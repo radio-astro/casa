@@ -33,7 +33,6 @@
 #include <msvis/MSVis/TransformingVi2.h>
 #include <msvis/MSVis/ViColumns2.h>
 
-#include <boost/noncopyable.hpp>
 #include <map>
 #include <vector>
 

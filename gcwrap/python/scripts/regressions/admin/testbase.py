@@ -348,5 +348,6 @@ class testbase :
             if name in files:
                 if count > 0:
                     ret += "\n"
+                count += 1
                 ret += os.path.join(root, name)
         return ret

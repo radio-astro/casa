@@ -25,12 +25,6 @@ using casa::utilj::DeltaThreadTimes;
 #include <msvis/MSVis/VisibilityIterator.h>
 #include <msvis/MSVis/VisibilityIteratorImpl.h>
 
-#include <boost/noncopyable.hpp>
-///#pragma GCC diagnostic ignored "-Wno-missing-field-initializers"
-///#warning "Disabling GCC diagnostic to handle spurious boost warnings"
-#include <boost/thread/condition_variable.hpp>
-#include <boost/thread/locks.hpp>
-#include <boost/thread/recursive_mutex.hpp>
 ///#pragma GCC diagnostic warning "-Wno-missing-field-initializers"
 #include <memory>
 #include <queue>
@@ -575,12 +569,14 @@ private:
 };
 
 
-class AsynchronousInterface : private boost::noncopyable {
+class AsynchronousInterface {
 
     //friend class InterfaceController;
 
 public:
 
+    // make noncopyable...
+    AsynchronousInterface( const AsynchronousInterface& ) = delete;
     AsynchronousInterface (int maxNBuffers);
     ~AsynchronousInterface ();
 

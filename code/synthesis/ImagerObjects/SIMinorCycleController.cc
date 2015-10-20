@@ -22,9 +22,6 @@
 
 #include <synthesis/ImagerObjects/SIMinorCycleController.h>
 
-/* Include file for the lock guard */
-//#include <boost/thread/locks.hpp>
-
 /* Records Interface */
 #include <casa/Containers/Record.h>
 
@@ -147,7 +144,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   Record SIMinorCycleController::getCycleExecutionRecord() {
     LogIO os( LogOrigin("SISkyModel",__FUNCTION__,WHERE) );
-    //boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
     Record returnRecord;
 
     returnRecord.define( RecordFieldId("iterdone"),  itsIterDone);
@@ -211,8 +207,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   void SIMinorCycleController::addSummaryMinor(uInt deconvolverid, uInt subimageid, Float model, Float peakresidual)
   {
-    //boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
-    
     LogIO os( LogOrigin("SIMinorCycleController", __FUNCTION__ ,WHERE) );
 
     IPosition shp = itsSummaryMinor.shape();

@@ -38,9 +38,8 @@
 
 
 // Boost Libraries for mutex and noncopyable semantics
-#include <boost/thread/thread.hpp>
-#include <boost/thread/recursive_mutex.hpp>
-#include <boost/utility.hpp>
+#include <mutex>
+#include <condition_variable>
 
 // Include files for the DBus Service
 //#include <casadbus/interfaces/SynthImager.adaptor.h>
@@ -65,7 +64,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			void removeHandler( SIIterBot_adaptor* );
 
 		private:
-			boost::recursive_mutex mutex;
+			std::recursive_mutex mutex;
 			SIIterBot_adaptor *adaptor;
 
 	};
@@ -229,8 +228,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			/* A recursive mutex which provides access control to the
 			   underlying state variables
 			*/
-			boost::recursive_mutex recordMutex;
-			boost::recursive_mutex descriptionMutex; /** protects itsDescription **/
+			std::recursive_mutex recordMutex;
+			std::recursive_mutex descriptionMutex; /** protects itsDescription **/
 
 			/* Control Variables */
 			Int    itsNiter;
@@ -263,8 +262,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			*/
 			bool                      interactionPending;
 			bool                      updateNeeded;
-			boost::condition_variable interactionCond; 
-			boost::mutex              interactionMutex; 
+			std::condition_variable   interactionCond; 
+			std::mutex                interactionMutex; 
 
 
 			/* Summary variables */

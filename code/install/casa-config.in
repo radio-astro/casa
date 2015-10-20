@@ -1,113 +1,107 @@
-#!/bin/sh
+#!/usr/bin/perl
 
-prefix="@PREFIX@"
-include="@INCLUDE@"
-lddpath="@LDDPATH@"
-lddpreload="@LDDPRELOAD@"
-libversion="@LIBVERSION@"
-version="@CASA_API_VERSION@"
-revision="@SVNREVISION@"
-srcurl="@CASASRCURL@"
-arch="@arch@"
+$prefix="@PREFIX@";
+$include="@INCLUDE@";
+$lddpath="@LDDPATH@";
+$lddpreload="@LDDPRELOAD@";
+$libversion="@LIBVERSION@";
+$version="@CASA_API_VERSION@";
+$revision="@SVNREVISION@";
+$srcurl="@CASASRCURL@";
+$arch="@arch@";
 
-mplrc=""
-pythonhome=""
-pythonpath=""
-casapython=""
-tcllib=""
-qtplugin=""
-pgplot=""
+$mplrc="";
+$pythonhome="";
+$pythonpath="";
+$casapython="";
+$tcllib="";
+$qtplugin="";
+$pgplot="";
 
 #SPLIT#SPLIT#SPLIT#SPLIT#SPLIT#SPLIT#SPLIT#SPLIT#SPLIT#SPLIT#SPLIT#SPLIT#SPLIT#
 #######  code after this point is shared by both developer builds and binary
 #######  releases and should be written to support either using the variables
 #######  above...
+$HOME = $ENV{HOME};
+$os = `uname -s`;
+$exec_with_sh = 0;
 
-os=`uname -s | awk -F. '{ print $1 }'`
+sub usage {
+    my $status = shift(@_);
 
-usage( ) {
-    cat <<EOF
+    my $msg = <<'EOF';
 Usage: casa-config [OPTION]
 
    --help               print this message
    --version            print CASA version information
-   --prefix             print CASA's install root
+   --prefix             print CASA install root
    --revision           print CASA source revision information
    --libversion         print CASA library version number
-   --exec <sh command>  setup CASA environment and exec a shell cmd
+   --exec <command>     setup CASA environment and exec a cmd
+   --sh-exec <command>  setup CASA environment and exec a cmd with /bin/sh
 
 EOF
-    exit $1
+    print $msg;
+    exit $status;
 }
 
-execute( ) {
+sub execute {
+    my $cmd = shift(@_);
 
     ####
     #### setup matplotlib...
     ####
-    if [ -z "$MATPLOTLIBRC" -a "$mplrc" ]; then
-        MATPLOTLIBRC="$mplrc"
-        export MATPLOTLIBRC
-    fi
+    if ( ! exists $ENV{MATPLOTLIBRC} && $mplrc ) {
+        $ENV{MATPLOTLIBRC} = $mplrc;
+    }
+
     ####
     ####    where fontList.cache...
     ####    mixing this with different versions of python causes problems...
     ####
-    MPLCONFIGDIR="$HOME/.casa/matplotlib"
-    export MPLCONFIGDIR
-    if [ ! -d "$MPLCONFIGDIR" ]; then
-        mkdir -p "$MPLCONFIGDIR"
-    fi
-    if [ ! -d "$MPLCONFIGDIR" ]; then
-        echo "could not create matplotlib config directory: $MPLCONFIGDIR"
-        exit 1
-    fi
+    $ENV{MPLCONFIGDIR} = "$HOME/.casa/matplotlib";
+    if ( ! -d $ENV{MPLCONFIGDIR} ) {
+	mkpath($ENV{MPLCONFIGDIR});
+    }
+    if ( ! -d $ENV{MPLCONFIGDIR} ) {
+        print "could not create matplotlib config directory: $ENV{MPLCONFIGDIR}\n";
+        exit 1;
+    }
 
-    if [ "$pythonhome" ]; then
-        PYTHONHOME="$pythonhome"
-        export PYTHONHOME
-    fi
-    if [ "$pythonpath" ]; then
-        _PYTHONPATH="$PYTHONPATH"
-        PYTHONPATH="$pythonpath:$_PYTHONPATH"
-        export PYTHONPATH
-    fi
-    if [ "$casapython" ]; then
-        __CASAPY_PYTHONDIR="$casapython"
-        export __CASAPY_PYTHONDIR
-    fi
+    if ( $pythonhome ) {
+        $ENV{PYTHONHOME} = $pythonhome;
+    }
+    if ( "$pythonpath" ) {
+        my $old = (exists $ENV{PYTHONPATH} ? ":$ENV{PYTHONPATH}" : '');
+        $ENV{PYTHONPATH} = "$pythonpath:$old";
+    }
+    if ( $casapython ) {
+        $ENV{__CASAPY_PYTHONDIR} = $casapython;
+    }
 
-    if [ "$tcllib" ]; then
-        TCL_LIBRARY="$tcllib"
-        export TCL_LIBRARY
-    fi
-    if [ "$qtplugin" ]; then
-        QT_PLUGIN_PATH="$qtplugin"
-        export QT_PLUGIN_PATH
-    fi
-    if [ "$pgplot" ]; then
-        PGPLOT_FONT="$pgplot/grfont.dat"
-        PGPLOT_RGB="$pgplot/rgb.txt"
-		export PGPLOT_FONT PGPLOT_RGB
-    fi
+    if ( $tcltklib ) {
+        $ENV{TCL_LIBRARY} = "$tcltklib/tcl";
+        $ENV{TK_LIBRARY} = "$tcltklib/tk";
+    }
+    if ( $qtplugin ) {
+        $ENV{QT_PLUGIN_PATH} = $qtplugin;
+    }
+    if ( $pgplot ) {
+        $ENV{PGPLOT_FONT} = "$pgplot/grfont.dat";
+        $ENV{PGPLOT_RGB} = "$pgplot/rgb.txt";
+    }
 
-    CASAPATH="${prefix} ${arch}"
-    export CASAPATH
+    $ENV{CASAPATH} = "$prefix $arch";
 
-    if [ "${lddpath}" ]; then
-        case "${os}" in
-        Darwin)
-                DYLD_LIBRARY_PATH="${lddpath}"
-                export DYLD_LIBRARY_PATH
-                ;;
-        Linux)
-                LD_LIBRARY_PATH="${lddpath}"
-                export LD_LIBRARY_PATH
-                ;;
-        esac
-    fi
+    if ( $lddpath ) {
+        if ( $^O eq 'linux' ) {
+            $ENV{LD_LIBRARY_PATH} = $lddpath;
+        } elsif ( $^O eq 'darwin' ) {
+            $ENV{DYLD_LIBRARY_PATH} = $lddpath;
+        }
+    }
 
-    if [ "$lddpreload" ]; then
+    if ( $lddpreload ) {
         ###
         ### newer versions of fedora have trouble with the older libtermcap
         ### that comes with the RHEL5 build casa binary distributions...
@@ -117,54 +111,49 @@ execute( ) {
         ### system from another linux system causes a segv without also
         ### including the ncurses that is linked against libtinfo...
         ###
-        interpose=`find -H /lib64 -type f -name 'libtinfo.*' 2> /dev/null | head -1`
-        if test -n "$interpose"; then
-            ncurses=`find -H /lib64 -type f -name 'libncurses.*' 2> /dev/null | head -1`
-            interpose="$interpose:$ncurses:"
-        fi
+        chomp( my $interpose=`find -H /lib64 -type f -name 'libtinfo.*' 2> /dev/null | head -1` );
+        if ( $interpose ) {
+            chomp( my $ncurses = `find -H /lib64 -type f -name 'libncurses.so.*' 2> /dev/null | head -1` );
+            $interpose = "$interpose $ncurses ";
+        }
 
-        LD_PRELOAD="$interpose$lddpreload"
-        export LD_PRELOAD
-    fi
-    exec $1
+        $ENV{LD_PRELOAD} = "$interpose$lddpreload";
+    }
+
+    if ( $exec_with_sh ) {
+        my $c = shift(@$cmd);
+        my @quoted = ( );
+        foreach ( <@$cmd> ) {
+            s|([)(*\s?])|\\$1|g;
+            push( @quoted, $_ );
+        }
+        exec '/bin/sh', '-c', join( ' ', $c, @quoted );
+    } else {
+        exec { $$cmd[0] } @$cmd;
+    }
+    exit(0);
 }
 
-if [ $# -eq 0 ]; then
-    usage 1
-fi
+if ( scalar(@ARGV) <= 0 ) {
+    usage 1;
+}
 
-while [ $# -gt 0 ]; do
-    case "$1" in
-    --help)
-            usage 0
-            ;;
-    --version)
-            echo ${version}
-            ;;
-    --prefix)
-            echo ${prefix}
-            ;;
-    --revision)
-            echo ${revision}
-            ;;
-    --libversion)
-            echo "${libversion}"
-            ;;
-    --src)
-            echo "${srcurl}"
-            ;;
-    --exec)
-            if [ $# -lt 2 ]; then
-                usage 1
-            fi
-            execute "$2"
-            shift
-            ;;
-    *)
-            usage 1
-            ;;
-    esac
-    shift
-done
+while ( scalar(@ARGV) > 0 ) {
+    $_ = shift(@ARGV);
+    if ( m|^--help$| ) { usage 0 }
+    elsif ( m|^--version$| ) { print "$version\n" }
+    elsif ( m|^--prefix$| ) { print "$prefix\n" }
+    elsif ( m|^--revision$| ) { print "$revision\n" }
+    elsif ( m|^--libversion$| ) { print "$libversion\n" }
+    elsif ( m|^--src$| ) { print "$srcurl\n" }
+    elsif ( m|^--exec$| ) { 
+        if ( scalar(@ARGV) < 1 ) { usage 1 }
+        execute \@ARGV;
+    } elsif ( m|^--sh-exec$| ) { 
+        if ( scalar(@ARGV) < 1 ) { usage 1 }
+        $exec_with_sh = 1;
+        execute \@ARGV;
+    }
+}
 
-exit 0
+exit 0;

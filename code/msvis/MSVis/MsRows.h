@@ -9,7 +9,6 @@
 #define MsVis_MsRows_H
 
 #include <msvis/MSVis/VisBuffer2.h>
-#include <boost/noncopyable.hpp>
 #include <vector>
 
 namespace casa {

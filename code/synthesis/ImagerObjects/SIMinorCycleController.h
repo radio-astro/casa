@@ -31,10 +31,6 @@
 #include <sys/time.h>
 
 
-// Boost Libraries for mutex and noncopyable semantics
-//#include <boost/thread/recursive_mutex.hpp>
-#include <boost/utility.hpp>
-
 // Include files for the DBus Service
 //#include <casadbus/interfaces/SynthImager.adaptor.h>
 
@@ -42,9 +38,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   class Record;
 
-  class SIMinorCycleController : boost::noncopyable 
+  class SIMinorCycleController
  {
   public:
+
+    // make noncopyable...
+    SIMinorCycleController( const SIMinorCycleController& ) = delete;
     SIMinorCycleController();
 
     virtual ~SIMinorCycleController();

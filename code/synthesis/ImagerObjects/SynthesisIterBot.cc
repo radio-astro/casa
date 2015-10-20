@@ -56,6 +56,9 @@
 
 #include <sys/types.h>
 #include <unistd.h>
+#include <functional>
+#include <thread>
+
 using namespace std;
 
 
@@ -70,7 +73,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void SynthesisIterBot::openDBus( ) {
 		if ( dbus_thread != NULL ) return;
-		dbus_thread = new boost::thread(boost::bind(&SynthesisIterBot::dbus_thread_launch_pad,this));
+		dbus_thread = new std::thread(std::bind(&SynthesisIterBot::dbus_thread_launch_pad,this));
 	}
 
 	void SynthesisIterBot::dbus_thread_launch_pad( ) {

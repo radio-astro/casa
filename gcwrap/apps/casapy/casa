@@ -231,7 +231,7 @@ if [ ${_dodebug} = "T" ]; then
     echo
     exec -a ${DEBUGGER}  ${DEBUGGER} ${PYTHONEXECUTABLE}
 else
-    exec -a python ${PYTHONEXECUTABLE} -W ignore::DeprecationWarning ${casapy_command} $*
+    exec -a python ${PYTHONEXECUTABLE} -W ignore::DeprecationWarning ${casapy_command} "$@"
 fi
 
 #

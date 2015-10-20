@@ -31,7 +31,6 @@
 #include <casa/aips.h>
 #include <msvis/MSVis/ViImplementation2.h>
 
-#include <boost/noncopyable.hpp>
 #include <map>
 #include <vector>
 

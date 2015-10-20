@@ -27,19 +27,19 @@
 //# $Id$
 #ifndef STDCASA_THREAD_BARRIER_H_
 #define STDCASA_THREAD_BARRIER_H_
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/condition_variable.hpp>
+#include <mutex>
+#include <condition_variable>
 
 namespace casa {
     class Barrier {
     private:
-        boost::mutex mutex_;
-        boost::condition_variable cvar_;
+        std::mutex mutex_;
+        std::condition_variable cvar_;
         std::size_t count_;
     public:
         explicit Barrier(std::size_t count) : count_{count} { }
         void wait( ) {
-            boost::unique_lock<boost::mutex> lock(mutex_);
+            std::unique_lock<std::mutex> lock(mutex_);
             if (--count_ == 0) {
                 cvar_.notify_all();
             } else {

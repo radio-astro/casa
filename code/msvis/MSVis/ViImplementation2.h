@@ -34,7 +34,6 @@
 #include <measures/Measures/MFrequency.h>
 #include <measures/Measures/Stokes.h>
 
-#include <boost/noncopyable.hpp>
 #include <map>
 #include <vector>
 
@@ -125,12 +124,14 @@ class WeightScaling;
 //   <li> sort out what to do with weights when interpolating
 // </todo>
 
-class ViImplementation2 : private boost::noncopyable {
+class ViImplementation2 {
 
     friend class VisibilityIterator2;
 
 public:
 
+    // make noncopyable...
+    ViImplementation2( const ViImplementation2& ) = delete;
     ViImplementation2 () {}
 
     // Destructor

@@ -25,7 +25,7 @@
 #include <casadbus/utilities/Conversion.h>
 
 /* Include file for the lock guard */
-#include <boost/thread/locks.hpp>
+#include <mutex>
 
 /* Records Interface */
 #include <casa/Containers/Record.h>
@@ -37,19 +37,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	/// SIIterBot_callback implementation ///
 	////////////////////////////////////
 	void SIIterBot_callback::interactionRequired( bool val ) {
-		boost::lock_guard<boost::recursive_mutex> guard(mutex); 
+		std::lock_guard<std::recursive_mutex> guard(mutex); 
 		if ( adaptor != 0 )
 			adaptor->interactionRequired(val);
 	}
 
 	void SIIterBot_callback::addHandler( SIIterBot_adaptor *adapt ) {
-		boost::lock_guard<boost::recursive_mutex> guard(mutex); 
+		std::lock_guard<std::recursive_mutex> guard(mutex); 
 		if ( adaptor == 0 )
 			adaptor = adapt;
 		
 	}
 	void SIIterBot_callback::removeHandler( SIIterBot_adaptor *adapt ) {
-		boost::lock_guard<boost::recursive_mutex> guard(mutex); 
+		std::lock_guard<std::recursive_mutex> guard(mutex); 
 		if ( adaptor == adapt )
 			adaptor = 0;
 	}
@@ -100,7 +100,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	bool SIIterBot_state::interactiveInputRequired( ) {
-		boost::lock_guard<boost::recursive_mutex> guard(recordMutex); 
+		std::lock_guard<std::recursive_mutex> guard(recordMutex); 
 		return ( itsInteractiveMode &&
 				 ( itsMaxCycleIterDone+itsInteractiveIterDone>=itsInteractiveNiter ||
 				   itsPeakResidual <= itsInteractiveThreshold ||
@@ -113,7 +113,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			/* Spawn a Viewer set up for interactive */
 		}
 		cout << "UU : setup interaction" << endl;
-		boost::unique_lock<boost::mutex> lock(interactionMutex);
+		std::unique_lock<std::mutex> lock(interactionMutex);
 		if(!interactionPending) {
 			interactionPending = true;
 			pushDetails( );
@@ -136,7 +136,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	int SIIterBot_state::cleanComplete(){
-		boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+		std::lock_guard<std::recursive_mutex> guard(recordMutex);    
 
 		LogIO os( LogOrigin("SIIterBot_state",__FUNCTION__,WHERE) );
 
@@ -179,7 +179,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Record SIIterBot_state::getMinorCycleControls(){
 		LogIO os( LogOrigin("SIIterBot_state",__FUNCTION__,WHERE) );
-		boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+		std::lock_guard<std::recursive_mutex> guard(recordMutex);    
 
 		/* If autocalc, compute cyclethresh from peak res, cyclefactor and psf sidelobe 
 		   Otherwise, the user has explicitly set it (interactively) for this minor cycle */
@@ -220,7 +220,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	void SIIterBot_state::mergeCycleInitializationRecord(Record& initRecord){
-		boost::lock_guard<boost::recursive_mutex> guard(recordMutex);  
+		std::lock_guard<std::recursive_mutex> guard(recordMutex);  
     
 		itsPeakResidual = max( itsPeakResidual,
 							   initRecord.asFloat(RecordFieldId("peakresidual")) );
@@ -230,7 +230,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	void SIIterBot_state::mergeCycleExecutionRecord( Record& execRecord ){
-		boost::lock_guard<boost::recursive_mutex> guard(recordMutex);  
+		std::lock_guard<std::recursive_mutex> guard(recordMutex);  
 
 		LogIO os( LogOrigin("SIIterBot_state",__FUNCTION__,WHERE) );
 
@@ -249,7 +249,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	void SIIterBot_state::mergeMinorCycleSummary( const Array<Double>& summary ){
-		boost::lock_guard<boost::recursive_mutex> guard(recordMutex);  
+		std::lock_guard<std::recursive_mutex> guard(recordMutex);  
     
 		IPosition cShp = itsSummaryMinor.shape();
 		IPosition nShp = summary.shape();
@@ -281,7 +281,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Record controlRecord=dbus::toRecord(updatedParams);
 		setControlsFromRecord(controlRecord);
 		{
-			boost::lock_guard<boost::mutex> lock(interactionMutex);
+			std::lock_guard<std::mutex> lock(interactionMutex);
 			updateNeeded=true;
 		}
 	}
@@ -292,7 +292,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		changePauseFlag(false);
 		itsInteractiveIterDone = 0;    
 		{
-			boost::lock_guard<boost::mutex> lock(interactionMutex);
+			std::lock_guard<std::mutex> lock(interactionMutex);
 			interactionPending=false;
 			updateNeeded=true;
 		}
@@ -300,12 +300,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	std::string SIIterBot_state::getDescription( ) {
-		boost::lock_guard<boost::recursive_mutex> guard(descriptionMutex);
+		std::lock_guard<std::recursive_mutex> guard(descriptionMutex);
 		return itsDescription;
 	}
 
 	void SIIterBot_state::setDescription( const std::string &value ) {
-		boost::lock_guard<boost::recursive_mutex> guard(descriptionMutex);    
+		std::lock_guard<std::recursive_mutex> guard(descriptionMutex);    
 		itsDescription = value;
 	}
 
@@ -322,7 +322,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	void SIIterBot_state::pushSummary( ) {
-		//boost::lock_guard<boost::recursive_mutex> guard(countMutex);
+		//std::lock_guard<std::recursive_mutex> guard(countMutex);
 		std::cout << __FUNCTION__ << "executing" << std::endl;
 		//    summaryUpdate();
 	}
@@ -333,18 +333,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	int SIIterBot_state::getNumberOfControllers( ) {
-		boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+		std::lock_guard<std::recursive_mutex> guard(recordMutex);    
 		return itsControllerCount;
 	}
 
 	bool SIIterBot_state::incrementController( ) {
-		boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+		std::lock_guard<std::recursive_mutex> guard(recordMutex);    
 		itsControllerCount++;
 		return true;
 	}
 
 	bool SIIterBot_state::decrementController( ) {
-		boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+		std::lock_guard<std::recursive_mutex> guard(recordMutex);    
 		itsControllerCount--;
 		return true;
 	} 
@@ -352,7 +352,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   /* ------------ End of runtime parameter getters -------- */
 
 	void SIIterBot_state::incrementMajorCycleCount( ) {
-		boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
+		std::lock_guard<std::recursive_mutex> guard(recordMutex);
 		itsMajorDone++;
 
 		/* Interactive iteractions update */ 
@@ -365,13 +365,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	Int SIIterBot_state::getMajorCycleCount( ) {
-		boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
+		std::lock_guard<std::recursive_mutex> guard(recordMutex);
 		return itsMajorDone;
 	}
   
 	Record SIIterBot_state::getSummaryRecord( ) {
 		LogIO os( LogOrigin("SIIterBot_state",__FUNCTION__,WHERE) );
-		boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
+		std::lock_guard<std::recursive_mutex> guard(recordMutex);
 		Record returnRecord = getDetailsRecord();
 		returnRecord.define( RecordFieldId("summaryminor"), itsSummaryMinor);
 		returnRecord.define( RecordFieldId("summarymajor"), itsSummaryMajor);
@@ -381,7 +381,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // TODO : Optimize this storage and resizing ? Or call this only now and then... ?
 
 	void SIIterBot_state::addSummaryMajor( ) {
-		boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
+		std::lock_guard<std::recursive_mutex> guard(recordMutex);
 
 		IPosition shp = itsSummaryMajor.shape();
 		if( shp.nelements() != 1 ) 
@@ -392,7 +392,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
   
 	void SIIterBot_state::updateCycleThreshold( ) {
-		boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+		std::lock_guard<std::recursive_mutex> guard(recordMutex);    
     
 		Float psffraction = itsMaxPsfSidelobe * itsCycleFactor;
     
@@ -405,43 +405,43 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 //   Float SIIterBot_state::getMaxPsfSidelobe()
 //   {
-//     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+//     std::lock_guard<std::recursive_mutex> guard(recordMutex);    
 //     return itsMaxPsfSidelobe;
 //   }
 
 //   void SIIterBot_state::setMaxPsfSidelobe(Float maxSidelobe)
 //   {
-//     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+//     std::lock_guard<std::recursive_mutex> guard(recordMutex);    
 //     itsMaxPsfSidelobe = maxSidelobe;
 //   }
 
 //   Float SIIterBot_state::getMaxPsfFraction()
 //   {
-//     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+//     std::lock_guard<std::recursive_mutex> guard(recordMutex);    
 //     return itsMaxPsfFraction;
 //   }
 
 //   void SIIterBot_state::setMaxPsfFraction(Float maxPsfFraction)
 //   {
-//     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+//     std::lock_guard<std::recursive_mutex> guard(recordMutex);    
 //     itsMaxPsfFraction = maxPsfFraction;
 //   }
 
 //   Float SIIterBot_state::getMinPsfFraction()
 //   {
-//     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+//     std::lock_guard<std::recursive_mutex> guard(recordMutex);    
 //     return itsMinPsfFraction;
 //   }
 
 //   void SIIterBot_state::setMinPsfFraction(Float minPsfFraction)
 //   {
-//     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+//     std::lock_guard<std::recursive_mutex> guard(recordMutex);    
 //     itsMinPsfFraction = minPsfFraction;
 //   }
 
 	Record SIIterBot_state::getDetailsRecord(){
 		LogIO os( LogOrigin("SIIterBot_state",__FUNCTION__,WHERE) );
-		boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
+		std::lock_guard<std::recursive_mutex> guard(recordMutex);
 		Record returnRecord;
 
 		/* Control Variables */
@@ -480,13 +480,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	void SIIterBot_state::changeNiter( Int niter ) {
-		boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+		std::lock_guard<std::recursive_mutex> guard(recordMutex);    
 		itsNiter = niter;
 		//cout << "UUU : change niter : " << niter << endl;
 	}
 
 	void SIIterBot_state::changeCycleNiter( Int cycleniter ) {
-		boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
+		std::lock_guard<std::recursive_mutex> guard(recordMutex);
 		if (cycleniter <= 0)  
 			itsCycleNiter = itsNiter;
 		else
@@ -494,65 +494,65 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	void SIIterBot_state::changeInteractiveNiter( Int interactiveNiter ) {
-		boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+		std::lock_guard<std::recursive_mutex> guard(recordMutex);    
 		itsInteractiveNiter = interactiveNiter;
 	}
 
 	void SIIterBot_state::changeThreshold( Float threshold ) {
-		boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+		std::lock_guard<std::recursive_mutex> guard(recordMutex);    
 		itsThreshold = threshold;
 	}
 
 	void SIIterBot_state::changeCycleThreshold( Float cyclethreshold ) {
-		boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
+		std::lock_guard<std::recursive_mutex> guard(recordMutex);
 		itsCycleThreshold = cyclethreshold;
 		itsIsCycleThresholdAuto = False;
 	}
 
 	void SIIterBot_state::changeInteractiveThreshold( Float interactivethreshold ) {
-		boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
+		std::lock_guard<std::recursive_mutex> guard(recordMutex);
 		itsInteractiveThreshold = interactivethreshold;
 	}
 
 	void SIIterBot_state::changeLoopGain( Float loopgain ) {
-		boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
+		std::lock_guard<std::recursive_mutex> guard(recordMutex);
 		itsLoopGain = loopgain;
 	}
 
 	void SIIterBot_state::changeCycleFactor( Float cyclefactor ) {
-		boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+		std::lock_guard<std::recursive_mutex> guard(recordMutex);    
 		itsCycleFactor = cyclefactor;
 	}
 
 	void SIIterBot_state::changeInteractiveMode( const bool& interactiveEnabled ) {
-		boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+		std::lock_guard<std::recursive_mutex> guard(recordMutex);    
 		itsInteractiveMode = interactiveEnabled;
 	}
 
 	void SIIterBot_state::changePauseFlag( const bool& pauseEnabled ){
-		boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+		std::lock_guard<std::recursive_mutex> guard(recordMutex);    
 		itsPauseFlag = pauseEnabled;
 		cout << "UUU : changed pause flag to " << pauseEnabled << endl;
 	}
 
 	void SIIterBot_state::changeStopFlag(const bool& stopEnabled){
-		boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+		std::lock_guard<std::recursive_mutex> guard(recordMutex);    
 		itsStopFlag = stopEnabled;
 	}
 
 	void SIIterBot_state::changeMinPsfFraction( Float minpsffraction ) {
-		boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+		std::lock_guard<std::recursive_mutex> guard(recordMutex);    
 		itsMinPsfFraction = minpsffraction;
 	}
 
 	void SIIterBot_state::changeMaxPsfFraction( Float maxpsffraction ) {
-		boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+		std::lock_guard<std::recursive_mutex> guard(recordMutex);    
 		itsMaxPsfFraction = maxpsffraction;
 	}
 
 	void SIIterBot_state::setControlsFromRecord( Record &recordIn ) {
 		LogIO os( LogOrigin("SIIterBot_state",__FUNCTION__,WHERE) );
-		boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
+		std::lock_guard<std::recursive_mutex> guard(recordMutex);
 
 		/* Note it is important that niter get set first as we catch
 		   negative values in the cycleniter, and set it equal to niter */
@@ -595,7 +595,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
         Float SIIterBot_state::readThreshold( Record recordIn, String id )  {
 		LogIO os( LogOrigin("SIIterBot_state",__FUNCTION__,WHERE) );
-		boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+		std::lock_guard<std::recursive_mutex> guard(recordMutex);    
 		// Threshold can be a variant, either Float or String(with units).
 		Float fthresh=0.0;
 		// If a number, treat it as a number in units of Jy.

@@ -11,9 +11,7 @@
 #include <casa/aips.h>
 #include <casa/aipstype.h>
 #include <casa/BasicSL/String.h>
-#include <boost/utility.hpp>
-#include <boost/noncopyable.hpp>
-#include <boost/thread/condition.hpp>
+#include <mutex>
 #include "UtilJ.h"
 
 #include <map>
@@ -52,7 +50,7 @@ public:
 
 protected:
 
-    boost::mutex & getMutex ();
+    std::mutex & getMutex ();
 
 private:
 
@@ -208,12 +206,15 @@ public:
 
 private:
 
-    boost::unique_lock<boost::mutex> uniqueLock_p;
+    std::unique_lock<std::mutex> uniqueLock_p;
 };
 
-class Logger : private boost::noncopyable {
+class Logger {
 
 public:
+
+    // make noncopyable...
+    Logger( const Logger& ) = delete;
 
     void log (const char * format, ...);
     void registerName (const String & threadName);

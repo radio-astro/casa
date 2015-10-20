@@ -20,7 +20,6 @@
 #include <cstdarg>
 #include <ostream>
 
-using namespace boost;
 using namespace std;
 
 #include "UtilJ.h"

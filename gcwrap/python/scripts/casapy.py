@@ -134,6 +134,7 @@ casa = { 'build': {
              'data': None,
              'recipes': casadef.python_library_directory+'/recipes',
              'root': None,
+             'arch': None,
              'pipeline': None
          },
          'flags': { },
@@ -152,12 +153,17 @@ casa = { 'build': {
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 if os.environ.has_key('CASAPATH') :
     __casapath__ = os.environ['CASAPATH'].split(' ')[0]
+    __casaarch__ = os.environ['CASAPATH'].split(' ')[1]
     if not os.path.exists(__casapath__ + "/data") :
         print "DEBUG: CASAPATH = %s" % (__casapath__)
         raise RuntimeError, "Unable to find the data repository directory in your CASAPATH. Please fix."
     else :
         casa['dirs']['root'] = __casapath__
         casa['dirs']['data'] = __casapath__ + "/data"
+        if not os.path.exists(__casapath__ + "/" + __casaarch__):
+            print "DEBUG: CASA ARCH = %s/%s" (__casapath__,__casaarch__)
+            raise RuntimeError, "Unable to find the architecture directory in your CASAPATH. Please fix."
+        casa['dirs']['arch'] = __casapath__ + "/" + __casaarch__
 else :
     __casapath__ = casac.__file__
     while __casapath__ and __casapath__ != "/" :
@@ -169,6 +175,10 @@ else :
     else :
         casa['dirs']['root'] = __casapath__
         casa['dirs']['data'] = __casapath__ + "/data"
+        if not os.path.exists(__casapath__ + "/" + __casaarch__):
+            print "DEBUG: CASA ARCH = %s/%s" (__casapath__,__casaarch__)
+            raise RuntimeError, "Unable to find the architecture directory in your CASAPATH. Please fix."
+        casa['dirs']['arch'] = __casapath__ + "/" + __casaarch__
 
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 ## setup pipeline path (if it exists)
@@ -1184,6 +1194,44 @@ def exit():
     #print 'Use CNTRL-D to exit'
     #return
 
+
+####################
+def pybot_install( ):
+    import tempfile
+    import subprocess
+    import shutil
+    archdir = casa['dirs']['arch']
+    pybot_url = "https://svn.cv.nrao.edu/svn/casa/development_tools/testing/pybot"
+    tmp = tempfile.mkdtemp( )
+
+    checkout = subprocess.Popen( "svn co %s ." % pybot_url, \
+                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, cwd=tmp )
+    (output, err) = checkout.communicate()
+    if len(err) > 0:
+        print "OUTPUT: ", output
+        print "ERROR:  ", err
+
+    install = subprocess.Popen( "python setup.py install --install-lib=%s/python/2.7 --install-scripts=%s/bin" % (archdir,archdir), \
+                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, cwd=tmp )
+    (output, err) = install.communicate()
+    if len(err) > 0:
+        print "OUTPUT: ", output
+        print "ERROR:  ", err
+
+    shutil.rmtree(tmp)
+
+def pybot_setup( ):
+    import subprocess
+    regression_url = "https://svn.cv.nrao.edu/svn/casa/development_tools/testing/pybot-regression"
+    checkout = subprocess.Popen( "svn co %s casa" % regression_url, \
+                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True )
+    (output, err) = checkout.communicate()
+    if len(err) > 0:
+        print "OUTPUT: ", output
+        print "ERROR:  ", err
+####################
+
+    
 import pylab as pl
 
 #

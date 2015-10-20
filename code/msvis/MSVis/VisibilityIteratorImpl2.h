@@ -37,7 +37,6 @@
 #include <msvis/MSVis/VisImagingWeight.h>
 #include <msvis/MSVis/VisBuffer2.h>
 
-#include <boost/noncopyable.hpp>
 #include <tuple>
 #include <map>
 #include <vector>

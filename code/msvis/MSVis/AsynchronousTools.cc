@@ -10,22 +10,26 @@
 #include <cstring>
 #include <errno.h>
 #include <fstream>
-#include <pthread.h>
 #include <queue>
 #include <semaphore.h>
 #include <fcntl.h>
 
 #include <time.h>
-#include <sys/syscall.h>
+#if defined(AIPS_LINUX)
+#if ! defined(_GNU_SOURCE)
+#define _GNU_SOURCE        /* or _BSD_SOURCE or _SVID_SOURCE */
+#endif
+#include <unistd.h>
+#include <sys/syscall.h>   /* For SYS_xxx definitions */
+#endif
 #include <sys/time.h>
 
 #include <casa/Exceptions/Error.h>
 #include <casa/Logging/LogIO.h>
 
-#include <boost/thread/condition_variable.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/once.hpp>
-#include <boost/thread/thread.hpp>
+#include <condition_variable>
+#include <mutex>
+#include <thread>
 
 #include "AsynchronousTools.h"
 #include "UtilJ.h"
@@ -45,7 +49,7 @@ private:
 
     ConditionImpl () : condition_p () {}
 
-    boost::condition_variable condition_p;
+    std::condition_variable condition_p;
 };
 
 class MutexImpl {
@@ -58,8 +62,8 @@ private:
     MutexImpl () : mutex_p () {}
     ~MutexImpl () {}
 
-    boost::thread::id lockingThreadId_p;
-    boost::mutex mutex_p;
+    std::thread::id lockingThreadId_p;
+    std::mutex mutex_p;
 };
 
 class SemaphoreImpl {
@@ -227,12 +231,12 @@ Logger::~Logger ()
     }
 }
 
-boost::once_flag loggerOnceFlag = BOOST_ONCE_INIT;
+std::once_flag loggerOnceFlag;
 
 Logger*
 Logger::get()
 {
-    boost::call_once (loggerOnceFlag, initialize);
+    std::call_once (loggerOnceFlag, initialize);
 
     return singleton_p;
 }
@@ -460,7 +464,7 @@ Mutex::~Mutex ()
     delete impl_p;
 }
 
-boost::mutex &
+std::mutex &
 Mutex::getMutex ()
 {
     return impl_p->mutex_p;
@@ -471,7 +475,7 @@ Mutex::getMutex ()
 //{
 //    // Only for use in debugs or asserts
 //
-//    Bool itIs = isLocked_p && boost::this_thread::get_id () == impl_p->lockingThreadId_p;
+//    Bool itIs = isLocked_p && std::this_thread::get_id () == impl_p->lockingThreadId_p;
 //
 //    return itIs;
 //}
@@ -480,7 +484,7 @@ void
 Mutex::lock ()
 {
     impl_p->mutex_p.lock();
-    impl_p->lockingThreadId_p = boost::this_thread::get_id ();
+    impl_p->lockingThreadId_p = std::this_thread::get_id ();
     isLocked_p = True;
 }
 
@@ -512,7 +516,7 @@ Mutex::trylock ()
     bool gotLock = impl_p->mutex_p.try_lock ();
     isLocked_p = gotLock;
     if (isLocked_p){
-        impl_p->lockingThreadId_p = boost::this_thread::get_id ();
+        impl_p->lockingThreadId_p = std::this_thread::get_id ();
     }
 
     return gotLock;

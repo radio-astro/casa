@@ -54,7 +54,6 @@
 //#include <tables/Tables/ArrayColumn.h>
 //#include <tables/Tables/ScalarColumn.h>
 
-#include <boost/noncopyable.hpp>
 #include <map>
 #include <set>
 #include <utility>
@@ -378,7 +377,7 @@ protected:
 //   <li> cleanup the currently dual interface for visibilities and flags
 //   <li> sort out what to do with weights when interpolating
 // </todo>
-class VisibilityIterator2 : private boost::noncopyable
+class VisibilityIterator2
 {
     // These classes are members of the VI/VB framework and need extra
     // access to the non-public methods of this class.  Any additions of
@@ -399,7 +398,7 @@ class VisibilityIterator2 : private boost::noncopyable
 
 public:
 
-
+  VisibilityIterator2( const VisibilityIterator2& ) = delete;
   class Factory { // Interface for implementation creation factory
 
   public:

@@ -35,12 +35,10 @@
 #include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MDirection.h>
 #include <synthesis/ImagerObjects/SIIterBot.h>
-#include <boost/thread/thread.hpp>
+#include <thread>
 
 //#include<casa/random.h>
 #include<synthesis/ImagerObjects/InteractiveMasking.h>
-
-#include <boost/scoped_ptr.hpp>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -96,7 +94,7 @@ protected:
     /////////////// All input parameters
 
  private:
-  boost::thread  *dbus_thread;
+  std::thread  *dbus_thread;
   void dbus_thread_launch_pad( );
 
   /// Parameters to control the old interactive GUI. Can be moved somewhere more appropriate...

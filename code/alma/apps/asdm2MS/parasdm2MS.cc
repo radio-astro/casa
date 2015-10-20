@@ -884,11 +884,8 @@ bool overTheTopExists(PointingRow* row) { return row->isOverTheTopExists(); }
 //
 // A collection of declarations and functions used for the parsing of the 'scans' option.
 //
-//#include <boost/spirit.hpp>
 #include <boost/spirit/include/classic.hpp>
-//#include <boost/spirit/actor/assign_actor.hpp>
 #include <boost/spirit/include/classic_assign_actor.hpp>
-//#include <boost/spirit/actor/push_back_actor.hpp>
 #include <boost/spirit/include/classic_push_back_actor.hpp>
 using namespace boost::spirit::classic;
 

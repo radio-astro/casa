@@ -10,7 +10,6 @@
 #include <ostream>
 #include <utility>
 
-using namespace boost;
 using namespace casa::async;
 using namespace casa::utilj;
 using namespace std;

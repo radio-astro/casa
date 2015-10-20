@@ -53,7 +53,6 @@
 #include <tables/Tables/ArrayColumn.h>
 #include <tables/Tables/ScalarColumn.h>
 
-#include <boost/noncopyable.hpp>
 #include <map>
 #include <vector>
 
