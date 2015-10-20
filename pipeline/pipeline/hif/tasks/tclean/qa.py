@@ -17,11 +17,19 @@ class TcleanQAHandler(pqa.QAResultHandler):
     child_cls = None
 
     def handle(self, context, result):
-        # calculate QA score comparing RMS against clean threshold and/or sensitivity
+        # calculate QA score comparing RMS against clean threshold
+
         imageScorer = scorers.erfScorer(1.0, 5.0)
+
         qaTool = casac.quanta()
         try:
-            score = imageScorer(result.rms / qaTool.convert(result.threshold, 'Jy')['value'])
+            if (result.intent == 'TARGET'):
+                score = imageScorer(result.rms / qaTool.convert(result.threshold, 'Jy')['value'])
+            # As of CASA 4.5.0 there is a discrepancy between the sensitivity and
+            # the achievable RMS for calibrators (point sources ?). For C3R3
+            # we disable the score until this issue is resolved.
+            else:
+                score = 1.0
         except:
             score = -0.1
         result.qa.pool[:] = [pqa.QAScore(score, longmsg='RMS outside mask vs. threshold', shortmsg='RMS vs. threshold')]
