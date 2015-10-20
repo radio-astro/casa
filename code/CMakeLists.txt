@@ -21,19 +21,24 @@
 cmake_minimum_required( VERSION 2.8 )
 
 set( CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/install )
-set( CASA_svngen ${CMAKE_SOURCE_DIR}/install/generate-svninfo )
-execute_process( COMMAND ${CASA_svngen} -revision url=${CMAKE_SOURCE_DIR} 
-                 OUTPUT_VARIABLE SVNREVISION
-                 OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-execute_process( COMMAND ${CASA_svngen} -date url=${CMAKE_SOURCE_DIR} 
-                 OUTPUT_VARIABLE SVNDATE
-                 OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-execute_process( COMMAND ${CASA_svngen} -url url=${CMAKE_SOURCE_DIR} 
-                 OUTPUT_VARIABLE CASASRCURL
-                 OUTPUT_STRIP_TRAILING_WHITESPACE
-)
+if(EXISTS "${CMAKE_SOURCE_DIR}/.svn" OR EXISTS "${CMAKE_SOURCE_DIR}/../.svn")
+    message(".svn directories found. Running svn scripts.")
+    set( CASA_svngen ${CMAKE_SOURCE_DIR}/install/generate-svninfo )
+    execute_process( COMMAND ${CASA_svngen} -revision url=${CMAKE_SOURCE_DIR} 
+                   OUTPUT_VARIABLE SVNREVISION
+                   OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    execute_process( COMMAND ${CASA_svngen} -date url=${CMAKE_SOURCE_DIR} 
+                   OUTPUT_VARIABLE SVNDATE
+                   OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    execute_process( COMMAND ${CASA_svngen} -url url=${CMAKE_SOURCE_DIR} 
+                   OUTPUT_VARIABLE CASASRCURL
+                   OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+else ()
+    message("Couldn't find .svn directories. Not running svn scripts.")
+endif ()
 
 
 include( config )
