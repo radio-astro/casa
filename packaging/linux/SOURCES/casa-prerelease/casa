@@ -198,7 +198,7 @@ sub setup_environment {
     my $mplconfig = "$HOME/.casa/matplotlib";
     $ENV{'MPLCONFIGDIR'} = $mplconfig;
     unless ( -d $mplconfig ) {
-	mkpath($mplconfig) or die "could not create matplotlib config directory: $mplconfig";
+	mkpath(untaint($mplconfig)) or die "could not create matplotlib config directory: $mplconfig";
     }
 
     $ENV{'CASA_INSTALLATION_TYPE'} = "rpm-installation";
