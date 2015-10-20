@@ -21,8 +21,15 @@
 cmake_minimum_required( VERSION 2.8 )
 
 set( CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/install )
-if(EXISTS "${CMAKE_SOURCE_DIR}/.svn" OR EXISTS "${CMAKE_SOURCE_DIR}/../.svn")
-    message(".svn directories found. Running svn scripts.")
+
+execute_process( COMMAND svn info
+                   RESULT_VARIABLE SVNINFOSTATUS
+                   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+)
+message("SVNINFOSTATUS: ${SVNINFOSTATUS}")
+
+if(${SVNINFOSTATUS} STREQUAL "0")
+    message("Running svn scripts.")
     set( CASA_svngen ${CMAKE_SOURCE_DIR}/install/generate-svninfo )
     execute_process( COMMAND ${CASA_svngen} -revision url=${CMAKE_SOURCE_DIR} 
                    OUTPUT_VARIABLE SVNREVISION
@@ -37,7 +44,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/.svn" OR EXISTS "${CMAKE_SOURCE_DIR}/../.svn")
                    OUTPUT_STRIP_TRAILING_WHITESPACE
     )
 else ()
-    message("Couldn't find .svn directories. Not running svn scripts.")
+    message("Couldn't detect svn. Not running svn scripts.")
 endif ()
 
 
