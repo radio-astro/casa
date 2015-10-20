@@ -22,11 +22,21 @@
 cmake_minimum_required( VERSION 2.8 )
 
 set( CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/install )
-set( CASA_svngen ${CMAKE_SOURCE_DIR}/install/generate-svninfo )
-execute_process( COMMAND %{CASA_svngen} "u=+%a %Y/%m/%d %H:%M:%S UTC"
-                 OUTPUT_VARIABLE BUILDTIME 
-                 OUTPUT_STRIP_TRAILING_WHITESPACE
-)
+
+if(EXISTS "${CMAKE_SOURCE_DIR}/.svn" OR EXISTS "${CMAKE_SOURCE_DIR}/../.svn")
+  set( CASA_svngen ${CMAKE_SOURCE_DIR}/install/generate-svninfo )
+  execute_process( COMMAND %{CASA_svngen} "u=+%a %Y/%m/%d %H:%M:%S UTC"
+                   OUTPUT_VARIABLE BUILDTIME
+                   OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+else ()
+  set( CASA_svngen ${CMAKE_SOURCE_DIR}/install/generate-gitinfo )
+  execute_process( COMMAND %{CASA_svngen} "u=+%a %Y/%m/%d %H:%M:%S UTC"
+                   OUTPUT_VARIABLE BUILDTIME
+                   OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+endif ()
+
 
 include( config )
 include( ui )
@@ -52,7 +62,7 @@ enable_language (Fortran)
 # Define compiler paths on OSX 10.5. This must be done before invoking project()
 if( APPLE )
     set( SO dylib )
-    if( EXISTS ${CMAKE_Fortran_COMPILER}) 
+    if( EXISTS ${CMAKE_Fortran_COMPILER})
         message(STATUS "Use " ${CMAKE_Fortran_COMPILER})
     elseif( EXISTS            /opt/casa/core2-apple-darwin8/3rd-party/bin/gfortran )
         set( CMAKE_Fortran_COMPILER /opt/casa/core2-apple-darwin8/3rd-party/bin/gfortran )
@@ -73,7 +83,7 @@ endif()
 
 project( CASA C CXX Fortran )
 
-# C is enabled because 
+# C is enabled because
 # - FindQt4.cmake requires it (bug)
 # - ccmtools uses the C preprocessor
 if( CMAKE_Fortran_COMPILER STREQUAL CMAKE_Fortran_COMPILER-NOTFOUND )
@@ -119,14 +129,14 @@ if( NOT arch AND EXISTS ${casaroot}/aipshosts )
   execute_process( COMMAND uname -n
                    COMMAND awk -F. "{print $1}"
                    OUTPUT_VARIABLE _host OUTPUT_STRIP_TRAILING_WHITESPACE )
-  execute_process( COMMAND egrep "^[\ ]*${_host}[\ \t]*" ${casaroot}/aipshosts 
+  execute_process( COMMAND egrep "^[\ ]*${_host}[\ \t]*" ${casaroot}/aipshosts
                    COMMAND awk "{print $2}"
     OUTPUT_VARIABLE _a
     OUTPUT_STRIP_TRAILING_WHITESPACE
     )
 
   if( _a )
-    set( arch ${_a} )    
+    set( arch ${_a} )
   endif()
 endif()
 
@@ -147,7 +157,7 @@ if (CMAKE_CROSSCOMPILING)
 endif()
 dump( CMAKE_SYSTEM
       CMAKE_SYSTEM_PROCESSOR
-      CMAKE_GENERATOR 
+      CMAKE_GENERATOR
       CMAKE_BUILD_TYPE )
 
 set( BUILD_SHARED_LIBS ON )
@@ -158,7 +168,7 @@ else ()
     set( DEFAULT_CXX_FLAGS "-pipe -Wall -Wextra -Wno-non-template-friend -Wcast-align -Wno-comment" )
 endif()
 
-set( DEFAULT_C_FLAGS 
+set( DEFAULT_C_FLAGS
      "-pipe -Wall -Wextra -Wcast-align -Wno-comment"
      )
 
@@ -216,7 +226,7 @@ message( STATUS "$_gfortran_lib_path = ${_gfortran_lib_path}" )
 # Define paths for development packages.
 # Check for unresolved symbols at link time.
 # Set compiler flags.
-# 
+#
 if( APPLE )
     set( CMAKE_Fortran_FLAGS -fno-second-underscore )
 
@@ -447,7 +457,7 @@ set( LATEX2HTML_OPTIONS "htcasa,section+,next,p-width,5"
 
 # Use pdflatex
 find_program( PDFLATEX_COMPILER NAMES pdflatex )
-#set( LATEX2PDF_OPTIONS "htcasa,section+,next,p-width,3" 
+#set( LATEX2PDF_OPTIONS "htcasa,section+,next,p-width,3"
 #CACHE STRING "LATEX2PDF_CONVERTER options" )
 
 set( CASA_DOC_DIR ${casaroot}/docs ) # Where to put documentation
@@ -456,7 +466,7 @@ find_package( Doxygen )
 
 if( DOXYGEN_FOUND )
   add_custom_target( doc_doxy
-    COMMAND ${DOXYGEN_EXECUTABLE} ${casaroot}/install/docutils/doxygen.cfg 
+    COMMAND ${DOXYGEN_EXECUTABLE} ${casaroot}/install/docutils/doxygen.cfg
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     )
 else()
@@ -473,7 +483,7 @@ set( CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 set( CMAKE_INSTALL_NAME_DIR ${CMAKE_INSTALL_PREFIX}/lib )
 
 # Preprocessor definitions
-add_definitions( 
+add_definitions(
 # seen in CASA code
         -DAIPS_HAS_QWT
 # seen nowhere
@@ -493,7 +503,7 @@ if( CMAKE_SYSTEM_NAME STREQUAL Linux )
   endif()
 elseif( CMAKE_SYSTEM_NAME STREQUAL Darwin )
   add_definitions(
-    -DAIPS_DARWIN 
+    -DAIPS_DARWIN
     )
 else(
     message( WARNING "Not on Linux nor Darwin!" )
@@ -542,7 +552,7 @@ if( NOT FORTRAN_LIBRARIES )
   file( WRITE ${_try}
     "int main() { return 0; }\n"
     )
-  
+
   if( _gfortran_lib_path )
     try_compile( _have_gfortran ${CMAKE_BINARY_DIR} ${_try}
       CMAKE_FLAGS -Wdev "-DCMAKE_EXE_LINKER_FLAGS=${_gfortran_lib_path}"
@@ -555,13 +565,13 @@ if( NOT FORTRAN_LIBRARIES )
   try_compile( _have_g2c ${CMAKE_BINARY_DIR} ${_try}
     CMAKE_FLAGS -Wdev "-DCMAKE_EXE_LINKER_FLAGS=-lg2c"
     )
- 
+
   if( _have_gfortran )
     if( _gfortran_lib_path )
       set( FORTRAN_LIBRARIES ${_gfortran_lib_path}
 	CACHE STRING "Fortran library linker option" FORCE )
     else()
-      set( FORTRAN_LIBRARIES -lgfortran 
+      set( FORTRAN_LIBRARIES -lgfortran
         CACHE STRING "Fortran library linker option" FORCE )
     endif()
     message( STATUS "Looking for Fortran runtime libraries -- ${FORTRAN_LIBRARIES}" )
@@ -589,7 +599,7 @@ if( NOT SKIP_PGPLOT )
   if (CMAKE_SYSTEM MATCHES ^Darwin-11 AND NOT LLVMCOMPILER )
      set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -framework AppKit -lgfortran" )
   else()
-     if (APPLE) 
+     if (APPLE)
         set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -framework AppKit" )
      else()
         set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error" )
@@ -618,7 +628,7 @@ if( NOT SKIP_PGPLOT )
 #define CASA_STRINGIFY(x) #x
 #define CASA_TOSTRING(x) CASA_STRINGIFY(x)
     std::cout << CASA_TOSTRING(WCSLIB_VERSION)"
-    DEFINITIONS -DSIGNBIT 
+    DEFINITIONS -DSIGNBIT
     DEPENDS PGPLOT )
 else()
   casa_find( WCSLIB
@@ -701,8 +711,8 @@ else()
       set( casacore_prefix ${CMAKE_INSTALL_PREFIX}/.. )
   endif()
   set( casacore_libs
-       casa_casa 
-       casa_coordinates 
+       casa_casa
+       casa_coordinates
        casa_fits
        casa_images
        casa_lattices
@@ -728,7 +738,7 @@ casa_find( CASACORE
            RUN_VERSION "casa::getVersionCASA()"
            DEPENDS LAPACK CFITSIO WCSLIB FFTW3 DL )
 
-# Listing explicitly CASACore's dependency libraries is not necessary if the CASACore libraries 
+# Listing explicitly CASACore's dependency libraries is not necessary if the CASACore libraries
 # were built with correct linking information, which they are not.
 
 set( CASACORE_DEFINITIONS ${CASACORE_DEFINITIONS}
@@ -741,7 +751,7 @@ set( CASACORE_DEFINITIONS ${CASACORE_DEFINITIONS}
 if( CMAKE_SYSTEM_NAME STREQUAL Linux )
   set( CASACORE_DEFINITIONS ${CASACORE_DEFINITIONS}
     -D_FILE_OFFSET_BITS=64
-    -D_LARGEFILE_SOURCE 
+    -D_LARGEFILE_SOURCE
     )
 endif()
 
@@ -764,7 +774,7 @@ else()
   endif()
   set( casacode_libs
        atnf
-       alma 
+       alma
        atmosphere
        calanalysis
        casadbus
@@ -820,11 +830,11 @@ if( NOT PYTHON_FOUND )
   set( _found False )
   foreach( _v ${_names} )
 
-    casa_find( 
-      PYTHON${_v} 
+    casa_find(
+      PYTHON${_v}
       PREFIX_HINTS ${PYTHON_ROOT_DIR}
-      LIBS python${_v} 
-      NO_REQUIRE 
+      LIBS python${_v}
+      NO_REQUIRE
       )
 
     if( PYTHON${_v}_FOUND )
@@ -834,7 +844,7 @@ if( NOT PYTHON_FOUND )
     endif()
 
   endforeach()
-  
+
   if( NOT _found )
     message( FATAL_ERROR "Could not find any PYTHON library with version one of ${_names}. Please check!" )
   endif()
@@ -850,7 +860,7 @@ string( SUBSTRING ${PYTHON_LIBNAME} 0 3 PYTHONV )
 string( REPLACE "." "" PV ${PYTHONV} )
 set( python_library python${PYTHON_LIBNAME} )
 
-# Form the Python install prefix by stripping away "lib/libpython2.5.2.dylib" (example) from 
+# Form the Python install prefix by stripping away "lib/libpython2.5.2.dylib" (example) from
 # the full python library path
 string( REGEX MATCH "/lib(64)?/lib${python_library}" _match ${PYTHON${PYTHON_LIBNAME}_LIBRARIES} )
 if( _match )
@@ -887,11 +897,11 @@ message( "${python_prefix}/Library/Frameworks/Python.framework/Versions/${PYTHON
 message( "${NUMPY_ROOT_DIR}" )
 casa_find( PYTHON
   VERSION 2.5    # minimum required
-  INCLUDES Python.h 
+  INCLUDES Python.h
      numpy/npy_interrupt.h   # for numpy
   INCLUDES_SUFFIXES python${PYTHONV}
-  PREFIX_HINTS 
-     ${NUMPY_ROOT_DIR}     
+  PREFIX_HINTS
+     ${NUMPY_ROOT_DIR}
      ${python_prefix}/lib/python${PYTHONV}/site-packages/numpy/core
      ${python_prefix}/Library/Frameworks/Python.framework/Versions/${PYTHONV}
      ${python_prefix}/Library/Frameworks/Python.framework/Versions/${PYTHONV}/lib/python${PYTHONV}/site-packages/numpy/core
@@ -1006,7 +1016,7 @@ endif( )
 #  INCLUDES_SUFFIXES ATM
 #  LIBS aatm
 #  CPP_VERSION ATM_VERSION
-#  RUN_VERSION "atm::getVersion()" 
+#  RUN_VERSION "atm::getVersion()"
 #  PREFIX_HINTS ${ATM_ROOT_DIR}
 #)
 
@@ -1017,8 +1027,8 @@ casa_find( LIBXML2
   INCLUDES libxml/xmlversion.h
   INCLUDES_SUFFIXES libxml2
   LIBS xml2
-  CPP_VERSION LIBXML_DOTTED_VERSION 
-  RUN_VERSION "LIBXML_DOTTED_VERSION; LIBXML_TEST_VERSION;" 
+  CPP_VERSION LIBXML_DOTTED_VERSION
+  RUN_VERSION "LIBXML_DOTTED_VERSION; LIBXML_TEST_VERSION;"
   )
 
 # XSLT
@@ -1028,8 +1038,8 @@ casa_find( LIBXSLT
   INCLUDES libxslt/xsltconfig.h
   INCLUDES_SUFFIXES libxslt
   LIBS xslt
-  CPP_VERSION LIBXSLT_DOTTED_VERSION 
-  RUN_VERSION "LIBXSLT_DOTTED_VERSION; LIBXSLT_VERSION;" 
+  CPP_VERSION LIBXSLT_DOTTED_VERSION
+  RUN_VERSION "LIBXSLT_DOTTED_VERSION; LIBXSLT_VERSION;"
   )
 
 # Do not reuse FindLibXml2.cmake, except this excerpt
@@ -1073,10 +1083,10 @@ endif()
 
 set( QT4_INCLUDE_DIRS ${QT_INCLUDES} CACHE PATH "QT4 include directories" FORCE )
 set( QT4_DEFINITIONS ${QT_DEFINITIONS} -DQT_NO_DEBUG CACHE STRING "QT4 preprocessor flags" FORCE )
-set( QT4_LIBRARIES 
-  ${QT_QTCORE_LIBRARY} 
-  ${QT_QTGUI_LIBRARY} 
-  ${QT_QTDBUS_LIBRARY} 
+set( QT4_LIBRARIES
+  ${QT_QTCORE_LIBRARY}
+  ${QT_QTGUI_LIBRARY}
+  ${QT_QTDBUS_LIBRARY}
   ${QT_QTXML_LIBRARY} ${QT_QTUITOOLS_LIBRARY}
   # ${QT_QTOPENGL_LIBRARY}
   CACHE FILEPATH "QT4 libraries" FORCE )
@@ -1093,7 +1103,7 @@ casa_find( QWT
   VERSION 5.1.1
   INCLUDES qwt_global.h
   INCLUDES_SUFFIXES qwt qwt-qt4
-  PREFIX_HINTS 
+  PREFIX_HINTS
     ${QWT_ROOT_DIR}
     ${casa_packages}/qwt-5.2.0
     ${casa_packages}/qwt-5.2.1-svn
@@ -1108,8 +1118,8 @@ casa_find( XERCES
   PREFIX_HINTS ${XERCES_ROOT_DIR}
   INCLUDES xercesc/util/XercesVersion.hpp
   LIBS xerces-c
-  CPP_VERSION XERCES_FULLVERSIONDOT 
-  RUN_VERSION "gXercesMajVersion << '.' << gXercesMinVersion << '.' << gXercesRevision" 
+  CPP_VERSION XERCES_FULLVERSIONDOT
+  RUN_VERSION "gXercesMajVersion << '.' << gXercesMinVersion << '.' << gXercesRevision"
 )
 
 #
@@ -1147,7 +1157,7 @@ if( Boost_VERSION GREATER 103499 )
   if( NOT Boost_FOUND )
     message( FATAL_ERROR "Boost-system could not be found. Please check!" )
   endif()
-endif() 
+endif()
 
 if( NOT Boost_VERSION GREATER 104099 AND NOT CASA_IGNORE_VERSION )
   message( FATAL_ERROR "Boost version (${Boost_VERSION}) is too old! Must be 104100 (1.41.0) or newer. Please check!" )
@@ -1162,11 +1172,11 @@ casa_find( RPFITS
   LIBS rpfits
   #RUN_VERSION names_.rpfitsversion
   PREFIX_HINTS ${RPFITS_ROOT_DIR}
-  DEPENDS FORTRAN 
+  DEPENDS FORTRAN
 )
 
 # Readline
-casa_find( READLINE 
+casa_find( READLINE
   VERSION 4.3
   INCLUDES readline/readline.h #depends on <cstdio> to compile
   LIBS readline ncurses
@@ -1282,7 +1292,7 @@ install( PROGRAMS
 	 ${CMAKE_CURRENT_BINARY_DIR}/preprocessed/casapy
          DESTINATION bin )
 
-install( FILES 
+install( FILES
          install/casa2c++h.xsl
          install/casa2py.xsl
          install/casa2pyimp.xsl
@@ -1299,4 +1309,3 @@ install( FILES
          DESTINATION ${CMAKE_INSTALL_PREFIX}/xml )
 
 install( FILES install/saxon8.jar DESTINATION lib )
-
