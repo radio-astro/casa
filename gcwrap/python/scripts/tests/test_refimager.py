@@ -1192,12 +1192,12 @@ class test_cube(testref_base):
           self.mvstart=me.radialvelocity('BARY',qa.quantity("11977.6km/s"))
           #self.dop = me.todoppler('radio',mfstart,qa.quantity('1.0GHz'))
           self.mfstart10=me.frequency('LSRK',qa.quantity(" 1.17999GHz"))                                                        
-          self.dop = me.todoppler('radio',mfstart10,qa.quantity('1.25GHz'))                                              
+          self.dop = me.todoppler('radio',self.mfstart10,qa.quantity('1.25GHz'))                                              
           #1chan width 
           #self.qvwidth = qa.quantity("11991.700km/s")
           #self.qvwidth = qa.quantity("4796.7km/s")
           self.qvwidth = qa.quantity("11991.7km/s")
-          self.mvwidth = me.radialvelocity('TOPO',qvwidth)
+          self.mvwidth = me.radialvelocity('TOPO',self.qvwidth)
 
           # self.restf = 1.25GHz
           # vel range: 59961.1 -  -31174.7 km/s (lsrk/radio)
@@ -1248,22 +1248,22 @@ class test_cube(testref_base):
                      #   'veltype':'optical','outframe':'LSRK',
                      ##   'desc':'velocity, start=\'74952.3km/s\', default width, veltype=optical LSRK'},
                      #   'desc':'velocity, start=\'-49962.6km/s\', default width, veltype=optical LSRK'},
-                     14:{'imagename':'Cubetest_stqfreqdefwd','spw':'0','start':qfstart,'width':'', 'veltype':'radio','outframe':'',
-                        'desc':'frequency, start=%s, default width, veltype=radio TOPO' % qfstart},
-                     15:{'imagename':'Cubetest_stmfreqdefwd','spw':'0','start':mfstart,'width':'', 'veltype':'radio','outframe':'',
-                        'desc':'frequency, start=%s, default width, veltype=radio LSRK' % mfstart},
-                     16:{'imagename':'Cubetest_stqveldefwd','spw':'0','start':qvstart,'width':'','outframe':'TOPO',
-                        'desc':'velocity, start=%s, default width, TOPO' % qvstart},
-                     17:{'imagename':'Cubetest_stmveldefwd','spw':'0','start':mvstart,'width':'','outframe':'TOPO',
-                        'desc':'velocity, start=%s, default width, BARY' % mvstart},
-                     18:{'imagename':'Cubetest_veldefstqvwidth','spw':'0','start':'','width':qvwidth,'outframe':'TOPO',
-                        'desc':'velocity, default start, width=%s, TOPO' % qvwidth},
-                     19:{'imagename':'Cubetest_veldefstmvwidth','spw':'0','start':'','width':mvwidth,'outframe':'TOPO',
-                        'desc':'velocity, default start, width=%s, TOPO' % mvwidth},
-                     20:{'imagename':'Cubetest_stdopdefwd','spw':'0','start':dop,'width':'','outframe':'TOPO',
-                        'desc':'doppler, start=%s, default width, TOPO' % dop},
+                     14:{'imagename':'Cubetest_stqfreqdefwd','spw':'0','start':self.qfstart,'width':'', 'veltype':'radio','outframe':'',
+                        'desc':'frequency, start=%s, default width, veltype=radio TOPO' % self.qfstart},
+                     15:{'imagename':'Cubetest_stmfreqdefwd','spw':'0','start':self.mfstart,'width':'', 'veltype':'radio','outframe':'',
+                        'desc':'frequency, start=%s, default width, veltype=radio LSRK' % self.mfstart},
+                     16:{'imagename':'Cubetest_stqveldefwd','spw':'0','start':self.qvstart,'width':'','outframe':'TOPO',
+                        'desc':'velocity, start=%s, default width, TOPO' % self.qvstart},
+                     17:{'imagename':'Cubetest_stmveldefwd','spw':'0','start':self.mvstart,'width':'','outframe':'TOPO',
+                        'desc':'velocity, start=%s, default width, BARY' % self.mvstart},
+                     18:{'imagename':'Cubetest_veldefstqvwidth','spw':'0','start':'','width':self.qvwidth,'outframe':'TOPO',
+                        'desc':'velocity, default start, width=%s, TOPO' % self.qvwidth},
+                     19:{'imagename':'Cubetest_veldefstmvwidth','spw':'0','start':'','width':self.mvwidth,'outframe':'TOPO',
+                        'desc':'velocity, default start, width=%s, TOPO' % self.mvwidth},
+                     20:{'imagename':'Cubetest_stdopdefwd','spw':'0','start':self.dop,'width':'','outframe':'TOPO',
+                        'desc':'doppler, start=%s, default width, TOPO' % self.dop},
                      # with a gap in spw channel sel
-                     21:{'imagename':'Cubetest_st5gap','spw':'0:5~9,12~14','start':5,'width':'','outframe':'LSRK',
+                     21:{'imagename':'Cubetest_st5gap','spw':'0:5~9;12~14','start':5,'width':'','outframe':'LSRK',
                         'desc':'channel, start=%s, default width, channel gap (10-11) LSRK' % 5},
                      # stride > 1
                      22:{'imagename':'Cubetest_st5gap','spw':'0:0~10^2','start':0,'width':'','outframe':'LSRK',
