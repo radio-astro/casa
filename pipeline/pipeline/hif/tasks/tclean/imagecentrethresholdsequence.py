@@ -25,6 +25,7 @@ class ImageCentreThresholdSequence(BaseCleanSequence):
         self.pblimit_image = pblimit_image
         self.pblimit_cleanmask = pblimit_cleanmask
         self.result = BoxResult()
+        self.sidelobe_ratio = -1
 
     def iteration(self, new_cleanmask):
 
