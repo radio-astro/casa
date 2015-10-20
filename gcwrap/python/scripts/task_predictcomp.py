@@ -51,7 +51,7 @@ def predictcomp(objname=None, standard=None, epoch=None,
              Examples: True (save to prefix + '.png')
                        'myplot.png' (save to myplot.png) 
     symb: One of matplotlib's codes for plot symbols: .:,o^v<>s+xDd234hH|_
-          default: ',':  The smallest points I could find.
+          default: '.'
     include0amp: Force the lower limit of the amplitude axis to 0.
                  Default: False
     include0bl: Force the lower limit of the baseline length axis to 0.

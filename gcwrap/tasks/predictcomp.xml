@@ -75,7 +75,7 @@
 	  </param>
           <param type="string" name="symb">
 	    <description>A matplotlib plot symbol code</description>
-	    <value>,</value>
+	    <value>.</value>
           </param>
 	  <param type="bool" name="include0amp" subparam="True">
 	    <description>Force the amplitude axis to start at 0?</description>
@@ -103,7 +103,7 @@
 	      <notequals value="">
 		<default param="showplot"><value>True</value></default>
 		<default param="savefig"><value type="string"></value></default>
-                <default param="symb"><value type="string">,</value></default>
+                <default param="symb"><value type="string">.</value></default>
 		<default param="include0amp"><value>False</value></default>
 		<default param="include0bl"><value>False</value></default>
 		<default param="blunit"><value type="string"></value></default>
@@ -167,7 +167,7 @@
              Examples: ''           (do not save the plot)
                        'myplot.png' (save to myplot.png)
     symb: One of matplotlib's codes for plot symbols: .:,o^v&lt;&gt;s+xDd234hH|_
-          Default: ',':  The smallest points I could find.
+          Default: '.'
     include0amp: Force the amplitude axis to start at 0?
                  Default: False
     include0bl: Force the baseline axis to start at 0?
