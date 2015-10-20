@@ -116,15 +116,15 @@ namespace casa {
 	}
 
 	void ColorHistogram::powerCyclesChangedSlider(int value ) {
-		casa::utilj::ThreadTimes t1;
+		//casa::utilj::ThreadTimes t1;
 		float valueDistance = value - SLIDER_MIN;
 		float valueRange = SLIDER_MAX - SLIDER_MIN;
 		float powerRange = SCALE_LIMIT * 2;
 		float powerMin = -1 * SCALE_LIMIT;
 		float cycleValue = powerRange * valueDistance / valueRange+powerMin;
 		resetPowerCycles( cycleValue);
-		casa::utilj::ThreadTimes t2;
-		casa::utilj::DeltaThreadTimes dt = t2 - t1;
+		//casa::utilj::ThreadTimes t2;
+		//casa::utilj::DeltaThreadTimes dt = t2 - t1;
 	}
 
 	void ColorHistogram::resetIntensityRange() {

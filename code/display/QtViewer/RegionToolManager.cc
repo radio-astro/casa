@@ -823,7 +823,7 @@ namespace casa {
 
                         std::vector<std::pair<double,double> > linear_pts(points.size( ));
 
-                        bool error = false;
+                        //bool error = false;
                         try {
                             for ( unsigned int i = 0; i < points.size( ); ++i ) {
                                 double lx, ly;
@@ -855,7 +855,7 @@ namespace casa {
                                 // region is outside of our pixel canvas area
                                 if ( (int) px < 0 || (int) px > shape[0] ||
                                      (int) py < 0 || (int) py > shape[1] ) {
-                                    error = false;
+                                    //error = false;
                                     panel->logIO( ) << LogIO::WARN
                                                     << "polygon region is outside of display area"
                                                     << LogIO::POST;
@@ -901,7 +901,7 @@ namespace casa {
 
                         std::vector<std::pair<double,double> > linear_pts(points.size( ));
 
-                        bool error = false;
+                        //bool error = false;
                         try {
                             for ( unsigned int i = 0; i < points.size( ); ++i ) {
                                 double lx, ly;
@@ -933,7 +933,7 @@ namespace casa {
                                 // region is outside of our pixel canvas area
                                 if ( (int) px < 0 || (int) px > shape[0] ||
                                      (int) py < 0 || (int) py > shape[1] ) {
-                                    error = false;
+                                    //error = false;
                                     panel->logIO( ) << LogIO::WARN
                                                     << "polyline region is outside of display area"
                                                     << LogIO::POST;

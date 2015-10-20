@@ -187,7 +187,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	const char *PSDriver::dimensionToString(const PSDriver::Dimension indem) {
-		char *rtn;
+		const char *rtn;
 
 		switch(indem) {
 		case PSDriver::INCHES:
@@ -2495,7 +2495,7 @@ image\n"
 //	 | 0 0 1 |
 	void PSDriver::PSState::setIdentity() {
 		a_ = d_ = ai_ = di_ = 1.0;
-		b_ = c_ = bi_ = bi_ = 0.0;
+		b_ = c_ = /*bi_ =*/ bi_ = 0.0;
 		tx_ = ty_ = txi_ = tyi_ = 0.0;
 	}
 

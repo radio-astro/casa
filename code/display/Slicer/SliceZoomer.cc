@@ -55,7 +55,7 @@ namespace casa {
 
 		//The cursor
 		zoomMap.load( ":/images/zoomCursor.png");
-		QSize zoomMapSize = zoomMap.size();
+		//QSize zoomMapSize = zoomMap.size();
 		zoomCursor = new QCursor( zoomMap );
 
 		//Use the +,-, and Home keys to zoom in and out

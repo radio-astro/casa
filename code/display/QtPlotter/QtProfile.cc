@@ -522,6 +522,7 @@ namespace casa {
 		QPixmap* image = pixelCanvas->graph();
 		QPrinter printer;
 		printer.setOutputFormat( QPrinter::PdfFormat );
+		printer.setOrientation( QPrinter::Landscape );
 		printer.setOutputFileName( fileName );
 		QPainter painter;
 		if ( !painter.begin( & printer )){

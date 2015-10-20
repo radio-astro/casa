@@ -207,7 +207,7 @@ namespace casa {
 		//the correct parameters, we store the information before deleting
 		//the data.
 
-		QColor singleColor = imageView->getDisplayedColor();
+		//QColor singleColor = imageView->getDisplayedColor();
 		int dropIndex = imageScroll->getIndex( imageView );
 		bool registered = imageView->isRegistered();
 		bool masterCoordinate = imageView->isMasterCoordinate();

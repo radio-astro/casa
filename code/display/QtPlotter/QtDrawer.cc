@@ -351,12 +351,15 @@ namespace casa {
 		if (!file.open(QFile::WriteOnly | QIODevice::Text))
 			return ;
 
-		char* t = (char*)("plt");
+		//char* t = (char*)("plt");
 		QString ext = fn.section('.', -1);
-		if (ext == "txt" || ext == "plt")
+		/*if (ext == "txt" || ext == "plt")
 			t = (char*)ext.toLocal8Bit().constData();
 		else
-			fn.append(".plt");
+			fn.append(".plt");*/
+		if ( ext != "txt" && ext != "plt" ){
+			fn.append( ".plt");
+		}
 
 		QTextStream ts(&file);
 

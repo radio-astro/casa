@@ -516,11 +516,11 @@ static void preprocess_args( int argc, const char *argv[], int &numargs, char **
 void start_manager_root( const char *origname, int /*numargs*/, char **args, const char */*dbusname*/,
                          bool without_gui, pid_t root_pid ) {
 
-	pid_t child_xvfb = 0;
+	//pid_t child_xvfb = 0;
 	char *display = 0;
 	char *authority = 0;
 	if ( without_gui ) {
-		child_xvfb = launch_xvfb( args[0], root_pid, display, authority );
+		/*child_xvfb =*/ launch_xvfb( args[0], root_pid, display, authority );
 		sleep(2);
 	}
 

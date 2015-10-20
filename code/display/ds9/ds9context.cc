@@ -201,9 +201,13 @@ namespace casa {
 				case FK4:
 					to_linear_offset(wc_,MDirection::B1950,d,0,lx,ly);
 					break;
-				case ECLIPTIC:
+				//Note:  ECLIPTIC was commented out because it generates
+			    //a compiler warning.  However, I think this warning is a symptom
+				//of a bigger problem.  If the method takes a SkyFormat, we should
+				//be switching of SkyFormats, not SkyFrames
+				/*case ECLIPTIC:
 					to_linear_offset(wc_,MDirection::ECLIPTIC,d,0,lx,ly);
-					break;
+					break;*/
 				case GALACTIC:
 					to_linear(wc_,MDirection::GALACTIC,d,0,lx,ly);
 					break;

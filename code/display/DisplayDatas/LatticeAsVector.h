@@ -196,7 +196,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Value of the Lattice at a position--used by showValue().  Overrides
 		// base version to take user-controlled addition to phase angle into account.
-		virtual const T dataValue(IPosition pos);
+		virtual /*const*/ T dataValue(IPosition pos);
 
 	private:
 

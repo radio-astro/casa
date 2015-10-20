@@ -867,7 +867,7 @@ namespace casa {
 	//-----------------------------------------------------------------------------
 
 	QSize ImageView::minimumSizeHint() const {
-		QSize frameSize = QFrame::size();
+		//QSize frameSize = QFrame::size();
 		QSize hint ( 200, minimumSize );
 		return hint;
 	}

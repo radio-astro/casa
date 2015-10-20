@@ -1117,7 +1117,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// identified with refvalue (world coordinate value) equal to uiBase(),
 		// in the simple linear coordinates below.
 
-		Int nlc = ( nAnt_ != 1 && (ax[0] == BASELN || ax[1] == BASELN) || 
+		Int nlc = ( ( (nAnt_ != 1 && ax[0] == BASELN) || ax[1] == BASELN) ||
                     freqAxis(ax[0]) || freqAxis(ax[1]) ) ? 1 : 2;
 		// The Linear coordinate will cover just one axis if
 		// a Tabular coordinate (below) is used for baseline numbering
@@ -1832,7 +1832,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// avoided on (somewhat bogus) grounds that it might be a bit expensive).
 		// Recall that _normal_ animator operation by the user to change
 		// frames does _not_ pass through this setOptions() routine.
-		if(axZChg || newRanges || oldAxZ==BASELN && bslSortChg) {
+		if(axZChg || newRanges || (oldAxZ==BASELN && bslSortChg)) {
 			getFirstZIndex(pos_[oldAxZ], oldRngZ);
 			oldPosZ = pos_[oldAxZ];
 		}
@@ -1923,8 +1923,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// to its range/position, require resetting of the animator[s]
 
 		if( isCSmaster() &&
-		        (axZChg || rngZChg || pos_[axZ]!=oldPosZ &&
-		         (newRanges || bslSortChg)) ) {
+		        (axZChg || rngZChg || (pos_[axZ]!=oldPosZ &&
+		         (newRanges || bslSortChg))) ) {
 			Record setanimrec;
 			setanimrec.define("zindex", pos_[axZ]);
 			recOut.defineRecord("setanimator", setanimrec);
@@ -5200,7 +5200,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			Int marg;
 			Int nframes = nframes_(frames, trialfrm, nfrms, marg);
 			if(nframes  > maxframes ||
-			        nframes == maxframes && !multiple && (mult || marg>margin) ) {
+			        (nframes == maxframes && !multiple && (mult || marg>margin)) ) {
 
 				// trialfrm is the optimal candidate so far.
 

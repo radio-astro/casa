@@ -558,9 +558,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			float			lrmargin;
 			float			tbmargin;
 			PSDriver::Dimension	dimension;	// MM or INCHES.
-			char			*name; //"North American letter", etc.
-			char			*alias1;	// "NA_LETTER", etc.
-			char			*alias2;	// "LETTER", etc.
+			const char			*name; //"North American letter", etc.
+			const char			*alias1;	// "NA_LETTER", etc.
+			const char			*alias2;	// "LETTER", etc.
 		} pageinfo_;
 		// Given a paper type, return a pointer to its description.
 		static const PSDriver::PageInfo *pageInfo(const PSDriver::MediaSize);

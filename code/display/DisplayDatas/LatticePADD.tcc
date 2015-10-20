@@ -279,7 +279,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Query the value of the lattice at a particular position:
 	template <class T>
-	const T LatticePADisplayData<T>::dataValue(IPosition pos) {
+	/*const*/ T LatticePADisplayData<T>::dataValue(IPosition pos) {
 		if (!itsMaskedLatticePtr) {
 			throw(AipsError("LatticePADisplayData<T>::dataValue - "
 			                "no lattice is available"));

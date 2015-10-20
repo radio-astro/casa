@@ -538,14 +538,14 @@ void BinPlotWidget::setDisplayLogY( bool display ){
 		clearPoissonFitMarker();
 
 		if ( displayLogY ){
-			float maxBinCount = 1000;
 			float minBinCount = 1;
 			if ( histogramMap.contains(selectedId)){
 				std::pair<float,float> minMaxBinCount = histogramMap[selectedId]->getMinMaxBinCount();
+				//float maxBinCount = 1000;
 				if ( minMaxBinCount.first > minBinCount ){
 					minBinCount = minMaxBinCount.first;
 				}
-				maxBinCount = minMaxBinCount.second;
+				//maxBinCount = minMaxBinCount.second;
 			}
 			binPlot.setAxisScaleEngine( QwtPlot::yLeft, new QwtLog10ScaleEngine );
 		}

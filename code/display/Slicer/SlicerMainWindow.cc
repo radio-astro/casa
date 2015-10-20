@@ -207,14 +207,14 @@ namespace casa {
 		                   QString(), tr( "Images (*.png *.jpg);; Text files (*.txt)"));
 		if ( fileName.length() > 0 ) {
 			QString ext = fileName.section('.', -1);
-			bool successfulExport = true;
+			//bool successfulExport = true;
 			if (ext =="png" || ext == "jpg") {
-				successfulExport = toImageFormat(fileName, ext );
+				/*successfulExport =*/ toImageFormat(fileName, ext );
 			} else {
 				if (ext != "txt") {
 					fileName.append(".txt");
 				}
-				successfulExport = toASCII(fileName);
+				/*successfulExport =*/ toASCII(fileName);
 			}
 		}
 	}

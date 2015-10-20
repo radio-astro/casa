@@ -536,23 +536,23 @@ namespace casa {
 		if ( mode != previousMode ) {
 			int rate = 0;
 			int frame = 0;
-			bool channelMode = NORMAL_MODE;
-			bool channelImages = false;
+			//bool channelMode = NORMAL_MODE;
+			//bool channelImages = false;
 			if ( mode == IMAGE_MODE ) {
 				animatorChannel->setPlaying( false );
 				rate = animatorImage->getRate();
 				frame = animatorImage->getFrame();
-				channelMode = BLINK_MODE;
+				//channelMode = BLINK_MODE;
 			} else if ( mode == CHANNEL_MODE  ) {
 				animatorImage->setPlaying( false );
 				rate = animatorChannel->getRate();
 				frame = animatorChannel->getFrame();
 			} else if ( mode == CHANNEL_IMAGES_MODE ) {
-				channelImages = true;
+				//channelImages = true;
 				animatorImage->setPlaying( false );
 				rate = animatorChannel->getRate();
 				frame = animatorChannel->getFrame();
-				channelMode = BLINK_MODE;
+				//channelMode = BLINK_MODE;
 			}
 			/*if ( channelMode )
 				emit setChannelMode( );

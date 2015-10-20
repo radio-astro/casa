@@ -981,7 +981,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			// Display LEL expression.
 			path = lelEdit_->text().trimmed().toStdString();
 			datatype = "lel";
-		} else if (load_tree_widget_->currentItem() > 0) {
+		} else if ( load_tree_widget_->currentItem() != nullptr) {
 			// Display selected file.
 			path = (ts.dir( )->path( ) + "/" + load_tree_widget_->currentItem()->text(0)).toStdString( );
 			datatype = dataType_.value(uiDataType_[load_tree_widget_->currentItem()->text(1)]).toStdString();
@@ -1040,7 +1040,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		displaytype = (displayType_.key(uiDisplayType_[button->text()])).toStdString();
 
-		if (load_tree_widget_->currentItem() > 0) {
+		if (load_tree_widget_->currentItem() != nullptr) {
 
 			// Display selected file.
 			path = (ts.dir( )->path( ) + "/" + load_tree_widget_->currentItem()->text(0)).toStdString( );

@@ -49,7 +49,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Bool AttributeBuffer::getValue(const String &name, Vector<T> &value) const {
 		Vector<T>* tmp = NULL;
 		DataType dtype = whatType(tmp);
-		AttValue::ValueType valType;
+		/*AttValue::ValueType valType;
 		switch(dtype) {
 		case TpArrayUInt:
 			valType = AttValue::AtuInt;
@@ -74,8 +74,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			break;
 		default:
 			throw(AipsError("Invalid template for AttributeBuffer::getValue"));
+		}*/
+		if ( dtype != TpArrayUInt && dtype != TpArrayInt && dtype != TpArrayBool &&
+			 dtype != TpArrayFloat && dtype != TpArrayDouble &&
+			dtype != TpArrayString && dtype != TpArrayQuantity ){
+			throw(AipsError("Invalid template for AttributeBuffer::getValue"));			
 		}
-
 		for (uInt i = 0; i < attributes.nelements(); i++) {
 			if (name == (attributes[i])->getName()) {
 				AttributeValue<T>* tmp =

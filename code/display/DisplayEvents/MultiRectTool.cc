@@ -647,9 +647,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			Int spInd = cs.findCoordinate(Coordinate::SPECTRAL);
 			SpectralCoordinate spCoord;
-			Int wSp=-1;
+			//Int wSp=-1;
 			if ( spInd>=0 ) {
-				wSp= (cs.worldAxes(spInd))[0];
+				//wSp= (cs.worldAxes(spInd))[0];
 				spCoord=cs.spectralCoordinate(spInd);
 				spCoord.setVelocity();
 				Double vel;

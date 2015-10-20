@@ -67,7 +67,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	template <>
-	const Float LatticeAsVector<Float>::dataValue(IPosition pos) {
+	/*const*/ Float LatticeAsVector<Float>::dataValue(IPosition pos) {
 
 		// Return the value of the Lattice at a particular position.
 		// Overrides the base method to take itsRotation (user-specified
@@ -92,7 +92,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	template <>
-	const Complex LatticeAsVector<Complex>::dataValue(IPosition pos) {
+	/*const*/ Complex LatticeAsVector<Complex>::dataValue(IPosition pos) {
 
 		// This is only a half-hearted stab (there are no Image<Complex>'s yet).
 		// When they're implemented, showValue() should also be modified to

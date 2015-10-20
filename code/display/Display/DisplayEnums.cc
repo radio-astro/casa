@@ -513,7 +513,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 // For Keysyms 0xFF00 to 0xFFFF
-	static char * ttyFuncStr[256] = {
+	static const char * ttyFuncStr[256] = {
 		"","","","","","","","",
 		"K_BackSpace","K_Tab","K_Linefeed","K_Clear","","K_Return","","",
 

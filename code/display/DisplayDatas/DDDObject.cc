@@ -243,7 +243,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		pixel = cSys.referencePixel().copy();
 		pixel(0) = 0.0;
 		pixel(1) = 0.0;
-		Bool ok = cSys.toWorld(world, pixel);
+		/*Bool ok =*/ cSys.toWorld(world, pixel);
 
 // Account for start of image display from start of pixel canvas
 // I can't seem to get this quite right... But it's seems to be
@@ -259,7 +259,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Convert blc world to subimage pixel
 
-		ok = cSys.toPixel(pixel, world);
+		/*ok =*/ cSys.toPixel(pixel, world);
 //
 		Float dx = Float(wcPtr->canvasDrawXOffset()) + Float(wcPtr->canvasXOffset());
 		Float dy = Float(wcPtr->canvasDrawYOffset()) + Float(wcPtr->canvasYOffset());

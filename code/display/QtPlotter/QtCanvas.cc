@@ -595,7 +595,7 @@ namespace casa {
 			double x = getDataX( mouseX );
 			double y = getDataY( mouseY );
 
-			QtPlotSettings settings = zoomStack[curZoom];
+			//QtPlotSettings settings = zoomStack[curZoom];
 			QString ptCoords = findCoords( x, y );
 			if ( ! ptCoords.isNull() && ! ptCoords.isEmpty() ) {
 				QToolTip::showText(event->globalPos(), ptCoords );
@@ -998,7 +998,7 @@ namespace casa {
 
 	void QtCanvas::drawFrameMarker( QPainter* painter ) {
 		QRect rect( MARGIN_LEFT, MARGIN_TOP, getRectWidth(), getRectHeight());
-		QtPlotSettings settings = zoomStack[curZoom];
+		//QtPlotSettings settings = zoomStack[curZoom];
 		QPen framePen( frameMarkerColor );
 		QPen oldPen = painter->pen();
 		painter->setPen( framePen );
@@ -1190,7 +1190,7 @@ namespace casa {
 		}
 		QFont font(yLabel.fontName, yLabel.fontSize);
 		font.setBold( true );
-		QRect fontBoundingRect = QFontMetrics(font).boundingRect(yLabel.text);
+		//QRect fontBoundingRect = QFontMetrics(font).boundingRect(yLabel.text);
 		font.setPixelSize(50);
 		painter->rotate(-90);
 		painter->drawText(-height(), 0, height(), MARGIN_LEFT/2, Qt::AlignHCenter|Qt::AlignTop, yLabel.text);

@@ -365,7 +365,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // and specializing results in multiply defined symbols on
 // Mac OSX
 	template <class T>
-	const T LatticeAsVector<T>::dataValue(IPosition pos) {
+	/*const*/ T LatticeAsVector<T>::dataValue(IPosition pos) {
 
 		// Default template (needed by compiler(?); probably not used).
 

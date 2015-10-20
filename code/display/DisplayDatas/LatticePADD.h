@@ -89,7 +89,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// required functions to help inherited "setup" amongst other things
 		virtual const IPosition dataShape() const;
 		virtual uInt dataDim() const;
-		virtual const T dataValue(IPosition pos);
+		virtual /*const*/ T dataValue(IPosition pos);
 		virtual const Unit dataUnit() const;
 
 		// Pure virtual function from DisplayData...

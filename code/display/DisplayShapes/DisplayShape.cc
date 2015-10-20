@@ -395,7 +395,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 	Bool DisplayShape::setOptions(const Record& settings) {
 		Bool localChange = False;
-		Bool handleRebuild = False;
+		//Bool handleRebuild = False;
 
 		//Pick out all the settings I'm interested in.
 		if (itsColor->fromRecord(settings)) localChange = True;
@@ -412,7 +412,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				Int newSize = settings.asInt("handlesize");
 				if (itsHandleSize != newSize) {
 					itsHandleSize = newSize;
-					handleRebuild = True;
+					//handleRebuild = True;
 				}
 			}
 
@@ -426,7 +426,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 				if (cast != itsHandleShape) {
 					itsHandleShape = cast;
-					handleRebuild = True;
+					//handleRebuild = True;
 				}
 
 			}

@@ -368,9 +368,9 @@ namespace casa {
 			}
 		}
 
-		void QtRegionDock::stack_changed( int index ) {
+		void QtRegionDock::stack_changed( int /*index*/ ) {
 
-			static int last_index = -1;
+			//static int last_index = -1;
 			int size = region_stack->count( );
 			region_scroll->setMaximum( size > 0 ? size - 1 : 0 );
 			if ( size <= 0 ) {
@@ -391,7 +391,7 @@ namespace casa {
 				// box is empty... e.g. after being deleted while updating
 				region_scroll->setEnabled(false);
 				dismiss_region->setEnabled(false);
-				last_index = 0;
+				//last_index = 0;
 				return;
 			}
 
@@ -414,7 +414,7 @@ namespace casa {
 				state->emitRefresh( );
 			}
 #endif
-			last_index = index;
+			//last_index = index;
 		}
 
 		int QtRegionDock::numFrames( ) const {
