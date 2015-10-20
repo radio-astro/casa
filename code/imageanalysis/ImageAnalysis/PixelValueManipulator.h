@@ -108,6 +108,20 @@ public:
 
 	String getClass() const { return _className; }
 
+	// Make a block of regions from a Record
+	// public so ImageAnalysis can use it, once those methods have been
+	// excised, make private
+	static void makeRegionBlock(
+	    PtrBlock<const ImageRegion*>& regions,
+	    const Record& Regions
+	);
+
+	// set specified pixels or mask equal to provided scalar value
+	static Bool set(
+	    SPIIF image, const String& pixels, const Int pixelmask,
+	    Record& region, const Bool list = false
+	);
+
 	// set region name for logging purposes. Only used if the logfile is set.
 	void setRegionName(const String& rname) { _regionName = rname; }
 
@@ -146,6 +160,8 @@ private:
 		const String& unit, PixelValueManipulatorData::SpectralType specType,
 		const Quantity *const restFreq, const String& axisUnit
 	) const;
+
+
 };
 
 }

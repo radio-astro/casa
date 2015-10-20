@@ -227,9 +227,6 @@ public:
         const bool extendMask=False
     );
 
-    Bool set(const String& pixels, const Int pixelmask, 
-             Record& region, const Bool list = false);
-
     bool setcoordsys(const Record& csys);
 
     inline static String className() {const static String x = "ImageAnalysis"; return x; }
@@ -314,12 +311,6 @@ public:
     casa::CoordinateSystem*
       makeCoordinateSystem(const casa::Record& cSys,
                            const casa::IPosition& shape) const;
-    
-    // Make a block of regions from a Record
-    static void _makeRegionBlock(
-    	PtrBlock<const ImageRegion*>& regions,
-    	const Record& Regions
-    );
 
     // Some helper functions that needs to be in casa namespace coordsys
 

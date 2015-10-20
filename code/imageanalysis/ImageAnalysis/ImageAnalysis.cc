@@ -494,7 +494,7 @@ void ImageAnalysis::calc(const String& expr, Bool verbose) {
 	Record regions;
 	Block<LatticeExprNode> temps;
 	PtrBlock<const ImageRegion*> tempRegs;
-	_makeRegionBlock(tempRegs, regions);
+	PixelValueManipulator<Float>::makeRegionBlock(tempRegs, regions);
 	LatticeExprNode node = ImageExprParse::command(expr, temps, tempRegs);
 	DataType type = node.dataType();
 	Bool isReal = casa::isReal(type);
@@ -514,7 +514,7 @@ void ImageAnalysis::calc(const String& expr, Bool verbose) {
 		"Resulting image is complex valued but"
 		"the attached image is real valued"
 	);
-	_makeRegionBlock(tempRegs, Record());
+	PixelValueManipulator<Float>::makeRegionBlock(tempRegs, Record());
 	if (verbose) {
 		*_log << LogIO::WARN << "Overwriting pixel values "
 			<< "of the currently attached image"
@@ -543,11 +543,11 @@ Bool ImageAnalysis::calcmask(
 	);
 	Block<LatticeExprNode> temps;
 	PtrBlock<const ImageRegion*> tempRegs;
-	_makeRegionBlock(tempRegs, regions);
+	PixelValueManipulator<Float>::makeRegionBlock(tempRegs, regions);
 	LatticeExprNode node = ImageExprParse::command(mask, temps, tempRegs);
 
 	// Delete the ImageRegions
-	_makeRegionBlock(tempRegs, Record());
+	PixelValueManipulator<Float>::makeRegionBlock(tempRegs, Record());
 
 	// Make sure the expression is Boolean
 	DataType type = node.dataType();
@@ -1735,91 +1735,6 @@ ImageInterface<Float>* ImageAnalysis::sepconvolve(
 	return pImOut;
 }
 
-Bool ImageAnalysis::set(const String& lespixels, const Int pixelmask,
-		Record& p_Region, const Bool list) {
-	_onlyFloat(__func__);
-	*_log << LogOrigin(className(), __func__);
-	String pixels(lespixels);
-	Bool setPixels(True);
-	if (pixels.length() == 0) {
-		setPixels = False;
-		pixels = "0.0";
-	}
-	Bool setMask(False);
-	Bool mask(True);
-	if (pixelmask != -1) {
-		setMask = True;
-		mask = (pixelmask > 0 ? True : False);
-	}
-	Record tempRegions;
-
-	if (!setPixels && !setMask) {
-		*_log << LogIO::WARN << "Nothing to do" << LogIO::POST;
-		return False;
-	}
-
-	// Try and make a mask if we need one.
-	if (setMask && !_imageFloat->isMasked()) {
-		String maskName("");
-		ImageMaskAttacher::makeMask(*_imageFloat, maskName, True, True, *_log, list);
-	}
-
-	// Make region and subimage
-	Record *tmpRegion = new Record(p_Region);
-	const ImageRegion* pRegion = ImageRegion::fromRecord(
-		(list ? _log.get() : 0), _imageFloat->coordinates(), _imageFloat->shape(),
-		*tmpRegion
-	);
-	delete tmpRegion;
-	SubImage<Float> subImage(*_imageFloat, *pRegion, True);
-
-	// Set the pixels
-	if (setPixels) {
-		// Get LatticeExprNode (tree) from parser
-		// Convert the GlishRecord containing regions to a
-		// PtrBlock<const ImageRegion*>.
-		if (pixels.empty()) {
-			*_log << "You must specify an expression" << LogIO::EXCEPTION;
-		}
-		Block<LatticeExprNode> temps;
-		String exprName;
-		//String newexpr = substituteOID (temps, exprName, pixels);
-		String newexpr = pixels;
-		PtrBlock<const ImageRegion*> tempRegs;
-		_makeRegionBlock(tempRegs, tempRegions);
-		LatticeExprNode node =
-			ImageExprParse::command(newexpr, temps, tempRegs);
-		// Delete the ImageRegions (by using an empty GlishRecord).
-		_makeRegionBlock(tempRegs, Record());
-		// We must have a scalar expression
-		if (!node.isScalar()) {
-			*_log << "The pixels expression must be scalar"
-					<< LogIO::EXCEPTION;
-		}
-		if (node.isInvalidScalar()) {
-			*_log << "The scalar pixels expression is invalid"
-					<< LogIO::EXCEPTION;
-		}
-		LatticeExprNode node2 = toFloat(node);
-		// if region==T (good) set value given by pixel expression, else
-		// leave the pixels as they are
-		LatticeRegion region = subImage.region();
-		LatticeExprNode node3(iif(region, node2.getFloat(), subImage));
-		subImage.copyData(LatticeExpr<Float> (node3));
-	}
-	// Set the mask
-	if (setMask) {
-		Lattice<Bool>& pixelMask = subImage.pixelMask();
-		LatticeRegion region = subImage.region();
-		// if region==T (good) set value given by "mask", else
-		// leave the pixelMask as it is
-		LatticeExprNode node4(iif(region, mask, pixelMask));
-		pixelMask.copyData(LatticeExpr<Bool> (node4));
-	}
-
-	return True;
-}
-
 Bool ImageAnalysis::setcoordsys(const Record& coordinates) {
 	*_log << LogOrigin(className(), __func__);
 	ThrowIf(
@@ -2076,24 +1991,6 @@ Bool ImageAnalysis::toASCII(
 		nline += 1;
 	}
 	return True;
-}
-
-void ImageAnalysis::_makeRegionBlock(
-	PtrBlock<const ImageRegion*>& regions,
-	const Record& Regions
-) {
-	for (uInt j = 0; j < regions.nelements(); j++) {
-		delete regions[j];
-	}
-	regions.resize(0, True, True);
-	uInt nreg = Regions.nfields();
-	if (nreg > 0) {
-		regions.resize(nreg);
-		regions.set(static_cast<ImageRegion*> (0));
-		for (uInt i = 0; i < nreg; i++) {
-			regions[i] = ImageRegion::fromRecord(Regions.asRecord(i), "");
-		}
-	}
 }
 
 CoordinateSystem* ImageAnalysis::makeCoordinateSystem(

@@ -688,6 +688,104 @@ template<class T> Bool PixelValueManipulator<T>::putRegion(
     return True;
 }
 
+
+template<class T> Bool PixelValueManipulator<T>::set(
+    SPIIF image, const String& lespixels, const Int pixelmask,
+    Record& p_Region, const Bool list
+) {
+    LogIO mylog;
+    mylog << LogOrigin(_className, __func__);
+    auto setPixels = ! lespixels.empty();
+    auto pixels = setPixels ? lespixels : "0.0";
+
+    auto setMask = pixelmask != -1;
+    auto mask = setMask ? pixelmask > 0 : True;
+
+    if (!setPixels && !setMask) {
+        mylog << LogIO::WARN << "Nothing to do" << LogIO::POST;
+        return False;
+    }
+
+    Record tempRegions;
+
+    // Try and make a mask if we need one.
+    if (setMask && ! image->isMasked()) {
+        String maskName("");
+        ImageMaskAttacher::makeMask(*image, maskName, True, True, mylog, list);
+    }
+
+    // Make region and subimage
+    unique_ptr<Record> tmpRegion(new Record(p_Region));
+    unique_ptr<const ImageRegion> pRegion(
+        ImageRegion::fromRecord(
+            (list ? &mylog : 0), image->coordinates(), image->shape(),
+            *tmpRegion
+        )
+    );
+    SubImage<Float> subImage(*image, *pRegion, True);
+
+    // Set the pixels
+    if (setPixels) {
+        // Get LatticeExprNode (tree) from parser
+        // Convert the GlishRecord containing regions to a
+        // PtrBlock<const ImageRegion*>.
+        ThrowIf(
+            pixels.empty(), "You must specify an expression"
+        );
+        Block<LatticeExprNode> temps;
+        String exprName;
+        PtrBlock<const ImageRegion*> tempRegs;
+        makeRegionBlock(tempRegs, tempRegions);
+        LatticeExprNode node = ImageExprParse::command(pixels, temps, tempRegs);
+        // Delete the ImageRegions
+        makeRegionBlock(tempRegs, Record());
+        // We must have a scalar expression
+        ThrowIf(
+            ! node.isScalar(), "The pixels expression must be scalar"
+        );
+        ThrowIf(
+            node.isInvalidScalar(),
+            "The scalar pixels expression is invalid"
+        );
+        LatticeExprNode node2 = toFloat(node);
+        // if region==T (good) set value given by pixel expression, else
+        // leave the pixels as they are
+        LatticeRegion region = subImage.region();
+        LatticeExprNode node3(iif(region, node2.getFloat(), subImage));
+        subImage.copyData(LatticeExpr<Float> (node3));
+    }
+    // Set the mask
+    if (setMask) {
+        Lattice<Bool>& pixelMask = subImage.pixelMask();
+        LatticeRegion region = subImage.region();
+        // if region==T (good) set value given by "mask", else
+        // leave the pixelMask as it is
+        LatticeExprNode node4(iif(region, mask, pixelMask));
+        pixelMask.copyData(LatticeExpr<Bool> (node4));
+    }
+    return True;
+}
+
+template<class T> void PixelValueManipulator<T>::makeRegionBlock(
+    PtrBlock<const ImageRegion*>& regions,
+    const Record& Regions
+) {
+    auto n = regions.size();
+    for (uInt j=0; j<n; ++j) {
+        delete regions[j];
+    }
+    regions.resize(0, True, True);
+    uInt nreg = Regions.nfields();
+    if (nreg > 0) {
+        regions.resize(nreg);
+        regions.set(static_cast<ImageRegion*> (0));
+        for (uInt i=0; i<nreg; ++i) {
+            regions[i] = ImageRegion::fromRecord(Regions.asRecord(i), "");
+        }
+    }
+}
+
+
 }
 
 
