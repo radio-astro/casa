@@ -44,7 +44,7 @@ def toolhelp():
     print ' fn : Functional utilities'
     print ' ia : Image analysis utilities'
     print ' im : Imaging utilities'
-    print 'lm: linear mosaic '
+    print ' lm: linear mosaic '
     print ' me : Measures utilities'
     print ' ms : MeasurementSet (MS) utilities'
     print ' msmd : MS metadata accessors'
