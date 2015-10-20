@@ -399,6 +399,7 @@ class VisibilityIterator2
 public:
 
   VisibilityIterator2( const VisibilityIterator2& ) = delete;
+  VisibilityIterator2& operator=( const VisibilityIterator2& ) = delete;
   class Factory { // Interface for implementation creation factory
 
   public:

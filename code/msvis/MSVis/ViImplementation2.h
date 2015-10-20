@@ -132,6 +132,7 @@ public:
 
     // make noncopyable...
     ViImplementation2( const ViImplementation2& ) = delete;
+    ViImplementation2& operator=( const ViImplementation2& ) = delete;
     ViImplementation2 () {}
 
     // Destructor

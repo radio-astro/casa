@@ -215,6 +215,7 @@ public:
 
     // make noncopyable...
     Logger( const Logger& ) = delete;
+    Logger& operator=( const Logger& ) = delete;
 
     void log (const char * format, ...);
     void registerName (const String & threadName);

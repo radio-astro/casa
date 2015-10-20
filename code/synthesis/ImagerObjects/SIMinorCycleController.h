@@ -44,6 +44,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // make noncopyable...
     SIMinorCycleController( const SIMinorCycleController& ) = delete;
+    SIMinorCycleController &operator=( const SIMinorCycleController& ) = delete;
     SIMinorCycleController();
 
     virtual ~SIMinorCycleController();

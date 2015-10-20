@@ -574,6 +574,7 @@ class AsynchronousInterface {
 public:
 
     AsynchronousInterface( const AsynchronousInterface& ) = delete;
+    AsynchronousInterface& operator=( const AsynchronousInterface& ) = delete;
     AsynchronousInterface (int maxNBuffers);
     ~AsynchronousInterface ();
 
