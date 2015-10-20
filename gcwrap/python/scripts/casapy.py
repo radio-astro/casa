@@ -1404,7 +1404,10 @@ casa['state']['startup'] = False
 #print 'casapy.log exists:', os.path.exists('casapy.log')
 
 if (thelogfile == 'null' or thelogfile != 'casapy.log') and os.path.exists('casapy.log'):
-    os.remove('casapy.log')
+    try:
+        os.remove('casapy.log')
+    except OSError:
+        pass
 
 # initialize/finalize Sakura library
 if hasattr(casac,'sakura'):
