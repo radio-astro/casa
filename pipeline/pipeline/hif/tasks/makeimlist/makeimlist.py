@@ -278,7 +278,8 @@ class MakeImList(basetask.StandardTaskTemplate):
                   field_intent_list=field_intent_list, spwspec=spwspec)
                 if (cells[spwspec] != ['invalid']):
                     min_cell = cells[spwspec] if (qaTool.convert(cells[spwspec][0], 'arcsec')['value'] < qaTool.convert(min_cell[0], 'arcsec')['value']) else min_cell
-            min_cell = ['%s%s' % (round(qaTool.getvalue(min_cell[0]), 2), qaTool.getunit(min_cell[0]))]
+            # Rounding to two significant figures
+            min_cell = ['%.2g%s' % (qaTool.getvalue(min_cell[0]), qaTool.getunit(min_cell[0]))]
             # Use same cell size for all spws (in a band (TODO))
             for spwspec in spwlist:
                 if (cells[spwspec] != ['invalid']):
