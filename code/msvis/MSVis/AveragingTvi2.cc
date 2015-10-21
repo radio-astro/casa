@@ -388,6 +388,7 @@ public:
     int nSpectralWindowsInBuffer () const;
     void setBufferToFill (VisBufferImpl2 *);
     void startChunk (ViImplementation2 *);
+    Int getBaselineIndex (Int antenna1, Int antenna2, Int spw) const;
 
 protected:
 
@@ -1413,6 +1414,14 @@ VbAvg::getBaselineIndex (const MsRow * msRow) const
     return index;
 }
 
+Int
+VbAvg::getBaselineIndex (Int antenna1, Int antenna2, Int spw) const
+{
+    Int index = baselineIndex_p (antenna1, antenna2, spw);
+
+    return index;
+}
+
 void
 VbAvg::finalizeAverages ()
 {
@@ -1453,13 +1462,24 @@ VbAvg::finalizeBaseline (MsRowAvg * msRowAvg)
     transferBaseline (msRowAvg);
 }
 
+// Functor to divide variables of possibly different types.
+// This is unlike std::divides which requires equal types.
+template <typename L, typename R=L, typename RES=L>
+struct DividesNonZero : public std::binary_function<L,R,RES>
+{
+  RES operator() (const L& x, const R& y) const
+  {
+    { return y > 0? RES(x)/y : RES(x); }
+  }
+};
+
 
 void
 VbAvg::finalizeCubeData (MsRowAvg * msRow)
 {
     // Divide each of the data cubes in use by the sum of the appropriate weights.
 
-    typedef Divides <Complex, Float, Complex> DivideOp;
+    typedef DividesNonZero <Complex, Float, Complex> DivideOp;
     DivideOp op;
 
     if (doing_p.correctedData_p)
@@ -2554,18 +2574,51 @@ AveragingTvi2::average (const Cube<Float> &data, const Cube<Bool> &flags)
 // -----------------------------------------------------------------------
 void AveragingTvi2::writeFlag (const Cube<Bool> & flag)
 {
+	// Create index map for averaged data
+	VisBuffer2 *avgVB = getVisBuffer();
+	Vector<Int> avgAnt1 = avgVB->antenna1();
+	Vector<Int> avgAnt2 = avgVB->antenna2();
+	Vector<Int> avgSPW = avgVB->spectralWindows();
+
+	std::map< Int, std::map <Int, std::map< Int, uInt> >  > spwAnt1Ant2IndexMap;
+	for (uInt avgRow=0;avgRow<avgAnt1.size();avgRow++)
+	{
+		spwAnt1Ant2IndexMap[avgSPW(avgRow)][avgAnt1(avgRow)][avgAnt2(avgRow)] = avgRow;
+	}
+
 	// Calculate FLAG_ROW from flag
 	Vector<Bool> flagRow;
 	TransformingVi2::calculateFlagRowFromFlagCube(flag,flagRow);
 
+	// Propagate transformed flags
 	getVii()->origin();
 	Int currentBuffer = 0;
 	while (getVii()->more())
 	{
 		if ((currentBuffer >= startBuffer_p) and (currentBuffer <= endBuffer_p))
 		{
-			getVii()->writeFlag(flag);
-			getVii()->writeFlagRow(flagRow);
+			// Allocated propagated flag vector/cube
+			uInt nOriginalRows = getVii()->getVisBuffer()->nRows();
+			Vector<Bool> flagMapped(nOriginalRows,False);
+			Cube<Bool> flagCubeMapped(flag.shape()(0),flag.shape()(1),nOriginalRows,False);
+
+			// Get original ant1/ant2/spw cols. to determine the mapped index
+			Vector<Int> orgAnt1 = getVii()->getVisBuffer()->antenna1();
+			Vector<Int> orgAnt2 = getVii()->getVisBuffer()->antenna2();
+			Vector<Int> orgSPW = getVii()->getVisBuffer()->spectralWindows();
+
+			// Fill propagated flag vector/cube
+			for (uInt row=0;row<nOriginalRows;row++)
+			{
+				uInt index = spwAnt1Ant2IndexMap[orgSPW(row)][orgAnt1(row)][orgAnt2(row)];
+				flagMapped(row) = flagRow(index);
+				flagCubeMapped.xyPlane(row) = flag.xyPlane(index);
+			}
+
+			// Write propagated flag vector/cube
+			getVii()->writeFlag(flagCubeMapped);
+			getVii()->writeFlagRow(flagMapped);
+
 		}
 
 		currentBuffer += 1;
@@ -2579,15 +2632,46 @@ void AveragingTvi2::writeFlag (const Cube<Bool> & flag)
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-void AveragingTvi2::writeFlagRow (const Vector<Bool> & rowflags)
+void AveragingTvi2::writeFlagRow (const Vector<Bool> & flagRow)
 {
+	// Create index map for averaged data
+	VisBuffer2 *avgVB = getVisBuffer();
+	Vector<Int> avgAnt1 = avgVB->antenna1();
+	Vector<Int> avgAnt2 = avgVB->antenna2();
+	Vector<Int> avgSPW = avgVB->spectralWindows();
+
+	std::map< Int, std::map <Int, std::map< Int, uInt> >  > spwAnt1Ant2IndexMap;
+	for (uInt avgRow=0;avgRow<avgAnt1.size();avgRow++)
+	{
+		spwAnt1Ant2IndexMap[avgSPW(avgRow)][avgAnt1(avgRow)][avgAnt2(avgRow)] = avgRow;
+	}
+
+	// Propagate transformed flags
 	getVii()->origin();
 	Int currentBuffer = 0;
 	while (getVii()->more())
 	{
 		if ((currentBuffer >= startBuffer_p) and (currentBuffer <= endBuffer_p))
 		{
-			getVii()->writeFlagRow(rowflags);
+			// Allocated propagated flag vector/cube
+			uInt nOriginalRows = getVii()->getVisBuffer()->nRows();
+			Vector<Bool> flagMapped(nOriginalRows,False);
+
+			// Get original ant1/ant2/spw cols. to determine the mapped index
+			Vector<Int> orgAnt1 = getVii()->getVisBuffer()->antenna1();
+			Vector<Int> orgAnt2 = getVii()->getVisBuffer()->antenna2();
+			Vector<Int> orgSPW = getVii()->getVisBuffer()->spectralWindows();
+
+			// Fill propagated flag vector/cube
+			for (uInt row=0;row<nOriginalRows;row++)
+			{
+				uInt index = spwAnt1Ant2IndexMap[orgSPW(row)][orgAnt1(row)][orgAnt2(row)];
+				flagMapped(row) = flagRow(index);
+			}
+
+			// Write propagated flag vector/cube
+			getVii()->writeFlagRow(flagMapped);
+
 		}
 
 		currentBuffer += 1;
