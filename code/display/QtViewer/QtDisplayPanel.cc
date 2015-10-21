@@ -65,6 +65,8 @@
 #include <QtGui/QToolTip>
 
 #include <iostream>
+#include <cassert>
+
 using namespace std;
 namespace casa { //# NAMESPACE CASA - BEGIN
 

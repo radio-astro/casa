@@ -32,7 +32,6 @@ using namespace asdmbinaries;
 
 #include "asdm2MSGeneric.h"
 #include <boost/algorithm/string.hpp>
-#include <boost/regex.hpp>
 using namespace boost;
 
 #include <boost/filesystem/path.hpp>

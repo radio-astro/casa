@@ -29,7 +29,8 @@
 #define ANNOTATIONS_ANNOTATIONBASE_H
 
 #include <coordinates/Coordinates/CoordinateSystem.h>
-#include <boost/regex.hpp>
+#include <regex>
+#include <list>
 
 #include <measures/Measures/Stokes.h>
 
@@ -141,7 +142,7 @@ public:
 	static const String DEFAULT_LABELPOS;
 	static const vector<Int> DEFAULT_LABELOFF;
 
-	static const boost::regex rgbHexRegex;
+	static const std::regex rgbHexRegex;
 
 	virtual ~AnnotationBase();
 

@@ -32,7 +32,7 @@
  */
 #include "ASDMTables.h"
 #include "Name2Table.h"
-#include "boost/regex.hpp"
+#include <regex>
 #include "boost/tokenizer.hpp"
 #include "boost/algorithm/string.hpp"
 
