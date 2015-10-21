@@ -2919,10 +2919,10 @@ namespace sdmbin {
 	vmsData_p->v_flag.push_back(v_msDataPtr_[n]->flag);
 
 	vmsData_p->v_atmPhaseCorrection = v_msDataPtr_[n]->v_atmPhaseCorrection;
-	map<AtmPhaseCorrection,boost::shared_array<float> > m_vdata;
+	map<AtmPhaseCorrection,std::shared_ptr<float> > m_vdata;
 	for(unsigned int napc=0; napc<vmsData_p->v_atmPhaseCorrection.size(); napc++){
 	  float* d=v_msDataPtr_[n]->v_data[napc];
-	  boost::shared_array<float> d_sp(d);
+	  std::shared_ptr<float> d_sp(d);
 	  m_vdata.insert(make_pair(vmsData_p->v_atmPhaseCorrection[napc],d_sp));
 	}
 	vmsData_p->v_m_data.push_back(m_vdata);
@@ -2955,10 +2955,10 @@ namespace sdmbin {
 	vmsData_p->v_flag.push_back(v_msDataPtr_[n]->flag);
 
 	vmsData_p->v_atmPhaseCorrection = v_msDataPtr_[n]->v_atmPhaseCorrection;
-	map<AtmPhaseCorrection, boost::shared_array<float> > m_vdata;
+	map<AtmPhaseCorrection, std::shared_ptr<float> > m_vdata;
 	for(unsigned int napc=0; napc<vmsData_p->v_atmPhaseCorrection.size(); napc++){
 	  float* d=v_msDataPtr_[n]->v_data[napc];
-	  boost::shared_array<float> d_sp(d);
+	  std::shared_ptr<float> d_sp(d);
 	  m_vdata.insert(make_pair(vmsData_p->v_atmPhaseCorrection[napc],d_sp));
 	}
 	vmsData_p->v_m_data.push_back(m_vdata);
