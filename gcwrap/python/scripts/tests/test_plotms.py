@@ -19,7 +19,6 @@ if os.environ.has_key('TEST_DATADIR'):
     DATADIR = str(os.environ.get('TEST_DATADIR'))+'/plotms/'
     if os.path.isdir(DATADIR):
         datapath = DATADIR         
-        calpath = datapath + "/gaincal/"
 
 print 'plotms tests will use data from '+ datapath
 
@@ -152,63 +151,72 @@ class plotms_test_basic(plotms_test_base):
 
     def test_basic_overplot2MS(self):
         '''test_basic_overplot2MS: Overplot two data sets on one plot.'''
-        self.plotfile_jpg = self.outputDir + "testBasic04.jpg"
-        self.removePlotfile()
-        time.sleep(5)
-        # Plot first MS scan vs time
-        res = plotms(vis=self.ms, 
-                     showgui=False, yaxis='scan',
-                     showlegend=True, legendposition='lowerRight',
-                     customsymbol=[True], symbolshape=['diamond'], symbolsize=[3],
-                     symbolcolor=['ff0000'], symbolfill=['mesh3'])
-        self.assertTrue(res)
-        # Plot second MS field vs time and export it
-        res = plotms(vis=self.ms2, plotfile=self.plotfile_jpg, expformat='jpg', 
-                     showgui=False, yaxis='field',
-                     rowindex=0, colindex=0, plotindex=1, clearplots=False,
-                     showlegend=True, legendposition='lowerRight',
-                     customsymbol=[True], symbolshape=['circle'], symbolsize=[3],
-                     symbolcolor=['00FF00'], symbolfill=['mesh3'])   
-        self.assertTrue(res) 
-        self.checkPlotfile(self.plotfile_jpg, 55000)    
+        if os.path.exists(self.ms2):
+            self.plotfile_jpg = self.outputDir + "testBasic04.jpg"
+            self.removePlotfile()
+            time.sleep(5)
+            # Plot first MS scan vs time
+            res = plotms(vis=self.ms, 
+                         showgui=False, yaxis='scan',
+                         showlegend=True, legendposition='lowerRight',
+                         customsymbol=[True], symbolshape=['diamond'], symbolsize=[3],
+                         symbolcolor=['ff0000'], symbolfill=['mesh3'])
+            self.assertTrue(res)
+            # Plot second MS field vs time and export it
+            res = plotms(vis=self.ms2, plotfile=self.plotfile_jpg, expformat='jpg', 
+                         showgui=False, yaxis='field',
+                         rowindex=0, colindex=0, plotindex=1, clearplots=False,
+                         showlegend=True, legendposition='lowerRight',
+                         customsymbol=[True], symbolshape=['circle'], symbolsize=[3],
+                         symbolcolor=['00FF00'], symbolfill=['mesh3'])   
+            self.assertTrue(res) 
+            self.checkPlotfile(self.plotfile_jpg, 55000)
+        else:
+            print "Skipping test, no path to alternate MS"
         print
 
     def test_basic_overplot2MS_freq(self):
         '''test_basic_overplot2MS_freq: CAS-6975 overplotting problem'''
-        self.plotfile_jpg = self.outputDir + "testBasic05.jpg"
-        self.removePlotfile()
-        time.sleep(5)
-        # Create the first plot
-        res = plotms(vis=self.ms, showgui=False,
-                     xaxis="freq", yaxis="phase", avgchannel="63")
-        self.assertTrue(res)
-        # Do an overplot with a different file
-        res = plotms(vis=self.ms2, showgui=False, plotfile=self.plotfile_jpg,
-                     xaxis="freq", yaxis="phase", avgchannel="63",
-                     plotindex=1, clearplots=False) 
-        self.assertTrue(res)
-        self.checkPlotfile(self.plotfile_jpg, 40000)   
+        if os.path.exists(self.ms2):
+            self.plotfile_jpg = self.outputDir + "testBasic05.jpg"
+            self.removePlotfile()
+            time.sleep(5)
+            # Create the first plot
+            res = plotms(vis=self.ms, showgui=False,
+                         xaxis="freq", yaxis="phase", avgchannel="63")
+            self.assertTrue(res)
+            # Do an overplot with a different file
+            res = plotms(vis=self.ms2, showgui=False, plotfile=self.plotfile_jpg,
+                         xaxis="freq", yaxis="phase", avgchannel="63",
+                         plotindex=1, clearplots=False) 
+            self.assertTrue(res)
+            self.checkPlotfile(self.plotfile_jpg, 40000)   
+        else:
+            print "Skipping test, no path to alternate MS"
         print
 
     def test_basic_overplot2colors(self):
         '''test_basic_overplot2colors: CAS-7043 Create overplot with different color for each'''
-        self.plotfile_jpg = self.outputDir + "testBasic06.jpg"
-        self.removePlotfile()
-        time.sleep(5)
-        # Create the first plot
-        res = plotms(vis=self.ms, showgui=False,
-                     xaxis="time", yaxis="amp", antenna="1", avgchannel="1000",
-                     customsymbol=True, symbolshape='diamond', 
-                     symbolsize=5,symbolcolor='00ff00')
-        self.assertTrue(res)
-        # Do an overplot with a different file
-        res = plotms(vis=self.ms2, showgui=False, plotfile=self.plotfile_jpg,
-                     xaxis="time", yaxis="amp", antenna="!1",avgchannel="1000",
-                     plotindex=1, clearplots=False, 
-                     customsymbol=True, symbolshape='diamond',
-                     symbolsize=1, symbolcolor='0000ff')
-        self.assertTrue(res)
-        self.checkPlotfile(self.plotfile_jpg, 60000)   
+        if os.path.exists(self.ms2):
+            self.plotfile_jpg = self.outputDir + "testBasic06.jpg"
+            self.removePlotfile()
+            time.sleep(5)
+            # Create the first plot
+            res = plotms(vis=self.ms, showgui=False,
+                         xaxis="time", yaxis="amp", antenna="1", avgchannel="1000",
+                         customsymbol=True, symbolshape='diamond', 
+                         symbolsize=5,symbolcolor='00ff00')
+            self.assertTrue(res)
+            # Do an overplot with a different file
+            res = plotms(vis=self.ms2, showgui=False, plotfile=self.plotfile_jpg,
+                         xaxis="time", yaxis="amp", antenna="!1",avgchannel="1000",
+                         plotindex=1, clearplots=False, 
+                         customsymbol=True, symbolshape='diamond',
+                         symbolsize=1, symbolcolor='0000ff')
+            self.assertTrue(res)
+            self.checkPlotfile(self.plotfile_jpg, 60000)   
+        else:
+            print "Skipping test, no path to alternate MS"
         print
 
 # ------------------------------------------------------------------------------
@@ -501,25 +509,28 @@ class plotms_test_calibration(plotms_test_base):
 
     def test_calibration_callib(self):
         '''test_calibration_callib: CAS-3034, CAS-7502 callib parameter for OTF calibration'''
-        self.plotfile_jpg = self.outputDir + "testCalibration01.jpg"
-        self.removePlotfile()
-        time.sleep(5)
+        if os.path.exists(calpath):
+            self.plotfile_jpg = self.outputDir + "testCalibration01.jpg"
+            self.removePlotfile()
+            time.sleep(5)
 
-        # Need this ms to be writeable for calibration
-        msfile = calpath + "ngc5921.ms"
-        newmsfile = "/tmp/ngc5921.ms"
-        if os.path.exists(newmsfile):
-            shutil.rmtree(newmsfile)
-        shutil.copytree(msfile, newmsfile)
+            # Need this ms to be writeable for calibration
+            msfile = calpath + "ngc5921.ms"
+            newmsfile = "/tmp/ngc5921.ms"
+            if os.path.exists(newmsfile):
+                shutil.rmtree(newmsfile)
+            shutil.copytree(msfile, newmsfile)
 
-        calfile = calpath + "ngc5921.ref1a.gcal"
-        # callib is a string not a filename
-        callib = "caltable='" + calfile + "' calwt=True tinterp='nearest'"
-        res = plotms(vis=newmsfile, plotfile = self.plotfile_jpg, 
-                     ydatacolumn="corrected", xaxis="frequency",
-                     showgui=False, callib=callib)
-        self.assertTrue(res)
-        self.checkPlotfile(self.plotfile_jpg, 250000)
+            calfile = calpath + "ngc5921.ref1a.gcal"
+            # callib is a string not a filename
+            callib = "caltable='" + calfile + "' calwt=True tinterp='nearest'"
+            res = plotms(vis=newmsfile, plotfile = self.plotfile_jpg, 
+                         ydatacolumn="corrected", xaxis="frequency",
+                         showgui=False, callib=callib)
+            self.assertTrue(res)
+            self.checkPlotfile(self.plotfile_jpg, 250000)
+        else:
+            print "Skipping test, no path to calibration tables"
         print 
 
     def test_calibration_badcallib(self):
