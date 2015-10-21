@@ -40,7 +40,7 @@
 #include <iostream>
 #include <iomanip>
 
-#include <regex>
+#include <boost/regex.hpp>
 
 #define _ORIGINB LogOrigin("ImageMetaDataBase", __FUNCTION__, WHERE)
 
@@ -326,11 +326,11 @@ uInt ImageMetaDataBase::_ndim() const {
 uInt ImageMetaDataBase::_getAxisNumber(
 	const String& key
 ) const {
-	using namespace std::regex_constants;
 	uInt n = 0;
 	string sre = key.substr(0, 5) + "[0-9]+";
-	std::regex re(sre,icase);
-	if (std::regex_match(key, re)) {
+	boost::regex re;
+	re.assign(sre, boost::regex_constants::icase);
+	if (boost::regex_match(key, re)) {
 		n = String::toInt(key.substr(5));
 		uInt ndim = _ndim();
 		if (n == 0) {

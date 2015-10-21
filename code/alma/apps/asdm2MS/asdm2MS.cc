@@ -35,6 +35,8 @@ using namespace boost;
 #include <boost/filesystem/convenience.hpp>
 using namespace boost::filesystem;
 
+#include <boost/regex.hpp> 
+
 #include <ASDMAll.h>
 
 #include "SDMBinData.h"

@@ -31,6 +31,8 @@ using namespace boost;
 #include <boost/filesystem/convenience.hpp>
 using namespace boost::filesystem;
 
+#include <boost/regex.hpp> 
+
 #include <boost/lambda/lambda.hpp>
 #include <boost/lambda/bind.hpp>
 #include <boost/lambda/casts.hpp>
