@@ -42,12 +42,8 @@ using namespace casa::async;
 #include <cstdarg>
 #include <functional>
 
-#include <boost/lambda/lambda.hpp>
-#include <boost/function.hpp>
-
 #include "UtilJ.h"
 
-using namespace boost;
 using namespace casa::utilj;
 using namespace std;
 using namespace casa::asyncio;
