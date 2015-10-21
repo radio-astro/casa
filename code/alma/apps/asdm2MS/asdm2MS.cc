@@ -7141,7 +7141,7 @@ int main(int argc, char *argv[]) {
     
     // Did we have problem with BDF with data not falling in the time range of their scan/subscan pair ?
     const vector<string>& report = msMainRowsInSubscanChecker.report();
-    for_each(report.begin(), report.end(), bind(warning, _1)); 
+    for_each(report.begin(), report.end(), warning ); 
     
     infostream.str("");
     infostream << "The dataset has "  << stateT.size() << " state(s)..." ;

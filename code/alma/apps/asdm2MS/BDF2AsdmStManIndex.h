@@ -11,20 +11,17 @@
 #include <casa/Containers/BlockIO.h>
 #include <map>
 
-#include <boost/lambda/lambda.hpp>
-#include <boost/lambda/bind.hpp>
-#include <boost/lambda/casts.hpp>
 #include <stdint.h>
+#include <algorithm>
 
-using namespace boost::lambda;
 /*
 ** A simplistic tracing toolbox.
 */
 extern bool debug; 
 extern vector<char> logIndent;
-#define LOGENTER(name) if (debug) {for_each(logIndent.begin(), logIndent.end(), cout << _1); logIndent.push_back('\t'); cout << #name ": entering" << endl;}
-#define LOGEXIT(name)  if (debug) {logIndent.pop_back(); for_each(logIndent.begin(), logIndent.end(), cout << _1); cout << #name ": exiting" << endl;}
-#define LOG(msg) if (debug) {for_each(logIndent.begin(), logIndent.end(), cout << _1); cout << msg << endl;}
+#define LOGENTER(name) if (debug) { std::for_each(logIndent.begin(), logIndent.end(), [](char v) { cout << v; }); logIndent.push_back('\t'); cout << #name ": entering" << endl; }
+#define LOGEXIT(name)  if (debug) { logIndent.pop_back(); std::for_each(logIndent.begin(), logIndent.end(), [](char v) { cout << v; } ); cout << #name ": exiting" << endl; }
+#define LOG(msg) if (debug) { std::for_each(logIndent.begin(), logIndent.end(), [](char v) { cout << v; } ); cout << msg << endl; }
 
 class BDF2AsdmStManIndex {
 public:
