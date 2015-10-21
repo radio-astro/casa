@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id$
-#include <boost/math/special_functions/round.hpp>
+#include <cmath>
 
 
 #include <casa/Quanta/Quantum.h>
@@ -858,8 +858,8 @@ using namespace casa::vi;
     for (Int f=0; f<nvchan; ++f){
       for (Int k=0; k <2; ++k){
 	pos=(scale[k])*uvw[3*row+k]*(freq[f])/C::c+((offset[k])+1.0);
-	loc[(rowoff+f)*nel+k]=boost::math::iround(pos);
-	off[(rowoff+f)*nel+k]=boost::math::iround((Double(loc[(rowoff+f)*nel+k])-pos)*Double(sampling));
+	loc[(rowoff+f)*nel+k]=std::lround(pos);
+	off[(rowoff+f)*nel+k]=std::lround((Double(loc[(rowoff+f)*nel+k])-pos)*Double(sampling));
 	//off[(rowoff+f)*2+k]=(loc[(rowoff+f)*2+k]-pos(k))*sampling;	
       }
       phase=-Double(2.0)*C::pi*dphase[row]*(freq[f])/C::c;
@@ -868,7 +868,7 @@ using namespace casa::vi;
       ///This is for W-Projection
       if(doW){
 	pos=sqrt(fabs(scale[2]*uvw[3*row+2]*(freq[f])/C::c))+offset[2]+1.0;
-	loc[(rowoff+f)*nel+2]=boost::math::iround(pos);
+	loc[(rowoff+f)*nel+2]=std::lround(pos);
 	off[(rowoff+f)*nel+2]=0;
       }
     }

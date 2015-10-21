@@ -36,23 +36,20 @@
 
 #include <iomanip>
 
-#include <boost/assign.hpp>
-
 using namespace std;
-using namespace boost::assign;
 
 namespace casa {
 
 const AnnotationBase::RGB AnnotationBase::BLACK(3, 0.0);
-const AnnotationBase::RGB AnnotationBase::BLUE = list_of(0.0)(0.0)(255.0);
-const AnnotationBase::RGB AnnotationBase::CYAN = list_of(255.0)(255.0)(0.0);
-const AnnotationBase::RGB AnnotationBase::GRAY = list_of(190.0)(190.0)(190.0);
-const AnnotationBase::RGB AnnotationBase::GREEN = list_of(0.0)(255.0)(0.0);
-const AnnotationBase::RGB AnnotationBase::MAGENTA = list_of(255.0)(0.0)(255.0);
-const AnnotationBase::RGB AnnotationBase::ORANGE = list_of(255.0)(165.0)(0.0);
-const AnnotationBase::RGB AnnotationBase::RED = list_of(255.0)(0.0)(0.0);
+const AnnotationBase::RGB AnnotationBase::BLUE{0.0,0.0,255.0};
+const AnnotationBase::RGB AnnotationBase::CYAN{255.0,255.0,0.0};
+const AnnotationBase::RGB AnnotationBase::GRAY{190.0,190.0,190.0};
+const AnnotationBase::RGB AnnotationBase::GREEN{0.0,255.0,0.0};
+const AnnotationBase::RGB AnnotationBase::MAGENTA{255.0,0.0,255.0};
+const AnnotationBase::RGB AnnotationBase::ORANGE{255.0,165.0,0.0};
+const AnnotationBase::RGB AnnotationBase::RED{255.0,0.0,0.0};
 const AnnotationBase::RGB AnnotationBase::WHITE(3, 255.0);
-const AnnotationBase::RGB AnnotationBase::YELLOW = list_of(255.0)(255.0)(0.0);
+const AnnotationBase::RGB AnnotationBase::YELLOW{255.0,255.0,0.0};
 
 const String AnnotationBase::DEFAULT_LABEL = "";
 const AnnotationBase::RGB AnnotationBase::DEFAULT_COLOR = AnnotationBase::GREEN;
