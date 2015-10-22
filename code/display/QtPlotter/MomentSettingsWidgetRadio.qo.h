@@ -37,10 +37,10 @@
 
 namespace casa {
 
-	class ImageAnalysis;
 	class MomentCollapseThreadRadio;
 	class ThresholdingBinPlotDialog;
 	class Converter;
+	template <class T> class ImageMoments;
 	template <class T> class ImageInterface;
 
 	class CollapseResult {
@@ -76,15 +76,15 @@ namespace casa {
 	class MomentCollapseThreadRadio : public QThread, public ImageMomentsProgressMonitor {
 		Q_OBJECT
 	public:
-		MomentCollapseThreadRadio( ImageAnalysis* imageAnalysis );
+		MomentCollapseThreadRadio( ImageMoments<Float>* imageAnalysis );
 		bool isSuccess() const;
 		void setChannelStr( String str );
 		void setMomentNames( const Vector<QString>& momentNames );
 		void setOutputFileName( QString name );
 		String getErrorMessage() const;
 		std::vector<CollapseResult> getResults() const;
-		void setData(const Vector<Int>& moments, const Int axis, Record& region,
-		             const String& mask, const Vector<String>& method,
+		void setData(const Vector<Int>& moments, const Int axis,
+		             const Vector<String>& method,
 		             const Vector<Int>& smoothaxes,
 		             const Vector<String>& smoothtypes,
 		             const Vector<Quantity>& smoothwidths,
@@ -106,12 +106,11 @@ namespace casa {
 
 	private:
 		bool getOutputFileName( String& outName, int moment, const String& channelStr ) const;
-		ImageAnalysis* analysis;
+
+		ImageMoments<Float>* analysis;
 		Vector<Int> moments;
 		Vector<QString> momentNames;
 		Int axis;
-		Record region;
-		String mask;
 		String channelStr;
 		Vector<String> method;
 		Vector<Int> smoothaxes;
@@ -166,18 +165,21 @@ namespace casa {
 		void stopMoments();
 
 	private:
+		void _initAnalysis();
+		Record _makeRegionRecord( );
 		enum SummationIndex {MEAN, INTEGRATED, WEIGHTED_MEAN, DISPERSION, MEDIAN,
 		                     MEDIAN_VELOCITY, STDDEV,  RMS, ABS_MEAN_DEV, MAX, MAX_VELOCITY, MIN,
 		                     MIN_VELOCITY, END_INDEX
 		                    };
 		QMap<SummationIndex, int> momentMap;
 		Ui::MomentSettingsWidgetRadio ui;
-		ImageAnalysis* imageAnalysis;
+		ImageMoments<Float>* imageAnalysis;
 		MomentCollapseThreadRadio* collapseThread;
 		ThresholdingBinPlotDialog* thresholdingBinDialog;
 		QString outputFileName;
 		QList<QString> momentOptions;
 		QProgressDialog progressBar;
+		QString m_units;
 
 		//Progress Monitor functionality
 		int momentCount;
@@ -194,7 +196,7 @@ namespace casa {
 		String makeChannelInterval( float startChannelIndex,float endChannelIndex ) const;
 		Vector<Int> populateMoments( Vector<QString>& momentNames );
 		Vector<String> populateMethod() const;
-		String populateChannels(uInt * nSelectedChannels);
+		String populateChannels(uInt * nSelectedChannels, bool * channelOK);
 		bool populateThresholds( Vector<Float>& includeThreshold, Vector<Float>& excludeThreshold );
 		bool populateThreshold( Vector<Float>& threshold );
 	};

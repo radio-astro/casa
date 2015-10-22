@@ -25,7 +25,7 @@
 
 
 #include "MomentSettingsWidgetRadio.qo.h"
-#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
+#include <imageanalysis/ImageAnalysis/ImageMoments.h>
 #include <display/Display/DisplayCoordinateSystem.h>
 #include <display/QtPlotter/ProfileTaskMonitor.h>
 #include <display/QtPlotter/ThresholdingBinPlotDialog.qo.h>
@@ -34,6 +34,7 @@
 #include <imageanalysis/Regions/CasacRegionManager.h>
 #include <ms/MSOper/MS1ToMS2Converter.h>
 #include <display/Display/Options.h>
+#include <casa/Logging.h>
 
 #include <QFileDialog>
 #include <QTime>
@@ -42,9 +43,9 @@
 
 namespace casa {
 
-	MomentCollapseThreadRadio::MomentCollapseThreadRadio( ImageAnalysis* imageAnalysis ):
+	MomentCollapseThreadRadio::MomentCollapseThreadRadio( ImageMoments<Float>* imageAnalysis ):
 		analysis( imageAnalysis ), stepSize( 10 ), collapseError(false) {
-		imageAnalysis->setMomentsProgressMonitor( this );
+		imageAnalysis->setProgressMonitor( this );
 	}
 
 	CollapseResult::CollapseResult( const String& outputName, bool tmp, ImageInterface<Float>* img ):
@@ -90,8 +91,8 @@ namespace casa {
 		return errorMsg;
 	}
 
-	void MomentCollapseThreadRadio::setData(const Vector<Int>& mments, const Int axis, Record& region,
-	                                        const String& maskStr, const Vector<String>& methodVec,
+	void MomentCollapseThreadRadio::setData(const Vector<Int>& mments, const Int axis,
+	                                        const Vector<String>& methodVec,
 	                                        const Vector<Int>& smoothaxesVec,
 	                                        const Vector<String>& smoothtypesVec,
 	                                        const Vector<Quantity>& smoothwidthsVec,
@@ -103,8 +104,6 @@ namespace casa {
 
 		moments = mments;
 		this->axis = axis;
-		this->region = region;
-		mask = maskStr;
 		method = methodVec;
 		smoothaxes = smoothaxesVec;
 		smoothtypes = smoothtypesVec;
@@ -163,38 +162,42 @@ namespace casa {
 	void MomentCollapseThreadRadio::run() {
 		try {
 			//casa::utilj::ThreadTimes t1;
-			stopImmediately = false;
-			for ( int i = 0; i < static_cast<int>(moments.size()); i++ ) {
-				if ( stopImmediately ){
+
+			//Output file
+			String outFile;
+			bool outputFileTemporary = getOutputFileName( outFile, 0, channelStr );
+			if ( !analysis->setMoments(moments) ){
+				errorMsg = analysis->errorMessage();
+				collapseError = true;
+			}
+			else {
+				if ( !analysis->setMomentAxis( axis ) ){
+					errorMsg = analysis->errorMessage();
 					collapseError = true;
-					break;
 				}
-				Vector<int> whichMoments(1);
-				whichMoments[0] = moments[i];
+				else {
 
-				//Output file
-				String outFile;
-				bool outputFileTemporary = getOutputFileName( outFile, i, channelStr );
-				/*const String& doppler = "RADIO",  const String& outfile = "",
-				        const String& smoothout="", const String& plotter="/NULL",
-				        const Int nx=1, const Int ny=1,  const Bool yind=False,
-				        const Bool overwrite=False, const Bool drop=True,*/
-
-				ImageInterface<Float>* newImage = analysis->moments( whichMoments, axis, region,
-				                                  mask, method,
-				                                  smoothaxes, smoothtypes, smoothwidths,
-				                                  includepix,excludepix,
-				                                  peaksnr, stddev, "RADIO", outFile, "",
-				                                  False,False);
-				if ( newImage != NULL ) {
-					CollapseResult result( outFile, outputFileTemporary, newImage );
-					collapseResults.push_back( result );
+					if ( !analysis->setInExCludeRange(includepix, excludepix) ){
+						errorMsg = analysis->errorMessage();
+						collapseError = true;
+					}
+					else {
+						std::vector<std::unique_ptr<MaskedLattice<Float> > > newImages = analysis->createMoments(
+							   false, outFile, false );
+						int newImageCount = newImages.size();
+						for ( int i = 0; i < newImageCount; i++ ){
+							ImageInterface<Float>* newImage = dynamic_cast<ImageInterface<Float>*> (newImages[i].release());
+							CollapseResult result( outFile, outputFileTemporary, newImage );
+							collapseResults.push_back( result );
+						}
+					}
 				}
 			}
 			//casa::utilj::ThreadTimes t2;
 			//casa::utilj::DeltaThreadTimes dt = t2 - t1;
 			//qDebug() << "Elapsed time moment="<<moments[0]<< " elapsed="<<dt.elapsed()<<" cpu="<<dt.cpu();
-		} catch( AipsError& error ) {
+		}
+		catch( AipsError& error ) {
 			errorMsg = error.getLastMessage();
 			collapseError = true;
 		}
@@ -220,19 +223,19 @@ namespace casa {
 		connect( this, SIGNAL( momentsFinished()), &progressBar, SLOT(cancel()));
 		connect( &progressBar, SIGNAL(canceled()), this, SLOT(stopMoments()));
 
-		momentOptions << "(-1) Mean Value, Mean Intensity" <<
-		              "(0) Integrated Value, Sum" <<
-		              "(1) Weighted Mean, Velocity Field"<<
-		              "(2) Intensity-Weighted Dispersion of Spectral Coordinate, Velocity Dispersion" <<
-		              "(3) Median Value, Median Intensity" <<
-		              "(4) Spectral Coordinate of Median, Median Velocity Field" <<
-		              "(5) Standard Deviation About Mean, Noise, Intensity Scatter" <<
-		              "(6) Root Mean Square Intensity"<<
-		              "(7) Absolute Mean Deviation" <<
-		              "(8) Maximum Intensity, MaximumValue" <<
-		              "(9) Spectral Coordinate of Maximum, Velocity of Maximum"<<
-		              "(10) Minimum Intensity, MinimumValue" <<
-		              "(11) Spectral Coordinate of Minimum, Velocity of Minimum";
+		momentOptions << "Mean Value, Mean Intensity" <<
+		              "Integrated Value, Sum" <<
+		              "Weighted Mean, Velocity Field"<<
+		              "Intensity-Weighted Dispersion of Spectral Coordinate, Velocity Dispersion" <<
+		              "Median Value, Median Intensity" <<
+		              "Spectral Coordinate of Median, Median Velocity Field" <<
+		              "Standard Deviation About Mean, Noise, Intensity Scatter" <<
+		              "Root Mean Square Intensity"<<
+		              "Absolute Mean Deviation" <<
+		              "Maximum Intensity, MaximumValue" <<
+		              "Spectral Coordinate of Maximum, Velocity of Maximum"<<
+		              "Minimum Intensity, MinimumValue" <<
+		              "Spectral Coordinate of Minimum, Velocity of Minimum";
 		for ( int i = 0; i < static_cast<int>(END_INDEX); i++ ) {
 			QListWidgetItem* listItem = new QListWidgetItem( momentOptions[i], ui.momentList);
 			if ( i == static_cast<int>(INTEGRATED) ) {
@@ -246,19 +249,19 @@ namespace casa {
 
 		//Right now, there is not a clear need for the moment map, but if some
 		//moments are no longer used in the display, it will be needed.
-		momentMap[MEAN] = -1;
-		momentMap[INTEGRATED] = 0;
-		momentMap[WEIGHTED_MEAN] = 1;
-		momentMap[DISPERSION] = 2;
-		momentMap[MEDIAN] = 3;
-		momentMap[MEDIAN_VELOCITY] = 4;
-		momentMap[STDDEV] = 5;
-		momentMap[RMS] = 6;
-		momentMap[ABS_MEAN_DEV] = 7;
-		momentMap[MAX] = 8;
-		momentMap[MAX_VELOCITY] = 9;
-		momentMap[MIN] = 10;
-		momentMap[MIN_VELOCITY] = 11;
+		momentMap[MEAN] = MomentsBase<Float>::AVERAGE;
+		momentMap[INTEGRATED] = MomentsBase<Float>::INTEGRATED;
+		momentMap[WEIGHTED_MEAN] = MomentsBase<Float>::WEIGHTED_MEAN_COORDINATE;
+		momentMap[DISPERSION] = MomentsBase<Float>::WEIGHTED_DISPERSION_COORDINATE;
+		momentMap[MEDIAN] = MomentsBase<Float>::MEDIAN;
+		momentMap[MEDIAN_VELOCITY] = MomentsBase<Float>::MEDIAN_COORDINATE;
+		momentMap[STDDEV] = MomentsBase<Float>::STANDARD_DEVIATION;
+		momentMap[RMS] = MomentsBase<Float>::RMS;
+		momentMap[ABS_MEAN_DEV] = MomentsBase<Float>::ABS_MEAN_DEVIATION;
+		momentMap[MAX] = MomentsBase<Float>::MAXIMUM;
+		momentMap[MAX_VELOCITY] = MomentsBase<Float>::MAXIMUM_COORDINATE;
+		momentMap[MIN] = MomentsBase<Float>::MINIMUM;
+		momentMap[MIN_VELOCITY] = MomentsBase<Float>::MINIMUM_COORDINATE;
 
 		ui.channelTable->setColumnCount( 2 );
 		QStringList tableHeaders =(QStringList()<< "Min" << "Max");
@@ -290,20 +293,47 @@ namespace casa {
 	String MomentSettingsWidgetRadio::makeChannelInterval( float startChannelIndex,
 	        float endChannelIndex ) const {
 		String channelStr=String::toString( startChannelIndex)+"~"+String::toString(endChannelIndex);
+
 		return channelStr;
 	}
 
-	String MomentSettingsWidgetRadio::populateChannels(uInt* nSelectedChannels ) {
+	String MomentSettingsWidgetRadio::populateChannels(uInt* nSelectedChannels, bool * ok ) {
 		int channelIntervalCount = ui.channelIntervalCountSpinBox->value();
 		String channelStr;
+		*ok = true;
 		for ( int i = 0; i < channelIntervalCount; i++ ) {
 			QString startStr;
 			QString endStr;
 			getChannelMinMax( i, startStr, endStr );
-			if ( isValidChannelRangeValue( startStr, "Start" ) && isValidChannelRangeValue( endStr, "End" )) {
-				// convert input values to Float
-				float startChanVal=startStr.toFloat();
-				float endChanVal  =endStr.toFloat();
+
+			float startChanVal = startStr.toFloat(ok);
+			if ( !(*ok) ){
+				return channelStr;
+			}
+			float endChanVal = endStr.toFloat(ok);
+			if ( !(*ok) ){
+				return channelStr;
+			}
+
+			SHARED_PTR<const ImageInterface<float> > image = taskMonitor->getImage();
+			if ( m_units != "Channels"){
+				//Convert the units to Channels
+				Bool valid = true;
+				SpectralCoordinate coord = taskMonitor->getSpectralCoordinate(image, valid );
+				if ( valid ){
+					Converter* converter = Converter::getConverter( m_units, "" );
+					startChanVal = converter->toPixel( startChanVal, coord );
+					endChanVal = converter->toPixel( endChanVal, coord );
+					delete converter;
+				}
+				else {
+					*ok = false;
+					return channelStr;
+				}
+			}
+
+			if ( isValidChannelRangeValue( QString::number(startChanVal), "Start" ) &&
+					isValidChannelRangeValue( QString::number(endChanVal), "End" ) ) {
 				if ( endChanVal < startChanVal ) {
 					//Switch them around - the code expects the startVal
 					//to be less than the endVal;
@@ -311,11 +341,20 @@ namespace casa {
 					startChanVal = endChanVal;
 					endChanVal = tempVal;
 				}
+				//Do final check that values are in the range of the spec axis.
+				IPosition imShape = image->shape();
+				DisplayCoordinateSystem displayCoord = image->coordinates();
+				int specIndex = displayCoord.spectralAxisNumber();
+				int specMax = imShape[specIndex];
+				if ( startChanVal < 0 || startChanVal >= specMax ){
+					startChanVal = 0;
+				}
+				if ( endChanVal < 0 || endChanVal >= specMax ){
+					endChanVal = specMax - 1;
+				}
 
-				int startChannelIndex = -1;
-				int endChannelIndex = -1;
-				Vector<float> z_xval = taskMonitor->getXValues();
-				findChannelRange( startChanVal, endChanVal, z_xval, startChannelIndex, endChannelIndex );
+				int startChannelIndex = startChanVal;
+				int endChannelIndex = endChanVal;
 				*nSelectedChannels = *nSelectedChannels + (endChannelIndex - startChannelIndex + 1);
 
 				String channelIntervalStr = makeChannelInterval( startChannelIndex, endChannelIndex );
@@ -323,6 +362,9 @@ namespace casa {
 					channelStr = channelStr + ",";
 				}
 				channelStr = channelStr + channelIntervalStr;
+			}
+			else {
+				*ok = false;
 			}
 		}
 		return channelStr;
@@ -399,6 +441,51 @@ namespace casa {
 		return whichMoments;
 	}
 
+	void MomentSettingsWidgetRadio::_initAnalysis(){
+		if ( imageAnalysis == nullptr ){
+			if ( taskMonitor != nullptr ){
+				Record region = _makeRegionRecord( );
+				if ( ! region.nfields() > 0 ){
+					String empty("");
+					SHARED_PTR<const ImageInterface<float> > image = taskMonitor->getImage();
+					SHARED_PTR<const SubImage<Float> > result =
+							SubImageFactory<Float>::createSubImageRO(*image, region, empty, NULL);
+					ImageInterface<Float>* image2 = new SubImage<Float>( *result );
+					LogOrigin log("MomentSettingsWidgetRadio", "collapseImage", WHERE);
+					LogIO os(log);
+					imageAnalysis = new ImageMoments<Float>(*image2, os);
+				}
+
+			}
+
+		}
+	}
+
+	Record MomentSettingsWidgetRadio::_makeRegionRecord(){
+
+		QString fileName = taskMonitor->getImagePath();
+		String infile(fileName.toStdString());
+
+		//Initialize the channels
+		uInt nSelectedChannels;
+		bool channelOK = true;
+		Record region;
+		String channelStr = populateChannels( &nSelectedChannels, & channelOK );
+		if ( channelOK ){
+			SHARED_PTR<const ImageInterface<float> > image = taskMonitor->getImage();
+			DisplayCoordinateSystem cSys = image -> coordinates();
+			IPosition pos = image->shape();
+			String regionName;
+			String stokesStr = "";
+			CasacRegionManager crm( cSys );
+			String diagnostics;
+			String pixelBox="";
+			region = crm.fromBCS( diagnostics, nSelectedChannels, stokesStr,
+										 NULL, regionName, channelStr, CasacRegionManager::USE_FIRST_STOKES,
+										 pixelBox, pos, infile);
+		}
+		return region;
+	}
 
 
 	void MomentSettingsWidgetRadio::collapseImage() {
@@ -426,70 +513,60 @@ namespace casa {
 			return;
 		}
 
-		Vector<Int> smoothaxes;
-		Vector<String> smoothtypes;
-		Vector<Quantity> smoothwidths;
-		QString fileName = taskMonitor->getImagePath();
-		String infile(fileName.toStdString());
 
-		//Initialize the channels
-		uInt nSelectedChannels;
-		String channelStr = populateChannels( &nSelectedChannels );
+		//QString fileName = taskMonitor->getImagePath();
+		//String infile(fileName.toStdString());
 
-		//Get the region
-		IPosition pos = image->shape();
-		String regionName;
-
-		String stokesStr = "";
-		CasacRegionManager crm( cSys );
-		String diagnostics;
-		String pixelBox="";
-		Record region = crm.fromBCS( diagnostics, nSelectedChannels, stokesStr,
-		                             NULL, regionName, channelStr, CasacRegionManager::USE_FIRST_STOKES,
-		                             pixelBox, pos, infile);
-		//Set up the imageAnalysis
-		if ( imageAnalysis == NULL ) {
-			// a cast might work, but I'm just going to clone it to be safe - dmehring shared_ptr refactor
-			// cloning was what the old ImageAnalysis constructor did anyway
-			SHARED_PTR<ImageInterface<float> > image2(image->cloneII());
-			imageAnalysis = new ImageAnalysis( image2 );
-
-		}
+		_initAnalysis();
 
 		//Set up the thread that will do the work.
-		delete collapseThread;
-		collapseThread = new MomentCollapseThreadRadio( imageAnalysis );
-		connect( collapseThread, SIGNAL( finished() ), this, SLOT(collapseDone()));
-		connect( collapseThread, SIGNAL(stepCountChanged(int)), this, SLOT(setStepCount(int)));
-		connect( collapseThread, SIGNAL(stepsCompletedChanged(int)), this, SLOT(setStepsCompleted(int)));
+		if ( imageAnalysis != nullptr ){
+			delete collapseThread;
+			collapseThread = new MomentCollapseThreadRadio( imageAnalysis );
+			connect( collapseThread, SIGNAL( finished() ), this, SLOT(collapseDone()));
+			connect( collapseThread, SIGNAL(stepCountChanged(int)), this, SLOT(setStepCount(int)));
+			connect( collapseThread, SIGNAL(stepsCompletedChanged(int)), this, SLOT(setStepsCompleted(int)));
 
-		//Do a collapse image for each of the moments.
-		Vector<QString> momentNames;
-		Vector<Int> moments = populateMoments( momentNames );
-		momentCount = moments.size();
-		collapseThread-> setMomentNames( momentNames );
-		String baseName( taskMonitor->getFileName().toStdString());
-		collapseThread->setData(moments, spectralAxisNumber, region,
-		                        "", method, smoothaxes, smoothtypes, smoothwidths,
-		                        includepix, excludepix, peaksnr, stddev,
-		                        "RADIO", baseName);
-		if ( !outputFileName.isEmpty() ) {
-			collapseThread->setOutputFileName( outputFileName );
-		}
+			//Do a collapse image for each of the moments.
+			Vector<QString> momentNames;
+			Vector<Int> moments = populateMoments( momentNames );
+			collapseThread-> setMomentNames( momentNames );
+			momentCount = moments.size();
+			Vector<Int> smoothaxes;
+			Vector<String> smoothtypes;
+			Vector<Quantity> smoothwidths;
+			String baseName( taskMonitor->getFileName().toStdString());
+			collapseThread->setData(moments, spectralAxisNumber,
+								     method, smoothaxes, smoothtypes, smoothwidths,
+									includepix, excludepix, peaksnr, stddev,
+									"RADIO", baseName);
+			if ( !outputFileName.isEmpty() ) {
+				collapseThread->setOutputFileName( outputFileName );
+			}
 
-		collapseThread->setChannelStr( channelStr );
-		previousCount = 0;
-		cycleCount = 0;
-		if ( moments.size() == 1 ){
-			progressBar.setCancelButtonText( QString() );
+			uInt nSelectedChannels;
+			bool channelOK = true;
+			String channelStr = populateChannels( &nSelectedChannels, &channelOK );
+			if ( channelOK ){
+				collapseThread->setChannelStr( channelStr );
+				previousCount = 0;
+				cycleCount = 0;
+				if ( moments.size() == 1 ){
+					progressBar.setCancelButtonText( QString() );
+				}
+				else {
+					progressBar.setCancelButtonText( "Cancel");
+				}
+				progressBar.show();
+		//#warning "Revert to THREADING"
+				collapseThread->start();
+				//collapseThread->run();
+			}
 		}
 		else {
-			progressBar.setCancelButtonText( "Cancel");
+			QString msg = "Unable to calculate moment(s).";
+			Util::showUserMessage( msg, this );
 		}
-		progressBar.show();
-//#warning "Revert to THREADING"
-		collapseThread->start();
-		//collapseThread->run();
 	}
 
 	void MomentSettingsWidgetRadio::collapseDone() {
@@ -549,7 +626,7 @@ namespace casa {
 		}
 		Converter* converter = Converter::getConverter( oldUnits, newUnits );
 		if ( imageAnalysis != NULL ){
-			SHARED_PTR<const ImageInterface<Float> > imagePtr = imageAnalysis->getImage();
+			SHARED_PTR<const ImageInterface<Float> > imagePtr = taskMonitor->getImage();
 			Bool validCoord;
 			SpectralCoordinate coord = taskMonitor->getSpectralCoordinate(imagePtr, validCoord );
 			for ( int i = 0; i < channelIntervalCount; i++ ) {
@@ -569,6 +646,7 @@ namespace casa {
 			unitStr = "";
 		}
 
+
 		QString prevUnit = ui.channelGroupBox->title();
 		int startIndex = unitStr.indexOf( "[");
 		int endIndex = unitStr.indexOf( "]");
@@ -579,6 +657,7 @@ namespace casa {
 		if ( prevUnit != "Channels" && prevUnit != unitStr ) {
 			QString oldUnits = Util::stripBrackets( prevUnit );
 			QString newUnits = Util::stripBrackets( unitStr );
+			m_units = newUnits;
 			convertChannelRanges( oldUnits, newUnits );
 		}
 	}
@@ -611,15 +690,14 @@ namespace casa {
 	}
 
 	void MomentSettingsWidgetRadio::reset() {
-		if ( imageAnalysis != NULL ) {
+		if ( imageAnalysis != nullptr ) {
 			delete imageAnalysis;
-			imageAnalysis = NULL;
+			imageAnalysis = nullptr;
 		}
 		delete collapseThread;
-		collapseThread = NULL;
-		if ( taskMonitor != NULL ) {
-			SHARED_PTR<ImageInterface<Float> > img = CONST_POINTER_CAST<ImageInterface <Float> >(taskMonitor->getImage());
-			imageAnalysis = new ImageAnalysis(img);
+		collapseThread = nullptr;
+		if ( taskMonitor != nullptr ) {
+			_initAnalysis();
 		}
 	}
 

@@ -188,7 +188,7 @@ public:
 
     // this method is deprecated. Use ImageMomentsTask instead.
     // instead.
-    ImageInterface<Float> * moments(
+    /*ImageInterface<Float> * moments(
     	const Vector<Int>& moments, const Int axis, Record& region,
     	const String& mask, const Vector<String>& method,
     	const Vector<Int>& smoothaxes,
@@ -201,7 +201,7 @@ public:
         const String& smoothout="",
         const Bool overwrite=False, const Bool drop=True,
         const Bool stretchMask=False
-    );
+    );*/
 
     // this method is deprecated. Use ImageMomentsTask.setMomentsProgressMonitor()
     // instead.

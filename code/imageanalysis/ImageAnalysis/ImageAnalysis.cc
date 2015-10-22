@@ -1335,7 +1335,7 @@ Record ImageAnalysis::maxfit(
 	return outrec;
 }
 
-ImageInterface<Float> * ImageAnalysis::moments(
+/*ImageInterface<Float> * ImageAnalysis::moments(
         const Vector<Int>& whichmoments, const Int axis,
         Record& Region, const String& mask, const Vector<String>& method,
         const Vector<Int>& smoothaxes, const Vector<String>& kernels,
@@ -1488,7 +1488,7 @@ ImageInterface<Float> * ImageAnalysis::moments(
         }
     }
     return pIm.release();
-}
+}*/
 
 void ImageAnalysis::setMomentsProgressMonitor( ImageMomentsProgressMonitor* progressMonitor ){
 	_onlyFloat(__func__);
