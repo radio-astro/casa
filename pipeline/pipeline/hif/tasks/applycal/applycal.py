@@ -304,7 +304,7 @@ class Applycal(basetask.StandardTaskTemplate):
 	
 	    #BRK note - Added kwarg fieldcnt based on Justo's changes, July 2015
 	    # Need to have fieldcnt in the flagline above
-	    flaggingjob = casa_tasks.flagdata(vis=inputs.vis, mode='list', inpfile=flagkwargs)
+	    flaggingjob = casa_tasks.flagdata(vis=inputs.vis, mode='list', inpfile=flagkwargs, flagbackup=False)
 	    #flaggingjob = casa_tasks.flagdata(vis=inputs.vis, mode='summary', fieldcnt=True)
 	    flagdicts = self._executor.execute(flaggingjob)
 	    
