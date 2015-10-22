@@ -62,6 +62,23 @@ ImageMetaData::ImageMetaData(
 ) : ImageMetaDataBase(), _floatImage(), _complexImage(imagec), _info(imagec->imageInfo()),
 	_csys(imagec->coordinates()) {}
 
+
+Record ImageMetaData::summary(
+    const String& doppler, const Bool list,
+    const Bool pixelorder, const Bool verbose
+) {
+    if (_floatImage) {
+        return _summary(
+            _floatImage, doppler, list, pixelorder, verbose
+        );
+    }
+    else {
+        return _summary(
+            _complexImage, doppler, list, pixelorder, verbose
+        );
+    }
+}
+
 Record ImageMetaData::toRecord(Bool verbose) const {
 	if (_header.empty()) {
 		_header = this->_makeHeader();
@@ -240,7 +257,6 @@ Record ImageMetaData::_getStatistics() const {
 	return _stats;
 }
 
-
 String ImageMetaData::_getTelescope() const {
 	if (_telescope.empty()) {
 		_telescope = _getCoords().obsInfo().telescope();
@@ -248,5 +264,6 @@ String ImageMetaData::_getTelescope() const {
 	return _telescope;
 }
 
-} //# NAMESPACE CASA - END
+
+}
 

@@ -77,7 +77,7 @@
 #include <imageanalysis/ImageAnalysis/ImageConvolver.h>
 #include <images/Images/ImageExprParse.h>
 #include <images/Regions/WCEllipsoid.h>
-#include <imageanalysis/ImageAnalysis/ImageMoments.h>
+//#include <imageanalysis/ImageAnalysis/ImageMoments.h>
 #include <images/Images/ImageOpener.h>
 #include <images/Regions/ImageRegion.h>
 #include <images/Images/ImageRegrid.h>
@@ -1818,22 +1818,6 @@ Bool ImageAnalysis::twopointcorrelation(
 	twoPt.autoCorrelation(*pImOut, *subImage, axes, m, showProgress);
 
 	return True;
-}
-
-Record ImageAnalysis::summary(
-	const String& doppler, const Bool list,
-	const Bool pixelorder, const Bool verbose
-) {
-	if (_imageFloat) {
-		return _summary(
-			*_imageFloat, doppler, list, pixelorder, verbose
-		);
-	}
-	else {
-		return _summary(
-			*_imageComplex, doppler, list, pixelorder, verbose
-		);
-	}
 }
 
 Bool ImageAnalysis::tofits(

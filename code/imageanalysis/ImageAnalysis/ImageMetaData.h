@@ -88,6 +88,12 @@ public:
 
 	Record toRecord(Bool verbose) const;
 
+	// For ia.summary() moved from ImageAnalysis
+	Record summary(
+	    const String& doppler, const Bool list,
+	    const Bool pixelorder, const Bool verbose
+	);
+
 protected:
 
 	SPCIIF _getFloatImage() const { return _floatImage; }
@@ -138,6 +144,11 @@ protected:
 
 	Vector<String> _getStokes() const;
 
+	template <class T> Record _summary(
+	    SPCIIT image, const String& doppler, const Bool list,
+        const Bool pixelorder, const Bool verbose
+    );
+
 private:
 
 	SPCIIF _floatImage;
@@ -161,6 +172,10 @@ private:
 	mutable Record _stats;
 };
 
-} //# NAMESPACE CASA - END
+}
+
+#ifndef AIPS_NO_TEMPLATE_SRC
+#include <imageanalysis/ImageAnalysis/ImageMetaData.tcc>
+#endif //# AIPS_NO_TEMPLATE_SRC
 
 #endif

@@ -30,13 +30,11 @@
 
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 
-#include <casa/Logging/LogFilter.h>
 #include <imageanalysis/ImageAnalysis/ImageFFT.h>
 #include <imageanalysis/ImageAnalysis/ImageMaskAttacher.h>
 #include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 #include <images/Images/ImageExpr.h>
 #include <images/Images/ImageOpener.h>
-#include <images/Images/ImageSummary.h>
 #include <images/Images/PagedImage.h>
 #include <lattices/Lattices/LatticeUtilities.h>
 
@@ -231,72 +229,6 @@ template<class T> void ImageAnalysis::_destruct(ImageInterface<T>& image) {
 			(static_cast<PagedImage<T>& >(image)).table().unlock();
 		}
 	}
-}
-
-template<class T> Record ImageAnalysis::_summary(
-	const ImageInterface<T>& image,
-	const String& doppler, const Bool list,
-	const Bool pixelorder, const Bool verbose
-) {
-	*_log << LogOrigin(className(), __func__);
-	Vector<String> messages;
-	Record retval;
-	ImageSummary<T> s(image);
-	MDoppler::Types velType;
-	if (!MDoppler::getType(velType, doppler)) {
-		*_log << LogIO::WARN << "Illegal velocity type, using RADIO"
-				<< LogIO::POST;
-		velType = MDoppler::RADIO;
-	}
-
-	if (list) {
-		messages = s.list(*_log, velType, False, verbose);
-	}
-	else {
-		// Write messages to local sink only so we can fish them out again
-		LogFilter filter;
-		LogSink sink(filter, False);
-		LogIO osl(sink);
-		messages = s.list(osl, velType, True);
-	}
-	retval.define("messages", messages);
-	Vector<String> axes = s.axisNames(pixelorder);
-	Vector<Double> crpix = s.referencePixels(False); // 0-rel
-	Vector<Double> crval = s.referenceValues(pixelorder);
-	Vector<Double> cdelt = s.axisIncrements(pixelorder);
-	Vector<String> axisunits = s.axisUnits(pixelorder);
-
-	retval.define("ndim", Int(s.ndim()));
-	retval.define("shape", s.shape().asVector());
-	retval.define("tileshape", s.tileShape().asVector());
-	retval.define("axisnames", axes);
-	retval.define("refpix", crpix);
-	retval.define("refval", crval);
-	retval.define("incr", cdelt);
-	retval.define("axisunits", axisunits);
-	retval.define("unit", s.units().getName());
-	retval.define("hasmask", s.hasAMask());
-	retval.define("defaultmask", s.defaultMaskName());
-	retval.define("masks", s.maskNames());
-	retval.define("imagetype", s.imageType());
-
-	ImageInfo info = image.imageInfo();
-	Record iRec;
-	String error;
-	Bool ok = info.toRecord(error, iRec);
-	if (! ok) {
-		*_log << LogIO::SEVERE
-				<< "Failed to convert ImageInfo to a record because "
-				<< LogIO::EXCEPTION;
-		*_log << LogIO::SEVERE << error << LogIO::POST;
-	}
-	else if (iRec.isDefined("restoringbeam")) {
-		retval.defineRecord("restoringbeam", iRec.asRecord("restoringbeam"));
-	}
-	else if (iRec.isDefined("perplanebeams")) {
-		retval.defineRecord("perplanebeams", info.beamToRecord(-1, -1));
-	}
-	return retval;
 }
 
 } // end of  casa namespace

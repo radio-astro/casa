@@ -175,6 +175,7 @@ install (FILES
     ImageAnalysis/ImageMaskedPixelReplacer.h
     ImageAnalysis/ImageMaskedPixelReplacer.tcc
 	ImageAnalysis/ImageMetaData.h
+    ImageAnalysis/ImageMetaData.tcc
     ImageAnalysis/ImageMetaDataBase.h
     ImageAnalysis/ImageMetaDataRW.h
 	ImageAnalysis/ImageMoments.h

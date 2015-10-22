@@ -238,13 +238,6 @@ public:
         const Bool overwrite=False, const Bool stretch=False
     );
 
-    Record summary(
-    	const String& doppler = "RADIO",
-    	const Bool list = True,
-    	const Bool pixelorder = True,
-    	const Bool verbose = False
-    );
-
     Bool tofits(
     	const String& outfile, const Bool velocity, const Bool optical,
         const Int bitpix, const Double minpix, const Double maxpix,
@@ -326,12 +319,6 @@ public:
     void _onlyFloat(const String& method) const;
 
     template<class T> static void _destruct(ImageInterface<T>& image);
-
-    template<class T> Record _summary(
-    	const ImageInterface<T>& image,
-    	const String& doppler, const Bool list,
-    	const Bool pixelorder, const Bool verbose
-    );
 
     template<class T> void _calc(
     	SPIIT image,
