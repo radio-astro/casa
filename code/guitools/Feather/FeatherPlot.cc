@@ -24,7 +24,7 @@
 //#
 
 #include "FeatherPlot.h"
-#include <guitools/Feather/ExternalAxisWidget.h>
+#include <guitools/Feather/ExternalAxisControl.h>
 #include <guitools/Feather/ExternalAxis.h>
 #include <guitools/Feather/ExternalAxisWidgetLeft.h>
 #include <guitools/Feather/ExternalAxisWidgetRight.h>

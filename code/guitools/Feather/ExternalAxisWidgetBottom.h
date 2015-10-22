@@ -26,11 +26,11 @@
 #ifndef EXTERNALAXISWIDGETBOTTOM_H_
 #define EXTERNALAXISWIDGETBOTTOM_H_
 
-#include <guitools/Feather/ExternalAxisWidget.h>
+#include <guitools/Feather/ExternalAxisControl.h>
 
 namespace casa {
 
-class ExternalAxisWidgetBottom : public ExternalAxisWidget {
+class ExternalAxisWidgetBottom : public ExternalAxisControl {
 public:
 	ExternalAxisWidgetBottom(QWidget* parent );
 	virtual ~ExternalAxisWidgetBottom();

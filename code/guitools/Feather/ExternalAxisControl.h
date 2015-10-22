@@ -37,13 +37,13 @@ namespace casa {
  * to draw their own axis.
  */
 
-class ExternalAxisWidget : public QWidget {
+class ExternalAxisControl : public QWidget {
 public:
-	ExternalAxisWidget(QWidget* parent);
+	ExternalAxisControl(QWidget* parent);
 	void setAxisLabel( const QString& label );
 	void setPlot( QwtPlot* canvas );
 	virtual void paintEvent( QPaintEvent* event );
-	virtual ~ExternalAxisWidget();
+	virtual ~ExternalAxisControl();
 
 protected:
 	virtual void drawTicks( QPainter* painter, int tickLength ) = 0;

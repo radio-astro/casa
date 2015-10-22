@@ -23,7 +23,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#include "ExternalAxisWidget.h"
+#include "ExternalAxisControl.h"
 #include <guitools/Feather/ExternalAxis.h>
 #include <QPainter>
 #include <QDebug>
@@ -31,21 +31,21 @@
 
 namespace casa {
 
-ExternalAxisWidget::ExternalAxisWidget(QWidget* parent) :QWidget( parent ),
+ExternalAxisControl::ExternalAxisControl(QWidget* parent) :QWidget( parent ),
 		plot( NULL ), AXIS_SMALL_SIDE(100), MARGIN(5), MIN_START_Y(22),
 		FONT_SIZE(8), FONT_SIZE_AXIS_LABEL(8){
 }
 
 
-void ExternalAxisWidget::setPlot( QwtPlot* plotOwner ){
+void ExternalAxisControl::setPlot( QwtPlot* plotOwner ){
 	plot = plotOwner;
 }
 
-int ExternalAxisWidget::getStartY() const {
+int ExternalAxisControl::getStartY() const {
 	return MIN_START_Y;
 }
 
-double ExternalAxisWidget::getTickStartPixel( QwtPlot::Axis axis ){
+double ExternalAxisControl::getTickStartPixel( QwtPlot::Axis axis ){
 	//Figure out where to start the first tick.  There will be a small distance
 	//between the first tick and the start of the axis do to the difference between
 	//the upper bound and the first tick location.
@@ -71,7 +71,7 @@ double ExternalAxisWidget::getTickStartPixel( QwtPlot::Axis axis ){
 	return startPixel;
 }
 
-double ExternalAxisWidget::getTickDistance(QwtPlot::Axis axis ){
+double ExternalAxisControl::getTickDistance(QwtPlot::Axis axis ){
 	QwtScaleDiv* scaleDiv = plot->axisScaleDiv( axis );
 	const QList<double> axisTicks = scaleDiv->ticks( axis);
 	double tickDistance = scaleDiv->upperBound() - scaleDiv->lowerBound();
@@ -84,7 +84,7 @@ double ExternalAxisWidget::getTickDistance(QwtPlot::Axis axis ){
 	return tickDistance;
 }
 
-double ExternalAxisWidget::getTickIncrement( double tickDistance, QwtPlot::Axis axis ){
+double ExternalAxisControl::getTickIncrement( double tickDistance, QwtPlot::Axis axis ){
 	QwtScaleDiv* scaleDiv = plot->axisScaleDiv( axis );
 	double axisExtent = scaleDiv->upperBound() - scaleDiv->lowerBound();
 	double tickPercentage = tickDistance / axisExtent;
@@ -99,12 +99,12 @@ double ExternalAxisWidget::getTickIncrement( double tickDistance, QwtPlot::Axis 
 	return xIncrement;
 }
 
-int ExternalAxisWidget::getCanvasHeight() const {
+int ExternalAxisControl::getCanvasHeight() const {
 	QwtPlotCanvas* canvas = plot->canvas();
 	return canvas->height();
 }
 
-int ExternalAxisWidget::getTickIncrement( int tickCount ) const {
+int ExternalAxisControl::getTickIncrement( int tickCount ) const {
 
 	//Adjust the allowable number of ticks by how much space
 	//we have available for them.
@@ -136,7 +136,7 @@ int ExternalAxisWidget::getTickIncrement( int tickCount ) const {
 	return increment;
 }
 
-void ExternalAxisWidget::paintEvent( QPaintEvent* event ){
+void ExternalAxisControl::paintEvent( QPaintEvent* event ){
 	QWidget::paintEvent( event );
 	if ( plot != NULL ){
 
@@ -150,20 +150,20 @@ void ExternalAxisWidget::paintEvent( QPaintEvent* event ){
 	}
 }
 
-void ExternalAxisWidget::drawTicks( QPainter* painter ){
+void ExternalAxisControl::drawTicks( QPainter* painter ){
 	QFont font = painter->font();
 	font.setPointSize( FONT_SIZE );
 	painter->setFont( font );
 	drawTicks( painter, 5  );
 }
 
-void ExternalAxisWidget::drawBackBone( QPainter* painter ){
+void ExternalAxisControl::drawBackBone( QPainter* painter ){
 	QLine line;
 	defineAxis( line );
 	painter->drawLine( line );
 }
 
-void ExternalAxisWidget::drawLabel( QPainter* painter ){
+void ExternalAxisControl::drawLabel( QPainter* painter ){
 	  QFont font("Helvetica [Cronyx]", FONT_SIZE_AXIS_LABEL );
 	  font.setBold( true );
 	  painter->setFont( font );
@@ -172,11 +172,11 @@ void ExternalAxisWidget::drawLabel( QPainter* painter ){
 
 
 
-void ExternalAxisWidget::setAxisLabel( const QString& label ){
+void ExternalAxisControl::setAxisLabel( const QString& label ){
 	axisLabel = label;
 }
 
-ExternalAxisWidget::~ExternalAxisWidget() {
+ExternalAxisControl::~ExternalAxisControl() {
 
 }
 

@@ -26,11 +26,11 @@
 #ifndef EXTERNALAXISWIDGETRIGHT_H_
 #define EXTERNALAXISWIDGETRIGHT_H_
 
-#include <guitools/Feather/ExternalAxisWidget.h>
+#include <guitools/Feather/ExternalAxisControl.h>
 
 namespace casa {
 
-class ExternalAxisWidgetRight : public ExternalAxisWidget {
+class ExternalAxisWidgetRight : public ExternalAxisControl {
 public:
 	ExternalAxisWidgetRight(QWidget* parent );
 	void setUseLeftScale( bool b );

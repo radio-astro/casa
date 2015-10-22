@@ -34,7 +34,7 @@
 namespace casa {
 
 ExternalAxisWidgetRight::ExternalAxisWidgetRight(QWidget* parent ) :
-	ExternalAxisWidget( parent ){
+	ExternalAxisControl( parent ){
 	setSizePolicy( QSizePolicy::Fixed, QSizePolicy::MinimumExpanding );
 	setFixedWidth( AXIS_SMALL_SIDE);
 	useLeftScale = false;

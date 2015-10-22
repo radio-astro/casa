@@ -33,7 +33,7 @@
 namespace casa {
 
 ExternalAxisWidgetBottom::ExternalAxisWidgetBottom( QWidget* parent ):
-	ExternalAxisWidget( parent ){
+	ExternalAxisControl( parent ){
 	setFixedHeight( AXIS_SMALL_SIDE / 2 );
 	setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::Fixed );
 

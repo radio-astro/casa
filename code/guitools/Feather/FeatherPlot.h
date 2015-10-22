@@ -38,7 +38,7 @@ namespace casa {
 class ExternalAxisWidgetBottom;
 class ExternalAxisWidgetRight;
 class ExternalAxisWidgetLeft;
-class ExternalAxisWidget;
+class ExternalAxisControl;
 class ExternalAxis;
 class FeatherCurve;
 
@@ -118,7 +118,7 @@ private:
     //External axis drawing support
     QList<QString> axisTitles;
     QList<QString> axisLabels;
-    QList<ExternalAxisWidget*> axisWidgets;
+    QList<ExternalAxisControl*> axisWidgets;
     QList<ExternalAxis*> axisBlanks;
 
     double minX;

@@ -26,11 +26,11 @@
 #ifndef EXTERNALAXISWIDGETLEFT_H_
 #define EXTERNALAXISWIDGETLEFT_H_
 
-#include <guitools/Feather/ExternalAxisWidget.h>
+#include <guitools/Feather/ExternalAxisControl.h>
 
 namespace casa {
 
-class ExternalAxisWidgetLeft : public ExternalAxisWidget {
+class ExternalAxisWidgetLeft : public ExternalAxisControl {
 public:
 	ExternalAxisWidgetLeft(QWidget* parent/*, bool manageTicksManually = false*/);
 	virtual ~ExternalAxisWidgetLeft();
