@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="hifa_tsysflag" category="pipeline">
+<shortdescription>Flag deviant system temperature measurements</shortdescription>
+<description>
+Flag deviant system temperature measurements. This is done by running a
+sequence of flagging subtasks, each looking for a different type of 
+possible error.
+</description>
+<input>
+    <param type="stringArray" name="vis" subparam="true">
+        <description>List of input measurement sets (Not used) </description>
+        <value></value>
+    </param>
+
+    <param type="stringArray" name="caltable" subparam="true">
+        <description>List of input caltables</description>
+        <value></value>
+    </param>
+
+    <param type="bool" name="flag_nmedian">
+        <description>True to flag Tsys spectra with high median value</description>
+        <value>True</value>
+    </param>
+
+    <param type="double" name="fnm_limit" subparam="true">
+        <description>Flag spectra with median &gt; fnm_limit * median over all spectra</description>
+        <value>2.0</value>
+    </param>
+ 
+    <param type="bool" name="flag_derivative">
+        <description>True to flag Tsys spectra with high median derivative</description>
+        <value>True</value>
+    </param>
+
+    <param type="double" name="fd_max_limit" subparam="true">
+        <description>Flag spectra with median derivative higher than fd_max_limit * median of this measure over all spectra</description>
+        <value>5.0</value>
+    </param>
+
+    <param type="bool" name="flag_edgechans">
+        <description>True to flag edges of Tsys spectra</description>
+        <value>True</value>
+    </param>
+
+    <param type="double" name="fe_edge_limit" subparam="true">
+        <description>Flag channels whose channel to channel difference &gt; fe_edge_limit * median across spectrum</description>
+        <value>3.0</value>
+    </param>
+
+    <param type="bool" name="flag_fieldshape">
+        <description>True to flag Tsys spectra with a radically different shape to those of the ff_refintent</description>
+        <value>True</value>
+    </param>
+
+    <param type="string" name="ff_refintent" subparam="true">
+        <description>Data intent providing the reference shape for \'flag_fieldshape\'</description>
+        <value>BANDPASS</value>
+    </param>
+
+    <param type="double" name="ff_max_limit" subparam="true">
+        <description>Flag Tsys spectra with \'fieldshape\' metric &gt; ff_max_limit</description>
+        <value>5.0</value>
+    </param>
+
+    <param type="double" name="ff_tmf1_limit" subparam="true">
+        <description>Flag all Tsys spectra for an antenna if proportion flagged already &gt; ff_tmf1_limit</description>
+        <value>0.666</value>
+    </param>
+
+    <param type="bool" name="flag_birdies">
+        <description>True to flag channels covering sharp spectral features</description>
+        <value>True</value>
+    </param>
+
+    <param type="double" name="fb_sharps_limit" subparam="true">
+        <description>Flag channels bracketing a channel to channel difference &gt; fb_sharps_limit</description>
+        <value>0.05</value>
+    </param>
+
+    <param type="string" name="pipelinemode">
+        <description>The pipeline operations mode</description>
+        <value>automatic</value>
+        <allowed kind="enum">
+            <value>automatic</value>
+            <value>interactive</value>
+            <value>getinputs</value>
+        </allowed>
+    </param>
+
+    <param type="bool" name="dryrun" subparam="true">
+        <description>Run the task (False) or list commands(True)</description>
+       <value>False</value>
+    </param>
+
+    <param type="bool" name="acceptresults" subparam="true">
+        <description>Automatically apply results to context</description>
+        <value>True</value>
+    </param>
+
+    <constraints>
+        <when param="pipelinemode">
+            <equals type="string" value="automatic" />
+            <equals type="string" value="interactive">
+                <default param="caltable"><value type="stringArray"></value></default>
+                <default param="dryrun"><value type="bool">False</value></default>
+                <default param="acceptresults"><value type="bool">True</value></default>
+            </equals>
+            <equals type="string" value="getinputs">
+                <default param="caltable"><value type="stringArray"></value></default>
+            </equals>
+        </when>
+
+        <when param="flag_nmedian">
+            <equals type="bool" value="True">
+                <default param="fnm_limit"><value>2.0</value></default>
+            </equals>
+            <equals type="bool" value="False">
+            </equals>
+        </when>
+
+        <when param="flag_derivative">
+            <equals type="bool" value="True">
+                <default param="fd_max_limit"><value>5.0</value></default>
+            </equals>
+            <equals type="bool" value="False">
+            </equals>
+        </when>
+
+        <when param="flag_edgechans">
+            <equals type="bool" value="True">
+                <default param="fe_edge_limit"><value>3.0</value></default>
+            </equals>
+            <equals type="bool" value="False">
+            </equals>
+        </when>
+
+        <when param="flag_fieldshape">
+            <equals type="bool" value="True">
+                <default param="ff_refintent"><value type="string">BANDPASS</value></default>
+                <default param="ff_max_limit"><value>5.0</value></default>
+                <default param="ff_tmf1_limit"><value>0.666</value></default>
+            </equals>
+            <equals type="bool" value="False">
+            </equals>
+        </when>
+
+        <when param="flag_birdies">
+            <equals type="bool" value="True">
+                <default param="fb_sharps_limit"><value>0.05</value></default>
+            </equals>
+            <equals type="bool" value="False">
+            </equals>
+        </when>
+
+    </constraints>
+</input>
+
+<output>
+    <param type="any" name="results">
+        <description>The output results object</description>
+        <any type="variant"/>
+        <value></value>
+    </param>
+</output>
+<returns type="void"/>
+
+<example>
+hif_tsysflag tries to flag all deviant system temperature measurements in 
+the system temperature calibration table. It does this by running a sequence
+of flagging tests, each designed to look for a different type of error.
+The tests are:
+
+1. Flag Tsys spectra with high median values by running sister task
+hifa_tsysflagspectra with metric='median', flag_nmedian=True,
+fnm_limit=fnm_limit.
+
+2. Flag Tsys spectra with high median derivatives by running 
+hifa_tsysflagspectra with metric='derivative', flag_maxabs=True,
+fmax_limit=fd_max_limit. This is meant to spot spectra that are 'ringing'.
+
+3. Flag the edge channels of the Tsys spectra in each SpW by
+running hifa_tsysflagchans with 
+intentgroups=['ATMOSPHERE','BANDPASS','AMPLITUDE'],
+flag_edges=True, edge_limit=fe_edge_limit.
+
+4. Flag Tsys spectra whose shape is different from that associated with
+the BANDPASS intent or which are associated with an antenna that has 
+been too heavily flagged already, by running hif_tsysflagspectra with 
+metric='fieldshape', refintent=ff_refintent, flag_maxabs=True, 
+fmax_limit=ff_max_limit, flag_tmf1=True, tmf1_axis='Antenna1', 
+tmf1_limit=ff_tmf1_limit.
+
+5. Flag 'birdies' by running hif_tsysflagchans with metric='antenna_diff',
+flag_sharps=True, sharps_limit=fb_sharps_limit.
+
+
+Keyword arguments:
+
+pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
+   determines the values of all context defined pipeline inputs automatically.
+   In interactive mode the user can set the pipeline context defined parameters
+   manually.  In 'getinputs' mode the user can check the settings of all
+   pipeline parameters without running the task.
+   default: 'automatic'.
+
+---- pipeline context defined parameter arguments which can be set only in
+'interactive mode'
+
+caltable -- List of input Tsys calibration tables
+    default: [] - Use the table currently stored in the pipeline context. 
+    example: caltable=['X132.ms.tsys.s2.tbl']
+
+flag_nmedian -- True to flag Tsys spectra with high median value.
+    default: True
+
+fnm_limit -- Flag spectra with median value higher than fnm_limit * median 
+    of this measure over all spectra.
+    default: 2.0
+ 
+flag_derivative -- True to flag Tsys spectra with high median derivative.
+    default: True
+
+fd_max_limit -- Flag spectra with median derivative higher than 
+    fd_max_limit * median of this measure over all spectra.
+    default: 5.0
+
+flag_edgechans -- True to flag edges of Tsys spectra.
+    default: True
+
+fe_edge_limit -- Flag channels whose channel to channel difference &gt; 
+    fe_edge_limit * median across spectrum.
+    default: 3.0
+
+flag_fieldshape -- True to flag Tsys spectra with a radically different 
+    shape to those of the ff_refintent.
+    default: True
+
+ff_refintent -- Data intent that provides the reference shape for 
+    'flag_fieldshape'.
+    default: BANDPASS
+
+ff_max_limit -- Flag Tsys spectra with 'fieldshape' metric values &gt;
+    ff_max_limit.
+    default: 5.0
+
+ff_tmf1_limit -- Flag all Tsys spectra for an antenna if proportion flagged 
+    already &gt; ff_tmf1_limit.
+    default: 0.666
+
+flag_birdies -- True to flag channels covering sharp spectral features.
+    default: True
+
+fb_sharps_limit -- Flag channels bracketing a channel to channel
+     difference &gt; fb_sharps_limit.
+     default: 0.05
+
+-- Pipeline task execution modes
+
+dryrun -- Run the commands (True) or generate the commands to be run but
+   do not execute (False).
+   default: True
+
+acceptresults -- Add the results of the task to the pipeline context (True) or
+   reject them (False).
+   default: True
+
+Output:
+
+results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
+    the results object for the pipeline task is returned.
+
+Examples:
+
+1. Flag Tsys measurements using currently recommended tests:
+
+   hif_tsysflag()
+
+2. Flag Tsys measurements using all recommended tests apart from that
+   using the 'fieldshape' metric.
+ 
+   hif_tsysflag(flag_fieldshape=False)
+</example> 
+
+</task>
+</casaxml>
+
