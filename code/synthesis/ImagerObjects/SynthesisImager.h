@@ -43,8 +43,6 @@
 #include <synthesis/TransformMachines/FTMachine.h>
 #include <synthesis/TransformMachines/ATerm.h>
 
-#include <boost/scoped_ptr.hpp>
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Forward declarations

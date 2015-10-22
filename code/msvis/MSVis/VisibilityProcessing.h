@@ -15,10 +15,8 @@
 #include "VisibilityIterator.h"
 #include "UtilJ.h"
 
-#include <boost/iterator/indirect_iterator.hpp>
 #include <memory>
 #include <tuple>
-#include <boost/utility.hpp>
 #include <map>
 #include <set>
 #include <vector>
@@ -224,12 +222,15 @@ public:
 };
 
 
-class VisibilityProcessor : boost::noncopyable {
+class VisibilityProcessor {
 
     friend class VpContainer;
     friend class WriterVp;
 
 public:
+
+    VisibilityProcessor( const VisibilityProcessor& ) = delete;
+    VisibilityProcessor& operator=( const VisibilityProcessor& ) = delete;
 
     typedef enum {
         Normal,
@@ -372,11 +373,6 @@ private:
     VpPort & getInputRef (const String & name);
     VpPort & getOutputRef (const String & name);
     void setContainer (const VpContainer *);
-
-    // Prevent copying of existing objects
-
-    VisibilityProcessor (const VisibilityProcessor & other); // do not define
-    VisibilityProcessor & operator=(const VisibilityProcessor & other); // do not define
 
     ROVisibilityIterator * getVi (); // returns the VI used for this data set
     VpEngine * getVpEngine(); // returns the engine executing this VP
@@ -534,8 +530,8 @@ public:
 protected:
 
     typedef vector<VisibilityProcessor *> VPs; // VPs are used (not owned)
-    typedef boost::indirect_iterator <VPs::const_iterator> const_iterator;
-    typedef boost::indirect_iterator <VPs::iterator> iterator;
+    typedef VPs::const_iterator const_iterator;
+    typedef VPs::iterator iterator;
 
     iterator begin();
     const_iterator begin() const;

@@ -573,12 +573,12 @@ VpContainer::chunkStart (const SubchunkIndex & sci)
     iterator i;
     try{
         for (i = begin(); i != end(); i++){
-            i->chunkStart (sci);
+            (*i)->chunkStart (sci);
         }
     }
     catch (AipsError & e){
         Rethrow (e, String::format ("Error during chunkStart for container '%s' VP '%s'",
-                            getName().c_str(), i->getName().c_str()));
+                            getName().c_str(), (*i)->getName().c_str()));
     }
 }
 
@@ -1053,12 +1053,12 @@ VpContainer::processingStartImpl ()
     iterator i;
     try{
         for (i = begin(); i != end(); i++){
-            i->processingStart ();
+            (*i)->processingStart ();
         }
     }
     catch (AipsError & e){
         Rethrow (e, String::format ("Error during processingStart for container '%s' VP '%s'",
-                            getName().c_str(), i->getName().c_str()));
+                            getName().c_str(), (*i)->getName().c_str()));
     }
 }
 
@@ -1105,12 +1105,12 @@ VpContainer::validateImpl()
     iterator i;
     try{
         for (i = begin(); i != end(); i++){
-            i->validate ();
+            (*i)->validate ();
         }
     }
     catch (AipsError & e){
         Rethrow (e, String::format ("Error during validate for container '%s' VP '%s'",
-                            getName().c_str(), i->getName().c_str()));
+                            getName().c_str(), (*i)->getName().c_str()));
     }
 
     orderContents(); // put vps_p into dependency order

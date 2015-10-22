@@ -42,8 +42,6 @@
 #include <msvis/MSVis/VisibilityIterator2.h>
 #include <synthesis/TransformMachines2/FTMachine.h>
 
-#include <boost/scoped_ptr.hpp>
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 // Forward declarations
 class MeasurementSet;

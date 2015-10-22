@@ -96,10 +96,8 @@
 
 #include <casa/namespace.h>
 
-#include <boost/assign/std/vector.hpp>
 #include "../../../code/imageanalysis/ImageAnalysis/ImageExprCalculator.h"
 
-using namespace boost::assign;
 using namespace std;
 
 #define _ORIGIN LogOrigin(_class, __func__, WHERE)
@@ -2275,15 +2273,14 @@ image* image::transpose(
 			);
 		}
 		if (doImages) {
-			std::vector<String> names;
-			names += "box", "region", "chans", "stokes", "mask", "includepix",
-				"excludepix", "residual", "model", "estimates", "logfile",
-				"append", "newestimates", "complist", "dooff", "offset",
-				"fixoffset", "stretch", "rms", "noisefwhm";
-			std::vector<variant> values;
-			values += box, region, chans, stokes, vmask, in_includepix, in_excludepix,
-				residual, model, estimates, logfile, append, newestimates, complist,
-				dooff, offset, fixoffset, stretch, rms, noisefwhm;
+			std::vector<String> names { "box", "region", "chans", "stokes", "mask", "includepix",
+			                            "excludepix", "residual", "model", "estimates", "logfile",
+			                            "append", "newestimates", "complist", "dooff", "offset",
+			                            "fixoffset", "stretch", "rms", "noisefwhm" };
+			std::vector<variant> values { box, region, chans, stokes, vmask, in_includepix, in_excludepix,
+			                              residual, model, estimates, logfile, append, newestimates, complist,
+			                              dooff, offset, fixoffset, stretch, rms, noisefwhm };
+
 			String fname = String("ia.") + String(__func__);
 			fitter.addHistory(lor, fname, names, values);
 		}
@@ -2755,8 +2752,7 @@ image* image::hanning(
                 );
             }
         }
-		vector<variant> values;
-		values += outfile, region, vmask, axis, drop, overwrite, stretch, dmethod;
+		vector<variant> values { outfile, region, vmask, axis, drop, overwrite, stretch, dmethod };
 		if (_image->isFloat()) {
 			SPCIIF image = _image->getImage();
 			return _hanning(
@@ -2797,9 +2793,8 @@ template <class T> image* image::_hanning(
 	if (drop) {
 		smoother.setDecimationFunction(dFunction);
 	}
-	vector<String> names;
-	names += "outfile", "region", "mask", "axis",
-		"drop", "overwrite", "stretch", "dmethod";
+	vector<String> names { "outfile", "region", "mask", "axis",
+	                       "drop", "overwrite", "stretch", "dmethod" };
 	smoother.addHistory(
 		LogOrigin(_class, __func__), "ia.hanning",
 		names, values
@@ -3779,12 +3774,10 @@ image* image::rebin(
 		"All binning factors must be positive."
 	);
 	try {
-		std::vector<String> names;
-		names += "outfile", "bin", "region", "mask",
-			"dropdeg", "overwrite", "stretch", "crop";
-		std::vector<variant> values;
-		values += outfile, bin, region, vmask,
-			dropdeg, overwrite, stretch, crop;
+		std::vector<String> names { "outfile", "bin", "region", "mask",
+		                            "dropdeg", "overwrite", "stretch", "crop" };
+		std::vector<variant> values { outfile, bin, region, vmask,
+		                              dropdeg, overwrite, stretch, crop };
 
 		vector<String> msgs = _newHistory(__func__, names, values);
 		String mask = vmask.toString();
@@ -3857,17 +3850,16 @@ image* image::regrid(
 		if (!((inaxes.size() == 1) && (inaxes[0] == -1))) {
 			axes = inaxes;
 		}
-		vector<String> names;
-		names += "outfile", "shape", "csys", "axes",
-			"region", "mask", "method", "decimate",
-			"replicate", "doref", "dropdegen",
-			"overwrite", "force", "asvelocity", "stretch";
-		vector<variant> values;
-		values += outfile, inshape, csys, inaxes,
-			region, vmask, method, decimate, replicate,
-			doRefChange, dropDegenerateAxes,
-			overwrite, forceRegrid,
-			specAsVelocity, stretch;
+		vector<String> names { "outfile", "shape", "csys", "axes",
+		                       "region", "mask", "method", "decimate",
+		                       "replicate", "doref", "dropdegen",
+		                       "overwrite", "force", "asvelocity", "stretch" };
+		vector<variant> values { outfile, inshape, csys, inaxes,
+		                         region, vmask, method, decimate, replicate,
+		                         doRefChange, dropDegenerateAxes,
+		                         overwrite, forceRegrid,
+		                         specAsVelocity, stretch };
+
 		vector<String> msgs = _newHistory(__func__, names, values);
 		if (_image->isFloat()) {
 			ImageRegridder regridder(

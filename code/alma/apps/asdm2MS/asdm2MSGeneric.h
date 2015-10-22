@@ -10,7 +10,6 @@
 #include <libxml/parserInternals.h>
 
 #include <memory>
-#include <boost/filesystem/path.hpp>
 
 /**
  * A template functor which returns -|v|.

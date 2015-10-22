@@ -38,8 +38,6 @@
 //#include <msvis/MSVis/VisibilityIterator2.h>
 #include <measures/Measures/Stokes.h>
 
-#include <boost/utility.hpp>
-
 using casa::vi::VisBufferComponent2;
 using casa::vi::VisBufferComponents2;
 
@@ -135,13 +133,17 @@ typedef enum {VbNoOptions, VbWritable = 1, VbRekeyable = 2} VisBufferOptions;
 //<todo>
 //</todo>
 
-class VisBuffer2 : private boost::noncopyable {
+class VisBuffer2 {
 
     friend class VisibilityIteratorImpl2;
     friend class FinalTvi2;
     friend class TransformingVi2;
 
 public:
+
+    // make noncopyable...
+    VisBuffer2( const VisBuffer2& ) = delete;
+    VisBuffer2& operator=( const VisBuffer2& ) = delete;
 
     enum {FrameNotSpecified = -2};
 

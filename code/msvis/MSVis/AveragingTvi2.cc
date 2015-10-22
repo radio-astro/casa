@@ -96,9 +96,13 @@ Flag - Each averaged flag (correlation, channel) is the logical "and"
 */
 
 
-class BaselineIndex : private boost::noncopyable {
+class BaselineIndex {
 
 public:
+
+    // make noncopyable...
+    BaselineIndex( const BaselineIndex& ) = delete;
+    BaselineIndex& operator=( const BaselineIndex& ) = delete;
 
     BaselineIndex ();
     ~BaselineIndex ();
