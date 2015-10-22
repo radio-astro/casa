@@ -4705,22 +4705,37 @@ template<class T> SPIIT image::_subimage(
 }
 
 record* image::summary(
-	const string& doppler, const bool list,
-	const bool pixelorder, const bool verbose
+	const string& doppler, bool list,
+	bool pixelorder, bool verbose
 ) {
 	try {
 		_log << _ORIGIN;
 		if (detached()) {
 			return 0;
 		}
+		if (_image->isFloat()) {
+		    ImageMetaData md(_image->getImage());
+		    return fromRecord(
+		        md.summary(doppler, list, pixelorder, verbose)
+		    );
+		}
+		else {
+		    ImageMetaData md(_image->getComplexImage());
+		    return fromRecord(
+		        md.summary(doppler, list, pixelorder, verbose)
+		    );
+		}
+		/*
 		return fromRecord(
 			_image->summary(doppler, list, pixelorder, verbose)
 		);
+		*/
 	} catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
+	return nullptr;
 }
 
 bool image::tofits(
