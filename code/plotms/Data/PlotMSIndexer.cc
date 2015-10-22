@@ -1067,6 +1067,7 @@ Record PlotMSIndexer::getPointMetaData(Int i) {
 	Double freq = plotmscache_->getFreq(currChunk_, ichan);
 	Int icorr = Int(plotmscache_->getCorr(currChunk_,getIndex1000(currChunk_,irel_)));
 	String corr = plotmscache_->polname(icorr);
+	Int obsId = Int(plotmscache_->getObsid(currChunk_, 0));
 
 	Int offset = (currChunk_ > 0 ? (nCumulative_(currChunk_-1)+irel_) : irel_);
 	// Collate meta data
@@ -1085,6 +1086,7 @@ Record PlotMSIndexer::getPointMetaData(Int i) {
 	r.define("corr", corr);
 	r.define("x", thisx);
 	r.define("y", thisy);
+	r.define("obsid", obsId);
 	r.define("offset", offset);
 	r.define("currchunk", currChunk_);
 	r.define("irel", irel_);
@@ -1150,6 +1152,7 @@ PlotLogMessage* PlotMSIndexer::locateRange(const Vector<PlotRegion>& regions,
 	Int nFoundMasked(0),nFoundUnmasked(0);
 
 	Bool m(False);
+	ss << "Deprecation warning: (offset, currchunk, irel) will be removed from Locate information in the next release.\n";
 	for(Int i = 0; i < n; i++) {
 
 		m=maskedAt(i);
@@ -1278,8 +1281,9 @@ void PlotMSIndexer::reportMeta(Double x, Double y, Bool masked,stringstream& ss)
 	ss << " ";
 
 	ss << "X=" << x << " ";
-	ss << "Y="  << y << " ";
-	ss << ( masked ? "F " : " ");
+	ss << "Y="  << y;
+	ss << ( masked ? " F " : " ");
+	ss << "Observation=" << plotmscache_->getObsid(currChunk_,0) << " ";
 	ss << "(" << (currChunk_ > 0 ? (nCumulative_(currChunk_-1)+irel_) : irel_) << "/";
 	ss << currChunk_ << "/" << irel_ << ")";
 

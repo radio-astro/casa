@@ -85,8 +85,9 @@ bool ActionExport::exportText( PlotMSApp* plotms ){
 	if ( firstRecord.isDefined( Y_AXIS_UNITS)){
 		yunit = rec.subRecord(0).asString(Y_AXIS_UNITS);
 	}
+    csv_file << "# Deprecation warning: offset currchunk irel will be removed in the next release.\n";
 	csv_file << "# x y chan scan field ant1 ant2 ant1name "
-			<< "ant2name time freq spw corr offset currchunk irel"
+			<< "ant2name time freq spw corr obs offset currchunk irel"
 			<< endl;
 	if ( xunit.length() > 0 || yunit.length() > 0 ){
 		csv_file << "# " << xunit << " " << yunit
@@ -125,6 +126,7 @@ bool ActionExport::exportText( PlotMSApp* plotms ){
 			Int spw = fieldRecord.asInt("spw");
 			Double freq = fieldRecord.asDouble("freq");
 			String corr = fieldRecord.asString("corr");
+			Int obsId = fieldRecord.asInt("obsid");
 			Int offset = fieldRecord.asInt("offset");
 			Int currchunk = fieldRecord.asInt("currchunk");
 			Int irel = fieldRecord.asInt("irel");
@@ -166,8 +168,8 @@ bool ActionExport::exportText( PlotMSApp* plotms ){
 					<< freq << " ";
 			csv_file.unsetf(ios_base::fixed);
 			csv_file.precision(precision);
-			csv_file << spw << " " << corr << " " << offset << " "
-					<< currchunk << " " << irel << endl;
+			csv_file << spw << " " << corr << " " << obsId << " " << 
+					offset << " " << currchunk << " " << irel << endl;
 
 		}
 	}
