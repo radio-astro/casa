@@ -156,12 +156,12 @@ ia.close()
 #             'rms': 0.46436065,
 #             'sigma': 0.42372863,
 #             'sum':  47434.86051071}
-# 2015/03/08: update after image parameter change in simanalyze (r32603)
-refstats = {'max': 5.25182152,
-             'min': -0.84452724,
-             'rms': 0.558559,
-             'sigma': 0.51158817,
-             'sum':  58747.95095025}
+# 2015/10/23: update after the fix to rasterutil._get_sampling (r35037)
+refstats = {'max': 5.01661158,
+             'min': -0.80671942,
+             'rms': 0.5335443,
+             'sigma': 0.48867723,
+             'sum':  56116.85862354}
 
 ia.open(project+"/"+project + '.sd.diff')
 m51sd_diffstats=ia.statistics(verbose=False,list=False)
@@ -214,12 +214,19 @@ ia.close()
 #             'rms': 0.2181273,
 #             'sigma': 0.2095669,
 #             'sum': 15109.65572983}
-# 2015/03/08: update after image parameter change in simanalyze (r32603)
-diffstats = {'max': 0.96216369,
-             'min': -0.94122034,
-             'rms': 0.21231961,
-             'sigma': 0.21136266,
-             'sum': 5277.29528891}
+# # 2015/03/08: update after image parameter change in simanalyze (r32603)
+# diffstats = {'max': 0.96216369,
+#              'min': -0.94122034,
+#              'rms': 0.21231961,
+#              'sigma': 0.21136266,
+#              'sum': 5277.29528891}
+
+# 2015/10/23: update after the fix to rasterutil._get_sampling (r35037)
+diffstats = {'max': 0.91776484,
+             'min': -0.89943612,
+             'rms': 0.20261368,
+             'sigma': 0.20169726,
+             'sum': 5044.85529928}
 
 # relative tolerances to reference values
 reftol   = {'sum':  1e-2,
