@@ -78,6 +78,7 @@
 #include <imageanalysis/ImageAnalysis/ImageHistogramsCalculator.h>
 #include <imageanalysis/ImageAnalysis/ImageHistory.h>
 #include <imageanalysis/ImageAnalysis/ImageMaskedPixelReplacer.h>
+#include <imageanalysis/ImageAnalysis/ImageMetaDataRW.h>
 #include <imageanalysis/ImageAnalysis/ImageMomentsTask.h>
 #include <imageanalysis/ImageAnalysis/ImagePadder.h>
 #include <imageanalysis/ImageAnalysis/ImageProfileFitter.h>
@@ -3460,7 +3461,7 @@ template<class T> void image::_putchunk(
 bool image::putregion(
     const variant& v_pixels, const variant& v_pixelmask,
     const variant& region, bool list, bool usemask,
-    bool locking, bool replicateArray
+    bool , bool replicateArray
 ) {
 	try {
 		_log << _ORIGIN;
@@ -4253,23 +4254,28 @@ bool image::setbrightnessunit(const std::string& unit) {
 }
 
 bool image::setcoordsys(const ::casac::record& csys) {
-	bool rstat(false);
 	try {
 		_log << _ORIGIN;
 		if (detached()) {
-			return rstat;
+			return False;
 		}
 
-		Record *coordinates = toRecord(csys);
-		rstat = _image->setcoordsys(*coordinates);
-		delete coordinates;
+		unique_ptr<Record> coordinates(toRecord(csys));
+		unique_ptr<ImageMetaDataRW> md(
+		    _image->isFloat()
+		    ? new ImageMetaDataRW(_image->getImage())
+		    : new ImageMetaDataRW(_image->getComplexImage())
+		);
+		md->setCsys(*coordinates);
+
+		//rstat = _image->setcoordsys(*coordinates);
 	}
 	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
+	return True;
 }
 
 bool image::sethistory(const std::string& origin,
