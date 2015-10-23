@@ -246,62 +246,6 @@ void ImageAnalysis::addnoise(
 	//deleteHist();
 }
 
-Bool ImageAnalysis::imagefromascii(const String& outfile, const String& infile,
-		const Vector<Int>& shape, const String& sep, const Record& csys,
-		const Bool linear, const Bool overwrite) {
-	try {
-		*_log << LogOrigin("ImageAnalysis", "imagefromascii");
-
-		Path filePath(infile);
-		String fileName = filePath.expandedName();
-
-		ifstream inFile(fileName.c_str());
-		if (!inFile) {
-			*_log << LogIO::SEVERE << "Cannot open " << infile << LogIO::POST;
-			return false;
-		}
-
-		IPosition shp(shape);
-		uInt n = shp.product();
-		uInt nx = shp(0);
-		Vector<Float> a(n, 0.0);
-		int idx = 0;
-		string line;
-		string *line2 = new string[2 * nx];
-		uInt iline = 0;
-		uInt nl = 1;
-		while (nl > 0) {
-			getline(inFile, line, '\n');
-			nl = split(line, line2, 2 * nx, sep);
-			if (nl > 0) {
-				if (nl != nx) {
-					*_log << LogIO::SEVERE << "Length of line " << iline
-							<< " is " << nl << " but should be " << nx
-							<< LogIO::POST;
-					return false;
-				}
-				for (uInt i = 0; i < nx; i++) {
-					a[idx + i] = atof(line2[i].c_str());
-				}
-				idx += nx;
-				iline += 1;
-			}
-		}
-		delete [] line2;
-		Vector<Float> vec(n);
-		for (uInt i = 0; i < n; i++)
-			vec[i] = a[i];
-		Array<Float> pixels(vec.reform(IPosition(shape)));
-		_imageComplex.reset();
-		_imageFloat = ImageFactory::imageFromArray(outfile, pixels, csys, linear, overwrite);
-	} catch (const AipsError& x) {
-		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		return False;
-	}
-	return True;
-}
-
 Bool ImageAnalysis::imagefromimage(const String& outfile, const String& infile,
 		Record& region, const String& Mask, const bool dropdeg,
 		const bool overwrite) {

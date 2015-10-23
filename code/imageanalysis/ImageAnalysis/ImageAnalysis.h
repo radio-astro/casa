@@ -78,11 +78,6 @@ public:
     	const std::pair<Int, Int> *const &seeds
     );
 
-    Bool imagefromascii(const String& outfile, const String& infile, 
-                        const Vector<Int>& shape, const String& sep, 
-                        const Record& csys, const Bool linear = False, 
-                        const Bool overwrite = False);
-
     Bool imagefromimage(const String& outfile, const String& infile, 
                         Record& region, const String& mask, 
                         const Bool dropdeg = False, 

@@ -112,6 +112,12 @@ public:
     	const vector<std::pair<LogOrigin, String> > *const &msgs=0
     );
 
+    static SPIIF fromASCII(
+        const String& outfile, const String& infile,
+        const IPosition& shape, const String& sep, const Record& csys,
+        const Bool linear, const Bool overwrite
+    );
+
     // Create a float-valued image from a complex-valued image. All metadata is copied
     // and pixel values are initialized according to <src>func</src>.
     static SHARED_PTR<TempImage<Float> > floatFromComplex(

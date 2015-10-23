@@ -58,6 +58,53 @@ SPIIC ImageFactory::complexImageFromShape(
 	);
 }
 
+
+SPIIF ImageFactory::fromASCII(
+    const String& outfile, const String& infile,
+    const IPosition& shape, const String& sep, const Record& csys,
+    const Bool linear, const Bool overwrite
+) {
+    Path filePath(infile);
+    auto fileName = filePath.expandedName();
+
+    ifstream inFile(fileName.c_str());
+    ThrowIf(!inFile, "Cannot open " + infile);
+
+    auto n = shape.product();
+    auto nx = shape[0];
+    Vector<Float> a(n, 0.0);
+    int idx = 0;
+    string line;
+    unique_ptr<string[]> managed(new string[2 * nx]);
+    auto line2 = managed.get();
+    uInt iline = 0;
+    uInt nl = 1;
+    while (nl > 0) {
+        getline(inFile, line, '\n');
+        nl = split(line, line2, 2 * nx, sep);
+        if (nl > 0) {
+            ThrowIf(
+                nl != nx,
+                "Length of line " + String::toString(iline)
+                + " is " + String::toString(nl) + " but should be "
+                + String::toString(nx)
+            );
+            for (uInt i = 0; i < nx; i++) {
+                a[idx + i] = atof(line2[i].c_str());
+            }
+            idx += nx;
+            iline += 1;
+        }
+    }
+    Vector<Float> vec(n);
+    for (uInt i = 0; i < n; ++i) {
+        vec[i] = a[i];
+    }
+    Array<Float> pixels(vec.reform(IPosition(shape)));
+    return imageFromArray(outfile, pixels, csys, linear, overwrite);
+}
+
+
 void ImageFactory::_centerRefPix(
 	CoordinateSystem& csys, const IPosition& shape
 ) {
