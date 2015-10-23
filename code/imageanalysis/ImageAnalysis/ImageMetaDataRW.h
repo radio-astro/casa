@@ -32,6 +32,10 @@
 
 #include <casa/aips.h>
 
+#include <memory>
+
+using namespace std;
+
 namespace casa {
 
 // <summary>
@@ -77,6 +81,8 @@ class ImageMetaDataRW : public ImageMetaDataBase {
 
 public:
 
+    ImageMetaDataRW() = delete;
+
 	ImageMetaDataRW(SPIIF image);
 	ImageMetaDataRW(SPIIC image);
 
@@ -96,6 +102,9 @@ public:
 
 	// set (update) the value associated with the key.
 	Bool set(const String& key, const ValueHolder& value);
+
+	// set the coordinate system from a Record.
+	void setCsys(const Record& coordinates);
 
 protected:
 
@@ -163,7 +172,9 @@ private:
 	mutable vector<Quantity> _refVal, _increment;
 	mutable Record _header, _stats;
 
-	ImageMetaDataRW() {}
+	unique_ptr<CoordinateSystem> _makeCoordinateSystem(
+	    const Record& coordinates, const IPosition& shape
+	);
 
 	void _setCoordinateValue(const String& key, const ValueHolder& value);
 
@@ -188,6 +199,6 @@ private:
 	Bool _isWritable() const;
 };
 
-} //# NAMESPACE CASA - END
+}
 
 #endif

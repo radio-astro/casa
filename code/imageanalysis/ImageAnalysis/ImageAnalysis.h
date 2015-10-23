@@ -227,8 +227,6 @@ public:
         const bool extendMask=False
     );
 
-    bool setcoordsys(const Record& csys);
-
     inline static String className() {const static String x = "ImageAnalysis"; return x; }
 
     bool twopointcorrelation(
@@ -299,12 +297,6 @@ public:
     void centreRefPix (casa::CoordinateSystem& cSys,
                        const casa::IPosition& shape) const;
     
-   
-// Convert a Record to a CoordinateSystem
-    casa::CoordinateSystem*
-      makeCoordinateSystem(const casa::Record& cSys,
-                           const casa::IPosition& shape) const;
-
     // Some helper functions that needs to be in casa namespace coordsys
 
     Record _worldVectorToRecord(

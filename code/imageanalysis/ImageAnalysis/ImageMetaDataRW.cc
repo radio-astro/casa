@@ -30,6 +30,7 @@
 
 #include <casa/Containers/ValueHolder.h>
 #include <casa/Quanta/QuantumHolder.h>
+#include <coordinates/Coordinates/CoordinateUtil.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 
@@ -447,6 +448,45 @@ Bool ImageMetaDataRW::removeMask(const String& maskName) {
 		_header.assign(Record());
 		return True;
 	}
+}
+
+void ImageMetaDataRW::setCsys(const Record& coordinates) {
+    ThrowIf(
+        coordinates.nfields() == 0,
+        "Record is empty"
+    );
+    auto cs = _makeCoordinateSystem(
+        coordinates, _getShape()
+    );
+    ThrowIf(
+        ! _setCsys(
+            *_makeCoordinateSystem(
+                coordinates, _getShape()
+            )
+        ), "Unable to set coordinate system"
+    );
+}
+
+unique_ptr<CoordinateSystem> ImageMetaDataRW::_makeCoordinateSystem(
+    const Record& coordinates, const IPosition& shape
+) {
+    unique_ptr<CoordinateSystem> pCS;
+    if (coordinates.nfields() == 1) {
+        // must be a record as an element
+        Record tmp(coordinates.asRecord(RecordFieldId(0)));
+        pCS.reset(CoordinateSystem::restore(tmp, ""));
+    }
+    else {
+        pCS.reset(CoordinateSystem::restore(coordinates, ""));
+    }
+
+    // Fix up any body longitude ranges...
+    String errMsg;
+    if (! CoordinateUtil::cylindricalFix(*pCS, errMsg, shape)) {
+       _getLog() << LogOrigin("ImageMetaDataRW", __func__)
+           << LogIO::WARN << errMsg << LogIO::POST;
+    }
+    return pCS;
 }
 
 Bool ImageMetaDataRW::_setCsys(const CoordinateSystem& csys) {

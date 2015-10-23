@@ -1735,36 +1735,6 @@ ImageInterface<Float>* ImageAnalysis::sepconvolve(
 	return pImOut;
 }
 
-Bool ImageAnalysis::setcoordsys(const Record& coordinates) {
-	*_log << LogOrigin(className(), __func__);
-	ThrowIf(
-		coordinates.nfields() == 0,
-		"CoordinateSystem is empty"
-	);
-	Bool ok = False;
-	if (_imageFloat) {
-		PtrHolder<CoordinateSystem> cSys(
-			makeCoordinateSystem(
-				coordinates, _imageFloat->shape()
-			)
-		);
-		ok = _imageFloat->setCoordinateInfo(*(cSys.ptr()));
-	}
-	else if (_imageComplex) {
-		PtrHolder<CoordinateSystem> cSys(
-			makeCoordinateSystem(
-				coordinates, _imageComplex->shape()
-			)
-		);
-		ok = _imageComplex->setCoordinateInfo(*(cSys.ptr()));
-	}
-	else {
-		ThrowCc("No image is defined");
-	}
-	ThrowIf(!ok, "Failed to set CoordinateSystem");
-	return True;
-}
-
 Bool ImageAnalysis::twopointcorrelation(
 	const String& outFile,
 	Record& theRegion, const String& mask, const Vector<Int>& axes1,
@@ -1975,27 +1945,6 @@ Bool ImageAnalysis::toASCII(
 		nline += 1;
 	}
 	return True;
-}
-
-CoordinateSystem* ImageAnalysis::makeCoordinateSystem(
-		const Record& coordinates, const IPosition& shape) const {
-	*_log << LogOrigin("ImageAnalysis", "makeCoordinateSystem");
-	CoordinateSystem* pCS = 0;
-	if (coordinates.nfields() == 1) { // must be a record as an element
-		Record tmp(coordinates.asRecord(RecordFieldId(0)));
-		pCS = CoordinateSystem::restore(tmp, "");
-
-	} else {
-		pCS = CoordinateSystem::restore(coordinates, "");
-	}
-
-	// Fix up any body longitude ranges...
-	String errMsg;
-	if (!CoordinateUtil::cylindricalFix(*pCS, errMsg, shape)) {
-		*_log << LogOrigin("ImageAnalysis", "makeCoordinateSystem");
-		*_log << LogIO::WARN << errMsg << LogIO::POST;
-	}
-	return pCS;
 }
 
 void ImageAnalysis::centreRefPix(CoordinateSystem& cSys, const IPosition& shape) const {
