@@ -573,6 +573,16 @@ bool image::fromascii(const string& outfile, const string& infile,
 
 		_reset();
 		std::unique_ptr<Record> coordsys(toRecord(csys));
+		_image.reset(
+		    new ImageAnalysis(
+		        ImageFactory::fromASCII(
+		            outfile, infile, IPosition(Vector<Int>(shape)),
+		            sep, *coordsys, linear, overwrite
+		        )
+		    )
+		);
+		_stats.reset(nullptr);
+		/*
 		if (
 			_image->imagefromascii(
 				outfile, infile, Vector<Int> (shape),
@@ -583,11 +593,13 @@ bool image::fromascii(const string& outfile, const string& infile,
 			return True;
 		}
 		throw AipsError("Error creating image from ascii.");
+		*/
 	} catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
+	return True;
 }
 
 bool image::fromfits(
