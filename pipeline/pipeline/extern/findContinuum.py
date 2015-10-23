@@ -22,7 +22,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: findContinuum.py,v 1.22 2015/09/21 04:06:02 we Exp $" 
+    myversion = "$Id: findContinuum.py,v 1.23 2015/10/22 19:24:16 we Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -104,7 +104,17 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
            one window is found
     """
     if (centralArcsec == 'auto'):
-        centralArcsecField = -1  # use the whole field
+        bmaj, bmin, bpa, cdelt1, cdelt2, naxis1, naxis2, freq = getImageInfo(img)
+        nchan, firstFreq, lastFreq = numberOfChannelsInCube(img, returnFreqs=True)
+        npixels = float(nchan)*naxis1*naxis2
+        maxpixels = float(1024)*1024*960
+        if (npixels > maxpixels):
+            print "Excessive number of pixels (%.0f > %.0f)" % (npixels,maxpixels)
+            totalWidthArcsec = abs(cdelt2*naxis2)
+            centralArcsecField = totalWidthArcsec*maxpixels/npixels
+            print "Reducing image width examined from %.2f to %.2f arcsec to avoid memory problems." % (totalWidthArcsec,centralArcsecField)
+        else:
+            centralArcsecField = -1  # use the whole field
     else:
         centralArcsecField = centralArcsec  # use the specified field radius
     selection, png = runFindContinuum(img, spw, transition, baselineModeA, baselineModeB,
@@ -1271,8 +1281,8 @@ def MAD(a, c=0.6745, axis=0):
         d = nanmedian(a[good])
         m = nanmedian(np.fabs(a[good] - d) / c)
     else:
+        print "1) len(a)=%d, len(a[good])=%d, np.shape(a)=%s, np.shape(good)=%s" % (len(a), len(a[good]), np.shape(a), np.shape(good))
         d = nanmedian(a[good], axis=axis)
-        # I don't want the array to change so I have to copy it?
         if axis > 0:
             aswp = swapaxes(a[good],0,axis)
         else:
