@@ -5743,7 +5743,7 @@ int main(int argc, char *argv[]) {
 
       vector<string> observingLog = r->getObservingLog();
 
-      string scheduleType("ALMA");
+      string scheduleType(r->getTelescopeName());
       schedule[0] = "SchedulingBlock " + ds->getSBSummary().getRowByKey(r->getSBSummaryId())->getSbSummaryUID().getEntityId().toString();
       schedule[1] = "ExecBlock " + r->getExecBlockUID().getEntityId().toString();
       string project(r->getProjectUID().getEntityId().toString());
