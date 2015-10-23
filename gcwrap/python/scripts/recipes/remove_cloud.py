@@ -14,6 +14,7 @@ from scipy import stats
 import scipy.optimize as opt
 import os
 import math
+import time
 
 def rmc_func1(x,a,b,c):    
     return a*(x-b)**2+c
@@ -224,16 +225,16 @@ def rmc_approxCalc(tsrc0, tsrc1, tsrc2, tsrc3,
     return pwv_z,pwv_z_noc,tau_constant,tsrcn
 
 
-def remove_cloud(vis=None, correct_ms=False, statsfile='', verbose=False, doplot=False):
+def remove_cloud(vis=None, correct_ms=False, offsetsfile='', verbose=False, doplot=False):
     """
     Parameters:
        vis - MS with WVR data included (imported ALMA data)
        correct_ms - do the corrections to the wvr data in the MS (default False)
-       statsfile - store processing statistics in this filename (default '' = don't store) 
+       offsetsfile - store processing results (Temp offsets) in this filename (default '' = don't store) 
        verbose - control terminal output (default False) 
        doplot - generate diagnostic plots in subdirectory vis+'_remove_cloud_plots' (default False)
     Example:
-       remove_cloud(vis='uid___A002_X....', True, 'mystats.txt')
+       remove_cloud(vis='uid___A002_X....', True, 'myoffsets.txt')
     """
 
     casalog.post('*** Starting remove_cloud ***', 'INFO')
@@ -253,12 +254,12 @@ def remove_cloud(vis=None, correct_ms=False, statsfile='', verbose=False, doplot
                          +'\nCannot proceed.', 'SEVERE')
             return False
 
-    if not type(statsfile)==str: 
-        casalog.post('Invalid parameter statsfile.', 'SEVERE')
+    if not type(offsetsfile)==str: 
+        casalog.post('Invalid parameter offsetsfile.', 'SEVERE')
         return False
 
-    if statsfile!='' and  os.path.exists(statsfile):
-        casalog.post('File '+statsfile+' exits.', 'SEVERE')
+    if offsetsfile!='' and  os.path.exists(offsetsfile):
+        casalog.post('File '+offsetsfile+' exits.', 'SEVERE')
         return False
 
     if correct_ms:   # either correct or dont correct ms file - need to set in advance
@@ -305,6 +306,22 @@ def remove_cloud(vis=None, correct_ms=False, statsfile='', verbose=False, doplot
     m_el=360.0*(np.median(mytb.getcol('DIRECTION')[1]))/(2.0*3.14)
     mytb.close()
 
+    tbo = None
+    dooffsets=False
+    if offsetsfile!='':
+        os.system('echo "0 0 0 0 0" > mydummy.txt')
+        ok = mytb.fromascii(offsetsfile, sep=" ", columnnames=['ANTENNA','OFFSETS'], datatypes=['S', 'R4'], 
+                           asciifile='mydummy.txt')
+        mytb.close()
+        if not ok:
+            casalog.post('Error creating table '+offsetsfile, 'SEVERE')
+            return False
+        tbo = tbtool()
+        tbo.open(offsetsfile, nomodify=False)
+        tbo.removerows([0])
+        os.system('rm mydummy.txt')
+        dooffsets=True
+
     if correct_ms:
 	mytb.open(vis,nomodify=False)
     else:
@@ -319,31 +336,45 @@ def remove_cloud(vis=None, correct_ms=False, statsfile='', verbose=False, doplot
     tauc_std_ant=np.zeros(nant)
 
     for iant in range(nant):
-        if verbose:
-            casalog.post('- Processing antenna#'+str(iant)+' ('+antnames[iant]+') ...', 'INFO')
-        tb1=mytb.query("ANTENNA1==%d && PROCESSOR_ID==%d" % (iant,proc_id))
+        casalog.post('- Processing antenna#'+str(iant)+' ('+antnames[iant]+') ...', 'INFO')
+        tb1=mytb.query("ANTENNA1==%d && PROCESSOR_ID==%d" % (iant,proc_id), sortlist='TIME')
         temp=tb1.getcol('DATA')
-        nsamples=len(temp[0][0][:])
+        nsamples=len(temp[0][0])
         pwvna=np.zeros(nsamples)
         pwvn_noca=np.zeros(nsamples)
         tau_con=np.zeros(nsamples)
+
+        offsets=None
+        if dooffsets:
+            offsets=np.zeros((4,nsamples))
+
         for isam in range(nsamples):
-            tsrc0=(temp[0][0][isam]).real
-            tsrc1=(temp[0][1][isam]).real
-            tsrc2=(temp[0][2][isam]).real
-            tsrc3=(temp[0][3][isam]).real
+            tsrc=[(temp[0][0][isam]).real, (temp[0][1][isam]).real, (temp[0][2][isam]).real, (temp[0][3][isam]).real]
 
-        # got temps, now convert to pwv
+            # got temps, now convert to pwv
 
-        pwvna[isam],pwvn_noca[isam],tau_con[isam],tsrcn=rmc_approxCalc(tsrc0, tsrc1, tsrc2, tsrc3, m_el, Tamb, 
-                                                                       verbose)
+            pwvna[isam],pwvn_noca[isam],tau_con[isam],tsrcn=rmc_approxCalc(tsrc[0], tsrc[1], tsrc[2], tsrc[3], m_el, Tamb, 
+                                                                           verbose)
+            if dooffsets:
+                for it in range(4):
+                    offsets[it][isam]=tsrc[it] - tsrcn[it] # = old WVR value minus newly calculated one
 
-	if correct_ms:
-            # put the new tsrcn values for this sample & antenna into temp[0][0-3][isam]
-            if verbose:
-                casalog.post('   Writing new values to Main table of '+vis, 'INFO')
-            for it in range(4):
-                temp[0][it][isam]=tsrcn[it]
+            if correct_ms:
+                # put the new tsrcn values for this sample & antenna into temp[0][0-3][isam]
+                for it in range(4):
+                    temp[0][it][isam]=tsrcn[it]
+
+        if dooffsets:
+            casalog.post('   Writing the offset values for antenna '+str(iant)+' to '+offsetsfile, 'INFO')
+            startrow=tbo.nrows()
+            tbo.addrows(nsamples)
+            tbo.putcol('OFFSETS', offsets, startrow)
+            ants = np.empty(nsamples)
+            ants.fill(iant)
+            tbo.putcol('ANTENNA', ants, startrow)
+
+        if correct_ms:
+            casalog.post('   Writing new values for antenna '+str(iant)+' to Main table of '+vis, 'INFO')
             tb1.putcol('DATA',temp)
         
         tb1.close()
@@ -376,10 +407,12 @@ def remove_cloud(vis=None, correct_ms=False, statsfile='', verbose=False, doplot
             tau_con_scaled=10*tau_con
             pl.ion()
             pyplot.clf()
-            pyplot.plot(pwvna)
-            pyplot.plot(pwvn_noca,color='r')
-            pyplot.plot(tau_con_scaled)
-            pyplot.title((antnames[iant]+'  '+str(iant)+'  '+vis))
+            pyplot.plot(pwvna, color='blue')
+            pyplot.plot(pwvn_noca, color='red')
+            pyplot.plot(tau_con_scaled, color='green')
+            pyplot.title(antnames[iant]+'  ('+str(iant)+')  '+vis)
+            pyplot.xlabel('Measurement Number')
+            pyplot.ylabel('blue=PWV_before (mm), red=PWV_after (mm), green=10*tau_con')
             pyplot.draw()
             plotfil=plotdir+'/'+antnames[iant]+'.png'
             pyplot.savefig(plotfil)
@@ -388,21 +421,23 @@ def remove_cloud(vis=None, correct_ms=False, statsfile='', verbose=False, doplot
 
     mytb.close()
 
-    if statsfile!='':
+    if dooffsets:
         pwv_noca_all=stats.nanmedian(pwv_ant)
         pwv_std_all=stats.nanmedian(pwv_std_ant)
         tauc_all=stats.nanmedian(tauc_ant)
         tauc_std_all=stats.nanmedian(tauc_std_ant)
 
-        try:
-            fil=open(statsfile,'a')
-            lineo=vis+'  pwv '+str(pwv_noca_all)+'+/-'+str(pwv_std_all)+' tauc '+str(tauc_all)+'+/-'+str(tauc_std_all)+'\n'
-            fil.write(lineo)
-            fil.close()
-            casalog.post(' Saved remove_cloud statistics to '+statsfile, 'INFO')
-        except Exception, instance: 
-            casalog.post("*** Error \'"+instance+"\' writing file "+statsfile, 'WARN')
-            return False 
+        tbo.putkeyword('REFMS', vis)
+        tbo.putkeyword('CREATION_UTC', time.asctime(time.gmtime()))
+        tbo.putkeyword('PWV', pwv_noca_all)
+        tbo.putkeyword('PWV_STDEV', pwv_std_all)
+        tbo.putkeyword('TAUC', tauc_all)
+        tbo.putkeyword('TAUC_STDEV', tauc_std_all)
+
+        tbo.close()
+        
+        casalog.post(' Saved remove_cloud results to '+offsetsfile, 'INFO')
+
 
     return True
 
