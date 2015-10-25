@@ -1575,17 +1575,17 @@ void PlotMSIndexer::computeRanges() {
 
 		if ( !m ) {
 			++sizeUnMasked_;
-			xmin_=min(xmin_,x);
-			xmax_=max(xmax_,x);
-			ymin_=min(ymin_,y);
-			ymax_=max(ymax_,y);
+			xmin_ = std::min(xmin_,x);
+			xmax_ = std::max(xmax_,x);
+			ymin_ = std::min(ymin_, y);
+			ymax_ = std::max(ymax_, y);
 		}
 		else {
 			++sizeMasked_;
-			xflmin_=min(xflmin_,x);
-			xflmax_=max(xflmax_,x);
-			yflmin_=min(yflmin_,y);
-			yflmax_=max(yflmax_,y);
+			xflmin_ = std::min(xflmin_,x);
+			xflmax_ = std::max(xflmax_,x);
+			yflmin_ = std::min(yflmin_,y);
+			yflmax_ = std::max(yflmax_,y);
 		}
 	}
 
