@@ -35,18 +35,18 @@ class QGridLayout;
 
 namespace casa {
 
-class ExternalAxisWidgetBottom;
-class ExternalAxisWidgetRight;
-class ExternalAxisWidgetLeft;
+class ExternalAxisControlBottom;
+class ExternalAxisControlRight;
+class ExternalAxisControlLeft;
 class ExternalAxisControl;
 class ExternalAxis;
 class FeatherCurve;
 
 class FeatherPlot : public QwtPlot {
 
-friend class ExternalAxisWidgetBottom;
-friend class ExternalAxisWidgetRight;
-friend class ExternalAxisWidgetLeft;
+friend class ExternalAxisControlBottom;
+friend class ExternalAxisControlRight;
+friend class ExternalAxisControlLeft;
 
 public:
 	FeatherPlot(QWidget* parent );
@@ -75,7 +75,7 @@ public:
 
 	//Legend
 	void insertSingleLegend( QWidget* parent );
-	QWidget* getExternalAxisWidget( QwtPlot::Axis position );
+	QWidget* getExternalAxisControl( QwtPlot::Axis position );
 
 	//Accessors
 	FeatherPlot::PlotType getPlotType() const;

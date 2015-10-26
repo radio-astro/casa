@@ -23,27 +23,29 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#ifndef EXTERNALAXISWIDGETLEFT_H_
-#define EXTERNALAXISWIDGETLEFT_H_
+#ifndef EXTERNALAXISWIDGETRIGHT_H_
+#define EXTERNALAXISWIDGETRIGHT_H_
 
 #include <guitools/Feather/ExternalAxisControl.h>
 
 namespace casa {
 
-class ExternalAxisWidgetLeft : public ExternalAxisControl {
+class ExternalAxisControlRight : public ExternalAxisControl {
 public:
-	ExternalAxisWidgetLeft(QWidget* parent/*, bool manageTicksManually = false*/);
-	virtual ~ExternalAxisWidgetLeft();
+	ExternalAxisControlRight(QWidget* parent );
+	void setUseLeftScale( bool b );
+	virtual ~ExternalAxisControlRight();
 protected:
+	virtual int getCanvasHeight() const;
 	virtual void defineAxis( QLine& axisLine );
 	virtual void drawTicks( QPainter* painter, int tickLength );
 	virtual void drawAxisLabel( QPainter* painter );
 	virtual int getStartY() const;
 private:
 
-	void drawTick( QPainter* painter, float yPixel, double value,
-			int tickLength );
+	bool useLeftScale;
+	void drawTick( QPainter* painter, double yPixel, double value, int tickLength);
 };
 
 } /* namespace casa */
-#endif /* EXTERNALAXISWIDGETLEFT_H_ */
+#endif /* EXTERNALAXISWIDGETRIGHT_H_ */

@@ -80,7 +80,7 @@ public:
     void resetZoomRectangleColor();
     virtual void addZoomNeutralCurves() = 0;
 
-    QWidget* getExternalAxisWidget( QwtPlot::Axis position );
+    QWidget* getExternalAxisControl( QwtPlot::Axis position );
 
     void insertLegend( QWidget* parent );
     ~FeatherPlotWidget();

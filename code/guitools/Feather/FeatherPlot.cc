@@ -26,9 +26,9 @@
 #include "FeatherPlot.h"
 #include <guitools/Feather/ExternalAxisControl.h>
 #include <guitools/Feather/ExternalAxis.h>
-#include <guitools/Feather/ExternalAxisWidgetLeft.h>
-#include <guitools/Feather/ExternalAxisWidgetRight.h>
-#include <guitools/Feather/ExternalAxisWidgetBottom.h>
+#include <guitools/Feather/ExternalAxisControlLeft.h>
+#include <guitools/Feather/ExternalAxisControlRight.h>
+#include <guitools/Feather/ExternalAxisControlBottom.h>
 #include <guitools/Feather/FeatherCurve.h>
 #include <msvis/MSVis/UtilJ.h>
 #include <QDebug>
@@ -148,18 +148,18 @@ FeatherPlot::~FeatherPlot() {
 //                     External Axis
 //-------------------------------------------------------------------------
 
-QWidget* FeatherPlot::getExternalAxisWidget( QwtPlot::Axis position ){
+QWidget* FeatherPlot::getExternalAxisControl( QwtPlot::Axis position ){
 	QWidget* axisWidget = NULL;
 	if ( position < AXIS_COUNT ){
 		if ( axisWidgets[position] == NULL ){
 			if ( position == QwtPlot::xBottom ){
-				axisWidgets[position] = new ExternalAxisWidgetBottom( NULL );
+				axisWidgets[position] = new ExternalAxisControlBottom( NULL );
 			}
 			else if ( position == QwtPlot::yLeft ){
-				axisWidgets[position] = new ExternalAxisWidgetLeft( NULL);
+				axisWidgets[position] = new ExternalAxisControlLeft( NULL);
 			}
 			else {
-				axisWidgets[position] = new ExternalAxisWidgetRight( NULL );
+				axisWidgets[position] = new ExternalAxisControlRight( NULL );
 			}
 			axisWidgets[position]->setPlot( this );
 			updateAxis( position );
@@ -466,7 +466,7 @@ void FeatherPlot::addCurve( QVector<double> xValues, QVector<double> yValues,
 	    curve  = new FeatherCurve( this, QwtPlot::xBottom, yAxis, sumCurve );
 	    if ( isScatterPlot() ){
 			if ( axisWidgets[QwtPlot::yRight] != NULL ){
-				ExternalAxisWidgetRight* rightWidget = dynamic_cast<ExternalAxisWidgetRight*>(axisWidgets[QwtPlot::yRight]);
+				ExternalAxisControlRight* rightWidget = dynamic_cast<ExternalAxisControlRight*>(axisWidgets[QwtPlot::yRight]);
 				rightWidget->setUseLeftScale( true );
 			}
 			curve->initScatterPlot( dotSize );

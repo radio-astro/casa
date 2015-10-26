@@ -23,7 +23,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#include "ExternalAxisWidgetRight.h"
+#include "ExternalAxisControlRight.h"
 #include <QDebug>
 #include <QPainter>
 #include <qwt_plot.h>
@@ -33,18 +33,18 @@
 
 namespace casa {
 
-ExternalAxisWidgetRight::ExternalAxisWidgetRight(QWidget* parent ) :
+ExternalAxisControlRight::ExternalAxisControlRight(QWidget* parent ) :
 	ExternalAxisControl( parent ){
 	setSizePolicy( QSizePolicy::Fixed, QSizePolicy::MinimumExpanding );
 	setFixedWidth( AXIS_SMALL_SIDE);
 	useLeftScale = false;
 }
 
-void ExternalAxisWidgetRight::setUseLeftScale( bool b ){
+void ExternalAxisControlRight::setUseLeftScale( bool b ){
 	useLeftScale = b;
 }
 
-int ExternalAxisWidgetRight::getStartY() const {
+int ExternalAxisControlRight::getStartY() const {
 	int plotHeight = height();
 	int canvasHeight = getCanvasHeight();
 	int heightDiff = plotHeight - canvasHeight;
@@ -54,7 +54,7 @@ int ExternalAxisWidgetRight::getStartY() const {
 	return heightDiff;
 }
 
-int ExternalAxisWidgetRight::getCanvasHeight() const {
+int ExternalAxisControlRight::getCanvasHeight() const {
 	//We should use canvas->height()
 	//But because the main canvas is not laid out yet when this
 	//gets drawn, canvas->height gives a bogus value.  Thus, we
@@ -68,7 +68,7 @@ int ExternalAxisWidgetRight::getCanvasHeight() const {
 	return canvasHeight;
 }
 
-void ExternalAxisWidgetRight::defineAxis( QLine& axisLine ){
+void ExternalAxisControlRight::defineAxis( QLine& axisLine ){
 	const int MARGIN = 1;
 	int x = MARGIN;
 	int top = getStartY();
@@ -79,7 +79,7 @@ void ExternalAxisWidgetRight::defineAxis( QLine& axisLine ){
 	axisLine.setP2( secondPt );
 }
 
-void ExternalAxisWidgetRight::drawTick( QPainter* painter, double yPixel, double value,
+void ExternalAxisControlRight::drawTick( QPainter* painter, double yPixel, double value,
 		int tickLength){
 
 	//Draw the tick
@@ -100,7 +100,7 @@ void ExternalAxisWidgetRight::drawTick( QPainter* painter, double yPixel, double
 
 
 
-void ExternalAxisWidgetRight::drawTicks( QPainter* painter, int tickLength ){
+void ExternalAxisControlRight::drawTicks( QPainter* painter, int tickLength ){
 
 	QwtPlot::Axis axisScale = QwtPlot::yRight;
 	if ( useLeftScale ){
@@ -131,7 +131,7 @@ void ExternalAxisWidgetRight::drawTicks( QPainter* painter, int tickLength ){
 	}
 }
 
-void ExternalAxisWidgetRight::drawAxisLabel( QPainter* painter ){
+void ExternalAxisControlRight::drawAxisLabel( QPainter* painter ){
 	 QFont font = painter->font();
 	 QString mainLabel = axisLabel.trimmed();
 
@@ -148,7 +148,7 @@ void ExternalAxisWidgetRight::drawAxisLabel( QPainter* painter ){
 }
 
 
-ExternalAxisWidgetRight::~ExternalAxisWidgetRight() {
+ExternalAxisControlRight::~ExternalAxisControlRight() {
 
 }
 

@@ -23,7 +23,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#include "ExternalAxisWidgetBottom.h"
+#include "ExternalAxisControlBottom.h"
 #include <QDebug>
 #include <QPainter>
 #include <qwt_plot.h>
@@ -32,14 +32,14 @@
 
 namespace casa {
 
-ExternalAxisWidgetBottom::ExternalAxisWidgetBottom( QWidget* parent ):
+ExternalAxisControlBottom::ExternalAxisControlBottom( QWidget* parent ):
 	ExternalAxisControl( parent ){
 	setFixedHeight( AXIS_SMALL_SIDE / 2 );
 	setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::Fixed );
 
 }
 
-void ExternalAxisWidgetBottom::defineAxis( QLine& axisLine ){
+void ExternalAxisControlBottom::defineAxis( QLine& axisLine ){
 	int left = MARGIN;
 	int right = width() - MARGIN;
 	int top = 1;
@@ -50,7 +50,7 @@ void ExternalAxisWidgetBottom::defineAxis( QLine& axisLine ){
 	axisLine.setP2( secondPt );
 }
 
-void ExternalAxisWidgetBottom::drawTick( QPainter* painter, double xPixel, double value,
+void ExternalAxisControlBottom::drawTick( QPainter* painter, double xPixel, double value,
 		int tickLength ){
 	int yEnd = 0;
 	int xPosition = static_cast<int>(xPixel);
@@ -66,7 +66,7 @@ void ExternalAxisWidgetBottom::drawTick( QPainter* painter, double xPixel, doubl
 
 
 
-void ExternalAxisWidgetBottom::drawTicks( QPainter* painter, int tickLength ){
+void ExternalAxisControlBottom::drawTicks( QPainter* painter, int tickLength ){
 
 	//Figure out how far out to start drawing ticks.
 	double startPixelX = getTickStartPixel(QwtPlot::xBottom)+MARGIN;
@@ -91,7 +91,7 @@ void ExternalAxisWidgetBottom::drawTicks( QPainter* painter, int tickLength ){
 	}
 }
 
-void ExternalAxisWidgetBottom::drawAxisLabel( QPainter* painter ){
+void ExternalAxisControlBottom::drawAxisLabel( QPainter* painter ){
 	 QFont font = painter->font();
 	 QRect fontBoundingRect = QFontMetrics(font).boundingRect( axisLabel );
 	 int yPosition = height() / 2;
@@ -101,7 +101,7 @@ void ExternalAxisWidgetBottom::drawAxisLabel( QPainter* painter ){
 		 painter->rotate(-90);
 }
 
-ExternalAxisWidgetBottom::~ExternalAxisWidgetBottom() {
+ExternalAxisControlBottom::~ExternalAxisControlBottom() {
 }
 
 } /* namespace casa */

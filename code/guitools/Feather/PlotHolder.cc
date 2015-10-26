@@ -28,7 +28,7 @@
 #include <QContextMenuEvent>
 #include <guitools/Feather/FeatherPlotWidgetSlice.h>
 #include <guitools/Feather/FeatherPlotWidgetScatter.h>
-#include <guitools/Feather/ExternalAxisWidgetLeft.h>
+#include <guitools/Feather/ExternalAxisControlLeft.h>
 
 
 namespace casa {
@@ -295,7 +295,7 @@ void PlotHolder::addPlots( QGridLayout*& layout, int rowIndex, int basePlotIndex
 
 
 void PlotHolder::addPlotAxis( int rowIndex, int columnIndex, QGridLayout* layout, QwtPlot::Axis axis, int basePlotIndex ){
-	QWidget* axisWidget = plots[basePlotIndex]->getExternalAxisWidget( axis );
+	QWidget* axisWidget = plots[basePlotIndex]->getExternalAxisControl( axis );
 	axisWidget->setParent( this );
 	layout->addWidget( axisWidget, rowIndex, columnIndex );
 }

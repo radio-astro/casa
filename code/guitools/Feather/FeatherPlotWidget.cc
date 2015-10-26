@@ -184,8 +184,8 @@ void FeatherPlotWidget::setPlotColors( const QMap<CurveType,CurveDisplay>& color
 }
 
 
-QWidget* FeatherPlotWidget::getExternalAxisWidget( QwtPlot::Axis position ){
-	return plot->getExternalAxisWidget( position );
+QWidget* FeatherPlotWidget::getExternalAxisControl( QwtPlot::Axis position ){
+	return plot->getExternalAxisControl( position );
 }
 
 

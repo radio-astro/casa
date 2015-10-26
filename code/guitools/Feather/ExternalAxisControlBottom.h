@@ -30,10 +30,10 @@
 
 namespace casa {
 
-class ExternalAxisWidgetBottom : public ExternalAxisControl {
+class ExternalAxisControlBottom : public ExternalAxisControl {
 public:
-	ExternalAxisWidgetBottom(QWidget* parent );
-	virtual ~ExternalAxisWidgetBottom();
+	ExternalAxisControlBottom(QWidget* parent );
+	virtual ~ExternalAxisControlBottom();
 protected:
 	virtual void defineAxis( QLine& axisLine );
 	virtual void drawTicks( QPainter* painter, int tickLength);

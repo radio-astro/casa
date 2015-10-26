@@ -105,9 +105,9 @@ casa_add_library( guitools
   Feather/CurveDisplay.cc
   Feather/ExternalAxis.cc
   Feather/ExternalAxisControl.cc
-  Feather/ExternalAxisWidgetLeft.cc
-  Feather/ExternalAxisWidgetRight.cc
-  Feather/ExternalAxisWidgetBottom.cc
+  Feather/ExternalAxisControlLeft.cc
+  Feather/ExternalAxisControlRight.cc
+  Feather/ExternalAxisControlBottom.cc
   Feather/FeatherManager.cc
   Feather/FeatheredData.cc
   Feather/FeatherThread.cc

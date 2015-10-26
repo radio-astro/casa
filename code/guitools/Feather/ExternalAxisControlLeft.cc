@@ -23,7 +23,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#include "ExternalAxisWidgetLeft.h"
+#include "ExternalAxisControlLeft.h"
 #include <QDebug>
 #include <QPainter>
 #include <qwt_plot.h>
@@ -32,7 +32,7 @@
 
 namespace casa {
 
-ExternalAxisWidgetLeft::ExternalAxisWidgetLeft(QWidget* parent):
+ExternalAxisControlLeft::ExternalAxisControlLeft(QWidget* parent):
 	ExternalAxisControl( parent ){
 	setSizePolicy( QSizePolicy::Fixed, QSizePolicy::MinimumExpanding );
 	setFixedWidth( AXIS_SMALL_SIDE );
@@ -40,7 +40,7 @@ ExternalAxisWidgetLeft::ExternalAxisWidgetLeft(QWidget* parent):
 
 
 
-void ExternalAxisWidgetLeft::defineAxis( QLine& line ){
+void ExternalAxisControlLeft::defineAxis( QLine& line ){
 	const int MARGIN = 1;
 	int x = width() - MARGIN;;
 	int top = getStartY();
@@ -51,7 +51,7 @@ void ExternalAxisWidgetLeft::defineAxis( QLine& line ){
 	line.setP2( secondPt );
 }
 
-void ExternalAxisWidgetLeft::drawTick( QPainter* painter, float yPixel, double value,
+void ExternalAxisControlLeft::drawTick( QPainter* painter, float yPixel, double value,
 		int tickLength ){
 
 	//Draw the tick
@@ -70,7 +70,7 @@ void ExternalAxisWidgetLeft::drawTick( QPainter* painter, float yPixel, double v
 	painter->drawText( labelStart, position, numberStr);
 }
 
-int ExternalAxisWidgetLeft::getStartY() const {
+int ExternalAxisControlLeft::getStartY() const {
 	QwtPlotCanvas* canvas = plot->canvas();
 	int canvasHeight = canvas->height();
 	int heightDiff =  height() - canvas->height();
@@ -80,7 +80,7 @@ int ExternalAxisWidgetLeft::getStartY() const {
 	return heightDiff;
 }
 
-void ExternalAxisWidgetLeft::drawTicks( QPainter* painter, int tickLength ){
+void ExternalAxisControlLeft::drawTicks( QPainter* painter, int tickLength ){
 
 	//Figure out how far out to start drawing ticks.
 	double startPixelY = getTickStartPixel(QwtPlot::yLeft);
@@ -105,7 +105,7 @@ void ExternalAxisWidgetLeft::drawTicks( QPainter* painter, int tickLength ){
 	}
 }
 
-void ExternalAxisWidgetLeft::drawAxisLabel( QPainter* painter ){
+void ExternalAxisControlLeft::drawAxisLabel( QPainter* painter ){
 	  QFont font = painter->font();
 	  QString mainLabel = axisLabel.trimmed();
 
@@ -121,7 +121,7 @@ void ExternalAxisWidgetLeft::drawAxisLabel( QPainter* painter ){
 	  painter->rotate(90);
 }
 
-ExternalAxisWidgetLeft::~ExternalAxisWidgetLeft() {
+ExternalAxisControlLeft::~ExternalAxisControlLeft() {
 }
 
 } /* namespace casa */
