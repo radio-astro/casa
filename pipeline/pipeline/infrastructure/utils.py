@@ -18,7 +18,10 @@ except:
 import platform
 import re
 import string
-import StringIO
+try:
+    import cStringIO as StringIO
+except:
+    import StringIO
 import types
 import uuid
 
@@ -74,6 +77,7 @@ def commafy(l, quotes=True, multi_prefix='', separator=', ', conjunction='and'):
         else:
             return '%s%s%s%s' % (multi_prefix, l[0], separator, commafy(l[1:], separator=separator, quotes=quotes, conjunction=conjunction))
 
+
 def find_ranges(data):
     if isinstance(data, str):
         # barf if channel ranges are also in data, eg. 23:1~10,24
@@ -99,6 +103,7 @@ def find_ranges(data):
             ranges.append('%s~%s' % (rng[0], rng[-1]))
     return ','.join(ranges)
 
+
 def get_epoch_as_datetime(epoch):
     mt = casatools.measures
     qt = casatools.quanta
@@ -118,6 +123,7 @@ def get_epoch_as_datetime(epoch):
 
     return t
 
+
 def unix_seconds_to_datetime(unix_secs):
     """
     Return the input list, specified in seconds elapsed since 1970-01-01,
@@ -128,6 +134,7 @@ def unix_seconds_to_datetime(unix_secs):
     """
     datetimes = [datetime.datetime.utcfromtimestamp(s) for s in unix_secs]
     return datetimes if len(unix_secs) > 1 else datetimes[0]
+
 
 def mjd_seconds_to_datetime(mjd_secs):
     """
@@ -140,6 +147,7 @@ def mjd_seconds_to_datetime(mjd_secs):
     # 1970-01-01 is JD 40587. 86400 = seconds in a day
     unix_offset = 40587 * 86400
     return unix_seconds_to_datetime(mjd_secs - unix_offset)
+
 
 def total_time_on_source(scans):
     '''
@@ -155,6 +163,7 @@ def total_time_on_source(scans):
         # could potentially be zero matching scans, such as when the
         # measurement set is missing scans with science intent
         return datetime.timedelta(0)
+
 
 def format_datetime(dt, dp=0):
     '''
@@ -172,6 +181,7 @@ def format_datetime(dt, dp=0):
     microsecs = dt.microsecond / 1e6
     f = '{0:.%sf}' % dp
     return s + f.format(microsecs)[1:]
+
 
 def format_timedelta(td, dp=0):
     '''
@@ -195,6 +205,7 @@ def format_timedelta(td, dp=0):
     else:
         return str(rounded)
 
+
 def dict_merge(a, b):
     '''
     Recursively merge dictionaries.
@@ -209,12 +220,14 @@ def dict_merge(a, b):
             result[k] = copy.deepcopy(v)
     return result
 
+
 def safe_split(fields):
     '''
     Split a string containing field names into a list, taking account of
     field names within quotes.
     '''
     return pyparsing.commaSeparatedList.parseString(str(fields))
+
 
 def to_CASA_intent(ms, intents):
     '''
@@ -229,6 +242,7 @@ def to_CASA_intent(ms, intents):
         intents = set(itertools.chain(*intents))
         # replace the CASA arg with *INTENT1*,*INTENT2*, etc.
         return ','.join(['*{0}*'.format(intent) for intent in intents])
+
 
 def to_pipeline_intent(ms, intent):
     """
@@ -246,10 +260,12 @@ def to_pipeline_intent(ms, intent):
 
     return ','.join(pipeline_intents)
 
+
 def stringSplitByNumbers(x):
     r = re.compile('(\d+)')
     l = r.split(x)
     return [int(y) if y.isdigit() else y for y in l]
+
 
 def numericSort(l):
     """
@@ -258,6 +274,7 @@ def numericSort(l):
     ['9,11,13,15', '11,13', '9'] -> ['9', '9,11,13,15', '11,13']
     """
     return sorted(l, key=stringSplitByNumbers)
+
 
 def truncate_floats(s, precision=3):
     """
@@ -277,6 +294,7 @@ def truncate_floats(s, precision=3):
     # during replacement.
     pattern = '(\d+\.\d{%s})\d+' % precision
     return re.sub(pattern, '\\1', s)
+
 
 def enable_memstats():
     if platform.system() == 'Darwin':
@@ -346,11 +364,13 @@ def get_calfroms(inputs, caltypes=None):
 
     return [cf for cf in calfroms if cf.caltype in caltypes]
 
+
 def areEqual(a, b):
     """
     Return True if the contents of the given arrays are equal.
     """
     return len(a) == len(b) and len(a) == sum([1 for i, j in zip(a, b) if i == j])
+
 
 def pickle_copy(original):
     stream = StringIO.StringIO()
@@ -360,11 +380,13 @@ def pickle_copy(original):
     stream.seek(0)
     return pickle_load(stream)
 
+
 def pickle_load(fileobj):
     unpickled = pickle.load(fileobj)
     if hasattr(unpickled, 'reconnect_weakrefs'):
         unpickled.reconnect_weakrefs()
     return unpickled
+
 
 def gen_hash(o):
     """
@@ -386,6 +408,7 @@ def gen_hash(o):
         new_o[k] = gen_hash(v)
 
     return hash(tuple(frozenset(new_o.items())))
+
 
 def range_to_list(arg):
     if arg == '':
@@ -413,6 +436,7 @@ def range_to_list(arg):
 
     return list(atoms.parseString(str(arg)))
 
+
 def collect_properties(instance, ignore=[]):
     """
     Return the public properties of an object as a dictionary
@@ -429,6 +453,7 @@ def collect_properties(instance, ignore=[]):
             LOG.debug('Could not get input property %s' % dd_name)
     return properties
 
+
 def flatten(l):
     """
     Flatten a list of lists into a single list
@@ -440,6 +465,7 @@ def flatten(l):
         else:
             yield el
 
+
 def approx_equal(x, y, tol=1e-15):
     """
     Return True if two numbers are equal within the given tolerance.
@@ -447,6 +473,7 @@ def approx_equal(x, y, tol=1e-15):
     lo = min(x, y)
     hi = max(x, y)
     return (lo + 0.5 * tol) >= (hi - 0.5 * tol)
+
 
 def get_num_caltable_polarizations(caltable):
     # it seems that the number of QA ID does not map directly to the number
@@ -472,6 +499,7 @@ def get_num_caltable_polarizations(caltable):
 
     return int(col_pols.pop())
 
+
 def mkdir_p(path):
     """
     Emulate mkdir -p functionality.
@@ -484,6 +512,7 @@ def mkdir_p(path):
         else:
             raise
 
+
 def task_depth():
     """
     Get the number of executing tasks currently on the stack. If the depth is
@@ -494,6 +523,7 @@ def task_depth():
              and frame_obj.f_code.co_filename.endswith('pipeline/infrastructure/basetask.py')]
     stack_count = len(stack)
     return stack_count
+
 
 def is_top_level_task():
     """
@@ -508,6 +538,7 @@ def is_top_level_task():
         return False
 
     return task_depth() is  1
+
 
 def get_logrecords(result, loglevel):
     """
@@ -539,6 +570,7 @@ def get_logrecords(result, loglevel):
     return [r for r in records if
             r.msg not in dset and not dset.add(r.msg)]
 
+
 def field_arg_to_id(ms_path, field_arg):
     """
     Convert a string to the corresponding field IDs.
@@ -558,6 +590,7 @@ def field_arg_to_id(ms_path, field_arg):
         all_indices = _convert_arg_to_id('field', ms_path, quoted_arg)    
         return all_indices['field'].tolist()
 
+
 def spw_arg_to_id(ms_path, spw_arg):
     """
     Convert a string to spectral window IDs and channels.
@@ -572,6 +605,7 @@ def spw_arg_to_id(ms_path, spw_arg):
             for (spw, start, end, step) in all_indices['channel']
             if spw in all_indices['spw']]
 
+
 def ant_arg_to_id(ms_path, ant_arg):
     """
     Convert a string to the corresponding antenna IDs.
@@ -582,6 +616,7 @@ def ant_arg_to_id(ms_path, ant_arg):
     """
     all_indices = _convert_arg_to_id('baseline', ms_path, str(ant_arg))    
     return all_indices['antenna1'].tolist()
+
 
 @cachetools.lru_cache(maxsize=1000)
 def _convert_arg_to_id(arg_name, ms_path, arg_val):
@@ -601,6 +636,7 @@ def _convert_arg_to_id(arg_name, ms_path, arg_val):
         ms.msselect(taql, onlyparse=True)
         return ms.msselectedindices()
 
+
 def get_qascores(result, lo=None, hi=None):
     if isinstance(result, list):
         scores = flatten([get_qascores(r, lo, hi) for r in result])
@@ -618,6 +654,7 @@ def get_qascores(result, lo=None, hi=None):
         matches = lambda score: s.score > lo and s.score <= hi
       
     return [s for s in scores if matches(s)]
+
 
 def natural_sort(l): 
     convert = lambda text: int(text) if text.isdigit() else text.lower() 
@@ -645,6 +682,7 @@ class OrderedDefaultdict(collections.OrderedDict):
     def __reduce__(self):  # optional, for pickle support
         args = (self.default_factory,) if self.default_factory else ()
         return self.__class__, args, None, None, self.iteritems()
+
 
 def get_intervals(context, calapp, spw_ids=None):
     """
@@ -684,7 +722,8 @@ def get_intervals(context, calapp, spw_ids=None):
     
     return all_solints
 
-def merge_jobs(jobs, task, merge=(), ignore=()):
+
+def merge_jobs(jobs, task, merge=None, ignore=None):
     """
     Merge jobs that are identical apart from the arguments named in
     ignore. These jobs will be recreated with  
@@ -707,6 +746,11 @@ def merge_jobs(jobs, task, merge=(), ignore=()):
     :rtype: a list of \
         :class:`~pipeline.infrastructure.jobrequest.JobRequest`
     """
+    if merge is None:
+        merge = ()
+    if ignore is None:
+        ignore = ()
+
     # union holds the property names to ignore while calculating the job hash
     union = frozenset(itertools.chain.from_iterable((merge, ignore)))
 
@@ -737,6 +781,7 @@ def merge_jobs(jobs, task, merge=(), ignore=()):
         component_jobs[job_hash].append(job)
 
     return zip(merged_jobs.values(), component_jobs.values())
+
 
 def plotms_iterate(jobs_and_wrappers, iteraxis):
     # component jobs containing a comma should be executed as they are. An
