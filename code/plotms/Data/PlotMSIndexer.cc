@@ -1562,7 +1562,6 @@ void PlotMSIndexer::computeRanges() {
 	// Initialize limits
 	xmin_=ymin_=xflmin_=yflmin_=DBL_MAX;
 	xmax_=ymax_=xflmax_=yflmax_=-DBL_MAX;
-
 	// We will count up flagged/unflagged here
 	sizeMasked_=sizeUnMasked_=0;
 
@@ -1573,19 +1572,28 @@ void PlotMSIndexer::computeRanges() {
 		Bool m;
 		xyAndMaskAt(i,x,y,m);
 
+		// CAS-8019 nan>ymax_ caused error in autorange
 		if ( !m ) {
 			++sizeUnMasked_;
-			xmin_ = std::min(xmin_,x);
-			xmax_ = std::max(xmax_,x);
-			ymin_ = std::min(ymin_, y);
-			ymax_ = std::max(ymax_, y);
+			if (!isNaN(x)) {
+			    xmin_ = min(xmin_,x);
+			    xmax_ = max(xmax_,x);
+			}
+			if (!isNaN(y)) {
+			    ymin_ = min(ymin_, y);
+			    ymax_ = max(ymax_, y);
+			}
 		}
 		else {
 			++sizeMasked_;
-			xflmin_ = std::min(xflmin_,x);
-			xflmax_ = std::max(xflmax_,x);
-			yflmin_ = std::min(yflmin_,y);
-			yflmax_ = std::max(yflmax_,y);
+			if (!isNaN(x)) {
+			    xflmin_ = min(xflmin_,x);
+			    xflmax_ = max(xflmax_,x);
+			}
+			if (!isNaN(y)) {
+			    yflmin_ = min(yflmin_,y);
+			    yflmax_ = max(yflmax_,y);
+			}
 		}
 	}
 
