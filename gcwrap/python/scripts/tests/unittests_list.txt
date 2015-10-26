@@ -82,7 +82,6 @@ test_immoments                  dmehring@nrao.edu
 test_impbcor                    dmehring@nrao.edu
 test_importasdm                 dpetry@eso.org
 test_importasdm_mms             scastro@eso.org
-test_importasdm_sd              takeshi.nakazato@nao.ac.jp
 test_importevla                 scastro@eso.org
 test_importfitsidi              dpetry@eso.org
 test_imregrid                   jkern@nrao.edu

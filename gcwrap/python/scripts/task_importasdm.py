@@ -13,8 +13,6 @@ def importasdm(
     createmms=None,
     separationaxis=None,
     numsubms=None,    
-    singledish=None,
-    antenna=None,
     corr_mode=None,
     srt=None,
     time_sampling=None,
@@ -58,10 +56,6 @@ def importasdm(
        createmms  -- Create a Multi-MS
            default: False
            
-       singledish   -- Set True to write data as single-dish format (Scantable)
-               default: False singledish expandable parameter
-                 antenna -- antenna name or id.
- 
        corr_mode -- correlation mode to be considered on input. Could
             be one or more of the following, ao, co, ac, or all
            default: all
@@ -180,99 +174,6 @@ def importasdm(
         casalog.origin('importasdm')
         viso = ''
         visoc = ''  # for the wvr corrected version, if needed
-                # -----------------------------------------
-                # beginning of importasdm_sd implementation
-                # -----------------------------------------
-        if singledish:
-            theexecutable = 'asdm2ASAP'
-                        # if useversion == 'v2':
-                        #        theexecutable = 'oldasdm2ASAP'
-            if compression:
-                casalog.post('compression=True has no effect for single-dish format.')
-                                
-            cmd = 'which %s > /dev/null 2>&1' % theexecutable
-            ret = os.system(cmd)
-            if ret == 0:
-                import commands
-                casalog.post('found %s' % theexecutable)
-                if showversion:
-                    execute_string = theexecutable + ' --help'
-                else:
-                    execute_string = theexecutable + ' -asdm ' + asdm
-                    if len(vis) != 0:
-                        execute_string += ' -asap ' + vis.rstrip('/')
-                    execute_string += ' -antenna ' + str(antenna) \
-                        + ' -apc ' + wvr_corrected_data \
-                        + ' -time-sampling ' + time_sampling.lower() \
-                        + ' -overwrite ' + str(overwrite)
-                    if corr_mode == 'all':
-                        execute_string += \
-                            ' -corr-mode ao,ca -ocorr-mode ao'
-                    else:
-                        execute_string += ' -corr-mode ' \
-                            + corr_mode.replace(' ', ',') \
-                            + ' -ocorr-mode ao'
-                    if srt == 'all':
-                        execute_string += ' -srt ' + srt
-                    else:
-                        execute_string += ' -srt ' + srt.replace(' ',
-                                ',')
-                    execute_string += ' -logfile ' + casalog.logfile()
-                casalog.post('execute_string is')
-                casalog.post('   ' + execute_string)
-                ret = os.system(execute_string)
-                if ret != 0 and not showversion:
-                    casalog.post(theexecutable
-                                 + ' terminated with exit code '
-                                 + str(ret), 'SEVERE')
-                    # raise Exception, "ASDM conversion error, please check if it is a valid ASDM and/or useversion='%s' is consistent with input ASDM."%(useversion)
-                    raise Exception, \
-                        'ASDM conversion error, please check if it is a valid ASDM.'
-            else:
-                casalog.post('You have to build ASAP to be able to create single-dish data.'
-                             , 'SEVERE')
-                        # implementation of asis option using tb.fromASDM
-            if asis != '':
-                import commands
-                asdmTables = commands.getoutput('ls %s/*.xml'
-                        % asdm).split('\n')
-                asdmTabNames = []
-                for tab in asdmTables:
-                    asdmTabNames.append(tab.split('/')[-1].rstrip('.xml'
-                            ))
-                if asis == '*':
-                    targetTables = asdmTables
-                    targetTabNames = asdmTabNames
-                else:
-                    targetTables = []
-                    targetTabNames = []
-                    tmpTabNames = asis.split()
-                    for i in xrange(len(tmpTabNames)):
-                        tab = tmpTabNames[i]
-                        try:
-                            targetTables.append(asdmTables[asdmTabNames.index(tab)])
-                            targetTabNames.append(tab)
-                        except:
-                            pass
-                outTabNames = []
-                outTables = []
-                for tab in targetTabNames:
-                    out = 'ASDM_' + tab.upper()
-                    outTabNames.append(out)
-                    outTables.append(vis + '/' + out)
-                
-                tblocal.open(vis, nomodify=False)
-                wtb = casac.table()
-                for i in xrange(len(outTables)):
-                    wtb.fromASDM(outTables[i], targetTables[i])
-                    tblocal.putkeyword(outTabNames[i], 'Table: %s'
-                                  % outTables[i])
-                    tblocal.flush()
-                tblocal.close()
-            return
-                # -----------------------------------
-                # end of importasdm_sd implementation
-                # -----------------------------------
         if len(vis) > 0:
             viso = vis
             tmps = vis.rstrip('.ms')
@@ -280,15 +181,10 @@ def importasdm(
                 visoc = vis + '-wvr-corrected'
             else:
                 visoc = tmps + '-wvr-corrected.ms'
-            if singledish:
-                viso = vis.rstrip('/') + '.importasdm.tmp.ms'
         else:
             viso = asdm.rstrip("/") + '.ms'
             visoc = asdm.rstrip("/") + '-wvr-corrected.ms'
             vis = asdm.rstrip("/")
-            if singledish:
-                viso = asdm.rstrip('/') + '.importasdm.tmp.ms'
-                vis = asdm.rstrip('/') + '.asap'
 
 
 
