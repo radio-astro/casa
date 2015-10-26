@@ -637,14 +637,11 @@ bool image::fromimage(const string& outfile, const string& infile,
 		String theMask;
 		if (mask.type() == variant::BOOLVEC) {
 			theMask = "";
-		} else if (mask.type() == variant::STRING) {
+		}
+		else if (mask.type() == variant::STRING) {
 			theMask = mask.toString();
-		} else if (mask.type() == variant::RECORD) {
-			_log << LogIO::SEVERE
-					<< "Don't support region masking yet, only valid LEL "
-					<< LogIO::POST;
-			return False;
-		} else {
+		}
+		else {
 			_log << LogIO::SEVERE
 					<< "Mask is not understood, try a valid LEL string "
 					<< LogIO::POST;
@@ -652,13 +649,28 @@ bool image::fromimage(const string& outfile, const string& infile,
 		}
 
 		SHARED_PTR<Record> regionPtr(_getRegion(region, False));
+		auto imagePair = ImageFactory::fromImage(
+		    outfile, infile, *regionPtr, theMask,
+		    dropdeg, overwrite
+		);
+		_image.reset(
+		    imagePair.first
+		    ? new ImageAnalysis(imagePair.first)
+		    : new ImageAnalysis(imagePair.second)
+		);
+
+		/*
 		return _image->imagefromimage(outfile, infile, *regionPtr, theMask,
 				dropdeg, overwrite);
-	} catch (const AipsError& x) {
+				*/
+		return True;
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
+	return False;
 }
 
 bool image::fromshape(
