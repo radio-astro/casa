@@ -108,7 +108,7 @@ Derive the flux density scale from standard calibrators.
                 <default param="vis"><value type="stringArray"></value></default>
                 <default param="reference"><value type="string"></value></default>
                 <default param="transfer"><value type="string"></value></default>
-                <default param="refint"><value type="string"></value></default>
+                <default param="refintent"><value type="string"></value></default>
                 <default param="transintent"><value type="string"></value></default>
                 <default param="refspwmap"><value type="intArray"></value></default>
                 <default param="refant"><value type="string"></value></default>
@@ -120,7 +120,7 @@ Derive the flux density scale from standard calibrators.
                 <default param="vis"><value type="stringArray"></value></default>
                 <default param="reference"><value type="string"></value></default>
                 <default param="transfer"><value type="string"></value></default>
-                <default param="refint"><value type="string"></value></default>
+                <default param="refintent"><value type="string"></value></default>
                 <default param="transintent"><value type="string"></value></default>
                 <default param="refspwmap"><value type="intArray"></value></default>
                 <default param="refant"><value type="string"></value></default>
