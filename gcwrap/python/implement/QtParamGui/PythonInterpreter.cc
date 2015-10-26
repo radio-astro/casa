@@ -78,7 +78,7 @@ bool PythonInterpreter::init(bool showLogger) {
                 commands << "/lib/python2.5', '" << casapylib;
                 commands << "/lib/python2.5/site-packages']\nsys.argv = [";
                 if(!showLogger) commands << "'--nologger', ";
-                commands << "'--noipython']\nexecfile('" << cp;
+                commands << "]\nexecfile('" << cp;
                 commands << "/casapy.py')";
     
                 PyRun_SimpleString(commands.str().c_str());

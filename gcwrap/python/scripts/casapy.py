@@ -313,7 +313,6 @@ if casa['flags'].has_key('--help') :
 	print "   --nologfile"
 	print "   --nogui"
         print "   --colors=[NoColor|Linux|LightBG]"
-	print "   --noipython"
         print "   --pipeline"
 	print "   -c filename-or-expression"
 	print "   --help, print this text and exit"
@@ -1256,7 +1255,6 @@ false = False
 F     = False
 
 # Case where casapy is run non-interactively
-ipython = not casa['flags'].has_key('--noipython')
 try:
    import IPython
 except ImportError, e:
@@ -1305,8 +1303,7 @@ if os.path.exists( casa['dirs']['rc'] + '/init.py' ) :
         print 'Could not execute initialization file: ' + casa['dirs']['rc'] + '/init.py'
         sys.exit(1)
 
-if ipython:
-    startup()
+startup()
 
 # assignment protection
 #
@@ -1336,78 +1333,77 @@ fullpath=casadef.python_library_directory + '/assignmentFilter.py'
 if os.environ.has_key('__CASAPY_PYTHONDIR'):
     fullpath=os.environ['__CASAPY_PYTHONDIR'] + '/assignmentFilter.py'
 
-if ipython:
-    ipythonlog = 'ipython-'+time.strftime("%Y%m%d-%H%M%S", time.gmtime())+'.log'
-    #if os.path.exists('ipython.log') and not os.access('ipython.log', os.W_OK):
-    #    print
-    #    print
-    #    print
-    #    print "**********************************************************"
-    #    print "Error: ipython.log is not writable, unable to start casapy"
-    #    print "**********************************************************"
-    #    sys.exit(1) 
+ipythonlog = 'ipython-'+time.strftime("%Y%m%d-%H%M%S", time.gmtime())+'.log'
+#if os.path.exists('ipython.log') and not os.access('ipython.log', os.W_OK):
+#    print
+#    print
+#    print
+#    print "**********************************************************"
+#    print "Error: ipython.log is not writable, unable to start casapy"
+#    print "**********************************************************"
+#    sys.exit(1) 
 
    
-    if casa['flags'].has_key('-c') :
-        print 'will execute script',casa['flags']['-c']
-        if os.path.exists( casa['dirs']['rc']+'/ipython/ipy_user_conf.py' ) :
-            if os.path.exists( casa['flags']['-c'] ) :
-                ###
-                ###  assume casa['flags']['-c'] is a file to execute...
-                ###
-                try:
-                    ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors',__ipython_colors, '-nomessages', '-nobanner','-logfile',ipythonlog,'-ipythondir',casa['dirs']['rc']+'/ipython','-c','execfile("'+casa['flags']['-c']+'")'], user_ns=globals() )
-                except:
-                    print "ERROR: falied to create an instance of IPython.Shell.IPShell"
-            else:
-                ###
-                ###  assume casa['flags']['-c'] is a python command...
-                ###
-                try:
-                    ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors',__ipython_colors, '-nomessages', '-nobanner','-logfile',ipythonlog,'-ipythondir',casa['dirs']['rc']+'/ipython','-c',casa['flags']['-c']], user_ns=globals() )
-                except: 
-                    print "ERROR: falied to create an instance of IPython.Shell.IPShell"
+if casa['flags'].has_key('-c') :
+    print 'will execute script',casa['flags']['-c']
+    if os.path.exists( casa['dirs']['rc']+'/ipython/ipy_user_conf.py' ) :
+        if os.path.exists( casa['flags']['-c'] ) :
+            ###
+            ###  assume casa['flags']['-c'] is a file to execute...
+            ###
+            try:
+                ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors',__ipython_colors, '-nomessages', '-nobanner','-logfile',ipythonlog,'-ipythondir',casa['dirs']['rc']+'/ipython','-c','execfile("'+casa['flags']['-c']+'")'], user_ns=globals() )
+            except:
+                print "ERROR: falied to create an instance of IPython.Shell.IPShell"
         else:
-            if os.path.exists( casa['flags']['-c'] ) :
-                ###
-                ###  assume casa['flags']['-c'] is a file to execute...
-                ###
-                try:
-                    ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors',__ipython_colors, '-nomessages', '-nobanner','-logfile',ipythonlog,'-upgrade','-ipythondir',casa['dirs']['rc']+'/ipython','-c','execfile("'+casa['flags']['-c']+'")'], user_ns=globals() )
-                except: 
-                    print "ERROR: falied to create an instance of IPython.Shell.IPShell"
-            else:
-                ###
-                ###  assume casa['flags']['-c'] is a python command...
-                ###
-                try:
-                    ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors',__ipython_colors, '-nomessages', '-nobanner','-logfile',ipythonlog,'-upgrade','-ipythondir',casa['dirs']['rc']+'/ipython','-c',casa['flags']['-c']], user_ns=globals() )
-                except: 
-                    print "ERROR: falied to create an instance of IPython.Shell.IPShell"
+            ###
+            ###  assume casa['flags']['-c'] is a python command...
+            ###
+            try:
+                ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors',__ipython_colors, '-nomessages', '-nobanner','-logfile',ipythonlog,'-ipythondir',casa['dirs']['rc']+'/ipython','-c',casa['flags']['-c']], user_ns=globals() )
+            except: 
+                print "ERROR: falied to create an instance of IPython.Shell.IPShell"
     else:
-        if os.path.exists( casa['dirs']['rc']+'/ipython/ipy_user_conf.py' ) :
-	    if(thelogfile != 'null') :
-                try:
-                    ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors',__ipython_colors, '-nomessages', '-nobanner','-logfile',ipythonlog,'-ipythondir',casa['dirs']['rc']+'/ipython'], user_ns=globals() )
-                except: 
-                    print "ERROR: falied to create an instance of IPython.Shell.IPShell"
-            else :
-                try:
-                    ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors',__ipython_colors, '-nomessages', '-nobanner','-ipythondir',casa['dirs']['rc']+'/ipython'], user_ns=globals() )
-                except: 
-                    print "ERROR: falied to create an instance of IPython.Shell.IPShell"
+        if os.path.exists( casa['flags']['-c'] ) :
+            ###
+            ###  assume casa['flags']['-c'] is a file to execute...
+            ###
+            try:
+                ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors',__ipython_colors, '-nomessages', '-nobanner','-logfile',ipythonlog,'-upgrade','-ipythondir',casa['dirs']['rc']+'/ipython','-c','execfile("'+casa['flags']['-c']+'")'], user_ns=globals() )
+            except: 
+                print "ERROR: falied to create an instance of IPython.Shell.IPShell"
         else:
-	    if(thelogfile != 'null') :
-                try:
-                    ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors',__ipython_colors, '-nomessages', '-nobanner','-logfile',ipythonlog,'-upgrade','-ipythondir',casa['dirs']['rc']+'/ipython'], user_ns=globals() )
-                except: 
-                    print "ERROR: falied to create an instance of IPython.Shell.IPShell"
-            else :
-                try:
-                    ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors',__ipython_colors, '-nomessages', '-nobanner','-upgrade','-ipythondir',casa['dirs']['rc']+'/ipython'], user_ns=globals() )
-                except: 
-                    print "ERROR: falied to create an instance of IPython.Shell.IPShell"
-        ipshell.IP.runlines('execfile("'+fullpath+'")')
+            ###
+            ###  assume casa['flags']['-c'] is a python command...
+            ###
+            try:
+                ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors',__ipython_colors, '-nomessages', '-nobanner','-logfile',ipythonlog,'-upgrade','-ipythondir',casa['dirs']['rc']+'/ipython','-c',casa['flags']['-c']], user_ns=globals() )
+            except: 
+                print "ERROR: falied to create an instance of IPython.Shell.IPShell"
+else:
+    if os.path.exists( casa['dirs']['rc']+'/ipython/ipy_user_conf.py' ) :
+        if(thelogfile != 'null') :
+            try:
+                ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors',__ipython_colors, '-nomessages', '-nobanner','-logfile',ipythonlog,'-ipythondir',casa['dirs']['rc']+'/ipython'], user_ns=globals() )
+            except: 
+                print "ERROR: falied to create an instance of IPython.Shell.IPShell"
+        else :
+            try:
+                ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors',__ipython_colors, '-nomessages', '-nobanner','-ipythondir',casa['dirs']['rc']+'/ipython'], user_ns=globals() )
+            except: 
+                print "ERROR: falied to create an instance of IPython.Shell.IPShell"
+    else:
+        if(thelogfile != 'null') :
+            try:
+                ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors',__ipython_colors, '-nomessages', '-nobanner','-logfile',ipythonlog,'-upgrade','-ipythondir',casa['dirs']['rc']+'/ipython'], user_ns=globals() )
+            except: 
+                print "ERROR: falied to create an instance of IPython.Shell.IPShell"
+        else :
+            try:
+                ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors',__ipython_colors, '-nomessages', '-nobanner','-upgrade','-ipythondir',casa['dirs']['rc']+'/ipython'], user_ns=globals() )
+            except: 
+                print "ERROR: falied to create an instance of IPython.Shell.IPShell"
+    ipshell.IP.runlines('execfile("'+fullpath+'")')
 
 #ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors',__ipython_colors,'-logfile',ipythonlog,'-ipythondir',casa['dirs']['rc']+'/ipython'], user_ns=globals() )
 
