@@ -213,9 +213,21 @@ bool image::fromrecord(const record& imrecord, const string& outfile) {
 	try {
 		_log << _ORIGIN;
 		std::unique_ptr<Record> tmpRecord(toRecord(imrecord));
+		_reset();
+		auto imagePair = ImageFactory::fromRecord(*tmpRecord, outfile);
+		if (imagePair.first) {
+		    _image.reset(new ImageAnalysis(imagePair.first));
+		}
+		else {
+		    _image.reset(new ImageAnalysis(imagePair.second));
+		}
+		return True;
+		/*
 		if (_image.get() == 0) {
 			_image.reset(new ImageAnalysis());
 		}
+		*/
+		/*
 		if (
 			! _image->fromRecord(*tmpRecord, casa::String(outfile))
 		) {
@@ -223,9 +235,12 @@ bool image::fromrecord(const record& imrecord, const string& outfile) {
 					<< LogIO::EXCEPTION;
 		}
 		return True;
-	} catch (const AipsError& x) {
+		*/
+	}
+	catch (const AipsError& x) {
 		RETHROW(x);
 	}
+	return False;
 }
 
 bool image::addnoise(
