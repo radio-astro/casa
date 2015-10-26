@@ -78,11 +78,6 @@ public:
     	const std::pair<Int, Int> *const &seeds
     );
 
-    Bool imagefromimage(const String& outfile, const String& infile, 
-                        Record& region, const String& mask, 
-                        const Bool dropdeg = False, 
-                        const Bool overwrite = False);
-
     ImageInterface<Float> * convolve(
     	const String& outfile,
         Array<Float>& kernel,

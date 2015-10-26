@@ -31,6 +31,7 @@
 #include <images/Images/ImageFITSConverter.h>
 #include <images/Images/ImageUtilities.h>
 #include <imageanalysis/IO/CasaImageOpener.h>
+#include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 
 namespace casa {
 
@@ -104,6 +105,44 @@ SPIIF ImageFactory::fromASCII(
     return imageFromArray(outfile, pixels, csys, linear, overwrite);
 }
 
+pair<SPIIF, SPIIC> ImageFactory::fromImage(
+    const String& outfile, const String& infile,
+    const Record& region, const String& mask, Bool dropdeg,
+    Bool overwrite
+) {
+    _checkInfile(infile);
+    unique_ptr<LatticeBase> latt(CasaImageOpener::openImage(infile));
+    ThrowIf (! latt, "Unable to open lattice");
+    auto imagePair = _fromLatticeBase(latt);
+    LogIO mylog;
+    mylog << LogOrigin("ImageFactory", __func__);
+    if (imagePair.first) {
+        imagePair.first = SubImageFactory<Float>::createImage(
+                *imagePair.first, outfile, region,
+                mask, dropdeg, overwrite, False, False
+        );
+        ThrowIf(
+           ! imagePair.first,
+           "Failed to create PagedImage"
+        );
+        mylog << LogIO::NORMAL << "Created image '" << outfile
+            << "' of shape " << imagePair.first->shape() << LogIO::POST;
+    }
+    else {
+        imagePair.second = SubImageFactory<Complex>::createImage(
+            *imagePair.second, outfile, region,
+            mask, dropdeg, overwrite, False, False
+        );
+        ThrowIf(
+            ! imagePair.second,
+            "Failed to create PagedImage"
+        );
+        mylog << LogIO::NORMAL << "Created image '" << outfile
+            << "' of shape " << imagePair.second->shape() << LogIO::POST;
+
+    }
+    return imagePair;
+}
 
 void ImageFactory::_centerRefPix(
 	CoordinateSystem& csys, const IPosition& shape
@@ -200,16 +239,13 @@ SHARED_PTR<TempImage<Float> > ImageFactory::floatFromComplex(
 }
 
 pair<SPIIF, SPIIC> ImageFactory::fromFile(const String& infile) {
-    ThrowIf(
-        infile.empty(), "File name is empty"
-    );
-    File thefile(infile);
-    ThrowIf(
-        ! thefile.exists(),
-        "File " + infile + " does not exist."
-    );
+    _checkInfile(infile);
     unique_ptr<LatticeBase> latt(CasaImageOpener::openImage(infile));
     ThrowIf (! latt, "Unable to open lattice");
+    return _fromLatticeBase(latt);
+}
+
+pair<SPIIF, SPIIC> ImageFactory::_fromLatticeBase(unique_ptr<LatticeBase>& latt) {
     DataType dataType = latt->dataType();
     pair<SPIIF, SPIIC> ret(nullptr, nullptr);
     if (isReal(dataType)) {
@@ -243,6 +279,17 @@ pair<SPIIF, SPIIC> ImageFactory::fromFile(const String& infile) {
     ostringstream os;
     os << dataType;
     throw AipsError("unsupported image data type " + os.str());
+}
+
+void ImageFactory::_checkInfile(const String& infile) {
+    ThrowIf(
+        infile.empty(), "File name is empty"
+    );
+    File thefile(infile);
+    ThrowIf(
+        ! thefile.exists(),
+        "File " + infile + " does not exist."
+    );
 }
 
 SPIIF ImageFactory::fromFITS(

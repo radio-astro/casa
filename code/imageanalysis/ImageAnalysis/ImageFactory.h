@@ -34,6 +34,7 @@
 #include <casa/BasicSL/String.h>
 #include <casa/Logging/LogOrigin.h>
 #include <casa/namespace.h>
+#include <lattices/Lattices/LatticeBase.h>
 #include <utility>
 #include <vector>
 
@@ -71,6 +72,8 @@ public:
 		IMAG
 	};
 
+	ImageFactory() = delete;
+
     ~ImageFactory() {};
 
     // Create a TempImage if outfile is empty, otherwise a PagedImage.
@@ -103,6 +106,15 @@ public:
     	const Record& csys, Bool linear=True,
     	Bool overwrite=False, Bool verbose=True,
         const std::vector<std::pair<LogOrigin, String> > *const &msgs=0
+    );
+
+    // only the pointer of the correct data type will be valid, the other
+    // will be null.
+    static pair<SPIIF, SPIIC> fromImage(
+        const String& outfile, const String& infile,
+        const Record& region, const String& mask,
+        Bool dropdeg=False,
+        Bool overwrite=False
     );
 
     template <class T> static SPIIT imageFromArray(
@@ -149,8 +161,6 @@ public:
 
 private:
 
-	ImageFactory() {};
-
 	template <class T> static SPIIT _fromShape(
 		const String& outfile, const Vector<Int>& shape,
 		const Record& csys, Bool linear,
@@ -162,6 +172,8 @@ private:
 		CoordinateSystem& csys, const IPosition& shape
 	);
 
+	static void _checkInfile(const String& infile);
+
     // Convert a Record to a CoordinateSystem
     static CoordinateSystem* _makeCoordinateSystem(
         const casa::Record& cSys,
@@ -169,6 +181,8 @@ private:
     );
 
     static void _checkOutfile(const String& outfile, Bool overwrite);
+
+    static pair<SPIIF, SPIIC> _fromLatticeBase(unique_ptr<LatticeBase>& latt);
 
 };
 }

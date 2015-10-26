@@ -246,68 +246,6 @@ void ImageAnalysis::addnoise(
 	//deleteHist();
 }
 
-Bool ImageAnalysis::imagefromimage(const String& outfile, const String& infile,
-		Record& region, const String& Mask, const bool dropdeg,
-		const bool overwrite) {
-	Bool rstat = False;
-	try {
-		*_log << LogOrigin(className(), __func__);
-
-		// Open
-		PtrHolder<ImageInterface<Float> > inImage;
-		ImageUtilities::openImage(inImage, infile);
-		//
-		// Convert region from Glish record to ImageRegion.
-		// Convert mask to ImageRegion and make SubImage.
-		//
-		AxesSpecifier axesSpecifier;
-		if (dropdeg) {
-			axesSpecifier = AxesSpecifier(False);
-		}
-		SHARED_PTR<SubImage<Float> > subImage = SubImageFactory<Float>::createSubImageRW(
-			*inImage, region,
-			Mask, _log.get(), axesSpecifier
-		);
-
-		if (outfile.empty()) {
-			_imageFloat = subImage;
-			rstat = True;
-		}
-		else {
-			if (!overwrite) {
-				NewFile validfile;
-				String errmsg;
-				if (!validfile.valueOK(outfile, errmsg)) {
-					*_log << errmsg << LogIO::EXCEPTION;
-				}
-			}
-			*_log << LogIO::NORMAL << "Creating image '" << outfile
-					<< "' of shape " << subImage->shape() << LogIO::POST;
-			_imageFloat.reset(new PagedImage<Float> (subImage->shape(),
-					subImage->coordinates(), outfile));
-			if (_imageFloat.get() == 0) {
-				*_log << "Failed to create PagedImage" << LogIO::EXCEPTION;
-			}
-			ImageUtilities::copyMiscellaneous(*_imageFloat, *inImage);
-
-			// Make output mask if required
-
-			if (subImage->isMasked()) {
-				String maskName("");
-				ImageMaskAttacher::makeMask(*_imageFloat, maskName, False, True, *_log, True);
-			}
-
-			LatticeUtilities::copyDataAndMask(*_log, *_imageFloat, *subImage);
-			rstat = True;
-		}
-	}
-	catch (const AipsError& x) {
-		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-	}
-	return rstat;
-}
-
 ImageInterface<Float> *
 ImageAnalysis::convolve(
 	const String& outFile, Array<Float>& kernelArray,
