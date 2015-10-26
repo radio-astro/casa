@@ -1468,21 +1468,20 @@ import shutil
 if os.environ.has_key('_PYTHONPATH'):
     sys.path.extend(os.getenv('_PYTHONPATH').split(':'))
 
-if ipython:
-    ipshell.mainloop( )
-    if(os.uname()[0] == 'Darwin') and type(casa) == "<type 'dict'>" and casa['flags'].has_key('--maclogger') :
-           os.system("osascript -e 'tell application \"Console\" to quit'")
-    for pid in logpid: 
-        #print 'pid: ',pid
-        os.kill(pid,9)
+ipshell.mainloop( )
+if(os.uname()[0] == 'Darwin') and type(casa) == "<type 'dict'>" and casa['flags'].has_key('--maclogger') :
+    os.system("osascript -e 'tell application \"Console\" to quit'")
+for pid in logpid: 
+    #print 'pid: ',pid
+    os.kill(pid,9)
 
-    for x in os.listdir('.'):
-       if x.lower().startswith('casapy.scratch-'):
-          if os.path.isdir(x):
-             #shutil.rmtree(x, ignore_errors=True)
-             os.system("rm -rf %s" % x)
-             #print "Removed: ", x, "\n"
+for x in os.listdir('.'):
+    if x.lower().startswith('casapy.scratch-'):
+        if os.path.isdir(x):
+            #shutil.rmtree(x, ignore_errors=True)
+            os.system("rm -rf %s" % x)
+            #print "Removed: ", x, "\n"
 
-    ## leave killing off children to the watchdog...
-    ## so everyone has a chance to die naturally...
-    print "leaving casapy..."
+## leave killing off children to the watchdog...
+## so everyone has a chance to die naturally...
+print "leaving casapy..."
