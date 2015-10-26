@@ -170,6 +170,7 @@ Bool ImageAnalysis::toRecord(RecordInterface& rec) {
 	return False;
 }
 
+/*
 Bool ImageAnalysis::fromRecord(const RecordInterface& rec, const String& name) {
 	Bool retval = False;
 	String err;
@@ -200,6 +201,7 @@ Bool ImageAnalysis::fromRecord(const RecordInterface& rec, const String& name) {
 	}
 	return retval;
 }
+*/
 
 Bool ImageAnalysis::open(const String& infile) {
 	// Generally used if the image is already closed !b

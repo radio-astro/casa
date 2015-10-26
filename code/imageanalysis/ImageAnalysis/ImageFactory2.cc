@@ -144,6 +144,21 @@ pair<SPIIF, SPIIC> ImageFactory::fromImage(
     return imagePair;
 }
 
+
+pair<SPIIF, SPIIC> ImageFactory::fromRecord(
+    const RecordInterface& rec, const String& name
+) {
+    auto mytype = rec.type(rec.fieldNumber("imagearray"));
+    pair<SPIIF, SPIIC> imagePair;
+    if (isReal(mytype)) {
+        imagePair.first = _fromRecord<Float>(rec, name);
+    }
+    else {
+        imagePair.second = _fromRecord<Complex>(rec, name);
+    }
+    return imagePair;
+}
+
 void ImageFactory::_centerRefPix(
 	CoordinateSystem& csys, const IPosition& shape
 ) {

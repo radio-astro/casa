@@ -261,7 +261,7 @@ public:
     // Return a record of the associates ImageInterface 
     Bool toRecord(RecordInterface& rec);
     // Create a pagedimage if imagename is not "" else create a tempimage
-    Bool fromRecord(const RecordInterface& rec, const String& imagename="");
+    //Bool fromRecord(const RecordInterface& rec, const String& imagename="");
 
     // get the associated ImageInterface object
     SPCIIF getImage() const;

@@ -33,6 +33,8 @@
 #include <images/Images/TempImage.h>
 
 #include <imageanalysis/ImageAnalysis/ImageHistory.h>
+#include <imageanalysis/ImageAnalysis/SubImageFactory.h>
+
 namespace casa {
 
 template <class T> SPIIT ImageFactory::createImage(
@@ -130,6 +132,25 @@ template <class T> SPIIT ImageFactory::imageFromArray(
 	);
 	myim->put(pixels);
 	return myim;
+}
+
+template <class T> SPIIT ImageFactory::_fromRecord(
+    const RecordInterface& rec, const String& name
+) {
+    SPIIT image;
+    String err;
+    image.reset(new TempImage<T>());
+    ThrowIf(
+        ! image->fromRecord(err, rec),
+        "Error converting image from record: " + err
+    );
+    if (! name.empty()) {
+        image = SubImageFactory<T>::createImage(
+            *image, name, Record(), "", False,
+            False, False, False
+        );
+    }
+    return image;
 }
 
 }

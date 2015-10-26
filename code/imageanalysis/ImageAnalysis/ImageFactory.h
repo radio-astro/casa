@@ -32,6 +32,7 @@
 
 #include <casa/Arrays/Array.h>
 #include <casa/BasicSL/String.h>
+#include <casa/Containers/Record.h>
 #include <casa/Logging/LogOrigin.h>
 #include <casa/namespace.h>
 #include <lattices/Lattices/LatticeBase.h>
@@ -153,6 +154,11 @@ public:
         const Bool zeroBlanks, const Bool overwrite
     );
 
+    static pair<SPIIF, SPIIC> fromRecord(
+        const RecordInterface& rec, const String& imagename=""
+    );
+
+
     // open a canonical image
     static SPIIF testImage(
         const String& outfile, const Bool overwrite,
@@ -166,6 +172,10 @@ private:
 		const Record& csys, Bool linear,
 		Bool overwrite, Bool verbose,
         const std::vector<std::pair<LogOrigin, String> > *const &msgs
+	);
+
+	template <class T> static SPIIT _fromRecord(
+	    const RecordInterface& rec, const String& name
 	);
 
 	static void _centerRefPix(
