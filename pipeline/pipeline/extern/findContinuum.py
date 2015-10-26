@@ -17,12 +17,13 @@ import scipy
 from scipy.stats import scoreatpercentile, percentileofscore
 from taskinit import *
 from imhead_cli import imhead_cli as imhead
+import warnings
 
 def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: findContinuum.py,v 1.23 2015/10/22 19:24:16 we Exp $" 
+    myversion = "$Id: findContinuum.py,v 1.24 2015/10/24 19:05:32 we Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -103,8 +104,10 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
            default='auto' means start with whole field, then reduce to 1/10 if only
            one window is found
     """
-    if (centralArcsec == 'auto'):
-        bmaj, bmin, bpa, cdelt1, cdelt2, naxis1, naxis2, freq = getImageInfo(img)
+    if (centralArcsec == 'auto' and img != ''):
+        results = getImageInfo(img)
+        if results == None: return results
+        bmaj, bmin, bpa, cdelt1, cdelt2, naxis1, naxis2, freq = results
         nchan, firstFreq, lastFreq = numberOfChannelsInCube(img, returnFreqs=True)
         npixels = float(nchan)*naxis1*naxis2
         maxpixels = float(1024)*1024*960
@@ -427,7 +430,9 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
             transform=ax1.transAxes, ha='center', size=fontsize)
     pl.text(0.5,0.99-4*inc,'chans above median: %d (%.5f), below median: %d (%.5f), ratio: %.2f (%.2f)'%(channelsAboveMedian,sumAboveMedian,channelsBelowMedian,sumBelowMedian,channelRatio,sumRatio),
             transform=ax1.transAxes, ha='center', size=fontsize)
-    if (centralArcsec < 0):
+    if (centralArcsec == 'auto'):
+        areaString = 'mean over area: (unknown)'
+    elif (centralArcsec < 0):
         areaString = 'mean over area: whole field'
     else:
         areaString = 'mean over area: central box of radius %.1f arcsec' % (centralArcsec)
@@ -1029,21 +1034,105 @@ def nanmean(a, axis=0):
     """
     Takes the mean of an array, ignoring the nan entries
     """
-    if (np.__version__ < '1.81'):
+    if (map(int, np.__version__.split('.')[:3]) < (1,8,1)):
         return(scipy.stats.nanmean(a,axis)) 
 #        length = len(np.array(a)[np.where(np.isnan(a)==False)])
 #        return(np.nansum(a,axis)/length)
     else:
         return(np.nanmean(a,axis))
 
-def nanmedian(a, axis=0):
+def _nanmedian(arr1d, preop=None):  # This only works on 1d arrays
+    """Private function for rank a arrays. Compute the median ignoring Nan.
+
+    Parameters
+    ----------
+    arr1d : ndarray
+        Input array, of rank 1.
+
+    Results
+    -------
+    m : float
+        The median.
     """
-    Takes the mean of an array, ignoring the nan entries
+    x = arr1d.copy()
+    c = np.isnan(x)
+    s = np.where(c)[0]
+    if s.size == x.size:
+        warnings.warn("All-NaN slice encountered", RuntimeWarning)
+        return np.nan
+    elif s.size != 0:
+        # select non-nans at end of array
+        enonan = x[-s.size:][~c[-s.size:]]
+        # fill nans in beginning of array with non-nans of end
+        x[s[:enonan.size]] = enonan
+        # slice nans away
+        x = x[:-s.size]
+    if preop:
+        x = preop(x)
+    return np.median(x, overwrite_input=True)
+
+def nanmedian(x, axis=0, preop=None):
     """
-    if (np.__version__ < '1.81'):
-        return(scipy.stats.nanmedian(a,axis)) 
-    else:
-        return(np.nanmedian(a,axis))
+    Compute the median along the given axis ignoring nan values.
+
+    Parameters
+    ----------
+    x : array_like
+        Input array.
+    axis : int or None, optional
+        Axis along which the median is computed. Default is 0.
+        If None, compute over the whole array `x`.
+    preop : function
+        function to apply on 1d slice after removing the NaNs and before
+        computing median
+
+    Returns
+    -------
+    m : float
+        The median of `x` along `axis`.
+
+    See Also
+    --------
+    nanstd, nanmean, numpy.nanmedian
+
+    Examples
+    --------
+    >>> from scipy import stats
+    >>> a = np.array([0, 3, 1, 5, 5, np.nan])
+    >>> stats.nanmedian(a)
+    array(3.0)
+
+    >>> b = np.array([0, 3, 1, 5, 5, np.nan, 5])
+    >>> stats.nanmedian(b)
+    array(4.0)
+
+    Example with axis:
+
+    >>> c = np.arange(30.).reshape(5,6)
+    >>> idx = np.array([False, False, False, True, False] * 6).reshape(5,6)
+    >>> c[idx] = np.nan
+    >>> c
+    array([[  0.,   1.,   2.,  nan,   4.,   5.],
+           [  6.,   7.,  nan,   9.,  10.,  11.],
+           [ 12.,  nan,  14.,  15.,  16.,  17.],
+           [ nan,  19.,  20.,  21.,  22.,  nan],
+           [ 24.,  25.,  26.,  27.,  nan,  29.]])
+    >>> stats.nanmedian(c, axis=1)
+    array([  2. ,   9. ,  15. ,  20.5,  26. ])
+
+    """
+    x = np.asarray(x)
+    if axis is None:
+        x = x.ravel()
+        axis = 0
+    if x.ndim == 0:
+        return float(x.item())
+    if preop is None and hasattr(np, 'nanmedian'):
+        return np.nanmedian(x, axis)
+    x = np.apply_along_axis(_nanmedian, axis, x, preop)
+    if x.ndim == 0:
+        x = float(x.item())
+    return x
 
 def avgOverCube(pixels, useAbsoluteValue=False, threshold=None, median=False):
     """
@@ -1274,21 +1363,11 @@ def MAD(a, c=0.6745, axis=0):
          median(abs(a - median(a))) / c
     c = 0.6745 is the constant to convert from MAD to std 
     """
-    a = np.array(a)
-    good = (a==a)
     a = np.asarray(a, np.float64)
-    if a.ndim == 1:
-        d = nanmedian(a[good])
-        m = nanmedian(np.fabs(a[good] - d) / c)
-    else:
-        print "1) len(a)=%d, len(a[good])=%d, np.shape(a)=%s, np.shape(good)=%s" % (len(a), len(a[good]), np.shape(a), np.shape(good))
-        d = nanmedian(a[good], axis=axis)
-        if axis > 0:
-            aswp = swapaxes(a[good],0,axis)
-        else:
-            aswp = a[good]
-        m = nanmedian(np.fabs(aswp - d) / c, axis=0)
-    return m
+    m = nanmedian(a, axis=axis,
+                  preop=lambda x:
+                        np.fabs(np.subtract(x, np.median(x, axis=None), out=x), out=x))
+    return m / c
 
 def splitListIntoContiguousLists(mylist):
     """
