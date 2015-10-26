@@ -1577,19 +1577,28 @@ void PlotMSIndexer::computeRanges() {
 		Bool m;
 		xyAndMaskAt(i,x,y,m);
 
+		// CAS-8019 nan>ymax_ caused error in autorange
 		if ( !m ) {
 			++sizeUnMasked_;
-			xmin_=min(xmin_,x);
-			xmax_=max(xmax_,x);
-			ymin_=min(ymin_,y);
-			ymax_=max(ymax_,y);
+			if (!isNaN(x)) {
+			    xmin_ = min(xmin_,x);
+			    xmax_ = max(xmax_,x);
+			}
+			if (!isNaN(y)) {
+			    ymin_ = min(ymin_,y);
+			    ymax_ = max(ymax_,y);
+			}
 		}
 		else {
 			++sizeMasked_;
-			xflmin_=min(xflmin_,x);
-			xflmax_=max(xflmax_,x);
-			yflmin_=min(yflmin_,y);
-			yflmax_=max(yflmax_,y);
+			if (!isNaN(x)) {
+			    xflmin_ = min(xflmin_,x);
+			    xflmax_ = max(xflmax_,x);
+			}
+			if (!isNaN(y)) {
+			    yflmin_ = min(yflmin_,y);
+			    yflmax_ = max(yflmax_,y);
+			}
 		}
 	}
 
