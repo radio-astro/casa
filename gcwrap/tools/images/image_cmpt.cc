@@ -222,20 +222,6 @@ bool image::fromrecord(const record& imrecord, const string& outfile) {
 		    _image.reset(new ImageAnalysis(imagePair.second));
 		}
 		return True;
-		/*
-		if (_image.get() == 0) {
-			_image.reset(new ImageAnalysis());
-		}
-		*/
-		/*
-		if (
-			! _image->fromRecord(*tmpRecord, casa::String(outfile))
-		) {
-			_log << "Failed to create a valid image from this record"
-					<< LogIO::EXCEPTION;
-		}
-		return True;
-		*/
 	}
 	catch (const AipsError& x) {
 		RETHROW(x);
@@ -1458,7 +1444,7 @@ image::coordmeasures(const std::vector<double>&pixel) {
 		casa::Record theFreq;
 		casa::Record theVel;
 		casa::Record* retval;
-		casa::Quantity theInt;
+		casa::Quantum<Float> theInt;
 		Vector<Double> vpixel;
 		if (!(pixel.size() == 1 && pixel[0] == -1)) {
 			vpixel = pixel;
@@ -3399,21 +3385,32 @@ image* image::crop(
 
 ::casac::record*
 image::pixelvalue(const std::vector<int>& pixel) {
-	::casac::record *rstat = 0;
 	try {
 		_log << _ORIGIN;
-		if (detached())
-			return rstat;
+		if (detached()) {
+			return nullptr;
+		}
+		if(_image->isFloat()) {
+		    PixelValueManipulator<Float> pvm(_image->getImage(), nullptr, "");
+		    return fromRecord(pvm.pixelValue(Vector<Int> (pixel)));
+		}
+		else {
+		    PixelValueManipulator<Complex> pvm(_image->getComplexImage(), nullptr, "");
+		    return fromRecord(pvm.pixelValue(Vector<Int> (pixel)));
+		}
 
+		/*
 		Record *outRec = _image->pixelvalue(Vector<Int> (pixel));
 		rstat = fromRecord(*outRec);
 		delete outRec;
-	} catch (AipsError x) {
+		*/
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
+	return nullptr;
 }
 
 bool image::putchunk(
