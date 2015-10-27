@@ -56,7 +56,7 @@ the meta data associated with the observation.
 	<value type="int">8</value>
     </param>
 
-   <param type="bool" name="hm_nantennas">
+   <param type="string" name="hm_nantennas">
 	<description>The antenna selection heuristic (unsupported) </description>
 	<value>all</value>
 	<allowed kind="enum">
