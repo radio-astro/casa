@@ -451,8 +451,8 @@ def get_mediantemp (ms, tsys_spwlist, scan_list, antenna='',
                 if beginScanTimes[j] > tend or endScanTimes[j] < tstart:
                     continue
                 if scanids[i] <= 0:
-                        scanids[i] = uniqueScans[j]
-                        nmatch = nmatch + 1
+                    scanids[i] = uniqueScans[j]
+                    nmatch = nmatch + 1
 
         if nmatch <= 0:
             LOG.warn ( \
