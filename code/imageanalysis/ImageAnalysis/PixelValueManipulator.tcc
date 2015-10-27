@@ -28,6 +28,8 @@
 
 // #include <casa/Arrays/ArrayMath.h>
 
+#include <casa/Quanta/QuantumHolder.h>
+
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
 
 namespace casa {
@@ -688,7 +690,6 @@ template<class T> Bool PixelValueManipulator<T>::putRegion(
     return True;
 }
 
-
 template<class T> Bool PixelValueManipulator<T>::set(
     SPIIF image, const String& lespixels, const Int pixelmask,
     Record& p_Region, const Bool list
@@ -783,6 +784,85 @@ template<class T> void PixelValueManipulator<T>::makeRegionBlock(
             regions[i] = ImageRegion::fromRecord(Regions.asRecord(i), "");
         }
     }
+}
+
+template<class T> Record PixelValueManipulator<T>::pixelValue(
+    const Vector<Int>& pixel
+) const {
+    Bool offImage;
+    Quantum<T> value;
+    Bool mask;
+    Vector<Int> pos(pixel);
+    pixelValue(offImage, value, mask, pos);
+    if (offImage) {
+        return Record();
+    }
+
+    RecordDesc outRecDesc;
+    outRecDesc.addField("mask", TpBool);
+    outRecDesc.addField("value", TpRecord);
+    outRecDesc.addField("pixel", TpArrayInt);
+    Record outRec(outRecDesc);
+    outRec.define("mask", mask);
+    String error;
+    QuantumHolder qh(value);
+    Record qr;
+    ThrowIf(
+        ! qh.toRecord(error, qr),
+        "Unable to convert QuantumHolder to Record " + error
+    );
+    outRec.defineRecord("value", qr);
+
+    outRec.define("pixel", pos);
+    return outRec;
+}
+
+template<class T> void PixelValueManipulator<T>::pixelValue (
+    Bool& offImage, Quantum<T>& value, Bool& mask,
+    Vector<Int>& pos
+) const {
+   const auto myim = this->_getImage();
+    const auto imShape = myim->shape();
+    const auto refPix = myim->coordinates().referencePixel();
+    const auto nDim = myim->ndim();
+    if (pos.size() == 1 && pos[0] == -1) { // check for default input parameter
+        pos.resize(nDim);
+        for (uInt i = 0; i < nDim; ++i) {
+            pos[i] = Int(refPix[i] + 0.5);
+        }
+    }
+    IPosition iPos = IPosition(pos);
+    const uInt nPix = iPos.nelements();
+    iPos.resize(nDim, True);
+
+    // Discard extra pixels, add ref pixel for missing ones
+    offImage = False;
+    for (uInt i = 0; i < nDim; ++i) {
+        if ((i + 1) > nPix) {
+            iPos[i] = Int(refPix[i] + 0.5);
+        }
+        else {
+            if (iPos(i) < 0 || iPos[i] > (imShape[i] - 1)) {
+                offImage = True;
+            }
+        }
+    }
+    if (offImage) {
+        return;
+    }
+    IPosition shape(myim->ndim(), 1);
+    auto pixel = myim->getSlice(iPos, shape);
+    auto maskPixel = myim->getMaskSlice(iPos, shape);
+    auto units = myim->units();
+    if (pos.size() != iPos.size()) {
+        pos.resize(iPos.size());
+    }
+    auto n = pos.size();
+    for (uInt i = 0; i < n; i++) {
+        pos(i) = iPos(i);
+    }
+    value = Quantum<T> (pixel(shape - 1), units);
+    mask = maskPixel(shape - 1);
 }
 
 

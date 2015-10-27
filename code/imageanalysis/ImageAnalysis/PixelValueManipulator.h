@@ -97,13 +97,13 @@ public:
 	Record getProfile(
 		uInt axis, const String& function, const String& unit,
 		PixelValueManipulatorData::SpectralType specType=PixelValueManipulatorData::DEFAULT,
-		const Quantity *const restFreq=0, const String& frame=""
+		const Quantity *const restFreq=nullptr, const String& frame=""
 	);
 
 	Record getProfile(
 		uInt axis, ImageCollapserData::AggregateType function, const String& unit,
 		PixelValueManipulatorData::SpectralType specType=PixelValueManipulatorData::DEFAULT,
-		const Quantity *const restFreq=0, const String& frame=""
+		const Quantity *const restFreq=nullptr, const String& frame=""
 	);
 
 	String getClass() const { return _className; }
@@ -115,6 +115,13 @@ public:
 	    PtrBlock<const ImageRegion*>& regions,
 	    const Record& Regions
 	);
+
+	Record pixelValue(const Vector<Int>& pixel) const;
+
+	void pixelValue(
+	    Bool& offImage, Quantum<T>& value, Bool& mask,
+	    Vector<Int>& pos
+	) const;
 
 	// set specified pixels or mask equal to provided scalar value
 	static Bool set(
@@ -160,6 +167,8 @@ private:
 		const String& unit, PixelValueManipulatorData::SpectralType specType,
 		const Quantity *const restFreq, const String& axisUnit
 	) const;
+
+
 
 
 };

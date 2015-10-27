@@ -39,6 +39,8 @@ public:
 		WAVELENGTH,
 	};
 
+	PixelValueManipulatorData() = delete;
+
 	// destructor
 	~PixelValueManipulatorData() {}
 
@@ -46,11 +48,6 @@ public:
 	// minimum match supported): "default", "optical velocity", "radio velocity",
 	// "wavelength", "air wavelength", and "" (which returns DEFAULT)
 	static SpectralType spectralType(const String& specString);
-
-private:
-
-	// disallow default constructor
-	PixelValueManipulatorData() {}
 
 };
 }

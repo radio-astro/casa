@@ -111,7 +111,7 @@
 #include <lattices/LRegions/RegionType.h>
 #include <lattices/Lattices/TiledLineStepper.h>
 #include <scimath/Fitting/LinearFitSVD.h>
-#include <scimath/Functionals/Polynomial.h>
+//#include <scimath/Functionals/Polynomial.h>
 #include <scimath/Mathematics/VectorKernel.h>
 #include <tables/LogTables/NewFile.h>
 #include <images/Images/MIRIADImage.h>
@@ -169,39 +169,6 @@ Bool ImageAnalysis::toRecord(RecordInterface& rec) {
 
 	return False;
 }
-
-/*
-Bool ImageAnalysis::fromRecord(const RecordInterface& rec, const String& name) {
-	Bool retval = False;
-	String err;
-	if (name != "") {
-		TempImage<Float> tempim;
-		retval = tempim.fromRecord(err, rec);
-		if (retval) {
-			{
-				PagedImage<Float> diskim(tempim.shape(), tempim.coordinates(),
-						name);
-				diskim.copyData(tempim);
-				// go out of context hence flush to disk
-			}
-			retval = open(name);
-		}
-	} else {
-		if (_log.get() == 0)
-			_log.reset(new LogIO());
-		if (_imageFloat.get() != 0) {
-			*_log << LogOrigin("ImageAnalysis", "fromRecord");
-			*_log << LogIO::WARN
-					<< "Image is already open, disconnecting first"
-					<< LogIO::POST;
-		}
-		_imageFloat.reset(new TempImage<Float> ());
-		retval = _imageFloat->fromRecord(err, rec);
-
-	}
-	return retval;
-}
-*/
 
 Bool ImageAnalysis::open(const String& infile) {
 	// Generally used if the image is already closed !b
@@ -534,7 +501,7 @@ CoordinateSystem ImageAnalysis::coordsys(const Vector<Int>& pixelAxes) {
 }
 
 Record* ImageAnalysis::coordmeasures(
-	Quantity& intensity, Record& direction,
+	Quantum<Float>& intensity, Record& direction,
 	Record& frequency, Record& velocity, const Vector<Double>& pixel
 ) {
 	_onlyFloat(__func__);
@@ -559,7 +526,8 @@ Record* ImageAnalysis::coordmeasures(
 	Bool offImage;
 	Quantum<Double> value;
 	Bool mask(False);
-	pixelValue(offImage, intensity, mask, ipixel);
+	PixelValueManipulator<Float> pvm(_imageFloat, nullptr, "");
+	pvm.pixelValue(offImage, intensity, mask, ipixel);
 	if (offImage)
 		return r;
 
@@ -1373,12 +1341,13 @@ Record ImageAnalysis::maxfit(
     }
     return pIm.release();
 }*/
-
+/*
 void ImageAnalysis::setMomentsProgressMonitor( ImageMomentsProgressMonitor* progressMonitor ){
 	_onlyFloat(__func__);
 	imageMomentsProgressMonitor = progressMonitor;
 }
-
+*/
+/*
 Record*
 ImageAnalysis::pixelvalue(const Vector<Int>& pixel) {
 	_onlyFloat(__func__);
@@ -1409,7 +1378,8 @@ ImageAnalysis::pixelvalue(const Vector<Int>& pixel) {
 	outRec->define("pixel", pos);
 	return outRec;
 }
-
+*/
+/*
 void ImageAnalysis::pixelValue(Bool& offImage, Quantum<Double>& value,
 		Bool& mask, Vector<Int>& pos) const {
 	_onlyFloat(__func__);
@@ -1455,6 +1425,7 @@ void ImageAnalysis::pixelValue(Bool& offImage, Quantum<Double>& value,
 	value = Quantum<Double> (Double(pixels(shp - 1)), units);
 	mask = maskPixels(shp - 1);
 }
+*/
 
 Bool ImageAnalysis::rename(const String& name, const Bool overwrite) {
 	_onlyFloat(__func__);

@@ -102,7 +102,7 @@ public:
 
     CoordinateSystem coordsys(const Vector<int>& axes);
 
-    Record* coordmeasures(Quantity& intensity, Record& direction, 
+    Record* coordmeasures(Quantum<Float>& intensity, Record& direction,
                           Record& frequency, Record& velocity, 
                           const Vector<double>& pixel);
 
@@ -176,32 +176,8 @@ public:
     Record maxfit(Record& region, const Bool point, const Int width = 5, 
                    const Bool negfind = False, const Bool list = True);
 
-    // this method is deprecated. Use ImageMomentsTask instead.
-    // instead.
-    /*ImageInterface<Float> * moments(
-    	const Vector<Int>& moments, const Int axis, Record& region,
-    	const String& mask, const Vector<String>& method,
-    	const Vector<Int>& smoothaxes,
-    	const Vector<String>& smoothtypes,
-        const Vector<Quantity>& smoothwidths,
-        const Vector<Float>& includepix,
-        const Vector<Float>& excludepix,
-        const Double peaksnr, const Double stddev,
-        const String& doppler = "RADIO",  const String& outfile = "",
-        const String& smoothout="",
-        const Bool overwrite=False, const Bool drop=True,
-        const Bool stretchMask=False
-    );*/
-
-    // this method is deprecated. Use ImageMomentsTask.setMomentsProgressMonitor()
-    // instead.
-    void setMomentsProgressMonitor( ImageMomentsProgressMonitor* progressMonitor );
 
     Bool open(const String& infile);
-
-    Record* pixelvalue(const Vector<Int>& pixel);
-    void pixelValue (Bool& offImage, Quantum<Double>& value, Bool& mask,
-                     Vector<Int>& pos) const;
 
     Bool rename(const String& name, const Bool overwrite = False);
 
