@@ -181,12 +181,21 @@ Bool MSUVWGenerator::make_uvws(const Vector<Int> flds)
     const Unit sec("s");
     Double oldTime = timeCentMeas(tOI[0]).get(sec).getValue() - 2.0 * timeRes_p;
     Int    oldFld  = -2;
+
+    // IO reordering buffer to avoid poor IO patterns on files not sorted by time
+    std::map<uInt, Vector<Double> > writebuffer;
+
     for(uInt row = 0; row < msc_p.nrow(); ++row){
       uInt   toir = tOI[row];
-      Double currTime = timeCentMeas(toir).get(sec).getValue();
+      const MEpoch & timecentmeas = timeCentMeas(toir);
+      Double currTime = timecentmeas.get(sec).getValue();
       Int    currFld  = fieldID(toir);
       Bool   newWsrtConvention = (msc_p.observation().telescopeName()(obsID(toir)) ==
                                   "WSRT");
+      if ((row % (1<<22)) == 0) {
+        logSink() << LogIO::NORMAL << "Rows handled: "
+                  << row << "/" << msc_p.nrow() << LogIO::POST;
+      }
 
       if(currTime - oldTime > timeRes_p || currFld != oldFld
          || newWsrtConvention != oldWsrtConvention){
@@ -203,14 +212,25 @@ Bool MSUVWGenerator::make_uvws(const Vector<Int> flds)
 
         //logSink() << LogIO::DEBUG1 << "currTime: " << currTime
         //          << "\ncurrFld: " << currFld << LogIO::POST;
-        uvw_an(timeCentMeas(toir), currFld, newWsrtConvention);
+        uvw_an(timecentmeas, currFld, newWsrtConvention);
       }
     
       if(flds[fieldID(toir)] > -1){
 	//      uvw_bl(ant1(toir), ant2(toir),
 	//     feed1(toir), feed2(toir), UVWcol(toir));
-	UVWcol.put(toir, antUVW_p[ant2(toir)] - antUVW_p[ant1(toir)]);
+        // collect output and write larger chunk in row sequential order
+        writebuffer[toir] = antUVW_p[ant2(toir)] - antUVW_p[ant1(toir)];
+        if (writebuffer.size() > 100000) {
+          for (auto it = writebuffer.begin(); it != writebuffer.end(); ++it) {
+            UVWcol.put(it->first, it->second);
+          }
+          writebuffer.clear();
+        }
       }
+    }
+    // flush rest of buffer
+    for (auto it = writebuffer.begin(); it != writebuffer.end(); ++it) {
+      UVWcol.put(it->first, it->second);
     }
   }
   catch(AipsError x){
