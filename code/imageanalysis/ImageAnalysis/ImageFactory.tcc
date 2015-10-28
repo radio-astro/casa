@@ -147,7 +147,7 @@ template <class T> SPIIT ImageFactory::_fromRecord(
     if (! name.empty()) {
         image = SubImageFactory<T>::createImage(
             *image, name, Record(), "", False,
-            False, False, False
+            True, False, False
         );
     }
     return image;
