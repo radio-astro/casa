@@ -95,7 +95,7 @@ $(document).ready(function() {
 		filesize = measures.FileSize(total_bytes, measures.FileSizeUnits.BYTES)
 	%>
 	% if file_exists:
-		<li><a href="${relpath}" data-title="${relpath}" class="replace-pre">View</a> or <a href="${relpath}" download="${relpath}" data-title="Click to download ${tooltip}">download</a> ${relpath} (${str(filesize)})</li>
+		<li><a href="${relpath}" data-title="${relpath}" class="replace-pre">View</a>, <a href="t1-4.html?logfile=${relpath}" target="_blank">view in new tab</a> or <a href="${relpath}" download="${relpath}" data-title="Click to download ${tooltip}">download</a> ${relpath} (${str(filesize)})</li>
 	% endif
 </%def>
 

@@ -47,6 +47,18 @@ pipeline.pages = pipeline.pages || function() {
 			});
 
             pipeline.appContainer.redirectPreAnchorTarget();
+
+            // load the stage given in the URL
+			var logfile = $.url().param("logfile");
+
+            if (logfile) {
+                var onSuccess = [function() {
+                    pipeline.appContainer.addPreMarkup(logfile);
+                    pipeline.appContainer.setTitle(logfile);
+                    pipeline.history.pushState(logfile);
+                }];
+                pipeline.appContainer.load(logfile, onSuccess);
+            }
 		};
 
 		return innerModule;
@@ -426,15 +438,15 @@ pipeline.appContainer = pipeline.appContainer || (function() {
         });
     }
 
-	//module.getQueryUrl = function() {
-     //   // Only append to the URL when displaying a log
-	//	if (isPreFormatted) {
-	//        var path = loadedHref.substring(loadedHref.lastIndexOf('/') + 1, loadedHref.length);
-	//		return "?log=" + path;
-	//	} else {
-	//		return "";
-	//	}
-	//}
+	module.getQueryUrl = function() {
+        // Only append to the URL when displaying a log
+		if (isPreFormatted) {
+	        var path = loadedHref.substring(loadedHref.lastIndexOf('/') + 1, loadedHref.length);
+			return "?logfile=" + path;
+		} else {
+			return "";
+		}
+	}
 
 	module.getScrollTop = function() {
 		return $(window).scrollTop();
@@ -755,7 +767,7 @@ pipeline.history = pipeline.history || (function() {
     var getUrl = function(state) {
         var loc = window.location;
         var path = loc.pathname.substring(loc.pathname.lastIndexOf('/') + 1, loc.pathname.length);
-        return path + pipeline.sidebar.getQueryUrl() + pipeline.msselector.getQueryUrl() + pipeline.detailsframe.getQueryUrl();
+        return path + pipeline.appContainer.getQueryUrl() + pipeline.sidebar.getQueryUrl() + pipeline.msselector.getQueryUrl() + pipeline.detailsframe.getQueryUrl();
     };
     
     return module; 
