@@ -4888,11 +4888,10 @@ image::topixel(const ::casac::variant& value) {
 
 ::casac::record*
 image::toworld(const ::casac::variant& value, const std::string& format, bool dovelocity) {
-	record *rstat = 0;
 	try {
 		_log << LogOrigin("image", __func__);
 		if (detached()) {
-			return rstat;
+			return nullptr;
         }
 		Vector<Double> pixel;
 		if (isunset(value)) {
@@ -4917,23 +4916,27 @@ image::toworld(const ::casac::variant& value, const std::string& format, bool do
 				pixel = tmp->asArrayDouble("numeric");
 			}
             else {
-				_log << LogIO::SEVERE << "unsupported record type for value"
-						<< LogIO::EXCEPTION;
-				return rstat;
+				ThrowCc("Unsupported record type for value");
 			}
 		}
         else {
-			_log << LogIO::SEVERE << "unsupported data type for value"
-					<< LogIO::EXCEPTION;
-			return rstat;
+			ThrowCc("Unsupported data type for value");
 		}
-		rstat = fromRecord(_image->toworld(pixel, format, dovelocity));
+		//rstat = fromRecord(_image->toworld(pixel, format, dovelocity));
+		unique_ptr<ImageMetaData> imd;
+		if (_image->isFloat()) {
+		    imd.reset(new ImageMetaData(_image->getImage()));
+		}
+		else {
+		    imd.reset(new ImageMetaData(_image->getComplexImage()));
+		}
+		return fromRecord(imd->toWorld(pixel, format, dovelocity));
 	} catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
+	return nullptr;
 }
 
 bool image::unlock() {
