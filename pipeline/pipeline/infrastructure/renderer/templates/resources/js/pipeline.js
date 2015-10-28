@@ -35,7 +35,23 @@ pipeline.pages = pipeline.pages || function() {
 
 		return innerModule;
 	}();
-	
+
+	module.t1_4m = function() {
+		var innerModule = {};
+
+		innerModule.ready = function() {
+			History.Adapter.bind(window, 'statechange', function(event) { // Note: We are using statechange instead of popstate
+		        var state = History.getState(); // Note: We are using History.getState() instead of event.state
+				History.debug("statechange: " + JSON.stringify(state.data));
+				pipeline.history.setComponentState(state.data["componentState"]);
+			});
+
+            pipeline.appContainer.redirectPreAnchorTarget();
+		};
+
+		return innerModule;
+	}();
+
 	module.t2_1 = function() {
 		var innerModule = {};
 		
@@ -46,7 +62,6 @@ pipeline.pages = pipeline.pages || function() {
 			var href = $("a#" + anchorId).prop("href");
 
 			var onSuccess = [function() {
-				console.log("Setting " + anchorId + " active");
 				pipeline.sidebar.setActive(anchorId);
 
 				// replace rather than push, as the current state was 
@@ -288,6 +303,148 @@ pipeline.sidebar = pipeline.sidebar || (function() {
 	}
 	
 	return module;
+})();
+
+
+pipeline.appContainer = pipeline.appContainer || (function() {
+    var module = {};
+    var loadedHref;
+    var title;
+    var isPreFormatted;
+    var scrollTop;
+
+    module.getSelector = function() {
+        return "div#app-container";
+    }
+
+    module.getId = function() {
+        return "App container";
+    }
+
+	module.getState = function() {
+        if (!document.URL.match(/t1-4.html$/)) {
+            return {}
+        } else {
+            return {
+                page: "t1-4",
+                href: loadedHref,
+                preformatted: isPreFormatted,
+                title: title || document.title,
+                scrollTop: module.getScrollTop()
+            };
+        }
+	};
+
+	module.setState = function(state) {
+        if (state["page"] === "t1-4") {
+            var onSuccess = [];
+            if (state["preformatted"] === true) {
+                onSuccess.push(function () {
+                    module.addPreMarkup(state["title"]);
+                });
+            }
+            if (state["title"] !== "") {
+                onSuccess.push(function () {
+                    module.setTitle(state["title"]);
+                })
+            }
+            if (state["scrollTop"]) {
+                onSuccess.push(function () {
+                    module.setScrollTop(state["scrollTop"]);
+                });
+            }
+            var href = state["href"];
+            module.load(href, onSuccess);
+        }
+	};
+
+    module.load = function(href, onSuccess) {
+		loadedHref = href;
+		isPreFormatted = false;
+		title = "Untitled";
+
+    	if (onSuccess) {
+    		if (!(onSuccess instanceof Array)) {
+    			onSuccess = [onSuccess]
+    		}
+    	} else {
+    		onSuccess = [];
+    	};
+
+        var container = module.getSelector();
+		onSuccess.push(function() {
+			module.redirectPreAnchorTarget(container);
+		});
+
+        // if no log is being loaded, just load the main content from the
+        // HTML, bypassing the javascript parts of the page which would
+        // otherwise load repeatedly
+        if (href === undefined) {
+            href = document.URL + " #mainbody";
+        }
+		UTILS.loadContent(container, href, onSuccess);
+	}
+
+	module.addPreMarkup = function(pageTitle) {
+		var target = $(module.getSelector());
+        target.wrapInner("<code />");
+        target.wrapInner("<pre />");
+        target.prepend('<div class="page-header">' +
+            '<h1>' + pageTitle +
+            '<button class="btn btn-default pull-right" ' +
+            'onclick="javascript:window.history.back()">Back</button>' +
+            '</h1>' +
+            '</div>');
+        isPreFormatted = true;
+        title = pageTitle;
+	};
+
+    module.setTitle = function(newTitle) {
+        document.title = newTitle;
+        title = newTitle;
+    };
+
+    module.redirectPreAnchorTarget = function() {
+        var target = module.getSelector();
+
+        $(target).find("a.replace-pre").click(function (evt) {
+            evt.preventDefault();
+
+    		// take a snapshot of the current state so we can restore the page on
+    		// return.
+            pipeline.history.replaceState();
+
+            var title = $(this).data("title");
+
+            var onSuccess = [function() {
+            	pipeline.appContainer.addPreMarkup(title);
+                pipeline.appContainer.setTitle(title);
+                pipeline.history.pushState(title);
+            }];
+
+            pipeline.appContainer.load(this.href, onSuccess);
+        });
+    }
+
+	//module.getQueryUrl = function() {
+     //   // Only append to the URL when displaying a log
+	//	if (isPreFormatted) {
+	//        var path = loadedHref.substring(loadedHref.lastIndexOf('/') + 1, loadedHref.length);
+	//		return "?log=" + path;
+	//	} else {
+	//		return "";
+	//	}
+	//}
+
+	module.getScrollTop = function() {
+		return $(window).scrollTop();
+	}
+
+	module.setScrollTop = function(scrollTop) {
+		$(window).scrollTop(scrollTop);
+	}
+
+    return module;
 })();
 
 
@@ -540,6 +697,7 @@ pipeline.history = pipeline.history || (function() {
 		var d = {};
 		
 		// TODO go through registered components
+        d[pipeline.appContainer.getId()] = pipeline.appContainer.getState();
 		d[pipeline.sidebar.getId()] = pipeline.sidebar.getState();
 		d[pipeline.fakeframe.getId()] = pipeline.fakeframe.getState();
 		d[pipeline.msselector.getId()] = pipeline.msselector.getState();
@@ -563,14 +721,15 @@ pipeline.history = pipeline.history || (function() {
         	pipeline.msselector.setState(state[pipeline.msselector.getId()]);
         	pipeline.detailsframe.setState(state[pipeline.detailsframe.getId()]);
     	}];
+        pipeline.appContainer.setState(state[pipeline.appContainer.getId()]);
     	pipeline.sidebar.setState(state[pipeline.sidebar.getId()]);
     	pipeline.fakeframe.setState(state[pipeline.fakeframe.getId()], callbacks);
     };
 
-    module.pushState = function() {
+    module.pushState = function(title) {
     	var newState = { componentState : module.getComponentState() };
     	newUrl = getUrl(newState);
-    	var title = pipeline.sidebar.getTaskName();
+    	title = title || pipeline.sidebar.getTaskName();
 		History.debug("Pushing new state: " + JSON.stringify(newState));
 		try {
 			manipulatingState = true;
@@ -580,10 +739,10 @@ pipeline.history = pipeline.history || (function() {
 		}
     }
 
-    module.replaceState = function() {
+    module.replaceState = function(title) {
     	var oldState = { componentState : module.getComponentState() };
     	newUrl = getUrl(oldState);
-    	var title = pipeline.sidebar.getTaskName();
+    	title = title || pipeline.sidebar.getTaskName();
 		History.debug("Updating current state: " + JSON.stringify(oldState));
 		try {
 			manipulatingState = true;
