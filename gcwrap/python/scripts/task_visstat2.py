@@ -22,6 +22,7 @@ def visstat2(vis=None,
              ddistart=None,
              taql=None,
              monolithic_processing=None,
+             intent=None,
              reportingaxis=None):
 
     casalog.origin('visstat2')  

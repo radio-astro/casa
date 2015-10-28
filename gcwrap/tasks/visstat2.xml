@@ -131,7 +131,11 @@
       </param>
 
 
-
+     <param type="any" name="intent" >
+        <description>Select data by scan intent.</description>
+        <any type="variant" limittypes="string stringArray int intArray"/>
+        <value type="string"></value>
+     </param>
 
 
 
