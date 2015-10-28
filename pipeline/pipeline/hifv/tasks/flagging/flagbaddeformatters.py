@@ -8,6 +8,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.callibrary as callibrary
 
 import itertools
+import collections
 
 from pipeline.hif.tasks import gaincal
 from pipeline.hif.tasks import bandpass
@@ -23,12 +24,15 @@ class FlagBadDeformattersInputs(basetask.StandardInputs):
         self._init_properties(vars())
 
 class FlagBadDeformattersResults(basetask.Results):
-    def __init__(self, jobs=[], result_amp=[], result_phase=[]):
+    def __init__(self, jobs=[], result_amp=[], result_phase=[], 
+                 amp_collection=collections.defaultdict(list), phase_collection=collections.defaultdict(list)):
         super(FlagBadDeformattersResults, self).__init__()
 
         self.jobs=jobs
         self.result_amp=result_amp
         self.result_phase=result_phase
+        self.amp_collection=amp_collection
+        self.phase_collection=phase_collection
         
     def __repr__(self):
         s = 'Bad deformatter results:\n'
@@ -54,7 +58,7 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
                        'calBPtablename' : 'testBPcal.b', # Define the table to run this on
                        'flagreason' : 'bad_deformatters_amp or RFI'} # Define the REASON given for the flags
         
-        result_amp = self._do_flag_baddeformatters(**method_args)
+        (result_amp, amp_collection) = self._do_flag_baddeformatters(**method_args)
         
         method_args = {'testq' : 'phase',
                        'tstat' : 'diff',
@@ -67,9 +71,10 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
                        'calBPtablename' : 'testBPcal.b',
                        'flagreason' : 'bad_deformatters_phase or RFI'}
         
-        result_phase = self._do_flag_baddeformatters(**method_args)
+        (result_phase, phase_collection) = self._do_flag_baddeformatters(**method_args)
         
-        return FlagBadDeformattersResults(result_amp=result_amp, result_phase=result_phase)
+        return FlagBadDeformattersResults(result_amp=result_amp, result_phase=result_phase, 
+                amp_collection=amp_collection, phase_collection=phase_collection)
         
     def _do_flag_baddeformatters(self, testq=None, tstat=None, doprintall=True,
                                  testlimit=None, testunder=True, nspwlimit=4,
@@ -142,6 +147,7 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
         calBPstatresult = getBCalStatistics(calBPtablename)
         flaglist = []
         extflaglist = []
+        weblogflagdict = collections.defaultdict(list)
         
         for iant in calBPstatresult['antband'].keys():
             antName = calBPstatresult['antDict'][iant]
@@ -237,6 +243,7 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
                 # Use name for flagging
                 flagstr = "mode='manual' antenna='"+antName+"' spw='"+spwstr+"'"
                 flaglist.append(flagstr)
+                weblogflagdict[antName].append(spwstr)
                 
             if doflagemptyspws and len(flaggedspwlist)>0:
                 spwstr = '' 
@@ -252,6 +259,7 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
                 # Use name for flagging
                 flagstr = "mode='manual' antenna='"+antName+"' spw='"+spwstr+"'"
                 extflaglist.append(flagstr)
+                weblogflagdict[antName].append(swpstr)
         
         nflagcmds = len(flaglist)+len(extflaglist)
         if nflagcmds<1:
@@ -280,10 +288,10 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
                 
                 flaggingresult = self._executor.execute(job)
                 
-                return flaglist
+                return (flaglist, weblogflagdict)
                 
         #If the flag commands are not executed.
-        return []
+        return ([], collections.defaultdict(list))
         
         
     def analyse(self, results):

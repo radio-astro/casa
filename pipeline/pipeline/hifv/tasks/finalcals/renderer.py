@@ -228,6 +228,13 @@ class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
         for r in result:
             caltypes = utils.dict_merge(caltypes,
                                         self.caltypes_for_result(r))
+                                        
+        filesizes = {}
+        for r in result:
+            vis = r.inputs['vis']
+            ms = context.observing_run.get_ms(vis)
+            filesizes[os.path.basename(vis)] = ms._calc_filesize()
+            LOG.info("FILESIZE::"+str(filesizes[os.path.basename(vis)]))
 
         # return all agents so we get ticks and crosses against each one
         agents = ['before', 'applycal']
@@ -240,7 +247,8 @@ class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                     'calapps'  : calapps,
                     'caltypes' : caltypes,
                     'agents'   : agents,
-                    'dirname'  : weblog_dir})
+                    'dirname'  : weblog_dir,
+                    'filesizes': filesizes})
 
         amp_vs_time_summary_plots = self.create_plots(context, 
                                                       result, 
