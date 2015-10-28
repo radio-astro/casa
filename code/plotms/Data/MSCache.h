@@ -91,10 +91,11 @@ private:
   MSCache(const MSCache&);
 
   // Set up
-  String checkDataColumn(vector<PMS::Axis>& loadAxes, 
-			 vector<PMS::DataColumn>& loadData);
-  String getDataColumn(PMS::DataColumn dataCol);
-  String checkAxesDatacolumns();
+  String getDataColumn(vector<PMS::Axis>& loadAxes, 
+                       vector<PMS::DataColumn>& loadData);
+  PMS::DataColumn checkReqDataColumn(PMS::DataColumn reqDataCol);
+  String checkLoadedAxesDatacol();
+  String normalizeColumnName(String plotmscol);
   void getNamesFromMS(MeasurementSet& ms);
   void setUpVisIter(PlotMSSelection& selection,
 		    PlotMSCalibration& calibration,

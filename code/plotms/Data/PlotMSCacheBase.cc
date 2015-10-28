@@ -306,24 +306,24 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
 			throw(AipsError("Plots of antenna-based vs. baseline-based axes not supported ("+
 					PMS::axis(currentX_[i])+" and "+PMS::axis(currentY_[i])));
 		}
-		// Can't plot averaged weights yet with plotms-averaging code
+
+        // Check averaging validity
 		if ( averaging_.baseline() || averaging_.antenna() || averaging_.spw() )
 		{
 			int axesCount = axes.size();
 			for ( int j = 0; j < axesCount; j++ ){
-			        if ((axes[j] == (PMS::WT)) || 
-				    (axes[j] == (PMS::WTxAMP)) || 
-				    (axes[j] == (PMS::WTSP)) ||
-				    (axes[j] == (PMS::SIGMA)) ||
-				    (axes[j] == (PMS::SIGMASP)) ) {
+		        // Can't plot averaged weights yet with plotms-averaging code
+                if (PMS::axisIsWeight(axes[j])) {
 					throw(AipsError("Selected averaging does not yet support Weight and Sigma axes."));
 				}
-				if (!axisIsValid(axes[j], averaging_)) {
+                // Check axis/averaging compatibility
+				if ( !axisIsValid(axes[j], averaging_) ) {
 					throw(AipsError(PMS::axis(axes[j]) + " axis is not valid for selected averaging."));
 				}
 			}
 		}
 
+        // Check ephemeris validity
 		bool ephemerisX = isEphemerisAxis( currentX_[i]);
 		bool ephemerisY = isEphemerisAxis( currentY_[i]);
 		if ( ephemerisX || ephemerisY ){
@@ -402,13 +402,13 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
 		dc = PMS::DEFAULT_DATACOLUMN;
 		if(i < data.size()) dc = data[i];
 
-		// 1)  already in the load list?
+		// 1)  already in the load list? (loadAxes)
 		for(unsigned int j = 0; !found && j < loadAxes.size(); j++)
 			if(loadAxes[j] == axis) found = true;
 		if(found) continue;
 
-		//If ephemeris data is not available we should not axes associated
-		//with ephemeris data.
+		//If ephemeris data is not available we should not load axes 
+        //associated with ephemeris data.
 		bool ephemerisAvailable = isEphemeris();
 		if ( !ephemerisAvailable ){
 			if ( axis == PMS::RADIAL_VELOCITY || axis == PMS::RHO ){
@@ -416,10 +416,13 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
 			}
 		}
 
-		// 2)  already loaded?
+		// 2)  not already loaded? (loadedAxes)
 		if(!loadedAxes_[axis]) {
 			loadAxes.push_back(axis);
-			loadData.push_back(dc);
+			if ((axis == PMS::WT) || (axis == PMS::WTSP))
+                loadData.push_back(PMS::DEFAULT_DATACOLUMN_WT);
+            else
+			    loadData.push_back(dc);
 		}
 
 		// 3)  a data column, already loaded, but wrong data column

@@ -161,7 +161,8 @@ public:
     // indicate which data column to use or not.  Currently false except for
     // AMP, PHASE, REAL, and IMAG.
     static bool axisIsData(Axis axis);
-              
+    // Need datacolumn for averaging weight axes          
+    static bool axisIsWeight(Axis axis);
               
     // Enum for different axes types.  Currently only used to display this
     // information to the user in the GUI's cache tab.
@@ -279,6 +280,7 @@ public:
     static const Axis DEFAULT_XAXIS;
     static const Axis DEFAULT_YAXIS;
     static const DataColumn DEFAULT_DATACOLUMN;
+    static const DataColumn DEFAULT_DATACOLUMN_WT;
     static const Axis DEFAULT_COLOR_AXIS;
     // </group>
     

@@ -54,6 +54,13 @@ bool PMS::axisIsData(Axis axis) {
     }
 }
 
+bool PMS::axisIsWeight(Axis axis) {
+    switch(axis) {
+    case WT: case WTSP: case SIGMA: case SIGMASP: return true;
+    default: return false;
+    }
+}
+
 PMS::AxisType PMS::axisType(Axis axis) {
     switch(axis) {
     case FLAG:
@@ -254,6 +261,7 @@ const int PMS::DEFAULT_GRID_COLS = 1;
 const PMS::Axis PMS::DEFAULT_XAXIS = TIME;
 const PMS::Axis PMS::DEFAULT_YAXIS = AMP;
 const PMS::DataColumn PMS::DEFAULT_DATACOLUMN = DATA;
+const PMS::DataColumn PMS::DEFAULT_DATACOLUMN_WT = CORRECTED;
 const PMS::Axis PMS::DEFAULT_COLOR_AXIS = SPW;
 
 const PlotAxis PMS::DEFAULT_CANVAS_XAXIS = X_BOTTOM;

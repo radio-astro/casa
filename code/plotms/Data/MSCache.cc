@@ -81,7 +81,7 @@ void MSCache::loadIt(vector<PMS::Axis>& loadAxes,
 		ThreadCommunication* thread) {
 
 	// process selected columns			
-	String dataColumn = checkDataColumn(loadAxes, loadData);
+	String dataColumn = getDataColumn(loadAxes, loadData);
 
 	// Apply selections to MS to create selection MS 
 	// and channel/correlation selections
@@ -168,141 +168,150 @@ void MSCache::deleteVm() {
 	vm_ = NULL;
 }
 
-String MSCache::checkDataColumn(vector<PMS::Axis>& loadAxes,
-	vector<PMS::DataColumn>& loadData)
+String MSCache::getDataColumn(vector<PMS::Axis>& loadAxes,
+                              vector<PMS::DataColumn>& loadData)
 {	// Check data column choice and determine which column to pass to VisIter
- 
-	Bool corcolOk(false), floatcolOk(false), datacolOk(false), wtspcolOk(false);
 	String dataColumn = "NONE";  // default is none - CAS-7506
+    
+    // Get datacolumn for visibility & weight axes only
+	for (uInt i=0; i<loadAxes.size(); ++i) {
+        if (PMS::axisIsData(loadAxes[i]) || PMS::axisIsWeight(loadAxes[i])) {
+            // check if requested data column exists
+            loadData[i] = checkReqDataColumn(loadData[i]);
+            // check if axis/datacol valid
+            switch (loadAxes[i]) {
+                case PMS::AMP:
+                case PMS::REAL:
+                case PMS::WTxAMP:
+                case PMS::WT:
+                case PMS::SIGMA:
+                case PMS::SIGMASP: {
+                    dataColumn = PMS::dataColumn(loadData[i]);
+                    break;
+                }
+                case PMS::PHASE:
+                case PMS::IMAG: {
+                    // These axes not valid with float data
+                    if (loadData[i] == PMS::FLOAT_DATA) {
+                        throw(AipsError("Chosen axis not valid for FLOAT_DATA, please use AMP or change Data Column"));
+                    } else {
+                        dataColumn = PMS::dataColumn(loadData[i]);
+                    }
+                    break;
+                }
+                case PMS::WTSP: {
+                    // CAS-7517 wtsp col exists but is empty - plot weight instead
+	                Table thisTable(filename_);
+	                const ColumnDescSet cds = thisTable.tableDesc().columnDescSet();
+	                if (cds.isDefined("WEIGHT_SPECTRUM")) {
+                        ArrayColumn<Float> weightSpectrum;
+                        weightSpectrum.attach(thisTable,
+                            MS::columnName(MS::WEIGHT_SPECTRUM));
+                        if (!weightSpectrum.hasContent())
+                            logWarn("load_cache", "Plotting WEIGHT column, WEIGHT_SPECTRUM (WTSP) has not been initialized (this can be changed with initweights task)");
+                            // Also send to console
+                            cout << "WARNING: Plotting WEIGHT column, WEIGHT_SPECTRUM (WTSP) has not been initialized (this can be changed with initweights task)" << endl;
+                    }
+                    dataColumn = PMS::dataColumn(loadData[i]);
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
+	} 
 
-	// Check if data, scratch, float, and wtsp cols present
+    // loadAxes is only new axes to load; if no datacolumn,
+    // try datacolumn of already-loaded axes
+    if (dataColumn == "NONE") {
+        dataColumn = checkLoadedAxesDatacol();
+    }
+    // convert to mstransform datacolumn string
+    if (dataColumn != "NONE")
+        dataColumn = normalizeColumnName(dataColumn);
+
+	return dataColumn;
+}
+
+PMS::DataColumn MSCache::checkReqDataColumn(PMS::DataColumn reqDataCol) {
+	// Check if requested data, scratch, or float cols exist
+    PMS::DataColumn datacol = reqDataCol;
+	Bool datacolOk(false), corcolOk(false), floatcolOk(false);
 	Table thisTable(filename_);
 	const ColumnDescSet cds = thisTable.tableDesc().columnDescSet();
 	datacolOk  = cds.isDefined("DATA");
 	corcolOk   = cds.isDefined("CORRECTED_DATA");
 	floatcolOk = cds.isDefined("FLOAT_DATA");
-	wtspcolOk  = cds.isDefined("WEIGHT_SPECTRUM");
 
-	for (uInt i=0; i<loadData.size(); ++i) {
-		// Check data column
-		switch (loadData[i]) {
-			case PMS::CORRECTED:
-			case PMS::CORRECTED_DIVIDE_MODEL:
-			case PMS::CORRMODEL: {
-			    // user asked for corrected data but no corrected column
-			    if (!corcolOk && !calibration_.useCallib()) {
-                    if (datacolOk) {
-                        //Exception was removed - see CAS-5214
-                        loadData[i] = PMS::DATA;
-                        logWarn( "load_cache", 
-                             "CORRECTED_DATA column not present and calibration library not set or enabled; will use DATA instead.");
-                        //throw(AipsError("CORRECTED_DATA not present, please use DATA"));
-                    } else {
-                        // CAS-7761 - if no corrected/data cols use float for SD MS 
-                        if (floatcolOk) {
-                            loadData[i] = PMS::FLOAT_DATA;
-				            logWarn( "load_cache", 
-                             "CORRECTED_DATA column not present and calibration library not set or enabled; will use FLOAT_DATA instead.");
-                        }
-                    }
-                }
-			    break;
-			}
-			case PMS::FLOAT_DATA: {
-			    if (!floatcolOk) {
-                    // user asked for float data but no float column 
-                    throw(AipsError("FLOAT_DATA not present, please use DATA"));
-			    }
-			    break;
-			}
-			case PMS::DATA: {
-			    // CAS-7482 data requested (could be default) but no DATA column 
-			    if (!datacolOk && floatcolOk) {
-				    loadData[i] = PMS::FLOAT_DATA;
-                    if (loadAxes[i] == PMS::AMP)
-				        logWarn( "load_cache", "DATA column not present; will use FLOAT_DATA instead.");
-			    }
-			    break;
-			}
-			default:
-				break;
-		} // switch
-
-		// Check load axes
-		switch (loadAxes[i]) {
-			case PMS::WTSP: {
-				if (wtspcolOk) {
-					ArrayColumn<Float> weightSpectrum;
-					weightSpectrum.attach(thisTable,
-                        MS::columnName(MS::WEIGHT_SPECTRUM));
-         			if (!weightSpectrum.hasContent())  // CAS-7517
-				    	logWarn("load_cache", "Plotting WEIGHT column, WEIGHT_SPECTRUM (WTSP) has not been initialized (this can be changed with initweights task)");
-                        // Also send to console
-				    	cout << "WARNING: Plotting WEIGHT column, WEIGHT_SPECTRUM (WTSP) has not been initialized (this can be changed with initweights task)" << endl;
-				}
-                break;
-			}
-            case PMS::PHASE:
-			case PMS::IMAG: {
-                if (loadData[i] == PMS::FLOAT_DATA) {
-				    // user asked for float data for nonvalid axes
-				    throw(AipsError("Chosen axis not valid for FLOAT_DATA, please use AMP or change Data Column"));
-                } else {
-			        dataColumn = getDataColumn(loadData[i]);
-                }
-				break;
+    switch (reqDataCol) {
+        case PMS::DATA: {
+            // CAS-7482 - for singledish, use FLOAT if no DATA 
+            if (!datacolOk && floatcolOk) {
+                datacol = PMS::FLOAT_DATA;
+                logWarn( "load_cache", "DATA column not present; will use FLOAT_DATA instead.");
             }
-			case PMS::REAL:
-            case PMS::AMP:
-            case PMS::WTxAMP: {
-                dataColumn = getDataColumn(loadData[i]);
-                break;
+            break;
+        }
+        case PMS::CORRECTED:
+        case PMS::CORRECTED_DIVIDE_MODEL:
+        case PMS::CORRMODEL: {
+            // requested corrected data but no (real or OTF) corrected column
+            if (!corcolOk && !calibration_.useCallib()) {
+                if (datacolOk) {
+                    // CAS-5214 - use DATA if no CORRECTED_DATA with warning
+                    datacol = PMS::DATA;
+                    logWarn( "load_cache", "CORRECTED_DATA column not present and calibration library not set or enabled; will use DATA instead.");
+                } else if (floatcolOk) {
+                    // CAS-7761 - for singledish, use FLOAT if no CORRECTED or DATA
+                    datacol = PMS::FLOAT_DATA;
+                    logWarn( "load_cache", "CORRECTED_DATA column not present and calibration library not set or enabled; will use FLOAT_DATA instead.");
+                }
             }
-            default:
-                break;
-        } // switch
-	} // for
-
-    // If data was already loaded but an axis was changed,
-    // only the new axis is in loadAxes and column will end up NONE.
-    // Check for datacolumn-dependent axis being plotted
-    if (dataColumn == "NONE") {
-        dataColumn = checkAxesDatacolumns();
-    }
-        
-	return dataColumn;
+            break;
+        }
+        case PMS::FLOAT_DATA: {
+            // requested float data but no FLOAT column 
+            if (!floatcolOk) {
+                throw(AipsError("FLOAT_DATA not present, please use DATA"));
+            }
+            break;
+        }
+        default:
+            break;
+    } // switch
+    return datacol;
 }
 
-String MSCache::getDataColumn(PMS::DataColumn dataCol)
-{
-    String dataColumn = PMS::dataColumn(dataCol);
-	// Convert datacolumn as needed for MSTransformManager
-	if ((dataColumn == "corrected-model") || 
-	    (dataColumn == "data-model") ||
-	    (dataColumn == "data/model") || 
-	    (dataColumn == "corrected/model")) {
-			dataColumn = "ALL";
-	} else if (dataColumn == "float") {
-		dataColumn = "FLOAT_DATA";
-	} else {	
-		dataColumn.upcase();
-	}
-	return dataColumn;
-}
-
-String MSCache::checkAxesDatacolumns() {
+String MSCache::checkLoadedAxesDatacol() {
     // Check data column of plotted axes
-    String dataCol = "NONE";
+    String loadedCol = "NONE";
     int axesCount = currentX_.size();
     for (int i=0; i<axesCount; ++i) {
-        if (PMS::axisIsData(currentX_[i])) {
-            dataCol = getDataColumn(loadedAxesData_[currentX_[i]]);
+        if (PMS::axisIsData(currentX_[i]) || PMS::axisIsWeight(currentX_[i])) {
+            loadedCol = PMS::dataColumn(loadedAxesData_[currentX_[i]]);
         }
-        if (PMS::axisIsData(currentY_[i])) {
-            dataCol = getDataColumn(loadedAxesData_[currentY_[i]]);
+        if (PMS::axisIsData(currentY_[i]) || PMS::axisIsWeight(currentY_[i])) {
+            loadedCol = PMS::dataColumn(loadedAxesData_[currentY_[i]]);
         }
     }
-    return dataCol;
+    return loadedCol;
+}
+
+String MSCache::normalizeColumnName(String plotmscol)
+{
+	// Convert datacolumn as needed for MSTransformManager
+    String colname = plotmscol;
+	if ((plotmscol == "corrected-model") || 
+	    (plotmscol == "data-model") ||
+	    (plotmscol == "data/model") || 
+	    (plotmscol == "corrected/model")) {
+			colname = "ALL";
+	} else if (plotmscol == "float") {
+		colname = "FLOAT_DATA";
+	} else {   // "data", "corrected", "model"	
+		colname.upcase();
+	}
+	return colname;
 }
 
 void MSCache::getNamesFromMS(MeasurementSet& ms)
