@@ -562,7 +562,9 @@ int ASDM2MSFiller::createMS(const string& msName,
     SetupNewTable tableSetup(itsMS->tableName() + "/" + name_,
 			     tableDesc_,
 			     Table::New);
-    itsMS->rwKeywordSet().defineTable(name_, Table(tableSetup));    
+    itsMS->rwKeywordSet().defineTable(name_, Table(tableSetup));
+    itsCalDeviceNumberOfRows = 0;
+    itsMSCalDeviceTable = itsMS->rwKeywordSet().asTable("CALDEVICE");
   }
 
   itsMS->initRefs(True);
@@ -2170,29 +2172,31 @@ void ASDM2MSFiller::addCalDevice(int				antennaId,
 				 vector<vector<float> >&	calEff,
 				 vector<vector<float> >&	noiseCal,
 				 vector<double >&                temperatureLoad) {
-  Table								mscaldevice = itsMS->rwKeywordSet().asTable("CALDEVICE");
-  int								rowIndex    = mscaldevice.nrow();
-  mscaldevice.addRow(1);
 
-  ScalarColumn<Int>	antennaIdCol(mscaldevice, "ANTENNA_ID");
+  //Table	mscaldevice = itsMS->rwKeywordSet().asTable("CALDEVICE");
+  int  rowIndex = itsCalDeviceNumberOfRows ;
+
+  itsMSCalDeviceTable.addRow(1);
+
+  ScalarColumn<Int>	antennaIdCol(itsMSCalDeviceTable, "ANTENNA_ID");
   antennaIdCol.put(rowIndex, antennaId);
 
-  ScalarColumn<Int>	feedIdCol(mscaldevice, "FEED_ID");
+  ScalarColumn<Int>	feedIdCol(itsMSCalDeviceTable, "FEED_ID");
   feedIdCol.put(rowIndex, feedId);
 
-  ScalarColumn<Int>	spectralWindowIdCol(mscaldevice, "SPECTRAL_WINDOW_ID");
+  ScalarColumn<Int>	spectralWindowIdCol(itsMSCalDeviceTable, "SPECTRAL_WINDOW_ID");
   spectralWindowIdCol.put(rowIndex, spectralWindowId);
 
-  ScalarColumn<Double>	timeCol(mscaldevice, "TIME");
+  ScalarColumn<Double>	timeCol(itsMSCalDeviceTable, "TIME");
   timeCol.put(rowIndex, time);
 
-  ScalarColumn<Double>	intervalCol(mscaldevice, "INTERVAL");
+  ScalarColumn<Double>	intervalCol(itsMSCalDeviceTable, "INTERVAL");
   intervalCol.put(rowIndex, interval);  
 
-  ScalarColumn<Int> numCalLoadCol(mscaldevice, "NUM_CAL_LOAD");
+  ScalarColumn<Int> numCalLoadCol(itsMSCalDeviceTable, "NUM_CAL_LOAD");
   numCalLoadCol.put(rowIndex, numCalLoad);
 
-  ArrayColumn<String> calloadNamesCol(mscaldevice, "CAL_LOAD_NAMES");
+  ArrayColumn<String> calloadNamesCol(itsMSCalDeviceTable, "CAL_LOAD_NAMES");
   Vector<String> calloadNames_(IPosition(1, calloadNames.size()));
   for (unsigned int i = 0; i < calloadNames.size(); i++)
     calloadNames_(i) = calloadNames[i];
@@ -2201,13 +2205,13 @@ void ASDM2MSFiller::addCalDevice(int				antennaId,
   //
   // numReceptor == 0 will be interpreted as numReceptor 'absent'.
   if (numReceptor) {
-    ScalarColumn<Int> numReceptorCol(mscaldevice, "NUM_RECEPTOR");
+    ScalarColumn<Int> numReceptorCol(itsMSCalDeviceTable, "NUM_RECEPTOR");
     numReceptorCol.put(rowIndex, numReceptor);
 
     //
     // calEff size == 0 will be interpreted as calEff absent. 
     if (calEff.size()) {
-      ArrayColumn<Float> calEffCol(mscaldevice, "CAL_EFF");
+      ArrayColumn<Float> calEffCol(itsMSCalDeviceTable, "CAL_EFF");
       Matrix<Float> calEff_(IPosition(2, numCalLoad, numReceptor));
       for (unsigned int iReceptor = 0; iReceptor < numReceptor; iReceptor++)
 	for (unsigned int iCalLoad = 0; iCalLoad < numCalLoad; iCalLoad++)
@@ -2218,7 +2222,7 @@ void ASDM2MSFiller::addCalDevice(int				antennaId,
     //
     // noiseCal size == 0 will be interpreted as noiseCal absent.
     if (noiseCal.size()) {
-      ArrayColumn<Float> noiseCalCol(mscaldevice, "NOISE_CAL");
+      ArrayColumn<Float> noiseCalCol(itsMSCalDeviceTable, "NOISE_CAL");
       Matrix<Float> noiseCal_(IPosition(2, numCalLoad, numReceptor));
       for (unsigned int iReceptor = 0; iReceptor < numReceptor; iReceptor++)
 	for (unsigned int iCalLoad = 0; iCalLoad < numCalLoad; iCalLoad++)
@@ -2230,11 +2234,12 @@ void ASDM2MSFiller::addCalDevice(int				antennaId,
   //
   // temperatureLoad == 0 will be interpreted as temperatureLoad absent. 
   if (temperatureLoad.size()) {
-    ArrayColumn<Double> temperatureLoadCol(mscaldevice, "TEMPERATURE_LOAD");
+    ArrayColumn<Double> temperatureLoadCol(itsMSCalDeviceTable, "TEMPERATURE_LOAD");
     temperatureLoadCol.put(rowIndex, Vector<Double>(IPosition(1, numCalLoad), &temperatureLoad[0], SHARE));
   }    
 
-  //mscaldevice.flush();
+  itsCalDeviceNumberOfRows++;
+  //itsMSCalDeviceTable.flush();
 }
 
 void ASDM2MSFiller::end(double time_) {

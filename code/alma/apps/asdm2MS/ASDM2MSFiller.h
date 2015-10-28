@@ -191,7 +191,9 @@ class ASDM2MSFiller
     
   ddMgr    itsDDMgr;
 
-         
+  int itsCalDeviceNumberOfRows;
+  Table itsMSCalDeviceTable;
+
   int createMS(const string& msName, 
                bool complexData, 
                bool withCompression, 

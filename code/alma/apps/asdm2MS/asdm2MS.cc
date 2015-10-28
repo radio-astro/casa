@@ -6587,14 +6587,14 @@ int main(int argc, char *argv[]) {
       const vector<CalDeviceRow *>& calDevices = selector(calDeviceT.get(), ignoreTime);
       if (!ignoreTime) 
 	infostream << calDevices.size() << " of them in the selected exec blocks / scans ... ";
-    
+      
       info(infostream.str());
-
+      
       for (vector<CalDeviceRow*>::const_iterator iter = calDevices.begin(); iter != calDevices.end(); iter++) {
 	bool ignoreThisRow = false;
 	unsigned int numCalload = 0;
 	unsigned int numReceptor = 0;
-      
+	
 	//
 	// Let's make some checks on the attributes.
 	errstream.str("");
@@ -6610,7 +6610,7 @@ int main(int argc, char *argv[]) {
 		    << endl; 
 	  ignoreThisRow = true;
 	}
-      
+	
 	//
 	// Do we have enough elements in calLoadNames ?
 	vector<CalibrationDevice> temp = (*iter)->getCalLoadNames();
@@ -6628,7 +6628,7 @@ int main(int argc, char *argv[]) {
 	  calLoadNames.resize(temp.size());
 	  transform(temp.begin(), temp.end(), calLoadNames.begin(), stringValue<CalibrationDevice, CCalibrationDevice>);	  
 	}
-
+	
 	//
 	// Do we have numReceptor ?
 	if ((*iter)->isNumReceptorExists()) {
@@ -6643,7 +6643,7 @@ int main(int argc, char *argv[]) {
 	    ignoreThisRow = true;
 	  }
 	}
-
+	
 	//
 	// Do we have calEff ?
 	vector<vector<float> > calEff;
@@ -6804,6 +6804,7 @@ int main(int argc, char *argv[]) {
 	time =  (*iter)->getTimeInterval().getStartInMJD()*86400 + interval / 2.0 ;
 	//}
       
+	
 	for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator msIter = msFillers.begin();
 	     msIter != msFillers.end();
 	     ++msIter) {
@@ -6820,6 +6821,7 @@ int main(int argc, char *argv[]) {
 				       temperatureLoad);
 	}      
       }
+
       unsigned int numMSCalDevices = (const_cast<casa::MeasurementSet*>(msFillers.begin()->second->ms()))->rwKeywordSet().asTable("CALDEVICE").nrow();
       if (numMSCalDevices > 0) {
 	infostream.str("");
