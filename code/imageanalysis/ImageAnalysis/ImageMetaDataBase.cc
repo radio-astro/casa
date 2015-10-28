@@ -757,5 +757,344 @@ template <class T> Record ImageMetaDataBase::_calcStatsT(
 	return x;
 }
 
-} //# NAMESPACE CASA - END
+Record ImageMetaDataBase::toWorld(
+    const Vector<Double>& pixel, const String& format, Bool doVelocity
+) const {
+    Vector<Double> pixel2 = pixel.copy();
+    const auto& csys = _getCoords();
+    {
+        Vector<Double> replace = csys.referencePixel();
+        const Int nIn = pixel2.size();
+        const Int nOut = replace.size();
+        Vector<Double> out(nOut);
+        for (Int i = 0; i < nOut; ++i) {
+            if (i > nIn - 1) {
+                out(i) = replace(i);
+            }
+            else {
+                out(i) = pixel2(i);
+            }
+        }
+        pixel2.assign(out);
+    }
+
+    // Convert to world
+
+    Vector<Double> world;
+    Record rec;
+    if (csys.toWorld(world, pixel2)) {
+        rec = _worldVectorToRecord(world, -1, format, True, True, doVelocity);
+    }
+    else {
+        ThrowCc(
+            "Error converting to world coordinates: " + csys.errorMessage());
+    }
+    return rec;
+}
+
+Record ImageMetaDataBase::_worldVectorToRecord(const Vector<Double>& world, Int c,
+    const String& format, Bool isAbsolute, Bool showAsAbsolute, Bool doVelocity
+) const {
+    // World vector must be in the native units of cSys
+    // c = -1 means world must be length cSys.nWorldAxes
+    // c > 0 means world must be length cSys.coordinate(c).nWorldAxes()
+    // format from 'n,q,s,m'
+
+    auto ct = upcase(format);
+    Vector<String> units;
+    const auto& csys = _getCoords();
+    if (c < 0) {
+        units = csys.worldAxisUnits();
+    }
+    else {
+        units = csys.coordinate(c).worldAxisUnits();
+    }
+    AlwaysAssert(world.size() == units.size(),AipsError);
+    Record rec;
+    if (ct.contains("N")) {
+        rec.define("numeric", world);
+    }
+    if (ct.contains("Q")) {
+        String error;
+        Record recQ1, recQ2;
+        for (uInt i = 0; i < world.size(); ++i) {
+            Quantum<Double> worldQ(world(i), Unit(units(i)));
+            QuantumHolder h(worldQ);
+            ThrowIf(! h.toRecord(error, recQ1), error);
+            recQ2.defineRecord(i, recQ1);
+        }
+        rec.defineRecord("quantity", recQ2);
+    }
+    if (ct.contains("S")) {
+        Vector<Int> worldAxes;
+        if (c < 0) {
+            worldAxes.resize(world.size());
+            indgen(worldAxes);
+        }
+        else {
+            worldAxes = csys.worldAxes(c);
+        }
+        Coordinate::formatType fType = Coordinate::SCIENTIFIC;
+        Int prec = 8;
+        String u;
+        Int coord, axisInCoord;
+        Vector<String> fs(world.nelements());
+        for (uInt i = 0; i < world.size(); ++i) {
+            csys.findWorldAxis(coord, axisInCoord, i);
+            if (
+                csys.type(coord) == Coordinate::DIRECTION
+                || csys.type(coord) == Coordinate::STOKES
+            ) {
+                fType = Coordinate::DEFAULT;
+            }
+            else {
+                fType = Coordinate::SCIENTIFIC;
+            }
+            u = "";
+            fs(i) = csys.format(
+                u, fType, world(i), worldAxes(i),
+                isAbsolute, showAsAbsolute, prec
+            );
+            if ((u != "") && (u != " ")) {
+                fs(i) += " " + u;
+            }
+        }
+
+        rec.define("string", fs);
+    }
+    if (ct.contains(String("M"))) {
+        Record recM = _worldVectorToMeasures(world, c, isAbsolute, doVelocity);
+        rec.defineRecord("measure", recM);
+    }
+    return rec;
+}
+
+Record ImageMetaDataBase::_worldVectorToMeasures(
+    const Vector<Double>& world, Int c,
+    Bool abs, Bool doVelocity
+) const {
+    _log << LogOrigin("ImageMetaDataBase", __func__);
+    uInt directionCount, spectralCount, linearCount, stokesCount, tabularCount;
+    directionCount = spectralCount = linearCount = stokesCount = tabularCount
+            = 0;
+    const auto& csys = _getCoords();
+    // Loop over desired Coordinates
+    Record rec;
+    String error;
+    uInt s, e;
+    if (c < 0) {
+        AlwaysAssert(world.nelements()==csys.nWorldAxes(), AipsError);
+        s = 0;
+        e = csys.nCoordinates();
+    } else {
+        AlwaysAssert(world.nelements()==csys.coordinate(c).nWorldAxes(), AipsError);
+        s = c;
+        e = c + 1;
+    }
+    for (uInt i = s; i < e; i++) {
+        // Find the world axes in the CoordinateSystem that this coordinate belongs to
+
+        const auto& worldAxes = csys.worldAxes(i);
+        const auto nWorldAxes = worldAxes.size();
+        Vector<Double> world2(nWorldAxes);
+        const auto& coord = csys.coordinate(i);
+        auto units = coord.worldAxisUnits();
+        Bool none = True;
+
+        // Fill in missing world axes if all coordinates specified
+
+        if (c < 0) {
+            for (uInt j = 0; j < nWorldAxes; ++j) {
+                if (worldAxes(j) < 0) {
+                    world2[j] = coord.referenceValue()[j];
+                }
+                else {
+                    world2(j) = world(worldAxes[j]);
+                    none = False;
+                }
+            }
+        }
+        else {
+            world2 = world;
+            none = False;
+        }
+        if (
+            csys.type(i) == Coordinate::LINEAR
+            || csys.type(i) == Coordinate::TABULAR
+        ) {
+            if (!none) {
+                Record linRec1, linRec2;
+                for (uInt k = 0; k < world2.size(); ++k) {
+                    Quantum<Double> value(world2(k), units(k));
+                    QuantumHolder h(value);
+                    ThrowIf(
+                        ! h.toRecord(error, linRec1), error
+                    );
+                    linRec2.defineRecord(k, linRec1);
+                }
+                if (csys.type(i) == Coordinate::LINEAR) {
+                    rec.defineRecord("linear", linRec2);
+                }
+                else if (csys.type(i) == Coordinate::TABULAR) {
+                    rec.defineRecord("tabular", linRec2);
+                }
+            }
+            if (csys.type(i) == Coordinate::LINEAR) {
+                ++linearCount;
+            }
+            if (csys.type(i) == Coordinate::TABULAR) {
+                ++tabularCount;
+            }
+        }
+        else if (csys.type(i) == Coordinate::DIRECTION) {
+            ThrowIf(
+                ! abs,
+                "It is not possible to have a relative MDirection measure"
+            );
+            AlwaysAssert(worldAxes.nelements() == 2,AipsError);
+            if (!none) {
+                // Make an MDirection and stick in record
+
+                Quantum<Double> t1(world2(0), units(0));
+                Quantum<Double> t2(world2(1), units(1));
+                MDirection direction(
+                    t1, t2,
+                    csys.directionCoordinate(i).directionType()
+                );
+                MeasureHolder h(direction);
+                Record dirRec;
+                ThrowIf(
+                    ! h.toRecord(error, dirRec), error
+                );
+                rec.defineRecord("direction", dirRec);
+            }
+            directionCount++;
+        }
+        else if (csys.type(i) == Coordinate::SPECTRAL) {
+            ThrowIf(
+                ! abs,
+                "It is not possible to have a relative MFrequency measure"
+            );
+            AlwaysAssert(worldAxes.nelements()==1,AipsError);
+            if (!none) {
+                // Make an MFrequency and stick in record
+
+                Record specRec, specRec1;
+                Quantum<Double> t1(world2(0), units(0));
+                const auto& sc0 = csys.spectralCoordinate(i);
+                MFrequency frequency(t1, sc0.frequencySystem());
+                MeasureHolder h(frequency);
+                ThrowIf(
+                    ! h.toRecord(error, specRec1), error
+                );
+                specRec.defineRecord("frequency", specRec1);
+                if (doVelocity) {
+                    SpectralCoordinate sc(sc0);
+
+                    // Do velocity conversions and stick in MDOppler
+                    // Radio
+
+                    sc.setVelocity(String("km/s"), MDoppler::RADIO);
+                    Quantum<Double> velocity;
+                    ThrowIf(
+                        ! sc.frequencyToVelocity(velocity, frequency),
+                        sc.errorMessage()
+                    );
+                    MDoppler v(velocity, MDoppler::RADIO);
+                    MeasureHolder h(v);
+                    ThrowIf(
+                        ! h.toRecord(error, specRec1), error
+                    );
+                    specRec.defineRecord("radiovelocity", specRec1);
+                    // Optical
+
+                    sc.setVelocity(String("km/s"), MDoppler::OPTICAL);
+                    ThrowIf(
+                        ! sc.frequencyToVelocity(velocity, frequency),
+                        sc.errorMessage()
+                    );
+                    v = MDoppler(velocity, MDoppler::OPTICAL);
+                    h = MeasureHolder(v);
+                    ThrowIf(
+                        ! h.toRecord(error, specRec1), error
+                    );
+                    specRec.defineRecord("opticalvelocity", specRec1);
+
+                    // beta (relativistic/true)
+
+                    sc.setVelocity(String("km/s"), MDoppler::BETA);
+                    ThrowIf(
+                        ! sc.frequencyToVelocity(velocity, frequency),
+                        sc.errorMessage()
+                    );
+                    v = MDoppler(velocity, MDoppler::BETA);
+                    h = MeasureHolder(v);
+                    ThrowIf(
+                        ! h.toRecord(error, specRec1), error
+                    );
+                    specRec.defineRecord("betavelocity", specRec1);
+                }
+                rec.defineRecord("spectral", specRec);
+            }
+            ++spectralCount;
+        }
+        else if (csys.type(i) == Coordinate::STOKES) {
+            ThrowIf (
+                ! abs,
+                "It makes no sense to have a relative Stokes measure"
+            );
+            AlwaysAssert(worldAxes.size() == 1, AipsError);
+            if (!none) {
+                const auto& coord0 = csys.stokesCoordinate(i);
+                StokesCoordinate coord(coord0); // non-const
+                String u;
+                auto s = coord.format(
+                    u, Coordinate::DEFAULT, world2(0),
+                    0, True, True, -1
+                );
+                rec.define("stokes", s);
+            }
+            ++stokesCount;
+        }
+        else {
+            ThrowCc("Cannot handle Coordinates of type " + csys.showType(i));
+        }
+    }
+    if (directionCount > 1) {
+        _log << LogIO::WARN
+                << "There was more than one DirectionCoordinate in the "
+                << LogIO::POST;
+        _log << LogIO::WARN << "CoordinateSystem.  Only the last one is returned"
+                << LogIO::POST;
+    }
+    if (spectralCount > 1) {
+        _log << LogIO::WARN
+                << "There was more than one SpectralCoordinate in the "
+                << LogIO::POST;
+        _log << LogIO::WARN << "CoordinateSystem.  Only the last one is returned"
+                << LogIO::POST;
+    }
+    if (stokesCount > 1) {
+        _log << LogIO::WARN << "There was more than one StokesCoordinate in the "
+                << LogIO::POST;
+        _log << LogIO::WARN << "CoordinateSystem.  Only the last one is returned"
+                << LogIO::POST;
+    }
+    if (linearCount > 1) {
+        _log << LogIO::WARN << "There was more than one LinearCoordinate in the "
+                << LogIO::POST;
+        _log << LogIO::WARN << "CoordinateSystem.  Only the last one is returned"
+                << LogIO::POST;
+    }
+    if (tabularCount > 1) {
+        _log << LogIO::WARN
+                << "There was more than one TabularCoordinate in the "
+                << LogIO::POST;
+        _log << LogIO::WARN << "CoordinateSystem.  Only the last one is returned"
+                << LogIO::POST;
+    }
+    return rec;
+}
+
+}
 

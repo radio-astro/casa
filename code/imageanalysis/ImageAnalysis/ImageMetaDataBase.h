@@ -112,6 +112,13 @@ public:
 	// get the value of the datum corresponding to the given FITS keyword.
 	ValueHolder getFITSValue(const String& key) const;
 
+	// if doVelocity=True, compute spectral velocities as well as frequencies, if False, only
+	// compute frequencies.
+	Record toWorld(
+	    const Vector<double>& value, const String& format = "n",
+	    Bool doVelocity=True
+	) const;
+
 protected:
 	const static String _BEAMMAJOR, _BEAMMINOR, _BEAMPA, _BMAJ, _BMIN, _BPA,
 		_BUNIT, _CDELT, _CRPIX, _CRVAL, _CTYPE, _CUNIT, _DATAMAX, _DATAMIN,
@@ -200,12 +207,17 @@ private:
 		SHARED_PTR<const ImageInterface<T> > image
 	) const;
 
+	Record _worldVectorToRecord(
+	    const Vector<Double>& world, Int c, const String& format,
+	    Bool isAbsolute, Bool showAsAbsolute, Bool doVelocity
+	) const;
 
+	Record _worldVectorToMeasures(
+	    const Vector<Double>& world, Int c, Bool abs, Bool doVelocity
+	) const;
 
 };
 
-
-
-} //# NAMESPACE CASA - END
+}
 
 #endif

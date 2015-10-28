@@ -221,10 +221,6 @@ public:
         const Bool extendMask=False
     );
 
-    // if doVelocity=True, compute spectral velocities as well as frequencies, if False, only
-    // compute frequencies.
-    Record toworld(const Vector<double>& value, const String& format = "n", Bool doVelocity=True) const;
-
     Bool detached();
 
     ImageInterface<Float> * newimage(const String& infile,
@@ -256,23 +252,13 @@ public:
 
     IPosition last_chunk_shape_p;
 
-    ImageMomentsProgressMonitor* imageMomentsProgressMonitor;
+    //ImageMomentsProgressMonitor* imageMomentsProgressMonitor;
 
    
     // Center refpix apart from STokes
     void centreRefPix (casa::CoordinateSystem& cSys,
                        const casa::IPosition& shape) const;
     
-    // Some helper functions that needs to be in casa namespace coordsys
-
-    Record _worldVectorToRecord(
-        const Vector<Double>& world, Int c, const String& format, 
-        Bool isAbsolute, Bool showAsAbsolute, Bool doVelocity
-    ) const;
-
-    Record _worldVectorToMeasures(
-        const Vector<Double>& world, Int c, Bool abs, Bool doVelocity
-    ) const;
 
     void _onlyFloat(const String& method) const;
 
