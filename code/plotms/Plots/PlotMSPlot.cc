@@ -964,12 +964,13 @@ void PlotMSPlot::cacheLoaded_(bool wasCanceled) {
 		updateIndexing();
 	}
 	// Reset the iterator (if data are new)
-	resetIter();
+	bool iterRecalculated = resetIter();
 
-	// Let the plot know that the data has been changed as needed, unless the
-	// thread was canceled.
-	updatePlots();
-
+    if (!iterRecalculated) {
+        // Let the plot know that the data has been changed as needed, 
+        // unless the thread was canceled.
+        updatePlots();
+    }
 
 	// Update display as needed.  Put this before update canvas so
 	// that the legend item keys will have the correct color.
