@@ -126,8 +126,11 @@ class WeatherChart(object):
             return self._get_plot_object()
 
         LOG.debug('Creating new Weather plot')
-        analysis_scripts.analysisUtils.plotWeather(vis=self.ms.name,
-                                                   figfile=self.figfile)
+        try:
+            analysis_scripts.analysisUtils.plotWeather(vis=self.ms.name,
+                                                       figfile=self.figfile)
+        except:
+            return None
 
         # plot weather does not close the plot! work around that here rather
         # than editing the code as we might lose the fix (again..)
