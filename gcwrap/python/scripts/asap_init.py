@@ -18,7 +18,9 @@ def asap_init():
     casapath=os.environ['CASAPATH']
     print('*** Loading ATNF ASAP Package...')
     import asap as sd
-    print('*** ... ASAP (%s rev#%s) import complete ***' % (sd.__version__,sd.__revision__))
+    #print('*** ... ASAP (%s rev#%s) import complete ***' % (sd.__version__,sd.__revision__))
+    import casadef
+    print('*** ... ASAP (%sa rev#%s) import complete ***' % (casadef.casa_version,sd.__revision__))
     os.environ['CASAPATH']=casapath
     from sdaverage_cli import sdaverage_cli as sdaverage
     from sdbaseline_cli import sdbaseline_cli as sdbaseline
