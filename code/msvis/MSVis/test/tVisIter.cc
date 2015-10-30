@@ -28,9 +28,9 @@
 #include <casa/aips.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/iostream.h>
-#include <msvis/MSVis/VisSet.h>
-#include <msvis/MSVis/VisBuffer.h>
-#include <msvis/MSVis/VisibilityIterator.h>
+#include <synthesis/MSVis/VisSet.h>
+#include <synthesis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisibilityIterator.h>
 #include <casa/OS/Timer.h>
 #include <casa/iomanip.h>
 #include <casa/namespace.h>
@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
     Int iRow=0, iTime=-1, iIter=0, iChunk=0,iAnt1=-1,iAnt2=-1;
     Double oldTime=-1., time0; Vector<Double> curTime;
     Complex xxx;
-    Int row;
+    Int row, chn, pol;
     Bool newTime;
     Vector<Int> ant1, ant2;   Int a1, a2, oldAnt1=-1,oldAnt2=-1,fd1,fd2;
     Vector<Int> feed1,feed2;  Int oldFeed1=-1,oldFeed2=-1,iFeed1=-1,iFeed2=-1;
@@ -81,8 +81,8 @@ int main(int argc, char **argv) {
 
 	Int nRow=vb.nRow();
 //	cout<<"chunk="<<iChunk<<" nRow="<<nRow<<endl;
-	//Int nChan=vb.nChannel();
-        //Int nPol=vi.visibilityShape()(0);
+	Int nChan=vb.nChannel();
+        Int nPol=vi.visibilityShape()(0);
 	for (row=0; row<nRow; row++) {
 	     if(oldTime==-1) time0=curTime(row);
              newTime=(oldTime!=curTime(row));
