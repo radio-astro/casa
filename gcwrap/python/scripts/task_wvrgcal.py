@@ -8,7 +8,7 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 	    scale=None, spw=None, wvrspw=None,
 	    reversespw=None,  cont=None, maxdistm=None,
 	    minnumants=None, mingoodfrac=None, usefieldtab=None, 
-	    refant=None):
+	    refant=None, offsetstable=None):
 	"""
 	Generate a gain table based on Water Vapour Radiometer data.
 	Returns a dictionary containing the RMS of the path length variation
@@ -91,6 +91,11 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 	              default: '' (use the first good or interpolatable antenna), 
                       examples: 'DA45' - use DA45 
                                 ['DA45','DV51'] - use DA45 and if that is not good, use DV51 instead
+
+	  offsetstable -- subtract the temperature offsets in this table from the WVR measurements before
+	             using them to calculate the phase corrections
+		     default: '' (do not apply any offsets)
+		     examples: 'uid___A002_Xabd867_X2277.cloud_offsets' use the given table
 
         """
 	#Python script
@@ -191,6 +196,9 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 		if usefieldtab:
 			execute_string+= ' --usefieldtab'
 				
+		if offsetstable!='' and type(offsetstable)==str:
+			execute_string+= ' --offsets '+offsetstable
+
 		if (len(wvrflag)>0):
 			for ant in wvrflag:
 				if not (type(ant)==int or type(ant)==str):

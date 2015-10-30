@@ -225,16 +225,16 @@ def rmc_approxCalc(tsrc0, tsrc1, tsrc2, tsrc3,
     return pwv_z,pwv_z_noc,tau_constant,tsrcn
 
 
-def remove_cloud(vis=None, correct_ms=False, offsetsfile='', verbose=False, doplot=False):
+def remove_cloud(vis=None, correct_ms=False, offsetstable='', verbose=False, doplot=False):
     """
     Parameters:
        vis - MS with WVR data included (imported ALMA data)
        correct_ms - do the corrections to the wvr data in the MS (default False)
-       offsetsfile - store processing results (Temp offsets) in this filename (default '' = don't store) 
+       offsetstable - store processing results (Temp offsets) in this table (default '' = don't store) 
        verbose - control terminal output (default False) 
        doplot - generate diagnostic plots in subdirectory vis+'_remove_cloud_plots' (default False)
     Example:
-       remove_cloud(vis='uid___A002_X....', True, 'myoffsets.txt')
+       remove_cloud(vis='uid___A002_X....', True, 'myoffsets')
     """
 
     casalog.post('*** Starting remove_cloud ***', 'INFO')
@@ -251,15 +251,15 @@ def remove_cloud(vis=None, correct_ms=False, offsetsfile='', verbose=False, dopl
         if not myref=='':
             casalog.post('MS '+vis
                          +' was imported with option lazy=True, i.e. its DATA column is read-only.'
-                         +'\nCannot proceed.', 'SEVERE')
+                         +'\nCannot proceed when option correct_ms==True.', 'SEVERE')
             return False
 
-    if not type(offsetsfile)==str: 
-        casalog.post('Invalid parameter offsetsfile.', 'SEVERE')
+    if not type(offsetstable)==str: 
+        casalog.post('Invalid parameter offsetstable.', 'SEVERE')
         return False
 
-    if offsetsfile!='' and  os.path.exists(offsetsfile):
-        casalog.post('File '+offsetsfile+' exits.', 'SEVERE')
+    if offsetstable!='' and  os.path.exists(offsetstable):
+        casalog.post('Table '+offsetstable+' exits.', 'SEVERE')
         return False
 
     if correct_ms:   # either correct or dont correct ms file - need to set in advance
@@ -308,18 +308,23 @@ def remove_cloud(vis=None, correct_ms=False, offsetsfile='', verbose=False, dopl
 
     tbo = None
     dooffsets=False
-    if offsetsfile!='':
-        os.system('echo "0 0 0 0 0" > mydummy.txt')
-        ok = mytb.fromascii(offsetsfile, sep=" ", columnnames=['ANTENNA','OFFSETS'], datatypes=['S', 'R4'], 
-                           asciifile='mydummy.txt')
-        mytb.close()
+    if offsetstable!='':
+        try:
+            os.system('echo "0 0 0 0 0" > mydummy.txt')
+            ok = mytb.fromascii(offsetstable, sep=" ", columnnames=['ANTENNA','OFFSETS'], datatypes=['I', 'R4'], 
+                                asciifile='mydummy.txt')
+            mytb.close()
+        except:
+            os.system('rm -f mydummy.txt')
+            casalog.post('Could not create table '+offsetstable, 'SEVERE')
+            return False
+        os.system('rm -f mydummy.txt')
         if not ok:
-            casalog.post('Error creating table '+offsetsfile, 'SEVERE')
+            casalog.post('Error creating table '+offsetstable, 'SEVERE')
             return False
         tbo = tbtool()
-        tbo.open(offsetsfile, nomodify=False)
+        tbo.open(offsetstable, nomodify=False)
         tbo.removerows([0])
-        os.system('rm mydummy.txt')
         dooffsets=True
 
     if correct_ms:
@@ -365,7 +370,7 @@ def remove_cloud(vis=None, correct_ms=False, offsetsfile='', verbose=False, dopl
                     temp[0][it][isam]=tsrcn[it]
 
         if dooffsets:
-            casalog.post('   Writing the offset values for antenna '+str(iant)+' to '+offsetsfile, 'INFO')
+            casalog.post('   Writing the offset values for antenna '+str(iant)+' to '+offsetstable, 'INFO')
             startrow=tbo.nrows()
             tbo.addrows(nsamples)
             tbo.putcol('OFFSETS', offsets, startrow)
@@ -436,7 +441,7 @@ def remove_cloud(vis=None, correct_ms=False, offsetsfile='', verbose=False, dopl
 
         tbo.close()
         
-        casalog.post(' Saved remove_cloud results to '+offsetsfile, 'INFO')
+        casalog.post(' Saved remove_cloud results to '+offsetstable, 'INFO')
 
 
     return True

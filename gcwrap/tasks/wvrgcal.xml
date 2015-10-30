@@ -128,6 +128,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	<value></value>
       </param>
       
+      <param type="string" name="offsetstable">
+	<description>subtract the temperature offsets in this table from the WVR measurements before calculating the phase corrections</description>
+	<value></value>
+      </param>
 
 
       <!-- ================================================================= -->
@@ -237,12 +241,20 @@ WVRGCAL correction should not be used.
                 examples: 'DA45' - use DA45 
                           ['DA45','DV51'] - use DA45 and if that is not good, use DV51 instead
 
+  offsetstable -- subtract the temperature offsets in this table from the WVR measurements before
+             using them to calculate the phase corrections
+                default: '' (do not apply any offsets)
+		examples: 'uid___A002_Xabd867_X2277.cloud_offsets' use the given table
 
   </description>
 
   <example>
 
    wvrgcal(vis='uid___A002_X1d54a1_X5.ms', caltable='cal-wvr-uid___A002_X1d54a1_X5.W',
+           toffset=-1, segsource=True, tie=['Titan,1037-295,NGC3256'], statsource='1037-295')
+
+   wvrgcal(vis='uid___A002_X1d54a1_X5.ms', caltable='cal-wvr-uid___A002_X1d54a1_X5.W', 
+           offsetstable='uid___A002_X1d54a1_X5.cloud_offsets',
            toffset=-1, segsource=True, tie=['Titan,1037-295,NGC3256'], statsource='1037-295')
 
   </example>
