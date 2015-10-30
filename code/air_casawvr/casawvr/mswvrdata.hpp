@@ -99,7 +99,8 @@ namespace LibAIR2 {
 			       std::vector<size_t> &sortedI,
 			       std::set<int> &flaggedantsInMain,
 			       double requiredUnflaggedFraction=0.8,
-			       bool usepointing=true);
+			       bool usepointing=true,
+			       std::string offsetstable="");
 
 }
 
