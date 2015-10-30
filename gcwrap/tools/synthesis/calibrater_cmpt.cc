@@ -271,7 +271,7 @@ calibrater::setcallib(const ::casac::record& callib) {
     Record callibrec = *toRecord(callib);
 
     // Forward to the Calibrater object
-    itsCalibrater->setcallib(callibrec);
+    itsCalibrater->setcallib2(callibrec);
 
   } catch(AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
