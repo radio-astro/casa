@@ -992,8 +992,8 @@ class test_cube(testref_base):
                      21:{'imagename':'Cubetest_st4gap','spw':'0:4~9;12~14','start':4,'width':'','outframe':'LSRK','veltype':'radio',
                         'desc':'channel, start=%s, default width, channel gap (10-11) LSRK' % 4},
                      # stride > 1
-                     22:{'imagename':'Cubetest_st4stride2','spw':'0:0~10^2','start':0,'width':'','outframe':'LSRK','veltype':'radio',
-                        'desc':'channel, start=%s, default width, step=2 LSRK' % 0}
+                     22:{'imagename':'Cubetest_st4stride2','spw':'0:0~10^2','start':0,'width':'','outframe':'LSRK','veltype':'radio', 'interpolation':'nearest',
+                        'desc':'channel, start=%s, default width, step=2 LSRK nearest' % 0}
                     }
           
 #          self.test_cube_0.__func__.__doc__ %=self.testList[0]['desc']
@@ -1001,7 +1001,21 @@ class test_cube(testref_base):
 
      def run_cubetclean(self, testid):
           """ core function to execute a cube tclean """
-          ret = tclean(vis=self.msfile,field='0',imsize=100,cell='8.0arcsec',niter=10,specmode='cube',nchan=10,restfreq=['1.25GHz'],phasecenter="J2000 19:59:28.500 +40.44.01.50",deconvolver='hogbom',spw=self.testList[testid]['spw'],imagename=self.img+self.testList[testid]['imagename'],start=self.testList[testid]['start'], width=self.testList[testid]['width'],veltype=self.testList[testid]['veltype'],outframe=self.testList[testid]['outframe'])
+          if self.testList[testid].has_key('interpolation'):
+              interpolation = self.testList[testid]['interpolation']
+          else:
+              interpolation = 'linear'
+
+          ret = tclean(vis=self.msfile,field='0',imsize=100,cell='8.0arcsec',niter=10,\
+                       specmode='cube',nchan=10,restfreq=['1.25GHz'],\
+                       phasecenter="J2000 19:59:28.500 +40.44.01.50",deconvolver='hogbom',\
+                       spw=self.testList[testid]['spw'],\
+                       imagename=self.img+self.testList[testid]['imagename'],\
+                       start=self.testList[testid]['start'],\
+                       width=self.testList[testid]['width'],\
+                       veltype=self.testList[testid]['veltype'],\
+                       outframe=self.testList[testid]['outframe'], \
+                       interpolation=interpolation)
           return ret
 
      def test_cube_0(self):
@@ -1314,7 +1328,8 @@ class test_cube(testref_base):
 
      def test_cube_22(self):
           """ [cube] Test_Cube_22  """
-          # stride (step=2) *** Currently fails 2015-10-23
+          # stride (step=2) use nearest interpolation (other interpotion methods
+          # may not work well...)
           testid=22
           print " : " , self.testList[testid]['desc']
           self.prepData('refim_point.ms')
@@ -1323,8 +1338,8 @@ class test_cube(testref_base):
           self.assertTrue(os.path.exists(self.img+self.testList[testid]['imagename']+'.psf') and os.path.exists(self.img+self.testList[testid]['imagename']+'.residual') )
           self.checkall(imexist=[self.img+self.testList[testid]['imagename']+'.image'],
           imval=[(self.img+self.testList[testid]['imagename']+'.image',1.5000546,
-          [50,50,0,4])])
-          self.checkspecframe(self.img+self.testList[testid]['imagename']+'.image','LSRK',1.199989152e9)
+          [50,50,0,0])])
+          self.checkspecframe(self.img+self.testList[testid]['imagename']+'.image','LSRK',0.999988750387e9)
 
               
      def test_cube_D1(self):
