@@ -236,6 +236,7 @@ public:
     const Vector<Double> & getFrequencies (Int rowInBuffer,Int frame = FrameNotSpecified) const;
     Int getChannelNumber (Int rowInBuffer, Int frequencyIndex) const;
     const Vector<Int> & getChannelNumbers (Int rowInBuffer) const;
+    Vector<Int> getChannelNumbersSelected (Int outputChannelIndex) const;
 
     const Vector<uInt> & rowIds () const;
 
@@ -324,6 +325,7 @@ private:
 	mutable Vector<MDirection> azel_p;
 	mutable Vector<Double> frequencies_p;
 	mutable Vector<Int> channelNumbers_p;
+	mutable map< Int,Vector<Int> > outputInputChannelMap_p;
 	mutable Vector<uInt> rowIds_p;
 	mutable IPosition shape_p;
 	mutable uInt nRows_p;
@@ -365,6 +367,7 @@ private:
 	mutable Bool azelOk_p;
 	mutable Bool frequenciesOk_p;
 	mutable Bool channelNumbersOk_p;
+	mutable Bool channelNumbersSelectedOk_p;
 	mutable Bool rowIdsOk_p;
 	mutable Bool shapeOk_p;
 	mutable Bool nRowsOk_p;

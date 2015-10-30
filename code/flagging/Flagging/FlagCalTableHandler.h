@@ -338,6 +338,7 @@ public:
 	const Vector<Int>& antenna2() const {return ctCache_p->antenna2();}
 	const Cube<Bool>& flagCube() const {return ctCache_p->flagCube();}
 	const Vector<Int>& getChannelNumbers(Int rowInBuffer) const {return ctCache_p->getChannelNumbers(rowInBuffer);}
+	Vector<Int> getChannelNumbersSelected (Int outputChannelIndex) const { throw AipsError ("Not Implemented");}
 	const Vector<Double>& getFrequencies(Int rowInBuffer,Int /*frame*/ = vi::VisBuffer2::FrameNotSpecified) const {return ctCache_p->getFrequencies(rowInBuffer);}
 	Int nRows() const {return ctCache_p->nRows();}
 	Int nChannels() const {return ctCache_p->nChannels();}

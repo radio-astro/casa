@@ -168,6 +168,7 @@ public:
                                                    Int frame = FrameNotSpecified) const;
     virtual Int getChannelNumber (Int rowInBuffer, Int frequencyIndex) const;
     virtual const Vector<Int> & getChannelNumbers (Int rowInBuffer) const;
+    virtual Vector<Int> getChannelNumbersSelected (Int outputChannelIndex) const;
 
     virtual const VisibilityIterator2 * getVi () const;
 

@@ -123,6 +123,7 @@ void MSTransformBufferImpl::resetState()
 	azelOk_p = False;
 	frequenciesOk_p = False;
 	channelNumbersOk_p = False;
+	channelNumbersSelectedOk_p = False;
 	rowIdsOk_p = False;
 	shapeOk_p = False;
 	nRowsOk_p = False;
@@ -1420,6 +1421,91 @@ const Vector<Int> & MSTransformBufferImpl::getChannelNumbers (Int rowInBuffer) c
 	}
 
 	return channelNumbers_p;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+Vector<Int> MSTransformBufferImpl::getChannelNumbersSelected (Int outputChannelIndex) const
+{
+	if (not channelNumbersSelectedOk_p)
+	{
+		// Make sure output channel numbers are filled in and map is cleared
+		outputInputChannelMap_p.clear();
+		Vector<Int> channelNumbers = getChannelNumbers(0); // Sometimes is FW directly from the inner VB
+
+		// Get current SPW
+		Int inputSpw = manager_p->getVisBuffer()->spectralWindows()[0];
+
+		// If there is no chan. selection for this SPW create a dummy selection
+		if (manager_p->inputOutputChanIndexMap_p.find(inputSpw) == manager_p->inputOutputChanIndexMap_p.end())
+		{
+			manager_p->inputOutputChanIndexMap_p[inputSpw] = vector<Int>(manager_p->getVisBuffer()->nChannels(),0);
+			for (Int idx=0;idx<manager_p->getVisBuffer()->nChannels();idx++)
+			{
+				manager_p->inputOutputChanIndexMap_p[inputSpw].at(idx) = idx;
+			}
+		}
+
+		// If there is no channel average just map input-output channel
+		Int selectedChannel;
+		if (not manager_p->channelAverage_p)
+		{
+			for (uInt outChanIdx=0;outChanIdx<channelNumbers.size();outChanIdx++)
+			{
+				selectedChannel = manager_p->inputOutputChanIndexMap_p[inputSpw].at(outChanIdx);
+				outputInputChannelMap_p[channelNumbers(outChanIdx)] = Vector<Int>(1,selectedChannel);
+			}
+		}
+		// If there channel average map all selected channels falling in each bin
+		else
+		{
+			uInt chanbin = manager_p->freqbinMap_p[inputSpw];
+
+			/*
+			manager_p->logger_p << LogIO::NORMAL
+					<< LogOrigin("MSTransformBufferImpl", __FUNCTION__)
+					<< "inputSpw=" << inputSpw
+					<< " chanbin=" << chanbin
+					<< LogIO::POST;
+			*/
+
+			for (uInt outChanIdx=0;outChanIdx<channelNumbers.size();outChanIdx++)
+			{
+				uInt startChan = chanbin*outChanIdx;
+				uInt endChan = chanbin*(outChanIdx+1);
+				outputInputChannelMap_p[channelNumbers(outChanIdx)] = Vector<Int>(chanbin,0);
+
+				/*
+				manager_p->logger_p << LogIO::NORMAL
+						<< LogOrigin("MSTransformBufferImpl", __FUNCTION__)
+						<< " outChanIdx=" << outChanIdx
+						<< " startChan=" << startChan
+						<< " endChan=" << endChan
+						<< LogIO::POST;
+				*/
+
+				uInt mapChanIdex = 0;
+				for (uInt chanIdx=startChan;chanIdx<endChan;chanIdx++)
+				{
+					selectedChannel = manager_p->inputOutputChanIndexMap_p[inputSpw].at(chanIdx);
+					outputInputChannelMap_p[channelNumbers(outChanIdx)](mapChanIdex) = selectedChannel;
+					mapChanIdex ++;
+				}
+
+				/*
+				manager_p->logger_p << LogIO::NORMAL
+						<< LogOrigin("MSTransformBufferImpl", __FUNCTION__)
+						<< " selectedChannels=" << outputInputChannelMap_p[channelNumbers_p(outChanIdx)]
+						<< LogIO::POST;
+				*/
+			}
+		}
+
+		channelNumbersSelectedOk_p = True;
+	}
+
+	return outputInputChannelMap_p[outputChannelIndex];
 }
 
 // -----------------------------------------------------------------------

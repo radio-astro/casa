@@ -734,6 +734,11 @@ VisBufferImpl2::getChannelNumbers (Int rowInBuffer) const
     return state_p->channelNumbers_p.values_p;
 }
 
+Vector<Int> VisBufferImpl2::getChannelNumbersSelected (Int outputChannelIndex) const
+{
+    return Vector<Int>(1,outputChannelIndex);
+}
+
 Vector<Stokes::StokesTypes>
 VisBufferImpl2::getCorrelationTypesDefined () const
 {

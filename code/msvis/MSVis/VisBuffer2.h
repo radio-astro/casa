@@ -276,6 +276,7 @@ public:
                                                    Int frame = FrameNotSpecified) const = 0;
     virtual Int getChannelNumber (Int rowInBuffer, Int frequencyIndex) const = 0;
     virtual const Vector<Int> & getChannelNumbers (Int rowInBuffer) const = 0;
+    virtual Vector<Int> getChannelNumbersSelected (Int outputChannelIndex) const = 0;
 
     // Sort/unsort the correlations, if necessary
     //  (Rudimentary handling of non-canonically sorted correlations--use with care!)

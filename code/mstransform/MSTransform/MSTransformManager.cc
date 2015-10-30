@@ -135,6 +135,7 @@ void MSTransformManager::initialize()
 	inputOutputDDIndexMap_p.clear();
 	inputOutputAntennaIndexMap_p.clear();
 	outputInputSPWIndexMap_p.clear();
+	inputOutputChanIndexMap_p.clear();
 
 	// Frequency transformation parameters
 	nspws_p = 1;
@@ -1952,10 +1953,17 @@ void MSTransformManager::initDataSelectionParams()
 				numOfSelChanMap_p[spw] = channelWidth;
 
 				outputSpwIndex ++;
+
+				inputOutputChanIndexMap_p[spw].clear(); // Accesing the vector creates it
 			}
 			else
 			{
 				numOfSelChanMap_p[spw] += channelWidth;
+			}
+
+			for (uInt inpChan=channelStart;inpChan<=channelStop;inpChan += channelStep)
+			{
+				inputOutputChanIndexMap_p[spw].push_back(inpChan);
 			}
 		}
 	}
@@ -2549,6 +2557,7 @@ void MSTransformManager::regridSpwAux(	Int spwId,
 				 << LogIO::EXCEPTION;
 	}
 
+
 	/*
 	ostringstream oss_debug;
     oss_debug 	<< " phaseCenter_p=" << phaseCenter_p << endl
@@ -2560,11 +2569,12 @@ void MSTransformManager::regridSpwAux(	Int spwId,
 				<< " start_p=" << start_p << endl
 				<< " width_p=" << width_p << endl
 				<< " restFrequency_p=" << restFrequency_p << endl
-				<< " outputReferenceFramePar_p=" << outputReferenceFramePar_p << endl
+				<< " outputReferenceFrame_p=" << outputReferenceFrame_p << endl
 				<< " velocityType_p=" << velocityType_p << endl
 				<< " radialVelocity_p=" << radialVelocity_p;
     logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) << oss_debug.str() << LogIO::POST;
-	*/
+    */
+
 
     // jagonzal (new WEIGHT/SIGMA convention in CASA 4.2.2)
 	if (newWeightFactorMap_p.find(spwId) == newWeightFactorMap_p.end())
@@ -4442,7 +4452,7 @@ void MSTransformManager::checkDataColumnsToFill()
 {
 	dataColMap_p.clear();
 	Bool mainColSet=False;
-
+	timeAvgOptions_p = vi::AveragingOptions(vi::AveragingOptions::Nothing);
 
 	if (datacolumn_p.contains("ALL"))
 	{
@@ -4943,26 +4953,55 @@ void MSTransformManager::generateIterator()
 	// Calibrating VI
 	if (calibrate_p)
 	{
-		// Isolate iteration parameters
-		vi::IteratingParameters iterpar(0,vi::SortColumns(sortColumns_p, false));
+		try
+		{
+			// Isolate iteration parameters
+			vi::IteratingParameters iterpar(0,vi::SortColumns(sortColumns_p, false));
 
-		// By callib String
-        if (callib_p.length() > 0)
-        {
-    		logger_p 	<< LogIO::NORMAL << LogOrigin("MSTransformManager",__FUNCTION__)
-    					<< "OTF calibration activated, using calibration file spec to generate iterator"
-    					<< LogIO::POST;
+			// By callib String
+	        if (callib_p.length() > 0)
+	        {
+	    		logger_p 	<< LogIO::NORMAL << LogOrigin("MSTransformManager",__FUNCTION__)
+	    					<< "OTF calibration activated, using calibration file spec to generate iterator"
+	    					<< LogIO::POST;
 
-			visibilityIterator_p = new vi::VisibilityIterator2(vi::LayeredVi2Factory(selectedInputMs_p, &iterpar,callib_p, timeavgParams));
+				visibilityIterator_p = new vi::VisibilityIterator2(vi::LayeredVi2Factory(selectedInputMs_p, &iterpar,callib_p, timeavgParams));
+			}
+	        // By callib Record
+	        else if (callibRec_p.nfields() > 0)
+	        {
+	    		logger_p 	<< LogIO::NORMAL << LogOrigin("MSTransformManager",__FUNCTION__)
+	    					<< "OTF calibration activated, using calibration record spec to generate iterator"
+	    					<< LogIO::POST;
+
+				visibilityIterator_p = new vi::VisibilityIterator2(vi::LayeredVi2Factory(selectedInputMs_p, &iterpar,callibRec_p, timeavgParams));
+			}
 		}
-        // By callib Record
-        else if (callibRec_p.nfields() > 0)
-        {
-    		logger_p 	<< LogIO::NORMAL << LogOrigin("MSTransformManager",__FUNCTION__)
-    					<< "OTF calibration activated, using calibration record spec to generate iterator"
-    					<< LogIO::POST;
+		catch (MSSelectionError x)
+		{
+			delete visibilityIterator_p;
 
-			visibilityIterator_p = new vi::VisibilityIterator2(vi::LayeredVi2Factory(selectedInputMs_p, &iterpar,callibRec_p, timeavgParams));
+			correctedDataColumnAvailable_p = False;
+			checkDataColumnsToFill();
+
+			// Averaging VI
+			if (timeAverage_p)
+			{
+				visibilityIterator_p = new vi::VisibilityIterator2(vi::AveragingVi2Factory(*timeavgParams, selectedInputMs_p));
+			}
+			// Plain VI
+			else
+			{
+				visibilityIterator_p = new vi::VisibilityIterator2(*selectedInputMs_p,vi::SortColumns(sortColumns_p, false),
+																	isWritable, NULL, timeBin_p);
+			}
+		}
+		catch (AipsError x)
+		{
+    		logger_p 	<< LogIO::SEVERE << LogOrigin("MSTransformManager",__FUNCTION__)
+    					<< "Error initializing calibration VI: " << x.getMesg()
+    					<< LogIO::POST;
+    		throw(x);
 		}
 	}
 	// Averaging VI

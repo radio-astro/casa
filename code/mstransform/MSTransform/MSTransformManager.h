@@ -1249,6 +1249,7 @@ protected:
 	map<uInt,uInt> inputOutputDDIndexMap_p;
 	map<uInt,uInt> inputOutputAntennaIndexMap_p;
 	map<uInt,uInt> outputInputSPWIndexMap_p;
+	map<Int,vector<Int> > inputOutputChanIndexMap_p;
 
 	// Frequency transformation parameters
 	uInt nspws_p;
