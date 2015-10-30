@@ -216,18 +216,22 @@ install (FILES
 	DESTINATION include/casacode/msvis/MSVis/statistics
 	)
 
-casa_add_assay( msvis MSVis/test/tHanningSmooth.cc )
-casa_add_assay( msvis MSVis/test/tMSCalEnums.cc )
-casa_add_assay( msvis MSVis/test/tUVSub.cc )
 casa_add_assay( msvis MSVis/test/tVisibilityIterator.cc )
 casa_add_assay( msvis MSVis/test/tVisibilityIteratorAsync.cc )
+
+#casa_add_unit_test( MODULES msvis SOURCES MSVis/test/tVisibilityIterator.cc )
+#casa_add_unit_test( MODULES msvis SOURCES MSVis/test/tVisibilityIteratorAsync.cc )
+casa_add_module_test (MODULES msvis SOURCES MSVis/test/VisibilityIterator_Test.cc MSVis/test/MsFactory.cc ) 
 casa_add_unit_test ( MODULES msvis SOURCES MSVis/test/AveragingTvi2_Test.cc MSVis/test/MsFactory.cc )
-casa_add_unit_test ( MODULES msvis SOURCES MSVis/test/VisibilityIterator_Test.cc MsFactory.cc )
-casa_add_assay( msvis MSVis/test/tVisIter.cc )
+casa_add_unit_test( MODULES msvis SOURCES MSVis/test/tHanningSmooth.cc )
+casa_add_unit_test( MODULES msvis SOURCES MSVis/test/tMSCalEnums.cc )
+casa_add_unit_test( MODULES msvis SOURCES MSVis/test/tUVSub.cc )
+casa_add_unit_test( MODULES msvis SOURCES MSVis/test/tVisIter.cc )
+
 
 # Following line commented out until a problem related to the older cmake used on Jenkins (dev machine using 2.8.12.2)
 # Uncomment this when that problem is resolved
 #
-#casa_add_google_test (MODULES msvis SOURCES MSVis/test/VisibilityIterator_Gtest.cc MSVis/test/MsFactory.cc) 
+##casa_add_google_test (MODULES msvis SOURCES MSVis/test/VisibilityIterator_Gtest.cc MSVis/test/MsFactory.cc) 
 
-#casa_add_unit_test (msvis MSVis/test/VisibilityIterator_Test.cc MSVis/test/MsFactory.cc) 
+

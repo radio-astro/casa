@@ -25,9 +25,9 @@
 //#
 //# $Id$
 
-#include <synthesis/MSVis/VisibilityIterator.h>
-#include <synthesis/MSVis/VisBufferAsync.h>
-#include <synthesis/MSVis/UtilJ.h>
+#include <msvis/MSVis/VisibilityIterator.h>
+#include <msvis/MSVis/VisBufferAsync.h>
+#include <msvis/MSVis/UtilJ.h>
 #include <tables/Tables.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/iostream.h>
@@ -386,8 +386,6 @@ Rovia_Test::compareWeightsAsyncToSync (const String & msNameSync, const String &
 
     // Now see if they match up.
 
-    Bool ok = True;
-
     MeasurementSet msSync (msNameSync, Table::Update);
     Block<Int> bi(0); // create empty block with sortColumns
 
@@ -418,8 +416,6 @@ Rovia_Test::compareWeightsAsyncToSync (const String & msNameSync, const String &
                  iSync ++, iAsync ++){
 
                 if (abs(* iSync - * iAsync) > 1e-6){
-
-                    ok = false;
 
                     cout << "Comparison of written 'weight' failed.\n"
                          << "Expected " << * iSync << " but got " << * iAsync << ".\n"

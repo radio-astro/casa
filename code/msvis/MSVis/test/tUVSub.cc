@@ -29,9 +29,9 @@
 #include <casa/aips.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/iostream.h>
-#include <synthesis/MSVis/VisSet.h>
-#include <synthesis/MSVis/VisBuffer.h>
-#include <synthesis/MSVis/VisibilityIterator.h>
+#include <msvis/MSVis/VisSet.h>
+#include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisibilityIterator.h>
 #include <casa/OS/Timer.h>
 #include <casa/iomanip.h>
 #include <casa/namespace.h>
@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
     sort[1] = MS::DATA_DESC_ID;
     sort[0] = MS::TIME;
     Matrix<Int> allChannels;
-    Double intrvl;
+    Double intrvl = 0;
 
     VisSet vs(ms,sort,allChannels,intrvl);
     VisIter& vi(vs.iter());

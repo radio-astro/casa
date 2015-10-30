@@ -156,6 +156,7 @@ class VisBuffer {
     friend class VisBufferAsync; // for async i/o
     friend class VisBufferAsyncWrapper; // for async i/o
     friend class ViReadImplAsync; // for async I/O
+    friend class Rovia_Test;
     friend class SIMapperCollection; //for SIimager as we need access to MS object
 
 public:
