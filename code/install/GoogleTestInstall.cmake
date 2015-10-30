@@ -33,10 +33,10 @@
 set (GoogleTest_Version "1.7.0")
 
 set (CasaCodeSourceRoot ${CMAKE_SOURCE_DIR})
-set (GoogleTest_Root ${CMAKE_BINARY_DIR}/gtest)
+set (GoogleTest_Root ${CasaCodeSourceRoot}/gtest)
 
 set (GoogleTest_ReleaseArchive 
-     https://svn.cv.nrao.edu/casa/devel/googletest/googletest-release-${GoogleTest_Version}.tar.gz)
+     https://github.com/google/googletest/archive/release-${GoogleTest_Version}.tar.gz)
 
 ######################
 #                    #
@@ -44,11 +44,11 @@ set (GoogleTest_ReleaseArchive
 #                    #
 ######################
 
-set (GoogleTest_ArchiveFile "googletest-release-${GoogleTest_Version}.tar.gz")
+set (GoogleTest_ArchiveFile "release-${GoogleTest_Version}.tar.gz")
 set (GoogleTest_ReleaseRoot ${GoogleTest_Root}/googletest-release-${GoogleTest_Version} 
      CACHE STRING "Root of Google Test source")
 set (GoogleTest_LibraryDir ${CMAKE_BINARY_DIR}/gtest CACHE STRING "Location of libgtest.a")
-set (GoogleTest_Target "libgtest" CACHE STRING "Target building Google Test library")
+   set (GoogleTest_Target "libgtest" CACHE STRING "Target building Google Test library")
 
 if (NOT (CMAKE_SYSTEM_NAME STREQUAL Linux AND CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 ))
 
@@ -76,7 +76,7 @@ if (NOT EXISTS ${GoogleTest_Root}/${GoogleTest_ArchiveFile}) # download archive
                     WORKING_DIRECTORY ${GoogleTest_Root}
 		    RESULT_VARIABLE status)
    if (NOT ${status} EQUAL 0)
-       message (SEND_ERROR "*** Failed to download Google Test from ${GoogleTest_ReleaseArchive}.")
+       message (SEND_ERROR "*** Failed to download Google Test from github")
    endif ()
 
    message ("-- ... Downloaded source")
