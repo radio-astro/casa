@@ -157,25 +157,30 @@ void MSUVBin::createOutputMS(const Int nrrow){
 	MSTransformDataHandler::addOptionalColumns(mss_p[0]->spectralWindow(),
 					outMsPtr_p->spectralWindow());
 	///Setup pointing why this is not done in setupMS
-		{
-		SetupNewTable pointingSetup(outMsPtr_p->pointingTableName(),
-		                              MSPointing::requiredTableDesc(), Table::New);
-		  // POINTING can be large, set some sensible defaults for storageMgrs
-		  IncrementalStMan ismPointing ("ISMPointing");
-		  StandardStMan ssmPointing("SSMPointing", 32768);
-		  pointingSetup.bindAll(ismPointing, True);
-		  pointingSetup.bindColumn(MSPointing::columnName(MSPointing::DIRECTION),
+	{
+	  SetupNewTable pointingSetup(outMsPtr_p->pointingTableName(),
+				      MSPointing::requiredTableDesc(), Table::New);
+	  // POINTING can be large, set some sensible defaults for storageMgrs
+	  IncrementalStMan ismPointing ("ISMPointing");
+	  StandardStMan ssmPointing("SSMPointing", 32768);
+	  pointingSetup.bindAll(ismPointing, True);
+	  pointingSetup.bindColumn(MSPointing::columnName(MSPointing::DIRECTION),
 		                           ssmPointing);
-		  pointingSetup.bindColumn(MSPointing::columnName(MSPointing::TARGET),
-		                           ssmPointing);
-		  pointingSetup.bindColumn(MSPointing::columnName(MSPointing::TIME),
-		                           ssmPointing);
-		  outMsPtr_p->rwKeywordSet().defineTable(MS::keywordName(MS::POINTING),
-		                                     Table(pointingSetup));
-		  outMsPtr_p->initRefs();
-		}
-		TableCopy::copySubTables(outMsPtr_p->pointing(), (mss_p[0])->pointing());
-
+	  pointingSetup.bindColumn(MSPointing::columnName(MSPointing::TARGET),
+				   ssmPointing);
+	  pointingSetup.bindColumn(MSPointing::columnName(MSPointing::TIME),
+				   ssmPointing);
+	  outMsPtr_p->rwKeywordSet().defineTable(MS::keywordName(MS::POINTING),
+						 Table(pointingSetup));
+	  outMsPtr_p->initRefs();
+	}
+	TableCopy::copySubTables(outMsPtr_p->pointing(), (mss_p[0])->pointing());
+	if(doW_p){
+	  TiledShapeStMan tiledStMan("TiledImagWgtSpectrum", tileShape);
+	  outMsPtr_p->addColumn(ArrayColumnDesc<Float>("IMAGINARY_WEIGHT_SPECTRUM",2),  tiledStMan);
+	  ArrayColumn<Float> imagWgtSpecCol(*outMsPtr_p, "IMAGINARY_WEIGHT_SPECTRUM");
+	  imagWgtSpecCol.fillColumn(Matrix<Float>(npol_p, nchan_p, 0.0));
+	}
 	MSColumns msc(*outMsPtr_p);
 	msc.data().fillColumn(Matrix<Complex>(npol_p, nchan_p, Complex(0.0)));
 	msc.flagRow().fillColumn(True);
@@ -358,9 +363,9 @@ Bool MSUVBin::fillNewBigOutputMS(){
 	  // cerr << "convSupport0 " << convFunc.shape() << "   " << convSupport << endl;
 	}
 	/////////////////////////////////////////////////
-	Int usableNchan=Int(Double(HostInfo::memoryFree())*memFraction_p*1024.0/Double(npol_p)/Double(nx_p*ny_p)/12.0);
+	Int usableNchan=Int(Double(HostInfo::memoryFree())*memFraction_p*1024.0/Double(npol_p)/Double(nx_p*ny_p)/(doW_p ? 16.0: 12.0));
 	if(usableNchan < nchan_p)
-	  cerr << "nchan per pass " << min(usableNchan, nchan_p) << endl;
+	  cerr << "Maximum nchan per pass " << min(usableNchan, nchan_p) << endl;
 	Int npass=nchan_p%usableNchan==0 ? nchan_p/usableNchan : nchan_p/usableNchan+1;
 	if(npass >1)
 	  cerr << "Due to lack of memory will be doing  " << npass << " passes through data"<< endl;
@@ -370,7 +375,9 @@ Bool MSUVBin::fillNewBigOutputMS(){
 
 		Cube<Complex> grid(npol_p, endchan-startchan+1, nrrows);
 		//cerr << "shape " << grid.shape() << endl;
-		Cube<Float> wghtSpec(npol_p, endchan-startchan+1, nrrows);
+		Cube<Complex> wghtSpec;
+		Cube<Float> realWghtSpec(npol_p, endchan-startchan+1, nrrows);
+		Cube<Float> imagWghtSpec;
 		Cube<Bool> flag(npol_p, endchan-startchan+1, nrrows);
 		//Matrix<Int> locuv;
 
@@ -382,8 +389,20 @@ Bool MSUVBin::fillNewBigOutputMS(){
 			//recover the previous data for summing
 			Slicer elslice(IPosition(2, 0, startchan), IPosition(2,npol_p, endchan-startchan+1));
 			msc.data().getColumn(elslice, grid);
-			msc.weightSpectrum().getColumn(elslice, wghtSpec);
+			msc.weightSpectrum().getColumn(elslice, realWghtSpec);
 			msc.flag().getColumn(elslice, flag);
+			wghtSpec.resize(realWghtSpec.shape());
+			setReal(wghtSpec, realWghtSpec);
+			if(outMsPtr_p->tableDesc().columnDescSet().isDefined("IMAGINARY_WEIGHT_SPECTRUM")){
+			   ArrayColumn<Float> imagWgtSpecCol(*outMsPtr_p, "IMAGINARY_WEIGHT_SPECTRUM");
+			   imagWghtSpec.resize(realWghtSpec.shape());
+			   imagWgtSpecCol.getColumn(elslice, imagWghtSpec);
+			   setImag(wghtSpec, imagWghtSpec);
+			}
+			if(doW_p){
+			  imagWghtSpec.resize();
+			  realWghtSpec.resize();
+			}
 			//multiply the data with weight here
 			{
 			  for (Int iz=0; iz< grid.shape()(2); ++iz){
@@ -394,11 +413,19 @@ Bool MSUVBin::fillNewBigOutputMS(){
 			    }
 			  }
 			}
+			if(!doW_p)
+			  wghtSpec.resize();
+			
 
 		}
 		else{
 			grid.set(Complex(0));
-			wghtSpec.set(0);
+			if(doW_p){
+			  wghtSpec.resize(realWghtSpec.shape());
+			  wghtSpec.set(0);
+			  realWghtSpec.resize();
+			}
+			realWghtSpec.set(0);
 			flag.set(True);
 		       
 			//cerr << "Zeroing  grid " << grid.shape() << endl;
@@ -413,31 +440,65 @@ Bool MSUVBin::fillNewBigOutputMS(){
 	for(iter.origin(); iter.more(); iter.next()){
 	  if(doW_p){
 	    //gridDataConv(*vb, grid, wght, wghtSpec,flag, rowFlag, uvw,
-	    //		   ant1,ant2,timeCen, startchan, endchan, convFunc, convSupport, wScale, convSampling);
-	     gridDataConvThr(*vb, grid, wghtSpec,flag, rowFlag, uvw,
-	    		 ant1,ant2,timeCen, startchan, endchan, convFunc, convSupport, wScale, convSampling);
+	    //		 ant1,ant2,timeCen, startchan, endchan, convFunc, convSupport, wScale, convSampling);
+	    gridDataConvThr(*vb, grid, wghtSpec,flag, rowFlag, uvw,
+			    ant1,ant2,timeCen, startchan, endchan, convFunc, convSupport, wScale, convSampling);
 	}
-	    else
-	      gridData(*vb, grid, wght, wghtSpec,flag, rowFlag, uvw,
-		       ant1,ant2,timeCen, startchan, endchan);
+	  else
+	    gridData(*vb, grid, wght, realWghtSpec,flag, rowFlag, uvw,
+	             ant1,ant2,timeCen, startchan, endchan);
 	    rowsDone+=Double(vb->nRows());
 	    pm.update(rowsDone);
 	  }
 
 	}
+  
+       imagWghtSpec.resize();
+       if(doW_p){
+	  realWghtSpec.resize(wghtSpec.shape());
+       realWghtSpec=real(wghtSpec);
+	 imagWghtSpec.resize(wghtSpec.shape());
+	 imagWghtSpec=imag(wghtSpec);
+       }
+       else{
+	 wghtSpec.resize(realWghtSpec.shape());
+	 wghtSpec.set(0.0);
+	 setReal(wghtSpec, realWghtSpec);
+       }
 
      //Weight Correct the data
-     {
-       for (Int iz=0; iz< grid.shape()(2); ++iz){
+       {
+	 for (Int iz=0; iz< grid.shape()(2); ++iz){
+	   /*	   Float medweight= 0.0;
+	   if(max(abs(wghtSpec.xyPlane(iz))) > 0.0){
+	       medweight=median(wghtSpec.xyPlane(iz));
+	       medweight
+	   }
+	   */
+	 /* if(max(wghtSpec.xyPlane(iz)) > 0.0)
+	   cerr << iz << " median " << median(wghtSpec.xyPlane(iz)) << " min " << min(wghtSpec.xyPlane(iz)) << " max " << max(wghtSpec.xyPlane(iz)) << endl;
+	 */
+	   
 	 for(Int iy=0; iy < grid.shape()(1); ++iy){
 	   for(Int ix=0; ix < grid.shape()(0); ++ix){
-	     grid(ix,iy,iz)= (!flag(ix,iy,iz) && wghtSpec(ix,iy, iz) !=0) ? grid(ix,iy,iz)/wghtSpec(ix,iy,iz): Complex(0);
+	     if(!flag(ix,iy,iz) &&  wghtSpec(ix,iy, iz) > 0.0){
+	       grid(ix,iy, iz)=grid(ix,iy,iz)/wghtSpec(ix,iy,iz);
+	     }
+	     else{
+	       grid(ix,iy,iz)=0.0;
+	       wghtSpec(ix,iy,iz)=0.0;
+	     }
+	 
+	     //grid(ix,iy,iz)= (!flag(ix,iy,iz) && fabs(wghtSpec(ix,iy, iz)) > 1e-3*medweight) ? grid(ix,iy,iz)/wghtSpec(ix,iy,iz): Complex(0);
 	   }
 	 }
+	   
+	  
+	 } // iz
        }
-     }
-
-	saveData(grid, flag, rowFlag, wghtSpec, uvw, ant1, ant2, timeCen, startchan, endchan);
+       
+      
+       saveData(grid, flag, rowFlag, realWghtSpec, uvw, ant1, ant2, timeCen, startchan, endchan, imagWghtSpec);
 	}
 	storeGridInfo();
 	return True;
@@ -1304,7 +1365,7 @@ void MSUVBin::gridData(const vi::VisBuffer2& vb, Cube<Complex>& grid,
 
 }
 void MSUVBin::gridDataConv(const vi::VisBuffer2& vb, Cube<Complex>& grid,
-		Matrix<Float>& /*wght*/, Cube<Float>& wghtSpec,
+		Matrix<Float>& /*wght*/, Cube<Complex>& wghtSpec,
 		Cube<Bool>& flag, Vector<Bool>& rowFlag, Matrix<Double>& uvw, Vector<Int>& ant1,
 			 Vector<Int>& ant2, Vector<Double>& timeCen, const Int startchan, const Int endchan, const Cube<Complex>& convFunc, const Vector<Int>& convSupport, const Double wScale, const Int convSampling){
   //all pixel that are touched the flag and flag Row shall be unset and the w be assigned
@@ -1419,8 +1480,11 @@ void MSUVBin::gridDataConv(const vi::VisBuffer2& vb, Cube<Complex>& grid,
 				  //  Double newU=	Double(locu-nx_p/2)/refFreq/scale(0);
 				  //   Double newV= Double(locv-ny_p/2)/refFreq/scale(1);
 				  //   Double phaseCorr=((newU/vb.uvw()(0,k)-1)+(newV/vb.uvw()(1,k)-1))*vb.uvw()(2,k)*2.0*C::pi*refFreq/C::c;
-				  Complex toB=hasCorrected ? vb.visCubeCorrected()(pol,chan,k)*vb.weight()(pol,k)*cwt:
+				  Complex toB=hasCorrected ? 
+				    vb.visCubeCorrected()(pol,chan,k)*vb.weight()(pol,k)*cwt: 
 				    vb.visCube()(pol,chan,k)*vb.weight()(pol,k)*cwt;
+				  //Complex dat=hasCorrected ? vb.visCubeCorrected()(pol,chan,k) :
+				      //				      vb.visCube()(pol,chan,k);
 				  if(needRot)
 				    toB *=elphas;
 				    //  Double s, c;
@@ -1428,14 +1492,18 @@ void MSUVBin::gridDataConv(const vi::VisBuffer2& vb, Cube<Complex>& grid,
 				    //  toB=toB*Complex(c,s);
 				  //Float elwgt=vb.weight()(pol,k)* fabs(real(cwt));
 				  //////////////TESTING
-				  Float elwgt=vb.weight()(pol,k)* real(cwt);
+				  Complex elwgt=vb.weight()(pol,k)* cwt;
+				  //Complex elwgt=real(dat) !=0.0 ? real(toB)/real(dat): 0.0;
 				  ///////////////////////////
 				  grid(polMap_p(pol),lechan, newrow[jj])
-				    = (grid(polMap_p(pol),lechan, newrow[jj])// *wghtSpec(polMap_p(pol),lechan,newrow[jj])
-				       + toB); ///(elwgt+wghtSpec(polMap_p(pol),lechan,newrow[jj]));
+				    = (grid(polMap_p(pol),lechan, newrow[jj])/*wghtSpec(polMap_p(pol),lechan,newrow[jj])*/
+				       + toB);///(elwgt+wghtSpec(polMap_p(pol),lechan,newrow[jj]));
 				      flag(polMap_p(pol), lechan, newrow[jj])=False;
 				      //cerr << "weights " << max(vb.weight()) << "  spec " << max(vb.weightSpectrum()) << endl;
 				      //wghtSpec(polMap_p(pol),chanMap_p(chan), newrow)+=vb.weightSpectrum()(pol, chan, k);
+				      //  if(  wghtSpec(polMap_p(pol),lechan, newrow[jj])  > 10)
+				      //if(newrow[jj]==2149026)
+				      //	cerr <<xx << " : " << yy << " : "  <<jj <<" spec " << wghtSpec(polMap_p(pol),lechan, newrow[jj])  << " elwgt " << elwgt <<  " chan " <<chan << " : " <<  lechan << " pol " << pol <<   " newrow " << newrow[jj] << " vbrow " << vb.rowIds()(k) << " uv " << uvw(0, newrow[jj]) << " " << uvw(1, newrow[jj]) << " " << vb.uvw()(0,k) << "  " << vb.uvw()(1,k) <<endl;
 				      wghtSpec(polMap_p(pol),lechan, newrow[jj]) += elwgt;
 				    }
 				    ///We should do that at the end totally
@@ -1462,7 +1530,7 @@ void MSUVBin::gridDataConv(const vi::VisBuffer2& vb, Cube<Complex>& grid,
 
 }
 void MSUVBin::gridDataConvThr(const vi::VisBuffer2& vb, Cube<Complex>& grid,
-			      Cube<Float>& wghtSpec,
+			      Cube<Complex>& wghtSpec,
 		Cube<Bool>& flag, Vector<Bool>& rowFlag, Matrix<Double>& uvw, Vector<Int>& ant1,
 			 Vector<Int>& ant2, Vector<Double>& timeCen, const Int startchan, const Int endchan, const Cube<Complex>& convFunc, const Vector<Int>& convSupport, const Double wScale, const Int convSampling){
   //all pixel that are touched the flag and flag Row shall be unset and the w be assigned
@@ -1490,7 +1558,7 @@ void MSUVBin::gridDataConvThr(const vi::VisBuffer2& vb, Cube<Complex>& grid,
   Bool needRot=vbutil_p.rotateUVW(vb, phaseCenter_p, eluvw, phasor);
   Bool gridCopy, weightCopy, flagCopy, rowFlagCopy, uvwCopy, ant1Copy, ant2Copy, timeCenCopy;
   Complex * gridStor=grid.getStorage(gridCopy);
-  Float * wghtSpecStor=wghtSpec.getStorage(weightCopy);
+  Complex * wghtSpecStor=wghtSpec.getStorage(weightCopy);
   Bool * flagStor=flag.getStorage(flagCopy);
   Bool * rowFlagStor=rowFlag.getStorage(rowFlagCopy);
   Double * uvwStor=uvw.getStorage(uvwCopy);
@@ -1535,7 +1603,7 @@ void MSUVBin::gridDataConvThr(const vi::VisBuffer2& vb, Cube<Complex>& grid,
 	    offv=Int ((Double(locv)-(Double(ny_p)/2.0+vb.uvw()(1,k)*refFreq*scale(1)))*Double(convSampling)+0.5);
 	    offu=Int ((Double(locu)-(Double(nx_p)/2.0+vb.uvw()(0,k)*refFreq*scale(0)))*Double(convSampling)+0.5);
 	    locw=Int(sqrt(fabs(wScale*vb.uvw()(2,k)*refFreq/C::c))+0.5);
-	    supp=locw < convSupport.shape()[0] ? convSupport(locw) :convSupport(convSupport.nelements()-1) ;
+	    supp=locw < convSupport.shape()[0] ? convSupport(locw) :conSupport(convSupport.nelements()-1) ;
 	  }
 		
 	  Vector<Int> newrow((2*supp+1)*(2*supp+1), -1);
@@ -1639,7 +1707,7 @@ void MSUVBin::gridDataConvThr(const vi::VisBuffer2& vb, Cube<Complex>& grid,
 }
 
 void MSUVBin::multiThrLoop(const Int outchan, const vi::VisBuffer2& vb, Double refFreq, Vector<Float> scale, Bool hasCorrected, Bool needRot, const Vector<Double>& phasor, const Vector<Double>& visFreq, const Double& fracbw, Complex*& grid,
-			     Float*& wghtSpec,
+			     Complex*& wghtSpec,
 			  Bool*& flag, Bool*& rowFlag, Double*& uvw, 
 			  Int*& ant1, Int*& ant2, Double*& timeCen, 
 			  const Int startchan, const Int endchan, 
@@ -1698,6 +1766,10 @@ void MSUVBin::multiThrLoop(const Int outchan, const vi::VisBuffer2& vb, Double r
 			  Int jj=yy*(2*supp+1)+xx;
 			  if(newrow[jj] >-1){
 			    Complex cwt=convFunc(locx, locy, locw);
+			    //Float fracconv=fabs(cwt)/fabs(convFunc(0,0,locw));
+			    /////TEST
+			    //cwt=1.0;
+			    //////
 			    if(vb.uvw()(2,k) > 0.0)
 			      cwt=conj(cwt);
 			    if(rowFlag[newrow[jj]] && !(vb.flagRow()(k))){
@@ -1706,15 +1778,16 @@ void MSUVBin::multiThrLoop(const Int outchan, const vi::VisBuffer2& vb, Double r
 			      ant1[newrow[jj]]=vb.antenna1()(k);
 			      ant2[newrow[jj]]=vb.antenna2()(k);
 			      timeCen[newrow[jj]]=vb.time()(k);
-			      
+			    
 			    }
 			    Int lechan=chanMap_p(chan)-startchan;
 			    for(Int pol=0; pol < vb.nCorrelations(); ++pol){
-			      if((!vb.flagCube()(pol,chan, k)) && (polMap_p(pol)>=0) && (vb.weight()(pol,k)>0.0) && (fabs(cwt) > 0.0)){
+			      if((!vb.flagCube()(pol,chan, k)) && (polMap_p(pol)>=0) /*&& (vb.weight()(pol,k)>0.0) && fabs(cwt) > 0.0//// (fracconv > 5e-2)*/){
 				//  Double newU=	Double(locu-nx_p/2)/refFreq/scale(0);
 				//   Double newV= Double(locv-ny_p/2)/refFreq/scale(1);
 				//   Double phaseCorr=((newU/vb.uvw()(0,k)-1)+(newV/vb.uvw()(1,k)-1))*vb.uvw()(2,k)*2.0*C::pi*refFreq/C::c;
-				Complex toB=hasCorrected ? vb.visCubeCorrected()(pol,chan,k)*vb.weight()(pol,k)*cwt:
+				Complex toB=hasCorrected ? 
+				  vb.visCubeCorrected()(pol,chan,k)*vb.weight()(pol,k)*cwt :
 				  vb.visCube()(pol,chan,k)*vb.weight()(pol,k)*cwt;
 				if(needRot)
 				  toB *=elphas;
@@ -1723,10 +1796,14 @@ void MSUVBin::multiThrLoop(const Int outchan, const vi::VisBuffer2& vb, Double r
 				//  toB=toB*Complex(c,s);
 				//Float elwgt=vb.weight()(pol,k)* fabs(real(cwt));
 				//////////////TESTING
-				Float elwgt=vb.weight()(pol,k)* real(cwt);
+				Complex elwgt=vb.weight()(pol,k)* (cwt);
 				///////////////////////////
-			       ooLong cubindx=ooLong(newrow[jj])*uLong(npol_p)*ooLong(endchan-startchan+1)+ooLong(lechan*npol_p)+ooLong(polMap_p(pol));
-				//cerr << jj << " newrow[jj] " << newrow[jj] << " polMap_p(pol) " <<polMap_p(pol) << " cubindex " << cubindx << endl; 
+			       ooLong cubindx=ooLong(newrow[jj])*ooLong(npol_p)*ooLong(endchan-startchan+1)+ooLong(lechan*npol_p)+ooLong(polMap_p(pol));
+			       /* if(newrow[jj]==2023010 && outchan==0){
+				 cerr << jj << " newrow[jj] " << newrow[jj] << " polMap_p(pol) " <<polMap_p(pol) << " cubindex " << cubindx << endl;
+				 cerr << "uvw " << vb.uvw().column(k) << " weight " << vb.weight()(pol,k) << " elwgt " << elwgt << " cwt " << cwt << endl;
+				 cerr << "revmap " << chanMapRev_p[outchan].nelements() << " support " << supp << " locu locv " << locu << " " <<locv << endl;
+				 }*/ 
 				grid[cubindx]
 				  = (grid[cubindx]// *wghtSpec(polMap_p(pol),lechan,newrow[jj])
 				     + toB); ///(elwgt+wghtSpec(polMap_p(pol),lechan,newrow[jj]));
@@ -1734,6 +1811,7 @@ void MSUVBin::multiThrLoop(const Int outchan, const vi::VisBuffer2& vb, Double r
 				//cerr << "weights " << max(vb.weight()) << "  spec " << max(vb.weightSpectrum()) << endl;
 				//wghtSpec(polMap_p(pol),chanMap_p(chan), newrow)+=vb.weightSpectrum()(pol, chan, k);
 				wghtSpec[cubindx] += elwgt;
+				//wghtSpec[cubindx] +=vb.weight()(pol,k)/(4*supp*supp);
 			      }
 			      ///We should do that at the end totally
 				    //wght(pol,newrow)=median(wghtSpec.xyPlane(newrow).row(pol));
@@ -1758,7 +1836,7 @@ void MSUVBin::multiThrLoop(const Int outchan, const vi::VisBuffer2& vb, Double r
 Bool MSUVBin::saveData(const Cube<Complex>& grid, const Cube<Bool>&flag, const Vector<Bool>& rowFlag,
 				const Cube<Float>&wghtSpec,
 				const Matrix<Double>& uvw, const Vector<Int>& ant1,
-				const Vector<Int>& ant2, const Vector<Double>& timeCen, const Int startchan, const Int endchan){
+		       const Vector<Int>& ant2, const Vector<Double>& timeCen, const Int startchan, const Int endchan, const Cube<Float>& imagWghtSpec){
 	Bool retval=True;
 	MSColumns msc(*outMsPtr_p);
 	if(!existOut_p && startchan==0){
@@ -1783,6 +1861,13 @@ Bool MSUVBin::saveData(const Cube<Complex>& grid, const Cube<Bool>&flag, const V
 		msc.flag().putColumnCells(rowslice, elslice,flag(polslice, chanslice, Slice(k*nx_p,nx_p)));
 		//msc.flag().putColumnRange(rowslice, elslice,flag(polslice, chanslice, Slice(k*nx_p,nx_p)));
 	}
+	if(doW_p){
+	  ArrayColumn<Float> imagWgtSpecCol(*outMsPtr_p, "IMAGINARY_WEIGHT_SPECTRUM");
+	  for (Int k=0; k <ny_p; ++k){
+	    RefRows rowslice(k*nx_p, (k+1)*nx_p-1);
+	    imagWgtSpecCol.putColumnCells(rowslice, elslice, imagWghtSpec(polslice,chanslice, Slice(k*nx_p, nx_p)));
+	  }
+	}
 	if(endchan==nchan_p-1){
 		msc.flagRow().putColumn(rowFlag);
 		msc.antenna1().putColumn(ant1);
@@ -1793,7 +1878,8 @@ Bool MSUVBin::saveData(const Cube<Complex>& grid, const Cube<Bool>&flag, const V
 		for (Int row=0; row < wghtSpec.shape()[2]; ++row){
 				for (Int pol=0; pol < npol_p; ++pol){
 				//cerr << "shape min max "<< median(wghtSpec.xyPlane(newrow).row(pol)) << " " << min(wghtSpec.xyPlane(newrow).row(pol)) << "  "<< max(wghtSpec.xyPlane(newrow).row(pol)) << endl;
-				weight(pol,row)=max(spectralweight.xyPlane(row).row(pol));
+				  weight(pol,row)=min(spectralweight.xyPlane(row).row(pol));
+				  //weight(pol,row)=1.0;
 	    //if(!rowFlag(row))
 	    //  cerr << "pol " << pol << " row "<< row << " median  "<< weight(pol, row) << " min-max " << (min(wghtSpec.xyPlane(row).row(pol))+max(wghtSpec.xyPlane(row).row(pol)))/2.0 << " mean " << mean(wghtSpec.xyPlane(row).row(pol)) << endl;
 			}
@@ -1942,7 +2028,7 @@ void MSUVBin::copySubtable(const String& tabName, const Table& inTab,const Bool 
 	String outName(outMsPtr_p->tableName() + '/' + tabName);
 
 	if (PlainTable::tableCache()(outName)){
-		cerr << "cpy subtable "<< outName << endl;
+	  //cerr << "cpy subtable "<< outName << endl;
 		Table outTab(outName, Table::Update);
 		if(norows){
 			Vector<uInt> rownums=outTab.rowNumbers();
@@ -2149,9 +2235,9 @@ void MSUVBin::makeWConv(vi::VisibilityIterator2& iter, Cube<Complex>& convFunc, 
     Int maxMemoryMB=HostInfo::memoryTotal(true)/1024;
     Double maxConvSizeConsidered=sqrt(Double(maxMemoryMB)/8.0*1024.0*1024.0/Double(wConvSize));
     CompositeNumber cn(Int(maxConvSizeConsidered/2.0)*2);
-    
-    convSampling=4;
-    convSize=max(nx_p,ny_p);
+    //cerr << "max ConvSize considered " << maxConvSizeConsidered << endl;
+    convSampling=10;
+    convSize=max(nx_p, ny_p);
     convSize=min(convSize,(Int)cn.nearestEven(Int(maxConvSizeConsidered/2.0)*2));
     Int maxConvSize=convSize; 
     CoordinateSystem coords=csys_p;
@@ -2340,8 +2426,15 @@ void MSUVBin::makeWConv(vi::VisibilityIterator2& iter, Cube<Complex>& convFunc, 
 #ifdef _OPENMP
   omp_set_nested(0);
 #endif
+
+  /* convFunc.putStorage(convFuncPtr, convFuncStor);
+  maxes.putStorage(maxptr, maxdel);
+  Complex maxconv=max(abs(maxes));
+  convFunc=convFunc/real(maxconv);
   convFuncPtr=convFunc.getStorage(convFuncStor);
-#pragma omp parallel for default(none) firstprivate(suppstor, cpConvSize, cpWConvSize, cpConvSamp, convFuncPtr, maxConvSize)  
+  */
+  
+#pragma omp parallel for default(none) firstprivate(suppstor, cpConvSize, cpWConvSize, cpConvSamp, convFuncPtr, maxConvSize, maxes)  
   for (Int iw=0;iw<cpWConvSize;iw++) {
     Bool found=False;
     Int trial=0;
@@ -2358,9 +2451,14 @@ void MSUVBin::makeWConv(vi::VisibilityIterator2& iter, Cube<Complex>& convFunc, 
  //     }
   ///////////////////////
         
-       for (trial=0; trial<cpConvSize/2-2;++trial) {
-      // if((abs(convFunc(trial,0,iw))>1e-3)||(abs(convFunc(0,trial,iw))>1e-3) ) {
-	 if((abs(convFuncPtr[ooLong(trial)+ploffset])<1e-3)||(abs(convFuncPtr[ooLong(trial*(cpConvSize/2-1))+ploffset])<1e-3) ) {
+    for (trial=0; trial<cpConvSize/2-2;++trial) {
+    //for (trial=cpConvSize/2-2;trial>0;trial--) {
+    // if((abs(convFunc(trial,0,iw))>1e-3)||(abs(convFunc(0,trial,iw))>1e-3) ) {
+     if((abs(convFuncPtr[ooLong(trial)+ploffset])/abs(maxes[iw])< 1e-3)||(abs(convFuncPtr[ooLong(trial*(cpConvSize/2-1))+ploffset])/abs(maxes[iw]) < 1e-3) ) {
+      //if((abs(convFuncPtr[ooLong(trial)+ploffset]) < 1e-3)||(abs(convFuncPtr[ooLong(trial*(cpConvSize/2-1))+ploffset]) < 1e-3) ) {
+      //if(abs(convFuncPtr[ooLong(trial)+ploffset])*abs(convFuncPtr[ooLong(trial*(cpConvSize/2-1))+ploffset]) < 1e-3){
+      ///diagonal
+      //if(abs(convFuncPtr[ooLong((Double(trial)/sqrt(2.0))*(cpConvSize/2-1))+ploffset+ooLong((Double(trial)/sqrt(2.0)))]) < 1e-4){
 	//cout <<"iw " << iw << " x " << abs(convFunc(trial,0,iw)) << " y " 
 	//   <<abs(convFunc(0,trial,iw)) << endl; 
 	found=True;
@@ -2370,23 +2468,28 @@ void MSUVBin::makeWConv(vi::VisibilityIterator2& iter, Cube<Complex>& convFunc, 
       
     if(found) {
       suppstor[iw]=Int(0.5+Float(trial)/Float(cpConvSamp))+1;
+    }
+    else{
+      suppstor[iw]=Int(0.5+Float(cpConvSize/2-2)/Float(cpConvSamp))+1;
+    }
       if(suppstor[iw]*cpConvSamp*2 >= maxConvSize){
 	suppstor[iw]=cpConvSize/2/cpConvSamp-1;
-      }
+      
     }
   }
   
 
 
   convFunc.putStorage(convFuncPtr, convFuncStor);
-  maxes.putStorage(maxptr, maxdel);
+  /*  maxes.putStorage(maxptr, maxdel);
   Complex maxconv=max(abs(maxes));
   convFunc=convFunc/real(maxconv);
-  
+  */
   pcsupp.putStorage(suppstor, delsupstor);
   convSupport=pcsupp;
   ////////////TESTING
 
+  //cerr<< " convsupp " << convSupport << endl;
 
   //convSupport.set(0);
   /////////////////
@@ -2399,12 +2502,12 @@ void MSUVBin::makeWConv(vi::VisibilityIterator2& iter, Cube<Complex>& convFunc, 
     pbSum=0.0;
   for (Int iy=-convSupport(iz);iy<=convSupport(iz);iy++) {
     for (Int ix=-convSupport(iz);ix<=convSupport(iz);ix++) {
-      pbSum+=convFunc(abs(ix)*cpConvSamp,abs(iy)*cpConvSamp,iz);
+      pbSum+=fabs(convFunc(abs(ix)*cpConvSamp,abs(iy)*cpConvSamp,iz));
     }
   }
   convFunc.xyPlane(iz) = convFunc.xyPlane(iz)/Complex(pbSum);
   }
-  cerr << "pbSum " << pbSum << endl;
+  //cerr << "pbSum " << pbSum << endl;
 
    Int newConvSize=2*(max(convSupport)+2)*convSampling;
   
@@ -2419,7 +2522,7 @@ void MSUVBin::makeWConv(vi::VisibilityIterator2& iter, Cube<Complex>& convFunc, 
     convFunc=newConvFunc;
     // convFunctions_p[actualConvIndex_p]->assign(Cube<Complex>(convFunc(blc,trc)));
     convSize=newConvSize;
-    cerr << "new convsize " << convSize << endl;
+    //cerr << "new convsize " << convSize << endl;
   }
 
 
@@ -2450,7 +2553,7 @@ void MSUVBin::makeWConv(vi::VisibilityIterator2& iter, Cube<Complex>& convFunc, 
   /////Write out the SF correction image
   String corrim=outMSName_p+String("/WprojCorrection.image");
   Path elpath(corrim);
-  cerr << "Saving the correction image " << elpath.absoluteName() << "\nIt should be used to restore images to a flat noise state " << endl;
+  //cerr << "Saving the correction image " << elpath.absoluteName() << "\nIt should be used to restore images to a flat noise state " << endl;
   if(!Table::isReadable(corrim)){
     ConvolveGridder<Double, Float>elgridder(IPosition(2, nx_p, ny_p),
 					      uvScale, uvOffset,
@@ -2492,7 +2595,7 @@ void MSUVBin::makeWConv(vi::VisibilityIterator2& iter, Cube<Complex>& convFunc, 
 
 
   // Write out FT of screen as an image
-    if(1) {
+  /*  if(1) {
       CoordinateSystem ftCoords(coords);
       Int directionIndex=ftCoords.findCoordinate(Coordinate::DIRECTION);
       AlwaysAssert(directionIndex>=0, AipsError);
@@ -2515,7 +2618,7 @@ void MSUVBin::makeWConv(vi::VisibilityIterator2& iter, Cube<Complex>& convFunc, 
       //thisScreen.copyData(le);
       //thisScreen.put(real(screen));
     }
-  
+  */
 
   
 }

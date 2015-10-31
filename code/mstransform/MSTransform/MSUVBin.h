@@ -88,12 +88,12 @@ private:
 			Cube<Bool>& flag, Vector<Bool>& rowFlag, Matrix<Double>& uvw, Vector<Int>& ant1,
 			Vector<Int>& ant2, Vector<Double>& time, const Int startchan, const Int endchan);
 	void gridDataConv(const vi::VisBuffer2& vb, Cube<Complex>& grid,
-		       Matrix<Float>& /*wght*/, Cube<Float>& wghtSpec,
+		       Matrix<Float>& /*wght*/, Cube<Complex>& wghtSpec,
 		       Cube<Bool>& flag, Vector<Bool>& rowFlag, Matrix<Double>& uvw, Vector<Int>& ant1,
 		       Vector<Int>& ant2, Vector<Double>& timeCen, const Int startchan, const Int endchan, 
 		       const Cube<Complex>& convFunc, const Vector<Int>& convSupport, const Double wScale, const Int convSampling);
 	void gridDataConvThr(const vi::VisBuffer2& vb, Cube<Complex>& grid,
-			     Cube<Float>& wghtSpec,
+			     Cube<Complex>& wghtSpec,
 		       Cube<Bool>& flag, Vector<Bool>& rowFlag, Matrix<Double>& uvw, Vector<Int>& ant1,
 		       Vector<Int>& ant2, Vector<Double>& timeCen, const Int startchan, const Int endchan, 
 		       const Cube<Complex>& convFunc, const Vector<Int>& convSupport, const Double wScale, const Int convSampling);
@@ -106,7 +106,7 @@ private:
 			 Vector<Float> scale, Bool hasCorrected,Bool needRot, 
 			 const Vector<Double>& phasor, const Vector<Double>& visFreq, 
 			 const Double& fracbw,  
-			 Complex*& grid, Float*& wghtSpec, Bool*& flag, 
+			 Complex*& grid, Complex*& wghtSpec, Bool*& flag, 
 			 Bool*& rowFlag, Double*& uvw, Int*& ant1,
 			 Int*& ant2, Double*& timeCen, const Int startchan, 
 			 const Int endchan, const Cube<Complex>& convFunc, const Vector<Int>& convSupport, const Double wScale, const Int convSampling );
@@ -121,7 +121,7 @@ private:
 	Bool saveData(const Cube<Complex>& grid, const Cube<Bool>&flag, const Vector<Bool>& rowFlag,
 					const Cube<Float>&wghtSpec,
 					const Matrix<Double>& uvw, const Vector<Int>& ant1,
-					const Vector<Int>& ant2, const Vector<Double>& time, const Int startchan, const Int endchan);
+		      const Vector<Int>& ant2, const Vector<Double>& time, const Int startchan, const Int endchan, 	const Cube<Float>& imagwghtSpec=Cube<Float>());
 	void fillSubTables();
 	void fillFieldTable();
 	void copySubtable(const String& tabName, const Table& inTab,
