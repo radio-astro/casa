@@ -340,7 +340,7 @@ void GBTLO1File::setSouvel(FITSTable &souvelTab) {
 
 void GBTLO1File::lo1Row(const MVEpoch &time) const
 {
-    if (itsLO1Table && (itslo1Row < 0) || !time.near(itsCurrentTime)) {
+    if (itsLO1Table && ((itslo1Row < 0) || !time.near(itsCurrentTime))) {
 	Int inc = 1;
 	Int limit = itsLO1Table->nrow()-1;
 	if (time.get() < itsCurrentTime.get()) {

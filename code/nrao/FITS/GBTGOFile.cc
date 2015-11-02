@@ -124,8 +124,8 @@ Bool GBTGOFile::attach(const String &gofile)
 		    }
 
 		    if (primaryKeys().fieldNumber("PROCSEQN") >= 0) {
-			if (baseVersion() < 0 || deviceVersion() < 1 &&
-			    primaryKeys().dataType("PROCSEQN") == TpString) {
+			if (baseVersion() < 0 || (deviceVersion() < 1 &&
+			    primaryKeys().dataType("PROCSEQN") == TpString)) {
 			    // early versions mistakenly code this as a string
 			    itsProcseqn = stringToInt(primaryKeys().asString("PROCSEQN"));
 			} else {
@@ -136,8 +136,8 @@ Bool GBTGOFile::attach(const String &gofile)
 		    }
 
 		    if (primaryKeys().fieldNumber("PROCSIZE") >= 0) {
-			if (baseVersion() < 0 || deviceVersion() < 1 &&
-			    primaryKeys().dataType("PROCSIZE") == TpString) {
+			if (baseVersion() < 0 || (deviceVersion() < 1 &&
+			    primaryKeys().dataType("PROCSIZE") == TpString)) {
 			    // early versions mistakenly code this as a string
 			    itsProcsize = stringToInt(primaryKeys().asString("PROCSIZE"));
 			} else {
