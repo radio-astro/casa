@@ -568,12 +568,12 @@ macro (casa_add_google_test)
     list(GET google_test_SOURCES 0 testName)
     get_filename_component (testName ${testName} NAME_WE)
 
-    # if (NOT (CMAKE_SYSTEM_NAME STREQUAL Linux AND CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 ))
+    if (NOT (CMAKE_SYSTEM_NAME STREQUAL Linux AND CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 ))
 
-    #    message ("WARNING:: Test ${testName}: CASA support for Google Test not ready except of Linux for x64")
-    #    return()
+        message ("WARNING:: Test ${testName}: CASA support for Google Test not ready except of Linux for x64")
+        return()
 
-    # endif ()
+    endif ()
 
     # The Google Test install logic in cmake will put the needed include and library
     # below the directory stored in the variable GtestRoot.
