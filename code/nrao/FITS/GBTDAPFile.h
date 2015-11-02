@@ -95,7 +95,7 @@ public:
     virtual void next();
     virtual const Record &currentRow() const {return *currentRow_p;}
     virtual Bool pastEnd() const 
-	{ return (!isValid() || FITSTable::pastEnd() && currentTime_p == endOfTime_p);}
+	{ return (!isValid() || (FITSTable::pastEnd() && currentTime_p == endOfTime_p));}
     virtual Int rownr() const {return row_nr_p;}
     virtual void move(Int torow);
 

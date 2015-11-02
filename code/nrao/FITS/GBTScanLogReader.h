@@ -96,7 +96,7 @@ public:
 
     // construct this using the indicated ScanLog FITS file
     GBTScanLogReader(const File& scanlog, Int minscan=-1,
-		     Int maxscan=LONG_MAX);
+		     Int maxscan=(Int) LONG_MAX);
 
     ~GBTScanLogReader();
 
