@@ -50,13 +50,6 @@ set (GoogleTest_ReleaseRoot ${GoogleTest_Root}/googletest-release-${GoogleTest_V
 set (GoogleTest_LibraryDir ${CMAKE_BINARY_DIR}/gtest CACHE STRING "Location of libgtest.a")
    set (GoogleTest_Target "libgtest" CACHE STRING "Target building Google Test library")
 
-if (NOT (CMAKE_SYSTEM_NAME STREQUAL Linux AND CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 ))
-
-   message ("WARNING:: Google Test installation not yet supported outside of Linux for x64")
-   return()
-
-endif ()
-
 message ("-- Google Test installation commencing ...")
 
 if (NOT EXISTS ${GoogleTest_Root})
@@ -86,10 +79,15 @@ else ()
 endif ()
 
 # Explode the archive
-
-execute_process (COMMAND tar xf ${GoogleTest_ArchiveFile} --overwrite
+if( APPLE )
+    execute_process (COMMAND tar xf ${GoogleTest_ArchiveFile}
+	  	 WORKING_DIRECTORY ${GoogleTest_Root}
+		 RESULT_VARIABLE status)
+else ()
+    execute_process (COMMAND tar xf ${GoogleTest_ArchiveFile} --overwrite
 		 WORKING_DIRECTORY ${GoogleTest_Root}
 		 RESULT_VARIABLE status)
+endif ()
 
 if (NOT ${status} EQUAL 0)
    message (SEND_ERROR "*** Failed to explode Google Test tar file.")
