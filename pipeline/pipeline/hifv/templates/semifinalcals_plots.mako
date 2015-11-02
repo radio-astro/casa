@@ -65,6 +65,18 @@ $(document).ready(function () {
 	<h1>Semi-finalcals ${plots[0].parameters['type'].title()} Plots<button class="btn btn-default pull-right" onClick="javascript:window.history.back();">Back</button></h1>
 </div>
 
+% for ms in delay_subpages.keys():
+    <h4>Plots:  <a class="replace"
+           href="${os.path.relpath(os.path.join(dirname, delay_subpages[ms]), pcontext.report_dir)}">Delay plots </a>|
+        <a class="replace"
+           href="${os.path.relpath(os.path.join(dirname, phasegain_subpages[ms]), pcontext.report_dir)}">Gain phase </a>|
+        <a class="replace"
+           href="${os.path.relpath(os.path.join(dirname, bpsolamp_subpages[ms]), pcontext.report_dir)}">BP Amp solution </a>|
+        <a class="replace"
+           href="${os.path.relpath(os.path.join(dirname, bpsolphase_subpages[ms]), pcontext.report_dir)}">BP Phase solution </a>
+    </h4>
+%endfor
+
 <br>
 
 

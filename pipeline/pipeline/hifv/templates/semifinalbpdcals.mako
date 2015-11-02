@@ -50,7 +50,7 @@ of the bandpass calibrator has not yet been determined.</p>
 
 % for ms in summary_plots:
     <h4>Plots:  <a class="replace"
-           href="${os.path.relpath(os.path.join(dirname, delay_subpages[ms]), pcontext.report_dir)}">Delay plots</a>|
+           href="${os.path.relpath(os.path.join(dirname, delay_subpages[ms]), pcontext.report_dir)}">Delay plots </a>|
         <a class="replace"
            href="${os.path.relpath(os.path.join(dirname, phasegain_subpages[ms]), pcontext.report_dir)}">Gain phase </a>|
         <a class="replace"
@@ -59,6 +59,10 @@ of the bandpass calibrator has not yet been determined.</p>
            href="${os.path.relpath(os.path.join(dirname, bpsolphase_subpages[ms]), pcontext.report_dir)}">BP Phase solution </a>
     </h4>
 %endfor
+
+
+
+<br>
 
 
 

@@ -49,7 +49,7 @@ $(document).ready(function() {
 
 % for ms in summary_plots:
     <h4>Plots: <br> <a class="replace"
-           href="${os.path.relpath(os.path.join(dirname, finaldelay_subpages[ms]), pcontext.report_dir)}">Final delay plots</a> |
+           href="${os.path.relpath(os.path.join(dirname, finaldelay_subpages[ms]), pcontext.report_dir)}">Final delay plots </a> |
         <a class="replace"
            href="${os.path.relpath(os.path.join(dirname, phasegain_subpages[ms]), pcontext.report_dir)}">BP initial gain phase </a> |
         <a class="replace"

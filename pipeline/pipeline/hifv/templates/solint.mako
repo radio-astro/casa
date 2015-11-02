@@ -55,7 +55,7 @@ $(document).ready(function() {
     </ul>
 
     <h4>Plots:  <a class="replace"
-           href="${os.path.relpath(os.path.join(dirname, testgainsamp_subpages[ms]), pcontext.report_dir)}">Testgains amp plots</a>|
+           href="${os.path.relpath(os.path.join(dirname, testgainsamp_subpages[ms]), pcontext.report_dir)}">Testgains amp plots </a> | 
         <a class="replace"
            href="${os.path.relpath(os.path.join(dirname, testgainsphase_subpages[ms]), pcontext.report_dir)}">Testgains phase plots</a>
     </h4>

@@ -65,6 +65,18 @@ $(document).ready(function () {
 	<h1>Testgains ${plots[0].parameters['type'].title()} Plots<button class="btn btn-default pull-right" onClick="javascript:window.history.back();">Back</button></h1>
 </div>
 
+% for ms in testgainsamp_subpages.keys():
+
+    <h4>Plots:  <a class="replace"
+           href="${os.path.relpath(os.path.join(dirname, testgainsamp_subpages[ms]), pcontext.report_dir)}">Testgains amp plots </a> | 
+        <a class="replace"
+           href="${os.path.relpath(os.path.join(dirname, testgainsphase_subpages[ms]), pcontext.report_dir)}">Testgains phase plots</a>
+    </h4>
+    
+
+
+%endfor
+
 <br>
 
 % for plot in sorted(plots, key=lambda p: p.parameters['ant']):

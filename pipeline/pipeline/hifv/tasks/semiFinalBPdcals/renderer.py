@@ -23,6 +23,18 @@ class VLASubPlotRenderer(object):
         self.ms = os.path.basename(self.result.inputs['vis'])
         self.template = template
         self.filename_prefix=filename_prefix
+        
+        self.summary_plots = {}
+        self.delay_subpages = {}
+        self.phasegain_subpages = {}
+        self.bpsolamp_subpages = {}
+        self.bpsolphase_subpages = {}
+        
+
+        self.delay_subpages[self.ms] = filenamer.sanitize('delays' + '-%s.html' % self.ms)
+        self.phasegain_subpages[self.ms] = filenamer.sanitize('phasegain' + '-%s.html' % self.ms)
+        self.bpsolamp_subpages[self.ms] = filenamer.sanitize('bpsolamp' + '-%s.html' % self.ms)
+        self.bpsolphase_subpages[self.ms] = filenamer.sanitize('bpsolphase' + '-%s.html' % self.ms)
 
         if os.path.exists(json_path):
             with open(json_path, 'r') as json_file:
@@ -35,7 +47,11 @@ class VLASubPlotRenderer(object):
                 'result'     : self.result,
                 'plots'      : self.plots,
                 'dirname'    : self.dirname,
-                'json'       : self.json}
+                'json'       : self.json,
+                'delay_subpages' : self.delay_subpages,
+                'phasegain_subpages' : self.phasegain_subpages,
+                'bpsolamp_subpages'  : self.bpsolamp_subpages,
+                'bpsolphase_subpages' : self.bpsolphase_subpages}
 
     @property
     def dirname(self):

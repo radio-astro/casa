@@ -24,6 +24,15 @@ class VLASubPlotRenderer(object):
         self.template = template
         self.filename_prefix=filename_prefix
 
+        self.summary_plots = {}
+        self.testgainsamp_subpages = {}
+        self.testgainsphase_subpages = {}
+        
+
+        self.testgainsamp_subpages[self.ms] = filenamer.sanitize('amp' + '-%s.html' % self.ms)
+        self.testgainsphase_subpages[self.ms] = filenamer.sanitize('phase' + '-%s.html' % self.ms)
+
+
         if os.path.exists(json_path):
             with open(json_path, 'r') as json_file:
                 self.json = json_file.readlines()[0]
@@ -35,7 +44,9 @@ class VLASubPlotRenderer(object):
                 'result'     : self.result,
                 'plots'      : self.plots,
                 'dirname'    : self.dirname,
-                'json'       : self.json}
+                'json'       : self.json,
+                'testgainsamp_subpages' : self.testgainsamp_subpages,
+                'testgainsphase_subpages'   : self.testgainsphase_subpages}
 
     @property
     def dirname(self):

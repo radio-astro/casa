@@ -29,6 +29,26 @@ class VLASubPlotRenderer(object):
         self.ms = os.path.basename(self.result.inputs['vis'])
         self.template = template
         self.filename_prefix=filename_prefix
+        
+        
+        self.summary_plots = {}
+        self.finaldelay_subpages = {}
+        self.phasegain_subpages = {}
+        self.bpsolamp_subpages = {}
+        self.bpsolphase_subpages = {}
+        self.bpsolphaseshort_subpages = {}
+        self.finalamptimecal_subpages = {}
+        self.finalampfreqcal_subpages = {}
+        self.finalphasegaincal_subpages = {}
+        
+        self.finaldelay_subpages[self.ms] = filenamer.sanitize('finaldelays' + '-%s.html' % self.ms)
+        self.phasegain_subpages[self.ms] = filenamer.sanitize('phasegain' + '-%s.html' % self.ms)
+        self.bpsolamp_subpages[self.ms] = filenamer.sanitize('bpsolamp' + '-%s.html' % self.ms)
+        self.bpsolphase_subpages[self.ms] = filenamer.sanitize('bpsolphase' + '-%s.html' % self.ms)
+        self.bpsolphaseshort_subpages[self.ms] = filenamer.sanitize('bpsolphaseshort' + '-%s.html' % self.ms)
+        self.finalamptimecal_subpages[self.ms] = filenamer.sanitize('finalamptimecal' + '-%s.html' % self.ms)
+        self.finalampfreqcal_subpages[self.ms] = filenamer.sanitize('finalampfreqcal' + '-%s.html' % self.ms)
+        self.finalphasegaincal_subpages[self.ms] = filenamer.sanitize('finalphasegaincal' + '-%s.html' % self.ms)
 
         if os.path.exists(json_path):
             with open(json_path, 'r') as json_file:
@@ -41,7 +61,15 @@ class VLASubPlotRenderer(object):
                 'result'     : self.result,
                 'plots'      : self.plots,
                 'dirname'    : self.dirname,
-                'json'       : self.json}
+                'json'       : self.json,
+                'finaldelay_subpages' : self.finaldelay_subpages,
+                'phasegain_subpages' : self.phasegain_subpages,
+                'bpsolamp_subpages'  : self.bpsolamp_subpages,
+                'bpsolphase_subpages' : self.bpsolphase_subpages,
+                'bpsolphaseshort_subpages' : self.bpsolphaseshort_subpages,
+                'finalamptimecal_subpages' : self.finalamptimecal_subpages,
+                'finalampfreqcal_subpages' : self.finalampfreqcal_subpages,
+                'finalphasegaincal_subpages' : self.finalphasegaincal_subpages}
 
     @property
     def dirname(self):
