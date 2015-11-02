@@ -3,25 +3,21 @@ from __future__ import absolute_import
 import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.casatools as casatools
-import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.callibrary as callibrary
 
-import itertools
 import collections
 
-from pipeline.hif.tasks import gaincal
-from pipeline.hif.tasks import bandpass
-from pipeline.hif.tasks import applycal
 from pipeline.hifv.heuristics import getCalFlaggedSoln, getBCalStatistics
 
 LOG = infrastructure.get_logger(__name__)
+
 
 class FlagBadDeformattersInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, vis=None):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
+
 
 class FlagBadDeformattersResults(basetask.Results):
     def __init__(self, jobs=[], result_amp=[], result_phase=[], 
@@ -40,15 +36,16 @@ class FlagBadDeformattersResults(basetask.Results):
             s += '%s performed. Statistics to follow?' % str(job)
         return s 
 
+
 class FlagBadDeformatters(basetask.StandardTaskTemplate):
     Inputs = FlagBadDeformattersInputs
     
     def prepare(self):
         
-        #Setting control parameters as method arguments
+        # Setting control parameters as method arguments
 
         method_args = {'testq' : 'amp',  # Which quantity to test? ['amp','phase','real','imag']
-                       'tstat' : 'rat',  # Which stat to use? ['min','max','mean','var'] or 'rat'=min/max or 'diff'=max-min
+                       'tstat' : 'rat',  # Which stat to use?['min','max','mean','var']or'rat'=min/max or 'diff'=max-min
                        'doprintall' : True,  # Print detailed flagging stats
                        'testlimit' : 0.15,   # Limit for test (flag values under/over this limit)
                        'testunder' : True,
@@ -74,7 +71,7 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
         (result_phase, phase_collection) = self._do_flag_baddeformatters(**method_args)
         
         return FlagBadDeformattersResults(result_amp=result_amp, result_phase=result_phase, 
-                amp_collection=amp_collection, phase_collection=phase_collection)
+                                          amp_collection=amp_collection, phase_collection=phase_collection)
         
     def _do_flag_baddeformatters(self, testq=None, tstat=None, doprintall=True,
                                  testlimit=None, testunder=True, nspwlimit=4,
@@ -259,7 +256,7 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
                 # Use name for flagging
                 flagstr = "mode='manual' antenna='"+antName+"' spw='"+spwstr+"'"
                 extflaglist.append(flagstr)
-                weblogflagdict[antName].append(swpstr)
+                weblogflagdict[antName].append(spwstr)
         
         nflagcmds = len(flaglist)+len(extflaglist)
         if nflagcmds<1:
@@ -290,9 +287,8 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
                 
                 return (flaglist, weblogflagdict)
                 
-        #If the flag commands are not executed.
+        # If the flag commands are not executed.
         return ([], collections.defaultdict(list))
-        
-        
+
     def analyse(self, results):
-	return results
+        return results
