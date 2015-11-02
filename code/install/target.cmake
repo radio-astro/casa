@@ -342,7 +342,7 @@ macro( casa_add_test)
 endmacro()
 
 #
-# casa_add_check_module (MODULES module1 [module2] ... TEST test TYPE unit|module)
+# casa_add_check_module (MODULES module1 [module2] ... TEST test)
 #
 # Internal macro that creates a check_MODULE make target if it doesn't exist.
 # Adds dependency on "test" to that make target
@@ -350,7 +350,7 @@ endmacro()
 macro( casa_add_check_module)
 
     set (options ) 
-    set (oneValueArgs TEST TYPE) # None
+    set (oneValueArgs TEST) # None
     set (multiValueArgs MODULES)
 
     cmake_parse_arguments (casa_add_check "${options}" "${oneValueArgs}" 
@@ -358,35 +358,25 @@ macro( casa_add_check_module)
   
     set (modules ${casa_add_check_MODULES})
     set (test ${casa_add_check_TEST})
-    set (type ${casa_add_check_TYPE})
 
     set (targetSuffix "")
     set (pathSuffix "")
     list (GET modules 0 moduleName)
     set (moduleDirectory "${CMAKE_BINARY_DIR}/${moduleName}")
 
-    # For type "unit", exclude module tests; for type "module"
-    # only do module tests
-
-    if ("${type}" STREQUAL "module")
-        set (ctestFlag "--tests-regex")
-    else ()
-        set (ctestFlag "--exclude-regex")
-    endif ()
-
     foreach (source ${modules})
 
         set (targetSuffix "${targetSuffix}_${source}")
 	set (pathSuffix "${pathSuffix}${source}/")
-        set (target  "${type}_test${targetSuffix}")
+        set (target  "unit_test${targetSuffix}")
 
         if (NOT TARGET ${target})
 
             add_custom_target (${target}
-                               COMMAND echo --- Checking module ${targetSuffix}
-                               COMMAND cd ${moduleDirectory}
-                               COMMAND ctest ${ctestFlag}  'module_test_.*')
-            message ("INFO Added custom target '${target}' which depends on ${test}")
+                               "echo" "--- Checking module ${targetSuffix}"
+                               COMMAND "cd" ${moduleDirectory}
+                               COMMAND ctest)
+            message ("INFO added custom target: ${target}")
         endif ()
 
         add_dependencies (${target} ${test})
@@ -411,25 +401,12 @@ macro (casa_add_assay)
 
 endmacro ()
 
-macro (casa_add_module_test)
-
-    casa_add_unit_test (${ARGN} MODULE_LEVEL)
-
-endmacro ()
-
-macro (casa_add_google_module_test)
-
-    casa_add_unit_test (${ARGN} MODULE_LEVEL)
-
-endmacro ()
-
-
 #
 # casa_add_unit_test( MODULES module [submodule [subsubmodule]  ...]
 #                     SOURCES source ... 
 #                     [LIBRARIES library1 [library2] ...] 
 #                     [INCLUDE_DIRS dir1 [dir2] ...] 
-#                     [NOT_READY] [MODULE_LEVEL])
+#                     [NOT_READY])
 #
 #      Add a unit test. The name of the test will be the basename of
 #      of the first source file.  Usually there will be a single source
@@ -445,34 +422,22 @@ endmacro ()
 #
 macro( casa_add_unit_test)
 
-  set (options NOT_READY COMMIT_ONLY MODULE_LEVEL) 
+  set (options NOT_READY COMMIT_ONLY) 
   set (oneValueArgs) # None
   set (multiValueArgs LIBRARIES COMMAND_ARGUMENTS INCLUDE_DIRS SOURCES MODULES) # None
 
   cmake_parse_arguments (casa_unit_test "${options}" "${oneValueArgs}" 
                          "${multiValueArgs}" ${ARGN})
   
-  set (libraries ${casa_unit_test_LIBRARIES})
-  set (modules ${casa_unit_test_MODULES})
-  list (GET modules 0 module) # First element is the module
-  set (rawSources ${casa_unit_test_SOURCES})
-  set (testNotReady ${casa_unit_test_NOT_READY})
-
-  list (GET rawSources 0 firstSource)
-  get_filename_component (testName ${firstSource} NAME_WE )
-  get_filename_component (path ${firstSource} PATH)
-
-  if (casa_unit_test_MODULE_LEVEL) # Set the test type to either module or unit
-      set (testType "module")
-  else ()
-      set (testType "unit")
-  endif ()
+  list (GET casa_unit_test_SOURCES 0 firstSource)
+  get_filename_component( testName ${firstSource} NAME_WE )
+  get_filename_component(path ${firstSource} PATH)
 
   # If any of the other sources are missing a path provide them the
   # path from the first source file.
 
   set (sources "")
-  foreach (source ${rawSources})
+  foreach (source ${casa_unit_test_SOURCES})
      get_filename_component(thePath ${source} PATH)
      if (thePath)
          list (APPEND sources ${source})
@@ -481,12 +446,13 @@ macro( casa_add_unit_test)
      endif ()
   endforeach ()
 
-  if (${testNotReady})
+  list (GET casa_unit_test_MODULES 0 module) # First element is the module
+
+  if (casa_unit_test_NOT_READY)
     add_executable( ${testName} EXCLUDE_FROM_ALL ${sources} ) # not part of main build
-    target_link_libraries( ${testName} lib${module} ${libraries})
   else ()
     add_executable( ${testName} ${sources} )
-    target_link_libraries( ${testName} lib${module} ${libraries})
+    target_link_libraries( ${testName} lib${module} ${casa_unit_test_LIBRARIES})
 
     if (${module}_WarningsAsErrors)
       set_property (TARGET ${testName} APPEND PROPERTY COMPILE_FLAGS "-Werror")
@@ -497,48 +463,32 @@ macro( casa_add_unit_test)
   # target_link_libraries( ${testName} lib${module} ${casa_unit_test_LIBRARIES})
 
   set (moduleDirectory "${CMAKE_BINARY_DIR}/${module}")
-  set (test_target ${testType}_test_${testName})
-  add_custom_target (${test_target}
+  set (unit_test_target unit_test_${testName})
+  add_custom_target (${unit_test_target}
                      COMMAND "cd" ${moduleDirectory}
                      COMMAND ctest -R ${testName})
-  add_dependencies (${test_target} ${testName})
+  add_dependencies (${unit_test_target} ${testName})
 
   if (NOT ${casa_unit_test_INCLUDE_DIRS})
-####  target_include_directories (${testName} PRIVATE "${casa_unit_test_INCLUDE_DIRS}")
-####  Relace next three lines with the above commented out line once cmake on jenkins gets upgraded (10/8/15)
-	get_target_property (includes ${testName} INCLUDE_DIRECTORIES)	
-	list (APPEND includes ${casa_unit_test_INCLUDE_DIRS})
-	set_target_properties (${testName} PROPERTIES INCLUDE_DIRECTORIES "${includes}" )	
- endif ()
+    target_include_directories (${testName} PRIVATE "${casa_unit_test_INCLUDE_DIRS}")
+  endif ()
 
   if (NOT casa_unit_test_NOT_READY)
 
     # This unit test is ready for normal use.  Add it as a runnable unit test both
     # globally and within its module.
     
-    if (casa_unit_test_MODULE_LEVEL)
-        add_test( module_test_${testName} ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/${testName} 
-    	          ${casa_unit_test_COMMAND_ARGUMENTS})
-    else ()
-        add_test( ${testName} ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/${testName} 
-                  ${casa_unit_test_COMMAND_ARGUMENTS})
-    endif ()
+    add_test( ${testName} ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/${testName} 
+              ${casa_unit_test_COMMAND_ARGUMENTS})
 
     if (NOT TARGET unit_test)
-        add_custom_target (unit_test COMMAND "cd" ${CMAKE_BINARY_DIR} 
-                                     COMMAND ${ctestCommand})
-        add_custom_target (module_test COMMAND "cd" ${CMAKE_BINARY_DIR} COMMAND ctest --tests-regex 'module_test_*')
+        add_custom_target (unit_test COMMAND "cd" ${CMAKE_BINARY_DIR} COMMAND "ctest")
     endif ()
 
-    if (casa_unit_test_MODULE_LEVEL)
-        add_dependencies( module_test module_test_${testName})
-    else ()
-        add_dependencies( unit_test ${testName} )
-    endif ()
+    add_dependencies( unit_test ${testName} )
 
     if (NOT casa_unit_test_COMMIT_ONLY)
-        casa_add_check_module (MODULES ${casa_unit_test_MODULES} 
-                               TEST ${testName} TYPE ${testType})
+        casa_add_check_module (MODULES ${casa_unit_test_MODULES} TEST ${testName})
     endif ()
 
     if (CASA_SHOW_TESTS)
@@ -609,7 +559,7 @@ macro (casa_add_google_test)
 
     # Parse the arguments
 
-    set (options MODULE_LEVEL) # None
+    set (options ) # None
     set (oneValueArgs ) # just MODULE
     set (multiValueArgs SOURCES LIBS MODULES) # the lists of source files and libraries
     cmake_parse_arguments (google_test "${options}" "${oneValueArgs}"
@@ -634,14 +584,9 @@ macro (casa_add_google_test)
     set (libraries ${gtestLibrary})
     list (APPEND gtestLibrary ${google_test_LIBS})
 
-    if (google_test_MODULE_LEVEL)
-        set (module_level "MODULE_LEVEL")
-    endif ()
-
     casa_add_unit_test (MODULES ${google_test_MODULES} SOURCES ${google_test_SOURCES} 
                         LIBRARIES ${libraries} # gtest + provide libs
-                        INCLUDE_DIRS ${gtestIncludeDirectory}
-                        ${module_level})
+                        INCLUDE_DIRS ${gtestIncludeDirectory}) # gtest include dirs
 
     add_dependencies (${CasaTestName} ${GoogleTest_Target})
 
