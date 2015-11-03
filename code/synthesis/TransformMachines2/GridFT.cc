@@ -399,10 +399,6 @@ void GridFT::finalizeToVis()
 }
 
 
-template<class T>  struct leaker {
-  void operator()(T *p) { }
-};
-
 // Initialize the FFT to the Sky. Here we have to setup and initialize the
 // grid. 
 void GridFT::initializeToSky(ImageInterface<Complex>& iimage,
@@ -424,28 +420,20 @@ void GridFT::initializeToSky(ImageInterface<Complex>& iimage,
   weight.resize(sumWeight.shape());
   weight=0.0;
 
-  // Initialize for in memory or to disk gridding. lattice will
-  // point to the appropriate Lattice, either the ArrayLattice for
-  // in memory gridding or to the image for to disk gridding.
-  if(isTiled) {
-    imageCache->flush();
-    image->set(Complex(0.0));
-    lattice=SHARED_PTR<Lattice<Complex> >(image, leaker<Lattice<Complex> >( ));
+ 
+  IPosition gridShape(4, nx, ny, npol, nchan);
+  griddedData.resize(gridShape);
+  griddedData=Complex(0.0);
+  if(useDoubleGrid_p){
+    griddedData.resize();
+    griddedData2.resize(gridShape);
+    griddedData2=DComplex(0.0);
   }
-  else {
-    IPosition gridShape(4, nx, ny, npol, nchan);
-    griddedData.resize(gridShape);
-    griddedData=Complex(0.0);
-    if(useDoubleGrid_p){
-      griddedData.resize();
-      griddedData2.resize(gridShape);
-      griddedData2=DComplex(0.0);
-    }
-    image->clearCache();
-    //iimage.get(griddedData, False);
-    //if(arrayLattice) delete arrayLattice; arrayLattice=0;
-    
-  }
+  image->clearCache();
+  //iimage.get(griddedData, False);
+  //if(arrayLattice) delete arrayLattice; arrayLattice=0;
+  
+  
   //AlwaysAssert(lattice, AipsError);
 }
 

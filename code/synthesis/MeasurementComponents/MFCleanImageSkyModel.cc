@@ -216,10 +216,10 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
   Int nx, ny;
   Int npol=image(0).shape()(2);
   Int nchan=image(0).shape()(3);
-  Int polloop=1;
+  //Int polloop=1;
   Vector<String> stokesID(npol, "");
   if (!doPolJoint_p) {
-    polloop=npol;
+    //polloop=npol;
     CoordinateSystem cs=image(0).coordinates();
     Int stokesindex=cs.findCoordinate(Coordinate::STOKES);
     StokesCoordinate stcoord=cs.stokesCoordinate(stokesindex);
@@ -411,7 +411,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
       // Calculate the threshold for this cycle. Add a safety factor
 
       // fractionOfPsf controls how deep the cleaning should go. 
-      // There are two user-controls.
+      // There arse two user-controls.
       //  cycleFactor_p : scale factor for the PSF sidelobe level. 
       //                         1 : clean down to the psf sidelobe level
       //                         <1 : go deeper
@@ -632,6 +632,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		  cleaner.setHistLength(1024);
 		  cleaner.setMaxNumPix(32*1024);
 		  cleaner.setChoose(False);
+		  cerr << "CYCLE_SPEEDUP " << cycleSpeedup_p << endl;
 		  cleaner.setCycleSpeedup(cycleSpeedup_p);
 		  cleaner.setSpeedup(0.0);
 		  if ( displayProgress_p ) {

@@ -769,7 +769,7 @@ cacheActivePixels(Matrix<Float> & pixVal, Matrix<Int> & pixPos,
   pixVal.putStorage(valPtr, valCopy);
   pixPos.putStorage(posPtr, posCopy);
   data.freeStorage(dataPtr, dataCopy);
-  DebugAssert(nBigPix <= 0 && (nBigPix + pixVal.ncolumn()) >= 0, AipsError);
+  DebugAssert(nBigPix <= 0 && (nBigPix + Int(pixVal.ncolumn())) >= Int(0), AipsError);
   return pixVal.ncolumn() + nBigPix;
 };
 //----------------------------------------------------------------------

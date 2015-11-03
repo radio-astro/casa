@@ -127,7 +127,7 @@ Bool PClarkCleanImageSkyModel::solve(SkyEquation& se) {
   }
 
   // Start of the parallelization (over channel no.)
-  Bool rStat;
+  Bool rStat=True;
   Array<Float> maskTmp;
   if (mask_sl_p) {
     rStat = mask_sl_p->get(maskTmp);
@@ -203,7 +203,7 @@ Bool PClarkCleanImageSkyModel::solve(SkyEquation& se) {
 
   if (mask_sl_p != 0 )  delete mask_sl_p;
   os << "End parallel clean" << LogIO::NORMAL << LogIO::POST;
-  return(True);
+  return(rStat);
 };
 
 
