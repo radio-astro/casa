@@ -1,5 +1,4 @@
 from __future__ import absolute_import
-import os
 import types
 
 from pipeline.hif.heuristics import caltable as caltable_heuristic
@@ -9,7 +8,6 @@ import pipeline.infrastructure.callibrary as callibrary
 from pipeline.infrastructure import casa_tasks
 from . import resultobjects
 import pipeline.infrastructure.casatools as casatools
-from bisect import bisect_left
 import numpy
 from pipeline.hifv.heuristics import find_EVLA_band
 
@@ -48,9 +46,9 @@ def _find_spw(vis, bands, context):
 class OpcalInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, caltable=None, caltype=None, parameter=None, spw=None):
-	# set the properties to the values given as input arguments
+        # set the properties to the values given as input arguments
         self._init_properties(vars())
-	setattr(self, 'caltype', 'opac')
+        setattr(self, 'caltype', 'opac')
 
     @property
     def caltable(self):
@@ -59,12 +57,11 @@ class OpcalInputs(basetask.StandardInputs):
         if type(self.vis) is types.ListType:
             return self._handle_multiple_vis('caltable')
         
-	# Get the name.
+        # Get the name.
         if callable(self._caltable):
-	    casa_args = self._get_partial_task_args()
+            casa_args = self._get_partial_task_args()
             return self._caltable(output_dir=self.output_dir,
-                                  stage=self.context.stage,
-                                  **casa_args)
+                                  stage=self.context.stage, **casa_args)
         return self._caltable
         
     @caltable.setter
@@ -94,18 +91,18 @@ class OpcalInputs(basetask.StandardInputs):
         self._spw = value
 
     # Avoids circular dependency on caltable.
-    # NOT SURE WHY THIS IS NECCESARY.
+    # NOT SURE WHY THIS IS NECESSARY.
     def _get_partial_task_args(self):
         return {'vis': self.vis, 'caltype': self.caltype}
 
     # Convert to CASA gencal task arguments.
     def to_casa_args(self):
         
-	    return {'vis': self.vis,
-	        'caltable': self.caltable,
-		    'caltype': self.caltype,
-            'parameter': self.parameter,
-            'spw': self.spw}
+        return {'vis': self.vis,
+                'caltable': self.caltable,
+                'caltype': self.caltype,
+                'parameter': self.parameter,
+                'spw': self.spw}
 
 
 class Opcal(basetask.StandardTaskTemplate):
@@ -117,7 +114,7 @@ class Opcal(basetask.StandardTaskTemplate):
         context = self.inputs.context
         
         m = context.observing_run.measurement_sets[0]
-        #spw2band = context.evla['msinfo'][m.name].spw2band
+        # spw2band = context.evla['msinfo'][m.name].spw2band
         spw2band = m.get_vla_spw2band()
         bands = spw2band.values()
         
@@ -153,8 +150,8 @@ class Opcal(basetask.StandardTaskTemplate):
         calapp = callibrary.CalApplication(calto, calfrom)
         callist.append(calapp)
 
-        return resultobjects.OpcalResults(pool=callist, opacities=opacities, spw=inputs.spw, center_frequencies=center_frequencies, seasonal_weight=seasonal_weight)
-
+        return resultobjects.OpcalResults(pool=callist, opacities=opacities, spw=inputs.spw,
+                                          center_frequencies=center_frequencies, seasonal_weight=seasonal_weight)
 
     def analyse(self, result):
         # With no best caltable to find, our task is simply to set the one
