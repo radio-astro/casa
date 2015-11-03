@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-import os
+
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -28,10 +28,9 @@ class GainCurvesResults(basetask.Results):
             context.callibrary.add(calapp.calto, calapp.calfrom)
 
     def __repr__(self):
-
-	# Format the GainCurve results.
+        # Format the GainCurve results.
         s = 'GainCurvesResults:\n'
         for calapplication in self.final:
             s += '\tGaincurves caltable written to {name}\n'.format(
                     name=calapplication.gaintable)
-	return s
+        return s

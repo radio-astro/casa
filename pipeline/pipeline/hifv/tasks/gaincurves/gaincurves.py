@@ -1,5 +1,4 @@
 from __future__ import absolute_import
-import os
 import types
 
 from pipeline.hif.heuristics import caltable as caltable_heuristic
@@ -16,10 +15,9 @@ LOG = infrastructure.get_logger(__name__)
 class GainCurvesInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, caltable=None, caltype=None, parameter=[]):
-	    # set the properties to the values given as input arguments
+        # set the properties to the values given as input arguments
         self._init_properties(vars())
-        
-	setattr(self, 'caltype', 'gc')
+        setattr(self, 'caltype', 'gc')
 
     @property
     def caltable(self):
@@ -28,12 +26,11 @@ class GainCurvesInputs(basetask.StandardInputs):
         if type(self.vis) is types.ListType:
             return self._handle_multiple_vis('caltable')
         
-	# Get the name.
+        # Get the name.
         if callable(self._caltable):
-	    casa_args = self._get_partial_task_args()
+            casa_args = self._get_partial_task_args()
             return self._caltable(output_dir=self.output_dir,
-                                  stage=self.context.stage,
-                                  **casa_args)
+                                  stage=self.context.stage, **casa_args)
         return self._caltable
         
     @caltable.setter
@@ -63,16 +60,16 @@ class GainCurvesInputs(basetask.StandardInputs):
         self._spw = value
 
     # Avoids circular dependency on caltable.
-    # NOT SURE WHY THIS IS NECCESARY.
+    # NOT SURE WHY THIS IS NECESSARY.
     def _get_partial_task_args(self):
-	return {'vis': self.vis, 'caltype': self.caltype}
+        return {'vis': self.vis, 'caltype': self.caltype}
 
     # Convert to CASA gencal task arguments.
     def to_casa_args(self):
         
-	return {'vis': self.vis,
-	        'caltable': self.caltable,
-		'caltype': self.caltype,
+        return {'vis': self.vis,
+                'caltable': self.caltable,
+                'caltype': self.caltype,
                 'parameter': self.parameter}
 
 
@@ -93,7 +90,6 @@ class GainCurves(basetask.StandardTaskTemplate):
         callist.append(calapp)
 
         return resultobjects.GainCurvesResults(pool=callist)
-
 
     def analyse(self, result):
 
