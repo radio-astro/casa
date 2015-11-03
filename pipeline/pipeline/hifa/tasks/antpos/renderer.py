@@ -41,13 +41,13 @@ def make_antpos_table(context, results):
 
         # Loop over the individual antennas and offsets
         for item in zip (antenna_list, xyzoffsets_list):
-           antname = item[0]
-           xoffset = '%0.3f' % item[1][0]
-           yoffset = '%0.3f' % item[1][1]
-           zoffset = '%0.3f' % item[1][2]
-                                    
-           tr = AntposTR(vis_cell, antname, xoffset, yoffset, zoffset)
-           rows.append(tr)
+            antname = item[0]
+            xoffset = '%0.2e' % item[1][0]
+            yoffset = '%0.2e' % item[1][1]
+            zoffset = '%0.2e' % item[1][2]
+                                 
+            tr = AntposTR(vis_cell, antname, xoffset, yoffset, zoffset)
+            rows.append(tr)
 
     return utils.merge_td_columns(rows)
 
