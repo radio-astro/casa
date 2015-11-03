@@ -18,7 +18,8 @@ __all__ = ['score_polintents',                                # ALMA specific
            'score_bands',                                     # ALMA specific
            'score_bwswitching',                               # ALMA specific
            'score_tsysspwmap',                                # ALMA specific
-           'score_missing_derived_fluxes',                    # ALMA specific
+           'score_number_antenna_offsets',                    # ALMA specific
+           _score_missing_derived_fluxes',                    # ALMA specific
            'score_derived_fluxes_snr',                        # ALMA specific
            'score_phaseup_mapping_fraction',                  # ALMA specific
            'score_missing_phaseup_snrs',                      # ALMA specific
@@ -691,6 +692,29 @@ def score_setjy_measurements (ms, reqfields, reqintents, reqspws, measurements):
         score = 0.0
         longmsg = 'Too many flux calibrator measurements for %s %d/%d' % (ms.basename, nmeasured, nexpected)
         shortmsg = 'Too many flux measurements'
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg,
+                       vis=ms.basename)
+
+@log_qa
+def score_number_antenna_offsets (ms, antenna, offsets):
+    '''
+    Score is equal to the ratio number of antennas without corrections
+    to the number of antennas with them. Make this more sophisticated
+    later
+    '''
+
+    nant_with_offsets = len(offsets) / 3
+    nant = len([ant.id for ant in ms.get_antenna()])
+
+    if nant_with_offsets == 0:
+        score = 1.0
+        longmsg = 'No antenna position offsets for %s ' % ms.basename
+        shortmsg = 'No antenna postion offsets'
+    else:
+        score = float(nant - nant_with_offsets) / float (nant)
+        longmsg = '%d nonzero antenna position offsets for %s ' % (nant_with_offsets, ms.basename)
+        shortmsg = 'Nonzero antenna postion offsets'
 
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg,
                        vis=ms.basename)
