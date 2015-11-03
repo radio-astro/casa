@@ -324,7 +324,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                           field_intent[1], field_intent[0])
                         himsize = self.heuristics.imsize(fields=field_ids,
                           cell=cells[spwspec], beam=beams[spwspec])
-                        if field_intent[1] in ['PHASE', 'BANDPASS', 'AMPLITUDE', 'FLUX']:
+                        if field_intent[1] in ['PHASE', 'BANDPASS', 'AMPLITUDE', 'FLUX', 'CHECK']:
                             himsize = [min(npix, inputs.calmaxpix) for npix in himsize]
                         imsizes[(field_intent[0],spwspec)] = himsize
                         if (imsizes[(field_intent[0],spwspec)][0] > max_x_size):
