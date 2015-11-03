@@ -11,6 +11,7 @@ import pipeline.infrastructure.casatools as casatools
 import numpy
 from pipeline.hifv.heuristics import find_EVLA_band
 
+
 LOG = infrastructure.get_logger(__name__)
 
 
