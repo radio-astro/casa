@@ -44,29 +44,29 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
         
         # Setting control parameters as method arguments
 
-        method_args = {'testq' : 'amp',  # Which quantity to test? ['amp','phase','real','imag']
-                       'tstat' : 'rat',  # Which stat to use?['min','max','mean','var']or'rat'=min/max or 'diff'=max-min
-                       'doprintall' : True,  # Print detailed flagging stats
-                       'testlimit' : 0.15,   # Limit for test (flag values under/over this limit)
-                       'testunder' : True,
-                       'nspwlimit' : 4,      # Number of spw per baseband to trigger flagging entire baseband
-                       'doflagundernspwlimit' : True, # Flag individual spws when below nspwlimit
-                       'doflagemptyspws' : False, # Flag data for spws with no unflagged channel solutions in any poln?
-                       'calBPtablename' : 'testBPcal.b', # Define the table to run this on
-                       'flagreason' : 'bad_deformatters_amp or RFI'} # Define the REASON given for the flags
+        method_args = {'testq': 'amp',  # Which quantity to test? ['amp','phase','real','imag']
+                       'tstat': 'rat',  # Which stat to use?['min','max','mean','var']or'rat'=min/max or 'diff'=max-min
+                       'doprintall': True,  # Print detailed flagging stats
+                       'testlimit': 0.15,   # Limit for test (flag values under/over this limit)
+                       'testunder': True,
+                       'nspwlimit': 4,      # Number of spw per baseband to trigger flagging entire baseband
+                       'doflagundernspwlimit': True,  # Flag individual spws when below nspwlimit
+                       'doflagemptyspws': False,  # Flag data for spws with no unflagged channel solutions in any poln?
+                       'calBPtablename': 'testBPcal.b',  # Define the table to run this on
+                       'flagreason': 'bad_deformatters_amp or RFI'}  # Define the REASON given for the flags
         
         (result_amp, amp_collection) = self._do_flag_baddeformatters(**method_args)
         
-        method_args = {'testq' : 'phase',
-                       'tstat' : 'diff',
-                       'doprintall' : True,
-                       'testlimit' : 50,
-                       'testunder' : False,
-                       'nspwlimit' : 4,
-                       'doflagundernspwlimit' : True,
-                       'doflagemptyspws' : False,
-                       'calBPtablename' : 'testBPcal.b',
-                       'flagreason' : 'bad_deformatters_phase or RFI'}
+        method_args = {'testq': 'phase',
+                       'tstat': 'diff',
+                       'doprintall': True,
+                       'testlimit': 50,
+                       'testunder': False,
+                       'nspwlimit': 4,
+                       'doflagundernspwlimit': True,
+                       'doflagemptyspws': False,
+                       'calBPtablename': 'testBPcal.b',
+                       'flagreason': 'bad_deformatters_phase or RFI'}
         
         (result_phase, phase_collection) = self._do_flag_baddeformatters(**method_args)
         
@@ -83,23 +83,23 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
         """
         
         # Which quantity to test? ['amp','phase','real','imag']
-        ####testq = 'amp'
+        # testq = 'amp'
         
         # Which stat to use? ['min','max','mean','var'] or 'rat'=min/max or 'diff'=max-min
-        ####tstat = 'rat'
+        # tstat = 'rat'
 
         # Print detailed flagging stats
-        ####doprintall = True
+        # doprintall = True
 
         # Limit for test (flag values under/over this limit)
-        ####testlimit = 0.15
-        ####testunder = True
+        # testlimit = 0.15
+        # testunder = True
         # Number of spw per baseband to trigger flagging entire baseband
-        ####nspwlimit = 4
+        # nspwlimit = 4
         # Flag individual spws when below nspwlimit
-        ####doflagundernspwlimit = True
+        # doflagundernspwlimit = True
         # Flag data for spws with no unflagged channel solutions in any poln?
-        ####doflagemptyspws = False
+        # doflagemptyspws = False
         
         with casatools.MSReader(self.inputs.vis) as ms:
             ms_summary = ms.summary()
@@ -114,9 +114,9 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
             doflagdata = True
         
         # Define the table to run this on
-        ####calBPtablename ='testBPcal.b'
+        # calBPtablename ='testBPcal.b'
         # Define the REASON given for the flags
-        ####flagreason = 'bad_deformatters_amp or RFI'
+        # flagreason = 'bad_deformatters_amp or RFI'
         
         LOG.info("Will test on quantity: "+testq)
         LOG.info("Will test using statistic: "+tstat)
@@ -233,10 +233,10 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
                     else:
                         spwstr+=','+str(ispw)
                 #
-                #reastr = 'bad_deformatters'
+                # reastr = 'bad_deformatters'
                 reastr = flagreason
                 # Add entry for this antenna
-                #flagstr = "mode='manual' antenna='"+str(iant)+"' spw='"+spwstr+"' reason='"+reastr+"'"
+                # flagstr = "mode='manual' antenna='"+str(iant)+"' spw='"+spwstr+"' reason='"+reastr+"'"
                 # Use name for flagging
                 flagstr = "mode='manual' antenna='"+antName+"' spw='"+spwstr+"'"
                 flaglist.append(flagstr)
@@ -252,7 +252,7 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
                 #
                 # Add entry for this antenna
                 reastr = 'no_unflagged_solutions'
-                #flagstr = "mode='manual' antenna='"+str(iant)+"' spw='"+spwstr+"' reason='"+reastr+"'"
+                # flagstr = "mode='manual' antenna='"+str(iant)+"' spw='"+spwstr+"' reason='"+reastr+"'"
                 # Use name for flagging
                 flagstr = "mode='manual' antenna='"+antName+"' spw='"+spwstr+"'"
                 extflaglist.append(flagstr)
