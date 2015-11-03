@@ -100,7 +100,7 @@ class PySynthesisImager:
             exists = (os.path.exists(cfCacheName) and os.path.isdir(cfCacheName));
 
         for fld in range(0,self.NF):
-            print "self.allimpars=",self.allimpars,"\n"
+            #print "self.allimpars=",self.allimpars,"\n"
             self.SItool.defineimage( self.allimpars[str(fld)] , self.allgridpars[str(fld)] )
     
         # For cube imaging:  align the data selections and image setup
