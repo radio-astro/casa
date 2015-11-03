@@ -19,7 +19,7 @@ __all__ = ['score_polintents',                                # ALMA specific
            'score_bwswitching',                               # ALMA specific
            'score_tsysspwmap',                                # ALMA specific
            'score_number_antenna_offsets',                    # ALMA specific
-           _score_missing_derived_fluxes',                    # ALMA specific
+           '_score_missing_derived_fluxes',                    # ALMA specific
            'score_derived_fluxes_snr',                        # ALMA specific
            'score_phaseup_mapping_fraction',                  # ALMA specific
            'score_missing_phaseup_snrs',                      # ALMA specific
