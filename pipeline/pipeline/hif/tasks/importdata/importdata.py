@@ -352,7 +352,7 @@ class ImportData(basetask.StandardTaskTemplate):
             LOG.info('Copying Source.xml from ASDM to measurement set')
             LOG.trace('Copying Source.xml: %s to %s' % (asdm_source,
                                                         vis_source))
-            shutil.copy(asdm_source, vis_source)
+            shutil.copyfile(asdm_source, vis_source)
 
     def _make_template_flagfile(self, asdm):
         inputs = self.inputs
