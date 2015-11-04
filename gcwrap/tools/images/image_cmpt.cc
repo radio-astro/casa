@@ -3391,19 +3391,17 @@ image::pixelvalue(const std::vector<int>& pixel) {
 			return nullptr;
 		}
 		if(_image->isFloat()) {
-		    PixelValueManipulator<Float> pvm(_image->getImage(), nullptr, "");
+		    PixelValueManipulator<Float> pvm(
+		        _image->getImage(), nullptr, "", False
+		    );
 		    return fromRecord(pvm.pixelValue(Vector<Int> (pixel)));
 		}
 		else {
-		    PixelValueManipulator<Complex> pvm(_image->getComplexImage(), nullptr, "");
+		    PixelValueManipulator<Complex> pvm(
+		        _image->getComplexImage(), nullptr, "", False
+		    );
 		    return fromRecord(pvm.pixelValue(Vector<Int> (pixel)));
 		}
-
-		/*
-		Record *outRec = _image->pixelvalue(Vector<Int> (pixel));
-		rstat = fromRecord(*outRec);
-		delete outRec;
-		*/
 	}
 	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
