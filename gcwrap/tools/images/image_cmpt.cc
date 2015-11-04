@@ -857,14 +857,19 @@ template<class T> image* image::_adddegaxes(
 	return nullptr;
 }
 
-::casac::record* image::boundingbox(const variant& region) {
+record* image::boundingbox(const variant& region) {
 	try {
 		_log << _ORIGIN;
 		if (detached()) {
 			return nullptr;
 		}
-		SHARED_PTR<Record> Region(_getRegion(region, False));
-		return fromRecord(*_image->boundingbox(*Region));
+		auto myreg = _getRegion(region, False);
+		unique_ptr<ImageMetaData> md(
+		    _image->isFloat()
+		    ? new ImageMetaData(_image->getImage())
+		    : new ImageMetaData(_image->getComplexImage())
+		);
+		return fromRecord(*md->getBoundingBox(*myreg));
 	}
 	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
