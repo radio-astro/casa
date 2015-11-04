@@ -114,7 +114,7 @@ class Opcal(basetask.StandardTaskTemplate):
         
         context = self.inputs.context
         
-        m = context.observing_run.measurement_sets[0]
+        m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         # spw2band = context.evla['msinfo'][m.name].spw2band
         spw2band = m.get_vla_spw2band()
         bands = spw2band.values()
