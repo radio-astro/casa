@@ -40,6 +40,7 @@
 from taskinit import *
 
 def find_EVLA_band(frequency, bandlimits=[0.0e6, 150.0e6, 700.0e6, 2.0e9, 4.0e9, 8.0e9, 12.0e9, 18.0e9, 26.5e9, 40.0e9, 56.0e9], BBAND='?4PLSCXUKAQ?'):
+    from bisect import bisect_left
     """identify VLA band"""
     i = bisect_left(bandlimits, frequency)
 
