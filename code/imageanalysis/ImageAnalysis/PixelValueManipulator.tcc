@@ -39,12 +39,12 @@ template<class T> const String PixelValueManipulator<T>::_className = "PixelValu
 template<class T> PixelValueManipulator<T>::PixelValueManipulator(
 	const SPCIIT image,
 	const Record *const regionRec,
-	const String& mask
+	const String& mask, Bool verboseDuringConstruction
 ) : ImageTask<T>(
 	image, "", regionRec, "", "", "",
 	mask, "", False
 ), _axes() {
-	this->_construct();
+	this->_construct(verboseDuringConstruction);
 }
 
 template<class T> void PixelValueManipulator<T>::setAxes(

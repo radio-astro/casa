@@ -54,7 +54,7 @@ template <class T> ImageTask<T>::ImageTask(
 	_region(region), _box(box),
 	_chan(chanInp), _stokesString(stokes), _mask(maskInp),
 	_outname(outname), _overwrite(overwrite), _stretch(False),
-	/*_logfileSupport(False), */ _logfileAppend(False), _suppressHistory(False),
+	_logfileAppend(False), _suppressHistory(False),
 	_dropDegen(False),
 	_verbosity(NORMAL), _logfile(), _newHistory() {
     FITSImage::registerOpenFunction();
