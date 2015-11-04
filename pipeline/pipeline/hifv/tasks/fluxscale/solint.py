@@ -23,10 +23,11 @@ class SolintInputs(basetask.StandardInputs):
 
 
 class SolintResults(basetask.Results):
-    def __init__(self, final=[], pool=[], preceding=[], longsolint=None, gain_solint2=None, shortsol2=None, short_solint=None, new_gain_solint1=None):
+    def __init__(self, final=[], pool=[], preceding=[], longsolint=None, gain_solint2=None,
+                 shortsol2=None, short_solint=None, new_gain_solint1=None, vis=None):
         super(SolintResults, self).__init__()
 
-        self.vis = None
+        self.vis = vis
         self.pool = pool[:]
         self.final = final[:]
         self.preceding = preceding[:]
@@ -39,7 +40,7 @@ class SolintResults(basetask.Results):
         self.new_gain_solint1 = new_gain_solint1
         
     def merge_with_context(self, context):    
-        m = context.observing_run.measurement_sets[0]
+        m = context.observing_run.get_ms(self.vis)
         context.evla['msinfo'][m.name].gain_solint2 = self.gain_solint2
         context.evla['msinfo'][m.name].longsolint = self.longsolint
         
@@ -164,7 +165,8 @@ class Solint(basetask.StandardTaskTemplate):
         
         LOG.info("Using short solint = " + new_gain_solint1)
         
-        return SolintResults(longsolint=longsolint, gain_solint2=gain_solint2, shortsol2=shortsol2, short_solint=short_solint, new_gain_solint1=new_gain_solint1)
+        return SolintResults(longsolint=longsolint, gain_solint2=gain_solint2, shortsol2=shortsol2,
+                             short_solint=short_solint, new_gain_solint1=new_gain_solint1, vis=self.inputs.vis)
     
     def analyse(self, results):
         return results
