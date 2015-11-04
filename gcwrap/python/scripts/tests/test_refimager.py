@@ -62,8 +62,8 @@ import inspect
 ## List to be run
 def suite():
 #     return [test_onefield, test_iterbot, test_multifield,test_stokes, test_modelvis]
-     return [test_onefield, test_iterbot, test_multifield,test_stokes, test_modelvis, test_cube]
-#     return [test_onefield, test_iterbot, test_multifield,test_stokes,test_cube, test_widefield,test_mask, test_modelvis,test_modelvis_failing,test_widefield_failing,test_cube_failing]
+     return [test_onefield, test_iterbot, test_multifield,test_stokes, test_modelvis, test_cube, test_mask, test_widefield]
+#     return [test_onefield, test_iterbot, test_multifield,test_stokes,test_cube, test_widefield,test_mask, test_modelvis,test_startmodel,test_widefield_failing]
 
 refdatapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/refimager/'
 #refdatapath = "/export/home/riya/rurvashi/Work/ImagerRefactor/Runs/UnitData/"
@@ -1420,30 +1420,57 @@ class test_mask(testref_base):
 
      def test_mask_1(self):
           """ [mask] test_mask_1 : Input mask as file and string : mfs """
+          self.prepData('refim_twochan.ms')
+          mstr = 'circle[[50pix,80pix],10pix]'
+          self.write_file(self.img+'.mask.txt', '#CRTFv0 CASA Region Text Format version 0\n'+mstr+'\n')
+          ret1 = tclean(vis=self.msfile,imagename=self.img+'1',imsize=100,cell='8.0arcsec',niter=10,deconvolver='hogbom',interactive=0,mask=self.img+'.mask.txt')
+          ret2 = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',niter=10,deconvolver='hogbom',interactive=0,mask=mstr)
+          self.checkall(imexist=[self.img+'1.mask', self.img+'2.mask'], imval=[(self.img+'1.mask',0.0,[50,50,0,0]),(self.img+'1.mask',1.0,[50,80,0,0]),(self.img+'2.mask',0.0,[50,50,0,0]),(self.img+'2.mask',0.0,[50,80,0,0])])
 
      def test_mask_2(self):
           """ [mask] test_mask_2 :  Input mask as file and string : cube (few channels) """
+          self.prepData('refim_point.ms')
+          mstr =  'circle[[50pix,50pix],10pix],range=[1.1GHz,1.5GHz]'
+          self.write_file(self.img+'.mask.txt', '#CRTFv0 CASA Region Text Format version 0\n'+mstr+'\n')
+          ret1 = tclean(vis=self.msfile,imagename=self.img+'1',imsize=100,cell='8.0arcsec',niter=10,deconvolver='hogbom',specmode='cube',interactive=0,mask=self.img+'.mask.txt')
+          ret2 = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',niter=10,deconvolver='hogbom',specmode='cube',interactive=0,mask=mstr)
+          self.checkall(imexist=[self.img+'1.mask', self.img+'2.mask'], imval=[(self.img+'1.mask',0.0,[50,50,0,1]),(self.img+'1.mask',1.0,[50,50,0,2]),(self.img+'1.mask',1.0,[50,50,0,10]),(self.img+'1.mask',0.0,[50,50,0,11]),(self.img+'2.mask',0.0,[50,50,0,1]),(self.img+'2.mask',1.0,[50,50,0,2]),(self.img+'2.mask',1.0,[50,50,0,10]),(self.img+'2.mask',0.0,[50,50,0,11])])
 
      def test_mask_3(self):
           """ [mask] test_mask_3 : Input mask as image-to-be-regridded (ra/dec) : mfs """
+          self.prepData('refim_twochan.ms')
+          mstr = 'circle[[50pix,50pix],10pix]'
+          self.write_file(self.img+'.mask.txt', '#CRTFv0 CASA Region Text Format version 0\n'+mstr+'\n')
+          ret1 = tclean(vis=self.msfile,imagename=self.img+'1',imsize=100,cell='8.0arcsec',niter=10,deconvolver='hogbom',interactive=0,mask=self.img+'.mask.txt')
+          ret2 = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',niter=10,deconvolver='hogbom',interactive=0,mask=self.img+'1.mask',phasecenter='J2000 19h59m57.5s +40d49m00.077s') # shift phasecenter
+          self.checkall(imexist=[self.img+'1.mask', self.img+'2.mask'], imval=[(self.img+'1.mask',1.0,[50,50,0,0]),(self.img+'2.mask',1.0,[91,13,0,0])])
 
      def test_mask_4(self):
           """ [mask] test_mask_4 :  Input mask as image-to-be-regridded(ra/dec/specframe) : cube """
+          self.prepData('refim_point.ms')
+          mstr =  'circle[[50pix,50pix],10pix],range=[1.1GHz,1.5GHz]'
+          self.write_file(self.img+'.mask.txt', '#CRTFv0 CASA Region Text Format version 0\n'+mstr+'\n')
+          ret1 = tclean(vis=self.msfile,imagename=self.img+'1',imsize=100,cell='8.0arcsec',niter=10,deconvolver='hogbom',specmode='cube',interactive=0,mask=self.img+'.mask.txt')
+          ret2 = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',niter=10,deconvolver='hogbom',specmode='cube',start='1.3GHz',interactive=0,mask=self.img+'1.mask')
+          self.checkall(imexist=[self.img+'1.mask', self.img+'2.mask'], imval=[(self.img+'1.mask',0.0,[50,50,0,1]),(self.img+'1.mask',1.0,[50,50,0,2]),(self.img+'1.mask',1.0,[50,50,0,10]),(self.img+'1.mask',0.0,[50,50,0,11]),(self.img+'2.mask',1.0,[50,50,0,0]),(self.img+'2.mask',1.0,[50,50,0,4]),(self.img+'2.mask',0.0,[50,50,0,10])])
 
      def test_mask_autobox(self):
           """ [mask] test_mask_autobox :  Autobox """
+          self.prepData('refim_twochan.ms')
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10,deconvolver='hogbom',interactive=0,mask='auto')
+          self.checkall(imexist=[self.img+'.mask'], imval=[(self.img+'.mask',1.0,[50,50,0,0]),(self.img+'.mask',0.0,[50,80,0,0])])
 
-     def test_mask_pbmask(self):
-          """ [mask] test_mask_pbmask :  pb mask """
-
-     def test_mask_combined_1(self):
-          """ [mask] test_mask_combined_1 :  string + pbmask """
-
-     def test_mask_combined_2(self):
-          """ [mask] test_mask_combined_2 :  Autobox + pbmask """
-
-     def test_mask_outlier(self):
-          """ [mask] test_mask_outlier : With outlier fields """
+#     def test_mask_pbmask(self):
+#          """ [mask] test_mask_pbmask :  pb mask """
+#
+#     def test_mask_combined_1(self):
+#          """ [mask] test_mask_combined_1 :  string + pbmask """
+#
+#     def test_mask_combined_2(self):
+#          """ [mask] test_mask_combined_2 :  Autobox + pbmask """
+#
+#     def test_mask_outlier(self):
+#          """ [mask] test_mask_outlier : With outlier fields """
 
 
 
@@ -1727,17 +1754,23 @@ class test_modelvis(testref_base):
           ret = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',startmodel=self.img, spw='0',niter=0,savemodel='virtual')
           ## cannot check anything here....  just that it runs without error
 
-class test_modelvis_failing(testref_base):
-     def test_modelvis_12(self):
-          """ [modelpredict] Test_modelvis_12 : Regrid input model onto new image grid : mfs (ra/dec) """
+class test_startmodel(testref_base):
+     def test_startmodel_12(self):
+          """ [modelpredict] Test_startmodel_12 : Regrid input model onto new image grid : mfs (ra/dec) """
 
-     def test_modelvis_13(self):
-          """ [modelpredict] Test_modelvis_13 : Regrid input model onto new image grid : cube (ra/dec/specframe)"""
+     def test_startmodel_13(self):
+          """ [modelpredict] Test_startmodel_13 : Regrid input model onto new image grid : cube (ra/dec/specframe)"""
 
-     def test_modelvis_14(self):
-          """ [modelpredict] Test_modelvis_14 : Regrid input model onto new image grid : mtmfs (ra/dec/terms)"""
+     def test_startmodel_14(self):
+          """ [modelpredict] Test_startmodel_14 : Regrid input model onto new image grid : mtmfs (ra/dec/terms)"""
 
-     def test_modelvis_startmodel_mfs(self):
-          """ [modelvis] test_modelvis_startmodel_mfs : Restart a run with existing 'startmodel'."""
+     def test_startmodel_15(self):
+          """ [modelpredict] Test_startmodel_15 : Regrid input model onto new image grid : mfs (imsize/cell)"""
+
+     def test_startmodel_startmodel_mfs(self):
+          """ [startmodel] test_startmodel_mfs : Restart a run with existing 'startmodel'."""
+
+     def test_startmodel_mfs_changeshape(self):
+          """ [startmodel] test_startmodel_mfs_changeshape : Restart a run with overwrite=T and change imshape"""
 
 ##############################################
