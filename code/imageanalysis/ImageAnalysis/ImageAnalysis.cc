@@ -303,40 +303,6 @@ ImageAnalysis::convolve(
 	return imOut.release();
 }
 
-Record* ImageAnalysis::boundingbox(
-	const Record& region
-) const {
-	*_log << LogOrigin(className(), __func__);
-	const CoordinateSystem csys = _imageFloat
-		? _imageFloat->coordinates()
-		: _imageComplex->coordinates();
-	const IPosition shape = _imageFloat
-		? _imageFloat->shape()
-		: _imageComplex->shape();
-	// Find the bounding box of this region
-	const ImageRegion* pRegion = ImageRegion::fromRecord(
-		0, csys, shape, region
-	);
-	LatticeRegion latRegion = pRegion->toLatticeRegion(
-		csys, shape
-	);
-	Slicer sl = latRegion.slicer();
-	IPosition blc(sl.start());
-	IPosition trc(sl.end());
-	IPosition inc(sl.stride());
-	IPosition length(sl.length());
-	std::unique_ptr<Record> outRec(new Record());
-	outRec->define("blc", blc.asVector());
-	outRec->define("trc", trc.asVector());
-	outRec->define("inc", inc.asVector());
-	outRec->define("bbShape", (trc - blc + 1).asVector());
-	outRec->define("regionShape", length.asVector());
-	outRec->define("imageShape", shape.asVector());
-	outRec->define("blcf", CoordinateUtil::formatCoordinate(blc, csys)); // 0-rel for use in C++
-	outRec->define("trcf", CoordinateUtil::formatCoordinate(trc, csys));
-	return outRec.release();
-}
-
 void ImageAnalysis::calc(const String& expr, Bool verbose) {
 	*_log << LogOrigin(className(), __func__);
 	ThrowIf(expr.empty(), "You must specify an expression");

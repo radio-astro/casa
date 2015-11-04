@@ -106,6 +106,9 @@ public:
 		String& message, const uInt chan, const String& stokesString
     ) const;
 
+	// get the bounding box in the image for the specified region.
+	Record* getBoundingBox(const Record& region) const;
+
 	// convert the header info to a Record and list to logger if verbose=True
 	virtual Record toRecord(Bool verbose) const = 0;
 

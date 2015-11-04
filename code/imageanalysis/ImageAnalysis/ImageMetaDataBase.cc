@@ -39,10 +39,13 @@
 
 #include <iostream>
 #include <iomanip>
+//#include <memory>
 
 #include <boost/regex.hpp>
 
 #define _ORIGINB LogOrigin("ImageMetaDataBase", __FUNCTION__, WHERE)
+
+using namespace std;
 
 namespace casa {
 
@@ -161,6 +164,37 @@ const TableRecord ImageMetaDataBase::_miscInfo() const {
 	const TableRecord misc = imf ? imf->miscInfo() : imc->miscInfo();
 	return misc;
 }
+
+Record* ImageMetaDataBase::getBoundingBox(
+    const Record& region
+) const {
+    const auto& csys = _getCoords();
+    const auto shape = _getShape();
+    const unique_ptr<ImageRegion> pRegion(
+        ImageRegion::fromRecord(
+            nullptr, csys, shape, region
+        )
+    );
+    LatticeRegion latRegion = pRegion->toLatticeRegion(
+        csys, shape
+    );
+    Slicer sl = latRegion.slicer();
+    IPosition blc(sl.start());
+    IPosition trc(sl.end());
+    IPosition inc(sl.stride());
+    IPosition length(sl.length());
+    std::unique_ptr<Record> outRec(new Record());
+    outRec->define("blc", blc.asVector());
+    outRec->define("trc", trc.asVector());
+    outRec->define("inc", inc.asVector());
+    outRec->define("bbShape", (trc - blc + 1).asVector());
+    outRec->define("regionShape", length.asVector());
+    outRec->define("imageShape", shape.asVector());
+    outRec->define("blcf", CoordinateUtil::formatCoordinate(blc, csys)); // 0-rel for use in C++
+    outRec->define("trcf", CoordinateUtil::formatCoordinate(trc, csys));
+    return outRec.release();
+}
+
 
 ValueHolder ImageMetaDataBase::getFITSValue(const String& key) const {
 	String c = key;
