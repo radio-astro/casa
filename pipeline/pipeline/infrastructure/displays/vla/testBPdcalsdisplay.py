@@ -1,14 +1,9 @@
 from __future__ import absolute_import
-import collections
-import json
 import os
-
-import numpy
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.renderer.logger as logger
-from pipeline.infrastructure import casa_tasks
 import casa
 import numpy as np
 import math
@@ -21,10 +16,10 @@ class testBPdcalsSummaryChart(object):
         self.context = context
         self.result = result
         self.ms = context.observing_run.get_ms(result.inputs['vis'])
-        #self.caltable = result.final[0].gaintable
+        # self.caltable = result.final[0].gaintable
 
     def plot(self):
-        ##science_spws = self.ms.get_spectral_windows(science_windows_only=True)
+        # #science_spws = self.ms.get_spectral_windows(science_windows_only=True)
         plots = [self.get_plot_wrapper('BPcal'), self.get_plot_wrapper('delaycal')]
         return [p for p in plots if p is not None]
 
@@ -32,29 +27,27 @@ class testBPdcalsSummaryChart(object):
         figfile = self.get_figfile(prefix)
         
         context = self.context
-        result = self.result
-
-        numAntenna = len(self.ms.antennas)
         bandpass_field_select_string = context.evla['msinfo'][self.ms.name].bandpass_field_select_string
         bandpass_scan_select_string = context.evla['msinfo'][self.ms.name].bandpass_scan_select_string
         corrstring = self.ms.get_vla_corrstring()
         delay_scan_select_string = context.evla['msinfo'][self.ms.name].delay_scan_select_string
-        calibrator_scan_select_string = context.evla['msinfo'][self.ms.name].calibrator_scan_select_string
-        calibrator_field_select_string = context.evla['msinfo'][self.ms.name].calibrator_field_select_string
-        field_ids = self.ms.get_vla_field_ids()
-        field_names = self.ms.get_vla_field_names()
-        channels = self.ms.get_vla_numchan()
         
         ms_active = self.ms.name
 
-
         if (prefix == 'BPcal'):
-            casa.plotms(vis=ms_active, xaxis='freq', yaxis='amp', ydatacolumn='corrected',  selectdata=True, field=bandpass_field_select_string,    scan=bandpass_scan_select_string,  correlation=corrstring,  averagedata=True, avgtime='1e8s', avgscan=True, transform=False,    extendflag=False, iteraxis='', coloraxis='antenna2',  plotrange=[], title='', xlabel='',  ylabel='', showmajorgrid=False,    showminorgrid=False, plotfile=figfile, overwrite=True, clearplots=True, showgui=False)
-
+            casa.plotms(vis=ms_active, xaxis='freq', yaxis='amp', ydatacolumn='corrected',  selectdata=True,
+                        field=bandpass_field_select_string,    scan=bandpass_scan_select_string,
+                        correlation=corrstring,  averagedata=True, avgtime='1e8s', avgscan=True, transform=False,
+                        extendflag=False, iteraxis='', coloraxis='antenna2',  plotrange=[], title='',
+                        xlabel='',  ylabel='', showmajorgrid=False,    showminorgrid=False, plotfile=figfile,
+                        overwrite=True, clearplots=True, showgui=False)
 
         if ((delay_scan_select_string != bandpass_scan_select_string) and prefix == 'delaycal'):
-            casa.plotms(vis=ms_active, xaxis='freq',   yaxis='amp',  ydatacolumn='corrected',  selectdata=True,  scan=delay_scan_select_string,        correlation=corrstring,  averagedata=True,  avgtime='1e8s',  avgscan=True, transform=False,  extendflag=False,  iteraxis='',        coloraxis='antenna2',  plotrange=[],  title='',  xlabel='',  ylabel='',  showmajorgrid=False,  showminorgrid=False,        plotfile=figfile, overwrite=True, clearplots=True, showgui=False)
-
+            casa.plotms(vis=ms_active, xaxis='freq',   yaxis='amp',  ydatacolumn='corrected',  selectdata=True,
+                        scan=delay_scan_select_string,        correlation=corrstring,  averagedata=True,
+                        avgtime='1e8s',  avgscan=True, transform=False,  extendflag=False,  iteraxis='',
+                        coloraxis='antenna2',  plotrange=[],  title='',  xlabel='',  ylabel='',  showmajorgrid=False,
+                        showminorgrid=False,        plotfile=figfile, overwrite=True, clearplots=True, showgui=False)
 
     def get_figfile(self, prefix):
         return os.path.join(self.context.report_dir, 
@@ -65,15 +58,11 @@ class testBPdcalsSummaryChart(object):
         figfile = self.get_figfile(prefix)
         
         context = self.context
-        m = context.observing_run.measurement_sets[0]
         bandpass_scan_select_string = context.evla['msinfo'][self.ms.name].bandpass_scan_select_string
         delay_scan_select_string = context.evla['msinfo'][self.ms.name].delay_scan_select_string
 
-
         if (prefix == 'BPcal' or ((delay_scan_select_string != bandpass_scan_select_string) and prefix == 'delaycal')):
-            wrapper = logger.Plot(figfile,
-                              x_axis='freq',
-                              y_axis='amp',
+            wrapper = logger.Plot(figfile, x_axis='freq', y_axis='amp',
                               parameters={'vis'      : self.ms.basename,
                                           'type'     : prefix,
                                           'spw'      : ''})
@@ -109,32 +98,13 @@ class testDelaysPerAntennaChart(object):
         result = self.result
         
         numAntenna = len(self.ms.antennas)
-        bandpass_field_select_string = context.evla['msinfo'][self.ms.name].bandpass_field_select_string
-        bandpass_scan_select_string = context.evla['msinfo'][self.ms.name].bandpass_scan_select_string
-        delay_scan_select_string = context.evla['msinfo'][self.ms.name].delay_scan_select_string
-        calibrator_scan_select_string = context.evla['msinfo'][self.ms.name].calibrator_scan_select_string
-        calibrator_field_select_string = context.evla['msinfo'][self.ms.name].calibrator_field_select_string
-        field_ids = self.ms.get_vla_field_ids()
-        field_names = self.ms.get_vla_field_names()
-        channels = self.ms.get_vla_numchan()
-        
-        ms_active = self.ms.name
         
         plots = []
-        
-        # nplots=int(numAntenna/3)
-
-        # if ((numAntenna%3)>0):
-        #    nplots = nplots + 1
-
         nplots = numAntenna
 
         for ii in range(nplots):
 
             filename='testdelay'+str(ii)+'.png'
-            # ###syscommand='rm -rf '+filename
-            # ###os.system(syscommand)
-            # antPlot=str(ii*3)+'~'+str(ii*3+2)
             antPlot = str(ii)
             
             stage = 'stage%s' % result.stage_number
@@ -197,19 +167,8 @@ class ampGainPerAntennaChart(object):
         result = self.result
         
         numAntenna = len(self.ms.antennas)
-        bandpass_field_select_string = context.evla['msinfo'][self.ms.name].bandpass_field_select_string
-        bandpass_scan_select_string = context.evla['msinfo'][self.ms.name].bandpass_scan_select_string
-        delay_scan_select_string = context.evla['msinfo'][self.ms.name].delay_scan_select_string
-        calibrator_scan_select_string = context.evla['msinfo'][self.ms.name].calibrator_scan_select_string
-        calibrator_field_select_string = context.evla['msinfo'][self.ms.name].calibrator_field_select_string
-        field_ids = self.ms.get_vla_field_ids()
-        field_names = self.ms.get_vla_field_names()
-        channels = self.ms.get_vla_numchan()
-        
-        ms_active = self.ms.name
-        
-        plots = []
 
+        plots = []
         nplots=int(numAntenna/3)
 
         with casatools.TableReader('testBPdinitialgain.g') as tb:
@@ -228,9 +187,6 @@ class ampGainPerAntennaChart(object):
         for ii in range(nplots):
 
             filename='testBPdinitialgainamp'+str(ii)+'.png'
-            # ###syscommand='rm -rf '+filename
-            # ###os.system(syscommand)
-            # antPlot=str(ii*3)+'~'+str(ii*3+2)
             antPlot=str(ii)
             
             stage = 'stage%s' % result.stage_number
@@ -293,19 +249,8 @@ class phaseGainPerAntennaChart(object):
         result = self.result
         
         numAntenna = len(self.ms.antennas)
-        bandpass_field_select_string = context.evla['msinfo'][self.ms.name].bandpass_field_select_string
-        bandpass_scan_select_string = context.evla['msinfo'][self.ms.name].bandpass_scan_select_string
-        delay_scan_select_string = context.evla['msinfo'][self.ms.name].delay_scan_select_string
-        calibrator_scan_select_string = context.evla['msinfo'][self.ms.name].calibrator_scan_select_string
-        calibrator_field_select_string = context.evla['msinfo'][self.ms.name].calibrator_field_select_string
-        field_ids = self.ms.get_vla_field_ids()
-        field_names = self.ms.get_vla_field_names()
-        channels = self.ms.get_vla_numchan()
-        
-        ms_active = self.ms.name
-        
+
         plots = []
-        
         nplots=int(numAntenna/3)
 
         with casatools.TableReader('testBPdinitialgain.g') as tb:
@@ -324,9 +269,6 @@ class phaseGainPerAntennaChart(object):
         for ii in range(nplots):
 
             filename = 'testBPdinitialgainphase'+str(ii)+'.png'
-            # ###syscommand='rm -rf '+filename
-            # ###os.system(syscommand)
-            # antPlot=str(ii*3)+'~'+str(ii*3+2)
             antPlot = str(ii)
             
             stage = 'stage%s' % result.stage_number
@@ -389,19 +331,8 @@ class bpSolAmpPerAntennaChart(object):
         result = self.result
         
         numAntenna = len(self.ms.antennas)
-        bandpass_field_select_string = context.evla['msinfo'][self.ms.name].bandpass_field_select_string
-        bandpass_scan_select_string = context.evla['msinfo'][self.ms.name].bandpass_scan_select_string
-        delay_scan_select_string = context.evla['msinfo'][self.ms.name].delay_scan_select_string
-        calibrator_scan_select_string = context.evla['msinfo'][self.ms.name].calibrator_scan_select_string
-        calibrator_field_select_string = context.evla['msinfo'][self.ms.name].calibrator_field_select_string
-        field_ids = self.ms.get_vla_field_ids()
-        field_names = self.ms.get_vla_field_names()
-        channels = self.ms.get_vla_numchan()
-        
-        ms_active = self.ms.name
         
         plots = []
-
         nplots=int(numAntenna/3)
 
         with casatools.TableReader('testBPdinitialgain.g') as tb:
@@ -425,7 +356,7 @@ class bpSolAmpPerAntennaChart(object):
             dataArr = dataVarCol[rrow]
             flagArr = flagVarCol[rrow]
             amps=np.abs(dataArr)
-            phases=np.arctan2(np.imag(dataArr),np.real(dataArr))
+            phases=np.arctan2(np.imag(dataArr), np.real(dataArr))
             good=np.logical_not(flagArr)
             tmparr=amps[good]
             if (len(tmparr)>0):
@@ -448,9 +379,6 @@ class bpSolAmpPerAntennaChart(object):
         for ii in range(nplots):
 
             filename='testBPcal_amp'+str(ii)+'.png'
-            # ###syscommand='rm -rf '+filename
-            # ###os.system(syscommand)
-            # antPlot=str(ii*3)+'~'+str(ii*3+2)
             antPlot=str(ii)
             
             stage = 'stage%s' % result.stage_number
@@ -513,19 +441,8 @@ class bpSolPhasePerAntennaChart(object):
         result = self.result
         
         numAntenna = len(self.ms.antennas)
-        bandpass_field_select_string = context.evla['msinfo'][self.ms.name].bandpass_field_select_string
-        bandpass_scan_select_string = context.evla['msinfo'][self.ms.name].bandpass_scan_select_string
-        delay_scan_select_string = context.evla['msinfo'][self.ms.name].delay_scan_select_string
-        calibrator_scan_select_string = context.evla['msinfo'][self.ms.name].calibrator_scan_select_string
-        calibrator_field_select_string = context.evla['msinfo'][self.ms.name].calibrator_field_select_string
-        field_ids = self.ms.get_vla_field_ids()
-        field_names = self.ms.get_vla_field_names()
-        channels = self.ms.get_vla_numchan()
-        
-        ms_active = self.ms.name
-        
-        plots = []
 
+        plots = []
         nplots=int(numAntenna/3)
 
         with casatools.TableReader('testBPdinitialgain.g') as tb:
@@ -571,9 +488,6 @@ class bpSolPhasePerAntennaChart(object):
         for ii in range(nplots):
 
             filename = 'testBPcal_phase'+str(ii)+'.png'
-            # ###syscommand='rm -rf '+filename
-            # ###os.system(syscommand)
-            # antPlot=str(ii*3)+'~'+str(ii*3+2)
             antPlot = str(ii)
             
             stage = 'stage%s' % result.stage_number
@@ -619,8 +533,7 @@ class bpSolPhasePerAntennaChart(object):
 
         return [p for p in plots if p is not None]
 
-
-##TsysStat = collections.namedtuple('TsysScore', 'median rms median_max')
+# #TsysStat = collections.namedtuple('TsysScore', 'median rms median_max')
 '''
 class ScoringtestBPdcalsPerAntennaChart(object):
     def __init__(self, context, result):
