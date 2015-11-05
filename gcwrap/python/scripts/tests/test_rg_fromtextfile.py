@@ -289,6 +289,24 @@ class rg_fromtextfile_test(unittest.TestCase):
         self.assertTrue(self.ia.statistics()['npts'][0] == 331*331)
         self.assertTrue(self.ia.statistics(region=datapath + "1000circles.txt")['npts'][0] == 13679)
         self.ia.done()
+        
+    def test_CAS_8072(self):
+        """Verify rest frequency precision issue has been fixed"""
+        self.ia.fromshape("",[20,20,200])
+        self.ia.addnoise()
+        reg = reg = rg.fromtext(
+            "box [[0pix,0pix], [19pix,19pix]], range=[1140km/s, 1142km/s], restfreq=1.42040575e+09Hz",
+            csys = self.ia.coordsys().torecord(), shape=self.ia.shape()
+        )
+        reg1 = rg.fromtext(
+            "box [[0pix,0pix], [19pix,19pix]], range=[1140km/s, 1142km/s]",
+            csys = self.ia.coordsys().torecord(), shape=self.ia.shape()
+        )
+        stats0 = self.ia.statistics(region=reg)
+        stats1 = self.ia.statistics(region=reg1)
+        self.ia.done()
+        for k in ('maxpos', 'minpos'):
+            self.assertTrue((stats0[k] == stats1[k]).all())
 
 def suite():
     return [rg_fromtextfile_test]
