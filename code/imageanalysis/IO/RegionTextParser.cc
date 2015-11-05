@@ -1354,7 +1354,6 @@ void RegionTextParser::_setInitialGlobals() {
 	_currentGlobals[AnnotationBase::COORD] = coord;
 
 	ParamValue range;
-	// range.freqRange = Vector<MFrequency>(0);
 	range.freqRange.reset();
 	_currentGlobals[AnnotationBase::RANGE] = range;
 
@@ -1376,7 +1375,11 @@ void RegionTextParser::_setInitialGlobals() {
 		_currentGlobals[AnnotationBase::VELTYPE] = veltype;
 
 		ParamValue restfreq;
-		restfreq.stringVal = String::toString(spectral.restFrequency()) + "Hz";
+		// truncates value, not enough precision
+		// restfreq.stringVal = String::toString(spectral.restFrequency()) + "Hz";
+		ostringstream oss;
+		oss << std::setprecision(20) << spectral.restFrequency() << "Hz";
+		restfreq.stringVal = oss.str();
 		_currentGlobals[AnnotationBase::RESTFREQ] = restfreq;
 	}
 	ParamValue linewidth;
