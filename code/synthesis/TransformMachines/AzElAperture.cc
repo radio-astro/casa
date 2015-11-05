@@ -88,6 +88,8 @@ namespace casa{
       // symmetric.
       if (isNoOp()) return;
 
+      (void)baseCFC;
+
       Double actualPA = getPA(vb), currentCFPA = cfc.pa_p.getValue("rad");
       //Double baseCFCPA=baseCFC.pa_p.getValue("rad");
 

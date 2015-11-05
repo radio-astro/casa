@@ -674,7 +674,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					Bool Evaluate)
   {
     Int NAnt = 0;
-    Float tmp;
     // TBD: adapt the following to VisCal mechanism:
     MEpoch LAST;
     
@@ -685,10 +684,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for(ndx(2)=0;ndx(2)<NAnt;ndx(2)++)
       {
 	ndx1=ndx;
-	ndx(0)=0;ndx1(0)=0;	tmp=l_off(ndx)  = pointingOffsets(ndx1);//Axis_0,Pol_0,Ant_i
-	ndx(0)=1;ndx1(0)=1;	tmp=l_off(ndx)  = pointingOffsets(ndx1);//Axis_0,Pol_1,Ant_i
-	ndx(0)=0;ndx1(0)=2;	tmp=m_off(ndx)  = pointingOffsets(ndx1);//Axis_1,Pol_0,Ant_i
-	ndx(0)=1;ndx1(0)=3;	tmp=m_off(ndx)  = pointingOffsets(ndx1);//Axis_1,Pol_1,Ant_i
+	ndx(0)=0;ndx1(0)=0;	//tmp=l_off(ndx)  = pointingOffsets(ndx1);//Axis_0,Pol_0,Ant_i
+	ndx(0)=1;ndx1(0)=1;	//tmp=l_off(ndx)  = pointingOffsets(ndx1);//Axis_0,Pol_1,Ant_i
+	ndx(0)=0;ndx1(0)=2;	//tmp=m_off(ndx)  = pointingOffsets(ndx1);//Axis_1,Pol_0,Ant_i
+	ndx(0)=1;ndx1(0)=3;	//tmp=m_off(ndx)  = pointingOffsets(ndx1);//Axis_1,Pol_1,Ant_i
       }
 
 //     l_off  = pointingOffsets(IPosition(3,0,0,0),IPosition(3,0,0,NAnt));
@@ -1037,11 +1036,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// Accumulate the shifted PBs
 	//
 	{
-	  Bool isRefF,isRefC;
+	  Bool isRefF;
 	  Array<Float> fbuf;
 	  Array<Complex> cbuf;
 	  isRefF=theavgPB.get(fbuf);
-	  isRefC=localTwoDPB.get(cbuf);
+	  //isRefC=localTwoDPB.get(cbuf);
 	  
 	  IPosition fs(fbuf.shape());
 	  {
@@ -1166,6 +1165,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int i,j,N = cfPolMap.nelements();
     for(i=0;i<N;i++)
       if (cfPolMap[i] > -1)
+	{
 	if      (visStokes[i] == Stokes::RR) 
 	  {
 	    conjPolMap[i]=-1;
@@ -1190,6 +1190,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    for(j=0;j<N;j++) if (visStokes[j] == Stokes::LR) break; 
 	    conjPolMap[i]=cfPolMap[j];
 	  }
+	}
   }
   //
   //---------------------------------------------------------------
@@ -1375,7 +1376,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ndx =0;
     Area.resize(Area.nelements()+1,True);
     Area(lastPASlot)=0;
-    Complex a=0;
+
     for(ndx(0)=0;ndx(0)<shp(0);ndx(0)++)
       for(ndx(1)=0;ndx(1)<shp(1);ndx(1)++)
 	Area(lastPASlot)+=convFunc(ndx);
@@ -1509,8 +1510,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // convolution function.
     //
     //------------------------------------------------------------------
-    Bool writeResults;
-    writeResults=False;
     
     Int inner=convSize/convSampling;
     //    inner = convSize/2;
@@ -2883,9 +2882,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			  FTMachine::Type type)
   {
     // Take care of translation of Bools to Integer
-    Int idopsf=0;
     makingPSF=dopsf;
-    if(dopsf) idopsf=1;
     
     findConvFunction(*image, vb);
     

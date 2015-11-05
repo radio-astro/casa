@@ -111,11 +111,11 @@ namespace casa{
   //----------------------------------------------------------------------
   // Write PB to the pbImage
   //
-  void VLACalcIlluminationConvFunc::applyPB(ImageInterface<Float>& pbImage,
+  void VLACalcIlluminationConvFunc::applyPB(ImageInterface<Float>& /*pbImage*/,
 					    //const VisBuffer& vb, 
-					    Double& pa,
-					    const Vector<Float>& paList, 
-					    Int bandID, Bool doSquint)
+					    Double& /*pa*/,
+					    const Vector<Float>& /*paList*/, 
+					    Int /*bandID*/, Bool /*doSquint*/)
   {
     throw(AipsError("applyPB(paList) called!"));
     // CoordinateSystem skyCS(pbImage.coordinates());
@@ -153,8 +153,6 @@ namespace casa{
 //    cout<<"bandID = "<<bandID<<"\n";
 //    cout<<"doSquint = "<<doSquint<<"\n";
     TempImage<Complex> uvGrid;
-    Int convSize, convSampling;
-    Int nx=pbImage.shape()(0);
 
     if (maximumCacheSize() > 0) uvGrid.setMaximumCacheSize(maximumCacheSize());
     //    regridAperture(skyCS, skyShape, uvGrid, vb, True, bandID);
@@ -180,12 +178,12 @@ namespace casa{
   //--------------------------------------------------------------------------
   // Write PB^2 to the pbImage
   //
-  void VLACalcIlluminationConvFunc::applyPBSq(ImageInterface<Float>& pbImage,
+  void VLACalcIlluminationConvFunc::applyPBSq(ImageInterface<Float>& /*pbImage*/,
 					      //const VisBuffer& vb, 
-					      Double& pa,
-					      const Vector<Float>& paList, 
-					      Int bandID,
-					      Bool doSquint)
+					      Double& /*pa*/,
+					      const Vector<Float>& /*paList*/, 
+					      Int /*bandID*/,
+					      Bool /*doSquint*/)
   {
     throw(AipsError("applyPBSq(paList) called!"));
     // CoordinateSystem skyCS(pbImage.coordinates());
@@ -233,7 +231,7 @@ namespace casa{
   void VLACalcIlluminationConvFunc::setApertureParams(ApertureCalcParams& ap,
 						      const Float& Freq, const Float& pa, 
 						      const Int& bandID,
-						      const Int& inStokes,
+						      const Int& /*inStokes*/,
 						      const IPosition& skyShape,
 						      const Vector<Double>& uvIncr)
   {
@@ -260,7 +258,7 @@ namespace casa{
   //--------------------------------------------------------------------------
   //
   void VLACalcIlluminationConvFunc::regridApertureEngine(ApertureCalcParams& ap,
-							 const Int& inStokes)
+							 const Int& /*inStokes*/)
   {
     IPosition apertureShape(ap.aperture->shape());
     apertureShape(0) = ap.nx;  apertureShape(1) = ap.ny;
@@ -292,7 +290,7 @@ namespace casa{
     AlwaysAssert(bandID>=-1, AipsError);
     if (bandID != -1) ap.band = bandID;
     //Float pa = getPA(vb);
-    Float Freq, freqLo, freqHi;
+    Float Freq, freqHi;
 
     if (lastPA == pa)
       {
@@ -1017,8 +1015,12 @@ namespace casa{
   
 
   
-	void VLACalcIlluminationConvFunc::makeFullJones(ImageInterface<Complex>& pbImage, const VisBuffer& vb, Bool doSquint,
-               Int bandID, Double freqVal) {}
+  void VLACalcIlluminationConvFunc::makeFullJones(ImageInterface<Complex>& /*pbImage*/, 
+						  const VisBuffer& /*vb*/, 
+						  Bool /*doSquint*/,
+						  Int /*bandID*/, 
+						  Double /*freqVal*/) 
+  {}
 
   
 };

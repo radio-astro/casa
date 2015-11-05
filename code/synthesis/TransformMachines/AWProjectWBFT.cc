@@ -44,8 +44,8 @@
 #include <casa/sstream.h>
 #include <casa/Utilities/CompositeNumber.h>
 
-#define CONVSIZE (1024*4)
-#define OVERSAMPLING 10
+//#define CONVSIZE (1024*4)
+//#define OVERSAMPLING 10
 #define USETABLES 0           // If equal to 1, use tabulated exp() and
 			      // complex exp() functions.
 #define MAXPOINTINGERROR 250.0 // Max. pointing error in arcsec used to
@@ -77,7 +77,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // This is a pure C function pointer which FORTRAN can call.  
     // The function itself uses GCF object services.
     //
-    convSize=0;
+    //    convSize=0;
     paChangeDetector.reset();
     pbLimit_p=pbLimit;
     if (applyPointingOffset) doPointing=1; else doPointing=0;
@@ -85,8 +85,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // Set up the Conv. Func. disk cache manager object.
     //
-    convSampling=OVERSAMPLING;
-    convSize=CONVSIZE;
+    //convSampling=OVERSAMPLING;
+    //    convSize=CONVSIZE;
     //use memory size defined in aipsrc if exists
     Long hostRAM = (HostInfo::memoryTotal(true)*1024); // In bytes
     hostRAM = hostRAM/(sizeof(Float)*2); // In complex pixels
@@ -109,8 +109,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       log_l << "Failed to create " << name() << " object." << LogIO::EXCEPTION;
 
     maxConvSupport=-1;
-    convSampling=OVERSAMPLING;
-    convSize=CONVSIZE;
+    //convSampling=OVERSAMPLING;
+    //convSize=CONVSIZE;
     visResampler_p->init(useDoubleGrid_p);
   }
   //
@@ -309,7 +309,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     Bool doSumWtNorm=True;
     if (sumWt.shape().nelements()==0) doSumWtNorm=False;
-
+    doSumWtNorm = doSumWtNorm; // Dummy statement to get rid of compiler warnings
     if ((sumWt.shape().nelements() < 2) || 
 	(sumWt.shape()(0) != wtImage.shape()(2)) || 
 	(sumWt.shape()(1) != wtImage.shape()(3)))

@@ -110,12 +110,15 @@ namespace casa{
   //
   Double getCurrentTimeStamp(const VisBuffer& vb)
   {
+    LogIO os(LogOrigin("Utils", "getCurrentTimeStamp", WHERE));
+
     Int N=vb.nRow();
     for(Int i=0;i<N;i++)
       {
 	if ((!vb.flagRow()(i)) && (vb.antenna1()(i) != vb.antenna2()(i)))
 	  return vb.time()(i);
       }
+    //os << "No unflagged row found!  This is a major problem/bug" << LogIO::WARN;
     return 0.0;
   }
   //

@@ -1872,6 +1872,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     		{
 		  //if (SynthesisUtilMethods::validate(*vb)==SynthesisUtilMethods::NOVALIDROWS) break; // No valid rows in this VB
 		  //		  cerr << "nRows "<< vb->nRow() << "   " << max(vb->visCube()) <<  endl;
+		  if (SynthesisUtilMethods::validate(*vb)!=SynthesisUtilMethods::NOVALIDROWS)
+		    {
     			if(!dopsf) {
 			    { vb->setModelVisCube(Complex(0.0, 0.0)); }
     				itsMappers.degrid(*vb, savevirtualmodel );
@@ -1881,6 +1883,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     			itsMappers.grid(*vb, dopsf, datacol_p);
 			cohDone += vb->nRow();
 			pm.update(Double(cohDone));
+		    }
     		}
     	}
     	//cerr << "IN SYNTHE_IMA" << endl;
@@ -2035,16 +2038,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // a call to fillCFCache().
       for (rvi_p->originChunks(); rvi_p->moreChunks();rvi_p->nextChunk())
 	{
-	  
 	  for (rvi_p->origin(); rvi_p->more(); (*rvi_p)++)
 	    {
-	      if (SynthesisUtilMethods::validate(*vb)==SynthesisUtilMethods::NOVALIDROWS) break; //No valid rows in this MS
-	      itsMappers.grid(*vb, True, FTMachine::OBSERVED, whichFTM);
-	      cohDone += vb->nRow();
-	      pm.update(Double(cohDone));
+	      if (SynthesisUtilMethods::validate(*vb)!=SynthesisUtilMethods::NOVALIDROWS) 
+		{
+		  itsMappers.grid(*vb, True, FTMachine::OBSERVED, whichFTM);
+		  cohDone += vb->nRow();
+		  pm.update(Double(cohDone));
+		}
 	    }
 	}
     }
+    if (cohDone == 0) os << "No valid rows found in dryGridding." << LogIO::EXCEPTION << LogIO::POST;
     // Unset the dry-gridding mode.
     (itsMappers.getFTM(whichFTM,True))->setDryRun(False);
 
@@ -2095,7 +2100,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  wtCFList_p.resize(cfList_p.nelements());
 	  for (Int i=0; i<(Int)wtCFList_p.nelements(); i++) wtCFList_p[i]="WT"+cfList_p[i];
 
-	  cerr << cfList_p << endl;
+	  //cerr << cfList_p << endl;
       	  cfCacheObj->setCacheDir(cfcPath.data());
 
 	  os << "Re-loading the \"blank\" CFCache for filling" << LogIO::WARN << LogIO::POST;

@@ -151,7 +151,8 @@ namespace casa{
 				const char *cfName,
 				const char *qualifier)
   {
-    const char *formedName;
+    (void)cfName;
+    //const char *formedName;
     for (Int i=0;i<storage_p.shape()(0);i++)
       for (Int j=0;j<storage_p.shape()(1);j++)
 	{
@@ -216,15 +217,19 @@ namespace casa{
   //
   Int CFStore2::nearestPA(const Quantity& pa, const Quantity& paTol)
     {
-      Int n=pa_p.nelements();
+      Int n=pa_p.nelements(), junk=-1;
       Float dpa=paTol.getValue("rad"),
-	paVal = pa.getValue("rad");
+	paVal = pa.getValue("rad"), cpa;
+
       for(Int i=0;i<n;i++)
 	{
-	  if (fabs(pa_p(i).getValue("rad") - paVal) < dpa)
-	  return i;
+	  cpa = pa_p(i).getValue("rad");
+	  //	  cerr << "##### " << i << " " << cpa*57.2956 << " " << paVal*57.2956 << " " << dpa*57.2956 << " " << (fabs(cpa - paVal))*57.2956 << endl; 
+	  // if (fabs(cpa - paVal) > dpa) 
+	  //   {cout << "%%%%% "; cin >> junk;}
+	  if (fabs(cpa - paVal) < dpa) {junk=i;break;}
 	}
-      return -1;
+      return junk;
     }
 }; // end casa namespace
 

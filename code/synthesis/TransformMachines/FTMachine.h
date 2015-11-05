@@ -498,8 +498,9 @@ protected:
   Matrix<Double> spwFreqSel_p, expandedSpwFreqSel_p,expandedSpwConjFreqSel_p;
   Vector<Int> cfStokes_p;
   Int polInUse_p;
-  CFStore cfs_p, cfwts_p;
+
   CountedPtr<CFCache> cfCache_p;
+  CFStore cfs_p, cfwts_p;
   CountedPtr<CFStore2> cfs2_p, cfwts2_p;
 
   CountedPtr<ConvolutionFunction> convFuncCtor_p;

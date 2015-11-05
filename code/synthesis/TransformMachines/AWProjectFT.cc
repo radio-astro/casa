@@ -60,7 +60,7 @@
 #include <synthesis/TransformMachines/EVLAAperture.h>
 #include <synthesis/TransformMachines/AWConvFuncEPJones.h>
 
-#define CONVSIZE (1024*2)
+//#define CONVSIZE (1024*2)
 // #define OVERSAMPLING 2
 #define USETABLES 0           // If equal to 1, use tabulated exp() and
 			      // complex exp() functions.
@@ -178,7 +178,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       rotatedConvFunc_p(),//cfs2_p(), cfwts2_p(), 
       runTime1_p(0.0)
   {
-    convSize=0;
+    //    convSize=0;
     tangentSpecified_p=False;
     lastIndex_p=0;
     paChangeDetector.reset();
@@ -195,7 +195,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // if (!cfCache_p.null()) delete &cfCache_p;
     // cfCache_p=cfcache;
     convSampling=OVERSAMPLING;
-    convSize=CONVSIZE;
+    //convSize=CONVSIZE;
     Long hostRAM = (HostInfo::memoryTotal(true)*1024); // In bytes
     hostRAM = hostRAM/(sizeof(Float)*2); // In complex pixels
     if (cachesize > hostRAM) cachesize=hostRAM;
@@ -236,7 +236,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       visResampler_p(visResampler), sensitivityPatternQualifier_p(-1),sensitivityPatternQualifierStr_p(""),
       rotatedConvFunc_p(), runTime1_p(0.0)
   {
-    convSize=0;
+    //convSize=0;
     tangentSpecified_p=False;
     lastIndex_p=0;
     paChangeDetector.reset();
@@ -253,7 +253,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // if (!cfCache_p.null()) delete &cfCache_p;
     // cfCache_p=cfcache;
     convSampling=OVERSAMPLING;
-    convSize=CONVSIZE;
+    //convSize=CONVSIZE;
     Long hostRAM = (HostInfo::memoryTotal(true)*1024); // In bytes
     hostRAM = hostRAM/(sizeof(Float)*2); // In complex pixels
     if (cachesize > hostRAM) cachesize=hostRAM;
@@ -288,7 +288,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     maxConvSupport=-1;
     convSampling=OVERSAMPLING;
     visResampler_p->init(useDoubleGrid_p);
-    convSize=CONVSIZE;
+    //convSize=CONVSIZE;
     canComputeResiduals_p=DORES;
     if (!cfCache_p.null())
       {
@@ -369,7 +369,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	maxConvSupport= other.maxConvSupport;
 
 	epJ_p=other.epJ_p;
-	convSize=other.convSize;
+	//convSize=other.convSize;
 	lastIndex_p=other.lastIndex_p;
 	paChangeDetector=other.paChangeDetector;
 	pbLimit_p=other.pbLimit_p;
@@ -384,7 +384,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//
 	cfCache_p=other.cfCache_p;
 	convSampling=other.convSampling;
-	convSize=other.convSize;
+	//convSize=other.convSize;
 	cachesize=other.cachesize;
     
 	currentCFPA=other.currentCFPA;
@@ -685,7 +685,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO log_l(LogOrigin("AWProjectFT", "findPointingOffsets[R&D]"));
     Int NAnt = 0;
-    Float tmp;
+    //Float tmp;
     // TBD: adapt the following to VisCal mechanism:
     MEpoch LAST;
     
@@ -696,10 +696,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for(ndx(2)=0;ndx(2)<NAnt;ndx(2)++)
       {
 	ndx1=ndx;
-	ndx(0)=0;ndx1(0)=0;	tmp=l_off(ndx)  = pointingOffsets(ndx1);//Axis_0,Pol_0,Ant_i
-	ndx(0)=1;ndx1(0)=1;	tmp=l_off(ndx)  = pointingOffsets(ndx1);//Axis_0,Pol_1,Ant_i
-	ndx(0)=0;ndx1(0)=2;	tmp=m_off(ndx)  = pointingOffsets(ndx1);//Axis_1,Pol_0,Ant_i
-	ndx(0)=1;ndx1(0)=3;	tmp=m_off(ndx)  = pointingOffsets(ndx1);//Axis_1,Pol_1,Ant_i
+	ndx(0)=0;ndx1(0)=0;	//tmp=l_off(ndx)  = pointingOffsets(ndx1);//Axis_0,Pol_0,Ant_i
+	ndx(0)=1;ndx1(0)=1;	//tmp=l_off(ndx)  = pointingOffsets(ndx1);//Axis_0,Pol_1,Ant_i
+	ndx(0)=0;ndx1(0)=2;	//tmp=m_off(ndx)  = pointingOffsets(ndx1);//Axis_1,Pol_0,Ant_i
+	ndx(0)=1;ndx1(0)=3;	//tmp=m_off(ndx)  = pointingOffsets(ndx1);//Axis_1,Pol_1,Ant_i
       }
 
 //     l_off  = pointingOffsets(IPosition(3,0,0,0),IPosition(3,0,0,NAnt));
@@ -824,12 +824,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     outImage.resize(inShape);
     outImage.setCoordinateInfo(inImage.coordinates());
 
-    Bool isRefIn, isRefOut;
+    Bool isRefIn;
     Array<Complex> inBuf;
     Array<Float> outBuf;
 
     isRefIn  = inImage.get(inBuf);
-    isRefOut = outImage.get(outBuf);
+    //isRefOut = outImage.get(outBuf);
     log_l << "Normalizing the average PBs to unity"
 	  << LogIO::NORMAL << LogIO::POST;
     //
@@ -1654,7 +1654,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Take care of translation of Bools to Integer
     makingPSF=dopsf;
     
-    findConvFunction(*image, vb);
+    try
+      {
+	findConvFunction(*image, vb);
+      }
+    catch(AipsError& x)
+      {
+	log_l << x.getMesg() << LogIO::WARN;
+	return;
+      }
     if (isDryRun) return;
 
     Nant_p     = vb.msColumns().antenna().nrow();
@@ -1670,7 +1678,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     Int NAnt;
     if (doPointing) NAnt = findPointingOffsets(vb,l_offsets,m_offsets,True);
-    
+    NAnt=NAnt;  // Dummy statement to supress complier warnings and will be used when pointing offsets are used.
     //
     // If row is -1 then we pass through all rows
     //
@@ -1786,6 +1794,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Nant_p     = vb.msColumns().antenna().nrow();
     Int NAnt=0;
     if (doPointing)   NAnt = findPointingOffsets(vb,l_offsets,m_offsets,True);
+    NAnt=NAnt;  // Dummy statement to supress complier warnings and will be used when pointing offsets are used.
     
     // Get the uvws in a form that Fortran can use
     Matrix<Double> uvw(3, vb.uvw().nelements());
@@ -2332,7 +2341,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				 const Cube<Int>& flagCube,
 				 const Vector<Double>& dphase,
 				 const Bool& dopsf,
-				 const Vector<Int>& gridShape)
+				 const Vector<Int>& /*gridShape*/)
   {
     LogIO log_l(LogOrigin("AWProjectFT", "setupVBStore[R&D]"));
 

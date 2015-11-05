@@ -473,7 +473,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // functions pointed to by the elements of convFunctions_p.  The
     // co-ordinates of this array are (W-term, Poln, PA).
     //
-    Int convSize, convSampling, wConvSize, lastIndex_p;
+    Int // convSize,
+      convSampling, wConvSize, lastIndex_p;
     
     //
     // The average PB for sky image normalization

@@ -1005,6 +1005,7 @@ void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   Int doWeightGridding=1;
   if(doneWeightImage_p)
     doWeightGridding=-1;
+  doWeightGridding = doWeightGridding;//Dummy statement to supress silly complier warnings
   Bool del;
   //    IPosition s(flags.shape());
   const IPosition& fs=flags.shape();

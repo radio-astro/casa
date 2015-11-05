@@ -30,7 +30,7 @@
   const Complex *gridPtr;
   Complex  *phaseGradPtr;
   Int *supportPtr, *cfShapePtr,
-    *locPtr, *igrdposPtr, *ilocPtr, *tilocPtr,
+    *locPtr, *igrdposPtr, //*ilocPtr, *tilocPtr, 
     *convOriginPtr;
   Float  *samplingPtr;
   Double *offPtr;
@@ -43,8 +43,8 @@
   cfShapePtr    = cfShape.getStorage(dummy);
   locPtr        = loc.getStorage(dummy);
   igrdposPtr    = igrdpos.getStorage(dummy);
-  ilocPtr       = iloc.getStorage(dummy);
-  tilocPtr      = tiloc.getStorage(dummy);
+  //ilocPtr       = iloc.getStorage(dummy);
+  //tilocPtr      = tiloc.getStorage(dummy);
   offPtr        = off.getStorage(dummy);
   convOriginPtr = convOrigin.getStorage(dummy);
   Int finitePointingOffsets_int = (finitePointingOffset?1:0);

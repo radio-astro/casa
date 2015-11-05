@@ -166,7 +166,7 @@ namespace casa{
     // Unused variable from the dark-ages era interface that should ultimately go.
     (void)psScale;
     (void)muellerElementsIndex;
-
+    (void)freqHi;
     LogIO log_l(LogOrigin("AWConvFunc", "fillConvFuncBuffer[R&D]"));
     //    Int ttt=0;
     Complex cfNorm, cfWtNorm;
@@ -725,7 +725,12 @@ namespace casa{
     
     log_l << "Making a new convolution function for PA="
 	  << pa*(180/C::pi) << "deg"
-	  << LogIO::NORMAL << LogIO::POST;
+	  << " for field ID " << vb.fieldId();
+    // log_l << "TimeStamps(0-10) ";
+    // for (Int i=0;i<10;i++) 
+    //   //log_l << MVTime(vb.time()(i)).string(MVTime::TIME) << " ";
+    //   log_l << vb.time()(i)/1e8 << " ";
+    // log_l << LogIO::NORMAL << LogIO::POST;
     
     if(wConvSize>0) 
       {
@@ -1289,12 +1294,12 @@ namespace casa{
     outImage.resize(inShape);
     outImage.setCoordinateInfo(inImage.coordinates());
     
-    Bool isRefIn, isRefOut;
+    Bool isRefIn;
     Array<Complex> inBuf;
     Array<Float> outBuf;
     
     isRefIn  = inImage.get(inBuf);
-    isRefOut = outImage.get(outBuf);
+    //isRefOut = outImage.get(outBuf);
     log_l << "Normalizing the average PBs to unity"
 	  << LogIO::NORMAL << LogIO::POST;
     //
@@ -1397,11 +1402,11 @@ namespace casa{
 	// Accumulate the shifted PBs
 	//
 	{
-	  Bool isRefF,isRefC;
+	  Bool isRefF;
 	  Array<Float> fbuf;
 	  Array<Complex> cbuf;
 	  isRefF=theavgPB.get(fbuf);
-	  isRefC=localTwoDPB.get(cbuf);
+	  //isRefC=localTwoDPB.get(cbuf);
 	  
 	  IPosition fs(fbuf.shape());
 	  IPosition ndx(4,0,0,0,0),avgNDX(4,0,0,0,0);
@@ -1776,9 +1781,8 @@ namespace casa{
 				     const Bool aTermOn)
   {
     LogIO log_l(LogOrigin("AWConvFunc", "makeConvFunction2[R&D]"));
-    Int convSize, convSampling, polInUse;
+    Int convSize, convSampling;//, polInUse;
     Array<Complex> convFunc_l, convWeights_l;
-    Double cfRefFreq=-1, freqScale=1e8;
     //  
     // Get the coordinate system
     //
@@ -1786,7 +1790,7 @@ namespace casa{
     PagedImage<Complex> image_l(uvGridDiskImage);//cfs2.getCacheDir()+"/uvgrid.im");
     CoordinateSystem coords(image_l.coordinates());
     
-    Int nx=image_l.shape()(0);//, ny=image.shape()(1);
+    //Int nx=image_l.shape()(0);//, ny=image.shape()(1);
     CountedPtr<CFBuffer> cfb_p, cfwtb_p;
     
     IPosition cfsShape = cfs2.getShape();

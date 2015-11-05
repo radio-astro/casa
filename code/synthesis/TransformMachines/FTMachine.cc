@@ -78,7 +78,7 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   
-  FTMachine::FTMachine() : image(0), uvwMachine_p(0), 
+  FTMachine::FTMachine() : isDryRun(False), image(0), uvwMachine_p(0), 
 			   tangentSpecified_p(False), fixMovingSource_p(False),
 			   distance_p(0.0), lastFieldId_p(-1),lastMSId_p(-1), 
 			   useDoubleGrid_p(False), 
@@ -86,8 +86,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			   freqInterpMethod_p(InterpolateArray1D<Double,Complex>::nearestNeighbour), 
 			   pointingDirCol_p("DIRECTION"),
 			   cfStokes_p(), cfCache_p(), cfs_p(), cfwts_p(), cfs2_p(), cfwts2_p(),
-			   canComputeResiduals_p(False), numthreads_p(-1), pbLimit_p(0.05),sj_p(0), 
-			   cmplxImage_p( ), isDryRun(False)
+			   canComputeResiduals_p(False), numthreads_p(-1),pbLimit_p(0.05), 
+			   sj_p(0),cmplxImage_p()
   {
     spectralCoord_p=SpectralCoordinate();
     isIOnly=False;
@@ -98,7 +98,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   
   FTMachine::FTMachine(CountedPtr<CFCache>& cfcache,CountedPtr<ConvolutionFunction>& cf):
-    image(0), uvwMachine_p(0), 
+    isDryRun(False), image(0), uvwMachine_p(0), 
     tangentSpecified_p(False), fixMovingSource_p(False),
     distance_p(0.0), lastFieldId_p(-1),lastMSId_p(-1), 
     useDoubleGrid_p(False), 
@@ -107,7 +107,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     pointingDirCol_p("DIRECTION"),
     cfStokes_p(), cfCache_p(cfcache), cfs_p(), cfwts_p(), cfs2_p(), cfwts2_p(),
     convFuncCtor_p(cf),canComputeResiduals_p(False), toVis_p(True), numthreads_p(-1), 
-    pbLimit_p(0.05),sj_p(0), cmplxImage_p( ), isDryRun(False)
+    pbLimit_p(0.05),sj_p(0),cmplxImage_p( )
   {
     spectralCoord_p=SpectralCoordinate();
     isIOnly=False;
@@ -2150,7 +2150,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   
 
-  void FTMachine::setCFCache(CountedPtr<CFCache>& cfc, const Bool loadCFC) 
+  void FTMachine::setCFCache(CountedPtr<CFCache>& /*cfc*/, const Bool /*loadCFC*/) 
   {
     throw(AipsError("FTMachine::setCFCache() directly called!"));
   }

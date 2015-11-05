@@ -62,8 +62,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO log_l(LogOrigin("AWProjectWBFTNew", "ftWeightImage[R&D]"));
     if (wtImageFTDone_p) return;
 
-    Bool doSumWtNorm=True;
-    if (sumWt.shape().nelements()==0) doSumWtNorm=False;
+    // Bool doSumWtNorm=True;
+    // if (sumWt.shape().nelements()==0) doSumWtNorm=False;
 
     if ((sumWt.shape().nelements() < 2) || 
 	(sumWt.shape()(0) != wtImage.shape()(2)) || 
@@ -122,12 +122,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for(wtImIter.reset(); !wtImIter.atEnd(); wtImIter++)
       {
 	Int pol_l=wtImIter.position()(2), chan_l=wtImIter.position()(3);
-	Double sumwt_l=1.0;;
+	pol_l=pol_l; chan_l=chan_l; // Dummy statements to supress silly compiler warnings
 	// Lets write some mildly obfuscated code ~[8-)
 	//if ((sensitivityPatternQualifier_p == -1) && (doSumWtNorm))
 	//  sumwt_l = ((sumwt_l = getSumOfCFWeights()(pol_l,chan_l))==0)?1.0:sumwt_l;
 
-	sumwt_l = getSumOfCFWeights()(pol_l,chan_l);
+	//sumwt_l = getSumOfCFWeights()(pol_l,chan_l);
 
 	wtImIter.rwCursor() = (wtImIter.rwCursor()
 			       *Float(sizeX)*Float(sizeY)

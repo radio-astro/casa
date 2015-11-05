@@ -31,6 +31,7 @@
 #include <synthesis/TransformMachines/SynthesisError.h>
 #include <synthesis/TransformMachines/Utils.h>
 #include <msvis/MSVis/AsynchronousTools.h>
+#include <casa/Quanta/MVTime.h>
 #include <fstream>
 
 namespace casa{
@@ -122,6 +123,7 @@ namespace casa{
     vbRow2CFBMap_p.resize(nRow);
     Quantity pa(getPA(vbs),"rad");
     PolOuterProduct outerProduct;
+    Int statusCode=CFDefs::MEMCACHE;
     for (Int irow=0;irow<nRow;irow++)
       {
 	//
@@ -143,15 +145,29 @@ namespace casa{
 	  }
 	catch (CFNotCached& x)
 	  {
-	    log_l << "CFs not cached for " << pa.getValue("deg") << " deg, dPA = " << dPA.getValue("deg") 
-		  << " Ant1Type, Ant2Type = " << ant1Type << "," << ant2Type << LogIO::POST;
-	    return CFDefs::NOTCACHED;
+	    log_l << "CFs not cached for " << pa.getValue("deg") 
+		  << " deg, dPA = " << dPA.getValue("deg") 
+		  << " Field ID = " << vbs.fieldId()
+		  << " TimeStamps(0-10) = " << vbs.feed_pa(getCurrentTimeStamp(vbs)).nelements() << " ";
+	    for (Int i=0;i<10;i++) 
+	      {
+		//		log_l << MVTime(vbs.time()(i)).string(MVTime::TIME) << " ";
+		log_l << vbs.time()(i)/1.0e8 << " ";
+		log_l << "(" << (vbs.feed_pa(getCurrentTimeStamp(vbs))(i))*57.2956 << ") ";
+	      }
+	    log_l << " Ant1Type, Ant2Type = " << ant1Type << "," << ant2Type << LogIO::POST;
+	    statusCode=CFDefs::NOTCACHED;
 	  }
 
-	cfb_l->setPointingOffset(pointingOffset);
-	vbRow2CFBMap_p(irow) = cfb_l;
-
-
+	if (statusCode==CFDefs::NOTCACHED)
+	  {
+	    break;
+	  }
+	else
+	  {
+	    cfb_l->setPointingOffset(pointingOffset);
+	    vbRow2CFBMap_p(irow) = cfb_l;
+	  }
 
 	/*
 	//
@@ -194,7 +210,7 @@ namespace casa{
 	  }
 	*/
       }
-    return CFDefs::MEMCACHE;
+    return statusCode;
   }
 
 };// end namespace casa

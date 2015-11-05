@@ -210,12 +210,12 @@ namespace casa{
 
     String telescopeName=vb.msColumns().observation().telescopeName().getColumn()[0];
 
-    Float Freq, freqLo, freqHi;
+    Float freqHi;
     Vector<Double> chanFreq = vb.frequency();
 
     freqHi = max(chanFreq);
-    freqLo = min(chanFreq);
-    Freq   = freqHi;
+    //freqLo = min(chanFreq);
+    //Freq   = freqHi;
 
     regridAperture(skyCS, skyShape, uvGrid, telescopeName, MVFrequency(freqHi), 
 		   pa, doSquint, bandID);

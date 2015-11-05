@@ -256,6 +256,7 @@ namespace casa{
   {
     LogOrigin logOrigin("CFCache", "fillCFListFromDisk");
     LogIO log_l(logOrigin);
+    (void)showInfo;
     Bool selectPA = (fabs(selectPAVal) <= 360.0);
     try
       {
@@ -979,7 +980,8 @@ namespace casa{
 
     Vector<Int> xconvSupport,yconvSupport;;
     Vector<Float> convSampling;
-    Double cfRefFreq; CoordinateSystem coordSys;
+    //Double cfRefFreq; 
+    CoordinateSystem coordSys;
     Array<Complex> cfBuf;
     Float samplingFromMisc, paFromMisc;
     if (Dir.length() == 0) 
@@ -1028,7 +1030,7 @@ namespace casa{
 	    coordSys = tmp.coordinates();
 	    SpectralCoordinate spCS = coordSys.spectralCoordinate(index);
 
-	    cfRefFreq=spCS.referenceValue()(0);
+	    //cfRefFreq=spCS.referenceValue()(0);
 	
 	    polInUse = tmp.shape()(2);
 	    IPosition ts=tmp.shape(),ndx(4,0,0,0,0),ts2(4,0,0,0,0);

@@ -37,7 +37,6 @@
   Float  *samplingPtr;
   Double *offPtr;
   Bool dummy;
-
   //  gridPtr       = grid.getStorage(dummy);
   cfPtr         = convFuncV;
   phaseGradPtr  = cached_phaseGrad_p.getStorage(dummy);
@@ -50,6 +49,10 @@
   tilocPtr      = tiloc.getStorage(dummy);
   offPtr        = off.getStorage(dummy);
   convOriginPtr = convOrigin.getStorage(dummy);
+  (void)cfPtr;
+  (void)ilocPtr;
+  (void)tilocPtr;
+
   Int finitePointingOffsets_int = (finitePointingOffsets?1:0),
     psfOnly_int = (psfOnly?1:0);
   Int cf0=cfShape(0), cf1=cfShape(1), cf2=cfShape(2), cf3=cfShape(3);

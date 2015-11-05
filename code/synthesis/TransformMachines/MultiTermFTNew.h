@@ -173,7 +173,7 @@ public:
   {
     isDryRun=val;
     //cerr << "MTFTMN: " << isDryRun << endl;
-    for (Int i=0;i<subftms_p.nelements();i++)
+    for (uInt i=0;i<subftms_p.nelements();i++)
       subftms_p[i]->setDryRun(val);
   };
   virtual Bool isUsingCFCache() {Bool v=False; if (subftms_p.nelements() > 0) v=subftms_p[0]->isUsingCFCache(); return v;};

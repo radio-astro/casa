@@ -584,7 +584,7 @@ namespace casa{
     calcAntenna *a;
     Double dir[3] = {0.0, 0.0, 1.0};
     Double sub_h, feed_x, feed_y, feed_z, thmax, ftaper;
-    char geomfile[128], *feedfile;
+    char geomfile[128];//, *feedfile;
     BeamCalcGeometry *geom;
     Int i;
     Double x, freq, df;
@@ -601,7 +601,7 @@ namespace casa{
     feed_x = geom->feedpos[0]; feed_x = -feed_x;
     feed_y = geom->feedpos[1];
     feed_z = geom->feedpos[2];
-    feedfile = 0;
+    //feedfile = 0;
     thmax = geom->subangle;
     
     freq = ap->freq;
@@ -625,20 +625,20 @@ namespace casa{
     /* feed pattern file is two column text file containing 
      * angle (in degrees) and power (in dBi) 
      */
-    /* 
-       if(feedfile != 0)
-       {
-       Double scale;
-       scale = getKeyValueDouble(kv, "feedpatternscale");
-       if(!Antennasetfeedpattern(a, feedfile, scale)) 
-       {
-       deleteAntenna(a);
-       fprintf(stderr, "Problem with feed file <%s>\n",
-       feedfile);
-       return 0;
-       }
-       }
-    */	
+
+    // if(feedfile != 0)
+    //   {
+    // 	Double scale;
+    // 	scale = getKeyValueDouble(kv, "feedpatternscale");
+    // 	if(!Antennasetfeedpattern(a, feedfile, scale)) 
+    // 	  {
+    // 	    deleteAntenna(a);
+    // 	    fprintf(stderr, "Problem with feed file <%s>\n",
+    // 		    feedfile);
+    // 	    return 0;
+    // 	  }
+    //   }
+
     Antennasetfreq(a, ap->freq);
     
     a->legwidth = geom->legwidth;
@@ -1308,7 +1308,7 @@ namespace casa{
     l1[0] = l1[1] = 0.0;
     l1[2] = a->legapex;
     phi = atan2(r0[1], r0[0]);
-    
+    phi=phi;
     for(n = 0; n < 4; n++)
       {
 	theta = thetalut[n];
@@ -1368,7 +1368,7 @@ namespace casa{
     l1[0] = l1[1] = 0.0;
     l1[2] = a->legapex;
     phi = atan2(r0[1], r0[0]);
-    
+    phi=phi;
     for(n = 0; n < 4; n++)
       {
 	theta = thetalut[n];
@@ -1425,7 +1425,7 @@ namespace casa{
     Complex Er[3], El[3];
     Complex Pr[2], Pl[2]; 
     Complex q[2];
-    Double dx, dy, x0, y0, Rhole, Rant, R2, H2, eps;
+    //Double dx, dy, Rhole, Rant, x0, y0, R2, H2, eps;
     Complex rr, rl, lr, ll, tmp;
     Double L0, phase;
     Double sp, cp;
@@ -1434,7 +1434,7 @@ namespace casa{
     Pathology *p;
     Int nx, ny, os;
     Int i, j;
-    Double pac, pas; /* parallactic angle cosine / sine */
+    //Double pac, pas; /* parallactic angle cosine / sine */
     Complex Iota; Iota=Complex(0,1);
 
     //UNUSED: Complex E1[3];
@@ -1454,8 +1454,8 @@ namespace casa{
       deleteRay(tmpRay);
     }
     
-    pac = cos(ap->pa+M_PI/2);
-    pas = sin(ap->pa+M_PI/2);
+    //pac = cos(ap->pa+M_PI/2);
+    //pas = sin(ap->pa+M_PI/2);
 
     if(obsName_p=="EVLA" || obsName_p=="VLA"){
       /* compute polarization vectors in circular basis */
@@ -1493,16 +1493,16 @@ namespace casa{
     os = ap->oversamp;
     nx = ap->nx*os;
     ny = ap->ny*os;
-    dx = ap->dx/os;
-    dy = ap->dy/os;
-    x0 = ap->x0 - ap->dx/2.0 + dx/2.0;
-    y0 = ap->y0 - ap->dy/2.0 + dy/2.0;
-    Rant = a->radius;
-    Rhole = a->hole_radius;
-    R2 = Rant*Rant;
-    H2 = Rhole*Rhole;
+    //dx = ap->dx/os;
+    //dy = ap->dy/os;
+    //x0 = ap->x0 - ap->dx/2.0 + dx/2.0;
+    //y0 = ap->y0 - ap->dy/2.0 + dy/2.0;
+    //Rant = a->radius;
+    //Rhole = a->hole_radius;
+    //R2 = Rant*Rant;
+    //H2 = Rhole*Rhole;
     
-    eps = dx/4.0;
+    //eps = dx/4.0;
     
     IPosition pos(4);
     //    shape = ap->aperture->shape();
@@ -1545,12 +1545,14 @@ namespace casa{
     Complex fp, Exr, Eyr, Exl, Eyl;
     //    Complex Er[3], El[3];
     Complex E1[3];
-    Double dx, dy, x0, y0, x, y, r2, Rhole, Rant, R2, H2, eps;
+    Double dx, dy, Rant, x0, y0, x, y, r2, R2, H2, eps, Rhole;
     Complex rr, rl, lr, ll, tmp;
     Double L, amp, dP, dA, dO, x1, y1, dx1, dy1, dx2, dy2, phase;
-    Int nx, ny, os;
+    //Int nx, ny;
+    Int os;
     Int niter=6;
-    Double pac, pas, cp,sp; /* parallactic angle cosine / sine */
+    Double pac, pas;
+    Double cp,sp; /* parallactic angle cosine / sine */
     Complex Iota; Iota=Complex(0,1);
     IPosition pos(4);pos=0;
 
@@ -1558,8 +1560,8 @@ namespace casa{
     /* determine parallactic angle rotated coordinates */
     
     os = ap->oversamp;
-    nx = ap->nx*os;
-    ny = ap->ny*os;
+    //nx = ap->nx*os;
+    //ny = ap->ny*os;
     dx = ap->dx/os;
     dy = ap->dy/os;
     x0 = ap->x0 - ap->dx/2.0 + dx/2.0;
@@ -1570,9 +1572,9 @@ namespace casa{
     H2 = Rhole*Rhole;
     //   for(Int i=0; i < nx; ++i)
      {
-      eps = dx/4.0;
-      pac = cos(ap->pa+M_PI/2);
-      pas = sin(ap->pa+M_PI/2);
+       eps = dx/4.0;
+       pac = cos(ap->pa+M_PI/2);
+       pas = sin(ap->pa+M_PI/2);
       
       x = pac*(x0 + i*dx) - pas*(y0 + j*dy);
       y = pas*(x0 + i*dx) + pac*(y0 + j*dy);
@@ -1686,7 +1688,7 @@ namespace casa{
     Complex Er[3], El[3];
     Complex Pr[2], Pl[2]; 
     Complex q[2];
-    Double dx, dy, x0, y0, Rhole, Rant, R2, H2, eps;
+    //Double dx, dy, Rhole, Rant;//x0, y0, R2, H2, eps;
     Complex rr, rl, lr, ll, tmp;
     Double L0, phase;
     Double sp, cp;
@@ -1695,7 +1697,7 @@ namespace casa{
     Pathology *p;
     Int nx, ny, os;
     Int i, j;
-    Double pac, pas; /* parallactic angle cosine / sine */
+    //Double pac, pas; /* parallactic angle cosine / sine */
     Complex Iota; Iota=Complex(0,1);
 
     //UNUSED: Complex E1[3];
@@ -1715,8 +1717,8 @@ namespace casa{
       deleteRay(tmpRay);
     }
     
-    pac = cos(ap->pa+M_PI/2);
-    pas = sin(ap->pa+M_PI/2);
+    //pac = cos(ap->pa+M_PI/2);
+    //pas = sin(ap->pa+M_PI/2);
 
     if(obsName_p=="EVLA" || obsName_p=="VLA"){
       /* compute polarization vectors in circular basis */
@@ -1759,16 +1761,16 @@ namespace casa{
     os = ap->oversamp;
     nx = ap->nx*os;
     ny = ap->ny*os;
-    dx = ap->dx/os;
-    dy = ap->dy/os;
-    x0 = ap->x0 - ap->dx/2.0 + dx/2.0;
-    y0 = ap->y0 - ap->dy/2.0 + dy/2.0;
-    Rant = a->radius;
-    Rhole = a->hole_radius;
-    R2 = Rant*Rant;
-    H2 = Rhole*Rhole;
+    // dx = ap->dx/os;
+    // dy = ap->dy/os;
+    //x0 = ap->x0 - ap->dx/2.0 + dx/2.0;
+    //y0 = ap->y0 - ap->dy/2.0 + dy/2.0;
+    // Rant = a->radius;
+    // Rhole = a->hole_radius;
+    //R2 = Rant*Rant;
+    //H2 = Rhole*Rhole;
     
-    eps = dx/4.0;
+    //eps = dx/4.0;
     
     IPosition pos(4);
     //    shape = ap->aperture->shape();
@@ -1819,7 +1821,8 @@ namespace casa{
     Double dx, dy, x0, y0, x, y, r2, Rhole, Rant, R2, H2, eps;
     Complex rr, rl, lr, ll, tmp;
     Double L, amp, dP, dA, dO, x1, y1, dx1, dy1, dx2, dy2, phase;
-    Int nx, ny, os;
+    //Int nx, ny;
+    Int os;
     Int niter=6;
     Double pac, pas, cp,sp; /* parallactic angle cosine / sine */
     Complex Iota; Iota=Complex(0,1);
@@ -1829,8 +1832,8 @@ namespace casa{
     /* determine parallactic angle rotated coordinates */
     
     os = ap->oversamp;
-    nx = ap->nx*os;
-    ny = ap->ny*os;
+    //nx = ap->nx*os;
+    //ny = ap->ny*os;
     dx = ap->dx/os;
     dy = ap->dy/os;
     x0 = ap->x0 - ap->dx/2.0 + dx/2.0;
@@ -1966,14 +1969,14 @@ namespace casa{
   {
     Complex Ex[3], Ey[3];
     Complex Px[2], Py[2]; 
-    Double dx, dy, x0, y0, Rhole, Rant, R2, H2, eps;
+    //Double dx, dy, Rhole, Rant;//x0, y0, R2, H2, eps;
     Double L0;
     calcAntenna *a;
     Pathology *p;
     Int nx, ny, os;
     Int i, j;
-    Double pac, pas; /* parallactic angle cosine / sine */
-    Complex Iota=Complex(0,1);
+    //Double pac, pas; /* parallactic angle cosine / sine */
+    //    Complex Iota=Complex(0,1);
 
 
     a = newAntennafromApertureCalcParams(ap);
@@ -1987,8 +1990,8 @@ namespace casa{
       deleteRay(tmpRay);
     }
     
-    pac = cos(ap->pa+M_PI/2);
-    pas = sin(ap->pa+M_PI/2);
+    //pac = cos(ap->pa+M_PI/2);
+    //pas = sin(ap->pa+M_PI/2);
 
     /* in linear basis */
     Px[0] = 0.0; Px[1] = 1.0;
@@ -2029,16 +2032,16 @@ namespace casa{
     os = ap->oversamp;
     nx = ap->nx*os;
     ny = ap->ny*os;
-    dx = ap->dx/os;
-    dy = ap->dy/os;
-    x0 = ap->x0 - ap->dx/2.0 + dx/2.0;
-    y0 = ap->y0 - ap->dy/2.0 + dy/2.0;
-    Rant = a->radius;
-    Rhole = a->hole_radius;
-    R2 = Rant*Rant;
-    H2 = Rhole*Rhole;
+    // dx = ap->dx/os;
+    // dy = ap->dy/os;
+    //x0 = ap->x0 - ap->dx/2.0 + dx/2.0;
+    //y0 = ap->y0 - ap->dy/2.0 + dy/2.0;
+    // Rant = a->radius;
+    // Rhole = a->hole_radius;
+    //R2 = Rant*Rant;
+    //H2 = Rhole*Rhole;
     
-    eps = dx/4.0;
+    //eps = dx/4.0;
     
     // cerr << "max threads " << omp_get_max_threads() 
     // 	 << " threads available " << omp_get_num_threads() 
@@ -2085,7 +2088,8 @@ namespace casa{
     Double dx, dy, x0, y0, x, y, r2, Rhole, Rant, R2, H2, eps;
     Complex xx, xy, yx, yy, tmp;
     Double L, amp, dP, dA, dO, x1, y1, dx1, dy1, dx2, dy2, phase;
-    Int nx, ny, os;
+    //Int nx, ny;
+    Int os;
     Int niter=6;
     Double pac, pas, cp,sp; /* parallactic angle cosine / sine */
     Complex Iota; Iota=Complex(0,1);
@@ -2095,8 +2099,8 @@ namespace casa{
     /* determine parallactic angle rotated coordinates */
     
     os = ap->oversamp;
-    nx = ap->nx*os;
-    ny = ap->ny*os;
+    //nx = ap->nx*os;
+    //ny = ap->ny*os;
     dx = ap->dx/os;
     dy = ap->dy/os;
     x0 = ap->x0 - ap->dx/2.0 + dx/2.0;

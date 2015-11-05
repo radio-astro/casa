@@ -248,7 +248,7 @@ namespace casa{
 #ifdef _OPENMP
     Nth=max(omp_get_max_threads()-2,1);
 #endif
-
+    Nth = Nth;
 
     const Int* scaledSupport_ptr=scaledSupport.getStorage(Dummy);
     const Float *scaledSampling_ptr=scaledSampling.getStorage(Dummy);
@@ -406,7 +406,7 @@ namespace casa{
 					Bool /*useConjFreqCF*/)
   {
     LogIO log_l(LogOrigin("AWVisResampler[R&D]","DataToGridImpl_p"));
-    Int nDataChan, nDataPol, nGridPol, nGridChan, nx, ny, nw, nCFFreq;
+    Int nDataChan, nDataPol, nGridPol, nGridChan, nx, ny, nw;//, nCFFreq;
     Int targetIMChan, targetIMPol, rbeg, rend;//, PolnPlane, ConjPlane;
     Int startChan, endChan;
     
@@ -473,7 +473,7 @@ namespace casa{
     runTimeG1_p += timer_p.real();
 
     nw = wVals.nelements();
-    nCFFreq = fVals.nelements()-1;
+    //nCFFreq = fVals.nelements()-1;
     iloc = 0;
 
     // timer.mark();
@@ -656,7 +656,7 @@ runTimeG7_p += timer_p.real();
   //
   void AWVisResampler::GridToData(VBStore& vbs, const Array<Complex>& grid)
   {
-    Int nDataChan, nDataPol, nGridPol, nGridChan, nx, ny,nw, nCFFreq;
+    Int nDataChan, nDataPol, nGridPol, nGridChan, nx, ny,nw;//, nCFFreq;
     Int achan, apol, rbeg, rend;//, PolnPlane, ConjPlane;
     Vector<Float> sampling(2);//scaledSampling(2);
     Vector<Int> support(2),loc(3), iloc(4),tiloc(4);// scaledSupport(2);
@@ -724,7 +724,7 @@ runTimeG7_p += timer_p.real();
 	Double fIncr, wIncr;
 	cfb.getCoordList(fVals,wVals,mNdx, mVals, conjMNdx, conjMVals, fIncr, wIncr);
 	nw = wVals.nelements();
-	nCFFreq = fVals.nelements()-1;
+	//	nCFFreq = fVals.nelements()-1;
 	
 	for (Int ichan=0; ichan < nDataChan; ichan++) {
 	  achan=chanMap_p[ichan];

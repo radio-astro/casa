@@ -126,7 +126,7 @@ namespace casa{
     telescopeName_p=telescopeNames[0];
   }
 
-  Int ALMAAperture::getBandID(const Double& freq, const String& telescopeName)
+  Int ALMAAperture::getBandID(const Double& freq, const String& /*telescopeName*/)
   {
     Int bandID = -1;
     if(haveCannedResponses_p){
@@ -172,9 +172,9 @@ namespace casa{
     // return bandID;
   }
   
-  void ALMAAperture::makeFullJones(ImageInterface<Complex>& pbImage,
-				   const VisBuffer& vb,
-				   Bool doSquint, Int& bandID, Double freqVal)
+  void ALMAAperture::makeFullJones(ImageInterface<Complex>& /*pbImage*/,
+				   const VisBuffer& /*vb*/,
+				   Bool /*doSquint*/, Int& /*bandID*/, Double /*freqVal*/)
   {
     throw(AipsError("ALMAAperture::makeJones() not yet implemented"));
   }
