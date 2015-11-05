@@ -235,6 +235,7 @@ class FieldVsTimeChart(object):
     _intent_colours = {'AMPLITUDE'  : 'green',
                        'ATMOSPHERE' : 'magenta',
                        'BANDPASS'   : 'red',
+                       'CHECK'      : 'purple',
                        'PHASE'      : 'cyan',
                        'POINTING'   : 'yellow',
                        'SIDEBAND'   : 'orange',
@@ -410,14 +411,15 @@ class IntentVsTimeChartInputs(basetask.StandardInputs):
 class IntentVsTimeChart(object):
     Inputs = IntentVsTimeChartInputs
 
-    _intent_colours = {'AMPLITUDE'  : ('green', 15),
-                       'ATMOSPHERE' : ('magenta', 20),
-                       'BANDPASS'   : ('red', 10),
+    _intent_colours = {'AMPLITUDE'  : ('green', 20),
+                       'ATMOSPHERE' : ('magenta', 25),
+                       'BANDPASS'   : ('red', 15),
+                       'CHECK'      : ('purple',10),
                        'PHASE'      : ('cyan', 5),
-                       'POINTING'   : ('yellow', 25),
-                       'SIDEBAND'   : ('orange', 30),
+                       'POINTING'   : ('yellow', 30),
+                       'SIDEBAND'   : ('orange', 35),
                        'TARGET'     : ('blue', 0),
-                       'WVR'        : ('lime', 35)}
+                       'WVR'        : ('lime', 40)}
     
     def __init__(self, inputs):
         self.inputs = inputs
@@ -447,8 +449,8 @@ class IntentVsTimeChart(object):
                 ax.annotate('%s' % scan.id, (scan_start, scan_y+6))
     
         ax.set_ylim(0, 42.5)
-        ax.set_yticks([2.5,7.5,12.5,17.5,22.5,27.5,32.5,37.5])
-        ax.set_yticklabels(['SCIENCE', 'PHASE', 'BANDPASS', 'AMPLITUDE',
+        ax.set_yticks([2.5,7.5,12.5,17.5,22.5,27.5,32.5,37.5,42.5])
+        ax.set_yticklabels(['SCIENCE', 'PHASE', 'CHECK', 'BANDPASS', 'AMPLITUDE',
           'ATMOSPHERE', 'POINTING', 'SIDEBAND', 'WVR'])
 
         # set the labelling of the time axis
