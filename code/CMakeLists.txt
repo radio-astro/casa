@@ -61,7 +61,11 @@ set( CASA_API_VERSION "${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_
 ###
 ### default name for casa-maintained dbus C++ library... (but could also be called just "dbus-cpp")
 ###
-set( dbus-cpp-library-name casa-dbus-cpp )
+if( APPLE )
+    set( dbus-cpp-library-name casa-dbus-cpp )
+else( )
+    set( dbus-cpp-library-name casa-dbus-cpp casa-dbus )
+endif( )
 ###
 ### by default, look for Qt4 in the standard places... (with casa01-* RPMs and linux, we avoid system places)...
 ###
@@ -363,7 +367,11 @@ if( APPLE )
             set( dbus-arch-path-guess ${dbus-root-path}/lib/dbus-1.0 )
         endif( )
         if( EXISTS ${dbus-root-path}/lib/libdbus-cpp.dylib )
-            set( dbus-cpp-library-name dbus-cpp )
+            if( APPLE )
+                set( dbus-cpp-library-name dbus-cpp )
+            else( )
+                set( dbus-cpp-library-name casa-dbus-cpp casa-dbus )
+            endif( )
         endif( )
     endif( )
 
@@ -1019,7 +1027,7 @@ endif()
 
 find_package(
   Qt4 ${qt4-version}
-  COMPONENTS QtCore QtGui QtDBus QtXml QtUiTools ) #QtOpenGL )
+  COMPONENTS QtCore QtGui QtDBus QtXml QtUiTools QtSvg ) #QtOpenGL )
 
 if( NOT QT4_FOUND )
   message( FATAL_ERROR "Qt4 could not be found. Please check!" )
@@ -1031,7 +1039,7 @@ set( QT4_LIBRARIES
   ${QT_QTCORE_LIBRARY} 
   ${QT_QTGUI_LIBRARY} 
   ${QT_QTDBUS_LIBRARY} 
-  ${QT_QTXML_LIBRARY} ${QT_QTUITOOLS_LIBRARY}
+  ${QT_QTXML_LIBRARY} ${QT_QTUITOOLS_LIBRARY} ${QT_QTSVG_LIBRARY}
   # ${QT_QTOPENGL_LIBRARY}
   CACHE FILEPATH "QT4 libraries" FORCE )
 list( REMOVE_ITEM QT4_LIBRARIES "optimized" )

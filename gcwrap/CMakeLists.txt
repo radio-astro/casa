@@ -1083,7 +1083,7 @@ endif()
 
 find_package(
   Qt4 4.3.4
-  COMPONENTS QtCore QtGui QtDBus QtXml QtUiTools ) #QtOpenGL )
+  COMPONENTS QtCore QtGui QtDBus QtXml QtUiTools QtSvg ) #QtOpenGL )
 
 if( NOT QT4_FOUND )
   message( FATAL_ERROR "Qt4 could not be found. Please check!" )
