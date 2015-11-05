@@ -905,7 +905,7 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
         std::vector<std::vector<double> > ffpar_mtx_tmp(num_pol);
         std::vector<std::vector<uInt> > masklist_mtx_tmp(num_pol);
         std::vector<std::vector<double> > coeff_mtx_tmp(num_pol);
-        Array<Float> rms_mtx(IPosition(2, num_pol, 1), ArrayInitPolicy::NO_INIT);
+        Array<Float> rms_mtx(IPosition(2, num_pol, 1), (Float)0);
         Array<Float> cthres_mtx(IPosition(2, num_pol, 1), ArrayInitPolicy::NO_INIT);
         Array<uInt> citer_mtx(IPosition(2, num_pol, 1), ArrayInitPolicy::NO_INIT);
         Array<Bool> uself_mtx(IPosition(2, num_pol, 1), ArrayInitPolicy::NO_INIT);
