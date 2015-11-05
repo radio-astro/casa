@@ -103,9 +103,18 @@ AnnotationBase::AnnotationBase(
 		! csys.hasDirectionCoordinate(),
 		"Coordinate system has no direction coordinate"
 	);
+	const uInt *oname;
+	Int nall, nex;
+	const auto *tname = MDirection::allMyTypes(nall, nex, oname);
+	// Because MDirection::getType() only does minimal match, bogus strings
+	// can tacitly be let through, so we do a more rigorous check here.
+	ThrowIf(
+		find( tname, tname+nall, dirRefFrameString) == tname+nall,
+		"Unknown direction reference frame '" + dirRefFrameString + "'"
+	);
 	ThrowIf (
 		! MDirection::getType(_directionRefFrame, dirRefFrameString),
-		"Unknown coordinate frame " + dirRefFrameString
+		"Unknown direction reference frame " + dirRefFrameString
 	);
 	setFrequencyLimits(
 		beginFreq, endFreq, freqRefFrame,

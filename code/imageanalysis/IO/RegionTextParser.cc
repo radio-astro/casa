@@ -256,14 +256,14 @@ void RegionTextParser::_parse(const String& contents, const String& fileDesc) {
 				consumeMe, preamble
 			);
 			map<AnnotationBase::Keyword, String> gParms;
-			for (
-				auto iter=newParams.begin();
-				iter != newParams.end(); ++iter
-			) {
-				gParms[iter->first] = iter->second.stringVal;
+			for (const auto& p: newParams) {
+				gParms[p.first] = p.second.stringVal;
 			}
 			_addLine(AsciiAnnotationFileLine(gParms));
-			if (_csys.hasSpectralAxis() && spectralParmsUpdated) {
+			if (
+				_csys.hasSpectralAxis() && spectralParmsUpdated
+				&& newParams.find(AnnotationBase::RANGE) != newParams.end()
+			) {
 				qFreqs = _quantitiesFromFrequencyString(
 					newParams[AnnotationBase::RANGE].stringVal, preamble
 				);
@@ -553,7 +553,7 @@ AnnotationBase::Type RegionTextParser::_getAnnotationType(
 		}
 		break;
 	default:
-		throw AipsError(
+		ThrowCc(
 			preamble + "Unable to determine annotation type"
 		);
 	}
@@ -569,7 +569,7 @@ RegionTextParser::ParamSet RegionTextParser::getParamSet(
 ) {
 	ParamSet parms;
 	spectralParmsUpdated = False;
-	/*String*/ auto consumeMe = text;
+	auto consumeMe = text;
 	// get key-value pairs on the line
 	while (consumeMe.size() > 0) {
 		ParamValue paramValue;
@@ -582,8 +582,8 @@ RegionTextParser::ParamSet RegionTextParser::getParamSet(
 			preamble + "Illegal extra characters on line ("
 				+ consumeMe + "). Did you forget a '='?"
 		);
-		/*uInt*/ const auto equalPos = consumeMe.find('=');
-		/*String*/ auto keyword = consumeMe.substr(0, equalPos);
+		const auto equalPos = consumeMe.find('=');
+		auto keyword = consumeMe.substr(0, equalPos);
 		keyword.trim();
 		keyword.downcase();
 		consumeMe.del(0, (Int)equalPos + 1);
@@ -758,18 +758,14 @@ RegionTextParser::_getCurrentParamSet(
 	Bool& spectralParmsUpdated, ParamSet& newParams,
 	String& consumeMe, const String& preamble
 ) const {
-	/*ParamSet*/ auto currentParams = _currentGlobals;
+	auto currentParams = _currentGlobals;
 	newParams = getParamSet(
 		spectralParmsUpdated,
 		*_log, consumeMe, preamble, _csys, _overridingFreqRange,
 		_overridingCorrRange
 	);
-	/*ParamSet::const_iterator*/ auto end = newParams.cend();
-	for (
-		/*ParamSet::const_iterator */ auto iter=newParams.cbegin();
-		iter!=end; ++iter
-	) {
-		currentParams[iter->first] = iter->second;
+	for (const auto& p: newParams) {
+		currentParams[p.first] = p.second;
 	}
 	ThrowIf(
 		currentParams.find(AnnotationBase::RANGE) == currentParams.end()
@@ -1073,7 +1069,7 @@ String RegionTextParser::_getKeyValue(
 			ostringstream err;
 			err << preamble << "Unmatched open bracket: "
 				<< consumeMe;
-			throw AipsError(err.str());
+			ThrowCc(err.str());
 		}
 		Int closeBracketPos = consumeMe.find("]");
 		// don't save the open and close brackets
