@@ -23,7 +23,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: findContinuum.py,v 1.24 2015/10/24 19:05:32 we Exp $" 
+    myversion = "$Id: findContinuum.py,v 1.25 2015/11/04 19:28:53 we Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -108,7 +108,7 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
         results = getImageInfo(img)
         if results == None: return results
         bmaj, bmin, bpa, cdelt1, cdelt2, naxis1, naxis2, freq = results
-        nchan, firstFreq, lastFreq = numberOfChannelsInCube(img, returnFreqs=True)
+        nchan = numberOfChannelsInCube(img)
         npixels = float(nchan)*naxis1*naxis2
         maxpixels = float(1024)*1024*960
         if (npixels > maxpixels):
@@ -405,9 +405,8 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
     pl.setp(ax1.get_xticklabels(), fontsize=fontsize)
     pl.setp(ax1.get_yticklabels(), fontsize=fontsize)
     pl.setp(ax2.get_xticklabels(), fontsize=fontsize)
-    ax2.set_xbound(firstFreq*1e-9,lastFreq*1e-9)
+    ax2.set_xlim(firstFreq*1e-9,lastFreq*1e-9)
     freqRange = np.abs(lastFreq-firstFreq)
-#    print "freqRange = %f, lastFreq=%f, firstFreq=%f" % (freqRange, lastFreq, firstFreq)
     power = int(np.log10(freqRange))-9
     ax2.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(10**power))
     if (len(ax2.get_xticks()) < 2):
