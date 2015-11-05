@@ -1514,31 +1514,24 @@ void ImageFitter::_fitsky(
 				anyLT(errors, 0.0),
 				"At least one calculated error is less than zero"
 			);
-			result[j] = SkyComponentFactory::encodeSkyComponent(
-				*_getLog(), facToJy, allAxesSubImage, modelType,
-				solution, stokes, xIsLong, deconvolveIt, beam
-			);
+			try {
+			    result[j] = SkyComponentFactory::encodeSkyComponent(
+			        *_getLog(), facToJy, allAxesSubImage, modelType,
+			        solution, stokes, xIsLong, deconvolveIt, beam
+			    );
+			}
+			catch (const AipsError& x) {
+			    ostringstream os;
+			    os << "Fit converged but transforming fit in pixel to world coordinates failed. "
+			        << "Fit may be nonsensical, especially if any of the following fitted values "
+			        << "are extremely large: " << solution
+			        << ". The lower level exception message is "
+			        << x.getMesg();
+			    ThrowCc(os.str());
+			}
 			String error;
 			Record r;
 			result[j].flux().toRecord(error, r);
-			/*
-			 // this was the old way of determining errors, which in some cases
-			 // was defective
-            try {
-                _encodeSkyComponentError(
-				    result[j], facToJy, allAxesSubImage.coordinates(),
-				    solution, errors, stokes, xIsLong
-			    );
-            }
-            catch (const AipsError& x) {
-                ThrowCc(
-                	"POTENTIAL DEFECT: Fitter converged but exception caught in post processing. "
-                    "This may be a bug. Contact us with the image and the input parameters "
-                    "you used and we will have a look. The exception message was "
-                	+ x.getMesg()
-                );
-            }
-            */
 			_curConvolvedList.add(result[j]);
 			if (doDeconvolved) {
 				_curDeconvolvedList.add(result[j].copy());
