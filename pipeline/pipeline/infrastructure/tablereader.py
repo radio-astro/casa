@@ -147,7 +147,7 @@ class MeasurementSetReader(object):
                 continue
         
             # Expected format is something like ALMA_RB_03#BB_1#SW-01#FULL_RES
-            m = re.match(r'ALMA_RB_(?P<band>\d+)', spw.name)
+            m = re.search(r'ALMA_RB_(?P<band>\d+)', spw.name)
             if m:
                 band_str = m.groupdict()['band']
                 band_num = int(band_str)
