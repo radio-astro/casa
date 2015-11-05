@@ -305,7 +305,7 @@ class rg_fromtextfile_test(unittest.TestCase):
         # no comma delimiters should throw exception
         self.assertRaises(
             Exception, rg.fromtext,
-            "global coord=B1950 frame=LSRK veltype=RADIO restfreq=1.42140575e+09Hz"
+            "global coord=B1950 frame=LSRK veltype=RADIO restfreq=1.42040575e+09Hz"
             + "\nbox [[0pix,0pix], [19pix,19pix]], range=[1140km/s, 1142km/s]",
             csys = self.ia.coordsys().torecord(), shape=self.ia.shape()
         )
@@ -314,15 +314,25 @@ class rg_fromtextfile_test(unittest.TestCase):
             + "\nbox [[0pix,0pix], [19pix,19pix]], range=[1140km/s, 1142km/s]",
             csys = self.ia.coordsys().torecord(), shape=self.ia.shape()
         )
-        
+        # different global rest freq
+        reg4 = rg.fromtext(
+            "global coord=J2000, frame=LSRK, veltype=RADIO, restfreq=1.42050575e+09Hz"
+            + "\nbox [[0pix,0pix], [19pix,19pix]], range=[1140km/s, 1142km/s]",
+            csys = self.ia.coordsys().torecord(), shape=self.ia.shape()
+        )
         stats0 = self.ia.statistics(region=reg)
         stats1 = self.ia.statistics(region=reg1)
         stats3 = self.ia.statistics(region=reg3)
+        stats4 = self.ia.statistics(region=reg4)
 
         self.ia.done()
         for k in ('maxpos', 'minpos'):
             self.assertTrue((stats0[k] == stats1[k]).all())
             self.assertTrue((stats0[k] == stats3[k]).all())
+            # different rest freq used, so the positions will not
+            # be the same
+            self.assertTrue((stats0[k] != stats4[k]).any())
+
 
 def suite():
     return [rg_fromtextfile_test]
