@@ -301,12 +301,28 @@ class rg_fromtextfile_test(unittest.TestCase):
         reg1 = rg.fromtext(
             "box [[0pix,0pix], [19pix,19pix]], range=[1140km/s, 1142km/s]",
             csys = self.ia.coordsys().torecord(), shape=self.ia.shape()
+        )        
+        # no comma delimiters should throw exception
+        self.assertRaises(
+            Exception, rg.fromtext,
+            "global coord=B1950 frame=LSRK veltype=RADIO restfreq=1.42140575e+09Hz"
+            + "\nbox [[0pix,0pix], [19pix,19pix]], range=[1140km/s, 1142km/s]",
+            csys = self.ia.coordsys().torecord(), shape=self.ia.shape()
         )
+        reg3 = rg.fromtext(
+            "global coord=J2000, frame=LSRK, veltype=RADIO, restfreq=1.42040575e+09Hz"
+            + "\nbox [[0pix,0pix], [19pix,19pix]], range=[1140km/s, 1142km/s]",
+            csys = self.ia.coordsys().torecord(), shape=self.ia.shape()
+        )
+        
         stats0 = self.ia.statistics(region=reg)
         stats1 = self.ia.statistics(region=reg1)
+        stats3 = self.ia.statistics(region=reg3)
+
         self.ia.done()
         for k in ('maxpos', 'minpos'):
             self.assertTrue((stats0[k] == stats1[k]).all())
+            self.assertTrue((stats0[k] == stats3[k]).all())
 
 def suite():
     return [rg_fromtextfile_test]
