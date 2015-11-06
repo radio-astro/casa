@@ -538,6 +538,7 @@ class AmpVsUVSummaryChart(SpwSummaryChart):
                      'avgtime'     : '',
                      'avgscan'     : False,
                      'avgbaseline' : False,
+                     'avgchannel'  : '9000',
                      'plotrange'   : [0, 0, 0, 0],
                      'coloraxis'   : 'corr',
                      'overwrite'   : True}
@@ -558,6 +559,7 @@ class AmpVsUVBasebandSummaryChart(BasebandSummaryChart):
                      'avgtime'     : '',
                      'avgscan'     : False,
                      'avgbaseline' : False,
+                     'avgchannel'  : '9000',
                      'plotrange'   : [0, 0, 0, 0],
                      'coloraxis'   : 'corr',
                      'overwrite'   : True}
@@ -577,6 +579,7 @@ class PhaseVsUVSummaryChart(SpwSummaryChart):
                      'avgtime'     : '',
                      'avgscan'     : False,
                      'avgbaseline' : False,
+                     'avgchannel'  : '9000',
                      'coloraxis'   : 'corr',
                      'plotrange'   : [0, 0, -90, 90],
                      'overwrite'   : True}
@@ -751,6 +754,7 @@ class AmpVsUVDetailChart(FieldSpwAntDetailChart):
                      'avgtime'     : '',
                      'avgscan'     : False,
                      'avgbaseline' : False,
+                     'avgchannel'  : '9000',
                      'plotrange'   : [0, 0, 0, 0],
                      'coloraxis'   : 'corr',
                      'overwrite'   : True}
@@ -770,6 +774,7 @@ class PhaseVsUVDetailChart(SpwAntDetailChart):
                      'avgtime'     : '',
                      'avgscan'     : False,
                      'avgbaseline' : False,
+                     'avgchannel'  : '9000',
                      'coloraxis'   : 'corr',
                      'plotrange'   : [0, 0, -180, 180],
                      'overwrite'   : True}
