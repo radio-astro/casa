@@ -870,9 +870,9 @@ String AnnotationBase::lineStyleToString(
 	case DOT_DASHED: return "-.";
 	case DOTTED: return ":";
 	default:
-		throw AipsError(
+		ThrowCc(
 			"Logic error: No string representation for LineStyle "
-			+ style
+			+ String::toString(style)
 		);
 	}
 }
