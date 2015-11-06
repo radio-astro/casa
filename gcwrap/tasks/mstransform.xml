@@ -218,7 +218,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
    
     <!-- REGRID MS parameters -->
     <param type="bool" name="regridms">
-        <description>Regrid the MS to a new spw, channel structure or frame.</description>
+        <description>Transform channel labels and visibilities to a different spectral reference frame. Notice that u,v,w data is not transformed. </description>
         <value>False</value>
     </param>
 
@@ -624,7 +624,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         default: False
 
 --- Regrid parameters ---
-    regridms -- Regrid the MS to a new spw, channel structure or frame.
+    regridms -- Transform channel labels and visibilities to a different spectral reference frame. 
+                Notice that u,v,w data is not transformed. 
         default: False
 
         mode -- Regridding mode.

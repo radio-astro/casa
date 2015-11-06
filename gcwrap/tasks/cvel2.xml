@@ -438,10 +438,12 @@ NOTE:
                   new channel 2 contains channels (13,15)
                   new channel 3 contains channels (21,23)
 
-    phasecenter -- direction measure  or fieldid for the mosaic center
-               default: '' =&gt; first field selected ; example: phasecenter=6
-               or phasecenter='J2000 19h30m00 -40d00m00'
-
+    phasecenter -- Direction measure  or fieldid. To be used in mosaics to indicate
+               the center direction to be used in the spectral coordinate transformation.
+            default: '' (first selected field)
+            options: FIELD_ID (int) or center coordinate measure (str).
+            example: phasecenter=6 or phasecenter='J2000 19h30m00 -40d00m00'
+            
     restfreq -- Specify rest frequency to use for output image
                default='' Occasionally it is necessary to set this (for
                example some VLA spectral line data).  For example for
