@@ -248,8 +248,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		
 	
 		if (fileInfo.isFile()) {
-		  if(CasaImageOpener::imageType(pathname)==ImageOpener::IMAGECONCAT || ImageOpener::imageType(pathname)==ImageOpener::IMAGEEXPR)
-		     return "Image";
+			//Note:  Calling the CasaImageOpener can produce an AipsError if the file
+			//does not have proper permissions.  Please see CAS-8068.
+			try {
+				if(CasaImageOpener::imageType(pathname)==ImageOpener::IMAGECONCAT || ImageOpener::imageType(pathname)==ImageOpener::IMAGEEXPR){
+					return "Image";
+				}
+			}
+			catch( AipsError& /*err*/ ){
+				//qDebug()<<"Error determining image type: "<<err.getMesg().c_str();
+				//Type is determined correctly below.
+			}
 			QFile file(pathName);
 			if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
 				char buf[10240];
@@ -274,8 +283,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				return "DS9 Region File";
 
 		} else if (fileInfo.isDir()) {	// Directory
-		  if(CasaImageOpener::imageType(pathname)==ImageOpener::IMAGECONCAT)
-		  return "Image";
+			//Note:  Calling the CasaImageOpener can throw an AIPS error if the
+			//directory/file does not have proper permissions.  Please see CAS-8068.
+			try {
+				if(CasaImageOpener::imageType(pathname)==ImageOpener::IMAGECONCAT){
+					return "Image";
+				}
+			}
+			catch( AipsError& /*error*/ ){
+				//qDebug()<<"Error determining image type: "<<error.getMesg().c_str();
+				//The file type is determined correctly below.
+			}
 
 			QFileInfo tab(pathName + "/table.dat");
 
