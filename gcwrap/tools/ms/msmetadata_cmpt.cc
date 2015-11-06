@@ -44,6 +44,8 @@
 #include <ms/MSOper/MSMetaData.h>
 #include <ms/MSOper/MSKeys.h>
 
+#include <msvis/MSVis/MSChecker.h>
+
 #include <algorithm>
 #include <boost/regex.hpp>
 
@@ -1156,6 +1158,8 @@ void msmetadata::_init(const casa::MeasurementSet *const &ms, const float caches
 bool msmetadata::open(const string& msname, const float cachesize) {
 	_FUNC2(
 		_ms.reset(new MeasurementSet(msname));
+		MSChecker msChecker(*_ms);
+		msChecker.checkReferentialIntegrity();
 		_init(_ms.get(), cachesize);
 		return true;
 	)

@@ -889,10 +889,13 @@ the ms definition itself. -->
        <param type="bool" direction="in" name="lock">
 	 <description>lock the table for exclusive use by this tool</description>
 	 <value>false</value>
-       </param>
-     </input>
+       </param> 
+     <param type="bool" name="check">
+        <description>Run additional internal integrity checks on the MS.</description>
+        <value>false</value>
+     </param>
+    </input>
      <returns type="bool"/>
-
      <description>
        Use this function when you have detached (using the
        <link anchor="ms:ms.close.function">close</link> function) the ms tool from a
@@ -900,6 +903,9 @@ the ms definition itself. -->
        set table.  <!-- This is quicker than destroying the ms tool with the
 			<link anchor="ms:ms.done.function">done</link> function and starting up a new one as
 			the server does not have to be restarted.-->
+			
+	   If check=true, additional referential integrity checks on the MS are run. If any of these
+	   fail, an exception is thrown and the MS is not open (since it is not a valid MS).
      </description>
      <example>
     

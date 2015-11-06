@@ -53,6 +53,7 @@
 #include <measures/Measures/MeasTable.h>
 
 #include <msvis/MSVis/MSAnalysis.h>
+#include <msvis/MSVis/MSChecker.h>
 #include <msvis/MSVis/MSContinuumSubtractor.h>
 #include <msvis/MSVis/Partition.h>
 #include <msvis/MSVis/Reweighter.h>
@@ -317,7 +318,7 @@ ms::iswritable()
 }
 
 bool
-ms::open(const std::string& thems, const bool nomodify, const bool lock)
+ms::open(const std::string& thems, bool nomodify, bool lock, bool check)
 {
 	try {
 		*itsLog << LogOrigin("ms", "open");
@@ -331,6 +332,10 @@ ms::open(const std::string& thems, const bool nomodify, const bool lock)
 			close();
 		}
 		*itsMS = MeasurementSet(thems, tl, openOption);
+		if (check) {
+			MSChecker msChecker(*itsMS);
+			msChecker.checkReferentialIntegrity();
+		}
 		*itsOriginalMS = MeasurementSet(*itsMS);
 		//
 		// itsSel and itsFlag were not being reset by using the set commands so

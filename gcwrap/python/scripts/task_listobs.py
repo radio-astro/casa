@@ -33,7 +33,7 @@ def listobs(
     try:
         myms = mstool()
         if (type(vis) == str) & os.path.exists(vis):
-            myms.open(thems=vis)
+            myms.open(thems=vis, check=True)
         else:
             raise Exception, \
                 'Visibility data set not found - please verify the name'

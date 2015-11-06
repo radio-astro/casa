@@ -77,6 +77,9 @@ import numpy
 datadir = os.environ.get('CASAPATH').split()[0]+'/data/'
 fixture = datadir + 'regression/unittest/MSMetaData/MSMetaData.ms'
 
+writeable = datadir + 'regression/unittest/MSMetaData/checker.ms'
+
+
 def near(a, b, epsilon):
     return abs((a-b)/max(a,b)) <= epsilon
 
@@ -1728,5 +1731,46 @@ class msmd_test(unittest.TestCase):
             else:
                 self.assertFalse(res)
     
+    def test_CAS7986(self):
+        """Verify datasets with referential integrity issues cause errors"""
+        myms = mstool()
+        mymsmd = msmdtool()
+        mytb = tbtool()
+        vis = "cas7986.ms"
+        def allgood():
+            if (os.path.exists(vis)):
+                shutil.rmtree(vis)
+            shutil.copytree(writeable, vis)
+            self.assertTrue(myms.open(vis))
+            self.assertTrue(myms.open(vis, check=True))
+            myms.done()
+            self.assertTrue(mymsmd.open(vis))
+            mymsmd.done()
+        
+        allgood()    
+         
+        def dobad(colname):
+            mytb.open(vis, nomodify=False)
+            mytb.putcell(colname, 20, 9)
+            mytb.done()
+            self.assertTrue(myms.open(vis))
+            self.assertRaises(
+                Exception, myms.open, vis, check=True
+            )
+            myms.done()
+            self.assertRaises(
+                Exception, mymsmd.open, vis
+            )
+            mymsmd.done() 
+
+        # insert a bad antenna
+        dobad("ANTENNA1")
+        allgood()
+        dobad("ANTENNA2")
+        allgood()
+        dobad("DATA_DESC_ID")
+        allgood()
+        dobad("FIELD_ID")
+        
 def suite():
     return [msmd_test]
