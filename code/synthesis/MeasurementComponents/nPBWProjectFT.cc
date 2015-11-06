@@ -684,10 +684,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for(ndx(2)=0;ndx(2)<NAnt;ndx(2)++)
       {
 	ndx1=ndx;
-	ndx(0)=0;ndx1(0)=0;	//tmp=l_off(ndx)  = pointingOffsets(ndx1);//Axis_0,Pol_0,Ant_i
-	ndx(0)=1;ndx1(0)=1;	//tmp=l_off(ndx)  = pointingOffsets(ndx1);//Axis_0,Pol_1,Ant_i
-	ndx(0)=0;ndx1(0)=2;	//tmp=m_off(ndx)  = pointingOffsets(ndx1);//Axis_1,Pol_0,Ant_i
-	ndx(0)=1;ndx1(0)=3;	//tmp=m_off(ndx)  = pointingOffsets(ndx1);//Axis_1,Pol_1,Ant_i
+	ndx(0)=0;ndx1(0)=0;	l_off(ndx)  = pointingOffsets(ndx1);//Axis_0,Pol_0,Ant_i
+	ndx(0)=1;ndx1(0)=1;	l_off(ndx)  = pointingOffsets(ndx1);//Axis_0,Pol_1,Ant_i
+	ndx(0)=0;ndx1(0)=2;	m_off(ndx)  = pointingOffsets(ndx1);//Axis_1,Pol_0,Ant_i
+	ndx(0)=1;ndx1(0)=3;	m_off(ndx)  = pointingOffsets(ndx1);//Axis_1,Pol_1,Ant_i
       }
 
 //     l_off  = pointingOffsets(IPosition(3,0,0,0),IPosition(3,0,0,NAnt));
@@ -1040,7 +1040,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  Array<Float> fbuf;
 	  Array<Complex> cbuf;
 	  isRefF=theavgPB.get(fbuf);
-	  //isRefC=localTwoDPB.get(cbuf);
+	  //isRefC=
+	  localTwoDPB.get(cbuf);
 	  
 	  IPosition fs(fbuf.shape());
 	  {
