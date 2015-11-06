@@ -32,6 +32,7 @@ casa_add_library( msvis
   MSVis/LayeredVi2Factory.cc
   MSVis/MSAnalysis.cc
   MSVis/MSCalEnums.cc
+  MSVis/MSChecker.cc
   MSVis/MSContinuumSubtractor.cc
   MSVis/MSUVWGenerator.cc
   MSVis/MSUtil.cc
@@ -122,6 +123,7 @@ install (FILES
 	MSVis/LayeredVi2Factory.h
 	MSVis/MSAnalysis.h
 	MSVis/MSCalEnums.h
+	MSVis/MSChecker.h
 	MSVis/MSContinuumSubtractor.h
 	MSVis/MSMoments.h
 	MSVis/MSMoments.tcc
