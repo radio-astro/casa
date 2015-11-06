@@ -998,10 +998,14 @@ class simutil:
             # ALMA-40.00.00.00-001-A-SPE.pdf
             # http://www.eso.org/sci/facilities/alma/system/frontend/
 
-            # limits instead of centers, go to higher band in gaps
-            f0=[31.3,45,84,116,163,211,275,373,500,720]
+            # lower limits 
+#           f0=[ 31, 67, 84, 125, 162, 211, 275, 385, 602, 787, 950] 
+            # go to higher band in gaps
+            f0=[ 31, 45, 84, 116, 162, 211, 275, 373, 500, 720, 950] 
+            # 80% spec
+#           t0=[ 17, 30, 37, 51, 65, 83, 147, 196, 175, 230]
             # cycle 1 OT values 7/12
-            t0=[ 17, 30, 45, 51, 65, 55, 75, 196, 100, 230]
+            t0=[ 17, 30, 45, 51, 65, 55,  75, 196, 100, 230]
 
             flim=[31.3,950]
             if self.verbose: self.msg("using ALMA/ACA Rx specs",origin="noisetemp")
@@ -1044,14 +1048,17 @@ class simutil:
         obsfreq=freq_ghz.get("value")        
         # z=pl.where(abs(obsfreq-pl.array(f0)) == min(abs(obsfreq-pl.array(f0))))
         # t_rx=t0[z[0]]
-        z=0
-        while(f0[z]<obsfreq and z<len(t0)):
-            z+=1
-        t_rx=t0[z-1]
         
         if obsfreq<flim[0]:
+            t_rx=t0[0]
             self.msg("observing freqency is lower than expected for "+telescope,priority="warn",origin="noise")
             self.msg("proceeding with extrapolated receiver temp="+str(t_rx),priority="warn",origin="noise")
+        else:
+            z=0
+            while(f0[z]<obsfreq and z<len(t0)):
+                z+=1
+            t_rx=t0[z-1]
+
         if obsfreq>flim[1]:
             self.msg("observing freqency is higher than expected for "+telescope,priority="warn",origin="noise")
             self.msg("proceeding with extrapolated receiver temp="+str(t_rx),priority="warn",origin="noise")
