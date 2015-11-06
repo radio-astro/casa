@@ -268,7 +268,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         </param>
 
         <param type="any" name="phasecenter" subparam="true">
-            <description>Image phase center: position or field index.</description>
+            <description>Phase center direction to be used for the spectral coordinate transformation: position or field index</description>
             <any type="variant"/>
             <value type="string"></value>
         </param>
@@ -670,11 +670,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             default: 'linear'
             options: 'nearest', 'cubic', 'spline', 'fftshift'
 
-        phasecenter -- Direction measure or FIELD_ID for the mosaic center.
+        phasecenter -- Direction measure  or fieldid. To be used in mosaics to indicate
+               the center direction to be used in the spectral coordinate transformation.
             default: '' (first selected field)
-            options: FIELD_ID (int) or center coordinate (str).
-            NOTE: As int, it gives the FIELD ID for the mosaic center. If a string,
-                  it gives the center coordinate, e.g. 'J2000 12h56m43.88s +21d41m00.1s'.                   
+            options: FIELD_ID (int) or center coordinate measure (str).
+            example: phasecenter=6 or phasecenter='J2000 19h30m00 -40d00m00'
 
         restfreq -- Specify rest frequency to use for output.
             default: ''; occasionally it is necessary to set this.

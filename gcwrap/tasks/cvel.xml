@@ -127,7 +127,7 @@ Hanning smoothing may not be necessary.
         </param>
 
         <param type="any" name="phasecenter">
-	    <description>Image phase center: position or field index</description>
+	    <description>Phase center direction to be used for the spectral coordinate transformation: position or field index</description>
 	    <any type="variant"/>
 	    <value type="string"></value>
         </param>
@@ -365,7 +365,8 @@ Hanning smoothing may not be necessary.
                   new channel 2 contains channels (13,15)
                   new channel 3 contains channels (21,23)
 
-      phasecenter -- direction measure  or fieldid for the mosaic center
+      phasecenter -- Direction measure  or fieldid. To be used in mosaics to indicate
+               the center direction to be used in the spectral coordinate transformation.
                default: '' =&gt; first field selected ; example: phasecenter=6
                or phasecenter='J2000 19h30m00 -40d00m00'
 
