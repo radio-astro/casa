@@ -1006,7 +1006,9 @@ class test_cube(testref_base):
                         'desc':'channel, start=%s, default width, channel gap (10-11) LSRK' % 4},
                      # stride > 1
                      22:{'imagename':'Cubetest_st4stride2','spw':'0:0~10^2','start':0,'width':'','outframe':'LSRK','veltype':'radio', 'interpolation':'nearest',
-                        'desc':'channel, start=%s, default width, step=2 LSRK nearest' % 0}
+                        'desc':'channel, start=%s, default width, step=2 LSRK nearest' % 0},
+                     23:{'imagename':'Cubetest_defstspwchansel4','spw':'0:4~13','start':'','width':'','outframe':'TOPO','veltype':'radio',
+                        'desc':'spw with channel selection( 0:4~13 ), default start, LSRK nearest'}
                     }
           
 #          self.test_cube_0.__func__.__doc__ %=self.testList[0]['desc']
@@ -1353,6 +1355,19 @@ class test_cube(testref_base):
           imval=[(self.img+self.testList[testid]['imagename']+'.image',1.5000546,
           [50,50,0,0])])
           self.checkspecframe(self.img+self.testList[testid]['imagename']+'.image','LSRK',0.999988750387e9)
+
+     def test_cube_23(self):
+          """ [cube] Test_Cube_23  """
+          testid=23
+          print " : " , self.testList[testid]['desc']
+          self.prepData('refim_point.ms')
+          ret = self.run_cubetclean(testid)
+
+          self.assertTrue(os.path.exists(self.img+self.testList[testid]['imagename']+'.psf') and os.path.exists(self.img+self.testList[testid]['imagename']+'.residual') )
+          self.checkall(imexist=[self.img+self.testList[testid]['imagename']+'.image'],
+          imval=[(self.img+self.testList[testid]['imagename']+'.image',1.2500156,
+          [50,50,0,0])])
+          self.checkspecframe(self.img+self.testList[testid]['imagename']+'.image','TOPO',1.20e9)
 
      def test_cube_D1(self):
           """ [cube] Test_Cube_D1 : specmode cubedata - No runtime doppler corrections """
