@@ -1629,8 +1629,6 @@ class ImagerParameters():
             ### Check for name increments 
             #if self.reusename == False:
 
-            #### MPIInterface related changes
-#            if self.allimpars['0']['overwrite'] == False:   # Later, can change this to be field dependent too.
             if self.allimpars['0']['overwrite'] == False:   # Later, can change this to be field dependent too.
                 ## Get a list of image names for all fields (to sync name increment ids across fields)
                 inpnamelist={}
@@ -1645,9 +1643,6 @@ class ImagerParameters():
                     for immod in self.allimpars.keys() :
                         self.allimpars[immod]['imagename'] = newnamelist[immod]
                 
-#                newname = self.incrementImageName( inpname )
-#                self.allimpars[immod]['imagename'] = newname
-
     def checkAndFixIterationPars(self ):
         errs=""
 

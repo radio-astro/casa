@@ -235,6 +235,7 @@ protected:
   String itsImageName;
   CoordinateSystem itsCoordSys;
 
+  Bool itsOverWrite;
   Bool itsUseWeight;
   Record itsMiscInfo;
   SHARED_PTR<ImageInterface<Float> > itsMask, itsParentMask, itsGridWt, itsPB; // mutliterm shares this...

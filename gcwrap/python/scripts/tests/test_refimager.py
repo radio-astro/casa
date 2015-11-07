@@ -62,7 +62,7 @@ import inspect
 ## List to be run
 def suite():
 #     return [test_onefield, test_iterbot, test_multifield,test_stokes, test_modelvis]
-     return [test_onefield, test_iterbot, test_multifield,test_stokes, test_modelvis, test_cube, test_mask, test_widefield]
+     return [test_onefield, test_iterbot, test_multifield,test_stokes, test_modelvis, test_cube, test_mask, test_startmodel]
 #     return [test_onefield, test_iterbot, test_multifield,test_stokes,test_cube, test_widefield,test_mask, test_modelvis,test_startmodel,test_widefield_failing]
 
 refdatapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/refimager/'
@@ -667,14 +667,14 @@ class test_iterbot(testref_base):
           """ [iterbot] : test_iterbot_deconvolvers : Do all minor cycle algorithms respond in the same way to iteration controls ? No ! """
           # clark and hogbom reach niter first, but multiscale gets to cyclethreshold first. Check peakres and iterdone.
           self.prepData('refim_twochan.ms')
-          ret1 = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10,threshold='0.1Jy', interactive=0,deconvolver='clark')
-          self.checkall(ret=ret1, peakres=0.3922, modflux=0.732, iterdone=10, nmajordone=2,imexist=[self.img+'.psf', self.img+'.residual', self.img+'.image'])
+          ret1 = tclean(vis=self.msfile,imagename=self.img+'1',imsize=100,cell='8.0arcsec',niter=10,threshold='0.1Jy', interactive=0,deconvolver='clark')
+          self.checkall(ret=ret1, peakres=0.3922, modflux=0.732, iterdone=10, nmajordone=2,imexist=[self.img+'1.psf', self.img+'1.residual', self.img+'1.image'])
 
-          ret2 = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10,threshold='0.1Jy', interactive=0,deconvolver='hogbom')
-          self.checkall(ret=ret2, peakres=0.148, modflux=1.008, iterdone=10, nmajordone=2,imexist=[self.img+'.psf', self.img+'.residual', self.img+'.image'])
+          ret2 = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',niter=10,threshold='0.1Jy', interactive=0,deconvolver='hogbom')
+          self.checkall(ret=ret2, peakres=0.3530, modflux=0.7719, iterdone=10, nmajordone=2,imexist=[self.img+'2.psf', self.img+'2.residual', self.img+'2.image'])
 
-          ret3 = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10,threshold='0.1Jy', interactive=0,deconvolver='multiscale')
-          self.checkall(ret=ret3, peakres=0.0984, modflux=1.096, iterdone=8, nmajordone=2,imexist=[self.img+'.psf', self.img+'.residual', self.img+'.image'])
+          ret3 = tclean(vis=self.msfile,imagename=self.img+'3',imsize=100,cell='8.0arcsec',niter=10,threshold='0.1Jy', interactive=0,deconvolver='multiscale')
+          self.checkall(ret=ret3, peakres=0.4358, modflux=0.7327, iterdone=10, nmajordone=2,imexist=[self.img+'3.psf', self.img+'3.residual', self.img+'3.image'])
      
           
 ##############################################
@@ -1440,7 +1440,7 @@ class test_mask(testref_base):
           self.write_file(self.img+'.mask.txt', '#CRTFv0 CASA Region Text Format version 0\n'+mstr+'\n')
           ret1 = tclean(vis=self.msfile,imagename=self.img+'1',imsize=100,cell='8.0arcsec',niter=10,deconvolver='hogbom',interactive=0,mask=self.img+'.mask.txt')
           ret2 = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',niter=10,deconvolver='hogbom',interactive=0,mask=mstr)
-          self.checkall(imexist=[self.img+'1.mask', self.img+'2.mask'], imval=[(self.img+'1.mask',0.0,[50,50,0,0]),(self.img+'1.mask',1.0,[50,80,0,0]),(self.img+'2.mask',0.0,[50,50,0,0]),(self.img+'2.mask',0.0,[50,80,0,0])])
+          self.checkall(imexist=[self.img+'1.mask', self.img+'2.mask'], imval=[(self.img+'1.mask',0.0,[50,50,0,0]),(self.img+'1.mask',1.0,[50,80,0,0]),(self.img+'2.mask',0.0,[50,50,0,0]),(self.img+'2.mask',1.0,[50,80,0,0])])
 
      def test_mask_2(self):
           """ [mask] test_mask_2 :  Input mask as file and string : cube (few channels) """
@@ -1770,22 +1770,53 @@ class test_modelvis(testref_base):
           ## cannot check anything here....  just that it runs without error
 
 class test_startmodel(testref_base):
-     def test_startmodel_12(self):
-          """ [modelpredict] Test_startmodel_12 : Regrid input model onto new image grid : mfs (ra/dec) """
+#     def test_startmodel_12(self):
+#          """ [modelpredict] Test_startmodel_12 : Regrid input model onto new image grid : mfs (ra/dec) """
 
-     def test_startmodel_13(self):
-          """ [modelpredict] Test_startmodel_13 : Regrid input model onto new image grid : cube (ra/dec/specframe)"""
+#     def test_startmodel_13(self):
+#          """ [modelpredict] Test_startmodel_13 : Regrid input model onto new image grid : cube (ra/dec/specframe)"""
 
-     def test_startmodel_14(self):
-          """ [modelpredict] Test_startmodel_14 : Regrid input model onto new image grid : mtmfs (ra/dec/terms)"""
+#     def test_startmodel_14(self):
+#          """ [modelpredict] Test_startmodel_14 : Regrid input model onto new image grid : mtmfs (ra/dec/terms)"""
 
-     def test_startmodel_15(self):
-          """ [modelpredict] Test_startmodel_15 : Regrid input model onto new image grid : mfs (imsize/cell)"""
+#     def test_startmodel_15(self):
+#          """ [modelpredict] Test_startmodel_15 : Regrid input model onto new image grid : mfs (imsize/cell)"""
 
-     def test_startmodel_startmodel_mfs(self):
-          """ [startmodel] test_startmodel_mfs : Restart a run with existing 'startmodel'."""
+     def test_startmodel_mfs_restart_1(self):
+          """ [startmodel] test_startmodel_mfs : Restart a run with no parameter changes"""
+          self.prepData('refim_twochan.ms')
+          ret1 = tclean(vis=self.msfile,imagename=self.img+'1',imsize=100,cell='8.0arcsec',niter=10,deconvolver='hogbom',interactive=0)
+          self.checkall(imexist=[self.img+'1.residual'], imval=[(self.img+'1.residual',0.35304,[50,50,0,0])])
+          ret2 = tclean(vis=self.msfile,imagename=self.img+'1',imsize=100,cell='8.0arcsec',niter=10,deconvolver='hogbom',interactive=0)
+          self.checkall(imexist=[self.img+'1.residual'], imval=[(self.img+'1.residual',0.1259,[50,50,0,0])])
 
-     def test_startmodel_mfs_changeshape(self):
-          """ [startmodel] test_startmodel_mfs_changeshape : Restart a run with overwrite=T and change imshape"""
+     def test_startmodel_mfs_restart_2(self):
+          """ [startmodel] test_startmodel_mfs : Restart a run using 'startmodel' and changed imagename"""
+          self.prepData('refim_twochan.ms')
+          ret1 = tclean(vis=self.msfile,imagename=self.img+'1',imsize=100,cell='8.0arcsec',niter=10,deconvolver='hogbom',interactive=0)
+          ret2 = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',niter=10,deconvolver='hogbom',interactive=0,startmodel=self.img+'1')
+          self.checkall(imexist=[self.img+'1.residual', self.img+'2.residual'], imval=[(self.img+'1.residual',0.35304,[50,50,0,0]),(self.img+'2.residual',0.1259,[50,50,0,0])])
+
+     def test_startmodel_mfs_changeshape_1(self):
+          """ [startmodel] test_startmodel_mfs_changeshape_1 : Restart a run but change shape only (cas-6937)"""
+          self.prepData('refim_twochan.ms')
+          ret1 = tclean(vis=self.msfile,imagename=self.img+'1',imsize=100,cell='8.0arcsec',niter=10,deconvolver='hogbom',interactive=0)
+          self.checkall(imexist=[self.img+'1.residual'], imval=[(self.img+'1.residual',0.35304,[50,50,0,0])])
+
+          try:
+               ## This run should fail with an exception
+               ret2 = tclean(vis=self.msfile,imagename=self.img+'1',imsize=120,cell='8.0arcsec',niter=10,deconvolver='hogbom',interactive=0)
+               correct=False
+          except Exception as e:
+              correct=True
+          self.assertTrue(correct)
+
+     def test_startmodel_mfs_changeshape_2(self):
+          """ [startmodel] test_startmodel_mfs_changeshape_2 : Restart a run using 'startmodel' and change shape and imagename"""
+          self.prepData('refim_twochan.ms')
+          ret1 = tclean(vis=self.msfile,imagename=self.img+'1',imsize=100,cell='8.0arcsec',niter=10,deconvolver='hogbom',interactive=0)
+          ret2 = tclean(vis=self.msfile,imagename=self.img+'2',imsize=120,cell='8.0arcsec',niter=10,deconvolver='hogbom',interactive=0,startmodel=self.img+'1')
+          self.checkall(imexist=[self.img+'1.residual', self.img+'2.residual'], imval=[(self.img+'1.residual',0.35304,[50,50,0,0]),(self.img+'2.residual',0.1259,[60,60,0,0])])
+
 
 ##############################################
