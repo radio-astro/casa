@@ -798,8 +798,8 @@ class NewMatrixFlaggerInputs(basetask.StandardInputs):
 
     def __init__(self, context, output_dir=None, vis=None, datatask=None,
         viewtask=None, flagsettertask=None, rules=None, niter=None, 
-        extendfields=None, iter_datatask=None, use_antenna_names=None,
-        prepend=''):
+        extendfields=None, extendbaseband=None, iter_datatask=None, 
+        use_antenna_names=None, prepend=''):
 
         # set the properties to the values given as input arguments
         self._init_properties(vars())
@@ -861,10 +861,16 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
 
         inputs = self.inputs
 
-        # Expand flag commands to larger scope, if requested
+        # Expand flag commands to larger scope, if requested, by removing selection in 
+        # specified fields
         if inputs.extendfields:
             LOG.info('%s flagcmds will be extended by removing selection in following fields: %s'
               % (inputs.prepend, inputs.extendfields))
+
+        # Expand flag commands to include all spws in a baseband, if requested
+        if inputs.extendfields:
+            LOG.info('%s flagcmds will be extended to include all spws within baseband.'
+              % (inputs.prepend))
 
         # Initialize flags, flag_reason, and iteration counter
         flags = []
@@ -1347,7 +1353,10 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
                           filename=table, rulename=rulename,
                           spw=spw, axisnames=[xtitle, ytitle],
                           flagcoords=flagcoord, pol=pol,
-                          antenna_id_to_name=antenna_id_to_name))
+                          extendfields=self.inputs.extendfields,
+                          extendbaseband=self.inputs.extendbaseband,
+                          antenna_id_to_name=antenna_id_to_name,
+                          vis=self.inputs.vis))
 
                     # Flag the view
                     flag[i2flag, j2flag] = True
@@ -1522,10 +1531,6 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
                             if len(valid_ant_data) < minsample:
                                 continue
 
-                            # TODO: remove next statement? Unused.
-                            #ant_data_median, ant_data_mad = \
-                            #  arrayflaggerbase.median_and_mad(valid_ant_data)
-
                             # find low outlier flags first
                             j_ant = np.arange(np.shape(ant_flag)[0])
                             j2flag_lo = j_ant[np.logical_and(data_median - ant_data > \
@@ -1623,9 +1628,7 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
                       [nchan/4,nchan/2-1],
                       [nchan/2,nchan*3/4-1],
                       [nchan*3/4,nchan-1]]
-                        
-                    #quadrant_len = nchan/4
-
+                    
                     for ant in range(nant):
                         # flag based on outliers in flag_copy, will set new flags
                         # in a further copy so that outlier flags are not corrupted

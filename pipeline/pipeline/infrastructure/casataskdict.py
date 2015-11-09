@@ -18,6 +18,7 @@ CasaTaskDict = {
                    'hif_findcont'          : 'FindCont',
                    'hif_flagcorrected'     : 'Flagcorrected',
                    'hif_gaincal'           : 'Gaincal',
+                   'hif_gainflag'          : 'Gainflag',
                    'hif_lowgainflag'       : 'Lowgainflag',
                    'hif_importdata'        : 'ImportData',
 		   'hif_makecleanlist'     : 'MakeCleanList', 
@@ -116,6 +117,7 @@ classToCASATask = {
     hif_tasks.Fluxcal                 : 'hif_fluxcal',
     hif_tasks.Fluxscale               : 'hif_fluxscale',
     hif_tasks.Gaincal                 : 'hif_gaincal',
+    hif_tasks.Gainflag                : 'hif_gainflag',
     hif_tasks.ImportData              : 'hif_importdata',
     hif_tasks.Lowgainflag             : 'hif_lowgainflag',
     hif_tasks.MakeCleanList           : 'hif_makecleanlist',
@@ -236,6 +238,16 @@ TASK_COMMENTS = {
         'gain on the bandpass calibrator.  First, temporary phase and '
         'bandpass solutions are calculated, and then that temporary bandpass '
         'is used to calculate a short solint phase and long solint amplitude '
+        'solution.'
+    ),
+    (hif_tasks.Gainflag,): (
+        'Sometimes antennas have significantly lower gain than nominal and/or'
+        'have a significantly larger spread in gain than nominal. Even '
+        'when calibrated, it is better for ALMA data to flag these antennas. '
+        'The pipeline detects this by calculating a short solint amplitude '
+        'gain on the bandpass calibrator.  First, temporary phase and '
+        'bandpass solutions are calculated, and then that temporary bandpass '
+        'is used to calculate a short solint phase and short solint amplitude '
         'solution.'
     ),
     (hif_tasks.Setjy,) : (

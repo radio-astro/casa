@@ -111,7 +111,7 @@ class FlagCmd(object):
     def __init__(self, filename=None, rulename=None, ruleaxis=None, spw=None,
       antenna=None, intent=None, pol=None, axisnames=None,
       flagcoords=None, channel_axis=None, reason=None,
-      extendfields=None, antenna_id_to_name=None):
+      extendfields=None, extendbaseband=None, antenna_id_to_name=None, vis=None):
         print 'FlagCmd intent=%s spw=%s antenna=%s axisnames=%s flagcoords=%s pol=%s reason=%s' % (
           intent, spw, antenna, axisnames, flagcoords, pol, reason)
 
@@ -127,7 +127,9 @@ class FlagCmd(object):
         self.channel_axis = channel_axis
         self.reason = reason
         self.extendfields = extendfields
+        self.extendbaseband = extendbaseband
         self.antenna_id_to_name = antenna_id_to_name
+        self.vis = vis
 
         # construct the corresponding flag command
         flagcmd = ""
@@ -146,8 +148,17 @@ class FlagCmd(object):
         #if pol is not None:
             #flagcmd += " correlation='%s'" % pol
 
+        # If specified, add spw to flagging command
         if spw is not None:
-            flagcmd += " spw='%s'" % spw
+            # If requested, expand current spw to all spws within the same baseband.
+            if extendbaseband:
+                with casatools.MSMDReader(self.vis) as msmdr:
+                    baseband = msmdr.baseband(spw=spw)
+                    bb_spws = msmdr.spwsforbaseband(baseband)                    
+                flagcmd += " spw='%s'" % ",".join(str(bb_spw) for bb_spw in bb_spws)
+            else:
+                flagcmd += " spw='%s'" % spw
+            
 
         # decode axisnames/flagcoords
         if axisnames is not None:
