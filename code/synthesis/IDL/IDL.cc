@@ -48,6 +48,8 @@ void idl_output(int flags, char* buf, int n) {
   else {
     os << LogIO::NORMAL << message << LogIO::POST;
   }
+#else
+  (void)flags;(void)buf;(void)n; // remove compiler warning
 #endif
 }
 
@@ -68,6 +70,7 @@ IDL::IDL(Int options)
   }
   IDL_ToutPush(idl_output);
 #else
+  (void) options;
   os << LogIO::SEVERE << "IDL processing is not available in this CASA installation." << LogIO::EXCEPTION;
 #endif
 }
@@ -118,6 +121,7 @@ Bool IDL::sendArray(const Array<Float>& a, String aname) {
   }
   return True;
 #else
+  (void) aname; (void)a;
   return False;
 #endif
 }
@@ -153,6 +157,7 @@ Array<Float> IDL::getArray(String aname) {
     os << LogIO::SEVERE << "IDL float array " << aname << " does not exist" << LogIO::EXCEPTION;
   }
 #else
+  (void) aname;
     os << LogIO::SEVERE << "IDL not enabled" << LogIO::EXCEPTION;
 #endif
   Array<Float> a;
@@ -182,6 +187,7 @@ Int IDL::getInt(String aname) {
 #ifdef HAVE_IDL_LIB
   return Int(getPointer(aname)->value.i);
 #else
+  (void) aname;
   return 0;
 #endif
 }
@@ -193,6 +199,7 @@ Float IDL::getFloat(String aname) {
 #ifdef HAVE_IDL_LIB
   return Int(getPointer(aname)->value.f);
 #else
+  (void) aname;
   return 0;
 #endif
 }
@@ -223,6 +230,8 @@ Bool IDL::runCommands(const Vector<String>& commands, Bool log) {
     os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
     return False;
   } 
+#else
+  (void)commands;(void)log;    
 #endif
   return False;
 }
@@ -242,6 +251,8 @@ Bool IDL::runCommand(const String& command, Bool log) {
     os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
     return False;
   } 
+#else
+  (void)command;(void)log;
 #endif
   return False;
 }
