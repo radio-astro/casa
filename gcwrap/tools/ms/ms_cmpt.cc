@@ -334,7 +334,13 @@ ms::open(const std::string& thems, bool nomodify, bool lock, bool check)
 		*itsMS = MeasurementSet(thems, tl, openOption);
 		if (check) {
 			MSChecker msChecker(*itsMS);
-			msChecker.checkReferentialIntegrity();
+			try {
+				msChecker.checkReferentialIntegrity();
+			}
+			catch(const AipsError& x) {
+				close();
+				RETHROW(x);
+			}
 		}
 		*itsOriginalMS = MeasurementSet(*itsMS);
 		//
@@ -358,7 +364,7 @@ ms::open(const std::string& thems, bool nomodify, bool lock, bool check)
 		itsSel->setMS(*itsMS);
 		itsFlag->setMSSelector(*itsSel);
 		doingIterations_p=False;
-	} catch (AipsError x) {
+	} catch (const AipsError& x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		Table::relinquishAutoLocks(True);
 		RETHROW(x);
