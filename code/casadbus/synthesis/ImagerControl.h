@@ -83,12 +83,16 @@ namespace casa {
 		    void changePauseFlag( const bool &state ) {
 #ifdef INTERACTIVE_ITERATION
 					edu::nrao::casa::SynthesisImager_proxy::changePauseFlag( state );
+#else
+					(void)state;
 #endif
 			}
 
 		    void changeStopFlag(const bool& state) {
 #ifdef INTERACTIVE_ITERATION
 					edu::nrao::casa::SynthesisImager_proxy::changeStopFlag( state );
+#else
+					(void)state;
 #endif
 			}
 
@@ -117,6 +121,8 @@ namespace casa {
 		    void controlUpdate(const std::map<std::string,dbus::variant>& newParams) {
 #ifdef INTERACTIVE_ITERATION
 				edu::nrao::casa::SynthesisImager_proxy::controlUpdate( dbus::fromStdMap(newParams) );
+#else
+				(void)newParams;
 #endif
 			}
 

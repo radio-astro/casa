@@ -181,6 +181,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     //need to  redo feather  application
     cweightApplied_p=False;
+    (void)retval; // avoid compiler warning
   }
 
   void Feather::setINTImage(const ImageInterface<Float>& INTImage){

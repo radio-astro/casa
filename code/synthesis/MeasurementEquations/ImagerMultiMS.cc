@@ -147,10 +147,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                                    const Bool useModel, 
 				   const Bool readonly){
     useModelCol_p=useModel;
-    Bool rd=readonly;
+    //    Bool rd=readonly;
     LogIO os(LogOrigin("imager", "setDataPerMS()"), logSink_p);
-    if(useModel) 
-      rd=True;
+    //    if(useModel) 
+    //      rd=True;
     if(!Table::isReadable(msname)){
       os << LogIO::SEVERE << "MeasurementSet " 
 	 << msname << " does not exist  " 

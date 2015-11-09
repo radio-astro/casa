@@ -4606,6 +4606,7 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
 	  FluxStandard::FluxScale fluxScaleEnum;
 	  matchedScale=FluxStandard::matchStandard(standard, fluxScaleEnum, 
 						   fluxScaleName);
+	  (void)matchedScale;
 	  FluxStandard fluxStd(fluxScaleEnum);
 	  Flux<Double> returnFlux, returnFluxErr;
 
@@ -4954,6 +4955,7 @@ Record Imager::setjy(const Vector<Int>& /*fieldid*/,
         foundSrc = sjy_computeFlux(os, fluxStd, returnFluxes, returnFluxErrs, tempCLs,
                                    fluxUsed, fluxScaleName, aveEpoch, mfreqs, model, fieldName,
                                    msselc, fldid, fieldDir, selToRawSpwIds, standard);
+	(void)foundSrc;
       }
       
       //*************** For loop about spw starts here ****************************

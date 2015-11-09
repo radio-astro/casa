@@ -289,15 +289,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				bool incrementController( )	{ return state->incrementController( ); }
 				bool decrementController( )	{ return state->decrementController( ); }
 
-				void interactionRequired( const bool &val ) {
+		  void interactionRequired( const bool &val ) {
 #ifdef INTERACTIVE_ITERATION
 					edu::nrao::casa::SynthesisImager_adaptor::interactionRequired( val );
+#else
+					(void)val;  // To get the compiler to not warn...
 #endif
 				}
 				void controlUpdate(const std::map< std::string, ::DBus::Variant >& newParams)
 											{
 #ifdef INTERACTIVE_ITERATION
 												state->controlUpdate(newParams);
+#else 
+												(void)newParams;// to avoid compiler warning
+											       
 #endif
 											}
 				void interactionComplete( )

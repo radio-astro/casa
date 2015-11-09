@@ -201,6 +201,7 @@ Bool PClarkCleanImageSkyModel::solve(SkyEquation& se) {
     rank = applicator.nextProcessDone(clarkClean, allDone);
   };
 
+  (void)rStat; // avoid compiler warning
   if (mask_sl_p != 0 )  delete mask_sl_p;
   os << "End parallel clean" << LogIO::NORMAL << LogIO::POST;
   return(rStat);

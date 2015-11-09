@@ -136,7 +136,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			     CoordinateSystem &imcoordsys, 
 			     IPosition imshape, 
 			     //			     const Int nfacets, 
-			     const Bool overwrite,
+			     const Bool /*overwrite*/,
 			     const Bool useweightimage)
   // TODO : Add parameter to indicate weight image shape. 
   {
@@ -1071,7 +1071,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
     
 
   }
-  void  SIImageStore::makePBImage(const Float pblimit)
+  void  SIImageStore::makePBImage(const Float /*pblimit*/)
   {
    LogIO os( LogOrigin("SIImageStore","makePBImage",WHERE) );
 
@@ -1265,7 +1265,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 		  LatticeExpr<Float> ratio( ( (*(modsubim)) * mask ) / ( deno + maskinv ) );
 		  
 		  IPosition ip(4,itsImageShape[0]/2,itsImageShape[1]/2,0,0);
-		  Float modval = modsubim->getAt(ip);
+		  ///		  Float modval = modsubim->getAt(ip);
 		  //LatticeExprNode aminval( min(*modsubim) );
 		  //LatticeExprNode amaxval( max(*modsubim) );
 		  //cout << "Before ---- min : " << aminval.getFloat() << " max : " << amaxval.getFloat() << endl;

@@ -286,7 +286,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       
       IPosition shape = chanlist.shape();
       uInt nSelections = shape[0];
-      Int spw,chanStart,chanEnd,chanStep;
+      Int spw=0,chanStart=0,chanEnd=0,chanStep=1;
 
       ///////////////Temporary revert to using Vi/vb
       Int msin=mss4vi_p.nelements();

@@ -670,6 +670,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				state(s) {
 #ifdef INTERACTIVE_ITERATION
 		state->acceptCallbacks(this);
+#else
+                (void)bus_name;
+		(void)object_path;
 #endif
 	}
 

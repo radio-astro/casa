@@ -153,7 +153,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//--------------------------------------------------------------------
 	// Use the selectedMS to generate time selection strings per part
 	//
-	Double Tint;
+	//	Double Tint;
 	ROMSMainColumns mainCols(selectedMS);
 	Vector<uInt> rowNumbers = selectedMS.rowNumbers();
 	Int nRows=selectedMS.nrow(), 
@@ -167,7 +167,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	MVTime mvInt=mainCols.intervalQuant()(0);
 	Time intT(mvInt.getTime());
-	Tint = intT.modifiedJulianDay();
+	//	Tint = intT.modifiedJulianDay();
 
 	Int partNo=0;
 	while(rowEndID < nRows)
