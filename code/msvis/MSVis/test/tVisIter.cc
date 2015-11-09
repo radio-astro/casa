@@ -60,7 +60,7 @@ int main(int argc, char **argv) {
     VisBuffer vb(vi);
 
     Int iRow=0, iTime=-1, iIter=0, iChunk=0,iAnt1=-1,iAnt2=-1;
-    Double oldTime=-1., time0; Vector<Double> curTime;
+    Double oldTime=-1., time0=0; Vector<Double> curTime;
     Complex xxx;
     Int row;
     Bool newTime;
