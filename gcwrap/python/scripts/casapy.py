@@ -161,7 +161,7 @@ if os.environ.has_key('CASAPATH') :
         casa['dirs']['root'] = __casapath__
         casa['dirs']['data'] = __casapath__ + "/data"
         if not os.path.exists(__casapath__ + "/" + __casaarch__):
-            print "DEBUG: CASA ARCH = %s/%s" (__casapath__,__casaarch__)
+            print "DEBUG: CASA ARCH = %s/%s" % (__casapath__,__casaarch__)
             raise RuntimeError, "Unable to find the architecture directory in your CASAPATH. Please fix."
         casa['dirs']['arch'] = __casapath__ + "/" + __casaarch__
 else :
