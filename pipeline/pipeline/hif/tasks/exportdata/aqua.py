@@ -603,6 +603,8 @@ class AquaReport(object):
                 vis = os.path.splitext(os.path.basename(results[idx].inputs['vis']))[0]
                 if metric is not None:
                     metric = '%0.3f' % results[idx].qa_wvr.overall_score
+                else:
+                    metric = 'Undefined'
 
         # Single result
         else:
@@ -616,6 +618,7 @@ class AquaReport(object):
                     metric = 'Undefined'
                 else:
                     metric = '%0.3f' % results.qa_wvr.overall_score
+            print 'single', 'Metric', metric, 'Vis', vis
 
         eltree.SubElement(stage_element, "Metric", Name="PhaseRmsRatio",
             Value=metric, Asdm=vis)
@@ -700,6 +703,7 @@ class AquaReport(object):
                     agent_stats if s.name in ['applycal']], 0))
 
             # Evaluate the metric
+            metric, idx = max ((metric, idx) for (idx, metric) in enumerate(mlist)) 
             if idx is None:
                 vis = 'Undefined'
                 metric = 'Undefined'
