@@ -2485,6 +2485,14 @@ void fillMainLazily2(const string& dsName,
   try {
     for (vector<MainRowCUStruct>::iterator iter=mRCU_s_v.begin(); iter!=mRCU_s_v.end(); iter++) {
       MainRow* mR_p = iter->mR_p;
+
+      // Depending on there is an ephemeris attached to the field or not 
+      // we obtain the phase direction in two different ways :
+      // * no ephemeris attached -> use the phase dir information found in the ASDM Field table
+      // * ephemeris attached -> get the phase direction from the MS Field columns and a given time, this
+      // can work IF AND ONLY if the MS Field column is filled prior to the calculation of the UVWs.
+      bool ephemerisAttached = mR_p->getFieldUsingFieldId()->isEphemerisIdExists();
+
       SDMDataObjectStreamReader sdosr;
       sdosr.open(iter->bdfName);
       LOG("Processing " + iter->bdfName);
@@ -2624,6 +2632,7 @@ void fillMainLazily2(const string& dsName,
 
       if (debug) {
 	oss.str("");
+
 	oss << "stepSDBl : " << stepSDBl << "\n" << "stepCrossBl : " << stepCrossBl; 
 	LOG(oss.str());
       }
@@ -3883,6 +3892,13 @@ void fillMain(int		rowNum,
   vector<float *> correctedData_v;
 
   /* compute the UVW */
+  // Depending on there is an ephemeris attached to the field or not 
+  // we obtain the phase direction in two different ways :
+  // * no ephemeris attached -> use the phase dir information found in the ASDM Field table
+  // * ephemeris attached -> get the phase direction from the MS Field columns and a given time, this
+  // can work IF AND ONLY if the MS Field column is filled prior to the calculation of the UVWs.
+  bool attachedEphemeris = r_p->getFieldUsingFieldId()->isEphemerisIdExists();
+
   vector<double> uvw_v(3*vmsData_p->v_time.size());
   vector<casa::Vector<casa::Double> > vv_uvw(vmsData_p->v_time.size());
 #if DDPRIORITY

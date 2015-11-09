@@ -5,6 +5,8 @@ using namespace std;
 #include "Enum.hpp"
 #include "CorrelationMode.h"
 
+#include <ms/MeasurementSets/MSFieldColumns.h>
+
 #include <measures/Measures.h>
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MPosition.h>
@@ -79,7 +81,8 @@ public:
 	       double timeCentroid,
 	       Enum<CorrelationMode> correlationMode,
 	       bool reverse, bool autoTrailing,
-	       vector<Vector<casa::Double> >& v_uvw );
+	       vector<Vector<casa::Double> >& v_uvw,
+	       casa::MSFieldColumns* msfc_p=0);
 
   /** Determine the baseline-based uvw in case timeCentroid may change vs  baseline, spw or bin within a dump
       @param configDescriptionId ConigDescription identifier
@@ -109,7 +112,8 @@ public:
 	       const vector<double>& v_timeCentroid,
 	       Enum<CorrelationMode> correlationMode,
 	       bool reverse, bool autoTrailing, 
-	       vector<Vector<casa::Double> >& v_uvw);
+	       vector<Vector<casa::Double> >& v_uvw,
+	       casa::MSFieldColumns* msfc_p=0);
 
   /** Determine the baseline-based uvw for a sequence of epochs
       @param mainRow         Pointer to a SDM main table row
@@ -177,7 +181,8 @@ public:
   void uvw_bl( asdm::MainRow* mainRow, vector<double> v_timeCentroid, 
 	       Enum<CorrelationMode> correlationMode,
 	       pair<bool,bool> dataOrder,
-	       vector<casa::Vector<casa::Double> >& v_uvw );
+	       vector<casa::Vector<casa::Double> >& v_uvw,
+	       casa::MSFieldColumns* msfc_p=0 );
 
 private:
 

@@ -146,7 +146,11 @@ void UvwCoords::uvw_an( double                        timeCentroid,
 }
 
 
-void UvwCoords::uvw_bl( const vector<Tag>& v_antennaId, unsigned int nrep, bool reverse,  vector<Vector<casa::Double> >& v_uvw ){
+void UvwCoords::uvw_bl( const vector<Tag>& v_antennaId,
+			unsigned int nrep,
+			bool reverse,
+			vector<Vector<casa::Double> >& v_uvw){
+
   Vector<casa::Double> uvw; uvw.resize(3);
   Vector<casa::Double> uvw_i, uvw_j;
 
@@ -210,7 +214,8 @@ void UvwCoords::uvw_bl( Tag configDescriptionId,
 			double timeCentroid,
 			Enum<CorrelationMode> correlationMode,
 			bool reverse, bool autoTrailing, 
-			vector<Vector<casa::Double> >& v_uvw){
+			vector<Vector<casa::Double> >& v_uvw,
+			casa::MSFieldColumns* msfc_p){
 
   map<Tag,ArrayParam>::const_iterator itf=m_array_.find(configDescriptionId);
 
@@ -263,7 +268,8 @@ void UvwCoords::uvw_bl( Tag configDescriptionId,
 			const vector<double>& v_timeCentroid,
 			Enum<CorrelationMode> correlationMode,
 			bool reverse, bool autoTrailing, 
-			vector<Vector<casa::Double> >& v_uvw){
+			vector<Vector<casa::Double> >& v_uvw,
+			casa::MSFieldColumns* msfc_p){
 
   map<Tag,ArrayParam>::const_iterator itf=m_array_.find(configDescriptionId);
 
@@ -348,7 +354,7 @@ void UvwCoords::uvw_bl( asdm::MainRow* mainRow, vector<pair<unsigned int,double>
 
 
 void UvwCoords::uvw_bl( asdm::MainRow* mainRow, vector<double> v_timeCentroid, Enum<CorrelationMode> correlationMode,
- 			pair<bool,bool> dataOrder, vector<Vector<casa::Double> >& v_uvw){
+ 			pair<bool,bool> dataOrder, vector<Vector<casa::Double> >& v_uvw, casa::MSFieldColumns* msfc_p){
 
   bool coutest=false;
 
