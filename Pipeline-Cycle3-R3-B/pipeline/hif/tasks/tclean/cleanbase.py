@@ -303,22 +303,40 @@ class CleanBase(basetask.StandardTaskTemplate):
         parallel = all([mpihelpers.parse_mpi_input_parameter(inputs.parallel),
                         'TARGET' in inputs.intent])
 
-        job = casa_tasks.tclean(vis=inputs.vis, imagename='%s.%s.iter%s' %
-	    (os.path.basename(inputs.imagename), inputs.stokes, iter),
-            spw=spw_param,
-	    intent=utils.to_CASA_intent(inputs.ms[0], inputs.intent),
-            scan=scanidlist, specmode=inputs.specmode if inputs.specmode != 'cont' else 'mfs', gridder=inputs.gridder,
-            pblimit=inputs.pblimit, niter=inputs.niter,
-            threshold=inputs.threshold, deconvolver=inputs.deconvolver,
-	    interactive=False, outframe=inputs.outframe, nchan=inputs.nchan,
-            start=inputs.start, width=inputs.width, imsize=inputs.imsize,
-	    cell=inputs.cell, phasecenter=inputs.phasecenter,
-	    stokes=inputs.stokes,
-            weighting=inputs.weighting, robust=inputs.robust,
-            npixels=inputs.npixels,
-            restoringbeam=inputs.restoringbeam, uvrange=inputs.uvrange,
-            mask=inputs.mask, savemodel='none', nterms=2,
-            parallel=parallel)
+        if (result.multiterm):
+            job = casa_tasks.tclean(vis=inputs.vis, imagename='%s.%s.iter%s' %
+                  (os.path.basename(inputs.imagename), inputs.stokes, iter),
+                  spw=spw_param,
+                  intent=utils.to_CASA_intent(inputs.ms[0], inputs.intent),
+                  scan=scanidlist, specmode=inputs.specmode if inputs.specmode != 'cont' else 'mfs', gridder=inputs.gridder,
+                  pblimit=inputs.pblimit, niter=inputs.niter,
+                  threshold=inputs.threshold, deconvolver=inputs.deconvolver,
+                  interactive=False, outframe=inputs.outframe, nchan=inputs.nchan,
+                  start=inputs.start, width=inputs.width, imsize=inputs.imsize,
+                  cell=inputs.cell, phasecenter=inputs.phasecenter,
+                  stokes=inputs.stokes,
+                  weighting=inputs.weighting, robust=inputs.robust,
+                  npixels=inputs.npixels,
+                  restoringbeam=inputs.restoringbeam, uvrange=inputs.uvrange,
+                  mask=inputs.mask, savemodel='none', nterms=result.multiterm,
+                  parallel=parallel)
+        else:
+            job = casa_tasks.tclean(vis=inputs.vis, imagename='%s.%s.iter%s' %
+                  (os.path.basename(inputs.imagename), inputs.stokes, iter),
+                  spw=spw_param,
+                  intent=utils.to_CASA_intent(inputs.ms[0], inputs.intent),
+                  scan=scanidlist, specmode=inputs.specmode if inputs.specmode != 'cont' else 'mfs', gridder=inputs.gridder,
+                  pblimit=inputs.pblimit, niter=inputs.niter,
+                  threshold=inputs.threshold, deconvolver=inputs.deconvolver,
+                  interactive=False, outframe=inputs.outframe, nchan=inputs.nchan,
+                  start=inputs.start, width=inputs.width, imsize=inputs.imsize,
+                  cell=inputs.cell, phasecenter=inputs.phasecenter,
+                  stokes=inputs.stokes,
+                  weighting=inputs.weighting, robust=inputs.robust,
+                  npixels=inputs.npixels,
+                  restoringbeam=inputs.restoringbeam, uvrange=inputs.uvrange,
+                  mask=inputs.mask, savemodel='none',
+                  parallel=parallel)
         self._executor.execute(job)
 
         # Create PB for single fields since it is not auto-generated for
