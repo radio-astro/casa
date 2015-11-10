@@ -72,12 +72,6 @@ public:
 
     virtual ~ImageAnalysis();
 
-    void addnoise(
-    	const String& type, const Vector<Double>& pars,
-    	const Record& region, const Bool zero,
-    	const std::pair<Int, Int> *const &seeds
-    );
-
     ImageInterface<Float> * convolve(
     	const String& outfile,
         Array<Float>& kernel,

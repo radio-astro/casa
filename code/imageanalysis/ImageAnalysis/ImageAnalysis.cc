@@ -189,30 +189,6 @@ Bool ImageAnalysis::detached() {
 	return _imageFloat.get() == 0 && _imageComplex.get() == 0;
 }
 
-void ImageAnalysis::addnoise(
-	const String& type, const Vector<Double>& pars,
-	const Record& region, const Bool zeroIt,
-	const std::pair<Int, Int> *const &seeds
-) {
-	_onlyFloat(__func__);
-	*_log << LogOrigin(className(), __func__);
-	String mask;
-	SHARED_PTR<SubImage<Float> > subImage = SubImageFactory<Float>::createSubImageRW(
-		*_imageFloat, region, mask, _log.get()
-	);
-	if (zeroIt) {
-		subImage->set(0.0);
-	}
-	Random::Types typeNoise = Random::asType(type);
-	SHARED_PTR<LatticeAddNoise> lan(
-		seeds
-		? new LatticeAddNoise(typeNoise, pars, seeds->first, seeds->second)
-		: new LatticeAddNoise(typeNoise, pars)
-	);
-	lan->add(*subImage);
-	//deleteHist();
-}
-
 ImageInterface<Float> *
 ImageAnalysis::convolve(
 	const String& outFile, Array<Float>& kernelArray,

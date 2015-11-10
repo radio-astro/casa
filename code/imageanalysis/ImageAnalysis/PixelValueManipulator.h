@@ -45,6 +45,11 @@ public:
 
 	~PixelValueManipulator() {}
 
+	static void addNoise(
+		SPIIT image, const String& type, const Record& region, const Vector<Double>& pars,
+		Bool zero, const std::pair<Int, Int> *const &seeds
+	);
+
 	// set axes to average over. If invert is True, select all axes other than
 	// the specified axes to average over.
 	void setAxes(const IPosition& axes, Bool invert=False);

@@ -26,9 +26,8 @@
 
 #include <imageanalysis/ImageAnalysis/PixelValueManipulator.h>
 
-// #include <casa/Arrays/ArrayMath.h>
-
 #include <casa/Quanta/QuantumHolder.h>
+#include <lattices/LatticeMath/LatticeAddNoise.h>
 
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
 
@@ -45,6 +44,26 @@ template<class T> PixelValueManipulator<T>::PixelValueManipulator(
 	mask, "", False
 ), _axes() {
 	this->_construct(verboseDuringConstruction);
+}
+
+template<class T> void PixelValueManipulator<T>::addNoise(
+	SPIIT image, const String& type, const Record& region, const Vector<Double>& pars,
+	Bool zeroIt, const std::pair<Int, Int> *const &seeds
+) {
+	String mask;
+	auto subImage = SubImageFactory<T>::createSubImageRW(
+		*image, region, mask, nullptr
+	);
+	if (zeroIt) {
+		subImage->set(0.0);
+	}
+	Random::Types typeNoise = Random::asType(type);
+	SHARED_PTR<LatticeAddNoise> lan(
+		seeds
+		? new LatticeAddNoise(typeNoise, pars, seeds->first, seeds->second)
+		: new LatticeAddNoise(typeNoise, pars)
+	);
+	lan->add(*subImage);
 }
 
 template<class T> void PixelValueManipulator<T>::setAxes(
