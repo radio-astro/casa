@@ -172,8 +172,8 @@ class testBPdcals(basetask.StandardTaskTemplate):
                                                            solint=solint, context=context, RefAntOutput=RefAntOutput)
 
             flaggedSolnResult3 = getCalFlaggedSoln(tablebase + table_suffix[1])
-            LOG.info("For solint = "+solint+" fraction of flagged solutions = "+str(flaggedSolnResult1['all']['fraction']))
-            LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult1['antmedian']['fraction']))
+            LOG.info("For solint = "+solint+" fraction of flagged solutions = "+str(flaggedSolnResult3['all']['fraction']))
+            LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult3['antmedian']['fraction']))
             calto = callibrary.CalTo(self.inputs.vis)
             calfrom = callibrary.CalFrom(gaintable=tablebase + table_suffix[1], interp='', calwt=False)
             context.callibrary._remove(calto, calfrom, context.callibrary._active)
@@ -203,8 +203,8 @@ class testBPdcals(basetask.StandardTaskTemplate):
                                                                    addcaltable=ktypecaltable, solint=solint,
                                                                    context=context, RefAntOutput=RefAntOutput)
                     flaggedSolnResult10 = getCalFlaggedSoln(tablebase + table_suffix[2])
-                    LOG.info("For solint = "+solint+" fraction of flagged solutions = "+str(flaggedSolnResult1['all']['fraction']))
-                    LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult1['antmedian']['fraction']))
+                    LOG.info("For solint = "+solint+" fraction of flagged solutions = "+str(flaggedSolnResult10['all']['fraction']))
+                    LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult10['antmedian']['fraction']))
                     calto = callibrary.CalTo(self.inputs.vis)
                     calfrom = callibrary.CalFrom(gaintable=tablebase + table_suffix[2], interp='', calwt=False)
                     context.callibrary._remove(calto, calfrom, context.callibrary._active)
