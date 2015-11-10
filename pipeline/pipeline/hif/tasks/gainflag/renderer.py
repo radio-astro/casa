@@ -33,7 +33,7 @@ class T2_4MDetailsGainflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 if not r.view:
                     continue
                 try:
-                    renderer = BaselineVsChannelsPlotRenderer(pipeline_context, 
+                    renderer = TimeVsAntenna1PlotRenderer(pipeline_context, 
                       result, component)
                     with renderer.get_file() as fileobj:
                         fileobj.write(renderer.render())
@@ -90,7 +90,7 @@ class T2_4MDetailsGainflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         return filename
 
 
-class BaselineVsChannelsPlotRenderer(basetemplates.JsonPlotRenderer):
+class TimeVsAntenna1PlotRenderer(basetemplates.JsonPlotRenderer):
     def __init__(self, context, result, component):
 
         r = result.components[component]
@@ -104,10 +104,10 @@ class BaselineVsChannelsPlotRenderer(basetemplates.JsonPlotRenderer):
             raise TypeError('No plots generated for %s component' % component)
         
         vis = os.path.basename(result.inputs['vis'])
-        outfile = filenamer.sanitize('baseline_vs_channels-%s-%s.html' % (vis, component))
+        outfile = filenamer.sanitize('time_vs_antenna1-%s-%s.html' % (vis, component))
 
-        title = 'Baseline vs channels plots for %s' % vis
+        title = 'Time vs Antenna1 plots for %s' % vis
 
-        super(BaselineVsChannelsPlotRenderer, self).__init__(
-                'generic_x_vs_y_per_spw_and_pol_plots.mako', context, 
+        super(TimeVsAntenna1PlotRenderer, self).__init__(
+                'generic_x_vs_y_spw_plots.mako', context, 
                 result, plots, title, outfile)

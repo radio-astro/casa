@@ -1177,6 +1177,13 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
                 antenna_id_to_name = None
         else:
             antenna_id_to_name = None
+            
+        # If requested, expand current spw to all spws within the same baseband, thus
+        # changing spw from an integer to a list of integers
+        if self.inputs.extendbaseband:
+            ms = self.inputs.context.observing_run.get_ms(self.inputs.vis)
+            baseband = ms.get_spectral_window(spw).baseband
+            spw = [spw.id for spw in ms.get_spectral_windows() if spw.baseband == baseband]
 
         # Initialize flags
         newflags = []
@@ -1354,9 +1361,7 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
                           spw=spw, axisnames=[xtitle, ytitle],
                           flagcoords=flagcoord, pol=pol,
                           extendfields=self.inputs.extendfields,
-                          extendbaseband=self.inputs.extendbaseband,
-                          antenna_id_to_name=antenna_id_to_name,
-                          vis=self.inputs.vis))
+                          antenna_id_to_name=antenna_id_to_name))
 
                     # Flag the view
                     flag[i2flag, j2flag] = True
