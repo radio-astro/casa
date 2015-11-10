@@ -12,22 +12,19 @@ LOG = infrastructure.get_logger(__name__)
 
 class ImageCentreThresholdSequence(BaseCleanSequence):
 
-    def __init__(self, gridder, threshold='0.0mJy', sensitivity=0.0,
-                 niter=1000, pblimit_image=0.2, pblimit_cleanmask=0.3):
+    def __init__(self, gridder, threshold='0.0mJy', sensitivity=0.0, niter=1000):
         """Constructor.
         """
         BaseCleanSequence.__init__(self)
         self.gridder = gridder
-	self.threshold = threshold
-	self.sensitivity = sensitivity
-	self.niter = niter
+        self.threshold = threshold
+        self.sensitivity = sensitivity
+        self.niter = niter
         self.iter = None
-        self.pblimit_image = pblimit_image
-        self.pblimit_cleanmask = pblimit_cleanmask
         self.result = BoxResult()
         self.sidelobe_ratio = -1
 
-    def iteration(self, new_cleanmask):
+    def iteration(self, new_cleanmask, pblimit_image=0.2, pblimit_cleanmask=0.3):
 
         if (self.multiterm):
             extension = '.tt0'
@@ -46,7 +43,8 @@ class ImageCentreThresholdSequence(BaseCleanSequence):
                   outfile=new_cleanmask, overwrite=True)
                 # verbose = False to suppress warning message
                 cm.calc('1', verbose=False)
-                cm.calc('replace("%s"["%s" > %.2f], 0)' % (os.path.basename(new_cleanmask), self.flux, self.pblimit_cleanmask), verbose=False)
+                cm.calc('replace("%s"["%s" > %f], 0)' % (os.path.basename(new_cleanmask), self.flux, pblimit_cleanmask), verbose=False)
+                cm.calcmask('"%s" > %s' % (self.flux, str(pblimit_image)))
                 cm.done()
             else:
                 cm = casatools.image.newimagefromimage(infile=self.residuals[0]+extension,
@@ -65,11 +63,11 @@ class ImageCentreThresholdSequence(BaseCleanSequence):
             self.result.sensitivity = self.sensitivity
             self.result.niter =  self.niter
             self.result.iterating = True
-	else:
+        else:
             self.result.cleanmask = ''
             self.result.threshold = '0.0mJy'
             self.result.sensitivity = 0.0
             self.result.niter =  0
             self.result.iterating = False
 
-	return self.result
+        return self.result

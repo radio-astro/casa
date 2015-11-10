@@ -116,9 +116,9 @@ class Tclean(cleanbase.CleanBase):
         LOG.info('deleting %s*.iter*', inputs.imagename)
         shutil.rmtree('%s*.iter*' % inputs.imagename, ignore_errors=True)
 
-        # Determine masking limits depending on image and cell sizes
-        self.pblimit_image, self.pblimit_cleanmask = \
-            inputs.heuristics.pblimits(inputs.imsize, inputs.cell)
+        # Set initial masking limits
+        self.pblimit_image = 0.2
+        self.pblimit_cleanmask = 0.3
         inputs.pblimit = self.pblimit_image
 
         # Get an empirical noise estimate by generating Q or V image.
@@ -147,9 +147,7 @@ class Tclean(cleanbase.CleanBase):
                 threshold = '%sJy' % (inputs.tlimit * sensitivity)
             sequence_manager = ImageCentreThresholdSequence(
                 gridder = inputs.gridder, threshold=threshold,
-                sensitivity = sensitivity, niter=inputs.niter,
-                pblimit_image = self.pblimit_image,
-                pblimit_cleanmask = self.pblimit_cleanmask)
+                sensitivity = sensitivity, niter=inputs.niter)
 
         elif inputs.hm_masking == 'psfiter':
             sequence_manager = IterativeSequence(
@@ -222,6 +220,11 @@ class Tclean(cleanbase.CleanBase):
                                 sensitivity=sequence_manager.sensitivity,
                                 result=None)
 
+        # Determine masking limits depending on PB
+        self.pblimit_image, self.pblimit_cleanmask = \
+            inputs.heuristics.pblimits(result.flux)
+        inputs.pblimit = self.pblimit_image
+
         # Give the result to the sequence_manager for analysis
         model_sum, cleaned_rms, non_cleaned_rms, residual_max, residual_min,\
             rms2d, image_max = sequence_manager.iteration_result(iter=0,
@@ -250,7 +253,7 @@ class Tclean(cleanbase.CleanBase):
                 pass
 
             # perform an iteration.
-            seq_result = sequence_manager.iteration(new_cleanmask)
+            seq_result = sequence_manager.iteration(new_cleanmask, self.pblimit_image, self.pblimit_cleanmask)
 
             # Check the iteration status.
             if not seq_result.iterating:
@@ -491,7 +494,7 @@ class Tclean(cleanbase.CleanBase):
                                                   niter=niter,
                                                   threshold=threshold,
                                                   sensitivity=sensitivity,
-                                                  pblimit=self.pblimit_image,
+                                                  pblimit=inputs.pblimit,
                                                   result=result,
                                                   parallel=parallel)
         clean_task = cleanbase.CleanBase(clean_inputs)

@@ -51,16 +51,22 @@ class TcleanHeuristics(object):
           (1.22 * (3.0e8/ref_frequency) / smallest_diameter) * \
           (180.0 * 3600.0 / math.pi))
 
-    def pblimits(self, imsize, cell):
+    def pblimits(self, pb):
 
-        qaTool = casatools.quanta
-        pb_edge = math.exp(-4.0 * math.log(2.0) * (0.9 * 0.5 * imsize[0] * qaTool.convert(cell[0], 'arcsec')['value'] / qaTool.convert(self.beam_radius, 'arcsec')['value']) ** 2)
-        if (pb_edge < 0.2):
-            pblimit_image = 0.2
-            pblimit_cleanmask = 0.3
-        else:
-            pblimit_image = math.exp(-4.0 * math.log(2.0) * (0.9 * 0.5 * imsize[0] * qaTool.convert(cell[0], 'arcsec')['value'] / qaTool.convert(self.beam_radius, 'arcsec')['value']) ** 2)
-            pblimit_cleanmask = math.exp(-4.0 * math.log(2.0) * (0.8 * 0.5 * imsize[0] * qaTool.convert(cell[0], 'arcsec')['value'] / qaTool.convert(self.beam_radius, 'arcsec')['value']) ** 2)
+        pblimit_image = 0.2
+        pblimit_cleanmask = 0.3
+
+        if (pb not in [None, '']):
+            try:
+                iaTool = casatools.image
+                iaTool.open(pb)
+                nx, ny = iaTool.shape()[0:2]
+                pb_edge = iaTool.getchunk([nx/2, 0], [nx/2, 0]).flatten()[0]
+                if (pb_edge > 0.2):
+                    pblimit_image = iaTool.getchunk([nx/2, 0.05*ny], [nx/2, 0.05*ny]).flatten()[0]
+                    pblimit_cleanmask = iaTool.getchunk([nx/2, 0.1*ny], [nx/2, 0.1*ny]).flatten()[0]
+            except Exception as e:
+                LOG.warning('Could not analyze PB: %s. Using default pblimit values.' % (e))
 
         return pblimit_image, pblimit_cleanmask
 
