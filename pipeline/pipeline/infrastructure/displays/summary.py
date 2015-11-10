@@ -73,6 +73,14 @@ class AzElChart(object):
         self.ms = ms
         self.figfile = self._get_figfile()
 
+        # Plot the first channel for all the science spws.
+        self.spwlist = ''
+        for spw in ms.get_spectral_windows(science_windows_only=True):
+            if self.spwlist == '':
+                self.spwlist = self.spwlist + '%d:0~0' % spw.id
+            else:
+                self.spwlist = self.spwlist + ',%d:0~0' % spw.id
+
     def plot(self):
         if DISABLE_PLOTMS:
             LOG.debug('Disabling AzEl plot due to problems with plotms')
@@ -87,6 +95,7 @@ class AzElChart(object):
                      'avgchannel'      : '9000',
                      'avgtime'         : '10s',
                      'antenna'         : '0&&*',
+                     'spw'             : self.spwlist,
                      'plotfile'        : self.figfile,
                      'clearplots'      : True,
                      'showgui'         : False}
@@ -170,6 +179,14 @@ class ElVsTimeChart(object):
         self.ms = ms
         self.figfile = self._get_figfile()
 
+        # Plot the first channel for all the science spws.
+        self.spwlist = ''
+        for spw in ms.get_spectral_windows(science_windows_only=True):
+            if self.spwlist == '':
+                self.spwlist = self.spwlist + '%d:0~0' % spw.id
+            else:
+                self.spwlist = self.spwlist + ',%d:0~0' % spw.id
+
     def plot(self):
         if DISABLE_PLOTMS:
             LOG.debug('Disabling ElVsTime plot due to problems with plotms')
@@ -184,6 +201,7 @@ class ElVsTimeChart(object):
                      'avgchannel'      : '9000',
                      'avgtime'         : '10s',
                      'antenna'         : '0&&*',
+                     'spw'             : self.spwlist,
                      'plotfile'        : self.figfile,
                      'clearplots'      : True,
                      'showgui'         : False}
