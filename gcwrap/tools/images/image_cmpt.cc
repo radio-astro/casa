@@ -253,8 +253,21 @@ bool image::addnoise(
 				? seeds[0]
 				: (Int)((uInt)(1e7*(seedBase - seedPair->second)));
 		}
+		/*
 		_image->addnoise(type, pars, *pRegion, zeroIt, seedPair.get());
-
+		*/
+		if (_image->isFloat()) {
+			PixelValueManipulator<Float>::addNoise(
+				_image->getImage(), type, *pRegion,
+				pars, zeroIt, seedPair.get()
+			);
+		}
+		else {
+			PixelValueManipulator<Complex>::addNoise(
+				_image->getComplexImage(), type, *pRegion,
+				pars, zeroIt, seedPair.get()
+			);
+		}
 		_stats.reset(0);
 		return True;
 	} catch (const AipsError& x) {
