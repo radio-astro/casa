@@ -2262,16 +2262,19 @@ class sdsave_scanrate(unittest.TestCase,sdsave_unittest_base):
         tb.open(infile)
         tsel = tb.query('POLNO==0')
         time_in = tsel.getcol('TIME')
+        unique_time_in, unique_index = numpy.unique(time_in, return_index=True)
         _dir_in = tsel.getcol('DIRECTION')
+        unique_dir_in = _dir_in.take(unique_index, axis=1)
         scanrate_in = tsel.getcol('SCANRATE')
+        unique_scanrate_in = scanrate_in.take(unique_index, axis=1)
         tsel.close()
         tb.close()
-        num_expected = 0 if all(scanrate_in.flatten() == 0.0) else 1
-        newshape = (_dir_in.shape[0],1,_dir_in.shape[1])
+        num_expected = 0 if all(unique_scanrate_in.flatten() == 0.0) else 1
+        newshape = (unique_dir_in.shape[0],1,unique_dir_in.shape[1])
         if num_expected == 0:
-            dir_in = _dir_in.reshape(newshape)
+            dir_in = unique_dir_in.reshape(newshape)
         else:
-            dir_in = numpy.concatenate((_dir_in.reshape(newshape), scanrate_in.reshape(newshape)), axis=1)
+            dir_in = numpy.concatenate((unique_dir_in.reshape(newshape), unique_scanrate_in.reshape(newshape)), axis=1)
         tb.open(os.path.join(outfile, 'POINTING'))
         time_out = tb.getcol('TIME')
         num_poly = tb.getcol('NUM_POLY')
@@ -2285,7 +2288,7 @@ class sdsave_scanrate(unittest.TestCase,sdsave_unittest_base):
 
         self.assertEqual(dir_in.shape, dir_out.shape,
                          msg='DIRECTION shape is not correct.')
-        self.assertTrue(all(time_in == time_out_sorted),
+        self.assertTrue(all(unique_time_in == time_out_sorted),
                         msg='TIME is not correct.')
         self.assertTrue(all(num_poly_sorted == num_expected),
                         msg='NUM_POLY is not correct.')
