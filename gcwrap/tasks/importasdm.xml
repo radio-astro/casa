@@ -8,7 +8,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="importasdm" category="import/export" >
 
-  <shortdescription>Convert an ALMA Science Data Model observation into a CASA visibility file (MS) or single-dish data format (Scantable)</shortdescription>
+  <shortdescription>Convert an ALMA Science Data Model observation into a CASA visibility file (MS)</shortdescription>
 
   <input>
 
@@ -220,7 +220,7 @@ Keyword arguments:
 asdm -- Name of input ASDM file (directory)
         default: none; example: asdm='ExecBlock3'
 
-vis       -- Root ms or scantable name, note a prefix (.ms or .asap) is NOT appended to this name
+vis       -- Root ms name. Note that a prefix (.ms) is NOT appended to this name.
              default: none
 
 createmms -- Create a multi-MS partitioned according to the given separation axis.
