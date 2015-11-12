@@ -381,7 +381,8 @@ class Fluxboot(basetask.StandardTaskTemplate):
                     SS = fluxdensity * (10.0**lfreqs[ii]/reffreq/1.0e9)**spix
                     fderr = lerrs[ii]*(10**lfds[ii])/math.log10(math.e)
                     LOG.info('    '+str(10.0**lfreqs[ii]/1.0e9)+'  '+ str(10.0**lfds[ii])+'  '+str(fderr)+'  '+str(SS))
-                    weblog_results.append({'freq' : str(10.0**lfreqs[ii]/1.0e9),
+                    weblog_results.append({'source': source,
+                                           'freq' : str(10.0**lfreqs[ii]/1.0e9),
                                            'data' : str(10.0**lfds[ii]),
                                            'error': str(fderr),
                                            'fitteddata': str(SS)})
@@ -391,7 +392,7 @@ class Fluxboot(basetask.StandardTaskTemplate):
         LOG.info("Setting power-law fit in the model column")
         
         # Sort weblog results by frequency
-        weblog_results = sorted(weblog_results, key=lambda k: k['freq']) 
+        weblog_results = sorted(weblog_results, key=lambda k: (k['source'], k['freq']))
         
         return results, weblog_results, spindex_results
                 

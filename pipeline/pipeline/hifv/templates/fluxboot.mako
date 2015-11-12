@@ -115,21 +115,21 @@ $(document).ready(function() {
 	<caption>Fitting data with a power law</caption>
         <thead>
 	    <tr>
+	        <th scope="col" rowspan="2">Source</th>
 	        <th scope="col" rowspan="2">Frequency [GHz]</th>
 	        <th scope="col" rowspan="2">Data</th>
-		<th scope="col" rowspan="2">Error</th>
-		<th scope="col" rowspan="2">Fitted Data</th>
+		    <th scope="col" rowspan="2">Error</th>
+		    <th scope="col" rowspan="2">Fitted Data</th>
 	    </tr>
 
 	</thead>
 	<tbody>   
   
-    % for row in sorted(weblog_results[ms], key=lambda p: float(p['freq'])):
-    
+    % for row in sorted(weblog_results[ms], key=lambda p: (p['source'], float(p['freq']))):
 
-	
 		<tr>
-		        <td>${row['freq']}</td>
+		    <td>${row['source']}</td>
+		    <td>${row['freq']}</td>
 			<td>${row['data']}</td>
 			<td>${row['error']}</td>
 			<td>${row['fitteddata']}</td>
