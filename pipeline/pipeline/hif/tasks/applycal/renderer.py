@@ -71,13 +71,13 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         amp_vs_time_summary_plots = self.create_plots(context, 
                                                       result, 
                                                       applycal.AmpVsTimeSummaryChart, 
-                                                      ['PHASE', 'BANDPASS', 'AMPLITUDE', 'TARGET'],
+                                                      ['PHASE', 'BANDPASS', 'AMPLITUDE', 'CHECK', 'TARGET'],
                                                       corrstring)
 
         phase_vs_time_summary_plots = self.create_plots(context, 
                                                       result, 
                                                       applycal.PhaseVsTimeSummaryChart, 
-                                                      ['PHASE', 'BANDPASS', 'AMPLITUDE', 'TARGET'],
+                                                      ['PHASE', 'BANDPASS', 'AMPLITUDE', 'CHECK', 'TARGET'],
                                                       corrstring)
 
 #         amp_vs_freq_phase_summary_plots = self.create_plots(context, 
@@ -106,7 +106,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 #         self.sort_plots_by_baseband(phase_vs_freq_bandpass_summary_plots)
 
         amp_vs_freq_summary_plots = utils.OrderedDefaultdict(utils.OrderedDefaultdict)
-        for intents in [['PHASE'], ['BANDPASS']]:
+        for intents in [['PHASE'], ['BANDPASS'], ['CHECK']]:
             plots = self.create_plots(context, 
                                       result, 
                                       applycal.AmpVsFrequencySummaryChart, 
@@ -119,7 +119,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 amp_vs_freq_summary_plots[vis][key] = vis_plots
 
         phase_vs_freq_summary_plots = utils.OrderedDefaultdict(utils.OrderedDefaultdict)
-        for intents in [['PHASE'], ['BANDPASS']]:
+        for intents in [['PHASE'], ['BANDPASS'], ['CHECK']]:
             plots = self.create_plots(context, 
                                       result, 
                                       applycal.PhaseVsFrequencySummaryChart, 
@@ -134,7 +134,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         # CAS-7659: Add plots of all calibrator calibrated amp vs uvdist to
         # the WebLog applycal page
         amp_vs_uv_summary_plots = utils.OrderedDefaultdict(utils.OrderedDefaultdict)
-        for intents in ['AMPLITUDE', 'PHASE', 'BANDPASS']:
+        for intents in ['AMPLITUDE', 'PHASE', 'BANDPASS', 'CHECK']:
             plots = self.create_plots(context,
                                       result,
                                       applycal.AmpVsUVSummaryChart,
@@ -163,21 +163,21 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             self.create_plots(context, 
                               result, 
                               applycal.AmpVsFrequencyDetailChart, 
-                              ['BANDPASS', 'PHASE'],
+                              ['BANDPASS', 'PHASE', 'CHECK'],
                               corrstring,
                               ApplycalAmpVsFreqPlotRenderer)
     
             self.create_plots(context, 
                               result, 
                               applycal.PhaseVsFrequencyDetailChart, 
-                              ['BANDPASS', 'PHASE'],
+                              ['BANDPASS', 'PHASE', 'CHECK'],
                               corrstring,
                               ApplycalPhaseVsFreqPlotRenderer)
     
             self.create_plots(context, 
                               result, 
                               applycal.AmpVsUVDetailChart, 
-                              ['AMPLITUDE', 'PHASE', 'BANDPASS'],
+                              ['AMPLITUDE', 'PHASE', 'BANDPASS', 'CHECK'],
                               corrstring,
                               ApplycalAmpVsUVPlotRenderer)
 
@@ -191,14 +191,14 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             self.create_plots(context, 
                               result, 
                               applycal.AmpVsTimeDetailChart, 
-                              ['AMPLITUDE', 'PHASE', 'BANDPASS', 'TARGET'],
+                              ['AMPLITUDE', 'PHASE', 'BANDPASS', 'CHECK', 'TARGET'],
                               corrstring,
                               ApplycalAmpVsTimePlotRenderer)
 
             self.create_plots(context, 
                               result, 
                               applycal.PhaseVsTimeDetailChart, 
-                              ['AMPLITUDE', 'PHASE', 'BANDPASS', 'TARGET'],
+                              ['AMPLITUDE', 'PHASE', 'BANDPASS', 'CHECK', 'TARGET'],
                               corrstring,
                               ApplycalPhaseVsTimePlotRenderer)
 
@@ -538,7 +538,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     def flags_by_intent(self, ms, summaries):
         # create a dictionary of scans per observing intent, eg. 'PHASE':[1,2,7]
         intent_scans = {}
-        for intent in ('BANDPASS', 'PHASE', 'AMPLITUDE', 'TARGET'):
+        for intent in ('BANDPASS', 'PHASE', 'AMPLITUDE', 'CHECK', 'TARGET'):
             # convert IDs to strings as they're used as summary dictionary keys
             intent_scans[intent] = [str(s.id) for s in ms.scans
                                     if intent in s.intents]
