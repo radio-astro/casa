@@ -118,7 +118,7 @@ $(document).ready(function() {
 		<tr>
 			<td>${ms}</td>
 			% for step in steps:
-			% if flags[ms][step] is None:
+			% if flags[ms].get(step) is None:
 			<td><span class="glyphicon glyphicon-remove"></span></td>
       		% else:
       		<td><span class="glyphicon glyphicon-ok"></span></td>
@@ -158,7 +158,7 @@ $(document).ready(function() {
 		<tr>
 			<th>${k}</th>               
 			% for step in ['before'] + steps + ['after']:
-			% if flags[ms][step] is not None:
+			% if flags[ms].get(step) is not None:
 				##<td>${step} ${k} ${flags[ms][step]['Summary'][k]}</td>
 				<td>${percent_flagged(flags[ms][step]['Summary'][k])}</td>
 			% else:
@@ -182,13 +182,13 @@ antenna for both polarisations.
 
 <ul>
 % for component in components: 
+  % if htmlreports.get(component) is not None:
 	<li>
 	<h3>${component}</h3>
 	${comp_descriptions[component]}
 
-    % if htmlreports[component]:
-  <h4>Flags</h4>
-  <table class="table table-bordered table-striped">
+    <h4>Flags</h4>
+    <table class="table table-bordered table-striped">
 	<thead>
 	    <tr>
 	        <th>Flagging Commands</th>
@@ -206,8 +206,7 @@ antenna for both polarisations.
 	    </tr>
 	    % endfor
 	</tbody>
-  </table>
-    % endif
+    </table>
  
     % if component in stdplots:
 	<h4>Plots</h4>
@@ -223,6 +222,7 @@ antenna for both polarisations.
 
 	</ul>
     % endif
- </li>
+  </li>
+  % endif
 % endfor
 </ul>
