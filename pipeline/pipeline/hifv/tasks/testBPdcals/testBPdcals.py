@@ -24,7 +24,7 @@ class testBPdcalsInputs(basetask.StandardInputs):
 
 
 class testBPdcalsResults(basetask.Results):
-    def __init__(self, final=[], pool=[], preceding=[], gain_solint1=None, shortsol1=None, vis=None):
+    def __init__(self, final=[], pool=[], preceding=[], gain_solint1=None, shortsol1=None, vis=None, bpdgain_touse=None):
         super(testBPdcalsResults, self).__init__()
 
         self.vis = vis
@@ -34,6 +34,7 @@ class testBPdcalsResults(basetask.Results):
         self.error = set()
         self.gain_solint1 = gain_solint1
         self.shortsol1 = shortsol1
+        self.bpdgain_touse = bpdgain_touse
         
     def merge_with_context(self, context):
         m = context.observing_run.get_ms(self.vis)
@@ -224,8 +225,8 @@ class testBPdcals(basetask.StandardTaskTemplate):
                         shortsol1=soltime
                         bpdgain_touse = tablebase + table_suffix[2]
 
-                        if (fracFlaggedSolns > 0.05):
-                            LOG.warn("There is a large fraction of flagged solutions, there might be something wrong with your data.  The fraction of flagged solutions is " + str(fracFlaggedSolns))
+                        if (fracFlaggedSolns10 > 0.05):
+                            LOG.warn("There is a large fraction of flagged solutions, there might be something wrong with your data.  The fraction of flagged solutions is " + str(fracFlaggedSolns10))
 
         LOG.info("Test amp and phase calibration on delay and bandpass calibrators complete")
         LOG.info("Using short solint = "+gain_solint1)
@@ -265,7 +266,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
         
         applycal_result = self._do_applycal(context=context)
 
-        return testBPdcalsResults(gain_solint1=gain_solint1, shortsol1=shortsol1, vis=self.inputs.vis)
+        return testBPdcalsResults(gain_solint1=gain_solint1, shortsol1=shortsol1, vis=self.inputs.vis, bpdgain_touse=bpdgain_touse)
 
     def analyse(self, results):
         return results
