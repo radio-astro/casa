@@ -231,7 +231,7 @@ class ampGainPerAntennaChart(object):
 	
 	
 	
-	with casatools.TableReader('testBPdinitialgain.g') as tb:
+	with casatools.TableReader(result.bpdgain_touse) as tb:
             cpar=tb.getcol('CPARAM')
             flgs=tb.getcol('FLAG')
         amps=np.abs(cpar)
@@ -262,7 +262,7 @@ class ampGainPerAntennaChart(object):
 	    if not os.path.exists(figfile):
 	        try:
 	            LOG.info("Plotting amplitude gain solutions")
-	            casa.plotcal(caltable='testBPdinitialgain.g', xaxis='time', yaxis='amp', poln='', field='', antenna=antPlot, spw='', timerange='', subplot=111, overplot=False, clearpanel='Auto', iteration='antenna', plotrange=[0,0,0,plotmax], showflags=False, plotsymbol='o',plotcolor='blue',markersize=5.0,fontsize=10.0,showgui=False,figfile=figfile)
+	            casa.plotcal(caltable=result.bpdgain_touse, xaxis='time', yaxis='amp', poln='', field='', antenna=antPlot, spw='', timerange='', subplot=111, overplot=False, clearpanel='Auto', iteration='antenna', plotrange=[0,0,0,plotmax], showflags=False, plotsymbol='o',plotcolor='blue',markersize=5.0,fontsize=10.0,showgui=False,figfile=figfile)
 	            #plots.append(figfile)
 
 	        except:
@@ -334,7 +334,7 @@ class phaseGainPerAntennaChart(object):
     
 	nplots=int(numAntenna/3)
 	
-	with casatools.TableReader('testBPdinitialgain.g') as tb:
+	with casatools.TableReader(result.bpdgain_touse) as tb:
             cpar=tb.getcol('CPARAM')
             flgs=tb.getcol('FLAG')
         amps=np.abs(cpar)
@@ -366,7 +366,7 @@ class phaseGainPerAntennaChart(object):
 	    if not os.path.exists(figfile):
 	        try:
 	            LOG.info("Plotting phase gain solutions")
-	            casa.plotcal(caltable='testBPdinitialgain.g', xaxis='time', yaxis='phase', poln='', field='',  antenna=antPlot, spw='', timerange='',        subplot=111, overplot=False, clearpanel='Auto', iteration='antenna',  plotrange=[0,0,-180,180], showflags=False, plotsymbol='o-',        plotcolor='blue',  markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
+	            casa.plotcal(caltable=result.bpdgain_touse, xaxis='time', yaxis='phase', poln='', field='',  antenna=antPlot, spw='', timerange='',        subplot=111, overplot=False, clearpanel='Auto', iteration='antenna',  plotrange=[0,0,-180,180], showflags=False, plotsymbol='o-',        plotcolor='blue',  markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
 	            #plots.append(figfile)
 
 	        except:
@@ -439,7 +439,7 @@ class bpSolAmpPerAntennaChart(object):
     
 	nplots=int(numAntenna/3)
 	
-	with casatools.TableReader('testBPdinitialgain.g') as tb:
+	with casatools.TableReader(result.bpdgain_touse) as tb:
             cpar=tb.getcol('CPARAM')
             flgs=tb.getcol('FLAG')
         amps=np.abs(cpar)
@@ -570,7 +570,7 @@ class bpSolPhasePerAntennaChart(object):
     
 	nplots=int(numAntenna/3)
 	
-	with casatools.TableReader('testBPdinitialgain.g') as tb:
+	with casatools.TableReader(result.bpdgain_touse) as tb:
             cpar=tb.getcol('CPARAM')
             flgs=tb.getcol('FLAG')
         amps=np.abs(cpar)

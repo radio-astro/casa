@@ -25,7 +25,7 @@ class semiFinalBPdcalsInputs(basetask.StandardInputs):
         self._init_properties(vars())
 
 class semiFinalBPdcalsResults(basetask.Results):
-    def __init__(self, final=[], pool=[], preceding=[]):
+    def __init__(self, final=[], pool=[], preceding=[], bpdgain_touse=None):
         super(semiFinalBPdcalsResults, self).__init__()
 
         self.vis = None
@@ -33,6 +33,7 @@ class semiFinalBPdcalsResults(basetask.Results):
         self.final = final[:]
         self.preceding = preceding[:]
         self.error = set()
+        self.bpdgain_touse = bpdgain_touse
 
 class semiFinalBPdcals(basetask.StandardTaskTemplate):
     Inputs = semiFinalBPdcalsInputs
@@ -154,7 +155,7 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
 
         applycal_result = self._do_applycal(context=context)
 
-        return semiFinalBPdcalsResults()                        
+        return semiFinalBPdcalsResults(bpdgain_touse=bpdgain_touse)                        
 
     def analyse(self, results):
 	return results
