@@ -11,7 +11,6 @@ from numpy import ma
 import pylab as plt
 
 import pipeline.infrastructure as infrastructure
-from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.renderer.logger as logger
 
 LOG = infrastructure.get_logger(__name__)
@@ -219,13 +218,10 @@ class ImageDisplay(object):
         xunits = image.axes[0].units
         ytitle = image.axes[1].name
         ydata = image.axes[1].data
-        yunits = image.axes[1].units
+        #yunits = image.axes[1].units
         dataunits = image.units
         datatype = image.datatype
-        indices = np.indices(np.shape(data))
-        i = indices[0]
-        j = indices[1]
-
+        
         # set sentinels at points with no data/violet. These should be
         # overwritten by other flag colours in a moment.
         data[flag!=0] = 2.0
@@ -305,7 +301,7 @@ class ImageDisplay(object):
                 ydata_numeric = np.arange(len(ydata))
         else:
             ydata_numeric = ydata
-
+        
         # only plot y tick labels on first panel to avoid collision
         # between y tick labels for second panel with greyscale for
         # first
@@ -317,6 +313,9 @@ class ImageDisplay(object):
             extent=[xdata[0], xdata[-1], ydata_numeric[0], ydata_numeric[-1]+1]
         else:
             extent=[xdata[0], xdata[-1], ydata_numeric[0], ydata_numeric[-1]]
+            
+        # If plotting by antenna, then extend limits of the axis to ensure that 
+        # the tick marks align correctly with the center of the antenna pixels.
         if 'ANTENNA' in xtitle.upper(): 
             extent[0] -= 0.5
             extent[1] += 0.5
@@ -343,7 +342,7 @@ class ImageDisplay(object):
 
         # rotate x tick labels to avoid them clashing
         plt.xticks(rotation=35)
-
+        
         # plot wedge, make tick numbers smaller, label with units
         if vmin==vmax:
             cb = plt.colorbar(shrink=shrink, fraction=fraction,
@@ -383,6 +382,17 @@ class ImageDisplay(object):
                     ax.axhline(chunk[-1]+0.5, color='white')
                     ax.text(lims[0]-0.25, ydata[chunk[0]], tstring,
                       fontsize=10, ha='right', va='bottom', clip_on=False)
+
+        # For x-axis, enable minor ticks
+        plt.gca().xaxis.set_minor_locator(ticker.AutoMinorLocator())
+
+        # If plotting by baseline on y-axis, add minor tick marks (should mark 
+        # start of each new antenna)
+        if 'BASELINE' in ytitle.upper():
+            plt.gca().yaxis.set_minor_locator(ticker.AutoMinorLocator())
+        
+        # Display ticks outside the plot for both axes and both sides
+        plt.gca().tick_params(axis='both', which='both', direction='out')
 
         # reset lims to values for image, stops box being pulled off edge
         # of image by other plotting commands.
