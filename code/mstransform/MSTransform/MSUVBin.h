@@ -7,7 +7,7 @@
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
-//# under the terms of the GNU Library General Public License as published by
+//# under the terms of the GNU  General Public License as published by
 //# the Free Software Foundation; either version 2 of the License, or (at your
 //# option) any later version.
 //#
@@ -48,7 +48,7 @@ public:
 	MSUVBin();
 	//npol should be only 1, 2 (parallel hands)  or 4
 	MSUVBin(const MDirection& phaseCenter, const Int nx,
-		const Int ny, const Int nchan, const Int npol, Quantity cellx, Quantity celly, Quantity freqStart, Quantity freqStep, Float memFraction=0.5, Bool dow=False);
+		const Int ny, const Int nchan, const Int npol, Quantity cellx, Quantity celly, Quantity freqStart, Quantity freqStep, Float memFraction=0.5, Bool dow=False, Bool doflag=False);
 	//Constructor to bin into an existing gridded ms
 	MSUVBin (MeasurementSet& ms);
 	//The following can be called multiple times to setup multiple input MS
@@ -110,6 +110,10 @@ private:
 			 Bool*& rowFlag, Double*& uvw, Int*& ant1,
 			 Int*& ant2, Double*& timeCen, const Int startchan, 
 			 const Int endchan, const Cube<Complex>& convFunc, const Vector<Int>& convSupport, const Double wScale, const Int convSampling );
+	void locateFlagFromGrid(vi::VisBuffer2& vb, Cube<Bool>& datFlag,
+				Cube<Float>& wghtSpec,
+				Cube<Bool>& flag, Vector<Bool>& rowFlag, Matrix<Double>& uvw, Vector<Int>& ant1,
+				Vector<Int>& ant2, Vector<Double>& timeCen, const Int startchan, const Int endchan);
 	// returns a false if either no channel map or pol map onto grid
 	Bool datadescMap(const vi::VisBuffer2& vb, Double& fracbw);
 	Bool datadescMap(const VisBuffer& vb);
@@ -148,7 +152,7 @@ private:
 	Block<const MeasurementSet *> mss_p;
 	VisBufferUtil vbutil_p;
 	Float memFraction_p;
-	Bool doW_p;
+	Bool doW_p, doFlag_p;
 
 }; // end class MSUVBin
 } //# NAMESPACE CASA - END

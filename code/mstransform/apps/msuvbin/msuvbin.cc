@@ -71,6 +71,7 @@ int main(int argc, char **argv) {
   inp.create("fstep", "1KHz", "channel width");
   inp.create("wproject", "False", "Do wprojection correction while binning");
   inp.create("memfrac", "0.5", "Fraction of ram to try to use");
+  inp.create("flag","False", "flag mode");
   inp.readArguments(argc, argv);
   String msname=inp.getString("vis");
   String outMS=inp.getString("outvis");
@@ -122,9 +123,10 @@ int main(int argc, char **argv) {
 
   Float memFrac=Float(inp.getDouble("memfrac"));
   Bool doW=inp.getBool("wproject");
+  Bool doFlag=inp.getBool("flag");
   
   MSUVBin binner(phaseCenter, nx,
-		 ny, nchan, ncorr, cellx, celly, fstart, fstep, memFrac, doW);
+		 ny, nchan, ncorr, cellx, celly, fstart, fstep, memFrac, doW, doFlag);
   binner.selectData(msname, spw, field, baseline, scan, uvrange, taql);
   binner.setOutputMS(outMS);
   binner.fillOutputMS();

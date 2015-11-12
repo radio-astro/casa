@@ -83,7 +83,7 @@ MSUVBin::MSUVBin():nx_p(0), ny_p(0), nchan_p(0), npol_p(0),existOut_p(False){
 	memFraction_p=0.5;
 }
 MSUVBin::MSUVBin(const MDirection& phaseCenter,
-		 const Int nx, const Int ny, const Int nchan, const Int npol, Quantity cellx, Quantity celly, Quantity freqStart, Quantity freqStep, Float memFraction, Bool dow):
+		 const Int nx, const Int ny, const Int nchan, const Int npol, Quantity cellx, Quantity celly, Quantity freqStart, Quantity freqStep, Float memFraction, Bool dow, Bool doflag):
 		existOut_p(False)
 
 {
@@ -101,6 +101,7 @@ MSUVBin::MSUVBin(const MDirection& phaseCenter,
 	outMSName_p="OutMS.ms";
 	memFraction_p=memFraction;
 	doW_p=dow;
+	doFlag_p=doflag;
 
 }
 
@@ -115,7 +116,7 @@ Bool MSUVBin::selectData(const String& msname, const String& spw, const String& 
 	Vector<Int> fakestep = Vector<Int> (1, 1);
 
 	String elms=msname; // cause the following constructor does not accept a const
-	MSTransformDataHandler mshandler(elms, Table::Old);
+	MSTransformDataHandler mshandler(elms, doFlag_p ? Table::Update: Table::Old);
 	//No very well documented what the step is supposed to do
 	//using the default value here
 	if(mshandler.setmsselect(spw, field, baseline, scan, uvrange,
@@ -335,7 +336,7 @@ Bool MSUVBin::fillNewBigOutputMS(){
 	createOutputMS(nrrows);
 	setTileCache();
 	ROMSColumns msc(*outMsPtr_p);
-	vi::VisibilityIterator2 iter(mss_p, vi::SortColumns(), False);
+	vi::VisibilityIterator2 iter(mss_p, vi::SortColumns(), doFlag_p);
 	vi::VisBuffer2* vb=iter.getVisBuffer();
 	iter.originChunks();
 	iter.origin();
@@ -438,27 +439,49 @@ Bool MSUVBin::fillNewBigOutputMS(){
 		Double rowsDone=0.0;
      for (iter.originChunks(); iter.moreChunks(); iter.nextChunk()){
 	for(iter.origin(); iter.more(); iter.next()){
-	  if(doW_p){
-	    //gridDataConv(*vb, grid, wght, wghtSpec,flag, rowFlag, uvw,
-	    //		 ant1,ant2,timeCen, startchan, endchan, convFunc, convSupport, wScale, convSampling);
-	    gridDataConvThr(*vb, grid, wghtSpec,flag, rowFlag, uvw,
-			    ant1,ant2,timeCen, startchan, endchan, convFunc, convSupport, wScale, convSampling);
-	}
-	  else
+	  if(doFlag_p){
+	    cerr << " before " << ntrue(vb->flagCube()) << endl;
+	    Cube<Bool> datFlag=vb->flagCube();
+	    locateFlagFromGrid(*vb, datFlag,
+				 realWghtSpec,
+				flag, rowFlag, uvw, ant1,
+			       ant2, timeCen, startchan, endchan);
+	    cerr << " after " << ntrue(datFlag) << endl;
+	    iter.writeFlag(datFlag);
+
+	  }
+	  else{
+	    if(doW_p){
+	      //gridDataConv(*vb, grid, wght, wghtSpec,flag, rowFlag, uvw,
+	      //		 ant1,ant2,timeCen, startchan, endchan, convFunc, convSupport, wScale, convSampling);
+	      gridDataConvThr(*vb, grid, wghtSpec,flag, rowFlag, uvw,
+			      ant1,ant2,timeCen, startchan, endchan, convFunc, convSupport, wScale, convSampling);
+	      
+	    }
+	    else{
 	    gridData(*vb, grid, wght, realWghtSpec,flag, rowFlag, uvw,
 	             ant1,ant2,timeCen, startchan, endchan);
-	    rowsDone+=Double(vb->nRows());
-	    pm.update(rowsDone);
+	    }
+	    
+	    
 	  }
-
+	  rowsDone+=Double(vb->nRows());
+	  
+	  
+	  
+	  pm.update(rowsDone);
+     
+	  
 	}
+
+     }
   
        imagWghtSpec.resize();
        if(doW_p){
 	  realWghtSpec.resize(wghtSpec.shape());
-       realWghtSpec=real(wghtSpec);
-	 imagWghtSpec.resize(wghtSpec.shape());
-	 imagWghtSpec=imag(wghtSpec);
+	  realWghtSpec=real(wghtSpec);
+	  imagWghtSpec.resize(wghtSpec.shape());
+	  imagWghtSpec=imag(wghtSpec);
        }
        else{
 	 wghtSpec.resize(realWghtSpec.shape());
@@ -1581,6 +1604,7 @@ void MSUVBin::gridDataConvThr(const vi::VisBuffer2& vb, Cube<Complex>& grid,
   Int nth=1;
 #ifdef _OPENMP
   nth=min(nchan_p, omp_get_max_threads());
+  omp_set_dynamic(0);
 #endif
 #pragma omp parallel for firstprivate(refFreq, scale, hasCorrected, needRot, fracbw, gridStor, wghtSpecStor, flagStor, rowFlagStor, uvwStor, ant1Stor, ant2Stor, timeCenStor ) shared(phasor, visFreq) num_threads(nth) schedule(dynamic, 1)
 
@@ -1831,6 +1855,105 @@ void MSUVBin::multiThrLoop(const Int outchan, const vi::VisBuffer2& vb, Double r
 			}
 			*/
     }
+
+}
+
+
+  void MSUVBin::locateFlagFromGrid(vi::VisBuffer2& vb, Cube<Bool>& datFlag,
+		Cube<Float>& wghtSpec,
+		Cube<Bool>& flag, Vector<Bool>& rowFlag, Matrix<Double>& uvw, Vector<Int>& ant1,
+		Vector<Int>& ant2, Vector<Double>& timeCen, const Int startchan, const Int endchan){
+	//all pixel that are touched the flag and flag Row shall be unset and the w be assigned
+		//later we'll deal with multiple w for the same uv
+		//we need polmap and chanmap;
+
+  Double fracbw;
+  if(!datadescMap(vb, fracbw)) return;
+  //cerr << "fracbw " << fracbw << endl;
+    SpectralCoordinate spec=csys_p.spectralCoordinate(2);
+    DirectionCoordinate thedir=csys_p.directionCoordinate(0);
+    Double refFreq=SpectralImageUtil::worldFreq(csys_p, Double(nchan_p/2));
+    //Double refFreq=SpectralImageUtil::worldFreq(csys_p, Double(0));
+    Vector<Float> scale(2);
+    scale(0)=fabs(nx_p*thedir.increment()(0))/C::c;
+    scale(1)=fabs(ny_p*thedir.increment()(1))/C::c;
+    //Dang i thought the new vb will return Data or FloatData if correctedData was
+	    //not there
+	    //Bool hasCorrected=!(ROMSMainColumns(vb.getVi()->ms()).correctedData().isNull());
+		//locateuvw(locuv, vb.uvw());
+	    Vector<Double> visFreq=vb.getFrequencies(0, MFrequency::LSRK);
+		for (Int k=0; k < vb.nRows(); ++k){
+		  if(!vb.flagRow()[k]){
+		  Int locu, locv;
+		  {
+		    locv=Int(Double(ny_p)/2.0+vb.uvw()(1,k)*refFreq*scale(1)+0.5);
+		    locu=Int(Double(nx_p)/2.0+vb.uvw()(0,k)*refFreq*scale(0)+0.5);
+
+		  }
+	
+		  for(Int chan=0; chan < vb.nChannels(); ++chan ){
+		    if(chanMap_p(chan) >=startchan && chanMap_p(chan) <=endchan){
+		      //Double outChanFreq;
+		      //spec.toWorld(outChanFreq, Double(chanMap_p(chan)));
+		      if(fracbw > 0.05)
+		      {
+		    	  locv=Int(Double(ny_p)/2.0+vb.uvw()(1,k)*visFreq(chan)*scale(1)+0.5);
+		    	  locu=Int(Double(nx_p)/2.0+vb.uvw()(0,k)*visFreq(chan)*scale(0)+0.5);
+		      }
+		      if(locv < ny_p && locu < nx_p){
+				  Int newrow=locv*nx_p+locu;
+				  if(rowFlag(newrow) && !(vb.flagRow()(k))){
+				    rowFlag(newrow)=False;
+				    /////TEST
+				    //uvw(0,newrow)=vb.uvw()(0,k);
+				    //uvw(1,newrow)=vb.uvw()(1,k);
+				    /////
+				    uvw(2,newrow)=vb.uvw()(2,k);
+				    //cerr << newrow << " rowids " << vb.rowIds()[k]  << " uvw2 " << uvw(2 ,newrow) << endl;
+				    ant1(newrow)=vb.antenna1()(k);
+				    ant2(newrow)=vb.antenna2()(k);
+				    timeCen(newrow)=vb.time()(k);
+
+				  }
+				  for(Int pol=0; pol < vb.nCorrelations(); ++pol){
+				    if((!vb.flagCube()(pol,chan, k)) && (polMap_p(pol)>=0) && (vb.weight()(pol,k)>0.0)){
+				  //  Double newU=	Double(locu-nx_p/2)/refFreq/scale(0);
+				 //   Double newV= Double(locv-ny_p/2)/refFreq/scale(1);
+				 //   Double phaseCorr=((newU/vb.uvw()(0,k)-1)+(newV/vb.uvw()(1,k)-1))*vb.uvw()(2,k)*2.0*C::pi*refFreq/C::c;
+				      // Complex toB=hasCorrected ? vb.visCubeCorrected()(pol,chan,k)*vb.weight()(pol,k):
+				      //	vb.visCube()(pol,chan,k)*vb.weight()(pol,k);
+				    //  Double s, c;
+				    //SINCOS(phaseCorr, s, c);
+				    //  toB=toB*Complex(c,s);
+				    //  grid(polMap_p(pol),chanMap_p(chan)-startchan, newrow)
+				      //	= (grid(polMap_p(pol),chanMap_p(chan)-startchan, newrow)
+				      //   + toB); ///(vb.weight()(pol,k)+wghtSpec(polMap_p(pol),chanMap_p(chan)-startchan,newrow));
+				      if(flag(polMap_p(pol),chanMap_p(chan)-startchan, newrow) || wghtSpec(polMap_p(pol),chanMap_p(chan)-startchan, newrow)==0.0) {
+					datFlag(pol,chan,k)=True;
+
+				      }
+				      //cerr << "weights " << max(vb.weight()) << "  spec " << max(vb.weightSpectrum()) << endl;
+				      //wghtSpec(polMap_p(pol),chanMap_p(chan), newrow)+=vb.weightSpectrum()(pol, chan, k);
+				      //wghtSpec(polMap_p(pol),chanMap_p(chan)-startchan, newrow) += vb.weight()(pol,k);
+				    }
+				    ///We should do that at the end totally
+				    //wght(pol,newrow)=median(wghtSpec.xyPlane(newrow).row(pol));
+				  }
+		      }//locu && locv
+		    }
+		  }
+			//sum wgtspec along channels for weight
+			/*for (Int pol=0; pol < wght.shape()(0); ++pol){
+				//cerr << "shape min max "<< median(wghtSpec.xyPlane(newrow).row(pol)) << " " << min(wghtSpec.xyPlane(newrow).row(pol)) << "  "<< max(wghtSpec.xyPlane(newrow).row(pol)) << endl;
+				wght(pol,newrow)=median(wghtSpec.xyPlane(newrow).row(pol));
+				//cerr << "pol " << pol << " newrow "<< newrow << " weight "<< wght(pol, newrow) << endl;
+			}
+			*/
+		  }
+		}
+
+
+
 
 }
 Bool MSUVBin::saveData(const Cube<Complex>& grid, const Cube<Bool>&flag, const Vector<Bool>& rowFlag,
@@ -2454,7 +2577,7 @@ void MSUVBin::makeWConv(vi::VisibilityIterator2& iter, Cube<Complex>& convFunc, 
     for (trial=0; trial<cpConvSize/2-2;++trial) {
     //for (trial=cpConvSize/2-2;trial>0;trial--) {
     // if((abs(convFunc(trial,0,iw))>1e-3)||(abs(convFunc(0,trial,iw))>1e-3) ) {
-     if((abs(convFuncPtr[ooLong(trial)+ploffset])/abs(maxes[iw])< 1e-3)||(abs(convFuncPtr[ooLong(trial*(cpConvSize/2-1))+ploffset])/abs(maxes[iw]) < 1e-3) ) {
+     if((abs(convFuncPtr[ooLong(trial)+ploffset])/abs(maxes[0])< 1e-3)||(abs(convFuncPtr[ooLong(trial*(cpConvSize/2-1))+ploffset])/abs(maxes[0]) < 1e-3) ) {
       //if((abs(convFuncPtr[ooLong(trial)+ploffset]) < 1e-3)||(abs(convFuncPtr[ooLong(trial*(cpConvSize/2-1))+ploffset]) < 1e-3) ) {
       //if(abs(convFuncPtr[ooLong(trial)+ploffset])*abs(convFuncPtr[ooLong(trial*(cpConvSize/2-1))+ploffset]) < 1e-3){
       ///diagonal
