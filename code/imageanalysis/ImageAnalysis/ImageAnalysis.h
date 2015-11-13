@@ -72,6 +72,7 @@ public:
 
     virtual ~ImageAnalysis();
 
+    /*
     ImageInterface<Float> * convolve(
     	const String& outfile,
         Array<Float>& kernel,
@@ -82,6 +83,7 @@ public:
         const Bool async=False,
         const Bool stretch=False
     );
+    */
 
     void calc(const String& expr, Bool verbose);
 

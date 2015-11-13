@@ -144,6 +144,8 @@ install (FILES
     ImageAnalysis/ImageConcatenator.tcc
     ImageAnalysis/ImageConvolver.h
 	ImageAnalysis/ImageConvolver.tcc
+    ImageAnalysis/ImageConvolverTask.h
+    ImageAnalysis/ImageConvolverTask.tcc
 	ImageAnalysis/ImageCropper.h
 	ImageAnalysis/ImageCropper.tcc
 	ImageAnalysis/ImageDecimator.h

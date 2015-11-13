@@ -74,7 +74,7 @@
 #include <coordinates/Coordinates/GaussianConvert.h>
 #include <coordinates/Coordinates/LinearCoordinate.h>
 #include <imageanalysis/ImageAnalysis/ComponentImager.h>
-#include <imageanalysis/ImageAnalysis/ImageConvolver.h>
+//#include <imageanalysis/ImageAnalysis/ImageConvolver.h>
 #include <images/Images/ImageExprParse.h>
 #include <images/Regions/WCEllipsoid.h>
 #include <images/Images/ImageOpener.h>
@@ -110,7 +110,7 @@
 #include <lattices/LRegions/RegionType.h>
 #include <lattices/Lattices/TiledLineStepper.h>
 #include <scimath/Fitting/LinearFitSVD.h>
-#include <scimath/Mathematics/VectorKernel.h>
+// #include <scimath/Mathematics/VectorKernel.h>
 #include <tables/LogTables/NewFile.h>
 #include <images/Images/MIRIADImage.h>
 
@@ -189,6 +189,7 @@ Bool ImageAnalysis::detached() {
 	return _imageFloat.get() == 0 && _imageComplex.get() == 0;
 }
 
+/*
 ImageInterface<Float> *
 ImageAnalysis::convolve(
 	const String& outFile, Array<Float>& kernelArray,
@@ -278,6 +279,7 @@ ImageAnalysis::convolve(
 	}
 	return imOut.release();
 }
+*/
 
 void ImageAnalysis::calc(const String& expr, Bool verbose) {
 	*_log << LogOrigin(className(), __func__);
