@@ -9,6 +9,7 @@ import pipeline.infrastructure.mpihelpers as mpihelpers
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
+from pipeline.hsd.heuristics import MaskDeviationHeuristic
 
 from .. import common
 from . import maskline
@@ -162,7 +163,17 @@ class SDBaseline(common.SingleDishTaskTemplate):
             LOG.debug('Members to be processed:')
             for i in xrange(len(member_list)):
                 LOG.debug('\tAntenna %s Spw %s Pol %s'%(antenna_list[i], spwid_list[i], pols_list[i]))
-            
+                
+            # Deviation Mask 
+            for (ant, spw) in zip(antenna_list, spwid_list):
+                st = self.context.observing_run.get_scantable(ant)
+                if st.spectral_window[spw].deviation_mask is None:
+                    LOG.debug('Evaluating deviation mask for %s spw %s'%(st.basename, spw))
+                    mask_list = self.evaluate_deviation_mask(st.name, spw)
+                    LOG.debug('deviation mask = %s'%(mask_list))
+                    st.spectral_window[spw].deviation_mask = mask_list
+                
+            # Spectral Line Detection and Validation
             maskline_inputs = maskline.MaskLine.Inputs(context, iteration, antenna_list, spwid_list, 
                                                        pols_list, window, edge, broadline, clusteringalgorithm)
             maskline_task = maskline.MaskLine(maskline_inputs)
@@ -287,6 +298,14 @@ class SDBaseline(common.SingleDishTaskTemplate):
 
     def analyse(self, result):
         return result
+
+    def evaluate_deviation_mask(self, infile, spw):
+        """
+        Create deviation mask using MaskDeviation heuristic
+        """
+        h = MaskDeviationHeuristic()
+        mask_list = h.calculate(infile=infile, spw=spw)
+        return mask_list
 
     def _generate_storage_for_baselined(self, context, reduction_group):
         for antenna in xrange(len(context.observing_run)):

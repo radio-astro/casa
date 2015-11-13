@@ -154,6 +154,7 @@ class FittingBase(common.SingleDishTaskTemplate):
         srctype = self.inputs.srctype
         edge = common.parseEdge(self.inputs.edge)
         fit_order = self.inputs.fit_order
+        st = self.inputs.context.observing_run.get_scantable(antennaid)
 
         if self.ApplicableDuration == 'subscan':
             timetable_index = 1
@@ -166,6 +167,20 @@ class FittingBase(common.SingleDishTaskTemplate):
         blinfo = []
         row_list_string = []
 
+        # prepare mask arrays
+        mask_array = numpy.ones(nchan, dtype=int)
+        mask_array[:edge[0]] = 0
+        mask_array[nchan-edge[1]:] = 0
+            
+        # deviation mask
+        deviation_mask = st.spectral_window[spwid].deviation_mask 
+        LOG.debug('Deviation mask for spw %s: %s'%(spwid, deviation_mask))
+        if deviation_mask is not None:
+            for mask_range in deviation_mask:
+                mask_array[mask_range[0]:mask_range[1]] = 0
+            
+        base_mask_array = mask_array.copy()
+    
         for pol in pollist:
             time_table = datatable.get_timetable(antennaid, spwid, pol)
             member_list = time_table[timetable_index]
@@ -176,10 +191,6 @@ class FittingBase(common.SingleDishTaskTemplate):
             LOG.info('Calculating Baseline Fitting Parameter...')
             LOG.info('Baseline Fit: background subtraction...')
             LOG.info('Processing %d spectra...'%(nrow_total))
-    
-            mask_array = numpy.ones(nchan, dtype=int)
-            mask_array[:edge[0]] = 0
-            mask_array[nchan-edge[1]:] = 0
     
             for y in xrange(len(member_list)):
                 rows = member_list[y][0]
@@ -244,12 +255,13 @@ class FittingBase(common.SingleDishTaskTemplate):
     
                     # fitting
                     polyorder = min(polyorder, max_polyorder)
-                    mask_array[edge[0]:nchan-edge[1]] = 1
+                    mask_array[:] = base_mask_array
                     #irow = len(row_list_total)+len(row_list)
                     irow = len(index_list_total) + i
                     param = self._calc_baseline_param(irow, polyorder, nchan, 0, edge, _masklist, win_polyorder, fragment, nwindow, mask_array)
                     # defintion of masklist differs in pipeline and ASAP (masklist = [a, b+1] in pipeline masks a channel range a ~ b-1)
                     param['masklist'] = [ [start, end-1] for [start, end] in param['masklist'] ]
+                    LOG.trace('Row %s: param=%s'%(row,param))
                     blinfo.append(param)
                     #index_list.append(idx)
                     #row_list.append(row)
