@@ -411,7 +411,7 @@ String VLAADA::arrayName() const {
   Bool fiber = (bits & 0x0040);
 
   // VLBA and EVLA are connected by fiber
-  if (fiber)
+  if (fiber) {
     // It is a VLBA antenna (e.g. PT)
     if (antId()>28)
       //      return String("VLBA:");
@@ -419,7 +419,7 @@ String VLAADA::arrayName() const {
     else
       // evla
       return String("EVLA:");
-
+  }
   // Otherwise this is just the old VLA
   //  (the underscore is so string length same as above, for AIPS)
   return String("VLA:_");

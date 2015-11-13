@@ -84,7 +84,7 @@ VLAOnlineInput::VLAOnlineInput(String &onlineFlag, Int afiles)
       int dum(-99);
       std::cerr << getTodaysFile() << std::endl;
       //olopen_(&dum, (char *)getTodaysFile().data(), 1);
-      olopen_(&dum, "online", 1);
+      olopen_(&dum, const_cast<char*>("online"), 1);
       oladvf_(&dum, &afiles);      // Positions the online filler 
                                    // afile < 0 previous days upto 14
                                    // afile == 0, start of current day

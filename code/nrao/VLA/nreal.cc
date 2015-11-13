@@ -92,7 +92,7 @@ static int oldDay =0;
 static int previousDay = 0;
 static char *tomorrowsFile = 0;
 
-static char *visDataDir = "/home/vis-serv-mirror/vladata/";
+static const char *visDataDir = "/home/vis-serv-mirror/vladata/";
 
 char *getTodaysFile(char *dataDir, char *aDate, int relDay){
 int LeapSeconds = LEAP_SECONDS;
