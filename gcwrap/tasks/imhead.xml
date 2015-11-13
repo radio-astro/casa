@@ -148,7 +148,8 @@ get       Return the specified keyword value. Ignores all but imagename, mode, a
 history   Log image history. Ignores all but imagename and mode parameters.
 list      Show supported keywords and their values. Ignores all but imagename and mode parameters.
 put       Modify the specified value associated with the keyword.
-summary   Log a summary of the image. Ignores all but imagename and mode parameters.
+summary   Log a summary of the image and return a dictionary of various metadata values.
+          Ignores all but imagename and mode parameters.
 
 See below for details about how these modes act for specific keywords.
 

@@ -100,9 +100,9 @@ def imhead(
             myia.open(imagename)
             if mode.startswith('h'):
                 myia.history()
+                return True
             elif mode.startswith('s'):
-                myia.summary(verbose=verbose)
-            return True
+                return myia.summary(verbose=verbose)
         except Exception, instance:
             casalog.post(str('*** Error *** ') + str(instance), 'SEVERE')
             raise

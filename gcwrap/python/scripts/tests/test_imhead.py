@@ -147,8 +147,6 @@ def deep_equality(a, b):
         return True
     return a == b
 
-
-
 class imhead_test(unittest.TestCase):
     
     def setUp(self):
@@ -1612,6 +1610,14 @@ class imhead_test(unittest.TestCase):
                 'minor': {'value': 7.0, 'unit': 'arcsec'}
             }
         )
+
+    def test_dict_return(self):
+        """Verify imhead returns a dictionary for mode=summary"""
+        myia = iatool()
+        imagename = "CAS-8095.im"
+        myia.fromshape(imagename, [1,1,4,3])
+        ret = imhead(imagename=imagename, mode="summary")
+        self.assertTrue(type(ret) == dict)
         
 def suite():
     return [imhead_test]    
