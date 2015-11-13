@@ -1,3 +1,4 @@
+import os
 import pylab as PL
 import numpy as NP
 import asap as sd
@@ -20,9 +21,9 @@ class MaskDeviationHeuristic(api.Heuristic):
         worker.ReadData()
         worker.SubtractMedian(threshold=3.0)
         worker.CalcStdSpectrum()
-        worker.PlotSpectrum()
+        #worker.PlotSpectrum()
         worker.CalcRange(threshold=3.0, detection=5.0, extension=2.0, iteration=10)
-        worker.SavePlot()
+        #worker.SavePlot()
         mask_list = worker.masklist
         del worker
         return mask_list
@@ -51,9 +52,9 @@ class MaskDeviation(object):
     subtraction.
     """
     def __init__(self, infile, spw=None):
-        LOG.trace('MaskDeviation.__init__: MaskDeviation')
         self.infile = infile.rstrip('/')
         self.spw = spw
+        LOG.trace('MaskDeviation.__init__: infile %s spw %s'%(os.path.basename(self.infile), self.spw))
         self.masklist = []
 
     def ReadData(self, infile=''):
