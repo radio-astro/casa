@@ -72,19 +72,6 @@ public:
 
     virtual ~ImageAnalysis();
 
-    /*
-    ImageInterface<Float> * convolve(
-    	const String& outfile,
-        Array<Float>& kernel,
-        const String& kernImage,
-        const Double scale,
-        Record& region, String& mask,
-        const Bool overwrite=False,
-        const Bool async=False,
-        const Bool stretch=False
-    );
-    */
-
     void calc(const String& expr, Bool verbose);
 
     // regions should be a Record of Records having different regions

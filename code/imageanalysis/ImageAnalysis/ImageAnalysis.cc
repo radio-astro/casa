@@ -31,88 +31,33 @@
 #include <casa/aips.h>
 #include <casa/iostream.h>
 #include <casa/sstream.h>
-#include <casa/BasicSL/String.h>
 #include <casa/Arrays/ArrayIO.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayUtil.h>
 #include <casa/Arrays/MaskedArray.h>
 #include <casa/Arrays/MaskArrMath.h>
-#include <casa/BasicMath/Random.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Containers/Record.h>
-#include <casa/Exceptions/Error.h>
 #include <casa/fstream.h>
-#include <casa/Logging/LogIO.h>
-#include <casa/Logging/LogOrigin.h>
 #include <casa/OS/Directory.h>
 #include <casa/OS/File.h>
 #include <casa/OS/HostInfo.h>
 #include <casa/OS/RegularFile.h>
 #include <casa/OS/SymLink.h>
-#include <casa/Quanta/QuantumHolder.h>
-#include <casa/Quanta/Quantum.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Utilities/Regex.h>
-#include <measures/Measures/MeasureHolder.h>
-#include <measures/Measures/MDirection.h>
-#include <measures/Measures/MEpoch.h>
-#include <measures/Measures/MDoppler.h>
-#include <measures/Measures/MFrequency.h>
-#include <measures/Measures/MPosition.h>
-#include <components/ComponentModels/ComponentList.h>
-#include <components/ComponentModels/ComponentShape.h>
-#include <components/ComponentModels/GaussianShape.h>
-#include <components/ComponentModels/SkyComponent.h>
-#include <components/ComponentModels/SkyCompRep.h>
-#include <components/ComponentModels/TwoSidedShape.h>
-#include <components/SpectralComponents/SpectralElement.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
-#include <coordinates/Coordinates/StokesCoordinate.h>
-#include <coordinates/Coordinates/CoordinateUtil.h>
-#include <coordinates/Coordinates/DirectionCoordinate.h>
-#include <coordinates/Coordinates/SpectralCoordinate.h>
-#include <coordinates/Coordinates/GaussianConvert.h>
-#include <coordinates/Coordinates/LinearCoordinate.h>
-#include <imageanalysis/ImageAnalysis/ComponentImager.h>
-//#include <imageanalysis/ImageAnalysis/ImageConvolver.h>
-#include <images/Images/ImageExprParse.h>
-#include <images/Regions/WCEllipsoid.h>
-#include <images/Images/ImageOpener.h>
-#include <images/Regions/ImageRegion.h>
+#include <coordinates/Coordinates/Coordinate.h>
+#include <components/ComponentModels/Flux.h>
 #include <images/Images/ImageRegrid.h>
-#include <images/Images/ImageStatistics.h>
+#include <imageanalysis/ImageAnalysis/ComponentImager.h>
 #include <imageanalysis/ImageAnalysis/ImageTwoPtCorr.h>
-#include <images/Images/ImageUtilities.h>
-#include <images/Images/LELImageCoord.h>
-#include <images/Images/PagedImage.h>
-#include <images/Regions/RegionManager.h>
-#include <imageanalysis/ImageAnalysis/SepImageConvolver.h>
-#include <imageanalysis/ImageAnalysis/SubImageFactory.h>
-#include <images/Images/TempImage.h>
-#include <images/Regions/WCLELMask.h>
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/ImageDecomposer.h>
 #include <imageanalysis/ImageAnalysis/ImageFactory.h>
 #include <imageanalysis/ImageAnalysis/ImageSourceFinder.h>
 #include <imageanalysis/ImageAnalysis/PixelValueManipulator.h>
-#include <lattices/LatticeMath/LatticeFit.h>
-#include <lattices/LatticeMath/LatticeAddNoise.h>
-#include <lattices/LEL/LatticeExprNode.h>
-#include <lattices/LEL/LatticeExprNode.h>
-#include <lattices/Lattices/LatticeIterator.h>
-#include <lattices/LRegions/LatticeRegion.h>
+#include <imageanalysis/ImageAnalysis/SepImageConvolver.h>
+#include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 #include <lattices/LatticeMath/LatticeSlice1D.h>
-#include <lattices/Lattices/LatticeUtilities.h>
-#include <lattices/LRegions/LCBox.h>
-#include <lattices/LRegions/LCSlicer.h>
 #include <lattices/Lattices/MaskedLatticeIterator.h>
 #include <lattices/Lattices/PixelCurve1D.h>
 #include <lattices/LRegions/RegionType.h>
-#include <lattices/Lattices/TiledLineStepper.h>
-#include <scimath/Fitting/LinearFitSVD.h>
-// #include <scimath/Mathematics/VectorKernel.h>
-#include <tables/LogTables/NewFile.h>
-#include <images/Images/MIRIADImage.h>
 
 #include <casa/OS/PrecTimer.h>
 
@@ -188,98 +133,6 @@ Bool ImageAnalysis::open(const String& infile) {
 Bool ImageAnalysis::detached() {
 	return _imageFloat.get() == 0 && _imageComplex.get() == 0;
 }
-
-/*
-ImageInterface<Float> *
-ImageAnalysis::convolve(
-	const String& outFile, Array<Float>& kernelArray,
-	const String& kernelFileName, const Double in_scale, Record& region,
-	String& mask, const Bool overwrite, const Bool, const Bool stretch
-) {
-	_onlyFloat(__func__);
-	*_log << LogOrigin(className(), __func__);
-
-	//Need to deal with the string part
-	//    String kernelFileName(kernel.toString());
-	if (mask == "[]") {
-		mask = "";
-	}
-	Bool autoScale;
-	Double scale(in_scale);
-
-	if (scale > 0) {
-		autoScale = False;
-	}
-	else {
-		autoScale = True;
-		scale = 1.0;
-	}
-
-	// Check output file name
-	if (!outFile.empty() && !overwrite) {
-		NewFile validfile;
-		String errmsg;
-		ThrowIf(
-			!validfile.valueOK(outFile, errmsg), errmsg
-		);
-	}
-
-	SHARED_PTR<const SubImage<Float> > subImage = SubImageFactory<Float>::createSubImageRO(
-		*_imageFloat, region, mask, _log.get(), AxesSpecifier(), stretch
-	);
-
-	// Create output image
-	IPosition outShape = subImage->shape();
-	std::unique_ptr<ImageInterface<Float> > imOut;
-	if (outFile.empty()) {
-		*_log << LogIO::NORMAL << "Creating (temp)image of shape "
-				<< outShape << LogIO::POST;
-		imOut.reset(new TempImage<Float> (outShape, subImage->coordinates()));
-	}
-	else {
-		*_log << LogIO::NORMAL << "Creating image '" << outFile
-				<< "' of shape " << outShape << LogIO::POST;
-		imOut.reset(new PagedImage<Float> (outShape, subImage->coordinates(),
-				outFile));
-	}
-	//ImageInterface<Float>* pImOut = imOut.ptr()->cloneII();
-
-	// Make the convolver
-	ImageConvolver<Float> aic;
-	Bool copyMisc = True;
-	Bool warnOnly = True;
-	ImageConvolver<Float>::ScaleTypes scaleType(ImageConvolver<Float>::NONE);
-	if (autoScale) {
-		scaleType = ImageConvolver<Float>::AUTOSCALE;
-	}
-	else {
-		scaleType = ImageConvolver<Float>::SCALE;
-	}
-	if (kernelFileName.empty()) {
-		ThrowIf(
-			kernelArray.nelements() <= 1,
-			"Kernel array dimensions are invalid"
-		);
-		aic.convolve(
-			*_log, *imOut, *subImage, kernelArray, scaleType,
-			scale, copyMisc
-		);
-	}
-	else {
-		ThrowIf(
-			! Table::isReadable(kernelFileName),
-			"kernel image " + kernelFileName
-			+ " is not available "
-		);
-		PagedImage<Float> kernelImage(kernelFileName);
-		aic.convolve(
-			*_log, *imOut, *subImage, kernelImage, scaleType,
-			scale, copyMisc, warnOnly
-		);
-	}
-	return imOut.release();
-}
-*/
 
 void ImageAnalysis::calc(const String& expr, Bool verbose) {
 	*_log << LogOrigin(className(), __func__);
