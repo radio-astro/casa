@@ -299,6 +299,7 @@ class SpectralWindowAdapter:
     
     def __init__(self, spw):
         self.spw = spw
+        self.deviation_mask = None
         
     @property
     def band(self):
