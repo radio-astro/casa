@@ -528,6 +528,7 @@ protected:
   //interpolation on y axis of a cube. 
   
   void swapyz(Cube<Complex>& out, const Cube<Complex>& in);
+  void swapyz(Cube<Complex>& out, const Cube<Bool>& outFlag, const Cube<Complex>& in);
   void swapyz(Cube<Bool>& out, const Cube<Bool>& in);
   void convUVW(Double& dphase, Vector<Double>& thisrow);
 

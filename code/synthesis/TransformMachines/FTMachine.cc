@@ -772,8 +772,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     flipdata.set(Complex(0.0));
     InterpolateArray1D<Double,Complex>::
       interpolate(flipdata,visFreq, imageFreq_p, flipgrid,freqInterpMethod_p);
-    swapyz(vb.modelVisCube(),flipdata);
-    
+    swapyz(vb.modelVisCube(), vb.flagCube(), flipdata);
+    //swapyz(vb.modelVisCube(), flipdata);
     
     return True;
   }
@@ -1112,14 +1112,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  String subPathname[30];
 	  String sep = "/";
 	  uInt nw = split(theDiskImage, subPathname, 20, sep);
-	  cerr << "nw " << nw << endl;
+	  
 	  String theposs=(subPathname[nw-1]);
 	  Bool isExistant=File(theposs).exists();
 	  if(isExistant) 
 	    theDiskImage=theposs;
 	    for (uInt i=nw-2 ; i>0; --i){
 	      theposs=subPathname[i]+"/"+theposs;
-	      cerr << "the poss " << theposs << endl;
 	      File newEldir(theposs);
 	      if(newEldir.exists()){
 		isExistant=True;
@@ -1622,7 +1621,33 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     out.putStorage(pout,deleteOut);
     in.freeStorage(pin,deleteIn);
   }
-  
+  void FTMachine::swapyz(Cube<Complex>& out, const Cube<Bool>& outFlag, const Cube<Complex>& in)
+  {
+    IPosition inShape=in.shape();
+    uInt nxx=inShape(0),nyy=inShape(2),nzz=inShape(1);
+    //resize breaks  references...so out better have the right shape 
+    //if references is not to be broken
+    if(out.nelements()==0)
+      out.resize(nxx,nyy,nzz);
+    Bool deleteIn,deleteOut, delFlag;
+    const Complex* pin = in.getStorage(deleteIn);
+    const Bool* poutflag= outFlag.getStorage(delFlag);
+    Complex* pout = out.getStorage(deleteOut);
+    uInt i=0, zOffset=0;
+    for (uInt iz=0; iz<nzz; ++iz, zOffset+=nxx) {
+      Int yOffset=zOffset;
+      for (uInt iy=0; iy<nyy; ++iy, yOffset+=nxx*nzz) {
+	for (uInt ix=0; ix<nxx; ++ix){ 
+	  if(!poutflag[i])
+	    pout[i] = pin[ix+yOffset];
+	  ++i;
+	}
+      }
+    }
+    out.putStorage(pout,deleteOut);
+    in.freeStorage(pin,deleteIn);
+    outFlag.freeStorage(poutflag, delFlag);
+  }
   // helper function to swap the y and z axes of a Cube
   void FTMachine::swapyz(Cube<Bool>& out, const Cube<Bool>& in)
   {
