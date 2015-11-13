@@ -612,6 +612,7 @@ class MSPlotMainMSCallBack : public TPGuiCallBackHooks
           //}
           ret = eflg.extend(flagids);
           //cout << "flag display: " << ret << endl;
+	  ((void) ret);
 
           return True;
 
@@ -812,6 +813,7 @@ class MSPlotMainMSCallBack : public TPGuiCallBackHooks
              //     << " iCount=" << idCount
              //     << endl;
              ret = eflg.extend(flagids(Slice(start, nSel)));
+	     ((void) ret);
 
              //eflg.detach();
              start += nSel;

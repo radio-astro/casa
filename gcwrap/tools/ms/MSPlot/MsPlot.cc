@@ -1770,88 +1770,95 @@ MsPlot::plotrangeToDbls( Vector<String> rangeStrVec,
        Int pos = tmpStr.find_first_of("/");
        Int nextPos;
        if ( pos >=0 && pos < (Int)tmpStr.length() )
-          nextPos = 
-             tmpStr.substr(pos+1,tmpStr.length()-1).find_first_of( "/");
+	   nextPos = 
+	       tmpStr.substr(pos+1,tmpStr.length()-1).find_first_of( "/");
        else
-          nextPos = -1;
+	   nextPos = -1;
       
        if ( ( pos < 0 || pos >= (Int)tmpStr.length() || pos==0  )
-          || ( nextPos > (Int)tmpStr.length() || nextPos < 0 ) ) {
-         //# We have found all the bits of the string relating
-         //# to the year, month, and day so depending on what
-         //# we have so far, add on the default values.
-         uInt numSlashes = timeString.freq( "/" );
-         if ( pos >= 0 && pos < (Int)tmpStr.length() || pos==0  ) 
-         {
-             timeString += tmpStr.substr( 0, pos+1 );
-             tmpStr=tmpStr.substr( pos+1, tmpStr.length()-1 );
-             numSlashes++;
-         }
-      
-         if ( numSlashes < 1 ) 
-            if ( day >= 0 )
-               timeString =  String::toString( day ) + String( "/" ) 
-                  + timeString;
-             else 
-               errors[0] += 
-                 String( "Day not given for plotrange value: " )
-                 + rangeStrVec[i]
-                 + String(" and the observations start end end days differ.\n");
+	    || ( nextPos > (Int)tmpStr.length() || nextPos < 0 ) ) {
 
-      if ( numSlashes < 2 ) 
-          //# Add Default Month value.
-          if ( month >= 0 )
-             timeString = String::toString( month ) 
-                + String( "/" ) + timeString ;
-          else 
-             errors[0] += String( "Month not given for plotrange value: " )
-              + rangeStrVec[i]
-              + String(" and the observations start end end months differ.\n");
-
-      if ( numSlashes < 3 ) 
-          //# Add Default year value.
-          if ( year >= 0 )
-             timeString = String::toString( year ) + String("/") 
-                + timeString;
-          else 
-             errors[0] += String( "Year not given for plotrange value: " )
-              + rangeStrVec[i]
-              + String(" and the observations start end end years differ.\n" );
+	   //# We have found all the bits of the string relating
+	   //# to the year, month, and day so depending on what
+	   //# we have so far, add on the default values.
+	   uInt numSlashes = timeString.freq( "/" );
+	   if ( ( pos >= 0 && pos < (Int)tmpStr.length() ) || pos==0  ) 
+	   {
+	       timeString += tmpStr.substr( 0, pos+1 );
+	       tmpStr=tmpStr.substr( pos+1, tmpStr.length()-1 );
+	       numSlashes++;
+	   }
       
-          done = True;
-      } else {
-         if ( nextPos == 0 ) {
-            //# We have an empty string so fill in with the default
-            uInt numSlashes = timeString.freq( "/" );
-            if ( numSlashes == 1 ) 
-               //# Add Default year value.
-               if ( year >= 0 )
-                  timeString += String::toString( year ) + String( "/" );
-               else 
-                  errors[0] += String( "Year not given for plotrange value: " )
-                   + rangeStrVec[i]
-                   + " and the observations start end end years differ.\n" ;
-            if ( numSlashes == 1 ) 
-               //# Add Default Month value.
-               if ( month >= 0 )
-                    timeString += String::toString( month ) + String( "/" );
-               else 
-                  errors[0] += String("Month not given for plotrange value: " )
-                   + rangeStrVec[i]
-                   + " and the observations start end end months differ.\n" ;
+	   if ( numSlashes < 1 ) {
+	       if ( day >= 0 )
+		   timeString =  String::toString( day ) + String( "/" ) 
+		       + timeString;
+	       else 
+		   errors[0] += 
+		       String( "Day not given for plotrange value: " )
+		       + rangeStrVec[i]
+		       + String(" and the observations start end end days differ.\n");
+	   }
+
+	   if ( numSlashes < 2 ) {
+	       //# Add Default Month value.
+	       if ( month >= 0 )
+		   timeString = String::toString( month ) 
+		       + String( "/" ) + timeString ;
+	       else 
+		   errors[0] += String( "Month not given for plotrange value: " )
+		       + rangeStrVec[i]
+		       + String(" and the observations start end end months differ.\n");
+	   }
+
+	   if ( numSlashes < 3 ) {
+	       //# Add Default year value.
+	       if ( year >= 0 )
+		   timeString = String::toString( year ) + String("/") 
+		       + timeString;
+	       else 
+		   errors[0] += String( "Year not given for plotrange value: " )
+		       + rangeStrVec[i]
+		       + String(" and the observations start end end years differ.\n" );
+	   }
+      
+	   done = True;
+       } else {
+	   if ( nextPos == 0 ) {
+	       //# We have an empty string so fill in with the default
+	       uInt numSlashes = timeString.freq( "/" );
+	       if ( numSlashes == 1 ) {
+		   //# Add Default year value.
+		   if ( year >= 0 )
+		       timeString += String::toString( year ) + String( "/" );
+		   else 
+		       errors[0] += String( "Year not given for plotrange value: " )
+			   + rangeStrVec[i]
+			   + " and the observations start end end years differ.\n" ;
+	       }
+	       if ( numSlashes == 1 ) {
+		   //# Add Default Month value.
+		   if ( month >= 0 )
+		       timeString += String::toString( month ) + String( "/" );
+		   else 
+		       errors[0] += String("Month not given for plotrange value: " )
+			   + rangeStrVec[i]
+			   + " and the observations start end end months differ.\n" ;
+	       }
          
-            if ( numSlashes == 2 ) 
-               if ( day >= 0 )
-                  timeString += String::toString( day ) + String( "/" );
-               else 
-                 errors[0] += String( "Day not given for plotrange value: " )
-                   + rangeStrVec[i]
-                   + " and the observations start end end days differ.\n";
-         }  else {   
-            //# Add the substring we found between the two slashes.
-            timeString += tmpStr.substr( 0, pos+1 );
-            tmpStr=tmpStr.substr( pos+1, tmpStr.length()-1 );
-         }
+	       if ( numSlashes == 2 ) {
+		   if ( day >= 0 )
+		       timeString += String::toString( day ) + String( "/" );
+		   else 
+		       errors[0] += String( "Day not given for plotrange value: " )
+			   + rangeStrVec[i]
+			   + " and the observations start end end days differ.\n";
+	       }
+	   }  else {   
+	       //# Add the substring we found between the two slashes.
+	       timeString += tmpStr.substr( 0, pos+1 );
+	       tmpStr=tmpStr.substr( pos+1, tmpStr.length()-1 );
+	   }
       
        }
    }

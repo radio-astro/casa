@@ -256,18 +256,18 @@ synthesisimager::setimage(const std::string& imagename,
 
       // Convert phasecenter ( If it is an integer, it's a field, id, connect to last MS.... )
       casa::MDirection  phaseCenter;
-      Int fieldid=-1;
+      //Int fieldid=-1;
       //If phasecenter is a simple numeric value then its taken as a fieldid 
       //otherwise its converted to a MDirection
       if(phasecenter.type()==::casac::variant::DOUBLEVEC 
 	 || phasecenter.type()==::casac::variant::DOUBLE
 	 || phasecenter.type()==::casac::variant::INTVEC
 	 || phasecenter.type()==::casac::variant::INT){
-	fieldid=phasecenter.toInt();
+	  //fieldid=phasecenter.toInt();
       }
       else{
 	if(toCasaString(phasecenter)==String("")){
-	  fieldid=0;
+	    //fieldid=0;
 	}
 	else{
 	  if(!casaMDirection(phasecenter, phaseCenter)){

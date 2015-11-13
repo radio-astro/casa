@@ -123,6 +123,7 @@ void TSLogSink::setLogSink(String logname){
 #endif
 
 TSLogSink::TSLogSink (const TSLogSink& other)
+    : LogSinkInterface (other)
 {
   //copy_other (other);
   LogSinkInterface::operator= (other);

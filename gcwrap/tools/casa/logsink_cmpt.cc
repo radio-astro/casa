@@ -80,9 +80,10 @@ logsink::logsink()
       logname = filein.path().absoluteName() ;
       //static_cast<TSLogSink*>(thelogsink)->setLogSink(logname);
    }
-   else
+   else{
       //thelogsink = new NullLogSink();
       ;
+   }
       
 }
 

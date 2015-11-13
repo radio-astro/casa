@@ -235,7 +235,7 @@ static PyMethodDef PyBind_methods[] = {
     "Clear Plot"},
    {"quit",PyBind_quit, METH_VARARGS,
     "Quit"},
-   {NULL,      NULL}      // sentinel 
+   {NULL,      NULL, METH_NOARGS, NULL}      // sentinel 
 };
 
 // Initialize the PythonBinder
@@ -273,7 +273,7 @@ PyBind_markregion(PyObject */*self*/, PyObject* list)
    /* Number of regions */
    len = PyList_Size(python_list);
 
-   if(len>0);
+   //if(len>0);
    
    Vector<double> gvec(4);
    for(int i=0;i<len;i++)

@@ -37,7 +37,7 @@ casac::spectralline* spectralline::splattotable(const vector<string>& filenames,
 		}
 		ListConverter converter(files, tablename);
 		SplatalogueTable *converted = converter.load();
-                casac:spectralline* rstat =new spectralline(converted);
+                casac::spectralline* rstat =new spectralline(converted);
                 if(!rstat)
 			throw AipsError("Unable to create table"+tablename);
 		return rstat;

@@ -43,7 +43,7 @@
 #include <casa/Arrays/MatrixMath.h>
 #include <casa/Arrays/ArrayError.h>
 #include <casa/Arrays/Matrix.h>
-#include <casa/IO/LargeRegularFileIO.h>
+#include <casa/IO/RegularFileIO.h>
 
 #include <tables/TaQL/ExprMathNode.h>
 #include <tables/TaQL/ExprMathNodeArray.h>
@@ -292,7 +292,7 @@ Int BasePlot::createTENS(Vector<String> &datastr)
    }
    
    /* Fill in default shapes, if not specified in the TaQL */
-   Bool tst=False;
+
    Vector<IPosition> colshapes;
    colshapes.resize(nip_p);
    Vector<Bool> isarraycol;
@@ -304,7 +304,7 @@ Int BasePlot::createTENS(Vector<String> &datastr)
 #endif 
    for(Int i=0;i<nip_p;i++)   
    {
-      tst = SelTab_p.tableDesc().isColumn(colnames_p(i));
+       //bool tst = SelTab_p.tableDesc().isColumn(colnames_p(i));
 #if LOG0
       log->out(String("column ")+colnames_p(i),
             fnname, clname, LogMessage::DEBUGGING);
@@ -2887,10 +2887,8 @@ Int BasePlot::getFlags(String flagversion, Bool showflags)
    Vector<Bool> vsflag;
    IPosition fshp;
    Bool sflag;
-   Bool row;
    
    Int rc;
-   row = False;
 
    /*** get the right flag version **/
    if(FV)
@@ -2919,7 +2917,6 @@ Int BasePlot::getFlags(String flagversion, Bool showflags)
       if( isArrayCol_p[z] && fcol_p && 
           (TENcolshapes_p[z].isEqual(FlagColShape_p)))      
       {
-      row = False;
    
       Float fcount=0.0,tcount=0.0;
       Int ff=0;
@@ -3302,8 +3299,6 @@ Int BasePlot::flagData(Int direction, String msname, String spwexpr,
    Array<Bool> avgflagit; 
    Vector<Bool> vsflag;
    IPosition fshp;
-   Bool row;
-   row = False;
 
    //if (FV) {
    //   if(flagversion.length() && 
@@ -3384,13 +3379,11 @@ Int BasePlot::flagData(Int direction, String msname, String spwexpr,
     Int fyp;
     Slicer fslice;
     Array<Bool> flagit; 
-    Bool row;
     IPosition fshp;
  
     //Int ff;
     Int zp, rc;
     //Int cnt;
-    row = False;
     //Int npol=0;
 
     //###ReductionType=[0], nTens_p=1
@@ -3850,10 +3843,7 @@ Int BasePlot::getFlags(String /*flagversion*/, String msname)
    Vector<Bool> vsflag;
    IPosition fshp;
    //Bool sflag;
-   Bool row;
    
-   row = False;
-
    //if (FV) {
    //   if(flagversion.length() && 
    //        !currentflagversion_p.matches(flagversion))
@@ -3937,12 +3927,10 @@ Int BasePlot::flagData(Int /*diskwrite*/, Int /*setrowflag*/, Int direction)
    Int fyp;
    Slicer fslice;
    Array<Bool> flagit; 
-   Bool row;
    IPosition fshp;
    
    Int ff=0;
    Int zp,cnt,rc;
-   row = False;
    Int npol=0;
    
    fyp=0;      
@@ -4243,12 +4231,10 @@ Int BasePlot::flagData(Int direction, String /*msname*/,
    Int fyp;
    Slicer fslice;
    Array<Bool> flagit; 
-   Bool row;
    IPosition fshp;
    
    Int ff=0;
    Int zp,cnt,rc;
-   row = False;
    Int npol=0;
    
    //get flags

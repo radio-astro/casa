@@ -445,7 +445,7 @@ bool stdcasaXMLUtil::readXML(record &itsRecord,  const Wrapper4InputSource &xmlS
                                         while(ss >> str){
 						// The xml uses Array and variant uses vec so we make the change
 						// so we don't get false failures for limittype failures
-						ssize_t hasArray = str.find("Array");
+						size_t hasArray = str.find("Array");
 						if(hasArray != string::npos){
 						   str.replace(hasArray, 5, string("vec"));
 						}
