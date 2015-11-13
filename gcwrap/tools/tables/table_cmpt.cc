@@ -196,7 +196,7 @@ table::close()
  return rstat;
 }
 casac::table* 
-table::fromfits(const std::string& tablename, const std::string& fitsfile, const int whichhdu, const std::string& storage, const std::string& convention, const bool nomodify, const bool ack){
+table::fromfits(const std::string& tablename, const std::string& fitsfile, const int whichhdu, const std::string& storage, const std::string& convention, const bool /*nomodify*/, const bool /*ack*/){
 
  *itsLog << LogOrigin(__func__, name());
 
@@ -299,7 +299,7 @@ table::fromfits(const std::string& tablename, const std::string& fitsfile, const
 
 
 casac::table*
-table::copy(const std::string& newtablename, const bool deep, const bool valuecopy, const ::casac::record& dminfo, const std::string& endian, const bool memorytable, const bool returnobject, const bool norows)
+table::copy(const std::string& newtablename, const bool deep, const bool valuecopy, const ::casac::record& dminfo, const std::string& endian, const bool memorytable, const bool /*returnobject*/, const bool norows)
 {
  *itsLog << LogOrigin(__func__, name());
  casac::table *rstat(0);
@@ -1038,7 +1038,7 @@ table::colnames()
 }
 
 std::vector<int>
-table::rownumbers(const ::casac::record& tab, const int nbytes)
+table::rownumbers(const ::casac::record& /*tab*/, const int /*nbytes*/)
 {
  *itsLog << LogOrigin(__func__, name());
  std::vector<int> rstat(0);
@@ -2055,7 +2055,7 @@ table::getLockOptions(casac::record &lockoptions){
 
 	return new TableLock(opt, interval, maxWait);
 }
-bool table::fromascii(const std::string& tablename, const std::string& asciifile, const std::string& headerfile, const bool autoheader, const std::vector<int>& autoshape, const std::string& sep, const std::string& commentmarker, const int firstline, const int lastline, const bool nomodify, const std::vector<string> &columnnames, const std::vector<string> &datatypes){
+bool table::fromascii(const std::string& tablename, const std::string& asciifile, const std::string& headerfile, const bool autoheader, const std::vector<int>& /*autoshape*/, const std::string& sep, const std::string& commentmarker, const int firstline, const int lastline, const bool /*nomodify*/, const std::vector<string> &columnnames, const std::vector<string> &datatypes){
 
    bool rstatus(false);
 
@@ -2085,7 +2085,7 @@ return rstatus;
 //depend on the structure of incoming Record, which was
 //built using the XML ASDM table structure.
 
-void test_record(Record &myRecord)
+void test_record(Record &/*myRecord*/)
 {
 
 //Record related declarations
@@ -2220,7 +2220,7 @@ return rstatus;
 ::casac::record* 
 table::statistics(const std::string& column, 
                   const std::string& complex_value, 
-                  const bool useflags)
+                  const bool /*useflags*/)
 {
     *itsLog << LogOrigin(__func__, column);
     ::casac::record *retval(NULL);

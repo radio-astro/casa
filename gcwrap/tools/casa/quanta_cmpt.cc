@@ -128,7 +128,7 @@ quanta::recordFromQuantity(const Quantum<Vector<Double> >& q)
 
 // setformat (t='', v=F) -> set specified format (e.g. 'prec') to value v
 bool
-quanta::setformat(const std::string& t, const std::string& v)
+quanta::setformat(const std::string& /*t*/, const std::string& /*v*/)
 {
   *itsLog << LogIO::WARN << "setformat NOT IMPLEMENTED YET!" << LogIO::POST;
   return false;
@@ -136,7 +136,7 @@ quanta::setformat(const std::string& t, const std::string& v)
 
 //  getformat (t='prec') -> get specified format (e.g. 'prec')
 std::string
-quanta::getformat(const std::string& t)
+quanta::getformat(const std::string& /*t*/)
 {
   *itsLog << LogIO::WARN << "getformat NOT IMPLEMENTED YET!" << LogIO::POST;
   return "F";
@@ -789,7 +789,7 @@ quanta::type()
 }
 
 bool
-quanta::done(const bool kill)
+quanta::done(const bool /*kill*/)
 {
   bool rstat(false);
   try {

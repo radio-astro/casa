@@ -213,7 +213,7 @@ calplot::plotoptions(const int subplot,
    return rstat;
 }
 
-bool calplot::markflags(const int panel, const std::vector<double>& region){
+bool calplot::markflags(const int /*panel*/, const std::vector<double>& /*region*/){
   bool rstat(False);
 
   try {

@@ -13,7 +13,7 @@ static void (*interrupt_on_p)( ) = 0;
 sigjmp_buf casa::jmp_buf;
 bool casa::longjmp_ok = false;
 
-static void _casa_signal_handler_(int sig) {
+static void _casa_signal_handler_(int /*sig*/) {
     if ( casa::longjmp_ok ) {
 	siglongjmp( casa::jmp_buf, 1 );
     }

@@ -30,7 +30,7 @@ tableindex::~tableindex()
 }
 
 bool
-tableindex::set(const ::casac::record& tab, const std::vector<std::string>& columns, const bool sort)
+tableindex::set(const ::casac::record& /*tab*/, const std::vector<std::string>& /*columns*/, const bool /*sort*/)
 {
 
     // TODO : IMPLEMENT ME HERE !
@@ -46,7 +46,7 @@ tableindex::isunique()
 }
 
 bool
-tableindex::setchanged(const std::vector<std::string>& columns)
+tableindex::setchanged(const std::vector<std::string>& /*columns*/)
 {
 
     // TODO : IMPLEMENT ME HERE !
@@ -54,7 +54,7 @@ tableindex::setchanged(const std::vector<std::string>& columns)
 }
 
 int
-tableindex::rownr(const ::casac::record& key)
+tableindex::rownr(const ::casac::record& /*key*/)
 {
 
     int rstat(0);
@@ -63,7 +63,7 @@ tableindex::rownr(const ::casac::record& key)
 }
 
 std::vector<int>
-tableindex::rownrs(const ::casac::record& key, const ::casac::record& upperkey, const bool lowerincl, const bool upperincl)
+tableindex::rownrs(const ::casac::record& /*key*/, const ::casac::record& /*upperkey*/, const bool /*lowerincl*/, const bool /*upperincl*/)
 {
 
     // TODO : IMPLEMENT ME HERE !

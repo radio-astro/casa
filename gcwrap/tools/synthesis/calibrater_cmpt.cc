@@ -225,7 +225,7 @@ calibrater::setapply(const std::string& type,
 		     const std::string& table,
 		     const ::casac::variant& field,
 		     const std::string& interp,
-		     const std::string& select,
+		     const std::string& /*select*/,
 		     const bool calwt, 
 		     const std::vector<int>& spwmap,
 		     const std::vector<double>& opacity) {
@@ -1073,9 +1073,9 @@ calibrater::listcal(const std::string& tablein,
 }
 
 bool
-calibrater::posangcal(const std::vector<double>& posangcor,
-		      const std::string& tablein, 
-		      const std::string& tableout)
+calibrater::posangcal(const std::vector<double>& /*posangcor*/,
+		      const std::string& /*tablein*/, 
+		      const std::string& /*tableout*/)
 {
   if (! itsMS) {
     *itsLog << LogIO::SEVERE << "Must first open a MeasurementSet."
@@ -1102,9 +1102,9 @@ calibrater::posangcal(const std::vector<double>& posangcor,
 };  // end of posangcal
 
 bool
-calibrater::linpolcor(const std::string& tablein, 
-		      const std::string& tableout, 
-		      const std::vector<std::string>& fields)
+calibrater::linpolcor(const std::string& /*tablein*/, 
+		      const std::string& /*tableout*/, 
+		      const std::vector<std::string>& /*fields*/)
 {
   if (! itsMS) {
     *itsLog << LogIO::SEVERE << "Must first open a MeasurementSet."
@@ -1138,16 +1138,16 @@ calibrater::linpolcor(const std::string& tablein,
 }
 
 bool 
-calibrater::plotcal(const std::vector<int>& antennas,
-                    const std::vector<int>& fields,
-                    const std::vector<int>& spwids,
-                    const std::string& plottype,
-                    const std::string& tablename,
-                    const int polarization,
-                    const bool multiplot, 
-		    const int nx, 
-		    const int ny, 
-		    const std::string& psfile)
+calibrater::plotcal(const std::vector<int>& /*antennas*/,
+                    const std::vector<int>& /*fields*/,
+                    const std::vector<int>& /*spwids*/,
+                    const std::string& /*plottype*/,
+                    const std::string& /*tablename*/,
+                    const int /*polarization*/,
+                    const bool /*multiplot*/, 
+		    const int /*nx*/, 
+		    const int /*ny*/, 
+		    const std::string& /*psfile*/)
 {
 
   if (! itsMS) {

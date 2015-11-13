@@ -3275,9 +3275,9 @@ bool ms::contsub(const std::string& outputms,    const ::casac::variant& fitspw,
 	return rstat;
 }
 
-bool ms::statwt(const bool dorms,                const bool byantenna,
-                const bool sepacs,               const ::casac::variant& fitspw,
-                const ::casac::variant& fitcorr, const std::string& combine,
+bool ms::statwt(const bool dorms,                const bool /*byantenna*/,
+                const bool /*sepacs*/,               const ::casac::variant& fitspw,
+                const ::casac::variant& /*fitcorr*/, const std::string& combine,
                 const ::casac::variant& timebin, const int minsamp,
                 const ::casac::variant& field,   const ::casac::variant& spw,
                 const ::casac::variant& baseline, const std::string& timerange,
@@ -4410,7 +4410,7 @@ ms::addephemcol(const casa::MeasurementSet& appendedMS)
 // getting the requested data out.
 //
 bool
-ms::niterinit(const std::vector<std::string>& columns, const double interval,
+ms::niterinit(const std::vector<std::string>& /*columns*/, const double interval,
               const int maxrows, const bool adddefaultsortcolumns)
 {
 	Bool rstat(False);
@@ -4503,7 +4503,7 @@ ms::niternext()
 }
 
 ::casac::record*
-ms::ngetdata(const std::vector<std::string>& items, const bool ifraxis, const int ifraxisgap, const int increment, const bool average)
+ms::ngetdata(const std::vector<std::string>& items, const bool /*ifraxis*/, const int /*ifraxisgap*/, const int /*increment*/, const bool /*average*/)
 {
 	try
 	{

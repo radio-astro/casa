@@ -438,7 +438,7 @@ simulator::setconfig(const std::string& telescopename, const std::vector<double>
 }
 
 bool
-simulator::setknownconfig(const std::string& arrayname)
+simulator::setknownconfig(const std::string& /*arrayname*/)
 {
 
   Bool rstat(False);

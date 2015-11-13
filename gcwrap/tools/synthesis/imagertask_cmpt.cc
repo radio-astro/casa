@@ -33,7 +33,7 @@ imagertask::~imagertask()
 }
 
 void
-imagertask::clean(const std::string& vis, const std::string& alg, const int niter, const double gain, const double threshold, const std::vector<std::string>& residual, const std::vector<std::string>& image, const std::vector<std::string>& model, const std::vector<std::string>& mask, const std::string& mode, const std::vector<int>& nchan, const std::vector<int>& start, const std::vector<int>& width, const std::vector<int>& step, const std::vector<int>& imsize, const std::vector<int>& cell, const std::string& stokes, const std::vector<int>& fieldid, const std::vector<int>& spwid, const std::string& weighting, const std::string& rmode, const double robust)
+imagertask::clean(const std::string& /*vis*/, const std::string& /*alg*/, const int /*niter*/, const double /*gain*/, const double /*threshold*/, const std::vector<std::string>& /*residual*/, const std::vector<std::string>& /*image*/, const std::vector<std::string>& /*model*/, const std::vector<std::string>& /*mask*/, const std::string& /*mode*/, const std::vector<int>& /*nchan*/, const std::vector<int>& /*start*/, const std::vector<int>& /*width*/, const std::vector<int>& /*step*/, const std::vector<int>& /*imsize*/, const std::vector<int>& /*cell*/, const std::string& /*stokes*/, const std::vector<int>& /*fieldid*/, const std::vector<int>& /*spwid*/, const std::string& /*weighting*/, const std::string& /*rmode*/, const double /*robust*/)
 {
     try {
         // create imager
@@ -60,7 +60,7 @@ imagertask::clean(const std::string& vis, const std::string& alg, const int nite
 }
 
 void
-imagertask::feather(const std::string& vis, const std::string& featherimage, const std::string& highres, const std::string& lowres, const std::string& lowpsf)
+imagertask::feather(const std::string& /*vis*/, const std::string& /*featherimage*/, const std::string& /*highres*/, const std::string& /*lowres*/, const std::string& /*lowpsf*/)
 {
     try {
         // create imager
@@ -77,7 +77,7 @@ imagertask::feather(const std::string& vis, const std::string& featherimage, con
 }
 
 void
-imagertask::invert(const std::string& vis, const std::string& map, const std::string& beam, const std::string& mode, const std::vector<int>& nchan, const std::vector<int>& start, const std::vector<int>& width, const std::vector<int>& step, const std::vector<int>& imsize, const std::vector<int>& cell, const std::string& stokes, const std::vector<int>& fieldid, const std::vector<int>& spwid, const std::string& weighting, const std::string& rmode, const double robust)
+imagertask::invert(const std::string& /*vis*/, const std::string& /*map*/, const std::string& /*beam*/, const std::string& /*mode*/, const std::vector<int>& /*nchan*/, const std::vector<int>& /*start*/, const std::vector<int>& /*width*/, const std::vector<int>& /*step*/, const std::vector<int>& /*imsize*/, const std::vector<int>& /*cell*/, const std::string& /*stokes*/, const std::vector<int>& /*fieldid*/, const std::vector<int>& /*spwid*/, const std::string& /*weighting*/, const std::string& /*rmode*/, const double /*robust*/)
 {
     try {
         // create imager
@@ -104,7 +104,7 @@ imagertask::invert(const std::string& vis, const std::string& map, const std::st
 }
 
 void
-imagertask::mosaic(const std::string& vis, const std::string& alg, const int niter, const double gain, const double threshold, const std::vector<std::string>& residual, const std::vector<std::string>& image, const std::vector<std::string>& model, const std::vector<std::string>& mask, const std::string& mode, const std::string& gridfn, const std::string& grid, const std::vector<int>& nchan, const std::vector<int>& start, const std::vector<int>& width, const std::vector<int>& step, const std::vector<int>& imsize, const std::vector<int>& cell, const std::string& stokes, const std::vector<int>& fieldid, const int reffieldid, const std::vector<int>& spwid, const std::string& weighting, const std::string& mosweight, const std::string& rmode, const double robust, const double minpb, const std::string& scaletype, const int stoplargenegatives, const double cyclefactor, const double cyclespeedup)
+imagertask::mosaic(const std::string& /*vis*/, const std::string& /*alg*/, const int /*niter*/, const double /*gain*/, const double /*threshold*/, const std::vector<std::string>& /*residual*/, const std::vector<std::string>& /*image*/, const std::vector<std::string>& /*model*/, const std::vector<std::string>& /*mask*/, const std::string& /*mode*/, const std::string& /*gridfn*/, const std::string& /*grid*/, const std::vector<int>& /*nchan*/, const std::vector<int>& /*start*/, const std::vector<int>& /*width*/, const std::vector<int>& /*step*/, const std::vector<int>& /*imsize*/, const std::vector<int>& /*cell*/, const std::string& /*stokes*/, const std::vector<int>& /*fieldid*/, const int /*reffieldid*/, const std::vector<int>& /*spwid*/, const std::string& /*weighting*/, const std::string& /*mosweight*/, const std::string& /*rmode*/, const double /*robust*/, const double /*minpb*/, const std::string& /*scaletype*/, const int /*stoplargenegatives*/, const double /*cyclefactor*/, const double /*cyclespeedup*/)
 {
     try {
         // create imager

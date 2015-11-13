@@ -34,13 +34,13 @@ asdmCasaXMLUtil::~asdmCasaXMLUtil()
    XMLPlatformUtils::Terminate();
 }
 
-Bool asdmCasaXMLUtil::toCasaRecord(Record &outRec, String &inString)
+Bool asdmCasaXMLUtil::toCasaRecord(Record &/*outRec*/, String &/*inString*/)
 {
    Bool rstat(false);
    return rstat;
 }
 
-Bool asdmCasaXMLUtil::fromCasaRecord(String &outString, const Record &inRec)
+Bool asdmCasaXMLUtil::fromCasaRecord(String &/*outString*/, const Record &/*inRec*/)
 {
    Bool rstat(false);
    return rstat;
@@ -83,7 +83,7 @@ Bool asdmCasaXMLUtil::readXMLFile(Table &outTab, const String &fileName, const S
    return rstat;
 }
 
-Bool asdmCasaXMLUtil::writeXMLFile(const String &fileName, const Record &inRec)
+Bool asdmCasaXMLUtil::writeXMLFile(const String &/*fileName*/, const Record & /*inRec*/)
 {
    Bool rstat(false);
    return rstat;

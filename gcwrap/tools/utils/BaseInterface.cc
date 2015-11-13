@@ -59,7 +59,7 @@ extern "C" char *command_generator (const char *text, int state)
  * contents of rl_line_buffer in case we want to do some simple
  * parsing.  Returnthe array of matches, or NULL if there aren't any. */
 
-extern "C" char **casactl_completion (const char *text, int start, int end)
+extern "C" char **casactl_completion (const char *text, int start, int /*end*/)
 {
    char **matches;
    matches = (char **)NULL;
@@ -76,7 +76,7 @@ extern "C" char **casactl_completion (const char *text, int start, int end)
 //
 vector<string> BaseInterface::commands(0);
 
-BaseInterface::BaseInterface(Record &descParams)
+BaseInterface::BaseInterface(Record &/*descParams*/)
 {
 	init();
 //#include <xmlcasa/utils/standalones.h>
@@ -111,7 +111,7 @@ Int BaseInterface::inputs(Record &params)
    return rstat;
 }
 
-void BaseInterface::parse_it(Record &params, const char *line){
+void BaseInterface::parse_it(Record &/*params*/, const char *line){
 
    if(!strcmp(line, "help")){
       done = False;
@@ -133,7 +133,7 @@ void BaseInterface::parse_it(Record &params, const char *line){
    }
 }
 
-Bool BaseInterface::go(const Record &params)
+Bool BaseInterface::go(const Record &/*params*/)
 {
    Bool rstat(True);
    return rstat;

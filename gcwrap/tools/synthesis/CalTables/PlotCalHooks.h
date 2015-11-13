@@ -97,12 +97,12 @@ public:
     cout << "PlotCalCallBacks dtor" << endl;
   };
 
-  casa::Bool flagdata(String tablename) {
+  casa::Bool flagdata(String /*tablename*/) {
     //    cout << "PlotCalCallBacks :: Completed flagging on : "
     //         << tablename << endl;
     return True;
   }
-  casa::Bool releasetable(Int nrows, Int ncols, Int panel, String tablename) {
+  casa::Bool releasetable(Int /*nrows*/, Int /*ncols*/, Int /*panel*/, String /*tablename*/) {
     //    cout << "PlotCalCallBacks :: releasing "
     //         << tablename << " from panel "
     //         << nrows << "," <<ncols << "," << panel << endl;
@@ -146,7 +146,7 @@ public:
 
   }
 
-  casa::Bool printlocateinfo(Vector<String> collist,
+  casa::Bool printlocateinfo(Vector<String> /*collist*/,
                              Matrix<Double> infomat,
                              Vector<String> cpol) {
 
@@ -215,7 +215,7 @@ public :
   }
   ~PlotCalFreqAxes(){};
   Double offset,interval;
-  inline Double Xconvert_col(Double x,Int row,Int tblNum){
+  inline Double Xconvert_col(Double x,Int /*row*/,Int tblNum){
     return x*intervalV(cdList(tblNum)) + offsetV(cdList(tblNum));
   }
 
@@ -236,8 +236,8 @@ public:
   };
   ~PlotCalParang(){};
   inline Double Xconvert(Double x,
-			 Int row,
-			 Int tblNum) {
+			 Int /*row*/,
+			 Int /*tblNum*/) {
     //    cout << "PCP::Xconvert: " << tblNum << " " << row << " " << x 
     //	 << fldLists(tblNum)(row)
     //	 << endl;

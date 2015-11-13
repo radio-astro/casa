@@ -89,7 +89,7 @@ extern "C" char **casactl_completion (const char *text, int start, int end)
 //
 vector<string> stdBaseInterface::commands(0);
 
-stdBaseInterface::stdBaseInterface(record &descParams)
+stdBaseInterface::stdBaseInterface(record &/*descParams*/)
 {
 	init();
 //#include <xmlcasa/utils/standalones.h>
@@ -124,7 +124,7 @@ int stdBaseInterface::inputs(record &params)
    return rstat;
 }
 
-void stdBaseInterface::parse_it(record &params, const char *line){
+void stdBaseInterface::parse_it(record &/*params*/, const char *line){
 
    if(!strcmp(line, "help")){
       done = false;
@@ -146,7 +146,7 @@ void stdBaseInterface::parse_it(record &params, const char *line){
    }
 }
 
-bool stdBaseInterface::go(const record &params)
+bool stdBaseInterface::go(const record &/*params*/)
 {
    bool rstat(true);
    return rstat;

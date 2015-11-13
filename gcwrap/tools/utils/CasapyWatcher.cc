@@ -88,8 +88,8 @@ void CasapyWatcher::casapyClosing_() {
 
 CasapyWatcher::CasapyWatcher() { }
 CasapyWatcher::~CasapyWatcher() { unregisterWatcher(this); }
-void CasapyWatcher::logChanged(const String& sinkLocation) { }
-void CasapyWatcher::logChanged(LogMessage::Priority filterPriority) { }
+void CasapyWatcher::logChanged(const String& /*sinkLocation*/) { }
+void CasapyWatcher::logChanged(LogMessage::Priority /*filterPriority*/) { }
 void CasapyWatcher::casapyClosing() { }
 
 }

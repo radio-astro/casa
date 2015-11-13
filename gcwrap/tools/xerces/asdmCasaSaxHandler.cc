@@ -2775,8 +2775,8 @@ void asdmCasaSaxHandler::setDescriptor(String tabName)
  
 }
 
-void asdmCasaSaxHandler::startElement(const XMLCh *const uri,
-		                  const XMLCh * const localname,
+void asdmCasaSaxHandler::startElement(const XMLCh *const /*uri*/,
+		                  const XMLCh * const /*localname*/,
 				  const XMLCh * const qname,
 				  const Attributes & attrs)
 {
@@ -2877,9 +2877,9 @@ void asdmCasaSaxHandler::startElement(const XMLCh *const uri,
 //
 //
 //
-void asdmCasaSaxHandler::endElement(const XMLCh *const uri,
+void asdmCasaSaxHandler::endElement(const XMLCh *const /*uri*/,
 		                  const XMLCh * const localname,
-				  const XMLCh * const qname)
+				  const XMLCh * const /*qname*/)
 {
 	char *tagName = XMLString::transcode(localname);
 	String eName(tagName);
@@ -2944,7 +2944,7 @@ void asdmCasaSaxHandler::endElement(const XMLCh *const uri,
 //and have to be defined uniquely as tables columns, they have to be
 //process independetly => a bif if-else block
 void asdmCasaSaxHandler::characters (const XMLCh *const chars, 
-		                 const unsigned int length){
+		                 const unsigned int /*length*/){
 	char *xmlValue = XMLString::transcode(chars);
 	String value(xmlValue);
 	if (flagIn) {

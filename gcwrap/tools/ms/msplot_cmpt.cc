@@ -1254,7 +1254,7 @@ casa::Bool
 msplot::checkPlotParams( casa::String& type,
     casa::String &column, 
     casa::String &value,
-    Vector<casa::String>& iteration 
+    Vector<casa::String>& /*iteration*/ 
 )
 {
     String Fn = "checkPlotParams( type, column, value, iteration )";

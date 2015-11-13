@@ -785,7 +785,7 @@ Bool PlotCal::doPlot(){
     throw(AipsError("Plotting time on y-axis if forbidden."));
   
   // Handle unspecified axes  
-  if (xAxis_p=="")
+  if (xAxis_p==""){
     if(calType_p=="G" || 
        calType_p=="T" || 
        calType_p=="M" || calType_p=="A" || 
@@ -795,6 +795,7 @@ Bool PlotCal::doPlot(){
       xAxis_p="ANTENNA";
     else
       xAxis_p="CHAN";
+  }
   
   if (yAxis_p=="") {
     if (calType_p=="D")
@@ -1875,7 +1876,7 @@ Int PlotCal::multiTables(const Table& tablein,
 
 
 
-  void PlotCal::virtualBPoly( Table& tabB, Int& nchan ){
+  void PlotCal::virtualBPoly( Table& tabB, Int& /*nchan*/ ){
 
     //    cout << "Evalutating BPOLY solutions...." << endl;
 
@@ -1937,7 +1938,9 @@ Int PlotCal::multiTables(const Table& tablein,
       String freqGrpName = col.freqGrpName().asString(row);
       
       // Extract the polynomial scale factor
-      Complex factor = col.scaleFactor().asComplex(row);
+      Complex factor = col.scaleFactor().asComplex(row); ((void) factor);
+      // if above has no side-effects, then remove entire line since factor is
+      // otherwise unused.
       
       // Extract the polynomial coefficients in amplitude and phase
       Int nAmp = col.nPolyAmp().asInt(row);
@@ -1969,7 +1972,7 @@ Int PlotCal::multiTables(const Table& tablein,
       Double x2 = freqDomain(1);
 
       Vector<Double> freq(nchan);
-      Double dfreq( (x2-x1)/Double(nchan-1) );
+      // Double dfreq( (x2-x1)/Double(nchan-1) ); <-- variable not used
       for (Int ichan=0;ichan<nchan;++ichan)
 	freq(ichan)=(startFreq_p(idesc)+Double(ichan)*stepFreq_p(idesc))*1.0e6;
 

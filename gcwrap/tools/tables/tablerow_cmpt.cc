@@ -30,7 +30,7 @@ tablerow::~tablerow()
 }
 
 bool
-tablerow::set(const ::casac::record& tab, const std::vector<std::string>& columns, const bool exclude)
+tablerow::set(const ::casac::record& /*tab*/, const std::vector<std::string>& /*columns*/, const bool /*exclude*/)
 {
 
     // TODO : IMPLEMENT ME HERE !
@@ -38,7 +38,7 @@ tablerow::set(const ::casac::record& tab, const std::vector<std::string>& column
 }
 
 ::casac::record*
-tablerow::get(const int rownr)
+tablerow::get(const int /*rownr*/)
 {
 
     // TODO : IMPLEMENT ME HERE !
@@ -46,7 +46,7 @@ tablerow::get(const int rownr)
 }
 
 bool
-tablerow::put(const int rownr, const ::casac::record& value, const bool matchingfields)
+tablerow::put(const int /*rownr*/, const ::casac::record& /*value*/, const bool /*matchingfields*/)
 {
 
     // TODO : IMPLEMENT ME HERE !
