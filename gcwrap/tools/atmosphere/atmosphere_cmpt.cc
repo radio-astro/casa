@@ -1875,9 +1875,10 @@ atmosphere::getTebbSky(int nc, int spwid, const Quantity& wh2o)
 }
 
 int
-atmosphere::getTebbSkySpec(const int spwid, const Quantity& wh2o, Quantity& tebbSky)
+atmosphere::getTebbSkySpec(const int spwidRaw, const Quantity& wh2o, Quantity& tebbSky)
 {
-  int nchan(-1);
+  uInt nchan(0);
+  uInt spwid = spwidRaw;
   bool userwh2o(false);
   try {
     if (pSkyStatus) {

@@ -1,5 +1,5 @@
 #
-# CASA - Common Astronomy Software Applications
+# CAS - Common Astronomy Software Applications
 # Copyright (C) 2010 by ESO (in the framework of the ALMA collaboration)
 #
 # This file is part of CASA.
@@ -35,6 +35,32 @@ macro( casa_always_install )
   add_custom_target( inst ALL ${CMAKE_BUILD_TOOL} install/fast )
 endmacro()
 
+# Get the "root" of the CASA source tree which is one above the project
+# (e.g., "gcwrap").  Then go through the list of include directories and
+# add any of them that are not below the CASA source tree root as system
+# include directories (i.e., their warnings are suppressed).  Otherwise
+# add the directory as a normal include.
+#
+macro (casa_add_include_directories includesIn)
+
+  set (includes ${includesIn}) # Parameters are hard to work with(?)
+
+  string (REGEX REPLACE "(/[a-zA-Z0-9_]+)$" "" sourceDirRoot ${CASA_SOURCE_DIR} )
+
+  foreach (i ${includes})
+
+    string (FIND ${i} ${sourceDirRoot} result)
+
+    if (NOT result EQUAL -1)
+      include_directories (${i})
+    else ()
+      include_directories (SYSTEM ${i})
+    endif ()
+
+  endforeach ()
+
+endmacro()
+
 
 #
 # Setup definitions and include directories for this module,
@@ -44,7 +70,7 @@ endmacro()
 macro( casa_add_library module )
 
   add_definitions( ${${module}_DEFINITIONS} )
-  include_directories( ${${module}_INCLUDE_DIRS} )
+  casa_add_include_directories ( "${${module}_INCLUDE_DIRS}" )
 
   # Create the target lib<module>, but set the output library
   # filename to lib<module>.<suffix> (which would have defaulted
