@@ -69,6 +69,7 @@
 #include <imageanalysis/ImageAnalysis/ImageBoxcarSmoother.h>
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
 #include <imageanalysis/ImageAnalysis/ImageConcatenator.h>
+#include <imageanalysis/ImageAnalysis/ImageConvolverTask.h>
 #include <imageanalysis/ImageAnalysis/ImageCropper.h>
 #include <imageanalysis/ImageAnalysis/ImageDecimator.h>
 #include <imageanalysis/ImageAnalysis/ImageFactory.h>
@@ -794,45 +795,50 @@ template<class T> image* image::_adddegaxes(
 	return new image(outPtr);
 }
 
-::casac::image* image::convolve(
-	const string& outFile, const variant& kernel,
-	const double in_scale, const variant& region,
-	const variant& vmask, const bool overwrite,
-	const bool stretch, const bool async
+image* image::convolve(
+	const string& outfile, const variant& kernel,
+	double scale, const variant& region,
+	const variant& vmask, bool overwrite,
+	bool stretch
 ) {
 	try {
 		_log << _ORIGIN;
 		if (detached()) {
 			return nullptr;
 		}
-		Array<Float> kernelArray;
+		ThrowIf(
+			! _image->isFloat(),
+			"This method only works on real valued images"
+		);
+		Array<Float> fkernelArray;
 		casa::String kernelFileName = "";
 		if (kernel.type() == variant::DOUBLEVEC) {
 			const auto kernelVector = kernel.toDoubleVec();
 			const auto shape = kernel.arrayshape();
-			kernelArray.resize(IPosition(shape));
+			fkernelArray.resize(IPosition(shape));
 			Vector<Double> localkern(kernelVector);
-			convertArray(kernelArray, localkern.reform(IPosition(shape)));
+			convertArray(fkernelArray, localkern.reform(IPosition(shape)));
 		}
 		else if (kernel.type() == variant::INTVEC) {
 			const auto kernelVector = kernel.toIntVec();
 			const auto shape = kernel.arrayshape();
-			kernelArray.resize(IPosition(shape));
+			fkernelArray.resize(IPosition(shape));
 			Vector<Int> localkern(kernelVector);
-			convertArray(kernelArray, localkern.reform(IPosition(shape)));
+			convertArray(fkernelArray, localkern.reform(IPosition(shape)));
 		}
 		else if (
 			kernel.type() == variant::STRING
 			|| kernel.type() == variant::STRINGVEC
 		) {
 			kernelFileName = kernel.toString();
+			fkernelArray = PagedImage<Float>(kernelFileName).get();
 		}
 		else {
 			ThrowCc("kernel is not understood, try using an array or an image");
 		}
 
+
 		String theMask;
-		//Record *theMaskRegion;
 		if (vmask.type() == variant::BOOLVEC) {
 			theMask = "";
 		}
@@ -842,27 +848,21 @@ template<class T> image* image::_adddegaxes(
 		) {
 			theMask = vmask.toString();
 		}
-		else if (vmask.type() == variant::RECORD) {
-			/*
-			variant localvar(vmask);
-			theMaskRegion = toRecord(localvar.asRecord());
-			*/
-			ThrowCc("Don't support region masking yet, only valid LEL");
-		}
 		else {
-			_log << "Mask is not understood, try a valid LEL string "
-				<< LogIO::EXCEPTION;
+			ThrowCc("Unsupported mask type");
 		}
 
-		SHARED_PTR<Record> Region(_getRegion(region, False));
-		return new image(
-			_image->convolve(
-				outFile, kernelArray,
-				kernelFileName, in_scale, *Region,
-				theMask, overwrite, async, stretch
-			)
+		SHARED_PTR<Record> myregion = _getRegion(region, False);
+		ImageConvolverTask<Float> ic(
+			_image->getImage(), myregion.get(),
+			theMask, outfile, overwrite
 		);
-	} catch (const AipsError& x) {
+		ic.setScale(scale);
+		ic.setStretch(stretch);
+		ic.setKernel(fkernelArray);
+		return new image(ic.convolve());
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;
 		RETHROW(x);

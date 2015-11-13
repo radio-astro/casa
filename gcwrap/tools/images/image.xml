@@ -2317,10 +2317,6 @@ value (which is an empty list).
         <description>Stretch the mask if necessary and possible? See help par.stretch for more details. </description>
          <value>false</value>
      </param>
-     <param type="bool"  name="async">
-     <description>Run asynchronously? </description>
-     <value>false</value>
-     </param>
 </input>
 <returns type="image"/>
 
