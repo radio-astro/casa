@@ -17,3 +17,4 @@ from .fitorder import FitOrderHeuristics
 from .fragmentation import FragmentationHeuristics
 from .sdsrctype import SrcTypeHeuristics
 from .tsysspwmap import TsysSpwMapHeuristics
+from .MaskDeviation import MaskDeviationHeuristic
