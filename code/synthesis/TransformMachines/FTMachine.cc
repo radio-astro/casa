@@ -772,7 +772,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     flipdata.set(Complex(0.0));
     InterpolateArray1D<Double,Complex>::
       interpolate(flipdata,visFreq, imageFreq_p, flipgrid,freqInterpMethod_p);
-    swapyz(vb.modelVisCube(), vb.flagCube(), flipdata);
+    
+    Cube<Bool>  copyOfFlag;
+    Vector<Int> mychanmap=multiChanMap_p[vb.spectralWindow()];
+    copyOfFlag=vb.flagCube();
+    for (uInt k=0; k<chanMap.nelements(); ++ k)
+      if(mychanmap(k)==-1)
+	copyOfFlag.xzPlane(k)=True;
+
+    swapyz(vb.modelVisCube(), copyOfFlag, flipdata);
     //swapyz(vb.modelVisCube(), flipdata);
     
     return True;
@@ -1508,7 +1516,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     multiChanMap_p[spw].resize();
     multiChanMap_p[spw]=chanMap;
-    
     
     if(nFound==0) {
       /*
