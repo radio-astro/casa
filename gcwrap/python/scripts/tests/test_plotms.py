@@ -9,6 +9,12 @@ import fnmatch
 import sha
 import time
 
+# Historical note:
+# When most of these tests were written, the default was highres=False but 
+# plotms would issue a warning and then export a high resolution image for
+# .png and .jpg files.
+# highres=True has been added to ensure getting the expected results.
+
 # Paths for data
 datapath = os.environ.get('CASAPATH').split()[0] + "/data/regression/unittest/plotms/"
 altdatapath = os.environ.get('CASAPATH').split()[0] + "/data/regression/unittest/setjy/"
@@ -111,7 +117,7 @@ class plotms_test_basic(plotms_test_base):
         self.removePlotfile()
         time.sleep(5)
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat="jpg", 
-                     showgui=False)   
+                     showgui=False, highres=True)   
         self.assertTrue(res)
         self.checkPlotfile(self.plotfile_jpg, 60000)
         print
@@ -121,7 +127,8 @@ class plotms_test_basic(plotms_test_base):
         self.plotfile_jpg = self.outputDir + "testBasic02.jpg"
         self.removePlotfile()
         time.sleep(5)
-        res = plotms( showgui=False, plotfile=self.plotfile_jpg, expformat='jpg')
+        res = plotms( showgui=False, plotfile=self.plotfile_jpg, expformat='jpg',
+                highres=True)
         self.assertTrue(res)
         self.checkPlotfile(self.plotfile_jpg, 23000)
         print    
@@ -133,18 +140,18 @@ class plotms_test_basic(plotms_test_base):
         time.sleep(5)
         # Create plotfile
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
-                     showgui=False)
+                     showgui=False, highres=True)   
         self.assertTrue(res)
         self.checkPlotfile(self.plotfile_jpg, 60000)
 
         # Next, overwrite is False so the save should fail.
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
-                     showgui=False)
+                     showgui=False, highres=True)   
         self.assertFalse(res)
 
         # Next, overwrite is True so the save should succeed.
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
-                     overwrite=True, showgui=False)
+                     overwrite=True, showgui=False, highres=True)
         self.assertTrue(res)
         self.checkPlotfile(self.plotfile_jpg, 60000)
         print
@@ -160,7 +167,7 @@ class plotms_test_basic(plotms_test_base):
                          showgui=False, yaxis='scan',
                          showlegend=True, legendposition='lowerRight',
                          customsymbol=[True], symbolshape=['diamond'], symbolsize=[3],
-                         symbolcolor=['ff0000'], symbolfill=['mesh3'])
+                         symbolcolor=['ff0000'], symbolfill=['mesh3'], highres=True)
             self.assertTrue(res)
             # Plot second MS field vs time and export it
             res = plotms(vis=self.ms2, plotfile=self.plotfile_jpg, expformat='jpg', 
@@ -168,7 +175,7 @@ class plotms_test_basic(plotms_test_base):
                          rowindex=0, colindex=0, plotindex=1, clearplots=False,
                          showlegend=True, legendposition='lowerRight',
                          customsymbol=[True], symbolshape=['circle'], symbolsize=[3],
-                         symbolcolor=['00FF00'], symbolfill=['mesh3'])   
+                         symbolcolor=['00FF00'], symbolfill=['mesh3'], highres=True)   
             self.assertTrue(res) 
             self.checkPlotfile(self.plotfile_jpg, 55000)
         else:
@@ -182,13 +189,13 @@ class plotms_test_basic(plotms_test_base):
             self.removePlotfile()
             time.sleep(5)
             # Create the first plot
-            res = plotms(vis=self.ms, showgui=False,
+            res = plotms(vis=self.ms, showgui=False, highres=True,
                          xaxis="freq", yaxis="phase", avgchannel="63")
             self.assertTrue(res)
             # Do an overplot with a different file
             res = plotms(vis=self.ms2, showgui=False, plotfile=self.plotfile_jpg,
                          xaxis="freq", yaxis="phase", avgchannel="63",
-                         plotindex=1, clearplots=False) 
+                         plotindex=1, clearplots=False, highres=True) 
             self.assertTrue(res)
             self.checkPlotfile(self.plotfile_jpg, 40000)   
         else:
@@ -202,7 +209,7 @@ class plotms_test_basic(plotms_test_base):
             self.removePlotfile()
             time.sleep(5)
             # Create the first plot
-            res = plotms(vis=self.ms, showgui=False,
+            res = plotms(vis=self.ms, showgui=False, highres=True,
                          xaxis="time", yaxis="amp", antenna="1", avgchannel="1000",
                          customsymbol=True, symbolshape='diamond', 
                          symbolsize=5,symbolcolor='00ff00')
@@ -210,13 +217,24 @@ class plotms_test_basic(plotms_test_base):
             # Do an overplot with a different file
             res = plotms(vis=self.ms2, showgui=False, plotfile=self.plotfile_jpg,
                          xaxis="time", yaxis="amp", antenna="!1",avgchannel="1000",
-                         plotindex=1, clearplots=False, 
+                         plotindex=1, clearplots=False,
                          customsymbol=True, symbolshape='diamond',
-                         symbolsize=1, symbolcolor='0000ff')
+                         symbolsize=1, symbolcolor='0000ff', highres=True)
             self.assertTrue(res)
             self.checkPlotfile(self.plotfile_jpg, 60000)   
         else:
             print "Skipping test, no path to alternate MS"
+        print
+
+    def test_basic_screenExport(self):
+        '''test_basic_screenExport: Export plot in screen resolution'''
+        self.plotfile_jpg = self.outputDir + "testBasic07.jpg"
+        self.removePlotfile()
+        time.sleep(5)
+        res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat="jpg", 
+                     showgui=False, highres=False)   
+        self.assertTrue(res)
+        self.checkPlotfile(self.plotfile_jpg, 40000)
         print
 
 # ------------------------------------------------------------------------------
@@ -238,7 +256,7 @@ class plotms_test_averaging(plotms_test_base):
         time.sleep(5)
         # interval = 30s
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg,
-                     showgui=False, avgtime='60')
+                     showgui=False, avgtime='60', highres=True)
         self.assertTrue(res)
         self.checkPlotfile(self.plotfile_jpg, 200000, 300000)  
         print
@@ -249,7 +267,7 @@ class plotms_test_averaging(plotms_test_base):
         self.removePlotfile()
         time.sleep(5)
         # interval = 30s
-        res = plotms(vis=self.ms, plotfile=self.plotfile_jpg,
+        res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, highres=True,
                      showgui=False, avgtime='120', avgscan=True)
         self.assertTrue(res)
         self.checkPlotfile(self.plotfile_jpg, 150000, 200000)  
@@ -261,7 +279,7 @@ class plotms_test_averaging(plotms_test_base):
         self.removePlotfile()
         time.sleep(5)
         # interval = 30s
-        res = plotms(vis=self.ms, plotfile=self.plotfile_jpg,
+        res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, highres=True,
                      showgui=False, avgtime='120', avgfield=True)
         self.assertTrue(res)
         self.checkPlotfile(self.plotfile_jpg, 150000, 200000)  
@@ -273,7 +291,7 @@ class plotms_test_averaging(plotms_test_base):
         self.removePlotfile()
         time.sleep(5)
         # nchan = 63
-        res = plotms(vis=self.ms, plotfile=self.plotfile_jpg,
+        res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, highres=True,
                      showgui=False, avgchannel='7')
         self.assertTrue(res)
         self.checkPlotfile(self.plotfile_jpg, 180000, 220000)  
@@ -284,7 +302,7 @@ class plotms_test_averaging(plotms_test_base):
         self.plotfile_jpg = self.outputDir + "testAveraging05.jpg"
         self.removePlotfile()
         time.sleep(5)
-        res = plotms(vis=self.ms, plotfile=self.plotfile_jpg,
+        res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, highres=True,
                      showgui=False, avgbaseline=True)
         self.assertTrue(res)
         self.checkPlotfile(self.plotfile_jpg, 150000, 200000)  
@@ -295,7 +313,7 @@ class plotms_test_averaging(plotms_test_base):
         self.plotfile_jpg = self.outputDir + "testAveraging06.jpg"
         self.removePlotfile()
         time.sleep(5)
-        res = plotms(vis=self.ms, plotfile=self.plotfile_jpg,
+        res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, highres=True,
                      showgui=False, avgantenna=True)
         self.assertTrue(res)
         self.checkPlotfile(self.plotfile_jpg, 200000, 300000)  
@@ -306,7 +324,7 @@ class plotms_test_averaging(plotms_test_base):
         self.plotfile_jpg = self.outputDir + "testAveraging07.jpg"
         self.removePlotfile()
         time.sleep(5)
-        res = plotms(vis=self.ms, plotfile=self.plotfile_jpg,
+        res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, highres=True,
                      showgui=False, avgbaseline=True, avgantenna=True)
         self.assertFalse(res)
         print
@@ -316,7 +334,7 @@ class plotms_test_averaging(plotms_test_base):
         self.plotfile_jpg = self.outputDir + "testAveraging08.jpg"
         self.removePlotfile()
         time.sleep(5)
-        res = plotms(vis=self.ms, plotfile=self.plotfile_jpg,
+        res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, highres=True,
                      showgui=False, avgspw=True)
         self.assertTrue(res)
         self.checkPlotfile(self.plotfile_jpg, 200000, 300000)  
@@ -345,7 +363,7 @@ class plotms_test_axis(plotms_test_base):
                      showlegend=True, legendposition='lowerRight',
                      customsymbol=[True,True], symbolshape=['diamond','circle'], 
                      symbolsize=[5,5], symbolcolor=['ff0000','00ff00'], 
-                     symbolfill=['mesh3','mesh3'])
+                     symbolfill=['mesh3','mesh3'], highres=True)
         self.assertTrue(res)
         self.checkPlotfile(self.plotfile_jpg, 60000)
         print
@@ -358,7 +376,8 @@ class plotms_test_axis(plotms_test_base):
         res = plotms(vis=self.ms, gridrows=1, gridcols=1, 
                      showgui=False, yaxis=['amp','scan'], 
                      yaxislocation=['left','right'],xaxis='time',
-                     plotfile=self.plotfile_jpg, expformat='jpg')
+                     plotfile=self.plotfile_jpg, expformat='jpg',
+                     highres=True)
         
         self.assertTrue(res)
         self.checkPlotfile(self.plotfile_jpg, 247000)      
@@ -366,7 +385,7 @@ class plotms_test_axis(plotms_test_base):
         # Plot amp vs time and amp vs time. 
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg',
                      overwrite=True, showgui=False, yaxis=['amp','amp'], 
-                     yaxislocation=['left','right'], xaxis='time')
+                     yaxislocation=['left','right'], xaxis='time', highres=True)
         self.assertFalse(res)  
         print
 
@@ -382,7 +401,8 @@ class plotms_test_axis(plotms_test_base):
         self.assertTrue(res)
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
                      showgui=False, xaxis='wt*amp', yaxis='time',
-                     plotindex=1, rowindex=1, colindex=0, clearplots=False)
+                     plotindex=1, rowindex=1, colindex=0, clearplots=False,
+                     highres=True)
         self.assertTrue(res)
         self.checkPlotfile(self.plotfile_jpg, 220000) 
         print
@@ -392,7 +412,7 @@ class plotms_test_axis(plotms_test_base):
         self.plotfile_jpg = self.outputDir + "testAxis04.jpg"
         self.removePlotfile()
         time.sleep(5)
-        res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, 
+        res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, highres=True,
                      showgui=False, xaxis='elevation', yaxis='azimuth')
         self.assertTrue(res)
         self.checkPlotfile(self.plotfile_jpg, 40000) 
@@ -405,7 +425,7 @@ class plotms_test_axis(plotms_test_base):
         for datacol in datacols:
             plotfile = self.outputDir + "testAxis05_" + datacol + ".jpg"
             self.removePlotfile(plotfile)
-            res = plotms(vis=self.ms, plotfile=plotfile, 
+            res = plotms(vis=self.ms, plotfile=plotfile, highres=True,
                          showgui=False, ydatacolumn=datacol)
             self.assertTrue(res)
             self.checkPlotfile(plotfile, 40000)
@@ -414,7 +434,7 @@ class plotms_test_axis(plotms_test_base):
         # can't put these in a filename!
         plotfile = self.outputDir + "testAxis05_datadivmodel.jpg"
         self.removePlotfile(plotfile)
-        res = plotms(vis=self.ms, plotfile=plotfile, 
+        res = plotms(vis=self.ms, plotfile=plotfile, highres=True,
                      showgui=False, ydatacolumn='data/model')
         self.assertTrue(res)
         self.checkPlotfile(plotfile, 50000)
@@ -422,7 +442,7 @@ class plotms_test_axis(plotms_test_base):
 
         plotfile = self.outputDir + "testAxis05_corrdivmodel.jpg"
         self.removePlotfile(plotfile)
-        res = plotms(vis=self.ms, plotfile=plotfile, 
+        res = plotms(vis=self.ms, plotfile=plotfile, highres=True,
                      showgui=False, ydatacolumn='corrected/model')
         self.assertTrue(res)
         self.checkPlotfile(plotfile, 50000)
@@ -434,7 +454,7 @@ class plotms_test_axis(plotms_test_base):
         self.plotfile_jpg = self.outputDir + "testAxis06.jpg"
         self.removePlotfile()
         time.sleep(5)
-        res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, 
+        res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, highres=True,
                      showgui=False, ydatacolumn='corr/model')
         self.assertFalse(res)
         print
@@ -444,7 +464,7 @@ class plotms_test_axis(plotms_test_base):
         self.plotfile_jpg = self.outputDir + "testAxis07.jpg"
         self.removePlotfile()
         time.sleep(5)
-        res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, 
+        res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, highres=True,
                      showgui=False, ydatacolumn='float')
         self.assertFalse(res)
         print
@@ -457,7 +477,7 @@ class plotms_test_axis(plotms_test_base):
         for syn in syns:
             plotfile = self.outputDir + "testAxis08_" + syn + ".jpg"
             self.removePlotfile(plotfile)
-            res = plotms(vis=self.ms, plotfile=plotfile, 
+            res = plotms(vis=self.ms, plotfile=plotfile, highres=True,
                          showgui=False, yaxis=syn)
             self.assertTrue(res)
             self.checkPlotfile(plotfile, 40000) 
@@ -469,7 +489,7 @@ class plotms_test_axis(plotms_test_base):
         self.plotfile_jpg = self.outputDir + "testAxis09.jpg"
         self.removePlotfile()
         # now test bad synonym
-        res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, 
+        res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, highres=True,
                      showgui=False, yaxis='veloc')
         self.assertFalse(res)
         print
@@ -488,7 +508,7 @@ class plotms_test_axis(plotms_test_base):
         for axis in axes:
             plotfile = self.outputDir + "testAxis10_" + axis + ".jpg"
             self.removePlotfile(plotfile)
-            res = plotms(vis=self.ms, plotfile=plotfile, 
+            res = plotms(vis=self.ms, plotfile=plotfile, highres=True,
                          showgui=False, yaxis=axis)
             self.assertTrue(res)
             self.checkPlotfile(plotfile, 50000) 
@@ -524,9 +544,9 @@ class plotms_test_calibration(plotms_test_base):
             calfile = calpath + "ngc5921.ref1a.gcal"
             # callib is a string not a filename
             callib = "caltable='" + calfile + "' calwt=True tinterp='nearest'"
-            res = plotms(vis=newmsfile, plotfile = self.plotfile_jpg, 
+            res = plotms(vis=newmsfile, plotfile = self.plotfile_jpg,
                          ydatacolumn="corrected", xaxis="frequency",
-                         showgui=False, callib=callib)
+                         showgui=False, callib=callib, highres=True)
             self.assertTrue(res)
             self.checkPlotfile(self.plotfile_jpg, 250000)
         else:
@@ -540,7 +560,8 @@ class plotms_test_calibration(plotms_test_base):
         time.sleep(5)
         res = plotms(vis=self.ms, plotfile = self.plotfile_jpg, 
                      ydatacolumn="corrected", xaxis="frequency",
-                     showgui=False, callib='/tmp/nocallib.txt')
+                     showgui=False, callib='/tmp/nocallib.txt',
+                     highres=True)
         self.assertFalse(res)
         print 
 
@@ -562,14 +583,14 @@ class plotms_test_display(plotms_test_base):
         time.sleep(5)
         # Test diamond shape
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
-                     showgui=False, 
+                     showgui=False, highres=True,
                      customsymbol=True, symbolshape='diamond', symbolsize=5,
                      symbolcolor='00ff00', symbolfill='mesh3')
         self.assertTrue(res)
         self.checkPlotfile(self.plotfile_jpg, 60000)
         # Test pixel shape
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
-                     overwrite=True, showgui=False, 
+                     overwrite=True, showgui=False, highres=True, 
                      customsymbol=True, symbolshape='pixel',
                      symbolcolor='00aa00')
         self.assertTrue(res)
@@ -582,7 +603,7 @@ class plotms_test_display(plotms_test_base):
         self.removePlotfile()
         time.sleep(5)
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
-                     showgui=False, customflaggedsymbol=True, 
+                     showgui=False, customflaggedsymbol=True, highres=True,
                      flaggedsymbolshape='diamond', flaggedsymbolsize=5, 
                      flaggedsymbolcolor='00ff00', flaggedsymbolfill='mesh3')
         self.assertTrue(res)
@@ -599,13 +620,15 @@ class plotms_test_display(plotms_test_base):
         # Set customflaggedsymbol=True
         res = plotms(vis=self.ms, plotfile = self.plotfile_jpg, showgui=False,
                      customflaggedsymbol=True,flaggedsymbolshape='diamond',
-                     flaggedsymbolsize=5,flaggedsymbolcolor='00ff00')
+                     flaggedsymbolsize=5,flaggedsymbolcolor='00ff00',
+                     highres=True)
         self.assertTrue(res)
         self.checkPlotfile(self.plotfile_jpg, 50000)
         # Set customflaggedsymbol=False
         res = plotms(vis=self.ms, plotfile=plotfile2_jpg, showgui=False,
                      customflaggedsymbol=False,flaggedsymbolshape='diamond',
-                     flaggedsymbolsize=5,flaggedsymbolcolor='00ff00')
+                     flaggedsymbolsize=5,flaggedsymbolcolor='00ff00',
+                     highres=True)
         self.assertTrue(res)
         self.checkPlotfile(plotfile2_jpg, 50000)
         print
@@ -617,7 +640,8 @@ class plotms_test_display(plotms_test_base):
         time.sleep(5)
         # Place a legend in the upper right corner of the plot
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
-                     showgui=False, showlegend=True, legendposition='upperRight')
+                     showgui=False, showlegend=True, legendposition='upperRight',
+                     highres=True)
         self.assertTrue(res)
         self.checkPlotfile(self.plotfile_jpg, 60000)   
         print
@@ -630,7 +654,7 @@ class plotms_test_display(plotms_test_base):
         self.removePlotfile()
         time.sleep(5)
         # First plot: scan vs time
-        res = plotms(vis=self.ms, showgui=False, yaxis='scan',
+        res = plotms(vis=self.ms, showgui=False, yaxis='scan', highres=True,
                      plotindex=0, showlegend=True, legendposition='lowerRight',
                      customsymbol=[True], symbolshape=['diamond'], symbolsize=[3],
                      symbolcolor=['ff0000'], symbolfill=['mesh3'])
@@ -641,7 +665,7 @@ class plotms_test_display(plotms_test_base):
                      showlegend=True, legendposition='lowerRight',
                      customsymbol=[True], symbolshape=['circle'], symbolsize=[3],
                      symbolcolor=['00FF00'], symbolfill=['mesh3'],
-                     plotfile=self.plotfile_jpg)   
+                     plotfile=self.plotfile_jpg, highres=True)   
         self.assertTrue(res)
         self.checkPlotfile(self.plotfile_jpg, 55000) 
         print
@@ -654,13 +678,13 @@ class plotms_test_display(plotms_test_base):
         # Colorize by time.
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
                      showgui=False, xaxis='elevation', yaxis='amp',
-                     coloraxis='time')
+                     coloraxis='time', highres=True)
         self.assertTrue(res)
         self.checkPlotfile(self.plotfile_jpg, 60000)
 
         # Colorize by synonym, see CAS-6921.
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
-                     overwrite=True, showgui=False,
+                     overwrite=True, showgui=False, highres=True,
                      xaxis='elevation', yaxis='amp',
                      coloraxis='chan')
         self.assertTrue(res)
@@ -669,7 +693,7 @@ class plotms_test_display(plotms_test_base):
 
         # Colorize by averaged time on an elevation x amp plot.
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
-                     overwrite=True, showgui=False, 
+                     overwrite=True, showgui=False, highres=True,
                      xaxis='elevation', yaxis='amp',
                      coloraxis='time', averagedata=True, avgtime='3600')
         self.assertTrue(res)
@@ -683,7 +707,7 @@ class plotms_test_display(plotms_test_base):
         time.sleep(5)
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
                      showgui=False, xaxis='time', yaxis=['scan','field'],
-                     yaxislocation=['left','right'],
+                     yaxislocation=['left','right'], highres=True,
                      showlegend=True, legendposition='exteriorTop',
                      customsymbol=[True,True], symbolshape=['diamond','circle'],
                      symbolsize=[5,5], symbolcolor=['ff0000','00ff00'], 
@@ -700,7 +724,7 @@ class plotms_test_display(plotms_test_base):
         time.sleep(5)
         res = plotms(vis=self.ms, plotfile=plotfile_jpg, expformat='jpg', 
                      showgui=False, xaxis='time', yaxis=['scan','field'],
-                     yaxislocation=['left','right'],
+                     yaxislocation=['left','right'], highres=True,
                      gridrows=2, gridcols=2, iteraxis="antenna",
                      showlegend=True, legendposition='lowerLeft',
                      customsymbol=[True,True], symbolshape=['diamond','circle'],
@@ -720,7 +744,7 @@ class plotms_test_display(plotms_test_base):
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, exprange='all', 
                      scan='3', antenna='1~3', xaxis="time", yaxis="amp",
                      showgui=False, iteraxis='baseline',
-                     gridrows=2, gridcols=2, 
+                     gridrows=2, gridcols=2, highres=True,
                      xselfscale=True, yselfscale=True, 
                      xsharedaxis=True, ysharedaxis=True)
         self.assertTrue(res)
@@ -736,7 +760,7 @@ class plotms_test_display(plotms_test_base):
         # xsharedaxis without xselfscale!
         res = plotms(vis=self.ms, plotfile = self.plotfile_jpg, exprange='all',
                      gridrows=2, gridcols=2, iteraxis='antenna',
-                     showgui=False, xsharedaxis=True)
+                     showgui=False, xsharedaxis=True, highres=True)
         self.assertFalse(res)
         print
 
@@ -746,7 +770,7 @@ class plotms_test_display(plotms_test_base):
         self.removePlotfile()
         time.sleep(5)
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
-                     showgui=False, 
+                     showgui=False, highres=True,
                      title='NGC5921', xlabel='x axis', ylabel='y axis')
         self.assertTrue(res)
         self.checkPlotfile(self.plotfile_jpg, 200000) 
@@ -758,7 +782,8 @@ class plotms_test_display(plotms_test_base):
         self.removePlotfile()
         time.sleep(5)
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
-                     showgui=False, showmajorgrid=True, showminorgrid=True)
+                     showgui=False, showmajorgrid=True, showminorgrid=True,
+                     highres=True)
         self.assertTrue(res)
         self.checkPlotfile(self.plotfile_jpg, 300000) 
         print
@@ -783,7 +808,7 @@ class plotms_test_grid(plotms_test_base):
         # Put the plot in the second row, second col
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
                      showgui=False, gridrows=2, gridcols=3, xaxis="time",
-                     rowindex=1, colindex=1)
+                     rowindex=1, colindex=1, highres=True)
         self.assertTrue(res)
         self.checkPlotfile(self.plotfile_jpg, 60000)
         print
@@ -811,7 +836,8 @@ class plotms_test_grid(plotms_test_base):
         res = plotms(vis=self.ms, plotindex=3, title='Plot D',
                      showgui=False, clearplots=False,
                      rowindex=1, colindex=1,
-                     plotfile=self.plotfile_jpg, expformat='jpg')  
+                     plotfile=self.plotfile_jpg, expformat='jpg',
+                     highres=True)  
         self.assertTrue(res)
         self.checkPlotfile(self.plotfile_jpg, 60000)
 
@@ -822,7 +848,8 @@ class plotms_test_grid(plotms_test_base):
         res = plotms(vis=self.ms, plotindex=1, title='Plot B',
                      showgui=False, clearplots=False,
                      rowindex=0, colindex=1,
-                     plotfile=plotfile2_jpg, expformat='jpg')
+                     plotfile=plotfile2_jpg, expformat='jpg',
+                     highres=True)
         self.assertTrue(res)
         self.checkPlotfile(plotfile2_jpg, 60000)
         self.removePlotfile(plotfile2_jpg)
@@ -865,7 +892,7 @@ class plotms_test_grid(plotms_test_base):
         # Add in an iteration plot and export it.
         res = plotms(vis=self.ms, plotfile=plotFile, expformat='jpg',
                      showgui=False, iteraxis='scan', exprange='all',
-                     gridrows=2, gridcols=2,
+                     gridrows=2, gridcols=2, highres=True,
                      rowindex=1, colindex=0, plotindex=3, clearplots=False)
         self.assertTrue(res)
         print 'Added iteration plot, now exporting'
@@ -886,7 +913,7 @@ class plotms_test_grid(plotms_test_base):
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
                      showgui=False, iteraxis='baseline',
                      plotindex=1, rowindex=0, colindex=1, 
-                     gridrows=2, gridcols=2) 
+                     gridrows=2, gridcols=2, highres=True) 
         self.assertFalse(res)
         print
 
@@ -896,12 +923,46 @@ class plotms_test_grid(plotms_test_base):
         self.removePlotfile()
         time.sleep(5)
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, exprange='all',
-                     showgui=False, iteraxis='scan',
+                     showgui=False, iteraxis='scan', highres=True,
                      gridrows=2, gridcols=2, rowindex=2, colindex=2)
         self.assertTrue(res)
         self.checkNoPlotfile(self.plotfile_jpg)
         print
-     
+
+    def test_grid_screenExport(self):
+        '''test_grid_screenExport: Export grid plot in screen resolution'''
+        plotfile_jpg = self.outputDir + "testGrid06.jpg"
+        plotfile1_jpg = self.outputDir + "testGrid06_Scan1,2,3,4.jpg"
+        self.removePlotfile(plotfile1_jpg)
+        time.sleep(5)
+        res = plotms(vis=self.ms, plotfile=plotfile_jpg, expformat="jpg", 
+                     showgui=False, highres=False, iteraxis='scan',
+                     gridrows=2, gridcols=2)   
+        self.assertTrue(res)
+        self.checkPlotfile(plotfile1_jpg, 140000)
+        # with external axes
+        plotfile2_jpg = self.outputDir + "testGrid06_Scan1,2,3,4.jpg"
+        self.removePlotfile(plotfile2_jpg)
+        time.sleep(5)
+        res = plotms(vis=self.ms, plotfile=plotfile_jpg, expformat="jpg", 
+                     showgui=False, highres=False, iteraxis='scan',
+                     gridrows=2, gridcols=2, xsharedaxis=True,
+                     ysharedaxis=True, xselfscale=True, yselfscale=True)   
+        self.assertTrue(res)
+        self.checkPlotfile(plotfile2_jpg, 80000)
+        # with 
+        plotfile3_jpg = self.outputDir + "testGrid06_Scan1,2,3,4.jpg"
+        self.removePlotfile(plotfile3_jpg)
+        time.sleep(5)
+        res = plotms(vis=self.ms, plotfile=plotfile_jpg, expformat="jpg", 
+                     showgui=False, highres=False, iteraxis='scan',
+                     gridrows=2, gridcols=2, xsharedaxis=True,
+                     ysharedaxis=True, xselfscale=True, yselfscale=True,
+                     yaxislocation='right')   
+        self.assertTrue(res)
+        self.checkPlotfile(plotfile3_jpg, 80000)
+        print
+
 # ------------------------------------------------------------------------------
 
 class plotms_test_iteration(plotms_test_base):
@@ -927,7 +988,8 @@ class plotms_test_iteration(plotms_test_base):
             self.removePlotfile(plotFiles[i])
         time.sleep(5)
         res = plotms(vis=self.ms, plotfile=plotfile_jpg, expformat='jpg', 
-                     showgui=False, iteraxis='scan', exprange='all')
+                     showgui=False, iteraxis='scan', exprange='all',
+                     highres=True)
         self.assertTrue(res)
         # Check each page got saved
         for  i in range(0, len(plotFiles)):
@@ -940,7 +1002,8 @@ class plotms_test_iteration(plotms_test_base):
         plotfile_jpg = self.outputDir + "testIteration02.jpg"
         # Create the plot and check that there are 27 iterations
         res = plotms(vis=self.ms, plotfile = plotfile_jpg, exprange='all',
-                     showgui=False,iteraxis='antenna',overwrite=True)
+                     showgui=False, iteraxis='antenna', overwrite=True,
+                     highres=True)
         self.assertTrue(res)
         fileCount = self.getFilecount(self.outputDir, "testIteration02_")
         # no Antenna23
@@ -956,7 +1019,8 @@ class plotms_test_iteration(plotms_test_base):
         time.sleep(5)
         # Export first plot only 
         res = plotms(vis=self.ms, plotfile=plotfile_jpg, showgui=False,
-                     xaxis='elevation', yaxis='amp', iteraxis='time')
+                     xaxis='elevation', yaxis='amp', iteraxis='time',
+                     highres=True)
         self.assertTrue(res)
         self.checkPlotfile(plotfile1_jpg, 40000) 
         self.removePlotfile(plotfile1_jpg)
@@ -970,7 +1034,7 @@ class plotms_test_iteration(plotms_test_base):
         time.sleep(5)
         res = plotms(vis=self.ms, plotfile=plotfile_jpg, expformat='jpg', 
                      showgui=False, xaxis='elevation', yaxis='amp', avgtime='60',
-                     iteraxis='time')
+                     iteraxis='time', highres=True)
         self.assertTrue(res)
         self.checkPlotfile(plotfile1_jpg, 40000) 
         self.removePlotfile(plotfile1_jpg)
@@ -987,7 +1051,7 @@ class plotms_test_iteration(plotms_test_base):
         # Make 2 pages of 2x2 iteration plots over scan
         res = plotms(vis=self.ms, plotfile=plotfile_jpg, expformat='jpg',
                      showgui=False, iteraxis='scan', exprange='all',
-                     gridrows=2, gridcols=2)
+                     gridrows=2, gridcols=2, highres=True)
         self.assertTrue(res)
         self.checkPlotfile(plotfile1_jpg, 91000)
         self.removePlotfile(plotfile1_jpg)
@@ -1006,7 +1070,7 @@ class plotms_test_iteration(plotms_test_base):
         # Make 2 pages of 3x2 iteration plots over scan
         res = plotms(vis=self.ms, plotfile=plotfile_jpg, expformat='jpg',
                      showgui=False, iteraxis='scan', exprange='all',
-                     gridrows=3, gridcols=2, 
+                     gridrows=3, gridcols=2, highres=True,
                      yaxis=['amp'], yaxislocation=['right'])
         self.assertTrue(res)
         self.checkPlotfile(plotfile1_jpg, 200000)
@@ -1029,7 +1093,7 @@ class plotms_test_iteration(plotms_test_base):
         # Select 3: check that there are 3 iteration plots
         res = plotms(vis=self.ms, plotfile=plotfile_jpg, exprange='all',
                      showgui=False, xaxis="time", yaxis="amp",
-                     antenna='1~3&&&', iteraxis='antenna')
+                     antenna='1~3&&&', iteraxis='antenna', highres=True)
         self.assertTrue(res)
         fileCount = self.getFilecount( self.outputDir, "testIteration07_" )
         self.assertEqual(fileCount, 3)
@@ -1050,7 +1114,7 @@ class plotms_test_iteration(plotms_test_base):
         # One valid selection: check that there is only 1 iteration plot
         res = plotms(vis=self.ms, plotfile = plotfile_jpg, exprange='all',
                      xaxis="time", yaxis="amp", antenna='28~31',
-                     showgui=False, iteraxis='antenna')
+                     showgui=False, iteraxis='antenna', highres=True)
         self.assertTrue(res)
         fileCount = self.getFilecount(self.outputDir, "testIteration08_" )
         self.assertEqual(fileCount, 1) 
@@ -1066,7 +1130,7 @@ class plotms_test_iteration(plotms_test_base):
         # Create plot with empty antenna selection and check the result is false'''
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, exprange='all',
                      xaxis="time", yaxis="amp", antenna="100,101,102",
-                     showgui=False, iteraxis='antenna')
+                     showgui=False, iteraxis='antenna', highres=True)
         self.assertFalse(res)
         print
 
@@ -1082,7 +1146,8 @@ class plotms_test_iteration(plotms_test_base):
         time.sleep(5)
         '''The expectation is the plot with the bad scan, 100, will be skipped'''
         res = plotms(vis=self.ms, plotfile = plotfile_jpg, exprange='all',
-                     showgui=False, scan="1,2,100,3,4", iteraxis='scan')
+                     showgui=False, scan="1,2,100,3,4", iteraxis='scan',
+                     highres=True)
         self.assertTrue(res)
         fileCount = self.getFilecount(self.outputDir, "testIteration10_" )
         self.assertEqual(fileCount, 4) 
@@ -1118,7 +1183,7 @@ class plotms_test_multi(plotms_test_base):
         # Plot in the second column, first row, plotindex=0
         print 'Test plot 1'
         res = plotms(vis=self.ms, gridrows=2, gridcols=2,
-                     rowindex=0, colindex=1,
+                     rowindex=0, colindex=1, highres=True,
                      showgui=False, plotfile=plotfile1_jpg,
                      customsymbol=True, symbolshape='diamond', symbolsize=5,
                      symbolcolor='ff0000')
@@ -1132,7 +1197,7 @@ class plotms_test_multi(plotms_test_base):
                      plotindex=1, rowindex=0, colindex=1,
                      gridrows=2, gridcols=2, yaxislocation='right', 
                      customsymbol=True, symbolshape='circle', symbolsize=5,
-                     symbolcolor='00ff00')
+                     symbolcolor='00ff00', highres=True)
         self.assertTrue(res)
         self.checkPlotfile(plotfile2_jpg, 60000)  
         self.removePlotfile(plotfile2_jpg)
@@ -1142,7 +1207,7 @@ class plotms_test_multi(plotms_test_base):
                      plotindex=2, rowindex=1, colindex=1, 
                      gridrows=2, gridcols=2,
                      showgui=False, plotfile=plotfile3_jpg,
-                     customsymbol=False, yaxislocation='')
+                     customsymbol=False, yaxislocation='', highres=True)
         self.assertTrue(res)
         self.checkPlotfile(plotfile3_jpg, 60000)  
         self.removePlotfile(plotfile3_jpg)
@@ -1164,7 +1229,7 @@ class plotms_test_multi(plotms_test_base):
         res = plotms(vis=self.ms, showgui=False, clearplots=False,
                      gridrows=2, gridcols=2,
                      plotindex=2, rowindex=1, colindex=1, 
-                     plotfile=plotfile4_jpg,
+                     plotfile=plotfile4_jpg, highres=True,
                      customsymbol=False, yaxislocation='')
         self.assertTrue(res)
         self.checkPlotfile(plotfile4_jpg, 60000)  
@@ -1184,7 +1249,8 @@ class plotms_test_multi(plotms_test_base):
     
         res = plotms(vis=self.ms, showgui=False, plotfile=plotfile1_jpg,
                      xaxis='uvdist', yaxis='amp',ydatacolumn='model',
-                     spw='0', scan='2,4,6,8', coloraxis='spw')
+                     spw='0', scan='2,4,6,8', coloraxis='spw',
+                     highres=True)
         self.assertTrue(res)
         self.checkPlotfile(plotfile1_jpg, 30000)   
         self.removePlotfile(plotfile1_jpg)
@@ -1197,7 +1263,7 @@ class plotms_test_multi(plotms_test_base):
                      customflaggedsymbol=False, flaggedsymboloutline=False,
                      flaggedsymbolshape="nosymbol", flaggedsymbolsize=2,
                      flaggedsymbolcolor="ff0000", flaggedsymbolfill="fill", 
-                     plotfile=plotfile2_jpg, showgui=False)
+                     plotfile=plotfile2_jpg, showgui=False, highres=True)
         self.assertTrue(res)
         self.checkPlotfile(plotfile2_jpg, 40000)
         self.removePlotfile(plotfile2_jpg)
@@ -1226,17 +1292,17 @@ class plotms_test_selection(plotms_test_base):
         time.sleep(5)
         # Fail with invalid scan
         res = plotms(vis=self.ms, plotfile=plotfile1_jpg, expformat='jpg', 
-                     showgui=False, scan='8')
+                     showgui=False, scan='8', highres=True)
         self.assertFalse(res)
         # Succeed with valid scans
         res = plotms(vis=self.ms, plotfile=plotfile2_jpg, expformat='jpg', 
-                     overwrite=True, showgui=False, scan='2,4')
+                     overwrite=True, showgui=False, scan='2,4', highres=True)
         self.assertTrue(res)
         self.checkPlotfile(plotfile2_jpg, 84000, 125000)
         self.removePlotfile(plotfile2_jpg)
         # Succeed with different scan selection (CAS-6813)
         res = plotms(vis=self.ms, plotfile=plotfile3_jpg, expformat='jpg', 
-                     overwrite=True, showgui=False, scan='5,7')
+                     overwrite=True, showgui=False, scan='5,7', highres=True)
         self.assertTrue(res)
         self.checkPlotfile(plotfile3_jpg, 84000, 125000)
         self.removePlotfile(plotfile3_jpg)
@@ -1252,11 +1318,11 @@ class plotms_test_selection(plotms_test_base):
         time.sleep(5)
         # Fail with invalid spw
         res = plotms(vis=self.ms, plotfile=plotfile1_jpg, expformat='jpg', 
-                     showgui=False, spw='500')
+                     showgui=False, spw='500', highres=True)
         self.assertFalse(res)
         # Succeed with valid spw
         res = plotms(vis=self.ms, plotfile=plotfile2_jpg, expformat='jpg', 
-                     showgui=False, spw='0')
+                     showgui=False, spw='0', highres=True)
         self.assertTrue(res)
         self.checkPlotfile(plotfile2_jpg, 200000, 300000)
         self.removePlotfile(plotfile2_jpg)
@@ -1274,17 +1340,18 @@ class plotms_test_selection(plotms_test_base):
         time.sleep(5)
         # Fail with invalid antenna
         res = plotms(vis=self.ms, plotfile=plotfile1_jpg, expformat='jpg', 
-                     showgui=False, selectdata=True, antenna='ea22&&*')  
+                     showgui=False, selectdata=True, antenna='ea22&&*',
+                     highres=True)  
         self.assertFalse(res)
         # Succeed without antenna selection (make sure it cleared)
         res = plotms(vis=self.ms, plotfile=plotfile2_jpg, expformat='jpg', 
-                     showgui=False)
+                     showgui=False, highres=True)
         self.assertTrue(res)
         self.checkPlotfile(plotfile2_jpg, 200000, 300000) 
         self.removePlotfile(plotfile2_jpg)
         # Succeed with valid antenna 
         res = plotms(vis=self.ms, plotfile=plotfile3_jpg, expformat='jpg', 
-                     showgui=False, antenna='0~1') 
+                     showgui=False, antenna='0~1', highres=True) 
         self.assertTrue(res)
         self.checkPlotfile(plotfile3_jpg, 60000, 100000) 
         self.removePlotfile(plotfile3_jpg)
@@ -1300,11 +1367,11 @@ class plotms_test_selection(plotms_test_base):
         time.sleep(5)
         # Fail with invalid field
         res = plotms(vis=self.ms, plotfile=plotfile1_jpg, expformat='jpg', 
-                     showgui=False, field='3')
+                     showgui=False, field='3', highres=True)
         self.assertFalse(res)
         # Succeed with valid field
         res = plotms(vis=self.ms, plotfile=plotfile2_jpg, expformat='jpg', 
-                     showgui=False, field='1')
+                     showgui=False, field='1', highres=True)
         self.assertTrue(res)
         self.checkPlotfile(plotfile2_jpg, 80000, 150000)
         self.removePlotfile(plotfile2_jpg)
@@ -1320,11 +1387,11 @@ class plotms_test_selection(plotms_test_base):
         time.sleep(5)
         # Fail with invalid corr
         res = plotms(vis=self.ms, plotfile=plotfile1_jpg, expformat='jpg', 
-                     showgui=False, correlation='XX')
+                     showgui=False, correlation='XX', highres=True)
         self.assertFalse(res)
         # Succeed with valid corr
         res = plotms(vis=self.ms, plotfile=plotfile2_jpg, expformat='jpg', 
-                     showgui=False, correlation='RR')
+                     showgui=False, correlation='RR', highres=True)
         self.assertTrue(res)
         self.checkPlotfile(plotfile2_jpg, 200000, 300000)
         self.removePlotfile(plotfile2_jpg)
@@ -1350,7 +1417,7 @@ class plotms_test_transform(plotms_test_base):
             plotfile = self.outputDir + "testTransform01_" + frame + ".jpg"
             self.removePlotfile(plotfile)
             res = plotms(vis=self.ms, plotfile=plotfile, yaxis='freq', 
-                         showgui=False, freqframe=frame)
+                         showgui=False, freqframe=frame, highres=True)
             self.assertTrue(res)
             self.checkPlotfile(plotfile, 300000)
             self.removePlotfile(plotfile)
@@ -1362,7 +1429,7 @@ class plotms_test_transform(plotms_test_base):
         self.removePlotfile()
         time.sleep(5)
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, yaxis='freq', 
-                     showgui=False, freqframe='J2000')
+                     showgui=False, freqframe='J2000', highres=True)
         self.assertFalse(res)
         print
         
@@ -1373,7 +1440,7 @@ class plotms_test_transform(plotms_test_base):
             plotfile = self.outputDir + "testTransform03_" + vel + ".jpg"
             self.removePlotfile(plotfile)
             res = plotms(vis=self.ms, plotfile=plotfile, yaxis='freq', 
-                         showgui=False, veldef=vel)
+                         showgui=False, veldef=vel, highres=True)
             self.assertTrue(res)
             self.checkPlotfile(plotfile, 300000)
             self.removePlotfile(plotfile)
@@ -1385,7 +1452,7 @@ class plotms_test_transform(plotms_test_base):
         self.removePlotfile()
         time.sleep(5)
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, yaxis='freq', 
-                     showgui=False, restfreq='1420')
+                     showgui=False, restfreq='1420', highres=True)
         self.assertTrue(res)
         self.checkPlotfile(self.plotfile_jpg, 300000)
         print
@@ -1396,7 +1463,7 @@ class plotms_test_transform(plotms_test_base):
         self.removePlotfile()
         time.sleep(5)
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, yaxis='phase', 
-                     showgui=False, shift=[-15, -15])
+                     showgui=False, shift=[-15, -15], highres=True)
         self.assertTrue(res)
         self.checkPlotfile(self.plotfile_jpg, 100000)
         print

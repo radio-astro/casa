@@ -640,7 +640,7 @@ def plotms(vis=None,
                 if (pm.isDrawing()):
                     casalog.post("Will wait until drawing of the plot has completed before exporting it",'NORMAL')
                     while (pm.isDrawing()):
-                        time.sleep(0.5)
+                        time.sleep(1.0)
                 casalog.post("Exporting the plot.",'NORMAL')
                 casalog.post("Calling pm.save,", 'NORMAL')
                 plotUpdated = pm.save( plotfile, expformat, highres)
