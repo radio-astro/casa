@@ -776,7 +776,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Cube<Bool>  copyOfFlag;
     Vector<Int> mychanmap=multiChanMap_p[vb.spectralWindow()];
     copyOfFlag=vb.flagCube();
-    for (uInt k=0; k<chanMap.nelements(); ++ k)
+    for (uInt k=0; k< mychanmap.nelements(); ++ k)
       if(mychanmap(k)==-1)
 	copyOfFlag.xzPlane(k)=True;
 
