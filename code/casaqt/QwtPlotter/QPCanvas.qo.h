@@ -554,6 +554,8 @@ private:
     virtual bool print(  QPainter* painter, PlotAreaFillPtr paf, double widthWidth,
     		double widgetHeight, int externalAxisWidth, int externalAxisHeight,
     		int rowIndex, int colIndex, QRect imageRect );
+    virtual bool printRect( QPainter* painter, QRect rect);
+
     virtual int canvasWidth() const{
     	return width();
     }

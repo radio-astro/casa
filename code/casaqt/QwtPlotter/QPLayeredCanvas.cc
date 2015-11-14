@@ -384,8 +384,10 @@ void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& cRect,
             
         QPImageCache image;
         foreach(PlotCanvasLayer layer, m_layers.keys()) {
-            image = axesCache.currImage(layer);
-            image.paint(painter, rect);
+            //image = axesCache.currImage(layer);
+            //image.paint(painter, rect);
+            // Changed because canvas just had axes drawn, no plot! (for screen res export)
+            m_layers.value(layer)->drawItems(painter,cRect,cMaps);
         }
 
         m_parent->logMethod(CLASS_NAME, "drawItems", false);
@@ -529,6 +531,7 @@ void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& cRect,
         }
         else {
         	drawThread->run();
+                if(!op.null()) op->finish();
         	delete m_drawThread;
         	m_drawThread = NULL;
         }

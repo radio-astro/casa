@@ -100,21 +100,16 @@ bool QPCanvas::print(  QPainter* painter, PlotAreaFillPtr paf, double widgetWidt
 	PlotOperationPtr op = operationExport();
 	bool wasCanceled = false;
 	if (!op.null()) wasCanceled |= op->cancelRequested();
-	if (!wasCanceled){
 
+	if (!wasCanceled){
 	        asQwtPlot().print(painter, printGeom);
 	        painter->drawRect( printGeom );
-
 	        // For bug where title color changes after a print.
 	        QwtText title = asQwtPlot().title();
 	        if (title.color() != titleColor) {
 	            title.setColor(titleColor);
 	            asQwtPlot().setTitle(title);
 	        }
-
-
-
-
 	        if (!op.null()) wasCanceled |= op->cancelRequested();
 	}
 
@@ -126,6 +121,17 @@ bool QPCanvas::print(  QPainter* painter, PlotAreaFillPtr paf, double widgetWidt
 	return wasCanceled;
 }
 
+bool QPCanvas::printRect( QPainter* painter, QRect rect) {
+	bool wasCanceled = false;
+	PlotOperationPtr op = operationExport();
+	if (!op.null()) wasCanceled |= op->cancelRequested();
+	if (!wasCanceled){
+	    asQwtPlot().print(painter, rect);
+	    painter->drawRect(rect);
+	    if (!op.null()) wasCanceled |= op->cancelRequested();
+	}
+	return wasCanceled;
+}
 
 bool QPCanvas::print( QPrinter& printer ){
 	 // Set orientation.

@@ -41,7 +41,7 @@ QPExporter::QPExporter() {
 }
 
 void QPExporter::findGridProperties( QPExportCanvas* grabCanvas, QPPlotter* grabPlotter,
-		Int& width, Int& height, Int& gridRows, Int& gridCols ){
+		Int& width, Int& height, Int& gridRows, Int& gridCols) {
 	//Figure out the grid size
 	width = 0;
 	if ( grabPlotter != NULL ){
@@ -99,7 +99,7 @@ bool QPExporter::exportPostscript(
     Int height = 0;
     Int gridRows = 1;
     Int gridCols = 1;
-    findGridProperties( grabCanvas, grabPlotter, width, height, gridRows, gridCols );
+    findGridProperties( grabCanvas, grabPlotter, width, height, gridRows, gridCols);
 
     Bool wasCanceled = false;
 
@@ -208,7 +208,7 @@ bool QPExporter::exportToImageFile(
     Int height = 0;
     Int gridRows = 1;
     Int gridCols = 1;
-    findGridProperties( grabCanvas, grabPlotter, width, height, gridRows, gridCols );
+    findGridProperties( grabCanvas, grabPlotter, width, height, gridRows, gridCols);
 
     // Remember the current background color, used for on-screen GUI
     // We want to temporarily change this to white for making the image file.
@@ -217,16 +217,17 @@ bool QPExporter::exportToImageFile(
     if(grabCanvas != NULL)
         normal_background = grabCanvas->background();
 
-
-    // Just grab the widget if: 1) screen resolution, or 2) high resolution
-    // but size is <= widget size or not set.
     bool wasCanceled = false;
     if(format.resolution == PlotExportFormat::SCREEN)    {
-        image=grabCanvas->grabImageFromCanvas(format);
-    }
-    else {
+        if (grabCanvas != NULL) {
+            image=grabCanvas->grabImageFromCanvas(format);
+        } else {
+            image = produceScreenImage(format, qcanvases, width, height, 
+                gridRows, gridCols, wasCanceled);
+        }
+    } else {
         // High resolution, or format size larger than widget.
-        image=produceHighResImage(format, qcanvases, width, height, gridRows, gridCols, wasCanceled);
+        image = produceHighResImage(format, qcanvases, width, height, gridRows, gridCols, wasCanceled);
     }
 
     // Set DPI.
@@ -311,6 +312,18 @@ int QPExporter::getCanvasCount( vector<QPExportCanvas*> &qcanvases ){
 		}
 	}
 	return canvasCount;
+}
+
+void QPExporter::getAxesCount(vector<QPExportCanvas*> &qcanvases,
+        Int& externalX, Int& externalY){
+    externalX = 0;
+    externalY = 0;
+	for ( unsigned int i = 0; i < qcanvases.size(); i++ ){
+		if ( qcanvases[i]->isAxis() ){
+            if (qcanvases[i]->isVertical()) ++externalY;
+            else ++externalX;
+		}
+	}
 }
 
 QImage QPExporter::produceHighResImage(
@@ -448,6 +461,166 @@ QImage QPExporter::produceHighResImage(
 
     return image;
 }
+
+QImage QPExporter::produceScreenImage(const PlotExportFormat& format,
+			vector<QPExportCanvas*> &qcanvases, int width, int height,
+            int rowCount, int colCount, bool &wasCanceled) {
+    // TBF: ignoring format width & height for now (= -1, not settable in plotms yet)
+
+    int canvasSize = qcanvases.size();
+    QPExportCanvas* canv = qcanvases[0]; // representative (or only) plot
+    // Keep it simple for a single plot
+    if (canvasSize == 1) {
+        return canv->grabImageFromCanvas(format);
+    }
+
+    // We have a grid
+    // Do we have external axes?
+    Int totalRows = rowCount;
+    Int totalCols = colCount;
+    Bool top=False, bottom=False, left=False, right=False;
+    Int externalX=0, externalY=0;
+
+    if (canvasSize > (rowCount * colCount)) {
+        getAxesCount(qcanvases, externalX, externalY);
+        Int numXaxes = externalX / colCount; // 1 xaxis per col
+        totalRows += numXaxes;
+        Int numYaxes = externalY / rowCount; // 1 yaxis per row
+        totalCols += numYaxes;
+        if (canv->isAxis()) {
+            Bool isVertical = canv->isVertical();
+            findXAxisLocations(numXaxes, isVertical, top, bottom);
+            if (top) {
+                findYAxisSecondRow(numYaxes, totalCols, qcanvases, left, right);
+            } else {
+                findYAxisLocations(numYaxes, isVertical, left, right);
+            }
+        } else {  // first canvas is a plot not an axis
+            bottom = (numXaxes > 0) ? True : False;
+            right = (numYaxes > 0) ? True : False;
+        }
+    }
+
+    int xpos=0, ypos=0, icanv=0;
+    int canvWidth, canvHeight;
+    QImage canvImage;
+    QRect printGeom;
+
+    // width and height are for exported image
+    QImage image = QImage(width, height, QImage::Format_ARGB32);
+    // white background
+    image.fill(canv->palette().color(canv->backgroundRole()).rgba());
+    image.fill((uint)(-1));
+    QPainter painter(&image);
+
+    // Even up plots so none are scrunched
+    // (already adjusted with external axes so just use canvas height/width below)
+    if (externalY == 0) canvWidth = width/totalCols;
+    if (externalX == 0) canvHeight = height/totalRows;
+
+    // Print each canvas.
+    for(int r = 0; r < totalRows; ++r) {
+        xpos = 0;
+        for(int c = 0; c < totalCols; ++c) {
+            // Handle "spaces" in grid
+            if (top && (r==0)) { // top row
+                if (left && (c==0)){
+                    // use axis canvas from next row to increment xpos
+                    QImage leftAxis = qcanvases[totalCols-1]->grabImageFromCanvas(format);
+                    xpos += leftAxis.width(); 
+                    continue;
+                }
+                if (right && (c==totalCols-1)) {
+                    // we're done with this row, this grid item is a space
+                    continue;
+                }
+            }
+            else if (bottom && (r==totalRows-1)) {  // bottom row
+                if (left && (c==0)) {
+                    // use axis canvas from previous row to increment xpos
+                    QImage leftAxis = qcanvases[icanv-totalCols]->grabImageFromCanvas(format);
+                    xpos += leftAxis.width();
+                    continue;
+                }
+                if (right && (c==totalCols-1)) {
+                    // we're done with this row, this grid item is a space
+                    continue;
+                }
+            }
+
+            canv = qcanvases[icanv];
+            canvImage = canv->grabImageFromCanvas(format);
+            if (externalX > 0) canvWidth = canvImage.width();
+            if (externalY > 0) canvHeight = canvImage.height();
+            printGeom = QRect(xpos, ypos, canvWidth, canvHeight);
+            wasCanceled = qcanvases[icanv]->printRect(&painter, printGeom);
+            if (wasCanceled) break;
+            ++icanv;
+            xpos += canvWidth;
+        }
+        ypos += canvHeight;
+    }
+
+    return image;
+}
+
+void QPExporter::findXAxisLocations(Int numX, Bool vertical, Bool& top, Bool& bottom) {
+    top = bottom = False;
+    switch (numX) {
+        case 0:
+            break; // top & bottom already False;
+        case 1: {
+            if (vertical)
+                bottom = True;
+            else
+                top = True;
+            break;
+        }
+    }
+}
+
+void QPExporter::findYAxisLocations(Int numY, Bool vertical, Bool& left, Bool& right) {
+    left = right = False;
+    switch (numY) {
+        case 0:
+            break; // left & right already False;
+        case 1: {
+            if (vertical)
+                left = True;
+            else
+                right = True;
+            break;
+        }
+        case 2: {
+            left = right = True;
+            break;
+        }
+    }
+}
+
+void QPExporter::findYAxisSecondRow(Int numY, Int nCols, vector<QPExportCanvas*> &qcanvases,
+        Bool& left, Bool& right) {
+    /* Assumes xaxis is top! */
+    left = right = False;
+    switch (numY) {
+        case 0:
+            break; // left & right already False;
+        case 1: {
+            // qcanvases[totalCols-1] is first canvas in second row if 1 y-axis
+            Bool isLeftAxis = qcanvases[nCols-1]->isAxis();
+            if (isLeftAxis) 
+                left = True;
+            else
+                right = True;
+            break;
+        }
+        case 2: {
+            left = right = True;
+            break;
+        }
+    }
+}
+
 bool QPExporter::exportCanvas(PlotCanvas* canvas, const PlotExportFormat& format) {
 	vector<QPExportCanvas*> canvases;
 	if ( canvas != NULL ){

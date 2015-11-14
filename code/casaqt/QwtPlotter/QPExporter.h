@@ -69,18 +69,31 @@ private:
 			int rowIndex, int columnIndex,
 			bool &wasCanceled);
 
+	static QImage produceScreenImage(
+			const PlotExportFormat& format,
+			vector<QPExportCanvas*> &qcanvases,
+			int width, int height,
+			int rowCount, int colCount,
+			bool &wasCanceled);
+
 	static bool  exportToImageFile(
 			const PlotExportFormat& format,
 			vector<QPExportCanvas*> &qcanvases,
 			QPExportCanvas* grabCanvas,
 			QPPlotter* grabPlotter);
+
 	static int findAxisHeight( vector<QPExportCanvas*> &qcanvases );
 	static int findAxisWidth( vector<QPExportCanvas*> &qcanvases );
 	static int getCanvasCount( vector<QPExportCanvas*> &qcanvases );
-
-
+    static void getAxesCount(vector<QPExportCanvas*> &qcanvases,
+            Int& externalX, Int& externalY);
 	static void findGridProperties( QPExportCanvas* grabCanvas, QPPlotter* grabPlotter,
-			Int& width, Int& height, Int& gridRows, Int& gridCols );
+			Int& width, Int& height, Int& gridRows, Int& gridCols);
+    static void findXAxisLocations(Int numX, Bool vertical, Bool& top, Bool& bottom);
+    static void findYAxisLocations(Int numY, Bool vertical, Bool& left, Bool& right);
+    static void findYAxisSecondRow(Int numY, Bool isLeftAxis, Bool& left, Bool& right);
+    static void findYAxisSecondRow(Int numY, Int nCols, vector<QPExportCanvas*> &qcanvases,
+            Bool& left, Bool& right);
 
 	static const String CLASS_NAME;
 	static const String EXPORT_NAME;

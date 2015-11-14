@@ -287,6 +287,7 @@ private:
     bool isLeftAxisInternal() const;
     bool isBottomAxisInternal() const;
     bool isRightAxisInternal() const;
+    bool isTopAxisInternal() const;
     // </group>
 
     //Reset the size hints of the canvases this plotter holds based on its current size.

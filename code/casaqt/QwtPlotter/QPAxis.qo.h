@@ -391,7 +391,9 @@ public:
     virtual bool print( QPrinter& printer );
     virtual QImage grabImageFromCanvas(const PlotExportFormat& format );
     virtual bool print(  QPainter* painter, PlotAreaFillPtr paf, double widgetWidth,
-    		double widgetHeight, int axisWidth, int axisHeight, int rowIndex, int colIndex, QRect imageRect );
+    		double widgetHeight, int axisWidth, int axisHeight, int rowIndex, int colIndex, 
+                QRect imageRect );
+    virtual bool printRect( QPainter* painter, QRect rect);
     virtual const QPalette& palette() const;
     virtual QPalette::ColorRole backgroundRole() const;
     virtual bool isAxis() const {

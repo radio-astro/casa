@@ -109,6 +109,19 @@ bool QPAxis::print(  QPainter* painter, PlotAreaFillPtr paf, double widgetWidth,
 	return wasCanceled;
 }
 
+bool QPAxis::printRect( QPainter* painter, QRect rect) {
+	bool wasCanceled = false;
+	PlotOperationPtr op = operationExport();
+	if (!op.null()){
+		wasCanceled |= op->cancelRequested();
+	}
+	if (!wasCanceled && axisWidget != NULL ){
+	    axisWidget->print(painter, rect);
+	    painter->drawRect( rect );
+	    if (!op.null()) wasCanceled |= op->cancelRequested();
+	}
+	return wasCanceled;
+}
 
 QImage QPAxis::grabImageFromCanvas(
         const PlotExportFormat& format )   {

@@ -187,6 +187,7 @@ public:
 private:
     // Plotter, Script or GUI
     Client* itsPlotter_;
+    Client* itsLastPlotter_;
     bool isGUI_;
 
     // Current parameters.

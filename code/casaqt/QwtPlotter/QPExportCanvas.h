@@ -44,6 +44,7 @@ public:
 	virtual bool print(  QPainter* painter, PlotAreaFillPtr paf, double widthRatio,
 			double heightRatio, int externalAxisWidth, int externalAxisHeight,
 			int rowIndex, int colIndex, QRect imageRect ) = 0;
+       virtual bool printRect( QPainter* painter, QRect printGeom) = 0;
 	virtual QImage  grabImageFromCanvas(const PlotExportFormat& format ) = 0;
 	virtual PlotLoggerPtr logger() const = 0;
 	virtual int canvasWidth() const = 0;

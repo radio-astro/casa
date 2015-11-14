@@ -43,7 +43,6 @@ PlotMSExportThread::PlotMSExportThread( QtProgressWidget* progressWidget,
 		PMSPTMethod postThreadMethod, PMSPTObject postThreadObject)
 	: PlotMSThread(progressWidget,postThreadMethod, postThreadObject),
 	  itsPlotter_( plotter ){
-
 	exportLocation = location;
 	itsPlots_ = itsPlotter_->getCurrentPlots();
 
@@ -118,12 +117,12 @@ void PlotMSExportThread::threadFinished() {
     	if( success ) {
     		itsPlotter_->showMessage(
                 "Successfully exported plot to " + exportLocation + "!",
-                "Export Success");
+                "export");
     	}
     	else {
     		itsPlotter_->showError(
                 "There was a problem exporting to file " + exportLocation +
-                ".", "Export Error", false);
+                ".", "export", false);
     	}
     }
     itsMutex_.unlock();

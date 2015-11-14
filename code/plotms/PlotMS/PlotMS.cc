@@ -62,7 +62,7 @@ namespace casa {
 // Constructors/Destructors //
 
 PlotMSApp::PlotMSApp(bool connectToDBus, bool userGui) :
-                isGUI_(userGui),
+                itsLastPlotter_(NULL), isGUI_(userGui),
 		itsExportFormat( PlotExportFormat::JPG, ""), 
                 itsDBus_(NULL){
     initialize(connectToDBus, userGui);
@@ -70,7 +70,8 @@ PlotMSApp::PlotMSApp(bool connectToDBus, bool userGui) :
 
 PlotMSApp::PlotMSApp(const PlotMSParameters& params, bool connectToDBus,
 		bool userGui) :
-        itsPlotter_(NULL), isGUI_(userGui), itsParameters_(params),
+        itsPlotter_(NULL), itsLastPlotter_(NULL), isGUI_(userGui), 
+        itsParameters_(params),
         itsExportFormat( PlotExportFormat::JPG, ""), itsDBus_(NULL) {
     initialize(connectToDBus, userGui);
 }
@@ -329,13 +330,22 @@ void PlotMSApp::initialize(bool connectToDBus, bool userGui) {
 	
     itsParameters_.addWatcher(this);
 
-    ClientFactory::ClientType clientType = ClientFactory::GUI;
-    if ( !userGui ){
-    	clientType = ClientFactory::SCRIPT;
+    if ((itsLastPlotter_ != NULL) && (itsLastPlotter_->isInteractive() == userGui)) {
+        Client* tmpPlotter = itsLastPlotter_;
+        itsLastPlotter_ = itsPlotter_;
+        itsPlotter_ = tmpPlotter;
+        itsPlotter_->clearMessage(); // clear status bar
+    } else {
+        itsLastPlotter_ = itsPlotter_;
+        ClientFactory::ClientType clientType = ClientFactory::GUI;
+        if ( !userGui ){
+    	    clientType = ClientFactory::SCRIPT;
+        }
+        itsPlotter_ = ClientFactory::makeClient( clientType, this );
     }
-
-    itsPlotter_ = ClientFactory::makeClient( clientType, this );
     itsLogger_ = itsPlotter_->getLogger();
+
+    // do this after setting up plotter
     itsPlotManager_.setParent(this);
     
     // Update internal state to reflect parameters.

@@ -216,22 +216,6 @@ bool ActionExport::doActionSpecific(PlotMSApp* plotms){
 	else {
 
 		PlotExportFormat exportFormat = adjustFormat( t );
-		// TODO !export fix
-		// Quick hack for screen resolution images.  Taking a screenshot without
-		// drawing the items is basically impossible in the non-main (GUI) thread,
-		// so for now just turn on high resolution so that it has to draw each
-		// items.  This isn't ideal because it is slow, but for now it's better to
-		// have something that works and is slow than something that doesn't work.
-
-		if((exportFormat.type == PlotExportFormat::JPG ||
-			exportFormat.type == PlotExportFormat::PNG) &&
-			exportFormat.resolution == PlotExportFormat::SCREEN) {
-			cout << "NOTICE: Exporting to images in screen resolution is currently"
-					<< " not working.  Switching to high resolution (which is slower,"
-					<< " but works)." << endl;
-			exportFormat.resolution = PlotExportFormat::HIGH;
-		}
-
 		// Tell parent the format so it can be used in msg to user
 		plotms->setExportFormat(exportFormat);
 
@@ -241,10 +225,10 @@ bool ActionExport::doActionSpecific(PlotMSApp* plotms){
 		setUpClientCommunication( exportThread, -1 );
 
 		setUseThreading( false );
-
 		ok = initiateWork( exportThread );
-		if ( threadController == NULL ){
-			delete exportThread;
+		if ( threadController != NULL ){
+            delete threadController;
+            threadController = NULL;
 		}
 	}
 	return ok;

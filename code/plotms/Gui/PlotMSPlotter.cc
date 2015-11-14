@@ -140,7 +140,11 @@ ThreadController* PlotMSPlotter::getThreadController( PlotMSAction::Type type,
 
 	if ( type == PlotMSAction::PLOT_EXPORT ){
 		PlotExportFormat format = itsParent_->getExportFormat();
-		controller = new PlotMSExportThread( itsThreadProgress_, this, format.location );
+        if ( showProgressWidget && guiShown() ){
+		    controller = new PlotMSExportThread( itsThreadProgress_, this, format.location );
+        } else {
+		    controller = new PlotMSExportThread( NULL, this, format.location );
+        }
 	}
 	else if ( type == PlotMSAction::CACHE_LOAD || type == PlotMSAction::CACHE_RELEASE ){
 		if ( postThreadObject == NULL ){
@@ -171,10 +175,12 @@ ThreadController* PlotMSPlotter::getThreadController( PlotMSAction::Type type,
 		}
 	}
 	else if ( type == PlotMSAction::HOLD_RELEASE_DRAWING ){
-		if ( showProgressWidget ){
+		if ( showProgressWidget && guiShown() ){
+            itsThreadProgress_->setVisible(true);
 			controller = new PlotMSDrawThread( this, itsThreadProgress_);
 		}
 		else {
+            itsThreadProgress_->setVisible(false);
 			controller = new PlotMSDrawThread( this, NULL);
 		}
 	}
@@ -208,7 +214,7 @@ void PlotMSPlotter::doThreadedOperation( ThreadController* controller) {
         
         // disable and show progress GUI
         foreach(QWidget* widget, itsEnableWidgets_) widget->setEnabled(false);
-        if ( showProgressWidget ){
+        if ( showProgressWidget && guiShown() ){
         	QRect rect = itsThreadProgress_->geometry();
         	rect.moveCenter(geometry().center());
         	itsThreadProgress_->move(rect.topLeft());
@@ -248,7 +254,6 @@ bool PlotMSPlotter::canvasDrawBeginning(
     }
     
     PlotMSDrawThread* dt;
-    
     if(itsCurrentThread_ != NULL) {
         dt = dynamic_cast<PlotMSDrawThread*>(itsCurrentThread_);
         if(dt != NULL) {
@@ -260,15 +265,23 @@ bool PlotMSPlotter::canvasDrawBeginning(
             // the actual drawing is still being done in the background).  If
             // the drawing finishes before the current thread, when the drawing
             // thread starts it will immediately exit.
-            dt = new PlotMSDrawThread(this, itsThreadProgress_);
+            if ( showProgressWidget && guiShown() ) {
+                itsThreadProgress_->setVisible(true);
+    	        dt = new PlotMSDrawThread(this, itsThreadProgress_ );
+            } else {
+                itsThreadProgress_->setVisible(false);
+    	        dt = new PlotMSDrawThread(this, NULL );
+            }
             itsWaitingThreads_.push_back(dt);
         }
         return true;
     }
-    if ( showProgressWidget ){
+    if ( showProgressWidget && guiShown() ){
+        itsThreadProgress_->setVisible(true);
     	dt = new PlotMSDrawThread(this, itsThreadProgress_ );
     }
     else {
+        itsThreadProgress_->setVisible(false);
     	dt = new PlotMSDrawThread(this, NULL );
     }
     doThreadedOperation(dt);
@@ -386,11 +399,8 @@ void PlotMSPlotter::showError(
 
 void PlotMSPlotter::showMessage(const String& message, const String& title, bool warning) {
 	if (itsParent_->its_want_avoid_popups)  {
-
-
 		// Update status bar 
 		// (Ignore the title)
-
 		QPalette pal = statusbar->palette();
 		if ( warning ){
 			pal.setColor(statusbar->foregroundRole(), Qt::red );
@@ -400,37 +410,17 @@ void PlotMSPlotter::showMessage(const String& message, const String& title, bool
 		}
 		statusbar->setPalette( pal );
 		statusbar->showMessage( QString::fromStdString( message ));
-		
 
 		// Also write msg to logger
-		// (not entirely sure how this is supposed to be done)
-		getParent()->getLogger()->postMessage(PMS::LOG_ORIGIN, String("showError()"), 
-			message);
-		
-		#if (0)   // (DSW) stolen from some .h for reference - do not use this code (i think, maybe)
-		void postMessage(const PlotLogMessage& message);
-		void postMessage(const String& origin1, const String& origin2,
-                     const String& message,
-                     int eventType = PlotLogMessage::DEFAULT_EVENT_TYPE);
-		#endif
- 
-	
+		getParent()->getLogger()->postMessage(PMS::LOG_ORIGIN, title, message);
 	} else {
-		
 		QMessageBox::information(this, title.c_str(), message.c_str());
- 
 	}
 }
-
-
 
 void PlotMSPlotter::showAbout() {
     QMessageBox::about(this, "About PlotMS", itsAboutString_);
 }
-
-
-
-
 
 void PlotMSPlotter::prepareForPlotting()   {
 	
@@ -766,7 +756,6 @@ void PlotMSPlotter::currentThreadFinished() {
 	}
 
     // Clean up current thread.
-
     delete itsCurrentThread_;
     itsCurrentThread_ = NULL;
     
