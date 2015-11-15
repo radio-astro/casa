@@ -299,6 +299,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsParentImageShape = imshape; 
     itsImageShape = imshape;
 
+    itsParentCoordSys = csys;
     itsCoordSys = csys; // Hopefully this doesn't change for a reference image
     itsImageName = imagename;
 
@@ -367,7 +368,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       oss << "  |||||  " << x.getMesg() << endl;
     }
 
-    //   cout << " SIIM:validate : " << oss.str() << endl;
+    //      cout << " SIIM:validate : " << oss.str() << endl;
 
     if( state == False )  throw(AipsError("Internal Error : Invalid ImageStore state : "+ oss.str()) );
     
@@ -405,6 +406,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     //    overwrite=False; /// HARD CODING THIS. See CAS-6937.
 
+    //    cout << "Open image : " << imagenamefull << "    useShape : " << useShape << endl;
+
     // if image exists
     //      if overwrite=T
     //           try to make new image
@@ -423,7 +426,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  {
 	    if(dbg) cout << "Trying to overwrite and open new image named : " << imagenamefull << " ow:"<< overwrite << endl;
 	    try{
-	      imPtr.reset( new PagedImage<Float> (useShape, itsCoordSys, imagenamefull) );
+	      imPtr.reset( new PagedImage<Float> (useShape, itsParentCoordSys, imagenamefull) );
 	      // initialize to zeros...
 	      imPtr->set(0.0);
 	    }
@@ -438,8 +441,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 		catch (AipsError &x){
 		  throw( AipsError("Writable table exists, but cannot open : " + x.getMesg() ) );
-		  //imPtr.reset( new TempImage<Float> (useShape, itsCoordSys) );
-		  //imPtr->set(0.0);
 		}
 	      }// is table writable
 	    else
@@ -458,24 +459,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		  if( !dosumwt)
 		    {
-		      //cout << itsImageShape << "  and " << imPtr->shape() << " ---- " << itsImageShape.product() << " : " << itsCoordSys.nCoordinates() << endl;
+		      //cout << useShape << "  and " << imPtr->shape() << " ---- " << useShape.product() << " : " << itsCoordSys.nCoordinates() << endl;
 		      // Check if coordsys and shape of this image are consistent with current ones (if filled)
-		      if( itsImageShape.product()>0 &&  ! itsImageShape.isEqual( imPtr->shape() ) )
+
+		      if( useShape.product()>0 &&  ! useShape.isEqual( imPtr->shape() ) )
 			{
 			  ostringstream oo1,oo2;
-			  oo1 << itsImageShape; oo2 << imPtr->shape();
-			  throw( AipsError( "Shape mismatch between existing images ("+oo2.str()+") and current parameters ("+oo1.str()+"). Please change imagename. If needed, please supply startmodel or mask via parameters so that they can be regridded to the new shape before continuing." ) );
+			  oo1 << useShape; oo2 << imPtr->shape();
+			  throw( AipsError( "Shape mismatch between existing images ("+oo2.str()+") and current parameters ("+oo1.str()+"). If attempting to restart a run, please change imagename and supply startmodel or mask via parameters so that they can be regridded to the new shape before continuing." ) );
 			}
-		      if( itsCoordSys.nCoordinates()>0 &&  ! itsCoordSys.near( imPtr->coordinates() ) )
+		      if( itsParentCoordSys.nCoordinates()>0 &&  ! itsParentCoordSys.near( imPtr->coordinates() ) )
 			{
-			  throw( AipsError( "CoordSys mismatch between existing images on disk and current parameters. Please change imagename. If needed, please supply startmodel or mask via parameters so that they can be regridded to the new coordinate system before continuing. " ) );
+			  throw( AipsError( "CoordSys mismatch between existing images on disk and current parameters("+itsParentCoordSys.errorMessage()+"). If attempting to restart a run, please change imagename and supply startmodel or mask via parameters so that they can be regridded to the new coordinate system before continuing. " ) );
 			}
 		    }// not dosumwt
 		}
 		catch (AipsError &x){
 		  throw( AipsError("Writable table exists, but cannot open "+imagenamefull+" : " + x.getMesg() ) );
-		  //imPtr.reset( new TempImage<Float> (useShape, itsCoordSys) );
-		  //imPtr->set(0.0);
 		}
 	      }// is table writable
 	    else // table exists but not writeable
@@ -489,7 +489,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	{
 	  if(dbg) cout << "Trying to open new image named : " << imagenamefull <<  endl;
 	  try{
-	    imPtr.reset( new PagedImage<Float> (useShape, itsCoordSys, imagenamefull) );
+	    imPtr.reset( new PagedImage<Float> (useShape, itsParentCoordSys, imagenamefull) );
 	    // initialize to zeros...
 	    imPtr->set(0.0);
 	  }
@@ -497,10 +497,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    throw( AipsError("Cannot make new image. : " + x.getMesg() ) );
 	  }
 	}
-      
+
 
       //////////////////////////////////////
-      /*
+    /*      
     if( overwrite || !Table::isWritable( imagenamefull ) )
       {
 	cout << "Trying to open new image named : " << imagenamefull << " ow:"<< overwrite << endl;
@@ -530,7 +530,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    imPtr->set(0.0);
 	  }
       }
-*/
+    */
     return imPtr;
   }
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -709,10 +709,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  {
 	    if( ! parentptr ) 
 	      {
-		//cout << "Making parent : " << label << "    sw : " << sw << endl; 
+		//cout << "Making parent : " << itsImageName+label << "    sw : " << sw << endl; 
 		parentptr = openImage(itsImageName+label , itsOverWrite, sw, itsNFacets );  
 	      }
-	    //cout << "Making facet " << itsFacetId << " out of " << itsNFacets << endl;
+	    //	    cout << "Making facet " << itsFacetId << " out of " << itsNFacets << endl;
+	    //cout << "Making chunk " << itsChanId << " out of " << itsNChanChunks << endl;
 	    //ptr = makeFacet( itsFacetId, itsNFacets*itsNFacets, *parentptr );
 	    ptr = makeSubImage( itsFacetId, itsNFacets*itsNFacets, 
 				itsChanId, itsNChanChunks, 
@@ -2172,6 +2173,7 @@ Bool SIImageStore::isModelEmpty()
 
     //    cout << "parent shape : " << itsParentImageShape << "   shape : " << itsImageShape << endl;
     itsParentImageShape = itsImageShape;
+    itsParentCoordSys = itsCoordSys;
 
     if( itsNFacets>1 || itsNChanChunks>1 || itsNPolChunks>1 ) { itsImageShape=IPosition(4,0,0,0,0); }
 

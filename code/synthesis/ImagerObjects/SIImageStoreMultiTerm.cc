@@ -1113,6 +1113,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsParentMask=itsMask;
 
     itsParentImageShape = itsImageShape;
+    itsParentCoordSys = itsCoordSys;
     if( itsNFacets>1 || itsNChanChunks>1 || itsNPolChunks>1 ) { itsImageShape=IPosition(4,0,0,0,0); }
 
   }

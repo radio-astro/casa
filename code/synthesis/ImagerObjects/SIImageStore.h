@@ -233,7 +233,7 @@ protected:
 
   IPosition itsImageShape, itsParentImageShape;
   String itsImageName;
-  CoordinateSystem itsCoordSys;
+  CoordinateSystem itsCoordSys, itsParentCoordSys;
 
   Bool itsOverWrite;
   Bool itsUseWeight;

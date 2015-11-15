@@ -1070,6 +1070,7 @@ void  CubeSkyEquation::isLargeCube(ImageInterface<Complex>& theIm,
     nslice=1;
   }
   else{
+    LogIO os(LogOrigin("CubeSkyEquation", "isLargeCube"));
     Long npix=theIm.shape().product();
     // use memory size denfined in aisprc if exists
     Long memtot=HostInfo::memoryTotal(true); // Use aipsrc/casarc
@@ -1104,6 +1105,7 @@ void  CubeSkyEquation::isLargeCube(ImageInterface<Complex>& theIm,
       if( (theIm.shape()(3) % nchanPerSlice_p) > 0)
 	++nslice;
     }
+    os << "Detected a Large Cube. Making and using " << nslice << " slices/chunks." << LogIO::POST;
   }
 }
 
