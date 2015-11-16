@@ -1374,59 +1374,6 @@ void ImageAnalysis::centreRefPix(CoordinateSystem& cSys, const IPosition& shape)
 	cSys.setReferencePixel(refPix);
 }
 
-ImageInterface<Float> *
-ImageAnalysis::newimage(const String& infile, const String& outfile,
-		Record& region, const String& Mask, const bool dropdeg,
-		const bool overwrite) {
-	ImageInterface<Float>* outImage = 0;
-		*_log << LogOrigin(className(), __func__);
-
-		// Open
-		PtrHolder<ImageInterface<Float> > inImage;
-		ImageUtilities::openImage(inImage, infile);
-
-		AxesSpecifier axesSpecifier;
-		if (dropdeg)
-			axesSpecifier = AxesSpecifier(False);
-		SHARED_PTR<SubImage<Float> > subImage = SubImageFactory<Float>::createSubImageRW(
-			*inImage, region, Mask, _log.get(), axesSpecifier
-		);
-
-		// Create output image
-		if (outfile.empty()) {
-			outImage = new SubImage<Float> (*subImage);
-		}
-		else {
-			if (!overwrite) {
-				NewFile validfile;
-				String errmsg;
-				if (!validfile.valueOK(outfile, errmsg)) {
-					*_log << errmsg << LogIO::EXCEPTION;
-				}
-			}
-			//
-			*_log << LogIO::NORMAL << "Creating image '" << outfile
-					<< "' of shape " << subImage->shape() << LogIO::POST;
-			outImage = new PagedImage<Float> (subImage->shape(),
-					subImage->coordinates(), outfile);
-			if (outImage == 0) {
-				*_log << "Failed to create PagedImage" << LogIO::EXCEPTION;
-			}
-			ImageUtilities::copyMiscellaneous(*outImage, *inImage);
-
-			// Make output mask if required
-			if (subImage->isMasked()) {
-				String maskName("");
-				ImageMaskAttacher::makeMask(*outImage, maskName, False, True, *_log, True);
-			}
-
-			// Copy data and mask
-			LatticeUtilities::copyDataAndMask(*_log, *outImage, *subImage);
-		}
-
-	return outImage;
-}
-
 void ImageAnalysis::_onlyFloat(const String& method) const {
 	ThrowIf(! _imageFloat, "Method " + method + " only supports Float valued images");
 }

@@ -204,13 +204,6 @@ public:
 
     Bool detached();
 
-    ImageInterface<Float> * newimage(const String& infile,
-                                     const String& outfile,
-                                     Record& region,
-                                     const String& Mask,
-                                     const bool dropdeg = False,
-                                     const bool overwrite = False);
-
     // Return a record of the associates ImageInterface 
     Bool toRecord(RecordInterface& rec);
     // Create a pagedimage if imagename is not "" else create a tempimage
