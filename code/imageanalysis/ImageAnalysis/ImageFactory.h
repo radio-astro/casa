@@ -158,11 +158,20 @@ public:
         const RecordInterface& rec, const String& imagename=""
     );
 
-
     // open a canonical image
     static SPIIF testImage(
         const String& outfile, const Bool overwrite,
         const String& imagetype="2d"
+    );
+
+    static void toFITS(
+    	SPCIIF image, const String& outfile, Bool velocity,
+		Bool optical, Int bitpix, Double minpix, Double maxpix,
+		const Record& region, const String& mask,
+		Bool overwrite=False, Bool dropdeg=False, Bool deglast=False,
+		Bool dropstokes=False, Bool stokeslast=False,
+		Bool wavelength=False, Bool airWavelength=False,
+		const String& origin="", Bool stretch=False, Bool history=True
     );
 
 private:

@@ -492,7 +492,6 @@ Bool ImageAnalysis::remove(Bool verbose)
             << "Detaching from image" << LogIO::POST;
   }
   _imageFloat.reset();
-  //deleteHist();
 
   // Now try and blow it away.  If it's open, tabledelete won't delete it.
   String message;
@@ -1198,83 +1197,6 @@ Bool ImageAnalysis::twopointcorrelation(
 			method);
 	twoPt.autoCorrelation(*pImOut, *subImage, axes, m, showProgress);
 
-	return True;
-}
-
-Bool ImageAnalysis::tofits(
-	const String& fitsfile, const Bool velocity,
-	const Bool optical, const Int bitpix, const Double minpix,
-	const Double maxpix, Record& pRegion, const String& mask,
-	const Bool overwrite, const Bool dropDeg, const Bool,
-	const Bool dropStokes, const Bool stokesLast, const Bool wavelength,
-	const Bool airWavelength, const String& origin, const Bool stretch,
-	const Bool history
-) {
-	_onlyFloat(__func__);
-	*_log << LogOrigin(className(), __func__);
-	String error;
-	// Check output file
-	if (!overwrite && !fitsfile.empty()) {
-		NewFile validfile;
-		String errmsg;
-		if (!validfile.valueOK(fitsfile, errmsg)) {
-			*_log << errmsg << LogIO::EXCEPTION;
-		}
-	}
-	// The SubImage that goes to the FITSCOnverter no longer will know
-	// the name of the parent mask, so spit it out here
-	if (_imageFloat->isMasked()) {
-		*_log << LogIO::NORMAL << "Applying mask of name '"
-				<< _imageFloat->getDefaultMask() << "'" << LogIO::POST;
-	}
-	IPosition keepAxes;
-	if (!dropDeg) {
-		if (dropStokes) {
-			CoordinateSystem cSys = _imageFloat->coordinates();
-			if (cSys.findCoordinate(Coordinate::STOKES) >= 0
-					&& cSys.nCoordinates() > 1) {
-				// Stokes axis exists and its not the only one
-				Vector<String> cNames = cSys.worldAxisNames();
-				keepAxes = IPosition(cNames.size() - 1);
-				uInt j = 0;
-				for (uInt i = 0; i < cNames.size(); i++) {
-					if (cNames(i) != "Stokes") { // not Stokes?
-						keepAxes(j) = i; // keep it
-						j++;
-					}
-				}
-			}
-			//else: nothing to drop
-		}
-	}
-	AxesSpecifier axesSpecifier;
-	if (dropDeg) { // just drop all degenerate axes
-		axesSpecifier = AxesSpecifier(False);
-	}
-	else if (!keepAxes.empty()) { // specify which axes to keep
-		axesSpecifier = AxesSpecifier(keepAxes);
-	}
-	SHARED_PTR<const SubImage<Float> > subImage = SubImageFactory<Float>::createSubImageRO(
-		*_imageFloat, pRegion, mask, _log.get(), axesSpecifier, stretch
-	);
-    // FIXME remove when the casacore interface has been updated to const
-    SPIIF myclone(subImage->cloneII());
-    if (
-		! ImageFITSConverter::ImageToFITS(
-			error, *myclone, fitsfile,
-			HostInfo::memoryFree() / 1024,
-			velocity, optical,
-			bitpix, minpix, maxpix, overwrite,
-			False, //  deglast default
-			False, //  verbose default
-			stokesLast,	wavelength,
-			airWavelength, // for airWavelength=True
-			origin,
-			history
-		)
-	) {
-		*_log << error << LogIO::EXCEPTION;
-	}
 	return True;
 }
 

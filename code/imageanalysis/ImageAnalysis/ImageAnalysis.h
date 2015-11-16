@@ -183,18 +183,6 @@ public:
         const Bool overwrite=False, const Bool stretch=False
     );
 
-    Bool tofits(
-    	const String& outfile, const Bool velocity, const Bool optical,
-        const Int bitpix, const Double minpix, const Double maxpix,
-        Record& region, const String& mask,
-        const Bool overwrite=False,
-        const Bool dropdeg=False, const Bool deglast=False,
-        const Bool dropstokes=False, const Bool stokeslast=False,
-        const Bool wavelength=False, const Bool airWavelength=False,
-        const String& origin="", Bool stretch=False,
-        const Bool history=True
-    );
-
     Bool toASCII(
     	const String& outfile, Record& region, const String& mask,
         const String& sep=" ", const String& format="%e",

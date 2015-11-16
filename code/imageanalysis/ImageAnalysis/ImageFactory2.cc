@@ -328,6 +328,72 @@ SPIIF ImageFactory::fromFITS(
     return pOut;
 }
 
+void ImageFactory::toFITS(
+	SPCIIF image, const String& outfile, Bool velocity, Bool optical,
+	Int bitpix, Double minpix, Double maxpix,
+	const Record& region, const String& mask,
+	Bool overwrite, Bool dropdeg, Bool deglast,
+	Bool dropStokes, Bool stokeslast,
+	Bool wavelength, Bool airWavelength,
+	const String& origin, Bool stretch, Bool history
+) {
+	LogIO log;
+	log << LogOrigin("ImageFactory", __func__);
+	_checkOutfile(outfile, overwrite);
+	// The SubImage that goes to the FITSCOnverter no longer will know
+	// the name of the parent mask, so spit it out here
+	if (image->isMasked()) {
+		log << LogIO::NORMAL << "Applying mask of name '"
+			<< image->getDefaultMask() << "'" << LogIO::POST;
+	}
+	IPosition keepAxes;
+	if (! dropdeg) {
+		if (dropStokes) {
+			const auto& cSys = image->coordinates();
+			if (
+				cSys.hasPolarizationCoordinate()
+				&& cSys.nCoordinates() > 1
+			) {
+				// Stokes axis exists and its not the only one
+				auto cNames = cSys.worldAxisNames();
+				keepAxes = IPosition(cNames.size() - 1);
+				uInt j = 0;
+				for (uInt i = 0; i < cNames.size(); ++i) {
+					if (cNames(i) != "Stokes") { // not Stokes?
+						keepAxes(j) = i; // keep it
+						j++;
+					}
+				}
+			}
+		}
+	}
+	AxesSpecifier axesSpecifier;
+	if (dropdeg) {
+		axesSpecifier = AxesSpecifier(False);
+	}
+	else if (! keepAxes.empty()) {
+		axesSpecifier = AxesSpecifier(keepAxes);
+	}
+	auto subImage = SubImageFactory<Float>::createSubImageRO(
+		*image, region, mask, &log, axesSpecifier, stretch
+	);
+	// FIXME remove when the casacore interface has been updated to const
+	SPIIF myclone(subImage->cloneII());
+	String error;
+	ThrowIf (
+		! ImageFITSConverter::ImageToFITS(
+			error, *myclone, outfile,
+			HostInfo::memoryFree() / 1024,
+			velocity, optical, bitpix, minpix,
+			maxpix, overwrite, deglast,
+			False, //  verbose default
+			stokeslast,	wavelength,
+			airWavelength, // for airWavelength=True
+			origin, history
+		), error
+	);
+}
+
 SPIIF ImageFactory::testImage(
     const String& outfile, const Bool overwrite,
     const String& imagetype
