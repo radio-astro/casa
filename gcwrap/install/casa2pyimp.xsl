@@ -27,6 +27,7 @@ import os
 from  casac import *
 import string
 from taskinit import casalog
+from taskinit import xmlpath
 #from taskmanager import tm
 import task_</xsl:text><xsl:value-of select="$taskname"/>
 <xsl:text>
@@ -74,8 +75,8 @@ def </xsl:text><xsl:value-of select="@name"/><xsl:text>(</xsl:text><xsl:apply-te
 </xsl:choose>
 </xsl:for-each>
 <xsl:text disable-output-escaping="yes">
-	pathname='file:///'+os.environ.get('CASAPATH').split()[0]+'/'+os.environ.get('CASAPATH').split()[1]+'/xml/'
-        trec = casac.utils().torecord(pathname+</xsl:text>&apos;<xsl:value-of select="$taskname"></xsl:value-of><xsl:text disable-output-escaping="yes">.xml&apos;)
+	pathname='file://' + xmlpath( ) + '/'
+	trec = casac.utils().torecord(pathname+</xsl:text>&apos;<xsl:value-of select="$taskname"></xsl:value-of><xsl:text disable-output-escaping="yes">.xml&apos;)
 </xsl:text>
 <xsl:text disable-output-escaping="yes">
         casalog.origin(&apos;</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">&apos;)

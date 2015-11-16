@@ -254,8 +254,8 @@ if not os.environ.has_key('CASA_ENGINE'):
 		print "Unable to start viewer, maybe no dbus available?"
 
 defaultsdir = {}
-defaultsdir['alma'] = 'file:///'+os.environ.get('CASAPATH').split()[0]+'/'+os.environ.get('CASAPATH').split()[1]+'/xml/almadefaults.xml'
-defaultsdir['evla'] = 'file:///'+os.environ.get('CASAPATH').split()[0]+'/'+os.environ.get('CASAPATH').split()[1]+'/xml/evladefaults.xml'
+defaultsdir['alma'] = casa['dirs']['xml'] + '/almadefaults.xml'
+defaultsdir['evla'] = casa['dirs']['xml'] + '/evladefaults.xml'
 
 
 def selectfield(vis,minstring):
@@ -460,3 +460,24 @@ def recursivermdir( top='' ):
 		for name in dirs:
 			os.rmdir( os.path.join( root, name ) )
 	os.rmdir(top)
+
+####-------- return path to XML files --------
+def static_var(varname, value):
+	def decorate(func):
+		setattr(func, varname, value)
+		return func
+	return decorate
+
+@static_var("path", None)
+def xmlpath( ):
+	if xmlpath.path is None:
+		__casapath__ = os.environ['CASAPATH'].split(' ')[0]
+		__casaarch__ = os.environ['CASAPATH'].split(' ')[1]
+		if os.path.exists(__casapath__ + "/" + __casaarch__ + "/xml"):
+			xmlpath.path = __casapath__ + "/" + __casaarch__ + "/xml"
+		elif os.path.exists(__casapath__ + "/xml"):
+			xmlpath.path = __casapath__ + "/xml"
+		else:
+			raise RuntimeError, "Unable to find the XML constraints directory in your CASAPATH"
+		
+	return xmlpath.path

@@ -33,9 +33,9 @@ def update_params(func, printtext=True):
            if (has_task) :
                 pathname = myf['task_location'][myf['taskname']]
            else :
-                pathname = os.environ.get('CASAPATH').split()[0] + '/' + os.environ.get('CASAPATH').split()[1] + '/xml'
+                pathname = xmlpath( )
         else :
-           pathname = os.environ.get('CASAPATH').split()[0] + '/' + os.environ.get('CASAPATH').split()[1] + '/xml'
+           pathname = xmlpath( )
         xmlfile = pathname + '/' + myf['taskname'] + '.xml'
         if(os.path.exists(xmlfile)) :
             cu.setconstraints('file://' + xmlfile);

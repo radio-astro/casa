@@ -110,6 +110,7 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
            self.__globals__=sys._getframe(len(inspect.stack())-1).f_globals
 	#casac = self.__globals__['casac']
 	casalog = self.__globals__['casalog']
+	casa = self.__globals__['casa']
 	#casalog = casac.casac.logsink()
         self.__globals__['__last_task'] = '</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">'
         self.__globals__['taskname'] = '</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">'
@@ -196,8 +197,8 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 </xsl:choose>
 </xsl:for-each>
 <xsl:text disable-output-escaping="yes">
-	pathname='file:///'+os.environ.get('CASAPATH').split()[0]+'/'+os.environ.get('CASAPATH').split()[1]+'/xml/'
-        trec = casac.casac.utils().torecord(pathname+</xsl:text>&apos;<xsl:value-of select="$taskname"></xsl:value-of><xsl:text disable-output-escaping="yes">.xml&apos;)
+	pathname='file://' + casa['dirs']['xml'] + '/'
+	trec = casac.casac.utils().torecord(pathname+</xsl:text>&apos;<xsl:value-of select="$taskname"></xsl:value-of><xsl:text disable-output-escaping="yes">.xml&apos;)
 </xsl:text>
 
 <xsl:text disable-output-escaping="yes">
