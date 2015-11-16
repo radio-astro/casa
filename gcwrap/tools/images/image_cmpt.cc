@@ -5015,8 +5015,8 @@ image* image::newimagefromimage(
 	const bool dropdeg, const bool overwrite
 ) {
 	try {
-		image *rstat(0);
-		std::unique_ptr<ImageAnalysis> newImage(new ImageAnalysis());
+		//image *rstat(0);
+		//std::unique_ptr<ImageAnalysis> newImage(new ImageAnalysis());
 		_log << _ORIGIN;
 		String mask;
 
@@ -5029,42 +5029,28 @@ image* image::newimagefromimage(
 		) {
 			mask = vmask.toString();
 		}
-		else if (vmask.type() == ::casac::variant::RECORD) {
-			_log << LogIO::SEVERE
-					<< "Don't support region masking yet, only valid LEL "
-					<< LogIO::POST;
-			throw AipsError("Unable to create image");
-			return 0;
-		}
 		else {
-			_log << LogIO::SEVERE
-					<< "Mask is not understood, try a valid LEL string "
-					<< LogIO::POST;
-			throw AipsError("Unable to create image");
-			return 0;
+			ThrowCc("mask is not understood, try a valid LEL string");
 		}
 		SHARED_PTR<Record> regionPtr(_getRegion(region, False, infile));
-        SHARED_PTR<ImageInterface<Float> >outIm(
-			newImage->newimage(
-				infile, outfile,*regionPtr,
-				mask, dropdeg, overwrite
-			)
+		auto ret = ImageFactory::fromImage(
+			outfile, infile, *regionPtr, mask,
+			dropdeg, overwrite
 		);
-		if (outIm) {
-			rstat = new image(outIm);
-		} else {
-			rstat = new image();
+		if (ret.first) {
+			return new image(ret.first);
 		}
-		if(!rstat)
-			throw AipsError("Unable to create image");
-		return rstat;
-
+		else if (ret.second) {
+			return new image(ret.second);
+		}
+		ThrowCc("Error creating image");
 	}
 	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;
 		RETHROW(x);
 	}
+	return nullptr;
 }
 
 image* image::newimagefromfile(const std::string& fileName) {
