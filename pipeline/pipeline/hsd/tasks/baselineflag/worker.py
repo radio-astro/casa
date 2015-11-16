@@ -100,6 +100,11 @@ class SDBLFlagWorker(object):
             LOG.info("*** Processing: %s ***" % (os.path.basename(st.name)))
             LOG.info("\tpre-fit table: %s" % (os.path.basename(filename_in)))
             LOG.info("\tpost-fit table: %s" % (os.path.basename(filename_out)))
+            
+            # deviation mask
+            deviation_mask = st.spectral_window[spwid].deviation_mask
+            LOG.debug('deviation mask for %s spw %s is %s'%(st.basename, spwid, deviation_mask))
+            
             for pol in pollist:
                 LOG.info("[ POL=%d ]" % (pol))
                 # time_table should only list on scans
@@ -126,7 +131,7 @@ class SDBLFlagWorker(object):
                 
                 # Calculate Standard Deviation and Diff from running mean
                 t0 = time.time()
-                dt_idx, tmpdata, _ = self.calcStatistics(datatable, filename_in, filename_out, nchan, nmean, TimeTable, edge, is_baselined)
+                dt_idx, tmpdata, _ = self.calcStatistics(datatable, filename_in, filename_out, nchan, nmean, TimeTable, edge, is_baselined, deviation_mask)
                 t1 = time.time()
                 LOG.info('Standard Deviation and diff calculation End: Elapse time = %.1f sec' % (t1 - t0))
                 
@@ -160,7 +165,7 @@ class SDBLFlagWorker(object):
         return flagSummary
 
 
-    def calcStatistics(self, DataTable, DataIn, DataOut, NCHAN, Nmean, TimeTable, edge, is_baselined):
+    def calcStatistics(self, DataTable, DataIn, DataOut, NCHAN, Nmean, TimeTable, edge, is_baselined, deviation_mask=None):
         # Calculate Standard Deviation and Diff from running mean
         NROW = len([ series for series in utils.flatten(TimeTable) ])/2
         # parse edge
@@ -253,7 +258,7 @@ class SDBLFlagWorker(object):
     
                     NewRMS = -1
                     if is_baselined:
-                        mask_out = self._get_mask_array(masklist, (edgeL, edgeR), FlOut[index])
+                        mask_out = self._get_mask_array(masklist, (edgeL, edgeR), FlOut[index], deviation_mask=deviation_mask)
                         NewRMS, Nmask = self._calculate_masked_stddev(SpOut[index], mask_out)
                         del Nmask
                     #stats[1] = NewRMS
@@ -395,7 +400,7 @@ class SDBLFlagWorker(object):
         return RMS, Nmask
 
         
-    def _get_mask_array(self, masklist, edge, flagtra, flagrow=False):
+    def _get_mask_array(self, masklist, edge, flagtra, flagrow=False, deviation_mask=None):
         """Get a list of channel mask (1=valid 0=flagged)"""
         array_type = [list, tuple, numpy.ndarray]
         if type(flagtra) not in array_type:
@@ -414,7 +419,18 @@ class SDBLFlagWorker(object):
         # convert FLAGTRA to mask (1=valid channel, 0=flagged channel)
         mask = numpy.array(sdutils.get_mask_from_flagtra(flagtra))
         # masklist
-        for [m0, m1] in masklist: mask[m0:m1] = 0
+        for [m0, m1] in masklist: 
+            mask[m0:m1] = 0
+        
+        # deviation mask
+        if deviation_mask is not None:
+            if type(deviation_mask) not in array_type:
+                raise Exception, "deviation_mask should be an array or None"
+            if len(deviation_mask) > 0 and type(deviation_mask[0]) not in array_type:
+                raise Exception, "deviation_mask should be an array of array or None"
+            for m0, m1 in deviation_mask:
+                mask[m0:m1] = 0
+                
         # edge channels
         mask[0:edge[0]] = 0
         mask[len(flagtra)-edge[1]:] = 0

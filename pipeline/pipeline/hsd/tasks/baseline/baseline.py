@@ -4,6 +4,7 @@ import os
 import shutil
 import glob
 import numpy
+import collections
 
 import pipeline.infrastructure.mpihelpers as mpihelpers
 import pipeline.infrastructure as infrastructure
@@ -83,6 +84,13 @@ class SDBaselineResults(common.SingleDishResults):
                                         channelmap_range=channelmap_range)
                 st = context.observing_run[ant]
                 st.work_data = st.baselined_name
+                
+        # merge deviation_mask with context
+        if self.outcome.has_key('deviation_mask'):
+            for (basename, masks) in self.outcome['deviation_mask'].items():
+                st = context.observing_run.get_scantable(basename)
+                for (spwid, masklist) in masks.items():
+                    st.spectral_window[spwid].deviation_mask = masklist
 
     def _outcome_name(self):
         return ['%s: %s (spw=%s, pol=%s)'%(idx, name, b['spw'], b['pols'])
@@ -165,6 +173,8 @@ class SDBaseline(common.SingleDishTaskTemplate):
                 LOG.debug('\tAntenna %s Spw %s Pol %s'%(antenna_list[i], spwid_list[i], pols_list[i]))
                 
             # Deviation Mask 
+            # This is a dictionary that will be merged with top-level context
+            deviation_mask = collections.defaultdict(dict)
             for (ant, spw) in zip(antenna_list, spwid_list):
                 st = self.context.observing_run.get_scantable(ant)
                 if st.spectral_window[spw].deviation_mask is None:
@@ -172,7 +182,8 @@ class SDBaseline(common.SingleDishTaskTemplate):
                     mask_list = self.evaluate_deviation_mask(st.name, spw)
                     LOG.debug('deviation mask = %s'%(mask_list))
                     st.spectral_window[spw].deviation_mask = mask_list
-                
+                    deviation_mask[st.basename][spw] = mask_list
+                    
             # Spectral Line Detection and Validation
             maskline_inputs = maskline.MaskLine.Inputs(context, iteration, antenna_list, spwid_list, 
                                                        pols_list, window, edge, broadline, clusteringalgorithm)
@@ -283,6 +294,7 @@ class SDBaseline(common.SingleDishTaskTemplate):
 
         outcome = {'baselined': baselined,
                    'edge': edge,
+                   'deviation_mask': deviation_mask,
                    'plots': plot_list}
         results = SDBaselineResults(task=self.__class__,
                                     success=True,
