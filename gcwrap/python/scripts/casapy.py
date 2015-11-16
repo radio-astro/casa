@@ -132,9 +132,9 @@ casa = { 'build': {
          'dirs': {
              'rc': homedir + '/.casa',
              'data': None,
-             'recipes': casadef.python_library_directory+'/recipes',
+             'recipes': None,
              'root': None,
-             'arch': None,
+             'python': None,
              'pipeline': None
          },
          'flags': { },
@@ -160,10 +160,15 @@ if os.environ.has_key('CASAPATH') :
     else :
         casa['dirs']['root'] = __casapath__
         casa['dirs']['data'] = __casapath__ + "/data"
-        if not os.path.exists(__casapath__ + "/" + __casaarch__):
-            print "DEBUG: CASA ARCH = %s/%s" % (__casapath__,__casaarch__)
-            raise RuntimeError, "Unable to find the architecture directory in your CASAPATH. Please fix."
-        casa['dirs']['arch'] = __casapath__ + "/" + __casaarch__
+        if os.path.exists(__casapath__ + "/" + __casaarch__ + "/python/2.7/assignmentFilter.py"):
+            casa['dirs']['python'] = __casapath__ + "/" + __casaarch__ + "python/2.7"
+        elif os.path.exists(__casapath__ + "/lib/python2.7/assignmentFilter.py"):
+            casa['dirs']['python'] = __casapath__ + "/lib/python2.7"
+        elif os.path.exists(__casapath__ + "/Resources/python/assignmentFilter.py"):
+            casa['dirs']['python'] = __casapath__ + "/Resources/python"
+
+        if casa['dirs']['python'] is not None:
+            casa['dirs']['recipes'] = casa['dirs']['python'] + "/recipes"
 else :
     __casapath__ = casac.__file__
     while __casapath__ and __casapath__ != "/" :
@@ -175,10 +180,15 @@ else :
     else :
         casa['dirs']['root'] = __casapath__
         casa['dirs']['data'] = __casapath__ + "/data"
-        if not os.path.exists(__casapath__ + "/" + __casaarch__):
-            print "DEBUG: CASA ARCH = %s/%s" (__casapath__,__casaarch__)
-            raise RuntimeError, "Unable to find the architecture directory in your CASAPATH. Please fix."
-        casa['dirs']['arch'] = __casapath__ + "/" + __casaarch__
+        if os.path.exists(__casapath__ + "/" + __casaarch__ + "python/2.7/assignmentFilter.py"):
+            casa['dirs']['python'] = __casapath__ + "/" + __casaarch__ + "python/2.7"
+        elif os.path.exists(__casapath__ + "/lib/python2.7/assignmentFilter.py"):
+            casa['dirs']['python'] = __casapath__ + "/lib/python2.7"
+        elif os.path.exists(__casapath__ + "/Resources/python/assignmentFilter.py"):
+            casa['dirs']['python'] = __casapath__ + "/Resources/python"
+
+        if casa['dirs']['python'] is not None:
+            casa['dirs']['recipes'] = casa['dirs']['python'] + "/recipes"
 
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 ## setup pipeline path (if it exists)
@@ -1310,7 +1320,7 @@ startup()
 #pathname=os.environ.get('CASAPATH').split()[0]
 #uname=os.uname()
 #unameminusa=str.lower(uname[0])
-fullpath = casadef.python_library_directory + 'assignmentFilter.py'
+fullpath = casa['dirs']['python'] + '/assignmentFilter.py'
 casalog.origin('casa')
 
 #
@@ -1328,7 +1338,7 @@ class casaDocHelper(pydoc.Helper):
 
 pydoc.help = casaDocHelper(sys.stdin, sys.stdout)
 
-fullpath=casadef.python_library_directory + '/assignmentFilter.py'
+fullpath=casa['dirs']['python'] + '/assignmentFilter.py'
 
 if os.environ.has_key('__CASAPY_PYTHONDIR'):
     fullpath=os.environ['__CASAPY_PYTHONDIR'] + '/assignmentFilter.py'
