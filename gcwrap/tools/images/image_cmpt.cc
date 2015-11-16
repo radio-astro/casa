@@ -4824,14 +4824,27 @@ bool image::tofits(
 			VersionInfo::report(buffer);
 			origin = String(buffer);
 		}
+		ThrowIf(
+			! _image->isFloat(),
+			"Only writing float-valued images to FITS is supported"
+		);
+		ImageFactory::toFITS(
+			_image->getImage(), fitsfile, velocity, optical,
+			bitpix, minpix, maxpix, *pRegion, mask, overwrite,
+			dropdeg, deglast, dropstokes, stokeslast, wavelength,
+			airwavelength, origin, stretch, history
+		);
+		/*
 		return _image->tofits(
 			fitsfile, velocity, optical, bitpix, minpix,
 			maxpix, *pRegion, mask, overwrite, dropdeg,
 			deglast, dropstokes, stokeslast, wavelength,
 			airwavelength, origin, stretch, history
 		);
+		*/
+		return True;
 	}
-	catch (AipsError x) {
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;
 		RETHROW(x);
@@ -5015,11 +5028,8 @@ image* image::newimagefromimage(
 	const bool dropdeg, const bool overwrite
 ) {
 	try {
-		//image *rstat(0);
-		//std::unique_ptr<ImageAnalysis> newImage(new ImageAnalysis());
 		_log << _ORIGIN;
 		String mask;
-
 		if (vmask.type() == variant::BOOLVEC) {
 			mask = "";
 		}
