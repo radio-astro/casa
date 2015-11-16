@@ -587,8 +587,6 @@ class test_onefield(testref_base):
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10,interactive=0,calcpsf=False,calcres=False,deconvolver='mtmfs')
           self.checkall(ret=ret, peakres=0.136, modflux=0.988, imexist=[self.img+'.psf.tt1',self.img+'.residual.tt1', self.img+'.image.tt1', self.img+'.alpha'],nmajordone=1,imval=[(self.img+'.alpha',-1.0,[50,50,0,0])])
 
-
-
 ##############################################
 ##############################################
 
@@ -824,11 +822,25 @@ class test_multifield(testref_base):
                                (self.img+'.alpha',-0.965,[48,51,0,0]),
                                (self.img+'1.alpha',-0.965,[130,136,0,0])]) 
 
-     def test_multifield_cube_chunks(self):
-          """ [multifield] Test_Multifield_cube_chunks : Two fields, two sections of the same cube"""
-          self.prepData("refim_point.ms")
-          self.write_file(self.img+'.out.txt', 'imagename='+self.img+'1\nnchan=5\nstart=5')
-          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='10.0arcsec',specmode='cube',nchan=5,start=0,outlierfile=self.img+'.out.txt',niter=10,deconvolver='hogbom',interactive=0,interpolation='nearest')
+
+     def test_multifield_facets_mfs(self):
+          """ [multifield] Test_Multifield_mfs_facets : Facetted imaging (mfs) """
+          self.prepData("refim_twopoints_twochan.ms")
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=200,cell='8.0arcsec',phasecenter="J2000 19:59:00.2 +40.50.15.50",facets=2,deconvolver='hogbom',niter=30)
+          self.checkall(imexist=[self.img+'.image', self.img+'.psf'],imval=[(self.img+'.psf',1.0,[100,100,0,0]),(self.img+'.image',5.56,[127,143,0,0]) ] )
+
+     def test_multifield_facets_mtmfs(self):
+          """ [multifield] Test_facets_mtmfs : Facetted imaging (mt-mfs) """
+          self.prepData("refim_twopoints_twochan.ms")
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=200,cell='8.0arcsec',phasecenter="J2000 19:59:00.2 +40.50.15.50",facets=2,deconvolver='mtmfs',niter=30)
+          self.checkall(imexist=[self.img+'.image.tt0', self.img+'.psf.tt0', self.img+'.alpha'],imval=[(self.img+'.psf.tt0',1.0,[100,100,0,0]),(self.img+'.image.tt0',5.56,[127,143,0,0]),(self.img+'.alpha',-1.0,[127,143,0,0]) ] )
+
+
+#     def test_multifield_cube_chunks(self):
+#          """ [multifield] Test_Multifield_cube_chunks : Two fields, two sections of the same cube"""
+#          self.prepData("refim_point.ms")
+#          self.write_file(self.img+'.out.txt', 'imagename='+self.img+'1\nnchan=5\nstart=5')
+#          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='10.0arcsec',specmode='cube',nchan=5,start=0,outlierfile=self.img+'.out.txt',niter=10,deconvolver='hogbom',interactive=0,interpolation='nearest')
 #          self.checkall(ret=ret, 
 #                        iterdone=38,
 #                        nmajordone=2,
@@ -1427,6 +1439,17 @@ class test_cube(testref_base):
           self.checkall(imexist=[self.img+'1.image'],imval=[(self.img+'1.image',0.7987,[54,50,0,0]), (self.img+'1.image',0.35945,[54,50,0,19]) ])
           # first channel has been restored by a 'common' beam picked from channel 2
 
+     def test_cube_chanchunks(self):
+          """ [cube] Test channel chunking for large cubes """
+          self.prepData('refim_point.ms')
+#          ret = tclean(vis=self.msfile,imagename=self.img,specmode='cube',imsize=100,cell='10.0arcsec',niter=10,deconvolver='hogbom', savemodel='modelcolumn')
+#          self.assertTrue(os.path.exists(self.img+'.psf') and os.path.exists(self.img+'.image') )
+#          self.checkall(imexist=[self.img+'.image'],imval=[(self.img+'.image',1.5002,[50,50,0,0]) , (self.img+'.image',0.769,[50,50,0,19]) ])
+
+          ret = tclean(vis=self.msfile,imagename=self.img+'cc',specmode='cube',imsize=100,cell='10.0arcsec',niter=10,deconvolver='hogbom',chanchunks=2,savemodel='modelcolumn')
+          self.assertTrue(os.path.exists(self.img+'cc.psf') and os.path.exists(self.img+'cc.image') )
+          self.checkall(imexist=[self.img+'cc.image'],imval=[(self.img+'cc.image',1.5002,[50,50,0,0]) , (self.img+'cc.image',0.769,[50,50,0,19]) ])
+
 ##############################################
 ##############################################
 
@@ -1502,17 +1525,6 @@ class test_widefield(testref_base):
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=200,cell='8.0arcsec',phasecenter="J2000 19:59:00.2 +40.50.15.50",niter=30,gridder='widefield',wprojplanes=4,deconvolver='hogbom')
           self.checkall(imexist=[self.img+'.image'],imval=[(self.img+'.psf',1.0,[100,100,0,0]),(self.img+'.image',5.56,[127,143,0,0]) ] )
 
-     def test_widefield_facets_mfs(self):
-          """ [multifield] Test_Multifield_mfs_facets : Facetted imaging (mfs) """
-          self.prepData("refim_twopoints_twochan.ms")
-          ret = tclean(vis=self.msfile,imagename=self.img,imsize=200,cell='8.0arcsec',phasecenter="J2000 19:59:00.2 +40.50.15.50",facets=2,deconvolver='hogbom',niter=30)
-          self.checkall(imexist=[self.img+'.image', self.img+'.psf'],imval=[(self.img+'.psf',1.0,[100,100,0,0]),(self.img+'.image',5.56,[127,143,0,0]) ] )
-
-     def test_widefield_facets_mtmfs(self):
-          """ [multifield] Test_facets_mtmfs : Facetted imaging (mt-mfs) """
-          self.prepData("refim_twopoints_twochan.ms")
-          ret = tclean(vis=self.msfile,imagename=self.img,imsize=200,cell='8.0arcsec',phasecenter="J2000 19:59:00.2 +40.50.15.50",facets=2,deconvolver='mtmfs',niter=30)
-          self.checkall(imexist=[self.img+'.image.tt0', self.img+'.psf.tt0', self.img+'.alpha'],imval=[(self.img+'.psf.tt0',1.0,[100,100,0,0]),(self.img+'.image.tt0',5.56,[127,143,0,0]),(self.img+'.alpha',-1.0,[127,143,0,0]) ] )
 
      def test_widefield_aproj_mfs(self):
           """ [widefield] Test_Widefield_aproj : MFS with narrowband AWProjection (wbawp=F, 1spw)  stokes I """

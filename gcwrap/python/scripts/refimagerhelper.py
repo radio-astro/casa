@@ -1906,7 +1906,21 @@ class ImagerParameters():
         return newimagenamelist
 
 
+import time
+import resource
+class PerformanceMeasure():
+    def __init__(self):
+        self.t0=self.timestart()
+        self.t1=0.0
+        self.mem=0.0
 
+    def timestart(self):
+        self.t0 = time.time()
 
+    def gettime(self,label=""):
+        self.t1 = time.time()
+        return "'%s: time=%s'"%(label,self.t1-self.t0)
 
-
+    def getresource(self,label=""):
+        usage=resource.getrusage(resource.RUSAGE_SELF)
+        return '''%s: usertime=%s systime=%s mem=%s mb '''%(label,usage[0],usage[1], (usage[2]*resource.getpagesize())/1000000.0 )

@@ -167,6 +167,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
       Cube<Complex> origCube;
       origCube.assign(vb.modelVisCube()); 
+
+      vb.setModelVisCube( Complex(0.0,0.0) );
       
       if( ! ft_p.null() ) { ft_p->get(vb); }
       if( ! cft_p.null() ) { cft_p->get(vb, cl_p); }

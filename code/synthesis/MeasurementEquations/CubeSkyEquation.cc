@@ -1105,7 +1105,7 @@ void  CubeSkyEquation::isLargeCube(ImageInterface<Complex>& theIm,
       if( (theIm.shape()(3) % nchanPerSlice_p) > 0)
 	++nslice;
     }
-    os << "Detected a Large Cube. Making and using " << nslice << " slices/chunks." << LogIO::POST;
+    if(nslice>1) os << "Detected a Large Cube. Making and using " << nslice << " slices/chunks." << LogIO::POST;
   }
 }
 
