@@ -13,7 +13,7 @@
 #
 # To test:  see plotbandpass_regression.py
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.74 2015/09/23 01:47:37 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.75 2015/11/16 17:16:42 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -89,7 +89,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.74 2015/09/23 01:47:37 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.75 2015/11/16 17:16:42 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -5379,18 +5379,23 @@ def CalcAtmTransmission(chans,freqs,xaxis,pwv,vm, mymsmd,vis,asdm,antenna,timest
     P = 563.0
     H = 20.0
     T = 273.0
+    roundedScanTimes = []
     if (type(mymsmd) != str):
         if (verbose):
             print "Looking for scans for field integer = %d" % (field)
         scans = mymsmd.scansforfield(field)
         if (verbose):
             print "For field %s, Got scans = " % str(field),scans
-        scantimes = mymsmd.timesforscans(scans) # is often longer than the scans array
-        roundedScanTimes = np.unique(np.round(scantimes,0))
-        scans, roundedScanTimes = getScansForTimes(mymsmd,roundedScanTimes) # be sure that each scantime has a scan associated, round to nearest second to save time (esp. for single dish data)
-        if (verbose): print "scantimes = %s" % (str(scantimes))
-        if (verbose): print "scans = %s" % (str(scans))
+        for myscan in scans:
+            roundedScanTimes.append(np.unique(np.round(mymsmd.timesforscan(myscan))))
+#   This method was much slower and not necessary.  Removed for CAS-8065
+#        scantimes = mymsmd.timesforscans(scans) # is often longer than the scans array
+#        roundedScanTimes = np.unique(np.round(scantimes,0))
+#        scans, roundedScanTimes = getScansForTimes(mymsmd,roundedScanTimes) # be sure that each scantime has a scan associated, round to nearest second to save time (esp. for single dish data)
+#        if (verbose): print "scantimes = %s" % (str(scantimes))
+#        if (verbose): print "scans = %s" % (str(scans))
         mindiff = 1e20
+        bestscan = 1
         for i in range(len(roundedScanTimes)):
             stime = roundedScanTimes[i]
             meantime = np.mean(stime)
@@ -7317,22 +7322,23 @@ def splitListIntoContiguousLists(mylist):
             newlist.append(mylist[i])
     mylists.append(newlist)
     return(mylists)
-    
-def getScansForTimes(mymsmd, scantimes):
-    myscans = []
-    myscantimes = []
-#    print "len(scantimes) = ", len(scantimes)
-    scantimes = splitListIntoContiguousLists(scantimes)
-    for t in scantimes:
-        mean_t = np.mean(t)
-        range_t = (1+np.max(t)-np.min(t))*0.5
-        scans_t = mymsmd.scansfortimes(mean_t, range_t)
-        if (len(scans_t) > 0):
-            scan = scans_t[0]
-            #        print "scansfortime(%f) = " % (t), scan
-            myscans.append(scan)
-            myscantimes.append(t)
-    return(myscans, myscantimes)
+ 
+# Removed for CAS-8065   
+#def getScansForTimes(mymsmd, scantimes):
+#    myscans = []
+#    myscantimes = []
+##    print "len(scantimes) = ", len(scantimes)
+#    scantimes = splitListIntoContiguousLists(scantimes)
+#    for t in scantimes:
+#        mean_t = np.mean(t)
+#        range_t = (1+np.max(t)-np.min(t))*0.5
+#        scans_t = mymsmd.scansfortimes(mean_t, range_t)
+#        if (len(scans_t) > 0):
+#            scan = scans_t[0]
+#            #        print "scansfortime(%f) = " % (t), scan
+#            myscans.append(scan)
+#            myscantimes.append(t)
+#    return(myscans, myscantimes)
 
 def pruneFilelist(filelist):
     """
