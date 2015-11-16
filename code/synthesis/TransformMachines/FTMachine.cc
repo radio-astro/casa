@@ -774,15 +774,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       interpolate(flipdata,visFreq, imageFreq_p, flipgrid,freqInterpMethod_p);
     
    
-    /*
+    
     Cube<Bool>  copyOfFlag;
+    //cerr << "spw " << vb.spectralWindow() << " chanMap " << multiChanMap_p[vb.spectralWindow()] << endl;
     Vector<Int> mychanmap=multiChanMap_p[vb.spectralWindow()];
-    copyOfFlag=vb.flagCube();
+    copyOfFlag.assign(vb.flagCube());
     for (uInt k=0; k< mychanmap.nelements(); ++ k)
-      if(mychanmap(k)==-1)
-	copyOfFlag.xzPlane(k)=True;
-    */
-    swapyz(vb.modelVisCube(), vb.flagCube(), flipdata);
+      if(mychanmap(k) < 0)
+	copyOfFlag.xzPlane(k).set(True);
+    
+    swapyz(vb.modelVisCube(), copyOfFlag, flipdata);
     //swapyz(vb.modelVisCube(), flipdata);
     
     return True;
