@@ -1859,7 +1859,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if( savemodelcolumn ) os << "Saving model column" << LogIO::POST;
     if( savevirtualmodel ) os << "Saving virtual model" << LogIO::POST;
 
-    cout << "Start of Major Cycle : " << SynthesisUtilMethods::getMemRSS() << endl;
+    //    cout << "Start of Major Cycle : " << SynthesisUtilMethods::getMemRSS() << endl;
 
     itsMappers.checkOverlappingModels("blank");
 
@@ -1907,7 +1907,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     unlockMSs();
 
-    cout << "End of Major Cycle : " << SynthesisUtilMethods::getMemRSS() << endl;
+    //    cout << "End of Major Cycle : " << SynthesisUtilMethods::getMemRSS() << endl;
 
   }// end runMajorCycle
 
