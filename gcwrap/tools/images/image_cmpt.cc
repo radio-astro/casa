@@ -4860,7 +4860,6 @@ bool image::toASCII(const std::string& outfile, const variant& region,
 	if (detached()) {
 		return False;
 	}
-
 	try {
 		String Mask;
 		if (mask.type() == ::casac::variant::BOOLVEC) {
@@ -4873,16 +4872,18 @@ bool image::toASCII(const std::string& outfile, const variant& region,
 			Mask = mask.toString();
 		}
 		SHARED_PTR<Record> pRegion(_getRegion(region, False));
-		return _image->toASCII(
-			outfile, *pRegion, Mask, sep, format,
-			maskvalue, overwrite, stretch
+		ImageFactory::toASCII(
+			_image->getImage(), outfile, *pRegion, Mask,
+			sep, format, maskvalue, overwrite, stretch
 		);
+		return True;
 	}
 	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
+	return False;
 }
 
 std::string image::type() {
