@@ -164,6 +164,14 @@ public:
         const String& imagetype="2d"
     );
 
+    static void toASCII(
+    	SPCIIF image,
+    	const String& outfile, Record& region, const String& mask,
+        const String& sep=" ", const String& format="%e",
+        Double maskvalue=-999, Bool overwrite=False,
+        Bool extendMask=False
+    );
+
     static void toFITS(
     	SPCIIF image, const String& outfile, Bool velocity,
 		Bool optical, Int bitpix, Double minpix, Double maxpix,

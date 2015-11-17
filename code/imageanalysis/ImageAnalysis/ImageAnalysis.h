@@ -183,13 +183,6 @@ public:
         const Bool overwrite=False, const Bool stretch=False
     );
 
-    Bool toASCII(
-    	const String& outfile, Record& region, const String& mask,
-        const String& sep=" ", const String& format="%e",
-        const Double maskvalue=-999, const Bool overwrite=False,
-        const Bool extendMask=False
-    );
-
     Bool detached();
 
     // Return a record of the associates ImageInterface 
@@ -213,14 +206,10 @@ public:
     std::unique_ptr<LogIO> _log;
 
     IPosition last_chunk_shape_p;
-
-    //ImageMomentsProgressMonitor* imageMomentsProgressMonitor;
-
    
     // Center refpix apart from STokes
     void centreRefPix (casa::CoordinateSystem& cSys,
                        const casa::IPosition& shape) const;
-    
 
     void _onlyFloat(const String& method) const;
 

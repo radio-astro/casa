@@ -31,6 +31,8 @@
 #include <images/Images/ImageFITSConverter.h>
 #include <images/Images/ImageUtilities.h>
 #include <imageanalysis/IO/CasaImageOpener.h>
+
+#include <imageanalysis/ImageAnalysis/PixelValueManipulator.h>
 #include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 
 namespace casa {
@@ -326,6 +328,75 @@ SPIIF ImageFactory::fromFITS(
     SPIIF pOut(x);
     ThrowIf(! rval || ! pOut, error);
     return pOut;
+}
+
+void ImageFactory::toASCII(
+	SPCIIF image, const String& outfile, Record& region,
+	const String& mask, const String& sep,
+	const String& format, Double maskvalue,
+	Bool overwrite, Bool extendMask
+) {
+	String outFileStr(outfile);
+	// Check output file name
+
+	if (outFileStr.empty()) {
+		Bool strippath(true);
+		outFileStr = image->name(strippath);
+		outFileStr = outFileStr + ".ascii";
+	}
+	_checkOutfile(outFileStr, overwrite);
+
+	Path filePath(outFileStr);
+	String fileName = filePath.expandedName();
+
+	ofstream outFile(fileName.c_str());
+	ThrowIf(! outFile, "Cannot open file " + outfile);
+
+	PixelValueManipulator<Float> pvm(
+		image, &region, mask
+	);
+	pvm.setVerbosity(ImageTask<Float>::QUIET);
+	pvm.setStretch(extendMask);
+	auto ret = pvm.get();
+
+	auto pixels = ret.asArrayFloat("values");
+	auto pixmask = ret.asArrayBool("mask");
+	auto shape = pixels.shape();
+	auto vshp = pixmask.shape();
+	uInt nx = shape(0);
+	uInt n = pixels.size();
+	uInt nlines = 0;
+	if (nx > 0) {
+		nlines = n / nx;
+	}
+	IPosition vShape(1, n);
+	Vector<Float> vpixels(pixels.reform(vShape));
+	if (pixmask.size() > 0) {
+		Vector<Bool> vmask(pixmask.reform(vShape));
+		for (uInt i = 0; i<n; ++i) {
+			if (! vmask[i]) {
+				vpixels[i] = (float) maskvalue;
+			}
+		}
+	}
+	int idx = 0;
+	uInt nline = 0;
+	char nextentry[128];
+	while (nline < nlines) {
+		string line;
+		for (uInt i = 0; i < nx - 1; ++i) {
+			sprintf(
+				nextentry, (format + "%s").c_str(), vpixels[idx + i],
+				sep.c_str()
+			);
+			line += nextentry;
+		}
+		sprintf(nextentry, format.c_str(), vpixels[idx + nx - 1]);
+		line += nextentry;
+		outFile << line.c_str() << endl;
+		idx += nx;
+		nline += 1;
+	}
 }
 
 void ImageFactory::toFITS(
