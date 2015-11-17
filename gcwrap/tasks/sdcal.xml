@@ -419,11 +419,10 @@ frequency switch data is supported.
 
 The 'quotient' mode is special mode for "AT" telescopes, namely ANNF
 MOPRA. It assumes that observing sequence looks like "target, reference,
-target, reference,..." and it derives calibrated spectrum as
+target, reference,..." and it derives calibrated spectrum by applying 
+the above formula to the pair of "target" and "reference" in order. 
+Reference spectra are not averaged in this mode.
 
-    Tsys * ON / OFF,
-
-slightly different from position switch modes.
   
 --------------------
 FLUX UNIT CONVERSION
