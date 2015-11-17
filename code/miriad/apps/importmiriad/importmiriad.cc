@@ -328,7 +328,7 @@ private:
   Double antpos[3*MAXANT];
   Float  phasem1[MAXANT];
   Double ra_p, dec_p;       // current pointing center RA,DEC at EPOCH 
-  Float  inttime_p;
+  Float  inttime_p, jyperk_p;
   Double freq_p;            // rest frequency of the primary line
   Int    mount_p;
   Double time_p;            // current MJD time
@@ -567,6 +567,7 @@ void Importmiriad::checkInput(Block<Int>& spw, Block<Int>& wide)
       uvgetvr_c(uv_handle_p,H_INT,"npol", (char *)&npol_p,1);
       uvgetvr_c(uv_handle_p,H_INT,"pol",(char *)&pol_p,1);
       uvgetvr_c(uv_handle_p,H_REAL,"inttime",(char *)&inttime_p,1);
+      uvgetvr_c(uv_handle_p,H_REAL,"jyperk",(char *)&jyperk_p,1);
       
       uvprobvr_c(uv_handle_p,"freq",vtype,&vlen,&vupd);
       freq_p = 1e9;
@@ -1041,17 +1042,8 @@ void Importmiriad::fillMSMainTable()
         msc.processorId().put(row,-1);
         msc.observationId().put(row,0);
         msc.stateId().put(row,-1);
-        if (!Qtsys_p) {
-          Vector<Float> tmp(nCorr); tmp=1.0;
-          msc.weight().put(row,tmp);
-          msc.sigma().put(row,tmp);
-        }
       }
-      interval = inttime_p;
-      msc.exposure().put(row,interval);
-      msc.interval().put(row,interval);
-#if 1
-      // the dumb way: e.g. 3" -> 20" for 3c273
+      
       Matrix<Complex> tvis(nCorr,win[freqSet_p].nschan[sno]);
       Cube<Bool> tflagCat(nCorr,win[freqSet_p].nschan[sno],nCat,False);  
       Matrix<Bool> tflag = tflagCat.xyPlane(0); // references flagCat's storage
@@ -1064,18 +1056,7 @@ void Importmiriad::fillMSMainTable()
           tflag(j,i) = flag(j,i+woffset);
         }
       }
-#else
-      // the 'smart' way,  using IPositions (still 20"....)
-      IPosition blc(2,0,0);
-      IPosition trc(2,nCorr-1,win[freqSet_p].nschan[sno]-1);
-      IPosition offset(2,0,win[freqSet_p].ischan[sno]-1);
-      Matrix<Complex> tvis(nCorr,win[freqSet_p].nschan[sno]);
-      Cube<Bool> tflagCat(nCorr,win[freqSet_p].nschan[sno],nCat,False);  
-      Matrix<Bool> tflag = tflagCat.xyPlane(0); // references flagCat's storage
-      
-      tvis(blc,trc) = vis(blc+offset,trc+offset);
-      tflag(blc,trc) = flag(blc+offset,trc+offset);
-#endif
+
       //if (group==0) cout<<"tvis="<<tvis(0,500)<<", "<<tvis(1,500)<<endl;
       msc.data().put(row,tvis);
       msc.flag().put(row,tflag);
@@ -1091,17 +1072,30 @@ void Importmiriad::fillMSMainTable()
       msc.antenna2().put(row,ant2);
       msc.time().put(row,time);           // CARMA did begin of scan.., now middle (2009)
       msc.timeCentroid().put(row,time);   // do we really need this ? flagging/blanking ?
+
+      interval = inttime_p;
+      msc.exposure().put(row,interval);
+      msc.interval().put(row,interval);
+      Float chnbw = win[freqSet_p].sdf[sno]*1e9;
+      Float factor = interval * abs(chnbw)/jyperk_p/jyperk_p;
+      // sigma=sqrt(Tx1*Tx2)/sqrt(chnbw*intTime)*JyPerK;
       if (Qtsys_p) {    
-        // Vector<Float> w1(nCorr), w2(nCorr);
-        w2 = 1.0;   // i use this as a 'version' id  to test FC refresh bugs :-)
+        w2 = 1.0; 
         if( systemp[ant1] == 0 || systemp[ant2] == 0) {
           zero_tsys++;
           w1 = 0.0;
-        } else
-          w1 = 1.0/(systemp[ant1]*systemp[ant2]);  // see uvio::uvinfo_variance()
-        //if (Debug(1)) cout << w1 << " " << w2 << endl;
+        } else {
+          w1 = factor/(systemp[ant1]*systemp[ant2]);  // see uvio::uvinfo_variance()
+          w2 = sqrt(systemp[ant1]*systemp[ant2])/sqrt(factor);
+        }
+        //cout << w1 << " " << w2 << " " << jyperk_p << " "<< chnbw<< " "<< interval<< endl;
         msc.weight().put(row,w1);
         msc.sigma().put(row,w2);        
+      } else {
+          w1=factor/50/50;  // Use nominal 50K systemp to keep values similar
+          w2=50/sqrt(factor);
+          msc.weight().put(row,w1);
+          msc.sigma().put(row,w2);
       }
       msc.uvw().put(row,uvw);
       msc.arrayId().put(row,nArray_p-1);
