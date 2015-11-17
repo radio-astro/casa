@@ -34,6 +34,8 @@
 #include <casa/OS/Directory.h>
 #include <casa/OS/EnvVar.h>
 
+#include <imageanalysis/ImageAnalysis/ImageFactory.h>
+
 #include <casa/namespace.h>
 
 #include <sys/types.h>
@@ -59,7 +61,7 @@ String outname() {
 }
 
 void checkImage(
-	const ImageInterface<Float> *gotImage, const String& expectedName
+	SPCIIF gotImage, const String& expectedName
 ) {
 	FITSImage expectedImage(expectedName);
 	AlwaysAssert(gotImage->shape() == expectedImage.shape(), AipsError);
@@ -83,32 +85,30 @@ void checkImage(
 void checkImage(
 	const String& gotName, const String& expectedName
 ) {
-	PagedImage<Float> gotImage(gotName);
-	checkImage(&gotImage, expectedName);
+	SPCIIF gotImage(new PagedImage<Float>(gotName));
+	checkImage(gotImage, expectedName);
 }
 
 
 void testException(
 	const String& test, const String& aggString,
-    const ImageInterface<Float>& image, const String& region,
-    const String& box, const String& chans,
-    const String& stokes, const String& mask,
+    SPCIIF image, const String& mask,
     const uInt compressionAxis
 ) {
 	writeTestString(test);
 	Bool exceptionThrown = true;
 	IPosition axes(1, compressionAxis);
 	try {
-		ImageCollapser collapser(
-			aggString, &image, region, 0, box,
-			chans, stokes, mask, axes,
-			outname(), False
+		ImageCollapser<Float> collapser(
+			aggString, image, nullptr,
+			mask, axes, False, outname(), False
 		);
+
 		// should not get here, fail if we do.
 		exceptionThrown = false;
 		AlwaysAssert(false, AipsError);
 	}
-	catch (AipsError x) {
+	catch (const AipsError& x) {
 		AlwaysAssert(exceptionThrown, AipsError);
 	}
 }
@@ -123,129 +123,112 @@ int main() {
     os << "tImageCollapser_tmp_" << pid;
     dirName = os.str();
 	Directory workdir(dirName);
-    FITSImage goodImage(datadir + "collapse_in.fits");
+    SPCIIF goodImage(new FITSImage(datadir + "collapse_in.fits"));
     const String ALL = CasacRegionManager::ALL;
 	workdir.create();
 	uInt retVal = 0;
     try {
     	testException(
     		"Exception if no aggregate string given", "",
-    		goodImage, "", "", "", "", "", 0
+    		goodImage, "", 0
     	);
     	testException(
     		"Exception if bogus aggregate string given", "bogus function",
-    		goodImage, "", "", "", "", "", 0
-    	);
-    	testException(
-    		"Exception if bogus region string given", "mean",
-    		goodImage, "bogus_region", "", "", "", "", 0
-    	);
-    	testException(
-    		"Exception if bogus box string given #1", "mean",
-    		goodImage, "", "abc", "", "", "", 0
-    	);
-    	testException(
-    		"Exception if bogus box string given #2", "mean",
-    		goodImage, "", "0,0,1000,1000", "", "", "", 0
+    		goodImage, "", 0
     	);
     	{
     		writeTestString("average full image collapse along axis 0");
-    		ImageCollapser collapser(
-    			"mean", &goodImage, "", 0, "", ALL,
-    			ALL, "", IPosition(1, 0), outname(), False
+    		ImageCollapser<Float> collapser(
+    			"mean", goodImage, nullptr, "", IPosition(1, 0),
+				False, outname(), False
     		);
-    		collapser.collapse(False);
+    		collapser.collapse();
     		checkImage(outname(), datadir + "collapse_avg_0.fits");
     	}
     	{
     		writeTestString("average full image collapse along axis 2");
-    		ImageCollapser collapser(
-    			"mean", &goodImage, "", 0, "", ALL,
-    			ALL, "", IPosition(1, 2), outname(), False
+    		ImageCollapser<Float> collapser(
+    			"mean", goodImage, nullptr, "", IPosition(1, 2),
+				False, outname(), False
     		);
-    		collapser.collapse(False);
+    		collapser.collapse();
     		checkImage(outname(), datadir + "collapse_avg_2.fits");
     	}
     	{
     		writeTestString("sum subimage collapse along axis 1");
-    		ImageCollapser *collapser = new ImageCollapser(
-    			"sum", &goodImage, "", 0, "1,1,2,2", "1~2",
-    			"qu", "", IPosition(1, 2), outname(), False
+    		String diagnostics;
+    		uInt nSelectedChannels;
+    		String stokes = "qu";
+    		String mask;
+    		String chans = "1~2";
+    		String box = "1,1,2,2";
+    		CasacRegionManager rm(goodImage->coordinates());
+    		auto region = rm.fromBCS(
+    			diagnostics, nSelectedChannels, stokes,
+				nullptr, mask, chans,
+				CasacRegionManager::USE_ALL_STOKES, box,
+				goodImage->shape(), goodImage->name(),
+				False
     		);
-    		collapser->collapse(False);
-    		delete collapser;
+    		ImageCollapser<Float> collapser(
+    			"sum", goodImage, &region, "",
+				IPosition(1, 2), False, outname(), False
+    		);
+    		collapser.collapse();
     		// and check that we can overwrite the previous output
-    		collapser = new ImageCollapser(
-        		"sum", &goodImage, "", 0, "1,1,2,2", "1~2",
-        		"qu", "", IPosition(1, 1), outname(), True
+    		ImageCollapser<Float> collapser2(
+        		"sum", goodImage, &region, "", IPosition(1, 1),
+				False, outname(), True
         	);
-    		collapser->collapse(False);
-    		delete collapser;
+    		collapser2.collapse();
     		checkImage(outname(), datadir + "collapse_sum_1.fits");
     	}
     	{
     		writeTestString("Check not specifying out file is ok");
-    		ImageCollapser collapser(
-    			"mean", &goodImage, "", 0, "", ALL,
-    			ALL, "", IPosition(1, 2), "", False
+    		ImageCollapser<Float> collapser(
+    			"mean", goodImage, nullptr, "",
+				IPosition(1, 2), False, "", False
     		);
-    		ImageInterface<Float> *collapsed = collapser.collapse(True);
+    		auto collapsed = collapser.collapse();
     		checkImage(collapsed, datadir + "collapse_avg_2.fits");
-    		delete collapsed;
-    	}
-    	{
-    		writeTestString("Check not wanting return pointer results in a NULL pointer being returned");
-    		ImageCollapser collapser(
-    			"mean", &goodImage, "", 0, "", ALL,
-    			ALL, "", IPosition(1, 2), "", False
-    		);
-    		ImageInterface<Float> *collapsed = collapser.collapse(False);
-    		AlwaysAssert(collapsed == NULL, AipsError);
     	}
     	{
     		writeTestString("average full image collapse along all axes but 0");
     		IPosition axes(3, 1, 2, 3);
 
-    		ImageCollapser collapser(
-    			"max", &goodImage, "", 0, "", ALL,
-    			ALL, "", axes, outname(), False
+    		ImageCollapser<Float> collapser(
+    			"max", goodImage, nullptr, "", axes,
+				False, outname(), False
     		);
-    		collapser.collapse(False);
+    		collapser.collapse();
     		checkImage(outname(), datadir + "collapse_max_0_a.fits");
     	}
        	{
         	writeTestString("average full temporary image collapse along axis 0");
-        	ImageInterface<Float> *pIm;
-        	LogIO log;
-        	ImageUtilities::openImage(pIm, goodImage.name(), log);
-        	cout << "pIm beam " << pIm->imageInfo().restoringBeam() << endl;
-        	IPosition shape = pIm->shape();
-        	CoordinateSystem csys = pIm->coordinates();
-        	Array<Float> vals = pIm->get();
-        	TempImage<Float> tIm(shape, csys);
-        	ImageUtilities::copyMiscellaneous(tIm, *pIm);
-        	delete pIm;
-        	tIm.put(vals);
-        	ImageCollapser collapser(
-        		"mean", &tIm, "", 0, "", ALL,
-        		ALL, "", IPosition(1, 0), outname(), False
+
+        	auto ret = ImageFactory::fromImage("", goodImage->name(), Record(), "");
+        	auto tIm = ret.first;
+
+        	ImageCollapser<Float> collapser(
+        		"mean", tIm, nullptr, "", IPosition(1, 0),
+				False, outname(), False
         	);
-        	collapser.collapse(False);
+        	collapser.collapse();
         	checkImage(outname(), datadir + "collapse_avg_0.fits");
         }
        	{
         	writeTestString("full image collapse along axes 0, 1");
         	IPosition axes(2, 0, 1);
-        	ImageCollapser collapser(
-        		"mean", &goodImage, "", 0, "", ALL,
-        		ALL, "", axes, outname(), False
+        	ImageCollapser<Float> collapser(
+        		"mean", goodImage, nullptr, "", axes,
+				False, outname(), False
         	);
-        	collapser.collapse(False);
+        	collapser.collapse();
         	checkImage(outname(), datadir + "collapse_avg_0_1.fits");
         }
         cout << "ok" << endl;
     }
-    catch (AipsError x) {
+    catch (const AipsError& x) {
         cerr << "Exception caught: " << x.getMesg() << endl;
         retVal = 1;
     } 
