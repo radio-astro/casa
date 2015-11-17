@@ -33,6 +33,7 @@
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayLogical.h>
 
+
 #include <casa/Logging.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogMessage.h>
@@ -44,6 +45,7 @@
 #include <casa/OS/File.h>
 #include <casa/OS/HostInfo.h>
 #include <casa/OS/Path.h>
+//#include <casa/OS/Memory.h>
 
 #include <lattices/LRegions/LCBox.h>
 
@@ -90,6 +92,8 @@
 
 #include <sys/types.h>
 #include <unistd.h>
+
+
 using namespace std;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -1354,14 +1358,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
       LogIO os(LogOrigin("SynthesisImager", "createChanChunkImageStoreList"));
 
+      Bool extrachunk=False;
       if( imagestore->getShape()[3] % chanchunks > 0 )
 	{
-	  os << LogIO::WARN << "chanchunks ["+String::toString(chanchunks)+"] is not a divisor of nchan ["+String::toString(imagestore->getShape()[3])+"]. Therefore, "+String::toString(imagestore->getShape()[3] % chanchunks)+" channels at the end of the cube will be ignored." << LogIO::POST ;
+	  os << LogIO::WARN << "chanchunks ["+String::toString(chanchunks)+"] is not a divisor of nchan ["+String::toString(imagestore->getShape()[3])+"].";
+	  //	  os << "Therefore, "+String::toString(imagestore->getShape()[3] % chanchunks)+" channels at the end of the cube will be ignored." << LogIO::POST ;
+	  os << "Therefore, "+String::toString(imagestore->getShape()[3] % chanchunks)+" channels at the end of the cube will be treated as an extra chunk." << LogIO::POST ;
+	  extrachunk=True;
 	}
 
-      os << "Creating " << chanchunks << " reference subCubes for gridding " << LogIO::POST;
+      os << "Creating " << chanchunks +(extrachunk?1:0) << " reference subCubes (channel chunks) for gridding " << LogIO::POST;
 
-    Block<CountedPtr<SIImageStore> > chunkList( chanchunks );
+      Block<CountedPtr<SIImageStore> > chunkList( chanchunks + (extrachunk?1:0) );
 
     if( chanchunks==1 ) { chunkList[0] = imagestore;  return chunkList; }
 
@@ -1373,7 +1381,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     unChanChunkedImStore_p = imagestore;
     chanChunksStore_p = chanchunks;
     
-    for (Int chunk=0; chunk< chanchunks; ++chunk){
+    for (Int chunk=0; chunk< chanchunks+(extrachunk?1:0); ++chunk){
       chunkList[chunk] = unChanChunkedImStore_p->getSubImageStore(0,1,chunk, chanchunks);
       }
     
@@ -1851,6 +1859,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if( savemodelcolumn ) os << "Saving model column" << LogIO::POST;
     if( savevirtualmodel ) os << "Saving virtual model" << LogIO::POST;
 
+    cout << "Start of Major Cycle : " << SynthesisUtilMethods::getMemRSS() << endl;
+
     itsMappers.checkOverlappingModels("blank");
 
     {
@@ -1896,6 +1906,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsMappers.checkOverlappingModels("restore");
 
     unlockMSs();
+
+    cout << "End of Major Cycle : " << SynthesisUtilMethods::getMemRSS() << endl;
 
   }// end runMajorCycle
 
