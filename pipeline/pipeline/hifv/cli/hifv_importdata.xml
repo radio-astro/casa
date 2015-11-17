@@ -49,6 +49,11 @@
         </allowed>
     </param>
 
+    <param type="string" name="ocorr_mode" subparam="true">
+	<description>Default set to CROSS_ONLY (co)</description>
+	<value>co</value>
+    </param>
+
     <param type="bool" name="dryrun" subparam="true">
 	<description>Run the task (False) or display task command (True)</description>
 	<value>False</value>
@@ -71,6 +76,7 @@
 	    </equals>
 	    <equals type="string" value="getinputs">
                 <default param="asis"><value type="string">Receiver CalAtmosphere</value></default>
+                <default param="ocorr_mode"><value type="string">co</value></default>
 		<default param="overwrite"><value type="bool">True</value></default>
 	    </equals>
 	</when>
@@ -115,6 +121,8 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
    can check the settings of all pipeline parameters without running
    the task.
    default: 'automatic'.
+
+ocorr_mode -- Default set to CROSS_ONLY (co)
 
 ---- pipeline context defined parameter argument which can be set only in
 'interactive mode'
