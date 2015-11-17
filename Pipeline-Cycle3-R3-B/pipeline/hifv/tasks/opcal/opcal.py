@@ -126,6 +126,21 @@ class Opcal(basetask.StandardTaskTemplate):
         
         startdate = ms_summary['BeginTime']
         
+        
+        seasonal_weight = 1.0
+        try:
+            with casatools.TableReader(self.inputs.vis +'/WEATHER') as table:
+                numRows = table.nrows()
+                if (numRows == 0):
+                    LOG.warn("Weather station broken during this period, using 100% seasonal model for calculating the zenith opacity")
+                    seasonal_weight = 1.0
+                else:
+                    LOG.info("Using seasonal_weight of 0.5")  #Standard value to use
+                    seasonal_weight = 0.5
+        except:
+            LOG.warn("Unable to open MS weather table.  Using 100% seasonal model for calculating the zenith opacity")
+        
+        '''
         if (((startdate >= 55918.80) and (startdate <= 55938.98)) or ((startdate >= 56253.6) and (startdate <= 56271.6))):
             LOG.info("Weather station broken during this period, using 100%")
             LOG.info("seasonal model for calculating the zenith opacity")
@@ -133,7 +148,8 @@ class Opcal(basetask.StandardTaskTemplate):
         else:
             LOG.info("Using seasonal_weight of 0.5")
             seasonal_weight=0.5
-            
+        '''
+        
         plotweather_args = {'vis' : inputs.vis, 'seasonal_weight': seasonal_weight, 'doPlot' : True}
         plotweather_job = casa_tasks.plotweather(**plotweather_args)
         opacities = self._executor.execute(plotweather_job)
