@@ -217,6 +217,8 @@ install (FILES
 	ImageAnalysis/PVGenerator.h
 	ImageAnalysis/SepImageConvolver.h
 	ImageAnalysis/SepImageConvolver.tcc
+	ImageAnalysis/SepImageConvolverTask.h
+    ImageAnalysis/SepImageConvolverTask.tcc
 	ImageAnalysis/SpectralCollapser.h
 	ImageAnalysis/SubImageFactory.h
 	ImageAnalysis/SubImageFactory.tcc

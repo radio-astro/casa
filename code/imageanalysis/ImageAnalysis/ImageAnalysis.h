@@ -162,18 +162,6 @@ public:
 
     Bool rename(const String& name, const Bool overwrite = False);
 
-    ImageInterface<Float>* sepconvolve(
-    	const String& outfile,
-        const Vector<Int>& axes,
-        const Vector<String>& types,
-        const Vector<Quantity>& widths,
-        Double scale,
-        Record& region,
-        const String& mask,
-        const bool overwrite=False,
-        const bool extendMask=False
-    );
-
     inline static String className() {const static String x = "ImageAnalysis"; return x; }
 
     bool twopointcorrelation(
