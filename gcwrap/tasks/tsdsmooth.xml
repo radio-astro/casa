@@ -13,7 +13,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
 
   <description>
   Task tsdsmooth performs smoothing along spectral axis using user-specified 
-  smoothing kernel. Currently only gaussian kernel is supported.
+  smoothing kernel. Currently gaussian and boxcar kernels are supported.
   </description>
 
   <input>
@@ -69,6 +69,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
         <value>gaussian</value>
         <allowed kind="enum">
             <value>gaussian</value>
+            <value>boxcar</value>
         </allowed>
     </param>
     
@@ -91,6 +92,9 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
     <constraints>
             <when param="kernel">
                 <equals value="gaussian">
+                    <default param="kwidth"><value>5</value></default>
+                </equals>
+                <equals value="boxcar">
                     <default param="kwidth"><value>5</value></default>
                 </equals>
             </when>
@@ -145,7 +149,7 @@ pol -- select data by polarization IDs
         example: pol='0,1' (polarization IDs 0,1)
         this selection is in addition to the other selections to data
 kernel -- type of spectral smoothing kernel
-        options: 'gaussian'
+        options: 'gaussian', 'boxcar'
         default: 'gaussian' (no smoothing)
 
     &gt;&gt;&gt;kernel expandable parameter
@@ -164,7 +168,7 @@ overwrite -- overwrite the output file if already exists
 DESCRIPTION
 -----------
 Task tsdsmooth performs smoothing along spectral axis using user-specified 
-smoothing kernel. Currently only gaussian kernel is supported.
+smoothing kernel. Currently gaussian and boxcar kernels are supported.
 
 
   </example>
