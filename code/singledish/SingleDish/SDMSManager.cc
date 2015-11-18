@@ -461,7 +461,8 @@ void SDMSManager::initializeSmoothing()
   Vector<Float> kernelForMinimumNumChan = convolverPool_[numChanMinimum].getPsf();
   sort.sortKey(kernelForMinimumNumChan.data(), TpFloat, 0, Sort::Descending);
   Vector<uInt> indexArray;
-  uInt indexArrayLength = sort.sort(indexArray, numChanMinimum);
+  //uInt indexArrayLength = sort.sort(indexArray, numChanMinimum);
+  sort.sort(indexArray, numChanMinimum);
   uInt startChan = indexArray[0] - halfWidth;
   uInt endChan = startChan + smoothBin_p;
   smoothCoeff_p.resize(smoothBin_p, False);

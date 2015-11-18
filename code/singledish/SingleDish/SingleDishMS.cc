@@ -100,7 +100,7 @@ inline void GetCubeFromFloat(VisBuffer2 const &vb, Cube<Float> &cube) {
   FloatDataAccessor::GetCube(vb, cube);
 }
 
-inline void GetCubeDefault(VisBuffer2 const &vb, Cube<Float> &cube) {
+  inline void GetCubeDefault(VisBuffer2 const& /*vb*/, Cube<Float>& /*cube*/) {
   throw AipsError("Data accessor for VB2 is not properly configured.");
 }
 } // anonymous namespace
