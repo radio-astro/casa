@@ -92,6 +92,7 @@
 #include <imageanalysis/ImageAnalysis/PeakIntensityFluxDensityConverter.h>
 #include <imageanalysis/ImageAnalysis/PixelValueManipulator.h>
 #include <imageanalysis/ImageAnalysis/PVGenerator.h>
+#include <imageanalysis/ImageAnalysis/SepImageConvolverTask.h>
 #include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 
 #include <stdcasa/version.h>
@@ -4163,12 +4164,11 @@ record* image::restoringbeam(int channel, int polarization) {
 }
 
 ::casac::image* image::sepconvolve(
-	const std::string& outFile, const std::vector<int>& axes,
+	const std::string& outfile, const std::vector<int>& axes,
 	const std::vector<std::string>& types,
 	const ::casac::variant& widths,
-	const double Scale, const variant& region,
-	const ::casac::variant& vmask, const bool overwrite,
-	const bool /* async */, const bool stretch
+	double scale, const variant& region,
+	const ::casac::variant& vmask, bool overwrite, bool stretch
 ) {
 	_log << _ORIGIN;
 	if (detached()) {
@@ -4232,6 +4232,18 @@ record* image::restoringbeam(int channel, int polarization) {
 				smoothaxes[i] = i;
 			}
 		}
+		SepImageConvolverTask<Float> task(
+			_image->getImage(), pRegion.get(), mask,
+			outfile, overwrite
+		);
+		task.setScale(scale);
+		task.setSmoothAxes(smoothaxes);
+		task.setKernels(kernels);
+		task.setKernelWidths(kernelwidths);
+		task.setStretch(stretch);
+		return new image(task.convolve());
+
+		/*
 		SHARED_PTR<ImageInterface<Float> > pImOut(
 			_image->sepconvolve(outFile,
 				smoothaxes, kernels, kernelwidths,
@@ -4240,6 +4252,7 @@ record* image::restoringbeam(int channel, int polarization) {
 			)
 		);
 		return new image(pImOut);
+		*/
 	}
 	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
