@@ -152,6 +152,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		QtDisplayData* getDD( const std::string& name ) const;
 		QtDisplayData* getDD( const DisplayData *dd ) const;
 		DisplayDataHolder* getDataHolder() const;
+		bool isCoordinateMaster( QtDisplayData* displayData ) const;
 		void setControllingDD( QtDisplayData* controllingDD );
 		// True if DD is on our list.  (It may _not_ be on viewer's list
 		// any longer, in particular when reacting to ddRemoved signal).

@@ -59,6 +59,7 @@ namespace casa {
 		ImageDisplayer() {}
 		virtual ~ImageDisplayer() {}
 		virtual void setControllingDD( QtDisplayData* controlDD ) = 0;
+		virtual bool isCoordinateMaster( QtDisplayData* dd ) const = 0;
 		virtual void registerDD( QtDisplayData* dd, int position = -1) = 0;
 		virtual void unregisterDD( QtDisplayData* dd ) = 0;
 		virtual void registrationOrderChanged() = 0;

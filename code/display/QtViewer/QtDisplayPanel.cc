@@ -923,6 +923,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 	}
 
+	bool QtDisplayPanel::isCoordinateMaster( QtDisplayData* displayData ) const {
+		bool coordinateMaster = false;
+		if ( displayData != NULL ){
+			coordinateMaster = pd_->isCSmaster( displayData->dd() );
+		}
+		return coordinateMaster;
+	}
 
 	void QtDisplayPanel::setControllingDD( QtDisplayData* controllingDD ) {
 		if ( controllingDD != NULL ) {
@@ -1888,7 +1895,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	float QtDisplayPanel::getLabelLineWidth( ) {
 		QtDisplayData *dd = getControllingDD( );
 		try {
-			return dd->getOptions( ).subRecord("labellinewidth").asFloat("value");
+			float defaultVal = 0.5;
+			//Avoid a segfault if the controlling dd is null.
+			if ( dd != NULL ){
+				Record ddOptions = dd->getOptions();
+				const String key( "labellinewidth" );
+				if ( ddOptions.isDefined( key ) ){
+					defaultVal = ddOptions.subRecord(key).asFloat("value");
+				}
+			}
+			return defaultVal;
 		} catch(...) {
 			throw AipsError("failed to retrieve line width");
 		}
@@ -1904,7 +1920,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	float QtDisplayPanel::getTickLength( ) {
 		QtDisplayData *dd = getControllingDD( );
 		try {
-			return dd->getOptions( ).subRecord("ticklength").asFloat("value");
+			float defaultVal = 40;
+			//Avoid a segfault if the controlling dd is null.
+			if ( dd != NULL ){
+				Record ddOptions = dd->getOptions();
+				const String key( "ticklength" );
+				if ( ddOptions.isDefined( key ) ){
+					defaultVal = ddOptions.subRecord(key).asFloat("value");
+				}
+			}
+			return defaultVal;
 		} catch(...) {
 			throw AipsError("failed to retrieve tick mark length");
 		}
@@ -2621,7 +2646,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 					if(!ddFileMatch_(path, dataType, displayType,  dd,
 					                 origrestorefile, restoredir)) {
-
 						cerr<<"**Unable to restore "<<path<<"**"<<endl;
 
 						continue;
@@ -2632,7 +2656,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 				// An existing dd was found, or a new one was successfully created.
 				// It is not registered yet, though; register it here (only).
-
 				registerDD(dd);
 
 
@@ -2830,8 +2853,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			trc[0] = wc->linXMax();
 			trc[1] = wc->linYMax();
 		}
-		qDebug() << "QtDisplayPanel::panel_state blc[0]="<<blc[0]<<" blc[1]="<<blc[1]
-		             <<" trc[0]="<<trc[0]<<" trc[1]="<<trc[1];
 
 		panel_state::colormap_map colormapstate;
 		Vector<Float> shiftSlope, brtCont;

@@ -69,7 +69,7 @@ namespace casa {
 		DisplayDataIterator endDD () const;
 
 		//Controlling DD
-		QtDisplayData* getDDControlling( ) const;
+		QtDisplayData* getDDControlling( );
 		void setDDControlling( QtDisplayData* controllingDD );
 
 		//Returns the DD that will be animating the channels in

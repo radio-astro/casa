@@ -69,6 +69,8 @@ namespace casa {
 		return exists;
 	}
 
+
+
 	void DisplayDataHolder::setDDControlling( QtDisplayData* controlDD ) {
 		//The control dd can be just an open image.  It does not even
 		//need to be in the list of registered images.
@@ -111,8 +113,18 @@ namespace casa {
 		return channelDD;
 	}
 
-	QtDisplayData* DisplayDataHolder::getDDControlling( ) const {
+	QtDisplayData* DisplayDataHolder::getDDControlling( ) {
 		// retrieve the "controlling" DD...
+		//If one has not been set, see if there is one that is the coordinate
+		//system master and set it.
+		if ( controlling_dd == NULL && dataList.size() > 0 && imageDisplayer != NULL ){
+			for ( DisplayDataIterator iter = dataList.begin(); iter != dataList.end(); iter++ ){
+				if ( imageDisplayer->isCoordinateMaster( (*iter)) ){
+					setDDControlling( (*iter) );
+					break;
+				}
+			}
+		}
 		return controlling_dd;
 	}
 
@@ -173,7 +185,8 @@ namespace casa {
 	void DisplayDataHolder::addDD( QtDisplayData* dd, int position,
 			bool autoRegister,
 			bool masterCoordinate, bool masterSaturation, bool masterHue ) {
-		if ( ! exists( dd )) {
+		bool existing= exists(dd);
+		if ( !existing ) {
 			int dataCount = dataList.size();
 			if ( position < 0 || position >= dataCount ) {
 				dataList.push_back( dd);
