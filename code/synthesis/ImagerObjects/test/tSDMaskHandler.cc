@@ -59,6 +59,31 @@
 #include <synthesis/ImagerObjects/SynthesisUtilMethods.h>
 #include <synthesis/ImagerObjects/SDMaskHandler.h>
 
+// generate a simple box mask image
+void generateMaskImage(String imagename, Int nchan, IPosition blc, IPosition trc) 
+{
+    //blc and trc --- 4 elements vect. 
+    IPosition shape(4, 100, 100, 1, nchan);
+    CoordinateSystem csys=CoordinateUtil::defaultCoords4D();
+    PagedImage<Float> maskImage(TiledShape(shape), csys, imagename);
+    maskImage.setUnits(Unit("Jy/pixel"));
+    maskImage.set(0.0);
+    // sanity check
+    if (blc(0) <= trc(0) && blc(1) <= trc(1) && blc(3) < nchan) {
+      Int dx = trc(0) - blc(0);  
+      Int dy = trc(1) - blc(1);
+      for (uInt i=0+blc(3); i < trc(3)+1; i++) {
+        for (uInt j=0; j < (uInt)dx; j++) {
+          for (uInt k=0; k < (uInt)dy; k++) { 
+            IPosition loc(4,blc(0)+j, blc(1)+k, 0, Int(i));
+            Float val = 1.0;
+            maskImage.putAt(val, loc);
+          }
+        }
+      }
+    }
+}
+
 // test makeMask
 void testMakeMask()
 {
@@ -196,14 +221,26 @@ void testRegionText()
   delete imageRegion;
 }
 
+void testTest()
+{
+  cout <<" Test test"<<endl;
+  IPosition blc(4, 25, 30, 0, 2);
+  IPosition trc(4, 40, 50, 0, 8);
+  generateMaskImage(String("testtest"),Int(10), blc, trc);
+
+}
+
 int main(int argc, char **argv)
 {
   using namespace std;
   using namespace casa;
+  (void)argc;
+  (void)argv;
   try{
       testMakeMask();
       testRegionToMaskImage();
       testRegionText();
+      testTest();
   }catch( AipsError e ){
     cout << "Exception ocurred." << endl;
     cout << e.getMesg() << endl;
