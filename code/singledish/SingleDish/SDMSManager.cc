@@ -414,8 +414,8 @@ void SDMSManager::setSmoothing(string const &kernelType, float const &kernelWidt
   // kernel type
   VectorKernel::KernelTypes type = VectorKernel::toKernelType(kernelType);
 
-  // Fail if type is not GAUSSIAN since other kernel types are not supported yet
-  if (type != VectorKernel::GAUSSIAN) {
+  // Fail if type is neither GAUSSIAN nor BOXCAR since other ones are yet to be supported
+  if ((type != VectorKernel::GAUSSIAN)&&(type != VectorKernel::BOXCAR)) {
     stringstream oss;
     oss << "Smoothing kernel type \"" << kernelType << "\" is not supported yet.";
     throw AipsError(oss.str());
@@ -447,6 +447,14 @@ void SDMSManager::initializeSmoothing()
   for (size_t i = 0; i < numChanList.nelements(); ++i) {
     Int numChan = numChanList[i];
     Vector<Float> theKernel = VectorKernel::make(kernelType_, kernelWidth_, numChan, True, False);
+    //shift 1 channel for boxcar kernel---(for CAS-7442, 2015/11/18 WK)
+    if (kernelType_ == VectorKernel::BOXCAR) {
+      for (size_t j = theKernel.nelements()-1; j >= 1; --j) {
+        theKernel[j] = theKernel[j-1];
+      }
+      theKernel[0] = 0.0;
+    }
+    //------
     convolverPool_[numChan] = Convolver<Float>();
     convolverPool_[numChan].setPsf(theKernel, IPosition(1, numChan));
   }

@@ -142,7 +142,7 @@ public:
       string const& tempfile_name, string const& temp_out_ms_name);
 
   // smooth data with arbitrary smoothing kernel
-  // currently only gaussian smoothing is supported
+  // smoothing kernels currently supported include gaussian and boxcar
   void smooth(string const &kernelType, float const kernelWidth,
       string const &columnName, string const&outMsName);
 
