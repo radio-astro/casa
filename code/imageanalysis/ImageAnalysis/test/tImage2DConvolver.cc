@@ -29,6 +29,7 @@
 
 #include <imageanalysis/ImageAnalysis/Image2DConvolver.h>
 
+#include <casa/Arrays/ArrayMath.h>
 #include <casa/OS/EnvVar.h>
 #include <casa/Exceptions/Error.h>
 #include <images/Images/FITSImage.h>
@@ -40,66 +41,71 @@
 int main() {
 	LogIO log;
 	try {
-            String casapath = EnvironmentVariable::get("CASAPATH");
-            if (casapath.empty()) {
-                cerr << "CASAPATH env variable not defined. Can't find fixtures. Did you source the casainit.(c)sh file?" << endl;
-                return 1;
-            }
+		String casapath = EnvironmentVariable::get("CASAPATH");
+		if (casapath.empty()) {
+			cerr << "CASAPATH env variable not defined. Can't find fixtures. Did you source the casainit.(c)sh file?" << endl;
+			return 1;
+		}
 
-            String *parts = new String[2];
-            split(casapath, parts, 2, String(" "));
-            String datadir = parts[0] + "/data/regression/unittest/imageanalysis/ImageAnalysis/";
-            delete [] parts;
+		String *parts = new String[2];
+		split(casapath, parts, 2, String(" "));
+		String datadir = parts[0] + "/data/regression/unittest/imageanalysis/ImageAnalysis/";
+		delete [] parts;
 
 		{
-			FITSImage in(datadir + "test_image2dconvolver.fits");
-			TempImage<Float> got(in.shape(), in.coordinates());
+			SPCIIF in(new FITSImage(datadir + "test_image2dconvolver.fits"));
 			Vector<Quantity> gauss(3);
 			gauss[0] = Quantity(10, "arcmin");
 			gauss[1] = Quantity(8, "arcmin");
 			gauss[2] = Quantity(80, "deg");
-			Image2DConvolver<Float>::convolve(
-				log, got, in, VectorKernel::GAUSSIAN,
-				IPosition(2, 0, 1), gauss, True, -1.0, True
-			);
+			Image2DConvolver<Float> c(in, nullptr, "", "", False);
+			c.setKernel("gauss", gauss[0], gauss[1], gauss[2]);
+			c.setAxes(make_pair(0, 1));
+			c.setScale(-1);
+			c.setTargetRes(False);
+			auto got = c.convolve();
 			FITSImage exp(datadir + "test_image2dconvolver_convolved.fits");
-            cout << "max diff " << max(abs(got.get() - exp.get())) << endl;
-			AlwaysAssert(max(abs(got.get() - exp.get())) < 4e-5, AipsError);
-			GaussianBeam gotBeam = got.imageInfo().restoringBeam();
+            cout << "max diff " << max(abs(got->get() - exp.get())) << endl;
+			AlwaysAssert(max(abs(got->get() - exp.get())) < 7e-5, AipsError);
+			GaussianBeam gotBeam = got->imageInfo().restoringBeam();
 			GaussianBeam expBeam = exp.imageInfo().restoringBeam();
-			AlwaysAssert (near(expBeam, gotBeam, 1e-7, Quantity(1e-6, "deg")), AipsError);
+			AlwaysAssert (near(expBeam, gotBeam, 1e-6, Quantity(1e-5, "deg")), AipsError);
 		}
 		{
-			PagedImage<Float> in(
-				datadir + "test_image2dconvolver_multibeam.im"
+			SPCIIF in(
+				new PagedImage<Float>(
+					datadir + "test_image2dconvolver_multibeam.im"
+				)
 			);
 			Vector<Quantity> gauss(3);
 			gauss[0] = Quantity(10, "arcmin");
 			gauss[1] = Quantity(8, "arcmin");
 			gauss[2] = Quantity(80, "deg");
-			TempImage<Float> got(in.shape(), in.coordinates());
-			Image2DConvolver<Float>::convolve(
-				log, got, in, VectorKernel::GAUSSIAN,
-				IPosition(2, 0, 1), gauss, True, -1.0, True
-			);
-			IPosition shape = in.shape();
-			IPosition start(in.ndim(), 0);
+			Image2DConvolver<Float> c(in, nullptr, "", "", False);
+			c.setKernel("gauss", gauss[0], gauss[1], gauss[2]);
+			c.setAxes(make_pair(0, 1));
+			c.setScale(-1);
+			c.setTargetRes(False);
+			auto got = c.convolve();
+			IPosition shape = in->shape();
+			IPosition start(in->ndim(), 0);
 			IPosition end = shape - 1;
 			for (Int i=0; i<shape[2]; i++) {
 				start[2] = i;
 				end[2] = i;
 				Slicer slice(start, end, Slicer::endIsLast);
-				SubImage<Float> expIn(in, slice);
-				TempImage<Float>exp(expIn.shape(), expIn.coordinates());
-				Image2DConvolver<Float>::convolve(
-					log, exp, expIn, VectorKernel::GAUSSIAN,
-					IPosition(2, 0, 1), gauss, True, -1.0, True
-				);
-				GaussianBeam gotBeam = got.imageInfo().restoringBeam(i, -1);
-				GaussianBeam expBeam = exp.imageInfo().restoringBeam();
+				SPCIIF expIn(new SubImage<Float>(*in, slice));
+				Image2DConvolver<Float> c2(expIn, nullptr, "", "", False);
+				c2.setKernel("gauss", gauss[0], gauss[1], gauss[2]);
+				c2.setAxes(make_pair(0, 1));
+				c2.setScale(-1);
+				c2.setTargetRes(False);
+				auto exp = c2.convolve();
+				GaussianBeam gotBeam = got->imageInfo().restoringBeam(i, -1);
+				GaussianBeam expBeam = exp->imageInfo().restoringBeam();
 				AlwaysAssert(near(expBeam, gotBeam, 1e-7, Quantity(1e-4, "deg")), AipsError);
-				Array<Float> gotData = got.get()(slice);
-				Array<Float> expData = exp.get();
+				Array<Float> gotData = got->get()(slice);
+				Array<Float> expData = exp->get();
 				AlwaysAssert(
 					max(fabs(gotData - expData)) < 3e-5,
 					AipsError
@@ -112,72 +118,73 @@ int main() {
 			CoordinateSystem csys = CoordinateUtil::defaultCoords2D();
 			csys.setWorldAxisUnits(Vector<String>(2, "arcsec"));
 			csys.setIncrement(Vector<Double>(2, 1.0));
-			TempImage<Float> tim(TiledShape(IPosition(2, 100, 100)), csys);
-			tim.setUnits("Jy/beam");
-			ImageInfo info = tim.imageInfo();
+			SPIIF tim(new TempImage<Float>(TiledShape(IPosition(2, 100, 100)), csys));
+			tim->setUnits("Jy/beam");
+			ImageInfo info = tim->imageInfo();
 			info.setRestoringBeam(
 				GaussianBeam(
 					Quantity(6.0,"arcsec"), Quantity(3.0, "arcsec"),
 					Quantity(0, "deg")
 				)
 			);
-			tim.setImageInfo(info);
-			Array<Float> values(tim.shape());
-			Array<Float> expected(tim.shape());
-			for (Int i=0; i<tim.shape()[0]; i++) {
-				Double x = (Int)tim.shape()[0]/2 - i;
-				for (Int j=0; j<tim.shape()[1]; j++) {
-					Double y = (Int)tim.shape()[1]/2 - j;
+			tim->setImageInfo(info);
+			Array<Float> values(tim->shape());
+			Array<Float> expected(tim->shape());
+			for (Int i=0; i<tim->shape()[0]; i++) {
+				Double x = (Int)tim->shape()[0]/2 - i;
+				for (Int j=0; j<tim->shape()[1]; j++) {
+					Double y = (Int)tim->shape()[1]/2 - j;
 					values(IPosition(2, i, j)) = exp(-(x*x*fac/9 + y*y*fac/36));
 					expected(IPosition(2, i, j)) = exp(-(x*x*fac/25 + y*y*fac/100));
                 }
 			}
-			tim.put(values);
-			TempImage<Float> got(TiledShape(tim.shape()), csys);
+			tim->put(values);
 			Vector<Quantity> gauss(3);
 			gauss[0] = Quantity(8, "arcsec");
 			gauss[1] = Quantity(4, "arcsec");
 			gauss[2] = Quantity(0, "deg");
 			Bool targetres = False;
-			Image2DConvolver<Float>::convolve(
-				log, got, tim, VectorKernel::GAUSSIAN,
-				IPosition(2, 0, 1), gauss, True, -1.0, True,
-				targetres
-			);
-			AlwaysAssert(got.shape() == expected.shape(), AipsError);
+
+			Image2DConvolver<Float> c(tim, nullptr, "", "", False);
+			c.setKernel("gauss", gauss[0], gauss[1], gauss[2]);
+			c.setAxes(make_pair(0, 1));
+			c.setScale(-1);
+			c.setTargetRes(targetres);
+			auto got = c.convolve();
+			AlwaysAssert(got->shape() == expected.shape(), AipsError);
 			GaussianBeam expBeam(
 				Quantity(10, "arcsec"), Quantity(5, "arcsec"),
 				Quantity(0, "deg")
 			);
-			AlwaysAssert(near(got.imageInfo().restoringBeam(), expBeam, 1e-6, Quantity(1e-5, "deg")), AipsError);
-			cout << "max diff " << max(abs(got.get() - expected)) << endl;
-			cout << "got " << got.get()(IPosition(2,50,50)) << endl;
+			AlwaysAssert(near(got->imageInfo().restoringBeam(), expBeam, 1e-6, Quantity(1e-5, "deg")), AipsError);
+			cout << "max diff " << max(abs(got->get() - expected)) << endl;
+			cout << "got " << got->get()(IPosition(2,50,50)) << endl;
 			cout << "expected " << expected(IPosition(2, 50, 50)) << endl;
-	        cout << "got " << got.get()(IPosition(2,51,50)) << endl;
+	        cout << "got " << got->get()(IPosition(2,51,50)) << endl;
 			cout << "expected " << expected(IPosition(2, 51, 50)) << endl;
-			AlwaysAssert(allNearAbs(got.get(), expected, 3e-5), AipsError);
+			AlwaysAssert(allNearAbs(got->get(), expected, 3e-5), AipsError);
 			gauss[0] = Quantity(10, "arcsec");
 			gauss[1] = Quantity(5, "arcsec");
 			gauss[2] = Quantity(0, "deg");
+			c.setKernel("gauss", gauss[0], gauss[1], gauss[2]);
 			targetres = True;
-			Image2DConvolver<Float>::convolve(
-				log, got, tim, VectorKernel::GAUSSIAN,
-				IPosition(2, 0, 1), gauss, True, -1.0, True,
-				targetres
-			);
-			AlwaysAssert(near(got.imageInfo().restoringBeam(), expBeam, 1e-6, Quantity(1e-5, "deg")), AipsError);
-			cout << "max diff " << max(abs(got.get() - expected)) << endl;
-			cout << "got " << got.get()(IPosition(2,50,50)) << endl;
+			c.setTargetRes(targetres);
+			got = c.convolve();
+			cout << "got " << got->imageInfo().restoringBeam() << endl;
+			cout << "exp " << expBeam << endl;
+			AlwaysAssert(near(got->imageInfo().restoringBeam(), expBeam, 1e-6, Quantity(1e-5, "deg")), AipsError);
+			cout << "max diff " << max(abs(got->get() - expected)) << endl;
+			cout << "got " << got->get()(IPosition(2,50,50)) << endl;
 			cout << "expected " << expected(IPosition(2, 50, 50)) << endl;
-			AlwaysAssert(allNearAbs(got.get(), expected, 3e-7), AipsError);
+			AlwaysAssert(allNearAbs(got->get(), expected, 1e-6), AipsError);
 
 			cout << "*** Test targetres parameter for multibeam image" << endl;
 			csys.addCoordinate(SpectralCoordinate());
-			tim = TempImage<Float>(TiledShape(IPosition(3, 100, 100, 2)), csys);
-			tim.setUnits("Jy/beam");
+			tim.reset(new TempImage<Float>(TiledShape(IPosition(3, 100, 100, 2)), csys));
+			tim->setUnits("Jy/beam");
 			got = tim;
-			info = tim.imageInfo();
-			info.setAllBeams(tim.shape()[2], 0, GaussianBeam());
+			info = tim->imageInfo();
+			info.setAllBeams(tim->shape()[2], 0, GaussianBeam());
 			info.setBeam(
 				0, -1, GaussianBeam(
 					Quantity(6.0,"arcsec"), Quantity(3.0, "arcsec"),
@@ -190,17 +197,17 @@ int main() {
 					Quantity(0, "deg")
 				)
 			);
-			tim.setImageInfo(info);
-			values.assign(Array<Float>(tim.shape()));
-			expected.assign(Array<Float>(tim.shape()));
+			tim->setImageInfo(info);
+			values.assign(Array<Float>(tim->shape()));
+			expected.assign(Array<Float>(tim->shape()));
 			IPosition pos(3);
-			for (Int i=0; i<tim.shape()[0]; i++) {
+			for (Int i=0; i<tim->shape()[0]; i++) {
 				pos[0] = i;
-				Double x = tim.shape()[0]/2 - i;
-				for (Int j=0; j<tim.shape()[1]; j++) {
+				Double x = tim->shape()[0]/2 - i;
+				for (Int j=0; j<tim->shape()[1]; j++) {
 					pos[1] = j;
-					Double y = tim.shape()[1]/2 - j;
-					for (Int k=0; k<tim.shape()[2]; k++) {
+					Double y = tim->shape()[1]/2 - j;
+					for (Int k=0; k<tim->shape()[2]; k++) {
 						pos[2] = k;
 						Double sx = (k == 0) ? 9 : 4;
 						Double sy = (k == 0) ? 36 : 16;
@@ -208,7 +215,7 @@ int main() {
 					}
 				}
 			}
-			tim.put(values);
+			tim->put(values);
 			targetres = False;
 			Vector<GaussianBeam> eBeam(2);
 			for (uInt trial=0; trial<2; trial++) {
@@ -216,28 +223,27 @@ int main() {
 				gauss[0] = Quantity(targetres ? 10 : 8, "arcsec");
 				gauss[1] = Quantity(targetres ? 5 : 4, "arcsec");
 				gauss[2] = Quantity(0, "deg");
-
-				for (Int k=0; k<tim.shape()[2]; k++) {
+				for (Int k=0; k<tim->shape()[2]; k++) {
 					IPosition testPos(3, 48, 48, k);
 					IPosition start(3, 0, 0, k);
-					IPosition end(3, tim.shape()[0]-1, tim.shape()[1]-1, k);
+					IPosition end(3, tim->shape()[0]-1, tim->shape()[1]-1, k);
 					WCBox box(
-						LCBox(start, end,  tim.shape()), csys
+						LCBox(start, end,  tim->shape()), csys
 					);
-					SubImage<Float> inChannelIm = SubImageFactory<Float>::createSubImage(
-						tim, box.toRecord(""), "", &log, True
+					auto inChannelIm = SubImageFactory<Float>::createSubImageRO(
+						*tim, box.toRecord(""), "", &log
 					);
+
 					IPosition inPos = testPos;
 					inPos[2] = 0;
-					TempImage<Float> outChannelIm(inChannelIm.shape(), inChannelIm.coordinates());
-					Image2DConvolver<Float>::convolve(
-						log, outChannelIm, inChannelIm,
-						VectorKernel::GAUSSIAN,
-						IPosition(2, 0, 1), gauss, True, -1.0, True,
-						targetres
-					);
-					expected(start, end) = outChannelIm.get();
-					eBeam[k] = outChannelIm.imageInfo().restoringBeam();
+					Image2DConvolver<Float> c3(inChannelIm, nullptr, "", "", False);
+					c3.setKernel("gauss", gauss[0], gauss[1], gauss[2]);
+					c3.setAxes(make_pair(0, 1));
+					c3.setScale(-1);
+					c3.setTargetRes(targetres);
+					auto outChannelIm = c3.convolve();
+					expected(start, end) = outChannelIm->get();
+					eBeam[k] = outChannelIm->imageInfo().restoringBeam();
 					if (targetres) {
 						AlwaysAssert(
 							near(
@@ -248,15 +254,15 @@ int main() {
 						);
 					}
 				}
-
-				Image2DConvolver<Float>::convolve(
-					log, got, tim, VectorKernel::GAUSSIAN,
-					IPosition(2, 0, 1), gauss, True, -1.0, True,
-					targetres
-				);
+				Image2DConvolver<Float> c4(tim, nullptr, "", "", False);
+				c4.setKernel("gauss", gauss[0], gauss[1], gauss[2]);
+				c4.setAxes(make_pair(0, 1));
+				c4.setScale(-1);
+				c4.setTargetRes(targetres);
+				auto got = c4.convolve();
 				if (targetres) {
 					AlwaysAssert(
-						got.imageInfo().restoringBeam() == GaussianBeam(gauss),
+						got->imageInfo().restoringBeam() == GaussianBeam(gauss),
 						AipsError
 					);
 				}
@@ -264,13 +270,13 @@ int main() {
 					for (uInt k=0; k<2; k++) {
 						AlwaysAssert(
 							near(
-								got.imageInfo().restoringBeam(k, -1),
+								got->imageInfo().restoringBeam(k, -1),
 								eBeam[k], 1e-6, Quantity(1e-5, "deg")
 							), AipsError
 						);
 					}
 				}
-				AlwaysAssert(allNearAbs(got.get(), expected, 3e-7), AipsError);
+				AlwaysAssert(allNearAbs(got->get(), expected, 3e-7), AipsError);
 			}
 		}
 	}
