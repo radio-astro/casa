@@ -1259,7 +1259,7 @@ class sdcal2_flag_base(sdcal2_caltest_base, unittest.TestCase):
     def _expected_caltable(self, srctype, colname, average=False):
         #print srctype, colname
         with tbmanager(self.rawfile) as tb:
-            tsel = tb.query('SRCTYPE==%s'%(srctype))
+            tsel = tb.query('SRCTYPE==%s'%(srctype), sortlist='TIME')
             flagrow = tsel.getcol('FLAGROW')
             flagtra = tsel.getcol('FLAGTRA')
             data = tsel.getcol(colname)
@@ -1509,7 +1509,7 @@ class sdcal2_tsyscal_flag(sdcal2_flag_base):
         average = False
         sdcal2(infile=self.rawfile, calmode='tsys', tsysspw='22', tsysavg=average, outfile=outfile)
 
-        self._verify_caltable(outfile, self._expected_caltable(10, 'TSYS', average))
+        self._verify_caltable(outfile, self._expected_caltable(11, 'TSYS', average))
 
     def test_tsyscal_flag_doaverage(self):
         """test_tsyscal_flag_noaverage: test if tsys calibration with spectral averaging handles flag information properly"""
@@ -1517,7 +1517,7 @@ class sdcal2_tsyscal_flag(sdcal2_flag_base):
         average = True
         sdcal2(infile=self.rawfile, calmode='tsys', tsysspw='22', tsysavg=average, outfile=outfile)
 
-        self._verify_caltable(outfile, self._expected_caltable(10, 'TSYS', average))
+        self._verify_caltable(outfile, self._expected_caltable(11, 'TSYS', average))
         
 ###
 # Test applycal flag handling
@@ -1556,7 +1556,7 @@ class sdcal2_applycal_flag(sdcal2_flag_base):
                tsysspw='22', tsysavg=average, spwmap={22:[23]}, interp='linear')
 
         self._verify_applycal(outfile, self._expected_caltable(1, 'SPECTRA'),
-                              self._expected_caltable(10, 'TSYS', average),
+                              self._expected_caltable(11, 'TSYS', average),
                               expected_flagrow)
     
 class sdcal2_applycal_flag2(sdcal2_flag_base):
