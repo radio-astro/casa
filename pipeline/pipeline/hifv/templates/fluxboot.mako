@@ -108,8 +108,7 @@ $(document).ready(function() {
 	</tbody>
     </table>
 
-    
-    
+
        <table class="table table-bordered table-striped table-condensed"
 	   summary="Fitting data with a power law">
 	<caption>Fitting data with a power law</caption>
@@ -125,16 +124,17 @@ $(document).ready(function() {
 	</thead>
 	<tbody>   
   
-    % for row in sorted(weblog_results[ms], key=lambda p: (p['source'], float(p['freq']))):
+     % for sourcekey in sorted(weblog_results[ms].keys()):
+        <tr>
+		    <td rowspan="${len(weblog_results[ms][sourcekey])}">${sourcekey}</td>
+                % for row in sorted(weblog_results[ms][sourcekey], key=lambda p: float(p['freq'])):
 
-		<tr>
-		    <td>${row['source']}</td>
-		    <td>${row['freq']}</td>
-			<td>${row['data']}</td>
-			<td>${row['error']}</td>
-			<td>${row['fitteddata']}</td>
+		        <td>${row['freq']}</td>
+			    <td>${row['data']}</td>
+			    <td>${row['error']}</td>
+			    <td>${row['fitteddata']}</td>
 		</tr>
-
+            % endfor
     % endfor
 	</tbody>
     </table>
