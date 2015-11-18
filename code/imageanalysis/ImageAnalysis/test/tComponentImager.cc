@@ -39,7 +39,6 @@
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <images/Images/PagedImage.h>
-//#include <lattices/Lattices/TiledShape.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/Arrays/Vector.h>
@@ -61,103 +60,122 @@
 
 #include <casa/namespace.h>
 int main() {
-  try {
-    const uInt nx = 4;
-    const uInt ny = nx;
-    const uInt nFreq = 3;
+	try {
+		const uInt nx = 4;
+		const uInt ny = nx;
+		const uInt nFreq = 3;
 
-    ComponentList clist;
-    {
-      const MDirection ra0dec0(Quantity(0, "deg"), Quantity(0, "deg"),
-			       MDirection::J2000);
-      SkyComponent c1(Flux<Double>(1.0), 
-		      PointShape(ra0dec0), ConstantSpectrum());
-      clist.add(c1);
-    }
-    
-    CoordinateSystem coords2D;
-    {
-      CoordinateUtil::addDirAxes(coords2D);
-      DirectionCoordinate dirCoord = coords2D.directionCoordinate(0);
-      {
-	Vector<Double> refPix(2);
-	refPix(0) = nx/2;
-	refPix(1) = ny/2;
-	dirCoord.setReferencePixel(refPix);
-      }
-      dirCoord.setWorldAxisUnits(Vector<String>(2, "deg"));
-      dirCoord.setIncrement(Vector<Double>(2, 1.0));
-      coords2D.replaceCoordinate(dirCoord, 0);
-    }
-    {
-      PagedImage<Float> 
-	image2D((TiledShape(IPosition(2,nx,ny))), coords2D,
-		File::newUniqueName("./", "tComponentImager_tmp_")
-		.absoluteName());
-      image2D.setUnits(Unit("Jy/pixel"));
-      image2D.set(0.0f);
-      ComponentImager::project(image2D, clist);
-      AlwaysAssert(near(image2D.getAt(IPosition(2,nx/2,ny/2)), 1.0f),
-		   AipsError);
-      image2D.putAt(0.0f, IPosition(2,nx/2,ny/2));
-      AlwaysAssert(allNear(image2D.get(), 0.0f, C::flt_min), AipsError);
-      image2D.table().markForDelete();
-    }
-    cerr << "Passed the 2-D Image test" << endl;
-    CoordinateSystem coords3D;
-    {
-      CoordinateUtil::addFreqAxis(coords3D);
-      coords3D.addCoordinate(coords2D.coordinate(0));
-      {
-	SpectralCoordinate specCoord = coords3D.spectralCoordinate(0);
-	specCoord.setWorldAxisUnits(Vector<String>(1, "GHz"));
-	specCoord.setIncrement(Vector<Double>(1, 1.0));
-	specCoord.setReferencePixel(Vector<Double>(1, nFreq/2));
-	specCoord.setReferenceValue(Vector<Double>(1, 2.0));
-	coords3D.replaceCoordinate(specCoord, 0);
-      }
-      PagedImage<Float> 
-	image3D((TiledShape(IPosition(3, nFreq, nx, ny))),
-		coords3D,
-		File::newUniqueName("./", "tComponentImager_tmp_")
-		.absoluteName());
-      image3D.setUnits(Unit("WU/pixel"));
-      const MDirection ra1dec2(Quantity(1, "deg"), Quantity(-2, "deg"),
-			       MDirection::J2000);
-      const MFrequency oneGhz(Quantity(1, "GHz"), MFrequency::LSRK);
-      SkyComponent c2(Flux<Double>(0.5), 
-		      PointShape(ra1dec2), 
-		      SpectralIndex(oneGhz, 1.0));
-      clist.add(c2);
-      ComponentImager::project(image3D, clist);
-      AlwaysAssert(near(image3D.getAt(IPosition(3, 0, nx/2,ny/2)), 200.0f),
-		   AipsError);
-      AlwaysAssert(near(image3D.getAt(IPosition(3, 1, nx/2,ny/2)), 200.0f),
-		   AipsError);
-      AlwaysAssert(near(image3D.getAt(IPosition(3, 2, nx/2,ny/2)), 200.0f),
-		   AipsError);
-      AlwaysAssert(near(image3D.getAt(IPosition(3, 0, nx/2+1,ny/2-2)), 100.f),
-		   AipsError);
-      AlwaysAssert(near(image3D.getAt(IPosition(3, 1, nx/2+1,ny/2-2)), 200.0f),
-		   AipsError);
-      AlwaysAssert(near(image3D.getAt(IPosition(3, 2, nx/2+1,ny/2-2)), 300.0f),
-		   AipsError);
-      image3D.table().markForDelete();
-    }
-    cerr << "Passed the 3-D Image test" << endl;
-  }
-  catch (AipsError x) {
-    cerr << x.getMesg() << endl;
-    cout << "FAIL" << endl;
-    return 1;
-  }
-  catch (...) {
-    cerr << "Exception not derived from AipsError" << endl;
-    cout << "FAIL" << endl;
-    return 2;
-  }
-  cout << "OK" << endl;
+		ComponentList clist;
+		{
+			const MDirection ra0dec0(
+				Quantity(0, "deg"), Quantity(0, "deg"),
+				MDirection::J2000
+			);
+			SkyComponent c1(Flux<Double>(1.0),
+			PointShape(ra0dec0), ConstantSpectrum());
+			clist.add(c1);
+		}
+		Record rec;
+		String err;
+		clist.toRecord(err, rec);
+		CoordinateSystem coords2D;
+		{
+			CoordinateUtil::addDirAxes(coords2D);
+			DirectionCoordinate dirCoord = coords2D.directionCoordinate(0);
+			{
+				Vector<Double> refPix(2);
+				refPix(0) = nx/2;
+				refPix(1) = ny/2;
+				dirCoord.setReferencePixel(refPix);
+			}
+			dirCoord.setWorldAxisUnits(Vector<String>(2, "arcsec"));
+			dirCoord.setIncrement(Vector<Double>(2, 1.0));
+			coords2D.replaceCoordinate(dirCoord, 0);
+		}
+		{
+			PagedImage<Float>
+			image2D(
+				(TiledShape(IPosition(2,nx,ny))), coords2D,
+				File::newUniqueName("./", "tComponentImager_tmp_"
+			).absoluteName());
+			image2D.setUnits(Unit("Jy/pixel"));
+			image2D.set(0.0f);
+			ComponentImager::project(image2D, clist);
+			AlwaysAssert(
+				near(image2D.getAt(IPosition(2,nx/2,ny/2)), 1.0f),
+				AipsError
+			);
+			image2D.putAt(0.0f, IPosition(2,nx/2,ny/2));
+			AlwaysAssert(allNear(image2D.get(), 0.0f, C::flt_min), AipsError);
+			image2D.table().markForDelete();
+		}
+		cerr << "Passed the 2-D Image test" << endl;
+		CoordinateSystem coords3D;
+		{
+			CoordinateUtil::addFreqAxis(coords3D);
+			coords3D.addCoordinate(coords2D.coordinate(0));
+			{
+				SpectralCoordinate specCoord = coords3D.spectralCoordinate(0);
+				specCoord.setWorldAxisUnits(Vector<String>(1, "GHz"));
+				specCoord.setIncrement(Vector<Double>(1, 1.0));
+				specCoord.setReferencePixel(Vector<Double>(1, nFreq/2));
+				specCoord.setReferenceValue(Vector<Double>(1, 2.0));
+				coords3D.replaceCoordinate(specCoord, 0);
+			}
+			PagedImage<Float> image3D(
+				(TiledShape(IPosition(3, nFreq, nx, ny))),
+				coords3D,
+				File::newUniqueName("./", "tComponentImager_tmp_"
+			).absoluteName());
+			image3D.setUnits(Unit("WU/pixel"));
+			const MDirection ra1dec2(
+				Quantity(1, "arcsec"), Quantity(-2, "arcsec"),
+				MDirection::J2000
+			);
+			const MFrequency oneGhz(Quantity(1, "GHz"), MFrequency::LSRK);
+			SkyComponent c2(
+				Flux<Double>(0.5), PointShape(ra1dec2),
+				SpectralIndex(oneGhz, 1.0)
+			);
+			clist.add(c2);
+			ComponentImager::project(image3D, clist);
+			AlwaysAssert(
+				near(image3D.getAt(IPosition(3, 0, nx/2,ny/2)), 200.0f),
+				AipsError
+			);
+			AlwaysAssert(
+				near(image3D.getAt(IPosition(3, 1, nx/2,ny/2)), 200.0f),
+				AipsError
+			);
+			AlwaysAssert(
+				near(image3D.getAt(IPosition(3, 2, nx/2,ny/2)), 200.0f),
+				AipsError
+			);
+			AlwaysAssert(
+				near(image3D.getAt(IPosition(3, 0, nx/2+1,ny/2-2)), 100.f),
+				AipsError
+			);
+			AlwaysAssert(
+				near(image3D.getAt(IPosition(3, 1, nx/2+1,ny/2-2)), 200.0f),
+				AipsError
+			);
+			AlwaysAssert(
+				near(image3D.getAt(IPosition(3, 2, nx/2+1,ny/2-2)), 300.0f),
+				AipsError
+			);
+			image3D.table().markForDelete();
+		}
+		cerr << "Passed the 3-D Image test" << endl;
+	}
+	catch (const AipsError& x) {
+		cerr << x.getMesg() << endl;
+		cout << "FAIL" << endl;
+		return 1;
+	}
+	catch (...) {
+		cerr << "Exception not derived from AipsError" << endl;
+		cout << "FAIL" << endl;
+		return 2;
+	}
+	cout << "OK" << endl;
 }
-// Local Variables: 
-// compile-command: "gmake OPTLIB=1 tComponentImager"
-// End: 

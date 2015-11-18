@@ -118,7 +118,8 @@ void ComponentImager::project(ImageInterface<Float>& image, const ComponentList&
 
 	// Check if there is a Stokes Axes and if so which polarizations. Otherwise
 	// only grid the I polarisation.
-	uInt nStokes = 0;
+	// because the code that puts pixel values needs at least one stokes for this to work.
+	uInt nStokes = 1;
 	if (coords.hasPolarizationCoordinate()) {
 		StokesCoordinate stCoord = coords.stokesCoordinate();
 		Vector<Int> types = stCoord.stokes();
@@ -178,7 +179,7 @@ void ComponentImager::project(ImageInterface<Float>& image, const ComponentList&
 
 	// Find out what the units are. Currently allowed units are anything
 	// dimensionally equivalent to Jy/pixel or Jy/beam. If the former then the
-	// pixel size at the centre of the image is assumed to hold throughout the
+	// pixel size at the center of the image is assumed to hold throughout the
 	// image. If the latter then the beam is fished out of the header and a
 	// 'beam' unit defined. If the units are not defined or are not one of the
 	// above they are assumed to be Jy/pixel and a warning message is sent to the
@@ -286,7 +287,7 @@ void ComponentImager::project(ImageInterface<Float>& image, const ComponentList&
 	// possible but still minimize the number of tiles in the cache.
 	auto chunkShape = imageShape;
 	{
-		const IPosition tileShape = image.niceCursorShape();
+		const IPosition tileShape = image.niceCursorShape(2048*2048);
 		chunkShape(longAxis) = tileShape(longAxis);
 		chunkShape(latAxis) = tileShape(latAxis);
 	}
@@ -389,7 +390,6 @@ void ComponentImager::project(ImageInterface<Float>& image, const ComponentList&
 		}
 	}
 }
-
 
 std::unique_ptr<ComponentList> ComponentImager::_doPoints(
 	ImageInterface<Float>& image, const ComponentList& list,
