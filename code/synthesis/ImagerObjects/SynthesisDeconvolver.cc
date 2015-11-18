@@ -293,6 +293,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SynthesisDeconvolver","executeMinorCycle",WHERE) );
     Record returnRecord;
 
+    SynthesisUtilMethods::getResource("Start Deconvolver");
+
     try {
       itsLoopController.setCycleControls(minorCycleControlRec);
 
@@ -306,6 +308,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     } catch(AipsError &x) {
       throw( AipsError("Error in running Minor Cycle : "+x.getMesg()) );
     }
+
+    SynthesisUtilMethods::getResource("End Deconvolver");
+
     return returnRecord;
   }
 
@@ -318,6 +323,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	itsImages = makeImageStore( itsImageName );
       }
+
+    SynthesisUtilMethods::getResource("Restoration");
 
     itsDeconvolver->restore(itsImages);
     itsImages->releaseLocks();

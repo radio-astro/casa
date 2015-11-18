@@ -67,6 +67,10 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <limits>
+
+#include <sys/time.h>
+#include<sys/resource.h>
+
 using namespace std;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -90,6 +94,88 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     return M;
   }
+
+  // Get the next largest even composite of 2,3,5,7.
+  // This is to ensure a 'good' image size for FFTW.
+  // Translated from gcwrap/scripts/cleanhelper.py : getOptimumSize
+  Int SynthesisUtilMethods::getOptimumSize(const Int npix)
+  {
+    return npix;
+  }
+
+  Vector<Int> SynthesisUtilMethods::primeFactors(uInt /*n*/, Bool /*douniq*/)
+  {
+    return Vector<Int>();
+  }
+
+
+  Int SynthesisUtilMethods::parseLine(char* line){
+        int i = strlen(line);
+        while (*line < '0' || *line > '9') line++;
+        line[i-3] = '\0';
+        i = atoi(line);
+        return i;
+    }
+    
+  void SynthesisUtilMethods::getResource(String label, String fname)
+  {
+    return;
+
+     LogIO os( LogOrigin("SynthesisUtilMethods","getResource",WHERE) );
+
+
+        FILE* file = fopen("/proc/self/status", "r");
+        int vmSize = -1, vmRSS=-1, pid=-1;
+	//	int fdSize=-1;
+        char line[128];
+    
+        while (fgets(line, 128, file) != NULL){
+	  if (strncmp(line, "VmSize:", 7) == 0){
+	    vmSize = parseLine(line)/1024.0;
+	  }
+	  if (strncmp(line, "VmRSS:", 6) == 0){
+	    vmRSS = parseLine(line)/1024.0;
+	  }
+	  //	  if (strncmp(line, "FDSize:", 7) == 0){
+	  //  fdSize = parseLine(line);
+	  //}
+	  if (strncmp(line, "Pid:", 4) == 0){
+	    pid = parseLine(line);
+	  }
+	}
+        fclose(file);
+
+	struct rusage usage;
+	struct timeval now;
+	getrusage(RUSAGE_SELF, &usage);
+	now = usage.ru_utime;
+
+	ostringstream oss;
+	
+	oss << " PID: " << pid ;
+	oss << " MemRSS: " << vmRSS << " MB.";
+	oss << " VirtMem: " << vmSize << " MB.";
+	//	oss << " FDSize: " << fdSize;
+	oss << " ProcTime: " << now.tv_sec << "." << now.tv_usec;
+	oss <<  " [" << label << "] ";
+
+
+	os << oss.str() << LogIO::NORMAL3 <<  LogIO::POST;
+	cout << oss.str() << endl;
+
+	// Write this to a file too...
+	fname = "memprofile";
+	if( fname.size() > 0 )
+	  {
+	    ofstream myfile;
+	    myfile.open (fname+"."+String::toString(pid), ios::app);
+	    myfile << oss.str() << endl;
+	    myfile.close();
+	  }
+  }
+
+
+
   // Data partitioning rules for CONTINUUM imaging
   //
   //  ALL members of the selection parameters in selpars are strings

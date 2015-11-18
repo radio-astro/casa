@@ -359,7 +359,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
       if( ( check1 || check2 ) && ( itsParentImageShape.product()>0 ) 
 	  && ( itsFacetId < itsNFacets*itsNFacets ) 
-	  && ( itsChanId < itsNChanChunks ) && ( itsPolId < itsNPolChunks ) 
+	  && ( itsChanId <= itsNChanChunks ) && ( itsPolId < itsNPolChunks ) 
 	  && ( check3 || !hasSumWt() ) )  state = True;
     }
 
