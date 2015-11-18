@@ -416,7 +416,7 @@ Record ImageStatsCalculator::statistics(
 	//Bool hasDirectionCoordinate = (csys.findCoordinate(Coordinate::DIRECTION) >= 0);
 	Int precis = -1;
 	if (csys.hasDirectionCoordinate()) {
-		DirectionCoordinate dirCoord = csys.directionCoordinate(0);
+		DirectionCoordinate dirCoord = csys.directionCoordinate();
 		Vector<String> dirUnits = dirCoord.worldAxisUnits();
 		Vector<Double> dirIncs = dirCoord.increment();
 		for (uInt i=0; i< dirUnits.size(); ++i) {
@@ -426,12 +426,9 @@ Record ImageStatsCalculator::statistics(
 			precis = (newPrecis > 2 && newPrecis > precis) ? newPrecis : precis;
 		}
 	}
-
 	String blcf, trcf;
 	blcf = CoordinateUtil::formatCoordinate(blc, csys, precis);
 	trcf = CoordinateUtil::formatCoordinate(trc, csys, precis);
-
-
     if (_statistics.get() == NULL) {
         _statistics.reset(
 		    _verbose
