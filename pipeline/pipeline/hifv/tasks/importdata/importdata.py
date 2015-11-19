@@ -157,7 +157,7 @@ class VLAImportDataResults(basetask.Results):
 class VLAImportData(basetask.StandardTaskTemplate):
     Inputs = VLAImportDataInputs
     
-    
+
 
     def _ms_directories(self, names):
         """
@@ -189,7 +189,7 @@ class VLAImportData(basetask.StandardTaskTemplate):
     def prepare(self, **parameters):
         inputs = self.inputs
         vis = inputs.vis
-        
+
         if vis is None:
             msg = 'Empty input data set list'
             LOG.warning(msg)
@@ -531,7 +531,7 @@ class VLAImportData(basetask.StandardTaskTemplate):
         #                             flagzero=False, flagpol=True,
         #                             shadow=True)
         '''
-        
+
         task = casa_tasks.importasdm(asdm=asdm, 
                                      vis=vis, 
                                      savecmds=self.inputs.save_flagonline,
