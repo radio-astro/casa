@@ -4051,23 +4051,33 @@ bool image::rotatebeam(const variant& angle) {
 	}
 }
 
-bool image::rename(const std::string& name, const bool overwrite) {
+bool image::rename(const std::string& name, bool overwrite) {
 	try {
 		_log << _ORIGIN;
 		if (detached()) {
 			return False;
 		}
-
-		if (_image->rename(name, overwrite)) {
-			_stats.reset(0);
-			return True;
+		_stats.reset();
+		if (_image->isFloat()) {
+			auto myimage = _image->getImage();
+			_image.reset();
+			ImageFactory::rename(myimage, name, overwrite);
+			_image.reset(new ImageAnalysis(myimage));
 		}
-		throw AipsError("Error renaming image.");
-	} catch (const AipsError& x) {
+		else {
+			auto myimage = _image->getComplexImage();
+			_image.reset();
+			ImageFactory::rename(myimage, name, overwrite);
+			_image.reset(new ImageAnalysis(myimage));
+		}
+		return True;
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
+	return False;
 }
 
 bool image::replacemaskedpixels(
