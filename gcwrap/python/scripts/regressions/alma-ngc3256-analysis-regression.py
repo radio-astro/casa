@@ -659,7 +659,7 @@ if(mystep in thesteps):
 
     os.system('rm -rf result-ngc3256_line_CO.*')
     clean(vis='ngc3256_line_target.ms.contsub', imagename='result-ngc3256_line_CO',
-          spw='0:38~87', mode='channel', start='', nchan=50, width='', 
+          spw='0:38~87', mode='channel', start='', nchan=-1, width='', 
           psfmode='hogbom', outframe='LSRK', restfreq='115.271201800GHz', 
           mask=[53,50,87,83], niter=500, interactive=False, imsize=128, cell='1arcsec', 
           weighting='briggs', robust=0.0, threshold='5mJy')
