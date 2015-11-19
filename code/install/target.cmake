@@ -450,6 +450,7 @@ macro( casa_add_unit_test)
 
   if (casa_unit_test_NOT_READY)
     add_executable( ${testName} EXCLUDE_FROM_ALL ${sources} ) # not part of main build
+    target_link_libraries( ${testName} lib${module} ${casa_unit_test_LIBRARIES})
   else ()
     add_executable( ${testName} ${sources} )
     target_link_libraries( ${testName} lib${module} ${casa_unit_test_LIBRARIES})
