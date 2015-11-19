@@ -1074,3 +1074,6 @@ casa_add_assay( display Display/test/tAttValPoi.cc )
 casa_add_assay( display QtViewer/test/dQtDataManager.cc )
 casa_add_assay( display Utilities/test/tDisplayOptions.cc )
 casa_add_assay( display Utilities/test/tDlHandle.cc )
+
+
+casa_add_google_test (MODULES display SOURCES Display/test/tAttribute_Gtest.cc) 
