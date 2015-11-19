@@ -70,6 +70,7 @@
 	    </equals>
 	    <equals type="string" value="interactive">
                 <default param="asis"><value type="string">Receiver CalAtmosphere</value></default>
+                <default param="ocorr_mode"><value type="string">co</value></default>
 		<default param="overwrite"><value type="bool">True</value></default>
 		<default param="dryrun"><value type="bool">False</value></default>
 		<default param="acceptresults"><value type="bool">True</value></default>
