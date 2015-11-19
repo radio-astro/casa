@@ -27,10 +27,13 @@
 
 #include <imageanalysis/ImageAnalysis/ImageFactory.h>
 
+#include <casa/OS/Directory.h>
+#include <casa/OS/RegularFile.h>
+#include <casa/OS/SymLink.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
-#include <tables/LogTables/NewFile.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/TempImage.h>
+#include <tables/LogTables/NewFile.h>
 
 #include <imageanalysis/ImageAnalysis/ImageHistory.h>
 #include <imageanalysis/ImageAnalysis/SubImageFactory.h>
@@ -152,6 +155,66 @@ template <class T> SPIIT ImageFactory::_fromRecord(
     }
     return image;
 }
+
+template <class T> pair<SPIIF, SPIIC> ImageFactory::_rename(
+	SPIIT& image, const String& name, const Bool overwrite
+) {
+	LogIO mylog;
+	mylog << LogOrigin(className(), __func__);
+	ThrowIf (! image, "Image pointer cannot be null");
+	ThrowIf(
+		! image->isPersistent(),
+		"This image tool is not associated with a "
+		"persistent disk file. It cannot be renamed"
+	);
+	ThrowIf(
+		name.empty(), "new file name must be specified"
+	);
+	String oldName = image->name(False);
+	ThrowIf(
+		oldName.empty(),
+		"Current file name is empty, cannot rename"
+	);
+	ThrowIf(
+		oldName == name,
+		"Specified output name is the same as the current image name"
+	);
+
+	// Let's see if it exists.  If it doesn't, then the user has deleted it
+	File file(oldName);
+	if (file.isSymLink()) {
+		file = File(SymLink(file).followSymLink());
+	}
+	ThrowIf(
+		! file.exists(), "The image to be renamed no longer exists"
+	);
+	_checkOutfile(name, overwrite);
+
+	// close image before renaming
+	image.reset();
+
+	// Now try and move it
+	Bool follow(True);
+	if (file.isRegular(follow)) {
+		RegularFile(file).move(name, overwrite);
+	}
+	else if (file.isDirectory(follow)) {
+		Directory(file).move(name, overwrite);
+	}
+	else if (file.isSymLink()) {
+		SymLink(file).copy(name, overwrite);
+	}
+	else {
+		ThrowCc("Failed to rename file " + oldName + " to " + name);
+	}
+
+	mylog << LogIO::NORMAL << "Successfully renamed file " << oldName
+			<< " to " << name << LogIO::POST;
+
+	return fromFile(name);
+
+}
+
 
 }
 

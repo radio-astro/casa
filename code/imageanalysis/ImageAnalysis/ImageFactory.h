@@ -158,6 +158,15 @@ public:
         const RecordInterface& rec, const String& imagename=""
     );
 
+    // if successful, image will be reset to point to new image upon return
+    static void rename(
+    	SPIIF& image, const String& name, const Bool overwrite
+    );
+
+    static void rename(
+    	SPIIC& image, const String& name, const Bool overwrite
+    );
+
     // open a canonical image
     static SPIIF testImage(
         const String& outfile, const Bool overwrite,
@@ -210,6 +219,12 @@ private:
     static void _checkOutfile(const String& outfile, Bool overwrite);
 
     static pair<SPIIF, SPIIC> _fromLatticeBase(unique_ptr<LatticeBase>& latt);
+
+    // if successful, image will point to the newly named image
+    // upone return
+    template <class T> static pair<SPIIF, SPIIC> _rename(
+    	SPIIT& image, const String& name, const Bool overwrite
+    );
 
 };
 }

@@ -160,7 +160,7 @@ public:
 
     Bool open(const String& infile);
 
-    Bool rename(const String& name, const Bool overwrite = False);
+    // Bool rename(const String& name, const Bool overwrite = False);
 
     inline static String className() {const static String x = "ImageAnalysis"; return x; }
 

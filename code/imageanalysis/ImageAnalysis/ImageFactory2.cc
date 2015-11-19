@@ -61,7 +61,6 @@ SPIIC ImageFactory::complexImageFromShape(
 	);
 }
 
-
 SPIIF ImageFactory::fromASCII(
     const String& outfile, const String& infile,
     const IPosition& shape, const String& sep, const Record& csys,
@@ -328,6 +327,18 @@ SPIIF ImageFactory::fromFITS(
     SPIIF pOut(x);
     ThrowIf(! rval || ! pOut, error);
     return pOut;
+}
+
+void ImageFactory::rename(
+	SPIIF& image, const String& name, const Bool overwrite
+) {
+	image = _rename(image, name, overwrite).first;
+}
+
+void ImageFactory::rename(
+	SPIIC& image, const String& name, const Bool overwrite
+) {
+	image = _rename(image, name, overwrite).second;
 }
 
 void ImageFactory::toASCII(

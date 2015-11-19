@@ -71,8 +71,7 @@ using namespace std;
 namespace casa { //# name space casa begins
 
 ImageAnalysis::ImageAnalysis() :
-	_imageFloat(), _imageComplex() /*,
-			imageMomentsProgressMonitor(0) */ {
+	_imageFloat(), _imageComplex() {
 
 	// Register the functions to create a FITSImage or MIRIADImage object.
 	FITSImage::registerOpenFunction();
@@ -83,14 +82,11 @@ ImageAnalysis::ImageAnalysis() :
 }
 
 ImageAnalysis::ImageAnalysis(SPIIF image) :
-	_imageFloat(image),_imageComplex(), _log(new LogIO()) /*,
-				imageMomentsProgressMonitor(0) */ {}
-
+	_imageFloat(image),_imageComplex(), _log(new LogIO()) {
+}
 
 ImageAnalysis::ImageAnalysis(SPIIC image) :
-	_imageFloat(),_imageComplex(image), _log(new LogIO()) /*,
-				imageMomentsProgressMonitor(0) */ {}
-
+	_imageFloat(),_imageComplex(image), _log(new LogIO()) {}
 
 ImageAnalysis::~ImageAnalysis() {
 	if (_imageFloat) {
@@ -981,7 +977,7 @@ Record ImageAnalysis::maxfit(
 	}
 	return outrec;
 }
-
+/*
 Bool ImageAnalysis::rename(const String& name, const Bool overwrite) {
 	_onlyFloat(__func__);
 	*_log << LogOrigin(className(), __func__);
@@ -1067,6 +1063,7 @@ Bool ImageAnalysis::rename(const String& name, const Bool overwrite) {
 	return True;
 
 }
+*/
 
 Bool ImageAnalysis::twopointcorrelation(
 	const String& outFile,
