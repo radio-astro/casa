@@ -2519,7 +2519,7 @@ void SingleDishMS::findLineAndGetMask(size_t const num_data, float const* data,
         static_cast<size_t>(edge[1]));
   }
   // copy input mask to output mask vector if necessary
-  if (&in_mask != &out_mask) {
+  if (in_mask != out_mask) {
     for (size_t i = 0; i < num_data; ++i) {
       out_mask[i] = in_mask[i];
     }
