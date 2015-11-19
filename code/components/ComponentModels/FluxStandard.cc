@@ -408,6 +408,13 @@ String FluxStandard::makeComponentList(const String& sourceName,
     SkyComponent skycomp(fluxval, cmp, spectrum);
 	
     cl.add(skycomp);
+    // Since fluxval is given for mfreq, it should update the reference frequency
+    // set via SpectralIndex (TT)
+    Int ncl=cl.nelements();
+    Vector<Int> which(1);
+    which(0) = ncl-1;
+    MVFrequency mvfreq = MVFrequency(mfreq.get("Hz").getValue());
+    cl.setRefFrequency(which,mvfreq);
     cl.rename(clpath, Table::New);
   }
   return clpath;

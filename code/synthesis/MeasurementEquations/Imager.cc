@@ -5759,11 +5759,17 @@ void Imager::sjy_makeComponentList(LogIO& os, Vector<String>& tempCLs,
     //if simodel is set use this 
       //cerr<<"NON-Tabular makeComponentList..."<<endl;
       //if (fluxval.value(1) ==0.0 && fluxval.value(2) == 0.0 && gotQUFlux) {
+
+      // fluxval is @ thefreq, make sure proper freq is used 
+      // Note that refreq in siModel will be overriden by thefreq 
+      MFrequency thefreq = reffreq;
       if ( gotQUFlux) {
         fluxval=fluxvalvec[0]; 
+        thefreq=mfreqs[selspw][0];
       }   
       tempCLs[selspw] = FluxStandard::makeComponentList(fieldName,
-                                                     mfreqs[selspw][0],
+                                 //                    mfreqs[selspw][0],
+                                                     thefreq,
                                                      mtime, fluxval, point,
                                                      siModel,
     // jagonzal (CAS-4109): Specify table name to avoid clashing between different CASA engines when running vs a MMS
