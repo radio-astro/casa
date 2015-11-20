@@ -30,7 +30,6 @@ casa_add_library( msvis
   MSVis/GroupWorker.cc
   MSVis/IteratingParameters.cc
   MSVis/LayeredVi2Factory.cc
-  MSVis/MSAnalysis.cc
   MSVis/MSCalEnums.cc
   MSVis/MSChecker.cc
   MSVis/MSContinuumSubtractor.cc
@@ -121,7 +120,6 @@ install (FILES
 	MSVis/GroupWorker.h
 	MSVis/IteratingParameters.h
 	MSVis/LayeredVi2Factory.h
-	MSVis/MSAnalysis.h
 	MSVis/MSCalEnums.h
 	MSVis/MSChecker.h
 	MSVis/MSContinuumSubtractor.h
