@@ -204,7 +204,6 @@ try:
     from sdlist import sdlist
     from sdflag import sdflag
     from sdflag2 import sdflag2
-    from sdtpimaging import sdtpimaging
     from sdmath import sdmath
     from sdimaging import sdimaging
     from sdimprocess import sdimprocess
@@ -212,7 +211,6 @@ except ImportError:
     sd = None
     sdcoadd = None
     sdscale = None
-    sdtpimaging = None
     sdlist = None
     sdfit = None
     sdbaseline = None

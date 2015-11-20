@@ -166,7 +166,6 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_sdsave.py
   test_sdscale.py
   test_sdstat.py
-  test_sdtpimaging.py
   test_setjy.py
   test_simobserve.py
   test_simplecluster.py

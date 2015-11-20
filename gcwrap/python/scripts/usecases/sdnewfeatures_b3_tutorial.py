@@ -11,9 +11,6 @@ import os
 import sys
 
 
-# include total power data analysis demo
-tpdemo = True
-
 # include total power plotting demo using sdplot
 # FOR THE DEMO DATA SET USED HERE, PLOTTING
 # WILL BE VERY SLOW. 
@@ -26,7 +23,6 @@ tpdemo2 = False
 datapath1 = os.environ['CASAPATH'].split()[0]+'/data/regression/ATST5/OrionS/'
 datapath2 = os.environ['CASAPATH'].split()[0]+'/data/alma/atf/sd/'
 datafile1 = 'OrionS_rawACSmod'
-datafile2='uid___X1e1_X3197_X1.ms'
 
 print "*******SD analysis demo for Beta Patch 3*******"
 print "This script shows new/modified feautures of single dish tools/tasks\n"
@@ -45,14 +41,6 @@ else:
     if not os.path.isdir(datafile1):
        print "Data file, %s, not found." % datafile1
        sys.exit() 
-if os.path.isdir(datapath2+datafile2):
-    os.system('mkdir %s;cp -r %s/[!.svn]* ./%s' % (datafile2, datapath2+datafile2, datafile2))
-else:
-    if not os.path.isdir(datafile2):
-       print "Data file, %s, not found." % datafile2
-       print "total power data analysis will be skipped"
-       tpdemo = False
-        
 
 ################
 # 1. sdcal #
@@ -505,75 +493,6 @@ print "*** Done sdstat ****\n"
 # You will also see these information is saved
 # in orion_hc3n_stat.txt
 
-
-
-if tpdemo:
-   # NEW TASK ####
-   ###############
-   # sdtpimaging #
-   ###############
-   print "###############\n 7. New task: sdtpimaging \n###############"
-   desc="* Sdtpimaging is a new task to do data analysis of the total power\n" \
-        "* raster scan data.\n"
-   print desc
-   default(sdtpimaging)
-   # plot the data
-   plotlevel=2
-   antenna='0'
-   sdfile='uid___X1e1_X3197_X1.ms'
-   inp()
-   desc="\n" \
-        "* For this example, we do it in three steps to illustrate features,\n" \
-        "* but it can be run the entire process in a single run of sdtpimaiging.\n" \
-        "* First, do just plotting of the uncalibrated data leaving \n" \
-        "* calmode and createimage to defaults (calmode='none', createimage=False).\n" \
-        "* If there is CORRECTED_DATA column in the MS data, the calibrated data\n"\
-        "* will be plotted instead.\n"
-   print desc
-   pause=raw_input('\n* Hit Return to continue ')
-   print "\n* Run sdtpimaging...\n"
-   sdtpimaging()
-   print "*** sdtpimaging done***\n"
-
-   calmode='baseline'
-   masklist=[50] # use 50 data points from each end of scan for fitting
-   plotlevel=1
-   #plotlevel=2 to see progress of each fitting
-   inp()
-   desc="\n"\
-        "* Now try to calibrate the data, currently only a simple baseline subtraction\n" \
-        "* is available.\n"
-   print desc
-   pause=raw_input('\n* Hit Return to continue ')
-   print "\n* Run sdtpimaging...\n"
-   sdtpimaging()
-   print "*** sdtpimaging done***\n"
-   # Do imaging only
-   calmode='none'
-   createimage=True
-   imagename='moon.im'
-   imsize=[200,200]
-   cell=[0.2] # in arcmin
-   phasecenter='AZEL 187d54m22s 41d03m0s'
-   ephemsrcname='moon' # can be omitted 
-   inp()
-   desc="\n" \
-        "* Finally, to create an image, set createimage=True.\n" \
-        "* The data contain the observation of the Moon so set\n"\
-        "* ephemsrcname (the task automatically look up SOURCE table\n"\
-        "* to check if it is ephemeris source or not, even you left\n"\
-        "* this blank.\n"
-   print desc
-   pause=raw_input('\n* Hit Return to continue ')
-   print "\n* Run sdtpimaging...\n"
-   sdtpimaging()
-   print "*** sdtpimaging done***\n"
-   
-   print "* Let's check the create image"
-   pause=raw_input('\n* Hit Return to continue ')
-   viewer(imagename)
-
-   
   
 print "\n###############\n Tool changes \n###############"
 

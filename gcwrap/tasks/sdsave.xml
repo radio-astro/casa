@@ -19,7 +19,7 @@ save the subset of the data by selecting field names, spw ids,
 time ranges, scan numbers, and polarization ids. The ASAP
 (scantable) format is recommended for further analysis using Sd
 tool or tasks except imaging. For further imaging using imager
-or sdimaging/sdtpimaging, save the data to the Measurement Set
+or sdimaging, save the data to the Measurement Set
 (MS2).
   </description>
 
@@ -234,8 +234,7 @@ save the subset of the data by selecting field names, spw ids,
 time ranges, scan numbers, and polarization ids. The ASAP
 (scantable) format is recommended for further analysis using Sd
 tool or tasks except imaging. For further imaging using imager
-or sdimaging/sdtpimaging, save the data to the Measurement Set
-(MS2).
+or sdimaging, save the data to the Measurement Set (MS2).
 
 Note that setting getpt=False needs a lot of attention.
 If you set getpt=False, the task retrieves pointing direction from 

@@ -64,7 +64,6 @@ casa_add_python( tools tools_regressions_python python/${PYTHONV}/regressions
 #  plotxy_regression.py
   pointing_regression.py
   polcal_20080224_cband_regression.py
-  sdtpimaging_regression.py
   stokesimagingtest_regression.py
   unit_tests.py
   vla_uvfits_line_sf.py

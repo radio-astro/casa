@@ -88,7 +88,6 @@ from sdreduce_pg import sdreduce_pg as sdreduce
 from sdsave_pg import sdsave_pg as sdsave
 from sdscale_pg import sdscale_pg as sdscale
 from sdstat_pg import sdstat_pg as sdstat
-from sdtpimaging_pg import sdtpimaging_pg as sdtpimaging
 from tsdbaseline_pg import  tsdbaseline_pg as tsdbaseline
 from tsdcal_pg import  tsdcal_pg as tsdcal
 from tsdfit_pg import  tsdfit_pg as tsdfit

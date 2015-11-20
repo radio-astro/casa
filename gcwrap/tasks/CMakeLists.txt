@@ -108,7 +108,6 @@ sdreduce.xml
 sdsave.xml
 sdscale.xml
 sdstat.xml
-sdtpimaging.xml
 setjy.xml
 ssoflux.xml
 simalma.xml

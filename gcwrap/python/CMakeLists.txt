@@ -178,7 +178,6 @@ scripts/task_sdreduce.py
 scripts/task_sdsave.py
 scripts/task_sdscale.py
 scripts/task_sdstat.py
-scripts/task_sdtpimaging.py
 scripts/task_setjy.py
 scripts/task_ssoflux.py
 scripts/task_simalma.py

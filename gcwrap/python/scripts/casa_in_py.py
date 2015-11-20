@@ -269,12 +269,10 @@ try:
     from sdscale_pg import sdscale_pg as sdscale 
     from sdsmooth_pg import sdsmooth_pg as sdsmooth
     from sdstat_pg import sdstat_pg as sdstat
-    from sdtpimaging_pg import sdtpimaging_pg as sdtpimaging
 except ImportError, e:
     print "failed to load ASAP:\n", e
     sdcoadd = None
     sdscale = None
-    sdtpimaging = None
     sdlist = None
     sdfit = None
     sdbaseline = None
@@ -456,7 +454,6 @@ def go(taskname=None):
 #    from sdlist_pg import sdlist_pg as sdlist
 #    from sdflag_pg import sdflag_pg as sdflag
 #    from sdflag2_pg import sdflag2_pg as sdflag2
-#    from sdtpimaging_pg import sdtpimaging_pg as sdtpimaging
 #    myf['sd']=sd
 #    myf['sdcal']=sdcal
 #    myf['sdsmooth']=sdsmooth
@@ -472,7 +469,6 @@ def go(taskname=None):
 #    myf['sdlist']=sdlist
 #    myf['sdflag']=sdflag
 #    myf['sdflag2']=sdflag2
-#    myf['sdtpimaging']=sdtpimaging
 #
 #
 #def selectantenna(vis,minstring):

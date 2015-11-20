@@ -92,7 +92,7 @@ class par(str):
                                            EVLA antennas ea03, ea12, or ea17
 
                 ---
-                (for single dish tasks except for sdimaging and sdtpimaging)
+                (for single dish tasks except for sdimaging)
                 antenna -- antenna name or id (only effective for MS input)
                            antenna selection syntax doesn't work since current
                            single dish tasks is not able to handle multiple
@@ -314,10 +314,9 @@ class par(str):
 	@staticmethod
 	def calmode():
 		"""
-		(for sdcal, sdreduce, sdtpimaging)
+		(for sdcal and sdreduce)
 		calmode -- SD calibration mode
-		options: 'ps', 'nod', 'fs', 'fsotf', 'quotient', 'none' (for sdcal/sdreduce)
-			 'baseline', 'none' (for sdtpimaging)
+		options: 'ps', 'nod', 'fs', 'fsotf', 'quotient', 'none'
 	        default: 'none'
 		example: choose 'none' if you have already calibrated
                 WARNING: 'fsotf' is not implemented yet
@@ -346,7 +345,7 @@ class par(str):
 	@staticmethod
 	def cell():
 		"""
-		(for sdimaging, sdtpimaging)
+		(for sdimaging)
 		cell -- x and y cell size. default unit arcmin.
 		default: ['1.0arcmin', '1.0arcmin']
 		example: cell=['0.2arcmin', '0.2arcmin']
@@ -635,13 +634,6 @@ class par(str):
                 """
 
 	@staticmethod
-	def createimage():
-		"""
-		createimage -- do imaging?
-		default: False
-		"""
-		
-	@staticmethod
 	def correlations():
 		""" 
        		correlation -- Select correlators:
@@ -766,7 +758,7 @@ class par(str):
 		ephemsrcname -- ephemeris source name for moving source
 		default: ''
 		if the source name in the data matches one of the known
-		solar objects by the system, the tasks sdimaging and sdtpimaging
+		solar objects by the system, the tasks sdimaging
 		automatically set the source name
 		"""
 		
@@ -927,15 +919,6 @@ class par(str):
                 (this would fix the flux to that set in sourcepar but allow the
                 x and y offset positions to be fit).
 		"""
-
-	@staticmethod
-	def flaglist():
-		"""
-		flaglist -- list of scan numbers to flag (ranges can be accepted)
-		default: [] (use all scans)
-		example: [[0,3],80]
-		         flag the scan range [0,3] = [0,1,2,3] and scan 80
-	        """
 
 	@staticmethod
 	def flagmode():
@@ -1606,16 +1589,6 @@ class par(str):
 			 
 	        ---------------------------------------------------------------
 
-		(for sdtpimaging)
-		masklist -- mask in numbers of rows from each edge of each scan
-		for baseline fitting
-		default: none
-		example: [30,30] or [30]
-		         uses first 30 rows and last 30 rows of each scan
-			 for baseline
-		
-	        ---------------------------------------------------------------
-
 		(for sdimprocess)
 		masklist -- mask width for Basket-Weaving on percentage
 		default: 1.0 (1.0% of map size)
@@ -1999,7 +1972,7 @@ class par(str):
 		"""
 		order -- order of baseline polynomial
 		options: (int) (<0 turns off baseline fitting)
-		default: 5 for sdbaseline/sdreduce, 1 for sdtpimaging
+		default: 5
 		example: typically in range 2-9 (higher values
 		         seem to be needed for GBT)
 		"""

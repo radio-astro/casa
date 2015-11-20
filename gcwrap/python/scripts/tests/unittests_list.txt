@@ -146,7 +146,6 @@ test_sdreduce                   kana.sugi@nao.ac.jp
 test_sdsave                     takeshi.nakazato@nao.ac.jp
 test_sdscale                    takeshi.nakazato@nao.ac.jp
 test_sdstat                     kana.sugi@nao.ac.jp
-test_sdtpimaging                takeshi.nakazato@nao.ac.jp
 test_setjy			ttsutsum@nrao.edu
 test_simobserve                 kana.sugi@ezweb.ne.jp
 test_simplecluster              jagonzal@eso.org

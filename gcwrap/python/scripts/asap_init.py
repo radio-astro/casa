@@ -40,7 +40,6 @@ def asap_init():
     from sdsave_cli import sdsave_cli as sdsave
     from sdscale_cli import sdscale_cli as sdscale
     from sdstat_cli import sdstat_cli as sdstat
-    from sdtpimaging_cli import sdtpimaging_cli as sdtpimaging
     myf['sd']=sd
     myf['sdaverage']=sdaverage
     myf['sdbaseline']=sdbaseline
@@ -61,7 +60,6 @@ def asap_init():
     myf['sdsave']=sdsave
     myf['sdscale']=sdscale
     myf['sdstat']=sdstat
-    myf['sdtpimaging']=sdtpimaging
 #     ### NOTE on interface changes ###
 #     print("#"*50)
 #     print("")
