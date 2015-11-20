@@ -52,7 +52,6 @@
 
 #include <measures/Measures/MeasTable.h>
 
-#include <msvis/MSVis/MSAnalysis.h>
 #include <msvis/MSVis/MSChecker.h>
 #include <msvis/MSVis/MSContinuumSubtractor.h>
 #include <msvis/MSVis/Partition.h>
