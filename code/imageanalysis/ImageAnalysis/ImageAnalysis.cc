@@ -644,6 +644,7 @@ Vector<Bool> ImageAnalysis::haslock() {
 	return rstat;
 }
 
+/*
 Bool ImageAnalysis::insert(
 	const String& infile, Record& Region,
 	const Vector<double>& locatePixel, Bool verbose
@@ -697,7 +698,7 @@ Bool ImageAnalysis::insert(
 	ir.insert(*_imageFloat, outPix, inSub);
 	return True;
 }
-
+*/
 
 Bool ImageAnalysis::ispersistent() {
 	_onlyFloat(__func__);
@@ -920,65 +921,6 @@ Bool ImageAnalysis::modify(
 
 	return True;
 }
-
-/*
-Record ImageAnalysis::maxfit(
-	Record& Region, const Bool doPoint,
-	const Int width, const Bool absFind, const Bool list
-) {
-	_onlyFloat(__func__);
-	*_log << LogOrigin("ImageAnalysis", __func__);
-	//SkyComponent sky; // Output
-	Vector<Double> absPixel; // Output
-	CountedPtr<ImageRegion> pRegionRegion, pMaskRegion;
-	AxesSpecifier axesSpec(False); // drop degenerate
-	String mask;
-	 auto subImage = SubImageFactory<Float>::createSubImageRO(
-		pRegionRegion, pMaskRegion, *_imageFloat, Region, mask, _log.get(), axesSpec
-	);
-	*_log << LogOrigin("ImageAnalysis", __func__);
-
-    pRegionRegion = nullptr;
-    pMaskRegion = nullptr;
-	// Find it
-	ImageSourceFinder<Float> sf(*subImage);
-	Double cutoff = 0.1;
-	auto sky = sf.findSourceInSky(*_log, absPixel, cutoff, absFind, doPoint, width);
-	// modify to show dropped degenerate axes values???
-	if (list) {
-		*_log << LogIO::NORMAL << "Brightness     = " << sky.flux().value()
-				<< " " << sky.flux().unit().getName() << LogIO::POST;
-		const auto& cSys = subImage->coordinates();
-		*_log << "World Axis Units: " << cSys.worldAxisUnits() << LogIO::POST;
-		Vector<Double> wPix;
-		if (!cSys.toWorld(wPix, absPixel)) {
-			*_log << LogIO::WARN
-					<< "Failed to convert to absolute world coordinates "
-					<< cSys.errorMessage() << LogIO::POST;
-		} else {
-			*_log << "Absolute world = " << wPix << LogIO::POST;
-		}
-		Vector<Double> wRel = wPix.copy();
-		cSys.makeWorldRelative(wRel);
-		*_log << "Relative world = " << wRel << LogIO::POST;
-		*_log << LogIO::NORMAL << "Absolute pixel = " << absPixel << endl;
-		Vector<Double> pRel = absPixel.copy();
-		cSys.makePixelRelative(pRel);
-		*_log << "Relative pixel = " << pRel << LogIO::POST;
-	}
-	ComponentList mycomp;
-	mycomp.add(sky);
-
-	String error;
-	Record outrec;
-	if (!mycomp.toRecord(error, outrec)) {
-		*_log << LogIO::SEVERE
-				<< "Cannot convert SkyComponent to output record"
-				<< LogIO::POST;
-	}
-	return outrec;
-}
-*/
 
 Bool ImageAnalysis::twopointcorrelation(
 	const String& outFile,

@@ -132,12 +132,12 @@ public:
                      const Int npts = 0, const String& method = "linear");
 
     Vector<Bool> haslock();
-
+    /*
     Bool insert(
     	const String& infile, Record& region,
     	const Vector<double>& locate, Bool verbose
     );
-
+	*/
     Bool ispersistent();
 
     Bool lock(const Bool writelock = False, const Int nattempts = 0);
@@ -154,10 +154,6 @@ public:
         const Bool subtract = True, const Bool list=True, const Bool extendMask=False
     );
 
-    /*
-    Record maxfit(Record& region, const Bool point, const Int width = 5, 
-                   const Bool negfind = False, const Bool list = True);
-*/
     Bool open(const String& infile);
 
     inline static String className() {const static String x = "ImageAnalysis"; return x; }

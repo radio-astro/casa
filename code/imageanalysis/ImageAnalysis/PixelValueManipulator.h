@@ -113,6 +113,13 @@ public:
 
 	String getClass() const { return _className; }
 
+	// region refers to the region in the image to be inserted, not the
+	// region that was chosen at object construction
+	static void insert(
+		ImageInterface<T>& target, const ImageInterface<T>& image, const Record& region,
+		const Vector<Double>& locatePixel, Bool verbose
+	);
+
 	// Make a block of regions from a Record
 	// public so ImageAnalysis can use it, once those methods have been
 	// excised, make private

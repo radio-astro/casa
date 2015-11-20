@@ -27,6 +27,7 @@
 #include <imageanalysis/ImageAnalysis/PixelValueManipulator.h>
 
 #include <casa/Quanta/QuantumHolder.h>
+#include <images/Images/ImageRegrid.h>
 #include <lattices/LatticeMath/LatticeAddNoise.h>
 
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
@@ -211,6 +212,35 @@ template<class T> Record PixelValueManipulator<T>::getProfile(
 	}
 
 	return ret;
+}
+
+template<class T> void PixelValueManipulator<T>::insert(
+	ImageInterface<T>& target, const ImageInterface<T>& infile, const Record& region,
+	const Vector<double>& locatePixel, Bool verbose
+) {
+	auto doRef = locatePixel.empty();
+	Int dbg = 0;
+	auto inSub = SubImageFactory<T>::createSubImageRO(
+		infile, region, "",
+		verbose ? unique_ptr<LogIO>(new LogIO()).get() : nullptr
+	);
+
+	// Generate output pixel location
+	const auto inShape = inSub->shape();
+	const auto outShape = target.shape();
+	const auto nDim = target.ndim();
+	Vector<Double> outPix(doRef ? 0 : nDim);
+	const auto nDim2 = locatePixel.size();
+
+	if (! doRef) {
+		for (uInt i = 0; i < nDim; ++i) {
+			outPix[i] = i < nDim2 ? locatePixel[i]
+				: (outShape(i) - inShape(i)) / 2.0; // Centrally located
+		}
+	}
+	ImageRegrid<T> ir;
+	ir.showDebugInfo(dbg);
+	ir.insert(target, outPix, *inSub);
 }
 
 template<class T> Record PixelValueManipulator<T>::_doWorld(
