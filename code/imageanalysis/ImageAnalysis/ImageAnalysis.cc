@@ -921,6 +921,7 @@ Bool ImageAnalysis::modify(
 	return True;
 }
 
+/*
 Record ImageAnalysis::maxfit(
 	Record& Region, const Bool doPoint,
 	const Int width, const Bool absFind, const Bool list
@@ -932,7 +933,7 @@ Record ImageAnalysis::maxfit(
 	CountedPtr<ImageRegion> pRegionRegion, pMaskRegion;
 	AxesSpecifier axesSpec(False); // drop degenerate
 	String mask;
-	/*SHARED_PTR<const SubImage<Float> >*/ auto subImage = SubImageFactory<Float>::createSubImageRO(
+	 auto subImage = SubImageFactory<Float>::createSubImageRO(
 		pRegionRegion, pMaskRegion, *_imageFloat, Region, mask, _log.get(), axesSpec
 	);
 	*_log << LogOrigin("ImageAnalysis", __func__);
@@ -947,7 +948,7 @@ Record ImageAnalysis::maxfit(
 	if (list) {
 		*_log << LogIO::NORMAL << "Brightness     = " << sky.flux().value()
 				<< " " << sky.flux().unit().getName() << LogIO::POST;
-		/*CoordinateSystem*/ const auto& cSys = subImage->coordinates();
+		const auto& cSys = subImage->coordinates();
 		*_log << "World Axis Units: " << cSys.worldAxisUnits() << LogIO::POST;
 		Vector<Double> wPix;
 		if (!cSys.toWorld(wPix, absPixel)) {
@@ -976,92 +977,6 @@ Record ImageAnalysis::maxfit(
 				<< LogIO::POST;
 	}
 	return outrec;
-}
-/*
-Bool ImageAnalysis::rename(const String& name, const Bool overwrite) {
-	_onlyFloat(__func__);
-	*_log << LogOrigin(className(), __func__);
-
-	if (!ispersistent()) {
-		*_log << LogIO::WARN
-				<< "This image tool is not associated with a persistent disk file. It cannot be renamed"
-				<< LogIO::POST;
-		return False;
-	}
-	if (name.size() == 0) {
-		*_log << LogIO::WARN << "Empty name" << LogIO::POST;
-		return False;
-	}
-
-	String oldName = _imageFloat->name(False);
-	if (oldName.size() == 0) {
-		return False;
-	}
-
-	// Make sure we don't rename ourselves to ourselves
-	if (oldName == name) {
-		*_log << LogIO::WARN
-				<< "Given name is already the name of the disk file associated with this image tool"
-				<< LogIO::POST;
-		return False;
-	}
-
-	// Let's see if it exists.  If it doesn't, then the user has deleted it
-	File file(oldName);
-	if (file.isSymLink()) {
-		file = File(SymLink(file).followSymLink());
-	}
-	if (!file.exists()) {
-		*_log << LogIO::WARN
-				<< "The disk file associated with this image tool appears to have been deleted"
-				<< LogIO::POST;
-		return False;
-	}
-
-	// Make sure target image name does not already exist
-	if (!overwrite) {
-		File nfile(name);
-		if (nfile.isSymLink()) {
-			nfile = File(SymLink(nfile).followSymLink());
-		}
-		if (nfile.exists()) {
-			*_log << LogIO::WARN << "There is already a file with the name "
-					<< name << LogIO::POST;
-			return False;
-		}
-	}
-
-	// OK we passed the tests.  Close deletes temporary persistent image
-	if (_imageFloat.get() != 0) {
-		*_log << LogIO::NORMAL << "Detaching from image" << LogIO::POST;
-		_imageFloat.reset();
-
-	}
-
-	// Now try and move it
-	Bool follow(True);
-	if (file.isRegular(follow)) {
-		RegularFile(file).move(name, overwrite);
-	} else if (file.isDirectory(follow)) {
-		Directory(file).move(name, overwrite);
-	} else if (file.isSymLink()) {
-		SymLink(file).copy(name, overwrite);
-	} else {
-		*_log << LogIO::POST << "Failed to rename file " << oldName << " to "
-				<< name << LogIO::POST;
-		return False;
-	}
-
-	*_log << LogIO::NORMAL << "Successfully renamed file " << oldName
-			<< " to " << name << LogIO::POST;
-
-	// Reopen ourprivate with the new file
-	if (!open(name)) {
-		*_log << LogIO::WARN << "Failed to open renamed file" << LogIO::POST;
-	}
-
-	return True;
-
 }
 */
 

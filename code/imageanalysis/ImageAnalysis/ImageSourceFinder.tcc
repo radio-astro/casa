@@ -158,8 +158,8 @@ SkyComponent ImageSourceFinder<T>::findSourceInSky (LogIO& os, Vector<Double>& a
    } else {
 // Find positive or negative only
    
-      Float valueMin = pImage_p->getAt(minPos);
-      Float valueMax = pImage_p->getAt(maxPos);
+      T valueMin = pImage_p->getAt(minPos);
+      T valueMax = pImage_p->getAt(maxPos);
 //
       if (abs(valueMax) > abs(valueMin)) {
          blc = maxPos;
@@ -351,7 +351,7 @@ ComponentList ImageSourceFinder<T>::findSources (LogIO& os,
 // Find max
 
          typename NumericTraits<T>::PrecisionType r1(sol(5)*sol(5) - 4*sol(3)*sol(4));       // dx
-         if (r1 == 0) continue;                            // forget
+         if (r1 == typename NumericTraits<T>::PrecisionType(0)) continue;                            // forget
          typename NumericTraits<T>::PrecisionType r0((2*sol(2)*sol(3) - sol(1)*sol(5))/r1);  // dy
          r1 = (2*sol(1)*sol(4) - sol(2)*sol(5))/r1;
          if (abs(r0)>1 || abs(r1)>1) continue;             // too far away from peak

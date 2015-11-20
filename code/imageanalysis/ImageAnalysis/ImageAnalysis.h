@@ -154,13 +154,11 @@ public:
         const Bool subtract = True, const Bool list=True, const Bool extendMask=False
     );
 
+    /*
     Record maxfit(Record& region, const Bool point, const Int width = 5, 
                    const Bool negfind = False, const Bool list = True);
-
-
+*/
     Bool open(const String& infile);
-
-    // Bool rename(const String& name, const Bool overwrite = False);
 
     inline static String className() {const static String x = "ImageAnalysis"; return x; }
 

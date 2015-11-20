@@ -176,6 +176,8 @@ install (FILES
     ImageAnalysis/ImageMaskAttacher.tcc
     ImageAnalysis/ImageMaskedPixelReplacer.h
     ImageAnalysis/ImageMaskedPixelReplacer.tcc
+    ImageAnalysis/ImageMaxFitter.h
+    ImageAnalysis/ImageMaxFitter.tcc
 	ImageAnalysis/ImageMetaData.h
     ImageAnalysis/ImageMetaData.tcc
     ImageAnalysis/ImageMetaDataBase.h
