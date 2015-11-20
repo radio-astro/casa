@@ -8,6 +8,7 @@
 #ifndef VISBUFFERIMPL2INTERNAL_H_
 #define VISBUFFERIMPL2INTERNAL_H_
 
+#include <msvis/MSVis/ViImplementation2.h>
 #include <cassert>
 
 namespace casa {
@@ -763,7 +764,7 @@ public:
     class FrequencyCache {
     public:
 
-        typedef Vector<T> (VisibilityIterator2::* Updater) (Double, Int, Int, Int) const;
+        typedef Vector<T> (ViImplementation2::* Updater) (Double, Int, Int, Int) const;
 
         FrequencyCache (Updater updater)
         : frame_p (-1),
@@ -787,7 +788,7 @@ public:
         }
 
         void
-        updateCacheIfNeeded (const VisibilityIterator2 * rovi,
+        updateCacheIfNeeded (const ViImplementation2 * rovi,
                              Int rowInBuffer,
                              Int frame,
                              const VisBufferImpl2 * vb)
@@ -814,9 +815,9 @@ public:
     : appendCapacity_p (0),
       appendSize_p (0),
       areCorrelationsSorted_p (False),
-      channelNumbers_p (& VisibilityIterator2::getChannels),
+      channelNumbers_p (& ViImplementation2::getChannels),
       dirtyComponents_p (),
-      frequencies_p (& VisibilityIterator2::getFrequencies),
+      frequencies_p (& ViImplementation2::getFrequencies),
       isAttached_p (False),
       isFillable_p (False),
       isNewMs_p (False),
@@ -829,7 +830,6 @@ public:
       pointingTableLastRow_p (-1),
       validShapes_p (N_ShapePatterns),
       vi_p (0),
-      viC_p (0),
       visModelData_p (0),
       weightScaling_p ( )
     {}
@@ -857,8 +857,7 @@ public:
     mutable Int pointingTableLastRow_p;
     Subchunk subchunk_p;
     Vector<IPosition> validShapes_p;
-    VisibilityIterator2 * vi_p; // [use]
-    const VisibilityIterator2 * viC_p; // [use]
+    ViImplementation2 * vi_p; // [use]
     mutable VisModelDataI * visModelData_p;
     CountedPtr <WeightScaling> weightScaling_p;
 };

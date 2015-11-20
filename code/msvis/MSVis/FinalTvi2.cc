@@ -21,7 +21,7 @@ FinalTvi2::FinalTvi2 (ViImplementation2 * inputVi, VisibilityIterator2 * vi,
   ms_p (finalMs)
 {
     VisBufferOptions options = isWritable ? VbWritable : VbNoOptions;
-    setVisBuffer (VisBuffer2::factory (vi, VbPlain, options));
+    setVisBuffer (createAttachedVisBuffer (VbPlain, options));
 }
 
 FinalTvi2::~FinalTvi2 ()

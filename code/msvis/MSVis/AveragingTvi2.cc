@@ -377,7 +377,7 @@ public:
 
     friend class MsRowAvg;
 
-    VbAvg (const AveragingParameters & averagingParameters);
+    VbAvg (const AveragingParameters & averagingParameters, const ViImplementation2 * vi);
 
     void accumulate (const VisBuffer2 * vb, const Subchunk & subchunk);
     const Cube<Int> & counts () const;
@@ -688,6 +688,7 @@ private:
 
     Double averagingInterval_p;
     AveragingOptions averagingOptions_p;
+    const ViImplementation2 * averagingVii_p;
     mutable BaselineIndex baselineIndex_p; // map of antenna1,antenna2 to row number in this VB.
     Vector<Bool> baselinePresent_p; // indicates whether baseline has any data
     Vector<Double> normalizationFactor_p; // indicates whether baseline has any data
@@ -896,10 +897,11 @@ void MsRowAvg::accumulateNormalizationFactor(Double normalizationFactor)
 	vbAvg_p->normalizationFactor_p (row ()) += normalizationFactor;
 }
 
-VbAvg::VbAvg (const AveragingParameters & averagingParameters)
+VbAvg::VbAvg (const AveragingParameters & averagingParameters, const ViImplementation2 * vii)
 : VisBufferImpl2 (VbRekeyable),
   averagingInterval_p (averagingParameters.getAveragingInterval ()),
   averagingOptions_p (averagingParameters.getOptions()),
+  averagingVii_p (vii),
   bufferToFill_p (0),
   complete_p (False),
   doing_p (), // all false until determined later on
@@ -1915,7 +1917,7 @@ VbAvg::setupVbAvg (const VisBuffer2 * vb)
 
     uInt nSpwInVb = spwInVb.size();
 
-    Int nSpw = vb->getVi()->nSpectralWindows();
+    Int nSpw = averagingVii_p->nSpectralWindows();
 
     baselineIndex_p.configure (nAntennas, nSpw, vb);
 
@@ -2273,7 +2275,7 @@ AveragingTvi2::AveragingTvi2 (VisibilityIterator2 * vi,
   averagingParameters_p (averagingParameters),
   ddidLastUsed_p (-1),
   inputViiAdvanced_p (False),
-  vbAvg_p (new VbAvg (averagingParameters))
+  vbAvg_p (new VbAvg (averagingParameters, this))
 {
     validateInputVi (inputVi);
 
@@ -2282,7 +2284,7 @@ AveragingTvi2::AveragingTvi2 (VisibilityIterator2 * vi,
     getVii()->originChunks();
     getVii()->origin ();
 
-    setVisBuffer (VisBuffer2::factory (vi, VbPlain, VbNoOptions));
+    setVisBuffer (createAttachedVisBuffer (VbPlain, VbNoOptions));
 }
 
 AveragingTvi2::~AveragingTvi2 ()

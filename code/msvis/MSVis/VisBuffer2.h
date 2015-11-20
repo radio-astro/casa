@@ -63,16 +63,17 @@ namespace ms {
 namespace vi {
 
 class Subchunk;
+class ViImplementation2;
 class VisibilityIterator2;
 class WeightScaling;
 
-typedef enum {VbPlain, VbAsynchronous} VisBufferType;
+enum VisBufferType : int {VbPlain, VbAsynchronous};
 
 // These are options to be applied to a VisBuffer, usually when it's created.
 // The intent is that these form a bit mask so that they can be used as
 // VbWritable | VbRekeyable, etc.  So add the next one in as 2 * theLastOne.
 
-typedef enum {VbNoOptions, VbWritable = 1, VbRekeyable = 2} VisBufferOptions;
+enum VisBufferOptions : int {VbNoOptions, VbWritable = 1, VbRekeyable = 2};
 
 //<summary>VisBuffer2s encapsulate one chunk of visibility data for processing.</summary>
 //
@@ -135,6 +136,7 @@ typedef enum {VbNoOptions, VbWritable = 1, VbRekeyable = 2} VisBufferOptions;
 
 class VisBuffer2 {
 
+    friend class ViImplementation2;
     friend class VisibilityIteratorImpl2;
     friend class FinalTvi2;
     friend class TransformingVi2;
@@ -147,8 +149,11 @@ public:
 
     enum {FrameNotSpecified = -2};
 
-    VisBuffer2 () {}
+    VisBuffer2 () : associatedVi_p (nullptr) {}
+
     static VisBuffer2 * factory (VisBufferType t, VisBufferOptions vbOptions = VbNoOptions);
+
+        // Used by framework
 
     // Destructor (detaches from VisIter)
 
@@ -203,9 +208,10 @@ public:
     virtual void validateShapes () const = 0;
 
     // For attached VBs this returns the VI the VB is attached to.  For free
-    // VBs this method returns False.
+    // VBs this method returns False. N.B.: It should not be used within the framework
+    // itself; instead access the associated ViImplementation2 object.
 
-    virtual const VisibilityIterator2 * getVi () const = 0;
+    virtual const VisibilityIterator2 * getVi () const;
 
     virtual Bool isAttached () const = 0;
     virtual Bool isFillable () const = 0;
@@ -555,6 +561,7 @@ public:
 
 protected:
 
+    virtual void associateWithVi2 (const VisibilityIterator2 *);
     virtual void configureNewSubchunk (Int msId, const String & msName, Bool isNewMs,
                                        Bool isNewArrayId, Bool isNewFieldId,
                                        Bool isNewSpectralWindow, const Subchunk & subchunk,
@@ -563,6 +570,7 @@ protected:
                                        const Vector<Stokes::StokesTypes> & correlationsDefined,
                                        const Vector<Stokes::StokesTypes> & correlationsSelected,
                                        CountedPtr<WeightScaling> weightScaling) = 0;
+    static VisBuffer2 * factoryInternal (ViImplementation2 * vi, VisBufferType t, VisBufferOptions options);
     virtual void invalidate() = 0;
     virtual Bool isRekeyable () const = 0;
     virtual void setFillable (Bool isFillable) = 0;
@@ -578,6 +586,8 @@ protected:
     //virtual VisBuffer2 * vb_p = 0; // One of the implementation classes
 
 private:
+
+    const VisibilityIterator2 * associatedVi_p;
 
 };
 

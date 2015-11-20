@@ -30,29 +30,10 @@
 
 #include <casa/aips.h>
 
-//#include <casa/Arrays/Cube.h>
-//#include <casa/Arrays/Matrix.h>
-//#include <casa/Arrays/Slicer.h>
-//#include <casa/BasicSL/String.h>
-//#include <casa/Containers/Stack.h>
-//#include <casa/Quanta/MVDoppler.h>
-//#include <measures/Measures/MCDoppler.h>
-//#include <measures/Measures/MDoppler.h>
-//#include <measures/Measures/MeasConvert.h>
-//#include <measures/Measures/Stokes.h>
-//#include <ms/MSOper/MSDerivedValues.h>
 #include <ms/MeasurementSets/MSIter.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
-//#include <ms/MSSel/MSSelection.h>
-//#include <scimath/Mathematics/RigidVector.h>
-//#include <scimath/Mathematics/SquareMatrix.h>
-//#include <msvis/MSVis/StokesVector.h>
-//#include <msvis/MSVis/UtilJ.h>
+#include <msvis/MSVis/VisBuffer2.h>
 #include <msvis/MSVis/VisBufferComponents2.h>
-//#include <msvis/MSVis/ViFrequencySelection.h>
-//#include <msvis/MSVis/VisImagingWeight.h>
-//#include <tables/Tables/ArrayColumn.h>
-//#include <tables/Tables/ScalarColumn.h>
 
 #include <map>
 #include <set>
@@ -87,6 +68,8 @@ class ROMSSysCalColumns;
 class ROMSWeatherColumns;
 template <typename T, Int N> class RigidVector;
 template <typename T, Int N> class SquareMatrix;
+class VisBufferType;
+class VisBufferOptions;
 class VisImagingWeight;
 
 namespace asyncio {
@@ -388,6 +371,8 @@ class VisibilityIterator2
     // facto private.
 
     friend class VisibilityIteratorImpl2;
+    friend VisBuffer2 * VisBuffer2::factory (VisibilityIterator2 * vi, VisBufferType t,
+                                             VisBufferOptions options);
     friend class VisBuffer2Adapter;
     friend class VisBufferImpl2;
     friend class VisBufferState;

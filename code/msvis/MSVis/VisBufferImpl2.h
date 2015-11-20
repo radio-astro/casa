@@ -62,8 +62,7 @@ class VbCacheItemBase;
 class VisBufferCache;
 class VisBufferState;
 class VisBufferImpl2;
-class VisibilityIterator2;
-class VisibilityIterator2;
+class ViImplementation2;
 
 namespace avg {
 
@@ -80,7 +79,7 @@ namespace avg {
 
 // <prerequisite>
 //   <li> <linkto class="VisSet">VisSet</linkto>
-//   <li> <linkto class="VisibilityIterator2">VisibilityIterator2</linkto>
+//   <li> <linkto class="ViImplementation2">ViImplementation2</linkto>
 //   <li> <linkto class="VisBufferImplAutoPtr">VisBufferImplAutoPtr</linkto>
 //   <li> <linkto class="VbDirtyComponents">VbDirtyComponents</linkto>
 // </prerequisite>
@@ -91,7 +90,7 @@ namespace avg {
 //
 //<synopsis>
 // This class contains 'one iteration' of the
-// <linkto class="VisibilityIterator2">VisibilityIterator2</linkto>
+// <linkto class="ViImplementation2">ViImplementation2</linkto>
 // It is a modifiable
 // buffer of values to which calibration and averaging can be applied.
 // This allows processing of the data in larger blocks, avoiding some
@@ -120,7 +119,7 @@ class VisBufferImpl2 : public VisBuffer2 {
     friend class VbCacheItemBase;
     friend class VisBufferCache;
     friend class VisBufferState;
-    friend class VisBuffer2;
+    friend class casa::vi::VisBuffer2;
     friend class VisBufferImpl2Async; // for async i/o
     friend class VisBufferImpl2AsyncWrapper; // for async i/o
     friend class ViReadImpl;
@@ -139,8 +138,6 @@ public:
                     bool doCopy = True);
     void appendRowsComplete ();
     Int appendSize () const;
-
-    virtual void associateWithVisibilityIterator2 (const VisibilityIterator2 & vi);
 
     // Copies all of the components (or just the one in the cache) from
     // the specified VisBuffer into this one.
@@ -169,8 +166,6 @@ public:
     virtual Int getChannelNumber (Int rowInBuffer, Int frequencyIndex) const;
     virtual const Vector<Int> & getChannelNumbers (Int rowInBuffer) const;
     virtual Vector<Int> getChannelNumbersSelected (Int outputChannelIndex) const;
-
-    virtual const VisibilityIterator2 * getVi () const;
 
     ms::MsRow * getRow (Int row) const;
     ms::MsRow * getRowMutable (Int row);
@@ -354,13 +349,13 @@ protected:
 
     // Create empty VisBufferImpl2 you can assign to or attach.
     VisBufferImpl2 (VisBufferOptions options = VbNoOptions);
-    // Construct VisBufferImpl2 for a particular VisibilityIterator2
+    // Construct VisBufferImpl2 for a particular ViImplementation2
     // The buffer will remain synchronized with the iterator.
 
     // Copy construct, looses synchronization with iterator: only use buffer for
     // current iteration (or reattach).
 
-    VisBufferImpl2(VisibilityIterator2 * iter, VisBufferOptions options);
+    VisBufferImpl2(ViImplementation2 * iter, VisBufferOptions options);
 
     // Attach to a VisIter. Detaches itself first if already attached
     // to a VisIter. Will remain synchronized with iterator.
@@ -416,7 +411,7 @@ protected:
                         Matrix<Float> & weightMat);
 
     virtual void sortCorrelationsAux (Bool makeSorted);
-    virtual VisibilityIterator2 * getViP () const; // protected, non-const access to VI
+    virtual ViImplementation2 * getViiP () const; // protected, non-const access to VI
     void registerCacheItem (VbCacheItemBase *);
     virtual void resizeRows (Int newNRows);
     virtual void stateCopy (const VisBufferImpl2 & other); // copy relevant noncached members
@@ -454,7 +449,7 @@ private:
 
     virtual Bool areCorrelationsInCanonicalOrder () const;
     void checkVisIterBase (const char * func, const char * file, int line, const char * extra = "") const;
-    void construct(VisibilityIterator2 * vi, VisBufferOptions options);
+    void construct(ViImplementation2 * vi, VisBufferOptions options);
     void constructCache();
     virtual void validate();
 
@@ -463,7 +458,7 @@ private:
     //  Fillers
     //
     // These methods fill the needed value into the cache.  This
-    // usually means getting it from the attached VisibilityIterator2
+    // usually means getting it from the attached ViImplementation2
     // but the needed value can be generated as well.
     //
     // The name of the filler should match up with the accessor method

@@ -255,6 +255,7 @@ public:
     virtual Int getNMs () const;
 
     virtual VisBuffer2 * getVisBuffer ();
+    virtual VisBuffer2 * getVisBuffer (const VisibilityIterator2 *);
 
     //reference to actual ms in interator
     virtual const MeasurementSet & ms () const;

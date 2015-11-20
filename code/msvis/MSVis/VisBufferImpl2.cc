@@ -148,7 +148,7 @@ VisBufferImpl2::VisBufferImpl2 (VisBufferOptions options)
     construct (0, options);
 }
 
-VisBufferImpl2::VisBufferImpl2(VisibilityIterator2 * iter, VisBufferOptions options)
+VisBufferImpl2::VisBufferImpl2(ViImplementation2 * iter, VisBufferOptions options)
 : cache_p (0),
   msRow_p (0),
   state_p (0)
@@ -298,16 +298,6 @@ VisBufferImpl2::areCorrelationsSorted() const
 }
 
 void
-VisBufferImpl2::associateWithVisibilityIterator2 (const VisibilityIterator2 & vi)
-{
-    ThrowIf (state_p->isAttached_p, "VisBuffer is attached to VisibilityIterator2");
-
-    state_p->isAttached_p = False;
-    state_p->viC_p = & vi;
-    state_p->vi_p = 0;
-}
-
-void
 VisBufferImpl2::checkVisIter (const char * func, const char * file, int line, const char * extra) const
 {
   checkVisIterBase (func, file, line, extra);
@@ -317,12 +307,12 @@ void
 VisBufferImpl2::checkVisIterBase (const char * func, const char * file, int line, const char * extra) const
 {
   if (! state_p->isAttached_p) {
-    throw AipsError (String ("VisBuffer not attached to a VisibilityIterator2 while filling this field in (") +
+    throw AipsError (String ("VisBuffer not attached to a ViImplementation2 while filling this field in (") +
                      func + extra + ")", file, line);
   }
 
-  if (getViP() == NULL){
-    throw AipsError (String ("VisBuffer's VisibilityIterator2 is NULL while filling this field in (") +
+  if (getViiP() == NULL){
+    throw AipsError (String ("VisBuffer's ViImplementation2 is NULL while filling this field in (") +
                      func + extra + ")", file, line);
   }
 }
@@ -364,7 +354,7 @@ VisBufferImpl2::cacheResizeAndZero (const VisBufferComponents2 & components)
 
 
 void
-VisBufferImpl2::construct (VisibilityIterator2 * vi, VisBufferOptions options)
+VisBufferImpl2::construct (ViImplementation2 * vi, VisBufferOptions options)
 {
     state_p = new VisBufferState ();
 
@@ -376,7 +366,6 @@ VisBufferImpl2::construct (VisibilityIterator2 * vi, VisBufferOptions options)
     state_p->pointingTableLastRow_p = -1;
     state_p->newMs_p = True;
     state_p->vi_p = vi;
-    state_p->viC_p = vi;
 
     // Handle the options
 
@@ -698,10 +687,10 @@ Double
 VisBufferImpl2::getFrequency (Int rowInBuffer, Int frequencyIndex, Int frame) const
 {
     if (frame == FrameNotSpecified){
-        frame = getVi()->getReportingFrameOfReference();
+        frame = getViiP()->getReportingFrameOfReference();
     }
 
-    state_p->frequencies_p.updateCacheIfNeeded (getVi(), rowInBuffer, frame, this);
+    state_p->frequencies_p.updateCacheIfNeeded (getViiP(), rowInBuffer, frame, this);
 
     return state_p->frequencies_p.values_p (frequencyIndex);
 }
@@ -710,10 +699,10 @@ const Vector<Double> &
 VisBufferImpl2::getFrequencies (Int rowInBuffer, Int frame) const
 {
     if (frame == FrameNotSpecified){
-        frame = getVi()->getReportingFrameOfReference();
+        frame = getViiP()->getReportingFrameOfReference();
     }
 
-    state_p->frequencies_p.updateCacheIfNeeded (getVi(), rowInBuffer, frame, this);
+    state_p->frequencies_p.updateCacheIfNeeded (getViiP(), rowInBuffer, frame, this);
 
     return state_p->frequencies_p.values_p;
 }
@@ -721,7 +710,7 @@ VisBufferImpl2::getFrequencies (Int rowInBuffer, Int frame) const
 Int
 VisBufferImpl2::getChannelNumber (Int rowInBuffer, Int frequencyIndex) const
 {
-    state_p->channelNumbers_p.updateCacheIfNeeded (getVi(), rowInBuffer, 0, this);
+    state_p->channelNumbers_p.updateCacheIfNeeded (getViiP(), rowInBuffer, 0, this);
 
     return state_p->channelNumbers_p.values_p (frequencyIndex);
 }
@@ -729,7 +718,7 @@ VisBufferImpl2::getChannelNumber (Int rowInBuffer, Int frequencyIndex) const
 const Vector<Int> &
 VisBufferImpl2::getChannelNumbers (Int rowInBuffer) const
 {
-    state_p->channelNumbers_p.updateCacheIfNeeded (getVi(), rowInBuffer, 0, this);
+    state_p->channelNumbers_p.updateCacheIfNeeded (getViiP(), rowInBuffer, 0, this);
 
     return state_p->channelNumbers_p.values_p;
 }
@@ -781,15 +770,12 @@ VisBufferImpl2::getValidShape (Int i) const
     return state_p->validShapes_p (i);
 }
 
-const VisibilityIterator2 *
-VisBufferImpl2::getVi () const
-{
-    return state_p->viC_p;
-}
 
-VisibilityIterator2 *
-VisBufferImpl2::getViP () const
+ViImplementation2 *
+VisBufferImpl2::getViiP () const
 {
+    ThrowIf (state_p->vi_p == nullptr, "Null pointer dereference!");
+
     return state_p->vi_p;
 }
 
@@ -1066,10 +1052,10 @@ void
 VisBufferImpl2::resetWeightsUsingSigma ()
 {
 
-  if (getViP()->weightSpectrumExists()) {   // Exists and contains actual values
+  if (getViiP()->weightSpectrumExists()) {   // Exists and contains actual values
     // We are doing spectral weights
 
-    if (getViP()->sigmaSpectrumExists()) {
+    if (getViiP()->sigmaSpectrumExists()) {
       // Init WS from SS for calibration
       Cube<Float> wtsp(nCorrelations(),nChannels(),nRows(),0.0);
       const Cube <Float> & sigmaSpec = this->sigmaSpectrum ();
@@ -1319,7 +1305,6 @@ VisBufferImpl2::stateCopy (const VisBufferImpl2 & other)
                                           // but probably not important in cases
                                           // where a vb is being copied (?).
     state_p->newMs_p = other.isNewMs ();
-    state_p->viC_p = other.getVi ();
     state_p->vi_p = 0; // just to be safe
     state_p->visModelData_p = other.getVisModelData ()->clone();
 }
@@ -1367,7 +1352,7 @@ VisBufferImpl2::writeChangesBack ()
     ThrowIf (! state_p->isAttached_p,
              "Call to writeChangesBack on unattached VisBuffer.");
 
-    VisibilityIterator2 * rwvi = dynamic_cast <VisibilityIterator2 *> (getViP());
+    ViImplementation2 * rwvi = dynamic_cast <ViImplementation2 *> (getViiP());
 
     ThrowIf (rwvi == 0, "Can't write to a read-only VisibilityIterator.");
 
@@ -1385,7 +1370,7 @@ VisBufferImpl2::initWeightSpectrum(const Cube<Float>& wtspec)
     ThrowIf (! state_p->isAttached_p,
              "Call to writeChangesBack on unattached VisBuffer.");
 
-    VisibilityIterator2 * rwvi = dynamic_cast <VisibilityIterator2 *> (getViP());
+    ViImplementation2 * rwvi = dynamic_cast <ViImplementation2 *> (getViiP());
 
     ThrowIf (rwvi == 0, "Can't write to a read-only VisibilityIterator.");
 
@@ -1404,37 +1389,37 @@ VisBufferImpl2::initWeightSpectrum(const Cube<Float>& wtspec)
 MDirection
 VisBufferImpl2::azel0(Double time) const
 {
-  return getViP()->azel0(time);
+  return getViiP()->azel0(time);
 }
 
 const Vector<MDirection> &
 VisBufferImpl2::azel(Double time) const
 {
-  return getViP()->azel(time);
+  return getViiP()->azel(time);
 }
 
 const Vector<Float> &
 VisBufferImpl2::feedPa(Double time) const
 {
-  return getViP()->feed_pa(time);
+  return getViiP()->feed_pa(time);
 }
 
 Double
 VisBufferImpl2::hourang(Double time) const
 {
-  return getViP()->hourang(time);
+  return getViiP()->hourang(time);
 }
 
 Float
 VisBufferImpl2::parang0(Double time) const
 {
-  return getViP()->parang0(time);
+  return getViiP()->parang0(time);
 }
 
 const Vector<Float> &
 VisBufferImpl2::parang(Double time) const
 {
-  return getViP()->parang(time);
+  return getViiP()->parang(time);
 }
 
 //      +-------------+
@@ -1979,7 +1964,7 @@ VisBufferImpl2::getRowMutable (Int row)
 //
 //  // Set the modelVisCube accordingly
 //
-//  Cube<Complex> visCube (getViP()->visibilityShape(), 0.0);
+//  Cube<Complex> visCube (getViiP()->visibilityShape(), 0.0);
 //
 //  for (Int icorr = 0; icorr < nCorrelations (); ++icorr){
 //    if (abs(stokesFinal(corrmap(icorr))) > 0.0) {
@@ -2106,7 +2091,7 @@ VisBufferImpl2::fillAntenna1 (Vector<Int>& value) const
 {
   CheckVisIter ();
 
-  getViP()->antenna1 (value);
+  getViiP()->antenna1 (value);
 }
 
 
@@ -2115,7 +2100,7 @@ VisBufferImpl2::fillAntenna2 (Vector<Int>& value) const
 {
   CheckVisIter ();
 
-  getViP()->antenna2 (value);
+  getViiP()->antenna2 (value);
 }
 
 void
@@ -2123,7 +2108,7 @@ VisBufferImpl2::fillArrayId (Vector<Int>& value) const
 {
   CheckVisIter ();
 
-  getViP()->arrayIds (value);
+  getViiP()->arrayIds (value);
 }
 
 void
@@ -2131,7 +2116,7 @@ VisBufferImpl2::fillCorrType (Vector<Int>& value) const
 {
   CheckVisIter ();
 
-  getViP()->corrType (value);
+  getViiP()->corrType (value);
 }
 
 void
@@ -2139,23 +2124,23 @@ VisBufferImpl2::fillCubeCorrected (Cube <Complex> & value) const
 {
     CheckVisIter ();
 
-    getViP()->visibilityCorrected (value);
+    getViiP()->visibilityCorrected (value);
 }
 
 Bool
 VisBufferImpl2::modelDataIsVirtual () const
 {
     //String modelkey=String("definedmodel_field_")+String::toString(fieldId());
-    //Bool hasmodkey=getViP()->ms().keywordSet().isDefined(modelkey);
+    //Bool hasmodkey=getViiP()->ms().keywordSet().isDefined(modelkey);
 	String elkey;
 	Int sourcerow;
 	if (state_p->visModelData_p == 0){
 		state_p->visModelData_p = VisModelDataI::create2();
 	}
 	Bool hasmodkey= ! (state_p->visModelData_p == 0) &&
-	                state_p->visModelData_p->isModelDefinedI(fieldId()(0), getViP()->ms(), elkey, sourcerow);
+	                state_p->visModelData_p->isModelDefinedI(fieldId()(0), getViiP()->ms(), elkey, sourcerow);
 
-    Bool isVirtual = hasmodkey || !(getViP()->ms().tableDesc().isColumn("MODEL_DATA"));
+    Bool isVirtual = hasmodkey || !(getViiP()->ms().tableDesc().isColumn("MODEL_DATA"));
 
     return isVirtual;
 }
@@ -2166,7 +2151,7 @@ VisBufferImpl2::fillCubeModel (Cube <Complex> & value) const
     CheckVisIter ();
 
     //String modelkey = String("definedmodel_field_")+String::toString(fieldId());
-    //Bool hasmodkey=getViP()->ms().keywordSet().isDefined(modelkey);
+    //Bool hasmodkey=getViiP()->ms().keywordSet().isDefined(modelkey);
 //    String modelkey;
 //    if (state_p->visModelData_p == 0){
 //                state_p->visModelData_p = VisModelDataI::create2();
@@ -2176,17 +2161,17 @@ VisBufferImpl2::fillCubeModel (Cube <Complex> & value) const
 
         Int sourcerow;
         String modelkey = String("definedmodel_field_")+String::toString(fieldId());
-        Bool hasmodkey=state_p->visModelData_p->isModelDefinedI(fieldId()(0), getViP()->ms(), modelkey, sourcerow);
+        Bool hasmodkey=state_p->visModelData_p->isModelDefinedI(fieldId()(0), getViiP()->ms(), modelkey, sourcerow);
 
         if (state_p->visModelData_p->hasModel (msId(), fieldId()(0), spectralWindows()(0)) == -1){
 
             if(hasmodkey){
             	TableRecord modrec;
-            	if(state_p->visModelData_p->getModelRecordI(modelkey, modrec, getViP()->ms())){
+            	if(state_p->visModelData_p->getModelRecordI(modelkey, modrec, getViiP()->ms())){
             		state_p->visModelData_p->addModel(modrec, Vector<Int>(1, msId()), *this);
             	}
-                //String whichrec=getViP()->ms().keywordSet().asString(modelkey);
-                //Record modrec(getViP()->ms().keywordSet().asRecord(whichrec));
+                //String whichrec=getViiP()->ms().keywordSet().asString(modelkey);
+                //Record modrec(getViiP()->ms().keywordSet().asRecord(whichrec));
                 //state_p->visModelData_p->addModel(modrec, Vector<Int>(1, msId()), VisBuffer2Adapter (this));
             }
         }
@@ -2214,7 +2199,7 @@ VisBufferImpl2::fillCubeModel (Cube <Complex> & value) const
 
         // Get the model data from the measurement set via the VI
 
-        getViP()->visibilityModel (value);
+        getViiP()->visibilityModel (value);
     }
 }
 
@@ -2223,7 +2208,7 @@ VisBufferImpl2::fillCubeObserved (Cube <Complex> & value) const
 {
     CheckVisIter ();
 
-    getViP()->visibilityObserved (value);
+    getViiP()->visibilityObserved (value);
 }
 
 void
@@ -2231,7 +2216,7 @@ VisBufferImpl2::fillDataDescriptionId  (Int& value) const
 {
   CheckVisIter ();
 
-  value = getViP()->dataDescriptionId ();
+  value = getViiP()->dataDescriptionId ();
 }
 
 void
@@ -2239,7 +2224,7 @@ VisBufferImpl2::fillDataDescriptionIds  (Vector<Int>& value) const
 {
   CheckVisIter ();
 
-  getViP()->dataDescriptionIds (value);
+  getViiP()->dataDescriptionIds (value);
 }
 
 
@@ -2277,11 +2262,11 @@ VisBufferImpl2::fillDirectionAux (Vector<MDirection>& value,
 {
     value.resize (antenna.nelements()); // could also use nRow()
 
-    const ROMSPointingColumns & mspc = getViP()->subtableColumns ().pointing();
+    const ROMSPointingColumns & mspc = getViiP()->subtableColumns ().pointing();
     state_p->pointingTableLastRow_p = mspc.pointingIndex (antenna (0),
                                                           time()(0), state_p->pointingTableLastRow_p);
 
-    if (getViP()->allBeamOffsetsZero() && state_p->pointingTableLastRow_p < 0) {
+    if (getViiP()->allBeamOffsetsZero() && state_p->pointingTableLastRow_p < 0) {
 
         // No true pointing information found; use phase center from the field table
 
@@ -2306,12 +2291,12 @@ VisBufferImpl2::fillDirectionAux (Vector<MDirection>& value,
             value(row) = phaseCenter(); // nothing found, use phase center
         }
 
-        if (!getViP()->allBeamOffsetsZero()) {
+        if (!getViiP()->allBeamOffsetsZero()) {
 
-            RigidVector<Double, 2> beamOffset = getViP()->getBeamOffsets()(0, antenna (row),
+            RigidVector<Double, 2> beamOffset = getViiP()->getBeamOffsets()(0, antenna (row),
                                                                            feed (row));
 
-            if (downcase (getViP()->antennaMounts()(antenna (row))) == "alt-az") {
+            if (downcase (getViiP()->antennaMounts()(antenna (row))) == "alt-az") {
 
                 SquareMatrix<Double, 2> xform(SquareMatrix<Double, 2>::General);
 
@@ -2337,7 +2322,7 @@ VisBufferImpl2::fillExposure (Vector<Double>& value) const
 {
   CheckVisIter ();
 
-  getViP()->exposure (value);
+  getViiP()->exposure (value);
 }
 
 void
@@ -2345,7 +2330,7 @@ VisBufferImpl2::fillFeed1 (Vector<Int>& value) const
 {
   CheckVisIter ();
 
-  getViP()->feed1 (value);
+  getViiP()->feed1 (value);
 }
 
 void
@@ -2353,7 +2338,7 @@ VisBufferImpl2::fillFeed2 (Vector<Int>& value) const
 {
   CheckVisIter ();
 
-  getViP()->feed2 (value);
+  getViiP()->feed2 (value);
 }
 
 void
@@ -2408,8 +2393,8 @@ VisBufferImpl2::fillFeedPaAux (Vector <Float> & feedPa,
       // we need to add an offset if this row correspods to a
       // different feed
 
-      float feedsAngle = getViP()->receptorAngles()(0, antenna (row), feed (row));
-      float feed0Angle = getViP()->receptorAngles()(0, antenna (row), 0);
+      float feedsAngle = getViiP()->receptorAngles()(0, antenna (row), feed (row));
+      float feed0Angle = getViiP()->receptorAngles()(0, antenna (row), 0);
 
       feedPa (row) += feedsAngle - feed0Angle;
     }
@@ -2421,7 +2406,7 @@ VisBufferImpl2::fillFieldId (Vector<Int>& value) const
 {
   CheckVisIter ();
 
-  getViP()->fieldIds (value);
+  getViiP()->fieldIds (value);
 }
 
 void
@@ -2429,7 +2414,7 @@ VisBufferImpl2::fillFlag (Matrix<Bool>& value) const
 {
   CheckVisIter ();
 
-  getViP()->flag (value);
+  getViiP()->flag (value);
 }
 
 void
@@ -2437,7 +2422,7 @@ VisBufferImpl2::fillFlagCategory (Array<Bool>& value) const
 {
   CheckVisIter();
 
-  getViP()->flagCategory (value);
+  getViiP()->flagCategory (value);
 }
 
 void
@@ -2445,7 +2430,7 @@ VisBufferImpl2::fillFlagCube (Cube<Bool>& value) const
 {
   CheckVisIter ();
 
-  getViP()->flag (value);
+  getViiP()->flag (value);
 }
 
 void
@@ -2453,7 +2438,7 @@ VisBufferImpl2::fillFlagRow (Vector<Bool>& value) const
 {
   CheckVisIter ();
 
-  getViP()->flagRow (value);
+  getViiP()->flagRow (value);
 }
 
 void
@@ -2461,13 +2446,13 @@ VisBufferImpl2::fillFloatData (Cube<Float>& value) const
 {
   CheckVisIter ();
 
-  getViP()->floatData (value);
+  getViiP()->floatData (value);
 }
 
 void
 VisBufferImpl2::fillImagingWeight (Matrix<Float> & value) const
 {
-    const VisImagingWeight & weightGenerator = getViP()->getImagingWeightGenerator ();
+    const VisImagingWeight & weightGenerator = getViiP()->getImagingWeightGenerator ();
 
     ThrowIf (weightGenerator.getType () == "none",
              "Bug check: Imaging weight generator not set");
@@ -2489,7 +2474,7 @@ VisBufferImpl2::fillImagingWeight (Matrix<Float> & value) const
     // Extract weights correctly
     Matrix<Float> wtm;  // [nchan,nrow]
     Cube<Float> wtc;  //  [ncorr,nchan,nrow]
-    if (getViP()->weightSpectrumExists())
+    if (getViiP()->weightSpectrumExists())
       wtc.reference(weightSpectrum());
     else 
       wtc.reference(weight().reform(IPosition(3,nCorrelations(),1,nRows())));
@@ -2528,7 +2513,7 @@ VisBufferImpl2::fillJonesC (Vector<SquareMatrix<Complex, 2> >& value) const
 {
   CheckVisIter ();
 
-  getViP()->jonesC (value);
+  getViiP()->jonesC (value);
 }
 
 void
@@ -2536,7 +2521,7 @@ VisBufferImpl2::fillNAntennas (Int & value) const
 {
   CheckVisIter ();
 
-  value = getVi()->getNAntennas();
+  value = getViiP()->nAntennas();
 }
 
 void
@@ -2574,7 +2559,7 @@ VisBufferImpl2::fillObservationId (Vector<Int>& value) const
 {
   CheckVisIter();
 
-  getViP()->observationId (value);
+  getViiP()->observationId (value);
 }
 
 void
@@ -2582,7 +2567,7 @@ VisBufferImpl2::fillPhaseCenter (MDirection& value) const
 {
   CheckVisIter ();
 
-  value = getViP()->phaseCenter ();
+  value = getViiP()->phaseCenter ();
 }
 
 void
@@ -2590,7 +2575,7 @@ VisBufferImpl2::fillPolFrame (Int& value) const
 {
   CheckVisIter ();
 
-  value = getViP()->polFrame ();
+  value = getViiP()->polFrame ();
 }
 
 void
@@ -2598,7 +2583,7 @@ VisBufferImpl2::fillPolarizationId (Int& value) const
 {
   CheckVisIter ();
 
-  value = getViP()->polarizationId ();
+  value = getViiP()->polarizationId ();
 }
 
 void
@@ -2606,7 +2591,7 @@ VisBufferImpl2::fillProcessorId (Vector<Int>& value) const
 {
   CheckVisIter();
 
-  getViP()->processorId (value);
+  getViiP()->processorId (value);
 }
 
 void
@@ -2614,7 +2599,7 @@ VisBufferImpl2::fillRowIds (Vector<uInt>& value) const
 {
   CheckVisIter ();
 
-  getViP()->getRowIds(value);
+  getViiP()->getRowIds(value);
 }
 
 
@@ -2623,7 +2608,7 @@ VisBufferImpl2::fillScan (Vector<Int>& value) const
 {
   CheckVisIter ();
 
-  getViP()->scan (value);
+  getViiP()->scan (value);
 }
 
 void
@@ -2631,7 +2616,7 @@ VisBufferImpl2::fillSigma (Matrix<Float>& value) const
 {
   CheckVisIter ();
 
-  getViP()->sigma (value);
+  getViiP()->sigma (value);
 }
 
 //void
@@ -2639,7 +2624,7 @@ VisBufferImpl2::fillSigma (Matrix<Float>& value) const
 //{
 //  CheckVisIter ();
 //
-//  getViP()->sigmaMat (value);
+//  getViiP()->sigmaMat (value);
 //}
 
 //void
@@ -2647,7 +2632,7 @@ VisBufferImpl2::fillSigma (Matrix<Float>& value) const
 //{
 //  CheckVisIter ();
 //
-//  value = getViP()->spectralWindow ();
+//  value = getViiP()->spectralWindow ();
 //}
 
 void
@@ -2655,7 +2640,7 @@ VisBufferImpl2::fillSpectralWindows (Vector<Int>& value) const
 {
   CheckVisIter ();
 
-  getViP()->spectralWindows (value);
+  getViiP()->spectralWindows (value);
 }
 
 void
@@ -2663,7 +2648,7 @@ VisBufferImpl2::fillStateId (Vector<Int>& value) const
 {
   CheckVisIter();
 
-  getViP()->stateId (value);
+  getViiP()->stateId (value);
 }
 
 
@@ -2672,7 +2657,7 @@ VisBufferImpl2::fillTime (Vector<Double>& value) const
 {
   CheckVisIter ();
 
-  getViP()->time (value);
+  getViiP()->time (value);
 }
 
 void
@@ -2680,7 +2665,7 @@ VisBufferImpl2::fillTimeCentroid (Vector<Double>& value) const
 {
   CheckVisIter ();
 
-  getViP()->timeCentroid (value);
+  getViiP()->timeCentroid (value);
 }
 
 void
@@ -2688,7 +2673,7 @@ VisBufferImpl2::fillTimeInterval (Vector<Double>& value) const
 {
   CheckVisIter ();
 
-  getViP()->timeInterval (value);
+  getViiP()->timeInterval (value);
 }
 
 void
@@ -2696,7 +2681,7 @@ VisBufferImpl2::fillUvw (Matrix<Double>& value) const
 {
   CheckVisIter ();
 
-  getViP()->uvw (value);
+  getViiP()->uvw (value);
 }
 
 //void
@@ -2704,7 +2689,7 @@ VisBufferImpl2::fillUvw (Matrix<Double>& value) const
 //{
 //    CheckVisIter ();
 //
-//    getViP()->visibilityCorrected (value);
+//    getViiP()->visibilityCorrected (value);
 //}
 
 //void
@@ -2712,7 +2697,7 @@ VisBufferImpl2::fillUvw (Matrix<Double>& value) const
 //{
 //    CheckVisIter ();
 //
-//    getViP()->visibilityModel (value);
+//    getViiP()->visibilityModel (value);
 //}
 
 //void
@@ -2720,7 +2705,7 @@ VisBufferImpl2::fillUvw (Matrix<Double>& value) const
 //{
 //    CheckVisIter ();
 //
-//    getViP()->visibilityObserved (value);
+//    getViiP()->visibilityObserved (value);
 //}
 
 
@@ -2729,7 +2714,7 @@ VisBufferImpl2::fillWeight (Matrix<Float>& value) const
 {
   CheckVisIter ();
 
-  getViP()->weight (value);
+  getViiP()->weight (value);
 }
 
 
@@ -2738,9 +2723,9 @@ VisBufferImpl2::fillWeightSpectrum (Cube<Float>& value) const
 {
     CheckVisIter ();
 
-    if (getViP()->weightSpectrumExists()){
+    if (getViiP()->weightSpectrumExists()){
 
-        getViP()->weightSpectrum (value);
+        getViiP()->weightSpectrum (value);
     }
     else{
 
@@ -2782,9 +2767,9 @@ VisBufferImpl2::fillSigmaSpectrum (Cube<Float>& value) const
 {
     CheckVisIter ();
 
-    if (getViP()->sigmaSpectrumExists()){
+    if (getViiP()->sigmaSpectrumExists()){
 
-        getViP()->sigmaSpectrum (value);
+        getViiP()->sigmaSpectrum (value);
     }
     else{
 
@@ -2974,7 +2959,7 @@ Bool
 VisBufferImpl2::weightSpectrumPresent () const
 {
     Bool present = cache_p->weightSpectrum_p.isPresent() ||
-                   (isAttached() && getVi()->weightSpectrumExists());
+                   (isAttached() && getViiP()->weightSpectrumExists());
 
     return present;
 }
@@ -2983,7 +2968,7 @@ Bool
 VisBufferImpl2::sigmaSpectrumPresent () const
 {
     Bool present = cache_p->sigmaSpectrum_p.isPresent() ||
-                   (isAttached() && getVi()->sigmaSpectrumExists());
+                   (isAttached() && getViiP()->sigmaSpectrumExists());
 
     return present;
 }

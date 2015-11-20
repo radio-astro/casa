@@ -73,6 +73,8 @@ class SubtableColumns;
 class VisBuffer2;
 class VisibilityIterator2;
 class WeightScaling;
+enum VisBufferType : int;
+enum VisBufferOptions : int;
 
 // <summary>
 // VisibilityIterator2 iterates through one or more readonly MeasurementSets
@@ -201,6 +203,7 @@ public:
 
     virtual void getRowIds (Vector<uInt> & rowids) const = 0;
 
+    virtual VisBuffer2 * getVisBuffer (const VisibilityIterator2 *) = 0;
     virtual VisBuffer2 * getVisBuffer () = 0;
 
 
@@ -591,6 +594,9 @@ public:
 
 
 protected:
+
+    VisBuffer2 * createAttachedVisBuffer (VisBufferType t, VisBufferOptions options);
+
 
     static void doWeightScaling (Bool hasWeightScaling,
                                  WeightScaling * scaling,

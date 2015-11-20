@@ -967,7 +967,7 @@ VisibilityIteratorImpl2::VisibilityIteratorImpl2 (VisibilityIterator2 * vi,
 
     VisBufferOptions options = isWritable () ? VbWritable : VbNoOptions;
 
-    vb_p = VisBuffer2::factory (vi, vbType, options);
+    vb_p = createAttachedVisBuffer (vbType, options);
 }
 
 void
@@ -2960,6 +2960,15 @@ VisibilityIteratorImpl2::getVisBuffer ()
 {
     return vb_p;
 }
+
+VisBuffer2 *
+VisibilityIteratorImpl2::getVisBuffer (const VisibilityIterator2 * vi)
+{
+    ThrowIf (vb_p == nullptr, "VI Implementation has not VisBuffer.");
+    vb_p->associateWithVi2 (vi);
+    return vb_p;
+}
+
 
 Int
 VisibilityIteratorImpl2::nAntennas () const

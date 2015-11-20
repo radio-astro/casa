@@ -181,7 +181,7 @@ CalibratingVi2::CalibratingVi2(	vi::VisibilityIterator2 * vi,
   getVii()->origin();
  
   // Make a VisBuffer for CalibratingVi2 clients (it is connected to the vi interface)
-  setVisBuffer(VisBuffer2::factory(vi,VbPlain,VbRekeyable));
+  setVisBuffer(createAttachedVisBuffer (VbPlain,VbRekeyable));
 
 }
 

@@ -9,19 +9,32 @@
 #include <msvis/MSVis/UtilJ.h>
 #include <msvis/MSVis/VisBuffer2.h>
 #include <msvis/MSVis/VisBufferImpl2.h>
+#include <msvis/MSVis/ViImplementation2.h>
+#include <msvis/MSVis/VisibilityIterator2.h>
 
 namespace casa {
 
 namespace vi {
 
 VisBuffer2 *
-VisBuffer2:: factory (VisBufferType t, VisBufferOptions options)
+VisBuffer2::factory (VisBufferType t, VisBufferOptions options)
 {
-    return factory (0, t, options);
+    return factory (nullptr, t, options);
 }
 
 VisBuffer2 *
 VisBuffer2::factory (VisibilityIterator2 * vi, VisBufferType t, VisBufferOptions options)
+{
+    ViImplementation2 * viImpl = nullptr;
+    if (vi){
+        viImpl = vi->getImpl ();
+    }
+
+    return factoryInternal (viImpl, t, options);
+}
+
+VisBuffer2 *
+VisBuffer2::factoryInternal (ViImplementation2 * vi, VisBufferType t, VisBufferOptions options)
 {
     VisBuffer2 * result = NULL;
 
@@ -34,6 +47,14 @@ VisBuffer2::factory (VisibilityIterator2 * vi, VisBufferType t, VisBufferOptions
 
     return result;
 }
+
+
+void
+VisBuffer2::associateWithVi2 (const VisibilityIterator2 * vi)
+{
+    associatedVi_p = vi;
+}
+
 
 ms::MsRow *
 VisBuffer2::getRow (Int) const
@@ -49,6 +70,12 @@ VisBuffer2::getRowMutable (Int)
     ThrowIf (True, "Not implemented by this subclass.");
 
     return 0;
+}
+
+const VisibilityIterator2 *
+VisBuffer2::getVi () const
+{
+    return associatedVi_p;
 }
 
 // Rotate visibility phase for phase center offsets

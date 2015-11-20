@@ -174,6 +174,7 @@ public:
 
     virtual void getRowIds (Vector<uInt> & rowids) const;
 
+    virtual VisBuffer2 * getVisBuffer (const VisibilityIterator2 *);
     virtual VisBuffer2 * getVisBuffer ();
 
 

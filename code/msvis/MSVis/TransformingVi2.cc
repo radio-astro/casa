@@ -382,6 +382,14 @@ TransformingVi2::getVisBuffer ()
     return vb_p;
 }
 
+VisBuffer2 *
+TransformingVi2::getVisBuffer (const VisibilityIterator2 * vi)
+{
+    ThrowIf (vb_p == 0, "This VI implementation does not provide a VisBuffer");
+
+    vb_p->associateWithVi2 (vi);
+    return vb_p;
+}
 
 Double
 TransformingVi2::hourang (Double time)  const

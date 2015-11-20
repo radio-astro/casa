@@ -102,6 +102,13 @@ ViImplementation2::feed_paCalculate (Double time, MSDerivedValues & msd,
     return feedpa;
 }
 
+VisBuffer2 *
+ViImplementation2::createAttachedVisBuffer (VisBufferType t, VisBufferOptions options)
+{
+    return VisBuffer2::factoryInternal (this, t, options);
+}
+
+
 Double
 ViImplementation2::hourangCalculate (Double time, MSDerivedValues & msd, const MEpoch & mEpoch0)
 {
