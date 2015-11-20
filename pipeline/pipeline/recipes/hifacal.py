@@ -27,6 +27,7 @@ from hifa_fluxdb_cli import hifa_fluxdb_cli as hifa_fluxdb
 from hif_refant_cli import hif_refant_cli as hif_refant
 from hifa_tsyscal_cli import hifa_tsyscal_cli as hifa_tsyscal
 from hifa_tsysflag_cli import hifa_tsysflag_cli as hifa_tsysflag
+from hifa_antpos_cli import hifa_antpos_cli as hifa_antpos
 from hifa_wvrgcalflag_cli import hifa_wvrgcalflag_cli as hifa_wvrgcalflag
 from hif_lowgainflag_cli import hif_lowgainflag_cli as hif_lowgainflag
 from hif_setjy_cli import hif_setjy_cli as hif_setjy
@@ -82,6 +83,9 @@ def hifacal (vislist, importonly=True, pipelinemode='automatic', interactive=Tru
     
         # Flag system temperature calibration
         hifa_tsysflag (pipelinemode=pipelinemode)
+
+        # Flag system temperature calibration
+        hifa_antpos (pipelinemode=pipelinemode)
 
         # Compute the WVR calibration, flag and interpolate over bad antennas
         hifa_wvrgcalflag (pipelinemode=pipelinemode)
