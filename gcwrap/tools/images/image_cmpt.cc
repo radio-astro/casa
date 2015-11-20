@@ -79,6 +79,7 @@
 #include <imageanalysis/ImageAnalysis/ImageHistogramsCalculator.h>
 #include <imageanalysis/ImageAnalysis/ImageHistory.h>
 #include <imageanalysis/ImageAnalysis/ImageMaskedPixelReplacer.h>
+#include <imageanalysis/ImageAnalysis/ImageMaxFitter.h>
 #include <imageanalysis/ImageAnalysis/ImageMetaDataRW.h>
 #include <imageanalysis/ImageAnalysis/ImageMomentsTask.h>
 #include <imageanalysis/ImageAnalysis/ImagePadder.h>
@@ -3125,25 +3126,29 @@ bool image::modify(
 	}
 }
 
-::casac::record*
-image::maxfit(const variant& region, const bool doPoint,
-		const int width, const bool absFind, const bool list) {
-	::casac::record *rstat = 0;
+record* image::maxfit(
+	const variant& region, bool doPoint,
+	int width, bool absFind, bool list
+) {
 	try {
 		_log << _ORIGIN;
 		if (detached()) {
-			return rstat;
+			return nullptr;
 		}
-		SHARED_PTR<Record> Region(_getRegion(region, False));
-		rstat = fromRecord(_image->maxfit(*Region, doPoint, width, absFind,
-				list));
-
-	} catch (const AipsError& x) {
+		ThrowIf(
+			! _image->isFloat(),
+			"This method only supports float-valued images"
+		);
+		auto Region = _getRegion(region, False);
+		ImageMaxFitter<Float> imf(_image->getImage(), Region.get());
+		return fromRecord(imf.fit(doPoint, width, absFind, list));
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
+	return nullptr;
 }
 
 ::casac::image* image::moments(
