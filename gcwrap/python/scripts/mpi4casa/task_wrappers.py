@@ -58,7 +58,6 @@ from imval_pg import imval_pg as imval
 from vishead_pg import vishead_pg as vishead
 from visstat_pg import visstat_pg as visstat
 from calstat_pg import calstat_pg as calstat
-from msmoments_pg import msmoments_pg as msmoments
 from partition_pg import partition_pg as partition
 from mstransform_pg import mstransform_pg as mstransform
 from split2_pg import split2_pg as split2

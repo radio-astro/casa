@@ -153,7 +153,6 @@ from listhistory import  listhistory
 from listobs import  listobs
 from listvis import  listvis
 from mosaic import  mosaic
-from msmoments import msmoments
 from mstransform import mstransform
 from msview import msview
 from partition import partition

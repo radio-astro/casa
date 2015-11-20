@@ -73,7 +73,6 @@ listvis.xml
 makemask.xml
 mosaic.xml
 msview.xml
-msmoments.xml 
 mstransform.xml
 msuvbin.xml
 plotants.xml

@@ -236,7 +236,6 @@ from vishead_pg import vishead_pg as vishead
 from visstat_pg import visstat_pg as visstat
 from visstat2_pg import visstat2_pg as visstat2
 from calstat_pg import calstat_pg as calstat
-from msmoments_pg import msmoments_pg as msmoments
 from partition_pg import partition_pg as partition
 from mstransform_pg import mstransform_pg as mstransform
 from cvel2_pg import cvel2_pg as cvel2

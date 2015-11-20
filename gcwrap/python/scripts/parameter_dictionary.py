@@ -785,13 +785,6 @@ class par(str):
 		"""
 
 	@staticmethod
-	def excludemask():
-		"""
-        	excludemask -- Range of masks to exclude
-                default: [-1] (don't exclude channels); example=[100,200]
-		"""
-
-	@staticmethod
 	def expr():
 		"""
 		expr -- mathematical expression using scantables
@@ -1241,14 +1234,6 @@ class par(str):
 		"""
 	        includepix -- Range of pixel values to include
                 default: [-1] (all pixels); example=[0.02,100.0]
-		"""
-
-	@staticmethod
-	def includemask():
-		"""
-                (for msmoments)
-	        includemask -- Range of masks to include
-                default: [-1] (include all channels); example=[2,100]
 		"""
 
 	@staticmethod
@@ -1990,13 +1975,6 @@ class par(str):
 
 		(for immoments)
         	outfile -- output image file name (or root for multiple moments)
-                default: '' (input+auto-determined suffix)
-		example: outfile='source_moment'
-
-		----------------------------------------------------------------
-
-		(for msmoments)
-        	outfile -- output MS file name (or root for multiple moments)
                 default: '' (input+auto-determined suffix)
 		example: outfile='source_moment'
 
