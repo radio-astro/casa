@@ -17,7 +17,7 @@ class PlotSummaryInputs(basetask.StandardInputs):
 
 class PlotSummaryResults(basetask.Results):
     def __init__(self, final=[], pool=[], preceding=[]):
-        super(HanningResults, self).__init__()
+        super(PlotSummaryResults, self).__init__()
 
         self.vis = None
         self.pool = pool[:]
