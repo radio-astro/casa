@@ -1172,6 +1172,29 @@ if( NOT Boost_VERSION GREATER 104099 AND NOT CASA_IGNORE_VERSION )
 endif()
 
 #
+# boost regex drags in dependencencies on international unicode libraries, if they are not
+# explicitly referenced, loading is left until runtime based upon transitive dependencies.
+# This thwarts creation of a cleanly relocatable distribution.
+#
+if(CMAKE_SYSTEM_NAME STREQUAL Linux AND Boost_LIBRARIES)
+    if(EXISTS "/usr/lib64/libicuuc.so")
+        set( Boost_LIBRARIES "${Boost_LIBRARIES};/usr/lib64/libicuuc.so" )
+    endif( )
+    #
+    # some other libraryies that may need to be explicitly included:
+    #    /usr/lib64/libicui18n.so.42
+    #    /lib64/libuuid.so.1
+    #    /usr/lib64/libicudata.so.42
+    #
+endif( )
+
+message( STATUS "Boost_INCLUDE_DIRS=${Boost_INCLUDE_DIRS}; Boost_LIBRARIES=${Boost_LIBRARIES}")
+
+if( NOT Boost_FOUND )
+  message( FATAL_ERROR "Boost could not be found. Please check!" )
+endif()
+
+#
 # RPFITS (Fortran)
 #
 casa_find( RPFITS

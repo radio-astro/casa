@@ -665,6 +665,24 @@ if( NOT Boost_VERSION GREATER 104099 AND NOT CASA_IGNORE_VERSION )
   message( FATAL_ERROR "Boost version (${Boost_VERSION}) is too old! Must be 104100 (1.41.0) or newer. Please check!" )
 endif()
 
+#
+# boost regex drags in dependencencies on international unicode libraries, if they are not
+# explicitly referenced, loading is left until runtime based upon transitive dependencies.
+# This thwarts creation of a cleanly relocatable distribution.
+#
+if(CMAKE_SYSTEM_NAME STREQUAL Linux AND Boost_LIBRARIES)
+    if(EXISTS "/usr/lib64/libicuuc.so")
+        set( Boost_LIBRARIES "${Boost_LIBRARIES};/usr/lib64/libicuuc.so" )
+    endif( )
+    #
+    # some other libraryies that may need to be explicitly included:
+    #    /usr/lib64/libicui18n.so.42
+    #    /lib64/libuuid.so.1
+    #    /usr/lib64/libicudata.so.42
+    #
+    message(STATUS "Boost_LIBRARIES=${Boost_LIBRARIES}")
+endif( )
+
 
 # CFITSIO
 casa_find( CFITSIO
@@ -1157,14 +1175,14 @@ else()
   endif()
 endif()
 casa_add_module( atmosphere )
-casa_add_module( stdcasa CASACORE )
-casa_add_module( parallel CASACORE )
+casa_add_module( stdcasa CASACORE Boost )
+casa_add_module( parallel CASACORE Boost )
 casa_add_module( casadbus CASACORE DBUS Boost)
 casa_add_module( casaqt CASACORE QT4 QWT XERCES graphics stdcasa Boost)
-casa_add_module( components stdcasa CASACORE GSL)
+casa_add_module( components stdcasa CASACORE Boost GSL)
 casa_add_module( imageanalysis CASACORE Boost components)
 #casa_add_module( display3d CASACORE QT4 OPENGL display )
-casa_add_module( asdmstman CASACORE )
+casa_add_module( asdmstman CASACORE Boost )
 casa_add_module( msvis CASACORE Boost asdmstman WarningsAsErrors)
 casa_add_module( mstransform CASACORE stdcasa imageanalysis msvis)
 casa_add_module( synthesis CASACORE atmosphere stdcasa casadbus asdmstman Boost SQLITE imageanalysis msvis mstransform)
@@ -1180,7 +1198,7 @@ casa_add_module( alma CASACORE LIBXML2 LIBXSLT Boost synthesis msvis)
 casa_add_module( nrao CASACORE Boost)
 casa_add_module( atnf CASACORE Boost RPFITS)
 casa_add_module( miriad CASACORE Boost components)
-casa_add_module( casa_sakura CASACORE LIBSAKURA)
+casa_add_module( casa_sakura CASACORE Boost LIBSAKURA)
 casa_add_module( singledish CASACORE casa_sakura msvis mstransform)
 casa_add_module( bnmin1 Boost GSL GSLCBLAS CASACORE )
 casa_add_module( air_casawvr CASACORE bnmin1 Boost synthesis WCSLIB CFITSIO LAPACK )
