@@ -1999,6 +1999,7 @@ HPX HEALPix grid.  -->
 	 <default param="pblimit"><value>0.2</value></default>
 	 <default param="normtype"><value>"flatnoise"</value></default>
 	 <default param="psterm"><value>False</value></default>
+	 <default param="aterm"><value>True</value></default>
 	 <default param="cfcache"><value>""</value></default>
 	 <default param="computepastep"><value>360.0</value></default>
 	 <default param="rotatepastep"><value>360.0</value></default>
@@ -2010,6 +2011,7 @@ HPX HEALPix grid.  -->
 	 <default param="pblimit"><value>0.2</value></default>
 	 <default param="normtype"><value>"flatnoise"</value></default>
 	 <default param="psterm"><value>False</value></default>
+	 <default param="aterm"><value>True</value></default>
 	 <default param="cfcache"><value>""</value></default>
 	 <default param="computepastep"><value>360.0</value></default>
 	 <default param="rotatepastep"><value>360.0</value></default>
