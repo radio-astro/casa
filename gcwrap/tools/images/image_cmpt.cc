@@ -2964,22 +2964,37 @@ bool image::insert(
 		if (detached()) {
 			return 0;
 		}
-
 		Vector<Double> locatePixel(locate);
 		if (locatePixel.size() == 1 && locatePixel[0] < 0) {
 			locatePixel.resize(0);
 		}
-		SHARED_PTR<Record> Region(_getRegion(region, False));
-		if (_image->insert(infile, *Region, locatePixel, verbose)) {
-			_stats.reset(0);
-			return True;
+		auto Region = _getRegion(region, False);
+		auto imagePair = ImageFactory::fromFile(infile);
+
+		if (imagePair.first && _image->isFloat()) {
+			PixelValueManipulator<Float>::insert(
+				*_image->getImage(), *imagePair.first, *Region,
+				locatePixel, verbose
+			);
 		}
-		throw AipsError("Error inserting image.");
-	} catch (const AipsError& x) {
+		else if (imagePair.second && ! _image->getComplexImage()){
+			PixelValueManipulator<Complex>::insert(
+				*_image->getComplexImage(), *imagePair.second, *Region,
+				locatePixel, verbose
+			);
+		}
+		else {
+			ThrowCc("Attached image pixel data type differs from that of " + infile);
+		}
+		_stats.reset();
+		return True;
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;
 		RETHROW(x);
 	}
+	return False;
 }
 
 bool image::isopen() {
