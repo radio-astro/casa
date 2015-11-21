@@ -435,6 +435,35 @@ deconvolver::clean(const std::string& algorithm, const int niter, const double g
   return rstat;
 }
 
+
+casac::record* 
+deconvolver::naclean(const int niter, const double gain, const ::casac::variant& threshold, const std::string& model, const std::string& mask)
+{
+  casac::record* rstat(0);
+  try {
+    
+    casa::Quantity thresh(0.0, "Jy");
+    if(String(threshold.toString()) != String("")){
+      thresh=casaQuantity(threshold);
+    }
+    Float maxResidual=0.0;
+    Int iterations=0;
+    Bool converged=itsDeconv->naclean(niter, gain, thresh, 
+				    String(model), String(mask), maxResidual, iterations);
+    Record theRec;
+    theRec.define("converged", converged);
+    theRec.define("maxresidual", maxResidual);
+    theRec.define("iterations", iterations);
+    rstat = fromRecord(theRec);  
+  } catch  (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+  }
+  
+  return rstat;
+}
+
+
 bool
 deconvolver::setscales(const std::string& scalemethod, const int nscales, const std::vector<double>& uservector)
 {

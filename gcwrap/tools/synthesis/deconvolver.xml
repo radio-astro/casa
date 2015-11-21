@@ -840,6 +840,67 @@ for details about ``methods'' used to update the GUI.
   </example>
 </method>
 
+<method type="function" name="naclean">
+  <shortdescription>Make a clean image with Hogbom with self masking</shortdescription> 
+
+<description>
+  The clean is
+  performed on the residual image calculated from the dirty image minus
+  the point spread function convolved with the model currently selected.
+  Thus if you want to restart a clean, simply set the model to the model
+  that was previously produced by clean.
+  
+  \end{description}
+    
+    
+    
+</description>
+  <input>
+    
+    
+    <param type="int" name="niter">
+      <description>Number of Iterations, set to zero for no CLEANing</description>
+      <value>1000</value>
+    </param>
+    
+    <param type="double" name="gain">
+      <description>Loop Gain for CLEANing, try 0.7 for msclean or fullmsclean</description>
+      <value>0.1</value>
+    </param>
+    
+    <param type="any" name="threshold">
+      <any type="variant"/>
+      <description>Flux level at which to stop CLEANing</description>
+      <value>0Jy</value>
+    </param>
+<!--
+    <param type="bool" name="displayprogress">
+      <description>Display progress</description>
+      <value>false</value>
+    </param>
+-->
+    <param type="string" name="model">
+      <description>Name of images</description>
+      <value></value>
+    </param>
+    
+    <param type="string" name="mask">
+      <description>Name of mask images to return region cleaned</description>
+      <value></value>
+    </param>
+    
+
+  </input>
+  
+  <returns type="record"/>
+  <example>
+    
+    dc.naclean(image='3C273XC1.clean.image', model='3C273XC1.clean.model',
+    mask='3C283XC1.mask', niter=1000, gain=0.25, threshold=0.03)
+
+  </example>
+</method>
+
 
  
    <method type="function" name="setscales">
