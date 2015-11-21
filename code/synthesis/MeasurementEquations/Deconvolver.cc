@@ -570,9 +570,7 @@ Bool Deconvolver::restore(const String& model, const String& image,
     {
       IPosition convshp=modelImage_p->shape();
       convshp[0]=nx_p; convshp[1]=ny_p;
-      cerr << "convshp " << convshp << endl;
       for (uInt k=2; k< convshp.nelements(); ++k) convshp[k]=1;
-      cerr << "convshp2 " << convshp << endl;
       TempImage<Float> gaussim(convshp, modelImage_p->coordinates());
       gaussim.set(0.0);
       ImageInfo ii = gaussim.imageInfo();
