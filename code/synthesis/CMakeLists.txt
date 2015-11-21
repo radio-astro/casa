@@ -271,6 +271,7 @@ casa_add_library( synthesis
  MeasurementEquations/Imager2.cc
  MeasurementEquations/ImagerMultiMS.cc
  MeasurementEquations/ImageMSCleaner.cc
+ MeasurementEquations/ImageNACleaner.cc	
  MeasurementEquations/IncCEMemModel.cc
  MeasurementEquations/IncEntropy.cc
  MeasurementEquations/IPLatConvEquation.cc
@@ -278,6 +279,7 @@ casa_add_library( synthesis
  MeasurementEquations/LatticeModel.cc
  MeasurementEquations/LinearMosaic.cc
  MeasurementEquations/MatrixCleaner.cc
+ MeasurementEquations/MatrixNACleaner.cc
  MeasurementEquations/MultiTermMatrixCleaner.cc
  MeasurementEquations/Simulator.cc
  MeasurementEquations/SkyEquation.cc
@@ -521,6 +523,7 @@ install (FILES
 	MeasurementEquations/HogbomCleanModel.h
 	MeasurementEquations/IPLatConvEquation.h
 	MeasurementEquations/ImageMSCleaner.h
+	MeasurementEquations/ImageNACleaner.h
 	MeasurementEquations/Imager.h
 	MeasurementEquations/ImagerMultiMS.h
 	MeasurementEquations/IncCEMemModel.h
@@ -534,6 +537,7 @@ install (FILES
 	MeasurementEquations/MaskedArrayModel.h
 	MeasurementEquations/MaskedHogbomCleanModel.h
 	MeasurementEquations/MatrixCleaner.h
+	MeasurementEquations/MatrixNACleaner.h
 	MeasurementEquations/MultiTermMatrixCleaner.h
 	MeasurementEquations/ResidualEquation.h
 	MeasurementEquations/Simulator.h
@@ -689,6 +693,7 @@ casa_add_assay( synthesis ImagerObjects/test/tSynthesisUtils.cc )
 casa_add_assay( synthesis TransformMachines2/test/tVisModelDataRefim.cc )
 casa_add_assay( synthesis TransformMachines/test/dImagingWeightViaGridFT.cc )
 casa_add_assay( synthesis TransformMachines/test/tVisModelData.cc )
+casa_add_assay( synthesis TransformMachines/test/tVisModelData2.cc )
 casa_add_assay( synthesis TransformMachines/test/tStokesImageUtil.cc )
 #casa_add_assay( synthesis TransformMachines/test/tCFCache.cc )
 #casa_add_assay( synthesis TransformMachines/test/tCImageRotation.cc )
