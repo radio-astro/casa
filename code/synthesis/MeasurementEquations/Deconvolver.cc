@@ -102,7 +102,7 @@
 #include <synthesis/MeasurementEquations/Deconvolver.h>
 #include <synthesis/MeasurementEquations/Imager.h>
 #include <synthesis/MeasurementEquations/ImageMSCleaner.h>
-
+#include <synthesis/MeasurementEquations/ImageNACleaner.h>
 
 
 #include <casa/sstream.h>
@@ -146,7 +146,7 @@ void Deconvolver::defaults()
 }
 
 Deconvolver::Deconvolver(const String& dirty, const String& psf)
-  : dirty_p(0), psf_p(0), convolver_p(0), cleaner_p( ), 
+  : dirty_p(0), psf_p(0), convolver_p(0), cleaner_p( ), naCleaner_p(nullptr),
      mt_nterms_p(-1), mt_cleaner_p(), mt_valid_p(False)
 {
   LogIO os(LogOrigin("Deconvolver", "Deconvolver(String& dirty, Strong& psf)", WHERE));
@@ -155,7 +155,7 @@ Deconvolver::Deconvolver(const String& dirty, const String& psf)
 }
 
 Deconvolver::Deconvolver(const Deconvolver &other)
-  : dirty_p(0), psf_p(0), convolver_p(0), cleaner_p( ), 
+  : dirty_p(0), psf_p(0), convolver_p(0), cleaner_p( ), naCleaner_p(nullptr),
     mt_nterms_p(-1), mt_cleaner_p(), mt_valid_p(False)
 {
   defaults();
@@ -164,17 +164,21 @@ Deconvolver::Deconvolver(const Deconvolver &other)
 
 Deconvolver &Deconvolver::operator=(const Deconvolver &other)
 {
-  if (dirty_p && this != &other) {
-    *dirty_p = *(other.dirty_p);
-  }
-  if (psf_p && this != &other) {
-    *psf_p = *(other.psf_p);
-  }
-  if (convolver_p && this != &other) {
-    *convolver_p = *(other.convolver_p);
-  }
-  if ((!cleaner_p.null()) && this != &other) {
-    *cleaner_p = *(other.cleaner_p);
+  if(this != &other){
+    if (dirty_p ) {
+      *dirty_p = *(other.dirty_p);
+    }
+    if (psf_p ) {
+      *psf_p = *(other.psf_p);
+    }
+    if (convolver_p && this != &other) {
+      *convolver_p = *(other.convolver_p);
+    }
+    if ((!cleaner_p.null()) ) {
+      *cleaner_p = *(other.cleaner_p);
+    }
+    if(naCleaner_p)
+      *naCleaner_p=*(other.naCleaner_p);
   }
   return *this;
 }
@@ -295,6 +299,7 @@ Bool Deconvolver::open(const String& dirty, const String& psf, Bool warn)
 	os << "Making Image cleaner" << LogIO::POST;
 	//if (cleaner_p) delete cleaner_p;
 	cleaner_p= new ImageMSCleaner(*psf_p, *dirty_p);
+	naCleaner_p=make_shared<ImageNACleaner>(*psf_p, *dirty_p);
 	if(nchan_p<=1){
 	  convolver_p = new LatticeConvolver<Float>(*psf_p);
 	}
@@ -531,6 +536,7 @@ Bool Deconvolver::restore(const String& model, const String& image,
     ImageRegrid<Float> regridder;
     Vector<Double> locate;
     Bool missedIt = regridder.insert(*modelImage_p, locate, modelImage0);
+    cerr << "missedIt " << missedIt << endl;
     if (!missedIt) {
       os << LogIO::SEVERE << "Problem in getting model Image on correct grid " << LogIO::POST;
     }
@@ -544,14 +550,14 @@ Bool Deconvolver::restore(const String& model, const String& image,
     if(! mbeam.isNull()) {
       os << "  Using specified beam: " << mbeam.getMajor("arcsec") << " by "
 	 << mbeam.getMinor("arcsec") << " (arcsec) at pa "
-	 << mbeam.getPA(Unit("deg")) << " (deg) " << endl;
+	 << mbeam.getPA(Unit("deg")) << " (deg) " << LogIO::POST;
       //StokesImageUtil::Convolve(imageImage, mbeam, False);
     }
     else {
       if(! beam_p.isNull()) {
 	os << "  Using fitted beam: " << beam_p.getMajor("arcsec") << " by "
 	   << beam_p.getMinor("arcsec") << " (arcsec) at pa "
-	   << beam_p.getPA(Unit("deg")) << " (deg) " << endl;
+	   << beam_p.getPA(Unit("deg")) << " (deg) " << LogIO::POST;
 	//StokesImageUtil::Convolve(imageImage, beam_p, False);
 	mbeam = beam_p;
       }
@@ -564,7 +570,9 @@ Bool Deconvolver::restore(const String& model, const String& image,
     {
       IPosition convshp=modelImage_p->shape();
       convshp[0]=nx_p; convshp[1]=ny_p;
+      cerr << "convshp " << convshp << endl;
       for (uInt k=2; k< convshp.nelements(); ++k) convshp[k]=1;
+      cerr << "convshp2 " << convshp << endl;
       TempImage<Float> gaussim(convshp, modelImage_p->coordinates());
       gaussim.set(0.0);
       ImageInfo ii = gaussim.imageInfo();
@@ -1200,7 +1208,7 @@ Bool Deconvolver::clean(const String& algorithm, const Int niter,
     {
       ostringstream oos;
       oos << "Clean gain = " <<gain<<", Niter = "<<niter<<", Threshold = "
-	  <<threshold << ", Algorithm = " << algorithm;
+	  <<threshold << ", Algorithm " << algorithm ;
       os << String(oos) << LogIO::POST;
     }
 
@@ -1226,6 +1234,82 @@ Bool Deconvolver::clean(const String& algorithm, const Int niter,
     result=cleaner_p->clean(modelImage, algorithm, niter, gain, threshold, displayProgress);
     maxResidual=cleaner_p->maxResidual();
     iterationsDone=cleaner_p->numberIterations();
+    dirty_p->table().relinquishAutoLocks(True);
+    dirty_p->table().unlock();
+    psf_p->table().relinquishAutoLocks(True);
+    psf_p->table().unlock();
+    if (maskim) delete maskim;    
+
+    return result;
+  } catch (AipsError x) {
+    dirty_p->table().unlock();
+    psf_p->table().unlock();
+    os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
+  } 
+  
+  return True;
+}
+
+Bool Deconvolver::naclean(const Int niter,
+			const Float gain, const Quantity& threshold, 
+			const String& model, const String& maskname, Float& maxResidual, Int& iterationsDone)
+{
+  
+  if(!valid()) return False;
+  LogIO os(LogOrigin("Deconvolver", "clean()", WHERE));
+  
+  dirty_p->table().lock();
+  psf_p->table().lock();
+  try {
+    
+    if(model=="") {
+      os << LogIO::SEVERE << "Need a name for model " << LogIO::POST;
+      return False;
+    }
+    //Int psfnchan=psf_p->shape()(chanAxis_p);
+    //Int masknchan=0;
+  
+    String imagename(model);
+    // Make first image with the required shape and coordinates only if
+    // it doesn't exist yet. Otherwise we'll throw an exception later
+    if(imagename=="") imagename=dirty_p->table().tableName()+".naclean";
+    if(!Table::isWritable(imagename)) {
+      make(imagename);
+    }
+    
+    {
+      ostringstream oos;
+      oos << "Clean gain = " <<gain<<", Niter = "<<niter<<", Threshold = "
+	  <<threshold ;
+      os << String(oos) << LogIO::POST;
+    }
+
+    PagedImage<Float> modelImage(imagename);
+
+    AlwaysAssert(naCleaner_p != nullptr, AipsError);
+    PagedImage<Float> *maskim = 0;
+    // Deal with mask
+    String mask=maskname;
+    if (mask == "") {
+      mask=dirty_p->table().tableName()+".mask";
+    }
+    if(!Table::isWritable(mask))
+       make(mask);
+    
+    maskim = new PagedImage<Float>(mask);
+       
+    
+    AlwaysAssert(maskim, AipsError);
+    naCleaner_p->setMask(*maskim);
+
+    
+
+    
+    Bool result=False;
+
+    result=naCleaner_p->clean(modelImage, niter, gain, threshold, False);
+    maxResidual=cleaner_p->maxResidual();
+    iterationsDone=cleaner_p->iteration();
     dirty_p->table().relinquishAutoLocks(True);
     dirty_p->table().unlock();
     psf_p->table().relinquishAutoLocks(True);
@@ -1994,14 +2078,19 @@ Bool Deconvolver::makegaussian(const String& gaussianName, GaussianBeam& mbeam, 
 
 Bool Deconvolver::putGaussian(ImageInterface<Float>& im, const GaussianBeam& beam){
   CoordinateSystem cs=im.coordinates();
+  
   Vector<Int> dirAxes=CoordinateUtil::findDirectionAxes(cs);
   DirectionCoordinate dirCoord=cs.directionCoordinate(cs.findCoordinate(Coordinate::DIRECTION));
   Vector<Double> cenpix(2, Double(nx_p)/2.0);
   cenpix(1)=Double(ny_p)/2.0;
   MDirection centre;
   dirCoord.toWorld(centre, cenpix);
-  GaussianShape gshp(centre,  beam.getMajor(), beam.getMinor(), beam.getPA());
-  SkyComponent gcomp(Flux<Double>(1.0, 0,0,0), gshp, ConstantSpectrum());
+  MVAngle mvRA=centre.getAngle().getValue()(0);
+  MVAngle mvDEC=centre.getAngle().getValue()(1);
+  cerr << "centre " << cenpix <<  "   " << centre.getRefString() << " " << mvRA(0.0).string(MVAngle::TIME,8)  << " " <<  mvDEC(0.0).string(MVAngle::ANGLE_CLEAN,8) << endl;
+  cerr << "maj min pa " << beam.getMajor() << "   " <<  beam.getMinor() << "   " <<  beam.getPA() << endl;
+  GaussianShape gshp(centre, beam.getMajor(), beam.getMinor(), beam.getPA());
+  SkyComponent gcomp(Flux<Double>(1.0), gshp, ConstantSpectrum());
   ComponentList cl;
   cl.add(gcomp);
   ComponentImager::project(im, cl);

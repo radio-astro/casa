@@ -56,7 +56,7 @@ class CEMemModel;
 class ClarkCleanLatModel;
 class LatConvEquation;
 class ImageMSCleaner;
-
+class ImageNACleaner;
 // <summary> A simple deconvolver operating on images (no SkyEquation) </summary>
 
 // <use visibility=export>
@@ -185,6 +185,9 @@ public:
 	     const Bool displayProgress,
              const String& model, const String& mask, Float& maxResidual, 
 	     Int& iterationsDone );
+  Bool naclean(const Int niter,
+			const Float gain, const Quantity& threshold, 
+	       const String& model, const String& mask, Float& maxResidual, Int& iterationsDone) ;
 
   //Clark Clean but image, psf, mask has to be 4-axes in the canonical casa order.
   //Useful for cleaning dirty images made in CASA
@@ -347,6 +350,7 @@ private:
   ResidualEquation<Lattice<Float> >* residEqn_p;
   LatConvEquation* latConvEqn_p;
   CountedPtr <ImageMSCleaner> cleaner_p;
+  std::shared_ptr <ImageNACleaner> naCleaner_p;
 
   Bool scalesValid_p;
 

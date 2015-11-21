@@ -42,7 +42,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
 template <class T> class Matrix;
-
+class MatrixNACleaner;
 // <summary>A copy of LatticeCleaner but just using 2-D matrices</summary>
 // <synopsis> It is a mimic of the LatticeCleaner class but avoid a lot of 
 // of the lattice to array and back copies and uses openmp in the obvious places
@@ -252,6 +252,7 @@ public:
   //static void addTo(Matrix<Float>& to, const Matrix<Float> & add);
 
 protected:
+  friend class MatrixNACleaner;
   // Make sure that the peak of the Psf is within the image
   Bool validatePsf(const Matrix<Float> & psf);
 
