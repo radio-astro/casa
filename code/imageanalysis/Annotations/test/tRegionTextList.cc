@@ -25,6 +25,7 @@
 
 #include <casa/aips.h>
 #include <imageanalysis/Annotations/RegionTextList.h>
+#include <imageanalysis/Annotations/AnnCircle.h>
 #include <imageanalysis/Annotations/AnnEllipse.h>
 #include <casa/OS/EnvVar.h>
 
@@ -78,8 +79,8 @@ int main () {
 			line31.getAnnotationBase()->isRegion(),
 			AipsError
 		);
-		AlwaysAssert(dynamic_cast<const AnnRegion *>(
-			line31.getAnnotationBase())->isAnnotationOnly(),
+		AlwaysAssert(
+			line31.getAnnotationBase()->isAnnotationOnly(),
 			AipsError
 		);
 
@@ -107,16 +108,22 @@ int main () {
 				IPosition(csys.nPixelAxes(), 2000, 2000, 2000)
 			);
 			Vector<AsciiAnnotationFileLine>  lines2 = list2.getLines();
-			for ( uInt i=0; i < lines2.size( ); ++i ) {
-				const AnnotationBase* ann = lines2[i].getAnnotationBase();
-				if ( lines2[i].getType( ) != AsciiAnnotationFileLine::ANNOTATION ) {
+			for (uInt i=0; i < lines2.size(); ++i) {
+				auto ann = lines2[i].getAnnotationBase();
+				if (lines2[i].getType() != AsciiAnnotationFileLine::ANNOTATION) {
 					continue;
 				}
-				AnnotationBase::Type type = ann->getType();
-				switch (type ) {
-				case AnnotationBase::ELLIPSE: {
+				auto type = ann->getType();
+				if (i == 1) {
+					AlwaysAssert(type == AnnotationBase::CIRCLE, AipsError);
+					const AnnCircle *cir = dynamic_cast<const AnnCircle *>(ann.get());
+					AlwaysAssert(cir->getRadius().getValue("arcsec") == 10, AipsError);
+				}
+				else if (i == 2) {
 					cout << lines2[i] << endl;
-					const AnnEllipse *ell = dynamic_cast<const AnnEllipse *>(ann);
+					cout << AnnotationBase::typeToString(type);
+					AlwaysAssert(type == AnnotationBase::ELLIPSE, AipsError);
+					const AnnEllipse *ell = dynamic_cast<const AnnEllipse *>(ann.get());
 					cout << "major" << ell->getSemiMajorAxis().getValue("arcsec") << endl;
 					cout << "minor" << ell->getSemiMinorAxis().getValue("arcsec") << endl;
 					cout << "pa " << ell->getPositionAngle() << endl;
@@ -125,13 +132,7 @@ int main () {
 					AlwaysAssert(near(ell->getPositionAngle().getValue("deg"), 0.0), AipsError);
 					break;
 				}
-				case AnnotationBase::CIRCLE:
-					throw AipsError("got circle, should be ellipse because pixels are not square");
-					cout << "circle" << endl;;
-					break;
-				default:
-					throw AipsError("bad region");
-				}
+
 			}
 		}
 	}
