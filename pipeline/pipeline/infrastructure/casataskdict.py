@@ -78,7 +78,8 @@ CasaTaskDict = {
                    'hifv_finalcals'        : 'Finalcals',
                    'hifv_applycals'        : 'Applycals',
                    'hifv_targetflag'       : 'Targetflag',
-                   'hifv_statwt'           : 'Statwt'
+                   'hifv_statwt'           : 'Statwt',
+                   'hifv_plotsummary'      : 'PlotSummary'
                }
 
 
@@ -162,7 +163,8 @@ classToCASATask = {
     hifv_tasks.Finalcals              : 'hifv_finalcals',
     hifv_tasks.Applycals              : 'hifv_applycals',
     hifv_tasks.Targetflag             : 'hifv_targetflag',
-    hifv_tasks.Statwt                 : 'hifv_statwt' 
+    hifv_tasks.Statwt                 : 'hifv_statwt',
+    hifv_tasks.PlotSummary            : 'hifv_plotsummary'
 }
 
 
