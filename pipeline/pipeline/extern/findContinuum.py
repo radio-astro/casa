@@ -23,7 +23,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: findContinuum.py,v 1.25 2015/11/04 19:28:53 we Exp $" 
+    myversion = "$Id: findContinuum.py,v 1.27 2015/11/20 22:09:20 we Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -70,7 +70,7 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
     nBaselineChannels: if integer, then the number of channels to use
           if float, then the fraction of channels to use (i.e. the percentile)
           default = 0.19, which is 24 channels (i.e. 12 on each side) of a TDM window
-    sigmaFindContinuum: passed to findContinuumChannels, 'auto' starts with 3
+    sigmaFindContinuum: passed to findContinuumChannels, 'auto' starts with 3.5
     verbose: if True, then print additional information during processing
     png: the name of the png to produce ('' yields default name)
     pngBasename: if True, then remove the directory from img name before generating png name
@@ -174,7 +174,7 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
     nBaselineChannels: if integer, then the number of channels to use
           if float, then the fraction of channels to use (i.e. the percentile)
           default = 0.19, which is 24 channels (i.e. 12 on each side) of a TDM window
-    sigmaFindContinuum: passed to findContinuumChannels, 'auto' starts with 3
+    sigmaFindContinuum: passed to findContinuumChannels, 'auto' starts with 3.5
     verbose: if True, then print additional information during processing
     png: the name of the png to produce ('' yields default name)
     pngBasename: if True, then remove the directory from img name before generating png name
@@ -268,25 +268,38 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
             sigmaFindContinuum = 3.5
         else:
             sigmaFindContinuumAutomatic = False
-        continuumChannels,selection,threshold,median,groups,correctionFactor,medianTrue,mad,medianCorrectionFactor,negativeThreshold,lineStrengthFactor = \
+        continuumChannels,selection,threshold,median,groups,correctionFactor,medianTrue,mad,medianCorrectionFactor,negativeThreshold,lineStrengthFactor,singleChannelPeaksAboveSFC,allGroupsAboveSFC = \
             findContinuumChannels(avgSpectrumNansReplaced, nBaselineChannels, sigmaFindContinuum, nanmin, 
                                   baselineModeB, trimChannels, narrow, verbose, maxTrim, maxTrimFraction, separator)
         sumAboveMedian, sumBelowMedian, sumRatio, channelsAboveMedian, channelsBelowMedian, channelRatio = \
             aboveBelow(avgSpectrumNansReplaced,medianTrue)
-        # If there are a lot of groups or a lot of channels above the median compared to below it,
+        # First, one group must have at least 2 channels (to insure it is real), otherwise raise the sigmaFC.
+        # Otherwise, if there are a lot of groups or a lot of channels above the median compared to below it,
         # then lower the sigma in order to push the threshold for real lines (or line emission wings) lower.
         # However, if there is only 1 group, then there may be no real lines present, so lowering 
-        # the threshold in this case can create needless extra groups.
-        if ((groups > 3 or (groups > 1 and channelRatio < 1.0) or (channelRatio < 0.5)) and sigmaFindContinuumAutomatic):
+        # the threshold in this case can create needless extra groups, so don't allow it.
+        if (singleChannelPeaksAboveSFC == allGroupsAboveSFC and allGroupsAboveSFC>1):
+            # raise the threshold a bit since it all the peaks look like all noise
+            factor = 1.5
+            sigmaFindContinuum *= factor
+            print "Scaling the threshold upward by a factor of %.2f to avoid apparent noise spikes (%d==%d)." % (factor, singleChannelPeaksAboveSFC,allGroupsAboveSFC)
+            continuumChannels,selection,threshold,median,groups,correctionFactor,medianTrue,mad,medianCorrectionFactor,negativeThreshold,lineStrengthFactor,singleChannelPeaksAboveSFC,allGroupsAboveSFC = \
+                findContinuumChannels(avgSpectrumNansReplaced, nBaselineChannels, sigmaFindContinuum, nanmin, 
+                                      baselineModeB, trimChannels, narrow, verbose, maxTrim, maxTrimFraction, separator)
+            sumAboveMedian, sumBelowMedian, sumRatio, channelsAboveMedian, channelsBelowMedian, channelRatio = \
+                aboveBelow(avgSpectrumNansReplaced,medianTrue)
+        elif ((groups > 3 or (groups > 1 and channelRatio < 1.0) or (channelRatio < 0.5)) and sigmaFindContinuumAutomatic):
             if (channelRatio < 1.0 and channelRatio > 0.1 and (firstFreq < 60e9 or nchan>256)):
                 # Don't allow this much reduction in ALMA TDM mode as it chops up quasar spectra too much
                 # The channelRatio>0.1 requirement prevents failures due to ALMA TFB platforming
                 factor = 0.333
+            elif (groups == 2):
+                factor = 0.9
             else:
                 factor = np.log(3)/np.log(groups)
+            print "Scaling the threshold by a factor of %.2  (groups=%d, channelRatio=%f)" % (factor, groups,channelRatio)
             sigmaFindContinuum *= factor
-            print "Scaling the threshold by a factor of %.2f to try to reduce the number of groups from %d (channelRatio=%f)" % (factor, groups,channelRatio)
-            continuumChannels,selection,threshold,median,groups,correctionFactor,medianTrue,mad,medianCorrectionFactor,negativeThreshold,lineStrengthFactor = \
+            continuumChannels,selection,threshold,median,groups,correctionFactor,medianTrue,mad,medianCorrectionFactor,negativeThreshold,lineStrengthFactor,singleChannelPeaksAboveSFC,allGroupsAboveSFC = \
                 findContinuumChannels(avgSpectrumNansReplaced, nBaselineChannels, sigmaFindContinuum, nanmin, 
                                       baselineModeB, trimChannels, narrow, verbose, maxTrim, maxTrimFraction, separator)
             sumAboveMedian, sumBelowMedian, sumRatio, channelsAboveMedian, channelsBelowMedian, channelRatio = \
@@ -709,6 +722,36 @@ def findContinuumChannels(spectrum, nBaselineChannels=16, sigmaFindContinuum=3,
         channels2 = np.where(spectrum > negativeThreshold)[0]
         channels = np.intersect1d(channels,channels2)
 
+    # for CAS-8059: remove channels that are equal to the minimum if all channels from 
+    # it toward the nearest edge are also equal to the minimum: 
+    channels = list(channels)
+    if (spectrum[np.min(channels)] == np.min(spectrum)):
+        lastmin = np.min(channels)
+        channels.remove(lastmin)
+        removed = 1
+        for c in range(np.min(channels),np.max(channels)):
+            if (spectrum[c] != np.min(spectrum)):
+                break
+            channels.remove(c)
+            removed += 1
+        print "Removed %d channels on low channel edge that were at the minimum." % (removed)
+    if (spectrum[np.max(channels)] == np.min(spectrum)):
+        lastmin = np.max(channels)
+        channels.remove(lastmin)
+        removed = 1
+        for c in range(np.max(channels),np.min(channels)-1,-1):
+            if (spectrum[c] != np.min(spectrum)):
+                break
+            channels.remove(c)
+            removed += 1
+        print "Removed %d channels on high channel edge that were at the minimum." % (removed)
+            
+    peakChannels = np.where(spectrum > threshold)[0]
+    peakChannelsLists = splitListIntoContiguousLists(peakChannels)
+    peakMultiChannelsLists = splitListIntoContiguousListsAndRejectNarrow(peakChannels, narrow=2)
+    allGroupsAboveSFC = len(peakChannelsLists)
+    singleChannelPeaksAboveSFC = allGroupsAboveSFC - len(peakMultiChannelsLists)
+
     selection = convertChannelListIntoSelection(channels)
     print "Found %d potential continuum channels: %s" % (len(channels), str(selection))
     if (len(channels) == 0):
@@ -745,7 +788,7 @@ def findContinuumChannels(spectrum, nBaselineChannels=16, sigmaFindContinuum=3,
     print "Found %d continuum channels in %d groups: %s" % (len(channels), groups, selection)
     return(channels, selection, threshold, median, groups, correctionFactor, 
            medianTrue, mad, computeMedianCorrectionFactor(baselineMode, percentile)*signalRatio,
-           negativeThreshold, lineStrengthFactor)
+           negativeThreshold, lineStrengthFactor, singleChannelPeaksAboveSFC, allGroupsAboveSFC)
 
 def splitListIntoContiguousListsAndRejectNarrow(channels, narrow=3):
     """
@@ -1402,7 +1445,6 @@ def splitListIntoContiguousListsAndRejectZeroStd(channels, values, nanmin=None, 
     mylists = splitListIntoContiguousLists(channels)
     channels = []
     for i,mylist in enumerate(mylists):
-        if verbose: print "Running np.std(%s)" % (str(values[mylist]))
         mystd = np.std(values[mylist])
         if (mystd > 1e-17):  # avoid blocks of identically-zero values
             if (nanmin != None):
