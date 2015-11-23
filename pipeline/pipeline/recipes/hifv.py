@@ -153,7 +153,7 @@ def hifv (vislist, importonly=False, pipelinemode='automatic', interactive=True)
         hifv_statwt(pipelinemode=pipelinemode)
 
         # Plotting Summary
-        # hifv_plotsummary (pipelinemode=pipelinemode)
+        hifv_plotsummary (pipelinemode=pipelinemode)
         
         # Make a list of expected point source calibrators to be cleaned
         # hif_makecleanlist (intent='PHASE,BANDPASS', pipelinemode=pipelinemode)
