@@ -1180,13 +1180,15 @@ if(CMAKE_SYSTEM_NAME STREQUAL Linux AND Boost_LIBRARIES)
     if(EXISTS "/usr/lib64/libicuuc.so")
         set( Boost_LIBRARIES "${Boost_LIBRARIES};/usr/lib64/libicuuc.so" )
     endif( )
-    #
-    # some other libraryies that may need to be explicitly included:
-    #    /usr/lib64/libicui18n.so.42
-    #    /lib64/libuuid.so.1
-    #    /usr/lib64/libicudata.so.42
-    #
+    if(EXISTS "/usr/lib64/libicudata.so")
+        set( Boost_LIBRARIES "${Boost_LIBRARIES};/usr/lib64/libicudata.so" )
+    endif( )
+    if(EXISTS "/usr/lib64/libicui18n.so")
+        set( Boost_LIBRARIES "${Boost_LIBRARIES};/usr/lib64/libicui18n.so" )
+    endif( )
+    message(STATUS "Boost_LIBRARIES=${Boost_LIBRARIES}")
 endif( )
+
 
 message( STATUS "Boost_INCLUDE_DIRS=${Boost_INCLUDE_DIRS}; Boost_LIBRARIES=${Boost_LIBRARIES}")
 
