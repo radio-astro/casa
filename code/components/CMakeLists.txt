@@ -133,7 +133,6 @@ casa_add_assay( components ComponentModels/test/tFluxStandard4.cc )
 casa_add_assay( components ComponentModels/test/tGaussianComponent.cc )
 casa_add_assay( components ComponentModels/test/tGaussianDeconvolver.cc )
 casa_add_assay( components ComponentModels/test/tGaussianShape.cc )
-casa_add_assay( components ComponentModels/test/tLimbDarkenedDiskShape.cc )
 casa_add_assay( components ComponentModels/test/tPointComponent.cc )
 casa_add_assay( components ComponentModels/test/tPointShape.cc )
 casa_add_assay( components ComponentModels/test/tSkyComponentFactory.cc )
@@ -149,6 +148,7 @@ casa_add_assay( components SpectralComponents/test/tProfileFit1D.cc )
 casa_add_assay( components SpectralComponents/test/tSpectralFit.cc )
 
 
+casa_add_unit_test( MODULES components SOURCES ComponentModels/test/tLimbDarkenedDiskShape.cc )
                      
                               
                                     
