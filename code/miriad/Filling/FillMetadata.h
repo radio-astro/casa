@@ -944,7 +944,7 @@ class FillMetadata {
     Int getAntennaID(Int antnum) { return arrayAnt+antnum-1; }
 
     // return the data description id for a given spectral window id.
-    Int getDataDescID(Int sid=0, Int pid=0) { 
+    Int getDataDescID(Int /*sid*/=0, Int /*pid*/=0) {
 #if 0
         DataDescComponents ddid(sid, pid);
 	return (ddids.isDefined(ddid) ? ddids(ddid) : -1);

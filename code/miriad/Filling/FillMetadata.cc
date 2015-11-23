@@ -136,14 +136,13 @@ MirSource::MirSource(String src, double sra, double sdec, float sepoch,
 MirSource::MirSource(int mirh, Double stime) : time(stime), id(-1), row(-1), 
     solsys(N_Objects), motion_p(0)
 {
-    int n;
     float twok = 2000.0;
     double zero = 0;
     char src[32];
     src[0] = '\0';
-    uvrdvr_c(mirh, H_REAL, "epoch", (char *)&epoch, (char *)&twok, n);
-    uvrdvr_c(mirh, H_DBLE, "ra", (char *)&ra, (char *)&zero, n);
-    uvrdvr_c(mirh, H_DBLE, "dec", (char *)&dec, (char *)&zero, n);
+    uvrdvr_c(mirh, H_REAL, "epoch", (char *)&epoch, (char *)&twok, sizeof (epoch));
+    uvrdvr_c(mirh, H_DBLE, "ra", (char *)&ra, (char *)&zero, sizeof(ra));
+    uvrdvr_c(mirh, H_DBLE, "dec", (char *)&dec, (char *)&zero, sizeof (dec));
     uvrdvr_c(mirh, H_BYTE, "source", src, "", 32);
     name = String(src); // warning, conversion to char* is old
     solsys = matchSolSysObj(name);

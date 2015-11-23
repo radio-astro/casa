@@ -1035,7 +1035,7 @@ void MirVisReader::handleVarChanges(FillMetadata &fm, Double time) {
     //           will have the same SOURCE_ID); if fm.source->id < 0, 
     //           then it has not yet been added.
     // 
-    char *srcvar[] = { "source", "epoch" };
+    const char *srcvar[] = { "source", "epoch" };
     int srcupd = 0;
     for(i=0; i < 2 && ! srcupd; i++) 
         uvprobvr_c(uv_handle_p, srcvar[i], vtype, &vlen, &srcupd);
@@ -1083,7 +1083,7 @@ void MirVisReader::handleVarChanges(FillMetadata &fm, Double time) {
     // has changed (srcupd=true), then we should not bother looking for
     // a change in position
     //
-    char *posvar[] = { "ra", "dec" };
+    const char *posvar[] = { "ra", "dec" };
     if (! srcupd) {
       for(i=0, vupd=0; i < 2 && ! vupd; i++) 
 	  uvprobvr_c(uv_handle_p, posvar[i], vtype, &vlen, &vupd);
@@ -1104,7 +1104,7 @@ void MirVisReader::handleVarChanges(FillMetadata &fm, Double time) {
     // the offsets so that we can see if they are different from previously
     // read offsets for this source.  
     //
-    char *fldvar[] = { "dra", "ddec" };
+    const char *fldvar[] = { "dra", "ddec" };
     for(i=0, vupd=0; i < 2 && ! vupd; i++) 
         uvprobvr_c(uv_handle_p, fldvar[i], vtype, &vlen, &vupd);
     if (vupd || srcupd) {
@@ -1136,7 +1136,7 @@ void MirVisReader::handleVarChanges(FillMetadata &fm, Double time) {
     } 
 
     // correllator setup.  
-    char *corrvar[] = { "cormode", "nspect", "nwide", "corfin", "corbw", 
+    const char *corrvar[] = { "cormode", "nspect", "nwide", "corfin", "corbw",
 			"restfreq" };
     for(i=0, vupd=0; i < 6 && ! vupd; i++) 
         uvprobvr_c(uv_handle_p, corrvar[i], vtype, &vlen, &vupd);
@@ -1178,7 +1178,7 @@ void MirVisReader::handleVarChanges(FillMetadata &fm, Double time) {
     //  pltb (real, Kelvin, "Planet brightness")
     // Note: we put this after correlator setup to ensure that all 
     // lines have been added to the source
-    char *plvar[] = { "plangle", "plmaj", "plmin", "pltb" };
+    const char *plvar[] = { "plangle", "plmaj", "plmin", "pltb" };
 
     for(i=0, vupd=0; i < 4 && ! vupd;  i++) 
 	uvprobvr_c(uv_handle_p, plvar[i], vtype, &vlen, &vupd);

@@ -1902,6 +1902,8 @@ bool variant::empty() const {
 	case RECORD:
 		return val.recordv->empty();
 	}
+
+	return false; // Looks right for unhandled case???
 }
 
 }	// casac namespace

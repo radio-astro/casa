@@ -447,11 +447,9 @@ Bool CarmaFiller::Debug(int level)
 // ==============================================================================================
 void CarmaFiller::checkInput(Block<Int>& narrow, Block<Int>& window)
 {
-  Bool ok=True;
   Int i, nread, nwread, vlen, vupd;
   char vtype[10], vdata[64];
   Float epoch;
-  Float zero = 0.0;
 
   if (Debug(1)) cout << "CarmaFiller::checkInput" << endl;
 
@@ -597,7 +595,6 @@ void CarmaFiller::checkInput(Block<Int>& narrow, Block<Int>& window)
 	for (i=1; i<npol_p; i++) {
 	  uvread_c(uv_handle_p, preamble, data, flags, MAXCHAN, &nread);
 	  if (nread <= 0) {
-	    ok = False;
 	    break;
 	  }
 	  if (i==1) cout << "POL(" << i << ") = " << pol_p << endl;
@@ -611,7 +608,6 @@ void CarmaFiller::checkInput(Block<Int>& narrow, Block<Int>& window)
   }
   if (nvis == 0) {
     throw(AipsError("CarmaFiller: Bad first uvread: no narrow or wide band data present"));
-    ok = False;
     return;
   } else
     cout << "CarmaFiller::checkInput: " << nvis << " records found" << endl;
@@ -876,7 +872,7 @@ void CarmaFiller::fillObsTables()
 // Loop over the visibility data and fill the main table of the MeasurementSet 
 // as you find corr/wcorr's
 //
-void CarmaFiller::fillMSMainTable(Bool scan)
+void CarmaFiller::fillMSMainTable(Bool /*scan*/)
 {
   if (Debug(1)) cout << "CarmaFiller::fillMSMainTable" << endl;
 
@@ -904,7 +900,7 @@ void CarmaFiller::fillMSMainTable(Bool scan)
   nAnt_p[0]=0;
 
   receptorAngle_p.resize(1);
-  Int group, i, j, row=-1;
+  Int group, row=-1;
   Double interval;
   Bool lastRowFlag = False;
 
@@ -1235,12 +1231,12 @@ void CarmaFiller::fillAntennaTable()
   // Should check the 'antdiam' UV variable, but it doesn't appear to 
   // exist in our CARMA datasets.
   // So, fill in some likely values
-  Float diameter=25;                        //# most common size (:-)
-  if (array_p=="ATCA")     diameter=22;     //# only at 'low' freq !!
-  if (array_p=="HATCREEK") diameter=6;
-  if (array_p=="BIMA")     diameter=6;
-  if (array_p=="CARMA")    diameter=8;
-  if (array_p=="OVRO")     diameter=10;
+//  Float diameter=25;                        //# most common size (:-)
+//  if (array_p=="ATCA")     diameter=22;     //# only at 'low' freq !!
+//  if (array_p=="HATCREEK") diameter=6;
+//  if (array_p=="BIMA")     diameter=6;
+//  if (array_p=="CARMA")    diameter=8;
+//  if (array_p=="OVRO")     diameter=10;
 
   if (nAnt == 15 && array_p=="OVRO") {
     cout << "CARMA array (6 OVRO, 9 BIMA) assumed" << endl;
@@ -1402,11 +1398,7 @@ void CarmaFiller::fillSpectralWindowTable(Bool use_lsrk)
   MSPolarizationColumns&  msPol(msc_p->polarization());
   MSDopplerColumns&       msDop(msc_p->doppler());
 
-  Int iFreq = 0;
-  Int nChan = nchan_p + nwide_p;
   Int nCorr = 1;            // only 1 polarization 
-  Int iChan;
-  Int spw=0;
   Int i, j, side;
   Double BW = 0.0;
 
@@ -1625,7 +1617,7 @@ void CarmaFiller::fillSourceTable()
   
 
   // 
-  for (Int src=0; src < source_p.nelements(); src++) {
+  for (Int src=0; src < (Int) source_p.nelements(); src++) {
 
     skip = 0;
     for (Int i=0; i<src; i++) {               // loop over sources to avoid duplicates
@@ -1921,7 +1913,7 @@ void CarmaFiller::Tracking(int record)
     object_p = vdata;  // also track object name whenever changed
 
 
-    for (i=0, j=-1; i<source_p.nelements(); i++) {    // find first matching source name
+    for (i=0, j=-1; i<(int) source_p.nelements(); i++) {    // find first matching source name
       if (source_p[i] == object_p) {
 	j = i ;
 	break;
@@ -2085,7 +2077,7 @@ void CarmaFiller::init_window(Block<Int>& narrow, Block<Int>& window)
   if (nspect > 0 && narrow[0] > 0) {         // fix up the keep[] array from the narrow= keyword
     for (j=0; j<nspect; j++)                 // flag all so we don't keep them
       win.keep[j] = 0;
-    for (j=0; j<narrow.nelements(); j++) {   // keep the ones listed in the narrow= keyword
+    for (j=0; j<(int) narrow.nelements(); j++) {   // keep the ones listed in the narrow= keyword
       k = narrow[j]-1;
       if (k >= 0 || k < nspect)
 	win.keep[k] = 1;
@@ -2112,7 +2104,7 @@ void CarmaFiller::init_window(Block<Int>& narrow, Block<Int>& window)
     if (window[0] > 0) {
       for (j=0; j<nwide; j++)
 	win.keep[idx+j] = 0;
-      for (j=0; j<window.nelements(); j++) {
+      for (j=0; j<(int) window.nelements(); j++) {
 	k = window[j]-1;
 	if (k >= 0 || k < nwide-2)
 	  win.keep[idx+k] = 1;
@@ -2135,11 +2127,11 @@ void CarmaFiller::init_window(Block<Int>& narrow, Block<Int>& window)
 	   << "\n";
 
     cout << "narrow: " ;
-    for (i=0; i<narrow.nelements(); i++)
+    for (i=0; i<(int) narrow.nelements(); i++)
 	cout << narrow[i] << " ";
     cout << endl;
     cout << "win: " ;
-    for (i=0; i<window.nelements(); i++)
+    for (i=0; i<(int) window.nelements(); i++)
 	cout << window[i] << " ";
     cout << endl;
   }

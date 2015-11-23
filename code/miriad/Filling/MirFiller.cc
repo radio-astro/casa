@@ -118,7 +118,7 @@ MirFiller::~MirFiller()
     if (defpolsel_p != NULL) delete defpolsel_p;
 }
 
-void MirFiller::noJoinFill(const String& msfile) { 
+void MirFiller::noJoinFill(const String& /*msfile*/) {
     // fill the output MS according to the current selections and options
 
     if (Debug(3)) cout << FILLERNAME << "::noJoinFill()" << endl;
@@ -552,12 +552,13 @@ void MirFiller::joinFill(const String& msfile) {
 	    // swap in desired setup for this source if one has been defined;
 	    // otherwise, use the default
 	    ConstMirPolSetup *use = NULL;
-	    if (0 /* we have set by-source polarization selections */) 
-		1; /* use = source selection */
-	    else if (defpolsel_p != NULL) 
-		use = defpolsel_p;
-	    else 
-		use = &(rdr_p.getDefaultPolSetup());
+	    if (0 /* we have set by-source polarization selections */){
+	        // 1; /* use = source selection */
+	    } else if (defpolsel_p != NULL) {
+	        use = defpolsel_p;
+	    } else {
+	        use = &(rdr_p.getDefaultPolSetup());
+	    }
 
 	    if (use != fm.pol) {
 		fm.pol = use;
@@ -1162,7 +1163,7 @@ void MirFiller::setOptions(const Record &opts) {
 
 }
  
-void MirFiller::flushObsRecord(FillMetadata &fm, Double time) {
+void MirFiller::flushObsRecord(FillMetadata & fm, Double /*time*/) {
     // add the current observation information as a new record to the
     // output ms's OBSERVATION subtable
     if (Debug(3)) cout << FILLERNAME << "::flushObsRecord()" << endl;
@@ -1197,7 +1198,7 @@ void MirFiller::flushObsRecord(FillMetadata &fm, Double time) {
     if (Debug(3)) cout << "leaving flushObsRecord()" << endl;
 }
 
-void MirFiller::addAntennaPositions(FillMetadata &fm, Double time) {
+void MirFiller::addAntennaPositions(FillMetadata &fm, Double /*time*/) {
     if (Debug(3)) cout << FILLERNAME << "::addAntennaPositions()" << endl;
 
     MSAntennaColumns& ant = fm.msc->antenna();
@@ -1774,13 +1775,9 @@ void MirFiller::addPolarization(FillMetadata& fm, Bool addCurrentOnly) {
     MSPolarization &poltbl = fm.ms->polarization();
     MSPolarizationColumns &pc = fm.msc->polarization();
 
-    Int ncorr=1, nrec=1;
+    Int ncorr=1;
     if (joinpol_p) {
 	ncorr = fm.pol->getCorrCount();
-	nrec = 1;
-    } else {
-	ncorr = 1;
-	nrec = (addCurrentOnly) ? 1 : fm.pol->getCorrCount();
     }
     
     Vector<Int> type(ncorr);
@@ -1902,7 +1899,7 @@ void MirFiller::initState(FillMetadata &fm) {
     st.flagRow().put(row, False);
 }
 
-void MirFiller::copyHistoryFrom(FillMetadata &fm, String tablename) {
+void MirFiller::copyHistoryFrom(FillMetadata &/*fm*/, String /*tablename*/) {
     // copy the history from a given HISTORY table
     // 
     // currently not supported
@@ -1964,7 +1961,7 @@ void MirFiller::addProcessor(FillMetadata &fm) {
     proc.flagRow().put(row, False);
 }
 
-void MirFiller::flushPointingRecords(FillMetadata &fm, Double time) {
+void MirFiller::flushPointingRecords(FillMetadata &/*fm*/, Double /*time*/) {
     // add the records to the POINTING subtable for the current set of antennas
     // 
     // no records are filled out at this time
@@ -1993,7 +1990,7 @@ void MirFiller::addHistoryMessage(FillMetadata &fm, String priority,
     his.message().put(row, msg);
 }
 
-void MirFiller::updateIntTime(FillMetadata &fm, Double time) { 
+void MirFiller::updateIntTime(FillMetadata &/*fm*/, Double /*time*/) {
     // no special processing necessary
 }
 
@@ -2153,7 +2150,7 @@ void MirFiller::updateFreqSetup(FillMetadata &fm, Double time) {
     }
 }
 
-void MirFiller::updatePolSetup(FillMetadata &fm, Double time) { 
+void MirFiller::updatePolSetup(FillMetadata &fm, Double /*time*/) {
     // handle a new polarization correlation type here only when we are 
     // loading polarizations on-the-fly (i.e. dataset was not prescanned) 
     // as single-polarization setups.
@@ -2255,7 +2252,7 @@ void MirFiller::addTsysRecords(FillMetadata &fm, Double time,
     }
 }
 
-void MirFiller::flushMovingFields(FillMetadata& fm, Double etime) {
+void MirFiller::flushMovingFields(FillMetadata& fm, Double /*etime*/) {
 
     if (!fm.movingsrc) return;
 
