@@ -249,8 +249,7 @@ casa_add_assay( imageanalysis Annotations/test/tRegionTextList.cc )
 
 casa_add_assay( imageanalysis ImageAnalysis/test/dImageHistograms.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/dImageMoments.cc )
-casa_add_assay( imageanalysis ImageAnalysis/test/tAntennaResponses.cc )
-# casa_add_assay( imageanalysis ImageAnalysis/test/tImage2DConvolver.cc )
+# casa_add_assay( imageanalysis ImageAnalysis/test/tAntennaResponses.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageAnalysis.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageAnalysis2.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageConvolver.cc )
@@ -279,6 +278,7 @@ casa_add_assay( imageanalysis IO/test/tRegionTextParser.cc )
 
 casa_add_assay( imageanalysis Regions/test/tCasacRegionManager.cc )
 
+casa_add_unit_test ( MODULES imageanalysis SOURCES ImageAnalysis/test/tAntennaResponses.cc )
 casa_add_unit_test ( MODULES imageanalysis SOURCES ImageAnalysis/test/tCasaImageBeamSet.cc )
 casa_add_unit_test ( MODULES imageanalysis SOURCES ImageAnalysis/test/tComponentImager.cc )
 casa_add_unit_test ( MODULES imageanalysis SOURCES ImageAnalysis/test/tImage2DConvolver.cc )

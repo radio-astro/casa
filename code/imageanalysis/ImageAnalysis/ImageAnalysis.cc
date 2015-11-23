@@ -452,65 +452,6 @@ Record ImageAnalysis::deconvolvecomponentlist(
 	return retval;
 }
 
-/*
-Bool ImageAnalysis::remove(Bool verbose)
-{
-	_onlyFloat(__func__);
-  *_log << LogOrigin(className(), __func__);
-  Bool rstat(False);
-
-  // Let's see if it exists.  If it doesn't, then the user has
-  // deleted it, or its a readonly expression
-  if (!_imageFloat->isPersistent()) {
-    *_log << LogIO::WARN
-            << "This image tool is not associated with a persistent disk file. It cannot be deleted"
-            << LogIO::POST;
-    return False;
-  }
-  Bool strippath(False);
-  String fileName = _imageFloat->name(strippath);
-  if (fileName.empty()) {
-    *_log << LogIO::WARN << "Filename is empty or does not exist."
-            << LogIO::POST;
-    return False;
-  }
-  File f(fileName);
-  if (!f.exists()) {
-    *_log << LogIO::WARN << fileName << " does not exist." << LogIO::POST;
-    return False;
-  }
-
-  // OK the file exists. Close ourselves first.  This deletes
-  // the temporary persistent image as well, if any and destroys
-  // the DDs associated with this image (they reference the image
-  // and will prevent us from deleting it)
-  if (_imageFloat.get() != 0) {
-    *_log << (verbose ? LogIO::NORMAL : LogIO::DEBUG1)
-            << "Detaching from image" << LogIO::POST;
-  }
-  _imageFloat.reset();
-
-  // Now try and blow it away.  If it's open, tabledelete won't delete it.
-  String message;
-  if (Table::canDeleteTable(message, fileName, True)) {
-    try {
-      Table::deleteTable(fileName, True);
-      rstat = True;
-      *_log << (verbose ? LogIO::NORMAL : LogIO::DEBUG1)
-              << "deleted table " << fileName << LogIO::POST;
-    } catch (AipsError x) {
-      *_log << LogIO::SEVERE << "Failed to delete file " << fileName
-              << " because " << x.getMesg() << LogIO::POST;
-    };
-  } else {
-    *_log << LogIO::SEVERE << "Cannot delete file " << fileName
-            << " because " << message << LogIO::POST;
-  }
-
-  return rstat;
-}
-*/
-
 Record ImageAnalysis::findsources(const int nMax, const double cutoff,
 		Record& Region, const String& mask, const Bool point, const Int width,
 		const Bool absFind) {
@@ -645,62 +586,6 @@ Vector<Bool> ImageAnalysis::haslock() {
 	rstat[1] = _imageFloat->hasLock(FileLocker::Write);
 	return rstat;
 }
-
-/*
-Bool ImageAnalysis::insert(
-	const String& infile, Record& Region,
-	const Vector<double>& locatePixel, Bool verbose
-) {
-	_onlyFloat(__func__);
-	*_log << LogOrigin(className(), __func__);
-	Bool doRef;
-	if (locatePixel.size() == 0) {
-		doRef = True;
-	}
-	else {
-		doRef = False;
-	}
-	Int dbg = 0;
-
-	ImageInterface<Float>* pInImage = 0;
-	ImageUtilities::openImage(pInImage, infile);
-	std::unique_ptr<ImageInterface<Float> > inImage(pInImage);
-	// Create region and subImage for image to be inserted
-	std::unique_ptr<const ImageRegion> pRegion(
-		ImageRegion::fromRecord(
-			verbose ? _log.get() : 0, pInImage->coordinates(),
-			pInImage->shape(), Region
-		)
-	);
-	SubImage<Float> inSub(*pInImage, *pRegion);
-	// Generate output pixel location
-	const IPosition inShape = inSub.shape();
-	const IPosition outShape = _imageFloat->shape();
-	const uInt nDim = _imageFloat->ndim();
-	Vector<Double> outPix(nDim);
-	const uInt nDim2 = locatePixel.nelements();
-	//
-	if (doRef) {
-		outPix.resize(0);
-	}
-	else {
-		for (uInt i = 0; i < nDim; i++) {
-			if (i < nDim2) {
-				//	  outPix[i] = locatePixel[i] - 1.0;              // 1 -> 0 rel
-				outPix[i] = locatePixel[i];
-			}
-			else {
-				outPix[i] = (outShape(i) - inShape(i)) / 2.0; // Centrally located
-			}
-		}
-	}
-	// Insert
-	ImageRegrid<Float> ir;
-	ir.showDebugInfo(dbg);
-	ir.insert(*_imageFloat, outPix, inSub);
-	return True;
-}
-*/
 
 Bool ImageAnalysis::ispersistent() {
 	_onlyFloat(__func__);

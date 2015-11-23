@@ -121,8 +121,6 @@ public:
     	const Record& complist, const Int channel, const Int polarization
     );
 
-    //Bool remove(Bool verbose=true);
-
     Record findsources(const Int nmax, const Double cutoff, Record& region, 
                         const String& mask, const Bool point = True, 
                         const Int width = 5, const Bool negfind = False);
@@ -132,12 +130,7 @@ public:
                      const Int npts = 0, const String& method = "linear");
 
     Vector<Bool> haslock();
-    /*
-    Bool insert(
-    	const String& infile, Record& region,
-    	const Vector<double>& locate, Bool verbose
-    );
-	*/
+
     Bool ispersistent();
 
     Bool lock(const Bool writelock = False, const Int nattempts = 0);
