@@ -40,6 +40,54 @@
 
 namespace casa {
 
+template <class T> void ImageFactory::remove(SPIIT& image, Bool verbose) {
+	ThrowIf(
+		! image, "Image cannot be null"
+	);
+	ThrowIf(
+		! image->isPersistent(),
+		"This image tool is not associated with a "
+		"persistent disk file. It cannot be deleted"
+	);
+	auto fileName = image->name(False);
+	ThrowIf(
+		fileName.empty(),
+		"Filename is empty or does not exist."
+    );
+	File f(fileName);
+	ThrowIf(
+		! f.exists(),
+		fileName + " does not exist."
+	);
+
+	// Destroy object before deleting image. This is why a reference
+	// needs to be passed in.
+	image.reset();
+
+	// Now try and blow it away.  If it's open, tabledelete won't delete it.
+	String message;
+	LogIO log;
+	if (Table::canDeleteTable(message, fileName, True)) {
+		try {
+			Table::deleteTable(fileName, True);
+			log << (verbose ? LogIO::NORMAL : LogIO::DEBUG1)
+            	<< "deleted table " << fileName << LogIO::POST;
+		}
+		catch (const AipsError& x) {
+			ThrowCc(
+				"Failed to delete file " + fileName
+				+ " because " + x.getMesg()
+			);
+		};
+	}
+	else {
+		ThrowCc(
+			"Cannot delete file " + fileName
+            + " because " + message
+		);
+	}
+}
+
 template <class T> SPIIT ImageFactory::createImage(
     const String& outfile,
     const CoordinateSystem& cSys, const IPosition& shape,

@@ -121,7 +121,7 @@ public:
     	const Record& complist, const Int channel, const Int polarization
     );
 
-    Bool remove(Bool verbose=true);
+    //Bool remove(Bool verbose=true);
 
     Record findsources(const Int nmax, const Double cutoff, Record& region, 
                         const String& mask, const Bool point = True, 

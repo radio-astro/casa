@@ -452,6 +452,7 @@ Record ImageAnalysis::deconvolvecomponentlist(
 	return retval;
 }
 
+/*
 Bool ImageAnalysis::remove(Bool verbose)
 {
 	_onlyFloat(__func__);
@@ -508,6 +509,7 @@ Bool ImageAnalysis::remove(Bool verbose)
 
   return rstat;
 }
+*/
 
 Record ImageAnalysis::findsources(const int nMax, const double cutoff,
 		Record& Region, const String& mask, const Bool point, const Int width,

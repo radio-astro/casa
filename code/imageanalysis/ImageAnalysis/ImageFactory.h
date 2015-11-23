@@ -158,6 +158,8 @@ public:
         const RecordInterface& rec, const String& imagename=""
     );
 
+    template <class T> static void remove(SPIIT& image, Bool verbose);
+
     // if successful, image will be reset to point to new image upon return
     static void rename(
     	SPIIF& image, const String& name, const Bool overwrite
