@@ -216,6 +216,7 @@ def tclean(
     #paramList.printParameters()
 
     pcube=False
+    concattype=''
     if parallel==True and specmode!='mfs':
         pcube=True
         parallel=False
@@ -231,6 +232,8 @@ def tclean(
          imager = PyParallelContSynthesisImager(params=paramList)
     elif pcube==True:
          imager = PyParallelCubeSynthesisImager(params=paramList)
+         # virtualconcat type 
+         concattype='virtualmove'
     else:
          print 'Invalid parallel combination in doClean.'
          return False
@@ -316,7 +319,9 @@ def tclean(
 
         if (pcube):
             print "running concatImages ..."
-            imager.concatImages(type='virtualnomove')
+            casalog.post("Running virtualconcat (type=%s) of sub-cubes" % concattype,"INFO2", "task_tclean")
+            # fixed to move subcubes
+            imager.concatImages(type=concattype)
 
         ## Close tools.
         imager.deleteTools()
