@@ -1731,20 +1731,35 @@ bool image::remove(const bool finished, const bool verbose) {
 		if (detached()) {
 			return False;
 		}
-		_stats.reset(0);
-
-		if (_image->remove(verbose)) {
-			// Now done the image tool if desired.
-			if (finished) {
-				done();
-			}
-			return True;
+		_remove(verbose);
+		if (finished) {
+			done();
 		}
-		throw AipsError("Error removing image.");
-	} catch (const AipsError &x) {
+		return True;
+	}
+	catch (const AipsError &x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
+	}
+	return False;
+}
+
+void image::_remove(bool verbose) {
+	pair<SPIIF,SPIIC> mypair;
+	if (_image->isFloat()) {
+		mypair.first = _image->getImage();
+	}
+	else {
+		mypair.second = _image->getComplexImage();
+	}
+	_stats.reset();
+	_image.reset();
+	if (mypair.first) {
+		ImageFactory::remove(mypair.first, verbose);
+	}
+	else {
+		ImageFactory::remove(mypair.second, verbose);
 	}
 }
 
@@ -1788,15 +1803,14 @@ bool image::done(const bool remove, const bool verbose) {
 		// resetting _stats must come before the table removal or the table
 		// removal will fail
 		_stats.reset(0);
+        MeasIERS::closeTables();
 
 		if (remove && !detached()) {
-			if (!_image->remove(verbose)) {
-				_log << LogIO::WARN << "Failed to remove image file"
-						<< LogIO::POST;
-			}
+			_remove(verbose);
 		}
-		_image.reset();
-        MeasIERS::closeTables();
+		else {
+			_image.reset();
+		}
 		return True;
 	}
 	catch (const AipsError& x) {

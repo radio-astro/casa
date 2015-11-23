@@ -148,3 +148,6 @@ template <class T> static image* _regrid(
 	const vector<String>& msgs
 );
 
+void _remove(bool verbose);
+
+
