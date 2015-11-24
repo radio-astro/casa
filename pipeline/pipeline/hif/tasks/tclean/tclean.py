@@ -40,6 +40,15 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
     subcontms = basetask.property_with_default('subcontms', False)
 
     @property
+    def imagename(self):
+        return self._imagename
+
+    @imagename.setter
+    def imagename(self, value):
+        print 'DEBUG_DM:', value
+        self._imagename = value.replace('STAGENUMBER', str(self.context.stage))
+
+    @property
     def noiseimage(self):
         return self._noiseimage
 

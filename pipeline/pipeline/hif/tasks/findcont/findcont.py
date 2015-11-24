@@ -81,7 +81,7 @@ class FindCont(basetask.StandardTaskTemplate):
                 else:
                     LOG.info('Determining continuum ranges for field %s, spw %s' % (source_name, spwid))
 
-                    findcont_basename = '%s.I.findcont' % (os.path.basename(target['imagename']).replace('spw%s' % (target['spw'].replace(',','_')), 'spw%s' % (spwid)))
+                    findcont_basename = '%s.I.findcont' % (os.path.basename(target['imagename']).replace('spw%s' % (target['spw'].replace(',','_')), 'spw%s' % (spwid)).replace('STAGENUMBER', str(context.stage)))
 
                     # determine the gridder mode here (temporarily ...)
                     clheuristics = makeimlist.MakeImListHeuristics(context=context,

@@ -584,7 +584,7 @@ class MakeImListHeuristics(object):
         if output_dir:
             namer.output_dir(output_dir)
 
-        namer.stage(self.context.stage)
+        namer.stage('STAGENUMBER')
         if intent:
             namer.intent(intent)
         if field:
