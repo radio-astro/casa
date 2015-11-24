@@ -1961,7 +1961,7 @@ void MSTransformManager::initDataSelectionParams()
 				numOfSelChanMap_p[spw] += channelWidth;
 			}
 
-			for (uInt inpChan=channelStart;inpChan<=channelStop;inpChan += channelStep)
+			for (Int inpChan=channelStart;inpChan<=channelStop;inpChan += channelStep)
 			{
 				inputOutputChanIndexMap_p[spw].push_back(inpChan);
 			}
@@ -5690,6 +5690,10 @@ void MSTransformManager::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 				{
 					vb->visCubeModel();
 				}
+				default:
+				{
+					vb->visCube();
+				}
 			}
 
 		}
@@ -7829,7 +7833,7 @@ template <class T> void MSTransformManager::flagCumSumNonZeroKernel(	Vector<T> &
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-template <class T> void MSTransformManager::smooth(	Int inputSpw,
+template <class T> void MSTransformManager::smooth(	Int ,
 													Vector<T> &inputDataStripe,
 													Vector<Bool> &inputFlagsStripe,
 													Vector<Float> &inputWeightsStripe,
@@ -7901,7 +7905,7 @@ void MSTransformManager::smoothKernel(	Vector<Float> &inputData,
 // -----------------------------------------------------------------------
 template <class T> void  MSTransformManager::plainSmooth(	Vector<T> &inputData,
 															Vector<Bool> &inputFlags,
-															Vector<Float> &inputWeights,
+															Vector<Float> &,
 															Vector<T> &outputData,
 															Vector<Bool> &outputFlags,
 															uInt outputPos)
@@ -7929,7 +7933,7 @@ template <class T> void  MSTransformManager::plainSmooth(	Vector<T> &inputData,
 // -----------------------------------------------------------------------
 template <class T> void  MSTransformManager::plainSmoothSpectrum(	Vector<T> &inputData,
 																	Vector<Bool> &inputFlags,
-																	Vector<Float> &inputWeights,
+																	Vector<Float> &,
 																	Vector<T> &outputData,
 																	Vector<Bool> &outputFlags,
 																	uInt outputPos)
@@ -8206,9 +8210,12 @@ template <class T> void MSTransformManager::averageSmoothRegrid(Int inputSpw,
 //
 // -----------------------------------------------------------------------
 void MSTransformManager::smoothFourierFloat(Int,
-        Vector<Float> &inputDataStripe, Vector<Bool> &inputFlagStripe,
-        Vector<Float> &inputWeightStripe,
-        Vector<Float> &outputDataStripe, Vector<Bool> &outputFlagStripe) {
+        									Vector<Float> &inputDataStripe,
+        									Vector<Bool> &inputFlagStripe,
+        									Vector<Float> &,
+        									Vector<Float> &outputDataStripe,
+        									Vector<Bool> &outputFlagStripe)
+{
     // replace flagged channel data with zero
     Int const numChan = inputDataStripe.nelements();
     for (Int ichan = 0; ichan < numChan; ++ichan) {
