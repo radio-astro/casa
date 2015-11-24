@@ -46,6 +46,8 @@ public:
 	~MSTransformIterator();
 
     const MeasurementSet & ms () const {return *transformedMS_p;};
+
+	vi::VisBuffer2 * getVisBuffer (const vi::VisibilityIterator2 * vi);
 	vi::VisBuffer2 * getVisBuffer () {return buffer_p;}
 
     void originChunks ();

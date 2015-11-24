@@ -654,9 +654,10 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
 	logLoad("Loading chunks......");
 
 	// Initialize VI and get VB
+	vi::VisBuffer2* vb = vi.getVisBuffer();
+
 	vi.originChunks();
 	vi.origin();
-	vi::VisBuffer2* vb = vi.getVisBuffer();
 
 	nAnt_ = vb->nAntennas();  // needed to set up indexer
 	// set frame; VB2 does not handle N_Types, just passes it along

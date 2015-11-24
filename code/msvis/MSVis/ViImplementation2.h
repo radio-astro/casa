@@ -595,6 +595,7 @@ public:
 
 protected:
 
+    void associateVbWithVi2 (VisBuffer2 * vb, const VisibilityIterator2 * vi);
     VisBuffer2 * createAttachedVisBuffer (VisBufferType t, VisBufferOptions options);
 
 

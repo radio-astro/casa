@@ -579,7 +579,7 @@ protected:
 
 private:
 
-    VisBuffer2 * vb_p;
+    VisBuffer2 * vb_p; // [own]
     VisibilityIterator2 * vi_p; // [use] The container
     CountedPtr<WeightScaling> weightScaling_p;
 

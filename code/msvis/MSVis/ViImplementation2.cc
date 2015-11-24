@@ -15,6 +15,17 @@ namespace casa {
 namespace vi {
 
 void
+ViImplementation2::associateVbWithVi2 (VisBuffer2 * vb, const VisibilityIterator2 * vi)
+{
+    // Associates the top-level VI with the presumably top-level VB.
+    // Implemented here since the associateWithVi2 method is protected
+    // but ViImplementation has friend access to VB.
+
+    vb->associateWithVi2(vi);
+}
+
+
+void
 ViImplementation2::azel0Calculate (Double time, MSDerivedValues & msd,
         MDirection & azel0, const MEpoch & mEpoch0)
 {
