@@ -254,7 +254,8 @@ template <class	T, class R, class RFilter>
    */
   TableSAXReader(bool verbose, RFilter& rFilter, TableFiller tableFiller_f_p, std::map<AtmPhaseCorrectionMod::AtmPhaseCorrection, ASDM2MSFiller*>& msFillers_m) {
 
-    LogSinkInterface& lsif = LogSink::globalSink();
+    //LogSinkInterface& lsif = LogSink::globalSink();
+    static_cast<void>(LogSink::globalSink());
 
     // The top level element name can be derived from the template parameter T.
     myContext.asdm_p		       = &asdm;
@@ -291,7 +292,7 @@ template <class	T, class R, class RFilter>
    * Defines the action to perform when an event "opening tag" occurs.
    *
    */ 
-  static void start_element_callback(void *v_p, const xmlChar *name, const xmlChar **attrs) {
+  static void start_element_callback(void *v_p, const xmlChar *name, const xmlChar **) {
     const xmlChar* expectedElement;
     typename ParserContext<T, R, RFilter>::StatesEnum nextState;
 

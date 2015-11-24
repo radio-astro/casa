@@ -739,7 +739,7 @@ void spher(const vector<double>& x, vector<double>& s) {
  */
 void topo2geomat(double lambda, double phi, vector<vector<double> >& mat) {
  
-  double cpsi, spsi, clam, slam, cphi, sphi;
+  double clam, slam, cphi, sphi;
 
   clam = cos(lambda);
   slam = sin(lambda);
@@ -922,7 +922,7 @@ map<int, set<int> > eb_scan_m;
 ** The two parameters begin and end are not used and here only to comply with the Spirit parser's convention.
 **
 */
-void fillScanSet(const char* begin, const char* end) {
+void fillScanSet(const char* , const char* ) {
   for (int i = scanNumber0; i < (scanNumber1+1); i++)
     scan_s.insert(i);
 }
@@ -933,7 +933,7 @@ void fillScanSet(const char* begin, const char* end) {
 ** in the global map eb_scan_m.
 ** The two parameters begin and end are not used and here only to comply with the Spirit parser's convention.
 */  
-void mergeScanSet(const char* begin, const char* end) {
+void mergeScanSet(const char* , const char*) {
   int key = eb_v.back();
   eb_scan_m[key].insert(scan_s.begin(), scan_s.end());
 }
@@ -942,7 +942,7 @@ void mergeScanSet(const char* begin, const char* end) {
 ** Empties the global set scan_s.
 ** The two parameters begin and end are not used and here only to comply with the Spirit parser's convention.
 */
-void clearScanSet(const char* begin, const char* end) {
+void clearScanSet(const char*, const char*) {
   scan_s.clear();
 }
 
@@ -1630,7 +1630,7 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 	  else {
 	    raASDM_vv.push_back(empty_v);
 	    decASDM_vv.push_back(empty_v);
-	    for (unsigned int j = 0; j < v[i]->getNumPolyDir(); j++) {
+	    for (int j = 0; j < v[i]->getNumPolyDir(); j++) {
 	      raASDM_vv.back().push_back(temp_vv[j][0]/3.14159265*180.0);
 	      decASDM_vv.back().push_back(temp_vv[j][1]/3.14159265*180.0);
 	    }
@@ -1643,7 +1643,7 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 	  }
 	  else {
 	    distanceASDM_vv.push_back(empty_v);
-	    for (unsigned int j = 0; j < v[i]->getNumPolyDist(); j++)
+	    for (int j = 0; j < v[i]->getNumPolyDist(); j++)
 	      distanceASDM_vv.back().push_back(temp_v[j] / 1.4959787066e11); // AU
 	  }
 
@@ -1655,7 +1655,7 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 	    }
 	    else {
 	      radVelASDM_vv.push_back(empty_v);
-	      for (unsigned int j = 0; j < v[i]->getNumPolyRadVel(); j++)
+	      for (int j = 0; j < v[i]->getNumPolyRadVel(); j++)
 		radVelASDM_vv.back().push_back(temp_v[j]/ 1.4959787066e11 * 24. * 3600.);   // AU/d
 	    }	
 	  }
@@ -1710,7 +1710,6 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 	  LOG("mjdMS_v -> "+TO_STRING(mjdMS_v.back()));
       
 	  double timeOrigin = 1.0e-09 * v[atiIdxMStime.first]->getTimeOrigin().get();
-	  double timeStart  = 1.0e-09 * v[atiIdxMStime.first]->getTimeInterval().getStart().get();
 	  double time       = 1.0e-09 * atiIdxMStime.second;
       
 	  LOG("timeOrigin="+TO_STRING(timeOrigin)+", time="+TO_STRING(time));
@@ -2375,13 +2374,8 @@ void fillMainLazily2(const string& dsName,
   ostringstream oss;
 
   MainTable&			mainT	= ds_p->getMain();
-  StateTable&			stateT	= ds_p->getState();  
   ConfigDescriptionTable&	cfgDscT = ds_p->getConfigDescription();
   ProcessorTable&		procT   = ds_p->getProcessor();
-
-
-  MainRow*	r      = 0;
-  MainRow*	temp_r = 0;
 
   MainRowCUStruct mRCU_s;
   vector<MainRowCUStruct> mRCU_s_v;
@@ -3181,10 +3175,10 @@ void fillMainLazily(const string& dsName,
 
   LOGENTER("fillMainLazily");
   const MainTable& mainT = ds_p->getMain();
-  const StateTable& stateT = ds_p->getState();
+
   
-  MainRow* r = 0;
-  MainRow* temp_r = 0;
+
+
   vector<MainRow*> v;
   vector<int32_t> mainRowIndex; 
   //
@@ -3431,7 +3425,7 @@ void fillMainLazily(const string& dsName,
 	int64_t startTime = (int64_t)sdmDataSubset.time() -  (int64_t)sdmDataSubset.interval()/2LL + deltaTime/2LL;
 	double   interval = deltaTime / 1000000000.0;
 	
-	int k = 0;
+
 	for (unsigned int iDD = 0; iDD < dataDescriptionIds.size(); iDD++) {
 	  //
 	  // Prepare a pair<int, int> to transport the shape of some cells
@@ -3807,7 +3801,6 @@ vector<T> reorder(const vector<T>& v, vector<int> index) {
  * This function fills the MS Main table from an ASDM Main table which refers to correlator data.
  *
  * given:
- * @parameter rowNum an integer expected to contain the number of the row being processed.
  * @parameter r_p a pointer to the MainRow being processed.
  * @parameter sdmBinData a reference to the SDMBinData containing a lot of information about the binary data being processed. Useful to know the requested ordering of data.
  * @parameter uvwCoords a reference to the UVW calculator.
@@ -3817,7 +3810,7 @@ vector<T> reorder(const vector<T>& v, vector<int> index) {
  * !!!!! One must be carefull to the fact that fillState must have been called before fillMain. During the execution of fillState , the global vector<int> msStateID
  * is filled and will be used by fillMain.
  */ 
-void fillMain(int		rowNum,
+void fillMain(
 	      MainRow*		r_p,
 	      SDMBinData&	sdmBinData,
 	      const VMSData*	vmsData_p,
@@ -4596,7 +4589,7 @@ void partitionMS(vector<int> SwIds,
                  int maxNumChan)
 {
   LOGENTER("partitionMS");
-  for (int i=0; i<SwIds.size(); i++) {
+  for (unsigned int i=0; i<SwIds.size(); i++) {
     ostringstream oss;
     oss<< SwIds.at(i);
     string msname_suffix = ".SpW"+oss.str( );
@@ -4702,7 +4695,8 @@ int main(int argc, char *argv[]) {
   appName = string(argv[0]);
   ofstream ofs;
 
-  LogSinkInterface& lsif = LogSink::globalSink();
+  //LogSinkInterface& lsif = LogSink::globalSink();
+  static_cast<void>(LogSink::globalSink());
 
   uint64_t bdfSliceSizeInMb = 0; // The default size of the BDF slice hold in memory.
 
@@ -5312,10 +5306,10 @@ int main(int argc, char *argv[]) {
   int maxNumChan=1;
   SpectralWindowTable& temp_spwT = ds->getSpectralWindow();
   SpectralWindowRow* temp_spwtrow;
-  int nSpW = temp_spwT.size();
+
   vector<int> SwIds;
   try {
-    for (int i=0; i<temp_spwT.size(); i++) {
+    for (unsigned int i=0; i<temp_spwT.size(); i++) {
       temp_spwtrow = temp_spwT.get()[i];
       maxNumChan=max(maxNumChan, temp_spwtrow->getNumChan());
       SwIds.push_back(temp_spwtrow->getSpectralWindowId().getTagValue());
@@ -5530,15 +5524,15 @@ int main(int argc, char *argv[]) {
 	string aName = r->getName();
 	if (find_first(aName, "&")) replace_all(aName, "&", "#");
 	
-	int antenna_id = iter->second->addAntenna(aName,
-						  r->getStationUsingStationId()->getName(),
-						  xPosition,
-						  yPosition,
-						  zPosition,
-						  xOffset,
-						  yOffset,
-						  zOffset,
-						  (float)r->getDishDiameter().get());	
+	static_cast<void>(iter->second->addAntenna(aName,
+						   r->getStationUsingStationId()->getName(),
+						   xPosition,
+						   yPosition,
+						   zPosition,
+						   xOffset,
+						   yOffset,
+						   zOffset,
+						   (float)r->getDishDiameter().get()));	
       }
     }
 
@@ -6951,12 +6945,12 @@ int main(int argc, char *argv[]) {
       fillMainLazily2(dsName, ds, selected_eb_scan_m,effectiveBwPerDD_m);
   }
   else {
-    ConfigDescriptionTable&	cfgT   = ds->getConfigDescription();
+
     const MainTable&		mainT  = ds->getMain();
     const StateTable&		stateT = ds->getState();
     
-    MainRow*				r							  = 0;
-    MainRow*				temp_r							  = 0;
+
+
     vector<MainRow*>			v;
     vector<int32_t>			mainRowIndex; 
     //
@@ -6999,8 +6993,8 @@ int main(int argc, char *argv[]) {
 	ConfigDescriptionTable& cT = ds->getConfigDescription();
 	ConfigDescriptionRow* cR = cT.getRowByKey(cdId);
 	Tag pId = cR->getProcessorId();
-	ProcessorTable& pT = ds->getProcessor();
-	ProcessorRow* pR = pT.getRowByKey(pId);
+
+
 	ProcessorType processorType = ds->getProcessor().getRowByKey(pId)->getProcessorType();
 	infostream.str("");
 	infostream << "ASDM Main row #" << mainRowIndex[i] << " contains data produced by a '" << CProcessorType::name(processorType) << "'." ;
@@ -7043,7 +7037,7 @@ int main(int argc, char *argv[]) {
 	  }
 	  vmsDataPtr = sdmBinData.getDataCols();
 	   
-	  fillMain(i,
+	  fillMain(
 		   v[i],
 		   sdmBinData,
 		   vmsDataPtr,
@@ -7080,7 +7074,7 @@ int main(int argc, char *argv[]) {
 	      msMainRowsInSubscanChecker.check(vmsDataPtr, v[i], mainRowIndex[i], absBDFpath);
 	      numberOfReadIntegrations += numberOfIntegrations;
 	      numberOfMSMainRows += vmsDataPtr->v_antennaId1.size();
-	      fillMain(i, v[i], sdmBinData, vmsDataPtr, uvwCoords, effectiveBwPerDD_m, complexData,  mute, ac_xc_per_timestamp);
+	      fillMain(v[i], sdmBinData, vmsDataPtr, uvwCoords, effectiveBwPerDD_m, complexData,  mute, ac_xc_per_timestamp);
 	      infostream << vmsDataPtr->v_antennaId1.size()  << " MS Main rows." << endl;
 	      info(infostream.str());
 	    }
@@ -7095,7 +7089,7 @@ int main(int argc, char *argv[]) {
 	      infostream << "ASDM Main row #" << mainRowIndex[i] << " - " << numberOfReadIntegrations  << " integrations done so far - the next " << numberOfRemainingIntegrations << " integrations produced " ;
 	      
 	      msMainRowsInSubscanChecker.check(vmsDataPtr, v[i], mainRowIndex[i], absBDFpath);
-	      fillMain(i, v[i], sdmBinData, vmsDataPtr, uvwCoords, effectiveBwPerDD_m, complexData, mute, ac_xc_per_timestamp);
+	      fillMain(v[i], sdmBinData, vmsDataPtr, uvwCoords, effectiveBwPerDD_m, complexData, mute, ac_xc_per_timestamp);
 	      
 	      infostream << vmsDataPtr->v_antennaId1.size()  << " MS Main rows." << endl;
 	      info(infostream.str());
@@ -7128,11 +7122,6 @@ int main(int argc, char *argv[]) {
 	info(infostream.str());
       }
       catch ( SDMDataObjectReaderException& e ) {
-	infostream.str("");
-	infostream << e.getMessage();
-	info(infostream.str());
-      }
-      catch (ConversionException& e) {
 	infostream.str("");
 	infostream << e.getMessage();
 	info(infostream.str());

@@ -398,7 +398,7 @@ map<int, set<int> > eb_scan_m;
 ** to by the global variable scan_s.
 ** The two parameters begin and end are not used and here only to comply with the Spirit parser's convention.
 */
-void fillScanSet(const char* begin, const char* end) {
+void fillScanSet(const char* , const char* ) {
   for (int i = scanNumber0; i < (scanNumber1+1); i++)
     scan_s.insert(i);
 }
@@ -409,7 +409,7 @@ void fillScanSet(const char* begin, const char* end) {
 ** in the global map eb_scan_m.
 ** The two parameters begin and end are not used and here only to comply with the Spirit parser's convention.
 */  
-void mergeScanSet(const char* begin, const char* end) {
+void mergeScanSet(const char* , const char* ) {
   int key = eb_v.back();
   eb_scan_m[key].insert(scan_s.begin(), scan_s.end());
 }
@@ -418,7 +418,7 @@ void mergeScanSet(const char* begin, const char* end) {
 ** Empties the global set scan_s.
 ** The two parameters begin and end are not used and here only to comply with the Spirit parser's convention.
 */
-void clearScanSet(const char* begin, const char* end) {
+void clearScanSet(const char* , const char* ) {
   scan_s.clear();
 }
 
@@ -428,7 +428,7 @@ void clearScanSet(const char* begin, const char* end) {
 */
 struct eb_scan_selection : public grammar<eb_scan_selection> {
   template<typename ScannerT> struct definition {
-    definition (eb_scan_selection const& self) {
+    definition (eb_scan_selection const& ) {
       eb_scan_list   = eb_scan >> *(';' >> eb_scan);
       eb_scan	     = (eb[push_back_a(eb_v, ebNumber)][assign_a(ebNumber, allEbs)] >> scan_list)[&mergeScanSet][&clearScanSet];
       eb	     = !(int_p[assign_a(readEb)] >> ':')[assign_a(ebNumber, readEb)];
@@ -737,10 +737,10 @@ pair<uInt, uInt> put(MSFlagAccumulator<char>& accumulator,
     flag.get((uInt)iRow0, flagCell);
     
     bool allSet = true;
-    int notNull = 0;
+
     int k = 0;
-    for (uInt i = 0;  i < numChan; i++)
-      for (uInt j = 0; j < numCorr; j++) {
+    for (int i = 0;  i < numChan; i++)
+      for (int j = 0; j < numCorr; j++) {
 	flagged = flag_v_p->at(k++) != (char) 0;
       
 	flagCell(j, i) = flagged ; // flagCell(j, i) || flagged;    // Let's OR the content of flag with what's found in the BDF flags.
@@ -1083,13 +1083,14 @@ int main (int argC, char * argV[]) {
 	  selected_eb_scan_m[iterr_m->first] = SetAndSet<int>(iter_m->second, iterr_m->second);
 
     for (map<int, set<int> >::iterator iterr_m = all_eb_scan_m.begin(); iterr_m != all_eb_scan_m.end(); iterr_m++)
-      if ((iter_m=eb_scan_m.find(iterr_m->first)) != eb_scan_m.end())
+      if ((iter_m=eb_scan_m.find(iterr_m->first)) != eb_scan_m.end()) {
 	if ((iter_m->second).empty())
 	  selected_eb_scan_m[iterr_m->first].insert((iterr_m->second).begin(), (iterr_m->second).end());
 	else {
 	  set<int> s = SetAndSet<int>(iter_m->second, iterr_m->second);
 	  selected_eb_scan_m[iterr_m->first].insert(s.begin(), s.end());
 	}
+      }
 
     ostringstream	oss;
     oss << "The following scans will be processed : " << endl;
@@ -1151,7 +1152,7 @@ int main (int argC, char * argV[]) {
   MSFlagEval flagEval(flagmask.to_ulong(), processUncorrectedData ? 3 : 0); // If we process uncorrected data we ignore the combination
                                                                             // 3 = WVR_APC | INTEGRATION_FULLY_BLANKED
 
-  uInt	iASDMRow    = 0;	// Row index in the ASDM Main table.
+ 
 
   //
   //
@@ -1185,7 +1186,7 @@ int main (int argC, char * argV[]) {
 
   uInt	iMSRow	    = 0;	// Row index in the MS Main table.
   uInt	iMSRowBegin = 0;	// Index of the first row in the MS Main table of the slice corresponding to one row in the ASDM Main table.
-  uInt	iMSRowEnd   = 0;	// Index of the last row in the MS Main table of the slice corresponding to one row in the ASDM Main table.
+
 
   iMSRowBegin = iMSRow;
   unsigned int iASDMIndex = 0;
@@ -1267,7 +1268,7 @@ int main (int argC, char * argV[]) {
 	  uint32_t		N			 = mR->getNumIntegration();
 	  uint64_t		bdfSize			 = mR->getDataSize();
 	  vector<uint64_t>	actualSizeInMemory(sizeInMemory(bdfSize, bdfSliceSizeInMb*1024*1024));
-	  int32_t		numberOfMSMainRows	 = 0;
+
 	  int32_t		numberOfIntegrations	 = 0;
 	  int32_t		numberOfReadIntegrations = 0;
 
@@ -1330,7 +1331,7 @@ int main (int argC, char * argV[]) {
 	      autoAccumulator.resetIntegration();
 	    if ( correlationMode != CorrelationModeMod::AUTO_ONLY )
 	      crossAccumulator.resetIntegration(); 
-	    for (int iIntegration = 0; iIntegration < numberOfRemainingIntegrations; iIntegration++) {
+	    for (unsigned int iIntegration = 0; iIntegration < numberOfRemainingIntegrations; iIntegration++) {
 	      const FLAGSTYPE * flags_p;
 	      unsigned int numFlags = sdosr.getSubset().flags(flags_p);
 	      pair<unsigned int, const FLAGSTYPE *> flagsPair(numFlags, flags_p);
