@@ -64,6 +64,7 @@
 #include <imageanalysis/ImageAnalysis/BeamManipulator.h>
 #include <imageanalysis/ImageAnalysis/CasaImageBeamSet.h>
 #include <imageanalysis/ImageAnalysis/ComplexImageRegridder.h>
+#include <imageanalysis/ImageAnalysis/ComponentImager.h>
 #include <imageanalysis/ImageAnalysis/Image2DConvolver.h>
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/ImageBoxcarSmoother.h>
@@ -3122,37 +3123,46 @@ image::miscinfo() {
 
 bool image::modify(
 	const ::casac::record& model, const variant& region,
-	const ::casac::variant& vmask, const bool subtract, const bool list,
-	const bool /* async */, bool stretch
+	const ::casac::variant& vmask, bool subtract, bool list,
+	bool stretch
 ) {
 	_log << _ORIGIN;
 	if (detached()) {
 		return false;
 	}
 	try {
+		ThrowIf(
+			! _image->isFloat(),
+			"This method only supports real valued images"
+		);
 		String error;
-		std::unique_ptr<Record> Model(toRecord(model));
-		SHARED_PTR<Record> Region(_getRegion(region, False));
+		std::unique_ptr<Record> mymodel(toRecord(model));
+		ComponentList cl;
+		ThrowIf(
+			! cl.fromRecord(error, *mymodel),
+			"model is an invalid componentlist record"
+		);
+		SHARED_PTR<Record> Region = _getRegion(region, False);
 		String mask = vmask.toString();
 		if (mask == "[]") {
 			mask = "";
 		}
-		if (
-			_image->modify(
-				*Model, *Region, mask, subtract,
-				list, stretch
-			)
-		) {
-			_stats.reset(0);
-			return True;
-		}
-		ThrowCc("Error modifying image.");
+		ComponentImager ci(
+			_image->getImage(), Region.get(), mask
+		);
+		ci.setComponentList(cl);
+		ci.setSubtract(subtract);
+		ci.setStretch(stretch);
+		ci.modify(list);
+		_stats.reset();
+		return True;
 	}
 	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
+	return False;
 }
 
 record* image::maxfit(

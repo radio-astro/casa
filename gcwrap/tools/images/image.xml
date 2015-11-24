@@ -6365,12 +6365,7 @@ ia.close()
      <description>List informative messages to the logger</description>
      <value>true</value>
      </param>
-  
-     <param type="bool"  name="async">
-     <description>Run asynchronously?</description>
-     <value>false</value>
-     </param>
-     
+
     <param type="bool"  name="stretch">
         <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
         <value>false</value>
