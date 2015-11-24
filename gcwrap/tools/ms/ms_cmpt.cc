@@ -528,7 +528,7 @@ bool ms::tofits(
 	Bool rstat(True);
 	try {
 		if(!detached()) {
-			MeasurementSet *mssel= new MeasurementSet();
+			unique_ptr<MeasurementSet> mssel(new MeasurementSet());
 			Bool subselect=False;
 			String fieldS(m1toBlankCStr_(field));
 			String spwS(m1toBlankCStr_(spw));
@@ -564,10 +564,7 @@ bool ms::tofits(
 				fieldID = fldids[0];
 			}
 			Vector<Int> spwids = selrec.asArrayInt("spw");
-
 			Matrix<Int> chansel=selrec.asArrayInt("channel");
-			//cout << "chansel=" << chansel << endl;
-			//cout << "chansel.nelements()=" << chansel.nelements() << endl;
 			if (chansel.nelements() !=0) {
 				istep=chansel.row(0)(3);
 				if(istep < 1) {
@@ -593,14 +590,10 @@ bool ms::tofits(
 
 			if(subselect && mssel->nrow() < itsMS->nrow()) {
 				if(mssel->nrow() == 0) {
-					if(!mssel) {
-						delete mssel;
-					}
-					mssel = 0;
 					*itsLog << LogIO::WARN << LogOrigin("ms", __func__)
 					        << "No data for selection: will convert full MeasurementSet"
 					        << LogIO::POST;
-					mssel=new MeasurementSet(*itsMS);
+					mssel.reset(new MeasurementSet(*itsMS));
 				}
 				else {
 					*itsLog << LogOrigin("ms", __func__)
@@ -610,10 +603,7 @@ bool ms::tofits(
 				}
 			}
 			else {
-				if(! mssel) {
-					delete mssel;
-				}
-				mssel = new MeasurementSet(*itsMS);
+				mssel.reset(new MeasurementSet(*itsMS));
 			}
 			MeasurementSet selms(*mssel);
 			MSMetaData md(&selms, 1000);
@@ -628,11 +618,6 @@ bool ms::tofits(
 				*itsLog << LogOrigin("ms", "tofits")
 				        << LogIO::SEVERE << "Conversion to FITS failed"<< LogIO::POST;
 				rstat = False;
-			}
-
-			//Done...clear off the mssel
-			if(mssel) {
-				delete mssel;
 			}
 		}
 	}
