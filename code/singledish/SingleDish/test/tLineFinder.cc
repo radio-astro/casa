@@ -36,8 +36,6 @@
 #include <tables/Tables/ArrayColumn.h>
 #include <tables/Tables/ScalarColumn.h>
 
-#include <casa_sakura/SakuraAlignedArray.h>
-
 #include <singledish/SingleDish/LineFindingUtils.h>
 #include <singledish/SingleDish/LineFinder.h>
 
@@ -66,7 +64,7 @@ void print_line(list<pair<size_t,size_t>> &line_list) {
 }
 
 int main(int argc, char *argv[]) {
-  bool dobin(false), domask(false), doline(false), domaskline(false), dolinefinder(false);
+  bool dobin(true), domask(true), doline(true), domaskline(true), dolinefinder(false);
   if (dobin)
   {// Test binning
     cout << "\n**********\nTest binning\n**********" << endl;
@@ -108,48 +106,48 @@ int main(int argc, char *argv[]) {
   {// Test mask creation
     cout << "\n**********\nTest mask creation\n**********" << endl;
     size_t const num_data = 20;
-    SakuraAlignedArray<float> data(num_data);
-    SakuraAlignedArray<float> mad(num_data);
-    SakuraAlignedArray<bool> in_mask(num_data);
-    SakuraAlignedArray<bool> out_mask(num_data);
-    float* dptr = data.data;
-    bool* mptr = in_mask.data;
+    Vector<float> data(num_data);
+    Vector<float> mad(num_data);
+    Vector<bool> in_mask(num_data);
+    Vector<bool> out_mask(num_data);
+    float* dptr = data.data();
+    bool* mptr = in_mask.data();
     for (size_t i = 0 ; i < num_data; ++i) {
       dptr[i] = float(i);
       mptr[i] = (i%4 != 0) ? true : false;
     }
-    LineFinderUtils::calculateMAD(num_data,data.data,in_mask,mad.data);
+    LineFinderUtils::calculateMAD(num_data,data.data(),in_mask.data(),mad.data());
     cout << "[MAD array]" << endl;
-    cout << "data = " << print_array<float>(num_data, data.data) << endl;
-    cout << "in_mask = " << print_array<bool>(num_data, in_mask.data) << endl;
-    cout << "MAD = " << print_array<float>(num_data, mad.data) << endl;
+    cout << "data = " << print_array<float>(num_data, data.data()) << endl;
+    cout << "in_mask = " << print_array<bool>(num_data, in_mask.data()) << endl;
+    cout << "MAD = " << print_array<float>(num_data, mad.data()) << endl;
 
     float threshold = 5.0;
     cout << "\n[Mask creation]" << endl;
-    cout << "MAD = " << print_array<float>(num_data, mad.data) << endl;
-    cout << "in_mask = " << print_array<bool>(num_data, in_mask.data) << endl;
+    cout << "MAD = " << print_array<float>(num_data, mad.data()) << endl;
+    cout << "in_mask = " << print_array<bool>(num_data, in_mask.data()) << endl;
     cout << "threshold = " << threshold << endl;
-    LineFinderUtils::createMaskByAThreshold(num_data, mad, in_mask, threshold, out_mask);
-    cout << "out_mask = " << print_array<bool>(num_data, out_mask.data) << endl;
+    LineFinderUtils::createMaskByAThreshold(num_data, mad.data(), in_mask.data(), threshold, out_mask.data());
+    cout << "out_mask = " << print_array<bool>(num_data, out_mask.data()) << endl;
     cout << "\n[Sign creation]" << endl;
-    SakuraAlignedArray<int8_t> signval(num_data);
-    LineFinderUtils::createSignByAThreshold(num_data, mad.data,
-					    threshold,signval.data);
-    cout << "data = " << print_array<float>(num_data, mad.data) << endl;
+    Vector<int8_t> signval(num_data);
+    LineFinderUtils::createSignByAThreshold(num_data, mad.data(),
+					    threshold,signval.data());
+    cout << "data = " << print_array<float>(num_data, mad.data()) << endl;
     cout << "threshold = " << threshold << endl;
-    cout << "sign = " << print_array<int8_t>(num_data, signval.data) << endl;
+    cout << "sign = " << print_array<int8_t>(num_data, signval.data()) << endl;
 
     cout << "\n[Mask to line list]" << endl;
     list<pair<size_t,size_t>> lines;
-    cout << "in_mask = " << print_array<bool>(num_data, in_mask.data) << endl;
-    LineFinderUtils::maskToRangesList(num_data, in_mask.data, lines);
+    cout << "in_mask = " << print_array<bool>(num_data, in_mask.data()) << endl;
+    LineFinderUtils::maskToRangesList(num_data, in_mask.data(), lines);
     print_line(lines);
     
     for (size_t i = 0; i<num_data; ++i) {
-      in_mask.data[i] = (i%4 != 1) ? true : false;
+      in_mask[i] = (i%4 != 1) ? true : false;
     }
-    cout << "\nin_mask = " << print_array<bool>(num_data, in_mask.data) << endl;
-    LineFinderUtils::maskToRangesList(num_data, in_mask.data, lines);
+    cout << "\nin_mask = " << print_array<bool>(num_data, in_mask.data()) << endl;
+    LineFinderUtils::maskToRangesList(num_data, in_mask.data(), lines);
     print_line(lines);
   }
   if (doline)
@@ -237,22 +235,22 @@ int main(int argc, char *argv[]) {
   {
     cout << "\n**********\nTest line list handling with mask\n**********" << endl;
     size_t num_data(20);
-    SakuraAlignedArray<int8_t> sign(num_data);
-    SakuraAlignedArray<bool> mask(num_data);
+    Vector<int8_t> sign(num_data);
+    Vector<bool> mask(num_data);
     for (size_t i = 0; i<num_data; ++i) {
-      sign.data[i] = ((i/6) % 2)==0 ? 1:-1;
-      mask.data[i] = (i % 5)==0 ? false : true;
+      sign[i] = ((i/6) % 2)==0 ? 1:-1;
+      mask[i] = (i % 5)==0 ? false : true;
     }
     cout << "[Extend by sign]" << endl;
-    cout << "sign = " << print_array<int8_t>(num_data, sign.data) << endl;
-    cout << "in_mask = " << print_array<bool>(num_data, mask.data) << endl;
+    cout << "sign = " << print_array<int8_t>(num_data, sign.data()) << endl;
+    cout << "in_mask = " << print_array<bool>(num_data, mask.data()) << endl;
     list<pair<size_t,size_t>> mylines;
     mylines.push_back(pair<size_t,size_t>(2,2));
     mylines.push_back(pair<size_t,size_t>(7,7));
     mylines.push_back(pair<size_t,size_t>(12,12));
     cout << "input line:" << endl;
     print_line(mylines);
-    LineFinderUtils::extendRangeBySign(num_data, sign.data, mask.data, mylines);
+    LineFinderUtils::extendRangeBySign(num_data, sign.data(), mask.data(), mylines);
     cout << "extended line:" << endl;
     print_line(mylines);
 
@@ -261,14 +259,14 @@ int main(int argc, char *argv[]) {
     mylines.push_back(pair<size_t,size_t>(5,10));
     mylines.push_back(pair<size_t,size_t>(16,18));
     for (size_t i = 0; i < num_data; ++i) {
-      mask.data[i] = (i>mylines.front().second && i<mylines.back().first)? false : true;
+      mask[i] = (i>mylines.front().second && i<mylines.back().first)? false : true;
     }
     size_t maxgap = 5;
     cout << "max gap = " << maxgap << endl;
-    cout << "mask = " << print_array<bool>(num_data, mask.data) << endl;
+    cout << "mask = " << print_array<bool>(num_data, mask.data()) << endl;
     cout << "input line = ";
     print_line(mylines);
-    LineFinderUtils::mergeGapByFalse(num_data, mask.data, maxgap, mylines);
+    LineFinderUtils::mergeGapByFalse(num_data, mask.data(), maxgap, mylines);
     cout << "output line: ";
     print_line(mylines);
     // change max gap to merge. This time lines would not be merged.
@@ -277,10 +275,10 @@ int main(int argc, char *argv[]) {
     mylines.push_back(pair<size_t,size_t>(5,10));
     mylines.push_back(pair<size_t,size_t>(16,18));
     cout << "max gap = " << maxgap << endl;
-    cout << "mask = " << print_array<bool>(num_data, mask.data) << endl;
+    cout << "mask = " << print_array<bool>(num_data, mask.data()) << endl;
     cout << "input line = ";
     print_line(mylines);
-    LineFinderUtils::mergeGapByFalse(num_data, mask.data, maxgap, mylines);
+    LineFinderUtils::mergeGapByFalse(num_data, mask.data(), maxgap, mylines);
     cout << "output line: ";
     print_line(mylines);
   }
@@ -301,15 +299,15 @@ int main(int argc, char *argv[]) {
     Vector<uint8_t> flagvec(flagCol.get(row_idx));
     size_t num_data(specvec.nelements());
     cout << "nchan: " << num_data << endl;
-    SakuraAlignedArray<float> data(num_data);
-    SakuraAlignedArray<bool> mask(num_data);
+    Vector<float> data(num_data);
+    Vector<bool> mask(num_data);
     for (size_t i=0; i<num_data; ++i) {
-      data.data[i] = specvec[i];
-      mask.data[i] = (flagvec[i]==static_cast<uint8_t>(0));
+      data[i] = specvec[i];
+      mask[i] = (flagvec[i]==static_cast<uint8_t>(0));
     }
     pair<size_t,size_t> edge(500,500);
     list<pair<size_t,size_t>> line_list = \
-      linefinder::MADLineFinder(num_data, data, mask, 5.0, 10.0, 3, 1000, 4, edge);
+      linefinder::MADLineFinder(num_data, data.data(), mask.data(), 5.0, 10.0, 3, 1000, 4, edge);
     cout << "[Line finding result]" << endl;
     print_line(line_list);
   }
