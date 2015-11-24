@@ -141,12 +141,12 @@ public:
     Vector<String> maskhandler(const String& op,const Vector<String>& nam);
 
     Record miscinfo();
-
+/*
     Bool modify(
     	Record& model, Record& region , const String& mask,
         const Bool subtract = True, const Bool list=True, const Bool extendMask=False
     );
-
+*/
     Bool open(const String& infile);
 
     inline static String className() {const static String x = "ImageAnalysis"; return x; }
@@ -182,9 +182,11 @@ public:
 
     IPosition last_chunk_shape_p;
    
+    /*
     // Center refpix apart from STokes
     void centreRefPix (casa::CoordinateSystem& cSys,
                        const casa::IPosition& shape) const;
+                       */
 
     void _onlyFloat(const String& method) const;
 

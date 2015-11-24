@@ -49,16 +49,24 @@ template <class T> ImageTask<T>::ImageTask(
 	const String& region, const Record *const &regionPtr,
 	const String& box, const String& chanInp,
 	const String& stokes, const String& maskInp,
-    const String& outname, const Bool overwrite
-) : _image(image), _log(new LogIO()), _regionPtr(regionPtr),
-	_region(region), _box(box),
+    const String& outname, Bool overwrite
+) : _image(image), _regionPtr(regionPtr),_region(region), _box(box),
 	_chan(chanInp), _stokesString(stokes), _mask(maskInp),
 	_outname(outname), _overwrite(overwrite), _stretch(False),
-	_logfileAppend(False), _suppressHistory(False),
-	_dropDegen(False),
-	_verbosity(NORMAL), _logfile(), _newHistory() {
+	_logfile() {
     FITSImage::registerOpenFunction();
     MIRIADImage::registerOpenFunction();
+}
+
+template <class T> ImageTask<T>::ImageTask(
+	const SPCIIT image, const Record *const &regionPtr,
+	const String& mask,
+    const String& outname, Bool overwrite
+) : _image(image), _regionPtr(regionPtr),
+	_region(), _box(), _chan(), _stokesString(), _mask(mask),
+	_outname(outname), _overwrite(overwrite) {
+	FITSImage::registerOpenFunction();
+	MIRIADImage::registerOpenFunction();
 }
 
 template <class T> ImageTask<T>::~ImageTask() {}
@@ -78,7 +86,6 @@ template <class T> std::vector<OutputDestinationChecker::OutputStruct> ImageTask
 }
 
 template <class T> void ImageTask<T>::_construct(Bool verbose) {
-
 	ThrowIf(
 		! _supportsMultipleBeams() && _image->imageInfo().hasMultipleBeams(),
 		"This application does not support images with multiple "

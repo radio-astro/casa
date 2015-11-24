@@ -75,8 +75,46 @@
 
 namespace casa {
 
-void ComponentImager::project(ImageInterface<Float>& image, const ComponentList& list) 
-{
+ComponentImager::ComponentImager(
+	const SPIIF image, const Record *const &region,
+	const String& mask
+) : ImageTask<Float>(image, region, mask, "", False),
+	_image(image) {
+	_construct();
+}
+
+ComponentImager::~ComponentImager() {}
+
+void ComponentImager::modify(Bool verbose) {
+	*this->_getLog() << LogOrigin(getClass(), __func__);
+	int nelem = _list.nelements();
+	Vector<SkyComponent> mod(nelem);
+	for (int i = 0; i < nelem; ++i) {
+		mod[i] = _list.component(i);
+	}
+
+	const auto n = mod.size();
+	ThrowIf(
+		n == 0, "There are no components in the model componentlist"
+	);
+	auto subImage = SubImageFactory<Float>::createSubImageRW(
+		*_image, *this->_getRegion(), this->_getMask(),
+		(verbose ? this->_getLog().get() : nullptr),
+        AxesSpecifier(), this->_getStretch()
+	);
+	// Allow for subtraction/addition
+	ComponentList cl;
+	for (uInt i = 0; i < n; ++i) {
+		SkyComponent sky = mod(i);
+		if (_subtract) {
+			sky.flux().scaleValue(-1.0);
+		}
+		cl.add(sky);
+	}
+	project(*subImage, cl);
+}
+
+void ComponentImager::project(ImageInterface<Float>& image, const ComponentList& list) {
 	const auto& coords = image.coordinates();
 	const auto imageShape = image.shape();
 	LogIO os(LogOrigin("ComponentImager", __func__));

@@ -762,7 +762,7 @@ Record ImageAnalysis::miscinfo() {
 	Record tmp = _imageFloat->miscInfo();
 	return tmp;
 }
-
+/*
 Bool ImageAnalysis::modify(
 	Record& Model, Record& Region, const String& mask,
 	const Bool subtract, const Bool list, const Bool extendMask) {
@@ -808,6 +808,7 @@ Bool ImageAnalysis::modify(
 
 	return True;
 }
+*/
 
 Bool ImageAnalysis::twopointcorrelation(
 	const String& outFile,
@@ -863,7 +864,7 @@ Bool ImageAnalysis::twopointcorrelation(
 
 	return True;
 }
-
+/*
 void ImageAnalysis::centreRefPix(CoordinateSystem& cSys, const IPosition& shape) const {
 	Int after = -1;
 	Int iS = cSys.findCoordinate(Coordinate::STOKES, after);
@@ -879,7 +880,7 @@ void ImageAnalysis::centreRefPix(CoordinateSystem& cSys, const IPosition& shape)
 	}
 	cSys.setReferencePixel(refPix);
 }
-
+*/
 void ImageAnalysis::_onlyFloat(const String& method) const {
 	ThrowIf(! _imageFloat, "Method " + method + " only supports Float valued images");
 }

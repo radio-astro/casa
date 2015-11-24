@@ -7,6 +7,8 @@
 #include <imageanalysis/IO/OutputDestinationChecker.h>
 #include <imageanalysis/Regions/CasacRegionManager.h>
 
+#include <memory>
+
 namespace casac {
 class variant;
 }
@@ -105,7 +107,13 @@ protected:
     	const String& region, const Record *const &regionPtr,
     	const String& box, const String& chanInp,
     	const String& stokes, const String& maskInp,
-        const String& outname, const Bool overwrite
+        const String& outname, Bool overwrite
+    );
+
+   	ImageTask(
+   		const SPCIIT image, const Record *const &regionPtr,
+    	const String& mask,
+        const String& outname, Bool overwrite
     );
 
    	virtual CasacRegionManager::StokesControl _getStokesControl() const = 0;
@@ -144,8 +152,6 @@ protected:
     String _summaryHeader() const;
 
     inline const SHARED_PTR<LogIO> _getLog() const {return _log;}
-
-    //inline void _setSupportsLogfile(const Bool b) { _logfileSupport=b;}
 
     // by default, derived classes are configured to have no log file
     // support.
@@ -202,16 +208,24 @@ protected:
 
 private:
     const SPCIIT _image;
-    SHARED_PTR<LogIO> _log;
+    SHARED_PTR<LogIO> _log = SHARED_PTR<LogIO>(new LogIO());
     const Record *const _regionPtr;
     Record _regionRecord;
-    String _region, _box, _chan, _stokesString, _mask, _outname;
-    Bool _overwrite, _stretch, /* _logfileSupport,*/ _logfileAppend,
-    	_suppressHistory, _dropDegen;
+    String _region = "";
+    String _box = "";
+    String _chan = "";
+    String _stokesString = "";
+    String _mask = "";
+    String _outname = "";
+    Bool _overwrite = False;
+    Bool _stretch = False;
+    Bool _logfileAppend = False;
+    Bool _suppressHistory = False;
+    Bool _dropDegen = False;
 	std::unique_ptr<FiledesIO> _logFileIO;
-	Verbosity _verbosity;
+	Verbosity _verbosity = NORMAL;
 	SHARED_PTR<LogFile> _logfile;
-	mutable vector<std::pair<String, String> > _newHistory;
+	mutable vector<std::pair<String, String> > _newHistory; // = vector<std::pair<String, String> >();
 };
 
 }

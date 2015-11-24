@@ -64,12 +64,14 @@
 
 #include <casa/aips.h>
 
+#include <imageanalysis/ImageAnalysis/ImageTask.h>
+#include <components/ComponentModels/ComponentList.h>
+
 #include <memory>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casa {
 
 template <class T> class ImageInterface;
-class ComponentList;
 class Unit;
 class LogIO;
 template <class T> class MeasRef;
@@ -110,9 +112,27 @@ class MFrequency;
 // <motivation>
 // </motivation>
 
-class ComponentImager
-{
+class ComponentImager: public ImageTask<Float> {
 public:
+
+	ComponentImager() = delete;
+
+	ComponentImager(
+		const SPIIF image, const Record *const &regionPtr,
+	    const String& maskInp
+	);
+
+	~ComponentImager();
+
+	void setComponentList(const ComponentList& list) {
+		_list = list;
+	}
+
+	void setSubtract(Bool b) { _subtract = b; }
+
+	String getClass() const { return "ComponentImager"; }
+
+	void modify(Bool verbose);
 
 	// Project the componentlist onto the image.  If any of the coordinate
 	// transformations for a particular pixel fail (e.g. coordinate system
@@ -126,6 +146,20 @@ public:
 	);
 
 private:
+	// we cannot use pointer stored in base class because that's const
+	SPIIF _image;
+
+	ComponentList _list;
+
+	Bool _subtract = False;
+
+   	CasacRegionManager::StokesControl _getStokesControl() const {
+   		return CasacRegionManager::USE_ALL_STOKES;
+   	}
+
+    std::vector<Coordinate::Type> _getNecessaryCoordinates() const {
+    	return std::vector<Coordinate::Type>(1, Coordinate::DIRECTION);
+    }
 
 	static std::unique_ptr<ComponentList> _doPoints(
 		ImageInterface<Float>& image, const ComponentList& list,
