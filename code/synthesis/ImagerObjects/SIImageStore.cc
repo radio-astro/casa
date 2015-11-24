@@ -1571,7 +1571,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 	Slicer imslice(substart, substop,Slicer::endIsLast);
 	SubImage<Float> subRestored( *image(term) , imslice, True );
 	SubImage<Float> subModel( *model(term) , imslice, True );
-	SubImage<Float> subResidual( *residual(term) , imslice, True );
+	SubImage<Float> subResidual( *residual(term) , imslice, False );
 	
 	GaussianBeam beam = itsRestoredBeams.getBeam( chanid, polid );;
 	
