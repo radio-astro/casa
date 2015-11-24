@@ -85,9 +85,9 @@ def plotms(vis=None,
                        default: False.
         yselfscale -- If true, iterated plots should share a common y-axis label per row.
                        default: False.
-        xsharedaxis -- use a common x-axis for vertically aligned plots.
+        xsharedaxis -- use a common x-axis for vertically aligned plots (must also set xselfscale=True)
                         default: False.
-        ysharedaxis -- use a common y-axis for horizontally aligned plots.
+        ysharedaxis -- use a common y-axis for horizontally aligned plots (must also set yselfscale=True)
                         default: False.
     selectdata -- data selection parameters flag
                   (see help par.selectdata for more detailed information)

@@ -767,12 +767,12 @@ specifying multiple plots per page will be added here)
     </param>
     
     <param type="bool" name="commonAxisX">
-      <description>Plots should share a common x-axis.</description>
+      <description>Plots should share a common x-axis. Must also set xselfscale=True.</description>
       <value>false</value>
     </param>
 
     <param type="bool" name="commonAxisY">
-      <description>Plots should share a common y-axis.</description>
+      <description>Plots should share a common y-axis. Must also set yselfscale=True.</description>
       <value>false</value>
     </param>
 
@@ -1789,7 +1789,7 @@ Execution Methods
         <description>Format type, if not provided, attempt will be made to guess from plotfile extension</description>
      </param>
      <param type="bool" name="highres">
-         <description>Use high resolution? Always true for jpg and png.</description>
+         <description>Use high resolution</description>
          <value>false</value>
      </param>
   </input>

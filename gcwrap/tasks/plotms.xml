@@ -544,12 +544,12 @@ Iteration Parameters
    </param>
    
    <param type="bool" name="xsharedaxis" subparam="true">
-       <description>Plots should share a common x-axis. </description>
+       <description>Plots should share a common x-axis. Must also set xselfscale=True.</description>
        <value>False</value>
    </param>
 
    <param type="bool" name="ysharedaxis" subparam="true">
-       <description>Plots should share a common y-axis.</description>
+       <description>Plots should share a common y-axis. Must also set yselfscale=True.</description>
        <value>False</value>
    </param>
 
@@ -831,7 +831,7 @@ Export plot as image Parameters
         </allowed>
      </param>
      <param type="bool" name="highres" subparam="true">
-         <description>Use high resolution? Always true for jpg and png.</description>
+         <description>Use high resolution</description>
          <value>False</value>
      </param>
     
@@ -1555,9 +1555,9 @@ Constraints
         xselfscale -- If true, iterated plots should share a common x-axis label per column.
         yselfscale -- If true, iterated plots should share a common y-axis label per row.
                       default: false, which will scale all plots globally
-        xsharedaxis -- If true, iterated plots should share a common x-axis.
+        xsharedaxis -- If true, iterated plots should share a common x-axis (must also set xselfscale=True) 
         			  default: false, each plot will have its own x-axis.
-        ysharedaxis -- If true, iterated plots should share a common y-axis.
+        ysharedaxis -- If true, iterated plots should share a common y-axis (must also set yselfscale=True)
         			  default: false, each plot will have its own y-axis.              
 
     customsymbol -- If true, use a custom symbol for drawing unflagged points
@@ -1637,16 +1637,16 @@ Constraints
         exprange -- pages to export for iteration plots
         			default:   ''
         			options: 'current', 'all'             
-        highres -- use high resolution? Always true for jpg and png.
-                   default: false
-        overwrite -- Overwrite plot file if it already exists?
-                     default: false
+        highres -- use high resolution in exported plot 
+                   default: False (use screen resolution)
+        overwrite -- overwrite plot file if it already exists
+                     default: False
       
     callib -- calibration library string, list of strings, or filename
-                default: '' 
+              default: '' 
     
     showgui - Whether or not to display the plotting GUI
-              default: True; example showgui=False
+              default: True
 
 <!--
 
