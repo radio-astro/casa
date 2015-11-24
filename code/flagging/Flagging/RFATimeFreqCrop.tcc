@@ -924,7 +924,7 @@ RFA::IterMode RFATimeFreqCrop :: ShowFlagPlots()
 	}//for pl
       
     }// end of if ShowPlots
-  
+    return RFA::CONT;
 }// end ShowFlagPlots
 
 /* Extend Flags
