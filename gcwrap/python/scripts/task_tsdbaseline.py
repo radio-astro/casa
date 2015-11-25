@@ -46,7 +46,7 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
             restore_sorted_table_keyword(infile, sorttab_info)
             
         elif (blmode == 'fit'):
-            blformat, bloutput = prepare_for_blformat_bloutput(infile, blformat, bloutput)
+            blformat, bloutput = prepare_for_blformat_bloutput(infile, blformat, bloutput, overwrite)
 
             output_bloutput_text_header(blformat, bloutput,
                                         blfunc, maskmode,
@@ -96,7 +96,7 @@ blformat_item = ['csv', 'text', 'table']
 blformat_ext  = ['csv', 'txt',  'bltable']
 
 
-def prepare_for_blformat_bloutput(infile, blformat, bloutput):
+def prepare_for_blformat_bloutput(infile, blformat, bloutput, overwrite):
     # force to string list
     blformat = force_to_string_list(blformat, 'blformat')
     bloutput = force_to_string_list(bloutput, 'bloutput')
@@ -117,7 +117,7 @@ def prepare_for_blformat_bloutput(infile, blformat, bloutput):
 
     # fill bloutput items to be output, then rearrange them
     # in the order of blformat_item.
-    bloutput = normalise_bloutput(infile, blformat, bloutput)
+    bloutput = normalise_bloutput(infile, blformat, bloutput, overwrite)
 
     return blformat, bloutput
 
@@ -157,14 +157,14 @@ def has_duplicate_nonnull_element_ex(lst, base):
     return has_duplicate_nonnull_element(
         [lst[i] for i in range(len(lst)) if base[i] != ''])
 
-def normalise_bloutput(infile, blformat, bloutput):
+def normalise_bloutput(infile, blformat, bloutput, overwrite):
     normalised_bloutput = []
     for item in zip(blformat_item, blformat_ext):
         normalised_bloutput.append(
-            get_normalised_name(infile, blformat, bloutput, item[0], item[1]))
+            get_normalised_name(infile, blformat, bloutput, item[0], item[1], overwrite))
     return normalised_bloutput
 
-def get_normalised_name(infile, blformat, bloutput, name, ext):
+def get_normalised_name(infile, blformat, bloutput, name, ext, overwrite):
     fname = ''
     if (name in blformat):
         fname = bloutput[blformat.index(name)]
