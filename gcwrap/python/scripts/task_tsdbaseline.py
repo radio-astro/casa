@@ -5,7 +5,7 @@ import sdutil
 from collections import Counter
 ms,sdms,tb = gentools(['ms','sdms','tb'])
 
-def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None, timerange=None, scan=None, pol=None, maskmode=None, thresh=None, avg_limit=None, minwidth=None, edge=None, blmode=None, dosubtract=None, blformat=None, bloutput=None, bltable=None, blfunc=None, order=None, npiece=None, applyfft=None, fftmethod=None, fftthresh=None, addwn=None, rejwn=None, clipthresh=None, clipniter=None, blparam=None, verify=None, verbose=None, showprogress=None, minnrow=None, outfile=None, overwrite=None):
+def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None, timerange=None, scan=None, pol=None, maskmode=None, thresh=None, avg_limit=None, minwidth=None, edge=None, blmode=None, dosubtract=None, blformat=None, bloutput=None, bltable=None, blfunc=None, order=None, npiece=None, applyfft=None, fftmethod=None, fftthresh=None, addwn=None, rejwn=None, clipthresh=None, clipniter=None, blparam=None, verbose=None, showprogress=None, minnrow=None, outfile=None, overwrite=None):
 
     casalog.origin('tsdbaseline')
     try:
@@ -31,11 +31,11 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
                 os.system('rm -rf %s' % outfile)
 
             selection = ms.msseltoindex(vis=infile, spw=spw, field=field, 
-                                        baseline=str(antenna), time=timerange, 
+                                        baseline=antenna, time=timerange, 
                                         scan=scan)
             sdms.open(infile)
             sdms.set_selection(spw=sdutil.get_spwids(selection), field=field, 
-                               antenna=str(antenna), timerange=timerange, 
+                               antenna=antenna, timerange=timerange, 
                                scan=scan)
             sdms.apply_baseline_table(bltable=bltable,
                                       datacolumn=datacolumn,
@@ -59,11 +59,11 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
                 os.system('rm -rf %s' % outfile)
 
             selection = ms.msseltoindex(vis=infile, spw=spw, field=field, 
-                                        baseline=str(antenna), time=timerange, 
+                                        baseline=antenna, time=timerange, 
                                         scan=scan)
             sdms.open(infile)
             sdms.set_selection(spw=sdutil.get_spwids(selection),
-                               field=field, antenna=str(antenna),
+                               field=field, antenna=antenna,
                                timerange=timerange, scan=scan)
             params, func = prepare_for_baselining(blfunc=blfunc,
                                                   datacolumn=datacolumn,

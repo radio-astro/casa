@@ -44,10 +44,9 @@ pipeline processing for huge dataset.
         </allowed>
     </param>
 
-    <param type="any" name="antenna">
+    <param type="string" name="antenna">
         <description>select an antenna name or ID, e.g. \'PM03\'</description>
-        <any type="variant" limittypes="string int"/>
-        <value type="int">0</value>
+        <value></value>
     </param> 
 
     <param type="string" name="field">
@@ -207,12 +206,6 @@ pipeline processing for huge dataset.
     <param type="string" name="blparam" subparam="true">
         <description>text file that stores per spectrum fit parameters</description>
         <value></value>
-    </param>
-
-    <param type="bool" name="verify">
-        <shortdescription>(NOT SUPPORTED YET) interactively verify the results of operation for each spectrum [True, False] (see description in help)</shortdescription>
-        <description>(NOT SUPPORTED YET) interactively verify the results of operation for each spectrum (see description in help)</description>
-        <value>False</value>
     </param>
 
     <param type="bool" name="verbose">
@@ -528,20 +521,6 @@ blfunc -- baseline model function. In cases blmode='apply' or blparam is
                  default: 0 (no iteration, i.e., no clipping)
         blparam -- the name of text file that stores per spectrum fit
                    parameters. See below for details of format.
-verify -- (NOT SUPPORTED YET) interactively verify the results of operation for each spectrum.
-          When verify = True, for each input spectrum, spectra 
-          before and after the operation are displayed in a plot
-          window. At the prompt there are four choices of action:
-          'Y' (accept the operation and continue to the next input
-          spectrum), 'N' (reject the operation and continue to the 
-          next input spectrum), 'A' (accept the current operation
-          and continue non-interactively), and 'R' (reject the
-          current operation and exit from operation).
-          Note that when the operation is rejected by 'N' or 'R',
-          no operation is done to the spectrum/spectra.
-        options: (bool) True,False
-        default: False
-        NOTE: Currently available only when blfunc='poly'
 verbose -- (NOT SUPPORTED YET) output fitting results to logger. if False, the fitting results
            including coefficients, residual rms, etc., are not output to
            the CASA logger, while the processing speed gets faster.
