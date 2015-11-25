@@ -1593,7 +1593,8 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 	SubImage<Float> subRestored( *image(term) , imslice, True );
 	SubImage<Float> subModel( *model(term) , imslice, True );
 	SubImage<Float> subResidual( *residual(term) , imslice, True );
-	
+
+
 	GaussianBeam beam = itsRestoredBeams.getBeam( chanid, polid );;
 	
 	try
@@ -1605,12 +1606,18 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 	    // Smooth model by beam
 	    StokesImageUtil::Convolve( subRestored, beam);
 	    // Add residual image
-	    if( !rbeam.isNull() || usebeam == "common")
+	    if( !rbeam.isNull() || usebeam == "common") // If need to rescale residuals, make a copy and do it.
 	      {
-		rescaleResolution(chanid, subResidual, beam, itsPSFBeams.getBeam(chanid, polid));
+		//		rescaleResolution(chanid, subResidual, beam, itsPSFBeams.getBeam(chanid, polid));
+		TempImage<Float> tmpSubResidualCopy( IPosition(4,nx,ny,1,1), subResidual.coordinates());
+		tmpSubResidualCopy.copyData( subResidual );
+		rescaleResolution(chanid, tmpSubResidualCopy, beam, itsPSFBeams.getBeam(chanid, polid));
+		subRestored.copyData( LatticeExpr<Float>( subRestored + tmpSubResidualCopy  ) );
 	      }
-	    subRestored.copyData( LatticeExpr<Float>( subRestored + subResidual  ) );
-	   
+	    else// if no need to rescale residuals, just add the residuals.
+	      {
+		subRestored.copyData( LatticeExpr<Float>( subRestored + subResidual  ) );
+	      }
 	    
 	  }
 	catch(AipsError &x)

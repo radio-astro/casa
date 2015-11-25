@@ -1431,12 +1431,12 @@ class test_cube(testref_base):
           self.prepData('refim_point.ms')
           ret = tclean(vis=self.msfile,imagename=self.img,specmode='cube',imsize=100,cell='10.0arcsec',niter=10,deconvolver='hogbom')
           self.assertTrue(os.path.exists(self.img+'.psf') and os.path.exists(self.img+'.image') )
-          self.checkall(imexist=[self.img+'.image'],imval=[(self.img+'.image',0.889,[54,50,0,0]) , (self.img+'.image',0.0602,[54,50,0,19]) ])
+          self.checkall(imexist=[self.img+'.image'],imval=[(self.img+'.image',0.889,[54,50,0,0]) , (self.img+'.image',0.0602,[54,50,0,19]) , (self.img+'.residual',0.033942,[54,50,0,19]) ])
           # first channel's psf is 'bad' and wider along one axis. This offcenter location is higher in value
 
           ret = tclean(vis=self.msfile,imagename=self.img+'1',specmode='cube',imsize=100,cell='10.0arcsec',niter=10,deconvolver='hogbom',restoringbeam='common')
           self.assertTrue(os.path.exists(self.img+'1.psf') and os.path.exists(self.img+'1.image') )
-          self.checkall(imexist=[self.img+'1.image'],imval=[(self.img+'1.image',0.8906,[54,50,0,0]), (self.img+'1.image',0.35945,[54,50,0,19]) ])
+          self.checkall(imexist=[self.img+'1.image'],imval=[(self.img+'1.image',0.8906,[54,50,0,0]), (self.img+'1.image',0.35945,[54,50,0,19]) , (self.img+'1.residual',0.033942,[54,50,0,19]) ])
           # OLD - first channel has been restored by a 'common' beam picked from channel 2
 
 #  def test_cube_explicit_restoringbeam(self):
