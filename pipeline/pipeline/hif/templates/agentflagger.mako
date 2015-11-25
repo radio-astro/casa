@@ -40,11 +40,13 @@ def get_template_agents(agents):
 <%inherit file="t2-4m_details-base.html"/>
 
 <script>
-$(document).ready(function(){
-	$(document).ready(function() {
-		$(".fancybox").fancybox();
-	});
-});
+    $(document).ready(function(){
+        $(document).ready(function() {
+            $(".fancybox").fancybox();
+        });
+
+        $("th.rotate").each(function(){ $(this).height($(this).find('span').width() + 8) });
+    });
 </script>
 
 <%
@@ -179,7 +181,7 @@ mses = [m for m in flags.keys() if 'online' in flags[m] or 'template' in flags[m
 % endif
 
 <h2>Flagged data summary</h2>
-<table class="table table-bordered table-striped "
+<table class="table table-bordered table-striped"
 	   summary="Flagged Data">
 	<caption>Summary of flagged data. Each cell states the amount of data 
 	flagged as a fraction of the specified data selection, with the 
@@ -199,7 +201,7 @@ mses = [m for m in flags.keys() if 'online' in flags[m] or 'template' in flags[m
 			<th>${agent_description[agent]}</th>
 %endfor
 %for ms in flags.keys():
-			<th>${ms}</th>
+			<th rowspan="2" class="rotate"><div><span>${ms}</span></div></th>
 %endfor
 		</tr>
 	</thead>

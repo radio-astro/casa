@@ -10,21 +10,6 @@ import pipeline.infrastructure.renderer.rendererutils as rendererutils
 
 <script>
 $(document).ready(function() {
-    // return a function that sets the Ant text field to the given ant
-    var createAntSetter = function(ant) {
-        return function() {
-			$("#select-ant").select2("val", [ant]).trigger("change");
-        };
-    };
-
-    // create a callback function for each overview plot that will select the
-    // appropriate spw once the page has loaded
-    $(".thumbnail a").each(function (i, v) {
-        var o = $(v);
-        var ant = o.data("ant");
-        o.data("callback", createAntSetter(ant));
-    });
-
     $(".fancybox").fancybox({
         type: 'image',
         prevEffect: 'none',
@@ -36,7 +21,7 @@ $(document).ready(function() {
             },
             thumbs: {
                 width: 50,
-                height: 50,
+                height: 50
             }
         }
     });
@@ -136,9 +121,13 @@ see detailed plots per spectral window and antenna.</p>
 <div class="col-md-8">
 	<div class="thumbnail">
 		<div class="caption">
-			<h4>Amplitude vs frequency 
+	        <%
+	        	plot = amp_refant[ms]
+	        %>
+			<h4>Amplitude vs frequency
 				(<a class="replace"
-		             href="${os.path.relpath(os.path.join(dirname, amp_subpages[ms]), pcontext.report_dir)}">show all</a>)
+                    data-vis="${plot.parameters['vis']}"
+		            href="${os.path.relpath(os.path.join(dirname, amp_subpages[ms]), pcontext.report_dir)}">show ${plot.parameters['vis']}</a>)
 			</h4>
 			<p>The plots below show amplitude vs frequency for the
 			bandpass correction, overlayed for all spectral windows
@@ -147,9 +136,6 @@ see detailed plots per spectral window and antenna.</p>
             below to show plots with specific antennas preselected.</p>
 		</div>		
 		<div class="row">
-	        <% 
-	        	plot = amp_refant[ms]
-	        %>
 			<div class="col-md-6">
 		        % if plot is None or not os.path.exists(plot.thumbnail):
 		        <img data-src="holder.js/255x188/text:Not Available">	
@@ -171,7 +157,8 @@ see detailed plots per spectral window and antenna.</p>
 		                Reference antenna (${plot.parameters['ant']})
 	                    (<a href="${os.path.relpath(os.path.join(dirname, amp_subpages[ms]), pcontext.report_dir)}"
 	                       class="replace"
-	                       data-ant="${plot.parameters['ant']}">
+	                       data-ant="${plot.parameters['ant']}"
+	                       data-vis="${plot.parameters['vis']}">
 	                       show ${plot.parameters['ant']}</a>)
 					</h5>
                     <p>Amplitude vs frequency for the reference antenna 
@@ -204,7 +191,8 @@ see detailed plots per spectral window and antenna.</p>
 					<h5>Typical antenna (${plot.parameters['ant']})
 	                    (<a href="${os.path.relpath(os.path.join(dirname, amp_subpages[ms]), pcontext.report_dir)}"
 	                       class="replace"
-	                       data-ant="${plot.parameters['ant']}">
+	                       data-ant="${plot.parameters['ant']}"
+	                       data-vis="${plot.parameters['vis']}">
 	                       show ${plot.parameters['ant']}
 	                    </a>)
 					</h5>
@@ -224,27 +212,27 @@ see detailed plots per spectral window and antenna.</p>
 <div class="col-md-4">
 	<div class="thumbnail">
 		<div class="caption">
-			<h4>Phase vs frequency 
+            <%
+                plot = phase_mode[ms]
+            %>
+			<h4>Phase vs frequency
 				(<a class="replace"
-		            href="${os.path.relpath(os.path.join(dirname, phase_subpages[ms]), pcontext.report_dir)}">show all</a>)
+                    data-vis="${plot.parameters['vis']}"
+		            href="${os.path.relpath(os.path.join(dirname, phase_subpages[ms]), pcontext.report_dir)}">show ${plot.parameters['vis']}</a>)
 			</h4>
 			<p>The plot below shows phase vs frequency for the
 			bandpass correction, overlayed for all spectral windows
 			and correlations. Click on the link above to show
 			show phase vs frequency plots for all antennas, or on the
-			link for just the reference antenna.</p>
-		</div>		
-        <% 
-        	plot = phase_refant[ms]
-        %>
+			link for just the typical antenna.</p>
+		</div>
 		<div class="row">
 			<div class="col-md-12">
 		        % if plot is None or not os.path.exists(plot.thumbnail):
 		        <img data-src="holder.js/255x188/text:Not Available">	
 				<div class="caption">
-					<h5>Reference Antenna</h5>
-					<p>The phase vs frequency plot for the reference antenna 
-					is not available.</p>
+					<h5>Typical Antenna</h5>
+					<p>The phase vs frequency plot is not available.</p>
 				</div>
 		        % else:
 				<a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
@@ -255,14 +243,15 @@ see detailed plots per spectral window and antenna.</p>
 	                        data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
 				</a>
 				<div class="caption">
-					<h5>Reference antenna (${plot.parameters['ant']})
+					<h5>Typical antenna (${plot.parameters['ant']})
 	                    (<a href="${os.path.relpath(os.path.join(dirname, phase_subpages[ms]), pcontext.report_dir)}"
 	                       class="replace"
-	                       data-ant="${plot.parameters['ant']}">
+	                       data-ant="${plot.parameters['ant']}"
+	                       data-vis="${plot.parameters['vis']}">
 	                       show ${plot.parameters['ant']}
 	                    </a>)
 					</h5>
-					<p>Phase vs frequency for the reference antenna 
+					<p>Phase vs frequency for a typical antenna
 					(${plot.parameters['ant']}). Click the link above to show
 					detailed plots for ${plot.parameters['ant']}.</p>
 				</div>

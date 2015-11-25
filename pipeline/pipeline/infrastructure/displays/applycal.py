@@ -129,9 +129,6 @@ class PlotmsLeaf(object):
 
         png = '{vis}{field}-{receiver}{spw}{ant}{intent}{uvrange}{y}_vs_{x}.png'.format(**fileparts)
         
-        #LOG.info("UVRANGE APPLYCAL DISPLAY: "+self._uvrange)
-        #LOG.info("PNG FILENAME: "+png)
-
         # Maximum filename size for Lustre filesystems is 255 bytes. Mosaics
         # can exceed this limit due to including the names of all the field.
         # Truncate over-long field components while keeping them unique by
@@ -147,7 +144,7 @@ class PlotmsLeaf(object):
                             png)
 
     def _get_plot_wrapper(self, task):
-        parameters={'vis' : self._vis}
+        parameters = {'vis': os.path.basename(self._vis)}
         
         domain_spws = self._ms.get_spectral_windows(self._spw)
         parameters['receiver'] = sorted(set(spw.band for spw in domain_spws))
@@ -259,7 +256,7 @@ class BasebandComposite(common.LeafComposite):
                 children.append(leaf_obj)
 
         super(BasebandComposite, self).__init__(children)
-    
+
 
 class AntComposite(common.LeafComposite):
     """
@@ -499,11 +496,18 @@ class SpwSummaryChart(PlotmsSpwComposite):
     def __init__(self, context, result, xaxis, yaxis, intent, **kwargs):
         (calto, intent) = _get_summary_args(context, result, intent)
         LOG.info('%s vs %s plot: %s' % (yaxis, xaxis, calto))
-        
+
+        if 'field' in kwargs:
+            field = kwargs['field']
+            del kwargs['field']
+            LOG.debug('Override for %s vs %s plot: field=%s' % (yaxis, xaxis, field))
+        else:
+            field = calto.field
+
         # request plots per spw, overlaying all antennas
         super(SpwSummaryChart, self).__init__(
                 context, result, calto, xaxis, yaxis, intent=intent, 
-                field=calto.field, **kwargs)
+                field=field, **kwargs)
 
 
 class BasebandSummaryChart(PlotmsBasebandComposite):
@@ -628,21 +632,23 @@ class PhaseVsTimeSummaryChart(SpwSummaryChart):
                 **plot_args)
 
 
-class AmpVsFrequencySummaryChart(BasebandSummaryChart):
+class AmpVsFrequencySummaryChart(SpwSummaryChart):
     """
     Create an amplitude vs time plot for each spw, overplotting by antenna.
     """
     def __init__(self, context, result, intent='', ydatacolumn='corrected', 
                  **kwargs):
-        plot_args = {'ydatacolumn' : ydatacolumn,
-                     'avgchannel'  : '',
-                     'avgtime'     : '1e8',
-                     'avgscan'     : True,
-                     'avgantenna'  : True,
-                     'plotrange'   : [0, 0, 0, 0],
-                     'correlation' : '',
-                     'coloraxis'   : 'antenna1',
-                     'overwrite'   : True}
+        plot_args = {
+            'ydatacolumn': ydatacolumn,
+            'avgchannel': '',
+            'avgtime': '1e8',
+            'avgscan': True,
+            'avgantenna': True,
+            'plotrange': [0, 0, 0, 0],
+            'correlation': '',
+            'coloraxis': 'antenna1',
+            'overwrite': True
+        }
         plot_args.update(kwargs)
         
         super(AmpVsFrequencySummaryChart, self).__init__(
@@ -823,3 +829,43 @@ class PhaseVsTimeDetailChart(FieldSpwAntDetailChart):
         super(PhaseVsTimeDetailChart, self).__init__(
                 context, result, xaxis='time', yaxis='phase', intent=intent, 
                 **plot_args)
+
+
+class CorrectedToModelRatioVsAntenna1SummaryChart(SpwSummaryChart):
+    """
+    Create an amplitude vs time plot for each spw, overplotting by antenna.
+    """
+    def __init__(self, context, result, intent, ydatacolumn='corrected/model',
+                 **kwargs):
+        plot_args = {
+            'ydatacolumn' : ydatacolumn,
+            'avgantenna': True,
+            'avgchannel': '1e8',
+            'coloraxis': 'antenna1',
+            'overwrite': True
+        }
+        plot_args.update(kwargs)
+
+        super(CorrectedToModelRatioVsAntenna1SummaryChart, self).__init__(
+                context, result, xaxis='antenna1', yaxis='amp', intent=intent,
+                **plot_args)
+
+
+class CorrectedToModelRatioVsUVDistanceSummaryChart(SpwSummaryChart):
+    """
+    Create an amplitude vs time plot for each spw, overplotting by antenna.
+    """
+    def __init__(self, context, result, intent, ydatacolumn='corrected/model',
+                 **kwargs):
+        plot_args = {
+            'ydatacolumn' : ydatacolumn,
+            'avgchannel': '1e8',
+            'coloraxis': 'antenna1',
+            'overwrite': True
+        }
+        plot_args.update(kwargs)
+
+        super(CorrectedToModelRatioVsUVDistanceSummaryChart, self).__init__(
+                context, result, xaxis='uvdist', yaxis='amp', intent=intent,
+                **plot_args)
+

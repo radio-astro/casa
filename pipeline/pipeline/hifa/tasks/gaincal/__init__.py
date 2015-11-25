@@ -11,4 +11,4 @@ from pipeline.hif.tasks.gaincal import renderer
 pipelineqa.registry.add_handler(qa.TimegaincalQAHandler())
 pipelineqa.registry.add_handler(qa.TimegaincalListQAHandler())
 
-weblog.add_renderer(TimeGaincal, renderer.T2_4MDetailsGaincalRenderer(), group_by='session')
+weblog.add_renderer(TimeGaincal, renderer.T2_4MDetailsGaincalRenderer(), group_by=weblog.UNGROUPED)

@@ -34,6 +34,7 @@ class T2_4MDetailsTsyscalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
         summary_plots = {}
         subpages = {}
+        eb_plots = []
         for result in results:
             plotter = displays.TsysSummaryChart(pipeline_context, result)
             plots = plotter.plot()
@@ -41,19 +42,33 @@ class T2_4MDetailsTsyscalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             summary_plots[vis] = plots
 
             # generate per-antenna plots
-            renderer = TsyscalPlotRenderer(pipeline_context, result)
+            plotter = displays.TsysPerAntennaChart(pipeline_context, result)
+            plots = plotter.plot()
+
+            # render per-EB plot detail pages
+            renderer = TsyscalPlotRenderer(pipeline_context, result, plots)
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())
                 # the filename is sanitised - the MS name is not. We need to
                 # map MS to sanitised filename for link construction.
                 subpages[vis] = renderer.path
 
+            eb_plots.extend(plots)
+
+        # additionally render plots for all EBs in one page
+        renderer = TsyscalPlotRenderer(pipeline_context, results, eb_plots)
+        with renderer.get_file() as fileobj:
+            fileobj.write(renderer.render())
+            # .. and we want the subpage links to go to this master page
+            for vis in subpages:
+                subpages[vis] = renderer.path
+
         tsysmap = self._get_tsysmap_table_rows(pipeline_context, results)
 
-        mako_context.update({'summary_plots'   : summary_plots,
-                             'summary_subpage' : subpages,
-                             'tsysmap'         : tsysmap,
-                             'dirname'         : weblog_dir})
+        mako_context.update({'summary_plots': summary_plots,
+                             'summary_subpage': subpages,
+                             'tsysmap': tsysmap,
+                             'dirname': weblog_dir})
 
     def _get_tsysmap_table_rows(self, pipeline_context, results):
         rows = []
@@ -88,41 +103,45 @@ class T2_4MDetailsTsyscalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
 
 class TsyscalPlotRenderer(basetemplates.JsonPlotRenderer):
-    def __init__(self, context, result):
-        vis = os.path.basename(result.inputs['vis'])
+    def __init__(self, context, result, plots):
+        vis = utils.get_vis_from_plots(plots)
+
         title = 'T<sub>sys</sub> plots for %s' % vis
         outfile = filenamer.sanitize('tsys-%s.html' % vis)
 
-        plotter = displays.TsysPerAntennaChart(context, result)
-        plots = plotter.plot()
-        
-        self._caltable = result.final[0].gaintable
-        self._spwmap = result.final[0].spwmap
+        # need to wrap result in a list to give common implementation for the
+        # following code that extracts spwmap and gaintable
+        if not isinstance(result, list):
+            result = [result]
+        self._caltable = {os.path.basename(r.inputs['vis']): r.final[0].gaintable
+                          for r in result}
+        self._spwmap = {os.path.basename(r.inputs['vis']): r.final[0].spwmap
+                        for r in result}
         
         super(TsyscalPlotRenderer, self).__init__(
-                'tsyscal_plots.mako', context, 
-                result, plots, title, outfile)
+                'tsyscal_plots.mako', context, result, plots, title, outfile)
 
     def update_json_dict(self, d, plot):
         antenna_name = plot.parameters['ant']
-        tsys_spw_id = plot.parameters['tsys_spw'] 
-        stat = self.get_stat(tsys_spw_id, antenna_name)            
+        tsys_spw_id = plot.parameters['tsys_spw']
+        vis = plot.parameters['vis']
+        stat = self.get_stat(vis, tsys_spw_id, antenna_name)
 
-        d.update({'tsys_spw'   : str(tsys_spw_id),
-                  'median'     : stat.median,
-                  'median_max' : stat.median_max,
-                  'rms'        : stat.rms})                
+        d.update({'tsys_spw': str(tsys_spw_id),
+                  'median': stat.median,
+                  'median_max': stat.median_max,
+                  'rms': stat.rms})
             
-    def get_stat(self, spw, antenna):
-        tsys_spw = self._spwmap[spw]
-        with casatools.CalAnalysis(self._caltable) as ca:
-            args = {'spw'     : tsys_spw,
-                    'antenna' : antenna,
-                    'axis'    : 'TIME',
-                    'ap'      : 'AMPLITUDE'}
+    def get_stat(self, vis, spw, antenna):
+        tsys_spw = self._spwmap[vis][spw]
+        with casatools.CalAnalysis(self._caltable[vis]) as ca:
+            args = {'spw': tsys_spw,
+                    'antenna': antenna,
+                    'axis': 'TIME',
+                    'ap': 'AMPLITUDE'}
     
-            LOG.trace('Retrieving caltable data for %s spw %s'
-                      '' % (antenna, spw))
+            LOG.trace('Retrieving caltable data for %s %s spw %s', vis,
+                      antenna, spw)
             ca_result = ca.get(**args)
             return self.get_stat_from_calanalysis(ca_result)
 
@@ -150,3 +169,12 @@ class TsyscalPlotRenderer(basetemplates.JsonPlotRenderer):
         median_max = numpy.max(mean_tsyses)
 
         return TsysStat(median, rms, median_max)
+
+
+def create_url_fn(root, plots):
+    vis_set = {p.parameters['vis'] for p in plots}
+
+    if len(vis_set) is 1:
+        return lambda x: filenamer.sanitize('%s-%s.html' % (root, x))
+    else:
+        return lambda x: filenamer.sanitize('%s-all_data.html' % root)

@@ -7015,3 +7015,22 @@ svg {
   color: #333333;
   font: "Roboto", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
+th.rotate {
+  white-space: nowrap;
+}
+th.rotate > div {
+  -webkit-transform: translate(17px, 5px) rotate(90deg);
+      -ms-transform: translate(17px, 5px) rotate(90deg);
+       -o-transform: translate(17px, 5px) rotate(90deg);
+          transform: translate(17px, 5px) rotate(90deg);
+  width: 0px;
+  direction: rtl;
+}
+.jumptarget:before {
+  content: "";
+  display: block;
+  height: 60px;
+  /* fixed header height*/
+  margin: -60px 0 0;
+  /* negative fixed header height */
+}

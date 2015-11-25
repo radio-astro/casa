@@ -67,22 +67,6 @@ def rx_for_plot(plot):
 
 <script>
 $(document).ready(function() {
-    // return a function that sets the SPW text field to the given spw
-    var createSpwSetter = function(spw) {
-        return function() {
-            // trigger a change event, otherwise the filters are not changed
-            $("#select-spw").select2("val", [spw]).trigger("change");
-        };
-    };
-
-    // create a callback function for each overview plot that will select the
-    // appropriate spw once the page has loaded
-    $(".thumbnail a").each(function (i, v) {
-        var o = $(v);
-        var spw = o.data("spw");
-        o.data("callback", createSpwSetter(spw));
-    });
-
     $(".fancybox").fancybox({
         type: 'image',
         prevEffect: 'none',
@@ -94,7 +78,7 @@ $(document).ready(function() {
             },
             thumbs: {
                 width: 50,
-                height: 50,
+                height: 50
             }
         }
     });

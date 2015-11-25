@@ -976,3 +976,15 @@ def selection_to_frequencies(img, selection, unit='GHz'):
         print 'None'
 
     return frequencies
+
+
+def get_vis_from_plots(plots):
+    """
+    Get the name to be used for the MS from the given plots.
+
+    :param plots:
+    :return:
+    """
+    vis = {p.parameters['vis'] for p in plots}
+    vis = vis.pop() if len(vis) is 1 else 'all data'
+    return vis

@@ -15,4 +15,4 @@ qaadapter.registry.register_to_flagging_topic(fluxcalflag.FluxcalFlagResults)
 weblog.add_renderer(FluxcalFlag, 
                     basetemplates.T2_4MDetailsDefaultRenderer(uri='fluxcalflag.mako',
                                                               description='Flag spectral features in solar system flux calibrators'),
-                    group_by='session')
+                    group_by=weblog.UNGROUPED)

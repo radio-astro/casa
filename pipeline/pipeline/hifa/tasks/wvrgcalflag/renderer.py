@@ -51,7 +51,11 @@ class T2_4MDetailsWvrgcalflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
         flag_plots = {}
         metric_plots = {}
         phase_offset_summary_plots = {}
+        phase_offset_subpages = {}
+        phase_offset_detail_plots = {}
         baseline_summary_plots = {}
+        baseline_summary_subpages = {}
+        baseline_detail_plots = {}
         wvrinfos = {}
         ms_non12 = []
         for result in results:
@@ -82,7 +86,7 @@ class T2_4MDetailsWvrgcalflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                 renderer = WvrcalflagMetricPlotsRenderer(context, result, plots)
                 with renderer.get_file() as fileobj:
                     fileobj.write(renderer.render())        
-    
+
                 metric_plots[vis] = plots[0]
 
             if result.view:
@@ -99,19 +103,22 @@ class T2_4MDetailsWvrgcalflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                 phase_offset_summary_plots[vis] = phase_offset_summary_plotter.plot()
                 
                 # generate the per-antenna phase offset plots
-                phase_offset_plotter = wvr.WVRPhaseOffsetPlot(context, result)            
-                phase_offset_plots = phase_offset_plotter.plot() 
+                phase_offset_plotter = wvr.WVRPhaseOffsetPlot(context, result)
+                phase_offset_detail_plots[vis] = phase_offset_plotter.plot()
                 # write the html for each MS to disk
                 renderer = WvrgcalflagPhaseOffsetPlotRenderer(context, result, 
-                                                              phase_offset_plots)
+                                                              phase_offset_detail_plots[vis])
                 with renderer.get_file() as fileobj:
                     fileobj.write(renderer.render())        
-                
+                    # the filename is sanitised - the MS name is not. We need to
+                    # map MS to sanitised filename for link construction.
+                    phase_offset_subpages[vis] = renderer.path
+
                 baseline_plotter = wvr.WVRPhaseVsBaselineChart(context, result)
-                baseline_plots = baseline_plotter.plot()
+                baseline_detail_plots[vis] = baseline_plotter.plot()
                 # write the html for each MS to disk
                 renderer = WvrgcalflagPhaseOffsetVsBaselinePlotRenderer(context, result, 
-                                                                        baseline_plots)
+                                                                        baseline_detail_plots[vis])
                 
                 # get the first scan for the QA intent(s)
                 qa_intent = set(result.inputs['qa_intent'].split(','))
@@ -121,25 +128,45 @@ class T2_4MDetailsWvrgcalflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                 qa_scan = str(qa_scan)            
                 LOG.trace('Using scan %s for phase vs baseline summary '
                           'plots' % qa_scan)
-                baseline_summary_plots[vis] = [p for p in baseline_plots
+                baseline_summary_plots[vis] = [p for p in baseline_detail_plots[vis]
                                                if qa_scan in set(p.parameters['scan'].split(','))]
                 
                 with renderer.get_file() as fileobj:
                     fileobj.write(renderer.render())        
+                    # the filename is sanitised - the MS name is not. We need to
+                    # map MS to sanitised filename for link construction.
+                    baseline_summary_subpages[vis] = renderer.path
 
         weblog_dir = os.path.join(context.report_dir,
                                   'stage%s' % results.stage_number)
 
+        # render plots for all EBs in one page
+        for d, plotter_cls, subpages in (
+                (phase_offset_detail_plots, WvrgcalflagPhaseOffsetPlotRenderer, phase_offset_subpages),
+                (baseline_detail_plots, WvrgcalflagPhaseOffsetVsBaselinePlotRenderer, baseline_summary_subpages)):
+            if d:
+                all_plots = list(utils.flatten([v for v in d.values()]))
+                renderer = plotter_cls(context, results, all_plots)
+                with renderer.get_file() as fileobj:
+                    fileobj.write(renderer.render())
+                    # redirect the subpages to the master page
+                    for vis in subpages:
+                        subpages[vis] = renderer.path
+
         # add the PlotGroups to the Mako context. The Mako template will parse
         # these objects in order to create links to the thumbnail pages we
         # just created
-        ctx.update({'applications' : applications,
-                    'wvrinfos'     : wvrinfos,
-                    'flag_plots' : flag_plots,
-                    'metric_plots' : metric_plots,
-                    'phase_offset_summary_plots' : phase_offset_summary_plots,
-                    'baseline_summary_plots' : baseline_summary_plots,
-                    'dirname' : weblog_dir})
+        ctx.update({
+            'applications': applications,
+            'wvrinfos': wvrinfos,
+            'flag_plots': flag_plots,
+            'metric_plots': metric_plots,
+            'phase_offset_summary_plots': phase_offset_summary_plots,
+            'phase_offset_subpages': phase_offset_subpages,
+            'baseline_summary_plots': baseline_summary_plots,
+            'baseline_summary_subpages': baseline_summary_subpages,
+            'dirname': weblog_dir
+        })
 
         # tell the user not to panic for non-12m dishes missing WVR 
         if ms_non12:
@@ -196,13 +223,14 @@ class WvrcalflagMetricPlotsRenderer(basetemplates.JsonPlotRenderer):
 
 class WvrgcalflagPhaseOffsetPlotRenderer(basetemplates.JsonPlotRenderer):
     def __init__(self, context, result, plots):
-        vis = os.path.basename(result.inputs['vis'])
+        vis = utils.get_vis_from_plots(plots)
+
         title = 'WVR Phase Offset Plots for %s' % vis
         outfile = filenamer.sanitize('phase_offsets-%s.html' % vis)
 
         # HACK! ant parameter is a list, but for these plots we know there's
         # only one plot.
-        for plot in plots:
+        for plot in [p for p in plots if isinstance(p.parameters['ant'], list)]:
             plot.parameters['ant'] = plot.parameters['ant'][0]
 
         super(WvrgcalflagPhaseOffsetPlotRenderer, self).__init__(
@@ -219,7 +247,8 @@ class WvrgcalflagPhaseOffsetPlotRenderer(basetemplates.JsonPlotRenderer):
 
 class WvrgcalflagPhaseOffsetVsBaselinePlotRenderer(basetemplates.JsonPlotRenderer):
     def __init__(self, context, result, plots):
-        vis = os.path.basename(result.inputs['vis'])
+        vis = utils.get_vis_from_plots(plots)
+
         title = 'Phase offset vs average baseline for %s' % vis
         outfile = filenamer.sanitize('phase_offsets_vs_baseline-%s.html' % vis)
         

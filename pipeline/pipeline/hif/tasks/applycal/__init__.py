@@ -12,4 +12,4 @@ pipelineqa.registry.add_handler(qa.ApplycalQAHandler())
 pipelineqa.registry.add_handler(qa.ApplycalListQAHandler())
 qaadapter.registry.register_to_flagging_topic(applycal.ApplycalResults)
 
-weblog.add_renderer(Applycal, renderer.T2_4MDetailsApplycalRenderer(), group_by='session')
+weblog.add_renderer(Applycal, renderer.T2_4MDetailsApplycalRenderer(), group_by=weblog.UNGROUPED)

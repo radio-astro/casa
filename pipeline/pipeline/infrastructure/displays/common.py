@@ -195,8 +195,8 @@ class PlotcalLeaf(object):
                 LOG.exception(ex)
                 return None
 
-        parameters={'vis'      : self._vis,
-                    'caltable' : self._caltable}        
+        parameters={'vis': os.path.basename(self._vis),
+                    'caltable': self._caltable}
 
         for attr in ['spw', 'ant', 'intent']:
             val = getattr(self, '_%s' % attr)

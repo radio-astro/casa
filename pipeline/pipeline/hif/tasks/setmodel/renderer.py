@@ -23,18 +23,12 @@ class T2_4MDetailsSetjyRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
     def update_mako_context(self, ctx, context, result):
         amp_vs_uv_summary_plots = collections.defaultdict(dict)
-        
-        
-        vis = os.path.basename(result.inputs['vis'])
-        ms = context.observing_run.get_ms(vis)
-        corrstring = ms.get_alma_corrstring()
-        
-        
+
         for intents in ['AMPLITUDE']:
             plots = self.create_plots(context, 
                                       result, 
                                       setjy_display.AmpVsUVSummaryChart, 
-                                      intents, correlation=corrstring)
+                                      intents)
             self.sort_plots_by_baseband(plots)
 
             key = intents
@@ -43,8 +37,8 @@ class T2_4MDetailsSetjyRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
         table_rows = make_flux_table(context, result)
 
-        ctx.update({'amp_vs_uv_plots' : amp_vs_uv_summary_plots,
-                    'table_rows'      : table_rows})
+        ctx.update({'amp_vs_uv_plots': amp_vs_uv_summary_plots,
+                    'table_rows': table_rows})
 
     def sort_plots_by_baseband(self, d):
         for vis, plots in d.items():
@@ -52,28 +46,32 @@ class T2_4MDetailsSetjyRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                            key=lambda plot: plot.parameters['baseband'])
             d[vis] = plots
 
-    def create_plots(self, context, results, plotter_cls, intents, renderer_cls=None, **kwargs):
+    def create_plots(self, context, results, plotter_cls, intents):
         """
         Create plots and return a dictionary of vis:[Plots].
         """
         d = {}
         for result in results:
-            plots = self.plots_for_result(context, result, plotter_cls, intents, renderer_cls, **kwargs)
+            plots = self.plots_for_result(context, result, plotter_cls, intents)
             d = utils.dict_merge(d, plots)
         return d
 
-    def plots_for_result(self, context, result, plotter_cls, intents, renderer_cls=None, **kwargs):
-        plotter = plotter_cls(context, result, intents, **kwargs)
+    def plots_for_result(self, context, result, plotter_cls, intents):
+        vis = os.path.basename(result.inputs['vis'])
+        ms = context.observing_run.get_ms(vis)
+        corrstring = ms.get_alma_corrstring()
+
+        plotter = plotter_cls(context, result, intents, correlation=corrstring)
         plots = plotter.plot()
 
         d = collections.defaultdict(dict)
         vis = os.path.basename(result.inputs['vis'])        
         d[vis] = plots
 
-        if renderer_cls is not None:
-            renderer = renderer_cls(context, result, plots, **kwargs)
-            with renderer.get_file() as fileobj:
-                fileobj.write(renderer.render())        
+        # if renderer_cls is not None:
+        #     renderer = renderer_cls(context, result, plots, **kwargs)
+        #     with renderer.get_file() as fileobj:
+        #         fileobj.write(renderer.render())
 
         return d
     

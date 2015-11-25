@@ -423,8 +423,9 @@ class WVRPhaseVsBaselineChart(object):
         wrapper = logger.Plot(figfile,
                               x_axis='baseline length',
                               y_axis='phase offset',
-                              parameters={'spw'  : spw.id,
-                                          'scan' : scan_ids})
+                              parameters={'vis': os.path.basename(self.result.vis),
+                                          'spw': spw.id,
+                                          'scan': scan_ids})
         
         if not os.path.exists(figfile):
             LOG.trace('WVR phase vs baseline plot for spw %s scan %s not found. Creating new '
@@ -475,6 +476,7 @@ class WVRPhaseOffsetPlot(phaseoffset.PhaseOffsetPlot):
         ms = context.observing_run.get_ms(vis)
         plothelper = WVRPhaseOffsetPlotHelper(context, result)        
         scan_intent = result.inputs['qa_intent']
+
         super(WVRPhaseOffsetPlot, self).__init__(context, ms, plothelper, scan_intent=scan_intent, score_retriever=WVRScoreFinder(result))
 
 
@@ -489,4 +491,5 @@ class WVRPhaseOffsetSummaryPlot(phaseoffset.PhaseOffsetPlot):
         ms = context.observing_run.get_ms(vis)
         plothelper = WVRPhaseOffsetSummaryPlotHelper(context, result)        
         scan_intent = result.inputs['qa_intent']
+
         super(WVRPhaseOffsetSummaryPlot, self).__init__(context, ms, plothelper, scan_intent=scan_intent, score_retriever=WVRScoreFinder(result))

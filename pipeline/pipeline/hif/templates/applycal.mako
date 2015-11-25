@@ -41,7 +41,7 @@ def sanitise(url):
 	return filenamer.sanitize(url)
 
 def spws_for_baseband(plot):
-	spws = plot.parameters['spw'].split(',')
+	spws = str(plot.parameters['spw']).split(',')
 	if not spws:
 		return ''
 	return '<h6 style="margin-top: -11px;">Spw%s</h6>' % utils.commafy(spws, quotes=False, multi_prefix='s')
@@ -64,35 +64,6 @@ def rx_for_plot(plot):
 <script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
 <script>
 $(document).ready(function(){
-    // return a function that sets the select text field to the given value
-    var createSelectSetter = function(val, element_id) {
-    	return function() {
-    		var vals = val.toString().split(',');
-    		// trigger a change event, otherwise the filters are not changed
-            $(element_id).select2("val", vals).trigger("change");
-        };
-    };
-    
-    // create a callback function for each overview plot that will select the
-    // appropriate spw once the page has loaded
-    $(".thumbnail a").each(function (i, v) {
-        var o = $(v);
-        var spw = o.data("spw");
-        var field = o.data("field");
-        var baseband = o.data("baseband");
-        var callbacks = [];
-        if (typeof field !== 'undefined') {
-        	callbacks.push(createSelectSetter(field, "#select-field"));
-        }
-        if (typeof spw !== 'undefined') {
-        	callbacks.push(createSelectSetter(spw, "#select-spw"));
-        }
-        if (typeof baseband !== 'undefined') {
-        	callbacks.push(createSelectSetter(baseband, "#select-baseband"));
-        }
-	    o.data("callback", callbacks);
-    });
-
     $(".fancybox").fancybox({
         type: 'image',
         prevEffect: 'none',
@@ -117,6 +88,8 @@ $(document).ready(function(){
 	    'placement': 'left',
 	    'container':'body'
 	  });
+
+    $("th.rotate").each(function(){ $(this).height($(this).find('span').width() + 8) });
 });
 </script>
 
@@ -235,7 +208,7 @@ def space_comma(s):
 %endfor
 			<th>Total</th>
 %for ms in flags.keys():
-			<th>${ms}</th>
+			<th class="rotate"><div><span>${ms}</span></div></th>
 %endfor
 		</tr>
 	</thead>
@@ -267,13 +240,14 @@ def space_comma(s):
 	</tbody>
 </table>
 
-% if amp_vs_freq_plots or phase_vs_freq_plots or amp_vs_time_plots or amp_vs_uv_plots or phase_vs_uv_plots or phase_vs_time_plots:
+% if amp_vs_freq_plots or phase_vs_freq_plots or amp_vs_time_plots or amp_vs_uv_plots or phase_vs_time_plots:
 <h2>Plots</h2>
 
 <%self:plot_group plot_dict="${amp_vs_freq_plots}"
-				  url_fn="${lambda x: 'amp_vs_freq-%s.html' % sanitise(x)}"
+				  url_fn="${lambda x: amp_vs_freq_subpages[x]}"
 				  data_field="${True}"
 				  data_spw="${True}"
+                  data_vis="${True}"
 				  plot_accessor="${lambda ms_plots: ms_plots.items()}">
 
 	<%def name="title()">
@@ -285,22 +259,21 @@ def space_comma(s):
 		correlations, coloured by antenna.
 	</%def>
 
-	<%def name="mouseover(plot)">Click to show amplitude vs frequency for baseband ${plot.parameters['baseband']}</%def>
+	<%def name="mouseover(plot)">Click to show amplitude vs frequency for spw ${plot.parameters['spw']}</%def>
 
 	<%def name="fancybox_caption(plot)">
 		Receiver: ${utils.commafy(plot.parameters['receiver'], quotes=False)}<br>
-		Baseband: ${plot.parameters['baseband']} (spw ${plot.parameters['spw']})<br>
+		Spw: ${plot.parameters['spw']}<br>
 		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br>
 		Fields: ${cgi.escape(plot.parameters['field'], True)}
 	</%def>
 
 	<%def name="caption_title(plot)">
-		Baseband ${plot.parameters['baseband']}<br>
+		Spw ${plot.parameters['spw']}<br>
 	</%def>
 
 	<%def name="caption_subtitle(plot)">
 		${rx_for_plot(plot)}
-		${spws_for_baseband(plot)}
 	</%def>
 
 	<%def name="caption_text(plot, intent)"> 
@@ -312,9 +285,10 @@ def space_comma(s):
 
 
 <%self:plot_group plot_dict="${phase_vs_freq_plots}"
-				  url_fn="${lambda x: 'phase_vs_freq-%s.html' % sanitise(x)}"
+				  url_fn="${lambda x: phase_vs_freq_subpages[x]}"
 				  data_field="${True}"
 				  data_spw="${True}"
+				  data_vis="${True}"
 				  plot_accessor="${lambda ms_plots: ms_plots.items()}">
 
 	<%def name="title()">
@@ -354,9 +328,10 @@ def space_comma(s):
 
 
 <%self:plot_group plot_dict="${amp_vs_uv_plots}"
-				  url_fn="${lambda x: 'amp_vs_uv-%s.html' % sanitise(x)}"
+				  url_fn="${lambda x: amp_vs_uv_subpages[x]}"
                   data_field="${True}"
 				  data_spw="${True}"
+				  data_vis="${True}"
 				  plot_accessor="${lambda ms_plots: ms_plots.items()}">
 
 	<%def name="title()">
@@ -394,7 +369,8 @@ def space_comma(s):
 
 
 <%self:plot_group plot_dict="${amp_vs_time_plots}"
-				  url_fn="${lambda x: 'amp_vs_time-%s.html' % sanitise(x)}"
+				  url_fn="${lambda x: amp_vs_time_subpages[x]}"
+				  data_vis="${True}"
 				  data_spw="${True}">
 
 	<%def name="title()">
@@ -427,8 +403,9 @@ def space_comma(s):
 
 
 <%self:plot_group plot_dict="${phase_vs_time_plots}"
-				  url_fn="${lambda x: 'phase_vs_time-%s.html' % sanitise(x)}"
-				  data_spw="${True}">
+				  url_fn="${lambda x: phase_vs_time_subpages[x]}"
+				  data_vis="${True}"
+                  data_spw="${True}">
 
 	<%def name="title()">
 		Calibrated phase vs time
@@ -458,10 +435,90 @@ def space_comma(s):
 
 </%self:plot_group>
 
+
+<%self:plot_group plot_dict="${corrected_to_antenna1_plots}"
+				  url_fn="${lambda x: 'junk'}">
+
+	<%def name="title()">
+        (Corrected amplitude / model) vs antenna
+	</%def>
+
+	<%def name="preamble()">
+		Plots of the ratio of the corrected amplitude to the model column
+        value versus antenna ID. Data are coloured by antenna and are shown
+        for all antennas and correlations.
+	</%def>
+
+    <%def name="ms_preamble(ms)">
+		<p>Plots for ${ms} were created with UV range set to capture the inner
+		half of the data (UV max < ${str(uv_max[ms])}).</p>
+	</%def>
+
+	<%def name="mouseover(plot)">Click to show the ratio of the corrected amplitude to model column for spw ${plot.parameters['spw']}</%def>
+
+	<%def name="fancybox_caption(plot)">
+		Spectral window: ${plot.parameters['spw']}<br>
+		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br>
+		Fields: ${cgi.escape(plot.parameters['field'], True)}
+	</%def>
+
+	<%def name="caption_title(plot)">
+		Spectral Window ${plot.parameters['spw']}<br>
+	</%def>
+
+	<%def name="caption_subtitle(plot)">
+		${rx_for_plot(plot)}
+		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br>
+		Fields: ${cgi.escape(plot.parameters['field'], True)}
+	</%def>
+
+</%self:plot_group>
+
+
+<%self:plot_group plot_dict="${corrected_to_model_vs_uvdist_plots}"
+				  url_fn="${lambda x: 'junk'}">
+
+	<%def name="title()">
+		(Corrected amplitude / model) vs UV distance
+	</%def>
+
+	<%def name="preamble()">
+		Plots of the ratio of the corrected amplitude to the model column
+        value versus UV distance. Data are coloured by antenna and are
+        shown for all antennas and correlations.
+	</%def>
+
+    <%def name="ms_preamble(ms)">
+		<p>Plots for ${ms} were created with UV range set to capture the inner
+		half of the data (UV max < ${str(uv_max[ms])}).</p>
+	</%def>
+
+	<%def name="mouseover(plot)">Click to show the ratio of the corrected amplitude to model column for spw ${plot.parameters['spw']}</%def>
+
+	<%def name="fancybox_caption(plot)">
+		Spectral window: ${plot.parameters['spw']}<br>
+		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br>
+		Fields: ${cgi.escape(plot.parameters['field'], True)}
+	</%def>
+
+	<%def name="caption_title(plot)">
+		Spectral Window ${plot.parameters['spw']}<br>
+	</%def>
+
+	<%def name="caption_subtitle(plot)">
+		${rx_for_plot(plot)}
+		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br>
+		Fields: ${cgi.escape(plot.parameters['field'], True)}
+	</%def>
+
+</%self:plot_group>
+
+
 <%self:plot_group plot_dict="${science_amp_vs_freq_plots}"
-				  url_fn="${lambda x: 'science_amp_vs_freq-%s.html' % sanitise(x)}"
+				  url_fn="${lambda x: 'science_amp_vs_freq-all_data.html'}"
 				  data_spw="${True}"
 				  data_field="${True}"
+                  data_vis="${True}"
 				  plot_accessor="${lambda ms_plots: ms_plots.items()}">
 
 	<%def name="title()">
@@ -487,22 +544,21 @@ def space_comma(s):
 		half of the data (UV max < ${str(uv_max[ms])}).</p>
 	</%def>
 
-	<%def name="mouseover(plot)">Click to show amplitude vs frequency for baseband ${plot.parameters['baseband']}</%def>
+	<%def name="mouseover(plot)">Click to show amplitude vs frequency for spw ${plot.parameters['spw']}</%def>
 
 	<%def name="fancybox_caption(plot)">
 		Receiver: ${utils.commafy(plot.parameters['receiver'], quotes=False)}<br>
-		Baseband: ${plot.parameters['baseband']} (spw ${plot.parameters['spw']})<br>
+		Spw: ${plot.parameters['spw']}<br>
 		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br>
 		Fields: ${cgi.escape(plot.parameters['field'], True)}
 	</%def>
 
 	<%def name="caption_title(plot)">
-		Baseband ${plot.parameters['baseband']}		
+		Spw ${plot.parameters['spw']}
 	</%def>
 
 	<%def name="caption_subtitle(plot)">
 		${rx_for_plot(plot)}
-		${spws_for_baseband(plot)}
 	</%def>
 
 	<%def name="caption_text(plot, source_id)">
@@ -513,9 +569,10 @@ def space_comma(s):
 </%self:plot_group>
 
 <%self:plot_group plot_dict="${science_phase_vs_freq_plots}"
-				  url_fn="${lambda x: 'science_phase_vs_freq-%s.html' % sanitise(x)}"
+				  url_fn="${lambda x: 'science_phase_vs_freq-all_data.html'}"
 				  data_baseband="${True}"
 				  data_field="${True}"
+                  data_vis="${True}"
 				  plot_accessor="${lambda ms_plots: ms_plots.items()}">
 
 	<%def name="title()">
@@ -566,9 +623,10 @@ def space_comma(s):
 </%self:plot_group>
 
 <%self:plot_group plot_dict="${science_amp_vs_uv_plots}"
-				  url_fn="${lambda x: 'science_amp_vs_uv-%s.html' % sanitise(x)}"
-				  data_baseband="${True}"
+				  url_fn="${lambda x: 'science_amp_vs_uv-all_data.html'}"
+				  data_spw="${True}"
 				  data_field="${True}"
+                  data_vis="${True}"
 				  plot_accessor="${lambda ms_plots: ms_plots.items()}">
 
 	<%def name="title()">
@@ -589,22 +647,21 @@ def space_comma(s):
 		spectral windows shown in different colours.</p>
 	</%def>
 
-	<%def name="mouseover(plot)">Click to show amplitude vs UV distance for baseband ${plot.parameters['baseband']}</%def>
+	<%def name="mouseover(plot)">Click to show amplitude vs UV distance for spw ${plot.parameters['spw']}</%def>
 
 	<%def name="fancybox_caption(plot)">
 		Receiver: ${utils.commafy(plot.parameters['receiver'], quotes=False)}<br>
-		Baseband: ${plot.parameters['baseband']} (spw ${plot.parameters['spw']})<br>
+		Spw: ${plot.parameters['spw']}<br>
 		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br>
 		Fields: ${cgi.escape(plot.parameters['field'], True)}
 	</%def>
 
 	<%def name="caption_title(plot)">
-		Baseband ${plot.parameters['baseband']}		
+		Spw ${plot.parameters['spw']}
 	</%def>
 
 	<%def name="caption_subtitle(plot)">
 		${rx_for_plot(plot)}
- 		${spws_for_baseband(plot)}
  	</%def>
 
 	<%def name="caption_text(plot, source_id)">

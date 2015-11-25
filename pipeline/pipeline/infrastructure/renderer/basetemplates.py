@@ -24,10 +24,10 @@ class T2_4MDetailsDefaultRenderer(object):
         self.always_rerender = always_rerender
 
     def get_display_context(self, context, result):
-        mako_context = {'pcontext' : context,
-                        'result'   : result,
-                        'casalog_url' : self._get_log_url(context, result),
-                        'dirname'  : 'stage%s' % result.stage_number}
+        mako_context = {'pcontext': context,
+                        'result': result,
+                        'casalog_url': self._get_log_url(context, result),
+                        'dirname': 'stage%s' % result.stage_number}
         self.update_mako_context(mako_context, context, result)
         return mako_context
 
@@ -62,14 +62,22 @@ class CommonRenderer(object):
         # this should be overwritten by the superclass constructor, otherwise
         # an exception will occur when the template is rendered
         self.path = None
-        
-        stage = 'stage%s' % result.stage_number
+
+        # when the calling context is rendering a page of plots for all MSes,
+        # the constructor is given a list of results rather than a single
+        # result
+        if isinstance(result, list):
+            stage_number = result[0].stage_number
+        else:
+            stage_number = result.stage_number
+        stage = 'stage%s' % stage_number
+
         self.dirname = os.path.join(context.report_dir, stage)
 
     def render(self):
-        mako_context = {'pcontext' : self.context,
-                        'result'   : self.result,
-                        'dirname'  : self.dirname}
+        mako_context = {'pcontext': self.context,
+                        'result': self.result,
+                        'dirname': self.dirname}
         self.update_mako_context(mako_context)
         t = weblog.TEMPLATE_LOOKUP.get_template(self.uri)
         return t.render(**mako_context)
@@ -108,7 +116,8 @@ class JsonPlotRenderer(CommonRenderer):
             # push the most commonly used filter parameters directly into the
             # JSON dictionary to save the extending classes from doing it in
             # update_json_dict 
-            for param in ('spw', 'scan', 'ant', 'baseband', 'field', 'pol'):
+            for param in ('vis', 'session', 'spw', 'scan', 'ant', 'baseband',
+                          'field', 'pol'):
                 if param in plot.parameters:
                     json_dict_for_plot[param] = str(plot.parameters[param])                    
             self.update_json_dict(json_dict_for_plot, plot)
@@ -138,7 +147,6 @@ class JsonPlotRenderer(CommonRenderer):
         super(JsonPlotRenderer, self).update_mako_context(mako_context)
         well_formed = self.json.replace("'", "\\'").replace('"', '&quot;')
         
-        mako_context.update({'plots'      : self.plots,
-                             'json'       : well_formed,
-                             'plot_title' : self.title})
-        
+        mako_context.update({'plots': self.plots,
+                             'json': well_formed,
+                             'plot_title': self.title})
