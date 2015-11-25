@@ -1436,8 +1436,11 @@ class test_cube(testref_base):
 
           ret = tclean(vis=self.msfile,imagename=self.img+'1',specmode='cube',imsize=100,cell='10.0arcsec',niter=10,deconvolver='hogbom',restoringbeam='common')
           self.assertTrue(os.path.exists(self.img+'1.psf') and os.path.exists(self.img+'1.image') )
-          self.checkall(imexist=[self.img+'1.image'],imval=[(self.img+'1.image',0.7987,[54,50,0,0]), (self.img+'1.image',0.35945,[54,50,0,19]) ])
-          # first channel has been restored by a 'common' beam picked from channel 2
+          self.checkall(imexist=[self.img+'1.image'],imval=[(self.img+'1.image',0.8906,[54,50,0,0]), (self.img+'1.image',0.35945,[54,50,0,19]) ])
+          # OLD - first channel has been restored by a 'common' beam picked from channel 2
+
+#  def test_cube_explicit_restoringbeam(self):
+#          """ [cube] Test explicit restoring beams : Test peak flux and off source value for smoothed residuals"""
 
      def test_cube_chanchunks(self):
           """ [cube] Test channel chunking for large cubes """
@@ -1587,6 +1590,17 @@ class test_widefield(testref_base):
           self.checkall(imexist=[self.img+'.image', self.img+'.psf', self.img+'.weight'],imval=[(self.img+'.image',0.9743,[256,256,0,0]),(self.img+'.weight',0.46,[256,256,0,0]) ] )
 
           #do stokes V too..
+
+#     def test_widefield_wbaproj_subsets(self):
+#          """ [widefield] Test_Widefield_wbaproj_subsets : MFS with the AWProjection gridder and A,W turned off  """
+#          self.prepData("refim_mawproject.ms")
+#          ## PS only
+#          ret = tclean(vis=self.msfile,spw='*',field='*',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",niter=30,gridder='awproject',psterm=True,aterm=False,wprojplanes=1,computepastep=360.0,rotatepastep=360.0,deconvolver='hogbom',pblimit=0.3)
+#          #self.checkall(imexist=[self.img+'.image', self.img+'.psf', self.img+'.weight'],imval=[(self.img+'.image',1.0,[256,256,0,0]),(self.img+'.weight',0.493,[256,256,0,0]) ] )
+#
+#          ## W and PS only
+#          ret = tclean(vis=self.msfile,spw='*',field='*',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",niter=30,gridder='awproject',psterm=True,aterm=False,wprojplanes=16,computepastep=360.0,rotatepastep=360.0,deconvolver='hogbom',pblimit=0.3)
+#          #self.checkall(imexist=[self.img+'.image', self.img+'.psf', self.img+'.weight'],imval=[(self.img+'.image',1.0,[256,256,0,0]),(self.img+'.weight',0.493,[256,256,0,0]) ] )
 
 
 class test_widefield_failing(testref_base):
@@ -1781,6 +1795,30 @@ class test_modelvis(testref_base):
           ret = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',startmodel=self.img, spw='0',niter=0,savemodel='virtual')
           ## cannot check anything here....  just that it runs without error
 
+#     def test_modelvis_12(self): 
+#          """ [modelpredict] Test_modelvis_12 : Predict a model with an internal T/F mask, for uvsub (cas-8133)"""
+#
+#          self.prepData("refim_twopoints_twochan.ms")
+#          ## Image two sources
+#          ret1 = tclean(vis=self.msfile,imagename=self.img,imsize=250,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",niter=100,deconvolver='hogbom',interactive=0,specmode='cube',nchan=2,interpolation='nearest',savemodel='modelcolumn')
+#          # check modelcolumn has flux of both sources
+#          #self.assertTrue( self.checkmodelchan(self.msfile,10) == 0.0 and self.checkmodelchan(self.msfile,3) > 0.0 )
+#          
+#         ## Make a mask to cover only one of them
+#          makemask(mode='copy',inpimage=self.img+'.model',inpmask='circle[[19h58m40.895s,40d55m58.543s], 1arcmin]',output=self.img+'.model:mask0')
+#          self.checkall(imexist=[self.img+'.model'], imval=[(self.img+'.residual',0.1259,[50,50,0,0])])
+#          
+#         ## Predict model with mask
+#          ret2 = tclean(vis=self.msfile,imagename=self.img+'1',imsize=250,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",niter=0,calcres=False,calcpsf=True,deconvolver='hogbom',interactive=0,specmode='cube',nchan=2,interpolation='nearest',savemodel='modelcolumn',startmodel=self.img)
+# check modelcolumn has flux of only 1 source
+#          
+#         ## uvsub
+#          uvsub(vis=self.msfile)
+#          
+#         ## Image again : Should see only the other source.
+#          ret1 = tclean(vis=self.msfile,imagename=self.img+'2',imsize=250,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",niter=100,deconvolver='hogbom',interactive=0,specmode='cube',nchan=2,interpolation='nearest',savemodel='modelcolumn')
+# modelcol should have flux of only second src.
+          
 class test_startmodel(testref_base):
 #     def test_startmodel_12(self):
 #          """ [modelpredict] Test_startmodel_12 : Regrid input model onto new image grid : mfs (ra/dec) """

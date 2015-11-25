@@ -228,7 +228,7 @@ protected:
   Bool copyMask(CountedPtr<ImageInterface<Float> >inimage, CountedPtr<ImageInterface<Float> >outimage);
 
   void removeMask(CountedPtr<ImageInterface<Float> >im);
-  void rescaleResolution(ImageInterface<Float>& subResidual, const GaussianBeam& newbeam, const GaussianBeam& oldbeam);
+  void rescaleResolution(Int chan, ImageInterface<Float>& subResidual, const GaussianBeam& newbeam, const GaussianBeam& oldbeam);
   ///////////////////// Member Objects
 
   IPosition itsImageShape, itsParentImageShape;

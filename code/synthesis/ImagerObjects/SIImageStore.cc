@@ -1054,20 +1054,41 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 	  im->removeRegion(strung);
 	} 
   } 
-  void SIImageStore:: rescaleResolution(ImageInterface<Float>& image, 
+  void SIImageStore:: rescaleResolution(Int chan, 
+					ImageInterface<Float>& image, 
 					const GaussianBeam& newbeam, 
 					const GaussianBeam& oldbeam){
 
+    LogIO os( LogOrigin("SIImageStore","rescaleResolution",WHERE) );
     GaussianBeam toBeUsed(Quantity(0.0, "arcsec"),Quantity(0.0, "arcsec"), 
 			  Quantity(0.0, "deg")) ;
     try {
-      GaussianDeconvolver::deconvolve(toBeUsed, newbeam, oldbeam);
-      Double pixwidth=sqrt(image.coordinates().increment()(0)*image.coordinates().increment()(0)+image.coordinates().increment()(1)*image.coordinates().increment()(1));
-      if(toBeUsed.getMinor(image.coordinates().worldAxisUnits()[0]) > pixwidth)
-	   StokesImageUtil::Convolve(image, toBeUsed, True);
+      Bool samesize = GaussianDeconvolver::deconvolve(toBeUsed, newbeam, oldbeam);
+
+      /*
+      os << LogIO::NORMAL2 << "Chan : " << chan << " : Input beam : : " << oldbeam.getMajor(Unit("arcsec")) << " arcsec, " << oldbeam.getMinor(Unit("arcsec"))<< " arcsec, " << oldbeam.getPA(Unit("deg")) << " deg" << LogIO::POST; 
+      os << LogIO::NORMAL2 << "Target beam : " << newbeam.getMajor(Unit("arcsec")) << " arcsec, " << newbeam.getMinor(Unit("arcsec"))<< " arcsec, " << newbeam.getPA(Unit("deg")) << " deg" << LogIO::POST; 
+      os << LogIO::NORMAL2 << "Beam to be used : " << toBeUsed.getMajor(Unit("arcsec")) << " arcsec, " << toBeUsed.getMinor(Unit("arcsec"))<< " arcsec, " << toBeUsed.getPA(Unit("deg")) << " deg" << LogIO::POST; 
+      os << LogIO::NORMAL2 << "SameSize ? " << samesize << endl;
+      */
+      
+      if( samesize )
+	{
+	  os << LogIO::NORMAL2 << "Input and output beam sizes are the same for Channel : " << chan << ". Not convolving residuals." << LogIO::POST;
+	}
+	else 
+	{
+	  Double pixwidth=sqrt(image.coordinates().increment()(0)*image.coordinates().increment()(0)+image.coordinates().increment()(1)*image.coordinates().increment()(1));
+	  
+	  if(toBeUsed.getMinor(image.coordinates().worldAxisUnits()[0]) > pixwidth)
+	    {
+	      StokesImageUtil::Convolve(image, toBeUsed, True);
+	    }
+	}
     }
     catch (const AipsError& x) {
-      throw(AipsError("Cannot convolve to new beam: may be smaller than old beam"));
+      //throw(AipsError("Cannot convolve to new beam: may be smaller than old beam : " + x.getMesg() ));
+      os << LogIO::WARN << "Cannot convolve to new beam for Channel : " << chan <<  " : " << x.getMesg() << LogIO::POST;
     }
     
 
@@ -1571,7 +1592,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 	Slicer imslice(substart, substop,Slicer::endIsLast);
 	SubImage<Float> subRestored( *image(term) , imslice, True );
 	SubImage<Float> subModel( *model(term) , imslice, True );
-	SubImage<Float> subResidual( *residual(term) , imslice, False );
+	SubImage<Float> subResidual( *residual(term) , imslice, True );
 	
 	GaussianBeam beam = itsRestoredBeams.getBeam( chanid, polid );;
 	
@@ -1584,8 +1605,10 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 	    // Smooth model by beam
 	    StokesImageUtil::Convolve( subRestored, beam);
 	    // Add residual image
-	    if(usebeam == "common")
-	      rescaleResolution(subResidual, beam, itsPSFBeams.getBeam(chanid, polid));
+	    if( !rbeam.isNull() || usebeam == "common")
+	      {
+		rescaleResolution(chanid, subResidual, beam, itsPSFBeams.getBeam(chanid, polid));
+	      }
 	    subRestored.copyData( LatticeExpr<Float>( subRestored + subResidual  ) );
 	   
 	    
