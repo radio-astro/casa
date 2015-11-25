@@ -1,4 +1,6 @@
-from IPython.kernel import client 
+from mpi4casa.MPIEnvironment import MPIEnvironment
+if not MPIEnvironment.is_mpi_enabled: from IPython.kernel import client
+#from IPython.kernel import client
 from subprocess import *
 import os
 import sys
@@ -13,6 +15,7 @@ import casadef
 import numpy as np
 from math import *
 from get_user import get_user
+
 # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
 import traceback
 # jagonzal (CAS-4372): Introduce CASA logging system into cluster infrastructure
