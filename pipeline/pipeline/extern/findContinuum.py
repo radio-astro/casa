@@ -297,7 +297,7 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
                 factor = 0.9
             else:
                 factor = np.log(3)/np.log(groups)
-            print "Scaling the threshold by a factor of %.2  (groups=%d, channelRatio=%f)" % (factor, groups,channelRatio)
+            print "Scaling the threshold by a factor of %.2f (groups=%d, channelRatio=%f)" % (factor, groups,channelRatio)
             sigmaFindContinuum *= factor
             continuumChannels,selection,threshold,median,groups,correctionFactor,medianTrue,mad,medianCorrectionFactor,negativeThreshold,lineStrengthFactor,singleChannelPeaksAboveSFC,allGroupsAboveSFC = \
                 findContinuumChannels(avgSpectrumNansReplaced, nBaselineChannels, sigmaFindContinuum, nanmin, 
