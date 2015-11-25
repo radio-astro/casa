@@ -741,3 +741,4 @@ casa_add_assay( synthesis CalTables/test/tCTGenericFill.cc )
 casa_add_test( synthesis ../mstransform/MSTransform/test/tMSTransformIterator.cc )
 casa_add_test( synthesis CalLibrary/test/tCalLibraryParse.cc )
 
+casa_add_google_test( MODULES synthesis SOURCES ImagerObjects/test/SDMaskHandler_GTest.cc )
