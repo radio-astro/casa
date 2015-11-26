@@ -23,7 +23,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: findContinuum.py,v 1.27 2015/11/20 22:09:20 we Exp $" 
+    myversion = "$Id: findContinuum.py,v 1.28 2015/11/25 17:35:58 we Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
