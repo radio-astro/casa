@@ -191,6 +191,7 @@ class sdcal2_exceptions(sdcal2_unittest_base,unittest.TestCase):
         if (os.path.exists(self.rawfile)):
             shutil.rmtree(self.rawfile)
         os.system( 'rm -rf '+self.prefix+'*' )
+        self.assertTrue(len(tb.showcache()) == 0)
 
     def test_exception00(self):
         """test_exception00: Default parameters"""
@@ -355,6 +356,7 @@ class sdcal2_skycal_ps(sdcal2_caltest_base,unittest.TestCase):
         if (os.path.exists(self.rawfile)):
             shutil.rmtree(self.rawfile)
         os.system( 'rm -rf '+self.prefix+'*' )
+        self.assertTrue(len(tb.showcache()) == 0)
 
     def test_skycal_ps00(self):
         """test_skycal_ps00: Sky calibration for calmode='ps' (ALMA)"""
@@ -405,6 +407,7 @@ class sdcal2_skycal_otf(sdcal2_caltest_base,unittest.TestCase):
         if (os.path.exists(self.rawfile)):
             shutil.rmtree(self.rawfile)
         os.system( 'rm -rf '+self.prefix+'*' )
+        self.assertTrue(len(tb.showcache()) == 0)
 
     def test_skycal_otf00(self):
         """test_skycal_otf00: Sky calibration for calmode='otf' (ALMA)"""
@@ -461,6 +464,7 @@ class sdcal2_skycal_otfraster(sdcal2_caltest_base,unittest.TestCase):
         if (os.path.exists(self.rawfile)):
             shutil.rmtree(self.rawfile)
         os.system( 'rm -rf '+self.prefix+'*' )
+        self.assertTrue(len(tb.showcache()) == 0)
 
     def test_skycal_otfraster00(self):
         """test_skycal_otfraster00: Sky calibration for calmode='otfraster' (ALMA)"""
@@ -517,6 +521,7 @@ class sdcal2_tsyscal(sdcal2_caltest_base,unittest.TestCase):
         if (os.path.exists(self.rawfile)):
             shutil.rmtree(self.rawfile)
         os.system( 'rm -rf '+self.prefix+'*' )
+        self.assertTrue(len(tb.showcache()) == 0)
 
     def test_tsyscal00(self):
         """test_tsyscal00: Tsys calibration"""
@@ -571,6 +576,7 @@ class sdcal2_tsyscal_average(sdcal2_caltest_base,unittest.TestCase):
         if (os.path.exists(self.rawfile)):
             shutil.rmtree(self.rawfile)
         os.system( 'rm -rf '+self.prefix+'*' )
+        self.assertTrue(len(tb.showcache()) == 0)
 
     def _comparecal_average(self, out, ref, col='SPECTRA', channelrange=[]):
         self._checkfile(out)
@@ -684,6 +690,7 @@ class sdcal2_applycal(sdcal2_caltest_base,unittest.TestCase):
         if (os.path.exists(self.rawfile)):
             shutil.rmtree(self.rawfile)
         os.system( 'rm -rf '+self.prefix+'*' )
+        self.assertTrue(len(tb.showcache()) == 0)
 
     def test_applycal00(self):
         """test_applycal00: apply existing sky table and Tsys table"""
@@ -793,6 +800,7 @@ class sdcal2_test_selection(selection_syntax.SelectionSyntaxTest,
         if (os.path.exists(self.tsys_table)):
             shutil.rmtree(self.tsys_table)
         os.system( 'rm -rf '+self.prefix+'*' )
+        self.assertTrue(len(tb.showcache()) == 0)
 
     ####################
     # scan
@@ -1356,6 +1364,7 @@ class sdcal2_flag_base(sdcal2_caltest_base, unittest.TestCase):
             tsel = tb.query('SRCTYPE==0')
             nrow_expected = tsel.nrows()
             time_expected = tsel.getcol('TIME')
+            tsel.close()
         
         # get calibrated data
         with tbmanager(outfile) as tb:
@@ -1468,6 +1477,7 @@ class sdcal2_skycal_flag(sdcal2_flag_base):
         if (os.path.exists(self.rawfile)):
             shutil.rmtree(self.rawfile)
         os.system( 'rm -rf '+self.prefix+'*' )
+        self.assertTrue(len(tb.showcache()) == 0)
 
     def test_skycal_flag_ps(self):
         """test_skycal_flag_ps: test if sky calibration handles flag information properly"""
@@ -1502,6 +1512,7 @@ class sdcal2_tsyscal_flag(sdcal2_flag_base):
         if (os.path.exists(self.rawfile)):
             shutil.rmtree(self.rawfile)
         os.system( 'rm -rf '+self.prefix+'*' )
+        self.assertTrue(len(tb.showcache()) == 0)
 
     def test_tsyscal_flag_noaverage(self):
         """test_tsyscal_flag_noaverage: test if tsys calibration handles flag information properly"""
@@ -1540,11 +1551,13 @@ class sdcal2_applycal_flag(sdcal2_flag_base):
         if (os.path.exists(self.rawfile)):
             shutil.rmtree(self.rawfile)
         os.system( 'rm -rf '+self.prefix+'*' )
+        self.assertTrue(len(tb.showcache()) == 0)
 
     def _expected_flagrow(self):
         with tbmanager(self.rawfile) as tb:
             tsel = tb.query('SRCTYPE==0', sortlist='TIME')
             flagrow = tsel.getcol('FLAGROW')
+            tsel.close()
         return flagrow
         
     def test_applycal_flag(self):
@@ -1585,11 +1598,13 @@ class sdcal2_applycal_flag2(sdcal2_flag_base):
             shutil.rmtree(self.rawfile)
         os.system( 'rm -rf '+self.prefix+'*' )
         os.system('rm -rf sd_analytic_type1-3*')
+        self.assertTrue(len(tb.showcache()) == 0)
 
     def _expected_flagrow(self):
         with tbmanager(self.rawfile) as tb:
             tsel = tb.query('SRCTYPE==0', sortlist='TIME')
             flagrow = tsel.getcol('FLAGROW')
+            tsel.close()
         return flagrow
 
     def applytable(self, sky_stat, tsys_stat=None):
