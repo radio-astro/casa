@@ -849,11 +849,6 @@ for details about ``methods'' used to update the GUI.
   the point spread function convolved with the model currently selected.
   Thus if you want to restart a clean, simply set the model to the model
   that was previously produced by clean.
-  
-  \end{description}
-    
-    
-    
 </description>
   <input>
     
