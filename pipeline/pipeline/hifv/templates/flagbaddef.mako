@@ -14,7 +14,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
             <h3>BP Table Amps</h3>
             <table class="table table-bordered table-striped table-condensed"
 	       summary="Deformatter Flagging Amp">
-	    <caption>BP Table Amps</caption>
+	    <caption></caption>
 	    <thead>
 		<tr>
 			<th>Antenna</th>
@@ -44,7 +44,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
             <h3>BP Table Phases</h3>
             <table class="table table-bordered table-striped table-condensed"
 	       summary="Deformatter Flagging Phase">
-	    <caption>BP Table Phases</caption>
+	    <caption></caption>
 	    <thead>
 		<tr>
 			<th>Antenna</th>
