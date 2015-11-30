@@ -73,6 +73,7 @@
 #include <imageanalysis/ImageAnalysis/ImageConvolverTask.h>
 #include <imageanalysis/ImageAnalysis/ImageCropper.h>
 #include <imageanalysis/ImageAnalysis/ImageDecimator.h>
+#include <imageanalysis/ImageAnalysis/ImageExprCalculator.h>
 #include <imageanalysis/ImageAnalysis/ImageFactory.h>
 #include <imageanalysis/ImageAnalysis/ImageFFTer.h>
 #include <imageanalysis/ImageAnalysis/ImageFitter.h>
@@ -101,7 +102,7 @@
 
 #include <casa/namespace.h>
 
-#include "../../../code/imageanalysis/ImageAnalysis/ImageExprCalculator.h"
+// #include "../../../code/imageanalysis/ImageAnalysis/ImageExprCalculator.h"
 
 using namespace std;
 
@@ -111,15 +112,16 @@ namespace casac {
 
 const String image::_class = "image";
 
-image::image() :
-_log(), _image(new ImageAnalysis()) {}
+image::image() : _log(), _image(new ImageAnalysis()),
+	_imageF(), _imageC() {}
 
 // private ImageInterface constructor for on the fly components
 // The constructed object will take over management of the provided pointer
 // using a shared_ptr
 
 image::image(casa::ImageInterface<casa::Float> *inImage) :
-	_log(), _image(new ImageAnalysis(SHARED_PTR<ImageInterface<Float> >(inImage))) {
+	_log(), _image(new ImageAnalysis(SHARED_PTR<ImageInterface<Float> >(inImage))),
+	_imageF(_image->getImage()), _imageC() {
 	try {
 		_log << _ORIGIN;
 
@@ -132,7 +134,8 @@ image::image(casa::ImageInterface<casa::Float> *inImage) :
 }
 
 image::image(ImageInterface<Complex> *inImage) :
-	_log(), _image(new ImageAnalysis(SHARED_PTR<ImageInterface<Complex> >(inImage))) {
+	_log(), _image(new ImageAnalysis(SHARED_PTR<ImageInterface<Complex> >(inImage))),
+	_imageF(), _imageC(_image->getComplexImage()) {
 	try {
 		_log << _ORIGIN;
 
@@ -145,7 +148,8 @@ image::image(ImageInterface<Complex> *inImage) :
 }
 
 image::image(SPIIF inImage) :
-    _log(), _image(new ImageAnalysis(inImage)) {
+    _log(), _image(new ImageAnalysis(inImage)), _imageF(inImage), _imageC() {
+	/*
 	try {
 		_log << _ORIGIN;
 	}
@@ -154,10 +158,12 @@ image::image(SPIIF inImage) :
 				<< LogIO::POST;
 		RETHROW(x);
 	}
+	*/
 }
 
 image::image(SPIIC inImage) :
-	_log(), _image(new ImageAnalysis(inImage)) {
+	_log(), _image(new ImageAnalysis(inImage)), _imageF(), _imageC(inImage) {
+	/*
 	try {
 		_log << _ORIGIN;
 	}
@@ -166,12 +172,19 @@ image::image(SPIIC inImage) :
 				<< LogIO::POST;
 		RETHROW(x);
 	}
+	*/
 }
 
 image::image(SHARED_PTR<ImageAnalysis> ia) :
-	_log(), _image(ia) {
+	_log(), _image(ia), _imageF(), _imageC() {
 	try {
 		_log << _ORIGIN;
+		if (_image->isFloat()) {
+			_imageF = _image->getImage();
+		}
+		else {
+			_imageC = _image->getComplexImage();
+		}
 	}
 	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
@@ -730,6 +743,7 @@ bool image::fromshape(
                 linear, overwrite, log, &msgs
             );
             _image.reset(new ImageAnalysis(myfloat));
+            _imageF = myfloat;
         }
         else {
             SPIIC mycomplex = ImageFactory::complexImageFromShape(
@@ -737,6 +751,7 @@ bool image::fromshape(
                 linear, overwrite, log, &msgs
             );
             _image.reset(new ImageAnalysis(mycomplex));
+            _imageC = mycomplex;
         }
        	return True;
 	}
@@ -1755,6 +1770,8 @@ void image::_remove(bool verbose) {
 		mypair.second = _image->getComplexImage();
 	}
 	_stats.reset();
+	_imageF.reset();
+	_imageC.reset();
 	_image.reset();
 	if (mypair.first) {
 		ImageFactory::remove(mypair.first, verbose);
@@ -1810,6 +1827,8 @@ bool image::done(const bool remove, const bool verbose) {
 			_remove(verbose);
 		}
 		else {
+			_imageF.reset();
+			_imageC.reset();
 			_image.reset();
 		}
 		return True;
@@ -1833,7 +1852,6 @@ bool image::fft(
 		if (detached()) {
 			return false;
 		}
-
 		SHARED_PTR<Record> myregion(_getRegion(region, False));
 		String mask = vmask.toString();
 		if (mask == "[]") {
@@ -1853,9 +1871,9 @@ bool image::fft(
 				leAxes[i] = axes[i];
 			}
 		}
-		if (_image->isFloat()) {
+		if (_imageF) {
 			ImageFFTer<Float> ffter(
-				_image->getImage(),
+				_imageF,
 				myregion.get(), mask, leAxes
 			);
 			ffter.setStretch(stretch);
@@ -1868,7 +1886,7 @@ bool image::fft(
 		}
 		else {
 			ImageFFTer<Complex> ffter(
-				_image->getComplexImage(),
+				_imageC,
 				myregion.get(), mask, leAxes
 			);
 			ffter.setStretch(stretch);
@@ -3104,21 +3122,27 @@ std::vector<std::string> image::maskhandler(const std::string& op,
 	}
 }
 
-::casac::record*
-image::miscinfo() {
-	::casac::record *rstat = 0;
+record* image::miscinfo() {
 	try {
 		_log << LogOrigin("image", "miscinfo");
-		if (detached())
-			return rstat;
-
-		rstat = fromRecord(_image->miscinfo());
-	} catch (AipsError x) {
+		if (detached()) {
+			return nullptr;
+		}
+		if (_image->isFloat()) {
+			// return fromRecord(_image->getImage()->miscInfo());
+			return fromRecord(_imageF->miscInfo());
+		}
+		else {
+			// return fromRecord(_image->getComplexImage()->miscInfo());
+			return fromRecord(_imageC->miscInfo());
+		}
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
+	return nullptr;
 }
 
 bool image::modify(
@@ -4102,17 +4126,21 @@ bool image::rename(const std::string& name, bool overwrite) {
 			return False;
 		}
 		_stats.reset();
-		if (_image->isFloat()) {
-			auto myimage = _image->getImage();
+		if (_imageF) {
+			auto myimage = _imageF;
 			_image.reset();
+			_imageF.reset();
 			ImageFactory::rename(myimage, name, overwrite);
 			_image.reset(new ImageAnalysis(myimage));
+			_imageF = myimage;
 		}
 		else {
-			auto myimage = _image->getComplexImage();
+			auto myimage = _imageC;
 			_image.reset();
+			_imageC.reset();
 			ImageFactory::rename(myimage, name, overwrite);
 			_image.reset(new ImageAnalysis(myimage));
+			_imageC = myimage;
 		}
 		return True;
 	}
@@ -4157,25 +4185,27 @@ bool image::replacemaskedpixels(
 			os << "ia." << __func__ << _inputsString(inputs);
 			msgs.push_back(make_pair(_ORIGIN, os.str()));
 		}
-		if (_image->isFloat()) {
-			SPIIF myfloat = _image->getImage();
+		if (_imageF) {
+			auto myfloat = _imageF;
 			ImageMaskedPixelReplacer<Float> impr(
 				myfloat, regionPtr.get(), mask
 			);
 			impr.setStretch(stretch);
 			impr.replace(pixels.toString(), updateMask, list);
 			_image.reset(new ImageAnalysis(myfloat));
+			_imageF = myfloat;
 			ImageHistory<Float> hist(myfloat);
 			hist.addHistory(msgs);
 		}
 		else {
-			SPIIC mycomplex = _image->getComplexImage();
+			auto mycomplex = _imageC;
 			ImageMaskedPixelReplacer<Complex> impr(
 				mycomplex, regionPtr.get(), mask
 			);
 			impr.setStretch(stretch);
 			impr.replace(pixels.toString(), updateMask, list);
 			_image.reset(new ImageAnalysis(mycomplex));
+			_imageC = mycomplex;
 			ImageHistory<Complex> hist(mycomplex);
 			hist.addHistory(msgs);
 		}
@@ -4757,7 +4787,7 @@ bool image::twopointcorrelation(
 		}
 
 		SHARED_PTR<ImageAnalysis> ia;
-		if (_image->isFloat()) {
+		if (_imageF) {
 			ia.reset(
 				new ImageAnalysis(
 					_subimage<Float>(
@@ -5073,13 +5103,10 @@ bool image::maketestimage(
 	try {
 		_reset();
 		_log << _ORIGIN;
-		_image.reset(
-		    new ImageAnalysis(
-		        ImageFactory::testImage(
-		            outfile, overwrite
-		        )
-		    )
+		_imageF = ImageFactory::testImage(
+			outfile, overwrite
 		);
+		_image.reset(new ImageAnalysis(_imageF));
 		return True;
 	}
 	catch (const AipsError& x) {

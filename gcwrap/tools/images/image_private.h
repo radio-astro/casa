@@ -17,6 +17,8 @@ private:
 
 typedef GaussianBeam Angular2DGaussian;
 
+
+
 mutable casa::LogIO _log;
 
 // This class needs to be templated. For now, we maintain two pointers.
@@ -28,6 +30,8 @@ mutable casa::LogIO _log;
 // the image analysis object needs to be removed after decimation of that
 // class is complete
 SHARED_PTR<casa::ImageAnalysis> _image;
+SPIIF _imageF;
+SPIIC _imageC;
 std::auto_ptr<casa::ImageStatsCalculator> _stats;
 
 static const casa::String _class;
