@@ -316,7 +316,7 @@ class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
         for intents in [['PHASE'],['BANDPASS']]:
             plots = self.create_plots(context, 
                                       result, 
-                                      applycal.AmpVsFrequencySummaryChart, 
+                                      applycal.VLAAmpVsFrequencySummaryChart,
                                       intents, correlation=corrstring)
             self.sort_plots_by_baseband(plots)
 
@@ -438,7 +438,7 @@ class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
             for source_id, brightest_field in brightest_fields.items():
                 plots = self.science_plots_for_result(context,
                                                       result, 
-                                                      applycal.AmpVsFrequencySummaryChart,
+                                                      applycal.VLAAmpVsFrequencySummaryChart,
                                                       [brightest_field.id],
                                                       uv_range, correlation=correlation)
                 amp_vs_freq_summary_plots[vis][source_id] = plots
@@ -466,7 +466,7 @@ class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                 # detail pages; we don't create plots per spw or antenna
                 self.science_plots_for_result(context, 
                                               result, 
-                                              applycal.AmpVsFrequencySummaryChart, 
+                                              applycal.VLAAmpVsFrequencySummaryChart,
                                               fields,
                                               uv_range,
                                               ApplycalAmpVsFreqSciencePlotRenderer, correlation=correlation)

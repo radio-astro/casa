@@ -656,6 +656,31 @@ class AmpVsFrequencySummaryChart(SpwSummaryChart):
                 **plot_args)
 
 
+class VLAAmpVsFrequencySummaryChart(BasebandSummaryChart):
+    """
+    Create an amplitude vs time plot for each spw, overplotting by antenna.
+    """
+    def __init__(self, context, result, intent='', ydatacolumn='corrected',
+                 **kwargs):
+        plot_args = {
+            'ydatacolumn': ydatacolumn,
+            'avgchannel': '',
+            'avgtime': '1e8',
+            'avgscan': True,
+            'avgantenna': True,
+            'plotrange': [0, 0, 0, 0],
+            'correlation': '',
+            'coloraxis': 'antenna1',
+            'overwrite': True
+        }
+        plot_args.update(kwargs)
+
+        super(VLAAmpVsFrequencySummaryChart, self).__init__(
+                context, result, xaxis='freq', yaxis='amp', intent=intent,
+                **plot_args)
+
+
+
 class PhaseVsFrequencySummaryChart(BasebandSummaryChart):
     """
     Create an amplitude vs time plot for each spw, overplotting by antenna.
