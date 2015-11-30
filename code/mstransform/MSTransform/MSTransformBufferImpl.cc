@@ -1745,7 +1745,7 @@ void MSTransformBufferImpl::channelAverage(	vi::VisBuffer2 *vb,
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-void MSTransformBufferImpl::flagAverageKernel(	vi::VisBuffer2 *vb,
+void MSTransformBufferImpl::flagAverageKernel(	vi::VisBuffer2 *,
 												DataCubeMap &inputDataCubeMap,
 												DataCubeMap &outputDataCubeMap,
 												uInt &inputPos,
