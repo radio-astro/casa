@@ -50,7 +50,7 @@ int main(int argc, char* argv[]) {
   String t_taql("");
   String timerange("");
   String t_whichcol("corrected");
-  Bool   averchan = true;
+  //Bool   averchan = true;
 
   char **args = argv + 1;
   int opts_processed = 1;	// Counting argv[0] as an arg.
@@ -70,7 +70,7 @@ int main(int argc, char* argv[]) {
       ++opts_processed;
     }
     else if(opt == "-S"){
-      averchan = false;
+	//averchan = false;
       ++opts_processed;
     }
     else if(opt == "-d"){
