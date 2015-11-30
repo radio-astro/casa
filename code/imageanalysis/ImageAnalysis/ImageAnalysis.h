@@ -133,8 +133,6 @@ public:
 
     Bool ispersistent();
 
-    Bool lock(const Bool writelock = False, const Int nattempts = 0);
-
     Bool makecomplex(const String& outfile, const String& imag, Record& region,
                      const Bool overwrite = False);
 
@@ -173,12 +171,6 @@ public:
 
     IPosition last_chunk_shape_p;
    
-    /*
-    // Center refpix apart from STokes
-    void centreRefPix (casa::CoordinateSystem& cSys,
-                       const casa::IPosition& shape) const;
-                       */
-
     void _onlyFloat(const String& method) const;
 
     template<class T> static void _destruct(ImageInterface<T>& image);

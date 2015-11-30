@@ -593,17 +593,6 @@ Bool ImageAnalysis::ispersistent() {
 	return _imageFloat->isPersistent();
 }
 
-Bool ImageAnalysis::lock(const Bool writelock, const Int nattempts) {
-	_onlyFloat(__func__);
-	*_log << LogOrigin("ImageAnalysis", "lock");
-
-	FileLocker::LockType locker = FileLocker::Read;
-	if (writelock)
-		locker = FileLocker::Write;
-	uInt n = max(0, nattempts);
-	return _imageFloat->lock(locker, n);
-}
-
 Bool ImageAnalysis::makecomplex(const String& outFile, const String& imagFile,
 		Record& Region, const Bool overwrite) {
 	_onlyFloat(__func__);
