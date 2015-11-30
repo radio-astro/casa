@@ -3065,19 +3065,30 @@ bool image::ispersistent() {
 	return rstat;
 }
 
-bool image::lock(const bool writelock, const int nattempts) {
-	bool rstat(false);
+bool image::lock(bool writelock, int nattempts) {
 	try {
-		_log << LogOrigin("image", "lock");
-		if (detached())
-			return rstat;
-		rstat = _image->lock(writelock, nattempts);
-	} catch (AipsError x) {
+		_log << LogOrigin("image", __func__);
+		if (detached()) {
+			return False;
+		}
+		FileLocker::LockType locker = FileLocker::Read;
+		if (writelock) {
+			locker = FileLocker::Write;
+		}
+		uInt n = max(0, nattempts);
+		if (_imageF) {
+			return _imageF->lock(locker, n);
+		}
+		else {
+			return _imageC->lock(locker, n);
+		}
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
+	return False;
 }
 
 bool image::makecomplex(const std::string& outFile,
