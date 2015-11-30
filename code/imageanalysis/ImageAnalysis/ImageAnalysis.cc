@@ -755,61 +755,6 @@ Vector<String> ImageAnalysis::maskhandler(const String& op,
 	return Vector<String> (0);
 }
 
-Record ImageAnalysis::miscinfo() {
-	_onlyFloat(__func__);
-	*_log << LogOrigin("ImageAnalysis", "miscinfo");
-
-	Record tmp = _imageFloat->miscInfo();
-	return tmp;
-}
-/*
-Bool ImageAnalysis::modify(
-	Record& Model, Record& Region, const String& mask,
-	const Bool subtract, const Bool list, const Bool extendMask) {
-	_onlyFloat(__func__);
-	*_log << LogOrigin(className(), __func__);
-
-	String error;
-	ComponentList cL;
-	if (!cL.fromRecord(error, Model)) {
-		*_log << LogIO::SEVERE
-				<< "Failed to transform model record to ComponentList "
-				<< error << LogIO::POST;
-		return False;
-	}
-	int nelem = cL.nelements();
-	Vector<SkyComponent> mod(nelem);
-	for (int i = 0; i < nelem; i++) {
-		mod[i] = cL.component(i);
-	}
-
-	const uInt n = mod.nelements();
-	if (n == 0) {
-		*_log << "There are no components in the model componentlist"
-				<< LogIO::EXCEPTION;
-	}
-
-	SHARED_PTR<SubImage<Float> > subImage = SubImageFactory<Float>::createSubImageRW(
-		*_imageFloat, Region, mask,  (list ? _log.get() : 0),
-        AxesSpecifier(), extendMask
-	);
-
-	// Allow for subtraction/addition
-	ComponentList cl;
-	for (uInt i = 0; i < n; i++) {
-		SkyComponent sky = mod(i);
-		if (subtract)
-			sky.flux().scaleValue(-1.0);
-		cl.add(sky);
-	}
-
-	// Do it
-	ComponentImager::project(*subImage, cl);
-
-	return True;
-}
-*/
-
 Bool ImageAnalysis::twopointcorrelation(
 	const String& outFile,
 	Record& theRegion, const String& mask, const Vector<Int>& axes1,
@@ -864,23 +809,7 @@ Bool ImageAnalysis::twopointcorrelation(
 
 	return True;
 }
-/*
-void ImageAnalysis::centreRefPix(CoordinateSystem& cSys, const IPosition& shape) const {
-	Int after = -1;
-	Int iS = cSys.findCoordinate(Coordinate::STOKES, after);
-	Int sP = -1;
-	if (iS >= 0) {
-		Vector<Int> pixelAxes = cSys.pixelAxes(iS);
-		sP = pixelAxes(0);
-	}
-	Vector<Double> refPix = cSys.referencePixel();
-	for (Int i = 0; i < Int(refPix.nelements()); i++) {
-		if (i != sP)
-			refPix(i) = Double(shape(i) / 2);
-	}
-	cSys.setReferencePixel(refPix);
-}
-*/
+
 void ImageAnalysis::_onlyFloat(const String& method) const {
 	ThrowIf(! _imageFloat, "Method " + method + " only supports Float valued images");
 }

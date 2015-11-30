@@ -140,13 +140,6 @@ public:
 
     Vector<String> maskhandler(const String& op,const Vector<String>& nam);
 
-    Record miscinfo();
-/*
-    Bool modify(
-    	Record& model, Record& region , const String& mask,
-        const Bool subtract = True, const Bool list=True, const Bool extendMask=False
-    );
-*/
     Bool open(const String& infile);
 
     inline static String className() {const static String x = "ImageAnalysis"; return x; }
@@ -162,8 +155,6 @@ public:
 
     // Return a record of the associates ImageInterface 
     Bool toRecord(RecordInterface& rec);
-    // Create a pagedimage if imagename is not "" else create a tempimage
-    //Bool fromRecord(const RecordInterface& rec, const String& imagename="");
 
     // get the associated ImageInterface object
     SPCIIF getImage() const;
