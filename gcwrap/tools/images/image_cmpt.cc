@@ -233,10 +233,12 @@ bool image::fromrecord(const record& imrecord, const string& outfile) {
 		_reset();
 		auto imagePair = ImageFactory::fromRecord(*tmpRecord, outfile);
 		if (imagePair.first) {
-		    _image.reset(new ImageAnalysis(imagePair.first));
+			_imageF = imagePair.first;
+		    _image.reset(new ImageAnalysis(_imageF));
 		}
 		else {
-		    _image.reset(new ImageAnalysis(imagePair.second));
+			_imageC = imagePair.second;
+		    _image.reset(new ImageAnalysis(_imageC));
 		}
 		return True;
 	}
@@ -500,6 +502,12 @@ bool image::fromarray(const std::string& outfile,
 	        outfile, pixels, csys,
 	        linear,  overwrite, log
 	    );
+	    if (_image->isFloat()) {
+	    	_imageF = _image->getImage();
+	    }
+	    else {
+	    	_imageC = _image->getComplexImage();
+	    }
 		return True;
 	}
 	catch (const AipsError& x) {
@@ -514,7 +522,7 @@ shared_ptr<ImageAnalysis> image::_fromarray(
     const string& outfile,
     const variant& pixels, const record& csys,
     bool linear, bool overwrite, bool log
-) const {
+) {
     Vector<Int> shape = pixels.arrayshape();
     ThrowIf(
         shape.ndim() == 0,
@@ -564,22 +572,24 @@ shared_ptr<ImageAnalysis> image::_fromarray(
         msgs.push_back(make_pair(lor, os.str()));
     }
     if (floatArray.ndim() > 0) {
-        SPIIF myfloat = ImageFactory::imageFromArray(
+        auto f = ImageFactory::imageFromArray(
             outfile, floatArray, *coordinates,
             linear, overwrite, log, &msgs
         );
-        return shared_ptr<ImageAnalysis>(new ImageAnalysis(myfloat));
+        return shared_ptr<ImageAnalysis>(new ImageAnalysis(f));
     }
     else {
-        SPIIC mycomplex = ImageFactory::imageFromArray(
+        auto c = ImageFactory::imageFromArray(
             outfile, complexArray, *coordinates,
             linear, overwrite, log, &msgs
         );
-        return shared_ptr<ImageAnalysis>(new ImageAnalysis(mycomplex));
+        return shared_ptr<ImageAnalysis>(new ImageAnalysis(c));
     }
 }
 
 void image::_reset() {
+	_imageF.reset();
+	_imageC.reset();
 	_image.reset(new ImageAnalysis());
 	//_imageFloat.reset();
 	//_imageComplex.reset();
@@ -604,14 +614,11 @@ bool image::fromascii(const string& outfile, const string& infile,
 
 		_reset();
 		std::unique_ptr<Record> coordsys(toRecord(csys));
-		_image.reset(
-		    new ImageAnalysis(
-		        ImageFactory::fromASCII(
-		            outfile, infile, IPosition(Vector<Int>(shape)),
-		            sep, *coordsys, linear, overwrite
-		        )
-		    )
+		_imageF = ImageFactory::fromASCII(
+			outfile, infile, IPosition(Vector<Int>(shape)),
+			sep, *coordsys, linear, overwrite
 		);
+		_image.reset(new ImageAnalysis(_imageF));
 		_stats.reset(nullptr);
 		/*
 		if (
@@ -646,6 +653,7 @@ bool image::fromfits(
 		    zeroBlanks, overwrite
 		);
 		if (im) {
+			_imageF = im;
 		    _image.reset(new ImageAnalysis(im));
 		    return True;
 		}
@@ -684,16 +692,13 @@ bool image::fromimage(const string& outfile, const string& infile,
 		    outfile, infile, *regionPtr, theMask,
 		    dropdeg, overwrite
 		);
+		_imageF = imagePair.first;
+		_imageC = imagePair.second;
 		_image.reset(
-		    imagePair.first
-		    ? new ImageAnalysis(imagePair.first)
-		    : new ImageAnalysis(imagePair.second)
+		    _imageF
+		    ? new ImageAnalysis(_imageF)
+		    : new ImageAnalysis(_imageC)
 		);
-
-		/*
-		return _image->imagefromimage(outfile, infile, *regionPtr, theMask,
-				dropdeg, overwrite);
-				*/
 		return True;
 	}
 	catch (const AipsError& x) {
@@ -738,20 +743,18 @@ bool image::fromshape(
 			msgs.push_back(make_pair(lor, os.str()));
 		}
         if (mytype.startsWith("f")) {
-            SPIIF myfloat = ImageFactory::floatImageFromShape(
+            _imageF = ImageFactory::floatImageFromShape(
                 outfile, shape, *coordinates,
                 linear, overwrite, log, &msgs
             );
-            _image.reset(new ImageAnalysis(myfloat));
-            _imageF = myfloat;
+            _image.reset(new ImageAnalysis(_imageF));
         }
         else {
-            SPIIC mycomplex = ImageFactory::complexImageFromShape(
+            _imageC = ImageFactory::complexImageFromShape(
                 outfile, shape, *coordinates,
                 linear, overwrite, log, &msgs
             );
-            _image.reset(new ImageAnalysis(mycomplex));
-            _imageC = mycomplex;
+            _image.reset(new ImageAnalysis(_imageC));
         }
        	return True;
 	}
@@ -3375,11 +3378,19 @@ String image::_name(bool strippath) const {
 bool image::open(const std::string& infile) {
 	try {
 		_reset();
-
 		_log << _ORIGIN;
-        return _image->open(infile);
-
-	} catch (const AipsError& x) {
+        auto res = _image->open(infile);
+        if (res) {
+        	if (_image->isFloat()) {
+        		_imageF = _image->getImage();
+        	}
+        	else {
+        		_imageC = _image->getComplexImage();
+        	}
+        }
+        return res;
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
@@ -5160,7 +5171,7 @@ image* image::newimagefromimage(
 
 image* image::newimagefromfile(const std::string& fileName) {
 	try {
-		std::unique_ptr<ImageAnalysis> newImage(new ImageAnalysis());
+		//std::unique_ptr<ImageAnalysis> newImage(new ImageAnalysis());
 		_log << _ORIGIN;
 		auto mypair = ImageFactory::fromFile(fileName);
 		if (mypair.first) {
