@@ -35,17 +35,30 @@ add_custom_command( OUTPUT definitions
     # feature of the shell), and thus trigger other make rules before the file is
     # complete.
 
+#Resources/python
 add_custom_target(
     tools_python_casadef
     COMMAND echo "import os" > casadef.py
-    COMMAND echo "if os.environ.has_key\\\(\\'__CASAPY_TASKDIR\\'\\\):" >> casadef.py
-    COMMAND echo "    task_directory = os.environ[\\'__CASAPY_TASKDIR\\']" >> casadef.py
-    COMMAND echo "else:" >> casadef.py
-    COMMAND echo "    task_directory = \\\"${PYTHON_TASKD_CASADEF}\\\"" >> casadef.py
-    COMMAND echo "if os.environ.has_key\\\(\\'__CASAPY_PYTHONDIR\\'\\\):" >> casadef.py
-    COMMAND echo "    python_library_directory = os.environ[\\'__CASAPY_PYTHONDIR\\']" >> casadef.py
-    COMMAND echo "else:" >> casadef.py
-    COMMAND echo "    python_library_directory = \\\"${PYTHON_LIBD_CASADEF}\\\"" >> casadef.py
+    COMMAND echo "task_directory = None" >> casadef.py
+    COMMAND echo "\\#\\# CASAPATH is the primary environment variable" >> casadef.py
+    COMMAND echo "if os.environ.has_key\\\(\\'CASAPATH\\'\\\):" >> casadef.py
+    COMMAND echo "    __casapath__ = os.environ[\\'CASAPATH\\'].split\\\(\\' \\'\\\)[0]" >> casadef.py
+    COMMAND echo "    __casaarch__ = os.environ[\\'CASAPATH\\'].split\\\(\\' \\'\\\)[1]" >> casadef.py
+    COMMAND echo "    if os.path.exists\\\(__casapath__ + \\'/lib/python2.7/casapy.py\\'\\\):" >> casadef.py
+    COMMAND echo "        task_directory = __casapath__ + \\'/lib/python2.7\\'" >> casadef.py
+    COMMAND echo "        python_library_directory = task_directory" >> casadef.py
+    COMMAND echo "    elif os.path.exists\\\(__casapath__ + \\'/Resources/python/casapy.py\\'\\\):" >> casadef.py
+    COMMAND echo "        task_directory = __casapath__ + \\'/Resources/python\\'" >> casadef.py
+    COMMAND echo "        python_library_directory = task_directory" >> casadef.py
+    COMMAND echo "    elif os.path.exists\\\(__casapath__ + \\'/\\' + __casaarch__ + \\'/python/2.7/casapy.py\\'\\\):" >> casadef.py
+    COMMAND echo "        task_directory = __casapath__ + \\'/\\' + __casaarch__ + \\'/python/2.7\\'" >> casadef.py
+    COMMAND echo "        python_library_directory = task_directory" >> casadef.py
+    COMMAND echo "\\#\\# if CASAPATH does not yeild any result, check secondary variables..." >> casadef.py
+    COMMAND echo "if task_directory is None:" >> casadef.py
+    COMMAND echo "    if os.environ.has_key\\\(\\'__CASAPY_TASKDIR\\'\\\):" >> casadef.py
+    COMMAND echo "        task_directory = os.environ[\\'__CASAPY_TASKDIR\\']" >> casadef.py
+    COMMAND echo "    if os.environ.has_key\\\(\\'__CASAPY_PYTHONDIR\\'\\\):" >> casadef.py
+    COMMAND echo "        python_library_directory = os.environ[\\'__CASAPY_PYTHONDIR\\']" >> casadef.py
     COMMAND echo "casa_version = \\\"${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_VERSION}\\\"" >> casadef.py
     COMMAND cat definitions >> casadef.py
     DEPENDS definitions
