@@ -36,6 +36,10 @@ macro( casa_always_install )
 endmacro()
 
 
+if (NOT TARGET unit_test)
+    add_custom_target (unit_test COMMAND "cd" ${CMAKE_BINARY_DIR} COMMAND "ctest")
+endif ()
+
 #
 # Setup definitions and include directories for this module,
 # and create a dynamic library
@@ -481,10 +485,6 @@ macro( casa_add_unit_test)
     
     add_test( ${testName} ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/${testName} 
               ${casa_unit_test_COMMAND_ARGUMENTS})
-
-    if (NOT TARGET unit_test)
-        add_custom_target (unit_test COMMAND "cd" ${CMAKE_BINARY_DIR} COMMAND "ctest")
-    endif ()
 
     add_dependencies( unit_test ${testName} )
 
