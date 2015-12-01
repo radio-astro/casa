@@ -15,6 +15,7 @@ import casadef
 import mako
 
 import pipeline as pipeline
+from pipeline.extern import analysis_scripts
 import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
@@ -184,7 +185,7 @@ class T1_1Renderer(RendererBase):
                 'num_antennas beamsize_min beamsize_max '
                 'time_start time_end time_on_source '
                 'baseline_min baseline_max baseline_rms')
-    
+
 
     @staticmethod
     def get_display_context(context):
@@ -588,6 +589,10 @@ class T2_1DetailsRenderer(object):
 
         task = summary.ElVsTimeChart(context, ms)
         el_vs_time_plot = task.plot()
+
+        # Get min, max elevation
+        el_min = "%.2f" % analysis_scripts.analysisUtils.computeAzElForMS(ms.name, value='min')[1]
+        el_max = "%.2f" % analysis_scripts.analysisUtils.computeAzElForMS(ms.name, value='max')[1]
         
         if is_singledish_ms(context):
             LOG.debug('TPSampling plot is enabled for single dish MS')
@@ -623,7 +628,9 @@ class T2_1DetailsRenderer(object):
             'pwv_plot'        : pwv_plot,
             'azel_plot'       : azel_plot,
             'el_vs_time_plot' : el_vs_time_plot,
-            'tpsampling_plot' : tpsampling_plot
+            'tpsampling_plot' : tpsampling_plot,
+            'el_min'          : el_min,
+            'el_max'          : el_max
         }
 
     @classmethod
