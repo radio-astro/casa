@@ -236,8 +236,11 @@ install (FILES
 casa_add_executable(imageanalysis imfit apps/imfit.cc )
 casa_add_executable(imageanalysis imcollapse apps/imcollapse.cc )
 
-casa_add_assay( imageanalysis ImageAnalysis/test/dImageHistograms.cc )
-casa_add_assay( imageanalysis ImageAnalysis/test/dImageMoments.cc )
+casa_add_demo( imageanalysis ImageAnalysis/test/dImageHistograms.cc )
+
+message ("WARNING: ImageAnalysis/test/dImageMoments.cc not building: repair or remove")
+#casa_add_demo( imageanalysis ImageAnalysis/test/dImageMoments.cc )
+
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageAnalysis.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageAnalysis2.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageConvolver.cc )

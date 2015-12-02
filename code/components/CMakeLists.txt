@@ -118,10 +118,10 @@ install (FILES
 	DESTINATION include/casacode/components/SpectralComponents
 )
 
-casa_add_assay( components ComponentModels/test/dPointShape.cc )
-casa_add_assay( components ComponentModels/test/dSkyCompBase.cc )
-casa_add_assay( components ComponentModels/test/dSpectralModel.cc )
-casa_add_assay( components ComponentModels/test/dTwoSidedShape.cc )
+casa_add_demo ( components ComponentModels/test/dPointShape.cc )
+casa_add_demo( components ComponentModels/test/dSkyCompBase.cc )
+casa_add_demo( components ComponentModels/test/dSpectralModel.cc )
+casa_add_demo( components ComponentModels/test/dTwoSidedShape.cc )
 casa_add_assay( components ComponentModels/test/tComponentList.cc )
 casa_add_assay( components ComponentModels/test/tComponentType.cc )
 casa_add_assay( components ComponentModels/test/tConstantSpectrum.cc )

@@ -129,4 +129,4 @@ install (FILES
 	DESTINATION include/casacode/casadbus/viewer
 	)
 
-casa_add_assay( casadbus session/test/dDBusSession.cc )
+casa_add_demo ( casadbus session/test/dDBusSession.cc )

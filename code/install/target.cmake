@@ -593,4 +593,46 @@ macro (casa_add_google_test)
 
 endmacro ()
 
+# casa_add_demo (module sourceFile1 [sourceFile2 ...])
+#
+# Adds a demo application to the project.  A demo program is a small
+# program demonstrating the use of some aspects of the module and is
+# intended to serve as an example to other developers.
+#
+# The demo program will be built as part of the normal casa and module builds.
+# This will help reduce the incidence of bit-rot; however, since the application 
+# will not be executed as part of any of CASA's automatic processes there is
+# some chance that the program could become unintentionally obsolete.
+#
+# Example:
+#
+# -- In code/components/CMakeLists.txt:
+#
+#   casa_add_demo( components ComponentModels/test/dPointShape.cc )
+#
+macro (casa_add_demo module)
 
+  set (rawSources "${ARGN}")
+
+  list (GET rawSources 0 firstSource)
+  get_filename_component( executableName ${firstSource} NAME_WE )
+  get_filename_component(path ${firstSource} PATH)
+
+  set (sources "")
+  foreach (source ${rawSources})
+     get_filename_component(thePath ${source} PATH)
+     if (thePath)
+         list (APPEND sources ${source})
+     else ()
+         list (APPEND sources ${path}/${source})
+     endif ()
+  endforeach ()
+
+  add_executable ( ${executableName} ${sources})
+  target_link_libraries( ${executableName} lib${module})
+
+  # Ensure that make module builds this demo.
+
+  add_dependencies (${executableName} lib${module})
+
+endmacro ()

@@ -30,7 +30,7 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/BasicSL/String.h>
 #include <casa/iostream.h>
-#include <iomanip.h>
+#include <iomanip>
 
 #include <casa/IO/ByteIO.h>
 #include <casa/IO/RegularFileIO.h>

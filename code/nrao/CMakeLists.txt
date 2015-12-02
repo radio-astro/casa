@@ -75,7 +75,7 @@ install (FILES
 	DESTINATION include/casacode/nrao/VLA
 	)
 
-casa_add_assay( nrao VLA/test/dVLAArchiveInput.cc )
+casa_add_demo( nrao VLA/test/dVLAArchiveInput.cc )
 casa_add_assay( nrao VLA/test/tVLABuffer.cc )
 casa_add_assay( nrao VLA/test/tVLADiskInput.cc )
 casa_add_assay( nrao VLA/test/tVLALogicalRecord.cc )
