@@ -131,8 +131,6 @@ public:
 
     Vector<Bool> haslock();
 
-    Bool ispersistent();
-
     Bool makecomplex(const String& outfile, const String& imag, Record& region,
                      const Bool overwrite = False);
 

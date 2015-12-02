@@ -587,12 +587,6 @@ Vector<Bool> ImageAnalysis::haslock() {
 	return rstat;
 }
 
-Bool ImageAnalysis::ispersistent() {
-	_onlyFloat(__func__);
-	*_log << LogOrigin("ImageAnalysis", "ispersistent");
-	return _imageFloat->isPersistent();
-}
-
 Bool ImageAnalysis::makecomplex(const String& outFile, const String& imagFile,
 		Record& Region, const Bool overwrite) {
 	_onlyFloat(__func__);
