@@ -18420,7 +18420,7 @@ def computeAzElForMS(vis, value='mean', forcePositiveAzim=True, verbose=False, i
             atmScans = list(mymsmd.scansforintent('CALIBRATE_ATMOSPHERE*'))
             calscans = sorted(pointingScans + sbScans + atmScans)
             if (len(calscans) > 0):
-                print "Dropping pointing+sideband+atmosphere scans: ", calscans
+                #print "Dropping pointing+sideband+atmosphere scans: ", calscans
                 scans = [x for x in scans if x not in calscans]
                 if verbose:
                     print "Kept scans: ", scans
@@ -18492,7 +18492,7 @@ def computeAzElFromRADecMJD(raDec, mjd, observatory='ALMA', verbose=False,
         if (len(tokens) < 2):
             tokens = raDec.split(',')
             if (len(tokens) < 2):
-                print "If you give a string, it must be of the format: hh:mm:ss.sss -dd:mm:ss.ss"
+                #print "If you give a string, it must be of the format: hh:mm:ss.sss -dd:mm:ss.ss"
                 return
         raDec = radec2rad(raDec)
         if (verbose):
@@ -18500,9 +18500,9 @@ def computeAzElFromRADecMJD(raDec, mjd, observatory='ALMA', verbose=False,
     if (type(mjd) == str):
         mjd = dateStringToMJD(mjd)
         if (mjd == None):
-            print "Invalid date string"
+            #print "Invalid date string"
             return
-        print "MJD = ", mjd
+        #print "MJD = ", mjd
     mydir = me.direction('J2000', qa.quantity(raDec[0],'rad'), qa.quantity(raDec[1],'rad'))
     me.doframe(me.epoch('mjd', qa.quantity(mjd, 'd')))
     me.doframe(me.observatory(observatory))
