@@ -59,10 +59,15 @@ SELECT2_PLACEHOLDER = {'vis': 'Show all measurement sets',
 				       'type' : 'Show all types'}
 
 def get_options(selector, plots):
-	options = format_options([p.parameters[selector] for p in plots])
-	if selector == 'field':
-		options = [cgi.escape(o, True) for o in options]
-	return options
+    try:
+        options = format_options([p.parameters[selector] for p in plots])
+    except KeyError:
+        print 'Key %s not found in %s' % (selector, plots)
+        print 'Example plot parameters:\n%s' % (plots[0].parameters)
+        raise
+    if selector == 'field':
+        options = [cgi.escape(o, True) for o in options]
+    return options
 
 def format_options(options):
 	# remove any duplicates

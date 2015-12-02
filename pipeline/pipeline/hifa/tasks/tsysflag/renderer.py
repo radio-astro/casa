@@ -299,6 +299,7 @@ class TimeVsAntennaPlotRenderer(basetemplates.JsonPlotRenderer):
         r = result.components[component]
 
         vis = os.path.basename(result.inputs['vis'])
+        self._vis = vis
         title = 'Time vs Antenna plots for %s' % vis
         outfile = filenamer.sanitize('%s-time_vs_ant-%s.html' % (vis, component))
 
@@ -311,6 +312,11 @@ class TimeVsAntennaPlotRenderer(basetemplates.JsonPlotRenderer):
         super(TimeVsAntennaPlotRenderer, self).__init__(
                 'generic_x_vs_y_per_spw_and_pol_plots.mako', context, 
                 result, plots, title, outfile)
+
+    def update_json_dict(self, d, plot):
+        if 'vis' not in plot.parameters:
+            plot.parameters['vis'] = self._vis
+            d['vis'] = self._vis
 
 
 class ImageDisplayPlotRenderer(basetemplates.JsonPlotRenderer):
@@ -329,6 +335,7 @@ class ImageDisplayPlotRenderer(basetemplates.JsonPlotRenderer):
         y_axis = plots[0].y_axis
 
         vis = os.path.basename(result.inputs['vis'])
+        self._vis = vis
         outfile = '%s-%s_vs_%s-%s.html' % (vis, y_axis, x_axis, component)
         outfile = filenamer.sanitize(outfile)
 
@@ -339,6 +346,11 @@ class ImageDisplayPlotRenderer(basetemplates.JsonPlotRenderer):
         super(ImageDisplayPlotRenderer, self).__init__(
                 'generic_x_vs_y_per_spw_and_pol_plots.mako', context, 
                 result, plots, title, outfile)
+
+    def update_json_dict(self, d, plot):
+        if 'vis' not in plot.parameters:
+            plot.parameters['vis'] = self._vis
+            d['vis'] = self._vis
 
 
 class SliceDisplayPlotRenderer(basetemplates.JsonPlotRenderer):
@@ -358,9 +370,10 @@ class SliceDisplayPlotRenderer(basetemplates.JsonPlotRenderer):
         y_axis = plots[0].y_axis
 
         vis = os.path.basename(result.inputs['vis'])
+        self._vis = vis
         outfile = '%s-%s_vs_%s-%s.html' % (vis, y_axis, x_axis, component)
         outfile = filenamer.sanitize(outfile)
-        
+
         y_axis = y_axis.replace('Tsys', 'T<sub>sys</sub>')
         title = '%s vs %s plots for %s' % (y_axis, x_axis, vis)
         self.shorttitle = '%s vs %s' % (y_axis, x_axis)
@@ -372,6 +385,9 @@ class SliceDisplayPlotRenderer(basetemplates.JsonPlotRenderer):
     def update_json_dict(self, d, plot):
         if 'intent' in plot.parameters:
             d['intent'] = plot.parameters['intent']
+        if 'vis' not in plot.parameters:
+            plot.parameters['vis'] = self._vis
+            d['vis'] = self._vis
 
 
 class TsysSpectraPlotRenderer(basetemplates.JsonPlotRenderer):
@@ -432,4 +448,6 @@ class TsysSpectraPlotRenderer(basetemplates.JsonPlotRenderer):
     def update_json_dict(self, d, plot):
         if 'intent' in plot.parameters:
             d['intent'] = plot.parameters['intent']
-        d['vis'] = self._vis
+        if 'vis' not in plot.parameters:
+            plot.parameters['vis'] = self._vis
+            d['vis'] = self._vis
