@@ -203,7 +203,7 @@ class WvrgcalInputs(basetask.StandardInputs):
     @smooth.setter
     def smooth(self, value):
         if value is None:
-            value = '1s'
+            value = ''
         self._smooth = value
 
     @property
