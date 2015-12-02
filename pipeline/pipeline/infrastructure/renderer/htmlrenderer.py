@@ -596,10 +596,10 @@ class T2_1DetailsRenderer(object):
         
         if is_singledish_ms(context):
             LOG.debug('TPSampling plot is enabled for single dish MS')
-            #task = summary.TPSamplingChart(context, ms)
-            #tpsampling_plot = task.plot()
-            LOG.debug('TPSampling plot is disabled for the time being (see CAS-8067)')
-            tpsampling_plot = None
+            task = summary.TPSamplingChart(context, ms)
+            tpsampling_plot = task.plot()
+            #LOG.debug('TPSampling plot is disabled for the time being (see CAS-8067)')
+            #tpsampling_plot = None
         else:
             tpsampling_plot = None
             
