@@ -81,6 +81,7 @@
 #include <imageanalysis/ImageAnalysis/ImageHistogramsCalculator.h>
 #include <imageanalysis/ImageAnalysis/ImageHistory.h>
 #include <imageanalysis/ImageAnalysis/ImageMaskedPixelReplacer.h>
+#include <imageanalysis/ImageAnalysis/ImageMaskHandler.h>
 #include <imageanalysis/ImageAnalysis/ImageMaxFitter.h>
 #include <imageanalysis/ImageAnalysis/ImageMetaDataRW.h>
 #include <imageanalysis/ImageAnalysis/ImageMomentsTask.h>
@@ -3115,29 +3116,67 @@ bool image::makecomplex(const std::string& outFile,
 	return rstat;
 }
 
-std::vector<std::string> image::maskhandler(const std::string& op,
-		const std::vector<std::string>& name) {
+std::vector<std::string> image::maskhandler(
+	const std::string& op,
+	const std::vector<std::string>& name
+) {
 	try {
 		_log << _ORIGIN;
 		if (detached()) {
 			return std::vector<string>(0);
 		}
-
-		Vector<String> namesOut;
-		Vector<String> namesIn = toVectorString(name);
-		namesOut = _image->maskhandler(op, namesIn);
-		if (namesOut.size() == 0) {
-			namesOut.resize(1);
-			namesOut[0] = "T";
+		vector<string> res = _imageF
+			? _handleMask(_imageF, op, name)
+			: _handleMask(_imageC, op, name);
+		if (res.empty()) {
+			res = vector<string>(1, "T");
 		}
-		std::vector<string> rstat = fromVectorString(namesOut);
 		_stats.reset(0);
-		return rstat;
-	} catch (const AipsError& x) {
+		return res;
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
+	return vector<string>();
+}
+
+
+template<class T> vector<string>  image::_handleMask(
+	SPIIT myimage, const std::string& op,
+	const std::vector<std::string>& name
+) {
+	ImageMaskHandler<T> imh(myimage);
+	casa::String oper = op;
+	oper.upcase();
+	if (oper.startsWith("SET")) {
+		auto myname = name.empty() ? "" : name[0];
+		imh.set(myname);
+		return vector<string>();
+	}
+	else if (oper.startsWith("DEF")) {
+		return vector<string>(1, imh.defaultMask());
+	}
+	else if (oper.startsWith("DEL")) {
+		imh.deleteMasks(std::set<casa::String>(name.begin(), name.end()));
+		return vector<string>();
+	}
+	else if (oper.startsWith("REN")) {
+		imh.rename(name[0], name[1]);
+		return vector<string>();
+	}
+	else if (oper.startsWith("GET")) {
+		return fromVectorString(imh.get());
+	}
+	else if (oper.startsWith("COP")) {
+		imh.copy(name[0], name[1]);
+		return vector<string>();
+	}
+	else {
+		ThrowCc("Unknown operation " + op);
+	}
+
 }
 
 record* image::miscinfo() {

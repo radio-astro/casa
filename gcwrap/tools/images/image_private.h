@@ -85,6 +85,11 @@ template <class T> casa::Record _getprofile(
 	const casa::String& regionName
 );
 
+template<class T> vector<string>  _handleMask(
+	SPIIT myimage, const std::string& op,
+	const std::vector<std::string>& name
+);
+
 template<class T> SPIIT _imagecalc(
 	const string& outfile, const string& pixels,
 	bool overwrite, const string& imagemd
