@@ -1081,14 +1081,18 @@ bool image::close() {
 	try {
 		_log << _ORIGIN;
 		_image.reset();
-		_stats.reset(0);
+		_imageF.reset();
+		_imageC.reset();
+		_stats.reset();
         MeasIERS::closeTables();
         return True;
-	} catch (const AipsError& x) {
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
+	return False;
 }
 
 image* image::continuumsub(
