@@ -3055,19 +3055,24 @@ bool image::isopen() {
 }
 
 bool image::ispersistent() {
-	bool rstat(false);
 	try {
 		_log << LogOrigin("image", "ispersistent");
-		if (detached())
-			return rstat;
-
-		rstat = _image->ispersistent();
-	} catch (AipsError x) {
+		if (detached()) {
+			return False;
+		}
+		if (_imageF) {
+			return _imageF->isPersistent();
+		}
+		else {
+			return _imageC->isPersistent();
+		}
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
+	return False;
 }
 
 bool image::lock(bool writelock, int nattempts) {
