@@ -136,8 +136,6 @@ public:
     Bool makecomplex(const String& outfile, const String& imag, Record& region,
                      const Bool overwrite = False);
 
-    Vector<String> maskhandler(const String& op,const Vector<String>& nam);
-
     Bool open(const String& infile);
 
     inline static String className() {const static String x = "ImageAnalysis"; return x; }
