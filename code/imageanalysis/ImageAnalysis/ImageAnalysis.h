@@ -131,9 +131,6 @@ public:
 
     Vector<Bool> haslock();
 
-    Bool makecomplex(const String& outfile, const String& imag, Record& region,
-                     const Bool overwrite = False);
-
     Bool open(const String& infile);
 
     inline static String className() {const static String x = "ImageAnalysis"; return x; }

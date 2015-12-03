@@ -139,9 +139,17 @@ public:
 
     // Create a complex-valued image from a float-valued image (real part)
     // and float-valued array (imaginary part). All metadata is copied from the
-    // real image and pixel values are initialized to real + i*complex
+    // real image and pixel values are initialized to realPart + i*complexPart
     static SHARED_PTR<TempImage<Complex> > complexFromFloat(
     	SPCIIF realPart, const Array<Float>& imagPart
+    );
+
+    // Create a complex-valued image from a float-valued image (real part)
+    // and float-valued array (imaginary part). All metadata is copied from the
+    // real image and pixel values are initialized to realPart + i*complexPart
+    static SPIIC makeComplex(
+    	SPCIIF realPart, SPCIIF imagPart, const String& outfile,
+		const Record& region, Bool overwrite = False
     );
 
     // exactly one of the pointers will not be null, indicating the

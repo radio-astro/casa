@@ -587,53 +587,6 @@ Vector<Bool> ImageAnalysis::haslock() {
 	return rstat;
 }
 
-Bool ImageAnalysis::makecomplex(const String& outFile, const String& imagFile,
-		Record& Region, const Bool overwrite) {
-	_onlyFloat(__func__);
-	*_log << LogOrigin("ImageAnalysis", "makecomplex");
-
-	// Check output file
-	if (!overwrite && !outFile.empty()) {
-		NewFile validfile;
-		String errmsg;
-		if (!validfile.valueOK(outFile, errmsg)) {
-			*_log << errmsg << LogIO::EXCEPTION;
-		}
-	}
-
-	// Open images and check consistency
-	PagedImage<Float> imagImage(imagFile);
-	//
-	const IPosition realShape = _imageFloat->shape();
-	const IPosition imagShape = imagImage.shape();
-	if (!realShape.isEqual(imagShape)) {
-		*_log << "Image shapes are not identical" << LogIO::EXCEPTION;
-	}
-	//
-	CoordinateSystem cSysReal = _imageFloat->coordinates();
-	CoordinateSystem cSysImag = imagImage.coordinates();
-	if (!cSysReal.near(cSysImag)) {
-		*_log << "Image Coordinate systems are not conformant" << LogIO::POST;
-	}
-
-	String mask;
-	SHARED_PTR<const SubImage<Float> > subRealImage = SubImageFactory<Float>::createSubImageRO(
-		*_imageFloat, Region, mask, _log.get()
-	);
-	SHARED_PTR<const SubImage<Float> > subImagImage = SubImageFactory<Float>::createSubImageRO(
-		imagImage, Region, mask, 0
-	);
-
-	// LEL node
-	LatticeExprNode node(formComplex(*subRealImage, *subImagImage));
-	LatticeExpr<Complex> expr(node);
-	//
-	PagedImage<Complex> outImage(realShape, cSysReal, outFile);
-	outImage.copyData(expr);
-	ImageUtilities::copyMiscellaneous(outImage, *_imageFloat);
-	return True;
-}
-
 void ImageAnalysis::_onlyFloat(const String& method) const {
 	ThrowIf(! _imageFloat, "Method " + method + " only supports Float valued images");
 }
