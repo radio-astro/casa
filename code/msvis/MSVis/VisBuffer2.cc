@@ -19,7 +19,7 @@ namespace vi {
 VisBuffer2 *
 VisBuffer2::factory (VisBufferType t, VisBufferOptions options)
 {
-    return factory (nullptr, t, options);
+    return factoryInternal (nullptr, t, options);
 }
 
 VisBuffer2 *

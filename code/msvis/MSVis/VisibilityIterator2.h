@@ -370,12 +370,12 @@ class VisibilityIterator2
     // area of this class so that items in the private area can remeain de
     // facto private.
 
-    friend class VisibilityIteratorImpl2;
+    //friend class VisibilityIteratorImpl2;
     friend VisBuffer2 * VisBuffer2::factory (VisibilityIterator2 * vi, VisBufferType t,
                                              VisBufferOptions options);
     friend class VisBuffer2Adapter;
-    friend class VisBufferImpl2;
-    friend class VisBufferState;
+    //friend class VisBufferImpl2;
+    //friend class VisBufferState;
     friend class asyncio::VLAT; // allow VI lookahead thread class to access protected
                                 // functions VLAT should not access private parts,
                                 // especially variables
@@ -647,6 +647,8 @@ public:
 
   const vi::SubtableColumns & subtableColumns () const;
 
+  static String getAipsRcBase () { return "VisibilityIterator2";}
+
   // The reporting frame of reference is the default frame of reference to be
   // used when the user requests the frequencies of the current data selection
   // in a VisBuffer.  This is useful when the user wishes to select the data
@@ -673,8 +675,6 @@ public:
   // This will flag all channels in the original data that contributed to
   // the output channel in the case of channel averaging.
   // All polarizations have the same flag value.
-
-//  void writeFlag(const Matrix<Bool>& flag);
 
   // Write/modify the flags in the data.
   // This writes the flags as found in the MS, Cube(npol,nchan,nrow),
@@ -756,13 +756,6 @@ public:
 protected:
 
 
-//  VisibilityIterator2 (const VisBufferComponents2 * prefetchColumns,
-//                         const Block<MeasurementSet>& mss,
-//                         const Block<Int>& sortColumns,
-//                         const Bool addDefaultSortCols,
-//                         Double timeInterval,
-//                         Bool writable);
-
   VisibilityIterator2();
 
   void construct (const VisBufferComponents2 * prefetchColumns,
@@ -771,330 +764,12 @@ protected:
                   Double timeInterval,
                   Bool writable);
 
-//     +------------------+
-//     |                  |
-//     |  Data Accessors  |
-//     |                  |
-//     +------------------+
-
-  // These methods are protected and should only be used by subclasses or
-  // befriended framework member classes.  Others should access these values
-  // via the VisBuffer attached to the VI (see getVisBuffer()).
-
-  // Return antenna1
-
-  void antenna1(Vector<Int>& ant1) const;
-
-  // Return antenna2
-
-  void antenna2(Vector<Int>& ant2) const;
-
-  // Return feed1
-
-  void feed1(Vector<Int>& fd1) const;
-
-  // Return feed2
-
-  void feed2(Vector<Int>& fd2) const;
-
-  // Returns True is this is a new MS from the last subchunk.
-
-  Bool isNewMS() const;
-
-  // Returns the zero-based index of the current MS in the collection
-  // of MSs used to create the VI.
-
-  Int msId() const;
-
-  // Return number  of Ant
-
-  Int nAntennas () const;
-
-  // Return number of rows in all selected ms's
-
-  Int nRowsViWillSweep () const;
-
-
-  // Return the number of rows in the current iteration
-
-  Int nRows () const;
-
-  void jonesC (Vector<SquareMatrix<Complex,2> >& cjones) const;
-
-  // Return receptor angles for all antennae and feeds
-  // First axis of the cube is a receptor number,
-  // 2nd is antennaId, 3rd is feedId
-  // Note: the method is intended to provide an access to MSIter::receptorAngles
-  // for VisBuffer in the multi-feed case. It may be worth to change the
-  // interface of feed_pa to return the information for all feeds.
-
-  const Cube<Double>& receptorAngles() const;
-
-  // return a string mount identifier for each antenna
-
-  const Vector<String>& antennaMounts() const;
-
-  // Return a cube containing pairs of coordinate offsets for each
-  // receptor of each feed (values are in radians, coordinate system is fixed
-  // with antenna and is the same one as used to define the BEAM_OFFSET
-  // parameter in the feed table). The cube axes are receptor, antenna, feed.
-
-  const Cube<RigidVector<Double, 2> >& getBeamOffsets() const;
-
-  // True if all elements of the cube returned by getBeamOffsets are zero
-
-  Bool allBeamOffsetsZero() const;
-
-  // Return feed parallactic angles Vector(nant) (1 feed/ant)
-
-  const Vector<Float> & feed_pa(Double time) const;
-
-  static Vector<Float> feed_paCalculate(Double time, MSDerivedValues & msd,
-                                        Int nAntennas, const MEpoch & mEpoch0,
-                                        const Vector<Float> & receptor0Angle);
-
-  // Return nominal parallactic angle at specified time
-  // (does not include feed position angle offset--see feed_pa)
-  // A global value for all antennas (e.g., small array)
-
-  const Float& parang0(Double time) const;
-
-  static Float parang0Calculate (Double time, MSDerivedValues & msd,
-                                 const MEpoch & epoch0);
-
-  // Per antenna:
-
-  const Vector<Float> & parang(Double time) const;
-
-  static Vector<Float> parangCalculate (Double time, MSDerivedValues & msd,
-		                        int nAntennas, const MEpoch mEpoch0);
-
-  // Return the antenna AZ/EL Vector(nant)
-
-  MDirection azel0(Double time) const;
-
-  static void azel0Calculate (Double time, MSDerivedValues & msd,
-		                      MDirection & azel0, const MEpoch & mEpoch0);
-  const Vector<MDirection> & azel(Double time) const;
-  static void azelCalculate (Double time,
-                             MSDerivedValues & msd,
-                             Vector<MDirection> & azel,
-                             Int nAnt,
-                             const MEpoch & mEpoch0);
-
-  // Return the hour angle for the specified time
-
-  Double hourang(Double time) const;
-  static Double hourangCalculate (Double time, MSDerivedValues & msd,
-                                  const MEpoch & mEpoch0);
-
-  // Return the current FieldId
-
-  void fieldIds(Vector<Int>&) const;
-
-  // Return the current ArrayId
-
-  void arrayIds (Vector<Int>&) const;
-
-  // Return the current Field Name
-
-  String fieldName() const;
-
-  // Return the current Source Name
-
-  String sourceName() const;
-
-  // Return flag for each polarization, channel and row
-
-  virtual void flag(Cube<Bool>& flags) const;
-
-  // Return flag for each channel & row
-
-  virtual void flag(Matrix<Bool>& flags) const;
-
-  // Determine whether FLAG_CATEGORY is valid.
-
-  Bool existsFlagCategory() const;
-
-  // Return flags for each polarization, channel, category, and row.
-
-  virtual void flagCategory(Array<Bool>& flagCategories) const;
-
-  // Return row flag
-
-  virtual void flagRow(Vector<Bool>& rowflags) const;
-
-  // Return scan number
-
-  virtual void scan(Vector<Int>& scans) const;
-
-  // Return the OBSERVATION_IDs
-
-  virtual void observationId(Vector<Int>& obsids) const;
-
-  // Return the PROCESSOR_IDs
-
-  virtual void processorId(Vector<Int>& procids) const;
-
-  // Return the STATE_IDs
-
-  virtual void stateId(Vector<Int>& stateids) const;
-
-  // Return the current phase center as an MDirection
-
-  virtual const MDirection& phaseCenter() const;
-
-  // Return frame for polarization (returns PolFrame enum)
-
-  virtual Int polFrame() const;
-
-  // Return the correlation type (returns Stokes enums)
-
-  virtual void corrType(Vector<Int>& corrTypes) const;
-
-  // Return sigma
-
-  virtual void sigma(Matrix<Float>& sigmat) const;
-
-  // Return current SpectralWindow
-
-  virtual Int spectralWindow() const;
-
-  virtual void spectralWindows(Vector<Int>& spws) const;
-
-  // Return current Polarization Id
-
-  virtual Int polarizationId() const;
-
-  // Return current DataDescription Id
-
-  virtual Int dataDescriptionId() const;
-
-  virtual void dataDescriptionIds(Vector<Int>& ddis) const;
-
-  // Return MJD midpoint of interval.
-
-  virtual void time(Vector<Double>& t) const;
-
-  // Return MJD centroid of interval.
-
-  virtual void timeCentroid(Vector<Double>& t) const;
-
-  // Return nominal time interval
-
-  virtual void timeInterval(Vector<Double>& ti) const;
-
-  // Return actual time interval
-
-  virtual void exposure(Vector<Double>& expo) const;
-
-  // Return the visibilities as found in the MS, Cube(npol,nchan,nrow).
-
-  virtual void visibilityCorrected (Cube<Complex> & vis) const;
-  virtual void visibilityModel (Cube<Complex> & vis) const;
-  virtual void visibilityObserved (Cube<Complex> & vis) const;
-
-  // Return FLOAT_DATA as a Cube (npol, nchan, nrow) if found in the MS.
-  virtual void floatData (Cube<Float> & fcube) const;
-
-  // Return the visibility 4-vector of polarizations for each channel.
-  // If the MS doesn't contain all polarizations, it is assumed it
-  // contains one or two parallel hand polarizations.
-
-//  virtual void visibilityCorrected (Matrix<CStokesVector> & vis) const;
-//  virtual void visibilityModel (Matrix<CStokesVector> & vis) const;
-//  virtual void visibilityObserved (Matrix<CStokesVector> & vis) const;
-
-  // Return the shape of the visibility Cube
-
-  virtual IPosition visibilityShape() const;
-
-  // Return u,v and w (in meters)
-
-  virtual void uvw(Matrix<Double>& uvw) const;
-
-  // Returns the nPol_p x curNumRow_p weight matrix.
-
-  virtual void weight (Matrix<Float>& wt) const;
-
-  // Return weightspectrum (a weight for each channel)
-
-  virtual void weightSpectrum(Cube<Float>& wtsp) const;
-
-  // Return sigmaspectrum (a sigma for each channel)
-
-  virtual void sigmaSpectrum(Cube<Float>& sigsp) const;
-
-  // Returns a vector of the correlation types that were selected
-  // into the current subchunk's data.  If Vector<Int> c = vi.getCorrelations();
-  // Then c[0] will return the correlation type (as defined in the polarization
-  // table) of the first correlation part of a data item (e.g., for a visCube,
-  // all elements having the first dimension index of zero will be c[0] type
-  // correlations).
-
-  Vector<Int> getCorrelations () const;
-
-  Vector<Double> getFrequencies (Double time, Int frameOfReference, Int spectralWndow = -1,
-                                 Int msId = -1) const;
-  Vector<Int> getChannels (Double time, Int frameOfReference, Int spectralWndow = -1,
-                           Int msId = -1) const;
-
-  // Convert the frequency from the observe frame to lsr frame.
-  // Returns True in convert if given spw was not observed
-  // in the LSRK frame
-  //when ignoreconv=True...no conversion is done from data frame
-  //frequency is served as is
-
-  Int getDataDescriptionId () const;
-  const MeasurementSet & getMeasurementSet() const;
-  Int getMeasurementSetId() const;
-  Int getNAntennas () const;
-  MEpoch getEpoch () const;
-  Vector<Float> getReceptor0Angle ();
-
-  // Return the row ids as from the original root table. This is useful
-  // to find correspondance between a given row in this iteration to the
-  // original ms row.
-
-  void getRowIds (Vector<uInt> &) const;
-
-  Bool newFieldId() const;
-
-  // Return True if arrayID has changed since last iteration
-
-  Bool newArrayId() const;
-
-  // Return True if SpectralWindow has changed since last iteration
-
-  Bool newSpectralWindow() const;
-
-  static String getAipsRcBase () { return "VisibilityIterator2";}
-
-//     +-------------------------------+
-//     |                               |
-//     |  Internal Management Methods  |
-//     |                               |
-//     +-------------------------------+
-
-  void getSpwInFreqRange(Block<Vector<Int> >& spw,
-                         Block<Vector<Int> >& start,
-                         Block<Vector<Int> >& nchan,
-                         Double freqStart,
-                         Double freqEnd,
-                         Double freqStep,
-                         MFrequency::Types freqFrame=MFrequency::LSRK);
-
-  //Get the frequency range of the data selection
-
-  void getFreqInSpwRange(Double& freqStart,
-                         Double& freqEnd,
-                         MFrequency::Types freqframe = MFrequency::LSRK);
-
-  // advance the iteration
+// advance the iteration
 
   void originChunks(Bool forceRewind);
 
   ViImplementation2 * getImpl() const;
+
 
 private:
 

@@ -148,12 +148,12 @@ VisBufferImpl2::VisBufferImpl2 (VisBufferOptions options)
     construct (0, options);
 }
 
-VisBufferImpl2::VisBufferImpl2(ViImplementation2 * iter, VisBufferOptions options)
+VisBufferImpl2::VisBufferImpl2(ViImplementation2 * vii, VisBufferOptions options)
 : cache_p (0),
   msRow_p (0),
   state_p (0)
 {
-  construct (iter, options);
+  construct (vii, options);
 }
 
 VisBufferImpl2::~VisBufferImpl2 ()

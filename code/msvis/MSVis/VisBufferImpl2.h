@@ -148,9 +148,9 @@ public:
     // the specified VisBuffer into this one.
 
     virtual void copyComponents (const VisBuffer2 & other,
-				 const VisBufferComponents2 & components,
+				                 const VisBufferComponents2 & components,
                                  Bool allowShapeChange = False,
-				 Bool fetchIfNeeded = True);
+				                 Bool fetchIfNeeded = True);
 
     virtual void copyCoordinateInfo (const VisBuffer2 * vb, Bool dirDependent,
                                      Bool allowShapeChange = False, Bool fetchIfNeeded = True);
