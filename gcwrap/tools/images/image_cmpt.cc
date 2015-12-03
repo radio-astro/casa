@@ -98,6 +98,7 @@
 #include <imageanalysis/ImageAnalysis/PVGenerator.h>
 #include <imageanalysis/ImageAnalysis/SepImageConvolverTask.h>
 #include <imageanalysis/ImageAnalysis/SubImageFactory.h>
+#include <imageanalysis/ImageAnalysis/TwoPointCorrelator.h>
 
 #include <stdcasa/version.h>
 
@@ -4800,9 +4801,9 @@ record* image::statistics(
 
 bool image::twopointcorrelation(
 	const std::string& outfile,
-	const variant& region, const ::casac::variant& vmask,
+	const variant& region, const variant& vmask,
 	const std::vector<int>& axes, const std::string& method,
-	const bool overwrite, const bool stretch
+	bool overwrite, bool stretch
 ) {
 	_log << _ORIGIN;
 	if (detached()) {
@@ -4819,16 +4820,41 @@ bool image::twopointcorrelation(
 		if (!(axes.size() == 1 && axes[0] == -1)) {
 			iAxes = axes;
 		}
-		return _image->twopointcorrelation(
-			outFile, *Region, mask, iAxes,
-			method, overwrite, stretch
-		);
+		if (_imageF) {
+			auto im = _twopointcorrelation(
+				_imageF, outfile, Region, mask,
+				IPosition(iAxes), method, overwrite, stretch
+			);
+		}
+		else {
+			auto im = _twopointcorrelation(
+				_imageC, outfile, Region, mask,
+				IPosition(iAxes), method, overwrite, stretch
+			);
+		}
+		return True;
 	}
 	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
+	return False;
+}
+
+template <class T> SPIIT image::_twopointcorrelation(
+	SPIIT myimage, const std::string& outfile,
+	SHARED_PTR<Record> region, const casa::String& mask,
+	const IPosition& axes, const std::string& method,
+	bool overwrite, bool stretch
+) {
+	TwoPointCorrelator<T> tpc(
+		myimage, region.get(), mask, outfile, overwrite
+	);
+	tpc.setAxes(axes);
+	tpc.setMethod(method);
+	tpc.setStretch(stretch);
+	return tpc.correlate();
 }
 
 ::casac::image* image::subimage(
