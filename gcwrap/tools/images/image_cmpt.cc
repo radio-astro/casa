@@ -3102,24 +3102,35 @@ bool image::lock(bool writelock, int nattempts) {
 	return False;
 }
 
-bool image::makecomplex(const std::string& outFile,
-		const std::string& imagFile, const variant& region,
-		const bool overwrite) {
-	bool rstat(false);
+bool image::makecomplex(
+	const std::string& outfile, const std::string& imagFile,
+	const variant& region, bool overwrite
+) {
 	try {
 		_log << _ORIGIN;
 		if (detached()) {
-			return rstat;
+			return False;
 		}
+		ThrowIf(
+			! _imageF, "The attached image must be real valued"
+		);
 		SHARED_PTR<Record> Region(_getRegion(region, False));
-		rstat = _image->makecomplex(outFile, imagFile, *Region, overwrite);
+		auto mypair = ImageFactory::fromFile(imagFile);
+		ThrowIf(
+			! mypair.first, imagFile + " does not have real valued pixels"
+		);
+		auto cImage = ImageFactory::makeComplex(
+			_imageF, mypair.first, outfile,
+			*Region, overwrite
+		);
+		return True;
 	}
 	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
+	return False;
 }
 
 std::vector<std::string> image::maskhandler(
