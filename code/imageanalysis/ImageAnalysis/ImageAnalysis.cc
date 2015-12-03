@@ -634,61 +634,6 @@ Bool ImageAnalysis::makecomplex(const String& outFile, const String& imagFile,
 	return True;
 }
 
-Bool ImageAnalysis::twopointcorrelation(
-	const String& outFile,
-	Record& theRegion, const String& mask, const Vector<Int>& axes1,
-	const String& method, const Bool overwrite, const Bool stretch
-) {
-	_onlyFloat(__func__);
-	*_log << LogOrigin("ImageAnalysis", __func__);
-
-	// Validate outfile
-	if (!overwrite && !outFile.empty()) {
-		NewFile validfile;
-		String errmsg;
-		if (!validfile.valueOK(outFile, errmsg)) {
-			*_log << errmsg << LogIO::EXCEPTION;
-		}
-	}
-
-	AxesSpecifier axesSpecifier;
-	SHARED_PTR<const SubImage<Float> > subImage = SubImageFactory<Float>::createSubImageRO(
-		*_imageFloat, theRegion, mask, _log.get(), axesSpecifier, stretch
-	);
-
-	// Deal with axes and shape
-	Vector<Int> axes2(axes1);
-	CoordinateSystem cSysIn = subImage->coordinates();
-	IPosition axes = ImageTwoPtCorr<Float>::setUpAxes(IPosition(axes2), cSysIn);
-	IPosition shapeOut = ImageTwoPtCorr<Float>::setUpShape(subImage->shape(),
-			axes);
-
-	// Create the output image and mask
-	PtrHolder<ImageInterface<Float> > imOut;
-	if (outFile.empty()) {
-		*_log << LogIO::NORMAL << "Creating (temp)image of shape "
-				<< shapeOut << LogIO::POST;
-		imOut.set(new TempImage<Float> (shapeOut, cSysIn));
-	} else {
-		*_log << LogIO::NORMAL << "Creating image '" << outFile
-				<< "' of shape " << shapeOut << LogIO::POST;
-		imOut.set(new PagedImage<Float> (shapeOut, cSysIn, outFile));
-	}
-	ImageInterface<Float>* pImOut = imOut.ptr();
-	String maskName("");
-	ImageMaskAttacher::makeMask(*pImOut, maskName, True, True, *_log, True);
-
-	// Do the work.  The Miscellaneous items and units are dealt with
-	// by function ImageTwoPtCorr::autoCorrelation
-	ImageTwoPtCorr<Float> twoPt;
-	Bool showProgress = True;
-	LatticeTwoPtCorr<Float>::Method m = LatticeTwoPtCorr<Float>::fromString(
-			method);
-	twoPt.autoCorrelation(*pImOut, *subImage, axes, m, showProgress);
-
-	return True;
-}
-
 void ImageAnalysis::_onlyFloat(const String& method) const {
 	ThrowIf(! _imageFloat, "Method " + method + " only supports Float valued images");
 }

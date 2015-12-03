@@ -138,13 +138,6 @@ public:
 
     inline static String className() {const static String x = "ImageAnalysis"; return x; }
 
-    bool twopointcorrelation(
-    	const String& outfile, Record& region,
-        const String& mask, const Vector<Int>& axes,
-        const String& method="structurefunction",
-        const Bool overwrite=False, const Bool stretch=False
-    );
-
     Bool detached();
 
     // Return a record of the associates ImageInterface 

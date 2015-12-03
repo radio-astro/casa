@@ -226,6 +226,8 @@ install (FILES
 	ImageAnalysis/SpectralCollapser.h
 	ImageAnalysis/SubImageFactory.h
 	ImageAnalysis/SubImageFactory.tcc
+	ImageAnalysis/TwoPointCorrelator.h
+    ImageAnalysis/TwoPointCorrelator.tcc
 	DESTINATION include/casacode/imageanalysis/ImageAnalysis
 	)
 install (FILES
