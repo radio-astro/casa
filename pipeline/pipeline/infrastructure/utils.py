@@ -988,3 +988,64 @@ def get_vis_from_plots(plots):
     vis = {p.parameters['vis'] for p in plots}
     vis = vis.pop() if len(vis) is 1 else 'all data'
     return vis
+
+
+def merge_ranges(ranges):
+
+    """
+    Merge overlapping and adjacent ranges and yield the merged ranges
+    in order. The argument must be an iterable of pairs (start, stop).
+
+    >>> list(merge_ranges([(5,7), (3,5), (-1,3)]))
+    [(-1, 7)]
+    >>> list(merge_ranges([(5,6), (3,4), (1,2)]))
+    [(1, 2), (3, 4), (5, 6)]
+    >>> list(merge_ranges([]))
+    []
+
+    (c) Gareth Rees 02/2013
+
+    """
+    ranges = iter(sorted(ranges))
+    current_start, current_stop = next(ranges)
+    for start, stop in ranges:
+        if start > current_stop:
+            # Gap between segments: output current segment and start a new one.
+            yield current_start, current_stop
+            current_start, current_stop = start, stop
+        else:
+            # Segments adjacent or overlapping: merge.
+            current_stop = max(current_stop, stop)
+    yield current_start, current_stop
+
+
+def spw_intersect(spw_range, line_regions):
+
+    """
+    Compute intersect between SPW frequency range and line frequency
+    ranges to be excluded.
+    """
+
+    spw_sel_intervals = []
+    for line_region in line_regions:
+        if (line_region[0] <= spw_range[0]) and (line_region[1] >= spw_range[1]):
+            spw_sel_intervals = []
+            spw_range = []
+            break
+        elif (line_region[0] <= spw_range[0]) and (line_region[1] >= spw_range[0]):
+            spw_range = [line_region[1], spw_range[1]]
+        elif (line_region[0] >= spw_range[0]) and (line_region[1] < spw_range[1]):
+            spw_sel_intervals.append([spw_range[0], line_region[0]])
+            spw_range = [line_region[1], spw_range[1]]
+        elif (line_region[0] >= spw_range[1]):
+            spw_sel_intervals.append(spw_range)
+            spw_range = []
+            break
+        elif (line_region[0] >= spw_range[0]) and (line_region[1] >= spw_range[1]):
+            spw_sel_intervals.append([spw_range[0], line_region[0]])
+            spw_range = []
+            break
+    if spw_range != []:
+        spw_sel_intervals.append(spw_range)
+
+    return spw_sel_intervals

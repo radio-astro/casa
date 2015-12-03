@@ -45,7 +45,6 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
 
     @imagename.setter
     def imagename(self, value):
-        print 'DEBUG_DM:', value
         self._imagename = value.replace('STAGENUMBER', str(self.context.stage))
 
     @property

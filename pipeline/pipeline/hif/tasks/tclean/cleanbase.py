@@ -15,6 +15,7 @@ import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.mpihelpers as mpihelpers
 import pipeline.infrastructure.utils as utils
 from pipeline.infrastructure import casa_tasks
+import pipeline.domain.measures as measures
 
 from .resultobjects import TcleanResult
 from pipeline.hif.heuristics import makeimlist
@@ -259,6 +260,7 @@ class CleanBase(basetask.StandardTaskTemplate):
         if scanidlist is None:
             scanidlist = []
 
+        context = self.inputs.context
         inputs = self.inputs
 
         #        LOG.info('Stokes %s' % (inputs.stokes))
@@ -293,12 +295,35 @@ class CleanBase(basetask.StandardTaskTemplate):
             pass
 
         spw_param_list = []
+        p = re.compile('([\d.]*)(~)([\d.]*)(\D*)')
+        freq_ranges = []
+        # get spw info from first vis set, assume spws uniform
+        # across datasets
+        ms = context.observing_run.get_ms(name=inputs.vis[0])
         for spwid in inputs.spw.split(','):
             if (inputs.spwsel.has_key('spw%s' % (spwid))):
-                spw_param_list.append('%s%s%s' % (spwid, ':'*(1 if inputs.spwsel['spw%s' % (spwid)] != '' else 0), inputs.spwsel['spw%s' % (spwid)]))
+                if (inputs.spwsel['spw%s' % (spwid)] != ''):
+                    spw_param_list.append('%s:%s' % (spwid, inputs.spwsel['spw%s' % (spwid)]))
+                    for freq_range in inputs.spwsel['spw%s' % (spwid)].split(';'):
+                        f1, sep, f2, unit = p.findall(freq_range)[0]
+                        freq_ranges.append((float(f1), float(f2)))
+                else:
+                    spw_param_list.append(spwid)
+                    spw_info = ms.get_spectral_window(spwid)
+                    min_frequency = float(spw_info.min_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
+                    max_frequency = float(spw_info.max_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
+                    freq_ranges.append((min_frequency, max_frequency))
             else:
                 spw_param_list.append(spwid)
+                spw_info = ms.get_spectral_window(spwid)
+                min_frequency = float(spw_info.min_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
+                max_frequency = float(spw_info.max_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
+                freq_ranges.append((min_frequency, max_frequency))
+
         spw_param = ','.join(spw_param_list)
+        aggregate_bw = '0.0GHz'
+        for freq_range in utils.merge_ranges(freq_ranges):
+            aggregate_bw = casatools.quanta.add(aggregate_bw, casatools.quanta.sub('%sGHz' % (freq_range[1]), '%sGHz' % (freq_range[0])))
 
         parallel = all([mpihelpers.parse_mpi_input_parameter(inputs.parallel),
                         'TARGET' in inputs.intent])
@@ -420,9 +445,10 @@ class CleanBase(basetask.StandardTaskTemplate):
                          type='cleanmask', iter=iter)
         result.set_cleanmask(iter=iter, image=inputs.mask)
 
-        # Keep threshold and sensitivity for QA
+        # Keep threshold, sensitivity and aggregate bandwidth for QA and weblog
         result.set_threshold(inputs.threshold)
         result.set_sensitivity(inputs.sensitivity)
+        result.set_aggregate_bw(aggregate_bw)
 
         return result
 
@@ -455,4 +481,3 @@ def set_miscinfo(name, spw=None, field=None, type=None, iter=None, multiterm=Non
             if iter is not None:
                 info['iter'] = iter
             image.setmiscinfo(info)
-
