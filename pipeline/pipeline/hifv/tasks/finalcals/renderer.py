@@ -262,7 +262,7 @@ class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
             vis = r.inputs['vis']
             ms = context.observing_run.get_ms(vis)
             filesizes[os.path.basename(vis)] = ms._calc_filesize()
-            LOG.info("FILESIZE::"+str(filesizes[os.path.basename(vis)]))
+            #LOG.info("FILESIZE::"+str(filesizes[os.path.basename(vis)]))
 
         # return all agents so we get ticks and crosses against each one
         agents = ['before', 'applycal']
