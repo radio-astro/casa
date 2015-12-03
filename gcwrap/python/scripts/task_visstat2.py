@@ -80,7 +80,7 @@ def visstat2(vis=None,
         casalog.post(stats + " statistics --- ", "NORMAL")
         if s[stats]['npts'] > 0:
                 casalog.post("        -- Mean of the values [mean]:                 " + str(s[stats]['mean']), "NORMAL")
-                casalog.post("        -- Variance of the values [var]:              " + str(s[stats]['var']), "NORMAL")
+                casalog.post("        -- Variance of the values [variance]:         " + str(s[stats]['variance']), "NORMAL")
                 casalog.post("        -- Standard deviation of the values [stddev]: " + str(s[stats]['stddev']), "NORMAL")
                 casalog.post("        -- Root mean square [rms]:                    " + str(s[stats]['rms']), "NORMAL")
                 casalog.post("        -- Median of the pixel values [median]:       " + str(s[stats]['median']), "NORMAL")
