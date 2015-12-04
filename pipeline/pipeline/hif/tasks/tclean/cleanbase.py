@@ -130,59 +130,9 @@ class CleanBase(basetask.StandardTaskTemplate):
         if type(inputs.vis) is not types.ListType:
             inputs.vis = [inputs.vis]
 
-        # Instantiate the clean list heuristics class
-        clheuristics = makeimlist.MakeImListHeuristics(context=inputs.context,
-                                                       vislist=inputs.vis,
-                                                       spw=inputs.spw,
-                                                       contfile=context.contfile,
-                                                       linesfile=context.linesfile)
-
-        # Generate the image name if one is not supplied.
-        if inputs.imagename == '':
-            inputs.imagename = clheuristics.imagename(intent=inputs.intent,
-                                                      field=inputs.field,
-                                                      spwspec=inputs.spw)
-
-        # Determine the default gridder
-        if inputs.gridder == '':
-            inputs.gridder = clheuristics.gridder(inputs.intent, inputs.field)
-
-        # Determine the default deconvolver
-        if inputs.deconvolver == '':
-            inputs.deconvolver = clheuristics.deconvolver(inputs.intent,
-                                                          inputs.field)
-
-        # Determine the phase center.
-        if inputs.phasecenter == '':
-            field_id = clheuristics.field(inputs.intent, inputs.field)
-            inputs.phasecenter = clheuristics.phasecenter(field_id)
-
-        # Get short cut specs of field to be cleaned. Are these really needed?
-        intent = inputs.intent
-        field = inputs.field
-        spw = inputs.spw
-
-        # Adjust the width to get around problems with increasing / decreasing
-        # frequency with channel issues.
-        if inputs.width == '':
-            if inputs.specmode == 'cube':
-                width = clheuristics.width(int(spw.split(',')[0]))
-                #width = inputs.width
-            else:
-                width = inputs.width
-        else:
-            width = inputs.width
-        inputs.width = width
-
-        if inputs.stokes == 'Q':
-            ncorr = clheuristics.ncorr(int(spw.split(',')[0]))
-            if ncorr <= 1:
-                LOG.warning('%s/%s/spw%s Q noise estimate invalid ncorrelation'
-                            ' is %s' %(field, intent, spw, ncorr))
-
         # Construct regex for string matching - escape likely problem
         # chars. Simpler way to do this ?
-        re_field = field.replace('*', '.*')
+        re_field = inputs.field.replace('*', '.*')
         re_field = re_field.replace('[', '\[')
         re_field = re_field.replace(']', '\]')
         re_field = re_field.replace('(', '\(')
@@ -190,7 +140,7 @@ class CleanBase(basetask.StandardTaskTemplate):
         re_field = re_field.replace('+', '\+')
 
         # Use scanids to select data with the specified intent
-        # Not CASA clean now supports intent selectin but leave
+        # Note CASA clean now supports intent selectin but leave
         # this logic in place and use it to eliminate vis that
         # don't contain the requested data.
         scanidlist = []
@@ -198,7 +148,7 @@ class CleanBase(basetask.StandardTaskTemplate):
         for vis in inputs.vis:
             ms = inputs.context.observing_run.get_ms(name=vis)
             scanids = [scan.id for scan in ms.scans if
-                       intent in scan.intents and
+                       inputs.intent in scan.intents and
                        re.search(pattern=re_field, string=str(scan.fields))]
             if not scanids:
                 continue
@@ -208,29 +158,6 @@ class CleanBase(basetask.StandardTaskTemplate):
             scanidlist.append(scanids)
             vislist.append(vis)
         inputs.vis=vislist
-
-        # If imsize not set then use heuristic code to calculate the
-        # centers for each field  / spw
-        imsize = inputs.imsize
-        cell = inputs.cell
-        if imsize == [] or cell == []:
-
-            # The heuristics cell size  is always the same for x and y as
-            # the value derives from a single value returned by imager.advise
-            cell, valid_data = clheuristics.cell(field_intent_list=[(field, intent)],
-                                           spwspec=spw)
-            beam = clheuristics.beam(spwspec=spw)
-
-            if inputs.cell == []:
-                inputs.cell = cell
-                LOG.info('Heuristic cell: %s' % cell)
-
-            field_ids = clheuristics.field(intent, field)
-            imsize = clheuristics.imsize(fields=field_ids,
-                                         cell=inputs.cell, beam=beam)
-            if inputs.imsize == []:
-                inputs.imsize = imsize
-                LOG.info('Heuristic imsize: %s', imsize)
 
         # Initialize imaging results structure
         if not inputs.result:

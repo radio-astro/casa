@@ -43,6 +43,11 @@ class TcleanResult(basetask.Results):
         self._sensitivity = 0.0
         self._threshold = 0.0
         self._rms = 0.0
+        # This should be automatic, but it does not yet work
+        self.pipeline_casa_task = 'Tclean'
+        # Dummy settings for the weblog renderer
+        self.results = [self]
+        self.targets = ['']
 
     def empty(self):
         return not(self._psf or self._model or self._flux or 
