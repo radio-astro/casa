@@ -302,6 +302,27 @@ VisibilityIterator2::originChunks (Bool forceRewind)
 }
 
 void
+VisibilityIterator2::setRowBlocking (Int nRows) // for use by Async I/O *ONLY
+{
+    CheckImplementationPointerR ();
+    impl_p->setRowBlocking (nRows);
+}
+
+void
+VisibilityIterator2::slurp () const
+{
+    CheckImplementationPointerR ();
+    impl_p->slurp ();
+}
+
+Int
+VisibilityIterator2::nRowsInChunk () const
+{
+    CheckImplementationPointerR ();
+    return impl_p->nRowsInChunk ();
+}
+
+void
 VisibilityIterator2::setFrequencySelection (const FrequencySelection & selection)
 {
     FrequencySelections selections;
