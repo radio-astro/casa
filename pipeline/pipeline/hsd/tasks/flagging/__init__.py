@@ -10,5 +10,5 @@ from .flagdeteralmasd import FlagDeterALMASingleDish
 # use the standard AgentFlagger renderer to render hifa flagging results
 weblog.add_renderer(FlagDeterALMASingleDish, 
                     super_renderer.T2_4MDetailsAgentFlaggerRenderer(description='ALMA SD deterministic flagging'),
-                    group_by='session')
+                    group_by=weblog.UNGROUPED)
 #weblog.add_renderer(ALMAAgentFlagger, super_renderer.T2_4MDetailsAgentFlaggerRenderer(description='ALMA deterministic flagging'))
