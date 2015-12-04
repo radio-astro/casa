@@ -576,17 +576,6 @@ ImageAnalysis::getslice(const Vector<Double>& x, const Vector<Double>& y,
 	return outRec;
 }
 
-Vector<Bool> ImageAnalysis::haslock() {
-	_onlyFloat(__func__);
-	Vector<Bool> rstat;
-	*_log << LogOrigin("ImageAnalysis", "haslock");
-
-	rstat.resize(2);
-	rstat[0] = _imageFloat->hasLock(FileLocker::Read);
-	rstat[1] = _imageFloat->hasLock(FileLocker::Write);
-	return rstat;
-}
-
 void ImageAnalysis::_onlyFloat(const String& method) const {
 	ThrowIf(! _imageFloat, "Method " + method + " only supports Float valued images");
 }
