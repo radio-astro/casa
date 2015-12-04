@@ -217,8 +217,10 @@ class CleanBase(basetask.StandardTaskTemplate):
 
             # The heuristics cell size  is always the same for x and y as
             # the value derives from a single value returned by imager.advise
-            cell, beam = clheuristics.cell(field_intent_list=[(field, intent)],
+            cell, valid_data = clheuristics.cell(field_intent_list=[(field, intent)],
                                            spwspec=spw)
+            beam = clheuristics.beam(spwspec=spw)
+
             if inputs.cell == []:
                 inputs.cell = cell
                 LOG.info('Heuristic cell: %s' % cell)
