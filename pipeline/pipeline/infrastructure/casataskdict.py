@@ -284,6 +284,9 @@ TASK_COMMENTS = {
     (hif_tasks.CleanList, hif_tasks.MakeImages) : (
         'A list of target sources is cleaned. '
     ),
+    (hif_tasks.Clean, hif_tasks.Tclean) : (
+        'A single target source is cleaned. '
+    ),
     (hif_tasks.ExportData,) : (
         'The output data products are computed. '
     ),
