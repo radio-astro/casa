@@ -25,7 +25,7 @@ class SDBaselineInputs(common.SingleDishInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, infiles=None, spw=None, pol=None,
                  linewindow=None, edge=None, broadline=None, fitorder=None,
-                 fitfunc=None, clusteringalgorithm=None):
+                 fitfunc=None, clusteringalgorithm=None, deviationmask=None):
         self._init_properties(vars())
         for key in ['spw', 'pol']:
             val = getattr(self, key)
@@ -33,7 +33,7 @@ class SDBaselineInputs(common.SingleDishInputs):
                 self._to_list([key])
         #self._to_list(['infiles', 'iflist', 'pollist', 'edge', 'linewindow'])
         self._to_list(['infiles', 'edge', 'linewindow'])
-        self._to_bool('broadline')
+        self._to_bool('broadline', 'deviationmask')
         self._to_numeric('fitorder')
         if isinstance(self.fitorder, float):
             self.fitorder = int(self.fitorder)
@@ -175,14 +175,18 @@ class SDBaseline(common.SingleDishTaskTemplate):
             # Deviation Mask 
             # This is a dictionary that will be merged with top-level context
             deviation_mask = collections.defaultdict(dict)
-            for (ant, spw) in zip(antenna_list, spwid_list):
-                st = self.context.observing_run.get_scantable(ant)
-                if st.spectral_window[spw].deviation_mask is None:
-                    LOG.debug('Evaluating deviation mask for %s spw %s'%(st.basename, spw))
-                    mask_list = self.evaluate_deviation_mask(st.name, spw)
-                    LOG.debug('deviation mask = %s'%(mask_list))
-                    st.spectral_window[spw].deviation_mask = mask_list
-                    deviation_mask[st.basename][spw] = mask_list
+            if self.inputs.deviationmask:
+                LOG.info('Apply deviation mask to baseline fitting')
+                for (ant, spw) in zip(antenna_list, spwid_list):
+                    st = self.context.observing_run.get_scantable(ant)
+                    if st.spectral_window[spw].deviation_mask is None:
+                        LOG.debug('Evaluating deviation mask for %s spw %s'%(st.basename, spw))
+                        mask_list = self.evaluate_deviation_mask(st.name, spw)
+                        LOG.debug('deviation mask = %s'%(mask_list))
+                        st.spectral_window[spw].deviation_mask = mask_list
+                        deviation_mask[st.basename][spw] = mask_list
+            else:
+                LOG.info('Deviation mask is disabled by the user')
                     
             # Spectral Line Detection and Validation
             maskline_inputs = maskline.MaskLine.Inputs(context, iteration, antenna_list, spwid_list, 

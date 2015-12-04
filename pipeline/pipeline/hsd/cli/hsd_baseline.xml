@@ -57,6 +57,11 @@
 	</allowed>
     </param>
 
+    <param type="bool" name="deviationmask">
+        <description>Apply deviation mask in addition to detected line masks</description>
+	<value>True</value>
+    </param>
+
     <param type="string" name="pipelinemode">
 	<description>The pipeline operating mode</description>
 	<value>automatic</value>
@@ -181,6 +186,10 @@ clusteringalgorithm -- selection of the algorithm used in the clustering
    algorithm and hierarchical clustering algorithm 'hierarchy' are so
    far implemented.
    default: 'kmean'.
+   
+deviationmask -- Apply deviation mask in addition to masks determined by 
+   the automatic line detection.
+   default: True
 
 pipelinemode -- The pipeline operating mode. In 'automatic' mode the 
    pipeline determines the values of all context defined pipeline inputs
