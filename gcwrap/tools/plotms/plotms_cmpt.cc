@@ -712,13 +712,16 @@ void plotms::clearPlots(){
 
 
 bool plotms::save(const string& filename, const string& format,
-		const bool highres) {
+		const bool highres, int dpi, int width, int height) {
 	 launchApp();
     Record params;
     bool retValue;
     params.define(PlotMSDBusApp::PARAM_EXPORT_FILENAME, filename);
     params.define(PlotMSDBusApp::PARAM_EXPORT_FORMAT, format);
     params.define(PlotMSDBusApp::PARAM_EXPORT_HIGHRES, highres);
+    params.define(PlotMSDBusApp::PARAM_EXPORT_DPI, dpi);
+    params.define(PlotMSDBusApp::PARAM_EXPORT_WIDTH, width);
+    params.define(PlotMSDBusApp::PARAM_EXPORT_HEIGHT, height);
     params.define(PlotMSDBusApp::PARAM_EXPORT_ASYNC, false);
     QtDBusXmlApp::dbusXmlCall(
     	dbus::FROM_NAME, app.dbusName( ),

@@ -834,8 +834,18 @@ Export plot as image Parameters
          <description>Use high resolution</description>
          <value>False</value>
      </param>
-    
-  
+     <param type="int" name="dpi" subparam="true">
+         <description>DPI of exported plot</description>
+         <value>-1</value>
+     </param>
+     <param type="int" name="width" subparam="true">
+         <description>Width of exported plot</description>
+         <value>-1</value>
+     </param>
+     <param type="int" name="height" subparam="true">
+         <description>Height of exported plot</description>
+         <value>-1</value>
+     </param>
      <param type="bool" name="overwrite" subparam="true">
          <description>Overwrite plot file if it already exists?</description>
          <value>False</value>
@@ -1241,6 +1251,9 @@ Constraints
             <default param="expformat"><value type="string"/></default>
             <default param="exprange"><value type="string"/></default>
             <default param="highres"><value type="bool">False</value></default>
+            <default param="dpi"><value type="int">-1</value></default>
+            <default param="width"><value type="int">-1</value></default>
+            <default param="height"><value type="int">-1</value></default>
             <default param="overwrite"><value type="bool">False</value></default>
         </notequals>
     </when>
@@ -1639,6 +1652,12 @@ Constraints
         			options: 'current', 'all'             
         highres -- use high resolution in exported plot 
                    default: False (use screen resolution)
+        dpi -- DPI of exported plot
+               default: -1 (not set)
+        width -- width of exported plot
+                 default: -1 (not set)
+        height -- height of exported plot
+                  default: -1 (not set)
         overwrite -- overwrite plot file if it already exists
                      default: False
       

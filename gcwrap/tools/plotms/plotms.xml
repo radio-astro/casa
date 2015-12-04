@@ -1792,6 +1792,18 @@ Execution Methods
          <description>Use high resolution</description>
          <value>false</value>
      </param>
+     <param type="int" name="dpi">
+         <description>DPI of exported plot</description>
+         <value>-1</value>
+     </param>
+     <param type="int" name="width">
+         <description>width of exported plot</description>
+         <value>-1</value>
+     </param>
+     <param type="int" name="height">
+         <description>height of exported plot</description>
+         <value>-1</value>
+     </param>
   </input>
   
   <example />

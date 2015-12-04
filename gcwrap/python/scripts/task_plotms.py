@@ -34,7 +34,7 @@ def plotms(vis=None,
            showminorgrid=None, minorwidth=None, minorstyle=None,  minorcolor=None, 
            showlegend=None, legendposition=None,   
            plotfile=None, expformat=None, exprange=None,
-           highres=None, overwrite=None, 
+           highres=None, dpi=None, width=None, height=None, overwrite=None,
            showgui=None, clearplots=None,
            callib=None
 ):
@@ -409,6 +409,12 @@ def plotms(vis=None,
         if not exprange or exprange == "":
             exprange='current'
         pm.setExportRange(exprange)
+        if not dpi:
+            dpi = -1
+        if not width:
+            width = -1
+        if not height:
+            height = -1
 
         # Set stuff that informs the plot on additional axes
         #  (iteration, colorization, etc.)
@@ -642,8 +648,8 @@ def plotms(vis=None,
                     while (pm.isDrawing()):
                         time.sleep(1.0)
                 casalog.post("Exporting the plot.",'NORMAL')
-                casalog.post("Calling pm.save,", 'NORMAL')
-                plotUpdated = pm.save( plotfile, expformat, highres)
+                casalog.post("Calling pm.save", 'NORMAL')
+                plotUpdated = pm.save( plotfile, expformat, highres, dpi, width, height)
     
     except Exception, instance:
         plotUpdated = False
