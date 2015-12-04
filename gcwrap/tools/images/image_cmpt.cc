@@ -2891,19 +2891,30 @@ template <class T> image* image::_hanning(
 }
 
 std::vector<bool> image::haslock() {
-	std::vector<bool> rstat;
 	try {
 		_log << LogOrigin("image", __func__);
-		if (detached())
-			return rstat;
-
-		_image->haslock().tovector(rstat);
-	} catch (AipsError x) {
+		if (detached()) {
+			return vector<bool>();
+		}
+		if (_imageF) {
+			return vector<bool> {
+				_imageF->hasLock(FileLocker::Read),
+				_imageF->hasLock(FileLocker::Write)
+			};
+		}
+		else {
+			return vector<bool> {
+				_imageC->hasLock(FileLocker::Read),
+				_imageC->hasLock(FileLocker::Write)
+			};
+		}
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
+	return vector<bool>();
 }
 
 record* image::histograms(
