@@ -125,6 +125,8 @@ class Context(object):
         self.subtask_counter = 0
         self.results = []
         self.logs = {}
+        self.contfile = None
+        self.linesfile = None
 
         # domain depends on infrastructure.casatools, so infrastructure cannot
         # depend on domain hence the run-time import
