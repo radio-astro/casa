@@ -67,6 +67,9 @@ template images must have the same coordinate structure.
      </constraints>
 </input>
 <example>
+The imregrid task currently finds the nearest input pixel center and interpolates to the output pixel center.
+No averaging is done in any direction!
+
 Imregrid will regrid an input image onto a new coordinate system from a template image
 or to a new directional reference frame. If a template image is used, then the input and
 template images must have the same coordinate structure.
