@@ -301,7 +301,7 @@ class MakeImListHeuristics(object):
 
             if cellvs:
                 # cell that's good for all field/intents
-                cell = '%.3f%s' % (min(cellvs), cellu)
+                cell = '%.2g%s' % (min(cellvs), cellu)
                 LOG.debug('RESULT cell for spw %s: %s' % (spwspec, cell))
             else:
                 cell = 'invalid'
