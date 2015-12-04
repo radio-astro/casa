@@ -113,12 +113,6 @@ SPIIF ImageRegridder::regrid() const {
 }
 
 SPIIF ImageRegridder::_regrid() const {
-	/*
-	SPIIF subImage = SubImageFactory<Float>::createImage(
-		*this->_getImage(), "", *this->_getRegion(), this->_getMask(),
-		this->_getDropDegen(), False, False, this->_getStretch()
-	);
-	*/
 	if (! _subimage) {
 		// for when this method is called directly by regridByVelocity
 		_subimage = SubImageFactory<Float>::createImage(
@@ -156,6 +150,21 @@ SPIIF ImageRegridder::_regrid() const {
 		"There is no overlap between the (region chosen in) the input image"
 		" and the output image with respect to the axes being regridded."
 	);
+	if (
+		coordsToRegrid.find(Coordinate::SPECTRAL) != coordsToRegrid.end()
+		&& fabs(csys.spectralCoordinate().increment()[0])
+			> fabs(csysFrom.spectralCoordinate().increment()[0])
+	) {
+		*this->_getLog() << LogOrigin(getClass(), __func__)
+			<< LogIO::WARN << " imregrid/ia.regrid() interpolates over spectral "
+			<< "channels and does not average channels together. Noise in your "
+			<< "resulting image will be the noise in the original individual "
+			<< "channels, not the averaged channel noise. To average output "
+			<< "channels together, use specsmooth (or ia.boxcar() or ia.hanning) "
+			<< "to smooth the spectral axis of your input cube to close to "
+			<< "desired resolution and use imregrid/ia.regrid() to regrid it to "
+			<< "the desired spectral coordinate grid.";
+	}
 	ImageRegrid<Float> ir;
 	ir.showDebugInfo(_debug);
 	ir.disableReferenceConversions(! _getDoRefChange());
@@ -314,12 +323,6 @@ SPIIF ImageRegridder::_regridByVelocity() const {
 		dynamic_cast<CoordinateSystem *>(csysTo.clone())
 	);
 	SpectralCoordinate templateSpecCoord = csys->spectralCoordinate();
-	/*
- 	SPIIF maskedClone = SubImageFactory<Float>::createImage(
- 		*this->_getImage(), "", *this->_getRegion(), this->_getMask(),
- 		False, False, False, this->_getStretch()
- 	);
- 	*/
 	std::unique_ptr<CoordinateSystem> coordClone(
 		dynamic_cast<CoordinateSystem *>(_subimage->coordinates().clone())
 	);
