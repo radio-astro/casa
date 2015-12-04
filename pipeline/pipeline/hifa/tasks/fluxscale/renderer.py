@@ -121,7 +121,8 @@ def make_flux_table(context, results):
             
         for field_arg, measurements in single_result.measurements.items():
             field = ms_for_result.get_fields(field_arg)[0]
-            field_cell = '%s (#%s)' % (field.name, field.id)
+            intents = ' '. join(field.intents.intersection(set(['BANDPASS', 'PHASE', 'CHECK'])))
+            field_cell = '%s (#%s) %s' % (field.name, field.id, intents)
 
             for measurement in sorted(measurements, key=lambda m: int(m.spw_id)):
                 fluxes = collections.defaultdict(lambda: 'N/A')
