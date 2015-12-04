@@ -77,6 +77,9 @@ const String PlotMSDBusApp::PARAM_EXPORT_FILENAME = "plotfile";
 const String PlotMSDBusApp::PARAM_EXPORT_FORMAT = "expformat";
 const String PlotMSDBusApp::PARAM_EXPORT_RANGE = "exprange";
 const String PlotMSDBusApp::PARAM_EXPORT_HIGHRES = "highres";
+const String PlotMSDBusApp::PARAM_EXPORT_DPI = "dpi";
+const String PlotMSDBusApp::PARAM_EXPORT_WIDTH = "width";
+const String PlotMSDBusApp::PARAM_EXPORT_HEIGHT = "height";
 const String PlotMSDBusApp::PARAM_EXPORT_ASYNC = "exportasync";
 
 const String PlotMSDBusApp::PARAM_COLORIZE = "colorize";
@@ -891,6 +894,14 @@ bool PlotMSDBusApp::_savePlot(const Record& parameters) {
 					&& parameters.asBool(PARAM_EXPORT_HIGHRES)
 			)
 			? PlotExportFormat::HIGH : PlotExportFormat::SCREEN;
+
+			format.dpi = parameters.isDefined(PARAM_EXPORT_DPI) ?
+                    parameters.asInt(PARAM_EXPORT_DPI) : -1;
+
+			format.width = parameters.isDefined(PARAM_EXPORT_WIDTH) ?
+                    parameters.asInt(PARAM_EXPORT_WIDTH) : -1;
+			format.height = parameters.isDefined(PARAM_EXPORT_HEIGHT) ?
+                    parameters.asInt(PARAM_EXPORT_HEIGHT) : -1;
 
 			if (! (ok = itsPlotms_.save(format))) {
 				log("Method " + methodName + ": failed to save plot to file ");

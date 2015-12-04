@@ -58,10 +58,13 @@ PlotMSExportTab::PlotMSExportTab(QWidget* parent):
     }
     ui.exportRangeCombo->setCurrentIndex( PMS::DEFAULT_EXPORT_RANGE );
 
-    //connect(ui.exportRangeCombo, SIGNAL(currentIndexChanged(int)), SIGNAL(exportRangeChanged()));
     connect( ui.msNamesButton, SIGNAL(clicked()), this, SLOT(insertMSNames()) );
     connect( ui.cancelButton, SIGNAL(clicked()), this, SLOT(closeDialog()));
     connect( ui.exportButton, SIGNAL(clicked()), this, SLOT(doExport()));
+
+    connect(ui.dpi, SIGNAL(toggled(bool)), this, SLOT(dpiChanged()));
+    connect(ui.dpiSpinner, SIGNAL(valueChanged(int)), this, SLOT(dpiChanged()));
+    connect(ui.ExportTab::size, SIGNAL(toggled(bool)), this, SLOT(sizeChanged()));
 }
 
 PlotMSExportTab::~PlotMSExportTab() { }
@@ -71,6 +74,15 @@ PlotMSExportParam PlotMSExportTab::getExportParams() const {
 	QString rangeStr =  ui.exportRangeCombo->currentText();
 	params.setExportRange( rangeStr.toStdString());
 	return params;
+}
+
+void PlotMSExportTab::dpiChanged() {
+    ui.dpiSpinner->setEnabled(ui.dpi->isChecked());
+}
+
+void PlotMSExportTab::sizeChanged() {
+    ui.sizeSpinner1->setEnabled(ui.ExportTab::size->isChecked());
+    ui.sizeSpinner2->setEnabled(ui.ExportTab::size->isChecked());
 }
 
 void PlotMSExportTab::insertMSNames()
@@ -95,6 +107,7 @@ String PlotMSExportTab::getMsNameFromPath(String msfilepath)
 void PlotMSExportTab::setExportFormat(PlotExportFormat format)
 {
     itsFileWidget_->setFile(format.location);
+    ui.dpiSpinner->setValue(format.dpi);
 }
 
 PlotExportFormat PlotMSExportTab::currentlySetExportFormat() const {
@@ -105,9 +118,8 @@ PlotExportFormat PlotMSExportTab::currentlySetExportFormat() const {
     PlotExportFormat format(t, file);
     format.resolution = ui.highRes->isChecked() ? PlotExportFormat::HIGH :
                                                PlotExportFormat::SCREEN;
-    format.dpi = (ui.dpi->isVisible() && ui.dpi->isChecked()) ?
-                 ui.dpiSpinner->value() : -1;
-    if(ui.ExportTab::size->isVisible() && ui.ExportTab::size->isChecked()) {
+    format.dpi = ui.dpi->isChecked() ? ui.dpiSpinner->value() : -1;
+    if(ui.ExportTab::size->isChecked()) {
         format.width  = ui.sizeSpinner1->value();
         format.height = ui.sizeSpinner2->value();
     } else {

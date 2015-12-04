@@ -90,6 +90,9 @@ public:
     static const String PARAM_EXPORT_FORMAT; //String
     static const String PARAM_EXPORT_RANGE; //String
     static const String PARAM_EXPORT_HIGHRES; // bool
+    static const String PARAM_EXPORT_DPI; // int
+    static const String PARAM_EXPORT_WIDTH; // int
+    static const String PARAM_EXPORT_HEIGHT; // int
     static const String PARAM_EXPORT_INTERACTIVE; // bool
     static const String PARAM_EXPORT_ASYNC;  // bool
     static const String PARAM_COLORIZE;      // bool

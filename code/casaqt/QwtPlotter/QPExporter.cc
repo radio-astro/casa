@@ -238,7 +238,6 @@ bool QPExporter::exportToImageFile(
         image.setDotsPerMeterY(dpm);
     }
 
-
     // Set output quality.
     bool hires = (format.resolution == PlotExportFormat::HIGH);
     int quality;    // see QImage.save official documentation for its meaning
@@ -465,7 +464,13 @@ QImage QPExporter::produceHighResImage(
 QImage QPExporter::produceScreenImage(const PlotExportFormat& format,
 			vector<QPExportCanvas*> &qcanvases, int width, int height,
             int rowCount, int colCount, bool &wasCanceled) {
-    // TBF: ignoring format width & height for now (= -1, not settable in plotms yet)
+    // make sure both width and height are set
+    if (format.width > 0){
+    	width  = format.width;
+    }
+    if (format.height > 0) {
+    	height = format.height;
+    }
 
     int canvasSize = qcanvases.size();
     QPExportCanvas* canv = qcanvases[0]; // representative (or only) plot

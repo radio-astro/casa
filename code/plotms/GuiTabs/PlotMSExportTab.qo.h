@@ -58,13 +58,12 @@ public:
     // Retrieve selected MS names to use in export filename
     inline void setMSNames(vector<String> msNames) { MSNames_ = msNames; }
 
-signals:
-	void exportRangeChanged();
-
 private slots:
 	void closeDialog();
 	void doExport();
 	void insertMSNames();
+    void dpiChanged();
+    void sizeChanged();
 
 private:
     String getMsNameFromPath(String msfilepath);
