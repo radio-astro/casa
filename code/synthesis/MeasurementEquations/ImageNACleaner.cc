@@ -170,7 +170,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   Int ImageNACleaner::clean(ImageInterface<Float> & modelimage, 
 			    const Int niter,
-			    const Float gain, const Quantity& threshold,  Bool /*doPlotProgress*/){
+			    const Float gain, const Quantity& threshold,  const Int masksupp, Bool /*doPlotProgress*/){
 
 
     
@@ -179,7 +179,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int result=0;
     ///case of single plane mask
     //now may be a time to set stuff  scales will be done later
-    if(!setupMatCleaner(niter, gain, threshold))
+    if(!setupMatCleaner(niter, gain, threshold, masksupp))
       return False;
     //cerr << "nPol " << nMaskPol_p << " " << nPsfPol_p << " " << nImPol_p << endl;
     //cerr << "nChan " << nMaskChan_p << " " << nPsfChan_p << " " << nImChan_p << endl;
@@ -240,6 +240,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  Matrix<Float> dirtySub ;
 	  Array<Float> buf;
 	  dirty_p->getSlice(buf, sl, True);
+	  if(dirty_p->isMasked()){
+	    cerr << "zeroing masked dirty" << endl;
+	    Array<Bool> bitmask;
+	    dirty_p->pixelMask().getSlice(bitmask, sl, True);
+	    buf(!bitmask)=0.0;
+	    matClean_p.setPixFlag(bitmask);
+	  }
 	  dirtySub.reference(buf);
 	  matClean_p.setDirty(dirtySub);
 	  Array<Float> bufMod;
@@ -255,19 +262,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
 	  Array<Float> buf2;
 	  if(mask_p){
-	    if((nMaskChan_p >1) && (k<(nMaskChan_p))){
+	    // if((nMaskChan_p >1) && (k<(nMaskChan_p))){
 	      Matrix<Float> maskSub;
 	      getMask=mask_p->getSlice(buf2, sl, True);
 	      //cerr << "getmask " << getMask << " buf2 " << buf2.shape() << endl;
 	      maskSub.reference(buf2);
 	      matClean_p.setMask(maskSub);
 	      //Set mask above does the makeScaleMasks as psf-scale-Xfr are valid	    	
-	    }
+	      // }
        
 	    
-	    else{
-	      matClean_p.unsetMask();
-	    }
+	      //    else{
+	      //matClean_p.unsetMask();
+	      //}
 	  }
 	  result=matClean_p.clean(subModel);
 	  //Update the private flux and residuals here

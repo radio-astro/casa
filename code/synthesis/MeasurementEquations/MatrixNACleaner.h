@@ -93,7 +93,7 @@ public:
   MatrixNACleaner();
 
   // Create a cleaner for a specific dirty image and PSF
-  MatrixNACleaner(const Matrix<Float> & psf, const Matrix<Float> & dirty);
+  MatrixNACleaner(const Matrix<Float> & psf, const Matrix<Float> & dirty, const Int memtype=2);
 
   // The copy constructor uses reference semantics
   MatrixNACleaner(const MatrixNACleaner& other);
@@ -148,6 +148,9 @@ public:
   
   void setMask(Matrix<Float> & mask);
  
+
+  void setPixFlag(const Matrix<Bool>& bitpix);
+
   // remove the mask;
   // useful when keeping object and sending a new dirty image to clean 
   // one can set another mask then 
@@ -200,8 +203,9 @@ private:
   std::shared_ptr<Matrix<Float> > itsDirty;
   std::shared_ptr<Matrix<Float> > itsPsf;
   std::shared_ptr<Matrix<Float> >itsResidual;
+  std::shared_ptr<Matrix<Bool> > itsBitPix;
 
- 
+  Float f(const Float& val);
 
  
   
@@ -214,6 +218,7 @@ private:
   IPosition psfShape_p;
   IPosition itsPositionPeakPsf;
   Float itsRms;
+  Int typeOfMemory_p;  //0 nomemory, 1 light, 2 medium, 3 strong
 
 };
 

@@ -26,7 +26,9 @@
 
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Cube.h>
+#include <casa/Arrays/MaskedArray.h>
 #include <casa/Arrays/ArrayMath.h>
+#include <casa/Arrays/MaskArrMath.h>
 #include <casa/Arrays/MatrixMath.h>
 #include <casa/Arrays/ArrayIO.h>
 #include <casa/BasicMath/Math.h>
@@ -70,12 +72,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 MatrixNACleaner::MatrixNACleaner():
   itsMask( ),
   itsDirty( ),
+  itsBitPix( ),
   itsMaximumResidual(1e100),
   itsTotalFlux(0.0),
   itsSupport(3),
   psfShape_p(0),
   itsPositionPeakPsf(0),
-  itsRms(0.0)
+  itsRms(0.0),
+  typeOfMemory_p(2)
 {
   
  
@@ -84,8 +88,8 @@ MatrixNACleaner::MatrixNACleaner():
  
 
 MatrixNACleaner::MatrixNACleaner(const Matrix<Float> & psf,
-				  const Matrix<Float> &dirty):
-  itsSupport(3), itsRms(0.0)
+				 const Matrix<Float> &dirty, const Int memType):
+  itsBitPix( ), itsSupport(3), itsRms(0.0),typeOfMemory_p(memType)
 {
   psfShape_p.resize(0, False);
   psfShape_p=psf.shape();
@@ -101,7 +105,7 @@ MatrixNACleaner::MatrixNACleaner(const Matrix<Float> & psf,
   itsResidual=std::make_shared<Matrix<Float> >();
   itsResidual->assign(dirty);
   itsMask= std::make_shared<Matrix<Float> >(itsDirty->shape(), Float(0.0));
-  itsRms=rms(*itsResidual);
+  //itsRms=rms(*itsResidual);
   itsMaximumResidual=1e100;
 }
 
@@ -144,11 +148,13 @@ MatrixNACleaner & MatrixNACleaner::operator=(const MatrixNACleaner & other) {
     itsMask = other.itsMask;
     itsDirty = other.itsDirty;
     itsResidual=other.itsResidual;
+    itsBitPix=other.itsBitPix;
     itsTotalFlux=other.itsTotalFlux;
     psfShape_p.resize(0, False);
     psfShape_p=other.psfShape_p;
     itsSupport=other.itsSupport;
     itsRms=other.itsRms;
+    
   }
   return *this;
 }
@@ -174,7 +180,18 @@ MatrixNACleaner::~MatrixNACleaner()
  
 
 }
+ 
+void MatrixNACleaner::setPixFlag(const Matrix<Bool> & bitpix) 
+{
+ 
 
+  //cerr << "Mask Shape " << mask.shape() << endl;
+  // This is not needed after the first steps
+  itsBitPix = std::make_shared<Matrix<Bool> >(bitpix.shape());
+  itsBitPix->reference(bitpix);
+ 
+
+}
 
 
 // Set up the control parameters
@@ -206,7 +223,11 @@ Int MatrixNACleaner::clean(Matrix<Float>& model)
  
   Int converged=0;
       
- 
+   if(!itsBitPix){
+     itsRms=rms(*itsResidual);
+   }else{
+     rms(MaskedArray<Float>(*itsResidual, *itsBitPix));
+   }
 
   // Define a subregion for the inner quarter
   IPosition blcDirty(model.shape().nelements(), 0);
@@ -274,9 +295,16 @@ Int MatrixNACleaner::clean(Matrix<Float>& model)
           os << "iteration    MaximumResidual   CleanedFlux" << LogIO::POST;
       }
       if ((itsIteration % (itsMaxNiter/10 > 0 ? itsMaxNiter/10 : 1)) == 0) {
-	
+	//Good time to redo rms if necessary
+	if(abs(maxima) >  4*itsRms){
+	  if(!itsBitPix){
+	    itsRms=rms(*itsResidual);
+	  }else{
+	    rms(MaskedArray<Float>(*itsResidual, *itsBitPix));
+	  }
+	}
 	os << itsIteration <<"      "<< maxima<<"      "
-	   << itsTotalFlux <<LogIO::POST;
+	   << itsTotalFlux << " rms " << itsRms << LogIO::POST;
       }
     }
 
@@ -418,8 +446,8 @@ Bool MatrixNACleaner::findMaxAbsMask(const Matrix<Float>& lattice,
       if(((posPeak[1]+y) >=0) && ((posPeak[1]+y) < ny)){
 	for(Int x=-support; x < support+1; ++x){
 	  if(((posPeak[0]+x) >=0) && ((posPeak[0]+x) < nx))
-	    if(mask(x+posPeak[0], y+posPeak[1]) < peakval)
-	      mask(x+posPeak[0], y+posPeak[1])=peakval;
+	    if(mask(x+posPeak[0], y+posPeak[1]) < f(peakval))
+	      mask(x+posPeak[0], y+posPeak[1])=f(peakval);
 	}
       }
     }
@@ -431,7 +459,10 @@ Bool MatrixNACleaner::findMaxAbsMask(const Matrix<Float>& lattice,
   return True;
 }
 
+  Float MatrixNACleaner::f(const Float& v){
+    return v;
 
+  }
 
 
 void MatrixNACleaner::setDirty(const Matrix<Float>& dirty){

@@ -126,7 +126,7 @@ class ImageNACleaner
   // -2 = not converged and either large scale hit negative or diverging 
   // -3 = clean is diverging rather than converging 
   Int clean(ImageInterface<Float> & model, 
-	    const Int niter, const Float gain, const Quantity& threshold, 
+	    const Int niter, const Float gain, const Quantity& threshold, const Int masksupp=3,
 	    Bool doPlotProgress=False);
   // Set the mask
   // mask - input mask lattice
