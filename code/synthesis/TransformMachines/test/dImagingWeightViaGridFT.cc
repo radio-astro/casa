@@ -191,7 +191,7 @@ main(int argc, char **argv){
      //Setup new VisImaging weight with weight density 
      VisImagingWeight vWght2(vi, "norm", Quantity(0.0, "Jy"), -1.0,  500, 500,  Quantity(1.0, "arcsec"), Quantity(1.0, "arcsec"),0, 0);
      //VisImagingWeight vWght2(vi, grids, "abs", Quantity(0.0, "Jy"), -1,  Quantity(1.0, "arcsec"), Quantity(1.0, "arcsec"));
-     float sumval2;
+     float sumval2=0.0;
      vWght2.setWeightDensity(grids);
      vi.origin();
      vi.useImagingWeight(vWght2);
