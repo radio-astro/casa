@@ -437,7 +437,7 @@ deconvolver::clean(const std::string& algorithm, const int niter, const double g
 
 
 casac::record* 
-deconvolver::naclean(const int niter, const double gain, const ::casac::variant& threshold, const std::string& model, const std::string& mask)
+deconvolver::naclean(const int niter, const double gain, const ::casac::variant& threshold, const std::string& model, const std::string& mask, const int masksupp)
 {
   casac::record* rstat(0);
   try {
@@ -449,7 +449,7 @@ deconvolver::naclean(const int niter, const double gain, const ::casac::variant&
     Float maxResidual=0.0;
     Int iterations=0;
     Bool converged=itsDeconv->naclean(niter, gain, thresh, 
-				    String(model), String(mask), maxResidual, iterations);
+				      String(model), String(mask), masksupp, maxResidual, iterations);
     Record theRec;
     theRec.define("converged", converged);
     theRec.define("maxresidual", maxResidual);

@@ -884,7 +884,10 @@ for details about ``methods'' used to update the GUI.
       <value></value>
     </param>
     
-
+    <param type="int" name="masksupp">
+      <description>Number of pixels on each side of peak to set the memory mask</description>
+      <value>3</value>
+    </param>
   </input>
   
   <returns type="record"/>
