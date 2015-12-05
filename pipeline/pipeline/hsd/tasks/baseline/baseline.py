@@ -33,7 +33,7 @@ class SDBaselineInputs(common.SingleDishInputs):
                 self._to_list([key])
         #self._to_list(['infiles', 'iflist', 'pollist', 'edge', 'linewindow'])
         self._to_list(['infiles', 'edge', 'linewindow'])
-        self._to_bool('broadline', 'deviationmask')
+        self._to_bool(['broadline', 'deviationmask'])
         self._to_numeric('fitorder')
         if isinstance(self.fitorder, float):
             self.fitorder = int(self.fitorder)
