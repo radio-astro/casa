@@ -426,7 +426,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  {
 	    if(dbg) cout << "Trying to overwrite and open new image named : " << imagenamefull << " ow:"<< overwrite << endl;
 	    try{
-	      imPtr.reset( new PagedImage<Float> (useShape, itsParentCoordSys, imagenamefull) );
+	      buildImage(imPtr, useShape, itsParentCoordSys, imagenamefull) ;
 	      // initialize to zeros...
 	      imPtr->set(0.0);
 	    }
@@ -437,7 +437,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      {
 		if(dbg) cout << "--- Trying to open existing image : "<< imagenamefull << endl;
 		try{
-		  imPtr.reset( new PagedImage<Float>( imagenamefull ) );
+		  buildImage( imPtr, imagenamefull );
 		}
 		catch (AipsError &x){
 		  throw( AipsError("Writable table exists, but cannot open : " + x.getMesg() ) );
@@ -455,7 +455,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      {
 		if(dbg) cout << "Trying to open existing image : "<< imagenamefull << endl;
 		try{
-		  imPtr.reset( new PagedImage<Float>( imagenamefull ) );
+		  buildImage( imPtr, imagenamefull ) ;
 
 		  if( !dosumwt)
 		    {
@@ -489,7 +489,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	{
 	  if(dbg) cout << "Trying to open new image named : " << imagenamefull <<  endl;
 	  try{
-	    imPtr.reset( new PagedImage<Float> (useShape, itsParentCoordSys, imagenamefull) );
+	    buildImage(imPtr, useShape, itsParentCoordSys, imagenamefull) ;
 	    // initialize to zeros...
 	    imPtr->set(0.0);
 	  }
@@ -533,6 +533,44 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     */
     return imPtr;
   }
+
+
+  void SIImageStore::buildImage(SHARED_PTR<ImageInterface<Float> > &imptr,IPosition shape, CoordinateSystem csys, String name)
+  {
+    itsOpened++;
+    imptr.reset( new PagedImage<Float> (shape, csys, name) );
+
+    /*
+    Int MEMFACTOR = 18;
+    Double memoryMB=HostInfo::memoryTotal(True)/1024/(MEMFACTOR*itsOpened);
+
+
+    TempImage<Float> *tptr = new TempImage( TiledShape(shape, tileShape()), csys, memoryBeforeLattice() ) ;
+
+    tptr->setMaximumCacheSize(shape.product());
+    tptr->cleanCache();
+
+    imptr.reset( tptr );
+    
+    */
+  }
+
+  void SIImageStore::buildImage(SHARED_PTR<ImageInterface<Float> > &imptr, String name)
+  {
+
+    itsOpened++;
+    imptr.reset( new PagedImage<Float>( name ) );
+
+    /*
+    IPosition cimageShape;
+    CoordinateSystem cimageCoord = StokesImageUtil::CStokesCoord( itsCoordSys,
+								  whichStokes, itsDataPolRep);
+    */
+
+  }
+
+
+
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   void SIImageStore::setImageInfo(const Record miscinfo)
   {
@@ -629,6 +667,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   void SIImageStore::releaseImage( SHARED_PTR<ImageInterface<Float> > im )
   {
+    im->clearCache();
     im->unlock();
     im->tempClose();
   }
@@ -663,7 +702,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	os << "Setting " << modelname << " as model " << LogIO::POST;
 	// Then, add its contents to itsModel.
 	//itsModel->put( itsModel->get() + model->get() );
-	itsModel->put( newmodel->get() );
+	/////////	itsModel->put( newmodel->get() );
+	itsModel->copyData( LatticeExpr<Float> (*newmodel) );
       }
   }
 
@@ -844,7 +884,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
   Double SIImageStore::memoryBeforeLattice(){
 	  //Calculate how much memory to use per temporary images before disking
-	  return 1000.0;
+    return 1.0;  /// in MB
   }
   IPosition SIImageStore::tileShape(){
 	  //Need to have settable stuff here or algorith to determine this
@@ -2076,7 +2116,10 @@ Float SIImageStore::getPeakResidual()
 {
     LogIO os( LogOrigin("SIImageStore","getPeakResidual",WHERE) );
 
-    Float maxresidual = max( residual()->get() );
+    LatticeExprNode pres( max( *residual() ) );
+    Float maxresidual = pres.getFloat();
+
+    //    Float maxresidual = max( residual()->get() );
 
     return maxresidual;
   }
@@ -2084,9 +2127,11 @@ Float SIImageStore::getPeakResidual()
 Float SIImageStore::getPeakResidualWithinMask()
   {
     LogIO os( LogOrigin("SIImageStore","getPeakResidualWithinMask",WHERE) );
-    Float minresmask, maxresmask, minres, maxres;
-    findMinMax( residual()->get(), mask()->get(), minres, maxres, minresmask, maxresmask );
+        Float minresmask, maxresmask, minres, maxres;
+    //findMinMax( residual()->get(), mask()->get(), minres, maxres, minresmask, maxresmask );
 
+    findMinMaxLattice(*residual(), *mask() , maxres,maxresmask, minres, minresmask);
+    
     return maxresmask;
   }
 
@@ -2095,7 +2140,9 @@ Float SIImageStore::getModelFlux(uInt term)
   {
     //    LogIO os( LogOrigin("SIImageStore","getModelFlux",WHERE) );
 
-    Float modelflux = sum( model(term)->get() );
+    LatticeExprNode mflux( sum( *model(term) ) );
+    Float modelflux = mflux.getFloat();
+    //    Float modelflux = sum( model(term)->get() );
 
     return modelflux;
   }
@@ -2103,8 +2150,7 @@ Float SIImageStore::getModelFlux(uInt term)
   // Check for non-zero model (this is different from getting model flux, for derived SIIMMT)
 Bool SIImageStore::isModelEmpty()
   {
-    /// There MUST be a more efficient way to do this !!!!!  I hope. 
-    return  ( fabs( sum( model()->get() ) ) < 1e-08 );
+    return  ( fabs( getModelFlux(0) ) < 1e-08 );
   }
 
   // Calculate the PSF sidelobe level...
@@ -2114,7 +2160,8 @@ Bool SIImageStore::isModelEmpty()
 
     /// Calculate only once, store and return for all subsequent calls.
 
-    Float psfsidelobe = fabs(min( psf()->get() ));
+    LatticeExprNode psfside( min( *psf() ) );
+    Float psfsidelobe = fabs( psfside.getFloat() );
 
     if(psfsidelobe == 1.0)
       {
@@ -2143,7 +2190,10 @@ Bool SIImageStore::isModelEmpty()
   {
     LogIO os( LogOrigin("SIImageStore","printImageStats",WHERE) );
     Float minresmask, maxresmask, minres, maxres;
-    findMinMax( residual()->get(), mask()->get(), minres, maxres, minresmask, maxresmask );
+    //    findMinMax( residual()->get(), mask()->get(), minres, maxres, minresmask, maxresmask );
+
+    findMinMaxLattice(*residual(), *mask() , maxres,maxresmask, minres, minresmask);
+
 
     os << "[" << itsImageName << "]" ;
     os << " Peak residual (max,min) " ;
@@ -2160,11 +2210,69 @@ Bool SIImageStore::isModelEmpty()
   {
     LogIO os( LogOrigin("SIImageStore","getMaskSum",WHERE) );
 
-    Float masksum = sum( mask()->get() );
+    LatticeExprNode msum( sum( *mask() ) );
+    Float masksum = msum.getFloat();
+
+    //    Float masksum = sum( mask()->get() );
 
     return masksum;
   }
 
+Bool SIImageStore::findMinMaxLattice(const Lattice<Float>& lattice, const Lattice<Float>& mask,
+				     Float& maxAbs, Float& maxAbsMask, Float& minAbs, Float& minAbsMask )
+{
+
+  maxAbs=0.0;maxAbsMask=0.0;
+  minAbs=1e+10;minAbsMask=1e+10;
+
+  const IPosition tileShape = lattice.niceCursorShape();
+  TiledLineStepper ls(lattice.shape(), tileShape, 0);
+  {
+    RO_LatticeIterator<Float> li(lattice, ls);
+    RO_LatticeIterator<Float> mi(mask, ls);
+    for(li.reset(),mi.reset();!li.atEnd();li++, mi++) {
+      IPosition posMax=li.position();
+      IPosition posMin=li.position();
+      IPosition posMaxMask=li.position();
+      IPosition posMinMask=li.position();
+      Float maxVal=0.0;
+      Float minVal=0.0;
+      Float maxValMask=0.0;
+      Float minValMask=0.0;
+      
+      minMaxMasked(minValMask, maxValMask, posMin, posMax, li.cursor(), mi.cursor());
+
+      minMax( minVal, maxVal, posMin, posMax, li.cursor() );
+    
+      if(abs(minVal)>abs(maxAbs)) {
+         maxAbs=minVal;
+	 //         posMax=li.position();
+	 //  posMax(0)=posMin(0);
+      }
+      if(abs(maxVal)>abs(maxAbs)) {
+         maxAbs=maxVal;
+         //posMax=li.position();
+         //posMax(0)=posMax(0);
+      }
+
+      if(abs(minValMask)>abs(maxAbsMask)) {
+         maxAbsMask=minValMask;
+         //posMaxAbs=li.position();
+         //posMaxAbs(0)=posMin(0);
+      }
+      if(abs(maxValMask)>abs(maxAbsMask)) {
+         maxAbsMask=maxValMask;
+         //posMaxAbs=li.position();
+         //posMaxAbs(0)=posMax(0);
+      }
+
+    }
+  }
+
+  return True;
+
+
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2207,6 +2315,7 @@ Bool SIImageStore::isModelEmpty()
 
     if( itsNFacets>1 || itsNChanChunks>1 || itsNPolChunks>1 ) { itsImageShape=IPosition(4,0,0,0,0); }
 
+    itsOpened=0;
  
   }
 

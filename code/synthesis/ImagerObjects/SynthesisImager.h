@@ -279,7 +279,11 @@ protected:
 			  const String imageNamePrefix="");
   ATerm* createTelescopeATerm(const MeasurementSet& ms, const Bool& isATermOn);
 
+  // Do the major cycle
   void runMajorCycle(const Bool dopsf=False, const Bool savemodel=False);
+
+  // Version of major cycle code with mappers in a loop outside vi/vb.
+  void runMajorCycle2(const Bool dopsf=False, const Bool savemodel=False);
 
   /////This function should be called at every define image
   /////It associated the ftmachine with a given field

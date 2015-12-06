@@ -49,6 +49,7 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 
 #include <synthesis/ImagerObjects/SIMapperCollection.h>
+#include <synthesis/ImagerObjects/SynthesisUtilMethods.h>
 
 #include <synthesis/TransformMachines/VisModelData.h>
 #include <images/Regions/WCBox.h>
@@ -172,6 +173,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  {
 	    (itsMappers[k])->initializeGrid(vb,dopsf,True);
 
+	    SynthesisUtilMethods::getResource("Init Grid for mapper"+String::toString(k));
   	  }
   }
 
@@ -220,6 +222,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       	  for (uInt k=0; k < itsMappers.nelements(); ++k)
       	  {
         		  (itsMappers[k])->finalizeGrid(vb, dopsf);
+	    SynthesisUtilMethods::getResource("Finalize Grid for mapper"+String::toString(k));
 
       	  }
         }

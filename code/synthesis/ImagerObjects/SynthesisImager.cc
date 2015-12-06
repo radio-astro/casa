@@ -1911,6 +1911,99 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }// end runMajorCycle
 
+ 
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /// The mapper loop is outside the data iterator loop.
+  /// This is for cases where the image size is large compared to the RAM and
+  /// where data I/O is the relatively minor cost.
+  void SynthesisImager::runMajorCycle2(const Bool dopsf, 
+				      const Bool savemodel)
+  {
+    LogIO os( LogOrigin("SynthesisImager","runMajorCycle2",WHERE) );
+
+    //    cout << "Savemodel : " << savemodel << "   readonly : " << readOnly_p << "   usescratch : " << useScratch_p << endl;
+
+    Bool savemodelcolumn = savemodel && !readOnly_p && useScratch_p;
+    Bool savevirtualmodel = savemodel && !readOnly_p && !useScratch_p;
+
+    if( savemodelcolumn ) os << "Saving model column" << LogIO::POST;
+    if( savevirtualmodel ) os << "Saving virtual model" << LogIO::POST;
+
+    itsMappers.checkOverlappingModels("blank");
+
+    for(Int gmap=0;gmap<itsMappers.nMappers();gmap++)
+       {
+	 SynthesisUtilMethods::getResource("Start Major Cycle for mapper"+String::toString(gmap));
+    	VisBufferAutoPtr vb(rvi_p);
+    	rvi_p->originChunks();
+    	rvi_p->origin();
+
+	ProgressMeter pm(1.0, Double(vb->numberCoh()), 
+			 dopsf?"Gridding Weights and PSF":"Major Cycle", "","","",True);
+	Int cohDone=0;
+
+
+    	if(!dopsf){
+	  //	  itsMappers.initializeDegrid(*vb);
+	  itsMappers.getMapper(gmap)->initializeDegrid(*vb);
+	}
+	//    	itsMappers.initializeGrid(*vb,dopsf);
+   	itsMappers.getMapper(gmap)->initializeGrid(*vb,dopsf);
+
+	SynthesisUtilMethods::getResource("After initialize for mapper"+String::toString(gmap));
+
+    	for (rvi_p->originChunks(); rvi_p->moreChunks();rvi_p->nextChunk())
+    	{
+
+    		for (rvi_p->origin(); rvi_p->more(); (*rvi_p)++)
+    		{
+		  //if (SynthesisUtilMethods::validate(*vb)==SynthesisUtilMethods::NOVALIDROWS) break; // No valid rows in this VB
+		  //		  cerr << "nRows "<< vb->nRow() << "   " << max(vb->visCube()) <<  endl;
+		  if (SynthesisUtilMethods::validate(*vb)!=SynthesisUtilMethods::NOVALIDROWS)
+		    {
+    			if(!dopsf) {
+			  {   vb->setModelVisCube(Complex(0.0, 0.0)); }
+			    //    				itsMappers.degrid(*vb, savevirtualmodel );
+			  itsMappers.getMapper(gmap)->degrid(*vb); //, savevirtualmodel );
+    				if(savemodelcolumn && writeAccess_p )
+    					wvi_p->setVis(vb->modelVisCube(),VisibilityIterator::Model);
+    			}
+			//    			itsMappers.grid(*vb, dopsf, datacol_p);
+    			itsMappers.getMapper(gmap)->grid(*vb, dopsf, datacol_p);
+			cohDone += vb->nRow();
+			pm.update(Double(cohDone));
+		    }
+    		}
+    	}
+    	//cerr << "IN SYNTHE_IMA" << endl;
+    	//VisModelData::listModel(rvi_p->getMeasurementSet());
+
+	SynthesisUtilMethods::getResource("Before finalize for mapper"+String::toString(gmap));
+
+    	if(!dopsf) 
+	  {
+	    //	    itsMappers.finalizeDegrid(*vb);
+	    itsMappers.getMapper(gmap)->finalizeDegrid();
+	  }
+	//    	itsMappers.finalizeGrid(*vb, dopsf);
+    	itsMappers.getMapper(gmap)->finalizeGrid(*vb, dopsf);
+
+	//	itsMappers.getMapper(gmap)->releaseImageLocks();
+
+	SynthesisUtilMethods::getResource("End Major Cycle for mapper"+String::toString(gmap));
+       }// end of mapper loop
+
+    itsMappers.checkOverlappingModels("restore");
+
+    unlockMSs();
+
+    SynthesisUtilMethods::getResource("End Major Cycle");
+
+  }// end runMajorCycle2
+
+
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   void SynthesisImager::predictModel(){
     LogIO os( LogOrigin("SynthesisImager","predictModel ",WHERE) );

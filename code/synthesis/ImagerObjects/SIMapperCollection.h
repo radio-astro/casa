@@ -87,12 +87,18 @@ class SIMapperCollection
 
   Bool anyNonZeroModels();
 
-  const CountedPtr<FTMachine> getFTM(Int which, const Bool ift=True) {return itsMappers[which]->getFTM(ift);};
+  const CountedPtr<FTMachine> getFTM(Int which, const Bool ift=True) 
+  {AlwaysAssert(which>=0 && which<(Int)itsMappers.nelements(),AipsError);
+    return itsMappers[which]->getFTM(ift);};
 
   /*
   void initPB();
   void addPB(VisBuffer& vb, PBMath& pbMath);
   */
+
+  const CountedPtr<SIMapper> getMapper(Int which)
+  {AlwaysAssert(which>=0 && which<(Int)itsMappers.nelements(),AipsError);
+    return itsMappers[which];};
 
 protected:
 

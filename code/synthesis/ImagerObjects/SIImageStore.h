@@ -221,6 +221,10 @@ protected:
 					       const Bool dosumwt=False,
 					       const Int nfacetsperside=1);
 
+  void buildImage(SHARED_PTR<ImageInterface<Float> > &imptr, IPosition shape, CoordinateSystem csys, String name);
+  void buildImage(SHARED_PTR<ImageInterface<Float> > &imptr,String name);
+
+
   Double getPbMax();
   Double getPbMax(Int pol, Int chan);
 
@@ -229,6 +233,11 @@ protected:
 
   void removeMask(CountedPtr<ImageInterface<Float> >im);
   void rescaleResolution(Int chan, ImageInterface<Float>& subResidual, const GaussianBeam& newbeam, const GaussianBeam& oldbeam);
+
+  Bool findMinMaxLattice(const Lattice<Float>& lattice, const Lattice<Float>& mask,
+			 Float& maxAbs, Float& maxAbsMask, Float& minAbs, Float& minAbsMask );
+
+
   ///////////////////// Member Objects
 
   IPosition itsImageShape, itsParentImageShape;
@@ -254,6 +263,8 @@ protected:
   //------------------------------------------
   // Non-persistent internal variables
   Vector<String> imageExts;
+
+  Int itsOpened;
 
 private:
 

@@ -522,7 +522,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		os << "Setting " << modelname << " as model for term " << tix << LogIO::POST;
 		// Then, add its contents to itsModel.
 		//itsModel->put( itsModel->get() + model->get() );
-		( model(tix) )->put( newmodel->get() );
+		/////( model(tix) )->put( newmodel->get() );
+		model(tix)->copyData( LatticeExpr<Float> (*newmodel) );
 	      }
 	  }
       }//nterms
@@ -1041,7 +1042,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool emptymodel=True;
     for(uInt tix=0;tix<itsNTerms;tix++)
       {
-	if( fabs( sum(model(tix)->get()) ) > 1e-08  ) emptymodel=False;
+	///	if( fabs( sum(model(tix)->get()) ) > 1e-08  ) emptymodel=False;
+	if( fabs( getModelFlux(tix) ) > 1e-08  ) emptymodel=False;
       } 
     return  emptymodel;
   }
@@ -1050,7 +1052,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SIImageStoreMultiTerm","printImageStats",WHERE) );
     Float minresmask, maxresmask, minres, maxres;
-    findMinMax( residual()->get(), mask()->get(), minres, maxres, minresmask, maxresmask );
+    //    findMinMax( residual()->get(), mask()->get(), minres, maxres, minresmask, maxresmask );
+
+    findMinMaxLattice(*residual(), *mask() , maxres,maxresmask, minres, minresmask);
 
     os << "[" << itsImageName << "]" ;
     os << " Peak residual (max,min) " ;
@@ -1115,6 +1119,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsParentImageShape = itsImageShape;
     itsParentCoordSys = itsCoordSys;
     if( itsNFacets>1 || itsNChanChunks>1 || itsNPolChunks>1 ) { itsImageShape=IPosition(4,0,0,0,0); }
+
+    itsOpened=0;
 
   }
 
