@@ -23,7 +23,7 @@ def visstat2(vis=None,
              taql=None,
              monolithic_processing=None,
              intent=None,
-             reportingaxis=None):
+             reportingaxes=None):
 
     casalog.origin('visstat2')  
 
@@ -60,7 +60,7 @@ def visstat2(vis=None,
                             scan=scan,
                             array=array,
                             obs=str(observation),
-                            reportingaxis=str(reportingaxis),
+                            reportingaxes=str(reportingaxes),
                             timeaverage=timeaverage,
                             timebin=timebin,
                             timespan=timespan)
