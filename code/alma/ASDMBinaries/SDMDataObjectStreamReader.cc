@@ -47,6 +47,10 @@ namespace asdmbinaries {
     return (int64_t) f.tellg();
   }
 
+  void SDMDataObjectStreamReader::position(int64_t p) {
+    f.seekg(p);
+  }
+
   void SDMDataObjectStreamReader::close() {
     // cout << "SDMDataObjectStreamReader::close -- Entering" << endl;
     if (f.is_open()) {
@@ -276,6 +280,17 @@ namespace asdmbinaries {
     throw SDMDataObjectStreamReaderException("could not find a boundary definition in '" + ctValue + "'.");
   }
 
+  void SDMDataObjectStreamReader::skipAsLongAsLineStartsWith(const string& start) {
+    int64_t curpos = 0;
+    do {
+      curpos = position();
+      nextLine();
+    }
+    while (currentLine.find(start) == 0);
+    position(curpos);
+    return;
+  }
+
   void SDMDataObjectStreamReader::skipUntilEmptyLine(int maxSkips) {
     // cout << "Entering skipUntilEmptyLine" << endl;
     int numSkips = 0;
@@ -471,7 +486,12 @@ namespace asdmbinaries {
 
   void SDMDataObjectStreamReader::requireSDMDataSubsetMIMEPart(SDMDataSubset & sdmDataSubset) {
     integrationStartsAt = f.tellg();
-
+    
+    skipAsLongAsLineStartsWith("--"+boundary_1);  // <--- this was added to preserve compatiblity with SDMDataObjectReader, which
+                                                  // was less strict on the respect of the BDF specifications. (cf CAS-8151)
+                                                  // Here the problem was caused by two successive occurrences of --MIME_boundary_1 
+                                                  // instead of only one as indicated in the specs at the very beginning of
+                                                  // an SDMDataSubsetHeader. M.Caillat - 4 decembre 2015
     pair<string, string> name_value = requireHeaderField("CONTENT-TYPE");
     boundary_2 = requireBoundaryInCT(name_value.second);
     // cout << "boundary_2 = " << boundary_2 << endl;

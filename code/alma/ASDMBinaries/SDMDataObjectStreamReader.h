@@ -54,6 +54,13 @@ namespace asdmbinaries {
      * @return an int64_t 
      */
     int64_t position();
+
+
+    /**
+     * Set the read position in the BDF file.
+     *
+     */
+    void position(int64_t p);
     
     /**
      * Close the file containing the BDF data and releases all the memory dynamically allocated.
@@ -320,6 +327,7 @@ namespace asdmbinaries {
     pair<string, string>	requireHeaderField(const string& hf);
     string			requireMIMEHeader();
     string			requireBoundaryInCT(const string& ctValue);
+    void                        skipAsLongAsLineStartsWith(const string& start);
     void			skipUntilEmptyLine(int maxSkips);  
     string			accumulateUntilBoundary(const string& boundary, int maxLines);
     void			requireBoundary(const string&, int maxLines);

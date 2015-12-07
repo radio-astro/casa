@@ -831,7 +831,8 @@ namespace asdmbinaries {
     SDMDataObjectParser::isElement(a_node, TPSubsetHeaderParser::SDMDATASUBSETHEADER);
 
     // Project path.
-    vector<unsigned int> v = SDMDataObjectParser::parseProjectPath(a_node, 3); 
+    int pathLen = (sdmTPDataSubset.owner()->dimensionality() == 0) ? 3 : 4;
+    vector<unsigned int> v = SDMDataObjectParser::parseProjectPath(a_node, pathLen); 
     
     // Check conformity of execBlockNum, scanNum and subscanNum.
     if (v.at(0)      != sdmTPDataSubset.owner()->execBlockNum()
@@ -841,6 +842,9 @@ namespace asdmbinaries {
 					 +SDMDataObjectParser::parseStringAttr(a_node, PROJECTPATH)
 					 +"' is not compatible with the project path announced in the global header"
 					 +" '"+sdmTPDataSubset.owner()->projectPath()+"'"); 
+
+    if (pathLen == 4)
+      sdmTPDataSubset.integrationNum_ = v.at(3);
 
     // Traverse the children...
     xmlNode* child = a_node->children;
@@ -875,30 +879,30 @@ namespace asdmbinaries {
     sdmTPDataSubset.autoDataREF_ = (SDMDataObjectParser::parseStringAttr(child, TPSubsetHeaderParser::XLINKHREF )); 
   }
 
-//   void TPSubsetHeaderParser::parseProjectPath(xmlNode* a_node, SDMDataSubset& sdmTPDataSubset) {
-//     string projectPath = SDMDataObjectParser::parseStringAttr(a_node,TPSubsetHeaderParser::PROJECTPATH);
+  void TPSubsetHeaderParser::parseProjectPath(xmlNode* a_node, SDMDataSubset& sdmTPDataSubset) {
+    string projectPath = SDMDataObjectParser::parseStringAttr(a_node,TPSubsetHeaderParser::PROJECTPATH);
     
-//     cmatch what;
-//     unsigned int execBlockNum = 0;
-//     unsigned int scanNum      = 0;
-//     unsigned int subscanNum   = 0;
+    cmatch what;
+    unsigned int execBlockNum = 0;
+    unsigned int scanNum      = 0;
+    unsigned int subscanNum   = 0;
 
-//     if (regex_match(projectPath.c_str(), what, PROJECTPATH3) && what[0].matched) {
-//       execBlockNum = ::atoi(what[1].first);
-//       scanNum      = ::atoi(what[2].first);
-//       subscanNum   = ::atoi(what[3].first);
-//     }
-//     else 
-//       throw SDMDataObjectParserException("Invalid string for projectPath '" + projectPath + "'");
+    if (regex_match(projectPath.c_str(), what, PROJECTPATH3) && what[0].matched) {
+      execBlockNum = ::atoi(what[1].first);
+      scanNum      = ::atoi(what[2].first);
+      subscanNum   = ::atoi(what[3].first);
+    }
+    else 
+      throw SDMDataObjectParserException("Invalid string for projectPath '" + projectPath + "'");
     
-//     if (execBlockNum    != sdmTPDataSubset.owner()->execBlockNum()
-// 	|| scanNum      != sdmTPDataSubset.owner()->scanNum()
-// 	|| subscanNum   != sdmTPDataSubset.owner()->subscanNum())
-//       throw SDMDataObjectParserException("The project path of this data subset '"
-// 					 +projectPath
-// 					 +"' is not compatible with the project path announced in the global header"
-// 					 +" '"+sdmTPDataSubset.owner()->projectPath()+"'"); 
-//   }
+    if (execBlockNum    != sdmTPDataSubset.owner()->execBlockNum()
+	|| scanNum      != sdmTPDataSubset.owner()->scanNum()
+	|| subscanNum   != sdmTPDataSubset.owner()->subscanNum())
+      throw SDMDataObjectParserException("The project path of this data subset '"
+					 +projectPath
+					 +"' is not compatible with the project path announced in the global header"
+					 +" '"+sdmTPDataSubset.owner()->projectPath()+"'"); 
+  }
 
   void TPSubsetHeaderParser::parseSchedulePeriodTime(xmlNode* a_node, SDMDataSubset& sdmTPDataSubset) {
     SDMDataObjectParser::isElement(a_node, TPSubsetHeaderParser::SCHEDULEPERIODTIME);
@@ -1171,7 +1175,7 @@ namespace asdmbinaries {
     }
     
     if (!matched)
-      throw SDMDataObjectException("'" + projectPath + "' is an invalid string for a 'projectPath' attribute.");
+      throw SDMDataObjectException("'" + projectPath + "' is an invalid string for a 'projectPath' attribute");
 
     for (unsigned int i = 0; i < len; i++) {
       result.push_back(::atoi(what[i+1].first));

@@ -146,7 +146,7 @@ namespace asdmbinaries {
    *
    * We detail now the different valid sequences for writing binary data depending on their kind.
    * @subsection how-to-tpData How to write Total Power data.
-   * One single call to the tpData() method.
+   * @subsubsection One single call to the tpData() method.
    * @code
    *  sdmdow.tpData(123450000,          // startTime
    *                "uid://X123/X4/X5", // execBlockUID
@@ -320,48 +320,27 @@ namespace asdmbinaries {
      */
     void done();
     
-    /**
-     * Writes the XML global header on the MIME message stream, when binary data are Total Power data.
-     * @param startime start time.
-     * @param execBlockUID the UID of the exec block.
-     * @param execBlockNum the index of the exec block.
-     * @param scanNum the index of the scan.
-     * @param subscanNum the index of the subscan.
-     * @param numOfIntegrations the number of integrations in that Subscan.
-     * @param numAntenna the number of antenna.
-     * @param dataStruct the description of the binary data structure.
-     *
-     * @throws SDMDataObjectWriterException
-     */
-    void tpDataHeader(uint64_t startTime,
-		      const string& execBlockUID,
-		      uint32_t execBlockNum,
-		      uint32_t scanNum,
-		      uint32_t subscanNum,
-		      uint32_t numOfIntegrations,
-		      uint32_t numAntenna,
-		      SDMDataObject::DataStruct& dataStruct);
 
-    /**
-     * Writes a data subset of Total Power binary data.
-     * @param time time of the subscan.
-     * @param interval duration of the subscan.
-     * @param flags the values of flags (see note).
-     * @param actualTimes the values of actualTimes (see note).
-     * @param actualDurations the values of actualDurations (see note).
-     * @param autoData the values of autoData.
-     *
-     * @throws SDMDataObjectWriterException 
-     *
-     * @note
-     * This method must called only once after a call to tpDataHeader.
-     **/
-    void addTPSubscan(uint64_t time,
-		      uint64_t interval,
-		      const vector<FLAGSTYPE>& flags,
-		      const vector<ACTUALTIMESTYPE>& actualTimes,
-		      const vector<ACTUALDURATIONSTYPE>& actualDurations,
-		      const vector<AUTODATATYPE>& autoData);
+    /* /\** */
+    /*  * Writes a data subset of Total Power binary data. */
+    /*  * @param time time of the subscan. */
+    /*  * @param interval duration of the subscan. */
+    /*  * @param flags the values of flags (see note). */
+    /*  * @param actualTimes the values of actualTimes (see note). */
+    /*  * @param actualDurations the values of actualDurations (see note). */
+    /*  * @param autoData the values of autoData. */
+    /*  * */
+    /*  * @throws SDMDataObjectWriterException  */
+    /*  * */
+    /*  * @note */
+    /*  * This method must called only once after a call to tpDataHeader. */
+    /*  **\/ */
+    /* void addTPSubscan(uint64_t time, */
+    /* 		      uint64_t interval, */
+    /* 		      const vector<FLAGSTYPE>& flags, */
+    /* 		      const vector<ACTUALTIMESTYPE>& actualTimes, */
+    /* 		      const vector<ACTUALDURATIONSTYPE>& actualDurations, */
+    /* 		      const vector<AUTODATATYPE>& autoData); */
 
     /**
      * Writes the full content of Total Power data in their respective attachments (global XML header, local XML header and binary attachments)
@@ -444,6 +423,52 @@ namespace asdmbinaries {
 		uint64_t interval,
 		const vector<AxisName>& autoDataAxes,
 		const vector<AUTODATATYPE>& autoData);
+
+    /**
+     * Writes the XML global header on the MIME message stream, when binary data are Total Power data and will be written
+     * in successive steps with calls to tpAddIntegration.
+     *
+     * @param startime start time.
+     * @param execBlockUID the UID of the exec block.
+     * @param execBlockNum the index of the exec block.
+     * @param scanNum the index of the scan.
+     * @param subscanNum the index of the subscan.
+     * @param numAntenna the number of antenna.
+     * @param dataStruct the description of the binary data structure.
+     *
+     * @throws SDMDataObjectWriterException
+     */
+    void tpDataHeader(uint64_t startTime,
+		      const string& execBlockUID,
+		      uint32_t execBlockNum,
+		      uint32_t scanNum,
+		      uint32_t subscanNum,
+		      uint32_t numAntenna,
+              SDMDataObject::DataStruct& dataStruct);
+
+    /**
+     * Writes one integration (local header + binary attachment) of total power data on the MIME message stream.
+     *
+     * @param integrationNum the index (1 based) of the integration.
+     * @param time time of the integration.
+     * @param interval interval of the integration.
+     * @param flags the values of flags.
+     * @param actualTimes the values of actualTimes.
+     * @param actualDurations the values of actualDurations.
+     * @param autoData the values of autoData.
+     *
+     * @throws SDMDataObjectWriterException
+     * 
+     * @note To be used repeatedly after one call to tpDataHeader until all the integrations of Total Power data have been acquired.
+     *
+     */
+    void tpAddIntegration(uint32_t integrationNum,
+			  uint64_t time,
+			  uint64_t interval,
+			  const vector<FLAGSTYPE>& flags,
+			  const vector<ACTUALTIMESTYPE>& actualTimes,
+			  const vector<ACTUALDURATIONSTYPE>& actualDurations,
+			  const vector<AUTODATATYPE>& autoData);
 
     /**
      * Writes water vapour radiometer (WVR) data in a  MIME message conform 
@@ -529,7 +554,7 @@ namespace asdmbinaries {
 
 
     /**
-     * Writes an integration (local header + binary attachment) on the MIME message stream.
+     * Writes one integration (local header + binary attachment) of correlator data on the MIME message stream.
      * @param integrationNum the index (1 based) of the integration.
      * @param time time of the integration.
      * @param interval interval of the integration.
@@ -853,8 +878,8 @@ namespace asdmbinaries {
 
 
     // A small finite state automaton to control the usage of SDMDataObjectWriter.
-    enum States {START, S_TPDATA, S_TPDATAHEADER, S_ADDTPSUBSCAN, S_WVRDATA, S_CORRDATAHEADER, S_ADDINTEGRATION, S_ADDSUBINTEGRATION, END};
-    enum Transitions {T_TPDATA, T_TPDATAHEADER, T_ADDTPSUBSCAN, T_WVRDATA, T_CORRDATAHEADER, T_ADDINTEGRATION, T_ADDSUBINTEGRATION, T_DONE};
+    enum States {START, S_TPDATA, S_TPDATAHEADER, S_ADDTPSUBSCAN, S_ADDTPINTEGRATION, S_WVRDATA, S_CORRDATAHEADER, S_ADDINTEGRATION, S_ADDSUBINTEGRATION, END};
+    enum Transitions {T_TPDATA, T_TPDATAHEADER, T_ADDTPSUBSCAN, T_ADDTPINTEGRATION, T_WVRDATA, T_CORRDATAHEADER, T_ADDINTEGRATION, T_ADDSUBINTEGRATION, T_DONE};
     States currentState_;
 
     void checkState(Transitions t, const string& methodName);

@@ -803,22 +803,17 @@ namespace asdmbinaries {
 
    // Check the Content-Location of the MIME header ...but do nothing special with it...
     string contentLocation=getContentLocation();
-   
+
     // Detect SDMDataHeader.
     processMIMESDMDataHeader();
 
-    if (sdmDataObject_.isCorrelation()) {
-      // Process integrations.
-      processMIMEIntegrations();
-    }
-    else if (sdmDataObject_.isTP()){
-      // cout << "TP data" << endl;
+    // Do we have packed data (i.e. only one SDMDataSubset grouping all the integrations) or one integration per SDMDataSubset (i.e. per timestamp) ?
+    if (sdmDataObject_.hasPackedData()) {
       processMIMESubscan();
     }
     else {
-      // cout << "Unrecognized type of binary data." << endl;
+      processMIMEIntegrations();
     }
-    //cout << "Exiting processMIME" << endl;
   }
 
   const SDMDataObject & SDMDataObjectReader::read(const char * buffer, unsigned long int size, bool fromFile) {

@@ -152,136 +152,100 @@ namespace asdmbinaries {
   }
 
 
-  void SDMDataObjectWriter::tpDataHeader(uint64_t startTime,
-					 const string& execBlockUID,
-					 uint32_t execBlockNum,
-					 uint32_t scanNum,
-					 uint32_t subscanNum,
-					 uint32_t numberOfIntegrations,
-					 uint32_t numAntenna,
-					 SDMDataObject::DataStruct& dataStruct) {
-    checkState(T_TPDATAHEADER, "tpDataHeader");
-        
-    sdmDataObject_.valid_ = true;
+
+  // void SDMDataObjectWriter::addTPSubscan(uint64_t time,
+  // 					 uint64_t interval,
+  // 					 const vector<FLAGSTYPE>& flags,
+  // 					 const vector<ACTUALTIMESTYPE>& actualTimes,
+  // 					 const vector<ACTUALDURATIONSTYPE>& actualDurations,
+  // 					 const vector<AUTODATATYPE>& autoData){
+  //   checkState(T_ADDTPSUBSCAN, "addTPSubscan");
+  //   outputln("Content-Type: Multipart/Related; boundary=\""+MIMEBOUNDARY_2+"\";type=\"text/xml\"; start=\"<DataSubset.xml>\"");
+  //   outputln("Content-Description: Data and metadata subset");
+  //   outputln("--"+MIMEBOUNDARY_2);
+  //   outputln("Content-Type: text/xml; charset=\"UTF-8\"");
+  //   outputln("Content-Location: " + sdmDataObject_.projectPath() + "desc.xml");
+  //   outputln();
+
+  //   SDMDataSubset tpDataSubset(&sdmDataObject_,
+  // 			       time,
+  // 			       interval,
+  // 			       autoData);
+
+  //   tpDataSubset.flags_ = (tpDataSubset.nFlags_ = flags.size()) ? &tpDataSubset.flags_[0] : 0;
+  //   tpDataSubset.actualTimes_ = (tpDataSubset.nActualTimes_ = actualTimes.size()) ? &tpDataSubset.actualTimes_[0] : 0;    
+  //   tpDataSubset.actualDurations_ = (tpDataSubset.nActualDurations_ = actualDurations.size()) ? &tpDataSubset.actualDurations_[0] : 0;    
+  //   outputln(tpDataSubset.toXML());
+  //   //outputln();
+
+  //   if (flags.size() != 0) {
+  //     uint32_t numFlags = sdmDataObject_.dataStruct_.flags_.size();
+  //     if (numFlags!=0 && numFlags != flags.size()) {
+  // 	ostringstream oss;
+  // 	oss << "The number of values provided for 'flags' ("
+  // 	    << flags.size()
+  // 	    << "), is not equal to the number declared in the global header ("
+  // 	    << numFlags << ").";
+  // 	throw SDMDataObjectWriterException(oss.str());
+  //     }
+  //     outputln("--"+MIMEBOUNDARY_2);
+  //     outputln("Content-Type: binary/octet-stream");
+  //     outputln("Content-Location: " + tpDataSubset.projectPath() + "flags.bin");
+  //     outputln();
+  //     outputln<uint32_t>(flags);
+  //   }
     
-    sdmDataObject_.startTime_ = startTime;
-    sdmDataObject_.dataOID_ = uid_;
-    sdmDataObject_.title_ = title_;
-    sdmDataObject_.dimensionality_ = 0;
-    sdmDataObject_.numTime_ = numberOfIntegrations;
-    sdmDataObject_.execBlockUID_ = execBlockUID;
-    sdmDataObject_.execBlockNum_ = execBlockNum;
-    sdmDataObject_.scanNum_ = scanNum;
-    sdmDataObject_.subscanNum_ = subscanNum;
-    sdmDataObject_.numAntenna_ = numAntenna;
-    sdmDataObject_.correlationMode_ = AUTO_ONLY;
-    sdmDataObject_.spectralResolutionType_ = BASEBAND_WIDE;
-    sdmDataObject_.processorType_ = RADIOMETER;
-    sdmDataObject_.dataStruct_ = dataStruct;
+  //   if (actualTimes.size() != 0) {
+  //     uint32_t numActualTimes = sdmDataObject_.dataStruct_.actualTimes_.size();
+  //     if (numActualTimes != 0 && numActualTimes != actualTimes.size()) {
+  // 	ostringstream oss;
+  // 	oss << "The number of values provided for 'actualTimes' ("
+  // 	    << actualTimes.size()
+  // 	    << "), is not equal to the number declared in the global header ("
+  // 	    << numActualTimes << ").";
+  // 	throw SDMDataObjectWriterException(oss.str());
+  //     }
+  //     outputln("--"+MIMEBOUNDARY_2);
+  //     outputln("Content-Type: binary/octet-stream");
+  //     outputln("Content-Location: " + tpDataSubset.projectPath() + "actualTimes.bin");
 
-    outputln("--"+MIMEBOUNDARY_1);
-    outputln("Content-Type: text/xml; charset=\"UTF-8\"");
-    outputln("Content-Transfer-Encoding: 8bit");
-    outputln("Content-Location: " + sdmDataObject_.projectPath() + "desc.xml");
-    outputln();
-    
-    outputln(sdmDataObject_.toXML());
-    outputln("--"+MIMEBOUNDARY_1);
-  }
-  
-  void SDMDataObjectWriter::addTPSubscan(uint64_t time,
-					 uint64_t interval,
-					 const vector<FLAGSTYPE>& flags,
-					 const vector<ACTUALTIMESTYPE>& actualTimes,
-					 const vector<ACTUALDURATIONSTYPE>& actualDurations,
-					 const vector<AUTODATATYPE>& autoData){
-    checkState(T_ADDTPSUBSCAN, "addTPSubscan");
-    outputln("Content-Type: Multipart/Related; boundary=\""+MIMEBOUNDARY_2+"\";type=\"text/xml\"; start=\"<DataSubset.xml>\"");
-    outputln("Content-Description: Data and metadata subset");
-    outputln("--"+MIMEBOUNDARY_2);
-    outputln("Content-Type: text/xml; charset=\"UTF-8\"");
-    outputln("Content-Location: " + sdmDataObject_.projectPath() + "desc.xml");
-    outputln();
+  //     outputln();
+  //     outputln<ACTUALTIMESTYPE>(actualTimes);
+  //   }
 
-    SDMDataSubset tpDataSubset(&sdmDataObject_,
-			       time,
-			       interval,
-			       autoData);
+  //   if (actualDurations.size() != 0) {
+  //     uint32_t numActualDurations = sdmDataObject_.dataStruct_.actualDurations_.size();
+  //     if (numActualDurations != 0 && numActualDurations != actualDurations.size()) {
+  // 	ostringstream oss;
+  // 	oss << "The number of values provided for 'actualDurations' ("
+  // 	    << actualDurations.size()
+  // 	    << "), is not equal to the number declared in the global header ("
+  // 	    << numActualDurations << ").";
+  // 	throw SDMDataObjectWriterException(oss.str());
+  //     }
+  //     outputln("--"+MIMEBOUNDARY_2);
+  //     outputln("Content-Type: binary/octet-stream");
+  //     outputln("Content-Location: " + tpDataSubset.projectPath() + "actualDurations.bin");
+  //     outputln();
+  //     outputln<ACTUALDURATIONSTYPE>(actualDurations);
+  //   }
 
-    tpDataSubset.flags_ = (tpDataSubset.nFlags_ = flags.size()) ? &tpDataSubset.flags_[0] : 0;
-    tpDataSubset.actualTimes_ = (tpDataSubset.nActualTimes_ = actualTimes.size()) ? &tpDataSubset.actualTimes_[0] : 0;    
-    tpDataSubset.actualDurations_ = (tpDataSubset.nActualDurations_ = actualDurations.size()) ? &tpDataSubset.actualDurations_[0] : 0;    
-    outputln(tpDataSubset.toXML());
-    //outputln();
-
-    if (flags.size() != 0) {
-      uint32_t numFlags = sdmDataObject_.dataStruct_.flags_.size();
-      if (numFlags!=0 && numFlags != flags.size()) {
-	ostringstream oss;
-	oss << "The number of values provided for 'flags' ("
-	    << flags.size()
-	    << "), is not equal to the number declared in the global header ("
-	    << numFlags << ").";
-	throw SDMDataObjectWriterException(oss.str());
-      }
-      outputln("--"+MIMEBOUNDARY_2);
-      outputln("Content-Type: binary/octet-stream");
-      outputln("Content-Location: " + tpDataSubset.projectPath() + "flags.bin");
-      outputln();
-      outputln<uint32_t>(flags);
-    }
-    
-    if (actualTimes.size() != 0) {
-      uint32_t numActualTimes = sdmDataObject_.dataStruct_.actualTimes_.size();
-      if (numActualTimes != 0 && numActualTimes != actualTimes.size()) {
-	ostringstream oss;
-	oss << "The number of values provided for 'actualTimes' ("
-	    << actualTimes.size()
-	    << "), is not equal to the number declared in the global header ("
-	    << numActualTimes << ").";
-	throw SDMDataObjectWriterException(oss.str());
-      }
-      outputln("--"+MIMEBOUNDARY_2);
-      outputln("Content-Type: binary/octet-stream");
-      outputln("Content-Location: " + tpDataSubset.projectPath() + "actualTimes.bin");
-
-      outputln();
-      outputln<ACTUALTIMESTYPE>(actualTimes);
-    }
-
-    if (actualDurations.size() != 0) {
-      uint32_t numActualDurations = sdmDataObject_.dataStruct_.actualDurations_.size();
-      if (numActualDurations != 0 && numActualDurations != actualDurations.size()) {
-	ostringstream oss;
-	oss << "The number of values provided for 'actualDurations' ("
-	    << actualDurations.size()
-	    << "), is not equal to the number declared in the global header ("
-	    << numActualDurations << ").";
-	throw SDMDataObjectWriterException(oss.str());
-      }
-      outputln("--"+MIMEBOUNDARY_2);
-      outputln("Content-Type: binary/octet-stream");
-      outputln("Content-Location: " + tpDataSubset.projectPath() + "actualDurations.bin");
-      outputln();
-      outputln<ACTUALDURATIONSTYPE>(actualDurations);
-    }
-
-    uint32_t numAutoData = sdmDataObject_.dataStruct_.autoData_.size();
-    if (numAutoData != 0 && numAutoData != autoData.size()) {
-      ostringstream oss;
-      oss << "The number of values provided for 'autoData' ("
-	  << autoData.size()
-	  << "), is not equal to the number declared in the global header ("
-	  << numAutoData << ").";
-      throw SDMDataObjectWriterException(oss.str());
-    }
-    outputln("--"+MIMEBOUNDARY_2);
-    outputln("Content-Type: binary/octet-stream");
-    outputln("Content-Location: " + tpDataSubset.projectPath() + "autoData.bin");
-    outputln();
-    outputln<float>(autoData);
-    outputln("--"+MIMEBOUNDARY_2+"--");
-  }
+  //   uint32_t numAutoData = sdmDataObject_.dataStruct_.autoData_.size();
+  //   if (numAutoData != 0 && numAutoData != autoData.size()) {
+  //     ostringstream oss;
+  //     oss << "The number of values provided for 'autoData' ("
+  // 	  << autoData.size()
+  // 	  << "), is not equal to the number declared in the global header ("
+  // 	  << numAutoData << ").";
+  //     throw SDMDataObjectWriterException(oss.str());
+  //   }
+  //   outputln("--"+MIMEBOUNDARY_2);
+  //   outputln("Content-Type: binary/octet-stream");
+  //   outputln("Content-Location: " + tpDataSubset.projectPath() + "autoData.bin");
+  //   outputln();
+  //   outputln<float>(autoData);
+  //   outputln("--"+MIMEBOUNDARY_2+"--");
+  // }
 
   void SDMDataObjectWriter::tpData(uint64_t startTime,
 				   const string& execBlockUID,
@@ -492,6 +456,157 @@ namespace asdmbinaries {
     outputln<float>(autoData);
     outputln("--"+MIMEBOUNDARY_2+"--");
   }
+
+  void SDMDataObjectWriter::tpDataHeader(uint64_t startTime,
+					 const string& execBlockUID,
+					 uint32_t execBlockNum,
+					 uint32_t scanNum,
+					 uint32_t subscanNum,
+					 uint32_t numAntenna,
+					 SDMDataObject::DataStruct& dataStruct) {
+    checkState(T_TPDATAHEADER, "tpDataHeader");
+
+    sdmDataObject_.valid_ = true;
+
+    sdmDataObject_.startTime_ = startTime;
+    sdmDataObject_.dataOID_ = uid_;
+    sdmDataObject_.title_ = title_;
+    sdmDataObject_.dimensionality_ = 1;
+    sdmDataObject_.execBlockUID_ = execBlockUID;
+    sdmDataObject_.execBlockNum_ = execBlockNum;
+    sdmDataObject_.scanNum_ = scanNum;
+    sdmDataObject_.subscanNum_ = subscanNum;
+    sdmDataObject_.numAntenna_ = numAntenna;
+    sdmDataObject_.correlationMode_ = AUTO_ONLY;
+    sdmDataObject_.spectralResolutionType_ = BASEBAND_WIDE;
+    sdmDataObject_.processorType_ = RADIOMETER;
+    sdmDataObject_.dataStruct_ = dataStruct;
+
+    outputln("--"+MIMEBOUNDARY_1);
+    outputln("Content-Type: text/xml; charset=\"UTF-8\"");
+    outputln("Content-Transfer-Encoding: 8bit");    //outputln("Content-Location: " + sdmDataObject_.projectPath() + "desc.xml");
+    outputln("Content-Location: sdmDataHeader.xml");
+    outputln();
+
+    outputln(sdmDataObject_.toXML());
+  }
+
+  void SDMDataObjectWriter::tpAddIntegration(uint32_t integrationNum,
+                                             uint64_t time,
+                                             uint64_t interval,
+                                             const vector<FLAGSTYPE>& flags,
+                                             const vector<ACTUALTIMESTYPE>& actualTimes,
+                                             const vector<ACTUALDURATIONSTYPE>& actualDurations,
+                                             const vector<AUTODATATYPE>& autoData) {
+
+    checkState(T_ADDTPINTEGRATION, "tpAddIntegration");
+
+    SDMDataSubset sdmDataSubset(&sdmDataObject_);
+    sdmDataObject_.numTime_++;
+    sdmDataSubsetNum_++;
+
+    // integrationNum and subintegrationNum.
+    sdmDataSubset.integrationNum_    = integrationNum;
+    sdmDataSubset.subintegrationNum_ = 0;
+
+    // The time.
+    sdmDataSubset.time_ = time;
+
+    // The interval.
+    sdmDataSubset.interval_ = interval;
+
+    // Attachments size;
+    sdmDataSubset.nActualTimes_     = actualTimes.size();
+    sdmDataSubset.nActualDurations_ = actualDurations.size();
+    sdmDataSubset.nZeroLags_ = 0;
+    sdmDataSubset.nCrossData_ = 0;
+
+    sdmDataSubset.nFlags_   = flags.size();
+
+    sdmDataSubset.nAutoData_ = autoData.size();
+
+    outputln("--"+MIMEBOUNDARY_1);
+    outputln("Content-Type: Multipart/Related; boundary=\""+MIMEBOUNDARY_2+"\";type=\"text/xml\"");
+    outputln("Content-Description: Data and metadata subset");
+    outputln("--"+MIMEBOUNDARY_2);
+    outputln("Content-Type: text/xml; charset=\"UTF-8\"");
+    outputln("Content-Location: " + sdmDataSubset.projectPath() + "desc.xml");
+    outputln();
+    outputln(sdmDataSubset.toXML());
+
+    // Write flags, if any
+    if (flags.size() != 0) {
+      uint32_t numFlags = sdmDataObject_.dataStruct_.flags_.size();
+      if (numFlags !=0 && numFlags != flags.size()) {
+        ostringstream oss;
+        oss << "The number of values provided for 'flags' ("
+            << flags.size()
+            << "), is not equal to the number declared in the global header ("
+            << numFlags << ").";
+        throw SDMDataObjectWriterException(oss.str());
+      }
+      outputln("--"+MIMEBOUNDARY_2);
+      outputln("Content-Type: binary/octet-stream");
+      outputlnLocation("flags", sdmDataSubset);
+      outputln();
+      outputln<uint32_t>(flags);
+    }
+
+    // Write actual times, if any
+    if (actualTimes.size() != 0) {
+      uint32_t numActualTimes = sdmDataObject_.dataStruct_.actualTimes_.size();
+      if (numActualTimes != 0 && numActualTimes != actualTimes.size()) {
+        ostringstream oss;
+        oss << "The number of values provided for 'actualTimes' ("
+            << actualTimes.size()
+            << "), is not equal to the number declared in the global header ("
+            << numActualTimes << ").";
+        throw SDMDataObjectWriterException(oss.str());
+      }
+      outputln("--"+MIMEBOUNDARY_2);
+      outputln("Content-Type: binary/octet-stream");
+      outputlnLocation("actualTimes", sdmDataSubset);
+      outputln();
+      outputln<ACTUALTIMESTYPE>(actualTimes);
+    }
+
+    // Write actual durations, if any
+    if (actualDurations.size() != 0) {
+      uint32_t numActualDurations = sdmDataObject_.dataStruct_.actualDurations_.size();
+      if (numActualDurations != 0 && numActualDurations != actualDurations.size()) {
+        ostringstream oss;
+        oss << "The number of values provided for 'actualDurations' ("
+            << actualDurations.size()
+            << "), is not equal to the number declared in the global header ("
+            << numActualDurations << ").";
+        throw SDMDataObjectWriterException(oss.str());
+      }
+      outputln("--"+MIMEBOUNDARY_2);
+      outputln("Content-Type: binary/octet-stream");
+      outputlnLocation("actualDurations", sdmDataSubset);
+      outputln();
+      outputln<ACTUALDURATIONSTYPE>(actualDurations);
+    }
+
+    // Write auto data
+    uint32_t numAutoData = sdmDataObject_.dataStruct_.autoData_.size();
+    if (numAutoData != autoData.size()) {
+      ostringstream oss;
+      oss << "The number of values provided for 'autoData' ("
+          << autoData.size()
+          << "), is not equal to the number declared in the global header ("
+          << numAutoData << ").";
+      throw SDMDataObjectWriterException(oss.str());
+    }
+    outputln("--"+MIMEBOUNDARY_2);
+    outputln("Content-Type: binary/octet-stream");
+    outputlnLocation("autoData", sdmDataSubset);
+    outputln();
+    outputln<float>(autoData);
+
+    outputln("--"+MIMEBOUNDARY_2+"--");
+  }
+
 
   void SDMDataObjectWriter::wvrData (const string & 		execBlockUID,
 				     uint32_t 		execBlockNum,
@@ -1054,92 +1169,106 @@ namespace asdmbinaries {
     return true;
   }
 
-  void SDMDataObjectWriter:: checkState(Transitions t, const string& methodName) {
+void SDMDataObjectWriter:: checkState(Transitions t, const string& methodName) {
     switch(currentState_) {
     case START:
-      if (t == T_TPDATA ) { 
-	currentState_ = S_TPDATA;
-	return;
-      }
-      else if (t == T_TPDATAHEADER ) {
-	currentState_ = S_TPDATAHEADER;
-	return;
-      }
-      else if (t == T_CORRDATAHEADER) {
-	currentState_ = S_CORRDATAHEADER;
-	return;
-      }
-      else if (t == T_WVRDATA) {
-	currentState_ = S_WVRDATA;
-	  return;
-      }
-      break;
+        if (t == T_TPDATA ) { 
+            currentState_ = S_TPDATA;
+            return;
+        }
+        else if (t == T_TPDATAHEADER ) {
+            currentState_ = S_TPDATAHEADER;
+            return;
+        }
+        else if (t == T_CORRDATAHEADER) {
+            currentState_ = S_CORRDATAHEADER;
+            return;
+        }
+        else if (t == T_WVRDATA) {
+            currentState_ = S_WVRDATA;
+            return;
+        }
+        break;
 
     case S_TPDATA:
-      if (t == T_DONE) {
-	currentState_ = END;
-	return;
-      }
-      break;
+        if (t == T_DONE) {
+            currentState_ = END;
+            return;
+        }
+        break;
 
       
     case S_TPDATAHEADER:
-      if (t == T_ADDTPSUBSCAN) {
-	currentState_ = S_ADDTPSUBSCAN;
-	return;
-      }
-      break;
+        if (t == T_ADDTPSUBSCAN) {
+            currentState_ = S_ADDTPSUBSCAN;
+            return;
+        }
+        else if (t == T_ADDTPINTEGRATION) {
+            currentState_ = S_ADDTPINTEGRATION;
+            return;
+        }
+        break;
+
+    case S_ADDTPINTEGRATION:
+        if (t == T_ADDTPINTEGRATION) {
+            return;
+        }
+        else if ( t == T_DONE ) {
+            currentState_ = END;
+            return;
+        }
+        break;
 
     case S_ADDTPSUBSCAN:
-      if ( t == T_DONE ) {
-	currentState_ = END;
-	return;
-      }
-      break;
+        if ( t == T_DONE ) {
+            currentState_ = END;
+            return;
+        }
+        break;
 
     case S_WVRDATA:
-      if (t == T_DONE) {
-	currentState_ = END;
-	return;
-      }
-      break;
+        if (t == T_DONE) {
+            currentState_ = END;
+            return;
+        }
+        break;
 
     case S_CORRDATAHEADER:
-      if (t == T_ADDINTEGRATION) {
-	currentState_ = S_ADDINTEGRATION;
-	return;
-      }
-      else if (t == T_ADDSUBINTEGRATION) {
-	currentState_ = S_ADDSUBINTEGRATION;
-	return;
-      }
-      break;
+        if (t == T_ADDINTEGRATION) {
+            currentState_ = S_ADDINTEGRATION;
+            return;
+        }
+        else if (t == T_ADDSUBINTEGRATION) {
+            currentState_ = S_ADDSUBINTEGRATION;
+            return;
+        }
+        break;
       
     case S_ADDINTEGRATION:
-      if (t == T_ADDINTEGRATION)
-	return;
-      else if (t == T_DONE) {
-	currentState_ = END;
-	return;
-      }
-      break;
+        if (t == T_ADDINTEGRATION)
+            return;
+        else if (t == T_DONE) {
+            currentState_ = END;
+            return;
+        }
+        break;
 
       
     case S_ADDSUBINTEGRATION:
-      if (t == T_ADDSUBINTEGRATION)
-	return;
-      else if (t == T_DONE) {
-	currentState_ = END;
-	return;
-      }
-      break;
+        if (t == T_ADDSUBINTEGRATION)
+            return;
+        else if (t == T_DONE) {
+            currentState_ = END;
+            return;
+        }
+        break;
 
 	
     case END:
-      break;
+        break;
     }
     throw SDMDataObjectWriterException("Invalid call of method '" + methodName + "'");
-  }
+}
 }
 
 
