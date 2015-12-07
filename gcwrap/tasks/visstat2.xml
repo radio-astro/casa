@@ -140,7 +140,7 @@
 
 
 
-      <param type="string" name="reportingaxis">
+      <param type="string" name="reportingaxes">
         <description>Which reporting axis to use (ddid, field, integration)</description>
         <value type="string">ddid</value>
         <allowed kind="enum">
