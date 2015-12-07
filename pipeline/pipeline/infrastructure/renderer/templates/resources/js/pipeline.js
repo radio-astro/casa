@@ -1049,7 +1049,8 @@ UTILS = (function() {
         var o = $(v);
         var dataKeys = ["vis", "spw", "ant", "pol", "field", "scan", "baseband", "tsys_spw", "intent", "type"];
 
-        for (var key of dataKeys) {
+        for (var i=0; i < dataKeys.length; i++) {
+            var key = dataKeys[i];
             var data = o.data(key);
             if (typeof data !== "undefined") {
                 // select2 elements are given ID of select-X, where X is the selector type
