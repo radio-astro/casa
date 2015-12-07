@@ -159,7 +159,7 @@ Compute a clean map.
        <value>none</value>
        <allowed kind="enum">
          <value>none</value>
-         <value>centralquarter</value>
+         <value>centralregion</value>
          <value>psf</value>
          <value>psfiter</value>
          <value>manual</value>
@@ -290,7 +290,7 @@ Compute a clean map.
     <when param="hm_masking">
       <equals value="none">
       </equals>
-      <equals value="centralquarter">
+      <equals value="centralregion">
       </equals>
       <equals value="psf">
       </equals>
@@ -502,9 +502,9 @@ restoringbeam -- Gaussina sestoring beam for clean, \'\' for default
     default: \'\'
     example:
 
-hm_masking -- Clean masking mode. Options are 'none', 'centralquarter'
+hm_masking -- Clean masking mode. Options are 'none', 'centralregion'
     'psf', 'psfiter' and 'manual'
-    default: 'centralquarter'
+    default: 'centralregion'
     example: 'manual'
 
 mask -- Image mask for hm_masking manual mode. User responsible for

@@ -12,6 +12,7 @@ import pipeline.infrastructure.pipelineqa as pipelineqa
 from pipeline.infrastructure import casa_tasks
 from .basecleansequence import BaseCleanSequence
 from .imagecentrethresholdsequence import ImageCentreThresholdSequence
+from .manualmaskthresholdsequence import ManualMaskThresholdSequence
 from .iterativesequence import IterativeSequence
 from .iterativesequence2 import IterativeSequence2
 from . import cleanbase
@@ -36,7 +37,7 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
     # Add extra getters and setters here
     spwsel = basetask.property_with_default('spwsel', {})
     hm_cleaning = basetask.property_with_default('hm_cleaning', 'rms')
-    hm_masking = basetask.property_with_default('hm_masking', 'centralquarter')
+    hm_masking = basetask.property_with_default('hm_masking', 'centralregion')
     masklimit = basetask.property_with_default('masklimit', 4.0)
     tlimit = basetask.property_with_default('tlimit', 2.0)
     subcontms = basetask.property_with_default('subcontms', False)
@@ -200,16 +201,27 @@ class Tclean(cleanbase.CleanBase):
         LOG.info('Sensitivity estimate from CASA %s', sensitivity)
 
         # Choose cleaning method.
-        if inputs.hm_masking == 'centralquarter':
+        if inputs.hm_masking in ('centralregion', 'manual'):
+            # Determine threshold
             if inputs.hm_cleaning == 'manual':
                 threshold = inputs.threshold
             elif inputs.hm_cleaning == 'sensitivity':
                 raise Exception, 'sensitivity threshold not yet implemented'
             elif inputs.hm_cleaning == 'rms':
                 threshold = '%sJy' % (inputs.tlimit * sensitivity)
-            sequence_manager = ImageCentreThresholdSequence(
-                gridder = inputs.gridder, threshold=threshold,
-                sensitivity = sensitivity, niter=inputs.niter)
+
+            # Choose sequence manager
+            # Central mask based on PB
+            if inputs.hm_masking == 'centralregion':
+                sequence_manager = ImageCentreThresholdSequence(
+                    gridder = inputs.gridder, threshold=threshold,
+                    sensitivity = sensitivity, niter=inputs.niter)
+            # Manually supplied mask
+            else:
+                sequence_manager = ManualMaskThresholdSequence(
+                    mask=inputs.mask,
+                    gridder = inputs.gridder, threshold=threshold,
+                    sensitivity = sensitivity, niter=inputs.niter)
 
         elif inputs.hm_masking == 'psfiter':
             sequence_manager = IterativeSequence(
