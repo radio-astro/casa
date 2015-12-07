@@ -50,7 +50,7 @@
 
 #include <casa/namespace.h>
 
-int main(int argc, char* argv[]) {
+int main(int /*argc*/, char* /*argv*/[]) {
   try {
     Input inputs(1);
     /*    inputs.create ("input", "/home/bonzo4/rmarson/file1.dat",
