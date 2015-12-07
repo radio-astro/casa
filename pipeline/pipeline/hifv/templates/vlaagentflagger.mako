@@ -1,4 +1,5 @@
 <%!
+rsc_path = ""
 import os
 import types
 
