@@ -98,7 +98,7 @@ namespace casa {
     *dataPtr = False;
   }
 
-  void AsdmFlagColumn::getSliceBoolV (uInt rowNumber, const Slicer & /* slicer */,
+  void AsdmFlagColumn::getSliceBoolV (uInt /*rowNumber*/, const Slicer & /* slicer */,
                                        Array<casa::Bool> * destination)
   {
     * destination = False;
@@ -115,7 +115,7 @@ namespace casa {
   {
     *dataPtr = float(1);
   }
-  void AsdmWeightColumn::getSlicefloatV (uInt rowNumber, const Slicer & /* slicer */,
+    void AsdmWeightColumn::getSlicefloatV (uInt /*rowNumber*/, const Slicer & /* slicer */,
                                          Array<casa::Float> * destination)
   {
     * destination = 1.0f;
@@ -133,7 +133,7 @@ namespace casa {
     *dataPtr = float(1);
   }
 
-  void AsdmSigmaColumn::getSlicefloatV (uInt rowNumber, const Slicer & /* slicer */,
+  void AsdmSigmaColumn::getSlicefloatV (uInt /*rowNumber*/, const Slicer & /* slicer */,
                                         Array<casa::Float> * destination)
   {
     * destination = 1.0f;
