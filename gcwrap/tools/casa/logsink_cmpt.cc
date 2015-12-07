@@ -27,7 +27,10 @@
 #include <casa/BasicMath/Random.h>
 #include <casa/System/Aipsrc.h>
 
+#ifdef _OPENMP
 #include <omp.h>
+#endif
+
 #include <stdio.h>
 
 using namespace std;
@@ -354,8 +357,10 @@ logsink::omp_num_thread()
 {
 	Int num_thread(0);
 
+#ifdef _OPENMP
 	#pragma omp parallel reduction( + : num_thread )
 	num_thread = num_thread + 1;
+#endif
 
 	return num_thread;
 }
