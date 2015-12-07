@@ -1139,7 +1139,8 @@ int main (int argC, char * argV[]) {
 
   // Regular expressions for the correct sequences of axes in the flags in the case of ALMA data.
   boost::regex ALMACorrelatorFlagsAxesRegex("(BAL )?ANT (BAB )?(POL )?");
-  boost::regex ALMARadiometerFlagsAxesRegex("(TIM ANT )?(BAB BIN POL )?");
+  boost::regex ALMARadiometerPackedFlagsAxesRegex("(TIM ANT )?(BAB BIN POL )?");
+  boost::regex ALMARadiometerFlagsAxesRegex("(ANT )?(BAB BIN POL )?");
 
 
   ConfigDescriptionTable &	cfgT = ds.getConfigDescription();
@@ -1375,25 +1376,44 @@ int main (int argC, char * argV[]) {
 	  ostringstream oss;
 	  hack06 hack06_instance(oss);
 	  for_each(flagsAxes.begin(), flagsAxes.end(), hack06_instance);
-	  // Check the validity of the sequence of flags axes.
-	  if (!regex_match(oss.str(), ALMARadiometerFlagsAxesRegex)) 
-	    throw ProcessFlagsException("'" + oss.str() + "' is not a valid sequence of flags axes for an ALMA radiometer.");
-	  
-	  unsigned int numTime = sdo.numTime();
-	  const FLAGSTYPE * flags_p;
-	  unsigned int numFlags = sdo.tpDataSubset().flags(flags_p);
-	  pair<unsigned int, const FLAGSTYPE *> flagsPair(numFlags, flags_p);
-	  MSFlagAccumulator<char> accumulator( numTime, antennas.size(), numDD);
 
-	  if (numTime != numIntegration) {
-	    infostream << "(the number of integrations actually read in the BDF (numTime = " << numTime << ") is different from the value announced in the Main table (numIntegration = " << numIntegration
-		       << "). Using " << numTime << ")";
+	  // Check the validity of the sequence of flags axes (depending on the fact that data are packed or not).
+	  if (sdo.hasPackedData()) {
+	    if (!regex_match(oss.str(), ALMARadiometerPackedFlagsAxesRegex)) 
+	      throw ProcessFlagsException("'" + oss.str() + "' is not a valid sequence of flags axes for an ALMA radiometer.");
+	  }
+	  else {
+	    if (!regex_match(oss.str(), ALMARadiometerFlagsAxesRegex)) 
+	      throw ProcessFlagsException("'" + oss.str() + "' is not a valid sequence of flags axes for an ALMA radiometer.");
+	  }
+	  unsigned int numIntegrations = sdo.hasPackedData() ? sdo.numTime() : sdo.sdmDataSubsets().size();
+	  MSFlagAccumulator<char> accumulator( numIntegrations, antennas.size(), numDD);
+
+
+	  if (numIntegrations != numIntegration) {
+	    infostream << "(the number of integrations actually read in the BDF (numIntegrations = " << numIntegrations << ") is different from the value announced in the Main table (numIntegration = " << numIntegration
+		       << "). Using " << numIntegrations << ")";
 	  }
 
-	  traverseALMARadiometerFlagsAxes(numTime, sdo.dataStruct().basebands(), antennas, dataDescriptions, flagsPair, flagEval, accumulator);
+	  const FLAGSTYPE *	flags_p	 = NULL;
+	  unsigned int		numFlags = 0;
+
+	  if (sdo.hasPackedData()) {
+	    numFlags = sdo.tpDataSubset().flags(flags_p);
+	    pair<unsigned int, const FLAGSTYPE *> flagsPair(numFlags, flags_p);
+	    traverseALMARadiometerFlagsAxes(numIntegrations, sdo.dataStruct().basebands(), antennas, dataDescriptions, flagsPair, flagEval, accumulator);
+	  }
+	  else {
+	    const vector<SDMDataSubset>& sdmDataSubsets = sdo.sdmDataSubsets();
+	    for (unsigned int iIntegration = 0; iIntegration < numIntegrations; iIntegration++) {
+	      numFlags = sdmDataSubsets[iIntegration].flags(flags_p);
+	      pair<unsigned int, const FLAGSTYPE *> flagsPair(numFlags, flags_p);
+	      traverseALMARadiometerFlagsAxes(1, sdo.dataStruct().basebands(), antennas, dataDescriptions, flagsPair, flagEval, accumulator);
+	    }
+	  }
 	  infostream.str("");
 	  
-	  infostream << "ASDM Main row #" << mainRowIndex[iASDMIndex] << " - " << numTime  << "/" << numTime << " integrations done so far.";
+	  infostream << "ASDM Main row #" << mainRowIndex[iASDMIndex] << " - " << numIntegrations  << "/" << numIntegrations << " integrations done so far.";
 	  info(infostream.str());
 
 	  sdor.done();
@@ -1429,6 +1449,18 @@ int main (int argC, char * argV[]) {
       infostream.str("");
       infostream << e.getMessage() << " , bdf path = " << bdfPath << ", processor type = " << CProcessorType::toString(pt) << endl;
       info(infostream.str());
+    }
+    catch (SDMDataObjectParserException e) {
+      info(infostream.str());
+      infostream.str("");
+      infostream << e.getMessage() << endl;
+      info(infostream.str());      
+    }
+    catch (SDMDataObjectException e) {
+      info(infostream.str());
+      infostream.str("");
+      infostream << e.getMessage() << endl;
+      info(infostream.str());      
     }
     catch (SDMDataObjectStreamReaderException e) {
       info(infostream.str());
