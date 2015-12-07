@@ -66,15 +66,15 @@ class T2_4MDetailsAgentFlaggerRenderer(basetemplates.T2_4MDetailsDefaultRenderer
         agents = ['before', 'online', 'qa0', 'template', 'autocorr', 'shadow', 
                   'intents', 'edgespw']
 
-        flagplots = [self.flagplot(r, pipeline_context) for r in result]
-        # plot object may be None if plot failed to generate
-        flagplots = [f for f in flagplots if f is not None]
+        flagplots = {os.path.basename(r.inputs['vis']): self.flagplot(r, pipeline_context)
+                     for r in result}
 
-        mako_context.update({'flags'     : flag_totals,
-                             'agents'    : agents,
-                             'dirname'   : weblog_dir,
-                             'flagcmds'  : flagcmd_files,
-                             'flagplots' : flagplots})
+        mako_context.update({
+            'flags': flag_totals,
+            'agents': agents,
+            'dirname': weblog_dir,
+            'flagcmds': flagcmd_files,
+            'flagplots': flagplots})
 
     def flagplot(self, result, context):
         plotter = flagging.PlotAntsChart(context, result)
