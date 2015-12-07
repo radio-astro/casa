@@ -60,9 +60,9 @@ def get_plot(plots, field, spw, i, colname):
                         % for pol in pols:
                             %if info_dict.get((field,str(spw),pol,'frequency')) is not None:
                             <tr>
-                                <td rowspan="9">${field}</td>
-                                <td rowspan="9">${spw}</td>
-                                <td rowspan="9">${pol}</td>
+                                <td rowspan="11">${field}</td>
+                                <td rowspan="11">${spw}</td>
+                                <td rowspan="11">${pol}</td>
 								<th>frequency</th>
 								<td>${casatools.quanta.tos(info_dict[(field,str(spw),pol,'frequency')], 4)}</td>
                                 <% 
@@ -78,7 +78,7 @@ def get_plot(plots, field, spw, i, colname):
                                     with renderer.get_file() as fileobj:
                                         fileobj.write(renderer.render())
                                     %>
-                                <td rowspan="8">
+                                <td rowspan="10">
 										<a class="replace" href="${os.path.relpath(renderer.path, pcontext.report_dir)}">
 										  <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
 										       title="Iteration ${final_iter}: image"
@@ -114,7 +114,7 @@ def get_plot(plots, field, spw, i, colname):
                             <tr>
                                             <th>image maximum </th>
                                 %if info_dict.get((field,str(spw),pol,'max')) is not None:
-                                            <td>${'%.2e %s' % (info_dict[(field,str(spw),pol,'max')],
+                                            <td>${'%.2g %s' % (info_dict[(field,str(spw),pol,'max')],
                                                 info_dict[(field,str(spw),pol,'brightness unit')])}</td>
                                 %else:
                                             <td>-</td>
@@ -123,7 +123,25 @@ def get_plot(plots, field, spw, i, colname):
                             <tr>
                                 <th>residual rms</th>
                                 %if info_dict.get((field,str(spw),pol,'masked rms')) is not None:
-                                            <td>${'%.2e %s' % (info_dict[(field,str(spw),pol,'masked rms')],
+                                            <td>${'%.2g %s' % (info_dict[(field,str(spw),pol,'masked rms')],
+                                                info_dict[(field,str(spw),pol,'brightness unit')])}</td>
+                                %else:
+                                            <td>-</td>
+                                %endif
+                            </tr>
+                            <tr>
+                                <th>theoretical noise</th>
+                                %if info_dict.get((field,str(spw),pol,'sensitivity')) is not None:
+                                            <td>${'%.2g %s' % (info_dict[(field,str(spw),pol,'sensitivity')],
+                                                info_dict[(field,str(spw),pol,'brightness unit')])}</td>
+                                %else:
+                                            <td>-</td>
+                                %endif
+                            </tr>
+                            <tr>
+                                <th>cleaning threshold</th>
+                                %if info_dict.get((field,str(spw),pol,'threshold')) is not None:
+                                            <td>${'%.2g %s' % (casatools.quanta.convert(info_dict[(field,str(spw),pol,'threshold')], info_dict[(field,str(spw),pol,'brightness unit')])['value'],
                                                 info_dict[(field,str(spw),pol,'brightness unit')])}</td>
                                 %else:
                                             <td>-</td>
