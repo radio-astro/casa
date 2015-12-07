@@ -913,6 +913,21 @@ class MPICommandClient:
                                         'signal':'process_control'},
                                        check_response=True)   
             
+        
+        def set_omp_num_threads(self,omp_max_threads,target_server):
+            
+            casalog_call_origin = "MPICommandClient::set_omp_num_threads"    
+            
+            if self.__life_cycle_state == 0:
+                casalog.post("Services not started","WARN",casalog_call_origin)
+                return       
+            elif self.__life_cycle_state == 2:
+                casalog.post("MPICommandClient life cycle finalized","WARN",casalog_call_origin)
+                return
+            
+            self.push_command_request("self.omp_set_num_threads(%s)" % str(omp_max_threads),
+                                      block=True,target_server=target_server)
+            
             
                       
             
