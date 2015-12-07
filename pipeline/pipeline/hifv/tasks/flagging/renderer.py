@@ -71,15 +71,15 @@ class T2_4MDetailsVLAAgentFlaggerRenderer(basetemplates.T2_4MDetailsDefaultRende
         agents = ['before', 'anos', 'shadow', 'intents', 'online', 'template', 'autocorr', 
                    'edgespw', 'clip', 'quack', 'baseband']
 
-        flagplots = [self.flagplot(r, context) for r in result]
-        # plot object may be None if plot failed to generate
-        flagplots = [f for f in flagplots if f is not None]
+        flagplots = {os.path.basename(r.inputs['vis']): self.flagplot(r, context)
+                     for r in result}
 
-        ctx.update({'flags'     : flag_totals,
-                    'agents'    : agents,
-                    'dirname'   : weblog_dir,
-                    'flagcmds'  : flagcmd_files,
-                    'flagplots' : flagplots})
+        ctx.update({
+            'flags'     : flag_totals,
+            'agents'    : agents,
+            'dirname'   : weblog_dir,
+            'flagcmds'  : flagcmd_files,
+            'flagplots' : flagplots})
 
         return ctx
 
