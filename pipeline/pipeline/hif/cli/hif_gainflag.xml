@@ -33,7 +33,7 @@ Flag antennas with deviant gain
 
     <param type="bool" name="flag_mediandeviant">
         <description>True to flag antennas with deviant median gains</description>
-        <value>True</value>
+        <value>False</value>
     </param>
 
     <param type="double" name="fmeddev_limit" subparam="true">
@@ -147,7 +147,7 @@ intent -- The data intent to be checked for antennas with deviant gains. The
 
 flag_mediandeviant -- True to flag antennas with deviant median gain, calculated as:
                       abs( median(antenna) - median(all antennas) ) / MAD(all antennas) > fmeddev_limit
-    default True
+    default False
 
 fmeddev_limit -- Flag antennas with \'mediandeviant\' metric larger than fmeddev_limit
     default 3.0
@@ -182,13 +182,13 @@ results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
 
 Description
 Deviant antennas are detected by analysis of a view showing their calibration 
-gains. Two flagging metrics are evaluated (mediandeviant, rmsdeviant) and 
-a flagging view is created for each metric. Each view is a list of 2D images 
-with axes 'Time' and 'Antenna'; there is one image for each spectral window and 
-intent. If either of the flagging metrics exceeds their corresponding limits 
-(fmeddev_limit, frmsdev_limit) for a given antenna in a given spw, then all data
-for that antenna and for all spws within the same baseband will be flagged with 
-a flagcmd.
+gains. Two flagging metrics are available (mediandeviant, rmsdeviant) and 
+a flagging view is created for each metric that has been enabled. Each view is 
+a list of 2D images with axes 'Time' and 'Antenna'; there is one image for each 
+spectral window and intent. If either of the flagging metrics exceeds their 
+corresponding limits (fmeddev_limit, frmsdev_limit) for a given antenna in a 
+given spw, then all data for that antenna and for all spws within the same 
+baseband will be flagged with a flagcmd.
 
 The following heuristics are used for the two flagging metrics:
 

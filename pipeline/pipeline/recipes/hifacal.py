@@ -30,6 +30,7 @@ from hifa_tsysflag_cli import hifa_tsysflag_cli as hifa_tsysflag
 from hifa_antpos_cli import hifa_antpos_cli as hifa_antpos
 from hifa_wvrgcalflag_cli import hifa_wvrgcalflag_cli as hifa_wvrgcalflag
 from hif_lowgainflag_cli import hif_lowgainflag_cli as hif_lowgainflag
+from hif_gainflag_cli import hif_gainflag_cli as hif_gainflag
 from hif_setjy_cli import hif_setjy_cli as hif_setjy
 from hif_bandpass_cli import hif_bandpass_cli as hif_bandpass
 from hifa_bandpass_cli import hifa_bandpass_cli as hifa_bandpass
@@ -57,19 +58,19 @@ def hifacal (vislist, importonly=True, pipelinemode='automatic', interactive=Tru
     casatools.post_to_log ("Beginning pipeline run ...")
 
     try:
-	# Initialize the pipeline
+        # Initialize the pipeline
         h_init()
 
         # Load the data
         hifa_importdata (vis=vislist, dbservice=False, pipelinemode=pipelinemode)
-	if importonly:
-	   raise Exception(IMPORT_ONLY)
+        if importonly:
+            raise Exception(IMPORT_ONLY)
     
         # Flag known bad data
         hifa_flagdata (pipelinemode=pipelinemode)
     
         # Flag lines in solar system calibrators and compute the default
-	# reference spectral window map.
+        # reference spectral window map.
         hifa_fluxcalflag (pipelinemode=pipelinemode)
 
         # Flag bad channels in the raw data
@@ -92,6 +93,9 @@ def hifacal (vislist, importonly=True, pipelinemode='automatic', interactive=Tru
     
         # Flag antennas with low gain
         hif_lowgainflag (pipelinemode=pipelinemode)
+
+        # Flag antennas with deviant gain
+        hif_gainflag (pipelinemode=pipelinemode)
     
         # Set the flux calibrator model
         hif_setjy (pipelinemode=pipelinemode)
@@ -125,23 +129,22 @@ def hifacal (vislist, importonly=True, pipelinemode='automatic', interactive=Tru
         hif_exportdata(pipelinemode=pipelinemode)
     
     except Exception, e:
-	if str(e) == IMPORT_ONLY:
-	    casatools.post_to_log ("Exiting after import step ...",
-	        echo_to_screen=echo_to_screen)
-	else:
-	    casatools.post_to_log ("Error in procedure execution ...",
-	        echo_to_screen=echo_to_screen)
-	    errstr = traceback.format_exc()
-	    casatools.post_to_log (errstr, echo_to_screen=echo_to_screen)
+        if str(e) == IMPORT_ONLY:
+            casatools.post_to_log ("Exiting after import step ...",
+                echo_to_screen=echo_to_screen)
+        else:
+            casatools.post_to_log ("Error in procedure execution ...",
+                echo_to_screen=echo_to_screen)
+            errstr = traceback.format_exc()
+            casatools.post_to_log (errstr, echo_to_screen=echo_to_screen)
 
     finally:
 
         # Save the results to the context
         h_save()
 
-	casatools.post_to_log ("Terminating procedure execution ...",
-	    echo_to_screen=echo_to_screen)
+        casatools.post_to_log ("Terminating procedure execution ...",
+            echo_to_screen=echo_to_screen)
 
-	# Restore previous state
-	__rethrow_casa_exceptions = def_rethrow
-
+        # Restore previous state
+        __rethrow_casa_exceptions = def_rethrow

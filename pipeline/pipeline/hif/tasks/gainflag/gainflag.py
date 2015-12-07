@@ -85,7 +85,7 @@ class GainflagInputs(commoncalinputs.CommonCalibrationInputs):
     @flag_mediandeviant.setter
     def flag_mediandeviant(self, value):
         if value is None:
-            value = True
+            value = False
         self._flag_mediandeviant = value
 
     @property
