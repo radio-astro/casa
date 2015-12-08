@@ -1110,7 +1110,7 @@ set( QT4_FOUND TRUE CACHE BOOL "Was QT4 found?" )
 casa_find( QWT
   VERSION 5.1.1
   INCLUDES qwt_global.h
-  INCLUDES_SUFFIXES qwt qwt-qt4
+  INCLUDES_SUFFIXES qwt qwt-qt4 qwt5
   PREFIX_HINTS
     ${QWT_ROOT_DIR}
     ${casa_packages}/qwt-5.2.0
