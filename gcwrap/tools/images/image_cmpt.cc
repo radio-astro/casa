@@ -1916,30 +1916,40 @@ bool image::fft(
 }
 
 ::casac::record*
-image::findsources(const int nMax, const double cutoff,
-		const variant& region, const ::casac::variant& vmask,
-		const bool point, const int width, const bool absFind) {
-	::casac::record *rstat = 0;
+image::findsources(
+	int nMax, double cutoff, const variant& region,
+	const variant& vmask, bool point, int width, bool absFind
+) {
 	try {
 		_log << _ORIGIN;
 		if (detached()) {
-			return rstat;
+			return nullptr;
 		}
-
+		ThrowIf(_imageC, "This application supports only real-valued images");
 		SHARED_PTR<Record> Region(_getRegion(region, False));
-		String mask = vmask.toString();
-		if (mask == "[]")
+		auto mask = vmask.toString();
+		if (mask == "[]") {
 			mask = "";
-
-		Record listOut = _image->findsources(nMax, cutoff, *Region, mask,
-				point, width, absFind);
-		rstat = fromRecord(listOut);
-	} catch (const AipsError& x) {
+		}
+		ImageSourceFinder<Float> sf(_imageF, Region.get(), mask);
+		sf.setCutoff(cutoff);
+		sf.setDoPoint(point);
+		sf.setWidth(width);
+		sf.setAbsFind(absFind);
+		auto cl = sf.findSources(nMax);
+		Record rec;
+		casa::String error;
+		ThrowIf (
+			! cl.toRecord(error, rec), "Failed to convert component list to record: " + error
+		);
+		return fromRecord(rec);
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
+	return nullptr;
 }
 
 record* image::fitprofile(const string& box, const variant& region,
@@ -2756,10 +2766,11 @@ variant* image::getregion(
 	}
 }
 
-::casac::record*
-image::getslice(const std::vector<double>& x, const std::vector<double>& y,
-		const std::vector<int>& axes, const std::vector<int>& coord,
-		int npts, const std::string& method) {
+::casac::record* image::getslice(
+	const std::vector<double>& x, const std::vector<double>& y,
+	const std::vector<int>& axes, const std::vector<int>& coord,
+	int npts, const std::string& method
+) {
 	try {
 		_log << _ORIGIN;
 		if (detached()) {
@@ -2780,11 +2791,6 @@ image::getslice(const std::vector<double>& x, const std::vector<double>& y,
 			}
 		}
 		unique_ptr<Record> outRec;
-		/*
-		Record *outRec = _image->getslice(Vector<Double> (x),
-				Vector<Double> (y), Vector<Int> (axes), Vector<Int> (ncoord),
-				npts, method);
-		*/
 		if (_imageF) {
 			outRec.reset(
 				PixelValueManipulator<Float>::getSlice(
