@@ -96,10 +96,10 @@ Flag antennas with deviant gain
         </when>
 
         <when param="flag_mediandeviant">
+            <equals type="bool" value="False">
+            </equals>
             <equals type="bool" value="True">
                 <default param="fmeddev_limit"><value type="float">3.0</value></default>
-            </equals>
-            <equals type="bool" value="False">
             </equals>
         </when>
 
