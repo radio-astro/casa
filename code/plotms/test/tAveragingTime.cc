@@ -78,7 +78,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
 	bool ok = app.save(format);
 	cout << "tAveragingTime test 1 - result of save=" << ok << endl;
-	bool okOutput = tUtil::checkFile( outFile, 300000, 325000, -1 );
+	bool okOutput = tUtil::checkFile( outFile, 300000, 335000, -1 );
 	cout << "tAveragingTime test 1 - result of first saved file check="<< okOutput << endl;
     bool test1 = ok && okOutput;
 
