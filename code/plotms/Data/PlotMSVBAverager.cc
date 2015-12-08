@@ -246,8 +246,10 @@ void PlotMSVBAverager::initialize(vi::VisBuffer2& vb)
 
   if (prtlev()>2) cout << "  PMSVBA::initialize()" << endl;
 
-  // Assign main meta info 
-  avBuf_p->copy(vb, False);
+  // Assign main meta info
+  vi::VisBufferComponents2 components = vi::VisBufferComponents2::these(
+    vi::FieldId, vi::ObservationId, vi::SpectralWindows, vi::StateId);
+  avBuf_p->copyComponents(vb, components, True, False);
   avBuf_p->setFieldId(vb.fieldId());
   avBuf_p->setSpectralWindows(vb.spectralWindows());
   avBuf_p->setObservationId(vb.observationId());
