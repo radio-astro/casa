@@ -110,6 +110,11 @@ public:
       skyCoupling_[i] = skyCoupling_[i] * factor;
     }
   }
+  /** Multiplier of one  Sky coupling channel  */
+  inline void multiplySkyCouplingChannel(unsigned int ichan, double factor)
+  {
+    skyCoupling_[ichan] = skyCoupling_[ichan] * factor;
+  }
 
   /** Setter of the Sky coupling vector to a single Sky Coupling value */
   inline void setSkyCoupling(double factor)

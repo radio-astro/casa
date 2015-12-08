@@ -290,14 +290,15 @@ void RefractiveIndexProfile::mkRefractiveIndexProfile()
   //    static const double abun_D=0.000298444;
   //    static const double o2_mixing_ratio=0.2092;
   //    static const double mmol_h2o=18.005059688;  //   20*0.0020439+19*(0.0003750+2*0.000298444)+18*(1-0.0020439-0.0003750-2*0.000298444)
-  static const double pi = 3.141592654;
 
-  static bool first = true;
+  // static bool first = true;   // [-Wunused_but_set_variable]
 
   double abun_O3, abun_CO, abun_N2O, abun_NO2, abun_SO2;
-  double wvt, wv, t;
-  double nu, nu2, nu_pi; 
-  // double width;s
+  double wvt, wv;
+  // double t; // [-Wunused_but_set_variable]
+  double nu;
+  // double nu2, nu_pi; // [-Wunused_but_set_variable]
+  // double width;
   // unsigned int npoints;
   RefractiveIndex atm;
   //    double sumAbsO3Lines1, sumAbsCOLines1, sumAbsN2OLines1, sumAbsNO2Lines1, sumAbsSO2Lines1; 
@@ -396,14 +397,14 @@ void RefractiveIndexProfile::mkRefractiveIndexProfile()
 
     // cout << "nc =" << nc << " nu=" << nu << " width=" << width << " GHz    npoints=" << npoints << endl;
 
-    nu2 = nu * nu;
-    nu_pi = nu / pi;
+    // nu2 = nu * nu;      // [-Wunused_but_set_variable]
+    // nu_pi = nu / M_PI;    // [-Wunused_but_set_variable] 
 
     for(unsigned int j = 0; j < numLayer_; j++) {
 
       wv = v_layerWaterVapor_[j] * 1000.0; // se multiplica por 10**3 por cuestión de unidades en las rutinas fortran.
       wvt = wv * v_layerTemperature_[j] / 217.0; // v_layerWaterVapor_[j] está en kg/m**3
-      t = v_layerTemperature_[j] / 300.0;
+      // t = v_layerTemperature_[j] / 300.0;    // [-Wunused_but_set_variable] 
 
 
       // cout <<"ATMRefractiveIndexProfile: " << v_layerTemperature_[j] << " K " << v_layerPressure_[j] << " mb "  << nu << " GHz " << endl;
@@ -499,7 +500,7 @@ void RefractiveIndexProfile::mkRefractiveIndexProfile()
       }
     }
 
-    if(vv_N_H2OLinesPtr_.size() == 0) first = true;
+    // if(vv_N_H2OLinesPtr_.size() == 0) first = true;  // [-Wunused_but_set_variable]
 
     if(vv_N_H2OLinesPtr_.size() < v_chanFreq_.size()) {
       vv_N_H2OLinesPtr_.push_back(v_N_H2OLinesPtr);
@@ -526,7 +527,7 @@ void RefractiveIndexProfile::mkRefractiveIndexProfile()
   }
 
   newBasicParam_ = false;
-  first = false;
+  // first = false;  // [-Wunused_but_set_variable]
 }
 
 Opacity RefractiveIndexProfile::getDryOpacity()

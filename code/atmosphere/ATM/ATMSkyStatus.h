@@ -1320,6 +1320,14 @@ public:
   void updateSkyCoupling_fromWVR(vector<WVRMeasurement> &RadiometerData,
                                  unsigned int n,
                                  unsigned int m);
+  /** Performs a sky coupling retrieval using WVR measurement sets between n and m
+   (obtains the ratio between the current sky coupling of a single WVR channel (ichan) and the best fit that
+   results from WVR measurement sets between n and m, keeping the other parameters unchanged)
+   and uses the result to update the Skycoupling of than WVR channel */
+  void updateSkyCouplingChannel_fromWVR(vector<WVRMeasurement> &RadiometerData,
+					unsigned int ichan,
+					unsigned int n,
+					unsigned int m);
   void updateSkyCoupling_fromWVR(vector<WVRMeasurement> &RadiometerData,
                                  unsigned int n)
   {
@@ -1382,6 +1390,16 @@ public:
         + 1);
   }
 
+  /*
+    return the rms of the residuals for one channel ichan, as a function of the multiplicative 
+    factor par_fit to this channel's coupling efficiency.
+   */
+  double sigmaSkyCouplingChannelRetrieval_fromWVR(double par_fit,
+						  const WaterVaporRadiometer &wvr,
+						  vector<WVRMeasurement> &RadiometerData,
+						  unsigned int ichan,
+						  unsigned int n,
+						  unsigned int m);
   Temperature getWVRAverageSigmaTskyFit(const vector<WVRMeasurement> &RadiometerData,
                                         unsigned int n,
                                         unsigned int m);
@@ -1390,7 +1408,16 @@ public:
   {
     return getWVRAverageSigmaTskyFit(RadiometerData, n, n + 1);
   }
-
+  /* 
+     return the rms of fit residual for a single channel, in a measurement
+  */
+  Temperature getWVRSigmaChannelTskyFit(const vector<WVRMeasurement> &RadiometerData,
+					unsigned int ichan,
+					unsigned int n,
+					unsigned int m);
+  /*
+    return the rms of water vapor retrieved values in a measurnment (n to m) 
+  */
   double getSigmaTransmissionFit(unsigned int spwId,
                                  const vector<double> &v_transmission,
                                  double airm,

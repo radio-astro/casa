@@ -318,7 +318,8 @@ ATM_NAMESPACE_BEGIN
       }else{
 	newfreq=nu-(width/2.0)+(width/(n-1))*i;
       }
-      average=average+mkSpecificRefractivity(species,tt,pp,eh2o,nu);
+      // average=average+mkSpecificRefractivity(species,tt,pp,eh2o,nu);
+      average=average+mkSpecificRefractivity(species,tt,pp,eh2o,newfreq);  // 2015-11-30 replace nu with newfreq
     }
     complex<double> averagen(real(average)/n,imag(average)/n);
     return averagen;

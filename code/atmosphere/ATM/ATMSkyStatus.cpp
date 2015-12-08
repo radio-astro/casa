@@ -2281,11 +2281,11 @@ double SkyStatus::mkSkyCouplingRetrieval_fromTEBB(unsigned int spwId,
                                                   const Temperature &tspill)
 {
 
-  double pfit_wh2o;
+  // double pfit_wh2o;  // [-Wunused_but_set_variable]
   double pfit_skycoupling;
   double pfit_skycoupling_b;
   double deltaa = 0.02;
-  double sig_fit = -999.0;
+  // double sig_fit = -999.0;  // [-Wunused_but_set_variable]
   double eps = 0.01;
   vector<Temperature> tebb_fit;
   tebb_fit.reserve(measuredSkyTEBB.size()); // allows resizing
@@ -2305,13 +2305,13 @@ double SkyStatus::mkSkyCouplingRetrieval_fromTEBB(unsigned int spwId,
   double res;
   Length wh2o_retrieved(-999.0, "mm");
   Length werr(-888, "mm");
-  double sigma_fit_transm0;
+  // double sigma_fit_transm0; // [-Wunused_but_set_variable]
   Length sigma_wh2o;
 
   num = 0;
 
   flamda = 0.001;
-  pfit_wh2o = (getUserWH2O().get("mm")) / (getGroundWH2O().get("mm"));
+  // pfit_wh2o = (getUserWH2O().get("mm")) / (getGroundWH2O().get("mm")); // [-Wunused_but_set_variable]
   pfit_skycoupling = 1.0;
 
   for(unsigned int kite = 0; kite < niter; kite++) {
@@ -2376,7 +2376,7 @@ double SkyStatus::mkSkyCouplingRetrieval_fromTEBB(unsigned int spwId,
     }
 
     flamda = flamda / 10.0;
-    sig_fit = sqrt(chisqr);
+    // sig_fit = sqrt(chisqr); // [-Wunused_but_set_variable]
     pfit_skycoupling = pfit_skycoupling_b;
 
     if(fabs(sqrt(chisq1) - sqrt(chisqr)) < eps) {
@@ -2386,7 +2386,7 @@ double SkyStatus::mkSkyCouplingRetrieval_fromTEBB(unsigned int spwId,
   }
 
   wh2o_retrieved = werr; // Extra error code, fit not reached after 20 iterations
-  sigma_fit_transm0 = -888.0; // Extra error code, fit not reached after 20 iterations
+  //sigma_fit_transm0 = -888.0; // Extra error code, fit not reached after 20 iterations [-Wunused_but_set_variable]
   sigma_wh2o = werr; // Extra error code, fit not reached after 20 iterations
 
   salir: return pfit_skycoupling * skycoupling;
@@ -2449,7 +2449,7 @@ double SkyStatus::RT(double pfit_wh2o,
 
   double radiance;
   double singlefreq;
-  double chanwidth;
+  // double chanwidth;  // [-Wunused_but_set_variable]
   double tebb;
   double h_div_k = 0.04799274551; /* plank=6.6262e-34,boltz=1.3806E-23 */
   double kv;
@@ -2458,7 +2458,7 @@ double SkyStatus::RT(double pfit_wh2o,
   double ratioWater = pfit_wh2o;
 
   singlefreq = getChanFreq(spwid, nc).get("GHz");
-  chanwidth = getChanWidth(spwid, nc).get("GHz");
+  // chanwidth = getChanWidth(spwid, nc).get("GHz"); // [-Wunused_but_set_variable]
   // cout << "Chan freq. =" << singlefreq << " GHz" << endl;
   // cout << "Chan width =" << chanwidth << " GHz" << endl;
 
@@ -2481,7 +2481,7 @@ double SkyStatus::RT(double pfit_wh2o,
   radiance = skycoupling * (radiance + (1.0 / (exp(h_div_k * singlefreq / tbgr)- 1.0)) * exp(-kv * airm)) + (1.0 / (exp(h_div_k * singlefreq / tspill)- 1.0)) * (1 - skycoupling);
     
   tebb = tebb + h_div_k * singlefreq / log(1 + (1 / radiance));
-    
+  // tebb = tebb+  h_div_k * singlefreq * radiance;  
   // cout << "singlefreq = " << singlefreq <<  " total opacity = " << kv << " tebb = " << tebb << endl;
 
   return tebb;
@@ -2578,6 +2578,26 @@ Temperature SkyStatus::getWVRAverageSigmaTskyFit(const vector<WVRMeasurement> &R
     sigma = sqrt(sigma / (m - n));
     sigmaT = Temperature(sigma, "K");
   }
+  return sigmaT;
+}
+Temperature SkyStatus::getWVRSigmaChannelTskyFit(const vector<WVRMeasurement> &RadiometerData,
+						 unsigned int ichan,
+                                                 unsigned int n,
+                                                 unsigned int m)
+{
+  double sigma = 0.0;
+  double dtr;
+  Temperature sigmaT;
+  if(m <= n) {
+    return Temperature(-999, "K");
+  }
+  for(unsigned int i = n; i < m; i++) {
+    dtr = RadiometerData[i].getmeasuredSkyBrightness()[ichan].get("K")
+      -RadiometerData[i].getfittedSkyBrightness()[ichan].get("K");
+    sigma = sigma + dtr * dtr;
+  }
+  sigma = sqrt(sigma / (m - n));
+  sigmaT = Temperature(sigma, "K");
   return sigmaT;
 }
 
@@ -2794,7 +2814,7 @@ void SkyStatus::updateSkyCoupling_fromWVR(vector<WVRMeasurement> &RadiometerData
 {
   double pfit;
   double deltaa = 0.02;
-  double sig_fit = -999.0;
+  // double sig_fit = -999.0; // [-Wunused_but_set_variable]
   double eps = 0.01;
 
   unsigned int num;
@@ -2831,7 +2851,7 @@ void SkyStatus::updateSkyCoupling_fromWVR(vector<WVRMeasurement> &RadiometerData
     beta = 0.0;
     alpha = 0.0;
 
-    if (pfit*maxCoupling>1)
+    if (pfit*maxCoupling>1.5)
       pfit = 1.-deltaa;
     f1 = sigmaSkyCouplingRetrieval_fromWVR(pfit,
                                            waterVaporRadiometer_,
@@ -2860,7 +2880,7 @@ void SkyStatus::updateSkyCoupling_fromWVR(vector<WVRMeasurement> &RadiometerData
     if(pfit_b < 0.0) {
       pfit_b = 0.9 * pfit;
     }
-    if (pfit_b*maxCoupling>1)
+    if (pfit_b*maxCoupling>1.5)
       pfit_b = 1;
     
     res = sigmaSkyCouplingRetrieval_fromWVR(pfit_b,
@@ -2868,6 +2888,111 @@ void SkyStatus::updateSkyCoupling_fromWVR(vector<WVRMeasurement> &RadiometerData
                                             RadiometerData,
                                             n,
                                             m);
+    chisqr = chisqr + res * res;
+
+    if(fabs(chisq1 - chisqr) > 0.001) {
+      if(chisq1 < chisqr) {
+        flamda = flamda * 10.0;
+        goto adjust;
+      }
+    }
+
+    flamda = flamda / 10.0;
+    // sig_fit = sqrt(chisqr); // [-Wunused_but_set_variable]
+    pfit = pfit_b;
+
+    if(fabs(sqrt(chisq1) - sqrt(chisqr)) < eps) {
+      goto salir;
+    }
+
+  }
+
+  salir: waterVaporRadiometer_.multiplySkyCoupling(pfit);
+
+  //    cout << "pfit=" << pfit << "  sky_coupling: " << waterVaporRadiometer_.getSkyCoupling()[0]   << endl;
+
+
+}
+void SkyStatus::updateSkyCouplingChannel_fromWVR(vector<WVRMeasurement> &RadiometerData,
+						 unsigned int ichan,
+						 unsigned int n,
+						 unsigned int m)
+{
+  double pfit;
+  double deltaa = 0.02;
+  double sig_fit = -999.0;
+  double eps = 0.01;
+
+  unsigned int num;
+  double flamda;
+  unsigned int niter = 20;
+  double alpha;
+  double beta;
+  double array;
+  double f1;
+  double psave;
+  double f2;
+  double deriv;
+  double chisq1;
+  double chisqr;
+  double pfit_b;
+  double res;
+
+  num = 0;
+
+  flamda = 0.001;
+  pfit = 1.00;
+
+  // This value is used to assure that the found skycoupling does not exceed 1
+  double maxCoupling = waterVaporRadiometer_.getSkyCoupling()[ichan];
+
+
+  for(unsigned int kite = 0; kite < niter; kite++) {
+
+    num = num + 1;
+    beta = 0.0;
+    alpha = 0.0;
+
+    if (pfit*maxCoupling>1)
+      pfit = 1.-deltaa;
+    f1 = sigmaSkyCouplingChannelRetrieval_fromWVR(pfit,
+						  waterVaporRadiometer_,
+						  RadiometerData,
+						  ichan,
+						  n,
+						  m);
+    psave = pfit;
+    pfit = pfit + deltaa;
+    f2 = sigmaSkyCouplingChannelRetrieval_fromWVR(pfit,
+						  waterVaporRadiometer_,
+						  RadiometerData,
+						  ichan,
+						  n,
+						  m);
+    deriv = (f2 - f1) / deltaa;
+    pfit = psave;
+    beta = beta - f1 * deriv;
+    alpha = alpha + deriv * deriv;
+    chisq1 = f1 * f1;
+
+    adjust: array = 1.0 / (1.0 + flamda);
+    pfit_b = pfit;
+    pfit_b = pfit_b + beta * array / alpha;
+
+    chisqr = 0.;
+
+    if(pfit_b < 0.0) {
+      pfit_b = 0.9 * pfit;
+    }
+    if (pfit_b*maxCoupling>1)
+      pfit_b = 1/maxCoupling;
+    
+    res = sigmaSkyCouplingChannelRetrieval_fromWVR(pfit_b,
+						   waterVaporRadiometer_,
+						   RadiometerData,
+						   ichan,
+						   n,
+						   m);
     chisqr = chisqr + res * res;
 
     if(fabs(chisq1 - chisqr) > 0.001) {
@@ -2887,7 +3012,7 @@ void SkyStatus::updateSkyCoupling_fromWVR(vector<WVRMeasurement> &RadiometerData
 
   }
 
-  salir: waterVaporRadiometer_.multiplySkyCoupling(pfit);
+ salir: waterVaporRadiometer_.multiplySkyCouplingChannel(ichan, pfit);
 
   //    cout << "pfit=" << pfit << "  sky_coupling: " << waterVaporRadiometer_.getSkyCoupling()[0]   << endl;
 
@@ -2926,6 +3051,43 @@ double SkyStatus::sigmaSkyCouplingRetrieval_fromWVR(double par_fit,
   }
 
   return getWVRAverageSigmaTskyFit(RadiometerData, n, m).get("K");
+
+}
+
+double SkyStatus::sigmaSkyCouplingChannelRetrieval_fromWVR(double par_fit,
+							   const WaterVaporRadiometer &wvr,
+							   vector<WVRMeasurement> &RadiometerData,
+							   unsigned int ichan,
+							   unsigned int n,
+							   unsigned int m)
+{
+
+  vector<double> skyCoupling = wvr.getSkyCoupling();
+
+  //for(unsigned int i = 0; i < skyCoupling.size(); i++) {
+  skyCoupling[ichan] = skyCoupling[ichan] * par_fit;
+    //}
+
+  WVRMeasurement RadiometerData_withRetrieval;
+
+  for(unsigned int i = n; i < m; i++) {
+
+    RadiometerData_withRetrieval
+        = mkWaterVaporRetrieval_fromWVR(RadiometerData[i].getmeasuredSkyBrightness(),
+                                        wvr.getIdChannels(),
+                                        skyCoupling,
+                                        wvr.getsignalGain(),
+                                        wvr.getSpilloverTemperature(),
+                                        RadiometerData[i].getElevation());
+
+    RadiometerData[i].setretrievedWaterVaporColumn(RadiometerData_withRetrieval.getretrievedWaterVaporColumn());
+    RadiometerData[i].setfittedSkyBrightness(RadiometerData_withRetrieval.getfittedSkyBrightness());
+    RadiometerData[i].setSigmaFit(RadiometerData_withRetrieval.getSigmaFit());
+
+  }
+
+  return getWVRAverageSigmaTskyFit(RadiometerData, n, m).get("K");
+  // return getWVRSigmaChannelTskyFit(RadiometerData, ichan, n, m).get("K");
 
 }
 

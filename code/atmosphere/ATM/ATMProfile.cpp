@@ -243,7 +243,7 @@ AtmProfile::AtmProfile(const vector<Length> &v_layerThickness,
   unsigned int nL9 = v_layerSO2.size();
 
   if(nL1 == nL2 && nL2 == nL3 && nL3 == nL4 && nL4 == nL5 && nL5 == nL6 && nL6
-      == nL7 == nL8 == nL9) {
+      == nL7 && nL7 == nL8 && nL8 == nL9) {
     numLayer_ = nL1;
     for(unsigned int n = 0; n < numLayer_; n++) {
       v_layerO3_.push_back(v_layerO3[n].get("m**-3"));
@@ -284,7 +284,7 @@ AtmProfile::AtmProfile(const vector<Length> &v_layerThickness,
   unsigned int nL9 = v_layerSO2.size();
 
   if(nL1 == nL2 && nL2 == nL3 && nL3 == nL4 && nL4 == nL5 && nL5 == nL6 && nL6
-      == nL7 == nL8 == nL9) {
+      == nL7 && nL7 == nL8 && nL8 == nL9) {
     numLayer_ = nL1;
     for(unsigned int n = 0; n < numLayer_; n++) {
       v_layerO3_.push_back(v_layerO3[n].get("m**-3"));
@@ -364,7 +364,7 @@ void AtmProfile::setBasicAtmosphericParameterThresholds(const Length &altitudeTh
 
 void AtmProfile::initBasicAtmosphericParameterThresholds()
 {
-  altitudeThreshold_ = Length(0.1,"m");
+  altitudeThreshold_ = Length(1.0,"m");
   groundPressureThreshold_ =  Pressure(99.,"Pa");  // DB 2014-03-06 : Choose 99 Pascal instead of 100 Pascal because the threshold must be lower than the value of delta_pressure used in getAverageDispersiveDryPathLength_GroundPressureDerivative()  
   groundTemperatureThreshold_ =  Temperature(0.3,"K");
   tropoLapseRateThreshold_ = 0.01;
@@ -1621,18 +1621,20 @@ unsigned int AtmProfile::mkAtmProfile()
   double rt = 6371.2E+0; // Earth radius in km
   double g0 = 9.80665E+0; // Earth gravity at the surface  (m/s**2)
 
-  static bool first = true;
+  // static bool first = true;  // [-Wunused_but_set_variable]
 
   unsigned int i;
   unsigned int i0;
   unsigned int j;
   unsigned int k;
-  double wh2o, wgr0, wh2o0;
+  // double wh2o, wh2o0;  // [-Wunused_but_set_variable]
+  double wgr0;
   double g = g0;
   double www, altura;
   // double abun_ozono, abun_n2o, abun_co;
   NumberDensity ozono, n2o, co;
-  double wgr, dh, humrel;
+  double wgr, dh; 
+// double humrel; // [-Wunused_but_set_variable]  
   // bool   errcode;
 
   //int    nmaxLayers=40;  // FV peut etre devrions nos avoir un garde-fou au cas ou le nb de couches serait stupidement trop grand
@@ -1668,8 +1670,8 @@ unsigned int AtmProfile::mkAtmProfile()
 
   // Absolute Humidity in gr/m**3 at altitude alti
   wgr0 = wgr * exp(alti / h0); // h0 in km ==> wgr0 would be the absolute humidity (gr/m**3) at sea level
-  wh2o0 = wgr0 * h0; // wh2o0 is the zenith column of water above sea level (kgr/m**2 or mm)
-  wh2o = wh2o0 * exp(-alti / h0); // wh2o is the zenith column of water above alti (kgr/m**2 or mm)
+  // wh2o0 = wgr0 * h0; // wh2o0 is the zenith column of water above sea level (kgr/m**2 or mm) // [-Wunused_but_set_variable]
+  // wh2o = wh2o0 * exp(-alti / h0); // wh2o is the zenith column of water above alti (kgr/m**2 or mm) // [-Wunused_but_set_variable]
 
   v_layerWaterVapor.push_back(wgr); // in gr/m**3
 
@@ -1782,9 +1784,10 @@ unsigned int AtmProfile::mkAtmProfile()
         v_layerWaterVapor[i] = wgr0 * exp(-v_layerThickness[i] / (1000.0 * h0)); //r[i] in kgr/(m**2*1000m) [gr/m**3]
       }
 
-      humrel = rwat_inv(Temperature(v_layerTemperature[i], "K"),
-                        MassDensity(v_layerWaterVapor[i], "gm**-3"),
-                        Pressure(v_layerPressure[i], "mb")).get("%");
+//       humrel = rwat_inv(Temperature(v_layerTemperature[i], "K"),    
+//                         MassDensity(v_layerWaterVapor[i], "gm**-3"),
+//                         Pressure(v_layerPressure[i], "mb")).get("%");
+
 
       /*	cout << "layer " << i
        << " P " << v_layerPressure[i] << " prLimit " << prLimit
@@ -1930,7 +1933,8 @@ unsigned int AtmProfile::mkAtmProfile()
   v_layerNO2_ = v_layerNO2_aux;
   v_layerSO2_ = v_layerSO2_aux;
 
-  first = false; // ?????
+  // first = false; // ?????    [-Wunused_but_set_variable]
+
   /* cout << " " << endl;
    cout << "v_layerPressure_.size() " << v_layerPressure_.size() << " P_ground=" << P_ground << endl;
    cout << "v_layerTemperature_.size() " << v_layerTemperature_.size() << endl;
