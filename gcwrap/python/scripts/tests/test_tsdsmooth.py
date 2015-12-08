@@ -378,9 +378,71 @@ class tsdsmooth_test_weight(tsdsmooth_test_base):
     def test_tsdsmooth_weight_gauss02(self):
         """test_tsdsmooth_weight_gauss02 --- gaussian smoothing (kwidth 3)"""
         self.run_test(kwidth=3)
-   
+
+class tsdsmooth_test_boxcar(tsdsmooth_test_base):
+    """
+    Unit test for checking boxcar smoothing.
+
+    The input data (tsdsmooth_delta.ms) has data with the following features:
+      in row0, pol0: 1 at index 100, 0 elsewhere,
+      in row0, pol1: 1 at index 0 and 2047(i.e., at both ends), 0 elsewhere,
+      in row1, pol0: 1 at index 10 and 11, 0 elsewhere,
+      in row1, pol1: 0 throughout.
+    If input spectrum has delta-function-like feature, the
+    expected output spectrum will be smoothing kernel itself.
+    As for the data at [row0, pol0], the output data will be: 
+      kwidth==1 -> spec[100] = 1
+      kwidth==2 -> spec[100,101] = 1/2 (=0.5)
+      kwidth==3 -> spec[99,100,101] = 1/3 (=0.333...)
+      kwidth==4 -> spec[99,100,101,102] = 1/4 (=0.25)
+      kwidth==5 -> spec[98,99,100,101,102] = 1/5 (=0.2)
+      and so on.
+    """
+    
+    infile = 'tsdsmooth_delta.ms'
+    datacolumn = 'float_data'
+    centers = {'00': [100], '01': [0,2047], '10': [10,11], '11':[]}
+
+    def _getLeftWidth(self, kwidth):
+        assert(0 < kwidth)
+        return (2-kwidth)/2
+
+    def _getRightWidth(self, kwidth):
+        assert(0 < kwidth)
+        return kwidth/2
+    
+    def _checkResult(self, spec, kwidth, centers, tol=5.0e-06):
+        sys.stdout.write('testing kernel_width = '+str(kwidth)+'...')
+        for i in range(len(spec)):
+            count = 0
+            for j in range(len(centers)):
+                lidx = centers[j] + self._getLeftWidth(kwidth)
+                ridx = centers[j] + self._getRightWidth(kwidth)
+                if (lidx <= i) and (i <= ridx): count += 1
+            value = count/float(kwidth)
+            self.assertTrue(((spec[i] - value) < tol), msg='Failed.')
+        sys.stdout.write('OK.\n')
+    
+    def setUp(self):
+        super(tsdsmooth_test_boxcar, self).setUp()
+        
+    def test000(self):
+        # testing kwidth from 1 to 5.
+        for kwidth in range(1,6):
+            result = tsdsmooth(infile=self.infile, outfile=self.outfile,
+                               datacolumn=self.datacolumn, overwrite=True,
+                               kernel='boxcar', kwidth = kwidth)
+            with sdutil.tbmanager(self.outfile) as tb:
+                for irow in range(tb.nrows()):
+                    spec = tb.getcell(self.datacolumn.upper(), irow)
+                    for ipol in range(len(spec)):
+                        center = self.centers[str(irow)+str(ipol)]
+                        self._checkResult(spec[ipol], kwidth, center)
+
+        
 def suite():
     return [tsdsmooth_test_fail, tsdsmooth_test_complex,
-            tsdsmooth_test_float, tsdsmooth_test_weight]
+            tsdsmooth_test_float, tsdsmooth_test_weight,
+            tsdsmooth_test_boxcar]
 
 
