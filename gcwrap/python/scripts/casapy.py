@@ -4,6 +4,7 @@ if os.environ.has_key('LD_PRELOAD'):
 import sys
 import time
 import signal
+import filecmp
 import traceback # To pretty-print tracebacks
 
 
@@ -1047,6 +1048,25 @@ def __set_default_parameters(b):
                 if((subkey[j] != 'value') & (subkey[j] != 'notvalue')):
                     myf[subkey[j]]=subdict[0][subkey[j]]
 
+def backupoldfile(thefile=''):
+    import copy
+    if(thefile==''):
+        return 
+    outpathdir = os.path.realpath(os.path.dirname(thefile))
+    outpathfile = outpathdir + os.path.sep + os.path.basename(thefile)
+    k=0
+    backupfile=outpathfile+'.'+str(k)
+    prevfile='--------'
+    while (os.path.exists(backupfile)):
+        k=k+1
+        prevfile=copy.copy(backupfile)
+        if(os.path.exists(prevfile)  and filecmp.cmp(outpathfile, prevfile)):
+        ##avoid making multiple copies of the same file
+            return
+        backupfile=outpathfile+'.'+str(k)
+    
+    os.system('cp '+outpathfile + ' ' + backupfile)
+
 def tput(taskname=None, outfile=''):
 	myf = sys._getframe(len(inspect.stack())-1).f_globals
 	if taskname == None: taskname = myf['taskname']
@@ -1094,6 +1114,9 @@ def saveinputs(taskname=None, outfile='', myparams=None, ipython_globals=None, s
         if taskname==None: taskname=myf['taskname']
         myf['taskname']=taskname
         if outfile=='': outfile=taskname+'.saved'
+        if(myf.has_key('__multibackup') and myf['__multibackup']):
+            backupoldfile(outfile)
+        
         ##make sure unfolded parameters get their default values
         myf['update_params'](func=myf['taskname'], printtext=False, ipython_globals=myf)
         ###
@@ -1166,7 +1189,6 @@ def saveinputs(taskname=None, outfile='', myparams=None, ipython_globals=None, s
             taskparameterfile.close()
     except TypeError, e:
         print "saveinputs --error: ", e
-
 def default(taskname=None):
     """ reset given task to its default values :
 
