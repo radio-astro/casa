@@ -24,9 +24,13 @@ template<class T> Record ImageMaxFitter<T>::fit(
 		this->_getLog().get(), axesSpec
 	);
 	*this->_getLog() << LogOrigin(getClass(), __func__);
-	ImageSourceFinder<T> sf(*subImage);
-	Double cutoff = 0.1;
-	auto sky = sf.findSourceInSky(*this->_getLog(), absPixel, cutoff, absFind, doPoint, width);
+	ImageSourceFinder<T> sf(subImage, nullptr, "");
+	sf.setCutoff(0.1);
+	sf.setAbsFind(absFind);
+	sf.setDoPoint(doPoint);
+	sf.setWidth(width);
+	//auto sky = sf.findSourceInSky(*this->_getLog(), absPixel, cutoff, absFind, doPoint, width);
+	auto sky = sf.findSourceInSky(absPixel);
 	// modify to show dropped degenerate axes values???
 	if (list) {
 		*this->_getLog() << LogIO::NORMAL << "Brightness     = " << sky.flux().value()

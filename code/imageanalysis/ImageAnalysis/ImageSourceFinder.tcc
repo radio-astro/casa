@@ -64,473 +64,486 @@
 #include <casa/iostream.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casa {
 
-template <class T>
-ImageSourceFinder<T>::ImageSourceFinder (const ImageInterface<T>& image)
-: pImage_p(image.cloneII())
-{}
+template <class T> ImageSourceFinder<T>::ImageSourceFinder(
+	SPCIIT image, const Record *const region, const String& mask
+) : ImageTask<T>(image, region, mask, "", False) {
+	this->_construct();
+}
 
 template <class T> 
-ImageSourceFinder<T>::ImageSourceFinder (const ImageSourceFinder<T> &other)
-: pImage_p(other.pImage_p->cloneII())
-{}
+ImageSourceFinder<T>::~ImageSourceFinder () {}
 
-template <class T> 
-ImageSourceFinder<T>::~ImageSourceFinder ()
-{ 
-   delete pImage_p;
+template <class T>
+ComponentList ImageSourceFinder<T>::findSources (Int nMax) {
+   return _findSources(nMax);
 }
 
 template <class T>
-ImageSourceFinder<T> &ImageSourceFinder<T>::operator=(const ImageSourceFinder<T> &other)
-{
-   if (this != &other) {
-      delete pImage_p;
-      pImage_p = other.pImage_p->cloneII();
-   }
-   return *this;
-}
+SkyComponent ImageSourceFinder<T>::findSourceInSky (
+	Vector<Double>& absPixel
+) {
 
+	// Find sky
+	Int dC;
+	String errorMessage;
+	Vector<Int> pixelAxes, worldAxes;
+	auto subImage = SubImageFactory<T>::createSubImageRO(
+		*this->_getImage(), *this->_getRegion(), this->_getMask(),
+		this->_getLog().get(), AxesSpecifier()
+	);
 
-template <class T> 
-Bool ImageSourceFinder<T>::setNewImage (const ImageInterface<T>& image)
-//
-// Reassign pointer.  
-//
-{
-   const ImageInterface<T>* pTemp;
-   pTemp = &image;
-   if (pTemp == 0) {
-      return False;
-   } else {
-      pImage_p = pTemp;
-      return True;
-   }
-}
-
-template <class T>
-ComponentList ImageSourceFinder<T>::findSources (LogIO& os, Int nMax, 
-                                                 Double cutoff, Bool absFind,
-                                                 Bool doPoint, Int width)
-{
-   return findSources(os, *pImage_p, nMax, cutoff, absFind, doPoint, width);
-}
-
-
-
-template <class T>
-SkyComponent ImageSourceFinder<T>::findSourceInSky (LogIO& os, Vector<Double>& absPixel,
-                                                    Double cutoff, Bool absFind, 
-                                                    Bool doPoint, Int width)
-{
-
-// Find sky
-   Int dC;
-   String errorMessage;
-   Vector<Int> pixelAxes, worldAxes;
-   CoordinateSystem cSys = pImage_p->coordinates();
-   if (!CoordinateUtil::findSky(errorMessage, dC, pixelAxes,
-                                worldAxes, cSys)) {
-     os << errorMessage << LogIO::EXCEPTION;
-   } 
-// Find maximum/minimum
+	CoordinateSystem cSys = subImage->coordinates();
+	ThrowIf(
+		!CoordinateUtil::findSky(
+			errorMessage, dC, pixelAxes,
+			worldAxes, cSys
+		), errorMessage
+	);
+	// Find maximum/minimum
    
-   LatticeStatistics<T> stats(*pImage_p, os, True);
-   IPosition minPos, maxPos;
-   if (!stats.getMinMaxPos(minPos, maxPos)) {
-      os << stats.errorMessage() << LogIO::EXCEPTION;
-   }
-// Make SubImage of plane of sky holding maximum or minimum
+	LatticeStatistics<T> stats(*subImage, *this->_getLog(), True);
+	IPosition minPos, maxPos;
+	ThrowIf(
+		!stats.getMinMaxPos(minPos, maxPos), stats.errorMessage()
+	);
+	// Make SubImage of plane of sky holding maximum or minimum
          
-   IPosition shape = pImage_p->shape();
-   const uInt nDim = pImage_p->ndim();
-// 
-   absPixel.resize(nDim);
-   IPosition blc;
-   IPosition trc;
-   if (absFind) {
-// Find positive only
+	IPosition shape = subImage->shape();
+	const uInt nDim = subImage->ndim();
 
-      blc = maxPos;
-      trc = maxPos;
-      for (uInt i=0; i<nDim; i++) absPixel(i) = maxPos(i);
-   } else {
-// Find positive or negative only
+	absPixel.resize(nDim);
+	IPosition blc;
+	IPosition trc;
+	if (_absFind) {
+		// Find positive only
+
+		blc = maxPos;
+		trc = maxPos;
+		for (uInt i=0; i<nDim; ++i) {
+			absPixel(i) = maxPos(i);
+		}
+	}
+	else {
+		// Find positive or negative only
+		auto valueMin = subImage->getAt(minPos);
+		auto valueMax = subImage->getAt(maxPos);
+		if (abs(valueMax) > abs(valueMin)) {
+			blc = maxPos;
+			trc = maxPos;
+			for (uInt i=0; i<nDim; ++i) {
+				absPixel(i) = maxPos(i);
+			}
+		}
+		else {
+			blc = minPos;
+			trc = minPos;
+			for (uInt i=0; i<nDim; ++i) {
+				absPixel(i) = maxPos(i);
+			}
+		}
+	}
+	blc(pixelAxes(0)) = 0;
+	blc(pixelAxes(1)) = 0;
+	trc(pixelAxes(0)) = shape(pixelAxes(0))-1;
+	trc(pixelAxes(1)) = shape(pixelAxes(1))-1;
+	IPosition inc(nDim,1);
+	LCBox::verify (blc, trc, inc, shape);
+	Slicer slicer(blc, trc, inc, Slicer::endIsLast);
+	AxesSpecifier axesSpec(False);   // drop degenerate
+	const SubImage<T> subImage2(*subImage, slicer, axesSpec);
+	SPCIIT myclone(subImage2.cloneII());
+	// Find one source
+
+	ImageSourceFinder<T> isf(myclone, nullptr, "");
+	isf.setCutoff(_cutoff);
+	isf.setAbsFind(_absFind);
+	isf.setDoPoint(_doPoint);
+	isf.setWidth(_width);
    
-      T valueMin = pImage_p->getAt(minPos);
-      T valueMax = pImage_p->getAt(maxPos);
-//
-      if (abs(valueMax) > abs(valueMin)) {
-         blc = maxPos;
-         trc = maxPos;
-         for (uInt i=0; i<nDim; i++) absPixel(i) = maxPos(i);
-      } else {
-         blc = minPos;
-         trc = minPos;
-         for (uInt i=0; i<nDim; i++) absPixel(i) = maxPos(i);
-      }
-   }
-   blc(pixelAxes(0)) = 0;
-   blc(pixelAxes(1)) = 0;
-   trc(pixelAxes(0)) = shape(pixelAxes(0))-1;
-   trc(pixelAxes(1)) = shape(pixelAxes(1))-1;
-   IPosition inc(nDim,1);
-   LCBox::verify (blc, trc, inc, shape);
-   Slicer slicer(blc, trc, inc, Slicer::endIsLast);
-   AxesSpecifier axesSpec(False);   // drop degenerate
-   const SubImage<T> subImage(*pImage_p, slicer, axesSpec);
-// Find one source
-
-   const uInt nMax = 1;
-   ComponentList list = findSources (os, subImage, nMax, cutoff, absFind, 
-                                     doPoint, width);
-   SkyComponent sky = list.component(0);
-   DirectionCoordinate dCoord = cSys.directionCoordinate(dC);
-   MDirection mDir = sky.shape().refDirection();
-   Vector<Double> dirPixel(2);
-   if (!dCoord.toPixel(dirPixel, mDir)) {
-     os << dCoord.errorMessage() << LogIO::EXCEPTION;
-   }
-   absPixel(pixelAxes(0)) = dirPixel(0);
-   absPixel(pixelAxes(1)) = dirPixel(1);
-   return sky;
+	ComponentList list = isf.findSources(1);
+	SkyComponent sky = list.component(0);
+	DirectionCoordinate dCoord = cSys.directionCoordinate(dC);
+	MDirection mDir = sky.shape().refDirection();
+	Vector<Double> dirPixel(2);
+	ThrowIf(
+		!dCoord.toPixel(dirPixel, mDir), dCoord.errorMessage()
+	);
+	absPixel(pixelAxes(0)) = dirPixel(0);
+	absPixel(pixelAxes(1)) = dirPixel(1);
+	return sky;
 }
 
-template <class T>
-ComponentList ImageSourceFinder<T>::findSources (LogIO& os, 
-                                                 const ImageInterface<T>& image,
-                                                 Int nMax, 
-                                                 Double cutoff, Bool absFind,
-                                                 Bool doPoint, Int width)
-{
-// Output
-   ComponentList listOut;
+template <class T> ComponentList ImageSourceFinder<T>::_findSources (
+	Int nMax
+) {
+	ComponentList listOut;
 
-// Make sure the Image is 2D and that it holds the sky.  Exception if not.
+	// Make sure the Image is 2D and that it holds the sky.  Exception if not.
 
-   const CoordinateSystem& cSys = image.coordinates();
-   Bool xIsLong = cSys.isDirectionAbscissaLongitude();
+	auto subImage = SubImageFactory<T>::createSubImageRO(
+		*this->_getImage(), *this->_getRegion(), this->_getMask(),
+   		this->_getLog().get(), AxesSpecifier(False)
+	);
 
-// Width support for fast source finder.
-// Can go to w/off/off2 = 5/2/1 but craps out if bigger.
+	const auto& cSys = subImage->coordinates();
+	Bool xIsLong = cSys.isDirectionAbscissaLongitude();
 
-   Int w = 3;
-   Int off = 1;
-   Int off2 = 0;
+	// Width support for fast source finder.
+	// Can go to w/off/off2 = 5/2/1 but craps out if bigger.
 
-// Results matrix
+	Int w = 3;
+	Int off = 1;
+	Int off2 = 0;
 
-   Matrix<typename NumericTraits<T>::PrecisionType> mat(w,w);
-   Matrix<typename NumericTraits<T>::PrecisionType> rs(nMax, 3);  // flux, x, y
-   rs = 0.0;
+	// Results matrix
+	Matrix<typename NumericTraits<T>::PrecisionType> mat(w,w);
+	Matrix<typename NumericTraits<T>::PrecisionType> rs(nMax, 3);  // flux, x, y
+	rs = 0.0;
     
-// Assume only positive
+	// Assume only positive
     
-   Double asign(1.0);
+	Double asign(1.0);
 
-// Fitting data
+	// Fitting data
  
-   LSQaips fit(6);
-   Vector<T> gel(6);
-   uInt rank;
-   Vector<T> sol(6);
+	LSQaips fit(6);
+	Vector<T> gel(6);
+	uInt rank;
+	Vector<T> sol(6);
    
-// Input data arrays
+	// Input data arrays
 
-   IPosition inShape = image.shape();
-   Int nx = inShape(0);
-   Int ny = inShape(1);
-   ThrowIf(
-		   ny <= w,
-		   "Need at least " + String::toString(w+1)
-   	   +" rows in image. Found only " + String::toString(ny)
-   );
-   IPosition inSliceShape(2, nx, 1);
-   Block<COWPtr<Array<T> > > inPtr(w);
-   Block<COWPtr<Array<Bool> > > inMaskPtr(w);
-   Matrix<Bool> inDone(w,nx);
-   inDone = False;
-   for (Int j=0; j<w; j++) {
-     inPtr[j] = COWPtr<Array<T> >(new Array<T>(inSliceShape));
-     inMaskPtr[j] = COWPtr<Array<Bool> >(new Array<Bool>(inSliceShape));
-   }
-// Read first w-1 lines 
+	IPosition inShape = subImage->shape();
+	Int nx = inShape(0);
+	Int ny = inShape(1);
+	ThrowIf(
+		ny <= w,
+		"Need at least " + String::toString(w+1)
+   	   	+ " rows in image. Found only " + String::toString(ny)
+	);
+	IPosition inSliceShape(2, nx, 1);
+	Block<COWPtr<Array<T> > > inPtr(w);
+	Block<COWPtr<Array<Bool> > > inMaskPtr(w);
+	Matrix<Bool> inDone(w,nx);
+	inDone = False;
+	for (Int j=0; j<w; ++j) {
+		inPtr[j] = COWPtr<Array<T> >(new Array<T>(inSliceShape));
+		inMaskPtr[j] = COWPtr<Array<Bool> >(new Array<Bool>(inSliceShape));
+	}
+	// Read first w-1 lines
+	Int inp = 0;
+	IPosition start(inShape);
+	start = 0;
+	IPosition pos(1,0);
+	cout << __FILE__ << " " << __LINE__ << endl;
 
-   Int inp = 0;
-   IPosition start(inShape);
-   start = 0;  
-   IPosition pos(1,0);
+	for (Int j=0; j<(w-1); ++j) {
+		cout << __FILE__ << " " << __LINE__ << endl;
+		cout << "start " << start << endl;
+		cout << "shape " << inSliceShape << endl;
+		subImage->getSlice(inPtr[inp+j], Slicer(start, inSliceShape), True);
+		cout << __FILE__ << " " << __LINE__ << endl;
 
-   for (Int j=0; j<(w-1); j++) {
-      //isRef = image.getSlice(inPtr[inp+j], Slicer(start, inSliceShape), True);
-      image.getSlice(inPtr[inp+j], Slicer(start, inSliceShape), True);
-      //isMaskRef = image.getMaskSlice(inMaskPtr[inp+j], Slicer(start, inSliceShape), True);
-      image.getMaskSlice(inMaskPtr[inp+j], Slicer(start, inSliceShape), True);
-      for (Int i=0; i<nx; i++) {
-         pos(0) = i;
-         inDone(inp+j, i) = inMaskPtr[inp+j].ref()(pos);
-      }
-      start(1) += 1;
-   }
-   
-// Loop through remaining lines  
+		subImage->getMaskSlice(inMaskPtr[inp+j], Slicer(start, inSliceShape), True);
+		cout << __FILE__ << " " << __LINE__ << endl;
+
+		for (Int i=0; i<nx; ++i) {
+			pos(0) = i;
+			inDone(inp+j, i) = inMaskPtr[inp+j].ref()(pos);
+		}
+		cout << __FILE__ << " " << __LINE__ << endl;
+
+		start(1) += 1;
+	}
+	cout << __FILE__ << " " << __LINE__ << endl;
+
+	// Loop through remaining lines
                
-   for (Int j=(w-1); j<ny; j++) {
-      inp++;
-      inp %= w;
-      //isRef = image.getSlice(inPtr[(inp+1)%w], Slicer(start, inSliceShape), True);
-      image.getSlice(inPtr[(inp+1)%w], Slicer(start, inSliceShape), True);
-      //isMaskRef = image.getMaskSlice(inMaskPtr[(inp+1)%w], Slicer(start, inSliceShape), True);
-      image.getMaskSlice(inMaskPtr[(inp+1)%w], Slicer(start, inSliceShape), True);
-      for (Int i=0; i<nx; i++) {
-         pos(0) = i;
-         inDone((inp+1)%w, i) = !(inMaskPtr[(inp+1)%w].ref()(pos));
-      }
-      start(1) += 1;
+	for (Int j=(w-1); j<ny; ++j) {
+		inp++;
+		inp %= w;
+		subImage->getSlice(inPtr[(inp+1)%w], Slicer(start, inSliceShape), True);
+		subImage->getMaskSlice(inMaskPtr[(inp+1)%w], Slicer(start, inSliceShape), True);
+		for (Int i=0; i<nx; ++i) {
+			pos(0) = i;
+			inDone((inp+1)%w, i) = !(inMaskPtr[(inp+1)%w].ref()(pos));
+		}
+		start(1) += 1;
          
-// All points
+		// All points
 
-      for (Int i=off; i<(nx-off); i++) {
-         if (inDone(inp, i)) continue;             // point already used or masked
-//
-         pos(0) = i;
-         typename NumericTraits<T>::PrecisionType v(inPtr[inp].ref()(pos));
-         if (absFind) {                            // find pos/neg
-            asign = (v<0) ? -1.0 : 1.0;
-            v = abs(v);
-         }  
-         if (v<0.8*cutoff*abs(rs(0,0)) ||
-             v<0.8*abs(rs(nMax-1,0))) continue;      // too small
+		for (Int i=off; i<(nx-off); ++i) {
+			if (inDone(inp, i)) {
+				continue;             // point already used or masked
+			}
+			pos(0) = i;
+			typename NumericTraits<T>::PrecisionType v(inPtr[inp].ref()(pos));
+			if (_absFind) {                            // find pos/neg
+				asign = (v<0) ? -1.0 : 1.0;
+				v = abs(v);
+			}
+			if (
+				v<0.8*_cutoff*abs(rs(0,0))
+				|| v<0.8*abs(rs(nMax-1,0))
+			) {
+				continue;      // too small
+			}
          
-// Make local data field
+			// Make local data field
             
-         Bool xt = False;
-         for (Int jj=-off; jj<(off+1); jj++) {
-            for (Int ii=-off; ii<(off+1); ii++) {
-               if (inDone((inp+jj+w)%w, i+ii)) {    // already used
-                  xt = True; 
-                  break;
-               }
-//
-               pos(0) = i+ii;
-               mat(jj+off,ii+off) = inPtr[(inp+jj+w)%w].ref()(pos);
-               mat(jj+off,ii+off) *= asign;            // make abs
-            }
-            if (xt) break;
-         }
-         if (xt) continue;
+			Bool xt = False;
+			for (Int jj=-off; jj<(off+1); ++jj) {
+				for (Int ii=-off; ii<(off+1); ++ii) {
+					if (inDone((inp+jj+w)%w, i+ii)) {    // already used
+						xt = True;
+						break;
+					}
+
+					pos(0) = i+ii;
+					mat(jj+off,ii+off) = inPtr[(inp+jj+w)%w].ref()(pos);
+					mat(jj+off,ii+off) *= asign;            // make abs
+				}
+				if (xt) {
+					break;
+				}
+			}
+			if (xt) {
+				continue;
+			}
                      
-// Test if a local peak
+			// Test if a local peak
 
-         if (v<=abs(mat(0+off2,1+off2)) || v<=abs(mat(2+off2,1+off2)) ||
-             v<=abs(mat(1+off2,0+off2)) || v<=abs(mat(1+off2,2+off2))) continue;
+			if (
+				v<=abs(mat(0+off2,1+off2)) || v<=abs(mat(2+off2,1+off2))
+				|| v<=abs(mat(1+off2,0+off2)) || v<=abs(mat(1+off2,2+off2))
+			) {
+				continue;
+			}
 
-// Solve general ellipsoid
+			// Solve general ellipsoid
     
-         Int k = 0;
-         fit.set(6);
-         for (Int jj=-off; jj<(off+1); jj++) {
-            for (Int ii=-off; ii<(off+1); ii++) {
-               gel(0)= 1;
-               gel(1) = jj;
-               gel(2) = ii;
-               gel(3) = jj*jj;
-               gel(4) = ii*ii;
-               gel(5) = jj*ii;
-               fit.makeNorm(gel.data(),
-			    1.0 - 0.5*(abs(ii)+abs(jj)) + 0.25*abs(jj*ii),
-                            mat(jj+off,ii+off));
-               k++;
-            }
-         }
-//
-         if (!fit.invert(rank)) continue;        // Cannot solve
-         fit.solve(sol);
-   
-// Find max
+			Int k = 0;
+			fit.set(6);
+			for (Int jj=-off; jj<(off+1); ++jj) {
+				for (Int ii=-off; ii<(off+1); ++ii) {
+					gel(0)= 1;
+					gel(1) = jj;
+					gel(2) = ii;
+					gel(3) = jj*jj;
+					gel(4) = ii*ii;
+					gel(5) = jj*ii;
+					fit.makeNorm(
+						gel.data(),
+						1.0 - 0.5*(abs(ii)+abs(jj)) + 0.25*abs(jj*ii),
+						mat(jj+off,ii+off)
+					);
+					++k;
+				}
+			}
 
-         typename NumericTraits<T>::PrecisionType r1(sol(5)*sol(5) - 4*sol(3)*sol(4));       // dx
-         if (r1 == typename NumericTraits<T>::PrecisionType(0)) continue;                            // forget
-         typename NumericTraits<T>::PrecisionType r0((2*sol(2)*sol(3) - sol(1)*sol(5))/r1);  // dy
-         r1 = (2*sol(1)*sol(4) - sol(2)*sol(5))/r1;
-         if (abs(r0)>1 || abs(r1)>1) continue;             // too far away from peak
+			if (!fit.invert(rank)) {
+				continue;        // Cannot solve
+			}
+			fit.solve(sol);
    
-// Amplitude
+			// Find max
+
+			typename NumericTraits<T>::PrecisionType r1(sol(5)*sol(5) - 4*sol(3)*sol(4));       // dx
+			if (r1 == typename NumericTraits<T>::PrecisionType(0)) {
+				continue;                            // forget
+			}
+			typename NumericTraits<T>::PrecisionType r0((2*sol(2)*sol(3) - sol(1)*sol(5))/r1);  // dy
+			r1 = (2*sol(1)*sol(4) - sol(2)*sol(5))/r1;
+			if (abs(r0)>1 || abs(r1)>1) {
+				continue;             // too far away from peak
+			}
    
-         sol(0) += sol(1)*r0 + sol(2)*r1 + sol(3)*r0*r0 + sol(4)*r1*r1 + sol(5)*r0*r1;
-         v = sol(0);
-         if (absFind) {
-            v = abs(v);
-            sol(0) = asign*sol(0);
-         }
-         if (v<cutoff*abs(rs(0,0))) continue;             // too small
-//
-         for (Int k=0; k<nMax; k++) {
-            if (v>=rs(k,0)) {
-               for (Int l=nMax-1; l>k; l--) {
-                  for (uInt i0=0; i0<3; i0++) {
-                     rs(l,i0) = rs(l-1,i0);
-                  }
-               }
-//
-               rs(k,0) = sol(0);                      // Peak
-               rs(k,1) = i+r0;                        // X
-               rs(k,2) = j+r1-1;                      // Y
-//
-               for (Int jj=-off; jj<(off+1); jj++) {
-                  for (Int ii=-off; ii<(off+1); ii++) {
-                     inDone((inp+jj+w)%w, i+ii) = True;
-                  }
-               }
-               break;
-            }
-         }
-      }
-   }
+			// Amplitude
+   
+			sol(0) += sol(1)*r0 + sol(2)*r1 + sol(3)*r0*r0 + sol(4)*r1*r1 + sol(5)*r0*r1;
+			v = sol(0);
+			if (_absFind) {
+				v = abs(v);
+				sol(0) = asign*sol(0);
+			}
+			if (v<_cutoff*abs(rs(0,0))) continue;             // too small
+
+			for (Int k=0; k<nMax; ++k) {
+				if (v>=rs(k,0)) {
+					for (Int l=nMax-1; l>k; --l) {
+						for (uInt i0=0; i0<3; ++i0) {
+							rs(l,i0) = rs(l-1,i0);
+						}
+					}
+
+					rs(k,0) = sol(0);                      // Peak
+					rs(k,1) = i+r0;                        // X
+					rs(k,2) = j+r1-1;                      // Y
+
+					for (Int jj=-off; jj<(off+1); ++jj) {
+						for (Int ii=-off; ii<(off+1); ++ii) {
+							inDone((inp+jj+w)%w, i+ii) = True;
+						}
+					}
+            	  break;
+				}
+			}
+		}
+	}
                        
-// Find the number filled
-   Int nFound = 0;
-   typename NumericTraits<T>::PrecisionType x = cutoff*abs(rs(0,0));
-   for (Int k=0; k<nMax; k++) {
-     if (abs(rs(k,0)) < x || rs(k,0) == 0) break;
-     nFound++;   
-   }      
+	// Find the number filled
+	Int nFound = 0;
+	auto x = _cutoff*abs(rs(0,0));
+	for (Int k=0; k<nMax; ++k) {
+		if (abs(rs(k,0)) < x || rs(k,0) == 0) {
+			break;
+		}
+		++nFound;
+	}
 
-   if (nFound==0) {
-      os << LogIO::WARN << "No sources were found" << LogIO::POST;
-      return listOut;
-   }
+	if (nFound==0) {
+		*this->_getLog() << LogIO::WARN << "No sources were found" << LogIO::POST;
+		return listOut;
+	}
 
-// Generate more accurate fit if required giveing shape information
+	// Generate more accurate fit if required giveing shape information
 
-   Matrix<typename NumericTraits<T>::PrecisionType> ss(nFound, 3);    // major, minor, pa
-   Matrix<typename NumericTraits<T>::PrecisionType> rs2(rs.copy());   // copy
-//
-   if (!doPoint) {
+	Matrix<typename NumericTraits<T>::PrecisionType> ss(nFound, 3);    // major, minor, pa
+	Matrix<typename NumericTraits<T>::PrecisionType> rs2(rs.copy());   // copy
 
-// Loop over found sources
+	if (! _doPoint) {
 
-      for (Int k=0; k<nFound; k++) {
-         if (width <= 0) {
+		// Loop over found sources
 
-// This means we want just the default shape estimates only
+		for (Int k=0; k<nFound; ++k) {
+			if (_width <= 0) {
 
-            ss(k,0) = width;
-            ss(k,1) = width;
-            ss(k,2) = 0.0;
-         } else {
+				// This means we want just the default shape estimates only
 
-// See if we can do this source
-            Int iCen = Int(rs(k,1));
-            Int jCen = Int(rs(k,2));
-            IPosition blc0(image.ndim(),0);
-            IPosition trc0(image.ndim(),0);
-            blc0(0) = iCen - width;
-            blc0(1) = jCen - width;
-            trc0(0) = iCen + width;
-            trc0(1) = jCen + width;
-//
-            if (blc0(0)<0 || trc0(0)>=inShape(0) ||
-                blc0(1)<0 || trc0(1)>=inShape(1)) {
-               os << LogIO::WARN << "Component " << k << " is too close to the image edge for" << endl;
-               os << "  shape-fitting - resorting to default shape estimates" << LogIO::POST;
-               ss(k,0) = width;
-               ss(k,1) = width;
-               ss(k,2) = 0.0;
-            } else {
+				ss(k,0) = _width;
+				ss(k,1) = _width;
+				ss(k,2) = 0.0;
+			}
+			else {
 
-// Fish out data to fit
+				// See if we can do this source
+				Int iCen = Int(rs(k,1));
+				Int jCen = Int(rs(k,2));
+				IPosition blc0(subImage->ndim(),0);
+				IPosition trc0(subImage->ndim(),0);
+				blc0(0) = iCen - _width;
+				blc0(1) = jCen - _width;
+				trc0(0) = iCen + _width;
+				trc0(1) = jCen + _width;
 
-               IPosition shp = trc0 - blc0 + 1;
-               Array<T> dataIn = image.getSlice(blc0, shp, False);               
-               Array<Bool> maskIn = image.getMaskSlice(blc0, shp, False);
-               Array<T> sigmaIn(dataIn.shape(),1.0);
+				if (
+					blc0(0)<0 || trc0(0)>=inShape(0)
+					|| blc0(1)<0 || trc0(1)>=inShape(1)
+				) {
+					*this->_getLog() << LogIO::WARN << "Component " << k << " is too close to the image edge for" << endl;
+					*this->_getLog() << "  shape-fitting - resorting to default shape estimates" << LogIO::POST;
+					ss(k,0) = _width;
+					ss(k,1) = _width;
+					ss(k,2) = 0.0;
+				}
+				else {
 
-// Make fitter, add model and fit
+					// Fish out data to fit
 
-               Fit2D fit2d(os);
-               Vector<typename NumericTraits<T>::PrecisionType> model = 
-                  fit2d.estimate(Fit2D::GAUSSIAN, dataIn, maskIn);
-               model(0) = rs(k,0);
-               fit2d.addModel(Fit2D::GAUSSIAN, model);
-               Fit2D::ErrorTypes ret = fit2d.fit(dataIn, maskIn, sigmaIn);
-//              
-               if (ret==Fit2D::OK) {
-                  Vector<typename NumericTraits<T>::PrecisionType> solution = 
-                     fit2d.availableSolution();
-//
-                  rs(k,0) = solution(0);
-                  rs(k,1) = solution(1) + blc0(0);
-                  rs(k,2) = solution(2) + blc0(1);
-//
-                  ss(k,0) = solution(3);
-                  ss(k,1) = solution(4);
-                  ss(k,2) = solution(5);
-               } else {
-                  os << LogIO::WARN << "Fit did not converge, resorting to default shape estimates" << LogIO::POST;
-                  ss(k,0) = width;
-                  ss(k,1) = width;
-                  ss(k,2) = 0.0;
-               }
-            }
-         }
-      }
-   }
+					IPosition shp = trc0 - blc0 + 1;
+					Array<T> dataIn = subImage->getSlice(blc0, shp, False);
+					Array<Bool> maskIn = subImage->getMaskSlice(blc0, shp, False);
+					Array<T> sigmaIn(dataIn.shape(),1.0);
 
-// Fill SkyComponents
-   os << LogIO::NORMAL << "Found " << nFound << " sources" << LogIO::POST;
-   const Unit& bU = image.units();
-   Double rat;
+					// Make fitter, add model and fit
 
-// What Stokes is the plane we are finding in ?
+					Fit2D fit2d(*this->_getLog());
+					auto model =  fit2d.estimate(Fit2D::GAUSSIAN, dataIn, maskIn);
+					model(0) = rs(k,0);
+					fit2d.addModel(Fit2D::GAUSSIAN, model);
+					auto ret = fit2d.fit(dataIn, maskIn, sigmaIn);
+
+					if (ret==Fit2D::OK) {
+						auto solution = fit2d.availableSolution();
+
+						rs(k,0) = solution(0);
+						rs(k,1) = solution(1) + blc0(0);
+						rs(k,2) = solution(2) + blc0(1);
+
+						ss(k,0) = solution(3);
+						ss(k,1) = solution(4);
+						ss(k,2) = solution(5);
+					}
+					else {
+						*this->_getLog() << LogIO::WARN << "Fit did not converge, resorting to default shape estimates" << LogIO::POST;
+						ss(k,0) = _width;
+						ss(k,1) = _width;
+						ss(k,2) = 0.0;
+					}
+				}
+			}
+		}
+	}
+
+	// Fill SkyComponents
+	*this->_getLog() << LogIO::NORMAL << "Found " << nFound << " sources" << LogIO::POST;
+	const Unit& bU = subImage->units();
+	Double rat;
+
+	// What Stokes is the plane we are finding in ?
       
-   Stokes::StokesTypes stokes(Stokes::Undefined);
-   stokes = CoordinateUtil::findSingleStokes (os, cSys, 0);
-//
-   Vector<Double> pars;
-   ComponentType::Shape cType(ComponentType::POINT);
-   pars.resize(3);
-   if (!doPoint) {
-      cType = ComponentType::GAUSSIAN;
-      pars.resize(6, True);
-   }
-//
-   for (Int k=0; k<nFound; k++) {
-      pars(0) = rs(k,0);
-      pars(1) = rs(k,1); 
-      pars(2) = rs(k,2);
-//
-      if (!doPoint) {
-         pars(3) = ss(k,0);
-         pars(4) = ss(k,1);
-         pars(5) = ss(k,2);
-      }
-//   
-      GaussianBeam beam = image.imageInfo().restoringBeam();
-      try {
+	Stokes::StokesTypes stokes(Stokes::Undefined);
+	stokes = CoordinateUtil::findSingleStokes (*this->_getLog(), cSys, 0);
+
+	Vector<Double> pars;
+	ComponentType::Shape cType(ComponentType::POINT);
+	pars.resize(3);
+	if (! _doPoint) {
+		cType = ComponentType::GAUSSIAN;
+		pars.resize(6, True);
+	}
+
+	for (Int k=0; k<nFound; ++k) {
+		pars(0) = rs(k,0);
+		pars(1) = rs(k,1);
+		pars(2) = rs(k,2);
+
+		if (! _doPoint) {
+			pars(3) = ss(k,0);
+			pars(4) = ss(k,1);
+			pars(5) = ss(k,2);
+		}
+
+		auto beam = subImage->imageInfo().restoringBeam();
+		try {
             // FIXME need to deal with multi beam images
-          SkyComponent sky = SkyComponentFactory::encodeSkyComponent (os, rat, cSys, bU,
-                                                                cType, pars, stokes, xIsLong, beam);
-         listOut.add(sky);
-      }  catch (AipsError x) {
-         os << LogIO::WARN << "Could not convert fitted pixel parameters to world for source " << k+1 << endl;
-         os << "Probably this means the fitted parameters were wildly wrong" << endl;
-         os << "Reverting to original POINT source parameters for this source " << LogIO::POST;
-//
-         Vector<Double> pars2(3);
-         pars2(0) = rs2(k,0);
-         pars2(1) = rs2(k,1); 
-         pars2(2) = rs2(k,2);
-         // FIXME need to deal with multi beam images
-         SkyComponent sky = SkyComponentFactory::encodeSkyComponent (os, rat, cSys, bU,
-                                                                ComponentType::POINT, 
-                                                                pars2, stokes, xIsLong, beam);
-         listOut.add(sky);
-      }
-   } 
-   return listOut;
+			auto sky = SkyComponentFactory::encodeSkyComponent (
+				*this->_getLog(), rat, cSys, bU,
+				cType, pars, stokes, xIsLong, beam
+			);
+			listOut.add(sky);
+		}
+		catch (const AipsError& x) {
+			*this->_getLog() << LogIO::WARN << "Could not convert fitted pixel parameters to world for source " << k+1 << endl;
+			*this->_getLog() << "Probably this means the fitted parameters were wildly wrong" << endl;
+			*this->_getLog() << "Reverting to original POINT source parameters for this source " << LogIO::POST;
+
+			Vector<Double> pars2(3);
+			pars2(0) = rs2(k,0);
+			pars2(1) = rs2(k,1);
+			pars2(2) = rs2(k,2);
+			// FIXME need to deal with multi beam images
+			auto sky = SkyComponentFactory::encodeSkyComponent (
+				*this->_getLog(), rat, cSys, bU, ComponentType::POINT,
+				pars2, stokes, xIsLong, beam
+			);
+			listOut.add(sky);
+		}
+	}
+	return listOut;
 }
 
-} //# NAMESPACE CASA - END
+}
 

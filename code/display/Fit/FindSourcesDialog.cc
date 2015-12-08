@@ -32,6 +32,7 @@
 #include <QFileSystemModel>
 #include <imageanalysis/Regions/CasacRegionManager.h>
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
+#include <imageanalysis/ImageAnalysis/ImageSourceFinder.h>
 #include <tables/Tables.h>
 #include <casa/Quanta/MVAngle.h>
 #include <display/Display/Options.h>
@@ -416,13 +417,18 @@ namespace casa {
 		}
 		int maxEstimates = ui.sourceEstimateCountSpinBox->value();
 		try {
-			Record sources = analysis->findsources(maxEstimates,cutoff,region,"",True );
-			String errorMsg;
-			bool ok = skyList.fromRecord(errorMsg, sources);
-			if ( !ok ) {
-				qDebug() << "Got error from making sky list from record: "<<errorMsg.c_str();
-				return;
-			}
+			//Record sources = analysis->findsources(maxEstimates,cutoff,region,"",True );
+            ImageSourceFinder<Float> isf(analysis->getImage(), &region, "");
+            isf.setCutoff(cutoff);
+            isf.setDoPoint(True);
+            skyList.fromComponentList(isf.findSources(maxEstimates));
+
+            // String errorMsg;
+			// bool ok = skyList.fromRecord(errorMsg, sources);
+			// if ( !ok ) {
+			//	qDebug() << "Got error from making sky list from record: "<<errorMsg.c_str();
+			//	return;
+			// }
 			resetSkyOverlay();
 		} catch( AipsError& error ) {
 			qDebug()<< "Could not find sources: "<<error.getMesg().c_str();

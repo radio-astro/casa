@@ -452,31 +452,6 @@ Record ImageAnalysis::deconvolvecomponentlist(
 	return retval;
 }
 
-Record ImageAnalysis::findsources(const int nMax, const double cutoff,
-		Record& Region, const String& mask, const Bool point, const Int width,
-		const Bool absFind) {
-	_onlyFloat(__func__);
-	*_log << LogOrigin("ImageAnalysis", "findsources");
-
-	AxesSpecifier axesSpec(False);
-	SHARED_PTR<const SubImage<Float> > subImage = SubImageFactory<Float>::createSubImageRO(
-		*_imageFloat, Region, mask, _log.get(), axesSpec
-	);
-	// Make finder
-	ImageSourceFinder<Float> sf(*subImage);
-
-	// Find them
-	ComponentList list = sf.findSources(*_log, nMax, cutoff, absFind, point,
-			width);
-	String error;
-	Record listOut;
-	if (!list.toRecord(error, listOut)) {
-		*_log << "Can not convert output ComponentList to Record " << error
-				<< LogIO::EXCEPTION;
-	}
-	return listOut;
-}
-
 SPCIIC ImageAnalysis::getComplexImage() const {
 	ThrowIf(
 		_imageFloat,
@@ -528,54 +503,7 @@ SPCIIF ImageAnalysis::getImage() const {
 	);
 	return _imageFloat;
 }
-/*
-Record*
-ImageAnalysis::getslice(const Vector<Double>& x, const Vector<Double>& y,
-		const Vector<Int>& axes, const Vector<Int>& coord, const Int npts,
-		const String& method) {
-	_onlyFloat(__func__);
-	*_log << LogOrigin("ImageAnalysis", "getslice");
 
-	Vector<Float> xPos;
-	Vector<Float> yPos;
-	Vector<Float> distance;
-	Vector<Float> pixels;
-	Vector<Bool> pixelMask;
-
-	// Construct PixelCurve.  FIll in defaults for x, y vectors
-	PixelCurve1D curve(x, y, npts);
-
-	// Set coordinates
-	IPosition iCoord = IPosition(Vector<Int> (coord));
-	IPosition iAxes = IPosition(Vector<Int> (axes));
-
-	// Get the Slice
-	LatticeSlice1D<Float>::Method method2 =
-			LatticeSlice1D<Float>::stringToMethod(method);
-	LatticeSlice1D<Float> slicer(*_imageFloat, method2);
-	slicer.getSlice(pixels, pixelMask, curve, iAxes(0), iAxes(1), iCoord);
-
-	// Get slice locations
-	uInt axis0, axis1;
-	slicer.getPosition(axis0, axis1, xPos, yPos, distance);
-
-	RecordDesc outRecDesc;
-	outRecDesc.addField("pixel", TpArrayFloat);
-	outRecDesc.addField("mask", TpArrayBool);
-	outRecDesc.addField("xpos", TpArrayFloat);
-	outRecDesc.addField("ypos", TpArrayFloat);
-	outRecDesc.addField("distance", TpArrayFloat);
-	outRecDesc.addField("axes", TpArrayInt);
-	Record *outRec = new Record(outRecDesc);
-	outRec->define("pixel", pixels);
-	outRec->define("mask", pixelMask);
-	outRec->define("xpos", xPos);
-	outRec->define("ypos", yPos);
-	outRec->define("distance", distance);
-	outRec->define("axes", Vector<Int> (axis0, axis1));
-	return outRec;
-}
-*/
 void ImageAnalysis::_onlyFloat(const String& method) const {
 	ThrowIf(! _imageFloat, "Method " + method + " only supports Float valued images");
 }

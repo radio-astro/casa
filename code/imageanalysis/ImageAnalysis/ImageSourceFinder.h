@@ -29,11 +29,10 @@
 #ifndef IMAGES_IMAGESOURCEFINDER_H
 #define IMAGES_IMAGESOURCEFINDER_H
 
-
-//# Includes
 #include <casa/aips.h>
 #include <measures/Measures/Stokes.h>      
-#include <components/ComponentModels/ComponentType.h>      
+#include <components/ComponentModels/ComponentType.h>
+#include <imageanalysis/ImageAnalysis/ImageTask.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -87,59 +86,80 @@ class LogIO;
 // </todo>
  
 
-template <class T> class ImageSourceFinder
-{
+template <class T> class ImageSourceFinder : public ImageTask<T> {
 public:
-// Constructor
-   ImageSourceFinder (const ImageInterface<T>&);
 
-// Copy constructor
-   ImageSourceFinder (const ImageSourceFinder<T> &other);
+	ImageSourceFinder() = delete;
 
-// Destructor
-  ~ImageSourceFinder();
+	ImageSourceFinder(SPCIIT image, const Record *const region, const String& mask);
 
-// Assignment operator
-   ImageSourceFinder<T> &operator=(const ImageSourceFinder<T> &other);
+	ImageSourceFinder (const ImageSourceFinder<T> &other) = delete;
 
-// Find strong sources.  nMax specifies the maximum number of sources to find.
-// cutoff is the fractional cutoff (of peak) and soiurces below this limit
-// will not be found. If absFind is True, only positive sources are found, else
-// positive and negative are found. If doPoint=True, the returned components
-// are of type POINT.  If doPoint=False, the position and shape information is 
-// returned via a Gaussian fit (and components will be of
-// type GAUSSIAN) to the point sources initially found.    The parameter width
-// specifies the half-width of a square grid of pixels centered on the initial
-// point source location to be used in the fit.  If you set doPoint=False and width=0,
-// a default width of 3 and position angle 0 is returned in the GAUSSIAN component.
-// Because  the flux of the component is integrated, this rough shape influences the 
-// flux values as well.  
-   ComponentList findSources (LogIO& os, Int nMax, Double cutoff=0.1, 
-                              Bool absFind=True, Bool doPoint=True,
-                              Int width=4);
+	~ImageSourceFinder();
 
-// Find one source in sky plane.  Exception if no sky
-   SkyComponent findSourceInSky (LogIO& os, Vector<Double>& absPixel,
-                                 Double cutoff=0.1, Bool absFind=True, 
-                                 Bool doPoint=True, Int width=4);
+	ImageSourceFinder<T> &operator=(const ImageSourceFinder<T> &other) = delete;
 
-// Set a new image
-   Bool setNewImage (const ImageInterface<T>& image);
+	// Find strong sources.  nMax specifies the maximum number of sources to find.
+	// cutoff is the fractional cutoff (of peak) and soiurces below this limit
+	// will not be found. If absFind is True, only positive sources are found, else
+	// positive and negative are found. If doPoint=True, the returned components
+	// are of type POINT.  If doPoint=False, the position and shape information is
+	// returned via a Gaussian fit (and components will be of
+	// type GAUSSIAN) to the point sources initially found.    The parameter width
+	// specifies the half-width of a square grid of pixels centered on the initial
+	// point source location to be used in the fit.  If you set doPoint=False and width=0,
+	// a default width of 3 and position angle 0 is returned in the GAUSSIAN component.
+	// Because  the flux of the component is integrated, this rough shape influences the
+	// flux values as well.
+	ComponentList findSources (Int nMax);
+
+	// Find one source in sky plane.  Exception if no sky
+	SkyComponent findSourceInSky(Vector<Double>& absPixel);
+
+	void setCutoff(Double cutoff) { _cutoff = cutoff; }
+
+	void setAbsFind(Bool af) { _absFind = af; }
+
+	void setDoPoint(Bool dp) { _doPoint = dp; }
+
+	void setWidth(Int w) { _width = w; }
+
+	String getClass() const {
+		const static String x = "ImageSourceFinder";
+		return x;
+	}
+
+protected:
+
+   	CasacRegionManager::StokesControl _getStokesControl() const {
+   		return CasacRegionManager::USE_FIRST_STOKES;
+   	}
+
+    // Represents the minimum set of coordinates necessary for the
+    // task to function.
+    std::vector<Coordinate::Type> _getNecessaryCoordinates() const {
+    	return std::vector<Coordinate::Type>(1, Coordinate::DIRECTION);
+    }
+
+    inline Bool _supportsMultipleRegions() const {return True;}
+
+    inline Bool _supportsMultipleBeams() const {return False;}
+
 
 private:
-   const ImageInterface<T>* pImage_p;
+	Double _cutoff = 0.1;
+	Bool _absFind = True;
+	Bool _doPoint = True;
+	Int _width = 4;
 
-// Find strong (point) sources
-   ComponentList findSources (LogIO& os, const ImageInterface<T>& image,
-                              Int nMax, 
-                              Double cutoff, Bool absFind, Bool doPoint,
-                              Int width);
+	// Find strong (point) sources
+	ComponentList _findSources(Int nMax);
 };
 
 
-} //# NAMESPACE CASA - END
+}
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
 #include <imageanalysis/ImageAnalysis/ImageSourceFinder.tcc>
-#endif //# CASACORE_NO_AUTO_TEMPLATES
+#endif
 #endif
