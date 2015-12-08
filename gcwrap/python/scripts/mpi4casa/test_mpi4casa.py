@@ -1779,7 +1779,7 @@ class test_mpi4casa_runtime_settings(unittest.TestCase):
         server = 0
         
         self.client.set_omp_num_threads(4,self.server_list)
-        omp_num_threads = self.client.push_command_request("casalog.omp_num_thread()",True,self.server_list)[server]['ret']
+        omp_num_threads = self.client.push_command_request("casalog.ompNumThread()",True,self.server_list)[server]['ret']
         self.assertEqual(omp_num_threads, 4, "OpenMP settings not re-configured")     
         
         if len(self.server_list) > 1: 
@@ -1788,7 +1788,7 @@ class test_mpi4casa_runtime_settings(unittest.TestCase):
             server = 0
             
         self.client.set_omp_num_threads(8,self.server_list)
-        omp_num_threads = self.client.push_command_request("casalog.omp_num_thread()",True,self.server_list)[server]['ret']
+        omp_num_threads = self.client.push_command_request("casalog.ompNumThread()",True,self.server_list)[server]['ret']
         self.assertEqual(omp_num_threads, 8, "OpenMP settings not re-configured")     
         
         if len(self.server_list) > 2: 
@@ -1797,7 +1797,7 @@ class test_mpi4casa_runtime_settings(unittest.TestCase):
             server = 0
             
         self.client.set_omp_num_threads(2,self.server_list)
-        omp_num_threads = self.client.push_command_request("casalog.omp_num_thread()",True,self.server_list)[server]['ret']
+        omp_num_threads = self.client.push_command_request("casalog.ompNumThread()",True,self.server_list)[server]['ret']
         self.assertEqual(omp_num_threads, 2, "OpenMP settings not re-configured")     
 
 def suite():

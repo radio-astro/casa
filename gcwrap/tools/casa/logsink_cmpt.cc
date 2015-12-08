@@ -353,7 +353,7 @@ logsink::logfile()
 }
 
 int
-logsink::omp_num_thread()
+logsink::ompNumThread()
 {
 	Int num_thread(0);
 

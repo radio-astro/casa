@@ -218,11 +218,11 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 
 </method>
 
-<method type="function" name="omp_num_thread">
+<method type="function" name="ompNumThread">
   <shortdescription>Returns the number of active OpenMP threads</shortdescription>
   <input/>
   <returns type="int"/>
-  <example>omp_num_thread = casalog.omp_num_thread()</example>
+  <example>omp_num_thread = casalog.ompNumThread()</example>
 </method>
 
 </tool>
