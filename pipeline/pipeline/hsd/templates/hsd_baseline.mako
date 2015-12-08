@@ -95,8 +95,7 @@ line detection stage.</p>
 	                    <h4>
 	                        <a href="${os.path.join(dirname, sparsemap_subpage_before[field])}"
 	                           class="replace"
-	                           data-spw="${plot.parameters['spw']}"
-	                           data-ant="${plot.parameters['ant']}">
+	                           data-spw="${plot.parameters['spw']}">
 	                           Spectral Window ${plot.parameters['spw']}
 	                        </a>
 	                    </h4>
@@ -137,8 +136,7 @@ line detection stage.</p>
 	                    <h4>
 	                        <a href="${os.path.join(dirname, sparsemap_subpage_after[field])}"
 	                           class="replace"
-	                           data-spw="${plot.parameters['spw']}"
-	                           data-ant="${plot.parameters['ant']}">
+	                           data-spw="${plot.parameters['spw']}">
 	                           Spectral Window ${plot.parameters['spw']}
 	                        </a>
 	                    </h4>
