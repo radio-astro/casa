@@ -62,7 +62,7 @@ void exportAsJPG( PlotMSApp& app ){
     String outFile( "/tmp/plotMSExportRangeJPGTest");
 
     PlotExportFormat::Type type = PlotExportFormat::JPG;
-    exportPlot( app, outFile, type, "JPG", 80000, 110000);
+    exportPlot( app, outFile, type, "JPG", 100000, 130000);
 }
 
 void exportAsPNG( PlotMSApp& app ){
@@ -70,7 +70,7 @@ void exportAsPNG( PlotMSApp& app ){
     String outFile( "/tmp/plotMSExportRangePNGTest");
 
     PlotExportFormat::Type type = PlotExportFormat::PNG;
-    exportPlot(  app, outFile, type, "PNG", 20000, 30000 );
+    exportPlot(  app, outFile, type, "PNG", 30000, 35000 );
 
 }
 
@@ -79,7 +79,7 @@ void exportAsPS( PlotMSApp& app ){
     String outFile( "/tmp/plotMSExportRangePSTest");
 
     PlotExportFormat::Type type = PlotExportFormat::PS;
-    exportPlot(  app, outFile, type, "PS", 700000, 920000);
+    exportPlot(  app, outFile, type, "PS", 800000, 1150000);
 
 }
 
@@ -89,7 +89,7 @@ void exportAsPDF( PlotMSApp& app ){
 
     PlotExportFormat::Type type = PlotExportFormat::PDF;
     cout << "Exporting PDF"<<endl;
-    exportPlot(  app, outFile, type, "PDF", 60000, 78000);
+    exportPlot(  app, outFile, type, "PDF", 65000, 90000);
 
 }
 

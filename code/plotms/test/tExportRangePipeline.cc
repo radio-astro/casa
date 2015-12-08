@@ -97,7 +97,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	cout << "tExportRangePipeline:: Result of save="<<ok<<endl;
     
 
-	ok = tUtil::checkFile( outFile1, 110000, 120000, -1 );
+	ok = tUtil::checkFile( outFile1, 120000, 130000, -1 );
 	cout << "tExportRangePipeline:: Result of first save file check="<<ok<<endl;
 
 	return tUtil::exitMain( false );

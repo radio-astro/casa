@@ -78,7 +78,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	bool ok = app.save(format);
 	cout << "tSymbol:: Result of save="<<ok<<endl;
     
-	ok = tUtil::checkFile( outFile, 190000, 205000, -1 );
+	ok = tUtil::checkFile( outFile, 210000, 220000, -1 );
 	cout << "tSymbol:: Result of save file check="<<ok<<endl;
 
 	return tUtil::exitMain( false );

@@ -122,7 +122,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	bool ok = app.save(format);
 	cout << "tLegend:: Result of save="<<ok<<endl;
     
-	ok = tUtil::checkFile( outFile, 70000, 75000, -1 );
+	ok = tUtil::checkFile( outFile, 60000, 80000, -1 );
 	cout << "tLegend:: Result of save file check="<<ok<<endl;
 	return tUtil::exitMain( false );
 }

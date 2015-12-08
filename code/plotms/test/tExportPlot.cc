@@ -67,7 +67,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	bool ok = app.save(format);
 	cout << "tExport:: Result of save="<<ok<<endl;
     
-	ok = tUtil::checkFile( outFile, 230000, 240000, -1 );
+	ok = tUtil::checkFile( outFile, 240000, 260000, -1 );
 	cout << "tExport:: Result of save file check="<<ok<<endl;
 	return tUtil::exitMain( false );
 }

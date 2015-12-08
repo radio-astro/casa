@@ -88,7 +88,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	bool ok = app.save(format);
 	cout << "tTimeColorization:: Result of save="<<ok<<endl;
     
-	ok = tUtil::checkFile( outFile, 160000, 172000, -1 );
+	ok = tUtil::checkFile( outFile, 170000, 185000, -1 );
 	cout << "tTimeColorization:: Result of  save file check="<<ok<<endl;
 	return tUtil::exitMain( false );
 }

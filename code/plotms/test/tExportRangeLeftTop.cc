@@ -105,12 +105,12 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	cout << "tExportRangeLeftTop:: Result of save="<<ok<<endl;
     
 
-	ok = tUtil::checkFile( outFile1, 80000, 115000, -1 );
+	ok = tUtil::checkFile( outFile1, 110000, 130000, -1 );
 	cout << "tExportRangeLeftTop:: Result of first save file check="<<ok<<endl;
 
 	//There should be 2 output files.
 	if ( ok ){
-		ok = tUtil::checkFile( outFile2, 40000, 110000, -1 );
+		ok = tUtil::checkFile( outFile2, 50000, 55000, -1 );
 		cout << "tExportRangeLeftTop:  Result of second save file check="<<ok<<endl;
 	}
 	return tUtil::exitMain( false );

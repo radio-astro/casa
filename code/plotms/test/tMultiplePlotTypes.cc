@@ -181,10 +181,10 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	bool ok = app.save(format);
 	cout << "tMultiplePlotTypes:: Result of save="<<ok<<endl;
 
-	ok = tUtil::checkFile( outFile1, 210000, 224000, -1 );
+	ok = tUtil::checkFile( outFile1, 210000, 230000, -1 );
 	cout << "tMultiplePlotTypes:: Result of first save file check="<<ok<<endl;
 
-	ok = tUtil::checkFile( outFile2, 210000, 225000, -1 );
+	ok = tUtil::checkFile( outFile2, 210000, 230000, -1 );
 	cout << "tMultiplePlotTypes:: Result of second save file check="<<ok<<endl;
 
 	ok = tUtil::checkFile( outFile3, 54000, 58000, -1 );
