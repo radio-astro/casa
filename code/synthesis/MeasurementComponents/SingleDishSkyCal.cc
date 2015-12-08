@@ -773,6 +773,7 @@ void SingleDishSkyCal::syncWtScale()
   
   // allocate necessary memory 
   currWtScale().resize(currentSky().shape());
+  currWtScale() = 1.0;
 
   // Calculate the weight scaling
   if (tInterpType() == "nearest") {
@@ -791,7 +792,6 @@ void SingleDishSkyCal::calcWtScale()
   debuglog << "calcWtScale<ScalingScheme>" << debugpost;
   CTInterface cti(*ct_);
   MSSelection mss;
-  mss.setFieldExpr(String::toString(currField()));
   mss.setSpwExpr(String::toString(currSpw()));
   mss.setObservationExpr(String::toString(currObs()));
   for (Int iAnt = 0; iAnt < nAnt(); ++iAnt) {
