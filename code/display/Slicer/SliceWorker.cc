@@ -25,6 +25,7 @@
 
 #include "SliceWorker.h"
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
+#include <imageanalysis/ImageAnalysis/PixelValueManipulator.h>
 #include <display/Slicer/SliceStatistics.h>
 #include <casa/Containers/Record.h>
 #include <msvis/MSVis/UtilJ.h>
@@ -124,18 +125,35 @@ namespace casa {
 	}
 
 	void SliceWorker::computeSlice( const Vector<double>& xValues, const Vector<double>& yValues ) {
-		Record* sliceResult = NULL;
+		Record* sliceResult = nullptr;
+        auto image = imageAnalysis->getImage();
 		if ( method.length() > 0 ) {
-			sliceResult = imageAnalysis-> getslice(xValues, yValues,
+            /*
+            sliceResult = imageAnalysis-> getslice(xValues, yValues,
 			                                       axes, coords, sampleCount, method);
+            */
+            sliceResult = PixelValueManipulator<Float>::getSlice(
+                image, xValues, yValues, axes, coords, sampleCount, method
+            );
 		} else if ( sampleCount > 0 ) {
+            /*
 			sliceResult = imageAnalysis-> getslice(xValues, yValues,
 			                                       axes, coords, sampleCount );
+            */
+            sliceResult = PixelValueManipulator<Float>::getSlice(
+                image, xValues, yValues, axes, coords, sampleCount
+            );
+ 
 		} else {
 			//Use all default arguments
+            /*
 			sliceResult = imageAnalysis-> getslice(xValues, yValues,
 			                                       axes, coords );
-		}
+            */
+	        sliceResult = PixelValueManipulator<Float>::getSlice(
+                image, xValues, yValues, axes, coords
+            );
+    	}
 		sliceResults.append( sliceResult );
 	}
 

@@ -29,6 +29,8 @@
 #include <casa/Quanta/QuantumHolder.h>
 #include <images/Images/ImageRegrid.h>
 #include <lattices/LatticeMath/LatticeAddNoise.h>
+#include <lattices/LatticeMath/LatticeSlice1D.h>
+#include <lattices/Lattices/PixelCurve1D.h>
 
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
 
@@ -212,6 +214,50 @@ template<class T> Record PixelValueManipulator<T>::getProfile(
 	}
 
 	return ret;
+}
+
+template<class T> Record* PixelValueManipulator<T>::getSlice(
+	SPCIIT image, const Vector<Double>& x, const Vector<Double>& y,
+	const Vector<Int>& axes, const Vector<Int>& coord, Int npts,
+	const String& method
+) {
+	Vector<Float> xPos;
+	Vector<Float> yPos;
+	Vector<Float> distance;
+	Vector<T> pixels;
+	Vector<Bool> pixelMask;
+
+	// Construct PixelCurve.  FIll in defaults for x, y vectors
+	PixelCurve1D curve(x, y, npts);
+
+	// Set coordinates
+	IPosition iCoord(coord);
+	IPosition iAxes(axes);
+
+	// Get the Slice
+	auto method2 = LatticeSlice1D<T>::stringToMethod(method);
+	LatticeSlice1D<T> slicer(*image, method2);
+	slicer.getSlice(pixels, pixelMask, curve, iAxes(0), iAxes(1), iCoord);
+
+	// Get slice locations
+	uInt axis0, axis1;
+	slicer.getPosition(axis0, axis1, xPos, yPos, distance);
+
+	RecordDesc outRecDesc;
+	outRecDesc.addField("pixel", TpArrayFloat);
+	outRecDesc.addField("mask", TpArrayBool);
+	outRecDesc.addField("xpos", TpArrayFloat);
+	outRecDesc.addField("ypos", TpArrayFloat);
+	outRecDesc.addField("distance", TpArrayFloat);
+	outRecDesc.addField("axes", TpArrayInt);
+	Record *outRec = new Record(outRecDesc);
+	outRec->define("pixel", pixels);
+	outRec->define("mask", pixelMask);
+	outRec->define("xpos", xPos);
+	outRec->define("ypos", yPos);
+	outRec->define("distance", distance);
+	outRec->define("axes", Vector<Int>(vector<uInt> {axis0, axis1}));
+	return outRec;
 }
 
 template<class T> void PixelValueManipulator<T>::insert(

@@ -60,6 +60,16 @@ public:
 	// 'mask'   => Array<Bool> of pixel mask values
 	Record get() const;
 
+	// get a slice through the image. The values are interpolated at regular
+	// intervals to provide samples at npts number of points. x and y are
+	// in pixel coordinates
+
+	static Record* getSlice(
+		SPCIIT image, const Vector<Double>& x, const Vector<Double>& y,
+		const Vector<Int>& axes, const Vector<Int>& coord,
+		Int npts=0, const String& method="linear"
+	);
+
 	static void put(
 		SPIIT image, const Array<T>& pixelsArray, const Vector<Int>& blc,
 		const Vector<Int>& inc, Bool list,

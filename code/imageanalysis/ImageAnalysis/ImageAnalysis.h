@@ -125,10 +125,11 @@ public:
                         const String& mask, const Bool point = True, 
                         const Int width = 5, const Bool negfind = False);
 
+    /*
     Record* getslice(const Vector<Double>& x, const Vector<Double>& y, 
                      const Vector<Int>& axes, const Vector<Int>& coord, 
                      const Int npts = 0, const String& method = "linear");
-
+	*/
     Bool open(const String& infile);
 
     inline static String className() {const static String x = "ImageAnalysis"; return x; }

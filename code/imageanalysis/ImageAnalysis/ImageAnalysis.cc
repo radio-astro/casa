@@ -528,7 +528,7 @@ SPCIIF ImageAnalysis::getImage() const {
 	);
 	return _imageFloat;
 }
-
+/*
 Record*
 ImageAnalysis::getslice(const Vector<Double>& x, const Vector<Double>& y,
 		const Vector<Int>& axes, const Vector<Int>& coord, const Int npts,
@@ -575,7 +575,7 @@ ImageAnalysis::getslice(const Vector<Double>& x, const Vector<Double>& y,
 	outRec->define("axes", Vector<Int> (axis0, axis1));
 	return outRec;
 }
-
+*/
 void ImageAnalysis::_onlyFloat(const String& method) const {
 	ThrowIf(! _imageFloat, "Method " + method + " only supports Float valued images");
 }
