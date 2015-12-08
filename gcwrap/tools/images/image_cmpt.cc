@@ -2759,15 +2759,14 @@ variant* image::getregion(
 ::casac::record*
 image::getslice(const std::vector<double>& x, const std::vector<double>& y,
 		const std::vector<int>& axes, const std::vector<int>& coord,
-		const int npts, const std::string& method) {
-	::casac::record *rstat = 0;
+		int npts, const std::string& method) {
 	try {
 		_log << _ORIGIN;
 		if (detached()) {
-			return rstat;
+			return nullptr;
 		}
 		ThrowIf(
-			! _image->isFloat(),
+			_imageC ,
 			"This method only supports Float valued images"
 		);
 		// handle default coord
@@ -2780,18 +2779,29 @@ image::getslice(const std::vector<double>& x, const std::vector<double>& y,
 				ncoord[i] = 0;
 			}
 		}
-
+		unique_ptr<Record> outRec;
+		/*
 		Record *outRec = _image->getslice(Vector<Double> (x),
 				Vector<Double> (y), Vector<Int> (axes), Vector<Int> (ncoord),
 				npts, method);
-		rstat = fromRecord(*outRec);
-		delete outRec;
-	} catch (AipsError x) {
+		*/
+		if (_imageF) {
+			outRec.reset(
+				PixelValueManipulator<Float>::getSlice(
+					_imageF, Vector<Double>(x), Vector<Double>(y),
+					Vector<Int> (axes), Vector<Int> (ncoord),
+					npts, method
+				)
+			);
+		}
+		return fromRecord(*outRec);
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
+	return nullptr;
 }
 
 image* image::hanning(
