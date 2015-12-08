@@ -80,16 +80,6 @@ MSTransformIterator::~MSTransformIterator()
 	return;
 }
 
-vi::VisBuffer2 * MSTransformIterator::getVisBuffer (const vi::VisibilityIterator2 * vi)
-{
-    vi::VisBuffer2 * vb = manager_p->getVisBuffer();
-    associateVbWithVi2(vb, vi);
-        // The above smells a bit like a kluge
-
-    return vb;
-}
-
-
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
