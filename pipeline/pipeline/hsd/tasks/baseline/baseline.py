@@ -117,6 +117,7 @@ class SDBaseline(common.SingleDishTaskTemplate):
         fitorder = 'automatic' if inputs.fitorder is None or inputs.fitorder < 0 else inputs.fitorder
         fitfunc = 'spline' if inputs.fitfunc is None else inputs.fitfunc
         clusteringalgorithm = inputs.clusteringalgorithm
+        deviationmask = True if inputs.deviationmask is None else inputs.deviationmask
         
         dummy_suffix = "_temp"
         # Clear-up old temporary scantables (but they really shouldn't exist)
@@ -175,7 +176,7 @@ class SDBaseline(common.SingleDishTaskTemplate):
             # Deviation Mask 
             # This is a dictionary that will be merged with top-level context
             deviation_mask = collections.defaultdict(dict)
-            if self.inputs.deviationmask:
+            if deviationmask:
                 LOG.info('Apply deviation mask to baseline fitting')
                 for (ant, spw) in zip(antenna_list, spwid_list):
                     st = self.context.observing_run.get_scantable(ant)
