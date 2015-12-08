@@ -65,20 +65,14 @@ int main(int /*argc*/, char** /*argv[]*/) {
     PlotExportFormat::Type type = PlotExportFormat::JPG;
 	PlotExportFormat format(type, outFile );
 	format.resolution = PlotExportFormat::SCREEN;
-    format.dpi = 300;
-    format.height = 1024;
-    format.width = 768;
+
 	bool ok = app.save(format);
-	cout << "tDataSelection - result of save="<<ok<<endl;
-    
+	cout << "tDataSelection - result of save=" << ok << endl;
 	bool okOutput = tUtil::checkFile( outFile, 70000, 90000, -1 );
-	cout << "tDataSelection - result of first saved file check="<<okOutput<<endl;
-	if ( okOutput ){
-		cout << "tDataSelection Pass!"<<endl;
-	}
-	else {
-		cout << "tDataSelection Fail!"<<endl;
-	}
-	return tUtil::exitMain( false );
+	cout << "tDataSelection - result of first saved file check=" << okOutput << endl;
+    bool test = ok && okOutput;
+
+    bool checkGui = tUtil::exitMain( false );
+    return !(test && checkGui);
 }
 

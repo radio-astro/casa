@@ -70,19 +70,20 @@ int main(int /*argc*/, char** /*argv[]*/) {
     // Export format for all tests
     PlotExportFormat::Type type = PlotExportFormat::JPG;
     // File size should be the same for first 3 cases
-    int noAveragingSizeMin = 263000;
-    int noAveragingSizeMax = 266000;
+    int noAveragingSizeMin = 320000;
+    int noAveragingSizeMax = 350000;
 
     // start with no averaging
     String outFile( "/tmp/plotAveragingChannelTest1.jpg");
     tUtil::clearFile( outFile );
 	PlotExportFormat format(type, outFile );
 	format.resolution = PlotExportFormat::SCREEN;
+
 	bool ok = app.save(format);
 	cout << "tAveragingChannel test 1 - result of save=" << ok << endl;
-    
 	bool okOutput = tUtil::checkFile( outFile, noAveragingSizeMin, noAveragingSizeMax, -1 );
-	cout << "tAveragingChannel test 1 - result of first saved file check="<<okOutput<<endl;
+	cout << "tAveragingChannel test 1 - result of first saved file check="<< okOutput << endl;
+    bool test1 = ok && okOutput;
 
     // Now turn channel averaging on to 1 (should be same as none)
     PlotMSAveraging averaging = ppdata->averaging();
@@ -98,10 +99,12 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	tUtil::clearFile( outFile2 );
 	PlotExportFormat format2(type, outFile2 );
 	format2.resolution = PlotExportFormat::SCREEN;
-	bool ok2 = app.save(format2);
-	cout << "tAveragingChannel test 2 - result of save=" << ok2 <<endl;
-	bool okOutput2 = tUtil::checkFile( outFile2, noAveragingSizeMin, noAveragingSizeMax, -1 );
-	cout << "tAveragingChannel test 2 - result of third saved file check="<<okOutput2<<endl;
+
+	ok = app.save(format2);
+	cout << "tAveragingChannel test 2 - result of save=" << ok <<endl;
+	okOutput = tUtil::checkFile( outFile2, noAveragingSizeMin, noAveragingSizeMax, -1 );
+	cout << "tAveragingChannel test 2 - result of third saved file check=" << okOutput << endl;
+    bool test2 = ok && okOutput;
 
     // Now turn channel averaging on to 3 for "normal" channel averaging
     averaging.setChannel( true);
@@ -116,20 +119,16 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	tUtil::clearFile( outFile3 );
 	PlotExportFormat format3(type, outFile3 );
 	format3.resolution = PlotExportFormat::SCREEN;
-	bool ok3 = app.save(format3);
-	cout << "tAveragingChannel test 3 - result of save=" << ok3 <<endl;
-        // This plot file should be smaller because of averaging
-	bool okOutput3 = tUtil::checkFile( outFile3, 180000, 185000, -1 );
-	cout << "tAveragingChannel test 3 - result of third saved file check="<<okOutput3<<endl;
 
-	if ( okOutput  && okOutput2 && okOutput3 ){
-		cout << "tAveragingChannel Pass!"<<endl;
-	}
-	else {
-		cout << "tAveragingChannel Fail!"<<endl;
-	}
+	ok = app.save(format3);
+	cout << "tAveragingChannel test 3 - result of save=" << ok <<endl;
+    // This plot file should be smaller because of averaging
+	okOutput = tUtil::checkFile( outFile3, 180000, 190000, -1 );
+	cout << "tAveragingChannel test 3 - result of third saved file check=" << okOutput << endl;
+    bool test3 = ok && okOutput;
+    bool test = test1 && test2 && test3;
 
-
-	return tUtil::exitMain( false );
+	bool checkGui = tUtil::exitMain( false );
+    return !(test && checkGui);
 }
 

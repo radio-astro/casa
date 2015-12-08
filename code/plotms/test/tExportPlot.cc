@@ -64,11 +64,13 @@ int main(int /*argc*/, char** /*argv[]*/) {
     PlotExportFormat::Type type = PlotExportFormat::JPG;
 	PlotExportFormat format(type, outFile );
 	format.resolution = PlotExportFormat::SCREEN;
-	bool ok = app.save(format);
-	cout << "tExport:: Result of save="<<ok<<endl;
-    
-	ok = tUtil::checkFile( outFile, 240000, 260000, -1 );
-	cout << "tExport:: Result of save file check="<<ok<<endl;
-	return tUtil::exitMain( false );
-}
 
+	bool ok = app.save(format);
+	cout << "tExport:: Result of save=" << ok << endl;
+	bool okOutput = tUtil::checkFile( outFile, 240000, 260000, -1 );
+	cout << "tExport:: Result of save file check=" << okOutput << endl;
+    bool test = ok && okOutput;
+
+    bool checkGui = tUtil::exitMain( false );
+    return !(test && checkGui);    
+}

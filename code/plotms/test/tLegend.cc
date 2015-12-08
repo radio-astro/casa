@@ -119,11 +119,14 @@ int main(int /*argc*/, char** /*argv[]*/) {
     PlotExportFormat::Type type = PlotExportFormat::JPG;
 	PlotExportFormat format(type, outFile );
 	format.resolution = PlotExportFormat::SCREEN;
+
 	bool ok = app.save(format);
-	cout << "tLegend:: Result of save="<<ok<<endl;
-    
-	ok = tUtil::checkFile( outFile, 60000, 80000, -1 );
-	cout << "tLegend:: Result of save file check="<<ok<<endl;
-	return tUtil::exitMain( false );
+	cout << "tLegend:: Result of save=" << ok << endl;
+	bool okOutput = tUtil::checkFile( outFile, 60000, 80000, -1 );
+	cout << "tLegend:: Result of save file check=" << okOutput << endl;
+    bool test = ok && okOutput;
+
+    bool checkGui = tUtil::exitMain( false );
+    return !(test && checkGui);    
 }
 

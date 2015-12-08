@@ -91,11 +91,14 @@ int main(int /*argc*/, char** /*argv[]*/) {
     PlotExportFormat::Type type = PlotExportFormat::JPG;
 	PlotExportFormat format(type, outFile );
 	format.resolution = PlotExportFormat::SCREEN;
+
 	bool ok = app.save(format);
-	cout << "tTimeColorizationAveraging:: Result of save="<<ok<<endl;
-    
-	ok = tUtil::checkFile( outFile, 50000, 70000, -1 );
-	cout << "tTimeColorizationAveraging:: Result of  save file check="<<ok<<endl;
-	return tUtil::exitMain( false );
+	cout << "tTimeColorizationAveraging:: Result of save=" << ok << endl;
+	bool okOutput = tUtil::checkFile( outFile, 50000, 70000, -1 );
+	cout << "tTimeColorizationAveraging:: Result of  save file check=" << okOutput << endl;
+    bool test = ok && okOutput;
+
+    bool checkGui = tUtil::exitMain( false );
+    return !(test && checkGui);
 }
 

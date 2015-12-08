@@ -78,19 +78,11 @@ int main(int /*argc*/, char** /*argv[]*/) {
     iterParams->setGridRow( 1 );
     iterParams->setGridCol( 1 );
 
-
-    //Make the plot.
     app.addOverPlot( &plotParams );
-
-
-    //QApplication::exec();
 
     //We want to print all pages in the output.
     PlotMSExportParam& exportParams = app.getExportParameters();
     exportParams.setExportRange( PMS::PAGE_ALL );
-
-
-
 
     String outFile( "/tmp/plotMSGridPlacementTest.jpg");
     tUtil::clearFile( outFile );
@@ -98,13 +90,14 @@ int main(int /*argc*/, char** /*argv[]*/) {
     PlotExportFormat::Type type = PlotExportFormat::JPG;
 	PlotExportFormat format(type, outFile );
 	format.resolution = PlotExportFormat::SCREEN;
+
 	bool ok = app.save(format);
-	qDebug() << "tGridPlacement:: Result of save="<<ok;
-    
+	qDebug() << "tGridPlacement:: Result of save=" << ok;
+	bool okOutput = tUtil::checkFile( outFile, 60000, 80000, -1 );
+	qDebug() << "tGridPlacement:: Result of save file check=" << okOutput;
+    bool test = ok && okOutput;
 
-	ok = tUtil::checkFile( outFile, 60000, 80000, -1 );
-	qDebug() << "tGridPlacement:: Result of save file check="<<ok;
-
-	tUtil::exitMain( false );
+    bool checkGui = tUtil::exitMain( false );
+    return !(test && checkGui);
 }
 

@@ -349,4 +349,4 @@ casa_add_executable( casaqt qcasabrowser apps/qcasabrowser/qcasabrowser.cc )
 casa_add_executable( casaqt qwtplottertest apps/qwtplottertest/qwtplottertest.cc )
 
 install( PROGRAMS apps/qcasabrowser/casabrowser DESTINATION bin )
-casa_add_assay( casaqt QtProgressMeter/test/tProgressMeter.cc )
+casa_add_demo( casaqt QtProgressMeter/test/dProgressMeter.cc )

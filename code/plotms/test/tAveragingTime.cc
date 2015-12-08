@@ -36,10 +36,11 @@
 
 int main(int /*argc*/, char** /*argv[]*/) {
 
+    // CAS-2884 (plotms averages all channels with avgchannel = '1')
 
-	//Path for data
-	String dataPath = "/lustre/bkent/evlapipeline/helpdesk/13A-398.sb17165245.eb19445220.56369.115810324074.ms";
-    cout << "tAveraging:: using data from "<<dataPath.c_str()<<endl;
+    //Path for data
+    String dataPath = tUtil::getFullPath( "pm_ngc5921.ms" );
+    cout << "tAveragingChannel:: using data from "<<dataPath.c_str()<<endl;
 
     // Set up plotms object.
     PlotMSApp app(false, false );
@@ -54,81 +55,55 @@ int main(int /*argc*/, char** /*argv[]*/) {
     }
     ppdata->setFilename( dataPath );
 
-
-    //Use corrected data
+    // Set up channel vs time plot
     PMS_PP_Cache* cacheParams = plotParams.typedGroup<PMS_PP_Cache>();
-    if ( cacheParams == NULL ){
+    if(cacheParams == NULL) {
     	plotParams.setGroup<PMS_PP_Cache>();
     	cacheParams = plotParams.typedGroup<PMS_PP_Cache>();
     }
-    cacheParams->setYAxis (PMS::AMP, PMS::CORRECTED );
-
-    //Turn channel and time averaging on.
-    PlotMSAveraging averaging = ppdata->averaging();
-    //averaging.setChannel( true);
-    //averaging.setChannelValue( 65 );
-    averaging.setTime( true );
-    averaging.setTimeValue( 200 );
-    ppdata->setAveraging( averaging );
-
-    //Make some selections.
-    PlotMSSelection sel = ppdata->selection();
-    sel.setScan( "31");
-    //Note:  the :3 selects on channel 3 so we can decrease the data size and not
-    //average channels which doesn't seem to be the problem.
-    sel.setSpw( "10:3");
-    sel.setAntenna( "22&23");
-    sel.setCorr( "RR");
-    sel.setField( "2" );
-    ppdata->setSelection(sel);
-
-    //Colorize by spw
-    PMS_PP_Display* displayParams = plotParams.typedGroup<PMS_PP_Display>();
-    if ( displayParams == NULL ){
-    	plotParams.setGroup<PMS_PP_Display>();
-    	displayParams = plotParams.typedGroup<PMS_PP_Display>();
-    }
-    displayParams->setColorize( true, PMS::SPW );
-
+    PMS::Axis yAxis = PMS::CHANNEL;
+    cacheParams->setYAxis(yAxis, PMS::DATA);
+    
     //Add the plot
     app.addOverPlot( &plotParams );
 
-    //Export
-    String outFile( "/tmp/plotAveragingTest.jpg");
-    tUtil::clearFile( outFile );
+    // Export format for all tests
     PlotExportFormat::Type type = PlotExportFormat::JPG;
+
+    // start with no averaging
+    String outFile( "/tmp/plotAveragingTimeTest1.jpg");
+    tUtil::clearFile( outFile );
 	PlotExportFormat format(type, outFile );
 	format.resolution = PlotExportFormat::SCREEN;
+
 	bool ok = app.save(format);
-	cout << "tAveraging - result of save=" << ok << endl;
-    
-	bool okOutput = tUtil::checkFile( outFile, 44000, 45000, -1 );
-	cout << "tAveraging - result of first saved file check=" << okOutput << endl;
-    bool test = ok && okOutput;
+	cout << "tAveragingTime test 1 - result of save=" << ok << endl;
+	bool okOutput = tUtil::checkFile( outFile, 300000, 325000, -1 );
+	cout << "tAveragingTime test 1 - result of first saved file check="<< okOutput << endl;
+    bool test1 = ok && okOutput;
 
-	//Now turn time averaging on
-	/*averaging.setTime( true );
-	averaging.setTimeValue( 200 );
-	ppdata->setAveraging( averaging);
+    // Now turn time averaging on to 600
+    PlotMSAveraging averaging = ppdata->averaging();
+    averaging.setTime( true);
+    averaging.setTimeValue( 600.0 );
+    ppdata->setAveraging( averaging );
 
+    app.clearPlots();
+    app.addOverPlot( &plotParams );
 
 	//Export the plot again
-	String outFile2( "/tmp/plotAveragingTest2.jpg");
+	String outFile2( "/tmp/plotAveragingTimeTest2.jpg");
 	tUtil::clearFile( outFile2 );
-	PlotExportFormat::Type type2 = PlotExportFormat::JPG;
-    PlotExportFormat format2(type2, outFile2 );
-    format2.resolution = PlotExportFormat::SCREEN;
-    bool ok2 = app.save(format2);
-	cout << "tAveraging - result of save="<<ok2<<endl;
+	PlotExportFormat format2(type, outFile2 );
+	format2.resolution = PlotExportFormat::SCREEN;
 
-	bool okOutput2 = tUtil::checkFile( outFile2, 166000, 170000, -1 );
-	cout << "tAveraging - result of second saved file check="<<okOutput2<<endl;
-	if ( okOutput2  && okOutput){
-		cout << "tAveraging Pass!"<<endl;
-	}
-	else {
-		cout << "tAveraging Fail!"<<endl;
-	}*/
+	ok = app.save(format2);
+	cout << "tAveragingTime test 2 - result of save=" << ok <<endl;
+    // This plot file should be smaller because of averaging
+	okOutput = tUtil::checkFile( outFile2, 150000, 160000, -1 );
+	cout << "tAveragingTime test 2 - result of second saved file check=" << okOutput << endl;
+    bool test2 = ok && okOutput;
+    bool test = test1 && test2;
 
 	bool checkGui = tUtil::exitMain( false );
     return !(test && checkGui);

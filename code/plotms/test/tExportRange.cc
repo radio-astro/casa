@@ -37,68 +37,61 @@
 #include <QApplication>
 
 
-void exportPlot(PlotMSApp& app, String outFile, PlotExportFormat::Type type,
+bool exportPlot(PlotMSApp& app, String outFile, PlotExportFormat::Type type,
                 String strType, int minSize, int maxSize ){
 	tUtil::clearFile( outFile+"_Scan1,2,3,4" );
 	tUtil::clearFile( outFile+"_Scan5,6,7_2" );
 
 	PlotExportFormat format(type, outFile );
 	format.resolution = PlotExportFormat::SCREEN;
+
 	bool ok = app.save(format);
 	cout << "tExportRange:: "<<strType.c_str()<<" Result of save="<<ok<<endl;
+	bool okOutput1 = tUtil::checkFile( outFile+"_Scan1,2,3,4", minSize, maxSize, -1 );
+	cout << "tExportRange:: "<<strType.c_str()<<" Result of first save file check=" << okOutput1 << endl;
+    bool okOutput2 = tUtil::checkFile( outFile+"_Scan5,6,7_2", minSize, maxSize, -1 );
+	cout << "tExportRange:: "<<strType.c_str()<<" Result of second save file check=" << okOutput2 << endl;
+    bool test = ok && okOutput1 && okOutput2;
 
-	ok = tUtil::checkFile( outFile+"_Scan1,2,3,4", minSize, maxSize, -1 );
-	cout << "tExportRange:: "<<strType.c_str()<<" Result of first save file check="<<ok<<endl;
-
-	//There should be 2 output files.
-	if ( ok ){
-		ok = tUtil::checkFile( outFile+"_Scan5,6,7_2", minSize, maxSize, -1 );
-		cout << "tExportRange:: "<<strType.c_str()<<" Result of second save file check="<<ok<<endl;
-	}
+    return test;
 }
 
-void exportAsJPG( PlotMSApp& app ){
+bool exportAsJPG( PlotMSApp& app ){
 
     String outFile( "/tmp/plotMSExportRangeJPGTest");
-
     PlotExportFormat::Type type = PlotExportFormat::JPG;
-    exportPlot( app, outFile, type, "JPG", 100000, 130000);
+    return exportPlot( app, outFile, type, "JPG", 100000, 130000);
 }
 
-void exportAsPNG( PlotMSApp& app ){
+bool exportAsPNG( PlotMSApp& app ){
 
     String outFile( "/tmp/plotMSExportRangePNGTest");
-
     PlotExportFormat::Type type = PlotExportFormat::PNG;
-    exportPlot(  app, outFile, type, "PNG", 30000, 35000 );
+    return exportPlot(  app, outFile, type, "PNG", 30000, 35000 );
 
 }
 
-void exportAsPS( PlotMSApp& app ){
+bool exportAsPS( PlotMSApp& app ){
 
     String outFile( "/tmp/plotMSExportRangePSTest");
-
     PlotExportFormat::Type type = PlotExportFormat::PS;
-    exportPlot(  app, outFile, type, "PS", 800000, 1150000);
+    return exportPlot(  app, outFile, type, "PS", 800000, 1150000);
 
 }
 
-void exportAsPDF( PlotMSApp& app ){
+bool exportAsPDF( PlotMSApp& app ){
 
     String outFile( "/tmp/plotMSExportRangePDFTest");
-
     PlotExportFormat::Type type = PlotExportFormat::PDF;
-    cout << "Exporting PDF"<<endl;
-    exportPlot(  app, outFile, type, "PDF", 65000, 90000);
+    return exportPlot(  app, outFile, type, "PDF", 65000, 90000);
 
 }
 
-void exportAsText( PlotMSApp& app ){
+bool exportAsText( PlotMSApp& app ){
 
     String outFile( "/tmp/plotMSExportRangeTextTest");
-    cout << "Exporting Text"<<endl;
     PlotExportFormat::Type type = PlotExportFormat::TEXT;
-    exportPlot(  app, outFile, type, "TEXT", 20000, 30000 );
+    return exportPlot(  app, outFile, type, "TEXT", 20000, 30000 );
 
 }
 
@@ -152,14 +145,16 @@ int main(int /*argc*/, char** /*argv[]*/) {
     //Make the plot.
     app.addOverPlot( &plotParams );
 
-    exportAsJPG( app );
-    exportAsPNG( app );
+    bool jpg_test = exportAsJPG( app );
+    bool png_test = exportAsPNG( app );
 
     //Too much data to export as text.
     //exportAsText( app );
-    exportAsPDF( app );
-    exportAsPS( app );
+    bool pdf_test = exportAsPDF( app );
+    bool ps_test = exportAsPS( app );
+    bool test = jpg_test && png_test && pdf_test && ps_test;
 
-    return tUtil::exitMain( false );
+    bool checkGui = tUtil::exitMain( false );
+    return !(test && checkGui);
 }
 

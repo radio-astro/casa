@@ -123,11 +123,14 @@ int main(int /*argc*/, char** /*argv[]*/) {
     PlotExportFormat::Type type = PlotExportFormat::JPG;
 	PlotExportFormat format(type, outFile );
 	format.resolution = PlotExportFormat::SCREEN;
+
 	bool ok = app.save(format);
-	qDebug() << "tOverPlot2FilesTest:: Result of save="<<ok;
-    
-	ok = tUtil::checkFile( outFile, 55000, 75000, -1 );
-	cout << "tOverPlot2FilesTest:: Result of save file check="<<ok<<endl;
-	return tUtil::exitMain( false );
+	qDebug() << "tOverPlot2FilesTest:: Result of save=" << ok;
+	bool okOutput = tUtil::checkFile( outFile, 55000, 75000, -1 );
+	cout << "tOverPlot2FilesTest:: Result of save file check=" << okOutput << endl;
+    bool test = ok && okOutput;
+
+    bool checkGui = tUtil::exitMain( false );
+    return !(test && checkGui);
 }
 

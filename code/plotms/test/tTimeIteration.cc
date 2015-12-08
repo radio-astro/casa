@@ -92,11 +92,14 @@ int main(int /*argc*/, char** /*argv[]*/) {
     PlotExportFormat::Type type = PlotExportFormat::JPG;
 	PlotExportFormat format(type, outFile + ".jpg");
 	format.resolution = PlotExportFormat::SCREEN;
+
 	bool ok = app.save(format);
-	cout << "tTimeIteration:: Result of save="<<ok<<endl;
-    
-	ok = tUtil::checkFile( outFile1, 110000, 140000, -1 );
-	cout << "tTimeIteration:: Result of  save file check="<<ok<<endl;
-	return tUtil::exitMain( false );
+	cout << "tTimeIteration:: Result of save=" << ok << endl;
+	bool okOutput = tUtil::checkFile( outFile1, 110000, 140000, -1 );
+	cout << "tTimeIteration:: Result of  save file check=" << okOutput << endl;
+    bool test = ok && okOutput;
+
+    bool checkGui = tUtil::exitMain( false );
+    return !(test && checkGui);
 }
 

@@ -93,13 +93,14 @@ int main(int /*argc*/, char** /*argv[]*/) {
     PlotExportFormat::Type type = PlotExportFormat::JPG;
 	PlotExportFormat format(type, outFile + ".jpg" );
 	format.resolution = PlotExportFormat::SCREEN;
+
 	bool ok = app.save(format);
-	cout << "tExportRangePipeline:: Result of save="<<ok<<endl;
-    
+	cout << "tExportRangePipeline:: Result of save=" << ok << endl;
+	bool okOutput = tUtil::checkFile( outFile1, 120000, 130000, -1 );
+	cout << "tExportRangePipeline:: Result of first save file check=" << okOutput << endl;
+    bool test = ok && okOutput;
 
-	ok = tUtil::checkFile( outFile1, 120000, 130000, -1 );
-	cout << "tExportRangePipeline:: Result of first save file check="<<ok<<endl;
-
-	return tUtil::exitMain( false );
+    bool checkGui = tUtil::exitMain( false );
+    return !(test && checkGui);
 }
 

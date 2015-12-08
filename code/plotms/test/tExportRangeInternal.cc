@@ -97,18 +97,16 @@ int main(int /*argc*/, char** /*argv[]*/) {
     PlotExportFormat::Type type = PlotExportFormat::JPG;
 	PlotExportFormat format(type, outFile+".jpg" );
 	format.resolution = PlotExportFormat::SCREEN;
+
 	bool ok = app.save(format);
-	cout << "tExportRangeInternal:: Result of save="<<ok<<endl;
-    
+	cout << "tExportRangeInternal:: Result of save=" << ok << endl;
+	bool okOutput = tUtil::checkFile( outFile1, 240000, 263000, -1 );
+	cout << "tExportRangeInternal:: Result of first save file check=" << okOutput << endl;
+    bool okOutput2 = tUtil::checkFile( outFile2, 45000, 52000, -1 );
+	cout << "tExportRangeInternal:  Result of second save file check=" << okOutput2 << endl;
+    bool test = ok && okOutput && okOutput2;
 
-	ok = tUtil::checkFile( outFile1, 240000, 263000, -1 );
-	cout << "tExportRangeInternal:: Result of first save file check="<<ok<<endl;
-
-	//There should be 2 output files.
-	if ( ok ){
-		ok = tUtil::checkFile( outFile2, 45000, 52000, -1 );
-		cout << "tExportRangeInternal:  Result of second save file check="<<ok<<endl;
-	}
-	return tUtil::exitMain( false );
+    bool checkGui = tUtil::exitMain( false );
+    return !(test && checkGui);    
 }
 

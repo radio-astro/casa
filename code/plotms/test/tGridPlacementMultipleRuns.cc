@@ -184,11 +184,12 @@ int main(int /*argc*/, char** /*argv[]*/) {
     PlotExportFormat::Type type2 = PlotExportFormat::JPG;
 	PlotExportFormat format(type2, outFile );
 	format.resolution = PlotExportFormat::SCREEN;
+
 	bool ok = app.save(format);
-	qDebug() << "tGridPlacementMultipleRuns 1:: Result of save="<<ok;
-    
-	ok = tUtil::checkFile( outFile, 195000, 225000, -1 );
-	qDebug() << "tGridPlacementMultipleRuns 1:: Result of save file check="<<ok;
+	qDebug() << "tGridPlacementMultipleRuns 1:: Result of save=" << ok;
+	bool okOutput = tUtil::checkFile( outFile, 195000, 225000, -1 );
+	qDebug() << "tGridPlacementMultipleRuns 1:: Result of save file check=" << okOutput;
+    bool test1 = ok && okOutput;
 
 	 //Now neck down the grid size
 	 params.setGridSize( 1, 1);
@@ -217,12 +218,15 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	 tUtil::clearFile( outFile2 );
 	 PlotExportFormat format2(type2, outFile2 );
 	 format2.resolution = PlotExportFormat::SCREEN;
+
 	 ok = app.save(format2);
-	 qDebug() << "tGridPlacementMultipleRuns 2:: Result of save="<<ok;
+	 qDebug() << "tGridPlacementMultipleRuns 2:: Result of save=" << ok;
+	 okOutput = tUtil::checkFile( outFile2, 245000, 255000, -1 );
+	 qDebug() << "tGridPlacementMultipleRuns 2:: Result of save file check=" << okOutput;
+     bool test2 = ok && okOutput;
 
-	ok = tUtil::checkFile( outFile2, 245000, 255000, -1 );
-	qDebug() << "tGridPlacementMultipleRuns 2:: Result of save file check="<<ok;
-
-	tUtil::exitMain( false );
+    bool test = test1 && test2;
+    bool checkGui = tUtil::exitMain( false );
+    return !(test && checkGui);
 }
 

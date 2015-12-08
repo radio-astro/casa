@@ -98,13 +98,14 @@ int main(int /*argc*/, char** /*argv[]*/) {
     PlotExportFormat::Type type = PlotExportFormat::JPG;
 	PlotExportFormat format(type, outFile );
 	format.resolution = PlotExportFormat::SCREEN;
+
 	bool ok = app.save(format);
-	qDebug() << "tGridPlacementMultiplePlots:: Result of save="<<ok;
-    
+	qDebug() << "tGridPlacementMultiplePlots:: Result of save=" << ok;
+	bool okOutput = tUtil::checkFile( outFile, 250000, 300000, -1 );
+	qDebug() << "tGridPlacementMultiplePlots:: Result of save file check=" << okOutput;
+    bool test = ok && okOutput;
 
-	ok = tUtil::checkFile( outFile, 250000, 300000, -1 );
-	qDebug() << "tGridPlacementMultiplePlots:: Result of save file check="<<ok;
-
-	tUtil::exitMain( false );
+    bool checkGui = tUtil::exitMain( false );
+    return !(test && checkGui);
 }
 
