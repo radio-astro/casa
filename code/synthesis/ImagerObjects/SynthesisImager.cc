@@ -1886,6 +1886,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     	if(!dopsf)itsMappers.initializeDegrid(*vb);
     	itsMappers.initializeGrid(*vb,dopsf);
+	SynthesisUtilMethods::getResource("After initGrid for all mappers");
+
     	for (rvi_p->originChunks(); rvi_p->moreChunks();rvi_p->nextChunk())
     	{
 
@@ -1909,6 +1911,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     	}
     	//cerr << "IN SYNTHE_IMA" << endl;
     	//VisModelData::listModel(rvi_p->getMeasurementSet());
+	SynthesisUtilMethods::getResource("Before finalize for all mappers");
     	if(!dopsf) itsMappers.finalizeDegrid(*vb);
     	itsMappers.finalizeGrid(*vb, dopsf);
 

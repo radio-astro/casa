@@ -394,7 +394,11 @@ void GridFT::finalizeToVis()
 
   //cerr <<"Time to degrid " << timedegrid_p << endl;
   timedegrid_p=0.0;
+
+  if(!arrayLattice.null()) arrayLattice=0;
+  if(!lattice.null()) lattice=0;
   griddedData.resize();
+
   if(isTiled) {
 
     logIO() << LogOrigin("GridFT", "finalizeToVis")  << LogIO::NORMAL;
@@ -440,10 +444,13 @@ void GridFT::initializeToSky(ImageInterface<Complex>& iimage,
   }
   else {
     IPosition gridShape(4, nx, ny, npol, nchan);
-    griddedData.resize(gridShape);
-    griddedData=Complex(0.0);
+    if( !useDoubleGrid_p )
+      {
+	griddedData.resize(gridShape);
+	griddedData=Complex(0.0);
+      }
     if(useDoubleGrid_p){
-      griddedData.resize();
+      //griddedData.resize();
       griddedData2.resize(gridShape);
       griddedData2=DComplex(0.0);
     }
@@ -1284,7 +1291,14 @@ ImageInterface<Complex>& GridFT::getImage(Matrix<Float>& weights, Bool normalize
       image->put(griddedData(blc, trc));
     }
   }
+
+  image->flush();
+  image->clearCache();
+
+  if(!arrayLattice.null()) arrayLattice=0;
+  if(!lattice.null()) lattice=0;
   griddedData.resize();
+
   return *image;
 }
 
