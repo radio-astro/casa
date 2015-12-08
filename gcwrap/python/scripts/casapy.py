@@ -1050,6 +1050,7 @@ def __set_default_parameters(b):
 
 def backupoldfile(thefile=''):
     import copy
+    import shutil
     if(thefile==''):
         return 
     outpathdir = os.path.realpath(os.path.dirname(thefile))
@@ -1064,8 +1065,7 @@ def backupoldfile(thefile=''):
         ##avoid making multiple copies of the same file
             return
         backupfile=outpathfile+'.'+str(k)
-    
-    os.system('cp '+outpathfile + ' ' + backupfile)
+    shutil.copy2(outpathfile, backupfile)
 
 def tput(taskname=None, outfile=''):
 	myf = sys._getframe(len(inspect.stack())-1).f_globals
