@@ -109,7 +109,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
 	bool ok = app.save(format);
 	cout << "tOverLeftRight:: Result of save=" << ok << endl;
-	bool okOutput = tUtil::checkFile( outFile, 60000, 80000, -1 );
+	bool okOutput = tUtil::checkFile( outFile, 60000, 95000, -1 );
 	cout << "tOverLeftRight:: Result of save file check=" << okOutput << endl;
     bool test = ok && okOutput;
 

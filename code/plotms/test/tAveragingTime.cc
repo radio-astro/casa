@@ -100,7 +100,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	ok = app.save(format2);
 	cout << "tAveragingTime test 2 - result of save=" << ok <<endl;
     // This plot file should be smaller because of averaging
-	okOutput = tUtil::checkFile( outFile2, 150000, 160000, -1 );
+	okOutput = tUtil::checkFile( outFile2, 150000, 170000, -1 );
 	cout << "tAveragingTime test 2 - result of second saved file check=" << okOutput << endl;
     bool test2 = ok && okOutput;
     bool test = test1 && test2;

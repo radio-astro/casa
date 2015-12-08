@@ -109,7 +109,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
 	bool ok = app.save(format);
 	cout << "tOverplot:: Result of save=" << ok << endl;
-	bool okOutput = tUtil::checkFile( outFile, 55000, 75000, -1 );
+	bool okOutput = tUtil::checkFile( outFile, 55000, 85000, -1 );
 	cout << "tOverplot:: Result of save file check=" << okOutput << endl;
     bool test = ok && okOutput;
 

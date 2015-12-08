@@ -102,7 +102,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	cout << "tExportRangeInternal:: Result of save=" << ok << endl;
 	bool okOutput = tUtil::checkFile( outFile1, 240000, 263000, -1 );
 	cout << "tExportRangeInternal:: Result of first save file check=" << okOutput << endl;
-    bool okOutput2 = tUtil::checkFile( outFile2, 45000, 52000, -1 );
+    bool okOutput2 = tUtil::checkFile( outFile2, 45000, 55000, -1 );
 	cout << "tExportRangeInternal:  Result of second save file check=" << okOutput2 << endl;
     bool test = ok && okOutput && okOutput2;
 

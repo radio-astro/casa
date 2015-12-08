@@ -96,7 +96,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
 	bool ok = app.save(format);
 	cout << "tExportRangePipeline:: Result of save=" << ok << endl;
-	bool okOutput = tUtil::checkFile( outFile1, 120000, 130000, -1 );
+	bool okOutput = tUtil::checkFile( outFile1, 120000, 140000, -1 );
 	cout << "tExportRangePipeline:: Result of first save file check=" << okOutput << endl;
     bool test = ok && okOutput;
 

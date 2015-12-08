@@ -187,7 +187,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
 	bool ok = app.save(format);
 	qDebug() << "tGridPlacementMultipleRuns 1:: Result of save=" << ok;
-	bool okOutput = tUtil::checkFile( outFile, 195000, 225000, -1 );
+	bool okOutput = tUtil::checkFile( outFile, 155000, 225000, -1 );
 	qDebug() << "tGridPlacementMultipleRuns 1:: Result of save file check=" << okOutput;
     bool test1 = ok && okOutput;
 
@@ -221,7 +221,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
 	 ok = app.save(format2);
 	 qDebug() << "tGridPlacementMultipleRuns 2:: Result of save=" << ok;
-	 okOutput = tUtil::checkFile( outFile2, 245000, 255000, -1 );
+	 okOutput = tUtil::checkFile( outFile2, 235000, 255000, -1 );
 	 qDebug() << "tGridPlacementMultipleRuns 2:: Result of save file check=" << okOutput;
      bool test2 = ok && okOutput;
 

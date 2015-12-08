@@ -104,9 +104,9 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
 	bool ok = app.save(format);
 	cout << "tExportRangeRightBottom:: Result of save=" << ok << endl;
-	bool okOutput = tUtil::checkFile( outFile1, 110000, 130000, -1 );
+	bool okOutput = tUtil::checkFile( outFile1, 110000, 155000, -1 );
 	cout << "tExportRangeRightBottom:: Result of first save file check=" << okOutput << endl;
-	bool okOutput2 = tUtil::checkFile( outFile2, 45000, 55000, -1 );
+	bool okOutput2 = tUtil::checkFile( outFile2, 45000, 60000, -1 );
 	cout << "tExportRangeRightBottom:  Result of second save file check=" << okOutput2 << endl;
     bool test = ok && okOutput && okOutput2;
 

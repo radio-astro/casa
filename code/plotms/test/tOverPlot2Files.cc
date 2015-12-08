@@ -126,7 +126,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
 	bool ok = app.save(format);
 	qDebug() << "tOverPlot2FilesTest:: Result of save=" << ok;
-	bool okOutput = tUtil::checkFile( outFile, 55000, 75000, -1 );
+	bool okOutput = tUtil::checkFile( outFile, 55000, 85000, -1 );
 	cout << "tOverPlot2FilesTest:: Result of save file check=" << okOutput << endl;
     bool test = ok && okOutput;
 

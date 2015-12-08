@@ -93,7 +93,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
 	bool ok = app.save(format);
 	qDebug() << "tGridPlacement:: Result of save=" << ok;
-	bool okOutput = tUtil::checkFile( outFile, 60000, 80000, -1 );
+	bool okOutput = tUtil::checkFile( outFile, 55000, 80000, -1 );
 	qDebug() << "tGridPlacement:: Result of save file check=" << okOutput;
     bool test = ok && okOutput;
 

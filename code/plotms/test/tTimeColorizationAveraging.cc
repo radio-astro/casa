@@ -94,7 +94,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
 	bool ok = app.save(format);
 	cout << "tTimeColorizationAveraging:: Result of save=" << ok << endl;
-	bool okOutput = tUtil::checkFile( outFile, 50000, 70000, -1 );
+	bool okOutput = tUtil::checkFile( outFile, 50000, 75000, -1 );
 	cout << "tTimeColorizationAveraging:: Result of  save file check=" << okOutput << endl;
     bool test = ok && okOutput;
 

@@ -95,7 +95,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
 	bool ok = app.save(format);
 	cout << "tTimeIteration:: Result of save=" << ok << endl;
-	bool okOutput = tUtil::checkFile( outFile1, 110000, 140000, -1 );
+	bool okOutput = tUtil::checkFile( outFile1, 110000, 190000, -1 );
 	cout << "tTimeIteration:: Result of  save file check=" << okOutput << endl;
     bool test = ok && okOutput;
 

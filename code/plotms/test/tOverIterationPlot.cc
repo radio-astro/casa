@@ -125,7 +125,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
 	bool ok = app.save(format);
 	cout << "tOverIterationplot:: Result of save=" << ok << endl;
-	bool okOutput = tUtil::checkFile( outFile1, 155000, 190000, -1 );
+	bool okOutput = tUtil::checkFile( outFile1, 155000, 240000, -1 );
 	cout << "tOverIterationplot:: Result of save file check=" << okOutput << endl;
     bool test = ok && okOutput;
 

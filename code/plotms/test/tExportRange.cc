@@ -60,14 +60,14 @@ bool exportAsJPG( PlotMSApp& app ){
 
     String outFile( "/tmp/plotMSExportRangeJPGTest");
     PlotExportFormat::Type type = PlotExportFormat::JPG;
-    return exportPlot( app, outFile, type, "JPG", 100000, 130000);
+    return exportPlot( app, outFile, type, "JPG", 100000, 160000);
 }
 
 bool exportAsPNG( PlotMSApp& app ){
 
     String outFile( "/tmp/plotMSExportRangePNGTest");
     PlotExportFormat::Type type = PlotExportFormat::PNG;
-    return exportPlot(  app, outFile, type, "PNG", 30000, 35000 );
+    return exportPlot(  app, outFile, type, "PNG", 30000, 50000 );
 
 }
 
@@ -75,7 +75,7 @@ bool exportAsPS( PlotMSApp& app ){
 
     String outFile( "/tmp/plotMSExportRangePSTest");
     PlotExportFormat::Type type = PlotExportFormat::PS;
-    return exportPlot(  app, outFile, type, "PS", 800000, 1150000);
+    return exportPlot(  app, outFile, type, "PS", 500000, 1150000);
 
 }
 
@@ -83,7 +83,7 @@ bool exportAsPDF( PlotMSApp& app ){
 
     String outFile( "/tmp/plotMSExportRangePDFTest");
     PlotExportFormat::Type type = PlotExportFormat::PDF;
-    return exportPlot(  app, outFile, type, "PDF", 65000, 90000);
+    return exportPlot(  app, outFile, type, "PDF", 65000, 110000);
 
 }
 
