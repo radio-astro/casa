@@ -119,7 +119,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
   void SynthesisUtilMethods::getResource(String label, String fname)
   {
-    return;
+        return;
 
      LogIO os( LogOrigin("SynthesisUtilMethods","getResource",WHERE) );
 
@@ -161,7 +161,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	os << oss.str() << LogIO::NORMAL3 <<  LogIO::POST;
-	cout << oss.str() << endl;
+	//	cout << oss.str() << endl;
 
 	// Write this to a file too...
 	fname = "memprofile";
@@ -1529,7 +1529,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ///    err += verifySpectralSetup();  
 
     // Allow only one starting model. No additions to be done.
-    
     if( startModel.length()>0 )
       {
 	if( nTaylorTerms<=1 ) {
@@ -1541,7 +1540,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  if( fp.exists() ) err += "Model " + imageName+".model.tt* exists, but a starting model of " + startModel + " is also being requested. Please either reset startmodel='' to use what already exists, or delete " + imageName + ".model.tt* so that it uses the new model specified in startmodel";
 	}
       }
-    
+
+
 	return err;
   }
 
@@ -3023,21 +3023,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     String err;
 
-    /*
-    // Allow only one starting model. No additions to be done.
-    if( startModel.length()>0 )
+    
+    // Allow mask inputs in only one way. User specified OR already on disk. Not both
+    if( maskString.length()>0 )
       {
-	if( nTaylorTerms<=1 ) {
-	  File fp( imageName+".model" );
-	  if( fp.exists() ) err += "Model " + imageName+".model exists, but a starting model of " + startModel + " is also being requested. Please either reset startmodel='' or delete " + imageName + ".model before restarting";
-	  }
-	else {
-	  File fp( imageName+".model.tt0" ); 
-	  if( fp.exists() ) err += "Model " + imageName+".model.tt* exists, but a starting model of " + startModel + " is also being requested. Please either reset startmodel='' or delete " + imageName + ".model.tt* before restarting";
-	}
+	  File fp( imageName+".mask" );
+	  if( fp.exists() ) err += "Mask image " + imageName+".mask exists, but a specific input mask of " + maskString + " has also been supplied. Please either reset mask='' to reuse the existing mask, or delete " + imageName + ".mask before restarting";
       }
-    */
-
+   
     return err;
   }
 

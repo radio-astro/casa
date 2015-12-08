@@ -2203,6 +2203,7 @@ Bool SIImageStore::isModelEmpty()
 
     os << "[" << itsImageName << "] Total Model Flux : " << getModelFlux() << LogIO::POST; 
 
+
   }
 
   // Calculate the total model flux
@@ -2218,12 +2219,14 @@ Bool SIImageStore::isModelEmpty()
     return masksum;
   }
 
-Bool SIImageStore::findMinMaxLattice(const Lattice<Float>& lattice, const Lattice<Float>& mask,
-				     Float& maxAbs, Float& maxAbsMask, Float& minAbs, Float& minAbsMask )
+Bool SIImageStore::findMinMaxLattice(const Lattice<Float>& lattice, 
+				     const Lattice<Float>& mask,
+				     Float& maxAbs, Float& maxAbsMask, 
+				     Float& minAbs, Float& minAbsMask )
 {
 
   maxAbs=0.0;maxAbsMask=0.0;
-  minAbs=1e+10;minAbsMask=1e+10;
+  minAbs=0.0;minAbsMask=0.0;
 
   const IPosition tileShape = lattice.niceCursorShape();
   TiledLineStepper ls(lattice.shape(), tileShape, 0);

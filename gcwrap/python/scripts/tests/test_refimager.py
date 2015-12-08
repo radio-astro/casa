@@ -692,8 +692,8 @@ class test_multifield(testref_base):
                         nmajordone=2,
                         imexist=[self.img+'.image', self.img+'1.image'],
                         imval=[(self.img+'.image',1.075,[50,50,0,0]),
-                               (self.img+'1.image',5.590,[40,40,0,0])])
-
+                               (self.img+'1.image',5.590,[40,40,0,0]),
+                               (self.img+'.residual',0.04,[30,18,0,0])])
 
      def test_multifield_both_mtmfs(self):
           """ [multifield] Test_Multifield_both_mtmfs : Two fields, both mt-mfs """
@@ -1854,12 +1854,16 @@ class test_startmodel(testref_base):
           self.checkall(imexist=[self.img+'1.residual'], imval=[(self.img+'1.residual',0.35304,[50,50,0,0])])
 
           try:
-               ## This run should fail with an exception
+               ## This run should fail with an exception (if __rethrow_exceptions = True )
                ret2 = tclean(vis=self.msfile,imagename=self.img+'1',imsize=120,cell='8.0arcsec',niter=10,deconvolver='hogbom',interactive=0)
                correct=False
           except Exception as e:
-              correct=True
-          self.assertTrue(correct)
+               correct=True
+          #self.assertTrue(correct)
+          
+          ## Check that there is no change in output value.... 
+          ## i.e. the second run should have failed.     
+          self.checkall(imval=[(self.img+'1.residual',0.35304,[50,50,0,0])])
 
      def test_startmodel_mfs_changeshape_2(self):
           """ [startmodel] test_startmodel_mfs_changeshape_2 : Restart a run using 'startmodel' and change shape and imagename"""

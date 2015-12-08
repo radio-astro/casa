@@ -69,14 +69,14 @@ class SIMapperCollection
   */
 
   //////////// OLD VI/VB : Version that use old vi/vb can be removed the vi2/vb2 works
-  void initializeGrid(VisBuffer& vb, Bool dopsf=False);
+  void initializeGrid(VisBuffer& vb, Bool dopsf=False,const Int mapperid=-1);
   void grid(VisBuffer& vb, Bool dopsf=False, FTMachine::Type col=FTMachine::CORRECTED,
-	    const Int whichFTM=-1);
-  void finalizeGrid(VisBuffer& vb, Bool dopsf=False);
-  void initializeDegrid(VisBuffer& vb);
-  void degrid(VisBuffer& vb, Bool saveVirtualMod=False);
+	    const Int mapperid=-1);
+  void finalizeGrid(VisBuffer& vb, Bool dopsf=False,const Int mapperid=-1);
+  void initializeDegrid(VisBuffer& vb,const Int mapperid=-1);
+  void degrid(VisBuffer& vb, Bool saveVirtualMod=False,const Int mapperid=-1);
   void saveVirtualModel(VisBuffer& vb);
-  void finalizeDegrid(VisBuffer& vb);
+  void finalizeDegrid(VisBuffer& vb,const Int mapperid=-1);
   ////////////////////////////////////////////////////
   Record getFTMRecord(Int mapperid);
 

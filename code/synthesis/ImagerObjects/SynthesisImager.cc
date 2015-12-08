@@ -120,6 +120,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
      nMajorCycles=0;
 
+     itsDataLoopPerMapper=False;
+
   }
   
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -912,8 +914,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     try
       {    
-	runMajorCycle(False, lastcycle);
-
+	if( itsDataLoopPerMapper == False )
+	  {	runMajorCycle(False, lastcycle);}
+	else
+	  {	runMajorCycle2(False, lastcycle);}
+	
+	
 	itsMappers.releaseImageLocks();
 
       }
@@ -934,7 +940,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
       try
       {
-	runMajorCycle(True, False);
+	if( itsDataLoopPerMapper == False )
+	  {runMajorCycle(True, False);}
+	else
+	  {runMajorCycle2(True, False);}
 
 	//	makeImage();
 
@@ -1408,10 +1417,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //---------------------------------------------
       // Some checks..
       if(facets > 1 && itsMappers.nMappers() > 0)
-	log_l << "Facetted image has to be first of multifields" << LogIO::EXCEPTION;
+	log_l << "Facetted image has to be the first of multifields" << LogIO::EXCEPTION;
 
       if(chanchunks > 1 && itsMappers.nMappers() > 0)
-	log_l << "Chan Chunked image has to be first of multifields" << LogIO::EXCEPTION;
+	log_l << "Channel chunking is currently not supported with multi(outlier)-fields. Please submit a feature request if needed." << LogIO::EXCEPTION;
+
+      if(chanchunks > 1) itsDataLoopPerMapper=True;
       
       AlwaysAssert( ( ( ! (ftm->name()=="MosaicFTNew" && mappertype=="imagemosaic") )  && 
       		      ( ! (ftm->name()=="AWProjectWBFTNew" && mappertype=="imagemosaic") )) ,
@@ -1946,11 +1957,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
     	if(!dopsf){
-	  //	  itsMappers.initializeDegrid(*vb);
-	  itsMappers.getMapper(gmap)->initializeDegrid(*vb);
+	  itsMappers.initializeDegrid(*vb, gmap);
+		  //itsMappers.getMapper(gmap)->initializeDegrid(*vb);
 	}
-	//    	itsMappers.initializeGrid(*vb,dopsf);
-   	itsMappers.getMapper(gmap)->initializeGrid(*vb,dopsf);
+	itsMappers.initializeGrid(*vb,dopsf, gmap);
+		//itsMappers.getMapper(gmap)->initializeGrid(*vb,dopsf);
 
 	SynthesisUtilMethods::getResource("After initialize for mapper"+String::toString(gmap));
 
@@ -1965,13 +1976,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		    {
     			if(!dopsf) {
 			  {   vb->setModelVisCube(Complex(0.0, 0.0)); }
-			    //    				itsMappers.degrid(*vb, savevirtualmodel );
-			  itsMappers.getMapper(gmap)->degrid(*vb); //, savevirtualmodel );
+			  itsMappers.degrid(*vb, savevirtualmodel, gmap );
+			  //itsMappers.getMapper(gmap)->degrid(*vb); //, savevirtualmodel );
     				if(savemodelcolumn && writeAccess_p )
     					wvi_p->setVis(vb->modelVisCube(),VisibilityIterator::Model);
     			}
-			//    			itsMappers.grid(*vb, dopsf, datacol_p);
-    			itsMappers.getMapper(gmap)->grid(*vb, dopsf, datacol_p);
+			itsMappers.grid(*vb, dopsf, datacol_p, gmap);
+    			//itsMappers.getMapper(gmap)->grid(*vb, dopsf, datacol_p);
 			cohDone += vb->nRow();
 			pm.update(Double(cohDone));
 		    }
@@ -1984,11 +1995,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     	if(!dopsf) 
 	  {
-	    //	    itsMappers.finalizeDegrid(*vb);
-	    itsMappers.getMapper(gmap)->finalizeDegrid();
+	    itsMappers.finalizeDegrid(*vb,gmap);
+	    //itsMappers.getMapper(gmap)->finalizeDegrid();
 	  }
-	//    	itsMappers.finalizeGrid(*vb, dopsf);
-    	itsMappers.getMapper(gmap)->finalizeGrid(*vb, dopsf);
+	itsMappers.finalizeGrid(*vb, dopsf,gmap);
+    	//itsMappers.getMapper(gmap)->finalizeGrid(*vb, dopsf);
 
 	//	itsMappers.getMapper(gmap)->releaseImageLocks();
 

@@ -314,6 +314,7 @@ protected:
   CountedPtr<SIImageStore> unFacettedImStore_p;
   CountedPtr<SIImageStore> unChanChunkedImStore_p;
 
+  Bool itsDataLoopPerMapper;
 
   CoordinateSystem itsMaxCoordSys;
   IPosition itsMaxShape;

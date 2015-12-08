@@ -167,20 +167,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   ////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////OLD vi/vb //////////////////////////////////////////////
-  void SIMapperCollection::initializeGrid(VisBuffer& vb, Bool dopsf)
+  void SIMapperCollection::initializeGrid(VisBuffer& vb, Bool dopsf, const Int mapperid)
   {
-	  for (uInt k=0; k < itsMappers.nelements(); ++k)
+    if(mapperid<0)
+      {
+	for (uInt k=0; k < itsMappers.nelements(); ++k)
 	  {
 	    (itsMappers[k])->initializeGrid(vb,dopsf,True);
-
-	    SynthesisUtilMethods::getResource("Init Grid for mapper"+String::toString(k));
   	  }
+      }
+    else 
+      {
+	if (mapperid > (Int)itsMappers.nelements())
+	  throw ( AipsError("Internal Error : SIMapperCollection::initializeGrid(): mapperid out of range") );
+	else itsMappers[mapperid]->initializeGrid(vb, dopsf, True);
+      }
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////OLD VI/VB ///////////////////////////////////
   void SIMapperCollection::grid(VisBuffer& vb, Bool dopsf, FTMachine::Type col,
-				Int whichFTM)
+				Int mapperid)
   {
     if( itsIsNonZeroModel == True ) // Try to subtract model visibilities only if a model exists.
 	{
@@ -199,17 +206,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    }
 	}// if non zero model
 
-    if (whichFTM < 0)
-      for (uInt k=0; k < itsMappers.nelements(); ++k)
-	{
-	  (itsMappers[k])->grid(vb, dopsf, col);
-	  
-	}
+    if (mapperid < 0)
+      {
+	for (uInt k=0; k < itsMappers.nelements(); ++k)
+	  {
+	    (itsMappers[k])->grid(vb, dopsf, col);
+	    
+	  }
+      }
     else 
       {
-	if (whichFTM > (Int)itsMappers.nelements())
-	  throw ( AipsError("Internal Error : SIMapperCollection::grid(): whichFTM out of range") );
-	else itsMappers[whichFTM]->grid(vb, dopsf, col);
+	if (mapperid > (Int)itsMappers.nelements())
+	  throw ( AipsError("Internal Error : SIMapperCollection::grid(): mapperid out of range") );
+	else itsMappers[mapperid]->grid(vb, dopsf, col);
       }
   }
   ///////////////////////////////
@@ -217,52 +226,78 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////OLD VI/VB////////////////////////////////////////////////
-    void SIMapperCollection::finalizeGrid(VisBuffer& vb, Bool dopsf)
-        {
-      	  for (uInt k=0; k < itsMappers.nelements(); ++k)
+  void SIMapperCollection::finalizeGrid(VisBuffer& vb, Bool dopsf,const Int mapperid)
+  {
+    if(mapperid<0)
+      {
+	for (uInt k=0; k < itsMappers.nelements(); ++k)
       	  {
-        		  (itsMappers[k])->finalizeGrid(vb, dopsf);
-	    SynthesisUtilMethods::getResource("Finalize Grid for mapper"+String::toString(k));
-
+	    (itsMappers[k])->finalizeGrid(vb, dopsf);
       	  }
-        }
-
+      }
+    else 
+      {
+	if (mapperid > (Int)itsMappers.nelements())
+	  throw ( AipsError("Internal Error : SIMapperCollection::finalizeGrid(): mapperid out of range") );
+	else itsMappers[mapperid]->finalizeGrid(vb, dopsf);
+      }
+  }
+  
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////OLD VI/VB ///////////////////////////////////////////////////
-  void SIMapperCollection::initializeDegrid(VisBuffer& vb)
+  void SIMapperCollection::initializeDegrid(VisBuffer& vb, const Int mapperid)
     {
 
       itsIsNonZeroModel = anyNonZeroModels();
 
       if( itsIsNonZeroModel == True )
 	{
-	  vb.setModelVisCube( Complex(0.0,0.0) );
+	  //	  vb.setModelVisCube( Complex(0.0,0.0) );
 	  
-
-  	  for (uInt k=0; k < itsMappers.nelements(); ++k)
-    	  {
+	  if(mapperid<0)
+	    {
+	      for (uInt k=0; k < itsMappers.nelements(); ++k)
+		{
     		  (itsMappers[k])->initializeDegrid(vb);
-
-    	  }
+		}
+	    }
+	  else 
+	    {
+	      if (mapperid > (Int)itsMappers.nelements())
+		throw ( AipsError("Internal Error : SIMapperCollection::initializeDegrid(): mapperid out of range") );
+	      else itsMappers[mapperid]->initializeDegrid(vb);
+	    }
+	  
 	}// if non zero model 
     }
 
   ////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////OLD VI/VB ////////////////////////////////////////////////////
-  void SIMapperCollection::degrid(VisBuffer& vb, Bool saveVirtualMod)
+  void SIMapperCollection::degrid(VisBuffer& vb, Bool saveVirtualMod, const Int mapperid)
     {
       if( itsIsNonZeroModel == True )
 	{
-	  	  for (uInt k=0; k < itsMappers.nelements(); ++k)
-	    				(itsMappers[k])->degrid(vb);
-
-  		  if(saveVirtualMod){
-		    saveVirtualModel(vb);
-  		  }
+	  if(mapperid<0)
+	    {
+	      for (uInt k=0; k < itsMappers.nelements(); ++k)
+		{
+		  (itsMappers[k])->degrid(vb);
+		}
+	    }
+	  else 
+	    {
+	      if (mapperid > (Int)itsMappers.nelements())
+		throw ( AipsError("Internal Error : SIMapperCollection::degrid(): mapperid out of range") );
+	      else itsMappers[mapperid]->degrid(vb);
+	    }
+	  
+	  if(saveVirtualMod){
+	    saveVirtualModel(vb);
+	  }
 	}// if non zero model
     }
-
+  
 
   /////
   /////////////
@@ -320,18 +355,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   /////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////
-  void SIMapperCollection::finalizeDegrid(VisBuffer& /*vb*/)
+  void SIMapperCollection::finalizeDegrid(VisBuffer& /*vb*/, const Int mapperid)
     {
       if( itsIsNonZeroModel == True )
 	{
-  	  for (uInt k=0; k < itsMappers.nelements(); ++k)
-  	  {
+	  if(mapperid<0)
+	    {
+	      for (uInt k=0; k < itsMappers.nelements(); ++k)
+		{
   		  (itsMappers[k])->finalizeDegrid();
-
-  	  }
+		  
+		}
+	    }
+	  else 
+	    {
+	      if (mapperid > (Int)itsMappers.nelements())
+		throw ( AipsError("Internal Error : SIMapperCollection::finalizeDegrid(): mapperid out of range") );
+	      else itsMappers[mapperid]->finalizeDegrid();
+	    }
 	}// if non zero model
     }
-
+  
   /*
   void SIMapperCollection::initPB()
   {
