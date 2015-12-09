@@ -44,30 +44,7 @@
 #include <images/Images/SubImage.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
-
-// Constructors, Destructor, Operators
-// -----------------------------------
-
-template <class T>
-ImageDecomposer<T>::ImageDecomposer()
- : itsImagePtr(0),
-   itsMapPtr(0),
-   itsShape(0), 
-   itsDim(0),
-   itsNRegions(0),
-   itsNComponents(0),
-   itsDeblendIt(True),
-   itsThresholdVal(0.1),
-   itsNContour(11),
-   itsMinRange(2),
-   itsNAxis(2),
-   itsFitIt(True),
-   itsMaximumRMS(0.1),
-   itsMaxRetries(-1),
-   itsMaxIter(256),
-   itsConvCriteria(0.001)
-{}
+namespace casa {
 
 template <class T>
 ImageDecomposer<T>::ImageDecomposer(const ImageInterface<T>& image)
@@ -124,7 +101,7 @@ ImageDecomposer<T>::ImageDecomposer(const ImageDecomposer<T>& other)
 
   itsMapPtr->copyData(*(other.itsMapPtr));
 }
-
+/*
 template <class T>
 ImageDecomposer<T> &ImageDecomposer<T>::operator=(const ImageDecomposer<T> &other)
 {
@@ -146,6 +123,7 @@ ImageDecomposer<T> &ImageDecomposer<T>::operator=(const ImageDecomposer<T> &othe
    }
    return *this;
 }
+*/
 
 template <class T>
 ImageDecomposer<T>::~ImageDecomposer()
@@ -163,7 +141,7 @@ ImageDecomposer<T>::~ImageDecomposer()
 // Basic set/get functions
 // -----------------------
 
-
+/*
 template <class T>
 void ImageDecomposer<T>::setImage(ImageInterface<T>& image)
 {
@@ -190,7 +168,7 @@ void ImageDecomposer<T>::setImage(ImageInterface<T>& image)
    }
    itsMapPtr->set(0);
 }
-
+*/
 
 template <class T>
 void ImageDecomposer<T>::setDeblend(Bool deblendIt)
@@ -2336,7 +2314,7 @@ void ImageDecomposer<T>::printComponents() const
   for (uInt g = 0; g < clist.nrow(); g++)
   {
     cout << g+1 << ": ";
-    if (itsList(g,0) == 0) {
+    if (itsList(g,0) == T(0)) {
        cout << "Failed"; 
     } else { 
       cout << "Peak: " << clist(g,0) << "  ";

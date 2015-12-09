@@ -129,24 +129,19 @@ public:
      MASKED = -2 
    };
 
-// Default constructor.   Object is not viable until setImage called
-   ImageDecomposer();
+   ImageDecomposer() = delete;
 
-// Construct from image
    ImageDecomposer(const ImageInterface<T>& image);
 
-// Copy constructor.
    ImageDecomposer(const ImageDecomposer<T>& other);
 
-// Assignment
-   ImageDecomposer<T> &operator=(const ImageDecomposer<T> &other);
+   ImageDecomposer<T> &operator=(const ImageDecomposer<T> &other) = delete;
 
-// Destructor
    ~ImageDecomposer();
 
 // Tell the decomposer what image to decompose ("target image").
 // Also resets the internal component map.
-   void setImage (ImageInterface<T>& image);
+//   void setImage (ImageInterface<T>& image);
 
 // Tells the program whether or not to use the contour-based deblender. If not,
 // the program will instead perform a single thresholding followed by a

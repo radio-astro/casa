@@ -340,69 +340,6 @@ Record* ImageAnalysis::coordmeasures(
 	return r;
 }
 
-Matrix<Float> ImageAnalysis::decompose(
-	Record& Region, const String& mask,
-	const Bool simple, const Double Threshold, const Int nContour,
-	const Int minRange, const Int nAxis, const Bool fit,
-	const Double maxrms, const Int maxRetry, const Int maxIter,
-	const Double convCriteria
-) {
-	_onlyFloat(__func__);
-
-	Matrix<Int> blcs;
-	Matrix<Int> trcs;
-	return decompose(
-		blcs, trcs, Region, mask, simple, Threshold, nContour, minRange,
-		nAxis, fit, maxrms, maxRetry, maxIter, convCriteria
-	);
-}
-
-Matrix<Float> ImageAnalysis::decompose(
-	Matrix<Int>& blcs, Matrix<Int>& trcs, Record& Region, const String& mask,
-	const Bool simple, const Double Threshold, const Int nContour,
-	const Int minRange, const Int nAxis, const Bool fit,
-	const Double maxrms, const Int maxRetry, const Int maxIter,
-	const Double convCriteria, const Bool stretch
-) {
-	_onlyFloat(__func__);
-	*_log << LogOrigin("ImageAnalysis", __func__);
-
-	if (Threshold < 0) {
-		*_log << "Threshold cannot be negative " << LogIO::EXCEPTION;
-	}
-
-	Float threshold(Threshold);
-
-	AxesSpecifier axesSpec(False);
-	SHARED_PTR<const SubImage<Float> > subImage = SubImageFactory<Float>::createSubImageRO(
-		*_imageFloat, Region, mask,	_log.get(), axesSpec, stretch
-	);
-	// Make finder
-	ImageDecomposer<Float> decomposer(*subImage);
-	decomposer.setDeblend(!simple);
-	decomposer.setDeblendOptions(threshold, nContour, minRange, nAxis);
-	decomposer.setFit(fit);
-	decomposer.setFitOptions(maxrms, maxRetry, maxIter, convCriteria);
-	decomposer.decomposeImage();
-	decomposer.printComponents();
-	Block<IPosition> blcspos(decomposer.numRegions());
-	Block<IPosition> trcspos(decomposer.numRegions());
-	decomposer.boundRegions(blcspos, trcspos);
-	if(blcspos.nelements() >0){
-	  blcs.resize(blcspos.nelements(), blcspos[0].asVector().nelements());
-	  trcs.resize(trcspos.nelements(), trcspos[0].asVector().nelements());
-	  for (uInt k=0; k < blcspos.nelements(); ++k){
-	    blcs.row(k)=blcspos[k].asVector();
-	    trcs.row(k)=trcspos[k].asVector();
-	  }
-	}
-	// As yet no methods to put the results into an output container
-	// (Note: component list can be output as a Matrix.)
-	Matrix<Float> cl = decomposer.componentList();
-	return cl;
-
-}
-
 SPCIIC ImageAnalysis::getComplexImage() const {
 	ThrowIf(
 		_imageFloat,
