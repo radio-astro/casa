@@ -785,8 +785,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   /////////////////////////////////////////////////////////////////////////////////////////////////////
   
   Vector<SynthesisParamsSelect> SynthesisImager::tuneSelectData(){
+           LogIO os( LogOrigin("SynthesisImager","tuneSelectData",WHERE) );
 	   if(itsMappers.nMappers() < 1)
 		   ThrowCc("defineimage has to be run before tuneSelectData");
+
+	   os << "Tuning frequency data selection to match image spectral coordinates" << LogIO::POST;
+
 	   Vector<SynthesisParamsSelect> origDatSel(dataSel_p.nelements());
 	   origDatSel=dataSel_p;
 	   /*Record selpars;
@@ -816,11 +820,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	   String freqend=doubleToString(freq2)+units;
 	   //Record outRec=SynthesisUtilMethods::cubeDataPartition(selpars, 1, freq1, freq2);
 	   //Record partRec=outRec.asRecord("0");
+
 	   ///resetting the block ms
 	   mss4vi_p.resize(0,True, False);
 	   //resetting data selection stored
-
 	   dataSel_p.resize();
+	   // reset rvi_p
+	   if(rvi_p) delete rvi_p;
+	   rvi_p=NULL;
 
 	   for(uInt k=0; k< origDatSel.nelements(); ++k){
 		   SynthesisParamsSelect outsel=origDatSel[k];
