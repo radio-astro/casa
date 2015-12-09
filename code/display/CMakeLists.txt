@@ -1063,20 +1063,18 @@ install ( FILES
 casa_add_executable( display casaplotter apps/casaplotter/casaplotter.cc )
 #casa_add_executable( display casadrawer apps/casadrawer/casadrawer.cc )
 casa_add_executable( display casaviewer apps/casaviewer/casaviewer.cc )
-casa_add_assay( display DisplayEvents/test/tDisplayEvent.cc )
-casa_add_assay( display DisplayEvents/test/tDisplayTool.cc )
+
+
 casa_add_demo( display Display/test/dGLDemo.cc )
-
-message ("WARNING: Display/test/dPSLatticeAsRaster.cc not building: repair or remove")
-#casa_add_demo( display Display/test/dPSLatticeAsRaster.cc )
-
 casa_add_demo( display Display/test/dPSWorldCanvasApp.cc )
-casa_add_assay( display Display/test/tAttribute.cc )
-casa_add_assay( display Display/test/tAttVal.cc )
-casa_add_assay( display Display/test/tAttValPoi.cc )
 casa_add_demo( display QtViewer/test/dQtDataManager.cc )
-casa_add_assay( display Utilities/test/tDisplayOptions.cc )
-casa_add_assay( display Utilities/test/tDlHandle.cc )
 
+casa_add_unit_test ( MODULES display SOURCES DisplayEvents/test/tDisplayEvent.cc )
+casa_add_unit_test ( MODULES display SOURCES DisplayEvents/test/tDisplayTool.cc )
+casa_add_unit_test( MODULES display SOURCES Display/test/tAttVal.cc )
+casa_add_unit_test( MODULES display SOURCES Display/test/tAttValPoi.cc )
+casa_add_unit_test( MODULES display SOURCES Utilities/test/tDisplayOptions.cc )
+casa_add_unit_test( MODULES display SOURCES Utilities/test/tDlHandle.cc )
 
 casa_add_google_test (MODULES display SOURCES Display/test/tAttribute_Gtest.cc) 
+

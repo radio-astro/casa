@@ -62,7 +62,7 @@ private:
 	std::string str;
 };
 
-int main( int argc, char **argv ) {
+int main( int /*argc*/, char **/**argv*/ ) {
 	std::cout << "-------------------- begin test --------------------" << std::endl;
 	obj *obj1 = new obj("try one");
 	std::cout << "<1> " << obj1->value() << std::endl;
@@ -100,4 +100,6 @@ int main( int argc, char **argv ) {
 	std::cout << "\t\t... handle is " << (p5.null() ? "null" : "not null") << " ..." << std::endl;
 
 	std::cout << "----------------------------------------------------" << std::endl;
+	std::cout << "OK" << std::endl;
+	return 0;
 }
