@@ -1621,7 +1621,7 @@ class ImagerParameters():
                 if inpname.count('/'):
                     splitname = inpname.split('/')
                     prefix = splitname[ len(splitname)-1 ]
-                    dirname = './' + inpname[0: len(inpname)-len(prefix)]   # has '/' at end
+                    dirname = inpname[0: len(inpname)-len(prefix)]   # has '/' at end
                     if not os.path.exists( dirname ):
                         casalog.post('Making directory : ' + dirname, 'INFO')
                         os.mkdir( dirname )
