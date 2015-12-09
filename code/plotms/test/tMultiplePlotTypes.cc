@@ -189,7 +189,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
     bool test = ok && okOutput && okOutput2 && okOutput3;
 
     // clean up
-    tUtil::clearFile(outFile);
+    tUtil::clearFile(outFile1);
     tUtil::clearFile(outFile2);
     tUtil::clearFile(outFile3);
     tUtil::clearFile(exportPath);

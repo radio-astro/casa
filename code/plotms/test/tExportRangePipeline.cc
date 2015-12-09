@@ -90,6 +90,12 @@ int main(int /*argc*/, char** /*argv[]*/) {
     //check the first.
     String outFile = exportPath + "plotMSExportRangePipeline";
     String outFile1( outFile + "_Scan1.jpg");
+    String outFile2( outFile + "_Scan2_2.jpg");
+    String outFile3( outFile + "_Scan3_3.jpg");
+    String outFile4( outFile + "_Scan4_4.jpg");
+    String outFile5( outFile + "_Scan5_5.jpg");
+    String outFile6( outFile + "_Scan6_6.jpg");
+    String outFile7( outFile + "_Scan7_7.jpg");
 
     PlotExportFormat::Type type = PlotExportFormat::JPG;
 	PlotExportFormat format(type, outFile + ".jpg" );
@@ -102,7 +108,13 @@ int main(int /*argc*/, char** /*argv[]*/) {
     bool test = ok && okOutput;
 
     // clean up
-    tUtil::clearFile(outFile + "*");
+    tUtil::clearFile(outFile1);
+    tUtil::clearFile(outFile2);
+    tUtil::clearFile(outFile3);
+    tUtil::clearFile(outFile4);
+    tUtil::clearFile(outFile5);
+    tUtil::clearFile(outFile6);
+    tUtil::clearFile(outFile7);
     tUtil::clearFile(exportPath);
 
     bool checkGui = tUtil::exitMain( false );
