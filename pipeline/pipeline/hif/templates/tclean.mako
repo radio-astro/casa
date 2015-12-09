@@ -130,18 +130,18 @@ def get_plot(plots, field, spw, i, colname):
                                 %endif
                             </tr>
                             <tr>
-                                <th>theoretical noise</th>
-                                %if info_dict.get((field,str(spw),pol,'sensitivity')) is not None:
-                                            <td>${'%.2g %s' % (info_dict[(field,str(spw),pol,'sensitivity')],
+                                <th>cleaning threshold</th>
+                                %if info_dict.get((field,str(spw),pol,'threshold')) is not None:
+                                            <td>${'%.2g %s' % (casatools.quanta.convert(info_dict[(field,str(spw),pol,'threshold')], info_dict[(field,str(spw),pol,'brightness unit')])['value'],
                                                 info_dict[(field,str(spw),pol,'brightness unit')])}</td>
                                 %else:
                                             <td>-</td>
                                 %endif
                             </tr>
                             <tr>
-                                <th>cleaning threshold</th>
-                                %if info_dict.get((field,str(spw),pol,'threshold')) is not None:
-                                            <td>${'%.2g %s' % (casatools.quanta.convert(info_dict[(field,str(spw),pol,'threshold')], info_dict[(field,str(spw),pol,'brightness unit')])['value'],
+                                <th>theoretical noise</th>
+                                %if info_dict.get((field,str(spw),pol,'sensitivity')) is not None:
+                                            <td>${'%.2g %s' % (info_dict[(field,str(spw),pol,'sensitivity')],
                                                 info_dict[(field,str(spw),pol,'brightness unit')])}</td>
                                 %else:
                                             <td>-</td>
