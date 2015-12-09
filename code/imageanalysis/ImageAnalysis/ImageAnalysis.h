@@ -117,10 +117,6 @@ public:
 		   const Bool stretch=False
    );
 
-    Record deconvolvecomponentlist(
-    	const Record& complist, const Int channel, const Int polarization
-    );
-
     Bool open(const String& infile);
 
     inline static String className() {const static String x = "ImageAnalysis"; return x; }

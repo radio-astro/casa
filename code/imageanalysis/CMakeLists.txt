@@ -129,6 +129,8 @@ install (FILES
 	ImageAnalysis/CasaImageBeamSet.h
 	ImageAnalysis/ComplexImageRegridder.h
 	ImageAnalysis/ComponentImager.h
+	ImageAnalysis/ComponentListDeconvolver.h
+    ImageAnalysis/ComponentListDeconvolver.tcc
 	ImageAnalysis/Image1DSmoother.h
 	ImageAnalysis/Image1DSmoother.tcc
 	ImageAnalysis/Image2DConvolver.h

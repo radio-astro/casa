@@ -403,55 +403,6 @@ Matrix<Float> ImageAnalysis::decompose(
 
 }
 
-Record ImageAnalysis::deconvolvecomponentlist(
-	const Record& compList, const Int channel, const Int polarization
-) {
-	_onlyFloat(__func__);
-	Record retval;
-	*_log << LogOrigin(className(), __func__);
-
-	String error;
-	ComponentList cl;
-	if (! cl.fromRecord(error, compList)) {
-		*_log << "Can not  convert input parameter to ComponentList "
-				<< error << LogIO::EXCEPTION;
-		return retval;
-	}
-
-	uInt n = cl.nelements();
-	Vector<SkyComponent> list(n);
-	for (uInt i = 0; i < n; i++) {
-		list(i) = cl.component(i);
-	}
-
-	// Do we have a beam ?
-	GaussianBeam beam = _imageFloat->imageInfo().restoringBeam(channel, polarization);
-	if (beam.isNull()) {
-		*_log << "This image does not have a restoring beam"
-				<< LogIO::EXCEPTION;
-	}
-	const CoordinateSystem cSys = _imageFloat->coordinates();
-	Int dirCoordinate = cSys.findCoordinate(Coordinate::DIRECTION);
-	if (dirCoordinate == -1) {
-		*_log
-		<< "This image does not contain a DirectionCoordinate - cannot deconvolve"
-		<< LogIO::EXCEPTION;
-	}
-	// Loop over components and deconvolve
-	n = list.nelements();
-	ComponentList outCL;
-	for (uInt i = 0; i < n; ++i) {
-		outCL.add(SkyComponentFactory::deconvolveSkyComponent(*_log, list(i), beam));
-	}
-	if (outCL.nelements() > 0) {
-		if (!outCL.toRecord(error, retval)) {
-			*_log << "Cannot  convert deconvolved ComponentList to Record"
-					<< error << LogIO::EXCEPTION;
-		}
-	}
-	return retval;
-}
-
 SPCIIC ImageAnalysis::getComplexImage() const {
 	ThrowIf(
 		_imageFloat,
