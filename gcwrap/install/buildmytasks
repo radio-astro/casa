@@ -115,6 +115,12 @@ verbose "Casa root directory: $CASAROOT"
 CASAARCH=`echo $CASAPATH | awk '{printf "%s/%s", $1, $2}'`
 verbose "Casa architecture: $CASAARCH"
 
+if [[ -e "$CASAROOT/xml/casa2pyimp.xsl" ]]; then
+   XMLROOT="$CASAROOT/xml"
+else
+   XMLROOT="$CASAARCH/xml"
+fi
+
 SAXONJAR="$CASAARCH/lib/saxon8.jar"
 if [[ ! -e ${SAXONJAR} ]]; then
    SAXONJAR=${CASAROOT}/Frameworks/saxon8.jar
@@ -154,7 +160,7 @@ for FILE in $XMLFILES; do
  else
 	  verbose "generating `basename -- "$XMLFILE"` task ... "
 	  xmlgenpy "$XMLFILE"
-	  $SAXON "$XMLFILE.xml" "$CASAARCH/xml/casa2tsum3.xsl" >> $INFOFILE
+	  $SAXON "$XMLFILE.xml" "$XMLROOT/casa2tsum3.xsl" >> $INFOFILE
 	  sed -i -e 's+pathname=.*$+pathname="file://'${INSTALLDIR}'/"+' "$XMLFILE.py"
 	  sed -i -e 's+pathname=.*$+pathname="file://'${INSTALLDIR}'/"+' "${XMLFILE}_cli.py"
 	  [ -e "${XMLFILE}_pg.py" ] && sed -i -e 's+pathname=.*$+pathname="file://'${INSTALLDIR}'/"+' "${XMLFILE}_pg.py"
