@@ -65,6 +65,7 @@
 #include <imageanalysis/ImageAnalysis/CasaImageBeamSet.h>
 #include <imageanalysis/ImageAnalysis/ComplexImageRegridder.h>
 #include <imageanalysis/ImageAnalysis/ComponentImager.h>
+#include <imageanalysis/ImageAnalysis/ComponentListDeconvolver.h>
 #include <imageanalysis/ImageAnalysis/Image2DConvolver.h>
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/ImageBoxcarSmoother.h>
@@ -1559,25 +1560,41 @@ image::decompose(const variant& region, const ::casac::variant& vmask,
 }
 
 record* image::deconvolvecomponentlist(
-	const record& complist, const int channel, const int polarization
+	const record& complist, int channel, int polarization
 ) {
 	_log << _ORIGIN;
 	if (detached()) {
-		return 0;
+		return nullptr;
 	}
 	try {
 		std::unique_ptr<Record> compList(toRecord(complist));
-		return fromRecord(
-			_image->deconvolvecomponentlist(
-				*compList, channel, polarization
-			)
+		ComponentList cl, clOut;
+		casa::String err;
+		ThrowIf(
+			! cl.fromRecord(err, *compList),
+			"Input dictionary is not a valid component list: " + err
 		);
+		if (_imageF) {
+			ComponentListDeconvolver<Float> cld(_imageF);
+			clOut = cld.deconvolve(cl, channel, polarization);
+		}
+		else {
+			ComponentListDeconvolver<Complex> cld(_imageC);
+			clOut = cld.deconvolve(cl, channel, polarization);
+		}
+		Record rec;
+		ThrowIf(
+			! clOut.toRecord(err, rec),
+			"Cannot convert resulting component list to record: " + err
+		);
+		return fromRecord(rec);
 	}
 	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;
 		RETHROW(x);
 	}
+	return nullptr;
 }
 
 record* image::deconvolvefrombeam(
