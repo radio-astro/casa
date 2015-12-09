@@ -2226,7 +2226,7 @@ Bool SIImageStore::findMinMaxLattice(const Lattice<Float>& lattice,
 {
 
   maxAbs=0.0;maxAbsMask=0.0;
-  minAbs=0.0;minAbsMask=0.0;
+  minAbs=1e+10;minAbsMask=1e+10;
 
   const IPosition tileShape = lattice.niceCursorShape();
   TiledLineStepper ls(lattice.shape(), tileShape, 0);
@@ -2247,27 +2247,11 @@ Bool SIImageStore::findMinMaxLattice(const Lattice<Float>& lattice,
 
       minMax( minVal, maxVal, posMin, posMax, li.cursor() );
     
-      if(abs(minVal)>abs(maxAbs)) {
-         maxAbs=minVal;
-	 //         posMax=li.position();
-	 //  posMax(0)=posMin(0);
-      }
-      if(abs(maxVal)>abs(maxAbs)) {
-         maxAbs=maxVal;
-         //posMax=li.position();
-         //posMax(0)=posMax(0);
-      }
+      if( (maxVal) > (maxAbs) ) maxAbs = maxVal;
+      if( (maxValMask) > (maxAbsMask) ) maxAbsMask = maxValMask;
 
-      if(abs(minValMask)>abs(maxAbsMask)) {
-         maxAbsMask=minValMask;
-         //posMaxAbs=li.position();
-         //posMaxAbs(0)=posMin(0);
-      }
-      if(abs(maxValMask)>abs(maxAbsMask)) {
-         maxAbsMask=maxValMask;
-         //posMaxAbs=li.position();
-         //posMaxAbs(0)=posMax(0);
-      }
+      if( (minVal) < (minAbs) ) minAbs = minVal;
+      if( (minValMask) < (minAbsMask) ) minAbsMask = minValMask;
 
     }
   }
