@@ -43,6 +43,8 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
 	String dataPath= tUtil::getFullPath( "pm_ngc5921.ms" );
     cout << "tTimeColorizationAveraging using data from "<<dataPath.c_str()<<endl;
+    String exportPath = tUtil::getExportPath();
+    cout << "Writing plotfiles to " << exportPath << endl;
 
     // Set up plotms object.
     PlotMSApp app(false, false);
@@ -86,8 +88,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
     //Add the plot
     app.addOverPlot( &plotParams );
 
-    String outFile( "/tmp/plotTimeColorAverageTest.jpg");
-    tUtil::clearFile( outFile );
+    String outFile = exportPath + "plotTimeColorAverageTest.jpg";
     PlotExportFormat::Type type = PlotExportFormat::JPG;
 	PlotExportFormat format(type, outFile );
 	format.resolution = PlotExportFormat::SCREEN;
@@ -97,6 +98,10 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	bool okOutput = tUtil::checkFile( outFile, 50000, 75000, -1 );
 	cout << "tTimeColorizationAveraging:: Result of  save file check=" << okOutput << endl;
     bool test = ok && okOutput;
+
+    // clean up
+    tUtil::clearFile(outFile);
+    tUtil::clearFile(exportPath);
 
     bool checkGui = tUtil::exitMain( false );
     return !(test && checkGui);

@@ -45,6 +45,8 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
 	String dataPath = tUtil::getFullPath( "pm_ngc5921.ms" );
     qDebug() << "tOverPlot2FilesTest using data from "<<dataPath.c_str();
+    String exportPath = tUtil::getExportPath();
+    cout << "Writing plotfiles to " << exportPath << endl;
 
     // Set up plotms object.
     PlotMSApp app(false, false);
@@ -118,8 +120,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
         app.addOverPlot( &plotParams );
     }
 
-    String outFile( "/tmp/plotMSOverPlot2FilesTest.jpg");
-    tUtil::clearFile( outFile );
+    String outFile = exportPath + "plotMSOverPlot2FilesTest.jpg";
     PlotExportFormat::Type type = PlotExportFormat::JPG;
 	PlotExportFormat format(type, outFile );
 	format.resolution = PlotExportFormat::SCREEN;
@@ -129,6 +130,10 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	bool okOutput = tUtil::checkFile( outFile, 55000, 85000, -1 );
 	cout << "tOverPlot2FilesTest:: Result of save file check=" << okOutput << endl;
     bool test = ok && okOutput;
+
+    // clean up
+    tUtil::clearFile(outFile);
+    tUtil::clearFile(exportPath);
 
     bool checkGui = tUtil::exitMain( false );
     return !(test && checkGui);

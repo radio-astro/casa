@@ -45,6 +45,8 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
 	String dataPath = tUtil::getFullPath( "pm_ngc5921.ms" );
     cout << "tOverLeftRight using data from "<<dataPath.c_str()<<endl;
+    String exportPath = tUtil::getExportPath();
+    cout << "Writing plotfiles to " << exportPath << endl;
 
     // Set up plotms object.
     PlotMSApp app(false, false);
@@ -101,8 +103,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
      ppdisp->setUnflaggedSymbol(ps2, 1);
      app.addOverPlot( &plotParams );
 
-    String outFile( "/tmp/plotMSOverLeftRightTest.jpg");
-    tUtil::clearFile( outFile );
+    String outFile = exportPath + "plotMSOverLeftRightTest.jpg";
     PlotExportFormat::Type type = PlotExportFormat::JPG;
 	PlotExportFormat format(type, outFile );
 	format.resolution = PlotExportFormat::SCREEN;
@@ -112,6 +113,10 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	bool okOutput = tUtil::checkFile( outFile, 60000, 95000, -1 );
 	cout << "tOverLeftRight:: Result of save file check=" << okOutput << endl;
     bool test = ok && okOutput;
+
+    // clean up
+    tUtil::clearFile(outFile);
+    tUtil::clearFile(exportPath);
 
     bool checkGui = tUtil::exitMain( false );
     return !(test && checkGui);

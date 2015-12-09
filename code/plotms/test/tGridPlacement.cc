@@ -47,6 +47,8 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
 	String dataPath = tUtil::getFullPath( "pm_ngc5921.ms" );
     qDebug() << "tGridPlacement using data from "<<dataPath.c_str();
+    String exportPath = tUtil::getExportPath();
+    cout << "Writing plotfiles to " << exportPath << endl;
 
     // Set up plotms object
     PlotMSApp app(false, false);
@@ -84,8 +86,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
     PlotMSExportParam& exportParams = app.getExportParameters();
     exportParams.setExportRange( PMS::PAGE_ALL );
 
-    String outFile( "/tmp/plotMSGridPlacementTest.jpg");
-    tUtil::clearFile( outFile );
+    String outFile = exportPath + "plotMSGridPlacementTest.jpg";
 
     PlotExportFormat::Type type = PlotExportFormat::JPG;
 	PlotExportFormat format(type, outFile );
@@ -96,6 +97,10 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	bool okOutput = tUtil::checkFile( outFile, 55000, 80000, -1 );
 	qDebug() << "tGridPlacement:: Result of save file check=" << okOutput;
     bool test = ok && okOutput;
+
+    // clean up
+    tUtil::clearFile(outFile);
+    tUtil::clearFile(exportPath);
 
     bool checkGui = tUtil::exitMain( false );
     return !(test && checkGui);

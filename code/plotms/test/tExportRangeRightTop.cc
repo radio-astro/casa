@@ -45,6 +45,8 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
 	String dataPath = tUtil::getFullPath( "pm_ngc5921.ms" );
     cout << "tExportRangePNG using data from "<<dataPath.c_str()<<endl;
+    String exportPath = tUtil::getExportPath();
+    cout << "Writing plotfiles to " << exportPath << endl;
 
     // Set up plotms object.
     PlotMSApp app(false, false);
@@ -93,11 +95,9 @@ int main(int /*argc*/, char** /*argv[]*/) {
     //Make the plot.
     app.addOverPlot( &plotParams );
 
-    String outFile( "/tmp/plotMSExportRangeRightTop");
+    String outFile = exportPath + "plotMSExportRangeRightTop";
     String outFile1( outFile + "_Scan1,2,3,4,5,6.jpg");
     String outFile2( outFile + "_Scan7_2.jpg");
-    tUtil::clearFile( outFile1 );
-    tUtil::clearFile( outFile2 );
     PlotExportFormat::Type type = PlotExportFormat::JPG;
 	PlotExportFormat format(type, outFile + ".jpg" );
 	format.resolution = PlotExportFormat::SCREEN;
@@ -109,6 +109,11 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	bool okOutput2 = tUtil::checkFile( outFile2, 45000, 60000, -1 );
 	cout << "tExportRangeRightTop:  Result of second save file check=" << okOutput2 << endl;
     bool test = ok && okOutput && okOutput2;
+
+    // clean up
+    tUtil::clearFile(outFile1);
+    tUtil::clearFile(outFile2);
+    tUtil::clearFile(exportPath);
 
     bool checkGui = tUtil::exitMain( false );
     return !(test && checkGui);

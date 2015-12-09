@@ -21,9 +21,12 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+#include <casa/BasicSL/String.h>
 #include <casa/OS/EnvVar.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 #include <iostream>
 #include <fstream>
 #include <cstdio>
@@ -56,6 +59,14 @@ public:
 		return dataPath;
 	}
 
+    static String getExportPath() {
+        // create unique path in /tmp using pid
+        String path = "/tmp/" + String::toString(getpid()) + "/";
+        clearFile(path);
+        mkdir(path.c_str(), 0775);
+        return path;
+    }
+
 	static void updatePlot( PlotMSApp* app ){
 		PlotMSPlotManager& manager = app->getPlotManager();
 		int plotCount = manager.numPlots();
@@ -67,9 +78,10 @@ public:
 	}
 
 	static int clearFile( const String& fileName ){
+        // remove works on files and directories
 		int result = remove( fileName.c_str());
 		if ( result == 0 ){
-			qDebug() << "File "<<fileName.c_str()<<" was deleted in preparation for test.";
+			qDebug() << fileName.c_str()<<" was deleted.";
 		}
 		return result;
 	}

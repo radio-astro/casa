@@ -45,6 +45,8 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
 	String dataPath = tUtil::getFullPath( "pm_ngc5921.ms" );
     cout << "tExportRangePipeline using data from "<<dataPath.c_str()<<endl;
+    String exportPath = tUtil::getExportPath();
+    cout << "Writing plotfiles to " << exportPath << endl;
 
     // Set up plotms object.
     PlotMSApp app(false, false);
@@ -86,9 +88,8 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
     //Note:  There will be seven plots generated, but we will just
     //check the first.
-    String outFile( "/tmp/plotMSExportRangePipeline");
+    String outFile = exportPath + "plotMSExportRangePipeline";
     String outFile1( outFile + "_Scan1.jpg");
-    tUtil::clearFile( outFile1 );
 
     PlotExportFormat::Type type = PlotExportFormat::JPG;
 	PlotExportFormat format(type, outFile + ".jpg" );
@@ -99,6 +100,10 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	bool okOutput = tUtil::checkFile( outFile1, 120000, 140000, -1 );
 	cout << "tExportRangePipeline:: Result of first save file check=" << okOutput << endl;
     bool test = ok && okOutput;
+
+    // clean up
+    tUtil::clearFile(outFile + "*");
+    tUtil::clearFile(exportPath);
 
     bool checkGui = tUtil::exitMain( false );
     return !(test && checkGui);

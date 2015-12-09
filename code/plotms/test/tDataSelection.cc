@@ -40,6 +40,8 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	//Path for data
 	String dataPath = tUtil::getFullPath( "pm_ngc5921.ms");
     cout << "tDataSelection:: using data from "<<dataPath.c_str()<<endl;
+    String exportPath = tUtil::getExportPath();
+    cout << "Writing plotfiles to " << exportPath << endl;
 
     // Set up plotms object.
     PlotMSApp app(false, false );
@@ -60,8 +62,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
     app.addOverPlot( &plotParams );
 
-    String outFile( "/tmp/plotDataSelectionTest.jpg");
-    tUtil::clearFile( outFile );
+    String outFile = exportPath + "plotDataSelectionTest.jpg";
     PlotExportFormat::Type type = PlotExportFormat::JPG;
 	PlotExportFormat format(type, outFile );
 	format.resolution = PlotExportFormat::SCREEN;
@@ -72,6 +73,10 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	cout << "tDataSelection - result of first saved file check=" << okOutput << endl;
     bool test = ok && okOutput;
 
+    // clean up
+    tUtil::clearFile(outFile);
+    tUtil::clearFile(exportPath);
+ 
     bool checkGui = tUtil::exitMain( false );
     return !(test && checkGui);
 }

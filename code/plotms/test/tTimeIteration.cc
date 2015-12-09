@@ -44,6 +44,8 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
 	String dataPath= tUtil::getFullPath( "pm_ngc5921.ms" );
     cout << "tTimeIteration using data from "<<dataPath.c_str()<<endl;
+    String exportPath = tUtil::getExportPath();
+    cout << "Writing plotfiles to " << exportPath << endl;
 
     // Set up plotms object.
     PlotMSApp app(false, false);
@@ -86,9 +88,8 @@ int main(int /*argc*/, char** /*argv[]*/) {
     //Add the plot
     app.addOverPlot( &plotParams );
 
-    String outFile( "/tmp/plotTimeIterationTest");
+    String outFile = exportPath + "plotTimeIterationTest";
     String outFile1( outFile + "_Time09:18:59.9998,09:19:30.0002,09:20:00.0006,09:20:30.0010.jpg");
-    tUtil::clearFile( outFile1 );
     PlotExportFormat::Type type = PlotExportFormat::JPG;
 	PlotExportFormat format(type, outFile + ".jpg");
 	format.resolution = PlotExportFormat::SCREEN;
@@ -98,6 +99,10 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	bool okOutput = tUtil::checkFile( outFile1, 110000, 190000, -1 );
 	cout << "tTimeIteration:: Result of  save file check=" << okOutput << endl;
     bool test = ok && okOutput;
+
+    // clean up
+    tUtil::clearFile(outFile1);
+    tUtil::clearFile(exportPath);
 
     bool checkGui = tUtil::exitMain( false );
     return !(test && checkGui);

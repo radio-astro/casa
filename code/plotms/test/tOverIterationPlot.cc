@@ -45,6 +45,8 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
 	String dataPath = tUtil::getFullPath( "pm_ngc5921.ms" );
     cout << "tOverIterationPlot using data from "<<dataPath.c_str()<<endl;
+    String exportPath = tUtil::getExportPath();
+    cout << "Writing plotfiles to " << exportPath << endl;
 
     // Set up plotms object.
     PlotMSApp app(false, false);
@@ -116,9 +118,8 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
     app.addOverPlot( &plotParams );
 
-    String outFile( "/tmp/plotOverIterationTest");
+    String outFile = exportPath + "plotOverIterationTest";
     String outFile1( outFile + "_Antenna1@VLA:N7,2@VLA:W1,3@VLA:W2,4@VLA:E1.jpg");
-    tUtil::clearFile( outFile1 );
     PlotExportFormat::Type type = PlotExportFormat::JPG;
 	PlotExportFormat format(type, outFile + ".jpg" );
 	format.resolution = PlotExportFormat::SCREEN;
@@ -128,6 +129,10 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	bool okOutput = tUtil::checkFile( outFile1, 155000, 240000, -1 );
 	cout << "tOverIterationplot:: Result of save file check=" << okOutput << endl;
     bool test = ok && okOutput;
+
+    // clean up
+    tUtil::clearFile(outFile1);
+    tUtil::clearFile(exportPath);
 
     bool checkGui = tUtil::exitMain( false );
     return !(test && checkGui);

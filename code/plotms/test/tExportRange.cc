@@ -39,8 +39,6 @@
 
 bool exportPlot(PlotMSApp& app, String outFile, PlotExportFormat::Type type,
                 String strType, int minSize, int maxSize ){
-	tUtil::clearFile( outFile+"_Scan1,2,3,4" );
-	tUtil::clearFile( outFile+"_Scan5,6,7_2" );
 
 	PlotExportFormat format(type, outFile );
 	format.resolution = PlotExportFormat::SCREEN;
@@ -52,44 +50,46 @@ bool exportPlot(PlotMSApp& app, String outFile, PlotExportFormat::Type type,
     bool okOutput2 = tUtil::checkFile( outFile+"_Scan5,6,7_2", minSize, maxSize, -1 );
 	cout << "tExportRange:: "<<strType.c_str()<<" Result of second save file check=" << okOutput2 << endl;
     bool test = ok && okOutput1 && okOutput2;
+	tUtil::clearFile( outFile+"_Scan1,2,3,4" );
+	tUtil::clearFile( outFile+"_Scan5,6,7_2" );
 
     return test;
 }
 
-bool exportAsJPG( PlotMSApp& app ){
+bool exportAsJPG( PlotMSApp& app, String& exportPath ){
 
-    String outFile( "/tmp/plotMSExportRangeJPGTest");
+    String outFile = exportPath + "plotMSExportRangeJPGTest";
     PlotExportFormat::Type type = PlotExportFormat::JPG;
     return exportPlot( app, outFile, type, "JPG", 100000, 160000);
 }
 
-bool exportAsPNG( PlotMSApp& app ){
+bool exportAsPNG( PlotMSApp& app, String& exportPath ){
 
-    String outFile( "/tmp/plotMSExportRangePNGTest");
+    String outFile = exportPath + "plotMSExportRangePNGTest";
     PlotExportFormat::Type type = PlotExportFormat::PNG;
     return exportPlot(  app, outFile, type, "PNG", 30000, 50000 );
 
 }
 
-bool exportAsPS( PlotMSApp& app ){
+bool exportAsPS( PlotMSApp& app, String& exportPath ){
 
-    String outFile( "/tmp/plotMSExportRangePSTest");
+    String outFile = exportPath + "plotMSExportRangePSTest";
     PlotExportFormat::Type type = PlotExportFormat::PS;
     return exportPlot(  app, outFile, type, "PS", 500000, 1150000);
 
 }
 
-bool exportAsPDF( PlotMSApp& app ){
+bool exportAsPDF( PlotMSApp& app, String& exportPath ){
 
-    String outFile( "/tmp/plotMSExportRangePDFTest");
+    String outFile = exportPath + "plotMSExportRangePDFTest";
     PlotExportFormat::Type type = PlotExportFormat::PDF;
     return exportPlot(  app, outFile, type, "PDF", 65000, 110000);
 
 }
 
-bool exportAsText( PlotMSApp& app ){
+bool exportAsText( PlotMSApp& app, String& exportPath ){
 
-    String outFile( "/tmp/plotMSExportRangeTextTest");
+    String outFile = exportPath + "plotMSExportRangeTextTest";
     PlotExportFormat::Type type = PlotExportFormat::TEXT;
     return exportPlot(  app, outFile, type, "TEXT", 20000, 30000 );
 
@@ -105,6 +105,8 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
 	String dataPath = tUtil::getFullPath( "pm_ngc5921.ms" );
     cout << "tExportRange using data from "<<dataPath.c_str()<<endl;
+    String exportPath = tUtil::getExportPath();
+    cout << "Writing plotfiles to " << exportPath << endl;
 
     // Set up plotms object.
     PlotMSApp app(false, false);
@@ -145,15 +147,16 @@ int main(int /*argc*/, char** /*argv[]*/) {
     //Make the plot.
     app.addOverPlot( &plotParams );
 
-    bool jpg_test = exportAsJPG( app );
-    bool png_test = exportAsPNG( app );
+    bool jpg_test = exportAsJPG( app, exportPath );
+    bool png_test = exportAsPNG( app, exportPath );
 
     //Too much data to export as text.
     //exportAsText( app );
-    bool pdf_test = exportAsPDF( app );
-    bool ps_test = exportAsPS( app );
+    bool pdf_test = exportAsPDF( app, exportPath );
+    bool ps_test = exportAsPS( app, exportPath );
     bool test = jpg_test && png_test && pdf_test && ps_test;
 
+    tUtil::clearFile(exportPath);
     bool checkGui = tUtil::exitMain( false );
     return !(test && checkGui);
 }

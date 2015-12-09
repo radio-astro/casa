@@ -40,7 +40,9 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
     //Path for data
     String dataPath = tUtil::getFullPath( "pm_ngc5921.ms" );
-    cout << "tAveragingChannel:: using data from "<<dataPath.c_str()<<endl;
+    cout << "tAveragingChannel:: using data from " << dataPath.c_str() << endl;
+    String exportPath = tUtil::getExportPath();
+    cout << "Writing plotfiles to " << exportPath << endl;
 
     // Set up plotms object.
     PlotMSApp app(false, false );
@@ -74,8 +76,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
     int noAveragingSizeMax = 350000;
 
     // start with no averaging
-    String outFile( "/tmp/plotAveragingChannelTest1.jpg");
-    tUtil::clearFile( outFile );
+    String outFile = exportPath + "plotAveragingChannelTest1.jpg";
 	PlotExportFormat format(type, outFile );
 	format.resolution = PlotExportFormat::SCREEN;
 
@@ -95,8 +96,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
     app.addOverPlot( &plotParams );
 
 	//Export the plot again
-	String outFile2( "/tmp/plotAveragingChannelTest2.jpg");
-	tUtil::clearFile( outFile2 );
+    String outFile2 = exportPath + "plotAveragingChannelTest2.jpg";
 	PlotExportFormat format2(type, outFile2 );
 	format2.resolution = PlotExportFormat::SCREEN;
 
@@ -115,19 +115,24 @@ int main(int /*argc*/, char** /*argv[]*/) {
     app.addOverPlot( &plotParams );
 
 	//Export the plot again
-	String outFile3( "/tmp/plotAveragingChannelTest3.jpg");
-	tUtil::clearFile( outFile3 );
+    String outFile3 = exportPath + "plotAveragingChannelTest3.jpg";
 	PlotExportFormat format3(type, outFile3 );
 	format3.resolution = PlotExportFormat::SCREEN;
 
 	ok = app.save(format3);
 	cout << "tAveragingChannel test 3 - result of save=" << ok <<endl;
     // This plot file should be smaller because of averaging
-	okOutput = tUtil::checkFile( outFile3, 180000, 200000, -1 );
+	okOutput = tUtil::checkFile( outFile3, 180000, 250000, -1 );
 	cout << "tAveragingChannel test 3 - result of third saved file check=" << okOutput << endl;
     bool test3 = ok && okOutput;
-    bool test = test1 && test2 && test3;
 
+    // clean up
+    tUtil::clearFile(outFile);
+    tUtil::clearFile(outFile2);
+    tUtil::clearFile(outFile3);
+    tUtil::clearFile(exportPath);
+
+    bool test = test1 && test2 && test3;
 	bool checkGui = tUtil::exitMain( false );
     return !(test && checkGui);
 }

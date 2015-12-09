@@ -44,6 +44,8 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
 	String dataPath= tUtil::getFullPath( "pm_ngc5921.ms" );
     cout << "tTimeAveragingIteration using data from "<<dataPath.c_str()<<endl;
+    String exportPath = tUtil::getExportPath();
+    cout << "Writing plotfiles to " << exportPath << endl;
 
     // Set up plotms object.
     PlotMSApp app(false, false);
@@ -92,9 +94,8 @@ int main(int /*argc*/, char** /*argv[]*/) {
     //Add the plot
     app.addOverPlot( &plotParams );
 
-    String outFile( "/tmp/plotTimeAveragingIterationTest");
+    String outFile = exportPath + "plotTimeAveragingIterationTest";
     String outFile1( outFile + "_Time09:21:44.9994 - 09:50:44.9995,09:50:44.9995 - 10:46:15.0001.jpg");
-    tUtil::clearFile( outFile1 );
     PlotExportFormat::Type type = PlotExportFormat::JPG;
 	PlotExportFormat format(type, outFile + ".jpg" );
 	format.resolution = PlotExportFormat::SCREEN;
@@ -104,6 +105,10 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	bool okOutput = tUtil::checkFile( outFile1, 70000, 140000, -1 );
 	cout << "tTimeAveragingIteration:: Result of  save file check=" << okOutput << endl;
     bool test = ok && okOutput;
+
+    // clean up
+    tUtil::clearFile(outFile1);
+    tUtil::clearFile(exportPath);
 
     bool checkGui = tUtil::exitMain( false );
     return !(test && checkGui);

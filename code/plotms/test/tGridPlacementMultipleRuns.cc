@@ -48,6 +48,8 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
 	String dataPath = tUtil::getFullPath( "pm_ngc5921.ms" );
     qDebug() << "tGridPlacementMultipleRuns using data from "<<dataPath.c_str();
+    String exportPath = tUtil::getExportPath();
+    cout << "Writing plotfiles to " << exportPath << endl;
 
     // Set up plotms object
     PlotMSApp app(false, false);
@@ -178,8 +180,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
     PlotMSExportParam& exportParams = app.getExportParameters();
     exportParams.setExportRange( PMS::PAGE_ALL );
 
-    String outFile( "/tmp/plotMSGridPlacementMultipleRuns1Test.jpg");
-    tUtil::clearFile( outFile );
+    String outFile = exportPath + "plotMSGridPlacementMultipleRuns1Test.jpg";
 
     PlotExportFormat::Type type2 = PlotExportFormat::JPG;
 	PlotExportFormat format(type2, outFile );
@@ -214,8 +215,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	 app.addOverPlot( &plotParams7 );
 
 	 //Export the second version.
-	 String outFile2( "/tmp/plotMSGridPlacementMultipleRuns2Test.jpg");
-	 tUtil::clearFile( outFile2 );
+     String outFile2 = exportPath + "plotMSGridPlacementMultipleRuns2Test.jpg";
 	 PlotExportFormat format2(type2, outFile2 );
 	 format2.resolution = PlotExportFormat::SCREEN;
 
@@ -224,6 +224,11 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	 okOutput = tUtil::checkFile( outFile2, 235000, 255000, -1 );
 	 qDebug() << "tGridPlacementMultipleRuns 2:: Result of save file check=" << okOutput;
      bool test2 = ok && okOutput;
+
+     // clean up
+    tUtil::clearFile(outFile);
+    tUtil::clearFile(outFile2);
+    tUtil::clearFile(exportPath);
 
     bool test = test1 && test2;
     bool checkGui = tUtil::exitMain( false );

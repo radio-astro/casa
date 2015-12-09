@@ -41,6 +41,8 @@ int main(int /*argc*/, char** /*argv[]*/) {
     //Path for data
     String dataPath = tUtil::getFullPath( "pm_ngc5921.ms" );
     cout << "tAveragingChannel:: using data from "<<dataPath.c_str()<<endl;
+    String exportPath = tUtil::getExportPath();
+    cout << "Writing plotfiles to " << exportPath << endl;
 
     // Set up plotms object.
     PlotMSApp app(false, false );
@@ -71,8 +73,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
     PlotExportFormat::Type type = PlotExportFormat::JPG;
 
     // start with no averaging
-    String outFile( "/tmp/plotAveragingTimeTest1.jpg");
-    tUtil::clearFile( outFile );
+    String outFile = exportPath + "plotAveragingTimeTest1.jpg";
 	PlotExportFormat format(type, outFile );
 	format.resolution = PlotExportFormat::SCREEN;
 
@@ -92,19 +93,23 @@ int main(int /*argc*/, char** /*argv[]*/) {
     app.addOverPlot( &plotParams );
 
 	//Export the plot again
-	String outFile2( "/tmp/plotAveragingTimeTest2.jpg");
-	tUtil::clearFile( outFile2 );
+    String outFile2 = exportPath + "plotAveragingTimeTest2.jpg";
 	PlotExportFormat format2(type, outFile2 );
 	format2.resolution = PlotExportFormat::SCREEN;
 
 	ok = app.save(format2);
 	cout << "tAveragingTime test 2 - result of save=" << ok <<endl;
     // This plot file should be smaller because of averaging
-	okOutput = tUtil::checkFile( outFile2, 150000, 170000, -1 );
+	okOutput = tUtil::checkFile( outFile2, 150000, 180000, -1 );
 	cout << "tAveragingTime test 2 - result of second saved file check=" << okOutput << endl;
     bool test2 = ok && okOutput;
-    bool test = test1 && test2;
 
+    // clean up
+    tUtil::clearFile(outFile);
+    tUtil::clearFile(outFile2);
+    tUtil::clearFile(exportPath);
+
+    bool test = test1 && test2;
 	bool checkGui = tUtil::exitMain( false );
     return !(test && checkGui);
 }
