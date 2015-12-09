@@ -74,6 +74,7 @@
 #include <imageanalysis/ImageAnalysis/ImageConvolverTask.h>
 #include <imageanalysis/ImageAnalysis/ImageCropper.h>
 #include <imageanalysis/ImageAnalysis/ImageDecimator.h>
+#include <imageanalysis/ImageAnalysis/ImageDecomposerTask.h>
 #include <imageanalysis/ImageAnalysis/ImageExprCalculator.h>
 #include <imageanalysis/ImageAnalysis/ImageFactory.h>
 #include <imageanalysis/ImageAnalysis/ImageFFTer.h>
@@ -1517,46 +1518,69 @@ image::coordmeasures(const std::vector<double>&pixel) {
 
 ::casac::record*
 image::decompose(const variant& region, const ::casac::variant& vmask,
-	const bool simple, const double Threshold, const int nContour,
-	const int minRange, const int nAxis, const bool fit,
-	const double maxrms, const int maxRetry, const int maxIter,
-	const double convCriteria, const bool stretch
+	bool simple, double threshold, int ncontour, int minrange,
+	int naxis, bool fit, double maxrms, int maxretry, int maxiter,
+	double convcriteria, bool stretch
 ) {
 	try {
 		_log << _ORIGIN;
 		if (detached()) {
-			return 0;
+			return nullptr;
 		}
+		ThrowIf(! _imageF, "This application supports only real-valued images");
 		ThrowIf(
-			Threshold < 0,
-			"Threshold = " + String::toString(Threshold)
+			threshold < 0,
+			"Threshold = " + String::toString(threshold)
 			+ ". You must specify a nonnegative threshold"
 		);
-		SHARED_PTR<Record> Region(_getRegion(region, False));
+		auto Region = _getRegion(region, False);
 		String mask = vmask.toString();
 		if (mask == "[]") {
 			mask = "";
 		}
 		Matrix<Int> blcs;
 		Matrix<Int> trcs;
-
+		casa::Record outrec1;
+		//if (_imageF) {
+			ImageDecomposerTask<Float> idt(_imageF, Region.get(), mask);
+			idt.setSimple(simple);
+			idt.setDeblendOptions(threshold, ncontour, minrange, naxis);
+			idt.setFit(fit);
+			idt.setFitOptions(maxrms, maxretry, maxiter, convcriteria);
+			idt.setStretch(stretch);
+			outrec1.define("components", idt.decompose(blcs, trcs));
+			/*
+		}
+		else {
+			ImageDecomposerTask<Complex> idt(_imageC, Region.get(), mask);
+			idt.setSimple(simple);
+			idt.setDeblendOptions(threshold, ncontour, minrange, naxis);
+			idt.setFit(fit);
+			idt.setFitOptions(maxrms, maxretry, maxiter, convcriteria);
+			idt.setStretch(stretch);
+			outrec1.define("components", idt.decompose(blcs, trcs));
+		}
+	*/
+		/*
 		Matrix<Float> cl = _image->decompose(
 			blcs, trcs, *Region, mask, simple, Threshold,
 			nContour, minRange, nAxis, fit, maxrms,
 			maxRetry, maxIter, convCriteria, stretch
 		);
+		*/
 
-		casa::Record outrec1;
-		outrec1.define("components", cl);
+
 		outrec1.define("blc", blcs);
 		outrec1.define("trc", trcs);
 		return fromRecord(outrec1);
 
-	} catch (const AipsError& x) {
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;
 		RETHROW(x);
 	}
+	return nullptr;
 }
 
 record* image::deconvolvecomponentlist(
