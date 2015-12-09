@@ -526,7 +526,7 @@ namespace asdmbinaries {
    */ 
   bool SDMDataObject::isTP() const {TSTVALID(); return inTitle("Total Power");}
   bool SDMDataObject::isWVR() const {TSTVALID(); return inTitle("WVR");}
-  bool SDMDataObject::isCorrelation() const {TSTVALID(); return inTitle("Correlator");}
+  bool SDMDataObject::isCorrelation() const {TSTVALID(); return processorType() == CORRELATOR;}
 
   /*
    * hasPackedData returns true if all the integrations are grouped in one subset for all the timestamps and conversely false if 
