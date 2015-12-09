@@ -7,7 +7,7 @@ import pipeline.infrastructure.displays.singledish.sparsemap as sparsemap
 
 LOG = infrastructure.get_logger(__name__)
 
-def analyze_plot_table(context, antid, spwid, polid, plot_table):
+def analyze_plot_table(context, datatable, antid, spwid, polid, plot_table):
     datatable = context.observing_run.datatable_instance
     num_rows = len(plot_table) # num_plane * num_ra * num_dec
     num_dec = plot_table[-1][1] + 1
@@ -22,7 +22,11 @@ def analyze_plot_table(context, antid, spwid, polid, plot_table):
                 plot_table_row = plot_table[plot_table_rowid]
                 LOG.debug('Process row %s: ra=%s, dec=%s'%(plot_table_rowid, plot_table_row[2], plot_table_row[3]))
                 for i in plot_table_row[-1]:
-                    yield i
+                    mypol = datatable.tb1.getcell('POL', i)
+                    LOG.trace('ID %s POL %s'%(i, mypol))
+                    if mypol == polid:
+                        LOG.trace('Adding %s to dataids'%(i))
+                        yield i
         dataids = numpy.fromiter(g(), dtype=int)
         if len(dataids) > 0:
             midx = median_index(dataids)
@@ -114,7 +118,7 @@ def get_lines(datatable, num_ra, rowlist):
 def plot_profile_map(context, antid, spwid, polid, plot_table, infile, outfile, line_range):
     datatable = context.observing_run.datatable_instance
 
-    num_ra, num_dec, num_plane, refpix, refval, increment, rowlist = analyze_plot_table(context, antid, spwid, polid, plot_table)
+    num_ra, num_dec, num_plane, refpix, refval, increment, rowlist = analyze_plot_table(context, datatable, antid, spwid, polid, plot_table)
         
     plotter = create_plotter(num_ra, num_dec, num_plane, refpix, refval, increment)
     
@@ -142,7 +146,7 @@ def plot_profile_map_with_fit(context, antid, spwid, polid, plot_table, prefit_d
     """
     datatable = context.observing_run.datatable_instance
 
-    num_ra, num_dec, num_plane, refpix, refval, increment, rowlist = analyze_plot_table(context, antid, spwid, polid, plot_table)
+    num_ra, num_dec, num_plane, refpix, refval, increment, rowlist = analyze_plot_table(context, datatable, antid, spwid, polid, plot_table)
         
     plotter = create_plotter(num_ra, num_dec, num_plane, refpix, refval, increment)
     
