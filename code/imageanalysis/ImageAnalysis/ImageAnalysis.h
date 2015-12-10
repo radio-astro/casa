@@ -81,8 +81,6 @@ public:
     	const String& name, const Bool asdefault = True
     );
 
-    CoordinateSystem coordsys(const Vector<int>& axes);
-
     Bool open(const String& infile);
 
     inline static String className() {const static String x = "ImageAnalysis"; return x; }

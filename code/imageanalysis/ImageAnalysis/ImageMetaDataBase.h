@@ -69,6 +69,8 @@ public:
 
 	virtual ~ImageMetaDataBase() {}
 
+    CoordinateSystem coordsys(const vector<Int>& axes) const;
+
 	uInt nChannels() const;
 
 	// Is the specified channel number valid for this image?
