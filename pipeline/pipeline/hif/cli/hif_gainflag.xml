@@ -48,7 +48,7 @@ Flag antennas with deviant gain
 
     <param type="double" name="frmsdev_limit" subparam="true">
         <description>Flag antennas with \'rmsdeviant\' metric above frmsdev_limit</description>
-        <value>3.0</value>
+        <value>3.5</value>
     </param>
 
     <param type="string" name="metric_order">
@@ -105,7 +105,7 @@ Flag antennas with deviant gain
 
         <when param="flag_rmsdeviant">
             <equals type="bool" value="True">
-                <default param="frmsdev_limit"><value type="float">3.0</value></default>
+                <default param="frmsdev_limit"><value type="float">3.5</value></default>
             </equals>
             <equals type="bool" value="False">
             </equals>
@@ -157,7 +157,7 @@ flag_rmsdeviant -- True to flag antennas with deviant gain rms, calculated as:
     default True
 
 frmsdev_limit -- Flag antennas with \'rmsdeviant\' metric larger than frmsdev_limit
-    default 3.0
+    default 3.5
     
 metric_order -- Order in which the flagging metrics are evaluated.
     default 'mediandeviant, rmsdeviant'

@@ -115,7 +115,7 @@ class GainflagInputs(commoncalinputs.CommonCalibrationInputs):
     @frmsdev_limit.setter
     def frmsdev_limit(self, value):
         if value is None:
-            value = 3.0
+            value = 3.5
         self._frmsdev_limit = value
 
     @property
@@ -243,7 +243,7 @@ class GainflaggerInputs(commoncalinputs.CommonCalibrationInputs):
     @property
     def fmax_limit(self):
         if self._fmax_limit is None:
-            return 3.0
+            return 3.5
         return self._fmax_limit
 
     @fmax_limit.setter
