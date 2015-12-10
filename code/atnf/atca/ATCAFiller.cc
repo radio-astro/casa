@@ -1452,24 +1452,43 @@ Int ATCAFiller::checkSpW(Int ifNumber,Bool log) {
       Matrix<Int> corrProduct(2,npol); corrProduct=0;
       if (log) os_p << LogIO::NORMAL << "         : Polarizations ";
       for (Int i=0; i<npol; i++) {
-              Stokes::StokesTypes stokesEnum;
-              corrType(i) = stokesEnum = Stokes::type
-                (String(&names_.if_cstok[2*(i+ifNumber*MaxNPol)],2).before(trailing));
-              if (i>0) os_p << " , ";
-              if (log) os_p << String(&names_.if_cstok[2*(i+ifNumber*MaxNPol)],2).before(trailing)
-                   << " - " << Int(stokesEnum);
-              if (stokesEnum != Stokes::Undefined) {
-                corrProduct(0,i)=Stokes::receptor1(stokesEnum);
-                corrProduct(1,i)=Stokes::receptor2(stokesEnum);
-              }
+          corrType(i) = Stokes::type
+            (String(&names_.if_cstok[2*(i+ifNumber*MaxNPol)],2).before(trailing));
       }
+      Vector<Int> tmp(npol); tmp=corrType;
+      // Sort the polarizations to standard order
+      GenSort<Int>::sort(corrType);
+      if (corrIndex_p.nrow()==0) {
+        corrIndex_p.resize(64,4);
+      }
+      if (Int(corrIndex_p.nrow())<=spWId_p) {
+        corrIndex_p.resize(nSpW_p,4,True);
+      }
+      // Get the sort indices to rearrange the data to standard order
+      for (Int i=0;i<npol;i++) {
+        for (Int j=0;j<npol;j++) {
+          if (corrType(j)==tmp(i)) corrIndex_p(spWId_p,i)=j;
+        }
+      }
+
+      // Figure out the correlation products from the polarizations
+      corrProduct.resize(2,npol); corrProduct=0;
+      for (Int i=0; i<npol; i++) {
+        Stokes::StokesTypes s=Stokes::type(corrType(i));
+        Fallible<Int> receptor=Stokes::receptor1(s);
+        if (receptor.isValid()) corrProduct(0,i)=receptor;
+        receptor=Stokes::receptor2(s);
+        if (receptor.isValid()) corrProduct(1,i)=receptor;
+        if (i>0 && log) os_p << " , ";
+        if (log) os_p << Stokes::name(s)<< " - " << corrType(i);
+      } 
       if (log) os_p << LogIO::POST;
 
       // try to find matching pol row
       Int nPolRow = atms_p.polarization().nrow();
       Int polRow = -1;
       for (Int i = 0; i< nPolRow; i++) {
-        if (  msc_p->polarization().numCorr()(i)== Int(if_.if_nstok[ifNumber])) {
+        if (msc_p->polarization().numCorr()(i)== Int(if_.if_nstok[ifNumber])) {
           if (allEQ(msc_p->polarization().corrType()(i),corrType)) {
             polRow=i;
             break;
@@ -2073,18 +2092,16 @@ void ATCAFiller::storeData()
   //Note any Gibbs reweighting needs to be done before any xyphase correction
   //is done.
 
-  if (inversion>0 && edge==0) {// no inversion and not discarding any data
-      // get the data with takeStorage in one go:
-      VIS.takeStorage(IPosition(2,npol,nfreq),(Complex*)&vis[0]);
-  } else {
-    // correct for inversion - conjugate data; skip birdie channels
-    for (Int j=0; j<nfreq; j++) {
-      Int k = (edge>0 ? (2*j+edge) : j);
-      for (Int i=0; i<npol; i++) 
-        VIS(i,j)=Complex(vis[0+2*(i+k*npol)],inversion*vis[1+2*(i+k*npol)]);
+ 
+  // correct for inversion - conjugate data; skip birdie channels
+  // resort pols
+  for (Int j=0; j<nfreq; j++) {
+    Int k = (edge>0 ? (2*j+edge) : j);
+    for (Int i=0; i<npol; i++) {
+      Int ipol = corrIndex_p(spWId_p,i);
+      VIS(ipol,j)=Complex(vis[0+2*(i+k*npol)],inversion*vis[1+2*(i+k*npol)]);
     }
   }
-  
   // Flag NaNs
   Matrix<Bool> nanFlags = isNaN(real(VIS));
   nanFlags |= isNaN(imag(VIS));
@@ -2164,7 +2181,7 @@ void ATCAFiller::storeData()
   msc_p->polarization().corrProduct().get(polId,corrProduct);
 
   // sigma=sqrt(Tx1*Tx2)/sqrt(chnbw*intTime)*JyPerK;
-  Float JyPerK=10.; // guess for ATCA dishes at 3-20cm
+  Float JyPerK=13.; // guess for ATCA dishes at 3-20cm
   Float factor=sqrt(chnbw(0)*exposure)/JyPerK;
   for (Int pol=0; pol<npol; pol++) {
     Float tsysAv=tsys1(corrProduct(0,pol))*tsys2(corrProduct(1,pol));

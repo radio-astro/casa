@@ -236,13 +236,6 @@ private:
   Matrix<Float> pointingCorr_p;
   Bool newPointingCorr_p;
 
-  // scanHeader subtable
-  //  ScalarColumn<String> cObserver, cInstrument, cDateObserved, cDateWritten,
-  //      cDateSystem, cSHCal;
-  //  ScalarColumn<Double> cUTC_TAI, cSHDJMRefP, cSHDJMRefT;
-  //  ArrayColumn<Double> cSHCParams, cArrayXYZ;
-  //  ScalarColumn<Int> cSHDefeat, cSHIntTime;
-
   // reference date
   Double mjd0_p;
 
@@ -269,6 +262,9 @@ private:
   // Track sources
   String sources_p;
   Int nsources_p;
+  
+  // Polarization order
+  Matrix<Int> corrIndex_p;
 
   // Check for shadowing
   Float shadow_p;
