@@ -42,6 +42,13 @@
 #include <casa/Logging/LogIO.h>
 
 #include <map>
+
+#if !defined(__clang__) && (__GNUC__ >= 5 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 4))
+#define CASA_ATTR_VECTORIZE __attribute__((optimize("tree-vectorize")))
+#else
+#define CASA_ATTR_VECTORIZE 
+#endif
+
 using namespace std;
 
 namespace casa {
@@ -312,7 +319,7 @@ namespace casa {
     return itsIndex[itsIndexEntry];
   }
 
-  void AsdmStMan::getShort (const AsdmIndex& ix, Complex* buf, uInt bl, uInt spw)
+  void CASA_ATTR_VECTORIZE AsdmStMan::getShort (const AsdmIndex& ix, Complex* buf, uInt bl, uInt spw)
   {
     // Get pointer to the data in the block.
     Short* data = (reinterpret_cast<Short*>(&itsData[0]));
@@ -332,12 +339,12 @@ namespace casa {
 	}
       }
     } else {
-      for (uInt j=0; j<ix.nChan; ++j) {
-	for (uInt i=0; i<ix.nPol; ++i) {
-	  *buf++ = Complex(data[0]/ix.scaleFactors[spw],
-			   data[1]/ix.scaleFactors[spw]);
+      // GCC < 5 fails vectorizing Complex so use floats (same layout c++11 26.4)
+      Float * fbuf = reinterpret_cast<Float*>(buf);
+      for (uInt j=0; j<ix.nChan * ix.nPol; ++j) {
+	  *fbuf++ = data[0]/ix.scaleFactors[spw];
+	  *fbuf++ = data[1]/ix.scaleFactors[spw];
 	  data += 2;
-	}
       }
     }
   }
