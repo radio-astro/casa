@@ -1354,12 +1354,25 @@ image::coordsys(const std::vector<int>& pixelAxes) {
 	_log << _ORIGIN;
 	try {
 		if (detached()) {
-			return 0;
+			return nullptr;
+		}
+		vector<Int> myAxes = pixelAxes;
+		if (pixelAxes.size() == 1 && pixelAxes[0] == -1) {
+			myAxes.clear();
 		}
 		std::unique_ptr<casac::coordsys> rstat;
 		// Return coordsys object
 		rstat.reset(new ::casac::coordsys());
-		CoordinateSystem csys = _image->coordsys(Vector<Int> (pixelAxes));
+		//auto csys = _image->coordsys(Vector<Int> (pixelAxes));
+		CoordinateSystem csys;
+		if (_imageF) {
+			ImageMetaData imd(_imageF);
+			csys = imd.coordsys(myAxes);
+		}
+		else {
+			ImageMetaData imd(_imageC);
+			csys = imd.coordsys(myAxes);
+		}
 		rstat->setcoordsys(csys);
 		return rstat.release();
 	}
@@ -1368,6 +1381,7 @@ image::coordsys(const std::vector<int>& pixelAxes) {
 				<< LogIO::POST;
 		RETHROW(x);
 	}
+	return nullptr;
 }
 
 image* image::decimate(
@@ -5182,27 +5196,27 @@ std::string image::type() {
 //std::vector<double>
 ::casac::record*
 image::topixel(const ::casac::variant& value) {
-	//  std::vector<double> rstat;
-	::casac::record *rstat = 0;
 	try {
 		_log << LogOrigin("image", __func__);
-		if (detached())
-			return rstat;
+		if (detached()) {
+			return nullptr;
+		}
 
-		Vector<Int> bla;
-		CoordinateSystem cSys = _image->coordsys(bla);
+		auto cSys = _imageF
+			? _imageF->coordinates()
+			: _imageC->coordinates();
 		::casac::coordsys mycoords;
 		//NOT using _image->toworld as most of the math is in casac namespace
 		//in coordsys...should revisit this when casac::coordsys is cleaned
 		mycoords.setcoordsys(cSys);
-		rstat = mycoords.topixel(value);
-
-	} catch (const AipsError& x) {
+		return mycoords.topixel(value);
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
+	return nullptr;
 }
 
 ::casac::record*
