@@ -69,6 +69,50 @@ template<class T> void PixelValueManipulator<T>::addNoise(
 	lan->add(*subImage);
 }
 
+template<class T> Record* PixelValueManipulator<T>::coordMeasures(
+	Quantum<T>& intensity, Record& direction,
+	Record& frequency, Record& velocity,
+	SPCIIT image, const Vector<Double>& pixel
+) {
+	Record *r = nullptr;
+
+	const auto& cSys = image->coordinates();
+
+	Vector<Double> vpixel = pixel.empty() ? cSys.referencePixel() : pixel;
+
+	String format("m");
+	ImageMetaData imd(image);
+	r = new Record(imd.toWorld(vpixel, format));
+
+	Vector<Int> ipixel(vpixel.size());
+	convertArray(ipixel, vpixel);
+
+	Bool offImage;
+	Quantum<Double> value;
+	Bool mask = False;
+	PixelValueManipulator<T> pvm(image, nullptr, "");
+	pvm.pixelValue(offImage, intensity, mask, ipixel);
+	if (offImage) {
+		return r;
+	}
+
+	r->define(RecordFieldId("mask"), mask);
+
+	if (r->isDefined("direction")) {
+		direction = r->asRecord("direction");
+	}
+	if (r->isDefined("spectral")) {
+		Record specRec = r->asRecord("spectral");
+		if (specRec.isDefined("frequency")) {
+			frequency = specRec.asRecord("frequency");
+		}
+		if (specRec.isDefined("radiovelocity")) {
+			velocity = specRec.asRecord("radiovelocity");
+		}
+	}
+	return r;
+}
+
 template<class T> void PixelValueManipulator<T>::setAxes(
 	const IPosition& axes, Bool invert
 ) {

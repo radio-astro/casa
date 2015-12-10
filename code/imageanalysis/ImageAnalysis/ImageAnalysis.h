@@ -83,10 +83,6 @@ public:
 
     CoordinateSystem coordsys(const Vector<int>& axes);
 
-    Record* coordmeasures(Quantum<Float>& intensity, Record& direction,
-                          Record& frequency, Record& velocity, 
-                          const Vector<double>& pixel);
-
     Bool open(const String& infile);
 
     inline static String className() {const static String x = "ImageAnalysis"; return x; }

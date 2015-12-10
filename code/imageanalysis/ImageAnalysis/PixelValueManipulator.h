@@ -50,6 +50,12 @@ public:
 		Bool zero, const std::pair<Int, Int> *const &seeds
 	);
 
+	static Record* coordMeasures(
+		Quantum<T>& intensity, Record& direction,
+		Record& frequency, Record& velocity,
+		SPCIIT image, const Vector<Double>& pixel
+	);
+
 	// set axes to average over. If invert is True, select all axes other than
 	// the specified axes to average over.
 	void setAxes(const IPosition& axes, Bool invert=False);

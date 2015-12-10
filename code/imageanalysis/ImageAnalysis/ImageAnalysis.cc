@@ -291,55 +291,6 @@ CoordinateSystem ImageAnalysis::coordsys(const Vector<Int>& pixelAxes) {
 	return cSys2;
 }
 
-Record* ImageAnalysis::coordmeasures(
-	Quantum<Float>& intensity, Record& direction,
-	Record& frequency, Record& velocity, const Vector<Double>& pixel
-) {
-	_onlyFloat(__func__);
-	Record *r = 0;
-
-	*_log << LogOrigin("ImageAnalysis", "coordmeasures");
-
-	CoordinateSystem cSys = _imageFloat->coordinates();
-
-	Vector<Double> vpixel(pixel);
-	if (pixel.size() == 0) {
-		vpixel = cSys.referencePixel();
-	}
-
-	String format("m");
-	ImageMetaData imd(_imageFloat);
-	r = new Record(imd.toWorld(vpixel, format));
-
-	Vector<Int> ipixel(vpixel.size());
-	convertArray(ipixel, vpixel);
-
-	//    Record *pR = this->pixelvalue(ipixel);
-	Bool offImage;
-	Quantum<Double> value;
-	Bool mask(False);
-	PixelValueManipulator<Float> pvm(_imageFloat, nullptr, "");
-	pvm.pixelValue(offImage, intensity, mask, ipixel);
-	if (offImage)
-		return r;
-
-	r->define(RecordFieldId("mask"), mask);
-
-	if (r->isDefined("direction")) {
-		direction = r->asRecord("direction");
-	}
-	if (r->isDefined("spectral")) {
-		Record specRec = r->asRecord("spectral");
-		if (specRec.isDefined("frequency")) {
-			frequency = specRec.asRecord("frequency");
-		}
-		if (specRec.isDefined("radiovelocity")) {
-			velocity = specRec.asRecord("radiovelocity");
-		}
-	}
-	return r;
-}
-
 SPCIIC ImageAnalysis::getComplexImage() const {
 	ThrowIf(
 		_imageFloat,
