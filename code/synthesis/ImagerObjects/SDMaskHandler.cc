@@ -510,6 +510,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     axes(1) = dirAxes(1);
     axes(2) = CoordinateUtil::findSpectralAxis(incsys);
 
+    const String outfilename = outImageMask.name()+String("_tmp");
+
     try {
       // Since regrid along the spectral axis does not seem to work
       // properly, replacing with ImageRegridder 
@@ -523,14 +525,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       SPCIIF tempim(inImageMaskptr);
       SPCIIF templateim(new TempImage<Float>(outshape,outcsys));
       Record* dummyrec = 0;
-      const String outfilename = outImageMask.name();
+      //      const String outfilename = outImageMask.name()+String("_tmp");
       ImageRegridder regridder(tempim, outfilename, templateim, axes, dummyrec, "", True, outshape);
       regridder.setMethod(Interpolate2D::LINEAR);
       SPIIF retim = regridder.regrid();
-      retim->copyData((LatticeExpr<Float>) iif(*retim > 0.1, 1.0, 0.0)); 
+      //      retim->copyData((LatticeExpr<Float>) iif(*retim > 0.1, 1.0, 0.0)); 
+      outImageMask.copyData( (LatticeExpr<Float>) iif(*retim > 0.1, 1.0, 0.0)  );
+
     } catch (AipsError &x) {
 	throw(AipsError("Image regrid error : "+ x.getMesg()));
       }
+
+    try
+      {
+	// delete the outfilename image on disk
+	Directory dd(outfilename);
+	dd.removeRecursive();
+      }
+    catch (AipsError &x) {
+      //      throw(AipsError("Cannot delete temporary mask image : "+ x.getMesg()));
+      os << LogIO::WARN << "Cannot  delete temporary mask image : " << x.getMesg() << LogIO::POST;
+    }
+    
   } 
 
   void SDMaskHandler::expandMask(const ImageInterface<Float>& inImageMask, ImageInterface<Float>& outImageMask)
