@@ -1481,39 +1481,56 @@ template <class T> image* image::_decimate(
 
 ::casac::record*
 image::coordmeasures(const std::vector<double>&pixel) {
-	::casac::record *rstat = 0;
 	try {
 		_log << _ORIGIN;
-		if (detached())
-			return rstat;
-
+		if (detached()) {
+			return nullptr;
+		}
 		casa::Record theDir;
 		casa::Record theFreq;
 		casa::Record theVel;
-		casa::Record* retval;
-		casa::Quantum<Float> theInt;
 		Vector<Double> vpixel;
 		if (!(pixel.size() == 1 && pixel[0] == -1)) {
 			vpixel = pixel;
 		}
-		retval = _image->coordmeasures(theInt, theDir, theFreq, theVel, vpixel);
-
+		unique_ptr<Record> retval;
 		String error;
 		Record R;
-		if (QuantumHolder(theInt).toRecord(error, R)) {
-			retval->defineRecord(RecordFieldId("intensity"), R);
-		} else {
-			_log << LogIO::SEVERE << "Could not convert intensity to record. "
-					<< error << LogIO::POST;
+		if (_imageF) {
+			casa::Quantum<Float> intensity;
+			retval.reset(
+				PixelValueManipulator<Float>::coordMeasures(
+					intensity, theDir, theFreq, theVel, _imageF, vpixel
+				)
+			);
+			ThrowIf(
+				! QuantumHolder(intensity).toRecord(error, R),
+				"Could not convert intensity to record. "
+				+ error
+			);
 		}
-		rstat = fromRecord(*retval);
-
-	} catch (AipsError x) {
+		else {
+			casa::Quantum<Complex> intensity;
+			retval.reset(
+				PixelValueManipulator<Complex>::coordMeasures(
+					intensity, theDir, theFreq, theVel, _imageC, vpixel
+				)
+			);
+			ThrowIf(
+				! QuantumHolder(intensity).toRecord(error, R),
+				"Could not convert intensity to record. "
+				+ error
+			);
+		}
+		retval->defineRecord(RecordFieldId("intensity"), R);
+		return fromRecord(*retval);
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
+	return nullptr;
 }
 
 ::casac::record*
