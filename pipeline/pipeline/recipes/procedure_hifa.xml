@@ -117,6 +117,12 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
+        <Command xmlns="">breakpoint</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
         <Command xmlns="">hif_makeimages</Command>
         <ParameterSet>
         </ParameterSet>
