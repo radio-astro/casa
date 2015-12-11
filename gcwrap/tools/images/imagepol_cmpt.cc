@@ -16,7 +16,6 @@
 #include <casa/Exceptions/Error.h>
 #include <casa/Logging/LogIO.h>
 #include <images/Images/ImageInterface.h>
-#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/ImageExpr.h>
 #include <imageanalysis/ImageAnalysis/ImagePolProxy.h>
