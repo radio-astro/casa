@@ -1587,8 +1587,8 @@ class immath_test3(unittest.TestCase):
         myia.done()
         self.assertTrue(type(data[0,0]) == numpy.complex128)
 
-        myia.fromshape(im4, shape, type='f')
-        self.assertRaises(Exception, myia.calc, im1 + '+' + im2)
+        #myia.fromshape(im4, shape, type='f')
+        #self.assertRaises(Exception, myia.calc, im1 + '+' + im2)
         
     def test_CAS6896(self):
         """Verify CAS-6896, user can choose from which image to copy metadata"""

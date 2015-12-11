@@ -1047,11 +1047,27 @@ std::string image::brightnessunit() {
 
 bool image::calc(const std::string& expr, bool verbose) {
 	try {
-		_log << _ORIGIN;
-		if (detached()) {
-			return False;
+		ThrowIf(
+			expr.empty(),
+			"You must provide an expression using the expr parameter"
+		);
+		DataType type = ImageExprParse::command(expr).dataType();
+		Bool warn = verbose && (_imageC || _imageF);
+		if (isReal(type)) {
+			_imageF = _imagecalc<Float>("", expr, False, "");
+			_image.reset(new ImageAnalysis(_imageF));
+			_imageC.reset();
 		}
-		_image->calc(expr, verbose);
+		else {
+			_imageC = _imagecalc<Complex>("", expr, False, "");
+			_image.reset(new ImageAnalysis(_imageC));
+			_imageF.reset();
+		}
+		if (warn) {
+			_log << LogIO::WARN << "Overwriting pixel values "
+				<< "of the currently attached image"
+				<< LogIO::POST;
+		}
 		_stats.reset(0);
 		return True;
 	}
@@ -1060,6 +1076,7 @@ bool image::calc(const std::string& expr, bool verbose) {
 			<< LogIO::POST;
 		RETHROW(x);
 	}
+	return False;
 }
 
 bool image::calcmask(
@@ -3028,15 +3045,6 @@ record* image::histograms(
 		ihc.setDoLog10(log);
 		ihc.setStretch(stretch);
         return fromRecord(ihc.compute());
-
-		/*
-        return fromRecord(
-        	_image->histograms(
-        		naxes, *regionRec, Mask, nbins, includePix,
-        		gauss, cumu, log, list, force, disk, stretch
-        	)
-        );
-        */
 	}
 	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
