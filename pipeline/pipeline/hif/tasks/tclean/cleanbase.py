@@ -226,10 +226,13 @@ class CleanBase(basetask.StandardTaskTemplate):
         spw_param_list = []
         p = re.compile('([\d.]*)(~)([\d.]*)(\D*)')
         freq_ranges = []
+        num_channels = []
         # get spw info from first vis set, assume spws uniform
         # across datasets
         ms = context.observing_run.get_ms(name=inputs.vis[0])
         for spwid in inputs.spw.split(','):
+            spw_info = ms.get_spectral_window(spwid)
+            num_channels.append(spw_info.num_channels)
             if (inputs.spwsel.has_key('spw%s' % (spwid))):
                 if (inputs.spwsel['spw%s' % (spwid)] != ''):
                     spw_param_list.append('%s:%s' % (spwid, inputs.spwsel['spw%s' % (spwid)]))
@@ -238,13 +241,11 @@ class CleanBase(basetask.StandardTaskTemplate):
                         freq_ranges.append((float(f1), float(f2)))
                 else:
                     spw_param_list.append(spwid)
-                    spw_info = ms.get_spectral_window(spwid)
                     min_frequency = float(spw_info.min_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
                     max_frequency = float(spw_info.max_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
                     freq_ranges.append((min_frequency, max_frequency))
             else:
                 spw_param_list.append(spwid)
-                spw_info = ms.get_spectral_window(spwid)
                 min_frequency = float(spw_info.min_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
                 max_frequency = float(spw_info.max_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
                 freq_ranges.append((min_frequency, max_frequency))
@@ -253,6 +254,17 @@ class CleanBase(basetask.StandardTaskTemplate):
         aggregate_bw = '0.0GHz'
         for freq_range in utils.merge_ranges(freq_ranges):
             aggregate_bw = casatools.quanta.add(aggregate_bw, casatools.quanta.sub('%sGHz' % (freq_range[1]), '%sGHz' % (freq_range[0])))
+
+        # Estimate memory usage and adjust chanchunks parameter to avoid
+        # exceeding the available memory.
+        mem_bytes = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')
+        mem_usable_bytes = 0.8 * mem_bytes
+        if (inputs.nchan != -1):
+            cube_bytes = inputs.imsize[0] * inputs.imsize[1] * inputs.nchan * 4
+        else:
+            cube_bytes = inputs.imsize[0] * inputs.imsize[1] * max(num_channels) * 4
+        tclean_bytes = 9 * cube_bytes
+        chanchunks = int(tclean_bytes / mem_usable_bytes) + 1
 
         parallel = all([mpihelpers.parse_mpi_input_parameter(inputs.parallel),
                         'TARGET' in inputs.intent])
@@ -273,7 +285,7 @@ class CleanBase(basetask.StandardTaskTemplate):
                   npixels=inputs.npixels,
                   restoringbeam=inputs.restoringbeam, uvrange=inputs.uvrange,
                   mask=inputs.mask, savemodel='none', nterms=result.multiterm,
-                  parallel=parallel)
+                  chanchunks=chanchunks, parallel=parallel)
         else:
             job = casa_tasks.tclean(vis=inputs.vis, imagename='%s.%s.iter%s' %
                   (os.path.basename(inputs.imagename), inputs.stokes, iter),
@@ -290,7 +302,7 @@ class CleanBase(basetask.StandardTaskTemplate):
                   npixels=inputs.npixels,
                   restoringbeam=inputs.restoringbeam, uvrange=inputs.uvrange,
                   mask=inputs.mask, savemodel='none',
-                  parallel=parallel)
+                  chanchunks=chanchunks, parallel=parallel)
         self._executor.execute(job)
 
         # Create PB for single fields since it is not auto-generated for

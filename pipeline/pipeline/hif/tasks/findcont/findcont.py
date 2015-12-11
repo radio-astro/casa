@@ -120,6 +120,16 @@ class FindCont(basetask.StandardTaskTemplate):
                         scanids = scanids.replace(']', '')
                         scanidlist.append(scanids)
 
+                    # Estimate memory usage and adjust chanchunks parameter to avoid
+                    # exceeding the available memory.
+                    mem_bytes = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')
+                    mem_usable_bytes = 0.8 * mem_bytes
+                    ms = context.observing_run.get_ms(name=inputs.vis[0])
+                    spw_info = ms.get_spectral_window(spwid)
+                    cube_bytes = target['imsize'][0] * target['imsize'][1] * spw_info.num_channels * 4
+                    tclean_bytes = 9 * cube_bytes
+                    chanchunks = int(tclean_bytes / mem_usable_bytes) + 1
+
                     parallel = mpihelpers.parse_mpi_input_parameter(inputs.parallel)
 
                     # Need to make a cube in the spw frequency frame to get
@@ -134,7 +144,7 @@ class FindCont(basetask.StandardTaskTemplate):
                         cell=target['cell'], phasecenter=target['phasecenter'],
                         stokes='I', weighting='briggs', robust=0.5,
                         npixels=0, restoringbeam='common',
-                        savemodel='none', parallel=parallel)
+                        savemodel='none', chanchunks=chanchunks, parallel=parallel)
                     self._executor.execute(job)
 
                     # Try detecting continuum frequency ranges
