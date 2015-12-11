@@ -74,13 +74,6 @@ public:
 
     void calc(const String& expr, Bool verbose);
 
-    // regions should be a Record of Records having different regions
-
-    Bool calcmask(
-    	const String& mask, Record& regions,
-    	const String& name, const Bool asdefault = True
-    );
-
     Bool open(const String& infile);
 
     inline static String className() {const static String x = "ImageAnalysis"; return x; }
@@ -95,6 +88,7 @@ public:
     SPIIF getImage();
 
     SPCIIC getComplexImage() const;
+
     SPIIC getComplexImage();
 
     Bool isFloat() const { return _imageFloat ? true : false; }
@@ -114,12 +108,6 @@ public:
     template<class T> void _calc(
     	SPIIT image,
     	const LatticeExprNode& node
-    );
-
-    template<class T> Bool _calcmask(
-    	SPIIT image,
-    	const LatticeExprNode& node,
-    	const String& name, const Bool makedefault
     );
 
 };

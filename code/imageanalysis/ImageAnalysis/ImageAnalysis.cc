@@ -170,44 +170,6 @@ void ImageAnalysis::calc(const String& expr, Bool verbose) {
 	}
 }
 
-Bool ImageAnalysis::calcmask(
-	const String& mask, Record& regions,
-	const String& maskName, const Bool makeDefault
-) {
-	*_log << LogOrigin(className(), __func__);
-
-	// Get LatticeExprNode (tree) from parser
-	// Convert the GlishRecord containing regions to a
-	// PtrBlock<const ImageRegion*>.
-	ThrowIf(
-		mask.empty(),
-		"You must specify an expression"
-	);
-	Block<LatticeExprNode> temps;
-	PtrBlock<const ImageRegion*> tempRegs;
-	PixelValueManipulator<Float>::makeRegionBlock(tempRegs, regions);
-	LatticeExprNode node = ImageExprParse::command(mask, temps, tempRegs);
-
-	// Delete the ImageRegions
-	PixelValueManipulator<Float>::makeRegionBlock(tempRegs, Record());
-
-	// Make sure the expression is Boolean
-	DataType type = node.dataType();
-	ThrowIf(
-		type != TpBool,
-		"The expression type must be Boolean"
-	);
-
-	Bool res = _imageFloat
-		? _calcmask(
-			_imageFloat, node, maskName, makeDefault
-		)
-		: _calcmask(
-			_imageComplex, node, maskName, makeDefault
-		);
-	return res;
-}
-
 SPCIIC ImageAnalysis::getComplexImage() const {
 	ThrowIf(
 		_imageFloat,

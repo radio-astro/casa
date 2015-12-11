@@ -25,6 +25,7 @@
 //# $Id: $
 
 #include <imageanalysis/ImageAnalysis/ImageMaskHandler.h>
+#include <imageanalysis/ImageAnalysis/PixelValueManipulator.h>
 
 #include <casa/Exceptions/Error.h>
 
@@ -102,6 +103,94 @@ template <class T> void ImageMaskHandler<T>::copy(
 	}
 }
 
+template <class T> void ImageMaskHandler<T>::calcmask(
+	const String& mask, Record& regions,
+	const String& maskName, const Bool makeDefault
+) {
+	ThrowIf(mask.empty(), "You must specify an expression");
+	ThrowIf (
+		! _image->canDefineRegion(),
+		"Cannot make requested mask for this type of image"
+		"It is of type" + _image->imageType()
+	);
+	Block<LatticeExprNode> temps;
+	PtrBlock<const ImageRegion*> tempRegs;
+	PixelValueManipulator<T>::makeRegionBlock(tempRegs, regions);
+	LatticeExprNode node = ImageExprParse::command(mask, temps, tempRegs);
 
+	// Delete the ImageRegions
+	PixelValueManipulator<Float>::makeRegionBlock(tempRegs, Record());
+
+	// Make sure the expression is Boolean
+	DataType type = node.dataType();
+	ThrowIf(type != TpBool, "The expression type must be Boolean");
+	_calcmask(node, maskName, makeDefault);
 }
 
+template<class T> void ImageMaskHandler<T>::_calcmask(
+    const LatticeExprNode& node,
+    const String& maskName, const Bool makeDefault
+) {
+	// Get the shape of the expression and check it matches that
+	// of the output image.  We don't check that the Coordinates
+	// match as that would be an un-necessary restriction.
+	if (
+		! node.isScalar()
+		&& ! _image->shape().isEqual(node.shape())
+	) {
+		ostringstream os;
+		os << "The shape of the expression does not conform "
+			<< "with the shape of the output image"
+			<< "Expression shape = " << node.shape()
+			<< "Image shape      = " << _image->shape();
+		ThrowCc(os.str());
+	}
+	// Make mask and get hold of its name.   Currently new mask is forced to
+	// be default because of other problems.  Cannot use the usual ImageMaskAttacher<Float>::makeMask
+	// function because I cant attach/make it default until the expression
+	// has been evaluated
+	// Generate mask name if not given
+	String maskName2 = maskName.empty()
+		? _image->makeUniqueRegionName(
+			String("mask"), 0
+		) : maskName;
+
+	// Make the mask if it does not exist
+	if (! _image->hasRegion(maskName2, RegionHandler::Masks)) {
+		_image->makeMask(maskName2, True, False);
+		LogIO log;
+		log << LogOrigin("ImageMaskHandler", __func__);
+		log << LogIO::NORMAL << "Created mask `" << maskName2 << "'"
+			<< LogIO::POST;
+		ImageRegion iR = _image->getRegion(
+			maskName2, RegionHandler::Masks
+		);
+		LCRegion& mask = iR.asMask();
+		if (node.isScalar()) {
+			Bool value = node.getBool();
+			mask.set(value);
+		}
+		else {
+			mask.copyData(LatticeExpr<Bool> (node));
+		}
+	}
+	else {
+		// Access pre-existing mask.
+		ImageRegion iR = _image->getRegion(
+			maskName2, RegionHandler::Masks
+		);
+		LCRegion& mask2 = iR.asMask();
+		if (node.isScalar()) {
+			Bool value = node.getBool();
+			mask2.set(value);
+		}
+		else {
+			mask2.copyData(LatticeExpr<Bool> (node));
+		}
+	}
+	if (makeDefault) {
+		_image->setDefaultMask(maskName2);
+	}
+}
+
+}

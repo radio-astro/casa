@@ -53,8 +53,18 @@ public:
     // copy mask
     void copy(const String& currentName, const String& newName);
 
+    void calcmask(
+    	const String& mask, Record& regions,
+		const String& name, Bool asdefault=True
+    );
+
 private:
     const SPIIT _image;
+
+    void _calcmask(
+    	const LatticeExprNode& node,
+		const String& name, const Bool makedefault
+    );
 
 };
 
