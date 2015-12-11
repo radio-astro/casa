@@ -1677,7 +1677,7 @@ Temperature SkyStatus::getSigmaFit(unsigned int spwId,
   if(!spwidAndIndexAreValid(spwId, 0)) {
     return ttt;
   }
-  if(!v_tebbspec.size() == getSpectralWindow(spwId).size()) {
+  if(v_tebbspec.size() != getSpectralWindow(spwId).size()) {
     return ttt;
   }
   if(wh2o.get("mm") < 0.0) {
@@ -2920,7 +2920,7 @@ void SkyStatus::updateSkyCouplingChannel_fromWVR(vector<WVRMeasurement> &Radiome
 {
   double pfit;
   double deltaa = 0.02;
-  double sig_fit = -999.0;
+  // double sig_fit = -999.0;    // [-Wunused_but_set_variable]
   double eps = 0.01;
 
   unsigned int num;
@@ -3003,7 +3003,7 @@ void SkyStatus::updateSkyCouplingChannel_fromWVR(vector<WVRMeasurement> &Radiome
     }
 
     flamda = flamda / 10.0;
-    sig_fit = sqrt(chisqr);
+    // sig_fit = sqrt(chisqr);   // [-Wunused_but_set_variable]
     pfit = pfit_b;
 
     if(fabs(sqrt(chisq1) - sqrt(chisqr)) < eps) {
