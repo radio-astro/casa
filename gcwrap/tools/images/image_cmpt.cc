@@ -206,28 +206,24 @@ Bool isunset(const ::casac::variant &theVar) {
 	return rstat;
 }
 
-::casac::record*
-image::torecord() {
-	::casac::record *rstat = new ::casac::record();
-	_log << LogOrigin("image", "torecord");
+::casac::record* image::torecord() {
+	_log << LogOrigin("image", __func__);
 	if (detached())
-		return rstat;
+		return new record();
 	try {
 		Record rec;
-		if (!_image->toRecord(rec)) {
-			_log << "Could not convert to record " << LogIO::EXCEPTION;
-		}
-
-		// Put it in a ::casac::record
-		delete rstat;
-		rstat = 0;
-		rstat = fromRecord(rec);
-	} catch (AipsError x) {
+		String err;
+		Bool ret = _imageF ? _imageF->toRecord(err, rec)
+			: _imageC->toRecord(err, rec);
+		ThrowIf (! ret, "Could not convert to record: " + err);
+		return fromRecord(rec);
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
+	return new record();
 
 }
 bool image::fromrecord(const record& imrecord, const string& outfile) {
