@@ -30,7 +30,6 @@
 #include <measures/Measures/MDirection.h>
 #include <tables/Tables/PlainTable.h>
 
-//#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
 #include <imageanalysis/ImageAnalysis/ImageMetaData.h>
 #include <imageanalysis/ImageAnalysis/ImagePadder.h>
