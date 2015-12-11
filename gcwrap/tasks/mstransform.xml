@@ -329,12 +329,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <!-- OTF CALIBRATION parameters -->
         
 	    <param type="bool" name="docallib" >
-	        <description>Enable OTF calibration</description>
+	        <description>Enable on-the-fly (OTF) calibration as in task applycal</description>
 	        <value>False</value>
 	    </param>
 
 	    <param type="string" name="callib" subparam="true" >
-	        <description>Cal Library filename</description>
+	        <description>Path to calibration library file</description>
 	        <value type="string"></value>
 	    </param>        
 
@@ -725,7 +725,35 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         maxuvwdistance -- Provide a maximum separation of start-to-end baselines 
                           that can be included in an average. (int)
             default: 0.0 (given in meters)
-
+            
+--- On-the-fly calibration parameters ---            
+    docallib -- Enable on-the-fly (OTF) calibration as in task applycal
+        default: False
+        
+        callib -- Path to calibration library file, which is a ascii file containing
+                  the parameters to correct the data as task in task applycal, namely
+                  gaintable/gainfield/interp/spwmap/calwt. In a Cal Library file, each 
+                  row expresses the calibration apply instructions for a particular 
+                  caltable and (optionally) a specific selection of data in the MS to 
+                  which it is to be applied.
+                  
+            default: '' (there is no default callib file)    
+            
+            examples: 
+            
+            caltable='cal.G' tinterp='linear' calwt=True
+            
+            -> Arrange a caltable called cal.G to be applied (with no detailed selection) 
+            to all MS data with linear interpolation in time, and with the weights also 
+            calibrated.
+            
+            caltable='cal.G' tinterp='linear' fldmap='nearest' spwmap=[0,1,1,3] calwt=True
+            caltable='cal.B' finterp='linear' fldmap='3' spwmap=[0,0,0,0] calwt=False    
+            
+            -> In this case, solutions from cal.G will be selected based on directional 
+            proximity ('nearest') for each MS field via the fldmap parameter, and spw 2 
+            will be calibrated by spw 1 solutions. For cal.B, solutions from field id 3 
+            will be used exclusively, with spw 0 calibrating all MS spws.
 
         
     ------ Multi-MS Processing and Heuristics ---------
@@ -799,6 +827,10 @@ http://www.eso.org/~scastro/ALMA/casa/MST/MSTransformDocs/MSTransformDocs.html
 7) Apply time averaging using a bin of 30 seconds on the default CORRECTED column.
     mstransform(vis='g19_d2usb_targets_line.ms', outputvis='test5.ms', timeaverage=True,
                 timebin='30s')
+                
+8) Apply OTF calibration to ng5921 using a calibration library
+    mstransform(vis='ngc5921.ms', outputvis='ngc5921_calibrated.ms',docallib=True,
+    			callib='unittest/mstransform/ngc5921_regression/ngc5921_callib.txt')
 
 
 </example> 
