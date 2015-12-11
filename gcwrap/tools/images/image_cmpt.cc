@@ -1065,20 +1065,28 @@ bool image::calc(const std::string& expr, bool verbose) {
 bool image::calcmask(
 	const string& mask, const string& maskName, bool makeDefault
 ) {
-	bool rstat(false);
 	try {
 		_log << _ORIGIN;
 		if (detached()) {
-			return rstat;
+			return False;
 		}
 		Record region;
-		rstat = _image->calcmask(mask, region, maskName, makeDefault);
-	} catch (const AipsError& x) {
+		if (_imageF) {
+			ImageMaskHandler<Float> imh(_imageF);
+			imh.calcmask(mask, region, maskName, makeDefault);
+		}
+		else {
+			ImageMaskHandler<Complex> imh(_imageC);
+			imh.calcmask(mask, region, maskName, makeDefault);
+		}
+		return True;
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
+	return False;
 }
 
 bool image::close() {
@@ -1150,42 +1158,6 @@ image* image::continuumsub(
 		RETHROW(x);
 	}
 }
-
-/*
-image* image::continuumsub(
-	const string& outline, const string& outcont,
-	const variant& region, const vector<int>& channels,
-	const string& pol, const int in_fitorder, const bool overwrite
-) {
-	try {
-		_log << _ORIGIN;
-		if (detached()) {
-			return 0;
-		}
-		SHARED_PTR<Record> leRegion = _getRegion(region, False);
-		Vector<Int> theChannels(channels);
-		if (theChannels.size() == 1 && theChannels[0] == -1) {
-			theChannels.resize(0);
-		}
-		SHARED_PTR<ImageInterface<Float> > theResid(
-			_image->continuumsub(
-				outline, outcont, *leRegion, theChannels,
-				pol, in_fitorder, overwrite
-			)
-		);
-		ThrowIf(
-			!theResid,
-			"continuumsub failed"
-		);
-		return new image(theResid);
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-}
-*/
 
 record* image::convertflux(
 	const variant& qvalue, const variant& major,
