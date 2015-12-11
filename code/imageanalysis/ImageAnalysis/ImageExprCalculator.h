@@ -1,5 +1,5 @@
-#ifndef IMAGEANALYSIS_ImageExprCalculator_H
-#define IMAGEANALYSIS_ImageExprCalculator_H
+#ifndef IMAGEANALYSIS_IMAGEEXPRCALCULATOR_H
+#define IMAGEANALYSIS_IMAGEEXPRCALCULATOR_H
 
 #include <casa/namespace.h>
 
@@ -44,10 +44,14 @@ public:
 	// Compute the expression and return the image.
 	SPIIT compute() const;
 
+    //void calc(const String& expr, Bool verbose);
+
 private:
     String _expr, _copyMetaDataFromImage, _outname;
     Bool _overwrite;
     mutable LogIO _log;
+
+    //void _calc(SPIIT image, const LatticeExprNode& node);
 
     SPIIT _imagecalc(
     	const LatticeExprNode& node, const IPosition& shape,

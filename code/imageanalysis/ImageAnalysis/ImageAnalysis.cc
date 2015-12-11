@@ -130,46 +130,6 @@ Bool ImageAnalysis::detached() {
 	return _imageFloat.get() == 0 && _imageComplex.get() == 0;
 }
 
-void ImageAnalysis::calc(const String& expr, Bool verbose) {
-	*_log << LogOrigin(className(), __func__);
-	ThrowIf(expr.empty(), "You must specify an expression");
-	Record regions;
-	Block<LatticeExprNode> temps;
-	PtrBlock<const ImageRegion*> tempRegs;
-	PixelValueManipulator<Float>::makeRegionBlock(tempRegs, regions);
-	LatticeExprNode node = ImageExprParse::command(expr, temps, tempRegs);
-	DataType type = node.dataType();
-	Bool isReal = casa::isReal(type);
-	ostringstream os;
-	os << type;
-	ThrowIf(
-		! isReal && ! isComplex(type),
-		"Unsupported node data type " + os.str()
-	);
-	ThrowIf(
-		_imageComplex && isReal,
-		"Resulting image is real valued but"
-		"the attached image is complex valued"
-	);
-	ThrowIf(
-		_imageFloat && isComplex(type),
-		"Resulting image is complex valued but"
-		"the attached image is real valued"
-	);
-	PixelValueManipulator<Float>::makeRegionBlock(tempRegs, Record());
-	if (verbose) {
-		*_log << LogIO::WARN << "Overwriting pixel values "
-			<< "of the currently attached image"
-			<< LogIO::POST;
-	}
-	if (_imageFloat) {
-		_calc(_imageFloat, node);
-	}
-	else {
-		_calc(_imageComplex, node);
-	}
-}
-
 SPCIIC ImageAnalysis::getComplexImage() const {
 	ThrowIf(
 		_imageFloat,
