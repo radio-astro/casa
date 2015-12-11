@@ -98,17 +98,6 @@ ImageAnalysis::~ImageAnalysis() {
 	//deleteHist();
 }
 
-Bool ImageAnalysis::toRecord(RecordInterface& rec) {
-	_onlyFloat(__func__);
-	if (_imageFloat.get() != 0) {
-		String err;
-		return _imageFloat->toRecord(err, rec);
-
-	}
-
-	return False;
-}
-
 Bool ImageAnalysis::open(const String& infile) {
 	// Generally used if the image is already closed !b
 	if (_imageFloat || _imageComplex) {

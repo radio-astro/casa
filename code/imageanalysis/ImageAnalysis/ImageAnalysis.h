@@ -78,9 +78,6 @@ public:
 
     Bool detached();
 
-    // Return a record of the associates ImageInterface 
-    Bool toRecord(RecordInterface& rec);
-
     // get the associated ImageInterface object
     SPCIIF getImage() const;
     SPIIF getImage();
