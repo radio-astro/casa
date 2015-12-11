@@ -454,9 +454,12 @@ class plotms_test_axis(plotms_test_base):
         self.plotfile_jpg = self.outputDir + "testAxis06.jpg"
         self.removePlotfile()
         time.sleep(5)
-        res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, highres=True,
+        try:
+            res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, highres=True,
                      showgui=False, ydatacolumn='corr/model')
-        self.assertFalse(res)
+            self.assertFalse(res)
+        except RunTimeError:  # "Parameter verification failed" rethrown on test server
+            self.assertIsNone(res)
         print
 
     def test_axis_datacolumnNoFloat(self):
@@ -489,9 +492,12 @@ class plotms_test_axis(plotms_test_base):
         self.plotfile_jpg = self.outputDir + "testAxis09.jpg"
         self.removePlotfile()
         # now test bad synonym
-        res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, highres=True,
+        try:
+            res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, highres=True,
                      showgui=False, yaxis='veloc')
-        self.assertFalse(res)
+            self.assertFalse(res)
+        except RunTimeError:  # "Parameter verification failed" rethrown on test server
+            self.assertIsNone(res)
         print
 
     # Removed from regular testing but available for manual testing!
@@ -1428,9 +1434,12 @@ class plotms_test_transform(plotms_test_base):
         self.plotfile_jpg = self.outputDir + "testTransform02.jpg"
         self.removePlotfile()
         time.sleep(5)
-        res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, yaxis='freq', 
-                     showgui=False, freqframe='J2000', highres=True)
-        self.assertFalse(res)
+        try:
+            res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, yaxis='freq', 
+                         showgui=False, freqframe='J2000', highres=True)
+            self.assertFalse(res)
+        except RunTimeError:  # "Parameter verification failed" rethrown on test server
+            self.assertIsNone(res)
         print
         
     def test_transform_veldef(self):
