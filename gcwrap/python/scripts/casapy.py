@@ -1051,7 +1051,7 @@ def __set_default_parameters(b):
 def backupoldfile(thefile=''):
     import copy
     import shutil
-    if(thefile==''):
+    if(thefile=='' or (not os.path.exists(thefile))):
         return 
     outpathdir = os.path.realpath(os.path.dirname(thefile))
     outpathfile = outpathdir + os.path.sep + os.path.basename(thefile)
