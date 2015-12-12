@@ -147,9 +147,6 @@ casa_add_assay( components SpectralComponents/test/tPowerLogPolynomialSpectralEl
 casa_add_assay( components SpectralComponents/test/tProfileFit1D.cc )
 casa_add_assay( components SpectralComponents/test/tSpectralFit.cc )
 
-
 casa_add_unit_test( MODULES components SOURCES ComponentModels/test/tLimbDarkenedDiskShape.cc )
-                     
-                              
-                                    
-
+casa_add_google_test( MODULES components SOURCES ComponentModels/test/FluxStandard_GTest.cc ComponentModels/test/FluxStandardTest.cc )
+casa_add_google_test( MODULES components SOURCES ComponentModels/test/EphemObjFluxStandard_GTest.cc ComponentModels/test/FluxStandardTest.cc )
