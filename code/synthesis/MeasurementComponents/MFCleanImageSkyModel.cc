@@ -632,7 +632,6 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		  cleaner.setHistLength(1024);
 		  cleaner.setMaxNumPix(32*1024);
 		  cleaner.setChoose(False);
-		  cerr << "CYCLE_SPEEDUP " << cycleSpeedup_p << endl;
 		  cleaner.setCycleSpeedup(cycleSpeedup_p);
 		  cleaner.setSpeedup(0.0);
 		  if ( displayProgress_p ) {
