@@ -916,7 +916,7 @@ void StokesImageUtil::To(ImageInterface<Float>& out, ImageInterface<Complex>& in
       //replaced copyData with iteration as it seems to load the whole array in memory
        for (inli.reset(), outli.reset(); !inli.atEnd() && !outli.atEnd();
 	 inli++,outli++) {
-	 outli.rwVectorCursor()=real(inli.vectorCursor());
+	 outli.woCursor()=real(inli.cursor());
 
        }
       
@@ -1019,7 +1019,7 @@ void StokesImageUtil::ToStokesPSF(ImageInterface<Float>& out, ImageInterface<Com
       outli=LatticeIterator<Float>  (out, inls);
       for (inli.reset(), outli.reset(); !inli.atEnd() && !outli.atEnd();
 	 inli++,outli++) {
-	 outli.rwVectorCursor()=real(inli.vectorCursor());
+	 outli.woCursor()=real(inli.cursor());
 
        }
       
