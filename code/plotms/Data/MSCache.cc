@@ -207,10 +207,11 @@ String MSCache::getDataColumn(vector<PMS::Axis>& loadAxes,
                         ArrayColumn<Float> weightSpectrum;
                         weightSpectrum.attach(thisTable,
                             MS::columnName(MS::WEIGHT_SPECTRUM));
-                        if (!weightSpectrum.hasContent())
+                        if (!weightSpectrum.hasContent()) {
                             logWarn("load_cache", "Plotting WEIGHT column, WEIGHT_SPECTRUM (WTSP) has not been initialized (this can be changed with initweights task)");
                             // Also send to console
                             cout << "WARNING: Plotting WEIGHT column, WEIGHT_SPECTRUM (WTSP) has not been initialized (this can be changed with initweights task)" << endl;
+                        }
                     }
                     dataColumn = PMS::dataColumn(loadData[i]);
                     break;
