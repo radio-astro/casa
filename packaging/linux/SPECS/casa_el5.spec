@@ -15,7 +15,7 @@
 %define SVNROOT       https://svn.cv.nrao.edu/svn/casa/branches/release-4_5
 ###
 ### configure version and revision...
-%define ver           4.5.0
+%define ver           4.5.1
 %define rev           %(/usr/src/rpmbuild/build/SOURCES/%{name}/svn-revision branch=release-4_5)
 %if %{?ver:1}0
 %define CASAVER       %{ver}
