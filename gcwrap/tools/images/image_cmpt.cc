@@ -1042,37 +1042,20 @@ std::string image::brightnessunit() {
 }
 
 bool image::calc(const std::string& expr, bool verbose) {
-	try {
-		ThrowIf(
-			expr.empty(),
-			"You must provide an expression using the expr parameter"
-		);
-		DataType type = ImageExprParse::command(expr).dataType();
-		Bool warn = verbose && (_imageC || _imageF);
-		if (isReal(type)) {
-			_imageF = _imagecalc<Float>("", expr, False, "");
-			_image.reset(new ImageAnalysis(_imageF));
-			_imageC.reset();
-		}
-		else {
-			_imageC = _imagecalc<Complex>("", expr, False, "");
-			_image.reset(new ImageAnalysis(_imageC));
-			_imageF.reset();
-		}
-		if (warn) {
-			_log << LogIO::WARN << "Overwriting pixel values "
-				<< "of the currently attached image"
-				<< LogIO::POST;
-		}
-		_stats.reset(0);
-		return True;
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-			<< LogIO::POST;
-		RETHROW(x);
-	}
-	return False;
+    try {
+        _log << _ORIGIN;
+        if (detached()) {
+            return False;
+        }
+        _image->calc(expr, verbose);
+        _stats.reset(0);
+        return True;
+    }    
+    catch (const AipsError& x) { 
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
+        RETHROW(x);
+    }    
 }
 
 bool image::calcmask(
