@@ -38,10 +38,8 @@ install (FILES
 )
 
 casa_add_assay( singledish
-    SingleDish/test/tSingleDishMS.cc
-    )
-casa_add_assay( singledish
     SingleDish/test/tLineFinder.cc
     )
 # google tests
 casa_add_google_test (MODULES singledish SOURCES SingleDish/test/LineFindingUtils_GTest.cc)
+casa_add_google_test (MODULES singledish SOURCES SingleDish/test/SingleDishMS_GTest.cc)

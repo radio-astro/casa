@@ -1,6 +1,7 @@
-//# tSingleDishMS.cc: this defines tests of SingleDishMS
+//# SingleDishMS_GTest.cc: this defines unit tests of
+//# SingleDishMS using google test framework
 //#
-//# Copyright (C) 2014,2015
+//# Copyright (C) 2015
 //# National Astronomical Observatory of Japan
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -26,10 +27,40 @@
 //#
 //# $Id$
 #include <iostream>
+#include <list>
+#include <cassert>
 
-#include <singledish/SingleDish/SingleDishMS.cc>
+#include <gtest/gtest.h>
 
-int main(int argc, char *argv[]) {
+#include <casa/Arrays/Vector.h>
 
-  return 0;
+#include <libsakura/sakura.h>
+#include <singledish/SingleDish/SingleDishMS.h>
+#include <singledish/SingleDish/test/SingleDishTestUtil.h>
+
+class SingleDishMSTest : public ::testing::Test {
+protected:
+  SingleDishMSTest() : verbose_(false) {}
+
+  virtual void SetUp() {
+    // Initialize sakura
+    LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Initialize)(nullptr,
+								   nullptr);
+    ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+  }
+
+  virtual void TearDown() {
+    // Clean-up sakura
+    LIBSAKURA_SYMBOL(CleanUp)();
+  }
+
+  bool verbose_;
+};
+
+/* NOTE no test has defined yet */
+
+int main (int nArgs, char * args []) {
+    ::testing::InitGoogleTest(& nArgs, args);
+    cout << "SingleDishMS test " << endl;
+    return RUN_ALL_TESTS();
 }
