@@ -72,11 +72,7 @@ public:
 
     virtual ~ImageAnalysis();
 
-    Bool open(const String& infile);
-
     inline static String className() {const static String x = "ImageAnalysis"; return x; }
-
-    //Bool detached();
 
     // get the associated ImageInterface object
     SPCIIF getImage() const;

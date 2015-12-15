@@ -98,27 +98,6 @@ ImageAnalysis::~ImageAnalysis() {
 	//deleteHist();
 }
 
-Bool ImageAnalysis::open(const String& infile) {
-	// Generally used if the image is already closed !b
-	if (_imageFloat || _imageComplex) {
-		*_log << LogIO::WARN << "Another image is already open, closing first"
-				<< LogIO::POST;
-		// The pointer does explicitly need to be reset for proper destruction
-		// of the image esp if the image trying to be opened is the same
-		// as the image stored in the pre-existing pointer.
-		_imageFloat.reset();
-		_imageComplex.reset();
-	}
-	pair<SPIIF, SPIIC> ret = ImageFactory::fromFile(infile);
-	_imageFloat = ret.first;
-	_imageComplex = ret.second;
-	return True;
-}
-/*
-Bool ImageAnalysis::detached() {
-	return _imageFloat.get() == 0 && _imageComplex.get() == 0;
-}
-*/
 SPCIIC ImageAnalysis::getComplexImage() const {
 	ThrowIf(
 		_imageFloat,
