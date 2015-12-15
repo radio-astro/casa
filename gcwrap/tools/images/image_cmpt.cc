@@ -3109,17 +3109,13 @@ bool image::insert(
 bool image::isopen() {
 	try {
 		_log << _ORIGIN;
-
-		if (_image.get() != 0 && !_image->detached()) {
-			return True;
-		} else {
-			return False;
-		}
-	} catch (AipsError x) {
+		return _imageF || _imageC;
+	} catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
+	return False;
 }
 
 bool image::ispersistent() {
@@ -5261,7 +5257,7 @@ bool image::unlock() {
 }
 
 bool image::detached() const {
-	if ( _image.get() == 0 || _image->detached()) {
+	if ( ! _imageF && ! _imageC) {
 		_log <<  _ORIGIN;
 		_log << LogIO::SEVERE
 			<< "Image is detached - cannot perform operation." << endl
