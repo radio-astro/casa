@@ -44,6 +44,10 @@ public:
 	// Compute the expression and return the image.
 	SPIIT compute() const;
 
+
+	// modify image in place
+    static void compute2(SPIIT image, const String& expr, Bool verbose);
+
 private:
     String _expr, _copyMetaDataFromImage, _outname;
     Bool _overwrite;
@@ -60,6 +64,8 @@ private:
     );
 
     void _checkImages() const;
+
+    static void _calc(SPIIT image, const LatticeExprNode& node);
 };
 }
 

@@ -72,8 +72,6 @@ public:
 
     virtual ~ImageAnalysis();
 
-    void calc(const String& expr, Bool verbose);
-
     Bool open(const String& infile);
 
     inline static String className() {const static String x = "ImageAnalysis"; return x; }
@@ -101,11 +99,6 @@ public:
     void _onlyFloat(const String& method) const;
 
     template<class T> static void _destruct(ImageInterface<T>& image);
-
-    template<class T> void _calc(
-        SPIIT image, const LatticeExprNode& node
-    );  
-
 
 };
 

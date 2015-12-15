@@ -7,6 +7,7 @@
 #include <images/Images/ImageProxy.h>
 
 #include <imageanalysis/ImageTypedefs.h>
+#include <imageanalysis/ImageAnalysis/PixelValueManipulator.h>
 
 using namespace std;
 
@@ -63,6 +64,138 @@ template<class T> SPIIT ImageExprCalculator<T>::compute() const {
 	// Delete the ImageRegions (by using an empty Record).
 	_makeRegionBlock(tempRegs, Record());
 	return computedImage;
+}
+
+
+template<class T> void ImageExprCalculator<T>::compute2(
+	SPIIT image, const String& expr, Bool verbose
+) {
+	LogIO log;
+    log << LogOrigin("ImageExprCalculator", __func__);
+    ThrowIf(expr.empty(), "You must specify an expression");
+    Record regions;
+    Block<LatticeExprNode> temps;
+    PtrBlock<const ImageRegion*> tempRegs;
+    PixelValueManipulator<T>::makeRegionBlock(tempRegs, regions);
+    auto node = ImageExprParse::command(expr, temps, tempRegs);
+    auto type = node.dataType();
+    Bool isReal = casa::isReal(type);
+    ostringstream os;
+    os << type;
+    ThrowIf(
+        ! isReal && ! isComplex(type),
+        "Unsupported node data type " + os.str()
+    );
+    ThrowIf(
+    	isComplex(image->dataType()) && isReal,
+        "Resulting image is real valued but"
+        "the attached image is complex valued"
+    );
+    ThrowIf(
+        casa::isReal(image->dataType()) && isComplex(type),
+        "Resulting image is complex valued but"
+        "the attached image is real valued"
+    );
+    //PixelValueManipulator<T>::makeRegionBlock(tempRegs, Record());
+    if (verbose) {
+        log << LogIO::WARN << "Overwriting pixel values "
+            << "of the currently attached image"
+            << LogIO::POST;
+    }
+    _calc(image, node);
+}
+
+
+template<class T> void ImageExprCalculator<T>::_calc(
+    SHARED_PTR<ImageInterface<T> > image,
+    const LatticeExprNode& node
+) {
+    // Get the shape of the expression and check it matches that
+    // of the output image
+    if (! node.isScalar() && ! image->shape().isEqual(node.shape())) {
+    	// const auto shapeOut = node.shape();
+        //if (! image->shape().isEqual(shapeOut)) {
+            ostringstream os;
+            os << "The shape of the expression does not conform "
+                << "with the shape of the output image"
+                << "Expression shape = " << node.shape()
+                << "Image shape = " << image->shape();
+            throw AipsError(os.str());
+        //}
+    }
+    // Get the CoordinateSystem of the expression and check it matches
+    // that of the output image
+    LogIO mylog;
+    if (! node.isScalar()) {
+        const auto attr = node.getAttribute();
+        const auto lattCoord = &(attr.coordinates().coordinates());
+        if (!lattCoord->hasCoordinates() || lattCoord->classname()
+                != "LELImageCoord") {
+            // We assume here that the output coordinates are ok
+            mylog << LogIO::WARN
+                    << "Images in expression have no coordinates"
+                    << LogIO::POST;
+        }
+        else {
+            const auto imCoord =
+                    dynamic_cast<const LELImageCoord*> (lattCoord);
+            AlwaysAssert (imCoord != 0, AipsError);
+            const auto& cSysOut = imCoord->coordinates();
+            if (! image->coordinates().near(cSysOut)) {
+                // Since the output image has coordinates, and the shapes
+                // have conformed, just issue a warning
+                mylog << LogIO::WARN
+                        << "The coordinates of the expression do not conform "
+                        << endl;
+                mylog << "with the coordinates of the output image" << endl;
+                mylog << "Proceeding with output image coordinates"
+                        << LogIO::POST;
+            }
+        }
+    }
+    // Make a LatticeExpr and see if it is masked
+    Bool exprIsMasked = node.isMasked();
+    if (exprIsMasked) {
+        if (! image->isMasked()) {
+            // The image does not have a default mask set.  So try and make it one.
+            String maskName = "";
+            ImageMaskAttacher::makeMask(*image, maskName, True, True, mylog, True);
+        }
+    }
+
+    // Evaluate the expression and fill the output image and mask
+    if (node.isScalar()) {
+        LatticeExprNode node2 = isReal(node.dataType())
+        	? toFloat(node) : toComplex(node);
+        // If the scalar value is masked, there is nothing
+        // to do.
+        if (! exprIsMasked) {
+            if (image->isMasked()) {
+                // We implement with a LEL expression of the form
+                // iif(mask(image)", value, image)
+                auto node3 = iif(mask(*image), node2, *image);
+                image->copyData(LatticeExpr<T> (node3));
+            }
+            else {
+                // Just set all values to the scalar. There is no mask to
+                // worry about.
+                image->copyData(LatticeExpr<T> (node2));
+            }
+        }
+    }
+    else {
+        if (image->isMasked()) {
+            // We implement with a LEL expression of the form
+            // iif(mask(image)", expr, image)
+            auto node3 = iif(mask(*image), node, *image);
+            image->copyData(LatticeExpr<T> (node3));
+        }
+        else {
+            // Just copy the pixels from the expression to the output.
+            // There is no mask to worry about.
+            image->copyData(LatticeExpr<T> (node));
+        }
+    }
 }
 
 template<class T> SPIIT ImageExprCalculator<T>::_imagecalc(
