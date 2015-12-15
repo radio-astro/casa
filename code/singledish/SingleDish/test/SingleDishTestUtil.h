@@ -2,6 +2,12 @@
 #define TEST_SINGLEDISHTESTUTIL_H_
 
 #include <iostream>
+#include <list>
+#include <string>
+#include <utility>
+
+#include <casacore/casa/OS/EnvVar.h>
+
 using namespace std;
 
 namespace test_utility {
@@ -50,6 +56,11 @@ namespace test_utility {
     }
   }
 
+  /* string GetCasaDataPath() { */
+  /*   string *parts[2]; */
+  /*   split(EnvironmentVariable::get("CASAPATH"), parts, 2, string(" ")); */
+  /*   return = parts[0] + "/data/"; */
+  /* } */
 }
 
 #endif /* TEST_SINGLEDISHTESTUTIL_H_ */
