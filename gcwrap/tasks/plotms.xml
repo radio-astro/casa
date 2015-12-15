@@ -445,7 +445,7 @@ MS Data Transformation Parameters
     </param>
 
    <param type="doubleArray" name="shift" subparam="true">
-       <description>Adjust phases by this phase center shift [dx,dy] (arcsec)</description>
+       <description>Adjust phases by this approximate phase center shift [dx,dy] (arcsec)</description>
        <value type="doubleArray"><value>0.0</value><value>0.0</value></value>
     </param>
 
@@ -1552,6 +1552,7 @@ Constraints
                  default: 'RADIO'
                  options: 'RADIO','OPT','TRUE'
         shift -- adjust phase according to a phase center shift [dx,dy] (arcsec)
+                 NB: the phase shift in plotms is an approximate transformation
                  default: [0,0]  (no shift)
 
     extendflag -- have flagging extend to other data points?

@@ -638,7 +638,7 @@ Gets the MS averaging parameters for the plot at the given index as a record
 Sets the MS transformation parameters for the plot at the given index, using
 individual values.  Supported transformations currently include frequency
 frame choices (TOPO,GEO,BARY,LSRK,LSRD), velocity definition choices (RADIO,
-OPTICAL,TRUE) and rest frequency, and phase center shift.  If
+OPTICAL,TRUE) and rest frequency, and approximate phase center shift.  If
 updateImmediately is true, this change takes effect immediately IF the plotms
 window is currently shown; otherwise it will only be applied next time update()
 and/or show() is called.
