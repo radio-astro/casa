@@ -43,3 +43,5 @@ casa_add_assay( singledish
 casa_add_assay( singledish
     SingleDish/test/tLineFinder.cc
     )
+# google tests
+casa_add_google_test (MODULES singledish SOURCES SingleDish/test/LineFindingUtils_GTest.cc)

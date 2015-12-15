@@ -68,10 +68,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     inline static size_t countTrue(size_t num_data, bool const data[/*num_data*/])
     {
       size_t ntrue = 0;
-      static_assert(static_cast<size_t>(true)==1, "cast of bool failed");
-      static_assert(static_cast<size_t>(false)==0, "cast of bool failed");
+      static_assert(static_cast<uint8_t>(true)==1, "cast of bool failed");
+      static_assert(static_cast<uint8_t>(false)==0, "cast of bool failed");
+      uint8_t const *data8 = reinterpret_cast<uint8_t const *>(data);
+      static_assert(sizeof(data[0])==sizeof(data8[0]),
+		    "bool and uint8_t has different size");
       for (size_t i=0; i<num_data; ++i) {
-	ntrue += static_cast<size_t>(data[i]);
+	ntrue += data8[i];
       }
       return ntrue;
     };
