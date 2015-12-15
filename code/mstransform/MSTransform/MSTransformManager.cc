@@ -2024,6 +2024,7 @@ void MSTransformManager::initDataSelectionParams()
 							<< "Setting chanbin to " << numOfSelChanMap_p[spwList(spw_i)]
 							<< " for SPW " << spwList(spw_i)
 							<< LogIO::POST;
+					freqbinMap_p[spwList(spw_i)] = numOfSelChanMap_p[spwList(spw_i)];
 					newWeightFactorMap_p[spwList(spw_i)] = numOfSelChanMap_p[spwList(spw_i)];
 				}
 				else
