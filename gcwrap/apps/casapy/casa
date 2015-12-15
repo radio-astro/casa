@@ -43,7 +43,7 @@ else
         casa3party="@casa_packages@"
     fi
     p_root=${casa3party}
-    if [[ "$CASAPATH" =~ /usr/lib* ]]; then
+    if [[ "$CASAPATH" =~ /usr/lib* ]] || [[ "$CASAPATH" =~ /opt/casa* ]]; then
         installed_from_rpm="T"
     else
         installed_from_rpm="F"   
