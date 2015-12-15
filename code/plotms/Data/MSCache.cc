@@ -108,7 +108,7 @@ void MSCache::loadIt(vector<PMS::Axis>& loadAxes,
 	// Note: MSTransformVI/VB handles channel and time averaging
 	// It does not handle Antenna, Baseline, and SPW averaging yet
 	// so for now we'll do it the old way
-	if ( averaging_.baseline() || averaging_.antenna() || averaging_.spw() ) {
+	if ( averaging_.baseline() || averaging_.antenna() || averaging_.spw() || averaging_.scalarAve() ) {
 		// make a "counting VI" -- plain VI2 is faster than TransformingTvi2.
 		// Use plotms code to determine nChunks and memory requirements
 		vi::VisibilityIterator2* cvi = setUpVisIter(*selMS, chansel, corrsel);
