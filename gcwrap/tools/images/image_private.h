@@ -11,7 +11,7 @@ image(SHARED_PTR<casa::ImageInterface<casa::Float> > inImage);
 
 image(SHARED_PTR<casa::ImageInterface<casa::Complex> > inImage);
 
-image(SHARED_PTR<casa::ImageAnalysis> ia);
+//image(SHARED_PTR<casa::ImageAnalysis> ia);
 
 private:
 
@@ -29,7 +29,7 @@ mutable casa::LogIO _log;
 
 // the image analysis object needs to be removed after decimation of that
 // class is complete
-SHARED_PTR<casa::ImageAnalysis> _image;
+//SHARED_PTR<casa::ImageAnalysis> _image;
 SPIIF _imageF;
 SPIIC _imageC;
 std::auto_ptr<casa::ImageStatsCalculator> _stats;
@@ -123,7 +123,14 @@ template<class T> image* _decimate(
 	const vector<casa::String>& msgs
 ) const;
 
+/*
 shared_ptr<ImageAnalysis> _fromarray(
+    const string& outfile, const variant& pixels,
+    const record& csys, bool linear, bool overwrite, bool log
+);
+*/
+
+std::pair<SPIIF, SPIIC> _fromarray(
     const string& outfile, const variant& pixels,
     const record& csys, bool linear, bool overwrite, bool log
 );

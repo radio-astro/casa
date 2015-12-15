@@ -67,7 +67,6 @@
 #include <imageanalysis/ImageAnalysis/ComponentImager.h>
 #include <imageanalysis/ImageAnalysis/ComponentListDeconvolver.h>
 #include <imageanalysis/ImageAnalysis/Image2DConvolver.h>
-#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/ImageBoxcarSmoother.h>
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
 #include <imageanalysis/ImageAnalysis/ImageConcatenator.h>
@@ -106,8 +105,6 @@
 
 #include <casa/namespace.h>
 
-// #include "../../../code/imageanalysis/ImageAnalysis/ImageExprCalculator.h"
-
 using namespace std;
 
 #define _ORIGIN LogOrigin(_class, __func__, WHERE)
@@ -116,7 +113,7 @@ namespace casac {
 
 const String image::_class = "image";
 
-image::image() : _log(), _image(new ImageAnalysis()),
+image::image() : _log(), /* _image(new ImageAnalysis()), */
 	_imageF(), _imageC() {}
 
 // private ImageInterface constructor for on the fly components
@@ -124,8 +121,8 @@ image::image() : _log(), _image(new ImageAnalysis()),
 // using a shared_ptr
 
 image::image(casa::ImageInterface<casa::Float> *inImage) :
-	_log(), _image(new ImageAnalysis(SHARED_PTR<ImageInterface<Float> >(inImage))),
-	_imageF(_image->getImage()), _imageC() {
+	_log(), /*_image(new ImageAnalysis(SHARED_PTR<ImageInterface<Float> >(inImage))),*/
+	_imageF(inImage), _imageC() {
 	try {
 		_log << _ORIGIN;
 
@@ -138,8 +135,8 @@ image::image(casa::ImageInterface<casa::Float> *inImage) :
 }
 
 image::image(ImageInterface<Complex> *inImage) :
-	_log(), _image(new ImageAnalysis(SHARED_PTR<ImageInterface<Complex> >(inImage))),
-	_imageF(), _imageC(_image->getComplexImage()) {
+	_log(), /*_image(new ImageAnalysis(SHARED_PTR<ImageInterface<Complex> >(inImage))),*/
+	_imageF(), _imageC(inImage) {
 	try {
 		_log << _ORIGIN;
 
@@ -152,42 +149,21 @@ image::image(ImageInterface<Complex> *inImage) :
 }
 
 image::image(SPIIF inImage) :
-    _log(), _image(new ImageAnalysis(inImage)), _imageF(inImage), _imageC() {
-	/*
-	try {
-		_log << _ORIGIN;
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	*/
-}
+    _log(), /* _image(new ImageAnalysis(inImage)), */ _imageF(inImage), _imageC() {}
 
 image::image(SPIIC inImage) :
-	_log(), _image(new ImageAnalysis(inImage)), _imageF(), _imageC(inImage) {
-	/*
-	try {
-		_log << _ORIGIN;
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	*/
-}
+	_log(), /* _image(new ImageAnalysis(inImage)), */ _imageF(), _imageC(inImage) {}
 
+/*
 image::image(SHARED_PTR<ImageAnalysis> ia) :
 	_log(), _image(ia), _imageF(), _imageC() {
 	try {
 		_log << _ORIGIN;
-		if (_image->isFloat()) {
-			_imageF = _image->getImage();
+		if (_imageF) {
+			_imageF = _imageF;
 		}
 		else {
-			_imageC = _image->getComplexImage();
+			_imageC = _imageC;
 		}
 	}
 	catch (const AipsError& x) {
@@ -196,6 +172,7 @@ image::image(SHARED_PTR<ImageAnalysis> ia) :
 		RETHROW(x);
 	}
 }
+*/
 
 image::~image() {}
 
@@ -234,11 +211,11 @@ bool image::fromrecord(const record& imrecord, const string& outfile) {
 		auto imagePair = ImageFactory::fromRecord(*tmpRecord, outfile);
 		if (imagePair.first) {
 			_imageF = imagePair.first;
-		    _image.reset(new ImageAnalysis(_imageF));
+		    //_image.reset(new ImageAnalysis(_imageF));
 		}
 		else {
 			_imageC = imagePair.second;
-		    _image.reset(new ImageAnalysis(_imageC));
+		    //_image.reset(new ImageAnalysis(_imageC));
 		}
 		return True;
 	}
@@ -272,18 +249,15 @@ bool image::addnoise(
 				? seeds[0]
 				: (Int)((uInt)(1e7*(seedBase - seedPair->second)));
 		}
-		/*
-		_image->addnoise(type, pars, *pRegion, zeroIt, seedPair.get());
-		*/
-		if (_image->isFloat()) {
+		if (_imageF) {
 			PixelValueManipulator<Float>::addNoise(
-				_image->getImage(), type, *pRegion,
+				_imageF, type, *pRegion,
 				pars, zeroIt, seedPair.get()
 			);
 		}
 		else {
 			PixelValueManipulator<Complex>::addNoise(
-				_image->getComplexImage(), type, *pRegion,
+				_imageC, type, *pRegion,
 				pars, zeroIt, seedPair.get()
 			);
 		}
@@ -323,11 +297,11 @@ image * image::collapse(
 				? Vector<String> (1, axes.getString())
 				: toVectorString(axes.toStringVec());
 			myAxes = IPosition(
-				_image->isFloat()
-				? _image->getImage()->coordinates().getWorldAxesOrder(
+				_imageF
+				? _imageF->coordinates().getWorldAxesOrder(
 					axVec, False
 				)
-				: _image->getComplexImage()->coordinates().getWorldAxesOrder(
+				: _imageC->coordinates().getWorldAxesOrder(
 					axVec, False
 				)
 			);
@@ -353,35 +327,33 @@ image * image::collapse(
 				<< LogIO::EXCEPTION;
 		}
 		String myStokes = stokes;
-		if (_image->isFloat()) {
-			SPCIIF myimage = _image->getImage();
-			CasacRegionManager rm(myimage->coordinates());
+		if (_imageF) {
+			CasacRegionManager rm(_imageF->coordinates());
 			String diagnostics;
 			uInt nSelectedChannels;
 			Record myreg = rm.fromBCS(
 				diagnostics, nSelectedChannels, myStokes, regRec.get(),
 				"", chans, CasacRegionManager::USE_ALL_STOKES, box,
-				myimage->shape(), mask, False
+				_imageF->shape(), mask, False
 			);
 			ImageCollapser<Float> collapser(
-				aggString, myimage, &myreg,
+				aggString, _imageF, &myreg,
 				mask, myAxes, False, outfile, overwrite
 			);
 			collapser.setStretch(stretch);
 			return new image(collapser.collapse());
 		}
 		else {
-			SPCIIC myimage = _image->getComplexImage();
-			CasacRegionManager rm(myimage->coordinates());
+			CasacRegionManager rm(_imageC->coordinates());
 			String diagnostics;
 			uInt nSelectedChannels;
 			Record myreg = rm.fromBCS(
 				diagnostics, nSelectedChannels, myStokes, regRec.get(),
 				"", chans, CasacRegionManager::USE_ALL_STOKES, box,
-				myimage->shape(), mask, False
+				_imageC->shape(), mask, False
 			);
 			ImageCollapser<Complex> collapser(
-				aggString, myimage, &myreg,
+				aggString, _imageC, &myreg,
 				mask, myAxes, False, outfile, overwrite
 			);
 			collapser.setStretch(stretch);
@@ -498,16 +470,20 @@ bool image::fromarray(const std::string& outfile,
 		const bool linear, const bool overwrite, const bool log) {
 	try {
 	    _reset();
-	    _image = _fromarray(
+	    auto mypair = _fromarray(
 	        outfile, pixels, csys,
 	        linear,  overwrite, log
 	    );
-	    if (_image->isFloat()) {
-	    	_imageF = _image->getImage();
+	    _imageF = mypair.first;
+	    _imageC = mypair.second;
+	    /*
+	    if (_imageF) {
+	    	_imageF = _imageF;
 	    }
 	    else {
-	    	_imageC = _image->getComplexImage();
+	    	_imageC = _imageC;
 	    }
+	    */
 		return True;
 	}
 	catch (const AipsError& x) {
@@ -518,7 +494,7 @@ bool image::fromarray(const std::string& outfile,
 	return False;
 }
 
-shared_ptr<ImageAnalysis> image::_fromarray(
+std::pair<SPIIF, SPIIC> image::_fromarray(
     const string& outfile,
     const variant& pixels, const record& csys,
     bool linear, bool overwrite, bool log
@@ -571,29 +547,29 @@ shared_ptr<ImageAnalysis> image::_fromarray(
         os << "ia." << __func__ << _inputsString(inputs);
         msgs.push_back(make_pair(lor, os.str()));
     }
+    SPIIF f;
+    SPIIC c;
     if (floatArray.ndim() > 0) {
-        auto f = ImageFactory::imageFromArray(
+        f = ImageFactory::imageFromArray(
             outfile, floatArray, *coordinates,
             linear, overwrite, log, &msgs
         );
-        return shared_ptr<ImageAnalysis>(new ImageAnalysis(f));
+        //return shared_ptr<ImageAnalysis>(new ImageAnalysis(f));
     }
     else {
-        auto c = ImageFactory::imageFromArray(
+        c = ImageFactory::imageFromArray(
             outfile, complexArray, *coordinates,
             linear, overwrite, log, &msgs
         );
-        return shared_ptr<ImageAnalysis>(new ImageAnalysis(c));
+        //return shared_ptr<ImageAnalysis>(new ImageAnalysis(c));
     }
+    return make_pair(f, c);
 }
 
 void image::_reset() {
 	_imageF.reset();
 	_imageC.reset();
-	_image.reset(new ImageAnalysis());
-	//_imageFloat.reset();
-	//_imageComplex.reset();
-	_stats.reset(0);
+	_stats.reset();
 }
 
 bool image::fromascii(const string& outfile, const string& infile,
@@ -618,21 +594,8 @@ bool image::fromascii(const string& outfile, const string& infile,
 			outfile, infile, IPosition(Vector<Int>(shape)),
 			sep, *coordsys, linear, overwrite
 		);
-		_image.reset(new ImageAnalysis(_imageF));
-		_stats.reset(nullptr);
-		/*
-		if (
-			_image->imagefromascii(
-				outfile, infile, Vector<Int> (shape),
-				sep, *coordsys, linear, overwrite
-			)
-		) {
-			_stats.reset(0);
-			return True;
-		}
-		throw AipsError("Error creating image from ascii.");
-		*/
-	} catch (const AipsError& x) {
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
@@ -654,7 +617,7 @@ bool image::fromfits(
 		);
 		if (im) {
 			_imageF = im;
-		    _image.reset(new ImageAnalysis(im));
+		    //_image.reset(new ImageAnalysis(im));
 		    return True;
 		}
 	}
@@ -694,11 +657,13 @@ bool image::fromimage(const string& outfile, const string& infile,
 		);
 		_imageF = imagePair.first;
 		_imageC = imagePair.second;
+		/*
 		_image.reset(
 		    _imageF
 		    ? new ImageAnalysis(_imageF)
 		    : new ImageAnalysis(_imageC)
 		);
+		*/
 		return True;
 	}
 	catch (const AipsError& x) {
@@ -747,14 +712,14 @@ bool image::fromshape(
                 outfile, shape, *coordinates,
                 linear, overwrite, log, &msgs
             );
-            _image.reset(new ImageAnalysis(_imageF));
+            //_image.reset(new ImageAnalysis(_imageF));
         }
         else {
             _imageC = ImageFactory::complexImageFromShape(
                 outfile, shape, *coordinates,
                 linear, overwrite, log, &msgs
             );
-            _image.reset(new ImageAnalysis(_imageC));
+            //_image.reset(new ImageAnalysis(_imageC));
         }
        	return True;
 	}
@@ -776,23 +741,22 @@ image::adddegaxes(
 		if (detached()) {
 			return 0;
 		}
-		if (_image->isFloat()) {
-			SPCIIF image = _image->getImage();
+		if (_imageF) {
+			SPCIIF myim = _imageF;
 			return _adddegaxes(
-				image,
-				outfile, direction, spectral, stokes, linear,
-				tabular, overwrite, silent
-			);
-		}
-		else {
-			SPCIIC image = _image->getComplexImage();
-			return _adddegaxes(
-				image,
-				outfile, direction, spectral, stokes,
+				myim, outfile, direction, spectral, stokes,
 				linear, tabular, overwrite, silent
 			);
 		}
-	} catch (const AipsError& x) {
+		else {
+			SPCIIC myim = _imageC;
+			return _adddegaxes(
+				myim, outfile, direction, spectral, stokes,
+				linear, tabular, overwrite, silent
+			);
+		}
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;
 		RETHROW(x);
@@ -828,8 +792,8 @@ image* image::convolve(
 			return nullptr;
 		}
 		ThrowIf(
-			! _image->isFloat(),
-			"This method only works on real valued images"
+			! _imageF,
+			"This method only supports real valued images"
 		);
 		Array<Float> fkernelArray;
 		casa::String kernelFileName = "";
@@ -875,7 +839,7 @@ image* image::convolve(
 
 		SHARED_PTR<Record> myregion = _getRegion(region, False);
 		ImageConvolverTask<Float> ic(
-			_image->getImage(), myregion.get(),
+			_imageF, myregion.get(),
 			theMask, outfile, overwrite
 		);
 		ic.setScale(scale);
@@ -899,9 +863,9 @@ record* image::boundingbox(const variant& region) {
 		}
 		auto myreg = _getRegion(region, False);
 		unique_ptr<ImageMetaData> md(
-		    _image->isFloat()
-		    ? new ImageMetaData(_image->getImage())
-		    : new ImageMetaData(_image->getComplexImage())
+		    _imageF
+		    ? new ImageMetaData(_imageF)
+		    : new ImageMetaData(_imageC)
 		);
 		return fromRecord(*md->getBoundingBox(*myreg));
 	}
@@ -933,9 +897,9 @@ image* image::boxcar(
 			mask = "";
 		}
 		if (axis < 0) {
-			const CoordinateSystem csys = _image->isFloat()
-				? _image->getImage()->coordinates()
-				: _image->getComplexImage()->coordinates();
+			const auto& csys = _imageF
+				? _imageF->coordinates()
+				: _imageC->coordinates();
 			ThrowIf(
 				! csys.hasSpectralAxis(),
 				"Axis not specified and image has no spectral coordinate"
@@ -978,8 +942,8 @@ image* image::boxcar(
 			os << "ia." << __func__ << _inputsString(inputs);
 			msgs.push_back(os.str());
 		}
-		if (_image->isFloat()) {
-			SPCIIF image = _image->getImage();
+		if (_imageF) {
+			SPCIIF image = _imageF;
 			return _boxcar(
 				image, myregion, mask, outfile,
 				overwrite, stretch, axis, width, drop,
@@ -987,7 +951,7 @@ image* image::boxcar(
 			);
 		}
 		else {
-			SPCIIC image = _image->getComplexImage();
+			SPCIIC image = _imageC;
 			return _boxcar(
 				image, myregion, mask, outfile,
 				overwrite, stretch, axis, width, drop,
@@ -1028,9 +992,9 @@ std::string image::brightnessunit() {
         return "";
     }
     try {
-        auto unit = _image->isFloat()
-            ? _image->getImage()->units().getName()
-            : _image->getComplexImage()->units().getName();
+        auto unit =_imageF
+            ? _imageF->units().getName()
+            : _imageC->units().getName();
        return unit;
 	}
 	catch (const AipsError& x) {
@@ -1049,14 +1013,14 @@ bool image::calc(const std::string& expr, bool verbose) {
         }
         if (_imageF) {
         	ImageExprCalculator<Float>::compute2(_imageF, expr, verbose);
-        	_image.reset(new ImageAnalysis(_imageF));
+        	//_image.reset(new ImageAnalysis(_imageF));
         }
         else {
         	ImageExprCalculator<Complex>::compute2(_imageC, expr, verbose);
-        	_image.reset(new ImageAnalysis(_imageC));
+        	//_image.reset(new ImageAnalysis(_imageC));
         }
         //_image->calc(expr, verbose);
-        _stats.reset(0);
+        _stats.reset();
         return True;
     }    
     catch (const AipsError& x) { 
@@ -1097,7 +1061,7 @@ bool image::calcmask(
 bool image::close() {
 	try {
 		_log << _ORIGIN;
-		_image.reset();
+		//_image.reset();
 		_imageF.reset();
 		_imageC.reset();
 		_stats.reset();
@@ -1135,10 +1099,10 @@ image* image::continuumsub(
 		if (planes.size() == 1 && planes[0] == -1) {
 			planes.resize(0);
 		}
-		Int spectralAxis = _image->getImage()->coordinates().spectralAxisNumber();
+		Int spectralAxis = _imageF->coordinates().spectralAxisNumber();
 		ThrowIf(spectralAxis < 0, "This image has no spectral axis");
 		ImageProfileFitter fitter(
-		_image->getImage(), "", leRegion.get(),
+		_imageF, "", leRegion.get(),
 			"", "", "", "", spectralAxis,
 			0, overwrite
 		);
@@ -1176,14 +1140,14 @@ record* image::convertflux(
 			return 0;
 		}
 		ThrowIf(
-			! _image->isFloat(),
+			! _imageF,
 			"This method only supports Float valued images"
 		);
 		casa::Quantity value = casaQuantity(qvalue);
 		casa::Quantity majorAxis = casaQuantity(major);
 		casa::Quantity minorAxis = casaQuantity(minor);
 		Bool noBeam = False;
-		PeakIntensityFluxDensityConverter converter(_image->getImage());
+		PeakIntensityFluxDensityConverter converter(_imageF);
 		converter.setSize(
 			Angular2DGaussian(majorAxis, minorAxis, casa::Quantity(0, "deg"))
 		);
@@ -1310,7 +1274,7 @@ image* image::convolve2d(
 			);
 		}
 		Image2DConvolver<Float> convolver(
-			_image->getImage(), Region.get(), mask, outFile, overwrite
+			_imageF, Region.get(), mask, outFile, overwrite
 		);
 		convolver.setAxes(std::make_pair(Axes[0], Axes[1]));
 		convolver.setKernel(type, majorKernel, minorKernel, paKernel);
@@ -1405,15 +1369,15 @@ image* image::decimate(
 			inputs.push_back(make_pair("stretch", stretch));
 			msgs.push_back("ia.decimate" + _inputsString(inputs));
 		}
-		if (_image->isFloat()) {
-			SPCIIF myim = _image->getImage();
+		if (_imageF) {
+			SPCIIF myim = _imageF;
 			return _decimate(
 				myim, outfile, axis, factor, f,
 				regPtr, mask, overwrite, stretch, msgs
 			);
 		}
 		else {
-			SPCIIC myim = _image->getComplexImage();
+			SPCIIC myim = _imageC;
 			return _decimate(
 				myim, outfile, axis, factor, f,
 				regPtr, mask, overwrite, stretch, msgs
@@ -1764,10 +1728,10 @@ record* image::commonbeam() {
 			return 0;
 		}
 		ThrowIf(
-			! _image->isFloat(),
+			! _imageF,
 			"This method only supports Float valued images"
 		);
-		ImageInfo myInfo = _image->getImage()->imageInfo();
+		ImageInfo myInfo = _imageF->imageInfo();
 		if (! myInfo.hasBeam()) {
 			throw AipsError("This image has no beam(s).");
 		}
@@ -1821,16 +1785,16 @@ bool image::remove(const bool finished, const bool verbose) {
 
 void image::_remove(bool verbose) {
 	pair<SPIIF,SPIIC> mypair;
-	if (_image->isFloat()) {
-		mypair.first = _image->getImage();
+	if (_imageF) {
+		mypair.first = _imageF;
 	}
 	else {
-		mypair.second = _image->getComplexImage();
+		mypair.second = _imageC;
 	}
 	_stats.reset();
 	_imageF.reset();
 	_imageC.reset();
-	_image.reset();
+	//_image.reset();
 	if (mypair.first) {
 		ImageFactory::remove(mypair.first, verbose);
 	}
@@ -1887,7 +1851,7 @@ bool image::done(const bool remove, const bool verbose) {
 		else {
 			_imageF.reset();
 			_imageC.reset();
-			_image.reset();
+			//_image.reset();
 		}
 		return True;
 	}
@@ -2030,7 +1994,7 @@ record* image::fitprofile(const string& box, const variant& region,
 	}
 	try {
 		ThrowIf(
-			! _image->isFloat(),
+			! _imageF,
 			"This method only supports Float valued images"
 		);
 		String regionName;
@@ -2122,21 +2086,21 @@ record* image::fitprofile(const string& box, const variant& region,
 		SHARED_PTR<ImageProfileFitter> fitter;
 		if (spectralList.nelements() > 0) {
 			fitter.reset(new ImageProfileFitter(
-				_image->getImage(), regionName, regionPtr.get(),
+				_imageF, regionName, regionPtr.get(),
 				box, chans, stokes, mask, axis,
 				spectralList
 			));
 		}
 		else if (! estimates.empty()) {
 			fitter.reset(new ImageProfileFitter(
-				_image->getImage(), regionName, regionPtr.get(),
+				_imageF, regionName, regionPtr.get(),
 				box, chans, stokes, mask, axis,
 				estimates
 			));
 		}
 		else {
 			fitter.reset(new ImageProfileFitter(
-				_image->getImage(), regionName, regionPtr.get(),
+				_imageF, regionName, regionPtr.get(),
 				box, chans, stokes, mask, axis,
 				ngauss
 			));
@@ -2239,7 +2203,7 @@ image* image::transpose(
 			return 0;
 		}
 		ThrowIf(
-			! _image->isFloat(),
+			! _imageF,
 			"This method only supports Float valued images"
 		);
 		std::unique_ptr<ImageTransposer> transposer;
@@ -2247,7 +2211,7 @@ image* image::transpose(
 		case variant::INT:
 			transposer.reset(
 				new ImageTransposer(
-					_image->getImage(),
+					_imageF,
 					order.toInt(), outfile
 				)
 			);
@@ -2255,7 +2219,7 @@ image* image::transpose(
 		case variant::STRING:
 			transposer.reset(
 				new ImageTransposer(
-					_image->getImage(),
+					_imageF,
 					order.toString(), outfile
 				)
 			);
@@ -2265,7 +2229,7 @@ image* image::transpose(
 				Vector<String> orderVec = toVectorString(order.toStringVec());
 				transposer.reset(
 					new ImageTransposer(
-						_image->getImage(), orderVec,
+						_imageF, orderVec,
 						outfile
 					)
 				);
@@ -2310,7 +2274,7 @@ image* image::transpose(
 
 	try {
 		ThrowIf(
-			! _image->isFloat(),
+			! _imageF,
 			"This method only supports Float valued images"
 		);
 		int num = in_includepix.size();
@@ -2329,7 +2293,7 @@ image* image::transpose(
 		if (mask == "[]") {
 			mask = "";
 		}
-        SPCIIF image = _image->getImage();
+        SPCIIF image = _imageF;
 		ImageFitterResults::CompListWriteControl writeControl = complist.empty()
 			? ImageFitterResults::NO_WRITE
 			: overwrite
@@ -2454,9 +2418,9 @@ variant* image::getchunk(
 			return 0;
 		}
 		Record ret;
-		if (_image->isFloat()) {
+		if (_imageF) {
 			ret = _getchunk<Float>(
-				_image->getImage(), blc, trc, inc,
+				_imageF, blc, trc, inc,
 				axes, list, dropdeg
 			);
 			if (! getmask) {
@@ -2467,7 +2431,7 @@ variant* image::getchunk(
 		}
 		else {
 			ret = _getchunk<Complex> (
-				_image->getComplexImage(), blc, trc, inc,
+				_imageC, blc, trc, inc,
 				axes, list, dropdeg
 			);
 			if (! getmask) {
@@ -2588,7 +2552,7 @@ image* image::pbcor(
 	try {
 		_log << _ORIGIN;
 		ThrowIf(
-			! _image->isFloat(),
+			! _imageF,
 			"This method only supports Float valued images"
 		);
 		Array<Float> pbPixels;
@@ -2635,7 +2599,7 @@ image* image::pbcor(
 			? ImagePrimaryBeamCorrector::DIVIDE
 			: ImagePrimaryBeamCorrector::MULTIPLY;
 		Bool useCutoff = cutoff >= 0.0;
-        SPCIIF shImage = _image->getImage();
+        SPCIIF shImage = _imageF;
         std::unique_ptr<ImagePrimaryBeamCorrector> pbcor(
 			(!pb_ptr)
 			? new ImagePrimaryBeamCorrector(
@@ -2687,8 +2651,8 @@ record* image::getprofile(
 			? region.toString() : "";
 		String myframe = frame;
 		myframe.trim();
-		if (_image->isFloat()) {
-			SPCIIF myimage = _image->getImage();
+		if (_imageF) {
+			SPCIIF myimage = _imageF;
 			return fromRecord(
 				_getprofile(
 					myimage, axis, function, unit,
@@ -2699,7 +2663,7 @@ record* image::getprofile(
 			);
 		}
 		else {
-			SPCIIC myimage = _image->getComplexImage();
+			SPCIIC myimage = _imageC;
 			return fromRecord(
 				_getprofile(
 					myimage, axis, function, unit,
@@ -2766,9 +2730,9 @@ variant* image::getregion(
 			iaxes.resize();
 		}
 		Record ret;
-		if (_image->isFloat()) {
+		if (_imageF) {
 			PixelValueManipulator<Float> pvm(
-				_image->getImage(), Region.get(), Mask
+				_imageF, Region.get(), Mask
 			);
 			pvm.setAxes(IPosition(iaxes));
 			pvm.setVerbosity(
@@ -2780,7 +2744,7 @@ variant* image::getregion(
 		}
 		else {
 			PixelValueManipulator<Complex> pvm(
-				_image->getComplexImage(), Region.get(), Mask
+				_imageC, Region.get(), Mask
 			);
 			pvm.setAxes(IPosition(iaxes));
 			pvm.setVerbosity(
@@ -2797,7 +2761,7 @@ variant* image::getregion(
 			std::vector<bool> s_pixelmask(pixelmask.begin(), pixelmask.end());
 			return new ::casac::variant(s_pixelmask, s_shape);
 		}
-		else if (_image->isFloat()) {
+		else if (_imageF) {
 			Array<Float> pixels = ret.asArrayFloat("values");
 			std::vector<double> d_pixels(pixels.begin(), pixels.end());
 			return new ::casac::variant(d_pixels, s_shape);
@@ -2832,7 +2796,7 @@ variant* image::getregion(
 		// handle default coord
 		std::vector<int> ncoord(coord);
 		if (ncoord.size() == 1 && ncoord[0] == -1) {
-			int n = _image->getImage()->ndim();
+			int n = _imageF->ndim();
 			ncoord.resize(n);
 			for (int i = 0; i < n; i++) {
 				//ncoord[i]=i;
@@ -2879,9 +2843,9 @@ image* image::hanning(
 			mask = "";
 		}
 		if (axis < 0) {
-			const CoordinateSystem csys = _image->isFloat()
-				? _image->getImage()->coordinates()
-				: _image->getComplexImage()->coordinates();
+			const CoordinateSystem csys = _imageF
+				? _imageF->coordinates()
+				: _imageC->coordinates();
 			ThrowIf(
 				! csys.hasSpectralAxis(),
 				"Axis not specified and image has no spectral coordinate"
@@ -2906,8 +2870,8 @@ image* image::hanning(
             }
         }
 		vector<variant> values { outfile, region, vmask, axis, drop, overwrite, stretch, dmethod };
-		if (_image->isFloat()) {
-			SPCIIF image = _image->getImage();
+		if (_imageF) {
+			SPCIIF image = _imageF;
 			return _hanning(
 				image, myregion, mask, outfile,
 				overwrite, stretch, axis, drop,
@@ -2915,7 +2879,7 @@ image* image::hanning(
 			);
 		}
 		else {
-			SPCIIC image = _image->getComplexImage();
+			SPCIIC image = _imageC;
 			return _hanning(
 				image, myregion, mask, outfile,
 				overwrite, stretch, axis, drop,
@@ -3020,7 +2984,7 @@ record* image::histograms(
 			myIncludePix = includepix;
 		}
 		ImageHistogramsCalculator ihc(
-		    _image->getImage(), regionRec.get(), Mask
+		    _imageF, regionRec.get(), Mask
 		);
 		if (! myaxes.empty()) {
 		    ihc.setAxes(myaxes);
@@ -3047,13 +3011,13 @@ std::vector<std::string> image::history(bool list) {
 		if (detached()) {
 			return vector<string>();
 		}
-		if (_image->isFloat()) {
-			SPIIF im = _image->getImage();
+		if (_imageF) {
+			SPIIF im = _imageF;
 			ImageHistory<Float> hist(im);
 			return fromVectorString(hist.get(list));
 		}
 		else {
-			SPIIC im = _image->getComplexImage();
+			SPIIC im = _imageC;
 			ImageHistory<Complex> hist(im);
 			return fromVectorString(hist.get(list));
 		}
@@ -3080,15 +3044,15 @@ bool image::insert(
 		auto Region = _getRegion(region, False);
 		auto imagePair = ImageFactory::fromFile(infile);
 
-		if (imagePair.first && _image->isFloat()) {
+		if (imagePair.first && _imageF) {
 			PixelValueManipulator<Float>::insert(
-				*_image->getImage(), *imagePair.first, *Region,
+				*_imageF, *imagePair.first, *Region,
 				locatePixel, verbose
 			);
 		}
-		else if (imagePair.second && ! _image->getComplexImage()){
+		else if (imagePair.second && ! _imageC){
 			PixelValueManipulator<Complex>::insert(
-				*_image->getComplexImage(), *imagePair.second, *Region,
+				*_imageC, *imagePair.second, *Region,
 				locatePixel, verbose
 			);
 		}
@@ -3265,12 +3229,12 @@ record* image::miscinfo() {
 		if (detached()) {
 			return nullptr;
 		}
-		if (_image->isFloat()) {
-			// return fromRecord(_image->getImage()->miscInfo());
+		if (_imageF) {
+			// return fromRecord(_imageF->miscInfo());
 			return fromRecord(_imageF->miscInfo());
 		}
 		else {
-			// return fromRecord(_image->getComplexImage()->miscInfo());
+			// return fromRecord(_imageC->miscInfo());
 			return fromRecord(_imageC->miscInfo());
 		}
 	}
@@ -3293,7 +3257,7 @@ bool image::modify(
 	}
 	try {
 		ThrowIf(
-			! _image->isFloat(),
+			! _imageF,
 			"This method only supports real valued images"
 		);
 		String error;
@@ -3309,7 +3273,7 @@ bool image::modify(
 			mask = "";
 		}
 		ComponentImager ci(
-			_image->getImage(), Region.get(), mask
+			_imageF, Region.get(), mask
 		);
 		ci.setComponentList(cl);
 		ci.setSubtract(subtract);
@@ -3336,11 +3300,11 @@ record* image::maxfit(
 			return nullptr;
 		}
 		ThrowIf(
-			! _image->isFloat(),
+			! _imageF,
 			"This method only supports float-valued images"
 		);
 		auto Region = _getRegion(region, False);
-		ImageMaxFitter<Float> imf(_image->getImage(), Region.get());
+		ImageMaxFitter<Float> imf(_imageF, Region.get());
 		return fromRecord(imf.fit(doPoint, width, absFind, list));
 	}
 	catch (const AipsError& x) {
@@ -3422,19 +3386,8 @@ record* image::maxfit(
             ! includepix.empty() && ! excludepix.empty(),
             "Only one of includepix or excludepix may be specified, not both"
         );
-        /*
-        SHARED_PTR<ImageInterface<Float> > outIm(
-            _image->moments(
-                whichmoments, axis,
-                *Region, mask, method, Vector<Int> (smoothaxes), kernels,
-                kernelwidths, includepix, excludepix, peaksnr, stddev,
-                velocityType, out, smoothout,
-                overwrite, removeAxis, stretch
-            )
-        );
-        */
         ImageMomentsTask<Float> momentsTask(
-            _image->getImage(), Region.get(), mask,
+            _imageF, Region.get(), mask,
             smoothout, overwrite
         );
         momentsTask.setMoments(whichmoments);
@@ -3501,11 +3454,11 @@ std::string image::name(const bool strippath) {
 }
 
 String image::_name(bool strippath) const {
-	if (_image->isFloat()) {
-		return _image->getImage()->name(strippath);
+	if (_imageF) {
+		return _imageF->name(strippath);
 	}
 	else {
-		return _image->getComplexImage()->name(strippath);
+		return _imageC->name(strippath);
 	}
 }
 
@@ -3520,9 +3473,11 @@ bool image::open(const std::string& infile) {
 		auto ret = ImageFactory::fromFile(infile);
 		_imageF = ret.first;
 		_imageC = ret.second;
+		/*
 		_image.reset(
 			_imageF ? new ImageAnalysis(_imageF) : new ImageAnalysis(_imageC)
 		);
+		*/
 		return True;
 	}
 	catch (const AipsError& x) {
@@ -3545,7 +3500,7 @@ image* image::pad(
 			return 0;
 		}
 		ThrowIf(
-			! _image->isFloat(),
+			! _imageF,
 			"This method only supports Float valued images"
 		);
 		if (npixels <= 0) {
@@ -3554,7 +3509,7 @@ image* image::pad(
 		SHARED_PTR<Record> regionPtr = _getRegion(region, True);
 
 		ImagePadder padder(
-			_image->getImage(), regionPtr.get(), box,
+			_imageF, regionPtr.get(), box,
 			chans, stokes, mask, outfile, overwrite
 		);
 		padder.setStretch(stretch);
@@ -3585,7 +3540,7 @@ image* image::crop(
 			return 0;
 		}
 		ThrowIf(
-			! _image->isFloat(),
+			! _imageF,
 			"This method only supports Float valued images"
 		);
         if (axes.size() > 0) {
@@ -3598,7 +3553,7 @@ image* image::crop(
 		SHARED_PTR<Record> regionPtr = _getRegion(region, True);
 
 		ImageCropper<Float> cropper(
-			_image->getImage(), regionPtr.get(), box,
+			_imageF, regionPtr.get(), box,
 			chans, stokes, mask, outfile, overwrite
 		);
 		cropper.setStretch(stretch);
@@ -3624,15 +3579,15 @@ image::pixelvalue(const std::vector<int>& pixel) {
 		if (detached()) {
 			return nullptr;
 		}
-		if(_image->isFloat()) {
+		if(_imageF) {
 		    PixelValueManipulator<Float> pvm(
-		        _image->getImage(), nullptr, "", False
+		        _imageF, nullptr, "", False
 		    );
 		    return fromRecord(pvm.pixelValue(Vector<Int> (pixel)));
 		}
 		else {
 		    PixelValueManipulator<Complex> pvm(
-		        _image->getComplexImage(), nullptr, "", False
+		        _imageC, nullptr, "", False
 		    );
 		    return fromRecord(pvm.pixelValue(Vector<Int> (pixel)));
 		}
@@ -3655,9 +3610,9 @@ bool image::putchunk(
 		if (detached()) {
 			return false;
 		}
-		if (_image->isFloat()) {
+		if (_imageF) {
 			_putchunk(
-				_image->getImage(), pixels, blc, inc, list, locking, replicate
+				_imageF, pixels, blc, inc, list, locking, replicate
 			);
 		}
 		else {
@@ -3671,14 +3626,14 @@ bool image::putchunk(
 				Vector<std::complex<double> > localpix(pixelVector);
 				casa::convertArray(pixelsArray, localpix.reform(IPosition(shape)));
 				PixelValueManipulator<Complex>::put(
-					_image->getComplexImage(), pixelsArray, Vector<Int>(blc),
+					_imageC, pixelsArray, Vector<Int>(blc),
 					Vector<Int>(inc), list, locking,
 					replicate
 				);
 			}
 			else {
 				_putchunk(
-					_image->getComplexImage(), pixels,
+					_imageC, pixels,
 					blc, inc, list, locking, replicate
 				);
 			}
@@ -3805,9 +3760,9 @@ bool image::putregion(
 		SHARED_PTR<Record> theRegion(_getRegion(region, False));
 		if (
 		    (
-		        _image->isFloat()
+		        _imageF
 		        && PixelValueManipulator<Float>::putRegion(
-		            _image->getImage(), pixels, mask, *theRegion,
+		            _imageF, pixels, mask, *theRegion,
 		            list, usemask, replicateArray
 		        )
 		    )
@@ -3838,7 +3793,7 @@ image* image::pv(
 	try {
 		_log << _ORIGIN;
 		ThrowIf(
-			! _image->isFloat(),
+			! _imageF,
 			"This method only supports Float valued images"
 		);
 		SHARED_PTR<casa::MDirection> startMD, endMD, centerMD;
@@ -3923,7 +3878,7 @@ image* image::pv(
 		}
 		SHARED_PTR<Record> regionPtr = _getRegion(region, True);
 		PVGenerator pv(
-			_image->getImage(), regionPtr.get(),
+			_imageF, regionPtr.get(),
 			chans, stokes, mask, outfile, overwrite
 		);
 		if (startPix.size() == 2) {
@@ -4053,8 +4008,8 @@ image* image::rebin(
 		if (mask == "[]") {
 			mask = "";
 		}
-		if (_image->isFloat()) {
-			SPIIF myfloat = _image->getImage();
+		if (_imageF) {
+			SPIIF myfloat = _imageF;
 			ImageRebinner<Float> rebinner(
 				myfloat, _getRegion(region, True).get(),
 				mask, outfile, overwrite
@@ -4067,7 +4022,7 @@ image* image::rebin(
 			return new image(rebinner.rebin());
 		}
 		else {
-			SPIIC myComplex = _image->getComplexImage();
+			SPIIC myComplex = _imageC;
 			ImageRebinner<Complex> rebinner(
 				myComplex, _getRegion(region, True).get(),
 				mask, outfile, overwrite
@@ -4130,9 +4085,9 @@ image* image::regrid(
 		                         specAsVelocity, stretch };
 
 		vector<String> msgs = _newHistory(__func__, names, values);
-		if (_image->isFloat()) {
+		if (_imageF) {
 			ImageRegridder regridder(
-				_image->getImage(), regionPtr.get(),
+				_imageF, regionPtr.get(),
 				mask, outfile, overwrite, *coordinates,
 				IPosition(axes), IPosition(inshape)
 			);
@@ -4144,7 +4099,7 @@ image* image::regrid(
 		}
 		else {
 			ComplexImageRegridder regridder(
-				_image->getComplexImage(), regionPtr.get(),
+				_imageC, regionPtr.get(),
 				mask, outfile, overwrite, *coordinates,
 				IPosition(axes), IPosition(inshape)
 			);
@@ -4223,7 +4178,7 @@ image* image::rotate(
 			mask = "";
 		}
 		ImageRotator rotator(
-		    _image->getImage(), Region.get(),
+		    _imageF, Region.get(),
 		    mask, outfile, overwrite
 		);
 		rotator.setShape(IPosition(shape));
@@ -4249,12 +4204,12 @@ bool image::rotatebeam(const variant& angle) {
 			return False;
 		}
 		Quantum<Double> pa(_casaQuantityFromVar(angle));
-		if (_image->isFloat()) {
-			BeamManipulator<Float> bManip(_image->getImage());
+		if (_imageF) {
+			BeamManipulator<Float> bManip(_imageF);
 			bManip.rotate(pa);
 		}
 		else {
-			BeamManipulator<Complex> bManip(_image->getComplexImage());
+			BeamManipulator<Complex> bManip(_imageC);
 			bManip.rotate(pa);
 		}
 		return true;
@@ -4275,18 +4230,18 @@ bool image::rename(const std::string& name, bool overwrite) {
 		_stats.reset();
 		if (_imageF) {
 			auto myimage = _imageF;
-			_image.reset();
+			//_image.reset();
 			_imageF.reset();
 			ImageFactory::rename(myimage, name, overwrite);
-			_image.reset(new ImageAnalysis(myimage));
+			//_image.reset(new ImageAnalysis(myimage));
 			_imageF = myimage;
 		}
 		else {
 			auto myimage = _imageC;
-			_image.reset();
+			//_image.reset();
 			_imageC.reset();
 			ImageFactory::rename(myimage, name, overwrite);
-			_image.reset(new ImageAnalysis(myimage));
+			//_image.reset(new ImageAnalysis(myimage));
 			_imageC = myimage;
 		}
 		return True;
@@ -4339,7 +4294,7 @@ bool image::replacemaskedpixels(
 			);
 			impr.setStretch(stretch);
 			impr.replace(pixels.toString(), updateMask, list);
-			_image.reset(new ImageAnalysis(myfloat));
+			//_image.reset(new ImageAnalysis(myfloat));
 			_imageF = myfloat;
 			ImageHistory<Float> hist(myfloat);
 			hist.addHistory(msgs);
@@ -4351,12 +4306,12 @@ bool image::replacemaskedpixels(
 			);
 			impr.setStretch(stretch);
 			impr.replace(pixels.toString(), updateMask, list);
-			_image.reset(new ImageAnalysis(mycomplex));
+			//_image.reset(new ImageAnalysis(mycomplex));
 			_imageC = mycomplex;
 			ImageHistory<Complex> hist(mycomplex);
 			hist.addHistory(msgs);
 		}
-		_stats.reset(0);
+		_stats.reset();
 		return True;
 	}
 	catch (const AipsError& x) {
@@ -4372,16 +4327,16 @@ record* image::restoringbeam(int channel, int polarization) {
 		if (detached()) {
 			return 0;
 		}
-		if (_image->isFloat()) {
+		if (_imageF) {
 			return fromRecord(
-				_image->getImage()->imageInfo().beamToRecord(
+				_imageF->imageInfo().beamToRecord(
 					channel, polarization
 				)
 			);
 		}
 		else {
 			return fromRecord(
-				_image->getComplexImage()->imageInfo().beamToRecord(
+				_imageC->imageInfo().beamToRecord(
 					channel, polarization
 				)
 			);
@@ -4464,7 +4419,7 @@ record* image::restoringbeam(int channel, int polarization) {
 			}
 		}
 		SepImageConvolverTask<Float> task(
-			_image->getImage(), pRegion.get(), mask,
+			_imageF, pRegion.get(), mask,
 			outfile, overwrite
 		);
 		task.setScale(scale);
@@ -4513,7 +4468,7 @@ bool image::set(
 		}
 		if (
 		    PixelValueManipulator<Float>::set(
-		        _image->getImage(), pixels, pixelmask, *pRegion, list
+		        _imageF, pixels, pixelmask, *pRegion, list
 		    )
 		) {
 		    _stats.reset(0);
@@ -4535,9 +4490,9 @@ bool image::setbrightnessunit(const std::string& unit) {
 		if (detached()) {
 			return False;
 		}
-		Bool res = _image->isFloat()
-			?  _image->getImage()->setUnits(Unit(unit))
-			: _image->getComplexImage()->setUnits(Unit(unit));
+		Bool res = _imageF
+			?  _imageF->setUnits(Unit(unit))
+			: _imageC->setUnits(Unit(unit));
 		ThrowIf(! res, "Unable to set brightness unit");
 		_stats.reset(0);
 		return True;
@@ -4558,9 +4513,9 @@ bool image::setcoordsys(const ::casac::record& csys) {
 
 		unique_ptr<Record> coordinates(toRecord(csys));
 		unique_ptr<ImageMetaDataRW> md(
-		    _image->isFloat()
-		    ? new ImageMetaDataRW(_image->getImage())
-		    : new ImageMetaDataRW(_image->getComplexImage())
+		    _imageF
+		    ? new ImageMetaDataRW(_imageF)
+		    : new ImageMetaDataRW(_imageC)
 		);
 		md->setCsys(*coordinates);
 
@@ -4584,12 +4539,12 @@ bool image::sethistory(const std::string& origin,
 			LogOrigin lor("image", "sethistory");
 			_log << lor << "history string is empty" << LogIO::POST;
 		} else {
-			if(_image->isFloat()) {
-				ImageHistory<Float> hist(_image->getImage());
+			if(_imageF) {
+				ImageHistory<Float> hist(_imageF);
 				hist.addHistory(origin, history);
 			}
 			else {
-				ImageHistory<Complex> hist(_image->getComplexImage());
+				ImageHistory<Complex> hist(_imageC);
 				hist.addHistory(origin, history);
 			}
 		}
@@ -4610,9 +4565,9 @@ bool image::setmiscinfo(const ::casac::record& info) {
 			return false;
 		}
 		std::unique_ptr<Record> tmp(toRecord(info));
-		Bool res = _image->isFloat()
-			? _image->getImage()->setMiscInfo(*tmp)
-			: _image->getComplexImage()->setMiscInfo(*tmp);
+		Bool res = _imageF
+			? _imageF->setMiscInfo(*tmp)
+			: _imageC->setMiscInfo(*tmp);
 		return res;
 	}
 	catch (const AipsError& x) {
@@ -4629,9 +4584,9 @@ std::vector<int> image::shape() {
 		return rstat;
 	}
 	try {
-		rstat = _image->isFloat()
-			? _image->getImage()->shape().asVector().tovector()
-			: _image->getComplexImage()->shape().asVector().tovector();
+		rstat = _imageF
+			? _imageF->shape().asVector().tovector()
+			: _imageC->shape().asVector().tovector();
 		return rstat;
 	}
 	catch (const AipsError& x) {
@@ -4690,8 +4645,8 @@ bool image::setrestoringbeam(
 				"Image " + imagename + " has no beam"
 			);
 		}
-		if (_image->isFloat()) {
-			BeamManipulator<Float> bManip(_image->getImage());
+		if (_imageF) {
+			BeamManipulator<Float> bManip(_imageF);
 			bManip.setVerbose(log);
 			if (remove) {
 				bManip.remove();
@@ -4709,7 +4664,7 @@ bool image::setrestoringbeam(
 			}
 		}
 		else {
-			BeamManipulator<Complex> bManip(_image->getComplexImage());
+			BeamManipulator<Complex> bManip(_imageC);
 			bManip.setVerbose(log);
 			if (remove) {
 				bManip.remove();
@@ -4753,7 +4708,7 @@ record* image::statistics(
 	}
 	try {
 		ThrowIf(
-			! _image->isFloat(),
+			! _imageF,
 			"This method only supports Float valued images"
 		);
 		SHARED_PTR<Record> regionRec(_getRegion(region, True));
@@ -4792,7 +4747,7 @@ record* image::statistics(
 		if (force || _stats.get() == 0) {
 			_stats.reset(
 				new ImageStatsCalculator(
-					_image->getImage(), regionRec.get(), mtmp, verbose
+					_imageF, regionRec.get(), mtmp, verbose
 				)
 			);
 		}
@@ -4958,35 +4913,59 @@ template <class T> SPIIT image::_twopointcorrelation(
 				<< "The resulting image will be inaccessible" << LogIO::POST;
 		}
 
-		SHARED_PTR<ImageAnalysis> ia;
+		//SHARED_PTR<ImageAnalysis> ia;
 		if (_imageF) {
+			/*
 			ia.reset(
 				new ImageAnalysis(
 					_subimage<Float>(
 						SHARED_PTR<ImageInterface<Float> >(
-							_image->getImage()->cloneII()
+							_imageF->cloneII()
 						),
 						outfile, *regionRec, mask, dropDegenerateAxes,
 						overwrite, list, stretch, keepaxes
 					)
 				)
 			);
+			*/
+			auto im = _subimage<Float>(
+				SHARED_PTR<ImageInterface<Float> >(
+					_imageF->cloneII()
+				),
+				outfile, *regionRec, mask, dropDegenerateAxes,
+				overwrite, list, stretch, keepaxes
+			);
+			auto res = wantreturn ? new image(im) : nullptr;
+			return res;
 		}
 		else {
+			/*
 			ia.reset(
 				new ImageAnalysis(
 					_subimage<Complex>(
 						SHARED_PTR<ImageInterface<Complex> >(
-							_image->getComplexImage()->cloneII()
+							_imageC->cloneII()
 						),
 						outfile, *regionRec, mask, dropDegenerateAxes,
 						overwrite, list, stretch, keepaxes
 					)
 				)
 			);
+			*/
+			auto im = _subimage<Complex>(
+				SHARED_PTR<ImageInterface<Complex> >(
+					_imageC->cloneII()
+				),
+				outfile, *regionRec, mask, dropDegenerateAxes,
+				overwrite, list, stretch, keepaxes
+			);
+			auto res = wantreturn ? new image(im) : nullptr;
+			return res;
 		}
+		/*
 		image *res = wantreturn ? new image(ia) : 0;
 		return res;
+		*/
 	}
 	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
@@ -5032,14 +5011,14 @@ record* image::summary(
 		if (detached()) {
 			return 0;
 		}
-		if (_image->isFloat()) {
-		    ImageMetaData md(_image->getImage());
+		if (_imageF) {
+		    ImageMetaData md(_imageF);
 		    return fromRecord(
 		        md.summary(doppler, list, pixelorder, verbose)
 		    );
 		}
 		else {
-		    ImageMetaData md(_image->getComplexImage());
+		    ImageMetaData md(_imageC);
 		    return fromRecord(
 		        md.summary(doppler, list, pixelorder, verbose)
 		    );
@@ -5094,11 +5073,11 @@ bool image::tofits(
 			origin = String(buffer);
 		}
 		ThrowIf(
-			! _image->isFloat(),
+			! _imageF,
 			"Only writing float-valued images to FITS is supported"
 		);
 		ImageFactory::toFITS(
-			_image->getImage(), fitsfile, velocity, optical,
+			_imageF, fitsfile, velocity, optical,
 			bitpix, minpix, maxpix, *pRegion, mask, overwrite,
 			dropdeg, deglast, dropstokes, stokeslast, wavelength,
 			airwavelength, origin, stretch, history
@@ -5142,7 +5121,7 @@ bool image::toASCII(const std::string& outfile, const variant& region,
 		}
 		SHARED_PTR<Record> pRegion(_getRegion(region, False));
 		ImageFactory::toASCII(
-			_image->getImage(), outfile, *pRegion, Mask,
+			_imageF, outfile, *pRegion, Mask,
 			sep, format, maskvalue, overwrite, stretch
 		);
 		return True;
@@ -5223,11 +5202,11 @@ image::toworld(const ::casac::variant& value, const std::string& format, bool do
 		}
 		//rstat = fromRecord(_image->toworld(pixel, format, dovelocity));
 		unique_ptr<ImageMetaData> imd;
-		if (_image->isFloat()) {
-		    imd.reset(new ImageMetaData(_image->getImage()));
+		if (_imageF) {
+		    imd.reset(new ImageMetaData(_imageF));
 		}
 		else {
-		    imd.reset(new ImageMetaData(_image->getComplexImage()));
+		    imd.reset(new ImageMetaData(_imageC));
 		}
 		return fromRecord(imd->toWorld(pixel, format, dovelocity));
 	} catch (const AipsError& x) {
@@ -5244,11 +5223,11 @@ bool image::unlock() {
 		if (detached()) {
 			return False;
 		}
-		if (_image->isFloat()) {
-			_image->getImage()->unlock();
+		if (_imageF) {
+			_imageF->unlock();
 		}
 		else {
-			_image->getComplexImage()->unlock();
+			_imageC->unlock();
 		}
 		return True;
 	} catch (const AipsError& x) {
@@ -5278,7 +5257,7 @@ bool image::maketestimage(
 		_imageF = ImageFactory::testImage(
 			outfile, overwrite
 		);
-		_image.reset(new ImageAnalysis(_imageF));
+		//_image.reset(new ImageAnalysis(_imageF));
 		return True;
 	}
 	catch (const AipsError& x) {
@@ -5365,18 +5344,29 @@ image* image::newimagefromarray(
 	const bool overwrite, const bool log
 ) {
 	try {
+		/*
 	    return new image(
 	        _fromarray(
 	            outfile, pixels, csys,
 	            linear, overwrite, log
 	        )
 	    );
+	    */
+		auto mypair = _fromarray(
+			outfile, pixels, csys,
+			linear, overwrite, log
+		);
+		auto res = mypair.first
+			? new image(mypair.first)
+			: new image(mypair.second);
+		return res;
 	}
 	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
+	return nullptr;
 }
 
 image* image::newimagefromshape(
@@ -5556,7 +5546,7 @@ bool image::isconform(const string& other) {
 	}
 	try {
 		ThrowIf(
-			! _image->isFloat(),
+			! _imageF,
 			"This method only supports Float valued images"
 		);
 		ImageInterface<Float> *oth = 0;
@@ -5565,7 +5555,7 @@ bool image::isconform(const string& other) {
 			throw AipsError("Unable to open image " + other);
 		}
 		std::unique_ptr<ImageInterface<Float> > x(oth);
-        SHARED_PTR<const ImageInterface<Float> > mine = _image->getImage();
+        SHARED_PTR<const ImageInterface<Float> > mine = _imageF;
 		if (mine->shape().isEqual(x->shape()) && mine->coordinates().near(
 				x->coordinates())) {
 			Vector<String> mc = mine->coordinates().worldAxisNames();
@@ -5599,16 +5589,16 @@ SHARED_PTR<Record> image::_getRegion(
 		CoordinateSystem csys;
 		if (otherImageName.empty()) {
 			ThrowIf(
-				! _image,
+				! _imageF && ! _imageC,
 				"No attached image. Cannot use a string value for region"
 			);
-			if (_image->isFloat()) {
-				shape = _image->getImage()->shape();
-				csys = _image->getImage()->coordinates();
+			if (_imageF) {
+				shape = _imageF->shape();
+				csys = _imageF->coordinates();
 			}
 			else {
-				shape = _image->getComplexImage()->shape();
-				csys = _image->getComplexImage()->coordinates();
+				shape = _imageC->shape();
+				csys = _imageC->coordinates();
 			}
 		}
 		else {
