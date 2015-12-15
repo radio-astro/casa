@@ -596,8 +596,10 @@ void PlotMSCacheBase::release(const vector<PMS::Axis>& axes) {
 			case PMS::TIME: time_.resize(0); break;
 			case PMS::TIME_INTERVAL: timeIntr_.resize(0); break;
 			case PMS::SPW: spw_.resize(0); break;
-
-			case PMS::CHANNEL: PMSC_DELETE(chan_) break;
+			case PMS::CHANNEL: 
+                PMSC_DELETE(chan_)
+                PMSC_DELETE(chansPerBin_)
+                break;
 			case PMS::FREQUENCY: PMSC_DELETE(freq_) break;
 			case PMS::VELOCITY: PMSC_DELETE(vel_) break;
 			case PMS::CORR: PMSC_DELETE(corr_) break;
@@ -1065,6 +1067,7 @@ void PlotMSCacheBase::increaseChunks(Int nc) {
 	field_.resize(nChunk_,True);
 	spw_.resize(nChunk_,True);
 	chan_.resize(nChunk_,False,True);
+	chansPerBin_.resize(nChunk_,False,True);
 	freq_.resize(nChunk_,False,True);
 	vel_.resize(nChunk_,False,True);
 	corr_.resize(nChunk_,False,True);
@@ -1131,6 +1134,7 @@ void PlotMSCacheBase::increaseChunks(Int nc) {
 		freq_[ic] = new Vector<Double>();
 		vel_[ic] = new Vector<Double>();
 		chan_[ic] = new Vector<Int>();
+		chansPerBin_[ic] = new Array<Int>();
 		corr_[ic] = new Vector<Int>();
 		amp_[ic] = new Array<Float>();
 		pha_[ic] = new Array<Float>();

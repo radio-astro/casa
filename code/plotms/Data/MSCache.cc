@@ -32,6 +32,7 @@
 #include <casa/Quanta/MVTime.h>
 #include <casa/System/Aipsrc.h>
 #include <casa/Utilities/Sort.h>
+#include <casa/Arrays/ArrayMath.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <lattices/Lattices/ArrayLattice.h>
 #include <lattices/LatticeMath/LatticeFFT.h>
@@ -45,7 +46,6 @@
 #include <plotms/PlotMS/PlotMS.h>
 #include <tables/Tables/Table.h>
 #include <measures/Measures/Stokes.h>
-
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MPosition.h>
@@ -1034,10 +1034,28 @@ void MSCache::loadAxis(vi::VisBuffer2* vb, Int vbnum, PMS::Axis axis,
 		spw_(vbnum) = vb->spectralWindows()(0);
 		break;
 
-	case PMS::CHANNEL:
-		*chan_[vbnum] = vb->getChannelNumbers(0);
-		break;
+	case PMS::CHANNEL: {
+        Vector<Int> chans = vb->getChannelNumbers(0);
+	    if (averaging_.channel()) {
+            int numBins = chans.size();
+            int numChans = vb->getChannelNumbersSelected(0).size();
+            // Rather than bin/index, save averaged channel number
+            Vector<Int> avgChanNum(numBins);
+            // Save which channels are being averaged, for Locate
+            Array<Int> chansPerBin(IPosition(2, numChans, numBins));
 
+            for (Int bin=0; bin < numBins; ++bin) {
+                Vector<Int> selChanNums = vb->getChannelNumbersSelected(bin);
+                avgChanNum[bin] = mean(selChanNums);
+                chansPerBin[bin] = selChanNums;
+            }
+            *chan_[vbnum] = avgChanNum;
+            *chansPerBin_[vbnum] = chansPerBin;
+        } else {
+            *chan_[vbnum] = chans;
+        }
+		break;
+    }
 	case PMS::FREQUENCY: {
 		// Convert freq to desired frame
   		*freq_[vbnum] = vb->getFrequencies(0, freqFrame_);
@@ -1045,16 +1063,6 @@ void MSCache::loadAxis(vi::VisBuffer2* vb, Int vbnum, PMS::Axis axis,
 		break;
 	}
 	case PMS::VELOCITY: {
-		/*
-		// Convert freq in the vb to velocity
-		VisBufferUtil vbu = VisBufferUtil();
-		vbu.toVelocity(*vel_[vbnum],
-				*vb,
-				freqFrame_,
-				MVFrequency(transformations_.restFreqHz()),
-				transformations_.veldef());
-		(*vel_[vbnum]) /= 1.0e3;  // in km/s
-		*/
 		*vel_[vbnum] = calcVelocity(vb); 
 		break;
 	}

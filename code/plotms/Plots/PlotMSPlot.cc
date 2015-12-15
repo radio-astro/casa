@@ -475,6 +475,8 @@ bool PlotMSPlot::updateCanvas() {
 	PMS_PP_Cache *cache = itsParams_.typedGroup<PMS_PP_Cache>();
 	PMS_PP_Canvas *canv = itsParams_.typedGroup<PMS_PP_Canvas>();
 	PMS_PP_Iteration *iter = itsParams_.typedGroup<PMS_PP_Iteration>();
+    PMS_PP_MSData *data = parameters().typedGroup<PMS_PP_MSData>();
+    PlotMSAveraging averaging = data->averaging();
 	if(axes == NULL || cache == NULL || canv == NULL || iter == NULL ) {
 		return false;
 	}
@@ -495,7 +497,7 @@ bool PlotMSPlot::updateCanvas() {
 			}
 			else {
 				setCanvasProperties( r, c, cache, axes, set, canv,
-						rows, cols, iter, iteration );
+						rows, cols, iter, iteration, averaging );
 			}
 		}
 	}
@@ -1611,7 +1613,8 @@ void PlotMSPlot::clearCanvasProperties( int row, int col){
 void PlotMSPlot::setCanvasProperties (int row, int col,
 		PMS_PP_Cache* cacheParams, PMS_PP_Axes* axesParams,
 		bool set, PMS_PP_Canvas *canvParams, uInt rows, uInt cols,
-		PMS_PP_Iteration *iter, uInt iteration) {
+		PMS_PP_Iteration *iter, uInt iteration,
+        PlotMSAveraging averaging) {
 
 	PlotCanvasPtr canvas = itsCanvases_[row][col];
 	if(canvas.null()){
@@ -1678,6 +1681,7 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
 	if(set && showX) {
 		PMS::DataColumn xDataColumn = cacheParams->xDataColumn();
 		String xLabelSingle = canvParams->xLabelFormat().getLabel(x, xref, xrefval, xDataColumn);
+        if (axisIsAveraged(x, averaging)) xLabelSingle = "Average " + xLabelSingle;
 		canvas->setAxisLabel(cx, xLabelSingle);
 		PlotFontPtr xFont = canvas->axisFont(cx);
 		xFont->setPointSize(std::max(12. - rows*cols+1., 8.));
@@ -1703,6 +1707,7 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
 				double yrefval = itsCache_->referenceValue(y);
 				PMS::DataColumn yDataColumn = plotCacheParams->yDataColumn(i);
 				String yLabelSingle = canvParams->yLabelFormat( ).getLabel(y, yref, yrefval, yDataColumn );
+                if (axisIsAveraged(y, averaging)) yLabelSingle = "Average " + yLabelSingle;
 				if ( cy == Y_LEFT ){
 					if ( yLabelLeft.size() > 0 ){
 						yLabelLeft.append( ", ");
@@ -1836,3 +1841,21 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
 	canvas->setGridMinorLine(minor_line);
 }
 
+bool PlotMSPlot::axisIsAveraged(PMS::Axis axis, PlotMSAveraging averaging) {
+    bool avgAxis = false;
+    switch (axis) {
+        case PMS::TIME:
+            if (averaging.time()) avgAxis = true;
+            break;
+        case PMS::CHANNEL:
+            if (averaging.channel()) avgAxis = true;
+            break;
+        case PMS::BASELINE:
+            if (averaging.baseline()) avgAxis = true;
+            break;
+        default:
+            break;
+    }
+    return avgAxis;
+}
+            

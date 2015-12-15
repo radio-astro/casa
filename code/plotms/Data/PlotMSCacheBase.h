@@ -228,6 +228,10 @@ public:
   inline Double getEl(Int chnk,Int irel)      { return *(el_[chnk]->data()+irel); };
   inline Double getParAng(Int chnk,Int irel)  { return *(parang_[chnk]->data()+irel); };
 
+  Vector<Int> getChansPerBin(Int chnk,Int irel) {
+      return (*chansPerBin_[chnk])[irel]; 
+  }
+
   // These support generic non-complex calibration
   inline Double getPar(Int chnk,Int irel)  { return *(par_[chnk]->data()+irel); };
 
@@ -354,6 +358,7 @@ protected:
   PtrBlock<Matrix<Double>*> uvdistL_, uwave_, vwave_, wwave_;
   PtrBlock<Vector<Double>*> freq_, vel_;
   PtrBlock<Vector<Int>*> chan_;
+  PtrBlock<Array<Int>*> chansPerBin_;
   PtrBlock<Vector<Int>*> corr_;
   PtrBlock<Vector<Int>*> obsid_;
   PtrBlock<Vector<Int>*> intent_;

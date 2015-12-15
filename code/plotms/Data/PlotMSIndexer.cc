@@ -1248,17 +1248,13 @@ void PlotMSIndexer::reportMeta(Double x, Double y, Bool masked,stringstream& ss)
 	ss << " ";
 
 	Int ichan=getIndex0100(currChunk_,irel_);
-
 	ss << "Chan=";
 	if (plotmscache_->netAxesMask_[dataIndex](1)) {
 
 		PlotMSAveraging& pmsave(plotmscache_->averaging());
 		if (pmsave.channel() && pmsave.channelValue()>1) {
-			//      Int& lochan=plotmscache_->chanAveBounds(spw)(ichan,0);
-			//      Int& hichan=plotmscache_->chanAveBounds(spw)(ichan,1);
-			Int lochan=99999;
-			Int hichan=99999;
-			ss << "<" << lochan << "~" << hichan  << ">";
+            Vector<Int> chansPerBin = plotmscache_->getChansPerBin(currChunk_, ichan);
+			ss << "<" << chansPerBin[0] << "~" << chansPerBin[chansPerBin.size()-1] << ">";
 		}
 		else
 			ss << Int(plotmscache_->getChan(currChunk_,ichan));

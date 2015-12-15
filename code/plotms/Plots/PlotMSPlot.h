@@ -330,7 +330,9 @@ private:
     void setCanvasProperties (int row, int col, PMS_PP_Cache*,
     		PMS_PP_Axes* axes, bool set, PMS_PP_Canvas *canv,
     		uInt rows, uInt cols, PMS_PP_Iteration *iter,
-    		uInt iteration );
+    		uInt iteration, PlotMSAveraging averaging );
+    // To modify axis label if needed
+    bool axisIsAveraged(PMS::Axis axis, PlotMSAveraging averaging);
 
     //Note:  First index for a plot is the dataCount,
     //second index is the number of iteration.
