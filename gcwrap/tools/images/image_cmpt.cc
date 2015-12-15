@@ -1047,7 +1047,15 @@ bool image::calc(const std::string& expr, bool verbose) {
         if (detached()) {
             return False;
         }
-        _image->calc(expr, verbose);
+        if (_imageF) {
+        	ImageExprCalculator<Float>::compute2(_imageF, expr, verbose);
+        	_image.reset(new ImageAnalysis(_imageF));
+        }
+        else {
+        	ImageExprCalculator<Complex>::compute2(_imageC, expr, verbose);
+        	_image.reset(new ImageAnalysis(_imageC));
+        }
+        //_image->calc(expr, verbose);
         _stats.reset(0);
         return True;
     }    
@@ -1056,6 +1064,7 @@ bool image::calc(const std::string& expr, bool verbose) {
             << LogIO::POST;
         RETHROW(x);
     }    
+    return False;
 }
 
 bool image::calcmask(
