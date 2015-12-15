@@ -1,5 +1,7 @@
 #include <imageanalysis/ImageAnalysis/ImageFFTer.h>
 
+#include <imageanalysis/ImageAnalysis/ImageFFT.h>
+
 namespace casa {
 
 template<class T> ImageFFTer<T>::ImageFFTer(

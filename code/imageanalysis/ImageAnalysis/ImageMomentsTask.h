@@ -7,6 +7,8 @@
 
 namespace casa {
 
+class ImageMomentsProgressMonitor;
+
 template <class T> class ImageMomentsTask : public ImageTask<T> {
 	// <summary>
 	// Top level interface for creating image moments
