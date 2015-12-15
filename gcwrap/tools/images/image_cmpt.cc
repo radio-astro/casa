@@ -3511,24 +3511,26 @@ String image::_name(bool strippath) const {
 
 bool image::open(const std::string& infile) {
 	try {
-		_reset();
 		_log << _ORIGIN;
-        auto res = _image->open(infile);
-        if (res) {
-        	if (_image->isFloat()) {
-        		_imageF = _image->getImage();
-        	}
-        	else {
-        		_imageC = _image->getComplexImage();
-        	}
-        }
-        return res;
+		if (_imageF || _imageC) {
+			_log << LogIO::WARN << "Another image is already open, closing first"
+				<< LogIO::POST;
+		}
+		_reset();
+		auto ret = ImageFactory::fromFile(infile);
+		_imageF = ret.first;
+		_imageC = ret.second;
+		_image.reset(
+			_imageF ? new ImageAnalysis(_imageF) : new ImageAnalysis(_imageC)
+		);
+		return True;
 	}
 	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
+	return False;
 }
 
 image* image::pad(
