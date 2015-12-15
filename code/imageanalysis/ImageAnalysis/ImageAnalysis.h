@@ -76,7 +76,7 @@ public:
 
     inline static String className() {const static String x = "ImageAnalysis"; return x; }
 
-    Bool detached();
+    //Bool detached();
 
     // get the associated ImageInterface object
     SPCIIF getImage() const;

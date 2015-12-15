@@ -114,11 +114,11 @@ Bool ImageAnalysis::open(const String& infile) {
 	_imageComplex = ret.second;
 	return True;
 }
-
+/*
 Bool ImageAnalysis::detached() {
 	return _imageFloat.get() == 0 && _imageComplex.get() == 0;
 }
-
+*/
 SPCIIC ImageAnalysis::getComplexImage() const {
 	ThrowIf(
 		_imageFloat,
