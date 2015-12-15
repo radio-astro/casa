@@ -38,6 +38,10 @@
 #include <singledish/SingleDish/SingleDishMS.h>
 #include <singledish/SingleDish/test/SingleDishTestUtil.h>
 
+using namespace casa;
+using namespace std;
+using namespace test_utility;
+
 class SingleDishMSTest : public ::testing::Test {
 protected:
   SingleDishMSTest() : verbose_(false) {}

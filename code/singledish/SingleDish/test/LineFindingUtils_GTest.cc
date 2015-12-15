@@ -63,14 +63,6 @@ protected:
     LIBSAKURA_SYMBOL(CleanUp)();
   }
 
-  void PrintLine(LineRangeList &line_list) {
-    cout << "Number of Lines: " << line_list.size() << endl;
-    for (list<pair<size_t,size_t>>::iterator iter = line_list.begin();
-	 iter!=line_list.end(); ++iter) {
-      cout << "- [ " << (*iter).first << ", " << (*iter).second << " ]" << endl;
-    }
-  }
-
   void RunBinning(size_t const bin_size, size_t const offset, bool keepsize,
 		  size_t const num_data, float const *in_data,
 		  bool const *in_mask, size_t const num_bin,

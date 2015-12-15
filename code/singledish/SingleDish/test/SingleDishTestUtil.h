@@ -42,6 +42,14 @@ namespace test_utility {
     return;
   }
 
+  void PrintLine(list<pair<size_t,size_t>> &line_list) {
+    cout << "Number of Lines: " << line_list.size() << endl;
+    for (list<pair<size_t,size_t>>::iterator iter = line_list.begin();
+	 iter!=line_list.end(); ++iter) {
+      cout << "- [ " << (*iter).first << ", " << (*iter).second << " ]" << endl;
+    }
+  }
+
 }
 
 #endif /* TEST_SINGLEDISHTESTUTIL_H_ */
