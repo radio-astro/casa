@@ -13,4 +13,4 @@ pipelineqa.registry.add_handler(qa.GainflagQAHandler())
 pipelineqa.registry.add_handler(qa.GainflagListQAHandler())
 qaadapter.registry.register_to_flagging_topic(resultobjects.GainflagResults)
 
-weblog.add_renderer(Gainflag, renderer.T2_4MDetailsGainflagRenderer(), group_by='session')
+weblog.add_renderer(Gainflag, renderer.T2_4MDetailsGainflagRenderer(), group_by=weblog.UNGROUPED)

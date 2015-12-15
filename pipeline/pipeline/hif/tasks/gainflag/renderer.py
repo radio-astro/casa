@@ -1,8 +1,8 @@
-'''
+"""
 Created on 7 Oct 2015
 
 @author: vgeers
-'''
+"""
 import os
 import collections
 
@@ -14,10 +14,9 @@ import pipeline.infrastructure.renderer.basetemplates as basetemplates
 LOG = logging.get_logger(__name__)
 
 class T2_4MDetailsGainflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
-    '''
+    """
     Renders detailed HTML output for the Gainflag task.
-    '''
-
+    """
     def __init__(self, uri='gainflag.mako', 
                  description='Flag antennas with gain outliers',
                  always_rerender=False):
@@ -25,7 +24,6 @@ class T2_4MDetailsGainflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 description=description, always_rerender=always_rerender)
 
     def update_mako_context(self, mako_context, pipeline_context, results):
-
         plots = collections.defaultdict(dict)
         for result in results:
             vis = os.path.basename(result.inputs['vis'])
@@ -45,10 +43,10 @@ class T2_4MDetailsGainflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         
         components = results[0].metric_order
         
-        mako_context.update({'htmlreports' : htmlreports,
-                             'components'  : components,
-                             'plots'       : plots,
-                             'agents'      : ['before', 'after']})        
+        mako_context.update({'htmlreports': htmlreports,
+                             'components': components,
+                             'plots': plots,
+                             'agents': ['before', 'after']})
 
     def _get_htmlreports(self, context, results):
         report_dir = context.report_dir
