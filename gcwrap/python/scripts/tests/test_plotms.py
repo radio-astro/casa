@@ -458,7 +458,7 @@ class plotms_test_axis(plotms_test_base):
             res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, highres=True,
                      showgui=False, ydatacolumn='corr/model')
             self.assertFalse(res)
-        except RunTimeError:  # "Parameter verification failed" rethrown on test server
+        except RuntimeError:  # "Parameter verification failed" rethrown on test server
             self.assertIsNone(res)
         print
 
@@ -496,7 +496,7 @@ class plotms_test_axis(plotms_test_base):
             res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, highres=True,
                      showgui=False, yaxis='veloc')
             self.assertFalse(res)
-        except RunTimeError:  # "Parameter verification failed" rethrown on test server
+        except RuntimeError:  # "Parameter verification failed" rethrown on test server
             self.assertIsNone(res)
         print
 
@@ -1438,7 +1438,7 @@ class plotms_test_transform(plotms_test_base):
             res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, yaxis='freq', 
                          showgui=False, freqframe='J2000', highres=True)
             self.assertFalse(res)
-        except RunTimeError:  # "Parameter verification failed" rethrown on test server
+        except RuntimeError:  # "Parameter verification failed" rethrown on test server
             self.assertIsNone(res)
         print
         
