@@ -32,107 +32,103 @@
 #include <images/Images/ImageConcat.h>
 #include <imageanalysis/IO/CasaImageOpener.h>
 #include <tables/Tables/Table.h>
-namespace casa{ //
 
-  ImageOpener::ImageTypes CasaImageOpener::imageType (const String& name){
+namespace casa{
 
-    File elfile(name);
-    if(elfile.exists() && elfile.isDirectory()){
-      Directory eldir(elfile);
-      DirectoryIterator iter(eldir);
-      for(iter.reset(); !iter.pastEnd(); iter++){
-	File sousFile=iter.file();
-	if(sousFile.isRegular()){
-	  ImageOpener::ImageTypes testType=ImageOpener::imageType(sousFile.path().expandedName());
-	  if(testType==ImageOpener::IMAGECONCAT)
-	    return testType;
-	}
-      }
-
-
+ImageOpener::ImageTypes CasaImageOpener::imageType (const String& name){
+	File elfile(name);
+    if(elfile.exists() && elfile.isDirectory()) {
+    	Directory eldir(elfile);
+    	DirectoryIterator iter(eldir);
+    	for(iter.reset(); !iter.pastEnd(); iter++){
+    		File sousFile=iter.file();
+    		if(sousFile.isRegular()){
+    			ImageOpener::ImageTypes testType=ImageOpener::imageType(sousFile.path().expandedName());
+    			if(testType==ImageOpener::IMAGECONCAT)
+    				return testType;
+    		}
+    	}
     }
-   
     return ImageOpener::imageType(name);
-  }
+}
 
-  LatticeBase* CasaImageOpener::openImage (const String& fileName,
-					   const MaskSpecifier& spec){
-    if (fileName.empty()) {
-      return nullptr;
-    }
-    LatticeBase* retval=nullptr;
+LatticeBase* CasaImageOpener::openImage (
+	const String& fileName, const MaskSpecifier& spec
+) {
+	if (fileName.empty()) {
+		return nullptr;
+	}
+	LatticeBase* retval=nullptr;
     ImageOpener::ImageTypes type = CasaImageOpener::imageType(fileName);
     if(File(fileName).isDirectory() && type==IMAGECONCAT){
-      Directory eldir(fileName);
-      DirectoryIterator iter(eldir);
-      for(iter.reset(); !iter.pastEnd(); iter++){
-	File sousFile=iter.file();
-	if(sousFile.isRegular()){
-	  ImageOpener::ImageTypes testType=ImageOpener::imageType(sousFile.path().expandedName()); 
-	  if(testType==IMAGECONCAT){
-	    MemoryIO membuf;
-	    RawIO rawio(&membuf);
-	    AipsIO newaio(&rawio);
-	    AipsIO oldaio(sousFile.path().expandedName());
-	    AlwaysAssert (oldaio.getstart("CompoundImage-Conc") == 0, AipsError);
-	    Int dtype;
-	    oldaio >> dtype;
-	    //newaio.putstart("CompoundImage-Conc",0);
-	    //newaio << dtype;
-	    newaio.putstart("ImageConcat",1);
-	    AlwaysAssert (oldaio.getstart ("ImageConcat") == 1, AipsError);
-	    uInt axis, nlatt;
-	    Bool tmpClose;
-	    String subname;
-	    oldaio >> axis >> tmpClose >> nlatt;
-	    newaio << axis << tmpClose << nlatt;
-	     for (uInt i=0; i<nlatt; ++i) {
-	       oldaio>> subname;
-	       if(File(subname).exists()){
-		 newaio << subname;
-	       }
-	       else{
-		 //Image is in subdirectory may be
-		 String newsub=fileName+"/"+Path(subname).baseName();
-		 if(Table::isReadable(newsub))
-		   newaio << newsub;
-		 else
-		   throw(AipsError("SubImage " + subname + " or " + newsub +" could not be found"));
-	       }
+    	Directory eldir(fileName);
+    	DirectoryIterator iter(eldir);
+    	for(iter.reset(); !iter.pastEnd(); ++iter){
+    		File sousFile=iter.file();
+    		if(sousFile.isRegular()){
+    			ImageOpener::ImageTypes testType=ImageOpener::imageType(sousFile.path().expandedName());
+    			if(testType==IMAGECONCAT){
+    				MemoryIO membuf;
+    				RawIO rawio(&membuf);
+    				AipsIO newaio(&rawio);
+    				AipsIO oldaio(sousFile.path().expandedName());
+    				AlwaysAssert (oldaio.getstart("CompoundImage-Conc") == 0, AipsError);
+    				Int dtype;
+    				oldaio >> dtype;
+    				newaio.putstart("ImageConcat",1);
+    				AlwaysAssert (oldaio.getstart ("ImageConcat") == 1, AipsError);
+    				uInt axis, nlatt;
+    				Bool tmpClose;
+    				String subname;
+    				oldaio >> axis >> tmpClose >> nlatt;
+    				newaio << axis << tmpClose << nlatt;
+    				for (uInt i=0; i<nlatt; ++i) {
+    					oldaio>> subname;
+    					if(File(subname).exists()){
+    						newaio << subname;
+    					}
+    					else{
+    						//Image is in subdirectory may be
+    						String newsub=fileName+"/"+Path(subname).baseName();
+    						if(Table::isReadable(newsub)) {
+    							newaio << newsub;
+    						}
+    						else {
+    							throw(AipsError("SubImage " + subname + " or " + newsub +" could not be found"));
+    						}
+    					}
 	       
-	     }
-	     oldaio.getend();
-	     newaio.putend();
-	     newaio.setpos(0);
+    				}
+    				oldaio.getend();
+    				newaio.putend();
+    				newaio.setpos(0);
 	     
 	     
-	     switch (dtype) {
-	     case TpFloat:
-	       retval = new ImageConcat<Float> (newaio, fileName);
-	       break;
-	     case TpDouble:
-	       retval = new ImageConcat<Double> (newaio, fileName);
-	       break;
-	     case TpComplex:
-	       retval = new ImageConcat<Complex> (newaio, fileName);
-	       break;
-	     case TpDComplex:
-	       retval = new ImageConcat<DComplex> (newaio, fileName);
-	       break;
-	     default:
-	       break;
-	     }
-	  }
+    				switch (dtype) {
+    				case TpFloat:
+    					retval = new ImageConcat<Float> (newaio, fileName);
+    					break;
+    				case TpDouble:
+    					retval = new ImageConcat<Double> (newaio, fileName);
+    					break;
+    				case TpComplex:
+    					retval = new ImageConcat<Complex> (newaio, fileName);
+    					break;
+    				case TpDComplex:
+    					retval = new ImageConcat<DComplex> (newaio, fileName);
+    					break;
+    				default:
+    					break;
+    				}
+    			}
 
-	}
-      }
-
-
+    		}
+  	   }
     }
-    else{
-      retval=ImageOpener::openImage(fileName, spec);
+    else {
+    	retval = ImageOpener::openImage(fileName, spec);
     }
     return retval;
-  }
+}
 
-} //# NAMESPACE CASA - END
+}
