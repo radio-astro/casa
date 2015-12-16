@@ -912,7 +912,17 @@ void StokesImageUtil::To(ImageInterface<Float>& out, ImageInterface<Complex>& in
   if(nStokesIn==0) {
     nStokesIn=StokesPolMap(inMap, in.coordinates());
     if(nStokesIn==nStokesOut) {
-      out.copyData(LatticeExpr<Float>(real(in)));
+      
+      outli=LatticeIterator<Float>  (out, inls); 
+      //replaced copyData with iteration as it seems to load the whole array in memory
+       for (inli.reset(), outli.reset(); !inli.atEnd() && !outli.atEnd();
+	 inli++,outli++) {
+	 outli.woCursor()=real(inli.cursor());
+
+       }
+      
+
+       // out.copyData(LatticeExpr<Float>(real(in)));
       return;
     }
     throw(AipsError("Illegal conversion in ToStokesImage"));
@@ -1006,7 +1016,15 @@ void StokesImageUtil::ToStokesPSF(ImageInterface<Float>& out, ImageInterface<Com
   if(nStokesIn==0) {
     nStokesIn=StokesPolMap(inMap, in.coordinates());
     if(nStokesIn==nStokesOut) {
-      out.copyData(LatticeExpr<Float>(real(in)));
+      //replaced copyData with iteration as it seems to load the whole array in memory
+      outli=LatticeIterator<Float>  (out, inls);
+      for (inli.reset(), outli.reset(); !inli.atEnd() && !outli.atEnd();
+	 inli++,outli++) {
+	 outli.woCursor()=real(inli.cursor());
+
+       }
+      
+      //out.copyData(LatticeExpr<Float>(real(in)));
       return;
     }
     throw(AipsError("Illegal conversion in ToStokesImage"));
