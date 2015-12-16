@@ -42,6 +42,8 @@
 #include <casa/BasicSL/Constants.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
 
+#include <synthesis/ImagerObjects/SynthesisUtilMethods.h>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
   
   template <class T>

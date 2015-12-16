@@ -1620,6 +1620,7 @@ ImageInterface<Complex>& MosaicFT::getImage(Matrix<Float>& weights,
   weights.resize(sumWeight.shape());
   
   convertArray(weights, sumWeight);
+  SynthesisUtilMethods::getResource("mem peak in getImage");
   
   // If the weights are all zero then we cannot normalize
   // otherwise we don't care.
