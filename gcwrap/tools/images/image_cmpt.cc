@@ -113,66 +113,44 @@ namespace casac {
 
 const String image::_class = "image";
 
-image::image() : _log(), /* _image(new ImageAnalysis()), */
-	_imageF(), _imageC() {}
+Bool image::_openFuncsRegistered = False;
+
+void image::_registerOpenFuncs() {
+	if (! _openFuncsRegistered) {
+		FITSImage::registerOpenFunction();
+		MIRIADImage::registerOpenFunction();
+		_openFuncsRegistered = True;
+	}
+}
+
+
+image::image() : _log(), _imageF(), _imageC() {
+	_registerOpenFuncs();
+}
 
 // private ImageInterface constructor for on the fly components
 // The constructed object will take over management of the provided pointer
 // using a shared_ptr
 
 image::image(casa::ImageInterface<casa::Float> *inImage) :
-	_log(), /*_image(new ImageAnalysis(SHARED_PTR<ImageInterface<Float> >(inImage))),*/
-	_imageF(inImage), _imageC() {
-	try {
-		_log << _ORIGIN;
-
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
+	_log(), _imageF(inImage), _imageC() {
+	_registerOpenFuncs();
 }
 
 image::image(ImageInterface<Complex> *inImage) :
-	_log(), /*_image(new ImageAnalysis(SHARED_PTR<ImageInterface<Complex> >(inImage))),*/
-	_imageF(), _imageC(inImage) {
-	try {
-		_log << _ORIGIN;
-
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
+	_log(), _imageF(), _imageC(inImage) {
+	_registerOpenFuncs();
 }
 
 image::image(SPIIF inImage) :
-    _log(), /* _image(new ImageAnalysis(inImage)), */ _imageF(inImage), _imageC() {}
+    _log(), _imageF(inImage), _imageC() {
+	_registerOpenFuncs();
+}
 
 image::image(SPIIC inImage) :
-	_log(), /* _image(new ImageAnalysis(inImage)), */ _imageF(), _imageC(inImage) {}
-
-/*
-image::image(SHARED_PTR<ImageAnalysis> ia) :
-	_log(), _image(ia), _imageF(), _imageC() {
-	try {
-		_log << _ORIGIN;
-		if (_imageF) {
-			_imageF = _imageF;
-		}
-		else {
-			_imageC = _imageC;
-		}
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
+	_log(), _imageF(), _imageC(inImage) {
+	_registerOpenFuncs();
 }
-*/
 
 image::~image() {}
 
@@ -3473,11 +3451,6 @@ bool image::open(const std::string& infile) {
 		auto ret = ImageFactory::fromFile(infile);
 		_imageF = ret.first;
 		_imageC = ret.second;
-		/*
-		_image.reset(
-			_imageF ? new ImageAnalysis(_imageF) : new ImageAnalysis(_imageC)
-		);
-		*/
 		return True;
 	}
 	catch (const AipsError& x) {

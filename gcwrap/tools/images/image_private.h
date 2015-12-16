@@ -36,6 +36,8 @@ std::auto_ptr<casa::ImageStatsCalculator> _stats;
 
 static const casa::String _class;
 
+static Bool _openFuncsRegistered;
+
 // Having private version of IS and IH means that they will
 // only recreate storage images if they have to
 
@@ -51,6 +53,8 @@ SHARED_PTR<casa::Record> _getRegion(
 ) const;
 
 static vector<double> _toDoubleVec(const variant& v);
+
+static void _registerOpenFuncs();
 
 void _reset();
 
