@@ -214,7 +214,8 @@ class testref_base(unittest.TestCase):
                   nmajordone=None, # an int
                   imexist=None,  # list of image names
                   imexistnot=None, # list of image names
-                  imval=None  # list of tuples of (imagename,val,pos)
+                  imval=None,  # list of tuples of (imagename,val,pos)
+                  tabcache=False
                   ):
           pstr = ""
 
@@ -251,6 +252,11 @@ class testref_base(unittest.TestCase):
                     for ii in imval:
                          if type(ii)==tuple and len(ii)==3:
                               pstr += self.checkpixval(ii[0],ii[1],ii[2])
+
+          if tabcache==True:
+               opentabs = tb.showcache()
+               if len(opentabs)>0 : 
+                    pstr += "["+inspect.stack()[1][3]+"] "+self.verdict(False) + ": Found open tables after run "
           
           self.checkfinal(pstr)
 
