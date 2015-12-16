@@ -90,7 +90,7 @@ class ss_setjy_helper:
 	  srcnames[fid]=(mytb.getcell('NAME',int(fid)))
           #fielddirs[fid]=(mytb.getcell('PHASE_DIR',int(fid)))
           ftimes[fid]=(mytb.getcell('TIME',int(fid)))
-          if colnames.count('EHPHEMERIS_ID'):
+          if colnames.count('EPHEMERIS_ID'):
               ephemid[fid]=(mytb.getcell('EPHEMERIS_ID',int(fid))) 
           else:
               ephemid[fid]=-1
@@ -145,7 +145,7 @@ class ss_setjy_helper:
           else: # must have ephem table attached...
               tc = ftimes[fid]#in sec.
               tmsg = "Time used for the model calculation for field "
-
+       
 	  #if inparams[srcnames[fid]].has_key('mjd'):
           #  inparams[srcnames[fid]]['mjds'][0].append([myme.epoch('utc',qa.quantity(tc,'s'))['m0']['value']])
           #else:
@@ -311,12 +311,17 @@ class ss_setjy_helper:
 	    #dirstring = [dirs[i]['refer'],qa.tos(dirs[i]['m0']),qa.tos(dirs[i]['m1'])]
             if useephemdir:
 	        dirstring = [dirs[i]['refer'],qa.tos(dirs[i]['m0']),qa.tos(dirs[i]['m1'])]
+                dirmsg = "Using the source position from the ephemeris table in the casa data directory: "
             else:
                 #dirstring = [fieldref, str(fielddirs[fieldids[0]][0][0])+'rad', str(fielddirs[fieldids[0]][1][0])+'rad']
                 # extract field direction of first id of the selected field ids
                 #dirstring = [fieldref, "%.18frad" % (fielddirs[fieldids[0]][0][0]), "%.18frad" % (fielddirs[fieldids[0]][1][0])]
-                dirstring = [fieldref, "%.18frad" % (fielddirs[vfid][0][0]), "%.18frad" % (fielddirs[vfid][1][0])]
-            #print "dirstring=",dirstring
+                #dirstring = [fieldref, "%.18frad" % (fielddirs[vfid][0][0]), "%.18frad" % (fielddirs[vfid][1][0])]
+                # by now the direction should be in J2000
+                dirstring = ['J2000', "%.18frad" % (fielddirs[vfid][0][0]), "%.18frad" % (fielddirs[vfid][1][0])]
+                dirmsg = "Using the source position in the MS (or in the attached ephemeris table, if any): "
+            
+            self._casalog.post(dirmsg+str(dirstring))
 
 	    # setup componentlists
 	    # need to set per dir
@@ -499,12 +504,10 @@ class ss_setjy_helper:
                       tmpclpath = "/tmp/"
                   #tmpclpath=tmpclpath+"_tmp_setjyCLfile_"+pid
                   tmpclpath=tmpclpath+os.path.basename(self.vis)+"_tmp_setjyCLfile"
-                  self._casalog.post("tmpclpath="+tmpclpath)
                   if os.path.exists(tmpclpath):
                       shutil.rmtree(tmpclpath)
                   mycl.rename(tmpclpath)
                   mycl.close(False)
-                  self._casalog.post("Now tmpclpath="+tmpclpath)
 	          self.im.ft(complist=tmpclpath)
              
 
