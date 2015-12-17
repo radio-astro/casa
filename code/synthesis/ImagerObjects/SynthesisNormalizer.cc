@@ -585,7 +585,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
       }
 
-      cout << "In setPsfFromOneFacet : sumwt : " << itsImages->sumwt()->get() << endl;
+      //      cout << "In setPsfFromOneFacet : sumwt : " << itsImages->sumwt()->get() << endl;
   
    }
 

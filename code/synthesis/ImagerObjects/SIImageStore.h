@@ -42,6 +42,8 @@
 #include <casa/BasicSL/Constants.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
 
+#include <synthesis/ImagerObjects/SynthesisUtilMethods.h>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
   
   template <class T>
@@ -188,6 +190,8 @@ class SIImageStore
   void setDataPolFrame(StokesImageUtil::PolRep datapolrep) {itsDataPolRep = datapolrep;};
   virtual void calcSensitivity();
 
+  CoordinateSystem getCSys(){return itsCoordSys;}
+
 protected:
   SHARED_PTR<ImageInterface<Float> > makeSubImage(const Int facet, const Int nfacets,
 						  const Int chan, const Int nchanchunks,
@@ -219,6 +223,10 @@ protected:
 					       const Bool dosumwt=False,
 					       const Int nfacetsperside=1);
 
+  void buildImage(SHARED_PTR<ImageInterface<Float> > &imptr, IPosition shape, CoordinateSystem csys, String name);
+  void buildImage(SHARED_PTR<ImageInterface<Float> > &imptr,String name);
+
+
   Double getPbMax();
   Double getPbMax(Int pol, Int chan);
 
@@ -226,13 +234,19 @@ protected:
   Bool copyMask(CountedPtr<ImageInterface<Float> >inimage, CountedPtr<ImageInterface<Float> >outimage);
 
   void removeMask(CountedPtr<ImageInterface<Float> >im);
-  void rescaleResolution(ImageInterface<Float>& subResidual, const GaussianBeam& newbeam, const GaussianBeam& oldbeam);
+  void rescaleResolution(Int chan, ImageInterface<Float>& subResidual, const GaussianBeam& newbeam, const GaussianBeam& oldbeam);
+
+  Bool findMinMaxLattice(const Lattice<Float>& lattice, const Lattice<Float>& mask,
+			 Float& maxAbs, Float& maxAbsMask, Float& minAbs, Float& minAbsMask );
+
+
   ///////////////////// Member Objects
 
   IPosition itsImageShape, itsParentImageShape;
   String itsImageName;
-  CoordinateSystem itsCoordSys;
+  CoordinateSystem itsCoordSys, itsParentCoordSys;
 
+  Bool itsOverWrite;
   Bool itsUseWeight;
   Record itsMiscInfo;
   SHARED_PTR<ImageInterface<Float> > itsMask, itsParentMask, itsGridWt, itsPB; // mutliterm shares this...
@@ -251,6 +265,8 @@ protected:
   //------------------------------------------
   // Non-persistent internal variables
   Vector<String> imageExts;
+
+  Int itsOpened;
 
 private:
 

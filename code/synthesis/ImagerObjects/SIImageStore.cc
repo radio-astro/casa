@@ -111,6 +111,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsPB.reset( );
 
     itsSumWt.reset( );
+    itsOverWrite=False;
     itsUseWeight=False;
     itsPBScaleFactor=1.0;
 
@@ -151,6 +152,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsPB.reset( );
 
     itsSumWt.reset( );
+    itsOverWrite=False; // Hard Coding this. See CAS-6937. overwrite;
     itsUseWeight=useweightimage;
     itsPBScaleFactor=1.0;
 
@@ -200,6 +202,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsChanId = 0;
     itsNPolChunks = 1;
     itsPolId = 0;
+    
+    itsOverWrite=False;
 
     itsImageName = imagename;
 
@@ -290,9 +294,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsNPolChunks = npolchunks;
     itsPolId = pol;
 
+    itsOverWrite=False;
+
     itsParentImageShape = imshape; 
     itsImageShape = imshape;
 
+    itsParentCoordSys = csys;
     itsCoordSys = csys; // Hopefully this doesn't change for a reference image
     itsImageName = imagename;
 
@@ -352,7 +359,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
       if( ( check1 || check2 ) && ( itsParentImageShape.product()>0 ) 
 	  && ( itsFacetId < itsNFacets*itsNFacets ) 
-	  && ( itsChanId < itsNChanChunks ) && ( itsPolId < itsNPolChunks ) 
+	  && ( itsChanId <= itsNChanChunks ) && ( itsPolId < itsNPolChunks ) 
 	  && ( check3 || !hasSumWt() ) )  state = True;
     }
 
@@ -361,7 +368,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       oss << "  |||||  " << x.getMesg() << endl;
     }
 
-    //cout << " SIIM:validate : " << oss.str() << endl;
+    //      cout << " SIIM:validate : " << oss.str() << endl;
 
     if( state == False )  throw(AipsError("Internal Error : Invalid ImageStore state : "+ oss.str()) );
     
@@ -397,8 +404,106 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//	cout << "openImage : Making sumwt grid : using shape : " << useShape << endl;
       }
 
+    //    overwrite=False; /// HARD CODING THIS. See CAS-6937.
+
+    //    cout << "Open image : " << imagenamefull << "    useShape : " << useShape << endl;
+
+    // if image exists
+    //      if overwrite=T
+    //           try to make new image
+    //           if not, try to open existing image
+    //                     if cannot, complain.
+    //       if overwrite=F
+    //           try to open existing image
+    //           if cannot, complain
+    // if image does not exist
+    //       try to make new image
+    //       if cannot, complain
+    Bool dbg=False;
+    if( doesImageExist( imagenamefull ) )
+      {
+	if (overwrite) //overwrite and make new image
+	  {
+	    if(dbg) cout << "Trying to overwrite and open new image named : " << imagenamefull << " ow:"<< overwrite << endl;
+	    try{
+	      buildImage(imPtr, useShape, itsParentCoordSys, imagenamefull) ;
+	      // initialize to zeros...
+	      imPtr->set(0.0);
+	    }
+	    catch (AipsError &x){
+	      if(dbg)cout << "Cannot overwrite : " << x.getMesg() << endl;
+	      if(dbg)cout << "Open already ? : " << Table::isOpened( imagenamefull ) << "  Writable ? : " << Table::isWritable( imagenamefull ) << endl;
+	    if(Table::isWritable( imagenamefull ))
+	      {
+		if(dbg) cout << "--- Trying to open existing image : "<< imagenamefull << endl;
+		try{
+		  buildImage( imPtr, imagenamefull );
+		}
+		catch (AipsError &x){
+		  throw( AipsError("Writable table exists, but cannot open : " + x.getMesg() ) );
+		}
+	      }// is table writable
+	    else
+	      {
+		throw( AipsError("Cannot overwrite existing image. : " + x.getMesg() ) );
+	      }
+	    }
+	  }// overwrite existing image
+	else // open existing image
+	  {
+	    if(Table::isWritable( imagenamefull ))
+	      {
+		if(dbg) cout << "Trying to open existing image : "<< imagenamefull << endl;
+		try{
+		  buildImage( imPtr, imagenamefull ) ;
+
+		  if( !dosumwt)
+		    {
+		      //cout << useShape << "  and " << imPtr->shape() << " ---- " << useShape.product() << " : " << itsCoordSys.nCoordinates() << endl;
+		      // Check if coordsys and shape of this image are consistent with current ones (if filled)
+
+		      if( useShape.product()>0 &&  ! useShape.isEqual( imPtr->shape() ) )
+			{
+			  ostringstream oo1,oo2;
+			  oo1 << useShape; oo2 << imPtr->shape();
+			  throw( AipsError( "Shape mismatch between existing images ("+oo2.str()+") and current parameters ("+oo1.str()+"). If attempting to restart a run, please change imagename and supply startmodel or mask via parameters so that they can be regridded to the new shape before continuing." ) );
+			}
+		      if( itsParentCoordSys.nCoordinates()>0 &&  ! itsParentCoordSys.near( imPtr->coordinates() ) )
+			{
+			  throw( AipsError( "CoordSys mismatch between existing images on disk and current parameters("+itsParentCoordSys.errorMessage()+"). If attempting to restart a run, please change imagename and supply startmodel or mask via parameters so that they can be regridded to the new coordinate system before continuing. " ) );
+			}
+		    }// not dosumwt
+		}
+		catch (AipsError &x){
+		  throw( AipsError("Writable table exists, but cannot open "+imagenamefull+" : " + x.getMesg() ) );
+		}
+	      }// is table writable
+	    else // table exists but not writeable
+	      {
+		if(dbg)cout << "Table exists but not writeable : " << imagenamefull << "  --- Open : " << Table::isOpened( imagenamefull ) << endl;
+		throw( AipsError("Table exists but not able to open for writes :"+imagenamefull+ ". Opened elsewhere : " + String::toString(Table::isOpened(imagenamefull))) );
+	      }
+	  }// open existing image
+      }// if image exists
+      else // image doesn't exist. make new one
+	{
+	  if(dbg) cout << "Trying to open new image named : " << imagenamefull <<  endl;
+	  try{
+	    buildImage(imPtr, useShape, itsParentCoordSys, imagenamefull) ;
+	    // initialize to zeros...
+	    imPtr->set(0.0);
+	  }
+	  catch (AipsError &x){
+	    throw( AipsError("Cannot make new image. : " + x.getMesg() ) );
+	  }
+	}
+
+
+      //////////////////////////////////////
+    /*      
     if( overwrite || !Table::isWritable( imagenamefull ) )
       {
+	cout << "Trying to open new image named : " << imagenamefull << " ow:"<< overwrite << endl;
 	imPtr.reset( new PagedImage<Float> (useShape, itsCoordSys, imagenamefull) );
 	// initialize to zeros...
 	imPtr->set(0.0);
@@ -407,7 +512,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	if(Table::isWritable( imagenamefull ))
 	  {
-	    //cerr << "Trying to open "<< imagenamefull << endl;
+	    cout << "Trying to open existing image : "<< imagenamefull << endl;
 	    try{
 	      imPtr.reset( new PagedImage<Float>( imagenamefull ) );
 	    }
@@ -425,9 +530,47 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    imPtr->set(0.0);
 	  }
       }
-
+    */
     return imPtr;
   }
+
+
+  void SIImageStore::buildImage(SHARED_PTR<ImageInterface<Float> > &imptr,IPosition shape, CoordinateSystem csys, String name)
+  {
+    itsOpened++;
+    imptr.reset( new PagedImage<Float> (shape, csys, name) );
+
+    /*
+    Int MEMFACTOR = 18;
+    Double memoryMB=HostInfo::memoryTotal(True)/1024/(MEMFACTOR*itsOpened);
+
+
+    TempImage<Float> *tptr = new TempImage( TiledShape(shape, tileShape()), csys, memoryBeforeLattice() ) ;
+
+    tptr->setMaximumCacheSize(shape.product());
+    tptr->cleanCache();
+
+    imptr.reset( tptr );
+    
+    */
+  }
+
+  void SIImageStore::buildImage(SHARED_PTR<ImageInterface<Float> > &imptr, String name)
+  {
+
+    itsOpened++;
+    imptr.reset( new PagedImage<Float>( name ) );
+
+    /*
+    IPosition cimageShape;
+    CoordinateSystem cimageCoord = StokesImageUtil::CStokesCoord( itsCoordSys,
+								  whichStokes, itsDataPolRep);
+    */
+
+  }
+
+
+
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   void SIImageStore::setImageInfo(const Record miscinfo)
   {
@@ -524,6 +667,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   void SIImageStore::releaseImage( SHARED_PTR<ImageInterface<Float> > im )
   {
+    im->clearCache();
     im->unlock();
     im->tempClose();
   }
@@ -558,7 +702,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	os << "Setting " << modelname << " as model " << LogIO::POST;
 	// Then, add its contents to itsModel.
 	//itsModel->put( itsModel->get() + model->get() );
-	itsModel->put( newmodel->get() );
+	/////////	itsModel->put( newmodel->get() );
+	itsModel->copyData( LatticeExpr<Float> (*newmodel) );
       }
   }
 
@@ -604,10 +749,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  {
 	    if( ! parentptr ) 
 	      {
-		//cout << "Making parent : " << label << "    sw : " << sw << endl; 
-		parentptr = openImage(itsImageName+label , False, sw, itsNFacets );  
+		//cout << "Making parent : " << itsImageName+label << "    sw : " << sw << endl; 
+		parentptr = openImage(itsImageName+label , itsOverWrite, sw, itsNFacets );  
 	      }
-	    //cout << "Making facet " << itsFacetId << " out of " << itsNFacets << endl;
+	    //	    cout << "Making facet " << itsFacetId << " out of " << itsNFacets << endl;
+	    //cout << "Making chunk " << itsChanId << " out of " << itsNChanChunks << endl;
 	    //ptr = makeFacet( itsFacetId, itsNFacets*itsNFacets, *parentptr );
 	    ptr = makeSubImage( itsFacetId, itsNFacets*itsNFacets, 
 				itsChanId, itsNChanChunks, 
@@ -625,7 +771,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
 	else
 	  {
-	    ptr = openImage(itsImageName+label , False, sw, 1 ); 
+	    ptr = openImage(itsImageName+label , itsOverWrite, sw, 1 ); 
 	    //cout << "Opening image : " << itsImageName+label << " of shape " << ptr->shape() << endl;
 	  }
       }
@@ -738,7 +884,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
   Double SIImageStore::memoryBeforeLattice(){
 	  //Calculate how much memory to use per temporary images before disking
-	  return 1000.0;
+    return 1.0;  /// in MB
   }
   IPosition SIImageStore::tileShape(){
 	  //Need to have settable stuff here or algorith to determine this
@@ -948,25 +1094,46 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 	  im->removeRegion(strung);
 	} 
   } 
-  void SIImageStore:: rescaleResolution(ImageInterface<Float>& image, 
+  void SIImageStore:: rescaleResolution(Int chan, 
+					ImageInterface<Float>& image, 
 					const GaussianBeam& newbeam, 
 					const GaussianBeam& oldbeam){
 
+    LogIO os( LogOrigin("SIImageStore","rescaleResolution",WHERE) );
     GaussianBeam toBeUsed(Quantity(0.0, "arcsec"),Quantity(0.0, "arcsec"), 
 			  Quantity(0.0, "deg")) ;
     try {
-      GaussianDeconvolver::deconvolve(toBeUsed, newbeam, oldbeam);
-      Double pixwidth=sqrt(image.coordinates().increment()(0)*image.coordinates().increment()(0)+image.coordinates().increment()(1)*image.coordinates().increment()(1));
-      if(toBeUsed.getMinor(image.coordinates().worldAxisUnits()[0]) > pixwidth)
-	   StokesImageUtil::Convolve(image, toBeUsed, True);
+      Bool samesize = GaussianDeconvolver::deconvolve(toBeUsed, newbeam, oldbeam);
+
+      /*
+      os << LogIO::NORMAL2 << "Chan : " << chan << " : Input beam : : " << oldbeam.getMajor(Unit("arcsec")) << " arcsec, " << oldbeam.getMinor(Unit("arcsec"))<< " arcsec, " << oldbeam.getPA(Unit("deg")) << " deg" << LogIO::POST; 
+      os << LogIO::NORMAL2 << "Target beam : " << newbeam.getMajor(Unit("arcsec")) << " arcsec, " << newbeam.getMinor(Unit("arcsec"))<< " arcsec, " << newbeam.getPA(Unit("deg")) << " deg" << LogIO::POST; 
+      os << LogIO::NORMAL2 << "Beam to be used : " << toBeUsed.getMajor(Unit("arcsec")) << " arcsec, " << toBeUsed.getMinor(Unit("arcsec"))<< " arcsec, " << toBeUsed.getPA(Unit("deg")) << " deg" << LogIO::POST; 
+      os << LogIO::NORMAL2 << "SameSize ? " << samesize << endl;
+      */
+      
+      if( samesize )
+	{
+	  os << LogIO::NORMAL2 << "Input and output beam sizes are the same for Channel : " << chan << ". Not convolving residuals." << LogIO::POST;
+	}
+	else 
+	{
+	  Double pixwidth=sqrt(image.coordinates().increment()(0)*image.coordinates().increment()(0)+image.coordinates().increment()(1)*image.coordinates().increment()(1));
+	  
+	  if(toBeUsed.getMinor(image.coordinates().worldAxisUnits()[0]) > pixwidth)
+	    {
+	      StokesImageUtil::Convolve(image, toBeUsed, True);
+	    }
+	}
     }
     catch (const AipsError& x) {
-      throw(AipsError("Cannot convolve to new beam: may be smaller than old beam"));
+      //throw(AipsError("Cannot convolve to new beam: may be smaller than old beam : " + x.getMesg() ));
+      os << LogIO::WARN << "Cannot convolve to new beam for Channel : " << chan <<  " : " << x.getMesg() << LogIO::POST;
     }
     
 
   }
-  void  SIImageStore::makePBImage(const Float pblimit)
+  void  SIImageStore::makePBImage(const Float /*pblimit*/)
   {
    LogIO os( LogOrigin("SIImageStore","makePBImage",WHERE) );
 
@@ -1160,7 +1327,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 		  LatticeExpr<Float> ratio( ( (*(modsubim)) * mask ) / ( deno + maskinv ) );
 		  
 		  IPosition ip(4,itsImageShape[0]/2,itsImageShape[1]/2,0,0);
-		  Float modval = modsubim->getAt(ip);
+		  ///		  Float modval = modsubim->getAt(ip);
 		  //LatticeExprNode aminval( min(*modsubim) );
 		  //LatticeExprNode amaxval( max(*modsubim) );
 		  //cout << "Before ---- min : " << aminval.getFloat() << " max : " << amaxval.getFloat() << endl;
@@ -1466,7 +1633,8 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 	SubImage<Float> subRestored( *image(term) , imslice, True );
 	SubImage<Float> subModel( *model(term) , imslice, True );
 	SubImage<Float> subResidual( *residual(term) , imslice, True );
-	
+
+
 	GaussianBeam beam = itsRestoredBeams.getBeam( chanid, polid );;
 	
 	try
@@ -1478,10 +1646,18 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 	    // Smooth model by beam
 	    StokesImageUtil::Convolve( subRestored, beam);
 	    // Add residual image
-	    if(usebeam == "common")
-	      rescaleResolution(subResidual, beam, itsPSFBeams.getBeam(chanid, polid));
-	    subRestored.copyData( LatticeExpr<Float>( subRestored + subResidual  ) );
-	   
+	    if( !rbeam.isNull() || usebeam == "common") // If need to rescale residuals, make a copy and do it.
+	      {
+		//		rescaleResolution(chanid, subResidual, beam, itsPSFBeams.getBeam(chanid, polid));
+		TempImage<Float> tmpSubResidualCopy( IPosition(4,nx,ny,1,1), subResidual.coordinates());
+		tmpSubResidualCopy.copyData( subResidual );
+		rescaleResolution(chanid, tmpSubResidualCopy, beam, itsPSFBeams.getBeam(chanid, polid));
+		subRestored.copyData( LatticeExpr<Float>( subRestored + tmpSubResidualCopy  ) );
+	      }
+	    else// if no need to rescale residuals, just add the residuals.
+	      {
+		subRestored.copyData( LatticeExpr<Float>( subRestored + subResidual  ) );
+	      }
 	    
 	  }
 	catch(AipsError &x)
@@ -1940,7 +2116,10 @@ Float SIImageStore::getPeakResidual()
 {
     LogIO os( LogOrigin("SIImageStore","getPeakResidual",WHERE) );
 
-    Float maxresidual = max( residual()->get() );
+    LatticeExprNode pres( max( *residual() ) );
+    Float maxresidual = pres.getFloat();
+
+    //    Float maxresidual = max( residual()->get() );
 
     return maxresidual;
   }
@@ -1948,9 +2127,11 @@ Float SIImageStore::getPeakResidual()
 Float SIImageStore::getPeakResidualWithinMask()
   {
     LogIO os( LogOrigin("SIImageStore","getPeakResidualWithinMask",WHERE) );
-    Float minresmask, maxresmask, minres, maxres;
-    findMinMax( residual()->get(), mask()->get(), minres, maxres, minresmask, maxresmask );
+        Float minresmask, maxresmask, minres, maxres;
+    //findMinMax( residual()->get(), mask()->get(), minres, maxres, minresmask, maxresmask );
 
+    findMinMaxLattice(*residual(), *mask() , maxres,maxresmask, minres, minresmask);
+    
     return maxresmask;
   }
 
@@ -1959,7 +2140,9 @@ Float SIImageStore::getModelFlux(uInt term)
   {
     //    LogIO os( LogOrigin("SIImageStore","getModelFlux",WHERE) );
 
-    Float modelflux = sum( model(term)->get() );
+    LatticeExprNode mflux( sum( *model(term) ) );
+    Float modelflux = mflux.getFloat();
+    //    Float modelflux = sum( model(term)->get() );
 
     return modelflux;
   }
@@ -1967,8 +2150,7 @@ Float SIImageStore::getModelFlux(uInt term)
   // Check for non-zero model (this is different from getting model flux, for derived SIIMMT)
 Bool SIImageStore::isModelEmpty()
   {
-    /// There MUST be a more efficient way to do this !!!!!  I hope. 
-    return  ( fabs( sum( model()->get() ) ) < 1e-08 );
+    return  ( fabs( getModelFlux(0) ) < 1e-08 );
   }
 
   // Calculate the PSF sidelobe level...
@@ -1978,7 +2160,8 @@ Bool SIImageStore::isModelEmpty()
 
     /// Calculate only once, store and return for all subsequent calls.
 
-    Float psfsidelobe = fabs(min( psf()->get() ));
+    LatticeExprNode psfside( min( *psf() ) );
+    Float psfsidelobe = fabs( psfside.getFloat() );
 
     if(psfsidelobe == 1.0)
       {
@@ -2007,7 +2190,10 @@ Bool SIImageStore::isModelEmpty()
   {
     LogIO os( LogOrigin("SIImageStore","printImageStats",WHERE) );
     Float minresmask, maxresmask, minres, maxres;
-    findMinMax( residual()->get(), mask()->get(), minres, maxres, minresmask, maxresmask );
+    //    findMinMax( residual()->get(), mask()->get(), minres, maxres, minresmask, maxresmask );
+
+    findMinMaxLattice(*residual(), *mask() , maxres,maxresmask, minres, minresmask);
+
 
     os << "[" << itsImageName << "]" ;
     os << " Peak residual (max,min) " ;
@@ -2017,6 +2203,7 @@ Bool SIImageStore::isModelEmpty()
 
     os << "[" << itsImageName << "] Total Model Flux : " << getModelFlux() << LogIO::POST; 
 
+
   }
 
   // Calculate the total model flux
@@ -2024,11 +2211,55 @@ Bool SIImageStore::isModelEmpty()
   {
     LogIO os( LogOrigin("SIImageStore","getMaskSum",WHERE) );
 
-    Float masksum = sum( mask()->get() );
+    LatticeExprNode msum( sum( *mask() ) );
+    Float masksum = msum.getFloat();
+
+    //    Float masksum = sum( mask()->get() );
 
     return masksum;
   }
 
+Bool SIImageStore::findMinMaxLattice(const Lattice<Float>& lattice, 
+				     const Lattice<Float>& mask,
+				     Float& maxAbs, Float& maxAbsMask, 
+				     Float& minAbs, Float& minAbsMask )
+{
+
+  maxAbs=0.0;maxAbsMask=0.0;
+  minAbs=1e+10;minAbsMask=1e+10;
+
+  const IPosition tileShape = lattice.niceCursorShape();
+  TiledLineStepper ls(lattice.shape(), tileShape, 0);
+  {
+    RO_LatticeIterator<Float> li(lattice, ls);
+    RO_LatticeIterator<Float> mi(mask, ls);
+    for(li.reset(),mi.reset();!li.atEnd();li++, mi++) {
+      IPosition posMax=li.position();
+      IPosition posMin=li.position();
+      IPosition posMaxMask=li.position();
+      IPosition posMinMask=li.position();
+      Float maxVal=0.0;
+      Float minVal=0.0;
+      Float maxValMask=0.0;
+      Float minValMask=0.0;
+      
+      minMaxMasked(minValMask, maxValMask, posMin, posMax, li.cursor(), mi.cursor());
+
+      minMax( minVal, maxVal, posMin, posMax, li.cursor() );
+    
+      if( (maxVal) > (maxAbs) ) maxAbs = maxVal;
+      if( (maxValMask) > (maxAbsMask) ) maxAbsMask = maxValMask;
+
+      if( (minVal) < (minAbs) ) minAbs = minVal;
+      if( (minValMask) < (minAbsMask) ) minAbsMask = minValMask;
+
+    }
+  }
+
+  return True;
+
+
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2067,9 +2298,11 @@ Bool SIImageStore::isModelEmpty()
 
     //    cout << "parent shape : " << itsParentImageShape << "   shape : " << itsImageShape << endl;
     itsParentImageShape = itsImageShape;
+    itsParentCoordSys = itsCoordSys;
 
     if( itsNFacets>1 || itsNChanChunks>1 || itsNPolChunks>1 ) { itsImageShape=IPosition(4,0,0,0,0); }
 
+    itsOpened=0;
  
   }
 

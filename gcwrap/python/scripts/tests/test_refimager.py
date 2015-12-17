@@ -553,6 +553,16 @@ class test_onefield(testref_base):
           self.checkall(ret=ret, peakres=0.136, modflux=0.988, imexist=[self.img+'.psf.tt1',self.img+'.residual.tt1', self.img+'.image.tt1', self.img+'.alpha'],nmajordone=1,imval=[(self.img+'.alpha',-1.0,[50,50,0,0])])
 
 
+     def test_onefield_cube_chanchunks(self):
+          """ [onefield] Test channel chunking for large cubes """
+          self.prepData('refim_point.ms')
+#          ret = tclean(vis=self.msfile,imagename=self.img,specmode='cube',imsize=100,cell='10.0arcsec',niter=10,deconvolver='hogbom', savemodel='modelcolumn')
+#          self.assertTrue(os.path.exists(self.img+'.psf') and os.path.exists(self.img+'.image') )
+#          self.checkall(imexist=[self.img+'.image'],imval=[(self.img+'.image',1.5002,[50,50,0,0]) , (self.img+'.image',0.769,[50,50,0,19]) ])
+
+          ret = tclean(vis=self.msfile,imagename=self.img+'cc',specmode='cube',imsize=100,cell='10.0arcsec',niter=10,deconvolver='hogbom',chanchunks=2,savemodel='modelcolumn')
+          self.assertTrue(os.path.exists(self.img+'cc.psf') and os.path.exists(self.img+'cc.image') )
+          self.checkall(imexist=[self.img+'cc.image'],imval=[(self.img+'cc.image',1.5002,[50,50,0,0]) , (self.img+'cc.image',0.769,[50,50,0,19]) ])
 
 ##############################################
 ##############################################
@@ -1348,6 +1358,7 @@ class test_cube(testref_base):
           self.assertTrue(os.path.exists(self.img+'1.psf') and os.path.exists(self.img+'1.image') )
           self.checkall(imexist=[self.img+'1.image'],imval=[(self.img+'1.image',0.708,[54,50,0,0]), (self.img+'1.image',0.2536,[54,50,0,19]) ])
           # first channel has been restored by a 'common' beam picked from channel 2
+
 
 ##############################################
 ##############################################

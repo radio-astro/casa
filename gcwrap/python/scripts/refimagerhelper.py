@@ -18,7 +18,6 @@ Summary...
 '''
 
 debug = False
-
 #############################################
 #############################################
 
@@ -101,6 +100,7 @@ class PySynthesisImager:
             exists = (os.path.exists(cfCacheName) and os.path.isdir(cfCacheName));
 
         for fld in range(0,self.NF):
+            #print "self.allimpars=",self.allimpars,"\n"
             self.SItool.defineimage( self.allimpars[str(fld)] , self.allgridpars[str(fld)] )
     
         # For cube imaging:  align the data selections and image setup
@@ -121,11 +121,6 @@ class PySynthesisImager:
     def initializeNormalizers(self):
         for immod in range(0,self.NF):
             self.PStools.append(casac.synthesisnormalizer())
-            #normpars = {'imagename':self.allimpars[str(immod)]['imagename']}
-            #normpars['mtype'] = self.allgridpars[str(immod)]['mtype']
-            #normpars['weightlimit'] = self.allgridpars[str(immod)]['weightlimit']
-            #normpars['nterms'] = self.allimpars[str(immod)]['nterms']
-            #normpars['facets'] = self.allgridpars[str(immod)]['facets']
             normpars = self.allnormpars[str(immod)]
             self.PStools[immod].setupnormalizer(normpars=normpars)
 
@@ -761,11 +756,13 @@ class PyParallelCubeSynthesisImager():
             # insert coordsys record in imagepars 
             # partionCubeSelection works per field ...
             allimagepars[fid]['csys'] = self.SItool.getcsys()
+            if allimagepars[fid]['nchan'] == -1:
+                allimagepars[fid]['nchan'] = self.SItool.updatenchan()
             alldataimpars[fid] = self.PH.partitionCubeSelection(allselpars,allimagepars[fid])
 
-        print "********************** ", alldataimpars.keys()
-        for kk in alldataimpars.keys():
-            print "KEY : ", kk , " --->", alldataimpars[kk].keys()
+        #print "********************** ", alldataimpars.keys()
+        #for kk in alldataimpars.keys():
+        #    print "KEY : ", kk , " --->", alldataimpars[kk].keys()
 
         # reorganize allselpars and allimpars for partitioned data        
         synu = casac.synthesisutils()
@@ -790,17 +787,19 @@ class PyParallelCubeSynthesisImager():
                         if alldataimpars[fid][nodeidx][ky]['spw']=='-1':
                             selparsPerNode[tnode][ky]['spw']=''
 
-            imparsPerNode[tnode][fid] = allimagepars[fid].copy()
-            imparsPerNode[tnode][fid]['csys'] = alldataimpars[fid][nodeidx]['coordsys'].copy()
-            imparsPerNode[tnode][fid]['nchan'] = alldataimpars[fid][nodeidx]['nchan']
-            imparsPerNode[tnode][fid]['imagename'] = imparsPerNode[tnode][fid]['imagename'] + '.n'+str(tnode) 
-            imparsPerNode[tnode]=synu.updateimpars(imparsPerNode[tnode])
+                imparsPerNode[tnode][fid] = allimagepars[fid].copy()
+                imparsPerNode[tnode][fid]['csys'] = alldataimpars[fid][nodeidx]['coordsys'].copy()
+                imparsPerNode[tnode][fid]['nchan'] = alldataimpars[fid][nodeidx]['nchan']
+                imparsPerNode[tnode][fid]['imagename'] = imparsPerNode[tnode][fid]['imagename'] + '.n'+str(tnode) 
+
+                # skip this for now (it is not working properly, but should not affect results without this)
+                #imparsPerNode[tnode][fid]=synu.updateimpars(imparsPerNode[tnode][fid])
             self.allselpars.update(selparsPerNode)
             self.allimpars.update(imparsPerNode)
 
-        #print "self.allimpars IN init>>>> ",self.allimpars
 
-        print "****** SELPARS in init **********", self.allselpars
+        #print "****** SELPARS in init **********", self.allselpars
+        #print "****** SELIMPARS in init **********", self.allimpars
         
         joblist=[]
         #### MPIInterface related changes
@@ -1313,6 +1312,7 @@ class ImagerParameters():
                  gridder="standard",
 #                 ftmachine='gridft', 
                  facets=1, 
+                 chanchunks=1,
 
                  wprojplanes=1,
 
@@ -1394,7 +1394,8 @@ class ImagerParameters():
                                    'cfcache': cfcache,'dopointing':dopointing, 'dopbcorr':dopbcorr, 
                                    'conjbeams':conjbeams, 'computepastep':computepastep,
                                    'rotatepastep':rotatepastep, #'mtype':mtype, # 'weightlimit':weightlimit,
-                                   'facets':facets, 'interpolation':interpolation, 'wprojplanes':wprojplanes,
+                                   'facets':facets,'chanchunks':chanchunks,
+                                   'interpolation':interpolation, 'wprojplanes':wprojplanes,
                                    'deconvolver':deconvolver }     }
         ######### weighting
         self.weightpars = {'type':weighting,'robust':robust, 'npixels':npixels,'uvtaper':uvtaper}
@@ -1620,7 +1621,7 @@ class ImagerParameters():
                 if inpname.count('/'):
                     splitname = inpname.split('/')
                     prefix = splitname[ len(splitname)-1 ]
-                    dirname = './' + inpname[0: len(inpname)-len(prefix)]   # has '/' at end
+                    dirname = inpname[0: len(inpname)-len(prefix)]   # has '/' at end
                     if not os.path.exists( dirname ):
                         casalog.post('Making directory : ' + dirname, 'INFO')
                         os.mkdir( dirname )
@@ -1628,8 +1629,6 @@ class ImagerParameters():
             ### Check for name increments 
             #if self.reusename == False:
 
-            #### MPIInterface related changes
-#            if self.allimpars['0']['overwrite'] == False:   # Later, can change this to be field dependent too.
             if self.allimpars['0']['overwrite'] == False:   # Later, can change this to be field dependent too.
                 ## Get a list of image names for all fields (to sync name increment ids across fields)
                 inpnamelist={}
@@ -1644,9 +1643,6 @@ class ImagerParameters():
                     for immod in self.allimpars.keys() :
                         self.allimpars[immod]['imagename'] = newnamelist[immod]
                 
-#                newname = self.incrementImageName( inpname )
-#                self.allimpars[immod]['imagename'] = newname
-
     def checkAndFixIterationPars(self ):
         errs=""
 
@@ -1910,7 +1906,21 @@ class ImagerParameters():
         return newimagenamelist
 
 
+import time
+import resource
+class PerformanceMeasure():
+    def __init__(self):
+        self.t0=self.timestart()
+        self.t1=0.0
+        self.mem=0.0
 
+    def timestart(self):
+        self.t0 = time.time()
 
+    def gettime(self,label=""):
+        self.t1 = time.time()
+        return "'%s: time=%s'"%(label,self.t1-self.t0)
 
-
+    def getresource(self,label=""):
+        usage=resource.getrusage(resource.RUSAGE_SELF)
+        return '''%s: usertime=%s systime=%s mem=%s mb '''%(label,usage[0],usage[1], (usage[2]*resource.getpagesize())/1000000.0 )

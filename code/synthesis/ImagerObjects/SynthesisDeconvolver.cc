@@ -173,18 +173,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // Set up the mask too.
       if( itsIsMaskLoaded==False ) {
 	if(  itsMaskString.length()>0  ) {
-          if( itsMaskString.contains("auto") ) {
+	  ///// Equals STRING and not 'contains'.
+          if( itsMaskString.matches("auto") ) {
             String alg;
-	    if ( itsMaskString=="auto") {
+	    if ( itsMaskString.matches("auto")) {
 	      itsMaskHandler->autoMask( itsImages, "");
             }
-            else  if ( itsMaskString.contains("thresh")) {
+            else  if ( itsMaskString.matches("thresh")) {
 	      itsMaskHandler->autoMask( itsImages, "thresh");
             }
-	    else if  ( itsMaskString == "auto-pb") {
+	    else if  ( itsMaskString.matches("auto-pb")) {
 	      itsMaskHandler->makePBMask( itsImages, 0.2);
 	    }
-	    else if  ( itsMaskString == "auto-within-pb") {
+	    else if  ( itsMaskString.matches("auto-within-pb")) {
 	      itsMaskHandler->autoMaskWithinPB( itsImages, 0.2);
 	    }
           }
@@ -293,6 +294,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SynthesisDeconvolver","executeMinorCycle",WHERE) );
     Record returnRecord;
 
+    SynthesisUtilMethods::getResource("Start Deconvolver");
+
     try {
       itsLoopController.setCycleControls(minorCycleControlRec);
 
@@ -306,6 +309,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     } catch(AipsError &x) {
       throw( AipsError("Error in running Minor Cycle : "+x.getMesg()) );
     }
+
+    SynthesisUtilMethods::getResource("End Deconvolver");
+
     return returnRecord;
   }
 
@@ -318,6 +324,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	itsImages = makeImageStore( itsImageName );
       }
+
+    SynthesisUtilMethods::getResource("Restoration");
 
     itsDeconvolver->restore(itsImages);
     itsImages->releaseLocks();
@@ -388,46 +396,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
   
-  /*
-  // Calculate the peak residual for this mapper
-  Float SynthesisDeconvolver::getPeakResidual()
-  {
-    LogIO os( LogOrigin("SynthesisDeconvolver","getPeakResidual",WHERE) );
-
-    Float maxresidual = max( itsImages->residual()->get() );
-
-    return maxresidual;
-  }
-
-  // Calculate the total model flux
-  Float SynthesisDeconvolver::getModelFlux()
-  {
-    LogIO os( LogOrigin("SynthesisDeconvolver","getModelFlux",WHERE) );
-
-    Float modelflux = sum( itsImages->model()->get() );
-
-    return modelflux;
-  }
-
-  // Calculate the PSF sidelobe level...
-  Float SynthesisDeconvolver::getPSFSidelobeLevel()
-  {
-    LogIO os( LogOrigin("SynthesisDeconvolver","getPSFSidelobeLevel",WHERE) );
-
-    /// Calculate only once, store and return for all subsequent calls.
-
-    Float psfsidelobe = fabs(min( itsImages->psf()->get() ));
-
-    if(psfsidelobe == 1.0)
-      {
-	//os << LogIO::WARN << "For testing only. Set psf sidelobe level to 0.01" << LogIO::POST;
-	psfsidelobe = 0.01;
-      }
-
-    return psfsidelobe;
-  }
-*/
-
   // This is for interactive-clean.
   void SynthesisDeconvolver::getCopyOfResidualAndMask( TempImage<Float> &/*residual*/,
                                            TempImage<Float> &/*mask*/ )
@@ -441,37 +409,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Here we will just pass in the new names
     // Copy the input mask to the local main image mask
   }
-
-  /*
-  //  Bool SynthesisDeconvolver::findMinMaxMask(const Array<Float>& lattice,
-  void SynthesisDeconvolver::findMinMax(const Array<Float>& lattice,
-					const Array<Float>& mask,
-					Float& minVal, Float& maxVal,
-					Float& minValMask, Float& maxValMask)
-  {
-    IPosition posmin(lattice.shape().nelements(), 0);
-    IPosition posmax(lattice.shape().nelements(), 0);
-
-    if( sum(mask) <1e-06 ) {minValMask=0.0; maxValMask=0.0;}
-    else { minMaxMasked(minValMask, maxValMask, posmin, posmax, lattice,mask); }
-
-    minMax( minVal, maxVal, posmin, posmax, lattice );
-  }
-
-  void SynthesisDeconvolver::printImageStats()
-  {
-    LogIO os( LogOrigin("SynthesisDeconvolver","getPeakResidual",WHERE) );
-    Float minresmask, maxresmask, minres, maxres;
-    findMinMax( itsImages->residual()->get(), itsImages->mask()->get(), minres, maxres, minresmask, maxresmask );
-
-    os << "[" << itsImageName << "]:" ;
-    os << " Peak residual (max,min) " ;
-    if( minresmask!=0.0 || maxresmask!=0.0 )
-      { os << "within mask : (" << maxresmask << "," << minresmask << ") "; }
-    os << "over full image : (" << maxres << "," << minres << ")" << LogIO::POST;
-
-  }
-*/
 
 } //# NAMESPACE CASA - END
 

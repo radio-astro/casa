@@ -67,6 +67,10 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <limits>
+
+#include <sys/time.h>
+#include<sys/resource.h>
+
 using namespace std;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -90,6 +94,88 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     return M;
   }
+
+  // Get the next largest even composite of 2,3,5,7.
+  // This is to ensure a 'good' image size for FFTW.
+  // Translated from gcwrap/scripts/cleanhelper.py : getOptimumSize
+  Int SynthesisUtilMethods::getOptimumSize(const Int npix)
+  {
+    return npix;
+  }
+
+  Vector<Int> SynthesisUtilMethods::primeFactors(uInt /*n*/, Bool /*douniq*/)
+  {
+    return Vector<Int>();
+  }
+
+
+  Int SynthesisUtilMethods::parseLine(char* line){
+        int i = strlen(line);
+        while (*line < '0' || *line > '9') line++;
+        line[i-3] = '\0';
+        i = atoi(line);
+        return i;
+    }
+    
+  void SynthesisUtilMethods::getResource(String label, String fname)
+  {
+           return;
+
+     LogIO os( LogOrigin("SynthesisUtilMethods","getResource",WHERE) );
+
+
+        FILE* file = fopen("/proc/self/status", "r");
+        int vmSize = -1, vmRSS=-1, pid=-1;
+	//	int fdSize=-1;
+        char line[128];
+    
+        while (fgets(line, 128, file) != NULL){
+	  if (strncmp(line, "VmSize:", 7) == 0){
+	    vmSize = parseLine(line)/1024.0;
+	  }
+	  if (strncmp(line, "VmRSS:", 6) == 0){
+	    vmRSS = parseLine(line)/1024.0;
+	  }
+	  //	  if (strncmp(line, "FDSize:", 7) == 0){
+	  //  fdSize = parseLine(line);
+	  //}
+	  if (strncmp(line, "Pid:", 4) == 0){
+	    pid = parseLine(line);
+	  }
+	}
+        fclose(file);
+
+	struct rusage usage;
+	struct timeval now;
+	getrusage(RUSAGE_SELF, &usage);
+	now = usage.ru_utime;
+
+	ostringstream oss;
+	
+	oss << " PID: " << pid ;
+	oss << " MemRSS: " << vmRSS << " MB.";
+	oss << " VirtMem: " << vmSize << " MB.";
+	//	oss << " FDSize: " << fdSize;
+	oss << " ProcTime: " << now.tv_sec << "." << now.tv_usec;
+	oss <<  " [" << label << "] ";
+
+
+	os << oss.str() << LogIO::NORMAL3 <<  LogIO::POST;
+	//	cout << oss.str() << endl;
+
+	// Write this to a file too...
+	fname = "memprofile";
+	if( fname.size() > 0 )
+	  {
+	    ofstream myfile;
+	    myfile.open (fname+"."+String::toString(pid), ios::app);
+	    myfile << oss.str() << endl;
+	    myfile.close();
+	  }
+  }
+
+
+
   // Data partitioning rules for CONTINUUM imaging
   //
   //  ALL members of the selection parameters in selpars are strings
@@ -153,7 +239,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//--------------------------------------------------------------------
 	// Use the selectedMS to generate time selection strings per part
 	//
-	Double Tint;
+	//	Double Tint;
 	ROMSMainColumns mainCols(selectedMS);
 	Vector<uInt> rowNumbers = selectedMS.rowNumbers();
 	Int nRows=selectedMS.nrow(), 
@@ -167,7 +253,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	MVTime mvInt=mainCols.intervalQuant()(0);
 	Time intT(mvInt.getTime());
-	Tint = intT.modifiedJulianDay();
+	//	Tint = intT.modifiedJulianDay();
 
 	Int partNo=0;
 	while(rowEndID < nRows)
@@ -1390,7 +1476,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
         String measType;
         String unit;
-        Double val;
+        Double val = 0;
         rec.get("type", measType);
         if(measType=="doppler")
           {
@@ -1443,7 +1529,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ///    err += verifySpectralSetup();  
 
     // Allow only one starting model. No additions to be done.
-    
     if( startModel.length()>0 )
       {
 	if( nTaylorTerms<=1 ) {
@@ -1455,7 +1540,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  if( fp.exists() ) err += "Model " + imageName+".model.tt* exists, but a starting model of " + startModel + " is also being requested. Please either reset startmodel='' to use what already exists, or delete " + imageName + ".model.tt* so that it uses the new model specified in startmodel";
 	}
       }
-    
+
+
 	return err;
   }
 
@@ -1795,7 +1881,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
             os << LogIO::SEVERE << "Error combining SpWs" << LogIO::POST;
           }
       }
-    if(nchan == -1) {
+    Double minDataFreq = min(dataChanFreq);
+    if(start=="" && minDataFreq < datafstart  ) {
         // limit data chan freq vector for default start case with channel selection
         Int chanStart, chanEnd;
         Int lochan = 0;
@@ -2652,6 +2739,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	// facets	
 	err += readVal( inrec, String("facets"), facets);
+	// chanchunks
+	err += readVal( inrec, String("chanchunks"), chanchunks);
 
 	// Spectral interpolation
 	err += readVal( inrec, String("interpolation"), interpolation );// not used in SI yet...
@@ -2714,6 +2803,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     if( facets < 1 )
       {err += "Must have at least 1 facet\n"; }
+    if( chanchunks < 1 )
+      {err += "Must have at least 1 chanchunk\n"; }
+    if( (facets>1) && (chanchunks>1) )
+      { err += "The combination of facetted imaging with channel chunking is not yet supported. Please choose only one or the other for now. \n";}
 
     if(ftmachine=="wproject" && wprojplanes<=1)
       {err += "The wproject gridder must be accompanied with wprojplanes>1\n";}
@@ -2745,6 +2838,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     // facets
     facets=1;
+
+    // chanchunks
+    chanchunks=1;
 
     // Spectral Axis interpolation
     interpolation=String("nearest");
@@ -2783,6 +2879,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     gridpar.define("convfunc", convFunc);
 
     gridpar.define("facets", facets);
+    gridpar.define("chanchunks", chanchunks);
     
     gridpar.define("interpolation",interpolation);
 
@@ -2926,21 +3023,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     String err;
 
-    /*
-    // Allow only one starting model. No additions to be done.
-    if( startModel.length()>0 )
+    
+    // Allow mask inputs in only one way. User specified OR already on disk. Not both
+    if( maskString.length()>0 )
       {
-	if( nTaylorTerms<=1 ) {
-	  File fp( imageName+".model" );
-	  if( fp.exists() ) err += "Model " + imageName+".model exists, but a starting model of " + startModel + " is also being requested. Please either reset startmodel='' or delete " + imageName + ".model before restarting";
-	  }
-	else {
-	  File fp( imageName+".model.tt0" ); 
-	  if( fp.exists() ) err += "Model " + imageName+".model.tt* exists, but a starting model of " + startModel + " is also being requested. Please either reset startmodel='' or delete " + imageName + ".model.tt* before restarting";
-	}
+	  File fp( imageName+".mask" );
+	  if( fp.exists() ) err += "Mask image " + imageName+".mask exists, but a specific input mask of " + maskString + " has also been supplied. Please either reset mask='' to reuse the existing mask, or delete " + imageName + ".mask before restarting";
       }
-    */
-
+   
     return err;
   }
 

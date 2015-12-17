@@ -1519,6 +1519,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //    cerr << "De-gridding run time = " << visResampler_p->runTimeDG_p << endl;
     visResampler_p->runTimeDG_p=0.0;
 
+  if(!arrayLattice.null()) arrayLattice=0;
+  if(!lattice.null()) lattice=0;
+  griddedData.resize();
+
     if(isTiled) 
       {
 	AlwaysAssert(imageCache, AipsError);
@@ -1579,13 +1583,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     else 
       {
 	IPosition gridShape(4, nx, ny, npol, nchan);
-	griddedData.resize(gridShape);
-	griddedData=Complex(0.0);
-	arrayLattice = new ArrayLattice<Complex>(griddedData);
-	lattice=arrayLattice;
+	if(!useDoubleGrid_p)
+	  {
+	    griddedData.resize(gridShape);
+	    griddedData=Complex(0.0);
+	  }
+	//	arrayLattice = new ArrayLattice<Complex>(griddedData);
+	//lattice=arrayLattice;
 	if(useDoubleGrid_p) 
 	  {
-	    griddedData.resize();
+	    //	    griddedData.resize();
 	    griddedData2.resize(gridShape);
 	    griddedData2=DComplex(0.0);
 	  }
@@ -1981,6 +1988,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    // Do the copy
 	    //
 	    image->put(griddedData(blc, trc));
+
+	    if(!arrayLattice.null()) arrayLattice=0;
+	    if(!lattice.null()) lattice=0;
 	    griddedData.resize(IPosition(1,0));
 	  }
       }

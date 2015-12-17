@@ -778,6 +778,27 @@ HPX HEALPix grid.  -->
       <value type="int">1</value>
     </param>
 
+    <param type="int" name="chanchunks" subparam="true">
+     <shortdescription>Number of channel chunks</shortdescription>
+<description>Number of channel chunks to grid separately
+
+                       For large image cubes, the gridders can run into memory limits
+                       as they loop over all available image planes for each row of data
+                       accessed. To prevent this problem, we can grid subsets of channels
+                       in sequence so that at any given time only part of the image cube
+                       needs to be loaded into memory. This parameter controls the 
+                       number of chunks to split the cube into. 
+
+                       Example :  chanchunks = 4
+
+                       [ This feature is experimental and may have restrictions on how
+                          chanchunks is to be chosen. For now, please pick chanchunks so 
+                          that nchan/chanchunks is an integer. ]
+
+</description>
+      <value type="int">1</value>
+    </param>
+
     <param type="int" name="wprojplanes" subparam="true">
      <shortdescription>Number of distinct w-values for convolution functions</shortdescription>
 <description>Number of distinct w-values at which to compute and use different
@@ -1916,6 +1937,7 @@ HPX HEALPix grid.  -->
 	 <default param="veltype"><value>"radio"</value></default>
 	 <default param="restfreq"><value>[]</value></default>
 	 <default param="interpolation"><value>"linear"</value></default>
+	 <default param="chanchunks"><value>1</value></default>
        </equals>
        <!-- desable for now...
        <equals type="string" value="cubesrc">
@@ -1928,6 +1950,7 @@ HPX HEALPix grid.  -->
 	 <default param="sysvel"><value>""</value></default>
 	 <default param="sysvelframe"><value>""</value></default>
 	 <default param="interpolation"><value>"linear"</value></default>
+	 <default param="chanchunks"><value>1</value></default>
        </equals>
        -->
        <equals type="string" value="cubedata">
@@ -1937,6 +1960,7 @@ HPX HEALPix grid.  -->
 	 <default param="veltype"><value>"radio"</value></default>
 	 <default param="restfreq"><value>[]</value></default>
 	 <default param="interpolation"><value>"linear"</value></default>
+	 <default param="chanchunks"><value>1</value></default>
        </equals>
      </when>
 
@@ -1975,6 +1999,7 @@ HPX HEALPix grid.  -->
 	 <default param="pblimit"><value>0.2</value></default>
 	 <default param="normtype"><value>"flatnoise"</value></default>
 	 <default param="psterm"><value>False</value></default>
+	 <default param="aterm"><value>True</value></default>
 	 <default param="cfcache"><value>""</value></default>
 	 <default param="computepastep"><value>360.0</value></default>
 	 <default param="rotatepastep"><value>360.0</value></default>
@@ -1986,6 +2011,7 @@ HPX HEALPix grid.  -->
 	 <default param="pblimit"><value>0.2</value></default>
 	 <default param="normtype"><value>"flatnoise"</value></default>
 	 <default param="psterm"><value>False</value></default>
+	 <default param="aterm"><value>True</value></default>
 	 <default param="cfcache"><value>""</value></default>
 	 <default param="computepastep"><value>360.0</value></default>
 	 <default param="rotatepastep"><value>360.0</value></default>
@@ -2089,6 +2115,26 @@ HPX HEALPix grid.  -->
            https://svn.cv.nrao.edu/svn/casa/branches/release-4_5/gcwrap/python/scripts/tests/test_refimager.py
      (B) A set of demo examples for ALMA imaging
            https://casaguides.nrao.edu/index.php/TCLEAN_and_ALMA 
+
+     
+     Example use cases that illustrate options in top level control flow :
+     ----------------------------------------------------------------------------------------
+
+     *** Standard imaging and deconvolution
+
+     *** Make only the dirty image and PSF
+
+     *** Make only the PSF (and primary beam)
+
+     *** Make only a residual image (given a startmodel) and PSF
+
+     *** Start from deconvolution without recalculating an existing PSF and residual image
+
+     *** Predict model visibilities and save them.
+
+     *** Predict wideband model visibilities in preparation for continuum subtraction
+
+     *** A run with outlier fields...
 
   </example>
 

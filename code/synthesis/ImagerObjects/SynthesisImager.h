@@ -43,8 +43,6 @@
 #include <synthesis/TransformMachines/FTMachine.h>
 #include <synthesis/TransformMachines/ATerm.h>
 
-#include <boost/scoped_ptr.hpp>
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Forward declarations
@@ -101,6 +99,7 @@ class SynthesisImager
 			   const Quantity& freqStep, 
 			   const Vector<Quantity>& restFreq,
 			   const Int facets=1,
+			   //			   const Int chanchunks=1,
 			   const String ftmachine="GridFT",
 			   const Int nTaylorTerms=1,
 			   const Quantity& refFreq = Quantity(0,"Hz"),
@@ -133,6 +132,7 @@ class SynthesisImager
 			   const String& ftmachine);
 
   Record getcsys() {return itsCsysRec;};
+  Int updateNchan() {return itsNchan;};
 
   //Function to tune the data selection to intersect with image definition chosen
   //This is to optimize the data selection so that unnecessary data is not parsed despite the user
@@ -172,7 +172,10 @@ class SynthesisImager
   // make the psf images  i.e grid weight rather than data
   void makePSF();
 
+  //  void makePrimaryBeam(PBMath& pbMath);
+
   void predictModel();
+  //  void makeImage();
   /* Access method to the Loop Controller held in this class */
   //SIIterBot& getLoopControls();
 
@@ -242,9 +245,12 @@ protected:
   Block<CountedPtr<SIImageStore> > createFacetImageStoreList(
 							     CountedPtr<SIImageStore> imagestore,
 							     Int facets);
-  void setPsfFromOneFacet();
+  // void setPsfFromOneFacet();
+  Block<CountedPtr<SIImageStore> > createChanChunkImageStoreList(
+							     CountedPtr<SIImageStore> imagestore,
+							     Int chanchunks);
 
-		       Bool toUseWeightImage(CountedPtr<FTMachine>& ftm, String mappertype);
+  Bool toUseWeightImage(CountedPtr<FTMachine>& ftm, String mappertype);
 
   void createVisSet(const Bool writeaccess=False);
   
@@ -273,7 +279,11 @@ protected:
 			  const String imageNamePrefix="");
   ATerm* createTelescopeATerm(const MeasurementSet& ms, const Bool& isATermOn);
 
+  // Do the major cycle
   void runMajorCycle(const Bool dopsf=False, const Bool savemodel=False);
+
+  // Version of major cycle code with mappers in a loop outside vi/vb.
+  void runMajorCycle2(const Bool dopsf=False, const Bool savemodel=False);
 
   /////This function should be called at every define image
   /////It associated the ftmachine with a given field
@@ -289,6 +299,7 @@ protected:
 			  CountedPtr<FTMachine>& iftm,
 		  	  Quantity distance=Quantity(0.0, "m"), 
 			  Int facets=1, 
+			  Int chanchunks=1,
 			  const Bool overwrite=False,
 			  String mappertype=String("default"),
 			  uInt ntaylorterms=1,
@@ -301,12 +312,14 @@ protected:
   SIMapperCollection itsMappers;
   ///if facetting this storage will keep the unsliced version 
   CountedPtr<SIImageStore> unFacettedImStore_p;
+  CountedPtr<SIImageStore> unChanChunkedImStore_p;
 
+  Bool itsDataLoopPerMapper;
 
   CoordinateSystem itsMaxCoordSys;
   IPosition itsMaxShape;
   Record itsCsysRec;
-
+  Int itsNchan;
 
   /////////////// All input parameters
 
@@ -332,7 +345,7 @@ protected:
   Bool writeAccess_p;
   MPosition mLocation_p;
   MDirection phaseCenter_p;
-  Int facetsStore_p;
+  Int facetsStore_p,chanChunksStore_p;
   VisImagingWeight imwgt_p;
   Bool imageDefined_p;
   Bool useScratch_p,readOnly_p;

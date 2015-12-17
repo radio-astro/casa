@@ -16,7 +16,7 @@ import time;
 
 from refimagerhelper import PySynthesisImager
 from refimagerhelper import PyParallelContSynthesisImager,PyParallelCubeSynthesisImager
-from refimagerhelper import ImagerParameters
+from refimagerhelper import ImagerParameters, PerformanceMeasure
 
 def tclean(
     ####### Data Selection
@@ -57,6 +57,7 @@ def tclean(
     ####### Gridding parameters
     gridder,#='ft', 
     facets,#=1,
+    chanchunks,#=1,
 
     wprojplanes,#=1,
 
@@ -161,13 +162,14 @@ def tclean(
         outframe=outframe,
         veltype=veltype,
         restfreq=restfreq,
-        sysvel='',#sysvel,
-        sysvelframe='',#sysvelframe,
+        sysvel='', #sysvel,
+        sysvelframe='', #sysvelframe,
         interpolation=interpolation,
 
         gridder=gridder,
 #        ftmachine=ftmachine,
         facets=facets,
+        chanchunks=chanchunks,
 
         wprojplanes=wprojplanes,
         
@@ -214,10 +216,13 @@ def tclean(
     #paramList.printParameters()
 
     pcube=False
+    concattype=''
     if parallel==True and specmode!='mfs':
         pcube=True
         parallel=False
 
+    ## Performance Measures
+    perf = PerformanceMeasure()
 
     ## Setup Imager objects, for different parallelization schemes.
     if parallel==False and pcube==False:
@@ -227,6 +232,8 @@ def tclean(
          imager = PyParallelContSynthesisImager(params=paramList)
     elif pcube==True:
          imager = PyParallelCubeSynthesisImager(params=paramList)
+         # virtualconcat type 
+         concattype='virtualmove'
     else:
          print 'Invalid parallel combination in doClean.'
          return False
@@ -277,6 +284,7 @@ def tclean(
                 imager.runMajorCycle()
                 t1=time.time();
                 casalog.post("***Time for major cycle (calcres=T): "+"%.2f"%(t1-t0)+" sec", "INFO3", "task_tclean");
+                #casalog.post("RESOURCE : " + perf.getresource("MajCycle"), "INFO")
 
             ## In case of no deconvolution iterations....
             if niter==0 and calcres==False:
@@ -299,7 +307,7 @@ def tclean(
                     casalog.post("***Time for major cycle: "+"%.2f"%(t1-t0)+" sec", "INFO3", "task_tclean");
 
                 ## Restore images.
-                if dorestore:
+                if dorestore:  # Take out this flag, or modify, when 'restore only' is enabled cas-7945
                     t0=time.time();
                     imager.restoreImages()
                     t1=time.time();
@@ -311,7 +319,9 @@ def tclean(
 
         if (pcube):
             print "running concatImages ..."
-            imager.concatImages(type='virtualnomove')
+            casalog.post("Running virtualconcat (type=%s) of sub-cubes" % concattype,"INFO2", "task_tclean")
+            # fixed to move subcubes
+            imager.concatImages(type=concattype)
 
         ## Close tools.
         imager.deleteTools()

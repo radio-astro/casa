@@ -436,6 +436,8 @@ void WProjectFT::finalizeToVis()
 
   //cerr <<"Time to degrid " << timedegrid_p << endl;
   timedegrid_p=0.0;
+  if(!arrayLattice.null()) arrayLattice=0;
+  if(!lattice.null()) lattice=0;
   griddedData.resize();
   if(isTiled) {
     
@@ -497,10 +499,13 @@ void WProjectFT::initializeToSky(ImageInterface<Complex>& iimage,
   }
   else {
     IPosition gridShape(4, nx, ny, npol, nchan);
-    griddedData.resize(gridShape);
-    griddedData=Complex(0.0);
+    if(!useDoubleGrid_p)
+      {
+	griddedData.resize(gridShape);
+	griddedData=Complex(0.0);
+      }
     if(useDoubleGrid_p){
-      griddedData.resize();
+      //griddedData.resize();
       griddedData2.resize(gridShape);
       griddedData2=DComplex(0.0);
     }
@@ -1469,6 +1474,8 @@ ImageInterface<Complex>& WProjectFT::getImage(Matrix<Float>& weights,
       griddedData.resize(IPosition(1,0));
     }
   }
+  if(!arrayLattice.null()) arrayLattice=0;
+  if(!lattice.null()) lattice=0;
   griddedData.resize();
   return *image;
 }

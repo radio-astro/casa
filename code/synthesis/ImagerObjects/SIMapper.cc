@@ -110,6 +110,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
        ift_p->initializeToSkyNew( dopsf, vb, itsImages);
 
+       /////////////DEBUG
+       //       CoordinateSystem csys = itsImages->getCSys();
+       //       cout << "SIMapper : im spectral axis : " <<  csys.spectralCoordinate().referenceValue() << " at " << csys.spectralCoordinate().referencePixel() << " with increment " << csys.spectralCoordinate().increment() << endl;
+
      }
 
   /////////////////OLD vi/vb version
@@ -163,6 +167,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
       Cube<Complex> origCube;
       origCube.assign(vb.modelVisCube()); 
+
+      vb.setModelVisCube( Complex(0.0,0.0) );
       
       if( ! ft_p.null() ) { ft_p->get(vb); }
       if( ! cft_p.null() ) { cft_p->get(vb, cl_p); }
@@ -197,6 +203,32 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  return cl_p.toRecord(err, rec);
 
   }
+
+  /*
+  void SIMapper::initPB()
+  {
+    itsImages->pb()->set(0.0);
+  }
+
+  void SIMapper::addPB(VisBuffer& vb, PBMath& pbMath)
+  {
+    CoordinateSystem imageCoord=itsImages->pb()->coordinates();
+     
+    IPosition imShape=itsImages->pb()->shape();
+    
+    MDirection wcenter=vb.msColumns().field().phaseDirMeas(vb.fieldId());
+    TempImage<Float> pbTemp(imShape, imageCoord);
+    TempImage<Complex> ctemp(imShape, imageCoord);
+    ctemp.set(1.0);
+    pbMath.applyPB(ctemp, ctemp, wcenter, Quantity(0.0, "deg"), BeamSquint::NONE);
+    StokesImageUtil::To(pbTemp, ctemp);
+    itsImages->pb()->copyData(  (LatticeExpr<Float>)((*(itsImages->pb()))+pbTemp) );
+
+    // Think about applying PB square and using the weight image instead of PB, 
+    // so that it's the same as the weight image.
+
+  }//addPB
+  */
 
 } //# NAMESPACE CASA - END
 

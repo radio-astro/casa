@@ -129,9 +129,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // the pipes.
     static Int validate(const VisBuffer& vb);
 
+
+    static Int getOptimumSize(const Int npix);
+
+    static Int parseLine(char* line);
+    static void getResource(String label="",String fname="");
     
   protected:
     static String mergeSpwSel(const Vector<Int>& fspw, const Vector<Int>& fstart, const Vector<Int>& fnchan, const Matrix<Int>& spwsel);
+
+    static Vector<Int> primeFactors(uInt n, Bool douniq=True);
 
   };
 
@@ -285,6 +292,9 @@ public:
 
   // Facets for gridding.
   Int facets;
+
+  // Cube chunks for gridding
+  Int chanchunks;
 
   // Spectral axis interpolation
   String interpolation;

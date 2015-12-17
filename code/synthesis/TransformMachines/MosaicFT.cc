@@ -366,6 +366,9 @@ void MosaicFT::prepGridForDegrid(){
 
 void MosaicFT::finalizeToVis()
 {
+  if(!arrayLattice.null()) arrayLattice=0;
+  if(!lattice.null()) lattice=0;
+  griddedData.resize();
   /*
   if(isTiled) {
     
@@ -451,10 +454,12 @@ void MosaicFT::initializeToSky(ImageInterface<Complex>& iimage,
     else*/ 
   {
     IPosition gridShape(4, nx, ny, npol, nchan);
-    griddedData.resize(gridShape);
-    griddedData=Complex(0.0);
+    if(!useDoubleGrid_p){
+	griddedData.resize(gridShape);
+	griddedData=Complex(0.0);
+      }
     if(useDoubleGrid_p){
-      griddedData.resize();
+      //griddedData.resize();
       griddedData2.resize(gridShape);
       griddedData2=DComplex(0.0);
     }
@@ -1699,6 +1704,8 @@ ImageInterface<Complex>& MosaicFT::getImage(Matrix<Float>& weights,
       image->put(griddedData(blc, trc));
     }
   }
+  if(!arrayLattice.null()) arrayLattice=0;
+  if(!lattice.null()) lattice=0;
   griddedData.resize();
   image->clearCache();
   return *image;
