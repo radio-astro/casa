@@ -264,6 +264,8 @@ class __imview_class(object):
 
     def __zoom( self, vwr, panel, zoom ) :      
 
+        import pdb
+        pdb.set_trace()
         channel = -1
         if type(zoom) == dict and zoom.has_key('channel') :
             channel = self.__checknumeric(zoom['channel'], int, "channel")
