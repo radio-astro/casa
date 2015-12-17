@@ -113,6 +113,7 @@ namespace casac {
 
 const String image::_class = "image";
 
+/*
 Bool image::_openFuncsRegistered = False;
 
 void image::_registerOpenFuncs() {
@@ -122,10 +123,10 @@ void image::_registerOpenFuncs() {
 		_openFuncsRegistered = True;
 	}
 }
-
+*/
 
 image::image() : _log(), _imageF(), _imageC() {
-	_registerOpenFuncs();
+	//_registerOpenFuncs();
 }
 
 // private ImageInterface constructor for on the fly components
@@ -134,22 +135,22 @@ image::image() : _log(), _imageF(), _imageC() {
 
 image::image(casa::ImageInterface<casa::Float> *inImage) :
 	_log(), _imageF(inImage), _imageC() {
-	_registerOpenFuncs();
+	//_registerOpenFuncs();
 }
 
 image::image(ImageInterface<Complex> *inImage) :
 	_log(), _imageF(), _imageC(inImage) {
-	_registerOpenFuncs();
+	//_registerOpenFuncs();
 }
 
 image::image(SPIIF inImage) :
     _log(), _imageF(inImage), _imageC() {
-	_registerOpenFuncs();
+	//_registerOpenFuncs();
 }
 
 image::image(SPIIC inImage) :
 	_log(), _imageF(), _imageC(inImage) {
-	_registerOpenFuncs();
+	//_registerOpenFuncs();
 }
 
 image::~image() {}
