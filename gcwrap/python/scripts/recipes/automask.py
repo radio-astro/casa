@@ -61,7 +61,7 @@ def automask(image='', maskimage='', fracofpeak=0, rmsthresh=3.0, resolution=Non
     ie=ic.regrid(outfile='__threshreg.image', shape=shp, csys=csys.torecord(), axes=[0,1], overwrite=True)
     ic.remove(done=True, verbose=False)
     convpix=str(numpix/2)+'pix' if(twopass) else str(numpix)+'pix'
-    ig=ie.convolve2d(outfile='__newmask2.image', major=convpix, minor=convpix, overwrite=True)
+    ig=ie.convolve2d(outfile='__newmask2.image', major=convpix, minor=convpix, pa='0deg', overwrite=True)
     ie.remove(done=True, verbose=False)
     ratiostr='3.0' if(twopass) else '2.0' 
 #    print 'pixels=', 'iif(__newmask.image > '+str(stat['rms'][0])+'/'+ratiostr+', 1.0, 0.0)'
@@ -101,7 +101,6 @@ def automask(image='', maskimage='', fracofpeak=0, rmsthresh=3.0, resolution=Non
    
 
 def automask2(image='', maskimage=''):
-    pdb.set_trace()
     iaim.open(image)
     stat=iaim.statistics(list=True, verbose=True)
     thresh=stat['rms'][0]*3.0
@@ -127,7 +126,7 @@ def automask2(image='', maskimage=''):
         else:
              arr[ret['blc'][j,0]:ret['trc'][j,0], ret['blc'][j,1]:ret['trc'][j,1], 0, 0]=ret['components'][j,0]
     iamask.putchunk(arr)
-    ib=iamask.convolve2d(outfile='masky', major='10pix', minor='10pix', overwrite=True)
+    ib=iamask.convolve2d(outfile='masky', major='10pix', minor='10pix', pa='0deg', overwrite=True)
     rej=ib.statistics(list=True, verbose=True)['max'][0]
     rej=rej/fac
     ib.calc(pixels='iif("'+'masky'+'" > '+str(rej)+', 1.0, 0.0)')
