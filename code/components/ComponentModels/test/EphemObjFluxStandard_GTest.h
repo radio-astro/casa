@@ -44,6 +44,7 @@ class EphemObjFluxStandardTest: public FluxStandardTest
 public:
 
     EphemObjFluxStandardTest();
+    EphemObjFluxStandardTest(Int nspw);
     virtual ~EphemObjFluxStandardTest();
     
 protected:
@@ -51,7 +52,6 @@ protected:
     virtual void SetUp();
     virtual void TearDown();
     Bool ephemExists(); 
-
     String foundEphemPath; 
     String flxStdName;          
     String srcName;
@@ -59,11 +59,15 @@ protected:
     Double freq;
     MFrequency mfreq;
     MEpoch mtime;
-    MDirection srcDir;
+    MDirection fieldDir;
     FluxStandard::FluxScale flxStdEnum;
     Vector<Double> fluxUsed;
-    Flux<Double> returnFlux, returnFluxErr;
     Bool foundStd;
+    Flux<Double> returnFlux, returnFluxErr;
+    Vector<Vector<MFrequency> > spws;
+    Vector<String> tempCLs;
+    Vector<Vector<Flux<Double> >> returnFluxes, returnFluxErrs;
+    ComponentList* cl;
     // expected values
     FluxStandard::FluxScale expFlxStdEnum;
 };
@@ -97,13 +101,30 @@ protected:
     
     virtual void SetUp();
     virtual void TearDown();
-    Vector<Vector<MFrequency> > spws;
-    Double expFlxVal;
-    const MDirection fieldDir;
-    Vector<String> tempCLs;
-    Vector<Vector<Flux<Double> >> returnFluxes, returnFluxErrs;
-    ComponentList* cl;
+    //Vector<Vector<MFrequency> > spws;
+    //Double expFlxVal;
+    //const MDirection fieldDir;
+    //Vector<String> tempCLs;
+    //Vector<Vector<Flux<Double> >> returnFluxes, returnFluxErrs;
+    //ComponentList* cl;
 };
+
+class TwoChanSpwFluxValTest: public EphemObjFluxStandardTest,
+       public ::testing::WithParamInterface<std::string>
+{
+
+public:
+  
+    TwoChanSpwFluxValTest();
+    virtual ~TwoChanSpwFluxValTest();
+   
+protected:
+    
+    virtual void SetUp();
+    virtual void TearDown();
+    
+};
+
 }// end namespace test
 
 

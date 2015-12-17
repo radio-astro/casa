@@ -38,7 +38,14 @@ EphemObjFluxStandardTest::EphemObjFluxStandardTest()
   : fluxUsed(4), foundStd(false)
 {
 };
+
  
+EphemObjFluxStandardTest::EphemObjFluxStandardTest(Int nspw)
+  : fluxUsed(4), foundStd(false), spws(nspw),tempCLs(nspw),
+    returnFluxes(nspw), returnFluxErrs(nspw)
+{
+};
+
 EphemObjFluxStandardTest::~EphemObjFluxStandardTest() {};
 
 void EphemObjFluxStandardTest::SetUp() 
@@ -71,7 +78,8 @@ void MatchStandardTest::TearDown() {};
 
 //SingleChanSpwFluxValTest
 SingleChanSpwFluxValTest::SingleChanSpwFluxValTest():
-                            spws(2),tempCLs(2),returnFluxes(2), returnFluxErrs(2)
+//                            spws(2),tempCLs(2),returnFluxes(2), returnFluxErrs(2)
+                            EphemObjFluxStandardTest(2)
 {
 };
 
@@ -102,6 +110,37 @@ void SingleChanSpwFluxValTest::TearDown()
      }
   }
 };
+
+TwoChanSpwFluxValTest::TwoChanSpwFluxValTest():
+                              EphemObjFluxStandardTest(1)
+{
+};
+
+TwoChanSpwFluxValTest::~TwoChanSpwFluxValTest() {};
+
+void TwoChanSpwFluxValTest::SetUp()
+{
+  EphemObjFluxStandardTest::SetUp();
+  Double mjd = 56000.1;
+  mtime = MEpoch(MVEpoch(Quantity(mjd, "d")), MEpoch::Ref(MEpoch::UTC));
+  spws[0].resize(2);
+  spws[0][0] = MFrequency(Quantity(115.0,"GHz"));
+  spws[0][1] = MFrequency(Quantity(345.0,"GHz"));
+  returnFluxes[0].resize(2);
+  returnFluxErrs[0].resize(2);
+};
+
+void TwoChanSpwFluxValTest::TearDown()
+{
+  delete cl;
+  if (tempCLs[0] != ""){
+        if(Table::canDeleteTable(tempCLs[0]))
+          Table::deleteTable(tempCLs[0]);
+  }
+};
+
+//torelance  (%)
+Double tol = 1e-5;
 
 // Parameters to be tested
 // src list
@@ -158,21 +197,21 @@ INSTANTIATE_TEST_CASE_P(checkFlux, SingleChanSpwFluxValTest, ::testing::ValuesIn
 TEST_P(SingleChanSpwFluxValTest, checkFlux)
 {
   // calc values were checked against calculation against a python script to be consistent at the tolerance level of  
-  Double tol = 1.0e-5;
+  //Double tol = 1.0e-5;
   if (ephemExists()) {
      //cerr<<"OK ephem data exists! ephemDataFullPath="<<foundEphemPath<<endl;
      String ssobjname(GetParam());
      fluxStd.reset(new FluxStandard(expFlxStdEnum));
      fluxStd->computeCL(ssobjname, spws, mtime, fieldDir, returnFluxes, returnFluxErrs, tempCLs, "setjy_");
      // test ang diameter
-     for(uInt spwInd = 0; spwInd < spws.nelements(); spwInd++) {
-       if(spwInd == 0 ) {
+     for (uInt spwInd = 0; spwInd < spws.nelements(); spwInd++) {
+       if (spwInd == 0) {
          cl = new ComponentList(Path(tempCLs[0]));
          //cerr<<" tempCLs[0] = "<<tempCLs[0]<<endl;
          Double angDiam = ((TwoSidedShape*)(cl->getShape(0)))->majorAxisInRad();
          //cerr<<ssobjname<<": major axis="<<angDiam<<endl;
          //cerr<<" exp value ="<<expAngDiam[ssobjname]<<endl;
-         EXPECT_NEAR(expAngDiam[ssobjname], angDiam,tol); 
+         EXPECT_NEAR(expAngDiam[ssobjname], angDiam, tol); 
        }
        returnFluxes[spwInd][0].value(fluxUsed);
        //cerr<<"calculated f="<<fluxUsed[0]<<" expected="<<(expFlux[ssobjname])[spwInd]<<endl;
@@ -180,7 +219,30 @@ TEST_P(SingleChanSpwFluxValTest, checkFlux)
      } 
   }
   else {
-     cout <<" The ephemeris database does not exist in "<<foundEphemPath<<" . Skip this test"<<endl;
+     cout <<" The ephemeris database directory, "<<foundEphemPath<<" does not seem to exist. Skip this test"<<endl;
+  }
+};
+
+INSTANTIATE_TEST_CASE_P(checkTwoChanFlux, TwoChanSpwFluxValTest, ::testing::ValuesIn(srcs));
+TEST_P(TwoChanSpwFluxValTest, checkTwoChanFlux)
+{
+  String ssobjname(GetParam());
+  if (ephemExists()) {
+    //String ssobjname(GetParam());
+    fluxStd.reset(new FluxStandard(expFlxStdEnum));
+    fluxStd->computeCL(ssobjname, spws, mtime, fieldDir, returnFluxes, returnFluxErrs, tempCLs, "setjy_");
+    for (uInt spwInd = 0; spwInd < spws[0].nelements(); spwInd++) {
+      if (spwInd == 0) {
+        cl = new ComponentList(Path(tempCLs[0]));
+        Double angDiam = ((TwoSidedShape*)(cl->getShape(0)))->majorAxisInRad();
+        EXPECT_NEAR(expAngDiam[ssobjname], angDiam, tol); 
+      }
+      returnFluxes[0][spwInd].value(fluxUsed);
+      EXPECT_TRUE(fabs(fluxUsed[0]/expFlux[ssobjname][spwInd]-1.0) < tol);
+    }
+  }
+  else {
+    cout <<" The ephmeris database directory, "<<foundEphemPath<<" does not seem to exist. Skip this test"<<endl;
   }
 };
 
