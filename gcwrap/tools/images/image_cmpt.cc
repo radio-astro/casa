@@ -5523,29 +5523,41 @@ bool image::isconform(const string& other) {
 			! _imageF,
 			"This method only supports Float valued images"
 		);
+		/*
 		ImageInterface<Float> *oth = 0;
 		ImageUtilities::openImage(oth, String(other));
 		if (oth == 0) {
 			throw AipsError("Unable to open image " + other);
 		}
 		std::unique_ptr<ImageInterface<Float> > x(oth);
+		*/
+		auto mypair = ImageFactory::fromFile(other);
+		auto shape = mypair.first ? mypair.first->shape()
+			: mypair.second->shape();
+		const auto& csys = mypair.first ? mypair.first->coordinates()
+				: mypair.second->coordinates();
+
+
         SHARED_PTR<const ImageInterface<Float> > mine = _imageF;
-		if (mine->shape().isEqual(x->shape()) && mine->coordinates().near(
-				x->coordinates())) {
-			Vector<String> mc = mine->coordinates().worldAxisNames();
-			Vector<String> oc = x->coordinates().worldAxisNames();
-			if (mc.size() != oc.size()) {
+		if (
+			_imageF->shape().isEqual(shape)
+			&& _imageF->coordinates().near(csys)
+		) {
+			auto axisnames = csys.worldAxisNames();
+			Vector<String> mc = _imageF->coordinates().worldAxisNames();
+			if (mc.size() != axisnames.size()) {
 				return False;
 			}
-			for (uInt i = 0; i < mc.size(); i++) {
-				if (mc[i] != oc[i]) {
+			for (uInt i = 0; i < mc.size(); ++i) {
+				if (mc[i] != axisnames[i]) {
 					return False;
 				}
 			}
 			return True;
 		}
 		return False;
-	} catch (const AipsError& x) {
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
