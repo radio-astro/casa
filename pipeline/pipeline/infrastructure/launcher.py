@@ -284,7 +284,12 @@ class Pipeline(object):
         src = casatools.log.logfile()
         dst = os.path.join(report_dir, os.path.basename(src))
         if not os.path.exists(dst):
-            os.link(src, dst)
+            try:
+                os.link(src, dst)
+            except OSError:
+                LOG.error('Error creating hard link to CASA log')
+                LOG.warning('Reverting to symbolic link to CASA log. This is unsupported!')
+                os.symlink(src, dst)
 
         # the web log creates links to each casa log. The name of each CASA
         # log is appended to the context.
