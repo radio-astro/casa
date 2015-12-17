@@ -83,10 +83,14 @@ def _get_tasks(context, args, procedure='procedure_hifa.xml'):
     
     for processingcommand in processingprocedure.findall('ProcessingCommand'):
         cli_command = processingcommand.findtext('Command')
+
+        if cli_command == 'breakpoint':
+            continue
+
         task_class = _get_task_class(cli_command)
 
         task_args = {}
-        
+
         if cli_command in ['hif_importdata',
                            'hifa_importdata',
                            'hif_restoredata',
