@@ -54,8 +54,8 @@ template <class T> ImageTask<T>::ImageTask(
 	_chan(chanInp), _stokesString(stokes), _mask(maskInp),
 	_outname(outname), _overwrite(overwrite), _stretch(False),
 	_logfile() {
-    FITSImage::registerOpenFunction();
-    MIRIADImage::registerOpenFunction();
+   // FITSImage::registerOpenFunction();
+   //  MIRIADImage::registerOpenFunction();
 }
 
 template <class T> ImageTask<T>::ImageTask(
@@ -65,8 +65,8 @@ template <class T> ImageTask<T>::ImageTask(
 ) : _image(image), _regionPtr(regionPtr),
 	_region(), _box(), _chan(), _stokesString(), _mask(mask),
 	_outname(outname), _overwrite(overwrite) {
-	FITSImage::registerOpenFunction();
-	MIRIADImage::registerOpenFunction();
+	//FITSImage::registerOpenFunction();
+	//MIRIADImage::registerOpenFunction();
 }
 
 template <class T> ImageTask<T>::~ImageTask() {}

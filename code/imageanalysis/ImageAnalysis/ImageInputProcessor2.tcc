@@ -31,15 +31,16 @@
 #include <casa/iostream.h>
 
 #include <images/Images/FITSImage.h>
-#include <images/Images/ImageUtilities.h>
+//#include <images/Images/ImageUtilities.h>
 #include <images/Images/MIRIADImage.h>
 #include <images/Regions/WCBox.h>
 #include <imageanalysis/ImageAnalysis/ImageMetaData.h>
+#include <imageanalysis/IO/CasaImageOpener.h>
 
 #include <measures/Measures/Stokes.h>
 
 namespace casa {
-
+/*
 template<class T> void ImageInputProcessor::process(
 	SPIIT image, Record& regionRecord,
 	String& diagnostics, vector<OutputDestinationChecker::OutputStruct> *outputStruct,
@@ -56,13 +57,13 @@ template<class T> void ImageInputProcessor::process(
         "imagename cannot be blank"
     );
     // Register the functions to create a FITSImage or MIRIADImage object.
-    FITSImage::registerOpenFunction();
-    MIRIADImage::registerOpenFunction();
-    ImageInterface<Float> *imagePtr = 0;
-    ImageUtilities::openImage(imagePtr, imagename);
+    //FITSImage::registerOpenFunction();
+    //MIRIADImage::registerOpenFunction();
+    //ImageInterface<Float> *imagePtr = nullptr;
+    //ImageUtilities::openImage(imagePtr, imagename);
+    auto imagePtr = CasaImageOpener::openImage(imagename);
     ThrowIf(
-    	imagePtr == 0,
-    	"Unable to open image " + imagename
+    	! imagePtr, "Unable to open image " + imagename
     );
     image.reset(imagePtr);
 	_process(
@@ -71,7 +72,7 @@ template<class T> void ImageInputProcessor::process(
 		allowMultipleBoxes, requiredCoordinateTypes, verbose
 	);
 }
-
+*/
 template<class T> void ImageInputProcessor::process(
 	Record& regionRecord, String& diagnostics,
 	std::vector<OutputDestinationChecker::OutputStruct> * const outputStruct, String& stokes,

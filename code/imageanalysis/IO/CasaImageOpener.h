@@ -51,21 +51,21 @@ class LatticeExprNode;
 // </synopsis>
 //
 
-
-
-class CasaImageOpener : public ImageOpener
-{
+class CasaImageOpener : public ImageOpener {
 public:
 
-  // Return the type of an image with the given name.  Will throw an
-  // exception if file does not exist.
-  static ImageTypes imageType (const String& fileName);
-  static LatticeBase* openImage (const String& fileName,
-				 const MaskSpecifier& spec=MaskSpecifier());
- 
+	// Return the type of an image with the given name.  Will throw an
+	// exception if file does not exist.
+	static ImageTypes imageType (const String& fileName);
+	static LatticeBase* openImage (
+		const String& fileName, const MaskSpecifier& spec=MaskSpecifier()
+	);
 
 private:
 
+	static Bool _openFuncsRegistered;
+
+	static void _registerOpenFuncs();
 };
 
 

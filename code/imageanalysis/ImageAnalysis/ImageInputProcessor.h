@@ -75,6 +75,7 @@ public:
 	// the inputs specify multiple n-dimensional rectangles. This should usually
 	// be set to false if the caller can only deal with a single n-dimensional
 	// rectangular region.
+    /*
     template<class T> void process(
     	SPIIT image, Record& regionRecord,
     	String& diagnostics,
@@ -87,7 +88,7 @@ public:
     	const std::vector<Coordinate::Type> *const &requiredCoordinateTypes,
     	Bool verbose=True
     );
-
+*/
 	// Process the inputs. Use this version if the associated image already exists.
     // Output parameters the specified region as a record (<src>
 	// regionRecord</src>, and a <src>diagnostics</src> String describing

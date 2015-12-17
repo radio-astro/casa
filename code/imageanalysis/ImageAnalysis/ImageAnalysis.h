@@ -72,10 +72,13 @@ public:
 
     virtual ~ImageAnalysis();
 
+    /*
     inline static String className() {const static String x = "ImageAnalysis"; return x; }
 
     // get the associated ImageInterface object
+    */
     SPCIIF getImage() const;
+    /*
     SPIIF getImage();
 
     SPCIIC getComplexImage() const;
@@ -83,7 +86,7 @@ public:
     SPIIC getComplexImage();
 
     Bool isFloat() const { return _imageFloat ? true : false; }
-
+*/
  private:
     SPIIF _imageFloat;
     SPIIC _imageComplex;

@@ -97,7 +97,7 @@ ImageAnalysis::~ImageAnalysis() {
 	}
 	//deleteHist();
 }
-
+/*
 SPCIIC ImageAnalysis::getComplexImage() const {
 	ThrowIf(
 		_imageFloat,
@@ -136,7 +136,7 @@ SPIIF ImageAnalysis::getImage() {
 	);
 	return _imageFloat;
 }
-
+*/
 SPCIIF ImageAnalysis::getImage() const {
 	ThrowIf(
 		_imageComplex,
@@ -149,9 +149,9 @@ SPCIIF ImageAnalysis::getImage() const {
 	);
 	return _imageFloat;
 }
-
+/*
 void ImageAnalysis::_onlyFloat(const String& method) const {
 	ThrowIf(! _imageFloat, "Method " + method + " only supports Float valued images");
 }
-
+*/
 }

@@ -23,6 +23,8 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+#include <imageanalysis/IO/CasaImageOpener.h>
+
 #include <casa/OS/Directory.h>
 #include <casa/OS/File.h>
 #include <casa/OS/DirectoryIterator.h>
@@ -30,7 +32,8 @@
 #include <casa/IO/MemoryIO.h>
 #include <casa/IO/RawIO.h>
 #include <images/Images/ImageConcat.h>
-#include <imageanalysis/IO/CasaImageOpener.h>
+#include <images/Images/FITSImage.h>
+#include <images/Images/MIRIADImage.h>
 #include <tables/Tables/Table.h>
 
 namespace casa{
@@ -55,6 +58,7 @@ ImageOpener::ImageTypes CasaImageOpener::imageType (const String& name){
 LatticeBase* CasaImageOpener::openImage (
 	const String& fileName, const MaskSpecifier& spec
 ) {
+	_registerOpenFuncs();
 	if (fileName.empty()) {
 		return nullptr;
 	}
@@ -129,6 +133,16 @@ LatticeBase* CasaImageOpener::openImage (
     	retval = ImageOpener::openImage(fileName, spec);
     }
     return retval;
+}
+
+Bool CasaImageOpener::_openFuncsRegistered = False;
+
+void CasaImageOpener::_registerOpenFuncs() {
+	if (! _openFuncsRegistered) {
+		FITSImage::registerOpenFunction();
+		MIRIADImage::registerOpenFunction();
+		_openFuncsRegistered = True;
+	}
 }
 
 }
