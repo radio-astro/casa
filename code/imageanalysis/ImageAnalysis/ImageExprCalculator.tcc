@@ -7,6 +7,7 @@
 #include <images/Images/ImageProxy.h>
 
 #include <imageanalysis/ImageTypedefs.h>
+#include <imageanalysis/ImageAnalysis/ImageFactory.h>
 #include <imageanalysis/ImageAnalysis/PixelValueManipulator.h>
 
 using namespace std;
@@ -66,7 +67,6 @@ template<class T> SPIIT ImageExprCalculator<T>::compute() const {
 	return computedImage;
 }
 
-
 template<class T> void ImageExprCalculator<T>::compute2(
 	SPIIT image, const String& expr, Bool verbose
 ) {
@@ -96,7 +96,6 @@ template<class T> void ImageExprCalculator<T>::compute2(
         "Resulting image is complex valued but"
         "the attached image is real valued"
     );
-    //PixelValueManipulator<T>::makeRegionBlock(tempRegs, Record());
     if (verbose) {
         log << LogIO::WARN << "Overwriting pixel values "
             << "of the currently attached image"
@@ -104,7 +103,6 @@ template<class T> void ImageExprCalculator<T>::compute2(
     }
     _calc(image, node);
 }
-
 
 template<class T> void ImageExprCalculator<T>::_calc(
     SHARED_PTR<ImageInterface<T> > image,
@@ -239,16 +237,27 @@ template<class T> SPIIT ImageExprCalculator<T>::_imagecalc(
 	}
 
 	// Copy miscellaneous stuff over
-	SPIIT copyFromImage;
+    auto copied = False;
+    Unit unit;
 	if (! _copyMetaDataFromImage.empty()) {
-		copyFromImage = ImageUtilities::openImage<T>(_copyMetaDataFromImage);
+        auto mypair = ImageFactory::fromFile(_copyMetaDataFromImage);
+        if (mypair.first || mypair.second) {
+            if (mypair.first) {
+                image->setMiscInfo(mypair.first->miscInfo());
+		        image->setImageInfo(mypair.first->imageInfo());
+		        image->setCoordinateInfo(mypair.first->coordinates());
+		        unit = mypair.first->units();
+            } 
+            else {
+                image->setMiscInfo(mypair.second->miscInfo());
+		        image->setImageInfo(mypair.second->imageInfo());
+		        image->setCoordinateInfo(mypair.second->coordinates());
+		        unit = mypair.second->units();
+            }
+            copied = True;
+        }
 	}
-	if (copyFromImage) {
-		image->setMiscInfo(copyFromImage->miscInfo());
-		image->setImageInfo(copyFromImage->imageInfo());
-		image->setCoordinateInfo(copyFromImage->coordinates());
-	}
-	else {
+    if (! copied) {
 		image->setMiscInfo(imCoord->miscInfo());
 		image->setImageInfo(imCoord->imageInfo());
 	}
@@ -266,12 +275,7 @@ template<class T> SPIIT ImageExprCalculator<T>::_imagecalc(
 		image->setCoordinateInfo(cSys);
 	}
 	else {
-		if (copyFromImage) {
-			image->setUnits(copyFromImage->units());
-		}
-		else {
-			image->setUnits(imCoord->unit());
-		}
+		image->setUnits(copied ? unit : imCoord->unit());
 	}
 	return image;
 }
