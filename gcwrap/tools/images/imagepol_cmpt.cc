@@ -19,6 +19,8 @@
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/ImageExpr.h>
 #include <imageanalysis/ImageAnalysis/ImagePolProxy.h>
+#include <imageanalysis/ImageAnalysis/ImageFactory.h>
+
 #include <casa/namespace.h>
 
 using namespace std;
@@ -60,9 +62,11 @@ imagepol::open(const variant& image){
 			itsImPol= new ImagePol(tmpim);
 		}
 		else if(image.type()== variant::STRING) {
-			PtrHolder<ImageInterface<Float> > im;
-			ImageUtilities::openImage(im, toCasaString(image));
-			itsImPol= new ImagePol(*im);
+			//PtrHolder<ImageInterface<Float> > im;
+			//ImageUtilities::openImage(im, toCasaString(image));
+			auto im = ImageFactory::fromFile(toCasaString(image));
+			ThrowIf(im.second, "Can only open real-valued images");
+			itsImPol= new ImagePol(*im.first);
 		}
 		else {
 			*itsLog << "Unsupported type for image input" << LogIO::EXCEPTION;
