@@ -106,9 +106,11 @@ class ImageNACleaner
   //        subtracted at every iteration)
   // aThreshold - absolute threshold to stop iterations
   // masksupport is +-number of pixel around a peak to remember
+  // memtype is memory function to use 0- no memory standard clean, 1 weak memory, 2 medium, 3 strong
+  // numsigma: keep memory of position if peak is above this value 
   void setcontrol(const Int niter,
 		  const Float gain, const Quantity& aThreshold,
-		  const Int masksupp=3);
+		  const Int masksupp=3, const Int memtype=2, const Float numSigma=5.0);
   
   
   // return how many iterations we did do
@@ -127,7 +129,7 @@ class ImageNACleaner
   // -3 = clean is diverging rather than converging 
   Int clean(ImageInterface<Float> & model, 
 	    const Int niter, const Float gain, const Quantity& threshold, const Int masksupp=3,
-	    Bool doPlotProgress=False);
+	    const Int memType=2, const Float numsigma=5.0);
   // Set the mask
   // mask - input mask lattice
   // This is where the algorithm searched...the value of the mask shows the weight 
@@ -140,7 +142,7 @@ class ImageNACleaner
  private:
   //Helper function to setup some param
   Bool setupMatCleaner(const Int niter, const Float gain, 
-		       const Quantity& threshold, const Int supp=3);
+		       const Quantity& threshold, const Int supp=3, const Int memType=2, const Float numsigma=5.0);
   MatrixNACleaner matClean_p;
   CountedPtr<ImageInterface<Float> > psf_p;
   CountedPtr<ImageInterface<Float> >dirty_p;

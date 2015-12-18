@@ -122,8 +122,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   void ImageNACleaner::setcontrol(const Int niter,
 		  const Float gain, const Quantity& aThreshold,
-				  const Int supp){
-    matClean_p.setcontrol(niter, gain, aThreshold, supp);
+				  const Int supp, const Int memtype, const Float numsigma){
+    matClean_p.setcontrol(niter, gain, aThreshold, supp, memtype, numsigma);
   }
   
   Int ImageNACleaner::iteration() const{
@@ -158,11 +158,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
 
   Bool ImageNACleaner::setupMatCleaner(const Int niter,
-				       const Float gain, const Quantity& threshold, const Int masksupp){
+				       const Float gain, const Quantity& threshold, const Int masksupp, const Int memType, const Float numsigma){
 
     LogIO os(LogOrigin("ImageNACleaner", "setupMatCleaner()", WHERE));
     
-    matClean_p.setcontrol(niter, gain, threshold, masksupp);
+    matClean_p.setcontrol(niter, gain, threshold, masksupp, memType, numsigma);
     
    
     return True;
@@ -170,7 +170,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   Int ImageNACleaner::clean(ImageInterface<Float> & modelimage, 
 			    const Int niter,
-			    const Float gain, const Quantity& threshold,  const Int masksupp, Bool /*doPlotProgress*/){
+			    const Float gain, const Quantity& threshold,  const Int masksupp, const Int memType, const Float numSigma){
 
 
     
@@ -179,7 +179,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int result=0;
     ///case of single plane mask
     //now may be a time to set stuff  scales will be done later
-    if(!setupMatCleaner(niter, gain, threshold, masksupp))
+    if(!setupMatCleaner(niter, gain, threshold, masksupp, memType, numSigma))
       return False;
     //cerr << "nPol " << nMaskPol_p << " " << nPsfPol_p << " " << nImPol_p << endl;
     //cerr << "nChan " << nMaskChan_p << " " << nPsfChan_p << " " << nImChan_p << endl;

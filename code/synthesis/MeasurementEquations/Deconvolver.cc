@@ -1250,7 +1250,7 @@ Bool Deconvolver::clean(const String& algorithm, const Int niter,
 
 Bool Deconvolver::naclean(const Int niter,
 			const Float gain, const Quantity& threshold, 
-			  const String& model, const String& maskname, const Int masksupp, Float& maxResidual, Int& iterationsDone)
+			  const String& model, const String& maskname, const Int masksupp, const Int memType, const Float numSigma, Float& maxResidual, Int& iterationsDone)
 {
   
   if(!valid()) return False;
@@ -1305,7 +1305,7 @@ Bool Deconvolver::naclean(const Int niter,
     
     Bool result=False;
 
-    result=naCleaner_p->clean(modelImage, niter, gain, threshold, masksupp, False);
+    result=naCleaner_p->clean(modelImage, niter, gain, threshold, masksupp, memType, numSigma);
     maxResidual=cleaner_p->maxResidual();
     iterationsDone=cleaner_p->iteration();
     dirty_p->table().relinquishAutoLocks(True);

@@ -93,7 +93,7 @@ public:
   MatrixNACleaner();
 
   // Create a cleaner for a specific dirty image and PSF
-  MatrixNACleaner(const Matrix<Float> & psf, const Matrix<Float> & dirty, const Int memtype=2);
+  MatrixNACleaner(const Matrix<Float> & psf, const Matrix<Float> & dirty, const Int memtype=2, const Float numSigma=5.0);
 
   // The copy constructor uses reference semantics
   MatrixNACleaner(const MatrixNACleaner& other);
@@ -126,7 +126,7 @@ public:
   // aThreshold - absolute threshold to stop iterations
  
   void setcontrol(const Int niter,
-		  const Float gain, const Quantity& aThresho, const Int masksupport=3 );
+		  const Float gain, const Quantity& aThresho, const Int masksupport=3 , const Int memType=2, const Float numsigma=5.0);
 
  
 
@@ -205,10 +205,10 @@ private:
   std::shared_ptr<Matrix<Float> >itsResidual;
   std::shared_ptr<Matrix<Bool> > itsBitPix;
 
-  Float f(const Float& val);
-
- 
-  
+  Float amnesiac(const Float& val);
+  Float weak(const Float& v);
+  Float medium(const Float& v);
+  Float strong(const Float& v);
 
   Float itsMaximumResidual;
   Int itsIteration;	// what iteration did we get to?
@@ -218,8 +218,9 @@ private:
   IPosition psfShape_p;
   IPosition itsPositionPeakPsf;
   Float itsRms;
-  Int typeOfMemory_p;  //0 nomemory, 1 light, 2 medium, 3 strong
-
+  Int typeOfMemory_p;  //0 nomemory, 1 weak, 2 medium, 3 strong
+  Float numSigma_p;
+  std::function<Float(const Float&)> f_p;
 };
 
 } //# NAMESPACE CASA - END

@@ -187,7 +187,7 @@ public:
 	     Int& iterationsDone );
   Bool naclean(const Int niter,
 			const Float gain, const Quantity& threshold, 
-	       const String& model, const String& mask, const Int masksupp, Float& maxResidual, Int& iterationsDone) ;
+	       const String& model, const String& mask, const Int masksupp, const Int memoryType, const Float numSigma, Float& maxResidual, Int& iterationsDone) ;
 
   //Clark Clean but image, psf, mask has to be 4-axes in the canonical casa order.
   //Useful for cleaning dirty images made in CASA

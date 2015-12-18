@@ -79,7 +79,8 @@ MatrixNACleaner::MatrixNACleaner():
   psfShape_p(0),
   itsPositionPeakPsf(0),
   itsRms(0.0),
-  typeOfMemory_p(2)
+  typeOfMemory_p(2),
+  numSigma_p(5.0)
 {
   
  
@@ -88,8 +89,8 @@ MatrixNACleaner::MatrixNACleaner():
  
 
 MatrixNACleaner::MatrixNACleaner(const Matrix<Float> & psf,
-				 const Matrix<Float> &dirty, const Int memType):
-  itsBitPix( ), itsSupport(3), itsRms(0.0),typeOfMemory_p(memType)
+				 const Matrix<Float> &dirty, const Int memType, const Float  numSigma):
+  itsBitPix( ), itsSupport(3), itsRms(0.0),typeOfMemory_p(memType), numSigma_p(numSigma)
 {
   psfShape_p.resize(0, False);
   psfShape_p=psf.shape();
@@ -154,6 +155,7 @@ MatrixNACleaner & MatrixNACleaner::operator=(const MatrixNACleaner & other) {
     psfShape_p=other.psfShape_p;
     itsSupport=other.itsSupport;
     itsRms=other.itsRms;
+    typeOfMemory_p=other.typeOfMemory_p;
     
   }
   return *this;
@@ -199,13 +201,15 @@ void MatrixNACleaner::setcontrol(
 				   const Int niter,
 				   const Float gain,
 				   const Quantity& aThreshold,
-				   const Int masksupp)
+				   const Int masksupp, const Int memType, const Float numSigma)
 {
   
   itsMaxNiter=niter;
   itsGain=gain;
   itsThreshold=aThreshold;
   itsSupport=masksupp;
+  typeOfMemory_p=memType;
+  numSigma_p=numSigma;
   
 }
 
@@ -220,7 +224,14 @@ Int MatrixNACleaner::clean(Matrix<Float>& model)
   LogIO os(LogOrigin("MatrixCleaner", "clean()", WHERE));
 
 
- 
+  if(typeOfMemory_p==0)
+    f_p=std::bind(&MatrixNACleaner::amnesiac, this, std::placeholders::_1);
+  else if(typeOfMemory_p==1)
+    f_p=std::bind(&MatrixNACleaner::weak, this, std::placeholders::_1);
+  else if(typeOfMemory_p==3)
+    f_p=std::bind(&MatrixNACleaner::strong, this, std::placeholders::_1);
+  else
+    f_p=std::bind(&MatrixNACleaner::medium, this, std::placeholders::_1);
   Int converged=0;
       
    if(!itsBitPix){
@@ -296,11 +307,11 @@ Int MatrixNACleaner::clean(Matrix<Float>& model)
       }
       if ((itsIteration % (itsMaxNiter/10 > 0 ? itsMaxNiter/10 : 1)) == 0) {
 	//Good time to redo rms if necessary
-	if(abs(maxima) >  4*itsRms){
+	if(abs(maxima) >  3*itsRms){
 	  if(!itsBitPix){
 	    itsRms=rms(*itsResidual);
 	  }else{
-	    rms(MaskedArray<Float>(*itsResidual, *itsBitPix));
+	    itsRms=rms(MaskedArray<Float>(*itsResidual, *itsBitPix));
 	  }
 	}
 	os << itsIteration <<"      "<< maxima<<"      "
@@ -407,7 +418,7 @@ Bool MatrixNACleaner::findMaxAbsMask(const Matrix<Float>& lattice,
    stop modifying mask when peak reaches 5 (or user settable) sigma
    
    f(p) is a memory function...f(p)=1 implies no memory or normal clean
-   right now we are using f(p)=p
+   default right now we are using f(p)=p
     a weak memory can be f(p)=1+ k*p  ( k << 1)  or p ^0.1
     a strong memory can be f(p)=p^2
    */
@@ -441,13 +452,13 @@ Bool MatrixNACleaner::findMaxAbsMask(const Matrix<Float>& lattice,
   peakval=maxValRes;
   Int nx=lattice.shape()(0);
   Int ny=lattice.shape()(1);
-  if(peakval > 5*itsRms){
+  if(peakval > numSigma_p*itsRms){
     for (Int y=-support; y < support+1; ++y){
       if(((posPeak[1]+y) >=0) && ((posPeak[1]+y) < ny)){
 	for(Int x=-support; x < support+1; ++x){
 	  if(((posPeak[0]+x) >=0) && ((posPeak[0]+x) < nx))
-	    if(mask(x+posPeak[0], y+posPeak[1]) < f(peakval))
-	      mask(x+posPeak[0], y+posPeak[1])=f(peakval);
+	    if(mask(x+posPeak[0], y+posPeak[1]) < f_p(peakval))
+	      mask(x+posPeak[0], y+posPeak[1])=f_p(peakval);
 	}
       }
     }
@@ -458,10 +469,20 @@ Bool MatrixNACleaner::findMaxAbsMask(const Matrix<Float>& lattice,
 
   return True;
 }
+  Float  MatrixNACleaner::amnesiac(const Float& ){
+    return 1.0;
+  }
 
-  Float MatrixNACleaner::f(const Float& v){
+  Float MatrixNACleaner::weak(const Float& v){
+    return 1.0+0.1*v;
+  }
+
+  Float MatrixNACleaner::medium(const Float& v){
     return v;
 
+  }
+  Float MatrixNACleaner::strong(const Float& v){
+    return v*v;
   }
 
 
