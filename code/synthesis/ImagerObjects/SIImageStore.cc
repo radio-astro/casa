@@ -904,7 +904,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     if( resetpsf ) psf()->set(0.0);
     if( resetresidual ) {
-      removeMask( residual() );
+      //      removeMask( residual() );
       residual()->set(0.0);
     }
     if( resetweight && itsWeight ) weight()->set(0.0);
@@ -1049,16 +1049,22 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 				CountedPtr<ImageInterface<Float> > outimage)
   {
     //cout << "Calling makeMask for mask0 for " << outimage->name() << endl;
-    ImageRegion outreg = outimage->makeMask("mask0",False,True);
-    LCRegion& outmask=outreg.asMask();
-    outmask.copyData(lemask);
-    outimage->defineRegion("mask0",outreg, RegionHandler::Masks, True);
-    outimage->setDefaultMask("mask0");
-
-    outimage->unlock();
-    outimage->tempClose();
-
-    //    outimage->table().unmarkForDelete();      
+    try
+      {
+	ImageRegion outreg = outimage->makeMask("mask0",False,True);
+	LCRegion& outmask=outreg.asMask();
+	outmask.copyData(lemask);
+	outimage->defineRegion("mask0",outreg, RegionHandler::Masks, True);
+	outimage->setDefaultMask("mask0");
+	
+	outimage->unlock();
+	outimage->tempClose();
+	
+	//    outimage->table().unmarkForDelete();      
+      }
+    catch (const AipsError& x) {
+      throw(AipsError("Error in creating internal T/F mask : " + x.getMesg() ));
+    }
 
     return True;
   }
@@ -1066,33 +1072,50 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
   Bool SIImageStore::copyMask(CountedPtr<ImageInterface<Float> > inimage,
 				CountedPtr<ImageInterface<Float> > outimage)
   {
-    if( (inimage->getDefaultMask()).matches("mask0") ) // input mask exists.
-      {
-	removeMask(outimage);
+    //    cout << "In copyMask for " << outimage->name() << endl;
 
-	// clear output image mask
-		if( (outimage->getDefaultMask()).matches("mask0") ) 
-		  {outimage->setDefaultMask(""); 
-		    outimage->removeRegion("mask0");}
-	// get mask from input image
-		
-		ImageRegion outreg=outimage->makeMask("mask0", False, True);
-		LCRegion& outmask=outreg.asMask();
-		outmask.copyData(inimage->getRegion("mask0").asLCRegion());
-		outimage->defineRegion("mask0",outreg, RegionHandler::Masks,True);
-		outimage->setDefaultMask("mask0");
+    try
+      {
+	if( (inimage->getDefaultMask()).matches("mask0") ) // input mask exists.
+	  {
+	    removeMask(outimage);
+	    
+	    // clear output image mask
+	    if( (outimage->getDefaultMask()).matches("mask0") ) 
+	      {outimage->setDefaultMask(""); 
+		outimage->removeRegion("mask0");}
+	    // get mask from input image
+	    
+	    ImageRegion outreg=outimage->makeMask("mask0", False, True);
+	    LCRegion& outmask=outreg.asMask();
+	    outmask.copyData(inimage->getRegion("mask0").asLCRegion());
+	    outimage->defineRegion("mask0",outreg, RegionHandler::Masks,True);
+	    outimage->setDefaultMask("mask0");
+	  }
       }
+    catch (const AipsError& x) {
+      throw(AipsError("Error in copying internal T/F mask : " + x.getMesg() ));
+    }
     return True;
   }
-
+  
   void SIImageStore::removeMask(CountedPtr<ImageInterface<Float> > im)
   {
+    try
+      {
 	///Remove the old mask as it is no longer valid
 	if (im-> getDefaultMask() != String("")){
 	  String strung=im->getDefaultMask();
 	  im->setDefaultMask("");
 	  im->removeRegion(strung);
 	} 
+	if( im->hasRegion("mask0") )
+	  {	  im->removeRegion("mask0"); }
+	
+      }
+    catch (const AipsError& x) {
+      throw(AipsError("Error in deleting internal T/F mask : " + x.getMesg() ));
+    }
   } 
   void SIImageStore:: rescaleResolution(Int chan, 
 					ImageInterface<Float>& image, 
@@ -1200,8 +1223,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
   void SIImageStore::divideResidualByWeight(Float pblimit,String normtype)
   {
     LogIO os( LogOrigin("SIImageStore","divideResidualByWeight",WHERE) );
-   
-
+    
     // Normalize by the sumwt, per plane. 
     Bool didNorm = divideImageByWeightVal( *residual() );
     
