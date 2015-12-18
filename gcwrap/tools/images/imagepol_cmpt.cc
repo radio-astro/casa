@@ -405,7 +405,7 @@ imagepol::pol(const std::string& which, const bool debias, const double clip, co
 }
 
 bool
-imagepol::rotationmeasure(const std::string& rm, const std::string& rmerr, const std::string& pa0, const std::string& pa0err, const std::string& nturns, const std::string& chisq, const double sigma, const double rmfq, const double rmmax, const double maxpaerr, const std::string& plotter, const int nx, const int ny)
+imagepol::rotationmeasure(const std::string& rm, const std::string& rmerr, const std::string& pa0, const std::string& pa0err, const std::string& nturns, const std::string& chisq, const double sigma, const double rmfq, const double rmmax, const double maxpaerr, const std::string& , const int , const int )
 {
   bool rstat(false);
   try{
@@ -419,8 +419,8 @@ imagepol::rotationmeasure(const std::string& rm, const std::string& rmerr, const
 			      String(pa0), String(pa0err),
 			      String(nturns), String(chisq),
 			      -1, Float(sigma), Float(rmfq),
-			      Float(rmmax), Float(maxpaerr),
-			      String(plotter), nx, ny);
+			      Float(rmmax), Float(maxpaerr)/*,
+			      String(plotter), nx, ny*/);
     rstat = true;
   } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
