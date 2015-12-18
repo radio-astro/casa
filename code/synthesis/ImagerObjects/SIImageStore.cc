@@ -904,7 +904,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     if( resetpsf ) psf()->set(0.0);
     if( resetresidual ) {
-      removeMask( residual() );
+      //removeMask( residual() );
       residual()->set(0.0);
     }
     if( resetweight && itsWeight ) weight()->set(0.0);
