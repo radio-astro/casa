@@ -31,16 +31,8 @@
 
 #include <casa/aips.h>
 
-//#include <casa/Quanta/QuantumHolder.h>
 #include <images/Images/ImageSummary.h>
-//#include <images/Images/ImageStatistics.h>
-//#include <measures/Measures/MeasureHolder.h>
-//#include <casa/Utilities/DataType.h>
 
-//#include <iostream>
-//#include <iomanip>
-
-//#include <boost/regex.hpp>
 
 namespace casa {
 template<class T> Record ImageMetaData::_summary(

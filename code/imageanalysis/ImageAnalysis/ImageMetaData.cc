@@ -38,8 +38,6 @@
 #include <iostream>
 #include <iomanip>
 
-#include <boost/regex.hpp>
-
 namespace casa {
 
 ImageMetaData::ImageMetaData(

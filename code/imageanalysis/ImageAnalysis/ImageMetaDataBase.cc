@@ -41,8 +41,6 @@
 #include <iomanip>
 //#include <memory>
 
-#include <boost/regex.hpp>
-
 #define _ORIGINB LogOrigin("ImageMetaDataBase", __FUNCTION__, WHERE)
 
 using namespace std;
@@ -448,23 +446,24 @@ uInt ImageMetaDataBase::_getAxisNumber(
 ) const {
 	uInt n = 0;
 	string sre = key.substr(0, 5) + "[0-9]+";
-	boost::regex re;
-	re.assign(sre, boost::regex_constants::icase);
-	if (boost::regex_match(key, re)) {
+	Regex myre(Regex::makeCaseInsensitive(sre));
+	if (key.find(myre) != String::npos) {
 		n = String::toInt(key.substr(5));
 		uInt ndim = _ndim();
-		if (n == 0) {
-			_log << _ORIGINB << "The FITS convention is that axes "
-				<< "are 1-based. Therefore, " << key << " is not a valid "
-				<< "FITS keyword specification" << LogIO::EXCEPTION;
-		}
-		else if (n > ndim) {
-			_log << _ORIGINB << "This image only has " << ndim
-				<< " axes." << LogIO::EXCEPTION;
-		}
+		ThrowIf(
+			n == 0,
+			"The FITS convention is that axes "
+			"are 1-based. Therefore, " + key + " is not a valid "
+			"FITS keyword specification"
+		);
+		ThrowIf(
+			n > ndim,
+			"This image only has " + String::toString(ndim)
+			+ " axes."
+		);
 	}
 	else {
-		_log << "Unsupported key " << key << LogIO::EXCEPTION;
+		ThrowCc("Unsupported key " + key);
 	}
 	return n;
 }

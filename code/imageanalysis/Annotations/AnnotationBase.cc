@@ -78,7 +78,7 @@ map<String, AnnotationBase::LineStyle> AnnotationBase::_lineStyleMap;
 map<string, AnnotationBase::RGB> AnnotationBase::_colors;
 map<AnnotationBase::RGB, string> AnnotationBase::_rgbNameMap;
 
-const boost::regex AnnotationBase::rgbHexRegex("([0-9]|[a-f]){6}");
+const Regex AnnotationBase::rgbHexRegex("([0-9]|[a-f]){6}");
 
 
 AnnotationBase::AnnotationBase(
@@ -621,7 +621,7 @@ AnnotationBase::RGB AnnotationBase::_colorStringToRGB(const String& s) {
     if (_colors.find(c) != _colors.end()) {
     	return _colors.find(c)->second;
     }
-    else if (boost::regex_match(c.c_str(), rgbHexRegex)) {
+    else if (c.find(rgbHexRegex) != String::npos) {
     	RGB rgb(3);
     	for (uInt i=0; i<3; i++) {
     		String comp = s.substr(2*i, 2);
