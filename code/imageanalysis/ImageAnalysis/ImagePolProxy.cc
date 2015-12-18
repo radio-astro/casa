@@ -774,9 +774,9 @@ namespace casa { //# name space casa begins
 		       const String& outPA0, const String& outPA0Err,
 		       const String& outNTurns, const String& outChiSq,
 		       Int axis2, Float sigmaQU, Float rmFg,
-		       Float rmMax, Float maxPaErr,
+		       Float rmMax, Float maxPaErr/*,
 		       const String& plotter,
-		       Int nx, Int ny) {
+		       Int nx, Int ny*/) {
 
     *itsLog << LogOrigin("imagepol", __FUNCTION__);
     if(itsImPol==0){

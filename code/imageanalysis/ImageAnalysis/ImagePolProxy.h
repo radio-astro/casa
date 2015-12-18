@@ -158,9 +158,9 @@ class ImagePol
 		       const String& outNTurns = "",
 		       const String& outChiSq = "",
 		       Int axis = -1, Float varQU = -1, Float rmFg = 0.0,
-		       Float rmMax = 0.0, Float maxPaErr = 1e30,
+		       Float rmMax = 0.0, Float maxPaErr = 1e30/*,
 		       const String& plotter = "",
-		       Int nx = 5, Int ny = 5);
+		       Int nx = 5, Int ny = 5*/);
 
   // Make a complex image
   void makeComplex (const String& complex, const String& real = "",
