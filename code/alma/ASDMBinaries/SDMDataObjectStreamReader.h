@@ -182,12 +182,28 @@ namespace asdmbinaries {
     CorrelatorType correlatorType() const;
 
     /**
+     * Returns true if the binary data are all packed in one subset or distributed in a sequence 
+     * of subsets (supposedly) along the time axis.
+     *
+     * @return a boolean
+     */
+    bool hasPackedData() const;
+
+    /**
      * Returns true if the data are total power data and false otherwise.
      * @return a bool.
      *
      * @note data are considered as total power data if CorrelationMode == AUTO_ONLY && SpectralResolutionType == BASEBAND_WIDE.
      */
     bool isTP() const ;
+
+    /**
+     * Returns true if the data are WVR data and false otherwise.
+     * @return a bool.
+     *
+     * @note data are considered as total power data if CorrelationMode == AUTO_ONLY && SpectralResolutionType == BASEBAND_WIDE.
+     */
+    bool isWVR() const ;
 
 
     /**

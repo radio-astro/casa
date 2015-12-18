@@ -81,7 +81,9 @@ namespace asdmbinaries {
   OptionalSpectralResolutionType	SDMDataObjectStreamReader::spectralResolutionType() const { checkState(T_QUERY, "spectralResolutionType"); return sdmDataObject.spectralResolutionType(); }
   ProcessorType				SDMDataObjectStreamReader::processorType() const { checkState(T_QUERY, "processorType"); return sdmDataObject.processorType(); }
   CorrelatorType			SDMDataObjectStreamReader::correlatorType() const { checkState(T_QUERY, "correlatorType"); return sdmDataObject.correlatorType(); }
+  bool                                  SDMDataObjectStreamReader::hasPackedData() const { checkState(T_QUERY, "isTP"); return sdmDataObject.hasPackedData();} 
   bool					SDMDataObjectStreamReader::isTP() const { checkState(T_QUERY, "isTP"); return sdmDataObject.isTP();} 
+  bool					SDMDataObjectStreamReader::isWVR() const {checkState(T_QUERY, "isCorrelation"); return sdmDataObject.isWVR();} 
   bool					SDMDataObjectStreamReader::isCorrelation() const {checkState(T_QUERY, "isCorrelation"); return sdmDataObject.isCorrelation();} 
   const SDMDataObject::DataStruct&	SDMDataObjectStreamReader::dataStruct() const { checkState(T_QUERY, "dataStruct"); return sdmDataObject.dataStruct();}
   bool					SDMDataObjectStreamReader::aborted() const {checkState(T_QUERY, "aborted"); return sdmDataObject.aborted();} 
