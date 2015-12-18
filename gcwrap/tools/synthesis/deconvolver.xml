@@ -868,12 +868,7 @@ for details about ``methods'' used to update the GUI.
       <description>Flux level at which to stop CLEANing</description>
       <value>0Jy</value>
     </param>
-<!--
-    <param type="bool" name="displayprogress">
-      <description>Display progress</description>
-      <value>false</value>
-    </param>
--->
+
     <param type="string" name="model">
       <description>Name of images</description>
       <value></value>
@@ -888,7 +883,23 @@ for details about ``methods'' used to update the GUI.
       <description>Number of pixels on each side of peak to set the memory mask</description>
       <value>3</value>
     </param>
+    <param type="string" name="memory">
+      <description>this define memory function to use (none, weak, medium, strong)</description>
+      <value>medium</value>
+      <allowed kind="enum">
+       <value>none</value>
+       <value>weak</value>
+       <value>medium</value>
+       <value>strong</value>
+     </allowed>
+    </param>
+    <param type="double" name="numsigma">
+      <description>remember positions of peak above this number of sigmas</description>
+      <value>5.0</value>
+    </param>
   </input>
+  
+
   
   <returns type="record"/>
   <example>
