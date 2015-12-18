@@ -207,19 +207,19 @@ ostringstream infostream;
 
 using namespace std;
 template<typename T> string TO_STRING(const T &v) {
-    const T shift = 100000000;
-    const T rnd = .000000005;
-    char buffer[128];
-    int whole = int(v);
-    int fraction = int((v-whole+rnd)*shift);
-    sprintf(buffer,"%d.%08d",whole,fraction);
-    return string(buffer);
+  const T shift = 100000000;
+  const T rnd = .000000005;
+  char buffer[128];
+  int whole = int(v);
+  int fraction = int((v-whole+rnd)*shift);
+  sprintf(buffer,"%d.%08d",whole,fraction);
+  return string(buffer);
 }
 
 string TO_STRING(const int &v) {
-    char buffer[128];
-    sprintf(buffer,"%d",v);
-    return string(buffer);
+  char buffer[128];
+  sprintf(buffer,"%d",v);
+  return string(buffer);
 }
 
 
@@ -1384,8 +1384,8 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 
       double mjd0 = ArrayTime(t0MS).getMJD();
       double dmjd = interpolate_ephemeris ? 0.001 : v[0]->getTimeInterval().getDuration().get() / 1000000000LL / 86400.0; // Grid time step == 0.001 if ephemeris interpolation requested
-                                                                                                 // otherwise == the interval of time of the first element of ephemeris converted in days.
-                                                                                                 // *SUPPOSEDLY* constant over all the ephemeris. 
+      // otherwise == the interval of time of the first element of ephemeris converted in days.
+      // *SUPPOSEDLY* constant over all the ephemeris. 
  
       // determine the position reference system
       double equator =  v[0]->getEquinoxEquator();
@@ -2684,7 +2684,7 @@ void fillMainLazily2(const string& dsName,
       //
       // Now delegate to bdf2AsdmStManIndex the creation of the AsmdIndex 'es.
       // 
-      if (processorType == RADIOMETER) {
+      if (processorType == RADIOMETER && sdosr.hasPackedData()) {
 
 	//
 	// Declare some containers required to populate the columns of the MS MAIN table in a non lazy way.
@@ -2814,7 +2814,7 @@ void fillMainLazily2(const string& dsName,
 	}
       }
 
-      else if (processorType == CORRELATOR) {
+      else if (!sdosr.hasPackedData() && (processorType == CORRELATOR || processorType == RADIOMETER)) {
 
 	//
 	// Declare some containers required to populate the columns of the MS MAIN table in a non lazy way.
