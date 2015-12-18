@@ -264,8 +264,6 @@ class __imview_class(object):
 
     def __zoom( self, vwr, panel, zoom ) :      
 
-        import pdb
-        pdb.set_trace()
         channel = -1
         if type(zoom) == dict and zoom.has_key('channel') :
             channel = self.__checknumeric(zoom['channel'], int, "channel")
@@ -327,6 +325,7 @@ class __imview_class(object):
                 raise Exception, "invalid zoom parameters"
             else:
                 vwr.channel( channel, panel=panel )
+        vwr.show(panel=panel)
 
     def __load_files( self, filetype, vwr, panel, files ):
 
