@@ -705,6 +705,11 @@ endif()
 # Since we are using the C++ linker, the Fortran runtime libraries must be explicitly
 # linked in.
 
+if( CMAKE_SYSTEM_NAME STREQUAL Linux )
+  SET(CMAKE_Fortran_IMPLICIT_LINK_LIBRARIES ${_gfortran_lib_path})
+  SET(CMAKE_Fortran_IMPLICIT_LINK_DIRECTORIES "")
+endif()
+
 if( NOT FORTRAN_LIBRARIES )
 
   message( STATUS "Looking for Fortran runtime libraries" )
