@@ -1890,28 +1890,29 @@ std::set<uInt> MSMetaData::getSQLDSpw() {
 }
 
 std::set<Int> MSMetaData::getScansForTimes(
-	Double center, Double tol, Int obsID, Int arrayID
+    Double center, Double tol, Int obsID, Int arrayID
 ) const {
-	_checkTolerance(tol);
-	// std::set<Int> uniqueScans = getScanNumbers();
-	ArrayKey arrayKey;
-	arrayKey.obsID = obsID;
-	arrayKey.arrayID = arrayID;
-	std::set<ScanKey> uniqueScans = getScanKeys(arrayKey);
-	CountedPtr<std::map<ScanKey, std::set<Double> > > scanToTimesMap = _getScanToTimesMap();
-	Double minTime = center - tol;
-	Double maxTime = center + tol;
-	std::set<Int> scans;
-	std::set<ScanKey>::const_iterator scan = uniqueScans.begin();
-	std::set<ScanKey>::const_iterator end = uniqueScans.end();
-	while (scan != end) {
-		std::set<Double> times = scanToTimesMap->find(*scan)->second;
-		if (*(++times.rend()) >= minTime && *times.begin() <= maxTime) {
-			scans.insert(scan->scan);
-		}
-		++scan;
-	}
-	return scans;
+    _checkTolerance(tol);
+    ArrayKey arrayKey;
+    arrayKey.obsID = obsID;
+    arrayKey.arrayID = arrayID;
+    std::set<ScanKey> uniqueScans = getScanKeys(arrayKey);
+    CountedPtr<std::map<ScanKey, std::set<Double> > > scanToTimesMap = _getScanToTimesMap();
+    Double minTime = center - tol; 
+    Double maxTime = center + tol; 
+    std::set<Int> scans;
+    std::set<ScanKey>::const_iterator scan = uniqueScans.begin();
+    std::set<ScanKey>::const_iterator end = uniqueScans.end();
+    while (scan != end) {
+        std::set<Double> times = scanToTimesMap->find(*scan)->second;
+        // rbegin() points to the last element in a container. For a std::set,
+        // the last element is the largest, and the first is the smallest.
+        if (*times.rbegin() >= minTime && *times.begin() <= maxTime) {
+            scans.insert(scan->scan);
+        }
+        ++scan;
+    }    
+    return scans;
 }
 
 CountedPtr<std::map<ScanKey, std::set<Double> > > MSMetaData::_getScanToTimesMap() const {
