@@ -1587,6 +1587,8 @@ def _to_validated_lines(detect_lines):
 
 
 class SVDSolver2D(object):
+    CONDITION_NUMBER_LIMIT = 1.0e-12
+    
     def __init__(self, xorder, yorder):
         self.xorder = xorder
         self.yorder = yorder
@@ -1654,9 +1656,16 @@ class SVDSolver2D(object):
         assert len(s) == self.L
         assert Vh.shape == (self.L, self.L)
         assert 0.0 < eps
+        
+        absolute_s = abs(s)
+        condition_number = absolute_s.min() / absolute_s.max()
+        if condition_number < self.CONDITION_NUMBER_LIMIT:
+            LOG.trace('smax %s, smin %s, condition_number is %s'%(absolute_s.max(), absolute_s.min(), condition_number))
+            raise RuntimeError('singular matrix')
+        
         threshold = s.max() * eps
         for i in xrange(self.L):
-            if abs(s[i]) < threshold:
+            if s[i] < threshold:
                 s[i] = 0.0
             else:
                 s[i] = 1.0 / s[i]
@@ -1703,7 +1712,7 @@ class SVDSolver2D(object):
     
     def find_good_solution(self, z, threshold=0.05):
         assert 0.0 <= threshold
-        eps_list = map(lambda x: 10**x, xrange(-20, 0))
+        eps_list = map(lambda x: 10**x, xrange(-11, -3))
         
         best_ans = None
         best_score = 1e30
