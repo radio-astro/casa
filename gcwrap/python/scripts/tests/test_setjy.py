@@ -1509,16 +1509,21 @@ class test_ephemtbl(SetjyUnitTestBase):
     """Test for data with attached ephem table(s)"""
 
     def setUp(self):
-        prefix = 'alma_uid___A002_Xa3f11a_X3df1.ms.split.thinned'
-        msfile = prefix
-        self.setUpMS(msfile)
+        # Changed to do setup from each test as two datasets are used
+        #prefix = 'alma_uid___A002_Xa3f11a_X3df1.ms.split.thinned'
+        #msfile = prefix
+        #self.setUpMS(msfile)
         self.result = {}
 
     def tearDown(self):
         self.resetMS()
 
     def test_ephemtbl1(self):
-        """ Test for Titan with the ephemeris table """
+        """ Test for Titan with the ephemeris table in J2000 """
+        prefix = 'alma_uid___A002_Xa3f11a_X3df1.ms.split.thinned'
+        msfile = prefix
+        self.setUpMS(msfile)
+
         sjran = setjy(vis=self.inpms, field='1', spw='0,1,2,3', standard='Butler-JPL-Horizons 2012', usescratch=True)
         #print sjran
         print "Checking returned flux densities..."
@@ -1556,6 +1561,46 @@ class test_ephemtbl(SetjyUnitTestBase):
         for spwn in spwlist:
             self.check_eq(stats['phase0'][spwn]['min']*180.0/numpy.pi,0.0,1.0e-4)
             self.check_eq(stats['phase180'][spwn]['min']*180.0/numpy.pi,180.0,1.0e-4)
+
+    def test_ephemtbl2(self):
+        """ Test for Uranus with the ephemeris table with the positions in ICRS """
+        prefix = 'alma_ephemobj_icrs.ms'
+        msfile = prefix
+        self.setUpMS(msfile)
+
+        sjran = setjy(vis=self.inpms, field='1', spw='0,1,2,3', standard='Butler-JPL-Horizons 2012', usescratch=True)
+        #print sjran
+        print "Checking returned flux densities..."
+        self.check_eq(sjran['1']['0']['fluxd'][0],36.20935440,0.0001)
+        self.check_eq(sjran['1']['1']['fluxd'][0],37.05635071,0.0001)
+        self.check_eq(sjran['1']['2']['fluxd'][0],33.30348587,0.0001)
+        self.check_eq(sjran['1']['3']['fluxd'][0],33.08575058,0.0001)
+
+        stats={}
+        stats['amp']={}
+        stats['phase']={}
+        ms.open(self.inpms)
+        stats['amp']['spw0']=ms.statistics(column='MODEL',complex_value='amp',field='1',spw='0')['MODEL']
+        stats['amp']['spw1']=ms.statistics(column='MODEL',complex_value='amp',field='1',spw='1')['MODEL']
+        stats['amp']['spw2']=ms.statistics(column='MODEL',complex_value='amp',field='1',spw='2')['MODEL']
+        stats['amp']['spw3']=ms.statistics(column='MODEL',complex_value='amp',field='1',spw='3')['MODEL']
+        stats['phase']['spw0']=ms.statistics(column='MODEL',complex_value='phase',field='1',spw='0')['MODEL']
+        stats['phase']['spw1']=ms.statistics(column='MODEL',complex_value='phase',field='1',spw='1')['MODEL'] 
+        stats['phase']['spw2']=ms.statistics(column='MODEL',complex_value='phase',field='1',spw='2')['MODEL'] 
+        stats['phase']['spw3']=ms.statistics(column='MODEL',complex_value='phase',field='1',spw='3')['MODEL'] 
+        ms.close()
+        spwlist = ['spw0','spw1','spw2','spw3']
+        print "Checking values of mean model amplitudes"
+        self.check_eq(stats['amp']['spw0']['mean'],31.924971781729685,1.0e-4)
+        self.check_eq(stats['amp']['spw1']['mean'],32.768748886512704,1.0e-4)
+        self.check_eq(stats['amp']['spw2']['mean'],30.069779582303905,1.0e-4)
+        self.check_eq(stats['amp']['spw3']['mean'],29.615508822175407,1.0e-4)
+        print "Checking values of mean model phases"
+        # icrs -> j2000 conversion via azelgeo seems to introduce some errors resulting non-zero phases...
+        self.check_eq(stats['phase']['spw0']['mean'],2.3264814735449297e-08,1.0e-4)
+        self.check_eq(stats['phase']['spw1']['mean'],2.3654161342165206e-08,1.0e-4)
+        self.check_eq(stats['phase']['spw2']['mean'],4.509242733959611e-08,1.0e-4)
+        self.check_eq(stats['phase']['spw3']['mean'],2.8893037876731247e-08,1.0e-4)
 
 def suite():
     return [test_SingleObservation,test_MultipleObservations,test_ModImage, test_inputs, test_conesearch, test_fluxscaleStandard, test_setpol, test_ephemtbl]
