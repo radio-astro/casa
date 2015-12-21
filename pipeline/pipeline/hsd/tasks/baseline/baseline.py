@@ -138,6 +138,10 @@ class SDBaseline(common.SingleDishTaskTemplate):
         #files = set()
         files_temp = {}
         plot_list = []
+        
+        # This is a dictionary for deviation mask that will be merged with top-level context
+        deviation_mask = collections.defaultdict(dict)
+
         for (group_id,group_desc) in reduction_group.items():
             LOG.debug('Processing Reduction Group %s'%(group_id))
             LOG.debug('Group Summary:')
@@ -174,8 +178,6 @@ class SDBaseline(common.SingleDishTaskTemplate):
                 LOG.debug('\tAntenna %s Spw %s Pol %s'%(antenna_list[i], spwid_list[i], pols_list[i]))
                 
             # Deviation Mask 
-            # This is a dictionary that will be merged with top-level context
-            deviation_mask = collections.defaultdict(dict)
             if deviationmask:
                 LOG.info('Apply deviation mask to baseline fitting')
                 for (ant, spw) in zip(antenna_list, spwid_list):
