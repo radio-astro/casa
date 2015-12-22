@@ -56,11 +56,25 @@ namespace test_utility {
     }
   }
 
-  /* string GetCasaDataPath() { */
-  /*   string *parts[2]; */
-  /*   split(EnvironmentVariable::get("CASAPATH"), parts, 2, string(" ")); */
-  /*   return = parts[0] + "/data/"; */
-  /* } */
+  string GetCasaDataPath() {
+    if (casa::EnvironmentVariable::isDefined ("CASAPATH"))  {
+      string casapath = casa::EnvironmentVariable::get("CASAPATH");
+      size_t endindex = casapath.find(" ");
+      if (endindex!=string::npos) {
+	string casaroot = casapath.substr(0, endindex);
+	cout << "casaroot = " << casaroot << endl;
+	return (casaroot + "/data/");
+      }
+      else {
+	cout << "hit npos" << endl;
+	return "/data/";
+      }
+    }
+    else {
+      cout  << "CASAPATH is not defined" << endl;
+      return "";
+    }
+  }
 }
 
 #endif /* TEST_SINGLEDISHTESTUTIL_H_ */

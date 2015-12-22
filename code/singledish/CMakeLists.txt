@@ -37,9 +37,11 @@ install (FILES
     DESTINATION include/casacode/singledish/SingleDish
 )
 
-casa_add_assay( singledish
-    SingleDish/test/tLineFinder.cc
-    )
-# google tests
+### traditional c++ codes for testing ###
+#casa_add_assay( singledish
+#    SingleDish/test/tLineFinder.cc
+#    )
+### google tests ###
 casa_add_google_test (MODULES singledish SOURCES SingleDish/test/LineFindingUtils_GTest.cc)
+casa_add_google_test (MODULES singledish SOURCES SingleDish/test/LineFinder_GTest.cc)
 casa_add_google_test (MODULES singledish SOURCES SingleDish/test/SingleDishMS_GTest.cc)
