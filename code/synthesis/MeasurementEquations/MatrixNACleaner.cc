@@ -233,11 +233,11 @@ Int MatrixNACleaner::clean(Matrix<Float>& model)
   else
     f_p=std::bind(&MatrixNACleaner::medium, this, std::placeholders::_1);
   Int converged=0;
-      
+  itsTotalFlux=0.0;
    if(!itsBitPix){
      itsRms=rms(*itsResidual);
    }else{
-     rms(MaskedArray<Float>(*itsResidual, *itsBitPix));
+     itsRms=rms(MaskedArray<Float>(*itsResidual, *itsBitPix));
    }
 
   // Define a subregion for the inner quarter
@@ -430,7 +430,10 @@ Bool MatrixNACleaner::findMaxAbsMask(const Matrix<Float>& lattice,
   Float maxValWgt=0.0;
   Float minValWgt;
   IPosition posMinWgt(lattice.shape().nelements(), 0);
-  minMax(minValWgt, maxValWgt, posMinWgt, posMaxWgt, wgtresid);
+  if(!itsBitPix)
+    minMax(minValWgt, maxValWgt, posMinWgt, posMaxWgt, wgtresid);
+  else
+     minMax(minValWgt, maxValWgt, posMinWgt, posMaxWgt, MaskedArray<Float>(wgtresid, *itsBitPix));
   if(abs(minValWgt) > abs(maxValWgt)){
     posMaxWgt=posMinWgt;
     maxValWgt=minValWgt;
@@ -439,7 +442,10 @@ Bool MatrixNACleaner::findMaxAbsMask(const Matrix<Float>& lattice,
   Float maxValRes=0.0;
   Float minValRes;
   IPosition posMinRes(lattice.shape().nelements(), 0);
-  minMax(minValRes, maxValRes, posMinRes, posMaxRes, lattice);
+  if(!itsBitPix)
+    minMax(minValRes, maxValRes, posMinRes, posMaxRes, lattice);
+  else
+    minMax(minValRes, maxValRes, posMinRes, posMaxRes,  MaskedArray<Float>(lattice, *itsBitPix));
   if(abs(minValRes) > abs(maxValRes)){
     posMaxRes=posMinRes;
     maxValRes=minValRes;
@@ -452,13 +458,14 @@ Bool MatrixNACleaner::findMaxAbsMask(const Matrix<Float>& lattice,
   peakval=maxValRes;
   Int nx=lattice.shape()(0);
   Int ny=lattice.shape()(1);
-  if(peakval > numSigma_p*itsRms){
+  Float apeakval=abs(peakval);
+  if(apeakval > numSigma_p*itsRms){
     for (Int y=-support; y < support+1; ++y){
       if(((posPeak[1]+y) >=0) && ((posPeak[1]+y) < ny)){
 	for(Int x=-support; x < support+1; ++x){
 	  if(((posPeak[0]+x) >=0) && ((posPeak[0]+x) < nx))
-	    if(mask(x+posPeak[0], y+posPeak[1]) < f_p(peakval))
-	      mask(x+posPeak[0], y+posPeak[1])=f_p(peakval);
+	    if(mask(x+posPeak[0], y+posPeak[1]) < f_p(apeakval))
+	      mask(x+posPeak[0], y+posPeak[1])=f_p(apeakval);
 	}
       }
     }
