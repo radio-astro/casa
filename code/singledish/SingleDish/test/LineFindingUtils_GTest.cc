@@ -142,8 +142,8 @@ protected:
     // test number of data
     EXPECT_EQ(data.size(), reference.size());
     // test line ranges
-    list<pair<size_t,size_t>>::iterator outiter = data.begin();
-    list<pair<size_t,size_t>>::iterator refiter = reference.begin();
+    LineRangeList::iterator outiter = data.begin();
+    LineRangeList::iterator refiter = reference.begin();
     for (;outiter!=data.end() && refiter!=reference.end();
 	 ++outiter, ++refiter) {
       EXPECT_EQ((*outiter).first, (*refiter).first);
