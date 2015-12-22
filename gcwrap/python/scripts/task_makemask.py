@@ -951,12 +951,27 @@ def regridmask(inputmask,template,outputmask,axes=[3,0,1],method='linear',chanra
     if not os.path.isdir(template):
         raise IOError, "template image %s does not exist" % template
     
-    (ia,) = gentools(['ia']) 
+    (ia,tb,) = gentools(['ia','tb']) 
+    inputmaskcopy = "_tmp_copy_"+inputmask
+    shutil.copytree(inputmask,inputmaskcopy)
     ia.open(template)
     ocsys = ia.coordsys()
     oshp = ia.shape()
     ia.done()
-    ia.open(inputmask)
+    tb.open(template)
+    defTelescope = tb.getkeywords()['coords']['telescope']
+    tb.close()
+    tb.open(inputmaskcopy, nomodify=False) 
+    keys = tb.getkeywords()  
+    if keys['coords']['telescope']=="UNKNOWN":
+        if defTelescope =="UNKNOWN":
+            raise IOError,"UNKNOWN Telescope for %s " % inputmask 
+        else:
+            keys['coords']['telescope']=defTelescope
+    tb.putkeywords(keys)     
+    tb.close()
+
+    ia.open(inputmaskcopy)
     # check axis order, if necessary re-interprete input axes correctly 
     # assumed order of axes 
     reforder=['Right Ascension', 'Declination', 'Stokes', 'Frequency']
@@ -987,13 +1002,19 @@ def regridmask(inputmask,template,outputmask,axes=[3,0,1],method='linear',chanra
     # for continuum case
     if oshp[tmp_axes[0]]==1:
        axes=[0,1]
-    ir=ia.regrid(outfile=outputmask,shape=oshp,csys=ocsys.torecord(),axes=axes,region=rgn,method=method)       
-    ia.done()
-    # to ensure to create 1/0 mask image
-    #ir.calc('iif (%s>0.0 && %s<1.0,1,%s)'%(outputmask,outputmask,outputmask))
-    # treat everything not = 0.0 to be mask
-    ir.calc('iif (abs(%s)>0.0,1,%s)'%(outputmask,outputmask),False)
-    ir.done()
+    try:
+        ir=ia.regrid(outfile=outputmask,shape=oshp,csys=ocsys.torecord(),axes=axes,region=rgn,method=method)       
+        
+    except:
+        pass
+    finally:
+        ia.remove()
+        ia.done()
+        # to ensure to create 1/0 mask image
+        #ir.calc('iif (%s>0.0 && %s<1.0,1,%s)'%(outputmask,outputmask,outputmask))
+        # treat everything not = 0.0 to be mask
+        ir.calc('iif (abs(%s)>0.0,1,%s)'%(outputmask,outputmask),False)
+        ir.done()
 
 def addimagemask(sumimage, imagetoadd, threshold=0.0):
     """
