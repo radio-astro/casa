@@ -192,6 +192,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       setMask(*somemask);
     }
     
+    /////TEST
+    //PagedImage<Float> someResid((*dirty_p).shape(), (*dirty_p).coordinates(), "decon.resid");
+    /////
     if(!psf_p)
       throw(AipsError("No PSF defined "));
     ///case of single plane psf
@@ -229,6 +232,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       IPosition trc=dirty_p->shape() -1;
       for (Int k=0; k < nImChan_p ; ++k){
 	for (Int j=0; j < npol; ++j){
+	  setupMatCleaner(niter, gain, threshold, masksupp, memType, numSigma);
 	  if(npol > 1 ){
 	    blc(polAxis_p)=j;
 	    trc(polAxis_p)=j;
@@ -282,6 +286,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  maxResidual_p=max(maxResidual_p, matClean_p.maxResidual()); 
 	  if(!getModel)
 	    modelimage.putSlice(bufMod, sl.start());
+	  /////TESTING
+
+	  //someResid.putSlice(matClean_p.getResidual().reform(bufMod.shape()), sl.start());
+
+	  ///////
 	  //  cerr << "mask " << max(buf2) << " buf2 " << buf2.shape() << " start " << sl.start() << endl;
 	  if(!getMask)
 	    mask_p->putSlice(buf2, sl.start());
