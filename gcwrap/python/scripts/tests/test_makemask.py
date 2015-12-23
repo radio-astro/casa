@@ -52,6 +52,7 @@ class test_copy(makemaskTestBase):
     inimage2='ngc5921.cube2.mask'
     inimage3='ngc5921.cube1.bmask'
     inimage4='ngc5921.cube1.image' # actual cube image
+    inimage5='ngc5921.cube1.UNKNOWNTEL.mask'# unknown telesocpe
 
     outimage1='ngc5921.cube1.copy.mask'
     outimage2='ngc5921.cube1.copyinimage.mask'
@@ -65,13 +66,13 @@ class test_copy(makemaskTestBase):
         #for img in [self.inimage,self.outimage1,self.outimage2, self.outimage3]:
         #    if os.path.isdir(img):
         #        shutil.rmtree(img)
-        for img in [self.inimage,self.inimage2,self.inimage3, self.inimage4]:
+        for img in [self.inimage,self.inimage2,self.inimage3, self.inimage4, self.inimage5]:
             if not os.path.isdir(img):
                 shutil.copytree(datapath+img,img)
 
     def tearDown(self):
         if not debug:
-            for img in [self.inimage,self.inimage2,self.outimage1,self.outimage2,self.outimage3, self.outimage4]:
+            for img in [self.inimage,self.inimage2,self.inimage3,self.inimage4,self.inimage5, self.outimage1,self.outimage2,self.outimage3, self.outimage4]:
                 #pass
                 if os.path.isdir(img):
                     shutil.rmtree(img)
@@ -203,6 +204,16 @@ class test_copy(makemaskTestBase):
                 self.assertTrue(self.compareimpix(self.inimage3,self.outimage1,True)) 
 
 
+    def test8_copyimagemask(self):
+        """ (copy mode) testcopy8: copying an image mask with UNKOWN telescope to a new image mask"""
+        try:
+            makemask(mode='copy',inpimage=self.inimage4,inpmask=self.inimage5,output=self.outimage1)
+        except Exception, e:
+            print "\nError running makemask"
+            raise e
+        
+        self.assertTrue(os.path.exists(self.outimage1))           
+        self.assertTrue(self.compareimpix(self.inimage5,self.outimage1))           
 
 class test_merge(makemaskTestBase):
     """test merging of multiple masks in copy mode"""
