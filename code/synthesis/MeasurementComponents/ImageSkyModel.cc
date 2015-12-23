@@ -197,14 +197,14 @@ ImageSkyModel::~ImageSkyModel() {
   if(componentList_p) delete componentList_p; componentList_p=0;
   for (Int thismodel=0;thismodel<nmodels_p;thismodel++) {
     if(residualImage_p[thismodel]) {    
-      (residualImage_p[thismodel])->clearCache();
-      (residualImage_p[thismodel])->tempClose();
+      //(residualImage_p[thismodel])->clearCache();
+      //(residualImage_p[thismodel])->tempClose();
       delete residualImage_p[thismodel];       
     }
     residualImage_p[thismodel]=0;
     if(cimage_p[thismodel]){
-      (cimage_p[thismodel])->clearCache();
-      (cimage_p[thismodel])->tempClose();
+      //(cimage_p[thismodel])->clearCache();
+      //(cimage_p[thismodel])->tempClose();
       delete cimage_p[thismodel]; 
     }
     cimage_p[thismodel]=0;
