@@ -215,6 +215,28 @@ class test_copy(makemaskTestBase):
         self.assertTrue(os.path.exists(self.outimage1))           
         self.assertTrue(self.compareimpix(self.inimage5,self.outimage1))           
 
+
+    def test9_copyimagemask(self):
+        """ (copy mode) testcopy9: copying an image mask with file names containing '+' """
+        inpimagename="copytest+1.0-0.5.image"
+        inpmaskname="copytest+1.0-0.5.mask"
+        try:
+            shutil.copytree(self.inimage4,inpimagename)
+            shutil.copytree(self.inimage,inpmaskname)
+
+            makemask(mode='copy',inpimage=inpimagename,inpmask=inpmaskname,output=self.outimage1)
+        except Exception, e:
+            print "\nError running makemask"
+            raise e
+             
+        self.assertTrue(os.path.exists(self.outimage1))           
+        self.assertTrue(self.compareimpix(inpmaskname,self.outimage1))           
+        if not debug:
+            if os.path.isdir(inpimagename):
+                shutil.rmtree(inpimagename) 
+            if os.path.isdir(inpmaskname):
+                shutil.rmtree(inpmaskname) 
+
 class test_merge(makemaskTestBase):
     """test merging of multiple masks in copy mode"""
 

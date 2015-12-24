@@ -689,6 +689,8 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
                     casalog.post('Summing all mask images in inpmask and  normalized to 1 for mask','INFO')
 		    for img in imgfiles:
                         tmpregrid='__tmp_regrid.'+img
+                        if os.path.exists(tmpregrid):
+                            shutil.rmtree(tmpregrid)
                         # regrid to output image coords
 			regridmask(img,sum_tmp_outfile,tmpregrid)
 			addimagemask(sum_tmp_outfile,tmpregrid)
@@ -1013,7 +1015,7 @@ def regridmask(inputmask,template,outputmask,axes=[3,0,1],method='linear',chanra
         # to ensure to create 1/0 mask image
         #ir.calc('iif (%s>0.0 && %s<1.0,1,%s)'%(outputmask,outputmask,outputmask))
         # treat everything not = 0.0 to be mask
-        ir.calc('iif (abs(%s)>0.0,1,%s)'%(outputmask,outputmask),False)
+        ir.calc('iif (abs("%s")>0.0,1,"%s")'%(outputmask,outputmask),False)
         ir.done()
 
 def addimagemask(sumimage, imagetoadd, threshold=0.0):
@@ -1023,7 +1025,7 @@ def addimagemask(sumimage, imagetoadd, threshold=0.0):
     (ia,) = gentools(['ia']) 
     #print "addimagemask: sumimage=",sumimage," imagetoadd=",imagetoadd
     ia.open(sumimage)
-    ia.calc('iif ('+imagetoadd+'>'+str(threshold)+',('+sumimage+'+'+imagetoadd+')/('+sumimage+'+'+imagetoadd+'),'+sumimage+')',False)
+    ia.calc('iif ("'+imagetoadd+'">'+str(threshold)+',("'+sumimage+'"+"'+imagetoadd+'")/("'+sumimage+'"+"'+imagetoadd+'"),"'+sumimage+'")',False)
     # actually should be AND?
     #ia.calc('iif ('+imagetoadd+'>'+str(threshold)+','+sumimage+'*'+imagetoadd+','+sumimage+')')
     #ia.calc('iif ('+imagetoadd+'>'+str(threshold)+',('+sumimage+'*'+imagetoadd+')/('+sumimage+'*'+imagetoadd+'),'+sumimage+')')
@@ -1037,8 +1039,8 @@ def multiplyimagemask(sumimage, imagetomerge):
     """
     (ia,) = gentools(['ia']) 
     ia.open(sumimage)
-    ia.calc('iif ('+imagetomerge+'!=0.0,('+sumimage+'*'+imagetomerge+'),0.0 )',False)
-    ia.calc('iif ('+sumimage+'!=0.0,('+sumimage+')/('+sumimage+'),'+sumimage+')',False)
+    ia.calc('iif ("'+imagetomerge+'"!=0.0,("'+sumimage+'"*"'+imagetomerge+'"),0.0 )',False)
+    ia.calc('iif ("'+sumimage+'"!=0.0,("'+sumimage+'")/("'+sumimage+'"),"'+sumimage+'")',False)
     ia.close()
 
 def expandchanmask(inimage,inchans,outimage,outchans):
