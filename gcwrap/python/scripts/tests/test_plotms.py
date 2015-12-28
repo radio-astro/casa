@@ -459,7 +459,7 @@ class plotms_test_axis(plotms_test_base):
                      showgui=False, ydatacolumn='corr/model')
             self.assertFalse(res)
         except RuntimeError:  # "Parameter verification failed" rethrown on test server
-            self.assertIsNone(res)
+            pass
         print
 
     def test_axis_datacolumnNoFloat(self):
@@ -497,7 +497,7 @@ class plotms_test_axis(plotms_test_base):
                      showgui=False, yaxis='veloc')
             self.assertFalse(res)
         except RuntimeError:  # "Parameter verification failed" rethrown on test server
-            self.assertIsNone(res)
+            pass
         print
 
     # Removed from regular testing but available for manual testing!
@@ -1439,7 +1439,7 @@ class plotms_test_transform(plotms_test_base):
                          showgui=False, freqframe='J2000', highres=True)
             self.assertFalse(res)
         except RuntimeError:  # "Parameter verification failed" rethrown on test server
-            self.assertIsNone(res)
+            pass
         print
         
     def test_transform_veldef(self):
