@@ -144,7 +144,7 @@ ImageMoments<T> &ImageMoments<T>::operator=(const ImageMoments<T> &other) {
         stdDeviation_p = other.stdDeviation_p;
         yMin_p = other.yMin_p;
         yMax_p = other.yMax_p;
-        plotter_p = other.plotter_p;
+        //plotter_p = other.plotter_p;
         smoothOut_p = other.smoothOut_p;
         goodParameterStatus_p = other.goodParameterStatus_p;
         doWindow_p = other.doWindow_p;
@@ -402,7 +402,7 @@ std::vector<std::unique_ptr<MaskedLattice<T> > > ImageMoments<T>::createMoments(
     auto windowMethod = False;
     auto fitMethod = False;
     auto clipMethod = False;
-    auto doPlot = plotter_p.isAttached();
+    //auto doPlot = plotter_p.isAttached();
     if (doSmooth_p && !doWindow_p) {
         smoothClipMethod = True;
     }
@@ -429,6 +429,7 @@ std::vector<std::unique_ptr<MaskedLattice<T> > > ImageMoments<T>::createMoments(
         pSmoothedImage = pSmoothedImageHolder.ptr();
         // Find the auto Y plot range.   The smooth & clip and the window
         // methods only plot the smoothed data.
+        /*
         if (doPlot && fixedYLimits_p && (smoothClipMethod || windowMethod)) {
             ImageStatistics<T> stats(*pSmoothedImage, False);
             Array<T> data;
@@ -437,9 +438,11 @@ std::vector<std::unique_ptr<MaskedLattice<T> > > ImageMoments<T>::createMoments(
             stats.getConvertedStatistic(data, LatticeStatsBase::MAX, True);
             yMax_p = data(IPosition(data.nelements(),0));
         }
+        */
     }
     // Find the auto Y plot range if not smoothing and stretch
     // limits for plotting
+    /*
     if (fixedYLimits_p && doPlot) {
         if (!doSmooth_p && (clipMethod || windowMethod || fitMethod)) {
             ImageStatistics<T> stats(*_image, False);
@@ -454,6 +457,7 @@ std::vector<std::unique_ptr<MaskedLattice<T> > > ImageMoments<T>::createMoments(
             yMax_p = data(IPosition(data.nelements(),0));
         }
     }
+    */
     // Set output images shape and coordinates.
     IPosition outImageShape;
     const auto cSysOut = this->makeOutputCoordinates(
@@ -553,12 +557,14 @@ std::vector<std::unique_ptr<MaskedLattice<T> > > ImageMoments<T>::createMoments(
         stdDeviation_p = noise;
     }
     // Set up some plotting things
+    /*
     if (doPlot) {
         plotter_p.subp(nxy_p(0), nxy_p(1));
         plotter_p.ask(True);
         plotter_p.sch(1.5);
         plotter_p.vstd();
     }
+    */
     // Create appropriate MomentCalculator object
     os_p << LogIO::NORMAL << "Begin computation of moments" << LogIO::POST;
     PtrHolder<MomentCalcBase<T> > pMomentCalculatorHolder;
@@ -699,22 +705,26 @@ Bool ImageMoments<T>::whatIsTheNoise (
     LatticeStatsBase::stretchMinMax(xMinF, xMaxF);
     IPosition yMinPos(1), yMaxPos(1);
     minMax (yMin, yMax, yMinPos, yMaxPos, counts);
-    Float yMinF = 0.0;
+    //Float yMinF = 0.0;
     Float yMaxF = this->convertT(yMax);
     yMaxF += yMaxF/20;
+    /*
     if (plotter_p.isAttached()) {
         plotter_p.subp(1,1);
         plotter_p.swin (xMinF, xMaxF, yMinF, yMaxF);
     }
+    */
     auto first = True;
     auto more = True;
-    T x1, x2;
+    //T x1, x2;
     while (more) {
+        /*
         // Plot histogram
         if (plotter_p.isAttached()) {
             plotter_p.page();
             this->drawHistogram (values, counts, plotter_p);
         }
+        */
         Int iMin = 0;
         Int iMax = 0;
         if (first) {
@@ -740,6 +750,7 @@ Bool ImageMoments<T>::whatIsTheNoise (
                 iMin = 0;
                 iMax = nBins-1;
             }
+            /*
             // Draw on plot
             if (plotter_p.isAttached()) {
                 x1 = values(iMin);
@@ -747,7 +758,9 @@ Bool ImageMoments<T>::whatIsTheNoise (
                 this->drawVertical (x1, yMin, yMax, plotter_p);
                 this->drawVertical (x2, yMin, yMax, plotter_p);
             }
+            */
         }
+        /*
         else if (plotter_p.isAttached()) {
             // We are redoing the fit so let the user mark where they think
             // the window fit should be done
@@ -778,6 +791,7 @@ Bool ImageMoments<T>::whatIsTheNoise (
             iMin = min(i1, i2);
             iMax = max(i1, i2);
         }
+        */
         // Now generate the distribution we want to fit.  Normalize to
         // peak 1 to help fitter.
         const uInt nPts2 = iMax - iMin + 1;
@@ -819,6 +833,7 @@ Bool ImageMoments<T>::whatIsTheNoise (
             os_p << LogIO::NORMAL
                     << "*** The fitted standard deviation of the noise is " << sigma
                     << endl << LogIO::POST;
+            /*
             // Now plot the fit
             if (plotter_p.isAttached()) {
                 Int nGPts = 100;
@@ -835,15 +850,19 @@ Bool ImageMoments<T>::whatIsTheNoise (
                 this->drawLine (xG, yG, plotter_p);
                 plotter_p.sci (1);
             }
+            */
         }
         else {
             os_p << LogIO::NORMAL << "The fit to determine the noise level failed." << endl;
             os_p << "Try inputting it directly" << endl;
+            /*
             if (plotter_p.isAttached()) {
                 os_p << "or try a different window " << LogIO::POST;
             }
+            */
         }
         // Another go
+        /*
         if (plotter_p.isAttached()) {
             plotter_p.message("Accept (click left), redo (click middle), give up (click right)");
             Float xx = this->convertT(xMin+xMax)/2;
@@ -862,8 +881,9 @@ Bool ImageMoments<T>::whatIsTheNoise (
             }
         }
         else {
+        */
             more = False;
-        }
+        //}
     }
     return True;
 }

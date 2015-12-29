@@ -394,7 +394,7 @@ protected:
    using MomentsBase<T>::moments_p;
    using MomentsBase<T>::selectRange_p;
    using MomentsBase<T>::smoothAxes_p;
-   using MomentsBase<T>::plotter_p;
+//   using MomentsBase<T>::plotter_p;
    using MomentsBase<T>::overWriteOutput_p;
    using MomentsBase<T>::error_p;
    using MomentsBase<T>::convertToVelocity_p;

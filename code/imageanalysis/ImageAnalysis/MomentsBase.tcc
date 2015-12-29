@@ -40,7 +40,7 @@
 
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <lattices/LatticeMath/LatticeStatsBase.h>
-#include <casa/System/PGPlotter.h>
+//#include <casa/System/PGPlotter.h>
 #include <tables/LogTables/NewFile.h>
 
 #include <casa/sstream.h>
@@ -274,7 +274,7 @@ Bool MomentsBase<T>::setSmoothOutName(const String& smoothOutU)
    return True;
 }
 
-
+/*
 template <class T>
 Bool MomentsBase<T>::setPlotting(PGPlotter& plotterU,
                                   const Vector<Int>& nxyU,
@@ -325,7 +325,7 @@ void MomentsBase<T>::closePlotting()
 {  
    if (plotter_p.isAttached()) plotter_p.detach();
 }
-
+*/
 template <class T>
 void MomentsBase<T>::setVelocityType(MDoppler::Types velocityType)
 {
@@ -385,7 +385,7 @@ Bool MomentsBase<T>::checkMethod ()
 // Plotting can be invoked passively for other methods.
 
    if ( ((doWindow_p && !doAuto_p) ||
-         (!doWindow_p && doFit_p && !doAuto_p)) && !plotter_p.isAttached()) {
+         (!doWindow_p && doFit_p && !doAuto_p)) /* && !plotter_p.isAttached() */) {
       error_p = "You have not given a plotting device";
       return False;
    } 
@@ -552,7 +552,7 @@ Bool MomentsBase<T>::checkMethod ()
 }
 
 
-
+/*
 template <class T> 
 void MomentsBase<T>::drawHistogram (const Vector<T>& x,
                                      const Vector<T>& y,
@@ -657,7 +657,7 @@ Bool MomentsBase<T>::getLoc (T& x,
    }
    return True;
 }
-
+*/
 template <class T> 
 Bool MomentsBase<T>::setOutThings(String& suffix, 
                                    Unit& momentUnits,
@@ -818,7 +818,7 @@ Bool MomentsBase<T>::setIncludeExclude (Vector<T>& range,
    return True;   
 }
 
-
+/*
 template <class T> 
 Bool MomentsBase<T>::readCursor (PGPlotter& plotter, Float& x,
                                   Float& y, String& ch)
@@ -832,7 +832,7 @@ Bool MomentsBase<T>::readCursor (PGPlotter& plotter, Float& x,
    r.get(RecordFieldId(3), ch);
    return gotCursor;
 }
- 
+ */
 
 template <class T> 
 CoordinateSystem MomentsBase<T>::makeOutputCoordinates (IPosition& outShape,

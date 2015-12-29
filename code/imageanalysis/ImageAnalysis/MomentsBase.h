@@ -34,7 +34,7 @@
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MDoppler.h>
-#include <casa/System/PGPlotter.h>
+// #include <casa/System/PGPlotter.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/iosfwd.h>
@@ -304,10 +304,11 @@ enum MethodTypes {
 // <src>nxy</src> then the latter is set to [1,1].   A return value
 // of <src>False</src> indicates that you gave roo many values in the
 // <src>nxy</src> vector.
+/*
    Bool setPlotting(PGPlotter& device,
                     const Vector<Int>& nxy,
                     const Bool yInd=False);
-
+*/
 // Set Velocity type.  This is used for moments for which the moment axis is
 // a spectral axis for which the coordinate is traditionally presented in
 // km/s   You can select the velocity definition. The default state of the
@@ -366,7 +367,7 @@ protected:
    Vector<Int> moments_p;
    Vector<T> selectRange_p;
    Vector<Int> smoothAxes_p;
-   PGPlotter plotter_p;
+   //PGPlotter plotter_p;
    Bool overWriteOutput_p;
    String error_p;
    Bool convertToVelocity_p;
@@ -375,7 +376,7 @@ protected:
 // Check that the combination of methods that the user has requested is valid
 // List a handy dandy table if not.
    Bool checkMethod();
-
+/*
 // Plot a histogram                     
    static void drawHistogram  (const Vector<T>& values,
                                const Vector<T>& counts,
@@ -396,19 +397,19 @@ protected:
    static Bool getLoc (T& x,
                        T& y,
                        PGPlotter& plotter);
-
+*/
 // Convert a <tt>T</tt> to a <tt>Float</tt> for plotting
    static Float convertT (const T value) {return Float(real(value));};
 
 // Convert a <tt>Float</tt> (from plotting) to a <tt>T</tt> 
    static T convertF (const Float value) {return T(value);};
-
+/*
 // Fish out cursor values
    static Bool readCursor (PGPlotter& plotter, 
                            Float& x,
                            Float& y, 
                            String& ch);
-
+*/
 // Take the user's data inclusion and exclusion data ranges and
 // generate the range and Booleans to say what sort it is
    Bool setIncludeExclude (Vector<T>& range,
