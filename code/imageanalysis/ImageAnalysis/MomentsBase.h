@@ -316,7 +316,7 @@ enum MethodTypes {
    void setVelocityType (MDoppler::Types type);
 
 // CLose plotter
-   void closePlotting();
+   //void closePlotting();
 
 // Reset argument error condition.  If you specify invalid arguments to
 // one of the above functions, an internal flag will be set which will

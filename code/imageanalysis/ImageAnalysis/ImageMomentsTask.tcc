@@ -139,7 +139,7 @@ template<class T> SPIIT ImageMomentsTask<T>::makeMoments() const {
         // Create moments
         std::vector<std::unique_ptr<MaskedLattice<Float> > > images =
             momentMaker.createMoments(doTemp, _momentName, _removeAxis);
-        momentMaker.closePlotting();
+        //momentMaker.closePlotting();
         // Return handle of first image
         pIm.reset(
             dynamic_cast<ImageInterface<T>*> (images[0].release())
