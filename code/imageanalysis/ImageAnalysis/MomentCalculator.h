@@ -35,7 +35,6 @@
 #include <lattices/LatticeMath/LineCollapser.h>
 #include <scimath/Functionals/Gaussian1D.h>
 #include <scimath/Mathematics/NumericTraits.h>
-//#include <casa/System/PGPlotter.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Logging/LogIO.h>
 
@@ -193,9 +192,6 @@ protected:
 // (expensive).  It should only be filled if doCoordCalc_p is True
    Vector<Double> sepWorldCoord_p;
 
-// This gives the plotter name.  If no plotting, it won't be attached
-   //PGPlotter plotter_p;
-
 // This Bool tells us whether we want to see all profiles plotted with the 
 // Y range or whether they are to be scaled individually
    Bool fixedYLimits_p;
@@ -259,9 +255,6 @@ protected:
                       Bool& doMedianV,
                       Bool& doAbsDev) const;
 
-// Return reference plotting device from ImageMoments or MSMoments object
-   //PGPlotter& device(MomentsBase<T>& iMom) const;
-
 // Return automatic/interactive switch from the ImageMoments or MSMoments object
    Bool doAuto(const MomentsBase<T>& iMom) const;
 
@@ -274,40 +267,7 @@ protected:
 // Return the Bool from the ImageMoments or MSMoments object saying whether we 
 // are going to fit Gaussians to the profiles or not.
    Bool doFit(const MomentsBase<T>& iMom) const;
-/*
-// Draw a horizontal line across the full x range of the plot
-   void drawHorizontal(const T& y,
-                       PGPlotter& plotter) const;
 
-// Draw a spectrum on the current panel with the box already drawn on
-   void drawLine (const Vector<T>& x,
-                  const Vector<T>& y,
-                  PGPlotter& plotter) const;
-
-// Draw and label a spectrum on the current or next panel
-   Bool drawSpectrum (const Vector<T>& x,
-                      const Vector<T>& y,
-                      const Vector<Bool>& mask,
-                      const Bool fixedYLimits,
-                      const T yMinAuto,
-                      const T yMaxAuto,
-                      const String xLabel, 
-                      const String yLabel, 
-                      const String title,
-                      const Bool advancePanel,
-                      PGPlotter& plotter) const;
-
-// Draw on lines marking the mean and +/- sigma
-   void drawMeanSigma  (const T dMean,
-                        const T dSigma,
-                        PGPlotter& plotter) const;
-
-// Draw a vertical line of the given length at a given abcissa
-   void drawVertical(const T x,
-                     const T yMin,
-                     const T yMax,
-                     PGPlotter& plotter) const;
-*/
 // Find the next masked or unmasked point in a vector
    Bool findNextDatum     (uInt& iFound,
                            const uInt& n,
@@ -341,14 +301,7 @@ protected:
                            const Vector<T>& y,
                            const Vector<Bool>& mask,
                            const T peakSNR,
-                           const T stdDeviation/*,
-                           PGPlotter& plotter,
-                           const Bool fixedYLimits,
-                           const T yMinAuto,
-                           const T yMaxAuto,
-                           const String xLabel,
-                           const String yLabel,
-                           const String title */) const;
+                           const T stdDeviation) const;
 
 // Automatically work out a guess for the Gaussian parameters
 // Returns False if all pixels masked.
@@ -359,12 +312,6 @@ protected:
                              const Vector<T>& x,
                              const Vector<T>& y,
                              const Vector<Bool>& mask) const;
-/*
-// Read the cursor button
-   void getButton(Bool& reject,
-                  Bool& redo,
-                  PGPlotter& plotter) const;
-*/
 
 // Interactively define a guess for a Gaussian fit, and then
 // do the fit.  Do this repeatedly  until the user is content.
@@ -379,8 +326,7 @@ protected:
                             const T yMaxAuto,
                             const String xLabel,
                             const String yLabel,
-                            const String title /*,
-                            PGPlotter& plotter */) const;
+                            const String title) const;
 
 // Interactively define a guess for the Gaussian parameters
    void getInterGaussianGuess(T& peakGuess,
@@ -389,19 +335,8 @@ protected:
                               Vector<Int>& window,
                               Bool& reject,
                               LogIO& os,
-                              const Int nPts /*,
-                              PGPlotter& plotter*/) const;
+                              const Int nPts) const;
 
-// Read the cursor and return its coordinates if not off the plot.
-// Also interpret which button was pressed
-/*
-   Bool getLoc(T& x,
-               Bool& allSubsequent,
-               Bool& ditch,
-               Bool& redo,
-               const Bool final,
-               PGPlotter& plotter) const;
-  */                      
 // Compute the world coordinate for the given moment axis pixel   
    Double getMomentCoord(
 		   const MomentsBase<T>& iMom, Vector<Double>& pixelIn,
@@ -487,17 +422,6 @@ protected:
                      const CoordinateSystem& cSys,
                      Bool doCoordProfile, Bool doCoordRandom) const;
 
-// Plot the Gaussian fit
-   /*
-   void showGaussFit(const T peak,
-                     const T pos,    
-                     const T width,
-                     const T level,
-                     const Vector<T>& x,
-                     const Vector<T>& y,
-                     const Vector<Bool>& mask,
-                     PGPlotter& plotter) const;
-*/
 // Find some statistics from teh masked vector.
 // Returns False if no unmasked points.
    Bool stats(T& dMin, T& dMax, 
@@ -829,12 +753,6 @@ private:
    Bool doAuto_p, doFit_p;
    IPosition sliceShape_p;
 
-/*
-// Draw two vertical lines marking a spectral window
-   void drawWindow(const Vector<Int>& window,
-                   PGPlotter& plotter) const;
-*/
-
 // Automatically determine the spectral window
    Bool getAutoWindow(uInt& nFailed,
                       Vector<Int>& window,
@@ -843,64 +761,15 @@ private:
                       const Vector<Bool>& mask,
                       const T peakSNR,
                       const T stdDeviation,
-                      const Bool doFit/*,
-                      PGPlotter& plotter,
-                      const Bool fixedYLimits,                 
-                      const T yMinAuto,                 
-                      const T yMaxAuto,                 
-                      const String xLabel,
-                      const String yLabel,
-                      const String title*/) const;
+                      const Bool doFit) const;
 
 // Automatically determine the spectral window via Bosma's algorithm
    Bool getBosmaWindow (Vector<Int>& window,
-                        //const Vector<T>& x,
                         const Vector<T>& y,
                         const Vector<Bool>& mask,
                         const T peakSNR,
-                        const T stdDeviation/*,
-                        PGPlotter& plotter,
-                        const Bool fixedYLimits,
-                        const T yMinAuto,
-                        const T yMaxAuto,
-                        const String xLabel,
-                        const String yLabel,
-                        const String title*/) const;
-/*
-// Interactively specify the spectral window with the cursor
-   Bool getInterDirectWindow(Bool& allSubsequent,
-                             LogIO& os,
-                             Vector<Int>& window,
-                             const Vector<T>& x,
-                             const Vector<T>& y,
-                             const Vector<Bool>& mask,
-                             const Bool fixedYLimits,   
-                             const T yMinAuto,   
-                             const T yMaxAuto,
-                             const String xLabel,
-                             const String yLabel,
-                             const String title,
-                             PGPlotter& plotter) const;
-*/
-   /*
-// Interactively define the spectral window
-// Returns false if can't define window.
-   Bool getInterWindow (uInt& nFailed,
-                        Bool& allSubsequent,
-                        LogIO& os,
-                        Vector<Int>& window,
-                        const Bool doFit,
-                        const Vector<T>& x,
-                        const Vector<T>& y,
-                        const Vector<Bool>& mask,
-                        const Bool fixedYLimits,
-                        const T yMinAuto,
-                        const T yMaxAuto,
-                        const String xLabel,
-                        const String yLabel,
-                        const String title,
-                        PGPlotter& plotter) const;
-*/
+                        const T stdDeviation) const;
+
 // Take the fitted Gaussian parameters and set an N-sigma window.
 // If the window is too small return a Fail condition.
    Bool setNSigmaWindow(Vector<Int>& window,  

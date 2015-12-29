@@ -152,15 +152,6 @@ Bool MomentCalcBase<T>::doFit(const MomentsBase<T>& iMom) const
    return iMom.doFit_p;
 }
 
-
-/*
-template <class T>
-PGPlotter& MomentCalcBase<T>::device(MomentsBase<T>& iMom) const
-{
-   return iMom.plotter_p;
-}
-*/
-
 template <class T>
 void MomentCalcBase<T>::doCoordCalc(Bool& doCoordProfile,
                                     Bool& doCoordRandom,
@@ -189,174 +180,6 @@ void MomentCalcBase<T>::doCoordCalc(Bool& doCoordProfile,
       }
    }
 }
-
-
-/*
-template <class T>
-void MomentCalcBase<T>::drawHorizontal(const T& y,
-                                       PGPlotter& plotter) const
-
-//
-// Draw a horizontal line across the full x range of the plot
-//
-{
-   Vector<Float> minMax(4);
-   minMax = plotter.qwin();
-   Float yy = convertT(y);
-
-   plotter.move (minMax(0), yy);
-   plotter.draw (minMax(1), yy);
-}
-*/
-/*
-template <class T>
-void MomentCalcBase<T>::drawLine (const Vector<T>& x,
-                                  const Vector<T>& y,
-                                  PGPlotter& plotter) const
-//
-// Draw  a spectrum on the current panel
-// with the box already drawn
-//
-{
-// Pass it on to ImageMoments who has to do this too
-
-   MomentsBase<T>::drawLine(x, y, plotter);
-} 
-*/
-/*
-template <class T>
-Bool MomentCalcBase<T>::drawSpectrum (const Vector<T>& x,
-                                      const Vector<T>& y,
-                                      const Vector<Bool>& mask,
-                                      const Bool fixedYLimits,
-                                      const T yMinAuto,
-                                      const T yMaxAuto,
-                                      const String xLabel,
-                                      const String yLabel,
-                                      const String title,
-                                      const Bool advance,
-                                      PGPlotter& plotter) const
-//
-// Draw and label a spectrum on the next panel
-// Some of the spectrum may be masked, so we draw it
-// in chunks
-//
-// If the mask is all good, there are no elements in it.
-//
-// Returns false if all pixels are masked.
-//
-{
-// Find number of segments in this vector. Bug out if none.
-
-   Vector<uInt> start;
-   Vector<uInt> nPtsPerSeg;
-   uInt nSeg;
-   if (mask.nelements() == 0) {
-      nSeg = 1;
-      start.resize(1);
-      start(0) = 0;
-      nPtsPerSeg.resize(1);
-      nPtsPerSeg(0) = y.nelements();
-   } else {
-      lineSegments (nSeg, start, nPtsPerSeg, mask);
-      if (nSeg == 0) return False;
-   }
-   
-
-// Find extrema.
- 
-   T yMin, yMax, yMean;
-   Float yMinF, yMaxF;
-   if (!fixedYLimits) {
-      if (mask.nelements() == 0) {
-         minMax (yMin, yMax, y);
-      } else {
-         uInt minPos, maxPos;       
-         if(!this->stats(yMin, yMax, minPos, maxPos, yMean, y, mask)) return False;
-      }
-
-      yMinF = convertT(yMin);
-      yMaxF = convertT(yMax);
-      LatticeStatsBase::stretchMinMax (yMinF, yMaxF);
-   } else {
-      yMinF = convertT(yMinAuto);
-      yMaxF = convertT(yMaxAuto);
-   }
-
-   const uInt nPts = x.nelements();
-   Float xMin = 0.0;
-   Float xMax = Float(nPts);
-   LatticeStatsBase::stretchMinMax (xMin, xMax); 
-
-
-// Draw box and label
-
-   if (advance) plotter.page();
-   plotter.swin (xMin, xMax, yMinF, yMaxF);
-   plotter.box ("BCNST", 0.0, 0, "BCNST", 0.0, 0);
-   plotter.lab (xLabel.chars(), yLabel.chars(), "");
-   plotter.mtxt ("T", 1.0, 0.5, 0.5, title.chars());
-
-
-// Loop over segments and plot them
-                                 
-   Vector<Float> xtmp, ytmp;
-   for (uInt i=0; i<nSeg; i++) {
-      const uInt ip = start(i);
-      if (nPtsPerSeg(i) == 1) {
-          xtmp.resize(1);
-          ytmp.resize(1);
-          xtmp(0) = convertT(x(ip));
-          ytmp(0) = convertT(y(ip));
-          plotter.pt (xtmp, ytmp, 1);
-      } else {
-          xtmp.resize(nPtsPerSeg(i));
-          ytmp.resize(nPtsPerSeg(i));
-          for (uInt j=0; j<nPtsPerSeg(i); j++) {
-             xtmp(j) = convertT(x(start(i)+j));
-             ytmp(j) = convertT(y(start(i)+j));
-          }
-          plotter.line (xtmp, ytmp);
-      }
-   }
-   return True;
-}
-*/
-
-/*
-template <class T>
-void MomentCalcBase<T>::drawMeanSigma (const T dMean,
-                                       const T dSigma,
-                                       PGPlotter& plotter) const
-
-//
-// Draw a horizontal line on the spectrum plot at
-// the mean value, and 2 horizontal lines at
-// mean +/- sigma
-//    
-{
-   plotter.sci(7);
-   drawHorizontal(dMean, plotter);
-   plotter.sci(5);
-   drawHorizontal(dMean+dSigma, plotter);
-   drawHorizontal(dMean-dSigma, plotter);
-   plotter.sci(1);
-}
-*/
-/*
-template <class T>
-void MomentCalcBase<T>::drawVertical (const T loc,
-                                      const T yMin,
-                                      const T yMax,
-                                      PGPlotter& plotter) const
-{  
-// Pass it on to ImageMoments
-
-   MomentsBase<T>::drawVertical(loc, yMin, yMax, plotter);
-}
- */ 
-
-
 
 template <class T>
 Bool MomentCalcBase<T>::findNextDatum (uInt& iFound,
@@ -510,14 +333,8 @@ Bool MomentCalcBase<T>::getAutoGaussianFit (uInt& nFailed,
                                             const Vector<T>& y,
                                             const Vector<Bool>& mask,
                                             const T peakSNR,
-                                            const T stdDeviation/*,
-                                            PGPlotter& plotter,
-                                            const Bool fixedYLimits,
-                                            const T yMinAuto,
-                                            const T yMaxAuto,
-                                            const String xLabel,
-                                            const String yLabel,
-                                            const String title*/) const
+                                            const T stdDeviation
+                                            ) const
 //
 // Automatically fit a Gaussian and return the Gaussian parameters.
 // If a plotting device is active, we also plot the spectra and fits
@@ -537,15 +354,6 @@ Bool MomentCalcBase<T>::getAutoGaussianFit (uInt& nFailed,
 //
 {
     
-   
-// Plot spectrum if desired. If all masked, bug out.
-/*      
-   if (plotter.isAttached()) {
-      if (!this->drawSpectrum (x, y, mask, fixedYLimits, yMinAuto, yMaxAuto,
-           xLabel, yLabel, title, True, plotter)) return False;
-   }
-*/
-
 // See if this spectrum is all noise.  If so, forget it.
 // Return straight away if all masked
    
@@ -553,13 +361,6 @@ Bool MomentCalcBase<T>::getAutoGaussianFit (uInt& nFailed,
    uInt iNoise = this->allNoise(dMean, y, mask, peakSNR, stdDeviation);
    if (iNoise == 2) return False;
  
-// Draw on mean and sigma
- /* 
-   if (plotter.isAttached()) {
-      this->drawMeanSigma (dMean, stdDeviation, plotter);
-      if (iNoise==1) plotter.mtxt ("T", 1.0, 0.0, 0.0, "NOISE");
-   }  
-   */
    if (iNoise==1) {
       gaussPars = 0;  
       return False;
@@ -586,12 +387,6 @@ Bool MomentCalcBase<T>::getAutoGaussianFit (uInt& nFailed,
    gaussPars(2) = width;
    gaussPars(3) = level;
 
-   
-// Plot the fit
-  /* 
-   if (plotter.isAttached()) showGaussFit (peak, pos, width, level, x, 
-                                           y, mask, plotter);
-   */
    return True;
 }
 
@@ -629,40 +424,6 @@ Bool MomentCalcBase<T>::getAutoGaussianGuess (T& peakGuess,
    return True;
 }
 
-
-
-/*
-template <class T>
-void MomentCalcBase<T>::getButton(Bool& ditch,
-                                  Bool& redo ,
-                                  PGPlotter& plotter) const
-//
-// Read the PGPLOT cursor and interpret the button
-// pushed
-//
-{
-// Fish out window
- 
-   Vector<Float> minMax(4);
-   minMax = plotter.qwin();
-
-
-   Float x = (minMax(0)+minMax(1))/2;
-   Float y = (minMax(2)+minMax(3))/2;
-   String str;
-   MomentsBase<T>::readCursor (plotter, x, y, str);
-   str.upcase();
-   ditch = False;
-   redo = False;  
-   if (str == "X") {
-      ditch = True;
-   } else if (str == "D") {
-      redo = True;
-   }
-
-}
-*/
-
 template <class T>
 Bool MomentCalcBase<T>::getInterGaussianFit (uInt& nFailed,
                                              Vector<T>& gaussPars,
@@ -675,8 +436,7 @@ Bool MomentCalcBase<T>::getInterGaussianFit (uInt& nFailed,
                                              const T yMaxAuto,
                                              const String xLabel,
                                              const String yLabel,
-                                             const String title /*,
-                                             PGPlotter& plotter */) const
+                                             const String title ) const
 //
 // With the cursor, define a guess for a Gaussian fit,
 // and do the fit over and over until they are happy.
@@ -796,8 +556,7 @@ void MomentCalcBase<T>::getInterGaussianGuess(T& peakGuess,
                                               Vector<Int>& window,
                                               Bool& reject,
                                               LogIO& os,
-                                              const Int nPts /*,
-                                              PGPlotter& plotter */) const
+                                              const Int nPts) const
 
 //
 // Use the cursor to get the user's guess for the
@@ -818,7 +577,6 @@ void MomentCalcBase<T>::getInterGaussianGuess(T& peakGuess,
    Float yCurLocF = (minMax(2)+minMax(3))/2;
    Bool miss=True;
    while (miss) {
-     // MomentsBase<T>::readCursor(plotter, xCurLocF, yCurLocF, str);
      str.upcase();
      if (str == "X") {
         miss = False;
@@ -826,36 +584,25 @@ void MomentCalcBase<T>::getInterGaussianGuess(T& peakGuess,
         miss = (xCurLocF<minMax(0) || xCurLocF>minMax(1) ||
                       yCurLocF<minMax(2) || yCurLocF>minMax(3));
      }
-     //if (miss) plotter.message("Cursor off image");
    }
 
    reject = False;
    if (str == "X") {
-     //plotter.message("Rejecting spectrum");
      reject = True;
      return;
    }
-   //plotter.sci(3);
 
    Vector<Float> xDataF(1), yDataF(1);
    xDataF(0) = xCurLocF;
    yDataF(0) = yCurLocF;
-    /*
-   plotter.pt (xDataF, yDataF, 2);
-   plotter.updt ();
-   plotter.sci (1);
-    */
    posGuess = convertT(xCurLocF);
    peakGuess = convertT(yCurLocF);
    
-     
 // Now FWHM
      
    os << endl;
-   //plotter.message("Mark location of the FWHM - click right to reject spectrum");
    miss = True;   
    while (miss) {
-     //MomentsBase<T>::readCursor(plotter, xCurLocF, yCurLocF, str);
      str.upcase();
      if (str == "X") {
         miss = False;
@@ -863,29 +610,17 @@ void MomentCalcBase<T>::getInterGaussianGuess(T& peakGuess,
         miss = (xCurLocF<minMax(0) || xCurLocF>minMax(1) ||
                       yCurLocF<minMax(2) || yCurLocF>minMax(3));
      }
-     // if (miss) plotter.message("Cursor off image");
    }
    if (str == "X") {
-     // plotter.message("Rejecting spectrum");
      reject = True;
    }
-   // plotter.sci (3);
-
    xDataF(0) = xCurLocF;
    yDataF(0) = yCurLocF;
-   //plotter.pt (xDataF, yDataF, 2);
-   // plotter.sci (1);
    yCurLocF = convertT(peakGuess)/2;
-   // plotter.updt (); 
    widthGuess = 2*abs(posGuess-T(xCurLocF));
   
-// Now window
-    
-   // plotter.message(" ");
-   // plotter.message("Mark location of fit window; right to reject spectrum, middle fits whole spectrum");
    miss=True;
    while (miss) {
-     //MomentsBase<T>::readCursor(plotter, xCurLocF, yCurLocF, str);
      str.upcase();
      if (str == "X") {
         miss = False;
@@ -893,14 +628,11 @@ void MomentCalcBase<T>::getInterGaussianGuess(T& peakGuess,
         miss = (xCurLocF<minMax(0) || xCurLocF>minMax(1) || 
                       yCurLocF<minMax(2) || yCurLocF>minMax(3));
      }
-     //if (miss) plotter.message("Cursor off image");
    }
    if (str == "X") {
-     // plotter.message("Rejecting spectrum");
      reject = True;
      return;
    } else if (str == "D") {
-     // plotter.message("Fit to entire spectrum");
      window(0) = 0;
      window(1) = nPts-1;
      return; 
@@ -908,12 +640,10 @@ void MomentCalcBase<T>::getInterGaussianGuess(T& peakGuess,
    T tX = convertF(xCurLocF);
    T tY1 = minMax(2);
    T tY2 = minMax(3);
-   //this->drawVertical (tX, tY1, tY2, plotter);
    window(0) = Int(xCurLocF+0.5);
    
    miss = True;
    while (miss) {
-     // MomentsBase<T>::readCursor(plotter, xCurLocF, yCurLocF, str);
      str.upcase();
      if (str == "X") {
         miss = False;
@@ -921,14 +651,11 @@ void MomentCalcBase<T>::getInterGaussianGuess(T& peakGuess,
         miss = (xCurLocF<minMax(0) || xCurLocF>minMax(1) || 
                       yCurLocF<minMax(2) || yCurLocF>minMax(3));
      }
-     // if (miss) plotter.message("Cursor off image");
    }
    if (str == "X") {
-     // plotter.message("Rejecting spectrum");
      reject = True;
      return;
    } else if (str == "D") {
-     // plotter.message("Fit to entire spectrum");
      window(0) = 0;
      window(1) = nPts-1;
      return;
@@ -936,94 +663,14 @@ void MomentCalcBase<T>::getInterGaussianGuess(T& peakGuess,
    tX = convertT(xCurLocF);
    tY1 = minMax(2);
    tY2 = minMax(3);
-   // this->drawVertical (tX, tY1, tY2, plotter);
    window(1) = Int(xCurLocF+0.5);
    Int iTemp = window(0);
    window(0) = min(iTemp, window(1));
    window(1) = max(iTemp, window(1));
    window(0) = max(0,window(0));
    window(1) = min(nPts-1,window(1));
-   
-   // plotter.sci(1);
 }
    
-/*
-template <class T>
-Bool MomentCalcBase<T>::getLoc (T& x,
-                                Bool& allSubsequent,
-                                Bool& ditch,
-                                Bool& redo,
-                                const Bool final ,
-                                PGPlotter& plotter ) const
-//
-// Read the PGPLOT cursor and return its coordinates if not off the plot
-// Also interpret which button was pressed
-// 
-// Inputs:
-//   final   If we are marking a window, this indicates that we are
-//           trying to mark the last location, so that allSubsequent
-//           might be activated.
-// Input/Output:
-//   x       X location of cursor.  Input value is used to position cursor
-// Outputs:
-//   allSubsequent
-//           If True it means that whatever we have done to this spectrum,
-//           the user would like it done to all subsequent ones.
-//   ditch   The user has indicated to reject this spectrum
-//   redo    The user has indicated to redo whaetver it is we are doing !
-//   Bool    False if cursor off the window
-//                            
-{
-// Fish out window
-      
-   Vector<Float> minMax(4);
-   minMax = plotter.qwin();
-      
-// Position and read cursor
-      
-   Float xCurLocF = convertT(x);
-   Float yCurLocF = 0.0;
-   String str;
-   MomentsBase<T>::readCursor(plotter, xCurLocF, yCurLocF, str);
-       
-// Interpret location and character
-
-   str.upcase();
-   ditch = False;
-   redo = False;
-   allSubsequent = False;
-                              
-   if (str == "X") {
-      plotter.message("Rejecting spectrum");
-      ditch = True;
-   } else if (str == "D") {
-      plotter.message("Redoing window for this spectrum");
-      redo = True;
-   } else {
-      if (xCurLocF >= minMax(0) && xCurLocF <= minMax(1)) {
-         x = convertF(xCurLocF);
-      } else {
-         plotter.message("Cursor out of range");
-         return False;
-      }
-
-      if (str == "S") {
-         if (!final) {
-            plotter.message("You must define both ends of the range before it can be\n");
-            plotter.message("applied to all subsequent spectra. Enter S to define the\n");
-            plotter.message("second extremum and indicate it will be used for all\n ");
-            plotter.message("subsequent spectra\n");
-
-            return False;
-         } else {
-            plotter.message("All subsequent spectra will use this window");
-            allSubsequent = True;
-         }
-      }
-   } 
-   return True;
-}
-*/
 template <class T>
 void MomentCalcBase<T>::lineSegments (uInt& nSeg,
                                       Vector<uInt>& start, 
@@ -1083,7 +730,6 @@ void MomentCalcBase<T>::makeAbcissa (Vector<T>& x,
 template <class T>
 Int& MomentCalcBase<T>::momentAxis(MomentsBase<T>& iMom) const
 {
-// Get it from ImageMoments private data
    return iMom.momentAxis_p;
 }
 
@@ -1312,70 +958,6 @@ void MomentCalcBase<T>::setUpCoords (const MomentsBase<T>& iMom,
       doneIntScale = True;
    }
 }
-/*
-template <class T>
-void MomentCalcBase<T>::showGaussFit(const T peak,
-                                     const T pos,
-                                     const T width,
-                                     const T level,
-                                     const Vector<T>& x,
-                                     const Vector<T>& y,
-                                     const Vector<Bool>& mask,
-                                     PGPlotter& plotter) const
-// 
-// Plot the Gaussian fit and residual
-//
-{
-   const uInt nDPts = x.nelements();
-   T xMin = x(0);
-   T xMax = x(nDPts-1);
-   uInt nGPts = 100;
-   T dx = (xMax - xMin)/nGPts;
-
-// Setup functional
-
-   const Gaussian1D<T> gauss(peak, pos, width);
-                                      
-   
-// Allocate arrays
-
-   Vector<T> xG(nGPts);
-   Vector<T> yG(nGPts);
-   
-   
-// Generate plot values
- 
-   uInt i;
-   T xx;
-   for (i=0,xx=xMin; i<nGPts; xx+=dx,i++) {
-      xG(i) = xx;
-      yG(i) = gauss(xx) + level;
-   }
-   plotter.sci (7);
-   drawLine (xG, yG, plotter);
-
-
-// Now difference
-   
-   Vector<T> xd(nDPts);
-   Vector<T> d(nDPts);
-   uInt j = 0;
-   for (i=0; i<nDPts; i++) {
-      if (mask(i)) {
-         xd(j) = x(i);
-         d(j) = y(i) - gauss(x(i));
-         j++;
-      }
-   }
-   if (j > 0) {
-     xd.resize(j,True);
-     d.resize(j,True);
-     plotter.sci (2);
-     drawLine (xd, d, plotter);
-  }
-  plotter.sci (1);
-}
-*/
 
 template <class T>      
 Bool MomentCalcBase<T>::stats(T& dMin, 
@@ -2313,27 +1895,6 @@ void MomentWindow<T>::multiProcess(Vector<T>& moments,
    }
 }
 
-
-/*
-template <class T>
-void MomentWindow<T>::drawWindow(const Vector<Int>& window,
-                                 PGPlotter& plotter) const
-//
-// Mark the current window on the plot
-//
-{  
-   Vector<Float> minMax(4);
-   minMax = plotter.qwin();
-   T yMin = convertF(minMax(2));
-   T yMax = convertF(minMax(3));
-
-   T x = window(0);
-   this->drawVertical (x, yMin, yMax, plotter);
-   x = window(1);
-   this->drawVertical (x, yMin, yMax, plotter);
-}
-*/
-
 template <class T>
 Bool MomentWindow<T>::getAutoWindow (uInt& nFailed,
                                      Vector<Int>& window,
@@ -2342,14 +1903,7 @@ Bool MomentWindow<T>::getAutoWindow (uInt& nFailed,
                                      const Vector<Bool>& mask,
                                      const T peakSNR,
                                      const T stdDeviation,
-                                     const Bool doFit/*,
-                                     PGPlotter& plotter,
-                                     const Bool fixedYLimits,                 
-                                     const T yMinAuto,                 
-                                     const T yMaxAuto,                 
-                                     const String xLabel,
-                                     const String yLabel,
-                                     const String title*/) const
+                                     const Bool doFit) const
 //
 // Automatically fit a Gaussian and return the +/- 3-sigma window or
 // invoke Bosma's method to set a window.  If a plotting device is
@@ -2370,9 +1924,7 @@ Bool MomentWindow<T>::getAutoWindow (uInt& nFailed,
 {
    if (doFit) {
       Vector<T> gaussPars(4);
-      if (!this->getAutoGaussianFit (nFailed, gaussPars, x, y, mask, peakSNR, stdDeviation/*, 
-                               plotter, fixedYLimits, yMinAuto, yMaxAuto, 
-                               xLabel, yLabel, title*/)) {
+      if (!this->getAutoGaussianFit (nFailed, gaussPars, x, y, mask, peakSNR, stdDeviation)) {
          window = 0;
          return False;
       } else {
@@ -2389,213 +1941,20 @@ Bool MomentWindow<T>::getAutoWindow (uInt& nFailed,
    } else {
 // Invoke Albert's method (see AJ, 86, 1791)
 
-      if (!getBosmaWindow (window, /*x,*/ y, mask, peakSNR, stdDeviation/*, 
-                           plotter, fixedYLimits, yMinAuto, yMaxAuto, 
-                           xLabel, yLabel, title*/)) {
+      if (!getBosmaWindow (window, y, mask, peakSNR, stdDeviation)) {
          window = 0;
          return False;
       }
    }
-   
-// Plot window if desired
- 
-   // if (plotter.isAttached()) drawWindow (window, plotter);
-
    return True;
 }
-/*
-template <class T>
-Bool MomentWindow<T>::getInterDirectWindow (Bool& allSubsequent,
-                                            LogIO& os,
-                                            Vector<Int>& window,
-                                            const Vector<T>& x,
-                                            const Vector<T>& y,
-                                            const Vector<Bool>& mask,
-                                            const Bool fixedYLimits,   
-                                            const T yMinAuto,   
-                                            const T yMaxAuto,
-                                            const String xLabel,
-                                            const String yLabel,
-                                            const String title ,
-                                            PGPlotter& plotter ) const
-//
-// With the cursor, mark the range for the window method
-//
-// Outputs:
-//  window    The window (pixels)
-//
-// Returns false if couldn't set window becasue spectrum
-// was all masked
-{
- 
-// First plot the spectrum
-   
-   if (!this->drawSpectrum (x, y, mask, fixedYLimits, yMinAuto, yMaxAuto,
-                      xLabel, yLabel, title, True, plotter)) return False;
-
-
-// Try and get a decent range from user   
-      
-   Vector<Float> minMax(4);
-   minMax = plotter.qwin();
-   Bool more = True;
-   Bool ditch, redo;
-   const uInt nPts = y.nelements();   
-   T tX, tY1, tY2;
-
-   while (more) {
-  
-// Get and draw first location   
-
-      Bool final = False;
-      T x1 = convertF(Float(nPts))/2;
-      allSubsequent = True;
-      while (!this->getLoc(x1, allSubsequent, ditch, redo, final, plotter)) {};
-      if (ditch) {
-         window = 0;
-         return False;
-      }
-
-      if (!redo) {
-         window(0) = max(0,Int(x1+0.5));
-         tX = window(0);
-         tY1 = minMax(2);
-         tY2 = minMax(3);
-         this->drawVertical (tX, tY1, tY2, plotter);
-  
-
-// Get and draw second location
-  
-         T x2 = window(0);
-         final = True;
-         allSubsequent = True;
-         while (!this->getLoc(x2, allSubsequent, ditch, redo, final, plotter)) {};
-         if (ditch) {
-            window = 0;
-            return False;
-         } else if (redo) {
-            plotter.eras();
-            this->drawSpectrum  (x, y, mask, fixedYLimits, yMinAuto, yMaxAuto,
-                          xLabel, yLabel, title, False, plotter);
-         } else {
-            window(1) = min(nPts-1,uInt(x2+0.5));
-            tX = window(1);
-            this->drawVertical (tX, tY1, tY2, plotter);
-         
-// Set window
-         
-            Int iTemp = window(0);
-            window(0) = min(iTemp, window(1));
-            window(1) = max(iTemp, window(1));
-         
-// If they stuffed it up, have another go.  Erase the line and redraw
-// the spectrum segment
-         
-            if (window(0) == window(1)) {
-               os << LogIO::NORMAL << "Degenerate window, try again" << LogIO::POST;
-               plotter.eras();
-               this->drawSpectrum (x, y, mask, fixedYLimits, yMinAuto, yMaxAuto,
-                            xLabel, yLabel, title, False, plotter);
-
-            } else
-               more = False;
-         } 
-      }
-   }
-   return True;
-}
-*/
-/*
-template <class T>
-Bool MomentWindow<T>::getInterWindow(uInt& nFailed, 
-                                     Bool& allSubsequent, 
-                                     LogIO& os,
-                                     Vector<Int>& window,
-                                     const Bool doFit,
-                                     const Vector<T>& x,
-                                     const Vector<T>& y,
-                                     const Vector<Bool>& mask,
-                                     const Bool fixedYLimits,
-                                     const T yMinAuto,
-                                     const T yMaxAuto,
-                                     const String xLabel,
-                                     const String yLabel,
-                                     const String title ,
-                                     PGPlotter& plotter ) const
-//
-// Interactively select the moment window by fitting a Gaussian
-// or directly setting the window with the cursor.
-//
-// Inputs:
-//   x,y        Spectrum
-//   mask       Mask associated with spectrum. True is good.
-//   x,yLabel   Labels for plots
-//   title
-// Output:
-//   window     Include pixels in this range of indices.  If both 0,
-//              then discard this spectrum and mask moments
-//   allSubsequent 
-//              If True, then the user has instructed that
-//              all subsequent spectra are to use this window
-//              and we are to stop the interactive plotting
-{                                     
-   if (doFit) {   
-         
-         
-// We interactively fit a Gaussian and choose +/- 3 sigma limits as the range
-      
-      Vector<T> gaussPars(4);
-      if (!this->getInterGaussianFit (nFailed, gaussPars, os, x, y, mask, fixedYLimits, 
-                                yMinAuto, yMaxAuto, xLabel, yLabel, 
-                                title, plotter)) {
-         window = 0;
-         return False;
-      } else {
-    
-// Set 3-sigma range
-   
-         if (!setNSigmaWindow (window, gaussPars(1), gaussPars(2), 
-                               y.nelements(), 3)) {
-            os << LogIO::NORMAL << "Window too small for this spectrum" << LogIO::POST;
-            window = 0;
-            return False;
-         }
-
-// Mark window on plot
-         
-         plotter.eras ();
-         this->drawSpectrum (x, y, mask, fixedYLimits, yMinAuto, yMaxAuto, 
-                       xLabel, yLabel, title, False, plotter);
-         drawWindow (window, plotter);
-      }
-      allSubsequent = False;
-   } else {
-
-// The user just marks the range with the cursor
-
-      if (!getInterDirectWindow (allSubsequent, os, window, x, y, mask, 
-                                 fixedYLimits, yMinAuto, yMaxAuto, xLabel,
-                                 yLabel, title, plotter)) return False;
-   }
-  
-   return True;
-}
-*/
 
 template <class T>
 Bool MomentWindow<T>::getBosmaWindow (Vector<Int>& window,
-                                      // const Vector<T>& x,
                                       const Vector<T>& y,
                                       const Vector<Bool>& mask,
                                       const T peakSNR,
-                                      const T stdDeviation/*,
-                                      PGPlotter& plotter, 
-                                      const Bool fixedYLimits,
-                                      const T yMinAuto,
-                                      const T yMaxAuto,
-                                      const String xLabel,
-                                      const String yLabel,
-                                      const String title*/) const
+                                      const T stdDeviation) const
 //
 // Automatically work out the spectral window
 // with Albert Bosma's algorithm.
@@ -2610,16 +1969,6 @@ Bool MomentWindow<T>::getBosmaWindow (Vector<Int>& window,
 //             be because it is all noise, or all masked
 //
 {
-     /* 
-   if (plotter.isAttached()) {
-   
-// Plot spectrum 
-      
-      if (!this->drawSpectrum (x, y, mask, fixedYLimits, yMinAuto, yMaxAuto,
-                        xLabel, yLabel, title, True, plotter)) return False;
-   }
-
-*/
 // See if this spectrum is all noise first.  If so, forget it.
 // Return straight away if all maske
 
@@ -2627,14 +1976,6 @@ Bool MomentWindow<T>::getBosmaWindow (Vector<Int>& window,
    uInt iNoise = this->allNoise(dMean, y, mask, peakSNR, stdDeviation);
    if (iNoise == 2) return False;
 
-
-// Draw on mean and sigma
- /*
-   if (plotter.isAttached()) {
-      this->drawMeanSigma (dMean, stdDeviation, plotter);
-      if (iNoise==1) plotter.mtxt ("T", 1.0, 0.0, 0.0, "NOISE");
-   }
-   */
    if (iNoise==1) {
       window = 0;
       return False;   
