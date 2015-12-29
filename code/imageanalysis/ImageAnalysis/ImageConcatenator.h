@@ -100,8 +100,8 @@ private:
 
 	// returns True if world coordinate values increase with pixel coordinate values
 	Bool _minMaxAxisValues(
-		Double& min, Double& max,
-		SPCIIT image
+		Double& min, Double& max, uInt ndim,
+		const CoordinateSystem& csys, const IPosition& shape
 	) const;
 
 	void _addImage(std::unique_ptr<ImageConcat<T> >& pConcat, const String& name) const;

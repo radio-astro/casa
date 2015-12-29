@@ -30,6 +30,8 @@
 
 #include <casa/BasicSL/STLIO.h>
 
+#include <imageanalysis/ImageAnalysis/ImageFactory.h>
+
 namespace casa {
 
 template <class T>
@@ -108,37 +110,46 @@ SPIIT ImageConcatenator<T>::concatenate(
 		minVals.resize(n);
 		maxVals.resize(n);
 		isIncreasing = _minMaxAxisValues(
-			minVals[0], maxVals[0], myImage
+			minVals[0], maxVals[0], myImage->ndim(),
+			csys, myImage->shape()
 		);
 	}
 	uInt i = 1;
 	for(String name: imageNames) {
-		SPIIT im2 = ImageUtilities::openImage<T>(name);
+		auto mypair = ImageFactory::fromFile(name);
+		auto oDType = mypair.first ? mypair.first->dataType() : mypair.second->dataType();
+		const auto& oCsys = mypair.first
+			? mypair.first->coordinates()
+			: mypair.second->coordinates();
 		ThrowIf(
-			im2->dataType() != dataType,
+			oDType != dataType,
 			"Concatenation of images of different data types is not supported"
 		);
 		if (! _relax || _reorder) {
 			ThrowIf(
 				_minMaxAxisValues(
-					minVals[i], maxVals[i], im2
+					minVals[i], maxVals[i],
+					mypair.first ? mypair.first->ndim() : mypair.second->ndim(),
+					oCsys,
+					mypair.first
+						? mypair.first->shape()
+						: mypair.second->shape()
 				) != isIncreasing,
 				"Coordinate axes in different images with opposing increment signs "
 				"is not permitted if relax=False or reorder=True"
 			);
 		}
 		if (! _relax) {
-			const CoordinateSystem tcsys = im2->coordinates();
-			tcsys.findPixelAxis(
+			oCsys.findPixelAxis(
 				whichCoordinate, axisInCoordinate, _axis
 			);
 			ThrowIf(
-				tcsys.coordinate(whichCoordinate).type() != ctype,
+				oCsys.coordinate(whichCoordinate).type() != ctype,
 				"Cannot concatenate different coordinates in different images "
 				"if relax=False"
 			);
 		}
-		i++;
+		++i;
 	}
 	if (_reorder) {
 		Sort sorter;
@@ -200,18 +211,16 @@ template <class T> void ImageConcatenator<T>::_addImage(
 }
 
 template <class T> Bool ImageConcatenator<T>::_minMaxAxisValues(
-	Double& mymin, Double& mymax, SPCIIT image
+	Double& mymin, Double& mymax, uInt ndim, const CoordinateSystem& csys,
+	const IPosition& shape
 ) const {
-	uInt ndim = image->ndim();
 	ThrowIf(
 		ndim != this->_getImage()->ndim(),
 		"All images must have the same number of dimensions"
 	);
-	const CoordinateSystem csys = image->coordinates();
 	Vector<Double> pix = csys.referencePixel();
 	pix[_axis] = 0;
 	mymin = csys.toWorld(pix)[_axis];
-	IPosition shape = image->shape();
 	if (shape[_axis] == 1) {
 		mymax = mymin;
 		return this->_getImage()->coordinates().increment()[_axis] > 0;
