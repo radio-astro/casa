@@ -62,7 +62,6 @@
 #include <casa/BasicMath/Math.h>
 #include <casa/BasicSL/Constants.h>
 #include <scimath/Mathematics/NumericTraits.h>
-#include <casa/System/PGPlotter.h>
 #include <casa/System/ProgressMeter.h>
 #include <casa/Quanta/QC.h>
 #include <casa/Quanta/MVAngle.h>
@@ -618,7 +617,6 @@ void ImagePolarimetry::rotationMeasure(ImageInterface<Float>*& rmOutPtr,
                                        ImageInterface<Float>*& pa0OutErrorPtr,
                                        ImageInterface<Float>*& nTurnsOutPtr, 
                                        ImageInterface<Float>*& chiSqOutPtr,
-                                       /*PGPlotter& plotter,*/
                                        Int axis,  Float rmMax, Float maxPaErr,
                                        Float sigma, Float rmFg, Bool showProgress)
 {
@@ -1548,7 +1546,7 @@ Bool ImagePolarimetry::findRotationMeasure (Float& rmFitted, Float& rmErrFitted,
                                             const Array<Bool>& paMask2, 
                                             const Array<Float>& paerr2, 
                                             Float rmFg, Float rmMax, Float maxPaErr,
-                                            /*PGPlotter& plotter, */ const String& posString)
+                                            const String& posString)
 //
 // wsq is lambda squared in m**2 in increasing wavelength order
 // pa is position angle in radians
@@ -1727,7 +1725,7 @@ Bool ImagePolarimetry::rmPrimaryFit(Float& nTurns, Float& rmFitted, Float& rmErr
                                     Float& pa0Fitted, Float& pa0ErrFitted, 
                                     Float& rChiSqFitted, const Vector<Float>& wsq, 
                                     const Vector<Float>& pa, const Vector<Float>& paerr, 
-                                    Float rmMax, /*PGPlotter& plotter,*/ const String& posString)
+                                    Float rmMax, const String& posString)
 {
    static Vector<Float> plotPA;
    static Vector<Float> plotPAErr;

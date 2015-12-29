@@ -52,8 +52,6 @@ class IPosition;
 class LatticeExprNode;
 class LCBox;
 class LogIO;
-//class PGPlotter;
-
 
 // <summary>
 // Polarimetric analysis of images
@@ -317,7 +315,6 @@ public:
    void rotationMeasure(ImageInterface<Float>*& rmPtr,  ImageInterface<Float>*& rmErrPtr, 
                         ImageInterface<Float>*& pa0Ptr, ImageInterface<Float>*& pa0ErrPtr,
                         ImageInterface<Float>*& nTurns, ImageInterface<Float>*& rChiSqPtr,
-                        /*PGPlotter& plotter,*/
                         Int spectralAxis,  Float rmMax, Float maxPaErr=1.0e30,
                         Float sigma=-1.0, Float rmFg=0.0, Bool showProgress=False);
 
@@ -379,7 +376,7 @@ private:
                              const Array<Bool>& paMask, 
                              const Array<Float>& paerr, 
                              Float rmfg, Float rmmax, Float paErrMax,
-                             /*PGPlotter& plotter, */const String& posString);
+                             const String& posString);
 
 // Find the Stokes in the construction image and assign pointers
    void findStokes();
@@ -416,7 +413,7 @@ private:
                       Float& pa0Fitted, Float& pa0ErrFitted,
                       Float& rChiSqFitted, const Vector<Float>& wsq, 
                       const Vector<Float>& pa, const Vector<Float>& paerr, 
-                      Float rmmax, /*PGPlotter& plotter, */const String& posString);
+                      Float rmmax, const String& posString);
 
 // Fit the spectrum of position angles to find the rotation measure via Leahy algorithm
 // for supplementary (n==2) points
