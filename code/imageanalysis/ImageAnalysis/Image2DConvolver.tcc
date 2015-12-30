@@ -269,7 +269,7 @@ template <class T> void Image2DConvolver<T>::_convolve(
 				start[specAxis] = channel;
 			}
 			if (nPol > 0) {
-				polarization = nChan > 0
+                polarization = nChan > 1
 					? (i - channel) % nChan
 					: i;
 				start[polAxis] = polarization;
