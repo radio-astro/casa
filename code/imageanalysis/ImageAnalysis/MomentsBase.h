@@ -34,7 +34,6 @@
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MDoppler.h>
-// #include <casa/System/PGPlotter.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/iosfwd.h>
@@ -287,28 +286,6 @@ enum MethodTypes {
 // method.  The default state of the class is to not output the smoothed image. 
    Bool setSmoothOutName(const String& smOut);
 
-// This sets the name of the PGPLOT plotting device, the number of
-// subplots in x and y per page and whether each spectrum plot is 
-// autoscaled individually (<src>yInd=False</src>) or they are 
-// plotted with the same range automatically determined from the image.
-// Plotting is not invoked for all states of the class.  It is only
-// needed for the interactive methods.  If you ask for a method that
-// needs to determine the noise from the image, and you set the
-// plotting device, then this will be done interactively.  Similarly,
-// if you invoke the automatic window or fit methods, but set the
-// plotting device, then you will see plots of the spectra and
-// the selected windows and fits, respectively.
-//
-// The default state of the class is that no plotting characteristics are set.
-// However, if you set <src>device</src> but offer a zero length array for
-// <src>nxy</src> then the latter is set to [1,1].   A return value
-// of <src>False</src> indicates that you gave roo many values in the
-// <src>nxy</src> vector.
-/*
-   Bool setPlotting(PGPlotter& device,
-                    const Vector<Int>& nxy,
-                    const Bool yInd=False);
-*/
 // Set Velocity type.  This is used for moments for which the moment axis is
 // a spectral axis for which the coordinate is traditionally presented in
 // km/s   You can select the velocity definition. The default state of the
@@ -367,7 +344,6 @@ protected:
    Vector<Int> moments_p;
    Vector<T> selectRange_p;
    Vector<Int> smoothAxes_p;
-   //PGPlotter plotter_p;
    Bool overWriteOutput_p;
    String error_p;
    Bool convertToVelocity_p;
@@ -376,40 +352,13 @@ protected:
 // Check that the combination of methods that the user has requested is valid
 // List a handy dandy table if not.
    Bool checkMethod();
-/*
-// Plot a histogram                     
-   static void drawHistogram  (const Vector<T>& values,
-                               const Vector<T>& counts,
-                               PGPlotter& plotter);
 
-// Plot a line 
-   static void drawLine       (const Vector<T>& x,
-                               const Vector<T>& y,
-                               PGPlotter& plotter);
-                     
-// Draw a vertical line of the given length at a given abcissa 
-   static void drawVertical   (const T& x,
-                               const T& yMin,
-                               const T& yMax,
-                               PGPlotter& plotter);
-
-// Read the cursor and return its coordinates 
-   static Bool getLoc (T& x,
-                       T& y,
-                       PGPlotter& plotter);
-*/
 // Convert a <tt>T</tt> to a <tt>Float</tt> for plotting
    static Float convertT (const T value) {return Float(real(value));};
 
 // Convert a <tt>Float</tt> (from plotting) to a <tt>T</tt> 
    static T convertF (const Float value) {return T(value);};
-/*
-// Fish out cursor values
-   static Bool readCursor (PGPlotter& plotter, 
-                           Float& x,
-                           Float& y, 
-                           String& ch);
-*/
+
 // Take the user's data inclusion and exclusion data ranges and
 // generate the range and Booleans to say what sort it is
    Bool setIncludeExclude (Vector<T>& range,

@@ -40,7 +40,6 @@
 
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <lattices/LatticeMath/LatticeStatsBase.h>
-//#include <casa/System/PGPlotter.h>
 #include <tables/LogTables/NewFile.h>
 
 #include <casa/sstream.h>
@@ -274,58 +273,6 @@ Bool MomentsBase<T>::setSmoothOutName(const String& smoothOutU)
    return True;
 }
 
-/*
-template <class T>
-Bool MomentsBase<T>::setPlotting(PGPlotter& plotterU,
-                                  const Vector<Int>& nxyU,
-                                  const Bool yIndU)
-//   
-// Assign the desired PGPLOT device name and number
-// of subplots
-//
-{ 
-   if (!goodParameterStatus_p) {
-      error_p = "Internal class status is bad";
-      return False;
-   }
-
-// Is new plotter attached ?
-         
-   if (!plotterU.isAttached()) {
-       error_p = "Input plotter is not attached";
-      goodParameterStatus_p = False;
-      return False;
-   }
-
-// Don't reattach to the same plotter.  The assignment will
-// close the previous device
-   
-   if (plotter_p.isAttached()) {
-      if (plotter_p.qid() != plotterU.qid()) plotter_p = plotterU;
-   } else {
-      plotter_p = plotterU;
-   }
-
-
-// Set number subplots
-
-   fixedYLimits_p = (!yIndU);
-   nxy_p.resize(0);
-   nxy_p = nxyU;
-   if (!LatticeStatsBase::setNxy(nxy_p, os_p.output())) {
-      goodParameterStatus_p = False;
-      return False;
-   }
-   return True;
-}
- 
-
-template <class T>
-void MomentsBase<T>::closePlotting()
-{  
-   if (plotter_p.isAttached()) plotter_p.detach();
-}
-*/
 template <class T>
 void MomentsBase<T>::setVelocityType(MDoppler::Types velocityType)
 {
@@ -551,113 +498,6 @@ Bool MomentsBase<T>::checkMethod ()
    return True;   
 }
 
-
-/*
-template <class T> 
-void MomentsBase<T>::drawHistogram (const Vector<T>& x,
-                                     const Vector<T>& y,
-                                     PGPlotter& plotter)
-{
-   plotter.box ("BCNST", 0.0, 0, "BCNST", 0.0, 0);
-   plotter.lab ("Intensity", "Number", "");
-
-   const Float width = convertT(x(1) - x(0)) / 2.0;
-   Float xx, yy;
-
-   for (uInt i=0; i<x.nelements(); i++) {
-      xx = convertT(x(i)) - width;
-      yy = convertT(y(i));
-   
-      plotter.move (xx, 0.0);
-      plotter.draw (xx, yy);
-         
-      plotter.move (xx, yy);
-      xx = x(i) + width;
-      plotter.draw (xx, yy);
-   
-      plotter.move (xx, yy);
-      plotter.draw (xx, 0.0);
-    }
-}
- 
-
-
-template <class T> 
-void MomentsBase<T>::drawVertical (const T& loc,
-                                    const T& yMin,
-                                    const T& yMax,
-                                    PGPlotter& plotter) 
-{
-// If the colour index is zero, we are trying to rub something
-// out, so don't monkey with the ci then
-
-   Int ci;
-   ci = plotter.qci();
-   if (ci!=0) plotter.sci (3);
-
-   plotter.move (convertT(loc), convertT(yMin));
-   plotter.draw (convertT(loc), convertT(yMax));
-   plotter.updt();
-   plotter.sci (ci);
-}
-
-
-template <class T> 
-void MomentsBase<T>::drawLine (const Vector<T>& x,
-                                const Vector<T>& y,
-                                PGPlotter& plotter)
-//
-// Draw  a spectrum on the current panel
-// with the box already drawn
-//
-{
-// Copy from templated floating type to float
-
-   const uInt n = x.nelements();
-   Vector<Float> xData(n);
-   Vector<Float> yData(n);
-   for (uInt i=0; i<n; i++) {
-      xData(i) = convertT(x(i));
-      yData(i) = convertT(y(i));
-   }
-   plotter.line (xData, yData);
-   plotter.updt ();
-}
-
-
-
-template <class T> 
-Bool MomentsBase<T>::getLoc (T& x,
-                              T& y,
-                              PGPlotter& plotter)
-//
-// Read the PGPLOT cursor and return its coordinates if not 
-// off the plot and any button other than last pushed
-//
-{
-// Fish out window
-
-   Vector<Float> minMax(4);
-   minMax = plotter.qwin();
-
-// Position and read cursor
-
-   Float xx = convertT(x);
-   Float yy = convertT(y);
-   String str;
-
-   readCursor(plotter, xx, yy, str);
-   if (xx >= minMax(0) && xx <= minMax(1) && 
-       yy >= minMax(2) && yy <= minMax(3)) {
-      x = xx;
-      y = yy;
-   } else {
-      plotter.message("Cursor out of range");
-      return False;
-   }
-   return True;
-}
-*/
 template <class T> 
 Bool MomentsBase<T>::setOutThings(String& suffix, 
                                    Unit& momentUnits,
@@ -817,22 +657,6 @@ Bool MomentsBase<T>::setIncludeExclude (Vector<T>& range,
    }
    return True;   
 }
-
-/*
-template <class T> 
-Bool MomentsBase<T>::readCursor (PGPlotter& plotter, Float& x,
-                                  Float& y, String& ch)
-{
-   Record r;
-   r = plotter.curs(x, y);
-   Bool gotCursor;
-   r.get(RecordFieldId(0), gotCursor);
-   r.get(RecordFieldId(1), x);
-   r.get(RecordFieldId(2), y);
-   r.get(RecordFieldId(3), ch);
-   return gotCursor;
-}
- */
 
 template <class T> 
 CoordinateSystem MomentsBase<T>::makeOutputCoordinates (IPosition& outShape,

@@ -33,7 +33,6 @@
 #include <casa/Quanta/QMath.h>
 #include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MDoppler.h>
-#include <casa/System/PGPlotter.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/iosfwd.h>
@@ -227,8 +226,8 @@ class ImageMomentsProgressMonitor;
 // </srcBlock>
 // In this example, we generate two moments (average intensity and intensity
 // weighted mean coordinate -- usually the velocity field) of axis 3 by the 
-// interactive window method.  The interactive plotting is done on the PGPLOT 
-// device called <src>/xs</src>.   We put 9 subplots on each page.  The output 
+// interactive window method.  The interactive plotting is done on the 
+// device called <src>/xs</src> (no longer supported).   We put 9 subplots on each page.  The output 
 // file names are constructed by the class from the input file name plus some 
 // internally generated suffixes.
 // </example>

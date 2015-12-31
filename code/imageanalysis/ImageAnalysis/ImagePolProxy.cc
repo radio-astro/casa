@@ -56,7 +56,6 @@
 #include <measures/Measures/Stokes.h>
 #include <tables/Tables/Table.h>
 #include <tables/LogTables/NewFile.h>
-//#include <casa/System/PGPlotter.h>
 #include <casa/namespace.h>
 
 #include <memory>
@@ -819,19 +818,9 @@ namespace casa { //# name space casa begins
     makeImage (pChiSqOut, outChiSq, cSysRM, shapeRM, True, False);
     std::unique_ptr<ImageInterface<Float> > managed4(pChiSqOut);
 
-    // Make plotter
-    /*
-    PGPlotter pgPlotter;
-    if (!plotter.empty()) {
-      pgPlotter = PGPlotter(plotter);
-      pgPlotter.ask(True);
-      pgPlotter.sch(2.0);
-      pgPlotter.subp(nx, ny);
-    }
-    */
     itsImPol->rotationMeasure(
     	pRMOut, pRMOutErr, pPA0Out, pPA0OutErr,
-    	pNTurnsOut, pChiSqOut, /*pgPlotter,*/
+    	pNTurnsOut, pChiSqOut, 
     	axis, rmMax, maxPaErr,
     	sigmaQU, rmFg, True
     );

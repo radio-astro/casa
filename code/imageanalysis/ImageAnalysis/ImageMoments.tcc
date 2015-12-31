@@ -81,7 +81,6 @@
 #include <lattices/LatticeMath/LatticeStatsBase.h>
 #include <lattices/LRegions/LCPagedMask.h>
 #include <lattices/Lattices/TiledLineStepper.h>
-#include <casa/System/PGPlotter.h>
 #include <tables/LogTables/NewFile.h>
 
 #include <casa/sstream.h>

@@ -142,7 +142,7 @@ class IPosition;
 // </srcBlock>
 // In this example, a <src>PagedImage</src> is constructed.  We set the cursor axes 
 // to be the y and z axes so we make a histogram of each yz plane as a function 
-// of x location on the PGPLOT device "/xs" with 9 subplots per page.
+// of x location on the  device "/xs" (no longer supported) with 9 subplots per page.
 // After the plotting we also retrieve the histograms into an array.
 // </example>
 
