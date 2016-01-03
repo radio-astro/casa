@@ -93,9 +93,10 @@ $(document).ready(function(){
 	        <th scope="col" rowspan="2">Measurement Set</th>
 	        <th scope="col" rowspan="2">Field</th>
 	        <th scope="col" rowspan="2">SpW</th>
-	        <th scope="col" rowspan="2">Centre Freq.</th>
+	        <th scope="col" rowspan="2">Centre Freq</th>
 	        <th scope="col" rowspan="2">Band</th>
 	        <th scope="col" colspan="4">Flux Density</th>
+	        <th scope="col" rowspan="2">Spix</th>
 		</tr>
 		<tr>
 	        <th scope="col">I</th>
