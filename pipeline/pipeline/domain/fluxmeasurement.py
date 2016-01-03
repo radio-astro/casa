@@ -9,12 +9,14 @@ LOG = infrastructure.get_logger(__name__)
 
 class FluxMeasurement():
     def __init__(self, spw_id, I, Q=measures.FluxDensity(0),
-                 U=measures.FluxDensity(0), V=measures.FluxDensity(0)):
+                 U=measures.FluxDensity(0), V=measures.FluxDensity(0),
+                 spix=decimal.Decimal('0.0')):
         self.spw_id = spw_id
         self.I = self._to_flux_density(I)
         self.Q = self._to_flux_density(Q)
         self.U = self._to_flux_density(U)
         self.V = self._to_flux_density(V)
+        self.spix = self._to_decimal(spix)
         
     def _to_flux_density(self, arg):
         """
@@ -31,6 +33,15 @@ class FluxMeasurement():
         except:
             LOG.error("Could not convert %s to fluxdensity" % arg)
             raise
+
+    def _to_decimal(self, arg):
+        if isinstance(arg, decimal.Decimal):
+            return arg
+        elif isinstance(arg, (int, float, long)):
+            return decimal.Decimal(map(str, arg))
+        else:
+            LOG.error("Could not convert %s to decimal" % arg)
+            raise
     
     @property
     def casa_flux_density(self):
@@ -41,9 +52,10 @@ class FluxMeasurement():
         return map(float, iquv)
 
     def __repr__(self):
-        return '<FluxMeasurement(Spw #{spw}, IQUV=({iquv})>'.format(
+        return '<FluxMeasurement(Spw #{spw}, IQUV=({iquv}), spix={spix}>'.format(
             spw=self.spw_id,
-            iquv=','.join(map(str, (self.I, self.Q, self.U, self.V))))
+            iquv=','.join(map(str, (self.I, self.Q, self.U, self.V))),
+            spix=float(self.spix))
 
     def __add__(self, other):
         if not isinstance(other, self.__class__):
@@ -55,8 +67,9 @@ class FluxMeasurement():
         Q = self.Q + other.Q
         U = self.U + other.U
         V = self.V + other.V
+        spix = self.spix
         
-        return self.__class__(spw_id, I, Q, U, V)
+        return self.__class__(spw_id, I, Q, U, V, spix)
 
     def __div__(self, other):
         if not isinstance(other, (int, float, long, decimal.Decimal)):
@@ -68,8 +81,9 @@ class FluxMeasurement():
         Q = self.Q / other
         U = self.U / other
         V = self.V / other
+        spix = self.spix
         
-        return self.__class__(spw_id, I, Q, U, V)
+        return self.__class__(spw_id, I, Q, U, V, spix)
 
     def __mul__(self, other):
         if not isinstance(other, (int, float, long, decimal.Decimal)):
@@ -80,8 +94,9 @@ class FluxMeasurement():
         Q = self.Q * other
         U = self.U * other
         V = self.V * other
+        spix = self.spix
         
-        return self.__class__(spw_id, I, Q, U, V)
+        return self.__class__(spw_id, I, Q, U, V, spix)
 
     def __rmul__(self, other):
         if not isinstance(other, (int, float, long, decimal.Decimal)):
@@ -92,5 +107,6 @@ class FluxMeasurement():
         Q = self.Q * other
         U = self.U * other
         V = self.V * other
+        spix = self.spix
         
-        return self.__class__(spw_id, I, Q, U, V)
+        return self.__class__(spw_id, I, Q, U, V, spix)
