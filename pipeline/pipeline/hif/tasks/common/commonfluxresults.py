@@ -77,7 +77,7 @@ class FluxCalibrationResults(basetask.Results):
             # measurement sets, so we replace them with spectral windows from 
             # this measurement set, identified by the same ID
             spw_id = ms.get_spectral_window(fm.spw_id)
-            m = domain.FluxMeasurement(spw_id, I=fm.I, Q=fm.Q, U=fm.U, V=fm.V)                
+            m = domain.FluxMeasurement(spw_id, I=fm.I, Q=fm.Q, U=fm.U, V=fm.V, spix=fm.spix)                
             native_measurements.append(m)
                 
         return native_measurements
@@ -88,9 +88,9 @@ class FluxCalibrationResults(basetask.Results):
             flux_by_spw = sorted(flux_densities, key=lambda f: f.spw_id)                    
             # rather complicated string format to display something like:
             # 0841+708 spw #0: I=3.2899 Jy; Q=0 Jy; U=0 Jy; V=0 Jy
-            lines = ['\t{field} spw #{spw}: I={I}; Q={Q}; U={U}; V={V}\n'.format(
+            lines = ['\t{field} spw #{spw}: I={I}; Q={Q}; U={U}; V={V}; spix={spix}\n'.format(
                     field=field, spw=flux.spw_id, 
-                    I=str(flux.I), Q=str(flux.Q), U=str(flux.U), V=str(flux.V)) 
+                    I=str(flux.I), Q=str(flux.Q), U=str(flux.U), V=str(flux.V), spix=str(flux.spix)) 
                     for flux in flux_by_spw]
             s += ''.join(lines)
 
