@@ -39,7 +39,7 @@ class T2_4MDetailsImportDataRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                              'num_mses'      : num_mses})
 
 
-FluxTR = collections.namedtuple('FluxTR', 'vis field spw i q u v')
+FluxTR = collections.namedtuple('FluxTR', 'vis field spw i q u v spix')
 
 def make_flux_table(context, results):
     # will hold all the flux stat table rows for the results
@@ -67,7 +67,8 @@ def make_flux_table(context, results):
                         pass
                                     
                 tr = FluxTR(vis_cell, field_cell, measurement.spw_id, 
-                            fluxes['I'], fluxes['Q'], fluxes['U'], fluxes['V'])
+                            fluxes['I'], fluxes['Q'], fluxes['U'], fluxes['V'],
+                            measurement.spix)
                 rows.append(tr)
     
     return utils.merge_td_columns(rows)
