@@ -75,7 +75,7 @@ class T2_4MDetailsSetjyRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
         return d
     
-FluxTR = collections.namedtuple('FluxTR', 'vis field spw freq band i q u v')
+FluxTR = collections.namedtuple('FluxTR', 'vis field spw freq band i q u v spix')
     
 def make_flux_table(context, results):
     # will hold all the flux stat table rows for the results
@@ -95,10 +95,10 @@ def make_flux_table(context, results):
 
             for measurement in sorted(measurements, key=lambda m: int(m.spw_id)):
                 fluxes = collections.defaultdict(lambda: 'N/A')
-                for stokes in ['I', 'Q', 'U', 'V']:
+                for item in ['I', 'Q', 'U', 'V', 'spix']:
                     try:                        
-                        flux = getattr(measurement, stokes)
-                        fluxes[stokes] = '%s' % flux
+                        value = getattr(measurement, item)
+                        fluxes[item] = '%s' % value
                     except:
                         pass
 
@@ -106,7 +106,7 @@ def make_flux_table(context, results):
                                                    
                 tr = FluxTR(vis_cell, field_cell, str(spw.id),
                             str(spw.centre_frequency), spw.band, fluxes['I'],
-                            fluxes['Q'], fluxes['U'], fluxes['V'])
+                            fluxes['Q'], fluxes['U'], fluxes['V'], fluxes['spix'])
                 rows.append(tr)
     
     return utils.merge_td_columns(rows)
