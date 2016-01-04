@@ -105,7 +105,7 @@ class T2_4MDetailsGFluxscaleRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     
     
     
-FluxTR = collections.namedtuple('FluxTR', 'vis field spw i q u v')
+FluxTR = collections.namedtuple('FluxTR', 'vis field spw i q u v spix')
 
 def make_flux_table(context, results):
     # will hold all the flux stat table rows for the results
@@ -143,9 +143,14 @@ def make_flux_table(context, results):
                         fluxes[stokes] = '%s%s' % (flux, uncertainty)
                     except:
                         pass
+                try:
+                    fluxes['spix'] = '%s' % getattr(measurement, 'spix')
+                except:
+                    fluxes['spix'] = '0.0'
                                     
                 tr = FluxTR(vis_cell, field_cell, measurement.spw_id, 
-                            fluxes['I'], fluxes['Q'], fluxes['U'], fluxes['V'])
+                            fluxes['I'], fluxes['Q'], fluxes['U'], fluxes['V'],
+                            fluxes['spix'])
                 rows.append(tr)
 
     return utils.merge_td_columns(rows)

@@ -20,11 +20,21 @@ LOG = infrastructure.get_logger(__name__)
 class GcorFluxscaleInputs(fluxscale.FluxscaleInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, caltable=None,
-                 fluxtable=None, reference=None, transfer=None,
+                 fluxtable=None, reffile=None, reference=None, transfer=None,
                  refspwmap=None, refintent=None, transintent=None,
                  solint=None, phaseupsolint=None, minsnr=None, refant=None,
                  hm_resolvedcals=None, antenna=None, uvrange=None, peak_fraction=None):
         self._init_properties(vars())
+
+    @property
+    def reffile(self):
+        return self._reffile
+
+    @reffile.setter
+    def reffile(self, value=None):
+        if value in (None, ''):
+            value = os.path.join(self.context.output_dir, 'flux.csv')
+        self._reffile = value
 
     @property
     def solint(self):
@@ -137,7 +147,7 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
 
         # Run setjy for sources in the reference list which have transfer intents.
         if inputs.ms.get_fields(inputs.reference, intent=inputs.transintent):
-            self._do_setjy(reffile=None, field=inputs.reference)
+            self._do_setjy(reffile=inputs.reffile, field=inputs.reference)
         else:
             LOG.info('Flux calibrator field(s) \'%s\' in %s have no data with intent %s' %
                         (inputs.reference, inputs.ms.basename, inputs.transintent))
