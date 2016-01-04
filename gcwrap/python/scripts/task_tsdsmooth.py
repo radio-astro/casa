@@ -6,7 +6,8 @@ ms,sdms,tb = gentools(['ms','sdms','tb'])
 
 def tsdsmooth(infile=None, datacolumn=None, antenna=None, 
               field=None, spw=None, timerange=None, scan=None, 
-              pol=None, kernel=None, kwidth=None, outfile=None, overwrite=None):
+              pol=None, intent=None, kernel=None, kwidth=None,
+              outfile=None, overwrite=None):
 
     casalog.origin('tsdsmooth')
 
@@ -22,7 +23,7 @@ def tsdsmooth(infile=None, datacolumn=None, antenna=None,
         sdms.open(infile)
         sdms.set_selection(spw=spw, field=field, 
                            antenna=antenna,
-                           timerange=timerange, scan=scan)
+                           timerange=timerange, scan=scan, intent=intent)
         sdms.smooth(type=kernel, width=kwidth, datacolumn=datacolumn, outfile=outfile)
     except Exception, instance:
         raise Exception, instance

@@ -74,6 +74,11 @@ pipeline processing for huge dataset.
         <value></value>
     </param>
 
+    <param type="string" name="intent">
+        <description>select data by observational intent, e.g. \'*ON_SOURCE*\' (\'\'=all)</description>
+        <value></value>
+    </param>
+
     <param type="string" name="maskmode" ignorecase="true">
         <shortdescription>mode of setting additional channel masks</shortdescription>
 <!--        <description>mode of setting additional channel masks [\'auto\', \'list\', or \'interact\']</description> -->
@@ -341,6 +346,10 @@ scan -- select data by scan numbers
 pol -- select data by polarization IDs
         default: '' (use all polarizations)
         example: pol='0,1' (polarization IDs 0,1)
+        this selection is in addition to the other selections to data
+intent -- select data by observational intent, also referred to as 'scan intent'
+        default: '' (use all scan intents)
+        example: intent='*ON_SOURCE*' (any valid scan-intent expression accepted by the MSSelection module can be specified)
         this selection is in addition to the other selections to data
 maskmode -- mode of setting additional channel masks. When blmode='apply'
              and/or blfunc='variable', maskmode and its subparameters

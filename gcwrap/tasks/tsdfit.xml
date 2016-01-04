@@ -61,6 +61,11 @@ or sdreduce.
         <value></value>
     </param>
 
+    <param type="string" name="intent">
+        <description>select data by observational intent, e.g. \'*ON_SOURCE*\' (\'\'=all)</description>
+        <value></value>
+    </param>
+
     <param type="string" name="fitfunc">
 <!--        <shortdescription>function for fitting [\'gaussian\', \'lorentzian\']</shortdescription> -->
         <shortdescription>function for fitting. only \'gaussian\' is available now.</shortdescription>
@@ -195,6 +200,10 @@ scan -- select data by scan numbers
 pol -- select data by polarization IDs
         default: '' (use all polarizations)
         example: pol='0,1' (polarization IDs 0,1)
+        this selection is in addition to the other selections to data
+intent -- select data by observational intent, also referred to as 'scan intent'
+        default: '' (use all scan intents)
+        example: intent='*ON_SOURCE*' (any valid scan-intent expression accepted by the MSSelection module can be specified)
         this selection is in addition to the other selections to data
 fitfunc -- function for fitting
         options: 'gaussian' ('lorentzian' will be available later)
