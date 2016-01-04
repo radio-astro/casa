@@ -74,36 +74,14 @@ bool imagemetadata::open(const std::string& infile) {
 		if (_log.get() == 0) {
 			_log.reset(new LogIO());
 		}
-		SPtrHolder<LatticeBase> latt(ImageOpener::openImage(infile));
-		ThrowIf (! latt.ptr(), "Unable to open image");
-		DataType dataType = latt->dataType();
-		if (
-			dataType == TpComplex
-		) {
-			_header.reset(
-				new ImageMetaDataRW(
-					SHARED_PTR<ImageInterface<Complex> >(
-						dynamic_cast<ImageInterface<Complex> *>(latt.transfer())
-					)
-				)
-			);
-		}
-		else if (dataType == TpFloat) {
-			_header.reset(
-				new ImageMetaDataRW(
-					SHARED_PTR<ImageInterface<Float> >(
-						dynamic_cast<ImageInterface<Float> *>(latt.transfer())
-					)
-				)
-			);
+		auto mypair = ImageFactory::fromFile(infile);
+		if (mypair.first) {
+			_header.reset(new ImageMetaDataRW(mypair.first));
 		}
 		else {
-			ostringstream x;
-			x << dataType;
-			ThrowCc("Unsupported data type " + x.str());
+			_header.reset(new ImageMetaDataRW(mypair.second));
 		}
 		return True;
-
 	}
 	catch (const AipsError& x) {
 		*_log << LogIO::SEVERE << "Exception Reported: "

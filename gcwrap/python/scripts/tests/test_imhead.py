@@ -1618,7 +1618,14 @@ class imhead_test(unittest.TestCase):
         myia.fromshape(imagename, [1,1,4,3])
         ret = imhead(imagename=imagename, mode="summary")
         self.assertTrue(type(ret) == dict)
-        
+       
+    def test_open_fits(self):
+        """Verify opening fits file works"""
+        imagename = datapath + "reorder_in.fits"
+        myimd = imdtool()
+        self.assertTrue(myimd.open(imagename))
+        myimd.done()
+ 
 def suite():
     return [imhead_test]    
     
