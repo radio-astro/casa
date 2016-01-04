@@ -40,6 +40,11 @@ Derive the flux density scale from standard calibrators.
         <value></value>
     </param>
 
+    <param type="string" name="reffile" subparam="true">
+        <description>Path to file with fluxes for non-solar system calibrators</description>
+        <value></value>
+    </param>
+
     <param type="any" name="phaseupsolint">
         <description>Phaseup correction solution interval</description>
         <any type="variant"/>
@@ -111,6 +116,7 @@ Derive the flux density scale from standard calibrators.
                 <default param="refintent"><value type="string"></value></default>
                 <default param="transintent"><value type="string"></value></default>
                 <default param="refspwmap"><value type="intArray"></value></default>
+                <default param="reffile"><value type="string"></value></default>
                 <default param="refant"><value type="string"></value></default>
                 <default param="hm_resolvedcals"><value type="string">automatic</value></default>
                 <default param="dryrun"><value type="bool">False</value></default>
@@ -123,6 +129,7 @@ Derive the flux density scale from standard calibrators.
                 <default param="refintent"><value type="string"></value></default>
                 <default param="transintent"><value type="string"></value></default>
                 <default param="refspwmap"><value type="intArray"></value></default>
+                <default param="reffile"><value type="string"></value></default>
                 <default param="refant"><value type="string"></value></default>
                 <default param="hm_resolvedcals"><value type="string">automatic</value></default>
             </equals>
@@ -223,6 +230,15 @@ refspwmap -- Vector of spectral window ids enabling scaling across
     default: []
     example: [1,1,3,3] (4 spws, reference fields in 1 and 3, transfer
              fields in 0,1,2,3
+
+reffile -- Path to a file containing flux densities for calibrators unknown to
+    CASA. Values given in this file take precedence over the CASA-derived values
+    for all calibrators except solar system calibrators. By default the path is
+    set to the CSV file created by hifa_importdata, consisting of catalogue fluxes
+    extracted from the ASDM and / or edited by the user.
+    default: ''
+    example: '', 'working/flux.csv'
+
 
 transintent -- A string containing a comma delimited list of intents 
     defining the transfer calibrators. Defaults to *PHASE*.
