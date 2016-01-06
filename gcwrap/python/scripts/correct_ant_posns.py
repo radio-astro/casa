@@ -125,8 +125,8 @@ def correct_ant_posns (vis_name, print_offsets=False):
 
     corrections_list = []
     for correction_line in correction_lines:
-        # remove any html tags 
-        corerction_line = re.sub(r"<.*>","",correction_line)
+        # remove any html tags (use non-greedy match)
+        correction_line = re.sub(r"<.*?>","",correction_line)
         correction_line_fields = correction_line.split()
         if (len(correction_line_fields) > 9):
             [c_year, moved_date, obs_date, put_date, put_time_str, ant, pad, Bx, By, Bz] = correction_line_fields
