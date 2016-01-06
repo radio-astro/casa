@@ -81,7 +81,7 @@ class SetjyInputs(basetask.StandardInputs):
         # hard-coded as the default value in the task interface), return that
         # value. 
         if self.fluxdensity is not -1:
-            return (self.reffreq, self.fluxdensity, flux.spix)
+            return (self.reffreq, self.fluxdensity, self.spix)
 
         # If invoked with multiple mses, return a list of flux densities
         if type(self.vis) is types.ListType:
