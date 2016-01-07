@@ -65,7 +65,7 @@ ImageRegridder::ImageRegridder(
 ImageRegridder::~ImageRegridder() {}
 
 SPIIF ImageRegridder::regrid() const {
-	_subimage = SubImageFactory<Float>::createImage(
+    _subimage = SubImageFactory<Float>::createImage(
 		*this->_getImage(), "", *this->_getRegion(), this->_getMask(),
 		this->_getDropDegen(), False, False, this->_getStretch()
 	);
@@ -121,10 +121,7 @@ SPIIF ImageRegridder::_regrid() const {
 		);
 	}
 	*this->_getLog() << LogOrigin(_class, __func__);
-	ThrowIf(
-		! anyTrue(_subimage->getMask()),
-		"All selected pixels are masked"
-	);
+    ThrowIf(ImageMask::isAllMaskFalse(*_subimage), "All selected pixels are masked");
 	const CoordinateSystem csysFrom = _subimage->coordinates();
 	CoordinateSystem csysTo = _getTemplateCoords();
 	csysTo.setObsInfo(csysFrom.obsInfo());
@@ -177,7 +174,7 @@ SPIIF ImageRegridder::_regrid() const {
 		workIm = _decimateStokes(workIm);
 	}
 	ThrowIf(
-		workIm->hasPixelMask() && ! anyTrue(workIm->pixelMask().get()),
+		workIm->hasPixelMask() && ImageMask::isAllMaskFalse(*workIm),
 		"All output pixels are masked"
 		+ String(
 			_getDecimate() > 1 && _regriddingDirectionAxes()
@@ -193,6 +190,7 @@ SPIIF ImageRegridder::_regrid() const {
 		Int specAxisNumber = workIm->coordinates().spectralAxisNumber(False);
 		finalShape[specAxisNumber] = _getNReplicatedChans();
 		SPIIF replicatedIm(new TempImage<Float>(finalShape, csys));
+        // FIXME this will exhaust memory for large images
 		Array<Float> fillerPixels = workIm->get();
 		Array<Bool> fillerMask = workIm->pixelMask().get();
 		Array<Float> finalPixels = replicatedIm->get();

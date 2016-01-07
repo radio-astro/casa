@@ -46,6 +46,7 @@ ImageAnalysis/ImageFFT.cc
 ImageAnalysis/ImageFitter.cc
 ImageAnalysis/ImageHistogramsCalculator.cc
 ImageAnalysis/ImageInputProcessor.cc
+ImageAnalysis/ImageMask.cc
 ImageAnalysis/ImageMetaData.cc
 ImageAnalysis/ImageMetaDataBase.cc
 ImageAnalysis/ImageMetaDataRW.cc
@@ -180,6 +181,8 @@ install (FILES
     ImageAnalysis/ImageMaskAttacher.tcc
     ImageAnalysis/ImageMaskedPixelReplacer.h
     ImageAnalysis/ImageMaskedPixelReplacer.tcc
+    ImageAnalysis/ImageMask.h
+    ImageAnalysis/ImageMask2.tcc
     ImageAnalysis/ImageMaskHandler.h
     ImageAnalysis/ImageMaskHandler.tcc
     ImageAnalysis/ImageMaxFitter.h

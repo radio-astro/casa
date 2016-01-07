@@ -38,6 +38,7 @@
 
 #include <imageanalysis/ImageAnalysis/ImageHistory.h>
 #include <imageanalysis/ImageAnalysis/ImageInputProcessor.h>
+#include <imageanalysis/ImageAnalysis/ImageMask.h>
 #include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 #include <imageanalysis/IO/LogFile.h>
 #include <stdcasa/variant.h>
@@ -304,7 +305,40 @@ template <class T> void ImageTask<T>::addHistory(
 	_newHistory.push_back(x);
 }
 
-template <class T> SPIIT  ImageTask<T>::_prepareOutputImage(
+template <class T> void ImageTask<T>::_copyMask(
+	Lattice<Bool>& mask, const ImageInterface<T>& image
+) {
+	auto cursorShape = image.niceCursorShape(4096*4096);
+	LatticeStepper stepper(image.shape(), cursorShape, LatticeStepper::RESIZE);
+	RO_MaskedLatticeIterator<T> iter(image, stepper);
+	LatticeIterator<Bool> miter(mask, stepper);
+	std::unique_ptr<RO_LatticeIterator<Bool>> pmiter;
+	if (image.hasPixelMask()) {
+		pmiter.reset(new RO_LatticeIterator<Bool>(image.pixelMask(), stepper));
+	}
+	for (iter.reset(); ! iter.atEnd(); ++iter, ++miter) {
+		auto mymask = iter.getMask();
+		if (pmiter) {
+			mymask = mymask && pmiter->cursor();
+			pmiter->operator++();
+		}
+		miter.rwCursor() = mymask;
+	}
+}
+
+template <class T> void ImageTask<T>::_copyData(
+	Lattice<T>& data, const ImageInterface<T>& image
+) {
+	auto cursorShape = image.niceCursorShape(4096*4096);
+	LatticeStepper stepper(image.shape(), cursorShape, LatticeStepper::RESIZE);
+	RO_LatticeIterator<T> iter(image, stepper);
+	LatticeIterator<T> diter(data, stepper);
+	for (iter.reset(); ! iter.atEnd(); ++iter, ++diter) {
+		diter.rwCursor() = iter.cursor();
+	}
+}
+
+template <class T> SPIIT ImageTask<T>::_prepareOutputImage(
     const ImageInterface<T>& image, const Array<T> *const values,
     const ArrayLattice<Bool> *const mask,
     const IPosition *const outShape, const CoordinateSystem *const coordsys,
@@ -317,32 +351,40 @@ template <class T> SPIIT  ImageTask<T>::_prepareOutputImage(
 			TiledShape(oShape), csys
 		)
 	);
-	std::unique_ptr<ArrayLattice<Bool> > mymask;
 	if (mask != 0) {
-		mymask.reset(dynamic_cast<ArrayLattice<Bool> *>(mask->clone()));
+		if (! ImageMask::isAllMaskTrue(*mask)) {
+			tmpImage->attachMask(*mask);
+		}
 	}
 	// because subimages can have two types of masks, a region mask and
 	// a pixel mask, but most other types of images really just have a
 	// pixel mask. its very confusing
 	else if (image.hasPixelMask() || image.isMasked()) {
-		Array<Bool> maskArray(image.shape(), True);
-		if (image.hasPixelMask()) {
-			maskArray = maskArray && image.pixelMask().get();
+		// A paged array is stored on disk and is preferred over an
+		// ArrayLattice which will exhaust memory for large images.
+		std::unique_ptr<Lattice<Bool>> mymask;
+		if (image.size() > 4096*4096) {
+			mymask.reset(new PagedArray<Bool>(image.shape()));
 		}
-		if (image.isMasked()) {
-			maskArray = maskArray && image.getMask();
+		else {
+			mymask.reset(new ArrayLattice<Bool>(image.shape()));
 		}
-		mymask.reset(new ArrayLattice<Bool>(maskArray));
-	}
-	if (mymask.get() != 0 && ! allTrue(mymask->get())) {
-		tmpImage->attachMask(*mymask);
+		_copyMask(*mymask, image);
+		if (! ImageMask::isAllMaskTrue(image)) {
+			tmpImage->attachMask(*mymask);
+		}
 	}
 	String myOutname = outname ? *outname : _outname;
 	if (! outname) {
 		overwrite = _overwrite;
 	}
 	SPIIT outImage = tmpImage;
-	outImage->put(values == 0 ? image.get() : *values);
+	if (values) {
+		outImage->put(*values);
+	}
+	else {
+		_copyData(*outImage, image);
+	}
 	if (dropDegen || ! myOutname.empty()) {
 		if (! myOutname.empty()) {
 			_removeExistingFileIfNecessary(myOutname, overwrite);
