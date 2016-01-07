@@ -898,6 +898,13 @@ Bool casaMDirection(const ::casac::variant& theVar,
       casa::Quantity val1=qh.asQuantity();
       qh.fromString(error, str[2]);
       casa::Quantity val2=qh.asQuantity();
+      if(val2.getFullUnit()==Unit("deg") && str[2].contains(":")){
+	ostringstream oss;
+	oss << "NOTE: you provided the Declination/Latitude value \""<< str[2]
+	    << "\" which is understood to be in units of hours.\n"
+	    << "      If you meant degrees, please replace \":\" by \".\".";
+	cerr << oss.str() << endl;
+      }
       MDirection::Types tp;
       if(!MDirection::getType(tp, str[0])){
 	ostringstream oss;
@@ -913,6 +920,13 @@ Bool casaMDirection(const ::casac::variant& theVar,
       casa::Quantity val1=qh.asQuantity();
       qh.fromString(error, str[1]);
       casa::Quantity val2=qh.asQuantity();
+      if(val2.getFullUnit()==Unit("deg") && str[1].contains(":")){
+	ostringstream oss;
+	oss << "NOTE: you provided the Declination/Latitude value \""<< str[2]
+	    << "\" which is understood to be in units of hours.\n"
+	    << "      If you meant degrees, please replace \":\" by \".\".";
+	cerr << oss.str() << endl;
+      }
       theMeas=MDirection(val1, val2);
       return True;
     }
@@ -949,8 +963,6 @@ Bool casaMDirection(const ::casac::variant& theVar,
       }
       
     }
-
-
 
   }
   ///If i am here i don't know how to interprete this
