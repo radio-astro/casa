@@ -14,7 +14,7 @@
 
 namespace Minim {
 
-  NestedSmallStart::NestedSmallStart(const std::list<MCPoint> &ss):
+  NestedSmallStart::NestedSmallStart(const std::list<MCPoint> & /*ss*/):
     BaseErr("Number of points in the starting set is less than two")
   {
   }

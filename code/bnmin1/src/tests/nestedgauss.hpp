@@ -21,7 +21,7 @@ struct pdesc {
 
 pdesc mkDesc(double l_sigma,
 	     bool monitor,
-	     double sigma=0.1,
+	     double /*sigma*/=0.1,
 	     size_t ndim=3)
 {
   using namespace Minim;

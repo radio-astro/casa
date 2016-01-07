@@ -250,7 +250,7 @@ namespace Minim {
   }
 
   void postHist(const std::list<WPPoint> &l,
-		double Z,
+		double /*Z*/,
 		const std::vector<double> &low,
 		const std::vector<double> &high,
 		size_t nbins,
@@ -324,7 +324,7 @@ namespace Minim {
   }
 
   void marginHist2D(const std::list<WPPoint> &l,
-		    double Z,
+		    double /*Z*/,
 		    size_t i,
 		    double ilow,
 		    double ihigh,

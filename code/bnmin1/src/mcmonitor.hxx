@@ -36,12 +36,12 @@ namespace Minim
 
     /** Called when point p has been accepted into the chain
      */
-    virtual void accept(const MCPoint& p)
+    virtual void accept(const MCPoint& /*p*/)
     {};
     
     /** Called when point p has been proposed for the chain
      */
-    virtual void propose(const MCPoint& p)
+    virtual void propose(const MCPoint& /*p*/)
     {};
 
   };

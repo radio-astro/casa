@@ -41,7 +41,7 @@ namespace Minim {
     return o;
   }
 
-  void PrettyPrint( ModelDesc &mod)
+  void PrettyPrint( ModelDesc & /*mod*/)
   {
     using namespace boost::lambda;
     //for_each(mod.pars.begin() , mod.pars.end() , std::cout <<_1 );

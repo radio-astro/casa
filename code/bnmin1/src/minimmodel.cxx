@@ -22,7 +22,7 @@ namespace Minim {
   {
   } 
 
-  void     Model::AddParams ( std::vector< Minim::DParamCtr > &pars )
+  void     Model::AddParams ( std::vector< Minim::DParamCtr > & /*pars*/ )
   {
 
   }

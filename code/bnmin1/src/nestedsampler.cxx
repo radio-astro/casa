@@ -30,7 +30,7 @@ namespace Minim {
 
   NestedS::NestedS(PriorNLikelihood & ml,
 		   const std::list<MCPoint> & start,
-		   unsigned seed) throw (NestedSmallStart):
+		   unsigned /*seed*/) throw (NestedSmallStart):
     ModelDesc(ml),
     Zseq(1,0.0),
     Xseq(1,1.0),
@@ -55,7 +55,7 @@ namespace Minim {
   }
 
   NestedS::NestedS(PriorNLikelihood & ml,
-		   unsigned seed):
+		   unsigned /*seed*/):
     ModelDesc(ml),
     Zseq(1,0.0),
     Xseq(1,1.0),

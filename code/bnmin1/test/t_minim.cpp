@@ -477,7 +477,7 @@ void t_NestedSampling()
   NestedS s(obs,
 	    startset);
   
-  const double res=s.sample(30);
+  /*const double res=*/s.sample(30);
 
   //AlwaysAssertExit(near(res,0.0, 0.1));
 	  

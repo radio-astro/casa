@@ -150,7 +150,7 @@ namespace Minim
   {
   }
 
-  double CSPAdaptive::advance(double L,
+  double CSPAdaptive::advance(double /*L*/,
 			      size_t maxprop)
   {
     const size_t qrtr=maxprop/4;

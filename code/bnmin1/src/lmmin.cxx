@@ -22,11 +22,11 @@ namespace Minim {
   static Minim::LMMin* LMMin_this;
   static int LMMin_lock (0);
 
-  extern "C" void LMMin_helper (int *m,
-				int *n,
+  extern "C" void LMMin_helper (int * /*m*/,
+				int * /*n*/,
 				double *x,
 				double *fvec,
-				int *iflag)
+				int * /*iflag*/)
   {
     LMMin_this->copytopars(x);
     LMMin_this->ResEval();
@@ -81,6 +81,8 @@ namespace Minim {
     ipvt.resize(n);
     
     
+#ifndef BNMIN1_NO_PDA
+
     std::vector< double>    diag( n);
     int mode =1;
     double factor = 100.0;
@@ -91,8 +93,6 @@ namespace Minim {
     std::vector<double> qtf ( n);
     
     std::vector<double> wa1( n) , wa2( n), wa3( n) , wa4( m);
-    
-#ifndef BNMIN1_NO_PDA
     
     pda_lmdif__( LMMin_helper,
 		 &m,

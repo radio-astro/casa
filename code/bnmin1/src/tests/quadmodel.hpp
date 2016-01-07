@@ -30,6 +30,7 @@ public:
     {
       res[i]= c*pow(x[i],2) + b* x[i] + a ;
     }
+    return std::numeric_limits<double>::signaling_NaN(); // method really ought to have void return type?
   }
 
   double grad(double x,
@@ -40,6 +41,8 @@ public:
     res[0] += 1;
     res[1] += x;
     res[2] += pow(x,2);
+
+    return std::numeric_limits<double>::signaling_NaN(); // method really ought to have void return type?
 
   }
 
