@@ -362,6 +362,9 @@ def importasdm(
             if len(scans) > 0:
                 bdffexecstring_base = bdffexecstring_base + ' --scans ' + scans
 
+            if lazy and not compression:
+                bdffexecstring_base = bdffexecstring_base + ' --lazy=true'
+
             for myviso in vistoproc:
                 if myviso.find("wvr-corrected") != -1:
                     options = " --wvr-corrected=True " 
