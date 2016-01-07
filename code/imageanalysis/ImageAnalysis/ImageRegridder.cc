@@ -138,7 +138,6 @@ SPIIF ImageRegridder::_regrid() const {
 	);
 	_checkOutputShape(*_subimage, coordsToRegrid);
 	SPIIF workIm(new TempImage<Float>(_getKludgedShape(), csys));
-	workIm->set(0.0);
 	ImageUtilities::copyMiscellaneous(*workIm, *_subimage);
 	String maskName("");
 	ImageMaskAttacher::makeMask(*workIm, maskName, True, True, *this->_getLog(), True);
