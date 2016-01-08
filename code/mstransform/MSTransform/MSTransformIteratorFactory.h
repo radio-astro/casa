@@ -147,6 +147,7 @@ public:
 	~MSTransformIteratorFactory();
 
 	std::vector<IPosition> getVisBufferStructure();
+	const MeasurementSet& getSelectedMS() const {return *(manager_p->selectedInputMs_p);}
 
 protected:
 
@@ -157,7 +158,7 @@ private:
 
 	Record configuration_p;
 	String tmpMSFileName_p;
-	SHARED_PTR<MSTransformManager> manager_p;
+	mutable SHARED_PTR<MSTransformManager> manager_p;
 	MrsEligibility eligibleSubTables_p;
 };
 

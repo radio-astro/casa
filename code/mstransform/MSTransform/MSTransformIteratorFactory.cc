@@ -184,24 +184,19 @@ void MSTransformIteratorFactory::setConfiguration(Record &configuration)
 vi::ViImplementation2 * MSTransformIteratorFactory::createVi(vi::VisibilityIterator2 *) const
 {
 	// Create MSTransformManager
-	SHARED_PTR<MSTransformManager> manager;
-	if (manager_p)
+	if (not manager_p)
 	{
-		manager = manager_p;
-	}
-	else
-	{
-		manager = SHARED_PTR<MSTransformManager>(new MSTransformManager(configuration_p));
-		manager->open();
-		manager->setup();
+		manager_p = SHARED_PTR<MSTransformManager>(new MSTransformManager(configuration_p));
+		manager_p->open();
+		manager_p->setup();
 	}
 
 	// Enable memory resident SubTables in transformed MS
-	manager->getOutputMs()->setMemoryResidentSubtables(eligibleSubTables_p);
+	manager_p->getOutputMs()->setMemoryResidentSubtables(eligibleSubTables_p);
 
 	// Create output VisibilityIterator
 	// NOTE: InpVi is not really necessary downstream. We only have to provide an implementation
-	MSTransformIterator *outputVI = new MSTransformIterator(NULL,manager->getVisIter()->getImpl(),manager);
+	MSTransformIterator *outputVI = new MSTransformIterator(NULL,manager_p->getVisIter()->getImpl(),manager_p);
 
 	return outputVI;
 }
