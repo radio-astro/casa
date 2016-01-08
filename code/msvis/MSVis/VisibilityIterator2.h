@@ -753,6 +753,8 @@ public:
 // Internal methods below this line
 //**********************************************************************
 
+  ViImplementation2 * getImpl() const;
+
 protected:
 
 
@@ -767,8 +769,6 @@ protected:
 // advance the iteration
 
   void originChunks(Bool forceRewind);
-
-  ViImplementation2 * getImpl() const;
 
 
 private:

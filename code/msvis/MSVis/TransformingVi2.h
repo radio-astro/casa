@@ -570,6 +570,7 @@ protected:
     VisibilityIterator2 * getVi () const;
     ViImplementation2 * getVii () const;
     void setVisBuffer (VisBuffer2 * vb);
+    VisBuffer2 * getVisBufferConst () const {return vb_p;}
 
     // jagonzal (to be reviewed by jjacobs): I need to set inputVii_p to NULL from
     // MSTransformIterator destructor because MSTransformIteratorFactory is borrowing
