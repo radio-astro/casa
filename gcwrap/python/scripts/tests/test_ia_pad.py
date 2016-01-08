@@ -147,7 +147,6 @@ class ia_pad_test(unittest.TestCase):
             exp = myia.toworld([0, 0, 0])['numeric']
             got = pad.toworld([np, np, 0])['numeric']
             
-    
     def test_stretch(self):
         """ ia.pad(): Test stretch parameter"""
         yy = iatool()
@@ -169,6 +168,80 @@ class ia_pad_test(unittest.TestCase):
         self.assertTrue(zz and type(zz) == type(yy))
         yy.done()
         zz.done()
+
+    def test_mask(self):
+        """Test that mask is preserved"""
+        myia = iatool()
+        imagename = "xyz.im"
+        n = 20
+        myia.fromshape(imagename, [n, n])
+        myia.addnoise()
+        np = 1
+        padsize = n + 2*np
+        pad = myia.pad(npixels=np)
+        data = pad.getchunk()
+        self.assertTrue((data[0, :] == 0).all())
+        self.assertTrue((data[:, 0] == 0).all())
+        self.assertTrue((data[padsize-1, :] == 0).all())
+        self.assertTrue((data[:, padsize-1] == 0).all())
+        self.assertTrue((data[1:padsize-1, 1:padsize-1] == myia.getchunk()).all()) 
+
+        mask = pad.getchunk(getmask=True)
+        self.assertTrue((mask[0, :] == False).all())
+        self.assertTrue((mask[:, 0] == False).all())
+        self.assertTrue((mask[padsize-1, :] == False).all())
+        self.assertTrue((mask[:, padsize-1] == False).all())
+        self.assertTrue((mask[1:padsize-1, 1:padsize-1]).all()) 
+
+        pad = myia.pad(npixels=np, mask=imagename + ">0")
+        data = pad.getchunk()
+        self.assertTrue((data[0, :] == 0).all())
+        self.assertTrue((data[:, 0] == 0).all())
+        self.assertTrue((data[padsize-1, :] == 0).all())
+        self.assertTrue((data[:, padsize-1] == 0).all())
+        self.assertTrue((data[1:padsize-1, 1:padsize-1] == myia.getchunk()).all()) 
+
+        mask = pad.getchunk(getmask=True)
+        self.assertTrue((mask[0, :] == False).all())
+        self.assertTrue((mask[:, 0] == False).all())
+        self.assertTrue((mask[padsize-1, :] == False).all())
+        self.assertTrue((mask[:, padsize-1] == False).all())
+        expec = myia.getchunk() > 0
+        self.assertTrue((mask[1:padsize-1, 1:padsize-1] == expec).all()) 
+
+        # give the image a pixel mask
+        myia.calcmask(imagename + "<0")
+        pad = myia.pad(npixels=np)
+        data = pad.getchunk()
+        self.assertTrue((data[0, :] == 0).all())
+        self.assertTrue((data[:, 0] == 0).all())
+        self.assertTrue((data[padsize-1, :] == 0).all())
+        self.assertTrue((data[:, padsize-1] == 0).all())
+        self.assertTrue((data[1:padsize-1, 1:padsize-1] == myia.getchunk()).all()) 
+
+        mask = pad.getchunk(getmask=True)
+        self.assertTrue((mask[0, :] == False).all())
+        self.assertTrue((mask[:, 0] == False).all())
+        self.assertTrue((mask[padsize-1, :] == False).all())
+        self.assertTrue((mask[:, padsize-1] == False).all())
+        self.assertTrue((mask[1:padsize-1, 1:padsize-1] == myia.getchunk(getmask=True)).all()) 
+
+        # pixel mask + region defined by using an OTF mask
+        pad = myia.pad(npixels=np, mask=imagename + "<0.5")
+        data = pad.getchunk()
+        self.assertTrue((data[0, :] == 0).all())
+        self.assertTrue((data[:, 0] == 0).all())
+        self.assertTrue((data[padsize-1, :] == 0).all())
+        self.assertTrue((data[:, padsize-1] == 0).all())
+        self.assertTrue((data[1:padsize-1, 1:padsize-1] == myia.getchunk()).all()) 
+
+        mask = pad.getchunk(getmask=True)
+        self.assertTrue((mask[0, :] == False).all())
+        self.assertTrue((mask[:, 0] == False).all())
+        self.assertTrue((mask[padsize-1, :] == False).all())
+        self.assertTrue((mask[:, padsize-1] == False).all())
+        expec = numpy.logical_and(myia.getchunk(getmask=True), myia.getchunk() < 0.5)
+        self.assertTrue((mask[1:padsize-1, 1:padsize-1] == expec).all()) 
     
 def suite():
     return [ia_pad_test]
