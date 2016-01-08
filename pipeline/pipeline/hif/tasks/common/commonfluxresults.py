@@ -97,6 +97,8 @@ class FluxCalibrationResults(basetask.Results):
         return s
 
 
+# Is this needed anymore? It used to be used with the code that
+# decoded the CASA LOGS
 class File(file):
     def __init__(self, *args, **kwargs):
         super(File, self).__init__(*args, **kwargs)

@@ -32,7 +32,7 @@ class SetjyInputs(basetask.StandardInputs):
                  #    tuple containing reffreq, fluxdensity, spix
                  refspectra=None,
                  # reference flux file
-                 reffile=None):
+                 reffile=None, normfluxes=None):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
 
@@ -149,7 +149,14 @@ class SetjyInputs(basetask.StandardInputs):
             flux_by_spw = [] 
             for spw_id in spw_ids:
                 reffreq = str(self.ms.get_spectral_window(spw_id).centre_frequency)
-                flux = [(reffreq, [I, Q, U, V], spix) 
+                if self.normfluxes:
+                    flux = [(reffreq, [I/I, Q/I, U/I, V/I], spix) 
+                        for (ref_field_id, ref_spw_id, I, Q, U, V, spix) in ref_flux
+                        if (ref_field_id in field_ids
+                            or ref_field_id in field_names)
+                        and ref_spw_id == spw_id]
+                else:
+                    flux = [(reffreq, [I, Q, U, V], spix) 
                         for (ref_field_id, ref_spw_id, I, Q, U, V, spix) in ref_flux
                         if (ref_field_id in field_ids
                             or ref_field_id in field_names)
@@ -193,6 +200,16 @@ class SetjyInputs(basetask.StandardInputs):
         if value in (None, ''):
             value = os.path.join(self.context.output_dir, 'flux.csv')
         self._reffile = value
+
+    @property
+    def normfluxes(self):
+        return self._normfluxes
+    
+    @normfluxes.setter
+    def normfluxes(self, value=None):
+        if value is None:
+            value = False
+        self._normfluxes = value
 
     @property
     def reffreq(self):
@@ -274,7 +291,7 @@ class SetjyInputs(basetask.StandardInputs):
             d['spix'] = d['refspectra'][2]
 
         # Filter out reffile. Note that the , is required
-        for ignore in ('reffile', 'refspectra', ):
+        for ignore in ('reffile', 'refspectra', 'normfluxes', ):
             if ignore in d:
                 del d[ignore]
 

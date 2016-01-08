@@ -41,6 +41,11 @@ Fills the model column with the model visibilities.
         <value></value>
     </param>
 
+    <param type="bool" name="normfluxes" subparam="true">
+        <description>Normalize lookup fluxes</description>
+        <value>False</value>
+    </param>
+
     <param type="string" name="reffreq" subparam="true">
         <description>Reference frequency for spix</description>
         <value>1GHz</value>
@@ -98,6 +103,7 @@ Fills the model column with the model visibilities.
 		<default param="intent"><value type="string"></value></default>
 		<default param="spw"><value type="string"></value></default>
 	        <default param="reffile"><value type="string"></value></default>
+	        <default param="normfluxes"><value type="bool">False</value></default>
 		<default param="model"><value type="string"></value></default>
 		<default param="dryrun"><value type="bool">False</value></default>
 		<default param="acceptresults"><value type="bool">True</value></default>
@@ -108,6 +114,7 @@ Fills the model column with the model visibilities.
 		<default param="intent"><value type="string"></value></default>
 		<default param="spw"><value type="string"></value></default>
 	        <default param="reffile"><value type="string"></value></default>
+	        <default param="normfluxes"><value type="bool">False</value></default>
 		<default param="model"><value type="string"></value></default>
 	    </equals>
 	</when>
