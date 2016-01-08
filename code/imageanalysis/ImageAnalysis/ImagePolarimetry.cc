@@ -1725,7 +1725,7 @@ Bool ImagePolarimetry::rmPrimaryFit(Float& nTurns, Float& rmFitted, Float& rmErr
                                     Float& pa0Fitted, Float& pa0ErrFitted, 
                                     Float& rChiSqFitted, const Vector<Float>& wsq, 
                                     const Vector<Float>& pa, const Vector<Float>& paerr, 
-                                    Float rmMax, const String& posString)
+                                    Float rmMax, const String& /*posString*/)
 {
    static Vector<Float> plotPA;
    static Vector<Float> plotPAErr;
