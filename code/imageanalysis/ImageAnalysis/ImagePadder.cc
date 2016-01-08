@@ -80,8 +80,10 @@ SPIIF ImagePadder::pad(const Bool wantReturn) const {
 	IPosition blc(subImage->ndim(), 0);
 	blc[dirAxes[0]] = _nPixels;
 	blc[dirAxes[1]] = _nPixels;
-	if (subImage->hasPixelMask()) {
-		mask.putSlice(subImage->pixelMask().get(False), blc);
+    // FIXME getting/creating the full mask and all the values in one go
+    // will exhaust memory for large images
+    if (subImage->isMasked()) {
+		mask.putSlice(subImage->getMask(), blc);
 	}
 	else if (! _good) {
 		mask.putSlice(Array<Bool>(subImage->shape(), True), blc);
