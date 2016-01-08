@@ -27,6 +27,7 @@ CasaTaskDict = {
                    'hif_refant'            : 'RefAnt',
 		   'hif_restoredata'       : 'RestoreData',
                    'hif_setjy'             : 'Setjy',
+                   'hif_setmodels'         : 'SetModels',
 		   'hif_tclean'            : 'Tclean', 
                    'hsd_calsky'            : 'SDCalSky',
                    'hsd_caltsys'           : 'SDCalTsys',
@@ -127,6 +128,7 @@ classToCASATask = {
     hif_tasks.RefAnt                  : 'hif_refant',
     hif_tasks.RestoreData             : 'hif_restoredata',
     hif_tasks.Setjy                   : 'hif_setjy',
+    hif_tasks.SetModels               : 'hif_setmodels',
     hif_tasks.Tclean                  : 'hif_tclean',
     # Single dish tasks ------------------------------------------------------
     hsd_tasks.SDCalSky                : 'hsd_calsky',
