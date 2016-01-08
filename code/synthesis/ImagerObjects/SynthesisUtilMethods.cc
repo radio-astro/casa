@@ -722,6 +722,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	casa::Quantity tmpQDEC;
 	casa::Quantity::read(tmpQRA, tmpRA);
 	casa::Quantity::read(tmpQDEC, tmpDEC);
+
+	if(tmpQDEC.getFullUnit()==Unit("deg") && tmpDEC.contains(":")){
+	  LogIO os( LogOrigin("SynthesisParams","stringToMDirection",WHERE) );
+	  os << LogIO::WARN 
+	     << "You provided the Declination/Latitude value \""<< tmpDEC
+	     << "\" which is understood to be in units of hours.\n"
+	     << "If you meant degrees, please replace \":\" by \".\"."
+	     << LogIO::POST;
+	}
+
 	MDirection::Types theRF;
 	MDirection::getType(theRF, tmpRF);
 	md = MDirection (tmpQRA, tmpQDEC, theRF);
