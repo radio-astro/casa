@@ -510,10 +510,35 @@ namespace asdmbinaries {
 				   CProcessorType::name(processorType_));
   }
 
-  bool SDMDataObject::isTP() const {TSTVALID(); return processorType_ == RADIOMETER; }
-  bool SDMDataObject::isCorrelation() const {TSTVALID(); return (processorType_ != RADIOMETER && processorType_ != SPECTROMETER) ; }
-
   
+  bool SDMDataObject::inTitle(const std::string&  what) const {TSTVALID();
+    // string s(title_);
+    // boost::iterator_range<std::string::iterator> range = boost::algorithm::ifind_first(s, what);
+    // return !range.empty();
+    bool result = title_.find(what) != std::string::npos;
+    return title_.find(what) != std::string::npos;
+  }
+
+  /*
+   * Due to the fact that the value of processor type in the global header does not allow to really determine which processor has produced the data
+   * (this is particularly true for ALMA_RADIOMETER and SQUARE_LAW_DETECTOR which fall under the same type PROCESSOR, I decided to use
+   * the content of the title to make a clear distinction. Of course this is based on a non said conventions used to form the title...
+   */ 
+  bool SDMDataObject::isTP() const {TSTVALID(); return inTitle("Total Power");}
+  bool SDMDataObject::isWVR() const {TSTVALID(); return inTitle("WVR");}
+  bool SDMDataObject::isCorrelation() const {TSTVALID(); return processorType() == CORRELATOR;}
+
+  /*
+   * hasPackedData returns true if all the integrations are grouped in one subset for all the timestamps and conversely false if 
+   * there is one subset per integration (i.e. per timestamp).
+   */
+  bool SDMDataObject::hasPackedData() const {TSTVALID(); return dimensionality() == 0;}
+  
+  const vector<SDMDataSubset>& SDMDataObject::sdmDataSubsets() const {
+    TSTVALID();
+    return dataSubsets_;
+  }
+
   const vector<SDMDataSubset>& SDMDataObject::corrDataSubsets() const {
     TSTVALID();
     if (isTP()) Utils::invalidCall("corrDataSubsets", this);

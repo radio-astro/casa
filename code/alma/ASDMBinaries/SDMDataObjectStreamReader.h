@@ -54,6 +54,13 @@ namespace asdmbinaries {
      * @return an int64_t 
      */
     int64_t position();
+
+
+    /**
+     * Set the read position in the BDF file.
+     *
+     */
+    void position(int64_t p);
     
     /**
      * Close the file containing the BDF data and releases all the memory dynamically allocated.
@@ -175,12 +182,28 @@ namespace asdmbinaries {
     CorrelatorType correlatorType() const;
 
     /**
+     * Returns true if the binary data are all packed in one subset or distributed in a sequence 
+     * of subsets (supposedly) along the time axis.
+     *
+     * @return a boolean
+     */
+    bool hasPackedData() const;
+
+    /**
      * Returns true if the data are total power data and false otherwise.
      * @return a bool.
      *
      * @note data are considered as total power data if CorrelationMode == AUTO_ONLY && SpectralResolutionType == BASEBAND_WIDE.
      */
     bool isTP() const ;
+
+    /**
+     * Returns true if the data are WVR data and false otherwise.
+     * @return a bool.
+     *
+     * @note data are considered as total power data if CorrelationMode == AUTO_ONLY && SpectralResolutionType == BASEBAND_WIDE.
+     */
+    bool isWVR() const ;
 
 
     /**
@@ -320,6 +343,7 @@ namespace asdmbinaries {
     pair<string, string>	requireHeaderField(const string& hf);
     string			requireMIMEHeader();
     string			requireBoundaryInCT(const string& ctValue);
+    void                        skipAsLongAsLineStartsWith(const string& start);
     void			skipUntilEmptyLine(int maxSkips);  
     string			accumulateUntilBoundary(const string& boundary, int maxLines);
     void			requireBoundary(const string&, int maxLines);

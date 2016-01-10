@@ -5,7 +5,7 @@
 #include <ArrayTimeInterval.h>
 #include <CAtmPhaseCorrection.h>
 
-#include <boost/shared_array.hpp>
+#include <memory>
 
 using asdm::ArrayTime;
 using asdm::Interval;
@@ -123,7 +123,7 @@ namespace sdmbin{
   
   /**
    * A structure containing the data from a single SDM BLOB.
-   * The *big* difference with the previous definition (VMSData) is that the visibilities are referred to by a boost::shared_ptr instead
+   * The *big* difference with the previous definition (VMSData) is that the visibilities are referred to by a std::shared_ptr instead
    * of a plain old pointer.
    *
    * \note 
@@ -154,7 +154,7 @@ namespace sdmbin{
     vector<double>                  v_exposure;           //!< from BINARIES actual duration for the observations
     vector<int>                     v_numData;            //!< from SDM      number of auto-correlations or cross-correlation
     vector<vector<unsigned int> >   vv_dataShape;         //!< from SDM      numPol,numChan,numApc=1
-    vector<map<AtmPhaseCorrectionMod::AtmPhaseCorrection,boost::shared_array<float> > > v_m_data;     //!< from BINARIES vector of maps (size num MS rows), map size=v_atmPhaseCorrection.size()
+    vector<map<AtmPhaseCorrectionMod::AtmPhaseCorrection,std::shared_ptr<float> > > v_m_data;     //!< from BINARIES vector of maps (size num MS rows), map size=v_atmPhaseCorrection.size()
     vector<vector<vector<asdm::Angle> > > v_phaseDir;           //!< from SDM      the ref phase directions at the epochs (v_timeCentroid) to use for uvw 
     vector<int>                     v_stateId;            //!< from SDM      need to be redefined when numBin>1 & checked when baseline>0
     vector<MSState>                 v_msState;            //!< from SDM      MS state tuples

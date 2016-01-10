@@ -122,7 +122,8 @@ using namespace boost::gregorian;
  * <ul>
  * <li> asdmbinaries::SDMDataObject is a class to represent in-memory ALMA binary data.</li>
  * <li> asdmbinaries::SDMDataObjectWriter is a class to build an SDMDataObject and to write it as a BDF document. </li>
- * <li> asdmbinaries::SDMDataObjectReader is a class to read a BDF document and to parse it into an SDMDataObject. </li>
+ * <li> asdmbinaries::SDMDataObjectReader is a class to read entirely in memory a BDF document and to parse it into an SDMDataObject. </li>
+ * <li> asdmbinaries::SDMDataObjectStreamReader is a class to read sequentially a BDF document and to parse it sequentially into an SDMDataObject. </li>
  * </ul>
  * 
  * 
@@ -284,18 +285,26 @@ namespace asdmbinaries {
 
   /**
    * A class to represent ALMA binary data.
-   * Two situations can be handled by this class:
+   * Three situations can be handled by this class:
    * <ul>
    * <li> Correlator data </li>
    * <li> Total power data </li>
+   * <li> WVR data </li>
    * </ul>
    *
-   * In the former case (correlator data), an SDMDataObject is organized as a header containing descriptive informations
-   * valid for all the recorded binary data, followed by a sequence of (local header, binary data) pairs. Each (local header, binary data) pair
-   * corresponds to one integration and the full SDMDataObject corresponds to one subscan.
+   * At the time of writing:
+   * <ul>
+   * <li> Correlator data (isCorrelation() returns true) are stored in an SDMDataObject which is organized as a global header containing descriptive informations
+   * valid for all the recorded binary data, followed by a sequence of SDMDataSubsets - local header, binary data pairs - . Each SDMDataSubset
+   * corresponds to one integration and the full SDMDataObject corresponds to one subscan  (hasPackedData returns false).
    *
-   * In the latter case (total power data), an SDMDataObject is organized as a header containing descriptive informations,
-   * followed by one (local header, binary data) pair. This pair corresponds to the data recorded during one subscan.
+   * <li> Total Power (TP) data (isTP() returns true) are stored like Correlator data i.e in a sequence of SDMDataSubsets (hasPackedData() returns false) <b>or</b> for TP data recorded before Cycle 3 
+   * in a SDMDataObject containing the global header followed by <b>one unique</b> SDMDataSubset containing the data recorded during the whole subscan (hasPackedData() returns true). 
+   * </li>
+   *
+   * <li> WVR data (isWVR() returns true) are stored in an SDMDataObject organized as one global header followed by <b>one unique</b> SDMDataSubset containing the data recorded during the whole subscan (hasPackedData() returns true). 
+   *
+   * <ul> 
    *
    * An instance of an SDMDataObject is never created explicitely by calling some constructors or setters methods. Instances
    * of SDMDataObject are rather created implicitely :
@@ -322,9 +331,14 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
    * <li>correlationMode() : the correlation mode encoded as a value of the enumeration CorrelationMode.</li>
    * <li>spectralResolutionType() : the type of spectral resolution defined as a value of the enumeration SpectralResolutionType.</li>
    * <li>dataStruct() : a instance of DataStruct describing the structure of the binary data.</li>
-   * <li>corrDataSubsets() : a vector of SDMDataSubset containing the collection of (sub) integrations in the case of correlator data. </li>
+   * <li>sdmDataSubsets() : a reference to the vector of SDMDataSubsets contained in this. This should be the preferred method to retrieve
+   *  the data independantly of their origin (Correlator, TP, WVR). The rignt way to interpret the reference to the vector of 
+   * SDMDataSubsets  will be driven by an appropriate utilization of isCorrelation(), isTP(), isWVR() and hasPackedData(). </li>
+   * <li>corrDataSubsets() : a vector of SDMDataSubset containing the collection of (sub) integrations in the case of correlator data.
+   * Use preferably sdmDataSubsets(). </li>
    * <li>sdmDataSubset() : an SDMDataSubset given its project path.
-   * <li>tpDataSubset() : a single SDMDataSubset containing all the binary data of a subscan in the case of total power data. </li>
+   * <li>tpDataSubset() : a single SDMDataSubset containing all the binary data of a subscan in the case of total power data. To be used 
+   * <b>only</b> when TP data are stored in one unique subset. Use preferably sdmDataSubsets()</li>
    * </ul>
    *
    */ 
@@ -1030,10 +1044,17 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
      * Returns true if the data are total power data and false otherwise.
      * @return a bool.
      *
-     * @note data are considered as total power data if CorrelationMode == AUTO_ONLY && SpectralResolutionType == BASEBAND_WIDE.
+     * @note data are considered as total power data if title contains the words "Total Power".
      */
     bool isTP() const ;
 
+    /**
+     * Returns true if the data are wvr data and false otherwise.
+     * @return a bool.
+     *
+     * @note data are considered as WVR data if title contains the acronym "WVR".
+     */
+    bool isWVR() const ;
 
     /**
      * Returns true if the data are correlator data and false otherwise.
@@ -1043,8 +1064,13 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
      */
     bool isCorrelation() const;
 
-
-
+    /**
+     * hasPackedData returns true if all the integrations are grouped in one subset for all the timestamps and conversely false if 
+     * there is one subset per integration (i.e. per timestamp). Equivalent to the method dimensionality as follows :
+     *   "hasPackedData returns true is equivalent to dimensionality returns 0"
+     */
+    bool hasPackedData() const;
+       
     /**
      * Returns the structure of the data.
      * @returns a reference to a DataStruct.
@@ -1052,6 +1078,17 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
     const DataStruct& dataStruct() const;
     void dataStruct(const DataStruct& dataStruct);
 
+
+    /**
+     * Return all the SDMDataSubsets contained in this.
+     *
+     * @return a reference on the vector of SDMDataSubsets contained in this instance of SDMDataObject. It's the responsibility
+     * of the user to determine what's in the element(s) of this vector from what's returned by a call to the method hasPackedData.
+     * If packedData returns true then the vector contains only one element containing all the data (typically this happens for WVR data), 
+     * conversely if it returns false then the vector may have more than one element and the data are distributed over the elements on 
+     * the basis of one integration per element.
+     */
+    const vector<SDMDataSubset>& sdmDataSubsets() const;
 
     /**
      * Returns the binary data as a sequence of integrations.
@@ -1129,6 +1166,14 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
      */
     void done();
 
+    /**
+     * Dimensionality of the binary content
+     *
+     * == 0 all data are grouped in one subset
+     * == 1 data are spread over a sequence of subsets, usually along the time axis  with one integration (i.e. one timestamp) per subset.
+     */
+    unsigned int dimensionality() const;
+
   private:
 
     static vector<string> correlationModeRefs;
@@ -1195,9 +1240,15 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
      * <li> 1 corresponds to correlator data.</li>
      * </ul>
      */
-    unsigned int dimensionality() const;
     void dimensionality( unsigned int value );
 
+    /**
+     * Returns true is the string passed as an argument is found in the title of this. The search is case insensitive.
+     * @param what, the string to be looked for in the title of this.
+     *
+     * @return true if and only if s is found in the title of this.
+     */
+    bool inTitle(const std::string& what) const;
 
     /**
      * Declares itself as the owner of all its parts.

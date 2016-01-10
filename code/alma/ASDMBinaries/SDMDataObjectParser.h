@@ -124,7 +124,7 @@ namespace asdmbinaries {
   private:
     void parseSDMDataHeader(xmlNode* a_node, SDMDataObject& sdmDataObject);
     
-    //    void parseProjectPath(xmlNode* a_node, SDMDataObject& sdmDataObject);
+    void parseProjectPath(xmlNode* a_node, SDMDataObject& sdmDataObject);
     long long parseStartTime(xmlNode* a_node);
     string parseDataOID(xmlNode* a_node);
     int  parseDimensionality(xmlNode* a_node);
@@ -271,7 +271,7 @@ namespace asdmbinaries {
     static const regex PROJECTPATH3;
 
     void parseSDMDataSubsetHeader(xmlNode* a_node,SDMDataSubset& sdmTPDataSubset);
-    //    void parseProjectPath(xmlNode* a_node, SDMDataSubset& sdmTPDataSubset);
+    void parseProjectPath(xmlNode* a_node, SDMDataSubset& sdmTPDataSubset);
     void parseSchedulePeriodTime(xmlNode* a_node, SDMDataSubset& sdmCorrDataSubset);
     long long parseTime(xmlNode* a_node);
     long long parseInterval(xmlNode* a_node);

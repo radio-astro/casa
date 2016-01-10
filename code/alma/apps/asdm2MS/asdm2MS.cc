@@ -21,9 +21,9 @@
 #include <stdlib.h>
 #include <string>
 #include <vector>
+#include <iomanip>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/lexical_cast.hpp>
 
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
@@ -36,13 +36,6 @@ using namespace boost;
 using namespace boost::filesystem;
 
 #include <boost/regex.hpp> 
-
-//#include <boost/lambda/lambda.hpp>
-//#include <boost/lambda/bind.hpp>
-//#include <boost/lambda/casts.hpp>
-//using namespace boost::lambda;
-
-#include <boost/foreach.hpp>
 
 #include <ASDMAll.h>
 
@@ -213,6 +206,22 @@ ostringstream errstream;
 ostringstream infostream;
 
 using namespace std;
+template<typename T> string TO_STRING(const T &v) {
+  const T shift = 100000000;
+  const T rnd = .000000005;
+  char buffer[128];
+  int whole = int(v);
+  int fraction = int((v-whole+rnd)*shift);
+  sprintf(buffer,"%d.%08d",whole,fraction);
+  return string(buffer);
+}
+
+string TO_STRING(const int &v) {
+  char buffer[128];
+  sprintf(buffer,"%d",v);
+  return string(buffer);
+}
+
 
 //
 // A class to describe Exceptions.
@@ -531,9 +540,9 @@ public :
   static vector<vector<double> > toMatrixD(const vector<vector<T> >& vv) {
     vector<vector<double> > result;
     vector<double> vD;
-    BOOST_FOREACH(vector<T> v, vv) {
+    for( vector<T> v: vv ) {
       vD.clear();
-      BOOST_FOREACH(T x, v) {
+      for( T x: v ) {
 	vD.push_back(x.get());
       }
       result.push_back(vD);
@@ -730,7 +739,7 @@ void spher(const vector<double>& x, vector<double>& s) {
  */
 void topo2geomat(double lambda, double phi, vector<vector<double> >& mat) {
  
-  double cpsi, spsi, clam, slam, cphi, sphi;
+  double clam, slam, cphi, sphi;
 
   clam = cos(lambda);
   slam = sin(lambda);
@@ -892,11 +901,8 @@ bool overTheTopExists(PointingRow* row) { return row->isOverTheTopExists(); }
 //
 // A collection of declarations and functions used for the parsing of the 'scans' option.
 //
-//#include <boost/spirit.hpp>
 #include <boost/spirit/include/classic.hpp>
-//#include <boost/spirit/actor/assign_actor.hpp>
 #include <boost/spirit/include/classic_assign_actor.hpp>
-//#include <boost/spirit/actor/push_back_actor.hpp>
 #include <boost/spirit/include/classic_push_back_actor.hpp>
 using namespace boost::spirit::classic;
 
@@ -916,7 +922,7 @@ map<int, set<int> > eb_scan_m;
 ** The two parameters begin and end are not used and here only to comply with the Spirit parser's convention.
 **
 */
-void fillScanSet(const char* begin, const char* end) {
+void fillScanSet(const char* , const char* ) {
   for (int i = scanNumber0; i < (scanNumber1+1); i++)
     scan_s.insert(i);
 }
@@ -927,7 +933,7 @@ void fillScanSet(const char* begin, const char* end) {
 ** in the global map eb_scan_m.
 ** The two parameters begin and end are not used and here only to comply with the Spirit parser's convention.
 */  
-void mergeScanSet(const char* begin, const char* end) {
+void mergeScanSet(const char* , const char*) {
   int key = eb_v.back();
   eb_scan_m[key].insert(scan_s.begin(), scan_s.end());
 }
@@ -936,7 +942,7 @@ void mergeScanSet(const char* begin, const char* end) {
 ** Empties the global set scan_s.
 ** The two parameters begin and end are not used and here only to comply with the Spirit parser's convention.
 */
-void clearScanSet(const char* begin, const char* end) {
+void clearScanSet(const char*, const char*) {
   scan_s.clear();
 }
 
@@ -1261,8 +1267,8 @@ void cubicSplineCoeff(unsigned int		npoints,
 
   for (unsigned int i = 0 ; i < npoints - 1; i++) {
     vector<double> coeff_v (4);
-    LOG(" delta k " + lexical_cast<string>(k_v[i+1]-k_v[i]) + " delta t " + lexical_cast<string>(time_v[i+1] - time_v[i]));
-    LOG(" m_i = " + lexical_cast<string>(m_v[i]) + ", m_i+1 = " + lexical_cast<string>(m_v[i+1]));
+    LOG(" delta k " + TO_STRING(k_v[i+1]-k_v[i]) + " delta t " + TO_STRING(time_v[i+1] - time_v[i]));
+    LOG(" m_i = " + TO_STRING(m_v[i]) + ", m_i+1 = " + TO_STRING(m_v[i+1]));
     coeff_v[0] = k_v[i];
     coeff_v[1] = (k_v[i+1] - k_v[i]) / (time_v[i+1] - time_v[i]) - (time_v[i+1] - time_v[i]) * (2 * m_v[i] + m_v[i+1]) / 6.0;
     coeff_v[2] = m_v[i] / 2.0;
@@ -1278,7 +1284,7 @@ double evalPoly (unsigned int		numCoeff,
 		 double 		timeOrigin,
 		 double 		time) {
   LOGENTER("evalPoly");
-  LOG( "numCoeff=" + lexical_cast<string>(numCoeff) + ", size of coeff=" + lexical_cast<string>(coeff.size())) ;
+  LOG( "numCoeff=" + TO_STRING(numCoeff) + ", size of coeff=" + TO_STRING(coeff.size())) ;
   //
   // Let's use the Horner schema to evaluate the polynomial.
   double result = coeff[numCoeff-1];
@@ -1313,7 +1319,7 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
     map<int, vector<EphemerisRow *> > i2e_m; // A map which associates a value of ephemerisId to the vector of Ephemeris rows 
     // having this value in their field ephemerisId.
     set<int> ephemerisId_s;
-    BOOST_FOREACH(EphemerisRow * eR_p , eR_v) {
+    for( EphemerisRow * eR_p: eR_v ) {
       int ephemerisId = eR_p -> getEphemerisId();
       if (i2e_m.find(ephemerisId) == i2e_m.end()) {
 	ephemerisId_s.insert(ephemerisId);
@@ -1324,13 +1330,13 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 
     // Let's create and fill the MS ephemeris tables.
 
-    BOOST_FOREACH(int ephemerisId, ephemerisId_s) {
+    for(int ephemerisId: ephemerisId_s) {
       /**
        * Check if there is at least one ASDM::Field row refering to this ephemerisId.
        */
       const vector<FieldRow *> fR_v = ds_p->getField().get();
       vector<FieldRow *> relatedField_v;    // This vector elements will contain pointers to all the Fields refering to this ephemerisId.
-      BOOST_FOREACH(const FieldRow* fR_p, fR_v) {
+      for(const FieldRow* fR_p: fR_v) {
 	if (fR_p->isEphemerisIdExists() && (fR_p->getEphemerisId() == ephemerisId))
 	  relatedField_v.push_back(const_cast<FieldRow *>(fR_p));
       }
@@ -1378,8 +1384,8 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 
       double mjd0 = ArrayTime(t0MS).getMJD();
       double dmjd = interpolate_ephemeris ? 0.001 : v[0]->getTimeInterval().getDuration().get() / 1000000000LL / 86400.0; // Grid time step == 0.001 if ephemeris interpolation requested
-                                                                                                 // otherwise == the interval of time of the first element of ephemeris converted in days.
-                                                                                                 // *SUPPOSEDLY* constant over all the ephemeris. 
+      // otherwise == the interval of time of the first element of ephemeris converted in days.
+      // *SUPPOSEDLY* constant over all the ephemeris. 
  
       // determine the position reference system
       double equator =  v[0]->getEquinoxEquator();
@@ -1449,11 +1455,11 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
     
   
       string tableName = "EPHEM"
-	+ boost::lexical_cast<std::string>(ephemerisId)
+	+ TO_STRING(ephemerisId)
 	+ "_"
 	+ fieldName
 	+ "_"
-	+ lexical_cast<string>(mjd0)
+	+ TO_STRING(mjd0)
 	+ ".tab";
 
       map<AtmPhaseCorrection, Table*> apc2EphemTable_m;
@@ -1543,10 +1549,10 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 	  }
 	}
     
-	LOG ("numPolyDirIsOne = " + lexical_cast<string>(numPolyDirIsOne));
-	LOG ("numPolyDistIsOne = " + lexical_cast<string>(numPolyDistIsOne));
-	LOG ("radVelExists = " + lexical_cast<string>(radVelExists));
-	LOG ("numPolyRadVelIsOne = " + lexical_cast<string>(numPolyRadVelIsOne));
+	LOG ("numPolyDirIsOne = " + TO_STRING(numPolyDirIsOne));
+	LOG ("numPolyDistIsOne = " + TO_STRING(numPolyDistIsOne));
+	LOG ("radVelExists = " + TO_STRING(radVelExists));
+	LOG ("numPolyRadVelIsOne = " + TO_STRING(numPolyRadVelIsOne));
     
 
 	//
@@ -1557,13 +1563,13 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 	//
 	if (numPolyDirIsOne || numPolyDistIsOne || (radVelExists && numPolyRadVelIsOne)) {
 	  // Then just "forget" the last element.
-	  LOG("Erasing the last element of v (size before = '" + lexical_cast<string>(v.size()) + "')");
+	  LOG("Erasing the last element of v (size before = '" + TO_STRING(v.size()) + "')");
 	  v.erase(v.begin() + v.size() - 1);
-	  LOG("Erasing the last element of v (size after = '" + lexical_cast<string>(v.size()) + "')");
+	  LOG("Erasing the last element of v (size after = '" + TO_STRING(v.size()) + "')");
 
-	  LOG("Erasing the last element of duration_v (size before = '" + lexical_cast<string>(duration_v.size()) + "')");
+	  LOG("Erasing the last element of duration_v (size before = '" + TO_STRING(duration_v.size()) + "')");
 	  duration_v.erase(duration_v.begin() + duration_v.size() - 1);
-	  LOG("Erasing the last element of duration_v (size after = '" + lexical_cast<string>(duration_v.size()) + "')");
+	  LOG("Erasing the last element of duration_v (size after = '" + TO_STRING(duration_v.size()) + "')");
 	}
 
 	// 
@@ -1577,7 +1583,7 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 	int64_t tMS = t0MS;
 
 	atiIdxMStime_v.push_back(atiIdxMStime_pair(index, tMS));
-	LOG ("size of atiIdxMStime_v="+lexical_cast<string>(atiIdxMStime_v.size())+", index = "+lexical_cast<string>(index)+", tMS = "+lexical_cast<string>(tMS));
+	LOG ("size of atiIdxMStime_v="+TO_STRING(atiIdxMStime_v.size())+", index = "+TO_STRING(index)+", tMS = "+TO_STRING(tMS));
 	tMS += timeStepInNanoSecond;
 
 	int64_t  start =  v[index]->getTimeInterval().getStart().get();
@@ -1586,7 +1592,7 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 	  if (tMS < end) {
 	    atiIdxMStime_v.push_back(atiIdxMStime_pair(index, tMS));
 	    tMS += timeStepInNanoSecond;
-	    LOG ("size of atiIdxMStime_v="+lexical_cast<string>(atiIdxMStime_v.size())+", index = "+lexical_cast<string>(index)+", tMS = "+lexical_cast<string>(tMS));
+	    LOG ("size of atiIdxMStime_v="+TO_STRING(atiIdxMStime_v.size())+", index = "+TO_STRING(index)+", tMS = "+TO_STRING(tMS));
 	  }
 	  else {
 	    index++;
@@ -1595,7 +1601,7 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 
 	} while (index < v.size()-1);
     
-	LOG("atiIdxMStime_v has " + lexical_cast<string>(atiIdxMStime_v.size()) + " elements.");
+	LOG("atiIdxMStime_v has " + TO_STRING(atiIdxMStime_v.size()) + " elements.");
 
 	//
 	// Prepare the coefficients which will be used for the tabulation.
@@ -1614,17 +1620,17 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
     
 	cout.precision(10);
 	for (unsigned int i = 0; i < v.size(); i++) {
-	  LOG_EPHEM("original " + lexical_cast<string> (ArrayTime(v[i]->getTimeInterval().getStart().get()).getMJD()));
+	  LOG_EPHEM("original " + TO_STRING (ArrayTime(v[i]->getTimeInterval().getStart().get()).getMJD()));
 	  vector<vector<double> > temp_vv = v[i]->getDir();
 	  if (numPolyDistIsOne) {
 	    raASDM_v.push_back(temp_vv[0][0]/3.14159265*180.0);
 	    decASDM_v.push_back(temp_vv[0][1]/3.14159265*180.0);
-	    LOG_EPHEM (" " + lexical_cast<string>(raASDM_v.back()) + " " + lexical_cast<string>(decASDM_v.back()));
+	    LOG_EPHEM (" " + TO_STRING(raASDM_v.back()) + " " + TO_STRING(decASDM_v.back()));
 	  }
 	  else {
 	    raASDM_vv.push_back(empty_v);
 	    decASDM_vv.push_back(empty_v);
-	    for (unsigned int j = 0; j < v[i]->getNumPolyDir(); j++) {
+	    for (int j = 0; j < v[i]->getNumPolyDir(); j++) {
 	      raASDM_vv.back().push_back(temp_vv[j][0]/3.14159265*180.0);
 	      decASDM_vv.back().push_back(temp_vv[j][1]/3.14159265*180.0);
 	    }
@@ -1633,11 +1639,11 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 	  temp_v = v[i]->getDistance();      
 	  if (numPolyDistIsOne) {
 	    distanceASDM_v.push_back(temp_v[0] / 1.4959787066e11);           // AU
-	    LOG_EPHEM (" " + lexical_cast<string>(distanceASDM_v.back()));
+	    LOG_EPHEM (" " + TO_STRING(distanceASDM_v.back()));
 	  }
 	  else {
 	    distanceASDM_vv.push_back(empty_v);
-	    for (unsigned int j = 0; j < v[i]->getNumPolyDist(); j++)
+	    for (int j = 0; j < v[i]->getNumPolyDist(); j++)
 	      distanceASDM_vv.back().push_back(temp_v[j] / 1.4959787066e11); // AU
 	  }
 
@@ -1645,11 +1651,11 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 	    temp_v = v[i]->getRadVel();
 	    if (numPolyRadVelIsOne) { 
 	      radVelASDM_v.push_back(temp_v[0] /  1.4959787066e11 * 24. * 3600.);      // AU/d
-	      LOG_EPHEM(" " + lexical_cast<string>(radVelASDM_v.back()));
+	      LOG_EPHEM(" " + TO_STRING(radVelASDM_v.back()));
 	    }
 	    else {
 	      radVelASDM_vv.push_back(empty_v);
-	      for (unsigned int j = 0; j < v[i]->getNumPolyRadVel(); j++)
+	      for (int j = 0; j < v[i]->getNumPolyRadVel(); j++)
 		radVelASDM_vv.back().push_back(temp_v[j]/ 1.4959787066e11 * 24. * 3600.);   // AU/d
 	    }	
 	  }
@@ -1696,36 +1702,35 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 	// End of interpolating with piecewise polynomial of degree 1.
 
 
-	BOOST_FOREACH (atiIdxMStime_pair atiIdxMStime, atiIdxMStime_v) {
+	for (atiIdxMStime_pair atiIdxMStime: atiIdxMStime_v) {
 	  //
 	  // MJD
 	  mjdMS_v.push_back(ArrayTime(atiIdxMStime.second).getMJD());
-	  LOG_EPHEM( "resampled " + lexical_cast<string>(mjdMS_v.back()));
-	  LOG("mjdMS_v -> "+lexical_cast<string>(mjdMS_v.back()));
+	  LOG_EPHEM( "resampled " + TO_STRING(mjdMS_v.back()));
+	  LOG("mjdMS_v -> "+TO_STRING(mjdMS_v.back()));
       
 	  double timeOrigin = 1.0e-09 * v[atiIdxMStime.first]->getTimeOrigin().get();
-	  double timeStart  = 1.0e-09 * v[atiIdxMStime.first]->getTimeInterval().getStart().get();
 	  double time       = 1.0e-09 * atiIdxMStime.second;
       
-	  LOG("timeOrigin="+lexical_cast<string>(timeOrigin)+", time="+lexical_cast<string>(time));
+	  LOG("timeOrigin="+TO_STRING(timeOrigin)+", time="+TO_STRING(time));
 
 	  //
 	  // RA / DEC
 	  LOG("Eval poly for RA");
-	  LOG("atiIdxMStime.first = " + lexical_cast<string>(atiIdxMStime.first));
+	  LOG("atiIdxMStime.first = " + TO_STRING(atiIdxMStime.first));
 	  raMS_v.push_back(evalPoly(raASDM_vv[atiIdxMStime.first].size(),
 				    raASDM_vv[atiIdxMStime.first],
 				    timeOrigin,
 				    time));
-	  LOG_EPHEM(" " + lexical_cast<string>(raMS_v.back()));
-	  LOG("raMS_v -> "+lexical_cast<string>(raMS_v.back()));
+	  LOG_EPHEM(" " + TO_STRING(raMS_v.back()));
+	  LOG("raMS_v -> "+TO_STRING(raMS_v.back()));
 
 	  LOG("Eval poly for DEC");
 	  decMS_v.push_back(evalPoly(decASDM_vv[atiIdxMStime.first].size(),
 				     decASDM_vv[atiIdxMStime.first],
 				     timeOrigin,
 				     time));
-	  LOG_EPHEM(" " + lexical_cast<string>(decMS_v.back()));
+	  LOG_EPHEM(" " + TO_STRING(decMS_v.back()));
       
 	  //
 	  // Distance
@@ -1734,7 +1739,7 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 					  distanceASDM_vv[atiIdxMStime.first],
 					  timeOrigin,
 					  time));
-	  LOG_EPHEM(" " + lexical_cast<string>(distanceMS_v.back()));
+	  LOG_EPHEM(" " + TO_STRING(distanceMS_v.back()));
 	  //
 	  // Radvel
 	  if (radVelExists) { 
@@ -1743,14 +1748,14 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 					  radVelASDM_vv[atiIdxMStime.first],
 					  timeOrigin,
 					  time));
-	    LOG_EPHEM(" " + lexical_cast<string>(radVelMS_v.back()));
+	    LOG_EPHEM(" " + TO_STRING(radVelMS_v.back()));
 	  }
 	  LOG_EPHEM("\n");
 	}
       } // end if interpolate_ephemeris
       else { 
 	// Just copy ephemeris without any interpolation. Just adapt the units.
-	BOOST_FOREACH(const EphemerisRow *eR_p, v) {
+	for(const EphemerisRow *eR_p: v) {
 	  mjdMS_v.push_back(eR_p->getTimeInterval().getStart().getMJD()); // MJD
 	  vector<vector<double> > dir = eR_p->getDir();
 	  raMS_v.push_back(dir[0][0]/3.14159265*180.0);  // deg
@@ -1780,7 +1785,7 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 	
 	// And fill the table
 	table_p->addRow(numRows);
-	LOG ("Added "+lexical_cast<string>(numRows)+" rows to table "+((string)table_p->tableName()));
+	LOG ("Added "+TO_STRING(numRows)+" rows to table "+((string)table_p->tableName()));
       
 	LOG("Filling column MJD");
 	Vector<casa::Double> MJD_V(IPosition(1, numRows), &mjdMS_v[0], SHARE);
@@ -2309,14 +2314,14 @@ bool checkForConstantNPolNChan(ASDM* ds_p) {
   PolarizationTable&	polT = ds_p->getPolarization();
 
   //bool result = true;
-  BOOST_FOREACH (ConfigDescriptionRow* cfgR_p , cfgR_v) {
+  for (ConfigDescriptionRow* cfgR_p: cfgR_v) {
     vector <Tag> ddId_v = cfgR_p->getDataDescriptionId();
 
     bool	firstElement = true;
     int		numChanRef   = 0;
     int		numPolRef    = 0;
 
-    BOOST_FOREACH(Tag ddId, ddId_v) {
+    for(Tag ddId: ddId_v) {
       if (firstElement) {
 	numChanRef = spwT.getRowByKey(ddT.getRowByKey(ddId)->getSpectralWindowId())->getNumChan();
 	numPolRef = polT.getRowByKey(ddT.getRowByKey(ddId)->getPolOrHoloId())->getNumCorr();
@@ -2369,13 +2374,8 @@ void fillMainLazily2(const string& dsName,
   ostringstream oss;
 
   MainTable&			mainT	= ds_p->getMain();
-  StateTable&			stateT	= ds_p->getState();  
   ConfigDescriptionTable&	cfgDscT = ds_p->getConfigDescription();
   ProcessorTable&		procT   = ds_p->getProcessor();
-
-
-  MainRow*	r      = 0;
-  MainRow*	temp_r = 0;
 
   MainRowCUStruct mRCU_s;
   vector<MainRowCUStruct> mRCU_s_v;
@@ -2479,6 +2479,14 @@ void fillMainLazily2(const string& dsName,
   try {
     for (vector<MainRowCUStruct>::iterator iter=mRCU_s_v.begin(); iter!=mRCU_s_v.end(); iter++) {
       MainRow* mR_p = iter->mR_p;
+
+      // Depending on there is an ephemeris attached to the field or not 
+      // we obtain the phase direction in two different ways :
+      // * no ephemeris attached -> use the phase dir information found in the ASDM Field table
+      // * ephemeris attached -> get the phase direction from the MS Field columns and a given time, this
+      // can work IF AND ONLY if the MS Field column is filled prior to the calculation of the UVWs.
+      bool ephemerisAttached = mR_p->getFieldUsingFieldId()->isEphemerisIdExists();
+
       SDMDataObjectStreamReader sdosr;
       sdosr.open(iter->bdfName);
       LOG("Processing " + iter->bdfName);
@@ -2530,7 +2538,7 @@ void fillMainLazily2(const string& dsName,
 	bdf2AsdmStManIndexC.setNumberOfDataDescriptions(dataDescriptionIds.size());
       
       unsigned int numberOfSpectralWindows = 0;
-      BOOST_FOREACH (const SDMDataObject::Baseband& bb , dataStruct.basebands()) {
+      for (const SDMDataObject::Baseband& bb: dataStruct.basebands()) {
 	numberOfSpectralWindows += bb.spectralWindows().size();
       }
 
@@ -2546,8 +2554,8 @@ void fillMainLazily2(const string& dsName,
       vector<unsigned int> numberOfChannels_v;
       vector<unsigned int> numberOfSDPolarizations_v;
       vector<unsigned int> numberOfCrossPolarizations_v;
-      BOOST_FOREACH (const SDMDataObject::Baseband& bb , dataStruct.basebands()) {
-	BOOST_FOREACH (const SDMDataObject::SpectralWindow& spw, bb.spectralWindows()) {
+      for (const SDMDataObject::Baseband& bb: dataStruct.basebands()) {
+	for (const SDMDataObject::SpectralWindow& spw: bb.spectralWindows()) {
 	  numberOfChannels_v.push_back(spw.numSpectralPoint());
 	  if (correlationMode != AUTO_ONLY)
 	    numberOfCrossPolarizations_v.push_back(spw.crossPolProducts().size());
@@ -2579,8 +2587,8 @@ void fillMainLazily2(const string& dsName,
       
       // The cross data scale factors exist.
       if (correlationMode != AUTO_ONLY) { 
-	BOOST_FOREACH (const SDMDataObject::Baseband& bb , dataStruct.basebands()) {
-	  BOOST_FOREACH (const SDMDataObject::SpectralWindow& spw, bb.spectralWindows()) {
+	for (const SDMDataObject::Baseband& bb: dataStruct.basebands()) {
+	  for (const SDMDataObject::SpectralWindow& spw: bb.spectralWindows()) {
 	    crossScaleFactors.push_back(spw.scaleFactor());
 	  }
 	}
@@ -2618,6 +2626,7 @@ void fillMainLazily2(const string& dsName,
 
       if (debug) {
 	oss.str("");
+
 	oss << "stepSDBl : " << stepSDBl << "\n" << "stepCrossBl : " << stepCrossBl; 
 	LOG(oss.str());
       }
@@ -2638,9 +2647,9 @@ void fillMainLazily2(const string& dsName,
       if (!onlyUncorrected and !uncorrectedANDcorrected) {
 	errstream.str("");
 	errstream.str("I don't know how to process data with uncorrected = " +
-		      lexical_cast<string>(iter->uncorrected) +
+		      TO_STRING(iter->uncorrected) +
 		      " and corrected = " +
-		      lexical_cast<string>(iter->corrected) );
+		      TO_STRING(iter->corrected) );
 	error(errstream.str());
       }
 
@@ -2675,7 +2684,7 @@ void fillMainLazily2(const string& dsName,
       //
       // Now delegate to bdf2AsdmStManIndex the creation of the AsmdIndex 'es.
       // 
-      if (processorType == RADIOMETER) {
+      if (processorType == RADIOMETER && sdosr.hasPackedData()) {
 
 	//
 	// Declare some containers required to populate the columns of the MS MAIN table in a non lazy way.
@@ -2805,7 +2814,7 @@ void fillMainLazily2(const string& dsName,
 	}
       }
 
-      else if (processorType == CORRELATOR) {
+      else if (!sdosr.hasPackedData() && (processorType == CORRELATOR || processorType == RADIOMETER)) {
 
 	//
 	// Declare some containers required to populate the columns of the MS MAIN table in a non lazy way.
@@ -3166,10 +3175,10 @@ void fillMainLazily(const string& dsName,
 
   LOGENTER("fillMainLazily");
   const MainTable& mainT = ds_p->getMain();
-  const StateTable& stateT = ds_p->getState();
+
   
-  MainRow* r = 0;
-  MainRow* temp_r = 0;
+
+
   vector<MainRow*> v;
   vector<int32_t> mainRowIndex; 
   //
@@ -3264,7 +3273,7 @@ void fillMainLazily(const string& dsName,
       const SDMDataObject::DataStruct& dataStruct = sdosr.dataStruct();
       
       unsigned int numberOfSpectralWindows = 0;
-      BOOST_FOREACH (const SDMDataObject::Baseband& bb , dataStruct.basebands()) {
+      for (const SDMDataObject::Baseband& bb: dataStruct.basebands()) {
 	numberOfSpectralWindows += bb.spectralWindows().size();
       }
 
@@ -3281,8 +3290,8 @@ void fillMainLazily(const string& dsName,
       // vector<unsigned int> numberOfPolarizations_v;
       vector<unsigned int> numberOfSDPolarizations_v;
       vector<unsigned int> numberOfCrossPolarizations_v;
-      BOOST_FOREACH (const SDMDataObject::Baseband& bb , dataStruct.basebands()) {
-	BOOST_FOREACH (const SDMDataObject::SpectralWindow& spw, bb.spectralWindows()) {
+      for (const SDMDataObject::Baseband& bb: dataStruct.basebands()) {
+	for (const SDMDataObject::SpectralWindow& spw: bb.spectralWindows()) {
 	  numberOfChannels_v.push_back(spw.numSpectralPoint());
 	  if (correlationMode != AUTO_ONLY)
 	    numberOfCrossPolarizations_v.push_back(spw.crossPolProducts().size());
@@ -3314,8 +3323,8 @@ void fillMainLazily(const string& dsName,
       
       // The cross data scale factors exist.
       if (correlationMode != AUTO_ONLY) { 
-	BOOST_FOREACH (const SDMDataObject::Baseband& bb , dataStruct.basebands()) {
-	  BOOST_FOREACH (const SDMDataObject::SpectralWindow& spw, bb.spectralWindows()) {
+	for (const SDMDataObject::Baseband& bb: dataStruct.basebands()) {
+	  for (const SDMDataObject::SpectralWindow& spw: bb.spectralWindows()) {
 	    crossScaleFactors.push_back(spw.scaleFactor());
 	  }
 	}
@@ -3416,7 +3425,7 @@ void fillMainLazily(const string& dsName,
 	int64_t startTime = (int64_t)sdmDataSubset.time() -  (int64_t)sdmDataSubset.interval()/2LL + deltaTime/2LL;
 	double   interval = deltaTime / 1000000000.0;
 	
-	int k = 0;
+
 	for (unsigned int iDD = 0; iDD < dataDescriptionIds.size(); iDD++) {
 	  //
 	  // Prepare a pair<int, int> to transport the shape of some cells
@@ -3792,7 +3801,6 @@ vector<T> reorder(const vector<T>& v, vector<int> index) {
  * This function fills the MS Main table from an ASDM Main table which refers to correlator data.
  *
  * given:
- * @parameter rowNum an integer expected to contain the number of the row being processed.
  * @parameter r_p a pointer to the MainRow being processed.
  * @parameter sdmBinData a reference to the SDMBinData containing a lot of information about the binary data being processed. Useful to know the requested ordering of data.
  * @parameter uvwCoords a reference to the UVW calculator.
@@ -3802,7 +3810,7 @@ vector<T> reorder(const vector<T>& v, vector<int> index) {
  * !!!!! One must be carefull to the fact that fillState must have been called before fillMain. During the execution of fillState , the global vector<int> msStateID
  * is filled and will be used by fillMain.
  */ 
-void fillMain(int		rowNum,
+void fillMain(
 	      MainRow*		r_p,
 	      SDMBinData&	sdmBinData,
 	      const VMSData*	vmsData_p,
@@ -3877,6 +3885,13 @@ void fillMain(int		rowNum,
   vector<float *> correctedData_v;
 
   /* compute the UVW */
+  // Depending on there is an ephemeris attached to the field or not 
+  // we obtain the phase direction in two different ways :
+  // * no ephemeris attached -> use the phase dir information found in the ASDM Field table
+  // * ephemeris attached -> get the phase direction from the MS Field columns and a given time, this
+  // can work IF AND ONLY if the MS Field column is filled prior to the calculation of the UVWs.
+  bool attachedEphemeris = r_p->getFieldUsingFieldId()->isEphemerisIdExists();
+
   vector<double> uvw_v(3*vmsData_p->v_time.size());
   vector<casa::Vector<casa::Double> > vv_uvw(vmsData_p->v_time.size());
 #if DDPRIORITY
@@ -4395,7 +4410,7 @@ void fillSysPower_aux (const vector<SysPowerRow *>& sysPowers, map<AtmPhaseCorre
   vector<float>		switchedPowerSum;
   vector<float>		requantizerGain;
 
-  LOG("fillSysPower_aux : resizing the arrays (" + lexical_cast<string>(sysPowers.size()) + ") to populate the columns of the MS SYSPOWER table.");
+  LOG("fillSysPower_aux : resizing the arrays (" + TO_STRING(sysPowers.size()) + ") to populate the columns of the MS SYSPOWER table.");
 
   antennaId.resize(sysPowers.size());
   spectralWindowId.resize(sysPowers.size());
@@ -4420,7 +4435,7 @@ void fillSysPower_aux (const vector<SysPowerRow *>& sysPowers, map<AtmPhaseCorre
   LOG("fillSysPower_aux : working on the optional attributes.");
 
   unsigned int numReceptor0 = sysPowers[0]->getNumReceptor();
-  LOG("fillSysPower_aux : numReceptor = " + lexical_cast<string>(numReceptor0));
+  LOG("fillSysPower_aux : numReceptor = " + TO_STRING(numReceptor0));
  
   bool switchedPowerDifferenceExists0 = sysPowers[0]->isSwitchedPowerDifferenceExists();
   if (switchedPowerDifferenceExists0) {
@@ -4574,7 +4589,7 @@ void partitionMS(vector<int> SwIds,
                  int maxNumChan)
 {
   LOGENTER("partitionMS");
-  for (int i=0; i<SwIds.size(); i++) {
+  for (unsigned int i=0; i<SwIds.size(); i++) {
     ostringstream oss;
     oss<< SwIds.at(i);
     string msname_suffix = ".SpW"+oss.str( );
@@ -4680,7 +4695,8 @@ int main(int argc, char *argv[]) {
   appName = string(argv[0]);
   ofstream ofs;
 
-  LogSinkInterface& lsif = LogSink::globalSink();
+  //LogSinkInterface& lsif = LogSink::globalSink();
+  static_cast<void>(LogSink::globalSink());
 
   uint64_t bdfSliceSizeInMb = 0; // The default size of the BDF slice hold in memory.
 
@@ -5290,10 +5306,10 @@ int main(int argc, char *argv[]) {
   int maxNumChan=1;
   SpectralWindowTable& temp_spwT = ds->getSpectralWindow();
   SpectralWindowRow* temp_spwtrow;
-  int nSpW = temp_spwT.size();
+
   vector<int> SwIds;
   try {
-    for (int i=0; i<temp_spwT.size(); i++) {
+    for (unsigned int i=0; i<temp_spwT.size(); i++) {
       temp_spwtrow = temp_spwT.get()[i];
       maxNumChan=max(maxNumChan, temp_spwtrow->getNumChan());
       SwIds.push_back(temp_spwtrow->getSpectralWindowId().getTagValue());
@@ -5508,15 +5524,15 @@ int main(int argc, char *argv[]) {
 	string aName = r->getName();
 	if (find_first(aName, "&")) replace_all(aName, "&", "#");
 	
-	int antenna_id = iter->second->addAntenna(aName,
-						  r->getStationUsingStationId()->getName(),
-						  xPosition,
-						  yPosition,
-						  zPosition,
-						  xOffset,
-						  yOffset,
-						  zOffset,
-						  (float)r->getDishDiameter().get());	
+	static_cast<void>(iter->second->addAntenna(aName,
+						   r->getStationUsingStationId()->getName(),
+						   xPosition,
+						   yPosition,
+						   zPosition,
+						   xOffset,
+						   yOffset,
+						   zOffset,
+						   (float)r->getDishDiameter().get()));	
       }
     }
 
@@ -6581,14 +6597,14 @@ int main(int argc, char *argv[]) {
       const vector<CalDeviceRow *>& calDevices = selector(calDeviceT.get(), ignoreTime);
       if (!ignoreTime) 
 	infostream << calDevices.size() << " of them in the selected exec blocks / scans ... ";
-    
+      
       info(infostream.str());
-
+      
       for (vector<CalDeviceRow*>::const_iterator iter = calDevices.begin(); iter != calDevices.end(); iter++) {
 	bool ignoreThisRow = false;
 	unsigned int numCalload = 0;
 	unsigned int numReceptor = 0;
-      
+	
 	//
 	// Let's make some checks on the attributes.
 	errstream.str("");
@@ -6604,7 +6620,7 @@ int main(int argc, char *argv[]) {
 		    << endl; 
 	  ignoreThisRow = true;
 	}
-      
+	
 	//
 	// Do we have enough elements in calLoadNames ?
 	vector<CalibrationDevice> temp = (*iter)->getCalLoadNames();
@@ -6622,7 +6638,7 @@ int main(int argc, char *argv[]) {
 	  calLoadNames.resize(temp.size());
 	  transform(temp.begin(), temp.end(), calLoadNames.begin(), stringValue<CalibrationDevice, CCalibrationDevice>);	  
 	}
-
+	
 	//
 	// Do we have numReceptor ?
 	if ((*iter)->isNumReceptorExists()) {
@@ -6637,7 +6653,7 @@ int main(int argc, char *argv[]) {
 	    ignoreThisRow = true;
 	  }
 	}
-
+	
 	//
 	// Do we have calEff ?
 	vector<vector<float> > calEff;
@@ -6798,6 +6814,7 @@ int main(int argc, char *argv[]) {
 	time =  (*iter)->getTimeInterval().getStartInMJD()*86400 + interval / 2.0 ;
 	//}
       
+	
 	for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator msIter = msFillers.begin();
 	     msIter != msFillers.end();
 	     ++msIter) {
@@ -6814,6 +6831,7 @@ int main(int argc, char *argv[]) {
 				       temperatureLoad);
 	}      
       }
+
       unsigned int numMSCalDevices = (const_cast<casa::MeasurementSet*>(msFillers.begin()->second->ms()))->rwKeywordSet().asTable("CALDEVICE").nrow();
       if (numMSCalDevices > 0) {
 	infostream.str("");
@@ -6927,12 +6945,12 @@ int main(int argc, char *argv[]) {
       fillMainLazily2(dsName, ds, selected_eb_scan_m,effectiveBwPerDD_m);
   }
   else {
-    ConfigDescriptionTable&	cfgT   = ds->getConfigDescription();
+
     const MainTable&		mainT  = ds->getMain();
     const StateTable&		stateT = ds->getState();
     
-    MainRow*				r							  = 0;
-    MainRow*				temp_r							  = 0;
+
+
     vector<MainRow*>			v;
     vector<int32_t>			mainRowIndex; 
     //
@@ -6975,8 +6993,8 @@ int main(int argc, char *argv[]) {
 	ConfigDescriptionTable& cT = ds->getConfigDescription();
 	ConfigDescriptionRow* cR = cT.getRowByKey(cdId);
 	Tag pId = cR->getProcessorId();
-	ProcessorTable& pT = ds->getProcessor();
-	ProcessorRow* pR = pT.getRowByKey(pId);
+
+
 	ProcessorType processorType = ds->getProcessor().getRowByKey(pId)->getProcessorType();
 	infostream.str("");
 	infostream << "ASDM Main row #" << mainRowIndex[i] << " contains data produced by a '" << CProcessorType::name(processorType) << "'." ;
@@ -7019,7 +7037,7 @@ int main(int argc, char *argv[]) {
 	  }
 	  vmsDataPtr = sdmBinData.getDataCols();
 	   
-	  fillMain(i,
+	  fillMain(
 		   v[i],
 		   sdmBinData,
 		   vmsDataPtr,
@@ -7056,7 +7074,7 @@ int main(int argc, char *argv[]) {
 	      msMainRowsInSubscanChecker.check(vmsDataPtr, v[i], mainRowIndex[i], absBDFpath);
 	      numberOfReadIntegrations += numberOfIntegrations;
 	      numberOfMSMainRows += vmsDataPtr->v_antennaId1.size();
-	      fillMain(i, v[i], sdmBinData, vmsDataPtr, uvwCoords, effectiveBwPerDD_m, complexData,  mute, ac_xc_per_timestamp);
+	      fillMain(v[i], sdmBinData, vmsDataPtr, uvwCoords, effectiveBwPerDD_m, complexData,  mute, ac_xc_per_timestamp);
 	      infostream << vmsDataPtr->v_antennaId1.size()  << " MS Main rows." << endl;
 	      info(infostream.str());
 	    }
@@ -7071,7 +7089,7 @@ int main(int argc, char *argv[]) {
 	      infostream << "ASDM Main row #" << mainRowIndex[i] << " - " << numberOfReadIntegrations  << " integrations done so far - the next " << numberOfRemainingIntegrations << " integrations produced " ;
 	      
 	      msMainRowsInSubscanChecker.check(vmsDataPtr, v[i], mainRowIndex[i], absBDFpath);
-	      fillMain(i, v[i], sdmBinData, vmsDataPtr, uvwCoords, effectiveBwPerDD_m, complexData, mute, ac_xc_per_timestamp);
+	      fillMain(v[i], sdmBinData, vmsDataPtr, uvwCoords, effectiveBwPerDD_m, complexData, mute, ac_xc_per_timestamp);
 	      
 	      infostream << vmsDataPtr->v_antennaId1.size()  << " MS Main rows." << endl;
 	      info(infostream.str());
@@ -7108,11 +7126,6 @@ int main(int argc, char *argv[]) {
 	infostream << e.getMessage();
 	info(infostream.str());
       }
-      catch (ConversionException& e) {
-	infostream.str("");
-	infostream << e.getMessage();
-	info(infostream.str());
-      }
       catch (ASDM2MSException& e) {
 	infostream.str("");
 	infostream << e.getMessage();
@@ -7135,7 +7148,7 @@ int main(int argc, char *argv[]) {
     
     // Did we have problem with BDF with data not falling in the time range of their scan/subscan pair ?
     const vector<string>& report = msMainRowsInSubscanChecker.report();
-    for_each(report.begin(), report.end(), bind(warning, _1)); 
+    for_each(report.begin(), report.end(), warning ); 
     
     infostream.str("");
     infostream << "The dataset has "  << stateT.size() << " state(s)..." ;

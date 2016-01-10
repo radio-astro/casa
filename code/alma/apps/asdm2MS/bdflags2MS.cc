@@ -31,7 +31,6 @@ using namespace ProcessorTypeMod;
 using namespace asdmbinaries;
 
 #include "asdm2MSGeneric.h"
-#include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/regex.hpp>
 using namespace boost;
@@ -379,11 +378,8 @@ public:
 //
 // A collection of declarations and functions used for the parsing of the 'scans' option.
 //
-//#include <boost/spirit.hpp>
 #include <boost/spirit/include/classic.hpp>
-//#include <boost/spirit/actor/assign_actor.hpp>
 #include <boost/spirit/include/classic_assign_actor.hpp>
-//#include <boost/spirit/actor/push_back_actor.hpp>
 #include <boost/spirit/include/classic_push_back_actor.hpp>
 using namespace boost::spirit::classic;
 
@@ -402,7 +398,7 @@ map<int, set<int> > eb_scan_m;
 ** to by the global variable scan_s.
 ** The two parameters begin and end are not used and here only to comply with the Spirit parser's convention.
 */
-void fillScanSet(const char* begin, const char* end) {
+void fillScanSet(const char* , const char* ) {
   for (int i = scanNumber0; i < (scanNumber1+1); i++)
     scan_s.insert(i);
 }
@@ -413,7 +409,7 @@ void fillScanSet(const char* begin, const char* end) {
 ** in the global map eb_scan_m.
 ** The two parameters begin and end are not used and here only to comply with the Spirit parser's convention.
 */  
-void mergeScanSet(const char* begin, const char* end) {
+void mergeScanSet(const char* , const char* ) {
   int key = eb_v.back();
   eb_scan_m[key].insert(scan_s.begin(), scan_s.end());
 }
@@ -422,7 +418,7 @@ void mergeScanSet(const char* begin, const char* end) {
 ** Empties the global set scan_s.
 ** The two parameters begin and end are not used and here only to comply with the Spirit parser's convention.
 */
-void clearScanSet(const char* begin, const char* end) {
+void clearScanSet(const char* , const char* ) {
   scan_s.clear();
 }
 
@@ -432,7 +428,7 @@ void clearScanSet(const char* begin, const char* end) {
 */
 struct eb_scan_selection : public grammar<eb_scan_selection> {
   template<typename ScannerT> struct definition {
-    definition (eb_scan_selection const& self) {
+    definition (eb_scan_selection const& ) {
       eb_scan_list   = eb_scan >> *(';' >> eb_scan);
       eb_scan	     = (eb[push_back_a(eb_v, ebNumber)][assign_a(ebNumber, allEbs)] >> scan_list)[&mergeScanSet][&clearScanSet];
       eb	     = !(int_p[assign_a(readEb)] >> ':')[assign_a(ebNumber, readEb)];
@@ -469,9 +465,9 @@ void traverseBAB(bool					sameAntenna,
   unsigned int		 numFlags = flagsPair.first;
 
   accumulator.resetDD();
-  BOOST_FOREACH (SDMDataObject::Baseband bab, basebands) {
+  for (SDMDataObject::Baseband bab: basebands) {
     const vector<SDMDataObject::SpectralWindow>& spws = bab.spectralWindows();
-    BOOST_FOREACH(SDMDataObject::SpectralWindow spw, spws) {
+    for(SDMDataObject::SpectralWindow spw: spws) {
       vector<StokesParameter>::const_iterator ppIter, ppBegin, ppEnd;
       ppIter = ppBegin = sameAntenna ? spw.sdPolProducts().begin() : spw.crossPolProducts().begin();
       ppEnd = sameAntenna ? spw.sdPolProducts().end() : spw.crossPolProducts().end();
@@ -741,10 +737,10 @@ pair<uInt, uInt> put(MSFlagAccumulator<char>& accumulator,
     flag.get((uInt)iRow0, flagCell);
     
     bool allSet = true;
-    int notNull = 0;
+
     int k = 0;
-    for (uInt i = 0;  i < numChan; i++)
-      for (uInt j = 0; j < numCorr; j++) {
+    for (int i = 0;  i < numChan; i++)
+      for (int j = 0; j < numCorr; j++) {
 	flagged = flag_v_p->at(k++) != (char) 0;
       
 	flagCell(j, i) = flagged ; // flagCell(j, i) || flagged;    // Let's OR the content of flag with what's found in the BDF flags.
@@ -848,6 +844,206 @@ vector<uint64_t> sizeInMemory(uint64_t BDFsize, uint64_t approxSizeInMemory) {
   return result;
 } 
 
+void processCorrelatorFlags(unsigned int                                numIntegration,
+			    const string&				bdfPath,
+			    const vector<string>&			antennas,
+			    const vector<pair<string, string> >&	dataDescriptions,
+			    MSFlagEval&				flagEval,
+			    uInt&					iMSRow,
+			    ArrayColumn<Bool>&				flag,
+			    ScalarColumn<Bool>&	                        flagRow
+			    ) {
+  boost::regex  ALMACorrelatorFlagsAxesRegex("(BAL )?ANT (BAB )?(POL )?");
+
+  uInt numFlaggedRows = 0;
+  SDMDataObjectStreamReader sdosr;
+
+  sdosr.open(bdfPath);
+  const SDMDataObject::BinaryPart & flagsBP = sdosr.dataStruct().flags();
+  const vector<AxisName> & flagsAxes = flagsBP.axes();
+  ostringstream oss;
+  hack06 hack06_instance(oss);
+  for_each(flagsAxes.begin(), flagsAxes.end(), hack06_instance);
+  // Check the validity of the sequence of flags axes.
+  if (!regex_match(oss.str(), ALMACorrelatorFlagsAxesRegex)) {
+    throw ProcessFlagsException("'" + oss.str() + "' is not a valid sequence of flags axes for an ALMA correlator.");
+  }
+  
+  CorrelationModeMod::CorrelationMode	correlationMode = sdosr.correlationMode();
+  unsigned int				numBAL		= antennas.size() * (antennas.size() - 1) / 2;
+  unsigned int				numDD		= dataDescriptions.size();
+
+
+  MSFlagAccumulator<char> autoAccumulator(numIntegration, antennas.size(), numDD);
+  MSFlagAccumulator<char> crossAccumulator(numIntegration, numBAL, numDD);
+  if ( correlationMode != CorrelationModeMod::CROSS_ONLY )
+    autoAccumulator.resetIntegration();
+  if ( correlationMode != CorrelationModeMod::AUTO_ONLY )
+    crossAccumulator.resetIntegration();
+  
+  while (sdosr.hasSubset()) {
+    const FLAGSTYPE * flags_p;
+
+    unsigned int numFlags = sdosr.getSubset().flags(flags_p);
+    pair<unsigned int, const FLAGSTYPE *> flagsPair(numFlags, flags_p);
+    traverseALMACorrelatorFlagsAxes(sdosr.dataStruct().basebands(),
+				    antennas,
+				    dataDescriptions,
+				    flagsPair,
+				    flagEval,
+				    correlationMode,
+				    autoAccumulator,
+				    crossAccumulator);
+    if ( correlationMode != CorrelationModeMod::CROSS_ONLY )
+      autoAccumulator.nextIntegration();
+    if ( correlationMode != CorrelationModeMod::AUTO_ONLY )
+      crossAccumulator.nextIntegration();
+  }
+
+  pair<uInt, uInt> putReturn = mergeAndPut(correlationMode,
+					   autoAccumulator,
+					   crossAccumulator,
+					   iMSRow,
+					   flag,
+					   flagRow);
+  iMSRow = putReturn.first;
+  numFlaggedRows += putReturn.second;
+
+  return;
+}
+
+void processCorrelatorFlagsPerSlices(MainRow*					mR_p,
+				     unsigned int                               iASDMIndex,
+				     const vector<int32_t>&                     mainRowIndex, 
+				     const string&				bdfPath,
+				     uint64_t					bdfSliceSizeInMb,
+				     const vector<string>&			antennas,
+				     const vector<pair<string, string> >&	dataDescriptions,
+				     MSFlagEval&				flagEval,
+				     uInt&					iMSRow,
+				     ArrayColumn<Bool>&				flag,
+				     ScalarColumn<Bool>&	                flagRow
+				     ) {
+  // Regular expressions for the correct sequences of axes in the flags in the case of ALMA data.
+  boost::regex  ALMACorrelatorFlagsAxesRegex("(BAL )?ANT (BAB )?(POL )?");
+
+  uInt numFlaggedRows = 0;
+  SDMDataObjectStreamReader sdosr;
+
+  sdosr.open(bdfPath);
+  const SDMDataObject::BinaryPart & flagsBP = sdosr.dataStruct().flags();
+  const vector<AxisName> & flagsAxes = flagsBP.axes();
+  ostringstream oss;
+  hack06 hack06_instance(oss);
+  for_each(flagsAxes.begin(), flagsAxes.end(), hack06_instance);
+  // Check the validity of the sequence of flags axes.
+  if (!regex_match(oss.str(), ALMACorrelatorFlagsAxesRegex)) {
+    throw ProcessFlagsException("'" + oss.str() + "' is not a valid sequence of flags axes for an ALMA correlator.");
+  }
+  
+  uint32_t		N			 = mR_p->getNumIntegration();
+  uint64_t		bdfSize			 = mR_p->getDataSize();
+  vector<uint64_t>	actualSizeInMemory(sizeInMemory(bdfSize, bdfSliceSizeInMb*1024*1024));
+  
+  int32_t		numberOfIntegrations	 = 0;
+  int32_t		numberOfReadIntegrations = 0;
+  
+  CorrelationModeMod::CorrelationMode	correlationMode = sdosr.correlationMode();
+  unsigned int				numBAL		= antennas.size() * (antennas.size() - 1) / 2;
+  unsigned int				numDD		= dataDescriptions.size();
+  
+  for (unsigned int j = 0; j < actualSizeInMemory.size(); j++) {
+    if (debug) cout << "PLATOON" << endl;
+    numberOfIntegrations = min(actualSizeInMemory[j] / (bdfSize / N), N); // The min to prevent a possible excess when there are very few bytes in the BDF.
+    if (debug) cout << "------------> " << numberOfIntegrations << " , " << actualSizeInMemory[j] << endl;
+    
+    if (numberOfIntegrations) {
+      MSFlagAccumulator<char> autoAccumulator(numberOfIntegrations, antennas.size(), numDD);
+      MSFlagAccumulator<char> crossAccumulator(numberOfIntegrations, numBAL, numDD);
+      if ( correlationMode != CorrelationModeMod::CROSS_ONLY )
+	autoAccumulator.resetIntegration();
+      if ( correlationMode != CorrelationModeMod::AUTO_ONLY )
+	crossAccumulator.resetIntegration();
+      
+      for (int iIntegration = 0; iIntegration < numberOfIntegrations; iIntegration++) {
+	const FLAGSTYPE * flags_p;
+	unsigned int numFlags = sdosr.getSubset().flags(flags_p);
+	pair<unsigned int, const FLAGSTYPE *> flagsPair(numFlags, flags_p);
+	traverseALMACorrelatorFlagsAxes(sdosr.dataStruct().basebands(),
+					antennas,
+					dataDescriptions,
+					flagsPair,
+					flagEval,
+					correlationMode,
+					autoAccumulator,
+					crossAccumulator);
+	if ( correlationMode != CorrelationModeMod::CROSS_ONLY )
+	  autoAccumulator.nextIntegration();
+	if ( correlationMode != CorrelationModeMod::AUTO_ONLY )
+	  crossAccumulator.nextIntegration();
+      }
+      pair<uInt, uInt> putReturn = mergeAndPut(correlationMode,
+					       autoAccumulator,
+					       crossAccumulator,
+					       iMSRow,
+					       flag,
+					       flagRow);
+      iMSRow = putReturn.first;
+      numFlaggedRows += putReturn.second;
+      numberOfReadIntegrations += numberOfIntegrations;
+      
+      infostream.str("");
+      
+      infostream << "ASDM Main row #" << mainRowIndex[iASDMIndex] << " - " << numberOfReadIntegrations   << "/" << N << " integrations done so far.";
+      info(infostream.str());
+    }
+  }
+  
+  if (debug) cout << "REMAINING" << endl;
+  uint32_t numberOfRemainingIntegrations = N - numberOfReadIntegrations;
+  if (numberOfRemainingIntegrations) {
+    MSFlagAccumulator<char> autoAccumulator(numberOfRemainingIntegrations, antennas.size(), numDD);
+    MSFlagAccumulator<char> crossAccumulator(numberOfRemainingIntegrations, numBAL, numDD);
+    if ( correlationMode != CorrelationModeMod::CROSS_ONLY )
+      autoAccumulator.resetIntegration();
+    if ( correlationMode != CorrelationModeMod::AUTO_ONLY )
+      crossAccumulator.resetIntegration(); 
+    for (unsigned int iIntegration = 0; iIntegration < numberOfRemainingIntegrations; iIntegration++) {
+      const FLAGSTYPE * flags_p;
+      unsigned int numFlags = sdosr.getSubset().flags(flags_p);
+      pair<unsigned int, const FLAGSTYPE *> flagsPair(numFlags, flags_p);
+      traverseALMACorrelatorFlagsAxes(sdosr.dataStruct().basebands(),
+				      antennas,
+				      dataDescriptions,
+				      flagsPair,
+				      flagEval,
+				      correlationMode,
+				      autoAccumulator,
+				      crossAccumulator);
+      if ( correlationMode != CorrelationModeMod::CROSS_ONLY )
+	autoAccumulator.nextIntegration();
+      if ( correlationMode != CorrelationModeMod::AUTO_ONLY )
+	crossAccumulator.nextIntegration();
+    }
+    pair<uInt, uInt> putReturn = mergeAndPut(correlationMode,
+					     autoAccumulator,
+					     crossAccumulator,
+					     iMSRow,
+					     flag,
+					     flagRow);
+    iMSRow = putReturn.first;
+    numFlaggedRows += putReturn.second;
+    numberOfReadIntegrations += numberOfIntegrations;
+    
+    infostream.str("");
+    
+    infostream << "ASDM Main row #" << mainRowIndex[iASDMIndex]   << " - " << numberOfReadIntegrations << "/" << N << " integrations done so far.";
+    info(infostream.str());
+  }
+  sdosr.close();
+}	
+
+
 int main (int argC, char * argV[]) {
   LOGENTER("int main (int argC, char * argV[])");
   string dsName;
@@ -868,6 +1064,8 @@ int main (int argC, char * argV[]) {
 
   po::variables_map vm;
 
+  bool lazy = false;  // must be set to true with the option "--lazy=true" if the MS has been produced by asdm2MS with the option --lazy !!!
+
   try {
     string flagcondDoc = "specifies the list of flagging conditions to consider. The list must be a white space separated list of valid flagging conditions names. Note that the flag names can be shortened as long as there is no ambiguity (i.e. \"FFT, SI\" is valid and will be interpreted as \"FFT_OVERFLOW , SIGMA_OVERFLOW\"). If no flagging condition is provided the application exits immediately. A flag is set at the appropriate location in the MS Main row whenever at least one of the flagging conditions present in the option --flagcond is read at the relevant location in the relevant BDF file. The flagging conditions are :\n" + abbrevList + "\n\n. Note that the special value \"ALL\" to set all the flagging conditions.";
     po::options_description generic("Generates MS Flag information from the flagging conditions contained in the BDF files of an ASDM dataset.\n\n"
@@ -881,7 +1079,8 @@ int main (int argC, char * argV[]) {
       ("help", "produces help message.")
       ("flagcond,f", po::value<string>()->default_value(""), flagcondDoc.c_str())
       ("scans,s", po::value<string>(), "processes only the scans specified in the option's value. This value is a semicolon separated list of scan specifications. A scan specification consists in an exec bock index followed by the character ':' followed by a comma separated list of scan indexes or scan index ranges. A scan index is relative to the exec block it belongs to. Scan indexes are 1-based while exec blocks's are 0-based. \"0:1\" or \"2:2~6\" or \"0:1,1:2~6,8;2:,3:24~30\" \"1,2\" are valid values for the option. \"3:\" alone will be interpreted as 'all the scans of the exec block#3'. An scan index or a scan index range not preceded by an exec block index will be interpreted as 'all the scans with such indexes in all the exec blocks'.  By default all the scans are considered.")
-      ("wvr-corrected-data", po::value<bool>()->default_value(false), "must be set to True (resp. False) whenever the MS to be populated contains corrected (resp. uncorrected) data (default==false)");
+      ("wvr-corrected-data", po::value<bool>()->default_value(false), "must be set to True (resp. False) whenever the MS to be populated contains corrected (resp. uncorrected) data (default==false)")
+      ("lazy", po::value<bool>()->default_value(false), "must be set to True if the measurement set has been produced by asdm2MS run with the option --lazy (default==false");
     
     po::options_description hidden("Hidden options");
     hidden.add_options()
@@ -955,7 +1154,7 @@ int main (int argC, char * argV[]) {
       iss.str(flagcond_opt);
       while (iss >> token) {
 	if ( to_upper_copy(token) == "ALL") {
-	  BOOST_FOREACH ( s_ui p, abbrev2bitpos ) {
+	  for ( s_ui p: abbrev2bitpos ) {
 	    flagmask.set(p.second, true);
 	    infostream << " " << p.first;
 	  }
@@ -964,7 +1163,7 @@ int main (int argC, char * argV[]) {
 	else {
 	  unsigned hits = 0;
 	  unsigned int bitpos = 0;
-	  BOOST_FOREACH ( s_ui p , abbrev2bitpos ) {
+	  for ( s_ui p: abbrev2bitpos ) {
 	    if (starts_with(p.first, to_upper_copy(trim_copy(token)))) {
 	      bitpos = p.second;
 	      hits++;
@@ -992,6 +1191,10 @@ int main (int argC, char * argV[]) {
       infostream.str("");
       infostream << "Consequently the following flag mask will be used : " << flagmask << "(" << std::hex << flagmask.to_ulong() << ")" << std::dec << endl;
       info(infostream.str());
+    }
+
+    if (vm.count("lazy")) {
+      lazy=vm["lazy"].as<bool>();
     }
   }
   catch (std::exception& e) {
@@ -1087,13 +1290,14 @@ int main (int argC, char * argV[]) {
 	  selected_eb_scan_m[iterr_m->first] = SetAndSet<int>(iter_m->second, iterr_m->second);
 
     for (map<int, set<int> >::iterator iterr_m = all_eb_scan_m.begin(); iterr_m != all_eb_scan_m.end(); iterr_m++)
-      if ((iter_m=eb_scan_m.find(iterr_m->first)) != eb_scan_m.end())
+      if ((iter_m=eb_scan_m.find(iterr_m->first)) != eb_scan_m.end()) {
 	if ((iter_m->second).empty())
 	  selected_eb_scan_m[iterr_m->first].insert((iterr_m->second).begin(), (iterr_m->second).end());
 	else {
 	  set<int> s = SetAndSet<int>(iter_m->second, iterr_m->second);
 	  selected_eb_scan_m[iterr_m->first].insert(s.begin(), s.end());
 	}
+      }
 
     ostringstream	oss;
     oss << "The following scans will be processed : " << endl;
@@ -1142,7 +1346,8 @@ int main (int argC, char * argV[]) {
 
   // Regular expressions for the correct sequences of axes in the flags in the case of ALMA data.
   boost::regex ALMACorrelatorFlagsAxesRegex("(BAL )?ANT (BAB )?(POL )?");
-  boost::regex ALMARadiometerFlagsAxesRegex("(TIM ANT )?(BAB BIN POL )?");
+  boost::regex ALMARadiometerPackedFlagsAxesRegex("(TIM ANT )?(BAB BIN POL )?");
+  boost::regex ALMARadiometerFlagsAxesRegex("(ANT )?(BAB BIN POL )?");
 
 
   ConfigDescriptionTable &	cfgT = ds.getConfigDescription();
@@ -1155,7 +1360,7 @@ int main (int argC, char * argV[]) {
   MSFlagEval flagEval(flagmask.to_ulong(), processUncorrectedData ? 3 : 0); // If we process uncorrected data we ignore the combination
                                                                             // 3 = WVR_APC | INTEGRATION_FULLY_BLANKED
 
-  uInt	iASDMRow    = 0;	// Row index in the ASDM Main table.
+ 
 
   //
   //
@@ -1189,11 +1394,11 @@ int main (int argC, char * argV[]) {
 
   uInt	iMSRow	    = 0;	// Row index in the MS Main table.
   uInt	iMSRowBegin = 0;	// Index of the first row in the MS Main table of the slice corresponding to one row in the ASDM Main table.
-  uInt	iMSRowEnd   = 0;	// Index of the last row in the MS Main table of the slice corresponding to one row in the ASDM Main table.
+
 
   iMSRowBegin = iMSRow;
   unsigned int iASDMIndex = 0;
-  BOOST_FOREACH (MainRow * mR, v) {
+  for (MainRow * mR: v) {
     // 
     // Retrieve metadata informations.
     //
@@ -1256,117 +1461,29 @@ int main (int argC, char * argV[]) {
 
       switch (pt) {
       case ProcessorTypeMod::CORRELATOR :
-	{  
-	  sdosr.open(bdfPath);
-	  const SDMDataObject::BinaryPart & flagsBP = sdosr.dataStruct().flags();
-	  const vector<AxisName> & flagsAxes = flagsBP.axes();
-	  ostringstream oss;
-	  hack06 hack06_instance(oss);
-	  for_each(flagsAxes.begin(), flagsAxes.end(), hack06_instance);
-	  // Check the validity of the sequence of flags axes.
-	  if (!regex_match(oss.str(), ALMACorrelatorFlagsAxesRegex)) {
-	    throw ProcessFlagsException("'" + oss.str() + "' is not a valid sequence of flags axes for an ALMA correlator.");
-	  }
-
-	  uint32_t		N			 = mR->getNumIntegration();
-	  uint64_t		bdfSize			 = mR->getDataSize();
-	  vector<uint64_t>	actualSizeInMemory(sizeInMemory(bdfSize, bdfSliceSizeInMb*1024*1024));
-	  int32_t		numberOfMSMainRows	 = 0;
-	  int32_t		numberOfIntegrations	 = 0;
-	  int32_t		numberOfReadIntegrations = 0;
-
-	  CorrelationModeMod::CorrelationMode correlationMode = sdosr.correlationMode();
-	  unsigned int numBAL = antennas.size() * (antennas.size() - 1) / 2;
-
-	  for (unsigned int j = 0; j < actualSizeInMemory.size(); j++) {
-	    if (debug) cout << "PLATOON" << endl;
-	    numberOfIntegrations = min(actualSizeInMemory[j] / (bdfSize / N), N); // The min to prevent a possible excess when there are very few bytes in the BDF.
-	    if (debug) cout << "------------> " << numberOfIntegrations << " , " << actualSizeInMemory[j] << endl;
-
-	    if (numberOfIntegrations) {
-	      MSFlagAccumulator<char> autoAccumulator(numberOfIntegrations, antennas.size(), numDD);
-	      MSFlagAccumulator<char> crossAccumulator(numberOfIntegrations, numBAL, numDD);
-	      if ( correlationMode != CorrelationModeMod::CROSS_ONLY )
-		autoAccumulator.resetIntegration();
-	      if ( correlationMode != CorrelationModeMod::AUTO_ONLY )
-		crossAccumulator.resetIntegration();
-
-	      for (int iIntegration = 0; iIntegration < numberOfIntegrations; iIntegration++) {
-		const FLAGSTYPE * flags_p;
-		unsigned int numFlags = sdosr.getSubset().flags(flags_p);
-		pair<unsigned int, const FLAGSTYPE *> flagsPair(numFlags, flags_p);
-		traverseALMACorrelatorFlagsAxes(sdosr.dataStruct().basebands(),
-						antennas,
-						dataDescriptions,
-						flagsPair,
-						flagEval,
-						correlationMode,
-						autoAccumulator,
-						crossAccumulator);
-		if ( correlationMode != CorrelationModeMod::CROSS_ONLY )
-		  autoAccumulator.nextIntegration();
-		if ( correlationMode != CorrelationModeMod::AUTO_ONLY )
-		  crossAccumulator.nextIntegration();
-	      }
-	      pair<uInt, uInt> putReturn = mergeAndPut(correlationMode,
-						       autoAccumulator,
-						       crossAccumulator,
-						       iMSRow,
-						       flag,
-						       flagRow);
-	      iMSRow = putReturn.first;
-	      numFlaggedRows += putReturn.second;
-	      numberOfReadIntegrations += numberOfIntegrations;
-
-	      infostream.str("");
-
-	      infostream << "ASDM Main row #" << mainRowIndex[iASDMIndex] << " - " << numberOfReadIntegrations   << "/" << N << " integrations done so far.";
-	      info(infostream.str());
-	    }
-	  }
-
-	  if (debug) cout << "REMAINING" << endl;
-	  uint32_t numberOfRemainingIntegrations = N - numberOfReadIntegrations;
-	  if (numberOfRemainingIntegrations) {
-	    MSFlagAccumulator<char> autoAccumulator(numberOfRemainingIntegrations, antennas.size(), numDD);
-	    MSFlagAccumulator<char> crossAccumulator(numberOfRemainingIntegrations, numBAL, numDD);
-	    if ( correlationMode != CorrelationModeMod::CROSS_ONLY )
-	      autoAccumulator.resetIntegration();
-	    if ( correlationMode != CorrelationModeMod::AUTO_ONLY )
-	      crossAccumulator.resetIntegration(); 
-	    for (int iIntegration = 0; iIntegration < numberOfRemainingIntegrations; iIntegration++) {
-	      const FLAGSTYPE * flags_p;
-	      unsigned int numFlags = sdosr.getSubset().flags(flags_p);
-	      pair<unsigned int, const FLAGSTYPE *> flagsPair(numFlags, flags_p);
-	      traverseALMACorrelatorFlagsAxes(sdosr.dataStruct().basebands(),
-					      antennas,
-					      dataDescriptions,
-					      flagsPair,
-					      flagEval,
-					      correlationMode,
-					      autoAccumulator,
-					      crossAccumulator);
-	      if ( correlationMode != CorrelationModeMod::CROSS_ONLY )
-		autoAccumulator.nextIntegration();
-	      if ( correlationMode != CorrelationModeMod::AUTO_ONLY )
-		crossAccumulator.nextIntegration();
-	    }
-	    pair<uInt, uInt> putReturn = mergeAndPut(correlationMode,
-						     autoAccumulator,
-						     crossAccumulator,
-						     iMSRow,
-						     flag,
-						     flagRow);
-	    iMSRow = putReturn.first;
-	    numFlaggedRows += putReturn.second;
-	    numberOfReadIntegrations += numberOfIntegrations;
-	    
-	    infostream.str("");
-	    
-	    infostream << "ASDM Main row #" << mainRowIndex[iASDMIndex]   << " - " << numberOfReadIntegrations << "/" << N << " integrations done so far.";
-	    info(infostream.str());
-	  }
-	  sdosr.close();
+	{   
+	  if (lazy) 
+	    processCorrelatorFlags(numIntegration,
+				   bdfPath,
+				   antennas,
+				   dataDescriptions,
+				   flagEval,
+				   iMSRow,
+				   flag,
+				   flagRow);
+	  
+	  else 
+	    processCorrelatorFlagsPerSlices(mR,
+					    iASDMIndex,
+					    mainRowIndex,
+					    bdfPath,
+					    bdfSliceSizeInMb,
+					    antennas,
+					    dataDescriptions,
+					    flagEval,
+					    iMSRow,
+					    flag,
+					    flagRow);
 	}	
 	break;
  
@@ -1378,25 +1495,44 @@ int main (int argC, char * argV[]) {
 	  ostringstream oss;
 	  hack06 hack06_instance(oss);
 	  for_each(flagsAxes.begin(), flagsAxes.end(), hack06_instance);
-	  // Check the validity of the sequence of flags axes.
-	  if (!regex_match(oss.str(), ALMARadiometerFlagsAxesRegex)) 
-	    throw ProcessFlagsException("'" + oss.str() + "' is not a valid sequence of flags axes for an ALMA radiometer.");
-	  
-	  unsigned int numTime = sdo.numTime();
-	  const FLAGSTYPE * flags_p;
-	  unsigned int numFlags = sdo.tpDataSubset().flags(flags_p);
-	  pair<unsigned int, const FLAGSTYPE *> flagsPair(numFlags, flags_p);
-	  MSFlagAccumulator<char> accumulator( numTime, antennas.size(), numDD);
 
-	  if (numTime != numIntegration) {
-	    infostream << "(the number of integrations actually read in the BDF (numTime = " << numTime << ") is different from the value announced in the Main table (numIntegration = " << numIntegration
-		       << "). Using " << numTime << ")";
+	  // Check the validity of the sequence of flags axes (depending on the fact that data are packed or not).
+	  if (sdo.hasPackedData()) {
+	    if (!regex_match(oss.str(), ALMARadiometerPackedFlagsAxesRegex)) 
+	      throw ProcessFlagsException("'" + oss.str() + "' is not a valid sequence of flags axes for an ALMA radiometer.");
+	  }
+	  else {
+	    if (!regex_match(oss.str(), ALMARadiometerFlagsAxesRegex)) 
+	      throw ProcessFlagsException("'" + oss.str() + "' is not a valid sequence of flags axes for an ALMA radiometer.");
+	  }
+	  unsigned int numIntegrations = sdo.hasPackedData() ? sdo.numTime() : sdo.sdmDataSubsets().size();
+	  MSFlagAccumulator<char> accumulator( numIntegrations, antennas.size(), numDD);
+
+
+	  if (numIntegrations != numIntegration) {
+	    infostream << "(the number of integrations actually read in the BDF (numIntegrations = " << numIntegrations << ") is different from the value announced in the Main table (numIntegration = " << numIntegration
+		       << "). Using " << numIntegrations << ")";
 	  }
 
-	  traverseALMARadiometerFlagsAxes(numTime, sdo.dataStruct().basebands(), antennas, dataDescriptions, flagsPair, flagEval, accumulator);
+	  const FLAGSTYPE *	flags_p	 = NULL;
+	  unsigned int		numFlags = 0;
+
+	  if (sdo.hasPackedData()) {
+	    numFlags = sdo.tpDataSubset().flags(flags_p);
+	    pair<unsigned int, const FLAGSTYPE *> flagsPair(numFlags, flags_p);
+	    traverseALMARadiometerFlagsAxes(numIntegrations, sdo.dataStruct().basebands(), antennas, dataDescriptions, flagsPair, flagEval, accumulator);
+	  }
+	  else {
+	    const vector<SDMDataSubset>& sdmDataSubsets = sdo.sdmDataSubsets();
+	    for (unsigned int iIntegration = 0; iIntegration < numIntegrations; iIntegration++) {
+	      numFlags = sdmDataSubsets[iIntegration].flags(flags_p);
+	      pair<unsigned int, const FLAGSTYPE *> flagsPair(numFlags, flags_p);
+	      traverseALMARadiometerFlagsAxes(1, sdo.dataStruct().basebands(), antennas, dataDescriptions, flagsPair, flagEval, accumulator);
+	    }
+	  }
 	  infostream.str("");
 	  
-	  infostream << "ASDM Main row #" << mainRowIndex[iASDMIndex] << " - " << numTime  << "/" << numTime << " integrations done so far.";
+	  infostream << "ASDM Main row #" << mainRowIndex[iASDMIndex] << " - " << numIntegrations  << "/" << numIntegrations << " integrations done so far.";
 	  info(infostream.str());
 
 	  sdor.done();
@@ -1432,6 +1568,18 @@ int main (int argC, char * argV[]) {
       infostream.str("");
       infostream << e.getMessage() << " , bdf path = " << bdfPath << ", processor type = " << CProcessorType::toString(pt) << endl;
       info(infostream.str());
+    }
+    catch (SDMDataObjectParserException e) {
+      info(infostream.str());
+      infostream.str("");
+      infostream << e.getMessage() << endl;
+      info(infostream.str());      
+    }
+    catch (SDMDataObjectException e) {
+      info(infostream.str());
+      infostream.str("");
+      infostream << e.getMessage() << endl;
+      info(infostream.str());      
     }
     catch (SDMDataObjectStreamReaderException e) {
       info(infostream.str());

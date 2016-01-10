@@ -161,6 +161,13 @@ namespace sdmbin {
 	v_pairDataDescriptionId_.push_back(false);
       }
     }else{                                       // Case when there are both auto and cross-correlations
+#if 1
+      for(unsigned int n=0; n<numDataDescription_; n++){
+	v_crossDataDescriptionId_.push_back(v_dataDescriptionIdArray[n]);
+	v_autoDataDescriptionId_.push_back(v_dataDescriptionIdArray[n]);
+	v_pairDataDescriptionId_.push_back(true);
+      }
+#else
       if(coutest)cout << "Auto and cross-correlations use-case " << endl;
       vector<PolarizationRow*>          v_polPtr = datasetPtr_->getPolarization().get();
       vector<StokesParameter>           v_corrType, v_corrTyp;
@@ -271,6 +278,7 @@ namespace sdmbin {
 	  v_pairDataDescriptionId_.push_back(false);   // this crossDataDescriptionId is not associated to an autoDescriptionId
 	}
       }
+#endif
     }
     // set the number of data and the sizes in number of primitive data type (PDT) values.
     size();

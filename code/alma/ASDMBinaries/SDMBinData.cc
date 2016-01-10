@@ -2671,7 +2671,7 @@ namespace sdmbin {
     return getNextMSMainCols( e_qcm, es_qapc, nDataSubset);
   }
 
-  void SDMBinData::getNextMSMainCols(unsigned int nDataSubset, boost::shared_ptr<VMSDataWithSharedPtr>& vmsData_p_sp) {
+  void SDMBinData::getNextMSMainCols(unsigned int nDataSubset, std::shared_ptr<VMSDataWithSharedPtr>& vmsData_p_sp) {
     Enum<CorrelationMode>       e_qcm;
     EnumSet<AtmPhaseCorrection> es_qapc;
     if(canSelect_){
@@ -2833,13 +2833,13 @@ namespace sdmbin {
     return vmsDataPtr_;
   }
 
-  void  SDMBinData::getNextMSMainCols(Enum<CorrelationMode> e_qcm, EnumSet<AtmPhaseCorrection> es_qapc, unsigned int nDataSubset,  boost::shared_ptr<VMSDataWithSharedPtr>& vmsData_p_sp ) {
+  void  SDMBinData::getNextMSMainCols(Enum<CorrelationMode> e_qcm, EnumSet<AtmPhaseCorrection> es_qapc, unsigned int nDataSubset,  std::shared_ptr<VMSDataWithSharedPtr>& vmsData_p_sp ) {
     if (verbose_) cout << "SDMBinData::getNextMSMainCols (with VMSDataSharedPtr) : entering" << endl;
 
     VMSDataWithSharedPtr* vmsData_p = vmsData_p_sp.get();
 
     // Delete the content of v_msDataPtr (but do not delete "deeply" i.e. do not delete the visibilities referred to by pointers stored into v_msDataPtr since the 
-    // memory they occupy is going to be managed by boost::shared_ptr s.
+    // memory they occupy is going to be managed by std::shared_ptr s.
     //
     if ( v_msDataPtr_.size() > 0 ){
       for(vector<MSData*>::reverse_iterator it=v_msDataPtr_.rbegin(); it!=v_msDataPtr_.rend(); ++it) delete (*it);
@@ -2919,10 +2919,10 @@ namespace sdmbin {
 	vmsData_p->v_flag.push_back(v_msDataPtr_[n]->flag);
 
 	vmsData_p->v_atmPhaseCorrection = v_msDataPtr_[n]->v_atmPhaseCorrection;
-	map<AtmPhaseCorrection,boost::shared_array<float> > m_vdata;
+	map<AtmPhaseCorrection,std::shared_ptr<float> > m_vdata;
 	for(unsigned int napc=0; napc<vmsData_p->v_atmPhaseCorrection.size(); napc++){
 	  float* d=v_msDataPtr_[n]->v_data[napc];
-	  boost::shared_array<float> d_sp(d);
+	  std::shared_ptr<float> d_sp(d);
 	  m_vdata.insert(make_pair(vmsData_p->v_atmPhaseCorrection[napc],d_sp));
 	}
 	vmsData_p->v_m_data.push_back(m_vdata);
@@ -2955,10 +2955,10 @@ namespace sdmbin {
 	vmsData_p->v_flag.push_back(v_msDataPtr_[n]->flag);
 
 	vmsData_p->v_atmPhaseCorrection = v_msDataPtr_[n]->v_atmPhaseCorrection;
-	map<AtmPhaseCorrection, boost::shared_array<float> > m_vdata;
+	map<AtmPhaseCorrection, std::shared_ptr<float> > m_vdata;
 	for(unsigned int napc=0; napc<vmsData_p->v_atmPhaseCorrection.size(); napc++){
 	  float* d=v_msDataPtr_[n]->v_data[napc];
-	  boost::shared_array<float> d_sp(d);
+	  std::shared_ptr<float> d_sp(d);
 	  m_vdata.insert(make_pair(vmsData_p->v_atmPhaseCorrection[napc],d_sp));
 	}
 	vmsData_p->v_m_data.push_back(m_vdata);
