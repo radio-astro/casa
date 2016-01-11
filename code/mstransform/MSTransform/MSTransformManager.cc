@@ -2381,7 +2381,12 @@ void MSTransformManager::regridAndCombineSpwSubtable()
 
     Vector<Double> combinedCHAN_FREQ;
     Vector<Double> combinedCHAN_WIDTH;
-    MSTransformRegridder::combineSpws(logger_p,outMsName_p,Vector<Int>(1,-1),combinedCHAN_FREQ,combinedCHAN_WIDTH,True);
+    std::vector<std::vector<Int> > averageWhichChan;
+    std::vector<std::vector<Int> > averageWhichSPW;
+    std::vector<std::vector<Double> > averageChanFrac;
+    MSTransformRegridder::combineSpws(logger_p,outMsName_p,Vector<Int>(1,-1),
+    								  combinedCHAN_FREQ,combinedCHAN_WIDTH,
+									  averageWhichChan, averageWhichSPW, averageChanFrac, True);
 
 	// Create list of combined channels
 	vector<channelInfo> combinedChannels;
@@ -2395,25 +2400,27 @@ void MSTransformManager::regridAndCombineSpwSubtable()
 		channelInfo_idx.CHAN_WIDTH = combinedCHAN_WIDTH(chan_idx);
 		channelInfo_idx.EFFECTIVE_BW = combinedCHAN_WIDTH(chan_idx);
 		channelInfo_idx.RESOLUTION = combinedCHAN_WIDTH(chan_idx);
+		channelInfo_idx.contribFrac = averageChanFrac.at(chan_idx);
+		channelInfo_idx.contribSPW_id = averageWhichSPW.at(chan_idx);
+		channelInfo_idx.contribChannel = averageWhichChan.at(chan_idx);
 		combinedChannels.push_back(channelInfo_idx);
 	}
 
-	// Find list of input overlapping channels per combined channel
-	Double overlap = 0;
+	// create list of input overlapping channels per combined channel
+	// note combineSpws has an edge case growing channels for slight overlap on edges,
+	// there the overlap is 1 even though combchannel->overlap(inputchannel) is slightly smaller than 1
 	inputOutputChanFactorMap_p.clear();
-	vector<channelInfo>::iterator inputChanIter;
-	vector<channelInfo>::iterator combChanIter;
-	for (combChanIter = combinedChannels.begin(); combChanIter != combinedChannels.end(); combChanIter++)
-	{
-		for (inputChanIter = inputChannels.begin(); inputChanIter != inputChannels.end(); inputChanIter++)
-		{
-			overlap = combChanIter->overlap(*inputChanIter);
-			if (overlap)
+
+	for (auto combChanIter = combinedChannels.begin(); combChanIter != combinedChannels.end(); combChanIter++) {
+		for (auto k = 0lu; k < combChanIter->contribFrac.size(); k++) {
+			// combineSpws sorts spw so we need to map back to input selection to get correct input spw
+			uInt spw_idx = combChanIter->contribSPW_id[k];
+			if (outputInputSPWIndexMap_p.size())
 			{
-				inputChanIter->outChannel = combChanIter->inpChannel;
-				inputOutputChanFactorMap_p[inputChanIter->outChannel].
-				push_back(channelContribution(inputChanIter->SPW_id,inputChanIter->inpChannel,inputChanIter->outChannel,overlap));
+				spw_idx = outputInputSPWIndexMap_p[spw_idx];
 			}
+			inputOutputChanFactorMap_p[combChanIter->inpChannel].
+			push_back(channelContribution(spw_idx, combChanIter->contribChannel[k], combChanIter->inpChannel, combChanIter->contribFrac[k]));
 		}
 	}
 
@@ -6623,7 +6630,7 @@ template <class T> void MSTransformManager::combineCubeOfData(	vi::VisBuffer2 *v
 			for (uInt pol = 0; pol < nInputCorrelations; pol++)
 			{
 				normalizingFactor = normalizingFactorPlane(pol,outputChannel);
-				if (normalizingFactor >= 1)
+				if (normalizingFactor >= 0.999999) // we lose a couple significant digits in the subtractions
 				{
 					inputPlaneData(pol,outputChannel) /= normalizingFactorPlane(pol,outputChannel);
 

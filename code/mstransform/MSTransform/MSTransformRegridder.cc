@@ -53,11 +53,15 @@ Bool MSTransformRegridder::combineSpws(	LogIO& os,
 										const Vector<Int>& spwids,
 										Vector<Double>& newCHAN_FREQ,
 										Vector<Double>& newCHAN_WIDTH,
+										vector<vector<Int> >& averageWhichChan,
+										vector<vector<Int> >& averageWhichSPW,
+										vector<vector<Double> >& averageChanFrac,
 										Bool verbose)
 {
 	MeasurementSet ms_p(msName, Table::Old);
 	Bool result = False;
-	result = combineSpwsCore(os,ms_p,spwids,newCHAN_FREQ,newCHAN_WIDTH,verbose);
+	result = combineSpwsCore(os,ms_p,spwids,newCHAN_FREQ,newCHAN_WIDTH,
+							 averageWhichChan, averageWhichSPW, averageChanFrac, verbose);
 	return result;
 }
 
@@ -69,6 +73,9 @@ Bool MSTransformRegridder::combineSpwsCore(	LogIO& os,
 											const Vector<Int>& spwids,
 											Vector<Double>& newCHAN_FREQ,
 											Vector<Double>& newCHAN_WIDTH,
+											vector<vector<Int> >& averageWhichChan,
+											vector<vector<Int> >& averageWhichSPW,
+											vector<vector<Double> >& averageChanFrac,
 											Bool verbose)
 {
 	// Analyze SPW Ids
@@ -227,9 +234,9 @@ Bool MSTransformRegridder::combineSpwsCore(	LogIO& os,
 	Vector<Double> newRESOLUTION(resolutionColr(id0));
 
 	vector<Int> averageN; // For each new channel store the number of old channels to average over
-	vector<vector<Int> > averageWhichSPW; // For each new channel store the (old) SPWs to average over
-	vector<vector<Int> > averageWhichChan; // For each new channel store the channel numbers to av. over
-	vector<vector<Double> > averageChanFrac; // For each new channel store the channel fraction for each old channel
+	//vector<vector<Int> > averageWhichSPW; // For each new channel store the (old) SPWs to average over
+	//vector<vector<Int> > averageWhichChan; // For each new channel store the channel numbers to av. over
+	//vector<vector<Double> > averageChanFrac; // For each new channel store the channel fraction for each old channel
 
 	// Initialize the averaging vectors
 	for (uInt i = 0; i < newNUM_CHAN; i++)
@@ -698,9 +705,9 @@ Bool MSTransformRegridder::combineSpwsCore(	LogIO& os,
 		newEFFECTIVE_BW.assign(Vector<Double> (mergedEffBW));
 		newRESOLUTION.assign(Vector<Double> (mergedRes));
 		averageN = mergedAverageN;
-		averageWhichSPW = mergedAverageWhichSPW;
-		averageWhichChan = mergedAverageWhichChan;
-		averageChanFrac = mergedAverageChanFrac;
+		averageWhichSPW.assign(mergedAverageWhichSPW.begin(), mergedAverageWhichSPW.end());
+		averageChanFrac.assign(mergedAverageChanFrac.begin(), mergedAverageChanFrac.end());
+		averageWhichChan.assign(mergedAverageWhichChan.begin(), mergedAverageWhichChan.end());
 	}
 
 	return True;

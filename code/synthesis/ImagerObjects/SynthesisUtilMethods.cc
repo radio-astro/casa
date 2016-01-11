@@ -1877,6 +1877,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     MFrequency::Types dataFrame=(MFrequency::Types)msc.spectralWindow().measFreqRef()(spwids[0]);
     Vector<Double> dataChanFreq, dataChanWidth;
+    std::vector<std::vector<Int> > averageWhichChan;
+    std::vector<std::vector<Int> > averageWhichSPW;
+    std::vector<std::vector<Double> > averageChanFrac;
     if(spwids.nelements()==1)
       {
         dataChanFreq=msc.spectralWindow().chanFreq()(spwids[0]);
@@ -1886,7 +1889,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
         //SubMS thems(msobj);
         //if(!thems.combineSpws(spwids,True,dataChanFreq,dataChanWidth))
-	if(!MSTransformRegridder::combineSpwsCore(os,msobj, spwids,dataChanFreq,dataChanWidth))
+	if(!MSTransformRegridder::combineSpwsCore(os,msobj, spwids,dataChanFreq,dataChanWidth,
+											  averageWhichChan,averageWhichSPW,averageChanFrac))
           {
             os << LogIO::SEVERE << "Error combining SpWs" << LogIO::POST;
           }

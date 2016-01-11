@@ -250,7 +250,15 @@ class test_base(unittest.TestCase):
             
         os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
         default(mstransform)          
-          
+
+    def setUp_CAS_7259(self):
+
+        self.vis = 'n0337d03-CAS-7259.ms'
+        if os.path.exists(self.vis):
+           self.cleanup()
+
+        os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
+        default(mstransform)
                    
     def createMMS(self, msfile, axis='auto',scans='',spws=''):
         '''Create MMSs for tests with input MMS'''
@@ -432,6 +440,65 @@ class test_Combspw1(test_base):
         cvel(vis=self.vis, outputvis='combcvel12.ms', spw='0~1:60~63')
         ret = th.verifyMS('combcvel12.ms', 1, 68, 0)
         self.assertTrue(ret[0],ret[1])
+
+    def test_combspw_overlap(self):
+        '''mstransform: Combine some channels of two overlapping spws'''
+
+        self.outputms = "combspw12.ms"
+        self.setUp_CAS_7259()
+        default(cvel2)
+        cvel2(vis=self.vis,
+              outputvis='cvel2overlap.ms',field="NGC0337",spw="",
+              antenna="",timerange="",scan="",array="",datacolumn='corrected',
+              mode="velocity",nchan=107,start="1360.00km/s",width="5.2km/s",interpolation="linear",
+              phasecenter="",restfreq="1420405752.0Hz",outframe="BARY",veltype="radio",hanning=False)
+
+        self.assertTrue(os.path.exists('cvel2overlap.ms'))
+        # The spws contain gaps, therefore the number of channels is bigger
+        ret = th.verifyMS('cvel2overlap.ms', 1, 107, 0)
+        self.assertTrue(ret[0],ret[1])
+        default(cvel)
+        default(split)
+        split(vis=self.vis,outputvis="n0337d03.src.ms.tmp",datacolumn="corrected",field="",spw="0,1",
+              width=1,antenna="",timebin="0s",timerange="",scan="",
+              intent="",array="",uvrange="",correlation="",observation="",
+              combine="",keepflags=False,keepmms=False)
+        cvel(vis="n0337d03.src.ms.tmp",outputvis='cveloverlap.ms',passall=False,field="NGC0337",spw="",
+             selectdata=True,antenna="",timerange="",scan="",array="",
+             mode="velocity",nchan=107,start="1360.00km/s",width="5.2km/s",interpolation="linear",
+             phasecenter="",restfreq="1420405752.0Hz",outframe="BARY",veltype="radio",hanning=False)
+
+        myms = mstool()
+
+        myms.open('cveloverlap.ms')
+        myms.sort('cveloverlap-sorted.ms',['OBSERVATION_ID','ARRAY_ID','SCAN_NUMBER','FIELD_ID','DATA_DESC_ID','ANTENNA1','ANTENNA2','TIME'])
+        myms.done()
+
+        myms.open('cvel2overlap.ms')
+        myms.sort('cvel2overlap-sorted.ms',['OBSERVATION_ID','ARRAY_ID','SCAN_NUMBER','FIELD_ID','DATA_DESC_ID','ANTENNA1','ANTENNA2','TIME'])
+        myms.done()
+
+        # TODO: there are differences in values of masked entries
+        tb = tbtool()
+        tb.open('cvel2overlap-sorted.ms', nomodify=False)
+        nd = tb.getcol('DATA')
+        nf = tb.getcol('FLAG')
+        nd[nf] = 0.
+        tb.putcol('DATA', nd)
+        tb.done()
+        tb.open('cveloverlap-sorted.ms', nomodify=False)
+        nd = tb.getcol('DATA')
+        nf = tb.getcol('FLAG')
+        nd[nf] = 0.
+        tb.putcol('DATA', nd)
+        tb.done()
+
+        # TODO: there are differences in weights and sigma column of masked channels
+        self.assertTrue(th.compTables('cveloverlap-sorted.ms','cvel2overlap-sorted.ms',
+                                      ['WEIGHT_SPECTRUM', 'FLAG_CATEGORY', 'WEIGHT', 'SIGMA'],
+                                      tolerance=0.0,mode="absolute"))
+        os.system('rm -rf cveloverlap-sorted.ms cveloverlap.ms n0337d03.src.ms.tmp')
+        os.system('rm -rf cvel2overlap-sorted.ms cvel2overlap.ms')
 
 
 class test_Regridms1(test_base):

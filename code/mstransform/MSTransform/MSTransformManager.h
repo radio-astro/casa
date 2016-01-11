@@ -155,6 +155,9 @@ struct channelInfo {
 	Double CHAN_WIDTH;
 	Double EFFECTIVE_BW;
 	Double RESOLUTION;
+	std::vector<Double> contribFrac;
+	std::vector<Int> contribChannel;
+	std::vector<Int> contribSPW_id;
 
 	channelInfo()
 	{
