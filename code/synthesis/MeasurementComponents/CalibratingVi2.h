@@ -72,14 +72,12 @@ class CalibratingVi2 : public vi::TransformingVi2
 
 public:
 
-  CalibratingVi2(vi::VisibilityIterator2 * vi, 
-		 vi::ViImplementation2 * inputVii,
-		 const CalibratingParameters& calpar);
+  CalibratingVi2( vi::ViImplementation2 * inputVii,
+                  const CalibratingParameters& calpar);
 
-  CalibratingVi2(vi::VisibilityIterator2 * vi, 
-		 vi::ViImplementation2 * inputVii,
-		 const CalibratingParameters& calpar,
-		 String msname);
+  CalibratingVi2( vi::ViImplementation2 * inputVii,
+                  const CalibratingParameters& calpar,
+                  String msname);
 
   ~CalibratingVi2();
 

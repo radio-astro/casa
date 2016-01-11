@@ -258,7 +258,7 @@ protected:
 
     friend class VisibilityIterator2;
 
-    virtual ViImplementation2 * createVi (VisibilityIterator2 *) const = 0;
+    virtual ViImplementation2 * createVi () const = 0;
 };
 
 // <summary>
@@ -371,8 +371,8 @@ class VisibilityIterator2
     // facto private.
 
     //friend class VisibilityIteratorImpl2;
-    friend VisBuffer2 * VisBuffer2::factory (VisibilityIterator2 * vi, VisBufferType t,
-                                             VisBufferOptions options);
+//    friend VisBuffer2 * VisBuffer2::factory (VisibilityIterator2 * vi, VisBufferType t,
+//                                             VisBufferOptions options);
     friend class VisBuffer2Adapter;
     //friend class VisBufferImpl2;
     //friend class VisBufferState;

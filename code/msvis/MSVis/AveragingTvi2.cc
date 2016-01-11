@@ -2266,10 +2266,9 @@ VbAvg::transferBaseline (MsRowAvg * rowAveraged)
 
 using namespace avg;
 
-AveragingTvi2::AveragingTvi2 (VisibilityIterator2 * vi,
-                              ViImplementation2 * inputVi,
+AveragingTvi2::AveragingTvi2 (ViImplementation2 * inputVi,
                               const AveragingParameters & averagingParameters)
-: TransformingVi2 (vi, inputVi),
+: TransformingVi2 (inputVi),
   averagingInterval_p (averagingParameters.getAveragingInterval()),
   averagingOptions_p (averagingParameters.getOptions()),
   averagingParameters_p (averagingParameters),

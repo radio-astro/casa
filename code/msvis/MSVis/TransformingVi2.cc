@@ -39,10 +39,9 @@ namespace casa {
 
 namespace vi {
 
-TransformingVi2::TransformingVi2 (VisibilityIterator2 * vi, ViImplementation2 * inputVi)
+TransformingVi2::TransformingVi2 (ViImplementation2 * inputVi)
 : inputVii_p (inputVi),
-  vb_p (0),
-  vi_p (vi)
+  vb_p (0)
 {}
 
 TransformingVi2::~TransformingVi2 ()

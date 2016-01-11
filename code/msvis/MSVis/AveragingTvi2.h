@@ -29,7 +29,7 @@ class AveragingTvi2 : public TransformingVi2 {
 
 public:
 
-    AveragingTvi2 (VisibilityIterator2 * vi, ViImplementation2 * inputVii,
+    AveragingTvi2 (ViImplementation2 * inputVii,
                    const AveragingParameters & averagingParameters);
     ~AveragingTvi2 ();
 

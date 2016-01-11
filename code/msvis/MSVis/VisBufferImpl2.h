@@ -352,9 +352,6 @@ protected:
     // Construct VisBufferImpl2 for a particular ViImplementation2
     // The buffer will remain synchronized with the iterator.
 
-    // Copy construct, looses synchronization with iterator: only use buffer for
-    // current iteration (or reattach).
-
     VisBufferImpl2(ViImplementation2 * iter, VisBufferOptions options);
 
     // Attach to a VisIter. Detaches itself first if already attached

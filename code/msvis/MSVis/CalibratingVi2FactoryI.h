@@ -69,10 +69,9 @@ protected:
 
   // Create CalibratingVi2 implementation
   //  this version makes plain one inside
-  virtual vi::ViImplementation2 * createVi (vi::VisibilityIterator2 * vi) const = 0;
+  virtual vi::ViImplementation2 * createVi () const = 0;
   //  If vii not NULL, then use it as the underlying one
-  virtual vi::ViImplementation2 * createVi (vi::VisibilityIterator2 * vi,
-					    vi::ViImplementation2 * vii) const = 0;
+  virtual vi::ViImplementation2 * createVi (vi::ViImplementation2 * vii) const = 0;
 
 private:
 

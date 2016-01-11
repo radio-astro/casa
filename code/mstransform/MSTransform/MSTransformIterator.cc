@@ -29,10 +29,9 @@ namespace casa
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-MSTransformIterator::MSTransformIterator(	vi::VisibilityIterator2 * vi,
-											vi::ViImplementation2 * inputVii,
+MSTransformIterator::MSTransformIterator(	vi::ViImplementation2 * inputVii,
 											SHARED_PTR<MSTransformManager> manager):
-											TransformingVi2 (vi, inputVii)
+											TransformingVi2 (inputVii)
 {
 
 	// The ownership of an object can only be shared with another shared_ptr

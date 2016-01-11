@@ -19,7 +19,7 @@ class PhaseShiftTvi : public TransformingVi2 {
 
 public:
 
-    PhaseShiftTvi (VisibilityIterator2 * vi, ViImplementation2 * inputVi, double dXArcseconds,
+    PhaseShiftTvi (ViImplementation2 * inputVi, double dXArcseconds,
                    double dYArcseconds);
 
     virtual void visibilityCorrected (Cube<Complex> & vis) const;

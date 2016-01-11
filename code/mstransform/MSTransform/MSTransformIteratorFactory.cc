@@ -181,7 +181,8 @@ void MSTransformIteratorFactory::setConfiguration(Record &configuration)
 // -----------------------------------------------------------------------
 // InpVi is the VisibilityIterator in which the implementation provided is to be plugged
 // -----------------------------------------------------------------------
-vi::ViImplementation2 * MSTransformIteratorFactory::createVi(vi::VisibilityIterator2 *) const
+
+vi::ViImplementation2 * MSTransformIteratorFactory::createVi() const
 {
 	// Create MSTransformManager
 	if (not manager_p)
@@ -196,7 +197,7 @@ vi::ViImplementation2 * MSTransformIteratorFactory::createVi(vi::VisibilityItera
 
 	// Create output VisibilityIterator
 	// NOTE: InpVi is not really necessary downstream. We only have to provide an implementation
-	MSTransformIterator *outputVI = new MSTransformIterator(NULL,manager_p->getVisIter()->getImpl(),manager_p);
+	MSTransformIterator *outputVI = new MSTransformIterator(manager_p->getVisIter()->getImpl(),manager_p);
 
 	return outputVI;
 }

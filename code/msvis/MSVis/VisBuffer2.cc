@@ -19,22 +19,22 @@ namespace vi {
 VisBuffer2 *
 VisBuffer2::factory (VisBufferType t, VisBufferOptions options)
 {
-    return factoryInternal (nullptr, t, options);
+    return factory (nullptr, t, options);
 }
 
-VisBuffer2 *
-VisBuffer2::factory (VisibilityIterator2 * vi, VisBufferType t, VisBufferOptions options)
-{
-    ViImplementation2 * viImpl = nullptr;
-    if (vi){
-        viImpl = vi->getImpl ();
-    }
+//VisBuffer2 *
+//VisBuffer2::factory (VisibilityIterator2 * vi, VisBufferType t, VisBufferOptions options)
+//{
+//    ViImplementation2 * viImpl = nullptr;
+//    if (vi){
+//        viImpl = vi->getImpl ();
+//    }
+//
+//    return factoryInternal (viImpl, t, options);
+//}
 
-    return factoryInternal (viImpl, t, options);
-}
-
 VisBuffer2 *
-VisBuffer2::factoryInternal (ViImplementation2 * vi, VisBufferType t, VisBufferOptions options)
+VisBuffer2::factory (ViImplementation2 * vi, VisBufferType t, VisBufferOptions options)
 {
     VisBuffer2 * result = NULL;
 

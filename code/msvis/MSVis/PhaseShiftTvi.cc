@@ -13,13 +13,12 @@ namespace casa {
 
 namespace vi {
 
-PhaseShiftTvi::PhaseShiftTvi (VisibilityIterator2 * vi, ViImplementation2 * inputVi, double dXArcseconds,
+PhaseShiftTvi::PhaseShiftTvi (ViImplementation2 * inputVi, double dXArcseconds,
                               double dYArcseconds)
-: TransformingVi2 (vi, inputVi),
+: TransformingVi2 (inputVi),
   dXArcseconds_p (dXArcseconds),
   dYArcseconds_p (dYArcseconds)
-{
-}
+{}
 
 void
 PhaseShiftTvi::phaseCenterShift (Cube<Complex> & cube) const

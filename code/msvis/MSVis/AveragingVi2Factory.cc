@@ -335,7 +335,7 @@ AveragingVi2Factory::initialize (const AveragingParameters & parameters,
 
 
 ViImplementation2 *
-AveragingVi2Factory::createVi (VisibilityIterator2 * vi2) const
+AveragingVi2Factory::createVi () const
 {
 
     // Make the chunk interval compatible with the averaging interval up rounding it up to
@@ -349,8 +349,7 @@ AveragingVi2Factory::createVi (VisibilityIterator2 * vi2) const
 
     // Create a simple VI implementation to perform the reading.
 
-    VisibilityIteratorImpl2 * vii2 = new VisibilityIteratorImpl2 (vi2,
-                                                                  mss_p,
+    VisibilityIteratorImpl2 * vii2 = new VisibilityIteratorImpl2 (mss_p,
                                                                   parameters_p.getSortColumns (),
                                                                   chunkInterval,
                                                                   VbPlain,
@@ -358,7 +357,7 @@ AveragingVi2Factory::createVi (VisibilityIterator2 * vi2) const
 
     vii2->setWeightScaling (parameters_p.getWeightScaling());
 
-    AveragingTvi2 * averagingTvi2 = new AveragingTvi2 (vi2, vii2, parameters_p);
+    AveragingTvi2 * averagingTvi2 = new AveragingTvi2 (vii2, parameters_p);
 
     return averagingTvi2;
 }

@@ -927,8 +927,7 @@ VisibilityIteratorImpl2::putColumnRows (ScalarColumn<T> & column, const Vector <
     column.putColumnCells(rows, array);
 }
 
-VisibilityIteratorImpl2::VisibilityIteratorImpl2 (VisibilityIterator2 * vi,
-                                                  const Block<const MeasurementSet *> &mss,
+VisibilityIteratorImpl2::VisibilityIteratorImpl2 (const Block<const MeasurementSet *> &mss,
                                                   const SortColumns & sortColumns,
                                                   Double timeInterval,
                                                   VisBufferType vbType,
@@ -953,17 +952,10 @@ VisibilityIteratorImpl2::VisibilityIteratorImpl2 (VisibilityIterator2 * vi,
   tileCacheIsSet_p (0),
   timeInterval_p (timeInterval),
   vb_p (0),
-  vi_p (0),
   weightScaling_p ( ),
   writable_p (writable)
 {
-    // Make sure the pointer to the containing ROVI (vi_p) is NULL when calling initialize
-    // otherwise the call back to the VI can result in it trying to use an uninitialized pointer
-    // to this object (since it is in the process or being constructed).
-
     initialize (mss);
-
-    vi_p = vi;
 
     VisBufferOptions options = isWritable () ? VbWritable : VbNoOptions;
 
@@ -1621,12 +1613,6 @@ const SortColumns &
 VisibilityIteratorImpl2::getSortColumns() const
 {
   return sortColumns_p;
-}
-
-VisibilityIterator2 *
-VisibilityIteratorImpl2::getViP () const
-{
-    return vi_p;
 }
 
 void

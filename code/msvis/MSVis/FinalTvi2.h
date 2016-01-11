@@ -98,7 +98,6 @@ class FinalTvi2 : public TransformingVi2 {
 public:
 
     FinalTvi2 (ViImplementation2 * inputVi,
-               VisibilityIterator2 * vi,
                MeasurementSet & finalMs,
                Bool isWritable);
 

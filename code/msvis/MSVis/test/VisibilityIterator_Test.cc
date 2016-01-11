@@ -69,15 +69,15 @@ VisibilityIterator2 *
 VisibilityIterator2::copyingViFactory (const MeasurementSet & srcMs,
                                        MeasurementSet & dstMs)
 {
-    VisibilityIterator2 * vi = new VisibilityIterator2 ();
 
     Block <const MeasurementSet *> mss (1, & srcMs);
     Block <Int> sortColumns;
 
-    VisibilityIteratorImpl2 * viReader = new VisibilityIteratorImpl2 (vi, mss, SortColumns(),
+    VisibilityIteratorImpl2 * viReader = new VisibilityIteratorImpl2 (mss, SortColumns(),
                                                                       0, VbPlain, False);
-    FinalTvi2 * fVi = new FinalTvi2 (viReader, vi, dstMs, False);
+    FinalTvi2 * fVi = new FinalTvi2 (viReader, dstMs, False);
 
+    VisibilityIterator2 * vi = new VisibilityIterator2 ();
     vi->impl_p = fVi;
 
     return vi;

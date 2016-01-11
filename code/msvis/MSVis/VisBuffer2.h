@@ -555,8 +555,6 @@ public:
     virtual const Vector<Int> & spectralWindows () const = 0; // [nR]
     virtual void setSpectralWindows (const Vector<Int> & spectralWindows) = 0;
 
-    static VisBuffer2 * factory (VisibilityIterator2 * vi, VisBufferType t, VisBufferOptions options);
-
     virtual CountedPtr<WeightScaling> getWeightScaling () const = 0;
 
 protected:
@@ -570,7 +568,7 @@ protected:
                                        const Vector<Stokes::StokesTypes> & correlationsDefined,
                                        const Vector<Stokes::StokesTypes> & correlationsSelected,
                                        CountedPtr<WeightScaling> weightScaling) = 0;
-    static VisBuffer2 * factoryInternal (ViImplementation2 * vi, VisBufferType t, VisBufferOptions options);
+    static VisBuffer2 * factory (ViImplementation2 * vi, VisBufferType t, VisBufferOptions options);
     virtual void invalidate() = 0;
     virtual Bool isRekeyable () const = 0;
     virtual void setFillable (Bool isFillable) = 0;
@@ -582,8 +580,6 @@ protected:
     virtual Cube<Complex> & visCubeCorrectedRef () = 0; // [nC,nF,nR]
     virtual Cube<Complex> & visCubeModelRef () = 0; // [nC,nF,nR]
     virtual Cube<Float> & weightSpectrumRef () = 0; // [nC,nF,nR]
-
-    //virtual VisBuffer2 * vb_p = 0; // One of the implementation classes
 
 private:
 

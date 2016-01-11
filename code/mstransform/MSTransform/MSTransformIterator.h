@@ -40,8 +40,7 @@ class MSTransformIterator : public vi::TransformingVi2
 
 public:
 
-	MSTransformIterator(	vi::VisibilityIterator2 * vi,
-							vi::ViImplementation2 * inputVii,
+	MSTransformIterator(	vi::ViImplementation2 * inputVii,
 							SHARED_PTR<MSTransformManager>);
 	~MSTransformIterator();
 

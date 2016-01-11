@@ -151,9 +151,8 @@ public:
 		    AveragingParameters* avepar=0);
   ~LayeredVi2Factory();
 
-  vi::ViImplementation2 * createVi (vi::VisibilityIterator2 * vi) const;
-  vi::ViImplementation2 * createVi (vi::VisibilityIterator2 *,
-				    vi::ViImplementation2 *) const {throw(AipsError("NYI!"));};  // NYI
+  vi::ViImplementation2 * createVi () const;
+  vi::ViImplementation2 * createVi (vi::ViImplementation2 *) const {throw(AipsError("NYI!"));};  // NYI
 
 private:
 

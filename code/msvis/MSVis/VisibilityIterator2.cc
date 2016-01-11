@@ -119,7 +119,7 @@ VisibilityIterator2::VisibilityIterator2 (const Block<const MeasurementSet *>& m
 VisibilityIterator2::VisibilityIterator2 (const ViFactory & factory)
 : impl_p (0)
 {
-    ViImplementation2 * newImpl = factory.createVi (this);
+    ViImplementation2 * newImpl = factory.createVi ();
 
     impl_p = newImpl;
 }
@@ -142,7 +142,7 @@ VisibilityIterator2::construct (const VisBufferComponents2 * prefetchColumns,
         //                                               addDefaultSortCols, timeInterval, writable);
     }
     else{
-        impl_p = new VisibilityIteratorImpl2 (this, mss, sortColumns, timeInterval, VbPlain, writable);
+        impl_p = new VisibilityIteratorImpl2 (mss, sortColumns, timeInterval, VbPlain, writable);
     }
 }
 

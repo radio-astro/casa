@@ -189,8 +189,7 @@ public:
 //                                const Block<Int> & sortColumns,
 //                                Double timeInterval = 0);
 
-    VisibilityIteratorImpl2 (VisibilityIterator2 * rovi,
-                             const Block<const MeasurementSet *> & mss,
+    VisibilityIteratorImpl2 (const Block<const MeasurementSet *> & mss,
                              const SortColumns & sortColumns,
                              Double timeInterval,
                              VisBufferType vbType,
@@ -943,7 +942,6 @@ protected:
     MeasRef<MEpoch>               timeFrameOfReference_p;
     Double                        timeInterval_p;
     VisBuffer2 *                  vb_p;  // [own] VisBuffer attached to this VI
-    VisibilityIterator2 *         vi_p; // [use] Containing VI
     CountedPtr<WeightScaling>     weightScaling_p;
     Bool                          writable_p;
 };

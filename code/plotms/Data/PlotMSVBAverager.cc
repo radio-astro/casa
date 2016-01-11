@@ -72,7 +72,7 @@ PlotMSVBAverager::PlotMSVBAverager(Int nAnt)
 //    nAnt_p               Int              No. of antennas
 //
   // Note: this returns a VisBufferImpl2
-  avBuf_p = vi::VisBuffer2::factory(NULL, vi::VbPlain, vi::VbRekeyable);
+  avBuf_p = vi::VisBuffer2::factory(vi::VbPlain, vi::VbRekeyable);
 
   if (prtlev()>2) cout << "PMSVBA::PMSVBA()" << endl;
 
@@ -167,7 +167,7 @@ void PlotMSVBAverager::finalizeAverage()
 
     // Contract the VisBuffer data, if necessary
     if (nBln < nBlnMax_p) {
-      avBuf_p->setShape(nCorr_p, nChan_p, nBln);
+      avBuf_p->setShape(nCorr_p, nChan_p, nBln, true);
       avgTime_.resize(nBln);
       avgTimeInterval_.resize(nBln);
       avgScan_.resize(nBln);
@@ -281,7 +281,7 @@ void PlotMSVBAverager::initialize(vi::VisBuffer2& vb)
   */
 
   // Set basic shapes
-  avBuf_p->setShape(nCorr_p, nChan_p, nBlnMax_p);
+  avBuf_p->setShape(nCorr_p, nChan_p, nBlnMax_p, true);
 
   // Resize and fill in the antenna numbers for all rows
   avgAntenna1_.resize(nBlnMax_p);

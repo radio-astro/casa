@@ -555,7 +555,7 @@ public:
 
 protected:
 
-    TransformingVi2 (VisibilityIterator2 * vi, ViImplementation2 * inputVi);
+    TransformingVi2 (ViImplementation2 * inputVi);
 
     void configureNewSubchunk ();
     void configureNewSubchunk (Int msId, const String & msName, Bool isNewMs,
@@ -581,9 +581,7 @@ protected:
 private:
 
     VisBuffer2 * vb_p; // [own]
-    VisibilityIterator2 * vi_p; // [use] The container
     CountedPtr<WeightScaling> weightScaling_p;
-
 };
 
 } // end namespace vi

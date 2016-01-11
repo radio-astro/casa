@@ -13,9 +13,9 @@ namespace casa {
 
 namespace vi {
 
-FinalTvi2::FinalTvi2 (ViImplementation2 * inputVi, VisibilityIterator2 * vi,
+FinalTvi2::FinalTvi2 (ViImplementation2 * inputVi,
                       MeasurementSet & finalMs, Bool isWritable)
-: TransformingVi2 (vi, inputVi),
+: TransformingVi2 (inputVi),
   columns_p (),
   columnsAttached_p (False),
   ms_p (finalMs)

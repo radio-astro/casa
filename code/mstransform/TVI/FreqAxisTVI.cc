@@ -38,7 +38,7 @@ namespace vi { //# NAMESPACE VI - BEGIN
 // -----------------------------------------------------------------------
 FreqAxisTVI::FreqAxisTVI(	ViImplementation2 * inputVii,
 							const Record &configuration):
-							TransformingVi2 (NULL, inputVii)
+							TransformingVi2 (inputVii)
 {
 	// Parse and check configuration parameters
 	// Note: if a constructor finishes by throwing an exception, the memory

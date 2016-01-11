@@ -156,9 +156,8 @@ protected:
 
   // Create CalibratingVi2 implementation
   //  If vii=NULL, create underlying vii internally
-  virtual vi::ViImplementation2 * createVi (vi::VisibilityIterator2 * vi) const;
-  virtual vi::ViImplementation2 * createVi (vi::VisibilityIterator2 * vi,
-					    vi::ViImplementation2 * vii) const;
+  virtual vi::ViImplementation2 * createVi () const;
+  virtual vi::ViImplementation2 * createVi (vi::ViImplementation2 * vii) const;
 
 private:
 

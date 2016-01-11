@@ -118,7 +118,7 @@ void CalibratingVi2Factory::initialize(MeasurementSet* ms,
 
 
 // -----------------------------------------------------------------------
-vi::ViImplementation2 * CalibratingVi2Factory::createVi (vi::VisibilityIterator2 * vi2) const
+vi::ViImplementation2 * CalibratingVi2Factory::createVi () const
 {
 
   if (!valid_p)
@@ -127,22 +127,20 @@ vi::ViImplementation2 * CalibratingVi2Factory::createVi (vi::VisibilityIterator2
   //cout << "Making plain ViImpl2 for the user." << endl;
   vi::ViImplementation2 * plainViI(NULL);  // generic
   // Create a simple VI implementation to perform the reading.
-  plainViI = new vi::VisibilityIteratorImpl2 (vi2,
-					      Block<const MeasurementSet*>(1,ms_p),
-					      iterpar_p.getSortColumns(),
-					      iterpar_p.getChunkInterval(),
-					      vi::VbPlain,
-					      True); // writable!
+  plainViI = new vi::VisibilityIteratorImpl2 (Block<const MeasurementSet*>(1,ms_p),
+                                              iterpar_p.getSortColumns(),
+                                              iterpar_p.getChunkInterval(),
+                                              vi::VbPlain,
+                                              True); // writable!
   
-  return this->createVi(vi2,plainViI);
+  return this->createVi(plainViI);
 
 }
 
 
 
 // -----------------------------------------------------------------------
-vi::ViImplementation2 * CalibratingVi2Factory::createVi (vi::VisibilityIterator2 * vi2,
-							 vi::ViImplementation2 * vii) const
+vi::ViImplementation2 * CalibratingVi2Factory::createVi (vi::ViImplementation2 * vii) const
 {
 
   if (!valid_p)
@@ -157,18 +155,17 @@ vi::ViImplementation2 * CalibratingVi2Factory::createVi (vi::VisibilityIterator2
   }
   else
     // Create a simple VI implementation to perform the reading.
-    vii2 = new vi::VisibilityIteratorImpl2 (vi2,
-					    Block<const MeasurementSet*>(1,ms_p),
-					    iterpar_p.getSortColumns(),
-					    iterpar_p.getChunkInterval(),
-					    vi::VbPlain,
-					    True); // writable!
+    vii2 = new vi::VisibilityIteratorImpl2 (Block<const MeasurementSet*>(1,ms_p),
+                                            iterpar_p.getSortColumns(),
+                                            iterpar_p.getChunkInterval(),
+                                            vi::VbPlain,
+                                            True); // writable!
     
   // Create output VisibilityIterator
   //   (Get base MS name cleverly, because ms_p might be a reference table)
   String msantname=ms_p->antenna().tableName();
   String msname=msantname.before("/ANTENNA");
-  CalibratingVi2 *calVI = new CalibratingVi2(vi2,vii2,calpar_p,msname);
+  CalibratingVi2 *calVI = new CalibratingVi2(vii2,calpar_p,msname);
   
   return calVI;
 }

@@ -126,7 +126,7 @@ LayeredVi2Factory::~LayeredVi2Factory() {
 
 
 // -----------------------------------------------------------------------
-vi::ViImplementation2 * LayeredVi2Factory::createVi (vi::VisibilityIterator2 * vi2) const
+vi::ViImplementation2 * LayeredVi2Factory::createVi () const
 {
 
   //  cout << "MSVis::LayeredVi2Factor::createVi" << endl;
@@ -137,12 +137,11 @@ vi::ViImplementation2 * LayeredVi2Factory::createVi (vi::VisibilityIterator2 * v
 
   // The bottom layer is the standard vii2 that does I/O
   Int ilayer(0);
-  viis[ilayer]= new vi::VisibilityIteratorImpl2 (vi2,
-						 Block<const MeasurementSet*>(1,ms_p),
-						 iterpar_p->getSortColumns(),
-						 iterpar_p->getChunkInterval(),
-						 vi::VbPlain,
-						 True); // writable!  (hardwired?)
+  viis[ilayer]= new vi::VisibilityIteratorImpl2 (Block<const MeasurementSet*>(1,ms_p),
+                                                 iterpar_p->getSortColumns(),
+                                                 iterpar_p->getChunkInterval(),
+                                                 vi::VbPlain,
+                                                 True); // writable!  (hardwired?)
   
   // TBD: consider if this is the layer where weight scaling should be applied?
   viis[ilayer]->setWeightScaling(iterpar_p->getWeightScaling());
@@ -152,7 +151,7 @@ vi::ViImplementation2 * LayeredVi2Factory::createVi (vi::VisibilityIterator2 * v
     ++ilayer;
     Assert(ilayer<nlayer_p);
     // Call the factory
-    viis[ilayer] = calvi2factory_p->createVi(vi2,viis[ilayer-1]);
+    viis[ilayer] = calvi2factory_p->createVi(viis[ilayer-1]);
   }
 
   // If (time) averaging requested
@@ -160,7 +159,7 @@ vi::ViImplementation2 * LayeredVi2Factory::createVi (vi::VisibilityIterator2 * v
     ++ilayer;
     Assert(ilayer<nlayer_p);
     // TBD: update the AveragingVi2Factory to permit layered createVi...
-    viis[ilayer] = new AveragingTvi2(vi2,viis[ilayer-1],*avepar_p);
+    viis[ilayer] = new AveragingTvi2(viis[ilayer-1],*avepar_p);
   }
 
   // Must be at the last layer now

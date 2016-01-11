@@ -202,7 +202,7 @@ public:
 
 protected:
 
-    virtual ViImplementation2 * createVi (VisibilityIterator2 *) const;
+    virtual ViImplementation2 * createVi () const;
 
 private:
 

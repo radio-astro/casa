@@ -132,10 +132,9 @@ void CalibratingParameters::validate() const
 
 
 // -----------------------------------------------------------------------
-CalibratingVi2::CalibratingVi2(	vi::VisibilityIterator2 * vi,
-				vi::ViImplementation2 * inputVii,
-				const CalibratingParameters& calpar) :
-  TransformingVi2 (vi, inputVii),
+CalibratingVi2::CalibratingVi2(	vi::ViImplementation2 * inputVii,
+				                const CalibratingParameters& calpar) :
+  TransformingVi2 (inputVii),
   cb_p(),
   ve_p(0),
   corrFactor_p(calpar.getCorrFactor()), // temporary
@@ -147,16 +146,15 @@ CalibratingVi2::CalibratingVi2(	vi::VisibilityIterator2 * vi,
   getVii()->origin();
  
   // Make a VisBuffer for CalibratingVi2 clients (it is connected to the vi interface)
-  setVisBuffer(VisBuffer2::factory(vi,VbPlain,VbRekeyable));
+  setVisBuffer(createAttachedVisBuffer (VbPlain,VbRekeyable));
 
 }
 
 // -----------------------------------------------------------------------
-CalibratingVi2::CalibratingVi2(	vi::VisibilityIterator2 * vi,
-				vi::ViImplementation2 * inputVii,
-				const CalibratingParameters& calpar,
-				String msname) :
-  TransformingVi2 (vi, inputVii),
+CalibratingVi2::CalibratingVi2( vi::ViImplementation2 * inputVii,
+                                const CalibratingParameters& calpar,
+                                String msname) :
+  TransformingVi2 (inputVii),
   cb_p(msname),
   ve_p(0),
   corrFactor_p(1.0),
