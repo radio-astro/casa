@@ -120,6 +120,7 @@ def cvel2(
             config['phasecenter'] = phasecenter
         config['veltype'] = veltype
         config['nspw'] = 1
+        config['taql'] = "NOT (FLAG_ROW OR ALL(FLAG))"
         
         # Configure the tool and all the parameters        
         casalog.post('%s'%config, 'DEBUG')
