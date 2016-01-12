@@ -61,13 +61,16 @@ namespace LibAIR2 {
 			     std::vector<double> &res,
 			     std::vector<double> &res2) const
   {
+    (void) i; // use not yet implemented
+    (void) time;
+    (void) el;
     res.resize(c.size());
     std::copy(c.begin(), 
 	      c.end(),
 	      res.begin());
 
-    for(size_t i=0; i<4; ++i)
-      res[i]*=chmask[i];
+    for(size_t j=0; j<4; ++j)
+      res[j]*=chmask[j];
 
     res2.resize(c2.size());
     std::copy(c2.begin(), 
@@ -133,6 +136,9 @@ struct hack01 {
 			    std::vector<double> &res,
 			    std::vector<double> &res2) const
   {
+    (void) time; // use not yet implemented
+    (void) el;
+
     const size_t nc=coeff.shape()[0];
     res.resize(nc);
     res2.resize(nc);
@@ -198,6 +204,9 @@ struct hack01 {
 					 std::vector<double> &res,
 					 std::vector<double> &c2) const
   {
+    (void) i; // use not yet implemented
+    (void) el;
+
     if (retrievals.size() == 0) 
     {
       throw std::runtime_error("No retrievals have been entered.");
@@ -211,8 +220,8 @@ struct hack01 {
       std::copy(retrievals.begin()->coeffs.begin(), 
 		retrievals.begin()->coeffs.end(),
 		res.begin());      
-      for(size_t i=0; i<4; ++i)
-	res[i]*=chmask[i];
+      for(size_t j=0; j<4; ++j)
+	res[j]*=chmask[j];
       std::copy(retrievals.begin()->c2.begin(), 
 		retrievals.begin()->c2.end(),
 		c2.begin());      
@@ -234,8 +243,8 @@ struct hack01 {
       std::copy(last->coeffs.begin(), 
 		last->coeffs.end(),
 		res.begin());         
-      for(size_t i=0; i<4; ++i)
-	res[i]*=chmask[i];
+      for(size_t j=0; j<4; ++j)
+	res[j]*=chmask[j];
       std::copy(last->c2.begin(), 
 		last->c2.end(),
 		c2.begin());            

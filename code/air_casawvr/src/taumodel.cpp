@@ -21,6 +21,7 @@ namespace LibAIR2 {
 
   double TauModel::eval(size_t ch) const
   {
+    (void) ch; // use not yet implemented
     return TBackRJ * exp(-n)+ TPhy*(1-exp(-n));
   }
 
@@ -32,11 +33,13 @@ namespace LibAIR2 {
 
   double TauModel::dTdc (size_t ch) const
   {
+    (void) ch; // use not yet implemented
     return -1;
   }
 
   double TauModel::dTdL_ND (size_t ch) const
   {
+    (void) ch; // use not yet implemented
     return -1;
   }
 
@@ -72,6 +75,7 @@ namespace LibAIR2 {
   
   double LapseTauModel::eval(size_t ch) const
   {
+    (void) ch; // use not yet implemented
     return TBackRJ * exp(-n) + 
       TPhy*(1-exp(-n)) +
       Gamma / ( nkappa * n) * ( 1 - (n+1)*exp(-n));
@@ -106,6 +110,7 @@ namespace LibAIR2 {
 
   double NumLapseTau::eval(size_t ch) const
   {
+    (void) ch; // use not yet implemented
     const double deltan = n/nstep;
 
     double Tt = TBackRJ;
@@ -125,6 +130,7 @@ namespace LibAIR2 {
   
   double OffsetTauModel::eval(size_t ch) const
   {
+    (void) ch; // use not yet implemented
     const double ntot=nfix+n;
     return TBackRJ * exp(-ntot)+ TPhy*(1-exp(-ntot));
   }

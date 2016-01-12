@@ -230,7 +230,7 @@ LibAIR2::AntSet getAntPars(const std::string &s,
                           anames.end(), false,
 #if __cplusplus >= 201103L
                           [=](bool acc, const aname_t::value_type &p) {
-                              return acc || (p.first == n);
+			    return acc || ((int)p.first == n);
                           }
 #else
 						  hack02(n)

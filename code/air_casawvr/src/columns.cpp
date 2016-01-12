@@ -154,6 +154,7 @@ namespace LibAIR2 {
 				 const Slice &s,
 				 std::vector<double> &res) const
   {
+    (void) s; // use not yet implemented
     const double r=getN();
     for(size_t i=0 ; i<f.size(); ++i)
     {
