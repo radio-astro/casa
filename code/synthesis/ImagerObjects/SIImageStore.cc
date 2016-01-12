@@ -1366,7 +1366,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 
 	}
 
-	storeImg(String("flatmodel.im"), *model());
+	//	storeImg(String("flatmodel.im"), *model());
 	
       }
     // createMask
