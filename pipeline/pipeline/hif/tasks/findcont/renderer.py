@@ -48,7 +48,7 @@ class T2_4MDetailsFindContRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 ranges_for_spw = ranges_dict[field][spw].get('cont_ranges', [])
                 if (ranges_for_spw in (['NONE'], [''])):
                     rows.append(TR(field=field, spw=spw, min='None', max='',
-                                   status=status, spectrum=plotfile))
+                                   frame='TOPO', status=status, spectrum=plotfile))
                 else:
                     sorted_ranges = sorted(ranges_for_spw, key=operator.itemgetter(0))
                     for (range_min, range_max) in sorted_ranges:
