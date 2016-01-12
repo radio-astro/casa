@@ -755,7 +755,9 @@ def update_params(func, printtext=True, ipython_globals=None):
 	   else :
 	        pathname = os.environ.get('CASAPATH').split()[0]+'/'+os.environ.get('CASAPATH').split()[1]+'/xml'
                 if not os.path.exists(pathname) :
-                   pathname = os.environ.get('CASAPATH').split()[0]+'/Resources/xml'
+                    pathname = os.environ.get('CASAPATH').split()[0]+'/xml'
+                    if not os.path.exists(pathname) :
+                        pathname = os.environ.get('CASAPATH').split()[0]+'/Resources/xml'
                 
 	else :
 	   pathname = os.environ.get('CASAPATH').split()[0]+'/'+os.environ.get('CASAPATH').split()[1]+'/xml'
