@@ -438,6 +438,9 @@ class split_test_cav(SplitChecker):
         self.records[corrsel] = record
         return splitran
 
+    # NOTE: In MSTransform (split2), if fewer channels than chanbin are left at 
+    # the end of the spw, these channels will be dropped. 
+
     def test_sts(self):
         """Subtables, chan avg. without correlation selection"""
         self.check_subtables('', [(2, 4)])
@@ -545,6 +548,9 @@ class split_test_cav5(SplitChecker):
             raise e
         self.records[corrsel] = record
         return splitran
+
+    # NOTE: In MSTransform (split2), if fewer channels than chanbin are left at 
+    # the end of the spw, these channels will be dropped. 
 
     def test_sts(self):
         """Subtables, chan avg. without correlation selection"""
@@ -858,6 +864,9 @@ class split_test_cavcd(unittest.TestCase):
         shutil.rmtree(self.inpms, ignore_errors=True)
         shutil.rmtree(self.outms, ignore_errors=True)
 
+    # NOTE: In MSTransform (split2), if fewer channels than chanbin are left at 
+    # the end of the spw, these channels will be dropped. 
+
     def test_cavcd(self):
         """
         Was the CORRECTED_DATA column channel averaged?
@@ -1160,6 +1169,9 @@ class split_test_sw_and_fc(SplitChecker):
         self.__class__.records[spwwidth] = record
         return splitran
 
+    # NOTE: In MSTransform (split2), if fewer channels than chanbin are left at 
+    # the end of the spw, these channels will be dropped. 
+
     def test_fc_noavg(self):
         """Updating of FLAG_CMD after selection, but no averaging."""
         check_eq(self.records[('1:12~115', '1')]['fc'],
@@ -1356,6 +1368,9 @@ class split_test_optswc(SplitChecker):
             raise e
         self.__class__.records[spwwidth] = record
         return splitran
+
+    # NOTE: In MSTransform (split2), if fewer channels than chanbin are left at 
+    # the end of the spw, these channels will be dropped. 
 
     def test_rightcols_noavg(self):
         """List of SW cols after selection, but no averaging."""
@@ -1559,6 +1574,9 @@ class split_test_wttosig(SplitChecker):
         self.__class__.records[dcwtb] = record
         return splitran
 
+    # NOTE: In MSTransform (split2), if fewer channels than chanbin are left at 
+    # the end of the spw, these channels will be dropped. 
+
     def test_wt_straightselection(self):
         """WEIGHT after straight selection of DATA."""
         check_eq(self.records[('data', '1', '0s')]['wt'],
@@ -1711,6 +1729,9 @@ class split_test_fc(SplitChecker):
         self.__class__.records[trwtb] = record
         self.__class__.records['categories'] = categories
         return splitran
+
+    # NOTE: In MSTransform (split2), if fewer channels than chanbin are left at 
+    # the end of the spw, these channels will be dropped. 
 
     def test_fc_categories(self):
         """FLAG_CATEGORY's CATEGORY keyword"""
