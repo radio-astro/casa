@@ -43,6 +43,7 @@ class ImageCentreThresholdSequence(BaseCleanSequence):
                   outfile=new_cleanmask, overwrite=True)
                 # verbose = False to suppress warning message
                 cm.calc('1', verbose=False)
+                cm.replacemaskedpixels('0')
                 cm.calc('replace("%s"["%s" > %f], 0)' % (os.path.basename(new_cleanmask), self.flux, pblimit_cleanmask), verbose=False)
                 cm.calcmask('"%s" > %s' % (self.flux, str(pblimit_image)))
                 cm.done()
