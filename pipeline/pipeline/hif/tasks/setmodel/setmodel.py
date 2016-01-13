@@ -147,8 +147,6 @@ class SetModels(basetask.StandardTaskTemplate):
          if reference_fields not in (None, ''):
             refresults = self._do_setjy(reference_fields, reference_intents, reffile=self.inputs.reffile,
                 normfluxes=False, scalebychan=self.inputs.scalebychan)
-         print "REFRESULTS"
-         print "ref"
 
          # Set transfer calibrator models.
          #    These models will always be assigned the lookup reference frequency,
