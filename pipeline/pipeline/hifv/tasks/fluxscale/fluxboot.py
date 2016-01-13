@@ -19,13 +19,27 @@ LOG = infrastructure.get_logger(__name__)
 
 class FluxbootInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
-    def __init__(self, context, vis=None):
+    def __init__(self, context, vis=None, caltable=None):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
         self.spix = 0.0
         self.sources = []
         self.flux_densities = []
         self.spws = []
+
+        @property
+        def caltable(self):
+            return self._caltable
+
+        @caltable.setter
+        def caltable(self, value):
+            '''
+                If a caltable is specified, then the fluxgains stage from the scripted pipeline is skipped
+                and we proceed directly to the flux density bootstrapping.
+            '''
+            if value is None:
+                value = None
+            self._caltable = value
 
 
 class FluxbootResults(basetask.Results):
@@ -58,91 +72,96 @@ class Fluxboot(basetask.StandardTaskTemplate):
 
     def prepare(self):
 
-        # FLUXGAIN stage
-        calMs = 'calibrators.ms'
+        if (self.inputs.caltable == None):
+            # FLUXGAIN stage
+            calMs = 'calibrators.ms'
+            caltable = 'fluxgaincal.g'
 
-        LOG.info("Setting models for standard primary calibrators")
+            LOG.info("Setting models for standard primary calibrators")
 
-        standard_source_names, standard_source_fields = standard_sources(calMs)
+            standard_source_names, standard_source_fields = standard_sources(calMs)
 
-        context = self.inputs.context
-        m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
-        # field_spws = context.evla['msinfo'][m.name].field_spws
-        field_spws = m.get_vla_field_spws()
-        new_gain_solint1 = context.evla['msinfo'][m.name].new_gain_solint1
-        gain_solint2 = context.evla['msinfo'][m.name].gain_solint2
-        # spw2band = context.evla['msinfo'][m.name].spw2band
-        spw2band = m.get_vla_spw2band()
-        bands = spw2band.values()
+            context = self.inputs.context
+            m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
+            # field_spws = context.evla['msinfo'][m.name].field_spws
+            field_spws = m.get_vla_field_spws()
+            new_gain_solint1 = context.evla['msinfo'][m.name].new_gain_solint1
+            gain_solint2 = context.evla['msinfo'][m.name].gain_solint2
+            # spw2band = context.evla['msinfo'][m.name].spw2band
+            spw2band = m.get_vla_spw2band()
+            bands = spw2band.values()
 
-        # Look in spectral window domain object as this information already exists!
-        with casatools.TableReader(self.inputs.vis+'/SPECTRAL_WINDOW') as table:
-            channels = table.getcol('NUM_CHAN')
-            originalBBClist = table.getcol('BBC_NO')
-            spw_bandwidths = table.getcol('TOTAL_BANDWIDTH')
-            reference_frequencies = table.getcol('REF_FREQUENCY')
-    
-        center_frequencies = map(lambda rf, spwbw: rf + spwbw/2, reference_frequencies, spw_bandwidths)
+            # Look in spectral window domain object as this information already exists!
+            with casatools.TableReader(self.inputs.vis+'/SPECTRAL_WINDOW') as table:
+                channels = table.getcol('NUM_CHAN')
+                originalBBClist = table.getcol('BBC_NO')
+                spw_bandwidths = table.getcol('TOTAL_BANDWIDTH')
+                reference_frequencies = table.getcol('REF_FREQUENCY')
 
-        
-        for i, fields in enumerate(standard_source_fields):
-            for myfield in fields:
-                spws = field_spws[myfield]
-                # spws = [1,2,3]
-                for myspw in spws:
-                    reference_frequency = center_frequencies[myspw]
-                    try:
-                        EVLA_band = spw2band[myspw]
-                    except:
-                        LOG.info('Unable to get band from spw id - using reference frequency instead')
-                        EVLA_band = find_EVLA_band(reference_frequency)
-                        
-                    LOG.info("Center freq for spw "+str(myspw)+" = "+str(reference_frequency)+", observing band = "+EVLA_band)
-                    
-                    model_image = standard_source_names[i] + '_' + EVLA_band + '.im'
+            center_frequencies = map(lambda rf, spwbw: rf + spwbw/2, reference_frequencies, spw_bandwidths)
 
-                    LOG.info("Setting model for field "+str(myfield)+" spw "+str(myspw)+" using "+model_image)
 
-                    # Double check, but the fluxdensity=-1 should not matter since
-                    #  the model image take precedence
-                    try:
-                        setjy_result = self._fluxgains_setjy(calMs, str(myfield), str(myspw), model_image, -1)
-                        # result.measurements.update(setjy_result.measurements)
-                    except Exception, e:
-                        # something has gone wrong, return an empty result
-                        LOG.error('Unable to complete flux scaling operation for field '+str(myfield)+', spw '+str(myspw))
-                        LOG.exception(e)
-        
-        LOG.info("Making gain tables for flux density bootstrapping")
-        LOG.info("Short solint = " + new_gain_solint1)
-        LOG.info("Long solint = " + gain_solint2)
-        
-        refantfield = context.evla['msinfo'][m.name].calibrator_field_select_string
-        refantobj = findrefant.RefAntHeuristics(vis='calibrators.ms',field=refantfield,
-                                                geometry=True,flagging=True, intent='', spw='')
-        
-        RefAntOutput = refantobj.calculate()
-        
-        refAnt = str(RefAntOutput[0])+','+str(RefAntOutput[1])+','+str(RefAntOutput[2])+','+str(RefAntOutput[3])
-                        
-        LOG.info("The pipeline will use antenna(s) "+refAnt+" as the reference")
-       
-        gaincal_result = self._do_gaincal(context, calMs, 'fluxphaseshortgaincal.g', 'p', [''],
-                                          solint=new_gain_solint1, minsnr=3.0, refAnt=refAnt)
-        
-        gaincal_result = self._do_gaincal(context, calMs, 'fluxgaincal.g', 'ap', ['fluxphaseshortgaincal.g'],
-                                          solint=gain_solint2, minsnr=5.0, refAnt=refAnt)
-        
-        LOG.info("Gain table fluxgaincal.g is ready for flagging")
-        
+            for i, fields in enumerate(standard_source_fields):
+                for myfield in fields:
+                    spws = field_spws[myfield]
+                    # spws = [1,2,3]
+                    for myspw in spws:
+                        reference_frequency = center_frequencies[myspw]
+                        try:
+                            EVLA_band = spw2band[myspw]
+                        except:
+                            LOG.info('Unable to get band from spw id - using reference frequency instead')
+                            EVLA_band = find_EVLA_band(reference_frequency)
+
+                        LOG.info("Center freq for spw "+str(myspw)+" = "+str(reference_frequency)+", observing band = "+EVLA_band)
+
+                        model_image = standard_source_names[i] + '_' + EVLA_band + '.im'
+
+                        LOG.info("Setting model for field "+str(myfield)+" spw "+str(myspw)+" using "+model_image)
+
+                        # Double check, but the fluxdensity=-1 should not matter since
+                        #  the model image take precedence
+                        try:
+                            setjy_result = self._fluxgains_setjy(calMs, str(myfield), str(myspw), model_image, -1)
+                            # result.measurements.update(setjy_result.measurements)
+                        except Exception, e:
+                            # something has gone wrong, return an empty result
+                            LOG.error('Unable to complete flux scaling operation for field '+str(myfield)+', spw '+str(myspw))
+                            LOG.exception(e)
+
+            LOG.info("Making gain tables for flux density bootstrapping")
+            LOG.info("Short solint = " + new_gain_solint1)
+            LOG.info("Long solint = " + gain_solint2)
+
+            refantfield = context.evla['msinfo'][m.name].calibrator_field_select_string
+            refantobj = findrefant.RefAntHeuristics(vis='calibrators.ms',field=refantfield,
+                                                    geometry=True,flagging=True, intent='', spw='')
+
+            RefAntOutput = refantobj.calculate()
+
+            refAnt = str(RefAntOutput[0])+','+str(RefAntOutput[1])+','+str(RefAntOutput[2])+','+str(RefAntOutput[3])
+
+            LOG.info("The pipeline will use antenna(s) "+refAnt+" as the reference")
+
+            gaincal_result = self._do_gaincal(context, calMs, 'fluxphaseshortgaincal.g', 'p', [''],
+                                              solint=new_gain_solint1, minsnr=3.0, refAnt=refAnt)
+
+            gaincal_result = self._do_gaincal(context, calMs, caltable, 'ap', ['fluxphaseshortgaincal.g'],
+                                              solint=gain_solint2, minsnr=5.0, refAnt=refAnt)
+
+            LOG.info("Gain table " + caltable + " is ready for flagging.")
+        else:
+            caltable = self.inputs.caltable
+            LOG.warn("Caltable " + caltable + " has been flagged and will be used in the flux density bootstrapping.")
+
         # ---------------------------------------------------------------------
         # Fluxboot stage
         calMs = 'calibrators.ms'
         context = self.inputs.context
-        LOG.info("Doing flux density bootstrapping")
+        LOG.info("Doing flux density bootstrapping using caltable "+ caltable)
         # LOG.info("Flux densities will be written to " + fluxscale_output)
         try:
-            fluxscale_result = self._do_fluxscale(context)
+            fluxscale_result = self._do_fluxscale(context, caltable)
             LOG.info("Fitting data with power law")
             powerfit_results, weblog_results, spindex_results = self._do_powerfit(context, fluxscale_result)
             setjy_result = self._do_setjy('calibrators.ms', powerfit_results)
@@ -160,14 +179,14 @@ class Fluxboot(basetask.StandardTaskTemplate):
     def analyse(self, results):
         return results
 
-    def _do_fluxscale(self, context):
+    def _do_fluxscale(self, context, caltable):
 
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         flux_field_select_string = context.evla['msinfo'][m.name].flux_field_select_string
         fluxcalfields = flux_field_select_string
 
         task_args = {'vis'          : 'calibrators.ms',
-                     'caltable'     : 'fluxgaincal.g',
+                     'caltable'     : caltable,
                      'fluxtable'    : 'fluxgaincalFcal.g',
                      'reference'    : [fluxcalfields],
                      'transfer'     : [''],

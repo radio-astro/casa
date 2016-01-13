@@ -14,6 +14,11 @@
 	<value></value>
     </param>
 
+    <param type="string" name="caltable" subparam="true">
+        <description>String name of the flagged caltable</description>
+        <value></value>
+            </param>
+
 
 
     <param type="string" name="pipelinemode">
@@ -76,7 +81,7 @@ vis -- List of visisbility  data files. These may be ASDMs, tar files of ASDMs,
    default: []
    example: vis=['X227.ms', 'asdms.tar.gz']
 
-
+caltable -- string name of flagged caltable
 
 
 pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
