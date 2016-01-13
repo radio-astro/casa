@@ -195,6 +195,11 @@ protected:
 
     Bool _getDropDegen() const { return _dropDegen; }
 
+    static void _copyMask(Lattice<Bool>& mask, const ImageInterface<T>& image);
+
+    static void _copyData(Lattice<T>& data, const ImageInterface<T>& image);
+
+
 private:
     const SPCIIT _image;
     SHARED_PTR<LogIO> _log;

@@ -45,6 +45,7 @@ ImageAnalysis/ImageFactory2.cc
 ImageAnalysis/ImageFFT.cc
 ImageAnalysis/ImageFitter.cc
 ImageAnalysis/ImageInputProcessor.cc
+ImageAnalysis/ImageMask.cc
 ImageAnalysis/ImageMetaData.cc
 ImageAnalysis/ImageMetaDataBase.cc
 ImageAnalysis/ImageMetaDataRW.cc
@@ -163,6 +164,8 @@ install (FILES
     ImageAnalysis/ImageHistory.tcc
 	ImageAnalysis/ImageInputProcessor.h
 	ImageAnalysis/ImageInputProcessor2.tcc
+	ImageAnalysis/ImageMask.h
+    ImageAnalysis/ImageMask2.tcc
 	ImageAnalysis/ImageMaskAttacher.h
     ImageAnalysis/ImageMaskAttacher.tcc
     ImageAnalysis/ImageMaskedPixelReplacer.h

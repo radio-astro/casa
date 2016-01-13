@@ -36,11 +36,10 @@
 #include <lattices/LRegions/LCMask.h>
 #include <lattices/Lattices/LatticeUtilities.h>
 
+#include <imageanalysis/ImageAnalysis/ImageMask.h>
 #include <imageanalysis/ImageAnalysis/ImageMaskAttacher.h>
 
 namespace casa {
-
-template<class T> SubImageFactory<T>::SubImageFactory() {}
 
 template<class T> SHARED_PTR<SubImage<T> > SubImageFactory<T>::createSubImageRW(
 	CountedPtr<ImageRegion>& outRegion, CountedPtr<ImageRegion>& outMask,
@@ -218,7 +217,7 @@ template<class T> SPIIT SubImageFactory<T>::createImage(
 	}
 	SHARED_PTR<const SubImage<T> > x = createSubImageRO(
 		image, region, mask, list ? &log : 0,
-		axesSpec, extendMask
+		axesSpec, extendMask, True
 	);
 	SPIIT outImage;
 	if (outfile.empty()) {
@@ -238,11 +237,7 @@ template<class T> SPIIT SubImageFactory<T>::createImage(
 		}
 	}
 	ImageUtilities::copyMiscellaneous(*outImage, *x);
-	if (
-		attachMask
-		|| (x->isMasked() && ! allTrue(x->getMask()))
-		|| (x->hasPixelMask() && ! allTrue(x->pixelMask().get()))
-	) {
+	if (attachMask || ! ImageMask::isAllMaskTrue(*x)) {
 		// if we don't already have a mask, but the user has specified that one needs to
 		// be present, attach it. This needs to be done prior to the copyDataAndMask() call
 		// because in that implementation, the image to which the mask is to be copied must

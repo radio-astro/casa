@@ -35,7 +35,6 @@
 
 #include <casa/BasicSL/STLIO.h>
 #include <memory>
-#include <stdcasa/cboost_foreach.h>
 
 namespace casa {
 
@@ -66,7 +65,7 @@ ImageRegridder::ImageRegridder(
 ImageRegridder::~ImageRegridder() {}
 
 SPIIF ImageRegridder::regrid() const {
-	_subimage = SubImageFactory<Float>::createImage(
+    _subimage = SubImageFactory<Float>::createImage(
 		*this->_getImage(), "", *this->_getRegion(), this->_getMask(),
 		this->_getDropDegen(), False, False, this->_getStretch()
 	);
@@ -114,12 +113,6 @@ SPIIF ImageRegridder::regrid() const {
 }
 
 SPIIF ImageRegridder::_regrid() const {
-	/*
-	SPIIF subImage = SubImageFactory<Float>::createImage(
-		*this->_getImage(), "", *this->_getRegion(), this->_getMask(),
-		this->_getDropDegen(), False, False, this->_getStretch()
-	);
-	*/
 	if (! _subimage) {
 		// for when this method is called directly by regridByVelocity
 		_subimage = SubImageFactory<Float>::createImage(
@@ -128,10 +121,7 @@ SPIIF ImageRegridder::_regrid() const {
 		);
 	}
 	*this->_getLog() << LogOrigin(_class, __func__);
-	ThrowIf(
-		! anyTrue(_subimage->getMask()),
-		"All selected pixels are masked"
-	);
+    ThrowIf(ImageMask::isAllMaskFalse(*_subimage), "All selected pixels are masked");
 	const CoordinateSystem csysFrom = _subimage->coordinates();
 	CoordinateSystem csysTo = _getTemplateCoords();
 	csysTo.setObsInfo(csysFrom.obsInfo());
@@ -141,12 +131,13 @@ SPIIF ImageRegridder::_regrid() const {
 		_subimage->shape(), False
 	);
 	ThrowIf(
-		csys.nPixelAxes() != _getShape().nelements(),
-		"The number of pixel axes in the output shape and Coordinate System must be the same"
+		csys.nPixelAxes() != _getShape().size(),
+		"The number of pixel axes in the output shape and Coordinate System must be the same. "
+		"Shape has size " + String::toString(_getShape().size()) + ". Output coordinate system "
+		"has " + String::toString(csys.nPixelAxes()) + " axes"
 	);
 	_checkOutputShape(*_subimage, coordsToRegrid);
 	SPIIF workIm(new TempImage<Float>(_getKludgedShape(), csys));
-	workIm->set(0.0);
 	ImageUtilities::copyMiscellaneous(*workIm, *_subimage);
 	String maskName("");
 	ImageMaskAttacher::makeMask(*workIm, maskName, True, True, *this->_getLog(), True);
@@ -155,6 +146,21 @@ SPIIF ImageRegridder::_regrid() const {
 		"There is no overlap between the (region chosen in) the input image"
 		" and the output image with respect to the axes being regridded."
 	);
+	if (
+		coordsToRegrid.find(Coordinate::SPECTRAL) != coordsToRegrid.end()
+		&& fabs(csys.spectralCoordinate().increment()[0])
+			> fabs(csysFrom.spectralCoordinate().increment()[0])
+	) {
+		*this->_getLog() << LogOrigin(getClass(), __func__)
+			<< LogIO::WARN << " imregrid/ia.regrid() interpolates over spectral "
+			<< "channels and does not average channels together. Noise in your "
+			<< "resulting image will be the noise in the original individual "
+			<< "channels, not the averaged channel noise. To average output "
+			<< "channels together, use specsmooth (or ia.boxcar() or ia.hanning) "
+			<< "to smooth the spectral axis of your input cube to close to "
+			<< "desired resolution and use imregrid/ia.regrid() to regrid it to "
+			<< "the desired spectral coordinate grid.";
+	}
 	ImageRegrid<Float> ir;
 	ir.showDebugInfo(_debug);
 	ir.disableReferenceConversions(! _getDoRefChange());
@@ -167,7 +173,7 @@ SPIIF ImageRegridder::_regrid() const {
 		workIm = _decimateStokes(workIm);
 	}
 	ThrowIf(
-		workIm->hasPixelMask() && ! anyTrue(workIm->pixelMask().get()),
+		workIm->hasPixelMask() && ImageMask::isAllMaskFalse(*workIm),
 		"All output pixels are masked"
 		+ String(
 			_getDecimate() > 1 && _regriddingDirectionAxes()
@@ -183,6 +189,7 @@ SPIIF ImageRegridder::_regrid() const {
 		Int specAxisNumber = workIm->coordinates().spectralAxisNumber(False);
 		finalShape[specAxisNumber] = _getNReplicatedChans();
 		SPIIF replicatedIm(new TempImage<Float>(finalShape, csys));
+        // FIXME this will exhaust memory for large images
 		Array<Float> fillerPixels = workIm->get();
 		Array<Bool> fillerMask = workIm->pixelMask().get();
 		Array<Float> finalPixels = replicatedIm->get();
@@ -235,7 +242,7 @@ SPIIF ImageRegridder::_decimateStokes(SPIIF workIm) const {
 				workIm->coordinates().polarizationAxisNumber(False)
 			)
 		);
-		foreach_(String stokes, _getOutputStokes()) {
+		for( String stokes: _getOutputStokes() ) {
 			Record region = rm.fromBCS(
 				diagnostics, nSelectedChannels, stokes,
 				"", CasacRegionManager::USE_FIRST_STOKES,
@@ -269,9 +276,9 @@ void ImageRegridder::_checkOutputShape(
 		const Coordinate::Type coordType = csysFrom.coordinate(i).type();
 		if (coordsToRegrid.find(coordType) == coordsToRegridEnd) {
 			Vector<Int> coordAxes = csysFrom.worldAxes(i);
-			foreach_(uInt oldAxis, coordAxes) {
+			for( uInt oldAxis: coordAxes ) {
 				uInt count = 0;
-				foreach_(uInt newAxis, outputAxisOrder) {
+				for( uInt newAxis: outputAxisOrder ) {
 					if (
 						newAxis == oldAxis
 						&& inputShape[oldAxis] != _getKludgedShape()[count]
@@ -313,12 +320,6 @@ SPIIF ImageRegridder::_regridByVelocity() const {
 		dynamic_cast<CoordinateSystem *>(csysTo.clone())
 	);
 	SpectralCoordinate templateSpecCoord = csys->spectralCoordinate();
-	/*
- 	SPIIF maskedClone = SubImageFactory<Float>::createImage(
- 		*this->_getImage(), "", *this->_getRegion(), this->_getMask(),
- 		False, False, False, this->_getStretch()
- 	);
- 	*/
 	std::unique_ptr<CoordinateSystem> coordClone(
 		dynamic_cast<CoordinateSystem *>(_subimage->coordinates().clone())
 	);
@@ -362,7 +363,8 @@ SPIIF ImageRegridder::_regridByVelocity() const {
 			! specCoord.frequencyToVelocity(velRefVal, freqRefVal),
 			"Unable to determine reference velocity"
 		);
-		Double vel0, vel1;
+		Double vel0;
+		Double vel1 = 0;
 		ThrowIf(
 			! specCoord.pixelToVelocity(vel0, 0.0)
 			|| ! specCoord.pixelToVelocity(vel1, 1.0),
