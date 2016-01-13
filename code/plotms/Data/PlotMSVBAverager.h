@@ -192,6 +192,11 @@ private:
     Vector<Double> avgTime_;
     Vector<Double> avgTimeInterval_;
     Vector<Int> avgScan_;
+    // Need to resize these in final avBuf
+    Vector<Int> fieldid_;
+    Vector<Int> spw_;
+    Vector<Int> obsid_;
+    Vector<Int> stateid_;
 };
 
 

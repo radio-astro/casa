@@ -187,6 +187,10 @@ void PlotMSVBAverager::finalizeAverage()
 	avgWeight_.resize(nCorr_p,nChan_p,nBln,True);
       avgFlagRow_.resize(nBln,True);
       avgFlagCube_.resize(nCorr_p,nChan_p,nBln,True);
+      fieldid_.resize(nBln);
+      spw_.resize(nBln);
+      obsid_.resize(nBln);
+      stateid_.resize(nBln);
     }
 
     // Time:
@@ -210,6 +214,10 @@ void PlotMSVBAverager::finalizeAverage()
     avBuf_p->setTime(avgTime_);
     avBuf_p->setTimeInterval(avgTimeInterval_);
     avBuf_p->setScan(avgScan_);
+    avBuf_p->setFieldId(fieldid_);
+    avBuf_p->setSpectralWindows(spw_);
+    avBuf_p->setObservationId(obsid_);
+    avBuf_p->setStateId(stateid_);
 
     //    cout << "final amp = " << amplitude(avBuf_p->visCube()) << endl;
     //    cout << "final flagR = " << boolalpha << avBuf_p->flagRow() << endl;
@@ -250,11 +258,11 @@ void PlotMSVBAverager::initialize(vi::VisBuffer2& vb)
   vi::VisBufferComponents2 components = vi::VisBufferComponents2::these(
     vi::FieldId, vi::ObservationId, vi::SpectralWindows, vi::StateId);
   avBuf_p->copyComponents(vb, components, True, False);
-  avBuf_p->setFieldId(vb.fieldId());
-  avBuf_p->setSpectralWindows(vb.spectralWindows());
-  avBuf_p->setObservationId(vb.observationId());
-  avBuf_p->setStateId(vb.stateId());
-  
+  fieldid_ = vb.fieldId();
+  spw_ = vb.spectralWindows();
+  obsid_ = vb.observationId();
+  stateid_ = vb.stateId();
+
   // Immutables:
   nChan_p = vb.nChannels();
   nCorr_p = vb.nCorrelations();
@@ -286,7 +294,6 @@ void PlotMSVBAverager::initialize(vi::VisBuffer2& vb)
   // Resize and fill in the antenna numbers for all rows
   avgAntenna1_.resize(nBlnMax_p);
   avgAntenna2_.resize(nBlnMax_p);
-
   if (blnAve_p) {
     avgAntenna1_.set(-1);
     avgAntenna2_.set(-1);
@@ -309,6 +316,11 @@ void PlotMSVBAverager::initialize(vi::VisBuffer2& vb)
     }
   }
 
+  // Resize 
+  fieldid_.resize(nBlnMax_p);
+  spw_.resize(nBlnMax_p);
+  obsid_.resize(nBlnMax_p);
+  stateid_.resize(nBlnMax_p);
   // Resize and initialize everything else
   avgTime_.resize(nBlnMax_p, False); 
   avgTime_.set(0.0);
