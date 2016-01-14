@@ -41,25 +41,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	void ColormapManager::registerColormap(Colormap *cmap, Float weight) {
-		if (itsInfoMap.isDefined(cmap)) {
-			// already known
-			ColormapInfo * mi = itsInfoMap(cmap);
-			mi->ref();
-			// compare weights -- if different call redistribute
-			if (mi->weight() != weight)	{
-				mi->setWeight(weight);
+		if ( cmap ){
+			if (itsInfoMap.isDefined(cmap)) {
+				// already known
+				ColormapInfo * mi = itsInfoMap(cmap);
+				mi->ref();
+				// compare weights -- if different call redistribute
+				if (mi->weight() != weight)	{
+					mi->setWeight(weight);
+					redistributeColormaps();
+				}
+			}
+			else {
+				// new colormap
+				ColormapInfo *mi = new ColormapInfo(cmap, weight, 0, 0);
+				mi->ref();
+				itsInfoMap.define(cmap, mi);
 				redistributeColormaps();
 			}
-		} else {
-			// new colormap
-			ColormapInfo *mi = new ColormapInfo(cmap, weight, 0, 0);
-			mi->ref();
-			itsInfoMap.define(cmap, mi);
-			redistributeColormaps();
+			// now tell the cmap that it is used by the PixelCanvasColorTable
+			// that this is a ColormapManager for...
+			cmap->registerPCColorTable(itsPCColorTable);
 		}
-		// now tell the cmap that it is used by the PixelCanvasColorTable
-		// that this is a ColormapManager for...
-		cmap->registerPCColorTable(itsPCColorTable);
 	}
 
 	void ColormapManager::registerColormap(Colormap *cmap,

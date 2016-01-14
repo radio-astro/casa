@@ -51,13 +51,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     PixelCanvas::PixelCanvas( const PixelCanvas *that ) :
 		defaultColormapActive_(True),
-		colormap_(new Colormap(that->colormap( )->name( ))),
+		colormap_(0),
 		drawMode_(Display::Draw),
 		drawBuffer_(Display::DefaultBuffer),
 		colorModel_(Display::RGB),
 		refreshActive_(False),
 		nRegisteredColormaps_(0),
 		vgbuf_(this, 1024) {
+    	if ( that ){
+    		Colormap* oldMap = that->colormap();
+    		if ( oldMap ){
+    			colormap_ = new Colormap( oldMap->name());
+    		}
+    		else {
+    			defaultColormapActive_ = False;
+    		}
+    	}
     }
 
 	PixelCanvas::PixelCanvas(PixelCanvasColorTable * pcctbl) :
@@ -84,7 +93,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	void PixelCanvas::setColormap(Colormap * map) {
-		if ( map != 0 ) colormap_ = map;
+		if ( map != 0 ){
+			colormap_ = map;
+		}
 	}
 
 	void PixelCanvas::setColorModel(Display::ColorModel model) {
