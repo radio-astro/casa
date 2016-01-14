@@ -352,9 +352,6 @@ class TsysflagspectraWorker(basetask.StandardTaskTemplate):
         
         inputs = self.inputs
 
-        # Initialize the final result
-        final = []
-
         # Get the tsys table name
         name = inputs.caltable
 
@@ -362,26 +359,26 @@ class TsysflagspectraWorker(basetask.StandardTaskTemplate):
         tsystable = caltableaccess.CalibrationTableDataFiller.getcal(name)
         self.result.vis = tsystable.vis
 
-        # Get the MS object from the context
-        ms = inputs.context.observing_run.get_ms(name=tsystable.vis)
-
         # Get the Tsys spw map by retrieving it from the first tsys CalFrom 
         # that is present in the callibrary. 
-        tsys_calfrom = utils.get_calfroms(inputs, 'tsys')[0]
-        spwmap = tsys_calfrom.spwmap
+        spwmap = utils.get_calfroms(inputs, 'tsys')[0].spwmap
+
+        # Construct a callibrary entry, and store in result. This entry was already
+        # created and merged into the context by tsyscal, but we recreate it here
+        # since it is needed by the weblog renderer to create a Tsys summary chart.
+        calto = callibrary.CalTo(vis=tsystable.vis)
+        calfrom = callibrary.CalFrom(name, caltype='tsys', spwmap=spwmap)
+        calapp = callibrary.CalApplication(calto, calfrom)
+        self.result.final = [calapp]
+
+        # Get the MS object from the context
+        ms = inputs.context.observing_run.get_ms(name=tsystable.vis)
 
         # Get the spws from the tsystable.
         tsysspws = set()
         for row in tsystable.rows:
             tsysspws.update([row.get('SPECTRAL_WINDOW_ID')])
        
-        # Construct a callibrary entry for the results that are to be
-        # merged back into the context, and append it to the final result.
-        calto = callibrary.CalTo(vis=tsystable.vis)
-        calfrom = callibrary.CalFrom(name, caltype='tsys', spwmap=spwmap)
-        calapp = callibrary.CalApplication(calto, calfrom)
-        final.append(calapp)
-
         # Get ids of fields for intent groups of interest
         intentgroupids = {}
         for intentgroup in self.inputs.intentgroups:
@@ -396,9 +393,6 @@ class TsysflagspectraWorker(basetask.StandardTaskTemplate):
                 self.calculate_view(tsystable, tsysspwid, intentgroup,
                   intentgroupids[intentgroup], inputs.metric,
                   inputs.refintent)
-
-        # Store the final result into the class result structure
-        self.result.final = final[:]
 
         return self.result
 
@@ -478,42 +472,20 @@ class TsysflagspectraWorker(basetask.StandardTaskTemplate):
         ms = self.inputs.context.observing_run.get_ms(name=self.inputs.vis)
 
         # Get antenna names, ids
-        antenna_name, antenna_ids = commonhelpermethods.get_antenna_names(ms)
+        antenna_names, antenna_ids = commonhelpermethods.get_antenna_names(ms)
 
         # Get names of polarisations, and create polarisation index 
         corr_type = commonhelpermethods.get_corr_axis(ms, spwid)
         pols = range(len(corr_type))
 
-        # Initialize tsysspectra and corresponding times.
-        tsysspectra = collections.defaultdict(TsysflagspectraResults)
-        times = set()
-
-        # Select rows from tsystable that match the specified spw and fields,
-        # store a Tsys spectrum for each polarisation in the tsysspectra results
-        # and store the corresponding time.
-        for row in tsystable.rows:
-            if row.get('SPECTRAL_WINDOW_ID') == spwid and \
-              row.get('FIELD_ID') in fieldids:
-
-                for pol in pols:          
-                    tsysspectrum = commonresultobjects.SpectrumResult(
-                      data=row.get('FPARAM')[pol,:,0],
-                      flag=row.get('FLAG')[pol,:,0],
-                      datatype='Normalised Tsys', filename=tsystable.name,
-                      field_id=row.get('FIELD_ID'),
-                      spw=row.get('SPECTRAL_WINDOW_ID'),
-                      ant=(row.get('ANTENNA1'),
-                      antenna_name[row.get('ANTENNA1')]),
-                      pol=corr_type[pol][0],
-                      time=row.get('TIME'), normalise=True)
-                    tsysspectra[pol].addview(tsysspectrum.description,
-                      tsysspectrum)
-                    times.update([row.get('TIME')])
+        # Select Tsysspectra and corresponding times for specified spwid and fieldids
+        tsysspectra, times, _ = self.get_tsystable_data(tsystable,
+          spwid, fieldids, antenna_names, pols, normalise=True)
 
         # Get ids of fields for reference spectra
         referencefieldids = intent_ids(refintent, ms)
 
-        # Create a flagging view for each antenna
+        # Create separate flagging views for each polarisation
         for pol in pols:
             
             # Initialize results
@@ -598,7 +570,7 @@ class TsysflagspectraWorker(basetask.StandardTaskTemplate):
                       datatype='Median Normalised Tsys',
                       filename=tsystable.name, spw=spwid,
                       pol=corr_type[pol][0],
-                      ant=(antenna_id, antenna_name[antenna_id]),
+                      ant=(antenna_id, antenna_names[antenna_id]),
                       intent=intent)
                     tsysrefs.addview(tsysref.description, tsysref)
 
@@ -684,38 +656,15 @@ class TsysflagspectraWorker(basetask.StandardTaskTemplate):
         ms = self.inputs.context.observing_run.get_ms(name=self.inputs.vis)
 
         # Get antenna names, ids
-        antenna_name, antenna_ids = commonhelpermethods.get_antenna_names(ms)
+        antenna_names, antenna_ids = commonhelpermethods.get_antenna_names(ms)
 
         # Get names of polarisations, and create polarisation index 
         corr_type = commonhelpermethods.get_corr_axis(ms, spwid)
         pols = range(len(corr_type))
 
-        # Initialize the tsysspectra and corresponding times
-        tsysspectra = collections.defaultdict(TsysflagspectraResults)
-        times = set()
-
-        # Select rows from tsystable that match the specified spw and fields,
-        # store a Tsys spectrum for each polarisation in the tsysspectra results
-        # and store the corresponding time.
-        for row in tsystable.rows:
-            if row.get('SPECTRAL_WINDOW_ID') == spwid and \
-              row.get('FIELD_ID') in fieldids:
-
-                for pol in pols:          
-                    tsysspectrum = commonresultobjects.SpectrumResult(
-                      data=row.get('FPARAM')[pol,:,0],
-                      flag=row.get('FLAG')[pol,:,0],
-                      datatype='Normalised Tsys', filename=tsystable.name,
-                      field_id=row.get('FIELD_ID'),
-                      spw=row.get('SPECTRAL_WINDOW_ID'),
-                      ant=(row.get('ANTENNA1'),
-                      antenna_name[row.get('ANTENNA1')]),
-                      pol=corr_type[pol][0],
-                      time=row.get('TIME'), normalise=True)
-
-                    tsysspectra[pol].addview(tsysspectrum.description,
-                      tsysspectrum)
-                    times.update([row.get('TIME')])
+        # Select Tsysspectra and corresponding times for specified spwid and fieldids
+        tsysspectra, times, _ = self.get_tsystable_data(tsystable,
+          spwid, fieldids, antenna_names, pols, normalise=True)
 
         # Create separate flagging views for each polarisation
         for pol in pols:
@@ -824,38 +773,15 @@ class TsysflagspectraWorker(basetask.StandardTaskTemplate):
         ms = self.inputs.context.observing_run.get_ms(name=self.inputs.vis)
 
         # Get antenna names, ids
-        antenna_name, antenna_ids = commonhelpermethods.get_antenna_names(ms)
+        antenna_names, antenna_ids = commonhelpermethods.get_antenna_names(ms)
 
         # Get names of polarisations, and create polarisation index 
         corr_type = commonhelpermethods.get_corr_axis(ms, spwid)
         pols = range(len(corr_type))
 
-        # Initialize a dictionary of Tsys spectra results and corresponding times
-        tsysspectra = collections.defaultdict(TsysflagspectraResults)
-        times = set()
-
-        # Select rows from tsystable that match the specified spw and fields,
-        # store a Tsys spectrum for each polarisation in the tsysspectra results
-        # and store the corresponding time.
-        for row in tsystable.rows:
-            if row.get('SPECTRAL_WINDOW_ID') == spwid and \
-              row.get('FIELD_ID') in fieldids:
-
-                for pol in pols:
-                    tsysspectrum = commonresultobjects.SpectrumResult(
-                      data=row.get('FPARAM')[pol,:,0],
-                      flag=row.get('FLAG')[pol,:,0],
-                      datatype='Tsys', filename=tsystable.name,
-                      field_id=row.get('FIELD_ID'),
-                      spw=row.get('SPECTRAL_WINDOW_ID'),
-                      ant=(row.get('ANTENNA1'),
-                      antenna_name[row.get('ANTENNA1')]), units='K',
-                      pol=corr_type[pol][0],
-                      time=row.get('TIME'), normalise=False)
-
-                    tsysspectra[pol].addview(tsysspectrum.description,
-                      tsysspectrum)
-                    times.update([row.get('TIME')])
+        # Select Tsysspectra and corresponding times for specified spwid and fieldids
+        tsysspectra, times, _ = self.get_tsystable_data(tsystable,
+          spwid, fieldids, antenna_names, pols, normalise=True)
 
         # Create separate flagging views for each polarisation
         for pol in pols:
@@ -957,39 +883,15 @@ class TsysflagspectraWorker(basetask.StandardTaskTemplate):
         ms = self.inputs.context.observing_run.get_ms(name=self.inputs.vis)
 
         # Get antenna names, ids
-        antenna_name, antenna_ids = commonhelpermethods.get_antenna_names(ms)
+        antenna_names, antenna_ids = commonhelpermethods.get_antenna_names(ms)
 
         # Get names of polarisations, and create polarisation index 
         corr_type = commonhelpermethods.get_corr_axis(ms, spwid)
         pols = range(len(corr_type))
 
-        # Initialize a dictionary of Tsys spectra results and corresponding times
-        tsysspectra = collections.defaultdict(TsysflagspectraResults)
-        times = set()
-
-        # Select rows from tsystable that match the specified spw and fields,
-        # store a Tsys spectrum for each polarisation in the tsysspectra results
-        # and store the corresponding time.
-        # Note: the SpectrumResult is normalised (i.e. divided by its median).
-        for row in tsystable.rows:
-            if row.get('SPECTRAL_WINDOW_ID') == spwid and \
-              row.get('FIELD_ID') in fieldids:
-
-                for pol in pols:
-                    tsysspectrum = commonresultobjects.SpectrumResult(
-                      data=row.get('FPARAM')[pol,:,0],
-                      flag=row.get('FLAG')[pol,:,0],
-                      datatype='Tsys', filename=tsystable.name,
-                      field_id=row.get('FIELD_ID'),
-                      spw=row.get('SPECTRAL_WINDOW_ID'),
-                      ant=(row.get('ANTENNA1'),
-                      antenna_name[row.get('ANTENNA1')]), units='K',
-                      pol=corr_type[pol][0], time=row.get('TIME'),
-                      normalise=True)
-
-                    tsysspectra[pol].addview(tsysspectrum.description,
-                      tsysspectrum)
-                    times.update([row.get('TIME')])
+        # Select Tsysspectra and corresponding times for specified spwid and fieldids
+        tsysspectra, times, _ = self.get_tsystable_data(tsystable,
+          spwid, fieldids, antenna_names, pols, normalise=True)
 
         # Create separate flagging views for each polarisation
         for pol in pols:
@@ -1079,3 +981,42 @@ class TsysflagspectraWorker(basetask.StandardTaskTemplate):
 
             # Add the view results to the class result structure
             self.result.addview(viewresult.description, viewresult)
+
+    def get_tsystable_data(self, tsystable, spwid, fieldids, antenna_names, pols, normalise=None):
+
+        # Initialize a dictionary of Tsys spectra results and corresponding times
+        tsysspectra = collections.defaultdict(TsysflagspectraResults)
+        times = set()
+
+        if normalise:
+            datatype = 'Normalised Tsys'
+        else:
+            datatype = 'Tsys'
+
+        # Select rows from tsystable that match the specified spw and fields,
+        # store a Tsys spectrum for each polarisation in the tsysspectra results
+        # and store the corresponding time.
+        for row in tsystable.rows:
+            if row.get('SPECTRAL_WINDOW_ID') == spwid and \
+              row.get('FIELD_ID') in fieldids:
+
+                for pol in pols:
+                    tsysspectrum = commonresultobjects.SpectrumResult(
+                      data=row.get('FPARAM')[pol,:,0],
+                      flag=row.get('FLAG')[pol,:,0],
+                      datatype=datatype, filename=tsystable.name,
+                      field_id=row.get('FIELD_ID'),
+                      spw=row.get('SPECTRAL_WINDOW_ID'),
+                      ant=(row.get('ANTENNA1'),
+                      antenna_names[row.get('ANTENNA1')]), units='K',
+                      pol=pol,
+                      time=row.get('TIME'), normalise=normalise)
+
+                    tsysspectra[pol].addview(tsysspectrum.description,
+                      tsysspectrum)
+                    times.update([row.get('TIME')])
+
+                # Store the number of channels
+                nchannels = np.shape(row.get('FPARAM'))[1]
+
+        return tsysspectra, times, nchannels
