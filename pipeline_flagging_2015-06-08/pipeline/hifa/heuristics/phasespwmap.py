@@ -43,6 +43,7 @@ def simple_w2nspwmap (allspws, scispws, maxnarrowbw, maxbwfrac, samebb):
 	#  Wide spw, match spw to itself.
         if scispw.bandwidth > maxnbw:
 	    matchedspws.append(scispw)
+            #LOG.info('Matched spw id %s to itself' % matchspw.id)
 	    continue
 	 
 	# Loop through the other science
@@ -65,7 +66,8 @@ def simple_w2nspwmap (allspws, scispws, maxnarrowbw, maxbwfrac, samebb):
 	    # fraction of the maximum bandwidth. Don't understand this
 	    # conversion issue.
 	    if matchspw.bandwidth < scispw.bandwidth or \
-	        matchspw.bandwidth < decimal.Decimal(str(maxbwfrac)) * maxnbw:
+	        matchspw.bandwidth < decimal.Decimal(str(maxbwfrac)) * bwmaxdict[scispw.band]:
+	        #matchspw.bandwidth < decimal.Decimal(str(maxbwfrac)) * maxnbw:
                 #LOG.info('Skipping condition match spw id %s' % matchspw.id)
 	        continue
 
@@ -79,6 +81,8 @@ def simple_w2nspwmap (allspws, scispws, maxnarrowbw, maxbwfrac, samebb):
 		if abs(scispw.centre_frequency.value - matchspw.centre_frequency.value) <  \
 		    abs(scispw.centre_frequency.value - bestspw.centre_frequency.value):
 		    bestspw = matchspw
+                else:
+                    pass
 		
 	    else:
 		# If the candidate  match is in the same baseband
@@ -92,6 +96,8 @@ def simple_w2nspwmap (allspws, scispws, maxnarrowbw, maxbwfrac, samebb):
 		    if abs(scispw.centre_frequency.value - matchspw.centre_frequency.value) <  \
 		        abs(scispw.centre_frequency.value - bestspw.centre_frequency.value):
 		        bestspw = matchspw
+                    else:
+                        pass
 	
 	# Append the matched spw to the list
 	if bestspw is None:
@@ -106,7 +112,6 @@ def simple_w2nspwmap (allspws, scispws, maxnarrowbw, maxbwfrac, samebb):
         # Find the maximum science spw id
         if scispw.id > max_spwid:
 	    max_spwid = scispw.id
-
 
     # Initialize the spwmap. All spw ids up to the maximum
     # science spw id must be defined.

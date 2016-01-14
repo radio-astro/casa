@@ -105,7 +105,7 @@ class T2_4MDetailsGFluxscaleRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     
     
     
-FluxTR = collections.namedtuple('FluxTR', 'vis field spw i q u v')
+FluxTR = collections.namedtuple('FluxTR', 'vis field spw i q u v spix')
 
 def make_flux_table(context, results):
     # will hold all the flux stat table rows for the results
@@ -121,7 +121,8 @@ def make_flux_table(context, results):
             
         for field_arg, measurements in single_result.measurements.items():
             field = ms_for_result.get_fields(field_arg)[0]
-            field_cell = '%s (#%s)' % (field.name, field.id)
+            intents = ' '. join(field.intents.intersection(set(['BANDPASS', 'PHASE', 'CHECK'])))
+            field_cell = '%s (#%s) %s' % (field.name, field.id, intents)
 
             for measurement in sorted(measurements, key=lambda m: int(m.spw_id)):
                 fluxes = collections.defaultdict(lambda: 'N/A')
@@ -142,9 +143,14 @@ def make_flux_table(context, results):
                         fluxes[stokes] = '%s%s' % (flux, uncertainty)
                     except:
                         pass
+                try:
+                    fluxes['spix'] = '%s' % getattr(measurement, 'spix')
+                except:
+                    fluxes['spix'] = '0.0'
                                     
                 tr = FluxTR(vis_cell, field_cell, measurement.spw_id, 
-                            fluxes['I'], fluxes['Q'], fluxes['U'], fluxes['V'])
+                            fluxes['I'], fluxes['Q'], fluxes['U'], fluxes['V'],
+                            fluxes['spix'])
                 rows.append(tr)
 
     return utils.merge_td_columns(rows)

@@ -4,11 +4,13 @@ import os
 import shutil
 import glob
 import numpy
+import collections
 
 import pipeline.infrastructure.mpihelpers as mpihelpers
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
+from pipeline.hsd.heuristics import MaskDeviationHeuristic
 
 from .. import common
 from . import maskline
@@ -23,7 +25,7 @@ class SDBaselineInputs(common.SingleDishInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, infiles=None, spw=None, pol=None,
                  linewindow=None, edge=None, broadline=None, fitorder=None,
-                 fitfunc=None, clusteringalgorithm=None):
+                 fitfunc=None, clusteringalgorithm=None, deviationmask=None):
         self._init_properties(vars())
         for key in ['spw', 'pol']:
             val = getattr(self, key)
@@ -31,7 +33,7 @@ class SDBaselineInputs(common.SingleDishInputs):
                 self._to_list([key])
         #self._to_list(['infiles', 'iflist', 'pollist', 'edge', 'linewindow'])
         self._to_list(['infiles', 'edge', 'linewindow'])
-        self._to_bool('broadline')
+        self._to_bool(['broadline', 'deviationmask'])
         self._to_numeric('fitorder')
         if isinstance(self.fitorder, float):
             self.fitorder = int(self.fitorder)
@@ -82,6 +84,13 @@ class SDBaselineResults(common.SingleDishResults):
                                         channelmap_range=channelmap_range)
                 st = context.observing_run[ant]
                 st.work_data = st.baselined_name
+                
+        # merge deviation_mask with context
+        if self.outcome.has_key('deviation_mask'):
+            for (basename, masks) in self.outcome['deviation_mask'].items():
+                st = context.observing_run.get_scantable(basename)
+                for (spwid, masklist) in masks.items():
+                    st.spectral_window[spwid].deviation_mask = masklist
 
     def _outcome_name(self):
         return ['%s: %s (spw=%s, pol=%s)'%(idx, name, b['spw'], b['pols'])
@@ -108,6 +117,7 @@ class SDBaseline(common.SingleDishTaskTemplate):
         fitorder = 'automatic' if inputs.fitorder is None or inputs.fitorder < 0 else inputs.fitorder
         fitfunc = 'spline' if inputs.fitfunc is None else inputs.fitfunc
         clusteringalgorithm = inputs.clusteringalgorithm
+        deviationmask = True if inputs.deviationmask is None else inputs.deviationmask
         
         dummy_suffix = "_temp"
         # Clear-up old temporary scantables (but they really shouldn't exist)
@@ -128,6 +138,10 @@ class SDBaseline(common.SingleDishTaskTemplate):
         #files = set()
         files_temp = {}
         plot_list = []
+        
+        # This is a dictionary for deviation mask that will be merged with top-level context
+        deviation_mask = collections.defaultdict(dict)
+
         for (group_id,group_desc) in reduction_group.items():
             LOG.debug('Processing Reduction Group %s'%(group_id))
             LOG.debug('Group Summary:')
@@ -162,7 +176,22 @@ class SDBaseline(common.SingleDishTaskTemplate):
             LOG.debug('Members to be processed:')
             for i in xrange(len(member_list)):
                 LOG.debug('\tAntenna %s Spw %s Pol %s'%(antenna_list[i], spwid_list[i], pols_list[i]))
-            
+                
+            # Deviation Mask 
+            if deviationmask:
+                LOG.info('Apply deviation mask to baseline fitting')
+                for (ant, spw) in zip(antenna_list, spwid_list):
+                    st = self.context.observing_run.get_scantable(ant)
+                    if st.spectral_window[spw].deviation_mask is None:
+                        LOG.debug('Evaluating deviation mask for %s spw %s'%(st.basename, spw))
+                        mask_list = self.evaluate_deviation_mask(st.name, spw)
+                        LOG.debug('deviation mask = %s'%(mask_list))
+                        st.spectral_window[spw].deviation_mask = mask_list
+                        deviation_mask[st.basename][spw] = mask_list
+            else:
+                LOG.info('Deviation mask is disabled by the user')
+                    
+            # Spectral Line Detection and Validation
             maskline_inputs = maskline.MaskLine.Inputs(context, iteration, antenna_list, spwid_list, 
                                                        pols_list, window, edge, broadline, clusteringalgorithm)
             maskline_task = maskline.MaskLine(maskline_inputs)
@@ -272,6 +301,7 @@ class SDBaseline(common.SingleDishTaskTemplate):
 
         outcome = {'baselined': baselined,
                    'edge': edge,
+                   'deviation_mask': deviation_mask,
                    'plots': plot_list}
         results = SDBaselineResults(task=self.__class__,
                                     success=True,
@@ -287,6 +317,14 @@ class SDBaseline(common.SingleDishTaskTemplate):
 
     def analyse(self, result):
         return result
+
+    def evaluate_deviation_mask(self, infile, spw):
+        """
+        Create deviation mask using MaskDeviation heuristic
+        """
+        h = MaskDeviationHeuristic()
+        mask_list = h.calculate(infile=infile, spw=spw)
+        return mask_list
 
     def _generate_storage_for_baselined(self, context, reduction_group):
         for antenna in xrange(len(context.observing_run)):

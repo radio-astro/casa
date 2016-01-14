@@ -380,3 +380,26 @@ svg {
   }
 }
 
+// styling for vertical table headers ========================================
+
+th.rotate {
+  white-space: nowrap;
+
+  &> div {
+    transform:
+      translate(17px, 5px)
+      rotate(90deg);
+    width: 0px;
+    direction: rtl;
+  }
+}
+
+// padding to allow clicked anchors to appear below the navbar ===============
+
+.jumptarget:before {
+  content:"";
+  display:block;
+  height: (@navbar-height + 10); /* fixed header height*/
+  margin: (-@navbar-height + -10) 0 0; /* negative fixed header height */
+}
+

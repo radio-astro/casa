@@ -69,6 +69,12 @@ class PipelineManifest(object):
 	"""
         eltree.SubElement (ous, "casa_cmdlog", name=casa_cmdlog)
 
+    def add_aqua_report (self, ous, aqua_report):
+	"""
+        Add the AQAUA report to the OUS element
+	"""
+        eltree.SubElement (ous, "aqua_report", name=aqua_report)
+
     def write (self, filename):
 	"""
         Convert the document to a nicely formatted XML string

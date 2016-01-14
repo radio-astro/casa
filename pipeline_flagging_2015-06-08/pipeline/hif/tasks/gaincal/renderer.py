@@ -37,7 +37,12 @@ class T2_4MDetailsGaincalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         diagnostic_phase_vs_time_summaries = {}
         diagnostic_amp_vs_time_details = {}
         diagnostic_phase_vs_time_details = {}
-        
+        amp_vs_time_subpages = {}
+        phase_vs_time_subpages = {}
+        diagnostic_amp_vs_time_subpages = {}
+        diagnostic_phase_vs_time_subpages = {}
+
+
         for result in results:
             vis = os.path.basename(result.inputs['vis'])
             ms = context.observing_run.get_ms(vis)
@@ -85,7 +90,8 @@ class T2_4MDetailsGaincalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 renderer = GaincalPhaseVsTimePlotRenderer(context, result, 
                                                           phase_vs_time_details[vis])
                 with renderer.get_file() as fileobj:
-                    fileobj.write(renderer.render())        
+                    fileobj.write(renderer.render())
+                    phase_vs_time_subpages[vis] = renderer.path
 
                 # amp vs time plots
                 plotter = gaincal_displays.GaincalAmpVsTimeDetailChart(context, result,
@@ -95,6 +101,7 @@ class T2_4MDetailsGaincalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                                                         amp_vs_time_details[vis])
                 with renderer.get_file() as fileobj:
                     fileobj.write(renderer.render())        
+                    amp_vs_time_subpages[vis] = renderer.path
 
                 # phase vs time for solint=int
                 plotter = gaincal_displays.GaincalPhaseVsTimeDetailChart(context, result,
@@ -104,6 +111,7 @@ class T2_4MDetailsGaincalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                         result, diagnostic_phase_vs_time_details[vis])
                 with renderer.get_file() as fileobj:
                     fileobj.write(renderer.render())        
+                    diagnostic_phase_vs_time_subpages[vis] = renderer.path
 
                 # amp vs time plots for solint=int
                 calapps = result.calampresult.final
@@ -114,6 +122,8 @@ class T2_4MDetailsGaincalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                         result, diagnostic_amp_vs_time_details[vis])
                 with renderer.get_file() as fileobj:
                     fileobj.write(renderer.render())        
+                    diagnostic_amp_vs_time_subpages[vis] = renderer.path
+
 
             # get the first scan for the PHASE intent(s)
 #             first_phase_scan = ms.get_scans(scan_intent='PHASE')[0]
@@ -122,17 +132,38 @@ class T2_4MDetailsGaincalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 #                       'plots' % first_phase_scan.id)
 #             structure_summary_plots[vis] = [p for p in structure_plots
 #                                             if scan_id in set(p.parameters['scan'].split(','))]
-            
+
+        # render plots for all EBs in one page
+        for d, plotter_cls, subpages in (
+                (amp_vs_time_details, GaincalAmpVsTimePlotRenderer, amp_vs_time_subpages),
+                (phase_vs_time_details, GaincalPhaseVsTimePlotRenderer, phase_vs_time_subpages),
+                (diagnostic_amp_vs_time_details, GaincalAmpVsTimeDiagnosticPlotRenderer, diagnostic_amp_vs_time_subpages),
+                (diagnostic_phase_vs_time_details, GaincalPhaseVsTimeDiagnosticPlotRenderer, diagnostic_phase_vs_time_subpages)):
+            if d:
+                all_plots = list(utils.flatten([v for v in d.values()]))
+                renderer = plotter_cls(context, results, all_plots)
+                with renderer.get_file() as fileobj:
+                    fileobj.write(renderer.render())
+                    # redirect subpage links to master page
+                    for vis in subpages:
+                        subpages[vis] = renderer.path
+
         # add the PlotGroups to the Mako context. The Mako template will parse
         # these objects in order to create links to the thumbnail pages we
         # just created
-        ctx.update({'applications'        : applications,
-                    'structure_plots'     : structure_plots,
-                    'amp_vs_time_plots'   : amp_vs_time_summaries,
-                    'phase_vs_time_plots' : phase_vs_time_summaries,
-                    'diagnostic_amp_vs_time_plots'   : diagnostic_amp_vs_time_summaries,
-                    'diagnostic_phase_vs_time_plots' : diagnostic_phase_vs_time_summaries})
-    
+        ctx.update({
+            'applications': applications,
+            'structure_plots': structure_plots,
+            'amp_vs_time_plots': amp_vs_time_summaries,
+            'phase_vs_time_plots': phase_vs_time_summaries,
+            'diagnostic_amp_vs_time_plots': diagnostic_amp_vs_time_summaries,
+            'diagnostic_phase_vs_time_plots': diagnostic_phase_vs_time_summaries,
+            'amp_vs_time_subpages': amp_vs_time_subpages,
+            'phase_vs_time_subpages': phase_vs_time_subpages,
+            'diagnostic_amp_vs_time_subpages': diagnostic_amp_vs_time_subpages,
+            'diagnostic_phase_vs_time_subpages': diagnostic_phase_vs_time_subpages
+        })
+
     def get_gaincal_applications(self, context, result, ms):
         applications = []
         
@@ -172,37 +203,44 @@ class T2_4MDetailsGaincalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
 class GaincalPhaseVsTimePlotRenderer(basetemplates.JsonPlotRenderer):
     def __init__(self, context, result, plots):
-        vis = os.path.basename(result.inputs['vis'])
+        vis = utils.get_vis_from_plots(plots)
+
         title = 'Phase vs time for %s' % vis
         outfile = filenamer.sanitize('phase_vs_time-%s.html' % vis)
-        
+
         super(GaincalPhaseVsTimePlotRenderer, self).__init__(
-                'generic_x_vs_y_spw_ant_plots.mako', context, 
-                result, plots, title, outfile)
+                'generic_x_vs_y_spw_ant_plots.mako', context, result, plots, title, outfile)
 
 
 class GaincalPhaseVsTimeDiagnosticPlotRenderer(basetemplates.JsonPlotRenderer):
-    def __init__(self, context, result, plots):
-        vis = os.path.basename(result.inputs['vis'])
+    def __init__(self, context, results, plots):
+        vis = utils.get_vis_from_plots(plots)
+
         title = 'Phase vs time for %s' % vis
         outfile = filenamer.sanitize('diagnostic_phase_vs_time-%s.html' % vis)
 
+        if not isinstance(results, list):
+            results = [results]
+
         # collect QA results generated for this vis
-        self._qa_data = [v for k, v in result.qa.qa_results_dict.items()
-                         if vis in k]
-        
+        self._qa_data = {}
+        for result in results:
+            b = os.path.basename(result.inputs['vis'])
+            self._qa_data[b] = [v for k, v in result.qa.qa_results_dict.items()
+                                if b in k]
+
         self._score_types = frozenset(['PHASE_SCORE_XY', 'PHASE_SCORE_X2X1'])
                 
         super(GaincalPhaseVsTimeDiagnosticPlotRenderer, self).__init__(
-                'diagnostic_phase_vs_time_plots.mako', context, result, plots,
+                'diagnostic_phase_vs_time_plots.mako', context, results, plots,
                 title, outfile)        
 
     def update_json_dict(self, json_dict, plot):
         ant_name = plot.parameters['ant']
         spw_id = plot.parameters['spw']
 
-        scores_dict = {}        
-        for qa_data in self._qa_data:
+        scores_dict = {}
+        for qa_data in self._qa_data[plot.parameters['vis']]:
             antenna_ids = dict((v, k) for (k, v) in qa_data['QASCORES']['ANTENNAS'].items())
             ant_id = antenna_ids[ant_name]
 
@@ -241,7 +279,8 @@ class GaincalPhaseVsTimeDiagnosticPlotRenderer(basetemplates.JsonPlotRenderer):
 
 class GaincalAmpVsTimePlotRenderer(basetemplates.JsonPlotRenderer):
     def __init__(self, context, result, plots):
-        vis = os.path.basename(result.inputs['vis'])
+        vis = utils.get_vis_from_plots(plots)
+
         title = 'Amplitude vs time for %s' % vis
         outfile = filenamer.sanitize('amp_vs_time-%s.html' % vis)
         
@@ -252,7 +291,8 @@ class GaincalAmpVsTimePlotRenderer(basetemplates.JsonPlotRenderer):
 
 class GaincalAmpVsTimeDiagnosticPlotRenderer(basetemplates.JsonPlotRenderer):
     def __init__(self, context, result, plots):
-        vis = os.path.basename(result.inputs['vis'])
+        vis = utils.get_vis_from_plots(plots)
+
         title = 'Amplitude vs time for %s' % vis
         outfile = filenamer.sanitize('diagnostic_amp_vs_time-%s.html' % vis)
         

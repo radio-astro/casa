@@ -392,7 +392,7 @@ class VLASetjy(basetask.StandardTaskTemplate):
         
         standard_source_names, standard_source_fields = standard_sources(self.inputs.vis)
         context = self.inputs.context
-        m = context.observing_run.measurement_sets[0]
+        m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         #field_spws = context.evla['msinfo'][m.name].field_spws
         field_spws = m.get_vla_field_spws()
         #spw2band = context.evla['msinfo'][m.name].spw2band

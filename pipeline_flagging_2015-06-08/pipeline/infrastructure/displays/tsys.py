@@ -11,7 +11,7 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class TsysSummaryChart(object):
-    def __init__(self, context, result):
+    def __init__(self, context, result, **kwargs):
         calto = result.final[0]
         self._vis = calto.vis
         self._vis_basename = os.path.basename(self._vis)
@@ -44,6 +44,8 @@ class TsysSummaryChart(object):
         self._real_figfiles = dict((tsys_spw, '%s.spw%0.2d%s' % (root, tsys_spw, ext))
                                    for tsys_spw in self._tsysmap)
 
+        self._kwargs = kwargs
+
 
     def create_task(self):
         unique_tsys_spws = set(self._spwmap.values())
@@ -61,6 +63,7 @@ class TsysSummaryChart(object):
                      'chanrange'   : '90%',  # CAS-7011
                      'subplot'     : 11,
                      'figfile'     : self._figroot}
+        task_args.update(self._kwargs)
 
         return casa_tasks.plotbandpass(**task_args)
 
@@ -98,9 +101,8 @@ class TsysSummaryChart(object):
 class TsysPerAntennaChart(common.PlotbandpassDetailBase):
     def __init__(self, context, result, **kwargs):
         super(TsysPerAntennaChart, self).__init__(context, result, 'freq',
-                                                   'tsys', overlay='time',
-                                                   showatm=True, showfdm=True,
-                                                   **kwargs)
+                'tsys', overlay='time', showatm=True, showfdm=True,
+                chanrange='90%', **kwargs)
 
         # create a mapping of Tsys windows to science windows
         calto = result.final[0]
@@ -159,11 +161,3 @@ class TsysPerAntennaChart(common.PlotbandpassDetailBase):
                               '%s antenna %s: %s not found', 
                               self._vis_basename, spw_id, ant_name, figfile)
         return wrappers
-
-
-def get_chanrange(ms, tsys_spw):
-    # CAS-7011: scale Tsys plots to show the inner 90% of channels
-    num_tsys_channels = ms.get_spectral_window(tsys_spw).num_channels
-    delta = int(round(0.05 * num_tsys_channels)) - 1
-    chanrange = '%s~%s' % (delta, num_tsys_channels - delta)
-    return chanrange

@@ -56,7 +56,7 @@ Compute clean results from a list of specified targets.
        <allowed kind="enum">
          <value></value>
          <value>none</value>
-         <value>centralquarter</value>
+         <value>centralregion</value>
          <value>psf</value>
          <value>psfiter</value>
        </allowed>
@@ -145,7 +145,7 @@ Compute clean results from a list of specified targets.
       </equals>
       <equals value="none">
       </equals>
-      <equals value="centralquarter">
+      <equals value="centralregion">
       </equals>
       <equals value="psf">
       </equals>

@@ -73,6 +73,14 @@ class AzElChart(object):
         self.ms = ms
         self.figfile = self._get_figfile()
 
+        # Plot the first channel for all the science spws.
+        self.spwlist = ''
+        for spw in ms.get_spectral_windows(science_windows_only=True):
+            if self.spwlist == '':
+                self.spwlist = self.spwlist + '%d:0~0' % spw.id
+            else:
+                self.spwlist = self.spwlist + ',%d:0~0' % spw.id
+
     def plot(self):
         if DISABLE_PLOTMS:
             LOG.debug('Disabling AzEl plot due to problems with plotms')
@@ -87,6 +95,7 @@ class AzElChart(object):
                      'avgchannel'      : '9000',
                      'avgtime'         : '10s',
                      'antenna'         : '0&&*',
+                     'spw'             : self.spwlist,
                      'plotfile'        : self.figfile,
                      'clearplots'      : True,
                      'showgui'         : False}
@@ -126,8 +135,11 @@ class WeatherChart(object):
             return self._get_plot_object()
 
         LOG.debug('Creating new Weather plot')
-        analysis_scripts.analysisUtils.plotWeather(vis=self.ms.name,
-                                                   figfile=self.figfile)
+        try:
+            analysis_scripts.analysisUtils.plotWeather(vis=self.ms.name,
+                                                       figfile=self.figfile)
+        except:
+            return None
 
         # plot weather does not close the plot! work around that here rather
         # than editing the code as we might lose the fix (again..)
@@ -167,6 +179,14 @@ class ElVsTimeChart(object):
         self.ms = ms
         self.figfile = self._get_figfile()
 
+        # Plot the first channel for all the science spws.
+        self.spwlist = ''
+        for spw in ms.get_spectral_windows(science_windows_only=True):
+            if self.spwlist == '':
+                self.spwlist = self.spwlist + '%d:0~0' % spw.id
+            else:
+                self.spwlist = self.spwlist + ',%d:0~0' % spw.id
+
     def plot(self):
         if DISABLE_PLOTMS:
             LOG.debug('Disabling ElVsTime plot due to problems with plotms')
@@ -181,6 +201,7 @@ class ElVsTimeChart(object):
                      'avgchannel'      : '9000',
                      'avgtime'         : '10s',
                      'antenna'         : '0&&*',
+                     'spw'             : self.spwlist,
                      'plotfile'        : self.figfile,
                      'clearplots'      : True,
                      'showgui'         : False}
@@ -232,6 +253,7 @@ class FieldVsTimeChart(object):
     _intent_colours = {'AMPLITUDE'  : 'green',
                        'ATMOSPHERE' : 'magenta',
                        'BANDPASS'   : 'red',
+                       'CHECK'      : 'purple',
                        'PHASE'      : 'cyan',
                        'POINTING'   : 'yellow',
                        'SIDEBAND'   : 'orange',
@@ -407,14 +429,15 @@ class IntentVsTimeChartInputs(basetask.StandardInputs):
 class IntentVsTimeChart(object):
     Inputs = IntentVsTimeChartInputs
 
-    _intent_colours = {'AMPLITUDE'  : ('green', 15),
-                       'ATMOSPHERE' : ('magenta', 20),
-                       'BANDPASS'   : ('red', 10),
+    _intent_colours = {'AMPLITUDE'  : ('green', 20),
+                       'ATMOSPHERE' : ('magenta', 25),
+                       'BANDPASS'   : ('red', 15),
+                       'CHECK'      : ('purple',10),
                        'PHASE'      : ('cyan', 5),
-                       'POINTING'   : ('yellow', 25),
-                       'SIDEBAND'   : ('orange', 30),
+                       'POINTING'   : ('yellow', 30),
+                       'SIDEBAND'   : ('orange', 35),
                        'TARGET'     : ('blue', 0),
-                       'WVR'        : ('lime', 35)}
+                       'WVR'        : ('lime', 40)}
     
     def __init__(self, inputs):
         self.inputs = inputs
@@ -444,8 +467,8 @@ class IntentVsTimeChart(object):
                 ax.annotate('%s' % scan.id, (scan_start, scan_y+6))
     
         ax.set_ylim(0, 42.5)
-        ax.set_yticks([2.5,7.5,12.5,17.5,22.5,27.5,32.5,37.5])
-        ax.set_yticklabels(['SCIENCE', 'PHASE', 'BANDPASS', 'AMPLITUDE',
+        ax.set_yticks([2.5,7.5,12.5,17.5,22.5,27.5,32.5,37.5,42.5])
+        ax.set_yticklabels(['SCIENCE', 'PHASE', 'CHECK', 'BANDPASS', 'AMPLITUDE',
           'ATMOSPHERE', 'POINTING', 'SIDEBAND', 'WVR'])
 
         # set the labelling of the time axis

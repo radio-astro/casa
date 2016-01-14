@@ -15,6 +15,7 @@ import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.mpihelpers as mpihelpers
 import pipeline.infrastructure.utils as utils
 from pipeline.infrastructure import casa_tasks
+import pipeline.domain.measures as measures
 
 from .resultobjects import TcleanResult
 from pipeline.hif.heuristics import makeimlist
@@ -129,59 +130,9 @@ class CleanBase(basetask.StandardTaskTemplate):
         if type(inputs.vis) is not types.ListType:
             inputs.vis = [inputs.vis]
 
-        # Instantiate the clean list heuristics class
-        clheuristics = makeimlist.MakeImListHeuristics(context=inputs.context,
-                                                       vislist=inputs.vis,
-                                                       spw=inputs.spw,
-                                                       contfile=context.contfile,
-                                                       linesfile=context.linesfile)
-
-        # Generate the image name if one is not supplied.
-        if inputs.imagename == '':
-            inputs.imagename = clheuristics.imagename(intent=inputs.intent,
-                                                      field=inputs.field,
-                                                      spwspec=inputs.spw)
-
-        # Determine the default gridder
-        if inputs.gridder == '':
-            inputs.gridder = clheuristics.gridder(inputs.intent, inputs.field)
-
-        # Determine the default deconvolver
-        if inputs.deconvolver == '':
-            inputs.deconvolver = clheuristics.deconvolver(inputs.intent,
-                                                          inputs.field)
-
-        # Determine the phase center.
-        if inputs.phasecenter == '':
-            field_id = clheuristics.field(inputs.intent, inputs.field)
-            inputs.phasecenter = clheuristics.phasecenter(field_id)
-
-        # Get short cut specs of field to be cleaned. Are these really needed?
-        intent = inputs.intent
-        field = inputs.field
-        spw = inputs.spw
-
-        # Adjust the width to get around problems with increasing / decreasing
-        # frequency with channel issues.
-        if inputs.width == '':
-            if inputs.specmode == 'cube':
-                width = clheuristics.width(int(spw.split(',')[0]))
-                #width = inputs.width
-            else:
-                width = inputs.width
-        else:
-            width = inputs.width
-        inputs.width = width
-
-        if inputs.stokes == 'Q':
-            ncorr = clheuristics.ncorr(int(spw.split(',')[0]))
-            if ncorr <= 1:
-                LOG.warning('%s/%s/spw%s Q noise estimate invalid ncorrelation'
-                            ' is %s' %(field, intent, spw, ncorr))
-
         # Construct regex for string matching - escape likely problem
         # chars. Simpler way to do this ?
-        re_field = field.replace('*', '.*')
+        re_field = inputs.field.replace('*', '.*')
         re_field = re_field.replace('[', '\[')
         re_field = re_field.replace(']', '\]')
         re_field = re_field.replace('(', '\(')
@@ -189,7 +140,7 @@ class CleanBase(basetask.StandardTaskTemplate):
         re_field = re_field.replace('+', '\+')
 
         # Use scanids to select data with the specified intent
-        # Not CASA clean now supports intent selectin but leave
+        # Note CASA clean now supports intent selectin but leave
         # this logic in place and use it to eliminate vis that
         # don't contain the requested data.
         scanidlist = []
@@ -197,7 +148,7 @@ class CleanBase(basetask.StandardTaskTemplate):
         for vis in inputs.vis:
             ms = inputs.context.observing_run.get_ms(name=vis)
             scanids = [scan.id for scan in ms.scans if
-                       intent in scan.intents and
+                       inputs.intent in scan.intents and
                        re.search(pattern=re_field, string=str(scan.fields))]
             if not scanids:
                 continue
@@ -207,27 +158,6 @@ class CleanBase(basetask.StandardTaskTemplate):
             scanidlist.append(scanids)
             vislist.append(vis)
         inputs.vis=vislist
-
-        # If imsize not set then use heuristic code to calculate the
-        # centers for each field  / spw
-        imsize = inputs.imsize
-        cell = inputs.cell
-        if imsize == [] or cell == []:
-
-            # The heuristics cell size  is always the same for x and y as
-            # the value derives from a single value returned by imager.advise
-            cell, beam = clheuristics.cell(field_intent_list=[(field, intent)],
-                                           spwspec=spw)
-            if inputs.cell == []:
-                inputs.cell = cell
-                LOG.info('Heuristic cell: %s' % cell)
-
-            field_ids = clheuristics.field(intent, field)
-            imsize = clheuristics.imsize(fields=field_ids,
-                                         cell=inputs.cell, beam=beam)
-            if inputs.imsize == []:
-                inputs.imsize = imsize
-                LOG.info('Heuristic imsize: %s', imsize)
 
         # Initialize imaging results structure
         if not inputs.result:
@@ -245,7 +175,7 @@ class CleanBase(basetask.StandardTaskTemplate):
         try:
             result = self._do_clean_cycle (scanidlist, result, iter=inputs.iter)
         except Exception, e:
-            LOG.error('%s/%s/spw%s clean error: %s' % (field, intent, spw, str(e)))
+            LOG.error('%s/%s/spw%s clean error: %s' % (inputs.field, inputs.intent, inputs.spw, str(e)))
 
         return result
 
@@ -259,6 +189,7 @@ class CleanBase(basetask.StandardTaskTemplate):
         if scanidlist is None:
             scanidlist = []
 
+        context = self.inputs.context
         inputs = self.inputs
 
         #        LOG.info('Stokes %s' % (inputs.stokes))
@@ -293,32 +224,85 @@ class CleanBase(basetask.StandardTaskTemplate):
             pass
 
         spw_param_list = []
+        p = re.compile('([\d.]*)(~)([\d.]*)(\D*)')
+        freq_ranges = []
+        num_channels = []
+        # get spw info from first vis set, assume spws uniform
+        # across datasets
+        ms = context.observing_run.get_ms(name=inputs.vis[0])
         for spwid in inputs.spw.split(','):
+            spw_info = ms.get_spectral_window(spwid)
+            num_channels.append(spw_info.num_channels)
             if (inputs.spwsel.has_key('spw%s' % (spwid))):
-                spw_param_list.append('%s%s%s' % (spwid, ':'*(1 if inputs.spwsel['spw%s' % (spwid)] != '' else 0), inputs.spwsel['spw%s' % (spwid)]))
+                if (inputs.spwsel['spw%s' % (spwid)] != ''):
+                    spw_param_list.append('%s:%s' % (spwid, inputs.spwsel['spw%s' % (spwid)]))
+                    for freq_range in inputs.spwsel['spw%s' % (spwid)].split(';'):
+                        f1, sep, f2, unit = p.findall(freq_range)[0]
+                        freq_ranges.append((float(f1), float(f2)))
+                else:
+                    spw_param_list.append(spwid)
+                    min_frequency = float(spw_info.min_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
+                    max_frequency = float(spw_info.max_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
+                    freq_ranges.append((min_frequency, max_frequency))
             else:
                 spw_param_list.append(spwid)
+                min_frequency = float(spw_info.min_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
+                max_frequency = float(spw_info.max_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
+                freq_ranges.append((min_frequency, max_frequency))
+
         spw_param = ','.join(spw_param_list)
+        aggregate_bw = '0.0GHz'
+        for freq_range in utils.merge_ranges(freq_ranges):
+            aggregate_bw = casatools.quanta.add(aggregate_bw, casatools.quanta.sub('%sGHz' % (freq_range[1]), '%sGHz' % (freq_range[0])))
+
+        # Estimate memory usage and adjust chanchunks parameter to avoid
+        # exceeding the available memory.
+        mem_bytes = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')
+        mem_usable_bytes = 0.8 * mem_bytes
+        if (inputs.nchan != -1):
+            cube_bytes = inputs.imsize[0] * inputs.imsize[1] * inputs.nchan * 4
+        else:
+            cube_bytes = inputs.imsize[0] * inputs.imsize[1] * max(num_channels) * 4
+        tclean_bytes = 9 * cube_bytes
+        chanchunks = int(tclean_bytes / mem_usable_bytes) + 1
 
         parallel = all([mpihelpers.parse_mpi_input_parameter(inputs.parallel),
                         'TARGET' in inputs.intent])
 
-        job = casa_tasks.tclean(vis=inputs.vis, imagename='%s.%s.iter%s' %
-	    (os.path.basename(inputs.imagename), inputs.stokes, iter),
-            spw=spw_param,
-	    intent=utils.to_CASA_intent(inputs.ms[0], inputs.intent),
-            scan=scanidlist, specmode=inputs.specmode if inputs.specmode != 'cont' else 'mfs', gridder=inputs.gridder,
-            pblimit=inputs.pblimit, niter=inputs.niter,
-            threshold=inputs.threshold, deconvolver=inputs.deconvolver,
-	    interactive=False, outframe=inputs.outframe, nchan=inputs.nchan,
-            start=inputs.start, width=inputs.width, imsize=inputs.imsize,
-	    cell=inputs.cell, phasecenter=inputs.phasecenter,
-	    stokes=inputs.stokes,
-            weighting=inputs.weighting, robust=inputs.robust,
-            npixels=inputs.npixels,
-            restoringbeam=inputs.restoringbeam, uvrange=inputs.uvrange,
-            mask=inputs.mask, savemodel='none', nterms=2,
-            parallel=parallel)
+        if (result.multiterm):
+            job = casa_tasks.tclean(vis=inputs.vis, imagename='%s.%s.iter%s' %
+                  (os.path.basename(inputs.imagename), inputs.stokes, iter),
+                  spw=spw_param,
+                  intent=utils.to_CASA_intent(inputs.ms[0], inputs.intent),
+                  scan=scanidlist, specmode=inputs.specmode if inputs.specmode != 'cont' else 'mfs', gridder=inputs.gridder,
+                  pblimit=inputs.pblimit, niter=inputs.niter,
+                  threshold=inputs.threshold, deconvolver=inputs.deconvolver,
+                  interactive=False, outframe=inputs.outframe, nchan=inputs.nchan,
+                  start=inputs.start, width=inputs.width, imsize=inputs.imsize,
+                  cell=inputs.cell, phasecenter=inputs.phasecenter,
+                  stokes=inputs.stokes,
+                  weighting=inputs.weighting, robust=inputs.robust,
+                  npixels=inputs.npixels,
+                  restoringbeam=inputs.restoringbeam, uvrange=inputs.uvrange,
+                  mask=inputs.mask, savemodel='none', nterms=result.multiterm,
+                  chanchunks=chanchunks, parallel=parallel)
+        else:
+            job = casa_tasks.tclean(vis=inputs.vis, imagename='%s.%s.iter%s' %
+                  (os.path.basename(inputs.imagename), inputs.stokes, iter),
+                  spw=spw_param,
+                  intent=utils.to_CASA_intent(inputs.ms[0], inputs.intent),
+                  scan=scanidlist, specmode=inputs.specmode if inputs.specmode != 'cont' else 'mfs', gridder=inputs.gridder,
+                  pblimit=inputs.pblimit, niter=inputs.niter,
+                  threshold=inputs.threshold, deconvolver=inputs.deconvolver,
+                  interactive=False, outframe=inputs.outframe, nchan=inputs.nchan,
+                  start=inputs.start, width=inputs.width, imsize=inputs.imsize,
+                  cell=inputs.cell, phasecenter=inputs.phasecenter,
+                  stokes=inputs.stokes,
+                  weighting=inputs.weighting, robust=inputs.robust,
+                  npixels=inputs.npixels,
+                  restoringbeam=inputs.restoringbeam, uvrange=inputs.uvrange,
+                  mask=inputs.mask, savemodel='none',
+                  chanchunks=chanchunks, parallel=parallel)
         self._executor.execute(job)
 
         # Create PB for single fields since it is not auto-generated for
@@ -402,9 +386,10 @@ class CleanBase(basetask.StandardTaskTemplate):
                          type='cleanmask', iter=iter)
         result.set_cleanmask(iter=iter, image=inputs.mask)
 
-        # Keep threshold and sensitivity for QA
+        # Keep threshold, sensitivity and aggregate bandwidth for QA and weblog
         result.set_threshold(inputs.threshold)
         result.set_sensitivity(inputs.sensitivity)
+        result.set_aggregate_bw(aggregate_bw)
 
         return result
 
@@ -437,4 +422,3 @@ def set_miscinfo(name, spw=None, field=None, type=None, iter=None, multiterm=Non
             if iter is not None:
                 info['iter'] = iter
             image.setmiscinfo(info)
-

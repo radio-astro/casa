@@ -39,9 +39,15 @@ class TcleanResult(basetask.Results):
         self._model = None
         self._flux = None
         self.iterations = collections.defaultdict(dict)
+        self._aggregate_bw = 0.0
         self._sensitivity = 0.0
         self._threshold = 0.0
         self._rms = 0.0
+        # This should be automatic, but it does not yet work
+        self.pipeline_casa_task = 'Tclean'
+        # Dummy settings for the weblog renderer
+        self.results = [self]
+        self.targets = ['']
 
     def empty(self):
         return not(self._psf or self._model or self._flux or 
@@ -122,11 +128,11 @@ class TcleanResult(basetask.Results):
         self.iterations[iter]['residual'] = image
 
     @property
-    def threshold(self):
-        return self._threshold
+    def aggregate_bw(self):
+        return self._aggregate_bw
 
-    def set_threshold(self, threshold):
-        self._threshold = threshold
+    def set_aggregate_bw(self, aggregate_bw):
+        self._aggregate_bw = aggregate_bw
 
     @property
     def sensitivity(self):
@@ -134,6 +140,13 @@ class TcleanResult(basetask.Results):
 
     def set_sensitivity(self, sensitivity):
         self._sensitivity = sensitivity
+
+    @property
+    def threshold(self):
+        return self._threshold
+
+    def set_threshold(self, threshold):
+        self._threshold = threshold
 
     @property
     def rms(self):

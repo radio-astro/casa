@@ -66,7 +66,10 @@ and line free channels are used for baseline fitting. </p>
 The topmost panel in each plot is an integrated spectrum while a set of bottom panels shows a profile map. 
 Each panel in the profile map shows an individual spectrum that is located around panel's position. 
 Cyan regions shows detected line regions. The line regions in the top panel indicates a property of detected 
-cluster while the ones in the profile map are the result of line detection for the corresponding spectra.</p>
+cluster while the ones in the profile map are the result of line detection for the corresponding spectra.
+Horizontal red bars in the top panel shows the additional masks that corresponds to channels having large 
+deviation, which effectively are any spectral features including the ones not detected or validated in the 
+line detection stage.</p>
 
 <h2>Spectral Data Before Baseline Subtraction</h2>
 
@@ -92,8 +95,7 @@ cluster while the ones in the profile map are the result of line detection for t
 	                    <h4>
 	                        <a href="${os.path.join(dirname, sparsemap_subpage_before[field])}"
 	                           class="replace"
-	                           data-spw="${plot.parameters['spw']}"
-	                           data-ant="${plot.parameters['ant']}">
+	                           data-spw="${plot.parameters['spw']}">
 	                           Spectral Window ${plot.parameters['spw']}
 	                        </a>
 	                    </h4>
@@ -134,8 +136,7 @@ cluster while the ones in the profile map are the result of line detection for t
 	                    <h4>
 	                        <a href="${os.path.join(dirname, sparsemap_subpage_after[field])}"
 	                           class="replace"
-	                           data-spw="${plot.parameters['spw']}"
-	                           data-ant="${plot.parameters['ant']}">
+	                           data-spw="${plot.parameters['spw']}">
 	                           Spectral Window ${plot.parameters['spw']}
 	                        </a>
 	                    </h4>

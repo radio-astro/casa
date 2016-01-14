@@ -47,6 +47,12 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
+        <Command xmlns="">hifa_antpos</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
         <Command xmlns="">hifa_wvrgcalflag</Command>
         <ParameterSet>
         </ParameterSet>
@@ -54,6 +60,12 @@
 
     <ProcessingCommand>
         <Command xmlns="">hif_lowgainflag</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_gainflag</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
@@ -101,6 +113,12 @@
                 <Keyword xmlns="">intent</Keyword>
                 <Value xmlns="">PHASE,BANDPASS,CHECK</Value>
             </Parameter>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">breakpoint</Command>
+        <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
 

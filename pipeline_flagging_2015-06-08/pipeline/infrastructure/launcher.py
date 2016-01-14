@@ -24,7 +24,7 @@ LOG = logging.get_logger(__name__)
 
 
 # minimum allowed CASA revision. Set to 0 or None to disable
-MIN_CASA_REVISION = 34489
+MIN_CASA_REVISION = 35654
 # maximum allowed CASA revision. Set to 0 or None to disable
 MAX_CASA_REVISION = None
 
@@ -125,6 +125,8 @@ class Context(object):
         self.subtask_counter = 0
         self.results = []
         self.logs = {}
+        self.contfile = None
+        self.linesfile = None
 
         # domain depends on infrastructure.casatools, so infrastructure cannot
         # depend on domain hence the run-time import
@@ -282,7 +284,12 @@ class Pipeline(object):
         src = casatools.log.logfile()
         dst = os.path.join(report_dir, os.path.basename(src))
         if not os.path.exists(dst):
-            os.link(src, dst)
+            try:
+                os.link(src, dst)
+            except OSError:
+                LOG.error('Error creating hard link to CASA log')
+                LOG.warning('Reverting to symbolic link to CASA log. This is unsupported!')
+                os.symlink(src, dst)
 
         # the web log creates links to each casa log. The name of each CASA
         # log is appended to the context.

@@ -360,8 +360,9 @@ class PhaseOffsetPlot(object):
         wrapper = logger.Plot(figfile,
                               x_axis='scan',
                               y_axis='phase',
-                              parameters={'spw' : spw.id,
-                                          'ant' : antenna_names})
+                              parameters={'vis': self._ms.basename,
+                                          'spw': spw.id,
+                                          'ant': antenna_names})
         
         if plothelper.plot_per_antenna and len(antennas) is 1:
             wrapper.qa_score = self._score_retriever.get_score(spw, antennas[0])

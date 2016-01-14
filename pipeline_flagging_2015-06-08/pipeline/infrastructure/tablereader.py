@@ -147,7 +147,7 @@ class MeasurementSetReader(object):
                 continue
         
             # Expected format is something like ALMA_RB_03#BB_1#SW-01#FULL_RES
-            m = re.match(r'ALMA_RB_(?P<band>\d+)', spw.name)
+            m = re.search(r'ALMA_RB_(?P<band>\d+)', spw.name)
             if m:
                 band_str = m.groupdict()['band']
                 band_num = int(band_str)
@@ -364,7 +364,9 @@ class ObservationTable(object):
         schedblock_id = 'N/A'
         execblock_id = 'N/A'
 
-        if 'ALMA' in msmd.observatorynames():
+        obsnames = msmd.observatorynames()
+
+        if 'ALMA' in obsnames or 'VLA' in obsnames or 'EVLA' in obsnames:
             # TODO this would break if > 1 observation in an EB. Can that
             # ever happen?
             d = {}
@@ -374,6 +376,8 @@ class ObservationTable(object):
 
             schedblock_id = d.get('SchedulingBlock', 'N/A')
             execblock_id = d.get('ExecBlock', 'N/A')
+
+        
 
         return observer, project_id, schedblock_id, execblock_id
 

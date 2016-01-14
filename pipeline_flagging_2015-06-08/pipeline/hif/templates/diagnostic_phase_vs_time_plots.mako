@@ -2,7 +2,7 @@
 rsc_path = ""
 import collections
 
-SELECTORS = ['spw', 'ant']
+SELECTORS = ['vis', 'spw', 'ant']
 
 HISTOGRAM_LABELS = collections.OrderedDict([
 	('PHASE_SCORE_XY', 'X-Y phase deviation'),
@@ -20,17 +20,27 @@ def get_score_text(plot):
 %>
 <%inherit file="detail_plots_basetemplate.mako"/>
 
+<%
+    multi_vis = len({p.parameters['vis'] for p in plots}) > 1
+%>
+
 <%self:render_plots plots="${sorted(plots, key=lambda p: p.parameters['ant'])}">
 
 	<%def name="mouseover(plot)">${plot.parameters['ant']} spw ${plot.parameters['spw']}; ${get_score_text(plot)}</%def>
 
 	<%def name="fancybox_caption(plot)">
+        % if multi_vis:
+        ${plot.parameters['vis']}<br>
+        % endif
 		Antenna: ${plot.parameters['ant']}<br>
 		Spectral Window: ${plot.parameters['spw']}<br>
 		Scores: ${get_score_text(plot)}
 	</%def>
 
 	<%def name="caption_text(plot)">
+        % if multi_vis:
+        ${plot.parameters['vis']}<br>
+        % endif
 		${plot.parameters['ant']}<br>
 		Spw ${plot.parameters['spw']}<br>
 	</%def>

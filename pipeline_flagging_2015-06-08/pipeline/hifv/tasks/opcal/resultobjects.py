@@ -1,5 +1,4 @@
 from __future__ import absolute_import
-import os
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -32,10 +31,9 @@ class OpcalResults(basetask.Results):
             context.callibrary.add(calapp.calto, calapp.calfrom)
 
     def __repr__(self):
-
-	# Format the Tsyscal results.
+        # Format the Tsyscal results.
         s = 'OpcalResults:\n'
         for calapplication in self.final:
             s += '\tOpacities caltable written to {name}\n'.format(
                     name=calapplication.gaintable)
-	return s
+        return s

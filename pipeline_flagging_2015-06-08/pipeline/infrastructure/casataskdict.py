@@ -18,6 +18,7 @@ CasaTaskDict = {
                    'hif_findcont'          : 'FindCont',
                    'hif_flagcorrected'     : 'Flagcorrected',
                    'hif_gaincal'           : 'Gaincal',
+                   'hif_gainflag'          : 'Gainflag',
                    'hif_lowgainflag'       : 'Lowgainflag',
                    'hif_importdata'        : 'ImportData',
 		   'hif_makecleanlist'     : 'MakeCleanList', 
@@ -26,6 +27,7 @@ CasaTaskDict = {
                    'hif_refant'            : 'RefAnt',
 		   'hif_restoredata'       : 'RestoreData',
                    'hif_setjy'             : 'Setjy',
+                   'hif_setmodels'         : 'SetModels',
 		   'hif_tclean'            : 'Tclean', 
                    'hsd_calsky'            : 'SDCalSky',
                    'hsd_caltsys'           : 'SDCalTsys',
@@ -77,7 +79,8 @@ CasaTaskDict = {
                    'hifv_finalcals'        : 'Finalcals',
                    'hifv_applycals'        : 'Applycals',
                    'hifv_targetflag'       : 'Targetflag',
-                   'hifv_statwt'           : 'Statwt'
+                   'hifv_statwt'           : 'Statwt',
+                   'hifv_plotsummary'      : 'PlotSummary'
                }
 
 
@@ -116,6 +119,7 @@ classToCASATask = {
     hif_tasks.Fluxcal                 : 'hif_fluxcal',
     hif_tasks.Fluxscale               : 'hif_fluxscale',
     hif_tasks.Gaincal                 : 'hif_gaincal',
+    hif_tasks.Gainflag                : 'hif_gainflag',
     hif_tasks.ImportData              : 'hif_importdata',
     hif_tasks.Lowgainflag             : 'hif_lowgainflag',
     hif_tasks.MakeCleanList           : 'hif_makecleanlist',
@@ -124,6 +128,7 @@ classToCASATask = {
     hif_tasks.RefAnt                  : 'hif_refant',
     hif_tasks.RestoreData             : 'hif_restoredata',
     hif_tasks.Setjy                   : 'hif_setjy',
+    hif_tasks.SetModels               : 'hif_setmodels',
     hif_tasks.Tclean                  : 'hif_tclean',
     # Single dish tasks ------------------------------------------------------
     hsd_tasks.SDCalSky                : 'hsd_calsky',
@@ -160,7 +165,8 @@ classToCASATask = {
     hifv_tasks.Finalcals              : 'hifv_finalcals',
     hifv_tasks.Applycals              : 'hifv_applycals',
     hifv_tasks.Targetflag             : 'hifv_targetflag',
-    hifv_tasks.Statwt                 : 'hifv_statwt' 
+    hifv_tasks.Statwt                 : 'hifv_statwt',
+    hifv_tasks.PlotSummary            : 'hifv_plotsummary'
 }
 
 
@@ -238,6 +244,16 @@ TASK_COMMENTS = {
         'is used to calculate a short solint phase and long solint amplitude '
         'solution.'
     ),
+    (hif_tasks.Gainflag,): (
+        'Sometimes antennas have significantly lower gain than nominal and/or'
+        'have a significantly larger spread in gain than nominal. Even '
+        'when calibrated, it is better for ALMA data to flag these antennas. '
+        'The pipeline detects this by calculating a short solint amplitude '
+        'gain on the bandpass calibrator.  First, temporary phase and '
+        'bandpass solutions are calculated, and then that temporary bandpass '
+        'is used to calculate a short solint phase and short solint amplitude '
+        'solution.'
+    ),
     (hif_tasks.Setjy,) : (
         'If the amplitude calibrator is a resolved solar system source, this '
         'uses a subset of antennas with short baselines (where the resolved '
@@ -269,6 +285,9 @@ TASK_COMMENTS = {
     ),
     (hif_tasks.CleanList, hif_tasks.MakeImages) : (
         'A list of target sources is cleaned. '
+    ),
+    (hif_tasks.Clean, hif_tasks.Tclean) : (
+        'A single target source is cleaned. '
     ),
     (hif_tasks.ExportData,) : (
         'The output data products are computed. '

@@ -33,8 +33,8 @@ class WvrgcalInputs(basetask.StandardInputs):
                  hm_toffset=None, toffset=None, segsource=None, hm_tie=None,
                  tie=None, sourceflag=None, nsol=None, disperse=None, 
                  wvrflag=None, hm_smooth=None, smooth=None, scale=None, 
-                 maxdistm=None, minnumants=None, mingoodfrac=None,
-		 qa_intent=None, qa_bandpass_intent=None, qa_spw=None,
+                 maxdistm=None, minnumants=None, mingoodfrac=None, refant=None,
+                 qa_intent=None, qa_bandpass_intent=None, qa_spw=None,
 		 accept_threshold=None, bandpass_result=None,
 		 nowvr_result=None):
         self._init_properties(vars())
@@ -130,6 +130,16 @@ class WvrgcalInputs(basetask.StandardInputs):
         self._nsol = value
 
     @property
+    def refant(self):
+        if self._refant is None:
+            return ''
+        return self._refant
+
+    @refant.setter
+    def refant(self, value):
+        self._refant = value
+
+    @property
     def qa_bandpass_intent(self):
         if type(self.vis) is types.ListType:
             return self._handle_multiple_vis('qa_bandpass_intent')
@@ -193,7 +203,7 @@ class WvrgcalInputs(basetask.StandardInputs):
     @smooth.setter
     def smooth(self, value):
         if value is None:
-            value = '1s'
+            value = ''
         self._smooth = value
 
     @property
@@ -309,10 +319,23 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         maxdistm = inputs.maxdistm
         minnumants = inputs.minnumants
         mingoodfrac = inputs.mingoodfrac
+
+        ms = inputs.context.observing_run.get_ms(name=inputs.vis)
+
+        # Set the reference antenna
+        refant = inputs.refant
+        if refant == '':
+            refant = ms.reference_antenna
+            if not (refant and refant.strip()):
+                msg = ('No reference antenna specified and none found in '
+                       'context for %s' % ms.basename)
+                LOG.error(msg)
+                refant = []
+            else:
+                refant = refant.split(',')
         
         # smooth may vary with spectral window so need to ensure we calculate
         # results that can cover them all
-        ms = inputs.context.observing_run.get_ms(name=inputs.vis)
         science_spws = ms.get_spectral_windows(science_windows_only=True)
         science_spwids = [spw.id for spw in science_spws]
         wvr_spwids = sorted([spw.id for spw in ms.spectral_windows if \
@@ -351,7 +374,7 @@ class Wvrgcal(basetask.StandardTaskTemplate):
                                           minnumants=minnumants,
                                           mingoodfrac=mingoodfrac,
 					  spw=science_spwids,
-					  wvrspw=[wvr_spwids[0]])
+					  wvrspw=[wvr_spwids[0]], refant=refant)
                 jobs.append(task)
                 
                 smooths_done.add(smooth)

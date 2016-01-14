@@ -8,7 +8,6 @@
 # imports
 import sys
 import string
-#import inspect
 import traceback
 import os
 import gc
@@ -27,20 +26,33 @@ except Exception, e:
     default__rethrow_casa_exceptions = False
 __rethrow_casa_exceptions=True
 
-# Setup path
-# Should not need this anymore
-#sys.path.insert (0, os.path.expandvars("$SCIPIPE_HEURISTICS"))
 
-def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
-    plotlevel='default', interactive=True):
+def executeppr (pprXmlFile, importonly=True, breakpoint='breakpoint',
+    bpaction='ignore', loglevel='info', plotlevel='default',
+    interactive=True):
 
     # Useful mode parameters
     echo_to_screen = interactive
 
     try:
+        casatools.post_to_log ("Analyzing pipeline processing request ...", 
+            echo_to_screen=echo_to_screen)
         # Decode the processing request
         info, structure, relativePath, intentsDict, asdmList, procedureName, commandsList = \
             _getFirstRequest (pprXmlFile)
+
+        # Check for the breakpoint
+        bpset = False
+        if breakpoint != '':
+            for command in commandsList:
+                if command[0] == breakpoint:
+                    casatools.post_to_log ("    Found break point: " + breakpoint,
+                        echo_to_screen=echo_to_screen)
+                    casatools.post_to_log ("    Break point action is: " + bpaction,
+                        echo_to_screen=echo_to_screen)
+                    bpset = True
+                    break
+
 
 	# Set the directories
         workingDir = os.path.join (os.path.expandvars("$SCIPIPE_ROOTDIR"),
@@ -49,8 +61,16 @@ def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
             relativePath, "rawdata")
 
         # Get the pipeline context 
-        context = pipeline.Pipeline(loglevel=loglevel, plotlevel=plotlevel,
-	    output_dir=workingDir).context
+        #     Resumes from the last context. Consider adding name
+        if bpset and bpaction == 'resume':
+            context = pipeline.Pipeline(context='last').context
+            casatools.post_to_log ("    Resuming from last context",
+                echo_to_screen=echo_to_screen)
+        else:
+            context = pipeline.Pipeline(loglevel=loglevel, plotlevel=plotlevel,
+	        output_dir=workingDir).context
+            casatools.post_to_log ("    Creating new pipeline context",
+                echo_to_screen=echo_to_screen)
 
     except Exception, e:
         casatools.post_to_log ("Beginning pipeline run ...", 
@@ -122,7 +142,6 @@ def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
 	ppr_file=pprXmlFile)
 
     # Create performance parameters object
-    #context.project_performance_parameters = project.PerformanceParameters()
     context.project_performance_parameters = _getPerformanceParameters(intentsDict)
 
     # Get the session info from the intents dictionary
@@ -166,12 +185,45 @@ def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
         echo_to_screen=echo_to_screen)
 
     # Loop over the commands
+    foundbp = False
     for command in commandsList:
 
 	# Get task name and arguments lists.
         taskname = command[0]
         task_args = command[1]
 	casatools.set_log_origin(fromwhere=taskname)
+
+        # Handle break point if one is set
+        if bpset:
+            # Found the break point
+            #    Set the found flag
+            #    Ignore it  or
+            #    Break the loop or
+            #    Resume execution
+            if taskname == breakpoint:
+                foundbp = True
+                if bpaction == 'ignore':
+		    casatools.post_to_log(
+		    "Ignoring breakpoint " + taskname,
+                        echo_to_screen=echo_to_screen)
+                    continue
+                elif bpaction == 'break':
+                    casatools.post_to_log(
+		        "Terminating execution at breakpoint " + taskname,
+		        echo_to_screen=echo_to_screen)
+	            break
+                elif bpaction == 'resume':
+		    casatools.post_to_log(
+		        "Resuming execution after breakpoint " + taskname,
+		        echo_to_screen=echo_to_screen)
+                    continue
+            # Not the break point so check the resume case
+            elif not foundbp and bpaction == 'resume':
+	        casatools.post_to_log("Skipping task " + taskname,
+	            echo_to_screen=echo_to_screen)
+                continue
+
+        # Execute
         casatools.post_to_log ("Executing command ..." + \
 	    taskname, echo_to_screen=echo_to_screen)
 
@@ -204,7 +256,7 @@ def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
 	    #inputs = cInputs (context, **command[1])
 	    cTask = pipeline.tasks.__dict__[taskname]
 	    task = cTask(inputs)
-	    results = task.execute (dry_run=dry_run)
+	    results = task.execute (dry_run=False)
 	    casatools.post_to_log('Results ' + str(results),
 		echo_to_screen=echo_to_screen)
 	    try:
@@ -241,7 +293,6 @@ def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
                 break
 
 	except Exception, e:
-	    #traceback.print_exc(file=sys.stdout)
 	    errstr=traceback.format_exc()
             casatools.post_to_log (errstr,
 	        echo_to_screen=echo_to_screen)

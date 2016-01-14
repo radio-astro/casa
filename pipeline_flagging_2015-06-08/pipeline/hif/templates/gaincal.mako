@@ -14,22 +14,6 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 
 <script>
 $(document).ready(function() {
-    // return a function that sets the SPW text field to the given spw
-    var createSpwSetter = function(spw) {
-        return function() {
-            // trigger a change event, otherwise the filters are not changed
-            $("#select-spw").select2("val", [spw]).trigger("change");
-        };
-    };
-
-    // create a callback function for each overview plot that will select the
-    // appropriate spw once the page has loaded
-    $(".thumbnail a").each(function (i, v) {
-        var o = $(v);
-        var spw = o.data("spw");
-        o.data("callback", createSpwSetter(spw));
-    });
-
     $(".fancybox").fancybox({
         type: 'image',
         prevEffect: 'none',
@@ -41,7 +25,7 @@ $(document).ready(function() {
             },
             thumbs: {
                 width: 50,
-                height: 50,
+                height: 50
             }
         },
     	beforeShow : function() {
@@ -52,6 +36,30 @@ $(document).ready(function() {
 </script>
 
 <p>This task creates gain solutions for each measurement set.</p>
+
+<ul>
+    <li>Plots</li>
+    <ul>
+    % if phase_vs_time_plots:
+        <li><a href="#phase_vs_time_plots">Phase vs time</a></li>
+    % endif
+    % if structure_plots:
+        <li><a href="#structure_plots">Phase structure</a></li>
+    % endif
+    % if amp_vs_time_plots:
+        <li><a href="#amp_vs_time_plots">Amplitude vs time</a></li>
+    % endif
+    </ul>
+    <li>Diagnostic plots</li>
+    <ul>
+    % if diagnostic_phase_vs_time_plots:
+        <li><a href="#diagnostic_phase_vs_time_plots">Phase vs time</a></li>
+    % endif
+    % if diagnostic_amp_vs_time_plots:
+        <li><a href="#diagnostic_amp_vs_time_plots">Amplitude vs time</a></li>
+    % endif
+    </ul>
+</ul>
 
 <h2>Results</h2>
 <table class="table table-bordered" summary="Application Results">
@@ -88,8 +96,10 @@ $(document).ready(function() {
 <h2>Plots</h2>
 
 <%self:plot_group plot_dict="${phase_vs_time_plots}"
-				  url_fn="${lambda x: 'phase_vs_time-%s.html' % filenamer.sanitize(x)}"
-				  data_spw="${True}">
+				  url_fn="${lambda x: phase_vs_time_subpages[x]}"
+				  data_spw="${True}"
+                  data_vis="${True}"
+                  title_id="phase_vs_time_plots">
 
 	<%def name="title()">
 		Phase vs time
@@ -121,7 +131,8 @@ $(document).ready(function() {
 
 
 <%self:plot_group plot_dict="${structure_plots}"
-				  url_fn="${lambda x: 'baseline-%s.html' % filenamer.sanitize(x)}">
+				  url_fn="${lambda x: 'baseline-%s.html' % filenamer.sanitize(x)}"
+                  title_id="structure_plots">
 
 	<%def name="title()">
 		Phase structure: phase RMS vs distance to reference antenna
@@ -152,8 +163,10 @@ $(document).ready(function() {
 
 
 <%self:plot_group plot_dict="${amp_vs_time_plots}"
-				  url_fn="${lambda x: 'amp_vs_time-%s.html' % filenamer.sanitize(x)}"
-				  data_spw="${True}">
+				  url_fn="${lambda x: amp_vs_time_subpages[x]}"
+				  data_spw="${True}"
+                  data_vis="${True}"
+                  title_id="amp_vs_time_plots">
 
 	<%def name="title()">
 		Amplitude vs time
@@ -189,8 +202,10 @@ $(document).ready(function() {
 <h2>Diagnostic plots</h2>
 
 <%self:plot_group plot_dict="${diagnostic_phase_vs_time_plots}"
-				  url_fn="${lambda x: 'diagnostic_phase_vs_time-%s.html' % filenamer.sanitize(x)}"
-				  data_spw="${True}">
+				  url_fn="${lambda x: diagnostic_phase_vs_time_subpages[x]}"
+				  data_spw="${True}"
+                  data_vis="${True}"
+                  title_id="diagnostic_phase_vs_time_plots">
 
 	<%def name="title()">
 		Phase vs time for solint='int'
@@ -223,8 +238,10 @@ $(document).ready(function() {
 
 
 <%self:plot_group plot_dict="${diagnostic_amp_vs_time_plots}"
-				  url_fn="${lambda x: 'diagnostic_amp_vs_time-%s.html' % filenamer.sanitize(x)}"
-				  data_spw="${True}">
+				  url_fn="${lambda x: diagnostic_amp_vs_time_subpages[x]}"
+				  data_spw="${True}"
+                  data_vis="${True}"
+                  title_id="diagnostic_amp_vs_time_plots">
 
 	<%def name="title()">
 		Amplitude vs time for solint='int'

@@ -1,7 +1,7 @@
 <%!
 rsc_path = ""
 import collections
-SELECTORS = ['spw', 'ant']
+SELECTORS = ['vis', 'spw', 'ant']
 HISTOGRAM_LABELS = collections.OrderedDict([
 	('ratio', 'Ratio of phase RMS before/after WVR application')
 ])

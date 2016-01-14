@@ -197,7 +197,7 @@ class FluxscaleInputs(basetask.StandardInputs):
     @transintent.setter
     def transintent(self, value):
         if value is None:
-            value = 'PHASE,BANDPASS'
+            value = 'PHASE,BANDPASS,CHECK'
         self._transintent = value
         
         

@@ -874,6 +874,22 @@ def getEphemeris(vis, ephemerisId=-1, useASDM_Ephemeris=False, verbose=True):
     result = {ephemerisId: [mjdsec, raRadian, decRadian]}
     return(result)
     
+def ignoreMostCommonPosition(x,y):
+    """
+    Given two equal-lengths lists of coordinates, return the index of all pairs that
+    *excludes* the most common pair.
+    -Todd Hunter
+    """
+    roundedY = list(np.round(y))
+    y_mode = max(set(roundedY), key=roundedY.count)
+    threshold = max(1,abs(y_mode*0.005))
+    idx1_ignoreOffPositionY = np.where(np.abs(np.round(y) - y_mode) > threshold)
+    roundedX = list(np.round(x))
+    x_mode = max(set(roundedX), key=roundedX.count)
+    idx1_ignoreOffPositionX = np.where(np.round(x) != x_mode)
+    idx1_ignoreOffPosition = np.intersect1d(idx1_ignoreOffPositionX[0], idx1_ignoreOffPositionY[0])
+    return(idx1_ignoreOffPosition, idx1_ignoreOffPositionX, idx1_ignoreOffPositionY)
+
 def plotTPSampling(vis, obsid=0, plotfile='', debug=False,
                    labelFirstNSamples=0, labelIncrement=1, convert=True,
                    field='auto', plotrange=[0,0,0,0], antenna=0, scan=None,

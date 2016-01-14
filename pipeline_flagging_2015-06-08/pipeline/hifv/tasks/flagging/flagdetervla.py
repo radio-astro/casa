@@ -79,7 +79,7 @@ import pipeline.domain.measures as measures
 
 from pipeline.hif.tasks.flagging import flagdeterbase 
 
-#import pipeline.tasks.flagging.FlagDeterBase as gronk
+# import pipeline.tasks.flagging.FlagDeterBase as gronk
 
 # ------------------------------------------------------------------------------
 
@@ -593,22 +593,22 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
         
         context = inputs.context
         
-        m = context.observing_run.measurement_sets[0]
-        #numSpws = context.evla['msinfo'][m.name].numSpws
-        #channels = context.evla['msinfo'][m.name].channels
+        m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
+        # numSpws = context.evla['msinfo'][m.name].numSpws
+        # channels = context.evla['msinfo'][m.name].channels
         channels = m.get_vla_numchan()
         numSpws = len(channels)
         
         SPWtoflag=''
         
         for ispw in range(numSpws):
-            fivepctch=int(0.05*channels[ispw])
-            startch1=0
-            startch2=fivepctch-1
-            endch1=channels[ispw]-fivepctch
-            endch2=channels[ispw]-1
+            fivepctch = int(0.05*channels[ispw])
+            startch1 = 0
+            startch2 = fivepctch - 1
+            endch1 = channels[ispw] - fivepctch
+            endch2 = channels[ispw] - 1
             
-            #Minimum number of channels flagged must be three on each end
+            # Minimum number of channels flagged must be three on each end
             if (fivepctch < 3):
                 startch2=2
                 endch1=channels[ispw]-3
@@ -634,13 +634,13 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
             """
             inputs = self.inputs
                         
-            #get heuristics from the context
+            # get heuristics from the context
             context = inputs.context
             
-            m = context.observing_run.measurement_sets[0]
-            #quack_scan_string = context.evla['msinfo'][m.name].quack_scan_string
+            m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
+            # quack_scan_string = context.evla['msinfo'][m.name].quack_scan_string
             quack_scan_string = m.get_vla_quackingscans()
-            #int_time = context.evla['msinfo'][m.name].int_time
+            # int_time = context.evla['msinfo'][m.name].int_time
             int_time = m.get_vla_max_integration_time()
             
             quack_mode_cmd = 'mode=\'quack\' scan=\'%s\' quackinterval=%s quackmode=\'beg\' quackincrement=False reason=\'quack\' name=\'quack\'' % (quack_scan_string, str(1.5*int_time))
@@ -655,9 +655,9 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
 
         inputs = self.inputs
 
-        #get heuristics from the context
+        # get heuristics from the context
         context = inputs.context
-        m = context.observing_run.measurement_sets[0]
+        m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         
         bottomSPW=''
         topSPW=''
@@ -747,8 +747,6 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
 
         return baseband_cmd
 
-
-
     def verify_spw(self, spw):
         # override the default verifier, adding an extra test that bypasses
         # flagging of TDM windows
@@ -760,7 +758,6 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
         ncorr = len(dd.corr_axis)
         if ncorr*spw.num_channels > 256:
             raise ValueError('Skipping edge flagging for FDM spw %s' % spw.id)            
-
 
     def _add_file(self, filename):
         """

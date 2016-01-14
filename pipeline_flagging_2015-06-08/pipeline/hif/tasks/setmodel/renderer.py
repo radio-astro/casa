@@ -23,18 +23,12 @@ class T2_4MDetailsSetjyRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
     def update_mako_context(self, ctx, context, result):
         amp_vs_uv_summary_plots = collections.defaultdict(dict)
-        
-        
-        vis = os.path.basename(result.inputs['vis'])
-        ms = context.observing_run.get_ms(vis)
-        corrstring = ms.get_alma_corrstring()
-        
-        
+
         for intents in ['AMPLITUDE']:
             plots = self.create_plots(context, 
                                       result, 
                                       setjy_display.AmpVsUVSummaryChart, 
-                                      intents, correlation=corrstring)
+                                      intents)
             self.sort_plots_by_baseband(plots)
 
             key = intents
@@ -43,8 +37,8 @@ class T2_4MDetailsSetjyRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
         table_rows = make_flux_table(context, result)
 
-        ctx.update({'amp_vs_uv_plots' : amp_vs_uv_summary_plots,
-                    'table_rows'      : table_rows})
+        ctx.update({'amp_vs_uv_plots': amp_vs_uv_summary_plots,
+                    'table_rows': table_rows})
 
     def sort_plots_by_baseband(self, d):
         for vis, plots in d.items():
@@ -52,32 +46,36 @@ class T2_4MDetailsSetjyRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                            key=lambda plot: plot.parameters['baseband'])
             d[vis] = plots
 
-    def create_plots(self, context, results, plotter_cls, intents, renderer_cls=None, **kwargs):
+    def create_plots(self, context, results, plotter_cls, intents):
         """
         Create plots and return a dictionary of vis:[Plots].
         """
         d = {}
         for result in results:
-            plots = self.plots_for_result(context, result, plotter_cls, intents, renderer_cls, **kwargs)
+            plots = self.plots_for_result(context, result, plotter_cls, intents)
             d = utils.dict_merge(d, plots)
         return d
 
-    def plots_for_result(self, context, result, plotter_cls, intents, renderer_cls=None, **kwargs):
-        plotter = plotter_cls(context, result, intents, **kwargs)
+    def plots_for_result(self, context, result, plotter_cls, intents):
+        vis = os.path.basename(result.inputs['vis'])
+        ms = context.observing_run.get_ms(vis)
+        corrstring = ms.get_alma_corrstring()
+
+        plotter = plotter_cls(context, result, intents, correlation=corrstring)
         plots = plotter.plot()
 
         d = collections.defaultdict(dict)
         vis = os.path.basename(result.inputs['vis'])        
         d[vis] = plots
 
-        if renderer_cls is not None:
-            renderer = renderer_cls(context, result, plots, **kwargs)
-            with renderer.get_file() as fileobj:
-                fileobj.write(renderer.render())        
+        # if renderer_cls is not None:
+        #     renderer = renderer_cls(context, result, plots, **kwargs)
+        #     with renderer.get_file() as fileobj:
+        #         fileobj.write(renderer.render())
 
         return d
     
-FluxTR = collections.namedtuple('FluxTR', 'vis field spw freq band i q u v')
+FluxTR = collections.namedtuple('FluxTR', 'vis field spw freq band i q u v spix')
     
 def make_flux_table(context, results):
     # will hold all the flux stat table rows for the results
@@ -93,14 +91,16 @@ def make_flux_table(context, results):
             
         for field_arg, measurements in single_result.measurements.items():
             field = ms_for_result.get_fields(field_arg)[0]
-            field_cell = '%s (#%s)' % (field.name, field.id)
+            intents = " ".join(field.intents.intersection(set(['AMPLITUDE',
+               'BANDPASS', 'CHECK', 'PHASE'])))
+            field_cell = '%s (#%s) %s' % (field.name, field.id, intents)
 
             for measurement in sorted(measurements, key=lambda m: int(m.spw_id)):
                 fluxes = collections.defaultdict(lambda: 'N/A')
-                for stokes in ['I', 'Q', 'U', 'V']:
+                for item in ['I', 'Q', 'U', 'V', 'spix']:
                     try:                        
-                        flux = getattr(measurement, stokes)
-                        fluxes[stokes] = '%s' % flux
+                        value = getattr(measurement, item)
+                        fluxes[item] = '%s' % value
                     except:
                         pass
 
@@ -108,7 +108,7 @@ def make_flux_table(context, results):
                                                    
                 tr = FluxTR(vis_cell, field_cell, str(spw.id),
                             str(spw.centre_frequency), spw.band, fluxes['I'],
-                            fluxes['Q'], fluxes['U'], fluxes['V'])
+                            fluxes['Q'], fluxes['U'], fluxes['V'], fluxes['spix'])
                 rows.append(tr)
     
     return utils.merge_td_columns(rows)

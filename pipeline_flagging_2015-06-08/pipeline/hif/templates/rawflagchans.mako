@@ -101,6 +101,11 @@ def num_lines(relpath):
 		
 %>
 
+<script>
+    $(document).ready(function(){
+        $("th.rotate").each(function(){ $(this).height($(this).find('span').width() + 8) });
+    });
+</script>
 
 <%inherit file="t2-4m_details-base.html"/>
 <%block name="header" />
@@ -153,11 +158,11 @@ def num_lines(relpath):
 			<th rowspan="2">Total</th>
 			<th colspan="${len(flags)}">Measurement Set</th>
 		</tr>
-		<tr>
+        <tr>
 %for ms in flags.keys():
-			<th>${ms}</th>
+			<th class="rotate"><div><span>${ms}</span></div></th>
 %endfor
-		</tr>
+        </tr>
 	</thead>
 	<tbody>
 %for k in ['TOTAL', 'SCIENCE SPWS', 'BANDPASS', 'AMPLITUDE', 'PHASE', 'TARGET']: 

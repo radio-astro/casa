@@ -9,6 +9,7 @@ import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.filenamer as filenamer
+import collections
 
 LOG = logging.get_logger(__name__)
 
@@ -24,6 +25,15 @@ class VLASubPlotRenderer(object):
         self.template = template
         self.filename_prefix=filename_prefix
 
+        self.summary_plots = {}
+        self.testgainsamp_subpages = {}
+        self.testgainsphase_subpages = {}
+        
+
+        self.testgainsamp_subpages[self.ms] = filenamer.sanitize('amp' + '-%s.html' % self.ms)
+        self.testgainsphase_subpages[self.ms] = filenamer.sanitize('phase' + '-%s.html' % self.ms)
+
+
         if os.path.exists(json_path):
             with open(json_path, 'r') as json_file:
                 self.json = json_file.readlines()[0]
@@ -35,7 +45,9 @@ class VLASubPlotRenderer(object):
                 'result'     : self.result,
                 'plots'      : self.plots,
                 'dirname'    : self.dirname,
-                'json'       : self.json}
+                'json'       : self.json,
+                'testgainsamp_subpages' : self.testgainsamp_subpages,
+                'testgainsphase_subpages'   : self.testgainsphase_subpages}
 
     @property
     def dirname(self):
@@ -154,6 +166,8 @@ class T2_4MDetailsfluxbootRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         weblog_results = {}
         spindex_results = {}
 
+        webdicts = {}
+
         for result in results:
             
             plotter = fluxbootdisplay.fluxbootSummaryChart(context, result)
@@ -162,7 +176,14 @@ class T2_4MDetailsfluxbootRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             summary_plots[ms] = plots
             weblog_results[ms] = result.weblog_results
             spindex_results[ms] = result.spindex_results
-            
+
+            #Sort into dictionary collections to prep for weblog table
+            webdicts[ms] = collections.defaultdict(list)
+            for row in sorted(weblog_results[ms], key=lambda p: (p['source'], float(p['freq']))):
+                webdicts[ms][row['source']].append({'freq':row['freq'],'data':row['data'],'error':row['error'],'fitteddata':row['fitteddata']})
+
+            weblog_results[ms]=webdicts[ms]
+
         ctx.update({'summary_plots'   : summary_plots,
                     'weblog_results'  : weblog_results,
                     'spindex_results' : spindex_results,

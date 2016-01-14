@@ -52,7 +52,7 @@ class ContFileHandler(object):
     def write(self, cont_ranges):
         fd = open(self.filename, 'w+')
         for source_name in cont_ranges.iterkeys():
-            fd.write('%s\n\n' % (source_name))
+            fd.write('%s\n\n' % (source_name.replace('"','')))
             for spw_id in cont_ranges[source_name].iterkeys():
                 fd.write('SPW%s\n' % (spw_id))
                 if (cont_ranges[source_name][spw_id] == []):

@@ -146,8 +146,14 @@ class FlagCmd(object):
         #if pol is not None:
             #flagcmd += " correlation='%s'" % pol
 
+        # If specified, add spw to flagging command
         if spw is not None:
-            flagcmd += " spw='%s'" % spw
+            # If spw is a list of multiple spws, create a comma-separated string out of them
+            if isinstance(spw, list):              
+                flagcmd += " spw='%s'" % ",".join(str(s) for s in spw)
+            else:
+                flagcmd += " spw='%s'" % spw
+            
 
         # decode axisnames/flagcoords
         if axisnames is not None:

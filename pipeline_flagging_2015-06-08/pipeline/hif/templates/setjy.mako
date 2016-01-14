@@ -64,29 +64,6 @@ def rx_for_plot(plot):
 <script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
 <script>
 $(document).ready(function(){
-    // return a function that sets the SPW text field to the given spw
-    var createSelectSetter = function(val, element_id) {
-    	return function() {
-    		var vals = val.toString().split(',');
-    		// trigger a change event, otherwise the filters are not changed
-            $(element_id).select2("val", vals).trigger("change");
-        };
-    };
-    
-    // create a callback function for each overview plot that will select the
-    // appropriate spw once the page has loaded
-    $(".thumbnail a").each(function (i, v) {
-        var o = $(v);
-        var spw = o.data("spw");
-        var field = o.data("field");
-		if (typeof field === 'undefined') {
-	        o.data("callback", createSelectSetter(spw, "#select-spw"));
-		} else {
-	        o.data("callback", [createSelectSetter(spw, "#select-spw"),
-	                            createSelectSetter(field, "#select-field")]);
-		}
-    });
-
     $(".fancybox").fancybox({
         type: 'image',
         prevEffect: 'none',
@@ -116,9 +93,10 @@ $(document).ready(function(){
 	        <th scope="col" rowspan="2">Measurement Set</th>
 	        <th scope="col" rowspan="2">Field</th>
 	        <th scope="col" rowspan="2">SpW</th>
-	        <th scope="col" rowspan="2">Centre Freq.</th>
+	        <th scope="col" rowspan="2">Centre Freq</th>
 	        <th scope="col" rowspan="2">Band</th>
 	        <th scope="col" colspan="4">Flux Density</th>
+	        <th scope="col" rowspan="2">Spix</th>
 		</tr>
 		<tr>
 	        <th scope="col">I</th>

@@ -10,6 +10,9 @@ $(document).ready(function(){
 });
 </script>
 
+<!--  Add image holder library for missing plots -->
+<script src="${self.attr.rsc_path}resources/js/holder.js"></script>
+
 <div class="page-header">
 <h1>Overview of '${ms.basename}'</h1>
 </div>
@@ -135,11 +138,11 @@ $(document).ready(function(){
 			<tbody>
 				<tr>
 					<th>Min Elevation</th>
-					<td>N/A</td>
+					<td>${el_min} degrees</td>
 				</tr>
 				<tr>
 					<th>Max Elevation</th>
-					<td>N/A</td>
+					<td>${el_max} degrees</td>
 				</tr>
 			</tbody>
 		</table>
@@ -150,6 +153,17 @@ $(document).ready(function(){
 
 <div class="row">        
 	<div class="col-md-6">
+        % if weather_plot is None or not os.path.exists(weather_plot.thumbnail):
+        <h3>Weather</h3>
+        <div class="col-md-6">
+            <div class="thumbnail">
+                <img data-src="holder.js/250x188/text:Not Available">
+                <div class="caption">
+                    <h4>Weather plot</h4>
+                </div>
+            </div>
+        </div>
+        % else:
 		<a href="${os.path.relpath(weather_plot.abspath, pcontext.report_dir)}" class="fancybox">
 			<h3>Weather</h3>
 		</a>
@@ -166,9 +180,9 @@ $(document).ready(function(){
 				</div>
 			</div>
 		</div>
+        % endif
 	</div>
-	
-	
+
 	% if pcontext.project_summary.telescope.lower() in ('alma') and pwv_plot is not None:
 	
 	<div class="col-md-6">

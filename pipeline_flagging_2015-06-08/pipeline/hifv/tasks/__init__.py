@@ -18,6 +18,7 @@ from .semiFinalBPdcals import semiFinalBPdcals
 from .fluxscale import Solint
 from .fluxscale import Testgains
 from .hanning import Hanning
+from .plotsummary import PlotSummary
 from .finalcals import Finalcals
 from .fluxscale import Fluxboot
 from .setmodel import Fluxgains

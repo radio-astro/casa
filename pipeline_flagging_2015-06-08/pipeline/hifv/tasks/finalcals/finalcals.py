@@ -3,13 +3,11 @@ from __future__ import absolute_import
 import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.casatools as casatools
-import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.hif.heuristics.findrefant as findrefant
 
 import os
-import itertools
 import numpy as np
 import math
 import scipy as scp
@@ -24,21 +22,24 @@ from pipeline.hifv.tasks.setmodel.setmodel import find_standards, standard_sourc
 
 LOG = infrastructure.get_logger(__name__)
 
+
 class FinalcalsInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, vis=None):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
 
+
 class FinalcalsResults(basetask.Results):
-    def __init__(self, final=[], pool=[], preceding=[]):
+    def __init__(self, final=[], pool=[], preceding=[], vis=None):
         super(FinalcalsResults, self).__init__()
 
-        self.vis = None
+        self.vis = vis
         self.pool = pool[:]
         self.final = final[:]
         self.preceding = preceding[:]
         self.error = set()
+
 
 class Finalcals(basetask.StandardTaskTemplate):
     Inputs = FinalcalsInputs
@@ -53,8 +54,8 @@ class Finalcals(basetask.StandardTaskTemplate):
         tablebase = basevis+'.finalBPinitialgain'
         table_suffix = ['.g','3.g','10.g']
         soltimes = [1.0,3.0,10.0] 
-        m = self.inputs.context.observing_run.measurement_sets[0]
-        #soltimes = [self.inputs.context.evla['msinfo'][m.name].int_time * x for x in soltimes]
+        m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
+        # soltimes = [self.inputs.context.evla['msinfo'][m.name].int_time * x for x in soltimes]
         soltimes = [m.get_vla_max_integration_time() * x for x in soltimes]
         solints = ['int', '3.0s', '10.0s']
         soltime = soltimes[0]
@@ -63,7 +64,8 @@ class Finalcals(basetask.StandardTaskTemplate):
         context = self.inputs.context
 
         refantfield = context.evla['msinfo'][m.name].calibrator_field_select_string
-        refantobj = findrefant.RefAntHeuristics(vis=self.inputs.vis,field=refantfield,geometry=True,flagging=True, intent='', spw='')
+        refantobj = findrefant.RefAntHeuristics(vis=self.inputs.vis,field=refantfield,
+                                                geometry=True,flagging=True, intent='', spw='')
         
         RefAntOutput=refantobj.calculate()
         
@@ -73,27 +75,24 @@ class Finalcals(basetask.StandardTaskTemplate):
 
         gtype_delaycal_result = self._do_gtype_delaycal(caltable=gtypecaltable, context=context, refAnt=refAnt)
         
-        ktype_delaycal_result = self._do_ktype_delaycal(caltable=ktypecaltable, addcaltable=gtypecaltable, context=context, refAnt=refAnt)
+        ktype_delaycal_result = self._do_ktype_delaycal(caltable=ktypecaltable,
+                                                        addcaltable=gtypecaltable, context=context, refAnt=refAnt)
 
-        #Remove the cal tables from the callibrary
-        
-        
+        # Remove the cal tables from the callibrary
         calto = callibrary.CalTo(self.inputs.vis)
         calfrom = callibrary.CalFrom(gaintable=gtypecaltable, interp='', calwt=False)
         context.callibrary._remove(calto, calfrom, context.callibrary._active)
 
-        
-        
         LOG.info("Delay calibration complete")
-
 
         # Do initial gaincal on BP calibrator then semi-final BP calibration
         gain_solint1 = context.evla['msinfo'][m.name].gain_solint1
-        gtype_gaincal_result = self._do_gtype_bpdgains(tablebase + table_suffix[0], addcaltable=ktypecaltable, solint=gain_solint1, context=context, refAnt=refAnt)
+        gtype_gaincal_result = self._do_gtype_bpdgains(tablebase + table_suffix[0], addcaltable=ktypecaltable,
+                                                       solint=gain_solint1, context=context, refAnt=refAnt)
         
         bpdgain_touse = tablebase + table_suffix[0]
         
-        #Add appropriate temporary tables to the callibrary
+        # Add appropriate temporary tables to the callibrary
         calto = callibrary.CalTo(self.inputs.vis)
         calfrom = callibrary.CalFrom(gaintable=bpdgain_touse, interp='', calwt=False)
         context.callibrary.add(calto, calfrom)
@@ -103,7 +102,7 @@ class Finalcals(basetask.StandardTaskTemplate):
 
         bandpass_result = self._do_bandpass(bpcaltable, context=context, refAnt=refAnt)
         
-        #Force calwt for the bp table to be False
+        # Force calwt for the bp table to be False
         calto = callibrary.CalTo(self.inputs.vis)
         calfrom = callibrary.CalFrom(bpcaltable, interp='linearperobs,linearflag', calwt=True)
         context.callibrary._remove(calto, calfrom, context.callibrary._active)
@@ -118,17 +117,16 @@ class Finalcals(basetask.StandardTaskTemplate):
         calfrom = callibrary.CalFrom(gaintable=bpdgain_touse, interp='', calwt=False)
         context.callibrary._remove(calto, calfrom, context.callibrary._active)
 
-        #Derive an average phase solution for the bandpass calibrator to apply
-        #to all data to make QA plots easier to interpret.
+        # Derive an average phase solution for the bandpass calibrator to apply
+        # to all data to make QA plots easier to interpret.
         
         avgpgain = basevis + '.averagephasegain.g'
         
         avgphase_result = self._do_avgphasegaincal(avgpgain, context, refAnt)
-        
-        
-        #In case any antenna is flagged by this process, unflag all solutions
-        #in this gain table (if an antenna does exist or has bad solutions from
-        #other steps, it will be flagged by those gain tables).
+
+        # In case any antenna is flagged by this process, unflag all solutions
+        # in this gain table (if an antenna does exist or has bad solutions from
+        # other steps, it will be flagged by those gain tables).
         
         unflag_result = self._do_unflag(avgpgain)
         
@@ -142,21 +140,18 @@ class Finalcals(basetask.StandardTaskTemplate):
         calfrom = callibrary.CalFrom(gaintable=avgpgain, interp='', calwt=False)
         context.callibrary._remove(calto, calfrom, context.callibrary._active)
         
-        #---------------------------------------------------
+        # ---------------------------------------------------
         
         calMs = 'finalcalibrators.ms'
         split_result = self._do_split(calMs)
-
-        
 
         all_sejy_result = self._doall_setjy(calMs)
 
         powerfit_results = self._do_powerfit()
         
         powerfit_setjy = self._do_powerfitsetjy(calMs, powerfit_results)
-        
-        
-        m = context.observing_run.measurement_sets[0]
+
+        m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         new_gain_solint1 = context.evla['msinfo'][m.name].new_gain_solint1
         phaseshortgaincal_results = self._do_calibratorgaincal(calMs, basevis+'.phaseshortgaincal.g', new_gain_solint1, 3.0, 'p', [''], refAnt)
         
@@ -165,23 +160,23 @@ class Finalcals(basetask.StandardTaskTemplate):
         
         finalphasegaincal_results = self._do_calibratorgaincal(calMs, basevis+'.finalphasegaincal.g', gain_solint2, 3.0, 'p', [basevis+'.finalampgaincal.g'], refAnt)
 
-        return FinalcalsResults()                        
+        return FinalcalsResults(vis=self.inputs.vis)
 
     def analyse(self, results):
-	return results
+        return results
     
     def _do_gtype_delaycal(self, caltable=None, context=None, refAnt=None):
         
-        m = context.observing_run.measurement_sets[0]
+        m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         delay_field_select_string = context.evla['msinfo'][m.name].delay_field_select_string
-        #tst_delay_spw = context.evla['msinfo'][m.name].tst_delay_spw
+        # tst_delay_spw = context.evla['msinfo'][m.name].tst_delay_spw
         tst_delay_spw = m.get_vla_tst_delay_spw()
         delay_scan_select_string = context.evla['msinfo'][m.name].delay_scan_select_string
-        #minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
+        # minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
         minBL_for_cal = max(3,int(len(m.antennas)/2.0))
         
-        #need to add scan?
-        #ref antenna string needs to be lower case for gaincal
+        # need to add scan?
+        # ref antenna string needs to be lower case for gaincal
         delaycal_inputs = gaincal.GTypeGaincal.Inputs(context,
             vis = self.inputs.vis,
             caltable = caltable,
@@ -206,21 +201,21 @@ class Finalcals(basetask.StandardTaskTemplate):
     
     def _do_ktype_delaycal(self, caltable=None, addcaltable=None, context=None, refAnt=None):
         
-        m = context.observing_run.measurement_sets[0]
+        m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         delay_field_select_string = context.evla['msinfo'][m.name].delay_field_select_string
-        #tst_delay_spw = context.evla['msinfo'][m.name].tst_delay_spw
+        # tst_delay_spw = context.evla['msinfo'][m.name].tst_delay_spw
         tst_delay_spw = m.get_vla_tst_delay_spw()
-        #delay_scan_select_string = context.evla['msinfo'][m.name].delay_scan_select_string
-        #minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
+        # delay_scan_select_string = context.evla['msinfo'][m.name].delay_scan_select_string
+        # minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
         minBL_for_cal = max(3,int(len(m.antennas)/2.0))
 
-        #Add appropriate temporary tables to the callibrary
+        # Add appropriate temporary tables to the callibrary
         calto = callibrary.CalTo(self.inputs.vis)
         calfrom = callibrary.CalFrom(gaintable=addcaltable, interp='', calwt=False)
         context.callibrary.add(calto, calfrom)
 
-        #need to add scan?
-        #ref antenna string needs to be lower case for gaincal
+        # need to add scan?
+        # ref antenna string needs to be lower case for gaincal
         delaycal_inputs = gaincal.KTypeGaincal.Inputs(context,
             vis = self.inputs.vis,
             caltable = caltable,
@@ -240,27 +235,26 @@ class Finalcals(basetask.StandardTaskTemplate):
         delaycal_task = gaincal.KTypeGaincal(delaycal_inputs)
 
         return self._executor.execute(delaycal_task)
-    
-    
+
     def _do_gtype_bpdgains(self, caltable, addcaltable=None, solint='int', context=None, refAnt=None):
 
-        m = context.observing_run.measurement_sets[0]
+        m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         delay_field_select_string = context.evla['msinfo'][m.name].delay_field_select_string
-        #tst_bpass_spw = context.evla['msinfo'][m.name].tst_bpass_spw
+        # tst_bpass_spw = context.evla['msinfo'][m.name].tst_bpass_spw
         tst_bpass_spw = m.get_vla_tst_bpass_spw()
         delay_scan_select_string = context.evla['msinfo'][m.name].delay_scan_select_string
         bandpass_scan_select_string = context.evla['msinfo'][m.name].bandpass_scan_select_string
-        #minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
+        # minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
         minBL_for_cal = max(3,int(len(m.antennas)/2.0))
         
         
-        #Add appropriate temporary tables to the callibrary
+        # Add appropriate temporary tables to the callibrary
         calto = callibrary.CalTo(self.inputs.vis)
         calfrom = callibrary.CalFrom(gaintable=addcaltable, interp='', calwt=False)
         context.callibrary.add(calto, calfrom)
         
-        #need to add scan?
-        #ref antenna string needs to be lower case for gaincal
+        # need to add scan?
+        # ref antenna string needs to be lower case for gaincal
         bpdgains_inputs = gaincal.GTypeGaincal.Inputs(context,
             vis = self.inputs.vis,
             caltable = caltable,
@@ -286,13 +280,13 @@ class Finalcals(basetask.StandardTaskTemplate):
     def _do_bandpass(self, caltable, context=None, refAnt=None):
         """Run CASA task bandpass"""
 
-        m = context.observing_run.measurement_sets[0]
+        m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         bandpass_field_select_string = context.evla['msinfo'][m.name].bandpass_field_select_string
         bandpass_scan_select_string = context.evla['msinfo'][m.name].bandpass_scan_select_string
-        #minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
+        # minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
         minBL_for_cal = max(3,int(len(m.antennas)/2.0))
 
-        #bandtype = 'B'
+        # bandtype = 'B'
         bandpass_inputs = bandpass.ChannelBandpass.Inputs(context,
             vis = self.inputs.vis,
             caltable = caltable,
@@ -315,14 +309,14 @@ class Finalcals(basetask.StandardTaskTemplate):
       
     def _do_avgphasegaincal(self,caltable, context, refAnt):
         
-        m = context.observing_run.measurement_sets[0]
+        m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         bandpass_field_select_string = context.evla['msinfo'][m.name].bandpass_field_select_string
         bandpass_scan_select_string = context.evla['msinfo'][m.name].bandpass_scan_select_string
-        #minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
+        # minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
         minBL_for_cal = max(3,int(len(m.antennas)/2.0))
         
-        #need to add scan?
-        #ref antenna string needs to be lower case for gaincal
+        # need to add scan?
+        # ref antenna string needs to be lower case for gaincal
         gaincal_inputs = gaincal.GTypeGaincal.Inputs(context,
             vis = self.inputs.vis,
             caltable = caltable,
@@ -361,7 +355,7 @@ class Finalcals(basetask.StandardTaskTemplate):
     def _do_applycal(self, context=None):
         """Run CASA task applycal"""
         
-        m = context.observing_run.measurement_sets[0]
+        m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         calibrator_scan_select_string = context.evla['msinfo'][m.name].calibrator_scan_select_string
         
         applycal_inputs = applycal.Applycal.Inputs(context,
@@ -380,8 +374,8 @@ class Finalcals(basetask.StandardTaskTemplate):
     
     def _do_split(self, calMs):
         
-        m = self.inputs.context.observing_run.measurement_sets[0]
-        #channels = self.inputs.context.evla['msinfo'][m.name].channels
+        m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
+        # channels = self.inputs.context.evla['msinfo'][m.name].channels
         channels = m.get_vla_numchan()
         calibrator_scan_select_string = self.inputs.context.evla['msinfo'][m.name].calibrator_scan_select_string
     
@@ -410,16 +404,16 @@ class Finalcals(basetask.StandardTaskTemplate):
     def _doall_setjy(self, calMs):
         
         context = self.inputs.context
-        m = context.observing_run.measurement_sets[0]
-        #field_spws = context.evla['msinfo'][m.name].field_spws
+        m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
+        # field_spws = context.evla['msinfo'][m.name].field_spws
         field_spws = m.get_vla_field_spws()
-        #spw2band = context.evla['msinfo'][m.name].spw2band
+        # spw2band = context.evla['msinfo'][m.name].spw2band
         spw2band = m.get_vla_spw2band()
         bands = spw2band.values()
         
         standard_source_names, standard_source_fields = standard_sources(calMs)
 
-        #Look in spectral window domain object as this information already exists!
+        # Look in spectral window domain object as this information already exists!
         with casatools.TableReader(self.inputs.vis+'/SPECTRAL_WINDOW') as table:
             channels = table.getcol('NUM_CHAN')
             originalBBClist = table.getcol('BBC_NO')
@@ -488,17 +482,17 @@ class Finalcals(basetask.StandardTaskTemplate):
         context=self.inputs.context
         
         
-        m = context.observing_run.measurement_sets[0]
-        #field_spws = context.evla['msinfo'][m.name].field_spws
+        m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
+        # field_spws = context.evla['msinfo'][m.name].field_spws
         field_spws = m.get_vla_field_spws()
         sources = context.evla['msinfo'][m.name].fluxscale_sources
         flux_densities = context.evla['msinfo'][m.name].fluxscale_flux_densities
         spws = context.evla['msinfo'][m.name].fluxscale_spws
-        #spw2band = context.evla['msinfo'][m.name].spw2band
+        # spw2band = context.evla['msinfo'][m.name].spw2band
         spw2band = m.get_vla_spw2band()
         bands = spw2band.values()
 
-        #Look in spectral window domain object as this information already exists!
+        # Look in spectral window domain object as this information already exists!
         with casatools.TableReader(self.inputs.vis+'/SPECTRAL_WINDOW') as table:
             channels = table.getcol('NUM_CHAN')
             originalBBClist = table.getcol('BBC_NO')
@@ -534,14 +528,13 @@ class Finalcals(basetask.StandardTaskTemplate):
         ##            spws.append(int(fields[9].split('=')[1]))
         
         ii = 0
-	unique_sources = list(np.unique(sources))
-	results = []
-	for source in unique_sources:
-	    indices = []
-	    for ii in range(len(sources)):
-		if (sources[ii] == source):
-		    indices.append(ii)
-		    
+        unique_sources = list(np.unique(sources))
+        results = []
+        for source in unique_sources:
+            indices = []
+            for ii in range(len(sources)):
+                if (sources[ii] == source):
+                    indices.append(ii)
             bands_from_spw = []
             
             if bands == []:
@@ -551,60 +544,57 @@ class Finalcals(basetask.StandardTaskTemplate):
                 for ii in range(len(indices)):
                     bands_from_spw.append(spw2band[spws[indices[ii]]])
                 bands = bands_from_spw
-		    
 
-	    unique_bands = list(np.unique(bands))
-	    for band in unique_bands:
-		lfreqs = []
-		lfds = []
-		lerrs = []
-		uspws = []
-		
-		#Use spw id to band mappings
-		if spw2band.values() != []:
-		    for ii in range(len(indices)):
-		        if spw2band[spws[indices[ii]]] == band:
-			    lfreqs.append(math.log10(center_frequencies[spws[indices[ii]]]))
-			    lfds.append(math.log10(flux_densities[indices[ii]][0]))
-			    lerrs.append((flux_densities[indices[ii]][1])/(flux_densities[indices[ii]][0])/2.303)
-			    uspws.append(spws[indices[ii]])
-	        
-	        #Use frequencies for band mappings
-	        if spw2band.values() == []:
-	            for ii in range(len(indices)):
-		        if find_EVLA_band(center_frequencies[spws[indices[ii]]]) == band:
-			    lfreqs.append(math.log10(center_frequencies[spws[indices[ii]]]))
-			    lfds.append(math.log10(flux_densities[indices[ii]][0]))
-			    lerrs.append((flux_densities[indices[ii]][1])/(flux_densities[indices[ii]][0])/2.303)
-			    uspws.append(spws[indices[ii]])
-		
+            unique_bands = list(np.unique(bands))
+            for band in unique_bands:
+                lfreqs = []
+                lfds = []
+                lerrs = []
+                uspws = []
 
-		if len(lfds) < 2:
-		    pfinal = [lfds[0], 0.0]
-		    covar = [0.0,0.0]
-		else:
-		    alfds = scp.array(lfds)
-		    alerrs = scp.array(lerrs)
-		    alfreqs = scp.array(lfreqs)
-		    pinit = [0.0, 0.0]
-		    fit_out = scpo.leastsq(errfunc, pinit, args=(alfreqs, alfds, alerrs), full_output=1)
-		    pfinal = fit_out[0]
-		    covar = fit_out[1]
-		aa = pfinal[0]
-		bb = pfinal[1]
-		reffreq = 10.0**lfreqs[0]/1.0e9
-		fluxdensity = 10.0**(aa + bb*lfreqs[0])
-		spix = bb
-		results.append([ source, uspws, fluxdensity, spix, reffreq ])
-		LOG.info(source + ' ' + band + ' fitted spectral index = ' + str(spix))
-		LOG.info("Frequency, data, and fitted data:")
-		for ii in range(len(lfreqs)):
-		    SS = fluxdensity * (10.0**lfreqs[ii]/reffreq/1.0e9)**spix
-		    LOG.info('    '+str(10.0**lfreqs[ii]/1.0e9)+'  '+ str(10.0**lfds[ii])+'  '+str(SS))
+                # Use spw id to band mappings
+                if spw2band.values() != []:
+                    for ii in range(len(indices)):
+                        if spw2band[spws[indices[ii]]] == band:
+                            lfreqs.append(math.log10(center_frequencies[spws[indices[ii]]]))
+                            lfds.append(math.log10(flux_densities[indices[ii]][0]))
+                            lerrs.append((flux_densities[indices[ii]][1])/(flux_densities[indices[ii]][0])/2.303)
+                            uspws.append(spws[indices[ii]])
+
+                # Use frequencies for band mappings
+                if spw2band.values() == []:
+                    for ii in range(len(indices)):
+                        if find_EVLA_band(center_frequencies[spws[indices[ii]]]) == band:
+                            lfreqs.append(math.log10(center_frequencies[spws[indices[ii]]]))
+                            lfds.append(math.log10(flux_densities[indices[ii]][0]))
+                            lerrs.append((flux_densities[indices[ii]][1])/(flux_densities[indices[ii]][0])/2.303)
+                            uspws.append(spws[indices[ii]])
+
+                if len(lfds) < 2:
+                    pfinal = [lfds[0], 0.0]
+                    covar = [0.0,0.0]
+                else:
+                    alfds = scp.array(lfds)
+                    alerrs = scp.array(lerrs)
+                    alfreqs = scp.array(lfreqs)
+                    pinit = [0.0, 0.0]
+                    fit_out = scpo.leastsq(errfunc, pinit, args=(alfreqs, alfds, alerrs), full_output=1)
+                    pfinal = fit_out[0]
+                    covar = fit_out[1]
+                aa = pfinal[0]
+                bb = pfinal[1]
+                reffreq = 10.0**lfreqs[0]/1.0e9
+                fluxdensity = 10.0**(aa + bb*lfreqs[0])
+                spix = bb
+                results.append([ source, uspws, fluxdensity, spix, reffreq ])
+                LOG.info(source + ' ' + band + ' fitted spectral index = ' + str(spix))
+                LOG.info("Frequency, data, and fitted data:")
+                for ii in range(len(lfreqs)):
+                    SS = fluxdensity * (10.0**lfreqs[ii]/reffreq/1.0e9)**spix
+                    LOG.info('    '+str(10.0**lfreqs[ii]/1.0e9)+'  '+ str(10.0**lfds[ii])+'  '+str(SS))
         
         return results
-                
-    
+
     def _do_powerfitsetjy(self, calMs, results):
         
         LOG.info("Setting power-law fit in the model column")
@@ -634,19 +624,18 @@ class Finalcals(basetask.StandardTaskTemplate):
                     print(e)
                 
         return True
-            
-    
+
     def _do_calibratorgaincal(self, calMs, caltable, solint, minsnr, calmode, gaintablelist, refAnt):
         
         context = self.inputs.context
         
-        m = context.observing_run.measurement_sets[0]
+        m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         new_gain_solint1 = context.evla['msinfo'][m.name].new_gain_solint1
-        #minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
+        # minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
         minBL_for_cal = max(3,int(len(m.antennas)/2.0))
 
-        #temp_inputs = gaincal.GTypeGaincal.Inputs(self.inputs.context)
-        #refant = temp_inputs.refant.lower()
+        # temp_inputs = gaincal.GTypeGaincal.Inputs(self.inputs.context)
+        # refant = temp_inputs.refant.lower()
         
         task_args = {'vis'            : calMs,
                      'caltable'       : caltable,

@@ -277,7 +277,7 @@ class SpectralWindowAdapter:
     
     __slots__ = ('spw', '_frame', '_freq_max', '_freq_min',
                  '_intent', '_intents', '_pol_association',
-                 '_rest_frequencies')
+                 '_rest_frequencies', 'deviation_mask')
 
     def __getstate__(self):
         state_dictionary = self.__dict__.copy()
@@ -299,6 +299,7 @@ class SpectralWindowAdapter:
     
     def __init__(self, spw):
         self.spw = spw
+        self.deviation_mask = None
         
     @property
     def band(self):

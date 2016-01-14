@@ -178,9 +178,9 @@ class CleanTaskFactory(object):
                 # inner quarter. Other methods will be made available
                 # later.
                 #datatask_args['hm_masking'] = 'psfiter'
-                task_args['hm_masking'] = 'centralquarter'
+                task_args['hm_masking'] = 'centralregion'
             else:
-                task_args['hm_masking'] = 'centralquarter'
+                task_args['hm_masking'] = 'centralregion'
         else:
             task_args['hm_masking'] = inputs.hm_masking
 

@@ -2,21 +2,11 @@ from __future__ import absolute_import
 
 import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
-import pipeline.infrastructure.casatools as casatools
-import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.callibrary as callibrary
-
-import itertools
-
-from pipeline.hif.tasks import gaincal
-from pipeline.hif.tasks import bandpass
-from pipeline.hif.tasks import applycal
-
-
 
 
 LOG = infrastructure.get_logger(__name__)
+
 
 class HanningInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
@@ -35,7 +25,6 @@ class HanningResults(basetask.Results):
         self.preceding = preceding[:]
         self.error = set()
 
-        
     def merge_with_context(self, context):    
         m = context.observing_run.measurement_sets[0]
 
@@ -50,7 +39,7 @@ class Hanning(basetask.StandardTaskTemplate):
         return HanningResults()
     
     def analyse(self, results):
-	return results
+        return results
     
     def _do_hanningsmooth(self):
 
@@ -58,4 +47,4 @@ class Hanning(basetask.StandardTaskTemplate):
                                         datacolumn='data',
                                         outputvis='')
 
-        self._executor.execute(task)
+        return self._executor.execute(task)

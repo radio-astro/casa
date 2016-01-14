@@ -17,12 +17,13 @@ import scipy
 from scipy.stats import scoreatpercentile, percentileofscore
 from taskinit import *
 from imhead_cli import imhead_cli as imhead
+import warnings
 
 def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: findContinuum.py,v 1.22 2015/09/21 04:06:02 we Exp $" 
+    myversion = "$Id: findContinuum.py,v 1.28 2015/11/25 17:35:58 we Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -69,7 +70,7 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
     nBaselineChannels: if integer, then the number of channels to use
           if float, then the fraction of channels to use (i.e. the percentile)
           default = 0.19, which is 24 channels (i.e. 12 on each side) of a TDM window
-    sigmaFindContinuum: passed to findContinuumChannels, 'auto' starts with 3
+    sigmaFindContinuum: passed to findContinuumChannels, 'auto' starts with 3.5
     verbose: if True, then print additional information during processing
     png: the name of the png to produce ('' yields default name)
     pngBasename: if True, then remove the directory from img name before generating png name
@@ -103,8 +104,20 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
            default='auto' means start with whole field, then reduce to 1/10 if only
            one window is found
     """
-    if (centralArcsec == 'auto'):
-        centralArcsecField = -1  # use the whole field
+    if (centralArcsec == 'auto' and img != ''):
+        results = getImageInfo(img)
+        if results == None: return results
+        bmaj, bmin, bpa, cdelt1, cdelt2, naxis1, naxis2, freq = results
+        nchan = numberOfChannelsInCube(img)
+        npixels = float(nchan)*naxis1*naxis2
+        maxpixels = float(1024)*1024*960
+        if (npixels > maxpixels):
+            print "Excessive number of pixels (%.0f > %.0f)" % (npixels,maxpixels)
+            totalWidthArcsec = abs(cdelt2*naxis2)
+            centralArcsecField = totalWidthArcsec*maxpixels/npixels
+            print "Reducing image width examined from %.2f to %.2f arcsec to avoid memory problems." % (totalWidthArcsec,centralArcsecField)
+        else:
+            centralArcsecField = -1  # use the whole field
     else:
         centralArcsecField = centralArcsec  # use the specified field radius
     selection, png = runFindContinuum(img, spw, transition, baselineModeA, baselineModeB,
@@ -161,7 +174,7 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
     nBaselineChannels: if integer, then the number of channels to use
           if float, then the fraction of channels to use (i.e. the percentile)
           default = 0.19, which is 24 channels (i.e. 12 on each side) of a TDM window
-    sigmaFindContinuum: passed to findContinuumChannels, 'auto' starts with 3
+    sigmaFindContinuum: passed to findContinuumChannels, 'auto' starts with 3.5
     verbose: if True, then print additional information during processing
     png: the name of the png to produce ('' yields default name)
     pngBasename: if True, then remove the directory from img name before generating png name
@@ -255,25 +268,38 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
             sigmaFindContinuum = 3.5
         else:
             sigmaFindContinuumAutomatic = False
-        continuumChannels,selection,threshold,median,groups,correctionFactor,medianTrue,mad,medianCorrectionFactor,negativeThreshold,lineStrengthFactor = \
+        continuumChannels,selection,threshold,median,groups,correctionFactor,medianTrue,mad,medianCorrectionFactor,negativeThreshold,lineStrengthFactor,singleChannelPeaksAboveSFC,allGroupsAboveSFC = \
             findContinuumChannels(avgSpectrumNansReplaced, nBaselineChannels, sigmaFindContinuum, nanmin, 
                                   baselineModeB, trimChannels, narrow, verbose, maxTrim, maxTrimFraction, separator)
         sumAboveMedian, sumBelowMedian, sumRatio, channelsAboveMedian, channelsBelowMedian, channelRatio = \
             aboveBelow(avgSpectrumNansReplaced,medianTrue)
-        # If there are a lot of groups or a lot of channels above the median compared to below it,
+        # First, one group must have at least 2 channels (to insure it is real), otherwise raise the sigmaFC.
+        # Otherwise, if there are a lot of groups or a lot of channels above the median compared to below it,
         # then lower the sigma in order to push the threshold for real lines (or line emission wings) lower.
         # However, if there is only 1 group, then there may be no real lines present, so lowering 
-        # the threshold in this case can create needless extra groups.
-        if ((groups > 3 or (groups > 1 and channelRatio < 1.0) or (channelRatio < 0.5)) and sigmaFindContinuumAutomatic):
+        # the threshold in this case can create needless extra groups, so don't allow it.
+        if (singleChannelPeaksAboveSFC == allGroupsAboveSFC and allGroupsAboveSFC>1):
+            # raise the threshold a bit since it all the peaks look like all noise
+            factor = 1.5
+            sigmaFindContinuum *= factor
+            print "Scaling the threshold upward by a factor of %.2f to avoid apparent noise spikes (%d==%d)." % (factor, singleChannelPeaksAboveSFC,allGroupsAboveSFC)
+            continuumChannels,selection,threshold,median,groups,correctionFactor,medianTrue,mad,medianCorrectionFactor,negativeThreshold,lineStrengthFactor,singleChannelPeaksAboveSFC,allGroupsAboveSFC = \
+                findContinuumChannels(avgSpectrumNansReplaced, nBaselineChannels, sigmaFindContinuum, nanmin, 
+                                      baselineModeB, trimChannels, narrow, verbose, maxTrim, maxTrimFraction, separator)
+            sumAboveMedian, sumBelowMedian, sumRatio, channelsAboveMedian, channelsBelowMedian, channelRatio = \
+                aboveBelow(avgSpectrumNansReplaced,medianTrue)
+        elif ((groups > 3 or (groups > 1 and channelRatio < 1.0) or (channelRatio < 0.5)) and sigmaFindContinuumAutomatic):
             if (channelRatio < 1.0 and channelRatio > 0.1 and (firstFreq < 60e9 or nchan>256)):
                 # Don't allow this much reduction in ALMA TDM mode as it chops up quasar spectra too much
                 # The channelRatio>0.1 requirement prevents failures due to ALMA TFB platforming
                 factor = 0.333
+            elif (groups == 2):
+                factor = 0.9
             else:
                 factor = np.log(3)/np.log(groups)
+            print "Scaling the threshold by a factor of %.2f (groups=%d, channelRatio=%f)" % (factor, groups,channelRatio)
             sigmaFindContinuum *= factor
-            print "Scaling the threshold by a factor of %.2f to try to reduce the number of groups from %d (channelRatio=%f)" % (factor, groups,channelRatio)
-            continuumChannels,selection,threshold,median,groups,correctionFactor,medianTrue,mad,medianCorrectionFactor,negativeThreshold,lineStrengthFactor = \
+            continuumChannels,selection,threshold,median,groups,correctionFactor,medianTrue,mad,medianCorrectionFactor,negativeThreshold,lineStrengthFactor,singleChannelPeaksAboveSFC,allGroupsAboveSFC = \
                 findContinuumChannels(avgSpectrumNansReplaced, nBaselineChannels, sigmaFindContinuum, nanmin, 
                                       baselineModeB, trimChannels, narrow, verbose, maxTrim, maxTrimFraction, separator)
             sumAboveMedian, sumBelowMedian, sumRatio, channelsAboveMedian, channelsBelowMedian, channelRatio = \
@@ -392,9 +418,8 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
     pl.setp(ax1.get_xticklabels(), fontsize=fontsize)
     pl.setp(ax1.get_yticklabels(), fontsize=fontsize)
     pl.setp(ax2.get_xticklabels(), fontsize=fontsize)
-    ax2.set_xbound(firstFreq*1e-9,lastFreq*1e-9)
+    ax2.set_xlim(firstFreq*1e-9,lastFreq*1e-9)
     freqRange = np.abs(lastFreq-firstFreq)
-#    print "freqRange = %f, lastFreq=%f, firstFreq=%f" % (freqRange, lastFreq, firstFreq)
     power = int(np.log10(freqRange))-9
     ax2.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(10**power))
     if (len(ax2.get_xticks()) < 2):
@@ -417,7 +442,9 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
             transform=ax1.transAxes, ha='center', size=fontsize)
     pl.text(0.5,0.99-4*inc,'chans above median: %d (%.5f), below median: %d (%.5f), ratio: %.2f (%.2f)'%(channelsAboveMedian,sumAboveMedian,channelsBelowMedian,sumBelowMedian,channelRatio,sumRatio),
             transform=ax1.transAxes, ha='center', size=fontsize)
-    if (centralArcsec < 0):
+    if (centralArcsec == 'auto'):
+        areaString = 'mean over area: (unknown)'
+    elif (centralArcsec < 0):
         areaString = 'mean over area: whole field'
     else:
         areaString = 'mean over area: central box of radius %.1f arcsec' % (centralArcsec)
@@ -695,6 +722,36 @@ def findContinuumChannels(spectrum, nBaselineChannels=16, sigmaFindContinuum=3,
         channels2 = np.where(spectrum > negativeThreshold)[0]
         channels = np.intersect1d(channels,channels2)
 
+    # for CAS-8059: remove channels that are equal to the minimum if all channels from 
+    # it toward the nearest edge are also equal to the minimum: 
+    channels = list(channels)
+    if (spectrum[np.min(channels)] == np.min(spectrum)):
+        lastmin = np.min(channels)
+        channels.remove(lastmin)
+        removed = 1
+        for c in range(np.min(channels),np.max(channels)):
+            if (spectrum[c] != np.min(spectrum)):
+                break
+            channels.remove(c)
+            removed += 1
+        print "Removed %d channels on low channel edge that were at the minimum." % (removed)
+    if (spectrum[np.max(channels)] == np.min(spectrum)):
+        lastmin = np.max(channels)
+        channels.remove(lastmin)
+        removed = 1
+        for c in range(np.max(channels),np.min(channels)-1,-1):
+            if (spectrum[c] != np.min(spectrum)):
+                break
+            channels.remove(c)
+            removed += 1
+        print "Removed %d channels on high channel edge that were at the minimum." % (removed)
+            
+    peakChannels = np.where(spectrum > threshold)[0]
+    peakChannelsLists = splitListIntoContiguousLists(peakChannels)
+    peakMultiChannelsLists = splitListIntoContiguousListsAndRejectNarrow(peakChannels, narrow=2)
+    allGroupsAboveSFC = len(peakChannelsLists)
+    singleChannelPeaksAboveSFC = allGroupsAboveSFC - len(peakMultiChannelsLists)
+
     selection = convertChannelListIntoSelection(channels)
     print "Found %d potential continuum channels: %s" % (len(channels), str(selection))
     if (len(channels) == 0):
@@ -731,7 +788,7 @@ def findContinuumChannels(spectrum, nBaselineChannels=16, sigmaFindContinuum=3,
     print "Found %d continuum channels in %d groups: %s" % (len(channels), groups, selection)
     return(channels, selection, threshold, median, groups, correctionFactor, 
            medianTrue, mad, computeMedianCorrectionFactor(baselineMode, percentile)*signalRatio,
-           negativeThreshold, lineStrengthFactor)
+           negativeThreshold, lineStrengthFactor, singleChannelPeaksAboveSFC, allGroupsAboveSFC)
 
 def splitListIntoContiguousListsAndRejectNarrow(channels, narrow=3):
     """
@@ -1019,21 +1076,105 @@ def nanmean(a, axis=0):
     """
     Takes the mean of an array, ignoring the nan entries
     """
-    if (np.__version__ < '1.81'):
+    if (map(int, np.__version__.split('.')[:3]) < (1,8,1)):
         return(scipy.stats.nanmean(a,axis)) 
 #        length = len(np.array(a)[np.where(np.isnan(a)==False)])
 #        return(np.nansum(a,axis)/length)
     else:
         return(np.nanmean(a,axis))
 
-def nanmedian(a, axis=0):
+def _nanmedian(arr1d, preop=None):  # This only works on 1d arrays
+    """Private function for rank a arrays. Compute the median ignoring Nan.
+
+    Parameters
+    ----------
+    arr1d : ndarray
+        Input array, of rank 1.
+
+    Results
+    -------
+    m : float
+        The median.
     """
-    Takes the mean of an array, ignoring the nan entries
+    x = arr1d.copy()
+    c = np.isnan(x)
+    s = np.where(c)[0]
+    if s.size == x.size:
+        warnings.warn("All-NaN slice encountered", RuntimeWarning)
+        return np.nan
+    elif s.size != 0:
+        # select non-nans at end of array
+        enonan = x[-s.size:][~c[-s.size:]]
+        # fill nans in beginning of array with non-nans of end
+        x[s[:enonan.size]] = enonan
+        # slice nans away
+        x = x[:-s.size]
+    if preop:
+        x = preop(x)
+    return np.median(x, overwrite_input=True)
+
+def nanmedian(x, axis=0, preop=None):
     """
-    if (np.__version__ < '1.81'):
-        return(scipy.stats.nanmedian(a,axis)) 
-    else:
-        return(np.nanmedian(a,axis))
+    Compute the median along the given axis ignoring nan values.
+
+    Parameters
+    ----------
+    x : array_like
+        Input array.
+    axis : int or None, optional
+        Axis along which the median is computed. Default is 0.
+        If None, compute over the whole array `x`.
+    preop : function
+        function to apply on 1d slice after removing the NaNs and before
+        computing median
+
+    Returns
+    -------
+    m : float
+        The median of `x` along `axis`.
+
+    See Also
+    --------
+    nanstd, nanmean, numpy.nanmedian
+
+    Examples
+    --------
+    >>> from scipy import stats
+    >>> a = np.array([0, 3, 1, 5, 5, np.nan])
+    >>> stats.nanmedian(a)
+    array(3.0)
+
+    >>> b = np.array([0, 3, 1, 5, 5, np.nan, 5])
+    >>> stats.nanmedian(b)
+    array(4.0)
+
+    Example with axis:
+
+    >>> c = np.arange(30.).reshape(5,6)
+    >>> idx = np.array([False, False, False, True, False] * 6).reshape(5,6)
+    >>> c[idx] = np.nan
+    >>> c
+    array([[  0.,   1.,   2.,  nan,   4.,   5.],
+           [  6.,   7.,  nan,   9.,  10.,  11.],
+           [ 12.,  nan,  14.,  15.,  16.,  17.],
+           [ nan,  19.,  20.,  21.,  22.,  nan],
+           [ 24.,  25.,  26.,  27.,  nan,  29.]])
+    >>> stats.nanmedian(c, axis=1)
+    array([  2. ,   9. ,  15. ,  20.5,  26. ])
+
+    """
+    x = np.asarray(x)
+    if axis is None:
+        x = x.ravel()
+        axis = 0
+    if x.ndim == 0:
+        return float(x.item())
+    if preop is None and hasattr(np, 'nanmedian'):
+        return np.nanmedian(x, axis)
+    x = np.apply_along_axis(_nanmedian, axis, x, preop)
+    if x.ndim == 0:
+        x = float(x.item())
+    return x
 
 def avgOverCube(pixels, useAbsoluteValue=False, threshold=None, median=False):
     """
@@ -1264,21 +1405,11 @@ def MAD(a, c=0.6745, axis=0):
          median(abs(a - median(a))) / c
     c = 0.6745 is the constant to convert from MAD to std 
     """
-    a = np.array(a)
-    good = (a==a)
     a = np.asarray(a, np.float64)
-    if a.ndim == 1:
-        d = nanmedian(a[good])
-        m = nanmedian(np.fabs(a[good] - d) / c)
-    else:
-        d = nanmedian(a[good], axis=axis)
-        # I don't want the array to change so I have to copy it?
-        if axis > 0:
-            aswp = swapaxes(a[good],0,axis)
-        else:
-            aswp = a[good]
-        m = nanmedian(np.fabs(aswp - d) / c, axis=0)
-    return m
+    m = nanmedian(a, axis=axis,
+                  preop=lambda x:
+                        np.fabs(np.subtract(x, np.median(x, axis=None), out=x), out=x))
+    return m / c
 
 def splitListIntoContiguousLists(mylist):
     """
@@ -1314,7 +1445,6 @@ def splitListIntoContiguousListsAndRejectZeroStd(channels, values, nanmin=None, 
     mylists = splitListIntoContiguousLists(channels)
     channels = []
     for i,mylist in enumerate(mylists):
-        if verbose: print "Running np.std(%s)" % (str(values[mylist]))
         mystd = np.std(values[mylist])
         if (mystd > 1e-17):  # avoid blocks of identically-zero values
             if (nanmin != None):

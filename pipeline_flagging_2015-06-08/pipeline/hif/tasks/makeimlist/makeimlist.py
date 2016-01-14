@@ -278,7 +278,8 @@ class MakeImList(basetask.StandardTaskTemplate):
                   field_intent_list=field_intent_list, spwspec=spwspec)
                 if (cells[spwspec] != ['invalid']):
                     min_cell = cells[spwspec] if (qaTool.convert(cells[spwspec][0], 'arcsec')['value'] < qaTool.convert(min_cell[0], 'arcsec')['value']) else min_cell
-            min_cell = ['%s%s' % (round(qaTool.getvalue(min_cell[0]), 2), qaTool.getunit(min_cell[0]))]
+            # Rounding to two significant figures
+            min_cell = ['%.2g%s' % (qaTool.getvalue(min_cell[0]), qaTool.getunit(min_cell[0]))]
             # Use same cell size for all spws (in a band (TODO))
             for spwspec in spwlist:
                 if (cells[spwspec] != ['invalid']):
@@ -323,7 +324,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                           field_intent[1], field_intent[0])
                         himsize = self.heuristics.imsize(fields=field_ids,
                           cell=cells[spwspec], beam=beams[spwspec])
-                        if field_intent[1] in ['PHASE', 'BANDPASS', 'AMPLITUDE', 'FLUX']:
+                        if field_intent[1] in ['PHASE', 'BANDPASS', 'AMPLITUDE', 'FLUX', 'CHECK']:
                             himsize = [min(npix, inputs.calmaxpix) for npix in himsize]
                         imsizes[(field_intent[0],spwspec)] = himsize
                         if (imsizes[(field_intent[0],spwspec)][0] > max_x_size):
@@ -397,7 +398,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                     spwsel = {}
                     for spwid in spwspec.split(','):
                         spwsel['spw%s' % (spwid)] = self.heuristics.cont_ranges_spwsel[field_intent[0].replace('"','')][spwid]
-                        if (spwsel['spw%s' % (spwid)] == ''):
+                        if ((spwsel['spw%s' % (spwid)] == '') and (field_intent[1] == 'TARGET')):
                             LOG.warn('No continuum frequency range information available for %s, spw %s.' % (field_intent[0], spwid))
                 else:
                     spwsel = {}

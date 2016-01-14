@@ -36,7 +36,8 @@ SELECTORS = []
 HISTOGRAM_LABELS = {}
 HISTOGRAM_AXES = {}
 
-SELECT2_LABEL = {'spw' : 'Spectral window filter',
+SELECT2_LABEL = {'vis': 'Measurement Set',
+                 'spw' : 'Spectral window filter',
 				 'ant' : 'Antenna filter',
 				 'pol' : 'Polarisation filter',
 				 'field' : 'Field filter',
@@ -46,7 +47,8 @@ SELECT2_LABEL = {'spw' : 'Spectral window filter',
 				 'intent' : 'Observing intent filter',
 				 'type' : 'Type filter'}
 				 
-SELECT2_PLACEHOLDER = {'spw' : 'Show all spectral windows',
+SELECT2_PLACEHOLDER = {'vis': 'Show all measurement sets',
+                       'spw' : 'Show all spectral windows',
 				       'ant' : 'Show all antennas',
 				 	   'pol' : 'Show all polarisations',
 				       'field' : 'Show all fields',
@@ -57,10 +59,15 @@ SELECT2_PLACEHOLDER = {'spw' : 'Show all spectral windows',
 				       'type' : 'Show all types'}
 
 def get_options(selector, plots):
-	options = format_options([p.parameters[selector] for p in plots])
-	if selector == 'field':
-		options = [cgi.escape(o, True) for o in options]
-	return options
+    try:
+        options = format_options([p.parameters[selector] for p in plots])
+    except KeyError:
+        print 'Key %s not found in %s' % (selector, plots)
+        print 'Example plot parameters:\n%s' % (plots[0].parameters)
+        raise
+    if selector == 'field':
+        options = [cgi.escape(o, True) for o in options]
+    return options
 
 def format_options(options):
 	# remove any duplicates
@@ -88,6 +95,8 @@ $(document).ready(function () {
 
     // activate the input fields for spw, antenna, etc.
     $('.select2').select2();
+
+    $('select.select2').on("change", function() { pipeline.history.replaceState(); });
 
     // create a new filter pipeline, and tell it to filter based on the scores
     // in the scores_dict JSON dictionary that is set in the template.
@@ -118,20 +127,17 @@ $(document).ready(function () {
 	});
 % endif
 
-    // add on-click handler to our thumbnails to launch FancyBox with the
-    // relevant thumbnails
-    $("div.thumbnail a").click(function (evt) {
-        evt.preventDefault();
-        var target = this.href;
-        UTILS.launchFancybox(target);
-        return false;
-    });
+    pipeline.pages.detail_plots.ready();
 });
 </script>
 
 <div data-scores="${json}" id="scores"></div>
 
 <%def name="render_selectors(selectors)">
+    <%
+        # remove any redundant selectors, such as MS selector when only MS was plotted
+        selectors = filter(lambda selector: len(get_options(selector, plots)) > 1, selectors)
+    %>
 	% if len(selectors) > 0:
 		<div class="row">
 		% for selector in selectors:

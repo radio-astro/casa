@@ -105,6 +105,7 @@ class SDSparseMapPlotter(object):
         self.lines_map = None
         self.reference_level = None
         self.global_scaling = True
+        self.deviation_mask = None
         
     @property
     def nh(self):
@@ -154,6 +155,9 @@ class SDSparseMapPlotter(object):
     def unset_global_scaling(self):
         self.global_scaling = False
         
+    def set_deviation_mask(self, mask):
+        self.deviation_mask = mask
+        
     def plot(self, map_data, averaged_data, frequency, fit_result=None, figfile=None):
         plot_helper = PlotObjectHandler()
         
@@ -198,6 +202,12 @@ class SDSparseMapPlotter(object):
                 fmax = ch_to_freq(chmax, frequency)
                 LOG.debug('plotting line range for mean spectrum: [%s, %s]'%(chmin,chmax))
                 plot_helper.axvspan(fmin, fmax, color='cyan')
+        if self.deviation_mask is not None:
+            LOG.debug('plotting deviation mask %s'%(self.deviation_mask))
+            for chmin, chmax in self.deviation_mask:
+                fmin = ch_to_freq(chmin, frequency)
+                fmax = ch_to_freq(chmax, frequency)
+                plot_helper.axvspan(fmin, fmax, ymin=0.9, ymax=1, color='red')
                     
         is_valid_fit_result = (fit_result is not None and fit_result.shape == map_data.shape)
 

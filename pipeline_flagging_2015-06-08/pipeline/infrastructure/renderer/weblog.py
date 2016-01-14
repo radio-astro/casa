@@ -18,6 +18,11 @@ import pipeline.infrastructure.renderer.templates
 LOG = pipeline.infrastructure.logging.get_logger(__name__)
 
 
+# enumerations for registering web log renderers
+UNGROUPED = 'ungrouped'
+BY_SESSION = 'by_session'
+
+
 def _get_template_lookup():
     """
     Create a Mako TemplateLookup object to which all pipeline templates will

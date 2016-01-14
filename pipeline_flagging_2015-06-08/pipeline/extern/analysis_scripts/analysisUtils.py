@@ -28,6 +28,8 @@ Corder, then Robert.
 S. Corder, 2010-11-07
 """
 
+casaVersionWithMSMD = '4.1.0'
+
 if 1 :
     import os
     import sys
@@ -119,7 +121,8 @@ JPL_HORIZONS_ID = {'ALMA': '-7',
                    'VLA': '-5',
                    'GBT': '-9',
                    'MAUNAKEA': '-80',
-                   'OVRO': '-81'
+                   'OVRO': '-81',
+                   'geocentric': '500'
 }
 
 bandDefinitions = {# 1  : [31.3e9, 45e9  ],
@@ -5373,68 +5376,142 @@ def getWeather(vis='', scan='', antenna='0',verbose=False, vm=0, help=False):
     return([conditions,myTimes,vm])
     # end of getWeather
 
-def listazel(vis, scan, antenna='0', vm=0):
+
+def listazel(vis, scan=None, antenna='0', vm=0, verbose=True, value='mean'):
     """
-    Extracts the mean azimuth and elevation for the specified 'scan' in the
-    specified ms (whose name is passed in by the vis argument).
-    The scan can be a single scan or a list, as in [1,2,3], or in '1,2,3'
-    The antenna can be either the antenna number or its name.
-    This function needs to run ValueMapping, unless a ValueMapping object
-    is passed via the vm argument.
+    Extracts the mean, min, or max azimuth and elevation for the specified
+    'scan' in the specified ms (whose name is passed in by the vis argument).
+    scan: can be a single scan or a list, as in [1,2,3], or in '1,2,3'
+       If it is not specified, then all scans are used
+    antenna: can be either the antenna number or its name.
+    value: 'mean', 'min', 'median', or 'max'
+    This function uses msmd (or ValueMapping if casa < 4.1.0).
+    Returns:
+    selected statistical value for [azimuth, elevation] in degrees
     -- Todd Hunter
     """
+
+    import pipeline.infrastructure.casatools as casatools
+
+    if (not os.path.exists(vis+'/POINTING')):
+        print "POINTING table does not exist"
+        return
     try:
-      if str(antenna).isdigit():
-        antennaName = getAntennaNames(vis)[int(str(antenna))]
-      else:
-        try:
-          antenna = getAntennaIndex(vis,antennaName)
-        except:
-          antennaName = string.upper(antenna)
-          antenna = getAntennaIndex(vis,antennaName)
+        if str(antenna).isdigit():
+            antennaName = getAntennaNames(vis)[int(str(antenna))]
+            print antenna, antennaName
+        else:
+            try:
+                antenna = getAntennaIndex(vis,antennaName)
+            except:
+                antennaName = string.upper(antenna)
+                antenna = getAntennaIndex(vis,antennaName)
+                if (antenna == -1): return([0,0])
     except:
-      print "Either the ANTENNA table, or antenna %s does not exist" % str(antenna)
-      return([0,0])
+        print "Antenna %s does not exist in this dataset" % str(antenna)
+        return([0,0])
     try:
-      tb.open("%s/POINTING" % vis)
+        #mytb = createCasaTool(tbtool)
+        with casatools.TableReader("%s/POINTING" % vis) as mytb:
+            #mytb.open("%s/POINTING" % vis)
+            subtable = mytb.query("ANTENNA_ID == %s" % antenna)
     except:
-      print "POINTING table does not exist"
-      return([0,0])
-    subtable = tb.query("ANTENNA_ID == %s" % antenna)
-    tb.close()
-    if (vm==0):
-        vm = ValueMapping(vis)
-    if (type(scan) == str):
-      scan = [int(k) for k in scan.split(',')]
-    if (type(scan) == list):
-      myTimes = np.array([])
-      for sc in scan:
-        try:
-            newTimes = vm.getTimesForScan(sc)
-        except:
-            print "Error reading scan %d, is it in the data?" % (sc)
-            return
-        myTimes = np.concatenate((myTimes,newTimes))
+        print "Cannot open the POINTING table."
+        return([0,0])
+    # subtable = mytb.query("ANTENNA_ID == %s" % antenna)
+    # mytb.close()
+    if (casadef.casa_version >= casaVersionWithMSMD):
+        #mymsmd = createCasaTool(msmdtool)
+        with casatools.MSMDReader(vis) as mymsmd:
+            #mymsmd.open(vis)
+            scans = mymsmd.scannumbers()
     else:
-      try:
-          myTimes = vm.getTimesForScan(scan)
-      except:
-          print "Error reading scan %d, is it in the data?" % (sc)
-          return
+        if (vm==0):
+            vm = ValueMapping(vis)
+        scans = vm.uniqueScans
+    if (scan == None):
+        scan = scans
+    if (type(scan) == str):
+        scan = [int(k) for k in scan.split(',')]
+    if (type(scan) == list or type(scan) == np.ndarray):
+        myTimes = []
+        for sc in scan:
+            if (casadef.casa_version >= casaVersionWithMSMD):
+                with casatools.MSMDReader(vis) as mymsmd:
+                    if (sc not in mymsmd.scannumbers()):
+                        print "A: Scan %s is not in the data." % (str(sc))
+                        return([0,0])
+                    newTimes = mymsmd.timesforscan(sc)
+            else:
+                try:
+                    newTimes = vm.getTimesForScan(sc)
+                except:
+                    print "3) Error reading scan %d, is it in the data?" % (sc)
+                    return([0,0])
+#            print "Appending times for scan ", sc
+            myTimes.append(list(newTimes)) #  = np.concatenate((myTimes,newTimes))
+    elif (scan != None):
+        if (casadef.casa_version >= casaVersionWithMSMD):
+            with casatools.MSMDReader(vis) as mymsmd:
+                if (scan not in mymsmd.scannumbers()):
+                    print "B: Scan %s is not in the data." % (str(scan))
+                    return([0,0])
+                myTimes = [mymsmd.timesforscan(scan)]
+        else:
+            try:
+                myTimes = [vm.getTimesForScan(scan)]
+            except:
+                print "4) Error reading scan %d, is it in the data?" % (scan)
+                return([0,0])
+    else:
+        print "scan = ", scan
+        return([0,0])
     direction = subtable.getcol("DIRECTION")
     time = subtable.getcol("TIME")
     azimuth = direction[0][0]*180.0/math.pi
     elevation = direction[1][0]*180.0/math.pi
     npat = np.array(time)
-    matches = np.where(npat>myTimes[0])[0]
-    matches2 = np.where(npat<myTimes[-1])[0]
-    azimuth = np.mean(azimuth[matches[0]:matches2[-1]+1])
-    elevation = np.mean(elevation[matches[0]:matches2[-1]+1])
-    if (type(scan) == list):
+    if value == 'mean':
+        func = np.mean
+    elif value == 'median':
+        func = np.median
+    elif value == 'min':
+        func = np.min
+    elif value == 'max':
+        func = np.max
+    else:
+        func = np.mean
+
+    if (len(myTimes) == 1):
+        myTimes = myTimes[0]
+        # This logic assumes that scan lists do not have holes in them.
+        matches = np.where(npat>myTimes[0])[0]
+        matches2 = np.where(npat<myTimes[-1])[0]
+        azimuth = func(azimuth[matches[0]:matches2[-1]+1])
+        elevation = func(elevation[matches[0]:matches2[-1]+1])
+    else:
+        # There might be gaps in scan lists
+        myazimuth = []
+        myelevation = []
+        for myTime in myTimes:
+            matches = np.where(npat>myTime[0])[0]
+            matches2 = np.where(npat<myTime[-1])[0]
+            myazimuth.append(func(azimuth[matches[0]:matches2[-1]+1]))
+            myelevation.append(func(elevation[matches[0]:matches2[-1]+1]))
+        # implement a scan-based mean, rather than time-based mean
+        azimuth = func(myazimuth)
+        elevation = func(myelevation)
+    if (type(scan) == list or type(scan) == np.ndarray):
         listscan = ""
         listfield = []
         for sc in scan:
-            listfield.append(vm.getFieldsForScan(sc))
+            if (casadef.casa_version >= casaVersionWithMSMD):
+                with casatools.MSMDReader(vis) as mymsmd:
+                    fields = mymsmd.fieldsforscan(sc)
+            else:
+                fields = vm.getFieldsForScan(sc)
+            for f in fields:
+                listfield.append(f)
             listscan += "%d" % sc
             if (sc != scan[-1]):
                 listscan += ","
@@ -5446,9 +5523,18 @@ def listazel(vis, scan, antenna='0', vm=0):
                 listfield += ","
     else:
         listscan = str(scan)
-        listfield = vm.getFieldsForScan(listscan)
-    print "Scan %s (field=%s): azim = %.2f,  elev = %.2f  (degrees)" % (listscan, listfield, azimuth, elevation)
+        if (casadef.casa_version >= casaVersionWithMSMD):
+            with casatools.MSMDReader(vis) as mymsmd:
+                listfield = mymsmd.fieldsforscan(scan)
+        else:
+            with casatools.MSMDReader(vis) as mymsmd:
+                listfield = vm.getFieldsForScan(listscan)
+    if verbose:
+        print "Scan %s (field=%s): azim = %.2f,  elev = %.2f  (degrees)" % (listscan, listfield, azimuth, elevation)
+    #if (casadef.casa_version >= casaVersionWithMSMD):
+    #    mymsmd.close()
     return([azimuth, elevation])
+# end of listazel()
 
 def plotElevation(vis, antenna='0', xrange=None, yrange=None):
     """
@@ -8073,7 +8159,62 @@ def rad2radec(ra=0,dec=0,imfitdict=None, prec=5):
                           qa.formxxx('%.12frad'%dec,format='dms',prec=prec).replace('.',':',2))
     print mystring
     return(mystring)
-    
+
+
+
+def radec2rad(radecstring):
+    """
+    Convert a position from a single RA/Dec sexagesimal string to RA and
+    Dec in radians.
+    The RA and Dec portions can be separated by a comma or a space.
+    The RA portion of the string must be colon-delimited, space-delimited,
+        or 'h/m/s' delimited.
+    The Dec portion of the string can be either ":", "." or space-delimited.
+    If it is "." delimited, then it must have degrees, minutes, *and* seconds.
+    See also rad2radec.
+    -Todd Hunter
+    """
+    if (radecstring.find('h')>0 and radecstring.find('d')>0):
+        radecstring = radecstring.replace('h',':').replace('m',':').replace('d',':').replace('s','')
+    radec1 = radecstring.replace(',',' ')
+    tokens = radec1.split()
+    if (len(tokens) == 2):
+        (ra,dec) = radec1.split()
+    elif (len(tokens) == 6):
+        h,m,s,d,dm,ds = radec1.split()
+        ra = '%s:%s:%s' % (h,m,s)
+        dec = '%+f:%s:%s' % (float(d), dm, ds)
+    else:
+        print "Invalid format for RA/Dec string"
+        return
+    tokens = ra.strip().split(':')
+    hours = 0
+    for i,t in enumerate(tokens):
+        hours += float(t)/(60.**i)
+    if (dec.find(':') > 0):
+        tokens = dec.lstrip().split(':')
+    elif (dec.find('.') > 0):
+        try:
+            (d,m,s) = dec.lstrip().split('.')
+        except:
+            (d,m,s,sfraction) = dec.lstrip().split('.')
+            s = s + '.' + sfraction
+        tokens = [d,m,s]
+    else:  # just an integer
+        tokens = [dec]
+    dec1 = 0
+    for i,t in enumerate(tokens):
+        dec1 += abs(float(t)/(60.**i))
+    if (dec.lstrip().find('-') == 0):
+        dec1 = -dec1
+    decrad = dec1*np.pi/180.
+    ra1 = hours*15
+    rarad = ra1*np.pi/180.
+    return(rarad,decrad)
+
+
+
+
 def direction2radec(direction=None, prec=5):
     """
     Convert a direction dictionary to a sexagesimal string.
@@ -18236,7 +18377,8 @@ def getObservatoryName(ms):
         print "Could not open OBSERVATION table to get the telescope name: %s" % (antTable)
         myName = ''
     return(myName)
-    
+
+'''
 def computeAzElFromRADecMJD(raDec, mjd, observatory='ALMA'):
     """
     Computes the az/el for a specified J2000 RA/Dec, MJD and observatory.
@@ -18251,6 +18393,133 @@ def computeAzElFromRADecMJD(raDec, mjd, observatory='ALMA'):
     me.doframe(me.observatory(observatory))
     myazel = me.measure(mydir,'azel')
     return([myazel['m0']['value'], myazel['m1']['value']])
+'''
+
+
+
+
+def computeAzElForMS(vis, value='mean', forcePositiveAzim=True, verbose=False, ignorePointingSBAtmScans=True):
+    """
+    Computes the min/max/mean or median azim and elev for a measurement set.
+    vis: measurement set
+    value: 'min', 'max', 'mean' or 'median'
+    verbose: if True, then print the per scan values
+    Returns: 2 values (azim and elev)
+    -Todd Hunter
+    """
+
+    import pipeline.infrastructure.casatools as casatools
+
+    with casatools.MSMDReader(vis) as mymsmd:
+        #mymsmd = createCasaTool(msmdtool)
+        #mymsmd.open(vis)
+        scans = mymsmd.scannumbers()
+        if (ignorePointingSBAtmScans):
+            pointingScans = list(mymsmd.scansforintent('CALIBRATE_POINTING*'))
+            sbScans = list(mymsmd.scansforintent('CALIBRATE_SIDEBAND*'))
+            atmScans = list(mymsmd.scansforintent('CALIBRATE_ATMOSPHERE*'))
+            calscans = sorted(pointingScans + sbScans + atmScans)
+            if (len(calscans) > 0):
+                #print "Dropping pointing+sideband+atmosphere scans: ", calscans
+                scans = [x for x in scans if x not in calscans]
+                if verbose:
+                    print "Kept scans: ", scans
+        observatory = mymsmd.observatorynames()[0]
+        func = np.mean
+        if value == 'median':
+            func = np.median
+        elif value == 'min':
+            func = np.min
+        elif value == 'max':
+            func = np.max
+        az = []
+        el = []
+        for scan in scans:
+            field = mymsmd.fieldsforscan(scan)[0]
+            raDecString = direction2radec(mymsmd.phasecenter(field))
+            tfs = mymsmd.timesforscan(scan)/86400.
+            mjd =  np.min(tfs)
+            az0,el0 = computeAzElFromRADecMJD(raDecString, mjd, observatory,
+                                              degrees=True, frame='AZELGEO',
+                                              forcePositiveAzim=forcePositiveAzim)
+            mjd =  np.max(tfs)
+            az1,el1 = computeAzElFromRADecMJD(raDecString, mjd, observatory,
+                                              degrees=True, frame='AZELGEO',
+                                              forcePositiveAzim=forcePositiveAzim)
+            az.append(func([az0,az1]))
+            el.append(func([el0,el1]))
+            if verbose:
+                print "scan %d = %s, az=%f, el=%f" % (scan, raDecString, az[-1], el[-1])
+        #mymsmd.close()
+    return func(az), func(el)
+
+
+
+
+def computeAzElFromRADecMJD(raDec, mjd, observatory='ALMA', verbose=False,
+                            degrees=False, frame='AZEL',
+                            forcePositiveAzim=False):
+    """
+    Computes the az/el for a specified J2000 RA/Dec, MJD and observatory using
+    the CASA measures tool.
+
+    raDec must either be a tuple in radians: [ra,dec],
+        or a string of the form "hh:mm:ss.sss -dd:mm:ss.ss"
+    mjd must either be in days, or a date string of the form:
+               2011/10/15 05:00:00  or   2011/10/15-05:00:00
+            or 2011-10-15 05:00:00  or   2011-10-15-05:00:00
+    observatory: must be either a name recognized by the CASA me tool, or a JPL Horizons
+                 ID listed in the JPL_HORIZONS_ID dictionary at the top of this module.
+    degrees: if False, returns Az,El in radians;  otherwise degrees
+    frame: 'AZEL' or 'AZELGEO'
+    - Todd Hunter
+    """
+
+    import pipeline.infrastructure.casatools as casatools
+
+    if (observatory == 'MAUNAKEA'):
+        # Convert from a value known to JPL Horizons to a value known to CASA
+        observatory = 'SMA'
+    elif (observatory in JPL_HORIZONS_ID.values()):
+        observatory = JPL_HORIZONS_ID.keys()[JPL_HORIZONS_ID.values().index(str(observatory))]
+    if (observatory.lower().find('geo') == 0):
+        observatory = 'geo'
+    #me = createCasaTool(metool)
+    me = casatools.measures
+    if (type(raDec) == str):
+        # Then assume it is of the format "hh:mm:ss.sss -dd:mm:ss.ss"
+        tokens = raDec.split()
+        if (len(tokens) < 2):
+            tokens = raDec.split(',')
+            if (len(tokens) < 2):
+                #print "If you give a string, it must be of the format: hh:mm:ss.sss -dd:mm:ss.ss"
+                return
+        raDec = radec2rad(raDec)
+        if (verbose):
+            print "RA Dec in radians = ", raDec
+    if (type(mjd) == str):
+        mjd = dateStringToMJD(mjd)
+        if (mjd == None):
+            #print "Invalid date string"
+            return
+        #print "MJD = ", mjd
+    mydir = me.direction('J2000', qa.quantity(raDec[0],'rad'), qa.quantity(raDec[1],'rad'))
+    me.doframe(me.epoch('mjd', qa.quantity(mjd, 'd')))
+    me.doframe(me.observatory(observatory))
+    myazel = me.measure(mydir,frame)
+    myaz = myazel['m0']['value']
+    myel = myazel['m1']['value']
+    if (forcePositiveAzim and myaz < 0):
+        myaz += 2*np.pi
+    if (verbose):
+        print "%s: Azim = %.6f deg   Elev = %.6f deg" % (observatory, myaz*180/np.pi, myel*180/np.pi)
+    if (degrees):
+        myaz *= 180/np.pi
+        myel *= 180/np.pi
+    return([myaz,myel])
+
+
+
 
 def unnormalize(vis='',spwID='', scan='', state=None):
     """

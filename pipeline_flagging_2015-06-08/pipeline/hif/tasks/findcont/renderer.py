@@ -17,7 +17,7 @@ import pipeline.infrastructure.renderer.logger as logger
 LOG = logging.get_logger(__name__)
 
 
-TR = collections.namedtuple('TR', 'field spw min max status spectrum')
+TR = collections.namedtuple('TR', 'field spw min max frame status spectrum')
 
 
 class T2_4MDetailsFindContRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
@@ -48,7 +48,7 @@ class T2_4MDetailsFindContRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 ranges_for_spw = ranges_dict[field][spw].get('cont_ranges', [])
                 if (ranges_for_spw in (['NONE'], [''])):
                     rows.append(TR(field=field, spw=spw, min='None', max='',
-                                   status=status, spectrum=plotfile))
+                                   frame='None', status=status, spectrum=plotfile))
                 else:
                     sorted_ranges = sorted(ranges_for_spw, key=operator.itemgetter(0))
                     for (range_min, range_max) in sorted_ranges:
@@ -57,7 +57,7 @@ class T2_4MDetailsFindContRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                         min_freq = measures.Frequency(range_min)
                         max_freq = measures.Frequency(range_max)
                         rows.append(TR(field=field, spw=spw, min=min_freq,
-                                       max=max_freq, status=status,
+                                       max=max_freq, frame='TOPO', status=status,
                                        spectrum=plotfile))
 
         return utils.merge_td_columns(rows)

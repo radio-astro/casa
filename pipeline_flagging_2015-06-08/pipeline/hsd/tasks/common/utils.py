@@ -393,7 +393,7 @@ def nonscience_spw(spectral_windows):
 
 def science_spw(spectral_windows):
     # exclude spws for WVR and square-law detector (SQLD)
-    pattern = '(SQLD|WVR)'
+    pattern = '(SQLD|WVR|CH_AVG)'
     for (spwid, spw) in spectral_windows.items():
         spw_name = spw.name
         match_by_name = re.search(pattern, spw_name) is None

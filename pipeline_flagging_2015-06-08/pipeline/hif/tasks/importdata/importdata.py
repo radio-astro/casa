@@ -9,6 +9,7 @@ import shutil
 import string
 import tarfile
 import types
+import decimal
 import datetime
 import urllib
 import urllib2
@@ -352,7 +353,7 @@ class ImportData(basetask.StandardTaskTemplate):
             LOG.info('Copying Source.xml from ASDM to measurement set')
             LOG.trace('Copying Source.xml: %s to %s' % (asdm_source,
                                                         vis_source))
-            shutil.copy(asdm_source, vis_source)
+            shutil.copyfile(asdm_source, vis_source)
 
     def _make_template_flagfile(self, asdm):
         inputs = self.inputs
@@ -710,7 +711,7 @@ def export_flux_from_context(context, filename=None):
 
     with open(filename, 'wt') as f:
         writer = csv.writer(f)
-        writer.writerow(('ms', 'field', 'spw', 'I', 'Q', 'U', 'V', 'comment'))
+        writer.writerow(('ms', 'field', 'spw', 'I', 'Q', 'U', 'V', 'spix', 'comment'))
 
         counter = 0
         for ms in context.observing_run.measurement_sets:
@@ -719,7 +720,7 @@ def export_flux_from_context(context, filename=None):
                     (I, Q, U, V) = flux.casa_flux_density
                     comment = 'intent=' + ','.join(sorted(field.intents))
                     writer.writerow((ms.basename, field.id, flux.spw_id,
-                                     I, Q, U, V, comment))
+                                     I, Q, U, V, float(flux.spix), comment))
                     counter += 1
 
         LOG.info('Exported %s flux measurements to %s' % (counter, filename))
@@ -733,7 +734,7 @@ def export_flux_from_result(results, context, filename='flux.csv'):
         results = [results,]
     abspath = os.path.join(context.output_dir, filename)
 
-    columns = ['ms', 'field', 'spw', 'I', 'Q', 'U', 'V', 'comment']
+    columns = ['ms', 'field', 'spw', 'I', 'Q', 'U', 'V', 'spix', 'comment']
     existing = []
 
     # if the file exists, read it in
@@ -771,10 +772,10 @@ def export_flux_from_result(results, context, filename='flux.csv'):
 
                         ms = context.observing_run.get_ms(ms_basename)
                         field = ms.get_fields(field_id)[0]
-                        comment = 'intent=' + ','.join(sorted(field.intents))
+                        comment = field.name + ' ' + 'intent=' + ','.join(sorted(field.intents))
 
                         writer.writerow((ms_basename, field_id, m.spw_id,
-                                         I, Q, U, V, comment))
+                                         I, Q, U, V, float(m.spix), comment))
                         counter += 1
 
         LOG.info('Exported %s flux measurements to %s' % (counter, abspath))
@@ -796,7 +797,12 @@ def import_flux(output_dir, observing_run, filename=None):
         counter = 0
         for row in reader:
             try:
-                (ms_name, field_id, spw_id, I, Q, U, V, _) = row
+                try:
+                    (ms_name, field_id, spw_id, I, Q, U, V, spix, _) = row
+                    spix = decimal.Decimal(spix)
+                except:
+                    (ms_name, field_id, spw_id, I, Q, U, V, __) = row
+                    spix = decimal.Decimal('0.0')
                 spw_id = int(spw_id)
                 try:
                     ms = observing_run.get_ms(ms_name)
@@ -809,7 +815,7 @@ def import_flux(output_dir, observing_run, filename=None):
                     continue
 
                 fields = ms.get_fields(field_id)
-                measurement = domain.FluxMeasurement(spw_id, I, Q, U, V)
+                measurement = domain.FluxMeasurement(spw_id, I, Q, U, V, spix)
 
                 # A single field identifier could map to multiple field objects,
                 # but the flux should be the same for all, so we iterate..

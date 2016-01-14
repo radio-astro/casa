@@ -49,7 +49,7 @@ $(document).ready(function() {
 
 % for ms in summary_plots:
     <h4>Plots:  <a class="replace"
-           href="${os.path.relpath(os.path.join(dirname, testdelay_subpages[ms]), pcontext.report_dir)}">Test delay plots</a>|
+           href="${os.path.relpath(os.path.join(dirname, testdelay_subpages[ms]), pcontext.report_dir)}">Test delay plots </a>|
         <a class="replace"
            href="${os.path.relpath(os.path.join(dirname, ampgain_subpages[ms]), pcontext.report_dir)}">Gain Amplitude </a>|
         <a class="replace"

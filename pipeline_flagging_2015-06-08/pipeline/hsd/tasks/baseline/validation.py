@@ -1221,17 +1221,9 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                                 (Lrow, Lmin, Lmax, LRA, LDEC) = dummy[i]
                         FitData.append([Lmin, Lmax, LRA, LDEC, 1])
                         del dummy
-                        # TN refactoring
-                        # make arrays for coefficient calculation
-                        # Matrix    MM x A = B  ->  A = MM^-1 x B
-                        # It is OK to prepare storage outside the loop 
-                        # since xorder0 and yorder0 will not change inside 
-                        # the loop. Whenever xorder0 or yorder0 changes, 
-                        # exit the loop. See code below.
-                        M0 = numpy.zeros((xorder0 * 2 + 1) * (yorder0 * 2 + 1), dtype=numpy.float64)
-                        B0 = numpy.zeros((xorder0 + 1) * (yorder0 + 1), dtype=numpy.float64)
-                        B1 = numpy.zeros((xorder0 + 1) * (yorder0 + 1), dtype=numpy.float64)
-                        MM0 = numpy.zeros([(xorder0 + 1) * (yorder0 + 1), (xorder0 + 1) * (yorder0 + 1)], dtype=numpy.float64)
+
+                        # Instantiate SVD solver
+                        solver = SVDSolver2D(xorder0, yorder0)
                         for iteration in xrange(3):
                             LOG.trace('------03------ iteration=%d' % iteration)
                             LOG.trace('2D Fit Iteration = %d' % iteration)
@@ -1257,62 +1249,47 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                             effective = [i for i in xrange(len(FitData)) 
                                          if FitData[i][4] == 1]
 
-                            # calculate coefficients
-                            M0[:] = 0.0
-                            B0[:] = 0.0
-                            B1[:] = 0.0
-                            MM0[:] = 0.0
-                            for eff in effective:
-                                (Width, Center, x, y, flag) = FitData[eff]
-                                LOG.trace('W,C,x,y,flag = %f, %f, %f, %f, %s' % (Width, Center, x, y, flag))
-                                yk = 1.0
-                                idx = 0
-                                for k in xrange(yorder0 * 2 + 1):
-                                    xjyk = yk
-                                    for j in xrange(xorder0 * 2 + 1):
-                                        M0[idx] += xjyk
-                                        xjyk *= x
-                                        idx += 1
-                                    yk *= y
-                                yk = 1.0
-                                idx = 0
-                                for k in xrange(yorder0 + 1):
-                                    xjyk = yk
-                                    for j in xrange(xorder0 + 1):
-                                        B0[idx] += xjyk * Center
-                                        B1[idx] += xjyk * Width
-                                        xjyk *= x
-                                        idx += 1
-                                    yk *= y
-
-                            # make Matrix MM0,MM1 and calculate A0,A1
-                            for K in xrange((xorder0 + 1) * (yorder0 + 1)):
-                                k0 = K % (xorder0 + 1)
-                                k1 = int(K / (xorder0 + 1))
-                                for J in xrange((xorder0 + 1) * (yorder0 + 1)):
-                                    j0 = J % (xorder0 + 1)
-                                    j1 = int(J / (xorder0 + 1))
-                                    MM0[J, K] = M0[j0 + k0 + (j1 + k1) * (xorder0 * 2 + 1)]
+                            # prepare data for SVD fit
                             ExceptionLinAlg = False
+                            xdata = numpy.array([FitData[i][2] for i in effective], dtype=numpy.float64)
+                            ydata = numpy.array([FitData[i][3] for i in effective], dtype=numpy.float64)
+                            lmindata = numpy.array([FitData[i][0] for i in effective], dtype=numpy.float64)
+                            lmaxdata = numpy.array([FitData[i][1] for i in effective], dtype=numpy.float64)
                             try:
-                                A0 = LA.solve(MM0, B0)
-                                # TN refactoring
-                                # MM1 is same as MM0 and MM0 is not overwritten 
-                                # so that MM1 is not necessary. We can use MM0.
-                                #MM1 = MM0.copy()
-                                #A1 = LA.solve(MM1, B1)
-                                A1 = LA.solve(MM0, B1)
-                            #except LinAlgError:
-                            except:
+                                solver.set_data_points(xdata, ydata)
+                                A0 = solver.find_good_solution(lmaxdata)
+                                A1 = solver.find_good_solution(lmindata)
+                                LOG.trace('SVD: A0=%s'%(A0.tolist()))
+                                LOG.trace('SVD: A1=%s'%(A1.tolist()))
+                            except Exception, e:
                                 LOG.trace('------04------ in exception loop ExceptionLinAlg=%s SingularMatrix=%s' % (ExceptionLinAlg, SingularMatrix))
                                 if xorder0 != 0 or yorder0 != 0:
                                     ExceptionLinAlg = True
                                     LOG.trace('xorder0,yorder0 = %s,%s' % (xorder0, yorder0))
                                     xorder0 = max(xorder0 - 1, 0)
                                     yorder0 = max(yorder0 - 1, 0)
+                                    LOG.info('Fit failed. Trying lower order (%s, %s)'%(xorder0, yorder0))
                                 else:
                                     SingularMatrix = True
+                                import traceback
+                                LOG.trace(traceback.format_exc(e))
                                 break
+
+                            # verification
+#                             diff_lmin = numpy.zeros(len(effective), dtype=numpy.float64)
+#                             diff_lmax = numpy.zeros(len(effective), dtype=numpy.float64)
+#                             for ieff in xrange(len(effective)):
+#                                 eff = effective[ieff]
+#                                 lmin_ex = FitData[eff][0]
+#                                 lmax_ex = FitData[eff][1]
+#                                 x = FitData[eff][2]
+#                                 y = FitData[eff][3]
+#                                 lmin_fit, lmax_fit = _eval_poly(xorder0+1, yorder0+1, x, y, A0, A1) 
+#                                 diff_lmin[ieff] = abs((lmin_fit - lmin_ex) / lmin_ex)
+#                                 diff_lmax[ieff] = abs((lmax_fit - lmax_ex) / lmax_ex)
+#                             LOG.trace('SVD: Lmin difference: max %s, min %s, mean %s, std %s'%(diff_lmin.max(), diff_lmin.min(), diff_lmin.mean(), diff_lmin.std()))
+#                             LOG.trace('SVD: Lmax difference: max %s, min %s, mean %s, std %s'%(diff_lmax.max(), diff_lmax.min(), diff_lmax.mean(), diff_lmax.std()))
+                            
                             LOG.trace('------05------ after try ExceptionLinAlg=%s SingularMatrix=%s' % (ExceptionLinAlg, SingularMatrix))
 
                             # Calculate Sigma
@@ -1607,3 +1584,165 @@ def _to_validated_lines(detect_lines):
                 lines.append(line)
     lines_withflag = map(lambda x: [0.5*sum(x), x[1]-x[0], True], lines)
     return lines_withflag
+
+
+class SVDSolver2D(object):
+    CONDITION_NUMBER_LIMIT = 1.0e-12
+    
+    def __init__(self, xorder, yorder):
+        self.xorder = xorder
+        self.yorder = yorder
+
+        assert 0 <= self.xorder 
+        assert 0 <= self.yorder
+
+        # internal storage for solver
+        self.N = 0
+        self.L = (self.xorder + 1) * (self.yorder + 1)
+
+        # design matrix
+        self.storage = numpy.zeros(self.N * self.L, dtype=numpy.float64)
+        self.G = None 
+
+        # for SVD
+        self.Vs = numpy.zeros((self.L, self.L), dtype=numpy.float64)
+        self.B = numpy.zeros(self.L, dtype=numpy.float64)
+        self.U = None
+    
+    def set_data_points(self, x, y):
+        nx = len(x)
+        ny = len(y)
+        LOG.trace('nx, ny = %s, %s'%(nx, ny))
+        assert nx == ny
+        if self.N < nx:
+            self.storage.resize(nx * self.L)
+            #self.G.resize((nx, self.L))
+        self.N = nx
+        assert self.L <= self.N
+        
+        self.G = self.storage[:self.N * self.L].reshape((self.N, self.L))
+        
+        # matrix operation
+        self._set_design_matrix(x, y)
+        #self._svd()
+    
+    def _set_design_matrix(self, x, y):
+        # The design matrix G is a basis array that stores gj(xi)
+        # where g0  = 1,   g1  = x,     g2  = x^2      g3  = x^3,
+        #       g4  = y,   g5  = x y,   g6  = x^2 y,   g7  = x^3 y
+        #       g8  = y^2, g9  = x y^2, g10 = x^2 y^2, g11 = x^3 y^2
+        #       g12 = y^3, g13 = x y^3, g14 = x^2 y^3, g15 = x^3 y^3
+        # if xorder = 3 and yorder = 3
+        for k in xrange(self.N):
+            yp = 1.0
+            for i in xrange(self.yorder + 1):
+                xp = 1.0
+                for j in xrange(self.xorder + 1):
+                    l = j + (self.xorder + 1) * i
+                    self.G[k,l] = xp * yp
+                    xp *= x[k]
+                yp *= y[k]
+                
+    def _svd(self, eps):
+        LOG.trace('G.shape=%s'%(list(self.G.shape)))
+        self.U, s, Vh = LA.svd(self.G, full_matrices=False)
+        LOG.trace('U.shape=%s (N,L)=(%s,%s)'%(list(self.U.shape), self.N, self.L))
+        LOG.trace('s.shape=%s'%(list(s.shape)))
+        LOG.trace('Vh.shape=%s'%(list(Vh.shape)))
+        #LOG.trace('U=%s'%(self.U))
+        #LOG.trace('s=%s'%(s))
+        #LOG.trace('Vh=%s'%(Vh))
+        assert self.U.shape == (self.N, self.L)
+        assert len(s) == self.L
+        assert Vh.shape == (self.L, self.L)
+        assert 0.0 < eps
+        
+        absolute_s = abs(s)
+        condition_number = absolute_s.min() / absolute_s.max()
+        if condition_number < self.CONDITION_NUMBER_LIMIT:
+            LOG.trace('smax %s, smin %s, condition_number is %s'%(absolute_s.max(), absolute_s.min(), condition_number))
+            raise RuntimeError('singular matrix')
+        
+        threshold = s.max() * eps
+        for i in xrange(self.L):
+            if s[i] < threshold:
+                s[i] = 0.0
+            else:
+                s[i] = 1.0 / s[i]
+        for icol in xrange(self.L):
+            for irow in xrange(self.L):
+                self.Vs[irow, icol] = Vh[icol, irow] * s[icol]
+        
+    def _eval_poly_from_G(self, row, coeff):
+        idx = 0 
+        poly = 0.0
+        for k in xrange(self.yorder + 1):
+            for j in xrange(self.xorder + 1):
+                poly += self.G[row,idx] * coeff[idx]
+                idx += 1
+        #LOG.trace('poly=%s'%(poly))
+        return poly   
+                
+    def solve_for(self, z, out=None, eps=1.0e-7):
+        assert 0.0 <= eps
+        
+        nz = len(z)
+        assert nz == self.N
+        
+        self._svd(eps)
+        
+        if out is None:
+            A = numpy.zeros(self.L, dtype=numpy.float64)
+        else:
+            A = out
+            A[:] = 0
+            assert len(A) == self.L
+        self.B[:] = 0
+        for i in xrange(self.L):
+            for k in xrange(self.N):
+                self.B[i] += self.U[k, i] * z[k]
+        for i in xrange(self.L):
+            for k in xrange(self.L):
+                A[i] += self.Vs[i, k] * self.B[k] 
+                
+        #fit = numpy.fromiter((self._eval_poly_from_G(i, A) for i in xrange(self.N)), dtype=numpy.float64)   
+        #LOG.trace('fit=%s'%(fit))
+        #LOG.trace('diff=%s'%(abs(fit - z)/z))
+        return A
+    
+    def find_good_solution(self, z, threshold=0.05):
+        assert 0.0 <= threshold
+        eps_list = map(lambda x: 10**x, xrange(-11, -3))
+        
+        best_ans = None
+        best_score = 1e30
+        best_eps = eps_list[0]
+        intlog = lambda x: int(numpy.log10(x))
+        ans = numpy.zeros(self.L, dtype=numpy.float64)
+        best_ans = numpy.zeros(self.L, dtype=numpy.float64)
+        diff = numpy.zeros(self.N, dtype=numpy.float64)
+        for eps in eps_list:
+            ans = self.solve_for(z, out=ans, eps=eps)
+            #fit = numpy.fromiter((self._eval_poly_from_G(i, ans) for i in xrange(self.N)), dtype=numpy.float64)
+            #diff = abs((fit - z) / z)
+            for i in xrange(self.N):
+                fit = self._eval_poly_from_G(i, ans)
+                if z[i] != 0:
+                    diff[i] = abs((fit - z[i]) / z[i])
+                else:
+                    diff[i] = fit
+            #score = diff.max()
+            score = diff.mean()
+            LOG.trace('eps=%s, score=%s'%(intlog(eps),score))
+            if best_ans is None or score < best_score:
+                best_ans[:] = ans
+                best_score = score
+                best_eps = eps
+        if 1.0 <= best_score:
+            raise RuntimeError('No good solution is found.')
+        elif threshold < best_score:
+            LOG.trace('Score is higher than given threshold (threshold %s, score %s)'%(threshold, best_score))
+        
+        LOG.trace('best eps: %s (score %s)'%(intlog(best_eps), best_score))
+        return best_ans
+    

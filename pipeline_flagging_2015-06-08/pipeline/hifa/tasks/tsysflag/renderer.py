@@ -19,15 +19,15 @@ LOG = logging.get_logger(__name__)
 
 FlagTotal = collections.namedtuple('FlagSummary', 'flagged total')
 
-std_templates = {'nmedian'    : 'generic_x_vs_y_per_spw_and_pol_plots.mako',
-                 'derivative' : 'generic_x_vs_y_per_spw_and_pol_plots.mako',
-                 'edgechans'  : 'generic_x_vs_y_spw_intent_plots.mako',
-                 'fieldshape' : 'generic_x_vs_y_spw_intent_plots.mako',
-                 'birdies'    : 'generic_x_vs_y_spw_ant_plots.mako'}
+std_templates = {'nmedian': 'generic_x_vs_y_per_spw_and_pol_plots.mako',
+                 'derivative': 'generic_x_vs_y_per_spw_and_pol_plots.mako',
+                 'edgechans': 'generic_x_vs_y_spw_intent_plots.mako',
+                 'fieldshape': 'generic_x_vs_y_spw_intent_plots.mako',
+                 'birdies': 'generic_x_vs_y_spw_ant_plots.mako'}
 
-extra_templates = {'nmedian'    : 'generic_x_vs_y_per_spw_and_pol_plots.mako',
-                   'derivative' : 'generic_x_vs_y_per_spw_and_pol_plots.mako',
-                   'fieldshape' : 'generic_x_vs_y_spw_intent_plots.mako'}
+extra_templates = {'nmedian': 'generic_x_vs_y_per_spw_and_pol_plots.mako',
+                   'derivative': 'generic_x_vs_y_per_spw_and_pol_plots.mako',
+                   'fieldshape': 'generic_x_vs_y_spw_intent_plots.mako'}
 
 
 class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
@@ -39,8 +39,6 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                  always_rerender=False):
         super(T2_4MDetailsTsysflagRenderer, self).__init__(uri=uri,
                 description=description, always_rerender=always_rerender)
-
-    
 
     def _do_standard_plots(self, context, result, component):
         if component in ('nmedian','derivative','fieldshape'):
@@ -66,7 +64,6 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             
         return renderer
 
-        
     def update_mako_context(self, ctx, context, results):
         weblog_dir = os.path.join(context.report_dir,
                                   'stage%s' % results.stage_number)
@@ -107,14 +104,14 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             flag_totals[table]['after'] = self.flags_for_result(result, 
                     context, summary='last')
 
-
         htmlreports = self.get_htmlreports(context, results)
         
         summary_plots = {}
         subpages = {}
+        eb_plots = []
+        last_results = []
         for result in results:
-            # summary plots at end of flagging sequence, beware empty
-            # sequence
+            # summary plots at end of flagging sequence, beware empty sequence
             lastflag = result.components.keys()
             if lastflag:
                 lastflag = lastflag[-1]
@@ -126,23 +123,40 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             summary_plots[vis] = plots
 
             # generate per-antenna plots
-            renderer = tsyscalrenderer.TsyscalPlotRenderer(context, lastresult)
+            plotter = displays.TsysPerAntennaChart(context, lastresult)
+            per_antenna_plots = plotter.plot()
+
+            renderer = tsyscalrenderer.TsyscalPlotRenderer(context,
+                                                           lastresult,
+                                                           per_antenna_plots)
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())
                 # the filename is sanitised - the MS name is not. We need to
                 # map MS to sanitised filename for link construction.
                 subpages[vis] = renderer.path
 
+            eb_plots.extend(per_antenna_plots)
+            last_results.append(lastresult)
+
+        # additionally render plots for all EBs in one page
+        renderer = tsyscalrenderer.TsyscalPlotRenderer(context, last_results,
+                                                       eb_plots)
+        with renderer.get_file() as fileobj:
+            fileobj.write(renderer.render())
+            # .. and we want the subpage links to go to this master page
+            for vis in subpages:
+                subpages[vis] = renderer.path
+
         components = results[0].metric_order
-        
-        ctx.update({'flags'           : flag_totals,
-                    'components'      : components,
-                    'summary_plots'   : summary_plots,
-                    'summary_subpage' : subpages,
-                    'dirname'         : weblog_dir,
-                    'stdplots'        : stdplots,
-                    'extraplots'      : extraplots,
-                    'htmlreports'     : htmlreports})
+
+        ctx.update({'flags': flag_totals,
+                    'components': components,
+                    'summary_plots': summary_plots,
+                    'summary_subpage': subpages,
+                    'dirname': weblog_dir,
+                    'stdplots': stdplots,
+                    'extraplots': extraplots,
+                    'htmlreports': htmlreports})
         
     def get_htmlreports(self, context, results):
         report_dir = context.report_dir
@@ -285,6 +299,7 @@ class TimeVsAntennaPlotRenderer(basetemplates.JsonPlotRenderer):
         r = result.components[component]
 
         vis = os.path.basename(result.inputs['vis'])
+        self._vis = vis
         title = 'Time vs Antenna plots for %s' % vis
         outfile = filenamer.sanitize('%s-time_vs_ant-%s.html' % (vis, component))
 
@@ -297,6 +312,11 @@ class TimeVsAntennaPlotRenderer(basetemplates.JsonPlotRenderer):
         super(TimeVsAntennaPlotRenderer, self).__init__(
                 'generic_x_vs_y_per_spw_and_pol_plots.mako', context, 
                 result, plots, title, outfile)
+
+    def update_json_dict(self, d, plot):
+        if 'vis' not in plot.parameters:
+            plot.parameters['vis'] = self._vis
+            d['vis'] = self._vis
 
 
 class ImageDisplayPlotRenderer(basetemplates.JsonPlotRenderer):
@@ -315,6 +335,7 @@ class ImageDisplayPlotRenderer(basetemplates.JsonPlotRenderer):
         y_axis = plots[0].y_axis
 
         vis = os.path.basename(result.inputs['vis'])
+        self._vis = vis
         outfile = '%s-%s_vs_%s-%s.html' % (vis, y_axis, x_axis, component)
         outfile = filenamer.sanitize(outfile)
 
@@ -325,6 +346,11 @@ class ImageDisplayPlotRenderer(basetemplates.JsonPlotRenderer):
         super(ImageDisplayPlotRenderer, self).__init__(
                 'generic_x_vs_y_per_spw_and_pol_plots.mako', context, 
                 result, plots, title, outfile)
+
+    def update_json_dict(self, d, plot):
+        if 'vis' not in plot.parameters:
+            plot.parameters['vis'] = self._vis
+            d['vis'] = self._vis
 
 
 class SliceDisplayPlotRenderer(basetemplates.JsonPlotRenderer):
@@ -344,9 +370,10 @@ class SliceDisplayPlotRenderer(basetemplates.JsonPlotRenderer):
         y_axis = plots[0].y_axis
 
         vis = os.path.basename(result.inputs['vis'])
+        self._vis = vis
         outfile = '%s-%s_vs_%s-%s.html' % (vis, y_axis, x_axis, component)
         outfile = filenamer.sanitize(outfile)
-        
+
         y_axis = y_axis.replace('Tsys', 'T<sub>sys</sub>')
         title = '%s vs %s plots for %s' % (y_axis, x_axis, vis)
         self.shorttitle = '%s vs %s' % (y_axis, x_axis)
@@ -358,6 +385,9 @@ class SliceDisplayPlotRenderer(basetemplates.JsonPlotRenderer):
     def update_json_dict(self, d, plot):
         if 'intent' in plot.parameters:
             d['intent'] = plot.parameters['intent']
+        if 'vis' not in plot.parameters:
+            plot.parameters['vis'] = self._vis
+            d['vis'] = self._vis
 
 
 class TsysSpectraPlotRenderer(basetemplates.JsonPlotRenderer):
@@ -403,6 +433,7 @@ class TsysSpectraPlotRenderer(basetemplates.JsonPlotRenderer):
         y_axis = plots[0].y_axis
 
         vis = os.path.basename(result.inputs['vis'])
+        self._vis = vis
         outfile = '%s-%s_vs_%s-%s.html' % (vis, y_axis, x_axis, component)
         outfile = filenamer.sanitize(outfile)
         
@@ -417,4 +448,6 @@ class TsysSpectraPlotRenderer(basetemplates.JsonPlotRenderer):
     def update_json_dict(self, d, plot):
         if 'intent' in plot.parameters:
             d['intent'] = plot.parameters['intent']
-
+        if 'vis' not in plot.parameters:
+            plot.parameters['vis'] = self._vis
+            d['vis'] = self._vis

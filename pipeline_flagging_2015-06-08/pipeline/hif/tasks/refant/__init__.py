@@ -15,4 +15,4 @@ qaadapter.registry.register_to_miscellaneous_topic(referenceantenna.RefAntResult
 weblog.add_renderer(RefAnt, 
                     basetemplates.T2_4MDetailsDefaultRenderer(uri='refant.mako',
                                                               description='Select reference antennas'),
-                    group_by='session')
+                    group_by=weblog.UNGROUPED)

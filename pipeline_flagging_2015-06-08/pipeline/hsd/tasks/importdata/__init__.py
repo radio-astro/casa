@@ -17,8 +17,8 @@ pipelineqa.registry.add_handler(qa.SDImportDataOldQAHandler())
 pipelineqa.registry.add_handler(qa.SDImportDataOldListQAHandler())
 qaadapter.registry.register_to_dataset_topic(importdataold.SDImportDataOldResults)
 
-weblog.add_renderer(SDImportDataOld, renderer.T2_4MDetailsSingleDishImportDataOldRenderer(), group_by='ungrouped')
+weblog.add_renderer(SDImportDataOld, renderer.T2_4MDetailsSingleDishImportDataOldRenderer(), group_by=weblog.UNGROUPED)
 
 # use the standard ImportData renderer to render ALMAImportData results
-weblog.add_renderer(SDImportData, super_renderer.T2_4MDetailsImportDataRenderer(), group_by='session')
+weblog.add_renderer(SDImportData, super_renderer.T2_4MDetailsImportDataRenderer(), group_by=weblog.UNGROUPED)
 

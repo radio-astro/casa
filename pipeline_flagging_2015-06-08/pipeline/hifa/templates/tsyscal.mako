@@ -10,22 +10,6 @@ import pipeline.infrastructure.utils as utils
 
 <script>
 $(document).ready(function() {
-    // return a function that sets the SPW text field to the given spw
-    var createSpwSetter = function(spw) {
-        return function() {
-            // trigger a change event, otherwise the filters are not changed
-            $("#select-tsys_spw").select2("val", [spw]).trigger("change");
-        };
-    };
-
-    // create a callback function for each overview plot that will select the
-    // appropriate spw once the page has loaded
-    $(".thumbnail a").each(function (i, v) {
-        var o = $(v);
-        var spw = o.data("spw");
-        o.data("callback", createSpwSetter(spw));
-    });
-
     $(".fancybox").fancybox({
         type: 'image',
         prevEffect: 'none',
@@ -77,7 +61,8 @@ frequency.</p>
 
 <%self:plot_group plot_dict="${summary_plots}"
 				  url_fn="${lambda x: summary_subpage[x]}"
-				  data_tsysspw="${True}">
+				  data_tsysspw="${True}"
+                  data_vis="${True}">
 
 	<%def name="title()">
 		T<sub>sys</sub> vs frequency

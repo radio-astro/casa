@@ -108,33 +108,33 @@ $(document).ready(function() {
 	</tbody>
     </table>
 
-    
-    
+
        <table class="table table-bordered table-striped table-condensed"
 	   summary="Fitting data with a power law">
 	<caption>Fitting data with a power law</caption>
         <thead>
 	    <tr>
+	        <th scope="col" rowspan="2">Source</th>
 	        <th scope="col" rowspan="2">Frequency [GHz]</th>
 	        <th scope="col" rowspan="2">Data</th>
-		<th scope="col" rowspan="2">Error</th>
-		<th scope="col" rowspan="2">Fitted Data</th>
+		    <th scope="col" rowspan="2">Error</th>
+		    <th scope="col" rowspan="2">Fitted Data</th>
 	    </tr>
 
 	</thead>
 	<tbody>   
   
-    % for row in sorted(weblog_results[ms], key=lambda p: float(p['freq'])):
-    
+     % for sourcekey in sorted(weblog_results[ms].keys()):
+        <tr>
+		    <td rowspan="${len(weblog_results[ms][sourcekey])}">${sourcekey}</td>
+                % for row in sorted(weblog_results[ms][sourcekey], key=lambda p: float(p['freq'])):
 
-	
-		<tr>
 		        <td>${row['freq']}</td>
-			<td>${row['data']}</td>
-			<td>${row['error']}</td>
-			<td>${row['fitteddata']}</td>
+			    <td>${row['data']}</td>
+			    <td>${row['error']}</td>
+			    <td>${row['fitteddata']}</td>
 		</tr>
-
+            % endfor
     % endfor
 	</tbody>
     </table>

@@ -10,7 +10,7 @@ LOG = infrastructure.get_logger(__name__)
 class RqcalResults(basetask.Results):
     def __init__(self, final=[], pool=[], preceding=[]):
         super(RqcalResults, self).__init__()
-        
+
         self.vis = None
         self.pool = pool[:]
         self.final = final[:]
@@ -28,11 +28,10 @@ class RqcalResults(basetask.Results):
             context.callibrary.add(calapp.calto, calapp.calfrom)
 
     def __repr__(self):
-
-	# Format the Tsyscal results.
+        # Format the Tsyscal results.
         s = 'RqcalResults:\n'
         for calapplication in self.final:
             s += '\tBest caltable for spw #{spw} in {vis} is {name}\n'.format(
                 spw=calapplication.spw, vis=os.path.basename(calapplication.vis),
                 name=calapplication.gaintable)
-	return s
+        return s

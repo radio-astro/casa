@@ -37,13 +37,14 @@ $(document).ready(function() {
             <tr>
                 <th rowspan="2">Field</th>
                 <th rowspan="2">Spw</th>
-                <th colspan="2">Continuum Frequency Range</th>
+                <th colspan="3">Continuum Frequency Range</th>
                 <th rowspan="2">Status</th>
                 <th rowspan="2">Average spectrum</th>
             </tr>
             <tr>
                 <th>Start</th>
                 <th>End</th>
+                <th>Frame</th>
             </tr>
         </thead>
         <tbody>

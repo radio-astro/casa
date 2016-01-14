@@ -89,7 +89,7 @@ a QA score based on its effect on the interferometric data.
       
     <param type="string" name="smooth" subparam="true">
 	<description>Smooth WVR data on the given timescale before calculating the correction</description>
-	<value>1s</value>
+	<value></value>
     </param>
       
     <param type="double" name="scale" subparam="true">
@@ -97,25 +97,30 @@ a QA score based on its effect on the interferometric data.
 	<value>1.</value>
     </param>
 
-      <param type="double" name="maxdistm">
-        <description>Maximum distance (m) of an antenna used for interpolation for a flagged antenna</description>
-        <value>500.</value>
-      </param>
+    <param type="double" name="maxdistm">
+      <description>Maximum distance (m) of an antenna used for interpolation for a flagged antenna</description>
+      <value>500.</value>
+    </param>
 
-      <param type="int" name="minnumants">
-        <description>Minimum number of near antennas (up to 3) required for interpolation</description>
-        <value>2</value>
-        <allowed kind="enum">
-            <value>1</value>
-            <value>2</value>
-            <value>3</value>
-        </allowed>
-      </param>
+    <param type="int" name="minnumants">
+      <description>Minimum number of near antennas (up to 3) required for interpolation</description>
+      <value>2</value>
+      <allowed kind="enum">
+          <value>1</value>
+          <value>2</value>
+          <value>3</value>
+      </allowed>
+    </param>
 
-      <param type="double" name="mingoodfrac">
-        <description>Minimum fraction of good data per antenna</description>
-        <value>0.8</value>
-      </param>
+    <param type="double" name="mingoodfrac">
+      <description>Minimum fraction of good data per antenna</description>
+      <value>0.8</value>
+    </param>
+
+    <param type="string" name="refant" subparam="true">
+      <description>Ranked list of reference antennas</description>
+      <value></value>
+    </param>
 
     <param type="string" name="qa_intent">
         <description>Data intents to use in estimating the effectiveness of the wvr correction</description>
@@ -167,6 +172,7 @@ a QA score based on its effect on the interferometric data.
                 <default param="caltable"><value type="stringArray"></value></default>
                 <default param="wvrflag"><value type="stringArray"></value></default>
                 <default param="scale"><value type="double">1.0</value></default>
+                <default param="refant"><value type="string"></value></default>
                 <default param="dryrun"><value type="bool">False</value></default>
                 <default param="acceptresults"><value type="bool">True</value></default>
             </equals>
@@ -175,6 +181,7 @@ a QA score based on its effect on the interferometric data.
                 <default param="caltable"><value type="stringArray"></value></default>
                 <default param="wvrflag"><value type="stringArray"></value></default>
                 <default param="scale"><value type="double">1.0</value></default>
+                <default param="refant"><value type="string"></value></default>
             </equals>
         </when>
 
@@ -185,7 +192,7 @@ a QA score based on its effect on the interferometric data.
 	    <equals type="string" value="automatic">
 	    </equals>
 	    <equals type="string" value="manual">
-	        <default param="smooth"><value type="string">1s</value></default>
+	        <default param="smooth"><value type="string"></value></default>
 	    </equals>
         </when>
 
@@ -297,7 +304,7 @@ hm_smooth -- If 'manual' set the 'smooth' parameter to the user-specified value.
 
 smooth -- Smooth WVR data on this timescale before calculating the correction.
     Ignored unless hm_smooth='manual'.
-    default: '1s'
+    default: ''
 
 scale -- Scale the entire phase correction by this factor.
     default: 1
@@ -311,6 +318,13 @@ minnumants -- Minimum number of nearby antennas (up to 3) used for
     interpolation from a flagged antenna.
     default: 2
     example: 3
+
+mingoodfrac -- Minimum fraction of good data per  antenna
+    default: 0.8
+
+refant -- Ranked comma delimited list of reference antennas.
+    default: ''
+    example 'DV01,DV02'
 
 qa_intent -- The list of data intents on which the wvr correction is to be 
     tried as a means of estimating its effectiveness.

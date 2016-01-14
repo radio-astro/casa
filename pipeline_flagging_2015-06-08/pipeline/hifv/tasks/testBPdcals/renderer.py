@@ -24,6 +24,20 @@ class VLASubPlotRenderer(object):
         self.template = template
         self.filename_prefix=filename_prefix
 
+        self.summary_plots = {}
+        self.testdelay_subpages = {}
+        self.ampgain_subpages = {}
+        self.phasegain_subpages = {}
+        self.bpsolamp_subpages = {}
+        self.bpsolphase_subpages = {}
+        
+
+        self.testdelay_subpages[self.ms] = filenamer.sanitize('testdelays' + '-%s.html' % self.ms)
+        self.ampgain_subpages[self.ms] = filenamer.sanitize('ampgain' + '-%s.html' % self.ms)
+        self.phasegain_subpages[self.ms] = filenamer.sanitize('phasegain' + '-%s.html' % self.ms)
+        self.bpsolamp_subpages[self.ms] = filenamer.sanitize('bpsolamp' + '-%s.html' % self.ms)
+        self.bpsolphase_subpages[self.ms] = filenamer.sanitize('bpsolphase' + '-%s.html' % self.ms)
+
         if os.path.exists(json_path):
             with open(json_path, 'r') as json_file:
                 self.json = json_file.readlines()[0]
@@ -35,7 +49,12 @@ class VLASubPlotRenderer(object):
                 'result'     : self.result,
                 'plots'      : self.plots,
                 'dirname'    : self.dirname,
-                'json'       : self.json}
+                'json'       : self.json,
+                'testdelay_subpages' : self.testdelay_subpages,
+                'ampgain_subpages'   : self.ampgain_subpages,
+                'phasegain_subpages' : self.phasegain_subpages,
+                'bpsolamp_subpages'  : self.bpsolamp_subpages,
+                'bpsolphase_subpages' : self.bpsolphase_subpages}
 
     @property
     def dirname(self):

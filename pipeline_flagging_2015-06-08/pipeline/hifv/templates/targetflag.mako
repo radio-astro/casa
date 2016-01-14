@@ -45,39 +45,7 @@ $(document).ready(function() {
 });
 </script>
 
-<p>Run all calibrated data (including target) through rflag.</p>
-
-
-
-
-
-
-<%self:plot_group plot_dict="${summary_plots}"
-                                  url_fn="${lambda ms:  'noop'}">
-
-        <%def name="title()">
-            Targetflag summary plot
-        </%def>
-
-        <%def name="preamble()">
-
-
-        </%def>
-        
-        
-        <%def name="mouseover(plot)">Summary window </%def>
-        
-        
-        
-        <%def name="fancybox_caption(plot)">
-          Plot of ${plot.y_axis} vs. ${plot.x_axis}
-        </%def>
-        
-        
-        <%def name="caption_title(plot)">
-           ${plot.parameters['type']}
-        </%def>
-</%self:plot_group>
+<p>Run all calibrated data (including intent='TARGET') through rflag.</p>
 
 
 

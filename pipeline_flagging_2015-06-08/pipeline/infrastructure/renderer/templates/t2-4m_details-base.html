@@ -50,9 +50,13 @@ def format_notification(tr_class, alert, msg, icon_class=None):
 
 %>
 
-<%def name="plot_group(plot_dict, url_fn, data_spw=False, data_field=False, data_baseband=False, data_tsysspw=False, plot_accessor=lambda d: [('No Intent', d)])">
+<%def name="plot_group(plot_dict, url_fn, data_spw=False, data_field=False, data_baseband=False, data_tsysspw=False, data_vis=False, title_id=None, plot_accessor=lambda d: [('No Intent', d)])">
 % if plot_dict:
-	<h3>${caller.title()}</h3>
+	% if title_id:
+		<h3 id="${title_id}" class="jumptarget">${caller.title()}</h3>
+	% else:
+		<h3>${caller.title()}</h3>
+	% endif
 
 	% if hasattr(caller, 'preamble'):
 		 ${caller.preamble()}
@@ -61,14 +65,21 @@ def format_notification(tr_class, alert, msg, icon_class=None):
 	% for ms, ms_plots in plot_dict.items():
 		<%
 			relurl = url_fn(ms)
-			subpage_abspath = os.path.join(pcontext.report_dir, dirname, relurl)
-			subpage_path = os.path.relpath(subpage_abspath, pcontext.report_dir)
-			subpage_exists = os.path.exists(subpage_abspath)
+			if relurl:
+				subpage_abspath = os.path.join(pcontext.report_dir, dirname, relurl)
+				subpage_path = os.path.relpath(subpage_abspath, pcontext.report_dir)
+				subpage_exists = os.path.exists(subpage_abspath)
+			else:
+				subpage_exists = false
+
 		%>
 
 		<h4>
 			% if subpage_exists:
 			<a class="replace"
+			   % if data_vis:
+			   data-vis="${ms}"
+			   % endif
 			   href="${subpage_path}">
 			% endif
 				${ms}
@@ -117,10 +128,13 @@ def format_notification(tr_class, alert, msg, icon_class=None):
 								   data-spw="${plot.parameters['spw']}"
 								% endif
 								% if data_tsysspw:
-								   data-spw="${plot.parameters['tsys_spw']}"
+								   data-tsys_spw="${plot.parameters['tsys_spw']}"
 								% endif
 								% if data_baseband:
 								   data-baseband="${plot.parameters['baseband']}"
+								% endif
+								% if data_vis:
+								   data-vis="${plot.parameters['vis']}"
 								% endif
 	   							   class="replace">
 							% endif

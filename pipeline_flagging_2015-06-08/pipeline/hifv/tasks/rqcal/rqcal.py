@@ -1,5 +1,4 @@
 from __future__ import absolute_import
-import os
 import types
 
 from pipeline.hif.heuristics import caltable as caltable_heuristic
@@ -10,18 +9,16 @@ from pipeline.infrastructure import casa_tasks
 from . import resultobjects
 
 import pipeline.infrastructure.casatools as casatools
-import numpy
 
 LOG = infrastructure.get_logger(__name__)
-
 
 
 class RqcalInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, caltable=None, caltype=None, parameter=[]):
-	# set the properties to the values given as input arguments
+        # set the properties to the values given as input arguments
         self._init_properties(vars())
-	setattr(self, 'caltype', 'rq')
+        setattr(self, 'caltype', 'rq')
 
     @property
     def caltable(self):
@@ -30,9 +27,9 @@ class RqcalInputs(basetask.StandardInputs):
         if type(self.vis) is types.ListType:
             return self._handle_multiple_vis('caltable')
         
-	# Get the name.
+        # Get the name.
         if callable(self._caltable):
-	    casa_args = self._get_partial_task_args()
+            casa_args = self._get_partial_task_args()
             return self._caltable(output_dir=self.output_dir,
                                   stage=self.context.stage,
                                   **casa_args)
@@ -65,16 +62,16 @@ class RqcalInputs(basetask.StandardInputs):
         self._spw = value
 
     # Avoids circular dependency on caltable.
-    # NOT SURE WHY THIS IS NECCESARY.
+    # NOT SURE WHY THIS IS NECESSARY.
     def _get_partial_task_args(self):
-	return {'vis': self.vis, 'caltype': self.caltype}
+        return {'vis': self.vis, 'caltype': self.caltype}
 
     # Convert to CASA gencal task arguments.
     def to_casa_args(self):
         
-	return {'vis': self.vis,
-	        'caltable': self.caltable,
-		'caltype': self.caltype,
+        return {'vis': self.vis,
+                'caltable': self.caltable,
+                'caltype': self.caltype,
                 'parameter': self.parameter}
 
 
@@ -89,7 +86,7 @@ class Rqcal(basetask.StandardTaskTemplate):
 
         startdate = ms_summary['BeginTime']
 
-        #Note from original scripted pipeline:
+        # Note from original scripted pipeline:
         # Apply switched power calibration (when commissioned); for now, just
         # requantizer gains (needs casa4.1!), and only for data with
         # sensible switched power tables (Feb 24, 2011)
@@ -105,7 +102,6 @@ class Rqcal(basetask.StandardTaskTemplate):
             callist.append(calapp)
 
         return resultobjects.RqcalResults(pool=callist)
-
 
     def analyse(self, result):
         # With no best caltable to find, our task is simply to set the one

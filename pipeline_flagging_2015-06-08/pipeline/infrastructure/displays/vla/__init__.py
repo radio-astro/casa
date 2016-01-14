@@ -11,6 +11,8 @@ from .fluxbootdisplay import fluxbootSummaryChart
 
 from .targetflagdisplay import targetflagSummaryChart
 
+from .plotsummarydisplay import plotsummarySummaryChart
+
 from .finalcalsdisplay import finalcalsSummaryChart, finalDelaysPerAntennaChart, finalphaseGainPerAntennaChart, finalbpSolAmpPerAntennaChart, finalbpSolPhasePerAntennaChart, finalbpSolPhaseShortPerAntennaChart, finalAmpTimeCalPerAntennaChart, finalAmpFreqCalPerAntennaChart, finalPhaseGainCalPerAntennaChart
 
 from .opacitiesdisplay import opacitiesSummaryChart

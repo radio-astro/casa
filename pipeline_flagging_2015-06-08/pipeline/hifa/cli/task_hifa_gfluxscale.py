@@ -6,7 +6,7 @@ import pipeline.h.cli.utils as utils
 
 
 def hifa_gfluxscale(vis=None, reference=None, transfer=None, refintent=None,
-    transintent=None, refspwmap=None, phaseupsolint=None, solint=None,
+    transintent=None, refspwmap=None, reffile=None, phaseupsolint=None, solint=None,
     minsnr=None, refant=None, hm_resolvecals=None, antenna=None,
     peak_fraction=None, pipelinemode=None, dryrun=None, acceptresults=None):
 

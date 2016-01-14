@@ -3,13 +3,13 @@ import ast
 import csv
 import datetime
 import os
-import re
 import string
 import types
+import numpy as np
+import decimal
 
 
 from ..common import commonfluxresults
-import pipeline.infrastructure.casatools as casatools
 import pipeline.domain as domain
 import pipeline.domain.measures as measures
 from pipeline.hif.heuristics import standard as standard
@@ -20,28 +20,21 @@ import pipeline.infrastructure.utils as utils
 
 LOG = infrastructure.get_logger(__name__)
 
-
 class SetjyInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None,
-                 # standard setjy parameters 
-                 vis=None, field=None, spw=None, model=None, 
-                 scalebychan=None, fluxdensity=None, spix=None,
-                 reffreq=None, standard=None,
-                 # intent for calculating field name
-                 intent=None,
+                 # some standard setjy selection parameters
+                 vis=None, field=None, intent=None, spw=None,
+                 # other standard setjy parameters
+                 model=None, scalebychan=None, fluxdensity=None,
+                 spix=None, reffreq=None, standard=None,
+                 # reference spectrum
+                 #    tuple containing reffreq, fluxdensity, spix
+                 refspectra=None,
                  # reference flux file
-                 reffile=None):
+                 reffile=None, normfluxes=None):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
-
-    @staticmethod
-    def _get_casa_flux_density(flux):
-        iquv = [flux.I.to_units(measures.FluxDensityUnits.JANSKY),
-                flux.Q.to_units(measures.FluxDensityUnits.JANSKY),
-                flux.U.to_units(measures.FluxDensityUnits.JANSKY),
-                flux.V.to_units(measures.FluxDensityUnits.JANSKY) ]
-        return map(float, iquv)
 
     @property
     def field(self):
@@ -71,115 +64,6 @@ class SetjyInputs(basetask.StandardInputs):
         self._field = value
 
     @property
-    def fluxdensity(self):
-        # if flux density was explicitly set and is *not* -1 (which is 
-        # hard-coded as the default value in the task interface), return that
-        # value. 
-        if self._fluxdensity is not -1:
-            return self._fluxdensity
-
-        # if invoked with multiple mses, return a list of flux densities
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('fluxdensity')
-
-        if not self.ms:
-            return
-
-        # so _fluxdensity is -1, indicating we should do a flux lookup. The
-        # lookup order is: 
-        # 1) from file, unless it's a solar system object
-        # 2) from CASA
-        # We now read the reference flux value from a file
-        ref_flux = []
-        if os.path.exists(self.reffile):
-            with open(self.reffile, 'rt') as f:
-                reader = csv.reader(f)
-
-                # first row is header row
-                reader.next()
-        
-                for row in reader:
-                    try:
-                        (ms_name, field_id, spw_id, I, Q, U, V, comment) = row
-                    except ValueError:
-                        LOG.warning('Invalid flux statement in %s: \'%s'
-                                    '\'' % (self.reffile, row))
-                        continue
-
-                    if os.path.basename(ms_name) != self.ms.basename:
-                        continue
-
-                    spw_id = int(spw_id)
-                    ref_flux.append((field_id, spw_id, float(I), float(Q), 
-                                     float(U), float(V)))
-        
-                    # TODO sort the flux values in spw order?
-
-        if not os.path.exists(self.reffile) and self.reffile not in ('', None):
-            LOG.warning('Flux reference file \'%s\' not found')
-
-        # get the spectral window IDs for the spws specified by the inputs
-        spws = self.ms.get_spectral_windows(self.spw)
-        spw_ids = sorted(spw.id for spw in spws)
-
-        # in order to print flux densities in the same order as the fields, we
-        # need to get the flux density for each field in turn 
-        field_flux = []
-        for field_arg in utils.safe_split(self.field):
-            # field names may resolve to multiple field IDs
-            fields = self.ms.get_fields(task_arg=field_arg, intent=self.intent)
-            field_ids = set([str(field.id) for field in fields])
-            field_names = set([field.name for field in fields])
-
-            flux_by_spw = [] 
-            for spw_id in spw_ids:
-                flux = [[I, Q, U, V] 
-                        for (ref_field_id, ref_spw_id, I, Q, U, V) in ref_flux
-                        if (ref_field_id in field_ids
-                            or ref_field_id in field_names)
-                        and ref_spw_id == spw_id]
-                
-                # no flux measurements found for the requested field/spws, so do
-                # either a CASA model look-up (-1) or reset the flux to 1.                
-                if not flux:
-                    if any('AMPLITUDE' in f.intents for f in fields):
-                        flux = [-1]
-                    else:
-                        flux = [1]
-
-                # if this is a solar system calibrator, ignore any catalogue
-                # flux and request a CASA model lookup
-                if not field_names.isdisjoint(standard.Standard.ephemeris_fields):
-                    LOG.debug('Ignoring records from file for solar system '
-                              'calibrator')
-                    flux = [-1]
-
-                flux_by_spw.append(flux[0] if len(flux) is 1 else flux)
-
-            field_flux.append(flux_by_spw[0] if len(flux_by_spw) is 1 
-                              else flux_by_spw)
-
-        return field_flux[0] if len(field_flux) is 1 else field_flux
-
-    @fluxdensity.setter
-    def fluxdensity(self, value):
-        # Multiple flux density values in the form of nested lists are
-        # required when multiple spws and fields are to be processed. This
-        # function recursively converts those nested list elements to floats.
-        def element_to_float(e):
-            if type(e) is types.ListType:
-                return [element_to_float(i) for i in e]
-            return float(e)
-
-        # default value is -1
-        if value is None:
-            value = -1
-        elif value is not -1:
-            value = [element_to_float(n) for n in ast.literal_eval(str(value))]        
-        
-        self._fluxdensity = value
-
-    @property
     def intent(self):
         if self._intent is not None:
             return self._intent.replace('*', '')
@@ -192,6 +76,122 @@ class SetjyInputs(basetask.StandardInputs):
         self._intent = string.replace(value, '*', '')
 
     @property
+    def refspectra(self):
+        # If flux density was explicitly set and is *not* -1 (which is 
+        # hard-coded as the default value in the task interface), return that
+        # value. 
+        if self.fluxdensity is not -1:
+            return (self.reffreq, self.fluxdensity, self.spix)
+
+        # If invoked with multiple mses, return a list of flux densities
+        if type(self.vis) is types.ListType:
+            return self._handle_multiple_vis('refspectra')
+
+        if not self.ms:
+            return
+
+        # So _fluxdensity is -1, indicating we should do a flux lookup. The
+        # lookup order is: 
+        # 1) from file, unless it's a solar system object
+        # 2) from CASA
+        
+        # TODO: Add reading directly from the context 
+
+        # We now read the reference flux value from a file
+        ref_flux = []
+        if os.path.exists(self.reffile):
+            with open(self.reffile, 'rt') as f:
+                reader = csv.reader(f)
+
+                # First row is header row
+                reader.next()
+        
+                # Loop over rows trying the new format first
+                for row in reader:
+                    try:
+                        try:
+                            (ms_name, field_id, spw_id, I, Q, U, V, spix, comment) = row
+                        except:
+                            (ms_name, field_id, spw_id, I, Q, U, V, comment) = row
+                            spix = str(self.spix)
+                    except ValueError:
+                        LOG.warning('Invalid flux statement in %s: \'%s'
+                                    '\'' % (self.reffile, row))
+                        continue
+
+                    # Check that the entry is for the correct MS
+                    if os.path.basename(ms_name) != self.ms.basename:
+                        continue
+
+                    spw_id = int(spw_id)
+                    ref_flux.append((field_id, spw_id, float(I), float(Q), 
+                                     float(U), float(V), float(spix)))
+        
+                    # TODO sort the flux values in spw order?
+
+        # Warning if reference file was specified but not found.
+        if not os.path.exists(self.reffile) and self.reffile not in ('', None):
+            LOG.warning('Flux reference file \'%s\' not found')
+
+        # Get the spectral window IDs for the spws specified by the inputs
+        spws = self.ms.get_spectral_windows(self.spw)
+        spw_ids = sorted(spw.id for spw in spws)
+
+        # In order to print flux densities in the same order as the fields, we
+        # need to get the flux density for each field in turn 
+        field_flux = []
+        for field_arg in utils.safe_split(self.field):
+            # Field names may resolve to multiple field IDs
+            fields = self.ms.get_fields(task_arg=field_arg, intent=self.intent)
+            field_ids = set([str(field.id) for field in fields])
+            field_names = set([field.name for field in fields])
+
+            flux_by_spw = [] 
+            for spw_id in spw_ids:
+                reffreq = str(self.ms.get_spectral_window(spw_id).centre_frequency)
+                if self.normfluxes:
+                    flux = [(reffreq, [I/I, Q/I, U/I, V/I], spix) 
+                        for (ref_field_id, ref_spw_id, I, Q, U, V, spix) in ref_flux
+                        if (ref_field_id in field_ids
+                            or ref_field_id in field_names)
+                        and ref_spw_id == spw_id]
+                else:
+                    flux = [(reffreq, [I, Q, U, V], spix) 
+                        for (ref_field_id, ref_spw_id, I, Q, U, V, spix) in ref_flux
+                        if (ref_field_id in field_ids
+                            or ref_field_id in field_names)
+                        and ref_spw_id == spw_id]
+                
+                # No flux measurements found for the requested field/spws, so do
+                # either a CASA model look-up (-1) or reset the flux to 1.                
+                if not flux:
+                    if any('AMPLITUDE' in f.intents for f in fields):
+                        flux = (reffreq, -1, self.spix)
+                    else:
+                        flux = (reffreq, [1], self.spix)
+
+                # If this is a solar system calibrator, ignore any catalogue
+                # flux and request a CASA model lookup
+                if not field_names.isdisjoint(standard.Standard.ephemeris_fields):
+                    LOG.debug('Ignoring records from file for solar system '
+                              'calibrator')
+                    flux = (reffreq, -1, 0.0)
+
+                flux_by_spw.append(flux[0] if len(flux) is 1 else flux)
+
+            field_flux.append(flux_by_spw[0] if len(flux_by_spw) is 1 
+                              else flux_by_spw)
+
+        return field_flux[0] if len(field_flux) is 1 else field_flux
+
+    @refspectra.setter
+    def refspectra(self, value):
+        # default value is tuple containing standard defaults
+        if value is None:
+            value = (self.reffreq, self.fluxdensity, self.spix)
+        self._refspectra = value
+
+    @property
     def reffile(self):
         return self._reffile
     
@@ -200,6 +200,16 @@ class SetjyInputs(basetask.StandardInputs):
         if value in (None, ''):
             value = os.path.join(self.context.output_dir, 'flux.csv')
         self._reffile = value
+
+    @property
+    def normfluxes(self):
+        return self._normfluxes
+    
+    @normfluxes.setter
+    def normfluxes(self, value=None):
+        if value is None:
+            value = False
+        self._normfluxes = value
 
     @property
     def reffreq(self):
@@ -212,14 +222,14 @@ class SetjyInputs(basetask.StandardInputs):
         self._reffreq = value
 
     @property
-    def scalebychan(self):
-        return self._scalebychan
+    def fluxdensity(self):
+        return self._fluxdensity
 
-    @scalebychan.setter
-    def scalebychan(self, value):
+    @fluxdensity.setter
+    def fluxdensity(self, value):
         if value is None:
-            value = True
-        self._scalebychan = value
+            value = -1
+        self._fluxdensity = value
 
     @property
     def spix(self):
@@ -230,6 +240,16 @@ class SetjyInputs(basetask.StandardInputs):
         if value is None:
             value = 0.0
         self._spix = value
+
+    @property
+    def scalebychan(self):
+        return self._scalebychan
+
+    @scalebychan.setter
+    def scalebychan(self, value):
+        if value is None:
+            value = True
+        self._scalebychan = value
 
     @property
     def standard(self):
@@ -262,8 +282,16 @@ class SetjyInputs(basetask.StandardInputs):
         
     def to_casa_args(self):
         d = super(SetjyInputs, self).to_casa_args()
+
+        d['fluxdensity'] = d['refspectra'][1]
+        try:
+            np.testing.assert_almost_equal(d['refspectra'][2], 0.0)
+        except:
+            d['reffreq'] = d['refspectra'][0]
+            d['spix'] = d['refspectra'][2]
+
         # Filter out reffile. Note that the , is required
-        for ignore in ('reffile',):
+        for ignore in ('reffile', 'refspectra', 'normfluxes', ):
             if ignore in d:
                 del d[ignore]
 
@@ -279,25 +307,6 @@ class SetjyInputs(basetask.StandardInputs):
 class Setjy(basetask.StandardTaskTemplate):
     Inputs = SetjyInputs
 
-    # SetJy outputs different log messages depending on the type of amplitude
-    # calibrator. These two patterns match the formats we've seen so far
-    _flux_patterns = (
-        # 2013-02-07 15:27:51 INFO setjy        0542+498 (fld ind 2) spw 0  [I=21.881, Q=0, U=0, V=0] Jy, (Perley-Butler 2010)
-        re.compile('\(fld ind (?P<field>\d+)\)'
-                   '\s+spw\s+(?P<spw>\d+)'
-                   '\s+\[I=(?P<I>[\d\.]+)'
-                   ', Q=(?P<Q>[\d\.]+)'
-                   ', U=(?P<U>[\d\.]+)'
-                   ', V=(?P<V>[\d\.]+)]'),
-    
-        # 2013-02-07 16:28:38 INFO setjy     Callisto: spw9 Flux:[I=20.043,Q=0.0,U=0.0,V=0.0] +/- [I=0.0,Q=0.0,U=0.0,V=0.0] Jy
-        re.compile('(?P<field>\S+): '
-                   'spw(?P<spw>\d+)\s+'
-                   'Flux:\[I=(?P<I>[\d\.]+),'
-                   'Q=(?P<Q>[\d\.]+),'
-                   'U=(?P<U>[\d\.]+),'
-                   'V=(?P<V>[\d\.]+)\]'))
-    
     def prepare(self):
         inputs = self.inputs
         result = commonfluxresults.FluxCalibrationResults(vis=inputs.vis) 
@@ -310,13 +319,8 @@ class Setjy(basetask.StandardTaskTemplate):
                         (inputs.field, inputs.ms.basename, inputs.intent))
             return result
 
-        # get the spectral windows for the spw inputs argument
+        # Get the spectral windows for the spw inputs argument
         spws = [spw for spw in inputs.ms.get_spectral_windows(inputs.spw)]
-
-        # Multiple spectral windows spawn multiple setjy jobs. Set a unique
-        # marker in the CASA log so that we can identify log entries from this
-        # particular task
-        ####start_marker = self._add_marker_to_casa_log()
 
         # loop over fields so that we can use Setjy for sources with different
         # standards
@@ -326,8 +330,8 @@ class Setjy(basetask.StandardTaskTemplate):
         for field_name in utils.safe_split(inputs.field):
             jobs = []
 
-            # intent is now passed through to setjy, where the intents are 
-            # ANDed to form the data selection. This causes problems when a 
+            # Intent is now passed through to setjy, where the intents are 
+            # AND'ed to form the data selection. This causes problems when a 
             # field name resolves to two field IDs with disjoint intents: 
             # no data is selected. So, create our own OR data selection by 
             # looping over the individual fields, specifying just those 
@@ -340,11 +344,11 @@ class Setjy(basetask.StandardTaskTemplate):
                         
             for field in fields:
 
-		# determine the valid spws for that field
+		# Determine the valid spws for that field
 		valid_spwids = [spw.id for spw in field.valid_spws]
 
                 field_identifier = field.name if field_is_unique else str(field.id)
-                # we're specifying field PLUS intent, so we're unlikely to
+                # We're specifying field PLUS intent, so we're unlikely to
                 # have duplicate data selections. We ensure no duplicate
                 # selections by using field ID at the expense of losing some 
                 # readability in the log. Also, this helps if the amplitude
@@ -360,7 +364,7 @@ class Setjy(basetask.StandardTaskTemplate):
     
                     orig_intent = inputs.intent
                     try:                
-                        # the field may not have all intents, which leads to its
+                        # The field may not have all intents, which leads to its
                         # deselection in the setjy data selection. Only list
                         # the target intents that are present in the field.
                         input_intents = set(inputs.intent.split(',')) 
@@ -377,33 +381,25 @@ class Setjy(basetask.StandardTaskTemplate):
                     # Flux densities coming from a non-lookup are added to the
                     # results so that user-provided calibrator fluxes are
                     # committed back to the domain objects
-                    if inputs.fluxdensity is not -1:
-    #                    l = inputs.field.split(',')
-    #                     field_idx = l.index(field)                                    
+                    if inputs.refspectra[1] is not -1:
                         try:
-                            (I,Q,U,V) = inputs.fluxdensity
-                            flux = domain.FluxMeasurement(spw_id=spw.id, I=I, Q=Q, U=U, V=V)
+                            (I,Q,U,V) = inputs.refspectra[1]
+                            spix = decimal.Decimal(str(inputs.refspectra[2]))
+                            flux = domain.FluxMeasurement(spw_id=spw.id, I=I, Q=Q, U=U, V=V, spix=spix)
                         except:
-                            I = inputs.fluxdensity
-                            flux = domain.FluxMeasurement(spw_id=spw.id, I=I)
+                            I = inputs.refspectra[1][0]
+                            spix = decimal.Decimal(str(inputs.refspectra[2]))
+                            flux = domain.FluxMeasurement(spw_id=spw.id, I=I, spix=spix)
                         result.measurements[field_identifier].append(flux)
 
-            # merge identical jobs into one job with a multi-spw argument
+            # Merge identical jobs into one job with a multi-spw argument
             jobs_and_components = utils.merge_jobs(jobs, casa_tasks.setjy, merge=('spw',))
             for job, _ in jobs_and_components:
                 setjy_dicts.append(self._executor.execute(job))
 
-        # higher-level tasks may run multiple Setjy tasks before running
-        # analyse, so we also tag the end of our jobs so we can identify the
-        # values from this task
-        ####end_marker = self._add_marker_to_casa_log()
 
-        # We read the log in reverse order, so the end timestamp should
-        # trigger processing and the start timestamps should terminate it.
-        ####end_pattern = re.compile('.*%s.*' % start_marker)
-        ####start_pattern = re.compile('.*%s.*' % end_marker)
-        
-        
+        # Process the setjy results.
+        #    There can be ambiguity in the field names and ids
         spw_seen = set()
         for setjy_dict in setjy_dicts:
             setjy_dict.pop('format')
@@ -412,77 +408,21 @@ class Setjy(basetask.StandardTaskTemplate):
                 spwkeys = setjy_dict[field_id].keys()
                 field = self.inputs.ms.get_fields(field_id)[0]
 
-                if field.name not in result.measurements.keys():
-                    for spw_id in spwkeys:
-                        I = setjy_dict[field_id][spw_id]['fluxd'][0]
-                        Q = setjy_dict[field_id][spw_id]['fluxd'][1]
-                        U = setjy_dict[field_id][spw_id]['fluxd'][2]
-                        V = setjy_dict[field_id][spw_id]['fluxd'][3]
-                        flux = domain.FluxMeasurement(spw_id=spw_id, I=I, Q=Q, U=U, V=V)
+                if field_id not in result.measurements.keys():
+                    if field.name not in result.measurements.keys():
+                        for spw_id in spwkeys:
+                            I = setjy_dict[field_id][spw_id]['fluxd'][0]
+                            Q = setjy_dict[field_id][spw_id]['fluxd'][1]
+                            U = setjy_dict[field_id][spw_id]['fluxd'][2]
+                            V = setjy_dict[field_id][spw_id]['fluxd'][3]
+                            flux = domain.FluxMeasurement(spw_id=spw_id, I=I, Q=Q, U=U, V=V)
                     
-                        if spw_id not in spw_seen:
-                            result.measurements[field.identifier].append(flux)
-                            spw_seen.add(spw_id)
-        '''
-        with commonfluxresults.File(casatools.log.logfile()) as casa_log:
-            # CASA has a bug whereby setting spw='0,1' logs results for spw #0
-            # twice, thus giving us two measurements. We get round this by
-            # noting previously recorded spws in this set
-            spw_seen = set()
-        
-            start_tag_found = False
-            for l in casa_log.backward():
-                if not start_tag_found and start_pattern.match(l):
-                    start_tag_found = True
-                    continue
-
-                if start_tag_found:
-                    flux_match = self._match_flux_log_entry(l)
-                    if flux_match:
-                        log_entry = flux_match.groupdict()
-                        
-                        field_id = log_entry['field']
-                        field = self.inputs.ms.get_fields(field_id)[0]
-                        
-                        spw_id = log_entry['spw']
- 
-                        I = log_entry['I']
-                        Q = log_entry['Q']
-                        U = log_entry['U']
-                        V = log_entry['V']                        
-                        flux = domain.FluxMeasurement(spw_id=spw_id, 
-                                                      I=I, Q=Q, U=U, V=V)
-                       
-                        # .. and here's that check for previously recorded
-                        # spectral windows.
-                        if spw_id not in spw_seen:
-                            result.measurements[field.identifier].append(flux)
-                            spw_seen.add(spw_id)
-                    if end_pattern.match(l):
-                        break
-
-            # Yes, this else belongs to the for loop! This will execute when
-            # no break occurs 
-            else:
-                LOG.error('Could not find start of setjy task in CASA log. '
-                          'Too many sources, or operating in dry-run mode?')
-            '''
+                            if spw_id not in spw_seen:
+                                result.measurements[str(field_id)].append(flux)
+                                spw_seen.add(spw_id)
             
         return result
 
     def analyse(self, result):
         return result
 
-    def _add_marker_to_casa_log(self):
-        comment = 'Setjy marker: %s' %  datetime.datetime.now()
-        comment_job = casa_tasks.comment(comment, False)
-        self._executor.execute(comment_job)
-        return comment
-
-    def _match_flux_log_entry(self, log_entry):
-        for pattern in self._flux_patterns:
-            match = pattern.search(log_entry)
-            if match:
-                return match
-        return False
-        

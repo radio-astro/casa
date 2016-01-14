@@ -52,6 +52,7 @@ import pipeline.infrastructure.imagelibrary as imagelibrary
 LOG = infrastructure.get_logger(__name__)
 
 from . import manifest
+from . import aqua
 
 class ExportDataInputs(basetask.StandardInputs):
     """
@@ -405,6 +406,19 @@ class ExportData(basetask.StandardTaskTemplate):
 	    [os.path.basename(image) for image in targetimages_fitslist], \
 	    'target')
 
+        # Generate the AQUA report
+        aqua_reportfile = 'pipeline_aquareport.xml'
+	LOG.info ('Generating pipeline AQUA report')
+        try:
+            aqua.aquaReportFromContext (inputs.context, aqua_reportfile)
+        except:
+	    LOG.error ('Error generating the pipeline AQUA report')
+        finally:
+	    LOG.info ('Exporting pipeline AQUA report')
+            pipe_aquareport_file = self._export_aqua_report (inputs.context,
+                oussid, aqua_reportfile, inputs.products_dir)
+            # Don't add to the pipeline manifest as AQUA takes care of this
+
 	# Export the pipeline manifest file
 	casa_pipe_manifest = self._export_pipe_manifest(inputs.context, oussid,
 	    'pipeline_manifest.xml', inputs.products_dir, pipemanifest)
@@ -648,13 +662,6 @@ class ExportData(basetask.StandardTaskTemplate):
 	cwd = os.getcwd()
 	os.chdir (context.output_dir)
 
-	#ps = context.project_structure
-	#if ps is None:
-	    #ousid = ''
-	#elif ps.ousstatus_entity_id == 'unknown':
-	    #ousid = ''
-	#else:
-	    #ousid = ps.ousstatus_entity_id.translate(string.maketrans(':/', '__')) + '.'
 	ousid = oussid + '.'
 
 	# Define the name of the output tarfile
@@ -711,7 +718,6 @@ class ExportData(basetask.StandardTaskTemplate):
 	elif ps.ousstatus_entity_id == 'unknown':
             tarfilename = 'weblog.tar.gz'
 	else:
-	    #ousid = ps.ousstatus_entity_id.translate(string.maketrans(':/', '__')) 
             tarfilename = oussid + '.weblog.tar.gz'
 
 	LOG.info('Saving final weblog in %s' % (tarfilename))
@@ -741,7 +747,6 @@ class ExportData(basetask.StandardTaskTemplate):
 	    casalog_file = os.path.join (context.report_dir, casalog_name)
 	    out_casalog_file = os.path.join (products_dir, casalog_name) 
 	else:
-	    #ousid = ps.ousstatus_entity_id.translate(string.maketrans(':/', '__'))
 	    casalog_file = os.path.join (context.report_dir, casalog_name)
 	    out_casalog_file = os.path.join (products_dir, oussid + '.' + casalog_name)
 
@@ -751,6 +756,31 @@ class ExportData(basetask.StandardTaskTemplate):
 	    shutil.copy (casalog_file, out_casalog_file)
 
 	return os.path.basename(out_casalog_file)
+
+    def _export_aqua_report (self, context, oussid, aquareport_name, products_dir):
+
+	"""
+	Save the AQUA report.
+	"""
+
+	ps = context.project_structure
+	if ps is None:
+	    aqua_file = os.path.join (context.report_dir, aquareport_name)
+	    out_aqua_file = os.path.join (products_dir, aquareport_name) 
+	elif ps.ousstatus_entity_id == 'unknown':
+	    aqua_file = os.path.join (context.report_dir, aquareport_name)
+	    out_aqua_file = os.path.join (products_dir, aquareport_name) 
+	else:
+	    aqua_file = os.path.join (context.report_dir, aquareport_name)
+	    out_aqua_file = os.path.join (products_dir, oussid + '.' + aquareport_name)
+
+        if os.path.exists(aqua_file):
+	    LOG.info('Copying AQUA report %s to %s' % \
+	        (aqua_file, out_aqua_file))
+	    shutil.copy (aqua_file, out_aqua_file)
+	    return os.path.basename(out_aqua_file)
+        else:
+	    return 'Undefined'
 
     def _export_casa_restore_script (self, context, script_name, products_dir, oussid, vislist, session_list):
 

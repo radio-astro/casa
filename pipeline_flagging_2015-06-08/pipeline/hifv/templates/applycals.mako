@@ -5,6 +5,7 @@ import os
 import string
 import types
 
+
 import pipeline.infrastructure.renderer.htmlrenderer as hr
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
@@ -157,11 +158,13 @@ def space_comma(s):
 	<caption>Applied Calibrations</caption>
 	<thead>
 		<tr>
-			<th rowspan="2">Measurement Set</th>
+			<th colspan="2">Measurement Set</th>
 			<th colspan="4">Target</th>
 			<th colspan="6">Calibration</th>
 		</tr>
 		<tr>
+		        <th>Name</th>
+		        <th>Final Size</th>
 			<th>Intent</th>
 			<th>Field</th>
 			<th>Spw</th>
@@ -180,6 +183,7 @@ def space_comma(s):
 		<% ca_rowspan = len(calapp.calfrom) %>
 		<tr>
 			<td rowspan="${ca_rowspan}">${vis}</td>
+			<td rowspan="${ca_rowspan}">${filesizes[vis]}</td>
 			<td rowspan="${ca_rowspan}">${space_comma(calapp.calto.intent)}</td>
 			<td rowspan="${ca_rowspan}">${space_comma(calapp.calto.field)}</td>
 			<td rowspan="${ca_rowspan}">${space_comma(calapp.calto.spw)}</td>

@@ -451,8 +451,8 @@ def get_mediantemp (ms, tsys_spwlist, scan_list, antenna='',
                 if beginScanTimes[j] > tend or endScanTimes[j] < tstart:
                     continue
                 if scanids[i] <= 0:
-                        scanids[i] = uniqueScans[j]
-                        nmatch = nmatch + 1
+                    scanids[i] = uniqueScans[j]
+                    nmatch = nmatch + 1
 
         if nmatch <= 0:
             LOG.warn ( \
@@ -478,10 +478,12 @@ def get_mediantemp (ms, tsys_spwlist, scan_list, antenna='',
     # Loop over the spw and scan list which have the same length
     for spw, scan in zip (tsys_spwlist, scan_list):
 
+        # If no Tsys data skip to the next window
         if (spw not in tsys_uniqueSpws):
             LOG.warn ('Tsys spw %d is not in the SYSCAL table for MS %s' % \
                 (spw, ms.basename))
-            return medtempsdict
+            continue
+            #return medtempsdict
 
         # Loop over the rows
         medians = []
@@ -899,7 +901,12 @@ def compute_bpsolint(ms, spwlist, spw_dict, reqPhaseupSnr,
         # Compute the various SNR factors
         #    The following are shared between the phaseup time solint and
         #    the bandpass frequency solint
-        relativeTsys = spw_dict[spwid]['median_tsys'] / ALMA_TSYS[bandidx]
+        if spw_dict[spwid]['median_tsys'] <= 0.0:
+            relativeTsys = 1.0
+            LOG.warn('Spw %d <= 0K in MS %s assuming nominal Tsys' % \
+            (spwid, ms.basename))
+        else:
+            relativeTsys = spw_dict[spwid]['median_tsys'] / ALMA_TSYS[bandidx]
         nbaselines = spw_dict[spwid]['num_7mantenna'] + \
             spw_dict[spwid]['num_12mantenna'] - 1
         arraySizeFactor = np.sqrt(16 * 15 / 2.0) / np.sqrt(nbaselines)

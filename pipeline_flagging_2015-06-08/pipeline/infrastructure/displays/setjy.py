@@ -62,6 +62,7 @@ class AmpVsUVSummaryChart(BasebandSummaryChart):
                      'avgtime'     : '',
                      'avgscan'     : False,
                      'avgbaseline' : False,
+                     'avgchannel'  : '9000',
                      'plotrange'   : [0, 0, 0, 0],
                      'coloraxis'   : 'spw',
                      'overwrite'   : True}

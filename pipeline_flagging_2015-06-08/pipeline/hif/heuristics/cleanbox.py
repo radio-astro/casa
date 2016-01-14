@@ -743,7 +743,7 @@ def analyse_clean_result(multiterm, model, restored, residual, flux, cleanmask, 
         if flux is not None and os.path.exists(flux):
             have_mask= True
             # Default is annulus 0.2 < pb < 0.3
-            statsmask = '("%s" > %.2f) && ("%s" < %.2f)' % (os.path.basename(flux), pblimit_image, os.path.basename(flux), pblimit_cleanmask)
+            statsmask = '("%s" > %f) && ("%s" < %f)' % (os.path.basename(flux), pblimit_image, os.path.basename(flux), pblimit_cleanmask)
         elif cleanmask is not None and os.path.exists(cleanmask):
             have_mask= True
             # Area outside clean mask
@@ -767,7 +767,7 @@ def analyse_clean_result(multiterm, model, restored, residual, flux, cleanmask, 
         # where spikes can occur)
         if flux is not None and os.path.exists(flux):
             residual_stats = image.statistics(
-              mask='"%s" > %.2f' % (os.path.basename(flux), pblimit_image), robust=False)
+              mask='"%s" > %f' % (os.path.basename(flux), pblimit_image), robust=False)
         else:
             residual_stats = image.statistics(robust=False)
         try:

@@ -99,6 +99,9 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
                     info_dict[(field, spw, pol, 'nchan')] = nchan
                     info_dict[(field, spw, pol, 'width')] = width
+
+                    aggregate_bw = '%.3g GHz' % (qaTool.convert(r.aggregate_bw, 'GHz')['value'])
+                    info_dict[(field, spw, pol, 'aggregate bandwidth')] = aggregate_bw
                     
                 with casatools.ImageReader(r.iterations[maxiter]['residual']+extension) as residual:
                     stats = residual.statistics(robust=False)
@@ -107,7 +110,8 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 # The RMS value needs to be taken with proper masking.
                 # Store the one used for QA scoring.
                 info_dict[(field, spw, pol, 'masked rms')] = r.rms
-
+                info_dict[(field, spw, pol, 'sensitivity')] = r.sensitivity
+                info_dict[(field, spw, pol, 'threshold')] = r.threshold
                 info_dict[(field, spw, pol, 'score')] = r.qa.representative
 
         # Make the plots

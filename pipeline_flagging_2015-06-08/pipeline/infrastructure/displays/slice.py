@@ -40,11 +40,11 @@ flag_color = {'edges':'lightblue',
               'diffmad': 'red',
               'tmf': 'aqua'}
 
-class SliceDisplay(object):
 
+class SliceDisplay(object):
     def plot(self, context, results, reportdir, description_to_plot=None,
-      overplot_spectrum=None, plotbad=True, plot_only_flagged=False,
-      prefix=''):
+             overplot_spectrum=None, plotbad=True, plot_only_flagged=False,
+             prefix=''):
 
         if not results:
             return []
@@ -96,12 +96,14 @@ class SliceDisplay(object):
 
             plot = logger.Plot(plotfile, x_axis=xtitle, y_axis=ytitle,
               field=results.first(description).fieldname,
-              parameters={ 'spw': results.first(description).spw,
-              'pol': results.first(description).pol,
-              'ant': ant,
-              'intent' : results.first(description).intent,
-              'type': results.first(description).datatype,
-              'file': os.path.basename(results.first(description).filename)})
+              parameters={
+                  'spw': results.first(description).spw,
+                  'pol': results.first(description).pol,
+                  'ant': ant,
+                  'intent': results.first(description).intent,
+                  'type': results.first(description).datatype,
+                  'file': os.path.basename(results.first(description).filename)
+              })
             plots.append(plot)
 
             if os.path.exists(plotfile):

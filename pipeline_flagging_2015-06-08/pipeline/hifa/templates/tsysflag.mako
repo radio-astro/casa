@@ -38,22 +38,6 @@ extra_plot_desc = {'nmedian'    : ' shows the spectra flagged in',
 
 <script>
 $(document).ready(function() {
-    // return a function that sets the SPW text field to the given spw
-    var createSpwSetter = function(spw) {
-        return function() {
-            // trigger a change event, otherwise the filters are not changed
-            $("#select-tsys_spw").select2("val", [spw]).trigger("change");
-        };
-    };
-
-    // create a callback function for each overview plot that will select the
-    // appropriate spw once the page has loaded
-    $(".thumbnail a").each(function (i, v) {
-        var o = $(v);
-        var spw = o.data("spw");
-        o.data("callback", createSpwSetter(spw));
-    });
-
     $(".fancybox").fancybox({
         type: 'image',
         prevEffect: 'none',
@@ -72,9 +56,24 @@ $(document).ready(function() {
 });
 </script>
 
+<ul>
+<li><a href="#plots">T<sub>sys</sub> after flagging</a></li>
+<li><a href="#summarytable">Flagged data summary</a></li>
+<li>Flag step details</li>
+    <ul>
+    % for component in components:
+      % if htmlreports.get(component) is not None:
+        <li><a href="#${component}">${component}</a></li>
+      % endif
+    % endfor
+    </ul>
+</ul>
+
 <%self:plot_group plot_dict="${summary_plots}"
 				  url_fn="${lambda x: summary_subpage[x]}"
-				  data_tsysspw="${True}">
+				  data_tsysspw="${True}"
+                  data_vis="${True}"
+                  title_id="plots">
 
 	<%def name="title()">
 		T<sub>sys</sub> vs frequency after flagging
@@ -101,7 +100,7 @@ $(document).ready(function() {
 
 </%self:plot_group>
 
-<h2>Flagging steps</h2>
+<h2 id="summarytable" class="jumptarget">Flagging steps</h2>
 <table class="table table-bordered table-striped">
 	<thead>
 		<tr>
@@ -116,7 +115,7 @@ $(document).ready(function() {
 		<tr>
 			<td>${ms}</td>
 			% for step in components:
-			% if flags[ms][step] is None:
+			% if flags[ms].get(step) is None:
 			<td><span class="glyphicon glyphicon-remove"></span></td>
       		% else:
       		<td><span class="glyphicon glyphicon-ok"></span></td>
@@ -156,7 +155,7 @@ $(document).ready(function() {
 		<tr>
 			<th>${k}</th>               
 			% for step in ['before'] + components + ['after']:
-			% if flags[ms][step] is not None:
+			% if flags[ms].get(step) is not None:
 				##<td>${step} ${k} ${flags[ms][step]['Summary'][k]}</td>
 				<td>${percent_flagged(flags[ms][step]['Summary'][k])}</td>
 			% else:
@@ -180,13 +179,13 @@ antenna for both polarisations.
 
 <ul>
 % for component in components: 
+  % if htmlreports.get(component) is not None:
 	<li>
-	<h3>${component}</h3>
+	<h3 id="${component}" class="jumptarget">${component}</h3>
 	${comp_descriptions[component]}
 
-    % if htmlreports[component]:
-  <h4>Flags</h4>
-  <table class="table table-bordered table-striped">
+    <h4>Flags</h4>
+    <table class="table table-bordered table-striped">
 	<thead>
 	    <tr>
 	        <th>Flagging Commands</th>
@@ -204,8 +203,7 @@ antenna for both polarisations.
 	    </tr>
 	    % endfor
 	</tbody>
-  </table>
-    % endif
+    </table>
  
     % if component in stdplots:
 	<h4>Plots</h4>
@@ -221,6 +219,7 @@ antenna for both polarisations.
 
 	</ul>
     % endif
- </li>
+  </li>
+  % endif
 % endfor
 </ul>

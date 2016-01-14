@@ -32,10 +32,11 @@ class VLAImportDataInputs(basetask.StandardInputs):
     overwrite = basetask.property_with_default('overwrite', False)
     save_flagonline = basetask.property_with_default('save_flagonline', True)
     asis = basetask.property_with_default('asis', 'Receiver CalAtmosphere')
+    ocorr_mode = basetask.property_with_default('ocorr_mode', 'co')
 
     @basetask.log_equivalent_CASA_call
     def __init__(self, context=None, vis=None, output_dir=None, 
-                 asis=None, session=None, overwrite=None, save_flagonline=None, createmms=None):
+                 asis=None, session=None, overwrite=None, save_flagonline=None, createmms=None, ocorr_mode=None):
         self._init_properties(vars())
 
     @property
@@ -94,7 +95,8 @@ class VLAImportDataResults(basetask.Results):
                 context.evla = collections.defaultdict(dict)
             #msinfo = self._do_msinfo_heuristics(context)
             msinfos = dict((ms.name, self._do_msinfo_heuristics(ms.name, context)) for ms in self.mses)
-            context.evla['msinfo'].update(msinfos) 
+            context.evla['msinfo'].update(msinfos)
+            context.project_summary.telescope = 'EVLA'
             #context.evla['msinfo'] = { m.name : msinfo }
             
 
@@ -155,7 +157,7 @@ class VLAImportDataResults(basetask.Results):
 class VLAImportData(basetask.StandardTaskTemplate):
     Inputs = VLAImportDataInputs
     
-    
+
 
     def _ms_directories(self, names):
         """
@@ -187,7 +189,7 @@ class VLAImportData(basetask.StandardTaskTemplate):
     def prepare(self, **parameters):
         inputs = self.inputs
         vis = inputs.vis
-        
+
         if vis is None:
             msg = 'Empty input data set list'
             LOG.warning(msg)
@@ -372,7 +374,12 @@ class VLAImportData(basetask.StandardTaskTemplate):
             history_table = os.path.join(ms.name, 'HISTORY')
             with casatools.TableReader(history_table) as table:
                 if table.nrows() != 0:
-                    bad_mses.append(ms)
+                    origin_col = table.getcol('ORIGIN')
+                    for i in range(len(origin_col)):
+                        if origin_col[i] == 'importasdm' or origin_col[i] == 'im::calcuvw()':
+                            continue
+                        bad_mses.append(ms)
+                        break
 
         if bad_mses:
             # log a message like 'Entries were found in the HISTORY table for 
@@ -524,11 +531,12 @@ class VLAImportData(basetask.StandardTaskTemplate):
         #                             flagzero=False, flagpol=True,
         #                             shadow=True)
         '''
-        
+
         task = casa_tasks.importasdm(asdm=asdm, 
                                      vis=vis, 
                                      savecmds=self.inputs.save_flagonline,
                                      outfile=outfile,
+                                     ocorr_mode=self.inputs.ocorr_mode,
                                      #process_caldevice=False,
                                      asis="",
                                      overwrite=self.inputs.overwrite)

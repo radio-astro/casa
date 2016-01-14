@@ -32,4 +32,7 @@ weblog.add_renderer(Checkflag,
                                                               description='Flag possible RFI on BP calibrator using rflag'),                                                                      
                     group_by='ungrouped')
 
-weblog.add_renderer(Targetflag, renderer.T2_4MDetailstargetflagRenderer(), group_by='ungrouped')
+#weblog.add_renderer(Targetflag, renderer.T2_4MDetailstargetflagRenderer(), group_by='ungrouped')
+
+weblog.add_renderer(Targetflag,  basetemplates.T2_4MDetailsDefaultRenderer(uri='targetflag.mako',
+                                      description='Targetflag'), group_by='ungrouped')

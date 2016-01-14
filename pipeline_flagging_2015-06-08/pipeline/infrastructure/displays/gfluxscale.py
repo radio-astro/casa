@@ -79,6 +79,7 @@ class GFluxscaleSummaryChart(setjy.BasebandSummaryChart):
                      'avgtime'     : '',
                      'avgscan'     : False,
                      'avgbaseline' : False,
+                     'avgchannel'  : '9000',
                      'antenna'     : ant,
                      'correlation' : corrstring,
                      'uvrange'     : uvrange,   #Specified in hifa_gfluxscale task inputs

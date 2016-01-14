@@ -95,7 +95,7 @@ class MakeImListHeuristics(object):
                 for spw_id in self.cont_ranges_spwsel[source_name].iterkeys():
                     if (cont_ranges.has_key(source_name)):
                         if (cont_ranges[source_name].has_key(spw_id)):
-                            self.cont_ranges_spwsel[source_name][spw_id] = ';'.join(['%s~%sGHz' % (spw_sel_interval[0], spw_sel_interval[1]) for spw_sel_interval in self.merge_ranges(cont_ranges[source_name][spw_id])])
+                            self.cont_ranges_spwsel[source_name][spw_id] = ';'.join(['%s~%sGHz' % (spw_sel_interval[0], spw_sel_interval[1]) for spw_sel_interval in utils.merge_ranges(cont_ranges[source_name][spw_id])])
 
         # alternatively read and merge line regions and calculate continuum regions
         elif (os.path.isfile(linesfile)):
@@ -114,7 +114,7 @@ class MakeImListHeuristics(object):
                     line_ranges_GHz.append((fLow, fHigh))
                 except:
                     pass
-            merged_line_ranges_GHz = [r for r in self.merge_ranges(line_ranges_GHz)]
+            merged_line_ranges_GHz = [r for r in utils.merge_ranges(line_ranges_GHz)]
 
             # get source and spw info from first vis set, assume spws uniform
             # across datasets
@@ -123,7 +123,7 @@ class MakeImListHeuristics(object):
                 # assemble continuum spw selection
                 min_frequency = float(spw.min_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
                 max_frequency = float(spw.max_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
-                spw_sel_intervals = self.spw_intersect([min_frequency, max_frequency], merged_line_ranges_GHz)
+                spw_sel_intervals = utils.spw_intersect([min_frequency, max_frequency], merged_line_ranges_GHz)
                 spw_selection = ';'.join(['%s~%sGHz' % (spw_sel_interval[0], spw_sel_interval[1]) for spw_sel_interval in spw_sel_intervals])
 
                 # Skip selection syntax completely if the whole spw is selected
@@ -301,7 +301,7 @@ class MakeImListHeuristics(object):
 
             if cellvs:
                 # cell that's good for all field/intents
-                cell = '%.3f%s' % (min(cellvs), cellu)
+                cell = '%.2g%s' % (min(cellvs), cellu)
                 LOG.debug('RESULT cell for spw %s: %s' % (spwspec, cell))
             else:
                 cell = 'invalid'
@@ -584,7 +584,7 @@ class MakeImListHeuristics(object):
         if output_dir:
             namer.output_dir(output_dir)
 
-        namer.stage(self.context.stage)
+        namer.stage('STAGENUMBER')
         if intent:
             namer.intent(intent)
         if field:
@@ -643,62 +643,3 @@ class MakeImListHeuristics(object):
             return 0
 
 	return ncorr
-
-    def merge_ranges(self, ranges):
-
-        """
-        Merge overlapping and adjacent ranges and yield the merged ranges
-        in order. The argument must be an iterable of pairs (start, stop).
-
-        >>> list(merge_ranges([(5,7), (3,5), (-1,3)]))
-        [(-1, 7)]
-        >>> list(merge_ranges([(5,6), (3,4), (1,2)]))
-        [(1, 2), (3, 4), (5, 6)]
-        >>> list(merge_ranges([]))
-        []
-
-        (c) Gareth Rees 02/2013
-
-        """
-        ranges = iter(sorted(ranges))
-        current_start, current_stop = next(ranges)
-        for start, stop in ranges:
-            if start > current_stop:
-                # Gap between segments: output current segment and start a new one.
-                yield current_start, current_stop
-                current_start, current_stop = start, stop
-            else:
-                # Segments adjacent or overlapping: merge.
-                current_stop = max(current_stop, stop)
-        yield current_start, current_stop
-
-    def spw_intersect(self, spw_range, line_regions):
-    
-        """
-        Compute intersect between SPW frequency range and line frequency
-        ranges to be excluded.
-        """
-    
-        spw_sel_intervals = []
-        for line_region in line_regions:
-            if (line_region[0] <= spw_range[0]) and (line_region[1] >= spw_range[1]):
-                spw_sel_intervals = []
-                spw_range = []
-                break
-            elif (line_region[0] <= spw_range[0]) and (line_region[1] >= spw_range[0]):
-                spw_range = [line_region[1], spw_range[1]]
-            elif (line_region[0] >= spw_range[0]) and (line_region[1] < spw_range[1]):
-                spw_sel_intervals.append([spw_range[0], line_region[0]])
-                spw_range = [line_region[1], spw_range[1]]
-            elif (line_region[0] >= spw_range[1]):
-                spw_sel_intervals.append(spw_range)
-                spw_range = []
-                break
-            elif (line_region[0] >= spw_range[0]) and (line_region[1] >= spw_range[1]):
-                spw_sel_intervals.append([spw_range[0], line_region[0]])
-                spw_range = []
-                break
-        if spw_range != []:
-            spw_sel_intervals.append(spw_range)
-    
-        return spw_sel_intervals

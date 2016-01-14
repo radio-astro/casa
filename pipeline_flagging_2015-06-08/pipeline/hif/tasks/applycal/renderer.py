@@ -47,76 +47,69 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             caltypes = utils.dict_merge(caltypes,
                                         self.caltypes_for_result(r))
 
+        filesizes = {}
+        for r in result:
+            vis = r.inputs['vis']
+            ms = context.observing_run.get_ms(vis)
+            filesizes[ms.basename] = ms._calc_filesize()
+
         # return all agents so we get ticks and crosses against each one
         agents = ['before', 'applycal']
         
-        vis = os.path.basename(result.inputs['vis'])
-        ms = context.observing_run.get_ms(vis)
-        corrstring = ms.get_alma_corrstring()
-        
-        ctx.update({'flags'    : flag_totals,
-                    'calapps'  : calapps,
-                    'caltypes' : caltypes,
-                    'agents'   : agents,
-                    'dirname'  : weblog_dir})
+        ctx.update({
+            'flags': flag_totals,
+            'calapps': calapps,
+            'caltypes': caltypes,
+            'agents': agents,
+            'dirname': weblog_dir,
+            'filesizes': filesizes
+        })
 
-        amp_vs_time_summary_plots = self.create_plots(context, 
-                                                      result, 
-                                                      applycal.AmpVsTimeSummaryChart, 
-                                                      ['PHASE', 'BANDPASS', 'AMPLITUDE', 'TARGET'],
-                                                      corrstring)
+        # these dicts map vis to the hrefs of the detail pages
+        amp_vs_time_subpages = {}
+        phase_vs_time_subpages = {}
+        amp_vs_freq_subpages = {}
+        phase_vs_freq_subpages = {}
+        amp_vs_uv_subpages = {}
 
-        phase_vs_time_summary_plots = self.create_plots(context, 
-                                                      result, 
-                                                      applycal.PhaseVsTimeSummaryChart, 
-                                                      ['PHASE', 'BANDPASS', 'AMPLITUDE', 'TARGET'],
-                                                      corrstring)
+        amp_vs_time_summary_plots, amp_vs_time_subpages = self.create_plots(
+            context,
+            result,
+            applycal.AmpVsTimeSummaryChart,
+            ['PHASE', 'BANDPASS', 'AMPLITUDE', 'CHECK', 'TARGET']
+        )
 
-#         amp_vs_freq_phase_summary_plots = self.create_plots(context, 
-#                                                             result, 
-#                                                             applycal.AmpVsFrequencySummaryChart, 
-#                                                             ['PHASE'])
-# 
-#         phase_vs_freq_phase_summary_plots = self.create_plots(context, 
-#                                                               result, 
-#                                                               applycal.PhaseVsFrequencySummaryChart, 
-#                                                               ['PHASE'])
-# 
-#         amp_vs_freq_bandpass_summary_plots = self.create_plots(context, 
-#                                                             result, 
-#                                                             applycal.AmpVsFrequencySummaryChart, 
-#                                                             ['BANDPASS'])
-# 
-#         phase_vs_freq_bandpass_summary_plots = self.create_plots(context, 
-#                                                                  result, 
-#                                                                  applycal.PhaseVsFrequencySummaryChart, 
-#                                                                  ['BANDPASS'])
-# 
-#         self.sort_plots_by_baseband(amp_vs_freq_phase_summary_plots)
-#         self.sort_plots_by_baseband(phase_vs_freq_phase_summary_plots)
-#         self.sort_plots_by_baseband(amp_vs_freq_bandpass_summary_plots)
-#         self.sort_plots_by_baseband(phase_vs_freq_bandpass_summary_plots)
+        phase_vs_time_summary_plots, phase_vs_time_subpages = self.create_plots(
+            context,
+            result,
+            applycal.PhaseVsTimeSummaryChart,
+            ['PHASE', 'BANDPASS', 'AMPLITUDE', 'CHECK', 'TARGET']
+        )
 
         amp_vs_freq_summary_plots = utils.OrderedDefaultdict(utils.OrderedDefaultdict)
-        for intents in [['PHASE'], ['BANDPASS']]:
-            plots = self.create_plots(context, 
-                                      result, 
-                                      applycal.AmpVsFrequencySummaryChart, 
-                                      intents,
-                                      corrstring)
-            self.sort_plots_by_baseband(plots)
+        for intents in [['PHASE'], ['BANDPASS'], ['CHECK'], ['AMPLITUDE']]:
+            # it doesn't matter that the subpages dict is repeatedly redefined.
+            # The only purpose of the returned dict is to map the vis to a
+            # non-existing page, which will disable the link.
+            plots, amp_vs_freq_subpages = self.create_plots(
+                context,
+                result,
+                applycal.AmpVsFrequencySummaryChart,
+                intents
+            )
 
             key = utils.commafy(intents, quotes=False)
             for vis, vis_plots in plots.items():
                 amp_vs_freq_summary_plots[vis][key] = vis_plots
 
         phase_vs_freq_summary_plots = utils.OrderedDefaultdict(utils.OrderedDefaultdict)
-        for intents in [['PHASE'], ['BANDPASS']]:
-            plots = self.create_plots(context, 
-                                      result, 
-                                      applycal.PhaseVsFrequencySummaryChart, 
-                                      intents,
-                                      corrstring)
+        for intents in [['PHASE'], ['BANDPASS'], ['CHECK']]:
+            plots, phase_vs_freq_subpages = self.create_plots(
+                context,
+                result,
+                applycal.PhaseVsFrequencySummaryChart,
+                intents
+            )
             self.sort_plots_by_baseband(plots)
 
             key = utils.commafy(intents, quotes=False)
@@ -126,86 +119,154 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         # CAS-7659: Add plots of all calibrator calibrated amp vs uvdist to
         # the WebLog applycal page
         amp_vs_uv_summary_plots = utils.OrderedDefaultdict(utils.OrderedDefaultdict)
-        for intents in ['AMPLITUDE', 'PHASE', 'BANDPASS']:
-            plots = self.create_plots(context,
-                                      result,
-                                      applycal.AmpVsUVSummaryChart,
-                                      [intents],
-                                      corrstring)
+        for intents in ['AMPLITUDE', 'PHASE', 'BANDPASS', 'CHECK']:
+            plots, amp_vs_uv_subpages = self.create_plots(
+                context,
+                result,
+                applycal.AmpVsUVSummaryChart,
+                [intents]
+            )
 
             key = utils.commafy(intents, quotes=False)
             for vis, vis_plots in plots.items():
                 amp_vs_uv_summary_plots[vis][key] = vis_plots
 
-        phase_vs_uv_summary_plots = self.create_plots(context, 
-                                                      result, 
-                                                      applycal.PhaseVsUVSummaryChart, 
-                                                      ['AMPLITUDE'],
-                                                      corrstring)
+        # Phase vs UV distance plots are not required
+        # phase_vs_uv_summary_plots, _ = self.create_plots(
+        #     context,
+        #     result,
+        #     applycal.PhaseVsUVSummaryChart,
+        #     ['AMPLITUDE']
+        # )
 
         # CAS-5970: add science target plots to the applycal page
-        (science_amp_vs_freq_summary_plots, 
+        (science_amp_vs_freq_summary_plots,
          science_phase_vs_freq_summary_plots,
          science_amp_vs_uv_summary_plots,
-         uv_max) = self.create_science_plots(context, result, corrstring)
+         uv_max) = self.create_science_plots(context, result)
+
+        corrected_ratio_to_antenna1_plots = {}
+        corrected_ratio_to_uv_dist_plots = {}
+        for r in result:
+            vis = os.path.basename(r.inputs['vis'])
+            uvrange_dist = uv_max.get(vis, None)
+            in_m = str(uvrange_dist.to_units(pipeline.domain.measures.DistanceUnits.METRE))
+            uvrange = '0~%sm' % in_m
+
+            p, _ = self.create_plots(
+                context,
+                [r],
+                applycal.CorrectedToModelRatioVsAntenna1SummaryChart,
+                ['AMPLITUDE'],
+                uvrange=uvrange
+            )
+            corrected_ratio_to_antenna1_plots[vis] = p[vis]
+
+            p, _ = self.create_plots(
+                context,
+                [r],
+                applycal.CorrectedToModelRatioVsUVDistanceSummaryChart,
+                ['AMPLITUDE'],
+                uvrange=uvrange,
+                plotrange=[0,float(in_m),0,0]
+            )
+            corrected_ratio_to_uv_dist_plots[vis] = p[vis]
+
+        # these dicts map vis to the list of plots
+        amp_vs_freq_detail_plots = {}
+        phase_vs_freq_detail_plots = {}
+        amp_vs_uv_detail_plots = {}
+        amp_vs_time_detail_plots = {}
+        phase_vs_time_detail_plots = {}
 
         if pipeline.infrastructure.generate_detail_plots(result):
             # detail plots. Don't need the return dictionary, but make sure a
             # renderer is passed so the detail page is written to disk
-            self.create_plots(context, 
-                              result, 
-                              applycal.AmpVsFrequencyDetailChart, 
-                              ['BANDPASS', 'PHASE'],
-                              corrstring,
-                              ApplycalAmpVsFreqPlotRenderer)
-    
-            self.create_plots(context, 
-                              result, 
-                              applycal.PhaseVsFrequencyDetailChart, 
-                              ['BANDPASS', 'PHASE'],
-                              corrstring,
-                              ApplycalPhaseVsFreqPlotRenderer)
-    
-            self.create_plots(context, 
-                              result, 
-                              applycal.AmpVsUVDetailChart, 
-                              ['AMPLITUDE', 'PHASE', 'BANDPASS'],
-                              corrstring,
-                              ApplycalAmpVsUVPlotRenderer)
+            amp_vs_freq_detail_plots, amp_vs_freq_subpages = self.create_plots(
+                context,
+                result,
+                applycal.AmpVsFrequencyDetailChart,
+                ['BANDPASS', 'PHASE', 'CHECK', 'AMPLITUDE'],
+                ApplycalAmpVsFreqPlotRenderer
+            )
 
-            self.create_plots(context, 
-                              result, 
-                              applycal.PhaseVsUVDetailChart, 
-                              ['AMPLITUDE'],
-                              corrstring,
-                              ApplycalPhaseVsUVPlotRenderer)
+            phase_vs_freq_detail_plots, phase_vs_freq_subpages = self.create_plots(
+                context,
+                result,
+                applycal.PhaseVsFrequencyDetailChart,
+                ['BANDPASS', 'PHASE', 'CHECK'],
+                ApplycalPhaseVsFreqPlotRenderer
+            )
 
-            self.create_plots(context, 
-                              result, 
-                              applycal.AmpVsTimeDetailChart, 
-                              ['AMPLITUDE', 'PHASE', 'BANDPASS', 'TARGET'],
-                              corrstring,
-                              ApplycalAmpVsTimePlotRenderer)
+            amp_vs_uv_detail_plots, amp_vs_uv_subpages = self.create_plots(
+                context,
+                result,
+                applycal.AmpVsUVDetailChart,
+                ['AMPLITUDE', 'PHASE', 'BANDPASS', 'CHECK'],
+                ApplycalAmpVsUVPlotRenderer
+            )
 
-            self.create_plots(context, 
-                              result, 
-                              applycal.PhaseVsTimeDetailChart, 
-                              ['AMPLITUDE', 'PHASE', 'BANDPASS', 'TARGET'],
-                              corrstring,
-                              ApplycalPhaseVsTimePlotRenderer)
+            # phase_vs_uv_detail_plots, phase_vs_uv_subpages = self.create_plots(
+            #     context,
+            #     result,
+            #     applycal.PhaseVsUVDetailChart,
+            #     ['AMPLITUDE'],
+            #     ApplycalPhaseVsUVPlotRenderer
+            # )
 
-        ctx.update({'amp_vs_freq_plots'   : amp_vs_freq_summary_plots,
-                    'phase_vs_freq_plots' : phase_vs_freq_summary_plots,
-                    'amp_vs_time_plots'   : amp_vs_time_summary_plots,
-                    'amp_vs_uv_plots'     : amp_vs_uv_summary_plots,
-                    'phase_vs_uv_plots'   : phase_vs_uv_summary_plots,
-                    'phase_vs_time_plots' : phase_vs_time_summary_plots,
-                    'science_amp_vs_freq_plots'   : science_amp_vs_freq_summary_plots,
-                    'science_phase_vs_freq_plots' : science_phase_vs_freq_summary_plots,
-                    'science_amp_vs_uv_plots' : science_amp_vs_uv_summary_plots,
-                    'uv_max' : uv_max})
+            amp_vs_time_detail_plots, amp_vs_time_subpages = self.create_plots(
+                context,
+                result,
+                applycal.AmpVsTimeDetailChart,
+                ['AMPLITUDE', 'PHASE', 'BANDPASS', 'CHECK', 'TARGET'],
+                ApplycalAmpVsTimePlotRenderer
+            )
+
+            phase_vs_time_detail_plots, phase_vs_time_subpages = self.create_plots(
+                context,
+                result,
+                applycal.PhaseVsTimeDetailChart,
+                ['AMPLITUDE', 'PHASE', 'BANDPASS', 'CHECK', 'TARGET'],
+                ApplycalPhaseVsTimePlotRenderer
+            )
+
+        # render plots for all EBs in one page
+        for d, plotter_cls, subpages in (
+                (amp_vs_freq_detail_plots, ApplycalAmpVsFreqPlotRenderer, amp_vs_freq_subpages),
+                (phase_vs_freq_detail_plots, ApplycalPhaseVsFreqPlotRenderer, phase_vs_freq_subpages),
+                (amp_vs_uv_detail_plots, ApplycalAmpVsUVPlotRenderer, amp_vs_uv_subpages),
+                # (phase_vs_uv_detail_plots, ApplycalPhaseVsUVPlotRenderer, phase_vs_uv_subpages),
+                (amp_vs_time_detail_plots, ApplycalAmpVsTimePlotRenderer, amp_vs_time_subpages),
+                (phase_vs_time_detail_plots, ApplycalPhaseVsTimePlotRenderer, phase_vs_time_subpages)):
+            if d:
+                all_plots = list(utils.flatten([v for v in d.values()]))
+                renderer = plotter_cls(context, result, all_plots)
+                with renderer.get_file() as fileobj:
+                    fileobj.write(renderer.render())
+                    # redirect subpage links to master page
+                    for vis in subpages:
+                        subpages[vis] = renderer.path
+
+        ctx.update({
+            'amp_vs_freq_plots': amp_vs_freq_summary_plots,
+            'phase_vs_freq_plots': phase_vs_freq_summary_plots,
+            'amp_vs_time_plots': amp_vs_time_summary_plots,
+            'amp_vs_uv_plots': amp_vs_uv_summary_plots,
+            'phase_vs_time_plots': phase_vs_time_summary_plots,
+            'corrected_to_antenna1_plots': corrected_ratio_to_antenna1_plots,
+            'corrected_to_model_vs_uvdist_plots' : corrected_ratio_to_uv_dist_plots,
+            'science_amp_vs_freq_plots': science_amp_vs_freq_summary_plots,
+            'science_phase_vs_freq_plots': science_phase_vs_freq_summary_plots,
+            'science_amp_vs_uv_plots': science_amp_vs_uv_summary_plots,
+            'uv_max': uv_max,
+            'amp_vs_freq_subpages': amp_vs_freq_subpages,
+            'phase_vs_freq_subpages': phase_vs_freq_subpages,
+            'amp_vs_time_subpages': amp_vs_time_subpages,
+            'amp_vs_uv_subpages': amp_vs_uv_subpages,
+            'phase_vs_time_subpages': phase_vs_time_subpages,
+        })
         
-    def create_science_plots(self, context, results, correlation):
+    def create_science_plots(self, context, results):
         """
         Create plots for the science targets, returning two dictionaries of 
         vis:[Plots].
@@ -215,12 +276,18 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         amp_vs_uv_summary_plots = collections.defaultdict(dict)
         max_uvs = collections.defaultdict(dict)
 
+        amp_vs_freq_detail_plots = {}
+        phase_vs_freq_detail_plots = {}
+        amp_vs_uv_detail_plots = {}
+
         for result in results:
-            # Plot for 1 science field (either 1 science target or for a mosaic 1 
-            # pointing). The science field that should be chosen is the one with
-            # the brightest average amplitude over all spws
             vis = os.path.basename(result.inputs['vis'])
             ms = context.observing_run.get_ms(vis)
+            correlation = ms.get_alma_corrstring()
+
+            # Plot for 1 science field (either 1 science target or for a mosaic 1
+            # pointing). The science field that should be chosen is the one with
+            # the brightest average amplitude over all spws
 
             # Ideally, the uvmax of the spectrum (plots 1 and 2)
             # would be set by the appearance of plot 3; that is, if there is
@@ -255,7 +322,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     
                 plots = self.science_plots_for_result(context, 
                                                       result, 
-                                                      applycal.AmpVsUVBasebandSummaryChart,
+                                                      applycal.AmpVsUVSummaryChart,
                                                       [brightest_field.id], correlation=correlation)
                 amp_vs_uv_summary_plots[vis][source_id] = plots
 
@@ -267,36 +334,48 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 
                 # Science target detail plots. Note that summary plots go onto the
                 # detail pages; we don't create plots per spw or antenna
-                self.science_plots_for_result(context, 
-                                              result, 
-                                              applycal.AmpVsFrequencySummaryChart, 
-                                              fields,
-                                              uv_range,
-                                              ApplycalAmpVsFreqSciencePlotRenderer,
-                                              correlation=correlation)
+                plots = self.science_plots_for_result(context,
+                                                  result,
+                                                  applycal.AmpVsFrequencySummaryChart,
+                                                  fields,
+                                                  uv_range,
+                                                  ApplycalAmpVsFreqSciencePlotRenderer,
+                                                  correlation=correlation)
+                amp_vs_freq_detail_plots[vis] = plots
 
-                self.science_plots_for_result(context, 
+                plots = self.science_plots_for_result(context,
                                               result, 
                                               applycal.PhaseVsFrequencySummaryChart,
                                               fields,
                                               uv_range,
                                               ApplycalPhaseVsFreqSciencePlotRenderer,
                                               correlation=correlation)
+                phase_vs_freq_detail_plots[vis] = plots
 
-                self.science_plots_for_result(context, 
+                plots = self.science_plots_for_result(context,
                                               result, 
-                                              applycal.AmpVsUVBasebandSummaryChart,
+                                              applycal.AmpVsUVSummaryChart,
                                               fields,
                                               renderer_cls=ApplycalAmpVsUVSciencePlotRenderer,
                                               correlation=correlation)
+                amp_vs_uv_detail_plots[vis] = plots
+
+        for d, plotter_cls in (
+                (amp_vs_freq_detail_plots, ApplycalAmpVsFreqSciencePlotRenderer),
+                (phase_vs_freq_detail_plots, ApplycalPhaseVsFreqSciencePlotRenderer),
+                (amp_vs_uv_detail_plots, ApplycalAmpVsUVSciencePlotRenderer)):
+            if d:
+                all_plots = list(utils.flatten([v for v in d.values()]))
+                renderer = plotter_cls(context, results, all_plots)
+                with renderer.get_file() as fileobj:
+                    fileobj.write(renderer.render())
 
         # sort plots by baseband so that the summary plots appear in baseband order
-        for vis, source_plots in amp_vs_freq_summary_plots.items():
-            self.sort_plots_by_baseband(source_plots)
-        for vis, source_plots in phase_vs_freq_summary_plots.items():
-            self.sort_plots_by_baseband(source_plots)
-        for vis, source_plots in amp_vs_uv_summary_plots.items():
-            self.sort_plots_by_baseband(source_plots)
+        for plot_dict in (amp_vs_freq_summary_plots,
+                          phase_vs_freq_summary_plots,
+                          amp_vs_uv_summary_plots):
+            for source_plots in plot_dict.values():
+                self.sort_plots_by_baseband(source_plots)
 
         return (amp_vs_freq_summary_plots, phase_vs_freq_summary_plots, 
                 amp_vs_uv_summary_plots, max_uvs)
@@ -377,10 +456,10 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         
             # defines the parameters for the visstat job
             job_params = {
-                'vis'        : ms.name,
-                'axis'       : 'amp',
-                'datacolumn' : 'corrected',
-                'spw'        : ','.join(map(str, spw_ids)),
+                'vis': ms.name,
+                'axis': 'amp',
+                'datacolumn': 'corrected',
+                'spw': ','.join(map(str, spw_ids)),
             }
 
             # solve circular import problem by importing at run-time
@@ -415,26 +494,35 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     
     def sort_plots_by_baseband(self, d):
         for vis, plots in d.items():
-            # secondary sort by baseband
-            plots = sorted(plots,
-                           key=lambda plot: plot.parameters['baseband'])
-            # primary sort by receiver band
-            plots = sorted(plots,
-                           key=lambda plot: plot.parameters['receiver'])
-            d[vis] = plots
+            if all(['baseband' in plot.parameters for plot in plots]):
+                # secondary sort by baseband
+                plots = sorted(plots,
+                               key=lambda plot: plot.parameters['baseband'])
+                # primary sort by receiver band
+                plots = sorted(plots,
+                               key=lambda plot: plot.parameters['receiver'])
+                d[vis] = plots
 
-    def create_plots(self, context, results, plotter_cls, intents, corrstring,
+    def create_plots(self, context, results, plotter_cls, intents,
                      renderer_cls=None, **kwargs):
         """
-        Create plots and return a dictionary of vis:[Plots].
+        Create plots and return (dictionary of vis:[Plots], dict of vis:subpage URL).
         """
         d = {}
+        subpages = {}
+
         for result in results:
-            plots = self.plots_for_result(context, result, plotter_cls,
-                                          intents, corrstring,
-                                          renderer_cls, **kwargs)
+            vis = os.path.basename(result.inputs['vis'])
+            ms = context.observing_run.get_ms(vis)
+            corrstring = ms.get_alma_corrstring()
+
+            plots, href = self.plots_for_result(context, result, plotter_cls,
+                                                intents, corrstring,
+                                                renderer_cls, **kwargs)
             d = utils.dict_merge(d, plots)
-        return d
+            subpages[vis] = href
+
+        return d, subpages
 
     def plots_for_result(self, context, result, plotter_cls, intents,
                          corrstring, renderer_cls=None, **kwargs):
@@ -448,12 +536,15 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         d = collections.defaultdict(dict)
         d[vis] = plots
 
+        path = None
+
         if renderer_cls is not None:
             renderer = renderer_cls(context, result, plots, **kwargs)
             with renderer.get_file() as fileobj:
-                fileobj.write(renderer.render())        
+                fileobj.write(renderer.render())
+                path = renderer.path
 
-        return d
+        return d, path
 
     def calapps_for_result(self, result):
         calapps = collections.defaultdict(list)
@@ -464,10 +555,10 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
     def caltypes_for_result(self, result):
         type_map = {
-            'bandpass' : 'Bandpass',
-            'gaincal'  : 'Gain',
-            'tsys'     : 'T<sub>sys</sub>',
-            'wvr'      : 'WVR',
+            'bandpass': 'Bandpass',
+            'gaincal': 'Gain',
+            'tsys': 'T<sub>sys</sub>',
+            'wvr': 'WVR',
         }
         
         d = {}
@@ -530,7 +621,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     def flags_by_intent(self, ms, summaries):
         # create a dictionary of scans per observing intent, eg. 'PHASE':[1,2,7]
         intent_scans = {}
-        for intent in ('BANDPASS', 'PHASE', 'AMPLITUDE', 'TARGET'):
+        for intent in ('BANDPASS', 'PHASE', 'AMPLITUDE', 'CHECK', 'TARGET'):
             # convert IDs to strings as they're used as summary dictionary keys
             intent_scans[intent] = [str(s.id) for s in ms.scans
                                     if intent in s.intents]
@@ -590,7 +681,8 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
 class ApplycalAmpVsFreqPlotRenderer(basetemplates.JsonPlotRenderer):
     def __init__(self, context, result, plots):
-        vis = os.path.basename(result.inputs['vis'])
+        vis = utils.get_vis_from_plots(plots)
+
         title = 'Calibrated amplitude vs frequency for %s' % vis
         outfile = filenamer.sanitize('amp_vs_freq-%s.html' % vis)
         
@@ -601,7 +693,8 @@ class ApplycalAmpVsFreqPlotRenderer(basetemplates.JsonPlotRenderer):
 
 class ApplycalPhaseVsFreqPlotRenderer(basetemplates.JsonPlotRenderer):
     def __init__(self, context, result, plots):
-        vis = os.path.basename(result.inputs['vis'])
+        vis = utils.get_vis_from_plots(plots)
+
         title = 'Calibrated phase vs frequency for %s' % vis
         outfile = filenamer.sanitize('phase_vs_freq-%s.html' % vis)
         
@@ -612,40 +705,44 @@ class ApplycalPhaseVsFreqPlotRenderer(basetemplates.JsonPlotRenderer):
 
 class ApplycalAmpVsFreqSciencePlotRenderer(basetemplates.JsonPlotRenderer):
     def __init__(self, context, result, plots):
-        vis = os.path.basename(result.inputs['vis'])
+        vis = utils.get_vis_from_plots(plots)
+
         title = 'Calibrated amplitude vs frequency for %s' % vis
         outfile = filenamer.sanitize('science_amp_vs_freq-%s.html' % vis)
         
         super(ApplycalAmpVsFreqSciencePlotRenderer, self).__init__(
-                'generic_x_vs_y_field_baseband_detail_plots.mako', context, 
+                'generic_x_vs_y_spw_field_detail_plots.mako', context,
                 result, plots, title, outfile)
 
 
 class ApplycalPhaseVsFreqSciencePlotRenderer(basetemplates.JsonPlotRenderer):
     def __init__(self, context, result, plots):
-        vis = os.path.basename(result.inputs['vis'])
+        vis = utils.get_vis_from_plots(plots)
+
         title = 'Calibrated phase vs frequency for %s' % vis
         outfile = filenamer.sanitize('science_phase_vs_freq-%s.html' % vis)
         
         super(ApplycalPhaseVsFreqSciencePlotRenderer, self).__init__(
-                'generic_x_vs_y_field_baseband_detail_plots.mako', context, 
+                'generic_x_vs_y_field_baseband_detail_plots.mako', context,
                 result, plots, title, outfile)
 
 
 class ApplycalAmpVsUVSciencePlotRenderer(basetemplates.JsonPlotRenderer):
     def __init__(self, context, result, plots):
-        vis = os.path.basename(result.inputs['vis'])
+        vis = utils.get_vis_from_plots(plots)
+
         title = 'Calibrated amplitude vs UV distance for %s' % vis
         outfile = filenamer.sanitize('science_amp_vs_uv-%s.html' % vis)
         
         super(ApplycalAmpVsUVSciencePlotRenderer, self).__init__(
-                'generic_x_vs_y_field_baseband_detail_plots.mako', context, 
+                'generic_x_vs_y_spw_field_detail_plots.mako', context,
                 result, plots, title, outfile)
 
 
 class ApplycalAmpVsUVPlotRenderer(basetemplates.JsonPlotRenderer):
     def __init__(self, context, result, plots):
-        vis = os.path.basename(result.inputs['vis'])
+        vis = utils.get_vis_from_plots(plots)
+
         title = 'Calibrated amplitude vs UV distance for %s' % vis
         outfile = filenamer.sanitize('amp_vs_uv-%s.html' % vis)
         
@@ -656,7 +753,8 @@ class ApplycalAmpVsUVPlotRenderer(basetemplates.JsonPlotRenderer):
 
 class ApplycalPhaseVsUVPlotRenderer(basetemplates.JsonPlotRenderer):
     def __init__(self, context, result, plots):
-        vis = os.path.basename(result.inputs['vis'])
+        vis = utils.get_vis_from_plots(plots)
+
         title = 'Calibrated phase vs UV distance for %s' % vis
         outfile = filenamer.sanitize('phase_vs_uv-%s.html' % vis)
         
@@ -667,7 +765,8 @@ class ApplycalPhaseVsUVPlotRenderer(basetemplates.JsonPlotRenderer):
 
 class ApplycalAmpVsTimePlotRenderer(basetemplates.JsonPlotRenderer):
     def __init__(self, context, result, plots):
-        vis = os.path.basename(result.inputs['vis'])
+        vis = utils.get_vis_from_plots(plots)
+
         title = 'Calibrated amplitude vs times for %s' % vis
         outfile = filenamer.sanitize('amp_vs_time-%s.html' % vis)
         
@@ -678,7 +777,8 @@ class ApplycalAmpVsTimePlotRenderer(basetemplates.JsonPlotRenderer):
 
 class ApplycalPhaseVsTimePlotRenderer(basetemplates.JsonPlotRenderer):
     def __init__(self, context, result, plots):
-        vis = os.path.basename(result.inputs['vis'])
+        vis = utils.get_vis_from_plots(plots)
+
         title = 'Calibrated phase vs times for %s' % vis
         outfile = filenamer.sanitize('phase_vs_time-%s.html' % vis)
         

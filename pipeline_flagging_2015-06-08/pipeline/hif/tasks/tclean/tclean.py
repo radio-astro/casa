@@ -12,9 +12,12 @@ import pipeline.infrastructure.pipelineqa as pipelineqa
 from pipeline.infrastructure import casa_tasks
 from .basecleansequence import BaseCleanSequence
 from .imagecentrethresholdsequence import ImageCentreThresholdSequence
+from .manualmaskthresholdsequence import ManualMaskThresholdSequence
 from .iterativesequence import IterativeSequence
 from .iterativesequence2 import IterativeSequence2
 from . import cleanbase
+
+from pipeline.hif.heuristics import makeimlist
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -34,10 +37,21 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
     # Add extra getters and setters here
     spwsel = basetask.property_with_default('spwsel', {})
     hm_cleaning = basetask.property_with_default('hm_cleaning', 'rms')
-    hm_masking = basetask.property_with_default('hm_masking', 'centralquarter')
+    hm_masking = basetask.property_with_default('hm_masking', 'centralregion')
     masklimit = basetask.property_with_default('masklimit', 4.0)
     tlimit = basetask.property_with_default('tlimit', 2.0)
     subcontms = basetask.property_with_default('subcontms', False)
+
+    @property
+    def imagename(self):
+        return self._imagename
+
+    @imagename.setter
+    def imagename(self, value):
+        if (value is None):
+            self._imagename = ''
+        else:
+            self._imagename = value.replace('STAGENUMBER', str(self.context.stage))
 
     @property
     def noiseimage(self):
@@ -103,12 +117,12 @@ class Tclean(cleanbase.CleanBase):
         return True
 
     def prepare(self):
+        context = self.inputs.context
         inputs = self.inputs
 
         LOG.info('\nCleaning for intent "%s", field %s, spw %s\n',
                  inputs.intent, inputs.field, inputs.spw)
 
-        # try:
         result = None
 
         # delete any old files with this naming root. One of more
@@ -116,40 +130,98 @@ class Tclean(cleanbase.CleanBase):
         LOG.info('deleting %s*.iter*', inputs.imagename)
         shutil.rmtree('%s*.iter*' % inputs.imagename, ignore_errors=True)
 
-        # Determine masking limits depending on image and cell sizes
-        self.pblimit_image, self.pblimit_cleanmask = \
-            inputs.heuristics.pblimits(inputs.imsize, inputs.cell)
+        # Set initial masking limits
+        self.pblimit_image = 0.2
+        self.pblimit_cleanmask = 0.3
         inputs.pblimit = self.pblimit_image
 
-        # Get an empirical noise estimate by generating Q or V image.
-        #    Assumes presence of XX and YY, or RR and LL
-        #    Assumes source is unpolarized
-        #    Make code more efficient (use MS XX and YY correlations) directly.
-        #    Update / replace  code when sensitity function is working.
-        #model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
-        #  residual_min, rms2d, image_max = \
-        #  self._do_noise_estimate(stokes=inputs.noiseimage)
-        #sensitivity = non_cleaned_rms
-        #LOG.info('Noise rms estimate from %s image is %s' %
-        #  (inputs.noiseimage, sensitivity))
+        # Instantiate the clean list heuristics class
+        clheuristics = makeimlist.MakeImListHeuristics(context=context,
+                                                       vislist=inputs.vis,
+                                                       spw=inputs.spw,
+                                                       contfile=context.contfile,
+                                                       linesfile=context.linesfile)
+
+        # Generate the image name if one is not supplied.
+        if inputs.imagename in ('', None):
+            inputs.imagename = clheuristics.imagename(intent=inputs.intent,
+                                                      field=inputs.field,
+                                                      spwspec=inputs.spw)
+
+        # Determine the default gridder
+        if inputs.gridder in ('', None):
+            inputs.gridder = clheuristics.gridder(inputs.intent, inputs.field)
+
+        # Determine the default deconvolver
+        if inputs.deconvolver in ('', None):
+            inputs.deconvolver = clheuristics.deconvolver(inputs.intent,
+                                                          inputs.field)
+
+        # Determine the phase center.
+        if inputs.phasecenter in ('', None):
+            field_id = clheuristics.field(inputs.intent, inputs.field)
+            inputs.phasecenter = clheuristics.phasecenter(field_id)
+
+        # Adjust the width to get around problems with increasing / decreasing
+        # frequency with channel issues.
+        if inputs.width in ('', None):
+            if inputs.specmode == 'cube':
+                width = clheuristics.width(int(inputs.spw.split(',')[0]))
+            else:
+                width = inputs.width
+        else:
+            width = inputs.width
+        inputs.width = width
+
+        # If imsize not set then use heuristic code to calculate the
+        # centers for each field  / spw
+        imsize = inputs.imsize
+        cell = inputs.cell
+        if imsize == [] or cell == []:
+
+            # The heuristics cell size  is always the same for x and y as
+            # the value derives from a single value returned by imager.advise
+            cell, valid_data = clheuristics.cell(field_intent_list=[(inputs.field, inputs.intent)],
+                                           spwspec=inputs.spw)
+            beam = clheuristics.beam(spwspec=inputs.spw)
+
+            if inputs.cell == []:
+                inputs.cell = cell
+                LOG.info('Heuristic cell: %s' % cell)
+
+            field_ids = clheuristics.field(inputs.intent, inputs.field)
+            imsize = clheuristics.imsize(fields=field_ids,
+                                         cell=inputs.cell, beam=beam)
+            if inputs.imsize == []:
+                inputs.imsize = imsize
+                LOG.info('Heuristic imsize: %s', imsize)
 
         # Get a noise estimate from the CASA sensitivity calculator
         sensitivity = self._do_sensitivity()
         LOG.info('Sensitivity estimate from CASA %s', sensitivity)
 
         # Choose cleaning method.
-        if inputs.hm_masking == 'centralquarter':
+        if inputs.hm_masking in ('centralregion', 'manual'):
+            # Determine threshold
             if inputs.hm_cleaning == 'manual':
                 threshold = inputs.threshold
             elif inputs.hm_cleaning == 'sensitivity':
                 raise Exception, 'sensitivity threshold not yet implemented'
             elif inputs.hm_cleaning == 'rms':
                 threshold = '%sJy' % (inputs.tlimit * sensitivity)
-            sequence_manager = ImageCentreThresholdSequence(
-                gridder = inputs.gridder, threshold=threshold,
-                sensitivity = sensitivity, niter=inputs.niter,
-                pblimit_image = self.pblimit_image,
-                pblimit_cleanmask = self.pblimit_cleanmask)
+
+            # Choose sequence manager
+            # Central mask based on PB
+            if inputs.hm_masking == 'centralregion':
+                sequence_manager = ImageCentreThresholdSequence(
+                    gridder = inputs.gridder, threshold=threshold,
+                    sensitivity = sensitivity, niter=inputs.niter)
+            # Manually supplied mask
+            else:
+                sequence_manager = ManualMaskThresholdSequence(
+                    mask=inputs.mask,
+                    gridder = inputs.gridder, threshold=threshold,
+                    sensitivity = sensitivity, niter=inputs.niter)
 
         elif inputs.hm_masking == 'psfiter':
             sequence_manager = IterativeSequence(
@@ -164,10 +236,6 @@ class Tclean(cleanbase.CleanBase):
         result = self._do_iterative_imaging(
             sequence_manager=sequence_manager, result=result)
 
-        # except Exception, e:
-        #     raise Exception, '%s/%s/SpW%s Iterative imaging error: %s' % (
-        #         inputs.intent, inputs.field, inputs.spw, str(e))
-
         return result
 
     def analyse(self, result):
@@ -181,11 +249,6 @@ class Tclean(cleanbase.CleanBase):
 
         context = self.inputs.context
         inputs = self.inputs
-
-        # TODO: For inputs.specmode=='cont' get continuum frequency ranges from
-        # dirty cubes if no lines.dat is defined
-        #if (inputs.specmode == 'cont') and ("no lines.dat") ...
-            # Make dirty cubes, run detection algorithm on each of them
 
         # Check if a matching 'cont' image exists for continuum subtraction.
         # NOTE: For Cycle 3 we use 'mfs' images due to possible
@@ -222,6 +285,11 @@ class Tclean(cleanbase.CleanBase):
                                 sensitivity=sequence_manager.sensitivity,
                                 result=None)
 
+        # Determine masking limits depending on PB
+        self.pblimit_image, self.pblimit_cleanmask = \
+            inputs.heuristics.pblimits(result.flux)
+        inputs.pblimit = self.pblimit_image
+
         # Give the result to the sequence_manager for analysis
         model_sum, cleaned_rms, non_cleaned_rms, residual_max, residual_min,\
             rms2d, image_max = sequence_manager.iteration_result(iter=0,
@@ -250,7 +318,7 @@ class Tclean(cleanbase.CleanBase):
                 pass
 
             # perform an iteration.
-            seq_result = sequence_manager.iteration(new_cleanmask)
+            seq_result = sequence_manager.iteration(new_cleanmask, self.pblimit_image, self.pblimit_cleanmask)
 
             # Check the iteration status.
             if not seq_result.iterating:
@@ -491,7 +559,7 @@ class Tclean(cleanbase.CleanBase):
                                                   niter=niter,
                                                   threshold=threshold,
                                                   sensitivity=sensitivity,
-                                                  pblimit=self.pblimit_image,
+                                                  pblimit=inputs.pblimit,
                                                   result=result,
                                                   parallel=parallel)
         clean_task = cleanbase.CleanBase(clean_inputs)
