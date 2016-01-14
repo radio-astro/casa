@@ -1051,8 +1051,8 @@ HPX HEALPix grid.  -->
 	      <value>hogbom</value>
               <value>clark</value>
 	      <value>clarkstokes</value>
-              <value>clark2</value>
-	      <value>clarkstokes2</value>
+              <value>clark_exp</value>
+	      <value>clarkstokes_exp</value>
 	      <value>multiscale</value>
 	      <value>mtmfs</value>
 	      <value>mem</value>
