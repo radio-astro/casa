@@ -333,6 +333,33 @@ void ChannelAverageTVI::sigmaSpectrum(Cube<Float> &sigmaSp) const
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
+Vector<Double> ChannelAverageTVI::getFrequencies (	Double time,
+													Int frameOfReference,
+													Int spectralWindowId,
+													Int msId) const
+{
+	// Get frequencies from input VI
+	Vector<Double> inputFrequencies = getVii()->getFrequencies(time,frameOfReference,
+																spectralWindowId,msId);
+
+	// Produce output (transformed) frequencies
+	Vector<Double> outputFrecuencies(spwOutChanNumMap_p[spectralWindowId]);
+
+	// Configure Transformation Engine
+	DataCubeMap auxiliaryData;
+	PlainChannelAverageKernel<Double> kernel;
+	uInt width = spwChanbinMap_p[spectralWindowId];
+	ChannelAverageTransformEngine<Double> transformer(&(kernel),width);
+
+	// Transform data
+	transformer.transform(inputFrequencies,outputFrecuencies,auxiliaryData);
+
+	return outputFrecuencies;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
 void ChannelAverageTVI::writeFlag (const Cube<Bool> & flag)
 {
 	// Create a flag cube with the input VI shape
@@ -475,6 +502,40 @@ template<class T> void ChannelAverageTransformEngine<T>::transform(Vector<T> &in
 		chanAvgKernel_p->kernel(inputVector,outputVector,auxiliaryData,
 								startChan,outChanIndex,tail);
 	}
+
+	return;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// PlainChannelAverageKernel class
+//////////////////////////////////////////////////////////////////////////
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template<class T> void PlainChannelAverageKernel<T>::kernel(	Vector<T> &inputVector,
+																Vector<T> &outputVector,
+																DataCubeMap &,
+																uInt startInputPos,
+																uInt outputPos,
+																uInt width)
+{
+	uInt pos = startInputPos + 1;
+	uInt counts = 1;
+	T avg = inputVector(startInputPos);
+	while (counts < width)
+	{
+		avg += inputVector(pos);
+		counts += 1;
+		pos += 1;
+	}
+
+	if (counts > 0)
+	{
+		avg /= counts;
+	}
+
+	outputVector(outputPos) = avg;
 
 	return;
 }
@@ -652,7 +713,6 @@ template<class T> void SigmaChannelAverageKernel<T>::kernel(	Vector<T> &inputVec
 
 	return;
 }
-
 
 } //# NAMESPACE VI - END
 

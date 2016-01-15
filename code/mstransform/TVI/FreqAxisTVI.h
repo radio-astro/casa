@@ -76,6 +76,10 @@ public:
     virtual void visibilityModel (Cube<Complex> & vis) const = 0;
     virtual void weightSpectrum(Cube<Float> &weightSp) const = 0;
     virtual void sigmaSpectrum (Cube<Float> &sigmaSp) const = 0;
+
+    virtual Vector<Double> getFrequencies (	Double time, Int frameOfReference,
+    										Int spectralWindowId, Int msId) const = 0;
+
     virtual void writeFlag (const Cube<Bool> & flag) = 0;
 
     // Common transformation for all sub-classes

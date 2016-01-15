@@ -847,7 +847,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			}
 			*/
 
-			/*
+
 			row = compareVector(visBuffer->getFrequencies(0),visBufferRef->getFrequencies(0));
 			if (row >= 0)
 			{
@@ -862,7 +862,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 				cout << GREEN;
 				cout << "=>getFrequencies match" << endl;
 			}
-			*/
+
 
 			if (abs(visBuffer->getChannelNumber(0,0)-visBufferRef->getChannelNumber(0,0)) > 0)
 			{

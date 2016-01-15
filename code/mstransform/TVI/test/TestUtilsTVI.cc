@@ -48,6 +48,7 @@ template <class T> Bool compareVector(	const Char* column,
 	{
 		if (abs(inp(index) - ref(index)) > tolerance )
 		{
+			ret = False;
 			cout << RED;
 			cout << column << " does not match in position="
 					<< index
@@ -303,6 +304,13 @@ Bool compareVisibilityIterators(VisibilityIterator2 &testTVI,
 			{
 				columnName = VisBufferComponents2::name(Sigma);
 				res = compareMatrix(columnName.c_str(),testVb->sigma(),refVb->sigma(),tolerance);
+				if (not res) keepIterating = False;
+			}
+
+			if (columns.contains(Frecuencies))
+			{
+				columnName = VisBufferComponents2::name(Frecuencies);
+				res = compareVector(columnName.c_str(),testVb->getFrequencies(0),refVb->getFrequencies(0),tolerance);
 				if (not res) keepIterating = False;
 			}
 

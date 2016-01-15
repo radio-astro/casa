@@ -1238,7 +1238,7 @@ const Vector<Double> & MSTransformBufferImpl::getFrequencies (Int rowInBuffer,In
 	// CAS-7699: Check if frequencies have to be transformed to a new ref. frame
 	Bool freqRefFrameTransRequested  = False;
 	MFrequency::Types requestedFreqRefFrame = static_cast<MFrequency::Types> (frame);
-	if (requestedFreqRefFrame != freqRefFrameType())
+	if (frame != FrameNotSpecified and requestedFreqRefFrame != freqRefFrameType())
 	{
 		frequenciesOk_p = False;
 		freqRefFrameTransRequested = True;

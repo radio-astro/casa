@@ -50,6 +50,10 @@ public:
     void visibilityModel (Cube<Complex> & vis) const;
     void weightSpectrum(Cube<Float> &weightSp) const;
     void sigmaSpectrum (Cube<Float> &sigmaSp) const;
+
+    Vector<Double> getFrequencies (	Double time, Int frameOfReference,
+    								Int spectralWindowId, Int msId) const;
+
     void writeFlag (const Cube<Bool> & flag);
 
 protected:
@@ -125,7 +129,7 @@ public:
 
 	virtual void kernel(	Vector<T> &inputVector,
 							Vector<T> &outputVector,
-							DataCubeMap &auxiliaryData,
+							DataCubeMap &,
 							uInt startInputPos,
 							uInt outputPos,
 							uInt width) = 0;
@@ -137,6 +141,23 @@ public:
 //////////////////////////////////////////////////////////////////////////
 
 template<class T> class DataChannelAverageKernel : public ChannelAverageKernel<T>
+{
+
+public:
+
+	void kernel(	Vector<T> &inputVector,
+					Vector<T> &outputVector,
+					DataCubeMap &auxiliaryData,
+					uInt startInputPos,
+					uInt outputPos,
+					uInt width);
+};
+
+//////////////////////////////////////////////////////////////////////////
+// PlainChannelAverageKernel class
+//////////////////////////////////////////////////////////////////////////
+
+template<class T> class PlainChannelAverageKernel : public ChannelAverageKernel<T>
 {
 
 public:
@@ -199,6 +220,7 @@ public:
 					uInt outputPos,
 					uInt width);
 };
+
 
 
 } //# NAMESPACE VI - END

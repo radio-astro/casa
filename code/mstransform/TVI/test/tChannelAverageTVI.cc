@@ -71,12 +71,16 @@ Record parseConfiguration(int argc, char **argv)
 			string filename(res[0]);
 			filename += string("/data/regression/unittest/flagdata/Four_ants_3C286.ms");
 
+			// Remove any previously existing copy
+			inputms = string("Four_ants_3C286.ms");
+			string rm_command = string ("rm -r ") + inputms + string("*");
+			system(rm_command.c_str());
+
 			// Make a copy of the MS in the working directory
-			string command = string ("cp -r ") + filename + string(" .");
-			Int ret = system(command.c_str());
+			string cp_command = string ("cp -r ") + filename + string(" .");
+			Int ret = system(cp_command.c_str());
 			if (ret == 0)
 			{
-				inputms = string("Four_ants_3C286.ms");
 				configuration.define ("inputms", String("Four_ants_3C286.ms"));
 				configuration.define ("spw", "1");
 				configuration.define ("chanbin", 8);
@@ -105,13 +109,13 @@ Record parseConfiguration(int argc, char **argv)
 	configuration.define ("datacolumn", string("ALL"));
 
 	// Make a second copy of the MS to serve as reference value
-	string command = string ("cp -r ") + inputms + string(" ") + inputms + string(".ref");
-	system(command.c_str());
+	string cp_command = string ("cp -r ") + inputms + string(" ") + inputms + string(".ref");
+	system(cp_command.c_str());
 
 	return configuration;
 }
 
-Bool test_compareVsMSTransformIterator(Record configuration)
+Bool test_compareTransformedData(Record configuration)
 {
 	// Declare working variables
 	Bool res;
@@ -150,6 +154,7 @@ Bool test_compareVsMSTransformIterator(Record configuration)
 	columns += SigmaSpectrum;
 	columns += Weight;
 	columns += Sigma;
+	columns += Frecuencies;
 
 	// Compare
 	res = compareVisibilityIterators(testTVI,refTVI,columns,tolerance);
@@ -228,7 +233,7 @@ int main(int argc, char **argv)
 
 	// Run test
 	Bool result = True;
-	result &= test_compareVsMSTransformIterator(configuration);
+	result &= test_compareTransformedData(configuration);
 	result &= test_comparePropagatedFlags(configuration);
 
 	// Exit code
