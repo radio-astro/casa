@@ -429,7 +429,7 @@ void SDGrid::findPBAsConvFunction(const ImageInterface<Complex>& image,
     uInt row=0;
     const ROMSPointingColumns& act_mspc = vb.msColumns().pointing();
     Bool nullPointingTable=(act_mspc.nrow() < 1);
-    // uInt pointIndex=getIndex(*mspc, vb.time()(row), vb.timeInterval()(row));
+    // uInt pointIndex=getIndex(*mspc, vb.time()(row), vb.timeInterval()(row), vb.antenna1()(row));
     Int pointIndex=-1;
     if(!nullPointingTable){
       //if(vb.newMS()) This thing is buggy...using msId change
@@ -437,9 +437,9 @@ void SDGrid::findPBAsConvFunction(const ImageInterface<Complex>& image,
 	lastIndex_p=0;
 	msId_p=vb.msId();
       }
-      pointIndex=getIndex(act_mspc, vb.time()(row));
+      pointIndex=getIndex(act_mspc, vb.time()(row), -1.0, vb.antenna1()(row));
       if(pointIndex < 0)
-	pointIndex=getIndex(act_mspc, vb.time()(row), vb.timeInterval()(row));
+	pointIndex=getIndex(act_mspc, vb.time()(row), vb.timeInterval()(row), vb.antenna1()(row));
       
     }
     if(!nullPointingTable && ((pointIndex<0)||(pointIndex>=Int(act_mspc.time().nrow())))) {
@@ -1339,7 +1339,7 @@ void SDGrid::ok() {
 // One could cure this by searching but it would be considerably
 // costlier.
 Int SDGrid::getIndex(const ROMSPointingColumns& mspc, const Double& time,
-		     const Double& interval) {
+		     const Double& interval, const Int& antid) {
   Int start=lastIndex_p;
   Double tol=interval < 0.0 ? time*C::dbl_epsilon : interval/2.0;
   // Search forwards
@@ -1349,6 +1349,12 @@ Int SDGrid::getIndex(const ROMSPointingColumns& mspc, const Double& time,
     // If the interval in the pointing table is negative, use the last
     // entry. Note that this may be invalid (-1) but in that case 
     // the calling routine will generate an error
+
+    // Check for ANTENNA_ID. When antid<0 (default) ANTENNA_ID in POINTING table < 0 is ignored.
+    // MS v2 definition indicates ANTENNA_ID in POINING >= 0.
+    if (antid >= 0 && mspc.antennaId()(i) != antid) {
+    	continue;
+    }
     if(mspc.interval()(i)<0.0) {
       return lastIndex_p;
     }
@@ -1365,6 +1371,9 @@ Int SDGrid::getIndex(const ROMSPointingColumns& mspc, const Double& time,
   // Search backwards
   for (Int i=start;i>=0;i--) {
     Double midpoint = mspc.time()(i); // time in POINTING table is midpoint
+    if (antid >= 0 && mspc.antennaId()(i) != antid) {
+    	continue;
+    }
     if(mspc.interval()(i)<0.0) {
       return lastIndex_p;
     }
@@ -1395,10 +1404,10 @@ Bool SDGrid::getXYPos(const VisBuffer& vb, Int row) {
       lastIndex_p=0;
       msId_p=vb.msId();
     }
-    pointIndex=getIndex(act_mspc, vb.time()(row));
+    pointIndex=getIndex(act_mspc, vb.time()(row), -1.0, vb.antenna1()(row));
     //Try again to locate a pointing within the integration 
     if(pointIndex <0)
-      pointIndex=getIndex(act_mspc, vb.time()(row), vb.timeInterval()(row));
+      pointIndex=getIndex(act_mspc, vb.time()(row), vb.timeInterval()(row), vb.antenna1()(row));
   }
   if(!nullPointingTable && ((pointIndex<0)||(pointIndex>=Int(act_mspc.time().nrow())))) {
     ostringstream o;
