@@ -153,6 +153,7 @@ scripts/task_plotms.py
 scripts/task_plotuv.py
 scripts/task_plotweather.py
 #scripts/task_plotxy.py
+scripts/task_oldsplit.py
 scripts/task_partition.py
 scripts/task_polcal.py
 scripts/task_predictcomp.py
