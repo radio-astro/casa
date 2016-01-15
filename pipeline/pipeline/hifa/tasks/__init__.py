@@ -6,6 +6,7 @@ from .bpsolint import BpSolint
 from .flagging import FlagDeterALMA
 from .flagging import ALMAAgentFlagger
 from .gaincal import TimeGaincal
+from .gaincalsnr import GaincalSnr
 from .fluxcalflag import FluxcalFlag
 from .fluxscale import GcorFluxscale
 from .importdata import ALMAImportData

@@ -202,7 +202,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    inputs.minbpnchan)
 
         if not solint_dict:
-            LOG.info('No solution internval dictionary')
+            LOG.info('No solution interval dictionary')
             return BpSolintResults(vis=inputs.vis)
 
         # Construct the results object
