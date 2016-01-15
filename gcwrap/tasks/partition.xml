@@ -84,13 +84,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>True</value>
         </param>
         <param type="string" name="separationaxis" ignorecase="true" subparam="true">
-            <description>Axis to do parallelization across(scan, spw, baseline, auto)</description>
+            <description>Axis to do parallelization across(scan, spw, auto)</description>
             <value>auto</value>
             <allowed kind="enum" ignorecase="true">
                 <value>auto</value>
                 <value>scan</value>
                 <value>spw</value>
-                <value>baseline</value>
             </allowed>
         </param>
         <param type="any" name="numsubms" subparam="true">
