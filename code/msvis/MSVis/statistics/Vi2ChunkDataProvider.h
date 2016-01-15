@@ -51,8 +51,19 @@ namespace casa {
 // the data from a single column in a single vi2 chunk. It is intended that the
 // user set up the VisibilityIterator2 appropriately to select the desired data
 // sample for computing statistics. The user may then iterate through the
-// VisibilityIterator2 chunks, creating a new Vi2ChunkDataProvider instance in
-// each iteration to compute statistics for that chunk's data.
+// VisibilityIterator2 chunks, calling reset() on the Vi2ChunkDataProvider
+// instance before supplying the instance to the Statistics::setDataProvider()
+// call to compute statistics for that chunk's data. In outline:
+//
+// Vi2ChunkDataProvider *dp; // given
+// for (dp->vi2->originChunks(); dp->vi2->moreChunks(); dp->vi2->nextChunk()) {
+// 	// Prepare the data provider
+// 	dp->vi2->origin();
+// 	dp->reset();
+// 	// Compute statistics for this chunk
+// 	statistics.setDataProvider(dp);
+// 	statistics.getStatistics();
+// }
 //
 // Note that the AccumType template parameter value of StatsDataProvider is
 // derived from the DataIterator parameter value of this template, imposing a
@@ -84,6 +95,11 @@ public:
 		, component(component)
 		, use_data_weights(use_data_weights)
 		, omit_flagged_data(omit_flagged_data) {
+
+		// Attach the MS columns to vi2 by calling originChunks(). Not the most
+		// direct method, but attaching the columns is required in many cases to
+		// pass existsColumn() test.
+		vi2->originChunks();
 		if (!vi2->existsColumn(component))
 			throw AipsError("Column is not present");
 	}
