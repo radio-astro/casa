@@ -155,6 +155,7 @@ from listvis import  listvis
 from mosaic import  mosaic
 from mstransform import mstransform
 from msview import msview
+from oldsplit import  oldsplit
 from partition import partition
 from plotants import  plotants
 from plotcal import  plotcal

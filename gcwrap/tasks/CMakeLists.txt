@@ -75,6 +75,7 @@ mosaic.xml
 msview.xml
 mstransform.xml
 msuvbin.xml
+oldsplit.xml
 plotants.xml
 plotbandpass.xml
 plotcal.xml

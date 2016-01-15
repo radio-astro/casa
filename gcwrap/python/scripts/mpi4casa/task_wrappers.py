@@ -6,6 +6,7 @@ from flagdata_pg import flagdata_pg as flagdata
 from flagcmd_pg import flagcmd_pg as flagcmd
 from importevla_pg import importevla_pg as importevla
 from split_pg import split_pg as split
+from oldsplit_pg import oldsplit_pg as oldsplit
 from importvla_pg import importvla_pg as importvla
 from hanningsmooth_pg import hanningsmooth_pg as hanningsmooth
 from widefield_pg import widefield_pg as widefield
