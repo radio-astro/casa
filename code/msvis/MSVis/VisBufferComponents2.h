@@ -32,6 +32,7 @@ typedef enum {
     FlagCube,
     FlagRow,
     FloatData,
+    Frecuencies,
     ImagingWeight,
     JonesC,
     NAntennas,

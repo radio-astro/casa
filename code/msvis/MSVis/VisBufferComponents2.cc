@@ -163,6 +163,7 @@ VisBufferComponents2::name (Int id)
     names [FlagCube] = "FlagCube";
     names [FlagRow] = "FlagRow";
     names [FloatData] = "FloatData";
+    names [Frecuencies] = "Frecuencies";
     names [ImagingWeight] = "ImagingWeight";
     names [JonesC] = "JonesC";
     names [NAntennas] = "NAntennas";
