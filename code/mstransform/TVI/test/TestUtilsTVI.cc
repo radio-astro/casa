@@ -320,6 +320,71 @@ Bool compareVisibilityIterators(VisibilityIterator2 &testTVI,
 }
 
 
+void propagateFlags(VisibilityIterator2 &vi)
+{
+	// Declare working variables
+	Int chunk = 0,buffer = 0;
+
+	// Get VisBuffer
+	VisBuffer2 *vb = vi.getVisBuffer();
+
+	// Propagate flags
+	vi.originChunks();
+	while (vi.moreChunks())
+	{
+		chunk += 1;
+		buffer = 0;
+
+		vi.origin();
+		vi.origin();
+
+		while (vi.more())
+		{
+			buffer += 1;
+
+			// Initialize flag cube
+			IPosition shape = vb->getShape();
+			Cube<Bool> flagCube(shape,False);
+
+			// Switch each other buffer the sign of the flag of the first block of channels
+			Bool firstChanBlockFlag = buffer % 2? True:False;
+
+			// Fill flag cube alternating flags per blocks channels
+			size_t nCorr = shape(0);
+			size_t nChan = shape(1);
+			size_t nRows = shape(2);
+			for (size_t row_i =0;row_i<nRows;row_i++)
+			{
+				// Row completely flagged
+				if (row_i % 2)
+				{
+					flagCube.xyPlane(row_i) = True;
+				}
+				else
+				{
+					for (size_t chan_i =0;chan_i<nChan;chan_i++)
+					{
+						// Set the flags in each other block of channels
+						Bool chanBlockFlag = chan_i % 2? firstChanBlockFlag:!firstChanBlockFlag;
+
+						for (size_t corr_i =0;corr_i<nCorr;corr_i++)
+						{
+							flagCube(corr_i,chan_i,row_i) = chanBlockFlag;
+						}
+					}
+				}
+			}
+
+			vi.writeFlag(flagCube);
+			vi.next();
+		}
+
+		vi.nextChunk();
+	}
+
+	return;
+}
+
 } //# NAMESPACE VI - END
 
 } //# NAMESPACE CASA - END

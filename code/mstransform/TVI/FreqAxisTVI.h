@@ -56,6 +56,7 @@ public:
 
 	// Lifecycle
 	FreqAxisTVI(ViImplementation2 * inputVii,const Record &configuration);
+	~FreqAxisTVI();
 
 	// Navigation methods
 	void origin ();
@@ -76,7 +77,6 @@ public:
     virtual void weightSpectrum(Cube<Float> &weightSp) const = 0;
     virtual void sigmaSpectrum (Cube<Float> &sigmaSp) const = 0;
     virtual void writeFlag (const Cube<Bool> & flag) = 0;
-    virtual void writeFlagRow (const Vector<Bool> & rowflags) = 0;
 
     // Common transformation for all sub-classes
     Vector<Int> getChannels (	Double time, Int frameOfReference,

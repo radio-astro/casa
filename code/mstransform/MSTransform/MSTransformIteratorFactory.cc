@@ -33,6 +33,9 @@ MSTransformIteratorFactory::MSTransformIteratorFactory(Record &configuration)
 	tmpMSFileName_p = String("");
 	setConfiguration(configuration);
 	eligibleSubTables_p = MrsEligibility::defaultEligible();
+
+	initializeManager();
+
 	return;
 }
 
@@ -43,6 +46,29 @@ MSTransformIteratorFactory::MSTransformIteratorFactory(Record &configuration, Mr
 {
 	setConfiguration(configuration);
 	eligibleSubTables_p = eligibleSubTables;
+
+	initializeManager();
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformIteratorFactory::initializeManager()
+{
+	// Initialize manager to unpack parameters
+	manager_p = SHARED_PTR<MSTransformManager>(new MSTransformManager(configuration_p));
+
+	// Open manager to create selected inputMS
+	manager_p->open();
+
+	// Need to call setup in order to determine the output channel structure
+	manager_p->setup();
+
+	// Enable memory resident SubTables in transformed MS
+	manager_p->getOutputMs()->setMemoryResidentSubtables(eligibleSubTables_p);
+
 	return;
 }
 
@@ -70,15 +96,6 @@ std::vector<IPosition> MSTransformIteratorFactory::getVisBufferStructure()
 {
 	// Initialize logger
 	LogIO logger;
-
-	// Initialize manager to unpack parameters
-	manager_p = SHARED_PTR<MSTransformManager>(new MSTransformManager(configuration_p));
-
-	// Open manager to create selected inputMS
-	manager_p->open();
-
-	// Need to call setup in order to determine the output channel structure
-	manager_p->setup();
 
 	// Get MS filename as we may need to remove the tmp file from the Factory class
 	tmpMSFileName_p = manager_p->getOutputMsName();
@@ -184,19 +201,7 @@ void MSTransformIteratorFactory::setConfiguration(Record &configuration)
 
 vi::ViImplementation2 * MSTransformIteratorFactory::createVi() const
 {
-	// Create MSTransformManager
-	if (not manager_p)
-	{
-		manager_p = SHARED_PTR<MSTransformManager>(new MSTransformManager(configuration_p));
-		manager_p->open();
-		manager_p->setup();
-	}
-
-	// Enable memory resident SubTables in transformed MS
-	manager_p->getOutputMs()->setMemoryResidentSubtables(eligibleSubTables_p);
-
 	// Create output VisibilityIterator
-	// NOTE: InpVi is not really necessary downstream. We only have to provide an implementation
 	MSTransformIterator *outputVI = new MSTransformIterator(manager_p->getVisIter()->getImpl(),manager_p);
 
 	return outputVI;

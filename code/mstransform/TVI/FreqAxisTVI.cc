@@ -59,6 +59,19 @@ FreqAxisTVI::FreqAxisTVI(	ViImplementation2 * inputVii,
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
+FreqAxisTVI::~FreqAxisTVI()
+{
+	// The parent class destructor (~TransformingVi2) deletes the inner
+	// ViImplementation2 object. However if it might have been already
+	// deleted at the top level context
+	inputVii_p = NULL;
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
 Bool FreqAxisTVI::parseConfiguration(const Record &configuration)
 {
 	int exists = 0;

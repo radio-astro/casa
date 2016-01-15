@@ -147,11 +147,12 @@ public:
 	~MSTransformIteratorFactory();
 
 	std::vector<IPosition> getVisBufferStructure();
-	const MeasurementSet& getSelectedMS() const {return *(manager_p->selectedInputMs_p);}
+	vi::VisibilityIterator2 * getInputVI() {return manager_p->getVisIter();}
 
 protected:
 
 	void setConfiguration(Record &configuration);
+	void initializeManager();
 	vi::ViImplementation2 * createVi () const;
 
 private:

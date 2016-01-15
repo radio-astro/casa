@@ -31,7 +31,7 @@ using namespace casa::vi;
 
 Record parseConfiguration(int argc, char **argv)
 {
-	string parameter,value;
+	string parameter,value,inputms;
 	Record configuration;
 	Bool autoMode = True;
 
@@ -42,6 +42,7 @@ Record parseConfiguration(int argc, char **argv)
 
 		if (parameter == string("-vis"))
 		{
+			inputms = value;
 			configuration.define ("inputms", value);
 			autoMode = False;
 		}
@@ -70,17 +71,15 @@ Record parseConfiguration(int argc, char **argv)
 			string filename(res[0]);
 			filename += string("/data/regression/unittest/flagdata/Four_ants_3C286.ms");
 
-			// Check if file exists
+			// Make a copy of the MS in the working directory
 			string command = string ("cp -r ") + filename + string(" .");
-			Int exists = system(command.c_str());
-			if (exists == 0)
+			Int ret = system(command.c_str());
+			if (ret == 0)
 			{
+				inputms = string("Four_ants_3C286.ms");
 				configuration.define ("inputms", String("Four_ants_3C286.ms"));
-				configuration.define ("chanaverage", True);
-				configuration.define ("chanbin", 8);
-				configuration.define ("datacolumn", string("ALL"));
-				configuration.define ("reindex", False);
 				configuration.define ("spw", "1");
+				configuration.define ("chanbin", 8);
 			}
 			else
 			{
@@ -100,6 +99,15 @@ Record parseConfiguration(int argc, char **argv)
 		}
 	}
 
+	// Generic settings necessary for MSTransformIterator
+	configuration.define ("reindex", False);
+	configuration.define ("chanaverage", True);
+	configuration.define ("datacolumn", string("ALL"));
+
+	// Make a second copy of the MS to serve as reference value
+	string command = string ("cp -r ") + inputms + string(" ") + inputms + string(".ref");
+	system(command.c_str());
+
 	return configuration;
 }
 
@@ -109,18 +117,22 @@ Bool test_compareVsMSTransformIterator(Record configuration)
 	Bool res;
 	Float tolerance = 1E-5; // FLT_EPSILON is 1.19209290e-7F
 
-	// Generate MSTransformIterator and associated buffer
+	// Get original inputms name
+	String inputms;
+	configuration.get (configuration.fieldNumber ("inputms"), inputms);
+
+	// Create MSTransformIterator pointing to reference file
+	configuration.define("inputms", inputms + String(".ref"));
 	MSTransformIteratorFactory refFactory(configuration);
 	VisibilityIterator2 refTVI(refFactory);
 
-	// Generate input VisbilityIterator (use selected MS from MSTransformIterator)
-	// NOTE: Declare as a pointer so that destructor is not invoked
-	//       (~VisibilityIterator2 deletes its ViImplementation2 and
-	//        ~TransformingVi2 deletes the input ViImplementation2)
-	VisibilityIterator2 *inputVI = new vi::VisibilityIterator2(refFactory.getSelectedMS());
+	// Use MSTransformFactory to create a plain input VII
+	configuration.define("inputms", inputms);
+	MSTransformIteratorFactory plainVIFactory(configuration);
+	ViImplementation2 *inputVI = plainVIFactory.getInputVI()->getImpl();
 
 	// Generate TVI to test
-	ChannelAverageTVIFactory testFactory(configuration,inputVI->getImpl());
+	ChannelAverageTVIFactory testFactory(configuration,inputVI);
 	VisibilityIterator2 testTVI(testFactory);
 
 	// Determine columns to check
@@ -145,13 +157,79 @@ Bool test_compareVsMSTransformIterator(Record configuration)
 	return res;
 }
 
+void propagateFlags(Record configuration)
+{
+	// Get original inputms name
+	String inputms;
+	configuration.get (configuration.fieldNumber ("inputms"), inputms);
+
+	// Create MSTransformIterator pointing to reference file
+	configuration.define("inputms", inputms + String(".ref"));
+	MSTransformIteratorFactory refFactory(configuration);
+	VisibilityIterator2 refTVI(refFactory);
+
+	// Use MSTransformFactory to create a plain input VII
+	configuration.define("inputms", inputms);
+	MSTransformIteratorFactory plainVIFactory(configuration);
+	ViImplementation2 *inputVI = plainVIFactory.getInputVI()->getImpl();
+
+	// Generate TVI to test
+	ChannelAverageTVIFactory testFactory(configuration,inputVI);
+	VisibilityIterator2 testTVI(testFactory);
+
+	// Propagate flags with MSTransformIterator
+	propagateFlags(refTVI);
+
+	// Propagate flags with TVI to test
+	propagateFlags(testTVI);
+
+	return;
+}
+
+
+Bool test_comparePropagatedFlags(Record configuration)
+{
+	// Declare working variables
+	Bool res;
+	Float tolerance = 1E-5; // FLT_EPSILON is 1.19209290e-7F
+
+	// Propagate flags
+	propagateFlags(configuration);
+
+	// Get original inputms name
+	String inputms;
+	configuration.get (configuration.fieldNumber ("inputms"), inputms);
+
+	// Use MSTransformIteratorFactory to create a plain input VI pointing to the test file
+	configuration.define("inputms", inputms);
+	MSTransformIteratorFactory testFactory(configuration);
+	VisibilityIterator2 *testTVI = testFactory.getInputVI();
+
+	// Use MSTransformIteratorFactory to create a plain input VI pointing to the reference file
+	configuration.define("inputms", inputms + String(".ref"));
+	MSTransformIteratorFactory refFactory(configuration);
+	VisibilityIterator2 *refTVI = refFactory.getInputVI();
+
+	// Determine columns to check
+	VisBufferComponents2 columns;
+	columns += FlagCube;
+
+	// Compare
+	res = compareVisibilityIterators(*testTVI,*refTVI,columns,tolerance);
+
+	return res;
+}
+
+
 int main(int argc, char **argv)
 {
 	// Read configuration
 	Record configuration = parseConfiguration(argc, argv);
 
 	// Run test
-	Bool result = test_compareVsMSTransformIterator(configuration);
+	Bool result = True;
+	result &= test_compareVsMSTransformIterator(configuration);
+	result &= test_comparePropagatedFlags(configuration);
 
 	// Exit code
 	if (result)

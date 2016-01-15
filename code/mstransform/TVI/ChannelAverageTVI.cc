@@ -335,14 +335,73 @@ void ChannelAverageTVI::sigmaSpectrum(Cube<Float> &sigmaSp) const
 // -----------------------------------------------------------------------
 void ChannelAverageTVI::writeFlag (const Cube<Bool> & flag)
 {
+	// Create a flag cube with the input VI shape
+	Cube<Bool> propagatedFlagCube(getVii()->getVisBuffer()->getShape(),False);
+
+	// Propagate flags from the input cube to the propagated flag cube
+	propagateChanAvgFlags(flag,propagatedFlagCube);
+
+	// Pass propagated flag cube downstream for further propagation and/or writting
+	getVii()->writeFlag(propagatedFlagCube);
+
 	return;
 }
 
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-void ChannelAverageTVI::writeFlagRow (const Vector<Bool> & rowflags)
+void ChannelAverageTVI::propagateChanAvgFlags (const Cube<Bool> &transformedFlagCube,
+												Cube<Bool> &propagatedFlagCube)
 {
+	// Get current SPW and chanbin
+	VisBuffer2 *inputVB = getVii()->getVisBuffer();
+	Int inputSPW = inputVB->spectralWindows()(0);
+	uInt width = spwChanbinMap_p[inputSPW];
+
+	// Get propagated (input) shape
+	IPosition inputShape = propagatedFlagCube.shape();
+	size_t nCorr = inputShape(0);
+	size_t nChan = inputShape(1);
+	size_t nRows = inputShape(2);
+
+	// Get transformed (output) shape
+	IPosition transformedShape = transformedFlagCube.shape();
+	size_t nTransChan = transformedShape(1);
+
+	// Map input-output channel
+	uInt binCounts = 0;
+	uInt transformedIndex = 0;
+	Vector<uInt> inputOutputChan(nChan);
+	for (size_t chan_i =0;chan_i<nChan;chan_i++)
+	{
+		binCounts += 1;
+
+		if (binCounts > width)
+		{
+			binCounts = 1;
+			transformedIndex += 1;
+		}
+
+		inputOutputChan(chan_i) = transformedIndex;
+	}
+
+	// Propagate chan-avg flags
+	uInt outChan;
+	for (size_t row_i =0;row_i<nRows;row_i++)
+	{
+		for (size_t chan_i =0;chan_i<nChan;chan_i++)
+		{
+			outChan = inputOutputChan(chan_i);
+			if (outChan < nTransChan) // outChan >= nChan  may happen when channels are dropped
+			{
+				for (size_t corr_i =0;corr_i<nCorr;corr_i++)
+				{
+					propagatedFlagCube(corr_i,chan_i,row_i) = transformedFlagCube(corr_i,outChan,row_i);
+				}
+			}
+		}
+	}
+
 	return;
 }
 
@@ -364,6 +423,14 @@ ChannelAverageTVIFactory::ChannelAverageTVIFactory (Record &configuration,
 //
 // -----------------------------------------------------------------------
 vi::ViImplementation2 * ChannelAverageTVIFactory::createVi(VisibilityIterator2 *) const
+{
+	return new ChannelAverageTVI(inputVii_p,configuration_p);
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+vi::ViImplementation2 * ChannelAverageTVIFactory::createVi() const
 {
 	return new ChannelAverageTVI(inputVii_p,configuration_p);
 }

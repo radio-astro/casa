@@ -51,7 +51,10 @@ public:
     void weightSpectrum(Cube<Float> &weightSp) const;
     void sigmaSpectrum (Cube<Float> &sigmaSp) const;
     void writeFlag (const Cube<Bool> & flag);
-    void writeFlagRow (const Vector<Bool> & rowflags);
+
+protected:
+
+    void propagateChanAvgFlags (const Cube<Bool> &avgFlagCube, Cube<Bool> &expandedFlagCube);
 
 private:
 
@@ -76,6 +79,7 @@ public:
 protected:
 
 	vi::ViImplementation2 * createVi (VisibilityIterator2 *) const;
+	vi::ViImplementation2 * createVi () const;
 
 private:
 

@@ -70,6 +70,8 @@ Bool compareVisibilityIterators(VisibilityIterator2 &testTVI,
 								VisBufferComponents2 &columns,
 								Float tolerance = FLT_EPSILON);
 
+void propagateFlags(VisibilityIterator2 &vi);
+
 
 } //# NAMESPACE VI - END
 
