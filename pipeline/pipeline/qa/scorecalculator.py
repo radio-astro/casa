@@ -26,6 +26,8 @@ __all__ = ['score_polintents',                                # ALMA specific
            'score_missing_bandpass_snrs',                     # ALMA specific
            'score_poor_phaseup_solutions',                    # ALMA specific
            'score_poor_bandpass_solutions',                   # ALMA specific
+           'score_missing_phase_snrs',                        # ALMA specific
+           'score_poor_phase_snrs',                           # ALMA specific
            'score_flagging_view_exists',                      # ALMA specific
            'score_file_exists',
            'score_path_exists',
@@ -949,6 +951,75 @@ def score_poor_bandpass_solutions(ms, spwids, nbpsolutions, min_nsolutions):
 
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg,
                        vis=ms.basename)
+
+@log_qa
+def score_missing_phase_snrs(ms, spwids, snrs):
+
+    '''
+    Score is the fraction of spws with SNR estimates
+    '''
+
+    # Compute the number of expected and missing SNR measurements
+    nexpected = len(spwids)
+    missing_spws = []
+    for i in range (len(spwids)):
+        if not snrs[i]:
+            missing_spws.append(spwid[i])
+    nmissing = len(missing_spws) 
+
+    if nexpected <= 0:
+        score = 0.0
+        longmsg = 'No gaincal SNR estimates for %s ' % ms.basename
+        shortmsg = 'No gaincal SNR estimates'
+    elif nmissing <= 0:
+        score = 1.0
+        longmsg = 'No missing gaincal SNR estimates for %s ' % ms.basename
+        shortmsg = 'No missing gaincal SNR estimates'
+    else:
+        score = float (nexpected - nmissing) / nexpected
+        longmsg = 'Missing gaincal SNR estimates for spws %s in %s ' % \
+            (missing_spws, ms.basename)
+        shortmsg = 'Missing gaincal SNR estimates'
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg,
+                       vis=ms.basename)
+
+@log_qa
+def score_poor_phase_snrs(ms, spwids, minsnr, snrs):
+
+    '''
+    Score is the fraction of spws with poor snr estimates
+    '''
+
+    # Compute the number of expected and poor solutions
+    nexpected = len(spwids)
+    poor_spws = []
+    for i in range (len(spwids)):
+        if not snrs[i]:
+            poor_spws.append(spwids[i])
+        elif snrs[i] < minsnr:
+            poor_spws.append(spwids[i])
+    npoor = len(poor_spws) 
+
+    if nexpected <= 0:
+        score = 0.0
+        longmsg = 'No gaincal SNR estimates for %s ' % \
+            ms.basename
+        shortmsg = 'No gaincal SNR estimates'
+    elif npoor <= 0:
+        score = 1.0
+        longmsg = 'No low gaincal SNR estimates for %s ' % \
+            ms.basename
+        shortmsg = 'No low gaincal SNR estimates'
+    else:
+        score = float (nexpected - npoor) / nexpected
+        longmsg = 'Low gaincal SNR estimates for spws %s in %s ' % \
+            (poor_spws, ms.basename)
+        shortmsg = 'Low gaincal SNR estimates'
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg,
+                       vis=ms.basename)
+
 
 @log_qa
 def score_derived_fluxes_snr(ms, measurements):
