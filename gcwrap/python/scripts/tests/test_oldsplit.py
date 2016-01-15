@@ -1,5 +1,5 @@
 '''
-Unit tests for task split.
+Unit tests for task oldsplit.
 
 Features tested:
   1. Are the POLARIZATION, DATA_DESCRIPTION, and (to some extent) the
@@ -15,7 +15,7 @@ Features tested:
      channels are being selected and/or averaged?
   8. The finer points of spw:chan selection.
 
-Note: The time_then_chan_avg regression is a more "end-to-end" test of split.
+Note: The time_then_chan_avg regression is a more "end-to-end" test of oldsplit.
 '''
 
 import inspect
@@ -24,15 +24,11 @@ import numpy
 import re
 import sys
 import shutil
-import exceptions
-import filecmp
 from __main__ import default
 from recipes.listshapes import listshapes
-import testhelper as th
-from tasks import split, partition, listobs, flagdata, importasdm, flagcmd
-from taskinit import mstool, msmdtool, tbtool
+from tasks import *
+from taskinit import *
 import unittest
-from parallel.parallel_task_helper import ParallelTaskHelper
 
 datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/split/'
 
@@ -44,18 +40,8 @@ if os.environ.has_key('TEST_DATADIR'):
     if os.path.isdir(DATADIR):
         datapath = DATADIR+'/split/'
 
-print 'split tests will use data from '+datapath         
+print 'oldsplit tests will use data from '+datapath         
 
-if os.environ.has_key('BYPASS_PARALLEL_PROCESSING'):
-    ParallelTaskHelper.bypassParallelProcessing(1)
-
-'''
-    Start of old tests, which are the same as test_split.
-    class SplitFlags on are new tests.
-'''
-
-# local copy of tool
-tblocal = tbtool()
 
 def check_eq(val, expval, tol=None):
     """Checks that val matches expval within tol."""
@@ -86,28 +72,28 @@ def slurp_table(tabname):
     Returns a dictionary containing the CASA table tabname.  The dictionary
     is arranged like:
 
-    {'keywords': tblocal.getkeywords(),
-     'cols': {colname0, {'desc': tblocal.getcoldesc(colname0),
-                         'keywords': tblocal.getcolkeywords(colname0),
-                         'data': tblocal.getcol(colname0)},
-              colname1, {'desc': tblocal.getcoldesc(colname1),
-                             'keywords': tblocal.getcolkeywords(colname1),
-                         'data': tblocal.getcol(colname1)},
+    {'keywords': tb.getkeywords(),
+     'cols': {colname0, {'desc': tb.getcoldesc(colname0),
+                         'keywords': tb.getcolkeywords(colname0),
+                         'data': tb.getcol(colname0)},
+              colname1, {'desc': tb.getcoldesc(colname1),
+                             'keywords': tb.getcolkeywords(colname1),
+                         'data': tb.getcol(colname1)},
               ...}}
     """
-    tblocal.open(tabname)
-    retval = {'keywords': tblocal.getkeywords(),
+    tb.open(tabname)
+    retval = {'keywords': tb.getkeywords(),
               'cols': {}}
-    cols = tblocal.colnames()
+    cols = tb.colnames()
     for col in cols:
-        entry = {'desc': tblocal.getcoldesc(col),
-                 'keywords': tblocal.getcolkeywords(col)}
-        if tblocal.isvarcol(col):
-            entry['data'] = tblocal.getvarcol(col)
+        entry = {'desc': tb.getcoldesc(col),
+                 'keywords': tb.getcolkeywords(col)}
+        if tb.isvarcol(col):
+            entry['data'] = tb.getvarcol(col)
         else:
-            entry['data'] = tblocal.getcol(col)
+            entry['data'] = tb.getcol(col)
         retval['cols'][col] = entry
-    tblocal.close()
+    tb.close()
     return retval
     
 def compare_tables(tabname, exptabname, tol=None):
@@ -243,16 +229,16 @@ class split_test_tav(SplitChecker):
         shutil.rmtree(outms, ignore_errors=True)
         try:
             print "\nTime averaging", self.inpms, corrsel
-            splitran = split(self.inpms, outms, datacolumn='data',
+            splitran = oldsplit(self.inpms, outms, datacolumn='data',
                              field='', spw='', width=1, antenna='',
                              timebin='20s', timerange='',
                              scan='', array='', uvrange='',
                              correlation=corrsel)
-            tblocal.open(outms)
-            record['data']   = tblocal.getcell('DATA', 2)
-            record['weight'] = tblocal.getcell('WEIGHT', 5)
-            record['sigma']  = tblocal.getcell('SIGMA', 7)
-            tblocal.close()
+            tb.open(outms)
+            record['data']   = tb.getcell('DATA', 2)
+            record['weight'] = tb.getcell('WEIGHT', 5)
+            record['sigma']  = tb.getcell('SIGMA', 7)
+            tb.close()
         except Exception, e:
             print "Error time averaging and reading", outms
             raise e
@@ -421,25 +407,22 @@ class split_test_cav(SplitChecker):
         shutil.rmtree(outms, ignore_errors=True)
         try:
             print "\nChannel averaging", corrsel
-            splitran = split(self.inpms, outms, datacolumn='data',
+            splitran = oldsplit(self.inpms, outms, datacolumn='data',
                              field='', spw='0:5~16', width=3,
                              antenna='',
                              timebin='', timerange='',
                              scan='', array='', uvrange='',
                              correlation=corrsel)
-            tblocal.open(outms)
-            record['data']   = tblocal.getcell('DATA', 2)
-            record['weight'] = tblocal.getcell('WEIGHT', 5)
-            record['sigma']  = tblocal.getcell('SIGMA', 7)
-            tblocal.close()
+            tb.open(outms)
+            record['data']   = tb.getcell('DATA', 2)
+            record['weight'] = tb.getcell('WEIGHT', 5)
+            record['sigma']  = tb.getcell('SIGMA', 7)
+            tb.close()
         except Exception, e:
             print "Error channel averaging and reading", outms
             raise e
         self.records[corrsel] = record
         return splitran
-
-    # NOTE: In MSTransform (new split), if fewer channels than chanbin are left at 
-    # the end of the spw, these channels will be dropped. 
 
     def test_sts(self):
         """Subtables, chan avg. without correlation selection"""
@@ -484,34 +467,34 @@ class split_test_cav(SplitChecker):
     def test_wt(self):
         """WEIGHT[5], chan avg. without correlation selection"""
         check_eq(self.records['']['weight'],
-                 numpy.array([ 2.75,  2.75]), 0.001)
+                 numpy.array([3.0, 3.0]), 0.001)
         #self.__class__.n_tests_passed += 1
 
     def test_wt_rr(self):
         """WEIGHT[5], chan avg. RR"""
         check_eq(self.records['rr']['weight'],
-                 numpy.array([2.75]), 0.001)
+                 numpy.array([3.0]), 0.001)
 
     def test_wt_ll(self):
         """WEIGHT[5], chan avg. LL"""
         check_eq(self.records['ll']['weight'],
-                 numpy.array([ 2.75]), 0.001)
+                 numpy.array([3.0]), 0.001)
         #self.__class__.n_tests_passed += 1
 
     def test_sigma(self):
         """SIGMA[7], chan avg. without correlation selection"""
         check_eq(self.records['']['sigma'],
-                 numpy.array([ 0.60978937,  0.60978937]), 0.0001)
+                 numpy.array([0.57735026, 0.57735026]), 0.0001)
         
     def test_sigma_rr(self):
         """SIGMA[7], chan avg. RR"""
         check_eq(self.records['rr']['sigma'],
-                 numpy.array([0.60978937]), 0.0001)
+                 numpy.array([0.57735026]), 0.0001)
         
     def test_sigma_ll(self):
         """SIGMA[7], chan avg. LL"""
         check_eq(self.records['ll']['sigma'],
-                 numpy.array([ 0.60978937]), 0.0001)
+                 numpy.array([0.57735026]), 0.0001)
         #self.__class__.n_tests_passed += 1
 
 class split_test_cav5(SplitChecker):
@@ -532,73 +515,73 @@ class split_test_cav5(SplitChecker):
         shutil.rmtree(outms, ignore_errors=True)
         try:
             print "\nChannel averaging", corrsel
-            splitran = split(self.inpms, outms, datacolumn='data',
+            splitran = oldsplit(self.inpms, outms, datacolumn='data',
                              field='', spw='0:5~16', width=5,
                              antenna='',
                              timebin='', timerange='',
                              scan='', array='', uvrange='',
                              correlation=corrsel)
-            tblocal.open(outms)
-            record['data']   = tblocal.getcell('DATA', 2)
-            record['weight'] = tblocal.getcell('WEIGHT', 5)
-            record['sigma']  = tblocal.getcell('SIGMA', 7)
-            tblocal.close()
+            tb.open(outms)
+            record['data']   = tb.getcell('DATA', 2)
+            record['weight'] = tb.getcell('WEIGHT', 5)
+            record['sigma']  = tb.getcell('SIGMA', 7)
+            tb.close()
         except Exception, e:
             print "Error channel averaging and reading", outms
             raise e
         self.records[corrsel] = record
         return splitran
 
-    # NOTE: In MSTransform (new split), if fewer channels than chanbin are left at 
-    # the end of the spw, these channels will be dropped. 
-
     def test_sts(self):
         """Subtables, chan avg. without correlation selection"""
-        self.check_subtables('', [(2, 2)])
+        self.check_subtables('', [(2, 3)])
         #self.__class__.n_tests_passed += 1
 
     def test_sts_ll(self):
         """Subtables, chan avg. LL"""
-        self.check_subtables('ll', [(1, 2)])
+        self.check_subtables('ll', [(1, 3)])
         #self.__class__.n_tests_passed += 1
 
     def test_data(self):
         """DATA[2],   chan avg. without correlation selection"""
         check_eq(self.records['']['data'],
-                 numpy.array([[17.13964462-42.20331192j, 26.04414749-49.97922897j],
-                              [ 5.80819368-43.6548233j,   6.72127867-44.33802414j]]),0.0005)
+                 numpy.array([[17.13964462-42.20331192j, 26.04414749-49.97922897j,
+                               20.67210388-52.81464005j],
+                              [ 5.80819368-43.6548233j,   6.72127867-44.33802414j,
+                               10.60328102-11.62711906j]]),
+                 0.0005)
         #self.__class__.n_tests_passed += 1
         
     def test_data_ll(self):
         """DATA[2],   chan avg. LL"""
         check_eq(self.records['ll']['data'],
-                 numpy.array([[ 5.80819368-43.6548233j,  6.72127867-44.33802414j]]),0.0001)
+                 numpy.array([[ 5.80819368-43.6548233j,  6.72127867-44.33802414j,
+                               10.60328102-11.62711906j]]),
+                 0.0001)
 
     def test_wt(self):
         """WEIGHT[5], chan avg. without correlation selection"""
-        # jagonzal: New WEIGHT calculation based on median
-        # check_eq(self.records['']['weight'],numpy.array([5.0, 5.0]),0.001)
-        check_eq(self.records['']['weight'],numpy.array([4.5, 4.5]),0.001)
+        check_eq(self.records['']['weight'],
+                 numpy.array([5.0, 5.0]),
+                 0.001)
         #self.__class__.n_tests_passed += 1
 
     def test_wt_ll(self):
         """WEIGHT[5], chan avg. LL"""
-        # jagonzal: New WEIGHT calculation based on median
-        # check_eq(self.records['ll']['weight'],numpy.array([5.]),0.001)
-        check_eq(self.records['ll']['weight'],numpy.array([4.5]),0.001)
+        check_eq(self.records['ll']['weight'],
+                 numpy.array([5.]),
+                 0.001)
         #self.__class__.n_tests_passed += 1
 
     def test_sigma(self):
         """SIGMA[7], chan avg. without correlation selection"""
-        # jagonzal: New SIGMA calculation based on median
-        #check_eq(self.records['']['sigma'],numpy.array([0.44721359, 0.44721359]), 0.0001)
-        check_eq(self.records['']['sigma'],numpy.array([0.4736068,  0.4736068]), 0.0001)
+        check_eq(self.records['']['sigma'],
+                 numpy.array([0.44721359, 0.44721359]), 0.0001)
         
     def test_sigma_ll(self):
         """SIGMA[7], chan avg. LL"""
-        # jagonzal: New SIGMA calculation based on median
-        # check_eq(self.records['ll']['sigma'],numpy.array([0.44721359]), 0.0001)
-        check_eq(self.records['ll']['sigma'],numpy.array([0.4736068]), 0.0001)
+        check_eq(self.records['ll']['sigma'],
+                 numpy.array([0.44721359]), 0.0001)
         #self.__class__.n_tests_passed += 1
 
 class split_test_cdsp(SplitChecker):
@@ -625,7 +608,7 @@ class split_test_cdsp(SplitChecker):
         shutil.rmtree(outms, ignore_errors=True)
         try:
             print "\nRemapping CALDEVICE and SYSPOWER of", corrsel
-            splitran = split(datapath + corrsel, outms, datacolumn='data',
+            splitran = oldsplit(datapath + corrsel, outms, datacolumn='data',
                              field='', spw='0,2', width=1,
                              antenna='ea05,ea13&',
                              timebin='', timerange='',
@@ -633,10 +616,10 @@ class split_test_cdsp(SplitChecker):
                              correlation='')
             for st in ('CALDEVICE', 'SYSPOWER'):
                 record[st] = {}
-                tblocal.open(outms + '/' + st)
+                tb.open(outms + '/' + st)
                 for c in ('ANTENNA_ID', 'SPECTRAL_WINDOW_ID'):
-                    record[st][c]   = tblocal.getcol(c)
-                tblocal.close()
+                    record[st][c]   = tb.getcol(c)
+                tb.close()
         except Exception, e:
             print "Error channel averaging and reading", outms
             raise e
@@ -719,7 +702,7 @@ class split_test_cst(SplitChecker):
         record = {}
         try:
             print "\nSplitting", inpms
-            splitran = split(inpms, self.outms, datacolumn='data',
+            splitran = oldsplit(inpms, self.outms, datacolumn='data',
                              field='', spw='', width=1,
                              antenna='',
                              timebin='', timerange='',
@@ -731,18 +714,18 @@ class split_test_cst(SplitChecker):
             print "Error splitting to", self.outms
             raise e
         try:
-            tblocal.open(self.outms + '/SOURCE')
-            record['srcids'] = tblocal.getcol('SOURCE_ID')
-            tblocal.close()
-            tblocal.open(self.outms)
-            #record['lastmainobsid'] = tblocal.getcell('OBSERVATION_ID', tblocal.nrows() - 1)
-            tcol = tblocal.getcol('OBSERVATION_ID')
+            tb.open(self.outms + '/SOURCE')
+            record['srcids'] = tb.getcol('SOURCE_ID')
+            tb.close()
+            tb.open(self.outms)
+            #record['lastmainobsid'] = tb.getcell('OBSERVATION_ID', tb.nrows() - 1)
+            tcol = tb.getcol('OBSERVATION_ID')
             tcol.sort()
-            record['lastmainobsid'] = tcol[tblocal.nrows() - 1]
-            tblocal.close()
-            tblocal.open(self.outms + '/OBSERVATION')
-            record['ebs'] = tblocal.getcol('SCHEDULE')[1]
-            tblocal.close()
+            record['lastmainobsid'] = tcol[tb.nrows() - 1]
+            tb.close()
+            tb.open(self.outms + '/OBSERVATION')
+            record['ebs'] = tb.getcol('SCHEDULE')[1]
+            tb.close()
             shutil.rmtree(self.outms, ignore_errors=True)
         except Exception, e:
             print "Error getting results from", self.outms
@@ -786,7 +769,7 @@ class split_test_state(unittest.TestCase):
         try:
             shutil.rmtree(self.outms, ignore_errors=True)
             os.symlink(self.inpms, self.locms)  # Paranoia
-            splitran = split(self.locms, self.outms, datacolumn='data',
+            splitran = oldsplit(self.locms, self.outms, datacolumn='data',
                              intent='OBSERVE_TARGET.UNSPECIFIED'
                              )
         except Exception, e:
@@ -801,12 +784,12 @@ class split_test_state(unittest.TestCase):
         """
         Is STATE correct after selecting by intent?
         """
-        tblocal.open(self.outms + '/STATE')
-        om = tblocal.getcol('OBS_MODE')
-        tblocal.close()
+        tb.open(self.outms + '/STATE')
+        om = tb.getcol('OBS_MODE')
+        tb.close()
         check_eq(om, numpy.array(['OBSERVE_TARGET.UNSPECIFIED']))
-        tblocal.open(self.outms)
-        mytime = tblocal.getcol('TIME')
+        tb.open(self.outms)
+        mytime = tb.getcol('TIME')
         myrow = 0
         for i in xrange(len(mytime)):
             if mytime[i]==4785966752.5:
@@ -815,8 +798,8 @@ class split_test_state(unittest.TestCase):
         rec = {}
         for c in ('ANTENNA1', 'ANTENNA2', 'DATA_DESC_ID', 'DATA',
                   'SCAN_NUMBER', 'STATE_ID', 'TIME'):
-            rec[c] = tblocal.getcell(c, myrow)
-        tblocal.close()
+            rec[c] = tb.getcell(c, myrow)
+        tb.close()
         # Row 1330 in inpms is the first one with STATE_ID 0.
         check_eq(rec, {'ANTENNA1': 0,
                        'ANTENNA2': 1,
@@ -850,7 +833,7 @@ class split_test_cavcd(unittest.TestCase):
                 shutil.copytree(datapath + self.inpms, self.inpms)
                 
             print "\n\tSplitting", self.inpms
-            splitran = split(self.inpms, self.outms, datacolumn='corrected',
+            splitran = oldsplit(self.inpms, self.outms, datacolumn='corrected',
                              field='', spw='', width=4,
                              antenna='',
                              timebin='0s', timerange='',
@@ -864,16 +847,13 @@ class split_test_cavcd(unittest.TestCase):
         shutil.rmtree(self.inpms, ignore_errors=True)
         shutil.rmtree(self.outms, ignore_errors=True)
 
-    # NOTE: In MSTransform (new split), if fewer channels than chanbin are left at 
-    # the end of the spw, these channels will be dropped. 
-
     def test_cavcd(self):
         """
         Was the CORRECTED_DATA column channel averaged?
         """
-        tblocal.open(self.outms)
-        cod = tblocal.getcell('DATA', 0)
-        tblocal.close()
+        tb.open(self.outms)
+        cod = tb.getcell('DATA', 0)
+        tb.close()
         check_eq(cod.shape, (1, 2))
 
 class split_test_genericsubtables(unittest.TestCase):
@@ -888,7 +868,7 @@ class split_test_genericsubtables(unittest.TestCase):
             shutil.rmtree(self.outms, ignore_errors=True)
 
             #print "\n\tSplitting", self.inpms
-            splitran = split(self.inpms, self.outms, datacolumn='data',
+            splitran = oldsplit(self.inpms, self.outms, datacolumn='data',
                              field='', spw='0', width=1,
                              antenna='',
                              timebin='0s', timerange='',
@@ -905,9 +885,9 @@ class split_test_genericsubtables(unittest.TestCase):
         """
         Can we copy generic subtables?
         """
-        tblocal.open(self.outms)
-        kws = tblocal.keywordnames()
-        tblocal.close()
+        tb.open(self.outms)
+        kws = tb.keywordnames()
+        tb.close()
         # Just check a few, and order does not matter.  Include both "generic"
         # and "standard" (mandatory and optional) subtables.
         for subtab in ('ASDM_CALWVR', 'ASDM_CALDELAY', 'DATA_DESCRIPTION',
@@ -936,7 +916,7 @@ class split_test_singchan(unittest.TestCase):
                 shutil.copytree(datapath + self.inpms, self.inpms)
 
             print "\n\tSplitting", self.inpms
-            splitran = split(self.inpms, self.outms, datacolumn='data',
+            splitran = oldsplit(self.inpms, self.outms, datacolumn='data',
                              field='', spw='0:25', width=1,
                              antenna='',
                              timebin='0s', timerange='',
@@ -956,12 +936,12 @@ class split_test_singchan(unittest.TestCase):
         """
         Did we get the right channel?
         """
-        tblocal.open(self.inpms)
-        data_orig = tblocal.getcell('DATA', 3)
-        tblocal.close()
-        tblocal.open(self.outms)
-        data_sp = tblocal.getcell('DATA', 3)
-        tblocal.close()
+        tb.open(self.inpms)
+        data_orig = tb.getcell('DATA', 3)
+        tb.close()
+        tb.open(self.outms)
+        data_sp = tb.getcell('DATA', 3)
+        tb.close()
         
         # For all correlations, compare output channel 0 to input channel 25.
         check_eq(data_sp[:,0], data_orig[:,25], 0.0001)
@@ -1007,7 +987,7 @@ class split_test_blankov(unittest.TestCase):
             # quiets an expected error message.
             original_throw_pref = myf.get('__rethrow_casa_exceptions', False)
             myf['__rethrow_casa_exceptions'] = True
-            splitran = split(self.inpms, self.outms, datacolumn='data',
+            splitran = oldsplit(self.inpms, self.outms, datacolumn='data',
                              field='', spw='0:25', width=1,
                              antenna='',
                              timebin='0s', timerange='',
@@ -1037,18 +1017,18 @@ class split_test_almapol(SplitChecker):
         shutil.rmtree(outms, ignore_errors=True)
         splitran = False
         try:
-            splitran = split(self.inpms, outms, datacolumn='data',
+            splitran = oldsplit(self.inpms, outms, datacolumn='data',
                              field='', spw='1~3', width=1,
                              antenna='',
                              timebin='0s', timerange='',
                              scan='', array='', uvrange='',
                              correlation=corrsel)
-            tblocal.open(outms + '/WEATHER')
-            record['nsid'] = {0: tblocal.getcell('NS_WX_STATION_ID', 0),
-                              1: tblocal.getcell('NS_WX_STATION_ID', 1)}
-            record['nspos'] = {0: tblocal.getcell('NS_WX_STATION_POSITION', 0),
-                               1: tblocal.getcell('NS_WX_STATION_POSITION', 1)}
-            tblocal.close()
+            tb.open(outms + '/WEATHER')
+            record['nsid'] = {0: tb.getcell('NS_WX_STATION_ID', 0),
+                              1: tb.getcell('NS_WX_STATION_ID', 1)}
+            record['nspos'] = {0: tb.getcell('NS_WX_STATION_POSITION', 0),
+                               1: tb.getcell('NS_WX_STATION_POSITION', 1)}
+            tb.close()
         except Exception, e:
             print "Error selecting %s from %s:" % (corrsel, outms)
             raise e
@@ -1094,14 +1074,14 @@ class split_test_unorderedpolspw(SplitChecker):
         shutil.rmtree(outms, ignore_errors=True)
         try:
             print "\nSelecting spws 1, 3, and 5."
-            splitran = split(self.inpms, outms, datacolumn='data',
+            splitran = oldsplit(self.inpms, outms, datacolumn='data',
                              field='', spw='1,3,5', width=1, antenna='',
                              timebin='0s', timerange='18:32:40~18:33:20',
                              scan='', array='', uvrange='',
                              correlation=corrsel)
-            tblocal.open(outms)
-            record['data'] = tblocal.getcell('DATA', 2)
-            tblocal.close()
+            tb.open(outms)
+            record['data'] = tb.getcell('DATA', 2)
+            tb.close()
         except Exception, e:
             print "Error selecting spws 1, 3, and 5 from", self.inpms
             raise e
@@ -1139,38 +1119,35 @@ class split_test_sw_and_fc(SplitChecker):
         try:
             print "\nChecking SPECTRAL_WINDOW and FLAG_CMD with width " + spwwidth[1] + '.'
             # Antenna selection added just so it's tested somewhere.
-            splitran = split(self.inpms, outms, datacolumn='data',
+            splitran = oldsplit(self.inpms, outms, datacolumn='data',
                              field='', spw=spwwidth[0], width=spwwidth[1],
                              antenna='VA03,VA05&',               # Case sensitive
                              timebin='0s', timerange='',
                              scan='', array='', uvrange='',
                              correlation='')
-            tblocal.open(outms + '/SPECTRAL_WINDOW')
-            cf = tblocal.getcell('CHAN_FREQ', 0)
+            tb.open(outms + '/SPECTRAL_WINDOW')
+            cf = tb.getcell('CHAN_FREQ', 0)
             record['nchan'] = cf.shape[0]
             record['cf0']   = cf[0]
             record['cf']    = cf[33]
             record['cflc']  = cf[-1]
-            record['res']   = tblocal.getcell('RESOLUTION', 0)
-            record['cw']    = tblocal.getcell('CHAN_WIDTH', 0)
-            record['eb']    = tblocal.getcell('EFFECTIVE_BW', 0)
-            record['tb']    = tblocal.getcell('TOTAL_BANDWIDTH', 0)
-            record['rf']    = tblocal.getcell('REF_FREQUENCY', 0)
-            tblocal.close()
-            tblocal.open(outms + '/FLAG_CMD')
+            record['res']   = tb.getcell('RESOLUTION', 0)
+            record['cw']    = tb.getcell('CHAN_WIDTH', 0)
+            record['eb']    = tb.getcell('EFFECTIVE_BW', 0)
+            record['tb']    = tb.getcell('TOTAL_BANDWIDTH', 0)
+            record['rf']    = tb.getcell('REF_FREQUENCY', 0)
+            tb.close()
+            tb.open(outms + '/FLAG_CMD')
             record['fc'] = []
             for i in (0, 1, 2, 3, 4, 515, 516):
-                record['fc'].append(tblocal.getcell('COMMAND', i))
-            tblocal.close()
+                record['fc'].append(tb.getcell('COMMAND', i))
+            tb.close()
             shutil.rmtree(outms, ignore_errors=True)
         except Exception, e:
             print "Error selecting spws 1, 3, and 5 from", self.inpms
             raise e
         self.__class__.records[spwwidth] = record
         return splitran
-
-    # NOTE: In MSTransform (new split), if fewer channels than chanbin are left at 
-    # the end of the spw, these channels will be dropped. 
 
     def test_fc_noavg(self):
         """Updating of FLAG_CMD after selection, but no averaging."""
@@ -1221,9 +1198,7 @@ class split_test_sw_and_fc(SplitChecker):
 
     def test_nchan_wavg(self):
         """# of channels after averaging, but no selection."""
-        # The last channel is dropped when width is narrower than the others,
-        # in order to have an uniform grid
-        check_eq(self.records[('1', '3')]['nchan'], 42)
+        check_eq(self.records[('1', '3')]['nchan'], 43)
 
     def test_rf_wavg(self):
         """REF_FREQUENCY after averaging, but no selection."""
@@ -1233,8 +1208,6 @@ class split_test_sw_and_fc(SplitChecker):
         """RESOLUTION after averaging and simple selection."""
         # The last one really is different (128 % 3 != 0), but the variation
         # of the rest is numerical jitter.
-        # The last channel is dropped when width is narrower than the others,
-        # in order to have an uniform grid
         check_eq(self.records[('1', '3')]['res'],
                  numpy.array([39186.15630552, 39186.1563017, 39186.15630552,
                               39186.1563017,  39186.1563017, 39186.1563017,
@@ -1249,7 +1222,8 @@ class split_test_sw_and_fc(SplitChecker):
                               39186.1563017,  39186.1563017, 39186.15630552,
                               39186.1563017,  39186.1562979, 39186.15630552,
                               39186.1563017,  39186.1563055, 39186.15629789,
-                              39186.1563017,  39186.1563055, 39186.15629789]), 1e-4)
+                              39186.1563017,  39186.1563055, 39186.15629789,
+                              14771.10564634]), 1e-4)
 
     def test_cf0_wavg(self):
         """CHAN_FREQ[0] after averaging, but no selection."""
@@ -1261,16 +1235,12 @@ class split_test_sw_and_fc(SplitChecker):
 
     def test_cflc_wavg(self):
         """CHAN_FREQ[-1] after averaging, but no selection."""
-        # The last channel is dropped when width is narrower than the others,
-        # in order to have an uniform grid
-        check_eq(self.records[('1', '3')]['cflc'], 22143114581.64592, 1e-4)
+        check_eq(self.records[('1', '3')]['cflc'], 22143138996.696575, 1e-4)
 
     def test_cw_wavg(self):
         """CHAN_WIDTH after averaging, but no selection."""
         # The last one really is different (128 % 3 != 0), but the variation
         # of the rest is numerical jitter.
-        # The last channel is dropped when width is narrower than the others,
-        # in order to have an uniform grid
         check_eq(self.records[('1', '3')]['cw'],
                  numpy.array([36622.57598673, 36622.57598292, 36622.57598673,
                               36622.57598292, 36622.57598292, 36622.57598292,
@@ -1285,14 +1255,13 @@ class split_test_sw_and_fc(SplitChecker):
                               36622.57598292, 36622.57598292, 36622.57598673,
                               36622.57598292, 36622.5759791,  36622.57598673,
                               36622.57598292, 36622.57598673, 36622.5759791,
-                              36622.57598292, 36622.57598673, 36622.5759791]), 1e-3)
+                              36622.57598292, 36622.57598673, 36622.5759791,
+                              12207.52532755]), 1e-3)
 
     def test_eb_wavg(self):
         """EFFECTIVE_BW after averaging, but no selection."""
         # The last one really is different (128 % 3 != 0), but the variation
         # of the rest is numerical jitter.
-        # The last channel is dropped when width is narrower than the others,
-        # in order to have an uniform grid
         check_eq(self.records[('1', '3')]['eb'],
                  numpy.array([39186.15630552, 39186.1563017,  39186.15630552,
                               39186.1563017,  39186.1563017,  39186.1563017,
@@ -1307,14 +1276,13 @@ class split_test_sw_and_fc(SplitChecker):
                               39186.1563017,  39186.1563017,  39186.15630552,
                               39186.1563017,  39186.15629789, 39186.15630552,
                               39186.1563017,  39186.15630552, 39186.15629789,
-                              39186.1563017,  39186.15630552, 39186.15629789]), 1e-3)
+                              39186.1563017,  39186.15630552, 39186.15629789,
+                              14771.10564634]), 1e-3)
 
     def test_tb_wavg(self):
         """Is TOTAL_BANDWIDTH conserved after averaging, but no selection?"""
         # The expected value comes from spw 1 of inpms.
-        # The last channel is dropped when width is narrower than the others,
-        # in order to have an uniform grid
-        check_eq(self.records[('1', '3')]['tb'], 1538148.1912714909, 0.1)
+        check_eq(self.records[('1', '3')]['tb'], 1550355.7165990437, 0.1)
 
     def test_fc_wavg(self):
         """Updating of FLAG_CMD after averaging, but simple selection."""
@@ -1353,24 +1321,21 @@ class split_test_optswc(SplitChecker):
         shutil.rmtree(outms, ignore_errors=True)
         try:
             print "\nChecking SPECTRAL_WINDOW's opt cols with width " + spwwidth[1] + '.'
-            splitran = split(self.inpms, outms, datacolumn='data',
+            splitran = oldsplit(self.inpms, outms, datacolumn='data',
                              field='', spw=spwwidth[0], width=spwwidth[1], antenna='',
                              timebin='0s', timerange='',
                              scan='', array='', uvrange='',
                              correlation='')
-            tblocal.open(outms + '/SPECTRAL_WINDOW')
-            record['colnames'] = set(tblocal.colnames())
-            record['bbc_no']   = tblocal.getcell('BBC_NO', 0)
-            tblocal.close()
+            tb.open(outms + '/SPECTRAL_WINDOW')
+            record['colnames'] = set(tb.colnames())
+            record['bbc_no']   = tb.getcell('BBC_NO', 0)
+            tb.close()
             shutil.rmtree(outms, ignore_errors=True)
         except Exception, e:
             print "Error selecting spws 1, 3, and 5 from", self.inpms
             raise e
         self.__class__.records[spwwidth] = record
         return splitran
-
-    # NOTE: In MSTransform (new split), if fewer channels than chanbin are left at 
-    # the end of the spw, these channels will be dropped. 
 
     def test_rightcols_noavg(self):
         """List of SW cols after selection, but no averaging."""
@@ -1417,19 +1382,19 @@ class split_test_tav_then_cvel(SplitChecker):
         shutil.rmtree(cvms, ignore_errors=True)
         try:
             print "\nTime averaging", corrsel
-            splitran = split(self.inpms, tavms, datacolumn='data',
+            splitran = oldsplit(self.inpms, tavms, datacolumn='data',
                              field='', spw='', width=1, antenna='',
                              timebin='10s', timerange='',
                              scan='', array='', uvrange='',
                              correlation=corrsel)
-            tblocal.open(tavms)
+            tb.open(tavms)
             for c in ['DATA', 'WEIGHT', 'INTERVAL', 'SCAN_NUMBER', 'STATE_ID', 'TIME']:
                 record['tav'][c] = {}
                 for r in [0, 4, 5, 6, 7, 90, 91]:
-                    record['tav'][c][r] = tblocal.getcell(c, r)
+                    record['tav'][c][r] = tb.getcell(c, r)
             for c in ['SCAN_NUMBER', 'STATE_ID', 'TIME']:
-                record['tav'][c][123] = tblocal.getcell(c, 123)
-            tblocal.close()
+                record['tav'][c][123] = tb.getcell(c, 123)
+            tb.close()
         except Exception, e:
             print "Error time averaging and reading", tavms
             raise e
@@ -1549,7 +1514,6 @@ class split_test_wttosig(SplitChecker):
                 ('data', '1', '60s'),     # time averaged DATA
                 ('corrected', '2', '0s'), # channel averaged CORRECTED -> DATA
                 ('corrected', '1', '60s')) # time averaged CORRECTED -> DATA
-    
 
     def do_split(self, dcwtb):
         outms = 'wtsig_' + '_'.join(dcwtb) + '.ms'
@@ -1558,24 +1522,21 @@ class split_test_wttosig(SplitChecker):
         shutil.rmtree(outms, ignore_errors=True)
         try:
             print "\nChecking WEIGHT and SIGMA after %s." % (dcwtb,)
-            splitran = split(self.inpms, outms, datacolumn=dcwtb[0],
+            splitran = oldsplit(self.inpms, outms, datacolumn=dcwtb[0],
                              field='', spw='', width=dcwtb[1], antenna='',
                              timebin=dcwtb[2], timerange='',
                              scan='', array='', uvrange='',
                              correlation='')
-            tblocal.open(outms)
-            record['sigma'] = tblocal.getcol('SIGMA')[:,0:5].transpose()
-            record['wt']    = tblocal.getcol('WEIGHT')[:,0:5].transpose()
-            tblocal.close()
+            tb.open(outms)
+            record['sigma'] = tb.getcol('SIGMA')[:,0:5].transpose()
+            record['wt']    = tb.getcol('WEIGHT')[:,0:5].transpose()
+            tb.close()
             shutil.rmtree(outms, ignore_errors=True)
         except Exception, e:
             print "Error splitting %s from %s", (dcwtb, self.inpms)
             raise e
         self.__class__.records[dcwtb] = record
         return splitran
-
-    # NOTE: In MSTransform (new split), if fewer channels than chanbin are left at 
-    # the end of the spw, these channels will be dropped. 
 
     def test_wt_straightselection(self):
         """WEIGHT after straight selection of DATA."""
@@ -1594,7 +1555,8 @@ class split_test_wttosig(SplitChecker):
                               [4.,     3.,       2.,       1.],
                               [1.,     2.,       3.,       4.],
                               [5.,     6.,       7.,       8.],
-                              [1.,     1.,       1.,       1.]]), 0.001)
+                              [1.,     1.,       1.,       1.]]),
+                 0.001)
 
     def test_wt_corrtodata(self):
         """WEIGHT after straight CORRECTED -> DATA."""
@@ -1603,7 +1565,8 @@ class split_test_wttosig(SplitChecker):
                               [0.0625, 0.111111, 0.25,     1.],
                               [1.,     0.25,     0.111111, 0.0625],
                               [1.,     1.,       1.,       1.],
-                              [1.,     1.,       1.,       1.]]), 0.001)
+                              [1.,     1.,       1.,       1.]]),
+                 0.001)
 
     def test_sig_corrtodata(self):
         """SIGMA after straight CORRECTED -> DATA."""
@@ -1612,7 +1575,8 @@ class split_test_wttosig(SplitChecker):
                               [4.,     3.,       2.,       1.],
                               [1.,     2.,       3.,       4.],
                               [1.,     1.,       1.,       1.],
-                              [1.,     1.,       1.,       1.]]), 0.001)
+                              [1.,     1.,       1.,       1.]]),
+                 0.001)
 
     def test_wt_cavdata(self):
         """WEIGHT after channel averaging DATA."""
@@ -1713,15 +1677,15 @@ class split_test_fc(SplitChecker):
         shutil.rmtree(outms, ignore_errors=True)
         try:
             print "\nChecking FLAG_CATEGORY after %s." % (trwtb,)
-            splitran = split(self.inpms, outms, datacolumn='data',
+            splitran = oldsplit(self.inpms, outms, datacolumn='data',
                              field='', spw='', width=trwtb[1], antenna='',
                              timebin=trwtb[2], timerange=trwtb[0],
                              scan='', array='', uvrange='',
                              correlation='')
-            tblocal.open(outms)
-            record['fc'] = tblocal.getcell('FLAG_CATEGORY', 5)[2]
-            categories = tblocal.getcolkeyword('FLAG_CATEGORY', 'CATEGORY')
-            tblocal.close()
+            tb.open(outms)
+            record['fc'] = tb.getcell('FLAG_CATEGORY', 5)[2]
+            categories = tb.getcolkeyword('FLAG_CATEGORY', 'CATEGORY')
+            tb.close()
             shutil.rmtree(outms, ignore_errors=True)
         except Exception, e:
             print "Error splitting %s from %s", (trwtb, self.inpms)
@@ -1729,9 +1693,6 @@ class split_test_fc(SplitChecker):
         self.__class__.records[trwtb] = record
         self.__class__.records['categories'] = categories
         return splitran
-
-    # NOTE: In MSTransform (new split), if fewer channels than chanbin are left at 
-    # the end of the spw, these channels will be dropped. 
 
     def test_fc_categories(self):
         """FLAG_CATEGORY's CATEGORY keyword"""
@@ -1852,306 +1813,14 @@ class split_test_fc(SplitChecker):
                               [False, False, False],
                               [ True, False, False],
                               [ True, False, False]]))
-        
-        
-''' New class of tests for split -- MMS tests, etc.'''    
-class test_base(unittest.TestCase):
-    
-    def setUp_4ants(self):
-        # data set with spw=0~15, 64 channels each in TOPO
-        self.vis = "Four_ants_3C286.ms"
-
-        if os.path.exists(self.vis):
-           self.cleanup()
-
-        os.system('cp -RL '+self.datapath + self.vis +' '+ self.vis)
-        default(split)
-        
-    def setUp_3c84(self):
-        # MS is as follows (scan=1):
-        #  SpwID   #Chans   Corrs
-        #   0      256      RR
-        #   0      256      LL
-        #   1      128      RR  LL
-        #   2      64       RR  RL  LR  LL
-
-        self.vis = '3c84scan1.ms'
-        if os.path.exists(self.vis):
-           self.cleanup()
-
-        os.system('cp -RL '+self.datapath + self.vis +' '+ self.vis)
-        default(split)
-        
-    def setUp_flags(self):
-        asdmname = 'test_uid___A002_X997a62_X8c-short' # Flag.xml is modified
-        self.vis = asdmname+'.ms'
-        self.flagfile = asdmname+'_cmd.txt'
-
-        asdmpath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/importasdm/'
-        os.system('ln -sf '+asdmpath+asdmname)
-        importasdm(asdmname, convert_ephem2geo=False, flagbackup=False, process_syspower=False, lazy=True, 
-                   scans='1', savecmds=True)
-        
-
-    def createMMS(self, msfile, axis='auto',scans='',spws=''):
-        '''Create MMSs for tests with input MMS'''
-        prefix = msfile.rstrip('.ms')
-        if not os.path.exists(msfile):
-            os.system('cp -RL '+datapath + msfile +' '+ msfile)
-        
-        # Create an MMS for the tests
-        self.testmms = prefix + ".test.mms"
-        default(partition)
-        
-        if os.path.exists(self.testmms):
-            os.system("rm -rf " + self.testmms)
-            os.system("rm -rf " + self.testmms +'.flagversions')
-            
-        print "................. Creating test MMS .................."
-        partition(vis=msfile, outputvis=self.testmms, separationaxis=axis, scan=scans, spw=spws)
 
 
-class splitTests(test_base):
-    '''Test the keepflags parameter'''
-    
-    def setUp(self):
-        if testmms:
-            self.datapath = datapath
-        else:
-            self.datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/flagdata/'
-        self.setUp_4ants()
-        
-    def tearDown(self):
-        os.system('rm -rf '+ self.vis)
-#        os.system('rm -rf '+ self.outputms)
-        
-    def test_keepflags(self):
-        '''split: keepflags=False'''
-        self.outputms = 'split_notkeep.ms'
-        
-        # Unflag and flag spw=0,15
-        flagdata(self.vis, flagbackup=False, mode='list', inpfile=["mode='unflag'","spw='0,15'"])
-        
-        # Split scan=31 out
-        split(vis=self.vis, outputvis=self.outputms, datacolumn='corrected', scan='31', keepflags=False)
-        
-        expected_spws = range(1,15)
-        msmdt = msmdtool()
-        msmdt.open(self.outputms)
-        spws = msmdt.spwsforscan(31)
-        msmdt.close()
-        lspws = spws.tolist()
-        self.assertListEqual(expected_spws, lspws)
-        
-    def test_split_combine_scan_axis(self):
-        """split: raise error when combine=\'scan\' and axis=\'scan\'"""
-        # create MMS first 
-        self.createMMS(self.vis, axis='scan', spws='0,2,3')
-        self.outputms = "split_heur1.ms"
-        try:
-            split(vis=self.testmms, outputvis=self.outputms, timebin='20s', combine='scan', datacolumn='data')        
-        except exceptions.Exception, instance:
-            print 'Expected Error: %s'%instance
-        
-        print 'Expected Error!'
-        
-    def test_flagversions(self):
-        '''split: raise an error when .flagversions exist'''
-        self.outputms = 'spw0.ms'
-        
-        os.system('cp -RL ' + self.vis + ' ' + self.outputms)
-        
-        # First, create a .flagversions file
-        flagdata(vis=self.outputms, flagbackup=True, spw='0', mode='unflag')
-        self.assertTrue(os.path.exists(self.outputms+'.flagversions'))
-        
-        # Now, delete only the MS and leave the .flagversions in disk
-        os.system('rm -rf '+self.outputms)
-        self.assertFalse(split(vis=self.vis, outputvis=self.outputms, spw='0'),'Expected task to fail.')
-        # The next code doesn't work with the __rethrow_casa_exceptions=False in prelude.py
-#         with self.assertRaises(IOError):
-#             split(vis=self.vis, outputvis=self.outputms, spw='0')
-#         print 'Expected Error!'
-        
-    def test_numpy_width(self):
-        '''split: Automatically convert numpy type to Python type'''
-        self.outputms = "split_numpytype.ms"
-        bin1 = numpy.int32(64)
-        split(vis=self.vis, outputvis=self.outputms, spw='10', datacolumn='data',
-                    width=bin1)
-        
-        self.assertTrue(os.path.exists(self.outputms))
-
-        # Output should be:
-        # spw=0 1 channel
-        ret = th.verifyMS(self.outputms, 1, 1, 0, ignoreflags=True)
-        self.assertTrue(ret[0],ret[1])
-
-    def test_numpy_width_mms(self):
-        '''split: Automatically convert numpy type to Python type in an MMS'''
-        self.createMMS(self.vis, axis='auto', spws='0,10')
-        # spws are renumbered to 0,1 in the above command
-        
-        self.outputms = "split_numpytype.mms"
-        bin1 = numpy.int32(64)
-        ParallelTaskHelper.bypassParallelProcessing(1)
-        # This will cause MS NULL selections in some subMSs that have only spw=0
-        split(vis=self.testmms, outputvis=self.outputms, spw='1', datacolumn='data',
-                    width=bin1)
-        
-        ParallelTaskHelper.bypassParallelProcessing(0)
-        self.assertTrue(ParallelTaskHelper.isParallelMS(self.outputms),'Output should be an MMS')
-
-        # Output should be:
-        # spw=0 1 channel
-        ret = th.verifyMS(self.outputms, 1, 1, 0, ignoreflags=True)
-        self.assertTrue(ret[0],ret[1])
-       
-    def test_combinescan_mms(self):
-        '''split: combine=scan with axis=scan'''
-        self.createMMS(self.vis, axis='scan', spws='0')
-        
-        self.outputms = "split_combscan_spw.mms"
-        # This should not work because scan length is 89s
-        try:
-            split(vis=self.testmms, outputvis=self.outputms, datacolumn='data',combine='scan',
-                    timebin='100s')
-            self.assertTrue(ParallelTaskHelper.isParallelMS(self.outputms),'Output should be an MMS')
-        except Exception, instance:
-            print 'Expected error!'
-
-    def test_combinescan_ms(self):
-        '''split: combine=scan with axis=scan, keepmms=false'''
-        self.createMMS(self.vis, axis='scan', spws='0')
-        
-        self.outputms = "split_combscan_spw.ms"
-        split(vis=self.testmms, outputvis=self.outputms, datacolumn='data',combine='scan',
-                    timebin='100s', keepmms=False)
-        self.assertFalse(ParallelTaskHelper.isParallelMS(self.outputms),'Output should be an MS')
-            
-    def test_combinescan_spw_mms(self):
-        '''split: combine=scan with axis=spw'''
-        self.createMMS(self.vis, axis='spw', scans='31',spws='0,3,4')
-        
-        self.outputms = "split_combscan.mms"
-        split(vis=self.testmms, outputvis=self.outputms, datacolumn='data',combine='scan',
-                    timebin='100s')
-        self.assertTrue(ParallelTaskHelper.isParallelMS(self.outputms),'Output should be an MMS')
-       
-        
-class splitSpwPoln(test_base):
-    '''tests for spw with different polarization shapes
-       CAS-3666
-    '''
-
-    def setUp(self):
-        if testmms:
-            self.datapath = datapath
-        else:
-            self.datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/mstransform/'
-        self.setUp_3c84()
-
-    def tearDown(self):
-        os.system('rm -rf '+ self.vis)
-        os.system('rm -rf '+ self.outputms)
-        os.system('rm -rf list.obs')
-        
-    def test_split_different_corrs(self):
-        '''split: split spws with different shapes'''
-        self.outputms = 'split_corrs.ms'
-        split(self.vis, outputvis=self.outputms, spw='>0', correlation='RR,LL', datacolumn='DATA')
-        
-        # Verify the input versus the output
-        myms = mstool()
-        myms.open(self.vis)
-        myms.msselect({'spw':'1,2'})
-        inp_nrow = myms.nrow()
-        myms.close()
-
-        mymd = msmdtool()
-        mymd.open(self.outputms)
-        out_nrow = mymd.nrows()
-        dds = mymd.datadescids()
-        mymd.done()
-        
-        self.assertEqual(inp_nrow, out_nrow)
-        self.assertEqual(dds.size, 2)
-        
-        pol_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'POLARIZATION_ID')
-        self.assertEqual(pol_col['r1'][0], 2,'Error in POLARIZATION_ID of DATA_DESCRIPTION table')
-        self.assertEqual(pol_col['r2'][0], 3,'Error in POLARIZATION_ID of DATA_DESCRIPTION table')
-
-        # Verify that POLARIZATION table is not re-sized.
-        corr_col = th.getVarCol(self.outputms+'/POLARIZATION', 'NUM_CORR')
-        self.assertEqual(corr_col.keys().__len__(), 4, 'Wrong number of rows in POLARIZATION table')
-        
-    def test_split_chanavg_spw_with_diff_pol_shape(self):
-        '''split: channel average spw 0 that has repeated SPW ID'''
-        self.outputms = 'split_3cChAvespw0.ms'
-        # Create only one output channel
-        split(vis=self.vis, outputvis=self.outputms, datacolumn='data', spw='0',
-                width=256)
-
-        # verify the metadata of the output
-        msmd = msmdtool()
-        msmd.open(self.outputms)
-        nchan = msmd.nchan(0) # 1
-        nrow = msmd.nrows() # 2600
-        dds = msmd.datadescids() # 2
-        meanfreq = msmd.meanfreq(0) # 4968996093.75
-        chanfreq = msmd.chanfreqs(0) # [4.96899609e+09]
-        chanwidth = msmd.chanwidths(spw=0, unit='kHz') # 2000
-        msmd.done()
-
-        self.assertEqual(dds.size,2,'Wrong number of rows in DD table')
-        self.assertEqual(nchan, 1)
-        self.assertEqual(nrow, 2600,'Wrong number of rows in DD table')
-        self.assertEqual(meanfreq, 4968996093.75)
-        self.assertEqual(chanwidth, 2000)
-        self.assertAlmostEqual(meanfreq, chanfreq, 1)
-
-        listobs(self.outputms, listfile='list.obs')
-        self.assertTrue(os.path.exists('list.obs'), 'Probable error in sub-table re-indexing')
-        
-class splitUpdateFlagCmd(test_base):
-    
-    def setUp(self):
-        self.datapath = '.'
-        self.setUp_flags()
-
-    def tearDown(self):
-        os.system('rm -rf '+ self.vis)
-        os.system('rm -rf '+ self.outputms)
-        os.system('rm -rf list.obs')
-        
-    def test_updateFlagcmd1(self):
-        '''split: Do not update FLAG_CMD table when spw selection in FLAG_CMD is by name'''
-        self.outputms = 'split_spwName.ms'
-        split(vis=self.vis, outputvis=self.outputms, spw='1,2', datacolumn='data')
-        flagcmd(self.outputms, action='list', savepars=True, outfile='spwnames.txt', useapplied=True)
-        self.assertTrue(filecmp.cmp(self.flagfile, 'spwnames.txt',1))
-        
 
 def suite():
-    return [
-#            split_test_tav, 
-            split_test_cav, 
-            split_test_cav5, 
-            split_test_cst,
-            split_test_state, 
-            split_test_optswc, 
-            split_test_cdsp,
-            split_test_singchan, 
-            split_test_unorderedpolspw, 
-            split_test_blankov,
-#            split_test_tav_then_cvel, 
-            split_test_genericsubtables,
-            split_test_sw_and_fc, 
-            split_test_cavcd, 
-            split_test_almapol,
-#            split_test_wttosig, 
-#            split_test_fc
-            splitTests,
-            splitSpwPoln,
-            splitUpdateFlagCmd
-            ]
+    return [split_test_tav, split_test_cav, split_test_cav5, split_test_cst,
+            split_test_state, split_test_optswc, split_test_cdsp,
+            split_test_singchan, split_test_unorderedpolspw, split_test_blankov,
+            split_test_tav_then_cvel, split_test_genericsubtables,
+            split_test_sw_and_fc, split_test_cavcd, split_test_almapol,
+            split_test_wttosig, split_test_fc]
+    

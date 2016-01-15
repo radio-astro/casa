@@ -60,7 +60,7 @@ from visstat_pg import visstat_pg as visstat
 from calstat_pg import calstat_pg as calstat
 from partition_pg import partition_pg as partition
 from mstransform_pg import mstransform_pg as mstransform
-from split2_pg import split2_pg as split2
+#from split2_pg import split2_pg as split2
 from hanningsmooth2_pg import hanningsmooth2_pg as hanningsmooth2
 from cvel2_pg import cvel2_pg as cvel2
 from plotms_pg import plotms_pg as plotms

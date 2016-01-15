@@ -169,7 +169,7 @@ from simanalyze import  simanalyze
 from smoothcal import  smoothcal
 from specfit import  specfit
 from split import  split
-from split2 import split2
+#from split2 import split2
 from tclean import tclean
 from tsdbaseline import tsdbaseline
 from tsdcal import tsdcal
