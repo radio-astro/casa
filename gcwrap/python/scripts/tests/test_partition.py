@@ -413,9 +413,10 @@ class partition_test2(test_base):
         myms.sort('mms_sorted.ms',['OBSERVATION_ID','ARRAY_ID','SCAN_NUMBER','FIELD_ID','DATA_DESC_ID','ANTENNA1','ANTENNA2','TIME'])
         myms.done()
 
+        # Ignore WEIGHT_SPECTRUM and SIGMA_SPECTRUM, which are empty columns
         self.assertTrue(th.compTables('ms_sorted.ms', 'mms_sorted.ms', 
                                       ['FLAG','FLAG_CATEGORY','TIME_CENTROID',
-                                       'WEIGHT_SPECTRUM','DATA']))
+                                       'WEIGHT_SPECTRUM','SIGMA_SPECTRUM','DATA']))
 
         # Compare the DATA column
         self.assertTrue(th.compVarColTables('ms_sorted.ms', 'mms_sorted.ms','DATA'))
