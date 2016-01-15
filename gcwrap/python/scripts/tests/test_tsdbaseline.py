@@ -1881,7 +1881,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test000(self):
-        """Basic Test 000:blfunc='poly',blformat=['csv','text','table'],bloutput=['test.csv','test.txt','test.table']""" 
+        """Bloutput Test 000:blfunc='poly',blformat=['csv','text','table'],bloutput=['test.csv','test.txt','test.table']""" 
         blfunc='poly'
         blformat=['csv','text','table']
         bloutput=['test.csv','test.txt','test.table']
@@ -1912,7 +1912,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test001(self):
-        """Basic Test 001: blfunc='poly', blformat=['text','csv','table'], bloutput=['test.txt','test.csv','test.table']"""
+        """Bloutput Test 001: blfunc='poly', blformat=['text','csv','table'], bloutput=['test.txt','test.csv','test.table']"""
         blfunc='poly'
         blformat=['text','csv','table']
         bloutput=['test.txt','test.csv','test.table']
@@ -1941,7 +1941,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test002(self):
-        """Basic Test 002: blfunc='poly', blformat=['table','text','csv'], bloutput=['test.table','test.txt','test.csv']"""
+        """Bloutput Test 002: blfunc='poly', blformat=['table','text','csv'], bloutput=['test.table','test.txt','test.csv']"""
         blfunc='poly'
         blformat=['table','text','csv']
         bloutput=['test.table','test.txt','test.csv']
@@ -1970,7 +1970,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test003(self):
-        """Basic Test 003: blfunc='poly', blformat=['table','text','csv'], bloutput=['','test.txt','test.csv']"""
+        """Bloutput Test 003: blfunc='poly', blformat=['table','text','csv'], bloutput=['','test.txt','test.csv']"""
         blfunc='poly'
         blformat=['table','text','csv']
         bloutput=['','test.txt','test.csv']
@@ -1999,7 +1999,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test004(self):
-        """Basic Test 004: blfunc='poly', blformat=['table','text','csv'], bloutput=['','','']"""
+        """Bloutput Test 004: blfunc='poly', blformat=['table','text','csv'], bloutput=['','','']"""
         blfunc='poly'
         blformat=['table','text','csv']
         bloutput=['','','']
@@ -2030,7 +2030,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test005(self):
-        """Basic Test 005: blfunc='poly', blformat=['table','text'], bloutput=['','']"""
+        """Bloutput Test 005: blfunc='poly', blformat=['table','text'], bloutput=['','']"""
         blfunc='poly'    
         blformat=['table','text']
         bloutput=['','']
@@ -2053,7 +2053,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test006(self):
-        """Basic Test 006: blfunc='poly', blformat=['table'], bloutput=['']"""
+        """Bloutput Test 006: blfunc='poly', blformat=['table'], bloutput=['']"""
         blfunc='poly'
         blformat=['table']
         bloutput=['']
@@ -2070,7 +2070,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test007(self):
-        """Basic Test 007: blfunc='poly', blformat=['csv'], bloutput=['']"""
+        """Bloutput Test 007: blfunc='poly', blformat=['csv'], bloutput=['']"""
         blfunc='poly'
         blformat=['csv']
         bloutput=['']
@@ -2090,7 +2090,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test008(self):
-        """Basic Test 008: blfunc='poly', blformat=['text'], bloutput=['']"""
+        """Bloutput Test 008: blfunc='poly', blformat=['text'], bloutput=['']"""
         blfunc='poly'
         blformat=['text']
         bloutput=['']
@@ -2110,7 +2110,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test009(self):
-        """Basic Test 009: blfunc='poly', blformat=[''], bloutput=['']"""
+        """Bloutput Test 009: blfunc='poly', blformat=[''], bloutput=['']"""
         blfunc='poly'
         blformat=['']
         bloutput=['']
@@ -2133,7 +2133,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test010(self):
-        """Basic Test 010: default values for all parameters except blformat=['','csv'] and bloutput=['','test.csv']"""
+        """Bloutput Test 010: default values for all parameters except blformat=['','csv'] and bloutput=['','test.csv']"""
         blfunc='poly'
         blformat=['','csv']
         bloutput=['','test.csv']
@@ -2162,7 +2162,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test010a(self):
-        """Basic Test 010a: default values for all parameters except blformat=['','csv'] and bloutput=['test.text','']"""
+        """Bloutput Test 010a: default values for all parameters except blformat=['','csv'] and bloutput=['test.text','']"""
         blfunc='poly'
         blformat=['','csv']
         bloutput=['test.text','']
@@ -2190,7 +2190,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test011(self):
-        """Basic Test 011: default values for all parameters except blformat='' and  bloutput=''"""
+        """Bloutput Test 011: default values for all parameters except blformat='' and  bloutput=''"""
 
         blfunc='poly'
         blformat=''
@@ -2211,7 +2211,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test012(self):
-        """Basic Test 012: default values for all parameters except blformat='' and  bloutput='test.csv'"""
+        """Bloutput Test 012: default values for all parameters except blformat='' and  bloutput='test.csv'"""
 
         blfunc='poly'
         blformat=''
@@ -2236,7 +2236,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test013(self):
-        """Basic Test 013: default values for all parameters except blfunc=variable, blparam='analytic_variable_blparam.txt', blformat=['csv','text','table'], and bloutput=['test.csv','test.txt','test.table']"""
+        """Bloutput Test 013: default values for all parameters except blfunc=variable, blparam='analytic_variable_blparam.txt', blformat=['csv','text','table'], and bloutput=['test.csv','test.txt','test.table']"""
         blfunc='variable'
         blformat=['table','text','csv']
         bloutput=['test.table','test.txt','test.csv']
@@ -2267,7 +2267,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test014(self):
-        """Basic Test 014: default values for all parameters except  blformat=['table','text','csv'] and  bloutput=['test.table','','test.csv']"""
+        """Bloutput Test 014: default values for all parameters except  blformat=['table','text','csv'] and  bloutput=['test.table','','test.csv']"""
         blfunc='poly'
         blformat=['table','text','csv']
         bloutput=['test.table','','test.csv']
@@ -2297,7 +2297,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test015(self):
-        """Basic Test 015: default values for all parameters except blformat=['table','text','csv'] and bloutput=['test.table','test.txt','']"""
+        """Bloutput Test 015: default values for all parameters except blformat=['table','text','csv'] and bloutput=['test.table','test.txt','']"""
         
         blfunc='poly'
         blformat=['table','text','csv']
@@ -2328,7 +2328,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
         
 
     def test016(self):
-        """Basic Test 016: default values for all parameters except blfunc='cspline'"""
+        """Bloutput Test 016: default values for all parameters except blfunc='cspline'"""
        
         blfunc='cspline'
         blformat=['csv','text','table']
@@ -2358,7 +2358,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
        
        
     def test017(self):
-        """Basic Test 017: default values for all parameters except blfunc='cspline',blformat=['text','csv','table'] and bloutput=['test.txt','test.csv','test.table']"""
+        """Bloutput Test 017: default values for all parameters except blfunc='cspline',blformat=['text','csv','table'] and bloutput=['test.txt','test.csv','test.table']"""
         blfunc='cspline'
         blformat=['text','csv','table']
         bloutput=['test.txt','test.csv','test.table']
@@ -2387,7 +2387,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test018(self):
-        """Basic Test 018: default values for all parameters except blfunc='cspline',blformat=['table','text','csv'] and bloutput=['test.table','test.txt','test.csv']"""
+        """Bloutput Test 018: default values for all parameters except blfunc='cspline',blformat=['table','text','csv'] and bloutput=['test.table','test.txt','test.csv']"""
         blfunc='cspline'
         blformat=['table','text','csv']
         bloutput=['test.table','test.txt','test.csv']
@@ -2416,7 +2416,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test019(self):
-        """Basic Test 019: default values for all parameters except blfunc='cspline',blformat=['table','text','csv'] and bloutput=['','test.txt','test.csv']"""
+        """Bloutput Test 019: default values for all parameters except blfunc='cspline',blformat=['table','text','csv'] and bloutput=['','test.txt','test.csv']"""
         blfunc='cspline'
         blformat=['table','text','csv']
         bloutput=['','test.txt','test.csv']
@@ -2445,7 +2445,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test020(self):
-        """Basic Test 020: default values for all parameters except blfunc='cspline',blformat=['table','text','csv'] and bloutput=['','','']"""
+        """Bloutput Test 020: default values for all parameters except blfunc='cspline',blformat=['table','text','csv'] and bloutput=['','','']"""
 
         blfunc='cspline'
         blformat=['table','text','csv']
@@ -2475,7 +2475,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test021(self):
-        """Basic Test 021: default values for all parameters except blfunc='cspline',blformat=['table','text'] and bloutput=['','']"""
+        """Bloutput Test 021: default values for all parameters except blfunc='cspline',blformat=['table','text'] and bloutput=['','']"""
         blfunc='cspline'    
         blformat=['table','text']
         bloutput=['','']
@@ -2498,7 +2498,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test022(self):
-        """Basic Test 022: default values for all parameters except blfunc='cspline',blformat=['table'] and bloutput=['']"""
+        """Bloutput Test 022: default values for all parameters except blfunc='cspline',blformat=['table'] and bloutput=['']"""
         blfunc='cspline'
         blformat=['table']
         bloutput=['']
@@ -2515,7 +2515,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test023(self):
-        """Basic Test 023: default values for all parameters except blfunc='cspline',blformat=['csv'] and bloutput=['']"""
+        """Bloutput Test 023: default values for all parameters except blfunc='cspline',blformat=['csv'] and bloutput=['']"""
 
         blfunc='cspline'
         blformat=['csv']
@@ -2536,7 +2536,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test024(self):
-        """Basic Test 024: default values for all parameters except blfunc='cspline',blformat=['text'] and bloutput=['']"""
+        """Bloutput Test 024: default values for all parameters except blfunc='cspline',blformat=['text'] and bloutput=['']"""
 
         blfunc='cspline'
         blformat=['text']
@@ -2557,7 +2557,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test025(self):
-        """Basic Test 025: default values for all parameters except blfunc='cspline',blformat=[''] and bloutput=['']"""
+        """Bloutput Test 025: default values for all parameters except blfunc='cspline',blformat=[''] and bloutput=['']"""
 
         blfunc='cspline'
         blformat=['']
@@ -2581,7 +2581,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test026(self):
-        """Basic Test 026: default values for all parameters except blfunc='cspline',blformat=['','csv'] and bloutput=['','test.csv']"""
+        """Bloutput Test 026: default values for all parameters except blfunc='cspline',blformat=['','csv'] and bloutput=['','test.csv']"""
 
         blfunc='cspline'
         blformat=['','csv']
@@ -2611,7 +2611,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test027(self):
-        """Basic Test 027: default values for all parameters except blfunc='cspline',blformat='' and  bloutput=''"""
+        """Bloutput Test 027: default values for all parameters except blfunc='cspline',blformat='' and  bloutput=''"""
         blfunc='cspline'
         blformat=''
         bloutput=''
@@ -2631,7 +2631,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test028(self):
-        """Basic Test 028: default values for all parameters except blfunc='cspline', blformat='' and  bloutput='test.csv'"""
+        """Bloutput Test 028: default values for all parameters except blfunc='cspline', blformat='' and  bloutput='test.csv'"""
 
         blfunc='cspline'
         blformat=''
@@ -2656,7 +2656,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test029(self):
-        """Basic Test 029: default values for all parameters except blfunc='cspline'"""
+        """Bloutput Test 029: default values for all parameters except blfunc='cspline'"""
 
         blfunc='variable'
         blformat=['csv','text','table']
@@ -2688,6 +2688,8 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test030(self):
+        """Bloutput Test 030: default values for all parameters except blfunc='cspline',blformat=['text','csv','table'] and bloutput=['test.txt','test.csv','test.table']"""
+
         blfunc='variable'
         blformat=['text','csv','table']
         bloutput=['test.txt','test.csv','test.table']
@@ -2720,7 +2722,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test031(self):
-        """Basic Test 031: default values for all parameters except blfunc='cspline',blformat=['table','text','csv'] and bloutput=['test.table','test.txt','test.csv']"""
+        """Bloutput Test 031: default values for all parameters except blfunc='cspline',blformat=['table','text','csv'] and bloutput=['test.table','test.txt','test.csv']"""
 
         blfunc='variable'
         blformat=['table','text','csv']
@@ -2754,7 +2756,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test032(self):
-        """Basic Test 032: default values for all parameters except blfunc='cspline',blformat=['table','text','csv'] and bloutput=['','test.txt','test.csv']"""
+        """Bloutput Test 032: default values for all parameters except blfunc='cspline',blformat=['table','text','csv'] and bloutput=['','test.txt','test.csv']"""
 
         blfunc='variable'
         blformat=['table','text','csv']
@@ -2785,7 +2787,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test033(self):
-        """Basic Test 033: default values for all parameters except blfunc='cspline',blformat=['table','text','csv'] and bloutput=['','','']"""
+        """Bloutput Test 033: default values for all parameters except blfunc='cspline',blformat=['table','text','csv'] and bloutput=['','','']"""
 
         blfunc='variable'
         blformat=['table','text','csv']
@@ -2815,7 +2817,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test034(self):
-        """Basic Test 034: default values for all parameters except blfunc='cspline',blformat=['table','text'] and bloutput=['','']"""
+        """Bloutput Test 034: default values for all parameters except blfunc='cspline',blformat=['table','text'] and bloutput=['','']"""
 
         blfunc='variable'
         blformat=['table','text']
@@ -2845,7 +2847,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test035(self):
-        """Basic Test 035: default values for all parameters except blfunc='cspline',blformat=['table'] and bloutput=['']"""
+        """Bloutput Test 035: default values for all parameters except blfunc='cspline',blformat=['table'] and bloutput=['']"""
 
         blfunc='variable'
         blformat=['table']
@@ -2875,7 +2877,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test036(self):
-        """Basic Test 036: default values for all parameters except blfunc='cspline',blformat=['csv'] and bloutput=['']"""
+        """Bloutput Test 036: default values for all parameters except blfunc='cspline',blformat=['csv'] and bloutput=['']"""
 
         blfunc='variable'
         blformat=['csv']
@@ -2905,7 +2907,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test037(self):
-        """Basic Test 037: default values for all parameters except blfunc='cspline',blformat=['text'] and bloutput=['']"""
+        """Bloutput Test 037: default values for all parameters except blfunc='cspline',blformat=['text'] and bloutput=['']"""
 
         blfunc='variable'
         blformat=['text']
@@ -2934,7 +2936,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
         #self.assertEqual(diff_value, 0, msg=self.infile + '_blparam.txt' + 'is not equivalent to ' + self.bloutput_variable_txt)   
 
     def test038(self):
-        """Basic Test 038: default values for all parameters except blfunc='cspline',blformat=[''] and bloutput=['']"""
+        """Bloutput Test 038: default values for all parameters except blfunc='cspline',blformat=[''] and bloutput=['']"""
 
         blfunc='variable'
         blformat=['']
@@ -2965,7 +2967,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test039(self):
-        """Basic Test 039: default values for all parameters except blfunc='cspline',blformat=['','csv'] and bloutput=['','test.csv']"""
+        """Bloutput Test 039: default values for all parameters except blfunc='cspline',blformat=['','csv'] and bloutput=['','test.csv']"""
 
         blfunc='variable'
         blformat=['','csv']
@@ -2999,7 +3001,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test040(self):
-        """Basic Test 040: default values for all parameters except blfunc='cspline',blformat='' and  bloutput=''"""
+        """Bloutput Test 040: default values for all parameters except blfunc='cspline',blformat='' and  bloutput=''"""
 
         blfunc='variable'
         blformat=''
@@ -3031,7 +3033,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
         #self.assertEqual(diff_value, 0, msg=bloutput[1] + ' is not equivalent to ' + self.bloutput_variable_csv)   
 
     def test041(self):
-        """Basic Test 041: default values for all parameters except blfunc='cspline', blformat='' and  bloutput='test.csv'"""
+        """Bloutput Test 041: default values for all parameters except blfunc='cspline', blformat='' and  bloutput='test.csv'"""
 
         blfunc='variable'
         blformat=''
