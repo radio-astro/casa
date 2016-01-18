@@ -169,11 +169,12 @@ from imstat_pg import imstat_pg as imstat
 from flagdata_pg import flagdata_pg as flagdata
 from flagcmd_pg import flagcmd_pg as flagcmd
 from importevla_pg import importevla_pg as importevla
+from oldsplit_pg import oldsplit_pg as oldsplit
 from split_pg import split_pg as split
-#from split_pg import split_pg as split2
 from importvla_pg import importvla_pg as importvla
+from oldhanningsmooth_pg import oldhanningsmooth_pg as oldhanningsmooth
 from hanningsmooth_pg import hanningsmooth_pg as hanningsmooth
-from hanningsmooth2_pg import hanningsmooth2_pg as hanningsmooth2
+#from hanningsmooth2_pg import hanningsmooth2_pg as hanningsmooth2
 from widefield_pg import widefield_pg as widefield
 from immoments_pg import immoments_pg as immoments
 from uvcontsub_pg import uvcontsub_pg as uvcontsub

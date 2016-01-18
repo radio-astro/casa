@@ -36,7 +36,7 @@ ft.xml
 gaincal.xml
 gencal.xml
 hanningsmooth.xml
-hanningsmooth2.xml
+#hanningsmooth2.xml
 imcollapse.xml
 imcontsub.xml
 imfit.xml
@@ -75,6 +75,7 @@ mosaic.xml
 msview.xml
 mstransform.xml
 msuvbin.xml
+oldhanningsmooth.xml
 oldsplit.xml
 plotants.xml
 plotbandpass.xml

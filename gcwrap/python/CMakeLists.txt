@@ -105,7 +105,7 @@ scripts/task_ft.py
 scripts/task_gaincal.py
 scripts/task_gencal.py
 scripts/task_hanningsmooth.py
-scripts/task_hanningsmooth2.py
+#scripts/task_hanningsmooth2.py
 scripts/task_help.py
 scripts/task_imcollapse.py
 scripts/task_imcontsub.py
@@ -153,6 +153,7 @@ scripts/task_plotms.py
 scripts/task_plotuv.py
 scripts/task_plotweather.py
 #scripts/task_plotxy.py
+scripts/task_oldhanningsmooth.py
 scripts/task_oldsplit.py
 scripts/task_partition.py
 scripts/task_polcal.py

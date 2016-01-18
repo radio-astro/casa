@@ -132,7 +132,7 @@ from ft import  ft
 from gaincal import  gaincal
 from gencal import  gencal
 from hanningsmooth import  hanningsmooth
-from hanningsmooth2 import  hanningsmooth2
+#from hanningsmooth2 import  hanningsmooth2
 from imcontsub import  imcontsub
 from imfit import  imfit
 from imhead import  imhead
@@ -155,6 +155,7 @@ from listvis import  listvis
 from mosaic import  mosaic
 from mstransform import mstransform
 from msview import msview
+from oldhanningsmooth import  oldhanningsmooth
 from oldsplit import  oldsplit
 from partition import partition
 from plotants import  plotants

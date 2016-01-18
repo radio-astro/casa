@@ -9,6 +9,7 @@ from split_pg import split_pg as split
 from oldsplit_pg import oldsplit_pg as oldsplit
 from importvla_pg import importvla_pg as importvla
 from hanningsmooth_pg import hanningsmooth_pg as hanningsmooth
+from oldhanningsmooth_pg import oldhanningsmooth_pg as oldhanningsmooth
 from widefield_pg import widefield_pg as widefield
 from immoments_pg import immoments_pg as immoments
 from uvcontsub_pg import uvcontsub_pg as uvcontsub
@@ -62,7 +63,7 @@ from calstat_pg import calstat_pg as calstat
 from partition_pg import partition_pg as partition
 from mstransform_pg import mstransform_pg as mstransform
 #from split2_pg import split2_pg as split2
-from hanningsmooth2_pg import hanningsmooth2_pg as hanningsmooth2
+#from hanningsmooth2_pg import hanningsmooth2_pg as hanningsmooth2
 from cvel2_pg import cvel2_pg as cvel2
 from plotms_pg import plotms_pg as plotms
 from tclean_pg import tclean_pg as tclean

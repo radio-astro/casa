@@ -154,6 +154,9 @@ macro( casa_add_tasks module _target )
     
  # Create an alias to split2 pointing to split. Temporary
     COMMAND echo "from split_cli import  split_cli as split2" >> ${_tasks}  
+
+ # Create an alias to hanningsmooth2 pointing to hanningsmooth. Temporary
+    COMMAND echo "from hanningsmooth_cli import  hanningsmooth_cli as hanningsmooth2" >> ${_tasks}  
       
     COMMAND echo "from tget import *" >> ${_tasks}
     DEPENDS ${_out_taskinfo}
