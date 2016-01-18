@@ -11,6 +11,10 @@ def description():
 # The different spw selection strings are designed to test different paths
 # through split, not MSSelection.
 # Typically channel averaging does not change the # of rows.
+
+# NOTE: CAS-7886. The expected values have been updated to adapt to using
+# the new split. In the new split, time averaging and weight/sigma handling
+# are different than in the past.
 expected = {
     # Input MS
     'labelled_by_time+ichan_simple.ms': {  # Has weight spectrum (some rows altered)
@@ -21,41 +25,59 @@ expected = {
         # The rest of the keys at this level are chanselstrs.
         '': {
             # Test type
-            'nrows_aft_tavg': 1079,
-            'nrows_aft_cavg': 1079,
-            'datshp':         (1, 4, 1079),
+#            'nrows_aft_tavg': 1079,
+#            'nrows_aft_cavg': 1079,
+            'nrows_aft_tavg': 1320,
+            'nrows_aft_cavg': 1320,
+            'datshp':         (1, 4, 1320),
             'cells': {
                 #T or C  (col, row)  val, or (val, tolerance)
                 'tav': {('FLAG', 0): [False for i in xrange(8)],
-                        ('WEIGHT', 0): (589824.0, 0.1),
-                        ('EXPOSURE', 0): 18.874367952346802,
-                        ('DATA', 1): (numpy.array([[ 4.50010633+0.j,  4.50010633+1.j,
-                                                     4.50010633+2.j,  4.50010633+3.j,
-                                                     4.50010633+4.j,  4.50010633+5.j,
-                                                     4.50010633+6.j,  4.50010633+7.j]]), 0.005),
+  #                      ('WEIGHT', 0): (589824.0, 0.1),
+                        ('WEIGHT', 0): (655360.0, 0.1),
+#                        ('EXPOSURE', 0): 18.874367952346802,
+                        ('EXPOSURE', 0): 20.971519947052002,
+#                        ('DATA', 1): (numpy.array([[ 4.50010633+0.j,  4.50010633+1.j,
+#                                                     4.50010633+2.j,  4.50010633+3.j,
+#                                                     4.50010633+4.j,  4.50010633+5.j,
+#                                                     4.50010633+6.j,  4.50010633+7.j]]), 0.005),
+                        ('DATA', 1): (numpy.array([[ 6.33345938+0.j,  6.33345938+1.j,  
+                                                     6.33345938+2.j,  6.33345938+3.j,                                                                   
+                                                     6.33345938+4.j,  6.33345938+5.j,  
+                                                     6.33345938+6.j,  6.33345938+7.j]]), 0.005),
                         ('TIME', 1): (4715114710.4857559, 0.01),
                         ('EXPOSURE', 1): 20.971519947052002,
                         ('FLAG', 1): [False for i in xrange(8)],
-                        ('WEIGHT', 1): (655360.0, 0.1),
-                        ('SIGMA', 1): 0.0012352647,
-                        ('WEIGHT', 2): (45.0, 0.05),
+#                        ('WEIGHT', 1): (655360.0, 0.1),
+                        ('WEIGHT', 1): (45.0, 0.1),
+#                        ('SIGMA', 1): 0.0012352647,
+                        ('SIGMA', 1): 0.14907120168209076,
+#                        ('WEIGHT', 2): (45.0, 0.05),
+                        ('WEIGHT', 2): (0.0, 0.05),
                         ('FLAG', 3): [False for i in xrange(8)],
                         ('ANTENNA2', 5): 7,  # Baseline 0-6 is dropped
                         },
                 'cav': {('FLAG', 0): [False for i in xrange(4)],
-                        ('WEIGHT', 0): (1179648.0,0.1),
-                        ('EXPOSURE', 0): 18.874367952346802,
+#                        ('WEIGHT', 0): (1179648.0,0.1),
+                        ('WEIGHT', 0): (1310720.0,0.1),
+#                        ('EXPOSURE', 0): 18.874367952346802,
+                        ('EXPOSURE', 0): 20.971519947052002,
                         ('FEED1', 0): 0,
                         ('FEED2', 9): 0,
-                        ('DATA', 1): (numpy.array([[ 4.50010633+0.5j,  4.50010633+2.5j,
-                                                     4.50010633+4.5j, 4.50010633+6.5j]]),0.005),
+#                        ('DATA', 1): (numpy.array([[ 4.50010633+0.5j,  4.50010633+2.5j,
+#                                                     4.50010633+4.5j, 4.50010633+6.5j]]),0.005),
+                        ('DATA', 1): (numpy.array([[6.33345938+0.5j,  6.33345938+2.5j,  6.33345938+4.5j,                                                                          
+                                                    6.33345938+6.5j ]]),0.005),
                         ('TIME', 1): (4715114710.4857559, 0.01),
                         ('EXPOSURE', 1): 20.971519947052002,
                         ('ARRAY_ID', 1): 0,
                         ('FLAG', 1): [False for i in xrange(4)],
-                        ('WEIGHT', 1): (1310720.0, 0.1),
-                        ('SIGMA', 1): 0.0008734640,
-                        ('WEIGHT', 2): (90.0, 0.05),
+#                        ('WEIGHT', 1): (1310720.0, 0.1),
+                        ('WEIGHT', 1): (90.0, 0.1),
+#                        ('SIGMA', 1): 0.0008734640,
+                        ('SIGMA', 1): 0.10540925711393356,
+#                        ('WEIGHT', 2): (90.0, 0.05),
+                        ('WEIGHT', 2): (0.0, 0.05),
                         ('FLAG', 3): [False for i in xrange(4)],
                         ('ANTENNA2', 5): 7  # Baseline 0-6 is dropped
                         }}},
