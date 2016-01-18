@@ -119,12 +119,12 @@ dataset_name = dataset_name_orig
 os.system('rm -rf input.ms input2.ms')
 os.system('cp -RL '+dataset_name_orig+' input.ms')
 os.system('chmod -R u+w input.ms')
-os.system('cp -RL '+dataset_name_orig+' input2.ms')
+#os.system('cp -RL '+dataset_name_orig+' input2.ms')
 os.system('chmod -R u+w input2.ms')
 clean_inputvis_local_copy = 'input.ms'
 
 clean_inputvis_local_copy2 = 'input2.ms' # we need a second copy for the hanning smoothed cases
-hanningsmooth(vis=clean_inputvis_local_copy2)
+hanningsmooth2(vis=dataset_name_orig, outputvis=clean_inputvis_local_copy2)
 
 
 # loop over all possible output reference frames

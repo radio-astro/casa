@@ -139,12 +139,12 @@ importuvfits(fitsfile=dataset_name_orig, vis=dataset_name)
 
 os.system('cp -RL '+dataset_name+' input.ms')
 os.system('chmod -R u+w input.ms')
-os.system('cp -RL '+dataset_name+' input2.ms')
+#os.system('cp -RL '+dataset_name+' input2.ms')
 os.system('chmod -R u+w input2.ms')
 clean_inputvis_local_copy = 'input.ms'
 
 clean_inputvis_local_copy2 = 'input2.ms' # we need a second copy for the hanning smoothed cases
-hanningsmooth(vis=clean_inputvis_local_copy2)
+hanningsmooth2(vis=dataset_name, outputvis=clean_inputvis_local_copy2)
 
 
 # loop over all possible output reference frames
