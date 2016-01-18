@@ -5,7 +5,7 @@ import numpy
 import math
 import sys
 import exceptions
-from tasks import mstransform, cvel, cvel2, listpartition, listobs, setjy, flagdata, split, applycal, split2
+from tasks import mstransform, cvel, cvel2, listpartition, listobs, setjy, flagdata, split, applycal
 from taskinit import mstool, tbtool, msmdtool, aftool
 from __main__ import default
 import testhelper as th
@@ -5414,12 +5414,12 @@ class test_otf_calibration(test_base_compare):
         
         os.system('rm -rf '+ 'ngc5921_regression')
         
-    def test_otf_calibration_mst_vs_applycal_split2(self):
+    def test_otf_calibration_mst_vs_applycal_split(self):
         
         mstransform(vis=self.vis,outputvis=self.outvis,docallib=True,callib=self.auxfile)
 
         applycal(vis=self.vis,docallib=True,callib=self.auxfile)
-        split2(vis=self.vis,outputvis=self.refvis,datacolumn='CORRECTED') 
+        split(vis=self.vis,outputvis=self.refvis,datacolumn='CORRECTED') 
         
         self.generate_tolerance_map()
         

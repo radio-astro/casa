@@ -1831,8 +1831,8 @@ class test_clip(test_base):
     def test_timeavg1(self):
         '''flagdata: clip with time average and compare with mstransform'''
         # Create an output with 4 rows
-        from tasks import split2
-        split2(vis=self.vis,outputvis='timeavg.ms',datacolumn='data',spw='9',scan='30',antenna='1&2',
+        from tasks import split
+        split(vis=self.vis,outputvis='timeavg.ms',datacolumn='data',spw='9',scan='30',antenna='1&2',
                timerange='2010/10/16/14:45:08.50~2010/10/16/14:45:11.50')
         
         # STEP 1

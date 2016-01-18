@@ -2,7 +2,7 @@ import os
 import sys
 import shutil
 from __main__ import default
-from tasks import hanningsmooth2, mstransform, partition, cvel, split2, clearcal
+from tasks import hanningsmooth2, mstransform, partition, cvel, split, clearcal
 from taskinit import mstool
 import exceptions
 import testhelper as th
@@ -141,7 +141,7 @@ class hanningsmooth2_test1(test_base):
         '''hanningsmooth2 - Test 4: Theoretical and calculated values should be the same for MMS-case'''
 	
         # Split the input to decrease the running time
-        split2(self.msfile, outputvis='splithan.ms',scan='1,2',datacolumn='data')
+        split(self.msfile, outputvis='splithan.ms',scan='1,2',datacolumn='data')
         self.msfile = 'splithan.ms'
         
         # create a test MMS. It creates self.testmms

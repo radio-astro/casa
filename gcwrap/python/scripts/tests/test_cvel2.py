@@ -3,7 +3,7 @@ import os
 import numpy
 import shutil
 from __main__ import default
-from tasks import cvel2, cvel, partition, importuvfits, split2
+from tasks import cvel2, cvel, partition, importuvfits, split
 from taskinit import tbtool, mstool, qa
 from parallel.parallel_task_helper import ParallelTaskHelper
 from parallel.parallel_data_helper import ParallelDataHelper
@@ -124,7 +124,7 @@ class test_base(unittest.TestCase):
         elif(not os.path.exists(vis_g)):
             # construct an MS with attached Jupiter ephemeris from vis_c
             self.setUp_vis_c()
-            split2(vis=vis_c, outputvis=vis_g, field='JUPITER', datacolumn='data')
+            split(vis=vis_c, outputvis=vis_g, field='JUPITER', datacolumn='data')
             mytb.open(vis_g, nomodify=False)
             a = mytb.getcol('TIME')
             delta = (54709.*86400-a[0])
@@ -263,7 +263,7 @@ class cvel2_test(test_base):
         
         # Simulate the passall=True. This MS has fields 0~6
         desel = outfile+'.deselected'
-        split2(vis='myinput.ms',outputvis=desel,field='0,2,3,4,5,6',spw='0',datacolumn='all')
+        split(vis='myinput.ms',outputvis=desel,field='0,2,3,4,5,6',spw='0',datacolumn='all')
         mslocal = mstool()
         mslocal.open(outfile, nomodify=False)
         mslocal.concatenate(msfile=desel)            
