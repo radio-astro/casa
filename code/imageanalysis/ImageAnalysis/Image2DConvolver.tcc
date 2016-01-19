@@ -674,7 +674,7 @@ template <class T> T Image2DConvolver<T>::_dealWithRestoringBeam(
 			SkyComponentFactory::pixelWidthsToWorld(
 				beamOut, pixelParameters, cSys, _axes, False
 			);
-			if (brightnessUnitIn.getName().contains("K")) {
+			if (! brightnessUnitIn.getName().contains(Regex(Regex::makeCaseInsensitive("beam")))) {
 				scaleFactor *= beamIn.getArea("arcsec2")/beamOut.getArea("arcsec2");
 			}
 		}
@@ -688,11 +688,6 @@ template <class T> T Image2DConvolver<T>::_dealWithRestoringBeam(
 			}
 		}
 	}
-	/*
-	if (scaleFactor != 1) {
-		kernelArray *= scaleFactor;
-	}
-	*/
 	// Put beam position angle into range +/- 180 in case it has eluded us so far
 	if (! beamOut.isNull()) {
 		MVAngle pa(beamOut.getPA(True).getValue(Unit("rad")));
