@@ -1840,8 +1840,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //vs_p= new VisSet(blockMSSel_p, sort, noChanSel, useModelCol_p);
     if(!writeAccess){
 
-      //      if(rvi_p) delete rvi_p;
-      //rvi_p = NULL;
+      if(rvi_p) delete rvi_p;
+      rvi_p = NULL;
       rvi_p=new ROVisibilityIterator(mss4vi_p, sort);
 
     }
