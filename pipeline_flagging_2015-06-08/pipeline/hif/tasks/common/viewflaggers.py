@@ -833,7 +833,7 @@ class NewMatrixFlaggerResults(basetask.Results,
 
 
 class NewMatrixFlagger(basetask.StandardTaskTemplate):
-    Inputs = MatrixFlaggerInputs
+    Inputs = NewMatrixFlaggerInputs
 
     flag_reason_index = {'max abs':1,
                          'min abs':2,
@@ -852,9 +852,6 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
     # its references to the tasks and the originals.
     def __init__(self, inputs):
         self.inputs = inputs
-        self.datatask = inputs.datatask
-        self.viewtask = inputs.viewtask
-        self.flagsettertask = inputs.flagsettertask
         self.result = NewMatrixFlaggerResults()
 
     def prepare(self):
@@ -885,7 +882,7 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
             # Run the data task if needed
             if counter == 1:
                 # Always run data task on first iteration
-                data = self._executor.execute(self.datatask)
+                data = self._executor.execute(inputs.datatask)
             elif inputs.iter_datatask is True:
                 # If requested to re-run datatask on iteration, then
                 # run the flag-setting task which modifies the data
@@ -898,13 +895,13 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
                 else:
                     _, _ = self.set_flags(newflags)
                     
-                data = self._executor.execute(self.datatask)
+                data = self._executor.execute(inputs.datatask)
             else:
                 # TODO: implement flagging mask for the case where iter_datatask = False
                 raise(NotImplementedError)
 
             # Create flagging view                
-            viewresult = self.viewtask(data)
+            viewresult = inputs.viewtask(data)
 
             # If a view could be created, continue with flagging
             if viewresult.descriptions():
@@ -939,6 +936,7 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
                 counter += 1
             else:
                 # If no view could be created, exit the iteration
+                LOG.warning('No flagging view was created!')
                 break
 
         # Create final set of flags by removing duplicates from our accumulated flags
@@ -961,7 +959,7 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
                                                      summarize_after=True)   
 
                     # With new flags set, re-run the data task
-                    data = self._executor.execute(self.datatask)
+                    data = self._executor.execute(inputs.datatask)
                                  
                 # Otherwise, set flags, and include both "before" and "after" summary
                 else:
@@ -970,7 +968,7 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
                                                                summarize_after=True)
                 
                 # Create final post-flagging view                
-                viewresult = self.viewtask(data)
+                viewresult = inputs.viewtask(data)
 
                 # Import the post-flagging view into the final result
                 self.result.importfrom(viewresult)
@@ -982,7 +980,7 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
                 # already been done, and the flags have already been set, so only
                 # need to do an "after" summary
                 if inputs.iter_datatask is True:
-                    summary_job = casa_tasks.flagdata(vis=self.inputs.vis, mode='summary')
+                    summary_job = casa_tasks.flagdata(vis=inputs.flagsettertask.inputs.table, mode='summary')
                     stats_after = self._executor.execute(summary_job)
                 # Otherwise, set flags, and include both "before" and "after" summary
                 else:
@@ -1000,13 +998,13 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
         else:
             # Run a single flagging summary and use the result as both the "before" 
             # and "after" summary.
-            summary_job = casa_tasks.flagdata(vis=self.inputs.vis, mode='summary')
+            summary_job = casa_tasks.flagdata(vis=inputs.flagsettertask.inputs.table, mode='summary')
             stats_before = self._executor.execute(summary_job)
             stats_after = stats_before        
         
         # Store in the final result the name of the measurement set or caltable to 
         # which any potentially found flags would need to be applied to
-        self.result.table = self.flagsettertask.inputs.table
+        self.result.table = self.inputs.flagsettertask.inputs.table
         
         # Store the flagging summaries in the final result
         self.result.summaries = [stats_before, stats_after]
@@ -1050,10 +1048,10 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
             allflagcmds.append("mode='summary' name='after'")
         
         # Update flag setting task with all flagging commands
-        self.flagsettertask.flags_to_set(allflagcmds)
+        self.inputs.flagsettertask.flags_to_set(allflagcmds)
         
         # Run flag setting task
-        flagsetterresult = self._executor.execute(self.flagsettertask)
+        flagsetterresult = self._executor.execute(self.inputs.flagsettertask)
 
         # Extract "before" summary if necessary
         if summarize_before:
@@ -2029,6 +2027,655 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                               flagcoords=flagcoords,
                               channel_axis=vector.axis,
                               intent=intent))
+
+                elif rulename == 'outlier':
+                    minsample = rule['minsample']
+                    limit = rule['limit']
+
+                    # enough data for valid statistics?
+                    if len(valid_data) < minsample:
+                        continue
+  
+                    # get channels to flag
+                    flag_chan = (np.abs(data-data_median) > data_mad*limit) & np.logical_not(flag)
+
+                    # flag the 'view'
+                    rflag[flag_chan] = True
+
+                    # now compose a description of the flagging required on
+                    # the MS
+                    nchannels = len(rdata)
+                    channels = np.arange(nchannels)
+                    channels_flagged = channels[flag_chan]
+
+                    axisnames = ['channels']
+                    flagcoords = [list(channels_flagged)]
+
+                    if len(channels_flagged) > 0:
+                        # Add new flag command to flag data underlying the
+                        # view.
+                        newflags.append(arrayflaggerbase.FlagCmd(
+                          reason='outlier',
+                          filename=table, rulename=rulename,
+                          spw=spw, pol=pol, antenna=antenna,
+                          axisnames=axisnames, flagcoords=flagcoords))
+
+                elif rulename == 'sharps':
+                    limit = rule['limit']
+                    if len(valid_data):
+                        diff = abs(rdata[1:] - rdata[:-1])
+                        diff_flag = (rflag[1:] | rflag[:-1])
+
+                        # flag channels whose slope is greater than the 
+                        # limit for a 'sharp feature'
+                        newflag = (diff>limit) & np.logical_not(diff_flag)
+
+                        # now broaden the flags until the diff falls below
+                        # 2 times the median diff, to catch the wings of
+                        # sharp features
+                        if np.any([np.logical_not(diff_flag | newflag)]):
+                            median_diff = np.median(diff[np.logical_not(
+                              diff_flag | newflag)])
+                            median_flag = ((diff > 2 * median_diff) &
+                              np.logical_not(diff_flag)) 
+                        else:
+                            median_flag = newflag
+
+                        start = None
+                        for i in np.arange(len(median_flag)):
+                            if median_flag[i]:
+                                end = i
+                                if start is None:
+                                    start = i
+                            else:
+                                if start is not None:
+                                    # have found start and end of a block
+                                    # of contiguous True flags. Does the
+                                    # block contain a sharp feature? If 
+                                    # so broaden the sharp feature flags 
+                                    # to include the whole block
+                                    if np.any(newflag[start:end]):
+                                        newflag[start:end] = True
+                                    start = None
+
+                        flag_chan = np.zeros([len(newflag)+1], np.bool) 
+                        flag_chan[:-1] = newflag
+                        flag_chan[1:] = (flag_chan[1:] | newflag)
+
+                        # flag the 'view'
+                        rflag[flag_chan] = True
+
+                        # now compose a description of the flagging required on
+                        # the MS
+                        nchannels = len(rdata)
+                        channels = np.arange(nchannels)
+                        channels_flagged = channels[flag_chan]
+
+                        axisnames = ['channels']
+                        flagcoords = [list(channels_flagged)]
+
+                        if len(channels_flagged) > 0:
+                            # Add new flag command to flag data underlying the
+                            # view.
+                            newflags.append(arrayflaggerbase.FlagCmd(
+                              reason='sharps',
+                              filename=table,
+                              rulename=rulename,
+                              spw=spw, antenna=antenna, axisnames=axisnames,
+                              flagcoords=flagcoords))
+
+                elif rulename == 'diffmad':
+                    limit = rule['limit']
+                    nchan_limit = rule['nchan_limit']
+                    if len(valid_data):
+                        diff = rdata[1:] - rdata[:-1]
+                        diff_flag = np.logical_or(rflag[1:], rflag[:-1])
+                        median_diff = np.median(diff[diff_flag==0])
+                        mad = np.median(
+                          np.abs(diff[diff_flag==0] - median_diff))
+
+                        # first, flag channels further from the median than
+                        # limit * MAD
+                        newflag = (abs(diff-median_diff) > limit*mad) & \
+                          (diff_flag==0)
+
+                        # second, flag all channels if more than nchan_limit 
+                        # were flagged by the first stage
+                        if len(newflag[newflag==True]) >= nchan_limit:
+                            newflag[newflag==False] = True         
+
+                        # set channels flagged 
+                        flag_chan = np.zeros([len(newflag)+1], np.bool) 
+                        flag_chan[:-1] = newflag
+                        flag_chan[1:] = np.logical_or(flag_chan[1:], newflag)
+
+                        # flag the 'view'
+                        rflag[flag_chan] = True
+
+                        # now compose a description of the flagging required on
+                        # the MS
+                        nchannels = len(rdata)
+                        channels = np.arange(nchannels)
+                        channels_flagged = channels[flag_chan]
+
+                        axisnames = ['channels']
+                        flagcoords = [list(channels_flagged)]
+
+                        if len(channels_flagged) > 0:
+                            # Add new flag command to flag data underlying the
+                            # view.
+                            newflags.append(arrayflaggerbase.FlagCmd(
+                              reason='diffmad',
+                              filename=table, rulename=rulename,
+                              spw=spw, pol=pol, antenna=antenna,
+                              axisnames=axisnames, flagcoords=flagcoords))
+
+                elif rulename == 'tmf':
+                    frac_limit = rule['frac_limit']
+                    nchan_limit = rule['nchan_limit']
+                    if len(valid_data):
+                        # flag all channels if fraction already flagged 
+                        # is greater than tmf_limit of total
+                        if (float(len(rdata[rflag==True])) / len(rdata) >= frac_limit) or \
+                          (len(rdata[rflag==True]) >= nchan_limit):
+                            newflag = (rflag==False)
+
+                            # flag the 'view'
+                            rflag[newflag] = True
+
+                            # now compose a description of the flagging required on
+                            # the MS
+                            nchannels = len(rdata)
+                            channels = np.arange(nchannels)
+                            channels_flagged = channels[newflag]
+
+                            axisnames = ['channels']
+                            flagcoords = [list(channels_flagged)]
+
+                            if len(channels_flagged) > 0:
+                                # Add new flag command to flag data underlying the
+                                # view.
+                                newflags.append(arrayflaggerbase.FlagCmd(
+                                  reason='tmf',
+                                  filename=table, rulename=rulename,
+                                  spw=spw, pol=pol, antenna=antenna,
+                                  axisnames=axisnames, flagcoords=flagcoords))
+
+                else:           
+                    raise NameError, 'bad rule: %s' % rule
+
+        return newflags
+
+    @staticmethod
+    def _find_noise_edge(mad, flag):
+        """Return the index in the mad array where the noise first
+        dips below the median value.
+
+        Keyword arguments:
+        mad    -- The noise array to be examined.
+        flag   -- Array whose elements are True where mad is invalid.
+
+        The index of the first point where the noise dips below twice the median
+        for the first half of the spectrum. Looking at half the spectrum
+        handles the case where the spectrum is a composite of 2 subbands,
+        with different noise levels; it's a fudge in that some spectra may
+        be composed of more than 2 subbands.
+        """
+
+        noise_edge = None
+
+        nchan = len(mad)
+        median_mad = np.median(mad[:nchan/4][np.logical_not(flag[:nchan/4])])
+        for i in range(nchan):
+            if not flag[i]:
+                if mad[i] < 2.0 * median_mad:
+                    noise_edge = i
+                    break
+
+        return noise_edge
+
+    @staticmethod
+    def _find_small_diff(data, flag, limit=2.0, description='unknown'):
+        """Return the index in the first quarter of the data array where the
+        point to point difference first falls below twice the median value.
+
+        Keyword arguments:
+        data -- The data array to be examined.
+        flag -- Array whose elements are True where list_data is bad.
+        limit -- Multiple of median value where the 'edge' will be set.
+
+        Returns:
+        The index of the first point where the point to point difference
+        first falls below 'limit' times the median value.
+        """
+        result = None
+
+        nchan = len(data)
+        good_data = data[:nchan/4][np.logical_not(flag[:nchan/4])]
+        good_data_index = np.arange(nchan/4)[np.logical_not(flag[:nchan/4])]
+        diff = abs(good_data[1:] - good_data[:-1])
+        median_diff = np.median(diff)
+
+        for i in good_data_index[:-2]:
+            if diff[i] < limit * median_diff:
+                result = i
+                break
+
+        if result is None:
+            LOG.warning('edge finder failed for:%s' % description)
+            # flag one edge channel - sole purpose of this is to ensure
+            # that a plot is made in the weblog so that the problem
+            # can be understood
+            result = 1
+
+        return result
+
+
+class NewVectorFlaggerInputs(basetask.StandardInputs):
+
+    def __init__(self, context, output_dir=None, vis=None, datatask=None,
+        viewtask=None, flagsettertask=None, rules=None, niter=None, 
+        iter_datatask=None, prepend=''):
+
+        # set the properties to the values given as input arguments
+        self._init_properties(vars())
+
+
+class NewVectorFlaggerResults(basetask.Results,
+  flaggableviewresults.FlaggableViewResults):
+    def __init__(self):
+        """
+        Construct and return a new NewVectorFlaggerResults.
+        """
+        basetask.Results.__init__(self)
+        flaggableviewresults.FlaggableViewResults.__init__(self)
+
+    def merge_with_context(self, context):
+        pass
+
+    def __repr__(self):
+        s = 'NewVectorFlaggerResults'
+        return s
+
+
+class NewVectorFlagger(basetask.StandardTaskTemplate):
+    Inputs = NewVectorFlaggerInputs
+
+    # override the inherited __init__ method so that references to the
+    # task objects can be kept outside self.inputs. Later on self.inputs
+    # will be replaced by a copy which breaks the connection between
+    # its references to the tasks and the originals.
+    def __init__(self, inputs):
+        self.inputs = inputs
+        self.result = NewVectorFlaggerResults()
+
+    def prepare(self):
+        
+        inputs = self.inputs
+
+        # Initialize flags and iteration counter
+        flags = []
+        newflags = []
+        counter = 1
+        include_before = True
+
+        # Start iterative flagging
+        while counter <= inputs.niter:
+
+            # Run the data task if needed
+            if counter == 1:
+                # Always run data task on first iteration
+                data = self._executor.execute(self.inputs.datatask)
+            elif inputs.iter_datatask is True:
+                # If requested to re-run datatask on iteration, then
+                # run the flag-setting task which modifies the data
+                # and then re-run the data task
+                
+                # If no "before summary" was done, include this in the flag setting task
+                if include_before:
+                    stats_before, _ = self.set_flags(newflags, summarize_before=True)
+                    include_before = False
+                else:
+                    _, _ = self.set_flags(newflags)
+                    
+                data = self._executor.execute(inputs.datatask)
+            else:
+                # TODO: implement flagging mask for the case where iter_datatask = False
+                raise(NotImplementedError)
+
+            # Create flagging view                
+            viewresult = inputs.viewtask(data)
+
+            # If a view could be created, continue with flagging
+            if viewresult.descriptions():
+            
+                # Import the views from viewtask into the final result
+                self.result.importfrom(viewresult)
+    
+                # Flag the view
+                newflags = self.flag_view(viewresult)
+            
+                # Report how many flags were found in this iteration and
+                # stop iteration if no new flags were found
+                if len(newflags) == 0:
+                    # If no new flags are found, report as a log message
+                    LOG.info('%s%s iteration %s raised %s flagging commands' % \
+                             (inputs.prepend, os.path.basename(inputs.vis), counter, len(newflags)))
+                    break
+                else:
+                    # Report newly found flags as a warning message
+                    LOG.warning('%s%s iteration %s raised %s flagging commands' % \
+                                (inputs.prepend, os.path.basename(inputs.vis), counter, len(newflags)))
+    
+                # Accumulate new flags
+                flags += newflags
+                
+                counter += 1
+            else:
+                # If no view could be created, exit the iteration
+                break
+
+        # Create final set of flags by removing duplicates from our accumulated flags
+        flags = list(set(flags))
+        
+        # If flags were found...
+        if len(flags) > 0:
+            
+            # If newflags were found on last iteration loop, we need to still set 
+            # these.
+            if len(newflags) > 0:
+                
+                # If datatask needs to be iterated, and max number of iterations is
+                # not 1, then the "before" summary has already been done, so only 
+                # need to set flags and do "after" summary
+                if inputs.iter_datatask is True and inputs.niter != 1:
+                    
+                    # Set flags, and include "after" summary
+                    _ , stats_after = self.set_flags(newflags,
+                                                     summarize_after=True)   
+
+                    # With new flags set, re-run the data task
+                    data = self._executor.execute(inputs.datatask)
+                                 
+                # Otherwise, set flags, and include both "before" and "after" summary
+                else:
+                    stats_before, stats_after = self.set_flags(newflags, 
+                                                               summarize_before=True, 
+                                                               summarize_after=True)
+                
+                # Create final post-flagging view                
+                viewresult = inputs.viewtask(data)
+
+                # Import the post-flagging view into the final result
+                self.result.importfrom(viewresult)
+                
+            # If no newflags were found on last iteration loop
+            else:
+                
+                # If datatask needs to be iterated, then the "before" summary has
+                # already been done, and the flags have already been set, so only
+                # need to do an "after" summary
+                if inputs.iter_datatask is True:
+                    summary_job = casa_tasks.flagdata(vis=inputs.flagsettertask.inputs.table, mode='summary')
+                    stats_after = self._executor.execute(summary_job)
+                # Otherwise, set flags, and include both "before" and "after" summary
+                else:
+                    stats_before, stats_after = self.set_flags(newflags, 
+                                                               summarize_before=True, 
+                                                               summarize_after=True)
+            
+            # Store the final set of flags in the final result
+            self.result.addflags(flags)
+            
+        # if no flags were found at all
+        else:
+            # Run a single flagging summary and use the result as both the "before" 
+            # and "after" summary.
+            summary_job = casa_tasks.flagdata(vis=inputs.flagsettertask.inputs.table, mode='summary')
+            stats_before = self._executor.execute(summary_job)
+            stats_after = stats_before        
+        
+        # Store in the final result the name of the measurement set or caltable to 
+        # which any potentially found flags would need to be applied to
+        self.result.table = inputs.flagsettertask.inputs.table
+        
+        # Store the flagging summaries in the final result
+        self.result.summaries = [stats_before, stats_after]
+
+        return self.result
+
+    def analyse(self, result):
+        return result
+
+    def flag_view(self, view):
+        newflags = []
+        descriptionlist = view.descriptions()
+        descriptionlist.sort() 
+        for description in descriptionlist:
+            image = view.last(description)
+            # get flags for this view according to the rules
+            newflags += self.generate_flags(image)
+
+        return newflags
+    
+    def set_flags(self, flags, summarize_before=False, summarize_after=False):
+        # Initialize flagging summaries
+        stats_before = []
+        stats_after = []
+        allflagcmds = []
+
+        # Add the "before" summary to the flagging commands
+        if summarize_before:
+            allflagcmds = ["mode='summary' name='before'"]
+        
+        # Add the flagging commands
+        allflagcmds.extend(flags)
+        
+        # Add the "before" summary to the flagging commands
+        if summarize_after:
+            allflagcmds.append("mode='summary' name='after'")
+        
+        # Update flag setting task with all flagging commands
+        self.inputs.flagsettertask.flags_to_set(allflagcmds)
+        
+        # Run flag setting task
+        flagsetterresult = self._executor.execute(self.inputs.flagsettertask)
+
+        # Extract "before" summary if necessary
+        if summarize_before:
+            stats_before = {}
+            for report in flagsetterresult.results[0].keys():
+                if flagsetterresult.results[0][report]['name'] == 'before':
+                    stats_before = flagsetterresult.results[0][report]
+        if summarize_after:
+            stats_after = {}
+            for report in flagsetterresult.results[0].keys():
+                if flagsetterresult.results[0][report]['name'] == 'after':
+                    stats_after = flagsetterresult.results[0][report]
+        
+        return stats_before, stats_after
+
+    @staticmethod
+    def make_flag_rules (flag_edges=False, edge_limit=2.0,
+      flag_minabs=False, fmin_limit=0.0,
+      flag_nmedian=False, fnm_lo_limit=0.7, fnm_hi_limit=1.3,
+      flag_hilo=False, fhl_limit=5.0, fhl_minsample=5, 
+      flag_sharps=False, sharps_limit=0.05,
+      flag_diffmad=False, diffmad_limit=10, diffmad_nchan_limit=4,
+      flag_tmf=None, tmf_frac_limit=0.1, tmf_nchan_limit=4):
+
+        """
+        Generate a list of flagging rules from a set of flagging parameters.
+        Added detailed docs here.
+        """
+
+        # Construct rules from flag properties
+        rules = []
+        if flag_edges:
+            rules.append({'name':'edges', 'limit':edge_limit})
+        if flag_minabs:
+            rules.append({'name':'min abs', 'limit':fmin_limit})
+        if flag_nmedian:
+            rules.append({'name':'nmedian', 'lo_limit':fnm_lo_limit,
+              'hi_limit':fnm_hi_limit})
+        if flag_hilo:
+            rules.append({'name':'outlier', 'limit':fhl_limit,
+              'minsample':fhl_minsample})
+        if flag_sharps:
+            rules.append({'name':'sharps', 'limit':sharps_limit})
+        if flag_diffmad:
+            rules.append({'name':'diffmad', 'limit':diffmad_limit,
+              'nchan_limit':diffmad_nchan_limit})
+        if flag_tmf:
+            rules.append({'name':'tmf', 'frac_limit':tmf_frac_limit,
+              'nchan_limit':tmf_nchan_limit})
+
+        return rules
+
+    def generate_flags(self, vector):
+        """
+        Calculate the statistics of a vector and flag the data according
+        to a list of specified rules.
+
+        Keyword arguments:
+        vector - SpectrumResult object containing data to be flagged.
+        rules - Rules to be applied.
+        """
+
+        # Get the attributes - ensure all arrays are numpy arrays
+        # as some subsequent processing depends on numpy array indexing
+        data = np.array(vector.data)
+        flag = np.array(vector.flag)
+        spw = vector.spw
+        pol = vector.pol
+        antenna = vector.ant
+        if antenna is not None:
+            # deal with antenna id not name
+            antenna = antenna[0]
+        table = vector.filename
+
+        # any flags found will apply to this subset of the data
+        axisnames = []
+        flagcoords = []
+        if antenna is not None:
+            axisnames.append('ANTENNA1')
+            flagcoords.append(antenna)
+
+        # Initialize flags
+        newflags = []
+
+        # Index arrays
+        i = np.indices(np.shape(data))
+
+        rdata = np.ravel(data)
+        rflag = np.ravel(flag)
+        valid_data = rdata[np.logical_not(rflag)]
+
+        # If there is valid data (non-flagged), then proceed with flagging
+        if len(valid_data) > 0:
+
+            # calculate statistics for valid data
+            data_median, data_mad = arrayflaggerbase.median_and_mad(valid_data)
+
+            # flag data according to each rule in turn
+            for rule in self.inputs.rules:
+                rulename = rule['name']
+                if rulename == 'edges':
+                    limit = rule['limit']
+                    if len(valid_data):
+
+                        # find left edge
+                        left_edge = VectorFlagger._find_small_diff(rdata,
+                          rflag, limit, vector.description)
+
+                        # and right edge
+                        reverse_data = rdata[-1::-1]
+                        reverse_flag = rflag[-1::-1]
+                        right_edge = VectorFlagger._find_small_diff(
+                          reverse_data, reverse_flag, limit, vector.description)
+
+                        # flag the 'view'
+                        rflag[:left_edge] = True
+                        if right_edge > 0:
+                            rflag[-right_edge:] = True
+
+                        # now compose a description of the flagging required on
+                        # the MS
+                        nchannels = len(rdata)
+                        channels = np.arange(nchannels)
+                        channels_flagged = channels[np.logical_or(
+                          channels < left_edge,
+                          channels > (nchannels-1-right_edge))]
+
+                        axisnames = ['channels']
+                        flagcoords = [list(channels_flagged)]
+                        if len(channels_flagged) > 0:
+                            # Add new flag command to flag data underlying the
+                            # view.
+                            newflags.append(arrayflaggerbase.FlagCmd(
+                              reason='edges',
+                              filename=table,
+                              rulename=rulename, spw=spw, axisnames=axisnames,
+                              flagcoords=flagcoords))
+
+                elif rulename == 'min abs':
+                    limit = rule['limit']
+                    if len(valid_data):
+
+                        flag_chan = (np.abs(data)<limit) & np.logical_not(flag)
+
+                        # flag the 'view'
+                        rflag[flag_chan] = True
+
+                        # now compose a description of the flagging required on
+                        # the MS
+                        nchannels = len(rdata)
+                        channels = np.arange(nchannels)
+                        channels_flagged = channels[flag_chan]
+
+                        axisnames = ['channels']
+                        flagcoords = [list(channels_flagged)]
+
+                        if len(channels_flagged) > 0:
+                            # Add new flag command to flag data underlying the
+                            # view.
+                            newflags.append(arrayflaggerbase.FlagCmd(
+                              reason='min_abs',
+                              filename=table, rulename=rulename,
+                              spw=spw, axisnames=axisnames,
+                              flagcoords=flagcoords,
+                              channel_axis=vector.axis))
+
+                elif rulename == 'nmedian':
+                    limit = rule['limit']
+                    if len(valid_data):
+
+                        if limit < 1:
+                            flag_chan = (data < np.median(data)*limit) & np.logical_not(flag)
+                        else:
+                            flag_chan = (data > np.median(data)*limit) & np.logical_not(flag)
+
+                        # flag the 'view'
+                        rflag[flag_chan] = True
+
+                        # now compose a description of the flagging required on
+                        # the MS
+                        nchannels = len(rdata)
+                        channels = np.arange(nchannels)
+                        channels_flagged = channels[flag_chan]
+
+                        axisnames = ['channels']
+                        flagcoords = [list(channels_flagged)]
+
+                        if len(channels_flagged) > 0:
+                            # Add new flag command to flag data underlying the
+                            # view.
+                            newflags.append(arrayflaggerbase.FlagCmd(
+                              reason='nmedian',
+                              filename=table, rulename=rulename,
+                              spw=spw, axisnames=axisnames,
+                              flagcoords=flagcoords,
+                              channel_axis=vector.axis))
 
                 elif rulename == 'outlier':
                     minsample = rule['minsample']

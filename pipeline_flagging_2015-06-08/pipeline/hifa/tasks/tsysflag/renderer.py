@@ -34,9 +34,10 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     '''
     Renders detailed HTML output for the Tsysflag task.
     '''
+    # FIXME: ensure that always_rerender is back to False
     def __init__(self, uri='tsysflag.mako',
                  description='Flag Tsys calibration',
-                 always_rerender=False):
+                 always_rerender=True):
         super(T2_4MDetailsTsysflagRenderer, self).__init__(uri=uri,
                 description=description, always_rerender=always_rerender)
 
@@ -212,14 +213,16 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         return filename
 
     def flags_for_result(self, result, context, summary=None):
-        name = result.inputs['caltable']
+        name = result.caltable
         tsystable = caltableaccess.CalibrationTableDataFiller.getcal(name)
         ms = context.observing_run.get_ms(name=tsystable.vis) 
 
         summaries = result.summaries
         if summary == 'first':
+            # select only first summary, but keep as list
             summaries = summaries[:1]
         elif summary == 'last':
+            # select only last summary, but keep as list
             summaries = summaries[-1:]
 
         by_intent = self.flags_by_intent(ms, summaries)
@@ -259,7 +262,10 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                             flagcount -= int(previous_summary['field'][field]['flagged'])
 
                 ft = FlagTotal(flagcount, totalcount)
-                total[summary['name']][intent] = ft
+                # The individual summaries may have been named differently from 
+                # each other, but the renderer will expect a single summary, so 
+                # consolidate summaries into a single summary named "Summary"
+                total['Summary'][intent] = ft
     
             previous_summary = summary
                 
