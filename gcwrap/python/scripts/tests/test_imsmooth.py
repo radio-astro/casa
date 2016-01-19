@@ -1252,7 +1252,7 @@ class imsmooth_test(unittest.TestCase):
                 myia.done()
                 
     def test_conserve_flux(self):
-        """Test flux density is conserved for images with units of K"""
+        """Test flux density is conserved for images with units of K or anything without 'beam'"""
         myia = self.ia
         imagename = "tres1x.im"
         myia.fromshape(imagename, [100, 100])
@@ -1265,27 +1265,29 @@ class imsmooth_test(unittest.TestCase):
         values = make_gauss2d(shape, 3.0, 6.0)
         #expected = make_gauss2d(shape, 5.0, 10.0)
         myia.putchunk(values)
-        myia.setbrightnessunit("K")
-        zz = myia.fitcomponents()
+        for unit in ("K", "cm-2"):
+            myia.setbrightnessunit(unit)
+            zz = myia.fitcomponents()
+            mycl = cltool()
+            mycl.fromrecord(zz['results'])
+            expected = mycl.getfluxvalue(0)
+            gg = iatool()
+            outfile = "gxg_" + unit + ".im"
+            imsmooth(
+                imagename=imagename, targetres=True, major="10arcsec", minor="5arcsec",
+                pa="0deg", outfile=outfile
+            )
+            gg.open(outfile)
+            zz = gg.fitcomponents()
+            gg.done()
+            mycl.fromrecord(zz['results'])
+            got = mycl.getfluxvalue(0)
+            self.assertTrue(abs(got[0]/expected[0] - 1) < 2e-7, "Failed testing unit " + unit)
+        mycl.done()
         myia.done()
-        mycl = cltool()
-        mycl.fromrecord(zz['results'])
-        expected = mycl.getfluxvalue(0)
-        outfile = "gxg.im"
-        imsmooth(
-            imagename=imagename, targetres=True, major="10arcsec", minor="5arcsec",
-            pa="0deg", outfile=outfile
-        )
-        myia.open(outfile)
-        zz = myia.fitcomponents()
-        myia.done()
-        mycl = cltool()
-        mycl.fromrecord(zz['results'])
-        got = mycl.getfluxvalue(0)
-        self.assertTrue(abs(got[0]/expected[0] - 1) < 2e-7)
         
     def test_commonbeam(self):
-        #"""Test kernel='commonbeam' in imsmooth"""
+        """Test kernel='commonbeam' in imsmooth"""
         myia = self.ia
         imagename = "cb1.im"
         myia.fromshape(imagename, [100, 100, 5])
