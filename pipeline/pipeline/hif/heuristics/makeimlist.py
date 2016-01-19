@@ -155,11 +155,11 @@ class MakeImListHeuristics(object):
                     # remove items from field_intent_result that are not
                     # consistent with the fields in field_list
                     temp_result = set()
-                    re_field = field
-                    for char in '()+?.^$[]{}|':
-                        re_field = re_field.replace(char, '\%s' % char)
-                    re_field = re_field.replace('*', '.*')
                     for eachfield in field_list:
+                        re_field = eachfield
+                        for char in '()+?.^$[]{}|':
+                            re_field = re_field.replace(char, '\%s' % char)
+                        re_field = re_field.replace('*', '.*')
                         temp_result.update([fir for fir in field_intent_result
                           if re.search(pattern=re_field, string=fir[0])])
                     field_intent_result = temp_result
