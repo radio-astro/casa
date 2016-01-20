@@ -25,6 +25,8 @@ casa_add_library( singledish
     SingleDish/LineFinder.cc
     SingleDish/SDMSManager.cc
     SingleDish/SingleDishMS.cc
+    Filler/Scantable2MSReader.cc
+    Filler/SingleDishMSFiller.cc
 )
 
 install (FILES
@@ -37,6 +39,15 @@ install (FILES
     DESTINATION include/casacode/singledish/SingleDish
 )
 
+install (FILES
+    Filler/DataAccumulator.h
+    Filler/ReaderInterface.h
+    Filler/Scantable2MSReader.h
+    Filler/SingleDishMSFiller.h
+    Filler/SingleDishMSFiller.tcc
+    DESTINATION include/casacode/singledish/Filler
+)
+
 ### traditional c++ codes for testing ###
 #casa_add_assay( singledish
 #    SingleDish/test/tLineFinder.cc
@@ -45,3 +56,4 @@ install (FILES
 casa_add_google_test (MODULES singledish SOURCES SingleDish/test/LineFindingUtils_GTest.cc)
 casa_add_google_test (MODULES singledish SOURCES SingleDish/test/LineFinder_GTest.cc)
 casa_add_google_test (MODULES singledish SOURCES SingleDish/test/SingleDishMS_GTest.cc)
+casa_add_google_test (MODULES singledish SOURCES Filler/test/SingleDishMSFiller_GTest.cc)
