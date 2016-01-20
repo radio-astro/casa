@@ -77,6 +77,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
         fracFlaggedSolns = 1.0
         
         # critfrac = context.evla['msinfo'][m.name].critfrac
+        LOG.info("TESTBPDCALS DEBUG:  GET CRITICAL FRACTION")
         critfrac = m.get_vla_critfrac()
 
         '''
@@ -100,17 +101,26 @@ class testBPdcals(basetask.StandardTaskTemplate):
 
         # Iterate and check the fraction of Flagged solutions, each time running gaincal in 'K' mode
         flagcount=0
+        LOG.info("TESTBPDCALS DEBUG:  STARTING FRACFLAGSOLNS LOOP")
         while (fracFlaggedSolns > critfrac and flagcount < 4):
             
             context = self.inputs.context
 
+            LOG.info("TESTBPDCALS DEBUG:  START CALLIBRARY")
             calto = callibrary.CalTo(self.inputs.vis)
             calfrom = callibrary.CalFrom(gaintable=gtypecaltable, interp='', calwt=False)
             context.callibrary._remove(calto, calfrom, context.callibrary._active)
-            
+            LOG.info("TESTBPDCALS DEBUG:  END CALLIBRARY")
+
+            LOG.info("TESTBPDCALS DEBUG:  START K DELAYCAL")
             ktype_delaycal_result = self._do_ktype_delaycal(caltable=ktypecaltable, addcaltable=gtypecaltable, context=context, RefAntOutput=RefAntOutput)
+            LOG.info("TESTBPDCALS DEBUG:  END K DELAYCAL")
+            LOG.info("TESTBPDCALS DEBUG:  START GETCALFLAGSOLN")
             flaggedSolnResult = getCalFlaggedSoln(ktype_delaycal_result.__dict__['inputs']['caltable'])
+            LOG.info("TESTBPDCALS DEBUG:  END GETCALFLAGSOLN")
+            LOG.info("TESTBPDCALS DEBUG:  START CHECK_FLAGSOLNS")
             (fracFlaggedSolns,RefAntOutput)  = self._check_flagSolns(flaggedSolnResult, RefAntOutput)
+            LOG.info("TESTBPDCALS DEBUG:  END CHECK_FLAGSOLNS")
             LOG.info("Fraction of flagged solutions = "+str(flaggedSolnResult['all']['fraction']))
             LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult['antmedian']['fraction']))
             flagcount += 1

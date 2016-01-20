@@ -397,7 +397,7 @@ class Finalcals(basetask.StandardTaskTemplate):
                      'observation'  : '',
                      'keepflags'    : False}
         
-        job = casa_tasks.split2(**task_args)
+        job = casa_tasks.split(**task_args)
             
         return self._executor.execute(job)
     
