@@ -1532,7 +1532,7 @@ HPX HEALPix grid.  -->
     </param>
 
     <param type="double" name="maxpsffraction" subparam="true">
-     <shortdescription>>PSF fraction that marks the minimum depth of cleaning in the minor cycle </shortdescription>
+     <shortdescription>PSF fraction that marks the minimum depth of cleaning in the minor cycle </shortdescription>
 <description>PSF fraction that marks the minimum depth of cleaning in the minor cycle 
 
                        Please refer to the Note under the documentation for 'threshold' that
