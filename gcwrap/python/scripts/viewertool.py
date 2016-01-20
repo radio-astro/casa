@@ -322,6 +322,15 @@ class viewertool(object):
 
         return self.__invoke( dbus.Boolean, bool, self.__state['proxy'].contourlevels, dbus.Array(map( lambda(x): float(x), levels),signature="d"), baselevel, unitlevel, data )
 
+    def contourcolor( self, color="foreground", data=0 ):
+        if type(color) != str or type(data) != int:
+            raise Exception, "contorcolor() takes color name and data id..."
+
+        if self.__state['proxy'] == None:
+            self.__connect( )
+
+        return self.__invoke( dbus.Boolean, bool, self.__state['proxy'].contourcolor, color, data )
+
     def colormap( self, map, data_or_panel=0 ):
         if type(map) != str or type(data_or_panel) != int :
             raise Exception, "colormap() takes a colormap name and an optional panel or data id..."

@@ -273,6 +273,49 @@ namespace casa {
 		return QDBusVariant(QVariant(true));
 	}
 
+	QDBusVariant QtDBusViewerAdaptor::contourcolor( const QString &color, int panel_or_data ) {
+
+		Record rec;
+        std::list<std::string> valid { "foreground", "background", "black", "white", "red",
+                                       "green", "blue", "cyan", "magenta", "yellow", "gray" };
+
+        if ( std::find( valid.begin( ), valid.end(), color.toAscii( ).constData( ) ) == valid.end( ) ) {
+            return error(QString("invalid color '") + color + "'");
+        }
+
+        rec.define( "color", color.toAscii( ).constData( ) );
+
+		QtDisplayData *dd = finddata(panel_or_data);
+
+		if ( dd == 0 ) {
+
+			panelmap::iterator dpiter = managed_panels.find( panel_or_data == 0 ? INT_MAX : panel_or_data );
+
+			if ( dpiter == managed_panels.end( ) ) {
+				char buf[50];
+				sprintf( buf, "%d", panel_or_data );
+				return error(QString("could not find a panel or data with id '") + buf + "'");
+			}
+
+			bool set_color = false;
+			std::list<int> &data = dpiter->second->data( );
+			for ( std::list<int>::iterator diter = data.begin(); diter != data.end(); ++diter ) {
+				datamap::iterator dditer = managed_datas.find(*diter);
+				if ( dditer != managed_datas.end( ) ) {
+					QtDisplayData *dd = dditer->second->data( );
+					if ( dd->displayType( ) == "contour" ) {
+						dd->setOptions(rec,true);
+						set_color = true;
+					}
+				}
+			}
+			return QDBusVariant(QVariant(set_color));
+		}
+
+		dd->setOptions(rec,true);
+		return QDBusVariant(QVariant(true));
+	}
+
 	QDBusVariant QtDBusViewerAdaptor::colormap( const QString &map, int panel_or_data ) {
 		QtDisplayData *dd = finddata(panel_or_data);
 		if ( dd == 0 ) {
