@@ -843,7 +843,8 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
                          'low outlier':6,
                          'too many flags':7,
                          'bad quadrant':8,
-                         'bad antenna':9}
+                         'bad antenna':9,
+                         'too many entirely flagged':10}
     flag_reason_key = {value: key for (key, value) in flag_reason_index.items()}
 
     # override the inherited __init__ method so that references to the
@@ -1075,6 +1076,7 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
       flag_lo=False, flo_limit=5.0, flo_minsample=5,
       flag_tmf1=False, tmf1_axis='Time', tmf1_limit=1.0, tmf1_excess_limit=10000000,
       flag_tmf2=False, tmf2_axis='Time', tmf2_limit=1.0, tmf2_excess_limit=10000000,
+      flag_tmef1=False, tmef1_axis='Antenna1', tmef1_limit=1.0,
       flag_nmedian=False, fnm_lo_limit=0.7, fnm_hi_limit=1.3,
       flag_maxabs=False, fmax_limit=0.1,
       flag_minabs=False, fmin_limit=0.0,
@@ -1128,6 +1130,10 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
               'axis':str.upper(tmf2_axis),
               'limit':tmf2_limit,
               'excess limit':tmf2_excess_limit})
+        if flag_tmef1:
+            rules.append({'name':'too many entirely flagged',
+              'axis':str.upper(tmef1_axis),
+              'limit':tmef1_limit})
 
         return rules
 
@@ -1469,6 +1475,43 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
                             flag_reason[i2flag, j2flag] =\
                               self.flag_reason_index[rulename]
 
+                elif rulename == 'too many entirely flagged':
+ 
+                    maxfraction = rule['limit']
+                    axis = rule['axis']
+                    axis = axis.upper().strip()
+
+                    # if flagging for each element on x-axis (i.e. evaluate column by column)
+                    if axis == xtitle.upper().strip():
+                        
+                        # Determine fraction of columns that are entirely flagged
+                        frac_ef = np.count_nonzero(np.all(flag, axis=1)) / float(flag.shape[0])
+
+                        # If the fraction of "entirely flagged" columns exceeds the limit, then
+                        # all non-flagged data will need to be flagged.
+                        if frac_ef > maxfraction:
+                            
+                            # Indices to flag are all those that are currently not flagged
+                            i2flag = i[np.logical_not(flag)]
+                            j2flag = j[np.logical_not(flag)]
+                            
+                            # Add new flag commands to flag data underlying 
+                            # the view.
+                            flagcoords = zip(xdata[i2flag], ydata[j2flag])
+                            for flagcoord in flagcoords:
+                                newflags.append(arrayflaggerbase.FlagCmd(
+                                  reason='too_many_flags',
+                                  filename=table, rulename=rulename,
+                                  spw=spw, antenna=antenna, 
+                                  axisnames=[xtitle,ytitle],
+                                  flagcoords=flagcoord, pol=pol,
+                                  antenna_id_to_name=antenna_id_to_name))
+
+                            # Flag the view
+                            flag[i2flag, j2flag] = True
+                            flag_reason[i2flag, j2flag] =\
+                              self.flag_reason_index[rulename]
+                
                 elif rulename == 'nmedian':
 
                     # Check for valid median

@@ -1,12 +1,10 @@
 from __future__ import absolute_import
 
-import os
 import re
 import collections
 
 import numpy as np 
 
-from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
@@ -30,7 +28,7 @@ class TsysflagInputs(basetask.StandardInputs):
       flag_derivative=None, fd_max_limit=None,
       flag_edgechans=None, fe_edge_limit=None,
       flag_fieldshape=None, ff_refintent=None, ff_max_limit=None,
-      ff_tmf1_limit=None, 
+      ff_tmf1_limit=None, tmef1_limit=None,
       flag_birdies=None, fb_sharps_limit=None, 
       metric_order=None):
 
@@ -164,6 +162,16 @@ class TsysflagInputs(basetask.StandardInputs):
         self._ff_tmf1_limit = value
 
     @property
+    def tmef1_limit(self):
+        return self._tmef1_limit
+
+    @tmef1_limit.setter
+    def tmef1_limit(self, value):
+        if value is None:
+            value = 0.666
+        self._tmef1_limit = value
+
+    @property
     def flag_birdies(self):
         return self._flag_birdies
 
@@ -226,16 +234,28 @@ class Tsysflag(basetask.StandardTaskTemplate):
             if metric == 'birdies' and inputs.flag_birdies:
                 metrics_to_evaluate.append(metric)
 
-        # TODO: if ff_tmf1_limit or ff_tmf2_limit is set, these need to be passed
-        # only once, to the metric among "nmedian", "derivative" and "fieldshape" 
-        # that is run last.
-
         # Store order of metrics in result
         result.metric_order = metrics_to_evaluate
+
+        # The "too many flags" or "too many entirely flagged" metrics should be
+        # added to the matrix-flagging-metric that is to be evaluated last.
+        # Determine which of the matrix metrics will be evaluated last:
+        matrix_metrics = ['nmedian','derivative','fieldshape']
+        matrix_metric_evaluated = [metric for metric in metrics_to_evaluate if metric in matrix_metrics]
+        if matrix_metric_evaluated:
+            last_matrix_metric = matrix_metric_evaluated[-1]
+        else:
+            last_matrix_metric = None
+            LOG.warning("No matrix-flagging metrics enabled ({0}), ".format(', '.join(matrix_metrics)) + \
+              "cannot evaluate the 'too many flags' or 'too many entirely flagged' metrics.")
         
-        # Run flagger for each metric
+        # Run flagger for each metric, adding the "too many" metrics to the last 
+        # last matrix metric to be run.
         for metric in metrics_to_evaluate:
-            result.add(metric, self.run_flagger(metric))
+            if metric == last_matrix_metric:
+                result.add(metric, self.run_flagger(metric, flag_tmf1=True, flag_tmef1=True))
+            else:
+                result.add(metric, self.run_flagger(metric))
 
         # Extract before and after flagging summaries from individual results:
         stats_before = result.components[metrics_to_evaluate[0]].summaries[0]
@@ -249,7 +269,7 @@ class Tsysflag(basetask.StandardTaskTemplate):
     def analyse(self, result):
         return result
     
-    def run_flagger(self, metric):
+    def run_flagger(self, metric, flag_tmf1=False, flag_tmef1=False):
 
         LOG.info('flag '+metric)
         inputs = self.inputs
@@ -260,8 +280,7 @@ class Tsysflag(basetask.StandardTaskTemplate):
         # Load the input tsys caltable
         tsystable = caltableaccess.CalibrationTableDataFiller.getcal(inputs.caltable)        
 
-        # FIXME: store self.inputs.vis or tsystable.vis?
-        # this is used e.g. by image.py
+        # Store the vis from the tsystable in the result
         result.vis = tsystable.vis
 
         # Get the Tsys spw map by retrieving it from the first tsys CalFrom 
@@ -313,17 +332,25 @@ class Tsysflag(basetask.StandardTaskTemplate):
             rules = flagger.make_flag_rules (
               flag_maxabs=True, fmax_limit=inputs.fd_max_limit)
         elif metric == 'fieldshape':
-            # FIXME: tmf1 should be flexibly added to the last MatrixFlagger call, which 
-            # need not always be 'fieldshape'.
             rules = flagger.make_flag_rules (
-              flag_maxabs=True, fmax_limit=inputs.ff_max_limit,
-              flag_tmf1=True, tmf1_axis='Antenna1', tmf1_limit=inputs.ff_tmf1_limit)
+              flag_maxabs=True, fmax_limit=inputs.ff_max_limit)
         elif metric == 'birdies':
             rules = flagger.make_flag_rules(
               flag_sharps=True, sharps_limit=inputs.fb_sharps_limit)
         elif metric == 'edgechans':
             rules = flagger.make_flag_rules(
               flag_edges=True, edge_limit=inputs.fe_edge_limit)
+
+        # If requested, add the 'too many flags' or 'too many entirely flagged' metric to 
+        # the list of flagging rules.
+        if flag_tmf1:
+            extra_rule = flagger.make_flag_rules (
+              flag_tmf1=True, tmf1_axis='Antenna1', tmf1_limit=inputs.ff_tmf1_limit)
+            rules.extend(extra_rule)
+        if flag_tmef1:
+            extra_rule = flagger.make_flag_rules (
+              flag_tmef1=True, tmef1_axis='Antenna1', tmef1_limit=inputs.tmef1_limit)
+            rules.extend(extra_rule)
 
         # Construct the flagger task around the data view task and the
         # flagsetter task.
@@ -333,18 +360,9 @@ class Tsysflag(basetask.StandardTaskTemplate):
           rules=rules, niter=1, prepend='flag {0} - '.format(metric))
         flaggertask = flagger(flaggerinputs)
 
-#         # Create a "before" summary of the flagging state
-#         # FIXME: change to extract the before and after summaries from the individual results
-#         summary_job = casa_tasks.flagdata(vis=inputs.caltable, mode='summary')
-#         stats_before = self._executor.execute(summary_job)
-
         # Execute the flagger task
         flaggerresult = self._executor.execute(flaggertask)
         
-#         # Create an "after" summary of the flagging state
-#         summary_job = casa_tasks.flagdata(vis=inputs.caltable, mode='summary')
-#         stats_after = self._executor.execute(summary_job)
-
         # Import views, flags, and "measurement set or caltable to flag"
         # into final result
         result.importfrom(flaggerresult)
@@ -356,8 +374,6 @@ class Tsysflag(basetask.StandardTaskTemplate):
         
         # Copy flagging summaries to final result
         result.summaries = flaggerresult.summaries
-#         # Copy flagging summaries to final result        
-#         result.summaries = [stats_before, stats_after]
 
         return result
 
@@ -400,6 +416,10 @@ class TsysflagView(object):
                           antenna/scan from the median over all
                           scans for that antenna in the selected fields
                           in the SpW.
+                        'edgechans' gives median Tsys spectra for each
+                          spw.
+                        'birdies' gives difference spectra between
+                          the antenna median spectra and spw median.
         refintent -- data with this intent will be used to
                      calculate the 'reference' Tsys shape to which
                      other data will be compared, in some views.
@@ -411,7 +431,6 @@ class TsysflagView(object):
 
         # Set group of intents-of-interest based on metric:
         if self.metric == 'edgechans':
-            # self.intentgroups = ['ATMOSPHERE,BANDPASS,AMPLITUDE']
             self.intentgroups = ['ATMOSPHERE','BANDPASS','AMPLITUDE']
         else:
             self.intentgroups = ['ATMOSPHERE']
@@ -425,8 +444,6 @@ class TsysflagView(object):
         self.result = TsysflagViewResults()
 
         if data.table:
-            LOG.info ('Computing flagging metrics for caltable %s ' % (
-              os.path.basename(data.table)))
             self.calculate_views(data.table)
 
         return self.result
@@ -535,7 +552,7 @@ class TsysflagView(object):
 
         # Select Tsysspectra and corresponding times for specified spwid and fieldids
         tsysspectra, times, _ = self.get_tsystable_data(tsystable,
-          spwid, fieldids, antenna_names, pols, normalise=True)
+          spwid, fieldids, antenna_names, corr_type, normalise=True)
 
         # Create separate flagging views for each polarisation
         for pol in pols:
@@ -644,7 +661,7 @@ class TsysflagView(object):
 
         # Select Tsysspectra and corresponding times for specified spwid and fieldids
         tsysspectra, times, _ = self.get_tsystable_data(tsystable,
-          spwid, fieldids, antenna_names, pols, normalise=True)
+          spwid, fieldids, antenna_names, corr_type, normalise=True)
 
         # Create separate flagging views for each polarisation
         for pol in pols:
@@ -684,7 +701,7 @@ class TsysflagView(object):
                 tsysmedian = commonresultobjects.SpectrumResult(
                   data=stackmedian, 
                   datatype='Median Normalised Tsys',
-                  filename=tsystable.name, spw=spwid, pol=pol,
+                  filename=tsystable.name, spw=spwid, pol=corr_type[pol][0],
                   intent=intent)
                 tsysmedians.addview(tsysmedian.description, tsysmedian)
 
@@ -776,7 +793,7 @@ class TsysflagView(object):
 
         # Select Tsysspectra and corresponding times for specified spwid and fieldids
         tsysspectra, times, _ = self.get_tsystable_data(tsystable,
-          spwid, fieldids, antenna_names, pols, normalise=True)
+          spwid, fieldids, antenna_names, corr_type, normalise=True)
 
         # Get ids of fields for reference spectra
         referencefieldids = self.intent_ids(refintent, self.ms)
@@ -948,8 +965,7 @@ class TsysflagView(object):
 
         # Select Tsysspectra and corresponding times for specified spwid and fieldids
         tsysspectra, _, _ = self.get_tsystable_data(tsystable, spwid, fieldids, 
-                                                                antenna_names, pols,
-                                                                normalise=True)
+          antenna_names, corr_type, normalise=True)
 
         # Initialize a stack of all Tsys spectra
         spectrumstack = None
@@ -1020,7 +1036,7 @@ class TsysflagView(object):
 
         # Select Tsysspectra and corresponding times for specified spwid and fieldids
         tsysspectra, _, _ = self.get_tsystable_data(tsystable,
-          spwid, fieldids, antenna_names, pols, normalise=True)
+          spwid, fieldids, antenna_names, corr_type, normalise=True)
 
         # Initialize spectrum stacks for antennas and for spw
         spw_spectrumstack = None
@@ -1102,7 +1118,7 @@ class TsysflagView(object):
                 self.result.addview(viewresult.description, viewresult)
 
 
-    def get_tsystable_data(self, tsystable, spwid, fieldids, antenna_names, pols, normalise=None):
+    def get_tsystable_data(self, tsystable, spwid, fieldids, antenna_names, corr_type, normalise=None):
 
         # Initialize a dictionary of Tsys spectra results and corresponding times
         tsysspectra = collections.defaultdict(TsysflagspectraResults)
@@ -1113,6 +1129,8 @@ class TsysflagView(object):
         else:
             datatype = 'Tsys'
 
+        pols = range(len(corr_type))
+        
         # Select rows from tsystable that match the specified spw and fields,
         # store a Tsys spectrum for each polarisation in the tsysspectra results
         # and store the corresponding time.
@@ -1129,7 +1147,7 @@ class TsysflagView(object):
                       spw=row.get('SPECTRAL_WINDOW_ID'),
                       ant=(row.get('ANTENNA1'),
                       antenna_names[row.get('ANTENNA1')]), units='K',
-                      pol=pol,
+                      pol=corr_type[pol][0],
                       time=row.get('TIME'), normalise=normalise)
 
                     tsysspectra[pol].addview(tsysspectrum.description,
