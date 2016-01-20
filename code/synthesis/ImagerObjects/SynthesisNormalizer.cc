@@ -190,7 +190,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     //    os << "In ScatterModel : " << itsPartImages.nelements() << " for " << itsPartImageNames << LogIO::POST;
 
-    if( itsPartImages.nelements() > 0 )
+    if( itsPartImages.nelements() > 0 && itsImages->doesImageExist(itsImages->getName()+".model") )
       {
 	os << "Send the model from : " << itsImageName << " to all nodes :" << itsPartImageNames << LogIO::POST;
 	
@@ -201,7 +201,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
 	itsImages->releaseLocks();
       }
-  }// end of gatherImages
+  }// end of scatterModel
 
   void SynthesisNormalizer::scatterWeightDensity()
   {
