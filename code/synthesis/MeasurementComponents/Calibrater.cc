@@ -50,6 +50,7 @@
 #include <synthesis/CalTables/CLPatchPanel.h>
 #include <synthesis/MeasurementComponents/VisCalSolver.h>
 #include <synthesis/MeasurementComponents/UVMod.h>
+#include <synthesis/MeasurementComponents/TsysGainCal.h>
 #include <msvis/MSVis/VisSetUtil.h>
 #include <msvis/MSVis/VisBuffAccumulator.h>
 #include <msvis/MSVis/VisibilityIterator2.h>
@@ -1683,6 +1684,8 @@ Bool Calibrater::initWeights(String wtmode, Bool dowtsp) {
       WEIGHT,  // SIGMA, WEIGHT as are, propagate to WEIGHT_SEPCTRUM (if requested)
       DELWTSP,  // just delete WEIGHT_SPECTRUM if it exists
       DELSIGSP,  // just delete SIGMA_SPECTRUM if it exists
+//      TSYS,    // SIGMA=Tsys/sqrt(f*chw), propagate to WEIGHT, WEIGHT_SPECTRUM
+//      TINTTSYS,    // SIGMA=Tsys/sqrt(f*chw*dt), propagate to WEIGHT, WEIGHT_SPECTRUM
     };
     
     // Translate mode String to enum value
@@ -1693,6 +1696,8 @@ Bool Calibrater::initWeights(String wtmode, Bool dowtsp) {
     else if (wtmode=="weight") initmode=WEIGHT;
     else if (wtmode=="delwtsp") initmode=DELWTSP;
     else if (wtmode=="delsigsp") initmode=DELSIGSP;
+//    else if (wtmode=="tsys") initmode=TSYS;
+//    else if (wtmode=="tinttsys") initmode=TINTTSYS;
 
     // Detect WEIGHT_SPECTRUM
     TableDesc mstd = ms_p->actualTableDesc();
@@ -1757,7 +1762,15 @@ Bool Calibrater::initWeights(String wtmode, Bool dowtsp) {
       if (!dowtsp)
 	throw(AipsError("Specified wtmode requires dowtsp=T"));
       break;
-    } 
+    }
+//    case TSYS: {
+//        logSink() << "Initializing SIGMA and WEIGHT according to channel bandwidth and Tsys. NOTE this is an expert mode." << LogIO::WARN;
+//        break;
+//    }
+//    case TINTTSYS: {
+//        logSink() << "Initializing SIGMA and WEIGHT according to channel bandwidth, integration time, and Tsys. NOTE this is an expert mode." << LogIO::WARN;
+//        break;
+//    }
     }
 
     // Force dowtsp if the column already exists
@@ -1866,6 +1879,8 @@ Bool Calibrater::initWeights(String wtmode, Bool dowtsp) {
 	}	  
 
 	// Init WEIGHT, SIGMA  from bandwidth & time
+//	case TSYS:
+//	case TINTTSYS:
 	case NYQ: {
 
 	  Matrix<Float> newwt(ncor,nrow),newsig(ncor,nrow);
@@ -1974,6 +1989,284 @@ Bool Calibrater::initWeights(String wtmode, Bool dowtsp) {
     retval = False;  // Not that it ever gets here...
   }
   return retval;
+}
+
+Bool Calibrater::initWeightsWithTsys(String wtmode, Bool dowtsp,
+		String tsystable, String gainfield, String interp, Vector<Int> spwmap) {
+
+	logSink() << LogOrigin("Calibrater", "initWeightsWithTsys")
+			<< LogIO::NORMAL;
+	Bool retval = true;
+
+	try {
+
+		if (!ok())
+			throw(AipsError("Calibrater not prepared for initWeights!"));
+
+		String uptype = calTableType(tsystable);
+		if (!uptype.contains("TSYS")) {
+			throw(AipsError(
+					"Invalid calibration table type for Tsys weighting."));
+		}
+		// Set record format for calibration table application information
+		RecordDesc applyparDesc;
+		applyparDesc.addField("t", TpDouble);
+		applyparDesc.addField("table", TpString);
+		applyparDesc.addField("interp", TpString);
+		applyparDesc.addField("spw", TpArrayInt);
+		applyparDesc.addField("fieldstr", TpString);
+		applyparDesc.addField("calwt", TpBool);
+		applyparDesc.addField("spwmap", TpArrayInt);
+		applyparDesc.addField("opacity", TpArrayDouble);
+
+		// Create record with the requisite field values
+		Record applypar(applyparDesc);
+		applypar.define("t", 0.0);
+		applypar.define("table", tsystable);
+		applypar.define("interp", interp);
+		applypar.define("spw", getSpwIdx(""));
+		applypar.define("fieldstr", gainfield);
+		applypar.define("calwt", true);
+		applypar.define("spwmap", spwmap);
+		applypar.define("opacity", Vector<Double>(1, 0.0));
+
+		cout << "Now start initializing VisSet" << endl;
+		if (!vs_p) {
+			selectvis();
+		}
+		cout << "Start creating VisCal" << endl;
+		StandardTsys vc = StandardTsys(*vs_p);
+		cout << "Setting apply par" << endl;
+		vc.setApply(applypar);
+		cout << "Generated VisCal" << endl;
+
+		logSink() << LogIO::NORMAL << ".   " << vc.applyinfo() << LogIO::POST;
+		PtrBlock<VisCal*> vcb(1, &vc);
+		// Maintain sort of apply list
+		ve_p->setapply(vcb);
+
+		// Detect WEIGHT_SPECTRUM
+		TableDesc mstd = ms_p->actualTableDesc();
+		String colWtSp = MS::columnName(MS::WEIGHT_SPECTRUM);
+		Bool wtspexists = mstd.isColumn(colWtSp);
+//		String colSigSp = MS::columnName(MS::SIGMA_SPECTRUM);
+//		Bool sigspexists = mstd.isColumn(colSigSp);
+
+		// Some log info
+		bool use_exposure = false;
+		if (wtmode == "tsys") {
+			logSink()
+					<< "Initializing SIGMA and WEIGHT according to channel bandwidth and Tsys. NOTE this is an expert mode."
+					<< LogIO::WARN << LogIO::POST;
+		} else if (wtmode == "tinttsys") {
+			logSink()
+					<< "Initializing SIGMA and WEIGHT according to channel bandwidth, integration time, and Tsys. NOTE this is an expert mode."
+					<< LogIO::WARN << LogIO::POST;
+			use_exposure = true;
+		} else {
+			throw(AipsError("Unrecognized wtmode specified: " + wtmode));
+		}
+
+		// Force dowtsp if the column already exists
+		if (wtspexists && !dowtsp) {
+			logSink() << "Found WEIGHT_SPECTRUM; will force its initialization."
+					<< LogIO::POST;
+			dowtsp = True;
+		}
+
+		// Report that we are initializing the WEIGHT_SPECTRUM, and prepare to do so.
+		if (dowtsp) {
+
+			// Ensure WEIGHT_SPECTRUM really exists at all
+			//   (often it exists but is empty)
+			if (!wtspexists) {
+				logSink() << "Creating WEIGHT_SPECTRUM." << LogIO::POST;
+
+				// Nominal defaulttileshape
+				IPosition dts(3, 4, 32, 1024);
+
+				// Discern DATA's default tile shape and use it
+				const Record dminfo = ms_p->dataManagerInfo();
+				for (uInt i = 0; i < dminfo.nfields(); ++i) {
+					Record col = dminfo.asRecord(i);
+					//if (upcase(col.asString("NAME"))=="TILEDDATA") {
+					if (anyEQ(col.asArrayString("COLUMNS"), String("DATA"))) {
+						dts = IPosition(
+								col.asRecord("SPEC").asArrayInt(
+										"DEFAULTTILESHAPE"));
+						//cout << "Found DATA's default tile: " << dts << endl;
+						break;
+					}
+				}
+
+				// Add the column
+				String colWtSp = MS::columnName(MS::WEIGHT_SPECTRUM);
+				TableDesc tdWtSp;
+				tdWtSp.addColumn(
+						ArrayColumnDesc<Float>(colWtSp, "weight spectrum", 2));
+				TiledShapeStMan wtSpStMan("TiledWgtSpectrum", dts);
+				ms_p->addColumn(tdWtSp, wtSpStMan);
+			} else
+				logSink() << "Found WEIGHT_SPECTRUM." << LogIO::POST;
+
+			logSink()
+					<< "Initializing WEIGHT_SPECTRUM uniformly in channel (==WEIGHT)."
+					<< LogIO::POST;
+
+		}
+
+		// Arrange for iteration over data
+		//  TBD: Be sure this sort is optimal for creating WS?
+		Block<Int> columns;
+		// include scan iteration
+		columns.resize(5);
+		columns[0] = MS::ARRAY_ID;
+		columns[1] = MS::SCAN_NUMBER;
+		columns[2] = MS::FIELD_ID;
+		columns[3] = MS::DATA_DESC_ID;
+		columns[4] = MS::TIME;
+
+		vi::SortColumns sc(columns);
+		vi::VisibilityIterator2 vi2(*ms_p, sc, True);
+		vi::VisBuffer2 *vb = vi2.getVisBuffer();
+
+		ROMSColumns mscol(*ms_p);
+		const ROMSSpWindowColumns& msspw(mscol.spectralWindow());
+		uInt nSpw = msspw.nrow();
+		Vector<Double> effChBw(nSpw, 0.0);
+		for (uInt ispw = 0; ispw < nSpw; ++ispw) {
+			effChBw[ispw] = mean(msspw.effectiveBW()(ispw));
+		}
+
+		Int ivb(0);
+		for (vi2.originChunks(); vi2.moreChunks(); vi2.nextChunk()) {
+
+			for (vi2.origin(); vi2.more(); vi2.next(), ++ivb) {
+
+				Int spw = vb->spectralWindows()(0);
+
+				Int nrow = vb->nRows();
+				Int nchan = vb->nChannels();
+				Int ncor = vb->nCorrelations();
+
+				if (ve_p->spwOK(spw)) {
+
+					// Re-initialize weight info from sigma info
+					//   This is smart wrt spectral weights, etc.
+					//   (this makes W and WS, if present, "dirty" in the vb)
+					// TBD: only do this if !trial (else: avoid the I/O)
+					// vb->resetWeightsUsingSigma();
+					// Prepare for WEIGHT_SPECTRUM, if nec.
+					Cube<Float> newwtsp(0, 0, 0);
+					if (dowtsp) {
+						newwtsp.resize(ncor, nchan, nrow);
+						newwtsp.set(1.0);
+					}
+
+					// Handle non-trivial modes
+					// Init WEIGHT, SIGMA  from bandwidth & time
+					Matrix<Float> newwt(ncor, nrow), newsig(ncor, nrow);
+					newwt.set(1.0);
+					newsig.set(1.0);
+
+					// Detect ACs
+					const Vector<Int> a1(vb->antenna1());
+					const Vector<Int> a2(vb->antenna2());
+					Vector<Bool> ac(a1 == a2);
+
+					// XCs need an extra factor of 2
+					Vector<Float> xcfactor(nrow, 2.0);
+					xcfactor(ac) = 1.0;				// (but not ACs)
+
+					// The row-wise integration time
+					Vector<Float> expo(nrow);
+					convertArray(expo, vb->exposure());
+
+					// Set weights to channel bandwidth first.
+					newwt.set(Float(effChBw(spw)));
+
+					// For each correlation, apply exposure and xcfactor
+					for (Int icor = 0; icor < ncor; ++icor) {
+
+						Vector<Float> wt(newwt.row(icor));
+						if (use_exposure) {
+							wt *= expo;
+						}
+						wt *= xcfactor;
+						if (dowtsp) {
+							for (Int ich = 0; ich < nchan; ++ich) {
+								Vector<Float> wtspi(
+										newwtsp(Slice(icor, 1, 1),
+												Slice(ich, 1, 1), Slice()).nonDegenerate(
+												IPosition(1, 2)));
+								wtspi = wt;
+							}
+						}
+					}
+
+					// sig from wt is inverse sqrt
+					newsig = 1.0f / sqrt(newwt);
+
+					// Arrange write-back of both SIGMA and WEIGHT
+					vb->setSigma(newsig);
+					vb->setWeight(newwt);
+					// Handle WEIGHT_SPECTRUM
+					if (dowtsp) {
+					  vb->initWeightSpectrum(newwtsp);
+					}
+					// Force writeback to disk (need to initialize weight/sigma before applying cal table)
+					vb->writeChangesBack();
+
+					// Arrange for _in-place_ apply on CORRECTED_DATA (init from DATA)
+					//   (this makes CD "dirty" in the vb)
+					// TBD: only do this if !trial (else: avoid the I/O)
+					vb->setVisCubeCorrected(vb->visCube());
+
+					// Make flagcube dirty in the vb
+					//  NB: we must _always_ do this I/O  (even trial mode)
+					vb->setFlagCube(vb->flagCube());
+
+					// Make all vb "not dirty"; we'll carefully arrange the writeback below
+					vb->dirtyComponentsClear();
+
+					// throws exception if nothing to apply
+					ve_p->correct2(*vb, False, dowtsp);
+
+					if (dowtsp) {
+						vb->setWeightSpectrum(vb->weightSpectrum());
+						// If WS was calibrated, set W to its channel-axis median
+						vb->setWeight(
+								partialMedians(vb->weightSpectrum(),
+										IPosition(1, 1)));
+					} else {
+						vb->setWeight(vb->weight());
+					}
+					newsig = 1.0f / sqrt(vb->weight());
+					vb->setSigma(newsig);
+
+					// Force writeback to disk
+					vb->writeChangesBack();
+
+//					// Handle WEIGHT_SPECTRUM
+//					if (dowtsp)
+//						vb->initWeightSpectrum(newwtsp);
+
+				}
+			}
+		}
+
+	} catch (AipsError x) {
+		logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg()
+				<< LogIO::POST;
+
+		logSink() << "Resetting all calibration application settings."
+				<< LogIO::POST;
+		unsetapply();
+
+		throw(AipsError("Error in Calibrater::initWeights."));
+		retval = False;  // Not that it ever gets here...
+	}
+	return retval;
 }
 
 Bool Calibrater::initWeights(Bool doBT, Bool dowtsp) {

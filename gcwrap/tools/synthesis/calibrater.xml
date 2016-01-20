@@ -1355,6 +1355,26 @@ cb.close()
      <description>Initialize WEIGHT_SPECTRUM column</description>
      <value>false</value>
      </param>
+	<param type="string" direction="in" name="tsystable">
+		<description>Tsys calibration table to apply on the fly</description>
+		<value></value>
+	</param>
+
+	<param type="string" direction="in" name="gainfield">
+		<description>Select a subset of calibrators from Tsys caltable</description>
+		<value></value>
+	</param>
+
+	<param type="string" direction="in" name="interp">
+		<description>Interp type in time[,freq]. default==linear,linear</description>
+		<value></value>
+	</param>
+
+	<param type="intArray" direction="in" name="spwmap">
+		<description>Spectral windows combinations to form for gaintables(s)</description>
+		<value></value>
+	</param>
+
 </input>
 
 

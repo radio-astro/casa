@@ -181,6 +181,8 @@ class Calibrater
   // Initialize sigma/weight, and possibly weight_spectrum
   Bool initWeights(String wtmode, Bool dowtsp=False);
   Bool initWeights(Bool doBT=True, Bool dowtsp=False);
+  Bool initWeightsWithTsys(String wtmode, Bool dowtsp=False, String tsystable="",
+			String gainfield="", String interp="linear", Vector<Int> spwmap=Vector<Int>());
 
   // Solve for a given calibration component
   Bool solve();

@@ -23,12 +23,57 @@
                        <value>ones</value>
                        <value>delwtsp</value>
                        <value>delsigsp</value>
+                       <value>tsys</value>
+                       <value>tinttsys</value>
                 </allowed>
 	</param>
+	<param type="string" name="tsystable" mustexist="false"  subparam="true">
+		<description>Tsys calibration table to apply on the fly</description>
+		<value></value>
+	</param>
+
+	<param type="string" name="gainfield" subparam="true">
+		<description>Select a subset of calibrators from Tsys table</description>
+		<value></value>
+	</param>
+
+	<param type="string" name="interp" subparam="true">
+		<description>Interp type in time[,freq]. default==linear,linear</description>
+		<value></value>
+	</param>
+
+	<param type="intArray" name="spwmap" subparam="true">
+		<description>Spectral windows combinations to form for gaintables(s)</description>
+		<value></value>
+	</param>
+
 	<param type="bool" name="dowtsp">
 		<description>Initialize the WEIGHT_SPECTRUM column.</description>
 		<value>False</value>
 	</param>
+
+   <constraints>
+        <when param="wtmode">
+                <equals value="nyq"/>
+                <equals value="sigma"/>
+                <equals value="weight"/>
+                <equals value="ones"/>
+                <equals value="delwtsp"/>
+                <equals value="delsigsp"/>
+                <equals value="tsys">
+                        <default param="tsystable"><value type="string"/></default>
+                        <default param="gainfield"><value type="string"/></default>
+                        <default param="interp"><value type="string"/></default>
+                        <default param="spwmap"><value type="intArray"/></default>
+		</equals>
+                <equals value="tinttsys">
+                        <default param="tsystable"><value type="string"/></default>
+                        <default param="gainfield"><value type="string"/></default>
+                        <default param="interp"><value type="string"/></default>
+                        <default param="spwmap"><value type="intArray"/></default>
+		</equals>
+        </when>
+   </constraints>
 	</input>
 <returns type="void"/>
 
