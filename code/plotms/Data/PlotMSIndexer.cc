@@ -1394,7 +1394,7 @@ String PlotMSIndexer::iterValue() {
 		label += (ant1>-1 ? plotmscache_->antstanames_(ant1) : "*")+" & ";
 		label += (ant2>-1 ? plotmscache_->antstanames_(ant2) : "*");
         // CAS-4239 add baseline length to plot title
-        String bsnLen = String::format("_%.0fm", computeBaselineLength(ant1, ant2));
+        String bsnLen = ((ant1>-1 && ant2>-1) ? String::format("_%.0fm", computeBaselineLength(ant1, ant2)) : "_*m");
         label += bsnLen;
 		return label;
 		break;

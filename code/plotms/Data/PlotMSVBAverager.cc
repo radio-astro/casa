@@ -187,10 +187,10 @@ void PlotMSVBAverager::finalizeAverage()
 	avgWeight_.resize(nCorr_p,nChan_p,nBln,True);
       avgFlagRow_.resize(nBln,True);
       avgFlagCube_.resize(nCorr_p,nChan_p,nBln,True);
-      fieldid_.resize(nBln);
-      spw_.resize(nBln);
-      obsid_.resize(nBln);
-      stateid_.resize(nBln);
+      fieldid_.resize(nBln, True);
+      spw_.resize(nBln, True);
+      obsid_.resize(nBln, True);
+      stateid_.resize(nBln, True);
     }
 
     // Time:
@@ -218,7 +218,6 @@ void PlotMSVBAverager::finalizeAverage()
     avBuf_p->setSpectralWindows(spw_);
     avBuf_p->setObservationId(obsid_);
     avBuf_p->setStateId(stateid_);
-
     //    cout << "final amp = " << amplitude(avBuf_p->visCube()) << endl;
     //    cout << "final flagR = " << boolalpha << avBuf_p->flagRow() << endl;
     //    cout << "final flagC = " << boolalpha << avBuf_p->flagCube() << endl;
@@ -317,10 +316,10 @@ void PlotMSVBAverager::initialize(vi::VisBuffer2& vb)
   }
 
   // Resize 
-  fieldid_.resize(nBlnMax_p);
-  spw_.resize(nBlnMax_p);
-  obsid_.resize(nBlnMax_p);
-  stateid_.resize(nBlnMax_p);
+  fieldid_.resize(nBlnMax_p, True);
+  spw_.resize(nBlnMax_p, True);
+  obsid_.resize(nBlnMax_p, True);
+  stateid_.resize(nBlnMax_p, True);
   // Resize and initialize everything else
   avgTime_.resize(nBlnMax_p, False); 
   avgTime_.set(0.0);
