@@ -1042,8 +1042,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool emptymodel=True;
     for(uInt tix=0;tix<itsNTerms;tix++)
       {
-	///	if( fabs( sum(model(tix)->get()) ) > 1e-08  ) emptymodel=False;
-	if( fabs( getModelFlux(tix) ) > 1e-08  ) emptymodel=False;
+	//if( fabs( getModelFlux(tix) ) > 1e-08  ) emptymodel=False;
+	if( doesImageExist(itsImageName+String(".model.tt")+String::toString(tix)) && 
+	    fabs( getModelFlux(tix) ) > 1e-08  ) emptymodel=False;
       } 
     return  emptymodel;
   }

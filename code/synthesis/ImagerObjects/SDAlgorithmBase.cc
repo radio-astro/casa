@@ -131,15 +131,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    startpeakresidual = peakresidual;
 	    startmodelflux = modelflux;
 
-	    // Record info about the start of the minor cycle iterations
-	    loopcontrols.addSummaryMinor( deconvolverid, chanid+polid*nSubChans, 
-					  modelflux, peakresidual );
-	    
 	    stopCode = checkStop( loopcontrols,  peakresidual );
 
 	    if( validMask && stopCode==0 )
 	      {
 		
+		// Record info about the start of the minor cycle iterations
+		loopcontrols.addSummaryMinor( deconvolverid, chanid+polid*nSubChans, 
+					      modelflux, peakresidual );
+
+		// Init the deconvolver
 		initializeDeconvolver();
 		
 		while ( stopCode==0 )

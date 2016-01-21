@@ -2172,7 +2172,8 @@ Float SIImageStore::getModelFlux(uInt term)
   // Check for non-zero model (this is different from getting model flux, for derived SIIMMT)
 Bool SIImageStore::isModelEmpty()
   {
-    return  ( fabs( getModelFlux(0) ) < 1e-08 );
+    if( ! doesImageExist(itsImageName+imageExts(MODEL)) ) return True;
+    else return  ( fabs( getModelFlux(0) ) < 1e-08 );
   }
 
   // Calculate the PSF sidelobe level...

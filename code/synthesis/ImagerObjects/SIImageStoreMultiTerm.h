@@ -152,7 +152,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
 
   virtual Bool hasSensitivity(){return itsWeights.nelements()>0 && itsWeights[0];}
-  virtual Bool hasModel() {return itsModels.nelements()>0 && itsModels[0];}
+  //  virtual Bool hasModel() {return itsModels.nelements()>0 && itsModels[0];}
+  virtual Bool hasModel() {return doesImageExist(itsImageName+imageExts(MODEL)+String(".tt0"));}
   virtual Bool hasPsf(){return itsPsfs.nelements()>0 && itsPsfs[0];}
   virtual Bool hasResidual() {return itsResiduals.nelements()>0 && itsResiduals[0];}
   virtual Bool hasSumWt() {return itsSumWts.nelements()>0 && itsSumWts[0];}

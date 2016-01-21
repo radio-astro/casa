@@ -215,7 +215,7 @@ class testref_base(unittest.TestCase):
                   imexist=None,  # list of image names
                   imexistnot=None, # list of image names
                   imval=None,  # list of tuples of (imagename,val,pos)
-                  tabcache=False
+                  tabcache=True
                   ):
           pstr = ""
 

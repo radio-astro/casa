@@ -160,7 +160,8 @@ class SIImageStore
   //virtual Bool hasPB(){return (bool) itsPB;}
 
   virtual Bool hasMask(){return (bool) itsMask; }
-  virtual Bool hasModel() {return (bool) itsModel;}
+  //  virtual Bool hasModel() {return (bool) itsModel;}
+  virtual Bool hasModel() {return doesImageExist(itsImageName+imageExts(MODEL));}
   virtual Bool hasPsf() {return (bool) itsPsf;}
   virtual Bool hasResidual() {return (bool) itsResidual;}
   virtual Bool hasSumWt() {return (bool) itsSumWt;}
