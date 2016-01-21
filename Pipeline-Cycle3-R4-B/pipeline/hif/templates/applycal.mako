@@ -276,8 +276,8 @@ def space_comma(s):
 		${rx_for_plot(plot)}
 	</%def>
 
-	<%def name="caption_text(plot, intent)"> 
-		${intent.capitalize()} calibrator: 
+	<%def name="caption_text(plot, intent)">
+		${'%s %s' % (intent.capitalize(), 'source' if intent.upper() == 'CHECK' else 'calibrator')}:
 		${utils.commafy(utils.safe_split(plot.parameters['field']), quotes=False)}.
 	</%def>
 
@@ -320,7 +320,7 @@ def space_comma(s):
 	</%def>
 
 	<%def name="caption_text(plot, intent)">
-		${intent.capitalize()} calibrator: 
+		${'%s %s' % (intent.capitalize(), 'source' if intent.upper() == 'CHECK' else 'calibrator')}:
 		${utils.commafy(utils.safe_split(plot.parameters['field']), quotes=False)}.
 	</%def>
 
@@ -361,8 +361,9 @@ def space_comma(s):
 		${rx_for_plot(plot)}
 	</%def>
 
-	<%def name="caption_text(plot, intent)"> 
-		${utils.commafy(plot.parameters['intent'], False)} calibrator: ${plot.parameters['field']}
+	<%def name="caption_text(plot, intent)">
+        ${utils.commafy(plot.parameters['intent'], False)} ${'source' if intent.upper() == 'CHECK' else 'calibrator'}:
+        ${plot.parameters['field']}
 	</%def>
 
 </%self:plot_group>
