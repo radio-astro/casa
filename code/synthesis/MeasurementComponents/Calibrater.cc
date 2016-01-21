@@ -2030,15 +2030,14 @@ Bool Calibrater::initWeightsWithTsys(String wtmode, Bool dowtsp,
 		applypar.define("spwmap", spwmap);
 		applypar.define("opacity", Vector<Double>(1, 0.0));
 
-		cout << "Now start initializing VisSet" << endl;
-		if (!vs_p) {
-			selectvis();
+		if (vc_p.nelements() > 0) {
+			logSink() << LogIO::WARN << "Resetting all calibration application settings." << LogIO::POST;
+			unsetapply();
 		}
-		cout << "Start creating VisCal" << endl;
+		logSink() << LogIO::NORMAL << "Weight initialization does not support selection. Resetting MS selection." << LogIO::POST;
+		selectvis();
 		StandardTsys vc = StandardTsys(*vs_p);
-		cout << "Setting apply par" << endl;
 		vc.setApply(applypar);
-		cout << "Generated VisCal" << endl;
 
 		logSink() << LogIO::NORMAL << ".   " << vc.applyinfo() << LogIO::POST;
 		PtrBlock<VisCal*> vcb(1, &vc);
@@ -2254,6 +2253,8 @@ Bool Calibrater::initWeightsWithTsys(String wtmode, Bool dowtsp,
 				}
 			}
 		}
+		// clear-up Tsys caltable from list of apply
+		unsetapply();
 
 	} catch (AipsError x) {
 		logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg()
