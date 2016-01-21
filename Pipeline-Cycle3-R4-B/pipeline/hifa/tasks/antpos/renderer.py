@@ -17,10 +17,11 @@ class T2_4MDetailsALMAAntposRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
     def update_mako_context(self, mako_context, pipeline_context, results):
         table_rows = make_antpos_table(pipeline_context, results)
-        mako_context.update({'table_rows'         : table_rows})
+        mako_context.update({'table_rows': table_rows})
 
-    
+
 AntposTR = collections.namedtuple('AntposTR', 'vis antenna x y z')
+
 
 def make_antpos_table(context, results):
 

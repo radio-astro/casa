@@ -7,6 +7,7 @@ import pipeline.hif.tasks.antpos.antpos as antpos
 
 LOG = infrastructure.get_logger(__name__)
 
+
 class ALMAAntposInputs(antpos.AntposInputs):
     # These are ALMA specific settings and override the defaults in
     # the base class. 
@@ -20,6 +21,6 @@ class ALMAAntposInputs(antpos.AntposInputs):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
 
+
 class ALMAAntpos(antpos.Antpos):
     Inputs = ALMAAntposInputs
-

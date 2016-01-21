@@ -8,28 +8,32 @@ rsc_path = ""
 
 <h2>Results</h2>
 
-<h4>Antenna Position Offsets</h4>
+% if not table_rows:
+    <p>No antenna positions were corrected.</p>
+% else:
+    <h4>Antenna Position Offsets</h4>
 
-<p>The following antenna position x, y, z offsets were used to calibrate the antenna positions </p>
+    <p>The following antenna position x, y, z offsets were used to calibrate the antenna positions </p>
 
-<table class="table table-bordered table-striped" summary="Antenna Position Offsets">
-	<caption>Antenna position offsets per measurement set</caption>
-    <thead>
+    <table class="table table-bordered table-striped" summary="Antenna Position Offsets">
+        <caption>Antenna position offsets per measurement set</caption>
+        <thead>
+            <tr>
+            <th scope="col">Measurement Set</th>
+            <th scope="col">Antenna</th>
+            <th scope="col">X Offset</th>
+            <th scope="col">Y Offset</th>
+            <th scope="col">Z Offset</th>
+        </tr>
+        </thead>
+        <tbody>
+        % for tr in table_rows:
         <tr>
-	    <th scope="col">Measurement Set</th>
-	    <th scope="col">Antenna</th>
-	    <th scope="col">X Offset</th>
-	    <th scope="col">Y Offset</th>
-	    <th scope="col">Z Offset</th>
-	</tr>
-    </thead>
-    <tbody>
-    % for tr in table_rows:
-	<tr>
-        % for td in tr:
-            ${td}
+            % for td in tr:
+                ${td}
+            % endfor
+        </tr>
         % endfor
-	</tr>
-    % endfor
-    </tbody>
-</table>
+        </tbody>
+    </table>
+% endif
