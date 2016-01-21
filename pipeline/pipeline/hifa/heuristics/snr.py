@@ -810,7 +810,7 @@ def get_obsinfo (ms, fieldnamelist, intent, spwidlist, compute_nantennas='all',
 
         LOG.info('For field %s spw %2d scans %s' % (fieldname, spwid, scanids))
         LOG.info('    %2d 12m antennas  %2d 7m antennas  exposure %0.3f minutes  interval %0.3f minutes' % \
-            (obsdict[spwid]['num_12mantenna'], obsdict[spwid]['num_7mantenna'], exposureTime, meanInterval))
+            (obsdict[spwid]['num_12mantenna'], obsdict[spwid]['num_7mantenna'], exposureTime, meanInterval / len(fscans)))
 
         prev_spwid = spwid
         prev_scanids = scanids
@@ -965,6 +965,7 @@ def compute_gaincalsnr(ms, spwlist, spw_dict, edge_fraction):
 
     maxEffectiveBW = 2.0e9 * (1.0 - 2.0 * edge_fraction)
 
+    LOG.info ('Signal to noise summary')
     for spwid in spwlist:
 
         # Determine the receiver band
@@ -995,8 +996,8 @@ def compute_gaincalsnr(ms, spwlist, spw_dict, edge_fraction):
 
         # SNR computation
         #timeFactor = 1.0 / np.sqrt(spw_dict[spwid]['integrationtime'])
-        timeFactor = 1.0 / np.sqrt(spw_dict[spwid]['exptime'])
-        bandwidthFactor = np.sqrt(8.0e9 / np.min(spw_dict[spwid]['bandwidth'], maxEffectiveBW))
+        timeFactor = 1.0 / np.sqrt(spw_dict[spwid]['exptime'] / len(spw_dict[spwid]['snr_scans']))
+        bandwidthFactor = np.sqrt(8.0e9 / min(spw_dict[spwid]['bandwidth'], maxEffectiveBW))
         factor = relativeTsys * timeFactor * arraySizeFactor * \
             areaFactor * bandwidthFactor * polarizationFactor
         sensitivity = ALMA_SENSITIVITIES[bandidx] * factor
@@ -1022,12 +1023,18 @@ def compute_gaincalsnr(ms, spwlist, spw_dict, edge_fraction):
         snr_dict[spwid]['inttime_minutes'] = \
             spw_dict[spwid]['integrationtime']
         snr_dict[spwid]['scantime_minutes'] = \
-            spw_dict[spwid]['exptime']
+            spw_dict[spwid]['exptime'] / len(spw_dict[spwid]['snr_scans'])
         snr_dict[spwid]['sensitivity_per_scan_mJy'] = \
            sensitivity
         snr_dict[spwid]['snr_per_scan'] = snrPerScan
+        LOG.info("Spw %3d  scan (minutes) %6.3f  integration (minutes) %6.3f  sensitivity (mJy) %7.3f  SNR %10.3f" % \
+            (spwid, \
+            snr_dict[spwid]['scantime_minutes'], \
+            snr_dict[spwid]['inttime_minutes'], \
+            snr_dict[spwid]['sensitivity_per_scan_mJy'], \
+            snr_dict[spwid]['snr_per_scan']))
 
-        return snr_dict
+    return snr_dict
 
 
 """
