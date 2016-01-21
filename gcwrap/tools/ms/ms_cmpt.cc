@@ -1349,7 +1349,7 @@ ms::statistics(const std::string& column,
 // This is probably a temporary solution, until a format for the return value
 // from statistics2 has been decided.
 static string
-mkKey(int id, vi::VisBuffer2 *vb)
+mkKey(int id, const vi::VisBuffer2 *vb)
 {
 	string result;
 
@@ -1379,6 +1379,53 @@ mkKey(int id, vi::VisBuffer2 *vb)
 	return result;
 }
 
+// Class used by doStatistics to accumulate the statistics for each chunk
+// provided by a VisibilityIterator2 instance (through a Vi2ChunkDataProvider
+// instance.)
+template <class A, class D, class W, class M>
+class ChunkStatisticsAccumulator
+	: public Vi2ChunkStatisticsIteratee<D,W,M>
+{
+	std::map<double, A> quantileToValue;
+	const double quartile = 0.75;
+	std::set<double> quantiles = {quartile};
+
+	Record &acc;
+	vector<Int> &sortColumnIds;
+	bool implicitTimeAverage;
+
+public:
+	ChunkStatisticsAccumulator(
+		Record &acc, vector<Int> &sortColumnIds, bool implicitTimeAverage)
+		: acc(acc)
+		, sortColumnIds(sortColumnIds)
+		, implicitTimeAverage(implicitTimeAverage) {};
+
+	void nextChunk(StatisticsAlgorithm<A,D,M,W> &statistics, const vi::VisBuffer2 *vb) {
+		string keyvals;
+		string delim;
+		for (auto const & id : sortColumnIds) {
+			if (!(id == MSMainEnums::PredefinedColumns::TIME
+			      && implicitTimeAverage)) {
+				keyvals += delim + mkKey(id, vb);
+				delim = ",";
+			}
+		}
+		Record stats = toRecord(statistics.getStatistics());
+
+		// Compute some quantiles
+		quantileToValue.clear();
+		A median = statistics.getMedianAndQuantiles(quantileToValue, quantiles);
+		stats.define("median", median);
+		stats.define("quartile", quantileToValue[quartile]);
+		A medianAbsDevMed = statistics.getMedianAbsDevMed();
+		stats.define("medabsdevmed", medianAbsDevMed);
+
+		// Record statistics, associated with key
+		acc.defineRecord(keyvals, stats);
+	}
+};
+
 // Compute statistics using a given DataProvider, using iteration over vi2
 // chunks to implement reporting axes. The Statistics template parameter may be
 // any StatisticsAlgorithm class, although statistics2 always uses
@@ -1402,42 +1449,13 @@ doStatistics(
 	           typename DataProvider::WeightsIteratorType>
 		statistics;
 
-	std::map<double, typename DataProvider::AccumType> quantileToValue;
-	const double quartile = 0.75;
-	std::set<double> quantiles = {quartile};
+	ChunkStatisticsAccumulator<typename DataProvider::AccumType,
+	                           typename DataProvider::DataIteratorType,
+	                           typename DataProvider::WeightsIteratorType,
+	                           typename DataProvider::MaskIteratorType>
+		accumulateChunkStatistics(result, sortColumnIds, implicitTimeAverage);
 
-	for (dp->vi2->originChunks(); dp->vi2->moreChunks(); dp->vi2->nextChunk()) {
-		// Using sortColumnIds and initial sub-chunk, generate result key for
-		// this chunk's statistics
-		dp->vi2->origin();
-		vi::VisBuffer2 *vb = dp->vi2->getVisBuffer();
-		string keyvals;
-		string delim;
-		for (auto const & id : sortColumnIds) {
-			if (!(id == MSMainEnums::PredefinedColumns::TIME
-			      && implicitTimeAverage)) {
-				keyvals += delim + mkKey(id, vb);
-				delim = ",";
-			}
-		}
-		// Compute statistics for this chunk
-		dp->reset();
-		statistics.setDataProvider(dp.get());
-		Record stats = toRecord(statistics.getStatistics());
-
-		// Compute some quantiles
-		quantileToValue.clear();
-		typename DataProvider::AccumType median =
-			statistics.getMedianAndQuantiles(quantileToValue, quantiles);
-		stats.define("median", median);
-		stats.define("quartile", quantileToValue[quartile]);
-		typename DataProvider::AccumType medianAbsDevMed =
-			statistics.getMedianAbsDevMed();
-		stats.define("medabsdevmed", medianAbsDevMed);
-
-		// Record statistics, associated with key
-		result.defineRecord(keyvals, stats);
-	}
+	dp->foreachChunk(statistics, accumulateChunkStatistics);
 	return fromRecord(result);
 }
 
