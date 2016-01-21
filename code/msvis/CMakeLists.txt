@@ -196,6 +196,7 @@ install (FILES
 	MSVis/statistics/Vi2ChunkModelVisDataProvider.h
 	MSVis/statistics/Vi2ChunkObservedVisDataProvider.h
 	MSVis/statistics/Vi2ChunkScanDataProvider.h
+        MSVis/statistics/Vi2ChunkStatisticsIteratee.h
 	MSVis/statistics/Vi2ChunkTimeDataProvider.h
 	MSVis/statistics/Vi2ChunkUVRangeDataProvider.h
 	MSVis/statistics/Vi2ChunkVisAmplitudeProvider.h

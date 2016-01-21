@@ -37,6 +37,8 @@
 #include <msvis/MSVis/statistics/Vi2StatsFlagsIterator.h>
 #include <msvis/MSVis/statistics/Vi2StatsWeightsIterator.h>
 #include <msvis/MSVis/statistics/Vi2StatsSigmasIterator.h>
+#include <msvis/MSVis/statistics/Vi2ChunkStatisticsIteratee.h>
+#include <casacore/scimath/Mathematics/StatisticsAlgorithm.h>
 #include <casacore/scimath/Mathematics/StatsDataProvider.h>
 #include <memory>
 #include <vector>
@@ -56,14 +58,31 @@ namespace casa {
 // call to compute statistics for that chunk's data. In outline:
 //
 // Vi2ChunkDataProvider *dp; // given
+// StatisticsAlgorithm statistics; // given
 // for (dp->vi2->originChunks(); dp->vi2->moreChunks(); dp->vi2->nextChunk()) {
-// 	// Prepare the data provider
-// 	dp->vi2->origin();
-// 	dp->reset();
-// 	// Compute statistics for this chunk
-// 	statistics.setDataProvider(dp);
-// 	statistics.getStatistics();
+//  // Prepare the data provider
+//  dp->vi2->origin();
+//  dp->reset();
+//  // Compute statistics for this chunk
+//  statistics.setDataProvider(dp);
+//  doStuff(statistics);  // do something with the statistics;
+//                        // maybe call statistics.getStatistics()
 // }
+//
+// The above pattern is encapsulated by the Vi2ChunkDataProvider::foreachChunk()
+// method and Vi2ChunkStatisticsIteratee. The above can be implemented as
+// follows (but with template parameters where needed):
+//
+// Vi2ChunkDataProvider *dp; // given
+// StatisticsAlgorithm statistics; // given
+// class DoStuff : public Vi2ChunkStatisticsIteratee {
+//   ... // constructor, probably needs some sort of accumulator
+//   void nextChunk(StatisticsAlgorithm stats, const * VisBuffer2 vb) {
+//     stats.getStatistics()...;
+//   }
+// }
+// DoStuff doStuff;
+// dp->foreachChunk(statistics, doStuff);
 //
 // Note that the AccumType template parameter value of StatsDataProvider is
 // derived from the DataIterator parameter value of this template, imposing a
@@ -216,6 +235,17 @@ public:
 	}
 
 	vi::VisibilityIterator2 * const vi2;
+
+	void foreachChunk(
+		StatisticsAlgorithm<AccumType,DataIteratorType,MaskIteratorType,WeightsIteratorType>& statistics,
+		Vi2ChunkStatisticsIteratee<DataIterator,WeightsIterator,MaskIterator>& iteratee) {
+
+		for (vi2->originChunks(); vi2->moreChunks(); vi2->nextChunk()) {
+			reset();
+			statistics.setDataProvider(this);
+			iteratee.nextChunk(statistics, vi2->getVisBuffer());
+		}
+	}
 
 protected:
 
