@@ -114,7 +114,7 @@ class GaincalSnrInputs(basetask.StandardInputs):
     @bwedgefrac.setter
     def bwedgefrac(self, value):
         if value is None:
-            value = 25.0
+            value = 0.03125
         self._bwedgefrac = value
 
     @property
@@ -178,7 +178,7 @@ class GaincalSnr(basetask.StandardTaskTemplate):
             return GaincalSnrResults(vis=inputs.vis)
 
         # Construct the results object
-        result = self._get_results (inputs.vis, spwlist, solint_dict)
+        result = self._get_results (inputs.vis, spwlist, snr_dict)
 
         # Return the results
         return result
@@ -214,9 +214,11 @@ class GaincalSnr(basetask.StandardTaskTemplate):
                 scantimes.append(snr_dict[spwid]['scantime_minutes'])
                 inttimes.append(snr_dict[spwid]['inttime_minutes'])
                 sensitivities.append(snr_dict[spwid]['sensitivity_per_scan_mJy'])
-                snrs.append(solint_dict[spwid]['snr_per_scan'])
+                snrs.append(snr_dict[spwid]['snr_per_scan'])
 
         # Populate the result.
+        result.scantimes = scantimes
+        result.inttimes = inttimes
         result.sensitivities = sensitivities
         result.snrs = snrs
 
@@ -254,6 +256,6 @@ class GaincalSnrResults(basetask.Results):
             line = line + 'Gaincal SNRs\n'
             for i in range(len(self.spwids)):
                 line = line + \
-                    "    spwid %2d sensitivity: %10.3f SNR: %i8.3f\n" % \
+                    "    spwid %2d sensitivity: %10.3f SNR: %8.3f\n" % \
                     (self.spwids[i], self.sensitivities[i], self.snrs[i])
             return line

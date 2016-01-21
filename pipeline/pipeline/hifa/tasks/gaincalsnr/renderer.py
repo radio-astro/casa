@@ -46,9 +46,9 @@ def make_gaincalsnr_table(context, results):
 	        sensitivities = ''
 	        snrs = ''
 	    else:
-                sensitivities = '%0.3f' % sensitivities[i]
-                snrs = '%0.3f' % snrs[i]
-            tr = gaincalSnrTR(vis_cell, spwid, sensitivities, snrs)
+                sensitivities = '%0.3f' % single_result.sensitivities[i]
+                snrs = '%0.3f' % single_result.snrs[i]
+            tr = GaincalSnrTR(vis_cell, spwid, sensitivities, snrs)
             rows.append(tr)
 
     return utils.merge_td_columns(rows)
