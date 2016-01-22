@@ -228,11 +228,25 @@ TEST_F(SingleDishMSFillerTest, FillerTestWithReaderStub) {
       EXPECT_EQ(row_record.asInt("MEAS_FREQ_REF"), mycolumns.measFreqRef()(i));
       EXPECT_EQ(row_record.asInt("NUM_CHAN"), mycolumns.numChan()(i));
       CASA_EXPECT_STREQ(row_record.asString("NAME"), mycolumns.name()(i));
-      Double refpix = row_record.asDouble("REFPIX");
-      Double refval = row_record.asDouble("REFVAL");
-      Double increment = row_record.asDouble("INCREMENT");
-      Int expected_net_sideband = (increment < 0.0) ? 1 : 0;
+      Double expected_refpix = row_record.asDouble("REFPIX");
+      Double expected_refval = row_record.asDouble("REFVAL");
+      Double expected_increment = row_record.asDouble("INCREMENT");
+      Int expected_net_sideband = (expected_increment < 0.0) ? 1 : 0;
       EXPECT_EQ(expected_net_sideband, mycolumns.netSideband()(i));
+      Vector<Double> chan_freq = mycolumns.chanFreq()(i);
+      Double freq0 = chan_freq[0];
+      Double chan0 = 0;
+      Vector<Double> chan_width = mycolumns.chanWidth()(i);
+      Double incr0 = chan_width[0];
+      Double refval = freq0 + expected_refpix * incr0;
+      EXPECT_EQ(expected_refval, refval);
+      EXPECT_TRUE(allEQ(chan_width, expected_increment));
+      Vector<Double> resolution = mycolumns.resolution()(i);
+      EXPECT_TRUE(allEQ(resolution, abs(expected_increment)));
+      Vector<Double> effective_bw = mycolumns.effectiveBW()(i);
+      EXPECT_TRUE(allEQ(effective_bw, abs(expected_increment)));
+      Double ref_freq = mycolumns.refFrequency()(i);
+      EXPECT_EQ(chan_freq[0], ref_freq);
     }
   }
 
