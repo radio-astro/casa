@@ -21,122 +21,202 @@
 //# $Id: $
 
 
-#include <mstransform/TVI/test/TestUtilsTVI.h>
-#include <mstransform/TVI/ChannelAverageTVI.h>
-#include <mstransform/MSTransform/MSTransformIteratorFactory.h>
+#include <mstransform/TVI/test/tChannelAverageTVI.h>
 
 using namespace std;
 using namespace casa;
 using namespace casa::vi;
 
-Record parseConfiguration(int argc, char **argv)
+
+//////////////////////////////////////////////////////////////////////////
+// FreqAxisTVITest class
+//////////////////////////////////////////////////////////////////////////
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+FreqAxisTVITest::FreqAxisTVITest():
+		autoMode_p(True), testResult_p(True)
 {
-	string parameter,value,inputms;
-	Record configuration;
-	Bool autoMode = True;
 
-	for (unsigned short i=0;i<argc-1;i++)
-	{
-		parameter = string(argv[i]);
-		value = string(argv[i+1]);
-
-		if (parameter == string("-vis"))
-		{
-			inputms = value;
-			configuration.define ("inputms", value);
-			autoMode = False;
-		}
-		else if (parameter == string("-spw"))
-		{
-			configuration.define ("spw", value);
-		}
-		else if (parameter == string("-chanbin"))
-		{
-			Int tmp = Int(atoi(value.c_str()));
-			configuration.define ("chanbin", tmp);
-		}
-	}
-
-	if (autoMode)
-	{
-		char* pathChar = getenv ("CASAPATH");
-		if (pathChar != NULL)
-		{
-			// Get base path
-			String pathStr(pathChar);
-			string res[2];
-			casa::split(pathChar,res,2,string(" "));
-
-			// Generate filename
-			string filename(res[0]);
-			filename += string("/data/regression/unittest/flagdata/Four_ants_3C286.ms");
-
-			// Remove any previously existing copy
-			inputms = string("Four_ants_3C286.ms");
-			string rm_command = string ("rm -r ") + inputms + string("*");
-			system(rm_command.c_str());
-
-			// Make a copy of the MS in the working directory
-			string cp_command = string ("cp -r ") + filename + string(" .");
-			Int ret = system(cp_command.c_str());
-			if (ret == 0)
-			{
-				configuration.define ("inputms", String("Four_ants_3C286.ms"));
-				configuration.define ("spw", "1");
-				configuration.define ("chanbin", 8);
-			}
-			else
-			{
-				cout << RED;
-				cout << "AUTOMATIC MODE DOES NOT FIND TESTING FILE: " << filename << endl;
-				cout << RESET;
-				exit(1);
-			}
-
-		}
-		else
-		{
-			cout << RED;
-			cout << "AUTOMATIC MODE DOES NOT FIND ENV. VARIABLE CASAPATH" << endl;
-			cout << RESET;
-			exit(1);
-		}
-	}
-
-	// Generic settings necessary for MSTransformIterator
-	configuration.define ("reindex", False);
-	configuration.define ("chanaverage", True);
-	configuration.define ("datacolumn", string("ALL"));
-
-	// Make a second copy of the MS to serve as reference value
-	string cp_command = string ("cp -r ") + inputms + string(" ") + inputms + string(".ref");
-	system(cp_command.c_str());
-
-	return configuration;
 }
 
-Bool test_compareTransformedData(Record configuration)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+FreqAxisTVITest::FreqAxisTVITest(Record configuration):
+		autoMode_p(False), testResult_p(True), testConfiguration_p(configuration)
+{
+
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+FreqAxisTVITest::~FreqAxisTVITest()
+{
+	TearDown();
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void FreqAxisTVITest::autoInit()
+{
+	autoMode_p = True;
+
+	// Define inputMS
+	generateTestFile();
+
+	// Configuration for ChannelAverageTVI Factory
+	initTestConfiguration();
+
+	// Configuration for MSTransformIterator Factory
+	initReferenceConfiguration();
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void FreqAxisTVITest::customInit(Record configuration)
+{
+	// Store inputMS name for quick access downstream
+	configuration.get (configuration.fieldNumber ("inputms"), inputMS_p);
+
+	// Init test configuration
+	testConfiguration_p.define ("inputms", inputMS_p + String(".test"));
+
+	// Configuration for MSTransformIterator Factory
+	initReferenceConfiguration();
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void FreqAxisTVITest::SetUp()
+{
+	// Copy test file
+	string cp_command_test = String ("cp -r ") + inputMS_p + String(" ") + inputMS_p + String(".test");
+	ASSERT_EQ(system(cp_command_test.c_str()),0);
+
+	// Copy reference file
+	string cp_command_ref = String ("cp -r ") + inputMS_p + String(" ") + inputMS_p + String(".ref");
+	ASSERT_EQ(system(cp_command_ref.c_str()),0);
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void FreqAxisTVITest::TearDown()
+{
+	String rm_command;
+	if (autoMode_p)
+	{
+		rm_command = String ("rm -rf ") + inputMS_p + String("*");
+	}
+	else
+	{
+		rm_command = String ("rm -rf ") + inputMS_p + String(".*");
+	}
+
+	system(rm_command.c_str());
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+// ChannelAverageTVITest class
+//////////////////////////////////////////////////////////////////////////
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void ChannelAverageTVITest::generateTestFile()
+{
+	inputMS_p = String("Four_ants_3C286.ms");
+	String path("/data/regression/unittest/flagdata/");
+	ASSERT_TRUE(copyTestFile(path,inputMS_p));
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void ChannelAverageTVITest::initTestConfiguration()
+{
+	testConfiguration_p.define ("inputms", inputMS_p + String(".test"));
+	testConfiguration_p.define ("spw", "1");
+	testConfiguration_p.define ("chanbin", 8);
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void ChannelAverageTVITest::initReferenceConfiguration()
+{
+	refConfiguration_p = testConfiguration_p;
+	refConfiguration_p.define ("inputms", inputMS_p + String(".ref"));
+	refConfiguration_p.define ("reindex", False);
+	refConfiguration_p.define ("chanaverage", True);
+	refConfiguration_p.define ("datacolumn", String("ALL"));
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+ChannelAverageTVITest::ChannelAverageTVITest(): FreqAxisTVITest ()
+{
+	autoInit();
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+ChannelAverageTVITest::ChannelAverageTVITest(Record configuration): FreqAxisTVITest(configuration)
+{
+	customInit(configuration);
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void ChannelAverageTVITest::TestBody()
+{
+	SetUp();
+	testCompareTransformedData();
+	TearDown();
+
+	SetUp();
+	testComparePropagatedFlags();
+	TearDown();
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void ChannelAverageTVITest::testCompareTransformedData()
 {
 	// Declare working variables
-	Bool res;
 	Float tolerance = 1E-5; // FLT_EPSILON is 1.19209290e-7F
 
-	// Get original inputms name
-	String inputms;
-	configuration.get (configuration.fieldNumber ("inputms"), inputms);
-
 	// Create MSTransformIterator pointing to reference file
-	configuration.define("inputms", inputms + String(".ref"));
-	MSTransformIteratorFactory refFactory(configuration);
+	MSTransformIteratorFactory refFactory(refConfiguration_p);
 	VisibilityIterator2 refTVI(refFactory);
 
 	// Use MSTransformFactory to create a plain input VII
-	configuration.define("inputms", inputms);
-	MSTransformIteratorFactory plainVIFactory(configuration);
+	MSTransformIteratorFactory plainVIFactory(testConfiguration_p);
 	ViImplementation2 *inputVI = plainVIFactory.getInputVI()->getImpl();
 
 	// Generate TVI to test
-	ChannelAverageTVIFactory testFactory(configuration,inputVI);
+	ChannelAverageTVIFactory testFactory(testConfiguration_p,inputVI);
 	VisibilityIterator2 testTVI(testFactory);
 
 	// Determine columns to check
@@ -157,62 +237,34 @@ Bool test_compareTransformedData(Record configuration)
 	columns += Frecuencies;
 
 	// Compare
-	res = compareVisibilityIterators(testTVI,refTVI,columns,tolerance);
+	Bool res = compareVisibilityIterators(testTVI,refTVI,columns,tolerance);
 
-	return res;
-}
+	// Store result
+	if (not res) testResult_p = res;
 
-void propagateFlags(Record configuration)
-{
-	// Get original inputms name
-	String inputms;
-	configuration.get (configuration.fieldNumber ("inputms"), inputms);
-
-	// Create MSTransformIterator pointing to reference file
-	configuration.define("inputms", inputms + String(".ref"));
-	MSTransformIteratorFactory refFactory(configuration);
-	VisibilityIterator2 refTVI(refFactory);
-
-	// Use MSTransformFactory to create a plain input VII
-	configuration.define("inputms", inputms);
-	MSTransformIteratorFactory plainVIFactory(configuration);
-	ViImplementation2 *inputVI = plainVIFactory.getInputVI()->getImpl();
-
-	// Generate TVI to test
-	ChannelAverageTVIFactory testFactory(configuration,inputVI);
-	VisibilityIterator2 testTVI(testFactory);
-
-	// Propagate flags with MSTransformIterator
-	propagateFlags(refTVI);
-
-	// Propagate flags with TVI to test
-	propagateFlags(testTVI);
+	// Trigger google test macro
+	ASSERT_TRUE(res);
 
 	return;
 }
 
-
-Bool test_comparePropagatedFlags(Record configuration)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void ChannelAverageTVITest::testComparePropagatedFlags()
 {
 	// Declare working variables
-	Bool res;
 	Float tolerance = 1E-5; // FLT_EPSILON is 1.19209290e-7F
 
 	// Propagate flags
-	propagateFlags(configuration);
-
-	// Get original inputms name
-	String inputms;
-	configuration.get (configuration.fieldNumber ("inputms"), inputms);
+	propagateFlags();
 
 	// Use MSTransformIteratorFactory to create a plain input VI pointing to the test file
-	configuration.define("inputms", inputms);
-	MSTransformIteratorFactory testFactory(configuration);
+	MSTransformIteratorFactory testFactory(testConfiguration_p);
 	VisibilityIterator2 *testTVI = testFactory.getInputVI();
 
 	// Use MSTransformIteratorFactory to create a plain input VI pointing to the reference file
-	configuration.define("inputms", inputms + String(".ref"));
-	MSTransformIteratorFactory refFactory(configuration);
+	MSTransformIteratorFactory refFactory(refConfiguration_p);
 	VisibilityIterator2 *refTVI = refFactory.getInputVI();
 
 	// Determine columns to check
@@ -220,29 +272,99 @@ Bool test_comparePropagatedFlags(Record configuration)
 	columns += FlagCube;
 
 	// Compare
-	res = compareVisibilityIterators(*testTVI,*refTVI,columns,tolerance);
+	Bool res = compareVisibilityIterators(*testTVI,*refTVI,columns,tolerance);
 
-	return res;
+	// Store result
+	if (not res) testResult_p = res;
+
+	// Trigger google test macro
+	ASSERT_TRUE(res);
+
+	return;
 }
 
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void ChannelAverageTVITest::propagateFlags()
+{
+	// Create MSTransformIterator pointing to reference file
+	MSTransformIteratorFactory refFactory(refConfiguration_p);
+	VisibilityIterator2 refTVI(refFactory);
 
+	// Use MSTransformFactory to create a plain input VII
+	MSTransformIteratorFactory plainVIFactory(testConfiguration_p);
+	ViImplementation2 *inputVI = plainVIFactory.getInputVI()->getImpl();
+
+	// Generate TVI to test
+	ChannelAverageTVIFactory testFactory(testConfiguration_p,inputVI);
+	VisibilityIterator2 testTVI(testFactory);
+
+	// Propagate flags with MSTransformIterator
+	flagEachOtherChannel(refTVI);
+
+	// Propagate flags with TVI to test
+	flagEachOtherChannel(testTVI);
+
+	return;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Googletest macros
+//////////////////////////////////////////////////////////////////////////
+TEST_F(ChannelAverageTVITest, testCompareTransformedData)
+{
+	testCompareTransformedData();
+}
+
+TEST_F(ChannelAverageTVITest, testComparePropagatedFlags)
+{
+	testComparePropagatedFlags();
+}
+
+//////////////////////////////////////////////////////////////////////////
+// main
+//////////////////////////////////////////////////////////////////////////
 int main(int argc, char **argv)
 {
-	// Read configuration
-	Record configuration = parseConfiguration(argc, argv);
+	int ret;
+	string parameter,value;
+	Record configuration;
+	Bool autoMode = True;
 
-	// Run test
-	Bool result = True;
-	result &= test_compareTransformedData(configuration);
-	result &= test_comparePropagatedFlags(configuration);
-
-	// Exit code
-	if (result)
+	for (unsigned short i=0;i<argc-1;i++)
 	{
-		exit(0);
+		parameter = string(argv[i]);
+		value = string(argv[i+1]);
+
+		if (parameter == string("-vis"))
+		{
+			configuration.define ("inputms", value);
+			autoMode = False;
+		}
+		else if (parameter == string("-spw"))
+		{
+			configuration.define ("spw", value);
+		}
+		else if (parameter == string("-chanbin"))
+		{
+			Int tmp = Int(atoi(value.c_str()));
+			configuration.define ("chanbin", tmp);
+		}
+	}
+
+	if (autoMode)
+	{
+		::testing::InitGoogleTest(&argc, argv);
+		ret = RUN_ALL_TESTS();
 	}
 	else
 	{
-		exit(1);
+		ChannelAverageTVITest test(configuration);
+		test.TestBody();
+		if (test.getTestResult()) ret = 0;
+		else ret = 1;
 	}
+
+	return ret;
 }

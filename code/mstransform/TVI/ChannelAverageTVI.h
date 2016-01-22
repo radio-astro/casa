@@ -137,10 +137,10 @@ public:
 };
 
 //////////////////////////////////////////////////////////////////////////
-// DataChannelAverageKernel class
+// WeightedChannelAverageKernel class
 //////////////////////////////////////////////////////////////////////////
 
-template<class T> class DataChannelAverageKernel : public ChannelAverageKernel<T>
+template<class T> class WeightedChannelAverageKernel : public ChannelAverageKernel<T>
 {
 
 public:
@@ -171,10 +171,10 @@ public:
 };
 
 //////////////////////////////////////////////////////////////////////////
-// FlagChannelAverageKernel class
+// LogicalANDKernel class
 //////////////////////////////////////////////////////////////////////////
 
-template<class T> class FlagChannelAverageKernel : public ChannelAverageKernel<T>
+template<class T> class LogicalANDKernel : public ChannelAverageKernel<T>
 {
 
 public:
@@ -188,10 +188,10 @@ public:
 };
 
 //////////////////////////////////////////////////////////////////////////
-// WeightChannelAverageKernel class
+// ChannelAccumulationKernel class
 //////////////////////////////////////////////////////////////////////////
 
-template<class T> class WeightChannelAverageKernel : public ChannelAverageKernel<T>
+template<class T> class ChannelAccumulationKernel : public ChannelAverageKernel<T>
 {
 
 public:
@@ -203,24 +203,6 @@ public:
 					uInt outputPos,
 					uInt width);
 };
-
-//////////////////////////////////////////////////////////////////////////
-// SigmaChannelAverageKernel class
-//////////////////////////////////////////////////////////////////////////
-
-template<class T> class SigmaChannelAverageKernel : public ChannelAverageKernel<T>
-{
-
-public:
-
-	void kernel(	Vector<T> &inputVector,
-					Vector<T> &outputVector,
-					DataCubeMap &auxiliaryData,
-					uInt startInputPos,
-					uInt outputPos,
-					uInt width);
-};
-
 
 
 } //# NAMESPACE VI - END

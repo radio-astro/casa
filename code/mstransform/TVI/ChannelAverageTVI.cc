@@ -153,7 +153,7 @@ void ChannelAverageTVI::flag(Cube<Bool>& flagCube) const
 	Int inputSPW = vb->spectralWindows()(0);
 
 	// Configure Transformation Engine
-	FlagChannelAverageKernel<Bool> kernel;
+	LogicalANDKernel<Bool> kernel;
 	uInt width = spwChanbinMap_p[inputSPW];
 	ChannelAverageTransformEngine<Bool> transformer(&(kernel),width);
 
@@ -176,7 +176,7 @@ void ChannelAverageTVI::floatData (Cube<Float> & vis) const
 	Int inputSPW = vb->spectralWindows()(0);
 
 	// Configure Transformation Engine
-	DataChannelAverageKernel<Float> kernel;
+	WeightedChannelAverageKernel<Float> kernel;
 	uInt width = spwChanbinMap_p[inputSPW];
 	ChannelAverageTransformEngine<Float> transformer(&(kernel),width);
 
@@ -203,20 +203,20 @@ void ChannelAverageTVI::visibilityObserved (Cube<Complex> & vis) const
 	Int inputSPW = vb->spectralWindows()(0);
 
 	// Configure Transformation Engine
-	DataChannelAverageKernel<Complex> kernel;
+	WeightedChannelAverageKernel<Complex> kernel;
 	uInt width = spwChanbinMap_p[inputSPW];
 	ChannelAverageTransformEngine<Complex> transformer(&(kernel),width);
 
 	// Get weightSpectrum from sigmaSpectrum
-	Cube<Float> weightSpectrum;
-	weightSpectrum.resize(vb->sigmaSpectrum().shape(),False);
-	weightSpectrum = vb->sigmaSpectrum(); // = Operator makes a copy
-	arrayTransformInPlace (weightSpectrum,sigmaToWeight);
+	Cube<Float> weightSpFromSigmaSp;
+	weightSpFromSigmaSp.resize(vb->sigmaSpectrum().shape(),False);
+	weightSpFromSigmaSp = vb->sigmaSpectrum(); // = Operator makes a copy
+	arrayTransformInPlace (weightSpFromSigmaSp,sigmaToWeight);
 
 	// Configure auxiliary data
 	DataCubeMap auxiliaryData;
 	DataCubeHolder<Bool> flagCubeHolder(vb->flagCube());
-	DataCubeHolder<Float> weightCubeHolder(weightSpectrum);
+	DataCubeHolder<Float> weightCubeHolder(weightSpFromSigmaSp);
 	auxiliaryData.add(MS::FLAG,flagCubeHolder);
 	auxiliaryData.add(MS::WEIGHT_SPECTRUM,weightCubeHolder);
 
@@ -236,7 +236,7 @@ void ChannelAverageTVI::visibilityCorrected (Cube<Complex> & vis) const
 	Int inputSPW = vb->spectralWindows()(0);
 
 	// Configure Transformation Engine
-	DataChannelAverageKernel<Complex> kernel;
+	WeightedChannelAverageKernel<Complex> kernel;
 	uInt width = spwChanbinMap_p[inputSPW];
 	ChannelAverageTransformEngine<Complex> transformer(&(kernel),width);
 
@@ -263,7 +263,7 @@ void ChannelAverageTVI::visibilityModel (Cube<Complex> & vis) const
 	Int inputSPW = vb->spectralWindows()(0);
 
 	// Configure Transformation Engine
-	DataChannelAverageKernel<Complex> kernel;
+	WeightedChannelAverageKernel<Complex> kernel;
 	uInt width = spwChanbinMap_p[inputSPW];
 	ChannelAverageTransformEngine<Complex> transformer(&(kernel),width);
 
@@ -290,7 +290,7 @@ void ChannelAverageTVI::weightSpectrum(Cube<Float> &weightSp) const
 	Int inputSPW = vb->spectralWindows()(0);
 
 	// Configure Transformation Engine
-	WeightChannelAverageKernel<Float> kernel;
+	ChannelAccumulationKernel<Float> kernel;
 	uInt width = spwChanbinMap_p[inputSPW];
 	ChannelAverageTransformEngine<Float> transformer(&(kernel),width);
 
@@ -315,9 +315,15 @@ void ChannelAverageTVI::sigmaSpectrum(Cube<Float> &sigmaSp) const
 	Int inputSPW = vb->spectralWindows()(0);
 
 	// Configure Transformation Engine
-	SigmaChannelAverageKernel<Float> kernel;
+	ChannelAccumulationKernel<Float> kernel;
 	uInt width = spwChanbinMap_p[inputSPW];
 	ChannelAverageTransformEngine<Float> transformer(&(kernel),width);
+
+	// Get weightSpectrum from sigmaSpectrum
+	Cube<Float> weightSpFromSigmaSp;
+	weightSpFromSigmaSp.resize(vb->sigmaSpectrum().shape(),False);
+	weightSpFromSigmaSp = vb->sigmaSpectrum(); // = Operator makes a copy
+	arrayTransformInPlace (weightSpFromSigmaSp,sigmaToWeight);
 
 	// Configure auxiliary data
 	DataCubeMap auxiliaryData;
@@ -325,7 +331,10 @@ void ChannelAverageTVI::sigmaSpectrum(Cube<Float> &sigmaSp) const
 	auxiliaryData.add(MS::FLAG,flagCubeHolder);
 
 	// Transform data
-	transformFreqAxis(vb->sigmaSpectrum(),sigmaSp,auxiliaryData,transformer);
+	transformFreqAxis(weightSpFromSigmaSp,sigmaSp,auxiliaryData,transformer);
+
+	// Transform back from weight format to sigma format
+	arrayTransformInPlace (sigmaSp,weightToSigma);
 
 	return;
 }
@@ -541,18 +550,18 @@ template<class T> void PlainChannelAverageKernel<T>::kernel(	Vector<T> &inputVec
 }
 
 //////////////////////////////////////////////////////////////////////////
-// DataChannelAverageKernel class
+// WeightedChannelAverageKernel class
 //////////////////////////////////////////////////////////////////////////
 
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-template<class T> void DataChannelAverageKernel<T>::kernel(	Vector<T> &inputVector,
-															Vector<T> &outputVector,
-															DataCubeMap &auxiliaryData,
-															uInt startInputPos,
-															uInt outputPos,
-															uInt width)
+template<class T> void WeightedChannelAverageKernel<T>::kernel(	Vector<T> &inputVector,
+																Vector<T> &outputVector,
+																DataCubeMap &auxiliaryData,
+																uInt startInputPos,
+																uInt outputPos,
+																uInt width)
 {
 	T avg = 0;
 	T normalization = 0;
@@ -599,18 +608,18 @@ template<class T> void DataChannelAverageKernel<T>::kernel(	Vector<T> &inputVect
 }
 
 //////////////////////////////////////////////////////////////////////////
-// FlagChannelAverageKernel class
+// LogicalANDKernel class
 //////////////////////////////////////////////////////////////////////////
 
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-template<class T> void FlagChannelAverageKernel<T>::kernel(	Vector<T> &inputVector,
-															Vector<T> &outputVector,
-															DataCubeMap &,
-															uInt startInputPos,
-															uInt outputPos,
-															uInt width)
+template<class T> void LogicalANDKernel<T>::kernel(	Vector<T> &inputVector,
+													Vector<T> &outputVector,
+													DataCubeMap &,
+													uInt startInputPos,
+													uInt outputPos,
+													uInt width)
 {
 	Bool outputFlag = True;
 	for (uInt sample_i=0;sample_i<width;sample_i++)
@@ -628,13 +637,13 @@ template<class T> void FlagChannelAverageKernel<T>::kernel(	Vector<T> &inputVect
 }
 
 //////////////////////////////////////////////////////////////////////////
-// WeightChannelAverageKernel class
+// ChannelAccumulationKernel class
 //////////////////////////////////////////////////////////////////////////
 
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-template<class T> void WeightChannelAverageKernel<T>::kernel(	Vector<T> &inputVector,
+template<class T> void ChannelAccumulationKernel<T>::kernel(	Vector<T> &inputVector,
 																Vector<T> &outputVector,
 																DataCubeMap &auxiliaryData,
 																uInt startInputPos,
@@ -666,50 +675,6 @@ template<class T> void WeightChannelAverageKernel<T>::kernel(	Vector<T> &inputVe
 
 
 	outputVector(outputPos) = acc;
-
-	return;
-}
-
-//////////////////////////////////////////////////////////////////////////
-// SigmaChannelAverageKernel class
-//////////////////////////////////////////////////////////////////////////
-
-// -----------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------
-template<class T> void SigmaChannelAverageKernel<T>::kernel(	Vector<T> &inputVector,
-																Vector<T> &outputVector,
-																DataCubeMap &auxiliaryData,
-																uInt startInputPos,
-																uInt outputPos,
-																uInt width)
-{
-	T acc = 0;
-	uInt inputPos = 0;
-	Vector<Bool> &inputFlagVector = auxiliaryData.getVector<Bool>(MS::FLAG);
-	Bool accumulatorFlag = inputFlagVector(startInputPos);
-
-	for (uInt sample_i=0;sample_i<width;sample_i++)
-	{
-		// Get input index
-		inputPos = startInputPos + sample_i;
-
-		// True/True or False/False
-		if (accumulatorFlag == inputFlagVector(inputPos))
-		{
-			acc += sigmaToWeight(inputVector(inputPos));
-		}
-		// True/False: Reset accumulation when accumulator switches from flagged to unflag
-		else if ( (accumulatorFlag == True) and (inputFlagVector(inputPos) == False) )
-		{
-			accumulatorFlag = False;
-			acc = sigmaToWeight(inputVector(inputPos));
-		}
-	}
-
-
-	// Transform weight into sigma format
-	outputVector(outputPos) = weightToSigma(acc);
 
 	return;
 }

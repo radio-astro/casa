@@ -23,6 +23,7 @@
 #ifndef TestUtilsTVI_H_
 #define TestUtilsTVI_H_
 
+// VI/VB framework
 #include <msvis/MSVis/VisBuffer2.h>
 #include <msvis/MSVis/VisibilityIterator2.h>
 
@@ -49,6 +50,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 namespace vi { //# NAMESPACE VI - BEGIN
 
+//////////////////////////////////////////////////////////////////////////
+// Convenience methods
+//////////////////////////////////////////////////////////////////////////
 template <class T> Bool compareVector(	const Char* column,
 										const Vector<T> &inp,
 										const Vector<T> &ref,
@@ -64,14 +68,14 @@ template <class T> Bool compareCube(const Char* column,
 									const Cube<T> &ref,
 									Float tolerance = FLT_EPSILON);
 
+Bool copyTestFile(String &path,String &filename);
 
 Bool compareVisibilityIterators(VisibilityIterator2 &testTVI,
 								VisibilityIterator2 &refTVI,
 								VisBufferComponents2 &columns,
 								Float tolerance = FLT_EPSILON);
 
-void propagateFlags(VisibilityIterator2 &vi);
-
+void flagEachOtherChannel(VisibilityIterator2 &vi);
 
 } //# NAMESPACE VI - END
 

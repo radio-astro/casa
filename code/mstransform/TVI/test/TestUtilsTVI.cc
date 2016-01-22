@@ -26,6 +26,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 namespace vi { //# NAMESPACE VI - BEGIN
 
+//////////////////////////////////////////////////////////////////////////
+// Convenience methods
+//////////////////////////////////////////////////////////////////////////
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
 template <class T> Bool compareVector(	const Char* column,
 										const Vector<T> &inp,
 										const Vector<T> &ref,
@@ -67,6 +74,9 @@ template <class T> Bool compareVector(	const Char* column,
 	return ret;
 }
 
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
 template <class T> Bool compareMatrix(	const Char* column,
 										const Matrix<T> &inp,
 										const Matrix<T> &ref,
@@ -114,6 +124,9 @@ template <class T> Bool compareMatrix(	const Char* column,
 	return ret;
 }
 
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
 template <class T> Bool compareCube(const Char* column,
 									const Cube<T> &inp,
 									const Cube<T> &ref,
@@ -164,6 +177,9 @@ template <class T> Bool compareCube(const Char* column,
 	return ret;
 }
 
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
 Bool compareVisibilityIterators(VisibilityIterator2 &testTVI,
 								VisibilityIterator2 &refTVI,
 								VisBufferComponents2 &columns,
@@ -327,8 +343,58 @@ Bool compareVisibilityIterators(VisibilityIterator2 &testTVI,
 	return keepIterating;
 }
 
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+Bool copyTestFile(String &path,String &filename)
+{
+	Bool ret = True;
+	char* pathChar = getenv ("CASAPATH");
+	if (pathChar != NULL)
+	{
+		// Get base path
+		String pathStr(pathChar);
+		String res[2];
+		casa::split(pathChar,res,2,String(" "));
 
-void propagateFlags(VisibilityIterator2 &vi)
+		// Generate full qualified filename
+		String fullfilename(res[0]);
+		fullfilename += path + "/" + filename;
+
+		// Remove any previously existing copy
+		String rm_command = String ("rm -rf ") + filename + String("*");
+		system(rm_command.c_str());
+
+		// Make a copy of the file in the working directory
+		String cp_command = String ("cp -r ") + fullfilename + String(" .");
+		Int ret1 = system(cp_command.c_str());
+
+		// Make a second copy of the MS to serve as reference file
+		if (ret1 != 0)
+		{
+			cout << RED;
+			cout << "TEST FILE NOT FOUND: " << fullfilename << endl;
+			cout << RESET;
+
+			ret = False;
+		}
+	}
+	else
+	{
+		cout << RED;
+		cout << "CASAPATH ENVIRONMENTAL VARIABLE NOT DEFINED" << endl;
+		cout << RESET;
+
+		ret = False;
+	}
+
+	return ret;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void flagEachOtherChannel(VisibilityIterator2 &vi)
 {
 	// Declare working variables
 	Int chunk = 0,buffer = 0;
