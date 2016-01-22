@@ -76,6 +76,7 @@ def tclean(
     deconvolver,#='hogbom',
     scales,#=[],
     nterms,#=1,
+    smallscalebias,#=0.6
     restoringbeam,#=[],
 
     ##### Outliers
@@ -207,6 +208,7 @@ def tclean(
         deconvolver=deconvolver,
         scales=scales,
         nterms=nterms,
+        scalebias=smallscalebias,
         restoringbeam=restoringbeam,
         mask=mask,
 

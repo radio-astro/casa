@@ -2732,7 +2732,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	mType="default";
 	if(gridder=="ft" || gridder=="gridft" || gridder=="standard" )
 	  { ftmachine="gridft"; }
-	if( gridder=="widefield" && wprojplanes>1)
+	if( gridder=="widefield" && (wprojplanes>1 || wprojplanes==-1))
 	  { ftmachine="wprojectft";}
 	if( gridder=="wproject" || gridder=="wprojectft")
 	  {ftmachine="wprojectft"; }
@@ -2741,7 +2741,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  { ftmachine="mosaicft"; }
 	if(gridder=="imagemosaic") {
 	    mType="imagemosaic";
-	    if (wprojplanes>1){ ftmachine="wprojectft"; }
+	    if (wprojplanes>1 || wprojplanes==-1){ ftmachine="wprojectft"; }
 	  }
 	if(gridder=="awproject" || gridder=="awprojectft")
 	  {ftmachine="awprojectft";}
@@ -2822,13 +2822,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if( (facets>1) && (chanchunks>1) )
       { err += "The combination of facetted imaging with channel chunking is not yet supported. Please choose only one or the other for now. \n";}
 
-    if(ftmachine=="wproject" && wprojplanes<=1)
-      {err += "The wproject gridder must be accompanied with wprojplanes>1\n";}
+    if(ftmachine=="wproject" && (wprojplanes==0 || wprojplanes==1))
+      {err += "The wproject gridder must be accompanied with wprojplanes>1 or wprojplanes=-1\n";}
 
     if((ftmachine=="awprojectft") && (facets>1) )
       {err += "The awprojectft gridder supports A- and W-Projection. "
 	  "Instead of using facets>1 to deal with the W-term, please set the number of wprojplanes to a value > 1 "
 	  "to trigger the combined AW-Projection algorithm. \n";  } // Also, the way the AWP cfcache is managed, even if all facets share a common one so that they reuse convolution functions, the first facet's gridder writes out the avgPB and all others see that it's there and don't compute their own. As a result, the code will run, but the first facet's weight image will be duplicated for all facets.  If needed, this must be fixed in the way the AWP gridder manages its cfcache. But, since the AWP gridder supports joint A and W projection, facet support may never be needed in the first place... 
+
+    if((ftmachine=="awprojectft") && (wprojplanes==-1) )
+      {err +="The awprojectft gridder does not support wprojplanes=-1 for automatic calculation. Please pick a value >1" ;}
 
     if( (ftmachine=="mosaicft") && (facets>1) )
       { err += "The combination of mosaicft gridding with multiple facets is not supported. "
@@ -2956,6 +2959,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	err += readVal( inrec, String("nterms"), nTaylorTerms );
 
 	err += readVal( inrec, String("scales"), scales );
+	err += readVal( inrec, String("scalebias"), scalebias );
 
 	err += readVal( inrec, String("mask"), maskString );
 
@@ -3056,6 +3060,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     deconvolverId=0;
     nTaylorTerms=1;
     scales.resize(1); scales[0]=0.0;
+    scalebias=0.6;
     maskString="";
     interactive=False;
   }
@@ -3070,6 +3075,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     decpar.define("id",deconvolverId);
     decpar.define("nterms",nTaylorTerms);
     decpar.define("scales",scales);
+    decpar.define("scalebias",scalebias);
     decpar.define("mask",maskString);
     decpar.define("interactive",interactive);
 

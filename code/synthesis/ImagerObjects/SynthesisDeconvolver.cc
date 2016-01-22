@@ -116,7 +116,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  } 
 	else if(decpars.algorithm==String("multiscale"))
 	  {
-	    itsDeconvolver.reset(new SDAlgorithmMSClean( decpars.scales )); 
+	    itsDeconvolver.reset(new SDAlgorithmMSClean( decpars.scales, decpars.scalebias )); 
 	  } 
 	else if(decpars.algorithm==String("mem"))
 	  {

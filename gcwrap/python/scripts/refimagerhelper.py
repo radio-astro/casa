@@ -1382,7 +1382,8 @@ class ImagerParameters():
 
                  deconvolver='hogbom',
                  scales=[],
-                 nterms=1, 
+                 nterms=1,
+                 scalebias=0.6,
                  restoringbeam=[],
 #                 mtype='default',
                  mask='',
@@ -1441,7 +1442,7 @@ class ImagerParameters():
 
         ######### Deconvolution
         self.alldecpars = { self.defaultKey: { 'id':0, 'deconvolver':deconvolver, 'nterms':nterms, 
-                                    'scales':scales, 'restoringbeam':restoringbeam, 'mask':mask,
+                                    'scales':scales, 'scalebias':scalebias, 'restoringbeam':restoringbeam, 'mask':mask,
                                     'interactive':interactive, 'startmodel':startmodel} }
 
         ######### Iteration control. 

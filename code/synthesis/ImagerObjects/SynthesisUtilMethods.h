@@ -331,6 +331,7 @@ public:
   Int deconvolverId; // maybe remove ? It's only to tag summary info.
   Int nTaylorTerms; 
   Vector<Float> scales;
+  Float scalebias;
   String maskString;
   Bool interactive;
 
