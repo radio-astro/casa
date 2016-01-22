@@ -24,6 +24,7 @@
 #include <casacore/ms/MeasurementSets/MSProcessorColumns.h>
 #include <casacore/ms/MeasurementSets/MSAntennaColumns.h>
 #include <casacore/ms/MeasurementSets/MSSourceColumns.h>
+#include <casacore/ms/MeasurementSets/MSSpWindowColumns.h>
 #include <casacore/ms/MeasurementSets/MSSysCalColumns.h>
 #include <casacore/ms/MeasurementSets/MSWeatherColumns.h>
 
@@ -48,25 +49,32 @@ public:
 
     my_ms_name_ = "mytest.ms";
     my_data_name_ = "mytest.asap";
+
+    deleteTable(my_ms_name_);
   }
 
   virtual void TearDown() {
     std::cout << "this is TearDown" << std::endl;
 
-    File file(my_ms_name_);
-    if (file.exists()) {
-      std::cout << "Removing " << my_ms_name_ << std::endl;
-      Table::deleteTable(my_ms_name_, True);
-    }
+    //deleteTable(my_ms_name_);
   }
 
 protected:
   std::string my_ms_name_;
   std::string my_data_name_;
+
+private:
+  void deleteTable(std::string const &name) {
+    File file(name);
+    if (file.exists()) {
+      std::cout << "Removing " << name << std::endl;
+      Table::deleteTable(name, True);
+    }
+  }
 };
 
 TEST_F(SingleDishMSFillerTest, FillerTestWithReaderStub) {
-  SingleDishMSFiller<::TestReader> filler(my_data_name_);
+  SingleDishMSFiller<TestReader<FloatDataStorage> > filler(my_data_name_);
 
   std::string const &data_name = filler.getDataName();
 
@@ -202,6 +210,29 @@ TEST_F(SingleDishMSFillerTest, FillerTestWithReaderStub) {
           "TRANSITION");
       Array<String> transition = mycolumns.transition()(i);
       CASA_EXPECT_ARRAYEQ(expected_transition, transition);
+    }
+  }
+
+  // verify SPECTRAL_WINDOW table
+  {
+    std::cout << "Verify SPECTRAL_WINDOW table" << std::endl;
+    auto const mytable = myms.spectralWindow();
+    TableRecord const &expected_record = reader.spw_record_;
+    uInt expected_nrow = expected_record.nfields();
+    ASSERT_EQ(expected_nrow, mytable.nrow());
+    ROMSSpWindowColumns mycolumns(mytable);
+    for (uInt i = 0; i < expected_nrow; ++i) {
+      std::cout << "Verifying row " << i << std::endl;
+      String key = "ROW" + String::toString(i);
+      TableRecord row_record = expected_record.asRecord(key);
+      EXPECT_EQ(row_record.asInt("MEAS_FREQ_REF"), mycolumns.measFreqRef()(i));
+      EXPECT_EQ(row_record.asInt("NUM_CHAN"), mycolumns.numChan()(i));
+      CASA_EXPECT_STREQ(row_record.asString("NAME"), mycolumns.name()(i));
+      Double refpix = row_record.asDouble("REFPIX");
+      Double refval = row_record.asDouble("REFVAL");
+      Double increment = row_record.asDouble("INCREMENT");
+      Int expected_net_sideband = (increment < 0.0) ? 1 : 0;
+      EXPECT_EQ(expected_net_sideband, mycolumns.netSideband()(i));
     }
   }
 
@@ -1023,7 +1054,7 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
   status = a.get(0, output_record);
   ASSERT_TRUE(status);
   IsValidOutputRecord(output_record);
-  Matrix<Complex> output_cdata = output_record.asArrayComplex("DATA");
+  Matrix < Complex > output_cdata = output_record.asArrayComplex("DATA");
   output_flag.assign(output_record.asArrayBool("FLAG"));
   IPosition const expected_shape4(2, 4, num_chan);
   EXPECT_EQ(expected_shape4, output_cdata.shape());
@@ -1050,8 +1081,8 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
   r1.define("FEED_ID", feed_id + 1);
   r1.define("INTENT", intent2);
   r1.define("POL_TYPE", poltype2);
-  Vector<Float> data2(8, -1.0f);
-  Vector<Bool> flag2(8, False);
+  Vector < Float > data2(8, -1.0f);
+  Vector < Bool > flag2(8, False);
   r1.define("DATA", data2);
   r1.define("FLAG", flag2);
   status = a.accumulate(r1);
@@ -1065,17 +1096,17 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
   status = a.get(0, output_record);
   ASSERT_TRUE(status);
   IsValidOutputRecord(output_record);
-  Matrix<Complex> output_cdata2 = output_record.asArrayComplex("DATA");
+  Matrix < Complex > output_cdata2 = output_record.asArrayComplex("DATA");
   EXPECT_EQ(output_cdata.shape(), output_cdata2.shape());
   EXPECT_TRUE(allEQ(output_cdata, output_cdata2));
   ClearRecord(output_record);
   status = a.get(1, output_record);
   ASSERT_TRUE(status);
   IsValidOutputRecord(output_record);
-  Matrix<Float> output_data2 = output_record.asArrayFloat("FLOAT_DATA");
+  Matrix < Float > output_data2 = output_record.asArrayFloat("FLOAT_DATA");
   EXPECT_EQ(IPosition(2, 1, 8), output_data2.shape());
   EXPECT_TRUE(allEQ(output_data2.row(0), data2));
-  Matrix<Bool> output_flag2 = output_record.asArrayBool("FLAG");
+  Matrix < Bool > output_flag2 = output_record.asArrayBool("FLAG");
   EXPECT_EQ(output_data2.shape(), output_flag2.shape());
   EXPECT_TRUE(allEQ(output_flag2.row(0), flag2));
 
@@ -1101,7 +1132,8 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
 
   // clear
   a.clear();
-  EXPECT_EQ(0u, a.getNumberOfChunks());
+  EXPECT_EQ(2u, a.getNumberOfChunks());
+  EXPECT_EQ(0u, a.getNumberOfActiveChunks());
   EXPECT_FALSE(a.queryForGet(r1));
 
   // reuse underlying DataChunk object

@@ -38,10 +38,14 @@ public:
           num_pol_max_, False), weight_(num_pol_max_, 1.0f), sigma_(weight_), poltype_(
           poltype), filled_(NoData()), get_chunk_(nullptr), get_num_pol_(
           nullptr) {
+    POST_START;
+
     setPolType(poltype);
     std::cout << (unsigned int) SinglePol0() << " "
         << (unsigned int) SinglePol1() << " " << (unsigned int) DualPol() << " "
         << (unsigned int) FullPol() << std::endl;
+
+    POST_END;
   }
 
   virtual ~DataChunk() {
@@ -82,10 +86,18 @@ public:
   }
 
   bool accumulate(TableRecord const &record) {
+    POST_START;
+
     if (!isValidRecord(record)) {
       return false;
     }
+
+    std::cout << "VALID" << std::endl;
+
     uInt polid = record.asuInt("POLNO");
+
+    std::cout << "POLNO=" << polid << std::endl;
+
     if (num_pol_max_ <= polid) {
       return false;
       //AipsError("Invalid POLNO");
@@ -98,9 +110,14 @@ public:
     Vector < Bool > flag = record.asArrayBool("FLAG");
     Bool flagrow = record.asBool("FLAG_ROW");
 
+    std::cout << "data=" << data << std::endl;
+    std::cout << "flag=" << flag << std::endl;
+
     if (data.shape() != flag.shape()) {
       return false;
     }
+
+    std::cout << "num_chan_ = " << num_chan_ << std::endl;
 
     if (data.nelements() != num_chan_) {
       return false;
@@ -163,10 +180,14 @@ private:
         "FLAG_ROW" };
     for (size_t i = 0; i < num_required_keys; ++i) {
       is_valid = is_valid && record.isDefined(required_keys[i]);
+      std::cout << "key " << required_keys[i] << " is_valid " << is_valid << std::endl;
     }
     return is_valid;
   }
   void setPolType(String const &poltype) {
+    POST_START;
+
+    std::cout << "poltype = " << poltype << std::endl;
     poltype_ = poltype;
     if (poltype_ == "linear") {
       get_chunk_ = &DataChunk::getLinear;
@@ -183,6 +204,8 @@ private:
     } else {
       throw AipsError(String("Invalid poltype") + poltype);
     }
+
+    POST_END;
   }
   size_t const num_pol_max_;
   size_t num_pol_;
@@ -391,8 +414,14 @@ public:
   }
 
   size_t getNumberOfChunks() const {
-    //return pool_.size();
-    return std::count_if(pool_.begin(), pool_.end(), [](DataChunk * const &c){
+    return pool_.size();
+//    return std::count_if(pool_.begin(), pool_.end(), [](DataChunk * const &c){
+//      return c->getNumPol() > 0;
+//    });
+  }
+
+  size_t getNumberOfActiveChunks() const {
+    return std::count_if(pool_.begin(), pool_.end(), [](DataChunk * const &c) {
       return c->getNumPol() > 0;
     });
   }
@@ -444,14 +473,21 @@ public:
   }
 
   bool accumulate(TableRecord const &record) {
+    POST_START;
+
     if (!isValidRecord(record)) {
       return false;
     }
+
+    std::cout << "valid" << std::endl;
+
     Double time = record.asDouble("TIME");
     if (time_ < 0.0) {
+      std::cout << "first record" << std::endl;
       time_ = time;
     }
     if (time_ != time) {
+      std::cout << "not valid timestamp" << std::endl;
       return false;
       //AipsError("Invalid use of DataAccumulator");
     }
@@ -465,6 +501,7 @@ public:
         + poltype;
     bool status = false;
     if (indexer_.isDefined(key)) {
+      std::cout << "accumulate " << key << std::endl;
       uInt index = indexer_.asuInt(key);
       status = pool_[index]->accumulate(record);
       if (status) {
@@ -474,6 +511,7 @@ public:
         intent_[index] = intent;
       }
     } else {
+      std::cout << "new entry " << key << std::endl;
       pool_.push_back(new DataChunk(poltype));
       spw_id_.push_back(-1);
       field_id_.push_back(-1);
@@ -489,6 +527,10 @@ public:
         intent_[index] = intent;
       }
     }
+
+    std::cout << "status = " << status << std::endl;
+
+    POST_END;
     return status;
   }
 

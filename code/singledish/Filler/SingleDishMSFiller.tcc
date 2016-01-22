@@ -21,6 +21,28 @@
 
 using namespace casacore;
 
+namespace {
+
+template<class _Table, class _Reader>
+void fillTable(_Table &mytable, _Reader const &reader) {
+  POST_START;
+
+  TableRow row(mytable);
+  TableRecord record = row.record();
+
+  size_t irow = 0;
+  for (Bool more_rows = reader(record); more_rows == True;
+      more_rows = reader(record)) {
+    mytable.addRow(1, True);
+    row.put(irow, record);
+    ++irow;
+  }
+
+  POST_END;
+}
+
+} // anonymous namespace
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 template<class T>
@@ -225,6 +247,9 @@ void SingleDishMSFiller<T>::setupMS() {
 
   ms_->initRefs();
 
+  // Set up MSMainColumns
+  ms_columns_.reset(new MSMainColumns(*ms_));
+
   std::cout << "End " << __PRETTY_FUNCTION__ << std::endl;
 }
 
@@ -232,17 +257,8 @@ template<class T>
 void SingleDishMSFiller<T>::fillAntenna() {
   POST_START;
 
-  auto mytable = ms_->antenna();
-  TableRow row(mytable);
-  TableRecord record = row.record();
-
-  size_t irow = 0;
-  for (Bool more_rows = reader_->getAntennaRow(record); more_rows == True;
-      more_rows = reader_->getAntennaRow(record)) {
-    mytable.addRow(1, True);
-    row.put(irow, record);
-    ++irow;
-  }
+  fillTable(ms_->antenna(),
+      [&](TableRecord &record) {return reader_->getAntennaRow(record);});
 
   POST_END;
 }
@@ -251,19 +267,8 @@ template<class T>
 void SingleDishMSFiller<T>::fillObservation() {
   POST_START;
 
-  auto mytable = ms_->observation();
-  TableRow row(mytable);
-  TableRecord record = row.record();
-
-  size_t irow = 0;
-  for (Bool more_rows = reader_->getObservationRow(record); more_rows == True;
-      more_rows = reader_->getObservationRow(record)) {
-    std::cout << "addrow" << std::endl;
-    mytable.addRow(1, True);
-    std::cout << "put" << std::endl;
-    row.put(irow, record);
-    ++irow;
-  }
+  fillTable(ms_->observation(),
+      [&](TableRecord &record) {return reader_->getObservationRow(record);});
 
   POST_END;
 }
@@ -272,17 +277,8 @@ template<class T>
 void SingleDishMSFiller<T>::fillProcessor() {
   POST_START;
 
-  auto mytable = ms_->processor();
-  TableRow row(mytable);
-  TableRecord record = row.record();
-
-  size_t irow = 0;
-  for (Bool more_rows = reader_->getProcessorRow(record); more_rows == True;
-      more_rows = reader_->getProcessorRow(record)) {
-    mytable.addRow(1, True);
-    row.put(irow, record);
-    ++irow;
-  }
+  fillTable(ms_->processor(),
+      [&](TableRecord &record) {return reader_->getProcessorRow(record);});
 
   POST_END;
 }
@@ -291,16 +287,60 @@ template<class T>
 void SingleDishMSFiller<T>::fillSource() {
   POST_START;
 
-  auto mytable = ms_->source();
-  TableRow row(mytable);
-  TableRecord record = row.record();
-  uInt irow = 0;
-  for (Bool more_rows = reader_->getSourceRow(record); more_rows == True;
-      more_rows = reader_->getSourceRow(record)) {
-    mytable.addRow(1, True);
-    row.put(irow, record);
-    ++irow;
-  }
+  fillTable(ms_->source(),
+      [&](TableRecord &record) {return reader_->getSourceRow(record);});
+
+  POST_END;
+}
+
+template<class T>
+void SingleDishMSFiller<T>::fillSpectralWindow() {
+  POST_START;
+
+  TableRecord record_proxy;
+  fillTable(ms_->spectralWindow(), [&](TableRecord &record) {
+    record.print(std::cout);
+    Bool status = reader_->getSpectralWindowRow(record_proxy);
+    if (status) {
+      record.define("NUM_CHAN", record_proxy.asInt("NUM_CHAN"));
+      record.define("NAME", record_proxy.asString("NAME"));
+      record.define("MEAS_FREQ_REF", record_proxy.asInt("MEAS_FREQ_REF"));
+      Double refpix = record_proxy.asDouble("REFPIX");
+      Double refval = record_proxy.asDouble("REFVAL");
+      Double increment = record_proxy.asDouble("INCREMENT");
+      std::cout << "NUM_CHAN" << std::endl;
+      Int num_chan = record.asInt("NUM_CHAN");
+
+      Double tot_bw = num_chan * abs(increment);
+      std::cout << "TOTAL_BANDWIDTH" << std::endl;
+      record.define("TOTAL_BANDWIDTH", tot_bw);
+
+      Double ref_frequency = refval - refpix * increment;
+      std::cout << "REF_FREQUENCY" << std::endl;
+      record.define("REF_FREQUENCY", ref_frequency);
+
+      Vector<Double> freq(num_chan);
+      indgen(freq, ref_frequency, increment);
+      std::cout << "CHAN_FREQ" << std::endl;
+      record.define("CHAN_FREQ", freq);
+
+      freq = increment;
+      std::cout << "CHAN_WIDTH" << std::endl;
+      record.define("CHAN_WIDTH", freq);
+
+      freq = abs(freq);
+      std::cout << "EFFECTIVE_BW" << std::endl;
+      record.define("EFFECTIVE_BW", freq);
+      record.define("RESOLUTION", freq);
+
+      Int net_sideband = 0;// USB
+      if (increment < 0.0) {
+        net_sideband = 1; // LSB
+      }
+      std::cout << "NET_SIDEBAND" << std::endl;
+      record.define("NET_SIDEBAND", net_sideband);
+    }
+    return status;});
 
   POST_END;
 }
@@ -309,16 +349,8 @@ template<class T>
 void SingleDishMSFiller<T>::fillSyscal() {
   POST_START;
 
-  auto mytable = ms_->sysCal();
-  TableRow row(mytable);
-  TableRecord record = row.record();
-  uInt irow = 0;
-  for (Bool more_rows = reader_->getSyscalRow(record); more_rows == True;
-      more_rows = reader_->getSyscalRow(record)) {
-    mytable.addRow(1, True);
-    row.put(irow, record);
-    ++irow;
-  }
+  fillTable(ms_->sysCal(),
+      [&](TableRecord &record) {return reader_->getSyscalRow(record);});
 
   POST_END;
 }
@@ -327,16 +359,8 @@ template<class T>
 void SingleDishMSFiller<T>::fillWeather() {
   POST_START;
 
-  auto mytable = ms_->weather();
-  TableRow row(mytable);
-  TableRecord record = row.record();
-  uInt irow = 0;
-  for (Bool more_rows = reader_->getWeatherRow(record); more_rows == True;
-      more_rows = reader_->getWeatherRow(record)) {
-    mytable.addRow(1, True);
-    row.put(irow, record);
-    ++irow;
-  }
+  fillTable(ms_->weather(),
+      [&](TableRecord &record) {return reader_->getWeatherRow(record);});
 
   POST_END;
 }

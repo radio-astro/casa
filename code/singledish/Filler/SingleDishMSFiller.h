@@ -19,6 +19,7 @@
 #include <casacore/casa/Arrays/Array.h>
 #include <casacore/casa/Arrays/ArrayIO.h>
 #include <casacore/ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/ms/MeasurementSets/MSMainColumns.h>
 #include <casacore/tables/Tables/TableRow.h>
 #include <casacore/tables/Tables/ArrayColumn.h>
 #include <casacore/tables/Tables/ScalarColumn.h>
@@ -40,7 +41,7 @@ template<typename Reader>
 class SingleDishMSFiller {
 public:
   SingleDishMSFiller(std::string const &name) :
-      ms_(), reader_(new Reader(name)) {
+      ms_(), ms_columns_(), reader_(new Reader(name)), is_float_(false) {
   }
 
   ~SingleDishMSFiller() {
@@ -92,6 +93,9 @@ private:
     // initialize reader
     reader_->initialize();
 
+    // query if the data is complex or float
+    is_float_ = reader_->isFloatData();
+
     POST_END;
   }
 
@@ -125,6 +129,9 @@ private:
     // fill SOURCE table
     fillSource();
 
+    // fill SPECTRAL_WINDOW table
+    fillSpectralWindow();
+
     // fill SYSCAL table
     fillSyscal();
 
@@ -150,12 +157,14 @@ private:
 
     size_t nrow = reader_->getNumberOfRows();
     DataAccumulator accumulator;
-    Bool is_ready = False;
     TableRecord record;
+    std::cout << "nrow = " << nrow << std::endl;
     for (size_t irow = 0; irow < nrow; ++irow) {
       Bool status = reader_->getData(irow, record);
+      std::cout << "irow " << irow << " status " << status << std::endl;
       if (status) {
         Bool is_ready = accumulator.queryForGet(record);
+        std::cout << "is_ready " << is_ready << std::endl;
         if (is_ready) {
           flush(record, accumulator);
         }
@@ -169,8 +178,14 @@ private:
   }
 
   void flush(TableRecord const &main_record, DataAccumulator &accumulator) {
-//    size_t nchunk = accumulator.getNumberOfChunks();
-//    for (size_t ichunk = 0; ichunk < nchunk; ++ichunk) {
+    POST_START;
+
+    std::cout << "main record" << std::endl;
+    main_record.print(std::cout);
+
+    size_t nchunk = accumulator.getNumberOfChunks();
+    std::cout << "nchunk = " << nchunk << std::endl;
+    for (size_t ichunk = 0; ichunk < nchunk; ++ichunk) {
 //      Int sourceId = updateSource(main_record);
 //      Int fieldId = updateField(sourceId, main_record);
 //      Int polarizationId = updatePolarization(
@@ -181,12 +196,21 @@ private:
 //      Int stateId = updateState(main_record);
 //      Int feedId = updateFeed(main_record);
 //      updatePointing(main_record);
-//      TableRecord data_record;
-//      Bool status = accumulator.get(ichunk, data_record);
-//      updateMain(fieldId, feedId, dataDescriptionId, stateId,
-//          data_record);
-//    }
-//    accumulator.clear();
+      TableRecord data_record;
+      Bool status = accumulator.get(ichunk, data_record);
+      std::cout << "ichunk " << ichunk << " status " << status << std::endl;
+      if (status) {
+        Int fieldId = 0;
+        Int feedId = 0;
+        Int dataDescriptionId = 0;
+        Int stateId = 0;
+        updateMain(fieldId, feedId, dataDescriptionId, stateId, main_record,
+            data_record);
+      }
+    }
+    accumulator.clear();
+
+    POST_START;
   }
 
   // Fill subtables
@@ -201,6 +225,9 @@ private:
 
   // fill SOURCE table
   void fillSource();
+
+  // fill SPECTRAL_WINDOW table
+  void fillSpectralWindow();
 
   // fill SYSCAL table
   void fillSyscal();
@@ -269,18 +296,104 @@ private:
 //  // @param[in] pointingSpec pointing specification
 //  void updatePointing(Record pointingSpec);
 //
-//  // update MAIN table
-//  // @param[in] fieldId field id
-//  // @param[in] feedId feed id
-//  // @param[in] dataDescriptionId data description id
-//  // @param[in] stateId state id
-//  // @param[in] mainSpec main table row specification except id
-//  void updateMain(Int fieldId, Int feedId, Int dataDescriptionId,
-//                  Int stateId, Record mainSpec);
+  // update MAIN table
+  // @param[in] fieldId field id
+  // @param[in] feedId feed id
+  // @param[in] dataDescriptionId data description id
+  // @param[in] stateId state id
+  // @param[in] mainSpec main table row specification except id
+  void updateMain(Int fieldId, Int feedId, Int dataDescriptionId, Int stateId,
+      TableRecord const &mainSpec, TableRecord const &dataRecord) {
+    // constant stuff
+    Vector<Double> const uvw(3, 0.0);
+    constexpr Int antennaId = 0;
+    Array<Bool> flagCategory(IPosition(3, 0, 0, 0));
+
+//    auto mytable = *ms_;
+//    TableRow row(mytable);
+//    TableRecord record = row.record();
+    // target row id
+    uInt irow = ms_->nrow();
+
+    // add new row
+    ms_->addRow(1, True);
+
+    ms_columns_->uvw().put(irow, uvw);
+    ms_columns_->flagCategory().put(irow, flagCategory);
+    ms_columns_->antenna1().put(irow, antennaId);
+    ms_columns_->antenna2().put(irow, antennaId);
+    ms_columns_->fieldId().put(irow, fieldId);
+    ms_columns_->feed1().put(irow, feedId);
+    ms_columns_->feed2().put(irow, feedId);
+    ms_columns_->dataDescId().put(irow, dataDescriptionId);
+    ms_columns_->stateId().put(irow, stateId);
+    Double time = mainSpec.asDouble("TIME");
+    ms_columns_->time().put(irow, time);
+    ms_columns_->timeCentroid().put(irow, time);
+    Double interval = mainSpec.asDouble("INTERVAL");
+    ms_columns_->interval().put(irow, interval);
+    ms_columns_->exposure().put(irow, interval);
+//    record.define("UVW", uvw);
+//    record.define("FLAG_CATEGORY", flagCategory);
+//    record.define("ANTENNA1", antenna_id);
+//    record.define("ANTENNA2", antenna_id);
+//    record.define("FIELD_ID", fieldId);
+//    record.define("FEED1", feedId);
+//    record.define("FEED2", feedId);
+//    record.define("DATA_DESC_ID", dataDescriptionId);
+//    record.define("STATE_ID", stateId);
+//    Double time = mainSpec.asDouble("TIME");
+//    record.define("TIME", time);
+//    record.define("TIME_CENTROID", time);
+//    Double interval = mainSpec.asDouble("INTERVAL");
+//    record.define("INTERVAL", interval);
+//    record.define("EXPOSURE", interval);
+
+    if (is_float_) {
+      Matrix < Float > floatData;
+      if (dataRecord.isDefined("FLOAT_DATA")) {
+        //record.define("FLOAT_DATA", dataRecord.asArrayFloat("FLOAT_DATA"));
+        floatData.assign(dataRecord.asArrayFloat("FLOAT_DATA"));
+      } else if (dataRecord.isDefined("DATA")) {
+        //record.define("FLOAT_DATA", real(dataRecord.asArrayComplex("DATA")));
+        floatData.assign(real(dataRecord.asArrayComplex("DATA")));
+      }
+      ms_columns_->floatData().put(irow, floatData);
+    } else {
+      Matrix < Complex > data;
+      if (dataRecord.isDefined("FLOAT_DATA")) {
+//        record.define("DATA",
+//            makeComplex(dataRecord.asArrayFloat("FLOAT_DATA"),
+//                Matrix < Float > (dataRecord.shape("FLOAT_DATA"), 0.0f)));
+        data.assign(
+            makeComplex(dataRecord.asArrayFloat("FLOAT_DATA"),
+                Matrix < Float > (dataRecord.shape("FLOAT_DATA"), 0.0f)));
+      } else if (dataRecord.isDefined("DATA")) {
+//        record.define("DATA", dataRecord.asArrayComplex("DATA"));
+        data.assign(dataRecord.asArrayComplex("DATA"));
+      }
+      ms_columns_->data().put(irow, data);
+    }
+
+    ms_columns_->flag().put(irow, dataRecord.asArrayBool("FLAG"));
+    ms_columns_->flagRow().put(irow, dataRecord.asBool("FLAG_ROW"));
+    ms_columns_->sigma().put(irow, dataRecord.asArrayFloat("SIGMA"));
+    ms_columns_->weight().put(irow, dataRecord.asArrayFloat("WEIGHT"));
+//    record.define("FLAG", dataRecord.asArrayBool("FLAG"));
+//    record.define("FLAG_ROW", dataRecord.asBool("FLAG_ROW"));
+//    record.define("SIGMA", dataRecord.asArrayFloat("SIGMA"));
+//    record.define("WEIGHT", dataRecord.asArrayFloat("WEIGHT"));
+
+//    uInt irow = mytable.nrow();
+//    mytable.addRow(1, True);
+//    row.put(irow, record);
+  }
 
 //  std::string const &ms_name_;
   std::unique_ptr<casacore::MeasurementSet> ms_;
+  std::unique_ptr<MSMainColumns> ms_columns_;
   std::unique_ptr<Reader> reader_;
+  bool is_float_;
 }
 ;
 

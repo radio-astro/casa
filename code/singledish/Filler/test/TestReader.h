@@ -8,6 +8,8 @@
 #ifndef SINGLEDISH_FILLER_TEST_TESTREADER_H_
 #define SINGLEDISH_FILLER_TEST_TESTREADER_H_
 
+#include <gtest/gtest.h>
+
 #include <casacore/casa/Arrays/Array.h>
 #include <casacore/casa/BasicSL/Constants.h>
 #include <casacore/casa/Quanta/MVPosition.h>
@@ -149,6 +151,64 @@ private:
   Vector<Vector<Double> > sysvel_;
 };
 
+class SpwIterator: public FixedNumberIteratorInterface {
+public:
+  SpwIterator() :
+      FixedNumberIteratorInterface(4), spw_id_(num_iter_), name_(
+          num_iter_), refpix_(num_iter_), refval_(num_iter_), increment_(
+          num_iter_), num_chan_(num_iter_), meas_freq_ref_(
+          num_iter_) {
+    indgen(spw_id_, 0, 1);
+    for (size_t i = 0; i < num_iter_; ++i) {
+      name_[i] = "SPW" + String::toString(spw_id_[i]);
+    }
+    num_chan_[0] = 1024;
+    num_chan_[1] = 512;
+    num_chan_[2] = 64;
+    num_chan_[3] = 32;
+    meas_freq_ref_[0] = 0; // REST
+    meas_freq_ref_[1] = 1; // LSRK
+    meas_freq_ref_[2] = 5; // TOPO
+    meas_freq_ref_[3] = 4; // GEO
+    refpix_[0] = 0.0;
+    refpix_[1] = 256.0;
+    refpix_[2] = 32.0;
+    refpix_[3] = -1.0;
+    increment_[0] = 1.0e8;
+    increment_[1] = 1.0e8;
+    increment_[2] = -1.0e8;
+    increment_[3] = -1.0e8;
+    refval_[0] = 1.0e11;
+    refval_[1] = 1.256e11;
+    refval_[2] = 1.1e11;
+    refval_[3] = 1.133e11;
+  }
+
+  virtual ~SpwIterator() {}
+
+  void getEntry(TableRecord &record) {
+    if (moreData()) {
+      size_t i = current_iter_;
+      record.define("SPECTRAL_WINDOW_ID", spw_id_[i]);
+      record.define("NAME", name_[i]);
+      record.define("NUM_CHAN", num_chan_[i]);
+      record.define("MEAS_FREQ_REF", meas_freq_ref_[i]);
+      record.define("REFPIX", refpix_[i]);
+      record.define("REFVAL", refval_[i]);
+      record.define("INCREMENT", increment_[i]);
+    }
+  }
+
+private:
+  Vector<Int> spw_id_;
+  Vector<String> name_;
+  Vector<Double> refpix_;
+  Vector<Double> refval_;
+  Vector<Double> increment_;
+  Vector<Int> num_chan_;
+  Vector<Int> meas_freq_ref_;
+};
+
 class SysCalIterator: public FixedNumberIteratorInterface {
 public:
   SysCalIterator() :
@@ -274,19 +334,105 @@ private:
   Vector<Float> wind_direction_;
 };
 
-
 // Mock object for Reader
+struct FloatDataStorage {
+  size_t const kNumRow = 24;
+  Double const time_[2] = { 4.0e9, 4.1e9 };
+  Int const spw_[2] = { 0, 1 };
+  Int const num_pol_[2] = { 2, 1 };
+  Int const num_chan_[2] = { 4, 8 };
+  Int const field_[2] = { 0, 1 };
+  Int const feed_[2] = { 0, 1 };
+  String const intent_[2] = { "ON_SOURCE", "OFF_SOURCE" };
+  Bool getData(size_t irow, TableRecord &record) {
+    POST_START;
+
+    size_t const n = kNumRow;
+
+    if (n <= irow) {
+      return False;
+    }
+
+    size_t index = irow / (n / 2);
+    std::cout << "ROW " << irow << std::endl;
+    std::cout << "    index for time and state " << index << std::endl;
+    if (2ul <= index)
+      return false;;
+    record.define("TIME", time_[index]);
+    record.define("INTENT", intent_[index]);
+
+    index = (irow / (n / 4)) % 2;
+    std::cout << "    index for field " << index << std::endl;
+    if (2ul <= index)
+      return false;;
+    record.define("FIELD_ID", field_[index]);
+
+    index = (irow / (n / 8)) % 2;
+    std::cout << "    index for feed " << index << std::endl;
+    if (2ul <= index)
+      return false;;
+    record.define("FEED_ID", feed_[index]);
+
+    if (irow % 3 == 2) {
+      index = 1;
+    } else {
+      index = 0;
+    }
+    std::cout << "    index for spw " << index << std::endl;
+    if (2ul <= index)
+      return false;;
+    size_t const num_chan = num_chan_[index];
+    record.define("SPECTRAL_WINDOW_ID", spw_[index]);
+
+    if (irow % 3 == 1) {
+      index = 1;
+    } else {
+      index = 0;
+    }
+    std::cout << "    index for pol " << index << std::endl;
+    if (2ul <= index)
+      return false;;
+    record.define("POLNO", (Int) index);
+
+    record.define("POL_TYPE", "linear");
+
+    Vector < Float > data(num_chan, (Float) irow);
+    Vector < Bool > flag(num_chan, False);
+    Bool flag_row = False;
+    record.define("DATA", data);
+    record.define("FLAG", flag);
+    record.define("FLAG_ROW", flag_row);
+    record.define("INTERVAL", 10.0);
+
+    POST_END;
+
+    return True;
+  }
+  bool isFloatData() {
+    return true;
+  }
+  size_t nrow() const {
+    return kNumRow;
+  }
+};
+
+struct ComplexDataStorage {
+
+};
+
+template<class DataStorage>
 class TestReader: public casa::ReaderInterface {
 public:
   TestReader(std::string const &name) :
       casa::ReaderInterface(name), source_iterator_(nullptr), syscal_iterator_(
           nullptr), weather_iterator_(nullptr), get_observation_row_(
-          &::TestReader::getObservationRowImpl), get_antenna_row_(
-          &::TestReader::getAntennaRowImpl), get_processor_row_(
-          &::TestReader::getProcessorRowImpl), get_source_row_(
-          &::TestReader::getSourceRowWithInitImpl), get_syscal_row_(
-          &::TestReader::getSysCalRowWithInitImpl), get_weather_row_(
-          &::TestReader::getWeatherRowWithInitImpl) {
+          &::TestReader<DataStorage>::getObservationRowImpl), get_antenna_row_(
+          &::TestReader<DataStorage>::getAntennaRowImpl), get_processor_row_(
+          &::TestReader<DataStorage>::getProcessorRowImpl), get_source_row_(
+          &::TestReader<DataStorage>::getSourceRowWithInitImpl), get_spw_row_(
+          &::TestReader<DataStorage>::getSpwRowWithInitImpl), get_syscal_row_(
+          &::TestReader<DataStorage>::getSysCalRowWithInitImpl), get_weather_row_(
+          &::TestReader<DataStorage>::getWeatherRowWithInitImpl), storage_() {
     POST_START;
     POST_END;
   }
@@ -297,7 +443,14 @@ public:
   }
 
   // get number of rows
-  virtual size_t getNumberOfRows() { return 0; }
+  virtual size_t getNumberOfRows() {
+    return storage_.nrow();
+  }
+
+  // query for data type
+  virtual Bool isFloatData() {
+    return True;
+  }
 
   // to get OBSERVATION table
   virtual Bool getObservationRow(TableRecord &record) {
@@ -341,6 +494,18 @@ public:
     return return_value;
   }
 
+  // to get SPECTRAL WINDOW table
+  virtual Bool getSpectralWindowRow(TableRecord &record) {
+    POST_START;
+
+    Bool return_value = (*this.*get_spw_row_)(record);
+    //Bool return_value = False;
+
+    POST_END;
+
+    return return_value;
+  }
+
   // to get SYSCAL table
   virtual Bool getSyscalRow(TableRecord &record) {
     POST_START;
@@ -373,8 +538,13 @@ public:
   // for DataAccumulator
   virtual Bool getData(size_t irow, TableRecord &record) {
     POST_START;
+
+    Bool status = storage_.getData(irow, record);
+
+    std::cout << "status = " << status << std::endl;
+
     POST_END;
-    return True;
+    return status;
   }
 
   // for testing
@@ -382,6 +552,7 @@ public:
   TableRecord antenna_record_;
   TableRecord processor_record_;
   TableRecord source_record_;
+  TableRecord spw_record_;
   TableRecord syscal_record_;
   TableRecord weather_record_;
   TableRecord main_record_;
@@ -399,14 +570,17 @@ protected:
 
 private:
   std::unique_ptr<SourceIterator> source_iterator_;
+  std::unique_ptr<SpwIterator> spw_iterator_;
   std::unique_ptr<SysCalIterator> syscal_iterator_;
   std::unique_ptr<WeatherIterator> weather_iterator_;
-  Bool (::TestReader::*get_observation_row_)(TableRecord &);
-  Bool (::TestReader::*get_antenna_row_)(TableRecord &);
-  Bool (::TestReader::*get_processor_row_)(TableRecord &);
-  Bool (::TestReader::*get_source_row_)(TableRecord &);
-  Bool (::TestReader::*get_syscal_row_)(TableRecord &);
-  Bool (::TestReader::*get_weather_row_)(TableRecord &);
+  Bool (::TestReader<DataStorage>::*get_observation_row_)(TableRecord &);
+  Bool (::TestReader<DataStorage>::*get_antenna_row_)(TableRecord &);
+  Bool (::TestReader<DataStorage>::*get_processor_row_)(TableRecord &);
+  Bool (::TestReader<DataStorage>::*get_source_row_)(TableRecord &);
+  Bool (::TestReader<DataStorage>::*get_spw_row_)(TableRecord &);
+  Bool (::TestReader<DataStorage>::*get_syscal_row_)(TableRecord &);
+  Bool (::TestReader<DataStorage>::*get_weather_row_)(TableRecord &);
+  DataStorage storage_;
 
   Bool getObservationRowImpl(TableRecord &record) {
     POST_START;
@@ -433,7 +607,7 @@ private:
     observation_record_.assign(record);
 
     // redirect function pointer to noMoreRowImpl
-    get_observation_row_ = &::TestReader::noMoreRowImpl;
+    get_observation_row_ = &::TestReader<DataStorage>::noMoreRowImpl;
 
     POST_END;
 
@@ -451,7 +625,7 @@ private:
         Quantity(-1.1825465955049892, "rad"),
         Quantity(-0.4018251640113072, "rad"));
     MPosition position(mvposition, MPosition::WGS84);
-    Quantum<Vector<Double> > position_val = MPosition::Convert(position,
+    Quantum < Vector<Double> > position_val = MPosition::Convert(position,
         MPosition::ITRF)().get("m");
     record.define("POSITION", position_val.getValue());
     MVPosition mvoffset(Quantity(-50.0, "m"), Quantity(0.01, "rad"),
@@ -465,7 +639,7 @@ private:
     antenna_record_.assign(record);
 
     // redirect function pointer to noMoreRowImpl
-    get_antenna_row_ = &::TestReader::noMoreRowImpl;
+    get_antenna_row_ = &::TestReader<DataStorage>::noMoreRowImpl;
 
     POST_END;
 
@@ -484,7 +658,7 @@ private:
     processor_record_.assign(record);
 
     // redirect function pointer to noMoreRowImpl
-    get_processor_row_ = &::TestReader::noMoreRowImpl;
+    get_processor_row_ = &::TestReader<DataStorage>::noMoreRowImpl;
 
     POST_END;
     return True;
@@ -494,7 +668,7 @@ private:
     POST_START;
 
     source_iterator_.reset(new ::SourceIterator());
-    get_source_row_ = &::TestReader::getSourceRowImpl;
+    get_source_row_ = &::TestReader<DataStorage>::getSourceRowImpl;
 
     Bool more_rows = getSourceRowImpl(record);
 
@@ -520,7 +694,7 @@ private:
       source_record_.defineRecord(key, record);
     } else {
       source_iterator_.reset(nullptr);
-      get_source_row_ = &::TestReader::noMoreRowImpl;
+      get_source_row_ = &::TestReader<DataStorage>::noMoreRowImpl;
     }
 
     POST_END;
@@ -528,11 +702,50 @@ private:
     return more_rows;
   }
 
+  Bool getSpwRowWithInitImpl(TableRecord &record) {
+    POST_START;
+
+    spw_iterator_.reset(new ::SpwIterator());
+    get_spw_row_ = &::TestReader<DataStorage>::getSpwRowImpl;
+
+    Bool more_rows = getSpwRowImpl(record);
+
+    POST_END;
+
+    return more_rows;
+  }
+
+  Bool getSpwRowImpl(TableRecord &record) {
+    POST_START;
+
+    assert(spw_iterator_);
+
+    bool more_rows = spw_iterator_->moreData();
+
+    if (more_rows) {
+      spw_iterator_->getEntry(record);
+      spw_iterator_->next();
+
+      // keep record contents
+      uInt i = spw_record_.nfields();
+      String key = "ROW" + String::toString(i);
+      spw_record_.defineRecord(key, record);
+    } else {
+      spw_iterator_.reset(nullptr);
+      get_spw_row_ = &::TestReader<DataStorage>::noMoreRowImpl;
+    }
+
+    POST_END;
+
+    return more_rows;
+
+  }
+
   Bool getSysCalRowWithInitImpl(TableRecord &record) {
     POST_START;
 
     syscal_iterator_.reset(new ::SysCalIterator());
-    get_syscal_row_ = &::TestReader::getSysCalRowImpl;
+    get_syscal_row_ = &::TestReader<DataStorage>::getSysCalRowImpl;
 
     Bool more_rows = getSysCalRowImpl(record);
 
@@ -558,7 +771,7 @@ private:
       syscal_record_.defineRecord(key, record);
     } else {
       syscal_iterator_.reset(nullptr);
-      get_syscal_row_ = &::TestReader::noMoreRowImpl;
+      get_syscal_row_ = &::TestReader<DataStorage>::noMoreRowImpl;
     }
 
     POST_END;
@@ -571,7 +784,7 @@ private:
     POST_START;
 
     weather_iterator_.reset(new ::WeatherIterator());
-    get_weather_row_ = &::TestReader::getWeatherRowImpl;
+    get_weather_row_ = &::TestReader<DataStorage>::getWeatherRowImpl;
 
     Bool more_rows = getWeatherRowImpl(record);
 
@@ -597,7 +810,7 @@ private:
       weather_record_.defineRecord(key, record);
     } else {
       weather_iterator_.reset(nullptr);
-      get_weather_row_ = &::TestReader::noMoreRowImpl;
+      get_weather_row_ = &::TestReader<DataStorage>::noMoreRowImpl;
     }
 
     POST_END;

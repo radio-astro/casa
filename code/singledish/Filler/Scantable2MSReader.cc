@@ -68,6 +68,14 @@ Bool Scantable2MSReader::getSourceRow(TableRecord &record) {
   return False;
 }
 
+Bool Scantable2MSReader::getSpectralWindowRow(TableRecord &record) {
+  POST_START;
+
+  POST_END;
+
+  return False;
+}
+
 Bool Scantable2MSReader::getSyscalRow(TableRecord &record) {
   POST_START;
 

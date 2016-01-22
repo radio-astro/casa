@@ -45,6 +45,10 @@ public:
     return name_;
   }
 
+  virtual Bool isFloatData() const {
+    return False;
+  }
+
   void initialize() {
     initializeCommon();
     initializeSpecific();
@@ -77,6 +81,11 @@ public:
   // The method should return True if row entry is available.
   // If it return False, row will be invalid so it should not be used.
   virtual Bool getSourceRow(TableRecord &row) = 0;
+
+  // to get SPECTRAL WINDOW table
+  // The method should return True if row entry is available.
+  // If it return False, row will be invalid so it should not be used.
+  virtual Bool getSpectralWindowRow(TableRecord &row) = 0;
 
   // to get SYSCAL table
   // The method should return True if row entry is available.
