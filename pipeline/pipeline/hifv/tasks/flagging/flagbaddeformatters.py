@@ -101,10 +101,13 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
         # Flag data for spws with no unflagged channel solutions in any poln?
         # doflagemptyspws = False
         
-        with casatools.MSReader(self.inputs.vis) as ms:
-            ms_summary = ms.summary()
+        #with casatools.MSReader(self.inputs.vis) as ms:
+        #    ms_summary = ms.summary()
 
-        startdate = ms_summary['BeginTime']
+        #startdate = ms_summary['BeginTime']
+
+        m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
+        startdate = m.start_time['m0']['value']
         
         LOG.info("Start date for flag bad deformatters is: " + str(startdate))
         
