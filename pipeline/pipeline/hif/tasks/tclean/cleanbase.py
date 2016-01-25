@@ -255,16 +255,19 @@ class CleanBase(basetask.StandardTaskTemplate):
         for freq_range in utils.merge_ranges(freq_ranges):
             aggregate_bw = casatools.quanta.add(aggregate_bw, casatools.quanta.sub('%sGHz' % (freq_range[1]), '%sGHz' % (freq_range[0])))
 
-        # Estimate memory usage and adjust chanchunks parameter to avoid
-        # exceeding the available memory.
-        mem_bytes = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')
-        mem_usable_bytes = 0.8 * mem_bytes
-        if (inputs.nchan != -1):
-            cube_bytes = inputs.imsize[0] * inputs.imsize[1] * inputs.nchan * 4
+        if (inputs.specmode == 'cube'):
+            # Estimate memory usage and adjust chanchunks parameter to avoid
+            # exceeding the available memory.
+            mem_bytes = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')
+            mem_usable_bytes = 0.8 * mem_bytes
+            if (inputs.nchan != -1):
+                cube_bytes = inputs.imsize[0] * inputs.imsize[1] * inputs.nchan * 4
+            else:
+                cube_bytes = inputs.imsize[0] * inputs.imsize[1] * max(num_channels) * 4
+            tclean_bytes = 9 * cube_bytes
+            chanchunks = int(tclean_bytes / mem_usable_bytes) + 1
         else:
-            cube_bytes = inputs.imsize[0] * inputs.imsize[1] * max(num_channels) * 4
-        tclean_bytes = 9 * cube_bytes
-        chanchunks = int(tclean_bytes / mem_usable_bytes) + 1
+            chanchunks = 1
 
         parallel = all([mpihelpers.parse_mpi_input_parameter(inputs.parallel),
                         'TARGET' in inputs.intent])
