@@ -23,7 +23,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: findContinuum.py,v 1.44 2016/01/18 06:08:27 we Exp $" 
+    myversion = "$Id: findContinuum.py,v 1.46 2016/01/24 19:35:37 we Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -49,7 +49,8 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
                   separator=';', overwrite=False, titleText='', 
                   showAverageSpectrum=False, maxTrim=20, maxTrimFraction=1.0,
                   meanSpectrumFile='', centralArcsec='auto', alternateDirectory='.',
-                  header='', plotAtmosphere=True, airmass=1.5, pwv=1.0):
+                  header='', plotAtmosphere=True, airmass=1.5, pwv=1.0,
+                  channelFractionForSlopeRemoval=0.75, invert=False):
     """
     This function calls functions to:
     1) compute the mean spectrum of a dirty cube
@@ -106,6 +107,11 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
            default='auto' means start with whole field, then reduce to 1/10 if only
            one window is found
     header: dictionary created by imhead(img, mode='list')
+    airmass: for plot of atmospheric transmission
+    pwv: in mm (for plot of atmospheric transmission)
+    channelFractionForSlopeRemoval: if this many channels are initially selected, then fit 
+         and remove a linear slope and re-identify continuum channels.
+    invert: if reading previous meanSpectrum file, then invert the sign and add the minimum
     """
     img = img.rstrip('/')
     imageInfo = [] # information returned from getImageInfo
@@ -119,6 +125,7 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
         bmaj, bmin, bpa, cdelt1, cdelt2, naxis1, naxis2, freq = imageInfo
         chanInfo = numberOfChannelsInCube(img, returnChannelWidth=True, returnFreqs=True, header=header)
         nchan,firstFreq,lastFreq,channelWidth = chanInfo
+        channelWidth = abs(channelWidth)
     else:
         header = []
         chanInfo = []
@@ -141,7 +148,6 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
     else:  
         print "Running findContinuum('%s', centralArcsec=%s)" % (img, str(centralArcsec))
         centralArcsecField = centralArcsec
-    channelWidth = abs(channelWidth)
 
     result = runFindContinuum(img, spw, transition, baselineModeA, baselineModeB,
                               sigmaCube, nBaselineChannels, sigmaFindContinuum,
@@ -152,10 +158,11 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
                               showAverageSpectrum, maxTrim, maxTrimFraction,
                               meanSpectrumFile, centralArcsecField, channelWidth,
                               alternateDirectory, imageInfo, chanInfo, header,
-                              plotAtmosphere, airmass, pwv)
+                              plotAtmosphere, airmass, pwv, 
+                              channelFractionForSlopeRemoval, invert, iteration=0)
     if result == None:
         return
-    selection, png = result
+    selection, png, slope = result
     if (centralArcsec == 'auto' and img != '' and len(selection.split(separator)) < 2):
         # reduce the field size to one tenth of the previous
         bmaj, bmin, bpa, cdelt1, cdelt2, naxis1, naxis2, freq = imageInfo # getImageInfo(img)
@@ -172,10 +179,11 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
                                   showAverageSpectrum, maxTrim, maxTrimFraction,
                                   meanSpectrumFile, centralArcsec, channelWidth,
                                   alternateDirectory, imageInfo, chanInfo, header,
-                                  plotAtmosphere, airmass, pwv)
+                                  plotAtmosphere, airmass, pwv, 
+                                  channelFractionForSlopeRemoval, invert, iteration=1)
         if result == None:
             return
-        selection, png = result
+        selection, png, slope = result
     aggregateBandwidth = computeBandwidth(selection, channelWidth)
     # Write summary of results to text file
     if (meanSpectrumFile == ''): meanSpectrumFile = img + '.meanSpectrum'
@@ -226,7 +234,8 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
                      showAverageSpectrum=False, maxTrim=20, maxTrimFraction=1.0,
                      meanSpectrumFile='', centralArcsec=-1, channelWidth=0,
                      alternateDirectory='.', imageInfo=[], chanInfo=[], 
-                     header='', plotAtmosphere=True, airmass=1.5, pwv=1.0):
+                     header='', plotAtmosphere=True, airmass=1.5, pwv=1.0,
+                     channelFractionForSlopeRemoval=0.8, invert=False, iteration=0):
     """
     This function calls functions to:
     1) compute the mean spectrum of a dirty cube
@@ -281,7 +290,12 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
     centralArcsec: radius of central box within which to compute the mean spectrum
                default='auto' means start with whole field, then reduce to 10 arcsec if only
                one window is found
+    airmass: for plot of atmospheric transmission
+    pwv: in mm (for plot of atmospheric transmission)
+    channelFractionForSlopeRemoval: if this many channels are initially selected, then fit 
+         and remove a linear slope and re-identify continuum channels.
     """
+    slope=None 
     replaceNans = True 
     startTime = timeUtilities.time()
     img = img.rstrip('/')
@@ -292,6 +306,7 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
             fitsTable = True
     if (type(nBaselineChannels) == float and not fitsTable):
         nchan, firstFreq, lastFreq, channelWidth = chanInfo # numberOfChannelsInCube(img, returnFreqs=True)
+        channelWidth = abs(channelWidth)
         nBaselineChannels = int(round(nBaselineChannels*nchan))
         print "Found %d channels in the cube" % (nchan)
     if (nBaselineChannels < 2 and not fitsTable):
@@ -324,7 +339,7 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
             chanInfo = [result[4],result[6],result[7],(result[7]-result[6])/(result[4]-1)]
         else:
             print "Running readPreviousMeanSpectrum('%s')" % (meanSpectrumFile)
-            result = readPreviousMeanSpectrum(meanSpectrumFile, verbose)
+            result = readPreviousMeanSpectrum(meanSpectrumFile, verbose, invert)
             if (result == None):
                 print "ASCII file is not valid, re-run with overwrite=True"
                 return
@@ -337,6 +352,7 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
         if (firstFreq == 0 and lastFreq == 0):
             # This was an old-format ASCII file, without a frequency column
             n, firstFreq, lastFreq, channelWidth = chanInfo # numberOfChannelsInCube(img,returnFreqs=True)
+            channelWidth = abs(channelWidth)
         if (fitsTable):
             nBaselineChannels = int(round(nBaselineChannels*nchan))
             img = meanSpectrumFile
@@ -347,6 +363,7 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
     donetime = timeUtilities.time()
     if verbose:
         print "%.1f sec elapsed in meanSpectrum" % (donetime-startTime)
+    print "Iteration %d" % (iteration)
     if (sigmaFindContinuum == 'auto' or sigmaFindContinuum == -1):
         sigmaFindContinuumAutomatic = True
         sigmaFindContinuum = 3.5
@@ -373,20 +390,28 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
         sumAboveMedian, sumBelowMedian, sumRatio, channelsAboveMedian, channelsBelowMedian, channelRatio = \
             aboveBelow(avgSpectrumNansReplaced,medianTrue)
     elif ((groups > 3 or (groups > 1 and channelRatio < 1.0) or (channelRatio < 0.5) or (groups == 2 and channelRatio < 1.3)) and sigmaFindContinuumAutomatic):
-        if (channelRatio < 1.0 and channelRatio > 0.1 and (firstFreq < 60e9 or channelWidth<0.5*15.625e6) and groups>2):  # was nchan>256
+#        print "A: groups,channelRatio=", groups, channelRatio, channelRatio < 1.0, channelRatio>0.1, channelWidth<0.5*15.624e6, groups>2
+        if (channelRatio < 0.9 and channelRatio > 0.1 and (firstFreq>60e9 and channelWidth<0.5*15.625e6) and groups>2):  # was nchan>256
             # Don't allow this much reduction in ALMA TDM mode as it chops up line-free quasar spectra too much.
             # The channelRatio>0.1 requirement prevents failures due to ALMA TFB platforming.
             factor = 0.333
         elif (groups <= 2):
-            if (channelRatio < 1.3 and channelRatio > 0.1 and groups == 2 and channelWidth<0.5*15.625e6 and channelWidth>=1875e6/480.):
-                factor = 0.5  # i.e. for galaxy spectra with FDM 240 channel (online-averaging) resolution
+            if (channelRatio < 1.3 and channelRatio > 0.1 and groups == 2 and 
+                channelWidth<15.625e6 and channelWidth>=1875e6/480.):
+                if (channelWidth<0.5*15.625e6):
+                    factor = 0.5  # i.e. for galaxy spectra with FDM 240 channel (online-averaging) resolution
+                else:
+                    factor = 0.7
             else:
                 # prevent sigmaFindContinuum going to inf if groups==1
                 # prevent sigmaFindContinuum going > 1 if groups==2
                 factor = 0.9
         else:
-            factor = np.log(3)/np.log(groups)
-        print "setting factor to %f because groups=%d, channelRatio=%g, firstFreq=%g, nchan=%d" % (factor,groups,channelRatio,firstFreq,nchan)
+            if (channelWidth>=0.5*15.625e6):
+                factor = 1.0
+            else:
+                factor = np.log(3)/np.log(groups)
+        print "setting factor to %f because groups=%d, channelRatio=%g, firstFreq=%g, nchan=%d, channelWidth=%e" % (factor,groups,channelRatio,firstFreq,nchan,channelWidth)
         print "Scaling the threshold by a factor of %.2f (groups=%d, channelRatio=%f)" % (factor, groups,channelRatio)
         sigmaFindContinuum *= factor
         continuumChannels,selection,threshold,median,groups,correctionFactor,medianTrue,mad,medianCorrectionFactor,negativeThreshold,lineStrengthFactor,singleChannelPeaksAboveSFC,allGroupsAboveSFC = \
@@ -396,6 +421,35 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
             aboveBelow(avgSpectrumNansReplaced,medianTrue)
     else:
         print "Not adjusting sigmaFindContinuum, because groups=%d, channelRatio=%g, firstFreq=%g, nchan=%d" % (groups,channelRatio,firstFreq,nchan)
+
+    selectedChannels = countChannels(selection)
+    largestGroup = channelsInLargestGroup(selection)
+    selections = len(selection.split(separator))
+    if (selectedChannels > channelFractionForSlopeRemoval*nchan or 
+        (largestGroup>nchan/3 and selections <= 2)):
+        previousResult = continuumChannels,selection,threshold,median,groups,correctionFactor,medianTrue,mad,medianCorrectionFactor,negativeThreshold,lineStrengthFactor,singleChannelPeaksAboveSFC,allGroupsAboveSFC        
+        # remove linear slope from mean spectrum and run it again
+        index = channelSelectionRangesToIndexArray(selection)
+        print "Fitting slope to %d channels (largestGroup=%d,nchan/3=%d,selectedChannels=%d)" % (len(index), largestGroup, nchan/3, selectedChannels)
+        slope, intercept = linfit(index, avgSpectrumNansReplaced[index], MAD(avgSpectrumNansReplaced[index]))
+        avgSpectrumNansReplaced -= np.array(range(len(avgSpectrumNansReplaced)))*slope
+        print "Removing slope = ", slope
+        continuumChannels,selection,threshold,median,groups,correctionFactor,medianTrue,mad,medianCorrectionFactor,negativeThreshold,lineStrengthFactor,singleChannelPeaksAboveSFC,allGroupsAboveSFC = \
+        findContinuumChannels(avgSpectrumNansReplaced, nBaselineChannels, sigmaFindContinuum, nanmin, 
+                              baselineModeB, trimChannels, narrow, verbose, maxTrim, maxTrimFraction, 
+                              separator, slope)
+        # If we had only one group and only added one or two more group after removing slope, and the
+        # smallest is small compared to the original group, then discard the new solution.
+        discardSlopeResult = False
+        if (groups <= 3 and previousResult[4] == 1):
+            counts = countChannelsInRanges(selection)
+            if (float(min(counts))/max(counts) < 0.2):
+                print "*** Restoring result prior to linfit ***"
+                discardSlopeResult = True
+                continuumChannels,selection,threshold,median,groups,correctionFactor,medianTrue,mad,medianCorrectionFactor,negativeThreshold,lineStrengthFactor,singleChannelPeaksAboveSFC,allGroupsAboveSFC = previousResult
+    else:
+        print "selected channels (%d) < 0.8 * nchan(%d)" % (selectedChannels,nchan)
+        
     idx = np.where(avgSpectrumNansReplaced < threshold)
     madOfPointsBelowThreshold = MAD(avgSpectrumNansReplaced[idx])
     pl.clf()
@@ -406,7 +460,7 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
     cols = 1
     fontsize = 10
     ax1 = pl.subplot(rows,cols,1)
-    skipchan = 2
+    skipchan = 1 # was 2
     if replaceNans:
         avgspectrumAboveThreshold = avgSpectrumNansReplaced
     else:
@@ -518,7 +572,7 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
     ax2.xaxis.set_minor_locator(matplotlib.ticker.MultipleLocator(0.1*10**power))
     ax2.xaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter(useOffset=False))
     if (channelWidth > 0):
-        channelWidthString = ', channel width: %g kHz' % (abs(channelWidth*1e-3))
+        channelWidthString = ', channel width: %g kHz' % (channelWidth*1e-3)
     else:
         channelWidthString = ''
     freqType = ''
@@ -549,11 +603,18 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
     else:
         areaString += 'mean over area: central box of radius %.1f arcsec' % (centralArcsec)
     pl.text(0.5,0.99-5*inc,areaString, transform=ax1.transAxes, ha='center', size=fontsize)
+    if (slope != None):
+        if discardSlopeResult:
+            discarded = ' (result discarded)'
+        else:
+            discarded = ''
+        pl.text(0.5, 0.99-6*inc, 'linear slope removed: %g %s' % (roundFigures(slope,3),discarded), transform=ax1.transAxes, ha='center', size=fontsize)
     # Write CVS version
     pl.text(1.03, -0.005-2*inc, ' '.join(version().split()[1:4]), size=8, 
             transform=ax1.transAxes, ha='right')
     if (plotAtmosphere):
         freqs, atm = CalcAtmTransmissionForImage(img, header, chanInfo, airmass, pwv)
+        print "freqs: min=%g, max=%g n=%d" % (np.min(freqs),np.max(freqs), len(freqs))
 #        atmRescaled = (ylim[1]-ylim[0])*0.25*atm + np.mean(ylim)
         atmRange = 0.5
         yrange = ylim[1]-ylim[0]
@@ -597,8 +658,8 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
     print "Wrote png = %s." % (png)
     donetime = timeUtilities.time()
     print "%.1f sec elapsed in plotMeanSpectrum" % (donetime-startTime)
-    return(selection, png)
-# end of findContinuum
+    return(selection, png, slope)
+# end of runFindContinuum
 
 def aboveBelow(avgSpectrumNansReplaced, threshold):
     """
@@ -687,7 +748,7 @@ def readMeanSpectrumFITSFile(meanSpectrumFile, unit=0, nanBufferChannels=1):
     return(avgspectrum, avgSpectrumNansReplaced, threshold,
            edgesUsed, nchan, nanmin, firstFreq, lastFreq)
     
-def readPreviousMeanSpectrum(meanSpectrumFile, verbose=False):
+def readPreviousMeanSpectrum(meanSpectrumFile, verbose=False, invert=False):
     """
     Read a previous calculated mean spectrum and its parameters,
     or an ASCII file created by the CASA viewer (or tt.ispec).
@@ -737,10 +798,17 @@ def readPreviousMeanSpectrum(meanSpectrumFile, verbose=False):
             chan,freq,a,b = line.split()
             channels.append(int(chan))
             freqs.append(float(freq))
+        if invert:
+            a = -float(a)
+            b = -float(b)
         avgspectrum.append(float(a))
         avgSpectrumNansReplaced.append(float(b))
     avgspectrum = np.array(avgspectrum)    
     avgSpectrumNansReplaced = np.array(avgSpectrumNansReplaced)
+    if invert:
+        avgspectrum += abs(np.min(avgspectrum))
+        avgSpectrumNansReplaced += abs(np.min(avgSpectrumNansReplaced))
+        
     if (len(freqs) > 0):
         firstFreq = freqs[0]
         lastFreq = freqs[-1]
@@ -755,7 +823,7 @@ def readPreviousMeanSpectrum(meanSpectrumFile, verbose=False):
 def findContinuumChannels(spectrum, nBaselineChannels=16, sigmaFindContinuum=3, 
                           nanmin=None, baselineMode='min', trimChannels='auto',
                           narrow='auto', verbose=False, maxTrim=20, 
-                          maxTrimFraction=1.0, separator=';'): 
+                          maxTrimFraction=1.0, separator=';', slope=0.0): 
     """
     Trys to find continuum channels in a spectrum, based on a threshold or
     some number of edge channels and their median and standard deviation.
@@ -789,6 +857,7 @@ def findContinuumChannels(spectrum, nBaselineChannels=16, sigmaFindContinuum=3,
     10 negative threshold used
     11 lineStrength factor
     """
+    originalSpectrum = spectrum + slope*np.array(range(len(spectrum)))
     if (narrow == 'auto'):
         narrow = pickNarrow(len(spectrum))
     npts = len(spectrum)
@@ -817,6 +886,7 @@ def findContinuumChannels(spectrum, nBaselineChannels=16, sigmaFindContinuum=3,
         # pick the n channels with the n lowest values (or highest if those have smallest MAD)
         idx = np.argsort(spectrum)
         allBaselineChannels = spectrum[idx[:nBaselineChannels]] 
+        allBaselineOriginalChannels = originalSpectrum[idx[:nBaselineChannels]]
         highestChannels = spectrum[idx[-nBaselineChannels:]] 
         if (MAD(allBaselineChannels) > MAD(highestChannels)):
             # This may be an absorption spectrum, so use highest values to define the continuum level
@@ -829,11 +899,18 @@ def findContinuumChannels(spectrum, nBaselineChannels=16, sigmaFindContinuum=3,
 
         print "min method: computing MAD and median of %d channels used as the baseline" % (len(allBaselineChannels))
         mad = MAD(allBaselineChannels)
-        if (mad < 1e-17):  # avoid blocks of identically-zero values
-            print "min method: avoiding blocks of identically-zero values"
-            myspectrum = spectrum[np.where(spectrum != allBaselineChannels[0])]
+        madOriginal = MAD(allBaselineOriginalChannels)
+        print "MAD of all baseline channels = ", mad
+        print "MAD of original baseline channels = ", mad
+        if (mad < 1e-17 or madOriginal < 1e-17): 
+            print "min method: avoiding blocks of identical-valued channels"
+#            myspectrum = spectrum[np.where(spectrum != allBaselineChannels[0])]
+            if (len(originalSpectrum) > 10):
+                myspectrum = spectrum[np.where((originalSpectrum != originalSpectrum[0]) * (originalSpectrum != originalSpectrum[-1]))]
+            else: # original logic, prior to linear fit removal
+                myspectrum = spectrum[np.where(spectrum != allBaselineChannels[0])]
             allBaselineChannels = myspectrum[np.argsort(myspectrum)[:nBaselineChannels]] 
-            print "            computing MAD and median  %d channels used as the baseline" % (len(allBaselineChannels))
+            print "            computing MAD and median of %d channels used as the baseline" % (len(allBaselineChannels)), allBaselineChannels
             mad = MAD(allBaselineChannels)
         mad = MAD(allBaselineChannels)
         median = nanmedian(allBaselineChannels)
@@ -847,7 +924,6 @@ def findContinuumChannels(spectrum, nBaselineChannels=16, sigmaFindContinuum=3,
     negativeThreshold = -1.15*sigmaEffective*mad + medianTrue
     print "MAD = %f, median = %f, trueMedian=%f, signalRatio=%f" % (mad, median, medianTrue, signalRatio)
     print "findContinuumChannels: computed threshold = ", threshold
-
     channels = np.where(spectrum < threshold)[0]
     if (negativeThreshold != None):
         channels2 = np.where(spectrum > negativeThreshold)[0]
@@ -856,27 +932,27 @@ def findContinuumChannels(spectrum, nBaselineChannels=16, sigmaFindContinuum=3,
     # for CAS-8059: remove channels that are equal to the minimum if all channels from 
     # it toward the nearest edge are also equal to the minimum: 
     channels = list(channels)
-    if (spectrum[np.min(channels)] == np.min(spectrum)):
+    if (originalSpectrum[np.min(channels)] == np.min(originalSpectrum)):
         lastmin = np.min(channels)
         channels.remove(lastmin)
         removed = 1
         for c in range(np.min(channels),np.max(channels)):
-            if (spectrum[c] != np.min(spectrum)):
+            if (originalSpectrum[c] != np.min(originalSpectrum)):
                 break
             channels.remove(c)
             removed += 1
         print "Removed %d channels on low channel edge that were at the minimum." % (removed)
-    if (spectrum[np.max(channels)] == np.min(spectrum)):
+    # Now come in from the upper side
+    if (originalSpectrum[np.max(channels)] == np.min(originalSpectrum)):
         lastmin = np.max(channels)
         channels.remove(lastmin)
         removed = 1
         for c in range(np.max(channels),np.min(channels)-1,-1):
-            if (spectrum[c] != np.min(spectrum)):
+            if (originalSpectrum[c] != np.min(originalSpectrum)):
                 break
             channels.remove(c)
             removed += 1
         print "Removed %d channels on high channel edge that were at the minimum." % (removed)
-            
     peakChannels = np.where(spectrum > threshold)[0]
     peakChannelsLists = splitListIntoContiguousLists(peakChannels)
     peakMultiChannelsLists = splitListIntoContiguousListsAndRejectNarrow(peakChannels, narrow=2)
@@ -1528,7 +1604,8 @@ def meanSpectrum(img='g35.03_KDnh3_11.hline.self.image', nBaselineChannels=16,
     return(avgspectrum, nansRemoved, nansReplaced, threshold, 
            edgesUsed, nchan, nanmin)
 
-def removeNaNs(a, replaceWithMin=False, verbose=False, nanBufferChannels=0, replaceWithZero=False):
+def removeNaNs(a, replaceWithMin=False, verbose=False, nanBufferChannels=0, 
+               replaceWithZero=False):
     """
     Remove or replace the nan values from an array.
     replaceWithMin: if True, then replace NaNs with np.nanmin of array
@@ -1691,6 +1768,7 @@ def convertChannelListIntoSelection(channels, trim=0, separator=';'):
 def getFreqsForImage(img, header='', spectralaxis=-1, unit='GHz'):
     """
     Returns an array of frequencies of an image cube in the specified unit.
+    Not currently used.
     """
     if (header == ''):
         header = imhead(img,mode='list')
@@ -1736,7 +1814,9 @@ def CalcAtmTransmissionForImage(img, header='', chanInfo='', airmass=1.5, pwv=-1
         freqs = np.linspace(chanInfo[1]*1e-9,chanInfo[2]*1e-9,chanInfo[0])
     else:
         telescopeName = header['telescope']
-        freqs = getFreqsForImage(img, header, spectralaxis)
+        # this will not match up with the plot, which uses numberOfChannelsInCube
+#        freqs = getFreqsForImage(img, header, spectralaxis)
+        freqs = np.linspace(chanInfo[1]*1e-9,chanInfo[2]*1e-9,chanInfo[0])
     P0 = 1000.0 # mbar
     H0 = 20.0   # percent
     T0 = 273.0  # Kelvin
@@ -1812,4 +1892,104 @@ def CalcAtmTransmissionForImage(img, header='', chanInfo='', airmass=1.5, pwv=-1
     else:
         values = TebbSky
     return(freqs, values)
+
+def channelSelectionRangesToIndexArray(selection, separator=';'):
+    """
+    Convert a channel selection range string to integer array of indicies.
+    e.g.:  '3~8;'10~11' -> [3,4,5,6,7,8,10,11]
+    """
+    index = []
+    for s in selection.split(separator):
+        a,b = s.split('~')
+        index += range(int(a),int(b)+1,1)
+    return(np.array(index))
+
+def linfit(x, y, yerror, pinit=[0,0]):
+    """
+    Basic linear function fitter with error bars in y-axis data points.
+    Uses scipy.optimize.leastsq().  Accepts either lists or arrays.
+    Example:
+         lf = au.linfit()
+         lf.linfit(x, y, yerror, pinit)
+    Input:
+         x, y: x and y axis values
+         yerror: uncertainty in the y-axis values (vector or scalar)
+         pinit contains the initial guess of [slope, intercept]
+    Output:
+       The fit result as: [slope, y-intercept]
+    - Todd Hunter
+    """
+    x = np.array(x)
+    y = np.array(y)
+    if (type(yerror) != list and type(yerror) != np.ndarray):
+        yerror = np.ones(len(x)) * yerror
+    fitfunc = lambda p, x: p[1] + p[0]*x
+    errfunc = lambda p,x,y,err: (y-fitfunc(p,x))/(err**2)
+    out = scipy.optimize.leastsq(errfunc, pinit, args=(x,y,yerror/y), full_output=1)
+    p = out[0]
+    covar = out[1]
+    return(p)
+
+def channelsInLargestGroup(selection):
+    """
+    Returns the number of channels in the largest group of channels in a
+    CASA selection string.
+    """
+    if (selection == ''):
+        return 0
+    ranges = selection.split(';')
+    largest = 0
+    for r in ranges:
+        c0 = int(r.split('~')[0])
+        c1 = int(r.split('~')[1])
+        channels = c1-c0+1
+        if (channels > largest):
+            largest = channels
+    return largest
+
+def countChannelsInRanges(channels, separator=';'):
+    """
+    Counts the number of channels in one spw of a CASA channel selection string
+    and return a list of numbers.
+    e.g. "5~20;30~40"  yields [16,11]
+    """
+    tokens = channels.split(separator)
+    count = []
+    for i in range(len(tokens)):
+        c0 = int(tokens[i].split('~')[0])
+        c1 = int(tokens[i].split('~')[1])
+        count.append(c1-c0+1)
+    return count
+
+def countChannels(channels):
+    """
+    Counts the number of channels in a CASA channel selection string.
+    If multiple spws, then return a dictionary of counts
+    e.g. "1:5~20;30~40"  yields 27; or  '6~30' yields 25
+         "1:5~20;30~40,2:6~30" yields {1:27, 2:25}
+    """
+    if (channels == ''):
+        return 0
+    tokens = channels.split(',')
+    nspw = len(tokens)
+    count = {}
+    for i in range(nspw):
+        string = tokens[i].split(':')
+        if (len(string) == 2):
+            spw,string = string
+        else:
+            string = string[0]
+            spw = 0
+        ranges = string.split(';')
+        for r in ranges:
+            c0 = int(r.split('~')[0])
+            c1 = int(r.split('~')[1])
+            if (c0 > c1):
+                print "Invalid channel range: c0 > c1 (%d > %d)" % (c0,c1)
+                return
+        channels = [1+int(r.split('~')[1])-int(r.split('~')[0]) for r in ranges]
+        count[spw] = np.sum(channels)
+    if (nspw == 1):
+        count = count[spw]
+    return(count)
 
