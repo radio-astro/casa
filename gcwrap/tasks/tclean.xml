@@ -823,6 +823,9 @@ HPX HEALPix grid.  -->
                        but there will be a significant performance cost to doing so, especially
                        for gridder='awproject' where it is combined with A-Projection.
 
+                       wprojplanes=-1 is an option for gridder='widefield' or 'wproject'
+                       in which the number of planes is automatically computed.
+
 </description>
       <value type="int">1</value>
     </param>
@@ -1132,6 +1135,27 @@ HPX HEALPix grid.  -->
 </description>
       <value type="int">2</value>
     </param>
+
+    <param type="double" name="smallscalebias" subparam="true">
+     <shortdescription>A bias towards smaller scale sizes</shortdescription>
+     <description>A numerical control to bias the solution towards smaller scales.
+
+                      The peak from each scale's smoothed residual is 
+                      multiplied by ( 1 - smallscalebias * scale/maxscale )
+                      to increase or decrease the amplitude relative to other scales,
+                      before the scale with the largest peak is chosen.
+
+                      smallscalebias=0.6 (default) applies a slight bias towards small
+                                              scales, ranging from 1.0 for a point source to
+                                              0.4 for the largest scale size
+
+                      Values larger than 0.6 will bias the solution towards smaller scales.
+                      Values smaller than 0.6 will tend towards giving all scales equal weight.
+
+</description>
+      <value type="double">0.6</value>
+    </param>
+
 
     <param type="any" name="restoringbeam" subparam="true">
            <shortdescription>Restoring beam shape to use. Default is the PSF main lobe</shortdescription>
@@ -2053,6 +2077,7 @@ HPX HEALPix grid.  -->
        </equals>
        <equals type="string" value="multiscale">
 	 <default param="scales"><value type="intArray"></value></default>
+	 <default param="smallscalebias"><value>0.6</value></default>
 	 <default param="restoringbeam"><value type="stringArray"></value></default>
        </equals>
        <equals type="string" value="mtmfs">
