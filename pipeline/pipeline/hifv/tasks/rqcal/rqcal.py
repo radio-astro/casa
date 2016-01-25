@@ -81,10 +81,12 @@ class Rqcal(basetask.StandardTaskTemplate):
     def prepare(self):
         inputs = self.inputs
 
-        with casatools.MSReader(inputs.vis) as ms:
-            ms_summary = ms.summary()
+        #with casatools.MSReader(inputs.vis) as ms:
+        #    ms_summary = ms.summary()
 
-        startdate = ms_summary['BeginTime']
+        #startdate = ms_summary['BeginTime']
+        m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
+        startdate = m.start_time['m0']['value']
 
         # Note from original scripted pipeline:
         # Apply switched power calibration (when commissioned); for now, just
