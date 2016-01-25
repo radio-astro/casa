@@ -119,10 +119,10 @@ class Opcal(basetask.StandardTaskTemplate):
         spw2band = m.get_vla_spw2band()
         bands = spw2band.values()
         
-        with casatools.MSReader(inputs.vis) as ms:
-            ms_summary = ms.summary()
+        #with casatools.MSReader(inputs.vis) as ms:
+        #    ms_summary = ms.summary()
         
-        startdate = ms_summary['BeginTime']
+        #startdate = ms_summary['BeginTime']
 
         seasonal_weight = 1.0
 
