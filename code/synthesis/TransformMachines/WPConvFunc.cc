@@ -184,6 +184,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     convSupport.resize(wConvSize);
   }
   else{
+    
+    
     if(maxW_p> 0.0)
       maxUVW= 1.05*maxW_p;
     else
@@ -492,6 +494,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	suppstor[iw]=cpConvSize/2/convSampling_p-1;
 	++warner;
       }
+    }
+    else{
+      suppstor[iw]=cpConvSize/2/convSampling_p-1;
+      ++warner;
     }
   }
   pcsupp.putStorage(suppstor, delsupstor);

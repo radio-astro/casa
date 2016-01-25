@@ -1,9 +1,9 @@
-//# WPConvFunc.h: Definition for PixelatedConvFunc
-//# Copyright (C) 2007
+//# WPConvFunc.h: Definition for WPConvFunc
+//# Copyright (C) 2007-2016
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
-//# under the terms of the GNU Library General Public License as published by
+//# under the terms of the GNU General Public License as published by
 //# the Free Software Foundation; either version 2 of the License, or (at your
 //# option) any later version.
 //#
@@ -94,6 +94,8 @@ namespace casa{
       //Serialization
       Bool toRecord(RecordInterface& rec);
       Bool fromRecord(String& err, const RecordInterface& rec);
+      
+      
     private:
       Bool checkCenterPix(const ImageInterface<Complex>& image);
       Block <CountedPtr<Cube<Complex> > > convFunctions_p;

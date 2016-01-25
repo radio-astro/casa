@@ -1,9 +1,9 @@
 //# WProjectFT.h: Definition for WProjectFT
-//# Copyright (C) 1996,1997,1998,1999,2000,2002
+//# Copyright (C) 2003-2016
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
-//# under the terms of the GNU Library General Public License as published by
+//# under the terms of the GNU General Public License as published by
 //# the Free Software Foundation; either version 2 of the License, or (at your
 //# option) any later version.
 //#
@@ -12,7 +12,7 @@
 //# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
 //# License for more details.
 //#
-//# You should have received a copy of the GNU Library General Public License
+//# You should have received a copy of the GNU General Public License
 //# along with this library; if not, write to the Free Software Foundation,
 //# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
 //#
@@ -228,6 +228,10 @@ public:
   CountedPtr<WPConvFunc>& getConvFunc();
   virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
   virtual void ComputeResiduals(VisBuffer& /*vb*/, Bool /*useCorrected*/) {};
+
+  //Helper function to calculate min, max, rms of W in the data set
+  static void wStat(ROVisibilityIterator& vi, Double& minW, Double& maxW, Double& rmsW); 
+
 
 protected:
 

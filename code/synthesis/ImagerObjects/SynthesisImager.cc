@@ -1,5 +1,5 @@
-//# SynthesisImager.cc: Implementation of Imager.h
-//# Copyright (C) 1997-2008
+//# SynthesisImager.cc: Implementation of SynthesisImager.h
+//# Copyright (C) 1997-2016
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This program is free software; you can redistribute it and/or modify it
@@ -1539,13 +1539,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     }
     else if(ftname== "wprojectft"){
+     Double maxW=-1.0;
+     Double minW=-1.0;
+     Double rmsW=-1.0;
+     if(wprojplane <1)
+	WProjectFT::wStat(*rvi_p, minW, maxW, rmsW);
+    if(facets >1){
+      theFT=new WProjectFT(wprojplane,  phaseCenter_p, mLocation_p,
+			   cache/2, tile, useAutocorr, padding, useDoublePrec, minW, maxW, rmsW);
+      theIFT=new WProjectFT(wprojplane,  phaseCenter_p, mLocation_p,
+			    cache/2, tile, useAutocorr, padding, useDoublePrec, minW, maxW, rmsW);
+    }
+    else{
       theFT=new WProjectFT(wprojplane,  mLocation_p,
-			   cache/2, tile, useAutocorr, padding, useDoublePrec);
+			   cache/2, tile, useAutocorr, padding, useDoublePrec, minW, maxW, rmsW);
       theIFT=new WProjectFT(wprojplane,  mLocation_p,
-			   cache/2, tile, useAutocorr, padding, useDoublePrec);
-      CountedPtr<WPConvFunc> sharedconvFunc= new WPConvFunc();
-      static_cast<WProjectFT &>(*theFT).setConvFunc(sharedconvFunc);
-      static_cast<WProjectFT &>(*theFT).setConvFunc(sharedconvFunc);
+			    cache/2, tile, useAutocorr, padding, useDoublePrec, minW, maxW, rmsW);
+    }
+      CountedPtr<WPConvFunc> sharedconvFunc=static_cast<WProjectFT &>(*theFT).getConvFunc();
+      //static_cast<WProjectFT &>(*theFT).setConvFunc(sharedconvFunc);
+      static_cast<WProjectFT &>(*theIFT).setConvFunc(sharedconvFunc);
     }
     else if ((ftname == "awprojectft") || (ftname== "mawprojectft") || (ftname == "protoft")) {
       createAWPFTMachine(theFT, theIFT, ftname, facets, wprojplane, 

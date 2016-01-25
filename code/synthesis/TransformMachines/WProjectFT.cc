@@ -1,9 +1,9 @@
 //# WProjectFT.cc: Implementation of WProjectFT class
-//# Copyright (C) 1997,1998,1999,2000,2001,2002,2003
+//# Copyright (C) 2001-2016
 //# Associated Universities, Inc. Washington DC, USA
 //#
 //# This library is free software; you can redistribute it and/or modify it
-//# under the terms of the GNU Library General Public License as published by
+//# under the terms of the GNU General Public License as published by
 //# the Free Software Foundation; either version 2 of the License, or (at your
 //# option) any later version.
 //#
@@ -12,7 +12,7 @@
 //# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
 //# License for more details.
 //#
-//# You should have received a copy of the GNU Library General Public License
+//# You should have received a copy of the GNU General Public License
 //# along with this library; if not, write to the Free Software Foundation,
 //# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
 //#
@@ -1699,6 +1699,29 @@ String WProjectFT::name() const {
 
 }
 
+  void WProjectFT::wStat(ROVisibilityIterator& vi, Double& minW, Double& maxW, Double& rmsW){
+     VisBuffer vb(vi);
+    maxW=0.0;
+    minW=1e99;
+    Double nval=0;
+    rmsW=0.0;
+    for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
+      for (vi.origin();vi.more();vi++) {
+	maxW=max(maxW, max(abs(vb.uvwMat().row(2)*max(vb.frequency())))/C::c);
+	minW=min(minW, min(abs(vb.uvwMat().row(2)*min(vb.frequency())))/C::c);
+	///////////some shenanigans as some compilers is confusing * operator for vector
+	Vector<Double> elw;
+	elw=vb.uvwMat().row(2);
+	elw*=vb.uvwMat().row(2);
+	//////////////////////////////////////////////////
+	rmsW+=sum(elw);
+
+	nval+=Double(vb.nRow());
+      }
+    }
+    rmsW=sqrt(rmsW/Double(nval))*max(vb.frequency())/C::c;
+
+  }
 
 
 } //# NAMESPACE CASA - END

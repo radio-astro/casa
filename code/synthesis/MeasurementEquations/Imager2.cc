@@ -2591,39 +2591,19 @@ Bool Imager::createFTMachine()
   else if (ftmachine_p == "wproject"){
     os << LogIO::NORMAL << "Performing w-plane projection" // Loglevel PROGRESS
        << LogIO::POST;
-    //if(wprojPlanes_p<64) {
-    //  os << LogIO::WARN
-    //	 << "No of WProjection planes set too low for W projection - recommend at least 128"
-    //	 << LogIO::POST;
-    //}
-    ///////Let's find  ... the maximum w
-    VisBuffer vb(*rvi_p);
-    Double maxW=0.0;
-    Double minW=1e99;
-    Double nval=0;
-    Double sumWW=0.0;
-    for (rvi_p->originChunks(); rvi_p->moreChunks(); rvi_p->nextChunk()) {
-      for (rvi_p->origin();rvi_p->more();(*rvi_p)++) {
-	maxW=max(maxW, max(abs(vb.uvwMat().row(2)*max(vb.frequency())))/C::c);
-	minW=min(minW, min(abs(vb.uvwMat().row(2)*min(vb.frequency())))/C::c);
-	///////////some shenanigans as some compilers is confusing * operator for vector
-	Vector<Double> elw;
-	elw=vb.uvwMat().row(2);
-	elw*=vb.uvwMat().row(2);
-	//////////////////////////////////////////////////
-	sumWW+=sum(elw);
-
-	nval+=Double(vb.nRow());
-      }
-    }
-    sumWW=sqrt(sumWW/Double(nval))*max(vb.frequency())/C::c;
+   
+    Double maxW=-1.0;
+    Double minW=-1.0;
+    Double rmsW=-1.0;
+    if(wprojPlanes_p < 1)
+      WProjectFT::wStat(*rvi_p, minW, maxW, rmsW);
     if(facets_p > 1){
       ft_p = new WProjectFT(wprojPlanes_p,  phaseCenter_p, mLocation_p,
-			    cache_p/2, tile_p, False, padding_p, useDoublePrecGrid, minW, maxW, sumWW);
+			    cache_p/2, tile_p, False, padding_p, useDoublePrecGrid, minW, maxW, rmsW);
     }
     else{
       ft_p = new WProjectFT(wprojPlanes_p,  mLocation_p,
-			    cache_p/2, tile_p, False, padding_p, useDoublePrecGrid, minW, maxW, sumWW);
+			    cache_p/2, tile_p, False, padding_p, useDoublePrecGrid, minW, maxW, rmsW);
     }
     AlwaysAssert(ft_p, AipsError);
     cft_p = new SimpleComponentFTMachine();
