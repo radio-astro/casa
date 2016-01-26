@@ -104,6 +104,7 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_imstat.py
   test_imtrans.py
   test_imval.py
+  test_initweights.py
   test_listhistory.py
   test_listfits.py
   test_listobs.py
