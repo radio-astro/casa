@@ -18,10 +18,15 @@ class SpwPhaseupQAHandler(pqa.QAResultHandler):
         vis= result.inputs['vis']
         ms = context.observing_run.get_ms(vis)
 
-        # Check for the frequency of narrow to wide mapping vs one to 
-        # one mapping
-        score1 = self._phaseup_mapping_fraction(ms, result.inputs['field'],
-                        result.inputs['intent'], result.phaseup_spwmap)
+        # Check first for the combined spw map. Next the
+        # narrow to wide spw mzp. Note that the input
+        # field and intent parameters are no longer used.
+        if result.combine_spwmap:
+            score1 = self._phaseup_mapping_fraction(ms, '', 'PHASE',
+                result.combine_spwmap)
+        else:
+            score1 = self._phaseup_mapping_fraction(ms, result.inputs['field'],
+                result.inputs['intent'], result.phaseup_spwmap)
 	if not result.phaseup_result.final:
 	    score2= qacalc.score_path_exists(ms.name,
 	    list(result.phaseup_result.error)[0].gaintable, 'caltable')
