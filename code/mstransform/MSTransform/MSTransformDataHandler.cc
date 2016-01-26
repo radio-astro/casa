@@ -1100,13 +1100,15 @@ Bool MSTransformDataHandler::makeSelection()
 			if (ant2List(idx) >= 0) antsSel.push_back(ant2List(idx));
 		}
 
-		// Remove duplicates and sort
-		antsSel.erase(std::unique(antsSel.begin(), antsSel.end()),antsSel.end());
+		// Sort and remove duplicates
 		std::sort(antsSel.begin(), antsSel.end());
+		antsSel.erase(std::unique(antsSel.begin(), antsSel.end()),antsSel.end());
 
 		Vector<Int> selAnts(antsSel);
 		uInt nAnts = selAnts.size();
 		Int maxAnt = max(selAnts);
+
+		os 	<< LogIO::NORMAL << "casa=" << selAnts << LogIO::POST;
 
 		if (maxAnt < 0)
 		{
