@@ -196,8 +196,8 @@ string plotms::getPlotMSFilename(const int plotIndex) {
 void plotms::setPlotMSSelection(const string& field, const string& spw,
         const string& timerange, const string& uvrange,
         const string& antenna, const string& scan, const string& corr,
-	const string& array, const string& observation, 
-        const string& intent, const string& msselect,
+        const string& array, const string& observation, 
+        const string& intent, const string& feed, const string& msselect,
         const bool updateImmediately, const int plotIndex) {
 	 launchApp();
     PlotMSSelection sel;
@@ -212,6 +212,7 @@ void plotms::setPlotMSSelection(const string& field, const string& spw,
     sel.setArray(array);
     sel.setObservation(observation);
     sel.setIntent(intent);
+    sel.setFeed(feed);
     sel.setMsselect(msselect);
     
     setPlotMSSelection_(sel, updateImmediately, plotIndex);

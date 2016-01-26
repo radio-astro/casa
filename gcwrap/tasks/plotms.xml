@@ -98,6 +98,11 @@ MS Parameters
       <value>antenna1</value><value>ant1</value>
       <value>antenna2</value><value>ant2</value>
       <value>baseline</value>
+      <value>row</value>
+      <value>observation</value>
+      <value>intent</value>
+      <value>feed1</value>
+      <value>feed2</value>
       <value>uvdist</value>
       <value>uvwave</value><value>uvdist_l</value><value>uvdistl</value>
       <value>u</value>
@@ -129,7 +134,6 @@ MS Parameters
       <value>ant-azimuth</value>
       <value>ant-elevation</value>
       <value>ant-parang</value><value>ant-parangle</value><value>ant-parallacticangle</value>
-      <value>row</value>
       <value>flagrow</value>
       <value>gainamp</value><value>gamp</value>
       <value>gainphase</value><value>gphase</value>
@@ -140,8 +144,6 @@ MS Parameters
       <value>swp</value><value>swpower</value><value>switchedpower</value>
       <value>radialvelocity</value>
       <value>rho</value>
-      <value>observation</value>
-      <value>intent</value>
     </allowed>
   </param>
   
@@ -188,6 +190,10 @@ MS Parameters
       <value>antenna2</value>
       <value>ant2</value>
       <value>baseline</value>
+      <value>observation</value>
+      <value>intent</value>
+      <value>feed1</value>
+      <value>feed2</value>
       <value>uvdist</value>
       <value>uvwave</value>
       <value>uvdist_l</value>
@@ -250,8 +256,6 @@ MS Parameters
       <value>swp</value>
       <value>swpower</value>
       <value>switchedpower</value>
-      <value>observation</value>
-      <value>intent</value>
     </allowed>
     </param>
     
@@ -337,13 +341,18 @@ MS Selection parameters
     </param>
     
     <param type="any" name="observation" subparam="true">
-      <description>Select by observation ID(s)</description>
+      <description>observation ID(s) (blank for all)</description>
       <any type="variant" limittypes="string int"/>
       <value type="string"></value>
     </param>
 
     <param type="string" name="intent" subparam="true">
-      <description>Select observing intent</description>
+      <description>observing intent (blank for all)</description>
+      <value />
+    </param>
+
+    <param type="string" name="feed" subparam="true">
+      <description>Select feed (blank for all)</description>
       <value />
     </param>
 
@@ -1055,6 +1064,7 @@ Constraints
       <equals value="flagrow"/>
       <equals value="observation"/>
       <equals value="intent"/>
+      <equals value="feed"/>
     </when>
 
     
@@ -1137,6 +1147,7 @@ Constraints
       <equals value="flagrow"/>
       <equals value="observation"/>
       <equals value="intent"/>
+      <equals value="feed"/>
     </when>
     
     <when param="selectdata">
@@ -1149,8 +1160,9 @@ Constraints
         <default param="scan"><value type="string" /></default>
         <default param="correlation"><value type="string" /></default>
         <default param="array"><value type="string" /></default>
-	<default param="observation"><value type="string"/></default>
-	<default param="intent"><value type="string"/></default>
+        <default param="observation"><value type="string"/></default>
+        <default param="intent"><value type="string"/></default>
+        <default param="feed"><value type="string"/></default>
         <default param="msselect"><value type="string" /></default>
       </equals>
       <equals type="bool" value="False" />
@@ -1370,7 +1382,11 @@ Constraints
                  'ant1'='antenna1'   (index)
                  'ant2'='antenna2'   (index)
                  'baseline'  (a baseline index) 
-                 'row'  (absoute row Id from the MS)
+                 'row'   (absoute row Id from the MS)
+                 'observation' (index)
+                 'intent'      (index)
+                 'feed1'       (index)
+                 'feed2'       (index)
                Visibility values, flags:
                  'amp'='amplitude'
                  'phase'  (deg)
@@ -1398,7 +1414,6 @@ Constraints
                  'ant-azimuth' 
                  'ant-elevation'
                  'ant-parang'='ant-parangle'
-
                Calibration:
                  'gainamp'='gamp'
                  'gainphase'='gphase'
@@ -1472,8 +1487,8 @@ Constraints
               If antenna string is a non-negative integer, it is assumed an
                 antenna index, otherwise, it is assumed as an antenna name
               antenna='5&amp;6'; baseline between antenna index 5 and index 6.
-	      antenna='!ea02'; exclude EVLA antenna 2.
-	      antenna='ea13;!ea22'; EVLA antenna 13, excluding antenna 22.
+              antenna='!ea02'; exclude EVLA antenna 2.
+              antenna='ea13;!ea22'; EVLA antenna 13, excluding antenna 22.
               antenna='VA05&amp;VA06'; baseline between VLA antenna 5 and 6.
               antenna='5&amp;6;7&amp;8'; baselines with indices 5-6 and 7-8
               antenna='5'; all baselines with antenna index 5
@@ -1503,13 +1518,16 @@ Constraints
                                basis (R/L or X/Y) appropriate to the MS)
       array -- Select the array id
                default: ''  (all array ids)
-      observation Select by observation ID(s).
-                  default: ''-->all;
-		  example: observation='0' (select obsID 0)
+      observation -- Select by observation ID(s).
+                     default: ''-->all;
+                     observation='0' (select obsID 0)
       intent -- Select observing intent  
                 default: ''  (no selection by intent)  
                 intent='*BANDPASS*'  (selects data labelled with  
-                                      BANDPASS intent)
+                    BANDPASS intent)
+      feed -- Select by feed IDs
+              default: '' (all feeds)
+              feed='1~2'
       msselect -- Optional TaQL data selection
 
     averagedata -- data averaging parameters flag
