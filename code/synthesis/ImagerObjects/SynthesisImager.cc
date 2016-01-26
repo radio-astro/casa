@@ -1379,7 +1379,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	{
 	  os << LogIO::WARN << "chanchunks ["+String::toString(chanchunks)+"] is not a divisor of nchan ["+String::toString(imagestore->getShape()[3])+"].";
 	  //	  os << "Therefore, "+String::toString(imagestore->getShape()[3] % chanchunks)+" channels at the end of the cube will be ignored." << LogIO::POST ;
-	  os << "Therefore, "+String::toString(imagestore->getShape()[3] % chanchunks)+" channels at the end of the cube will be treated as an extra chunk." << LogIO::POST ;
+	  os << "Therefore, "+String::toString(imagestore->getShape()[3] % chanchunks)+" channel(s) at the end of the cube will be treated as an extra chunk." << LogIO::POST ;
 	  extrachunk=True;
 	}
 
@@ -1425,6 +1425,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // Some checks..
       if(facets > 1 && itsMappers.nMappers() > 0)
 	log_l << "Facetted image has to be the first of multifields" << LogIO::EXCEPTION;
+
+      if( imshape.nelements()==4 && imshape[3]<chanchunks )
+	{
+	  log_l << LogIO::WARN << "An image with " << imshape[3] << " channel(s) cannot be divided into " << chanchunks << " chunks. Please set chanchunks=1 or choose chanchunks<nchan." << LogIO::EXCEPTION;
+	}
 
       if(chanchunks > 1 && itsMappers.nMappers() > 0)
 	log_l << "Channel chunking is currently not supported with multi(outlier)-fields. Please submit a feature request if needed." << LogIO::EXCEPTION;
