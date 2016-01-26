@@ -55,10 +55,10 @@ public:
     // <group>
     PMS_ENUM1(Field, fields, fieldStrings, field,
               FIELD, SPW, TIMERANGE, UVRANGE, ANTENNA, SCAN,
-              CORR, ARRAY, OBSERVATION, INTENT, MSSELECT)
+              CORR, ARRAY, OBSERVATION, INTENT, FEED, MSSELECT)
     PMS_ENUM2(Field, fields, fieldStrings, field,
               "field", "spw", "timerange", "uvrange", "antenna", "scan",
-              "corr", "array", "observation", "intent", "msselect")
+              "corr", "array", "observation", "intent", "feed", "msselect")
     // </group>
               
     // Returns the default value for the given selection field.  Returns an
@@ -118,6 +118,7 @@ public:
     const String& array() const     { return getValue(ARRAY);     }
     const String& observation() const {return getValue(OBSERVATION);}
     const String& intent() const    { return getValue(INTENT);}
+    const String& feed() const      { return getValue(FEED);}
     const String& msselect() const  { return getValue(MSSELECT);  }
     const Int& forceNew() const     { return forceNew_; }
     // </group>
@@ -134,6 +135,7 @@ public:
     void setArray(const String& v)     { setValue(ARRAY, v);     }
     void setObservation(const String& v) {setValue(OBSERVATION, v); }
     void setIntent(const String& v)    { setValue(INTENT, v); }
+    void setFeed(const String& v)      { setValue(FEED, v); }
     void setMsselect(const String& v)  { setValue(MSSELECT, v);  }
     void setForceNew(const Int& forcenew) { forceNew_ = forcenew; }
     // </group>

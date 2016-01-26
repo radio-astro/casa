@@ -121,10 +121,10 @@ void PlotMSSelection::apply(MeasurementSet& ms, MeasurementSet& selMS,
     MSSelection mss;
     String spwstr = spw();
     try {
-        mssSetData(ms, selMS, chansel,corrsel, "", 
+        mssSetData2(ms, selMS, chansel,corrsel, "", 
            timerange(), antenna(), field(), spwstr,
            uvrange(), msselect(), corr(), scan(), array(),
-           intent(), observation(), 1, &mss );
+           intent(), observation(), feed(), 1, &mss );
     } catch(AipsError x) {
         String errormsg = x.getMesg();
         if (errormsg.startsWith("Spw Expression: No match found") && (spwstr[0] != '"') && (spwstr.find('-') != std::string::npos)) {
@@ -179,6 +179,8 @@ void PlotMSSelection::apply(NewCalTable& ct, NewCalTable& selCT,
   mss.setFieldExpr(field());
   mss.setAntennaExpr(antenna());
   mss.setStateExpr(intent());
+  // Note cal table doesn't have FEED columns or table; 
+  // TBD: warn user if feed() is set? or just ignore?
   TableExprNode ten=mss.toTableExprNode(&cti);
   try {
     getSelectedTable(selCT,ct,ten,"");

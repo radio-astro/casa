@@ -124,6 +124,7 @@ void MSTransformManager::initialize()
 	scanIntentSelection_p = String("");
 	observationSelection_p = String("");
 	taqlSelection_p = String("");
+	feedSelection_p = String("");
 
 	// Input-Output index maps
 	inputOutputObservationIndexMap_p.clear();
@@ -557,6 +558,14 @@ void MSTransformManager::parseDataSelParams(Record &configuration)
 		configuration.get (exists, taqlSelection_p);
 		logger_p << LogIO::NORMAL2 << LogOrigin("MSTransformManager", __FUNCTION__)
 				<< "TaQL selection is " << taqlSelection_p << LogIO::POST;
+	}
+
+	exists = configuration.fieldNumber ("feed");
+	if (exists >= 0)
+	{
+		configuration.get (exists, feedSelection_p);
+		logger_p << LogIO::NORMAL2 << LogOrigin("MSTransformManager", __FUNCTION__)
+				<< "feed selection is " << feedSelection_p << LogIO::POST;
 	}
 
 	return;
@@ -1171,7 +1180,8 @@ void MSTransformManager::open()
 							(const String)arraySelection_p,
 							(const String)polarizationSelection_p,
 							(const String)scanIntentSelection_p,
-							(const String)observationSelection_p);
+							(const String)observationSelection_p,
+							(const String)feedSelection_p);
 
 	dataHandler_p->selectTime(timeBin_p,timeSelection_p);
 

@@ -68,7 +68,7 @@ PMS::AxisType PMS::axisType(Axis axis) {
     
     case FIELD: case SCAN: case SPW: case CHANNEL: case CORR:
     case ANTENNA1: case ANTENNA2: case BASELINE: case OBSERVATION:
-    case INTENT:
+    case INTENT: case FEED1: case FEED2:
         return TINT;
     
     case AMP: case PHASE: case REAL: case IMAG: case PARANG:

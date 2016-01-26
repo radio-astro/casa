@@ -113,6 +113,7 @@ public:
 	      SCAN,FIELD,TIME,TIME_INTERVAL,
 	      SPW,CHANNEL,FREQUENCY,VELOCITY,CORR,
 	      ANTENNA1,ANTENNA2,BASELINE,ROW,
+          OBSERVATION,INTENT,FEED1,FEED2,
 	      AMP,PHASE,REAL,IMAG,WT,WTxAMP,WTSP,
 	      SIGMA, SIGMASP,
 	      FLAG,FLAG_ROW,
@@ -123,13 +124,13 @@ public:
 	      GAMP,GPHASE,GREAL,GIMAG,
 	      DELAY,SWP,TSYS,OPAC,
 	      RADIAL_VELOCITY, RHO,
-	      OBSERVATION, INTENT,
 	      NONE)
 
     PMS_ENUM2(Axis, axes, axesStrings, axis,
 	      "Scan","Field","Time","Interval",
 	      "Spw","Channel","Frequency","Velocity","Corr",
 	      "Antenna1","Antenna2","Baseline","Row",
+	      "Observation", "Intent", "Feed1", "Feed2",
 	      "Amp","Phase","Real","Imag","Wt","Wt*Amp","WtSp",
 	      "Sigma", "SigmaSp", "Flag","FlagRow",
 	      "UVdist","UVwave","U","V","W","Uwave","Vwave","Wwave",
@@ -138,7 +139,6 @@ public:
 	      "GainAmp","GainPhase","GainReal","GainImag",
 	      "Delay","SwPower","Tsys","Opac",
 	      "Radial Velocity [km/s]", "Distance (rho) [km]",
-	      "Observation", "Intent",
 	      "None")
 
     // </group>

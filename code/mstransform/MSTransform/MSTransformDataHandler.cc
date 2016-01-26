@@ -352,7 +352,7 @@ Bool MSTransformDataHandler::setmsselect(	const String& spw, const String& field
                         					const String& uvrange, const String& taql,
                         					const Vector<Int>& step, const String& subarray,
                         					const String& correlation, const String& intent,
-                        					const String& obs)
+                        					const String& obs, const String& feed)
 {
 	LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
 	Bool ok;
@@ -386,6 +386,7 @@ Bool MSTransformDataHandler::setmsselect(	const String& spw, const String& field
 	obsString_p = obs;
 	uvrangeString_p = uvrange;
 	taqlString_p = taql;
+	feedString_p = feed;
 
 	if (subarray != "") selectArray(subarray);
 
@@ -984,6 +985,7 @@ Bool MSTransformDataHandler::makeSelection()
 	}
 
 	thisSelection.setTaQLExpr(taqlString_p);
+	thisSelection.setFeedExpr(feedString_p);
 
 	TableExprNode exprNode = thisSelection.toTableExprNode(elms);
 	selTimeRanges_p = thisSelection.getTimeList();

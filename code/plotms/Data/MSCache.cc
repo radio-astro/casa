@@ -812,10 +812,11 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
                     goodChunk_(chunk)  = False;
                     return;
                 }
-				if (useAveragedVisBuffer(loadAxes[i])) 
+				if (useAveragedVisBuffer(loadAxes[i])) {
 					vbToUse = &avb;
-                else
+                } else {
 					vbToUse = vb;
+                }
 				loadAxis(vbToUse, chunk, loadAxes[i], loadData[i]);
 			}
 		}
@@ -1490,6 +1491,15 @@ void MSCache::loadAxis(vi::VisBuffer2* vb, Int vbnum, PMS::Axis axis,
 	case PMS::INTENT:{
 		Vector<Int> states = vb->stateId();
 		*intent_[vbnum] = assignIntentIds(states);
+		break;
+	}
+
+	case PMS::FEED1:{
+		*feed1_[vbnum] = vb->feed1();
+		break;
+	}
+	case PMS::FEED2:{
+		*feed2_[vbnum] = vb->feed2();
 		break;
 	}
 

@@ -176,7 +176,6 @@ public:
   inline Double getTime(Int chnk,Int irel)     { return time_(chnk);  (void)irel; };
   inline Double getTimeIntr(Int chnk,Int irel) { return timeIntr_(chnk);  (void)irel; };
   inline Double getSpw(Int chnk,Int irel)      { return spw_(chnk);  (void)irel; };
-
   inline Double getFreq(Int chnk,Int irel) { return *(freq_[chnk]->data()+irel); };
   inline Double getVel(Int chnk,Int irel)  { return *(vel_[chnk]->data()+irel); };
   inline Double getChan(Int chnk,Int irel) { return *(chan_[chnk]->data()+irel); };
@@ -184,6 +183,25 @@ public:
   inline Double getAnt1(Int chnk,Int irel) { return *(antenna1_[chnk]->data()+irel); };
   inline Double getAnt2(Int chnk,Int irel) { return *(antenna2_[chnk]->data()+irel); };
   inline Double getBsln(Int chnk,Int irel) { return *(baseline_[chnk]->data()+irel); };
+  inline Double getRow(Int chnk,Int irel) { return *(row_[chnk]->data()+irel); };
+  inline Double getObsid(Int chnk,Int irel) { return *(obsid_[chnk]->data()+irel); };
+  inline Double getIntent(Int chnk,Int irel) { return *(intent_[chnk]->data()+irel); };
+  inline Double getFeed1(Int chnk,Int irel) { return *(feed1_[chnk]->data()+irel); };
+  inline Double getFeed2(Int chnk,Int irel) { return *(feed2_[chnk]->data()+irel); };
+
+  inline Double getAmp(Int chnk,Int irel)  { return *(amp_[chnk]->data()+irel); };
+  inline Double getPha(Int chnk,Int irel)  { return *(pha_[chnk]->data()+irel); };
+  inline Double getReal(Int chnk,Int irel) { return *(real_[chnk]->data()+irel); };
+  inline Double getImag(Int chnk,Int irel) { return *(imag_[chnk]->data()+irel); };
+  inline Double getFlag(Int chnk,Int irel) { return *(flag_[chnk]->data()+irel); };
+  inline Double getFlagRow(Int chnk,Int irel) { return *(flagrow_[chnk]->data()+irel); };
+
+  inline Double getWt(Int chnk,Int irel) { return *(wt_[chnk]->data()+irel); };
+  inline Double getWtxAmp(Int chnk, Int irel) { return *(wtxamp_[chnk]->data()+irel); }
+  inline Double getWtSp(Int chnk,Int irel) { return *(wtsp_[chnk]->data()+irel); };
+  inline Double getSigma(Int chnk,Int irel) { return *(sigma_[chnk]->data()+irel); };
+  inline Double getSigmaSp(Int chnk,Int irel) { return *(sigmasp_[chnk]->data()+irel); };
+
   inline Double getUVDist(Int chnk,Int irel) { return *(uvdist_[chnk]->data()+irel); };
   inline Double getUVDistL(Int chnk,Int irel) { return *(uvdistL_[chnk]->data()+irel); };
   inline Double getU(Int chnk,Int irel) { return *(u_[chnk]->data()+irel); };
@@ -193,32 +211,11 @@ public:
   inline Double getVwave(Int chnk,Int irel) { return *(vwave_[chnk]->data()+irel); };
   inline Double getWwave(Int chnk,Int irel) { return *(wwave_[chnk]->data()+irel); };
 
-  inline Double getAmp(Int chnk,Int irel)  { return *(amp_[chnk]->data()+irel); };
-  inline Double getPha(Int chnk,Int irel)  { return *(pha_[chnk]->data()+irel); };
-  inline Double getReal(Int chnk,Int irel) { return *(real_[chnk]->data()+irel); };
-  inline Double getImag(Int chnk,Int irel) { return *(imag_[chnk]->data()+irel); };
-
-  inline Double getFlag(Int chnk,Int irel) { return *(flag_[chnk]->data()+irel); };
-  inline Double getFlagRow(Int chnk,Int irel) { return *(flagrow_[chnk]->data()+irel); };
-  inline Double getRow(Int chnk,Int irel) { return *(row_[chnk]->data()+irel); };
-
-  inline Double getWt(Int chnk,Int irel) { return *(wt_[chnk]->data()+irel); };
-  inline Double getWtxAmp(Int chnk, Int irel) { return *(wtxamp_[chnk]->data()+irel); }
-
-  inline Double getWtSp(Int chnk,Int irel) { return *(wtsp_[chnk]->data()+irel); };
-
-  inline Double getSigma(Int chnk,Int irel) { return *(sigma_[chnk]->data()+irel); };
-  inline Double getSigmaSp(Int chnk,Int irel) { return *(sigmasp_[chnk]->data()+irel); };
-
-  inline Double getObsid(Int chnk,Int irel) { return *(obsid_[chnk]->data()+irel); };
-  inline Double getIntent(Int chnk,Int irel) { return *(intent_[chnk]->data()+irel); };
-
   // These are array-global (one value per chunk)
   inline Double getAz0(Int chnk,Int irel) { return az0_(chnk);  (void)irel; };
   inline Double getEl0(Int chnk,Int irel) { return el0_(chnk);  (void)irel; };
   inline Double getRadialVelocity0(Int chnk, Int irel){ return radialVelocity_(chnk); (void)irel;};
   inline Double getRHO0(Int chnk, Int irel){return rho_(chnk); (void)irel; };
-
   inline Double getHA0(Int chnk,Int irel) { return ha0_(chnk);  (void)irel; };
   inline Double getPA0(Int chnk,Int irel) { return pa0_(chnk);  (void)irel; };
 
@@ -228,12 +225,11 @@ public:
   inline Double getEl(Int chnk,Int irel)      { return *(el_[chnk]->data()+irel); };
   inline Double getParAng(Int chnk,Int irel)  { return *(parang_[chnk]->data()+irel); };
 
-  Vector<Int> getChansPerBin(Int chnk,Int irel) {
-      return (*chansPerBin_[chnk])[irel]; 
-  }
-
   // These support generic non-complex calibration
   inline Double getPar(Int chnk,Int irel)  { return *(par_[chnk]->data()+irel); };
+
+  // Returns a list of channel numbers that were averaged together in that chunk
+  inline Vector<Int> getChansPerBin(Int chnk,Int irel) { return (*chansPerBin_[chnk])[irel]; };
 
   Record locateInfo(int plotIterIndex, const Vector<PlotRegion>& regions,
       		bool showUnflagged, bool showFlagged, bool selectAll );
@@ -362,6 +358,7 @@ protected:
   PtrBlock<Vector<Int>*> corr_;
   PtrBlock<Vector<Int>*> obsid_;
   PtrBlock<Vector<Int>*> intent_;
+  PtrBlock<Vector<Int>*> feed1_, feed2_;
 
   // Optional parts of the cache
   PtrBlock<Vector<Float>*> pa_;

@@ -86,7 +86,8 @@ public:
 						const String& uvrange = "", const String& taql = "",
 						const Vector<Int>& step = Vector<Int> (1, 1),
 						const String& subarray = "", const String& correlation = "",
-						const String& intent = "", const String& obs = "");
+						const String& intent = "", const String& obs = "",
+                        const String& feed = "");
 
 	// Select source or field
 	Bool selectSource(const Vector<Int>& fieldid);
@@ -321,7 +322,7 @@ protected:
 	String scanString_p, // Selects scans by #number#.  Historically named.
 			intentString_p, // Selects scans by string.  scanString_p was taken.
 			obsString_p, // String for observationID selection.
-			uvrangeString_p, taqlString_p;
+			uvrangeString_p, taqlString_p, feedString_p;
 	String timeRange_p, arrayExpr_p, corrString_p;
 	String combine_p; // Should time averaging not split bins by
 	// scan #, observation, and/or state ID?

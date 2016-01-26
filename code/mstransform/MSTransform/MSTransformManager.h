@@ -1241,6 +1241,7 @@ protected:
 	String scanIntentSelection_p;
 	String observationSelection_p;
 	String taqlSelection_p;
+	String feedSelection_p;
 
 	// Input-Output index maps
 	map<uInt,uInt> inputOutputObservationIndexMap_p;
