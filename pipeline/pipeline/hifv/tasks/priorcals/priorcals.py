@@ -322,8 +322,9 @@ class Priorcals(basetask.StandardTaskTemplate):
         try:
             antpos_caltable = result[0].final[0].gaintable
             if os.path.exists(antpos_caltable):
-                #print "Printing ANTENNA positions corrections"
+                LOG.info("Start antenna position corrections")
                 antparamlist = correct_ant_posns(inputs.vis[0], print_offsets=False)
+                LOG.info("End antenna position corrections")
             
                 antList = antparamlist[1].split(',')
                 N=3
