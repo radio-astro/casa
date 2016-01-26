@@ -6,11 +6,10 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="hifa_spwphaseup" category="pipeline">
-<shortdescription>Compute narrow to wide band spw map and per spw phase offsets</shortdescription>
+<shortdescription>Compute phase calibration spw map and per spw phase offsets</shortdescription>
 <description>
-A simple narrow to wideband spectral window map is computed.  Phase offsets as
-a function of spectral window are computed using high signal to noise
-calibration observations. 
+The spw map for phase calibration is computed. Phase offsets as a function of spectral
+window are computed using high signal to noise calibration observations. 
 
 Previous calibrations are applied on the fly.
 
@@ -42,19 +41,54 @@ Previous calibrations are applied on the fly.
 	<value></value>
    </param>
 
-   <param type="string" name="maxnarrowbw">
+   <param type="string" name="hm_spwmapmode">
+	<description>The spw mapping mode</description>
+	<value>simple</value>
+	<allowed kind="enum">
+	    <value>simple</value>
+	    <value>auto</value>
+	    <value>combine</value>
+	    <value>default</value>
+	</allowed>
+   </param>
+
+   <param type="string" name="maxnarrowbw" subparam="true">
 	<description>The maximum bandwidth defining narrow spectral windows</description>
 	<value>300MHz</value>
    </param>
 
-   <param type="double" name="minfracmaxbw">
+   <param type="double" name="minfracmaxbw" subparam="true">
 	<description>The minimum fraction of the maximum bandpass for spw matching</description>
 	<value>0.8</value>
    </param>
 
-   <param type="bool" name="samebb">
+   <param type="bool" name="samebb" subparam="true">
 	<description>Match within the same baseband if possible ?</description>
 	<value>True</value>
+   </param>
+
+   <param type="double" name="phasesnr" subparam="true">
+	<description>The minimum snr for triggering spw combination in auto spw mapping mode</description>
+	<value>25.0</value>
+   </param>
+
+   <param type="double" name="bwedgefrac" subparam="true">
+        <description>The fraction of the bandwidth edge that is flagged</description>
+        <value>0.03125</value>
+   </param>
+
+   <param type="string" name="hm_nantennas" subparam="true">
+        <description>The antenna selection heuristic </description>
+        <value>all</value>
+        <allowed kind="enum">
+            <value>all</value>
+            <value>unflagged</value>
+        </allowed>
+   </param>
+
+   <param type="double" name="maxfracflagged" subparam="true">
+        <description>The maximum fraction of data flagged per antenna</description>
+        <value>0.90</value>
    </param>
 
     <param type="string" name="combine">
@@ -98,6 +132,25 @@ Previous calibrations are applied on the fly.
     </param>
 
     <constraints>
+
+        <when param="hm_spwmapmode">
+	    <equals type="string" value="simple">
+	        <default param="maxnarrowbw"><value type="string">300MHz</value></default>
+	        <default param="minfracmaxbw"><value type="double">0.8</value></default>
+	        <default param="samebb"><value type="bool">True</value></default>
+	    </equals>
+	    <equals type="string" value="auto">
+	        <default param="phasesnr"><value type="double">25.0</value></default>
+	        <default param="bwedgefrac"><value type="double">0.03125</value></default>
+	        <default param="hm_nantennas"><value type="string">all</value></default>
+                <default param="maxfracflagged"><value type="double">0.90</value></default>
+	    </equals>
+	    <equals type="string" value="combine">
+	    </equals>
+	    <equals type="string" value="default">
+	    </equals>
+        </when>
+
         <when param="pipelinemode">
 	    <equals type="string" value="automatic" />
 	    <equals type="string" value="interactive">
@@ -120,6 +173,7 @@ Previous calibrations are applied on the fly.
 	        <default param="refant"><value type="string"></value></default>
 	    </equals>
         </when>
+
     </constraints>
 </input>
 
@@ -146,10 +200,17 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
        the task.
        default: 'automatic'.
 
+hm_spwmapmode -- The spectral window mapping mode. The options are: 'simple',
+    'auto', 'combine', and 'default'. In 'simple' mode narrow windows are
+    mapped to wider ones using a simepl algorithm defined by 'maxnarrowbw',
+    'minfracmaxbw', and 'samebb'.
+    default: 'simple'
+    example: hm_spwmapmode='combine' 
+
 maxnarrowbw -- The maximum bandwidth defining narrow spectral windows. Values
     must be in CASA compatible frequency units.
     default: '300MHz'
-    example: combine=''
+    example: maxnarrowbw=''
 
 minfracmaxbw -- The minimum fraction of the maximum bandwidth in the set of
     spws to use for matching.
@@ -159,6 +220,26 @@ minfracmaxbw -- The minimum fraction of the maximum bandwidth in the set of
 samebb -- Match within the same baseband if possible ?
     default: True
     example: samebb=False
+
+phasesnr -- The required gaincal solution signal to noise
+    default: 25.0
+    example: phaseupsnr = 20.0
+
+bwedgefrac -- The fraction of the bandwidth edges that is flagged
+    default: 0.03125
+    example: bwedgefrac = 0.0
+
+hm_nantennas -- The heuristics for determines the number of antennas to use
+    in the signal to noise estimate. The options are 'all' and 'unflagged'.
+    The 'unflagged' options is not currently supported.
+    default: 'all'
+    example: hm_nantennas='unflagged'
+
+maxfracflagged -- The maximum fraction of an antenna that can be flagged
+    before its is excluded from the signal to noise estimate.
+    default: 0.90
+    example: maxfracflagged=0.80
+
 
 combine -- Data axes to combine for solving. Options are  '','scan','spw',field'
     or any comma-separated combination.
@@ -223,8 +304,8 @@ results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
 
 Description
 
-The  spectral window mapping from narrow to wide spectral windows
-is computed as follows.
+If hm_spwmapmode = 'simple', a mapping from narrow science to wide scinece
+spectral windows, is computed as follows:
 
 o construct a list of the bandwidths of all the science spectral windows
 o determine the maximum bandwidth in this list maxbandwidth
@@ -236,6 +317,17 @@ o for each science spectral window  with bandwidth less than maxbandwidth
     o prefentially match within the same baseband is samebb is True
 o otherwise
     o map the science spectral window to itself
+
+If hm_spwmapmode = 'combine' the code assumes ttah all the science spws
+will be combined into a single spectral window with an id of 0.
+
+If hm_spwmapmode = 'no' the spw mapping is assumed to be one to one.
+
+If hm_spwmapmode = 'auto' the  per spw per scan gaincal solution
+signal to noise is estimated. If the signal to noise of any single
+window is less than the value of "phasesnr" then the task defaults
+to hm_spwmapmode = 'combine', if not it defaults to hm_spwmapmode =
+'simple'
 
 Phase offsets per spw are determined by computing a phase only gain
 calibration on the selected data, normally the high signal to noise

@@ -4,7 +4,9 @@ import sys
 import pipeline.h.cli.utils as utils
 
 def hifa_spwphaseup(vis=None, caltable=None, field=None, intent=None,
-                 spw=None, maxnarrowbw=None, minfracmaxbw=None, samebb=None,
+                 spw=None, hm_spwmapmode=None, maxnarrowbw=None,
+                 minfracmaxbw=None, samebb=None, phasesnr=None,
+                 bwedgefrac=None, hm_nantennas=None, maxfracflagged=None,
                  combine=None, refant=None, minblperant=None, minsnr=None,
                  pipelinemode=None, dryrun=None, acceptresults=None):
 
