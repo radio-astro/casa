@@ -1639,8 +1639,8 @@ HPX HEALPix grid.  -->
     <!-- top level mask type selection -->
    
     <param type="string" name="usemask">
-           <shortdescription>Type of mask(s) to be used</shortdescription>
-<description>Type of mask(s) to be used.
+           <shortdescription>Type of mask(s) to be used for deconvolution</shortdescription>
+<description>Type of mask(s) to be used for deconvolution
 
                        none: (default) no mask 
                        user: mask image(s) or user specified region file(s) or string CRTF expression(s)
