@@ -6,16 +6,52 @@ import pipeline.domain.measures as measures
 
 LOG = infrastructure.get_logger(__name__)
 
+def combine_spwmap (allspws, scispws, combine_spwid):
+
+# Heuristics for computing a simple combined spw map
+#    At present all this does is assume that the science
+#    windows are mapped to a single spwid 
+# Here an spw is the spw object stored in the domain object.
+#        allspws - List of all spws in the MS (not actually used)
+#        scipws  - List of all science spws in the MS
+
+    # Find the maximum science spw id
+    max_spwid = 0
+    for scispw in scispws:
+
+        # Find the maximum science spw id
+        if scispw.id > max_spwid:
+	    max_spwid = scispw.id
+
+    # Initialize the spwmap. All spw ids up to the maximum
+    # science spw id must be defined.
+    combinespwmap = []
+    for i in range(max_spwid + 1):
+        combinespwmap.append(i)
+
+    # Make a reference copy for comparison
+    refspwmap = list(combinespwmap)
+
+    for scispw in scispws:
+        combinespwmap[scispw.id] = combine_spwid
+
+    # Return  the new map
+    if combinespwmap == refspwmap:
+        return []
+    else:
+        return combinespwmap
+
+
 # Heuristics for computing a simple phase up wide to narrow spwmap
 # Here an spw is the spw object stored in the domain object.
-#        allspws - List of all spws in the MS
+#        allspws - List of all spws in the MS (not actually used)
 #        scipws  - List of all science spws in the MS
 #    maxnarrowbw - Maximum narrow bandwidth, e.g. '300MHz'
 #      maxbwfrac - Width must be > maxbwfrac * maximum bandwidth for a match
 #         samebb - If possible match within a baseband
 #
 
-def simple_w2nspwmap (allspws, scispws, maxnarrowbw, maxbwfrac, samebb):
+def simple_n2wspwmap (allspws, scispws, maxnarrowbw, maxbwfrac, samebb):
 
     quanta = casatools.quanta
 
