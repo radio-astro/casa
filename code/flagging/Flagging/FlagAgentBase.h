@@ -415,6 +415,12 @@ protected:
 	// Needed to be protected for timeavg in clip
     String dataColumn_p;
 
+	// Pre-averaging parameters
+	Bool timeavg_p;
+	Double timebin_p;
+	Bool channelavg_p;
+	Vector<Int> chanbin_p;
+
 
 };
 

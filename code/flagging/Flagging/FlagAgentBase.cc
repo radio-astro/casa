@@ -97,6 +97,15 @@ FlagAgentBase::FlagAgentBase(FlagDataHandler *dh, Record config, uShort iteratio
 	// Set data selection
 	setDataSelection(config);
 
+	// Setup time/channel average iterator parameters
+	if (timeavg_p)
+	{
+	    flagDataHandler_p->timeAverageBin_p = timebin_p;
+	    flagDataHandler_p->dataColumnType_p = dataColumn_p;
+        flagDataHandler_p->setTimeAverageIter(true);
+	}
+
+
 	// Check if async processing is enabled
 	backgroundMode_p = false;
 	AipsrcValue<Bool>::find (backgroundMode_p,"FlagAgent.background", false);
@@ -169,6 +178,12 @@ FlagAgentBase::initialize()
    tableFlags_p = 0;
    tableNaNs_p = 0;
    visBufferFlags_p = 0;
+
+   // Pre-averaging parameters
+   timeavg_p = False;
+   timebin_p = 0.0;
+   channelavg_p = False;
+   chanbin_p = Vector<Int>(1,0);
 
    //// Initialize configuration ////
 
@@ -1449,6 +1464,81 @@ FlagAgentBase::setAgentParameters(Record config)
 					<< LogIO::POST;
 		}
 	}
+
+	// Channel average parameters
+	exists = config.fieldNumber ("channelavg");
+	if (exists >= 0)
+	{
+		if( config.type(exists) != TpBool )
+		{
+			throw( AipsError ( "Parameter 'channelavg' must be of type 'bool'" ) );
+		}
+
+		channelavg_p = config.asBool("channelavg");
+	}
+	else
+	{
+		channelavg_p = False;
+	}
+
+
+	if (channelavg_p)
+	{
+		exists = config.fieldNumber ("chanbin");
+		if (exists >= 0)
+		{
+			if ( config.type(exists) == casa::TpInt )
+			{
+				Int chanbin;
+				config.get (exists, chanbin);
+				chanbin_p = Vector<Int>(1,chanbin);
+			}
+			else if ( config.type(exists) == casa::TpArrayInt)
+			{
+				config.get (exists, chanbin_p);
+			}
+			else
+			{
+				*logger_p 	<< LogIO::WARN
+							<< "Wrong format for chanbin parameter "
+							<< " (only Int and arrayInt are supported)" << LogIO::POST;
+			}
+
+			*logger_p 	<< logLevel_p << "Channel average bin is " << chanbin_p << LogIO::POST;
+		}
+	}
+
+
+	// Time average parameters
+    exists = config.fieldNumber ("timeavg");
+    if (exists >= 0)
+    {
+        if( config.type(exists) != TpBool )
+        {
+            throw( AipsError ( "Parameter 'timeavg' must be of type 'bool'" ) );
+        }
+
+        timeavg_p = config.asBool("timeavg");
+
+    }
+    else
+    {
+        timeavg_p = false;
+    }
+
+    if (timeavg_p)
+    {
+        exists = config.fieldNumber ("timebin");
+        if (exists >= 0)
+        {
+            String timebin;
+            config.get(exists, timebin);
+            timebin_p = casaQuantity(timebin).get("s").getValue();
+
+    		*logger_p 	<< logLevel_p << "Time average bin is " << timebin_p << LogIO::POST;
+        }
+
+     }
 
 	return;
 }

@@ -162,6 +162,7 @@ FlagDataHandler::FlagDataHandler(string tablename, uShort iterationApproach, Dou
 	// Initialize time averaging options
     timeAvgOptions_p = vi::AveragingOptions(vi::AveragingOptions::Nothing);
     enableTimeAvg_p = false;
+    enableChanAvg_p = false;
 
 	return;
 }

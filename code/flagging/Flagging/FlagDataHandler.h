@@ -950,7 +950,9 @@ public:
 
     // Time average iterator parameters
     Bool enableTimeAvg_p;
+    Bool enableChanAvg_p;
     Double timeAverageBin_p;
+    Vector <Int> chanAverageBin_p;
     String dataColumnType_p;
     vi::AveragingOptions timeAvgOptions_p;
 

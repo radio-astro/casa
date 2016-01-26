@@ -31,15 +31,6 @@ FlagAgentClipping::FlagAgentClipping(FlagDataHandler *dh, Record config, Bool wr
 
 	// Request loading polarization map to FlagDataHandler
 	flagDataHandler_p->setMapPolarizations(true);
-
-	// Setup the time average iterator parameters
-	if (timeavg_p)
-	{
-	    flagDataHandler_p->timeAverageBin_p = timebin_p;
-	    flagDataHandler_p->dataColumnType_p = dataColumn_p;
-        flagDataHandler_p->setTimeAverageIter(true);
-	}
-
 }
 
 FlagAgentClipping::~FlagAgentClipping()
@@ -184,57 +175,6 @@ FlagAgentClipping::setAgentParameters(Record config)
 			*logger_p << logLevel_p << " Clipping range not provided, clipping only NaNs" << LogIO::POST;
 		}
 	}
-
-
-	// Finally, get channel average which is a neutral parameter
-	exists = config.fieldNumber ("channelavg");
-	if (exists >= 0)
-	{
-		if( config.type(exists) != TpBool )
-		{
-			throw( AipsError ( "Parameter 'channelavg' must be of type 'bool'" ) );
-		}
-
-		channelavg_p = config.asBool("channelavg");
-	}
-	else
-	{
-		channelavg_p = False;
-	}
-
-	*logger_p << logLevel_p << " channelavg is " << channelavg_p << LogIO::POST;
-
-	// Get the time averaging parameters
-    exists = config.fieldNumber ("timeavg");
-    if (exists >= 0)
-    {
-        if( config.type(exists) != TpBool )
-        {
-            throw( AipsError ( "Parameter 'timeavg' must be of type 'bool'" ) );
-        }
-
-        timeavg_p = config.asBool("timeavg");
-
-    }
-    else
-    {
-        timeavg_p = false;
-    }
-
-    if (timeavg_p)
-    {
-        exists = config.fieldNumber ("timebin");
-        if (exists >= 0)
-        {
-            String timebin;
-            config.get(exists, timebin);
-            timebin_p = casaQuantity(timebin).get("s").getValue();
-
-            *logger_p << logLevel_p << " time bin for time averaging is " << timebin_p << "s" << LogIO::POST;
-
-        }
-
-     }
 
 	return;
 }

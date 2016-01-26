@@ -60,15 +60,12 @@ private:
 	/// Input parameters ///
 	Bool clipminmax_p;
 	Bool clipoutside_p;
-	Bool channelavg_p;
 	Bool clipzeros_p;
 	Bool weightcol_p;
 	Float clipmin_p;
 	Float clipmax_p;
 	Float original_clipmin_p;
 	Float original_clipmax_p;
-	Bool timeavg_p;
-	Double timebin_p;
 
 	// Specialization for the clipping case
 	bool (casa::FlagAgentClipping::*checkVis_p)(Float);
