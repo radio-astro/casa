@@ -115,6 +115,85 @@ class test_base(unittest.TestCase):
 
     def cleanup(self):
         os.system('rm -rf '+ self.vis)
+        
+class test_base_compare(test_base):
+
+    def setUp(self):
+
+        self.outvis = ''
+        self.refvis = ''
+        self.outvis_sorted = ''
+        self.refvis_sorted = ''
+
+        self.subtables=['/ANTENNA','/DATA_DESCRIPTION','/FEED','/FIELD','/FLAG_CMD',
+                        '/POINTING','/POLARIZATION','/PROCESSOR','/STATE']
+        self.sortorder=['OBSERVATION_ID','ARRAY_ID','SCAN_NUMBER','FIELD_ID','DATA_DESC_ID','ANTENNA1','ANTENNA2','TIME']
+
+    def tearDown(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf '+ self.outvis)
+        os.system('rm -rf '+ self.refvis)
+        os.system('rm -rf '+ self.outvis_sorted)
+        os.system('rm -rf '+ self.refvis_sorted)
+
+    def sort(self):
+        myms = mstool()
+
+        myms.open(self.outvis)
+        myms.sort(self.outvis_sorted,self.sortorder)
+        myms.done()
+
+        myms.open(self.refvis)
+        myms.sort(self.refvis_sorted,self.sortorder)
+        myms.done()
+
+    def generate_tolerance_map(self):
+
+        # Get column names
+        mytb = tbtool()
+        mytb.open(self.refvis)
+        self.columns = mytb.colnames()
+        mytb.close()
+
+        # Define default tolerance
+        self.mode={}
+        self.tolerance={}
+        for col in self.columns:
+            self.mode[col] = "absolute"
+            self.tolerance[col] = 1E-6
+
+    def compare_subtables(self):
+        for subtable in self.subtables:
+            self.assertTrue(th.compTables(self.outvis_sorted+subtable,self.refvis_sorted+subtable, [],0.000001,"absolute"))
+
+        # Special case for SOURCE which contains many un-defined columns
+        # CAS-5172 (jagonzal): Commenting this out because cvel and mstransform produce different SORUCE subtable
+        # For some reason cvel removes sources which are not present in any row of the main table even if the
+        # user does not specify field selection
+        #self.assertTrue(th.compTables(self.outvis_sorted+'/SOURCE',self.refvis_sorted+'/SOURCE', 
+        #                              ['POSITION','TRANSITION','REST_FREQUENCY','SYSVEL','SOURCE_MODEL'],0.000001,"absolute"))
+
+        # Special case for OBSERVATION which contains many un-defined columns
+        self.assertTrue(th.compTables(self.outvis_sorted+'/OBSERVATION',self.refvis_sorted+'/OBSERVATION',
+                                      ['LOG','SCHEDULE'],0.000001,"absolute"))
+
+    def compare_main_table_columns(self,startrow = 0, nrow = -1, rowincr = 1):
+        for col in self.columns:
+            if col != "WEIGHT_SPECTRUM" and col != "SIGMA_SPECTRUM" and col != "SIGMA" and col != "FLAG_CATEGORY":
+                    tmpcolumn = self.columns[:]
+                    tmpcolumn.remove(col)
+                    self.assertTrue(th.compTables(self.refvis_sorted,self.outvis_sorted,tmpcolumn,self.tolerance[col],self.mode[col],startrow,nrow,rowincr))
+
+    def post_process(self,startrow = 0, nrow = -1, rowincr = 1):
+
+        # Sort the output MSs so that they can be compared
+        self.sort()
+
+        # Compare results for subtables
+        self.compare_subtables()
+
+        # Compare columns from main table
+        self.compare_main_table_columns(startrow,nrow,rowincr)        
 
 
 class test_mms_transformations(test_base):
@@ -1128,6 +1207,63 @@ class test_alma_wvr_correlation_products_mms(test_base):
         summary = flagdata(vis=self.outputms,mode='summary')
         self.assertTrue(summary.has_key('correlation'), 'Flagdata failure due to missformated MS')   
         
+
+class test_otf_calibration(test_base_compare):
+    '''Check that corrected data produce otf by mstransform is the same as produced otf by applycal'''
+            
+    def setUp(self):
+        
+        super(test_otf_calibration,self).setUp()
+        
+        if os.path.exists('ngc5921_regression'): os.system('rm -rf ' + 'ngc5921_regression')
+        os.system('cp -RL '+ datapath + 'ngc5921_regression .')
+        
+        self.previs = 'ngc5921_regression/ngc5921.ms'
+        self.vis = 'ngc5921.mms'
+        self.outvis = 'mst_otf_calibration.mms'
+        self.refvis = 'mst_otf_calibration.ms'
+        self.outvis_sorted = 'mst_otf_calibration_sorted.mms'
+        self.refvis_sorted = 'mst_otf_calibration_sorted.ms'
+        self.auxfile = 'ngc5921_regression/ngc5921_callib.txt'
+        
+        default(mstransform) 
+        
+        # Change current working directory
+        self.client = MPICommandClient()
+        self.client.set_log_mode('redirect')
+        self.client.start_services()      
+        
+        # Prepare list of servers
+        self.server_list = []
+        server_list = self.client.get_server_status()
+        for server in server_list:
+            if not server_list[server]['timeout']:
+                self.server_list.append(server_list[server]['rank'])         
+                
+        # Change current working directory        
+        self.client.push_command_request("os.chdir('%s')" % os.getcwd(),True,self.server_list)
+        
+    def tearDown(self):
+        
+        super(test_otf_calibration,self).tearDown()
+        os.system('rm -rf '+ 'ngc5921_regression')
+        os.system('rm -rf '+ self.outvis)
+        
+    @unittest.skip('Skip until CAS-8051:Problems with cal library in selected MS contexts is fixed.')        
+    def test_otf_calibration_mst_vs_applycal_split2(self):
+        
+        # First part ms
+        partition(vis=self.previs,outputvis=self.vis)
+        
+        # Apply OTF calibration
+        mstransform(vis=self.vis,outputvis=self.outvis,docallib=True,callib=self.auxfile,createmms=True,datacolumn='all')
+        
+        # Apply OTF calibration on original MS
+        mstransform(vis=self.previs,outputvis=self.refvis,docallib=True,callib=self.auxfile,datacolumn='all')
+        
+        # Compare results
+        self.generate_tolerance_map()
+        self.post_process()  
               
 
 # Cleanup class
@@ -1155,4 +1291,5 @@ def suite():
             test_mms_output,
             test_vla_mixed_polarizations_mms,
             test_alma_wvr_correlation_products_mms,
+            test_otf_calibration,
             Cleanup]

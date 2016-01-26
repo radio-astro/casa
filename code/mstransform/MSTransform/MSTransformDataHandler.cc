@@ -1068,6 +1068,7 @@ Bool MSTransformDataHandler::makeSelection()
 	// Setup antNewIndex_p now that mssel_p is ready.
 	if (antennaSel_p)
 	{
+		/*
 		// Watch out! getAntenna*List() and getBaselineList() return negative numbers for negated antennas!
 		ROScalarColumn<Int> ant1c(mssel_p, MS::columnName(MS::ANTENNA1));
 		ROScalarColumn<Int> ant2c(mssel_p, MS::columnName(MS::ANTENNA2));
@@ -1078,6 +1079,33 @@ Bool MSTransformDataHandler::makeSelection()
 		selAnts(Slice(nAnts, nAnts)) = ant2c.getColumn();
 		nAnts = GenSort<Int>::sort(selAnts, Sort::Ascending,Sort::NoDuplicates);
 		selAnts.resize(nAnts, True);
+		Int maxAnt = max(selAnts);
+		*/
+
+		// jagonzal: Scanning the main table is extremely inefficient, and depends on TaQL
+		//           Therefore simply remove the negated antennas from getAntenna1List
+		vector<Int> antsSel;
+
+		// Get antennas selected on position 1
+		Vector<Int> ant1List = thisSelection.getAntenna1List();
+		for (uInt idx=0;idx<ant1List.size();idx++)
+		{
+			if (ant1List(idx) >= 0) antsSel.push_back(ant1List(idx));
+		}
+
+		// Get antennas selected on position 2
+		Vector<Int> ant2List = thisSelection.getAntenna2List();
+		for (uInt idx=0;idx<ant2List.size();idx++)
+		{
+			if (ant2List(idx) >= 0) antsSel.push_back(ant2List(idx));
+		}
+
+		// Remove duplicates and sort
+		antsSel.erase(std::unique(antsSel.begin(), antsSel.end()),antsSel.end());
+		std::sort(antsSel.begin(), antsSel.end());
+
+		Vector<Int> selAnts(antsSel);
+		uInt nAnts = selAnts.size();
 		Int maxAnt = max(selAnts);
 
 		if (maxAnt < 0)
