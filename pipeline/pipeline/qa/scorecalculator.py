@@ -782,12 +782,14 @@ def score_phaseup_mapping_fraction(ms, reqfields, reqintents, phaseup_spwmap):
     '''
     Compute the fraction of science spws that have not been
     mapped to other probably  wider windows.
+
+    Note that reqfields and reqintents are no longer used. Remove at some point
     '''
 
     if not phaseup_spwmap:
         score = 1.0
-        longmsg = 'No mapped narrow science spws for %s ' % ms.basename
-        shortmsg = 'No mapped narrow science spws'
+        longmsg = 'No mapped science spws for %s ' % ms.basename
+        shortmsg = 'No mapped science spws'
     else:
         # Expected fields
         #scifields = set ([field for field in ms.get_fields (reqfields, intent=reqintents)])
@@ -813,8 +815,8 @@ def score_phaseup_mapping_fraction(ms, reqfields, reqintents, phaseup_spwmap):
             shortmsg = 'No mapped science spws'
         else:
             score =  float(nunmapped) / float(nexpected) 
-            longmsg = 'There are %d mapped narrow science spws for %s ' % (nexpected - nunmapped, ms.basename)
-            shortmsg = 'There are mapped narrow science spws'
+            longmsg = 'There are %d mapped science spws for %s ' % (nexpected - nunmapped, ms.basename)
+            shortmsg = 'There are mapped science spws'
 
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg,
                        vis=ms.basename)
