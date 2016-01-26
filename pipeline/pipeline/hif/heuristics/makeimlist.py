@@ -88,14 +88,17 @@ class MakeImListHeuristics(object):
             contfile_handler = contfilehandler.ContFileHandler(contfile)
 
             # read the ranges
-            cont_ranges = contfile_handler.read(skip_none = True)
+            cont_ranges = contfile_handler.read()
 
             # merge the ranges
             for source_name in self.cont_ranges_spwsel.iterkeys():
                 for spw_id in self.cont_ranges_spwsel[source_name].iterkeys():
                     if (cont_ranges.has_key(source_name)):
                         if (cont_ranges[source_name].has_key(spw_id)):
-                            self.cont_ranges_spwsel[source_name][spw_id] = ';'.join(['%s~%sGHz' % (spw_sel_interval[0], spw_sel_interval[1]) for spw_sel_interval in utils.merge_ranges(cont_ranges[source_name][spw_id])])
+                            if (cont_ranges[source_name][spw_id] != ['NONE']):
+                                self.cont_ranges_spwsel[source_name][spw_id] = ';'.join(['%s~%sGHz' % (spw_sel_interval[0], spw_sel_interval[1]) for spw_sel_interval in utils.merge_ranges(cont_ranges[source_name][spw_id])])
+                            else:
+                                self.cont_ranges_spwsel[source_name][spw_id] = 'NONE'
 
         # alternatively read and merge line regions and calculate continuum regions
         elif (os.path.isfile(linesfile)):
