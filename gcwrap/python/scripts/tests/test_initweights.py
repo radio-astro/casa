@@ -12,6 +12,11 @@ import unittest
 
 from initweights import initweights
 
+# to rethrow exception 
+import inspect
+g = sys._getframe(len(inspect.stack())-1).f_globals
+exception_stat = g['__rethrow_casa_exceptions'] if g.has_key('__rethrow_casa_exceptions') else False
+
 class initweights_common(unittest.TestCase):
     """
     A base test class for initweights task
@@ -439,48 +444,93 @@ class initweights_tsys_map(initweights_common):
         """Test spwmap wtmode='tinttsys', interp='linear,cspline', dowtsp=True"""
         self._runTest('tinttsys', True, [1,3,5,7,9,11,13,15], 'linear,cspline',self.spwmap)
 
-# class initweights_base(initweights_common):
-#     """
-#     Tests of mode ='nyq', 'ones', 'sigma', and 'weight'.
-#     The class tests dowtsp=T/F
-#     """
-#     templist = [initweights_common.inputms]
-#     exposure = {'tsys': [34.56], 'sci': [424.368, 160.272]} 
-#     chw = {'tsys': 1.5625e7, 'sci': 486486.}
-#     valid_spw = [1,3,5,7,9,11,13,15]
-    
+class initweights_base(initweights_common):
+    """
+    Tests of mode ='nyq', 'ones', and 'sigma'
+    The class tests dowtsp=T/F
+    NOTE the input MS has inconsistent values in WEIGHT and SIGMA only for testing purpose.
+    SIGMA=2.0, WEIGHT=9.0
+    """
+    inputms = 'weight_inconsistent.ms'
+    templist = [ inputms ]
+    exposure = {0: [34.56], 1: [424.368, 160.272]} 
+    chw = {0: 1.5625e7, 1: 486486.}
+    valid_spw = [0,1]
+    sigma = 2.0
+    weight = 9.0
 
-#     def _get_interpolated_wtsp(self, mode, spw, nchan, interplist, irow, dowtsp):
-#         if interplist[0].startswith('near'):
-#             tsys_funcs = self.tsys_nearest
-#         elif interplist[0].startswith('lin'):
-#             tsys_funcs = self.tsys_linear
-#         else:
-#             raise ValueError, "got unexpected time interpolation"
-#         if spw not in self.valid_spw:
-#             raise ValueError, "Testing unexpected spw %d" % spw
-#         spwintent = 'tsys' if spw in [1,3,5,7] else 'sci'
-#         if mode=='tsys':
-#             factor = self.chw[spwintent]
-#         elif mode=='tinttsys':
-#             factor = self.chw[spwintent]*self.exposure[spwintent][irow]
-#         else:
-#             raise ValueError, "invalid mode for tests"
-#         if tsys_funcs[spw]:
-#             tsys = self._generate_poly_array(nchan, tsys_funcs[spw][irow])
-#             if not dowtsp:
-#                 #use mean Tsys instead of spectral Tsys
-#                 meantsys = numpy.mean(tsys)
-#                 tsys = self._generate_poly_array(nchan, [meantsys])
-#             wtsp = self.tsysweightsp_from_tsysarr(tsys)
-#             wtsp *= factor
-#         else: #None
-#             wtsp = self._generate_poly_array(nchan, [1.0])
-#         return  wtsp
+    def _get_interpolated_wtsp(self, mode, spw, nchan, interplist, irow, dowtsp):
+        if spw not in self.valid_spw:
+            raise ValueError, "Testing unexpected spw %d" % spw
+        wt = -1.0
+        if mode=='nyq':
+            wt = self.chw[spw]*self.exposure[spw][irow]
+        elif mode=='ones':
+            wt = 1.0
+        elif mode=='sigma':
+            wt = 1./self.sigma**2
+        elif mode=='weight':
+            wt = self.weight
+        else:
+            raise ValueError, "invalid mode for tests"
+        wtsp = self._generate_poly_array(nchan, [wt])
+        return  wtsp
 
-#     def testNyq(self):
-#         """Test wtmode='one', dowtsp=False"""
-#         self._runTest('tsys', False, [1,3], 'nearest,nearest',self.spwmap)
+    # Just not to raise error at verification stage.
+    def _make_consistent(self):
+        tb.open(self.inputms,nomodify=False)
+        try:
+            for irow in xrange(tb.nrows()):
+                tb.putcell("SIGMA", irow, 1./numpy.sqrt(tb.getcell("WEIGHT", irow)))
+        except:
+            raise RuntimeError, "Failed to manually make SIGMA and WEIGHT consistent."
+        finally:
+            tb.close()
+
+    def testOnes(self):
+        """Test wtmode='ones', dowtsp=F"""
+        self._runTest('ones', False, self.valid_spw)
+
+    def testOnesSp(self):
+        """Test wtmode='ones', dowtsp=T"""
+        self._runTest('ones', True, self.valid_spw)
+
+    def testNyq(self):
+        """Test wtmode='nyq', dowtsp=F"""
+        self._runTest('nyq', False, self.valid_spw)
+
+    def testNyqSp(self):
+        """Test wtmode='nyq', dowtsp=T"""
+        self._runTest('nyq', True, self.valid_spw)
+
+    def testSigma(self):
+        """Test wtmode='sigma', dowtsp=F"""
+        self._runTest('sigma', False, self.valid_spw)
+
+    def testSigmaSp(self):
+        """Test wtmode='sigma', dowtsp=T"""
+        self._runTest('sigma', True, self.valid_spw)
+
+    def testWeight(self):
+        """Test wtmode='weight', dowtsp=F (shoud Fail)"""
+        self._make_consistent()
+        try:
+            g['__rethrow_casa_exceptions'] = True
+            ret = self._runTest('weight', False, self.valid_spw)
+            #self.fail("The task should raise error")
+        except Exception, e:
+            pos=str(e).find("Specified wtmode requires dowtsp=T")
+            self.assertNotEqual(pos, -1, "Unexpected exception was thorown: %s" % str(e))
+        finally:
+            g['__rethrow_casa_exceptions'] = exception_stat
+
+    def testWeightSp(self):
+        """Test wtmode='weight', dowtsp=T"""
+        self._make_consistent()
+        self._runTest('weight', True, self.valid_spw)
+
+#TODO: wtmode='delwtsp', and 'delsigsp'
+#TODO: dowtsp=F and MS with "WEIGHT_SPECTRUM"
 
 def suite():
-    return [initweights_tsys_base, initweights_tsys_map]
+    return [initweights_tsys_base, initweights_tsys_map, initweights_base]
