@@ -29,6 +29,7 @@ class MeasurementSet(object):
         self.reference_antenna = None
         self.reference_spwmap= None
         self.phaseup_spwmap= None
+        self.combine_spwmap= None
         self.flagcmds = []
         self.session = session
         self.filesize = self._calc_filesize() 
