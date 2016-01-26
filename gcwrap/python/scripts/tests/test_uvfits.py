@@ -7,6 +7,8 @@ from tasks import *
 from taskinit import *
 import unittest
 
+import numpy as np
+
 '''
 Unit tests for UVFITS I/O tasks.
 
@@ -16,7 +18,7 @@ Features tested:
   1. When that UVFITS file is read back in, is its data still correct?
 '''
 
-datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/'
+datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/uvfits/'
 
 def check_eq(val, expval, tol=None):
     """Checks that val matches expval within tol."""
@@ -109,10 +111,31 @@ class uvfits_test(unittest.TestCase):
         """Verify fix to CAS_4283, uvfits files containing actual Stokes parameters will not be imported"""
         myms = mstool()
         msname = "my.ms"
-        fitsname = datapath + "unittest/uvfits/1331+305_I.UVFITS"
+        fitsname = datapath + "1331+305_I.UVFITS"
         self.assertRaises(Exception, myms.fromfits, msname, fitsname)
 
 
+    def test_receptor_angle(self):
+        """CAS-7081: Test receptor angle is preserved"""
+        myms = mstool()
+        msname = datapath + "uvfits_test.ms"
+        self.assertTrue(myms.open(msname), "Input dataset not found")
+        uvfits = "xyz.uvfits"
+        self.assertTrue(myms.tofits(uvfits), "Failed to write uvfits")
+        myms.done()
+        feed = "/FEED"
+        tb.open(msname + feed)
+        rec_ang = "RECEPTOR_ANGLE"
+        expec = tb.getcol(rec_ang)
+        tb.done()
+        importname = "ke.ms"
+        self.assertTrue(myms.fromfits(importname, uvfits), "Failed uvfits import")
+        myms.done()
+        tb.open(importname + feed)
+        got = tb.getcol(rec_ang)
+        tb.done()
+        self.assertTrue(np.max(np.abs(got -expec)) < 1e-7, "Receptor angles not preserved")
+        
 def suite():
     return [uvfits_test]        
         
