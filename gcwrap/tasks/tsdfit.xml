@@ -30,10 +30,9 @@ or sdreduce.
         <value>data</value>
     </param>
 
-    <param type="any" name="antenna">
-        <description>select an antenna name or ID, e.g. \'PM03\'</description>
-        <any type="variant" limittypes="string int"/>
-        <value type="int">0</value>
+    <param type="string" name="antenna">
+        <description>select data by antenna name or ID, e.g. \'PM03\'</description>
+        <value></value>
     </param> 
 
     <param type="string" name="field">
@@ -165,8 +164,8 @@ infile -- name of input SD dataset
 datacolumn -- name of data column to be used
         options: 'data', 'float_data', or 'corrected_data'
         default: 'data'
-antenna -- select an antenna name or ID
-        default: 0
+antenna -- select data by antenna name or ID
+        default: '' (use all antennas)
         example: 'PM03'
 field -- select data by field IDs and names
         default: '' (use all fields)
