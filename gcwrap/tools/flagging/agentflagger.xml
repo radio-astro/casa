@@ -683,6 +683,12 @@ for the clip mode. Data selection follows the MS Selection syntax.
      </description>
      <value>false</value>
      </param>
+     
+     <param type="variant" name="width">
+     <description>Width (bin) of input channels to average to form an output channel.</description>
+     <any type="variant" limittypes="int intArray"/>            
+     <value type="int">1</value>
+     </param>
 
      <param type="bool" name="timeavg">
      <description>Average data over time ranges. [True/False]. Default:
@@ -1032,6 +1038,29 @@ for the time and frequency mode. Data selection follows the MS Selection syntax.
      <description>Parameter to flag or unflag the data. Default: </description>
      <value>true</value>
      </param>
+     
+     <param type="bool" name="channelavg">
+     <description>Average data over channels before clipping? [True/False]. Default:
+     </description>
+     <value>false</value>
+     </param>
+     
+     <param type="variant" name="width">
+     <description>Width (bin) of input channels to average to form an output channel.</description>
+     <any type="variant" limittypes="int intArray"/>            
+     <value type="int">1</value>
+     </param>
+
+     <param type="bool" name="timeavg">
+     <description>Average data over time ranges. [True/False]. Default:
+     </description>
+     <value>false</value>
+     </param>
+
+     <param type="string" name="timebin">
+     <description>Bin width for time average. Example: '2s' </description>
+     <value></value>
+     </param>     
 
 <!-- Selection parameters : end -->
      

@@ -584,11 +584,12 @@ AgentFlagger::initAgents()
 		agent_rec.get("mode", mode);
 
         // If clip agent is mixed with other agents and time average is True, skip it
-        if (mode.compare("clip") == 0 and list_size > 1 and agent_rec.isDefined("timeavg") == true){
+        if ((mode.compare("clip") == 0 or mode.compare("rflag") == 0 or mode.compare("tfcrop") == 0) and list_size > 1
+        		and (agent_rec.isDefined("timeavg") == true or agent_rec.isDefined("channelavg") == true)){
             Bool tavg;
             agent_rec.get("timeavg", tavg);
             if (tavg){
-                os << LogIO::WARN << "Cannot have clip mode with timeavg=True in list mode" << LogIO::POST;
+                os << LogIO::WARN << "Cannot have " << mode <<" mode with timeavg/channelavg=True in list mode" << LogIO::POST;
                 continue;
             }
         }
@@ -1164,7 +1165,7 @@ bool
 AgentFlagger::parseClipParameters(String field, String spw, String array, String feed, String scan,
 		String antenna, String uvrange, String timerange, String correlation,
 		String intent, String observation, String datacolumn,
-		Vector<Double> clipminmax, Bool clipoutside, Bool channelavg, Bool timeavg,
+		Vector<Double> clipminmax, Bool clipoutside, Bool channelavg, casac::variant width, Bool timeavg,
 		String timebin, Bool clipzeros, Bool apply)
 {
 
@@ -1196,6 +1197,16 @@ AgentFlagger::parseClipParameters(String field, String spw, String array, String
 	agent_record.define("clipminmax", clipminmax);
 	agent_record.define("clipoutside", clipoutside);
 	agent_record.define("channelavg", channelavg);
+
+	if (width.type() == casac::variant::INT)
+	{
+		agent_record.define("width", width.toInt());
+	}
+	else if (width.type() == casac::variant::INTVEC)
+	{
+		agent_record.define("width", Array<Int>(width.toIntVec()));
+	}
+
     agent_record.define("timeavg", timeavg);
     agent_record.define("timebin", timebin);
 	agent_record.define("clipzeros", clipzeros);
@@ -1311,7 +1322,8 @@ AgentFlagger::parseTfcropParameters(String field, String spw, String array, Stri
 		String intent, String observation, Double ntime, Bool combinescans,
 		String datacolumn, Double timecutoff, Double freqcutoff, String timefit,
 		String freqfit, Int maxnpieces, String flagdimension, String usewindowstats, Int halfwin,
-		Bool extendflags, Bool apply)
+		Bool extendflags, Bool apply, Bool channelavg, casac::variant width, Bool timeavg,
+   	    String timebin)
 {
 
 	LogIO os(LogOrigin("AgentFlagger", __FUNCTION__));
@@ -1351,6 +1363,19 @@ AgentFlagger::parseTfcropParameters(String field, String spw, String array, Stri
 	agent_record.define("halfwin", halfwin);
 	agent_record.define("extendflags", extendflags);
 	agent_record.define("apply", apply);
+
+	if (width.type() == casac::variant::INT)
+	{
+		agent_record.define("width", width.toInt());
+	}
+	else if (width.type() == casac::variant::INTVEC)
+	{
+		agent_record.define("width", Array<Int>(width.toIntVec()));
+	}
+
+	agent_record.define("channelavg", channelavg);
+    agent_record.define("timeavg", timeavg);
+    agent_record.define("timebin", timebin);
 
 	// Call the main method
 	parseAgentParameters(agent_record);

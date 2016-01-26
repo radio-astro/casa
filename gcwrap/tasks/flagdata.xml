@@ -198,6 +198,11 @@
                 <any type="variant" limittypes="bool boolArray" />
                 <value type="bool">False</value>
             </param>
+    		<param type="any" name="width">
+            	<description>Width (bin) of input channels to average to form an output channel.</description>
+            	<any type="variant" limittypes="int intArray"/>            
+            	<value type="int">1</value>
+			</param>            
             <param type="any" name="timeavg" subparam="true">
                 <description>Average over time ranges</description>
                 <any type="variant" limittypes="bool boolArray" />
@@ -486,6 +491,7 @@
                         <default param="clipminmax"><value type="doubleArray"></value></default>
                         <default param="clipoutside"><value type="bool">True</value></default>
                         <default param="channelavg"> <value type="bool">False</value></default>
+                        <default param="width"><value type="int">1</value></default>
                         <default param="timeavg"> <value type="bool">False</value></default>
                         <default param="timebin"> <value type="string"></value></default>
                         <default param="clipzeros"> <value type="bool">False</value></default>
@@ -560,6 +566,10 @@
                         <default param="usewindowstats"><value type="string">none</value></default>
                         <default param="halfwin"><value type="int">1</value></default>                    
                         <default param="extendflags"><value type="bool">True</value></default>
+                        <default param="channelavg"> <value type="bool">False</value></default>
+                        <default param="width"><value type="int">1</value></default>
+                        <default param="timeavg"> <value type="bool">False</value></default>
+                        <default param="timebin"> <value type="string"></value></default>                        
                     </equals>
                     <equals value="rflag">
                         <default param="field"><value type="string"></value></default>
@@ -584,6 +594,10 @@
                         <default param="spectralmax"><value type="double">1E6</value></default>
                         <default param="spectralmin"><value type="double">0.0</value></default>
                         <default param="extendflags"><value type="bool">True</value></default>
+                        <default param="channelavg"> <value type="bool">False</value></default>
+                        <default param="width"><value type="int">1</value></default>
+                        <default param="timeavg"> <value type="bool">False</value></default>
+                        <default param="timebin"> <value type="string"></value></default>                        
                     </equals>
                     <equals value="extend">
                         <default param="field"><value type="string"></value></default>

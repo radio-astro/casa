@@ -92,6 +92,7 @@ def flagdata(vis,
              datacolumn,
              clipoutside,
              channelavg,
+             width,
              timeavg,
              timebin,
              clipzeros,
@@ -407,6 +408,7 @@ def flagdata(vis,
             agent_pars['datacolumn'] = datacolumn.upper()
             agent_pars['clipoutside'] = clipoutside
             agent_pars['channelavg'] = channelavg
+            agent_pars['width'] = width            
             agent_pars['timeavg'] = timeavg
             agent_pars['timebin'] = timebin
             agent_pars['clipzeros'] = clipzeros
@@ -471,6 +473,10 @@ def flagdata(vis,
             agent_pars['usewindowstats'] = usewindowstats
             agent_pars['halfwin'] = halfwin
             agent_pars['extendflags'] = bool(extendflags)
+            agent_pars['channelavg'] = channelavg
+            agent_pars['width'] = width            
+            agent_pars['timeavg'] = timeavg
+            agent_pars['timebin'] = timebin            
             casalog.post('Time and Frequency (tfcrop) mode is active')
 
                       
@@ -501,6 +507,11 @@ def flagdata(vis,
             
             agent_pars['writeflags'] = writeflags
             agent_pars['display'] = display
+            
+            agent_pars['channelavg'] = channelavg
+            agent_pars['width'] = width            
+            agent_pars['timeavg'] = timeavg
+            agent_pars['timebin'] = timebin            
 
             casalog.post('Rflag mode is active')
 
