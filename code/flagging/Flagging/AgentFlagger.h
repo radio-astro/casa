@@ -302,7 +302,7 @@ public:
 	bool parseClipParameters(String field, String spw, String array, String feed, String scan,
        	    String antenna, String uvrange, String timerange,String correlation,
        	    String intent, String observation, String datacolumn,
-       	    Vector<Double> clipminmax, Bool clipoutside, Bool channelavg, casac::variant width, Bool timeavg,
+       	    Vector<Double> clipminmax, Bool clipoutside, Bool channelavg, casac::variant chanbin, Bool timeavg,
        	    String timebin, Bool clipzeros, Bool apply);
 
 	// Parse parameters for quack
@@ -323,7 +323,7 @@ public:
        	    String intent, String observation, Double ntime, Bool combinescans,
        	    String datacolumn, Double timecutoff, Double freqcutoff, String timefit,
        	    String freqfit, Int maxnpieces, String flagdimension, String usewindowstats,
-       	    Int halfwin, Bool extendflags, Bool apply, Bool channelavg, casac::variant width, Bool timeavg,
+       	    Int halfwin, Bool extendflags, Bool apply, Bool channelavg, casac::variant chanbin, Bool timeavg,
        	    String timebin);
 
 	// Parse parameters for extend

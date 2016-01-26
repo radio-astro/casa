@@ -353,7 +353,7 @@ agentflagger::parseclipparameters(
 		const std::vector<double>& clipminmax,
 		const bool clipoutside,
 		const bool channelavg,
-		const casac::variant& width,
+		const casac::variant& chanbin,
 		const bool timeavg,
 		const std::string& timebin,
 		const bool clipzeros,
@@ -371,7 +371,7 @@ agentflagger::parseclipparameters(
 					String(uvrange),String(timerange),String(correlation),
 					String(intent), String(observation),
 					String(datacolumn), clipminmax, Bool(clipoutside),
-					Bool(channelavg), casac::variant(width),Bool(timeavg), String(timebin),
+					Bool(channelavg), casac::variant(chanbin),Bool(timeavg), String(timebin),
 					Bool(clipzeros), Bool(apply));
 
 		}
@@ -489,7 +489,7 @@ agentflagger::parsetfcropparameters(
 		const bool extendflags,
 		const bool apply,
 		const bool channelavg,
-		const casac::variant& width,
+		const casac::variant& chanbin,
 		const bool timeavg,
 		const std::string& timebin)
 {
@@ -508,7 +508,7 @@ agentflagger::parsetfcropparameters(
 		       	    freqcutoff, String(timefit), String(freqfit), maxnpieces,
 		       	    String(flagdimension), String(usewindowstats), halfwin,
 		       	    Bool(extendflags), Bool(apply),
-		       	    Bool(channelavg), casac::variant(width),Bool(timeavg), String(timebin));
+		       	    Bool(channelavg), casac::variant(chanbin),Bool(timeavg), String(timebin));
 
 		}
 

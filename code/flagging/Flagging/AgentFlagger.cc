@@ -1165,7 +1165,7 @@ bool
 AgentFlagger::parseClipParameters(String field, String spw, String array, String feed, String scan,
 		String antenna, String uvrange, String timerange, String correlation,
 		String intent, String observation, String datacolumn,
-		Vector<Double> clipminmax, Bool clipoutside, Bool channelavg, casac::variant width, Bool timeavg,
+		Vector<Double> clipminmax, Bool clipoutside, Bool channelavg, casac::variant chanbin, Bool timeavg,
 		String timebin, Bool clipzeros, Bool apply)
 {
 
@@ -1198,13 +1198,13 @@ AgentFlagger::parseClipParameters(String field, String spw, String array, String
 	agent_record.define("clipoutside", clipoutside);
 	agent_record.define("channelavg", channelavg);
 
-	if (width.type() == casac::variant::INT)
+	if (chanbin.type() == casac::variant::INT)
 	{
-		agent_record.define("width", width.toInt());
+		agent_record.define("chanbin", chanbin.toInt());
 	}
-	else if (width.type() == casac::variant::INTVEC)
+	else if (chanbin.type() == casac::variant::INTVEC)
 	{
-		agent_record.define("width", Array<Int>(width.toIntVec()));
+		agent_record.define("chanbin", Array<Int>(chanbin.toIntVec()));
 	}
 
     agent_record.define("timeavg", timeavg);
@@ -1322,7 +1322,7 @@ AgentFlagger::parseTfcropParameters(String field, String spw, String array, Stri
 		String intent, String observation, Double ntime, Bool combinescans,
 		String datacolumn, Double timecutoff, Double freqcutoff, String timefit,
 		String freqfit, Int maxnpieces, String flagdimension, String usewindowstats, Int halfwin,
-		Bool extendflags, Bool apply, Bool channelavg, casac::variant width, Bool timeavg,
+		Bool extendflags, Bool apply, Bool channelavg, casac::variant chanbin, Bool timeavg,
    	    String timebin)
 {
 
@@ -1364,13 +1364,13 @@ AgentFlagger::parseTfcropParameters(String field, String spw, String array, Stri
 	agent_record.define("extendflags", extendflags);
 	agent_record.define("apply", apply);
 
-	if (width.type() == casac::variant::INT)
+	if (chanbin.type() == casac::variant::INT)
 	{
-		agent_record.define("width", width.toInt());
+		agent_record.define("chanbin", chanbin.toInt());
 	}
-	else if (width.type() == casac::variant::INTVEC)
+	else if (chanbin.type() == casac::variant::INTVEC)
 	{
-		agent_record.define("width", Array<Int>(width.toIntVec()));
+		agent_record.define("chanbin", Array<Int>(chanbin.toIntVec()));
 	}
 
 	agent_record.define("channelavg", channelavg);

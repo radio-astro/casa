@@ -198,7 +198,7 @@
                 <any type="variant" limittypes="bool boolArray" />
                 <value type="bool">False</value>
             </param>
-    		<param type="any" name="width">
+    		<param type="any" name="chanbin" subparam="true">
             	<description>Width (bin) of input channels to average to form an output channel.</description>
             	<any type="variant" limittypes="int intArray"/>            
             	<value type="int">1</value>
@@ -491,7 +491,7 @@
                         <default param="clipminmax"><value type="doubleArray"></value></default>
                         <default param="clipoutside"><value type="bool">True</value></default>
                         <default param="channelavg"> <value type="bool">False</value></default>
-                        <default param="width"><value type="int">1</value></default>
+                        <default param="chanbin"><value type="int">1</value></default>
                         <default param="timeavg"> <value type="bool">False</value></default>
                         <default param="timebin"> <value type="string"></value></default>
                         <default param="clipzeros"> <value type="bool">False</value></default>
@@ -567,7 +567,7 @@
                         <default param="halfwin"><value type="int">1</value></default>                    
                         <default param="extendflags"><value type="bool">True</value></default>
                         <default param="channelavg"> <value type="bool">False</value></default>
-                        <default param="width"><value type="int">1</value></default>
+                        <default param="chanbin"><value type="int">1</value></default>
                         <default param="timeavg"> <value type="bool">False</value></default>
                         <default param="timebin"> <value type="string"></value></default>                        
                     </equals>
@@ -595,7 +595,7 @@
                         <default param="spectralmin"><value type="double">0.0</value></default>
                         <default param="extendflags"><value type="bool">True</value></default>
                         <default param="channelavg"> <value type="bool">False</value></default>
-                        <default param="width"><value type="int">1</value></default>
+                        <default param="chanbin"><value type="int">1</value></default>
                         <default param="timeavg"> <value type="bool">False</value></default>
                         <default param="timebin"> <value type="string"></value></default>                        
                     </equals>
@@ -933,6 +933,9 @@
                              averaging on the channels.
                     default: False
                     options: True/False
+                    
+               width -- Bin width for channel averaging in number of input channels
+                    default: 1                 
     
                timeavg -- Average data in time. Partially flagged data will not be included in the average
                           calculation, unless all the data for a given channel is flagged. If present, 

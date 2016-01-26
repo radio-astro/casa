@@ -684,7 +684,7 @@ for the clip mode. Data selection follows the MS Selection syntax.
      <value>false</value>
      </param>
      
-     <param type="variant" name="width">
+     <param type="variant" name="chanbin">
      <description>Width (bin) of input channels to average to form an output channel.</description>
      <any type="variant" limittypes="int intArray"/>            
      <value type="int">1</value>
@@ -1045,7 +1045,7 @@ for the time and frequency mode. Data selection follows the MS Selection syntax.
      <value>false</value>
      </param>
      
-     <param type="variant" name="width">
+     <param type="variant" name="chanbin">
      <description>Width (bin) of input channels to average to form an output channel.</description>
      <any type="variant" limittypes="int intArray"/>            
      <value type="int">1</value>
