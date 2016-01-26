@@ -109,6 +109,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     String maskString;
     try {
       TempImage<Float> tempAllMaskImage(imstore->mask()->shape(), imstore->mask()->coordinates());
+      tempAllMaskImage.set(0.0);
       if (maskStrings.nelements()) {
         //working temp mask image
         TempImage<Float> tempMaskImage(imstore->mask()->shape(), imstore->mask()->coordinates());
@@ -174,7 +175,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
             }// end of region string
           }// end of non-emtpy maskstring
          
-          LatticeExpr<Float> addedmask(tempMaskImage+tempAllMaskImage); 
+          LatticeExpr<Float> addedmask( tempMaskImage + tempAllMaskImage ); 
           tempAllMaskImage.copyData( LatticeExpr<Float>( iif(addedmask > 0.0, 1.0, 0.0) ) );
         }
         imstore->mask()->copyData(tempAllMaskImage);
@@ -712,11 +713,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                                const String& alg, 
                                const String& threshold, 
                                const Float& fracofpeak, 
-                               const String& resolution) 
+                               const String& resolution)
   {
     LogIO os( LogOrigin("SDMaskHandler","autoMask",WHERE) );
     
-    cerr<<"autoMask alg="<<alg<<endl;
+    //currently supported alg:
+    //  onebox: a box around a max (box size +/-5pix around max position)
+    //  thresh: threshold based auto masking (uses threshold or fracofpeak, and resolution)
+    //      
+    os<<"algorithm:"<<alg<<LogIO::POST;
     TempImage<Float>* tempres = new TempImage<Float>(imstore->residual()->shape(), imstore->residual()->coordinates()); 
     Array<Float> resdata;
     Array<Float> maskdata;
@@ -747,7 +752,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Quantity qreso(0,"");
     Quantity::read(qreso,resolution);
     //cerr<<"input resolution : qreso.getValue()="<<qreso.getValue()<<endl;
-    os<<"Input resolution : "<<qreso.getValue()<<" "<<qreso.getUnit()<<LogIO::POST;
+    if( alg=="thresh" ) 
+      os<<"Input resolution : "<<qreso.getValue()<<" "<<qreso.getUnit()<<LogIO::POST;
     Float sigma;
     // if fracofpeak (fraction of a peak) is specified, use it to set a threshold
     if ( fracofpeak != 0.0 ) {
@@ -758,7 +764,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     else if(Quantity::read(qthresh,threshold) ) {
       // evaluate threshold input 
       //cerr<<"qthresh="<<qthresh.get().getValue()<<" unit="<<qthresh.getUnit()<<endl;
-      os << "Input threshold (qthresh) ="<<qthresh.get().getValue()<<" "<<qthresh.getUnit()<<LogIO::POST;
+      if( alg=="thresh" ) 
+        os << "Input threshold (qthresh) ="<<qthresh.getValue(qthresh.getUnit())<<" "<<qthresh.getUnit()<<LogIO::POST;
       if (qthresh.getUnit()!="") {
         // use qthresh and set sigma =0.0 to ignore
         sigma = 0.0;
@@ -790,8 +797,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     thestats.get(RecordFieldId("rms"), rms);
     os<<"Stats -- rms.nelements()="<<rms.nelements()<<" rms(0)="<<rms[0]<<LogIO::DEBUG1;
     os<<"Stats -- max.nelements()="<<max.nelements()<<" max(0)="<<max[0]<<LogIO::DEBUG1;
-    if (alg==String("")) {
-      cerr<<" calling makeAutoMask(), simple 1 cleanbox around the max"<<endl;
+    if (alg==String("") || alg==String("onebox")) {
+      //cerr<<" calling makeAutoMask(), simple 1 cleanbox around the max"<<endl;
       makeAutoMask(imstore);
     }
     else if (alg==String("thresh")) {

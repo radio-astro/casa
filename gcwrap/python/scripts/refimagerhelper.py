@@ -1386,7 +1386,12 @@ class ImagerParameters():
                  scalebias=0.6,
                  restoringbeam=[],
 #                 mtype='default',
+
+                 usemask='none',
                  mask='',
+                 pbmask=0.0,
+                 maskthreshold='',
+                 maskresolution='',
 
 #                 usescratch=True,
 #                 readonly=True,
@@ -1442,7 +1447,9 @@ class ImagerParameters():
 
         ######### Deconvolution
         self.alldecpars = { self.defaultKey: { 'id':0, 'deconvolver':deconvolver, 'nterms':nterms, 
-                                    'scales':scales, 'scalebias':scalebias, 'restoringbeam':restoringbeam, 'mask':mask,
+                                    'scales':scales, 'scalebias':scalebias, 'restoringbeam':restoringbeam, 'usemask':usemask, 
+                                    'mask':mask, 'pbmask':pbmask, 'maskthreshold':maskthreshold, 
+                                    'maskresolution':maskresolution,
                                     'interactive':interactive, 'startmodel':startmodel} }
 
         ######### Iteration control. 
@@ -1463,7 +1470,7 @@ class ImagerParameters():
                              'nterms','reffreq','specmode']
         self.outgridparlist = ['gridder','deconvolver','wprojplanes']
         self.outweightparlist=[]
-        self.outdecparlist=['deconvolver','startmodel','nterms','mask']
+        self.outdecparlist=['deconvolver','startmodel','nterms','usemask','mask']
         self.outnormparlist=['deconvolver','weightlimit','nterms']
 #        self.outnormparlist=['imagename','mtype','weightlimit','nterms']
 

@@ -333,6 +333,16 @@ public:
   Vector<Float> scales;
   Float scalebias;
   String maskString;
+  String maskType;
+  Vector<String> maskList;
+  String autoMaskAlgorithm;
+  Float pbMask;
+  String maskThreshold;
+  String maskResolution;
+  Float fracOfPeak;
+
+
+ 
   Bool interactive;
 
   GaussianBeam restoringbeam;

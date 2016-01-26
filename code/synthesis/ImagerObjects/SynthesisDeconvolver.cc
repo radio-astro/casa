@@ -65,7 +65,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				       itsBeam(0.0),
 				       itsDeconvolverId(0),
 				       itsScales(Vector<Float>()),
-				       itsMaskString(String("")),
+                                       itsMaskType(String("none")),
+                                       itsPBMask(0.0),
+				       //itsMaskString(String("")),
 				       itsIsMaskLoaded(False)
   {
   }
@@ -137,9 +139,35 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// Set Masking options
 	//	itsDeconvolver->setMaskOptions( decpars.maskType );
 	itsMaskHandler.reset(new SDMaskHandler());
-	itsMaskString = decpars.maskString;
+	//itsMaskString = decpars.maskString;
+	itsMaskType = decpars.maskType;
+        if(itsMaskType=="auto-thresh") 
+          {
+            itsAutoMaskAlgorithm="thresh";
+          }
+        else if(itsMaskType=="auto-onebox")
+          {
+            itsAutoMaskAlgorithm="onebox";
+          }
+        else {
+            itsAutoMaskAlgorithm="";
+        }
+        itsPBMask = decpars.pbMask;
+        itsMaskString = decpars.maskString;
+        if(decpars.maskList.nelements()==0 || 
+            (decpars.maskList.nelements()==1 && decpars.maskList[0]==""))
+          {
+            itsMaskList.resize(1);
+            itsMaskList[0] = itsMaskString;
+          }
+        else 
+          {
+            itsMaskList = decpars.maskList;
+          }
+        itsMaskThreshold = decpars.maskThreshold;
+        itsFracOfPeak = decpars.fracOfPeak;
+        itsMaskResolution = decpars.maskResolution;
 	itsIsInteractive = decpars.interactive;
-	
       }
     catch(AipsError &x)
       {
@@ -172,6 +200,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
       // Set up the mask too.
       if( itsIsMaskLoaded==False ) {
+        // use mask(s) 
+        if(  itsMaskType !="none" ) {
+          //auto mask
+          if ( itsAutoMaskAlgorithm != "" ) {
+            if ( itsPBMask > 0.0 ) {
+              itsMaskHandler->autoMaskWithinPB( itsImages, itsPBMask);
+            }
+            else { 
+              itsMaskHandler->autoMask( itsImages, itsAutoMaskAlgorithm, itsMaskThreshold, itsFracOfPeak, itsMaskResolution);
+            }
+          }
+          else if( itsMaskType=="user") {
+            itsMaskHandler->fillMask( itsImages, itsMaskList);
+            if( itsPBMask > 0.0 ) {  
+              itsMaskHandler->makePBMask(itsImages, itsPBMask);
+            }
+          }
+          else if( itsMaskType=="pb") {
+            itsMaskHandler->makePBMask(itsImages, itsPBMask);
+          }
+        /***
 	if(  itsMaskString.length()>0  ) {
 	  ///// Equals STRING and not 'contains'.
           if( itsMaskString.matches("auto") ) {
@@ -192,6 +241,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
           else {
 	    itsMaskHandler->fillMask( itsImages, itsMaskString );
           }
+          ***/
 	} else {
 
 	  //	  cout << "Setting mask to 1.0 everywhere to start with.... FIX THIS for interactive masking" << endl;

@@ -141,7 +141,14 @@ protected:
   uInt itsDeconvolverId;
   Vector<Float> itsScales;
 
+  String itsMaskType;
+  Vector<String> itsMaskList;
   String itsMaskString;
+  Float itsPBMask;
+  String itsAutoMaskAlgorithm;
+  String itsMaskThreshold;
+  Float itsFracOfPeak;
+  String itsMaskResolution;
   Bool itsIsMaskLoaded; // Try to get rid of this state variable ! 
   Bool itsIsInteractive;
  

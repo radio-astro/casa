@@ -1633,36 +1633,83 @@ HPX HEALPix grid.  -->
       <value type="bool">False</value>
     </param>
 
-    <param type="string" name="mask" subparam="true">
+<!--============================================== -->
+<!--                            Mask Parameters                                                    -->
+<!--============================================== -->
+    <!-- top level mask type selection -->
+   
+    <param type="string" name="usemask">
+           <shortdescription>Type of mask(s) to be used</shortdescription>
+<description>Type of mask(s) to be used.
+
+                       none: (default) no mask 
+                       user: mask image(s) or user specified region file(s) or string CRTF expression(s)
+                         subparameters: mask, pbmask
+                       pb: primary beam mask
+                         subparameter: pbmask
+
+                           Example: usemask="pb", pbmask=0.2
+                                             Construct a mask at the 0.2 pb gain level.  
+                                             (Currently, this option will work only with 
+                                             gridders that produce .pb (i.e. mosaic and awproject)
+                                             or if an externally produced .pb image exists on disk)
+
+                       auto-thresh: automask  by threshold for deconvolution
+                          subparameters : maskthreshold, maskresolution, pbmask
+                          
+                          if pbmask is >0.0, after automask algorithm is run, it limits the mask to within 
+                                             a pb gain level of pbmask (This option will work only with 
+                                             gridders that produce .pb (i.e. mosaic and awproject)
+                                             or if an externally produced .pb image exists on disk)
+
+</description>
+      <value type="string">none</value>
+	    <allowed kind="enum">
+	      <value>none</value>
+              <value>user</value>
+              <value>pb</value>
+	      <value>auto-thresh</value>
+	    </allowed>
+    </param>
+
+    <!-- sub-prameters--> 
+    <param type="any" name="mask" subparam="true">
+	   <shortdescription>Mask (a list of image name(s) or region file(s) or region string(s) )</shortdescription>
+<description>Mask (a list of image name(s) or region file(s) or region string(s)
+            
+    <!--<param type="string" name="mask" subparam="true">
 	   <shortdescription>Mask string (image name or region file or region string)</shortdescription>
 <description>Mask string (image name or region file or region string)
+-->
+                       The name of a CASA image or region file or region string that specifies
+                       a 1/0 mask to be used for deconvolution. Only locations with value 1 will
+                       be considered for the centers of flux components in the minor cycle.
 
-              The name of a CASA image or region file or region string that specifies
-              a 1/0 mask to be used for deconvolution. Only locations with value 1 will
-              be considered for the centers of flux components in the minor cycle.
+                       Manual mask options/examples : 
 
-              Manual mask options/examples : 
+                       mask='xxx.mask'  : Use this CASA image named xxx.mask and containing 
+                                                       ones and zeros as the mask. If this image is a different 
+                                                       shape from what is being made it will be resampled to 
+                                                       the target coordinate system before being used.
 
-                mask='xxx.mask'  : Use this CASA image named xxx.mask and containing 
-                                                ones and zeros as the mask. If this image is a different 
-                                                shape from what is being made it will be resampled to 
-                                                the target coordinate system before being used.
+                                                       [ Note : If an error occurs during image resampling or
+                                                                   if the expected mask does not appear, please try
+                                                                   using tasks 'imregrid' or 'makemask' to resample 
+                                                                   the mask image onto a CASA image with the target 
+                                                                   shape and coordinates and supply it via the 'mask' 
+                                                                   parameter. ]
 
-                                                [ Note : If an error occurs during image resampling or
-                                                            if the expected mask does not appear, please try
-                                                            using tasks 'imregrid' or 'makemask' to resample 
-                                                            the mask image onto a CASA image with the target 
-                                                            shape and coordinates and supply it via the 'mask' 
-                                                            parameter. ]
-
-                mask='xxx.crtf' : A text file with region strings and the following on the first line
-                                           ( #CRTFv0 CASA Region Text Format version 0 )
-                                           This is the format of a file created via the viewer's region
-                                           tool when saved in CASA region file format.
+                       mask='xxx.crtf' : A text file with region strings and the following on the first line
+                                                  ( #CRTFv0 CASA Region Text Format version 0 )
+                                                  This is the format of a file created via the viewer's region
+                                                  tool when saved in CASA region file format.
   
-                mask='circle[[40pix,40pix],10pix]'  : A CASA region string.
+                       mask='circle[[40pix,40pix],10pix]'  : A CASA region string.
 
+                       mask=['xxx.mask','xxx.crtf', 'circle[[40pix,40pix],10pix]']  : a list of masks
+                     
 
+              <!--
               There are also a few automasking options :
 
                 mask='auto' :  Run an autoboxing algorithm to produce a mask 
@@ -1677,21 +1724,62 @@ HPX HEALPix grid.  -->
                                                        a pb gain level of 0.2. (This option will work only with 
                                                        gridders that produce .pb (i.e. mosaic and awproject)
                                                        or if an externally produced .pb image exists on disk)
+               -->
 
 
-              Note : Mask images for deconvolution must contain 1 or 0 in each pixel.
-                         Such a mask is different from an internal T/F mask that can be
-                         held within each CASA image. These two types of masks are not
-                         automatically interchangeable, so please use the makemask task
-                         to copy between them if you need to construct a 1/0 based mask
-                         from a T/F one. 
+                       Note : Mask images for deconvolution must contain 1 or 0 in each pixel.
+                                  Such a mask is different from an internal T/F mask that can be
+                                  held within each CASA image. These two types of masks are not
+                                  automatically interchangeable, so please use the makemask task
+                                  to copy between them if you need to construct a 1/0 based mask
+                                  from a T/F one. 
 
-               Note : Work is in progress to generate more flexible masking options and
-                          enable more controls.
+                       Note : Work is in progress to generate more flexible masking options and
+                                  enable more controls.
 
+</description>
+
+<!---
+	    <value type="string"></value>
+    </param>-->
+	    <any type="varient" limittypes="string stringArray"/>
+	    <value type="string"></value>
+    </param>
+
+
+    <param type="double" name="pbmask" subparam="true">
+	   <shortdescription>primary beam mask</shortdescription>
+<description>primary beam mask 
+
+          	       Examples : pbmask=0.0 (default, no pb mask)
+          	                  pbmask=0.2 (construct a mask at the 0.2 pb gain level) 
+
+</description>
+	    <value type="double">0.0</value>
+    </param>
+    <param type="any" name="maskthreshold" subparam="true">
+	   <shortdescription>threshold for automasking (string with unit, e.g. "1.0mJy", sigma,  or fraction of peak ,e.g. 0.1)</shortdescription>
+<description>threshold for automasking 
+                       Threshold value in a string with a unit, sigma (e.g. 3.0)  or fraction of peak (e.g, 0.05)
+                       For a float value, if it is &gt;= 1.0, it is interpreted as sigma (i.e. sigma*rms for threshold). If it is &lt; 1.0, it is interpreted as
+                       the fraction of peak. 
+
+                       Examples : threshold = '1.0mJy'
+                                  threshold = 0.05  (threshold used is 0.05 * peak)
+                                  threshold = 5.0 ( threshold used is 5.0 * rms )
+                                  threshold = '' (default, use 3.0 * rms )
 </description>
 	    <value type="string"></value>
     </param>
+    <param type="string" name="maskresolution" subparam="true">
+	   <shortdescription>resolution for automasking (string, e.g. "10arcsec")</shortdescription>
+<description>resolution for automasking
+                       Examples : maskresolution='10arcsec'
+                                  maskresolution=''  (default, use a restoring beam major axis)
+</description>
+	    <value type="string"></value>
+    </param>
+           
 
 
 <!--============================================== -->
@@ -2099,7 +2187,7 @@ HPX HEALPix grid.  -->
 	 <default param="minpsffraction"><value>0.05</value></default>
 	 <default param="maxpsffraction"><value>0.8</value></default>
 	 <default param="interactive"><value>False</value></default>
-	 <default param="mask"><value>""</value></default>
+<!--	 <default param="mask"><value>""</value></default> -->
 <!--	 <default param="savemodel"><value>"none"</value></default>
  	 <default param="calcres"><value>True</value></default>
 	 <default param="calcpsf"><value>True</value></default>  -->
@@ -2119,6 +2207,24 @@ HPX HEALPix grid.  -->
        </equals>
      </when>  
 -->
+
+<!-- mask params -->
+   <when param="usemask">
+       <equals type="string" value="none"/>
+       <equals type="string" value="user">
+         <default param="mask"><value>""</value></default>
+         <default param="pbmask"><value>0.0</value></default>
+       </equals>
+       <equals type="string" value="pb">
+         <default param="pbmask"><value>0.2</value></default>
+       </equals>
+       <!-- auto masks -->
+       <equals type="string" value="auto-thresh"> 
+         <default param="pbmask"><value>0.0</value></default>
+         <default param="maskthreshold"><value>""</value></default>
+         <default param="maskresolution"><value>""</value></default>
+       </equals>
+   </when>
 
    </constraints>
 

@@ -810,6 +810,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      return String::toString(val) + unit;
   } 
 
+
   /////////////////////// Selection Parameters
 
   SynthesisParamsSelect::SynthesisParamsSelect():SynthesisParams()
@@ -2961,7 +2962,66 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	err += readVal( inrec, String("scales"), scales );
 	err += readVal( inrec, String("scalebias"), scalebias );
 
-	err += readVal( inrec, String("mask"), maskString );
+        err += readVal( inrec, String("usemask"), maskType );
+        if( maskType=="auto-thresh" ) 
+          {
+            autoMaskAlgorithm = "thresh";
+          }
+        else if( maskType=="auto-onebox" ) 
+          {
+            autoMaskAlgorithm = "onebox";
+          }
+        else if( maskType=="none" )
+          {
+            autoMaskAlgorithm = "";
+          }
+              
+
+        if( inrec.isDefined("mask") ) 
+          {
+            if( inrec.dataType("mask")==TpString )
+              {
+                err+= readVal( inrec, String("mask"), maskString );
+              }
+            else if( inrec.dataType("mask")==TpArrayString ) 
+              {
+                err+= readVal( inrec, String("mask"), maskList );
+              }
+           }
+        
+        if( inrec.isDefined("pbmask") )
+          {
+            err += readVal( inrec, String("pbmask"), pbMask ); 
+          }
+        if( inrec.isDefined("maskthreshold") ) 
+          {
+            if( inrec.dataType("maskthreshold")==TpString )
+              {
+                err += readVal( inrec, String("maskthreshold"), maskThreshold );
+              }
+            else if( inrec.dataType("maskthreshold")==TpFloat || inrec.dataType("maskthreshold")==TpDouble )
+              {
+
+                err += readVal( inrec, String("maskthreshold"), fracOfPeak );
+                if( fracOfPeak >=1.0 ) 
+                  {
+                    // maskthreshold is sigma ( * rms = threshold) 
+                    //
+                    maskThreshold=String::toString(fracOfPeak);
+                    fracOfPeak=0.0;
+                  }
+              }
+            else 
+              {
+                err += "maskthreshold must be a string, float, or double";
+              }
+           }
+         if( inrec.isDefined("maskresolution") ) 
+           { 
+             err += readVal(inrec, String("maskresolution"), maskResolution );
+           }
+             
+       
 
         if( inrec.isDefined("restoringbeam") )     
 	  {
@@ -3048,7 +3108,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  File fp( imageName+".mask" );
 	  if( fp.exists() ) err += "Mask image " + imageName+".mask exists, but a specific input mask of " + maskString + " has also been supplied. Please either reset mask='' to reuse the existing mask, or delete " + imageName + ".mask before restarting";
       }
-   
+
+    if( pbMask >= 1.0)
+      {err += "pbmask must be < 1.0 \n"; }
+    else if( pbMask < 0.0)
+      {err += "pbmask must be a positive value \n"; }
+
+    if(  maskType=="none" ) 
+      {
+        if( maskString!="" || (maskList.nelements()!=0 && maskList[0]!="") )
+          {
+           cerr<<"maskString="<<maskString<<endl;
+           cerr<<"maskList.nelements()="<<maskList.nelements()<<" maskList[0]="<<maskList[0]<<endl;
+           err += "mask is specified but usemask='none'. Please set usemask='user' to use the mask parameter\n";}
+      } 
+    if ( fracOfPeak >= 1.0) 
+      {err += "fracofpeak must be < 1.0 \n"; }
+    else if ( fracOfPeak < 0.0) 
+      {err += "fracofpeak must be a positive value \n"; }
+  
     return err;
   }
 
@@ -3061,7 +3139,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     nTaylorTerms=1;
     scales.resize(1); scales[0]=0.0;
     scalebias=0.6;
+    maskType="none";
     maskString="";
+    maskList.resize(1); maskList[0]="";
+    pbMask=0.0;
+    autoMaskAlgorithm="thresh";
+    maskThreshold="";
+    maskResolution="";
+    fracOfPeak=0.0; 
     interactive=False;
   }
 
@@ -3076,7 +3161,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     decpar.define("nterms",nTaylorTerms);
     decpar.define("scales",scales);
     decpar.define("scalebias",scalebias);
-    decpar.define("mask",maskString);
+    decpar.define("usemask",maskType);
+    if( maskList.nelements()==1 && maskList[0]=="") 
+      {
+        decpar.define("mask",maskString);
+      }
+    else {
+        decpar.define("mask",maskList);
+    }
+    decpar.define("pbmask",pbMask);
+    if (fracOfPeak > 0.0) 
+      {
+        decpar.define("maskthreshold",fracOfPeak);
+      }
+    else 
+      {
+        decpar.define("maskthreshold",maskThreshold);
+      }
+    decpar.define("maskresolution",maskResolution);
     decpar.define("interactive",interactive);
 
     return decpar;

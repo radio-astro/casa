@@ -99,7 +99,13 @@ def tclean(
     minpsffraction,#=0.1,
     maxpsffraction,#=0.8,
     interactive,#=False, 
+
+    ##### (new) Mask parameters
+    usemask,#='none',
     mask,#='',
+    pbmask,#='',
+    maskthreshold,#='',
+    maskresolution,#='',
 
     overwrite,#=True,
 
@@ -210,7 +216,13 @@ def tclean(
         nterms=nterms,
         scalebias=smallscalebias,
         restoringbeam=restoringbeam,
+        
+        ### new mask params
+        usemask=usemask,
         mask=mask,
+        pbmask=pbmask,
+        maskthreshold=maskthreshold,
+        maskresolution=maskresolution,
 
         savemodel=savemodel
         )
