@@ -1644,6 +1644,12 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
       itsRestoredBeams=ImageBeamSet(rbeam);
     }// if rbeam not NULL
     //// Done modifying beamset if needed
+
+
+    /// Before restoring, check for an empty model image and don't convolve (but still smooth residuals)
+    /// (for CAS-8271 : make output restored image even if .model is zero... )
+    Bool emptymodel = isModelEmpty();
+    if(emptymodel) os << LogIO::WARN << "Restoring with an empty model image. Only residuals will be processed to form the output restored image." << LogIO::POST;
     
     //// Use beamset to restore
     for( Int chanid=0; chanid<nchan;chanid++) {
@@ -1666,7 +1672,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 	    // Copy model into it
 	    subRestored.copyData( LatticeExpr<Float>( subModel )  );
 	    // Smooth model by beam
-	    StokesImageUtil::Convolve( subRestored, beam);
+	    if( !emptymodel ) { StokesImageUtil::Convolve( subRestored, beam); }
 	    // Add residual image
 	    if( !rbeam.isNull() || usebeam == "common") // If need to rescale residuals, make a copy and do it.
 	      {

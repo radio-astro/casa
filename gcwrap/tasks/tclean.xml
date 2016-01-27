@@ -1639,7 +1639,7 @@ HPX HEALPix grid.  -->
     <!-- top level mask type selection -->
    
     <param type="string" name="usemask">
-           <shortdescription>Type of mask(s) to be used for deconvolution</shortdescription>
+           <shortdescription>Type of mask(s) for deconvolution (none,user,pb,auto-thresh)</shortdescription>
 <description>Type of mask(s) to be used for deconvolution
 
                        none: (default) no mask 
@@ -1894,7 +1894,29 @@ HPX HEALPix grid.  -->
 	    </allowed> -->
     </param>
 
-    <param type="bool" name="calcres">
+    <param type="string" name="makeimages">
+	   <shortdescription>List of output images (auto,choose)</shortdescription>
+<description> List of output images. 
+                       This option is mainly to force uniformity of outputs 
+                       for scripting purposes while retaining the feature of
+                       making only the images actually needed for a given run.
+ 
+                       makeimages='auto' : Make only the images necessary for a run.
+                                                         For example, for a niter=0 run, there will be no
+                                                         .model or .image.   For a non A-Projection run, 
+                                                         there will be no .pb image. 
+
+                       makeimages='choose' : Pick from a list of options either for
+                                                             performance reasons (calcres, calcpsf)
+                                                             or to ensure consistent output products.
+
+</description>
+	    <value type="string">auto</value>
+    </param>
+
+
+
+    <param type="bool" name="calcres" subparam="true">
 	   <shortdescription>Calculate initial residual image</shortdescription>
 <description>Calculate initial residual image
 
@@ -1920,24 +1942,68 @@ HPX HEALPix grid.  -->
 	    <value type="bool">True</value>
     </param>
 
-    <param type="bool" name="calcpsf">
-	   <shortdescription>Calculate PSF</shortdescription>
-<description>Calculate PSF
 
-                      This parameter controls what the first major cycle does.
-
-                      calcpsf=False will assume that a .psf image already exists
-                      and that the minor cycle can begin without recomputing it.
-
-
-</description>
-	    <value type="bool">True</value>
+    <param type="bool" name="calcpsf" subparam="true">
+      <shortdescription>Calculate PSF</shortdescription>
+      <description>Calculate PSF
+	
+                        This parameter controls what the first major cycle does.
+	
+                        calcpsf=False will assume that a .psf image already exists
+                        and that the minor cycle can begin without recomputing it.
+      </description>
+      <value type="bool">True</value>
     </param>
+    
+    <param type="any" name="restoremodel" subparam="true">
+      <shortdescription>Restore the model image</shortdescription>
+      <description>Restore the model image
+
+                            Construct a restored image : imagename.image by convolving the model 
+                            image with a clean beam and adding the residual image to the result. 
+                            If a restoringbeam is specified, the residual image is also
+                            smoothed to that target resolution before adding it in.
+
+                           restoremodel='auto' : Run the restore step only if deconvolution
+                                                             iterations have been performed
+                           restoremodel=True : Always run the restore step. If a .model does 
+                                                           not exist, make an empty one and create
+                                                           the restored image from the residuals
+                                                           ( with additional smoothing if needed ).
+                                                           With algorithm='mtmfs', this will construct
+                                                           Taylor coefficient maps from the residuals and
+                                                           compute .alpha and .alpha.error.
+
+      </description>
+      <value type="string">auto</value>
+    </param>
+    
+    <param type="any" name="writepb" subparam="true">
+      <shortdescription>Make a primary beam image</shortdescription>
+      <description>Make a primary beam image
+
+                           Construct an imagename.pb image normalized to 1.0 at its peak.
+
+                           writepb='auto' : Construct a PB only for A-Projection gridders that
+                                                     produce .weight images 
+                                                     [ .pb = sqrt(.weight) / max( sqrt(.weight) ) ]
+
+                           writepb=True : Always construct a .pb image. For gridders that do not
+                                                    produce .weight, construct .pb explicitly.
+                                                    Note : For now, this option will create an empty image. 
+
+                                                    ( The makepb script can be used as described in the
+                                                       gridder section to make .pb images externally )                                    
+      </description>
+      <value type="string">auto</value>
+    </param>
+    
+
 
     <param type="bool" name="parallel">
-	   <shortdescription>Run major cycles in parallel</shortdescription>
-<description>Run major cycles in parallel (this feature is experimental)
-                       
+      <shortdescription>Run major cycles in parallel</shortdescription>
+      <description>Run major cycles in parallel (this feature is experimental)
+        
                        Parallel tclean will run only if casapy has already been started using mpirun.
                        Please refer to HPC documentation for details on how to start this on your system.
                        
@@ -2226,6 +2292,16 @@ HPX HEALPix grid.  -->
        </equals>
    </when>
 
+     <when param="makeimages">
+       <equals type="string" value="auto"/>
+       <equals type="string" value="choose">
+	 <default param="calcres"><value type="bool">True</value></default>
+	 <default param="calcpsf"><value type="bool">True</value></default>
+	 <default param="restoremodel"><value type="string">auto</value></default>
+	 <default param="writepb"><value type="string">auto</value></default>
+       </equals>
+     </when>
+
    </constraints>
 
   </input>
@@ -2248,24 +2324,6 @@ HPX HEALPix grid.  -->
            https://casaguides.nrao.edu/index.php/TCLEAN_and_ALMA 
 
      
-     Example use cases that illustrate options in top level control flow :
-     ----------------------------------------------------------------------------------------
-
-     *** Standard imaging and deconvolution
-
-     *** Make only the dirty image and PSF
-
-     *** Make only the PSF (and primary beam)
-
-     *** Make only a residual image (given a startmodel) and PSF
-
-     *** Start from deconvolution without recalculating an existing PSF and residual image
-
-     *** Predict model visibilities and save them.
-
-     *** Predict wideband model visibilities in preparation for continuum subtraction
-
-     *** A run with outlier fields...
 
   </example>
 

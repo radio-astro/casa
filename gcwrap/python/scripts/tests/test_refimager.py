@@ -592,6 +592,51 @@ class test_onefield(testref_base):
           ## But... current code (as of r33373) makes appropriate restored image but does not mess up residuals.
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10,interactive=0,calcpsf=False,calcres=False,deconvolver='mtmfs')
           self.checkall(ret=ret, peakres=0.136, modflux=0.988, imexist=[self.img+'.psf.tt1',self.img+'.residual.tt1', self.img+'.image.tt1', self.img+'.alpha'],nmajordone=1,imval=[(self.img+'.alpha',-1.0,[50,50,0,0])])
+     def test_onefield_all_outputs_mfs(self):
+          """ [onefield] : test_onefield_all_outputs_mfs : Make all output images even when not needed """
+          self.prepData('refim_twochan.ms')
+
+          ## Make only partial outputs
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=0,interactive=0,deconvolver='hogbom',makeimages='auto')
+          self.checkall(imexist=[self.img+'.psf', self.img+'.residual'],imexistnot=[self.img+'.image',self.img+'.model'],nmajordone=1)
+
+          ## Make all outputs
+          ret = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',niter=0,interactive=0,deconvolver='hogbom',makeimages='choose',restoremodel=True)
+          self.checkall(imexist=[self.img+'2.psf', self.img+'2.residual',self.img+'2.image',self.img+'2.model'],nmajordone=1)
+ 
+
+     def test_onefield_all_outputs_mtmfs(self):
+          """ [onefield] : test_onefield_all_outputs_mtmfs : Make all output images even when not needed """
+          self.prepData('refim_twochan.ms')
+
+          ## Make only partial outputs
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=0,interactive=0,deconvolver='mtmfs',makeimages='auto')
+          self.checkall(imexist=[self.img+'.psf.tt0', self.img+'.psf.tt1'],imexistnot=[self.img+'.image.tt0',self.img+'.model.tt0', self.img+'.alpha'],nmajordone=1)
+
+          ## Make all outputs
+          ret = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',niter=0,interactive=0,deconvolver='mtmfs',makeimages='choose',restoremodel=True)
+          self.checkall(imexist=[self.img+'2.psf.tt0', self.img+'2.psf.tt1',self.img+'2.image.tt0',self.img+'2.model.tt0', self.img+'2.alpha'],nmajordone=1)
+ 
+
+     def test_onefield_restore_mtmfs_niter0(self):
+          """ [onefield] : test_onefield_restore_mtmfs_niter0 : Niter=0 run followed by restoration without a model"""
+          self.prepData('refim_twochan.ms')
+
+          ## This test also checks the principal solution calculation on the dirty images.
+
+          ## niter=0 run 
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=0,interactive=0,deconvolver='mtmfs')
+          self.checkall(imexist=[self.img+'.psf.tt0', self.img+'.psf.tt1'], imexistnot=[self.img+'.model.tt0', self.img+'.model.tt0'],nmajordone=1)
+          ## restore only 
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=0,interactive=0,deconvolver='mtmfs',makeimages='choose',calcres=False,calcpsf=False,restoremodel=True)
+          self.checkall(imexist=[self.img+'.image.tt0', self.img+'.alpha'],nmajordone=0,
+                             imval=[(self.img+'.alpha',-1.0,[50,50,0,0])])
+
+          ## niter=0 and restore ( in one step )
+          ret = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',niter=0,interactive=0,deconvolver='mtmfs',makeimages='choose',restoremodel=True)
+          self.checkall(imexist=[self.img+'2.image.tt0', self.img+'2.alpha'],nmajordone=1,
+                             imval=[(self.img+'.alpha',-1.0,[50,50,0,0])] )
+
 
 ##############################################
 ##############################################

@@ -110,8 +110,12 @@ def tclean(
     overwrite,#=True,
 
     savemodel,#="none",
+
+    makeimages,#="auto"
     calcres,#=True,
     calcpsf,#=True,
+    restoremodel,#='auto'
+    writepb,#='auto'
 
     ####### State parameters
     parallel):#=False):
@@ -272,14 +276,17 @@ def tclean(
         casalog.post("***Time for initializing imager and normalizers: "+"%.2f"%(t1-t0)+" sec", "INFO3", "task_tclean");
 
         ## Init minor cycle elements
-        if niter>0:
+        if niter>0 or restoremodel==True:
             t0=time.time();
-
             imager.initializeDeconvolvers()
-            imager.initializeIterationControl()
-
             t1=time.time();
             casalog.post("***Time for initializing deconvolver(s): "+"%.2f"%(t1-t0)+" sec", "INFO3", "task_tclean");
+
+        if niter>0:
+            t0=time.time();
+            imager.initializeIterationControl()
+            t1=time.time();
+            casalog.post("***Time for initializing iteration controller: "+"%.2f"%(t1-t0)+" sec", "INFO3", "task_tclean");
             
         ## Make PSF
         if calcpsf==True:
@@ -319,17 +326,17 @@ def tclean(
                     imager.runMajorCycle()
                     t1=time.time();
                     casalog.post("***Time for major cycle: "+"%.2f"%(t1-t0)+" sec", "INFO3", "task_tclean");
-
-                ## Restore images.
-                if dorestore:  # Take out this flag, or modify, when 'restore only' is enabled cas-7945
-                    t0=time.time();
-                    imager.restoreImages()
-                    t1=time.time();
-                    casalog.post("***Time for restoring images: "+"%.2f"%(t1-t0)+" sec", "INFO3", "task_tclean");
-
                 ## Get summary from iterbot
                 if type(interactive) != bool:
                     retrec=imager.getSummary();
+
+            ## Restore images.
+            if dorestore or restoremodel==True:  
+                t0=time.time();
+                imager.restoreImages()
+                t1=time.time();
+                casalog.post("***Time for restoring images: "+"%.2f"%(t1-t0)+" sec", "INFO3", "task_tclean");
+
 
         if (pcube):
             print "running concatImages ..."
