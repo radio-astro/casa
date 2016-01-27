@@ -10,7 +10,7 @@ from simple_cluster import *
 import glob
 import multiprocessing
 import testhelper
-from parallel.parallel_task_helper import ParallelTaskHelper
+from parallel.parallel_task_helper import ParallelTaskHelper, JobData
 
 def sortFile(input_file,output_file,sort_order=None):
     

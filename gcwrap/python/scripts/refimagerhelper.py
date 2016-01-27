@@ -7,7 +7,6 @@ import time
 import re;
 from taskinit import *
 import copy
-#from simple_cluster import simple_cluster
 
 '''
 A set of helper functions for the tasks  tclean, xxxx
@@ -1202,11 +1201,6 @@ class PyParallelImagerHelper():
 #############################################
     def setupCluster(self):
         # Initialize cluster
-#        if((self.clusterdef != '') and os.path.exists(self.clusterdef)):
-#            self.sc=simple_cluster()
-#            if(self.sc.get_status()==None):
-#                self.sc.init_cluster(self.clusterdef, 'cluster_project')
-
 
         # * Terminal: Client logs + Server logs
         # * casapy-<timestamp>.log: Client logs

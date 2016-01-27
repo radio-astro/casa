@@ -94,9 +94,6 @@ mt = mttool()
 sdmstool = casac.singledishms
 sdms = sdmstool()
 
-from simple_cluster import simple_cluster
-clustermanager = simple_cluster()
-
 # Log initialization ###################################################################################################
 
 # IMPORTANT: The following steps must be follow the described order, 

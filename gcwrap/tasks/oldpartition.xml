@@ -188,18 +188,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     CORRECTED_DATA) can be selected. It can also be used to create a normal
     MS, split based on the given data selection parameters.
 
-    The partition task creates a multi-MS using the parallelization framework.
-    If a cluster is not present, it will create a default cluster based on the
-    resources of the system. One can create a simple_cluster prior to running
-    partition by doing the following.
-
-    from simple_cluster import *
-    sc = simple_cluster()
-    sc.init_cluster('cluster-config.txt', 'test')
-
-    The file 'cluster-config.txt' contains information on the machine that will
-    be used for the cluster. Please see the help of simple_cluster for more information.	
-
     A multi-MS is structured to have a reference MS on the top directory and a
     sub-directory called SUBMSS, which contain each partitioned sub-MS. The
     reference MS contains links to the sub-tables of the first sub-MS. The other
@@ -230,8 +218,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         default: True
         If False, it will work like the split task and create a
         normal MS, split according to the given data selection parameters.
-        Note that, when this parameter is set to False, a simple_cluster
-        will not be created.
 
         separationaxis -- Axis to do parallelization across. 
             default: 'scan'

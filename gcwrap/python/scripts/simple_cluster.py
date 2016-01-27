@@ -23,6 +23,8 @@ class simple_cluster:
     
     def __init__(self,monitoringFile='monitoring.log',verbose=False):
         
+        casalog.post("simple_cluster is deprecated. Please switch to "
+                     "mpi4casa","WARN","config_cluster")
         self._project=""
         self._hosts=[]
         self._jobs={}
@@ -2721,107 +2723,6 @@ class simple_cluster:
 ###########################################################################
 ###   job management classes
 ###########################################################################
-
-class JobData:
-    """
-    This class incapsulates a single job.  The commandName is the name
-    of the task to be executed.  The jobInfo is a dictionary of all
-    parameters that need to be handled.
-    """
-    class CommandInfo:
-
-        def __init__(self, commandName, commandInfo, returnVariable):
-            self.commandName = commandName
-            self.commandInfo = commandInfo
-            self.returnVariable = returnVariable
-
-        def getReturnVariable(self):
-            return self.returnVariable
-        
-        def getCommandLine(self):
-            firstArgument = True
-            output = "%s = %s(" % (self.returnVariable, self.commandName)
-            for (arg,value) in self.commandInfo.items():
-                if firstArgument:
-                    firstArgument = False
-                else:
-                    output += ', '
-                if isinstance(value, str):
-                    output += ("%s = '%s'" % (arg, value))
-                else:
-                    output += ("%s = " % arg) + str(value)
-            output += ')'
-            return output
-    
-    
-    def __init__(self, commandName, commandInfo = {}):
-        self._commandList = []
-        self.status  = 'new'
-        self.addCommand(commandName, commandInfo)
-        self._returnValues = None
-            
-
-    def addCommand(self, commandName, commandInfo):
-        """
-        Add an additional command to this Job to be exectued after
-        previous Jobs.
-        """
-        rtnVar = "returnVar%d" % len(self._commandList)
-        self._commandList.append(JobData.CommandInfo(commandName,
-                                                     commandInfo,
-                                                     rtnVar))
-    def getCommandLine(self):
-        """
-        This method will return the command line(s) to be executed on the
-        remote engine.  It is usually only needed for debugging or for
-        the JobQueueManager.
-        """
-        output = ''
-        for idx in xrange(len(self._commandList)):
-            if idx > 0:
-                output += '; '
-            output += self._commandList[idx].getCommandLine()
-        return output
-
-    def getCommandNames(self):
-        """
-        This method will return a list of command names that are associated
-        with this job.
-        """
-        return [command.commandName for command in self._commandList]
-    
-
-    def getCommandArguments(self, commandName = None):
-        """
-        This method will return the command arguments associated with a
-        particular job.
-           * If commandName is not none the arguments for the command with
-             that name are returned.
-           * Otherwise a dictionary (with keys being the commandName and
-             the value being the dictionary of arguments) is returned.
-           * If there is only a single command the arguments for that
-             command are returned as a dictionary.
-        """
-        returnValue = {}
-        for command in self._commandList:
-            if commandName is None or commandName == command.commandName:
-                returnValue[command.commandName] = command.commandInfo
-                                                   
-        if len(returnValue) == 1:
-            return returnValue.values()[0]
-        return returnValue
-    
-    def getReturnVariableList(self):
-        return [ci.returnVariable for ci in self._commandList]
-
-    def setReturnValues(self, valueList):
-        self._returnValues = valueList
-
-    def getReturnValues(self):
-        if self._returnValues is not None:
-            if len(self._returnValues) == 1:
-                return self._returnValues[0]
-        return self._returnValues
 
 class JobQueueManager:
     def __init__(self, cluster = None):

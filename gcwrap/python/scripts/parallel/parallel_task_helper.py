@@ -3,7 +3,6 @@ from taskinit import *
 import os
 import copy
 import shutil
-import simple_cluster
 import partitionhelper as ph
 
 # To handle thread-based Tier-2 parallelization
@@ -16,6 +15,107 @@ import traceback
 # jagonzal (Migration to MPI)
 from mpi4casa.MPIEnvironment import MPIEnvironment
 from mpi4casa.MPICommandClient import MPICommandClient
+
+class JobData:
+    """
+    This class incapsulates a single job.  The commandName is the name
+    of the task to be executed.  The jobInfo is a dictionary of all
+    parameters that need to be handled.
+    """
+    class CommandInfo:
+
+        def __init__(self, commandName, commandInfo, returnVariable):
+            self.commandName = commandName
+            self.commandInfo = commandInfo
+            self.returnVariable = returnVariable
+
+        def getReturnVariable(self):
+            return self.returnVariable
+        
+        def getCommandLine(self):
+            firstArgument = True
+            output = "%s = %s(" % (self.returnVariable, self.commandName)
+            for (arg,value) in self.commandInfo.items():
+                if firstArgument:
+                    firstArgument = False
+                else:
+                    output += ', '
+                if isinstance(value, str):
+                    output += ("%s = '%s'" % (arg, value))
+                else:
+                    output += ("%s = " % arg) + str(value)
+            output += ')'
+            return output
+    
+    
+    def __init__(self, commandName, commandInfo = {}):
+        self._commandList = []
+        self.status  = 'new'
+        self.addCommand(commandName, commandInfo)
+        self._returnValues = None
+            
+
+    def addCommand(self, commandName, commandInfo):
+        """
+        Add an additional command to this Job to be exectued after
+        previous Jobs.
+        """
+        rtnVar = "returnVar%d" % len(self._commandList)
+        self._commandList.append(JobData.CommandInfo(commandName,
+                                                     commandInfo,
+                                                     rtnVar))
+    def getCommandLine(self):
+        """
+        This method will return the command line(s) to be executed on the
+        remote engine.  It is usually only needed for debugging or for
+        the JobQueueManager.
+        """
+        output = ''
+        for idx in xrange(len(self._commandList)):
+            if idx > 0:
+                output += '; '
+            output += self._commandList[idx].getCommandLine()
+        return output
+
+    def getCommandNames(self):
+        """
+        This method will return a list of command names that are associated
+        with this job.
+        """
+        return [command.commandName for command in self._commandList]
+    
+
+    def getCommandArguments(self, commandName = None):
+        """
+        This method will return the command arguments associated with a
+        particular job.
+           * If commandName is not none the arguments for the command with
+             that name are returned.
+           * Otherwise a dictionary (with keys being the commandName and
+             the value being the dictionary of arguments) is returned.
+           * If there is only a single command the arguments for that
+             command are returned as a dictionary.
+        """
+        returnValue = {}
+        for command in self._commandList:
+            if commandName is None or commandName == command.commandName:
+                returnValue[command.commandName] = command.commandInfo
+                                                   
+        if len(returnValue) == 1:
+            return returnValue.values()[0]
+        return returnValue
+    
+    def getReturnVariableList(self):
+        return [ci.returnVariable for ci in self._commandList]
+
+    def setReturnValues(self, valueList):
+        self._returnValues = valueList
+
+    def getReturnValues(self):
+        if self._returnValues is not None:
+            if len(self._returnValues) == 1:
+                return self._returnValues[0]
+        return self._returnValues
 
 class ParallelTaskHelper:
     """
@@ -41,14 +141,12 @@ class ParallelTaskHelper:
         self._cluster = None
         self._mpi_cluster = False
         self._command_request_id_list = None
+        if not MPIEnvironment.is_mpi_enabled:
+            self.__bypass_parallel_processing = 1
         if (self.__bypass_parallel_processing == 0):
-            # jagonzal (Migration to MPI)
-            if MPIEnvironment.is_mpi_enabled and MPIEnvironment.is_mpi_client:
-                self._mpi_cluster = True
-                self._command_request_id_list = []
-                self._cluster = MPICommandClient()
-            else:
-                self._cluster = simple_cluster.simple_cluster.getCluster()
+            self._mpi_cluster = True
+            self._command_request_id_list = []
+            self._cluster = MPICommandClient()
         # jagonzal: To inhibit return values consolidation
         self._consolidateOutput = True
         # jagonzal (CAS-4287): Add a cluster-less mode to by-pass parallel processing for MMSs as requested 
@@ -75,10 +173,7 @@ class ParallelTaskHelper:
         Return the number of engines (iPython cluster) or the number of servers (MPI cluster)
         """
         if (self.__bypass_parallel_processing == 0):
-            if self._mpi_cluster:
-                return len(MPIEnvironment.mpi_server_rank_list())
-            else:
-                return len(self._cluster._cluster.get_engines())
+            return len(MPIEnvironment.mpi_server_rank_list())
         else:
             return None
 
@@ -108,10 +203,10 @@ class ParallelTaskHelper:
                     localArgs[key] = self._arguser[key][subMs_idx]
                 subMs_idx += 1
                 
-                if not self._mpi_cluster:
-                    self._executionList.append(simple_cluster.JobData(self._taskName,localArgs))
-                else:
+                if self._mpi_cluster:
                     self._executionList.append([self._taskName + '()',localArgs])
+                else:
+                    self._executionList.append(JobData(self._taskName,localArgs))
                 
             msTool.close()
             return True
@@ -144,11 +239,6 @@ class ParallelTaskHelper:
                     else:
                         casalog.post("Ignoring NullSelection error from %s" % (parameters['vis']),"INFO","executeJobs")
             self._executionList = []
-        elif not self._mpi_cluster:
-            self._jobQueue = simple_cluster.JobQueueManager(self._cluster)
-            self._jobQueue.addJob(self._executionList)
-            self._jobQueue.executeQueue()
-        # jagonzal (Migration to MPI)
         else:
             for job in self._executionList:
                 command_request_id = self._cluster.push_command_request(job[0],False,None,job[1])
@@ -164,22 +254,19 @@ class ParallelTaskHelper:
             ret_list = self._sequential_return_list
             self._sequential_return_list = {}        
         elif (self._cluster != None):
-            if self._mpi_cluster:
-                # jagonzal (CAS-7631): Support for thread-based Tier-2 parallelization
-                if ParallelTaskHelper.getMultithreadingMode():
-                    event = self._cluster.get_command_response_event(self._command_request_id_list)
-                    ParallelTaskWorker.releaseTaskLock()
-                    event.wait()
-                    ParallelTaskWorker.acquireTaskLock()
-                # Get command response
-                command_response_list =  self._cluster.get_command_response(self._command_request_id_list,True,True)
-                # Format list in the form of vis dict
-                ret_list = {}
-                for command_response in command_response_list:
-                    vis = command_response['parameters']['vis']
-                    ret_list[vis] = command_response['ret']
-            else:
-                ret_list =  self._cluster.get_return_list()
+            # jagonzal (CAS-7631): Support for thread-based Tier-2 parallelization
+            if ParallelTaskHelper.getMultithreadingMode():
+                event = self._cluster.get_command_response_event(self._command_request_id_list)
+                ParallelTaskWorker.releaseTaskLock()
+                event.wait()
+                ParallelTaskWorker.acquireTaskLock()
+            # Get command response
+            command_response_list =  self._cluster.get_command_response(self._command_request_id_list,True,True)
+            # Format list in the form of vis dict
+            ret_list = {}
+            for command_response in command_response_list:
+                vis = command_response['parameters']['vis']
+                ret_list[vis] = command_response['ret']
         else:
             return None
         

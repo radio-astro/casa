@@ -48,7 +48,7 @@ class FlagHelper(ParallelTaskHelper):
         
 #    @dump_args
     def setupCluster(self, thistask=''):
-        '''Get a simple_cluster to execute this task'''
+        '''Get a cluster to execute this task'''
         if thistask == '':
             thistask = 'flagdata'
             

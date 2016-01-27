@@ -4,10 +4,9 @@ import string
 import copy
 import math
 from taskinit import *
-from parallel.parallel_task_helper import ParallelTaskHelper
+from parallel.parallel_task_helper import ParallelTaskHelper, JobData
 import partitionhelper as ph
 import flaghelper as fh
-import simple_cluster
 
 class PartitionHelper(ParallelTaskHelper):
     def __init__(self, args = {}):
@@ -141,8 +140,7 @@ class PartitionHelper(ParallelTaskHelper):
             calCmd['outputvis'] = self.dataDir + '/%s.cal.ms' % self.outputBase
         else:
             calCmd['outputvis'] = self._arg['calmsname']
-        self._executionList.append(
-            simple_cluster.JobData(self._taskName, calCmd))
+        self._executionList.append(JobData(self._taskName, calCmd))
 
     def _createPrimarySplitCommand(self):            
         if self._arg['createmms']:
@@ -159,8 +157,7 @@ class PartitionHelper(ParallelTaskHelper):
             if scanList is not None:
                 singleCmd['scan'] = ParallelTaskHelper.\
                                     listToCasaString(scanList)
-            self._executionList.append(
-                simple_cluster.JobData(self._taskName, singleCmd))
+            self._executionList.append(JobData(self._taskName, singleCmd))
 
     def _createScanSeparationCommands(self):
         scanList = self._selectionScanList
@@ -182,8 +179,7 @@ class PartitionHelper(ParallelTaskHelper):
                             listToCasaString(partitionedScans[output])
             mmsCmd['outputvis'] = self.dataDir+'/%s.%04d.ms' \
                                   % (self.outputBase, output)
-            self._executionList.append(
-                simple_cluster.JobData(self._taskName, mmsCmd))
+            self._executionList.append(JobData(self._taskName, mmsCmd))
                 
     def _createSPWSeparationCommands(self):
         # This method is to generate a list of commands to partition
@@ -205,8 +201,7 @@ class PartitionHelper(ParallelTaskHelper):
                             listToCasaString(partitionedSPWs[output])
             mmsCmd['outputvis'] = self.dataDir+'/%s.%04d.ms' \
                                   % (self.outputBase, output)
-            self._executionList.append(
-                simple_cluster.JobData(self._taskName, mmsCmd))
+            self._executionList.append(JobData(self._taskName, mmsCmd))
 
     def _createDefaultSeparationCommands(self):
         # This method is similar to the SPW Separation mode above, except
@@ -250,8 +245,7 @@ class PartitionHelper(ParallelTaskHelper):
                             (partitionedSpws[output/numScanPartitions])
             mmsCmd['outputvis'] = self.dataDir+'/%s.%04d.ms' \
                                   % (self.outputBase, output)
-            self._executionList.append(
-                simple_cluster.JobData(self._taskName, mmsCmd))
+            self._executionList.append(JobData(self._taskName, mmsCmd))
 
     def _selectMS(self, doCalibrationSelection = False):
         '''

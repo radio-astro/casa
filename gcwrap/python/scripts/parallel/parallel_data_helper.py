@@ -8,8 +8,7 @@ import math
 import time
 import subprocess
 from taskinit import *
-from parallel.parallel_task_helper import ParallelTaskHelper
-import simple_cluster
+from parallel.parallel_task_helper import ParallelTaskHelper, JobData
 import partitionhelper as ph
 import inspect
 from numpy.f2py.auxfuncs import throw_error
@@ -455,7 +454,7 @@ class ParallelDataHelper(ParallelTaskHelper):
         
 #    @dump_args
     def setupCluster(self, thistask=''):
-        """ Get a simple_cluster 
+        """ Get a cluster
         
         Keyword argument:
             thistask  --  the task calling this class
@@ -615,7 +614,7 @@ class ParallelDataHelper(ParallelTaskHelper):
                 
             subMs_idx += 1
             if not self._mpi_cluster:
-                self._executionList.append(simple_cluster.JobData(self._taskName,localArgs))
+                self._executionList.append(JobData(self._taskName, localArgs))
             else:
                 self._executionList.append([self._taskName + '()',localArgs])
 
@@ -670,7 +669,7 @@ class ParallelDataHelper(ParallelTaskHelper):
             mmsCmd['outputvis'] = self.dataDir+'/%s.%04d.ms' \
                                   % (self.outputBase, output)
             if not self._mpi_cluster:
-                self._executionList.append(simple_cluster.JobData(self._taskName, mmsCmd))
+                self._executionList.append(JobData(self._taskName, mmsCmd))
             else:
                 self._executionList.append([self._taskName + '()',mmsCmd])
 
@@ -733,7 +732,7 @@ class ParallelDataHelper(ParallelTaskHelper):
                                   % (self.outputBase, output)
 
             if not self._mpi_cluster:
-                self._executionList.append(simple_cluster.JobData(self._taskName, mmsCmd))
+                self._executionList.append(JobData(self._taskName, mmsCmd))
             else:
                 self._executionList.append([self._taskName + '()',mmsCmd])
             
@@ -844,7 +843,7 @@ class ParallelDataHelper(ParallelTaskHelper):
                                   % (self.outputBase, sindex)
                                   
             if not self._mpi_cluster:
-                self._executionList.append(simple_cluster.JobData(self._taskName, mmsCmd))
+                self._executionList.append(JobData(self._taskName, mmsCmd))
             else:
                 self._executionList.append([self._taskName + '()',mmsCmd])
             
@@ -882,7 +881,7 @@ class ParallelDataHelper(ParallelTaskHelper):
             mmsCmd['outputvis'] = self.dataDir + '/%s.%04d.ms' % (self.outputBase, subms)
                                   
             if not self._mpi_cluster:
-                self._executionList.append(simple_cluster.JobData(self._taskName, mmsCmd))
+                self._executionList.append(JobData(self._taskName, mmsCmd))
             else:
                 self._executionList.append([self._taskName + '()',mmsCmd])
 
@@ -1372,14 +1371,11 @@ class ParallelDataHelper(ParallelTaskHelper):
             outputList = self._sequential_return_list
             self._sequential_return_list = {}
         elif (self._cluster != None):
-            if self._mpi_cluster:
-                command_response_list =  self._cluster.get_command_response(self._command_request_id_list,True,True)
-                # Format list in the form of vis dict
-                for command_response in command_response_list:
-                    outvis = command_response['parameters']['outputvis']
-                    outputList[outvis] = command_response['ret']
-            else:                                                    
-                outputList =  self._cluster.get_output_return_list()
+            command_response_list =  self._cluster.get_command_response(self._command_request_id_list,True,True)
+            # Format list in the form of vis dict
+            for command_response in command_response_list:
+                outvis = command_response['parameters']['outputvis']
+                outputList[outvis] = command_response['ret']
                                                                      
                      
         # List of failed MSs. TBD

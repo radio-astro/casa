@@ -25,7 +25,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     
     All these transformations will be applied on the fly without any writing to
     disk to optimize I/O. The user can ask to create a Multi-MS in parallel using CASA's 
-    cluster infrastructure using the parameter createmms. See simple_cluster 
+    cluster infrastructure using the parameter createmms. See MPIInterface 
     for more information on the cluster infrastructure.
 
     This task is implemented in a modular way to preserve the functionalities

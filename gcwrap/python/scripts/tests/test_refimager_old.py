@@ -708,29 +708,6 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
 
 
 
-     ### Make a cluster def file if a parallel test is to run.
-     if parallelmajor==True or parallelminor==True or parallelcube==True:
-        clusterdef = 'cfgfile.txt'
-        defstr = ''
-        defstr = defstr + 'riya, 2,'+os.getcwd() #+'/aatest'
-#        defstr = defstr + '\n'
-#        defstr = defstr + 'tara, 2,'+os.getcwd() # +'/aatest'
-        # remove file first
-        if os.path.exists(clusterdef):
-            os.system('rm -f '+ clusterdef)
-        
-        # save to a file    
-        with open(clusterdef, 'w') as f:
-            f.write(defstr)
-        f.close()
-
-        ### Open/init a cluster.
-        #from simple_cluster import simple_cluster
-        #sc = simple_cluster()  
-        #sc.init_cluster("cfgfile.txt", "mycluster") 
-        if not clustermanager.isClusterRunning():
-             clustermanager.init_cluster("cfgfile.txt", "mycluster") 
-
      ### Check input parameters, and parse outlier files.
      #if paramList.checkParameters() == False:
      #   return [None, "", False, False,False]

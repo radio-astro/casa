@@ -30,20 +30,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             pc001234a, slots=5
             pc001234b, slots=4
      
-
-    If CASA is started without a call to mpicasa, the default will fall-back to
-    using the simple_cluster implemetation.
-    If a cluster is not present, it will create a default cluster based on the
-    resources of the system. One can create a simple_cluster prior to running
-    partition by doing the following.
-
-    from simple_cluster import *
-    sc = simple_cluster()
-    sc.init_cluster('cluster-config.txt', 'test')
-
-    The file 'cluster-config.txt' contains information on the machine that will
-    be used for the cluster. Please see the help of simple_cluster for more information.	
-
     A multi-MS is structured to have a reference MS on the top directory and a
     sub-directory called SUBMSS, which contain each partitioned sub-MS. The
     reference MS contains links to the sub-tables of the first sub-MS. The other
@@ -187,7 +173,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <!-- HIDDEN sub-parameters -->            
     <param type="bool" name="disableparallel" subparam="true" visibility="hidden">
-        <description>Create a multi-MS in parallel using simple_cluster.</description>
+        <description>Create a multi-MS in parallel.</description>
         <value>False</value>
     </param>        
     <param type="int" name="ddistart" subparam="true" visibility="hidden">

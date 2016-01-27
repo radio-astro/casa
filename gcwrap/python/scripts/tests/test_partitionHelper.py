@@ -8,8 +8,7 @@ works correctly.
 
 import os
 import unittest
-from task_partition import PartitionHelper
-from simple_cluster import JobData
+from task_partition import PartitionHelper, JobData
 
 datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/'
 
