@@ -82,7 +82,7 @@ class SpwPhaseup(gaincalworker.GaincalWorker):
 
 	# Compute the spw map according to the rules defined by each
         # mapping mode. The default map is [] which stands for the
-	# default one to one mapping.
+	# default one to one spw mapping.
 	LOG.info('The spw mapping mode for %s is %s' % \
             (inputs.ms.basename, inputs.hm_spwmapmode))
         if inputs.hm_spwmapmode == 'auto':
@@ -92,11 +92,17 @@ class SpwPhaseup(gaincalworker.GaincalWorker):
 	        combinespwmap = combine_spwmap (allspws, scispws, 0)
 	        LOG.info('    The combine spw map is %s' % (combinespwmap))
 	        phaseupspwmap = []
-            else:
-                LOG.info('    Low SNR condition not met')
+            elif (len(snrtest_result.snrs) <= 0):
+                LOG.info('    Cannot compute PHASE SNR values')
+                LOG.info('    Switching to narrow to wide spw mapping algorithm')
 	        combinespwmap = []
 	        phaseupspwmap = simple_n2wspwmap (allspws, scispws, inputs.maxnarrowbw,
 	            inputs.minfracmaxbw, inputs.samebb)
+	        LOG.info('    The simple phaseup spw map is %s' % (phaseupspwmap))
+            else:
+                LOG.info('    Low SNR condition not met')
+	        combinespwmap = []
+	        phaseupspwmap = []
 	        LOG.info('    The phaseup spw map is %s' % (phaseupspwmap))
         elif inputs.hm_spwmapmode == 'combine':
 	    combinespwmap = combine_spwmap (allspws, scispws, 0)

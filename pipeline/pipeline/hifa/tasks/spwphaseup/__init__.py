@@ -7,13 +7,12 @@ import pipeline.infrastructure.renderer.weblog as weblog
 from .spwphaseup import SpwPhaseup
 from . import qa
 from . import spwphaseup
+from . import renderer
 
 pipelineqa.registry.add_handler(qa.SpwPhaseupQAHandler())
 pipelineqa.registry.add_handler(qa.SpwPhaseupListQAHandler())
 qaadapter.registry.register_to_calibration_topic(spwphaseup.SpwPhaseupResults)
 
-weblog.add_renderer(SpwPhaseup,
-                    basetemplates.T2_4MDetailsDefaultRenderer(uri='spwphaseup.mako',
-                                                              description='Map narrow to wide spectral windows'),
-                    group_by=weblog.UNGROUPED)
+weblog.add_renderer(SpwPhaseup, renderer.T2_4MDetailsSpwPhaseupRenderer(),
+    group_by=weblog.UNGROUPED)
 
