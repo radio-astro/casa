@@ -439,10 +439,142 @@ class tsdsmooth_test_boxcar(tsdsmooth_test_base):
                         center = self.centers[str(irow)+str(ipol)]
                         self._checkResult(spec[ipol], kwidth, center)
 
+
+class tsdsmooth_selection(tsdsmooth_test_base, unittest.TestCase):
+    infile = "analytic_type1.sm.ms"
+    outfile = "smoothed.ms"
+    common_param = dict(infile=infile, outfile=outfile,
+                        kernel='boxcar', kwidth=5)
+    selections=dict(intent=("CALIBRATE_ATMOSPHERE#*", [1]),
+                    antenna=("DA99&&&", [1]),
+                    field=("M1*", [0]),
+                    spw=(">6", [1]),
+                    timerange=("2013/4/28/4:13:21",[1]),
+                    scan=("0~8", [0]),
+                    pol=("YY", [1]))
+    verbose = False
+ 
+    def _get_selection_string(self, key):
+        if key not in self.selections.keys():
+            raise ValueError, "Invalid selection parameter %s" % key
+        return {key: self.selections[key][0]}
+
+    def _get_selected_row_and_pol(self, key):
+        if key not in self.selections.keys():
+            raise ValueError, "Invalid selection parameter %s" % key
+        pols = [0,1]
+        rows = [0,1]
+        if key == 'pol':  #self.selection stores pol ids
+            pols = self.selections[key][1]
+        else: #self.selection stores row ids
+            rows = self.selections[key][1]
+        return (rows, pols)
+
+    def _get_reference(self, nchan, row_offset, pol_offset, datacol):
+        if datacol.startswith("float"):
+            col_offset = 10
+        elif datacol.startswith("corr"):
+            col_offset = 50
+        else:
+            raise ValueError, "Got unexpected datacolumn."
+        spike_chan = col_offset + 20*row_offset + 10*pol_offset
+        reference = numpy.zeros(nchan)
+        reference[spike_chan-2:spike_chan+3] = 0.2
+        if self.verbose: print("reference=%s" % str(reference))
+        return reference
+    
+    def run_test(self, sel_param, datacolumn):
+        inparams = self._get_selection_string(sel_param)
+        inparams.update(self.common_param)
+        tsdsmooth(datacolumn=datacolumn, **inparams)
+        self._test_result(inparams["outfile"], sel_param, datacolumn)
         
+    def _test_result(self, msname, sel_param, dcol, atol=1.e-5, rtol=1.e-5):
+        # Make sure output MS exists
+        self.assertTrue(os.path.exists(msname), "Could not find output MS")
+        # Compare output MS with reference (nrow, npol, and spectral values)
+        (rowids, polids) = self._get_selected_row_and_pol(sel_param)
+        if dcol.startswith("float"):
+            testcolumn = "FLOAT_DATA"
+        else: #output is in DATA column
+            testcolumn = "DATA"
+        tb.open(msname)
+        try:
+            self.assertEqual(tb.nrows(), len(rowids), "Row number is wrong %d (expected: %d)" % (tb.nrows(), len(rowids)))
+            for out_row in range(len(rowids)):
+                in_row = rowids[out_row]
+                sp = tb.getcell(testcolumn, out_row)
+                self.assertEqual(sp.shape[0], len(polids), "Number of pol is wrong in row=%d:  %d (expected: %d)" % (out_row,len(polids),sp.shape[0]))
+                nchan = sp.shape[1]
+                for ipol in polids:
+                    reference = self._get_reference(nchan, in_row, ipol, dcol)
+                    if self.verbose: print("data=%s" % str(sp[ipol]))
+                    self.assertTrue(numpy.allclose(sp[ipol], reference,
+                                                   atol=atol, rtol=rtol),
+                                    "Smoothed spectrum differs in row=%d, pol=%d" % (out_row, ipol))
+        finally:
+            tb.close()
+        
+
+    def testIntentF(self):
+        """Test selection by intent (float_data)"""
+        self.run_test("intent", "float_data")
+
+    def testIntentC(self):
+        """Test selection by intent (corrected)"""
+        self.run_test("intent", "corrected")
+
+    # def testAntennaF(self):
+    #     """Test selection by antenna (float_data)"""
+    #     self.run_test("antenna", "float_data")
+
+    # def testAntennaC(self):
+    #     """Test selection by antenna (corrected)"""
+    #     self.run_test("antenna", "corrected")
+
+    def testFieldF(self):
+        """Test selection by field (float_data)"""
+        self.run_test("field", "float_data")
+
+    def testFieldC(self):
+        """Test selection by field (corrected)"""
+        self.run_test("field", "corrected")
+
+    def testSpwF(self):
+        """Test selection by spw (float_data)"""
+        self.run_test("spw", "float_data")
+
+    def testSpwC(self):
+        """Test selection by spw (corrected)"""
+        self.run_test("spw", "corrected")
+
+    def testTimerangeF(self):
+        """Test selection by timerange (float_data)"""
+        self.run_test("timerange", "float_data")
+
+    def testTimerangeC(self):
+        """Test selection by timerange (corrected)"""
+        self.run_test("timerange", "corrected")
+
+    def testScanF(self):
+        """Test selection by scan (float_data)"""
+        self.run_test("scan", "float_data")
+
+    def testScanC(self):
+        """Test selection by scan (corrected)"""
+        self.run_test("scan", "corrected")
+
+    # def testPolF(self):
+    #     """Test selection by pol (float_data)"""
+    #     self.run_test("pol", "float_data")
+
+    # def testPolC(self):
+    #     """Test selection by pol (corrected)"""
+    #     self.run_test("pol", "corrected")
+
 def suite():
     return [tsdsmooth_test_fail, tsdsmooth_test_complex,
             tsdsmooth_test_float, tsdsmooth_test_weight,
-            tsdsmooth_test_boxcar]
+            tsdsmooth_test_boxcar, tsdsmooth_selection]
 
 
