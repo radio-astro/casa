@@ -72,9 +72,6 @@ The current imaging and deconvolution tasks are:
    \item {\tt deconvolve} --- image-plane only deconvolution based on
          the dirty image and beam, using one of several algorithms
          (\S~\ref{section:im.deconvolve}),
-   \item {\tt pclean} --- an experimental task for {\tt clean} to work
-     in a parallelized way for multi-node and core computing systems
-          (\S~\ref{section:im.pclean})
 \end{itemize}
 
 There are also tasks that help you set up the imaging or interface
@@ -3233,96 +3230,6 @@ underneath for you!
 
 For now, we refer the user back to the calibration chapter for
 a reminder on how to run the calibration tasks. 
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Parallel Cleaning ({\tt pclean})}
-\label{section:im.pclean}
-
-{\tt pclean} is an {\bf experimental} task to allow clean speedup by using
-more than a single computing node. 
-
-The inputs are somewhat different from {\tt clean} but we will merge
-the two tasks in the future: 
-\small
-\begin{verbatim}
-#  pclean :: Invert and deconvolve images with parallel engines
-vis                 =         ''        #  Name of input visibility file
-imagename           =         ''        #  Pre-name of output images
-imsize              = [256, 256]        #  Image size in pixels (nx,ny), symmetric for
-                                        #   single value
-cell                = ['1.0arcsec', '1.0arcsec'] #  The image cell size in arcseconds.
-phasecenter         =         ''        #  Image center: direction or field index
-stokes              =         ''        #  Stokes params to image (eg I,IV,IQ,IQUV)
-mask                =         ''        #  mask image
-field               =         ''        #  Field Name or id
-spw                 =         ''        #  Spectral windows e.g. '0~3', '' is all
-ftmachine           =       'ft'        #  Fourier Transform Engine ('ft', 'sd', 'mosaic'
-                                        #   or 'wproject')
-alg                 =    'clark'        #  Deconvolution algorithm ('clark', 'hogbom',
-                                        #   'multiscale')
-cyclefactor         =        1.5        #  Control number of major cycle, threshold of
-                                        #   cycle=residualPeak*psfSidelobe*cyclefactor
-niter               =        500        #  Maximum number of iterations
-gain                =        0.1        #  Gain to use in deconvolution
-threshold           =    '0.0Jy'        #  Flux level to stop cleaning, must include
-                                        #   units: '1.0mJy'
-weighting           =  'natural'        #  Type of weighting
-mode                =   'continuum'     #  Clean mode ('continuum', 'cube')
-interactive         =      False        #  Interactive clean
-overwrite           =      False        #  Overwrite an existing model image
-uvtaper             =      False        #  Apply additional uv tapering of visibilities
-timerange           =         ''        #  Range of time to select from data
-uvrange             =         ''        #  Select data within uvrange
-antenna             =         ''        #  Select data based on antenna/baseline
-scan                =         ''        #  Scan number range
-observation         =         ''        #  Observation ID range
-pbcor               =      False        #  Correct for the primary beam post deconvolution
-minpb               =        0.2        #  Fractional of peak of pb coverage where to stop
-                                        #   the  pb correction
-clusterdef          =         ''        #  File that contains cluster definition
-async               =      False        #  If true the taskname must be started using
-                                        #   pclean(...)
-\end{verbatim}
-\normalsize
-
-In {\tt pclean}, the parameter {\tt alg} controls whether the 'clark',
-'hogbom', or 'multiscale' cleaning algorithms are used. 'ft', 'sd',
-'mosaic', and 'wproject' are specified via {\tt ftmachine}, similar to
-{\tt imagermode} in {\tt clean}. Important is the {\tt clusterdef}
-parameter. It specifies a file with all computer names, the number of
-CPU cores and temporary directories that can be used for {\tt
-  pclean}. It is formatted like:
-
-\small
-\begin{verbatim}
-############################
-hal9000, 10,   /home/ptest
-sal9000, 12,   /home/ptest
-nearstar, 6,    /home/ptest
-############################
-\end{verbatim}
-\normalsize
-
-It is advisable to leave one or to cores unused by {\tt pclean} on
-computers that run the task. This will allow other, sometimes vital,
-processes to continue. 
-
-{\bf IMPORTANT: The user has to have password-less ssh
-  access\footnote{see e.g. \url{http://www.linuxpro1blem.org/art_9.html}} to all
-  the computers used in a cluster definition file and the working
-  directories have to be cross-mounted by all the computers under the
-  same name.}
-
-
-{\tt pclean} attempts so slice the data in time bins for continuum
-imaging and in channel bins for spectral imaging and sends
-sub-processes to the individual nodes. Since they all report back to
-the main terminal while they are executed, the logging may look a bit
-messy. After the clean processes on the nodes have concluded, the data will
-be put back together to create single image files.
-
-
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

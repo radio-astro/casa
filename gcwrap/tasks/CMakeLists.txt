@@ -16,7 +16,6 @@ clearstat.xml
 concat.xml
 conjugatevis.xml
 csvclean.xml
-pclean.xml
 cvel.xml
 cvel2.xml
 deconvolve.xml

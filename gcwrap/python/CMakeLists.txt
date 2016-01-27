@@ -45,7 +45,6 @@ scripts/ngc5921_usecase.py
 scripts/OrderedDictionary.py
 scripts/odict.py
 scripts/parallel_go.py
-scripts/parallelSplit.py
 scripts/parameter_check.py
 scripts/parameter_dictionary.py
 scripts/partitionhelper.py
@@ -85,7 +84,6 @@ scripts/task_clearstat.py
 scripts/task_concat.py
 scripts/task_conjugatevis.py
 scripts/task_csvclean.py
-scripts/task_pclean.py
 scripts/task_cvel.py
 scripts/task_cvel2.py
 scripts/task_deconvolve.py
