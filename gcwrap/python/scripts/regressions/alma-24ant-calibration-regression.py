@@ -108,12 +108,6 @@ if(mystep in thesteps):
   print 'Step ', mystep, step_title[mystep]
   
   os.system('rm -rf hpc-uid___A002_X47bd4d_Xbd4.ms*')
-
-  if os.path.exists('clusterconf.txt'):
-    if not os.path.exists('myclusterhome'):
-      os.mkdir('myclusterhome')
-    sl=simple_cluster()
-    sl.init_cluster('clusterconf.txt', 'mycluster')
   
   partition(vis = 'uid___A002_X47bd4d_Xbd4.ms', outputvis = 'hpc-uid___A002_X47bd4d_Xbd4.ms',
     numsubms=mynumsubms)

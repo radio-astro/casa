@@ -107,7 +107,7 @@ def partition(vis,
         # Get a cluster
         pdh.setupCluster(thistask='partition')
             
-        # Execute the jobs using simple_cluster
+        # Execute the jobs using cluster
         try:
             pdh.go()
             pdh.bypassParallelProcessing(0)
