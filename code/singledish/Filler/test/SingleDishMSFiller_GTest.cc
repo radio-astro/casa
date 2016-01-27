@@ -184,45 +184,67 @@ TEST_F(SingleDishMSFillerTest, FillerTestWithReaderStub) {
   {
     std::cout << "verify SOURCE table" << std::endl;
     auto const mytable = myms.source();
-    TableRecord const &expected_record = reader.source_record_;
-    uInt expected_nrow = expected_record.nfields();
+    std::map<uInt, SourceRecord> expected_record = reader.source_record_;
+    uInt expected_nrow = expected_record.size();
     ASSERT_EQ(expected_nrow, mytable.nrow());
     ROMSSourceColumns mycolumns(mytable);
     for (uInt i = 0; i < expected_nrow; ++i) {
       std::cout << "Verifying row " << i << std::endl;
       String key = "ROW" + String::toString(i);
-      TableRecord row_record = expected_record.asRecord(key);
-      Int source_id = row_record.asInt("SOURCE_ID");
-      String source_name = row_record.asString("NAME");
+      SourceRecord const row_record = expected_record[i];
+      Int source_id = row_record.source_id;
+      String source_name = row_record.name;
       EXPECT_EQ(source_id, mycolumns.sourceId()(i));
       CASA_EXPECT_STREQ(source_name, mycolumns.name()(i));
       if (!source_map.isDefined(source_name)) {
         source_map.define(source_name, source_id);
       }
-      EXPECT_EQ(row_record.asDouble("TIME"), mycolumns.time()(i));
-      EXPECT_EQ(row_record.asDouble("INTERVAL"), mycolumns.interval()(i));
-      EXPECT_EQ(row_record.asInt("SPECTRAL_WINDOW_ID"),
-          mycolumns.spectralWindowId()(i));
-      EXPECT_EQ(row_record.asInt("CALIBRATION_GROUP"),
-          mycolumns.calibrationGroup()(i));
-      CASA_EXPECT_STREQ(row_record.asString("CODE"), mycolumns.code()(i));
-      EXPECT_EQ(row_record.asInt("NUM_LINES"), mycolumns.numLines()(i));
-      Array<Double> expected_array = row_record.asArrayDouble("DIRECTION");
+      EXPECT_EQ(row_record.time, mycolumns.time()(i));
+      EXPECT_EQ(row_record.interval, mycolumns.interval()(i));
+      EXPECT_EQ(row_record.spw_id, mycolumns.spectralWindowId()(i));
+      EXPECT_EQ(row_record.calibration_group, mycolumns.calibrationGroup()(i));
+      CASA_EXPECT_STREQ(row_record.code, mycolumns.code()(i));
+      EXPECT_EQ(row_record.num_lines, mycolumns.numLines()(i));
+      MDirection expected_direction = row_record.direction;
+      MDirection actual_direction = mycolumns.directionMeas()(i);
+
+      expected_direction.print(std::cout);
+      std::cout << " with ref " << expected_direction.getRefString()
+          << std::endl;
+      actual_direction.print(std::cout);
+      std::cout << " with ref " << actual_direction.getRefString() << std::endl;
+      Array<Double> expected_array = expected_direction.getAngle().getValue(
+          "rad");
       Array<Double> array = mycolumns.direction()(i);
       CASA_EXPECT_ARRAYEQ(expected_array, array);
-      expected_array.assign(row_record.asArrayDouble("PROPER_MOTION"));
-      array.assign(mycolumns.properMotion()(i));
-      CASA_EXPECT_ARRAYEQ(expected_array, array);
-      expected_array.assign(row_record.asArrayDouble("REST_FREQUENCY"));
-      array.assign(mycolumns.restFrequency()(i));
-      CASA_EXPECT_ARRAYEQ(expected_array, array);
-      expected_array.assign(row_record.asArrayDouble("SYSVEL"));
-      array.assign(mycolumns.sysvel()(i));
-      CASA_EXPECT_ARRAYEQ(expected_array, array);
-      Array<String> expected_transition = row_record.asArrayString(
-          "TRANSITION");
-      Array<String> transition = mycolumns.transition()(i);
-      CASA_EXPECT_ARRAYEQ(expected_transition, transition);
+      expected_array.assign(row_record.proper_motion);
+      if (expected_array.size() == 0) {
+        EXPECT_FALSE(mycolumns.properMotion().isDefined(i));
+      } else {
+        array.assign(mycolumns.properMotion()(i));
+        CASA_EXPECT_ARRAYEQ(expected_array, array);
+      }
+      expected_array.assign(row_record.rest_frequency);
+      if (expected_array.size() == 0) {
+        EXPECT_FALSE(mycolumns.restFrequency().isDefined(i));
+      } else {
+        array.assign(mycolumns.restFrequency()(i));
+        CASA_EXPECT_ARRAYEQ(expected_array, array);
+      }
+      expected_array.assign(row_record.sysvel);
+      if (expected_array.size() == 0) {
+        EXPECT_FALSE(mycolumns.sysvel().isDefined(i));
+      } else {
+        array.assign(mycolumns.sysvel()(i));
+        CASA_EXPECT_ARRAYEQ(expected_array, array);
+      }
+      Array<String> expected_transition = row_record.transition;
+      if (expected_transition.size() == 0) {
+        EXPECT_FALSE(mycolumns.transition().isDefined(i));
+      } else {
+        Array<String> transition = mycolumns.transition()(i);
+        CASA_EXPECT_ARRAYEQ(expected_transition, transition);
+      }
     }
   }
 
@@ -230,36 +252,35 @@ TEST_F(SingleDishMSFillerTest, FillerTestWithReaderStub) {
   {
     std::cout << "verify FIELD table" << std::endl;
     auto const mytable = myms.field();
-    TableRecord const &expected_record = reader.field_record_;
-    uInt num_records = expected_record.nfields();
+    std::map<uInt, FieldRecord> expected_record = reader.field_record_;
+    uInt num_records = expected_record.size();
     ROMSFieldColumns mycolumns(mytable);
     uInt expected_nrow = 0;
     std::vector<uInt> processed_rows;
     for (uInt i = 0; i < num_records; ++i) {
       std::cout << "Verifying row " << i << std::endl;
       String key = "ROW" + String::toString(i);
-      TableRecord row_record = expected_record.asRecord(key);
-      Int field_id = row_record.asInt("FIELD_ID");
+      FieldRecord const row_record = expected_record[i];
+      Int field_id = row_record.field_id;
       std::cout << "field " << field_id << std::endl;
       processed_rows.push_back((uInt) field_id);
       ASSERT_GE(field_id, 0);
       if ((uInt)(field_id + 1) > expected_nrow) {
         expected_nrow = field_id + 1;
       }
-      EXPECT_EQ(row_record.asDouble("TIME"), mycolumns.time()(field_id));
-      EXPECT_EQ(row_record.asInt("NUM_POLY"), mycolumns.numPoly()(field_id));
+      EXPECT_EQ(row_record.time, mycolumns.time()(field_id));
+      EXPECT_EQ(row_record.direction.shape()[1] - 1,
+          mycolumns.numPoly()(field_id));
       Int source_id = -1;
-      String source_name = row_record.asString("SOURCE_NAME");
+      String source_name = row_record.source_name;
       if (source_map.isDefined(source_name)) {
         source_id = source_map.asInt(source_name);
       }
       ASSERT_GE(source_id, 0);
       EXPECT_EQ(source_id, mycolumns.sourceId()(field_id));
-      CASA_EXPECT_STREQ(row_record.asString("NAME"),
-          mycolumns.name()(field_id));
-      CASA_EXPECT_STREQ(row_record.asString("CODE"),
-          mycolumns.code()(field_id));
-      Matrix<Double> const direction = row_record.asArrayDouble("DIRECTION");
+      CASA_EXPECT_STREQ(row_record.name, mycolumns.name()(field_id));
+      CASA_EXPECT_STREQ(row_record.code, mycolumns.code()(field_id));
+      Matrix<Double> const direction = row_record.direction;
       EXPECT_TRUE(allEQ(direction, mycolumns.delayDir()(field_id)));
       EXPECT_TRUE(allEQ(direction, mycolumns.phaseDir()(field_id)));
       EXPECT_TRUE(allEQ(direction, mycolumns.referenceDir()(field_id)));
@@ -284,31 +305,30 @@ TEST_F(SingleDishMSFillerTest, FillerTestWithReaderStub) {
   {
     std::cout << "Verify SPECTRAL_WINDOW table" << std::endl;
     auto const mytable = myms.spectralWindow();
-    TableRecord const &expected_record = reader.spw_record_;
-    uInt num_records = expected_record.nfields();
+    map<uInt, SpectralWindowRecord> expected_record = reader.spw_record_;
+    uInt num_records = expected_record.size();
     ROMSSpWindowColumns mycolumns(mytable);
     uInt expected_nrow = 0;
     std::vector<uInt> processed_rows;
     for (uInt i = 0; i < num_records; ++i) {
       std::cout << "Verifying row " << i << std::endl;
       String key = "ROW" + String::toString(i);
-      TableRecord row_record = expected_record.asRecord(key);
-      Int spw_id = row_record.asInt("SPECTRAL_WINDOW_ID");
+      SpectralWindowRecord row_record = expected_record[i];
+      Int spw_id = row_record.spw_id;
       std::cout << "spw " << spw_id << std::endl;
       processed_rows.push_back((uInt) spw_id);
       ASSERT_GE(spw_id, 0);
       if ((uInt)(spw_id + 1) > expected_nrow) {
         expected_nrow = spw_id + 1;
       }
-      EXPECT_EQ(row_record.asInt("MEAS_FREQ_REF"),
-          mycolumns.measFreqRef()(spw_id));
-      Int num_chan = row_record.asInt("NUM_CHAN");
+      EXPECT_EQ(row_record.meas_freq_ref, mycolumns.measFreqRef()(spw_id));
+      Int num_chan = row_record.num_chan;
       EXPECT_EQ(num_chan, mycolumns.numChan()(spw_id));
       num_chan_map[spw_id] = num_chan;
-      CASA_EXPECT_STREQ(row_record.asString("NAME"), mycolumns.name()(spw_id));
-      Double expected_refpix = row_record.asDouble("REFPIX");
-      Double expected_refval = row_record.asDouble("REFVAL");
-      Double expected_increment = row_record.asDouble("INCREMENT");
+      CASA_EXPECT_STREQ(row_record.name, mycolumns.name()(spw_id));
+      Double expected_refpix = row_record.refpix;
+      Double expected_refval = row_record.refval;
+      Double expected_increment = row_record.increment;
       Int expected_net_sideband = (expected_increment < 0.0) ? 1 : 0;
       EXPECT_EQ(expected_net_sideband, mycolumns.netSideband()(spw_id));
       Vector < Double > chan_freq = mycolumns.chanFreq()(spw_id);
@@ -345,32 +365,48 @@ TEST_F(SingleDishMSFillerTest, FillerTestWithReaderStub) {
   {
     std::cout << "Verify SYSCAL table" << std::endl;
     auto const mytable = myms.sysCal();
-    TableRecord const &expected_record = reader.syscal_record_;
-    uInt expected_nrow = expected_record.nfields();
+    map<uInt, SysCalRecord> expected_record = reader.syscal_record_;
+    uInt expected_nrow = expected_record.size();
     ASSERT_EQ(expected_nrow, mytable.nrow());
     ROMSSysCalColumns mycolumns(mytable);
     for (uInt i = 0; i < expected_nrow; ++i) {
       std::cout << "Verifying row " << i << std::endl;
       String key = "ROW" + String::toString(i);
-      TableRecord row_record = expected_record.asRecord(key);
-      EXPECT_EQ(row_record.asDouble("TIME"), mycolumns.time()(i));
-      EXPECT_EQ(row_record.asDouble("INTERVAL"), mycolumns.interval()(i));
-      EXPECT_EQ(row_record.asInt("SPECTRAL_WINDOW_ID"),
-          mycolumns.spectralWindowId()(i));
-      EXPECT_EQ(row_record.asInt("FEED_ID"), mycolumns.feedId()(i));
-      EXPECT_EQ(row_record.asInt("ANTENNA_ID"), mycolumns.antennaId()(i));
-      Array<Float> expected_array = row_record.asArrayFloat("TCAL");
-      Array<Float> array = mycolumns.tcal()(i);
-      CASA_EXPECT_ARRAYEQ(expected_array, array);
-      expected_array.assign(row_record.asArrayFloat("TSYS"));
-      array.assign(mycolumns.tsys()(i));
-      CASA_EXPECT_ARRAYEQ(expected_array, array);
-      expected_array.assign(row_record.asArrayFloat("TCAL_SPECTRUM"));
-      array.assign(mycolumns.tcalSpectrum()(i));
-      CASA_EXPECT_ARRAYEQ(expected_array, array);
-      expected_array.assign(row_record.asArrayFloat("TSYS_SPECTRUM"));
-      array.assign(mycolumns.tsysSpectrum()(i));
-      CASA_EXPECT_ARRAYEQ(expected_array, array);
+      SysCalRecord row_record = expected_record[i];
+      EXPECT_EQ(row_record.time, mycolumns.time()(i));
+      EXPECT_EQ(row_record.interval, mycolumns.interval()(i));
+      EXPECT_EQ(row_record.spw_id, mycolumns.spectralWindowId()(i));
+      EXPECT_EQ(row_record.feed_id, mycolumns.feedId()(i));
+      EXPECT_EQ(row_record.antenna_id, mycolumns.antennaId()(i));
+      Array<Float> expected_array = row_record.tcal;
+      Array<Float> array;
+      if (expected_array.size() == 0) {
+        EXPECT_FALSE(mycolumns.tcal().isDefined(i));
+      } else {
+        array = mycolumns.tcal()(i);
+        CASA_EXPECT_ARRAYEQ(expected_array, array);
+      }
+      expected_array.assign(row_record.tsys);
+      if (expected_array.size() == 0) {
+        EXPECT_FALSE(mycolumns.tsys().isDefined(i));
+      } else {
+        array.assign(mycolumns.tsys()(i));
+        CASA_EXPECT_ARRAYEQ(expected_array, array);
+      }
+      expected_array.assign(row_record.tcal_spectrum);
+      if (expected_array.size() == 0) {
+        EXPECT_FALSE(mycolumns.tcalSpectrum().isDefined(i));
+      } else {
+        array.assign(mycolumns.tcalSpectrum()(i));
+        CASA_EXPECT_ARRAYEQ(expected_array, array);
+      }
+      expected_array.assign(row_record.tsys_spectrum);
+      if (expected_array.size() == 0) {
+        EXPECT_FALSE(mycolumns.tsysSpectrum().isDefined(i));
+      } else {
+        array.assign(mycolumns.tsysSpectrum()(i));
+        CASA_EXPECT_ARRAYEQ(expected_array, array);
+      }
     }
   }
 
@@ -378,26 +414,22 @@ TEST_F(SingleDishMSFillerTest, FillerTestWithReaderStub) {
   {
     std::cout << "Verify WEATHER table" << std::endl;
     auto const mytable = myms.weather();
-    TableRecord const &expected_record = reader.weather_record_;
-    uInt expected_nrow = expected_record.nfields();
+    auto expected_record = reader.weather_record_;
+    uInt expected_nrow = expected_record.size();
     ASSERT_EQ(expected_nrow, mytable.nrow());
     ROMSWeatherColumns mycolumns(mytable);
     for (uInt i = 0; i < expected_nrow; ++i) {
       std::cout << "Verifying row " << i << std::endl;
       String key = "ROW" + String::toString(i);
-      TableRecord row_record = expected_record.asRecord(key);
-      EXPECT_EQ(row_record.asDouble("TIME"), mycolumns.time()(i));
-      EXPECT_EQ(row_record.asDouble("INTERVAL"), mycolumns.interval()(i));
-      EXPECT_EQ(row_record.asInt("ANTENNA_ID"), mycolumns.antennaId()(i));
-      EXPECT_FLOAT_EQ(row_record.asFloat("TEMPERATURE"),
-          mycolumns.temperature()(i));
-      EXPECT_FLOAT_EQ(row_record.asFloat("PRESSURE"), mycolumns.pressure()(i));
-      EXPECT_FLOAT_EQ(row_record.asFloat("REL_HUMIDITY"),
-          mycolumns.relHumidity()(i));
-      EXPECT_FLOAT_EQ(row_record.asFloat("WIND_SPEED"),
-          mycolumns.windSpeed()(i));
-      EXPECT_FLOAT_EQ(row_record.asFloat("WIND_DIRECTION"),
-          mycolumns.windDirection()(i));
+      WeatherRecord row_record = expected_record[i];
+      EXPECT_EQ(row_record.time, mycolumns.time()(i));
+      EXPECT_EQ(row_record.interval, mycolumns.interval()(i));
+      EXPECT_EQ(row_record.antenna_id, mycolumns.antennaId()(i));
+      EXPECT_FLOAT_EQ(row_record.temperature, mycolumns.temperature()(i));
+      EXPECT_FLOAT_EQ(row_record.pressure, mycolumns.pressure()(i));
+      EXPECT_FLOAT_EQ(row_record.rel_humidity, mycolumns.relHumidity()(i));
+      EXPECT_FLOAT_EQ(row_record.wind_speed, mycolumns.windSpeed()(i));
+      EXPECT_FLOAT_EQ(row_record.wind_direction, mycolumns.windDirection()(i));
     }
   }
 
@@ -471,7 +503,7 @@ TEST_F(SingleDishMSFillerTest, FillerTestWithReaderStub) {
   // verify MAIN table with several subtables
   constexpr size_t kNumPointing = 4;
   size_t pointing_count = 0;
-  Vector <Double> pointing_time(kNumPointing);
+  Vector < Double > pointing_time(kNumPointing);
   Vector < Int > pointing_antenna(kNumPointing);
   Vector < Int > pointing_num_poly(kNumPointing);
   Cube<Double> pointing_direction(IPosition(3, 2, 1, kNumPointing));
@@ -562,7 +594,7 @@ TEST_F(SingleDishMSFillerTest, FillerTestWithReaderStub) {
         ;
       }
 );
-                              ASSERT_GT(num_chan, 0);
+                                                                        ASSERT_GT(num_chan, 0);
       Matrix < Bool > expected_flag(expected_num_pol, num_chan);
       Matrix < Float > expected_data(expected_num_pol, num_chan);
       std::cout << "expected_flag.shape = " << expected_flag.shape()
@@ -678,7 +710,7 @@ TEST_F(SingleDishMSFillerTest, FillerTestWithReaderStub) {
         ;
       }
 );
-                              ASSERT_GT(num_chan, 0);
+                                                                        ASSERT_GT(num_chan, 0);
       expected_flag.resize(expected_num_pol, num_chan);
       expected_data.resize(expected_flag.shape());
       Int pol_id2 = row_record2.asInt("POLNO");
@@ -709,14 +741,15 @@ TEST_F(SingleDishMSFillerTest, FillerTestWithReaderStub) {
     Sort sorter;
     sorter.sortKey(pointing_antenna.data(), TpInt);
     sorter.sortKey(pointing_time.data(), TpDouble);
-    Vector<uInt> sort_index;
+    Vector < uInt > sort_index;
     sorter.sort(sort_index, pointing_count);
     for (size_t i = 0; i < nrow; ++i) {
       size_t j = sort_index[i];
       EXPECT_EQ(pointing_time[j], mycolumns.time()(i));
       EXPECT_EQ(pointing_antenna[j], mycolumns.antennaId()(i));
       EXPECT_EQ(pointing_num_poly[j], mycolumns.numPoly()(i));
-      EXPECT_TRUE(allEQ(pointing_direction.xyPlane(j), mycolumns.direction()(i)));
+      EXPECT_TRUE(
+          allEQ(pointing_direction.xyPlane(j), mycolumns.direction()(i)));
     }
   }
 }

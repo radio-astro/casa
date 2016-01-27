@@ -19,6 +19,7 @@
 #include <casacore/casa/BasicSL/String.h>
 #include <casacore/casa/Arrays/Array.h>
 #include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/measures/Measures/MDirection.h>
 #include <casacore/ms/MeasurementSets/MeasurementSet.h>
 #include <casacore/ms/MeasurementSets/MSMainColumns.h>
 #include <casacore/tables/Tables/TableRow.h>
@@ -98,13 +99,28 @@ private:
     // query if the data is complex or float
     is_float_ = reader_->isFloatData();
 
-    // pointing direction frame
-    //MDirection::Types direction_frame = reader_->getDirectionFrame();
+    // frame information
+    MDirection::Types direction_frame = reader_->getDirectionFrame();
+    auto mytable = ms_->pointing();
+    ArrayColumn<Double> direction_column(mytable, "DIRECTION");
+    TableRecord &record = direction_column.rwKeywordSet();
+    Record meas_info = record.asRecord("MEASINFO");
+    if (meas_info.dataType("Ref") == TpInt) {
+      std::cout << "MEASINFO::Ref is integer" << std::endl;
+      meas_info.define("Ref", direction_frame);
+    } else {
+      std::cout << "MEASINFO::Ref seems to be string" << std::endl;
+      String ref_string = MDirection::showType(direction_frame);
+      //ref_string = "GALACTIC";
+      std::cout << "setting \"" << ref_string << "\" to direction frame" << std::endl;
+      meas_info.define("Ref", ref_string);
+    }
+    record.defineRecord("MEASINFO", meas_info);
 
     POST_END;
   }
 
-  // finalization
+// finalization
   void finalize() {
     POST_START;
 
@@ -114,11 +130,11 @@ private:
     POST_END;
   }
 
-  // setup MS as Scratch table
-  // The table will be non-Scratch when it is saved
+// setup MS as Scratch table
+// The table will be non-Scratch when it is saved
   void setupMS();
 
-  // fill tables that can be processed prior to main loop
+// fill tables that can be processed prior to main loop
   void fillPreProcessTables() {
     POST_START;
 
@@ -149,7 +165,7 @@ private:
     POST_END;
   }
 
-  // fill tables that must be processed after main loop
+// fill tables that must be processed after main loop
   void fillPostProcessTables() {
     POST_START;
 
@@ -162,7 +178,7 @@ private:
     POST_END;
   }
 
-  // fill MAIN table
+// fill MAIN table
   void fillMain() {
     POST_START;
 
@@ -241,32 +257,32 @@ private:
 
   void sortPointing();
 
-  // Fill subtables
-  // fill ANTENNA table
+// Fill subtables
+// fill ANTENNA table
   void fillAntenna();
 
-  // fill OBSERVATION table
+// fill OBSERVATION table
   void fillObservation();
 
-  // fill PROCESSOR table
+// fill PROCESSOR table
   void fillProcessor();
 
-  // fill SOURCE table
+// fill SOURCE table
   void fillSource();
 
-  // fill SOURCE table
+// fill SOURCE table
   void fillField();
 
-  // fill SPECTRAL_WINDOW table
+// fill SPECTRAL_WINDOW table
   void fillSpectralWindow();
 
-  // fill SYSCAL table
+// fill SYSCAL table
   void fillSyscal();
 
-  // fill WEATHER table
+// fill WEATHER table
   void fillWeather();
 
-  // fill HISTORY table
+// fill HISTORY table
   void fillHistory() {
     POST_START;
 
@@ -297,44 +313,44 @@ private:
 //  // @return field id
 //  Int updateField(Int sourceId, Record fieldSpec);
 //
-  // update POLARIZATION table
-  // @param[in] corr_type polarization type list
-  // @param[in] num_pol number of polarization components
-  // @return polarization id
+// update POLARIZATION table
+// @param[in] corr_type polarization type list
+// @param[in] num_pol number of polarization components
+// @return polarization id
   Int updatePolarization(Vector<Int> const &corr_type, Int const &num_pol);
 
-  // update DATA_DESCRIPTION table
-  // @param[in] polarization_id polarization id
-  // @param[in] spw_id spectral window id
-  // @return data description id
+// update DATA_DESCRIPTION table
+// @param[in] polarization_id polarization id
+// @param[in] spw_id spectral window id
+// @return data description id
   Int updateDataDescription(Int const &polarization_id, Int const &spw_id);
 
-  // update STATE table
-  // @param[in] subscan subscan number
-  // @param[in] obs_mode observing mode string
-  // @return state id
+// update STATE table
+// @param[in] subscan subscan number
+// @param[in] obs_mode observing mode string
+// @return state id
   Int updateState(Int const &subscan, String const &obs_mode);
 
-  // update FEED table
-  // @param[in] feed_id feed ID
-  // @param[in] spw_id spectral window ID
-  // @param[in] pol_type polarization type
-  // @return feed row number
+// update FEED table
+// @param[in] feed_id feed ID
+// @param[in] spw_id spectral window ID
+// @param[in] pol_type polarization type
+// @return feed row number
   Int updateFeed(Int const &feed_id, Int const &spw_id, String const &pol_type);
 
-  // update POINTING table
-  // @param[in] antenna_id antenna id
-  // @param[in] time time stamp
-  // @param[in] direction pointing direction
+// update POINTING table
+// @param[in] antenna_id antenna id
+// @param[in] time time stamp
+// @param[in] direction pointing direction
   Int updatePointing(Int const &antenna_id, Int const &feed_id,
       Double const &time, Matrix<Double> const &direction);
 
-  // update MAIN table
-  // @param[in] fieldId field id
-  // @param[in] feedId feed id
-  // @param[in] dataDescriptionId data description id
-  // @param[in] stateId state id
-  // @param[in] mainSpec main table row specification except id
+// update MAIN table
+// @param[in] fieldId field id
+// @param[in] feedId feed id
+// @param[in] dataDescriptionId data description id
+// @param[in] stateId state id
+// @param[in] mainSpec main table row specification except id
   void updateMain(Int const &antenna_id, Int field_id, Int feedId,
       Int dataDescriptionId, Int stateId, Int const &scan_number,
       TableRecord const &mainSpec, TableRecord const &dataRecord) {
@@ -429,7 +445,7 @@ private:
   std::unique_ptr<Reader> reader_;
   bool is_float_;
 
-  // for POINTING table
+// for POINTING table
   Int reference_feed_;
   std::map<Int, Vector<Double>> pointing_time_;
   std::map<Int, Double> pointing_time_max_;

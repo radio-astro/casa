@@ -10,8 +10,13 @@
 
 #include <gtest/gtest.h>
 
+#include <singledish/Filler/ReaderInterface.h>
+
+#include <map>
+
 #include <casacore/casa/Arrays/Array.h>
 #include <casacore/casa/BasicSL/Constants.h>
+#include <casacore/measures/Measures/MDirection.h>
 #include <casacore/casa/Quanta/MVPosition.h>
 #include <casacore/measures/Measures/MPosition.h>
 #include <casacore/measures/Measures/MeasConvert.h>
@@ -117,22 +122,32 @@ public:
   }
 
   void getEntry(TableRecord &record) {
+
+  }
+  void getEntry(SourceRecord &record) {
+    POST_START;
     if (moreData()) {
       size_t i = current_iter_;
-      record.define("SOURCE_ID", source_id_[i]);
-      record.define("NAME", name_[i]);
-      record.define("TIME", time_[i]);
-      record.define("INTERVAL", interval_[i]);
-      record.define("CALIBRATION_GROUP", calibration_group_[i]);
-      record.define("CODE", code_[i]);
-      record.define("DIRECTION", direction_[i]);
-      record.define("PROPER_MOTION", proper_motion_[i]);
-      record.define("SPECTRAL_WINDOW_ID", spectral_window_id_[i]);
-      record.define("NUM_LINES", num_lines_[i]);
-      record.define("TRANSITION", transition_[i]);
-      record.define("REST_FREQUENCY", rest_frequency_[i]);
-      record.define("SYSVEL", sysvel_[i]);
+      record.source_id = source_id_[i];
+      record.name = name_[i];
+      record.time = time_[i];
+      record.interval = interval_[i];
+      record.calibration_group = calibration_group_[i];
+      record.code = code_[i];
+      std::cout << "direction = " << direction_[i] << std::endl;
+      Quantum<Vector<Double> > qdirection(direction_[i], "rad");
+      MDirection direction(qdirection, MDirection::J2000);
+      direction.print(std::cout);
+      std::cout << "with ref " << direction.getRefString() << std::endl;
+      record.direction = direction;
+      record.proper_motion = proper_motion_[i];
+      record.spw_id = spectral_window_id_[i];
+      record.num_lines = num_lines_[i];
+      record.transition = transition_[i];
+      record.rest_frequency = rest_frequency_[i];
+      record.sysvel = sysvel_[i];
     }
+    POST_END;
   }
 
 private:
@@ -211,14 +226,17 @@ public:
   }
 
   void getEntry(TableRecord &record) {
+    return;
+  }
+
+  void getEntry(FieldRecord &record) {
     if (moreData()) {
       size_t i = current_iter_;
-      record.define("FIELD_ID", field_id_[i]);
-      record.define("NAME", name_[i]);
-      record.define("SOURCE_NAME", source_name_[i]);
-      record.define("TIME", time_[i]);
-      record.define("INTERVAL", interval_[i]);
-      record.define("CODE", code_[i]);
+      record.field_id = field_id_[i];
+      record.name = name_[i];
+      record.source_name = source_name_[i];
+      record.time = time_[i];
+      record.code = code_[i];
       Int num_poly = 0;
       Matrix < Double > direction(direction_[i]);
       if (scan_rate_[i].nelements() > 0 && anyNE(scan_rate_[i], 0.0)) {
@@ -226,8 +244,8 @@ public:
         direction.column(1) = scan_rate_[i];
         num_poly = 1;
       }
-      record.define("DIRECTION", direction);
-      record.define("NUM_POLY", num_poly);
+      record.direction = direction;
+      record.frame = MDirection::GALACTIC;
     }
   }
 
@@ -281,15 +299,18 @@ public:
   }
 
   void getEntry(TableRecord &record) {
+
+  }
+  void getEntry(SpectralWindowRecord &record) {
     if (moreData()) {
       size_t i = current_iter_;
-      record.define("SPECTRAL_WINDOW_ID", spw_id_[i]);
-      record.define("NAME", name_[i]);
-      record.define("NUM_CHAN", num_chan_[i]);
-      record.define("MEAS_FREQ_REF", meas_freq_ref_[i]);
-      record.define("REFPIX", refpix_[i]);
-      record.define("REFVAL", refval_[i]);
-      record.define("INCREMENT", increment_[i]);
+      record.spw_id = spw_id_[i];
+      record.name = name_[i];
+      record.num_chan = num_chan_[i];
+      record.meas_freq_ref = meas_freq_ref_[i];
+      record.refpix = refpix_[i];
+      record.refval = refval_[i];
+      record.increment = increment_[i];
     }
   }
 
@@ -350,17 +371,20 @@ public:
   }
 
   void getEntry(TableRecord &record) {
+
+  }
+  void getEntry(SysCalRecord &record) {
     if (moreData()) {
       size_t i = current_iter_;
-      record.define("ANTENNA_ID", antenna_id_[i]);
-      record.define("FEED_ID", feed_id_[i]);
-      record.define("SPECTRAL_WINDOW_ID", spectral_window_id_[i]);
-      record.define("TIME", time_[i]);
-      record.define("INTERVAL", interval_[i]);
-      record.define("TCAL", tcal_[i]);
-      record.define("TCAL_SPECTRUM", tcal_spectrum_[i]);
-      record.define("TSYS", tsys_[i]);
-      record.define("TSYS_SPECTRUM", tsys_spectrum_[i]);
+      record.antenna_id = antenna_id_[i];
+      record.feed_id = feed_id_[i];
+      record.spw_id = spectral_window_id_[i];
+      record.time = time_[i];
+      record.interval = interval_[i];
+      record.tcal = tcal_[i];
+      record.tcal_spectrum = tcal_spectrum_[i];
+      record.tsys = tsys_[i];
+      record.tsys_spectrum = tsys_spectrum_[i];
     }
   }
 
@@ -404,16 +428,19 @@ public:
   }
 
   void getEntry(TableRecord &record) {
+
+  }
+    void getEntry(WeatherRecord &record) {
     if (moreData()) {
       size_t i = current_iter_;
-      record.define("ANTENNA_ID", antenna_id_[i]);
-      record.define("TIME", time_[i]);
-      record.define("INTERVAL", interval_[i]);
-      record.define("TEMPERATURE", temperature_[i]);
-      record.define("PRESSURE", pressure_[i]);
-      record.define("REL_HUMIDITY", rel_humidity_[i]);
-      record.define("WIND_SPEED", wind_speed_[i]);
-      record.define("WIND_DIRECTION", wind_direction_[i]);
+      record.antenna_id = antenna_id_[i];
+      record.time = time_[i];
+      record.interval = interval_[i];
+      record.temperature = temperature_[i];
+      record.pressure = pressure_[i];
+      record.rel_humidity = rel_humidity_[i];
+      record.wind_speed = wind_speed_[i];
+      record.wind_direction = wind_direction_[i];
     }
   }
 
@@ -432,7 +459,7 @@ private:
 struct FloatDataStorage {
   size_t const kNumRow = 24;
   Double const time_[4] = { 4.0e9, 4.1e9, 4.2e9, 4.3e9 };
-  Int const antenna_[2] = {0, 1};
+  Int const antenna_[2] = { 0, 1 };
   Int const spw_[2] = { 0, 1 };
   Int const num_pol_[2] = { 2, 1 };
   Int const num_chan_[2] = { 4, 8 };
@@ -440,8 +467,8 @@ struct FloatDataStorage {
   Int const feed_[2] = { 0, 1 };
   Int const scan_[2] = { 0, 2 };
   Int const subscan_[2] = { 0, 1 };
-  Double const ra_[2] = {0.25, 0.28};
-  Double const dec_[2] = {-1.48, -1.49};
+  Double const ra_[2] = { 0.25, 0.28 };
+  Double const dec_[2] = { -1.48, -1.49 };
 //  Double const dra_[2] = {0.0, -0.01};
 //  Double const ddec_[2] = {0.0, 0.002};
   String const intent_[2] = { "OBSERVE_TARGET#ON_SOURCE",
@@ -580,7 +607,7 @@ public:
   }
 
   // to get OBSERVATION table
-  virtual Bool getObservationRow(TableRecord &record) {
+  virtual Bool getObservationRow(ObservationRecord &record) {
     POST_START;
 
     Bool return_value = (*this.*get_observation_row_)(record);
@@ -590,7 +617,7 @@ public:
   }
 
   // to get ANTENNA table
-  virtual Bool getAntennaRow(TableRecord &record) {
+  virtual Bool getAntennaRow(AntennaRecord &record) {
     POST_START;
 
     Bool return_value = (*this.*get_antenna_row_)(record);
@@ -601,7 +628,7 @@ public:
   }
 
   // to get PROCESSOR table
-  virtual Bool getProcessorRow(TableRecord &record) {
+  virtual Bool getProcessorRow(ProcessorRecord &record) {
     POST_START;
 
     Bool return_value = (*this.*get_processor_row_)(record);
@@ -611,7 +638,7 @@ public:
   }
 
   // to get SOURCE table
-  virtual Bool getSourceRow(TableRecord &record) {
+  virtual Bool getSourceRow(SourceRecord &record) {
     POST_START;
 
     Bool return_value = (*this.*get_source_row_)(record);
@@ -622,7 +649,7 @@ public:
   }
 
   // to get FIELD table
-  virtual Bool getFieldRow(TableRecord &record) {
+  virtual Bool getFieldRow(FieldRecord &record) {
     POST_START;
 
     Bool return_value = (*this.*get_field_row_)(record);
@@ -633,7 +660,7 @@ public:
   }
 
   // to get SPECTRAL WINDOW table
-  virtual Bool getSpectralWindowRow(TableRecord &record) {
+  virtual Bool getSpectralWindowRow(SpectralWindowRecord &record) {
     POST_START;
 
     Bool return_value = (*this.*get_spw_row_)(record);
@@ -645,7 +672,7 @@ public:
   }
 
   // to get SYSCAL table
-  virtual Bool getSyscalRow(TableRecord &record) {
+  virtual Bool getSyscalRow(SysCalRecord &record) {
     POST_START;
 
     Bool return_value = (*this.*get_syscal_row_)(record);
@@ -656,7 +683,7 @@ public:
   }
 
   // to get WEATHER table
-  virtual Bool getWeatherRow(TableRecord &record) {
+  virtual Bool getWeatherRow(WeatherRecord &record) {
     POST_START;
 
     Bool return_value = (*this.*get_weather_row_)(record);
@@ -689,14 +716,14 @@ public:
   }
 
   // for testing
-  TableRecord observation_record_;
-  TableRecord antenna_record_;
-  TableRecord processor_record_;
-  TableRecord source_record_;
-  TableRecord field_record_;
-  TableRecord spw_record_;
-  TableRecord syscal_record_;
-  TableRecord weather_record_;
+  Record observation_record_;
+  Record antenna_record_;
+  Record processor_record_;
+  std::map<uInt, SourceRecord> source_record_;
+  std::map<uInt, FieldRecord> field_record_;
+  std::map<uInt, SpectralWindowRecord> spw_record_;
+  std::map<uInt, SysCalRecord> syscal_record_;
+  std::map<uInt, WeatherRecord> weather_record_;
   TableRecord main_record_;
 
 protected:
@@ -716,99 +743,126 @@ private:
   std::unique_ptr<SpwIterator> spw_iterator_;
   std::unique_ptr<SysCalIterator> syscal_iterator_;
   std::unique_ptr<WeatherIterator> weather_iterator_;
-  Bool (::TestReader<DataStorage>::*get_observation_row_)(TableRecord &);
-  Bool (::TestReader<DataStorage>::*get_antenna_row_)(TableRecord &);
-  Bool (::TestReader<DataStorage>::*get_processor_row_)(TableRecord &);
-  Bool (::TestReader<DataStorage>::*get_source_row_)(TableRecord &);
-  Bool (::TestReader<DataStorage>::*get_field_row_)(TableRecord &);
-  Bool (::TestReader<DataStorage>::*get_spw_row_)(TableRecord &);
-  Bool (::TestReader<DataStorage>::*get_syscal_row_)(TableRecord &);
-  Bool (::TestReader<DataStorage>::*get_weather_row_)(TableRecord &);
+  Bool (::TestReader<DataStorage>::*get_observation_row_)(ObservationRecord &);
+  Bool (::TestReader<DataStorage>::*get_antenna_row_)(AntennaRecord &);
+  Bool (::TestReader<DataStorage>::*get_processor_row_)(ProcessorRecord &);
+  Bool (::TestReader<DataStorage>::*get_source_row_)(SourceRecord &);
+  Bool (::TestReader<DataStorage>::*get_field_row_)(FieldRecord &);
+  Bool (::TestReader<DataStorage>::*get_spw_row_)(SpectralWindowRecord &);
+  Bool (::TestReader<DataStorage>::*get_syscal_row_)(SysCalRecord &);
+  Bool (::TestReader<DataStorage>::*get_weather_row_)(WeatherRecord &);
   DataStorage storage_;
 
-  Bool getObservationRowImpl(TableRecord &record) {
+  Bool getObservationRowImpl(ObservationRecord &record) {
     POST_START;
 
-    record.define("TELESCOPE_NAME", "MyTelescope");
+    String telescope_name = "MyTelescope";
+    record.telescope_name = telescope_name;
+    observation_record_.define("TELESCOPE_NAME", telescope_name);
     Vector < Double > time_range(2);
     Time t(2016, 1, 1);
     time_range[0] = t.modifiedJulianDay() * 86400.0; // sec
     t = t + 3600.0;
     time_range[1] = t.modifiedJulianDay();
     std::cout << "MJD=" << time_range[0] << std::endl;
-    record.define("TIME_RANGE", time_range);
-    record.define("OBSERVER", "MyName");
-    record.define("SCHEDULE_TYPE", "ALMA-SD");
-    record.define("PROJECT", "MyProject");
+    record.time_range = time_range;
+    observation_record_.define("TIME_RANGE", time_range);
+    String observer = "MyName";
+    record.observer = observer;
+    observation_record_.define("OBSERVER", observer);
+    String schedule_type = "ALMA-SD";
+    record.schedule_type = schedule_type;
+    observation_record_.define("SCHEDULE_TYPE", schedule_type);
+    String project = "MyProject";
+    record.project = project;
+    observation_record_.define("PROJECT", project);
     t = t + 86400.0;
-    record.define("RELEASE_DATE", t.modifiedJulianDay());
+    Double release_date = t.modifiedJulianDay();
+    record.release_date = release_date;
+    observation_record_.define("RELEASE_DATE", release_date);
     Vector < String > strvec(1, "");
-    record.define("LOG", strvec);
+    record.log = strvec;
+    observation_record_.define("LOG", strvec);
     strvec[0] = "NextSchedule";
-    record.define("SCHEDULE", strvec);
-
-    // keep record contents
-    observation_record_.assign(record);
+    record.schedule = strvec;
+    observation_record_.define("SCHEDULE", strvec);
 
     // redirect function pointer to noMoreRowImpl
-    get_observation_row_ = &::TestReader<DataStorage>::noMoreRowImpl;
+    get_observation_row_ = &::TestReader < DataStorage
+        > ::noMoreRowImplTemplate<ObservationRecord>;
 
     POST_END;
 
     return True;
   }
 
-  Bool getAntennaRowImpl(TableRecord &record) {
+  Bool getAntennaRowImpl(AntennaRecord &record) {
     POST_START;
 
-    record.define("NAME", "PMXY");
-    record.define("STATION", "A00");
-    record.define("TYPE", "GROUND-BASED");
-    record.define("MOUNT", "ALT-AZ");
+    String name = "PMXY";
+    record.name = name;
+    antenna_record_.define("NAME", name);
+    String station = "A00";
+    record.station = station;
+    antenna_record_.define("STATION", station);
+    String type = "GROUND-BASED";
+    record.type = type;
+    antenna_record_.define("TYPE", type);
+    String mount = "ALT-AZ";
+    record.mount = mount;
+    antenna_record_.define("MOUNT", mount);
     MVPosition mvposition(Quantity(5056.8, "m"),
         Quantity(-1.1825465955049892, "rad"),
         Quantity(-0.4018251640113072, "rad"));
     MPosition position(mvposition, MPosition::WGS84);
     Quantum < Vector<Double> > position_val = MPosition::Convert(position,
         MPosition::ITRF)().get("m");
-    record.define("POSITION", position_val.getValue());
+    MPosition position_itrf(position_val, MPosition::ITRF);
+    record.position = position_itrf;
+    antenna_record_.define("POSITION", position_val.getValue());
     MVPosition mvoffset(Quantity(-50.0, "m"), Quantity(0.01, "rad"),
         Quantity(-0.01, "rad"));
     MPosition offset(mvoffset, MPosition::ITRF);
+    record.offset = offset;
     Quantum<Vector<Double> > offset_val = offset.get("m");
-    record.define("OFFSET", offset_val.getValue());
-    record.define("DISH_DIAMETER", 12.0);
+    antenna_record_.define("OFFSET", offset_val.getValue());
+    Double dish_diameter = 12.0;
+    record.dish_diameter = dish_diameter;
+    antenna_record_.define("DISH_DIAMETER", dish_diameter);
 
-    // keep record contents
-    antenna_record_.assign(record);
-
-    // redirect function pointer to noMoreRowImpl
-    get_antenna_row_ = &::TestReader<DataStorage>::noMoreRowImpl;
+    get_antenna_row_ = &::TestReader < DataStorage
+        > ::noMoreRowImplTemplate<AntennaRecord>;
 
     POST_END;
 
     return True;
   }
 
-  Bool getProcessorRowImpl(TableRecord &record) {
+  Bool getProcessorRowImpl(ProcessorRecord &record) {
     POST_START;
 
-    record.define("TYPE", "CORRELATOR");
-    record.define("SUB_TYPE", "ACA");
-    record.define("TYPE_ID", -1);
-    record.define("MODE_ID", 37);
-
-    // keep record contents
-    processor_record_.assign(record);
+    String type = "CORRELATOR";
+    record.type = type;
+    processor_record_.define("TYPE", type);
+    String sub_type = "ACA";
+    record.sub_type = sub_type;
+    processor_record_.define("SUB_TYPE", sub_type);
+    Int type_id = -1;
+    record.type_id = type_id;
+    processor_record_.define("TYPE_ID", type_id);
+    Int mode_id = 37;
+    record.mode_id = mode_id;
+    processor_record_.define("MODE_ID", mode_id);
 
     // redirect function pointer to noMoreRowImpl
-    get_processor_row_ = &::TestReader<DataStorage>::noMoreRowImpl;
+    get_processor_row_ = &::TestReader < DataStorage
+        > ::noMoreRowImplTemplate<ProcessorRecord>;
 
     POST_END;
     return True;
   }
 
-  Bool getSourceRowWithInitImpl(TableRecord &record) {
+  Bool getSourceRowWithInitImpl(SourceRecord &record) {
     POST_START;
 
     source_iterator_.reset(new ::SourceIterator());
@@ -821,12 +875,12 @@ private:
     return more_rows;
   }
 
-  Bool getSourceRowImpl(TableRecord &record) {
-    return getRowImplTemplate(source_iterator_, source_record_, get_source_row_,
-        record);
+  Bool getSourceRowImpl(SourceRecord &record) {
+    return getRowImplTemplate2(source_iterator_, source_record_,
+        get_source_row_, record);
   }
 
-  Bool getFieldRowWithInitImpl(TableRecord &record) {
+  Bool getFieldRowWithInitImpl(FieldRecord &record) {
     POST_START;
 
     field_iterator_.reset(new ::FieldIterator());
@@ -839,11 +893,12 @@ private:
     return more_rows;
   }
 
-  Bool getFieldRowImpl(TableRecord &record) {
-    return getRowImplTemplate(field_iterator_, field_record_, get_field_row_, record);
+  Bool getFieldRowImpl(FieldRecord &record) {
+    return getRowImplTemplate2(field_iterator_, field_record_, get_field_row_,
+        record);
   }
 
-  Bool getSpwRowWithInitImpl(TableRecord &record) {
+  Bool getSpwRowWithInitImpl(SpectralWindowRecord &record) {
     POST_START;
 
     spw_iterator_.reset(new ::SpwIterator());
@@ -856,11 +911,11 @@ private:
     return more_rows;
   }
 
-  Bool getSpwRowImpl(TableRecord &record) {
-    return getRowImplTemplate(spw_iterator_, spw_record_, get_spw_row_, record);
+  Bool getSpwRowImpl(SpectralWindowRecord &record) {
+    return getRowImplTemplate2(spw_iterator_, spw_record_, get_spw_row_, record);
   }
 
-  Bool getSysCalRowWithInitImpl(TableRecord &record) {
+  Bool getSysCalRowWithInitImpl(SysCalRecord &record) {
     POST_START;
 
     syscal_iterator_.reset(new ::SysCalIterator());
@@ -873,12 +928,12 @@ private:
     return more_rows;
   }
 
-  Bool getSysCalRowImpl(TableRecord &record) {
-    return getRowImplTemplate(syscal_iterator_, syscal_record_, get_syscal_row_,
-        record);
+  Bool getSysCalRowImpl(SysCalRecord &record) {
+    return getRowImplTemplate2(syscal_iterator_, syscal_record_,
+        get_syscal_row_, record);
   }
 
-  Bool getWeatherRowWithInitImpl(TableRecord &record) {
+  Bool getWeatherRowWithInitImpl(WeatherRecord &record) {
     POST_START;
 
     weather_iterator_.reset(new ::WeatherIterator());
@@ -891,14 +946,14 @@ private:
     return more_rows;
   }
 
-  Bool getWeatherRowImpl(TableRecord &record) {
-    return getRowImplTemplate(weather_iterator_, weather_record_,
+  Bool getWeatherRowImpl(WeatherRecord &record) {
+    return getRowImplTemplate2(weather_iterator_, weather_record_,
         get_weather_row_, record);
   }
 
-  template<class _Iterator, class _Record, class _Func>
-  Bool getRowImplTemplate(_Iterator &iter, _Record &internal_record,
-      _Func &func, TableRecord &record) {
+  template<class _Iterator, class _InternalRecord, class _Func, class _Record>
+  Bool getRowImplTemplate(_Iterator &iter, _InternalRecord &internal_record,
+      _Func &func, _Record &record) {
     POST_START;
 
     assert(iter);
@@ -915,7 +970,36 @@ private:
       internal_record.defineRecord(key, record);
     } else {
       iter.reset(nullptr);
-      func = &::TestReader<DataStorage>::noMoreRowImpl;
+      func = &::TestReader < DataStorage > ::noMoreRowImplTemplate<_Record>;
+    }
+
+    POST_END;
+
+    return more_rows;
+  }
+
+  template<class _Iterator, class _InternalRecord, class _Func, class _Record>
+  Bool getRowImplTemplate2(_Iterator &iter, _InternalRecord &internal_record,
+      _Func &func, _Record &record) {
+    POST_START;
+
+    assert(iter);
+
+    bool more_rows = iter->moreData();
+
+    if (more_rows) {
+      iter->getEntry(record);
+      iter->next();
+
+      // keep record contents
+      uInt i = internal_record.size();
+      //String key = "ROW" + String::toString(i);
+      //internal_record.defineRecord(key, record);
+      std::cout << "keep record entry for " << i << std::endl;
+      internal_record[i] = record;
+    } else {
+      iter.reset(nullptr);
+      func = &::TestReader < DataStorage > ::noMoreRowImplTemplate<_Record>;
     }
 
     POST_END;
@@ -924,6 +1008,14 @@ private:
   }
 
   Bool noMoreRowImpl(TableRecord &) {
+    POST_START;
+    POST_END;
+
+    return False;
+  }
+
+  template<class _Record>
+  Bool noMoreRowImplTemplate(_Record &) {
     POST_START;
     POST_END;
 

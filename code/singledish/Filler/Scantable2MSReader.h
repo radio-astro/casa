@@ -28,28 +28,28 @@ public:
   virtual size_t getNumberOfRows() { return 0;}
 
   // to get OBSERVATION table
-  virtual Bool getObservationRow(TableRecord &row);
+  virtual Bool getObservationRow(ObservationRecord &record);
 
   // to get ANTENNA table
-  virtual Bool getAntennaRow(TableRecord &row);
+  virtual Bool getAntennaRow(AntennaRecord &record);
 
   // to get PROCESSOR table
-  virtual Bool getProcessorRow(TableRecord &row);
+  virtual Bool getProcessorRow(ProcessorRecord &row);
 
   // to get SOURCE table
-  virtual Bool getSourceRow(TableRecord &row);
+  virtual Bool getSourceRow(SourceRecord &row);
 
   // to get FIELD table
-  virtual Bool getFieldRow(TableRecord &row);
+  virtual Bool getFieldRow(FieldRecord &row);
 
   // to get SOURCE table
-  virtual Bool getSpectralWindowRow(TableRecord &row);
+  virtual Bool getSpectralWindowRow(SpectralWindowRecord &row);
 
   // to get SYSCAL table
-  virtual Bool getSyscalRow(TableRecord &row);
+  virtual Bool getSyscalRow(SysCalRecord &row);
 
   // to get WEATHER table
-  virtual Bool getWeatherRow(TableRecord &row);
+  virtual Bool getWeatherRow(WeatherRecord &row);
 
   // to get MAIN table
   virtual Bool getMainRecord(TableRecord &record);

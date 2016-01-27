@@ -34,7 +34,7 @@ void Scantable2MSReader::finalizeSpecific() {
   std::cout << "Scantabl2MSReader::finalize" << std::endl;
 }
 
-Bool Scantable2MSReader::getAntennaRow(TableRecord &record) {
+Bool Scantable2MSReader::getAntennaRow(AntennaRecord &record) {
   std::cout << "Scantabl2MSReader::getAntennaRow" << std::endl;
 
   return True;
@@ -46,21 +46,19 @@ Bool Scantable2MSReader::getMainRecord(TableRecord &record) {
   return True;
 }
 
-Bool Scantable2MSReader::getObservationRow(TableRecord &record) {
+Bool Scantable2MSReader::getObservationRow(ObservationRecord &record) {
   std::cout << "Scantabl2MSReader::getObservationRow" << std::endl;
-
-
 
   return True;
 }
 
-Bool Scantable2MSReader::getProcessorRow(TableRecord &record) {
+Bool Scantable2MSReader::getProcessorRow(ProcessorRecord &record) {
   std::cout << "Scantabl2MSReader::getProcessorRow" << std::endl;
 
   return True;
 }
 
-Bool Scantable2MSReader::getSourceRow(TableRecord &record) {
+Bool Scantable2MSReader::getSourceRow(SourceRecord &record) {
   POST_START;
 
   POST_END;
@@ -68,7 +66,7 @@ Bool Scantable2MSReader::getSourceRow(TableRecord &record) {
   return False;
 }
 
-Bool Scantable2MSReader::getFieldRow(TableRecord &record) {
+Bool Scantable2MSReader::getFieldRow(FieldRecord &record) {
   POST_START;
 
   POST_END;
@@ -76,7 +74,7 @@ Bool Scantable2MSReader::getFieldRow(TableRecord &record) {
   return False;
 }
 
-Bool Scantable2MSReader::getSpectralWindowRow(TableRecord &record) {
+Bool Scantable2MSReader::getSpectralWindowRow(SpectralWindowRecord &record) {
   POST_START;
 
   POST_END;
@@ -84,7 +82,7 @@ Bool Scantable2MSReader::getSpectralWindowRow(TableRecord &record) {
   return False;
 }
 
-Bool Scantable2MSReader::getSyscalRow(TableRecord &record) {
+Bool Scantable2MSReader::getSyscalRow(SysCalRecord &record) {
   POST_START;
 
   POST_END;
@@ -92,7 +90,7 @@ Bool Scantable2MSReader::getSyscalRow(TableRecord &record) {
   return False;
 }
 
-Bool Scantable2MSReader::getWeatherRow(TableRecord &record) {
+Bool Scantable2MSReader::getWeatherRow(WeatherRecord &record) {
   POST_START;
 
   POST_END;

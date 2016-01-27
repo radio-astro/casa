@@ -9,6 +9,14 @@
 #define SINGLEDISH_FILLER_SINGLEDISHMSFILLER_TCC_
 
 #include <singledish/Filler/SingleDishMSFiller.h>
+#include <singledish/Filler/AntennaRecord.h>
+#include <singledish/Filler/FieldRecord.h>
+#include <singledish/Filler/ObservationRecord.h>
+#include <singledish/Filler/ProcessorRecord.h>
+#include <singledish/Filler/SourceRecord.h>
+#include <singledish/Filler/SpectralWindowRecord.h>
+#include <singledish/Filler/SysCalRecord.h>
+#include <singledish/Filler/WeatherRecord.h>
 
 #include <iostream>
 #include <map>
@@ -52,6 +60,26 @@ void fillTable(_Table &mytable, _Reader const &reader) {
     mytable.addRow(1, True);
     row.put(irow, record);
     ++irow;
+  }
+
+  POST_END;
+}
+
+template<class _Table, class _Record, class _Reader>
+inline void fillTable2(_Table &table, _Record &record, _Reader const &reader) {
+  POST_START;
+
+  typename _Record::AssociatingColumns columns(table);
+
+  size_t irow = 0;
+  record.clear();
+  for (Bool more_rows = reader(record); more_rows == True;
+      more_rows = reader(record)) {
+    //table.addRow(1, True);
+    record.add(table, columns);
+    record.fill(irow, columns);
+    ++irow;
+    record.clear();
   }
 
   POST_END;
@@ -335,11 +363,13 @@ template<class T>
 void SingleDishMSFiller<T>::fillAntenna() {
   POST_START;
 
-  ::fillTable(ms_->antenna(),
-      [&](TableRecord &record) {return reader_->getAntennaRow(record);});
+  auto mytable = ms_->antenna();
+  AntennaRecord record;
+  ::fillTable2(mytable, record,
+      [&](AntennaRecord &record) {return reader_->getAntennaRow(record);});
 
   // initialize POINTING table related stuff
-  uInt nrow = ms_->antenna().nrow();
+  uInt nrow = mytable.nrow();
   num_pointing_time_.resize(nrow);
   for (uInt i = 0; i < nrow; ++i) {
     pointing_time_[i] = Vector < Double > (ARRAY_BLOCK_SIZE, -1.0);
@@ -355,8 +385,9 @@ template<class T>
 void SingleDishMSFiller<T>::fillObservation() {
   POST_START;
 
-  ::fillTable(ms_->observation(),
-      [&](TableRecord &record) {return reader_->getObservationRow(record);});
+  ObservationRecord record;
+  ::fillTable2(ms_->observation(), record,
+      [&](ObservationRecord &record) {return reader_->getObservationRow(record);});
 
   POST_END;
 }
@@ -365,8 +396,9 @@ template<class T>
 void SingleDishMSFiller<T>::fillProcessor() {
   POST_START;
 
-  ::fillTable(ms_->processor(),
-      [&](TableRecord &record) {return reader_->getProcessorRow(record);});
+  ProcessorRecord record;
+  ::fillTable2(ms_->processor(), record,
+      [&](ProcessorRecord &record) {return reader_->getProcessorRow(record);});
 
   POST_END;
 }
@@ -375,8 +407,9 @@ template<class T>
 void SingleDishMSFiller<T>::fillSource() {
   POST_START;
 
-  ::fillTable(ms_->source(),
-      [&](TableRecord &record) {return reader_->getSourceRow(record);});
+  SourceRecord record;
+  ::fillTable2(ms_->source(), record,
+      [&](SourceRecord &record) {return reader_->getSourceRow(record);});
 
   POST_END;
 }
@@ -385,55 +418,16 @@ template<class T>
 void SingleDishMSFiller<T>::fillField() {
   POST_START;
 
+  auto mytable = ms_->field();
+  FieldRecord record;
+  record.table = mytable;
+
   // make (name,id) map for SOURCE table
-  Record source_map;
-  Bool status = ::makeSourceMap(ms_->source(), source_map);
+  //Record source_map;
+  Bool status = ::makeSourceMap(ms_->source(), record.source_map);
 
-  MSField mytable = ms_->field();
-  TableRow row(mytable);
-  TableRecord record = row.record();
-
-  TableRecord record_proxy;
-  for (Bool more_rows = reader_->getFieldRow(record_proxy); more_rows == True;
-      more_rows = reader_->getFieldRow(record_proxy)) {
-    Int field_id = record_proxy.asInt("FIELD_ID");
-    if (field_id < 0) {
-      throw AipsError("Negative field id");
-    }
-    uInt ufield_id = (uInt) field_id;
-    uInt nrow = mytable.nrow();
-    if (nrow <= ufield_id) {
-      mytable.addRow(ufield_id - nrow + 1);
-      uInt new_nrow = mytable.nrow();
-      for (uInt irow = nrow; irow < new_nrow - 1; ++irow) {
-        std::cout << "add dummy field entry to " << irow << std::endl;
-        static Matrix<Double> const dummy_direction(2, 1, 0.0);
-        record.define("SOURCE_ID", -1);
-        record.define("NAME", "");
-        record.define("CODE", "");
-        record.define("TIME", 0.0);
-        record.define("NUM_POLY", 0);
-        record.define("DELAY_DIR", dummy_direction);
-        record.define("PHASE_DIR", dummy_direction);
-        record.define("REFERENCE_DIR", dummy_direction);
-        row.put(irow, record);
-      }
-    }
-    assert(field_id < mytable.nrow());
-
-    record.define("NAME", record_proxy.asString("NAME"));
-    record.define("CODE", record_proxy.asString("CODE"));
-    record.define("NUM_POLY", record_proxy.asInt("NUM_POLY"));
-    Matrix < Double > direction = record_proxy.asArrayDouble("DIRECTION");
-    record.define("DELAY_DIR", direction);
-    record.define("PHASE_DIR", direction);
-    record.define("REFERENCE_DIR", direction);
-    record.define("TIME", record_proxy.asDouble("TIME"));
-    String source_name = record_proxy.asString("SOURCE_NAME");
-    Int source_id = source_map.asInt(source_name);
-    record.define("SOURCE_ID", source_id);
-    row.put(field_id, record);
-  }
+  ::fillTable2(mytable, record,
+      [&](FieldRecord &record) {return reader_->getFieldRow(record);});
 
   POST_END;
 }
@@ -442,82 +436,89 @@ template<class T>
 void SingleDishMSFiller<T>::fillSpectralWindow() {
   POST_START;
 
-  MSSpectralWindow mytable = ms_->spectralWindow();
-  TableRow row(mytable);
-  TableRecord record = row.record();
+  auto mytable = ms_->spectralWindow();
+  SpectralWindowRecord record;
 
-  TableRecord record_proxy;
-  for (Bool more_rows = reader_->getSpectralWindowRow(record_proxy);
-      more_rows == True;
-      more_rows = reader_->getSpectralWindowRow(record_proxy)) {
+  ::fillTable2(mytable, record,
+      [&](SpectralWindowRecord &record) {return reader_->getSpectralWindowRow(record);});
 
-    Int spw_id = record_proxy.asInt("SPECTRAL_WINDOW_ID");
-    if (spw_id < 0) {
-      throw AipsError("Negative spw id");
-    }
-    uInt uspw_id = (uInt) spw_id;
-    uInt nrow = mytable.nrow();
-    if (nrow <= uspw_id) {
-      mytable.addRow(uspw_id - nrow + 1);
-      uInt new_nrow = mytable.nrow();
-      for (uInt irow = nrow; irow < new_nrow - 1; ++irow) {
-        std::cout << "add dummy spw entry to " << irow << std::endl;
-        Int const one_chan = 1;
-        Vector<Double> const dummy(one_chan, 0.0);
-        record.define("NUM_CHAN", one_chan);
-        record.define("CHAN_FREQ", dummy);
-        record.define("CHAN_WIDTH", dummy);
-        record.define("EFFECTIVE_BW", dummy);
-        record.define("RESOLUTION", dummy);
-        record.define("NAME", "");
-        record.define("REF_FREQUENCY", 0.0);
-        record.define("TOTAL_BANDWIDTH", 0.0);
-        row.put(irow, record);
-      }
-    }
-    assert(spw_id < mytable.nrow());
-
-    record.define("NUM_CHAN", record_proxy.asInt("NUM_CHAN"));
-    record.define("NAME", record_proxy.asString("NAME"));
-    record.define("MEAS_FREQ_REF", record_proxy.asInt("MEAS_FREQ_REF"));
-    Double refpix = record_proxy.asDouble("REFPIX");
-    Double refval = record_proxy.asDouble("REFVAL");
-    Double increment = record_proxy.asDouble("INCREMENT");
-    std::cout << "NUM_CHAN" << std::endl;
-    Int num_chan = record.asInt("NUM_CHAN");
-
-    Double tot_bw = num_chan * abs(increment);
-    std::cout << "TOTAL_BANDWIDTH" << std::endl;
-    record.define("TOTAL_BANDWIDTH", tot_bw);
-
-    Double ref_frequency = refval - refpix * increment;
-    std::cout << "REF_FREQUENCY" << std::endl;
-    record.define("REF_FREQUENCY", ref_frequency);
-
-    Vector < Double > freq(num_chan);
-    indgen(freq, ref_frequency, increment);
-    std::cout << "CHAN_FREQ" << std::endl;
-    record.define("CHAN_FREQ", freq);
-
-    freq = increment;
-    std::cout << "CHAN_WIDTH" << std::endl;
-    record.define("CHAN_WIDTH", freq);
-
-    freq = abs(freq);
-    std::cout << "EFFECTIVE_BW" << std::endl;
-    record.define("EFFECTIVE_BW", freq);
-    record.define("RESOLUTION", freq);
-
-    Int net_sideband = 0; // USB
-    if (increment < 0.0) {
-      net_sideband = 1; // LSB
-    }
-    std::cout << "NET_SIDEBAND" << std::endl;
-    record.define("NET_SIDEBAND", net_sideband);
-
-    record.print(std::cout);
-    row.put(spw_id, record);
-  }
+//
+//  MSSpectralWindow mytable = ms_->spectralWindow();
+//  TableRow row(mytable);
+//  TableRecord record = row.record();
+//
+//  TableRecord record_proxy;
+//  for (Bool more_rows = reader_->getSpectralWindowRow(record_proxy);
+//      more_rows == True;
+//      more_rows = reader_->getSpectralWindowRow(record_proxy)) {
+//
+//    Int spw_id = record_proxy.asInt("SPECTRAL_WINDOW_ID");
+//    if (spw_id < 0) {
+//      throw AipsError("Negative spw id");
+//    }
+//    uInt uspw_id = (uInt) spw_id;
+//    uInt nrow = mytable.nrow();
+//    if (nrow <= uspw_id) {
+//      mytable.addRow(uspw_id - nrow + 1);
+//      uInt new_nrow = mytable.nrow();
+//      for (uInt irow = nrow; irow < new_nrow - 1; ++irow) {
+//        std::cout << "add dummy spw entry to " << irow << std::endl;
+//        Int const one_chan = 1;
+//        Vector<Double> const dummy(one_chan, 0.0);
+//        record.define("NUM_CHAN", one_chan);
+//        record.define("CHAN_FREQ", dummy);
+//        record.define("CHAN_WIDTH", dummy);
+//        record.define("EFFECTIVE_BW", dummy);
+//        record.define("RESOLUTION", dummy);
+//        record.define("NAME", "");
+//        record.define("REF_FREQUENCY", 0.0);
+//        record.define("TOTAL_BANDWIDTH", 0.0);
+//        row.put(irow, record);
+//      }
+//    }
+//    assert(spw_id < mytable.nrow());
+//
+//    record.define("NUM_CHAN", record_proxy.asInt("NUM_CHAN"));
+//    record.define("NAME", record_proxy.asString("NAME"));
+//    record.define("MEAS_FREQ_REF", record_proxy.asInt("MEAS_FREQ_REF"));
+//    Double refpix = record_proxy.asDouble("REFPIX");
+//    Double refval = record_proxy.asDouble("REFVAL");
+//    Double increment = record_proxy.asDouble("INCREMENT");
+//    std::cout << "NUM_CHAN" << std::endl;
+//    Int num_chan = record.asInt("NUM_CHAN");
+//
+//    Double tot_bw = num_chan * abs(increment);
+//    std::cout << "TOTAL_BANDWIDTH" << std::endl;
+//    record.define("TOTAL_BANDWIDTH", tot_bw);
+//
+//    Double ref_frequency = refval - refpix * increment;
+//    std::cout << "REF_FREQUENCY" << std::endl;
+//    record.define("REF_FREQUENCY", ref_frequency);
+//
+//    Vector < Double > freq(num_chan);
+//    indgen(freq, ref_frequency, increment);
+//    std::cout << "CHAN_FREQ" << std::endl;
+//    record.define("CHAN_FREQ", freq);
+//
+//    freq = increment;
+//    std::cout << "CHAN_WIDTH" << std::endl;
+//    record.define("CHAN_WIDTH", freq);
+//
+//    freq = abs(freq);
+//    std::cout << "EFFECTIVE_BW" << std::endl;
+//    record.define("EFFECTIVE_BW", freq);
+//    record.define("RESOLUTION", freq);
+//
+//    Int net_sideband = 0; // USB
+//    if (increment < 0.0) {
+//      net_sideband = 1; // LSB
+//    }
+//    std::cout << "NET_SIDEBAND" << std::endl;
+//    record.define("NET_SIDEBAND", net_sideband);
+//
+//    record.print(std::cout);
+//    row.put(spw_id, record);
+//  }
 
   POST_END;
 }
@@ -526,8 +527,9 @@ template<class T>
 void SingleDishMSFiller<T>::fillSyscal() {
   POST_START;
 
-  fillTable(ms_->sysCal(),
-      [&](TableRecord &record) {return reader_->getSyscalRow(record);});
+  SysCalRecord record;
+  ::fillTable2(ms_->sysCal(), record,
+      [&](SysCalRecord &record) {return reader_->getSyscalRow(record);});
 
   POST_END;
 }
@@ -536,8 +538,9 @@ template<class T>
 void SingleDishMSFiller<T>::fillWeather() {
   POST_START;
 
-  fillTable(ms_->weather(),
-      [&](TableRecord &record) {return reader_->getWeatherRow(record);});
+  WeatherRecord record;
+  ::fillTable2(ms_->weather(), record,
+      [&](WeatherRecord &record) {return reader_->getWeatherRow(record);});
 
   POST_END;
 }
@@ -764,7 +767,9 @@ void SingleDishMSFiller<T>::sortPointing() {
 
   // sort TIME
   {
-    Vector < Double > sorted(IPosition(1, nrow), reinterpret_cast<Double *>(storage.get()), SHARE);
+    Vector < Double
+        > sorted(IPosition(1, nrow), reinterpret_cast<Double *>(storage.get()),
+            SHARE);
     for (uInt i = 0; i < nrow; ++i) {
       sorted[i] = time_list[index_vector[i]];
     }
@@ -772,7 +777,9 @@ void SingleDishMSFiller<T>::sortPointing() {
   }
   // sort ANTENNA_ID
   {
-    Vector < Int > sorted(IPosition(1, nrow), reinterpret_cast<Int *>(storage.get()), SHARE);
+    Vector < Int
+        > sorted(IPosition(1, nrow), reinterpret_cast<Int *>(storage.get()),
+            SHARE);
     for (uInt i = 0; i < nrow; ++i) {
       sorted[i] = antenna_id_list[index_vector[i]];
     }
@@ -783,7 +790,9 @@ void SingleDishMSFiller<T>::sortPointing() {
   {
     Vector < Int > num_poly_list(antenna_id_list);
     mycolumns.numPoly().getColumn(num_poly_list);
-    Vector < Int > sorted(IPosition(1, nrow), reinterpret_cast<Int *>(storage.get()), SHARE);
+    Vector < Int
+        > sorted(IPosition(1, nrow), reinterpret_cast<Int *>(storage.get()),
+            SHARE);
     for (uInt i = 0; i < nrow; ++i) {
       sorted[i] = antenna_id_list[index_vector[i]];
     }
@@ -792,9 +801,9 @@ void SingleDishMSFiller<T>::sortPointing() {
 
   // sort DIRECTION
   {
-    Cube < Double > direction = mycolumns.direction().getColumn();
-    Cube < Double
-        > sorted(IPosition(3, 2, 1, nrow), reinterpret_cast<Double *>(storage.get()), SHARE);
+    Cube<Double> direction = mycolumns.direction().getColumn();
+    Cube<Double> sorted(IPosition(3, 2, 1, nrow),
+        reinterpret_cast<Double *>(storage.get()), SHARE);
     for (uInt i = 0; i < nrow; ++i) {
       sorted.xyPlane(i) = direction.xyPlane(index_vector[i]);
     }
