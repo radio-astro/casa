@@ -2,26 +2,22 @@
 rsc_path = ""
 import os
 
-def choose_spwmap(combine_spwmap, phaseup_spwmap):
-    if combine_spwmap:
-        return combine_spwmap
-    else:
-        return phaseup_spwmap
-
-def format_spwmap(phaseup_spwmap):
-    if not phaseup_spwmap:
+def format_spwmap(spwmap):
+    if not spwmap:
         return ''
     else:
-        return ', '.join([str(spwid) for spwid in phaseup_spwmap])
+        return ', '.join([str(spwid) for spwid in spwmap])
 %>
 <%inherit file="t2-4m_details-base.html"/>
 
 <%block name="title">Compute Spw Phaseup Map and Offsets</%block>
 
-<p>Compute the phaseup spw map and spectral window phase offsets caltable</p>
+<p>This task computes the spectral window map that will be used to apply the time gaincal phase solutions
+and the caltable containing per spw phase offsets</p>
 
+<h2>Results</h2>
 <table class="table table-bordered table-striped" summary="Narrow to wide spw mapping results">
-	<caption>Phaseup spw map per measurement set.</caption>
+	<caption>Phase solution spw map per measurement set.</caption>
         <thead>
 	    <tr>
 	        <th>Measurement Set</th>
@@ -29,11 +25,42 @@ def format_spwmap(phaseup_spwmap):
 	    </tr>
 	</thead>
 	<tbody>
-    % for r in result:
+    % for spwmap in spwmaps:
 		<tr>
-			<td>${os.path.basename(r.vis)}</td>
-			<td>${format_spwmap(choose_spwmap(r.combine_spwmap, r.phaseup_spwmap))}</td>
+			<td>${os.path.basename(spwmap.ms)}</td>
+			<td>${format_spwmap(spwmap.spwmap)}</td>
 		</tr>
     % endfor
 	</tbody>
 </table>
+
+<table class="table table-bordered" summary="Application Results">
+        <caption>Applied calibrations and parameters used for caltable generation</caption>
+    <thead>
+        <tr>
+            <th scope="col" rowspan="2">Measurement Set</th>
+                        <th scope="col" colspan="2">Solution Parameters</th>
+                        <th scope="col" colspan="2">Applied To</th>
+            <th scope="col" rowspan="2">Calibration Table</th>
+                </tr>
+                <tr>
+                        <th>Type</th>
+            <th>Interval</th>
+                        <th>Scan Intent</th>
+                        <th>Spectral Windows</th>
+        </tr>
+    </thead>
+        <tbody>
+% for application in applications:
+                <tr>
+                        <td>${application.ms}</td>
+                        <td>${application.solint}</td>
+                        <td>${application.calmode}</td>
+                        <td>${application.intent}</td>
+                        <td>${application.spw}</td>
+                        <td>${application.gaintable}</td>
+                </tr>
+% endfor
+        </tbody>
+</table>
+
