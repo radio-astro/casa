@@ -82,6 +82,11 @@ public:
   // If it return False, row will be invalid so it should not be used.
   virtual Bool getSourceRow(TableRecord &row) = 0;
 
+  // to get FIELD table
+  // The method should return True if row entry is available.
+  // If it return False, row will be invalid so it should not be used.
+  virtual Bool getFieldRow(TableRecord &row) = 0;
+
   // to get SPECTRAL WINDOW table
   // The method should return True if row entry is available.
   // If it return False, row will be invalid so it should not be used.

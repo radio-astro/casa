@@ -18,13 +18,20 @@
 
 #include <casacore/casa/OS/Time.h>
 #include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Arrays/Cube.h>
 #include <casacore/casa/Quanta/MVPosition.h>
 #include <casacore/measures/Measures/MPosition.h>
 #include <casacore/ms/MeasurementSets/MSObsColumns.h>
 #include <casacore/ms/MeasurementSets/MSProcessorColumns.h>
 #include <casacore/ms/MeasurementSets/MSAntennaColumns.h>
+#include <casacore/ms/MeasurementSets/MSDataDescColumns.h>
+#include <casacore/ms/MeasurementSets/MSFeedColumns.h>
+#include <casacore/ms/MeasurementSets/MSFieldColumns.h>
+#include <casacore/ms/MeasurementSets/MSMainColumns.h>
+#include <casacore/ms/MeasurementSets/MSPolColumns.h>
 #include <casacore/ms/MeasurementSets/MSSourceColumns.h>
 #include <casacore/ms/MeasurementSets/MSSpWindowColumns.h>
+#include <casacore/ms/MeasurementSets/MSStateColumns.h>
 #include <casacore/ms/MeasurementSets/MSSysCalColumns.h>
 #include <casacore/ms/MeasurementSets/MSWeatherColumns.h>
 
@@ -173,6 +180,7 @@ TEST_F(SingleDishMSFillerTest, FillerTestWithReaderStub) {
   }
 
   // verify SOURCE table
+  Record source_map;
   {
     std::cout << "verify SOURCE table" << std::endl;
     auto const mytable = myms.source();
@@ -184,8 +192,13 @@ TEST_F(SingleDishMSFillerTest, FillerTestWithReaderStub) {
       std::cout << "Verifying row " << i << std::endl;
       String key = "ROW" + String::toString(i);
       TableRecord row_record = expected_record.asRecord(key);
-      EXPECT_EQ(row_record.asInt("SOURCE_ID"), mycolumns.sourceId()(i));
-      CASA_EXPECT_STREQ(row_record.asString("NAME"), mycolumns.name()(i));
+      Int source_id = row_record.asInt("SOURCE_ID");
+      String source_name = row_record.asString("NAME");
+      EXPECT_EQ(source_id, mycolumns.sourceId()(i));
+      CASA_EXPECT_STREQ(source_name, mycolumns.name()(i));
+      if (!source_map.isDefined(source_name)) {
+        source_map.define(source_name, source_id);
+      }
       EXPECT_EQ(row_record.asDouble("TIME"), mycolumns.time()(i));
       EXPECT_EQ(row_record.asDouble("INTERVAL"), mycolumns.interval()(i));
       EXPECT_EQ(row_record.asInt("SPECTRAL_WINDOW_ID"),
@@ -213,40 +226,118 @@ TEST_F(SingleDishMSFillerTest, FillerTestWithReaderStub) {
     }
   }
 
+  // verify FIELD table
+  {
+    std::cout << "verify FIELD table" << std::endl;
+    auto const mytable = myms.field();
+    TableRecord const &expected_record = reader.field_record_;
+    uInt num_records = expected_record.nfields();
+    ROMSFieldColumns mycolumns(mytable);
+    uInt expected_nrow = 0;
+    std::vector<uInt> processed_rows;
+    for (uInt i = 0; i < num_records; ++i) {
+      std::cout << "Verifying row " << i << std::endl;
+      String key = "ROW" + String::toString(i);
+      TableRecord row_record = expected_record.asRecord(key);
+      Int field_id = row_record.asInt("FIELD_ID");
+      std::cout << "field " << field_id << std::endl;
+      processed_rows.push_back((uInt) field_id);
+      ASSERT_GE(field_id, 0);
+      if ((uInt)(field_id + 1) > expected_nrow) {
+        expected_nrow = field_id + 1;
+      }
+      EXPECT_EQ(row_record.asDouble("TIME"), mycolumns.time()(field_id));
+      EXPECT_EQ(row_record.asInt("NUM_POLY"), mycolumns.numPoly()(field_id));
+      Int source_id = -1;
+      String source_name = row_record.asString("SOURCE_NAME");
+      if (source_map.isDefined(source_name)) {
+        source_id = source_map.asInt(source_name);
+      }
+      ASSERT_GE(source_id, 0);
+      EXPECT_EQ(source_id, mycolumns.sourceId()(field_id));
+      CASA_EXPECT_STREQ(row_record.asString("NAME"),
+          mycolumns.name()(field_id));
+      CASA_EXPECT_STREQ(row_record.asString("CODE"),
+          mycolumns.code()(field_id));
+      Matrix<Double> const direction = row_record.asArrayDouble("DIRECTION");
+      EXPECT_TRUE(allEQ(direction, mycolumns.delayDir()(field_id)));
+      EXPECT_TRUE(allEQ(direction, mycolumns.phaseDir()(field_id)));
+      EXPECT_TRUE(allEQ(direction, mycolumns.referenceDir()(field_id)));
+    }
+    ASSERT_EQ(expected_nrow, mytable.nrow());
+    for (uInt i = 0; i < expected_nrow; ++i) {
+      if (std::count(processed_rows.begin(), processed_rows.end(), i) == 0) {
+        std::cout << "Verifying empty field " << i << std::endl;
+        Int const num_poly = 0;
+        Matrix<Double> const dummy(2, 1, 0.0);
+        EXPECT_EQ(num_poly, mycolumns.numPoly()(i));
+        EXPECT_TRUE(allEQ(dummy, mycolumns.delayDir()(i)));
+        EXPECT_TRUE(allEQ(dummy, mycolumns.phaseDir()(i)));
+        EXPECT_TRUE(allEQ(dummy, mycolumns.referenceDir()(i)));
+      }
+    }
+
+  }
+
   // verify SPECTRAL_WINDOW table
+  std::map<Int, Int> num_chan_map;
   {
     std::cout << "Verify SPECTRAL_WINDOW table" << std::endl;
     auto const mytable = myms.spectralWindow();
     TableRecord const &expected_record = reader.spw_record_;
-    uInt expected_nrow = expected_record.nfields();
-    ASSERT_EQ(expected_nrow, mytable.nrow());
+    uInt num_records = expected_record.nfields();
     ROMSSpWindowColumns mycolumns(mytable);
-    for (uInt i = 0; i < expected_nrow; ++i) {
+    uInt expected_nrow = 0;
+    std::vector<uInt> processed_rows;
+    for (uInt i = 0; i < num_records; ++i) {
       std::cout << "Verifying row " << i << std::endl;
       String key = "ROW" + String::toString(i);
       TableRecord row_record = expected_record.asRecord(key);
-      EXPECT_EQ(row_record.asInt("MEAS_FREQ_REF"), mycolumns.measFreqRef()(i));
-      EXPECT_EQ(row_record.asInt("NUM_CHAN"), mycolumns.numChan()(i));
-      CASA_EXPECT_STREQ(row_record.asString("NAME"), mycolumns.name()(i));
+      Int spw_id = row_record.asInt("SPECTRAL_WINDOW_ID");
+      std::cout << "spw " << spw_id << std::endl;
+      processed_rows.push_back((uInt) spw_id);
+      ASSERT_GE(spw_id, 0);
+      if ((uInt)(spw_id + 1) > expected_nrow) {
+        expected_nrow = spw_id + 1;
+      }
+      EXPECT_EQ(row_record.asInt("MEAS_FREQ_REF"),
+          mycolumns.measFreqRef()(spw_id));
+      Int num_chan = row_record.asInt("NUM_CHAN");
+      EXPECT_EQ(num_chan, mycolumns.numChan()(spw_id));
+      num_chan_map[spw_id] = num_chan;
+      CASA_EXPECT_STREQ(row_record.asString("NAME"), mycolumns.name()(spw_id));
       Double expected_refpix = row_record.asDouble("REFPIX");
       Double expected_refval = row_record.asDouble("REFVAL");
       Double expected_increment = row_record.asDouble("INCREMENT");
       Int expected_net_sideband = (expected_increment < 0.0) ? 1 : 0;
-      EXPECT_EQ(expected_net_sideband, mycolumns.netSideband()(i));
-      Vector<Double> chan_freq = mycolumns.chanFreq()(i);
+      EXPECT_EQ(expected_net_sideband, mycolumns.netSideband()(spw_id));
+      Vector < Double > chan_freq = mycolumns.chanFreq()(spw_id);
       Double freq0 = chan_freq[0];
       Double chan0 = 0;
-      Vector<Double> chan_width = mycolumns.chanWidth()(i);
+      Vector < Double > chan_width = mycolumns.chanWidth()(spw_id);
       Double incr0 = chan_width[0];
       Double refval = freq0 + expected_refpix * incr0;
       EXPECT_EQ(expected_refval, refval);
       EXPECT_TRUE(allEQ(chan_width, expected_increment));
-      Vector<Double> resolution = mycolumns.resolution()(i);
+      Vector < Double > resolution = mycolumns.resolution()(spw_id);
       EXPECT_TRUE(allEQ(resolution, abs(expected_increment)));
-      Vector<Double> effective_bw = mycolumns.effectiveBW()(i);
+      Vector < Double > effective_bw = mycolumns.effectiveBW()(spw_id);
       EXPECT_TRUE(allEQ(effective_bw, abs(expected_increment)));
-      Double ref_freq = mycolumns.refFrequency()(i);
+      Double ref_freq = mycolumns.refFrequency()(spw_id);
       EXPECT_EQ(chan_freq[0], ref_freq);
+    }
+    ASSERT_EQ(expected_nrow, mytable.nrow());
+    for (uInt i = 0; i < expected_nrow; ++i) {
+      if (std::count(processed_rows.begin(), processed_rows.end(), i) == 0) {
+        std::cout << "Verifying empty spw " << i << std::endl;
+        Int const one_chan = 1;
+        Vector<Double> const dummy(1, 0.0);
+        EXPECT_EQ(one_chan, mycolumns.numChan()(i));
+        EXPECT_TRUE(allEQ(dummy, mycolumns.chanFreq()(i)));
+        EXPECT_TRUE(allEQ(dummy, mycolumns.chanWidth()(i)));
+        EXPECT_TRUE(allEQ(dummy, mycolumns.resolution()(i)));
+        EXPECT_TRUE(allEQ(dummy, mycolumns.effectiveBW()(i)));
+      }
     }
   }
 
@@ -337,6 +428,297 @@ TEST_F(SingleDishMSFillerTest, FillerTestWithReaderStub) {
     auto const mytable = myms.freqOffset();
     ASSERT_EQ(uInt(0), mytable.nrow());
   }
+
+  // prepare for verifying DATA_DESCRIPTION table
+  Vector < Int > dd_polarization_id;
+  Vector < Int > dd_spw_id;
+  {
+    auto const mytable = myms.dataDescription();
+    ROMSDataDescColumns const mycolumns(mytable);
+    dd_polarization_id = mycolumns.polarizationId().getColumn();
+    dd_spw_id = mycolumns.spectralWindowId().getColumn();
+  }
+
+  // prepare for verifying POLARIZATION table
+  Vector < Int > num_pol_map;
+  {
+    auto const mytable = myms.polarization();
+    ROMSPolarizationColumns const mycolumns(mytable);
+    num_pol_map = mycolumns.numCorr().getColumn();
+  }
+
+  // prepare for verifying FEED table
+  Matrix < Int > feed_id_matrix;
+  {
+    auto const mytable = myms.feed();
+    ROMSFeedColumns const mycolumns(mytable);
+    uInt nrow = mycolumns.nrow();
+    feed_id_matrix.resize(nrow, 2);
+    feed_id_matrix.column(0) = mycolumns.feedId().getColumn();
+    feed_id_matrix.column(1) = mycolumns.spectralWindowId().getColumn();
+  }
+
+  // prepare for verifying STATE table
+  Vector < Int > subscan_map;
+  Vector < String > obs_mode_map;
+  {
+    auto const mytable = myms.state();
+    ROMSStateColumns const mycolumns(mytable);
+    subscan_map = mycolumns.subScan().getColumn();
+    obs_mode_map = mycolumns.obsMode().getColumn();
+  }
+
+  // verify MAIN table with several subtables
+  constexpr size_t kNumPointing = 4;
+  size_t pointing_count = 0;
+  Vector <Double> pointing_time(kNumPointing);
+  Vector < Int > pointing_antenna(kNumPointing);
+  Vector < Int > pointing_num_poly(kNumPointing);
+  Cube<Double> pointing_direction(IPosition(3, 2, 1, kNumPointing));
+  {
+    std::cout << "Verify MAIN table" << std::endl;
+    auto const mytable = myms;
+    ROMSMainColumns const mycolumns(mytable);
+    // expected record stores each spectrum with associating meta data
+    // its order is as follows (See FloatDataStorage or ComplexDataStorage):
+    // Time0 Intent0 Field0 Antenna0 Beam0 Spw0 Pol0 |
+    // Time0 Intent0 Field0 Antenna0 Beam0 Spw0 Pol1 +--> ROW 0
+    // Time0 Intent0 Field0 Antenna0 Beam0 Spw1 Pol0 ---> ROW 1
+    // Time0 Intent0 Field0 Antenna0 Beam1 Spw0 Pol0 |
+    // Time0 Intent0 Field0 Antenna0 Beam1 Spw0 Pol1 +--> ROW 2
+    // Time0 Intent0 Field0 Antenna0 Beam1 Spw1 Pol0 ---> ROW 3
+    // Time1 Intent0 Field1 Antenna1 Beam0 Spw0 Pol0 |
+    // Time1 Intent0 Field1 Antenna1 Beam0 Spw0 Pol1 +--> ROW 4
+    // Time1 Intent0 Field1 Antenna1 Beam0 Spw1 Pol0 ---> ROW 5
+    // Time1 Intent0 Field1 Antenna1 Beam1 Spw0 Pol0 |
+    // Time1 Intent0 Field1 Antenna1 Beam1 Spw0 Pol1 +--> ROW 6
+    // Time1 Intent0 Field1 Antenna1 Beam1 Spw1 Pol0 ---> ROW 7
+    // Time2 Intent1 Field0 Antenna0 Beam0 Spw0 Pol0 |
+    // Time2 Intent1 Field0 Antenna0 Beam0 Spw0 Pol1 +--> ROW 8
+    // Time2 Intent1 Field0 Antenna0 Beam0 Spw1 Pol0 ---> ROW 9
+    // Time2 Intent1 Field0 Antenna0 Beam1 Spw0 Pol0 |
+    // Time2 Intent1 Field0 Antenna0 Beam1 Spw0 Pol1 +--> ROW 10
+    // Time2 Intent1 Field0 Antenna0 Beam1 Spw1 Pol0 ---> ROW 11
+    // Time3 Intent1 Field1 Antenna1 Beam0 Spw0 Pol0 |
+    // Time3 Intent1 Field1 Antenna1 Beam0 Spw0 Pol1 +--> ROW 12
+    // Time3 Intent1 Field1 Antenna1 Beam0 Spw1 Pol0 ---> ROW 13
+    // Time3 Intent1 Field1 Antenna1 Beam1 Spw0 Pol0 |
+    // Time3 Intent1 Field1 Antenna1 Beam1 Spw0 Pol1 +--> ROW 14
+    // Time3 Intent1 Field1 Antenna1 Beam1 Spw1 Pol0 ---> ROW 15
+    TableRecord const &expected_record = reader.main_record_;
+    constexpr size_t expected_nfield = 24;
+    constexpr size_t expected_nrow = 16;
+    ASSERT_EQ(expected_nfield, expected_record.nfields());
+    ASSERT_EQ(expected_nrow, mycolumns.nrow());
+    Vector<Double> const expected_uvw(3, 0.0);
+    //Int const expected_antenna = 0;
+    Int const expected_processor = 0;
+    Int const expected_observation = 0;
+    size_t record_index = 0;
+    auto generateKey = [](size_t i) {return "ROW" + String::toString(i);};
+    for (size_t i = 0; i < expected_nrow; i += 2) {
+      size_t irow = i;
+      std::cout << "Verifying row " << irow << " (record " << record_index
+          << " and " << record_index + 1 << ")" << std::endl;
+      String key = generateKey(record_index);
+      TableRecord const row_record0 = expected_record.asRecord(key);
+      Int expected_subscan = row_record0.asInt("SUBSCAN");
+      String expected_intent = row_record0.asString("INTENT");
+      auto verifyMeta =
+          [&](TableRecord const &record, size_t krow) {
+            Double expected_time = record.asDouble("TIME");
+            std::cout << "irow " << krow << " time " << mycolumns.time()(krow) << " (expected " << expected_time << ")" << std::endl;
+            Double expected_interval = record.asDouble("INTERVAL");
+            Int expected_feed = record.asInt("FEED_ID");
+            Int expected_field = record.asInt("FIELD_ID");
+            Int expected_scan = record.asInt("SCAN");
+            Int expected_antenna = record.asInt("ANTENNA_ID");
+            EXPECT_EQ(expected_time, mycolumns.time()(krow));
+            EXPECT_EQ(expected_time, mycolumns.timeCentroid()(krow));
+            EXPECT_EQ(expected_interval, mycolumns.interval()(krow));
+            EXPECT_EQ(expected_interval, mycolumns.exposure()(krow));
+            EXPECT_TRUE(allEQ(expected_uvw, mycolumns.uvw()(krow)));
+            EXPECT_EQ(expected_antenna, mycolumns.antenna1()(krow));
+            EXPECT_EQ(expected_antenna, mycolumns.antenna2()(krow));
+            EXPECT_EQ(expected_processor, mycolumns.processorId()(krow));
+            EXPECT_EQ(expected_observation, mycolumns.observationId()(krow));
+            EXPECT_EQ(expected_feed, mycolumns.feed1()(krow));
+            EXPECT_EQ(expected_feed, mycolumns.feed2()(krow));
+            EXPECT_EQ(expected_field, mycolumns.fieldId()(krow));
+            EXPECT_EQ(expected_scan, mycolumns.scanNumber()(krow));
+          };
+      verifyMeta(row_record0, irow);
+      ++record_index;
+      key = generateKey(record_index);
+      TableRecord const row_record1 = expected_record.asRecord(key);
+      Bool expected_flag_row = row_record0.asBool("FLAG_ROW")
+          || row_record1.asBool("FLAG_ROW");
+      Int expected_num_pol = 2;
+      Float expected_weight = 1.0;
+      Int expected_spw_id = row_record0.asInt("SPECTRAL_WINDOW_ID");
+      Int num_chan = -1;
+      ASSERT_NO_THROW( {
+        num_chan = num_chan_map[expected_spw_id]
+        ;
+      }
+);
+                              ASSERT_GT(num_chan, 0);
+      Matrix < Bool > expected_flag(expected_num_pol, num_chan);
+      Matrix < Float > expected_data(expected_num_pol, num_chan);
+      std::cout << "expected_flag.shape = " << expected_flag.shape()
+          << std::endl;
+      Int pol_id0 = row_record0.asInt("POLNO");
+      Int pol_id1 = row_record1.asInt("POLNO");
+      ASSERT_LT(pol_id0, 2);
+      ASSERT_GE(pol_id0, 0);
+      ASSERT_LT(pol_id1, 2);
+      ASSERT_GE(pol_id1, 0);
+      ASSERT_NE(pol_id0, pol_id1);
+      expected_flag.row(pol_id0) = row_record0.asArrayBool("FLAG");
+      expected_flag.row(pol_id1) = row_record1.asArrayBool("FLAG");
+      expected_data.row(pol_id0) = row_record0.asArrayFloat("DATA");
+      expected_data.row(pol_id1) = row_record1.asArrayFloat("DATA");
+      auto verifyData = [&](size_t krow) {
+        EXPECT_EQ(expected_flag_row, mycolumns.flagRow()(krow));
+        Vector<Float> sigma = mycolumns.sigma()(krow);
+        IPosition sigma_shape = sigma.shape();
+        EXPECT_EQ(1ul, sigma_shape.size());
+        EXPECT_EQ(expected_num_pol, sigma_shape[0]);
+        EXPECT_TRUE(allEQ(sigma, expected_weight));
+        Vector<Float> weight = mycolumns.weight()(krow);
+        EXPECT_TRUE(allEQ(sigma, weight));
+        Matrix<Bool> flag = mycolumns.flag()(krow);
+        EXPECT_EQ(expected_flag.shape(), flag.shape());
+        EXPECT_TRUE(allEQ(expected_flag, flag));
+        Matrix<Float> data = mycolumns.floatData()(krow);
+        EXPECT_EQ(expected_data.shape(), data.shape());
+        EXPECT_TRUE(allEQ(expected_data, data));
+      };
+      // verify data
+      verifyData(irow);
+
+      // verify subtables
+      auto verifySubtables = [&](size_t krow) {
+        // DATA_DESCRIPTION
+          Int data_desc_id = mycolumns.dataDescId()(krow);
+          Int spw_id = dd_spw_id[data_desc_id];
+          Int pol_id = dd_polarization_id[data_desc_id];
+          EXPECT_EQ(expected_spw_id, spw_id);
+
+          // POLARIZATION
+          Int num_pol = num_pol_map[pol_id];
+          EXPECT_EQ(expected_num_pol, num_pol);
+
+          // STATE
+          Int state_id = mycolumns.stateId()(krow);
+          Int subscan = subscan_map[state_id];
+          String intent = obs_mode_map[state_id];
+          EXPECT_EQ(expected_subscan, subscan);
+          CASA_EXPECT_STREQ(expected_intent, intent);
+
+          // FEED
+          Int feed_id = mycolumns.feed1()(krow);
+          Bool found = False;
+          Int id_matrix_arr[2] = {feed_id, spw_id};
+          Vector<Int> id_matrix(id_matrix_arr, 2, SHARE);
+          for (uInt frow = 0; frow < feed_id_matrix.nrow(); ++frow) {
+            if (allEQ(feed_id_matrix.row(frow), id_matrix)) {
+              found = True;
+              break;
+            }
+          }
+          EXPECT_TRUE(found);
+        };
+      verifySubtables(irow);
+
+      // for POINTING table verification
+      auto addPointing =
+          [&](size_t krow, TableRecord const &record) {
+            if (mycolumns.feed1()(krow) == 0) {
+              Int myantenna_id = mycolumns.antenna1()(krow);
+              Double mytime = mycolumns.time()(krow);
+              bool match = false;
+              for (size_t i = 0; i < pointing_count; ++i) {
+                if (pointing_time[i] == mytime && pointing_antenna[i] == myantenna_id) {
+                  match = true;
+                  break;
+                }
+              }
+              if (!match) {
+                pointing_time[pointing_count] = mytime;
+                pointing_antenna[pointing_count] = myantenna_id;
+                Matrix<Double> direction = record.asArrayDouble("DIRECTION");
+                Int num_poly = direction.shape()[1] - 1;
+                pointing_num_poly[pointing_count] = num_poly;
+                pointing_direction.xyPlane(pointing_count) = direction;
+                ++pointing_count;
+                ASSERT_LE(pointing_count, kNumPointing);
+              }
+              std::cout << "irow " << irow << " time " << mytime << " antenna " << myantenna_id << " pointing_count " << pointing_count << std::endl;
+              std::cout << "pointing_time=" << pointing_time << " pointing_antenna=" << pointing_antenna << std::endl;
+            }
+          };
+      addPointing(irow, row_record0);
+
+      // next row
+      ++record_index;
+      ++irow;
+      std::cout << "Verifying row " << irow << " (record " << record_index
+          << ")" << std::endl;
+      key = generateKey(record_index);
+      TableRecord const row_record2 = expected_record.asRecord(key);
+      expected_subscan = row_record2.asInt("SUBSCAN");
+      expected_intent = row_record2.asString("INTENT");
+      verifyMeta(row_record2, irow);
+      expected_flag_row = row_record2.asBool("FLAG_ROW");
+      expected_num_pol = 1;
+      expected_spw_id = row_record2.asInt("SPECTRAL_WINDOW_ID");
+      ASSERT_NO_THROW( {
+        num_chan = num_chan_map[expected_spw_id]
+        ;
+      }
+);
+                              ASSERT_GT(num_chan, 0);
+      expected_flag.resize(expected_num_pol, num_chan);
+      expected_data.resize(expected_flag.shape());
+      Int pol_id2 = row_record2.asInt("POLNO");
+      ASSERT_EQ(0, pol_id2);
+      expected_flag.row(pol_id2) = row_record2.asArrayBool("FLAG");
+      expected_data.row(pol_id2) = row_record2.asArrayFloat("DATA");
+      // verify data
+      verifyData(irow);
+
+      // verify subtables
+      verifySubtables(irow);
+
+      // for POINTING table verifycation
+      addPointing(irow, row_record2);
+
+      ++record_index;
+    }
+  }
+
+  // verify POINTING table
+  {
+    std::cout << "Verify POINTING table" << std::endl;
+    auto const mytable = myms.pointing();
+    ROMSPointingColumns const mycolumns(mytable);
+    uInt nrow = mytable.nrow();
+    ASSERT_EQ(pointing_count, kNumPointing);
+    ASSERT_EQ(pointing_count, nrow);
+    Sort sorter;
+    sorter.sortKey(pointing_antenna.data(), TpInt);
+    sorter.sortKey(pointing_time.data(), TpDouble);
+    Vector<uInt> sort_index;
+    sorter.sort(sort_index, pointing_count);
+    for (size_t i = 0; i < nrow; ++i) {
+      size_t j = sort_index[i];
+      EXPECT_EQ(pointing_time[j], mycolumns.time()(i));
+      EXPECT_EQ(pointing_antenna[j], mycolumns.antennaId()(i));
+      EXPECT_EQ(pointing_num_poly[j], mycolumns.numPoly()(i));
+      EXPECT_TRUE(allEQ(pointing_direction.xyPlane(j), mycolumns.direction()(i)));
+    }
+  }
 }
 
 namespace {
@@ -369,12 +751,43 @@ inline void TestShape(size_t const num_pol, size_t const num_chan,
 }
 
 struct BasicPolarizationTester {
-  static void Test(size_t const num_chan, Vector<uInt> const &polid_list,
-      Vector<TableRecord> const &input_record,
+  static void Test(size_t const num_chan, String const &pol_type,
+      Vector<uInt> const &polid_list, Vector<TableRecord> const &input_record,
       TableRecord const &output_record) {
-    size_t num_pol = polid_list.size();
-    ASSERT_LE(num_pol, 2ul);
-    ASSERT_EQ(num_pol, input_record.size());
+    size_t const expected_num_pol = polid_list.size();
+    size_t const num_pol = output_record.asInt("NUM_POL");
+    ASSERT_GE(2ul, num_pol);
+    ASSERT_EQ(input_record.size(), num_pol);
+    ASSERT_EQ(expected_num_pol, num_pol);
+
+    static Vector<Int> corr_type_list(2, Stokes::Undefined);
+    if (pol_type == "linear") {
+      corr_type_list[0] = Stokes::XX;
+      corr_type_list[1] = Stokes::YY;
+    } else if (pol_type == "circular") {
+      corr_type_list[0] = Stokes::RR;
+      corr_type_list[1] = Stokes::LL;
+    } else if (pol_type == "stokes") {
+      corr_type_list[0] = Stokes::I;
+    } else if (pol_type == "linpol") {
+      corr_type_list[0] = Stokes::Plinear;
+      corr_type_list[1] = Stokes::Pangle;
+    }
+    if (num_pol == 2) {
+      Vector < Int > expected_corr = corr_type_list;
+      Vector < Int > corr = output_record.asArrayInt("CORR_TYPE");
+      std::cout << "corr = " << corr << " (expected " << expected_corr << ")"
+          << std::endl;
+      ASSERT_TRUE(allEQ(expected_corr, corr));
+    } else {
+      Int corr_index = input_record[0].asInt("POLNO");
+      Vector < Int > expected_corr(1, corr_type_list[corr_index]);
+      Vector < Int > corr = output_record.asArrayInt("CORR_TYPE");
+      std::cout << "corr = " << corr << " (expected " << expected_corr << ")"
+          << std::endl;
+      ASSERT_TRUE(allEQ(expected_corr, corr));
+    }
+
     TestKeyword(input_record, output_record, "FLOAT_DATA");
 
     TestShape(num_pol, num_chan, output_record, "FLOAT_DATA");
@@ -408,13 +821,32 @@ struct BasicPolarizationTester {
 };
 
 struct FullPolarizationTester {
-  static void Test(size_t const num_chan, Vector<uInt> const &polid_list,
-      Vector<TableRecord> const &input_record,
+  static void Test(size_t const num_chan, String const &pol_type,
+      Vector<uInt> const &polid_list, Vector<TableRecord> const &input_record,
       TableRecord const &output_record) {
     std::cout << "Full polarization test" << std::endl;
-    size_t num_pol = polid_list.size();
-    ASSERT_LE(num_pol, 4ul);
-    ASSERT_EQ(num_pol, input_record.size());
+    size_t const expected_num_pol = polid_list.size();
+    size_t const num_pol = output_record.asInt("NUM_POL");
+    ASSERT_EQ(4ul, num_pol);
+    ASSERT_EQ(input_record.size(), num_pol);
+    ASSERT_EQ(expected_num_pol, num_pol);
+
+    static Vector<Int> expected_corr(4, Stokes::Undefined);
+    if (pol_type == "linear") {
+      expected_corr[0] = Stokes::XX;
+      expected_corr[1] = Stokes::XY;
+      expected_corr[2] = Stokes::YX;
+      expected_corr[3] = Stokes::YY;
+    } else if (pol_type == "circular") {
+      expected_corr[0] = Stokes::RR;
+      expected_corr[1] = Stokes::RL;
+      expected_corr[2] = Stokes::LR;
+      expected_corr[3] = Stokes::LL;
+    }
+    Vector < Int > corr = output_record.asArrayInt("CORR_TYPE");
+    std::cout << "corr = " << corr << " (expected " << expected_corr << ")"
+        << std::endl;
+    ASSERT_TRUE(allEQ(expected_corr, corr));
 
     TestKeyword(input_record, output_record, "DATA");
 
@@ -467,13 +899,28 @@ struct FullPolarizationTester {
 };
 
 struct StokesFullPolarizationTester {
-  static void Test(size_t const num_chan, Vector<uInt> const &polid_list,
-      Vector<TableRecord> const &input_record,
+  static void Test(size_t const num_chan, String const &pol_type,
+      Vector<uInt> const &polid_list, Vector<TableRecord> const &input_record,
       TableRecord const &output_record) {
     std::cout << "Stokes full polarization test" << std::endl;
-    size_t num_pol = polid_list.size();
-    ASSERT_LE(num_pol, 4ul);
-    ASSERT_EQ(num_pol, input_record.size());
+    CASA_ASSERT_STREQ(String("stokes"), pol_type);
+
+    size_t const expected_num_pol = polid_list.size();
+    size_t const num_pol = output_record.asInt("NUM_POL");
+    //ASSERT_LE(num_pol, 4ul);
+    ASSERT_EQ(expected_num_pol, num_pol);
+    ASSERT_EQ(input_record.size(), num_pol);
+    ASSERT_EQ(4ul, num_pol);
+
+    static Vector<Int> expected_corr(4, Stokes::Undefined);
+    expected_corr[0] = Stokes::I;
+    expected_corr[1] = Stokes::Q;
+    expected_corr[2] = Stokes::U;
+    expected_corr[3] = Stokes::V;
+    Vector < Int > corr = output_record.asArrayInt("CORR_TYPE");
+    std::cout << "corr = " << corr << " (expected " << expected_corr << ")"
+        << std::endl;
+    ASSERT_TRUE(allEQ(expected_corr, corr));
 
     TestKeyword(input_record, output_record, "FLOAT_DATA");
 
@@ -550,7 +997,7 @@ void TestPolarization(String const &poltype, Vector<uInt> const &polid_list) {
 
   chunk.get(output_record);
 
-  Tester::Test(num_chan, polid_list, input_record, output_record);
+  Tester::Test(num_chan, poltype, polid_list, input_record, output_record);
 }
 
 void TestSinglePolarization(String const &poltype, uInt const polid) {
@@ -561,69 +1008,69 @@ void TestSinglePolarization(String const &poltype, uInt const polid) {
 } // anonymous namespace
 
 TEST(DataChunkTest, SinglePolarizationTest) {
-  // POL 0
+// POL 0
   uInt polid = 0;
 
-  // Linear
+// Linear
   TestSinglePolarization("linear", polid);
 
-  // Circular
+// Circular
   TestSinglePolarization("circular", polid);
 
-  // Stokes
+// Stokes
   TestSinglePolarization("stokes", polid);
 
-  // Linpol
+// Linpol
   TestSinglePolarization("linpol", polid);
 
-  // POL 1
+// POL 1
   polid = 1;
 
-  // Linear
+// Linear
   TestSinglePolarization("linear", polid);
 
-  // Circular
+// Circular
   TestSinglePolarization("circular", polid);
 
-  // Stokes
-  // it should cause error, see WhiteBoxTest
+// Stokes
+// it should cause error, see WhiteBoxTest
 
-  // Linpol
-  // it should cause error, see WhiteBoxTest
+// Linpol
+// it should cause error, see WhiteBoxTest
 }
 
 TEST(DataChunkTest, DualPolarizationTest) {
-  // POL 0 and 1
+// POL 0 and 1
   Vector < uInt > polid_list(2);
   polid_list[0] = 0;
   polid_list[1] = 1;
 
-  // Linear
+// Linear
   TestPolarization("linear", polid_list);
 
-  // Circular
+// Circular
   TestPolarization("circular", polid_list);
 
-  // Stokes
-  // it should cause unexpected behavior, see WhiteBoxTest
+// Stokes
+// it should cause unexpected behavior, see WhiteBoxTest
 
-  // Linpol
+// Linpol
   TestPolarization("linpol", polid_list);
 
-  // Reverse POL order
+// Reverse POL order
   polid_list[0] = 1;
   polid_list[1] = 0;
 
-  // Linear
+// Linear
   TestPolarization("linear", polid_list);
 
-  // Circular
+// Circular
   TestPolarization("circular", polid_list);
 
-  // Stokes
-  // it should cause unexpected behavior, see WhiteBoxTest
+// Stokes
+// it should cause unexpected behavior, see WhiteBoxTest
 
-  // Linpol
+// Linpol
   TestPolarization("linpol", polid_list);
 
 }
@@ -631,52 +1078,52 @@ TEST(DataChunkTest, DualPolarizationTest) {
 TEST(DataChunkTest, FullPolarizationTest) {
   Vector < uInt > polid_list(4);
 
-  // Usual accumulation order
+// Usual accumulation order
   polid_list[0] = 0;
   polid_list[1] = 1;
   polid_list[2] = 2;
   polid_list[3] = 3;
 
-  // Linear
+// Linear
   TestPolarization<StandardInitializer, FullPolarizationTester>("linear",
       polid_list);
 
-  // Circular
+// Circular
   TestPolarization<StandardInitializer, FullPolarizationTester>("circular",
       polid_list);
 
-  // Stokes
+// Stokes
   TestPolarization<StandardInitializer, StokesFullPolarizationTester>("stokes",
       polid_list);
 
-  // Linpol
-  // it should cause unexpected behavior, see WhiteBoxTest
+// Linpol
+// it should cause unexpected behavior, see WhiteBoxTest
 
-  // Different order
+// Different order
   polid_list[0] = 2;
   polid_list[2] = 0;
 
-  // Linear
+// Linear
   TestPolarization<StandardInitializer, FullPolarizationTester>("linear",
       polid_list);
 
-  // Circular
+// Circular
   TestPolarization<StandardInitializer, FullPolarizationTester>("circular",
       polid_list);
 
-  // Stokes
+// Stokes
   TestPolarization<StandardInitializer, StokesFullPolarizationTester>("stokes",
       polid_list);
 
-  // Linpol
-  // it should cause unexpected behavior, see WhiteBoxTest
+// Linpol
+// it should cause unexpected behavior, see WhiteBoxTest
 }
 
 TEST(DataChunkTest, WhiteBoxTest) {
-  // Invalid poltype
+// Invalid poltype
   EXPECT_THROW(DataChunk("notype"), AipsError);
 
-  // Accumulate without initialization
+// Accumulate without initialization
   DataChunk chunk("linear");
   CASA_ASSERT_STREQ(String("linear"), chunk.getPolType());
   TableRecord record;
@@ -696,11 +1143,11 @@ TEST(DataChunkTest, WhiteBoxTest) {
   EXPECT_EQ(IPosition(2, 1, 1),
       output_record.asArrayFloat("FLOAT_DATA").shape());
 
-  // clear
+// clear
   chunk.clear();
   EXPECT_EQ(0u, chunk.getNumPol());
 
-  // Accumulate invalid record
+// Accumulate invalid record
   chunk.initialize(1);
   record.removeField("POLNO");
   ASSERT_EQ(0u, chunk.getNumPol());
@@ -708,7 +1155,7 @@ TEST(DataChunkTest, WhiteBoxTest) {
   ASSERT_FALSE(status);
   EXPECT_EQ(0u, chunk.getNumPol());
 
-  // Accumulate different shaped data
+// Accumulate different shaped data
   Vector < Float > data2(2);
   Vector < Bool > flag2(2);
   chunk.initialize(1);
@@ -720,12 +1167,12 @@ TEST(DataChunkTest, WhiteBoxTest) {
   status = chunk.accumulate(record);
   EXPECT_EQ(expected_status, status);
 
-  // Shape mismatch between data and flag
+// Shape mismatch between data and flag
   record.define("DATA", data1);
   status = chunk.accumulate(record);
   EXPECT_EQ(expected_status, status);
 
-  // Test number of polarization
+// Test number of polarization
   constexpr size_t num_seq = 4ul;
   constexpr size_t num_accum = 4ul;
   uInt expected_num_pol[num_seq][num_accum] = { { 1, 2, 2, 4 }, { 1, 2, 2, 4 },
@@ -746,7 +1193,7 @@ TEST(DataChunkTest, WhiteBoxTest) {
     }
   }
 
-  // accumulate data to same polarization twice
+// accumulate data to same polarization twice
   data2 = 0.0;
   chunk.initialize(2);
   record.define("POLNO", 0u);
@@ -762,7 +1209,7 @@ TEST(DataChunkTest, WhiteBoxTest) {
   EXPECT_EQ(IPosition(2, 1, 2), output_data.shape());
   EXPECT_TRUE(allEQ(output_data, 1.0f));
 
-  // accumulate three polarization component
+// accumulate three polarization component
   chunk.initialize(2);
   data2 = 3.0;
   record.define("POLNO", 0u);
@@ -779,13 +1226,13 @@ TEST(DataChunkTest, WhiteBoxTest) {
   EXPECT_EQ(IPosition(2, 2, 2), data.shape());
   EXPECT_TRUE(allEQ(data, 3.0f));
 
-  // reset poltype
+// reset poltype
   EXPECT_NE(0u, chunk.getNumPol());
   chunk.resetPolType("circular");
   CASA_ASSERT_STREQ(String("circular"), chunk.getPolType());
   ASSERT_EQ(0u, chunk.getNumPol());
 
-  // Stokes single pol 1 and dual pols 1 and 2 are invalid
+// Stokes single pol 1 and dual pols 1 and 2 are invalid
   DataChunk stokes_chunk("stokes");
 
   stokes_chunk.initialize(2);
@@ -805,7 +1252,7 @@ TEST(DataChunkTest, WhiteBoxTest) {
   EXPECT_EQ(IPosition(2, 1, 2), data_stokes.shape());
   EXPECT_TRUE(allEQ(data_stokes, 4.0f));
 
-  // Test number of polarization
+// Test number of polarization
   uInt expected_num_pol_stokes[num_seq][num_accum] = { { 1, 1, 1, 4 }, { 0, 1,
       1, 4 }, { 0, 0, 0, 4 }, { 1, 1, 1, 4 } };
   uInt polid_order_stokes[num_seq][num_accum] = { { 0, 1, 2, 3 },
@@ -824,7 +1271,7 @@ TEST(DataChunkTest, WhiteBoxTest) {
     }
   }
 
-  // Linpol single pol 1 and full pols are invalid
+// Linpol single pol 1 and full pols are invalid
   DataChunk linpol_chunk("linpol");
 
   linpol_chunk.initialize(2);
@@ -848,7 +1295,7 @@ TEST(DataChunkTest, WhiteBoxTest) {
   EXPECT_EQ(IPosition(2, 2, 2), data_linpol.shape());
   EXPECT_TRUE(allEQ(data_linpol, 8.0f));
 
-  // Test number of polarization
+// Test number of polarization
   uInt expected_num_pol_linpol[num_seq][num_accum] = { { 1, 2, 2, 2 }, { 0, 2,
       2, 2 }, { 0, 0, 0, 2 }, { 1, 1, 2, 2 } };
   uInt polid_order_linpol[num_seq][num_accum] = { { 0, 1, 2, 3 },
@@ -869,16 +1316,18 @@ TEST(DataChunkTest, WhiteBoxTest) {
 }
 
 TEST(DataAccumulatorTest, WhiteBoxTest) {
-  constexpr size_t num_record_keys = 10;
+  constexpr size_t num_record_keys = 13;
   constexpr const char *output_record_keys[] = { "TIME", "POL_TYPE", "INTENT",
-      "SPECTRAL_WINDOW_ID", "FIELD_ID", "FEED_ID", "FLAG", "FLAG_ROW", "SIGMA",
-      "WEIGHT" }; // and "DATA" or "FLOAT_DATA"
+      "SPECTRAL_WINDOW_ID", "FIELD_ID", "FEED_ID", "SCAN", "SUBSCAN", "FLAG",
+      "FLAG_ROW", "SIGMA", "WEIGHT", "DIRECTION" }; // and "DATA" or "FLOAT_DATA"
   auto IsValidOutputRecord = [&](TableRecord const &record) {
     for (size_t i = 0; i < num_record_keys; ++i) {
       ASSERT_TRUE(record.isDefined(output_record_keys[i]));
     }
+    size_t const expected_num_pol = record.asInt("NUM_POL");
     Matrix<Bool> const flag = record.asArrayBool("FLAG");
     size_t const num_pol = flag.nrow();
+    ASSERT_EQ(expected_num_pol, num_pol);
     String const poltype = record.asString("POL_TYPE");
     if (poltype == "linear" || poltype == "circular") {
       ASSERT_TRUE((num_pol == 1) || (num_pol == 2) || (num_pol == 4));
@@ -915,7 +1364,7 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
 
   DataAccumulator a;
 
-  // number of chunks must be zero at initial state
+// number of chunks must be zero at initial state
   ASSERT_EQ(0ul, a.getNumberOfChunks());
   TableRecord output_record;
   bool status = a.get(0, output_record);
@@ -926,11 +1375,11 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
   Double time = t.modifiedJulianDay() * 86400.0;
   r1.define("TIME", time);
 
-  // accumulator should not be ready at initial state
+// accumulator should not be ready at initial state
   bool is_ready = a.queryForGet(r1);
   ASSERT_FALSE(is_ready);
 
-  // Invalid record cannot be accumulated
+// Invalid record cannot be accumulated
   status = a.accumulate(r1);
   ASSERT_FALSE(status);
   TableRecord r2;
@@ -939,17 +1388,25 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
   is_ready = a.queryForGet(r2);
   ASSERT_FALSE(is_ready);
 
-  // Accumulate one data
+// Accumulate one data
+  Int antenna_id = 0;
   Int spw_id = 0;
   Int field_id = 1;
   Int feed_id = 2;
+  Int scan = 29;
+  Int subscan = 5;
+  Matrix < Double > direction(2, 1, 0.0);
   String intent = "ON_SOURCE";
   String poltype = "linear";
+  r1.define("ANTENNA_ID", antenna_id);
   r1.define("SPECTRAL_WINDOW_ID", spw_id);
   r1.define("FIELD_ID", field_id);
   r1.define("FEED_ID", feed_id);
+  r1.define("SCAN", scan);
+  r1.define("SUBSCAN", subscan);
   r1.define("INTENT", intent);
   r1.define("POL_TYPE", poltype);
+  r1.define("DIRECTION", direction);
   size_t const num_chan = 4;
 //  Vector < Float > data(num_chan, 0.0f);
 //  Vector < Bool > flag(num_chan, False);
@@ -974,21 +1431,21 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
   EXPECT_EQ(1u, a.getNumberOfChunks());
   EXPECT_EQ(1u, a.getNumPol(0));
 
-  // Data with different timestamp cannot be accumulated
+// Data with different timestamp cannot be accumulated
   r2.merge(r1, TableRecord::SkipDuplicates);
   status = a.accumulate(r2);
   ASSERT_FALSE(status);
   EXPECT_EQ(1u, a.getNumberOfChunks());
   EXPECT_EQ(1u, a.getNumPol(0));
 
-  // query
+// query
   is_ready = a.queryForGet(r1);
   ASSERT_FALSE(is_ready);
 
   is_ready = a.queryForGet(r2);
   ASSERT_TRUE(is_ready);
 
-  // Get
+// Get
   ClearRecord(output_record);
   CASA_ASSERT_STREQ(poltype, a.getPolType(0));
   ASSERT_EQ(1u, a.getNumPol(0));
@@ -1018,7 +1475,7 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
 //    EXPECT_TRUE(allEQ(output_flag.row(0), flag.row(i)));
 //  }
 
-  // Accumulate more data with same meta data but different polno
+// Accumulate more data with same meta data but different polno
   r1.define("POLNO", 1);
   r1.define("DATA", data.row(1));
   r1.define("FLAG", flag.row(1));
@@ -1027,7 +1484,7 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
   ASSERT_TRUE(status);
   EXPECT_EQ(1u, a.getNumberOfChunks());
 
-  // Get
+// Get
   ClearRecord(output_record);
   CASA_ASSERT_STREQ(poltype, a.getPolType(0));
   ASSERT_EQ(2u, a.getNumPol(0));
@@ -1045,7 +1502,7 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
   EXPECT_TRUE(allEQ(output_flag.row(1), flag.row(1)));
   EXPECT_EQ(flag_row[0] || flag_row[1], output_record.asBool("FLAG_ROW"));
 
-  // Accumulate cross-pol data with same meta data
+// Accumulate cross-pol data with same meta data
   r1.define("POLNO", 2);
   r1.define("DATA", data.row(2));
   r1.define("FLAG", flag.row(2));
@@ -1061,7 +1518,7 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
   ASSERT_TRUE(status);
   EXPECT_EQ(1u, a.getNumberOfChunks());
 
-  // Get
+// Get
   ClearRecord(output_record);
   CASA_ASSERT_STREQ(poltype, a.getPolType(0));
   ASSERT_EQ(4u, a.getNumPol(0));
@@ -1086,7 +1543,7 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
   EXPECT_TRUE(allEQ(output_flag.row(3), flag.row(1)));
   EXPECT_EQ(anyTrue(flag_row), output_record.asBool("FLAG_ROW"));
 
-  // Accumulate data with another meta data
+// Accumulate data with another meta data
   String intent2 = "OFF_SOURCE";
   String poltype2 = "circular";
   r1.define("POLNO", 0);
@@ -1124,7 +1581,7 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
   EXPECT_EQ(output_data2.shape(), output_flag2.shape());
   EXPECT_TRUE(allEQ(output_flag2.row(0), flag2));
 
-  // Accumulate another
+// Accumulate another
   r1.define("POLNO", 1);
   data2 *= 2.0f;
   flag2 = True;
@@ -1144,13 +1601,13 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
   EXPECT_EQ(output_data2.shape(), output_flag2.shape());
   EXPECT_TRUE(allEQ(flag2, output_flag2.row(1)));
 
-  // clear
+// clear
   a.clear();
   EXPECT_EQ(2u, a.getNumberOfChunks());
   EXPECT_EQ(0u, a.getNumberOfActiveChunks());
   EXPECT_FALSE(a.queryForGet(r1));
 
-  // reuse underlying DataChunk object
+// reuse underlying DataChunk object
 }
 
 int main(int nArgs, char * args[]) {

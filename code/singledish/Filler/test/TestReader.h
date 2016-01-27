@@ -61,7 +61,7 @@ public:
     name_[0] = "M78";
     name_[1] = "M78";
     name_[2] = "HLTau";
-    name_[2] = "HLTau";
+    name_[3] = "HLTau";
     Time t(2016, 1, 1);
     time_ = t.modifiedJulianDay() * 86400.0;
     time_[2] += 86400.0;
@@ -111,7 +111,7 @@ public:
 
     POST_END;
   }
-  ~SourceIterator() {
+  virtual ~SourceIterator() {
     POST_START;
     POST_END;
   }
@@ -151,19 +151,112 @@ private:
   Vector<Vector<Double> > sysvel_;
 };
 
+// Iterator for FIELD table
+class FieldIterator: public FixedNumberIteratorInterface {
+public:
+  FieldIterator() :
+      FixedNumberIteratorInterface(4), field_id_(num_iter_), time_(num_iter_), interval_(
+          num_iter_), name_(num_iter_), source_name_(num_iter_), code_(
+          num_iter_), direction_(num_iter_, Vector < Double > (2)), scan_rate_(
+          num_iter_, Vector < Double > (2)) {
+    POST_START;
+
+    field_id_[0] = 1;
+    field_id_[1] = 0;
+    field_id_[2] = 3;
+    field_id_[3] = 4;
+    source_name_[0] = "M78";
+    source_name_[1] = "M78";
+    source_name_[2] = "HLTau";
+    source_name_[3] = "HLTau";
+    name_[0] = source_name_[0] + "N";
+    name_[1] = source_name_[1] + "S";
+    name_[2] = source_name_[2] + "_E";
+    name_[3] = source_name_[3] + "_W";
+    source_name_[0] = "M78";
+    Time t(2016, 1, 1);
+    time_ = t.modifiedJulianDay() * 86400.0;
+    time_[1] = time_[0] + 86400.0;
+    time_[2] = time_[1] + 86400.0;
+    time_[3] = time_[2] + 86400.0;
+    interval_ = 3600.0;
+    code_[0] = "Northern area of " + source_name_[0];
+    code_[1] = "Southern area of " + source_name_[1];
+    code_[2] = "East area of " + source_name_[2];
+    code_[3] = "West area of " + source_name_[3];
+    Vector < Double > direction(2, 0.0);
+    direction_[0] = direction;
+    direction_[0][1] += 0.1;
+    direction_[1] = direction;
+    direction_[1][1] -= 0.1;
+    direction[0] += C::pi;
+    direction[1] -= C::pi;
+    direction_[2] = direction;
+    direction_[2][0] -= 0.1;
+    direction_[3] = direction;
+    direction_[3][0] += 0.1;
+    Vector < Double > scan_rate(2, 0.0);
+    scan_rate_[0] = scan_rate;
+    scan_rate_[1] = scan_rate;
+    scan_rate[0] = 0.1;
+    scan_rate[1] = -0.05;
+    scan_rate_[2] = scan_rate;
+    scan_rate_[3] = scan_rate;
+
+    POST_END;
+  }
+  virtual ~FieldIterator() {
+    POST_START;
+    POST_END;
+  }
+
+  void getEntry(TableRecord &record) {
+    if (moreData()) {
+      size_t i = current_iter_;
+      record.define("FIELD_ID", field_id_[i]);
+      record.define("NAME", name_[i]);
+      record.define("SOURCE_NAME", source_name_[i]);
+      record.define("TIME", time_[i]);
+      record.define("INTERVAL", interval_[i]);
+      record.define("CODE", code_[i]);
+      Int num_poly = 0;
+      Matrix < Double > direction(direction_[i]);
+      if (scan_rate_[i].nelements() > 0 && anyNE(scan_rate_[i], 0.0)) {
+        direction.resize(2, 2, True);
+        direction.column(1) = scan_rate_[i];
+        num_poly = 1;
+      }
+      record.define("DIRECTION", direction);
+      record.define("NUM_POLY", num_poly);
+    }
+  }
+
+private:
+  Vector<Int> field_id_;
+  Vector<Double> time_;
+  Vector<Double> interval_;
+  Vector<String> name_;
+  Vector<String> source_name_;
+  Vector<String> code_;
+  Vector<Vector<Double> > direction_;
+  Vector<Vector<Double> > scan_rate_;
+};
+
 class SpwIterator: public FixedNumberIteratorInterface {
 public:
   SpwIterator() :
-      FixedNumberIteratorInterface(4), spw_id_(num_iter_), name_(
-          num_iter_), refpix_(num_iter_), refval_(num_iter_), increment_(
-          num_iter_), num_chan_(num_iter_), meas_freq_ref_(
-          num_iter_) {
-    indgen(spw_id_, 0, 1);
+      FixedNumberIteratorInterface(4), spw_id_(num_iter_), name_(num_iter_), refpix_(
+          num_iter_), refval_(num_iter_), increment_(num_iter_), num_chan_(
+          num_iter_), meas_freq_ref_(num_iter_) {
+    spw_id_[0] = 0;
+    spw_id_[1] = 1;
+    spw_id_[2] = 4;
+    spw_id_[3] = 5;
     for (size_t i = 0; i < num_iter_; ++i) {
       name_[i] = "SPW" + String::toString(spw_id_[i]);
     }
-    num_chan_[0] = 1024;
-    num_chan_[1] = 512;
+    num_chan_[0] = 4;
+    num_chan_[1] = 8;
     num_chan_[2] = 64;
     num_chan_[3] = 32;
     meas_freq_ref_[0] = 0; // REST
@@ -184,7 +277,8 @@ public:
     refval_[3] = 1.133e11;
   }
 
-  virtual ~SpwIterator() {}
+  virtual ~SpwIterator() {
+  }
 
   void getEntry(TableRecord &record) {
     if (moreData()) {
@@ -337,13 +431,23 @@ private:
 // Mock object for Reader
 struct FloatDataStorage {
   size_t const kNumRow = 24;
-  Double const time_[2] = { 4.0e9, 4.1e9 };
+  Double const time_[4] = { 4.0e9, 4.1e9, 4.2e9, 4.3e9 };
+  Int const antenna_[2] = {0, 1};
   Int const spw_[2] = { 0, 1 };
   Int const num_pol_[2] = { 2, 1 };
   Int const num_chan_[2] = { 4, 8 };
   Int const field_[2] = { 0, 1 };
   Int const feed_[2] = { 0, 1 };
-  String const intent_[2] = { "ON_SOURCE", "OFF_SOURCE" };
+  Int const scan_[2] = { 0, 2 };
+  Int const subscan_[2] = { 0, 1 };
+  Double const ra_[2] = {0.25, 0.28};
+  Double const dec_[2] = {-1.48, -1.49};
+//  Double const dra_[2] = {0.0, -0.01};
+//  Double const ddec_[2] = {0.0, 0.002};
+  String const intent_[2] = { "OBSERVE_TARGET#ON_SOURCE",
+      "OBSERVE_TARGET#OFF_SOURCE" };
+  String const field_name_[2] = { "MyField", "AnotherField" };
+  String const source_name_[2] = { "M78", "HLTau" };
   Bool getData(size_t irow, TableRecord &record) {
     POST_START;
 
@@ -353,19 +457,41 @@ struct FloatDataStorage {
       return False;
     }
 
-    size_t index = irow / (n / 2);
+    // constant stuff (at this moment)
+    //record.define("ANTENNA_ID", 0);
+
+    size_t index = irow / (n / 4);
     std::cout << "ROW " << irow << std::endl;
-    std::cout << "    index for time and state " << index << std::endl;
+    std::cout << "    index for time " << index << std::endl;
+    if (4ul <= index)
+      return false;;
+    //record.define("TIME", time_[index]);
+
+    index = irow / (n / 2);
+    std::cout << "ROW " << irow << std::endl;
+    std::cout << "    index for state and scan" << index << std::endl;
     if (2ul <= index)
       return false;;
     record.define("TIME", time_[index]);
     record.define("INTENT", intent_[index]);
+    record.define("SCAN", scan_[index]);
+    record.define("SUBSCAN", subscan_[index]);
+    record.print(std::cout);
 
     index = (irow / (n / 4)) % 2;
     std::cout << "    index for field " << index << std::endl;
     if (2ul <= index)
       return false;;
     record.define("FIELD_ID", field_[index]);
+    record.define("FIELD_NAME", field_name_[index]);
+    record.define("SOURCE_NAME", source_name_[index]);
+    record.define("ANTENNA_ID", antenna_[index]);
+    static Matrix<Double> direction(2, 1);
+    direction(0, 0) = ra_[index];
+    direction(1, 0) = dec_[index];
+    record.define("DIRECTION", direction);
+//    direction(0, 1) = dra_[index];
+//    direction(1, 1) = ddec_[index];
 
     index = (irow / (n / 8)) % 2;
     std::cout << "    index for feed " << index << std::endl;
@@ -429,7 +555,8 @@ public:
           &::TestReader<DataStorage>::getObservationRowImpl), get_antenna_row_(
           &::TestReader<DataStorage>::getAntennaRowImpl), get_processor_row_(
           &::TestReader<DataStorage>::getProcessorRowImpl), get_source_row_(
-          &::TestReader<DataStorage>::getSourceRowWithInitImpl), get_spw_row_(
+          &::TestReader<DataStorage>::getSourceRowWithInitImpl), get_field_row_(
+          &::TestReader<DataStorage>::getFieldRowWithInitImpl), get_spw_row_(
           &::TestReader<DataStorage>::getSpwRowWithInitImpl), get_syscal_row_(
           &::TestReader<DataStorage>::getSysCalRowWithInitImpl), get_weather_row_(
           &::TestReader<DataStorage>::getWeatherRowWithInitImpl), storage_() {
@@ -494,6 +621,17 @@ public:
     return return_value;
   }
 
+  // to get FIELD table
+  virtual Bool getFieldRow(TableRecord &record) {
+    POST_START;
+
+    Bool return_value = (*this.*get_field_row_)(record);
+
+    POST_END;
+
+    return return_value;
+  }
+
   // to get SPECTRAL WINDOW table
   virtual Bool getSpectralWindowRow(TableRecord &record) {
     POST_START;
@@ -543,6 +681,9 @@ public:
 
     std::cout << "status = " << status << std::endl;
 
+    String key = "ROW" + String::toString(irow);
+    main_record_.defineRecord(key, record);
+
     POST_END;
     return status;
   }
@@ -552,6 +693,7 @@ public:
   TableRecord antenna_record_;
   TableRecord processor_record_;
   TableRecord source_record_;
+  TableRecord field_record_;
   TableRecord spw_record_;
   TableRecord syscal_record_;
   TableRecord weather_record_;
@@ -570,6 +712,7 @@ protected:
 
 private:
   std::unique_ptr<SourceIterator> source_iterator_;
+  std::unique_ptr<FieldIterator> field_iterator_;
   std::unique_ptr<SpwIterator> spw_iterator_;
   std::unique_ptr<SysCalIterator> syscal_iterator_;
   std::unique_ptr<WeatherIterator> weather_iterator_;
@@ -577,6 +720,7 @@ private:
   Bool (::TestReader<DataStorage>::*get_antenna_row_)(TableRecord &);
   Bool (::TestReader<DataStorage>::*get_processor_row_)(TableRecord &);
   Bool (::TestReader<DataStorage>::*get_source_row_)(TableRecord &);
+  Bool (::TestReader<DataStorage>::*get_field_row_)(TableRecord &);
   Bool (::TestReader<DataStorage>::*get_spw_row_)(TableRecord &);
   Bool (::TestReader<DataStorage>::*get_syscal_row_)(TableRecord &);
   Bool (::TestReader<DataStorage>::*get_weather_row_)(TableRecord &);
@@ -678,28 +822,25 @@ private:
   }
 
   Bool getSourceRowImpl(TableRecord &record) {
+    return getRowImplTemplate(source_iterator_, source_record_, get_source_row_,
+        record);
+  }
+
+  Bool getFieldRowWithInitImpl(TableRecord &record) {
     POST_START;
 
-    assert(source_iterator_);
+    field_iterator_.reset(new ::FieldIterator());
+    get_field_row_ = &::TestReader<DataStorage>::getFieldRowImpl;
 
-    bool more_rows = source_iterator_->moreData();
-
-    if (more_rows) {
-      source_iterator_->getEntry(record);
-      source_iterator_->next();
-
-      // keep record contents
-      uInt i = source_record_.nfields();
-      String key = "ROW" + String::toString(i);
-      source_record_.defineRecord(key, record);
-    } else {
-      source_iterator_.reset(nullptr);
-      get_source_row_ = &::TestReader<DataStorage>::noMoreRowImpl;
-    }
+    Bool more_rows = getFieldRowImpl(record);
 
     POST_END;
 
     return more_rows;
+  }
+
+  Bool getFieldRowImpl(TableRecord &record) {
+    return getRowImplTemplate(field_iterator_, field_record_, get_field_row_, record);
   }
 
   Bool getSpwRowWithInitImpl(TableRecord &record) {
@@ -716,29 +857,7 @@ private:
   }
 
   Bool getSpwRowImpl(TableRecord &record) {
-    POST_START;
-
-    assert(spw_iterator_);
-
-    bool more_rows = spw_iterator_->moreData();
-
-    if (more_rows) {
-      spw_iterator_->getEntry(record);
-      spw_iterator_->next();
-
-      // keep record contents
-      uInt i = spw_record_.nfields();
-      String key = "ROW" + String::toString(i);
-      spw_record_.defineRecord(key, record);
-    } else {
-      spw_iterator_.reset(nullptr);
-      get_spw_row_ = &::TestReader<DataStorage>::noMoreRowImpl;
-    }
-
-    POST_END;
-
-    return more_rows;
-
+    return getRowImplTemplate(spw_iterator_, spw_record_, get_spw_row_, record);
   }
 
   Bool getSysCalRowWithInitImpl(TableRecord &record) {
@@ -755,29 +874,8 @@ private:
   }
 
   Bool getSysCalRowImpl(TableRecord &record) {
-    POST_START;
-
-    assert(syscal_iterator_);
-
-    bool more_rows = syscal_iterator_->moreData();
-
-    if (more_rows) {
-      syscal_iterator_->getEntry(record);
-      syscal_iterator_->next();
-
-      // keep record contents
-      uInt i = syscal_record_.nfields();
-      String key = "ROW" + String::toString(i);
-      syscal_record_.defineRecord(key, record);
-    } else {
-      syscal_iterator_.reset(nullptr);
-      get_syscal_row_ = &::TestReader<DataStorage>::noMoreRowImpl;
-    }
-
-    POST_END;
-
-    return more_rows;
-
+    return getRowImplTemplate(syscal_iterator_, syscal_record_, get_syscal_row_,
+        record);
   }
 
   Bool getWeatherRowWithInitImpl(TableRecord &record) {
@@ -794,29 +892,35 @@ private:
   }
 
   Bool getWeatherRowImpl(TableRecord &record) {
+    return getRowImplTemplate(weather_iterator_, weather_record_,
+        get_weather_row_, record);
+  }
+
+  template<class _Iterator, class _Record, class _Func>
+  Bool getRowImplTemplate(_Iterator &iter, _Record &internal_record,
+      _Func &func, TableRecord &record) {
     POST_START;
 
-    assert(weather_iterator_);
+    assert(iter);
 
-    bool more_rows = weather_iterator_->moreData();
+    bool more_rows = iter->moreData();
 
     if (more_rows) {
-      weather_iterator_->getEntry(record);
-      weather_iterator_->next();
+      iter->getEntry(record);
+      iter->next();
 
       // keep record contents
-      uInt i = weather_record_.nfields();
+      uInt i = internal_record.nfields();
       String key = "ROW" + String::toString(i);
-      weather_record_.defineRecord(key, record);
+      internal_record.defineRecord(key, record);
     } else {
-      weather_iterator_.reset(nullptr);
-      get_weather_row_ = &::TestReader<DataStorage>::noMoreRowImpl;
+      iter.reset(nullptr);
+      func = &::TestReader<DataStorage>::noMoreRowImpl;
     }
 
     POST_END;
 
     return more_rows;
-
   }
 
   Bool noMoreRowImpl(TableRecord &) {

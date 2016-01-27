@@ -39,6 +39,9 @@ public:
   // to get SOURCE table
   virtual Bool getSourceRow(TableRecord &row);
 
+  // to get FIELD table
+  virtual Bool getFieldRow(TableRecord &row);
+
   // to get SOURCE table
   virtual Bool getSpectralWindowRow(TableRecord &row);
 

@@ -20,6 +20,8 @@
 #include <casacore/casa/Arrays/ArrayIO.h>
 #include <casacore/casa/Containers/Record.h>
 
+#include <casacore/measures/Measures/Stokes.h>
+
 #include <casacore/tables/Tables/TableRecord.h>
 
 #define POST_START std::cout << "Start " << __PRETTY_FUNCTION__ << std::endl
@@ -36,7 +38,7 @@ public:
   DataChunk(String const &poltype) :
       num_pol_max_(4), num_pol_(0), num_chan_(0), data_(), flag_(), flag_row_(
           num_pol_max_, False), weight_(num_pol_max_, 1.0f), sigma_(weight_), poltype_(
-          poltype), filled_(NoData()), get_chunk_(nullptr), get_num_pol_(
+          poltype), corr_type_(), filled_(NoData()), get_chunk_(nullptr), get_num_pol_(
           nullptr) {
     POST_START;
 
@@ -133,6 +135,17 @@ public:
 
   bool get(TableRecord &record) {
     bool return_value = (*this.*get_chunk_)(record);
+//    Int num_pol = 0;
+//    if (isFullPol()) {
+//      num_pol = 4;
+//    }
+//    else if (isDualPol()) {
+//      num_pol = 2;
+//    }
+//    else if (isSinglePol0() || isSinglePol1()) {
+//      num_pol = 1;
+//    }
+//    record.define("NUM_POL", num_pol);
     return return_value;
   }
 
@@ -180,7 +193,8 @@ private:
         "FLAG_ROW" };
     for (size_t i = 0; i < num_required_keys; ++i) {
       is_valid = is_valid && record.isDefined(required_keys[i]);
-      std::cout << "key " << required_keys[i] << " is_valid " << is_valid << std::endl;
+      std::cout << "key " << required_keys[i] << " is_valid " << is_valid
+          << std::endl;
     }
     return is_valid;
   }
@@ -192,15 +206,33 @@ private:
     if (poltype_ == "linear") {
       get_chunk_ = &DataChunk::getLinear;
       get_num_pol_ = &DataChunk::getNumPolLinear;
+      corr_type_.resize(4);
+      corr_type_[0] = Stokes::XX;
+      corr_type_[1] = Stokes::XY;
+      corr_type_[2] = Stokes::YX;
+      corr_type_[3] = Stokes::YY;
     } else if (poltype_ == "circular") {
       get_chunk_ = &DataChunk::getCircular;
       get_num_pol_ = &DataChunk::getNumPolCircular;
+      corr_type_.resize(4);
+      corr_type_[0] = Stokes::RR;
+      corr_type_[1] = Stokes::RL;
+      corr_type_[2] = Stokes::LR;
+      corr_type_[3] = Stokes::LL;
     } else if (poltype_ == "stokes") {
       get_chunk_ = &DataChunk::getStokes;
       get_num_pol_ = &DataChunk::getNumPolStokes;
+      corr_type_.resize(4);
+      corr_type_[0] = Stokes::I;
+      corr_type_[1] = Stokes::Q;
+      corr_type_[2] = Stokes::U;
+      corr_type_[3] = Stokes::V;
     } else if (poltype_ == "linpol") {
       get_chunk_ = &DataChunk::getLinpol;
       get_num_pol_ = &DataChunk::getNumPolLinpol;
+      corr_type_.resize(2);
+      corr_type_[0] = Stokes::Plinear;
+      corr_type_[1] = Stokes::Pangle;
     } else {
       throw AipsError(String("Invalid poltype") + poltype);
     }
@@ -216,6 +248,7 @@ private:
   Vector<Float> weight_;
   Vector<Float> sigma_;
   String poltype_;
+  Vector<Int> corr_type_;
   unsigned char filled_;
   bool (DataChunk::*get_chunk_)(TableRecord &record);
   uInt (DataChunk::*get_num_pol_)() const;
@@ -250,6 +283,14 @@ private:
       record.define("FLAG_ROW", flag_row);
       record.define("WEIGHT", weight_);
       record.define("SIGMA", sigma_);
+
+      record.define("NUM_POL", 4);
+//      Vector<Int> corr_type(4);
+//      corr_type[0] = Stokes::XX;
+//      corr_type[1] = Stokes::XY;
+//      corr_type[2] = Stokes::YX;
+//      corr_type[3] = Stokes::YY;
+      record.define("CORR_TYPE", corr_type_);
     } else if (isDualPol()) {
       // POL 0 and 1
       Matrix < Float > data = data_(IPosition(2, 0, 0),
@@ -263,6 +304,12 @@ private:
       record.define("FLAG_ROW", flag_row);
       record.define("WEIGHT", weight);
       record.define("SIGMA", weight);
+
+      record.define("NUM_POL", 2);
+      Vector < Int > corr_type(2);
+      corr_type[0] = corr_type_[0];
+      corr_type[1] = corr_type_[3];
+      record.define("CORR_TYPE", corr_type);
     } else if (isSinglePol0()) {
       // only POL 0
       Slicer slicer(IPosition(2, 0, 0), IPosition(2, 1, num_chan_));
@@ -278,6 +325,11 @@ private:
       record.define("FLAG_ROW", flag_row);
       record.define("WEIGHT", weight);
       record.define("SIGMA", weight);
+
+      record.define("NUM_POL", 1);
+      Vector < Int > corr_type(1, corr_type_[0]);
+//      corr_type[0] = Stokes::XX;
+      record.define("CORR_TYPE", corr_type);
     } else if (isSinglePol1()) {
       // only POL 1
       Slicer slicer(IPosition(2, 1, 0), IPosition(2, 1, num_chan_));
@@ -290,6 +342,11 @@ private:
       record.define("FLAG_ROW", flag_row);
       record.define("WEIGHT", weight);
       record.define("SIGMA", weight);
+
+      record.define("NUM_POL", 1);
+      Vector < Int > corr_type(1, corr_type_[3]);
+//      corr_type[0] = Stokes::YY;
+      record.define("CORR_TYPE", corr_type);
     } else {
       return false;
     }
@@ -311,6 +368,14 @@ private:
       record.define("FLAG_ROW", anyTrue(flag_row_));
       record.define("SIGMA", sigma_);
       record.define("WEIGHT", weight_);
+
+      record.define("NUM_POL", 4);
+//      Vector<Int> corr_type(4);
+//      corr_type[0] = Stokes::I;
+//      corr_type[1] = Stokes::Q;
+//      corr_type[2] = Stokes::U;
+//      corr_type[3] = Stokes::V;
+      record.define("CORR_TYPE", corr_type_);
     } else if (isSinglePol0()) {
       Slicer slicer(IPosition(2, 0, 0), IPosition(2, 1, num_chan_));
       record.define("FLOAT_DATA", data_(slicer));
@@ -319,6 +384,11 @@ private:
       Slice slice(0, 1);
       record.define("SIGMA", weight_(slice));
       record.define("WEIGHT", weight_(slice));
+
+      record.define("NUM_POL", 1);
+      Vector < Int > corr_type(1, corr_type_[0]);
+//      corr_type[0] = Stokes::I;
+      record.define("CORR_TYPE", corr_type);
     } else {
       return false;
     }
@@ -343,6 +413,12 @@ private:
       record.define("FLAG_ROW", flag_row);
       record.define("WEIGHT", weight);
       record.define("SIGMA", weight);
+
+      record.define("NUM_POL", 2);
+//      Vector<Int> corr_type(2);
+//      corr_type[0] = Stokes::Plinear;
+//      corr_type[1] = Stokes::Pangle;
+      record.define("CORR_TYPE", corr_type_);
     } else if (isSinglePol0()) {
       Slicer slicer(IPosition(2, 0, 0), IPosition(2, 1, num_chan_));
       record.define("FLOAT_DATA", data_(slicer));
@@ -351,6 +427,11 @@ private:
       Slice slice(0, 1);
       record.define("SIGMA", weight_(slice));
       record.define("WEIGHT", weight_(slice));
+
+      record.define("NUM_POL", 1);
+      Vector < Int > corr_type(1, corr_type_[0]);
+//      corr_type[0] = Stokes::Plinear;
+      record.define("CORR_TYPE", corr_type);
     } else {
       return false;
     }
@@ -399,7 +480,7 @@ private:
 class DataAccumulator {
 public:
   DataAccumulator() :
-      pool_(), spw_id_(), field_id_(), feed_id_(), intent_(), indexer_(), time_(
+      pool_(), antenna_id_(), spw_id_(), field_id_(), feed_id_(), scan_(), subscan_(), intent_(), indexer_(), time_(
           -1.0), is_ready_(false), is_free_() {
   }
 
@@ -449,26 +530,38 @@ public:
       return false;
     }
     bool status = pool_[ichunk]->get(record);
+    Int antennaid = -1;
     Int spwid = -1;
     Int fieldid = -1;
     Int feedid = -1;
+    Int scan = -1;
+    Int subscan = -1;
     String intent = "";
     Double time = -1.0;
     String poltype = "";
+    Matrix<Double> direction;
     if (status) {
-       poltype = pool_[ichunk]->getPolType();
-       time = time_;
-       spwid = spw_id_[ichunk];
-       fieldid = field_id_[ichunk];
-       feedid = feed_id_[ichunk];
-       intent = intent_[ichunk];
+      poltype = pool_[ichunk]->getPolType();
+      time = time_;
+      antennaid = antenna_id_[ichunk];
+      spwid = spw_id_[ichunk];
+      fieldid = field_id_[ichunk];
+      feedid = feed_id_[ichunk];
+      scan = scan_[ichunk];
+      subscan = subscan_[ichunk];
+      intent = intent_[ichunk];
+      direction.assign(direction_[ichunk]);
     }
     record.define("TIME", time);
     record.define("POL_TYPE", poltype);
+    record.define("ANTENNA_ID", antennaid);
     record.define("SPECTRAL_WINDOW_ID", spwid);
     record.define("FIELD_ID", fieldid);
     record.define("FEED_ID", feedid);
+    record.define("SCAN", scan);
+    record.define("SUBSCAN", subscan);
     record.define("INTENT", intent);
+    record.define("DIRECTION", direction);
     return status;
   }
 
@@ -491,40 +584,56 @@ public:
       return false;
       //AipsError("Invalid use of DataAccumulator");
     }
+    Int antennaid = record.asInt("ANTENNA_ID");
     Int spwid = record.asInt("SPECTRAL_WINDOW_ID");
     Int fieldid = record.asInt("FIELD_ID");
     Int feedid = record.asInt("FEED_ID");
+    Int scan = record.asInt("SCAN");
+    Int subscan = record.asInt("SUBSCAN");
     String intent = record.asString("INTENT");
     String poltype = record.asString("POL_TYPE");
-    String key = "SPW" + String::toString(spwid) + "FIELD"
-        + String::toString(fieldid) + "FEED" + String::toString(feedid) + intent
-        + poltype;
+    String key = "ANTENNA" + String::toString(antennaid) + "SPW"
+        + String::toString(spwid) + "FIELD" + String::toString(fieldid) + "FEED"
+        + String::toString(feedid) + intent + poltype;
+    Matrix<Double> direction = record.asArrayDouble("DIRECTION");
     bool status = false;
     if (indexer_.isDefined(key)) {
       std::cout << "accumulate " << key << std::endl;
       uInt index = indexer_.asuInt(key);
       status = pool_[index]->accumulate(record);
       if (status) {
+        antenna_id_[index] = antennaid;
         spw_id_[index] = spwid;
         field_id_[index] = fieldid;
         feed_id_[index] = feedid;
+        scan_[index] = scan;
+        subscan_[index] = subscan;
         intent_[index] = intent;
+        direction_[index].assign(direction);
       }
     } else {
       std::cout << "new entry " << key << std::endl;
       pool_.push_back(new DataChunk(poltype));
+      antenna_id_.push_back(-1);
       spw_id_.push_back(-1);
       field_id_.push_back(-1);
       feed_id_.push_back(-1);
+      scan_.push_back(-1);
+      subscan_.push_back(-1);
       intent_.push_back("");
+      direction_.push_back(Vector<Double>());
       uInt index = pool_.size() - 1;
       indexer_.define(key, index);
       status = pool_[index]->accumulate(record);
       if (status) {
+        antenna_id_[index] = antennaid;
         spw_id_[index] = spwid;
         field_id_[index] = fieldid;
         feed_id_[index] = feedid;
+        scan_[index] = scan;
+        subscan_[index] = subscan;
         intent_[index] = intent;
+        direction_[index].assign(direction);
       }
     }
 
@@ -546,9 +655,10 @@ public:
 
 private:
   bool isValidRecord(TableRecord const &record) {
-    constexpr size_t num_required_keys = 6;
+    constexpr size_t num_required_keys = 10;
     constexpr const char *required_keys[num_required_keys] = { "TIME",
-        "FIELD_ID", "SPECTRAL_WINDOW_ID", "FEED_ID", "INTENT", "POL_TYPE" };
+        "ANTENNA_ID", "FIELD_ID", "SPECTRAL_WINDOW_ID", "FEED_ID", "SCAN",
+        "SUBSCAN", "INTENT", "POL_TYPE", "DIRECTION" };
     bool is_valid = true;
     for (size_t i = 0; i < num_required_keys; ++i) {
       is_valid = is_valid && record.isDefined(required_keys[i]);
@@ -556,16 +666,20 @@ private:
     return is_valid;
   }
   std::vector<DataChunk *> pool_;
+  std::vector<Int> antenna_id_;
   std::vector<Int> spw_id_;
   std::vector<Int> field_id_;
   std::vector<Int> feed_id_;
+  std::vector<Int> scan_;
+  std::vector<Int> subscan_;
   std::vector<String> intent_;
+  std::vector<Matrix<Double> > direction_;
   Record indexer_;
   Double time_;
   bool is_ready_;
   std::vector<bool> is_free_;
 };
 
-}//# NAMESPACE CASA - END
+} //# NAMESPACE CASA - END
 
 #endif /* SINGLEDISH_FILLER_DATAACCUMULATOR_H_ */

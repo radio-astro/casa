@@ -10,6 +10,7 @@
 
 #include <string>
 #include <memory>
+#include <map>
 
 #include <singledish/Filler/DataAccumulator.h>
 
@@ -41,7 +42,8 @@ template<typename Reader>
 class SingleDishMSFiller {
 public:
   SingleDishMSFiller(std::string const &name) :
-      ms_(), ms_columns_(), reader_(new Reader(name)), is_float_(false) {
+      ms_(), ms_columns_(), reader_(new Reader(name)), is_float_(false), reference_feed_(
+          -1), pointing_time_(), pointing_time_max_(), pointing_time_min_(), num_pointing_time_() {
   }
 
   ~SingleDishMSFiller() {
@@ -96,6 +98,9 @@ private:
     // query if the data is complex or float
     is_float_ = reader_->isFloatData();
 
+    // pointing direction frame
+    //MDirection::Types direction_frame = reader_->getDirectionFrame();
+
     POST_END;
   }
 
@@ -129,6 +134,9 @@ private:
     // fill SOURCE table
     fillSource();
 
+    // fill FIELD table
+    fillField();
+
     // fill SPECTRAL_WINDOW table
     fillSpectralWindow();
 
@@ -148,6 +156,9 @@ private:
     // fill HISTORY table
     fillHistory();
 
+    // flush POINTING entry
+    sortPointing();
+
     POST_END;
   }
 
@@ -158,6 +169,7 @@ private:
     size_t nrow = reader_->getNumberOfRows();
     DataAccumulator accumulator;
     TableRecord record;
+    TableRecord previous_record;
     std::cout << "nrow = " << nrow << std::endl;
     for (size_t irow = 0; irow < nrow; ++irow) {
       Bool status = reader_->getData(irow, record);
@@ -166,10 +178,11 @@ private:
         Bool is_ready = accumulator.queryForGet(record);
         std::cout << "is_ready " << is_ready << std::endl;
         if (is_ready) {
-          flush(record, accumulator);
+          flush(previous_record, accumulator);
         }
       }
       accumulator.accumulate(record);
+      previous_record.merge(record, TableRecord::OverwriteDuplicates);
     }
 
     flush(record, accumulator);
@@ -185,33 +198,48 @@ private:
 
     size_t nchunk = accumulator.getNumberOfChunks();
     std::cout << "nchunk = " << nchunk << std::endl;
+
+    Int scan = main_record.asInt("SCAN");
+    Int subscan = main_record.asInt("SUBSCAN");
+    //String obs_mode = main_record.asString("INTENT");
+    String field_name = main_record.asString("FIELD_NAME");
+    String source_name = main_record.asString("SOURCE_NAME");
+    //Int field_id = main_record.asInt("FIELD_ID");
+    Double time = main_record.asDouble("TIME");
+
     for (size_t ichunk = 0; ichunk < nchunk; ++ichunk) {
-//      Int sourceId = updateSource(main_record);
-//      Int fieldId = updateField(sourceId, main_record);
-//      Int polarizationId = updatePolarization(
-//          accumulator.getPolType(ichunk), accumulator.getNumPol(ichunk));
-//      Int spectralWindowId = updateSpectralWindow(main_record);
-//      Int dataDescriptionId = updateDataDescription(polarizationId,
-//          spectralWindowId);
-//      Int stateId = updateState(main_record);
-//      Int feedId = updateFeed(main_record);
-//      updatePointing(main_record);
       TableRecord data_record;
       Bool status = accumulator.get(ichunk, data_record);
       std::cout << "ichunk " << ichunk << " status " << status << std::endl;
       if (status) {
-        Int fieldId = 0;
-        Int feedId = 0;
-        Int dataDescriptionId = 0;
-        Int stateId = 0;
-        updateMain(fieldId, feedId, dataDescriptionId, stateId, main_record,
-            data_record);
+        Int antenna_id = data_record.asInt("ANTENNA_ID");
+        Int spw_id = data_record.asInt("SPECTRAL_WINDOW_ID");
+        Int feed_id = data_record.asInt("FEED_ID");
+        Int field_id = data_record.asInt("FIELD_ID");
+        std::cout << "spw " << spw_id << std::endl;
+        String pol_type = data_record.asString("POL_TYPE");
+        String obs_mode = data_record.asString("INTENT");
+        Int num_pol = data_record.asInt("NUM_POL");
+        Vector < Int > corr_type = data_record.asArrayInt("CORR_TYPE");
+        Int polarization_id = updatePolarization(corr_type, num_pol);
+        updateFeed(feed_id, spw_id, pol_type);
+        Int data_desc_id = updateDataDescription(polarization_id, spw_id);
+        Int state_id = updateState(subscan, obs_mode);
+        Matrix < Double > direction = data_record.asArrayDouble("DIRECTION");
+
+        // updatePointing must be called after updateFeed
+        updatePointing(antenna_id, feed_id, time, direction);
+
+        updateMain(antenna_id, field_id, feed_id, data_desc_id, state_id, scan,
+            main_record, data_record);
       }
     }
     accumulator.clear();
 
     POST_START;
   }
+
+  void sortPointing();
 
   // Fill subtables
   // fill ANTENNA table
@@ -225,6 +253,9 @@ private:
 
   // fill SOURCE table
   void fillSource();
+
+  // fill SOURCE table
+  void fillField();
 
   // fill SPECTRAL_WINDOW table
   void fillSpectralWindow();
@@ -266,47 +297,49 @@ private:
 //  // @return field id
 //  Int updateField(Int sourceId, Record fieldSpec);
 //
-//  // update POLARIZATION table
-//  // @param[in] polarizationSpec polarization specification
-//  // @return polarization id
-//  Int updatePolarization(Record polarizationSpec);
-//
-//  // update SPECTRAL_WINDOW table
-//  // @param[in] spectralWindowSpec spectral window specification
-//  // @return spectral window id
-//  Int updateSpectralWindow(Record spectralWindowSpec);
-//
-//  // update DATA_DESCRIPTION table
-//  // @param[in] polarizationId polarization id
-//  // @param[in] spectralWindowId spectral window id
-//  // @return data description id
-//  Int updateDataDescription(Int polarizationId, Int spectralWindowId);
-//
-//  // update STATE table
-//  // @param[in] stateSpec state specification
-//  // @return state id
-//  Int updateState(Record stateSpec);
-//
-//  // update FEED table
-//  // @param[in] feedSpec feed specification
-//  // @return feed id
-//  Int updateFeed(Record feedSpec);
-//
-//  // update POINTING table
-//  // @param[in] pointingSpec pointing specification
-//  void updatePointing(Record pointingSpec);
-//
+  // update POLARIZATION table
+  // @param[in] corr_type polarization type list
+  // @param[in] num_pol number of polarization components
+  // @return polarization id
+  Int updatePolarization(Vector<Int> const &corr_type, Int const &num_pol);
+
+  // update DATA_DESCRIPTION table
+  // @param[in] polarization_id polarization id
+  // @param[in] spw_id spectral window id
+  // @return data description id
+  Int updateDataDescription(Int const &polarization_id, Int const &spw_id);
+
+  // update STATE table
+  // @param[in] subscan subscan number
+  // @param[in] obs_mode observing mode string
+  // @return state id
+  Int updateState(Int const &subscan, String const &obs_mode);
+
+  // update FEED table
+  // @param[in] feed_id feed ID
+  // @param[in] spw_id spectral window ID
+  // @param[in] pol_type polarization type
+  // @return feed row number
+  Int updateFeed(Int const &feed_id, Int const &spw_id, String const &pol_type);
+
+  // update POINTING table
+  // @param[in] antenna_id antenna id
+  // @param[in] time time stamp
+  // @param[in] direction pointing direction
+  Int updatePointing(Int const &antenna_id, Int const &feed_id,
+      Double const &time, Matrix<Double> const &direction);
+
   // update MAIN table
   // @param[in] fieldId field id
   // @param[in] feedId feed id
   // @param[in] dataDescriptionId data description id
   // @param[in] stateId state id
   // @param[in] mainSpec main table row specification except id
-  void updateMain(Int fieldId, Int feedId, Int dataDescriptionId, Int stateId,
+  void updateMain(Int const &antenna_id, Int field_id, Int feedId,
+      Int dataDescriptionId, Int stateId, Int const &scan_number,
       TableRecord const &mainSpec, TableRecord const &dataRecord) {
     // constant stuff
     Vector<Double> const uvw(3, 0.0);
-    constexpr Int antennaId = 0;
     Array<Bool> flagCategory(IPosition(3, 0, 0, 0));
 
 //    auto mytable = *ms_;
@@ -320,13 +353,14 @@ private:
 
     ms_columns_->uvw().put(irow, uvw);
     ms_columns_->flagCategory().put(irow, flagCategory);
-    ms_columns_->antenna1().put(irow, antennaId);
-    ms_columns_->antenna2().put(irow, antennaId);
-    ms_columns_->fieldId().put(irow, fieldId);
+    ms_columns_->antenna1().put(irow, antenna_id);
+    ms_columns_->antenna2().put(irow, antenna_id);
+    ms_columns_->fieldId().put(irow, field_id);
     ms_columns_->feed1().put(irow, feedId);
     ms_columns_->feed2().put(irow, feedId);
     ms_columns_->dataDescId().put(irow, dataDescriptionId);
     ms_columns_->stateId().put(irow, stateId);
+    ms_columns_->scanNumber().put(irow, scan_number);
     Double time = mainSpec.asDouble("TIME");
     ms_columns_->time().put(irow, time);
     ms_columns_->timeCentroid().put(irow, time);
@@ -394,6 +428,13 @@ private:
   std::unique_ptr<MSMainColumns> ms_columns_;
   std::unique_ptr<Reader> reader_;
   bool is_float_;
+
+  // for POINTING table
+  Int reference_feed_;
+  std::map<Int, Vector<Double>> pointing_time_;
+  std::map<Int, Double> pointing_time_max_;
+  std::map<Int, Double> pointing_time_min_;
+  Vector<Int> num_pointing_time_;
 }
 ;
 
