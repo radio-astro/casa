@@ -196,7 +196,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
 	for( uInt part=0;part<itsPartImages.nelements();part++)
 	  {
-	    itsPartImages[part]->setModelImage( itsImages->getName() );
+	    itsPartImages[part]->setModelImage( itsImages->getModelImageName() );
 	    itsPartImages[part]->releaseLocks();
 	  }
 	itsImages->releaseLocks();

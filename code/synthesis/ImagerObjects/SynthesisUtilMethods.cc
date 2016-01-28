@@ -1462,9 +1462,34 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if( frame!="" && ! MFrequency::getType(freqFrame, freqframestr) )
 	  { err += "Invalid Frequency Frame " + freqframestr ; }
 	err += readVal( inrec, String("overwrite"), overwrite );
-	err += readVal( inrec, String("startmodel"), startModel );
+
+	
+	// startmodel parsing copied in SynthesisParamDeconv. Clean this up !!! 
+        if( inrec.isDefined("startmodel") ) 
+          {
+            if( inrec.dataType("startmodel")==TpString )
+	      {
+		String onemodel;
+		err += readVal( inrec, String("startmodel"), onemodel );
+		if( onemodel.length()>0 )
+		  {
+		    startModel.resize(1);
+		    startModel[0] = onemodel;
+		  }
+		else {startModel.resize();}
+	      }
+	    else if( inrec.dataType("startmodel")==TpArrayString || 
+		     inrec.dataType("startmodel")==TpArrayBool)
+	      {
+		err += readVal( inrec, String("startmodel"), startModel );
+	      }
+	    else {
+	      err += String("startmodel must be either a string(singleterm) or a list of strings(multiterm)\n");
+	      }
+	  }
 
 	err += readVal( inrec, String("nterms"), nTaylorTerms );
+	err += readVal( inrec, String("deconvolver"), deconvolver );
 
 	// Force nchan=1 for anything other than cube modes...
 	if(mode=="mfs") nchan=1;
@@ -1478,7 +1503,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
       
       if( err.length()>0 ) throw(AipsError("Invalid Image Parameter set : " + err));
-      
+     
   }
 
   String SynthesisParamsImage::MDopToVelString(Record &rec)
@@ -1540,15 +1565,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ///    err += verifySpectralSetup();  
 
     // Allow only one starting model. No additions to be done.
-    if( startModel.length()>0 )
+    if( startModel.nelements()>0 )
       {
-	if( nTaylorTerms<=1 ) {
-	  File fp( imageName+String(".model") );
-	  if( fp.exists() ) err += "Model " + imageName+".model exists, but a starting model of " + startModel + " is also being requested. Please either reset startmodel='' to use what already exists, or delete " + imageName + ".model so that it uses the new model specified in startmodel.";
+	if( deconvolver!="mtmfs" ) {
+
+	  if( startModel.nelements()!=1 ){err += String("Only one startmodel image is allowed.\n");}
+	  else
+	    {
+	      File fp( imageName+String(".model") );
+	      if( fp.exists() ) err += "Model " + imageName+".model exists, but a starting model of " + startModel[0] + " is also being requested. Please either reset startmodel='' to use what already exists, or delete " + imageName + ".model so that it uses the new model specified in startmodel.";
+	    }
 	  }
-	else {
+	else {// mtmfs
 	  File fp( imageName+String(".model.tt0") ); 
-	  if( fp.exists() ) err += "Model " + imageName+".model.tt* exists, but a starting model of " + startModel + " is also being requested. Please either reset startmodel='' to use what already exists, or delete " + imageName + ".model.tt* so that it uses the new model specified in startmodel";
+	  if( fp.exists() ) 
+	    {err += "Model " + imageName+".model.tt* exists, but a starting model of ";
+	      for (uInt i=0;i<startModel.nelements();i++){ err += startModel[i] + ","; }
+	      err +=" is also being requested. Please either reset startmodel='' to use what already exists, or delete " + imageName + ".model.tt* so that it uses the new model specified in startmodel";
+	    }
 	}
       }
 
@@ -1577,7 +1611,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     phaseCenterFieldId=-1;
     projection=Projection::SIN;
     useNCP=False;
-    startModel=String("");
+    startModel=Vector<String>(0);
     overwrite=False;
 
     // Spectral coordinates
@@ -1603,6 +1637,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     sysvel="";
     sysvelframe="";
     nTaylorTerms=1;
+    deconvolver="hogbom";
     ///csysRecord=Record();
     //
 
@@ -1621,6 +1656,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     impar.define("stokes", stokes);
     impar.define("nchan", nchan);
     impar.define("nterms", nTaylorTerms);
+    impar.define("deconvolver",deconvolver);
     impar.define("phasecenter", MDirectionToString( phaseCenter ) );
     impar.define("phasecenterfieldid",phaseCenterFieldId);
     impar.define("projection", (useNCP? "NCP" : projection.name()) );
@@ -2954,7 +2990,33 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
 	err += readVal( inrec, String("imagename"), imageName );
 	err += readVal( inrec, String("deconvolver"), algorithm );
-	err += readVal( inrec, String("startmodel"), startModel );
+
+
+	//err += readVal( inrec, String("startmodel"), startModel );
+	// startmodel parsing copied from SynthesisParamImage. Clean this up !!! 
+        if( inrec.isDefined("startmodel") ) 
+          {
+            if( inrec.dataType("startmodel")==TpString )
+	      {
+		String onemodel;
+		err += readVal( inrec, String("startmodel"), onemodel );
+		if( onemodel.length()>0 )
+		  {
+		    startModel.resize(1);
+		    startModel[0] = onemodel;
+		  }
+		else {startModel.resize();}
+	      }
+	    else if( inrec.dataType("startmodel")==TpArrayString || 
+		     inrec.dataType("startmodel")==TpArrayBool)
+	      {
+		err += readVal( inrec, String("startmodel"), startModel );
+	      }
+	    else {
+	      err += String("startmodel must be either a string(singleterm) or a list of strings(multiterm)\n");
+	      }
+	  }
+	//------------------------
 
 	err += readVal( inrec, String("id"), deconvolverId );
 	err += readVal( inrec, String("nterms"), nTaylorTerms );
@@ -3134,7 +3196,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     imageName="";
     algorithm="hogbom";
-    startModel="";
+    startModel=Vector<String>(0);
     deconvolverId=0;
     nTaylorTerms=1;
     scales.resize(1); scales[0]=0.0;

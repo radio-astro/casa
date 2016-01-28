@@ -492,7 +492,33 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////
+  Vector<String> SIImageStoreMultiTerm::getModelImageName()
+  {
+    Vector<String> mods(itsNTerms);
+    for(uInt tix=0;tix<itsNTerms;tix++)
+      {mods[tix]=itsImageName + imageExts(MODEL)+".tt"+String::toString(tix);}
+    return mods;
+  }
 
+  void SIImageStoreMultiTerm::setModelImage( Vector<String> modelnames )
+  {
+    LogIO os( LogOrigin("SIImageStoreMultiTerm","setModelImage",WHERE) );
+
+    if( modelnames.nelements() > itsNTerms ) 
+      { throw(AipsError("We currently cannot support more than nterms images as the starting model. "));
+      }
+
+    if( modelnames.nelements() > 0 && modelnames.nelements() <= itsNTerms )
+      {
+	for(uInt tix=0;tix<modelnames.nelements();tix++)
+	  {
+	    setModelImageOne( modelnames[tix], tix );
+	  }
+      }
+
+  }
+
+  /*
   void SIImageStoreMultiTerm::setModelImage( String modelname )
   {
     LogIO os( LogOrigin("SIImageStoreMultiTerm","setModelImage",WHERE) );
@@ -528,6 +554,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
       }//nterms
   }
+  */ 
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////

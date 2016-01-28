@@ -109,7 +109,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   //  virtual SHARED_PTR<ImageInterface<Float> > gridwt(uInt term=0);
 
-  void setModelImage( String modelname );
+  void setModelImage( Vector<String> modelnames );
+  Vector<String> getModelImageName();
 
   Bool doesImageExist(String imagename);
 

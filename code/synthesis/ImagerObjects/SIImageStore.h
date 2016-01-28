@@ -109,7 +109,9 @@ class SIImageStore
   virtual SHARED_PTR<ImageInterface<Float> > gridwt(uInt term=0);
   virtual SHARED_PTR<ImageInterface<Float> > pb(uInt term=0);
 
-  virtual void setModelImage( String modelname );
+  virtual void setModelImageOne( String modelname, Int nterm=-1 );
+  virtual void setModelImage( Vector<String> modelnames );
+  virtual Vector<String> getModelImageName();
   virtual void setWeightDensity( SHARED_PTR<SIImageStore> imagetoset );
   virtual Bool doesImageExist(String imagename);
   void setImageInfo(const Record miscinfo);

@@ -233,7 +233,7 @@ protected:
 					 Quantity distance=Quantity(0.0, "m"),
 					 uInt facets=1,
 					 Bool useweightimage=False,
-					 String startmodel="");
+					 Vector<String> startmodel=Vector<String>(0));
   
   // Choose between different types of Mappers (single term, multiterm, imagemosaic, faceted)
   CountedPtr<SIMapper> createSIMapper(String mappertype,  
@@ -303,7 +303,7 @@ protected:
 			  const Bool overwrite=False,
 			  String mappertype=String("default"),
 			  uInt ntaylorterms=1,
-			  String startmodel="");
+			  Vector<String> startmodel=Vector<String>(0));
 
   void unlockMSs();
 

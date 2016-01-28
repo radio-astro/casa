@@ -1466,7 +1466,7 @@ class test_cube(testref_base):
           plotms(vis=self.msfile,xaxis='frequency',yaxis='amp',ydatacolumn='model',customsymbol=True,symbolshape='circle',symbolsize=5,showgui=False,plotfile=self.img+'.plot.step1.png',title="model after partial mtmfs on some channels")
 
           self.delmodels(msname=self.msfile,modcol='reset0')
-          ret = tclean(vis=self.msfile,imagename=self.img+'1',imsize=100,cell='8.0arcsec',startmodel=self.img, spw='0',niter=0,savemodel='modelcolumn',deconvolver='mtmfs')
+          ret = tclean(vis=self.msfile,imagename=self.img+'1',imsize=100,cell='8.0arcsec',startmodel=[self.img+'.model.tt0',self.img+'.model.tt1'], spw='0',niter=0,savemodel='modelcolumn',deconvolver='mtmfs')
 #          self.assertTrue( self.checkmodelchan(self.msfile,10) > 0.0 and self.checkmodelchan(self.msfile,3) > 0.0 
           plotms(vis=self.msfile,xaxis='frequency',yaxis='amp',ydatacolumn='model',customsymbol=True,symbolshape='circle',symbolsize=5,showgui=False,plotfile=self.img+'.plot.step2.png',title="model after mtmfs predict on full spw" )
 
@@ -1712,7 +1712,7 @@ class test_modelvis(testref_base):
 
           ##Predict from input model image (startmodel)
           self.delmodels(msname=self.msfile,modcol='delete')
-          ret = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',startmodel=self.img, niter=0,savemodel='modelcolumn')
+          ret = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',startmodel=self.img+'.model', niter=0,savemodel='modelcolumn')
           hasmodcol, modsum, hasvirmod = self.checkmodel(self.msfile)
           self.assertTrue( hasmodcol==True and modsum>0.0 and hasvirmod==False )
 
@@ -1728,7 +1728,7 @@ class test_modelvis(testref_base):
 
           ##Predict from input model image (startmodel)
           self.delmodels(msname=self.msfile,modcol='delete')
-          ret = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',startmodel=self.img, niter=0,savemodel='virtual')
+          ret = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',startmodel=self.img+'.model', niter=0,savemodel='virtual')
           hasmodcol, modsum, hasvirmod = self.checkmodel(self.msfile)
           self.assertTrue( hasmodcol==False and hasvirmod==True )
 
@@ -1751,7 +1751,7 @@ class test_modelvis(testref_base):
           self.assertTrue( hasmodcol==True and modsum>0.0 and hasvirmod==False )
 
           self.delmodels(msname=self.msfile,modcol='delete')
-          ret = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',startmodel=self.img,niter=0,deconvolver='mtmfs',savemodel='modelcolumn')
+          ret = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',startmodel=[self.img+'.model.tt0',self.img+'.model.tt1'],niter=0,deconvolver='mtmfs',savemodel='modelcolumn')
           hasmodcol, modsum, hasvirmod = self.checkmodel(self.msfile)
           self.assertTrue( hasmodcol==True and modsum>0.0 and hasvirmod==False )
 
@@ -1764,7 +1764,7 @@ class test_modelvis(testref_base):
           self.assertTrue( hasmodcol==False and hasvirmod==True )
 
           self.delmodels(msname=self.msfile,modcol='delete')
-          ret = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',startmodel=self.img,niter=0,deconvolver='mtmfs',savemodel='virtual')
+          ret = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',startmodel=[self.img+'.model.tt0',self.img+'.model.tt1'],niter=0,deconvolver='mtmfs',savemodel='virtual')
           hasmodcol, modsum, hasvirmod = self.checkmodel(self.msfile)
           self.assertTrue( hasmodcol==False and hasvirmod==True )
 
@@ -1779,7 +1779,7 @@ class test_modelvis(testref_base):
           self.checkchanvals([(10,">",0.0),(3,"==",1.0)])
           
           self.delmodels(msname=self.msfile,modcol='delete')
-          ret = tclean(vis=self.msfile,spw='0',imagename=self.img+'2',imsize=100,cell='8.0arcsec',startmodel=self.img,specmode='cube',niter=0,savemodel='modelcolumn')
+          ret = tclean(vis=self.msfile,spw='0',imagename=self.img+'2',imsize=100,cell='8.0arcsec',startmodel=self.img+'.model',specmode='cube',niter=0,savemodel='modelcolumn')
           hasmodcol, modsum, hasvirmod = self.checkmodel(self.msfile)
           self.assertTrue( hasmodcol==True and modsum>0.0 and hasvirmod==False )
           self.checkchanvals([(10,">",0.0),(3,"==",self.checkmodelchan(self.msfile,1))])
@@ -1795,7 +1795,7 @@ class test_modelvis(testref_base):
           self.assertTrue( hasmodcol==False and hasvirmod==True )
 
           self.delmodels(msname=self.msfile,modcol='delete')
-          ret = tclean(vis=self.msfile,spw='0',imagename=self.img+'2',imsize=100,cell='8.0arcsec',startmodel=self.img,specmode='cube',niter=0,savemodel='virtual')
+          ret = tclean(vis=self.msfile,spw='0',imagename=self.img+'2',imsize=100,cell='8.0arcsec',startmodel=self.img+'.model',specmode='cube',niter=0,savemodel='virtual')
           hasmodcol, modsum, hasvirmod = self.checkmodel(self.msfile)
           self.assertTrue( hasmodcol==False and hasvirmod==True )
 
@@ -1807,10 +1807,10 @@ class test_modelvis(testref_base):
           self.assertTrue(self.exists(self.img+'.model') )
 
           self.delmodels(msname=self.msfile,modcol='delete')
-          ret = tclean(vis=self.msfile,imagename=self.img+'1',imsize=100,cell='8.0arcsec',startmodel=self.img,niter=0,savemodel='modelcolumn')
+          ret = tclean(vis=self.msfile,imagename=self.img+'1',imsize=100,cell='8.0arcsec',startmodel=self.img+'.model',niter=0,savemodel='modelcolumn')
 
           self.delmodels(msname=self.msfile,modcol='delete')
-          ret = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',startmodel=self.img,niter=0,savemodel='virtual')
+          ret = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',startmodel=self.img+'.model',niter=0,savemodel='virtual')
 
      def test_modelvis_10(self):
           """ [modelpredict] Test_modelvis_10 : Use input model of different (narrower) freq range than data """
@@ -1823,12 +1823,12 @@ class test_modelvis(testref_base):
 
           ## add model expansion parameter
           self.delmodels(msname=self.msfile,modcol='delete')
-          ret = tclean(vis=self.msfile,imagename=self.img+'1',imsize=100,cell='8.0arcsec',startmodel=self.img, spw='0',niter=0,savemodel='modelcolumn')
+          ret = tclean(vis=self.msfile,imagename=self.img+'1',imsize=100,cell='8.0arcsec',startmodel=self.img+'.model', spw='0',niter=0,savemodel='modelcolumn')
 #          self.assertTrue( self.checkmodelchan(self.msfile,10) > 0.0 and self.checkmodelchan(self.msfile,3) > 0.0 )
           self.checkchanvals([(10,">",0.0),(3,">",0.0)])
 
           self.delmodels(msname=self.msfile,modcol='delete')
-          ret = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',startmodel=self.img, spw='0',niter=0,savemodel='virtual')
+          ret = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',startmodel=self.img+'.model', spw='0',niter=0,savemodel='virtual')
           ## cannot check anything here....  just that it runs without error
 
      def test_modelvis_11(self):
@@ -1840,11 +1840,11 @@ class test_modelvis(testref_base):
           self.assertTrue( self.checkmodelchan(self.msfile,10) == 0.0 and self.checkmodelchan(self.msfile,3) > 0.0 )
 
           self.delmodels(msname=self.msfile,modcol='delete')
-          ret = tclean(vis=self.msfile,imagename=self.img+'1',imsize=100,cell='8.0arcsec',startmodel=self.img, spw='0',niter=0,savemodel='modelcolumn')
+          ret = tclean(vis=self.msfile,imagename=self.img+'1',imsize=100,cell='8.0arcsec',startmodel=self.img+'.model', spw='0',niter=0,savemodel='modelcolumn')
           self.assertTrue( self.checkmodelchan(self.msfile,10) > 0.0 and self.checkmodelchan(self.msfile,3) > 0.0 )
 
           self.delmodels(msname=self.msfile,modcol='delete')
-          ret = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',startmodel=self.img, spw='0',niter=0,savemodel='virtual')
+          ret = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',startmodel=self.img+'.model', spw='0',niter=0,savemodel='virtual')
           ## cannot check anything here....  just that it runs without error
 
 #     def test_modelvis_12(self): 
@@ -1884,19 +1884,19 @@ class test_startmodel(testref_base):
 #     def test_startmodel_15(self):
 #          """ [modelpredict] Test_startmodel_15 : Regrid input model onto new image grid : mfs (imsize/cell)"""
 
-     def test_startmodel_mfs_restart_1(self):
-          """ [startmodel] test_startmodel_mfs : Restart a run with no parameter changes"""
+     def test_startmodel_mfs_continue(self):
+          """ [startmodel] test_startmodel_mfs_continue : Restart a run with no parameter changes"""
           self.prepData('refim_twochan.ms')
           ret1 = tclean(vis=self.msfile,imagename=self.img+'1',imsize=100,cell='8.0arcsec',niter=10,deconvolver='hogbom',interactive=0)
           self.checkall(imexist=[self.img+'1.residual'], imval=[(self.img+'1.residual',0.35304,[50,50,0,0])])
           ret2 = tclean(vis=self.msfile,imagename=self.img+'1',imsize=100,cell='8.0arcsec',niter=10,deconvolver='hogbom',interactive=0)
           self.checkall(imexist=[self.img+'1.residual'], imval=[(self.img+'1.residual',0.1259,[50,50,0,0])])
 
-     def test_startmodel_mfs_restart_2(self):
-          """ [startmodel] test_startmodel_mfs : Restart a run using 'startmodel' and changed imagename"""
+     def test_startmodel_mfs_restart(self):
+          """ [startmodel] test_startmodel_mfs_restart : Restart a run using 'startmodel' and changed imagename"""
           self.prepData('refim_twochan.ms')
           ret1 = tclean(vis=self.msfile,imagename=self.img+'1',imsize=100,cell='8.0arcsec',niter=10,deconvolver='hogbom',interactive=0)
-          ret2 = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',niter=10,deconvolver='hogbom',interactive=0,startmodel=self.img+'1')
+          ret2 = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',niter=10,deconvolver='hogbom',interactive=0,startmodel=self.img+'1.model')
           self.checkall(imexist=[self.img+'1.residual', self.img+'2.residual'], imval=[(self.img+'1.residual',0.35304,[50,50,0,0]),(self.img+'2.residual',0.1259,[50,50,0,0])])
 
      def test_startmodel_mfs_changeshape_1(self):
@@ -1921,8 +1921,27 @@ class test_startmodel(testref_base):
           """ [startmodel] test_startmodel_mfs_changeshape_2 : Restart a run using 'startmodel' and change shape and imagename"""
           self.prepData('refim_twochan.ms')
           ret1 = tclean(vis=self.msfile,imagename=self.img+'1',imsize=100,cell='8.0arcsec',niter=10,deconvolver='hogbom',interactive=0)
-          ret2 = tclean(vis=self.msfile,imagename=self.img+'2',imsize=120,cell='8.0arcsec',niter=10,deconvolver='hogbom',interactive=0,startmodel=self.img+'1')
+          ret2 = tclean(vis=self.msfile,imagename=self.img+'2',imsize=120,cell='8.0arcsec',niter=10,deconvolver='hogbom',interactive=0,startmodel=self.img+'1.model')
           self.checkall(imexist=[self.img+'1.residual', self.img+'2.residual'], imval=[(self.img+'1.residual',0.35304,[50,50,0,0]),(self.img+'2.residual',0.1259,[60,60,0,0])])
 
+     def test_startmodel_mtmfs_restart(self):
+          """ [startmodel] test_startmodel_mtmfs_restart : Restart a multi-term run using 'startmodel' and changed imagename"""
+          self.prepData('refim_twochan.ms')
+          ret1 = tclean(vis=self.msfile,imagename=self.img+'1',imsize=100,cell='8.0arcsec',niter=10,deconvolver='mtmfs',interactive=0)
+          # start with full model
+          ret2 = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',niter=10,deconvolver='mtmfs',interactive=0,startmodel=[self.img+'1.model.tt0',self.img+'1.model.tt1'])
+          # start with model only for tt0
+          ret3 = tclean(vis=self.msfile,imagename=self.img+'3',imsize=100,cell='8.0arcsec',niter=10,deconvolver='mtmfs',interactive=0,startmodel=self.img+'1.model.tt0')
+          # start with model only for tt1
+          ret3 = tclean(vis=self.msfile,imagename=self.img+'4',imsize=100,cell='8.0arcsec',niter=10,deconvolver='mtmfs',interactive=0,startmodel=['',self.img+'1.model.tt1'])
+
+          self.checkall(imexist=[self.img+'1.residual.tt0', self.img+'2.residual.tt0', self.img+'3.residual.tt0', self.img+'4.residual.tt0', self.img+'1.residual.tt1', self.img+'2.residual.tt1', self.img+'3.residual.tt1', self.img+'4.residual.tt1'], imval=[  (self.img+'1.residual.tt0',0.39226,[50,50,0,0]),
+                             (self.img+'2.residual.tt0',0.13677,[50,50,0,0]),
+                             (self.img+'3.residual.tt0',0.13677,[50,50,0,0]),
+                             (self.img+'4.residual.tt0',0.39226,[50,50,0,0]),  
+                             (self.img+'1.residual.tt1',-0.04358,[50,50,0,0]),
+                             (self.img+'2.residual.tt1',-0.01519,[50,50,0,0]),
+                             (self.img+'3.residual.tt1',-0.04358,[50,50,0,0]),
+                             (self.img+'4.residual.tt1',-0.01519,[50,50,0,0])     ] )
 
 ##############################################

@@ -361,22 +361,27 @@ HPX HEALPix grid.  -->
       <value type="string">SIN</value>
     </param>
 
-    <param type="string" name="startmodel" > <!-- subparam="true"> -->
+    <param type="any" name="startmodel" > <!-- subparam="true"> -->
      <shortdescription>Name of starting model image</shortdescription>
 <description>Name of starting model image
 
-                       This name must be only the prefix (similar to 'imagename') with
-                       CASA images with the full name with extension .model existing on disk.
-                       startmodel='try' will look for try.model on disk.
-                       For deconvolver='mtmfs' it will look for try.model.tt0, try.model.tt1,etc.
+                      The contents of the supplied starting model image will be 
+                      copied to the imagename.model before the run begins.
+
+                      example : startmodel = 'singledish.im' 
+
+                      For deconvolver='mtmfs', one image per Taylor term must be provided.
+                      example : startmodel = ['try.model.tt0', 'try.model.tt1']
+                                      startmodel = ['try.model.tt0']  will use a starting model only
+                                                           for the zeroth order term. 
+                                      startmodel = ['','try.model.tt1']  will use a starting model only
+                                                           for the first order term.
 
                        This starting model can be of a different image shape and size from
                        what is currently being imaged. If so, an image regrid is first triggered
                        to resample the input image onto the target coordinate system.
 
                        A common usage is to set this parameter equal to a single dish image
-                       ( In this case, rename the single dish image to xxx.model and 
-                         supply it as startmodel='xxx' ).
 
                       [ Note : If an error occurs during image resampling/regridding, 
                                    please try using task imregrid to resample the starting model
@@ -1172,10 +1177,7 @@ HPX HEALPix grid.  -->
 
                        - restoringbeam='common'
                          Automatically estimate a common beam shape/size appropriate for
-                         all planes. PSF main lobes from all planes are examined,
-                         bad or outlier beams identified based on their area and axial ratio, 
-                         and the largest beam from the remaining 'good' planes is
-                         picked as the common beam. 
+                         all planes. 
 
                        Note : For any restoring beam different from the native resolution
                                   the model image is convolved with the beam and added to

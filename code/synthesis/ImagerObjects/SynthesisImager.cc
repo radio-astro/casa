@@ -625,7 +625,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   impars.projection=projection;
   impars.freqFrame=freqFrame;
   impars.overwrite=overwrite;
-  impars.startModel=startmodel;
+  impars.startModel.resize(1); impars.startModel[0]=startmodel;
 
   err += impars.verify();
 
@@ -742,14 +742,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	os << "Error in adding Mapper : "+x.getMesg() << LogIO::EXCEPTION;
       }
 
-    // Set the model image for prediction -- Call an SIImageStore function that does the REGRIDDING.
-    /*
-      if( startmodel.length()>0 && !itsCurrentImages.null() )
-      {
-      os << "Setting " << startmodel << " as starting model for prediction " << LogIO::POST;
-      itsCurrentImages->setModelImage( startmodel );
-      }
-    */
     return True;
   }
 
@@ -1191,7 +1183,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							  Quantity distance,
 							  uInt facets,
 							  Bool useweightimage,
-							  String startmodel)
+							  Vector<String> startmodel)
   {
     LogIO os( LogOrigin("SynthesisImager","createIMStore",WHERE) );
 
@@ -1251,7 +1243,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	///////// Set Starting model if it exists.
 	//cout << "In SI, set starting model to : " << startmodel << endl;
-	if( startmodel.length()>0 ) 
+	if( startmodel.nelements()>0 ) 
 	  {
 	    imstor->setModelImage( startmodel );
 	  }
@@ -1418,7 +1410,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					   const Bool overwrite,
 					   String mappertype,
 					   uInt ntaylorterms,
-					   String startmodel)
+					   Vector<String> startmodel)
     {
       LogIO log_l(LogOrigin("SynthesisImager", "appendToMapperList(ftm)"));
       //---------------------------------------------

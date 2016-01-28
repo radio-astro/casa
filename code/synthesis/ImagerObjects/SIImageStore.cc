@@ -674,36 +674,56 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////
+  Vector<String> SIImageStore::getModelImageName()
+  {
+    Vector<String> mods(1);
+    mods[0]=itsImageName + imageExts(MODEL);
+    return mods;
+  }
 
-  void SIImageStore::setModelImage( String modelname )
+  void SIImageStore::setModelImage( Vector<String> modelnames)
   {
     LogIO os( LogOrigin("SIImageStore","setModelImage",WHERE) );
 
-    Directory immodel( modelname  +String(".model") );
+    if( modelnames.nelements() > 1 ) 
+      {throw( AipsError("Multiple starting model images are currently not supported. Please merge them before supplying as input to startmodel"));
+	/// If needed, THIS is the place to add code to support lists of model images... perhaps regrid separately and add them up or some such thing.
+      }
+
+    if( modelnames.nelements()==1 ) { setModelImageOne( modelnames[0] ); }
+  }
+
+
+
+  void SIImageStore::setModelImageOne( String modelname , Int nterm)
+  {
+    LogIO os( LogOrigin("SIImageStore","setModelImageOne",WHERE) );
+
+    if(modelname==String("")) return;
+
+    Bool multiterm=False;
+    if(nterm>-1)multiterm=True;
+    if(nterm==-1)nterm=0;
+
+    Directory immodel( modelname ); //  +String(".model") );
     if( !immodel.exists() ) 
       {
-	os << "Starting model image does not exist. No initial prediction will be done" << LogIO::POST;
+	os << "Starting model image " << modelname <<  " does not exist. No initial prediction will be done" << ((nterm>0)?String(" for term")+String::toString(nterm) :"") << LogIO::POST;
 	return;
       }
 
-    SHARED_PTR<PagedImage<Float> > newmodel( new PagedImage<Float>( modelname +String(".model") ) );
+    SHARED_PTR<PagedImage<Float> > newmodel( new PagedImage<Float>( modelname ) ); //+String(".model") ) );
+
     // Check shapes, coordsys with those of other images.  If different, try to re-grid here.
-
-    if( (newmodel->shape() != model()->shape()) ||  (! itsCoordSys.near(newmodel->coordinates() )) )
+    if( (newmodel->shape() != model(nterm)->shape()) ||  (! itsCoordSys.near(newmodel->coordinates() )) )
       {
-	os << "Regridding input model to target coordinate system" << LogIO::POST;
+	os << "Regridding input model " << modelname << " to target coordinate system for " << itsImageName << ".model" << ((multiterm)?".tt"+String::toString(nterm) :"") << LogIO::POST;
 	regridToModelImage( *newmodel );
-
-	// For now, throw an exception.
-	//throw( AipsError( "Input model image "+modelname+".model is not the same shape as that defined for output in "+ itsImageName + ".model" ) );
       }
     else
       {
-	os << "Setting " << modelname << " as model " << LogIO::POST;
-	// Then, add its contents to itsModel.
-	//itsModel->put( itsModel->get() + model->get() );
-	/////////	itsModel->put( newmodel->get() );
-	itsModel->copyData( LatticeExpr<Float> (*newmodel) );
+	os << "Copying input model " << modelname << " to " << itsImageName << ".model" << ((multiterm)?".tt"+String::toString(nterm) :"")  << LogIO::POST;
+	model(nterm)->copyData( LatticeExpr<Float> (*newmodel) );
       }
   }
 

@@ -128,7 +128,7 @@ protected:
   IPosition itsImageShape;
   
   String itsImageName;
-  String itsStartingModelName;
+  Vector<String> itsStartingModelNames;
   Bool itsAddedModel;
 
 

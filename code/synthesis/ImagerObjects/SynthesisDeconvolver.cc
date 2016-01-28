@@ -83,11 +83,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SynthesisDeconvolver","setupDeconvolution",WHERE) );
 
     itsImageName = decpars.imageName;
-    itsStartingModelName = decpars.startModel;
+    itsStartingModelNames = decpars.startModel;
     itsDeconvolverId = decpars.deconvolverId;
     
     os << "Set Deconvolution Options for [" << itsImageName << "] : " << decpars.algorithm ;
-    if( itsStartingModelName.length() > 0 ) os << " , starting from model : " << itsStartingModelName;
+    if( itsStartingModelNames.nelements()>0 && itsStartingModelNames[0].length() > 0 ) 
+      os << " , starting from model : " << itsStartingModelNames;
     os << LogIO::POST;
 
     try
@@ -430,10 +431,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     try
       {
 	
-	if( itsStartingModelName.length()>0 && itsImages )
+	if( itsStartingModelNames.nelements()>0 && itsImages )
 	  {
-	    os << "Setting " << itsStartingModelName << " as starting model for deconvolution " << LogIO::POST;
-	    itsImages->setModelImage( itsStartingModelName );
+	    //	    os << "Setting " << itsStartingModelNames << " as starting model for deconvolution " << LogIO::POST;
+	    itsImages->setModelImage( itsStartingModelNames );
 	  }
 
 	itsAddedModel=True;

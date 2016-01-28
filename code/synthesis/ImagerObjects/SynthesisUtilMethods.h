@@ -236,7 +236,8 @@ public:
   Record updateParams(const Record &impar);
 
   // Sky coordinates
-  String imageName, stokes, startModel;
+  String imageName, stokes;
+  Vector<String> startModel;
   Vector<Int> imsize;
   Vector<Quantity> cellsize;
   Projection projection;
@@ -266,6 +267,8 @@ public:
   Bool freqFrameValid;
 
   Bool overwrite;
+
+  String deconvolver;
 
 };
 
@@ -327,7 +330,8 @@ public:
   String verify() const;
   Record toRecord() const;
 
-  String imageName, algorithm, startModel;
+  String imageName, algorithm;
+  Vector<String> startModel;
   Int deconvolverId; // maybe remove ? It's only to tag summary info.
   Int nTaylorTerms; 
   Vector<Float> scales;

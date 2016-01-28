@@ -1420,7 +1420,7 @@ class ImagerParameters():
                                  'nterms':nterms,'restfreq':restfreq, 
                                  'outframe':outframe, 'reffreq':reffreq, 'sysvel':sysvel, 'sysvelframe':sysvelframe,
                                  'projection':projection,
-                                 'overwrite':overwrite, 'startmodel':startmodel,}    }
+                                 'overwrite':overwrite, 'startmodel':startmodel,'deconvolver':deconvolver}    }
         ######### Gridding
         self.allgridpars = { self.defaultKey :{'gridder':gridder,
                                    'aterm': aterm, 'psterm':psterm, 'mterm': mterm, 'wbawp': wbawp, 
