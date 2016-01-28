@@ -1878,11 +1878,7 @@ HPX HEALPix grid.  -->
                                       if the minor cycle runs. This savemodel parameter applies only to
                                       model visibilities created by de-gridding the model image.
                                       
-                        Note 2 : Runs with parallel=True can use only savemodel='none' for now.
-                                      To do self-cal, please do a separate tclean run with niter=0 and
-                                      parallel=False with savemodel=virtual or modelcolumn.   
-
-                        Note 3 :  It is possible for an MS to have both a virtual model
+                        Note 2 :  It is possible for an MS to have both a virtual model
                                       as well as a model_data column, but under normal operation, 
                                       the last used mode will get triggered.  Use the delmod task to 
                                       clear out existing models from an MS if confusion arises. 
