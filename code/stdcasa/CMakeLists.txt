@@ -67,18 +67,19 @@ else ()
 				COMMAND ${CMAKE_COMMAND} -E copy definitions_tmp definitions
 				)
 
-	message("stdcasa: Creating a dummy version.cc.")
+	 message("stdcasa: Creating a dummy version.cc.")
+     string(TIMESTAMP COMPILE_TIME UTC)
 		add_custom_command( OUTPUT version.cc
 			  COMMAND egrep subversion_revision definitions > tmp1.txt
 			  COMMAND sed -e 's|[^0-9]*\"||g' tmp1.txt > tmp2.txt
 			  COMMAND echo "namespace casa { extern const int   aips_patch_version =" > tmp3.txt
 			  COMMAND cat tmp2.txt >> tmp3.txt
 			COMMAND
-			sed -e 's|MAJOR|1|'
-			-e 's|MINOR|1|'
-			-e 's|PATCH|1|'
-			-e 's|REVISION|1|'
-			-e 's|DATE|1|'
+		    sed -e 's|MAJOR|${CASA_MAJOR_VERSION}|'
+		    -e 's|MINOR|${CASA_MINOR_VERSION}|'
+		    -e 's|PATCH|${CASA_PATCH_VERSION}|'
+		    -e 's|REVISION|1|'
+			-e 's|DATE|${COMPILE_TIME}|'
 			${CMAKE_CURRENT_SOURCE_DIR}/version.template > tmp4.txt
 			COMMAND cat tmp3.txt tmp4.txt > version_tmp.cc
 			|| ${PERL_EXECUTABLE} -e 'unlink("version_tmp.cc")\; exit 1\;'
