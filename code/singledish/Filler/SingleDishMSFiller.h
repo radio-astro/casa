@@ -112,7 +112,8 @@ private:
       std::cout << "MEASINFO::Ref seems to be string" << std::endl;
       String ref_string = MDirection::showType(direction_frame);
       //ref_string = "GALACTIC";
-      std::cout << "setting \"" << ref_string << "\" to direction frame" << std::endl;
+      std::cout << "setting \"" << ref_string << "\" to direction frame"
+          << std::endl;
       meas_info.define("Ref", ref_string);
     }
     record.defineRecord("MEASINFO", meas_info);
@@ -196,9 +197,9 @@ private:
         if (is_ready) {
           flush(previous_record, accumulator);
         }
+        accumulator.accumulate(record);
+        previous_record.merge(record, TableRecord::OverwriteDuplicates);
       }
-      accumulator.accumulate(record);
-      previous_record.merge(record, TableRecord::OverwriteDuplicates);
     }
 
     flush(record, accumulator);
@@ -214,6 +215,10 @@ private:
 
     size_t nchunk = accumulator.getNumberOfChunks();
     std::cout << "nchunk = " << nchunk << std::endl;
+
+    if (nchunk == 0) {
+      return;
+    }
 
     Int scan = main_record.asInt("SCAN");
     Int subscan = main_record.asInt("SUBSCAN");

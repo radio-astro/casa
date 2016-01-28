@@ -47,26 +47,8 @@ using namespace casacore;
 
 namespace {
 
-template<class _Table, class _Reader>
-void fillTable(_Table &mytable, _Reader const &reader) {
-  POST_START;
-
-  TableRow row(mytable);
-  TableRecord record = row.record();
-
-  size_t irow = 0;
-  for (Bool more_rows = reader(record); more_rows == True;
-      more_rows = reader(record)) {
-    mytable.addRow(1, True);
-    row.put(irow, record);
-    ++irow;
-  }
-
-  POST_END;
-}
-
 template<class _Table, class _Record, class _Reader>
-inline void fillTable2(_Table &table, _Record &record, _Reader const &reader) {
+inline void fillTable(_Table &table, _Record &record, _Reader const &reader) {
   POST_START;
 
   typename _Record::AssociatingColumns columns(table);
@@ -75,7 +57,6 @@ inline void fillTable2(_Table &table, _Record &record, _Reader const &reader) {
   record.clear();
   for (Bool more_rows = reader(record); more_rows == True;
       more_rows = reader(record)) {
-    //table.addRow(1, True);
     record.add(table, columns);
     record.fill(irow, columns);
     ++irow;
@@ -90,24 +71,18 @@ Int updateTable(_Table &mytable, _Columns &mycolumns, _Comparer const &comparer,
     _Updater const &updater) {
   POST_START;
 
-//  _Columns mycolumns(mytable);
   Int id = -1;
   if (mycolumns.nrow() >= (uInt) INT_MAX) {
     throw AipsError("Too much row in table");
   }
   for (uInt i = 0; i < mycolumns.nrow(); ++i) {
     if (comparer(mycolumns, i)) {
-//    if (mycolumns.polarizationId()(i) == polarization_id
-//        && mycolumns.spectralWindowId()(i) == spw_id) {
       id = (Int) i;
     }
   }
   if (id < 0) {
     id = mycolumns.nrow();
     mytable.addRow(1, True);
-//    ms_->dataDescription().addRow(1, True);
-//    mycolumns.polarizationId().put(id, polarization_id);
-//    mycolumns.spectralWindowId().put(id, spw_id);
     updater(mycolumns, id);
   }
 
@@ -365,7 +340,7 @@ void SingleDishMSFiller<T>::fillAntenna() {
 
   auto mytable = ms_->antenna();
   AntennaRecord record;
-  ::fillTable2(mytable, record,
+  ::fillTable(mytable, record,
       [&](AntennaRecord &record) {return reader_->getAntennaRow(record);});
 
   // initialize POINTING table related stuff
@@ -386,7 +361,7 @@ void SingleDishMSFiller<T>::fillObservation() {
   POST_START;
 
   ObservationRecord record;
-  ::fillTable2(ms_->observation(), record,
+  ::fillTable(ms_->observation(), record,
       [&](ObservationRecord &record) {return reader_->getObservationRow(record);});
 
   POST_END;
@@ -397,7 +372,7 @@ void SingleDishMSFiller<T>::fillProcessor() {
   POST_START;
 
   ProcessorRecord record;
-  ::fillTable2(ms_->processor(), record,
+  ::fillTable(ms_->processor(), record,
       [&](ProcessorRecord &record) {return reader_->getProcessorRow(record);});
 
   POST_END;
@@ -408,7 +383,7 @@ void SingleDishMSFiller<T>::fillSource() {
   POST_START;
 
   SourceRecord record;
-  ::fillTable2(ms_->source(), record,
+  ::fillTable(ms_->source(), record,
       [&](SourceRecord &record) {return reader_->getSourceRow(record);});
 
   POST_END;
@@ -423,10 +398,9 @@ void SingleDishMSFiller<T>::fillField() {
   record.table = mytable;
 
   // make (name,id) map for SOURCE table
-  //Record source_map;
   Bool status = ::makeSourceMap(ms_->source(), record.source_map);
 
-  ::fillTable2(mytable, record,
+  ::fillTable(mytable, record,
       [&](FieldRecord &record) {return reader_->getFieldRow(record);});
 
   POST_END;
@@ -439,86 +413,8 @@ void SingleDishMSFiller<T>::fillSpectralWindow() {
   auto mytable = ms_->spectralWindow();
   SpectralWindowRecord record;
 
-  ::fillTable2(mytable, record,
+  ::fillTable(mytable, record,
       [&](SpectralWindowRecord &record) {return reader_->getSpectralWindowRow(record);});
-
-//
-//  MSSpectralWindow mytable = ms_->spectralWindow();
-//  TableRow row(mytable);
-//  TableRecord record = row.record();
-//
-//  TableRecord record_proxy;
-//  for (Bool more_rows = reader_->getSpectralWindowRow(record_proxy);
-//      more_rows == True;
-//      more_rows = reader_->getSpectralWindowRow(record_proxy)) {
-//
-//    Int spw_id = record_proxy.asInt("SPECTRAL_WINDOW_ID");
-//    if (spw_id < 0) {
-//      throw AipsError("Negative spw id");
-//    }
-//    uInt uspw_id = (uInt) spw_id;
-//    uInt nrow = mytable.nrow();
-//    if (nrow <= uspw_id) {
-//      mytable.addRow(uspw_id - nrow + 1);
-//      uInt new_nrow = mytable.nrow();
-//      for (uInt irow = nrow; irow < new_nrow - 1; ++irow) {
-//        std::cout << "add dummy spw entry to " << irow << std::endl;
-//        Int const one_chan = 1;
-//        Vector<Double> const dummy(one_chan, 0.0);
-//        record.define("NUM_CHAN", one_chan);
-//        record.define("CHAN_FREQ", dummy);
-//        record.define("CHAN_WIDTH", dummy);
-//        record.define("EFFECTIVE_BW", dummy);
-//        record.define("RESOLUTION", dummy);
-//        record.define("NAME", "");
-//        record.define("REF_FREQUENCY", 0.0);
-//        record.define("TOTAL_BANDWIDTH", 0.0);
-//        row.put(irow, record);
-//      }
-//    }
-//    assert(spw_id < mytable.nrow());
-//
-//    record.define("NUM_CHAN", record_proxy.asInt("NUM_CHAN"));
-//    record.define("NAME", record_proxy.asString("NAME"));
-//    record.define("MEAS_FREQ_REF", record_proxy.asInt("MEAS_FREQ_REF"));
-//    Double refpix = record_proxy.asDouble("REFPIX");
-//    Double refval = record_proxy.asDouble("REFVAL");
-//    Double increment = record_proxy.asDouble("INCREMENT");
-//    std::cout << "NUM_CHAN" << std::endl;
-//    Int num_chan = record.asInt("NUM_CHAN");
-//
-//    Double tot_bw = num_chan * abs(increment);
-//    std::cout << "TOTAL_BANDWIDTH" << std::endl;
-//    record.define("TOTAL_BANDWIDTH", tot_bw);
-//
-//    Double ref_frequency = refval - refpix * increment;
-//    std::cout << "REF_FREQUENCY" << std::endl;
-//    record.define("REF_FREQUENCY", ref_frequency);
-//
-//    Vector < Double > freq(num_chan);
-//    indgen(freq, ref_frequency, increment);
-//    std::cout << "CHAN_FREQ" << std::endl;
-//    record.define("CHAN_FREQ", freq);
-//
-//    freq = increment;
-//    std::cout << "CHAN_WIDTH" << std::endl;
-//    record.define("CHAN_WIDTH", freq);
-//
-//    freq = abs(freq);
-//    std::cout << "EFFECTIVE_BW" << std::endl;
-//    record.define("EFFECTIVE_BW", freq);
-//    record.define("RESOLUTION", freq);
-//
-//    Int net_sideband = 0; // USB
-//    if (increment < 0.0) {
-//      net_sideband = 1; // LSB
-//    }
-//    std::cout << "NET_SIDEBAND" << std::endl;
-//    record.define("NET_SIDEBAND", net_sideband);
-//
-//    record.print(std::cout);
-//    row.put(spw_id, record);
-//  }
 
   POST_END;
 }
@@ -528,7 +424,7 @@ void SingleDishMSFiller<T>::fillSyscal() {
   POST_START;
 
   SysCalRecord record;
-  ::fillTable2(ms_->sysCal(), record,
+  ::fillTable(ms_->sysCal(), record,
       [&](SysCalRecord &record) {return reader_->getSyscalRow(record);});
 
   POST_END;
@@ -539,7 +435,7 @@ void SingleDishMSFiller<T>::fillWeather() {
   POST_START;
 
   WeatherRecord record;
-  ::fillTable2(ms_->weather(), record,
+  ::fillTable(ms_->weather(), record,
       [&](WeatherRecord &record) {return reader_->getWeatherRow(record);});
 
   POST_END;
@@ -759,10 +655,6 @@ void SingleDishMSFiller<T>::sortPointing() {
   sorter.sort(index_vector, nrow);
 
   size_t storage_size = nrow * 2 * sizeof(Double);
-//  auto deleter = [](void *p) {
-//    std::cout << "deleter will delete storage" << std::endl;
-//    free(p);
-//  };
   std::unique_ptr<void, ::Deleter> storage(malloc(storage_size));
 
   // sort TIME

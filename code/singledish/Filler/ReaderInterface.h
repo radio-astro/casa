@@ -79,49 +79,41 @@ public:
   // to get OBSERVATION table
   // The method should return True if row entry is available.
   // If it return False, row will be invalid so it should not be used.
-  virtual Bool getObservationRow(TableRecord &row) {return False;}
   virtual Bool getObservationRow(ObservationRecord &record) = 0;
 
   // to get ANTENNA table
   // The method should return True if row entry is available.
   // If it return False, row will be invalid so it should not be used.
-  virtual Bool getAntennaRow(TableRecord &row) {return False;}
   virtual Bool getAntennaRow(AntennaRecord &record) = 0;
 
   // to get PROCESSOR table
   // The method should return True if row entry is available.
   // If it return False, row will be invalid so it should not be used.
-  virtual Bool getProcessorRow(TableRecord &row) {return False;}
   virtual Bool getProcessorRow(ProcessorRecord &record) = 0;
 
   // to get SOURCE table
   // The method should return True if row entry is available.
   // If it return False, row will be invalid so it should not be used.
-  virtual Bool getSourceRow(TableRecord &row) {return False;}
   virtual Bool getSourceRow(SourceRecord &row) = 0;
 
   // to get FIELD table
   // The method should return True if row entry is available.
   // If it return False, row will be invalid so it should not be used.
-  virtual Bool getFieldRow(TableRecord &row) {return False;}
   virtual Bool getFieldRow(FieldRecord &row) = 0;
 
   // to get SPECTRAL WINDOW table
   // The method should return True if row entry is available.
   // If it return False, row will be invalid so it should not be used.
-  virtual Bool getSpectralWindowRow(TableRecord &row) {return False;}
   virtual Bool getSpectralWindowRow(SpectralWindowRecord &row) = 0;
 
   // to get SYSCAL table
   // The method should return True if row entry is available.
   // If it return False, row will be invalid so it should not be used.
-  virtual Bool getSyscalRow(TableRecord &row) {return False;}
   virtual Bool getSyscalRow(SysCalRecord &row) = 0;
 
   // to get WEATHER table
   // The method should return True if row entry is available.
   // If it return False, row will be invalid so it should not be used.
-  virtual Bool getWeatherRow(TableRecord &row) {return False;}
   virtual Bool getWeatherRow(WeatherRecord &row) = 0;
 
   // for DataAccumulator

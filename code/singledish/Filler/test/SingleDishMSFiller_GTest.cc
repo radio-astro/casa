@@ -10,13 +10,19 @@
 #include <singledish/Filler/SingleDishMSFiller.h>
 #include <singledish/Filler/ReaderInterface.h>
 #include <singledish/Filler/Scantable2MSReader.h>
-#include "TestReader.h"
+#include <singledish/Filler/test/TestReader.h>
+#include <singledish/SingleDish/test/SingleDishTestUtil.h>
 
 #include <string>
 #include <iostream>
 #include <memory>
 
 #include <casacore/casa/OS/Time.h>
+#include <casacore/casa/OS/File.h>
+#include <casacore/casa/OS/RegularFile.h>
+#include <casacore/casa/OS/SymLink.h>
+#include <casacore/casa/OS/Directory.h>
+#include <casacore/casa/OS/DirectoryIterator.h>
 #include <casacore/casa/Arrays/ArrayLogical.h>
 #include <casacore/casa/Arrays/Cube.h>
 #include <casacore/casa/Quanta/MVPosition.h>
@@ -49,28 +55,134 @@ using namespace casacore;
     EXPECT_TRUE(allEQ((expected), (actual))); \
   }
 
-class SingleDishMSFillerTest: public ::testing::Test {
+class SingleDishMSFillerTestBase: public ::testing::Test {
 public:
   virtual void SetUp() {
     std::cout << "this is SetUp" << std::endl;
 
-    my_ms_name_ = "mytest.ms";
-    my_data_name_ = "mytest.asap";
+    //my_ms_name_ = "mytest.ms";
+    //my_data_name_ = "mytest.asap";
+    my_ms_name_ = getMSName();
+    my_data_name_ = getDataName();
+    std::string const data_path = test_utility::GetCasaDataPath()
+        + "/regression/unittest/sdsave/";
 
+    copyData(data_path);
+    ASSERT_TRUE(File(my_data_name_).exists());
     deleteTable(my_ms_name_);
   }
 
   virtual void TearDown() {
     std::cout << "this is TearDown" << std::endl;
 
-    //deleteTable(my_ms_name_);
+    //cleanup();
   }
 
 protected:
+  template<class _Filler>
+  void ExecuteFiller(_Filler &filler) {
+    std::string const &data_name = filler.getDataName();
+
+    EXPECT_STREQ(data_name.c_str(), my_data_name_.c_str());
+
+    // fill MS
+    filler.fill();
+
+    // save MS
+    filler.save(my_ms_name_);
+
+    // file existence check
+    ASSERT_PRED1([](std::string const &name) {
+      File file(name);
+      return file.exists();
+    }, my_ms_name_);
+  }
+
   std::string my_ms_name_;
   std::string my_data_name_;
 
+  virtual std::string getDataName() = 0;
+  virtual std::string getMSName() = 0;
+
 private:
+  void copyRegular(String const &src, String const &dst) {
+//    std::cout << "copyRegular: src " << src << " dst " << dst << std::endl;
+    RegularFile r(src);
+    r.copy(dst);
+  }
+  void copySymLink(String const &src, String const &dst) {
+    Path p = SymLink(src).followSymLink();
+    String actual_src = p.absoluteName();
+    File f(actual_src);
+//    std::cout << "copySymLink: actual_src " << actual_src << " dst " << dst << std::endl;
+    if (f.isRegular()) {
+      copyRegular(actual_src, dst);
+    } else if (f.isDirectory()) {
+      copyDirectory(actual_src, dst);
+    }
+  }
+  void copyDirectory(String const &src, String const &dst) {
+    Directory dsrc(src);
+    Directory ddst(dst);
+    ddst.create();
+    DirectoryIterator iter(dsrc);
+    while (!iter.pastEnd()) {
+      String name = iter.name();
+      if (name.contains(".svn")) {
+        iter++;
+        continue;
+      }
+//      std::cout << "name " << name << std::endl;
+      File f = iter.file();
+      Path psrc(src);
+      Path pdst(dst);
+      psrc.append(name);
+      String sub_src = psrc.absoluteName();
+      pdst.append(name);
+      String sub_dst = pdst.absoluteName();
+//      std::cout << "copyDirectory: sub_src " << sub_src << " sub_dst " << sub_dst << std::endl;
+      if (f.isSymLink()) {
+        std::cout << name << " is symlink" << std::endl;
+        copySymLink(sub_src, sub_dst);
+      } else if (f.isRegular()) {
+//        std::cout << name << " is regular file" << std::endl;
+        copyRegular(sub_src, sub_dst);
+      } else if (f.isDirectory()) {
+//        std::cout << name << " is directory" << std::endl;
+        copyDirectory(sub_src, sub_dst);
+      }
+      iter++;
+    }
+  }
+  void copyData(std::string const &data_dir) {
+    if (my_data_name_.size() > 0) {
+//      std::cout << "Copying " << my_data_name_ << " from data repository"
+//          << std::endl;
+      std::string full_path = data_dir + my_data_name_;
+//      std::cout << "full_path = " << full_path << std::endl;
+      std::string work_path = my_data_name_;
+      File f(full_path);
+      ASSERT_TRUE(f.exists());
+      if (f.isSymLink()) {
+        copySymLink(full_path, work_path);
+      } else if (f.isRegular()) {
+        copyRegular(full_path, work_path);
+      } else if (f.isDirectory()) {
+        copyDirectory(full_path, work_path);
+      }
+    }
+  }
+  void cleanup() {
+    File f(my_data_name_);
+    if (f.isRegular()) {
+      RegularFile r(my_data_name_);
+      r.remove();
+    } else if (f.isDirectory()) {
+      Directory d(my_data_name_);
+      d.removeRecursive();
+    }
+    deleteTable(my_ms_name_);
+  }
   void deleteTable(std::string const &name) {
     File file(name);
     if (file.exists()) {
@@ -80,24 +192,157 @@ private:
   }
 };
 
-TEST_F(SingleDishMSFillerTest, FillerTestWithReaderStub) {
+class SingleDishMSFillerTestWithStub: public SingleDishMSFillerTestBase {
+  virtual std::string getDataName() {
+    return "";
+  }
+  virtual std::string getMSName() {
+    return "mytest.ms";
+  }
+};
+
+class SingleDishMSFillerTestFloat: public SingleDishMSFillerTestBase {
+  virtual std::string getDataName() {
+    return "data_selection.asap";
+  }
+  virtual std::string getMSName() {
+    return "floatdata.ms";
+  }
+};
+
+class SingleDishMSFillerTestComplex: public SingleDishMSFillerTestBase {
+  virtual std::string getDataName() {
+    return "crosspoltest.asap";
+  }
+  virtual std::string getMSName() {
+    return "complexdata.ms";
+  }
+};
+
+TEST_F(SingleDishMSFillerTestFloat, FillerTest) {
+  // Create filler
+  SingleDishMSFiller<Scantable2MSReader> filler(my_data_name_);
+
+  // Run filler
+  ExecuteFiller(filler);
+
+  // verify table contents
+  MeasurementSet myms(my_ms_name_);
+  Table myscantable(my_data_name_, Table::Old);
+  TableRecord const &scantable_header = myscantable.keywordSet();
+
+  // Verify OBSERVATION table
+  {
+    std::cout << "Verify OBSERVATION table" << std::endl;
+    auto const mytable = myms.observation();
+    ASSERT_EQ(uInt(1), mytable.nrow());
+    ROMSObservationColumns mycolumns(mytable);
+    CASA_EXPECT_STREQ(scantable_header.asString("Observer"),
+        mycolumns.observer()(0));
+    CASA_EXPECT_STREQ(scantable_header.asString("Project"),
+        mycolumns.project()(0));
+    String antenna_name = scantable_header.asString("AntennaName");
+    String expected_telescope_name;
+    String::size_type pos = antenna_name.find("//");
+    if (pos != String::npos) {
+      expected_telescope_name = antenna_name.substr(0, pos);
+    } else {
+      expected_telescope_name = antenna_name.substr(0, antenna_name.find("@"));
+    }
+    CASA_EXPECT_STREQ(expected_telescope_name, mycolumns.telescopeName()(0));
+    ROScalarColumn < Double > column(myscantable, "TIME");
+    Vector < Double > time_list = column.getColumn();
+    Vector < Double > time_range = mycolumns.timeRange()(0);
+    ASSERT_EQ(2u, time_range.nelements());
+    EXPECT_EQ(min(time_list), time_range[0]);
+    EXPECT_EQ(max(time_list), time_range[1]);
+  }
+
+  // verify PROCESSOR table
+  {
+    std::cout << "Verify PROCESSOR table" << std::endl;
+    auto const mytable = myms.processor();
+    // just to confirm it has only one row
+    ASSERT_EQ(uInt(1), mytable.nrow());
+  }
+
+  // verify ANTENNA table
+  {
+    std::cout << "Verify ANTENNA table" << std::endl;
+    auto const mytable = myms.antenna();
+    ASSERT_EQ(uInt(1), mytable.nrow());
+    ROMSAntennaColumns mycolumns(mytable);
+    String header_antenna_name = scantable_header.asString("AntennaName");
+    String antenna_name;
+    String expected_name;
+    String expected_station;
+    String::size_type pos = header_antenna_name.find("//");
+    if (pos != String::npos) {
+      antenna_name = header_antenna_name.substr(pos + 2);
+    } else {
+      antenna_name = header_antenna_name;
+    }
+    pos = antenna_name.find("@");
+    if (pos != String::npos) {
+      expected_name = antenna_name.substr(0, pos);
+      expected_station = antenna_name.substr(pos + 1);
+    } else {
+      expected_name = antenna_name;
+      expected_station = "";
+    }
+    CASA_EXPECT_STREQ(expected_name, mycolumns.name()(0));
+    CASA_EXPECT_STREQ(expected_station, mycolumns.station()(0));
+    CASA_EXPECT_STREQ(String("GROUND-BASED"), mycolumns.type()(0));
+    CASA_EXPECT_STREQ(String("ALT-AZ"), mycolumns.mount()(0));
+    auto const position_meas_column = mycolumns.positionMeas();
+    auto const position = position_meas_column(0);
+    auto const position_val = position.get("m");
+    Vector < Double > expected_position = scantable_header.asArrayDouble(
+        "AntennaPosition");
+    CASA_EXPECT_STREQ(String("ITRF"), position.getRefString());
+    EXPECT_TRUE(allEQ(expected_position, position_val.getValue()));
+    EXPECT_EQ(12.0, mycolumns.dishDiameter()(0));
+  }
+
+  // verify WEATHER table
+  {
+    std::cout << "Verify WEATHER table" << std::endl;
+    auto const mytable = myms.weather();
+    auto const weather_table = scantable_header.asTable("WEATHER");
+    uInt expected_nrow = weather_table.nrow();
+    ASSERT_EQ(expected_nrow, mytable.nrow());
+    ROMSWeatherColumns mycolumns(mytable);
+    ROTableRow row(weather_table);
+    for (uInt i = 0; i < expected_nrow; ++i) {
+      std::cout << "Verifying row " << i << std::endl;
+      TableRecord row_record = row.get(0);
+      uInt weather_id = row_record.asuInt("ID");
+      auto subtable = myscantable(myscantable.col("WEATHER_ID") == weather_id);
+      ROScalarColumn < Double > col(subtable, "TIME");
+      Double time_min, time_max;
+      minMax(time_min, time_max, col.getColumn());
+      EXPECT_EQ(0.5 * (time_min + time_max), mycolumns.time()(i));
+      EXPECT_EQ(time_max - time_min, mycolumns.interval()(i));
+      EXPECT_EQ(0, mycolumns.antennaId()(i));
+      EXPECT_FLOAT_EQ(row_record.asFloat("TEMPERATURE"),
+          mycolumns.temperature()(i));
+      EXPECT_FLOAT_EQ(row_record.asFloat("PRESSURE"), mycolumns.pressure()(i));
+      EXPECT_FLOAT_EQ(row_record.asFloat("HUMIDITY"),
+          mycolumns.relHumidity()(i));
+      EXPECT_FLOAT_EQ(row_record.asFloat("WINDSPEED"),
+          mycolumns.windSpeed()(i));
+      EXPECT_FLOAT_EQ(row_record.asFloat("WINDAZ"),
+          mycolumns.windDirection()(i));
+    }
+  }
+}
+
+TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
+  // Create filler
   SingleDishMSFiller<TestReader<FloatDataStorage> > filler(my_data_name_);
 
-  std::string const &data_name = filler.getDataName();
-
-  EXPECT_STREQ(data_name.c_str(), my_data_name_.c_str());
-
-  // fill MS
-  filler.fill();
-
-  // save MS
-  filler.save(my_ms_name_);
-
-  // file existence check
-  ASSERT_PRED1([](std::string const &name) {
-    File file(name);
-    return file.exists();
-  }, my_ms_name_);
+  // Run filler
+  ExecuteFiller(filler);
 
   // verify table contents
   MeasurementSet myms(my_ms_name_);
@@ -190,7 +435,6 @@ TEST_F(SingleDishMSFillerTest, FillerTestWithReaderStub) {
     ROMSSourceColumns mycolumns(mytable);
     for (uInt i = 0; i < expected_nrow; ++i) {
       std::cout << "Verifying row " << i << std::endl;
-      String key = "ROW" + String::toString(i);
       SourceRecord const row_record = expected_record[i];
       Int source_id = row_record.source_id;
       String source_name = row_record.name;
@@ -259,7 +503,6 @@ TEST_F(SingleDishMSFillerTest, FillerTestWithReaderStub) {
     std::vector<uInt> processed_rows;
     for (uInt i = 0; i < num_records; ++i) {
       std::cout << "Verifying row " << i << std::endl;
-      String key = "ROW" + String::toString(i);
       FieldRecord const row_record = expected_record[i];
       Int field_id = row_record.field_id;
       std::cout << "field " << field_id << std::endl;
@@ -312,7 +555,6 @@ TEST_F(SingleDishMSFillerTest, FillerTestWithReaderStub) {
     std::vector<uInt> processed_rows;
     for (uInt i = 0; i < num_records; ++i) {
       std::cout << "Verifying row " << i << std::endl;
-      String key = "ROW" + String::toString(i);
       SpectralWindowRecord row_record = expected_record[i];
       Int spw_id = row_record.spw_id;
       std::cout << "spw " << spw_id << std::endl;
@@ -371,7 +613,6 @@ TEST_F(SingleDishMSFillerTest, FillerTestWithReaderStub) {
     ROMSSysCalColumns mycolumns(mytable);
     for (uInt i = 0; i < expected_nrow; ++i) {
       std::cout << "Verifying row " << i << std::endl;
-      String key = "ROW" + String::toString(i);
       SysCalRecord row_record = expected_record[i];
       EXPECT_EQ(row_record.time, mycolumns.time()(i));
       EXPECT_EQ(row_record.interval, mycolumns.interval()(i));
@@ -420,7 +661,6 @@ TEST_F(SingleDishMSFillerTest, FillerTestWithReaderStub) {
     ROMSWeatherColumns mycolumns(mytable);
     for (uInt i = 0; i < expected_nrow; ++i) {
       std::cout << "Verifying row " << i << std::endl;
-      String key = "ROW" + String::toString(i);
       WeatherRecord row_record = expected_record[i];
       EXPECT_EQ(row_record.time, mycolumns.time()(i));
       EXPECT_EQ(row_record.interval, mycolumns.interval()(i));
@@ -519,24 +759,24 @@ TEST_F(SingleDishMSFillerTest, FillerTestWithReaderStub) {
     // Time0 Intent0 Field0 Antenna0 Beam1 Spw0 Pol0 |
     // Time0 Intent0 Field0 Antenna0 Beam1 Spw0 Pol1 +--> ROW 2
     // Time0 Intent0 Field0 Antenna0 Beam1 Spw1 Pol0 ---> ROW 3
-    // Time1 Intent0 Field1 Antenna1 Beam0 Spw0 Pol0 |
-    // Time1 Intent0 Field1 Antenna1 Beam0 Spw0 Pol1 +--> ROW 4
-    // Time1 Intent0 Field1 Antenna1 Beam0 Spw1 Pol0 ---> ROW 5
-    // Time1 Intent0 Field1 Antenna1 Beam1 Spw0 Pol0 |
-    // Time1 Intent0 Field1 Antenna1 Beam1 Spw0 Pol1 +--> ROW 6
-    // Time1 Intent0 Field1 Antenna1 Beam1 Spw1 Pol0 ---> ROW 7
-    // Time2 Intent1 Field0 Antenna0 Beam0 Spw0 Pol0 |
-    // Time2 Intent1 Field0 Antenna0 Beam0 Spw0 Pol1 +--> ROW 8
-    // Time2 Intent1 Field0 Antenna0 Beam0 Spw1 Pol0 ---> ROW 9
-    // Time2 Intent1 Field0 Antenna0 Beam1 Spw0 Pol0 |
-    // Time2 Intent1 Field0 Antenna0 Beam1 Spw0 Pol1 +--> ROW 10
-    // Time2 Intent1 Field0 Antenna0 Beam1 Spw1 Pol0 ---> ROW 11
-    // Time3 Intent1 Field1 Antenna1 Beam0 Spw0 Pol0 |
-    // Time3 Intent1 Field1 Antenna1 Beam0 Spw0 Pol1 +--> ROW 12
-    // Time3 Intent1 Field1 Antenna1 Beam0 Spw1 Pol0 ---> ROW 13
-    // Time3 Intent1 Field1 Antenna1 Beam1 Spw0 Pol0 |
-    // Time3 Intent1 Field1 Antenna1 Beam1 Spw0 Pol1 +--> ROW 14
-    // Time3 Intent1 Field1 Antenna1 Beam1 Spw1 Pol0 ---> ROW 15
+    // Time0 Intent0 Field1 Antenna1 Beam0 Spw0 Pol0 |
+    // Time0 Intent0 Field1 Antenna1 Beam0 Spw0 Pol1 +--> ROW 4
+    // Time0 Intent0 Field1 Antenna1 Beam0 Spw1 Pol0 ---> ROW 5
+    // Time0 Intent0 Field1 Antenna1 Beam1 Spw0 Pol0 |
+    // Time0 Intent0 Field1 Antenna1 Beam1 Spw0 Pol1 +--> ROW 6
+    // Time0 Intent0 Field1 Antenna1 Beam1 Spw1 Pol0 ---> ROW 7
+    // Time1 Intent1 Field0 Antenna0 Beam0 Spw0 Pol0 |
+    // Time1 Intent1 Field0 Antenna0 Beam0 Spw0 Pol1 +--> ROW 8
+    // Time1 Intent1 Field0 Antenna0 Beam0 Spw1 Pol0 ---> ROW 9
+    // Time1 Intent1 Field0 Antenna0 Beam1 Spw0 Pol0 |
+    // Time1 Intent1 Field0 Antenna0 Beam1 Spw0 Pol1 +--> ROW 10
+    // Time1 Intent1 Field0 Antenna0 Beam1 Spw1 Pol0 ---> ROW 11
+    // Time1 Intent1 Field1 Antenna1 Beam0 Spw0 Pol0 |
+    // Time1 Intent1 Field1 Antenna1 Beam0 Spw0 Pol1 +--> ROW 12
+    // Time1 Intent1 Field1 Antenna1 Beam0 Spw1 Pol0 ---> ROW 13
+    // Time1 Intent1 Field1 Antenna1 Beam1 Spw0 Pol0 |
+    // Time1 Intent1 Field1 Antenna1 Beam1 Spw0 Pol1 +--> ROW 14
+    // Time1 Intent1 Field1 Antenna1 Beam1 Spw1 Pol0 ---> ROW 15
     TableRecord const &expected_record = reader.main_record_;
     constexpr size_t expected_nfield = 24;
     constexpr size_t expected_nrow = 16;
@@ -594,7 +834,7 @@ TEST_F(SingleDishMSFillerTest, FillerTestWithReaderStub) {
         ;
       }
 );
-                                                                        ASSERT_GT(num_chan, 0);
+                                                                                                                            ASSERT_GT(num_chan, 0);
       Matrix < Bool > expected_flag(expected_num_pol, num_chan);
       Matrix < Float > expected_data(expected_num_pol, num_chan);
       std::cout << "expected_flag.shape = " << expected_flag.shape()
@@ -710,7 +950,7 @@ TEST_F(SingleDishMSFillerTest, FillerTestWithReaderStub) {
         ;
       }
 );
-                                                                        ASSERT_GT(num_chan, 0);
+                                                                                                                            ASSERT_GT(num_chan, 0);
       expected_flag.resize(expected_num_pol, num_chan);
       expected_data.resize(expected_flag.shape());
       Int pol_id2 = row_record2.asInt("POLNO");

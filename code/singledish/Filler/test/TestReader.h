@@ -484,9 +484,6 @@ struct FloatDataStorage {
       return False;
     }
 
-    // constant stuff (at this moment)
-    //record.define("ANTENNA_ID", 0);
-
     size_t index = irow / (n / 4);
     std::cout << "ROW " << irow << std::endl;
     std::cout << "    index for time " << index << std::endl;
@@ -664,7 +661,6 @@ public:
     POST_START;
 
     Bool return_value = (*this.*get_spw_row_)(record);
-    //Bool return_value = False;
 
     POST_END;
 
@@ -693,13 +689,13 @@ public:
     return return_value;
   }
 
-  // to get MAIN table
-  virtual Bool getMainRecord(TableRecord &record) {
-    POST_START;
-    POST_END;
-    return True;
-  }
-
+//  // to get MAIN table
+//  virtual Bool getMainRecord(TableRecord &record) {
+//    POST_START;
+//    POST_END;
+//    return True;
+//  }
+//
   // for DataAccumulator
   virtual Bool getData(size_t irow, TableRecord &record) {
     POST_START;
@@ -952,33 +948,6 @@ private:
   }
 
   template<class _Iterator, class _InternalRecord, class _Func, class _Record>
-  Bool getRowImplTemplate(_Iterator &iter, _InternalRecord &internal_record,
-      _Func &func, _Record &record) {
-    POST_START;
-
-    assert(iter);
-
-    bool more_rows = iter->moreData();
-
-    if (more_rows) {
-      iter->getEntry(record);
-      iter->next();
-
-      // keep record contents
-      uInt i = internal_record.nfields();
-      String key = "ROW" + String::toString(i);
-      internal_record.defineRecord(key, record);
-    } else {
-      iter.reset(nullptr);
-      func = &::TestReader < DataStorage > ::noMoreRowImplTemplate<_Record>;
-    }
-
-    POST_END;
-
-    return more_rows;
-  }
-
-  template<class _Iterator, class _InternalRecord, class _Func, class _Record>
   Bool getRowImplTemplate2(_Iterator &iter, _InternalRecord &internal_record,
       _Func &func, _Record &record) {
     POST_START;
@@ -993,8 +962,6 @@ private:
 
       // keep record contents
       uInt i = internal_record.size();
-      //String key = "ROW" + String::toString(i);
-      //internal_record.defineRecord(key, record);
       std::cout << "keep record entry for " << i << std::endl;
       internal_record[i] = record;
     } else {
@@ -1005,13 +972,6 @@ private:
     POST_END;
 
     return more_rows;
-  }
-
-  Bool noMoreRowImpl(TableRecord &) {
-    POST_START;
-    POST_END;
-
-    return False;
   }
 
   template<class _Record>
