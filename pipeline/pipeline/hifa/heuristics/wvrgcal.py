@@ -151,6 +151,8 @@ class WvrgcalHeuristics(object):
         tied_targets = [target[0] for target in targets]
         
         # get names and directions of phase calibrators
+        #     this may be a cycle 0 relic and need modifcation in the future so
+        #     that multiple intents are properly handled
         phases = [(field.name, field.mdirection) for field in ms.fields
                   if 'PHASE' in field.intents
                   and 'BANDPASS' not in field.intents
