@@ -813,7 +813,165 @@ class tsdfit_basicTest(tsdfit_unittest_base):
                         self.assertTrue(((result_lower <= answer[key][i][j]) and (answer[key][i][j] <= result_upper)),
                                         msg="row%s, comp%s result inconsistent with answer"%(i, j))
 
+class tsdfit_selection(unittest.TestCase):
+    datapath = os.environ.get('CASAPATH').split()[0] + \
+        '/data/regression/unittest/tsdfit/'
+    infile = "analytic_type1.fit.ms"
+    common_param = dict(infile=infile, outfile='',
+                        fitfunc='gaussian',nfit=[1],fitmode='list')
+    selections=dict(intent=("CALIBRATE_ATMOSPHERE#*", [1]),
+                    antenna=("DA99", [1]),
+                    field=("M1*", [0]),
+                    spw=(">6", [1]),
+                    timerange=("2013/4/28/4:13:21",[1]),
+                    scan=("0~8", [0]),
+                    pol=("YY", [1]))
+    verbose = False
+ 
+    reference = {'float_data': {'cent': [50, 50, 60, 60],
+                                'peak': [5, 10, 15, 20],
+                                'fwhm': [40, 30, 20, 10]},
+                 'corrected': {'cent': [70, 70, 80, 80],
+                               'peak': [25, 30, 35, 40],
+                               'fwhm': [20, 30, 40, 10]} }
+    templist = [infile]
 
+    def _clearup(self):
+        for name in self.templist:
+            if os.path.isdir(name):
+                shutil.rmtree(name)
+            elif os.path.exists(name):
+                os.remove(name)
+
+    def setUp(self):
+        self._clearup()
+        shutil.copytree(self.datapath+self.infile, self.infile)
+        default(tsdbaseline)
+
+    def tearDown(self):
+        self._clearup()
+
+    def _get_selection_string(self, key):
+        if key not in self.selections.keys():
+            raise ValueError, "Invalid selection parameter %s" % key
+        return {key: self.selections[key][0]}
+
+    def _get_selected_row_and_pol(self, key):
+        if key not in self.selections.keys():
+            raise ValueError, "Invalid selection parameter %s" % key
+        pols = [0,1]
+        rows = [0,1]
+        if key == 'pol':  #self.selection stores pol ids
+            pols = self.selections[key][1]
+        else: #self.selection stores row ids
+            rows = self.selections[key][1]
+        return (rows, pols)
+
+    def _get_reference(self, row_offset, pol_offset, datacol):
+        ref_list = self.reference[datacol]
+        idx = row_offset*2+pol_offset
+        retval = {}
+        for key in ref_list.keys():
+            retval[key] = ref_list[key][idx]
+        if self.verbose: print("reference=%s" % str(retval))
+        return retval
+
+    def _get_gauss_param_from_return(self, params, keys):
+        """returns a dictionary that stores a list of cent, fwhm, and peak """
+        retval = {}
+        for key in keys:
+            self.assertTrue(key in params.keys(),
+                            "Return value does not have key '%s'" % key)
+            retval[key] = [ params[key][irow][0][0] for irow in range(len(params[key])) ]
+        return retval
+
+    def run_test(self, sel_param, datacolumn):
+        inparams = self._get_selection_string(sel_param)
+        inparams.update(self.common_param)
+        fit_val = tsdfit(datacolumn=datacolumn, **inparams)
+        self._test_result(fit_val, sel_param, datacolumn)
+        
+    def _test_result(self, fit_val, sel_param, dcol, atol=1.e-5, rtol=1.e-5):
+        # Make sure output MS exists
+        self.assertTrue(os.path.exists(self.infile), "Could not find input MS")
+        tb.open(self.infile)
+        nrow = tb.nrows()
+        tb.close()
+        # Compare fitting parameters with reference
+        (rowids, polids) = self._get_selected_row_and_pol(sel_param)
+        self.assertEqual(nrow, 2, "Row number changed in input MS")
+        test_keys = self.reference[dcol].keys()
+        # format return values and make a list of line parameters
+        test_value = self._get_gauss_param_from_return(fit_val, test_keys)
+        idx = 0
+        for out_row in range(len(rowids)):
+            in_row = rowids[out_row]
+            for out_pol in range(len(polids)):
+                in_pol = polids[out_pol]
+                reference = self._get_reference(in_row, in_pol, dcol)
+                for key in reference.keys():
+                    self.assertTrue(numpy.allclose([test_value[key][idx]],
+                                                   [reference[key]],
+                                                   atol=atol, rtol=rtol),
+                                    "Fitting result '%s' in row=%d, pol=%d differs: %f (expected: %f)" % (key, in_row, in_pol, test_value[key][idx], reference[key]))
+                #Next spectrum
+                idx += 1
+
+    def testIntentF(self):
+        """Test selection by intent (float_data)"""
+        self.run_test("intent", "float_data")
+
+    def testIntentC(self):
+        """Test selection by intent (corrected)"""
+        self.run_test("intent", "corrected")
+
+    # def testAntennaF(self):
+    #     """Test selection by antenna (float_data)"""
+    #     self.run_test("antenna", "float_data")
+
+    # def testAntennaC(self):
+    #     """Test selection by antenna (corrected)"""
+    #     self.run_test("antenna", "corrected")
+
+    def testFieldF(self):
+        """Test selection by field (float_data)"""
+        self.run_test("field", "float_data")
+
+    def testFieldC(self):
+        """Test selection by field (corrected)"""
+        self.run_test("field", "corrected")
+
+    def testSpwF(self):
+        """Test selection by spw (float_data)"""
+        self.run_test("spw", "float_data")
+
+    def testSpwC(self):
+        """Test selection by spw (corrected)"""
+        self.run_test("spw", "corrected")
+
+    def testTimerangeF(self):
+        """Test selection by timerange (float_data)"""
+        self.run_test("timerange", "float_data")
+
+    def testTimerangeC(self):
+        """Test selection by timerange (corrected)"""
+        self.run_test("timerange", "corrected")
+
+    def testScanF(self):
+        """Test selection by scan (float_data)"""
+        self.run_test("scan", "float_data")
+
+    def testScanC(self):
+        """Test selection by scan (corrected)"""
+        self.run_test("scan", "corrected")
+
+    # def testPolF(self):
+    #     """Test selection by pol (float_data)"""
+    #     self.run_test("pol", "float_data")
+
+    # def testPolC(self):
+    #     """Test selection by pol (corrected)"""
+    #     self.run_test("pol", "corrected")
 
 def suite():
-    return [tsdfit_basicTest]
+    return [tsdfit_basicTest, tsdfit_selection]
