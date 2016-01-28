@@ -1536,7 +1536,7 @@ the ms definition itself. -->
     
       
       ms.open("3C273XC1.MS")
-      ms.statistics(column="DATA", antenna="2")
+      ms.statistics(column="DATA", complex_value='amp', field="2")
     
   </example>
 </method>
@@ -1681,7 +1681,7 @@ the ms definition itself. -->
   <example>
 
     ms.open("3C273XC1.MS")
-    ms.statistics2(column="DATA", antenna="2")
+    ms.statistics2(column="DATA", complex_value='amp', field="2")
 
   </example>
 </method>
@@ -4495,7 +4495,7 @@ for editing based on the rms fit will be added in the near future.
  cb.open('ngc5921.ms')  # add MODEL_DATA, CORRECTED_DATA columns
  cb.close()
  ms.open('ngc5921.ms',nomodify=False);    # writable!
- ms.continuumsub(fldid=2,fitspw='0:5~9;50~59',
+ ms.continuumsub(field=2,fitspw='0:5~9;50~59',
                  solint=0.0,fitorder=1,mode='sub')
  ms.done()
     
