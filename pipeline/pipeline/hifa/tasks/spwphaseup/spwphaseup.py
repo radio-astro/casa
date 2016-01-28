@@ -89,7 +89,7 @@ class SpwPhaseup(gaincalworker.GaincalWorker):
             lowsnr, snrtest_result = self._do_snrtest()
             if lowsnr:
                 LOG.info('    Low SNR condition met')
-	        combinespwmap = combine_spwmap (allspws, scispws, 0)
+	        combinespwmap = combine_spwmap (allspws, scispws, scispws[0].id)
 	        LOG.info('    The combine spw map is %s' % (combinespwmap))
 	        phaseupspwmap = []
             elif (len(snrtest_result.snrs) <= 0):
@@ -105,7 +105,7 @@ class SpwPhaseup(gaincalworker.GaincalWorker):
 	        phaseupspwmap = []
 	        LOG.info('    The phaseup spw map is %s' % (phaseupspwmap))
         elif inputs.hm_spwmapmode == 'combine':
-	    combinespwmap = combine_spwmap (allspws, scispws, 0)
+	    combinespwmap = combine_spwmap (allspws, scispws, scispws[0].id)
 	    phaseupspwmap = []
 	    LOG.info('    The combine spw map is %s' % (combinespwmap))
         elif inputs.hm_spwmapmode == 'simple':
