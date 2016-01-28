@@ -132,7 +132,7 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
 
     def prepare(self, **parameters):
         inputs = self.inputs
-        ms = inputs.ms
+        #ms = inputs.ms
 
         # Initialize results.
         result = commonfluxresults.FluxCalibrationResults(inputs.vis,
@@ -152,34 +152,56 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
             LOG.info('Flux calibrator field(s) \'%s\' in %s have no data with intent %s' %
                         (inputs.reference, inputs.ms.basename, inputs.transintent))
 
+        # set the reference antenna
         refant = inputs.refant
         if refant == '':
+
             # Get the reference antenna for this measurement set from the 
             # context. This comes back as a string containing a ranked
-            # list of antenna names. Choose the first one.
-            refant = ms.reference_antenna
-            # if no reference antenna was found in the context for this measurement
+            # list of antenna names.
+            refant = inputs.ms.reference_antenna
+
+            # If no reference antenna was found in the context for this measurement
             # (refant equals either None or an empty string), then raise an exception.
+            #    Note the exception.
             if not (refant and refant.strip()):
                 msg = ('No reference antenna specified and none found in '
-                       'context for %s' % ms.basename)
+                       'context for %s' % inputs.ms.basename)
                 LOG.error(msg)
                 raise Exception(msg)
-            refant = refant.split(',')
-            refant = refant[0]
+
+            # Choose the first antenna.
+            refant = refant.split(',')[0]
+            #refant = refant[0]
+
         LOG.trace('refant:%s' % refant)
 
         # Get the reference spwmap for flux scaling
         refspwmap = inputs.refspwmap
         if not refspwmap:
-            refspwmap = ms.reference_spwmap
+            refspwmap = inputs.ms.reference_spwmap
             if not refspwmap:
                 refspwmap = [-1]
 
-        # Get the phaseupspwmap. The result will be
-        # None if it has not been set or is equivalent
-        # to the default one to one  mapping.
-        phaseupspwmap = ms.phaseup_spwmap
+        # Determine the spw gaincal strategy. This determines how the phase only tables will
+        # be constructed.
+        if inputs.ms.combine_spwmap:
+            spwidlist = [spw.id for spw in inputs.ms.get_spectral_windows(science_windows_only=True)]
+            fieldnamelist = [field.name for field in inputs.ms.get_fields(task_arg=inputs.transfer, intent='PHASE')]
+            exptimes = heuristics.exptimes.get_scan_exptimes(inputs.ms, fieldnamelist, 'PHASE',
+                spwidlist)
+            phaseup_solint = '%0.3fs' % (min ([exptime[1] for exptime in exptimes]) / 4.0)
+            #phasesolint = 'int'
+            phase_gaintype = 'T'
+            phase_combine = 'spw'
+            phaseup_spwmap = inputs.ms.combine_spwmap
+            phase_interp = 'linearPD,linear'
+        else:
+            phaseup_solint = inputs.phaseupsolint
+            phase_gaintype = 'G'
+            phase_combine = ''
+            phaseup_spwmap = inputs.ms.phaseup_spwmap
+            phase_interp = None
 
         # Resolved source heuristics.
         #    Needs improvement if users start specifying the input antennas.
@@ -191,7 +213,7 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
         if inputs.hm_resolvedcals == 'automatic':
             # Get the antennas to be used in the gaincals, limiting
             # the range if the reference calibrator is resolved.
-            resantenna, uvrange = heuristics.fluxscale.antenna(ms=ms,
+            resantenna, uvrange = heuristics.fluxscale.antenna(ms=inputs.ms,
                     refsource=inputs.reference, refant=refant,
                     peak_frac=inputs.peak_fraction)
 
@@ -203,7 +225,7 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
             if resantenna == '' and uvrange == '':
                 pass
             else:
-                nant = len(ms.antennas)
+                nant = len(inputs.ms.antennas)
                 nresant = len(resantenna.split(','))
                 if nresant >= nant:
                     resantenna = allantenna
@@ -217,9 +239,9 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
         # Do a phase-only gaincal on the flux calibrator using a restricted
         # set of antennas
         r = self._do_gaincal(field=inputs.reference, intent=inputs.refintent,
-                gaintype='G', calmode='p', solint=inputs.phaseupsolint,
+                gaintype=phase_gaintype, calmode='p', combine=phase_combine, solint=inputs.phaseupsolint,
                 antenna=resantenna, uvrange=uvrange, refant=refant, minblperant=minblperant,
-                phaseupspwmap=None, append=False, merge=False)
+                phaseup_spwmap=None, phase_interp=None, append=False, merge=False)
 
         # Test for the existence of the caltable
         try:
@@ -232,18 +254,18 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
         # set of antennas
         append = os.path.exists(caltable)
         r = self._do_gaincal(caltable=caltable, field=inputs.transfer,
-                intent=inputs.transintent, gaintype='G', calmode='p',
-                solint=inputs.phaseupsolint, antenna=allantenna, uvrange='',
-                minblperant=None, refant=refant, phaseupspwmap=phaseupspwmap,
-                append=append, merge=True)
+                intent=inputs.transintent, gaintype=phase_gaintype, calmode='p',
+                combine=phase_combine, solint=phaseup_solint, antenna=allantenna, uvrange='',
+                minblperant=None, refant=refant, phaseup_spwmap=phaseup_spwmap,
+                phase_interp=phase_interp, append=append, merge=True)
 
         # Now do the amplitude-only gaincal. This will produce the caltable
         # that fluxscale will analyse
         try:
             r = self._do_gaincal(field=inputs.transfer + ',' + inputs.reference,
                 intent=inputs.transintent + ',' + inputs.refintent, gaintype='T',
-                calmode='a', solint=inputs.solint, antenna=allantenna, uvrange='',
-                refant=refant, minblperant=minblperant, phaseupspwmap=None,
+                calmode='a', combine='', solint=inputs.solint, antenna=allantenna, uvrange='',
+                refant=refant, minblperant=minblperant, phaseup_spwmap=None, phase_interp=None,
                 append=False, merge=True)
 
             # Get the gaincal caltable from the results
@@ -259,7 +281,7 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
             # at each spw separately.
             if os.path.exists(caltable):
                 check_ok = self._check_caltable(caltable=caltable,
-                        ms=ms, reference=inputs.reference, transfer=inputs.transfer)
+                        ms=inputs.ms, reference=inputs.reference, transfer=inputs.transfer)
             else:
                 check_ok = False
 
@@ -351,8 +373,8 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
         return True
 
     def _do_gaincal(self, caltable=None, field=None, intent=None, gaintype='G',
-        calmode=None, solint=None, antenna=None, uvrange='', refant=None,
-        minblperant=None, phaseupspwmap=None, append=None, merge=True):
+        calmode=None, combine=None, solint=None, antenna=None, uvrange='', refant=None,
+        minblperant=None, phaseup_spwmap=None, phase_interp=None, append=None, merge=True):
 
         inputs = self.inputs
 
@@ -379,7 +401,7 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
                      'gaintype'    : gaintype,
                      'calmode'     : calmode,
                      'minsnr'      : inputs.minsnr,
-                     'combine'     : '',
+                     'combine'     : combine,
                      'refant'      : refant,
                      'antenna'     : antenna,
                      'uvrange'     : uvrange,
@@ -397,10 +419,17 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
 
         # Merge
         if merge:
-            # Adjust the spwmap
-            if phaseupspwmap:
-                self._mod_last_spwmap(result.pool[0], phaseupspwmap)
-                self._mod_last_spwmap(result.final[0], phaseupspwmap)
+            # Adjust the spwmap for the combine case
+            if inputs.ms.combine_spwmap:
+                if phase_interp:
+                    self._mod_last_interp(result.pool[0], phase_interp)
+                    self._mod_last_interp(result.final[0], phase_interp)
+
+            # Adjust the spw map
+            if phaseup_spwmap:
+                self._mod_last_spwmap(result.pool[0], phaseup_spwmap)
+                self._mod_last_spwmap(result.final[0], phaseup_spwmap)
+
             # Merge result to the local context
             result.accept(inputs.context)
 
@@ -434,6 +463,17 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
         task = setjy.Setjy(task_inputs)
 
         return self._executor.execute(task, merge=True)
+
+    def _mod_last_interp(self, l, interp):
+        l.calfrom[-1] = self._copy_with_interp(l.calfrom[-1], interp)
+
+    def _copy_with_interp(self, old_calfrom, interp):
+        return callibrary.CalFrom(gaintable=old_calfrom.gaintable,
+                                  gainfield=old_calfrom.gainfield,
+                                  interp=interp,
+                                  spwmap=old_calfrom.spwmap,
+                                  caltype=old_calfrom.caltype,
+                                  calwt=old_calfrom.calwt)
 
     def _mod_last_spwmap(self, l, spwmap):
         l.calfrom[-1] = self._copy_with_spwmap(l.calfrom[-1], spwmap)
