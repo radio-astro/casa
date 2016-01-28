@@ -144,7 +144,7 @@ record* msmetadata::antennadiameter(const variant& antenna) {
 		int antID;
 		if (type == variant::INT) {
 			antID = antenna.toInt();
-			_checkAntennaId(antID, True);
+			_checkAntennaId(antID, False);
 		}
 		else if (type == variant::STRING) {
 			antID = _msmd->getAntennaID(antenna.toString());
@@ -155,13 +155,27 @@ record* msmetadata::antennadiameter(const variant& antenna) {
 				"Supported types are int and string"
 			);
 		}
-		Quantum<Vector<Double> > out = _msmd->getAntennaDiameters();
-		QuantumHolder qh(casa::Quantity(out.getValue()[antID], out.getFullUnit()));
 		Record rec;
-		qh.toRecord(rec);
-		return fromRecord(rec);
+		Quantum<Vector<Double> > out = _msmd->getAntennaDiameters();
+        if (antID >= 0) {
+            QuantumHolder qh(casa::Quantity(out.getValue()[antID], out.getFullUnit()));
+		    qh.toRecord(rec);
+        }
+        else {
+            auto i = 0;
+            auto unit = out.getFullUnit();
+            auto values = out.getValue();
+            for (const auto& diam: values) {
+                QuantumHolder qh(casa::Quantity(diam, unit));
+                Record rec1;
+                qh.toRecord(rec1);
+                rec.defineRecord(String::toString(i), rec1);
+                ++i;
+            }
+        }
+        return fromRecord(rec);
 	)
-	return NULL;
+	return nullptr;
 }
 
 vector<int> msmetadata::antennaids(

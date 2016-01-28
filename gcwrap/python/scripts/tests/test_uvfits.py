@@ -135,7 +135,22 @@ class uvfits_test(unittest.TestCase):
         got = tb.getcol(rec_ang)
         tb.done()
         self.assertTrue(np.max(np.abs(got -expec)) < 1e-7, "Receptor angles not preserved")
-        
+
+    def test_diameters(self):
+        """CAS-5818: Verify bogus dish diameters in AN table are not used but normal algorithm is used instead"""
+        myms = mstool()
+        fitsname = datapath + "CTR_CHI_TR2.RWYCP.2"
+        msname = "CAS-5818.ms"
+        self.assertTrue(myms.fromfits(msname, fitsname), "Failed to import uvfits file")
+        myms.done()
+        mymd = msmdtool()
+        mymd.open(msname)
+        diam = mymd.antennadiameter(-1)
+        mymd.done()
+        expec = "25m"
+        for i in diam.keys():
+            self.assertTrue(qa.eq(diam[i], expec), "Unexpected diameter for antenna " + i)
+            
 def suite():
     return [uvfits_test]        
         

@@ -126,7 +126,7 @@ windows in the dataset and close the tool.
             <shortdescription>Get the diameter for the specified antenna.</shortdescription>
             <input>
                 <param type="any" direction="in" name="antenna">
-                    <description>Zero-based antenna in the ANTENNA table, or antenna name.</description>
+                    <description>Zero-based antenna in the ANTENNA table, or antenna name. A negative integer will cause all antenna diameters to be returned.</description>
                     <any type="variant" limittypes="string int"/>
                     <value type="int">-1</value>
                 </param>
@@ -135,7 +135,10 @@ windows in the dataset and close the tool.
             <description>
                 Get the diameter for the specified antenna. The antenna can be specified either by
                 its zero-based ID from the ANTENNA table or by its name in that table. The returned
-                dictionary is a valid quantity.
+                dictionary is a valid quantity. If a negative integer is provided for the antenna, then
+                all atenna diameters will be returned in a dictionary that has keys that are the antenna IDs
+                and values that are dictionaries, each being a valid quantity representing the diameter for
+                that antenna ID.
             </description>
             <example>
     msmd.open("my.ms")
