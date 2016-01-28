@@ -234,7 +234,7 @@ public:
 		vi2->origin();
 	}
 
-	vi::VisibilityIterator2 * const vi2;
+	std::unique_ptr<vi::VisibilityIterator2> vi2;
 
 	void foreachChunk(
 		StatisticsAlgorithm<AccumType,DataIteratorType,MaskIteratorType,WeightsIteratorType>& statistics,
