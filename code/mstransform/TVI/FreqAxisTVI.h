@@ -81,6 +81,7 @@ public:
     										Int spectralWindowId, Int msId) const = 0;
 
     virtual void writeFlag (const Cube<Bool> & flag) = 0;
+    virtual void writeFlagRow (const Cube<Bool> & flag);
 
     // Common transformation for all sub-classes
     Vector<Int> getChannels (	Double time, Int frameOfReference,
@@ -97,8 +98,8 @@ protected:
 												DataCubeMap &auxiliaryData,
 												FreqAxisTransformEngine<T> &transformer) const;
 
-	LogIO logger_p;
 	String spwSelection_p;
+	mutable LogIO logger_p;
 	mutable map<Int,uInt > spwOutChanNumMap_p; // Must be accessed from const methods
 	mutable map<Int,vector<Int> > spwInpChanIdxMap_p; // Must be accessed from const methods
 

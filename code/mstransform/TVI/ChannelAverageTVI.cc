@@ -116,8 +116,19 @@ void ChannelAverageTVI::initialize()
 	{
 		spw = iter->first;
 
+		// Make sure that chanbin is greater than 1
+		if ((uInt)chanbin_p(spw_idx) <= 1)
+		{
+			logger_p << LogIO::DEBUG1 << LogOrigin("MSTransformManager", __FUNCTION__)
+					<< "Selected chanbin for spw " << spw
+					<< " set to 1 fallbacks to the default number of"
+					<< " existing/selected channels: " << iter->second.size()
+					<< LogIO::POST;
+
+			spwChanbinMap_p[spw] = iter->second.size();
+		}
 		// Make sure that chanbin does not exceed number of selected channels
-		if (iter->second.size() < (uInt)chanbin_p(spw_idx))
+		else if ((uInt)chanbin_p(spw_idx) > iter->second.size())
 		{
 			logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
 					<< "Number of selected channels " << iter->second.size()

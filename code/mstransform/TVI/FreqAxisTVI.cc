@@ -82,42 +82,13 @@ Bool FreqAxisTVI::parseConfiguration(const Record &configuration)
 	if (exists >= 0)
 	{
 		configuration.get (exists, spwSelection_p);
-		logger_p << LogIO::NORMAL << LogOrigin("FreqAxisTVI", __FUNCTION__)
+		logger_p << LogIO::DEBUG1 << LogOrigin("FreqAxisTVI", __FUNCTION__)
 				<< "spw selection is " << spwSelection_p
 				<< LogIO::POST;
 	}
 	else
 	{
 		spwSelection_p = "*";
-	}
-
-	// Get list of selected SPWs and channels
-	MSSelection mssel;
-	mssel.setSpwExpr(spwSelection_p);
-	Matrix<Int> spwchan = mssel.getChanList(&(inputVii_p->ms()));
-	logger_p << LogIO::NORMAL << LogOrigin("FreqAxisTVI", __FUNCTION__)
-			<< "Selected SPW:Channels are " << spwchan << LogIO::POST;
-
-	// Convert list of selected SPWs/Channels into a map
-	spwInpChanIdxMap_p.clear();
-    uInt nSelections = spwchan.shape()[0];
-	Int spw,channelStart,channelStop,channelStep;
-	for(uInt selection_i=0;selection_i<nSelections;selection_i++)
-	{
-		spw = spwchan(selection_i,0);
-		channelStart = spwchan(selection_i,1);
-		channelStop = spwchan(selection_i,2);
-		channelStep = spwchan(selection_i,3);
-
-		if (spwInpChanIdxMap_p.find(spw) == spwInpChanIdxMap_p.end())
-		{
-			spwInpChanIdxMap_p[spw].clear(); // Accesing the vector creates it
-		}
-
-		for (Int inpChan=channelStart;inpChan<=channelStop;inpChan += channelStep)
-		{
-			spwInpChanIdxMap_p[spw].push_back(inpChan);
-		}
 	}
 
 	return ret;
@@ -132,7 +103,7 @@ void FreqAxisTVI::initialize()
 	MSSelection mssel;
 	mssel.setSpwExpr(spwSelection_p);
 	Matrix<Int> spwchan = mssel.getChanList(&(inputVii_p->ms()));
-	logger_p << LogIO::NORMAL << LogOrigin("FreqAxisTVI", __FUNCTION__)
+	logger_p << LogIO::DEBUG1 << LogOrigin("FreqAxisTVI", __FUNCTION__)
 			<< "Selected SPW:Channels are " << spwchan << LogIO::POST;
 
 	// Convert list of selected SPWs/Channels into a map
@@ -278,6 +249,13 @@ Vector<Int> FreqAxisTVI::getChannels (Double,Int,Int spectralWindowId,Int) const
 	return ret;
 }
 
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void FreqAxisTVI::writeFlagRow (const Cube<Bool> & flag)
+{
+	getVii()->writeFlagRow(flag);
+}
 
 // -----------------------------------------------------------------------
 //
