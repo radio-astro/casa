@@ -64,7 +64,7 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
             sdms.open(infile)
             sdms.set_selection(spw=sdutil.get_spwids(selection),
                                field=field, antenna=antenna,
-                               timerange=timerange, scan=scan)
+                               timerange=timerange, scan=scan, intent=intent)
             params, func = prepare_for_baselining(blfunc=blfunc,
                                                   datacolumn=datacolumn,
                                                   outfile=outfile,
