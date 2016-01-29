@@ -884,6 +884,7 @@ public:
 	void setScanStartStopMap(bool activated);
 	void setScanStartStopFlaggedMap(bool activated);
     void setTimeAverageIter(bool activated);
+    void setChanAverageIter(Vector<Int> chanbin);
 
 	// Accessors for the mapping functions
 	antennaPairMap * getAntennaPairMap() {return antennaPairMap_p;}
@@ -955,6 +956,7 @@ public:
     Vector <Int> chanAverageBin_p;
     String dataColumnType_p;
     vi::AveragingOptions timeAvgOptions_p;
+    Record chanAvgOptions_p;
 
 protected:
 

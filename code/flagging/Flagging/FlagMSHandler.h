@@ -24,6 +24,7 @@
 #define FlagMSHandler_H_
 
 #include <flagging/Flagging/FlagDataHandler.h>
+#include <msvis/MSVis/ViFrequencySelection.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -101,6 +102,7 @@ private:
 
 	// RO Visibility Iterator
 	vi::VisibilityIterator2 *visibilityIterator_p;
+	vi::FrequencySelectionUsingChannels *channelSelector_p;
 
 };
 

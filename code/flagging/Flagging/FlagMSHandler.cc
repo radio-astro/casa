@@ -21,6 +21,7 @@
 //# $Id: $
 
 #include <flagging/Flagging/FlagMSHandler.h>
+#include <mstransform/TVI/ChannelAverageTVI.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -452,7 +453,19 @@ FlagMSHandler::generateIterator()
                     timeAvgOptions_p,0.0,NULL,true);
 
             visibilityIterator_p = new vi::VisibilityIterator2(vi::AveragingVi2Factory(parameters, selectedMeasurementSet_p));
+        }
+        else if (enableChanAvg_p)
+        {
+        	// Generate plain input VI
+        	vi::VisibilityIterator2 *vi = new vi::VisibilityIterator2(*selectedMeasurementSet_p,
+        																vi::SortColumns (sortOrder_p, true),
+        																true,prefetchColumns_p,timeInterval_p);
+        	// Apply channel selection in plain input VI
+        	applyChannelSelection(vi);
 
+        	// Generate ChannelAverageTVI
+        	vi::ChannelAverageTVIFactory chanAvgFactory(chanAvgOptions_p,vi->getImpl());
+        	visibilityIterator_p = new vi::VisibilityIterator2(chanAvgFactory);
         }
 		else if (!mapScanStartStop_p and !enableTimeAvg_p)
 		{
@@ -517,11 +530,12 @@ FlagMSHandler::generateIterator()
 // therefore this step will in practice do nothing , because the spw and channel lists are empty too.
 // -----------------------------------------------------------------------
 void
-FlagMSHandler::applyChannelSelection(vi::VisibilityIterator2 * /*visIter*/)
+FlagMSHandler::applyChannelSelection(vi::VisibilityIterator2 *visIter)
 {
+	vi::FrequencySelectionUsingChannels channelSelector;
+
 	// Apply channel selection (in row selection cannot be done with MSSelection)
 	// NOTE: Each row of the Matrix has the following elements: SpwID StartCh StopCh Step
-	/*
 	Matrix<Int> spwchan = measurementSetSelection_p->getChanList();
     IPosition shape = spwchan.shape();
     uInt nSelections = shape[0];
@@ -534,10 +548,11 @@ FlagMSHandler::applyChannelSelection(vi::VisibilityIterator2 * /*visIter*/)
 		channelStop = spwchan(selection_i,2);
 		channelStep = spwchan(selection_i,3);
 		channelWidth = channelStop-channelStart+1;
-		// jagonzal (TODO): Use the frequency selection capabilities of the new VI/VB framework
-		// visIter->selectChannel(1,channelStart,channelWidth,channelStep,spw);
+		channelSelector.add (spw, channelStart, channelWidth,channelStep);
 	}
-	*/
+
+	visIter->setFrequencySelection(channelSelector);
+
 	return;
 }
 

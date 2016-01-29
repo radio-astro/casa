@@ -208,56 +208,18 @@ FlagAgentClipping::computeInRowFlags(const vi::VisBuffer2 &/*visBuffer*/, VisMap
 {
 	// Get flag cube size
 	Float visExpression;
-	Int nPols,nChannels,nTimesteps,nAverage;
+	Int nPols,nChannels,nTimesteps;
 	visibilities.shape(nPols, nChannels, nTimesteps);
 
-	if (channelavg_p)
+	for (uInt chan_i=0;chan_i<(uInt) nChannels;chan_i++)
 	{
-		visExpression = 0;
-		nAverage = 0;
-
-		for (uInt pol_i=0;pol_i<(uInt)nPols;pol_i++)
+		for (uInt pol_i=0;pol_i<(uInt) nPols;pol_i++)
 		{
-			for (uInt chan_i=0;chan_i<(uInt) nChannels;chan_i++)
+			visExpression = visibilities(pol_i,chan_i,row);
+			if ((*this.*checkVis_p)(visExpression))
 			{
-				if (!flags.getModifiedFlags(pol_i,chan_i,row))
-				{
-					visExpression += visibilities(pol_i,chan_i,row);
-					nAverage += 1;
-				}
-			}
-
-			// If visExpression is out of range we flag the entire row
-			if (nAverage > 0)
-			{
-				visExpression /= nAverage;
-				if ((*this.*checkVis_p)(visExpression))
-				{
-					for (uInt chan_i=0;chan_i<(uInt)nChannels;chan_i++)
-					{
-						flags.applyFlag(pol_i,chan_i,row);
-					}
-					visBufferFlags_p += flags.flagsPerRow();
-				}
-			}
-
-			// calculate the average of next polarization
-			nAverage = 0;
-		}
-
-	}
-	else
-	{
-		for (uInt chan_i=0;chan_i<(uInt) nChannels;chan_i++)
-		{
-			for (uInt pol_i=0;pol_i<(uInt) nPols;pol_i++)
-			{
-				visExpression = visibilities(pol_i,chan_i,row);
-				if ((*this.*checkVis_p)(visExpression))
-				{
-					flags.applyFlag(pol_i,chan_i,row);
-					visBufferFlags_p += 1;
-				}
+				flags.applyFlag(pol_i,chan_i,row);
+				visBufferFlags_p += 1;
 			}
 		}
 	}

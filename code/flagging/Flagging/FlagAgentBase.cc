@@ -105,6 +105,13 @@ FlagAgentBase::FlagAgentBase(FlagDataHandler *dh, Record config, uShort iteratio
         flagDataHandler_p->setTimeAverageIter(true);
 	}
 
+	// Setup time/channel average iterator parameters
+	if (channelavg_p)
+	{
+		flagDataHandler_p->setChanAverageIter(chanbin_p);
+		filterChannels_p=false; // Done in the iterator
+	}
+
 
 	// Check if async processing is enabled
 	backgroundMode_p = false;

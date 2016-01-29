@@ -1614,7 +1614,7 @@ FlagDataHandler::setScanStartStopFlaggedMap(bool activated)
 }
 
 // ----------------------------------------------------------------------------
-//  Set the time averaging iterator options for the clip agent
+//  Set the time averaging iterator options for the visibility agents (clip, rflag, tfcrop)
 // ----------------------------------------------------------------------------
 void
 FlagDataHandler::setTimeAverageIter(bool activated)
@@ -1649,6 +1649,33 @@ FlagDataHandler::setTimeAverageIter(bool activated)
         timeAvgOptions_p |= vi::AveragingOptions::CorrectedFlagWeightAvgFromWEIGHT
     }*/
 
+}
+
+// ----------------------------------------------------------------------------
+//  Set the channel averaging iterator options for the visibility agents (clip, rflag, tfcrop)
+// ----------------------------------------------------------------------------
+void
+FlagDataHandler::setChanAverageIter(Vector<Int> chanbin)
+{
+    enableChanAvg_p = True;
+
+    // Store spw selection
+    if (spwSelection_p.size() > 0)
+    {
+    	chanAvgOptions_p.define("spw",spwSelection_p);
+    }
+
+    // Store chanbin
+    if (chanbin.size() == 1)
+    {
+    	chanAvgOptions_p.define("chanbin",chanbin(0));
+    }
+    else
+    {
+    	chanAvgOptions_p.define("chanbin",chanbin);
+    }
+
+    return;
 }
 
 // -----------------------------------------------------------------------
