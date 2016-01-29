@@ -1511,7 +1511,7 @@ FlagAgentBase::setAgentParameters(Record config)
 							<< " (only Int and arrayInt are supported)" << LogIO::POST;
 			}
 
-			*logger_p 	<< logLevel_p << "Channel average bin is " << chanbin_p << LogIO::POST;
+			*logger_p 	<< LogIO::NORMAL << "Channel average bin is " << chanbin_p << LogIO::POST;
 		}
 	}
 
@@ -1541,9 +1541,9 @@ FlagAgentBase::setAgentParameters(Record config)
             String timebin;
             config.get(exists, timebin);
             timebin_p = casaQuantity(timebin).get("s").getValue();
-
-    		*logger_p 	<< logLevel_p << "Time average bin is " << timebin_p << LogIO::POST;
         }
+
+		*logger_p 	<< LogIO::NORMAL << "Time average bin is " << timebin_p << LogIO::POST;
 
      }
 

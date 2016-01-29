@@ -81,7 +81,7 @@ public:
     										Int spectralWindowId, Int msId) const = 0;
 
     virtual void writeFlag (const Cube<Bool> & flag) = 0;
-    virtual void writeFlagRow (const Cube<Bool> & flag);
+    void writeFlagRow (const Cube<Bool> & flag);
 
     // Common transformation for all sub-classes
     Vector<Int> getChannels (	Double time, Int frameOfReference,

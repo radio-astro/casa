@@ -38,6 +38,7 @@ FlagMSHandler::FlagMSHandler(string tablename, uShort iterationApproach, Double 
 {
 	selectedMeasurementSet_p = NULL;
 	originalMeasurementSet_p = NULL;
+	preAveragingVI_p = NULL;
 	visibilityIterator_p = NULL;
 	tableTye_p = MEASUREMENT_SET;
 	processorTableExist_p = false;
@@ -59,6 +60,7 @@ FlagMSHandler::~FlagMSHandler()
 
 	// Delete VisibilityIterator
 	if (visibilityIterator_p) delete visibilityIterator_p;
+	if (preAveragingVI_p) delete preAveragingVI_p;
 
 	return;
 }
@@ -446,6 +448,21 @@ FlagMSHandler::generateIterator()
 			                                                   vi::SortColumns (sortOrder_p, true),
 			                                                   true,prefetchColumns_p,timeInterval_p);
 		}
+		else if ((enableTimeAvg_p) and  (enableChanAvg_p))
+		{
+            // Time averaging in clip mode uses the Time Averaging Iterator
+            vi::AveragingParameters parameters(timeAverageBin_p, 0,vi::SortColumns(sortOrder_p, false),
+                    timeAvgOptions_p,0.0,NULL,true);
+
+            preAveragingVI_p = new vi::VisibilityIterator2(vi::AveragingVi2Factory(parameters, selectedMeasurementSet_p));
+
+        	// Apply channel selection in input VI
+        	applyChannelSelection(preAveragingVI_p);
+
+        	// Generate ChannelAverageTVI
+        	vi::ChannelAverageTVIFactory chanAvgFactory(chanAvgOptions_p,preAveragingVI_p->getImpl());
+        	visibilityIterator_p = new vi::VisibilityIterator2(chanAvgFactory);
+		}
         else if (enableTimeAvg_p)
         {
             // Time averaging in clip mode uses the Time Averaging Iterator
@@ -457,14 +474,14 @@ FlagMSHandler::generateIterator()
         else if (enableChanAvg_p)
         {
         	// Generate plain input VI
-        	vi::VisibilityIterator2 *vi = new vi::VisibilityIterator2(*selectedMeasurementSet_p,
-        																vi::SortColumns (sortOrder_p, true),
-        																true,prefetchColumns_p,timeInterval_p);
+        	preAveragingVI_p = new vi::VisibilityIterator2(*selectedMeasurementSet_p,
+        													vi::SortColumns (sortOrder_p, true),
+        													true,prefetchColumns_p,timeInterval_p);
         	// Apply channel selection in plain input VI
-        	applyChannelSelection(vi);
+        	applyChannelSelection(preAveragingVI_p);
 
         	// Generate ChannelAverageTVI
-        	vi::ChannelAverageTVIFactory chanAvgFactory(chanAvgOptions_p,vi->getImpl());
+        	vi::ChannelAverageTVIFactory chanAvgFactory(chanAvgOptions_p,preAveragingVI_p->getImpl());
         	visibilityIterator_p = new vi::VisibilityIterator2(chanAvgFactory);
         }
 		else if (!mapScanStartStop_p and !enableTimeAvg_p)

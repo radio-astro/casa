@@ -3078,6 +3078,253 @@ class cleanup(test_base):
         pass
 
 
+class test_preaveraging(test_base):
+    """Test channel/time pre-averaging for visibility-based flagging"""
+    
+    def setUp(self):
+        self.setUp_data4tfcrop()
+        mstransform(vis=self.vis,outputvis='test_preaveraging.ms',datacolumn='data',spw='9',scan='30',
+                    antenna='1&2',timerange='2010/10/16/14:45:08.50~2010/10/16/14:45:11.50') 
+        self.vis = 'test_preaveraging.ms'     
+        
+    def tearDown(self):    
+        os.system('rm -rf test_preaveraging.ms')        
+        os.system('rm -rf test_clip_timeavg*')
+        os.system('rm -rf test_clip_chanavg*')
+        os.system('rm -rf test_clip_time_chanavg*')
+        os.system('rm -rf test_rflag_timeavg*')
+        os.system('rm -rf test_rflag_chanavg*')
+        os.system('rm -rf test_rflag_time_chanavg*')    
+        os.system('rm -rf test_tfcrop_timeavg*')
+        os.system('rm -rf test_tfcrop_chanavg*')
+        os.system('rm -rf test_tfcrop_time_chanavg*') 
+
+    def test_clip_timeavg(self):
+        '''flagdata: clip with time average and compare vs mstransform'''
+        
+        # Unflag the original input data
+        flagdata(self.vis, flagbackup=False, mode='unflag')      
+        
+        # STEP 1: Time average with mstransform, then flagging with normal clip
+        mstransform(vis=self.vis,outputvis='test_clip_timeavg_step1.ms',datacolumn='data',
+                    timeaverage=True,timebin='2s')
+        flagdata(vis='test_clip_timeavg_step1.ms',flagbackup=False, mode='clip',clipminmax=[0.0,0.08])
+        res1 = flagdata(vis='test_clip_timeavg_step1.ms', mode='summary', spwchan=True)
+        
+        # Unflag the original input data
+        flagdata(self.vis, flagbackup=False, mode='unflag')
+
+        # STEP 2: Flagging with clip using time average, then time average with mstransform
+        flagdata(vis=self.vis, flagbackup=False, mode='clip', datacolumn='DATA', 
+                 timeavg=True, timebin='2s', clipminmax=[0.0,0.08])
+        mstransform(vis=self.vis,outputvis='test_clip_timeavg_step2.ms',datacolumn='data',
+                    timeaverage=True,timebin='2s')
+        res2 = flagdata(vis='test_clip_timeavg_step2.ms', mode='summary', spwchan=True)
+
+        # Compare results
+        self.assertEqual(res1['flagged'], res2['flagged'])
+        
+    def test_clip_chanavg(self):
+        '''flagdata: clip with chan average and compare vs mstransform'''
+        
+        # Unflag the original input data
+        flagdata(self.vis, flagbackup=False, mode='unflag')
+        
+        # STEP 1: Chan average with mstransform, then flagging with normal clip
+        mstransform(vis=self.vis,outputvis='test_clip_chanavg_step1.ms',datacolumn='data',
+                    chanaverage=True,chanbin=2)
+        flagdata(vis='test_clip_chanavg_step1.ms',flagbackup=False, mode='clip',clipminmax=[0.0,0.08])
+        res1 = flagdata(vis='test_clip_chanavg_step1.ms', mode='summary', spwchan=True)
+        
+        # Unflag the original input data
+        flagdata(vis=self.vis, flagbackup=False, mode='unflag')
+
+        # STEP 2: Flagging with clip using time average, then time average with mstransform
+        flagdata(vis=self.vis, flagbackup=False, mode='clip', datacolumn='DATA', 
+                 channelavg=True, chanbin=2, clipminmax=[0.0,0.08])
+        mstransform(vis=self.vis, outputvis='test_clip_chanavg_step2.ms',datacolumn='data',
+                    chanaverage=True,chanbin=2)
+        res2 = flagdata(vis='test_clip_chanavg_step2.ms', mode='summary', spwchan=True)
+
+        # Compare results
+        self.assertEqual(res1['flagged'], res2['flagged'])        
+        
+    def test_clip_time_chanavg(self):
+        '''flagdata: clip with time/chan average and compare vs mstransform'''
+        
+        # Unflag the original input data
+        flagdata(self.vis, flagbackup=False, mode='unflag')
+        
+        # STEP 1: Chan average with mstransform, then flagging with normal clip
+        mstransform(vis=self.vis,outputvis='test_clip_time_chanavg_step1.ms',datacolumn='data',
+                    timeaverage=True,timebin='2s',chanaverage=True,chanbin=2)
+        flagdata(vis='test_clip_time_chanavg_step1.ms',flagbackup=False, mode='clip',clipminmax=[0.0,0.08])
+        res1 = flagdata(vis='test_clip_time_chanavg_step1.ms', mode='summary', spwchan=True)
+        
+        # Unflag the original input data
+        flagdata(vis=self.vis, flagbackup=False, mode='unflag')
+
+        # STEP 2: Flagging with clip using time average, then time average with mstransform
+        flagdata(vis=self.vis, flagbackup=False, mode='clip', datacolumn='DATA', 
+                 timeavg=True, timebin='2s', channelavg=True, chanbin=2, clipminmax=[0.0,0.08])
+        mstransform(vis=self.vis, outputvis='test_clip_time_chanavg_step2.ms',datacolumn='data',
+                    timeaverage=True,timebin='2s',chanaverage=True,chanbin=2)
+        res2 = flagdata(vis='test_clip_time_chanavg_step2.ms', mode='summary', spwchan=True)
+
+        # Compare results
+        self.assertEqual(res1['flagged'], res2['flagged'])  
+        
+    def test_rflag_timeavg(self):
+        '''flagdata: rflag with time average and compare vs mstransform'''
+        
+        # Unflag the original input data
+        flagdata(self.vis, flagbackup=False, mode='unflag')      
+        
+        # STEP 1: Time average with mstransform, then flagging with normal clip
+        mstransform(vis=self.vis,outputvis='test_rflag_timeavg_step1.ms',datacolumn='data',
+                    timeaverage=True,timebin='2s')
+        flagdata(vis='test_rflag_timeavg_step1.ms',flagbackup=False, mode='rflag',extendflags=False)
+        res1 = flagdata(vis='test_rflag_timeavg_step1.ms', mode='summary', spwchan=True)
+        
+        # Unflag the original input data
+        flagdata(self.vis, flagbackup=False, mode='unflag')
+
+        # STEP 2: Flagging with clip using time average, then time average with mstransform
+        flagdata(vis=self.vis, flagbackup=False, mode='rflag', datacolumn='DATA', 
+                 timeavg=True, timebin='2s', extendflags=False)
+        mstransform(vis=self.vis,outputvis='test_rflag_timeavg_step2.ms',datacolumn='data',
+                    timeaverage=True,timebin='2s')
+        res2 = flagdata(vis='test_rflag_timeavg_step2.ms', mode='summary', spwchan=True)
+
+        # Compare results
+        self.assertEqual(res2['flagged'], 20)        
+        
+    def test_rflag_chanavg(self):
+        '''flagdata: rflag with chan average and compare vs mstransform'''
+        
+        # Unflag the original input data
+        flagdata(self.vis, flagbackup=False, mode='unflag')
+        
+        # STEP 1: Chan average with mstransform, then flagging with normal clip
+        mstransform(vis=self.vis,outputvis='test_rflag_chanavg_step1.ms',datacolumn='data',
+                    chanaverage=True,chanbin=2)
+        flagdata(vis='test_rflag_chanavg_step1.ms',flagbackup=False, mode='rflag',extendflags=False)
+        res1 = flagdata(vis='test_rflag_chanavg_step1.ms', mode='summary', spwchan=True)
+        
+        # Unflag the original input data
+        flagdata(vis=self.vis, flagbackup=False, mode='unflag')
+
+        # STEP 2: Flagging with clip using time average, then time average with mstransform
+        flagdata(vis=self.vis, flagbackup=False, mode='rflag', datacolumn='DATA', 
+                 channelavg=True, chanbin=2,extendflags=False)
+        mstransform(vis=self.vis, outputvis='test_rflag_chanavg_step2.ms',datacolumn='data',
+                    chanaverage=True,chanbin=2)
+        res2 = flagdata(vis='test_rflag_chanavg_step2.ms', mode='summary', spwchan=True)
+
+        # Compare results
+        self.assertEqual(res1['flagged'], res2['flagged'])   
+        
+    def test_rflag_time_chanavg(self):
+        '''flagdata: rflag with time/chan average and compare vs mstransform'''
+        
+        # Unflag the original input data
+        flagdata(self.vis, flagbackup=False, mode='unflag')
+        
+        # STEP 1: Chan average with mstransform, then flagging with normal clip
+        mstransform(vis=self.vis,outputvis='test_rflag_time_chanavg_step1.ms',datacolumn='data',
+                    timeaverage=True,timebin='2s',chanaverage=True,chanbin=2)
+        flagdata(vis='test_rflag_time_chanavg_step1.ms',flagbackup=False, mode='clip',extendflags=False)
+        res1 = flagdata(vis='test_rflag_time_chanavg_step1.ms', mode='summary', spwchan=True)
+        
+        # Unflag the original input data
+        flagdata(vis=self.vis, flagbackup=False, mode='unflag')
+
+        # STEP 2: Flagging with clip using time average, then time average with mstransform
+        flagdata(vis=self.vis, flagbackup=False, mode='clip', datacolumn='DATA', 
+                 timeavg=True, timebin='2s', channelavg=True, chanbin=2, extendflags=False)
+        mstransform(vis=self.vis, outputvis='test_rflag_time_chanavg_step2.ms',datacolumn='data',
+                    timeaverage=True,timebin='2s',chanaverage=True,chanbin=2)
+        res2 = flagdata(vis='test_rflag_time_chanavg_step2.ms', mode='summary', spwchan=True)
+
+        # Compare results
+        self.assertEqual(res1['flagged'], res2['flagged'])            
+        
+    def test_tfcrop_timeavg(self):
+        '''flagdata: tfcrop with time average and compare vs mstransform'''
+        
+        # Unflag the original input data
+        flagdata(self.vis, flagbackup=False, mode='unflag')      
+        
+        # STEP 1: Time average with mstransform, then flagging with normal clip
+        mstransform(vis=self.vis,outputvis='test_tfcrop_timeavg_step1.ms',datacolumn='data',
+                    timeaverage=True,timebin='2s')
+        flagdata(vis='test_tfcrop_timeavg_step1.ms',flagbackup=False, mode='rflag',extendflags=False)
+        res1 = flagdata(vis='test_tfcrop_timeavg_step1.ms', mode='summary', spwchan=True)
+        
+        # Unflag the original input data
+        flagdata(self.vis, flagbackup=False, mode='unflag')
+
+        # STEP 2: Flagging with clip using time average, then time average with mstransform
+        flagdata(vis=self.vis, flagbackup=False, mode='rflag', datacolumn='DATA', 
+                 timeavg=True, timebin='2s', extendflags=False)
+        mstransform(vis=self.vis,outputvis='test_tfcrop_timeavg_step2.ms',datacolumn='data',
+                    timeaverage=True,timebin='2s')
+        res2 = flagdata(vis='test_tfcrop_timeavg_step2.ms', mode='summary', spwchan=True)
+
+        # Compare results
+        self.assertEqual(res2['flagged'], 20)        
+        
+    def test_tfcrop_chanavg(self):
+        '''flagdata: tfcrop with chan average and compare vs mstransform'''
+        
+        # Unflag the original input data
+        flagdata(self.vis, flagbackup=False, mode='unflag')
+        
+        # STEP 1: Chan average with mstransform, then flagging with normal clip
+        mstransform(vis=self.vis,outputvis='test_tfcrop_chanavg_step1.ms',datacolumn='data',
+                    chanaverage=True,chanbin=2)
+        flagdata(vis='test_tfcrop_chanavg_step1.ms',flagbackup=False, mode='rflag',extendflags=False)
+        res1 = flagdata(vis='test_tfcrop_chanavg_step1.ms', mode='summary', spwchan=True)
+        
+        # Unflag the original input data
+        flagdata(vis=self.vis, flagbackup=False, mode='unflag')
+
+        # STEP 2: Flagging with clip using time average, then time average with mstransform
+        flagdata(vis=self.vis, flagbackup=False, mode='rflag', datacolumn='DATA', 
+                 channelavg=True, chanbin=2,extendflags=False)
+        mstransform(vis=self.vis, outputvis='test_tfcrop_chanavg_step2.ms',datacolumn='data',
+                    chanaverage=True,chanbin=2)
+        res2 = flagdata(vis='test_tfcrop_chanavg_step2.ms', mode='summary', spwchan=True)
+
+        # Compare results
+        self.assertEqual(res1['flagged'], res2['flagged'])   
+        
+    def test_tfcrop_time_chanavg(self):
+        '''flagdata: tfcrop with time/chan average and compare vs mstransform'''
+        
+        # Unflag the original input data
+        flagdata(self.vis, flagbackup=False, mode='unflag')
+        
+        # STEP 1: Chan average with mstransform, then flagging with normal clip
+        mstransform(vis=self.vis,outputvis='test_tfcrop_time_chanavg_step1.ms',datacolumn='data',
+                    timeaverage=True,timebin='2s',chanaverage=True,chanbin=2)
+        flagdata(vis='test_tfcrop_time_chanavg_step1.ms',flagbackup=False, mode='clip',extendflags=False)
+        res1 = flagdata(vis='test_tfcrop_time_chanavg_step1.ms', mode='summary', spwchan=True)
+        
+        # Unflag the original input data
+        flagdata(vis=self.vis, flagbackup=False, mode='unflag')
+
+        # STEP 2: Flagging with clip using time average, then time average with mstransform
+        flagdata(vis=self.vis, flagbackup=False, mode='clip', datacolumn='DATA', 
+                 timeavg=True, timebin='2s', channelavg=True, chanbin=2, extendflags=False)
+        mstransform(vis=self.vis, outputvis='test_tfcrop_time_chanavg_step2.ms',datacolumn='data',
+                    timeaverage=True,timebin='2s',chanaverage=True,chanbin=2)
+        res2 = flagdata(vis='test_tfcrop_time_chanavg_step2.ms', mode='summary', spwchan=True)
+
+        # Compare results
+        self.assertEqual(res2['flagged'], res2['flagged'])          
+
+
 def suite():
     return [test_rflag,
             test_tfcrop,
@@ -3100,4 +3347,5 @@ def suite():
             test_float_column,
             test_tbuff,
             TestMergeManualTimerange,
+            test_preaveraging,
             cleanup]

@@ -584,10 +584,14 @@ AgentFlagger::initAgents()
 		agent_rec.get("mode", mode);
 
         // If clip agent is mixed with other agents and time average is True, skip it
-        if ((mode.compare("clip") == 0 or mode.compare("rflag") == 0 or mode.compare("tfcrop") == 0) and list_size > 1
-        		and (agent_rec.isDefined("timeavg") == true or agent_rec.isDefined("channelavg") == true)){
-            Bool tavg;
-            agent_rec.get("timeavg", tavg);
+        if ((mode.compare("clip") == 0 and list_size > 1) or
+        		(mode.compare("rflag") == 0 and list_size > 2) or
+        		(mode.compare("tfcrop") == 0 and list_size > 2))
+        {
+            Bool tavg = False;
+        	int exists = agent_rec.fieldNumber ("timeavg");
+        	if (exists >= 0) agent_rec.get("timeavg", tavg);
+
             if (tavg){
                 os << LogIO::WARN << "Cannot have " << mode <<" mode with timeavg/channelavg=True in list mode" << LogIO::POST;
                 continue;
