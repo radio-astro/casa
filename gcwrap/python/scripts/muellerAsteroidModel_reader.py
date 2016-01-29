@@ -1,8 +1,12 @@
 # return flux density of thermo-physical models for asteroids
 # -- read a tabulated model flux density by Mueller for asteroids and
 #  flux for a frequency scaled from the nearest value from the table
+import os
+import numpy as np
 
 class asteroid_TPM:
+    # objectname: capitalized name
+    # frequency in GHz 
     def __init__(self, objectname, frequency, mjd, path=''):
         self.knownsrcdict={'Ceres':{'interval':'1hour'},
                            'Lutetia':{'interval':'15min'},
@@ -17,7 +21,7 @@ class asteroid_TPM:
             self.setdatapath(path)
 
     def setfreq(self,frequency):
-        if type(frequency)!=float:
+        if type(frequency)!=float and type(frequency)!=np.float32 and type(frequency)!=np.float64:
             raise IOError("frequency must be float (in GHz)")
         self.freq=frequency
 
@@ -47,15 +51,19 @@ class asteroid_TPM:
         read flux density from the asteroid models by
         Mueller
         """
+        from casac import casac 
+        qa = casac.quanta()
+
         date=qa.time(str(self.mjd)+'d',form='ymd')[0]
         yr=date.split('/')[0] 
-
+        #if int(yr) < 2015: yr = '2015'
         if self.src in self.knownsrcdict.keys():
             filename = self.datapath+self.src+"_ALMA_TPMprediction_"+yr+"_"+self.knownsrcdict[self.src]['interval']+".txt"
+            #print "filename=",filename
         import glob
         flist = glob.glob(filename)
         if len(flist)==1:
-            print "Reading model data: ",flist[0]    
+            #print "Reading model data: ",flist[0]
             with open(flist[0],"r") as f:
                 data = f.readlines()
             freqs = self._checkheader(data)
@@ -83,7 +91,7 @@ class asteroid_TPM:
             print "refflux@reffreq=%s@%s at %s" % (refflux,reffreq,mjdarr[t])
 
         elif len(flist)==0:
-            raise IOError("Cannot find the model file for "+self.src+".")
+            raise IOError("Cannot find the model file for "+self.src+" for date="+date+".")
 
        
         return (reffreq, refflux)
