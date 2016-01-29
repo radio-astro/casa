@@ -2701,8 +2701,14 @@ class test_weight_spectrum(test_base):
     def test_clip_chanavg(self):
         '''flagdata: datacolumn=WEIGHT_SPECTRUM, channel average'''
         self.setUp_wtspec()
+        
+        # jagonzal (CAS-7782 - Generalized pre-averaging for visibility flagging)
+        # When doing channel average the resulting WEIGHT_SPECTRUM 
+        # is the sum (not average) of the input WEIGHT_SPECTRUM
+        # Therefore I have to multiply the clip threshold
+        # by the number of input channels
         flagdata(vis=self.vis, mode='clip', spw='0:1~29',datacolumn='WEIGHT_SPECTRUM', 
-                 clipminmax=[0,2.1], channelavg=True, flagbackup=False)
+                 clipminmax=[0,2.1*29], channelavg=True, flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary')
         # Same result as previous test. The values of the weight_spectrum
         # for each channel are the same, excluding the 2 channels that are
@@ -2751,8 +2757,15 @@ class test_weight_spectrum(test_base):
     def test_weight3(self):
         '''flagdata: clip using datacolumn='WEIGHT' and channelavg=True'''
         self.setUp_weightcol()
+        
+        # jagonzal (CAS-7782 - Generalized pre-averaging for visibility flagging)
+        # When doing channel average the resulting WEIGHT_SPECTRUM 
+        # is the sum (not average) of the input WEIGHT_SPECTRUM
+        # Therefore I have to multiply the clip threshold
+        # by the number of input channels        
         flagdata(vis=self.vis, mode='clip', datacolumn='WEIGHT', 
-                 clipminmax=[0,50.0], clipoutside=True, channelavg=True, flagbackup=False)
+                 clipminmax=[0,50.0*31], clipoutside=True, channelavg=True, flagbackup=False)
+        
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'],31)
         self.assertEqual(res['spw']['0']['flagged'],31)
