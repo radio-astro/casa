@@ -192,6 +192,7 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_virtualconcat.py
   test_vishead.py
   test_visstat.py
+  test_visstat2.py
   test_vpmanager.py
   test_wvrgcal.py
   selection_syntax.py
