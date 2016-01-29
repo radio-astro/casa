@@ -64,7 +64,7 @@ def listpartition(vis=None, createdict=None, listfile=None):
             if axis == '':
                 axis = 'unknown'
                 
-            casalog.post('This is a multi-MS with separation axis = '+axis)
+            casalog.post('This is a Multi-MS with separation axis = '+axis)
 
         else:
             mslist.append(vis)

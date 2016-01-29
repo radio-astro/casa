@@ -122,6 +122,17 @@ class test_base(unittest.TestCase):
             
         os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
         default('partition')         
+        
+    def setUp_SD(self):
+        res = None
+        # Single-dish ASDM with 3 antennas and 6 baselines in total
+        self.vis = 'uid___A002_X85c183_X36f_small.ms' 
+        datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/partition/'
+        if not os.path.exists(self.vis):
+            os.system('ln -sf ' + datapath + self.vis +' '+ self.vis)
+            
+        default(partition)
+        
 
     def cleanup(self):
         os.system('rm -rf '+ self.vis)
@@ -702,6 +713,26 @@ class partition_test2(test_base):
         # The separation axis should be written to the output MMS
         sepaxis = ph.axisType(self.mmsfile)
         self.assertEqual(sepaxis, 'spw', 'Partition did not write AxisType correctly in MMS')
+        
+    def test_baseline_partition(self):
+        '''partition: create an MMS per baseline for an interferometry MS'''
+        partition(vis=self.msfile, outputvis=self.mmsfile, spw='0,1',createmms=True,
+                  separationaxis='baseline', flagbackup=False, datacolumn='data')  
+        
+        listpartition(self.mmsfile) 
+        
+        # This MS doesn't have auto-correlations. It has 4 antennas and 6 baselines (cross)
+        # There will be MSSelectionNullSelection SEVERE messages in the logfile because
+        # it will try to create SubMSs from auto-correlations. This is not an error!
+        md = msmdtool()
+        md.open(self.mmsfile)
+        bsl = md.baselines()
+        md.close()
+        
+        # diagonal give the auto-corrs
+        ac = bsl.diagonal()
+        self.assertFalse(ac.all(), 'There should be no auto-correlations in MMS')
+                
 
 class partition_float(test_base):
     def setUp(self):
@@ -917,6 +948,56 @@ class test_partition_balanced_multiple_scan(test_base):
         for col in cols:
             self.assertTrue(os.path.islink(subms[1] + '/' + col))
  
+class test_partition_baseline_axis(test_base):
+    ''' test file with auto and cross correlations of SD data '''
+    def setUp(self):
+        self.setUp_SD()
+        
+    def tearDown(self):
+        os.system("rm -rf " + self.outputms)
+
+    def test_baseline1(self):
+        '''partition: create an MMS per baseline axis. Use the number of MPI servers'''
+        self.outputms = 'baseline1.mms'
+        partition(self.vis, outputvis=self.outputms, separationaxis='baseline', flagbackup=False)
+        
+        # The separation axis should be written to the output MMS
+        sepaxis = ph.axisType(self.outputms)
+        self.assertEqual(sepaxis, 'baseline', 'Partition did not write AxisType correctly in MMS')
+
+ 
+    def test_baseline_max(self):
+        '''partition: create an MMS per baseline axis. Use the maximum number of baselines'''
+        self.outputms = 'baseline_max.mms'
+        partition(self.vis, outputvis=self.outputms, separationaxis='baseline', numsubms=50, flagbackup=False)
+        
+        # Take the dictionary and compare with original MS
+        thisdict = listpartition(vis=self.outputms, createdict=True)
+        self.assertEqual(len(thisdict.keys()), 6, 'There should be 6 subMSs in output MMS')
+        
+    def test_baseline_autocorr(self):
+        '''partition: create an MMS per baseline axis only for auto-correlations'''
+        self.outputms = 'baseline_autocorr.mms'
+        partition(self.vis, outputvis=self.outputms, separationaxis='baseline', antenna='*&&&', flagbackup=False)
+        
+        md = msmdtool()
+        md.open(self.outputms)
+        bsl = md.baselines()
+        md.close()
+        
+        #diagnoals give the auto-corrs
+        ac = bsl.diagonal()
+        self.assertTrue(ac.all(), 'Not all auto-correlations are there')
+        
+    def test_baseline_2subms(self):
+        '''partition: create an MMS per baseline axis. Create 3 SubMS'''
+        self.outputms = 'baseline_3subms.mms'
+        partition(self.vis, outputvis=self.outputms, separationaxis='baseline', numsubms=3, flagbackup=False)
+        
+        # Take the dictionary and compare with original MS
+        thisdict = listpartition(vis=self.outputms, createdict=True)
+        self.assertEqual(len(thisdict.keys()), 3, 'There should be 3 subMSs in output MMS')
+ 
 
 # Cleanup class 
 class partition_cleanup(test_base):
@@ -936,4 +1017,5 @@ def suite():
             test_partiton_subtables_alma,
             test_partition_balanced,
             test_partition_balanced_multiple_scan,
+            test_partition_baseline_axis,
             partition_cleanup]

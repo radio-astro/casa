@@ -11,7 +11,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <description>
 
     T H I S   T A S K   I S    D E P R E C A T E D
-     I T   W I L L   B E   R E M O V E D   S O O N
+    I T   W I L L   B E   R E M O V E D   S O O N
+
 Oldsplit is the general purpose program to make a new data set that is a
 subset or averaged form of an existing data set.  General selection
 parameters are included, and one or all of the various data columns

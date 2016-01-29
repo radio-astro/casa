@@ -27,8 +27,8 @@ import os
 import sys
 import shutil
 from __main__ import default
-from tasks import importasdm, flagdata, exportasdm, flagcmd
-from taskinit import mstool, tbtool
+from tasks import importasdm, flagdata, exportasdm, listpartition
+from taskinit import mstool, tbtool, msmdtool
 import testhelper as th
 import unittest
 import partitionhelper as ph
@@ -213,7 +213,8 @@ class test_base(unittest.TestCase):
 
     def setUp_SD(self):
         res = None
-        myasdmname = 'uid___A002_X6218fb_X264' # Single-dish ASDM
+        # Single-dish ASDM, 1 scan, 9 spws, 4 antennas, 10 baselines,  4 auto-corrs + cross
+        myasdmname = 'uid___A002_X6218fb_X264'  
 
         datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/alma-sd/M100/'
         os.system('ln -sf '+datapath+myasdmname)
@@ -692,6 +693,7 @@ class asdm_import10(test_base):
         myasdmname = 'uid___A002_X6218fb_X264'
         themsname = myasdmname+".ms"
 
+        # The ocorr_mode='ao' option will create a FLOAT_DATA column instead of DATA
         importasdm(myasdmname, vis=themsname, ocorr_mode='ao', createmms=True, scans='1')
         self.assertTrue(ParallelDataHelper.isParallelMS(themsname), 'Output is not a Multi-MS')        
         self.assertTrue(len(th.getColDesc(themsname, 'FLOAT_DATA')) > 0)
@@ -705,6 +707,46 @@ class asdm_import10(test_base):
         self.assertTrue(ParallelDataHelper.isParallelMS(themsname), 'Output is not a Multi-MS')
         self.assertTrue(len(th.getColDesc(themsname, 'DATA')) > 0)
 
+    def test_sd_data_mms_baseline_all(self):
+        '''importasdm: Create an MMS separated per baseline, using default numsubms '''
+        myasdmname = 'uid___A002_X6218fb_X264'
+        themsname = myasdmname+".ms"
+
+        # Create a single-dish MMS with auto and cross correlations
+        importasdm(myasdmname, vis=themsname, ocorr_mode='ca', createmms=True, scans='1', separationaxis='baseline')
+        self.assertTrue(ParallelDataHelper.isParallelMS(themsname), 'Output is not a Multi-MS')        
+        self.assertTrue(len(th.getColDesc(themsname, 'DATA')) > 0)
+        
+        md = msmdtool()
+        md.open(themsname)
+        bsl = md.baselines()
+        md.close()      
+        
+        # Check if all baselines are in there
+        self.assertTrue(bsl.all(), 'Not all baselines are in the MMS')
+
+    def test_float_data_mms_baseline_auto(self):
+        '''importasdm: Create an MMS with a FLOAT_DATA column separated per baseline '''
+        myasdmname = 'uid___A002_X6218fb_X264'
+        themsname = myasdmname+".ms"
+
+        # The ocorr_mode='ao' option will create a FLOAT_DATA column instead of DATA
+        importasdm(myasdmname, vis=themsname, ocorr_mode='ao', createmms=True, scans='1', separationaxis='baseline', numsubms=4)
+        self.assertTrue(ParallelDataHelper.isParallelMS(themsname), 'Output is not a Multi-MS')        
+        self.assertTrue(len(th.getColDesc(themsname, 'FLOAT_DATA')) > 0)
+        
+        md = msmdtool()
+        md.open(themsname)
+        bsl = md.baselines()
+        md.close()
+        
+        #diagnoals give the auto-corrs
+        ac = bsl.diagonal()
+        self.assertTrue(ac.all(), 'Not all auto-correlations are there')
+        
+        # Take the dictionary and compare with original MS
+        thisdict = listpartition(vis=themsname, createdict=True)
+        self.assertEqual(len(thisdict.keys()), 4, 'There should be 4 subMSs in output MMS')
 
 
 class asdm_import11(test_base):

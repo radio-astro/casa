@@ -1890,7 +1890,7 @@ class test_base(unittest.TestCase):
         asdmpath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/importasdm/'
         os.system('ln -sf '+asdmpath+asdmname)
         importasdm(asdmname, convert_ephem2geo=False, flagbackup=False, process_syspower=False, lazy=True, 
-                   scans='1', savecmds=True)
+                   scans='1', savecmds=True, overwrite=True)
         
 
     def createMMS(self, msfile, axis='auto',scans='',spws=''):

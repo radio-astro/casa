@@ -115,6 +115,7 @@ class ParallelDataHelper(ParallelTaskHelper):
         self.__taskname = thistask
         
         self.__selectionScanList = None
+        self.__selectionBaselineList = None
         self.__ddistart = None
         self._msTool = None
         self._tbTool = None
@@ -123,7 +124,7 @@ class ParallelDataHelper(ParallelTaskHelper):
             self.__args['spw'] = ''
             
         if not self.__args.has_key('scan'):
-		      self.__args['scan'] = ''
+              self.__args['scan'] = ''
             
         self.__spwSelection = self.__args['spw']
         self.__spwList = None
@@ -547,6 +548,9 @@ class ParallelDataHelper(ParallelTaskHelper):
         
         casalog.origin("ParallelDataHelper")
         casalog.post("Analyzing MS for partitioning")
+        if ParallelDataHelper.isParallelMS(self._arg['vis']):
+            casalog.post("Input vis is a Multi-MS")
+
 
         # Input MMS, processed in parallel; output is an MMS
         # For tasks such as split2, hanningsmooth2
@@ -631,10 +635,10 @@ class ParallelDataHelper(ParallelTaskHelper):
                 self.__createScanSeparationCommands()
             elif self._arg['separationaxis'].lower() == 'spw':
                 self.__createSPWSeparationCommands()
+            elif self._arg['separationaxis'].lower() == 'baseline':
+                self.__createBaselineSeparationCommands()
             elif self._arg['separationaxis'].lower() == 'auto':
                 self.__createBalancedSeparationCommands()
-#            elif self._arg['separationaxis'].lower() == 'balanced':
-#                self.__createBalancedSeparationCommands()
             else:
                 # Use a default
                 self.__createDefaultSeparationCommands()
@@ -885,6 +889,64 @@ class ParallelDataHelper(ParallelTaskHelper):
             else:
                 self._executionList.append([self._taskName + '()',mmsCmd])
 
+#    @dump_args
+    def __createBaselineSeparationCommands(self):
+        """ This method is to generate a list of commands to partition
+             the data based on baseline.
+        """
+       
+       # Get the available baselines in MS (it will take selections into account)
+        baselineList = self.__getBaselineList()
+
+        # Make sure we have enough baselines to create the needed number of
+        # subMSs.  If not change the total expected.
+        numSubMS = self._arg['numsubms']
+        if isinstance(numSubMS,str) and numSubMS == 'auto':
+            # Create the best load balance based on the number of nodes
+            numSubMS = self.getNumberOfServers()
+            if numSubMS == None:
+                numSubMS = 8
+
+        numSubMS = min(len(baselineList),numSubMS)
+#        casalog.post('It will partition the MS into %s SubMSs'%numSubMS,'')
+
+        # Create a map of the baselines to distribute in each subMS
+        # Example of baselinePartitions
+        # {0: [[0, 0]], 1: [[0, 1], [0, 2]], 2: [[0, 3]], 3: [[1, 1]], 4: [[1, 2]]}
+        baselinePartitions = self.__partition1(baselineList, numSubMS) 
+        
+        # Use the above list of baselines to construct a TaQL expression for each subMS
+        submsBaselineMap = {}
+        for subms in baselinePartitions.keys():
+            submsBaselineMap[subms] = {}
+            mytaql = []
+            submsPair = baselinePartitions[subms]
+            ant1ant2 = []
+            for idx in range(len(submsPair)):
+                ant1ant2 = submsPair[idx]
+                if type(ant1ant2) == list:
+                    ant1 = ant1ant2[0]
+                    ant2 = ant1ant2[1]              
+                    mytaql.append(('(ANTENNA1==%i && (ANTENNA2 IN %i))') % (ant1, ant2))
+        
+            mytaql = ' OR '.join(mytaql)
+            submsBaselineMap[subms]['taql'] = mytaql
+        
+        # Create the commands for each SubMS (each engine)
+        for output in xrange(numSubMS):
+            mmsCmd = copy.copy(self._arg)
+            mmsCmd['createmms'] = False
+            mmsCmd['taql'] = submsBaselineMap[output]['taql']
+
+            mmsCmd['outputvis'] = self.dataDir+'/%s.%04d.ms' \
+                                  % (self.outputBase, output)
+                                  
+            if not self._mpi_cluster:
+                self._executionList.append(JobData(self._taskName, mmsCmd))
+            else:
+                self._executionList.append([self._taskName + '()',mmsCmd])
+            
+
     def __scanspwSelection(self, scan, spw):
         """ Return True if the selection is True or False otherwise. """
         
@@ -1052,6 +1114,38 @@ class ParallelDataHelper(ParallelTaskHelper):
         return sorted
 
 #    @dump_args
+    def __getBaselineList(self):
+        """ This method returns the baseline list from the current MS.  Be careful
+            about having selection already done when you call this.
+        """
+
+        # cumulative baseline selectiosn do not reflect on the msselectedindices()
+        if self._msTool is None:
+            self.__selectMS()
+            
+        # The * doesn't select auto-correlations
+#        baselineSelection = {'baseline':'*'}
+
+        # select all baselines (auto and cross)
+        baselineSelection = {'baseline':'*&&'}
+        
+        # If there are any previous antenna selections, use it
+        if self._arg['antenna'] != '':
+            baselineSelection = {'baseline':self._arg['antenna']}
+       
+        try:
+            self._msTool.msselect(baselineSelection, onlyparse=False)
+            # IMPORTANT: msselectedindices() will always say there are auto-correlation
+            # baselines, even when there aren't. In the MMS case, the SubMS creation will
+            # issue a MSSelectionNullSelection and not be created. Need to find a
+            # reliable way to know which baselines exist in an MS
+            baselinelist = self._msTool.msselectedindices()['baselines']
+        except:
+            baselinelist = []
+
+        return baselinelist.tolist()
+
+#    @dump_args
     def __getSelectionFilter(self):
         """ This method takes the list of specified selection criteria and
             puts them into a dictionary.  There is a bit of name mangling necessary.
@@ -1128,7 +1222,6 @@ class ParallelDataHelper(ParallelTaskHelper):
             rdict[i] = part
     
         return rdict
-
 
 #    @dump_args
     def __chanSelection(self, spwsel):
@@ -1395,11 +1488,7 @@ class ParallelDataHelper(ParallelTaskHelper):
         if len(subMSList) == 0:
             casalog.post("Error: no subMSs were successfully created.", 'WARN')
             return False
-        
-        # TBD: the list of subMSs to be merged should reflect the
-        # failures from above!!
-        
-        
+                
         # When separationaxis='scan' there is no need to give ddistart. 
         # The tool looks at the whole spw selection and
         # creates the indices from it. After the indices are worked out, 

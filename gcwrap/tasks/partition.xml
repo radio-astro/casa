@@ -70,12 +70,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>True</value>
         </param>
         <param type="string" name="separationaxis" ignorecase="true" subparam="true">
-            <description>Axis to do parallelization across(scan, spw, auto)</description>
+            <description>Axis to do parallelization across(scan, spw, baseline, auto)</description>
             <value>auto</value>
             <allowed kind="enum" ignorecase="true">
                 <value>auto</value>
                 <value>scan</value>
                 <value>spw</value>
+                <value>baseline</value>
             </allowed>
         </param>
         <param type="any" name="numsubms" subparam="true">
@@ -218,13 +219,23 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
         separationaxis -- Axis to do parallelization across. 
             default: 'auto'
-            Options: 'scan', 'spw', 'auto'
+            Options: 'scan', 'spw', 'baseline', 'auto'
 
-            The 'auto' option will partition per scan/spw to obtain optimal load balancing with the
+            * The 'auto' option will partition per scan/spw to obtain optimal load balancing with the
              following criteria:
     
-            1 - Maximize the scan/spw/field distribution across sub-MSs
-            2 - Generate sub-MSs with similar size
+               1 - Maximize the scan/spw/field distribution across sub-MSs
+               2 - Generate sub-MSs with similar size
+
+            * The 'scan' or 'spw' axes will partition the MS into scan or spw. The individual sub-MSs may
+            not be balanced with respect to the number of rows.
+
+            * The 'baseline' axis is mostly useful for Single-Dish data. This axis will partition the MS
+              based on the available baselines. If the user wants only auto-correlations, use the
+              antenna selection such as antenna='*&amp;&amp;&amp;' together with this separation axis. Note that in
+              if numsubms='auto', partition will try to create as many subMSs as the number of available
+              servers in the cluster. If the user wants to have one subMS for each baseline, set the numsubms
+              parameter to a number higher than the number of baselines to achieve this.        
                
         numsubms -- The number of sub-MSs to create.
             default: 'auto'
@@ -233,6 +244,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                The default 'auto' is to partition using the number of available servers in the cluster.
                If the task is unable to determine the number of running servers, it
                uses 8 as the default.
+
+                Example: Launch CASA with 5 engines, where 4 of them will be used to create the MMS. The first
+                    engine is used as the MPI client.
+      
+                mpicasa -n 5 casa --nogui --log2term
+                CASA> partition('uid__A1', outputvis='test.mms')
 				
         flagbackup -- Make a backup of the FLAG column of the output MMS. When the
                       MMS is created, the .flagversions of the input MS are not transferred,
@@ -332,12 +349,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 column.
     partition('uid0001.ms', outputvis='fechans.mms', spw='*:1~10', flagbackup=False)
 
-3) Create a normal MS, split the calibrater field.
-    partition('uid0001.ms', outputvis='mycal.ms', field='TITAN', datacolumn='corrected',
-              createmms=False)
-
-4) Create a Multi-MS using both separation axes.
+3) Create a Multi-MS using both separation axes.
     partition('uid0001.ms', outputvis='myuid.mms', createmms=True, separationaxis='auto')
+
+4) Create a single-dish Multi-MS using the baseline axis only for the auto-correlations.
+    partition('uid0001.ms', outputvis='myuid.mms', createmms=True, separationaxis='baseline', antenna='*&amp;&amp;&amp;')
 
 
 </example> 
