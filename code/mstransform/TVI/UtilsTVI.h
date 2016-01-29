@@ -34,6 +34,7 @@
 
 // Standard Lib
 #include <map>
+#include <float.h>
 
 // NOTE: See implementation include below
 

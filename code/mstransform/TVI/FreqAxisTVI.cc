@@ -23,8 +23,6 @@
 #ifndef FreqAxisTVI_CC_
 #define FreqAxisTVI_CC_
 
-#include <mstransform/TVI/FreqAxisTVI.h>
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 namespace vi { //# NAMESPACE VI - BEGIN

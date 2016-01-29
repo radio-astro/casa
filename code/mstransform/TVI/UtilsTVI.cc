@@ -23,9 +23,6 @@
 #ifndef UtilsTVI_CC_
 #define UtilsTVI_CC_
 
-#include <mstransform/TVI/ChannelAverageTVI.h>
-
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 namespace vi { //# NAMESPACE VI - BEGIN
