@@ -13,7 +13,7 @@
 #
 # To test:  see plotbandpass_regression.py
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.75 2015/11/16 17:16:42 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.76 2016/01/30 16:17:19 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -89,7 +89,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.75 2015/11/16 17:16:42 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.76 2016/01/30 16:17:19 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -117,7 +117,7 @@ def buildAntString(antID,msFound,msAnt):
       
 def makeplot(figfile,msFound,msAnt,overlayAntennas,pages,pagectr,density,
              interactive,antennasToPlot,spwsToPlot,overlayTimes,
-             locationCalledFrom, resample='1', debug=False,
+             locationCalledFrom, xant, subplot, resample='1', debug=False,
              figfileSequential=False, figfileNumber=0):
     if (type(figfile) == str):
         if (figfile.find('/')>=0):
@@ -139,7 +139,10 @@ def makeplot(figfile,msFound,msAnt,overlayAntennas,pages,pagectr,density,
     else:
         ispw = spwsToPlot[pages[pagectr][PAGE_SPW]]
     t = pages[pagectr][PAGE_TIME] # + 1
-    antstring, Antstring = buildAntString(antennasToPlot[pages[pagectr][PAGE_ANT]], msFound, msAnt)
+    if (subplot == 11):
+        antstring, Antstring = buildAntString(xant, msFound, msAnt)  # CAS-8285
+    else:
+        antstring, Antstring = buildAntString(antennasToPlot[pages[pagectr][PAGE_ANT]], msFound, msAnt)
     figfile = figfile.split('.png')[0]
     if (figfileSequential):
         plotfilename = figfile + '.%03d' % (figfileNumber)
@@ -2215,7 +2218,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                            plotfiles.append(makeplot(figfile,msFound,msAnt,
                                             overlayAntennas,pages,pagectr,
                                             density,interactive,antennasToPlot,
-                                            spwsToPlot,overlayTimes,0,resample,
+                                            spwsToPlot,overlayTimes,0,xant,subplot,resample,
                                             debug,figfileSequential,figfileNumber))
                            figfileNumber += 1
                        donetime = timeUtilities.time()
@@ -2301,7 +2304,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                   plotfiles.append(makeplot(figfile,msFound,msAnt,
                                     overlayAntennas,pages,pagectr,
                                     density,interactive,antennasToPlot,
-                                    spwsToPlot,overlayTimes,1,resample,debug,
+                                    spwsToPlot,overlayTimes,1,xant,subplot,resample,debug,
                                     figfileSequential,figfileNumber))
                   figfileNumber += 1
               donetime = timeUtilities.time()
@@ -2360,7 +2363,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
       if (len(figfile) > 0 and pagectr<len(pages)):
          plotfiles.append(makeplot(figfile,msFound,msAnt,overlayAntennas,pages,
                                    pagectr,density,interactive,antennasToPlot,
-                                   spwsToPlot,overlayTimes,2,resample,debug,
+                                   spwsToPlot,overlayTimes,2,xant,subplot,resample,debug,
                                    figfileSequential,figfileNumber))
          figfileNumber += 1
       if (len(plotfiles) > 0 and buildpdf):
@@ -4101,7 +4104,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                      plotfiles.append(makeplot(figfile,msFound,msAnt,
                                                                overlayAntennas,pages,pagectr,
                                                                density,interactive,antennasToPlot,
-                                                               spwsToPlot,overlayTimes,3,resample,
+                                                               spwsToPlot,overlayTimes,3,xant,subplot,resample,
                                                                debug,figfileSequential,figfileNumber))
                                      figfileNumber += 1
         
@@ -4933,7 +4936,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                           plotfiles.append(makeplot(figfile,msFound,msAnt,
                                                     overlayAntennas,pages,pagectr,
                                                     density,interactive,antennasToPlot,
-                                                    spwsToPlot,overlayTimes,4,resample,debug,
+                                                    spwsToPlot,overlayTimes,4,xant,subplot,resample,debug,
                                                     figfileSequential, figfileNumber))
                           if (debug):
                               print "done makeplot"
@@ -5040,7 +5043,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
           if (len(figfile) > 0):
               plotfiles.append(makeplot(figfile,msFound,msAnt,overlayAntennas,
                                         pages,pagectr,density,interactive,
-                                        antennasToPlot,spwsToPlot,overlayTimes,5,resample,debug,
+                                        antennasToPlot,spwsToPlot,overlayTimes,5,xant,subplot,resample,debug,
                                         figfileSequential,figfileNumber))
               figfileNumber += 1
       if (redisplay == False):
