@@ -2028,11 +2028,6 @@ HPX HEALPix grid.  -->
                                     - For cube imaging in parallel, there is currently no interactive masking.
                                    (Proper synchronization of iteration control is work in progress.)
 
-                      Note 2 :  Use savemodel='none' with parallel runs.
-                                     If you need to save model visibilities for a future uvsub or self-calibration
-                                     please run a separate niter=0 run with parallel=False.
-                                     (Proper parallel writing of the model is work in progress).
-
 </description>
 	    <value type="bool">False</value>
     </param>
