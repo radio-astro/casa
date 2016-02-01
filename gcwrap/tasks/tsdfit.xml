@@ -66,13 +66,12 @@ or sdreduce.
     </param>
 
     <param type="string" name="fitfunc">
-<!--        <shortdescription>function for fitting [\'gaussian\', \'lorentzian\']</shortdescription> -->
-        <shortdescription>function for fitting. only \'gaussian\' is available now.</shortdescription>
+        <shortdescription>function for fitting [\'gaussian\', \'lorentzian\']</shortdescription>
         <description>function for fitting</description>
         <value>gaussian</value>
         <allowed kind="enum">
             <value>gaussian</value>
-<!--            <value>lorentzian</value> -->
+            <value>lorentzian</value>
         </allowed>
     </param>
 
@@ -89,7 +88,7 @@ or sdreduce.
     </param>
 
     <param type="intArray" name="nfit">
-<!--        <description>list of number of gaussian/lorentzian lines to fit in maskline region (ignored when fitmode="auto")</description> -->
+<!--        <description>list of number of lines to fit in maskline region (ignored when fitmode="auto")</description> -->
         <description>list of number of lines to fit in maskline region.</description>
         <value type="vector"><value>0</value></value>
     </param>
@@ -205,7 +204,7 @@ intent -- select data by observational intent, also referred to as 'scan intent'
         example: intent='*ON_SOURCE*' (any valid scan-intent expression accepted by the MSSelection module can be specified)
         this selection is in addition to the other selections to data
 fitfunc -- function for fitting
-        options: 'gaussian' ('lorentzian' will be available later)
+        options: 'gaussian', 'lorentzian'
         default: 'gaussian'
 fitmode -- mode for fitting
         options: 'list' ('auto' and 'interact' will be available later)
@@ -276,8 +275,6 @@ or sdreduce.
 Note that multiple scans, IFs, and polarizations can in principle 
 be handled, but we recommend that you use scan, field, spw, and pol
 to give a single selection for each fit.
-
-Currently, you can choose only Gaussian profile as fitting model. 
 
 -------
 FITMODE
