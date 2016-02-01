@@ -288,6 +288,16 @@ private:
   Int lastAntID_p;
   Int msId_p;
 
+  Bool isSplineInterpolationReady;
+  Vector<Bool> doSplineInterpolation;
+  Vector<Vector<Double> > timePointing; //(antid)(index)
+  Vector<Vector<Vector<Double> > > dirPointing; //(antid)(index)(xy)
+  Vector<Vector<Vector<Vector<Double> > > > splineCoeff; //(antid)(index)(xy)(order)
+
+  void getSplineCoeff(const Vector<Double>& time,
+		      const Vector<Vector<Double> >& dir,
+		      Vector<Vector<Vector<Double> > >& coeff);
+  
   Int getIndex(const ROMSPointingColumns& mspc, const Double& time,
 	       const Double& interval=-1.0, const Int& antid=-1);
 
@@ -298,6 +308,8 @@ private:
   MDirection directionMeas(const ROMSPointingColumns& mspc, const Int& index, const Double& time);
   MDirection interpolateDirectionMeas(const ROMSPointingColumns& mspc, const Double& time,
                                   const Int& index, const Int& index1, const Int& index2);
+  MDirection interpolateDirectionMeasSpline(const Double& time,
+					    const Int& antid);
 
   void pickWeights(const VisBuffer&vb, Matrix<Float>& weight);
 
