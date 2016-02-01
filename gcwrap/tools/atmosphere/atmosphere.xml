@@ -2489,6 +2489,135 @@ for s in range(at.getNumSpectralWindows()):
 </example>
 </method>
 
+
+   <method type="function" name="getAverageTrjSky">
+   <shortdescription>Returns the average Rayleigh-Jeans Temperature</shortdescription>
+   
+<description>
+Returns the average Rayleigh-Jeans Temperature in spectral
+window spwid, for the current conditions and a perfect sky coupling.
+</description>
+
+<input>
+     <param type="int" direction="in" name="spwid">
+     <description>Spectral window (0-based)</description>
+     <value>0</value>
+     </param>
+     <param type="double" direction="in" name="wh2o" units="mm">
+     <description>User specified water column length in mm.  Default is not to use wh2o.</description>
+     <value>-1</value>
+     </param>
+</input>
+
+<returns type="Quantity">Average Trj</returns>
+
+<example>
+
+wh2o = qa.quantity(0.4,'mm')
+print "(INPUT CHANGE) water vapor column:", wh2o['value'], wh2o['unit']
+print "(NEW OUTPUT) T_RJ =", at.getAverageTrjSky(0,wh2o)['value'][0], at.getAverageTrjSky(0,wh2o)['unit']
+
+</example>
+
+</method>
+
+ 
+   <method type="function" name="getTrjSky">
+   <shortdescription>Returns the Rayleigh-Jeans Temperature</shortdescription>
+   
+<description>
+Gets the Rayleigh-Jeans Temperature in spectral window spwid and
+channel nc, for Water Vapor Column wh2o, the current Air Mass, and
+perfect Sky Coupling to the sky.
+</description>
+
+<input>
+     <param type="int" direction="in" name="nc">
+     <description>Channel number (0-based) - defaults to reference channel</description>
+     <value>-1</value>
+     </param>
+         <param type="int" direction="in" name="spwid">
+     <description>Spectral window (0-based)</description>
+     <value>0</value>
+     </param>
+     <param type="double" direction="in" name="wh2o" units="mm">
+     <description>User specified water column length in mm.  Default is not to use wh2o.</description>
+     <value>-1</value>
+     </param>
+</input>
+
+<returns type="Quantity">Average Trj</returns>
+
+<example>
+
+for s in range(at.getNumSpectralWindows()):
+        for i in range(at.getNumChan(s)):
+                print "Band", s, " channel ", i, "TrjSky = ", at.getTrjSky(i,s)['value'][0], at.getTrjSky()['unit']
+
+
+</example>
+</method>
+
+ 
+   <method type="function" name="getTrjSkySpec">
+   <shortdescription>Returns the Rayleigh-Jeans Temperatures on each channel of a band</shortdescription>
+   
+<description>
+Gets the Rayleigh-Jeans Temperatures in a spectral window spwid 
+for Water Vapor Column wh2o, the current Air Mass, and
+perfect Sky Coupling to the sky.
+</description>
+
+<output>
+
+     <param type="double"  name="trjSky" units="K">
+     <description>the Rayleigh-Jeans Temperatures in a band -
+        Quantum with a vector value and unit of K
+        </description>
+     </param>
+</output>
+<input>
+         <param type="int" direction="in" name="spwid">
+     <description>Spectral window (0-based)</description>
+     <value>0</value>
+     </param>
+     <param type="double" direction="in" name="wh2o" units="mm">
+     <description>User specified water column length in mm.  Default is not to use wh2o.</description>
+     <value>-1</value>
+     </param>
+</input>
+
+<returns type="int">The number of channels.</returns>
+
+<example>
+sw=at.getWetOpacitySpec()
+# returns a tuple of
+# 0 - The number of channels, and
+# 1 - the Equivalent Blackbody Temperatures in a band
+sw[1]['value']
+# [34.687910103670511,
+#  35.496193465331679,
+#  36.460355664151791,
+#  37.419146813713745,
+#  37.9452005127634,
+#  38.722631196093729,
+#  39.593561594172662,
+#  40.528694048924017]
+
+sw[0]
+# 8
+
+Another example:
+for s in range(at.getNumSpectralWindows()):
+        print "band", s
+        trjspec = at.getTrjSkySpec(spwid=s)
+        for i in range(at.getNumChan(s)):
+                print " - TrjSky %f [%s] " % (trjspec[1]['value'][i],trjspec[1]['unit'])
+
+</example>
+</method>
+
+
 </tool>
 
 </casaxml>

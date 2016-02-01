@@ -1912,4 +1912,105 @@ atmosphere::getTebbSkySpec(const int spwidRaw, const Quantity& wh2o, Quantity& t
   return nchan;
 }
 
+Quantity
+atmosphere::getAverageTrjSky(int spwid, const Quantity& wh2o)
+{
+  ::casac::Quantity q;
+  try {
+    if (pSkyStatus) {
+      q.value.resize(1);
+      std::string qunits("K");
+      if (wh2o.value[0] == -1) {
+	q.value[0]=pSkyStatus->getAverageTrjSky((unsigned int)spwid).get(qunits);
+      } else {
+	Length new_wh2o(wh2o.value[0],wh2o.units);
+	q.value[0]=pSkyStatus->getAverageTrjSky(spwid,new_wh2o).get(qunits);
+      }
+      q.units = qunits;
+    } else {
+      *itsLog << LogIO::WARN
+	      << "Please set spectral window(s) with initSpectralWindow first."
+	      << LogIO::POST;
+    }
+  } catch (AipsError x) {
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
+    RETHROW(x);
+  }
+  return q;
+}
+
+Quantity
+atmosphere::getTrjSky(int nc, int spwid, const Quantity& wh2o)
+{
+  ::casac::Quantity q;
+  try {
+    if (pSkyStatus) {
+      q.value.resize(1);
+      std::string qunits("K");
+      int chan;
+      if (nc < 0) {
+	chan = pSpectralGrid->getRefChan(spwid);
+      } else {
+	chan = nc;
+      }
+      if (wh2o.value[0] == -1) {
+	q.value[0]=pSkyStatus->getTrjSky((unsigned int)spwid,(unsigned int)chan).get(qunits);
+      } else {
+	Length new_wh2o(wh2o.value[0],wh2o.units);
+	q.value[0]=pSkyStatus->getTrjSky(spwid,chan,new_wh2o).get(qunits);
+      }
+      q.units = qunits;
+    } else {
+      *itsLog << LogIO::WARN
+	      << "Please set spectral window(s) with initSpectralWindow first."
+	      << LogIO::POST;
+    }
+  } catch (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+	    << LogIO::POST;
+    RETHROW(x);
+  }
+  return q;
+}
+
+int
+atmosphere::getTrjSkySpec(const int spwidRaw, const Quantity& wh2o, Quantity& trjSky)
+{
+  uInt nchan(0);
+  uInt spwid = spwidRaw;
+  bool userwh2o(false);
+  try {
+    if (pSkyStatus) {
+      nchan = pSpectralGrid->getNumChan(spwid);
+      (trjSky.value).resize(nchan);
+      trjSky.units="K";
+      Length new_wh2o;
+      if (wh2o.value[0] != -1) {
+	new_wh2o = Length(wh2o.value[0],wh2o.units);
+	userwh2o = true;
+      }
+      for (uInt i = 0; i < nchan; i++) {
+	if (userwh2o) {
+	(trjSky.value)[i] =
+	  pSkyStatus->getTrjSky(spwid,i,new_wh2o).get(trjSky.units);
+	} else {
+	(trjSky.value)[i] =
+	  pSkyStatus->getTrjSky(spwid,i).get(trjSky.units);
+	}
+      }
+    } else {
+      *itsLog << LogIO::WARN
+	      << "Please set spectral window(s) with initSpectralWindow first."
+	      << LogIO::POST;
+    }
+  } catch (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+	    << LogIO::POST;
+    RETHROW(x);
+  }
+  return nchan;
+}
+
+
 } // casac namespace
