@@ -64,7 +64,10 @@ def tsdfit(infile=None, datacolumn=None, antenna=None, field=None, spw=None, tim
 
 def get_results(tempfile, fitfunc, nfit, outfile):
     res = {'cent':[], 'peak':[], 'fwhm':[], 'nfit':[]}
-    if (fitfunc == 'gaussian'): func = 'gauss'
+    if (fitfunc == 'gaussian'):
+        func = 'gauss'
+    elif (fitfunc == 'lorentzian'):
+        func = 'lorentz'
     ncomp = sum(nfit)
     iline = 0
     with open(tempfile, 'r') as f:
