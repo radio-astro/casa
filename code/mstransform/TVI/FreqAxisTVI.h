@@ -80,8 +80,8 @@ public:
     virtual Vector<Double> getFrequencies (	Double time, Int frameOfReference,
     										Int spectralWindowId, Int msId) const = 0;
 
-    virtual void writeFlag (const Cube<Bool> & flag) = 0;
-    void writeFlagRow (const Cube<Bool> & flag);
+    virtual void writeFlag (const Cube<Bool> & flagCube) = 0;
+    void writeFlagRow (const Vector<Bool> & flag);
 
     // Common transformation for all sub-classes
     Vector<Int> getChannels (	Double time, Int frameOfReference,

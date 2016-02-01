@@ -250,7 +250,7 @@ Vector<Int> FreqAxisTVI::getChannels (Double,Int,Int spectralWindowId,Int) const
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-void FreqAxisTVI::writeFlagRow (const Cube<Bool> & flag)
+void FreqAxisTVI::writeFlagRow (const Vector<Bool> & flag)
 {
 	getVii()->writeFlagRow(flag);
 }
