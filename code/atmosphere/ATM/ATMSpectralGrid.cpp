@@ -701,7 +701,7 @@ bool SpectralGrid::isRegular() const
 
 bool SpectralGrid::isRegular(unsigned int spwId) const
 {
-  if(wrongSpwId(spwId)) return 32767.;
+  if(wrongSpwId(spwId)) return false;
   if(v_chanSep_[spwId] == 0.0) return false;
   return true;
 }
