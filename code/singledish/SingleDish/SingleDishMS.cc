@@ -25,6 +25,7 @@
 #include <scimath/Functionals/CompoundFunction.h>
 #include <scimath/Functionals/Function.h>
 #include <scimath/Functionals/Gaussian1D.h>
+#include <scimath/Functionals/Lorentzian1D.h>
 #include <scimath/Mathematics/Convolver.h>
 #include <scimath/Mathematics/VectorKernel.h>
 #include <singledish/SingleDish/BaselineTable.h>
@@ -1831,7 +1832,11 @@ void SingleDishMS::fitLine(string const& in_column_name, string const& in_spw,
             funcnames_.clear();
             funccomponents_.clear();
             for (size_t icomp = 0; icomp < funcs_.nelements(); ++icomp) {
-              funcs_[icomp] = new Gaussian1D<Float>();
+              if (expr == "gauss") {
+                funcs_[icomp] = new Gaussian1D<Float>();
+              } else if (expr == "lorentz") {
+                funcs_[icomp] = new Lorentzian1D<Float>();
+              }
               (funcs_[icomp]->parameters())[0] = peak[icomp]; //initial guess (peak)
               (funcs_[icomp]->parameters())[1] = cent[icomp]; //initial guess (centre)
               (funcs_[icomp]->parameters())[2] = fwhm[icomp]; //initial guess (fwhm)
