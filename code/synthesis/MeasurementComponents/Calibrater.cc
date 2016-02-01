@@ -1684,8 +1684,6 @@ Bool Calibrater::initWeights(String wtmode, Bool dowtsp) {
       WEIGHT,  // SIGMA, WEIGHT as are, propagate to WEIGHT_SEPCTRUM (if requested)
       DELWTSP,  // just delete WEIGHT_SPECTRUM if it exists
       DELSIGSP,  // just delete SIGMA_SPECTRUM if it exists
-//      TSYS,    // SIGMA=Tsys/sqrt(f*chw), propagate to WEIGHT, WEIGHT_SPECTRUM
-//      TINTTSYS,    // SIGMA=Tsys/sqrt(f*chw*dt), propagate to WEIGHT, WEIGHT_SPECTRUM
     };
     
     // Translate mode String to enum value
@@ -1696,8 +1694,6 @@ Bool Calibrater::initWeights(String wtmode, Bool dowtsp) {
     else if (wtmode=="weight") initmode=WEIGHT;
     else if (wtmode=="delwtsp") initmode=DELWTSP;
     else if (wtmode=="delsigsp") initmode=DELSIGSP;
-//    else if (wtmode=="tsys") initmode=TSYS;
-//    else if (wtmode=="tinttsys") initmode=TINTTSYS;
 
     // Detect WEIGHT_SPECTRUM
     TableDesc mstd = ms_p->actualTableDesc();
@@ -1763,20 +1759,21 @@ Bool Calibrater::initWeights(String wtmode, Bool dowtsp) {
 	throw(AipsError("Specified wtmode requires dowtsp=T"));
       break;
     }
-//    case TSYS: {
-//        logSink() << "Initializing SIGMA and WEIGHT according to channel bandwidth and Tsys. NOTE this is an expert mode." << LogIO::WARN;
-//        break;
-//    }
-//    case TINTTSYS: {
-//        logSink() << "Initializing SIGMA and WEIGHT according to channel bandwidth, integration time, and Tsys. NOTE this is an expert mode." << LogIO::WARN;
-//        break;
-//    }
     }
 
     // Force dowtsp if the column already exists
     if (wtspexists && !dowtsp) {
       logSink() << "Found WEIGHT_SPECTRUM; will force its initialization." << LogIO::POST;
       dowtsp=True;
+    }
+    // remove SIGMA_SPECTRUM column for non-channelized weight
+    if (sigspexists) {
+      logSink() << "Removing SIGMA_SPECTRUM for non-channelized weight." << LogIO::POST;
+      if (True || ms_p->canRemoveColumn(colSigSp)) {
+	ms_p->removeColumn(colSigSp);
+      }
+      else
+	logSink() << LogIO::WARN << "Failed to remove SIGMA_SPECTRUM column. Values in SIGMA and SIGMA_SPECTRUM columns may be inconsistent after the operation." << LogIO::POST;
     }
 
     // Report that we are initializing the WEIGHT_SPECTRUM, and prepare to do so.
@@ -1879,8 +1876,6 @@ Bool Calibrater::initWeights(String wtmode, Bool dowtsp) {
 	}	  
 
 	// Init WEIGHT, SIGMA  from bandwidth & time
-//	case TSYS:
-//	case TINTTSYS:
 	case NYQ: {
 
 	  Matrix<Float> newwt(ncor,nrow),newsig(ncor,nrow);
@@ -2044,12 +2039,13 @@ Bool Calibrater::initWeightsWithTsys(String wtmode, Bool dowtsp,
 		// Maintain sort of apply list
 		ve_p->setapply(vcb);
 
-		// Detect WEIGHT_SPECTRUM
+		// Detect WEIGHT_SPECTRUM and SIGMA_SPECTRUM
 		TableDesc mstd = ms_p->actualTableDesc();
 		String colWtSp = MS::columnName(MS::WEIGHT_SPECTRUM);
 		Bool wtspexists = mstd.isColumn(colWtSp);
 		String colSigSp = MS::columnName(MS::SIGMA_SPECTRUM);
 		Bool sigspexists = mstd.isColumn(colSigSp);
+		Bool addsigsp = (dowtsp && !sigspexists);
 
 		// Some log info
 		bool use_exposure = false;
@@ -2072,9 +2068,6 @@ Bool Calibrater::initWeightsWithTsys(String wtmode, Bool dowtsp,
 					<< LogIO::POST;
 			dowtsp = True;
 		}
-		// Force initializing SIGMA_SPECTRUM if the column already exists
-		Bool dosigsp = (sigspexists || dowtsp);
-		dosigsp = False;
 
 		// Report that we are initializing the WEIGHT_SPECTRUM, and prepare to do so.
 		if (dowtsp) {
@@ -2110,12 +2103,9 @@ Bool Calibrater::initWeightsWithTsys(String wtmode, Bool dowtsp,
 				ms_p->addColumn(tdWtSp, wtSpStMan);
 			} else
 				logSink() << "Found WEIGHT_SPECTRUM." << LogIO::POST;
-		}
-		if (dosigsp) {
-
 			// Ensure WEIGHT_SPECTRUM really exists at all
 			//   (often it exists but is empty)
-			if (!sigspexists) {
+		if (!sigspexists) {
 				logSink() << "Creating SIGMA_SPECTRUM." << LogIO::POST;
 
 				// Nominal defaulttileshape
@@ -2142,8 +2132,22 @@ Bool Calibrater::initWeightsWithTsys(String wtmode, Bool dowtsp,
 						ArrayColumnDesc<Float>(colSigSp, "sigma spectrum", 2));
 				TiledShapeStMan sigSpStMan("TiledSigtSpectrum", dts);
 				ms_p->addColumn(tdSigSp, sigSpStMan);
-			} else
-				logSink() << "Found SIGMA_SPECTRUM." << LogIO::POST;
+				{
+				  TableDesc loctd = ms_p->actualTableDesc();
+				  String loccolSigSp = MS::columnName(MS::SIGMA_SPECTRUM);
+				  AlwaysAssert(loctd.isColumn(loccolSigSp),AipsError);
+				}
+		}
+		}
+		else {
+    if (sigspexists) {
+      logSink() << "Removing SIGMA_SPECTRUM for non-channelized weight." << LogIO::POST;
+      if (True || ms_p->canRemoveColumn(colSigSp)) {
+	ms_p->removeColumn(colSigSp);
+      }
+      else
+	logSink() << LogIO::WARN << "Failed to remove SIGMA_SPECTRUM column. Values in SIGMA and SIGMA_SPECTRUM columns may be inconsistent after the operation." << LogIO::POST;
+    }
 		}
 
 		// Arrange for iteration over data
@@ -2180,13 +2184,11 @@ Bool Calibrater::initWeightsWithTsys(String wtmode, Bool dowtsp,
 				Int nchan = vb->nChannels();
 				Int ncor = vb->nCorrelations();
 
-				// Prepare for WEIGHT_SPECTRUM, if nec.
+				// Prepare for WEIGHT_SPECTRUM and SIGMA_SPECTRUM, if nec.
 				Cube<Float> newwtsp(0, 0, 0), newsigsp(0, 0, 0);
 				if (dowtsp) {
 				  newwtsp.resize(ncor, nchan, nrow);
 				  newwtsp.set(1.0);
-				}
-				if (dosigsp) {
 				  newsigsp.resize(ncor, nchan, nrow);
 				  newsigsp.set(1.0);
 				}
@@ -2238,29 +2240,19 @@ Bool Calibrater::initWeightsWithTsys(String wtmode, Bool dowtsp,
 							}
 						}
 					}
-
+					// Handle WEIGHT_SPECTRUM
+					if (dowtsp) {
+					  newsigsp = 1.0f / sqrt(newwtsp);
+					}
 					// sig from wt is inverse sqrt
 					newsig = 1.0f / sqrt(newwt);
 
 					// Arrange write-back of both SIGMA and WEIGHT
 					vb->setSigma(newsig);
 					vb->setWeight(newwt);
-					// Handle WEIGHT_SPECTRUM
 					if (dowtsp) {
 					  vb->initWeightSpectrum(newwtsp);
-					}
-					// Handle SIGMA_SPECTRUM (doing this in later round)
-					if (dosigsp) {
-						if (dowtsp) {
-							newsigsp = 1.0f / sqrt(newwtsp);
-						}
-						else {
-							for (Int irow = 0; irow < nrow; ++irow) {
-								Matrix<Float> sigspi(newsigsp(Slice(), Slice(irow, 1, 1), Slice()).nonDegenerate(IPosition(2, 0, 2)));
-								sigspi = newsig[irow];
-							}
-						}
-					  vb->setSigmaSpectrum(newsigsp);
+					  vb->initSigmaSpectrum(newsigsp);
 					}
 					// Force writeback to disk (need to initialize weight/sigma before applying cal table)
 					vb->writeChangesBack();
@@ -2286,30 +2278,16 @@ Bool Calibrater::initWeightsWithTsys(String wtmode, Bool dowtsp,
 						vb->setWeight(
 								partialMedians(vb->weightSpectrum(),
 										IPosition(1, 1)));
+						newsigsp = 1.0f / sqrt(vb->weightSpectrum());
+						vb->initSigmaSpectrum(newsigsp);
+						vb->setSigma(
+							     partialMedians(vb->sigmaSpectrum(),
+									    IPosition(1, 1)));
 					} else {
 						vb->setWeight(vb->weight());
-					}
-					if (dosigsp) {
-						if (dowtsp) {
-							newsigsp = 1.0f / sqrt(vb->weightSpectrum());
-							vb->setSigmaSpectrum(newsigsp);
-							vb->setSigma(
-									partialMedians(vb->sigmaSpectrum(),
-											IPosition(1, 1)));
-						} else {//no WEIGHT_SPECTRUM case
-							newsig = 1.0f / sqrt(vb->weight());
-							vb->setSigma(newsig);
-							for (Int irow = 0; irow < nrow; ++irow) {
-								Matrix<Float> sigspi(newsigsp(Slice(), Slice(irow, 1, 1), Slice()).nonDegenerate(IPosition(2, 0, 2)));
-								sigspi = newsig[irow];
-							}
-							vb->setSigmaSpectrum(newsigsp);
-						}
-					} else {
 						newsig = 1.0f / sqrt(vb->weight());
 						vb->setSigma(newsig);
 					}
-
 					// Force writeback to disk
 					vb->writeChangesBack();
 
@@ -2318,9 +2296,9 @@ Bool Calibrater::initWeightsWithTsys(String wtmode, Bool dowtsp,
 				    // newly created WS Need to initialize
 				    vb->initWeightSpectrum(newwtsp);
 				  }
-				  if (dosigsp && !sigspexists) {
+				  if (addsigsp) {
 				    // newly created SS Need to initialize
-				    vb->setSigmaSpectrum(newsigsp);
+				    vb->initSigmaSpectrum(newsigsp);
 				    vb->writeChangesBack();
 				  }
 				}
