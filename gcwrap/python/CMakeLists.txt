@@ -113,6 +113,7 @@ scripts/task_immath.py
 scripts/task_immoments.py
 scripts/task_impbcor.py
 scripts/task_importatca.py
+scripts/task_importasap.py
 scripts/task_importasdm.py
 scripts/task_importevla.py
 scripts/task_importfits.py

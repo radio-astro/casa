@@ -700,5 +700,28 @@ sdms.set_selection(field="M100", spw="3,5")
   </example> 
 </method>
 
+<method type="function" name="importasap">
+  <shortdescription>Import ASAP Scantable to MS.</shortdescription>
+  
+  <description>
+  Import ASAP Scantable data to MeasurementSet.
+  </description>
+  <input>
+    <param type="string" name="invile">
+      <description>The name of input ASAP Scantable</description>
+      <value></value>
+    </param>
+    
+    <param type="string" name="outfile">
+      <description>The name of output MeasurementSet</description>
+      <value></value>
+    </param>
+  </input> 
+  
+  <returns type="bool"/>
+  <example>
+  </example> 
+</method>
+
 </tool>
 </casaxml>

@@ -430,4 +430,19 @@ singledishms::smooth(string const &type, float const width,
     return rstat;
 }
 
+bool
+singledishms::importasap(string const &infile, string const &outfile)
+{
+    bool rstat(false);
+    *itsLog << _ORIGIN;
+    try {
+      rstat = SingleDishMS::importAsap(infile, outfile);
+    } catch  (AipsError x) {
+      *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+          << LogIO::POST;
+      RETHROW(x);
+    }
+    return rstat;
+}
+
 } // end of casac namespace

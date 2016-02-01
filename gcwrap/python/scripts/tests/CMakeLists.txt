@@ -95,6 +95,7 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_immath.py
   test_immoments.py
   test_impbcor.py
+  test_importasap.py
   test_importasdm.py
   test_importasdm_mms.py
   test_importevla.py
