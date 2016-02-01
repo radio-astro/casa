@@ -90,25 +90,22 @@ Int updateTable(_Table &mytable, _Columns &mycolumns, _Comparer const &comparer,
   return id;
 }
 
-Bool makeSourceMap(MSSource const &table, Record &source_map) {
+void makeSourceMap(MSSource const &table, Record &source_map) {
   POST_START;
 
   ROScalarColumn < String > name_column(table, "NAME");
   ROScalarColumn < Int > id_column(table, "SOURCE_ID");
   Vector<Int> id = id_column.getColumn();
-  std::cout << "SOURCE_ID=" << id << std::endl;
 
   Sort sorter;
   sorter.sortKey(id.data(), TpInt);
   Vector<uInt> unique_vector;
   uInt num_id = sorter.sort(unique_vector, id.nelements(),
       Sort::HeapSort | Sort::NoDuplicates);
-  std::cout << "found " << num_id << " unique entries" << std::endl;
   for (uInt i = 0; i < num_id; ++i) {
     uInt irow = unique_vector[i];
     String const source_name = name_column(irow);
     Int const source_id = id[irow];
-    std::cout << source_name << ": " << source_id << std::endl;
     source_map.define(source_name, source_id);
   }
 
@@ -117,7 +114,6 @@ Bool makeSourceMap(MSSource const &table, Record &source_map) {
 
 struct Deleter {
   void operator()(void *p) {
-    std::cout << "Deleter will delete p" << std::endl;
     free(p);
   }
 };
@@ -153,7 +149,7 @@ void SingleDishMSFiller<T>::save(std::string const &name) {
 
 template<class T>
 void SingleDishMSFiller<T>::setupMS() {
-  std::cout << "Start " << __PRETTY_FUNCTION__ << std::endl;
+//  std::cout << "Start " << __PRETTY_FUNCTION__ << std::endl;
 
 //  String dunit = table_->getHeader().fluxunit ;
 
@@ -163,21 +159,12 @@ void SingleDishMSFiller<T>::setupMS() {
   } else { 
     MeasurementSet::addColumnToDesc( ms_main_description, MSMainEnums::DATA, 2 ) ;
   }
-  //  MeasurementSet::addColumnToDesc(ms_main_description, MSMainEnums::FLOAT_DATA,
-  //      2);
 
   String const scratch_table_name = File::newUniqueName(".",
       "SingleDishMSFillerTemp").originalName();
   SetupNewTable newtab(scratch_table_name, ms_main_description, Table::Scratch);
 
   ms_.reset(new MeasurementSet(newtab));
-
-//  TableColumn col;
-//  if (useFloatData_)
-//    col.attach(*ms_, "FLOAT_DATA");
-//  else if (useData_)
-//    col.attach(*ms_, "DATA");
-//  col.rwKeywordSet().define("UNIT", dunit);
 
   // create subtables
   TableDesc ms_antenna_description = MSAntenna::requiredTableDesc();
@@ -291,14 +278,6 @@ void SingleDishMSFiller<T>::setupMS() {
       Table(ms_state_table));
 
   TableDesc ms_syscal_description = MSSysCal::requiredTableDesc();
-//  if (tcalSpec_)
-//    MSSysCal::addColumnToDesc(ms_syscal_description, MSSysCalEnums::TCAL_SPECTRUM, 2);
-//  else
-//    MSSysCal::addColumnToDesc(ms_syscal_description, MSSysCalEnums::TCAL, 1);
-//  if (tsysSpec_)
-//    MSSysCal::addColumnToDesc(ms_syscal_description, MSSysCalEnums::TSYS_SPECTRUM, 2);
-//  else
-//    MSSysCal::addColumnToDesc(ms_syscal_description, MSSysCalEnums::TSYS, 1);
   MSSysCal::addColumnToDesc(ms_syscal_description, MSSysCalEnums::TCAL_SPECTRUM,
       2);
   MSSysCal::addColumnToDesc(ms_syscal_description, MSSysCalEnums::TCAL, 1);
@@ -332,7 +311,7 @@ void SingleDishMSFiller<T>::setupMS() {
   // Set up MSMainColumns
   ms_columns_.reset(new MSMainColumns(*ms_));
 
-  std::cout << "End " << __PRETTY_FUNCTION__ << std::endl;
+//  std::cout << "End " << __PRETTY_FUNCTION__ << std::endl;
 }
 
 template<class T>
@@ -399,7 +378,7 @@ void SingleDishMSFiller<T>::fillField() {
   record.table = mytable;
 
   // make (name,id) map for SOURCE table
-  Bool status = ::makeSourceMap(ms_->source(), record.source_map);
+  ::makeSourceMap(ms_->source(), record.source_map);
 
   ::fillTable(mytable, record,
       [&](FieldRecord &record) {return reader_->getFieldRow(record);});
@@ -416,17 +395,6 @@ void SingleDishMSFiller<T>::fillSpectralWindow() {
 
   ::fillTable(mytable, record,
       [&](SpectralWindowRecord &record) {return reader_->getSpectralWindowRow(record);});
-
-  POST_END;
-}
-
-template<class T>
-void SingleDishMSFiller<T>::fillSysCal() {
-  POST_START;
-
-  SysCalRecord record;
-  ::fillTable(ms_->sysCal(), record,
-      [&](SysCalRecord &record) {return reader_->getSysCalRow(record);});
 
   POST_END;
 }
@@ -484,24 +452,6 @@ Int SingleDishMSFiller<T>::updateDataDescription(Int const &polarization_id,
   };
   Int data_desc_id = ::updateTable(mytable, mycolumns, comparer, updater);
 
-//  MSDataDescColumns mycolumns(ms_->dataDescription());
-//  Int data_desc_id = -1;
-//  if (mycolumns.nrow() >= (uInt) INT_MAX) {
-//    throw AipsError("Too much row in DATA_DESCRIPTION table");
-//  }
-//  for (uInt i = 0; i < mycolumns.nrow(); ++i) {
-//    if (mycolumns.polarizationId()(i) == polarization_id
-//        && mycolumns.spectralWindowId()(i) == spw_id) {
-//      data_desc_id = (Int) i;
-//    }
-//  }
-//  if (data_desc_id < 0) {
-//    data_desc_id = mycolumns.nrow();
-//    ms_->dataDescription().addRow(1, True);
-//    mycolumns.polarizationId().put(data_desc_id, polarization_id);
-//    mycolumns.spectralWindowId().put(data_desc_id, spw_id);
-//  }
-
   return data_desc_id;
 }
 
@@ -511,7 +461,6 @@ Int SingleDishMSFiller<T>::updateState(Int const &subscan,
   MSState &mytable = ms_->state();
   MSStateColumns mycolumns(mytable);
   static Regex const regex("^OBSERVE_TARGET#ON_SOURCE");
-  std::cout << "subscan " << subscan << " obs_mode " << obs_mode << std::endl;
   auto comparer =
       [&](MSStateColumns &columns, uInt i) {
         Bool match = (subscan == columns.subScan()(i)) && (obs_mode == columns.obsMode()(i));
@@ -586,13 +535,11 @@ Int SingleDishMSFiller<T>::updatePointing(Int const &antenna_id,
     return -1;
   }
 
-  constexpr double kDay2Sec = 86400.0;
   auto mytable = ms_->pointing();
   MSPointingColumns mycolumns(mytable);
-  mycolumns.direction().keywordSet().print(std::cout);
   uInt nrow = mytable.nrow();
 
-  Int *n = &num_pointing_time_[antenna_id];
+  uInt *n = &num_pointing_time_[antenna_id];
   Double *time_max = &pointing_time_max_[antenna_id];
   Double *time_min = &pointing_time_min_[antenna_id];
   Vector < Double > *time_list = &pointing_time_[antenna_id];
@@ -613,11 +560,9 @@ Int SingleDishMSFiller<T>::updatePointing(Int const &antenna_id,
       (*time_list)[*n] = time;
       // increment number of pointing entry
       *n += 1;
-      std::cout << "added pointing row: n=" << *n << "(antenna " << antenna_id << ")" << std::endl;
     };
 
   if (*n == 0) {
-    std::cout << "first entry for antenna " << antenna_id << std::endl;
     addPointingRow();
     *time_min = time;
     *time_max = time;

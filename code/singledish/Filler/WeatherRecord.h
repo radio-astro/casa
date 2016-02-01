@@ -52,6 +52,7 @@ struct WeatherRecord {
     rel_humidity = other.rel_humidity;
     wind_speed = other.wind_speed;
     wind_direction = other.wind_direction;
+    return *this;
   }
 
   void add(AssociatingTable &table, AssociatingColumns &/*columns*/) {

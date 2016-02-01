@@ -37,6 +37,7 @@ struct ProcessorRecord {
     sub_type = other.sub_type;
     type_id = other.type_id;
     mode_id = other.mode_id;
+    return *this;
   }
 
   void add(AssociatingTable &table, AssociatingColumns &/*columns*/) {

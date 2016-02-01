@@ -98,7 +98,7 @@ public:
     record.wind_speed = wind_speed_column_(irow);
     record.wind_direction = wind_direction_column_(irow);
   }
-  void getProduct(Product *p) {
+  void getProduct(Product */*p*/) {
 
   }
 
@@ -148,7 +148,7 @@ public:
 
   void getEntry(SpectralWindowRecord &record) {
     size_t const irow = current_iter_;
-    std::cout << "getEntry for row " << irow << std::endl;
+//    std::cout << "getEntry for row " << irow << std::endl;
     Int spw_id = ifno_list_[irow];
     Table subtable = main_table_(main_table_.col("IFNO") == (uInt) spw_id, 1);
     ROScalarColumn < uInt > freq_id_column(subtable, "FREQ_ID");
@@ -181,7 +181,7 @@ public:
     record.refval = refval;
     record.increment = increment;
   }
-  virtual void getProduct(Product *p) {
+  virtual void getProduct(Product */*p*/) {
 
   }
 
@@ -222,10 +222,10 @@ public:
     auto pos = field_name_with_id.find("__");
     auto defaultFieldId = [&]() {
       Int my_field_id = 0;
-      while (is_reserved_[my_field_id] && my_field_id < is_reserved_.size()) {
+      while (is_reserved_[my_field_id] && (uInt)my_field_id < is_reserved_.size()) {
         my_field_id++;
       }
-      if (my_field_id >= is_reserved_.size()) {
+      if ((uInt)my_field_id >= is_reserved_.size()) {
         throw AipsError("Internal inconsistency in FIELD_ID numbering");
       }
       is_reserved_[my_field_id] = True;
@@ -236,7 +236,7 @@ public:
       Int field_id = String::toInt(field_name_with_id.substr(pos + 2));
       if (field_id < 0) {
         record.field_id = defaultFieldId();
-      } else if (field_id >= is_reserved_.size() || !is_reserved_[field_id]) {
+      } else if ((uInt)field_id >= is_reserved_.size() || !is_reserved_[field_id]) {
         record.field_id = field_id;
         is_reserved_[field_id] = True;
       } else {
@@ -251,8 +251,8 @@ public:
     record.frame = MDirection::J2000;
     Matrix < Double
         > direction(direction_storage_(IPosition(2, 0, 0), IPosition(2, 1, 0)));
-    std::cout << "direction = " << direction << " (shape " << direction.shape()
-        << ")" << std::endl;
+//    std::cout << "direction = " << direction << " (shape " << direction.shape()
+//        << ")" << std::endl;
     direction_storage_.column(0) = direction_column_(irow);
     if (scanrate_column_.isDefined(irow)) {
       Vector < Double > scan_rate = scanrate_column_(irow);
@@ -261,8 +261,8 @@ public:
         direction.reference(direction_storage_);
       }
     }
-    std::cout << "direction = " << direction << " (shape " << direction.shape()
-        << ")" << std::endl;
+//    std::cout << "direction = " << direction << " (shape " << direction.shape()
+//        << ")" << std::endl;
     record.direction = direction;
 
     // update product
@@ -305,11 +305,8 @@ public:
     Vector < uInt > unique_vector;
     uInt num_unique = sorter.sort(unique_vector, source_name_list.size(),
         Sort::QuickSort | Sort::NoDuplicates);
-    std::cout << "unique_vector = " << unique_vector << std::endl;
     for (uInt i = 0; i < num_unique; ++i) {
-      //std::cout << "name " << name_column_(unique_vector[i]) << " ID " << i
-      //    << std::endl;
-      source_id_map_[name_column_(unique_vector[i])] = (Int) i;
+       source_id_map_[name_column_(unique_vector[i])] = (Int) i;
     }
     Sort sorter2;
     sorter2.sortKey(source_name_list.data(), TpString);
@@ -317,11 +314,10 @@ public:
     unique_vector.resize();
     num_unique = sorter2.sort(row_list_, source_name_list.size(),
         Sort::QuickSort | Sort::NoDuplicates);
-//    std::cout << "num_unique = " << num_unique << std::endl;
-    for (uInt i = 0; i < num_unique; ++i) {
-      std::cout << i << ": SRCNAME \"" << name_column_(row_list_[i])
-          << "\" IFNO " << ifno_column_(row_list_[i]) << std::endl;
-    }
+//    for (uInt i = 0; i < num_unique; ++i) {
+//      std::cout << i << ": SRCNAME \"" << name_column_(row_list_[i])
+//          << "\" IFNO " << ifno_column_(row_list_[i]) << std::endl;
+//    }
     initialize(num_unique);
   }
 
@@ -371,7 +367,7 @@ public:
     record.time = 0.5 * (time_min + time_max);
     record.interval = (time_max - time_min);
   }
-  virtual void getProduct(Product *p) {
+  virtual void getProduct(Product */*p*/) {
 
   }
 
@@ -387,24 +383,6 @@ private:
   Table molecules_table_;
   Vector<uInt> row_list_;
   std::map<String, Int> source_id_map_;
-};
-
-class ScantableSysCalIterator: public ScantableIteratorInterface {
-public:
-  typedef void * Product;
-  ScantableSysCalIterator(Table const &table) :
-      ScantableIteratorInterface(table) {
-    initialize(1);
-  }
-
-  virtual ~ScantableSysCalIterator() {
-  }
-
-  void getEntry(SysCalRecord &record) {
-  }
-  virtual void getProduct(Product *p) {
-
-  }
 };
 
 } //# NAMESPACE CASA - END

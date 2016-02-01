@@ -57,18 +57,16 @@ struct SpectralWindowRecord {
     refpix = other.refpix;
     refval = other.refval;
     increment = other.increment;
+    return *this;
   }
 
   void add(AssociatingTable &table, AssociatingColumns &columns) {
     uInt uspw_id = (uInt) spw_id;
-    std::cout << "spw_id = " << spw_id << std::endl;
     uInt nrow = table.nrow();
     if (nrow <= uspw_id) {
-      std::cout << "add dummy row" << std::endl;
       table.addRow(uspw_id - nrow + 1);
       uInt new_nrow = table.nrow();
       for (uInt i = nrow; i < new_nrow - 1; ++i) {
-        std::cout << "add dummy spw entry to " << i << std::endl;
         columns.numChan().put(i, d_num_chan);
         columns.refFrequency().put(i, d_freq);
         columns.totalBandwidth().put(i, d_freq);
@@ -87,7 +85,7 @@ struct SpectralWindowRecord {
 
     uInt nrow = columns.nrow();
 
-    if (nrow <= spw_id) {
+    if (nrow <= (uInt)spw_id) {
       return False;
     }
 

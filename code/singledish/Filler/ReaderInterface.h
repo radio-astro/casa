@@ -25,8 +25,14 @@
 #include <casacore/measures/Measures/MDirection.h>
 #include <casacore/tables/Tables/TableRecord.h>
 
+//#define SINGLEDISHMSFILLER_DEBUG
+#ifdef SINGLEDISHMSFILLER_DEBUG
 #define POST_START std::cout << "Start " << __PRETTY_FUNCTION__ << std::endl
 #define POST_END std::cout << "End " << __PRETTY_FUNCTION__ << std::endl
+#else
+#define POST_START
+#define POST_END
+#endif
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -105,11 +111,6 @@ public:
   // The method should return True if row entry is available.
   // If it return False, row will be invalid so it should not be used.
   virtual Bool getSpectralWindowRow(SpectralWindowRecord &row) = 0;
-
-  // to get SYSCAL table
-  // The method should return True if row entry is available.
-  // If it return False, row will be invalid so it should not be used.
-  virtual Bool getSysCalRow(SysCalRecord &row) = 0;
 
   // to get WEATHER table
   // The method should return True if row entry is available.

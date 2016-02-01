@@ -51,6 +51,7 @@ struct ObservationRecord {
     release_date = other.release_date;
     schedule = other.schedule;
     log = other.log;
+    return *this;
   }
 
   void add(AssociatingTable &table, AssociatingColumns &/*columns*/) {

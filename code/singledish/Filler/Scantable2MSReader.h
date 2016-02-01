@@ -17,7 +17,6 @@
 // casacore includes
 #include <casacore/casa/Containers/Record.h>
 #include <casacore/tables/Tables/TableRecord.h>
-//#include <casacore/measures/TableMeasures/ScalarMeasColumn.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -28,11 +27,9 @@ public:
 
   // get number of rows for MAIN table
   virtual size_t getNumberOfRows() {
-//    return 3;
     if (!main_table_) {
       return 0;
     }
-
     return main_table_->nrow();
   }
 
@@ -44,12 +41,12 @@ public:
       String pol_type = main_table_->keywordSet().asString("POLTYPE");
       ROScalarColumn < uInt > polno_column(*main_table_, "POLNO");
       uInt max_pol = max(polno_column.getColumn());
-      std::cout << "pol_type=" << pol_type << " max_pol=" << max_pol << std::endl;
+//      std::cout << "pol_type=" << pol_type << " max_pol=" << max_pol << std::endl;
       if ((max_pol == 3) && (pol_type == "linear" || pol_type == "circular")) {
         is_float = False;
       }
     }
-    std::cout << "is_float = " << is_float << std::endl;
+//    std::cout << "is_float = " << is_float << std::endl;
     return is_float;
   }
 
@@ -113,16 +110,6 @@ public:
     return return_value;
   }
 
-  // to get SYSCAL table
-  virtual Bool getSysCalRow(SysCalRecord &record) {
-    POST_START;
-
-    Bool return_value = (*this.*get_syscal_row_)(record);
-
-    POST_END;
-    return return_value;
-  }
-
   // to get WEATHER table
   virtual Bool getWeatherRow(WeatherRecord &record) {
     POST_START;
@@ -133,9 +120,6 @@ public:
     return return_value;
   }
 
-//  // to get MAIN table
-//  virtual Bool getMainRecord(TableRecord &record);
-//
   // for DataAccumulator
   virtual Bool getData(size_t irow, TableRecord &record);
 
@@ -157,7 +141,6 @@ private:
   ROScalarColumn<Int> srctype_column_;
   ArrayColumn<Float> data_column_;
   ArrayColumn<uChar> flag_column_;
-  //ScalarMeasColumn<MDirection> direction_column_;
   ArrayColumn<Double> direction_column_;
   ROScalarColumn<String> fieldname_column_;
   ArrayColumn<Float> tsys_column_;
@@ -171,13 +154,11 @@ private:
   Bool (Scantable2MSReader::*get_processor_row_)(ProcessorRecord &);
   Bool (Scantable2MSReader::*get_source_row_)(SourceRecord &);
   Bool (Scantable2MSReader::*get_spw_row_)(SpectralWindowRecord &);
-  Bool (Scantable2MSReader::*get_syscal_row_)(SysCalRecord &);
   Bool (Scantable2MSReader::*get_weather_row_)(WeatherRecord &);
 
   std::unique_ptr<ScantableFieldIterator> field_iter_;
   std::unique_ptr<ScantableFrequenciesIterator> freq_iter_;
   std::unique_ptr<ScantableSourceIterator> source_iter_;
-  std::unique_ptr<ScantableSysCalIterator> syscal_iter_;
   std::unique_ptr<ScantableWeatherIterator> weather_iter_;
 
   Bool getAntennaRowImpl(AntennaRecord &record);
@@ -186,7 +167,6 @@ private:
   Bool getProcessorRowImpl(ProcessorRecord &record);
   Bool getSourceRowImpl(SourceRecord &record);
   Bool getSpectralWindowRowImpl(SpectralWindowRecord &record);
-  Bool getSysCalRowImpl(SysCalRecord &record);
   Bool getWeatherRowImpl(WeatherRecord &record);
 
   template<class _Record>

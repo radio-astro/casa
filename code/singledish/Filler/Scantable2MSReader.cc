@@ -27,8 +27,6 @@ Double queryAntennaDiameter(String const &name) {
   String capitalized = name;
   capitalized.upcase();
   Double diameter = 0.0;
-  std::cout << "name \"" << name << "\" capitalized \"" << capitalized << "\""
-      << std::endl;
   if (capitalized.matches(Regex(".*(DV|DA|PM)[0-9]+$"))) {
     diameter = 12.0;
   } else if (capitalized.matches(Regex(".*CM[0-9]+$"))) {
@@ -77,7 +75,6 @@ String getIntent(Int srctype) {
     String unspecified = "UNSPECIFIED";
     String ftlow = "LOWER";
     String fthigh = "HIGHER";
-    std::cout << "initialize intent_map" << std::endl;
     intent_map[0] = target + sep1 + onstr + sep2 + pswitch;
     intent_map[1] = target + sep1 + offstr + sep2 + pswitch;
     intent_map[2] = target + sep1 + onstr + sep2 + nod;
@@ -120,26 +117,26 @@ String getIntent(Int srctype) {
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 Scantable2MSReader::Scantable2MSReader(std::string const &scantable_name) :
-    ReaderInterface(scantable_name), main_table_(nullptr), scan_column_(), cycle_column_(), ifno_column_(), polno_column_(), beam_column_(), flagrow_column_(), time_column_(), interval_column_(), srctype_column_(), data_column_(), flag_column_(), direction_column_(), fieldname_column_(), tsys_column_(), tcal_id_column_(), sorted_rows_(), get_observation_row_(
-        &Scantable2MSReader::getObservationRowImpl), get_antenna_row_(
+    ReaderInterface(scantable_name), main_table_(nullptr), scan_column_(), cycle_column_(), ifno_column_(), polno_column_(), beam_column_(), flagrow_column_(), time_column_(), interval_column_(), srctype_column_(), data_column_(), flag_column_(), direction_column_(), fieldname_column_(), tsys_column_(), tcal_id_column_(), sorted_rows_(), get_antenna_row_(
         &Scantable2MSReader::getAntennaRowImpl), get_field_row_(
-        &Scantable2MSReader::getFieldRowImpl), get_processor_row_(
+        &Scantable2MSReader::getFieldRowImpl), get_observation_row_(
+            &Scantable2MSReader::getObservationRowImpl), get_processor_row_(
         &Scantable2MSReader::getProcessorRowImpl), get_source_row_(
         &Scantable2MSReader::getSourceRowImpl), get_spw_row_(
-        &Scantable2MSReader::getSpectralWindowRowImpl), get_syscal_row_(
-        &Scantable2MSReader::getSysCalRowImpl), get_weather_row_(
+        &Scantable2MSReader::getSpectralWindowRowImpl)//, get_syscal_row_(
+        /*&Scantable2MSReader::getSysCalRowImpl)*/, get_weather_row_(
         &Scantable2MSReader::getWeatherRowImpl), field_iter_(nullptr), freq_iter_(
-        nullptr), source_iter_(nullptr), syscal_iter_(nullptr), weather_iter_(
+        nullptr), source_iter_(nullptr), /*syscal_iter_(nullptr),*/ weather_iter_(
         nullptr) {
-  std::cout << "Scantabl2MSReader::Scantable2MSReader" << std::endl;
+//  std::cout << "Scantabl2MSReader::Scantable2MSReader" << std::endl;
 }
 
 Scantable2MSReader::~Scantable2MSReader() {
-  std::cout << "Scantabl2MSReader::~Scantable2MSReader" << std::endl;
+//  std::cout << "Scantabl2MSReader::~Scantable2MSReader" << std::endl;
 }
 
 void Scantable2MSReader::initializeSpecific() {
-  std::cout << "Scantabl2MSReader::initialize" << std::endl;
+//  std::cout << "Scantabl2MSReader::initialize" << std::endl;
   File f(name_);
   if (f.exists() and f.isDirectory()) {
     main_table_.reset(new Table(name_, Table::Old));
@@ -174,28 +171,23 @@ void Scantable2MSReader::initializeSpecific() {
   s.sortKey(ifno_list.data(), TpUInt, 0, Sort::Ascending);
   Vector < uInt > polno_list = polno_column_.getColumn();
   s.sortKey(polno_list.data(), TpUInt, 0, Sort::Ascending);
-//  Vector<String> field_list = fieldname_column_.getColumn();
-//  s.sortKey(field_list.data(), TpString);
   uInt n = s.sort(sorted_rows_, main_table_->nrow());
   if (n != main_table_->nrow()) {
     AipsError("Internal problem when sorting rows");
   }
-  for (uInt i = 0; i < n; ++i) {
-    uInt j = sorted_rows_[i];
-//    std::cout << "id " << i << " row " << j << " T " << time_list[j] << " B "
-//        << beamno_list[j] << " S " << ifno_list[j] << " P " << polno_list[j]
-//        << std::endl;
-    printf("id %3u row %3u T %10.3f B %2u S %2u P %2u\n", i, j, time_list[j],
-        beamno_list[j], ifno_list[j], polno_list[j]);
-  }
+//  for (uInt i = 0; i < n; ++i) {
+//    uInt j = sorted_rows_[i];
+//    printf("id %3u row %3u T %10.3f B %2u S %2u P %2u\n", i, j, time_list[j],
+//        beamno_list[j], ifno_list[j], polno_list[j]);
+//  }
 }
 
 void Scantable2MSReader::finalizeSpecific() {
-  std::cout << "Scantabl2MSReader::finalize" << std::endl;
+//  std::cout << "Scantabl2MSReader::finalize" << std::endl;
 }
 
 Bool Scantable2MSReader::getAntennaRowImpl(AntennaRecord &record) {
-  std::cout << "Scantabl2MSReader::getAntennaRowImpl" << std::endl;
+//  std::cout << "Scantabl2MSReader::getAntennaRowImpl" << std::endl;
   TableRecord const &header = main_table_->keywordSet();
 
   // header antenna name is constructed as <ObservatoryName>//<AntennaName>@<StationName>
@@ -215,25 +207,18 @@ Bool Scantable2MSReader::getAntennaRowImpl(AntennaRecord &record) {
     record.station = "";
     record.name = antenna_name;
   }
-  std::cout << "name " << record.name << " station " << record.station
-      << std::endl;
   record.dish_diameter = queryAntennaDiameter(record.name);
-  std::cout << "diameter " << record.dish_diameter << std::endl;
   record.type = "GROUND-BASED";
   record.mount = "ALT-AZ";
 
   Vector < Double > antenna_position_value = header.asArrayDouble(
       "AntennaPosition");
-  std::cout << "antenna_position " << antenna_position_value << std::endl;
   Vector < Quantity > antenna_position_quant(3);
   antenna_position_quant[0] = Quantity(antenna_position_value[0], "m");
   antenna_position_quant[1] = Quantity(antenna_position_value[1], "m");
   antenna_position_quant[2] = Quantity(antenna_position_value[2], "m");
   record.position = MPosition(MVPosition(antenna_position_quant),
       MPosition::ITRF);
-  std::cout << "position";
-  record.position.print(std::cout);
-  std::cout << std::endl;
 
   // only one entry so redirect function pointer to noMoreRowImpl
   get_antenna_row_ = &Scantable2MSReader::noMoreRowImpl<AntennaRecord>;
@@ -241,24 +226,15 @@ Bool Scantable2MSReader::getAntennaRowImpl(AntennaRecord &record) {
   return True;
 }
 
-//Bool Scantable2MSReader::getMainRecord(TableRecord &record) {
-//  std::cout << "Scantabl2MSReader::getMainRecord" << std::endl;
-//
-//  return False;
-//}
-
 Bool Scantable2MSReader::getObservationRowImpl(ObservationRecord &record) {
-  std::cout << "Scantabl2MSReader::getObservationRowImpl" << std::endl;
+//  std::cout << "Scantabl2MSReader::getObservationRowImpl" << std::endl;
 
-  std::cout << "attach column" << std::endl;
   ROScalarColumn < Double > column(*main_table_, "TIME");
-  std::cout << "get time list" << std::endl;
   Vector < Double > time_list = column.getColumn();
   if (record.time_range.size() != 2) {
     record.time_range.resize(2);
   }
   minMax(record.time_range[0], record.time_range[1], time_list);
-  std::cout << "time_range = " << record.time_range << std::endl;
   TableRecord const &header = main_table_->keywordSet();
   record.observer = header.asString("Observer");
   record.project = header.asString("Project");
@@ -278,8 +254,8 @@ Bool Scantable2MSReader::getObservationRowImpl(ObservationRecord &record) {
   return True;
 }
 
-Bool Scantable2MSReader::getProcessorRowImpl(ProcessorRecord &record) {
-  std::cout << "Scantabl2MSReader::getProcessorRowImpl" << std::endl;
+Bool Scantable2MSReader::getProcessorRowImpl(ProcessorRecord &/*record*/) {
+//  std::cout << "Scantabl2MSReader::getProcessorRowImpl" << std::endl;
 
   // just add empty row once
 
@@ -302,16 +278,12 @@ Bool Scantable2MSReader::getSpectralWindowRowImpl(
   return getRowImplTemplate(freq_iter_, record, get_spw_row_);
 }
 
-Bool Scantable2MSReader::getSysCalRowImpl(SysCalRecord &record) {
-  return getRowImplTemplate(syscal_iter_, record, get_syscal_row_);
-}
-
 Bool Scantable2MSReader::getWeatherRowImpl(WeatherRecord &record) {
   return getRowImplTemplate(weather_iter_, record, get_weather_row_);
 }
 
 Bool Scantable2MSReader::getData(size_t irow, TableRecord &record) {
-  std::cout << "Scantable2MSReader::getData(irow=" << irow << ")" << std::endl;
+//  std::cout << "Scantable2MSReader::getData(irow=" << irow << ")" << std::endl;
 
   if (irow >= main_table_->nrow()) {
     return False;
@@ -319,18 +291,16 @@ Bool Scantable2MSReader::getData(size_t irow, TableRecord &record) {
 
   constexpr double kDay2Sec = 86400.0;
   uInt index = sorted_rows_[irow];
-  std::cout << "Accessing row " << index << std::endl;
+//  std::cout << "Accessing row " << index << std::endl;
 
   record.define("TIME", time_column_(index) * kDay2Sec);
   record.define("INTERVAL", interval_column_(index));
-  std::cout << "TIME=" << record.asDouble("TIME") << " INTERVAL="
-      << record.asDouble("INTERVAL") << std::endl;
+//  std::cout << "TIME=" << record.asDouble("TIME") << " INTERVAL="
+//      << record.asDouble("INTERVAL") << std::endl;
   String intent = getIntent(srctype_column_(index));
   record.define("INTENT", intent);
   record.define("SCAN", (Int) scan_column_(index));
   record.define("SUBSCAN", (Int) cycle_column_(index));
-  // FIELD_NAME?
-  // SOURCE_NAME?
   String field_name = fieldname_column_(index);
   record.define("FIELD_ID", field_map_[field_name]);
   record.define("ANTENNA_ID", (Int) 0);
@@ -353,7 +323,6 @@ Bool Scantable2MSReader::getData(size_t irow, TableRecord &record) {
     if (!allEQ(tsys, 1.0f) || !allEQ(tsys, 0.0f)) {
       record.define("TSYS", tsys);
     }
-    std::cout << "TSYS: " << record.asArrayFloat("TSYS") << std::endl;
   }
 
   Table const &tcal_table = main_table_->keywordSet().asTable("TCAL");
@@ -364,7 +333,6 @@ Bool Scantable2MSReader::getData(size_t irow, TableRecord &record) {
     if (!allEQ(tcal, 1.0f) || !allEQ(tcal, 0.0f)) {
       record.define("TCAL", tcal);
     }
-    std::cout << "TCAL: " << record.asArrayFloat("TCAL") << std::endl;
   }
   return True;
 }

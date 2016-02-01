@@ -60,16 +60,7 @@ struct SourceRecord {
     name = other.name;
     time = other.time;
     interval = other.interval;
-    std::cout << "other: " << std::endl;
-    direction.print(std::cout);
-    std::cout << " with ref " << direction.getRefString() << std::endl;
-    std::cout << "before: " << std::endl;
-    direction.print(std::cout);
-    std::cout << " with ref " << direction.getRefString() << std::endl;
     direction = other.direction;
-    std::cout << "after: " << std::endl;
-    direction.print(std::cout);
-    std::cout << " with ref " << direction.getRefString() << std::endl;
     num_lines = other.num_lines;
     code = other.code;
     calibration_group = other.calibration_group;
@@ -77,6 +68,7 @@ struct SourceRecord {
     rest_frequency = other.rest_frequency;
     sysvel = other.sysvel;
     proper_motion = other.proper_motion;
+    return *this;
   }
 
   void add(AssociatingTable &table, AssociatingColumns &columns) {

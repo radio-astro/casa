@@ -36,8 +36,6 @@ public:
     return current_iter_ < num_iter_;
   }
 
-  virtual void getEntry(TableRecord &record) = 0;
-
   void next() {
     ++current_iter_;
   }
@@ -117,13 +115,9 @@ public:
     POST_END;
   }
   virtual ~SourceIterator() {
-    POST_START;
-    POST_END;
+    POST_START;POST_END;
   }
 
-  void getEntry(TableRecord &record) {
-
-  }
   void getEntry(SourceRecord &record) {
     POST_START;
     if (moreData()) {
@@ -134,11 +128,8 @@ public:
       record.interval = interval_[i];
       record.calibration_group = calibration_group_[i];
       record.code = code_[i];
-      std::cout << "direction = " << direction_[i] << std::endl;
       Quantum<Vector<Double> > qdirection(direction_[i], "rad");
       MDirection direction(qdirection, MDirection::J2000);
-      direction.print(std::cout);
-      std::cout << "with ref " << direction.getRefString() << std::endl;
       record.direction = direction;
       record.proper_motion = proper_motion_[i];
       record.spw_id = spectral_window_id_[i];
@@ -146,8 +137,7 @@ public:
       record.transition = transition_[i];
       record.rest_frequency = rest_frequency_[i];
       record.sysvel = sysvel_[i];
-    }
-    POST_END;
+    }POST_END;
   }
 
 private:
@@ -221,12 +211,7 @@ public:
     POST_END;
   }
   virtual ~FieldIterator() {
-    POST_START;
-    POST_END;
-  }
-
-  void getEntry(TableRecord &record) {
-    return;
+    POST_START;POST_END;
   }
 
   void getEntry(FieldRecord &record) {
@@ -237,12 +222,10 @@ public:
       record.source_name = source_name_[i];
       record.time = time_[i];
       record.code = code_[i];
-      Int num_poly = 0;
       Matrix < Double > direction(direction_[i]);
       if (scan_rate_[i].nelements() > 0 && anyNE(scan_rate_[i], 0.0)) {
         direction.resize(2, 2, True);
         direction.column(1) = scan_rate_[i];
-        num_poly = 1;
       }
       record.direction = direction;
       record.frame = MDirection::GALACTIC;
@@ -298,9 +281,6 @@ public:
   virtual ~SpwIterator() {
   }
 
-  void getEntry(TableRecord &record) {
-
-  }
   void getEntry(SpectralWindowRecord &record) {
     if (moreData()) {
       size_t i = current_iter_;
@@ -322,82 +302,6 @@ private:
   Vector<Double> increment_;
   Vector<Int> num_chan_;
   Vector<Int> meas_freq_ref_;
-};
-
-class SysCalIterator: public FixedNumberIteratorInterface {
-public:
-  SysCalIterator() :
-      FixedNumberIteratorInterface(4), antenna_id_(num_iter_), feed_id_(
-          num_iter_), spectral_window_id_(num_iter_), time_(num_iter_), interval_(
-          num_iter_), tcal_(num_iter_, Vector<Float>()), tcal_spectrum_(
-          num_iter_, Matrix<Float>()), tsys_(num_iter_, Vector<Float>()), tsys_spectrum_(
-          num_iter_, Matrix<Float>()) {
-    antenna_id_[0] = 0;
-    antenna_id_[1] = 0;
-    antenna_id_[2] = 3;
-    antenna_id_[3] = 3;
-    feed_id_[0] = 0;
-    feed_id_[1] = 1;
-    feed_id_[2] = 2;
-    feed_id_[3] = 1;
-    spectral_window_id_[0] = 0;
-    spectral_window_id_[1] = 1;
-    spectral_window_id_[2] = 0;
-    spectral_window_id_[3] = 1;
-    Time t(2016, 1, 1);
-    time_ = t.modifiedJulianDay() * 86400.0;
-    time_[2] += 86400.0;
-    time_[3] = time_[2];
-    interval_ = 3600.0;
-    tcal_[0] = Vector < Float > (2, 100.0);
-    tcal_[1] = Vector<Float>();
-    tcal_[2] = tcal_[1];
-    tcal_[3] = tcal_[0] * 2.0f;
-    tsys_[0] = Vector<Float>();
-    tsys_[1] = tsys_[0];
-    tsys_[2] = Vector < Float > (1, 150.0);
-    tsys_[3] = tsys_[2];
-    tcal_spectrum_[0] = Matrix<Float>();
-    tcal_spectrum_[1] = Matrix < Float > (IPosition(2, 128), 175.0);
-    tcal_spectrum_[2] = tcal_spectrum_[0];
-    tcal_spectrum_[3] = tcal_spectrum_[1];
-    tsys_spectrum_[0] = Matrix<Float>();
-    tsys_spectrum_[1] = tsys_spectrum_[0];
-    tsys_spectrum_[2] = Matrix < Float > (IPosition(2, 64), 240.0);
-    tsys_spectrum_[3] = tsys_spectrum_[2];
-  }
-
-  virtual ~SysCalIterator() {
-  }
-
-  void getEntry(TableRecord &record) {
-
-  }
-  void getEntry(SysCalRecord &record) {
-    if (moreData()) {
-      size_t i = current_iter_;
-      record.antenna_id = antenna_id_[i];
-      record.feed_id = feed_id_[i];
-      record.spw_id = spectral_window_id_[i];
-      record.time = time_[i];
-      record.interval = interval_[i];
-      record.tcal = tcal_[i];
-      record.tcal_spectrum = tcal_spectrum_[i];
-      record.tsys = tsys_[i];
-      record.tsys_spectrum = tsys_spectrum_[i];
-    }
-  }
-
-private:
-  Vector<Int> antenna_id_;
-  Vector<Int> feed_id_;
-  Vector<Int> spectral_window_id_;
-  Vector<Double> time_;
-  Vector<Double> interval_;
-  Vector<Vector<Float> > tcal_;
-  Vector<Matrix<Float> > tcal_spectrum_;
-  Vector<Vector<Float> > tsys_;
-  Vector<Matrix<Float> > tsys_spectrum_;
 };
 
 class WeatherIterator: public FixedNumberIteratorInterface {
@@ -427,10 +331,7 @@ public:
   virtual ~WeatherIterator() {
   }
 
-  void getEntry(TableRecord &record) {
-
-  }
-    void getEntry(WeatherRecord &record) {
+  void getEntry(WeatherRecord &record) {
     if (moreData()) {
       size_t i = current_iter_;
       record.antenna_id = antenna_id_[i];
@@ -469,8 +370,6 @@ struct FloatDataStorage {
   Int const subscan_[2] = { 0, 1 };
   Double const ra_[2] = { 0.25, 0.28 };
   Double const dec_[2] = { -1.48, -1.49 };
-//  Double const dra_[2] = {0.0, -0.01};
-//  Double const ddec_[2] = {0.0, 0.002};
   String const intent_[2] = { "OBSERVE_TARGET#ON_SOURCE",
       "OBSERVE_TARGET#OFF_SOURCE" };
   String const field_name_[2] = { "MyField", "AnotherField" };
@@ -484,26 +383,24 @@ struct FloatDataStorage {
       return False;
     }
 
-    size_t index = irow / (n / 4);
-    std::cout << "ROW " << irow << std::endl;
-    std::cout << "    index for time " << index << std::endl;
-    if (4ul <= index)
-      return false;;
-    //record.define("TIME", time_[index]);
-
-    index = irow / (n / 2);
-    std::cout << "ROW " << irow << std::endl;
-    std::cout << "    index for state and scan" << index << std::endl;
+//    size_t index = irow / (n / 4);
+//    std::cout << "ROW " << irow << std::endl;
+//    std::cout << "    index for time " << index << std::endl;
+//    if (4ul <= index)
+//      return false;;
+//
+    size_t index = irow / (n / 2);
+//    std::cout << "ROW " << irow << std::endl;
+//    std::cout << "    index for time, state, and scan" << index << std::endl;
     if (2ul <= index)
       return false;;
     record.define("TIME", time_[index]);
     record.define("INTENT", intent_[index]);
     record.define("SCAN", scan_[index]);
     record.define("SUBSCAN", subscan_[index]);
-    record.print(std::cout);
 
     index = (irow / (n / 4)) % 2;
-    std::cout << "    index for field " << index << std::endl;
+//    std::cout << "    index for field " << index << std::endl;
     if (2ul <= index)
       return false;;
     record.define("FIELD_ID", field_[index]);
@@ -514,12 +411,10 @@ struct FloatDataStorage {
     direction(0, 0) = ra_[index];
     direction(1, 0) = dec_[index];
     record.define("DIRECTION", direction);
-//    direction(0, 1) = dra_[index];
-//    direction(1, 1) = ddec_[index];
     Int antenna_id = antenna_[index];
 
     index = (irow / (n / 8)) % 2;
-    std::cout << "    index for feed " << index << std::endl;
+//    std::cout << "    index for feed " << index << std::endl;
     if (2ul <= index)
       return false;;
     record.define("FEED_ID", feed_[index]);
@@ -530,7 +425,7 @@ struct FloatDataStorage {
     } else {
       index = 0;
     }
-    std::cout << "    index for spw " << index << std::endl;
+//    std::cout << "    index for spw " << index << std::endl;
     if (2ul <= index)
       return false;;
     size_t const num_chan = num_chan_[index];
@@ -548,7 +443,7 @@ struct FloatDataStorage {
     } else {
       index = 0;
     }
-    std::cout << "    index for pol " << index << std::endl;
+//    std::cout << "    index for pol " << index << std::endl;
     if (2ul <= index)
       return false;;
     record.define("POLNO", (Int) index);
@@ -564,8 +459,7 @@ struct FloatDataStorage {
     record.define("FLAG_ROW", flag_row);
     record.define("INTERVAL", 10.0);
 
-    Vector<Float> tsys(num_chan_tsys, tsys_value);
-    std::cout << "irow " << irow << ": " << tsys << std::endl;
+    Vector < Float > tsys(num_chan_tsys, tsys_value);
     record.define("TSYS", tsys);
 
     POST_END;
@@ -588,23 +482,20 @@ template<class DataStorage>
 class TestReader: public casa::ReaderInterface {
 public:
   TestReader(std::string const &name) :
-      casa::ReaderInterface(name), source_iterator_(nullptr), syscal_iterator_(
-          nullptr), weather_iterator_(nullptr), get_observation_row_(
+      casa::ReaderInterface(name), source_iterator_(nullptr), weather_iterator_(
+          nullptr), get_observation_row_(
           &::TestReader<DataStorage>::getObservationRowImpl), get_antenna_row_(
           &::TestReader<DataStorage>::getAntennaRowImpl), get_processor_row_(
           &::TestReader<DataStorage>::getProcessorRowImpl), get_source_row_(
           &::TestReader<DataStorage>::getSourceRowWithInitImpl), get_field_row_(
           &::TestReader<DataStorage>::getFieldRowWithInitImpl), get_spw_row_(
-          &::TestReader<DataStorage>::getSpwRowWithInitImpl), get_syscal_row_(
-          &::TestReader<DataStorage>::getSysCalRowWithInitImpl), get_weather_row_(
+          &::TestReader<DataStorage>::getSpwRowWithInitImpl), get_weather_row_(
           &::TestReader<DataStorage>::getWeatherRowWithInitImpl), storage_() {
-    POST_START;
-    POST_END;
+    POST_START;POST_END;
   }
 
   ~TestReader() {
-    POST_START;
-    POST_END;
+    POST_START;POST_END;
   }
 
   // get number of rows
@@ -681,17 +572,6 @@ public:
     return return_value;
   }
 
-  // to get SYSCAL table
-  virtual Bool getSysCalRow(SysCalRecord &record) {
-    POST_START;
-
-    Bool return_value = (*this.*get_syscal_row_)(record);
-
-    POST_END;
-
-    return return_value;
-  }
-
   // to get WEATHER table
   virtual Bool getWeatherRow(WeatherRecord &record) {
     POST_START;
@@ -709,8 +589,6 @@ public:
 
     Bool status = storage_.getData(irow, record);
 
-    std::cout << "status = " << status << std::endl;
-
     String key = "ROW" + String::toString(irow);
     main_record_.defineRecord(key, record);
 
@@ -725,26 +603,22 @@ public:
   std::map<uInt, SourceRecord> source_record_;
   std::map<uInt, FieldRecord> field_record_;
   std::map<uInt, SpectralWindowRecord> spw_record_;
-  std::map<uInt, SysCalRecord> syscal_record_;
   std::map<uInt, WeatherRecord> weather_record_;
   TableRecord main_record_;
 
 protected:
   void initializeSpecific() {
-    POST_START;
-    POST_END;
+    POST_START;POST_END;
   }
 
   void finalizeSpecific() {
-    POST_START;
-    POST_END;
+    POST_START;POST_END;
   }
 
 private:
   std::unique_ptr<SourceIterator> source_iterator_;
   std::unique_ptr<FieldIterator> field_iterator_;
   std::unique_ptr<SpwIterator> spw_iterator_;
-  std::unique_ptr<SysCalIterator> syscal_iterator_;
   std::unique_ptr<WeatherIterator> weather_iterator_;
   Bool (::TestReader<DataStorage>::*get_observation_row_)(ObservationRecord &);
   Bool (::TestReader<DataStorage>::*get_antenna_row_)(AntennaRecord &);
@@ -752,7 +626,6 @@ private:
   Bool (::TestReader<DataStorage>::*get_source_row_)(SourceRecord &);
   Bool (::TestReader<DataStorage>::*get_field_row_)(FieldRecord &);
   Bool (::TestReader<DataStorage>::*get_spw_row_)(SpectralWindowRecord &);
-  Bool (::TestReader<DataStorage>::*get_syscal_row_)(SysCalRecord &);
   Bool (::TestReader<DataStorage>::*get_weather_row_)(WeatherRecord &);
   DataStorage storage_;
 
@@ -767,7 +640,6 @@ private:
     time_range[0] = t.modifiedJulianDay() * 86400.0; // sec
     t = t + 3600.0;
     time_range[1] = t.modifiedJulianDay();
-    std::cout << "MJD=" << time_range[0] << std::endl;
     record.time_range = time_range;
     observation_record_.define("TIME_RANGE", time_range);
     String observer = "MyName";
@@ -918,24 +790,6 @@ private:
     return getRowImplTemplate2(spw_iterator_, spw_record_, get_spw_row_, record);
   }
 
-  Bool getSysCalRowWithInitImpl(SysCalRecord &record) {
-    POST_START;
-
-    syscal_iterator_.reset(new ::SysCalIterator());
-    get_syscal_row_ = &::TestReader<DataStorage>::getSysCalRowImpl;
-
-    Bool more_rows = getSysCalRowImpl(record);
-
-    POST_END;
-
-    return more_rows;
-  }
-
-  Bool getSysCalRowImpl(SysCalRecord &record) {
-    return getRowImplTemplate2(syscal_iterator_, syscal_record_,
-        get_syscal_row_, record);
-  }
-
   Bool getWeatherRowWithInitImpl(WeatherRecord &record) {
     POST_START;
 
@@ -969,7 +823,6 @@ private:
 
       // keep record contents
       uInt i = internal_record.size();
-      std::cout << "keep record entry for " << i << std::endl;
       internal_record[i] = record;
     } else {
       iter.reset(nullptr);
@@ -983,8 +836,7 @@ private:
 
   template<class _Record>
   Bool noMoreRowImplTemplate(_Record &) {
-    POST_START;
-    POST_END;
+    POST_START;POST_END;
 
     return False;
   }

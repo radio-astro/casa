@@ -24,8 +24,14 @@
 
 #include <casacore/tables/Tables/TableRecord.h>
 
+//#define SINGLEDISHMSFILLER_DEBUG
+#ifdef SINGLEDISHMSFILLER_DEBUG
 #define POST_START std::cout << "Start " << __PRETTY_FUNCTION__ << std::endl
 #define POST_END std::cout << "End " << __PRETTY_FUNCTION__ << std::endl
+#else
+#define POST_START
+#define POST_END
+#endif
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -43,9 +49,6 @@ public:
     POST_START;
 
     setPolType(poltype);
-    std::cout << (unsigned int) SinglePol0() << " "
-        << (unsigned int) SinglePol1() << " " << (unsigned int) DualPol() << " "
-        << (unsigned int) FullPol() << std::endl;
 
     POST_END;
   }
@@ -73,27 +76,15 @@ public:
     }
   }
   void initialize(size_t num_chan) {
-    std::cout << "initialize" << std::endl;
     num_chan_ = num_chan;
     IPosition const shape(2, num_pol_max_, num_chan_);
-    std::cout << "initialize data" << std::endl;
     resizeTo(data_, shape);
-    std::cout << "initialize flag" << std::endl;
     resizeTo(flag_, shape);
-    std::cout << "initialize tsys" << std::endl;
     resizeTo(tsys_, shape);
-    std::cout << "initialize tcal" << std::endl;
     resizeTo(tcal_, shape);
     tsys_ = -1.0f;
     tcal_ = -1.0f;
-//    if (data_.shape() != shape) {
-//      data_.resize(IPosition(2, num_pol_max_, num_chan_));
-//    }
-//    if (flag_.shape() != shape) {
-//      flag_.resize(IPosition(2, num_pol_max_, num_chan_));
-//    }
     filled_ = NoData();
-    std::cout << "end initialize" << std::endl;
   }
 
   void clear() {
@@ -112,15 +103,10 @@ public:
       return false;
     }
 
-    std::cout << "VALID" << std::endl;
-
     uInt polid = record.asuInt("POLNO");
-
-    std::cout << "POLNO=" << polid << std::endl;
 
     if (num_pol_max_ <= polid) {
       return false;
-      //AipsError("Invalid POLNO");
     }
     Vector < Float > data = record.asArrayFloat("DATA");
     if (num_chan_ == 0) {
@@ -129,27 +115,19 @@ public:
     }
     Vector < Bool > flag = record.asArrayBool("FLAG");
     Bool flagrow = record.asBool("FLAG_ROW");
-    //std::cout << "data=" << data << std::endl;
-    //std::cout << "flag=" << flag << std::endl;
 
     if (data.shape() != flag.shape()) {
       return false;
     }
 
-    std::cout << "fill Tsys" << std::endl;
     Vector < Float > tsys;
     if (record.isDefined("TSYS")) {
-      std::cout << "assign Tsys" << std::endl;
       tsys.assign(record.asArrayFloat("TSYS"));
     }
-    std::cout << "fill Tcal" << std::endl;
     Vector < Float > tcal;
     if (record.isDefined("TCAL")) {
-      std::cout << "assign Tcal" << std::endl;
       tcal.assign(record.asArrayFloat("TCAL"));
     }
-
-    std::cout << "num_chan_ = " << num_chan_ << std::endl;
 
     if (data.nelements() != num_chan_) {
       return false;
@@ -222,15 +200,12 @@ private:
         "FLAG_ROW" };
     for (size_t i = 0; i < num_required_keys; ++i) {
       is_valid = is_valid && record.isDefined(required_keys[i]);
-      std::cout << "key " << required_keys[i] << " is_valid " << is_valid
-          << std::endl;
     }
     return is_valid;
   }
   void setPolType(String const &poltype) {
     POST_START;
 
-    std::cout << "poltype = " << poltype << std::endl;
     poltype_ = poltype;
     if (poltype_ == "linear") {
       get_chunk_ = &DataChunk::getLinear;
@@ -287,15 +262,10 @@ private:
   bool getLinear(TableRecord &record) {
     POST_START;
 
-    std::cout << "data_.column(0).shape()=" << data_.column(0).shape()
-        << std::endl;
-    std::cout << "data_.row(0).shape()=" << data_.row(0).shape() << std::endl;
-
     Vector < Float > weight;
     Vector < Float > sigma;
     if (isFullPol()) {
       // POL 0, 1, 2, and 3
-      std::cout << "Full polarization" << std::endl;
       Matrix < Complex > data(4, num_chan_, Complex(0));
       Vector < Complex > complex0(data.row(0));
       setReal(complex0, data_.row(0));
@@ -372,7 +342,6 @@ private:
       record.define("CORR_TYPE", corr_type_);
     } else if (isDualPol()) {
       // POL 0 and 1
-      std::cout << "Dual polarization" << std::endl;
       Matrix < Float > data = data_(IPosition(2, 0, 0),
           IPosition(2, 1, num_chan_ - 1));
       Matrix < Bool > flag = flag_(IPosition(2, 0, 0),
@@ -388,28 +357,23 @@ private:
       Matrix < Float > tsys;
       if (tsys_(0, 0) > 0.0f && tsys_(0, 1) > 0.0f) {
         // should be spectral Tsys
-        std::cout << "spectral Tsys pol 0" << std::endl;
         tsys.resize(2, num_chan_);
         tsys = -1;
         tsys.row(0) = tsys_.row(0);
       } else if (tsys_(0, 0) > 0.0f) {
         // scalar Tsys
-        std::cout << "scalar Tsys pol 0" << std::endl;
         tsys.resize(2, 1);
         tsys = -1.0f;
         tsys(0, 0) = tsys_(0, 0);
       }
       if (tsys_(1, 0) > 0.0f && tsys_(1, 1) > 0.0f) {
-        std::cout << "spectral Tsys pol 1" << std::endl;
         tsys.resize(2, num_chan_, True);
         tsys.row(1) = tsys_.row(1);
       } else if (tsys_(1, 0) > 0.0f) {
-        std::cout << "scalar Tsys pol 1" << std::endl;
         tsys.resize(2, 1, True);
         tsys.row(1) = -1.0f;
         tsys(1, 0) = tsys_(1, 0);
       }
-      std::cout << "tsys = " << tsys << std::endl;
       if (!tsys.empty() && anyNE(tsys, 1.0f)) {
         record.define("TSYS", tsys);
       }
@@ -444,15 +408,11 @@ private:
       record.define("CORR_TYPE", corr_type);
     } else if (isSinglePol0()) {
       // only POL 0
-      std::cout << "Single polarization 0" << std::endl;
       Slicer slicer(IPosition(2, 0, 0), IPosition(2, 1, num_chan_));
       Matrix < Float > data = data_(slicer);
       Matrix < Bool > flag = flag_(slicer);
-      std::cout << data << std::endl;
-      std::cout << flag << std::endl;
       Bool flag_row = flag_row_(0);
       Vector < Float > weight = weight_(Slice(0, 1));
-      std::cout << weight << std::endl;
       record.define("FLOAT_DATA", data);
       record.define("FLAG", flag);
       record.define("FLAG_ROW", flag_row);
@@ -495,7 +455,6 @@ private:
       record.define("CORR_TYPE", corr_type);
     } else if (isSinglePol1()) {
       // only POL 1
-      std::cout << "Single polarization 1" << std::endl;
       Slicer slicer(IPosition(2, 1, 0), IPosition(2, 1, num_chan_));
       Matrix < Float > data = data_(slicer);
       Matrix < Bool > flag = flag_(slicer);
@@ -709,22 +668,9 @@ public:
 
   void clear() {
     for (auto iter = pool_.begin(); iter != pool_.end(); ++iter) {
-      //delete *iter;
       (*iter)->clear();
     }
-    //pool_.resize(0);
     time_ = -1.0;
-    //indexer_ = Record();
-
-    // antenna_id_.resize(0);
-    // spw_id_.resize(0);
-    // field_id_.resize(0);
-    // feed_id_.resize(0);
-    // scan_.resize(0);
-    // subscan_.resize(0);
-    // intent_.resize(0);
-    // direction_.resize(0);
-    // interval_.resize(0);
   }
 
   bool get(size_t ichunk, TableRecord &record) {
@@ -779,17 +725,12 @@ public:
       return false;
     }
 
-    std::cout << "valid" << std::endl;
-
     Double time = record.asDouble("TIME");
     if (time_ < 0.0) {
-      std::cout << "first record" << std::endl;
       time_ = time;
     }
     if (time_ != time) {
-      std::cout << "not valid timestamp" << std::endl;
       return false;
-      //AipsError("Invalid use of DataAccumulator");
     }
     Int antennaid = record.asInt("ANTENNA_ID");
     Int spwid = record.asInt("SPECTRAL_WINDOW_ID");
@@ -806,7 +747,6 @@ public:
     Double interval = record.asDouble("INTERVAL");
     bool status = false;
     if (indexer_.isDefined(key)) {
-      std::cout << "accumulate " << key << std::endl;
       uInt index = indexer_.asuInt(key);
       status = pool_[index]->accumulate(record);
       if (status) {
@@ -821,7 +761,6 @@ public:
         interval_[index] = interval;
       }
     } else {
-      std::cout << "new entry " << key << std::endl;
       pool_.push_back(new DataChunk(poltype));
       antenna_id_.push_back(-1);
       spw_id_.push_back(-1);
@@ -848,9 +787,9 @@ public:
       }
     }
 
-    std::cout << "status = " << status << std::endl;
-    std::cout << "key " << key << "(index " << indexer_.asuInt(key)
-        << "): TIME=" << time_ << " INTERVAL=" << interval << std::endl;
+//    std::cout << "status = " << status << std::endl;
+//    std::cout << "key " << key << "(index " << indexer_.asuInt(key)
+//        << "): TIME=" << time_ << " INTERVAL=" << interval << std::endl;
     POST_END;
     return status;
   }

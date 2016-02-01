@@ -65,22 +65,20 @@ struct FieldRecord {
     time = other.time;
     direction = other.direction;
     code = other.code;
+    return *this;
   }
 
   void add(AssociatingTable &table, AssociatingColumns &columns) {
     uInt ufield_id = (uInt) field_id;
-    std::cout << "field_id = " << field_id << std::endl;
     uInt nrow = table.nrow();
     if (nrow == 0) {
       // set direction frame information
       setFrame(columns);
     }
     if (nrow <= ufield_id) {
-      std::cout << "add dummy row" << std::endl;
       table.addRow(ufield_id - nrow + 1);
       uInt new_nrow = table.nrow();
       for (uInt i = nrow; i < new_nrow - 1; ++i) {
-        std::cout << "add dummy field entry to " << i << std::endl;
         columns.sourceId().put(i, d_source_id);
         columns.name().put(i, d_name);
         columns.time().put(i, d_time);
@@ -103,30 +101,7 @@ struct FieldRecord {
       setFrame(columns);
     }
 
-//    uInt ufield_id = (uInt) field_id;
-//    std::cout << "field_id = " << field_id << std::endl;
-//    uInt nrow = columns.nrow();
-//    if (nrow == 0) {
-//      // set direction frame information
-//      setFrame(columns);
-//    }
-//    if (nrow <= ufield_id) {
-//      std::cout << "add dummy row" << std::endl;
-//      table.addRow(ufield_id - nrow + 1);
-//      uInt new_nrow = table.nrow();
-//      for (uInt i = nrow; i < new_nrow - 1; ++i) {
-//        std::cout << "add dummy field entry to " << i << std::endl;
-//        columns.sourceId().put(i, d_source_id);
-//        columns.name().put(i, d_name);
-//        columns.time().put(i, d_time);
-//        columns.numPoly().put(i, d_num_poly);
-//        columns.delayDir().put(i, d_direction);
-//        columns.phaseDir().put(i, d_direction);
-//        columns.referenceDir().put(i, d_direction);
-//      }
-//    }
-//
-    if (table.nrow() <= field_id) {
+    if (table.nrow() <= (uInt)field_id) {
       return False;
     }
 

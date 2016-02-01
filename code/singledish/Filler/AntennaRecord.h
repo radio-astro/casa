@@ -49,6 +49,7 @@ struct AntennaRecord {
     dish_diameter = other.dish_diameter;
     station = other.station;
     offset = other.offset;
+    return *this;
   }
 
   void add(AssociatingTable &table, AssociatingColumns &/*columns*/) {
@@ -60,11 +61,8 @@ struct AntennaRecord {
       return False;
     }
 
-    std::cout << "name=" << name << std::endl;
     columns.name().put(irow, name);
-    std::cout << "position="; position.print(std::cout); std::cout << std::endl;
     columns.positionMeas().put(irow, position);
-    std::cout << "type = " << type << std::endl;
     columns.type().put(irow, type);
     columns.mount().put(irow, mount);
     columns.dishDiameter().put(irow, dish_diameter);

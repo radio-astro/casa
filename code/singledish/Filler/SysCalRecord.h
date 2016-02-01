@@ -57,6 +57,7 @@ struct SysCalRecord {
     tcal_spectrum = other.tcal_spectrum;
     tsys = other.tsys;
     tsys_spectrum = other.tsys_spectrum;
+    return *this;
   }
 
   void add(AssociatingTable &table, AssociatingColumns &/*columns*/) {
@@ -129,9 +130,6 @@ struct SysCalTableRecord {
   }
   SysCalTableRecord(SysCalTableRecord const &other)
   : ms_(other.ms_), columns_(ms_->sysCal()), irow_(other.irow_) {
-//    ms_ = other.ms_;
-//    columns_ = MSSysCalColumns(ms_->sysCal());
-//    irow_ = other.irow_;
     antenna_id = other.antenna_id;
     feed_id = other.feed_id;
     spw_id = other.spw_id;
@@ -169,45 +167,36 @@ struct SysCalTableRecord {
   bool operator==(SysCalRecord const &record) {
     bool is_meta_equal = antenna_id == record.antenna_id
         && feed_id == record.feed_id && spw_id == record.spw_id;
-    std::cout << "operator==: A " << antenna_id << " F " << feed_id << " S " << spw_id << std::endl;
     if (!is_meta_equal) {
       return false;
     }
-    std::cout << "is_meta_equal: num_chan " << num_chan << " num_corr " << num_corr << std::endl;
 
     bool is_tsys_same;
     if (tsys_status == Status::Spectral) {
-      std::cout << "spectral tsys" << std::endl;
-      is_tsys_same = num_chan == record.tsys_spectrum.ncolumn()
-          && num_corr == record.tsys_spectrum.nrow()
+      is_tsys_same = num_chan > 0 && (uInt)num_chan == record.tsys_spectrum.ncolumn()
+          && num_corr > 0 && (uInt)num_corr == record.tsys_spectrum.nrow()
           && tsys_nominal == record.tsys_spectrum(0, 0)
           && allEQ(columns_.tsysSpectrum()(irow_), record.tsys_spectrum);
     } else if (tsys_status == Status::Scalar) {
-      std::cout << "scalar tsys" << std::endl;
-      std::cout << "num_corr " << num_corr << " vs. tsys.size() " << record.tsys.size() << std::endl;
-      std::cout << "tsys_nominal " << tsys_nominal << " vs. tsys[0] " << record.tsys[0] << std::endl;
-      std::cout << "TSYS column " << columns_.tsys()(irow_) << " vs. tsys " << record.tsys << std::endl;
-      is_tsys_same = num_corr == record.tsys.size()
+      is_tsys_same = num_corr > 0 && (uInt)num_corr == record.tsys.size()
           && tsys_nominal == record.tsys[0]
           && allEQ(columns_.tsys()(irow_), record.tsys);
     } else {
-      std::cout << "empty tsys" << std::endl;
       is_tsys_same = record.tsys_spectrum.empty() && record.tsys.empty();
     }
 
     if (!is_tsys_same) {
       return false;
     }
-    std::cout << "is_tsys_same" << std::endl;
 
     bool is_tcal_same;
     if (tcal_status == Status::Spectral) {
-      is_tcal_same = num_chan == record.tcal_spectrum.ncolumn()
-          && num_corr == record.tcal_spectrum.nrow()
+      is_tcal_same = num_chan > 0 && (uInt)num_chan == record.tcal_spectrum.ncolumn()
+          && num_corr > 0 && (uInt)num_corr == record.tcal_spectrum.nrow()
           && tcal_nominal == record.tcal_spectrum(0, 0)
           && allEQ(columns_.tcalSpectrum()(irow_), record.tcal_spectrum);
     } else if (tcal_status == Status::Scalar) {
-      is_tcal_same = num_corr == record.tcal.size()
+      is_tcal_same = num_corr > 0 && (uInt)num_corr == record.tcal.size()
           && tcal_nominal == record.tcal[0]
           && allEQ(columns_.tcal()(irow_), record.tcal);
     } else {
@@ -217,7 +206,6 @@ struct SysCalTableRecord {
     if (!is_tcal_same) {
       return false;
     }
-    std::cout << "is_tcal_same" << std::endl;
 
     return true;
   }
