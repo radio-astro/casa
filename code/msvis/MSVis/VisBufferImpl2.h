@@ -179,6 +179,7 @@ public:
 
     virtual void writeChangesBack ();
     virtual void initWeightSpectrum (const Cube<Float>& wtspec);
+    virtual void initSigmaSpectrum (const Cube<Float>& sigspec);
 
     //--> This needs to be removed: virtual Bool fetch(const asyncio::PrefetchColumns *pfc);
 

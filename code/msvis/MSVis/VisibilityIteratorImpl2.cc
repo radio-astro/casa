@@ -3221,6 +3221,17 @@ VisibilityIteratorImpl2::writeSigmaSpectrum (const Cube<Float> & sigmaSpectrum)
 }
 
 void
+VisibilityIteratorImpl2::initSigmaSpectrum (const Cube<Float> & sigmaSpectrum)
+{
+    ThrowIf (! isWritable (), "This visibility iterator is not writable");
+
+    if (! columns_p.sigmaSpectrum_p.isNull () ) {
+      RefRows & rows = rowBounds_p.subchunkRows_p;
+      columns_p.sigmaSpectrum_p.putColumnCells (rows, sigmaSpectrum);
+    }
+}
+
+void
 VisibilityIteratorImpl2::writeSigma (const Matrix<Float> & sigma)
 {
     ThrowIf (! isWritable (), "This visibility iterator is not writable");

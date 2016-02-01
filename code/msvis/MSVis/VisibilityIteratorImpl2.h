@@ -568,6 +568,9 @@ public:
     // Write/modify the sigmaSpectrum
     virtual void writeSigmaSpectrum (const Cube<Float> & sigsp);
 
+    // Initialize the sigmaSpectrum column
+    virtual void initSigmaSpectrum (const Cube<Float> & sigmaSpectrum);
+
     // Write/modify the Sigma
     virtual void writeSigma (const Matrix<Float> & sig);
 

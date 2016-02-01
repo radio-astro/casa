@@ -1379,6 +1379,21 @@ VisBufferImpl2::initWeightSpectrum(const Cube<Float>& wtspec)
     rwvi->initWeightSpectrum(wtspec);
 }
 
+void
+VisBufferImpl2::initSigmaSpectrum(const Cube<Float>& wtspec) 
+{
+    ThrowIf (! state_p->isAttached_p,
+             "Call to writeChangesBack on unattached VisBuffer.");
+
+    ViImplementation2 * rwvi = dynamic_cast <ViImplementation2 *> (getViiP());
+
+    ThrowIf (rwvi == 0, "Can't write to a read-only VisibilityIterator.");
+
+    // TBD:  Should verify that shape is correct!
+
+    rwvi->initSigmaSpectrum(wtspec);
+}
+
 //      +---------------+
 //      |               |
 //      |  Calculators  |

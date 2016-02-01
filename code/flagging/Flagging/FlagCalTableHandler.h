@@ -69,6 +69,7 @@ public:
 
     virtual void writeChangesBack () {}
     virtual void initWeightSpectrum (const Cube<Float>&) {}
+    virtual void initSigmaSpectrum (const Cube<Float>&) {}
     virtual void dirtyComponentsAdd (const VisBufferComponents2 & /*additionalDirtyComponents*/) {}
     virtual void dirtyComponentsAdd (VisBufferComponent2 /*component*/) {}
     virtual void dirtyComponentsClear () {}
