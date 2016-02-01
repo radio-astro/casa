@@ -597,12 +597,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 	
 --- Channel averaging parameters ---
-    chanaverage -- Average data in channels. 
+    chanaverage -- Average data across channels. Partially flagged data is not be included in the average
+                   unless all data contributing to a given output channel is flagged. In this case, 
+                   mstransform calculates the average of all flagged data, and writes it to the output MS
+                   with the corresponding flag set to true. If present, WEIGHT_SPECTRUM/SIGMA_SPECTRUM
+                   are used together with the channelized flags (FLAG), to compute a weighted average 
+                   (using WEIGHT_SPECTRUM for CORRECTED_DATA and SIGMA_SPECTRUM for DATA).    
         default: False
 
-        chanbin -- Number of input channels to average to create an output
-                   channel. If a list is given, each bin will apply to one spw in
-                   the selection.
+        chanbin -- Bin width for channel average in number of input channels.
+                   If a list is given, each bin applies to one of the selected SPWs.
+                   
             default: 1 =&gt; no channel averaging.
             options: (int) or [int]
             example: chanbin=[2,3] =&gt; average 2 channels of 1st selected
@@ -691,19 +696,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 	
 --- Time averaging parameters ---
-    timeaverage -- Average data in time. Partially flagged data will not be included in the average
-                   calculation, unless all the data for a given channel is flagged. When all data for a
-                   channel is flagged, mstransform will calculate the average, write it to the output MS and
-                   will set all the flags to True. If keepflags=False, the fully flagged data
-                   will not be written to the output MS. If present, WEIGHT_SPECTRUM/SIGMA_SPECTRUM
-                   will be used together with the flags, to compute a weighted average.
-                   The calculation is done in the same way as for the channel average case but 
-                   across the time axis. Otherwise (if WEIGHT_SPECTRUM/SIGMA_SPECTRUM are not present)
-                   mstransform will use WEIGH/SIGMA instead, as in split.    
+    timeaverage -- Average data across time. Partially flagged data is not be included in the average
+                   unless all data contributing to a given output channel is flagged. In this case, 
+                   mstransform calculates the average of all flagged data, and writes it to the output MS
+                   with the corresponding flag set to true. If keepflags=False, the fully flagged data
+                   is not be written to the output MS. If present, WEIGHT_SPECTRUM/SIGMA_SPECTRUM
+                   are used together with the channelized flags (FLAG), to compute a weighted average 
+                   (using WEIGHT_SPECTRUM for CORRECTED_DATA and SIGMA_SPECTRUM for DATA). Otherwise 
+                   WEIGHT/SIGMA are used instead to average together data from different integrations.    
 
         default: False
 
-        timebin -- Bin width for time averaging.
+        timebin -- Bin width for time average in seconds.
             default: '0s'
 
         timespan -- Let the timebin span across scan, state or both.

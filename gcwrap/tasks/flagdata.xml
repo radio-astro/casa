@@ -194,22 +194,22 @@
                 <value type="bool">True</value>
             </param>
             <param type="any" name="channelavg" subparam="true">
-                <description>Average over channels (scalar average)</description>
+                <description>Pre-average data across channels before analyzing visibilities for flagging</description>
                 <any type="variant" limittypes="bool boolArray" />
                 <value type="bool">False</value>
             </param>
     		<param type="any" name="chanbin" subparam="true">
-            	<description>Width (bin) of input channels to average to form an output channel.</description>
+            	<description>Bin width for channel average in number of input channels</description>
             	<any type="variant" limittypes="int intArray"/>            
             	<value type="int">1</value>
 			</param>            
             <param type="any" name="timeavg" subparam="true">
-                <description>Average over time ranges</description>
+                <description>Pre-average data across time before analyzing visibilities for flagging.</description>
                 <any type="variant" limittypes="bool boolArray" />
                 <value type="bool">False</value>
             </param>
                 <param type="string" name="timebin" subparam="true">
-                    <description>Bin width for time averaging.</description>     
+                    <description>Bin width for time average in seconds</description>     
                     <value type="string">0s</value>
                 </param>            
             <param type="bool" name="clipzeros" subparam="true">
@@ -926,31 +926,37 @@
                     default: True
                     example: False; flag data WITHIN the clipminmax range.
 
-               channelavg -- Average data over the selected channels or not.
-                             Pre-flagged channels are excluded from the average. 
-                             The average is done after applying the expression
-                             given in the correlation parameter. This will do a scalar 
-                             averaging on the channels.
+               channelavg -- Pre-average data across channels before analyzing visibilities for flagging.
+                             Partially flagged data is  not be included in the average unless all data 
+                             contributing to a given output channel is flagged. If present, WEIGHT_SPECTRUM / 
+                             SIGMA_SPECTRUM are used to compute a weighted average (WEIGHT_SPECTRUM for 
+                             CORRECTED_DATA and SIGMA_SPECTRUM for DATA).
                     default: False
                     options: True/False
                     
-               width -- Bin width for channel averaging in number of input channels
-                    default: 1                 
+                          NOTE1: Pre-average across channels is not supported in list mode.
+                          NOTE2: Pre-average across channels is not supported for calibration tables                    
+                    
+               chanbin -- Bin width for channel average in number of input channels.
+                          If a list is given, each bin applies to one of the selected SPWs.
+                          When chanbin is set to 1 all input channels are used considered for the 
+                          average to produce a single output channel, this behaviour aims to be preserve 
+                          backwards compatibility with the previous pre-averaging feature of clip mode.
+                    default: 1    
     
-               timeavg -- Average data in time. Partially flagged data will not be included in the average
-                          calculation, unless all the data for a given channel is flagged. If present, 
-                          WEIGHT_SPECTRUM/SIGMA_SPECTRUM will be used to compute a weighted average. Otherwise, 
-                          if WEIGHT_SPECTRUM/SIGMA_SPECTRUM are not present, flagdata will use WEIGHT/SIGMA instead.
+               timeavg -- Pre-average data across time before analyzing visibilities for flagging.
+                          Partially flagged data is  not be included in the average unless all data 
+                          contributing to a given output channel is flagged. If present, WEIGHT_SPECTRUM / 
+                          SIGMA_SPECTRUM are used to compute a weighted average (WEIGHT_SPECTRUM for 
+                          CORRECTED_DATA and SIGMA_SPECTRUM for DATA). Otherwise WEIGHT/SIGMA are used to 
+                          average together data from different integrations.
                     default: False
                     options: True/False
     
-                          NOTE1: Time averaging in clip mode do not support calibration tables.
-                          NOTE2: It is not possible to use the clip mode with time averaging in a list mode.
-                                 The framework used to iterate through a time averaged chunk of data is different
-                                 from a normal iterator, therefore mixing time averaging with other flagging modes
-                                 is incompatible in list mode.
+                          NOTE1: Pre-average across time is not supported in list mode.
+                          NOTE2: Pre-average across time is not supported for calibration tables   
     
-               timebin -- Bin width for time averaging in seconds.
+               timebin -- Bin width for time average in seconds.
                     default: '0s'                    
     
                clipzeros -- Clip zero-value data.
@@ -1161,7 +1167,39 @@
                        cmd=["mode='tfcrop' freqcutoff=3.0 usewindowstats='sum' extendflags=False", 
                             "mode='extend' extendpols=True growtime=50.0 growaround=True"]
                      
-                       flagdata(vis, mode='list', inpfile=cmd)                    
+                       flagdata(vis, mode='list', inpfile=cmd)            
+                       
+               channelavg -- Pre-average data across channels before analyzing visibilities for flagging.
+                             Partially flagged data is  not be included in the average unless all data 
+                             contributing to a given output channel is flagged. If present, WEIGHT_SPECTRUM / 
+                             SIGMA_SPECTRUM are used to compute a weighted average (WEIGHT_SPECTRUM for 
+                             CORRECTED_DATA and SIGMA_SPECTRUM for DATA).
+                    default: False
+                    options: True/False
+                    
+                          NOTE1: Pre-average across channels is not supported in list mode.
+                          NOTE2: Pre-average across channels is not supported for calibration tables                    
+                    
+               chanbin -- Bin width for channel average in number of input channels.
+                          If a list is given, each bin applies to one of the selected SPWs.
+                          When chanbin is set to 1 all input channels are used considered for the 
+                          average to produce a single output channel.
+                    default: 1                   
+    
+               timeavg -- Pre-average data across time before analyzing visibilities for flagging.
+                          Partially flagged data is  not be included in the average unless all data 
+                          contributing to a given output channel is flagged. If present, WEIGHT_SPECTRUM / 
+                          SIGMA_SPECTRUM are used to compute a weighted average (WEIGHT_SPECTRUM for 
+                          CORRECTED_DATA and SIGMA_SPECTRUM for DATA). Otherwise WEIGHT/SIGMA are used to 
+                          average together data from different integrations.
+                    default: False
+                    options: True/False
+    
+                          NOTE1: Pre-average across time is not supported in list mode.
+                          NOTE2: Pre-average across time is not supported for calibration tables          
+                          
+               timebin -- Bin width for time average in seconds.
+                    default: '0s'                                                   
 
     ------------------------------------- RFLAG MODE -----------------------------------------------   
      
@@ -1305,7 +1343,39 @@
                        cmd=["mode='rflag' freqdevscale=3.0 extendflags=False", 
                             "mode='extend' extendpols=True growtime=50.0 growaround=True"]
                      
-                       flagdata(vis, mode='list', inpfile=cmd)                    
+                       flagdata(vis, mode='list', inpfile=cmd)                  
+                       
+               channelavg -- Pre-average data across channels before analyzing visibilities for flagging.
+                             Partially flagged data is  not be included in the average unless all data 
+                             contributing to a given output channel is flagged. If present, WEIGHT_SPECTRUM / 
+                             SIGMA_SPECTRUM are used to compute a weighted average (WEIGHT_SPECTRUM for 
+                             CORRECTED_DATA and SIGMA_SPECTRUM for DATA).
+                    default: False
+                    options: True/False
+                    
+                          NOTE1: Pre-average across channels is not supported in list mode.
+                          NOTE2: Pre-average across channels is not supported for calibration tables                    
+                    
+               chanbin -- Bin width for channel average in number of input channels.
+                          If a list is given, each bin applies to one of the selected SPWs.
+                          When chanbin is set to 1 all input channels are used considered for the 
+                          average to produce a single output channel.
+                    default: 1                
+    
+               timeavg -- Pre-average data across time before analyzing visibilities for flagging.
+                          Partially flagged data is  not be included in the average unless all data 
+                          contributing to a given output channel is flagged. If present, WEIGHT_SPECTRUM / 
+                          SIGMA_SPECTRUM are used to compute a weighted average (WEIGHT_SPECTRUM for 
+                          CORRECTED_DATA and SIGMA_SPECTRUM for DATA). Otherwise WEIGHT/SIGMA are used to 
+                          average together data from different integrations.
+                    default: False
+                    options: True/False
+    
+                          NOTE1: Pre-average across time is not supported in list mode.
+                          NOTE2: Pre-average across time is not supported for calibration tables  
+                          
+               timebin -- Bin width for time average in seconds.
+                    default: '0s'                                                   
 
     ------------------------------------- EXTEND MODE -----------------------------------------------   
      
@@ -1644,24 +1714,29 @@
 
         > The same result can be achieved using the task flagcmd.
          flagcmd('asdm.ms', inpmode='file', inpfile='online_flags.txt', action='apply')
+         
+    15) Clip mode pre-averaging data across channels and across time
+    
+        flagdata(vis='Four_ants_3C286.ms', flagbackup=False, mode='clip', datacolumn='DATA', 
+        timeavg=True, timebin='2s', channelavg=True, chanbin=2)
 
     
 ------ EXAMPLES on FLAGGING CALIBRATION TABLES ------   
     
-    15) Clip zero data from a bandpass calibration table.
+    16) Clip zero data from a bandpass calibration table.
     
         flagdata('cal-X54.B1', mode='clip', clipzeros=True, datacolumn='CPARAM')
         
-    16) Clip data from a cal table with SNR &lt;4.0.
+    17) Clip data from a cal table with SNR &lt;4.0.
     
         flagdata('cal-X54.B1', mode='clip', clipminmax=[0.0,4.0], clipoutside=False, datacolumn='SNR')
     
-    17) Clip the g values of a switched power caltable created using the gencal task. The g values are
+    18) Clip the g values of a switched power caltable created using the gencal task. The g values are
         usually &lt; 1.0.
         
         flagdata('cal.12A.syspower',mode='clip',clipminmax=[0.1,0.3],correlation='Sol1,Sol3',datacolumn='FPARAM')
     
-    18) Now, clip the Tsys values of the same table from above. The Tsys solutions have values between
+    19) Now, clip the Tsys values of the same table from above. The Tsys solutions have values between
         10 -- 100s.
     
         flagdata('cal.12A.syspower',mode='clip',clipminmax=[10.0,95.0],correlation='Sol2,Sol4',datacolumn='FPARAM')
