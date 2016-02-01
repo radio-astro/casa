@@ -280,14 +280,16 @@ class CleanBase(basetask.StandardTaskTemplate):
                   scan=scanidlist, specmode=inputs.specmode if inputs.specmode != 'cont' else 'mfs', gridder=inputs.gridder,
                   pblimit=inputs.pblimit, niter=inputs.niter,
                   threshold=inputs.threshold, deconvolver=inputs.deconvolver,
-                  interactive=False, outframe=inputs.outframe, nchan=inputs.nchan,
+                  interactive=0, outframe=inputs.outframe, nchan=inputs.nchan,
                   start=inputs.start, width=inputs.width, imsize=inputs.imsize,
                   cell=inputs.cell, phasecenter=inputs.phasecenter,
                   stokes=inputs.stokes,
                   weighting=inputs.weighting, robust=inputs.robust,
                   npixels=inputs.npixels,
                   restoringbeam=inputs.restoringbeam, uvrange=inputs.uvrange,
-                  mask=inputs.mask, savemodel='none', nterms=result.multiterm,
+                  mask=inputs.mask, usemask='user', savemodel='none',
+                  nterms=result.multiterm,
+                  makeimages='choose', restoremodel=True,
                   chanchunks=chanchunks, parallel=parallel)
         else:
             job = casa_tasks.tclean(vis=inputs.vis, imagename='%s.%s.iter%s' %
@@ -297,16 +299,17 @@ class CleanBase(basetask.StandardTaskTemplate):
                   scan=scanidlist, specmode=inputs.specmode if inputs.specmode != 'cont' else 'mfs', gridder=inputs.gridder,
                   pblimit=inputs.pblimit, niter=inputs.niter,
                   threshold=inputs.threshold, deconvolver=inputs.deconvolver,
-                  interactive=False, outframe=inputs.outframe, nchan=inputs.nchan,
+                  interactive=0, outframe=inputs.outframe, nchan=inputs.nchan,
                   start=inputs.start, width=inputs.width, imsize=inputs.imsize,
                   cell=inputs.cell, phasecenter=inputs.phasecenter,
                   stokes=inputs.stokes,
                   weighting=inputs.weighting, robust=inputs.robust,
                   npixels=inputs.npixels,
                   restoringbeam=inputs.restoringbeam, uvrange=inputs.uvrange,
-                  mask=inputs.mask, savemodel='none',
+                  mask=inputs.mask, usemask='user', savemodel='none',
+                  makeimages='choose', restoremodel=True,
                   chanchunks=chanchunks, parallel=parallel)
-        self._executor.execute(job)
+        tclean_result = self._executor.execute(job)
 
         # Create PB for single fields since it is not auto-generated for
         # gridder='standard'.

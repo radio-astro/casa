@@ -253,6 +253,9 @@ class Tclean(cleanbase.CleanBase):
         # Check if a matching 'cont' image exists for continuum subtraction.
         # NOTE: For Cycle 3 we use 'mfs' images due to possible
         #       inaccuracies in the nterms=2 cont images.
+        #       If 'cont' images are going to be used, then the
+        #       startmodel parameter must be a list with
+        #       ['<name>.model.tt0', '<name>.model.tt1'].
         cont_image_name = ''
         if (('TARGET' in inputs.intent) and (inputs.specmode == 'cube')):
             imlist = self.inputs.context.sciimlist.get_imlist()
@@ -262,7 +265,7 @@ class Tclean(cleanbase.CleanBase):
                     (iminfo['specmode'] == 'mfs') and \
                     (inputs.spw in iminfo['spwlist'].split(','))):
                     cont_image_name = iminfo['imagename'][:iminfo['imagename'].rfind('.image')]
-                    cont_image_name = cont_image_name.replace('.pbcor', '')
+                    cont_image_name = cont_image_name.replace('.pbcor', '.model')
                     break
 
             if (cont_image_name != ''):
