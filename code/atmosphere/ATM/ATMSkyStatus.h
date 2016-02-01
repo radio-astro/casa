@@ -474,6 +474,288 @@ public:
                          double skycoupling,
                          const Temperature &Tspill);
 
+
+   /** Accesor to the average Rayleigh-Jeans Temperature in spectral window 0, for the current conditions
+   and a perfect sky coupling */
+  Temperature getAverageTrjSky()
+  {
+    unsigned int n = 0;
+    return getAverageTrjSky(n);
+  }
+  /** Accesor to the average Rayleigh-Jeans Temperature in spectral window spwid, for the current conditions
+   and a perfect sky coupling */
+  Temperature getAverageTrjSky(unsigned int spwid)
+  {
+    return getAverageTrjSky(spwid,
+                             getUserWH2O(),
+                             getAirMass(),
+                             1.0,
+                             getGroundTemperature());
+  }
+  /** Accesor to the average Rayleigh-Jeans Temperature in spectral window 0, for the current
+   conditions, except water column wh2o, and a perfect sky coupling */
+  Temperature getAverageTrjSky(const Length &wh2o) { return getAverageTrjSky(0, wh2o); }
+  /** Accesor to the average Rayleigh-Jeans Temperature in spectral window spwid, for the current
+   conditions, except water column wh2o, and a perfect sky coupling */
+  Temperature getAverageTrjSky(unsigned int spwid, const Length &wh2o)
+  {
+    return getAverageTrjSky(spwid,
+                             wh2o,
+                             getAirMass(),
+                             1.0,
+                             getGroundTemperature());
+  }
+  /** Accesor to the average Rayleigh-Jeans Temperature in spectral window 0, for the current
+   conditions, except Air Mass airmass, and a perfect sky coupling */
+  Temperature getAverageTrjSky(double airmass) { return getAverageTrjSky(0, airmass); }
+  /** Accesor to the average Rayleigh-Jeans Temperature in spectral window spwid, for the current
+   conditions, except Air Mass airmass, and a perfect sky coupling */
+  Temperature getAverageTrjSky(unsigned int spwid, double airmass)
+  {
+    return getAverageTrjSky(spwid,
+                             getUserWH2O(),
+                             airmass,
+                             1.0,
+                             getGroundTemperature());
+  }
+  /** Accesor to the average Rayleigh-Jeans Temperature in spectral window 0, for the current
+   conditions, except water column wh2o, introducing a Sky Coupling and Spill Over Temperature */
+  Temperature getAverageTrjSky(const Length &wh2o,
+                                double skycoupling,
+                                const Temperature &Tspill)
+  {
+    return getAverageTrjSky(0, wh2o, skycoupling, Tspill);
+  }
+  /** Accesor to the average Rayleigh-Jeans Temperature in spectral window spwid, for the current
+   conditions, except water column wh2o, introducing a Sky Coupling and Spill Over Temperature */
+  Temperature getAverageTrjSky(unsigned int spwid,
+                                const Length &wh2o,
+                                double skycoupling,
+                                const Temperature &Tspill)
+  {
+    return getAverageTrjSky(spwid, wh2o, getAirMass(), skycoupling, Tspill);
+  }
+  /** Accesor to the average Rayleigh-Jeans Temperature in spectral window 0, for the current
+   conditions, except Air Mass airmass, introducing a Sky Coupling and Spill Over Temperature */
+  Temperature getAverageTrjSky(double airmass,
+                                double skycoupling,
+                                const Temperature &Tspill)
+  {
+    return getAverageTrjSky(0, airmass, skycoupling, Tspill);
+  }
+  /** Accesor to the average Rayleigh-Jeans Temperature in spectral window spwid, for the current
+   conditions, except Air Mass airmass, introducing a Sky Coupling and Spill Over Temperature */
+  Temperature getAverageTrjSky(unsigned int spwid,
+                                double airmass,
+                                double skycoupling,
+                                const Temperature &Tspill)
+  {
+    return getAverageTrjSky(spwid, getUserWH2O(), airmass, skycoupling, Tspill);
+  }
+  /** Accesor to the average Rayleigh-Jeans Temperature in spectral window 0 for the current
+   conditions, introducing a Sky Coupling and Spill Over Temperature */
+  Temperature getAverageTrjSky(double skycoupling, const Temperature &Tspill)
+  {
+    unsigned int n = 0;
+    return getAverageTrjSky(n, skycoupling, Tspill);
+  }
+  /** Accesor to the average Rayleigh-Jeans Temperature in spectral window spwid for the current
+   conditions, introducing a Sky Coupling and Spill Over Temperature */
+  Temperature getAverageTrjSky(unsigned int spwid,
+                                double skycoupling,
+                                const Temperature &Tspill)
+  {
+    return getAverageTrjSky(spwid,
+                             getUserWH2O(),
+                             getAirMass(),
+                             skycoupling,
+                             Tspill);
+  }
+  /** Accesor to the average Rayleigh-Jeans Temperature in spectral window spwid, for Water Column
+   wh2o, Air Mass airmass, Sky Coupling skycoupling, and Spill Over Temperature Tspill */
+  Temperature getAverageTrjSky(unsigned int spwid,
+                                const Length &wh2o,
+                                double airmass,
+                                double skycoupling,
+                                const Temperature &Tspill);
+
+  Temperature getAverageTrjSky(unsigned int spwid,
+                                const Length &wh2o,
+                                double airmass,
+                                double skycoupling,
+                                double signalgain,
+                                const Temperature &Tspill);
+
+  /** Accesor to the Rayleigh-Jeans Temperature in spectral window 0 and channel 0, for the currnet
+   (user) Water Vapor Column, the current Air Mass, and perfect Sky Coupling to the sky */
+  Temperature getTrjSky()
+  {
+    unsigned int n = 0;
+    return getTrjSky(n);
+  }
+  /** Accesor to the Rayleigh-Jeans Temperature in spectral window 0 and channel nc, for the currnet
+   (user) Water Vapor Column, the current Air Mass, and perfect Sky Coupling to the sky */
+  Temperature getTrjSky(unsigned int nc) // There was reported a bug at Launchpad:
+                                          // that the result did not take into account
+                                          // the actual column of water. But it is not true.
+                                          // The column of water is taken into account as
+                                          // seen in the next accessor, that is referred by this one.
+  {
+    unsigned int n = 0;
+    return getTrjSky(n, nc);
+  }
+  /** Accesor to the Rayleigh-Jeans Temperature in spectral window spwid and channel nc, for the currnet
+   (user) Water Vapor Column, the current Air Mass, and perfect Sky Coupling to the sky */
+  Temperature getTrjSky(unsigned int spwid, unsigned int nc)
+  {
+    return getTrjSky(spwid,
+                      nc,
+                      getUserWH2O(),
+                      getAirMass(),
+                      1.0,
+                      Temperature(100, "K"));
+  }
+  /** Accesor to the Rayleigh-Jeans Temperature in spectral window 0 and channel 0, for the currnet
+   (user) Water Vapor Column, Air Mass airmass, and perfect Sky Coupling to the sky */
+  Temperature getTrjSky(double airmass)
+  {
+    unsigned int n = 0;
+    return getTrjSky(n, airmass);
+  }
+  /** Accesor to the Rayleigh-Jeans Temperature in spectral window 0 and channel nc, for the currnet
+   (user) Water Vapor Column, Air Mass airmass, and perfect Sky Coupling to the sky */
+  Temperature getTrjSky(unsigned int nc, double airmass)
+  {
+    unsigned int n = 0;
+    return getTrjSky(n, nc, airmass);
+  }
+  /** Accesor to the Rayleigh-Jeans Temperature in spectral window spwid and channel nc, for the currnet
+   (user) Water Vapor Column, Air Mass airmass, and perfect Sky Coupling to the sky */
+  Temperature getTrjSky(unsigned int spwid, unsigned int nc, double airmass)
+  {
+    return getTrjSky(spwid, nc, getUserWH2O(), airmass, 1.0, Temperature(100,
+                                                                          "K"));
+  }
+  /** Accesor to the Rayleigh-Jeans Temperature in spectral window 0 and channel 0, for Water
+   Vapor Column wh2o, the current Air Mass, and perfect Sky Coupling to the sky */
+  Temperature getTrjSky(const Length &wh2o)
+  {
+    unsigned int n = 0;
+    return getTrjSky(n, wh2o);
+  }
+  /** Accesor to the Rayleigh-Jeans Temperature in spectral window 0 and channel nc, for Water
+   Vapor Column wh2o, the current Air Mass, and perfect Sky Coupling to the sky */
+  Temperature getTrjSky(unsigned int nc, const Length &wh2o)
+  {
+    unsigned int n = 0;
+    return getTrjSky(n, nc, wh2o);
+  }
+  /** Accesor to the Rayleigh-Jeans Temperature in spectral window spwid and channel nc, for Water
+   Vapor Column wh2o, the current Air Mass, and perfect Sky Coupling to the sky */
+  Temperature getTrjSky(unsigned int spwid, unsigned int nc, const Length &wh2o)
+  {
+    return getTrjSky(spwid, nc, wh2o, getAirMass(), 1.0, Temperature(100, "K"));
+  }
+  /** Accesor to the Rayleigh-Jeans Temperature in spectral window 0 and channel nc, for the current
+   (user) Water Vapor Column and Air Mass, Sky Coupling skycoupling, and Spill Over Temperature Tspill */
+  Temperature getTrjSky(unsigned int nc,
+                         double skycoupling,
+                         const Temperature &Tspill)
+  {
+    unsigned int n = 0;
+    return getTrjSky(n, nc, skycoupling, Tspill);
+  }
+  /** Accesor to the Rayleigh-Jeans Temperature in spectral window spwid and channel nc, for the current
+   (user) Water Vapor Column and Air Mass, Sky Coupling skycoupling, and Spill Over Temperature Tspill */
+  Temperature getTrjSky(unsigned int spwid,
+                         unsigned int nc,
+                         double skycoupling,
+                         const Temperature &Tspill)
+  {
+    return getTrjSky(spwid,
+                      nc,
+                      getUserWH2O(),
+                      getAirMass(),
+                      skycoupling,
+                      Tspill);
+  }
+  /** Accesor to the Rayleigh-Jeans Temperature in spectral window 0 and channel nc, for Water
+   Vapor Column wh2o, Air Mass airmass, and perfect Sky Coupling to the sky */
+  Temperature getTrjSky(unsigned int nc, const Length &wh2o, double airmass)
+  {
+    unsigned int n = 0;
+    return getTrjSky(n, nc, wh2o, airmass);
+  }
+  /** Accesor to the Rayleigh-Jeans Temperature in spectral window spwid and channel nc, for Water
+   Vapor Column wh2o, Air Mass airmass, and perfect Sky Coupling to the sky */
+  Temperature getTrjSky(unsigned int spwid,
+                         unsigned int nc,
+                         const Length &wh2o,
+                         double airmass)
+  {
+    return getTrjSky(spwid, nc, wh2o, airmass, 1.0, Temperature(100, "K"));
+  }
+  /** Accesor to the Rayleigh-Jeans Temperature in spectral window 0 and channel nc, for Water
+   Vapor Column wh2o, the current Air Mass, Sky Coupling skycoupling, and Spill Over Temperature Tspill */
+  Temperature getTrjSky(unsigned int nc,
+                         const Length &wh2o,
+                         double skycoupling,
+                         const Temperature &Tspill)
+  {
+    unsigned int n = 0;
+    return getTrjSky(n, nc, wh2o, skycoupling, Tspill);
+  }
+  /** Accesor to the Rayleigh-Jeans Temperature in spectral window spwid and channel nc, for Water
+   Vapor Column wh2o, the current Air Mass, Sky Coupling skycoupling, and Spill Over Temperature Tspill */
+  Temperature getTrjSky(unsigned int spwid,
+                         unsigned int nc,
+                         const Length &wh2o,
+                         double skycoupling,
+                         const Temperature &Tspill)
+  {
+    return getTrjSky(spwid, nc, wh2o, getAirMass(), skycoupling, Tspill);
+  }
+  /** Accesor to the Rayleigh-Jeans Temperature in spectral window 0 and channel nc, for the current
+   User Water Column, Air Mass airmass, Sky Coupling skycoupling, and Spill Over Temperature Tspill */
+  Temperature getTrjSky(unsigned int nc,
+                         double airmass,
+                         double skycoupling,
+                         const Temperature &Tspill)
+  {
+    unsigned int n = 0;
+    return getTrjSky(n, nc, airmass, skycoupling, Tspill);
+  }
+  /** Accesor to the Rayleigh-Jeans Temperature in spectral window spwid and channel nc, for the current
+   User Water Column, Air Mass airmass, Sky Coupling skycoupling, and Spill Over Temperature Tspill */
+  Temperature getTrjSky(unsigned int spwid,
+                         unsigned int nc,
+                         double airmass,
+                         double skycoupling,
+                         const Temperature &Tspill)
+  {
+    return getTrjSky(spwid, nc, getUserWH2O(), airmass, skycoupling, Tspill);
+  }
+  /** Accesor to the Rayleigh-Jeans Temperature in spectral window 0 and channel nc, for Water Column
+   wh2o, Air Mass airmass, Sky Coupling skycoupling, and Spill Over Temperature Tspill */
+  Temperature getTrjSky(unsigned int nc,
+                         const Length &wh2o,
+                         double airmass,
+                         double skycoupling,
+                         const Temperature &Tspill)
+  {
+    unsigned int n = 0;
+    return getTrjSky(n, nc, wh2o, airmass, skycoupling, Tspill);
+  }
+  /** Accesor to the Rayleigh-Jeans Temperature in spectral window spwid and channel nc, for Water Column
+   wh2o, Air Mass airmass, Sky Coupling skycoupling, and Spill Over Temperature Tspill */
+  Temperature getTrjSky(unsigned int spwid,
+                         unsigned int nc,
+                         const Length &wh2o,
+                         double airmass,
+                         double skycoupling,
+                         const Temperature &Tspill);
+
+  
   /** Accesor to get the integrated zenith Wet Opacity for the current conditions, for a single
    frequency RefractiveIndexProfile object or for the point 0 of spectral window 0 of a
    multi-window RefractiveIndexProfile object.
@@ -1659,8 +1941,127 @@ protected:
             unsigned int spwid,
             const vector<double> &spwId_filter,
             const Percent &signalgain);
-  
 
+
+  double RTRJ(double pfit_wh2o,
+            double skycoupling,
+            double tspill,
+            unsigned int spwid,
+            unsigned int nc)
+  {
+    return RTRJ(pfit_wh2o, skycoupling, tspill, airMass_, spwid, nc);
+  }
+  double RTRJ(double pfit_wh2o,
+            double skycoupling,
+            double tspill,
+            unsigned int spwid)
+  {
+    return RTRJ(pfit_wh2o, skycoupling, tspill, airMass_, spwid);
+  }
+  double RTRJ(double pfit_wh2o,
+            double skycoupling,
+            double tspill,
+            double airmass,
+            unsigned int spwId,
+            unsigned int nc);
+
+  double RTRJ(double pfit_wh2o,
+            double skycoupling,
+            double tspill,
+            double airmass,
+            unsigned int spwid)
+  {
+    double trj_channel = 0.0;
+    for(unsigned int n = 0; n < v_numChan_[spwid]; n++) {
+      trj_channel = trj_channel + RTRJ(pfit_wh2o,
+                                       skycoupling,
+                                       tspill,
+                                       airmass,
+                                       spwid,
+                                       n) / (v_numChan_[spwid]);
+    }
+    return trj_channel;
+  }
+
+  double RTRJ(double pfit_wh2o,
+            double skycoupling,
+            double tspill,
+            unsigned int spwid,
+            const Percent &signalgain)
+  {
+    vector<double> spwId_filter;
+    for(unsigned int n = 0; n < v_numChan_[spwid]; n++) {
+      spwId_filter.push_back(1.0);
+    }
+    return RTRJ(pfit_wh2o,
+              skycoupling,
+              tspill,
+              airMass_,
+              spwid,
+              spwId_filter,
+              signalgain);
+  }
+
+  double RTRJ(double pfit_wh2o,
+            double skycoupling,
+            double tspill,
+            double airmass,
+            unsigned int spwid,
+            const Percent &signalgain)
+  {
+    vector<double> spwId_filter;
+    for(unsigned int n = 0; n < v_numChan_[spwid]; n++) {
+      spwId_filter.push_back(1.0);
+    }
+    return RTRJ(pfit_wh2o,
+              skycoupling,
+              tspill,
+              airmass,
+              spwid,
+              spwId_filter,
+              signalgain);
+  }
+
+  double RTRJ(double pfit_wh2o,
+            double skycoupling,
+            double tspill,
+            unsigned int spwid,
+            const vector<double> &spwId_filter)
+  {
+    return RTRJ(pfit_wh2o,
+              skycoupling,
+              tspill,
+              airMass_,
+              spwid,
+              spwId_filter,
+              Percent(100.0, "%"));
+  }
+
+  double RTRJ(double pfit_wh2o,
+            double skycoupling,
+            double tspill,
+            unsigned int spwid,
+            const vector<double> &spwId_filter,
+            const Percent &signalgain)
+  {
+    return RTRJ(pfit_wh2o,
+              skycoupling,
+              tspill,
+              airMass_,
+              spwid,
+              spwId_filter,
+              signalgain);
+  }
+
+  double RTRJ(double pfit_wh2o,
+            double skycoupling,
+            double tspill,
+            double airmass,
+            unsigned int spwid,
+            const vector<double> &spwId_filter,
+            const Percent &signalgain);
+
+  
 private:
 
   // no accessors provided for these

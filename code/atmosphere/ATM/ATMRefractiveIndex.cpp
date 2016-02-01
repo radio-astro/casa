@@ -273,27 +273,36 @@ ATM_NAMESPACE_BEGIN
   //  complex<double>  RefractiveIndex::lineshape(Frequency nu, Frequency linefreq, Frequency linebroad, Frequency interf){
   complex<double>  RefractiveIndex::lineshape(double v, double vl, double dv, double itf){
 
-    // dv = linebroad.get("GHz");
-    // itf = interf.get("GHz");
-    // vl = linefreq.get("GHz");
-    // v = nu.get("GHz");
+    //    *********************************************************************************
+    //    *  CALCULATION OF THIS PART OF THE COMPLEX VAN-VLECK WEISSKOPF LINE PROFILE:    *
+    //    *  (1-i*itf)/(vl-v-idv) - (1+i*itf)/(vl+v+idv)                                  *
+    //    *  FOR MOST CASES itf=0 AND THEN THE REAL AND IMAGINARY PARTS ARE:              *
+    //    *   {[dv/((v-vl)**2+dv**2)]+[1/((v+vl)**2+dv**2)]}  IMAG  (UNITS 1/freq)        *
+    //    *   {[(vl-v)/((v-vl)**2+dv**2)]-[(vl+v)/((v+vl)**2+dv**2)]} REAL (UNITS 1/freq) *
+    //    *********************************************************************************
 
-    double lf=dv*itf;
+    //    dv  = linebroad.get("GHz");      LINE BROADENING PARAMETER
+    //    itf = interf.get("GHz");         LINE INTERFERENCE
+    //    vl  = linefreq.get("GHz");       FREQUENCY OF RESONANT LINE
+    //    v   = nu.get("GHz");             CURRENT WORKING FREQUENCY
 
-    double dv2=dv*dv;
-    double dv2v2=dv2+v*v;
-    double vl2=vl*vl;
-    double vvl=2*v*vl;
-    double aa=dv2v2+vl2;
-    double a1=aa-vvl;
-    double a2=aa+vvl;
+    //    double lf=dv*itf;
+    //    double dv2=dv*dv;
+    //    double dv2v2=dv2+v*v;
+    //    double vl2=vl*vl;
+    //    double vvl=2*v*vl;
+    //    double aa=dv2v2+vl2;
+    //    double a1=aa-vvl;
+    //    double a2=aa+vvl;
 
-    double fv=((dv-(vl-v)*itf)/a1+(dv-(vl+v)*itf)/a2);	        //   ! line profile (imaginary)
-                                                                //   !          in 1/frec units
-    double frv=((vl-v+lf)/a1-(vl+v+lf)/a2);                     //   ! delay profile (real part)
+    //    double fv=((dv-(vl-v)*itf)/a1+(dv-(vl+v)*itf)/a2);	   //   ! line profile (imaginary)
+                                                                   //   !          in 1/frec units
+    //    double frv=((vl-v+lf)/a1-(vl+v+lf)/a2);                  //   ! delay profile (real part)
+ 
+    //  return complex<double> (frv,fv)*(v/vl);                    
 
-    return complex<double> (frv,fv)*(v/vl);                              // GHz^-1*GHz (no units)
-
+    return complex<double> (v/vl)*(complex<double>(1.0,-itf)/complex<double>(vl-v,-dv)
+				   - complex<double>(1.0,itf)/complex<double>(vl+v, dv) );
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -665,7 +674,7 @@ ATM_NAMESPACE_BEGIN
 				   216.6,1364.2, 758.2, 331.5, 431.6, 330.3};
 
     static const double pi=3.141592654;
-    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
+    static const double picube8div3hcesu=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
     static const double mu=1.62;  //Debyes
     static const double mmol=64.0644;
 
@@ -726,7 +735,7 @@ ATM_NAMESPACE_BEGIN
 
 	}
 
-	lshapeacum=lshapeacum*(nu/pi)*(0.047992745509/tt)*(fac2fixed*pow(mu,2)/q);  // imaginary part: absorption coefficient in cm^2
+	lshapeacum=lshapeacum*(nu/pi)*(0.047992745509/tt)*(picube8div3hcesu*pow(mu,2)/q);  // imaginary part: absorption coefficient in cm^2
 	                                                                                                  // real part: delay in rad*cm^2
 
 	return lshapeacum*1e-4;    // to give it in SI units (m^2)    // (  rad m^2 , m^2 )
@@ -878,7 +887,7 @@ ATM_NAMESPACE_BEGIN
 				   0.409E+01,0.264E+02};
 
     static const double pi=3.141592654;
-    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
+    static const double picube8div3hcesu=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
     static const double mu=0.3161;  //Debyes
     static const double mmol=46.0;
 
@@ -939,7 +948,7 @@ ATM_NAMESPACE_BEGIN
 
 	}
 
-	lshapeacum=lshapeacum*(nu/pi)*(0.047992745509/tt)*(fac2fixed*pow(mu,2)/q);  // imaginary part: absorption coefficient in cm^2
+	lshapeacum=lshapeacum*(nu/pi)*(0.047992745509/tt)*(picube8div3hcesu*pow(mu,2)/q);  // imaginary part: absorption coefficient in cm^2
 	                                                                                                  // real part: delay in rad*cm^2
 
 	return lshapeacum*1e-4;    // to give it in SI units (  rad m^2 , m^2 )
@@ -1301,7 +1310,7 @@ ATM_NAMESPACE_BEGIN
 
 
     static const double pi=3.141592654;
-    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
+    static const double picube8div3hcesu=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
     static const double mu=0.161;  //Debyes
     static const double mmol=44.0;
 
@@ -1357,7 +1366,7 @@ ATM_NAMESPACE_BEGIN
 
 	}
 
-	lshapeacum=lshapeacum*(nu/pi)*(0.047992745509/tt)*(fac2fixed*pow(mu,2)/q);  // imaginary part: absorption coefficient in cm^2
+	lshapeacum=lshapeacum*(nu/pi)*(0.047992745509/tt)*(picube8div3hcesu*pow(mu,2)/q);  // imaginary part: absorption coefficient in cm^2
 	                                                                                                  // real part: delay in rad*cm^2
 
 	return lshapeacum*1e-4;    // to give it in SI units (  rad m^2 , m^2 )
@@ -1686,7 +1695,7 @@ ATM_NAMESPACE_BEGIN
 
 
     static const double pi=3.141592654;
-    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
+    static const double picube8div3hcesu=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
     static const double mu=0.112;  //Debyes
     static const double mmol=28.0;
 
@@ -1742,7 +1751,7 @@ ATM_NAMESPACE_BEGIN
 
 	}
 
-	lshapeacum=lshapeacum*(nu/pi)*(0.047992745509/tt)*(fac2fixed*pow(mu,2)/q);  // imaginary part: absorption coefficient in cm^2
+	lshapeacum=lshapeacum*(nu/pi)*(0.047992745509/tt)*(picube8div3hcesu*pow(mu,2)/q);  // imaginary part: absorption coefficient in cm^2
 	                                                                                                  // real part: delay in rad*cm^2
 
 	return lshapeacum*1e-4;    // to give it in SI units (  rad m^2 , m^2 )
@@ -1775,9 +1784,10 @@ ATM_NAMESPACE_BEGIN
 	0.0315*pow((double)(900/225),2)*(eee*ppp)*pow(t300,3);
     }
 
-    double delayh2o=(4.163*t300+0.239)*eh2o*t300*nu*1.2008e-3/57.29578;
-		     //		     eh2o*pow(t300,2.5)*.791e-6*pow(nu.get("GHz"),2)*nu.get("GHz")*1.2008e-3/57.29578;
+    double delayh2o=(4.163*t300+0.239)*eh2o*t300*nu*1.2008e-3/57.29578;   // VERSIÓN INSTALADA ANTES DE 16/12/2015 // AÑADIR REFERENCIA
 
+    // double delayh2o=eh2o*pow(t300,2.5)*.791e-6*pow(nu,2)*nu*1.2008e-3/57.29578; //VERSION DE PRUEBA 16/12/2015
+    
     return complex<double> (delayh2o,cnth2o);       // (  rad m^-1 , m^-1 )
 
   }
@@ -2718,7 +2728,7 @@ ATM_NAMESPACE_BEGIN
 
 
     static const double pi=3.141592654;
-    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
+    static const double picube8div3hcesu=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
     static const double mu=1.82332;  //Debyes
 
     //double q=0.034256116*pow(tt,1.5);    // Q(300 K)=178.120 JPL Line Catalog
@@ -2775,7 +2785,7 @@ ATM_NAMESPACE_BEGIN
 
 	}
 
-	lshapeacum=lshapeacum*(nu/pi)*(fac2fixed*pow(mu,2)/q); // imaginary part: absorption coefficient in cm^2
+	lshapeacum=lshapeacum*(nu/pi)*(picube8div3hcesu*pow(mu,2)/q); // imaginary part: absorption coefficient in cm^2
 	                                                                    // real part: delay in rad*cm^2
 
 	return lshapeacum*1e-4;    // to give it in SI units (m^2)  // (  rad m^2 , m^2 )
@@ -3902,7 +3912,7 @@ ATM_NAMESPACE_BEGIN
 
 
     static const double pi=3.141592654;
-    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
+    static const double picube8div3hcesu=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
     static const double mu=1.855;  //Debyes
 
     //double q=0.034278209*pow(tt,1.5);    // Q(300 K)=178.120 JPL Line Catalog
@@ -3971,7 +3981,7 @@ ATM_NAMESPACE_BEGIN
 
       }
 
-      lshapeacum=lshapeacum*(nu/pi)*(fac2fixed*pow(mu,2)/q); // imaginary part: absorption coefficient in cm^2
+      lshapeacum=lshapeacum*(nu/pi)*(picube8div3hcesu*pow(mu,2)/q); // imaginary part: absorption coefficient in cm^2
       // real part: delay in rad*cm^2
 
       return lshapeacum*1e-4;    // to give it in SI units (  rad m^2 , m^2 )
@@ -4334,7 +4344,7 @@ ATM_NAMESPACE_BEGIN
 
 
     static const double pi=3.141592654;
-    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
+    static const double picube8div3hcesu=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
     static const double mu=1.855;  //Debyes
 
     //double q=0.034412578*pow(tt,1.5);   // Q(300 K)=178.813   JPL Line Catalog
@@ -4392,7 +4402,7 @@ ATM_NAMESPACE_BEGIN
 
 	}
 
-	lshapeacum=lshapeacum*(nu/pi)*(fac2fixed*pow(mu,2)/q); // imaginary part: absorption coefficient in cm^2
+	lshapeacum=lshapeacum*(nu/pi)*(picube8div3hcesu*pow(mu,2)/q); // imaginary part: absorption coefficient in cm^2
 	                                                                    // real part: delay in rad*cm^2
 	return lshapeacum*1e-4;    // to give it in SI units (  rad m^2 , m^2 )
 
@@ -5074,7 +5084,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_hdo(double tt, double p
       57,  57,  57,  58,  58,  58,  58,  58,  58,   0};
 
     static const double pi=3.141592654;
-    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
+    static const double picube8div3hcesu=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
     static const double mua=0.657;  //Debyes
     static const double mub=1.732;  //Debyes
 
@@ -5142,7 +5152,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_hdo(double tt, double p
 
 	}
 
-	lshapeacum1=lshapeacum1*(nu/pi)*(fac2fixed*pow(mua,2)/q); // imaginary part: absorption coefficient in cm^2
+	lshapeacum1=lshapeacum1*(nu/pi)*(picube8div3hcesu*pow(mua,2)/q); // imaginary part: absorption coefficient in cm^2
 	                                                                    // real part: delay in rad*cm^2
       }
 
@@ -5163,7 +5173,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_hdo(double tt, double p
 
 	}
 
-	lshapeacum2=lshapeacum2*(nu/pi)*(fac2fixed*pow(mub,2)/q); // imaginary part: absorption coefficient in cm^2
+	lshapeacum2=lshapeacum2*(nu/pi)*(picube8div3hcesu*pow(mub,2)/q); // imaginary part: absorption coefficient in cm^2
 	                                                                    // real part: delay in rad*cm^2
       }
 
@@ -5525,7 +5535,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_hdo(double tt, double p
 
 
     static const double pi=3.141592654;
-    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
+    static const double picube8div3hcesu=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
     static const double mu=1.855;  //Debyes
 
     //double q=0.034571542*pow(tt,1.5);   // Q(300 K)=179.639   JPL Line Catalog
@@ -5582,7 +5592,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_hdo(double tt, double p
 
 	}
 
-	lshapeacum=lshapeacum*(nu/pi)*(fac2fixed*pow(mu,2)/q); // imaginary part: absorption coefficient in cm^2
+	lshapeacum=lshapeacum*(nu/pi)*(picube8div3hcesu*pow(mu,2)/q); // imaginary part: absorption coefficient in cm^2
 	                                                                    // real part: delay in rad*cm^2
 
 	return lshapeacum*1e-4;    // to give it in SI units (  rad m^2 , m^2 )
@@ -5604,7 +5614,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_hdo(double tt, double p
     static const double el[6]={5.70,2.95,2.95,25.97,23.18,23.18};
 
     static const double pi=3.141592654;
-    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
+    static const double picube8div3hcesu=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
     static const double mu=0.0186;  //Debyes (M1 Transitions)
 
     double q=0.72923*tt;
@@ -5625,7 +5635,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_hdo(double tt, double p
 
     }
 
-    lshapeacum=lshapeacum*(nu/pi)*(fac2fixed*pow(mu,2)/q); // imaginary part: absorption coefficient in cm^2
+    lshapeacum=lshapeacum*(nu/pi)*(picube8div3hcesu*pow(mu,2)/q); // imaginary part: absorption coefficient in cm^2
                                                                         // real part: delay in rad*cm^2
 
     return lshapeacum*1e-4;    // to give it in SI units (  rad m^2 , m^2 )
@@ -5653,7 +5663,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_hdo(double tt, double p
 
 
     static const double pi=3.141592654;
-    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
+    static const double picube8div3hcesu=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
     static const double mu=0.0186;  //Debyes (M1 Transitions)
 
     double q=1.536568889*tt;
@@ -5674,7 +5684,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_hdo(double tt, double p
 
     }
 
-    lshapeacum=lshapeacum*(nu/pi)*(fac2fixed*pow(mu,2)/q); // imaginary part: absorption coefficient in cm^2
+    lshapeacum=lshapeacum*(nu/pi)*(picube8div3hcesu*pow(mu,2)/q); // imaginary part: absorption coefficient in cm^2
     // real part: delay in rad*cm^2
 
     return lshapeacum*1e-4;    // to give it in SI units (  rad m^2 , m^2 )
@@ -5702,7 +5712,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
       38.900,   41.700,   61.300};
 
     static const double pi=3.141592654;
-    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
+    static const double picube8div3hcesu=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
     static const double mu=0.0186;  //Debyes (M1 Transitions)
 
     double q=1.536568889*tt;
@@ -5723,7 +5733,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 
     }
 
-    lshapeacum=lshapeacum*(nu/pi)*(fac2fixed*pow(mu,2)/q); // imaginary part: absorption coefficient in cm^2
+    lshapeacum=lshapeacum*(nu/pi)*(picube8div3hcesu*pow(mu,2)/q); // imaginary part: absorption coefficient in cm^2
 	                                                                    // real part: delay in rad*cm^2
 
     return lshapeacum*1e-4;    // to give it in SI units (m^2)    // (  rad m^2 , m^2 )
@@ -6324,7 +6334,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1};  */
 
     static const double pi=3.141592654;
-    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
+    static const double picube8div3hcesu=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
     static const double mu=0.0186;  //Debyes (M1 Transitions)
 
     double q=0.72923*tt;
@@ -6393,7 +6403,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 
 	}
 
-	lshapeacum=lshapeacum*(nu/pi)*(fac2fixed*pow(mu,2)/q); // imaginary part: absorption coefficient in cm^2
+	lshapeacum=lshapeacum*(nu/pi)*(picube8div3hcesu*pow(mu,2)/q); // imaginary part: absorption coefficient in cm^2
 	                                                                    // real part: delay in rad*cm^2
 
 
@@ -6754,7 +6764,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 
 
     static const double pi=3.141592654;
-    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
+    static const double picube8div3hcesu=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
     static const double mu=0.53;  //Debyes
     static const double mmol=48.0;
     
@@ -6814,7 +6824,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 	  
 	}
 	
-	lshapeacum=lshapeacum*(nu/pi)*(fac2fixed*pow(mu,2)/q)  // imaginary part: absorption coefficient in cm^2
+	lshapeacum=lshapeacum*(nu/pi)*(picube8div3hcesu*pow(mu,2)/q)  // imaginary part: absorption coefficient in cm^2
 	  *(0.047992745509/tt);                                                               // real part: delay in rad*cm^2
 	
 	
@@ -7195,7 +7205,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 				   780.284,  546.777, 2019.573,  201.247,  820.852, 1177.534    };
 
     static const double pi=3.141592654;
-    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
+    static const double picube8div3hcesu=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
     static const double mu=0.53;  //Debyes
     static const double mmol=48.0;
     
@@ -7255,7 +7265,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 	  
 	}
 	
-	lshapeacum=lshapeacum*(nu/pi)*(fac2fixed*pow(mu,2)/q)  // imaginary part: absorption coefficient in cm^2
+	lshapeacum=lshapeacum*(nu/pi)*(picube8div3hcesu*pow(mu,2)/q)  // imaginary part: absorption coefficient in cm^2
 	  *(0.047992745509/tt);                                                               // real part: delay in rad*cm^2
 	
 	
@@ -7566,7 +7576,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 
 
     static const double pi=3.141592654;
-    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
+    static const double picube8div3hcesu=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
     static const double mu=0.53;  //Debyes
     static const double mmol=48.0;
 
@@ -7626,7 +7636,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 
 	}
 
-	lshapeacum=lshapeacum*(nu/pi)*(fac2fixed*pow(mu,2)/q)  // imaginary part: absorption coefficient in cm^2
+	lshapeacum=lshapeacum*(nu/pi)*(picube8div3hcesu*pow(mu,2)/q)  // imaginary part: absorption coefficient in cm^2
 	  *(0.047992745509/tt);                                                               // real part: delay in rad*cm^2
 
 
@@ -8766,7 +8776,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 
 
     static const double pi=3.141592654;
-    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
+    static const double picube8div3hcesu=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
     static const double mu=0.53;  //Debyes
     static const double mmol=48.0;
 
@@ -8827,7 +8837,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 
 	}
 
-	lshapeacum=lshapeacum*(nu/pi)*(fac2fixed*pow(mu,2)/q)  // imaginary part: absorption coefficient in cm^2
+	lshapeacum=lshapeacum*(nu/pi)*(picube8div3hcesu*pow(mu,2)/q)  // imaginary part: absorption coefficient in cm^2
 	  *(0.047992745509/tt);                                                               // real part: delay in rad*cm^2
 
 
@@ -9855,7 +9865,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
       1338,1340,1343,1347,1351,1357,1361,1363,1368,1373};
 
     static const double pi=3.141592654;
-    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
+    static const double picube8div3hcesu=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
     static const double mu=0.53;  //Debyes
     static const double mmol=50.0;
 
@@ -9912,7 +9922,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 
 	}
 
-	lshapeacum=lshapeacum*(nu/pi)*(0.047992745509/tt)*(fac2fixed*pow(mu,2)/q);  // imaginary part: absorption coefficient in cm^2
+	lshapeacum=lshapeacum*(nu/pi)*(0.047992745509/tt)*(picube8div3hcesu*pow(mu,2)/q);  // imaginary part: absorption coefficient in cm^2
 	                                                                                                  // real part: delay in rad*cm^2
 
 	return lshapeacum*1e-4;    // to give it in SI units (m^2)    // (  rad m^2 , m^2 )
@@ -10932,7 +10942,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 	1325,1325,1332,1336,1338,1339,1347,1351,1354,1360};
 
     static const double pi=3.141592654;
-    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
+    static const double picube8div3hcesu=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
     static const double mu=0.53;  //Debyes
     static const double mmol=49.0;
 
@@ -10994,7 +11004,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 
 	}
 
-	lshapeacum=lshapeacum*(nu/pi)*(0.047992745509/tt)*(fac2fixed*pow(mu,2)/q);  // imaginary part: absorption coefficient in cm^2
+	lshapeacum=lshapeacum*(nu/pi)*(0.047992745509/tt)*(picube8div3hcesu*pow(mu,2)/q);  // imaginary part: absorption coefficient in cm^2
 	                                                                                                  // real part: delay in rad*cm^2
 
 	return lshapeacum*1e-4;    // to give it in SI units (m^2)    // (  rad m^2 , m^2 )
@@ -11709,7 +11719,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 
 
     static const double pi=3.141592654;
-    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
+    static const double picube8div3hcesu=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
     static const double mu=0.53;  //Debyes
     static const double mmol=50.0;
 
@@ -11766,7 +11776,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 
 	}
 
-	lshapeacum=lshapeacum*(nu/pi)*(0.047992745509/tt)*(fac2fixed*pow(mu,2)/q);  // imaginary part: absorption coefficient in cm^2
+	lshapeacum=lshapeacum*(nu/pi)*(0.047992745509/tt)*(picube8div3hcesu*pow(mu,2)/q);  // imaginary part: absorption coefficient in cm^2
 	                                                                                                  // real part: delay in rad*cm^2
 
 	return lshapeacum*1e-4;    // to give it in SI units (m^2)    // (  rad m^2 , m^2 )
@@ -12362,7 +12372,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
       493, 500, 514, 516, 516, 516, 516, 517, 517, 518};
 
     static const double pi=3.141592654;
-    static const double fac2fixed=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
+    static const double picube8div3hcesu=4.1623755E-19;  // (8*pi**3/(3*h*c))*(1e-18)**2 = 4.1623755E-19
     static const double mu=0.53;  //Debyes
     static const double mmol=49.0;
 
@@ -12419,7 +12429,7 @@ complex<double>  RefractiveIndex::mkSpecificRefractivity_16o18o(double tt, doubl
 
 	}
 
-	lshapeacum=lshapeacum*(nu/pi)*(0.047992745509/tt)*(fac2fixed*pow(mu,2)/q);  // imaginary part: absorption coefficient in cm^2
+	lshapeacum=lshapeacum*(nu/pi)*(0.047992745509/tt)*(picube8div3hcesu*pow(mu,2)/q);  // imaginary part: absorption coefficient in cm^2
 	                                                                                                  // real part: delay in rad*cm^2
 
 	return lshapeacum*1e-4;    // to give it in SI units (m^2)    // (  rad m^2 , m^2 )

@@ -923,6 +923,100 @@ Temperature SkyStatus::getTebbSky(unsigned int spwid,
             nc);
 }
 
+
+Temperature SkyStatus::getAverageTrjSky(unsigned int spwid,
+                                         const Length &wh2o,
+                                         double airmass,
+                                         double skycoupling,
+                                         const Temperature &Tspill)
+{
+  Temperature tt(-999, "K");
+  if(!spwidAndIndexAreValid(spwid, 0)) {
+    return tt;
+  }
+  if(wh2o.get() < 0.0) {
+    return tt;
+  }
+  // if(skycoupling<0.0 || skycoupling>1.0){return tt;}
+  if(airmass < 1.0) {
+    return tt;
+  }
+  if(Tspill.get("K") < 0.0 || Tspill.get("K") > 350.0) {
+    return tt;
+  }
+  return RTRJ(((wh2o.get()) / (getGroundWH2O().get())),
+            skycoupling,
+            Tspill.get("K"),
+            airmass,
+            spwid);
+}
+
+Temperature SkyStatus::getAverageTrjSky(unsigned int spwid,
+                                         const Length &wh2o,
+                                         double airmass,
+                                         double skycoupling,
+                                         double signalgain,     // adition
+                                         const Temperature &Tspill)
+{
+  Temperature tt(-999, "K");
+  if(!spwidAndIndexAreValid(spwid, 0)) {
+    return tt;
+  }
+  if(wh2o.get() < 0.0) {
+    return tt;
+  }
+  // if(skycoupling<0.0 || skycoupling>1.0){return tt;}
+  if(airmass < 1.0) {
+    return tt;
+  }
+  if(Tspill.get("K") < 0.0 || Tspill.get("K") > 350.0) {
+    return tt;
+  }
+  return signalgain*RTRJ(((wh2o.get()) / (getGroundWH2O().get())),
+            skycoupling,
+            Tspill.get("K"),
+            airmass,
+            spwid)+
+    +(1-signalgain)*RTRJ(((wh2o.get()) / (getGroundWH2O().get())),
+            skycoupling,
+            Tspill.get("K"),
+            airmass,
+            getAssocSpwId(spwid)[0]);
+}
+
+Temperature SkyStatus::getTrjSky(unsigned int spwid,
+                                  unsigned int nc,
+                                  const Length &wh2o,
+                                  double airmass,
+                                  double skycoupling,
+                                  const Temperature &Tspill)
+{
+  Temperature tt(-999, "K");
+  if(!spwidAndIndexAreValid(spwid, nc)) {
+    return tt;
+  }
+  if(wh2o.get() < 0.0) {
+    return tt;
+  }
+  if(skycoupling < 0.0 || skycoupling > 1.0) {
+    return tt;
+  }
+  if(airmass < 1.0) {
+    return tt;
+  }
+  if(Tspill.get("K") < 0.0 || Tspill.get("K") > 350.0) {
+    return tt;
+  }
+  return RTRJ(((wh2o.get()) / (getGroundWH2O().get())),
+            skycoupling,
+            Tspill.get("K"),
+            airmass,
+            spwid,
+            nc);
+}
+
+
+
 Angle SkyStatus::getDispersiveH2OPhaseDelay(unsigned int spwid, unsigned int nc)
 {
   if(!spwidAndIndexAreValid(spwid, nc)) {
@@ -2400,6 +2494,7 @@ double SkyStatus::mkSkyCouplingRetrieval_fromTEBB(unsigned int spwId,
 		       unsigned int spwid,
 		       const vector<double> &spwId_filter,
 		       const Percent &signalgain)
+
   {
     
     double tebb_channel = 0.0;
@@ -2447,6 +2542,7 @@ double SkyStatus::RT(double pfit_wh2o,
                      unsigned int nc)
 {
 
+
   double radiance;
   double singlefreq;
   // double chanwidth;  // [-Wunused_but_set_variable]
@@ -2480,13 +2576,58 @@ double SkyStatus::RT(double pfit_wh2o,
     
   radiance = skycoupling * (radiance + (1.0 / (exp(h_div_k * singlefreq / tbgr)- 1.0)) * exp(-kv * airm)) + (1.0 / (exp(h_div_k * singlefreq / tspill)- 1.0)) * (1 - skycoupling);
     
-  tebb = tebb + h_div_k * singlefreq / log(1 + (1 / radiance));
+  tebb = h_div_k * singlefreq / log(1 + (1 / radiance));
   // tebb = tebb+  h_div_k * singlefreq * radiance;  
   // cout << "singlefreq = " << singlefreq <<  " total opacity = " << kv << " tebb = " << tebb << endl;
 
   return tebb;
   
 }
+
+
+double SkyStatus::RTRJ(double pfit_wh2o,
+                     double skycoupling,
+                     double tspill,
+                     double airm,
+                     unsigned int spwid,
+                     unsigned int nc)
+{
+
+  double radiance;
+  double singlefreq;
+  // double chanwidth;  // [-Wunused_but_set_variable]
+  double trj;
+  double h_div_k = 0.04799274551; /* plank=6.6262e-34,boltz=1.3806E-23 */
+  double kv;
+  double tau_layer;
+  double tbgr = skyBackgroundTemperature_.get("K");
+  double ratioWater = pfit_wh2o;
+
+  singlefreq = getChanFreq(spwid, nc).get("GHz");
+  // chanwidth = getChanWidth(spwid, nc).get("GHz"); // [-Wunused_but_set_variable]
+  trj=0.0;
+  kv = 0.0;
+  radiance = 0.0;
+
+  for(unsigned int i = 0; i < getNumLayer(); i++) {
+    
+    tau_layer = ((getAbsTotalWet(spwid, nc, i).get()) * ratioWater+ getAbsTotalDry(spwid, nc, i).get()) * getLayerThickness(i).get();
+    
+    radiance = radiance + (1.0 / (exp(h_div_k * singlefreq/ getLayerTemperature(i).get()) - 1.0)) * exp(-kv * airm) * (1.0- exp(-airm * tau_layer));
+    
+    kv = kv + tau_layer;
+      
+  }
+    
+  radiance = skycoupling * (radiance + (1.0 / (exp(h_div_k * singlefreq / tbgr)- 1.0)) * exp(-kv * airm)) + (1.0 / (exp(h_div_k * singlefreq / tspill)- 1.0)) * (1 - skycoupling);
+    
+  trj = h_div_k * singlefreq * radiance;  
+
+  return trj;
+  
+}
+
+
 
 void SkyStatus::iniSkyStatus()
 {
