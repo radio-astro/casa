@@ -516,12 +516,14 @@ struct FloatDataStorage {
     record.define("DIRECTION", direction);
 //    direction(0, 1) = dra_[index];
 //    direction(1, 1) = ddec_[index];
+    Int antenna_id = antenna_[index];
 
     index = (irow / (n / 8)) % 2;
     std::cout << "    index for feed " << index << std::endl;
     if (2ul <= index)
       return false;;
     record.define("FEED_ID", feed_[index]);
+    Int feed_id = feed_[index];
 
     if (irow % 3 == 2) {
       index = 1;
@@ -533,6 +535,13 @@ struct FloatDataStorage {
       return false;;
     size_t const num_chan = num_chan_[index];
     record.define("SPECTRAL_WINDOW_ID", spw_[index]);
+    Int num_chan_tsys = 0;
+    if (feed_id == 0) {
+      num_chan_tsys = 1;
+    } else {
+      num_chan_tsys = num_chan_[index];
+    }
+    Float tsys_value = (Float)(spw_[index] + antenna_id + 1);
 
     if (irow % 3 == 1) {
       index = 1;
@@ -543,6 +552,7 @@ struct FloatDataStorage {
     if (2ul <= index)
       return false;;
     record.define("POLNO", (Int) index);
+    tsys_value *= (Float)(index + 1) * 100.0f;
 
     record.define("POL_TYPE", "linear");
 
@@ -553,6 +563,10 @@ struct FloatDataStorage {
     record.define("FLAG", flag);
     record.define("FLAG_ROW", flag_row);
     record.define("INTERVAL", 10.0);
+
+    Vector<Float> tsys(num_chan_tsys, tsys_value);
+    std::cout << "irow " << irow << ": " << tsys << std::endl;
+    record.define("TSYS", tsys);
 
     POST_END;
 
@@ -668,7 +682,7 @@ public:
   }
 
   // to get SYSCAL table
-  virtual Bool getSyscalRow(SysCalRecord &record) {
+  virtual Bool getSysCalRow(SysCalRecord &record) {
     POST_START;
 
     Bool return_value = (*this.*get_syscal_row_)(record);
@@ -689,13 +703,6 @@ public:
     return return_value;
   }
 
-//  // to get MAIN table
-//  virtual Bool getMainRecord(TableRecord &record) {
-//    POST_START;
-//    POST_END;
-//    return True;
-//  }
-//
   // for DataAccumulator
   virtual Bool getData(size_t irow, TableRecord &record) {
     POST_START;

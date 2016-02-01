@@ -109,7 +109,7 @@ public:
   // to get SYSCAL table
   // The method should return True if row entry is available.
   // If it return False, row will be invalid so it should not be used.
-  virtual Bool getSyscalRow(SysCalRecord &row) = 0;
+  virtual Bool getSysCalRow(SysCalRecord &row) = 0;
 
   // to get WEATHER table
   // The method should return True if row entry is available.

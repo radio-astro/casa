@@ -37,9 +37,9 @@ public:
 
   DataChunk(String const &poltype) :
       num_pol_max_(4), num_pol_(0), num_chan_(0), data_(), flag_(), flag_row_(
-          num_pol_max_, False), weight_(num_pol_max_, 1.0f), sigma_(weight_), poltype_(
-          poltype), corr_type_(), filled_(NoData()), get_chunk_(nullptr), get_num_pol_(
-          nullptr) {
+          num_pol_max_, False), tsys_(), tcal_(), weight_(num_pol_max_, 1.0f), sigma_(
+          weight_), poltype_(poltype), corr_type_(), filled_(NoData()), get_chunk_(
+          nullptr), get_num_pol_(nullptr) {
     POST_START;
 
     setPolType(poltype);
@@ -66,16 +66,34 @@ public:
     return (*this.*get_num_pol_)();
   }
 
+  template<class T>
+  void resizeTo(T &array, IPosition const &shape) {
+    if (array.shape() != shape) {
+      array.resize(shape);
+    }
+  }
   void initialize(size_t num_chan) {
+    std::cout << "initialize" << std::endl;
     num_chan_ = num_chan;
     IPosition const shape(2, num_pol_max_, num_chan_);
-    if (data_.shape() != shape) {
-      data_.resize(IPosition(2, num_pol_max_, num_chan_));
-    }
-    if (flag_.shape() != shape) {
-      flag_.resize(IPosition(2, num_pol_max_, num_chan_));
-    }
+    std::cout << "initialize data" << std::endl;
+    resizeTo(data_, shape);
+    std::cout << "initialize flag" << std::endl;
+    resizeTo(flag_, shape);
+    std::cout << "initialize tsys" << std::endl;
+    resizeTo(tsys_, shape);
+    std::cout << "initialize tcal" << std::endl;
+    resizeTo(tcal_, shape);
+    tsys_ = -1.0f;
+    tcal_ = -1.0f;
+//    if (data_.shape() != shape) {
+//      data_.resize(IPosition(2, num_pol_max_, num_chan_));
+//    }
+//    if (flag_.shape() != shape) {
+//      flag_.resize(IPosition(2, num_pol_max_, num_chan_));
+//    }
     filled_ = NoData();
+    std::cout << "end initialize" << std::endl;
   }
 
   void clear() {
@@ -111,12 +129,24 @@ public:
     }
     Vector < Bool > flag = record.asArrayBool("FLAG");
     Bool flagrow = record.asBool("FLAG_ROW");
-
-    std::cout << "data=" << data << std::endl;
-    std::cout << "flag=" << flag << std::endl;
+    //std::cout << "data=" << data << std::endl;
+    //std::cout << "flag=" << flag << std::endl;
 
     if (data.shape() != flag.shape()) {
       return false;
+    }
+
+    std::cout << "fill Tsys" << std::endl;
+    Vector < Float > tsys;
+    if (record.isDefined("TSYS")) {
+      std::cout << "assign Tsys" << std::endl;
+      tsys.assign(record.asArrayFloat("TSYS"));
+    }
+    std::cout << "fill Tcal" << std::endl;
+    Vector < Float > tcal;
+    if (record.isDefined("TCAL")) {
+      std::cout << "assign Tcal" << std::endl;
+      tcal.assign(record.asArrayFloat("TCAL"));
     }
 
     std::cout << "num_chan_ = " << num_chan_ << std::endl;
@@ -128,6 +158,16 @@ public:
     data_.row(polid) = data;
     flag_.row(polid) = flag;
     flag_row_[polid] = flagrow;
+    if (tsys.size() == num_chan_) {
+      tsys_.row(polid) = tsys;
+    } else if (!tsys.empty()){
+      tsys_(polid, 0) = tsys[0];
+    }
+    if (tcal.size() == num_chan_) {
+      tcal_.row(polid) = tcal;
+    } else if (!tcal.empty()){
+      tcal_(polid, 0) = tcal[0];
+    }
     filled_ |= 0x01 << polid;
 
     return true;
@@ -135,17 +175,6 @@ public:
 
   bool get(TableRecord &record) {
     bool return_value = (*this.*get_chunk_)(record);
-//    Int num_pol = 0;
-//    if (isFullPol()) {
-//      num_pol = 4;
-//    }
-//    else if (isDualPol()) {
-//      num_pol = 2;
-//    }
-//    else if (isSinglePol0() || isSinglePol1()) {
-//      num_pol = 1;
-//    }
-//    record.define("NUM_POL", num_pol);
     return return_value;
   }
 
@@ -245,6 +274,8 @@ private:
   Matrix<Float> data_;
   Matrix<Bool> flag_;
   Vector<Bool> flag_row_;
+  Matrix<Float> tsys_;
+  Matrix<Float> tcal_;
   Vector<Float> weight_;
   Vector<Float> sigma_;
   String poltype_;
@@ -264,6 +295,7 @@ private:
     Vector < Float > sigma;
     if (isFullPol()) {
       // POL 0, 1, 2, and 3
+      std::cout << "Full polarization" << std::endl;
       Matrix < Complex > data(4, num_chan_, Complex(0));
       Vector < Complex > complex0(data.row(0));
       setReal(complex0, data_.row(0));
@@ -284,6 +316,53 @@ private:
       record.define("WEIGHT", weight_);
       record.define("SIGMA", sigma_);
 
+      Matrix < Float > tsys;
+      if (tsys_(0, 0) > 0.0f && tsys_(0, 1) > 0.0f) {
+        // should be spectral Tsys
+        tsys.resize(2, num_chan_);
+        tsys = -1;
+        tsys.row(0) = tsys_.row(0);
+      } else if (tsys_(0, 0) > 0.0f) {
+        // scalar Tsys
+        tsys.resize(2, 1, -1.0f);
+        tsys(0, 0) = tsys_(0, 0);
+      }
+      if (tsys_(1, 0) > 0.0f && tsys_(1, 1) > 0.0f) {
+        tsys.resize(2, num_chan_, True);
+        tsys.row(1) = tsys_.row(1);
+      } else if (tsys_(1, 0) > 0.0f) {
+        tsys.resize(2, 1, True);
+        tsys.row(1) = -1.0f;
+        tsys(1, 0) = tsys_(1, 0);
+      }
+      if (!tsys.empty() && anyNE(tsys, 1.0f)) {
+        record.define("TSYS", tsys);
+      }
+
+      Matrix < Float > tcal;
+      if (tcal_(0, 0) > 0.0f && tcal_(0, 1) > 0.0f) {
+        // should be spectral Tcal
+        tcal.resize(2, num_chan_);
+        tcal = -1;
+        tcal.row(0) = tcal_.row(0);
+      } else if (tcal_(0, 0) > 0.0f) {
+        // scalar Tcal
+        tcal.resize(2, 1, -1.0f);
+        tcal(0, 0) = tcal_(0, 0);
+      }
+      if (tcal_(1, 0) > 0.0f && tcal_(1, 1) > 0.0f) {
+        if (tcal.ncolumn() < num_chan_) {
+          tcal.resize(2, num_chan_, True);
+        }
+        tcal.row(1) = tcal_.row(1);
+      } else if (tcal_(1, 0) > 0.0f) {
+        tcal.row(1) = -1.0f;
+        tcal(1, 0) = tcal_(1, 0);
+      }
+      if (!tcal.empty() && anyNE(tcal, 1.0f)) {
+        record.define("TCAL", tcal);
+      }
+
       record.define("NUM_POL", 4);
 //      Vector<Int> corr_type(4);
 //      corr_type[0] = Stokes::XX;
@@ -293,6 +372,7 @@ private:
       record.define("CORR_TYPE", corr_type_);
     } else if (isDualPol()) {
       // POL 0 and 1
+      std::cout << "Dual polarization" << std::endl;
       Matrix < Float > data = data_(IPosition(2, 0, 0),
           IPosition(2, 1, num_chan_ - 1));
       Matrix < Bool > flag = flag_(IPosition(2, 0, 0),
@@ -305,6 +385,58 @@ private:
       record.define("WEIGHT", weight);
       record.define("SIGMA", weight);
 
+      Matrix < Float > tsys;
+      if (tsys_(0, 0) > 0.0f && tsys_(0, 1) > 0.0f) {
+        // should be spectral Tsys
+        std::cout << "spectral Tsys pol 0" << std::endl;
+        tsys.resize(2, num_chan_);
+        tsys = -1;
+        tsys.row(0) = tsys_.row(0);
+      } else if (tsys_(0, 0) > 0.0f) {
+        // scalar Tsys
+        std::cout << "scalar Tsys pol 0" << std::endl;
+        tsys.resize(2, 1);
+        tsys = -1.0f;
+        tsys(0, 0) = tsys_(0, 0);
+      }
+      if (tsys_(1, 0) > 0.0f && tsys_(1, 1) > 0.0f) {
+        std::cout << "spectral Tsys pol 1" << std::endl;
+        tsys.resize(2, num_chan_, True);
+        tsys.row(1) = tsys_.row(1);
+      } else if (tsys_(1, 0) > 0.0f) {
+        std::cout << "scalar Tsys pol 1" << std::endl;
+        tsys.resize(2, 1, True);
+        tsys.row(1) = -1.0f;
+        tsys(1, 0) = tsys_(1, 0);
+      }
+      std::cout << "tsys = " << tsys << std::endl;
+      if (!tsys.empty() && anyNE(tsys, 1.0f)) {
+        record.define("TSYS", tsys);
+      }
+
+      Matrix < Float > tcal;
+      if (tcal_(0, 0) > 0.0f && tcal_(0, 1) > 0.0f) {
+        // should be spectral Tcal
+        tcal.resize(2, num_chan_);
+        tcal = -1;
+        tcal.row(0) = tcal_.row(0);
+      } else if (tcal_(0, 0) > 0.0f) {
+        // scalar Tcal
+        tcal.resize(2, 1, -1.0f);
+        tcal(0, 0) = tcal_(0, 0);
+      }
+      if (tcal_(1, 0) > 0.0f && tcal_(1, 1) > 0.0f) {
+        tcal.resize(2, num_chan_, True);
+        tcal.row(1) = tcal_.row(1);
+      } else if (tcal_(1, 0) > 0.0f) {
+        tcal.resize(2, 1, True);
+        tcal.row(1) = -1.0f;
+        tcal(1, 0) = tcal_(1, 0);
+      }
+      if (!tcal.empty() && anyNE(tcal, 1.0f)) {
+        record.define("TCAL", tcal);
+      }
+
       record.define("NUM_POL", 2);
       Vector < Int > corr_type(2);
       corr_type[0] = corr_type_[0];
@@ -312,6 +444,7 @@ private:
       record.define("CORR_TYPE", corr_type);
     } else if (isSinglePol0()) {
       // only POL 0
+      std::cout << "Single polarization 0" << std::endl;
       Slicer slicer(IPosition(2, 0, 0), IPosition(2, 1, num_chan_));
       Matrix < Float > data = data_(slicer);
       Matrix < Bool > flag = flag_(slicer);
@@ -326,12 +459,43 @@ private:
       record.define("WEIGHT", weight);
       record.define("SIGMA", weight);
 
+      Matrix < Float > tsys;
+      if (tsys_(0, 0) > 0.0f && tsys_(0, 1) > 0.0f) {
+        // should be spectral Tsys
+        tsys.resize(1, num_chan_);
+        tsys = -1;
+        tsys.row(0) = tsys_.row(0);
+      } else if (tsys_(0, 0) > 0.0f) {
+        // scalar Tsys
+        tsys.resize(1, 1, -1.0f);
+        tsys(0, 0) = tsys_(0, 0);
+      }
+      if (!tsys.empty() && anyNE(tsys, 1.0f)) {
+        record.define("TSYS", tsys);
+      }
+
+      Matrix < Float > tcal;
+      if (tcal_(0, 0) > 0.0f && tcal_(0, 1) > 0.0f) {
+        // should be spectral Tcal
+        tcal.resize(1, num_chan_);
+        tcal = -1;
+        tcal.row(0) = tcal_.row(0);
+      } else if (tcal_(0, 0) > 0.0f) {
+        // scalar Tcal
+        tcal.resize(1, 1, -1.0f);
+        tcal(0, 0) = tcal_(0, 0);
+      }
+      if (!tcal.empty() && anyNE(tcal, 1.0f)) {
+        record.define("TCAL", tcal);
+      }
+
       record.define("NUM_POL", 1);
       Vector < Int > corr_type(1, corr_type_[0]);
 //      corr_type[0] = Stokes::XX;
       record.define("CORR_TYPE", corr_type);
     } else if (isSinglePol1()) {
       // only POL 1
+      std::cout << "Single polarization 1" << std::endl;
       Slicer slicer(IPosition(2, 1, 0), IPosition(2, 1, num_chan_));
       Matrix < Float > data = data_(slicer);
       Matrix < Bool > flag = flag_(slicer);
@@ -342,6 +506,36 @@ private:
       record.define("FLAG_ROW", flag_row);
       record.define("WEIGHT", weight);
       record.define("SIGMA", weight);
+
+      Matrix < Float > tsys;
+      if (tsys_(1, 0) > 0.0f && tsys_(1, 1) > 0.0f) {
+        // should be spectral Tsys
+        tsys.resize(1, num_chan_);
+        tsys = -1;
+        tsys.row(0) = tsys_.row(1);
+      } else if (tsys_(1, 0) > 0.0f) {
+        // scalar Tsys
+        tsys.resize(1, 1, -1.0f);
+        tsys(0, 0) = tsys_(1, 0);
+      }
+      if (!tsys.empty() && anyNE(tsys, 1.0f)) {
+        record.define("TSYS", tsys);
+      }
+
+      Matrix < Float > tcal;
+      if (tcal_(1, 0) > 0.0f && tcal_(1, 1) > 0.0f) {
+        // should be spectral Tcal
+        tcal.resize(1, num_chan_);
+        tcal = -1;
+        tcal.row(0) = tcal_.row(1);
+      } else if (tcal_(1, 0) > 0.0f) {
+        // scalar Tcal
+        tcal.resize(1, 1, -1.0f);
+        tcal(0, 0) = tcal_(1, 0);
+      }
+      if (!tcal.empty() && anyNE(tcal, 1.0f)) {
+        record.define("TCAL", tcal);
+      }
 
       record.define("NUM_POL", 1);
       Vector < Int > corr_type(1, corr_type_[3]);
@@ -480,7 +674,7 @@ private:
 class DataAccumulator {
 public:
   DataAccumulator() :
-      pool_(), antenna_id_(), spw_id_(), field_id_(), feed_id_(), scan_(), subscan_(), intent_(), indexer_(), time_(
+      pool_(), antenna_id_(), spw_id_(), field_id_(), feed_id_(), scan_(), subscan_(), intent_(), direction_(), interval_(), indexer_(), time_(
           -1.0), is_ready_(false), is_free_() {
   }
 
@@ -521,6 +715,16 @@ public:
     //pool_.resize(0);
     time_ = -1.0;
     //indexer_ = Record();
+
+    // antenna_id_.resize(0);
+    // spw_id_.resize(0);
+    // field_id_.resize(0);
+    // feed_id_.resize(0);
+    // scan_.resize(0);
+    // subscan_.resize(0);
+    // intent_.resize(0);
+    // direction_.resize(0);
+    // interval_.resize(0);
   }
 
   bool get(size_t ichunk, TableRecord &record) {
@@ -539,7 +743,8 @@ public:
     String intent = "";
     Double time = -1.0;
     String poltype = "";
-    Matrix<Double> direction;
+    Matrix < Double > direction;
+    Double interval = -1.0;
     if (status) {
       poltype = pool_[ichunk]->getPolType();
       time = time_;
@@ -551,6 +756,7 @@ public:
       subscan = subscan_[ichunk];
       intent = intent_[ichunk];
       direction.assign(direction_[ichunk]);
+      interval = interval_[ichunk];
     }
     record.define("TIME", time);
     record.define("POL_TYPE", poltype);
@@ -562,6 +768,7 @@ public:
     record.define("SUBSCAN", subscan);
     record.define("INTENT", intent);
     record.define("DIRECTION", direction);
+    record.define("INTERVAL", interval);
     return status;
   }
 
@@ -595,7 +802,8 @@ public:
     String key = "ANTENNA" + String::toString(antennaid) + "SPW"
         + String::toString(spwid) + "FIELD" + String::toString(fieldid) + "FEED"
         + String::toString(feedid) + intent + poltype;
-    Matrix<Double> direction = record.asArrayDouble("DIRECTION");
+    Matrix < Double > direction = record.asArrayDouble("DIRECTION");
+    Double interval = record.asDouble("INTERVAL");
     bool status = false;
     if (indexer_.isDefined(key)) {
       std::cout << "accumulate " << key << std::endl;
@@ -610,6 +818,7 @@ public:
         subscan_[index] = subscan;
         intent_[index] = intent;
         direction_[index].assign(direction);
+        interval_[index] = interval;
       }
     } else {
       std::cout << "new entry " << key << std::endl;
@@ -622,6 +831,7 @@ public:
       subscan_.push_back(-1);
       intent_.push_back("");
       direction_.push_back(Vector<Double>());
+      interval_.push_back(-1.0);
       uInt index = pool_.size() - 1;
       indexer_.define(key, index);
       status = pool_[index]->accumulate(record);
@@ -634,11 +844,13 @@ public:
         subscan_[index] = subscan;
         intent_[index] = intent;
         direction_[index].assign(direction);
+        interval_[index] = interval;
       }
     }
 
     std::cout << "status = " << status << std::endl;
-
+    std::cout << "key " << key << "(index " << indexer_.asuInt(key)
+        << "): TIME=" << time_ << " INTERVAL=" << interval << std::endl;
     POST_END;
     return status;
   }
@@ -655,10 +867,10 @@ public:
 
 private:
   bool isValidRecord(TableRecord const &record) {
-    constexpr size_t num_required_keys = 10;
+    constexpr size_t num_required_keys = 11;
     constexpr const char *required_keys[num_required_keys] = { "TIME",
         "ANTENNA_ID", "FIELD_ID", "SPECTRAL_WINDOW_ID", "FEED_ID", "SCAN",
-        "SUBSCAN", "INTENT", "POL_TYPE", "DIRECTION" };
+        "SUBSCAN", "INTENT", "POL_TYPE", "DIRECTION", "INTERVAL" };
     bool is_valid = true;
     for (size_t i = 0; i < num_required_keys; ++i) {
       is_valid = is_valid && record.isDefined(required_keys[i]);
@@ -674,6 +886,7 @@ private:
   std::vector<Int> subscan_;
   std::vector<String> intent_;
   std::vector<Matrix<Double> > direction_;
+  std::vector<Double> interval_;
   Record indexer_;
   Double time_;
   bool is_ready_;

@@ -40,6 +40,15 @@ install (FILES
 )
 
 install (FILES
+    Filler/AntennaRecord.h
+    Filler/FieldRecord.h
+    Filler/ObservationRecord.h
+    Filler/ProcessorRecord.h
+    Filler/SourceRecord.h
+    Filler/SpectralWindowRecord.h
+    Filler/SysCalRecord.h
+    Filler/WeatherRecord.h
+    Filler/ScantableIterator.h
     Filler/DataAccumulator.h
     Filler/ReaderInterface.h
     Filler/Scantable2MSReader.h

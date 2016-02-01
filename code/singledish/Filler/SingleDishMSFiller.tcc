@@ -158,12 +158,13 @@ void SingleDishMSFiller<T>::setupMS() {
 //  String dunit = table_->getHeader().fluxunit ;
 
   TableDesc ms_main_description = MeasurementSet::requiredTableDesc();
-//  if ( useFloatData_ )
-//    MeasurementSet::addColumnToDesc( msDesc, MSMainEnums::FLOAT_DATA, 2 ) ;
-//  else if ( useData_ )
-//    MeasurementSet::addColumnToDesc( msDesc, MSMainEnums::DATA, 2 ) ;
-  MeasurementSet::addColumnToDesc(ms_main_description, MSMainEnums::FLOAT_DATA,
-      2);
+  if ( is_float_ ) {
+    MeasurementSet::addColumnToDesc( ms_main_description, MSMainEnums::FLOAT_DATA, 2 ) ;
+  } else { 
+    MeasurementSet::addColumnToDesc( ms_main_description, MSMainEnums::DATA, 2 ) ;
+  }
+  //  MeasurementSet::addColumnToDesc(ms_main_description, MSMainEnums::FLOAT_DATA,
+  //      2);
 
   String const scratch_table_name = File::newUniqueName(".",
       "SingleDishMSFillerTemp").originalName();
@@ -420,12 +421,12 @@ void SingleDishMSFiller<T>::fillSpectralWindow() {
 }
 
 template<class T>
-void SingleDishMSFiller<T>::fillSyscal() {
+void SingleDishMSFiller<T>::fillSysCal() {
   POST_START;
 
   SysCalRecord record;
   ::fillTable(ms_->sysCal(), record,
-      [&](SysCalRecord &record) {return reader_->getSyscalRow(record);});
+      [&](SysCalRecord &record) {return reader_->getSysCalRow(record);});
 
   POST_END;
 }
@@ -578,13 +579,14 @@ Int SingleDishMSFiller<T>::updateFeed(Int const &feed_id, Int const &spw_id,
 
 template<class T>
 Int SingleDishMSFiller<T>::updatePointing(Int const &antenna_id,
-    Int const &feed_id, Double const &time, Matrix<Double> const &direction) {
+    Int const &feed_id, Double const &time, Double const &interval, Matrix<Double> const &direction) {
   POST_START;
 
   if (reference_feed_ != feed_id) {
     return -1;
   }
 
+  constexpr double kDay2Sec = 86400.0;
   auto mytable = ms_->pointing();
   MSPointingColumns mycolumns(mytable);
   mycolumns.direction().keywordSet().print(std::cout);
@@ -598,6 +600,7 @@ Int SingleDishMSFiller<T>::updatePointing(Int const &antenna_id,
   auto addPointingRow = [&]() {
     mytable.addRow(1, True);
     mycolumns.time().put(nrow, time);
+    mycolumns.interval().put(nrow, interval);
     mycolumns.antennaId().put(nrow, antenna_id);
     mycolumns.direction().put(nrow, direction);
     Int num_poly = direction.shape()[1] - 1;
