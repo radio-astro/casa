@@ -607,7 +607,29 @@ class T2_1DetailsRenderer(object):
 
         dirname = os.path.join('session%s' % ms.session,
                                ms.basename)
-        
+
+        vla_basebands = ''
+
+        if context.project_summary.telescope != 'ALMA':
+        #All VLA basebands
+
+            vla_basebands = []
+
+            banddict = collections.defaultdict(lambda: collections.defaultdict(list))
+
+            for spw in ms.get_spectral_windows():
+                band = spw.name.split('#')[0].split('_')[1]
+                baseband = spw.name.split('#')[1]
+                banddict[band][baseband].append(str(spw.id))
+
+            for band in banddict.keys():
+                basebands = banddict[band].keys()
+                for baseband in basebands:
+                    vla_basebands.append(band+': '+baseband+': '+','.join(banddict[band][baseband]))
+
+            vla_basebands = '<tr><th>VLA Bands: Basebands: spws</th><td>'+'<br>'.join(vla_basebands)+'</td></tr>'
+
+
         return {
             'pcontext'        : context,
             'ms'              : ms,
@@ -630,7 +652,8 @@ class T2_1DetailsRenderer(object):
             'el_vs_time_plot' : el_vs_time_plot,
             'tpsampling_plot' : tpsampling_plot,
             'el_min'          : el_min,
-            'el_max'          : el_max
+            'el_max'          : el_max,
+            'vla_basebands'   : vla_basebands
         }
 
     @classmethod
