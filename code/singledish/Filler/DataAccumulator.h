@@ -42,8 +42,8 @@ public:
   friend DataAccumulator;
 
   DataChunk(String const &poltype) :
-      num_pol_max_(4), num_pol_(0), num_chan_(0), data_(), flag_(), flag_row_(
-          num_pol_max_, False), tsys_(), tcal_(), weight_(num_pol_max_, 1.0f), sigma_(
+      num_pol_max_(4), num_chan_(0), data_(), flag_(), flag_row_(num_pol_max_,
+          False), tsys_(), tcal_(), weight_(num_pol_max_, 1.0f), sigma_(
           weight_), poltype_(poltype), corr_type_(), filled_(NoData()), get_chunk_(
           nullptr), get_num_pol_(nullptr) {
     POST_START;
@@ -138,12 +138,12 @@ public:
     flag_row_[polid] = flagrow;
     if (tsys.size() == num_chan_) {
       tsys_.row(polid) = tsys;
-    } else if (!tsys.empty()){
+    } else if (!tsys.empty()) {
       tsys_(polid, 0) = tsys[0];
     }
     if (tcal.size() == num_chan_) {
       tcal_.row(polid) = tcal;
-    } else if (!tcal.empty()){
+    } else if (!tcal.empty()) {
       tcal_(polid, 0) = tcal[0];
     }
     filled_ |= 0x01 << polid;
@@ -244,7 +244,6 @@ private:
     POST_END;
   }
   size_t const num_pol_max_;
-  size_t num_pol_;
   size_t num_chan_;
   Matrix<Float> data_;
   Matrix<Bool> flag_;
@@ -634,7 +633,7 @@ class DataAccumulator {
 public:
   DataAccumulator() :
       pool_(), antenna_id_(), spw_id_(), field_id_(), feed_id_(), scan_(), subscan_(), intent_(), direction_(), interval_(), indexer_(), time_(
-          -1.0), is_ready_(false), is_free_() {
+          -1.0), is_free_() {
   }
 
   virtual ~DataAccumulator() {
@@ -828,7 +827,6 @@ private:
   std::vector<Double> interval_;
   Record indexer_;
   Double time_;
-  bool is_ready_;
   std::vector<bool> is_free_;
 };
 
