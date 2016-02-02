@@ -410,8 +410,7 @@ private:
   // @param[in] mainSpec main table row specification except id
   void updateMain(Int const &antenna_id, Int field_id, Int feedId,
       Int dataDescriptionId, Int stateId, Int const &scan_number,
-      Double const &time, /*TableRecord const &mainSpec,*/
-      TableRecord const &dataRecord) {
+      Double const &time, TableRecord const &dataRecord) {
     POST_START;
 
     // constant stuff
@@ -434,7 +433,6 @@ private:
     ms_columns_->dataDescId().put(irow, dataDescriptionId);
     ms_columns_->stateId().put(irow, stateId);
     ms_columns_->scanNumber().put(irow, scan_number);
-    //Double time = mainSpec.asDouble("TIME");
     ms_columns_->time().put(irow, time);
     ms_columns_->timeCentroid().put(irow, time);
     Double interval = dataRecord.asDouble("INTERVAL");
