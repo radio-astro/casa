@@ -2240,7 +2240,7 @@ Bool Calibrater::initWeightsWithTsys(String wtmode, Bool dowtsp,
 							}
 						}
 					}
-					// Handle WEIGHT_SPECTRUM
+					// Handle SIGMA_SPECTRUM
 					if (dowtsp) {
 					  newsigsp = 1.0f / sqrt(newwtsp);
 					}
@@ -2275,14 +2275,10 @@ Bool Calibrater::initWeightsWithTsys(String wtmode, Bool dowtsp,
 					if (dowtsp) {
 						vb->setWeightSpectrum(vb->weightSpectrum());
 						// If WS was calibrated, set W to its channel-axis median
-						vb->setWeight(
-								partialMedians(vb->weightSpectrum(),
-										IPosition(1, 1)));
+						vb->setWeight( partialMedians(vb->weightSpectrum(), IPosition(1, 1)) );
 						newsigsp = 1.0f / sqrt(vb->weightSpectrum());
 						vb->initSigmaSpectrum(newsigsp);
-						vb->setSigma(
-							     partialMedians(vb->sigmaSpectrum(),
-									    IPosition(1, 1)));
+						vb->setSigma( partialMedians(newsigsp, IPosition(1, 1)) );
 					} else {
 						vb->setWeight(vb->weight());
 						newsig = 1.0f / sqrt(vb->weight());
