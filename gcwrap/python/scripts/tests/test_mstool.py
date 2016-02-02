@@ -250,17 +250,17 @@ class mstool_test_summary(mstool_test_base):
         stats = self.ms.statistics(column="DATA", complex_value='amp', 
                 field="2")["DATA"]
         self.assertEqual(stats['npts'], 1619352.0)
-        self.assertAlmostEqual(stats['medabsdevmed'], 0.012279971037060022)
-        self.assertAlmostEqual(stats['min'], 2.2130521756480448e-05)
-        self.assertAlmostEqual(stats['max'], 73.65591430664062)
-        self.assertAlmostEqual(stats['sum'], 6899544.7426567525)
-        self.assertAlmostEqual(stats['sumsq'], 439740418.5306466)
-        self.assertAlmostEqual(stats['mean'], 4.260682509211557)
-        self.assertAlmostEqual(stats['median'], 0.027315710671246052)
-        self.assertAlmostEqual(stats['rms'], 16.47887420654297)
-        self.assertAlmostEqual(stats['stddev'], 15.91854469367191)
-        self.assertAlmostEqual(stats['var'], 253.40006516443012)
-        self.assertAlmostEqual(stats['quartile'], 0.02549157477915287)
+        self.assertAlmostEqual(stats['medabsdevmed'], 0.0122800)
+        self.assertAlmostEqual(stats['min'], 2.2130522e-05)
+        self.assertAlmostEqual(stats['max'], 73.6559143)
+        self.assertAlmostEqual(stats['sum'], 6899544.742657, 6)
+        self.assertAlmostEqual(stats['sumsq'], 439740418.530647, 6)
+        self.assertAlmostEqual(stats['mean'], 4.2606825)
+        self.assertAlmostEqual(stats['median'], 0.0273157)
+        self.assertAlmostEqual(stats['rms'], 16.4788742)
+        self.assertAlmostEqual(stats['stddev'], 15.9185447)
+        self.assertAlmostEqual(stats['var'], 253.4000652)
+        self.assertAlmostEqual(stats['quartile'], 0.0254916)
         print
 
     def test_statistics2(self): 
@@ -276,17 +276,17 @@ class mstool_test_summary(mstool_test_base):
         self.assertEqual(scan3stats['maxDatasetIndex'], 13)
         self.assertEqual(scan3stats['minDatasetIndex'], 1)
         self.assertEqual(scan3stats['npts'], 762048.0)
-        self.assertAlmostEqual(scan3stats['medabsdevmed'], 0.012062089052051306)
-        self.assertAlmostEqual(scan3stats['min'], 3.7663106922991574e-05)
-        self.assertAlmostEqual(scan3stats['max'], 73.65591430664062)
-        self.assertAlmostEqual(scan3stats['sum'], 3247317.168584982)
-        self.assertAlmostEqual(scan3stats['sumsq'], 207042007.63968545)
-        self.assertAlmostEqual(scan3stats['mean'], 4.261302658867969)
-        self.assertAlmostEqual(scan3stats['median'], 0.026805330067873)
-        self.assertAlmostEqual(scan3stats['rms'], 16.483068798447952)
-        self.assertAlmostEqual(scan3stats['stddev'], 15.92272556328353)
-        self.assertAlmostEqual(scan3stats['variance'], 253.53318936364278)
-        self.assertAlmostEqual(scan3stats['quartile'], 0.04107896238565445)
+        self.assertAlmostEqual(scan3stats['medabsdevmed'], 0.0120621)
+        self.assertAlmostEqual(scan3stats['min'], 3.7663107e-05)
+        self.assertAlmostEqual(scan3stats['max'], 73.6559143)
+        self.assertAlmostEqual(scan3stats['sum'], 3247317.1686, 4)
+        self.assertAlmostEqual(scan3stats['sumsq'], 207042007.639685, 6)
+        self.assertAlmostEqual(scan3stats['mean'], 4.2613027)
+        self.assertAlmostEqual(scan3stats['median'], 0.0268053)
+        self.assertAlmostEqual(scan3stats['rms'], 16.4830688)
+        self.assertAlmostEqual(scan3stats['stddev'], 15.9227256)
+        self.assertAlmostEqual(scan3stats['variance'], 253.5331894)
+        self.assertAlmostEqual(scan3stats['quartile'], 0.0410790)
         print
 
     def test_range(self): 
@@ -751,7 +751,7 @@ class mstool_test_iter(mstool_test_base):
     def tearDown(self):
         self.tearDownTest()
 
-    def xtest_iteration(self): 
+    def test_iteration(self): 
         """test ms.iter"""
         scannum = 1
         # rows per scan
@@ -896,13 +896,13 @@ class mstool_test_buffer(mstool_test_base):
 
     def test_get_clearbuffer(self): 
         """test ms.getbuffer, clearbuffer"""
-        exp_phase1 = array([-1.69489956, -1.60435688, -0.76646101, -2.65837741, -2.54876447, -1.70315683,  2.38823485, -2.54074621,  2.70191789, -1.69116795])
-        exp_phase2 = array([0.68389159,-1.65836263,-1.59149444, 2.31979609, 2.91262197, 3.08927035, 2.93609524,-2.88921165,-2.26710916,-2.68792892])
+        exp_phase1 = array([-1.694900, -1.604357, -0.766461, -2.658377, -2.548764, -1.703157,  2.388235, -2.540746,  2.701918, -1.691168])
+        exp_phase2 = array([0.683892,-1.658363,-1.591494, 2.319796, 2.912622, 3.089270, 2.936095,-2.889212,-2.267109,-2.687929])
         # fill buffer with phase (no ifraxis)
         self.assertTrue(self.ms.fillbuffer("PHASE"))
         rec = self.ms.getbuffer()
         self.assertEqual(rec['phase'].shape, (2, 63, 1439))
-        testing.assert_array_almost_equal(rec['phase'][0][0][30:40], exp_phase1, 8)
+        testing.assert_array_almost_equal(rec['phase'][0][0][30:40], exp_phase1, 6)
         # clear buffer
         self.ms.clearbuffer()
         rec = self.ms.getbuffer()  # empty dict, buffer is empty
@@ -911,7 +911,7 @@ class mstool_test_buffer(mstool_test_base):
         self.assertTrue(self.ms.fillbuffer("PHASE", True))
         rec = self.ms.getbuffer()
         self.assertEqual(rec['phase'].shape, (2, 63, 24, 60))
-        testing.assert_array_almost_equal(rec['phase'][0][0][1][30:40], exp_phase2, 8)
+        testing.assert_array_almost_equal(rec['phase'][0][0][1][30:40], exp_phase2, 6)
         print
 
     def test_set_writebufferflags(self): 
