@@ -359,7 +359,7 @@ class CalFrom(object):
     }
 
     CALTYPE_TO_VISCAL = {
-        'gaincal'  : ('G JONES', 'GSPLINE'),
+        'gaincal'  : ('G JONES', 'GSPLINE', 'T JONES'),
         'bandpass' : ('B JONES', 'BPOLY'),
         'tsys'     : ('B TSYS',),
         'antpos'   : ('KANTPOS JONES',)
