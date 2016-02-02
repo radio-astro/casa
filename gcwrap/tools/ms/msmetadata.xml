@@ -1062,15 +1062,22 @@ windows in the dataset and close the tool.
         
         <method type="function" name="nbaselines">
             <shortdescription>Get the number of baselines represented in the main MS table.</shortdescription>
+            <input>
+                <param type="bool" direction="in" name="ac">
+                    <description>Include auto-correlation "baselines"?</description>
+                    <value>false</value>
+                </param>
+            </input>
             <returns type="int"/>
             <description>
                 Get the number of unique baselines (antenna pairs) represented in the main MS table. This can, in theory, be less than
                 n*(n-1)/2 (n being the number of antennas in the ANTENNA table), if data for certain baselines
-                are not included in the main MS table. Autocorrelation "baselines" are not included in this count.
+                are not included in the main MS table. Autocorrelation "baselines" are included in this count if ac=True.
             </description>
             <example>
     msmd.open("my.ms")
     number_of_baselines = msmd.nbaselines()
+    number_of_baselines_including_ac = msmd.nbaselines(True)
     msmd.done()
             </example>
         </method>

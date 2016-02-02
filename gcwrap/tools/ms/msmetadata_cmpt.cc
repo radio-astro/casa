@@ -1005,9 +1005,9 @@ int msmetadata::nantennas() {
 	return 0;
 }
 
-int msmetadata::nbaselines() {
+int msmetadata::nbaselines(bool doAC) {
 	_FUNC(
-		return _msmd->nBaselines();
+		return _msmd->nBaselines(doAC);
 	)
 	return 0;
 }

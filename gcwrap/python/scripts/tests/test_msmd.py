@@ -1772,5 +1772,12 @@ class msmd_test(unittest.TestCase):
         allgood()
         dobad("FIELD_ID")
         
+    def test_nbaselines(self):
+        """Verify nbaselines()"""
+        md = self.md
+        self.assertTrue(md.nbaselines() == 21, "wrong number of baselines for default value of ac")
+        self.assertTrue(md.nbaselines(True) == 25, "wrong number of baselines for ac = True")
+        self.assertTrue(md.nbaselines(False) == 21, "wrong number of baselines for ac = False")
+        
 def suite():
     return [msmd_test]
