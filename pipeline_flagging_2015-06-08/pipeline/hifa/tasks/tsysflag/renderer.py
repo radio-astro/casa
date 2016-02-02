@@ -34,10 +34,9 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     '''
     Renders detailed HTML output for the Tsysflag task.
     '''
-    # FIXME: ensure that always_rerender is back to False
     def __init__(self, uri='tsysflag.mako',
                  description='Flag Tsys calibration',
-                 always_rerender=True):
+                 always_rerender=False):
         super(T2_4MDetailsTsysflagRenderer, self).__init__(uri=uri,
                 description=description, always_rerender=always_rerender)
 

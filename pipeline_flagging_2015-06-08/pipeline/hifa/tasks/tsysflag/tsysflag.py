@@ -270,6 +270,22 @@ class Tsysflag(basetask.StandardTaskTemplate):
         return result
     
     def run_flagger(self, metric, flag_tmf1=False, flag_tmef1=False):
+        """
+        Evaluates the Tsys spectra for a specified flagging metric.
+        
+        Keyword arguments:
+        metric      -- string : represents the flagging metric to evaluate. 
+                       Valid values: 'nmedian', 'derivative', 'edgechans', 
+                       'fieldshape', 'birdies'.
+        flag_tmf1   -- bool : if set to True, the "too many flags" rule
+                       is added to the flagging rules that are evaluated.
+        flag_tmef1  -- bool : if set to True, the "too many entirely flagged"
+                       rule is added to the flagging rules that are evaluated. 
+        
+        Returns:
+        TsysflagspectraResults object containing the flagging views and flagging
+        results for the requested metric.
+        """
 
         LOG.info('flag '+metric)
         inputs = self.inputs
@@ -405,6 +421,9 @@ class TsysflagView(object):
 
     def __init__(self, context, vis=None, metric=None, refintent=None):
         """
+        Creates an TsysflagView instance for specified metric.
+
+        Keyword arguments:
         metric    -- the name of the view metric:
                         'nmedian' gives an image where each pixel is the
                           tsys median for that antenna/scan.
@@ -438,7 +457,15 @@ class TsysflagView(object):
     
     def __call__(self, data):
         """
-        data     -- TsysflagDataResults object giving access to the tsys caltable.
+        When called, the TsysflagView object calculates flagging views
+        for the TsysflagDataResults that are provided, based on the 
+        metric that TsysflagView was initialized for.
+
+        data     -- TsysflagDataResults object giving access to the 
+                    tsys caltable.
+                    
+        Returns:
+        TsysflagViewResults object containing the flagging view.
         """
         # Initialize result structure
         self.result = TsysflagViewResults()
@@ -487,6 +514,9 @@ class TsysflagView(object):
     
     def calculate_views(self, table):
         """
+        Calculates a flagging view for the specified table, based on 
+        metric that TsysflagView was initialized with.
+        
         table     -- CalibrationTableData object giving access to the tsys
                      caltable.
         """
@@ -523,24 +553,89 @@ class TsysflagView(object):
                     self.calculate_antenna_diff_channel_view(tsystable, tsysspwid, intentgroup, fieldids[intentgroup])
                 elif self.metric == 'edgechans':
                     self.calculate_median_channel_view(tsystable, tsysspwid, intentgroup, fieldids[intentgroup])   
-                
-        return self.result
 
 
+    def get_tsystable_data(self, tsystable, spwid, fieldids, antenna_names, corr_type, normalise=None):
+        """
+        Reads in specified Tsys table, selects data for the specified 
+        spw and field(s) and returns the Tsys spectra data, timestamps, 
+        and number of channels per spectra.
+        
+        Keyword arguments:
+        tsystable      -- Tsys table to read data from.
+        spwid          -- Data is selected for this Spectral window id.
+        fieldids       -- Data are selected for these field ids.
+        antenna_names  -- List of strings containing the names of the antennas,
+                          which are used in the SpectrumResult.
+        corr_type      -- List containing the names of the polarizations,
+                          which are used in the SpectrumResult.
+        normalise      -- bool : if set to True, the SpectrumResult objects are normalised.
+        
+        Returns:
+        Tuple containing 3 elements:
+          tsysspectra: dictionary of TsysflagspectraResults
+          times: set of unique timestamps
+          nchannels: integer representing the number of channels in each Tsysflag spectrum.
+        """
+
+
+        # Initialize a dictionary of Tsys spectra results and corresponding times
+        tsysspectra = collections.defaultdict(TsysflagspectraResults)
+        times = set()
+
+        if normalise:
+            datatype = 'Normalised Tsys'
+        else:
+            datatype = 'Tsys'
+
+        pols = range(len(corr_type))
+        
+        # Select rows from tsystable that match the specified spw and fields,
+        # store a Tsys spectrum for each polarisation in the tsysspectra results
+        # and store the corresponding time.
+        for row in tsystable.rows:
+            if row.get('SPECTRAL_WINDOW_ID') == spwid and \
+              row.get('FIELD_ID') in fieldids:
+
+                for pol in pols:
+                    tsysspectrum = commonresultobjects.SpectrumResult(
+                      data=row.get('FPARAM')[pol,:,0],
+                      flag=row.get('FLAG')[pol,:,0],
+                      datatype=datatype, filename=tsystable.name,
+                      field_id=row.get('FIELD_ID'),
+                      spw=row.get('SPECTRAL_WINDOW_ID'),
+                      ant=(row.get('ANTENNA1'),
+                      antenna_names[row.get('ANTENNA1')]), units='K',
+                      pol=corr_type[pol][0],
+                      time=row.get('TIME'), normalise=normalise)
+
+                    tsysspectra[pol].addview(tsysspectrum.description,
+                      tsysspectrum)
+                    times.update([row.get('TIME')])
+
+                # Store the number of channels
+                nchannels = np.shape(row.get('FPARAM'))[1]
+
+        return tsysspectra, times, nchannels
+
+    
     def calculate_median_spectra_view(self, tsystable, spwid, intent, fieldids):
         """
+        Data of the specified spwid, intent and range of fieldids are
+        read from the given tsystable object. Two data 'views' will be
+        created, one for each polarization. Each 'view' is a matrix with
+        axes antenna_id v time. Each point in the matrix is the median
+        value of the tsys spectrum for that antenna/time. 
+        
+        Results are added to self.result.
+
+        Keyword arguments:
         tsystable -- CalibrationTableData object giving access to the tsys
                      caltable.
         spwid     -- view will be calculated using data for this spw id.
         intent    -- view will be calculated using data for this intent.
         fieldids  -- view will be calculated using data for all field_ids in
                      this list.
-
-        Data of the specified spwid, intent and range of fieldids are
-        read from the given tsystable object. Two data 'views' will be
-        created, one for each polarization. Each 'view' is a matrix with
-        axes antenna_id v time. Each point in the matrix is the median
-        value of the tsys spectrum for that antenna/time.
         """
 
         # Get antenna names, ids
@@ -561,7 +656,8 @@ class TsysflagView(object):
             tsysmedians = TsysflagspectraResults()
             spectrumstack = None
 
-            # Create a stack of all Tsys spectra for specified spw and pol
+            # Create a stack of all Tsys spectra for specified spw and pol;
+            # this will stack together spectra from all "fieldids".
             for description in tsysspectra[pol].descriptions():
                 tsysspectrum = tsysspectra[pol].last(description)
                 if tsysspectrum.pol==corr_type[pol][0]:
@@ -637,19 +733,22 @@ class TsysflagView(object):
 
     def calculate_derivative_view(self, tsystable, spwid, intent, fieldids):
         """
-        tsystable -- CalibrationTableData object giving access to the tsys
-                     caltable.
-        spwid     -- view will be calculated using data for this spw id.
-        intent    -- view will be calculated using data for this intent.
-        fieldids  -- view will be calculated using data for all field_ids in
-                     this list.
-
         Data of the specified spwid, intent and range of fieldids are
         read from the given tsystable object. Two data 'views' will be
         created, one for each polarization. Each 'view' is a matrix with
         axes antenna_id v time. Each point in the matrix is the median
         absolute deviation (MAD) of the channel to channel derivative
         across the Tsys spectrum for that antenna/time.
+
+        Results are added to self.result.
+
+        Keyword arguments:
+        tsystable -- CalibrationTableData object giving access to the tsys
+                     caltable.
+        spwid     -- view will be calculated using data for this spw id.
+        intent    -- view will be calculated using data for this intent.
+        fieldids  -- view will be calculated using data for all field_ids in
+                     this list.
         """
 
         # Get antenna names, ids
@@ -670,7 +769,8 @@ class TsysflagView(object):
             tsysmedians = TsysflagspectraResults()
             spectrumstack = None
 
-            # Create a stack of all Tsys spectra for specified spw and pol
+            # Create a stack of all Tsys spectra for specified spw and pol;
+            # this will stack together spectra from all "fieldids".
             for description in tsysspectra[pol].descriptions():
                 tsysspectrum = tsysspectra[pol].last(description)
                 if tsysspectrum.pol==corr_type[pol][0]:
@@ -755,16 +855,6 @@ class TsysflagView(object):
 
     def calculate_fieldshape_view(self, tsystable, spwid, intent, fieldids, refintent):
         """
-        tsystable -- CalibrationTableData object giving access to the tsys
-                     caltable.
-        spwid     -- view will be calculated using data for this spw id.
-        intent    -- view will be calculated using data for this intent.
-        fieldids  -- view will be calculated using data for all field_ids in
-                     this list.
-        refintent -- data with this intent will be used to
-                     calculate the 'reference' Tsys shape to which
-                     other data will be compared.
- 
         Data of the specified spwid, intent and range of fieldids are
         read from the given tsystable object. Two data 'views' will be
         created, one for each polarization. Each 'view' is a matrix with
@@ -782,6 +872,18 @@ class TsysflagView(object):
         normalised = -------------
                      median(array)
 
+        Results are added to self.result.
+
+        Keyword arguments:
+        tsystable -- CalibrationTableData object giving access to the tsys
+                     caltable.
+        spwid     -- view will be calculated using data for this spw id.
+        intent    -- view will be calculated using data for this intent.
+        fieldids  -- view will be calculated using data for all field_ids in
+                     this list.
+        refintent -- data with this intent will be used to
+                     calculate the 'reference' Tsys shape to which
+                     other data will be compared.
         """
 
         # Get antenna names, ids
@@ -811,8 +913,8 @@ class TsysflagView(object):
 
             for antenna_id in antenna_ids:
                 
-                # Create a stack of spectra, and corresponding flags, 
-                # for the fields that are listed as reference field.
+                # Create a single stack of spectra, and corresponding flags, 
+                # for all fields that are listed as reference field.
                 spectrumstack = None
                 for description in tsysspectra[pol].descriptions():
                     tsysspectrum = tsysspectra[pol].last(description)
@@ -830,7 +932,7 @@ class TsysflagView(object):
 
                 if spectrumstack is not None:
                     
-                    # From the stack of Tsys spectra, create a median Tsys 
+                    # From the stack of Tsys spectra, derive a median Tsys "reference"
                     # spectrum and corresponding flag list.
                     
                     # Ensure that the spectrum stack is 2D
@@ -856,7 +958,7 @@ class TsysflagView(object):
 
                     LOG.debug('looking for atmospheric lines')
                     
-                    # Calculate first derivative, and propagate flags
+                    # Calculate first derivative and propagate flags
                     diff = abs(stackmedian[1:] - stackmedian[:-1])
                     diff_flag = np.logical_or(stackmedianflag[1:], stackmedianflag[:-1])
 
@@ -943,17 +1045,20 @@ class TsysflagView(object):
 
     def calculate_median_channel_view(self, tsystable, spwid, intent, fieldids):
         """
+        Data of the specified spwid, intent and range of fieldids are
+        read from the given tsystable object. From all this one data 'view' 
+        is created; a 'median' Tsys spectrum where for each channel the 
+        value is the median of all the tsys spectra selected.
+
+        Results are added to self.result.
+
+        Keyword arguments:
         tsystable -- CalibrationTableData object giving access to the tsys
                      caltable.
         spwid     -- view will be calculated using data for this spw id.
         intent    -- view will be calculated using data for this intent.
         fieldids  -- view will be calculated using data for all field_ids in
                      this list.
-
-        Data of the specified spwid, intent and range of fieldids are
-        read from the given tsystable object. From all this one data 'view' 
-        is created; a 'median' Tsys spectrum where for each channel the 
-        value is the median of all the tsys spectra selected.
         """
 
         # Get antenna names
@@ -970,7 +1075,8 @@ class TsysflagView(object):
         # Initialize a stack of all Tsys spectra
         spectrumstack = None
 
-        # Create a stack of all Tsys spectra    
+        # Create a stack of all Tsys spectra for the specified spwid; this will
+        # stack together spectra from all "fieldids" and both polarisations.
         for pol in pols:
             for description in tsysspectra[pol].descriptions():
                 tsysspectrum = tsysspectra[pol].last(description)
@@ -1012,19 +1118,22 @@ class TsysflagView(object):
 
     def calculate_antenna_diff_channel_view(self, tsystable, spwid, intent, fieldids):
         """
-        tsystable -- CalibrationTableData object giving access to the tsys
-                     caltable.
-        spwid     -- view will be calculated using data for this spw id.
-        intent    -- view will be calculated using data for this intent.
-        fieldids  -- view will be calculated using data for all field_ids in
-                     this list.
-
         Data of the specified spwid, intent and range of fieldids are
         read from the given tsystable object. From all this a series
         of 'views' are created, one for each antenna. Each 'view'
         is the difference spectrum resulting from the subtraction
         of the 'spw median' Tsys spectrum from the 'antenna/spw median'
         spectrum.
+
+        Results are added to self.result.
+
+        Keyword arguments:
+        tsystable -- CalibrationTableData object giving access to the tsys
+                     caltable.
+        spwid     -- view will be calculated using data for this spw id.
+        intent    -- view will be calculated using data for this intent.
+        fieldids  -- view will be calculated using data for all field_ids in
+                     this list.
         """
 
         # Get antenna names, ids
@@ -1043,8 +1152,9 @@ class TsysflagView(object):
         ant_spectrumstack = {}
         ant_flagstack = {}
 
-        # Create a stack of all Tsys spectra for specified spw,
-        # as well as separate stacks for each antenna
+        # Create a stack of all Tsys spectra for specified "spwid",
+        # as well as separate stacks for each antenna. This will stack
+        # together spectra from all "fieldids" and both polarisations.
         for pol in pols:
             for description in tsysspectra[pol].descriptions():
                 tsysspectrum = tsysspectra[pol].last(description)
@@ -1116,45 +1226,4 @@ class TsysflagView(object):
 
                 # Add the view result to the class result structure
                 self.result.addview(viewresult.description, viewresult)
-
-
-    def get_tsystable_data(self, tsystable, spwid, fieldids, antenna_names, corr_type, normalise=None):
-
-        # Initialize a dictionary of Tsys spectra results and corresponding times
-        tsysspectra = collections.defaultdict(TsysflagspectraResults)
-        times = set()
-
-        if normalise:
-            datatype = 'Normalised Tsys'
-        else:
-            datatype = 'Tsys'
-
-        pols = range(len(corr_type))
-        
-        # Select rows from tsystable that match the specified spw and fields,
-        # store a Tsys spectrum for each polarisation in the tsysspectra results
-        # and store the corresponding time.
-        for row in tsystable.rows:
-            if row.get('SPECTRAL_WINDOW_ID') == spwid and \
-              row.get('FIELD_ID') in fieldids:
-
-                for pol in pols:
-                    tsysspectrum = commonresultobjects.SpectrumResult(
-                      data=row.get('FPARAM')[pol,:,0],
-                      flag=row.get('FLAG')[pol,:,0],
-                      datatype=datatype, filename=tsystable.name,
-                      field_id=row.get('FIELD_ID'),
-                      spw=row.get('SPECTRAL_WINDOW_ID'),
-                      ant=(row.get('ANTENNA1'),
-                      antenna_names[row.get('ANTENNA1')]), units='K',
-                      pol=corr_type[pol][0],
-                      time=row.get('TIME'), normalise=normalise)
-
-                    tsysspectra[pol].addview(tsysspectrum.description,
-                      tsysspectrum)
-                    times.update([row.get('TIME')])
-
-                # Store the number of channels
-                nchannels = np.shape(row.get('FPARAM'))[1]
-
-        return tsysspectra, times, nchannels
+                

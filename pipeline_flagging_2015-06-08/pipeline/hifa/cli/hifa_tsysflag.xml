@@ -69,7 +69,12 @@ possible error.
     </param>
 
     <param type="double" name="ff_tmf1_limit" subparam="true">
-        <description>Flag all Tsys spectra for an antenna if proportion flagged already &gt; ff_tmf1_limit</description>
+        <description>Flag all Tsys spectra within a timestamp for an antenna if proportion flagged already &gt; ff_tmf1_limit</description>
+        <value>0.666</value>
+    </param>
+
+    <param type="double" name="tmef1_limit" subparam="true">
+        <description>Flag all Tsys spectra for all antennas in a spw, if proportion of antennas that are already entirely flagged in all timestamps &gt; tmef1_limit</description>
         <value>0.666</value>
     </param>
 
@@ -145,6 +150,7 @@ possible error.
                 <default param="ff_refintent"><value type="string">BANDPASS</value></default>
                 <default param="ff_max_limit"><value>5.0</value></default>
                 <default param="ff_tmf1_limit"><value>0.666</value></default>
+                <default param="tmef1_limit"><value>0.666</value></default>
             </equals>
             <equals type="bool" value="False">
             </equals>
@@ -176,29 +182,18 @@ the system temperature calibration table. It does this by running a sequence
 of flagging tests, each designed to look for a different type of error.
 The tests are:
 
-1. Flag Tsys spectra with high median values by running sister task
-hifa_tsysflagspectra with metric='median', flag_nmedian=True,
-fnm_limit=fnm_limit.
+1. Flag Tsys spectra with high median values
 
-2. Flag Tsys spectra with high median derivatives by running 
-hifa_tsysflagspectra with metric='derivative', flag_maxabs=True,
-fmax_limit=fd_max_limit. This is meant to spot spectra that are 'ringing'.
+2. Flag Tsys spectra with high median derivatives. This is meant to spot 
+spectra that are 'ringing'.
 
-3. Flag the edge channels of the Tsys spectra in each SpW by
-running hifa_tsysflagchans with 
-intentgroups=['ATMOSPHERE','BANDPASS','AMPLITUDE'],
-flag_edges=True, edge_limit=fe_edge_limit.
+3. Flag the edge channels of the Tsys spectra in each SpW.
 
 4. Flag Tsys spectra whose shape is different from that associated with
 the BANDPASS intent or which are associated with an antenna that has 
-been too heavily flagged already, by running hif_tsysflagspectra with 
-metric='fieldshape', refintent=ff_refintent, flag_maxabs=True, 
-fmax_limit=ff_max_limit, flag_tmf1=True, tmf1_axis='Antenna1', 
-tmf1_limit=ff_tmf1_limit.
+been too heavily flagged already.
 
-5. Flag 'birdies' by running hif_tsysflagchans with metric='antenna_diff',
-flag_sharps=True, sharps_limit=fb_sharps_limit.
-
+5. Flag 'birdies'.
 
 Keyword arguments:
 
@@ -249,8 +244,13 @@ ff_max_limit -- Flag Tsys spectra with 'fieldshape' metric values &gt;
     ff_max_limit.
     default: 5.0
 
-ff_tmf1_limit -- Flag all Tsys spectra for an antenna if proportion flagged 
-    already &gt; ff_tmf1_limit.
+ff_tmf1_limit -- Flag all Tsys spectra within a timestamp for an 
+antenna if proportion flagged already &gt; ff_tmf1_limit.
+    default: 0.666
+
+tmef1_limit -- Flag all Tsys spectra for all antennas in a spw, if 
+proportion of antennas that are already entirely flagged in all 
+timestamps &gt; tmef1_limit.
     default: 0.666
 
 flag_birdies -- True to flag channels covering sharp spectral features.
