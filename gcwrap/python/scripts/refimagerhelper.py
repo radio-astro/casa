@@ -1518,6 +1518,7 @@ class ImagerParameters():
         errs += self.checkAndFixIterationPars()
         errs += self.checkAndFixNormPars()
 
+        ### MOVE this segment of code to the constructor so that it's clear which parameters go where ! 
         ### Copy them from 'impars' to 'normpars' and 'decpars'
         self.iterpars['allimages']={}
         for immod in self.allimpars.keys() :
@@ -1526,6 +1527,15 @@ class ImagerParameters():
             self.allgridpars[immod]['imagename'] = self.allimpars[immod]['imagename']
             self.iterpars['allimages'][immod] = { 'imagename':self.allimpars[immod]['imagename'] , 'multiterm': (self.alldecpars[immod]['deconvolver']=='mtmfs') }
 
+        ## Integers need to be NOT numpy versions.
+        self.fixIntParam(self.allimpars, 'imsize')
+        self.fixIntParam(self.allimpars, 'nchan')
+        self.fixIntParam(self.allimpars,'nterms')
+        self.fixIntParam(self.allnormpars,'nterms')
+        self.fixIntParam(self.alldecpars,'nterms')
+        self.fixIntParam(self.allgridpars,'facets')
+        self.fixIntParam(self.allgridpars,'chanchunks')
+ 
         ## If there are errors, print a message and exit.
         if len(errs) > 0:
 #            casalog.post('Parameter Errors : \n' + errs,'WARN')
@@ -1767,58 +1777,7 @@ class ImagerParameters():
         returnlist = self.evalToTarget( returnlist, 'gridpars', 'wprojplanes', 'int' )
 #        returnlist = self.evalToTarget( returnlist, 'impars', 'reffreq', 'strvec' )
 
-        ## Extra parsing for a few parameters.
-        ## imsize
-#        try:
-#            for fld in range(0, len( returnlist ) ):
-#                if returnlist[ fld ]['impars'].has_key('imsize'):
-#                    imsize_e = eval( returnlist[ fld ]['impars']['imsize'] )
-#                    returnlist[ fld ]['impars']['imsize'] = imsize_e
-#        except:
-#            print 'Cannot evaluate outlier field parameter "imsize"'
-#        ## nchan
-#        try:
-#            for fld in range(0, len( returnlist ) ):
-#                if returnlist[ fld ]['impars'].has_key('nchan'):
-#                    nchan_e = eval( returnlist[ fld ]['impars']['nchan'] )
-#                    returnlist[ fld ]['impars']['nchan'] = nchan_e
-#        except:
-#            print 'Cannot evaluate outlier field parameter "nchan"'
-#        ## cell
-#        try:
-#            for fld in range(0, len( returnlist ) ):
-#                if returnlist[ fld ]['impars'].has_key('cell'):
-#                    tcell =  returnlist[ fld ]['impars']['cell']
-#                    tcell = tcell.replace(' ','').replace('[','').replace(']','').replace("'","")
-#                    tcells = tcell.split(',')
-#                    cell_e = []
-#                    for cell in tcells:
-#                        cell_e.append( cell )
-#                    returnlist[ fld ]['impars']['cell'] = cell_e
-#        except:
-#            print 'Cannot evaluate outlier field parameter "cell"'
-#        ## nterms (like nchan)
-#        try:
-#            for fld in range(0, len( returnlist ) ):
-#                if returnlist[ fld ]['impars'].has_key('nterms'):
-#                    nterms_e = eval( returnlist[ fld ]['impars']['nterms'] )
-#                    returnlist[ fld ]['impars']['nterms'] = nterms_e
-#        except:
-#            print 'Cannot evaluate outlier field parameter "nterms"'
-#        ## restfreq (like cell)
-#        try:
-#            for fld in range(0, len( returnlist ) ):
-#                if returnlist[ fld ]['impars'].has_key('restfreq'):
-#                    tcell =  returnlist[ fld ]['impars']['restfreq']
-#                    tcell = tcell.replace(' ','').replace('[','').replace(']','').replace("'","")
-#                    tcells = tcell.split(',')
-#                    restfreq_e = []
-#                    for cell in tcells:
-#                        restfreq_e.append( cell )
-#                    returnlist[ fld ]['impars']['restfreq'] = restfreq_e
-#        except:
-#            print 'Cannot evaluate outlier field parameter "restfreq"'
-#
+
         #print returnlist
         return returnlist, errs
 
@@ -1940,6 +1899,19 @@ class ImagerParameters():
 #        print 'Using : ',  newimagenamelist
         return newimagenamelist
 
+    ## Guard against numpy int32,int64 types which don't convert well across tool boundary.
+    ## For CAS-8250. Remove when CAS-6682 is done.
+    def fixIntParam(self, allpars, parname ):
+        for immod in allpars.keys() :
+            if allpars[immod].has_key(parname):
+                ims = allpars[immod][parname]
+                if type(ims) != list:
+                    ims = int(ims)
+                else:
+                    for el in range(0,len(ims)):
+                        ims[el] = int(ims[el])
+                allpars[immod][parname] = ims
+      ############################
 
 import time
 import resource
