@@ -1944,4 +1944,57 @@ class test_startmodel(testref_base):
                              (self.img+'3.residual.tt1',-0.04358,[50,50,0,0]),
                              (self.img+'4.residual.tt1',-0.01519,[50,50,0,0])     ] )
 
-##############################################
+     def test_startmodel_with_mask_mfs(self):
+          """ [startmodel] test_startmodel_with_mask_mfs : Mask out some regions in the startmodel, before prediction """
+          self.prepData("refim_twopoints_twochan.ms")
+          ## image both sources
+          tclean(vis=self.msfile,spw='0:0',imagename=self.img,imsize=200,cell='10.0arcsec',niter=100)
+          ## mask out all but the brightest outlier source
+          ia.open(self.img+'.model')
+          ia.calcmask(mask='"'+self.img+'.model">2.0') # keep only high values. i.e. the far out bright source.
+          ia.close()
+          ## predict only that outlier source
+          tclean(vis=self.msfile,spw='0:0',imagename=self.img+'.2',niter=0,savemodel='modelcolumn',imsize=200,cell='10.0arcsec',startmodel=self.img+'.model')
+          ## subtract it out
+          uvsub(vis=self.msfile)
+          ## image the rest of the field.
+          tclean(vis=self.msfile,spw='0:0',imagename=self.img+'.3',imsize=200,cell='10.0arcsec',niter=100)
+          
+          self.checkall(imexist=[self.img+'.model',self.img+'.2.model',self.img+'.3.model'],
+                        imval=[ (self.img+'.model',1.497,[100,100,0,0]),
+                                (self.img+'.model',7.474,[154,172,0,0]),
+                                (self.img+'.3.model',1.497,[100,100,0,0]), 
+                                (self.img+'.3.model',0.024,[154,172,0,0])   ] )
+          
+     def test_startmodel_with_mask_mtmfs(self):
+          """ [startmodel] test_startmodel_with_mask_mtmfs : Mask out some regions in the startmodel, before prediction """
+          self.prepData("refim_twopoints_twochan.ms")
+          ## image both sources
+          tclean(vis=self.msfile,imagename=self.img,imsize=200,cell='10.0arcsec',niter=100,deconvolver='mtmfs')
+          ## mask out all but the brightest outlier source
+          ia.open(self.img+'.model.tt0')
+          ia.calcmask(mask='"'+self.img+'.model.tt0">2.0') # keep only high values. i.e. the far out bright source.
+          ia.close()
+          ia.open(self.img+'.model.tt1')
+          ia.calcmask(mask='"'+self.img+'.model.tt0">2.0') # keep only high values. i.e. the far out bright source.
+          ia.close()
+          ## predict only that outlier source
+          tclean(vis=self.msfile,imagename=self.img+'.2',niter=0,savemodel='modelcolumn',imsize=200,cell='10.0arcsec',startmodel=[self.img+'.model.tt0',self.img+'.model.tt1'],deconvolver='mtmfs')
+          ## subtract it out
+          uvsub(vis=self.msfile)
+          ## image the rest of the field.
+          tclean(vis=self.msfile,imagename=self.img+'.3',imsize=200,cell='10.0arcsec',niter=100,deconvolver='mtmfs')
+          
+          self.checkall(imexist=[self.img+'.model.tt0',self.img+'.2.model.tt0',self.img+'.3.model.tt0'],
+                        imval=[ 
+                                (self.img+'.model.tt0',1.08,[100,100,0,0]),
+                                (self.img+'.model.tt0',5.56,[154,172,0,0]),
+                                (self.img+'.3.model.tt0',1.108,[100,100,0,0]), 
+                                (self.img+'.3.model.tt0',0.056,[154,172,0,0]),
+                                (self.img+'.model.tt1',-1.057,[100,100,0,0]),
+                                (self.img+'.model.tt1',-5.521,[154,172,0,0]),
+                                (self.img+'.3.model.tt1',-1.099,[100,100,0,0]), 
+                                (self.img+'.3.model.tt1',-0.0904,[154,172,0,0])   ] )
+          
+ ##############################################
+          

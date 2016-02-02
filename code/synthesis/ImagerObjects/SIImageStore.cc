@@ -714,17 +714,71 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     SHARED_PTR<PagedImage<Float> > newmodel( new PagedImage<Float>( modelname ) ); //+String(".model") ) );
 
-    // Check shapes, coordsys with those of other images.  If different, try to re-grid here.
-    if( (newmodel->shape() != model(nterm)->shape()) ||  (! itsCoordSys.near(newmodel->coordinates() )) )
+    Bool hasMask = newmodel->isMasked();
+    
+    if( hasMask )
       {
-	os << "Regridding input model " << modelname << " to target coordinate system for " << itsImageName << ".model" << ((multiterm)?".tt"+String::toString(nterm) :"") << LogIO::POST;
-	regridToModelImage( *newmodel );
-      }
-    else
+	
+	os << "Input startmodel has an internal mask. Setting masked pixels to zero" << LogIO::POST;
+	
+	try {
+	  TempImage<Float> maskmodel( newmodel->shape(), newmodel->coordinates() );
+	  IPosition inshape = newmodel->shape();
+	  for(Int pol=0; pol<inshape[2]; pol++)
+	    {
+	      for(Int chan=0; chan<inshape[3]; chan++)
+		{
+		  IPosition pos(4,0,0,pol,chan);
+		  SHARED_PTR<ImageInterface<Float> > subim=makeSubImage(0,1, 
+									chan, inshape[3],
+									pol, inshape[2], 
+									(*newmodel) );
+		  
+		  SHARED_PTR<ImageInterface<Float> > submaskmodel=makeSubImage(0,1, 
+									       chan, inshape[3],
+									       pol, inshape[2], 
+									       maskmodel );
+		  
+		  ArrayLattice<Bool> pixmask( subim->getMask() );
+		  LatticeExpr<Float> masked( (*subim) * iif(pixmask,1.0,0.0) );
+		  submaskmodel->copyData( masked );
+		}
+	    }
+	  
+	  
+	  // Check shapes, coordsys with those of other images.  If different, try to re-grid here.
+	  if( (newmodel->shape() != model(nterm)->shape()) ||  (! itsCoordSys.near(newmodel->coordinates() )) )
+	    {
+	      os << "Regridding input model " << modelname << " to target coordinate system for " << itsImageName << ".model" << ((multiterm)?".tt"+String::toString(nterm) :"") << LogIO::POST;
+	      regridToModelImage( maskmodel );
+	    }
+	  else
+	    {
+	      os << "Copying input model " << modelname << " to " << itsImageName << ".model" << ((multiterm)?".tt"+String::toString(nterm) :"")  << LogIO::POST;
+	      model(nterm)->copyData( LatticeExpr<Float> (maskmodel) );
+	    }
+	  
+	  
+	} catch (AipsError &x) {
+	  throw(AipsError("Setting masked pixels to zero for input startmodel : "+ x.getMesg()));
+	}
+	
+      }// hasMask
+    else // nomask
       {
-	os << "Copying input model " << modelname << " to " << itsImageName << ".model" << ((multiterm)?".tt"+String::toString(nterm) :"")  << LogIO::POST;
-	model(nterm)->copyData( LatticeExpr<Float> (*newmodel) );
-      }
+	
+	// Check shapes, coordsys with those of other images.  If different, try to re-grid here.
+	if( (newmodel->shape() != model(nterm)->shape()) ||  (! itsCoordSys.near(newmodel->coordinates() )) )
+	  {
+	    os << "Regridding input model " << modelname << " to target coordinate system for " << itsImageName << ".model" << ((multiterm)?".tt"+String::toString(nterm) :"") << LogIO::POST;
+	    regridToModelImage( *newmodel );
+	  }
+	else
+	  {
+	    os << "Copying input model " << modelname << " to " << itsImageName << ".model" << ((multiterm)?".tt"+String::toString(nterm) :"")  << LogIO::POST;
+	    model(nterm)->copyData( LatticeExpr<Float> (*newmodel) );
+	  }
+      }//nomask
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2378,6 +2432,7 @@ void SIImageStore::regridToModelImage( ImageInterface<Float> &inputimage, Int te
 	axes(0) = dirAxes(0); 
 	axes(1) = dirAxes(1);
 	axes(2) = CoordinateUtil::findSpectralAxis(incsys);
+	
 	try {
 	  ImageRegrid<Float> imregrid;
 	  imregrid.regrid( *(model(term)), Interpolate2D::LINEAR, axes, inputimage ); 
