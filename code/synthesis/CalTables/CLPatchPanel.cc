@@ -807,19 +807,37 @@ CLPatchPanel::CLPatchPanel(const String& ctname,
     ++icls;
 
     // The current callib slice
-    CalLibSlice cls(callib.asRecord(icls),ms,ct_);
+    CalLibSlice cls(callib.asRecord(icls),ms_,ct_);
 
-    logsink_ << LogIO::NORMAL << ".   " << icls << ":" << endl
-	     << cls.state() << LogIO::POST;
-    
     // Apply callib instance MS selection to the incoming (selected MS)
     MeasurementSet clsms(ms_);
-    this->selectOnMS(clsms,ms_,cls.obs,cls.fld,cls.ent,cls.spw,"");
+
+    // Trap Null selection exceptions, as they are not needed downstream
+    try {
+      this->selectOnMS(clsms,ms_,cls.obs,cls.fld,cls.ent,cls.spw,"");
+    }
+    catch ( MSSelectionNullSelection x ) {
+
+      // Warn in logger that this slice doesn't match anything
+      //  in the selected MS
+      String msname=Path(ms_.tableName()).baseName();
+      logsink_ << LogIO::WARN 
+	       << ".   The following callib entry matches no data" << endl
+	       << ".   in the selected MS ("+msname+") and will be ignored:" << endl
+	       << ".   " << icls << ":" << endl
+	       << cls.state() << LogIO::POST;
+
+      // Just jump to next slice (cal maps for this MS selection unneeded)
+      continue;
+    }
+
+    // Report this relevant cal lib slice to the logger
+    logsink_ << LogIO::NORMAL << ".   " << icls << ":" << endl
+	     << cls.state() << LogIO::POST;
 
     // The intent list from the callib instance, to be used to index the msci_
     Vector<Int> theseMSint(1,-1);  // Details TBD
     //    cout << "theseMSint = " << theseMSint << endl;
-
 
     // What MS indices will be calibrated by this CL instance?
 
