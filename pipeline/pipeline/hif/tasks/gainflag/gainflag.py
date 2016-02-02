@@ -35,28 +35,6 @@ class GainflagInputs(commoncalinputs.CommonCalibrationInputs):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
         
-        # Convert metric order string to list
-        metric_list = [metric.strip() for metric in self.metric_order.split(',')]
-        
-        # Initialize ordered list of metrics to evaluate
-        self.metrics_to_evaluate = []
-        
-        # Convert requested flagging metrics to ordered list
-        for metric in metric_list:
-            if metric == 'mediandeviant' and self.flag_mediandeviant:
-                self.metrics_to_evaluate.append(metric)
-            if metric == 'rmsdeviant' and self.flag_rmsdeviant:
-                self.metrics_to_evaluate.append(metric)
-
-        # Collect requested flagging metrics that were not specified in
-        # ordered metric lists, append them to end of list, and raise a warning.
-        if self.flag_mediandeviant and 'mediandeviant' not in metric_list:
-            LOG.warning('mediandeviant flagging metric requested but missing from order in which to evaluate metrics; appending metric to end.')
-            self.metrics_to_evaluate.append('mediandeviant')
-        if self.flag_rmsdeviant and 'rmsdeviant' not in metric_list:
-            LOG.warning('rmsdeviant flagging metric requested but missing from order in which to evaluate metrics; appending metric to end.')
-            self.metrics_to_evaluate.append('rmsdeviant')
-
     @property
     def intent(self):
         if type(self.vis) is types.ListType:
@@ -145,12 +123,35 @@ class Gainflag(basetask.StandardTaskTemplate):
     def prepare(self):
         inputs = self.inputs
         
-        # Initialize result and store vis in result
+        # Initialize ordered list of metrics to evaluate
+        metrics_to_evaluate = []
+        
+        # Convert metric order string to list
+        metric_list = [metric.strip() for metric in inputs.metric_order.split(',')]
+        
+        # Convert requested flagging metrics to ordered list
+        for metric in metric_list:
+            if metric == 'mediandeviant' and inputs.flag_mediandeviant:
+                metrics_to_evaluate.append(metric)
+            if metric == 'rmsdeviant' and inputs.flag_rmsdeviant:
+                metrics_to_evaluate.append(metric)
+
+        # Collect requested flagging metrics that were not specified in
+        # ordered metric lists, append them to end of list, and raise a warning.
+        if inputs.flag_mediandeviant and 'mediandeviant' not in metric_list:
+            LOG.warning('mediandeviant flagging metric requested but not specified in the definition of the order-in-which-to-evaluate-metrics; appending metric to the end.')
+            metrics_to_evaluate.append('mediandeviant')
+        if inputs.flag_rmsdeviant and 'rmsdeviant' not in metric_list:
+            LOG.warning('rmsdeviant flagging metric requested but not specified in the definition of the order-in-which-to-evaluate-metrics; appending metric to the end.')
+            metrics_to_evaluate.append('rmsdeviant')
+
+        # Initialize result and store vis and order of metrics in result
         result = GainflagResults()
         result.vis = inputs.vis
-
+        result.metric_order = metrics_to_evaluate
+        
         # Run flagger for each metric
-        for metric in inputs.metrics_to_evaluate:            
+        for metric in metrics_to_evaluate:            
             LOG.info('Running Gainflagger for metric: {0}'.format(metric))
             
             if metric == 'mediandeviant':
@@ -172,15 +173,12 @@ class Gainflag(basetask.StandardTaskTemplate):
             result.add(metric, self._executor.execute(flaggertask))
 
         # Extract before and after flagging summaries from individual results:
-        stats_before = result.components[inputs.metrics_to_evaluate[0]].summaries[0]
-        stats_after = result.components[inputs.metrics_to_evaluate[-1]].summaries[-1]
+        stats_before = result.components[metrics_to_evaluate[0]].summaries[0]
+        stats_after = result.components[metrics_to_evaluate[-1]].summaries[-1]
         
         # Add the "before" and "after" flagging summaries to the final result
         result.summaries = [stats_before, stats_after]
 
-        # Store order of metrics in result
-        result.metric_order = inputs.metrics_to_evaluate
-                    
         return result
     
     

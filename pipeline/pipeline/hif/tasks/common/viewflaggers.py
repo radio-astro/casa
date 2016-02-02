@@ -833,7 +833,7 @@ class NewMatrixFlaggerResults(basetask.Results,
 
 
 class NewMatrixFlagger(basetask.StandardTaskTemplate):
-    Inputs = MatrixFlaggerInputs
+    Inputs = NewMatrixFlaggerInputs
 
     flag_reason_index = {'max abs':1,
                          'min abs':2,
