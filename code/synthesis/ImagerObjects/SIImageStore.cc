@@ -56,6 +56,7 @@
 #include <synthesis/ImagerObjects/SynthesisUtilMethods.h>
 #include <images/Images/ImageRegrid.h>
 
+//#include <imageanalysis/ImageAnalysis/ImageMaskedPixelReplacer.h>
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -714,7 +715,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     SHARED_PTR<PagedImage<Float> > newmodel( new PagedImage<Float>( modelname ) ); //+String(".model") ) );
 
-    Bool hasMask = newmodel->isMasked();
+    Bool hasMask = newmodel->isMasked(); /// || newmodel->hasPixelMask() ;
     
     if( hasMask )
       {
@@ -722,6 +723,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	os << "Input startmodel has an internal mask. Setting masked pixels to zero" << LogIO::POST;
 	
 	try {
+
+	  ////// Neat function to replace masked pixels, but it will do it in-place.
+          ////// We need to not modify the input model on disk, but apply the mask only OTF before
+          //////  regridding to the target image,.
+	  //	  ImageMaskedPixelReplacer<Float> impr( newmodel, 0, "" );
+	  //	  impr.replace("0", False, False );
+
+	  
 	  TempImage<Float> maskmodel( newmodel->shape(), newmodel->coordinates() );
 	  IPosition inshape = newmodel->shape();
 	  for(Int pol=0; pol<inshape[2]; pol++)
@@ -746,6 +755,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    }
 	  
 	  
+
 	  // Check shapes, coordsys with those of other images.  If different, try to re-grid here.
 	  if( (newmodel->shape() != model(nterm)->shape()) ||  (! itsCoordSys.near(newmodel->coordinates() )) )
 	    {
