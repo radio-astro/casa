@@ -121,7 +121,7 @@ public:
   }
 
   // for DataAccumulator
-  virtual Bool getData(size_t irow, TableRecord &record);
+  virtual Bool getData(size_t irow, DataRecord &record);
 
 protected:
   void initializeSpecific();

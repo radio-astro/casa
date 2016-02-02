@@ -19,6 +19,7 @@
 #include <singledish/Filler/SpectralWindowRecord.h>
 #include <singledish/Filler/SysCalRecord.h>
 #include <singledish/Filler/WeatherRecord.h>
+#include <singledish/Filler/DataRecord.h>
 
 // casacore includes
 #include <casacore/casa/Containers/Record.h>
@@ -118,7 +119,7 @@ public:
   virtual Bool getWeatherRow(WeatherRecord &row) = 0;
 
   // for DataAccumulator
-  virtual Bool getData(size_t irow, TableRecord &record) = 0;
+  virtual Bool getData(size_t irow, DataRecord &record) = 0;
 
 protected:
   virtual void initializeSpecific() = 0;

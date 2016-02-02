@@ -374,7 +374,7 @@ struct FloatDataStorage {
       "OBSERVE_TARGET#OFF_SOURCE" };
   String const field_name_[2] = { "MyField", "AnotherField" };
   String const source_name_[2] = { "M78", "HLTau" };
-  Bool getData(size_t irow, TableRecord &record) {
+  Bool getData(size_t irow, DataRecord &record) {
     POST_START;
 
     size_t const n = kNumRow;
@@ -394,31 +394,31 @@ struct FloatDataStorage {
 //    std::cout << "    index for time, state, and scan" << index << std::endl;
     if (2ul <= index)
       return false;;
-    record.define("TIME", time_[index]);
-    record.define("INTENT", intent_[index]);
-    record.define("SCAN", scan_[index]);
-    record.define("SUBSCAN", subscan_[index]);
+    record.time = time_[index];
+    record.intent = intent_[index];
+    record.scan = scan_[index];
+    record.subscan = subscan_[index];
 
     index = (irow / (n / 4)) % 2;
 //    std::cout << "    index for field " << index << std::endl;
     if (2ul <= index)
       return false;;
-    record.define("FIELD_ID", field_[index]);
-    record.define("FIELD_NAME", field_name_[index]);
-    record.define("SOURCE_NAME", source_name_[index]);
-    record.define("ANTENNA_ID", antenna_[index]);
+    record.field_id = field_[index];
+//    record.field_name = field_name_[index]);
+//    record.define("SOURCE_NAME", source_name_[index]);
+    record.antenna_id = antenna_[index];
     static Matrix<Double> direction(2, 1);
     direction(0, 0) = ra_[index];
     direction(1, 0) = dec_[index];
-    record.define("DIRECTION", direction);
-    Int antenna_id = antenna_[index];
+    record.direction = direction;
+    Int &antenna_id = record.antenna_id;
 
     index = (irow / (n / 8)) % 2;
 //    std::cout << "    index for feed " << index << std::endl;
     if (2ul <= index)
       return false;;
-    record.define("FEED_ID", feed_[index]);
-    Int feed_id = feed_[index];
+    record.feed_id = feed_[index];
+    Int &feed_id = record.feed_id;
 
     if (irow % 3 == 2) {
       index = 1;
@@ -429,7 +429,7 @@ struct FloatDataStorage {
     if (2ul <= index)
       return false;;
     size_t const num_chan = num_chan_[index];
-    record.define("SPECTRAL_WINDOW_ID", spw_[index]);
+    record.spw_id = spw_[index];
     Int num_chan_tsys = 0;
     if (feed_id == 0) {
       num_chan_tsys = 1;
@@ -446,21 +446,21 @@ struct FloatDataStorage {
 //    std::cout << "    index for pol " << index << std::endl;
     if (2ul <= index)
       return false;;
-    record.define("POLNO", (Int) index);
+    record.polno = index;
     tsys_value *= (Float)(index + 1) * 100.0f;
 
-    record.define("POL_TYPE", "linear");
+    record.pol_type = "linear";
 
     Vector < Float > data(num_chan, (Float) irow);
     Vector < Bool > flag(num_chan, False);
     Bool flag_row = False;
-    record.define("DATA", data);
-    record.define("FLAG", flag);
-    record.define("FLAG_ROW", flag_row);
-    record.define("INTERVAL", 10.0);
+    record.data.assign(data);
+    record.flag.assign(flag);
+    record.flag_row = flag_row;
+    record.interval = 10.0;
 
     Vector < Float > tsys(num_chan_tsys, tsys_value);
-    record.define("TSYS", tsys);
+    record.tsys.assign(tsys);
 
     POST_END;
 
@@ -584,13 +584,12 @@ public:
   }
 
   // for DataAccumulator
-  virtual Bool getData(size_t irow, TableRecord &record) {
+  virtual Bool getData(size_t irow, DataRecord &record) {
     POST_START;
 
     Bool status = storage_.getData(irow, record);
 
-    String key = "ROW" + String::toString(irow);
-    main_record_.defineRecord(key, record);
+    main_record_[irow] = record;
 
     POST_END;
     return status;
@@ -604,7 +603,7 @@ public:
   std::map<uInt, FieldRecord> field_record_;
   std::map<uInt, SpectralWindowRecord> spw_record_;
   std::map<uInt, WeatherRecord> weather_record_;
-  TableRecord main_record_;
+  std::map<uInt, DataRecord> main_record_;
 
 protected:
   void initializeSpecific() {

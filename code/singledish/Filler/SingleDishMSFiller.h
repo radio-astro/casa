@@ -186,21 +186,23 @@ private:
 
     size_t nrow = reader_->getNumberOfRows();
     DataAccumulator accumulator;
-    TableRecord record;
-    TableRecord previous_record;
+    DataRecord record;
+    DataRecord previous_record;
 //    std::cout << "nrow = " << nrow << std::endl;
     for (size_t irow = 0; irow < nrow; ++irow) {
       Bool status = reader_->getData(irow, record);
 //      std::cout << "irow " << irow << " status " << status << std::endl;
-//      std::cout << "   TIME=" << record.asDouble("TIME") << " INTERVAL="
-//          << record.asDouble("INTERVAL") << std::endl;
+//      std::cout << "   TIME=" << record.time << " INTERVAL=" << record.interval
+//          << std::endl;
+//      std::cout << "status = " << status << std::endl;
       if (status) {
         Bool is_ready = accumulator.queryForGet(record);
         if (is_ready) {
           flush(previous_record, accumulator);
         }
-        accumulator.accumulate(record);
-        previous_record.merge(record, TableRecord::OverwriteDuplicates);
+        Bool astatus = accumulator.accumulate(record);
+//        std::cout << "astatus = " << astatus << std::endl;
+        previous_record = record;
       }
     }
 
@@ -209,7 +211,7 @@ private:
     POST_END;
   }
 
-  void flush(TableRecord const &main_record, DataAccumulator &accumulator) {
+  void flush(DataRecord const &main_record, DataAccumulator &accumulator) {
     POST_START;
 
     size_t nchunk = accumulator.getNumberOfChunks();
@@ -218,7 +220,7 @@ private:
       return;
     }
 
-    Double time = main_record.asDouble("TIME");
+    Double time = main_record.time;
 
     for (size_t ichunk = 0; ichunk < nchunk; ++ichunk) {
       TableRecord data_record;

@@ -41,6 +41,7 @@ install (FILES
 
 install (FILES
     Filler/AntennaRecord.h
+    Filler/DataRecord.h
     Filler/FieldRecord.h
     Filler/ObservationRecord.h
     Filler/ProcessorRecord.h

@@ -282,7 +282,7 @@ Bool Scantable2MSReader::getWeatherRowImpl(WeatherRecord &record) {
   return getRowImplTemplate(weather_iter_, record, get_weather_row_);
 }
 
-Bool Scantable2MSReader::getData(size_t irow, TableRecord &record) {
+Bool Scantable2MSReader::getData(size_t irow, DataRecord &record) {
 //  std::cout << "Scantable2MSReader::getData(irow=" << irow << ")" << std::endl;
 
   if (irow >= main_table_->nrow()) {
@@ -293,35 +293,38 @@ Bool Scantable2MSReader::getData(size_t irow, TableRecord &record) {
   uInt index = sorted_rows_[irow];
 //  std::cout << "Accessing row " << index << std::endl;
 
-  record.define("TIME", time_column_(index) * kDay2Sec);
-  record.define("INTERVAL", interval_column_(index));
+  record.time = time_column_(index) * kDay2Sec;
+  record.interval = interval_column_(index);
 //  std::cout << "TIME=" << record.asDouble("TIME") << " INTERVAL="
 //      << record.asDouble("INTERVAL") << std::endl;
-  String intent = getIntent(srctype_column_(index));
-  record.define("INTENT", intent);
-  record.define("SCAN", (Int) scan_column_(index));
-  record.define("SUBSCAN", (Int) cycle_column_(index));
+  record.intent = getIntent(srctype_column_(index));
+  record.scan = (Int) scan_column_(index);
+  record.subscan = (Int) cycle_column_(index);
   String field_name = fieldname_column_(index);
-  record.define("FIELD_ID", field_map_[field_name]);
-  record.define("ANTENNA_ID", (Int) 0);
-  record.define("DIRECTION", direction_column_(index));
-  record.define("FEED_ID", beam_column_(index));
-  record.define("SPECTRAL_WINDOW_ID", ifno_column_(index));
-  record.define("POLNO", polno_column_(index));
-  record.define("POL_TYPE", main_table_->keywordSet().asString("POLTYPE"));
-  record.define("DATA", data_column_(index));
+  record.field_id = field_map_[field_name];
+  record.antenna_id = (Int) 0;
+  if (record.direction.empty()) {
+    record.direction.resize(2, 1);
+  }
+  Vector<Double> direction = direction_column_(index);
+  record.direction.column(0) = direction;
+  record.feed_id = (Int)beam_column_(index);
+  record.spw_id = (Int)ifno_column_(index);
+  record.polno = polno_column_(index);
+  record.pol_type = main_table_->keywordSet().asString("POLTYPE");
+  record.data.assign(data_column_(index));
   Vector < uChar > flag = flag_column_(index);
   Vector < Bool > bflag(flag.shape(), False);
   convertArray(bflag, flag);
-  record.define("FLAG", bflag);
+  record.flag.assign(bflag);
   uInt flagrow = flagrow_column_(index);
   Bool bflagrow = (flagrow != 0);
-  record.define("FLAG_ROW", bflagrow);
+  record.flag_row = bflagrow;
 
   if (tsys_column_.isDefined(index)) {
     Vector<Float> tsys = tsys_column_(index);
     if (!allEQ(tsys, 1.0f) || !allEQ(tsys, 0.0f)) {
-      record.define("TSYS", tsys);
+      record.tsys.assign(tsys);
     }
   }
 
@@ -331,7 +334,7 @@ Bool Scantable2MSReader::getData(size_t irow, TableRecord &record) {
     ArrayColumn<Float> tcal_column(t, "TCAL");
     Vector<Float> tcal = tcal_column(0);
     if (!allEQ(tcal, 1.0f) || !allEQ(tcal, 0.0f)) {
-      record.define("TCAL", tcal);
+      record.tcal.assign(tcal);
     }
   }
   return True;

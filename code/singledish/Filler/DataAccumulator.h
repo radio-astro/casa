@@ -8,6 +8,8 @@
 #ifndef SINGLEDISH_FILLER_DATAACCUMULATOR_H_
 #define SINGLEDISH_FILLER_DATAACCUMULATOR_H_
 
+#include <singledish/Filler/DataRecord.h>
+
 #include <vector>
 #include <cassert>
 #include <memory>
@@ -96,37 +98,37 @@ public:
     return true;
   }
 
-  bool accumulate(TableRecord const &record) {
+  bool accumulate(DataRecord const &record) {
     POST_START;
 
     if (!isValidRecord(record)) {
       return false;
     }
 
-    uInt polid = record.asuInt("POLNO");
+    uInt polid = record.polno;
 
     if (num_pol_max_ <= polid) {
       return false;
     }
-    Vector < Float > data = record.asArrayFloat("DATA");
+    Vector<Float> const &data = record.data;
     if (num_chan_ == 0) {
       size_t num_chan = data.size();
       initialize(num_chan);
     }
-    Vector < Bool > flag = record.asArrayBool("FLAG");
-    Bool flagrow = record.asBool("FLAG_ROW");
+    Vector<Bool> const &flag = record.flag;
+    Bool flagrow = record.flag_row;
 
     if (data.shape() != flag.shape()) {
       return false;
     }
 
     Vector < Float > tsys;
-    if (record.isDefined("TSYS")) {
-      tsys.assign(record.asArrayFloat("TSYS"));
+    if (!record.tsys.empty()) {
+      tsys.assign(record.tsys);
     }
     Vector < Float > tcal;
-    if (record.isDefined("TCAL")) {
-      tcal.assign(record.asArrayFloat("TCAL"));
+    if (!record.tcal.empty()) {
+      tcal.assign(record.tcal);
     }
 
     if (data.nelements() != num_chan_) {
@@ -193,15 +195,8 @@ private:
   bool judgePol(unsigned char const pol) const {
     return (filled_ & pol) == pol;
   }
-  bool isValidRecord(TableRecord const &record) {
-    bool is_valid = true;
-    constexpr size_t num_required_keys = 4;
-    constexpr const char *required_keys[] = { "POLNO", "DATA", "FLAG",
-        "FLAG_ROW" };
-    for (size_t i = 0; i < num_required_keys; ++i) {
-      is_valid = is_valid && record.isDefined(required_keys[i]);
-    }
-    return is_valid;
+  bool isValidRecord(DataRecord const &record) {
+    return !record.data.empty() && !record.flag.empty();
   }
   void setPolType(String const &poltype) {
     POST_START;
@@ -659,8 +654,8 @@ public:
     });
   }
 
-  bool queryForGet(TableRecord const &record) const {
-    Double const time = record.asDouble("TIME");
+  bool queryForGet(DataRecord const &record) const {
+    Double const time = record.time;
     bool is_ready = (0.0 <= time_) && !(time_ == time);
     return is_ready;
   }
@@ -717,33 +712,35 @@ public:
     return status;
   }
 
-  bool accumulate(TableRecord const &record) {
+  bool accumulate(DataRecord const &record) {
     POST_START;
 
     if (!isValidRecord(record)) {
+//      std::cout << "record is not a valid one" << std::endl;
       return false;
     }
 
-    Double time = record.asDouble("TIME");
+    Double time = record.time;
     if (time_ < 0.0) {
       time_ = time;
     }
     if (time_ != time) {
+//      std::cout << "timestamp mismatch" << std::endl;
       return false;
     }
-    Int antennaid = record.asInt("ANTENNA_ID");
-    Int spwid = record.asInt("SPECTRAL_WINDOW_ID");
-    Int fieldid = record.asInt("FIELD_ID");
-    Int feedid = record.asInt("FEED_ID");
-    Int scan = record.asInt("SCAN");
-    Int subscan = record.asInt("SUBSCAN");
-    String intent = record.asString("INTENT");
-    String poltype = record.asString("POL_TYPE");
+    Int antennaid = record.antenna_id;
+    Int spwid = record.spw_id;
+    Int fieldid = record.field_id;
+    Int feedid = record.feed_id;
+    Int scan = record.scan;
+    Int subscan = record.subscan;
+    String intent = record.intent;
+    String poltype = record.pol_type;
     String key = "ANTENNA" + String::toString(antennaid) + "SPW"
         + String::toString(spwid) + "FIELD" + String::toString(fieldid) + "FEED"
         + String::toString(feedid) + intent + poltype;
-    Matrix < Double > direction = record.asArrayDouble("DIRECTION");
-    Double interval = record.asDouble("INTERVAL");
+    Matrix < Double > direction = record.direction;
+    Double interval = record.interval;
     bool status = false;
     if (indexer_.isDefined(key)) {
       uInt index = indexer_.asuInt(key);
@@ -804,16 +801,14 @@ public:
   }
 
 private:
-  bool isValidRecord(TableRecord const &record) {
-    constexpr size_t num_required_keys = 11;
-    constexpr const char *required_keys[num_required_keys] = { "TIME",
-        "ANTENNA_ID", "FIELD_ID", "SPECTRAL_WINDOW_ID", "FEED_ID", "SCAN",
-        "SUBSCAN", "INTENT", "POL_TYPE", "DIRECTION", "INTERVAL" };
-    bool is_valid = true;
-    for (size_t i = 0; i < num_required_keys; ++i) {
-      is_valid = is_valid && record.isDefined(required_keys[i]);
-    }
-    return is_valid;
+  bool isValidRecord(DataRecord const &record) {
+//    std::cout << record.time << " " << record.interval << " "
+//        << record.antenna_id << " " << record.field_id << " " << record.feed_id
+//        << " " << record.spw_id << " " << record.scan << " " << record.subscan
+//        << " " << record.direction << std::endl;
+    return record.time > 0.0 && record.interval > 0.0 && record.antenna_id >= 0
+        && record.field_id >= 0 && record.feed_id >= 0 && record.spw_id >= 0
+        && record.scan >= 0 && record.subscan >= 0 && !record.direction.empty();
   }
   std::vector<DataChunk *> pool_;
   std::vector<Int> antenna_id_;
