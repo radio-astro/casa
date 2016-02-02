@@ -353,16 +353,49 @@ logsink::logfile()
 }
 
 int
-logsink::ompNumThread()
+logsink::ompNumThreadsTest()
 {
-	Int num_thread(0);
+	Int num_thread(-1);
 
-#ifdef _OPENMP
-	#pragma omp parallel reduction( + : num_thread )
-	num_thread = num_thread + 1;
-#endif
+	#ifdef _OPENMP
+		num_thread = 0;
+		#pragma omp parallel reduction( + : num_thread )
+		{
+			num_thread = num_thread + 1;
+		}
+	#endif
 
 	return num_thread;
+}
+
+int
+logsink::ompGetNumThreads()
+{
+	Int num_threads(-1);
+
+	#ifdef _OPENMP
+		#pragma omp parallel
+		{
+			#pragma omp master
+			{
+				num_threads = omp_get_num_threads();
+			}
+		}
+	#endif
+
+	return num_threads;
+}
+
+bool
+logsink::ompSetNumThreads(int numThreads)
+{
+	Int res(True);
+
+	#ifdef _OPENMP
+		omp_set_num_threads(numThreads);
+	#endif
+
+	return res;
 }
 
 

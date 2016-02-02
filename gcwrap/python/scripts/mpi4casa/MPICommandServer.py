@@ -25,9 +25,6 @@ import tempfile
 import uuid
 import os
 
-# To handle OMP settings
-import ctypes
-
 
 class MPICommandServer: 
     
@@ -96,10 +93,6 @@ class MPICommandServer:
             # Automatically start services
             if start_services:
                 self.start_services()
-                
-            # Load OpenMP lib
-            ctypes.CDLL('libgomp.so.1')
-            self.__omp = ctypes.CDLL('libgomp.so.1')
                 
 
         ################################################################################################################            
@@ -354,28 +347,28 @@ class MPICommandServer:
             self.__xauthfile.close()
             
             
-        def omp_set_num_threads(self,omp_max_threads):
+        def omp_set_num_threads(self,omp_num_threads):
             
             casalog_call_origin = "MPICommandServer::omp_set_num_threads"
 
             try:
-                current_omp_max_threads = self.__omp.omp_get_max_threads()
-                casalog.post("Changing OMP max number of threads from %s to %s" 
-                             % (str(current_omp_max_threads),str(omp_max_threads)),
+                current_omp_num_threads = casalog.ompGetNumThreads()
+                casalog.post("Changing OpenMP number of threads from %s to %s" 
+                             % (str(current_omp_num_threads),str(omp_num_threads)),
                              "INFO",casalog_call_origin)
-                self.__omp.omp_set_num_threads(omp_max_threads)
-                current_omp_max_threads = self.__omp.omp_get_max_threads()
-                if current_omp_max_threads == omp_max_threads:
-                    casalog.post("OMP max number of threads successfully set to %s" 
-                                 % str(current_omp_max_threads),
+                casalog.ompSetNumThreads(omp_num_threads)
+                current_omp_num_threads = casalog.ompGetNumThreads()
+                if current_omp_num_threads == omp_num_threads:
+                    casalog.post("OpenMP number of threads successfully set to %s" 
+                                 % str(current_omp_num_threads),
                                  "INFO",casalog_call_origin)
                 else:
-                    casalog.post("Error changing OMP max number of threads, returned setting is %s" 
-                                 % str(current_omp_max_threads),
+                    casalog.post("Error changing OpenMP number of threads, returned setting is %s" 
+                                 % str(current_omp_num_threads),
                                  "SEVERE",casalog_call_origin)
             except:           
                 formatted_traceback = traceback.format_exc()
-                casalog.post("Exception Changing OMP max number of threads: %s" % 
+                casalog.post("Exception Changing OpenMP number of threads: %s" % 
                              str(formatted_traceback),"SEVERE",casalog_call_origin)
                 
             

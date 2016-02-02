@@ -218,11 +218,28 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 
 </method>
 
-<method type="function" name="ompNumThread">
-  <shortdescription>Returns the number of active OpenMP threads</shortdescription>
+<method type="function" name="ompNumThreadsTest">
+  <shortdescription>Determines the number of OpenMP threads in the current parallel region using an OpenMP reduction pragma</shortdescription>
   <input/>
   <returns type="int"/>
-  <example>omp_num_thread = casalog.ompNumThread()</example>
+  <example>omp_num_thread = casalog.ompNumThreadsTest()</example>
+</method>
+
+<method type="function" name="ompGetNumThreads">
+  <shortdescription>Returns the number of OpenMP threads in the current parallel region</shortdescription>
+  <returns type="int"/>
+  <example>omp_num_thread = casalog.ompNumThreadsTest()</example>
+</method>
+
+<method type="function" name="ompSetNumThreads">
+  <shortdescription>Specifies the number of OpenMP threads used by default in subsequent parallel regions</shortdescription> 
+  <input>
+  	<param type="int" direction="in" name="numThreads">
+  		<value>1</value>
+  	</param>
+  </input>  
+  <returns type="bool"/>
+  <example>casalog.ompSetNumThreads(2)</example>
 </method>
 
 </tool>
