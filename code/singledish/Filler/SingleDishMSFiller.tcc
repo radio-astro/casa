@@ -487,6 +487,7 @@ Int SingleDishMSFiller<T>::updateFeed(Int const &feed_id, Int const &spw_id,
   Vector<String> const linear_type(linear_type_arr, 2, SHARE);
   String const circular_type_arr[2] = { "R", "L" };
   Vector<String> const circular_type(circular_type_arr, 2, SHARE);
+  Matrix<Complex> pol_response(num_receptors, num_receptors, Complex(0));
   Vector < String > polarization_type(2);
   if (pol_type == "linear") {
     polarization_type.reference(linear_type);
@@ -515,6 +516,7 @@ Int SingleDishMSFiller<T>::updateFeed(Int const &feed_id, Int const &spw_id,
       columns.beamOffset().put(i, beam_offset);
       columns.receptorAngle().put(i, receptor_angle);
       columns.position().put(i, position);
+      columns.polResponse().put(i, pol_response);
     };
   Int feed_row = ::updateTable(mytable, mycolumns, comparer, updater);
 
