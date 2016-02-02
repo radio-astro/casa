@@ -100,12 +100,58 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // Translated from gcwrap/scripts/cleanhelper.py : getOptimumSize
   Int SynthesisUtilMethods::getOptimumSize(const Int npix)
   {
-    return npix;
+    Int n=npix;
+
+    if( n%2 !=0 ){ n+= 1; }
+
+    Vector<Int> fac = primeFactors(n, False);
+    Int val, newlarge;
+    for( uInt k=0; k< fac.nelements(); k++ )
+      {
+	if( fac[k]>7 )
+	  {
+	    val = fac[k];
+	    while( max( primeFactors(val) ) > 7 ){ val+=1;}
+	    fac[k] = val;
+	  }
+      }
+    newlarge=product(fac);
+    for( Int k=n; k<newlarge; k+=2 )
+      {
+	if( max( primeFactors(k) ) < 8 ) {return k;}
+      }
+    return newlarge;
   }
 
+  // Return the prime factors of the given number
   Vector<Int> SynthesisUtilMethods::primeFactors(uInt /*n*/, Bool /*douniq*/)
   {
-    return Vector<Int>();
+    Vector<Int> factors;
+    /*
+    Int lastresult = n;
+    Int sqlast = int(sqrt(n))+1;
+   
+    if(n==1){ factors.resize(1);factors[0]=1;return factors;}
+    Int c=2;
+    while(1)
+      {
+	if( lastresult == 1 || c > sqlast ) { break; }
+	sqlast = (Int)(sqrt(lastresult))+1;
+	while(1)
+	  {
+	    if( c>sqlast){ c=lastresult; break; }
+	    if( lastresult % c == 0 ) { break; }
+	    c += 1;
+	  }
+	factors.resize( factors.nelements()+1, True );
+	factors[ factors.nelements()-1 ] = c;
+	lastresult /= c;
+      }
+    if( factors.nelements()==0 ) { factors.resize(1);factors[0]=n; }
+
+    if( douniq ) { factors = unique(factors); }
+*/
+    return factors;
   }
 
 
@@ -1021,6 +1067,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      }
 	    else // Wrong data type
 	      { err += "imsize must be either a single integer, or a vector of two integers\n";   }
+
 	  }//imsize
 	
 	//// cellsize
@@ -1586,6 +1633,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
       }
 
+    /// Check imsize for efficiency.
+    /*    Int imxnew = getOptimumSize( imsize[0] );
+    Int imynew = getOptimumSize( imsize[1] );
+    
+    if( imxnew != imsize[0] ) {err += "imsize with "+String::toString(imsize[0])+" pixels is not an efficient imagesize. Try "+String::toString(imxnew)+" instead.";}
+    if( imynew != imsize[1] ) {err += "imsize with "+String::toString(imsize[1])+" pixels is not an efficient imagesize. Try "+String::toString(imynew)+" instead.";}
+    */
 
 	return err;
   }
