@@ -2,8 +2,8 @@ from __future__ import absolute_import
 import collections
 import copy
 import itertools
+import operator
 import os
-import re
 import string
 import types
 import weakref
@@ -636,6 +636,19 @@ class CalState(collections.defaultdict):
 
     def __init__(self, default_factory=_ms_dim):
         super(CalState, self).__init__(default_factory)
+        self._removed = []
+
+    def global_remove(self, calfrom):
+        """
+        Mark a CalFrom as being removed from the calibration state. Rather than
+        iterating through the registered calibrations, this adds the CalFrom to
+        a list of object to be ignored. When the calibrations are subsequently
+        inspected, CalFroms marked as removed will be bypassed.
+
+        :param calfrom: the CalFrom to remove
+        :return:
+        """
+        self._removed.append(calfrom)
 
     def get_caltable(self, caltypes=None):
         """
@@ -664,20 +677,20 @@ class CalState(collections.defaultdict):
         
     @staticmethod
     def dictify(dd):
-        '''
+        """
         Get a standard dictionary of the items in the tree.
-        '''
+        """
         return dict([(k, (CalState.dictify(v) if isinstance(v, dict) else v))
                      for (k, v) in dd.items()])
 
     def merged(self, hide_empty=False):
         hashes = {}
         flattened = self._flattened(hide_empty=hide_empty)
-        for (calto_tup, calfrom) in flattened.iteritems():
+        for (calto_tup, calfrom) in flattened:
             # create a tuple, as lists are not hashable
             calfrom_hash = tuple([hash(cf) for cf in calfrom])
             if calfrom_hash not in hashes:
-                LOG.trace('Creating new CalFrom hash for %s' % calfrom)
+                LOG.trace('Creating new CalFrom hash for %s', calfrom)
                 calto_args = CalToArgs(*[[x,] for x in calto_tup])
                 hashes[calfrom_hash] = (calto_args, calfrom)
             else:
@@ -706,29 +719,15 @@ class CalState(collections.defaultdict):
     def _commafy(self, l=[]):
         return ','.join([str(i) for i in l])
 
-    def _flattened(self, keyReducer=lambda a,b:a+b, keyLift=lambda x:(x,),
-                   init=(), hide_empty=True):
-        def _flattenIter(pairs, _keyAccum=init):
-            atoms = ((k,v) for k,v in pairs if not isinstance(v, collections.Mapping))
-            submaps = ((k,v) for k,v in pairs if isinstance(v, collections.Mapping))
-            def compress(k):
-                return keyReducer(_keyAccum, keyLift(k))
-            return itertools.chain(
-                (
-                    (compress(k),v) for k,v in atoms
-                ),
-                *[
-                    _flattenIter(submap.items(), compress(k))
-                    for k,submap in submaps
-                ]
-            )
+    def _flattened(self, hide_empty=True):
+        active = ((ct_tuple, [cf for cf in cf_list if cf not in self._removed])
+                  for (ct_tuple, cf_list) in utils.flatten_dict(self))
 
-        flat = dict(_flattenIter(self.items()))
-        
         if hide_empty:
-            return dict([(k, v) for (k, v) in flat.items() 
-                         if len(v) is not 0])
-        return flat 
+            return ((ct_tuple, cf_list) for ct_tuple, cf_list in active
+                    if len(cf_list) is not 0)
+
+        return active
 
     def as_applycal(self):
         calapps = [CalApplication(k,v) 
@@ -768,13 +767,11 @@ class CalLibrary(object):
                 for intent in calto.get_field_intents(field_id, spw_id):
                     for antenna_id in calto.antenna:
                         for cf in calfroms:
-                            # now that we use immutable flyweights, we don't 
-                            # need the deepcopy
-#                             cf_copy = copy.deepcopy(cf)
+                            # now that we use immutable CalFroms, we don't
+                            # need to deepcopy the object we are appending
                             calstate[ms_name][spw_id][field_id][intent][antenna_id].append(cf)
 
-        LOG.trace('Calstate after _add:\n'
-                  '%s' % calstate.as_applycal())
+        LOG.trace('Calstate after _add:\n%s', calstate.as_applycal())
 
     def _calc_filename(self, filename=None):
         if filename in ('', None):
@@ -792,26 +789,36 @@ class CalLibrary(object):
                 export_file.write(ca.as_applycal())
                 export_file.write('\n')
 
-    def _remove(self, calto, calfrom, calstate):
-        if type(calfrom) is not types.ListType:
-            calfrom = [calfrom]
-        
-        calto = CalToIdAdapter(self._context, calto)
-        ms_name = calto.ms.name
-        
-        for spw_id in calto.spw:
-            for field_id in calto.field:
-                for intent in calto.get_field_intents(field_id, spw_id):
-                    for antenna_id in calto.antenna:
-                        current = calstate[ms_name][spw_id][field_id][intent][antenna_id]
-                        for c in calfrom:
-                            try:
-                                current.remove(c)
-                            except ValueError, _:
-                                LOG.debug('%s not found in calstate' % c)
+    def _remove(self, calstate, calfrom, calto=None):
+        # If this is a global removal, as signified by the lack of a CalTo to
+        # give any target data selection, we can simply mark the CalFrom as
+        # removed
+        if not calto:
+            calstate.global_remove(calfrom)
 
-        LOG.trace('Calstate after _remove:\n'
-                  '%s' % calstate.as_applycal())
+        # But if this is a partial removal, go through the dictionary
+        # dimensions and remove it from the data selection specified by the
+        # CalTo
+        else:
+            if type(calfrom) is not types.ListType:
+                calfrom = [calfrom]
+
+            calto = CalToIdAdapter(self._context, calto)
+            ms_name = calto.ms.name
+
+            for spw_id in calto.spw:
+                for field_id in calto.field:
+                    for intent in calto.get_field_intents(field_id, spw_id):
+                        for antenna_id in calto.antenna:
+                            current = calstate[ms_name][spw_id][field_id][intent][antenna_id]
+                            for c in calfrom:
+                                try:
+                                    current.remove(c)
+                                except ValueError, _:
+                                    LOG.debug('%s not found in calstate', c)
+
+
+        LOG.trace('Calstate after _remove:\n%s', calstate.as_applycal())
 
     def add(self, calto, calfroms):
         self._add(calto, calfroms, self._active)
@@ -839,7 +846,7 @@ class CalLibrary(object):
         written to disk as a set of equivalent applycal calls.
         """
         filename = self._calc_filename(filename)
-        LOG.info('Exporting current calibration state to %s' % filename)
+        LOG.info('Exporting current calibration state to %s', filename)
         self._export(self._active, filename)
 
     def export_applied(self, filename=None):
@@ -850,13 +857,16 @@ class CalLibrary(object):
         disk as a set of equivalent applycal calls.
         """
         filename = self._calc_filename(filename)
-        LOG.info('Exporting applied calibration state to %s' % filename)
+        LOG.info('Exporting applied calibration state to %s', filename)
         self._export(self._applied, filename)
 
-    def get_calstate(self, calto, hide_null=True, ignore=[]):
+    def get_calstate(self, calto, hide_null=True, ignore=None):
         """
         Get the calibration state for a target data selection.
         """
+        if ignore is None:
+            ignore = []
+
         # wrap the text-only CalTo in a CalToIdAdapter, which will parse the
         # CalTo properties and give us the appropriate subtable IDs to iterate
         # over 
@@ -880,12 +890,15 @@ class CalLibrary(object):
 
         return result
 
-    def _copy_calfrom(self, to_copy, ignore=[]):
+    def _copy_calfrom(self, to_copy, ignore=None):
+        if ignore is None:
+            ignore = []
+
         calfrom_properties = ['caltype', 'calwt', 'gainfield', 'gaintable',
                               'interp', 'spwmap']
         
-        copied = dict((k, getattr(to_copy, k)) for k in calfrom_properties 
-                      if k not in ignore)
+        copied = {k: getattr(to_copy, k) for k in calfrom_properties
+                  if k not in ignore}
         
         return CalFrom(**copied)
 
@@ -910,7 +923,7 @@ class CalLibrary(object):
                  '%s' % self.active.as_applycal())
 
     def mark_as_applied(self, calto, calfrom):
-        self._remove(calto, calfrom, self._active)
+        self._remove(self._active, calfrom, calto)
         self._add(calto, calfrom, self._applied)
 
         LOG.debug('New calibration state:\n'
