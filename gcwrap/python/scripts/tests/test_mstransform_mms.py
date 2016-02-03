@@ -1249,7 +1249,7 @@ class test_otf_calibration(test_base_compare):
         os.system('rm -rf '+ 'ngc5921_regression')
         os.system('rm -rf '+ self.outvis)
         
-    @unittest.skip('Skip until CAS-8051:Problems with cal library in selected MS contexts is fixed.')        
+    #@unittest.skip('Skip until CAS-8051:Problems with cal library in selected MS contexts is fixed.')        
     def test_otf_calibration_mst_vs_applycal_split2(self):
         
         # First part ms
