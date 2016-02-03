@@ -2080,8 +2080,10 @@ ms::selectpolarization(const std::vector<std::string>& wantedpol)
 {
 	Bool retval(False);
 	try {
-		if(!detached())
-			retval = itsSel->selectPolarization(toVectorString(wantedpol));
+        if(!detached()) {
+            itsSel->initSelection(); // seg fault if not initialized
+            retval = itsSel->selectPolarization(toVectorString(wantedpol));
+        }
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		Table::relinquishAutoLocks(True);
