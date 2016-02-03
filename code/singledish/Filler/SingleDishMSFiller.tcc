@@ -9,6 +9,7 @@
 #define SINGLEDISH_FILLER_SINGLEDISHMSFILLER_TCC_
 
 #include <singledish/Filler/SingleDishMSFiller.h>
+#include <singledish/Filler/FillerUtil.h>
 #include <singledish/Filler/AntennaRecord.h>
 #include <singledish/Filler/FieldRecord.h>
 #include <singledish/Filler/ObservationRecord.h>
@@ -112,11 +113,11 @@ void makeSourceMap(MSSource const &table, Record &source_map) {
   POST_END;
 }
 
-struct Deleter {
-  void operator()(void *p) {
-    free(p);
-  }
-};
+//struct Deleter {
+//  void operator()(void *p) {
+//    free(p);
+//  }
+//};
 
 } // anonymous namespace
 
@@ -605,7 +606,7 @@ void SingleDishMSFiller<T>::sortPointing() {
   sorter.sort(index_vector, nrow);
 
   size_t storage_size = nrow * 2 * sizeof(Double);
-  std::unique_ptr<void, ::Deleter> storage(malloc(storage_size));
+  std::unique_ptr<void, sdfiller::Deleter> storage(malloc(storage_size));
 
   // sort TIME
   {

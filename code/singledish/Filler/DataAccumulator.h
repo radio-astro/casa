@@ -9,6 +9,7 @@
 #define SINGLEDISH_FILLER_DATAACCUMULATOR_H_
 
 #include <singledish/Filler/DataRecord.h>
+#include <singledish/Filler/FillerUtil.h>
 
 #include <vector>
 #include <cassert>
@@ -25,15 +26,6 @@
 #include <casacore/measures/Measures/Stokes.h>
 
 #include <casacore/tables/Tables/TableRecord.h>
-
-//#define SINGLEDISHMSFILLER_DEBUG
-#ifdef SINGLEDISHMSFILLER_DEBUG
-#define POST_START std::cout << "Start " << __PRETTY_FUNCTION__ << std::endl
-#define POST_END std::cout << "End " << __PRETTY_FUNCTION__ << std::endl
-#else
-#define POST_START
-#define POST_END
-#endif
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -124,10 +116,12 @@ public:
 
     Vector < Float > tsys;
     if (!record.tsys.empty()) {
+//      std::cout << "tsys is not empty: " << record.tsys << std::endl;
       tsys.assign(record.tsys);
     }
     Vector < Float > tcal;
     if (!record.tcal.empty()) {
+//      std::cout << "tcal is not empty: " << record.tcal << std::endl;
       tcal.assign(record.tcal);
     }
 
@@ -153,7 +147,7 @@ public:
     return true;
   }
 
-  bool get(TableRecord &record) {
+  bool get(MSDataRecord &record) {
     bool return_value = (*this.*get_chunk_)(record);
     return return_value;
   }
@@ -250,251 +244,227 @@ private:
   String poltype_;
   Vector<Int> corr_type_;
   unsigned char filled_;
-  bool (DataChunk::*get_chunk_)(TableRecord &record);
+  bool (DataChunk::*get_chunk_)(MSDataRecord &record);
   uInt (DataChunk::*get_num_pol_)() const;
 
-  bool getLinear(TableRecord &record) {
+  bool getLinear(MSDataRecord &record) {
     POST_START;
 
     Vector < Float > weight;
     Vector < Float > sigma;
     if (isFullPol()) {
       // POL 0, 1, 2, and 3
-      Matrix < Complex > data(4, num_chan_, Complex(0));
+//      std::cout << "set data/flag" << std::endl;
+      record.setComplex();
+      record.setDataSize(4, num_chan_);
+      Vector < Float > zero_vector(num_chan_, 0.0f);
+      Matrix < Complex > &data = record.complex_data;
       Vector < Complex > complex0(data.row(0));
       setReal(complex0, data_.row(0));
+      setImag(complex0, zero_vector);
       complex0.reference(data.row(3));
       setReal(complex0, data_.row(1));
+      setImag(complex0, zero_vector);
       complex0.reference(data.row(1));
       setReal(complex0, data_.row(2));
       setImag(complex0, data_.row(3));
       data.row(2) = conj(data.row(1));
-      Matrix < Bool > flag = flag_;
-      flag.row(2) = flag.row(2) || flag.row(3);
-      flag.row(3) = flag.row(1);
-      flag.row(1) = flag.row(2);
-      Bool flag_row = anyEQ(flag_row_, True);
-      record.define("DATA", data);
-      record.define("FLAG", flag);
-      record.define("FLAG_ROW", flag_row);
-      record.define("WEIGHT", weight_);
-      record.define("SIGMA", sigma_);
+      record.flag = flag_;
+      record.flag.row(2) = record.flag.row(2) || record.flag.row(3);
+      record.flag.row(3) = record.flag.row(1);
+      record.flag.row(1) = record.flag.row(2);
+      record.flag_row = anyEQ(flag_row_, True);
+//      std::cout << "weight = " << record.weight << std::endl;
 
-      Matrix < Float > tsys;
+//      std::cout << "set tsys" << std::endl;
       if (tsys_(0, 0) > 0.0f && tsys_(0, 1) > 0.0f) {
         // should be spectral Tsys
-        tsys.resize(2, num_chan_);
-        tsys = -1;
-        tsys.row(0) = tsys_.row(0);
+        record.setTsysSize(2, num_chan_);
+        record.tsys = -1;
+        record.tsys.row(0) = tsys_.row(0);
       } else if (tsys_(0, 0) > 0.0f) {
         // scalar Tsys
-        tsys.resize(2, 1, -1.0f);
-        tsys(0, 0) = tsys_(0, 0);
+        record.setTsysSize(2, 1);
+        record.tsys(0, 0) = tsys_(0, 0);
       }
       if (tsys_(1, 0) > 0.0f && tsys_(1, 1) > 0.0f) {
-        tsys.resize(2, num_chan_, True);
-        tsys.row(1) = tsys_.row(1);
+        if (record.tsys.ncolumn() != num_chan_) {
+          record.setTsysSize(2, num_chan_);
+          record.tsys.row(0) = -1.0f;
+        }
+        record.tsys.row(1) = tsys_.row(1);
       } else if (tsys_(1, 0) > 0.0f) {
-        tsys.resize(2, 1, True);
-        tsys.row(1) = -1.0f;
-        tsys(1, 0) = tsys_(1, 0);
-      }
-      if (!tsys.empty() && anyNE(tsys, 1.0f)) {
-        record.define("TSYS", tsys);
+        if (record.tsys.ncolumn() != 1) {
+          record.setTsysSize(2, 1);
+          record.tsys(0, 0) = -1.0f;
+        }
+        record.tsys(1, 0) = tsys_(1, 0);
       }
 
-      Matrix < Float > tcal;
+//      std::cout << "set tcal " << tcal_ << std::endl;
       if (tcal_(0, 0) > 0.0f && tcal_(0, 1) > 0.0f) {
         // should be spectral Tcal
-        tcal.resize(2, num_chan_);
-        tcal = -1;
-        tcal.row(0) = tcal_.row(0);
+        record.setTcalSize(2, num_chan_);
+        record.tcal = -1;
+        record.tcal.row(0) = tcal_.row(0);
       } else if (tcal_(0, 0) > 0.0f) {
         // scalar Tcal
-        tcal.resize(2, 1, -1.0f);
-        tcal(0, 0) = tcal_(0, 0);
+        record.setTcalSize(2, num_chan_);
+        record.tcal(0, 0) = tcal_(0, 0);
       }
       if (tcal_(1, 0) > 0.0f && tcal_(1, 1) > 0.0f) {
-        if (tcal.ncolumn() < num_chan_) {
-          tcal.resize(2, num_chan_, True);
+        if (record.tcal.ncolumn() != num_chan_) {
+          record.setTcalSize(2, num_chan_);
+          record.tcal.row(0) = -1.0f;
         }
-        tcal.row(1) = tcal_.row(1);
+        record.tcal.row(1) = tcal_.row(1);
       } else if (tcal_(1, 0) > 0.0f) {
-        tcal.row(1) = -1.0f;
-        tcal(1, 0) = tcal_(1, 0);
-      }
-      if (!tcal.empty() && anyNE(tcal, 1.0f)) {
-        record.define("TCAL", tcal);
+        if (record.tcal.ncolumn() != 1) {
+          record.setTcalSize(2, 1);
+          record.tcal(0, 0) = -1.0f;
+        }
+        record.tcal(1, 0) = tcal_(1, 0);
       }
 
-      record.define("NUM_POL", 4);
-//      Vector<Int> corr_type(4);
-//      corr_type[0] = Stokes::XX;
-//      corr_type[1] = Stokes::XY;
-//      corr_type[2] = Stokes::YX;
-//      corr_type[3] = Stokes::YY;
-      record.define("CORR_TYPE", corr_type_);
+      record.num_pol = 4;
+      record.corr_type = corr_type_;
     } else if (isDualPol()) {
       // POL 0 and 1
-      Matrix < Float > data = data_(IPosition(2, 0, 0),
+//      std::cout << "set data/flag" << std::endl;
+      record.setFloat();
+      record.setDataSize(2, num_chan_);
+      record.float_data = data_(IPosition(2, 0, 0),
           IPosition(2, 1, num_chan_ - 1));
-      Matrix < Bool > flag = flag_(IPosition(2, 0, 0),
-          IPosition(2, 1, num_chan_ - 1));
-      Bool flag_row = flag_row_[0] || flag_row_[1];
-      Vector < Float > weight = weight_(Slice(0, 2));
-      record.define("FLOAT_DATA", data);
-      record.define("FLAG", flag);
-      record.define("FLAG_ROW", flag_row);
-      record.define("WEIGHT", weight);
-      record.define("SIGMA", weight);
+      record.flag = flag_(IPosition(2, 0, 0), IPosition(2, 1, num_chan_ - 1));
+      record.flag_row = flag_row_[0] || flag_row_[1];
+//      std::cout << "weight = " << record.weight << std::endl;
 
-      Matrix < Float > tsys;
+      //Matrix < Float > tsys;
+//      std::cout << "set tsys" << std::endl;
       if (tsys_(0, 0) > 0.0f && tsys_(0, 1) > 0.0f) {
         // should be spectral Tsys
-        tsys.resize(2, num_chan_);
-        tsys = -1;
-        tsys.row(0) = tsys_.row(0);
+        record.setTsysSize(2, num_chan_);
+        record.tsys = -1;
+        record.tsys.row(0) = tsys_.row(0);
       } else if (tsys_(0, 0) > 0.0f) {
         // scalar Tsys
-        tsys.resize(2, 1);
-        tsys = -1.0f;
-        tsys(0, 0) = tsys_(0, 0);
+        record.setTsysSize(2, 1);
+        record.tsys(0, 0) = tsys_(0, 0);
       }
       if (tsys_(1, 0) > 0.0f && tsys_(1, 1) > 0.0f) {
-        tsys.resize(2, num_chan_, True);
-        tsys.row(1) = tsys_.row(1);
+        if (record.tsys.ncolumn() != num_chan_) {
+          record.setTsysSize(2, num_chan_);
+          record.tsys.row(0) = -1.0f;
+        }
+        record.tsys.row(1) = tsys_.row(1);
       } else if (tsys_(1, 0) > 0.0f) {
-        tsys.resize(2, 1, True);
-        tsys.row(1) = -1.0f;
-        tsys(1, 0) = tsys_(1, 0);
-      }
-      if (!tsys.empty() && anyNE(tsys, 1.0f)) {
-        record.define("TSYS", tsys);
+        if (record.tsys.ncolumn() != 1) {
+          record.setTsysSize(2, 1);
+          record.tsys(0, 0) = -1.0f;
+        }
+        record.tsys(1, 0) = tsys_(1, 0);
       }
 
-      Matrix < Float > tcal;
+//      std::cout << "set tcal " << tcal_ << std::endl;
       if (tcal_(0, 0) > 0.0f && tcal_(0, 1) > 0.0f) {
         // should be spectral Tcal
-        tcal.resize(2, num_chan_);
-        tcal = -1;
-        tcal.row(0) = tcal_.row(0);
+        record.setTcalSize(2, num_chan_);
+        record.tcal = -1;
+        record.tcal.row(0) = tcal_.row(0);
       } else if (tcal_(0, 0) > 0.0f) {
         // scalar Tcal
-        tcal.resize(2, 1, -1.0f);
-        tcal(0, 0) = tcal_(0, 0);
+        record.setTcalSize(2, num_chan_);
+        record.tcal(0, 0) = tcal_(0, 0);
       }
       if (tcal_(1, 0) > 0.0f && tcal_(1, 1) > 0.0f) {
-        tcal.resize(2, num_chan_, True);
-        tcal.row(1) = tcal_.row(1);
+        if (record.tcal.ncolumn() != num_chan_) {
+          record.setTcalSize(2, num_chan_);
+          record.tcal.row(0) = -1.0f;
+        }
+        record.tcal.row(1) = tcal_.row(1);
       } else if (tcal_(1, 0) > 0.0f) {
-        tcal.resize(2, 1, True);
-        tcal.row(1) = -1.0f;
-        tcal(1, 0) = tcal_(1, 0);
-      }
-      if (!tcal.empty() && anyNE(tcal, 1.0f)) {
-        record.define("TCAL", tcal);
+        if (record.tcal.ncolumn() != 1) {
+          record.setTcalSize(2, 1);
+          record.tcal(0, 0) = -1.0f;
+        }
+        record.tcal(1, 0) = tcal_(1, 0);
       }
 
-      record.define("NUM_POL", 2);
-      Vector < Int > corr_type(2);
-      corr_type[0] = corr_type_[0];
-      corr_type[1] = corr_type_[3];
-      record.define("CORR_TYPE", corr_type);
+      record.num_pol = 2;
+      record.corr_type[0] = corr_type_[0];
+      record.corr_type[1] = corr_type_[3];
     } else if (isSinglePol0()) {
       // only POL 0
+//      std::cout << "set data/flag (pol 0)" << std::endl;
+      record.setFloat();
+      record.setDataSize(1, num_chan_);
       Slicer slicer(IPosition(2, 0, 0), IPosition(2, 1, num_chan_));
-      Matrix < Float > data = data_(slicer);
-      Matrix < Bool > flag = flag_(slicer);
-      Bool flag_row = flag_row_(0);
-      Vector < Float > weight = weight_(Slice(0, 1));
-      record.define("FLOAT_DATA", data);
-      record.define("FLAG", flag);
-      record.define("FLAG_ROW", flag_row);
-      record.define("WEIGHT", weight);
-      record.define("SIGMA", weight);
+      record.float_data = data_(slicer);
+      record.flag = flag_(slicer);
+      record.flag_row = flag_row_(0);
 
-      Matrix < Float > tsys;
       if (tsys_(0, 0) > 0.0f && tsys_(0, 1) > 0.0f) {
         // should be spectral Tsys
-        tsys.resize(1, num_chan_);
-        tsys = -1;
-        tsys.row(0) = tsys_.row(0);
+        record.setTsysSize(1, num_chan_);
+        record.tsys = -1;
+        record.tsys.row(0) = tsys_.row(0);
       } else if (tsys_(0, 0) > 0.0f) {
         // scalar Tsys
-        tsys.resize(1, 1, -1.0f);
-        tsys(0, 0) = tsys_(0, 0);
-      }
-      if (!tsys.empty() && anyNE(tsys, 1.0f)) {
-        record.define("TSYS", tsys);
+        record.setTsysSize(1, 1);
+        record.tsys(0, 0) = tsys_(0, 0);
       }
 
-      Matrix < Float > tcal;
+//      std::cout << "set tcal " << tcal_ << std::endl;
       if (tcal_(0, 0) > 0.0f && tcal_(0, 1) > 0.0f) {
         // should be spectral Tcal
-        tcal.resize(1, num_chan_);
-        tcal = -1;
-        tcal.row(0) = tcal_.row(0);
+        record.setTcalSize(1, num_chan_);
+        record.tcal = -1;
+        record.tcal.row(0) = tcal_.row(0);
       } else if (tcal_(0, 0) > 0.0f) {
         // scalar Tcal
-        tcal.resize(1, 1, -1.0f);
-        tcal(0, 0) = tcal_(0, 0);
-      }
-      if (!tcal.empty() && anyNE(tcal, 1.0f)) {
-        record.define("TCAL", tcal);
+        record.setTcalSize(1, 1);
+        record.tcal(0, 0) = tcal_(0, 0);
       }
 
-      record.define("NUM_POL", 1);
-      Vector < Int > corr_type(1, corr_type_[0]);
-//      corr_type[0] = Stokes::XX;
-      record.define("CORR_TYPE", corr_type);
+      record.num_pol = 1;
+      record.corr_type[0] = corr_type_[0];
     } else if (isSinglePol1()) {
       // only POL 1
+//      std::cout << "set data/flag (pol 1)" << std::endl;
+      record.setFloat();
+      record.setDataSize(1, num_chan_);
       Slicer slicer(IPosition(2, 1, 0), IPosition(2, 1, num_chan_));
-      Matrix < Float > data = data_(slicer);
-      Matrix < Bool > flag = flag_(slicer);
-      Bool flag_row = flag_row_(1);
-      Vector < Float > weight = weight_(Slice(0, 1));
-      record.define("FLOAT_DATA", data);
-      record.define("FLAG", flag);
-      record.define("FLAG_ROW", flag_row);
-      record.define("WEIGHT", weight);
-      record.define("SIGMA", weight);
+      record.float_data = data_(slicer);
+      record.flag = flag_(slicer);
+      record.flag_row = flag_row_(1);
 
-      Matrix < Float > tsys;
       if (tsys_(1, 0) > 0.0f && tsys_(1, 1) > 0.0f) {
-        // should be spectral Tsys
-        tsys.resize(1, num_chan_);
-        tsys = -1;
-        tsys.row(0) = tsys_.row(1);
+        if (record.tsys.ncolumn() != num_chan_) {
+          record.setTsysSize(1, num_chan_);
+        }
+        record.tsys.row(0) = tsys_.row(1);
       } else if (tsys_(1, 0) > 0.0f) {
-        // scalar Tsys
-        tsys.resize(1, 1, -1.0f);
-        tsys(0, 0) = tsys_(1, 0);
-      }
-      if (!tsys.empty() && anyNE(tsys, 1.0f)) {
-        record.define("TSYS", tsys);
+        if (record.tsys.ncolumn() != 1) {
+          record.setTsysSize(1, 1);
+        }
+        record.tsys(0, 0) = tsys_(1, 0);
       }
 
-      Matrix < Float > tcal;
+//      std::cout << "set tcal " << tcal_ << std::endl;
       if (tcal_(1, 0) > 0.0f && tcal_(1, 1) > 0.0f) {
         // should be spectral Tcal
-        tcal.resize(1, num_chan_);
-        tcal = -1;
-        tcal.row(0) = tcal_.row(1);
-      } else if (tcal_(1, 0) > 0.0f) {
+        record.setTcalSize(1, num_chan_);
+        record.tcal.row(0) = tcal_.row(1);
+      } else if (tcal_(0, 0) > 0.0f) {
         // scalar Tcal
-        tcal.resize(1, 1, -1.0f);
-        tcal(0, 0) = tcal_(1, 0);
-      }
-      if (!tcal.empty() && anyNE(tcal, 1.0f)) {
-        record.define("TCAL", tcal);
+        record.setTcalSize(1, 1);
+        record.tcal(0, 0) = tcal_(1, 0);
       }
 
-      record.define("NUM_POL", 1);
-      Vector < Int > corr_type(1, corr_type_[3]);
-//      corr_type[0] = Stokes::YY;
-      record.define("CORR_TYPE", corr_type);
+      record.num_pol = 1;
+      record.corr_type[0] = corr_type_[3];
     } else {
+//      std::cout << "DataChunk is not ready for get" << std::endl;
       return false;
     }
 
@@ -502,40 +472,31 @@ private:
     return true;
   }
 
-  bool getCircular(TableRecord &record) {
+  bool getCircular(MSDataRecord &record) {
     return getLinear(record);
   }
 
-  bool getStokes(TableRecord &record) {
+  bool getStokes(MSDataRecord &record) {
     POST_START;
 
+    record.setFloat();
     if (isFullPol()) {
-      record.define("FLOAT_DATA", data_);
-      record.define("FLAG", flag_);
-      record.define("FLAG_ROW", anyTrue(flag_row_));
-      record.define("SIGMA", sigma_);
-      record.define("WEIGHT", weight_);
+      record.setDataSize(4, num_chan_);
+      record.float_data = data_;
+      record.flag = flag_;
+      record.flag_row = anyTrue(flag_row_);
 
-      record.define("NUM_POL", 4);
-//      Vector<Int> corr_type(4);
-//      corr_type[0] = Stokes::I;
-//      corr_type[1] = Stokes::Q;
-//      corr_type[2] = Stokes::U;
-//      corr_type[3] = Stokes::V;
-      record.define("CORR_TYPE", corr_type_);
+      record.num_pol = 4;
+      record.corr_type = corr_type_;
     } else if (isSinglePol0()) {
+      record.setDataSize(1, num_chan_);
       Slicer slicer(IPosition(2, 0, 0), IPosition(2, 1, num_chan_));
-      record.define("FLOAT_DATA", data_(slicer));
-      record.define("FLAG", flag_(slicer));
-      record.define("FLAG_ROW", flag_row_[0]);
-      Slice slice(0, 1);
-      record.define("SIGMA", weight_(slice));
-      record.define("WEIGHT", weight_(slice));
+      record.float_data = data_(slicer);
+      record.flag = flag_(slicer);
+      record.flag_row = flag_row_[0];
 
-      record.define("NUM_POL", 1);
-      Vector < Int > corr_type(1, corr_type_[0]);
-//      corr_type[0] = Stokes::I;
-      record.define("CORR_TYPE", corr_type);
+      record.num_pol = 1;
+      record.corr_type[0] = corr_type_[0];
     } else {
       return false;
     }
@@ -544,41 +505,29 @@ private:
     return true;
   }
 
-  bool getLinpol(TableRecord &record) {
+  bool getLinpol(MSDataRecord &record) {
     POST_START;
 
+    record.setFloat();
     if (isDualPol()) {
       // POL 0 and 1
-      Matrix < Float > data = data_(IPosition(2, 0, 0),
+      record.setDataSize(2, num_chan_);
+      record.float_data = data_(IPosition(2, 0, 0),
           IPosition(2, 1, num_chan_ - 1));
-      Matrix < Bool > flag = flag_(IPosition(2, 0, 0),
-          IPosition(2, 1, num_chan_ - 1));
-      Bool flag_row = flag_row_[0] || flag_row_[1];
-      Vector < Float > weight = weight_(Slice(0, 2));
-      record.define("FLOAT_DATA", data);
-      record.define("FLAG", flag);
-      record.define("FLAG_ROW", flag_row);
-      record.define("WEIGHT", weight);
-      record.define("SIGMA", weight);
+      record.flag = flag_(IPosition(2, 0, 0), IPosition(2, 1, num_chan_ - 1));
+      record.flag_row = flag_row_[0] || flag_row_[1];
 
-      record.define("NUM_POL", 2);
-//      Vector<Int> corr_type(2);
-//      corr_type[0] = Stokes::Plinear;
-//      corr_type[1] = Stokes::Pangle;
-      record.define("CORR_TYPE", corr_type_);
+      record.num_pol = 2;
+      record.corr_type = corr_type_;
     } else if (isSinglePol0()) {
+      record.setDataSize(1, num_chan_);
       Slicer slicer(IPosition(2, 0, 0), IPosition(2, 1, num_chan_));
-      record.define("FLOAT_DATA", data_(slicer));
-      record.define("FLAG", flag_(slicer));
-      record.define("FLAG_ROW", flag_row_[0]);
-      Slice slice(0, 1);
-      record.define("SIGMA", weight_(slice));
-      record.define("WEIGHT", weight_(slice));
+      record.float_data = data_(slicer);
+      record.flag = flag_(slicer);
+      record.flag_row = flag_row_[0];
 
-      record.define("NUM_POL", 1);
-      Vector < Int > corr_type(1, corr_type_[0]);
-//      corr_type[0] = Stokes::Plinear;
-      record.define("CORR_TYPE", corr_type);
+      record.num_pol = 1;
+      record.corr_type[0] = corr_type_[0];
     } else {
       return false;
     }
@@ -643,9 +592,6 @@ public:
 
   size_t getNumberOfChunks() const {
     return pool_.size();
-//    return std::count_if(pool_.begin(), pool_.end(), [](DataChunk * const &c){
-//      return c->getNumPol() > 0;
-//    });
   }
 
   size_t getNumberOfActiveChunks() const {
@@ -667,48 +613,33 @@ public:
     time_ = -1.0;
   }
 
-  bool get(size_t ichunk, TableRecord &record) {
+  bool get(size_t ichunk, MSDataRecord &record) {
+    POST_START;
+
     if (pool_.size() == 0) {
       return false;
     } else if (ichunk >= pool_.size()) {
       return false;
     }
     bool status = pool_[ichunk]->get(record);
-    Int antennaid = -1;
-    Int spwid = -1;
-    Int fieldid = -1;
-    Int feedid = -1;
-    Int scan = -1;
-    Int subscan = -1;
-    String intent = "";
-    Double time = -1.0;
-    String poltype = "";
-    Matrix < Double > direction;
-    Double interval = -1.0;
-    if (status) {
-      poltype = pool_[ichunk]->getPolType();
-      time = time_;
-      antennaid = antenna_id_[ichunk];
-      spwid = spw_id_[ichunk];
-      fieldid = field_id_[ichunk];
-      feedid = feed_id_[ichunk];
-      scan = scan_[ichunk];
-      subscan = subscan_[ichunk];
-      intent = intent_[ichunk];
-      direction.assign(direction_[ichunk]);
-      interval = interval_[ichunk];
+//    std::cout << "get Chunk status = " << status << std::endl;
+    if (!status) {
+      record.clear();
+      return status;
     }
-    record.define("TIME", time);
-    record.define("POL_TYPE", poltype);
-    record.define("ANTENNA_ID", antennaid);
-    record.define("SPECTRAL_WINDOW_ID", spwid);
-    record.define("FIELD_ID", fieldid);
-    record.define("FEED_ID", feedid);
-    record.define("SCAN", scan);
-    record.define("SUBSCAN", subscan);
-    record.define("INTENT", intent);
-    record.define("DIRECTION", direction);
-    record.define("INTERVAL", interval);
+    record.time = time_;
+    record.pol_type = pool_[ichunk]->getPolType();
+    record.antenna_id = antenna_id_[ichunk];
+    record.spw_id = spw_id_[ichunk];
+    record.field_id = field_id_[ichunk];
+    record.feed_id = feed_id_[ichunk];
+    record.scan = scan_[ichunk];
+    record.subscan = subscan_[ichunk];
+    record.intent = intent_[ichunk];
+    record.direction = direction_[ichunk];
+    record.interval = interval_[ichunk];
+
+    POST_END;
     return status;
   }
 

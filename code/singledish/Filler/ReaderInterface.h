@@ -11,6 +11,7 @@
 // std includes
 #include <string>
 
+#include <singledish/Filler/FillerUtil.h>
 #include <singledish/Filler/AntennaRecord.h>
 #include <singledish/Filler/ObservationRecord.h>
 #include <singledish/Filler/ProcessorRecord.h>
@@ -25,15 +26,6 @@
 #include <casacore/casa/Containers/Record.h>
 #include <casacore/measures/Measures/MDirection.h>
 #include <casacore/tables/Tables/TableRecord.h>
-
-//#define SINGLEDISHMSFILLER_DEBUG
-#ifdef SINGLEDISHMSFILLER_DEBUG
-#define POST_START std::cout << "Start " << __PRETTY_FUNCTION__ << std::endl
-#define POST_END std::cout << "End " << __PRETTY_FUNCTION__ << std::endl
-#else
-#define POST_START
-#define POST_END
-#endif
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

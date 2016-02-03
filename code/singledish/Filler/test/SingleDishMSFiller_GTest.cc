@@ -7,6 +7,7 @@
 
 #include <gtest/gtest.h>
 
+#include <singledish/Filler/FillerUtil.h>
 #include <singledish/Filler/SingleDishMSFiller.h>
 #include <singledish/Filler/ReaderInterface.h>
 #include <singledish/Filler/Scantable2MSReader.h>
@@ -43,17 +44,6 @@
 
 using namespace casa;
 using namespace casacore;
-
-#ifndef POST_START
-#define SINGLEDISHMSFILLER_DEBUG
-#ifdef SINGLEDISHMSFILLER_DEBUG
-#define POST_START std::cout << "Start " << __PRETTY_FUNCTION__ << std::endl
-#define POST_END std::cout << "End " << __PRETTY_FUNCTION__ << std::endl
-#else
-#define POST_START
-#define POST_END
-#endif
-#endif
 
 #define CASA_EXPECT_STREQ(expected, actual) EXPECT_STREQ((expected).c_str(), (actual).c_str())
 #define CASA_ASSERT_STREQ(expected, actual) ASSERT_STREQ((expected).c_str(), (actual).c_str())
@@ -1248,7 +1238,7 @@ TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
         ;
       }
 );
-                                                                                                                                                                      ASSERT_GT(num_chan, 0);
+                                                                                                                                                                                  ASSERT_GT(num_chan, 0);
       Matrix < Bool > expected_flag(expected_num_pol, num_chan);
       Matrix < Float > expected_data(expected_num_pol, num_chan);
       uInt pol_id0 = row_record0.polno;
@@ -1360,11 +1350,11 @@ TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
         ;
       }
 );
-                                                                                                                                                                      ASSERT_GT(num_chan, 0);
+                                                                                                                                                                                  ASSERT_GT(num_chan, 0);
       expected_flag.resize(expected_num_pol, num_chan);
       expected_data.resize(expected_flag.shape());
       uInt pol_id2 = row_record2.polno;
-      ASSERT_EQ(0, pol_id2);
+      ASSERT_EQ(0u, pol_id2);
       expected_flag.row(pol_id2) = row_record2.flag;
       expected_data.row(pol_id2) = row_record2.data;
       // verify data
@@ -1526,40 +1516,27 @@ TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
 }
 
 namespace {
-inline void TestKeyword(Vector<DataRecord> const &input_record,
-    TableRecord const &output_record, String const &output_data_key) {
-  constexpr size_t kNumInputKeys = 4;
-  constexpr size_t kNumOutputKeys = 5;
-  String const input_keys[kNumInputKeys] =
-      { "DATA", "FLAG", "FLAG_ROW", "POLNO" };
-  String output_keys[kNumOutputKeys] = { output_data_key, "FLAG", "FLAG_ROW",
-      "SIGMA", "WEIGHT" };
-//  for (size_t i = 0; i < input_record.size(); ++i) {
-//    for (size_t j = 0; j < kNumInputKeys; ++j) {
-//      ASSERT_TRUE(input_record[i].isDefined(input_keys[j]));
-//    }
-//  }
-  for (size_t j = 0; j < kNumOutputKeys; ++j) {
-    ASSERT_TRUE(output_record.isDefined(output_keys[j]));
-  }
-}
 
 inline void TestShape(size_t const num_pol, size_t const num_chan,
-    TableRecord const &output_record, String const &output_data_key) {
+    MSDataRecord const &output_record, String const &output_data_key) {
   IPosition const expected_shape_matrix(2, num_pol, num_chan);
   IPosition const expected_shape_vector(1, num_pol);
-  EXPECT_EQ(expected_shape_matrix, output_record.shape(output_data_key));
-  EXPECT_EQ(expected_shape_matrix, output_record.shape("FLAG"));
-  EXPECT_EQ(expected_shape_vector, output_record.shape("SIGMA"));
-  EXPECT_EQ(expected_shape_vector, output_record.shape("WEIGHT"));
+  if (output_data_key == "FLOAT_DATA") {
+    EXPECT_EQ(expected_shape_matrix, output_record.float_data.shape());
+  } else {
+    EXPECT_EQ(expected_shape_matrix, output_record.complex_data.shape());
+  }
+  EXPECT_EQ(expected_shape_matrix, output_record.flag.shape());
+  EXPECT_EQ(expected_shape_vector, output_record.sigma.shape());
+  EXPECT_EQ(expected_shape_vector, output_record.weight.shape());
 }
 
 struct BasicPolarizationTester {
   static void Test(size_t const num_chan, String const &pol_type,
       Vector<uInt> const &polid_list, Vector<DataRecord> const &input_record,
-      TableRecord const &output_record) {
+      MSDataRecord const &output_record) {
     size_t const expected_num_pol = polid_list.size();
-    size_t const num_pol = output_record.asInt("NUM_POL");
+    size_t const num_pol = output_record.num_pol;
     ASSERT_GE(2ul, num_pol);
     ASSERT_EQ(input_record.size(), num_pol);
     ASSERT_EQ(expected_num_pol, num_pol);
@@ -1579,28 +1556,26 @@ struct BasicPolarizationTester {
     }
     if (num_pol == 2) {
       Vector < Int > expected_corr = corr_type_list;
-      Vector < Int > corr = output_record.asArrayInt("CORR_TYPE");
+      Vector < Int > corr = output_record.corr_type;
       ASSERT_TRUE(allEQ(expected_corr, corr));
     } else {
       Int corr_index = input_record[0].polno;
       Vector < Int > expected_corr(1, corr_type_list[corr_index]);
-      Vector < Int > corr = output_record.asArrayInt("CORR_TYPE");
+      Vector < Int > corr = output_record.corr_type;
       ASSERT_TRUE(allEQ(expected_corr, corr));
     }
 
-    TestKeyword(input_record, output_record, "FLOAT_DATA");
-
     TestShape(num_pol, num_chan, output_record, "FLOAT_DATA");
 
-    Matrix < Float > out_data = output_record.asArrayFloat("FLOAT_DATA");
-    Matrix < Bool > out_flag = output_record.asArrayBool("FLAG");
-    Bool out_flag_row = output_record.asBool("FLAG_ROW");
-    Vector < Float > out_sigma = output_record.asArrayFloat("SIGMA");
-    Vector < Float > out_weight = output_record.asArrayFloat("WEIGHT");
+    Matrix < Float > out_data = output_record.float_data;
+    Matrix < Bool > out_flag = output_record.flag;
+    Bool out_flag_row = output_record.flag_row;
+    Vector < Float > out_sigma = output_record.sigma;
+    Vector < Float > out_weight = output_record.weight;
     Bool net_flag_row = False;
     for (size_t i = 0; i < num_pol; ++i) {
-      std::cout << "Verifying i " << i << " polid "
-          << input_record[i].polno << std::endl;
+      std::cout << "Verifying i " << i << " polid " << input_record[i].polno
+          << std::endl;
       uInt polid = 0;
       if (num_pol == 2) {
         polid = input_record[i].polno;
@@ -1620,10 +1595,10 @@ struct BasicPolarizationTester {
 struct FullPolarizationTester {
   static void Test(size_t const num_chan, String const &pol_type,
       Vector<uInt> const &polid_list, Vector<DataRecord> const &input_record,
-      TableRecord const &output_record) {
+      MSDataRecord const &output_record) {
     std::cout << "Full polarization test" << std::endl;
     size_t const expected_num_pol = polid_list.size();
-    size_t const num_pol = output_record.asInt("NUM_POL");
+    size_t const num_pol = output_record.num_pol;
     ASSERT_EQ(4ul, num_pol);
     ASSERT_EQ(input_record.size(), num_pol);
     ASSERT_EQ(expected_num_pol, num_pol);
@@ -1640,10 +1615,8 @@ struct FullPolarizationTester {
       expected_corr[2] = Stokes::LR;
       expected_corr[3] = Stokes::LL;
     }
-    Vector < Int > corr = output_record.asArrayInt("CORR_TYPE");
+    Vector < Int > corr = output_record.corr_type;
     ASSERT_TRUE(allEQ(expected_corr, corr));
-
-    TestKeyword(input_record, output_record, "DATA");
 
     TestShape(num_pol, num_chan, output_record, "DATA");
 
@@ -1676,15 +1649,15 @@ struct FullPolarizationTester {
     flag.row(1) = flag.row(1) || flag.row(2);
     flag.row(2) = flag.row(1);
 
-    Matrix < Complex > out_data = output_record.asArrayComplex("DATA");
+    Matrix < Complex > out_data = output_record.complex_data;
     EXPECT_TRUE(allEQ(data_real, real(out_data)));
     EXPECT_TRUE(allEQ(data_imag, imag(out_data)));
-    Matrix < Bool > out_flag = output_record.asArrayBool("FLAG");
+    Matrix < Bool > out_flag = output_record.flag;
     EXPECT_TRUE(allEQ(flag, out_flag));
-    Bool out_flag_row = output_record.asBool("FLAG_ROW");
+    Bool out_flag_row = output_record.flag_row;
     EXPECT_EQ(net_flag_row, out_flag_row);
-    Vector < Float > out_sigma = output_record.asArrayFloat("SIGMA");
-    Vector < Float > out_weight = output_record.asArrayFloat("WEIGHT");
+    Vector < Float > out_sigma = output_record.sigma;
+    Vector < Float > out_weight = output_record.weight;
     EXPECT_TRUE(allEQ(out_sigma, 1.0f));
     EXPECT_TRUE(allEQ(out_weight, 1.0f));
   }
@@ -1694,13 +1667,12 @@ struct FullPolarizationTester {
 struct StokesFullPolarizationTester {
   static void Test(size_t const num_chan, String const &pol_type,
       Vector<uInt> const &polid_list, Vector<DataRecord> const &input_record,
-      TableRecord const &output_record) {
+      MSDataRecord const &output_record) {
     std::cout << "Stokes full polarization test" << std::endl;
     CASA_ASSERT_STREQ(String("stokes"), pol_type);
 
     size_t const expected_num_pol = polid_list.size();
-    size_t const num_pol = output_record.asInt("NUM_POL");
-    //ASSERT_LE(num_pol, 4ul);
+    size_t const num_pol = output_record.num_pol;
     ASSERT_EQ(expected_num_pol, num_pol);
     ASSERT_EQ(input_record.size(), num_pol);
     ASSERT_EQ(4ul, num_pol);
@@ -1710,18 +1682,16 @@ struct StokesFullPolarizationTester {
     expected_corr[1] = Stokes::Q;
     expected_corr[2] = Stokes::U;
     expected_corr[3] = Stokes::V;
-    Vector < Int > corr = output_record.asArrayInt("CORR_TYPE");
+    Vector < Int > corr = output_record.corr_type;
     ASSERT_TRUE(allEQ(expected_corr, corr));
-
-    TestKeyword(input_record, output_record, "FLOAT_DATA");
 
     TestShape(num_pol, num_chan, output_record, "FLOAT_DATA");
 
-    Matrix < Float > out_data = output_record.asArrayFloat("FLOAT_DATA");
-    Matrix < Bool > out_flag = output_record.asArrayBool("FLAG");
-    Bool out_flag_row = output_record.asBool("FLAG_ROW");
-    Vector < Float > out_sigma = output_record.asArrayFloat("SIGMA");
-    Vector < Float > out_weight = output_record.asArrayFloat("WEIGHT");
+    Matrix < Float > out_data = output_record.float_data;
+    Matrix < Bool > out_flag = output_record.flag;
+    Bool out_flag_row = output_record.flag_row;
+    Vector < Float > out_sigma = output_record.sigma;
+    Vector < Float > out_weight = output_record.weight;
     Bool net_flag_row = False;
     for (size_t i = 0; i < num_pol; ++i) {
       uInt polid = polid_list[i];
@@ -1783,8 +1753,8 @@ void TestPolarization(String const &poltype, Vector<uInt> const &polid_list) {
 
   ASSERT_EQ(polid_list.size(), chunk.getNumPol());
 
-  TableRecord output_record;
-  ASSERT_TRUE(output_record.empty());
+  MSDataRecord output_record;
+  ASSERT_LT(output_record.time, 0.0);
 
   chunk.get(output_record);
 
@@ -1911,7 +1881,7 @@ TEST(DataChunkTest, FullPolarizationTest) {
 }
 
 TEST(DataChunkTest, WhiteBoxTest) {
-// Invalid poltype
+  // Invalid poltype
   EXPECT_THROW(DataChunk("notype"), AipsError);
 
 // Accumulate without initialization
@@ -1928,11 +1898,10 @@ TEST(DataChunkTest, WhiteBoxTest) {
   bool status = chunk.accumulate(record);
   ASSERT_TRUE(status);
   EXPECT_EQ(1u, chunk.getNumPol());
-  TableRecord output_record;
+  MSDataRecord output_record;
   status = chunk.get(output_record);
   ASSERT_TRUE(status);
-  EXPECT_EQ(IPosition(2, 1, 1),
-      output_record.asArrayFloat("FLOAT_DATA").shape());
+  EXPECT_EQ(IPosition(2, 1, 1), output_record.float_data.shape());
 
 // clear
   chunk.clear();
@@ -1941,8 +1910,6 @@ TEST(DataChunkTest, WhiteBoxTest) {
 // Accumulate invalid record
   chunk.initialize(1);
   record.data.resize();
-//  record.removeField("POLNO");
-//  ASSERT_EQ(0u, chunk.getNumPol());
   ASSERT_TRUE(record.data.empty());
   status = chunk.accumulate(record);
   ASSERT_FALSE(status);
@@ -1998,7 +1965,7 @@ TEST(DataChunkTest, WhiteBoxTest) {
   ASSERT_TRUE(status);
   status = chunk.get(output_record);
   ASSERT_TRUE(status);
-  Matrix < Float > output_data = output_record.asArrayFloat("FLOAT_DATA");
+  Matrix < Float > output_data = output_record.float_data;
   EXPECT_EQ(IPosition(2, 1, 2), output_data.shape());
   EXPECT_TRUE(allEQ(output_data, 1.0f));
 
@@ -2015,7 +1982,7 @@ TEST(DataChunkTest, WhiteBoxTest) {
   EXPECT_EQ(2u, chunk.getNumPol());
   status = chunk.get(output_record);
   ASSERT_TRUE(status);
-  Matrix < Float > data = output_record.asArrayFloat("FLOAT_DATA");
+  Matrix < Float > data = output_record.float_data;
   EXPECT_EQ(IPosition(2, 2, 2), data.shape());
   EXPECT_TRUE(allEQ(data, 3.0f));
 
@@ -2041,7 +2008,7 @@ TEST(DataChunkTest, WhiteBoxTest) {
   EXPECT_EQ(1u, stokes_chunk.getNumPol());
   status = stokes_chunk.get(output_record);
   ASSERT_TRUE(status);
-  Matrix < Float > data_stokes = output_record.asArrayFloat("FLOAT_DATA");
+  Matrix < Float > data_stokes = output_record.float_data;
   EXPECT_EQ(IPosition(2, 1, 2), data_stokes.shape());
   EXPECT_TRUE(allEQ(data_stokes, 4.0f));
 
@@ -2084,7 +2051,7 @@ TEST(DataChunkTest, WhiteBoxTest) {
   EXPECT_EQ(2u, linpol_chunk.getNumPol());
   status = linpol_chunk.get(output_record);
   ASSERT_TRUE(status);
-  Matrix < Float > data_linpol = output_record.asArrayFloat("FLOAT_DATA");
+  Matrix < Float > data_linpol = output_record.float_data;
   EXPECT_EQ(IPosition(2, 2, 2), data_linpol.shape());
   EXPECT_TRUE(allEQ(data_linpol, 8.0f));
 
@@ -2109,57 +2076,44 @@ TEST(DataChunkTest, WhiteBoxTest) {
 }
 
 TEST(DataAccumulatorTest, WhiteBoxTest) {
-  constexpr size_t num_record_keys = 13;
-  constexpr const char *output_record_keys[] = { "TIME", "POL_TYPE", "INTENT",
-      "SPECTRAL_WINDOW_ID", "FIELD_ID", "FEED_ID", "SCAN", "SUBSCAN", "FLAG",
-      "FLAG_ROW", "SIGMA", "WEIGHT", "DIRECTION", "INTERVAL" }; // and "DATA" or "FLOAT_DATA"
-  auto IsValidOutputRecord = [&](TableRecord const &record) {
-    for (size_t i = 0; i < num_record_keys; ++i) {
-      ASSERT_TRUE(record.isDefined(output_record_keys[i]));
-    }
-    size_t const expected_num_pol = record.asInt("NUM_POL");
-    Matrix<Bool> const flag = record.asArrayBool("FLAG");
+  auto IsValidOutputRecord = [&](MSDataRecord const &record) {
+    size_t const expected_num_pol = record.num_pol;
+    Matrix<Bool> const flag = record.flag;
     size_t const num_pol = flag.nrow();
     ASSERT_EQ(expected_num_pol, num_pol);
-    String const poltype = record.asString("POL_TYPE");
+    String const poltype = record.pol_type;
     if (poltype == "linear" || poltype == "circular") {
       ASSERT_TRUE((num_pol == 1) || (num_pol == 2) || (num_pol == 4));
       if (num_pol < 4) {
-        ASSERT_FALSE(record.isDefined("DATA"));
-        ASSERT_TRUE(record.isDefined("FLOAT_DATA"));
+        ASSERT_TRUE(record.isFloat());
       }
       else {
-        ASSERT_FALSE(record.isDefined("FLOAT_DATA"));
-        ASSERT_TRUE(record.isDefined("DATA"));
+        ASSERT_FALSE(record.isFloat());
       }
     }
     else if (poltype == "stokes") {
       ASSERT_TRUE((num_pol == 1) || (num_pol == 4));
-      ASSERT_FALSE(record.isDefined("DATA"));
-      ASSERT_TRUE(record.isDefined("FLOAT_DATA"));
+      ASSERT_TRUE(record.isFloat());
     }
     else if (poltype == "linpol") {
       ASSERT_TRUE((num_pol == 1) || (num_pol == 2));
-      ASSERT_FALSE(record.isDefined("DATA"));
-      ASSERT_TRUE(record.isDefined("FLOAT_DATA"));
+      ASSERT_TRUE(record.isFloat());
     }
     else {
       FAIL();
     }
   };
 
-  auto ClearRecord = [](TableRecord &record) {
-    while (0 < record.nfields()) {
-      record.removeField(0);
-    }
-    ASSERT_EQ(0u, record.nfields());
+  auto ClearRecord = [](MSDataRecord &record) {
+    record.clear();
+    ASSERT_LT(record.time, 0.0);
   };
 
   DataAccumulator a;
 
   // number of chunks must be zero at initial state
   ASSERT_EQ(0ul, a.getNumberOfChunks());
-  TableRecord output_record;
+  MSDataRecord output_record;
   bool status = a.get(0, output_record);
   ASSERT_FALSE(status);
 
@@ -2236,42 +2190,28 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
   EXPECT_EQ(1u, a.getNumberOfChunks());
   EXPECT_EQ(1u, a.getNumPol(0));
 
-// query
+  // query
   is_ready = a.queryForGet(r1);
   ASSERT_FALSE(is_ready);
 
   is_ready = a.queryForGet(r2);
   ASSERT_TRUE(is_ready);
 
-// Get
+  // Get
   ClearRecord(output_record);
   CASA_ASSERT_STREQ(poltype, a.getPolType(0));
   ASSERT_EQ(1u, a.getNumPol(0));
   status = a.get(0, output_record);
   ASSERT_TRUE(status);
   IsValidOutputRecord(output_record);
-  Matrix < Float > output_data = output_record.asArrayFloat("FLOAT_DATA");
-  Matrix < Bool > output_flag = output_record.asArrayBool("FLAG");
+  Matrix < Float > output_data = output_record.float_data;
+  Matrix < Bool > output_flag = output_record.flag;
   IPosition const expected_shape1(2, 1, num_chan);
   EXPECT_EQ(expected_shape1, output_data.shape());
   EXPECT_EQ(expected_shape1, output_flag.shape());
   EXPECT_TRUE(allEQ(output_data.row(0), data.row(0)));
   EXPECT_TRUE(allEQ(output_flag.row(0), flag.row(0)));
-  EXPECT_EQ(flag_row[0], output_record.asBool("FLAG_ROW"));
-//  for (size_t i = 0; i < a.getNumberOfChunks(); ++i) {
-//    CASA_ASSERT_STREQ(poltype, a.getPolType(i));
-//    ASSERT_EQ(1u, a.getNumPol(i));
-//    status = a.get(i, output_record);
-//    ASSERT_TRUE(status);
-//    IsValidOutputRecord(output_record);
-//    Matrix < Float > output_data = output_record.asArrayFloat("FLOAT_DATA");
-//    Matrix < Bool > output_flag = output_record.asArrayBool("FLAG");
-//    IPosition const expected_shape(2, 1, num_chan);
-//    EXPECT_EQ(expected_shape, output_data.shape());
-//    EXPECT_EQ(expected_shape, output_flag.shape());
-//    EXPECT_TRUE(allEQ(output_data.row(0), data.row(i)));
-//    EXPECT_TRUE(allEQ(output_flag.row(0), flag.row(i)));
-//  }
+  EXPECT_EQ(flag_row[0], output_record.flag_row);
 
   // Accumulate more data with same meta data but different polno
   r1.polno = 1u;
@@ -2289,8 +2229,8 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
   status = a.get(0, output_record);
   ASSERT_TRUE(status);
   IsValidOutputRecord(output_record);
-  output_data.assign(output_record.asArrayFloat("FLOAT_DATA"));
-  output_flag.assign(output_record.asArrayBool("FLAG"));
+  output_data.assign(output_record.float_data);
+  output_flag.assign(output_record.flag);
   IPosition const expected_shape2(2, 2, num_chan);
   EXPECT_EQ(expected_shape2, output_data.shape());
   EXPECT_EQ(expected_shape2, output_flag.shape());
@@ -2298,7 +2238,7 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
   EXPECT_TRUE(allEQ(output_flag.row(0), flag.row(0)));
   EXPECT_TRUE(allEQ(output_data.row(1), data.row(1)));
   EXPECT_TRUE(allEQ(output_flag.row(1), flag.row(1)));
-  EXPECT_EQ(flag_row[0] || flag_row[1], output_record.asBool("FLAG_ROW"));
+  EXPECT_EQ(flag_row[0] || flag_row[1], output_record.flag_row);
 
 // Accumulate cross-pol data with same meta data
   r1.polno = 2u;
@@ -2323,8 +2263,8 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
   status = a.get(0, output_record);
   ASSERT_TRUE(status);
   IsValidOutputRecord(output_record);
-  Matrix < Complex > output_cdata = output_record.asArrayComplex("DATA");
-  output_flag.assign(output_record.asArrayBool("FLAG"));
+  Matrix < Complex > output_cdata = output_record.complex_data;
+  output_flag.assign(output_record.flag);
   IPosition const expected_shape4(2, 4, num_chan);
   EXPECT_EQ(expected_shape4, output_cdata.shape());
   EXPECT_EQ(expected_shape4, output_flag.shape());
@@ -2339,7 +2279,7 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
   EXPECT_TRUE(allEQ(real(output_cdata.row(3)), data.row(1)));
   EXPECT_TRUE(allEQ(imag(output_cdata.row(3)), 0.0f));
   EXPECT_TRUE(allEQ(output_flag.row(3), flag.row(1)));
-  EXPECT_EQ(anyTrue(flag_row), output_record.asBool("FLAG_ROW"));
+  EXPECT_EQ(anyTrue(flag_row), output_record.flag_row);
 
 // Accumulate data with another meta data
   String intent2 = "OFF_SOURCE";
@@ -2366,17 +2306,17 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
   status = a.get(0, output_record);
   ASSERT_TRUE(status);
   IsValidOutputRecord(output_record);
-  Matrix < Complex > output_cdata2 = output_record.asArrayComplex("DATA");
+  Matrix < Complex > output_cdata2 = output_record.complex_data;
   EXPECT_EQ(output_cdata.shape(), output_cdata2.shape());
   EXPECT_TRUE(allEQ(output_cdata, output_cdata2));
   ClearRecord(output_record);
   status = a.get(1, output_record);
   ASSERT_TRUE(status);
   IsValidOutputRecord(output_record);
-  Matrix < Float > output_data2 = output_record.asArrayFloat("FLOAT_DATA");
+  Matrix < Float > output_data2 = output_record.float_data;
   EXPECT_EQ(IPosition(2, 1, 8), output_data2.shape());
   EXPECT_TRUE(allEQ(output_data2.row(0), data2));
-  Matrix < Bool > output_flag2 = output_record.asArrayBool("FLAG");
+  Matrix < Bool > output_flag2 = output_record.flag;
   EXPECT_EQ(output_data2.shape(), output_flag2.shape());
   EXPECT_TRUE(allEQ(output_flag2.row(0), flag2));
 
@@ -2393,8 +2333,8 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
   ClearRecord(output_record);
   status = a.get(1, output_record);
   IsValidOutputRecord(output_record);
-  output_data2.assign(output_record.asArrayFloat("FLOAT_DATA"));
-  output_flag2.assign(output_record.asArrayBool("FLAG"));
+  output_data2.assign(output_record.float_data);
+  output_flag2.assign(output_record.flag);
   EXPECT_EQ(IPosition(2, 2, 8), output_data2.shape());
   EXPECT_TRUE(allEQ(data2, output_data2.row(1)));
   EXPECT_EQ(output_data2.shape(), output_flag2.shape());

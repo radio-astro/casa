@@ -40,6 +40,7 @@ install (FILES
 )
 
 install (FILES
+	Filler/FillerUtil.h
     Filler/AntennaRecord.h
     Filler/DataRecord.h
     Filler/FieldRecord.h

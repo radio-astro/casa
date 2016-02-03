@@ -14,6 +14,7 @@
 
 #include <singledish/Filler/DataAccumulator.h>
 #include <singledish/Filler/SysCalRecord.h>
+#include <singledish/Filler/FillerUtil.h>
 
 #include <casacore/casa/OS/File.h>
 #include <casacore/casa/OS/Path.h>
@@ -27,17 +28,6 @@
 #include <casacore/tables/Tables/TableRow.h>
 #include <casacore/tables/Tables/ArrayColumn.h>
 #include <casacore/tables/Tables/ScalarColumn.h>
-
-//#define SINGLEDISHMSFILLER_DEBUG
-#ifndef POST_START
-#ifdef SINGLEDISHMSFILLER_DEBUG
-#define POST_START std::cout << "Start " << __PRETTY_FUNCTION__ << std::endl
-#define POST_END std::cout << "End " << __PRETTY_FUNCTION__ << std::endl
-#else
-#define POST_START
-#define POST_END
-#endif
-#endif
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -201,6 +191,7 @@ private:
           flush(previous_record, accumulator);
         }
         Bool astatus = accumulator.accumulate(record);
+        (void)astatus;
 //        std::cout << "astatus = " << astatus << std::endl;
         previous_record = record;
       }
@@ -215,6 +206,7 @@ private:
     POST_START;
 
     size_t nchunk = accumulator.getNumberOfChunks();
+//    std::cout << "nchunk = " << nchunk << std::endl;
 
     if (nchunk == 0) {
       return;
@@ -223,25 +215,26 @@ private:
     Double time = main_record.time;
 
     for (size_t ichunk = 0; ichunk < nchunk; ++ichunk) {
-      TableRecord data_record;
+      MSDataRecord data_record;
       Bool status = accumulator.get(ichunk, data_record);
+//      std::cout << "accumulator status = " << std::endl;
       if (status) {
-        Int antenna_id = data_record.asInt("ANTENNA_ID");
-        Int spw_id = data_record.asInt("SPECTRAL_WINDOW_ID");
-        Int feed_id = data_record.asInt("FEED_ID");
-        Int field_id = data_record.asInt("FIELD_ID");
-        Int scan = data_record.asInt("SCAN");
-        Int subscan = data_record.asInt("SUBSCAN");
-        String pol_type = data_record.asString("POL_TYPE");
-        String obs_mode = data_record.asString("INTENT");
-        Int num_pol = data_record.asInt("NUM_POL");
-        Vector < Int > corr_type = data_record.asArrayInt("CORR_TYPE");
+        Int antenna_id = data_record.antenna_id;
+        Int spw_id = data_record.spw_id;
+        Int feed_id = data_record.feed_id;
+        Int field_id = data_record.field_id;
+        Int scan = data_record.scan;
+        Int subscan = data_record.subscan;
+        String pol_type = data_record.pol_type;
+        String obs_mode = data_record.intent;
+        Int num_pol = data_record.num_pol;
+        Vector < Int > &corr_type = data_record.corr_type;
         Int polarization_id = updatePolarization(corr_type, num_pol);
         updateFeed(feed_id, spw_id, pol_type);
         Int data_desc_id = updateDataDescription(polarization_id, spw_id);
         Int state_id = updateState(subscan, obs_mode);
-        Matrix < Double > direction = data_record.asArrayDouble("DIRECTION");
-        Double interval = data_record.asDouble("INTERVAL");
+        Matrix < Double > &direction = data_record.direction;
+        Double interval = data_record.interval;
 
         // updatePointing must be called after updateFeed
         updatePointing(antenna_id, feed_id, time, interval, direction);
@@ -252,9 +245,10 @@ private:
             time, data_record);
       }
     }
+//    std::cout << "clear accumulator" << std::endl;
     accumulator.clear();
 
-    POST_START;
+    POST_END;
   }
 
   void sortPointing();
@@ -335,31 +329,33 @@ private:
 
   void updateSysCal(Int const &antenna_id, Int const &feed_id,
       Int const &spw_id, Double const &time, Double const &interval,
-      TableRecord const &data_record) {
+      MSDataRecord const &data_record) {
     POST_START;
 
     //SysCalTableRecord table_record(*ms_, antenna_id, feed_id, spw_id, record);
     SysCalRecord record;
+    record.clear();
     record.antenna_id = antenna_id;
     record.feed_id = feed_id;
     record.spw_id = spw_id;
     record.time = time;
     record.interval = interval;
-    if (data_record.isDefined("TCAL")) {
-      if (data_record.shape(data_key_) == data_record.shape("TCAL")) {
-        record.tcal_spectrum.assign(data_record.asArrayFloat("TCAL"));
+    if (!data_record.tcal.empty() && !allEQ(data_record.tcal, 1.0f) && !allEQ(data_record.tcal, 0.0f)) {
+//      std::cout << "tcal seems to be valid " << data_record.tcal << std::endl;
+      if (data_record.float_data.shape() == data_record.tcal.shape()) {
+        record.tcal_spectrum.assign(data_record.tcal);
       } else {
-        Matrix < Float > tcal = data_record.asArrayFloat("TCAL");
+        Matrix < Float > tcal = data_record.tcal;
         if (!tcal.empty()) {
           record.tcal.assign(tcal.column(0));
         }
       }
     }
-    if (data_record.isDefined("TSYS")) {
-      if (data_record.shape(data_key_) == data_record.shape("TSYS")) {
-        record.tsys_spectrum.assign(data_record.asArrayFloat("TSYS"));
+    if (!data_record.tsys.empty() && !allEQ(data_record.tsys, 1.0f) && !allEQ(data_record.tsys, 0.0f)) {
+      if (data_record.float_data.shape() == data_record.tsys.shape()) {
+        record.tsys_spectrum.assign(data_record.tsys);
       } else {
-        Matrix < Float > tsys = data_record.asArrayFloat("TSYS");
+        Matrix < Float > tsys = data_record.tsys;
         if (!tsys.empty()) {
           record.tsys.assign(tsys.column(0));
         }
@@ -412,7 +408,7 @@ private:
   // @param[in] mainSpec main table row specification except id
   void updateMain(Int const &antenna_id, Int field_id, Int feedId,
       Int dataDescriptionId, Int stateId, Int const &scan_number,
-      Double const &time, TableRecord const &dataRecord) {
+      Double const &time, MSDataRecord const &dataRecord) {
     POST_START;
 
     // constant stuff
@@ -437,34 +433,34 @@ private:
     ms_columns_->scanNumber().put(irow, scan_number);
     ms_columns_->time().put(irow, time);
     ms_columns_->timeCentroid().put(irow, time);
-    Double interval = dataRecord.asDouble("INTERVAL");
+    Double interval = dataRecord.interval;
     ms_columns_->interval().put(irow, interval);
     ms_columns_->exposure().put(irow, interval);
 
     if (is_float_) {
       Matrix < Float > floatData;
-      if (dataRecord.isDefined("FLOAT_DATA")) {
-        floatData.assign(dataRecord.asArrayFloat("FLOAT_DATA"));
-      } else if (dataRecord.isDefined("DATA")) {
-        floatData.assign(real(dataRecord.asArrayComplex("DATA")));
+      if (dataRecord.isFloat()) {
+        floatData.reference(dataRecord.float_data);
+      } else {
+        floatData.assign(real(dataRecord.complex_data));
       }
       ms_columns_->floatData().put(irow, floatData);
     } else {
       Matrix < Complex > data;
-      if (dataRecord.isDefined("FLOAT_DATA")) {
+      if (dataRecord.isFloat()) {
         data.assign(
-            makeComplex(dataRecord.asArrayFloat("FLOAT_DATA"),
-                Matrix < Float > (dataRecord.shape("FLOAT_DATA"), 0.0f)));
-      } else if (dataRecord.isDefined("DATA")) {
-        data.assign(dataRecord.asArrayComplex("DATA"));
+            makeComplex(dataRecord.float_data,
+                Matrix < Float > (dataRecord.float_data.shape(), 0.0f)));
+      } else {
+        data.reference(dataRecord.complex_data);
       }
       ms_columns_->data().put(irow, data);
     }
 
-    ms_columns_->flag().put(irow, dataRecord.asArrayBool("FLAG"));
-    ms_columns_->flagRow().put(irow, dataRecord.asBool("FLAG_ROW"));
-    ms_columns_->sigma().put(irow, dataRecord.asArrayFloat("SIGMA"));
-    ms_columns_->weight().put(irow, dataRecord.asArrayFloat("WEIGHT"));
+    ms_columns_->flag().put(irow, dataRecord.flag);
+    ms_columns_->flagRow().put(irow, dataRecord.flag_row);
+    ms_columns_->sigma().put(irow, dataRecord.sigma);
+    ms_columns_->weight().put(irow, dataRecord.weight);
 
     POST_END;
   }
