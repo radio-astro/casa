@@ -6,6 +6,7 @@ from pipeline.hif.tasks.gaincal import gaincalworker
 from pipeline.hif.tasks.gaincal import gaincalmode
 from pipeline.hif.tasks.gaincal import gtypegaincal
 from pipeline.hif.heuristics import caltable as gcaltable
+from pipeline.hifa.heuristics import exptimes as gexptimes
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
@@ -145,16 +146,33 @@ class TimeGaincal(gaincalworker.GaincalWorker):
         # Create a results object.
         result = common.GaincalResults() 
 
-	# Get the phaseup spwmap
-	phaseupspwmap = inputs.ms.phaseup_spwmap
+	# Get the spw mapping mode
+        if inputs.ms.combine_spwmap:
+            spwidlist = [spw.id for spw in inputs.ms.get_spectral_windows(task_arg=inputs.spw, science_windows_only=True)]
+            fieldnamelist = [field.name for field in inputs.ms.get_fields(task_arg=inputs.field, intent='PHASE')]
+            exptimes = gexptimes.get_scan_exptimes(inputs.ms, fieldnamelist, 'PHASE',
+                spwidlist)
+            phase_calsolint = '%0.3fs' % (min ([exptime[1] for exptime in exptimes]) / 4.0)
+            phase_gaintype = 'T'
+            phase_combine = 'spw'
+	    phaseup_spwmap = inputs.ms.combine_spwmap
+            phase_interp = 'linearPD,linear'
+        else:
+            phase_calsolint = inputs.calsolint
+            phase_gaintype = 'G'
+            phase_combine = inputs.combine
+	    phaseup_spwmap = inputs.ms.phaseup_spwmap
+            phase_interp = 'linear,linear'
 
         # Produce the diagnostic table for displaying amplitude vs time plots. 
-	# No special mapping required here.
+        #     This table is not applied to the data
+	#     No special mapping required here.
         calampresult = self._do_caltarget_ampcal()
         result.calampresult = calampresult
 
         # Compute the science target phase solution
-        targetphaseresult = self._do_scitarget_phasecal()
+        targetphaseresult = self._do_scitarget_phasecal(solint=inputs.targetsolint,
+           gaintype=phase_gaintype, combine=phase_combine)
 
         # Readjust to the true calto.intent
         targetphaseresult.pool[0].calto.intent = 'PHASE,CHECK,TARGET'
@@ -164,23 +182,30 @@ class TimeGaincal(gaincalworker.GaincalWorker):
         # object rather than editing them directly
         self._mod_last_calwt(targetphaseresult.pool[0], False)
         self._mod_last_calwt(targetphaseresult.final[0], False)
-	if phaseupspwmap:
-            self._mod_last_spwmap(targetphaseresult.pool[0], phaseupspwmap)
-            self._mod_last_spwmap(targetphaseresult.final[0], phaseupspwmap)
+        if inputs.ms.combine_spwmap:
+            self._mod_last_interp(targetphaseresult.pool[0], phase_interp)
+            self._mod_last_interp(targetphaseresult.final[0], phase_interp)
+	if phaseup_spwmap:
+            self._mod_last_spwmap(targetphaseresult.pool[0], phaseup_spwmap)
+            self._mod_last_spwmap(targetphaseresult.final[0], phaseup_spwmap)
 
         # Adopt the target phase result
         result.pool.extend(targetphaseresult.pool)
         result.final.extend(targetphaseresult.final)
 
         # Compute the calibrator target phase solution
-        calphaseresult = self._do_caltarget_phasecal()
+        calphaseresult = self._do_caltarget_phasecal(solint=phase_calsolint,
+            gaintype=phase_gaintype, combine=phase_combine)
 
         # CalFroms are immutable, so we must replace them with a new one
         self._mod_last_calwt(calphaseresult.pool[0], False)
         self._mod_last_calwt(calphaseresult.final[0], False)
-	if phaseupspwmap:
-            self._mod_last_spwmap(calphaseresult.pool[0], phaseupspwmap)
-            self._mod_last_spwmap(calphaseresult.final[0], phaseupspwmap)
+        if inputs.ms.combine_spwmap:
+            self._mod_last_interp(calphaseresult.pool[0], phase_interp)
+            self._mod_last_interp(calphaseresult.final[0], phase_interp)
+	if phaseup_spwmap:
+            self._mod_last_spwmap(calphaseresult.pool[0], phaseup_spwmap)
+            self._mod_last_spwmap(calphaseresult.final[0], phaseup_spwmap)
 
 	# Do a local merge of this result.
 	calphaseresult.accept(inputs.context)
@@ -195,10 +220,6 @@ class TimeGaincal(gaincalworker.GaincalWorker):
 
         # Compute the amplitude calibration
         ampresult = self._do_target_ampcal()
-        # Remove this spwmap but leave code in place for now.
-	#if phaseupspwmap:
-            #self._mod_last_spwmap(ampresult.pool[0], phaseupspwmap)
-            #self._mod_last_spwmap(ampresult.final[0], phaseupspwmap)
 
         # Accept the amplitude result as is.
         result.pool.extend(ampresult.pool)
@@ -223,7 +244,7 @@ class TimeGaincal(gaincalworker.GaincalWorker):
         return result
     
     # Used to calibrated "selfcaled" targets
-    def _do_caltarget_phasecal(self):
+    def _do_caltarget_phasecal(self, solint=None, gaintype=None, combine=None):
         inputs = self.inputs
 
         task_args = {
@@ -233,11 +254,11 @@ class TimeGaincal(gaincalworker.GaincalWorker):
           'field'       : inputs.field,
           'intent'      : inputs.intent,
           'spw'         : inputs.spw,
-          'solint'      : inputs.calsolint,
-          'gaintype'    : 'G',
+          'solint'      : solint,
+          'gaintype'    : gaintype,
           'calmode'     : 'p',
           'minsnr'      : inputs.calminsnr,
-          'combine'     : inputs.combine,
+          'combine'     : combine,
           'refant'      : inputs.refant,
           'minblperant' : inputs.minblperant,
           'solnorm'     : inputs.solnorm,
@@ -248,7 +269,6 @@ class TimeGaincal(gaincalworker.GaincalWorker):
                                                       **task_args)
 
         gaincal_task = gtypegaincal.GTypeGaincal(task_inputs)
-        #result = self._executor.execute(gaincal_task, merge=True)
         result = self._executor.execute(gaincal_task)
         
         return result
@@ -283,7 +303,7 @@ class TimeGaincal(gaincalworker.GaincalWorker):
         
         return result
 
-    def _do_scitarget_phasecal(self):
+    def _do_scitarget_phasecal(self, solint=None, gaintype=None, combine=None):
         inputs = self.inputs
 
         task_args = {
@@ -293,11 +313,11 @@ class TimeGaincal(gaincalworker.GaincalWorker):
           'field'       : inputs.field,
           'intent'      : inputs.intent,
           'spw'         : inputs.spw,
-          'solint'      : inputs.targetsolint,
-          'gaintype'    : 'G',
+          'solint'      : solint,
+          'gaintype'    : gaintype,
           'calmode'     : 'p',
           'minsnr'      : inputs.targetminsnr,
-          'combine'     : inputs.combine,
+          'combine'     : combine,
           'refant'      : inputs.refant,
           'minblperant' : inputs.minblperant,
           'solnorm'     : inputs.solnorm,
@@ -340,6 +360,17 @@ class TimeGaincal(gaincalworker.GaincalWorker):
         result =  self._executor.execute(gaincal_task)
 
         return result
+
+    def _mod_last_interp(self, l, interp):
+        l.calfrom[-1] = self._copy_with_interp(l.calfrom[-1], interp)
+
+    def _copy_with_interp(self, old_calfrom, interp):
+        return callibrary.CalFrom(gaintable=old_calfrom.gaintable,
+                                  gainfield=old_calfrom.gainfield,
+                                  interp=interp,
+                                  spwmap=old_calfrom.spwmap,
+                                  caltype=old_calfrom.caltype,
+                                  calwt=old_calfrom.calwt)
 
     def _mod_last_spwmap(self, l, spwmap):
         l.calfrom[-1] = self._copy_with_spwmap(l.calfrom[-1], spwmap)
