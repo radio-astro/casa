@@ -175,7 +175,8 @@ class PhaseVsBaselineChart(common.PlotBase):
                         selection = data_before.filter(antenna=[antenna.id], spw=[spw.id])
                         try:
                             wrapper = self.get_data_object(selection, corr_id)
-                        except ValueError:
+                        #except ValueError, IndexError:
+                        except:
                             continue
                         
                         wrappers.append(wrapper)
