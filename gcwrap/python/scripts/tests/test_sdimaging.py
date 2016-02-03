@@ -2529,7 +2529,7 @@ class sdimaging_test_mapextent(unittest.TestCase):
         self.assertTrue(trc[1] >= trc_ref[1], msg='Unexpected coordinate (trc DEC is too narrow)')
         # also check if resulting map is not too wide
         # acceptable margin is 5% of the map extent
-	margin = 0.05
+        margin = 0.05
         self.assertTrue(blc[0] < blc_ref[0] + margin * extent[0], msg='Unexpected coordinate (blc RA is too wide)')
         self.assertTrue(blc[1] > blc_ref[1] - margin * extent[1], msg='Unexpected coordinate (blc DEC is too wide)')
         self.assertTrue(trc[0] > trc_ref[0] - margin * extent[0], msg='Unexpected coordinate (trc RA is too wide)')
