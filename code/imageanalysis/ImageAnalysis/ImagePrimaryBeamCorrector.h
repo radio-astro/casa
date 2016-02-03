@@ -33,8 +33,6 @@
 
 #include <casa/namespace.h>
 
-#include <memory>
-
 namespace casa {
 
 class ImagePrimaryBeamCorrector : public ImageTask<Float> {
@@ -70,6 +68,8 @@ public:
 		DIVIDE
 	};
 
+	ImagePrimaryBeamCorrector() = delete;
+
 	// if <src>outname</src> is empty, no image will be written
 	// if <src>overwrite</src> is True, if image already exists it will be removed
 	// if <src>overwrite</src> is False, if image already exists exception will be thrown
@@ -77,8 +77,8 @@ public:
 	// <group>
 
 	ImagePrimaryBeamCorrector(
-			const SPCIIF image,
-			const SPCIIF pbImage,
+		const SPCIIF image,
+		const SPCIIF pbImage,
 		const Record * const &regionPtr,
 		const String& region, const String& box,
 		const String& chanInp, const String& stokes,
@@ -88,7 +88,7 @@ public:
 	);
 
 	ImagePrimaryBeamCorrector(
-			const SPCIIF image,
+		const SPCIIF image,
 		const Array<Float>& pbArray,
 		const Record * const &regionPtr,
 		const String& region, const String& box,
@@ -115,16 +115,13 @@ protected:
 
 	CasacRegionManager::StokesControl _getStokesControl() const;
 
-
 private:
-	std::auto_ptr<ImageInterface<Float> > _pbImage;
+	SPIIF _pbImage;
 
 	Float _cutoff;
 	Mode _mode;
 	Bool _useCutoff;
 	const static String _class;
-
-	ImagePrimaryBeamCorrector();
 
 	void _checkPBSanity();
 };

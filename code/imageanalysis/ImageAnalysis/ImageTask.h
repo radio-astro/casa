@@ -9,6 +9,8 @@
 
 #include <memory>
 
+#include <components/ComponentModels/C11Timer.h>
+
 namespace casac {
 class variant;
 }
@@ -183,20 +185,23 @@ protected:
     // values=0 => the pixel values from the image will be used
     // mask=0 => the mask attached to the image, if any will be used, outShape=0 => use image shape, coordsys=0 => use image coordinate
     // system. overwrite is only used if outname != NULL.
+
+    //SPIIT _prepareOutputImage(const ImageInterface<T>& image) const;
+
     SPIIT _prepareOutputImage(
-    	const ImageInterface<T>& image, const Array<T> *const values=0,
-    	const ArrayLattice<Bool> *const mask=0,
-    	const IPosition *const outShape=0, const CoordinateSystem *const coordsys=0,
-    	const String *const outname=0, Bool overwrite=False, Bool dropDegen=False
+    	const ImageInterface<T>& image, const Array<T> *const values,
+    	const ArrayLattice<Bool> *const mask=nullptr,
+    	const IPosition *const outShape=nullptr, const CoordinateSystem *const coordsys=nullptr,
+    	const String *const outname=nullptr, Bool overwrite=False, Bool dropDegen=False
     ) const;
 
     SPIIT _prepareOutputImage(
-    	const ImageInterface<T>& image, Bool dropDegen
-    ) const {
+    	const ImageInterface<T>& image, Bool dropDegen=False
+    ) const; /* {
     	return _prepareOutputImage(
     		image, 0, 0, 0, 0, 0, False, dropDegen
     	);
-    }
+    }*/
 
     Verbosity _getVerbosity() const { return _verbosity; }
 
@@ -230,7 +235,9 @@ private:
 	std::unique_ptr<FiledesIO> _logFileIO;
 	Verbosity _verbosity = NORMAL;
 	SHARED_PTR<LogFile> _logfile;
-	mutable vector<std::pair<String, String> > _newHistory; // = vector<std::pair<String, String> >();
+	mutable vector<std::pair<String, String> > _newHistory;
+
+	mutable C11Timer _timer;
 };
 
 }

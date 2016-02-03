@@ -51,8 +51,8 @@ const String ImagePrimaryBeamCorrector::_class = "ImagePrimaryBeamCorrector";
 uInt _tempTableNumber = 0;
 
 ImagePrimaryBeamCorrector::ImagePrimaryBeamCorrector(
-		const SPCIIF image,
-		const SPCIIF pbImage,
+	const SPCIIF image,
+	const SPCIIF pbImage,
 	const Record *const &regionPtr,
 	const String& region, const String& box,
 	const String& chanInp, const String& stokes,
@@ -69,7 +69,7 @@ ImagePrimaryBeamCorrector::ImagePrimaryBeamCorrector(
 }
 
 ImagePrimaryBeamCorrector::ImagePrimaryBeamCorrector(
-		const SPCIIF image,
+	const SPCIIF image,
 	const Array<Float>& pbArray,
 	const Record *const &regionPtr,
 	const String& region, const String& box,
@@ -147,17 +147,17 @@ void ImagePrimaryBeamCorrector::_checkPBSanity() {
 			return;
 		}
 	}
-	Vector<Int> dcn = _pbImage->coordinates().pixelAxes(
+	auto dcn = _pbImage->coordinates().pixelAxes(
 		_pbImage->coordinates().directionCoordinateNumber()
 	);
-	ImageInterface<Float> *pbCopy(
-		(_pbImage->ndim() == 2)
-		? _pbImage.get()
-		: new SubImage<Float>(
-			*_pbImage,
-			AxesSpecifier(IPosition(dcn))
-		)
-	);
+	auto pbCopy = _pbImage;
+	if (_pbImage->ndim() != 2) {
+	    pbCopy.reset(
+	        new SubImage<Float>(
+	            *_pbImage, AxesSpecifier(IPosition(dcn))
+	        )
+        );
+	}
 	if (pbCopy->ndim() == 2) {
 		ThrowIf(
 			! _getImage()->coordinates().directionCoordinate().near(
@@ -173,7 +173,7 @@ void ImagePrimaryBeamCorrector::_checkPBSanity() {
 			"Cannot do primary beam correction."
 		);
 	}
-	_pbImage.reset(pbCopy);
+	_pbImage = pbCopy;
 	LatticeStatistics<Float> ls(*_pbImage);
 	Float myMin, myMax;
 	ls.getFullMinMax(myMin, myMax);
@@ -241,7 +241,7 @@ SPIIF ImagePrimaryBeamCorrector::correct(
 		    AxesSpecifier(), _getStretch()
         );
 	}
-	SHARED_PTR<const SubImage<Float> > pbSubImage = SubImageFactory<Float>::createSubImageRO(
+	auto pbSubImage = SubImageFactory<Float>::createSubImageRO(
     	*pbTemplate, *_getRegion(), _getMask(), _getLog().get(),
         AxesSpecifier(), _getStretch()
     );
