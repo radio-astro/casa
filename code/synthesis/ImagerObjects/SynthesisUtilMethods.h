@@ -138,7 +138,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   protected:
     static String mergeSpwSel(const Vector<Int>& fspw, const Vector<Int>& fstart, const Vector<Int>& fnchan, const Matrix<Int>& spwsel);
 
-    static Vector<Int> primeFactors(uInt n, Bool douniq=True);
+    static Vector<uInt> primeFactors(uInt n, Bool douniq=True);
 
   };
 

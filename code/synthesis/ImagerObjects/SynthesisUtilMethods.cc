@@ -104,7 +104,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     if( n%2 !=0 ){ n+= 1; }
 
-    Vector<Int> fac = primeFactors(n, False);
+    Vector<uInt> fac = primeFactors(n, False);
     Int val, newlarge;
     for( uInt k=0; k< fac.nelements(); k++ )
       {
@@ -124,9 +124,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   // Return the prime factors of the given number
-  Vector<Int> SynthesisUtilMethods::primeFactors(uInt n, Bool /*douniq*/)
+  Vector<uInt> SynthesisUtilMethods::primeFactors(uInt n, Bool douniq)
   {
-    Vector<Int> factors;
+    Vector<uInt> factors;
     
     Int lastresult = n;
     Int sqlast = int(sqrt(n))+1;
@@ -149,7 +149,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     if( factors.nelements()==0 ) { factors.resize(1);factors[0]=n; }
 
-    //    if( douniq ) { factors = unique(factors); }
+    //if( douniq ) { factors = unique(factors); }
+
+    /*    
+	  /// The Sort::unique isn't working as called below. Results appear to be the
+	  /// same as with the cleanhelper python code, so leaving as is for not. CAS-7889
+    if( douniq )
+      {
+	cout << "Test unique fn on : " << factors << endl;
+	Sort srt;
+	Vector<uInt> unvec=factors; uInt nrec;
+	srt.unique(unvec,nrec);
+	cout << " Unique : " << unvec << " nr : " << nrec << endl;
+      }
+    */
 
     return factors;
   }
@@ -1633,7 +1646,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
       }
 
-    /*
+    
     /// Check imsize for efficiency.
     Int imxnew = SynthesisUtilMethods::getOptimumSize( imsize[0] );
     Int imynew = SynthesisUtilMethods::getOptimumSize( imsize[1] );
@@ -1642,9 +1655,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	LogIO os( LogOrigin("SynthesisParamsImage","buildCoordinateSystem",WHERE) );
 	if( imxnew != imsize[0] ) {os << LogIO::WARN << "imsize with "+String::toString(imsize[0])+" pixels is not an efficient imagesize. Try "+String::toString(imxnew)+" instead." << LogIO::POST;}
-	if( imynew != imsize[1] ) {os << LogIO::WARN << "imsize with "+String::toString(imsize[1])+" pixels is not an efficient imagesize. Try "+String::toString(imynew)+" instead." << LogIO::POST;}
+	if( imsize[0] != imsize[1] && imynew != imsize[1] ) {os << LogIO::WARN << "imsize with "+String::toString(imsize[1])+" pixels is not an efficient imagesize. Try "+String::toString(imynew)+" instead." << LogIO::POST;}
+	//err += "blah";
       }
-    */
+    
 	return err;
   }// verify()
 
