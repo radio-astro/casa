@@ -941,6 +941,8 @@ if ( ${dbusxx} STREQUAL dbus-c++ )
       list( APPEND dbus_prefix ${_p}/${_l}/qt-4.3.4/dbus/${_l}/dbus-1.0 )
     endforeach()
   endforeach()
+  # Debian arch specific header location (64 bit only)
+  list( APPEND dbus_prefix /usr/lib/x86_64-linux-gnu/dbus-1.0)
 
   casa_find( DBUSXX_ARCH
     INCLUDES dbus/dbus-arch-deps.h
