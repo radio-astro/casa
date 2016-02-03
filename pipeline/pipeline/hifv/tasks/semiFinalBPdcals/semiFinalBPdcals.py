@@ -76,7 +76,7 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
             
             calto = callibrary.CalTo(self.inputs.vis)
             calfrom = callibrary.CalFrom(gaintable=gtypecaltable, interp='', calwt=False)
-            context.callibrary._remove(calto, calfrom, context.callibrary._active)
+            context.callibrary._remove(context.callibrary._active, calfrom, calto)
                 
             ktype_delaycal_result = self._do_ktype_delaycal(caltable=ktypecaltable, addcaltable=gtypecaltable, context=context, RefAntOutput=RefAntOutput)
             flaggedSolnResult = getCalFlaggedSoln(ktype_delaycal_result.__dict__['inputs']['caltable'])
@@ -89,7 +89,7 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
             try:
                 calto = callibrary.CalTo(self.inputs.vis)
                 calfrom = callibrary.CalFrom(gaintable=ktypecaltable, interp='', calwt=False)
-                context.callibrary._remove(calto, calfrom, context.callibrary._active)
+                context.callibrary._remove(context.callibrary._active, calfrom, calto)
             except:
                 LOG.info(ktypecaltable + " does not exist in the context callibrary, and does not need to be removed.")
 
@@ -97,7 +97,7 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
 
         calto = callibrary.CalTo(self.inputs.vis)
         calfrom = callibrary.CalFrom(gaintable=gtypecaltable, interp='', calwt=False)
-        context.callibrary._remove(calto, calfrom, context.callibrary._active)
+        context.callibrary._remove(context.callibrary._active, calfrom, calto)
         
         context = self.inputs.context
 
@@ -108,11 +108,11 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
         # Remove temporary caltables
         calto = callibrary.CalTo(self.inputs.vis)
         calfrom = callibrary.CalFrom(gaintable=tablebase + table_suffix[0], interp='', calwt=False)
-        context.callibrary._remove(calto, calfrom, context.callibrary._active)
+        context.callibrary._remove(context.callibrary._active, calfrom, calto)
         
         calto = callibrary.CalTo(self.inputs.vis)
         calfrom = callibrary.CalFrom(gaintable=ktypecaltable, interp='', calwt=False)
-        context.callibrary._remove(calto, calfrom, context.callibrary._active)
+        context.callibrary._remove(context.callibrary._active, calfrom, calto)
         
         context = self.inputs.context
         bpdgain_touse = tablebase + table_suffix[0]
@@ -131,7 +131,7 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
         # Force calwt for the bp table to be False
         calto = callibrary.CalTo(self.inputs.vis)
         calfrom = callibrary.CalFrom(bpcaltable, interp='linearperobs,linearflag', calwt=True)
-        context.callibrary._remove(calto, calfrom, context.callibrary._active)
+        context.callibrary._remove(context.callibrary._active, calfrom, calto)
         
         calto = callibrary.CalTo(self.inputs.vis)
         calfrom = callibrary.CalFrom(bpcaltable, interp='', calwt=False)
@@ -139,7 +139,7 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
 
         calto = callibrary.CalTo(self.inputs.vis)
         calfrom = callibrary.CalFrom(gaintable=bpdgain_touse, interp='', calwt=False)
-        context.callibrary._remove(calto, calfrom, context.callibrary._active)
+        context.callibrary._remove(context.callibrary._active, calfrom, calto)
 
         # context = self.inputs.context
         

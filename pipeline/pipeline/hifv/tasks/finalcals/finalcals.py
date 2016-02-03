@@ -81,7 +81,7 @@ class Finalcals(basetask.StandardTaskTemplate):
         # Remove the cal tables from the callibrary
         calto = callibrary.CalTo(self.inputs.vis)
         calfrom = callibrary.CalFrom(gaintable=gtypecaltable, interp='', calwt=False)
-        context.callibrary._remove(calto, calfrom, context.callibrary._active)
+        context.callibrary._remove(context.callibrary._active, calfrom, calto)
 
         LOG.info("Delay calibration complete")
 
@@ -105,7 +105,7 @@ class Finalcals(basetask.StandardTaskTemplate):
         # Force calwt for the bp table to be False
         calto = callibrary.CalTo(self.inputs.vis)
         calfrom = callibrary.CalFrom(bpcaltable, interp='linearperobs,linearflag', calwt=True)
-        context.callibrary._remove(calto, calfrom, context.callibrary._active)
+        context.callibrary._remove(context.callibrary._active, calfrom, calto)
         
         calto = callibrary.CalTo(self.inputs.vis)
         calfrom = callibrary.CalFrom(bpcaltable, interp='', calwt=False)
@@ -115,7 +115,7 @@ class Finalcals(basetask.StandardTaskTemplate):
         
         calto = callibrary.CalTo(self.inputs.vis)
         calfrom = callibrary.CalFrom(gaintable=bpdgain_touse, interp='', calwt=False)
-        context.callibrary._remove(calto, calfrom, context.callibrary._active)
+        context.callibrary._remove(context.callibrary._active, calfrom, calto)
 
         # Derive an average phase solution for the bandpass calibrator to apply
         # to all data to make QA plots easier to interpret.
@@ -138,7 +138,7 @@ class Finalcals(basetask.StandardTaskTemplate):
         
         calto = callibrary.CalTo(self.inputs.vis)
         calfrom = callibrary.CalFrom(gaintable=avgpgain, interp='', calwt=False)
-        context.callibrary._remove(calto, calfrom, context.callibrary._active)
+        context.callibrary._remove(context.callibrary._active, calfrom, calto)
         
         # ---------------------------------------------------
         

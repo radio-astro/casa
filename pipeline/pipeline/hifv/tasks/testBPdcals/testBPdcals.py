@@ -109,7 +109,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
             LOG.info("TESTBPDCALS DEBUG:  START CALLIBRARY")
             calto = callibrary.CalTo(self.inputs.vis)
             calfrom = callibrary.CalFrom(gaintable=gtypecaltable, interp='', calwt=False)
-            context.callibrary._remove(calto, calfrom, context.callibrary._active)
+            context.callibrary._remove(context.callibrary._active, calfrom, calto)
             LOG.info("TESTBPDCALS DEBUG:  END CALLIBRARY")
 
             LOG.info("TESTBPDCALS DEBUG:  START K DELAYCAL")
@@ -128,7 +128,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
             try:
                 calto = callibrary.CalTo(self.inputs.vis)
                 calfrom = callibrary.CalFrom(gaintable=ktypecaltable, interp='', calwt=False)
-                context.callibrary._remove(calto, calfrom, context.callibrary._active)
+                context.callibrary._remove(context.callibrary._active, calfrom, calto)
             except:
                 LOG.info(ktypecaltable + " does not exist in the context callibrary, and does not need to be removed.")
 
@@ -145,7 +145,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
         
         calto = callibrary.CalTo(self.inputs.vis)
         calfrom = callibrary.CalFrom(gaintable=gtypecaltable, interp='', calwt=False)
-        context.callibrary._remove(calto, calfrom, context.callibrary._active)
+        context.callibrary._remove(context.callibrary._active, calfrom, calto)
 
         context = self.inputs.context
         
@@ -159,11 +159,11 @@ class testBPdcals(basetask.StandardTaskTemplate):
         LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult1['antmedian']['fraction']))
         calto = callibrary.CalTo(self.inputs.vis)
         calfrom = callibrary.CalFrom(gaintable=tablebase + table_suffix[0], interp='', calwt=False)
-        context.callibrary._remove(calto, calfrom, context.callibrary._active)
+        context.callibrary._remove(context.callibrary._active, calfrom, calto)
         
         calto = callibrary.CalTo(self.inputs.vis)
         calfrom = callibrary.CalFrom(gaintable=ktypecaltable, interp='', calwt=False)
-        context.callibrary._remove(calto, calfrom, context.callibrary._active)
+        context.callibrary._remove(context.callibrary._active, calfrom, calto)
 
         if (flaggedSolnResult1['all']['total'] > 0):
             fracFlaggedSolns1=flaggedSolnResult1['antmedian']['fraction']
@@ -187,11 +187,11 @@ class testBPdcals(basetask.StandardTaskTemplate):
             LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult3['antmedian']['fraction']))
             calto = callibrary.CalTo(self.inputs.vis)
             calfrom = callibrary.CalFrom(gaintable=tablebase + table_suffix[1], interp='', calwt=False)
-            context.callibrary._remove(calto, calfrom, context.callibrary._active)
+            context.callibrary._remove(context.callibrary._active, calfrom, calto)
         
             calto = callibrary.CalTo(self.inputs.vis)
             calfrom = callibrary.CalFrom(gaintable=ktypecaltable, interp='', calwt=False)
-            context.callibrary._remove(calto, calfrom, context.callibrary._active)
+            context.callibrary._remove(context.callibrary._active, calfrom, calto)
 
             if (flaggedSolnResult3['all']['total'] > 0):
                 fracFlaggedSolns3=flaggedSolnResult3['antmedian']['fraction']
@@ -218,11 +218,11 @@ class testBPdcals(basetask.StandardTaskTemplate):
                     LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult10['antmedian']['fraction']))
                     calto = callibrary.CalTo(self.inputs.vis)
                     calfrom = callibrary.CalFrom(gaintable=tablebase + table_suffix[2], interp='', calwt=False)
-                    context.callibrary._remove(calto, calfrom, context.callibrary._active)
+                    context.callibrary._remove(context.callibrary._active, calfrom, calto)
                 
                     calto = callibrary.CalTo(self.inputs.vis)
                     calfrom = callibrary.CalFrom(gaintable=ktypecaltable, interp='', calwt=False)
-                    context.callibrary._remove(calto, calfrom, context.callibrary._active)
+                    context.callibrary._remove(context.callibrary._active, calfrom, calto)
                 
 
                     if (flaggedSolnResult10['all']['total'] > 0):
@@ -261,7 +261,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
         
         calto = callibrary.CalTo(self.inputs.vis)
         calfrom = callibrary.CalFrom(bpcaltable, interp='linearperobs,linearflag', calwt=True)
-        context.callibrary._remove(calto, calfrom, context.callibrary._active)
+        context.callibrary._remove(context.callibrary._active, calfrom, calto)
         
         calto = callibrary.CalTo(self.inputs.vis)
         calfrom = callibrary.CalFrom(bpcaltable, interp='', calwt=False)
