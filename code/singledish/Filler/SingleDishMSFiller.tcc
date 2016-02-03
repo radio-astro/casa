@@ -312,6 +312,15 @@ void SingleDishMSFiller<T>::setupMS() {
   // Set up MSMainColumns
   ms_columns_.reset(new MSMainColumns(*ms_));
 
+  // Set up MSFeedColumns
+  feed_columns_.reset(new MSFeedColumns(ms_->feed()));
+
+  // Set up MSPointingColumns
+  pointing_columns_.reset(new MSPointingColumns(ms_->pointing()));
+
+  // Set up MSSysCalColumns
+  syscal_columns_.reset(new MSSysCalColumns(ms_->sysCal()));
+
 //  std::cout << "End " << __PRETTY_FUNCTION__ << std::endl;
 }
 
@@ -481,8 +490,8 @@ Int SingleDishMSFiller<T>::updateState(Int const &subscan,
 template<class T>
 Int SingleDishMSFiller<T>::updateFeed(Int const &feed_id, Int const &spw_id,
     String const &pol_type) {
-  MSFeed &mytable = ms_->feed();
-  MSFeedColumns mycolumns(mytable);
+  //MSFeed &mytable = ms_->feed();
+  //MSFeedColumns mycolumns(mytable);
   constexpr Int num_receptors = 2;
   String const linear_type_arr[2] = { "X", "Y" };
   Vector<String> const linear_type(linear_type_arr, 2, SHARE);
@@ -519,7 +528,7 @@ Int SingleDishMSFiller<T>::updateFeed(Int const &feed_id, Int const &spw_id,
       columns.position().put(i, position);
       columns.polResponse().put(i, pol_response);
     };
-  Int feed_row = ::updateTable(mytable, mycolumns, comparer, updater);
+  Int feed_row = ::updateTable(ms_->feed(), *(feed_columns_.get()), comparer, updater);
 
   // reference feed
   if (reference_feed_ < 0) {
@@ -539,7 +548,7 @@ Int SingleDishMSFiller<T>::updatePointing(Int const &antenna_id,
   }
 
   auto mytable = ms_->pointing();
-  MSPointingColumns mycolumns(mytable);
+  //MSPointingColumns mycolumns(mytable);
   uInt nrow = mytable.nrow();
 
   uInt *n = &num_pointing_time_[antenna_id];
@@ -549,12 +558,12 @@ Int SingleDishMSFiller<T>::updatePointing(Int const &antenna_id,
 
   auto addPointingRow = [&]() {
     mytable.addRow(1, True);
-    mycolumns.time().put(nrow, time);
-    mycolumns.interval().put(nrow, interval);
-    mycolumns.antennaId().put(nrow, antenna_id);
-    mycolumns.direction().put(nrow, direction);
+    pointing_columns_->time().put(nrow, time);
+    pointing_columns_->interval().put(nrow, interval);
+    pointing_columns_->antennaId().put(nrow, antenna_id);
+    pointing_columns_->direction().put(nrow, direction);
     Int num_poly = direction.shape()[1] - 1;
-    mycolumns.numPoly().put(nrow, num_poly);
+    pointing_columns_->numPoly().put(nrow, num_poly);
     // add timestamp to the list
       uInt nelem = time_list->nelements();
       if (nelem <= *n) {

@@ -25,6 +25,8 @@
 #include <casacore/ms/MeasurementSets/MeasurementSet.h>
 #include <casacore/ms/MeasurementSets/MSMainColumns.h>
 #include <casacore/ms/MeasurementSets/MSSysCalColumns.h>
+#include <casacore/ms/MeasurementSets/MSPointingColumns.h>
+#include <casacore/ms/MeasurementSets/MSFeedColumns.h>
 #include <casacore/tables/Tables/TableRow.h>
 #include <casacore/tables/Tables/ArrayColumn.h>
 #include <casacore/tables/Tables/ScalarColumn.h>
@@ -37,7 +39,7 @@ template<typename Reader>
 class SingleDishMSFiller {
 public:
   SingleDishMSFiller(std::string const &name) :
-      ms_(), ms_columns_(), reader_(new Reader(name)), is_float_(false), data_key_(), reference_feed_(
+      ms_(), ms_columns_(), feed_columns_(), pointing_columns_(), syscal_columns_(), reader_(new Reader(name)), is_float_(false), data_key_(), reference_feed_(
           -1), pointing_time_(), pointing_time_max_(), pointing_time_min_(), num_pointing_time_(), syscal_list_() {
   }
 
@@ -362,16 +364,16 @@ private:
       }
     }
     auto mytable = ms_->sysCal();
-    MSSysCalColumns mycolumns(mytable);
+    //MSSysCalColumns mycolumns(mytable);
     auto pos = std::find(syscal_list_.begin(), syscal_list_.end(), record);
     if (pos == syscal_list_.end()) {
       uInt irow = mytable.nrow();
       mytable.addRow(1, True);
-      record.fill(irow, mycolumns);
+      record.fill(irow, *(syscal_columns_.get()));
       syscal_list_.push_back(SysCalTableRecord(ms_.get(), irow, record));
     } else {
       auto irow = std::distance(syscal_list_.begin(), pos);
-      updateSysCal(mycolumns, irow, record);
+      updateSysCal(*(syscal_columns_.get()) , irow, record);
     }
 
     POST_END;
@@ -467,6 +469,9 @@ private:
 
   std::unique_ptr<casacore::MeasurementSet> ms_;
   std::unique_ptr<MSMainColumns> ms_columns_;
+  std::unique_ptr<MSFeedColumns> feed_columns_;
+  std::unique_ptr<MSPointingColumns> pointing_columns_;
+  std::unique_ptr<MSSysCalColumns> syscal_columns_;
   std::unique_ptr<Reader> reader_;
   bool is_float_;
   String data_key_;

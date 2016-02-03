@@ -129,6 +129,7 @@ protected:
 
 private:
   std::unique_ptr<Table> main_table_;
+  Table tcal_table_;
 
   ROScalarColumn<uInt> scan_column_;
   ROScalarColumn<uInt> cycle_column_;

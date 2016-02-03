@@ -71,7 +71,7 @@ public:
   }
   void initialize(size_t num_chan) {
     num_chan_ = num_chan;
-    IPosition const shape(2, num_pol_max_, num_chan_);
+    IPosition const shape(2, num_chan_, num_pol_max_);
     resizeTo(data_, shape);
     resizeTo(flag_, shape);
     resizeTo(tsys_, shape);
@@ -129,18 +129,18 @@ public:
       return false;
     }
 
-    data_.row(polid) = data;
-    flag_.row(polid) = flag;
+    data_.column(polid) = data;
+    flag_.column(polid) = flag;
     flag_row_[polid] = flagrow;
     if (tsys.size() == num_chan_) {
-      tsys_.row(polid) = tsys;
+      tsys_.column(polid) = tsys;
     } else if (!tsys.empty()) {
-      tsys_(polid, 0) = tsys[0];
+      tsys_(0, polid) = tsys[0];
     }
     if (tcal.size() == num_chan_) {
-      tcal_.row(polid) = tcal;
+      tcal_.column(polid) = tcal;
     } else if (!tcal.empty()) {
-      tcal_(polid, 0) = tcal[0];
+      tcal_(0, polid) = tcal[0];
     }
     filled_ |= 0x01 << polid;
 
@@ -260,70 +260,71 @@ private:
       Vector < Float > zero_vector(num_chan_, 0.0f);
       Matrix < Complex > &data = record.complex_data;
       Vector < Complex > complex0(data.row(0));
-      setReal(complex0, data_.row(0));
+      setReal(complex0, data_.column(0));
       setImag(complex0, zero_vector);
       complex0.reference(data.row(3));
-      setReal(complex0, data_.row(1));
+      setReal(complex0, data_.column(1));
       setImag(complex0, zero_vector);
       complex0.reference(data.row(1));
-      setReal(complex0, data_.row(2));
-      setImag(complex0, data_.row(3));
+      setReal(complex0, data_.column(2));
+      setImag(complex0, data_.column(3));
       data.row(2) = conj(data.row(1));
-      record.flag = flag_;
-      record.flag.row(2) = record.flag.row(2) || record.flag.row(3);
-      record.flag.row(3) = record.flag.row(1);
+      //record.flag = flag_;
+      record.flag.row(0) = flag_.column(0);
+      record.flag.row(2) = flag_.column(2) || flag_.column(3);
+      record.flag.row(3) = flag_.column(1);
       record.flag.row(1) = record.flag.row(2);
       record.flag_row = anyEQ(flag_row_, True);
 //      std::cout << "weight = " << record.weight << std::endl;
 
 //      std::cout << "set tsys" << std::endl;
-      if (tsys_(0, 0) > 0.0f && tsys_(0, 1) > 0.0f) {
+      if (tsys_(0, 0) > 0.0f && tsys_(1, 0) > 0.0f) {
         // should be spectral Tsys
         record.setTsysSize(2, num_chan_);
         record.tsys = -1;
-        record.tsys.row(0) = tsys_.row(0);
+        record.tsys.row(0) = tsys_.column(0);
       } else if (tsys_(0, 0) > 0.0f) {
         // scalar Tsys
         record.setTsysSize(2, 1);
         record.tsys(0, 0) = tsys_(0, 0);
       }
-      if (tsys_(1, 0) > 0.0f && tsys_(1, 1) > 0.0f) {
+      if (tsys_(0, 1) > 0.0f && tsys_(1, 1) > 0.0f) {
         if (record.tsys.ncolumn() != num_chan_) {
           record.setTsysSize(2, num_chan_);
           record.tsys.row(0) = -1.0f;
         }
-        record.tsys.row(1) = tsys_.row(1);
-      } else if (tsys_(1, 0) > 0.0f) {
+        record.tsys.row(1) = tsys_.column(1);
+      } else if (tsys_(0, 1) > 0.0f) {
         if (record.tsys.ncolumn() != 1) {
           record.setTsysSize(2, 1);
           record.tsys(0, 0) = -1.0f;
         }
-        record.tsys(1, 0) = tsys_(1, 0);
+        record.tsys(1, 0) = tsys_(0, 1);
       }
 
 //      std::cout << "set tcal " << tcal_ << std::endl;
-      if (tcal_(0, 0) > 0.0f && tcal_(0, 1) > 0.0f) {
+      if (tcal_(0, 0) > 0.0f && tcal_(1, 0) > 0.0f) {
         // should be spectral Tcal
         record.setTcalSize(2, num_chan_);
         record.tcal = -1;
-        record.tcal.row(0) = tcal_.row(0);
+        record.tcal.row(0) = tcal_.column(0);
       } else if (tcal_(0, 0) > 0.0f) {
         // scalar Tcal
         record.setTcalSize(2, num_chan_);
         record.tcal(0, 0) = tcal_(0, 0);
       }
-      if (tcal_(1, 0) > 0.0f && tcal_(1, 1) > 0.0f) {
+      if (tcal_(0, 1) > 0.0f && tcal_(1, 1) > 0.0f) {
         if (record.tcal.ncolumn() != num_chan_) {
           record.setTcalSize(2, num_chan_);
           record.tcal.row(0) = -1.0f;
         }
-        record.tcal.row(1) = tcal_.row(1);
-      } else if (tcal_(1, 0) > 0.0f) {
+        record.tcal.row(1) = tcal_.column(1);
+      } else if (tcal_(0, 1) > 0.0f) {
         if (record.tcal.ncolumn() != 1) {
           record.setTcalSize(2, 1);
           record.tcal(0, 0) = -1.0f;
         }
-        record.tcal(1, 0) = tcal_(1, 0);
+        record.tcal(1, 0) = tcal_(0, 1);
       }
 
       record.num_pol = 4;
@@ -333,61 +334,62 @@ private:
 //      std::cout << "set data/flag" << std::endl;
       record.setFloat();
       record.setDataSize(2, num_chan_);
-      record.float_data = data_(IPosition(2, 0, 0),
-          IPosition(2, 1, num_chan_ - 1));
-      record.flag = flag_(IPosition(2, 0, 0), IPosition(2, 1, num_chan_ - 1));
+      record.float_data.row(0) = data_.column(0);
+      record.float_data.row(1) = data_.column(1);
+      record.flag.row(0) = flag_.column(0);
+      record.flag.row(1) = flag_.column(1);
       record.flag_row = flag_row_[0] || flag_row_[1];
 //      std::cout << "weight = " << record.weight << std::endl;
 
       //Matrix < Float > tsys;
 //      std::cout << "set tsys" << std::endl;
-      if (tsys_(0, 0) > 0.0f && tsys_(0, 1) > 0.0f) {
+      if (tsys_(0, 0) > 0.0f && tsys_(1, 0) > 0.0f) {
         // should be spectral Tsys
         record.setTsysSize(2, num_chan_);
         record.tsys = -1;
-        record.tsys.row(0) = tsys_.row(0);
+        record.tsys.row(0) = tsys_.column(0);
       } else if (tsys_(0, 0) > 0.0f) {
         // scalar Tsys
         record.setTsysSize(2, 1);
         record.tsys(0, 0) = tsys_(0, 0);
       }
-      if (tsys_(1, 0) > 0.0f && tsys_(1, 1) > 0.0f) {
+      if (tsys_(0, 1) > 0.0f && tsys_(1, 1) > 0.0f) {
         if (record.tsys.ncolumn() != num_chan_) {
           record.setTsysSize(2, num_chan_);
           record.tsys.row(0) = -1.0f;
         }
-        record.tsys.row(1) = tsys_.row(1);
-      } else if (tsys_(1, 0) > 0.0f) {
+        record.tsys.row(1) = tsys_.column(1);
+      } else if (tsys_(0, 1) > 0.0f) {
         if (record.tsys.ncolumn() != 1) {
           record.setTsysSize(2, 1);
           record.tsys(0, 0) = -1.0f;
         }
-        record.tsys(1, 0) = tsys_(1, 0);
+        record.tsys(1, 0) = tsys_(0, 1);
       }
 
 //      std::cout << "set tcal " << tcal_ << std::endl;
-      if (tcal_(0, 0) > 0.0f && tcal_(0, 1) > 0.0f) {
+      if (tcal_(0, 0) > 0.0f && tcal_(1, 0) > 0.0f) {
         // should be spectral Tcal
         record.setTcalSize(2, num_chan_);
         record.tcal = -1;
-        record.tcal.row(0) = tcal_.row(0);
+        record.tcal.row(0) = tcal_.column(0);
       } else if (tcal_(0, 0) > 0.0f) {
         // scalar Tcal
         record.setTcalSize(2, num_chan_);
         record.tcal(0, 0) = tcal_(0, 0);
       }
-      if (tcal_(1, 0) > 0.0f && tcal_(1, 1) > 0.0f) {
+      if (tcal_(0, 1) > 0.0f && tcal_(1, 1) > 0.0f) {
         if (record.tcal.ncolumn() != num_chan_) {
           record.setTcalSize(2, num_chan_);
           record.tcal.row(0) = -1.0f;
         }
-        record.tcal.row(1) = tcal_.row(1);
-      } else if (tcal_(1, 0) > 0.0f) {
+        record.tcal.row(1) = tcal_.column(1);
+      } else if (tcal_(0, 1) > 0.0f) {
         if (record.tcal.ncolumn() != 1) {
           record.setTcalSize(2, 1);
           record.tcal(0, 0) = -1.0f;
         }
-        record.tcal(1, 0) = tcal_(1, 0);
+        record.tcal(1, 0) = tcal_(0, 1);
       }
 
       record.num_pol = 2;
@@ -398,16 +400,15 @@ private:
 //      std::cout << "set data/flag (pol 0)" << std::endl;
       record.setFloat();
       record.setDataSize(1, num_chan_);
-      Slicer slicer(IPosition(2, 0, 0), IPosition(2, 1, num_chan_));
-      record.float_data = data_(slicer);
-      record.flag = flag_(slicer);
+      record.float_data.row(0) = data_.column(0);
+      record.flag.row(0) = flag_.column(0);
       record.flag_row = flag_row_(0);
 
-      if (tsys_(0, 0) > 0.0f && tsys_(0, 1) > 0.0f) {
+      if (tsys_(0, 0) > 0.0f && tsys_(1, 0) > 0.0f) {
         // should be spectral Tsys
         record.setTsysSize(1, num_chan_);
         record.tsys = -1;
-        record.tsys.row(0) = tsys_.row(0);
+        record.tsys.row(0) = tsys_.column(0);
       } else if (tsys_(0, 0) > 0.0f) {
         // scalar Tsys
         record.setTsysSize(1, 1);
@@ -415,11 +416,11 @@ private:
       }
 
 //      std::cout << "set tcal " << tcal_ << std::endl;
-      if (tcal_(0, 0) > 0.0f && tcal_(0, 1) > 0.0f) {
+      if (tcal_(0, 0) > 0.0f && tcal_(1, 0) > 0.0f) {
         // should be spectral Tcal
         record.setTcalSize(1, num_chan_);
         record.tcal = -1;
-        record.tcal.row(0) = tcal_.row(0);
+        record.tcal.row(0) = tcal_.column(0);
       } else if (tcal_(0, 0) > 0.0f) {
         // scalar Tcal
         record.setTcalSize(1, 1);
@@ -433,32 +434,31 @@ private:
 //      std::cout << "set data/flag (pol 1)" << std::endl;
       record.setFloat();
       record.setDataSize(1, num_chan_);
-      Slicer slicer(IPosition(2, 1, 0), IPosition(2, 1, num_chan_));
-      record.float_data = data_(slicer);
-      record.flag = flag_(slicer);
+      record.float_data.row(0) = data_.column(1);
+      record.flag.row(0) = flag_.column(1);
       record.flag_row = flag_row_(1);
 
-      if (tsys_(1, 0) > 0.0f && tsys_(1, 1) > 0.0f) {
+      if (tsys_(0, 1) > 0.0f && tsys_(1, 1) > 0.0f) {
         if (record.tsys.ncolumn() != num_chan_) {
           record.setTsysSize(1, num_chan_);
         }
-        record.tsys.row(0) = tsys_.row(1);
-      } else if (tsys_(1, 0) > 0.0f) {
+        record.tsys.row(0) = tsys_.column(1);
+      } else if (tsys_(0, 1) > 0.0f) {
         if (record.tsys.ncolumn() != 1) {
           record.setTsysSize(1, 1);
         }
-        record.tsys(0, 0) = tsys_(1, 0);
+        record.tsys(0, 0) = tsys_(0, 1);
       }
 
 //      std::cout << "set tcal " << tcal_ << std::endl;
-      if (tcal_(1, 0) > 0.0f && tcal_(1, 1) > 0.0f) {
+      if (tcal_(0, 1) > 0.0f && tcal_(1, 1) > 0.0f) {
         // should be spectral Tcal
         record.setTcalSize(1, num_chan_);
-        record.tcal.row(0) = tcal_.row(1);
-      } else if (tcal_(0, 0) > 0.0f) {
+        record.tcal.row(0) = tcal_.column(1);
+      } else if (tcal_(0, 1) > 0.0f) {
         // scalar Tcal
         record.setTcalSize(1, 1);
-        record.tcal(0, 0) = tcal_(1, 0);
+        record.tcal(0, 0) = tcal_(0, 1);
       }
 
       record.num_pol = 1;
@@ -482,17 +482,18 @@ private:
     record.setFloat();
     if (isFullPol()) {
       record.setDataSize(4, num_chan_);
-      record.float_data = data_;
-      record.flag = flag_;
+      for (size_t i = 0; i < 4; ++i) {
+        record.float_data.row(i) = data_.column(i);
+        record.flag.row(i) = flag_.column(i);
+      }
       record.flag_row = anyTrue(flag_row_);
 
       record.num_pol = 4;
       record.corr_type = corr_type_;
     } else if (isSinglePol0()) {
       record.setDataSize(1, num_chan_);
-      Slicer slicer(IPosition(2, 0, 0), IPosition(2, 1, num_chan_));
-      record.float_data = data_(slicer);
-      record.flag = flag_(slicer);
+      record.float_data.row(0) = data_.column(0);
+      record.flag.row(0) = flag_.column(0);
       record.flag_row = flag_row_[0];
 
       record.num_pol = 1;
@@ -512,18 +513,18 @@ private:
     if (isDualPol()) {
       // POL 0 and 1
       record.setDataSize(2, num_chan_);
-      record.float_data = data_(IPosition(2, 0, 0),
-          IPosition(2, 1, num_chan_ - 1));
-      record.flag = flag_(IPosition(2, 0, 0), IPosition(2, 1, num_chan_ - 1));
+      record.float_data.row(0) = data_.column(0);
+      record.float_data.row(1) = data_.column(1);
+      record.flag.row(0) = flag_.column(0);
+      record.flag.row(1) = flag_.column(1);
       record.flag_row = flag_row_[0] || flag_row_[1];
 
       record.num_pol = 2;
       record.corr_type = corr_type_;
     } else if (isSinglePol0()) {
       record.setDataSize(1, num_chan_);
-      Slicer slicer(IPosition(2, 0, 0), IPosition(2, 1, num_chan_));
-      record.float_data = data_(slicer);
-      record.flag = flag_(slicer);
+      record.float_data.row(0) = data_.column(0);
+      record.flag.row(0) = flag_.column(0);
       record.flag_row = flag_row_[0];
 
       record.num_pol = 1;

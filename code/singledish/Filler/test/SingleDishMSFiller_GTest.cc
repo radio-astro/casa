@@ -216,6 +216,15 @@ class SingleDishMSFillerTestComplex: public SingleDishMSFillerTestBase {
   }
 };
 
+class DISABLED_SingleDishMSFillerTestPerformance : public SingleDishMSFillerTestBase {
+  virtual std::string getDataName() {
+    return "uid___A002_X85c183_X36f.PM04.asap";
+  }
+  virtual std::string getMSName() {
+    return "performance.ms";
+  }
+};
+
 TEST_F(SingleDishMSFillerTestFloat, FillerTest) {
   // Create filler
   std::cout << "create filler" << std::endl;
@@ -2347,6 +2356,23 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
   EXPECT_FALSE(a.queryForGet(r1));
 
 // reuse underlying DataChunk object
+}
+
+// This is a test for performance measurement that is disabled by default.
+// To activate this test, please follow the instruction below:
+//
+//   1. put test data "uid___A002_X85c183_X36f.PM04.asap" to the directory unittest/importasap
+//
+//   2. run singledishMSFiller_GTest with the following option
+//
+//       --gtest_also_run_disabled_tests --gtest_filter="*Performance*"
+//
+TEST_F(DISABLED_SingleDishMSFillerTestPerformance, Test) {
+  // Create filler
+  SingleDishMSFiller<Scantable2MSReader> filler(my_data_name_);
+
+  // Run filler
+  ExecuteFiller(filler);
 }
 
 int main(int nArgs, char * args[]) {

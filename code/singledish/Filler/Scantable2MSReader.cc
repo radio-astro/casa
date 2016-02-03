@@ -117,7 +117,7 @@ String getIntent(Int srctype) {
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 Scantable2MSReader::Scantable2MSReader(std::string const &scantable_name) :
-    ReaderInterface(scantable_name), main_table_(nullptr), scan_column_(), cycle_column_(), ifno_column_(), polno_column_(), beam_column_(), flagrow_column_(), time_column_(), interval_column_(), srctype_column_(), data_column_(), flag_column_(), direction_column_(), fieldname_column_(), tsys_column_(), tcal_id_column_(), sorted_rows_(), get_antenna_row_(
+    ReaderInterface(scantable_name), main_table_(nullptr), tcal_table_(), scan_column_(), cycle_column_(), ifno_column_(), polno_column_(), beam_column_(), flagrow_column_(), time_column_(), interval_column_(), srctype_column_(), data_column_(), flag_column_(), direction_column_(), fieldname_column_(), tsys_column_(), tcal_id_column_(), sorted_rows_(), get_antenna_row_(
         &Scantable2MSReader::getAntennaRowImpl), get_field_row_(
         &Scantable2MSReader::getFieldRowImpl), get_observation_row_(
         &Scantable2MSReader::getObservationRowImpl), get_processor_row_(
@@ -139,6 +139,7 @@ void Scantable2MSReader::initializeSpecific() {
   File f(name_);
   if (f.exists() and f.isDirectory()) {
     main_table_.reset(new Table(name_, Table::Old));
+    tcal_table_ = main_table_->keywordSet().asTable("TCAL");
   } else {
     throw AipsError("Input data doesn't exist or is invalid");
   }
@@ -328,8 +329,8 @@ Bool Scantable2MSReader::getData(size_t irow, DataRecord &record) {
   }
 
   Table const &tcal_table = main_table_->keywordSet().asTable("TCAL");
-  Table const &t = tcal_table(tcal_table.col("ID") == tcal_id_column_(index),
-      1);
+  Table const &t = tcal_table_(tcal_table_.col("ID") == tcal_id_column_(index), 1);//tcal_table(tcal_table.col("ID") == tcal_id_column_(index),
+//      1);
   if (t.nrow() > 0) {
     ArrayColumn<Float> tcal_column(t, "TCAL");
 //    std::cout << "set tsys size to " << tcal_column.shape(0)[0] << " shape "
