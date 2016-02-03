@@ -933,7 +933,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      Float afactor = 2.0;
      //cerr<<"thresh/afactor="<<thresh/afactor<<endl;
      //LatticeExpr<Float> themask( iif( *(tempIm3_ptr) > thresh/afactor, 1.0, 0.0 ));
-     LatticeExpr<Float> themask( iif( tempconvim > thresh/afactor, 1.0, 0.0 ));
+     LatticeExpr<Float> themask( iif( tempconvim > rmsthresh/afactor, 1.0, 0.0 ));
      mask.copyData( (LatticeExpr<Float>)( iif((mask + themask) > 0.0, 1.0, 0.0  ) ) );
   }
   
