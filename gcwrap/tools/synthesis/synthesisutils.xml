@@ -279,6 +279,22 @@ siu.cubedatapartition(selprs=pars, npart=20, fstart="1.412787GHz", fend="1.41328
 <!-- ===================================== -->
 <!-- ===================================== -->
 
+   <method type="function" name="getOptimumSize">
+   <shortdescription>Get Optimum Image size</shortdescription>
+
+<description>
+</description>
+<input>
+     <param type="int" name="size">
+     <description>Input size</description>
+     <value>100</value>
+     </param>
+
+</input>
+<returns type="int"/>
+</method>
+<!-- ===================================== -->
+
    <method type="function" name="done">
    <shortdescription>Close the tool</shortdescription>
 

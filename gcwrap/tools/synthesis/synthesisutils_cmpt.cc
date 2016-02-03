@@ -230,6 +230,21 @@ synthesisutils::~synthesisutils()
 ***/
 
 
+  int  synthesisutils::getOptimumSize(const int size)
+{
+   int rstat(size);
+
+  try
+    {
+      rstat = SynthesisUtilMethods::getOptimumSize(size);
+    }
+  catch  (AipsError x)
+    {
+      RETHROW(x);
+    }
+
+  return rstat;
+}
 
 
 
