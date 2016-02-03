@@ -147,6 +147,7 @@ private:
   ROScalarColumn<uInt> tcal_id_column_;
   Vector<uInt> sorted_rows_;
   ScantableFieldIterator::Product field_map_;
+  ScantableFrequenciesIterator::Product num_chan_map_;
 
   Bool (Scantable2MSReader::*get_antenna_row_)(AntennaRecord &);
   Bool (Scantable2MSReader::*get_field_row_)(FieldRecord &);

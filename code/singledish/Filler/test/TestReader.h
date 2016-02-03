@@ -451,16 +451,16 @@ struct FloatDataStorage {
 
     record.pol_type = "linear";
 
-    Vector < Float > data(num_chan, (Float) irow);
-    Vector < Bool > flag(num_chan, False);
     Bool flag_row = False;
-    record.data.assign(data);
-    record.flag.assign(flag);
+    record.setDataSize(num_chan);
+    record.data = (Float) irow;
+    record.flag = False;
     record.flag_row = flag_row;
     record.interval = 10.0;
 
     Vector < Float > tsys(num_chan_tsys, tsys_value);
-    record.tsys.assign(tsys);
+    record.setTsysSize(num_chan_tsys);
+    record.tsys = tsys_value;
 
     POST_END;
 

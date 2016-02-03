@@ -228,9 +228,11 @@ class SingleDishMSFillerTestComplex: public SingleDishMSFillerTestBase {
 
 TEST_F(SingleDishMSFillerTestFloat, FillerTest) {
   // Create filler
+  std::cout << "create filler" << std::endl;
   SingleDishMSFiller<Scantable2MSReader> filler(my_data_name_);
 
   // Run filler
+  std::cout << "run filler" << std::endl;
   ExecuteFiller(filler);
 
   // verify table contents
@@ -2216,8 +2218,9 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
   Vector < Bool > flag_row(4, False);
   flag_row[3] = True;
   r1.polno = 0u;
-  r1.data.assign(data.row(0));
-  r1.flag.assign(flag.row(0));
+  r1.setDataSize(num_chan);
+  r1.data = data.row(0);
+  r1.flag = flag.row(0);
   r1.flag_row = flag_row[0];
   status = a.accumulate(r1);
   ASSERT_TRUE(status);
@@ -2272,8 +2275,8 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
 
   // Accumulate more data with same meta data but different polno
   r1.polno = 1u;
-  r1.data.assign(data.row(1));
-  r1.flag.assign(flag.row(1));
+  r1.data = data.row(1);
+  r1.flag = flag.row(1);
   r1.flag_row = flag_row[1];
   status = a.accumulate(r1);
   ASSERT_TRUE(status);
@@ -2299,15 +2302,15 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
 
 // Accumulate cross-pol data with same meta data
   r1.polno = 2u;
-  r1.data.assign(data.row(2));
-  r1.flag.assign(flag.row(2));
+  r1.data = data.row(2);
+  r1.flag = flag.row(2);
   r1.flag_row = flag_row[2];
   status = a.accumulate(r1);
   ASSERT_TRUE(status);
   EXPECT_EQ(1u, a.getNumberOfChunks());
   r1.polno = 3u;
-  r1.data.assign(data.row(3));
-  r1.flag.assign(flag.row(3));
+  r1.data = data.row(3);
+  r1.flag = flag.row(3);
   r1.flag_row = flag_row[3];
   status = a.accumulate(r1);
   ASSERT_TRUE(status);
@@ -2349,8 +2352,9 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
   r1.pol_type = poltype2;
   Vector < Float > data2(8, -1.0f);
   Vector < Bool > flag2(8, False);
-  r1.data.assign(data2);
-  r1.flag.assign(flag2);
+  r1.setDataSize(8);
+  r1.data = data2;
+  r1.flag = flag2;
   status = a.accumulate(r1);
   ASSERT_TRUE(status);
   EXPECT_EQ(2u, a.getNumberOfChunks());
@@ -2380,8 +2384,8 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
   r1.polno = 1u;
   data2 *= 2.0f;
   flag2 = True;
-  r1.data.assign(data2);
-  r1.flag.assign(flag2);
+  r1.data = data2;
+  r1.flag = flag2;
   status = a.accumulate(r1);
   ASSERT_TRUE(status);
   EXPECT_EQ(2u, a.getNumberOfChunks());

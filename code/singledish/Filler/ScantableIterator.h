@@ -114,7 +114,7 @@ private:
 
 class ScantableFrequenciesIterator: public ScantableIteratorInterface {
 public:
-  typedef void * Product;
+  typedef std::map<Int, Int> Product;
   ScantableFrequenciesIterator(Table const &table) :
       ScantableIteratorInterface(table) {
     TableRecord const &header = main_table_.keywordSet();
@@ -180,9 +180,16 @@ public:
     record.refpix = refpix;
     record.refval = refval;
     record.increment = increment;
-  }
-  virtual void getProduct(Product */*p*/) {
 
+    // update product
+    product_[spw_id] = num_chan;
+  }
+  virtual void getProduct(Product *p) {
+    if (p) {
+      for (auto iter = product_.begin(); iter != product_.end(); ++iter) {
+        (*p)[iter->first] = iter->second;
+      }
+    }
   }
 
 private:
@@ -193,6 +200,7 @@ private:
   ScalarColumn<Double> increment_column_;
   Vector<uInt> ifno_list_;
   Vector<uInt> id_list_;
+  Product product_;
 };
 
 class ScantableFieldIterator: public ScantableIteratorInterface {

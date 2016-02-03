@@ -28,8 +28,8 @@
 #include <casacore/tables/Tables/ArrayColumn.h>
 #include <casacore/tables/Tables/ScalarColumn.h>
 
-#ifndef POST_START
 //#define SINGLEDISHMSFILLER_DEBUG
+#ifndef POST_START
 #ifdef SINGLEDISHMSFILLER_DEBUG
 #define POST_START std::cout << "Start " << __PRETTY_FUNCTION__ << std::endl
 #define POST_END std::cout << "End " << __PRETTY_FUNCTION__ << std::endl

@@ -120,13 +120,12 @@ Scantable2MSReader::Scantable2MSReader(std::string const &scantable_name) :
     ReaderInterface(scantable_name), main_table_(nullptr), scan_column_(), cycle_column_(), ifno_column_(), polno_column_(), beam_column_(), flagrow_column_(), time_column_(), interval_column_(), srctype_column_(), data_column_(), flag_column_(), direction_column_(), fieldname_column_(), tsys_column_(), tcal_id_column_(), sorted_rows_(), get_antenna_row_(
         &Scantable2MSReader::getAntennaRowImpl), get_field_row_(
         &Scantable2MSReader::getFieldRowImpl), get_observation_row_(
-            &Scantable2MSReader::getObservationRowImpl), get_processor_row_(
+        &Scantable2MSReader::getObservationRowImpl), get_processor_row_(
         &Scantable2MSReader::getProcessorRowImpl), get_source_row_(
         &Scantable2MSReader::getSourceRowImpl), get_spw_row_(
-        &Scantable2MSReader::getSpectralWindowRowImpl)//, get_syscal_row_(
-        /*&Scantable2MSReader::getSysCalRowImpl)*/, get_weather_row_(
+        &Scantable2MSReader::getSpectralWindowRowImpl), get_weather_row_(
         &Scantable2MSReader::getWeatherRowImpl), field_iter_(nullptr), freq_iter_(
-        nullptr), source_iter_(nullptr), /*syscal_iter_(nullptr),*/ weather_iter_(
+        nullptr), source_iter_(nullptr), weather_iter_(
         nullptr) {
 //  std::cout << "Scantabl2MSReader::Scantable2MSReader" << std::endl;
 }
@@ -275,7 +274,7 @@ Bool Scantable2MSReader::getFieldRowImpl(FieldRecord &record) {
 
 Bool Scantable2MSReader::getSpectralWindowRowImpl(
     SpectralWindowRecord &record) {
-  return getRowImplTemplate(freq_iter_, record, get_spw_row_);
+  return getRowImplTemplate(freq_iter_, record, get_spw_row_, &num_chan_map_);
 }
 
 Bool Scantable2MSReader::getWeatherRowImpl(WeatherRecord &record) {
@@ -295,46 +294,50 @@ Bool Scantable2MSReader::getData(size_t irow, DataRecord &record) {
 
   record.time = time_column_(index) * kDay2Sec;
   record.interval = interval_column_(index);
-//  std::cout << "TIME=" << record.asDouble("TIME") << " INTERVAL="
-//      << record.asDouble("INTERVAL") << std::endl;
+//  std::cout << "TIME=" << record.time << " INTERVAL=" << record.interval
+//      << std::endl;
   record.intent = getIntent(srctype_column_(index));
   record.scan = (Int) scan_column_(index);
   record.subscan = (Int) cycle_column_(index);
   String field_name = fieldname_column_(index);
   record.field_id = field_map_[field_name];
   record.antenna_id = (Int) 0;
-  if (record.direction.empty()) {
-    record.direction.resize(2, 1);
-  }
-  Vector<Double> direction = direction_column_(index);
-  record.direction.column(0) = direction;
-  record.feed_id = (Int)beam_column_(index);
-  record.spw_id = (Int)ifno_column_(index);
+  direction_column_.get(index, record.direction_slice);
+  record.feed_id = (Int) beam_column_(index);
+  record.spw_id = (Int) ifno_column_(index);
   record.polno = polno_column_(index);
   record.pol_type = main_table_->keywordSet().asString("POLTYPE");
-  record.data.assign(data_column_(index));
+//  std::cout << "set data size to " << num_chan_map_[record.spw_id] << " shape "
+//      << record.data.shape() << std::endl;
+  record.setDataSize(num_chan_map_[record.spw_id]);
+  data_column_.get(index, record.data);
   Vector < uChar > flag = flag_column_(index);
-  Vector < Bool > bflag(flag.shape(), False);
-  convertArray(bflag, flag);
-  record.flag.assign(bflag);
+  convertArray(record.flag, flag);
   uInt flagrow = flagrow_column_(index);
   Bool bflagrow = (flagrow != 0);
   record.flag_row = bflagrow;
 
   if (tsys_column_.isDefined(index)) {
-    Vector<Float> tsys = tsys_column_(index);
+//    std::cout << "set tsys size to " << tsys_column_.shape(index)[0]
+//        << " shape " << record.tsys.shape() << std::endl;
+    record.setTsysSize(tsys_column_.shape(index)[0]);
+    Vector < Float > tsys = tsys_column_(index);
     if (!allEQ(tsys, 1.0f) || !allEQ(tsys, 0.0f)) {
-      record.tsys.assign(tsys);
+      record.tsys = tsys;
     }
   }
 
   Table const &tcal_table = main_table_->keywordSet().asTable("TCAL");
-  Table const &t = tcal_table(tcal_table.col("ID") == tcal_id_column_(index), 1);
+  Table const &t = tcal_table(tcal_table.col("ID") == tcal_id_column_(index),
+      1);
   if (t.nrow() > 0) {
     ArrayColumn<Float> tcal_column(t, "TCAL");
-    Vector<Float> tcal = tcal_column(0);
+//    std::cout << "set tsys size to " << tcal_column.shape(0)[0] << " shape "
+//        << record.tcal.shape() << std::endl;
+    record.setTcalSize(tcal_column.shape(0)[0]);
+    Vector < Float > tcal = tcal_column(0);
     if (!allEQ(tcal, 1.0f) || !allEQ(tcal, 0.0f)) {
-      record.tcal.assign(tcal);
+      record.tcal = tcal;
     }
   }
   return True;
