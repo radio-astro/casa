@@ -274,7 +274,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			     String imagename,
 			     const Int facet, const Int nfacets,
 			     const Int chan, const Int nchanchunks,
-			     const Int pol, const Int npolchunks)
+			     const Int pol, const Int npolchunks,
+			     const Bool useweightimage)
   {
 
     itsPsf=psfim;
@@ -296,6 +297,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsPolId = pol;
 
     itsOverWrite=False;
+    itsUseWeight=useweightimage;
 
     itsParentImageShape = imshape; 
     itsImageShape = imshape;
@@ -383,7 +385,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							  const Int chan, const Int nchanchunks, 
 							  const Int pol, const Int npolchunks)
   {
-    return SHARED_PTR<SIImageStore>(new SIImageStore(itsModel, itsResidual, itsPsf, itsWeight, itsImage, itsMask, itsSumWt, itsCoordSys,itsImageShape, itsImageName, facet, nfacets,chan,nchanchunks,pol,npolchunks));
+    return SHARED_PTR<SIImageStore>(new SIImageStore(itsModel, itsResidual, itsPsf, itsWeight, itsImage, itsMask, itsSumWt, itsCoordSys,itsImageShape, itsImageName, facet, nfacets,chan,nchanchunks,pol,npolchunks,itsUseWeight));
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -835,6 +837,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      {
 		//cout << "Making parent : " << itsImageName+label << "    sw : " << sw << endl; 
 		parentptr = openImage(itsImageName+label , itsOverWrite, sw, itsNFacets );  
+		if( sw) {setUseWeightImage( *parentptr, itsUseWeight ); }
 	      }
 	    //	    cout << "Making facet " << itsFacetId << " out of " << itsNFacets << endl;
 	    //cout << "Making chunk " << itsChanId << " out of " << itsNChanChunks << endl;
@@ -1282,7 +1285,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 
     normPSF();
 
-    //    cout << "In dividePSFByWeight : itsUseWeight : " << itsUseWeight << endl;
+    cout << "In dividePSFByWeight : itsUseWeight : " << itsUseWeight << endl;
     if( itsUseWeight )
     { 
 	

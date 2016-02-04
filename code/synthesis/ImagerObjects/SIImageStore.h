@@ -79,7 +79,8 @@ class SIImageStore
 	       String imagename, 
 	       const Int facet=0, const Int nfacets=1,
 	       const Int chan=0, const Int nchanchunks=1,
-	       const Int pol=0, const Int npolchunks=1);
+	       const Int pol=0, const Int npolchunks=1,
+	       const Bool useweightimage=False);
 
   
     
