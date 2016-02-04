@@ -1110,8 +1110,6 @@ Bool MSTransformDataHandler::makeSelection()
 		uInt nAnts = selAnts.size();
 		Int maxAnt = max(selAnts);
 
-		os 	<< LogIO::NORMAL << "casa=" << selAnts << LogIO::POST;
-
 		if (maxAnt < 0)
 		{
 			os 	<< LogIO::SEVERE
