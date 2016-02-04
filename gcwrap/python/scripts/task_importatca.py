@@ -74,7 +74,7 @@ def importatca (
               if len(nscans)>1:
                 lastscan=nscans[1]
             myaf.select(firstscan,lastscan,spw,lowfreq,highfreq,
-            fields,edge=edge)
+            fields,edge)
             myaf.fill()
         except Exception, e:
           print e;

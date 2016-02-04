@@ -33,7 +33,7 @@ importatca(files=None,vis=None,
 	   </param>
 
 	   <param type="string" name="options">
-		   <description>Processing options: birdie, reweight, noauto, noxycorr, fastmosaic, hires, notsys (comma separated list)</description>
+		   <description>Processing options: birdie, reweight, noxycorr, fastmosaic, hires, noac (comma separated list)</description>
 		   <value></value>	 
 	   </param>
 
