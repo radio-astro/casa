@@ -968,7 +968,7 @@ Bool ImageProfileFitter::_setFitterElements(
 		if (_nGaussSinglets > 0) {
 			fitter.setGaussianElements (_nGaussSinglets);
 			uInt ng = fitter.getList(False).nelements();
-			if (ng != _nGaussSinglets) {
+			if (ng != _nGaussSinglets && ! _haveWarnedAboutGuessingGaussians) {
 				*this->_getLog() << LogOrigin(getClass(), __func__) << LogIO::WARN;
 				if (ng == 0) {
 					*this->_getLog() << "Unable to estimate "
@@ -980,8 +980,13 @@ Bool ImageProfileFitter::_setFitterElements(
 				}
 				*this->_getLog() << "If you really want "
 					<< _nGaussSinglets << " Gaussian singlets to be fit, "
-					<< "you should specify initial parameter estimates for all of them"
-					<< LogIO::POST;
+					<< "you should specify initial parameter estimates for all of them";
+				if (_multiFit) {
+				    *this->_getLog() << " (additional warnings of this type during "
+				        "this run will not be logged)";
+				}
+				*this->_getLog() << "."	<< LogIO::POST;
+				_haveWarnedAboutGuessingGaussians = True;
 			}
 		}
 		if (polyEl.ptr()) {

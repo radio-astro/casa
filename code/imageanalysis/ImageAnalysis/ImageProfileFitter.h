@@ -270,6 +270,8 @@ private:
 
 	const static String _class;
 
+	mutable Bool _haveWarnedAboutGuessingGaussians = False;
+
     std::vector<OutputDestinationChecker::OutputStruct> _getOutputStruct();
 
     void _checkNGaussAndPolyOrder() const;
