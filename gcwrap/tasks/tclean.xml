@@ -424,7 +424,8 @@ HPX HEALPix grid.  -->
      <shortdescription>Spectral definition mode (mfs,cube,cubedata)</shortdescription>
 <description>Spectral definition mode (mfs,cube,cubedata)
                        
-                       mode='mfs' : Continuum imaging with only one channel
+                       mode='mfs' : Continuum imaging with only one output image channel.
+                                             (mode='cont' can also be used here)
 
                        mode='cube' : Spectral line imaging with one or more channels
                                                Parameters start, width,and nchan define the spectral
@@ -451,7 +452,13 @@ HPX HEALPix grid.  -->
                                                         
 
 </description>
-      <value type="string">mfs</value>
+     <value type="string">mfs</value>
+	    <allowed kind="enum">
+	      <value>mfs</value>
+	      <value>cont</value>
+	      <value>cube</value>
+	      <value>cubedata</value>
+	    </allowed>
     </param>
 
     <param type="any" name="reffreq" subparam="true">

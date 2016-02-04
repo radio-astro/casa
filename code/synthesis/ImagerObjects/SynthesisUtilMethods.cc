@@ -124,7 +124,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   // Return the prime factors of the given number
-  Vector<uInt> SynthesisUtilMethods::primeFactors(uInt n, Bool douniq)
+  Vector<uInt> SynthesisUtilMethods::primeFactors(uInt n, Bool /*douniq*/)
   {
     Vector<uInt> factors;
     
@@ -1214,6 +1214,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	// Frequency frame stuff. 
 	err += readVal( inrec, String("specmode"), mode);
+	// Alias for 'mfs' is 'cont'
+	if(mode=="cont") mode="mfs";
+
         err += readVal( inrec, String("outframe"), frame);
         qmframe="";
         // mveltype is only set when start/step is given in mdoppler
