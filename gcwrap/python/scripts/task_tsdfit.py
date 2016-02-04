@@ -26,12 +26,12 @@ def tsdfit(infile=None, datacolumn=None, antenna=None, field=None, spw=None, tim
         if (spw == ''): spw = '*'
 
         selection = ms.msseltoindex(vis=infile, spw=spw, field=field, 
-                                    baseline=str(antenna), time=timerange, 
+                                    baseline=antenna, time=timerange, 
                                     scan=scan)
 
         sdms.open(infile)
         sdms.set_selection(spw=sdutil.get_spwids(selection), field=field, 
-                           antenna=str(antenna), timerange=timerange, 
+                           antenna=antenna, timerange=timerange, 
                            scan=scan, intent=intent)
 
         tempfile = 'temp_tsdfit_'+str(datetime.datetime.fromtimestamp(time.time())).replace('-','').replace(' ','').replace(':','')
