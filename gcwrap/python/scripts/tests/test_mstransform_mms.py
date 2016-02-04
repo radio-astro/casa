@@ -14,6 +14,7 @@ from parallel.parallel_data_helper import ParallelDataHelper
 from unittest.case import expectedFailure
 
 from mpi4casa.MPICommandClient import MPICommandClient
+from mpi4casa.MPIEnvironment import MPIEnvironment
 
 
 # Define the root for the data files
@@ -1228,20 +1229,22 @@ class test_otf_calibration(test_base_compare):
         
         default(mstransform) 
         
-        # Change current working directory
-        self.client = MPICommandClient()
-        self.client.set_log_mode('redirect')
-        self.client.start_services()      
+        if MPIEnvironment.is_mpi_enabled:
+            
+            # Change current working directory
+            self.client = MPICommandClient()
+            self.client.set_log_mode('redirect')
+            self.client.start_services()      
         
-        # Prepare list of servers
-        self.server_list = []
-        server_list = self.client.get_server_status()
-        for server in server_list:
-            if not server_list[server]['timeout']:
-                self.server_list.append(server_list[server]['rank'])         
+            # Prepare list of servers
+            self.server_list = []
+            server_list = self.client.get_server_status()
+            for server in server_list:
+                if not server_list[server]['timeout']:
+                    self.server_list.append(server_list[server]['rank'])         
                 
-        # Change current working directory        
-        self.client.push_command_request("os.chdir('%s')" % os.getcwd(),True,self.server_list)
+            # Change current working directory        
+            self.client.push_command_request("os.chdir('%s')" % os.getcwd(),True,self.server_list)
         
     def tearDown(self):
         
