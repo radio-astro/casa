@@ -607,6 +607,11 @@ public:
     return is_ready;
   }
 
+  bool queryForGet(Double const &time) const {
+    bool is_ready = (0.0 <= time_) && !(time_ == time);
+    return is_ready;
+  }
+
   void clear() {
     for (auto iter = pool_.begin(); iter != pool_.end(); ++iter) {
       (*iter)->clear();

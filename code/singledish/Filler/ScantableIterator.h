@@ -8,6 +8,7 @@
 #ifndef SINGLEDISH_FILLER_SCANTABLEITERATOR_H_
 #define SINGLEDISH_FILLER_SCANTABLEITERATOR_H_
 
+#include <singledish/Filler/FillerUtil.h>
 #include <singledish/Filler/FieldRecord.h>
 #include <singledish/Filler/SourceRecord.h>
 #include <singledish/Filler/SpectralWindowRecord.h>
@@ -60,6 +61,8 @@ public:
   typedef void * Product;
   ScantableWeatherIterator(Table const &table) :
       ScantableIteratorInterface(table) {
+    POST_START;
+
     TableRecord const &header = main_table_.keywordSet();
     sub_table_ = header.asTable("WEATHER");
     size_t nrow = sub_table_.nrow();
@@ -72,6 +75,45 @@ public:
     humidity_column_.attach(sub_table_, "HUMIDITY");
     wind_speed_column_.attach(sub_table_, "WINDSPEED");
     wind_direction_column_.attach(sub_table_, "WINDAZ");
+
+    // generate sorted_index_
+    uInt nrow_main = main_table_.nrow();
+    ROScalarColumn < uInt > weather_id_column(main_table_, "WEATHER_ID");
+    ROScalarColumn < Double > time_column(main_table_, "TIME");
+    Sort sorter;
+    Vector < uInt > weather_id_list = weather_id_column.getColumn();
+    Vector < Double > time_list = time_column.getColumn();
+    sorter.sortKey(weather_id_list.data(), TpUInt, 0, Sort::Ascending);
+    sorter.sortKey(time_list.data(), TpDouble, 0, Sort::Ascending);
+    Vector < uInt > index_list;
+    sorter.sort(index_list, nrow_main, Sort::QuickSort);
+    uInt id_prev = weather_id_list[index_list[0]];
+    Double time_min = time_list[index_list[0]];
+    Double time_max = 0.0;
+    for (uInt i = 1; i < nrow_main; ++i) {
+      uInt j = index_list[i];
+      uInt weather_id = weather_id_list[j];
+      if (weather_id != id_prev) {
+        time_max = time_list[j - 1];
+        Block<Double> time_range(2);
+        time_range[0] = time_min;
+        time_range[1] = time_max;
+        time_range_[id_prev] = time_range;
+
+        id_prev = weather_id;
+        time_min = time_list[j];
+      }
+    }
+    uInt last_weather_id = weather_id_list[index_list[nrow_main - 1]];
+    if (time_range_.find(last_weather_id) == time_range_.end()) {
+      time_max = time_list[index_list[nrow_main - 1]];
+      Block<Double> time_range(2);
+      time_range[0] = time_min;
+      time_range[1] = time_max;
+      time_range_[last_weather_id] = time_range;
+    }
+
+    POST_END;
   }
   virtual ~ScantableWeatherIterator() {
   }
@@ -81,11 +123,18 @@ public:
     uInt weather_id = id_column_(irow);
     Double time_min = 0.0;
     Double time_max = 0.0;
-    Table subtable = main_table_(main_table_.col("WEATHER_ID") == weather_id);
-    if (subtable.nrow() > 0) {
-      ROScalarColumn < Double > column(subtable, "TIME");
-      Vector < Double > time_list = column.getColumn();
-      minMax(time_min, time_max, time_list);
+    auto iter = time_range_.find(weather_id);
+    if (iter != time_range_.end()) {
+      Block<Double> time_range = iter->second;
+      time_min = time_range[0];
+      time_max = time_range[1];
+    } else {
+      Table subtable = main_table_(main_table_.col("WEATHER_ID") == weather_id);
+      if (subtable.nrow() > 0) {
+        ROScalarColumn < Double > column(subtable, "TIME");
+        Vector < Double > time_list = column.getColumn();
+        minMax(time_min, time_max, time_list);
+      }
     }
 
     record.antenna_id = 0;
@@ -110,6 +159,7 @@ private:
   ScalarColumn<Float> humidity_column_;
   ScalarColumn<Float> wind_speed_column_;
   ScalarColumn<Float> wind_direction_column_;
+  std::map<uInt, Block<Double> > time_range_;
 };
 
 class ScantableFrequenciesIterator: public ScantableIteratorInterface {
@@ -228,23 +278,25 @@ public:
     uInt const irow = row_list_[current_iter_];
     String field_name_with_id = field_column_(irow);
     auto pos = field_name_with_id.find("__");
-    auto defaultFieldId = [&]() {
-      Int my_field_id = 0;
-      while (is_reserved_[my_field_id] && (uInt)my_field_id < is_reserved_.size()) {
-        my_field_id++;
-      }
-      if ((uInt)my_field_id >= is_reserved_.size()) {
-        throw AipsError("Internal inconsistency in FIELD_ID numbering");
-      }
-      is_reserved_[my_field_id] = True;
-      return my_field_id;
-    };
+    auto defaultFieldId =
+        [&]() {
+          Int my_field_id = 0;
+          while (is_reserved_[my_field_id] && (uInt)my_field_id < is_reserved_.size()) {
+            my_field_id++;
+          }
+          if ((uInt)my_field_id >= is_reserved_.size()) {
+            throw AipsError("Internal inconsistency in FIELD_ID numbering");
+          }
+          is_reserved_[my_field_id] = True;
+          return my_field_id;
+        };
     if (pos != String::npos) {
       record.name = field_name_with_id.substr(0, pos);
       Int field_id = String::toInt(field_name_with_id.substr(pos + 2));
       if (field_id < 0) {
         record.field_id = defaultFieldId();
-      } else if ((uInt)field_id >= is_reserved_.size() || !is_reserved_[field_id]) {
+      } else if ((uInt) field_id >= is_reserved_.size()
+          || !is_reserved_[field_id]) {
         record.field_id = field_id;
         is_reserved_[field_id] = True;
       } else {
@@ -306,6 +358,8 @@ public:
           main_table_, "MOLECULE_ID"), ifno_column_(main_table_, "IFNO"), molecules_table_(), row_list_(), source_id_map_() {
     TableRecord const &header = main_table_.keywordSet();
     molecules_table_ = header.asTable("MOLECULES");
+    restfrequency_column_.attach(molecules_table_, "RESTFREQUENCY");
+    molecule_name_column_.attach(molecules_table_, "NAME");
     Vector < String > source_name_list = name_column_.getColumn();
     Vector < uInt > ifno_list = ifno_column_.getColumn();
     Sort sorter;
@@ -314,7 +368,7 @@ public:
     uInt num_unique = sorter.sort(unique_vector, source_name_list.size(),
         Sort::QuickSort | Sort::NoDuplicates);
     for (uInt i = 0; i < num_unique; ++i) {
-       source_id_map_[name_column_(unique_vector[i])] = (Int) i;
+      source_id_map_[name_column_(unique_vector[i])] = (Int) i;
     }
     Sort sorter2;
     sorter2.sortKey(source_name_list.data(), TpString);
@@ -327,6 +381,13 @@ public:
 //          << "\" IFNO " << ifno_column_(row_list_[i]) << std::endl;
 //    }
     initialize(num_unique);
+
+    // generate molecule_id_map_
+    ROScalarColumn<uInt> id_column(molecules_table_, "ID");
+    Vector<uInt> molecule_id_list = id_column.getColumn();
+    for (uInt i = 0; i < id_column.nrow(); ++i) {
+      molecule_id_map_[molecule_id_list[i]] = i;
+    }
   }
 
   virtual ~ScantableSourceIterator() {
@@ -342,8 +403,17 @@ public:
         MDirection::J2000);
     record.proper_motion = proper_motion_column_(irow);
     uInt molecule_id = molecule_id_column_(irow);
+    auto iter = molecule_id_map_.find(molecule_id);
+    if (iter != molecule_id_map_.end()) {
+      uInt jrow = iter->second;
+      if (restfrequency_column_.isDefined(jrow)) {
+        record.rest_frequency = restfrequency_column_(jrow);
+      }
+      if (molecule_name_column_.isDefined(jrow)) {
+        record.transition = molecule_name_column_(jrow);
+      }
+    } else {
     Table t = molecules_table_(molecules_table_.col("ID") == molecule_id, 1);
-    Double sysvel = sysvel_column_(irow);
     if (t.nrow() == 1) {
       ArrayColumn<Double> rest_freq_column(t, "RESTFREQUENCY");
       ArrayColumn<String> molecule_name_column(t, "NAME");
@@ -354,10 +424,12 @@ public:
         record.transition = molecule_name_column(0);
       }
     }
+    }
+    Double sysvel = sysvel_column_(irow);
     record.num_lines = record.rest_frequency.size();
     record.sysvel = Vector < Double > (record.num_lines, sysvel);
 
-    t = main_table_(
+    Table t = main_table_(
         main_table_.col("SRCNAME") == record.name
             && main_table_.col("IFNO") == record.spw_id);
     time_column_.attach(t, "TIME");
@@ -388,9 +460,12 @@ private:
   ROScalarColumn<uInt> ifno_column_;
   ROScalarColumn<Double> time_column_;
   ROScalarColumn<Double> interval_column_;
+  ArrayColumn<Double> restfrequency_column_;
+  ArrayColumn<String> molecule_name_column_;
   Table molecules_table_;
   Vector<uInt> row_list_;
   std::map<String, Int> source_id_map_;
+  std::map<uInt, uInt> molecule_id_map_;
 };
 
 } //# NAMESPACE CASA - END

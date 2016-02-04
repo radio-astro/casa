@@ -321,6 +321,9 @@ void SingleDishMSFiller<T>::setupMS() {
   // Set up MSSysCalColumns
   syscal_columns_.reset(new MSSysCalColumns(ms_->sysCal()));
 
+  // Set up MSStateColumns
+  state_columns_.reset(new MSStateColumns(ms_->state()));
+
 //  std::cout << "End " << __PRETTY_FUNCTION__ << std::endl;
 }
 
@@ -469,11 +472,11 @@ template<class T>
 Int SingleDishMSFiller<T>::updateState(Int const &subscan,
     String const &obs_mode) {
   MSState &mytable = ms_->state();
-  MSStateColumns mycolumns(mytable);
   static Regex const regex("^OBSERVE_TARGET#ON_SOURCE");
+  static std::vector<Int> subscan_list;
   auto comparer =
       [&](MSStateColumns &columns, uInt i) {
-        Bool match = (subscan == columns.subScan()(i)) && (obs_mode == columns.obsMode()(i));
+        Bool match = (subscan == subscan_list[i]) && (obs_mode == columns.obsMode()(i));
         return match;
       };
   auto updater = [&](MSStateColumns &columns, uInt i) {
@@ -482,16 +485,16 @@ Int SingleDishMSFiller<T>::updateState(Int const &subscan,
     Bool is_signal = obs_mode.matches(regex);
     columns.sig().put(i, is_signal);
     columns.ref().put(i, !is_signal);
+
+    subscan_list.push_back(subscan);
   };
-  Int state_id = ::updateTable(mytable, mycolumns, comparer, updater);
+  Int state_id = ::updateTable(mytable, *(state_columns_.get()), comparer, updater);
   return state_id;
 }
 
 template<class T>
 Int SingleDishMSFiller<T>::updateFeed(Int const &feed_id, Int const &spw_id,
     String const &pol_type) {
-  //MSFeed &mytable = ms_->feed();
-  //MSFeedColumns mycolumns(mytable);
   constexpr Int num_receptors = 2;
   String const linear_type_arr[2] = { "X", "Y" };
   Vector<String> const linear_type(linear_type_arr, 2, SHARE);
@@ -547,8 +550,7 @@ Int SingleDishMSFiller<T>::updatePointing(Int const &antenna_id,
     return -1;
   }
 
-  auto mytable = ms_->pointing();
-  //MSPointingColumns mycolumns(mytable);
+  auto &mytable = ms_->pointing();
   uInt nrow = mytable.nrow();
 
   uInt *n = &num_pointing_time_[antenna_id];

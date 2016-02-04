@@ -27,6 +27,7 @@
 #include <casacore/ms/MeasurementSets/MSSysCalColumns.h>
 #include <casacore/ms/MeasurementSets/MSPointingColumns.h>
 #include <casacore/ms/MeasurementSets/MSFeedColumns.h>
+#include <casacore/ms/MeasurementSets/MSStateColumns.h>
 #include <casacore/tables/Tables/TableRow.h>
 #include <casacore/tables/Tables/ArrayColumn.h>
 #include <casacore/tables/Tables/ScalarColumn.h>
@@ -39,8 +40,8 @@ template<typename Reader>
 class SingleDishMSFiller {
 public:
   SingleDishMSFiller(std::string const &name) :
-      ms_(), ms_columns_(), feed_columns_(), pointing_columns_(), syscal_columns_(), reader_(new Reader(name)), is_float_(false), data_key_(), reference_feed_(
-          -1), pointing_time_(), pointing_time_max_(), pointing_time_min_(), num_pointing_time_(), syscal_list_() {
+      ms_(), ms_columns_(), feed_columns_(), pointing_columns_(), syscal_columns_(), state_columns_(), reader_(
+          new Reader(name)), is_float_(false), data_key_(), reference_feed_(-1), pointing_time_(), pointing_time_max_(), pointing_time_min_(), num_pointing_time_(), syscal_list_() {
   }
 
   ~SingleDishMSFiller() {
@@ -179,7 +180,8 @@ private:
     size_t nrow = reader_->getNumberOfRows();
     DataAccumulator accumulator;
     DataRecord record;
-    DataRecord previous_record;
+    //DataRecord previous_record;
+    Double current_time;
 //    std::cout << "nrow = " << nrow << std::endl;
     for (size_t irow = 0; irow < nrow; ++irow) {
       Bool status = reader_->getData(irow, record);
@@ -188,23 +190,24 @@ private:
 //          << std::endl;
 //      std::cout << "status = " << status << std::endl;
       if (status) {
-        Bool is_ready = accumulator.queryForGet(record);
+        Bool is_ready = accumulator.queryForGet(record.time);
         if (is_ready) {
-          flush(previous_record, accumulator);
+          flush(current_time, accumulator);
         }
         Bool astatus = accumulator.accumulate(record);
-        (void)astatus;
+        (void) astatus;
 //        std::cout << "astatus = " << astatus << std::endl;
-        previous_record = record;
+        //previous_record = record;
+        current_time = record.time;
       }
     }
 
-    flush(record, accumulator);
+    flush(record.time, accumulator);
 
     POST_END;
   }
 
-  void flush(DataRecord const &main_record, DataAccumulator &accumulator) {
+  void flush(Double const &time, DataAccumulator &accumulator) {
     POST_START;
 
     size_t nchunk = accumulator.getNumberOfChunks();
@@ -214,37 +217,38 @@ private:
       return;
     }
 
-    Double time = main_record.time;
+    //Double time = main_record.time;
 
+    //MSDataRecord data_record;
     for (size_t ichunk = 0; ichunk < nchunk; ++ichunk) {
-      MSDataRecord data_record;
-      Bool status = accumulator.get(ichunk, data_record);
+      //MSDataRecord data_record;
+      Bool status = accumulator.get(ichunk, record_);
 //      std::cout << "accumulator status = " << std::endl;
       if (status) {
-        Int antenna_id = data_record.antenna_id;
-        Int spw_id = data_record.spw_id;
-        Int feed_id = data_record.feed_id;
-        Int field_id = data_record.field_id;
-        Int scan = data_record.scan;
-        Int subscan = data_record.subscan;
-        String pol_type = data_record.pol_type;
-        String obs_mode = data_record.intent;
-        Int num_pol = data_record.num_pol;
-        Vector < Int > &corr_type = data_record.corr_type;
+        Int antenna_id = record_.antenna_id;
+        Int spw_id = record_.spw_id;
+        Int feed_id = record_.feed_id;
+        Int field_id = record_.field_id;
+        Int scan = record_.scan;
+        Int subscan = record_.subscan;
+        String pol_type = record_.pol_type;
+        String obs_mode = record_.intent;
+        Int num_pol = record_.num_pol;
+        Vector < Int > &corr_type = record_.corr_type;
         Int polarization_id = updatePolarization(corr_type, num_pol);
         updateFeed(feed_id, spw_id, pol_type);
         Int data_desc_id = updateDataDescription(polarization_id, spw_id);
         Int state_id = updateState(subscan, obs_mode);
-        Matrix < Double > &direction = data_record.direction;
-        Double interval = data_record.interval;
+        Matrix < Double > &direction = record_.direction;
+        Double interval = record_.interval;
 
         // updatePointing must be called after updateFeed
         updatePointing(antenna_id, feed_id, time, interval, direction);
 
-        updateSysCal(antenna_id, feed_id, spw_id, time, interval, data_record);
+        updateSysCal(antenna_id, feed_id, spw_id, time, interval, record_);
 
         updateMain(antenna_id, field_id, feed_id, data_desc_id, state_id, scan,
-            time, data_record);
+            time, record_);
       }
     }
 //    std::cout << "clear accumulator" << std::endl;
@@ -342,7 +346,8 @@ private:
     record.spw_id = spw_id;
     record.time = time;
     record.interval = interval;
-    if (!data_record.tcal.empty() && !allEQ(data_record.tcal, 1.0f) && !allEQ(data_record.tcal, 0.0f)) {
+    if (!data_record.tcal.empty() && !allEQ(data_record.tcal, 1.0f)
+        && !allEQ(data_record.tcal, 0.0f)) {
 //      std::cout << "tcal seems to be valid " << data_record.tcal << std::endl;
       if (data_record.float_data.shape() == data_record.tcal.shape()) {
         record.tcal_spectrum.assign(data_record.tcal);
@@ -353,7 +358,8 @@ private:
         }
       }
     }
-    if (!data_record.tsys.empty() && !allEQ(data_record.tsys, 1.0f) && !allEQ(data_record.tsys, 0.0f)) {
+    if (!data_record.tsys.empty() && !allEQ(data_record.tsys, 1.0f)
+        && !allEQ(data_record.tsys, 0.0f)) {
       if (data_record.float_data.shape() == data_record.tsys.shape()) {
         record.tsys_spectrum.assign(data_record.tsys);
       } else {
@@ -373,7 +379,7 @@ private:
       syscal_list_.push_back(SysCalTableRecord(ms_.get(), irow, record));
     } else {
       auto irow = std::distance(syscal_list_.begin(), pos);
-      updateSysCal(*(syscal_columns_.get()) , irow, record);
+      updateSysCal(*(syscal_columns_.get()), irow, record);
     }
 
     POST_END;
@@ -472,6 +478,7 @@ private:
   std::unique_ptr<MSFeedColumns> feed_columns_;
   std::unique_ptr<MSPointingColumns> pointing_columns_;
   std::unique_ptr<MSSysCalColumns> syscal_columns_;
+  std::unique_ptr<MSStateColumns> state_columns_;
   std::unique_ptr<Reader> reader_;
   bool is_float_;
   String data_key_;
@@ -485,6 +492,9 @@ private:
 
   // for SYSCAL table
   std::vector<SysCalTableRecord> syscal_list_;
+
+  // Data storage to interact with DataAccumulator
+  MSDataRecord record_;
 }
 ;
 
