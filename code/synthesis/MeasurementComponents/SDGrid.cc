@@ -1497,6 +1497,7 @@ Bool SDGrid::getXYPos(const VisBuffer& vb, Int row) {
   dointerp = False;
   if (!nullPointingTable && (vb.timeInterval()(row) < act_mspc.interval()(pointIndex))) {
     dointerp = True;
+    /*
     if (!isSplineInterpolationReady) {
       //(1)get number of pointing data for each antennaID
       Int nant = vb.msColumns().antenna().name().nrow();
@@ -1569,6 +1570,7 @@ Bool SDGrid::getXYPos(const VisBuffer& vb, Int row) {
 
       isSplineInterpolationReady = True;
     }
+    */
   }
 
   MEpoch epoch(Quantity(vb.time()(row), "s"));
@@ -1685,14 +1687,16 @@ MDirection SDGrid::directionMeas(const ROMSPointingColumns& mspc, const Int& ind
 MDirection SDGrid::directionMeas(const ROMSPointingColumns& mspc, const Int& index,
                                  const Double& time){
   //spline interpolation
+  /*
   if (isSplineInterpolationReady) {
     Int antid = mspc.antennaId()(index);
     if (doSplineInterpolation(antid)) {
       return interpolateDirectionMeasSpline(time, antid);
     }
   }
+  */
 
-  //linear interpolation (original way)
+  //linear interpolation (as done before CAS-7911)
   Int index1, index2;
   if (time < mspc.time()(index)) {
     if (index > 0) {
