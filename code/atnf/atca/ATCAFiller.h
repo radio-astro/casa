@@ -32,8 +32,6 @@
 #include <casa/aips.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Logging/LogIO.h>
-//#include <tables/Tables/ArrayColumn.h>
-//#include <tables/Tables/ScalarColumn.h>
 #include <tables/DataMan/TiledDataStManAccessor.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSColumns.h>
@@ -103,7 +101,7 @@ public:
   ATCAFiller & numChan1(Int numchan1);
 
   // Set shadowing limit
-  ATCAFiller & shadow(Double diam);
+  ATCAFiller & shadow(Float diam);
 
   // Deselect antennas.
   ATCAFiller & deselectAntenna(Vector<Int> antennas);

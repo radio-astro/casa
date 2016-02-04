@@ -27,36 +27,12 @@
 
 
 #include <atnf/atca/ATCAFiller.h>
-
-//#include <sstream>
-//#include <casa/stdio.h>
-
-//#include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Cube.h>
-//#include <casa/Arrays/MaskedArray.h>
-//#include <casa/Arrays/ArrayLogical.h>
-//#include <casa/Arrays/ArrayMath.h>
-//#include <casa/Arrays/ArrayUtil.h>
-//#include <casa/Arrays/ArrayIO.h>
-//#include <casa/BasicSL/Constants.h>
 #include <scimath/Mathematics/FFTServer.h>
-//#include <measures/Measures/Stokes.h>
-//#include <measures/TableMeasures/TableQuantumDesc.h>
-
-
-//#include <casa/Logging.h>
-//#include <casa/Logging/LogSink.h>
-//#include <casa/Logging/LogMessage.h>
-
-//#include <casa/OS/Directory.h>
 #include <casa/OS/DirectoryIterator.h>
 #include <casa/OS/RegularFile.h>
 #include <tables/Tables.h>
-//#include <tables/DataMan/CompressComplex.h>
-//#include <tables/DataMan/CompressFloat.h>
-//#include <casa/BasicSL/String.h>
 #include <RPFITS.h>
-//#include <casa/Quanta/MVTime.h>
 #include <ms/MeasurementSets/MSTileLayout.h>
 
 Int myround(Double x) { return Int(floor(x+0.5));}
@@ -799,8 +775,7 @@ Bool ATCAFiller::fill1(const String& rpfitsFile)
         //   for syscal records
         if (baseline==-1) {if_no=1; sourceno=1;} 
 
-        // check if ifchain could be selected and if_no valid
-        //if (!if_.if_found|| ifChain_p>if_.n_if|| if_no>if_.n_if) 
+        // check if if_no valid
         if (!if_.if_found|| if_no>if_.n_if) {
           //if (!skipScan_p)cerr<<"ss2=T"<<endl; 
           skipScan_p=True; 
@@ -820,7 +795,6 @@ Bool ATCAFiller::fill1(const String& rpfitsFile)
             if_no--; // go from 1-based to 0-based indexing (f2c)
             sourceno--; // same here
             // skip unselected or garbled data
-            //cerr << "Selected(ifno)="<<selected(if_no)<<endl;
             skipData_p=Bool(if_no<0 || !selected(if_no) || sourceno<0);
             // reject auto correlations?
             if (noac_p) skipData_p |= (Int(baseline)%257==0);
@@ -910,7 +884,7 @@ Bool ATCAFiller::fill1(const String& rpfitsFile)
           os_p<< LogIO::NORMAL <<"  Antenna off source     : "<<perc(ONLINE)<<"%"<<endl; 
           os_p<< LogIO::NORMAL <<"  ScanType (Point/Paddle): "<<perc(SCANTYPE)<<"%"<<endl; 
           if (!cabb_p) os_p<< LogIO::NORMAL <<"  Bad Sampler stats      : "<<perc(SYSCAL)<<"%"<<endl; 
-          os_p<< LogIO::NORMAL <<"  Antenna shadowed       : "<<perc(SHADOW)<<"%"<<LogIO::POST; 
+          if (shadow_p>0) os_p<< LogIO::NORMAL <<"  Antenna shadowed       : "<<perc(SHADOW)<<"%"<<LogIO::POST; 
         }
       }
       
@@ -1039,7 +1013,7 @@ ATCAFiller & ATCAFiller::numChan1(Int numchan1)
   return *this;
 }
 
-ATCAFiller & ATCAFiller::shadow(Double diam)
+ATCAFiller & ATCAFiller::shadow(Float diam)
 { 
   shadow_p=0;
   if (diam>0) shadow_p=diam;
@@ -2338,9 +2312,9 @@ Bool ATCAFiller::selected(Int ifNum)
   Bool select=True;
   // check if we want this frequency
   //if (spws_p.nelements()>0 && spws_p(0)>=0 && !anyEQ(spws_p,if_.if_chain[ifNum]))
-  if (spws_p.nelements()>0 && spws_p(0)>=0 && !anyEQ(spws_p,ifNum))
+  if (spws_p.nelements()>0 && spws_p(0)>=0 && !anyEQ(spws_p,ifNum)) {
     select=False;
-  else {
+  } else {
     // check if we want this frequency
     if (lowFreq_p>0 && (doubles_.if_freq[ifNum]-lowFreq_p)<0) 
       select=False;
@@ -2378,17 +2352,20 @@ void ATCAFiller::shadow(Int row, Bool last)
         Int k=rowCache_p[i];
         // check for shadowing: projected baseline < shadow diameter
         uvw = msc_p->uvw()(k);
-        Bool shadowed = (uvw(0)*uvw(0)+uvw(1)*uvw(1)<shadow_p*shadow_p);
-        if (shadowed) {
-          // w term decides which antenna is being shadowed
-          if (uvw(2)>0) {
-            flag(msc_p->antenna2()(k))=True;
-            //            cout << " Shadowed: antenna2="<<msc_p->antenna2()(k)<<" for row "
-            //                 <<k<<" time="<< msc_p->timeMeas()(k) <<endl;
-          } else {
-            flag(msc_p->antenna1()(k))=True;
-            //            cout << " Shadowed: antenna1="<<msc_p->antenna1()(k)<<" for row "
-            //                 <<k<<" time="<<msc_p->timeMeas()(k) <<endl;
+        double uvd2=uvw(0)*uvw(0)+uvw(1)*uvw(1);
+        if (uvd2>0) {
+          Bool shadowed = (uvd2<shadow_p*shadow_p);
+          if (shadowed) {
+            // w term decides which antenna is being shadowed
+            if (uvw(2)>0) {
+              flag(msc_p->antenna2()(k))=True;
+              //            cout << " Shadowed: antenna2="<<msc_p->antenna2()(k)<<" for row "
+              //                 <<k<<" time="<< msc_p->timeMeas()(k) <<endl;
+            } else {
+              flag(msc_p->antenna1()(k))=True;
+              //            cout << " Shadowed: antenna1="<<msc_p->antenna1()(k)<<" for row "
+              //                 <<k<<" time="<<msc_p->timeMeas()(k) <<endl;
+            }
           }
         }
       }
