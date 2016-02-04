@@ -1422,8 +1422,8 @@ void SDGrid::getSplineCoeff(const Vector<Double>& time,
   h(0) = time(1) - time(0);
   for (Int i = 1; i < num_data-1; ++i) {
     h(i) = time(i+1) - time(i);
-    vx(i) = (dir(i+1)(0)-dir(i)(0))/h(i) - (dir(i)(0)-dir(i-1)(0))/h(i-1);
-    vy(i) = (dir(i+1)(1)-dir(i)(1))/h(i) - (dir(i)(1)-dir(i-1)(1))/h(i-1);
+    vx(i) = 6.0*((dir(i+1)(0)-dir(i)(0))/h(i) - (dir(i)(0)-dir(i-1)(0))/h(i-1));
+    vy(i) = 6.0*((dir(i+1)(1)-dir(i)(1))/h(i) - (dir(i)(1)-dir(i-1)(1))/h(i-1));
     a(i) = 2.0*(time(i+1) - time(i-1));
     c(i) = h(i);
     gamma(i) = c(i);
@@ -1497,7 +1497,7 @@ Bool SDGrid::getXYPos(const VisBuffer& vb, Int row) {
   dointerp = False;
   if (!nullPointingTable && (vb.timeInterval()(row) < act_mspc.interval()(pointIndex))) {
     dointerp = True;
-    /*
+
     if (!isSplineInterpolationReady) {
       //(1)get number of pointing data for each antennaID
       Int nant = vb.msColumns().antenna().name().nrow();
@@ -1513,9 +1513,11 @@ Bool SDGrid::getXYPos(const VisBuffer& vb, Int row) {
       //   are enough number of pointing data (4 or more).
       //   in case there exists antenna ID for which not enough
       //   (i.e., 1, 2 or 3) pointing data are given, linear
-      //   interpolation is applied as originally done.
+      //   interpolation is applied for that antenna ID as
+      //   previously done.
       timePointing.resize(nant);
       dirPointing.resize(nant);
+      splineCoeff.resize(nant);
       doSplineInterpolation.resize(nant);
       doSplineInterpolation = False;
       for (Int i = 0; i < nant; ++i) {
@@ -1570,7 +1572,7 @@ Bool SDGrid::getXYPos(const VisBuffer& vb, Int row) {
 
       isSplineInterpolationReady = True;
     }
-    */
+
   }
 
   MEpoch epoch(Quantity(vb.time()(row), "s"));
@@ -1687,14 +1689,12 @@ MDirection SDGrid::directionMeas(const ROMSPointingColumns& mspc, const Int& ind
 MDirection SDGrid::directionMeas(const ROMSPointingColumns& mspc, const Int& index,
                                  const Double& time){
   //spline interpolation
-  /*
   if (isSplineInterpolationReady) {
     Int antid = mspc.antennaId()(index);
     if (doSplineInterpolation(antid)) {
       return interpolateDirectionMeasSpline(time, antid);
     }
   }
-  */
 
   //linear interpolation (as done before CAS-7911)
   Int index1, index2;
@@ -1721,7 +1721,8 @@ MDirection SDGrid::directionMeas(const ROMSPointingColumns& mspc, const Int& ind
 MDirection SDGrid::interpolateDirectionMeasSpline(const Double& time,
                                                   const Int& antid) {
   Vector<Double> newdir(2);
-  Int index = timePointing(antid).nelements() - 1;
+  Int lastIndex = timePointing(antid).nelements() - 1;
+  Int index = lastIndex;
   for (uInt i = 0; i < timePointing(antid).nelements(); ++i) {
     if (time < timePointing(antid)(i)) {
       index = i-1;
@@ -1729,6 +1730,7 @@ MDirection SDGrid::interpolateDirectionMeasSpline(const Double& time,
     }
   }
   if (index < 0) index = 0;
+  if (lastIndex <= index) index = lastIndex - 1;
 
   Vector<Vector<Double> > coeff;
   coeff.resize(2);
@@ -1817,9 +1819,6 @@ MDirection SDGrid::interpolateDirectionMeas(const ROMSPointingColumns& mspc,
     newdir(1) = dir2(1)-scanRate(1)*fabs(mspc.time()(index)-time);
     rf = mspc.directionMeas(indx2).getRef();
   }
-  //-----------------------------
-  cout << "x= " << newdir(0) << " y= " << newdir(1) << flush << endl;
-  //-----------------------------
   //default  return this
   Quantity rDirLon(newdir(0), "rad");
   Quantity rDirLat(newdir(1), "rad");
