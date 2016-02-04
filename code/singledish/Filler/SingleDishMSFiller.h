@@ -369,8 +369,7 @@ private:
         }
       }
     }
-    auto mytable = ms_->sysCal();
-    //MSSysCalColumns mycolumns(mytable);
+    auto &mytable = ms_->sysCal();
     auto pos = std::find(syscal_list_.begin(), syscal_list_.end(), record);
     if (pos == syscal_list_.end()) {
       uInt irow = mytable.nrow();
