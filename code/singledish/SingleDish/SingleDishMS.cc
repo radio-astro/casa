@@ -165,7 +165,7 @@ void SingleDishMS::setSelection(Record const &selection, bool const verbose) {
         uvDistExpr(""), taQLExpr(""), polnExpr(""), scanExpr(""), arrayExpr(""),
         obsExpr(""), intentExpr("");
     timeExpr = get_field_as_casa_string(selection_, "timerange");
-    antennaExpr = get_field_as_casa_string(selection_, "baseline");
+    antennaExpr = get_field_as_casa_string(selection_, "antenna");
     fieldExpr = get_field_as_casa_string(selection_, "field");
     spwExpr = get_field_as_casa_string(selection_, "spw");
     uvDistExpr = get_field_as_casa_string(selection_, "uvdist");
@@ -375,7 +375,7 @@ void SingleDishMS::format_selection(Record &selection) {
   String autoCorrSel("");
   os << "Formatting antenna selection to select only auto-correlation"
       << LogIO::POST;
-  String const antennaSel(get_field_as_casa_string(selection, "baseline"));
+  String const antennaSel(get_field_as_casa_string(selection, "antenna"));
   os << LogIO::DEBUG1 << "Input antenna expression = " << antennaSel
       << LogIO::POST;
   if (antennaSel == "") { //Antenna selection is NOT set
@@ -399,7 +399,7 @@ void SingleDishMS::format_selection(Record &selection) {
   }
   os << LogIO::DEBUG1 << "Auto-correlation selection string: " << autoCorrSel
       << LogIO::POST;
-  selection.define("baseline", autoCorrSel);
+  selection.define("antenna", autoCorrSel);
 
 }
 

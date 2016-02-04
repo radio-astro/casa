@@ -368,10 +368,10 @@ singledishms::set_selection(::casac::variant const& spw,
     selection_string = toCasaString(field);
     if (selection_string != "")
       selection.define("field", selection_string);
-    // baseline
+    // antenna
     selection_string = toCasaString(antenna);
     if (selection_string != "")
-      selection.define("baseline", selection_string);
+      selection.define("antenna", selection_string);
     // time
     selection_string = toCasaString(timerange);
     if (selection_string != "")
