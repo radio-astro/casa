@@ -697,7 +697,7 @@ public:
       scan_.push_back(-1);
       subscan_.push_back(-1);
       intent_.push_back("");
-      direction_.push_back(Vector<Double>());
+      direction_.push_back(Matrix<Double>());
       interval_.push_back(-1.0);
       uInt index = pool_.size() - 1;
       indexer_.define(key, index);

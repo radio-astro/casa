@@ -216,7 +216,7 @@ class SingleDishMSFillerTestComplex: public SingleDishMSFillerTestBase {
   }
 };
 
-class DISABLED_SingleDishMSFillerTestPerformance : public SingleDishMSFillerTestBase {
+class DISABLED_SingleDishMSFillerTestPerformance: public SingleDishMSFillerTestBase {
   virtual std::string getDataName() {
     return "uid___A002_X85c183_X36f.PM04.asap";
   }
@@ -1160,7 +1160,7 @@ TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
   Vector < Double > pointing_time(kNumPointing);
   Vector < Int > pointing_antenna(kNumPointing);
   Vector < Int > pointing_num_poly(kNumPointing);
-  Cube<Double> pointing_direction(IPosition(3, 2, 1, kNumPointing));
+  Cube<Double> pointing_direction(IPosition(3, 2, 2, kNumPointing));
   {
     std::cout << "Verify MAIN table" << std::endl;
     auto const mytable = myms;
@@ -1247,7 +1247,7 @@ TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
         ;
       }
 );
-                                                                                                                                                                                  ASSERT_GT(num_chan, 0);
+                                                                                                                                                                                        ASSERT_GT(num_chan, 0);
       Matrix < Bool > expected_flag(expected_num_pol, num_chan);
       Matrix < Float > expected_data(expected_num_pol, num_chan);
       uInt pol_id0 = row_record0.polno;
@@ -1332,6 +1332,9 @@ TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
                 pointing_antenna[pointing_count] = myantenna_id;
                 Matrix<Double> direction = record.direction;
                 Int num_poly = direction.shape()[1] - 1;
+                if (allEQ(record.scan_rate, 0.0)) {
+                  num_poly = 0;
+                }
                 pointing_num_poly[pointing_count] = num_poly;
                 pointing_direction.xyPlane(pointing_count) = direction;
                 ++pointing_count;
@@ -1359,7 +1362,7 @@ TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
         ;
       }
 );
-                                                                                                                                                                                  ASSERT_GT(num_chan, 0);
+                                                                                                                                                                                        ASSERT_GT(num_chan, 0);
       expected_flag.resize(expected_num_pol, num_chan);
       expected_data.resize(expected_flag.shape());
       uInt pol_id2 = row_record2.polno;
@@ -1397,8 +1400,15 @@ TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
       EXPECT_EQ(pointing_time[j], mycolumns.time()(i));
       EXPECT_EQ(pointing_antenna[j], mycolumns.antennaId()(i));
       EXPECT_EQ(pointing_num_poly[j], mycolumns.numPoly()(i));
-      EXPECT_TRUE(
-          allEQ(pointing_direction.xyPlane(j), mycolumns.direction()(i)));
+      Matrix < Double > expected_direction = pointing_direction.xyPlane(j);
+      if (allEQ(expected_direction.column(1), 0.0)) {
+        EXPECT_TRUE(
+            allEQ(expected_direction(IPosition(2, 0, 0), IPosition(2, 1, 0)),
+                mycolumns.direction()(i)));
+      } else {
+        EXPECT_TRUE(
+            allEQ(pointing_direction.xyPlane(j), mycolumns.direction()(i)));
+      }
     }
 
     // verify SYSCAL table
@@ -2165,7 +2175,8 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
   r1.subscan = subscan;
   r1.intent = intent;
   r1.pol_type = poltype;
-  r1.direction.assign(direction);
+  //r1.direction.assign(direction);
+  r1.direction_slice = direction;
   r1.interval = interval;
   size_t const num_chan = 4;
   Matrix < Float > data(IPosition(2, 4, num_chan), 0.0f);

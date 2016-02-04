@@ -370,6 +370,8 @@ struct FloatDataStorage {
   Int const subscan_[2] = { 0, 1 };
   Double const ra_[2] = { 0.25, 0.28 };
   Double const dec_[2] = { -1.48, -1.49 };
+  Double const dra_[2] = { 0.0, 0.01 };
+  Double const ddec_[2] = { 0.0, -0.07};
   String const intent_[2] = { "OBSERVE_TARGET#ON_SOURCE",
       "OBSERVE_TARGET#OFF_SOURCE" };
   String const field_name_[2] = { "MyField", "AnotherField" };
@@ -407,10 +409,10 @@ struct FloatDataStorage {
 //    record.field_name = field_name_[index]);
 //    record.define("SOURCE_NAME", source_name_[index]);
     record.antenna_id = antenna_[index];
-    static Matrix<Double> direction(2, 1);
-    direction(0, 0) = ra_[index];
-    direction(1, 0) = dec_[index];
-    record.direction = direction;
+    record.direction(0, 0) = ra_[index];
+    record.direction(1, 0) = dec_[index];
+    record.direction(0, 1) = dra_[index];
+    record.direction(1, 1) = ddec_[index];
     Int &antenna_id = record.antenna_id;
 
     index = (irow / (n / 8)) % 2;

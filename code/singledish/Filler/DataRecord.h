@@ -43,8 +43,8 @@ struct DataRecord {
           1, 0), tcal_shape_(1, 0), data_storage_(new Float[num_data_storage_]), flag_storage_(
           new Bool[num_data_storage_]), tsys_storage_(
           new Float[num_tsys_storage_]), tcal_storage_(
-          new Float[num_tcal_storage_]), direction(2, 1, 0.0), direction_slice(
-          direction.column(0)), data(data_shape_, data_storage_.get(), SHARE), flag(
+          new Float[num_tcal_storage_]), direction(2, 2, 0.0), direction_slice(IPosition(2, 2, 1), direction.data(), SHARE), direction_vector(
+          direction.column(0)), scan_rate(direction.column(1)), data(data_shape_, data_storage_.get(), SHARE), flag(
           data_shape_, flag_storage_.get(), SHARE), tsys(tsys_shape_,
           tsys_storage_.get(), SHARE), tcal(tcal_shape_, tcal_storage_.get(),
           SHARE) {
@@ -169,6 +169,9 @@ struct DataRecord {
     intent = other.intent;
     pol_type = other.pol_type;
     direction = other.direction;
+    direction_slice.takeStorage(direction_slice.shape(), direction.data(), SHARE);
+    direction_vector.reference(direction.column(0));
+    scan_rate.reference(direction.column(1));
     flag_row = other.flag_row;
     setDataSize(other.data_shape_[0]);
     data = other.data;
@@ -208,7 +211,9 @@ public:
   String intent;
   String pol_type;
   Matrix<Double> direction;
-  Vector<Double> direction_slice;
+  Matrix<Double> direction_slice;
+  Vector<Double> direction_vector;
+  Vector<Double> scan_rate;
   Vector<Float> data;
   Vector<Bool> flag;
   Bool flag_row;
@@ -229,7 +234,7 @@ struct MSDataRecord {
           malloc(num_tsys_storage_ * sizeof(Float))), tcal_storage_(
           malloc(num_tcal_storage_ * sizeof(Float))), sigma_storage_(
           new Float[4]), is_float_(False), corr_type(corr_type_shape_,
-          corr_type_storage_.storage(), SHARE), direction(2, 1, 0.0), float_data(
+          corr_type_storage_.storage(), SHARE), direction(2, 2, 0.0), direction_slice(IPosition(2,2,1),direction.data(),SHARE), float_data(
           data_shape_, reinterpret_cast<Float *>(data_storage_.get()), SHARE), complex_data(
           data_shape_, reinterpret_cast<Complex *>(data_storage_.get()), SHARE), flag(
           data_shape_, reinterpret_cast<Bool *>(flag_storage_.get()), SHARE), sigma(
@@ -418,6 +423,7 @@ struct MSDataRecord {
     pol_type = other.pol_type;
     num_pol = other.num_pol;
     direction = other.direction;
+    direction_slice.takeStorage(direction_slice.shape(), direction.data(), SHARE);
     flag_row = other.flag_row;
     setDataSize(other.data_shape_[0], other.data_shape_[1]);
     corr_type = other.corr_type;
@@ -467,6 +473,7 @@ public:
   String pol_type;
   Vector<Int> corr_type;
   Matrix<Double> direction;
+  Matrix<Double> direction_slice;
   Matrix<Float> float_data;
   Matrix<Complex> complex_data;
   Matrix<Bool> flag;

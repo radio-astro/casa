@@ -561,9 +561,14 @@ Int SingleDishMSFiller<T>::updatePointing(Int const &antenna_id,
     pointing_columns_->time().put(nrow, time);
     pointing_columns_->interval().put(nrow, interval);
     pointing_columns_->antennaId().put(nrow, antenna_id);
-    pointing_columns_->direction().put(nrow, direction);
-    Int num_poly = direction.shape()[1] - 1;
+    if (direction.ncolumn() == 1 || allEQ(direction.column(1), 0.0)) {
+      pointing_columns_->numPoly().put(nrow, 0);
+      pointing_columns_->direction().put(nrow, direction(IPosition(2,0,0), IPosition(2,1,0)));
+    } else {
+      pointing_columns_->direction().put(nrow, direction);
+      Int num_poly = direction.shape()[1] - 1;
     pointing_columns_->numPoly().put(nrow, num_poly);
+    }
     // add timestamp to the list
       uInt nelem = time_list->nelements();
       if (nelem <= *n) {
@@ -653,13 +658,13 @@ void SingleDishMSFiller<T>::sortPointing() {
 
   // sort DIRECTION
   {
-    Cube<Double> direction = mycolumns.direction().getColumn();
-    Cube<Double> sorted(IPosition(3, 2, 1, nrow),
-        reinterpret_cast<Double *>(storage.get()), SHARE);
+    std::map<uInt, Matrix<Double> > direction;
     for (uInt i = 0; i < nrow; ++i) {
-      sorted.xyPlane(i) = direction.xyPlane(index_vector[i]);
+      direction[i] = mycolumns.direction()(i);
     }
-    mycolumns.direction().putColumn(sorted);
+    for (uInt i = 0; i < nrow; ++i) {
+      mycolumns.direction().put(index_vector[i], direction[i]);
+    }
   }
 
   POST_END;

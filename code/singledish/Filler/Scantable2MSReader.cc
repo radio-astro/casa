@@ -117,7 +117,7 @@ String getIntent(Int srctype) {
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 Scantable2MSReader::Scantable2MSReader(std::string const &scantable_name) :
-    ReaderInterface(scantable_name), main_table_(nullptr), tcal_table_(), scan_column_(), cycle_column_(), ifno_column_(), polno_column_(), beam_column_(), flagrow_column_(), time_column_(), interval_column_(), srctype_column_(), data_column_(), flag_column_(), direction_column_(), fieldname_column_(), tsys_column_(), tcal_id_column_(), sorted_rows_(), get_antenna_row_(
+    ReaderInterface(scantable_name), main_table_(nullptr), tcal_table_(), scan_column_(), cycle_column_(), ifno_column_(), polno_column_(), beam_column_(), flagrow_column_(), time_column_(), interval_column_(), srctype_column_(), data_column_(), flag_column_(), direction_column_(), scanrate_column_(), fieldname_column_(), tsys_column_(), tcal_id_column_(), sorted_rows_(), get_antenna_row_(
         &Scantable2MSReader::getAntennaRowImpl), get_field_row_(
         &Scantable2MSReader::getFieldRowImpl), get_observation_row_(
         &Scantable2MSReader::getObservationRowImpl), get_processor_row_(
@@ -139,10 +139,12 @@ void Scantable2MSReader::initializeSpecific() {
   File f(name_);
   if (f.exists() and f.isDirectory()) {
     main_table_.reset(new Table(name_, Table::Old));
-    tcal_table_ = main_table_->keywordSet().asTable("TCAL");
   } else {
     throw AipsError("Input data doesn't exist or is invalid");
   }
+
+  // subtables
+  tcal_table_ = main_table_->keywordSet().asTable("TCAL");
 
   // attach columns
   scan_column_.attach(*main_table_, "SCANNO");
@@ -157,9 +159,12 @@ void Scantable2MSReader::initializeSpecific() {
   data_column_.attach(*main_table_, "SPECTRA");
   flag_column_.attach(*main_table_, "FLAGTRA");
   direction_column_.attach(*main_table_, "DIRECTION");
+  scanrate_column_.attach(*main_table_, "SCANRATE");
   fieldname_column_.attach(*main_table_, "FIELDNAME");
   tsys_column_.attach(*main_table_, "TSYS");
   tcal_id_column_.attach(*main_table_, "TCAL_ID");
+
+  tcal_column_.attach(tcal_table_, "TCAL");
 
   // get sort index
   Sort s;
@@ -180,6 +185,13 @@ void Scantable2MSReader::initializeSpecific() {
 //    printf("id %3u row %3u T %10.3f B %2u S %2u P %2u\n", i, j, time_list[j],
 //        beamno_list[j], ifno_list[j], polno_list[j]);
 //  }
+
+  // TCAL_ID mapping
+  ROScalarColumn<uInt> id_column(tcal_table_, "ID");
+  tcal_id_map_.clear();
+  for (uInt i = 0; i < tcal_table_.nrow(); ++i) {
+    tcal_id_map_[id_column(i)] = i;
+  }
 }
 
 void Scantable2MSReader::finalizeSpecific() {
@@ -303,7 +315,8 @@ Bool Scantable2MSReader::getData(size_t irow, DataRecord &record) {
   String field_name = fieldname_column_(index);
   record.field_id = field_map_[field_name];
   record.antenna_id = (Int) 0;
-  direction_column_.get(index, record.direction_slice);
+  direction_column_.get(index, record.direction_vector);
+  scanrate_column_.get(index, record.scan_rate);
   record.feed_id = (Int) beam_column_(index);
   record.spw_id = (Int) ifno_column_(index);
   record.polno = polno_column_(index);
@@ -328,15 +341,14 @@ Bool Scantable2MSReader::getData(size_t irow, DataRecord &record) {
     }
   }
 
-  Table const &tcal_table = main_table_->keywordSet().asTable("TCAL");
-  Table const &t = tcal_table_(tcal_table_.col("ID") == tcal_id_column_(index), 1);//tcal_table(tcal_table.col("ID") == tcal_id_column_(index),
-//      1);
-  if (t.nrow() > 0) {
-    ArrayColumn<Float> tcal_column(t, "TCAL");
+  uInt tcal_id = tcal_id_column_(index);
+  auto iter = tcal_id_map_.find(tcal_id);
+  if (iter != tcal_id_map_.end()) {
+    uInt tcal_row = iter->second;
 //    std::cout << "set tsys size to " << tcal_column.shape(0)[0] << " shape "
 //        << record.tcal.shape() << std::endl;
-    record.setTcalSize(tcal_column.shape(0)[0]);
-    Vector < Float > tcal = tcal_column(0);
+    record.setTcalSize(tcal_column_.shape(tcal_row)[0]);
+    Vector < Float > tcal = tcal_column_(tcal_row);
     if (!allEQ(tcal, 1.0f) || !allEQ(tcal, 0.0f)) {
       record.tcal = tcal;
     }
