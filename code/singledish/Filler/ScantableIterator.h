@@ -87,14 +87,21 @@ public:
     sorter.sortKey(time_list.data(), TpDouble, 0, Sort::Ascending);
     Vector < uInt > index_list;
     sorter.sort(index_list, nrow_main, Sort::QuickSort);
+//    for (uInt i = 0; i < nrow_main; ++i) {
+//      uInt j = index_list[i];
+//      std::cout << "i " << i << " j " << j << " WID " << weather_id_list[j]
+//          << " TIME " << time_list[j] << std::endl;
+//    }
     uInt id_prev = weather_id_list[index_list[0]];
     Double time_min = time_list[index_list[0]];
     Double time_max = 0.0;
     for (uInt i = 1; i < nrow_main; ++i) {
       uInt j = index_list[i];
       uInt weather_id = weather_id_list[j];
+//      std::cout << "weather_id = " << weather_id << " id_prev = " << id_prev
+//          << " time range (" << time_min << "," << time_max << ")" << std::endl;
       if (weather_id != id_prev) {
-        time_max = time_list[j - 1];
+        time_max = time_list[index_list[i - 1]];
         Block<Double> time_range(2);
         time_range[0] = time_min;
         time_range[1] = time_max;
@@ -128,14 +135,23 @@ public:
       Block<Double> time_range = iter->second;
       time_min = time_range[0];
       time_max = time_range[1];
-    } else {
-      Table subtable = main_table_(main_table_.col("WEATHER_ID") == weather_id);
-      if (subtable.nrow() > 0) {
-        ROScalarColumn < Double > column(subtable, "TIME");
-        Vector < Double > time_list = column.getColumn();
-        minMax(time_min, time_max, time_list);
-      }
     }
+    // 2016/02/24 TN
+    // comment out the else block since no corresponding rows in the given
+    // WEATHER_ID indicates that there are measurements but not associated
+    // with this particular dataset (may be due to data selection effect or
+    // others)
+//    else {
+//      std::cout << "unfortunately you failed to find WEATHER_ID " << weather_id
+//          << " in time_range_ keys" << std::endl;
+//      Table subtable = main_table_(main_table_.col("WEATHER_ID") == weather_id);
+//      std::cout << "subtable.nrow() = " << subtable.nrow() << std::endl;
+//      if (subtable.nrow() > 0) {
+//        ROScalarColumn < Double > column(subtable, "TIME");
+//        Vector < Double > time_list = column.getColumn();
+//        minMax(time_min, time_max, time_list);
+//      }
+//    }
 
     record.antenna_id = 0;
     constexpr double kDay2Sec = 86400.0;
@@ -383,8 +399,8 @@ public:
     initialize(num_unique);
 
     // generate molecule_id_map_
-    ROScalarColumn<uInt> id_column(molecules_table_, "ID");
-    Vector<uInt> molecule_id_list = id_column.getColumn();
+    ROScalarColumn < uInt > id_column(molecules_table_, "ID");
+    Vector < uInt > molecule_id_list = id_column.getColumn();
     for (uInt i = 0; i < id_column.nrow(); ++i) {
       molecule_id_map_[molecule_id_list[i]] = i;
     }
@@ -412,19 +428,25 @@ public:
       if (molecule_name_column_.isDefined(jrow)) {
         record.transition = molecule_name_column_(jrow);
       }
-    } else {
-    Table t = molecules_table_(molecules_table_.col("ID") == molecule_id, 1);
-    if (t.nrow() == 1) {
-      ArrayColumn<Double> rest_freq_column(t, "RESTFREQUENCY");
-      ArrayColumn<String> molecule_name_column(t, "NAME");
-      if (rest_freq_column.isDefined(0)) {
-        record.rest_frequency = rest_freq_column(0);
-      }
-      if (molecule_name_column.isDefined(0)) {
-        record.transition = molecule_name_column(0);
-      }
     }
-    }
+    // 2016/02/04 TN
+    // comment out the following else block since if no ID is found in
+    // molecule_id_map_ it indicates that there is no corresponding
+    // entry in MOLECULES table for given MOLECULE_ID. Serch result is
+    // always empty table.
+//    else {
+//      Table t = molecules_table_(molecules_table_.col("ID") == molecule_id, 1);
+//      if (t.nrow() == 1) {
+//        ArrayColumn<Double> rest_freq_column(t, "RESTFREQUENCY");
+//        ArrayColumn<String> molecule_name_column(t, "NAME");
+//        if (rest_freq_column.isDefined(0)) {
+//          record.rest_frequency = rest_freq_column(0);
+//        }
+//        if (molecule_name_column.isDefined(0)) {
+//          record.transition = molecule_name_column(0);
+//        }
+//      }
+//    }
     Double sysvel = sysvel_column_(irow);
     record.num_lines = record.rest_frequency.size();
     record.sysvel = Vector < Double > (record.num_lines, sysvel);
