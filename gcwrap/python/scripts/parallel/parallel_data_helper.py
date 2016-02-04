@@ -908,7 +908,6 @@ class ParallelDataHelper(ParallelTaskHelper):
                 numSubMS = 8
 
         numSubMS = min(len(baselineList),numSubMS)
-#        casalog.post('It will partition the MS into %s SubMSs'%numSubMS,'')
 
         # Create a map of the baselines to distribute in each subMS
         # Example of baselinePartitions
@@ -1119,29 +1118,30 @@ class ParallelDataHelper(ParallelTaskHelper):
             about having selection already done when you call this.
         """
 
-        # cumulative baseline selectiosn do not reflect on the msselectedindices()
+        # cumulative baseline selections do not reflect on the msselectedindices()
         if self._msTool is None:
             self.__selectMS()
-            
-        # The * doesn't select auto-correlations
-#        baselineSelection = {'baseline':'*'}
 
-        # select all baselines (auto and cross)
-        baselineSelection = {'baseline':'*&&'}
         
         # If there are any previous antenna selections, use it
         if self._arg['antenna'] != '':
             baselineSelection = {'baseline':self._arg['antenna']}
+            try:
+                self._msTool.msselect(baselineSelection, onlyparse=False)
+                # IMPORTANT: msselectedindices() will always say there are auto-correlation
+                # baselines, even when there aren't. In the MMS case, the SubMS creation will
+                # issue a MSSelectionNullSelection and not be created. 
+                baselinelist = self._msTool.msselectedindices()['baselines']
+            except:
+                baselinelist = []
+        else:
+            md = msmdtool()
+            md.open(self._arg['vis'])
+            baselines = md.baselines()
+            md.close()
+            import numpy as np
+            baselinelist = np.vstack(np.where(np.triu(baselines))).T                
        
-        try:
-            self._msTool.msselect(baselineSelection, onlyparse=False)
-            # IMPORTANT: msselectedindices() will always say there are auto-correlation
-            # baselines, even when there aren't. In the MMS case, the SubMS creation will
-            # issue a MSSelectionNullSelection and not be created. Need to find a
-            # reliable way to know which baselines exist in an MS
-            baselinelist = self._msTool.msselectedindices()['baselines']
-        except:
-            baselinelist = []
 
         return baselinelist.tolist()
 
