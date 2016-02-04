@@ -426,6 +426,7 @@ template <class T> SPIIT ImageTask<T>::_prepareOutputImage(
 		cout << __FILE__ << " " << __LINE__ << " " << _timer.duration() << endl;
 		_timer.start();
 		*/
+	    // FIXME this is a superfluous copy if  dropgen || ! myOutname.empty()
 		_copyData(*outImage, image);
 		/*
 		_timer.stop();
@@ -460,15 +461,7 @@ template <class T> SPIIT ImageTask<T>::_prepareOutputImage(
 	cout << __FILE__ << " " << __LINE__ << " " << _timer.duration() << endl;
 	_timer.start();
 	*/
-	if (! _suppressHistory) {
-		ImageHistory<T> history(outImage);
-		vector<std::pair<String, String> >::const_iterator end = _newHistory.end();
-		vector<std::pair<String, String> >::const_iterator iter = _newHistory.begin();
-		while (iter != end) {
-			history.addHistory(iter->first, iter->second);
-			iter++;
-		}
-	}
+	_doHistory(outImage);
 	/*
 	_timer.stop();
 	cout << __FILE__ << " " << __LINE__ << " " << _timer.duration() << endl;
@@ -489,17 +482,34 @@ template <class T> SPIIT ImageTask<T>::_prepareOutputImage(
         image, _outname, empty, emptyString, dropDeg,
         _overwrite, True, False, False
     );
-    if (! _suppressHistory) {
-        ImageHistory<T> history(outImage);
-        vector<std::pair<String, String> >::const_iterator end = _newHistory.end();
-        vector<std::pair<String, String> >::const_iterator iter = _newHistory.begin();
-        while (iter != end) {
-            history.addHistory(iter->first, iter->second);
-            iter++;
-        }
-    }
+    _doHistory(outImage);
     return outImage;
 }
+
+template <class T> SPIIT ImageTask<T>::_prepareOutputImage(
+    const ImageInterface<T>& image, const Lattice<T>& data
+) const {
+    if (! _outname.empty()) {
+        _removeExistingFileIfNecessary(_outname, _overwrite);
+    }
+    static const Record empty;
+    static const String emptyString;
+    auto outImage = SubImageFactory<T>::createImage(
+        image, _outname, empty, emptyString, False,
+        _overwrite, True, False, False, &data
+    );
+    _doHistory(outImage);
+    return outImage;
+}
+template <class T> void ImageTask<T>::_doHistory(SPIIT image) const {
+    if (! _suppressHistory) {
+        ImageHistory<T> history(image);
+        for (const auto& line: _newHistory) {
+            history.addHistory(line.first, line.second);
+        }
+    }
+}
+
 
 }
 

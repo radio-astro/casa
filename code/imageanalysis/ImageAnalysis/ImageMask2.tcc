@@ -60,28 +60,16 @@ template <class T> Bool ImageMask::isAllMaskFalse(const ImageInterface<T>& image
 }
 
 template <class T> Bool ImageMask::isAllMaskTrue(
-	const ImageInterface<T>& image
+	const MaskedLattice<T>& image
 ) {
-	if (! image.isMasked() && ! image.hasPixelMask()) {
+	if (! image.isMasked()) {
 		return True;
 	}
 	auto cursorShape = image.niceCursorShape(4096*4096);
 	LatticeStepper stepper(image.shape(), cursorShape, LatticeStepper::RESIZE);
 	RO_MaskedLatticeIterator<T> iter(image, stepper);
-	//std::unique_ptr<RO_LatticeIterator<Bool>> pmiter;
-    /*
-    if (image.hasPixelMask()) {
-		pmiter.reset(new RO_LatticeIterator<Bool>(image.pixelMask(), stepper));
-	}
-    */
 	for (iter.reset(); ! iter.atEnd(); ++iter) {
 		auto mymask = iter.getMask();
-        /*
-		if (pmiter) {
-			mymask = mymask && pmiter->cursor();
-			pmiter->operator++();
-		}
-        */
 		if (! allTrue(mymask)) {
 			return False;
 		}

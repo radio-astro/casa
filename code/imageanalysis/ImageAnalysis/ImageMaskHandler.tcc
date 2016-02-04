@@ -25,9 +25,13 @@
 //# $Id: $
 
 #include <imageanalysis/ImageAnalysis/ImageMaskHandler.h>
-#include <imageanalysis/ImageAnalysis/PixelValueManipulator.h>
+
+#include <imageanalysis/ImageAnalysis/ImageFactory.h>
 
 #include <casa/Exceptions/Error.h>
+#include <images/Images/ImageExprParse.h>
+#include <images/Images/ImageProxy.h>
+#include <images/Regions/RegionHandler.h>
 
 namespace casa {
 
@@ -103,6 +107,35 @@ template <class T> void ImageMaskHandler<T>::copy(
 	}
 }
 
+template <class T> template<class U> void ImageMaskHandler<T>::copy(
+    const MaskedLattice<U>& mask
+) {
+    auto shape = _image->shape();
+    ThrowIf (
+        ! shape.isEqual(mask.shape()),
+        "Mask must be the same shape as the image"
+    );
+    auto cursorShape = _image->niceCursorShape(4096*4096);
+    LatticeStepper stepper(shape, cursorShape, LatticeStepper::RESIZE);
+    if (! _image->hasPixelMask()) {
+        if (ImageMask::isAllMaskTrue(mask)) {
+            // the current image has no pixel mask and the mask is all true, so
+            // there is no point in copying anything.
+            return;
+        }
+        String maskname = "";
+        LogIO log;
+        ImageMaskAttacher::makeMask(*_image, maskname, False, True, log, False);
+    }
+    Lattice<Bool>& pixelMask = _image->pixelMask();
+    LatticeIterator<Bool> iter(pixelMask, stepper);
+    RO_MaskedLatticeIterator<U> miter(mask, stepper);
+    for (iter.reset(); ! iter.atEnd(); ++iter, ++miter) {
+        auto mymask = miter.getMask();
+        iter.rwCursor() = mymask;
+    }
+}
+
 template <class T> void ImageMaskHandler<T>::calcmask(
 	const String& mask, Record& regions,
 	const String& maskName, const Bool makeDefault
@@ -115,11 +148,11 @@ template <class T> void ImageMaskHandler<T>::calcmask(
 	);
 	Block<LatticeExprNode> temps;
 	PtrBlock<const ImageRegion*> tempRegs;
-	PixelValueManipulator<T>::makeRegionBlock(tempRegs, regions);
+	_makeRegionBlock(tempRegs, regions);
 	LatticeExprNode node = ImageExprParse::command(mask, temps, tempRegs);
 
 	// Delete the ImageRegions
-	PixelValueManipulator<Float>::makeRegionBlock(tempRegs, Record());
+	_makeRegionBlock(tempRegs, Record());
 
 	// Make sure the expression is Boolean
 	DataType type = node.dataType();
@@ -191,6 +224,25 @@ template<class T> void ImageMaskHandler<T>::_calcmask(
 	if (makeDefault) {
 		_image->setDefaultMask(maskName2);
 	}
+}
+
+template<class T> void ImageMaskHandler<T>::_makeRegionBlock(
+    PtrBlock<const ImageRegion*>& regions,
+    const Record& Regions
+) {
+    auto n = regions.size();
+    for (uInt j=0; j<n; ++j) {
+        delete regions[j];
+    }
+    regions.resize(0, True, True);
+    uInt nreg = Regions.nfields();
+    if (nreg > 0) {
+        regions.resize(nreg);
+        regions.set(static_cast<ImageRegion*> (0));
+        for (uInt i=0; i<nreg; ++i) {
+            regions[i] = ImageRegion::fromRecord(Regions.asRecord(i), "");
+        }
+    }
 }
 
 }

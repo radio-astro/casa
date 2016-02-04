@@ -6,11 +6,17 @@
 
 #include <imageanalysis/ImageTypedefs.h>
 
+// #include <lattices/Lattices/LatticeExprNode.h>
+
 #include <set>
 
 using namespace std;
 
 namespace casa {
+
+class ImageRegion;
+class LatticeExprNode;
+template <class T> class  MaskedLattice;
 
 template <class T> class ImageMaskHandler {
 
@@ -58,6 +64,10 @@ public:
 		const String& name, Bool asdefault=True
     );
 
+    // copy the mask from the specified lattice to the image's (default) mask. The mask
+    // and the image must have the same shape.
+    template <class U> void copy(const MaskedLattice<U>& mask);
+
 private:
     const SPIIT _image;
 
@@ -66,6 +76,11 @@ private:
 		const String& name, const Bool makedefault
     );
 
+    // Make a block of regions from a Record
+    static void _makeRegionBlock(
+        PtrBlock<const ImageRegion*>& regions,
+        const Record& Regions
+    );
 };
 
 }

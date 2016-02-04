@@ -197,11 +197,13 @@ protected:
 
     SPIIT _prepareOutputImage(
     	const ImageInterface<T>& image, Bool dropDegen=False
-    ) const; /* {
-    	return _prepareOutputImage(
-    		image, 0, 0, 0, 0, 0, False, dropDegen
-    	);
-    }*/
+    ) const;
+
+    // data are copied to the output image from the <src>data</src>
+    // lattice. The mask is copied from the input image.
+    SPIIT _prepareOutputImage(
+        const ImageInterface<T>& image, const Lattice<T>& data
+    ) const;
 
     Verbosity _getVerbosity() const { return _verbosity; }
 
@@ -214,7 +216,6 @@ protected:
     static void _copyMask(Lattice<Bool>& mask, const ImageInterface<T>& image);
 
     static void _copyData(Lattice<T>& data, const ImageInterface<T>& image);
-
 
 private:
     const SPCIIT _image;
@@ -238,6 +239,8 @@ private:
 	mutable vector<std::pair<String, String> > _newHistory;
 
 	mutable C11Timer _timer;
+
+	void _doHistory(SPIIT image) const;
 };
 
 }

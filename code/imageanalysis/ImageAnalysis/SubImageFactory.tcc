@@ -38,6 +38,10 @@
 
 #include <imageanalysis/ImageAnalysis/ImageMask.h>
 #include <imageanalysis/ImageAnalysis/ImageMaskAttacher.h>
+#include <imageanalysis/ImageAnalysis/ImageMaskHandler.h>
+
+// debug
+#include <components/ComponentModels/C11Timer.h>
 
 namespace casa {
 
@@ -190,11 +194,12 @@ template<class T> SPIIT SubImageFactory<T>::createImage(
 	const ImageInterface<T>& image,
 	const String& outfile, const Record& region,
 	const String& mask, Bool dropDegenerateAxes,
-	Bool overwrite, Bool list, Bool extendMask, Bool attachMask
+	Bool overwrite, Bool list, Bool extendMask, Bool attachMask,
+	const Lattice<T> *const data
 ) {
 	return createImage(
 		image, outfile, region, mask, AxesSpecifier(! dropDegenerateAxes),
-		overwrite, list, extendMask, attachMask
+		overwrite, list, extendMask, attachMask, data
 	);
 }
 
@@ -202,7 +207,8 @@ template<class T> SPIIT SubImageFactory<T>::createImage(
 	const ImageInterface<T>& image,
 	const String& outfile, const Record& region,
 	const String& mask, const AxesSpecifier& axesSpec,
-	Bool overwrite, Bool list, Bool extendMask, Bool attachMask
+	Bool overwrite, Bool list, Bool extendMask, Bool attachMask,
+	const Lattice<T> *const data
 ) {
 	LogIO log;
 	log << LogOrigin("SubImageFactory", __func__);
@@ -244,8 +250,17 @@ template<class T> SPIIT SubImageFactory<T>::createImage(
 		// have already have a mask; that call does not create one if it does not exist.
 		String maskName = "";
 		ImageMaskAttacher::makeMask(*outImage, maskName, False, True, log, list);
+		if (data) {
+		    ImageMaskHandler<T> imh(outImage);
+		    imh.copy(*x);
+		}
 	}
-	LatticeUtilities::copyDataAndMask(log, *outImage, *x);
+	if (data) {
+	    outImage->copyData(*data);
+	}
+	else {
+	    LatticeUtilities::copyDataAndMask(log, *outImage, *x);
+	}
     outImage->flush();
     return outImage;
 }

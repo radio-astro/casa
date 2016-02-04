@@ -250,8 +250,8 @@ SPIIF ImagePrimaryBeamCorrector::correct(
 	LatticeExpr<Float> expr = (_mode == DIVIDE)
 		? *subImage/(*pbSubImage)
 		: *subImage*(*pbSubImage);
-	SPIIF outImage = _prepareOutputImage(*subImage);
-	outImage->copyData(expr);
+	SPIIF outImage = _prepareOutputImage(*subImage, expr);
+	// outImage->copyData(expr);
     if (! wantReturn) {
     	outImage.reset();
     }

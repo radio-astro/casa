@@ -1,4 +1,3 @@
-//# ImageMask.h
 //# Copyright (C) 1998,1999,2000,2001
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -24,42 +23,24 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#ifndef IMAGEANALYSIS_IMAGEMASK_H
-#define IMAGEANALYSIS_IMAGEMASK_H
+#include <imageanalysis/ImageAnalysis/test/ImageMaskHandlerTest.h>
 
-#include <casacore/images/Images/ImageInterface.h>
+using namespace casacore;
 
-#include <imageanalysis/ImageTypedefs.h>
+using namespace std;
 
-namespace casa {
+namespace test {
 
-// <summary>
-// Static functions for interrogating image masks
-// </summary>
+ImageMaskHandlerTest::ImageMaskHandlerTest() {
+}
 
+ImageMaskHandlerTest::~ImageMaskHandlerTest() {}
 
-class ImageMask {
-
-public:
-	ImageMask() = delete;
-
-	virtual ~ImageMask();
-
-	// check the mask piecemeal because loading it all into memory will crash
-	// for very large images
-	template <class T> static Bool isAllMaskFalse(const ImageInterface<T>& image);
-
-    // is the image's mask all true valued?
-	template <class T> static Bool isAllMaskTrue(const MaskedLattice<T>& image);
-
-    static Bool isAllMaskTrue(const Lattice<Bool>& mask);
-
-};
+void ImageMaskHandlerTest::SetUp() {
 
 }
 
-#ifndef AIPS_NO_TEMPLATE_SRC
-#include <imageanalysis/ImageAnalysis/ImageMask2.tcc>
-#endif
+void ImageMaskHandlerTest::TearDown() {
+}
 
-#endif
+}

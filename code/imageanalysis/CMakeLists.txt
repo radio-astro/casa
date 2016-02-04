@@ -278,6 +278,8 @@ casa_add_assay( imageanalysis IO/test/tRegionTextParser.cc )
 
 casa_add_assay( imageanalysis Regions/test/tCasacRegionManager.cc )
 
+casa_add_google_test (MODULES imageanalysis SOURCES ImageAnalysis/test/ImageMaskHandler_Gtest.cc ImageAnalysis/test/ImageMaskHandlerTest.cc)
+
 casa_add_unit_test ( MODULES imageanalysis SOURCES Annotations/test/tAnnAnnulus.cc )
 casa_add_unit_test ( MODULES imageanalysis SOURCES Annotations/test/tAnnCenterBox.cc )
 casa_add_unit_test ( MODULES imageanalysis SOURCES Annotations/test/tAnnCircle.cc )

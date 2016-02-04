@@ -130,13 +130,16 @@ public:
 	// is returned if it is.
 	// If <src>attachMask</src> is True, attach a pixel mask to the newly created image
 	// if it otherwise wouldn't have a pixel mask. All the values in this mask will be
-	// True.
+	// True. If specified, data values will be copied from the <src>data</src> lattice.
+	// Note that data values only are copied from this lattice if it is specified;
+	// the mask values are still copied from the input image. The data lattice must
+	// be the same shape as the output image.
 	static SPIIT createImage(
 		const ImageInterface<T>& image,
 		const String& outfile, const Record& region,
 		const String& mask, Bool dropDegenerateAxes,
 		Bool overwrite, Bool list, Bool extendMask,
-		Bool attachMask=False
+		Bool attachMask=False, const Lattice<T> *const data=nullptr
 	);
 
 	static SPIIT createImage(
@@ -144,7 +147,7 @@ public:
 		const String& outfile, const Record& region,
 		const String& mask, const AxesSpecifier& axesSpec,
 		Bool overwrite, Bool list, Bool extendMask,
-		Bool attachMask=False
+		Bool attachMask=False, const Lattice<T> *const data=nullptr
 	);
 	// </group>
 
