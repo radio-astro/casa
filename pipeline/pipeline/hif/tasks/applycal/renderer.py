@@ -444,7 +444,9 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             
             field_ids = set([(f.id, f.name) for f in fields])
     
-            field = fields[0]
+            # Switch to second field
+            #field = fields[0]
+            field = fields[1]
             LOG.warning('Bypassing brightest field selection due to problem '
                         'with visstat. Using Field #%s (%s) for Source #%s'
                         '', field.id, field.name, source_id)
