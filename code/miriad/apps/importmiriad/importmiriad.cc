@@ -457,12 +457,12 @@ void Importmiriad::checkInput(Block<Int>& spw, Block<Int>& wide)
       // setup the 'keep' array to specify which data we want to keep
       for (Int i=0; i<MAXWIN+MAXWIDE; i++) keep[i]=(spw[0]==-1);
       for (uInt i=0; i<spw.nelements(); i++) {
-        if (spw[i]>0 && spw[i]<win[0].nspect) keep[spw[i]]=True;
+        if (spw[i]>=0 && spw[i]<win[0].nspect) keep[spw[i]]=True;
       }
       Int n=win[0].nspect;
       for (Int i=0; i<win[0].nwide; i++) keep[n+i]=(wide[0]==-1);
       for (uInt i=0; i<wide.nelements(); i++) {
-        if (wide[i]>0 && wide[i]<win[0].nwide) keep[n+wide[i]]=True;
+        if (wide[i]>=0 && wide[i]<win[0].nwide) keep[n+wide[i]]=True;
       }
       //  should store nread + nwread, or handle it as option
       if (win[freqSet_p].nspect > 0) {               // narrow band, with possibly wide band also
