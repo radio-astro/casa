@@ -191,11 +191,10 @@ def applycal(
             casalog.post("*** Error \'%s\' updating HISTORY"
                          % instance, 'WARN')
     except Exception, instance:
-
         print '*** Error ***', instance
         mycb.close()
-        raise Exception, instance
-
+        casalog.post("Error in applycal: %s" % str(instance), "SEVERE")
+        raise Exception, "Error in applycal: "+str(instance)
 
 def reportflags(rec):
     try:

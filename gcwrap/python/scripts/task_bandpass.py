@@ -120,7 +120,8 @@ def bandpass(vis=None,caltable=None,
 		mycb.close()
 
 	except Exception, instance:
-		print '*** Error ***',instance
+		print '*** Error ***', instance
 		mycb.close()
-		raise Exception, instance
+		casalog.post("Error in bandpass: %s" % str(instance), "SEVERE")
+		raise Exception, "Error in bandpass: "+str(instance)
 

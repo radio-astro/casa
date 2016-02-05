@@ -129,9 +129,10 @@ def gaincal(vis=None,caltable=None,
 		mycb.close()
 
 	except Exception, instance:
-		print '*** Error ***',instance
+		print '*** Error ***', instance
 		mycb.close()
-		raise Exception, instance
+		casalog.post("Error in gaincal: %s" % str(instance), "SEVERE")
+		raise Exception, "Error in gaincal: "+str(instance)
 
 def reportsolvestats(rec):
 	if (rec.keys().count('origin')==1 and
