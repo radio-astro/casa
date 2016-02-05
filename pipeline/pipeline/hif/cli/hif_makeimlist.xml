@@ -209,8 +209,11 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
 specmode -- Frequency specification:
     default: 'mfs'
     example:
-        mode='mfs' produce one image from all specified data
-        mode='cube', channels are specified in frequency
+        mode='mfs' produce one image per source and spw
+        mode='cont' produce one image per source and aggregate over all
+             specified spws
+        mode='cube' produce an LSRK frequency cube, channels are specified
+             in frequency
 
 cell -- Cell size (x, y)
     default '' Compute cell size based on the UV coverage of all the fields
