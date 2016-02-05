@@ -150,6 +150,14 @@ class uvfits_test(unittest.TestCase):
         expec = "25m"
         for i in diam.keys():
             self.assertTrue(qa.eq(diam[i], expec), "Unexpected diameter for antenna " + i)
+
+    def test_filename_extensions(self):
+        """CAS-7696: Verify we turn off fits filename extension support when necessary"""
+        myms = mstool()
+        fitsname = datapath + "name+000"
+        msname = "CAS-7696.ms"
+        self.assertTrue(myms.fromfits(msname, fitsname), "Failed to import uvfits file")
+        myms.done()
             
 def suite():
     return [uvfits_test]        
