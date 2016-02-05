@@ -61,7 +61,6 @@ import inspect
 
 ## List to be run
 def suite():
-#     return [test_onefield, test_iterbot, test_multifield,test_stokes, test_modelvis]
      return [test_onefield, test_iterbot, test_multifield,test_stokes, test_modelvis, test_cube, test_mask, test_startmodel]
 #     return [test_onefield, test_iterbot, test_multifield,test_stokes,test_cube, test_widefield,test_mask, test_modelvis,test_startmodel,test_widefield_failing]
 
@@ -118,7 +117,7 @@ class testref_base(unittest.TestCase):
           return stat['max'],stat['maxpos']
 
      def get_pix(self,imname,pos):
-          """Get Image max"""
+          """Get Image val"""
           ia.open(imname)
           apos = ia.pixelvalue(pos)
           ia.close()
@@ -336,19 +335,21 @@ class testref_base(unittest.TestCase):
 
           res=True
 
-          if numpy.isnan(readval) or numpy.isinf(readval):
+          if readval==None:
                res=False
-
-          if abs(theval)>1e-08:
-               if abs(readval - theval)/abs(theval) > self.epsilon: 
-                    res = False
-               else:
-                    res = True
-          else:  ## this is to guard against exact zero... sort of.
-               if abs(readval - theval) > self.epsilon: 
-                    res = False
-               else:
-                    res = True
+          elif numpy.isnan(readval) or numpy.isinf(readval):
+               res=False
+          else:
+               if abs(theval)>1e-08:
+                  if abs(readval - theval)/abs(theval) > self.epsilon: 
+                       res = False
+                  else:
+                       res = True
+               else:  ## this is to guard against exact zero... sort of.
+                  if abs(readval - theval) > self.epsilon: 
+                       res = False
+                  else:
+                       res = True
                
           pstr =  "[" + testname + "] " + imname + ": Value is " + str(readval) + " at " + str(thepos) + " (" + self.verdict(res) +" : should be " + str(theval) + " )"
           print pstr
@@ -918,6 +919,12 @@ class test_stokes(testref_base):
           tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10, stokes='IV')
           self.checkall(imexist=[self.img+'.image'],imval=[(self.img+'.image',1.0,[50,50,0,0]),(self.img+'.image',4.0,[50,50,1,0])  ])
 
+     def test_stokes_mfs_QU(self):
+          """ [onefield] Test_Stokes_mfs_QU : mfs with stokes QU"""
+          self.prepData('refim_point_linRL.ms')
+          tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10, stokes='QU')
+          self.checkall(imexist=[self.img+'.image'],imval=[(self.img+'.image',2.0,[50,50,0,0]),(self.img+'.image',3.0,[50,50,1,0])  ])
+
 #     def test_stokes_mfs_Q(self):
 #          """ [onefield] Test_Stokes_mfs_Q : mfs with stokes Q"""
 #          self.prepData('refim_point_linRL.ms')
@@ -935,6 +942,12 @@ class test_stokes(testref_base):
           self.prepData('refim_point_linRL.ms')
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10, stokes='IV',interactive=0,specmode='cube',interpolation='nearest')
           self.checkall(imexist=[self.img+'.image'],imval=[(self.img+'.image',1.0,[50,50,0,0]),(self.img+'.image',1.0,[50,50,0,1]),(self.img+'.image',1.0,[50,50,0,2]),  (self.img+'.image',4.0,[50,50,1,0]),(self.img+'.image',4.0,[50,50,1,1]),(self.img+'.image',4.0,[50,50,1,2])] )
+
+     def test_stokes_cube_QU(self):
+          """ [onefield] Test_Stokes_stokes_QU : cube with stokes QU"""
+          self.prepData('refim_point_linRL.ms')
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10, stokes='QU',interactive=0,specmode='cube',interpolation='nearest')
+          self.checkall(imexist=[self.img+'.image'],imval=[(self.img+'.image',2.0,[50,50,0,0]),(self.img+'.image',2.0,[50,50,0,1]),(self.img+'.image',2.0,[50,50,0,2]),  (self.img+'.image',3.0,[50,50,1,0]),(self.img+'.image',3.0,[50,50,1,1]),(self.img+'.image',3.0,[50,50,1,2])] )
 
 #     def test_stokes_cube_Q(self):
 #          """ [onefield] Test_Stokes_cube_Q : cube with stokes Q"""
@@ -1847,36 +1860,23 @@ class test_modelvis(testref_base):
           ret = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',startmodel=self.img+'.model', spw='0',niter=0,savemodel='virtual')
           ## cannot check anything here....  just that it runs without error
 
-#     def test_modelvis_12(self): 
-#          """ [modelpredict] Test_modelvis_12 : Predict a model with an internal T/F mask, for uvsub (cas-8133)"""
-#
-#          self.prepData("refim_twopoints_twochan.ms")
-#          ## Image two sources
-#          ret1 = tclean(vis=self.msfile,imagename=self.img,imsize=250,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",niter=100,deconvolver='hogbom',interactive=0,specmode='cube',nchan=2,interpolation='nearest',savemodel='modelcolumn')
-#          # check modelcolumn has flux of both sources
-#          #self.assertTrue( self.checkmodelchan(self.msfile,10) == 0.0 and self.checkmodelchan(self.msfile,3) > 0.0 )
-#          
-#         ## Make a mask to cover only one of them
-#          makemask(mode='copy',inpimage=self.img+'.model',inpmask='circle[[19h58m40.895s,40d55m58.543s], 1arcmin]',output=self.img+'.model:mask0')
-#          self.checkall(imexist=[self.img+'.model'], imval=[(self.img+'.residual',0.1259,[50,50,0,0])])
-#          
-#         ## Predict model with mask
-#          ret2 = tclean(vis=self.msfile,imagename=self.img+'1',imsize=250,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",niter=0,calcres=False,calcpsf=True,deconvolver='hogbom',interactive=0,specmode='cube',nchan=2,interpolation='nearest',savemodel='modelcolumn',startmodel=self.img)
-# check modelcolumn has flux of only 1 source
-#          
-#         ## uvsub
-#          uvsub(vis=self.msfile)
-#          
-#         ## Image again : Should see only the other source.
-#          ret1 = tclean(vis=self.msfile,imagename=self.img+'2',imsize=250,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",niter=100,deconvolver='hogbom',interactive=0,specmode='cube',nchan=2,interpolation='nearest',savemodel='modelcolumn')
-# modelcol should have flux of only second src.
           
 class test_startmodel(testref_base):
-#     def test_startmodel_12(self):
-#          """ [modelpredict] Test_startmodel_12 : Regrid input model onto new image grid : mfs (ra/dec) """
+     def test_startmodel_regrid_mfs(self):
+          """ [modelpredict] Test_startmodel_regrid_mfs : Regrid input model onto new image grid : mfs (ra/dec) """
+          self.prepData('refim_twopoints_twochan.ms')
+          ret1 = tclean(vis=self.msfile,imagename=self.img+'1',imsize=50,cell='8.0arcsec',niter=10,deconvolver='hogbom',interactive=0,phasecenter='J2000 19h58m40.801s +40d55m59.863s')
+          ret2 = tclean(vis=self.msfile,imagename=self.img+'2',imsize=200,cell='8.0arcsec',niter=0,deconvolver='hogbom',interactive=0,startmodel=self.img+'1.model')
+          self.checkall(imexist=[self.img+'1.residual', self.img+'2.residual'], imval=[(self.img+'1.residual',1.7963,[25,25,0,0]),(self.img+'2.residual',1.910,[168,190,0,0])])
 
-#     def test_startmodel_13(self):
-#          """ [modelpredict] Test_startmodel_13 : Regrid input model onto new image grid : cube (ra/dec/specframe)"""
+     def test_startmodel_regrid_cube(self):
+          """ [modelpredict] Test_startmodel_regrid_cube : Regrid input model onto new image grid : cube (ra/dec/specframe)"""
+          self.prepData('refim_point.ms')
+          ret1 = tclean(vis=self.msfile,imagename=self.img+'1',imsize=50,cell='8.0arcsec',niter=10,deconvolver='hogbom',interactive=0,specmode='cube',start='1.05GHz',width='50MHz',nchan=20)
+          ret2 = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',niter=0,deconvolver='hogbom',interactive=0,startmodel=self.img+'1.model',specmode='cube')
+          self.checkall(imexist=[self.img+'1.residual', self.img+'2.residual'], imval=[(self.img+'1.residual',0.362,[25,25,0,5]),(self.img+'2.residual',0.362,[50,50,0,6])])
+
+
 
 #     def test_startmodel_14(self):
 #          """ [modelpredict] Test_startmodel_14 : Regrid input model onto new image grid : mtmfs (ra/dec/terms)"""
