@@ -652,6 +652,7 @@
                         <default param="spwchan"><value type="bool">False</value></default>
                         <default param="spwcorr"><value type="bool">False</value></default>
                         <default param="basecnt"><value type="bool">False</value></default>  
+                        <default param="fieldcnt"><value type="bool">False</value></default>                          
                         <default param="name"><value type="string">Summary</value></default>
                     </equals>
                 </when>

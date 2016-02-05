@@ -115,6 +115,14 @@ protected:
 								string label,
 								Double scale);
 
+	// Dedicated method to generate threshold values
+	void generateThresholds(	map< pair<Int,Int>,vector<Double> > &data,
+								map< pair<Int,Int>,vector<Double> > &dataSquared,
+								map< pair<Int,Int>,vector<Double> > &counts,
+								map< pair<Int,Int>,Double > &threshold,
+								string label,
+								Double scale);
+
 private:
 
 	// General parameters

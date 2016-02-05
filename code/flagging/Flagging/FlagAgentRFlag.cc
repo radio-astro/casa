@@ -434,22 +434,21 @@ FlagReport FlagAgentRFlag::getReport()
 
 	if ((doflag_p==false))
 	{
-		// Plot reports (should be returned if params were calculated and display is activated)
 		FlagReport plotRepCont(String("list"),agentName_p);
-		getReportCore(	field_spw_noise_histogram_sum_p,
-						field_spw_noise_histogram_sum_squares_p,
-						field_spw_noise_histogram_counts_p,
-						field_spw_noise_map_p,
-						plotRepCont,
-						"Time analysis",
-						noiseScale_p);
-		getReportCore(	field_spw_scutof_histogram_sum_p,
-						field_spw_scutof_histogram_sum_squares_p,
-						field_spw_scutof_histogram_counts_p,
-						field_spw_scutof_map_p,
-						plotRepCont,
-						"Spectral analysis",
-						scutofScale_p);
+
+		// Calculate thresholds
+		generateThresholds(	field_spw_noise_histogram_sum_p,
+							field_spw_noise_histogram_sum_squares_p,
+							field_spw_noise_histogram_counts_p,
+							field_spw_noise_map_p,
+							"Time analysis",
+							noiseScale_p);
+		generateThresholds(	field_spw_scutof_histogram_sum_p,
+							field_spw_scutof_histogram_sum_squares_p,
+							field_spw_scutof_histogram_counts_p,
+							field_spw_scutof_map_p,
+							"Spectral analysis",
+							scutofScale_p);
 
 		// Threshold reports (should be returned if params were calculated)
 		Record threshList;
@@ -496,6 +495,22 @@ FlagReport FlagAgentRFlag::getReport()
 		// Should be fixed in the display agent....
 		if(doplot_p==true)
 		{
+			// Plot reports (should be returned if params were calculated and display is activated)
+			getReportCore(	field_spw_noise_histogram_sum_p,
+							field_spw_noise_histogram_sum_squares_p,
+							field_spw_noise_histogram_counts_p,
+							field_spw_noise_map_p,
+							plotRepCont,
+							"Time analysis",
+							noiseScale_p);
+			getReportCore(	field_spw_scutof_histogram_sum_p,
+							field_spw_scutof_histogram_sum_squares_p,
+							field_spw_scutof_histogram_counts_p,
+							field_spw_scutof_map_p,
+							plotRepCont,
+							"Spectral analysis",
+							scutofScale_p);
+
 			Int nReports = plotRepCont.nReport();
 			for (Int report_idx=0; report_idx<nReports; report_idx++)
 			{
@@ -542,10 +557,6 @@ FlagReport FlagAgentRFlag::getReportCore(	map< pair<Int,Int>,vector<Double> > &d
     vector<Double> total_threshold;
     vector<Double> total_threshold_squared;
     vector<Double> total_threshold_counts;
-    vector<Double> current_spw_frequency;
-    vector<Double> current_spw_threshold;
-    vector<Double> current_spw_threshold_squared;
-    vector<Double> current_spw_threshold_counts;
     vector<Float> total_threshold_spw_average;
     vector<Float> spw_separator_frequency;
     vector<Float> spw_separator_central;
@@ -574,10 +585,10 @@ FlagReport FlagAgentRFlag::getReportCore(	map< pair<Int,Int>,vector<Double> > &d
     		current_field_spw = std::make_pair(field,spw);
 
     		// Access the data for this specific field-spw
-        	current_spw_frequency = field_spw_frequency_p[current_field_spw];
-        	current_spw_threshold = data[current_field_spw];
-        	current_spw_threshold_squared = dataSquared[current_field_spw];
-        	current_spw_threshold_counts = counts[current_field_spw];
+    	    vector<Double> &current_spw_frequency = field_spw_frequency_p[current_field_spw];
+    	    vector<Double> &current_spw_threshold = data[current_field_spw];
+    	    vector<Double> &current_spw_threshold_squared = dataSquared[current_field_spw];
+    	    vector<Double> &current_spw_threshold_counts = counts[current_field_spw];
 
         	// Insert this field-spw data in total arrays
         	total_frequency.insert(total_frequency.end(),current_spw_frequency.begin(),current_spw_frequency.end());
@@ -585,16 +596,8 @@ FlagReport FlagAgentRFlag::getReportCore(	map< pair<Int,Int>,vector<Double> > &d
         	total_threshold_squared.insert(total_threshold_squared.end(),current_spw_threshold_squared.begin(),current_spw_threshold_squared.end());
         	total_threshold_counts.insert(total_threshold_counts.end(),current_spw_threshold_counts.begin(),current_spw_threshold_counts.end());
 
-        	// Compute threshold
-        	spwStd = scale*computeThreshold(current_spw_threshold,current_spw_threshold_squared,current_spw_threshold_counts);
-        	threshold[current_field_spw] = spwStd;
-        	*logger_p << logLevel_p << label.c_str() 	<< " - Field " << current_field_spw.first
-        												<< " - Spw " << current_field_spw.second
-        												<< " - Frequency " << current_spw_frequency[0] << "~"
-        												<< current_spw_frequency[current_spw_frequency.size()-1] << "GHz"
-        												<< " threshold (over baselines/timesteps) avg: " << spwStd << LogIO::POST;
-
         	// Prepare threshold array for plotting
+        	spwStd = threshold[current_field_spw];
         	vector<Float> aux(current_spw_threshold.size(),spwStd);
         	total_threshold_spw_average.insert(total_threshold_spw_average.end(),aux.begin(),aux.end());
 
@@ -657,6 +660,103 @@ FlagReport FlagAgentRFlag::getReportCore(	map< pair<Int,Int>,vector<Double> > &d
     return totalReport;
 }
 
+void FlagAgentRFlag::generateThresholds(	map< pair<Int,Int>,vector<Double> > &data,
+											map< pair<Int,Int>,vector<Double> > &dataSquared,
+											map< pair<Int,Int>,vector<Double> > &counts,
+											map< pair<Int,Int>,Double > &threshold,
+											string label,
+											Double scale)
+{
+	// Set logger origin
+	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+
+    // First of all determine each SPW frequency in order to produce ordered vectors
+    size_t nfreq;
+    Double freqStart, freqEnd;
+    pair<Int,Int> current_field_spw;
+    for (	map< pair<Int,Int>,vector<Double> >::iterator field_spw_iter = data.begin();
+    		field_spw_iter != data.end();
+    		field_spw_iter++)
+    {
+    	current_field_spw = field_spw_iter->first;
+
+    	// Compute threshold
+    	threshold[current_field_spw] = scale*computeThreshold(	data[current_field_spw],
+																dataSquared[current_field_spw],
+																counts[current_field_spw]);
+
+    	// Log info
+    	nfreq = field_spw_frequency_p[current_field_spw].size();
+    	freqStart = field_spw_frequency_p[current_field_spw][0];
+    	freqEnd = field_spw_frequency_p[current_field_spw][nfreq-1];
+    	*logger_p << logLevel_p << label.c_str() 	<< " - Field " << current_field_spw.first
+    												<< " - Spw " << current_field_spw.second
+    												<< " - Frequency " << freqStart << "~" << freqEnd << "GHz"
+    												<< " threshold (over baselines/timesteps) avg: "
+    												<< threshold[current_field_spw] << LogIO::POST;
+    }
+
+	/*
+	// Set logger origin
+	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+
+    // First of all determine each SPW frequency in order to produce ordered vectors
+	pair<Int,Int> current_field_spw;
+    map< Int, vector<pair<Double,Int> > > field_spw_order;
+    for (	map< pair<Int,Int>,vector<Double> >::iterator field_spw_iter = data.begin();
+    		field_spw_iter != data.end();
+    		field_spw_iter++)
+    {
+    	current_field_spw = field_spw_iter->first;
+    	pair<Double,Int> freq_spw = std::make_pair(field_spw_frequencies_p[current_field_spw],current_field_spw.second);
+    	field_spw_order[current_field_spw.first].push_back(freq_spw);
+    }
+
+
+    // Now iterate over the field-frequency-spw map, and sort it on the fly
+    Int field,spw;
+    size_t nfreq;
+    Double freqStart, freqEnd;
+    for (	map< Int, vector<pair<Double,Int> > >::iterator field_freq_spw_iter = field_spw_order.begin();
+    		field_freq_spw_iter != field_spw_order.end();
+    		field_freq_spw_iter++)
+    {
+    	// Get field
+    	field = field_freq_spw_iter->first;
+
+    	// Sort SPWs by ascending frequency
+    	sort(field_freq_spw_iter->second.begin(),field_freq_spw_iter->second.end());
+
+    	// Now iterate over SPWs
+    	for (uInt spw_i=0;spw_i<field_freq_spw_iter->second.size();spw_i++)
+    	{
+    		// Get SPW
+    		spw = field_freq_spw_iter->second[spw_i].second;
+
+    		// Create field-spw pair for accessing the data
+    		current_field_spw = std::make_pair(field,spw);
+
+        	// Compute threshold
+        	threshold[current_field_spw] = scale*computeThreshold(	data[current_field_spw],
+																	dataSquared[current_field_spw],
+																	counts[current_field_spw]);
+
+        	// Log info
+        	nfreq = field_spw_frequency_p[current_field_spw].size();
+        	freqStart = field_spw_frequency_p[current_field_spw][0];
+        	freqEnd = field_spw_frequency_p[current_field_spw][nfreq-1];
+        	*logger_p << logLevel_p << label.c_str() 	<< " - Field " << current_field_spw.first
+        												<< " - Spw " << current_field_spw.second
+        												<< " - Frequency " << freqStart << "~" << freqEnd << "GHz"
+        												<< " threshold (over baselines/timesteps) avg: "
+        												<< threshold[current_field_spw] << LogIO::POST;
+    	}
+    }
+	*/
+
+    return;
+}
+
 void FlagAgentRFlag::computeAntennaPairFlagsCore(	pair<Int,Int> spw_field,
 													Double noise,
 													Double scutof,
@@ -689,7 +789,7 @@ void FlagAgentRFlag::computeAntennaPairFlagsCore(	pair<Int,Int> spw_field,
 
 	// Time-Direction analysis: Fix channel/polarization and compute stats with all time-steps
 	// NOTE: It is better to operate in channel/polarization sequence for data contiguity
-	if ( (noise == 0) or ((noise > 0) and (doflag_p == true) and (prepass_p == false)) )
+	if ( (noise < 0) or ((noise > 0) and (doflag_p == true) and (prepass_p == false)) )
 	{
 		for (uInt chan_j=0;chan_j<(uInt)nChannels;chan_j++)
 		{
@@ -744,7 +844,7 @@ void FlagAgentRFlag::computeAntennaPairFlagsCore(	pair<Int,Int> spw_field,
 	            	// Apply flags or generate histogram?
 	            	// NOTE: AIPS RFlag has the previous code duplicated in two separated
 	            	// routines, but I don't see a reason to do this, performance-wise
-	            	if (noise==0)
+	            	if (noise < 0)
 	            	{
 	            		field_spw_noise_histogram_counts_p[spw_field][chan_j] += 1;
 	            		field_spw_noise_histogram_sum_p[spw_field][chan_j]  += StdTotal;
@@ -767,7 +867,7 @@ void FlagAgentRFlag::computeAntennaPairFlagsCore(	pair<Int,Int> spw_field,
 	}
 
 	// Spectral analysis: Fix timestep/polarization and compute stats with all channels
-	if ( (scutof == 0) or ((scutof > 0) and (doflag_p == true) and (prepass_p == false)) )
+	if ( (scutof < 0) or ((scutof > 0) and (doflag_p == true) and (prepass_p == false)) )
 	{
 		for (uInt timestep_i=centralTime;timestep_i<=centralTime;timestep_i++)
 		{
@@ -786,7 +886,7 @@ void FlagAgentRFlag::computeAntennaPairFlagsCore(	pair<Int,Int> spw_field,
 												visibilities,
 												flags);
 
-				if (scutof==0)
+				if (scutof < 0)
 				{
 					for (uInt chan_j=0;chan_j<(uInt) nChannels;chan_j++)
 					{
@@ -1023,12 +1123,13 @@ FlagAgentRFlag::computeAntennaPairFlags(const vi::VisBuffer2 &visBuffer, VisMapp
 	Bool initFreq = False;
 
 	// Get noise and scutoff levels
-	Double noise = 0;
-	if (field_spw_noise_map_p.find(field_spw) != field_spw_noise_map_p.end())
+	Double noise = -1;
+	if ( (field_spw_noise_map_p.find(field_spw) != field_spw_noise_map_p.end()) and
+			field_spw_noise_map_p[field_spw] > 0)
 	{
 		noise = field_spw_noise_map_p[field_spw];
 	}
-	else if (noise_p)
+	else if (noise_p > 0)
 	{
 		noise = noise_p;
 	}
@@ -1043,12 +1144,13 @@ FlagAgentRFlag::computeAntennaPairFlags(const vi::VisBuffer2 &visBuffer, VisMapp
 	}
 
 	// Get cutoff level
-	Double scutof = 0;
-	if (field_spw_scutof_map_p.find(field_spw) != field_spw_scutof_map_p.end())
+	Double scutof = -1;
+	if ((field_spw_scutof_map_p.find(field_spw) != field_spw_scutof_map_p.end()) and
+			(field_spw_scutof_map_p[field_spw] > 0))
 	{
 		scutof = field_spw_scutof_map_p[field_spw];
 	}
-	else if (scutof_p)
+	else if (scutof_p > 0)
 	{
 		scutof = scutof_p;
 	}
