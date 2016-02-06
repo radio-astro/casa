@@ -24,7 +24,6 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id$
-
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/OS/HostInfo.h>
 #include <components/ComponentModels/SkyComponent.h>
@@ -45,6 +44,7 @@
 #include <lattices/Lattices/TiledLineStepper.h>
 #include <lattices/Lattices/LatticeStepper.h>
 #include <lattices/Lattices/LatticeIterator.h>
+#include <lattices/Lattices/LatticeUtilities.h>
 #include <lattices/LRegions/LCEllipsoid.h>
 #include <lattices/LRegions/LCUnion.h>
 #include <lattices/LRegions/LCExtension.h>
@@ -521,18 +521,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //imregrid.regrid(outImageMask, Interpolate2D::LINEAR, axes, inImageMask); 
       //
       TempImage<Float>* inImageMaskptr = new TempImage<Float>(inshape,incsys);
-      inImageMaskptr->copyData((LatticeExpr<Float>)(inImageMask));
+      ArrayLattice<Bool> inimmask(inImageMask.getMask());
+      inImageMaskptr->copyData((LatticeExpr<Float>)(inImageMask * iif(inimmask,1.0,0.0)) );
       //
       SPCIIF tempim(inImageMaskptr);
       SPCIIF templateim(new TempImage<Float>(outshape,outcsys));
       Record* dummyrec = 0;
-      //      const String outfilename = outImageMask.name()+String("_tmp");
       ImageRegridder regridder(tempim, outfilename, templateim, axes, dummyrec, "", True, outshape);
       regridder.setMethod(Interpolate2D::LINEAR);
       SPIIF retim = regridder.regrid();
-      //      retim->copyData((LatticeExpr<Float>) iif(*retim > 0.1, 1.0, 0.0)); 
-      outImageMask.copyData( (LatticeExpr<Float>) iif(*retim > 0.1, 1.0, 0.0)  );
-
+      //outImageMask.copyData( (LatticeExpr<Float>) iif(*retim > 0.1, 1.0, 0.0)  );
+      ArrayLattice<Bool> retimmask(retim->getMask());
+      //LatticeExpr<Float> withmask( (*retim) * iif(retimmask,1.0,0.0) );
+      //outImageMask.copyData( withmask );
+      outImageMask.copyData( (LatticeExpr<Float>)((*retim) * iif(retimmask,1.0,0.0))  );
+      //LatticeUtilities::copyDataAndMask(os, outImageMask, *retim );
     } catch (AipsError &x) {
 	throw(AipsError("Image regrid error : "+ x.getMesg()));
       }
@@ -754,7 +757,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //cerr<<"input resolution : qreso.getValue()="<<qreso.getValue()<<endl;
     if( alg=="thresh" ) 
       os<<"Input resolution : "<<qreso.getValue()<<" "<<qreso.getUnit()<<LogIO::POST;
-    Float sigma;
+    Float sigma = 0.0;
     // if fracofpeak (fraction of a peak) is specified, use it to set a threshold
     if ( fracofpeak != 0.0 ) {
       if (fracofpeak > 1.0 )

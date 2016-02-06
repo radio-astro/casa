@@ -1559,6 +1559,16 @@ class test_mask(testref_base):
           ret2 = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',niter=10,deconvolver='hogbom',specmode='cube',start='1.3GHz',interactive=0,usemask='user',mask=self.img+'1.mask')
           self.checkall(imexist=[self.img+'1.mask', self.img+'2.mask'], imval=[(self.img+'1.mask',0.0,[50,50,0,1]),(self.img+'1.mask',1.0,[50,50,0,2]),(self.img+'1.mask',1.0,[50,50,0,10]),(self.img+'1.mask',0.0,[50,50,0,11]),(self.img+'2.mask',1.0,[50,50,0,0]),(self.img+'2.mask',1.0,[50,50,0,4]),(self.img+'2.mask',0.0,[50,50,0,10])])
 
+     def test_mask_5(self):
+          """ [mask] test_mask_5 : Input cube mask that has different chan
+          ranges (use mask from the 1st tclean with a different channel range in the 2nd tclean run)"""
+          self.prepData('refim_point.ms')
+          mstr = 'circle[[50pix,50pix],10pix]'
+          self.write_file(self.img+'.mask.txt', '#CRTFv0 CASA Region Text Format version 0\n'+mstr+'\n')
+          ret1 = tclean(vis=self.msfile,imagename=self.img+'1',imsize=100,cell='8.0arcsec',niter=1,deconvolver='hogbom',specmode='cube',start=0,nchan=10,interactive=0,usemask='user',mask=self.img+'.mask.txt')
+          ret2 = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',niter=1,deconvolver='hogbom',specmode='cube',start=5,nchan=10,interactive=0,usemask='user',mask=self.img+'1.mask')
+          self.checkall(imexist=[self.img+'1.mask', self.img+'2.mask'], imval=[(self.img+'1.mask',1.0,[50,50,0,1]),(self.img+'1.mask',1.0,[50,50,0,2]),(self.img+'1.mask',1.0,[50,50,0,9]),(self.img+'2.mask',1.0,[50,50,0,0]),(self.img+'2.mask',1.0,[50,50,0,4]),(self.img+'2.mask',0.0,[50,50,0,5])])
+
      def test_mask_autobox(self):
          # changed to use threshold based automasking 
           """ [mask] test_mask_autobox :  Autobox """
