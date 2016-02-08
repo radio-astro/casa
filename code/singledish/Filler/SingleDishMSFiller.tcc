@@ -504,25 +504,27 @@ template<class T>
 Int SingleDishMSFiller<T>::updateFeed(Int const &feed_id, Int const &spw_id,
     String const &pol_type) {
   constexpr Int num_receptors = 2;
-  String const linear_type_arr[2] = { "X", "Y" };
-  Vector<String> const linear_type(linear_type_arr, 2, SHARE);
-  String const circular_type_arr[2] = { "R", "L" };
-  Vector<String> const circular_type(circular_type_arr, 2, SHARE);
-  Matrix < Complex > pol_response(num_receptors, num_receptors, Complex(0));
-  Vector < String > polarization_type(2);
+  static String const linear_type_arr[2] = { "X", "Y" };
+  static Vector<String> linear_type(linear_type_arr, 2, SHARE);
+  static String const circular_type_arr[2] = { "R", "L" };
+  static Vector<String> circular_type(circular_type_arr, 2, SHARE);
+  static Matrix < Complex > const pol_response(num_receptors, num_receptors, Complex(0));
+  static Vector < String > *polarization_type = nullptr;
   if (pol_type == "linear") {
-    polarization_type.reference(linear_type);
+    polarization_type = &linear_type;
   } else if (pol_type == "circular") {
-    polarization_type.reference(circular_type);
+    polarization_type = &circular_type;
   }
+  static std::vector< Vector<String> *> polarization_type_pool;
+
   String polarization_type_arr[2] = { "X", "Y" };
   Vector < String > polarization_type_storage(polarization_type_arr, 2, SHARE);
   Matrix<Double> const beam_offset(2, num_receptors, 0.0);
   Vector<Double> const receptor_angle(num_receptors, 0.0);
   Vector<Double> const position(3, 0.0);
   auto comparer = [&](MSFeedColumns &columns, uInt i) {
-    columns.polarizationType().get(i, polarization_type_storage);
-    Bool match = allEQ(polarization_type, polarization_type_storage) &&
+    Vector<String> *current_polarization_type = polarization_type_pool[i];
+    Bool match = allEQ(*polarization_type, *current_polarization_type) &&
     (feed_id == columns.feedId()(i)) &&
     (spw_id == columns.spectralWindowId()(i));
     return match;
@@ -536,11 +538,13 @@ Int SingleDishMSFiller<T>::updateFeed(Int const &feed_id, Int const &spw_id,
       columns.feedId().put(i, feed_id);
       columns.beamId().put(i, 0);
       columns.spectralWindowId().put(i, spw_id);
-      columns.polarizationType().put(i, polarization_type);
+      columns.polarizationType().put(i, *polarization_type);
       columns.beamOffset().put(i, beam_offset);
       columns.receptorAngle().put(i, receptor_angle);
       columns.position().put(i, position);
       columns.polResponse().put(i, pol_response);
+
+      polarization_type_pool.push_back(polarization_type);
     };
   Int feed_row = ::updateTable(ms_->feed(), *(feed_columns_.get()), comparer,
       updater);
