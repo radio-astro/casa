@@ -28,6 +28,46 @@
 
 using namespace casacore;
 
+namespace {
+template<class T, class U>
+inline void getDataRangePerId(Vector<uInt> const &index_list,
+    Vector<T> const &id_list, Vector<U> const &data_list, size_t start,
+    size_t end, std::map<T, Block<uInt> > &range_index) {
+  uInt id_prev = id_list[index_list[start]];
+  uInt id_min = index_list[start];
+  uInt id_max = 0;
+  Double data_min = data_list[id_min];
+  Double data_max = 0.0;
+  Block < uInt > current_index(2);
+  for (uInt i = start + 1; i < end; ++i) {
+    uInt j = index_list[i];
+    uInt current_id = id_list[j];
+//      std::cout << "weather_id = " << weather_id << " id_prev = " << id_prev
+//          << " time range (" << time_min << "," << time_max << ")" << std::endl;
+    if (current_id != id_prev) {
+      id_max = index_list[i - 1];
+      data_max = data_list[id_max];
+      current_index[0] = id_min;
+      current_index[1] = id_max;
+      range_index[id_prev] = current_index;
+
+      id_prev = current_id;
+      id_min = j;
+      data_min = data_list[j];
+    }
+  }
+  uInt last_id = id_list[index_list[end - 1]];
+  if (range_index.find(last_id) == range_index.end()) {
+    id_max = index_list[end - 1];
+    data_max = data_list[id_max];
+    current_index[0] = id_min;
+    current_index[1] = id_max;
+    range_index[last_id] = current_index;
+  }
+}
+
+}
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 class ScantableIteratorInterface {
@@ -92,32 +132,15 @@ public:
 //      std::cout << "i " << i << " j " << j << " WID " << weather_id_list[j]
 //          << " TIME " << time_list[j] << std::endl;
 //    }
-    uInt id_prev = weather_id_list[index_list[0]];
-    Double time_min = time_list[index_list[0]];
-    Double time_max = 0.0;
-    for (uInt i = 1; i < nrow_main; ++i) {
-      uInt j = index_list[i];
-      uInt weather_id = weather_id_list[j];
-//      std::cout << "weather_id = " << weather_id << " id_prev = " << id_prev
-//          << " time range (" << time_min << "," << time_max << ")" << std::endl;
-      if (weather_id != id_prev) {
-        time_max = time_list[index_list[i - 1]];
-        Block<Double> time_range(2);
-        time_range[0] = time_min;
-        time_range[1] = time_max;
-        time_range_[id_prev] = time_range;
-
-        id_prev = weather_id;
-        time_min = time_list[j];
-      }
-    }
-    uInt last_weather_id = weather_id_list[index_list[nrow_main - 1]];
-    if (time_range_.find(last_weather_id) == time_range_.end()) {
-      time_max = time_list[index_list[nrow_main - 1]];
-      Block<Double> time_range(2);
-      time_range[0] = time_min;
-      time_range[1] = time_max;
-      time_range_[last_weather_id] = time_range;
+    std::map<uInt, Block<uInt> > range_index;
+    getDataRangePerId(index_list, weather_id_list, time_list, 0, nrow_main,
+        range_index);
+    Block<Double> range(2);
+    for (auto i = range_index.begin(); i != range_index.end(); ++i) {
+      Block<uInt> const &idx = i->second;
+      range[0] = time_list[idx[0]];
+      range[1] = time_list[idx[1]];
+      time_range_[i->first] = range;
     }
 
     POST_END;
@@ -404,6 +427,64 @@ public:
     for (uInt i = 0; i < id_column.nrow(); ++i) {
       molecule_id_map_[molecule_id_list[i]] = i;
     }
+
+    // generate sorted_index_
+    uInt nrow_main = main_table_.nrow();
+    ROScalarColumn < String > srcname_column(main_table_, "SRCNAME");
+    ROScalarColumn < uInt > ifno_column(main_table_, "IFNO");
+    ROScalarColumn < Double > time_column(main_table_, "TIME");
+    ROScalarColumn < Double > &interval_column = time_column;
+    Sort sorter3;
+    Vector < String > srcname_list = srcname_column.getColumn();
+    Vector < Double > time_list = time_column.getColumn();
+    sorter3.sortKey(srcname_list.data(), TpString, 0, Sort::Ascending);
+    sorter3.sortKey(ifno_list.data(), TpUInt, 0, Sort::Ascending);
+    sorter3.sortKey(time_list.data(), TpDouble, 0, Sort::Ascending);
+    Vector < uInt > index_list;
+    sorter3.sort(index_list, nrow_main, Sort::QuickSort);
+
+    std::vector<size_t> srcname_boundary;
+    srcname_boundary.push_back(0u);
+    String current = srcname_list[index_list[0]];
+    for (uInt i = 1; i < nrow_main; ++i) {
+      String name = srcname_list[index_list[i]];
+      if (current != name) {
+        srcname_boundary.push_back(i);
+        current = name;
+      }
+    }
+    srcname_boundary.push_back(nrow_main);
+
+    constexpr double kDay2Sec = 86400.0;
+    interval_column.attach(main_table_, "INTERVAL");
+    time_range_.clear();
+    for (size_t i = 0; i < srcname_boundary.size() - 1; ++i) {
+      String name = srcname_list[srcname_boundary[i]];
+      size_t start = srcname_boundary[i];
+      size_t end = srcname_boundary[i + 1];
+      std::map<uInt, Block<Double> > range;
+      std::map<uInt, Block<uInt> > range_index;
+      getDataRangePerId(index_list, ifno_list, time_list, start, end,
+          range_index);
+      for (auto iter = range_index.begin(); iter != range_index.end(); ++iter) {
+        Block<uInt> idx = iter->second;
+        Block<Double> time_range(2);
+        time_range[0] = time_list[idx[0]] * kDay2Sec
+            - 0.5 * interval_column(idx[0]);
+        time_range[1] = time_list[idx[1]] * kDay2Sec
+            + 0.5 * interval_column(idx[1]);
+        range[iter->first] = time_range;
+      }
+      time_range_[name] = range;
+    }
+
+//    for (auto i = time_range_.begin(); i != time_range_.end(); ++i) {
+//      std::cout << "SRCNAME \"" << i->first << "\": " << std::endl;
+//      for (auto j = i->second.begin(); j != i->second.end(); ++j) {
+//        std::cout << "    " << j->first << ": " << j->second[0] << " "
+//            << j->second[1] << std::endl;
+//      }
+//    }
   }
 
   virtual ~ScantableSourceIterator() {
@@ -411,9 +492,10 @@ public:
 
   void getEntry(SourceRecord &record) {
     uInt const irow = row_list_[current_iter_];
+    uInt const ifno = ifno_column_(irow);
     record.name = name_column_(irow);
     record.source_id = source_id_map_[record.name];
-    record.spw_id = ifno_column_(irow);
+    record.spw_id = ifno;    //ifno_column_(irow);
     record.direction = MDirection(
         Quantum<Vector<Double> >(direction_column_(irow), "rad"),
         MDirection::J2000);
@@ -451,21 +533,24 @@ public:
     record.num_lines = record.rest_frequency.size();
     record.sysvel = Vector < Double > (record.num_lines, sysvel);
 
-    Table t = main_table_(
-        main_table_.col("SRCNAME") == record.name
-            && main_table_.col("IFNO") == record.spw_id);
-    time_column_.attach(t, "TIME");
-    Vector < Double > time_list = time_column_.getColumn();
-    Sort sorter;
-    sorter.sortKey(time_list.data(), TpDouble);
-    Vector < uInt > index_vector;
-    uInt n = sorter.sort(index_vector, time_list.size());
-    interval_column_.attach(t, "INTERVAL");
-    constexpr double kDay2Sec = 86400.0;
-    Double time_min = time_list[index_vector[0]] * kDay2Sec
-        - 0.5 * interval_column_(index_vector[0]);
-    Double time_max = time_list[index_vector[n - 1]] * kDay2Sec
-        + 0.5 * interval_column_(index_vector[n - 1]);
+//    Table t = main_table_(
+//        main_table_.col("SRCNAME") == record.name
+//            && main_table_.col("IFNO") == record.spw_id);
+//    time_column_.attach(t, "TIME");
+//    Vector < Double > time_list = time_column_.getColumn();
+//    Sort sorter;
+//    sorter.sortKey(time_list.data(), TpDouble);
+//    Vector < uInt > index_vector;
+//    uInt n = sorter.sort(index_vector, time_list.size());
+//    interval_column_.attach(t, "INTERVAL");
+//    constexpr double kDay2Sec = 86400.0;
+//    Double time_min = time_list[index_vector[0]] * kDay2Sec
+//        - 0.5 * interval_column_(index_vector[0]);
+//    Double time_max = time_list[index_vector[n - 1]] * kDay2Sec
+//        + 0.5 * interval_column_(index_vector[n - 1]);
+    Block<Double> const &time_range = time_range_[record.name][ifno];
+    Double time_min = time_range[0];
+    Double time_max = time_range[1];
     record.time = 0.5 * (time_min + time_max);
     record.interval = (time_max - time_min);
   }
@@ -488,6 +573,7 @@ private:
   Vector<uInt> row_list_;
   std::map<String, Int> source_id_map_;
   std::map<uInt, uInt> molecule_id_map_;
+  std::map<String, std::map<uInt, Block<Double> > > time_range_;
 };
 
 } //# NAMESPACE CASA - END

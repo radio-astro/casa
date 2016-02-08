@@ -17,6 +17,8 @@
 // casacore includes
 #include <casacore/casa/Containers/Record.h>
 #include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/tables/Tables/ArrayColumn.h>
+#include <casacore/tables/Tables/ScalarColumn.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -152,6 +154,7 @@ private:
   ScantableFieldIterator::Product field_map_;
   ScantableFrequenciesIterator::Product num_chan_map_;
   std::map<uInt, uInt> tcal_id_map_;
+  String pol_type_;
 
   Bool (Scantable2MSReader::*get_antenna_row_)(AntennaRecord &);
   Bool (Scantable2MSReader::*get_field_row_)(FieldRecord &);
@@ -176,14 +179,13 @@ private:
 
   template<class _Record>
   Bool noMoreRowImpl(_Record &) {
-    POST_START;
-    POST_END;
+    POST_START;POST_END;
     return False;
   }
 
   template<class _Iterator, class _Record, class _Func>
   Bool getRowImplTemplate(std::unique_ptr<_Iterator> &iter, _Record &record,
-      _Func &func, typename _Iterator::Product *product=nullptr) {
+      _Func &func, typename _Iterator::Product *product = nullptr) {
     POST_START;
 
     if (!iter) {

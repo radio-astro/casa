@@ -18,7 +18,6 @@
 #include <casacore/casa/Arrays/ArrayMath.h>
 #include <casacore/casa/Arrays/ArrayIO.h>
 #include <casacore/tables/Tables/Table.h>
-#include <casacore/tables/Tables/ScalarColumn.h>
 
 using namespace casacore;
 
@@ -125,8 +124,7 @@ Scantable2MSReader::Scantable2MSReader(std::string const &scantable_name) :
         &Scantable2MSReader::getSourceRowImpl), get_spw_row_(
         &Scantable2MSReader::getSpectralWindowRowImpl), get_weather_row_(
         &Scantable2MSReader::getWeatherRowImpl), field_iter_(nullptr), freq_iter_(
-        nullptr), source_iter_(nullptr), weather_iter_(
-        nullptr) {
+        nullptr), source_iter_(nullptr), weather_iter_(nullptr) {
 //  std::cout << "Scantabl2MSReader::Scantable2MSReader" << std::endl;
 }
 
@@ -192,6 +190,9 @@ void Scantable2MSReader::initializeSpecific() {
   for (uInt i = 0; i < tcal_table_.nrow(); ++i) {
     tcal_id_map_[id_column(i)] = i;
   }
+
+  // polarization type from header
+  pol_type_ = main_table_->keywordSet().asString("POLTYPE");
 }
 
 void Scantable2MSReader::finalizeSpecific() {
@@ -305,22 +306,23 @@ Bool Scantable2MSReader::getData(size_t irow, DataRecord &record) {
   uInt index = sorted_rows_[irow];
 //  std::cout << "Accessing row " << index << std::endl;
 
-  record.time = time_column_(index) * kDay2Sec;
-  record.interval = interval_column_(index);
+  time_column_.get(index, record.time);
+  record.time *= kDay2Sec;
+  interval_column_.get(index, record.interval);
 //  std::cout << "TIME=" << record.time << " INTERVAL=" << record.interval
 //      << std::endl;
   record.intent = getIntent(srctype_column_(index));
   record.scan = (Int) scan_column_(index);
   record.subscan = (Int) cycle_column_(index);
-  String field_name = fieldname_column_(index);
+  String field_name = fieldname_column_.get(index);
   record.field_id = field_map_[field_name];
   record.antenna_id = (Int) 0;
   direction_column_.get(index, record.direction_vector);
   scanrate_column_.get(index, record.scan_rate);
   record.feed_id = (Int) beam_column_(index);
   record.spw_id = (Int) ifno_column_(index);
-  record.polno = polno_column_(index);
-  record.pol_type = main_table_->keywordSet().asString("POLTYPE");
+  polno_column_.get(index, record.polno);
+  record.pol_type = pol_type_; 
 //  std::cout << "set data size to " << num_chan_map_[record.spw_id] << " shape "
 //      << record.data.shape() << std::endl;
   record.setDataSize(num_chan_map_[record.spw_id]);

@@ -24,8 +24,10 @@
 #include <casacore/measures/Measures/MDirection.h>
 #include <casacore/ms/MeasurementSets/MeasurementSet.h>
 #include <casacore/ms/MeasurementSets/MSMainColumns.h>
+#include <casacore/ms/MeasurementSets/MSDataDescColumns.h>
 #include <casacore/ms/MeasurementSets/MSSysCalColumns.h>
 #include <casacore/ms/MeasurementSets/MSPointingColumns.h>
+#include <casacore/ms/MeasurementSets/MSPolColumns.h>
 #include <casacore/ms/MeasurementSets/MSFeedColumns.h>
 #include <casacore/ms/MeasurementSets/MSStateColumns.h>
 #include <casacore/tables/Tables/TableRow.h>
@@ -40,7 +42,7 @@ template<typename Reader>
 class SingleDishMSFiller {
 public:
   SingleDishMSFiller(std::string const &name) :
-      ms_(), ms_columns_(), feed_columns_(), pointing_columns_(), syscal_columns_(), state_columns_(), reader_(
+      ms_(), ms_columns_(), data_description_columns_(), feed_columns_(), pointing_columns_(), polarization_columns_(), syscal_columns_(), state_columns_(), reader_(
           new Reader(name)), is_float_(false), data_key_(), reference_feed_(-1), pointing_time_(), pointing_time_max_(), pointing_time_min_(), num_pointing_time_(), syscal_list_() {
   }
 
@@ -419,14 +421,15 @@ private:
     POST_START;
 
     // constant stuff
-    Vector<Double> const uvw(3, 0.0);
-    Array<Bool> flagCategory(IPosition(3, 0, 0, 0));
+    static Vector<Double> const uvw(3, 0.0);
+    static Array<Bool> const flagCategory(IPosition(3, 0, 0, 0));
 
     // target row id
     uInt irow = ms_->nrow();
 
     // add new row
-    ms_->addRow(1, True);
+    //ms_->addRow(1, True);
+    ms_->addRow(1, False);
 
     ms_columns_->uvw().put(irow, uvw);
     ms_columns_->flagCategory().put(irow, flagCategory);
@@ -440,7 +443,7 @@ private:
     ms_columns_->scanNumber().put(irow, scan_number);
     ms_columns_->time().put(irow, time);
     ms_columns_->timeCentroid().put(irow, time);
-    Double interval = dataRecord.interval;
+    Double const &interval = dataRecord.interval;
     ms_columns_->interval().put(irow, interval);
     ms_columns_->exposure().put(irow, interval);
 
@@ -474,8 +477,10 @@ private:
 
   std::unique_ptr<casacore::MeasurementSet> ms_;
   std::unique_ptr<MSMainColumns> ms_columns_;
+  std::unique_ptr<MSDataDescColumns> data_description_columns_;
   std::unique_ptr<MSFeedColumns> feed_columns_;
   std::unique_ptr<MSPointingColumns> pointing_columns_;
+  std::unique_ptr<MSPolarizationColumns> polarization_columns_;
   std::unique_ptr<MSSysCalColumns> syscal_columns_;
   std::unique_ptr<MSStateColumns> state_columns_;
   std::unique_ptr<Reader> reader_;

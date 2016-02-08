@@ -119,7 +119,7 @@ void makeSourceMap(MSSource const &table, Record &source_map) {
 //  }
 //};
 
-} // anonymous namespace
+}// anonymous namespace
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -130,7 +130,7 @@ void SingleDishMSFiller<T>::save(std::string const &name) {
 #ifdef SINGLEDISHMSFILLER_DEBUG
   std::cout << "Saving MS as \"" << name << "\"" << std::endl;
   std::cout << "current working directory is \"" << Path().absoluteName()
-      << "\"" << std::endl;
+  << "\"" << std::endl;
 #endif
 
   ms_->deepCopy(name, Table::New);
@@ -155,10 +155,11 @@ void SingleDishMSFiller<T>::setupMS() {
 //  String dunit = table_->getHeader().fluxunit ;
 
   TableDesc ms_main_description = MeasurementSet::requiredTableDesc();
-  if ( is_float_ ) {
-    MeasurementSet::addColumnToDesc( ms_main_description, MSMainEnums::FLOAT_DATA, 2 ) ;
-  } else { 
-    MeasurementSet::addColumnToDesc( ms_main_description, MSMainEnums::DATA, 2 ) ;
+  if (is_float_) {
+    MeasurementSet::addColumnToDesc(ms_main_description,
+        MSMainEnums::FLOAT_DATA, 2);
+  } else {
+    MeasurementSet::addColumnToDesc(ms_main_description, MSMainEnums::DATA, 2);
   }
 
   String const scratch_table_name = File::newUniqueName(".",
@@ -312,11 +313,17 @@ void SingleDishMSFiller<T>::setupMS() {
   // Set up MSMainColumns
   ms_columns_.reset(new MSMainColumns(*ms_));
 
+  // Set up MSDataDescColumns
+  data_description_columns_.reset(new MSDataDescColumns(ms_->dataDescription()));
+
   // Set up MSFeedColumns
   feed_columns_.reset(new MSFeedColumns(ms_->feed()));
 
   // Set up MSPointingColumns
   pointing_columns_.reset(new MSPointingColumns(ms_->pointing()));
+
+  // Set up MSPolarizationColumns
+  polarization_columns_.reset(new MSPolarizationColumns(ms_->polarization()));
 
   // Set up MSSysCalColumns
   syscal_columns_.reset(new MSSysCalColumns(ms_->sysCal()));
@@ -431,7 +438,7 @@ Int SingleDishMSFiller<T>::updatePolarization(Vector<Int> const &corr_type,
     throw AipsError("Internal inconsistency in number of correlations");
   }
   MSPolarization &mytable = ms_->polarization();
-  MSPolarizationColumns mycolumns(mytable);
+  //MSPolarizationColumns mycolumns(mytable);
   Matrix<Int> const corr_product(2, num_pol, 0);
   auto comparer = [&](MSPolarizationColumns const &columns, uInt i) {
     Bool match = allEQ(columns.corrType()(i), corr_type);
@@ -442,7 +449,7 @@ Int SingleDishMSFiller<T>::updatePolarization(Vector<Int> const &corr_type,
     columns.corrType().put(i, corr_type);
     columns.corrProduct().put(i, corr_product);
   };
-  Int polarization_id = ::updateTable(mytable, mycolumns, comparer, updater);
+  Int polarization_id = ::updateTable(mytable, *(polarization_columns_.get()), comparer, updater);
   return polarization_id;
 }
 
@@ -453,9 +460,9 @@ Int SingleDishMSFiller<T>::updateDataDescription(Int const &polarization_id,
     throw AipsError("Invalid ids for DATA_DESCRIPTION");
   }
   MSDataDescription &mytable = ms_->dataDescription();
-  MSDataDescColumns mycolumns(mytable);
+  //MSDataDescColumns mycolumns(mytable);
   auto comparer = [&](MSDataDescColumns const &columns, uInt i) {
-    Bool match = (mycolumns.polarizationId()(i) == polarization_id)
+    Bool match = (columns.polarizationId()(i) == polarization_id)
     && (columns.spectralWindowId()(i) == spw_id);
     return match;
   };
@@ -463,7 +470,7 @@ Int SingleDishMSFiller<T>::updateDataDescription(Int const &polarization_id,
     columns.polarizationId().put(i, polarization_id);
     columns.spectralWindowId().put(i, spw_id);
   };
-  Int data_desc_id = ::updateTable(mytable, mycolumns, comparer, updater);
+  Int data_desc_id = ::updateTable(mytable, *(data_description_columns_.get()), comparer, updater);
 
   return data_desc_id;
 }
@@ -488,7 +495,8 @@ Int SingleDishMSFiller<T>::updateState(Int const &subscan,
 
     subscan_list.push_back(subscan);
   };
-  Int state_id = ::updateTable(mytable, *(state_columns_.get()), comparer, updater);
+  Int state_id = ::updateTable(mytable, *(state_columns_.get()), comparer,
+      updater);
   return state_id;
 }
 
@@ -500,18 +508,21 @@ Int SingleDishMSFiller<T>::updateFeed(Int const &feed_id, Int const &spw_id,
   Vector<String> const linear_type(linear_type_arr, 2, SHARE);
   String const circular_type_arr[2] = { "R", "L" };
   Vector<String> const circular_type(circular_type_arr, 2, SHARE);
-  Matrix<Complex> pol_response(num_receptors, num_receptors, Complex(0));
+  Matrix < Complex > pol_response(num_receptors, num_receptors, Complex(0));
   Vector < String > polarization_type(2);
   if (pol_type == "linear") {
     polarization_type.reference(linear_type);
   } else if (pol_type == "circular") {
     polarization_type.reference(circular_type);
   }
+  String polarization_type_arr[2] = { "X", "Y" };
+  Vector < String > polarization_type_storage(polarization_type_arr, 2, SHARE);
   Matrix<Double> const beam_offset(2, num_receptors, 0.0);
   Vector<Double> const receptor_angle(num_receptors, 0.0);
   Vector<Double> const position(3, 0.0);
   auto comparer = [&](MSFeedColumns &columns, uInt i) {
-    Bool match = allEQ(polarization_type, columns.polarizationType()(i)) &&
+    columns.polarizationType().get(i, polarization_type_storage);
+    Bool match = allEQ(polarization_type, polarization_type_storage) &&
     (feed_id == columns.feedId()(i)) &&
     (spw_id == columns.spectralWindowId()(i));
     return match;
@@ -531,7 +542,8 @@ Int SingleDishMSFiller<T>::updateFeed(Int const &feed_id, Int const &spw_id,
       columns.position().put(i, position);
       columns.polResponse().put(i, pol_response);
     };
-  Int feed_row = ::updateTable(ms_->feed(), *(feed_columns_.get()), comparer, updater);
+  Int feed_row = ::updateTable(ms_->feed(), *(feed_columns_.get()), comparer,
+      updater);
 
   // reference feed
   if (reference_feed_ < 0) {
@@ -543,7 +555,8 @@ Int SingleDishMSFiller<T>::updateFeed(Int const &feed_id, Int const &spw_id,
 
 template<class T>
 Int SingleDishMSFiller<T>::updatePointing(Int const &antenna_id,
-    Int const &feed_id, Double const &time, Double const &interval, Matrix<Double> const &direction) {
+    Int const &feed_id, Double const &time, Double const &interval,
+    Matrix<Double> const &direction) {
   POST_START;
 
   if (reference_feed_ != feed_id) {
@@ -558,28 +571,29 @@ Int SingleDishMSFiller<T>::updatePointing(Int const &antenna_id,
   Double *time_min = &pointing_time_min_[antenna_id];
   Vector < Double > *time_list = &pointing_time_[antenna_id];
 
-  auto addPointingRow = [&]() {
-    mytable.addRow(1, True);
-    pointing_columns_->time().put(nrow, time);
-    pointing_columns_->interval().put(nrow, interval);
-    pointing_columns_->antennaId().put(nrow, antenna_id);
-    if (direction.ncolumn() == 1 || allEQ(direction.column(1), 0.0)) {
-      pointing_columns_->numPoly().put(nrow, 0);
-      pointing_columns_->direction().put(nrow, direction(IPosition(2,0,0), IPosition(2,1,0)));
-    } else {
-      pointing_columns_->direction().put(nrow, direction);
-      Int num_poly = direction.shape()[1] - 1;
-    pointing_columns_->numPoly().put(nrow, num_poly);
-    }
-    // add timestamp to the list
-      uInt nelem = time_list->nelements();
-      if (nelem <= *n) {
-        time_list->resize(nelem + ARRAY_BLOCK_SIZE, True);
-      }
-      (*time_list)[*n] = time;
-      // increment number of pointing entry
-      *n += 1;
-    };
+  auto addPointingRow =
+      [&]() {
+        mytable.addRow(1, True);
+        pointing_columns_->time().put(nrow, time);
+        pointing_columns_->interval().put(nrow, interval);
+        pointing_columns_->antennaId().put(nrow, antenna_id);
+        if (direction.ncolumn() == 1 || allEQ(direction.column(1), 0.0)) {
+          pointing_columns_->numPoly().put(nrow, 0);
+          pointing_columns_->direction().put(nrow, direction(IPosition(2,0,0), IPosition(2,1,0)));
+        } else {
+          pointing_columns_->direction().put(nrow, direction);
+          Int num_poly = direction.shape()[1] - 1;
+          pointing_columns_->numPoly().put(nrow, num_poly);
+        }
+        // add timestamp to the list
+        uInt nelem = time_list->nelements();
+        if (nelem <= *n) {
+          time_list->resize(nelem + ARRAY_BLOCK_SIZE, True);
+        }
+        (*time_list)[*n] = time;
+        // increment number of pointing entry
+        *n += 1;
+      };
 
   if (*n == 0) {
     addPointingRow();
