@@ -145,9 +145,11 @@ class Finalcals(basetask.StandardTaskTemplate):
         calMs = 'finalcalibrators.ms'
         split_result = self._do_split(calMs)
 
-        all_sejy_result = self._doall_setjy(calMs)
+        field_spws = m.get_vla_field_spws()
 
-        powerfit_results = self._do_powerfit()
+        all_sejy_result = self._doall_setjy(calMs, field_spws)
+
+        powerfit_results = self._do_powerfit(field_spws)
         
         powerfit_setjy = self._do_powerfitsetjy(calMs, powerfit_results)
 
@@ -401,12 +403,12 @@ class Finalcals(basetask.StandardTaskTemplate):
             
         return self._executor.execute(job)
     
-    def _doall_setjy(self, calMs):
+    def _doall_setjy(self, calMs, field_spws):
         
         context = self.inputs.context
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         # field_spws = context.evla['msinfo'][m.name].field_spws
-        field_spws = m.get_vla_field_spws()
+        # field_spws = m.get_vla_field_spws()
         # spw2band = context.evla['msinfo'][m.name].spw2band
         spw2band = m.get_vla_spw2band()
         bands = spw2band.values()
@@ -477,14 +479,14 @@ class Finalcals(basetask.StandardTaskTemplate):
             print(e)
             return None
     
-    def _do_powerfit(self):
+    def _do_powerfit(self, field_spws):
         
         context=self.inputs.context
         
         
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         # field_spws = context.evla['msinfo'][m.name].field_spws
-        field_spws = m.get_vla_field_spws()
+        # field_spws = m.get_vla_field_spws()
         sources = context.evla['msinfo'][m.name].fluxscale_sources
         flux_densities = context.evla['msinfo'][m.name].fluxscale_flux_densities
         spws = context.evla['msinfo'][m.name].fluxscale_spws
