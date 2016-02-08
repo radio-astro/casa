@@ -29,15 +29,13 @@
 using namespace casacore;
 
 namespace {
-template<class T, class U>
+template<class T>
 inline void getDataRangePerId(Vector<uInt> const &index_list,
-    Vector<T> const &id_list, Vector<U> const &data_list, size_t start,
+    Vector<T> const &id_list, size_t start,
     size_t end, std::map<T, Block<uInt> > &range_index) {
   uInt id_prev = id_list[index_list[start]];
   uInt id_min = index_list[start];
   uInt id_max = 0;
-  Double data_min = data_list[id_min];
-  Double data_max = 0.0;
   Block < uInt > current_index(2);
   for (uInt i = start + 1; i < end; ++i) {
     uInt j = index_list[i];
@@ -46,20 +44,17 @@ inline void getDataRangePerId(Vector<uInt> const &index_list,
 //          << " time range (" << time_min << "," << time_max << ")" << std::endl;
     if (current_id != id_prev) {
       id_max = index_list[i - 1];
-      data_max = data_list[id_max];
       current_index[0] = id_min;
       current_index[1] = id_max;
       range_index[id_prev] = current_index;
 
       id_prev = current_id;
       id_min = j;
-      data_min = data_list[j];
     }
   }
   uInt last_id = id_list[index_list[end - 1]];
   if (range_index.find(last_id) == range_index.end()) {
     id_max = index_list[end - 1];
-    data_max = data_list[id_max];
     current_index[0] = id_min;
     current_index[1] = id_max;
     range_index[last_id] = current_index;
@@ -133,7 +128,7 @@ public:
 //          << " TIME " << time_list[j] << std::endl;
 //    }
     std::map<uInt, Block<uInt> > range_index;
-    getDataRangePerId(index_list, weather_id_list, time_list, 0, nrow_main,
+    getDataRangePerId(index_list, weather_id_list, 0, nrow_main,
         range_index);
     Block<Double> range(2);
     for (auto i = range_index.begin(); i != range_index.end(); ++i) {
@@ -464,7 +459,7 @@ public:
       size_t end = srcname_boundary[i + 1];
       std::map<uInt, Block<Double> > range;
       std::map<uInt, Block<uInt> > range_index;
-      getDataRangePerId(index_list, ifno_list, time_list, start, end,
+      getDataRangePerId(index_list, ifno_list, start, end,
           range_index);
       for (auto iter = range_index.begin(); iter != range_index.end(); ++iter) {
         Block<uInt> idx = iter->second;
