@@ -585,7 +585,7 @@ private:
     String intent;
 
     template<class T, class C>
-    bool comp(T const &a, T const &b, C const &c) {
+    bool comp(T const &a, T const &b, C const &c) const {
       if (a < b) {
         return true;
       } else if (a == b) {
@@ -596,7 +596,7 @@ private:
     }
 
     bool operator()(DataAccumulatorKey const &lhs,
-        DataAccumulatorKey const &rhs) {
+        DataAccumulatorKey const &rhs) const {
       return comp(lhs.antenna_id, rhs.antenna_id,
           [&]() {return comp(lhs.field_id, rhs.field_id,
                 [&]() {return comp(lhs.feed_id, rhs.feed_id,
