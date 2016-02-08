@@ -140,6 +140,7 @@ class VisBuffer2 {
     friend class VisibilityIteratorImpl2;
     friend class FinalTvi2;
     friend class TransformingVi2;
+    friend class SimpleSimVi2;
 
 public:
 
