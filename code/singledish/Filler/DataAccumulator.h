@@ -575,6 +575,38 @@ private:
 };
 
 class DataAccumulator {
+private:
+  struct DataAccumulatorKey {
+    Int antenna_id;
+    Int field_id;
+    Int feed_id;
+    Int spw_id;
+    String pol_type;
+    String intent;
+
+    template<class T, class C>
+    bool comp(T const &a, T const &b, C const &c) {
+      if (a < b) {
+        return true;
+      } else if (a == b) {
+        return c();
+      } else {
+        return false;
+      }
+    }
+
+    bool operator()(DataAccumulatorKey const &lhs,
+        DataAccumulatorKey const &rhs) {
+      return comp(lhs.antenna_id, rhs.antenna_id,
+          [&]() {return comp(lhs.field_id, rhs.field_id,
+                [&]() {return comp(lhs.feed_id, rhs.feed_id,
+                      [&]() {return comp(lhs.spw_id, rhs.spw_id,
+                            [&]() {return comp(lhs.pol_type, rhs.pol_type,
+                                  [&]() {return comp(lhs.intent, rhs.intent,
+                                        []() {return false;});});});});});});
+    }
+  };
+
 public:
   DataAccumulator() :
       pool_(), antenna_id_(), spw_id_(), field_id_(), feed_id_(), scan_(), subscan_(), intent_(), direction_(), interval_(), indexer_(), time_(
@@ -673,14 +705,19 @@ public:
     Int subscan = record.subscan;
     String intent = record.intent;
     String poltype = record.pol_type;
-    String key = "ANTENNA" + String::toString(antennaid) + "SPW"
-        + String::toString(spwid) + "FIELD" + String::toString(fieldid) + "FEED"
-        + String::toString(feedid) + intent + poltype;
-    Matrix < Double > direction = record.direction;
+    DataAccumulatorKey key;
+    key.antenna_id = record.antenna_id;
+    key.field_id = record.field_id;
+    key.feed_id = record.feed_id;
+    key.spw_id = record.spw_id;
+    key.intent = record.intent;
+    key.pol_type = record.pol_type;
+    Matrix < Double > const &direction = record.direction;
     Double interval = record.interval;
     bool status = false;
-    if (indexer_.isDefined(key)) {
-      uInt index = indexer_.asuInt(key);
+    auto iter = indexer_.find(key);
+    if (iter != indexer_.end()) {
+      uInt index = iter->second;
       status = pool_[index]->accumulate(record);
       if (status) {
         antenna_id_[index] = antennaid;
@@ -705,7 +742,7 @@ public:
       direction_.push_back(Matrix<Double>());
       interval_.push_back(-1.0);
       uInt index = pool_.size() - 1;
-      indexer_.define(key, index);
+      indexer_[key] = index;
       status = pool_[index]->accumulate(record);
       if (status) {
         antenna_id_[index] = antennaid;
@@ -747,6 +784,7 @@ private:
         && record.field_id >= 0 && record.feed_id >= 0 && record.spw_id >= 0
         && record.scan >= 0 && record.subscan >= 0 && !record.direction.empty();
   }
+
   std::vector<DataChunk *> pool_;
   std::vector<Int> antenna_id_;
   std::vector<Int> spw_id_;
@@ -757,7 +795,7 @@ private:
   std::vector<String> intent_;
   std::vector<Matrix<Double> > direction_;
   std::vector<Double> interval_;
-  Record indexer_;
+  std::map<DataAccumulatorKey, uInt, DataAccumulatorKey> indexer_;
   Double time_;
   std::vector<bool> is_free_;
 };
