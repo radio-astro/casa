@@ -29,7 +29,6 @@
 
 #include <casa/BasicSL/String.h>
 #include <images/Images/ImageUtilities.h>
-#include <imageanalysis/ImageAnalysis/ImageCollapser.h>
 #include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 
 #include <iomanip>
@@ -37,7 +36,6 @@
 namespace casa {
 
 const String ImageStatsCalculator::_class = "ImageStatsCalculator";
-
 
 ImageStatsCalculator::ImageStatsCalculator(
 	const SPCIIF image,
@@ -72,25 +70,23 @@ Record ImageStatsCalculator::calculate() {
 				_writeLogfile("# " + *iter, False, False);
 			}
 		}
-		ImageCollapser<Float> collapsed(
-			_subImage,
-			_axes.nelements() == 0
-				? IPosition::makeAxisPath(_getImage()->ndim()).asVector()
-				: _axes,
-			False, ImageCollapserData::ZERO, "", False
-		);
-		SPIIF tempIm;
+		IPosition shape = _axes.empty() ? IPosition(_subImage->ndim(), 1)
+		    : _subImage->shape();
+		for (const auto& axis: _axes) {
+		    shape[axis] = 1;
+		}
+		Record r;
+		auto csys = _subImage->coordinates();
+		csys.save(r, "");
 		try {
-			tempIm = collapsed.collapse();
+		    SPIIF tempIm = ImageFactory::floatImageFromShape("", shape.asVector(), r);
+		    _reportDetailedStats(tempIm, retval);
 		}
 		catch (const AipsError& x) {
-			*_getLog() << LogIO::WARN << "Unable to collapse image "
-				<< "so detailed per plane statistics reporting is not "
-				<< "possible. The exception message was " << x.getMesg()
-				<< LogIO::POST;
-		}
-		if (tempIm) {
-			_reportDetailedStats(tempIm, retval);
+		    *_getLog() << LogIO::WARN << "Unable to collapse image "
+		        << "so detailed per plane statistics reporting is not "
+		        << "possible. The exception message was " << x.getMesg()
+		        << LogIO::POST;
 		}
 	}
 	return retval;
@@ -307,15 +303,16 @@ void ImageStatsCalculator::_reportDetailedStats(
 	oss << std::scientific;
 	uInt width = 13;
 	Vector<Vector<String> > coords(reportAxes.size());
-	for (uInt i=0; i<reportAxes.size(); ++i) {
-		Vector<Double> indices = indgen(imShape[reportAxes[i]], 0.0, 1.0);
-		uInt prec = reportAxes[i] == freqCol ? 9 : 5;
+	auto i = 0;
+	for (const auto& axis: reportAxes) {
+		Vector<Double> indices = indgen(imShape[axis], 0.0, 1.0);
+		uInt prec = axis == freqCol ? 9 : 5;
 		if (doVelocity && reportAxes[i] == freqCol) {
 			const SpectralCoordinate& spc = csys.spectralCoordinate();
 			Vector<Double> vels;
 			spc.pixelToVelocity(vels, indices);
 			vector<String> sv;
-			for (auto v : vels) {
+			for (const auto& v : vels) {
 				ostringstream oss;
 				oss << setprecision(prec) << v;
 				sv.push_back(oss.str());
@@ -324,11 +321,12 @@ void ImageStatsCalculator::_reportDetailedStats(
 		}
 		else {
 			ImageUtilities::pixToWorld(
-				coords[i], csys, reportAxes[i], _axes,
+				coords[i], csys, axis, _axes,
 				IPosition(imShape.size(),0), imShape-1, indices, prec,
 				True
 			);
 		}
+		++i;
 	}
 	uInt count = 0;
 	for (inIter.reset(); ! inIter.atEnd(); ++inIter) {
@@ -343,11 +341,12 @@ void ImageStatsCalculator::_reportDetailedStats(
 			++colNum;
 	    }
 		csys.toWorld(world, position);
-		if (axesMap.nelements() == 0) {
+		if (axesMap.empty()) {
 			arrayIndex = IPosition(1, 0);
 		}
 		else {
-			for (uInt i=0; i<axesMap.nelements(); ++i) {
+		    auto n = axesMap.nelements();
+			for (uInt i=0; i<n; ++i) {
 				arrayIndex[i] = position[axesMap[i]];
 			}
 		}
@@ -389,7 +388,6 @@ Record ImageStatsCalculator::statistics(
 	if (mtmp == "false" || mtmp == "[]") {
 		mtmp = "";
 	}
-	//SPIIF clone(_getImage()->cloneII());
     _subImage = SubImageFactory<Float>::createSubImageRO(
 		pRegionRegion, pMaskRegion, *_getImage(), *_getRegion(), mtmp,
 		(_verbose ? _getLog().get() : 0), AxesSpecifier(),
@@ -413,7 +411,6 @@ Record ImageStatsCalculator::statistics(
 	}
 	// for precision
 	CoordinateSystem csys = _getImage()->coordinates();
-	//Bool hasDirectionCoordinate = (csys.findCoordinate(Coordinate::DIRECTION) >= 0);
 	Int precis = -1;
 	if (csys.hasDirectionCoordinate()) {
 		DirectionCoordinate dirCoord = csys.directionCoordinate();
