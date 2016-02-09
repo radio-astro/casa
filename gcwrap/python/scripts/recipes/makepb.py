@@ -10,6 +10,7 @@ import os;
 import shutil;
 from  casac import *;
 from tasks import imregrid
+from numpy import fabs
 
 def makePB(vis='',field='',spw='',timerange='',uvrange='',antenna='',observation='',intent='',scan='', imtemplate='',outimage='',pblimit=0.2):
     
@@ -48,17 +49,21 @@ def makePB(vis='',field='',spw='',timerange='',uvrange='',antenna='',observation
     stokes = 'I'
     dirs = csys['direction0']
     phasecenter = me.direction(dirs['system'], qa.quantity(dirs['crval'][0],dirs['units'][0]) , qa.quantity(dirs['crval'][1],dirs['units'][1]) )
-    cellx=qa.quantity(dirs['cdelt'][0],dirs['units'][0])
-    celly=qa.quantity(dirs['cdelt'][1],dirs['units'][1])
+    cellx=qa.quantity(fabs(dirs['cdelt'][0]),dirs['units'][0])
+    celly=qa.quantity(fabs(dirs['cdelt'][1]),dirs['units'][1])
     nchan=shp[3]
     start=qa.quantity( csysa.referencevalue()['numeric'][3], csysa.units()[3] )  ## assumes refpix is zero
     step=qa.quantity( csysa.increment()['numeric'][3], csysa.units()[3] )
+
+    smode='mfs'
+    if nchan>1:
+        smode='frequency'
 
     print 'MAKEPB : Starting imager tool'
 
     im.open(vis)
     im.selectvis(field=field,spw=spw,time=timerange,intent=intent,scan=scan,uvrange=uvrange,baseline=antenna,observation=observation)
-    im.defineimage(nx=shp[0],ny=shp[0],phasecenter=phasecenter,cellx=qa.tos(cellx),celly=qa.tos(celly),nchan=nchan,start=start,step=step)
+    im.defineimage(nx=shp[0],ny=shp[0],phasecenter=phasecenter,cellx=qa.tos(cellx),celly=qa.tos(celly),nchan=nchan,start=start,step=step,mode=smode)
     im.setvp(dovp=True,telescope=tel)
     im.makeimage(type='pb',image=outimage+'.tmp')
     im.close()
@@ -72,6 +77,6 @@ def makePB(vis='',field='',spw='',timerange='',uvrange='',antenna='',observation
     print 'MAKEPB : Set mask to pblimit'
 
     ia.open(outimage)
-    ia.calcmask( outimage+'>'+str(pblimit) )
+    ia.calcmask( "'"+outimage+"'>"+str(pblimit) )
     ia.close()
 
