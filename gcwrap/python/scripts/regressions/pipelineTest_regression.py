@@ -123,6 +123,8 @@ def stats():
         result_bool = np.isclose(fluxlist[0][0], value_compare, rtol=rtol, atol=atol, equal_nan=False)
         
         print >>logfile, "Accepted test value is: ", value_compare
+        print "Accepted test value is: ", value_compare
+        print >>logfile, "Regression generated value is: ", fluxlist[0][0]
         print "Regression generated value is: ", fluxlist[0][0]
         
         if (result_bool):
