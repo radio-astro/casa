@@ -93,6 +93,7 @@ def _get_tasks(context, args, procedure='procedure_hifa.xml'):
 
         if cli_command in ['hif_importdata',
                            'hifa_importdata',
+                           'hifv_importdata',
                            'hif_restoredata',
                            'hsd_importdata']:
             task_args['vis'] = args.vis
@@ -126,6 +127,8 @@ def string_to_val(s):
         #     pyobj = s
         return pyobj
     except ValueError:
+        return s
+    except SyntaxError:
         return s
 
 def _format_arg_value(arg_val):
