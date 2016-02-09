@@ -553,14 +553,6 @@ FlagReport FlagAgentRFlag::getReportCore(	map< pair<Int,Int>,vector<Double> > &d
     Int field,spw;
     Double spwStd;
     String fieldName;
-    vector<Double> total_frequency;
-    vector<Double> total_threshold;
-    vector<Double> total_threshold_squared;
-    vector<Double> total_threshold_counts;
-    vector<Float> total_threshold_spw_average;
-    vector<Float> spw_separator_frequency;
-    vector<Float> spw_separator_central;
-    vector<Float> spw_separator_bar;
     for (	map< Int, vector<pair<Double,Int> > >::iterator field_freq_spw_iter = field_spw_order.begin();
     		field_freq_spw_iter != field_spw_order.end();
     		field_freq_spw_iter++)
@@ -574,6 +566,20 @@ FlagReport FlagAgentRFlag::getReportCore(	map< pair<Int,Int>,vector<Double> > &d
 
     	// Sort SPWs by ascending frequency
     	sort(field_freq_spw_iter->second.begin(),field_freq_spw_iter->second.end());
+
+    	// Initialize tmp vectors
+        vector<Double> total_frequency;
+        vector<Double> total_threshold;
+        vector<Double> total_threshold_squared;
+        vector<Double> total_threshold_counts;
+        vector<Float> total_threshold_spw_average;
+        vector<Float> spw_separator_frequency;
+        vector<Float> spw_separator_central;
+        vector<Float> spw_separator_bar;
+
+    	// Log info
+    	*logger_p << logLevel_p << label.c_str() << " gathering stats for field "
+    			<< field << " (" << fieldName << ")" << LogIO::POST;
 
     	// Now iterate over SPWs
     	for (uInt spw_i=0;spw_i<field_freq_spw_iter->second.size();spw_i++)
@@ -613,16 +619,16 @@ FlagReport FlagAgentRFlag::getReportCore(	map< pair<Int,Int>,vector<Double> > &d
     	// Now copy values from std::vector to casa::vector
         size_t idx = 0;
         Double avg,sumSquare,variance = 0;
-        Vector<Float> threshold_index(total_threshold_counts.size(),0);
+        // Vector<Float> threshold_index(total_threshold_counts.size(),0);
         Vector<Float> threshold_frequency(total_threshold_counts.size(),0);
         Vector<Float> threshold_avg(total_threshold_counts.size(),0);
         Vector<Float> threshold_up(total_threshold_counts.size(),0);
-        Vector<Float> threshold_down(total_threshold_counts.size(),0);
-        Vector<Float> threshold_variance(total_threshold_counts.size(),0);
+        //Vector<Float> threshold_down(total_threshold_counts.size(),0);
+        //Vector<Float> threshold_variance(total_threshold_counts.size(),0);
         Vector<Float> threshold_dev(total_threshold_counts.size(),0);
         for (vector<Double>::iterator iter = total_threshold.begin();iter != total_threshold.end();iter++)
         {
-        	threshold_index(idx) = idx;
+        	// threshold_index(idx) = idx;
         	threshold_frequency(idx) = total_frequency[idx];
         	threshold_dev(idx) = total_threshold_spw_average[idx];
         	if (total_threshold_counts[idx] > 0)
@@ -641,8 +647,8 @@ FlagReport FlagAgentRFlag::getReportCore(	map< pair<Int,Int>,vector<Double> > &d
 
         	threshold_avg(idx) = avg;
         	threshold_up(idx) = avg+variance;
-        	threshold_down(idx) = avg-variance;
-        	threshold_variance(idx) = variance; // New
+        	//threshold_down(idx) = avg-variance;
+        	//threshold_variance(idx) = variance; // New
         	idx++;
         }
 
@@ -695,64 +701,6 @@ void FlagAgentRFlag::generateThresholds(	map< pair<Int,Int>,vector<Double> > &da
     												<< " threshold (over baselines/timesteps) avg: "
     												<< threshold[current_field_spw] << LogIO::POST;
     }
-
-	/*
-	// Set logger origin
-	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
-
-    // First of all determine each SPW frequency in order to produce ordered vectors
-	pair<Int,Int> current_field_spw;
-    map< Int, vector<pair<Double,Int> > > field_spw_order;
-    for (	map< pair<Int,Int>,vector<Double> >::iterator field_spw_iter = data.begin();
-    		field_spw_iter != data.end();
-    		field_spw_iter++)
-    {
-    	current_field_spw = field_spw_iter->first;
-    	pair<Double,Int> freq_spw = std::make_pair(field_spw_frequencies_p[current_field_spw],current_field_spw.second);
-    	field_spw_order[current_field_spw.first].push_back(freq_spw);
-    }
-
-
-    // Now iterate over the field-frequency-spw map, and sort it on the fly
-    Int field,spw;
-    size_t nfreq;
-    Double freqStart, freqEnd;
-    for (	map< Int, vector<pair<Double,Int> > >::iterator field_freq_spw_iter = field_spw_order.begin();
-    		field_freq_spw_iter != field_spw_order.end();
-    		field_freq_spw_iter++)
-    {
-    	// Get field
-    	field = field_freq_spw_iter->first;
-
-    	// Sort SPWs by ascending frequency
-    	sort(field_freq_spw_iter->second.begin(),field_freq_spw_iter->second.end());
-
-    	// Now iterate over SPWs
-    	for (uInt spw_i=0;spw_i<field_freq_spw_iter->second.size();spw_i++)
-    	{
-    		// Get SPW
-    		spw = field_freq_spw_iter->second[spw_i].second;
-
-    		// Create field-spw pair for accessing the data
-    		current_field_spw = std::make_pair(field,spw);
-
-        	// Compute threshold
-        	threshold[current_field_spw] = scale*computeThreshold(	data[current_field_spw],
-																	dataSquared[current_field_spw],
-																	counts[current_field_spw]);
-
-        	// Log info
-        	nfreq = field_spw_frequency_p[current_field_spw].size();
-        	freqStart = field_spw_frequency_p[current_field_spw][0];
-        	freqEnd = field_spw_frequency_p[current_field_spw][nfreq-1];
-        	*logger_p << logLevel_p << label.c_str() 	<< " - Field " << current_field_spw.first
-        												<< " - Spw " << current_field_spw.second
-        												<< " - Frequency " << freqStart << "~" << freqEnd << "GHz"
-        												<< " threshold (over baselines/timesteps) avg: "
-        												<< threshold[current_field_spw] << LogIO::POST;
-    	}
-    }
-	*/
 
     return;
 }
