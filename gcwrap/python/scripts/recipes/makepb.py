@@ -77,6 +77,6 @@ def makePB(vis='',field='',spw='',timerange='',uvrange='',antenna='',observation
     print 'MAKEPB : Set mask to pblimit'
 
     ia.open(outimage)
-    ia.calcmask( '"'+outimage+'">'+str(pblimit) )
+    ia.calcmask( "'"+outimage+"'>"+str(pblimit) )
     ia.close()
 
