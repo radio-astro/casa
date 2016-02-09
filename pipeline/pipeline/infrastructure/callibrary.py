@@ -614,7 +614,7 @@ class CalToIdAdapter(object):
                                          self.intent, self.spw, self.antenna))
 
 
-# CalState extends defaultdict. For defaultdicts to be pickleable, their 
+# CalState extends defaultdict. For defaultdicts to be pickleable, their
 # default factories must be defined at the module level.
 def _antenna_dim(): return []
 def _intent_dim(): return collections.defaultdict(_antenna_dim)
@@ -636,7 +636,14 @@ class CalState(collections.defaultdict):
 
     def __init__(self, default_factory=_ms_dim):
         super(CalState, self).__init__(default_factory)
-        self._removed = []
+        self._removed = set()
+
+    def __reduce__(self):  # optional, for pickle support
+        super_state = super(CalState, self).__reduce__()
+        return self.__class__, super_state[1], self._removed, super_state[3], super_state[4]
+
+    def __setstate__(self, state):
+        self._removed = state
 
     def global_remove(self, calfrom):
         """
@@ -648,7 +655,7 @@ class CalState(collections.defaultdict):
         :param calfrom: the CalFrom to remove
         :return:
         """
-        self._removed.append(calfrom)
+        self._removed.add(calfrom)
 
     def get_caltable(self, caltypes=None):
         """
@@ -741,7 +748,7 @@ class CalState(collections.defaultdict):
         return self.as_applycal()
 #        return 'CalState(%s)' % repr(CalState.dictify(self.merged))
 
-        
+
 class CalLibrary(object):
     """
     CalLibrary is the root object for the pipeline calibration state.
@@ -793,7 +800,7 @@ class CalLibrary(object):
         # If this is a global removal, as signified by the lack of a CalTo to
         # give any target data selection, we can simply mark the CalFrom as
         # removed
-        if not calto:
+        if calto is None:
             calstate.global_remove(calfrom)
 
         # But if this is a partial removal, go through the dictionary
@@ -878,15 +885,16 @@ class CalLibrary(object):
             for field_id in id_resolver.field:
                 for intent in id_resolver.get_field_intents(field_id, spw_id):
                     for antenna_id in id_resolver.antenna:
-                        calfroms_orig = self._active[ms_name][spw_id][field_id][intent][antenna_id][:]
+                        calfroms = self._active[ms_name][spw_id][field_id][intent][antenna_id]
 
                         # Make the hash function ignore the ignored properties
                         # by setting their value to the default (and equal) 
                         # value.
-                        calfroms_copy = [self._copy_calfrom(cf, ignore) 
-                                         for cf in calfroms_orig]
+                        calfrom_copies = [self._copy_calfrom(cf, ignore)
+                                          for cf in calfroms
+                                          if cf not in self._active._removed]
 
-                        result[ms_name][spw_id][field_id][intent][antenna_id] = calfroms_copy
+                        result[ms_name][spw_id][field_id][intent][antenna_id] = calfrom_copies
 
         return result
 
