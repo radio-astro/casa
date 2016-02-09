@@ -122,6 +122,9 @@ def stats():
         #result_bool = np.isclose(fluxlist[0][0], standard_fluxlist[0][0], rtol=rtol, atol=atol, equal_nan=False)
         result_bool = np.isclose(fluxlist[0][0], value_compare, rtol=rtol, atol=atol, equal_nan=False)
         
+        print >>logfile, "Accepted test value is: ", value_compare
+        print "Regression generated value is: ", fluxlist[0][0]
+        
         if (result_bool):
             regstate=True
             print >>logfile,"hifv_fluxboot values match within relative tolerance of 1.0e-05 and absolute tolerance of 1.0e-08"
