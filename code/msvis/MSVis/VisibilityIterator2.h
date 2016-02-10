@@ -34,6 +34,7 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <msvis/MSVis/VisBuffer2.h>
 #include <msvis/MSVis/VisBufferComponents2.h>
+#include <msvis/MSVis/ViiLayerFactory.h>
 
 #include <map>
 #include <set>
@@ -445,6 +446,7 @@ public:
                        Double timeInterval = 0);
 
   VisibilityIterator2 (const ViFactory & factory);
+  VisibilityIterator2 (const Vector<ViiLayerFactory*> & factories);
 
   // Destructor
 

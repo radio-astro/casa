@@ -124,6 +124,18 @@ VisibilityIterator2::VisibilityIterator2 (const ViFactory & factory)
     impl_p = newImpl;
 }
 
+VisibilityIterator2::VisibilityIterator2 (const Vector<ViiLayerFactory*> & factories)
+: impl_p (0)
+{
+
+  Int nfactory=factories.nelements();
+
+  ViImplementation2 * newImpl = factories(nfactory-1)->createViImpl2(factories(Slice(0,nfactory-1,1)));
+
+    impl_p = newImpl;
+}
+
+
 void
 VisibilityIterator2::construct (const VisBufferComponents2 * prefetchColumns,
                                 const Block<const MeasurementSet *>& mss,
