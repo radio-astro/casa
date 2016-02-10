@@ -1692,7 +1692,7 @@ MDirection SDGrid::directionMeas(const ROMSPointingColumns& mspc, const Int& ind
   if (isSplineInterpolationReady) {
     Int antid = mspc.antennaId()(index);
     if (doSplineInterpolation(antid)) {
-      return interpolateDirectionMeasSpline(time, antid);
+      return interpolateDirectionMeasSpline(mspc, time, index, antid);
     }
   }
 
@@ -1718,35 +1718,39 @@ MDirection SDGrid::directionMeas(const ROMSPointingColumns& mspc, const Int& ind
   return interpolateDirectionMeas(mspc, time, index, index1, index2);
 }
 
-MDirection SDGrid::interpolateDirectionMeasSpline(const Double& time,
+MDirection SDGrid::interpolateDirectionMeasSpline(const ROMSPointingColumns& mspc,
+                                                  const Double& time,
+                                                  const Int& index,
                                                   const Int& antid) {
-  Vector<Double> newdir(2);
   Int lastIndex = timePointing(antid).nelements() - 1;
-  Int index = lastIndex;
+  Int aindex = lastIndex;
   for (uInt i = 0; i < timePointing(antid).nelements(); ++i) {
     if (time < timePointing(antid)(i)) {
-      index = i-1;
+      aindex = i-1;
       break;
     }
   }
-  if (index < 0) index = 0;
-  if (lastIndex <= index) index = lastIndex - 1;
+  if (aindex < 0) aindex = 0;
+  if (lastIndex <= aindex) aindex = lastIndex - 1;
 
   Vector<Vector<Double> > coeff;
   coeff.resize(2);
   for (uInt i = 0; i < coeff.nelements(); ++i) {
     coeff(i).resize(4);
     for (uInt j = 0; j < coeff(i).nelements(); ++j) {
-      coeff(i)(j) = splineCoeff(antid)(index)(i)(j);
+      coeff(i)(j) = splineCoeff(antid)(aindex)(i)(j);
     }
   }
-  Double dt = time - timePointing(antid)(index);
+  Double dt = time - timePointing(antid)(aindex);
+  Vector<Double> newdir(2);
   newdir(0) = coeff(0)(0) + coeff(0)(1)*dt + coeff(0)(2)*dt*dt + coeff(0)(3)*dt*dt*dt;
   newdir(1) = coeff(1)(0) + coeff(1)(1)*dt + coeff(1)(2)*dt*dt + coeff(1)(3)*dt*dt*dt;
   
   Quantity rDirLon(newdir(0), "rad");
   Quantity rDirLat(newdir(1), "rad");
-  return MDirection(rDirLon, rDirLat);
+  MDirection::Ref rf = mspc.directionMeas(index).getRef();
+
+  return MDirection(rDirLon, rDirLat, rf);
 }
 
 MDirection SDGrid::interpolateDirectionMeas(const ROMSPointingColumns& mspc,

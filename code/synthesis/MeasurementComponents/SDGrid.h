@@ -308,7 +308,8 @@ private:
   MDirection directionMeas(const ROMSPointingColumns& mspc, const Int& index, const Double& time);
   MDirection interpolateDirectionMeas(const ROMSPointingColumns& mspc, const Double& time,
                                   const Int& index, const Int& index1, const Int& index2);
-  MDirection interpolateDirectionMeasSpline(const Double& time,
+  MDirection interpolateDirectionMeasSpline(const ROMSPointingColumns& mspc, const Double& time,
+					    const Int& index,
 					    const Int& antid);
 
   void pickWeights(const VisBuffer&vb, Matrix<Float>& weight);
