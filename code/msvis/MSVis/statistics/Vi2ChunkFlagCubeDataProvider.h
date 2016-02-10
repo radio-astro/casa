@@ -41,7 +41,9 @@ class Vi2ChunkFlagCubeDataProvider final
 	: public Vi2ChunkWeightsCubeDataProvider<Vi2StatsBoolIterator> {
 
 public:
-	Vi2ChunkFlagCubeDataProvider(vi::VisibilityIterator2 *vi2);
+	Vi2ChunkFlagCubeDataProvider(
+		vi::VisibilityIterator2 *vi2,
+		Bool omit_flagged_data);
 
 	const Cube<Bool>& dataArray();
 };

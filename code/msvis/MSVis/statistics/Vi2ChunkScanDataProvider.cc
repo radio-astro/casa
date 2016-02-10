@@ -30,11 +30,13 @@
 
 namespace casa {
 
-Vi2ChunkScanDataProvider::Vi2ChunkScanDataProvider(vi::VisibilityIterator2 *vi2)
+Vi2ChunkScanDataProvider::Vi2ChunkScanDataProvider(
+	vi::VisibilityIterator2 *vi2,
+	Bool omit_flagged_data)
 	: Vi2ChunkDataProvider(
 		vi2,
 		vi::VisBufferComponent2::Scan,
-		false,
+		omit_flagged_data,
 		false) {}
 
 const Vector<Int>&

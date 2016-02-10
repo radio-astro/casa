@@ -43,7 +43,9 @@ class Vi2ChunkScanDataProvider final
 	: public Vi2ChunkWeightsRowDataProvider<Vi2StatsIntIterator> {
 
 public:
-	Vi2ChunkScanDataProvider(vi::VisibilityIterator2 *vi2);
+	Vi2ChunkScanDataProvider(
+		vi::VisibilityIterator2 *vi2,
+		Bool omit_flagged_data);
 
 	const Vector<Int>& dataArray();
 };

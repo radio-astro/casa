@@ -31,11 +31,11 @@
 namespace casa {
 
 Vi2ChunkArrayIdDataProvider::Vi2ChunkArrayIdDataProvider(
-	vi::VisibilityIterator2 *vi2)
+	vi::VisibilityIterator2 *vi2, Bool omit_flagged_data)
 	: Vi2ChunkDataProvider(
 		vi2,
 		vi::VisBufferComponent2::ArrayId,
-		false,
+		omit_flagged_data,
 		false) {}
 
 const Vector<Int>& Vi2ChunkArrayIdDataProvider::dataArray() {

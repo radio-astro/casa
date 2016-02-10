@@ -41,7 +41,9 @@ class Vi2ChunkFieldIdDataProvider final
 	: public Vi2ChunkWeightsRowDataProvider<Vi2StatsIntIterator> {
 
 public:
-	Vi2ChunkFieldIdDataProvider(vi::VisibilityIterator2 *vi2);
+	Vi2ChunkFieldIdDataProvider(
+		vi::VisibilityIterator2 *vi2,
+		Bool omit_flagged_data);
 
 	const Vector<Int>& dataArray();
 };

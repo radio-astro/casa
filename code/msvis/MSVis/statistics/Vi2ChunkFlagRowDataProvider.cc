@@ -30,11 +30,12 @@
 
 namespace casa {
 
-Vi2ChunkFlagRowDataProvider::Vi2ChunkFlagRowDataProvider(vi::VisibilityIterator2 *vi2)
+Vi2ChunkFlagRowDataProvider::Vi2ChunkFlagRowDataProvider(
+	vi::VisibilityIterator2 *vi2, Bool omit_flagged_data)
 	: Vi2ChunkDataProvider(
 		vi2,
 		vi::VisBufferComponent2::FlagRow,
-		false,
+		omit_flagged_data,
 		false) {}
 
 const Vector<Bool>& Vi2ChunkFlagRowDataProvider::dataArray() {
