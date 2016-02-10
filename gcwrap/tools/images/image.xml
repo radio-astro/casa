@@ -2763,8 +2763,11 @@ This gives you much more scope than the simple
 <link anchor="images:image.putregion.function">putregion</link> functions.
 Both float and complex valued images are supported.
 
-See \htmladdnormallink{note 223}{../../notes/223/223.html}
-which describes the the syntax and functionality of LEL in detail. 
+See http://casa.nrao.edu/aips2_docs/notes/223/index.shtml
+which describes the the syntax and functionality of LEL in detail. Also
+in this document is a description of ways to escape image names that
+contain certain non-alphanumeric characters so they are compatible
+with LEL syntax. 
 
 If the expression is not a scalar, the shapes and coordinates of the
 image and expression must conform.    If the expression is a scalar
