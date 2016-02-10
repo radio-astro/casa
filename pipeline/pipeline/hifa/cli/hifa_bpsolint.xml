@@ -46,6 +46,11 @@ the meta data associated with the observation.
 	<value>2</value>
    </param>
 
+   <param type="bool" name="evenbpints">
+	<description>Force the bandpass frequency solution intervals to be an even number of channels</description>
+	<value>False</value>
+   </param>
+
    <param type="double" name="bpsnr">
 	<description>The required bandpass frequency solution signal to noise</description>
 	<value>50.0</value>
@@ -65,7 +70,7 @@ the meta data associated with the observation.
 	</allowed>
    </param>
 
-   <param type="string" name="maxfracflagged" subparam="true">
+   <param type="double" name="maxfracflagged" subparam="true">
 	<description>The maximum fraction of data flaggeded per antenna (unsupported)</description>
 	<value>0.90</value>
    </param>

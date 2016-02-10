@@ -4,7 +4,7 @@ import sys
 import pipeline.h.cli.utils as utils
 
 def hifa_bpsolint(vis=None, field=None, intent=None, spw=None, phaseupsnr=None,
-          minphaseupints=None, bpsnr=None, minbpnchan=None, hm_nantennas=None,
+          minphaseupints=None, evenbpints=None, bpsnr=None, minbpnchan=None, hm_nantennas=None,
 	  maxfracflagged=None, pipelinemode=None, dryrun=None,
 	  acceptresults=None):
 
