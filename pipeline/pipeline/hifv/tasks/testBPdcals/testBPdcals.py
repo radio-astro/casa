@@ -103,14 +103,18 @@ class testBPdcals(basetask.StandardTaskTemplate):
         flagcount=0
         LOG.info("TESTBPDCALS DEBUG:  STARTING FRACFLAGSOLNS LOOP")
         while (fracFlaggedSolns > critfrac and flagcount < 4):
-            
-            context = self.inputs.context
 
-            LOG.info("TESTBPDCALS DEBUG:  START CALLIBRARY")
-            calto = callibrary.CalTo(self.inputs.vis)
-            calfrom = callibrary.CalFrom(gaintable=gtypecaltable, interp='', calwt=False)
-            context.callibrary._remove(context.callibrary._active, calfrom)
-            LOG.info("TESTBPDCALS DEBUG:  END CALLIBRARY")
+            # Don't remove the CalFrom before its first addition! The gaincal task above
+            # was not executed with 'merge=True', so it was not added to the CalLibrary.
+            # This removal marks the CalFrom as globally removed, before it has chance to
+            # be added in the do_ktype_delaycal call; the add call in do_kytype_delaycal
+            # then just reactivates the CalFrom - but it never existed in any entry so the
+            # 'reactivated' caltable never appears in the subsequent calls.
+            #
+            # LOG.info("TESTBPDCALS DEBUG:  START CALLIBRARY")
+            # calfrom = callibrary.CalFrom(gaintable=gtypecaltable, interp='', calwt=False)
+            # context.callibrary._remove(context.callibrary._active, calfrom)
+            # LOG.info("TESTBPDCALS DEBUG:  END CALLIBRARY")
 
             LOG.info("TESTBPDCALS DEBUG:  START K DELAYCAL")
             ktype_delaycal_result = self._do_ktype_delaycal(caltable=ktypecaltable, addcaltable=gtypecaltable, context=context, RefAntOutput=RefAntOutput)
@@ -125,12 +129,12 @@ class testBPdcals(basetask.StandardTaskTemplate):
             LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult['antmedian']['fraction']))
             flagcount += 1
 
-            try:
-                calto = callibrary.CalTo(self.inputs.vis)
-                calfrom = callibrary.CalFrom(gaintable=ktypecaltable, interp='', calwt=False)
-                context.callibrary._remove(context.callibrary._active, calfrom, calto)
-            except:
-                LOG.info(ktypecaltable + " does not exist in the context callibrary, and does not need to be removed.")
+            # Removal before first addition again. See comment above.
+            # try:
+            #     calfrom = callibrary.CalFrom(gaintable=ktypecaltable, interp='', calwt=False)
+            #     context.callibrary._remove(context.callibrary._active, calfrom)
+            # except:
+            #     LOG.info(ktypecaltable + " does not exist in the context callibrary, and does not need to be removed.")
 
         # Do initial amplitude and phase gain solutions on the BPcalibrator and delay
         # calibrator; the amplitudes are used for flagging; only phase
@@ -142,8 +146,6 @@ class testBPdcals(basetask.StandardTaskTemplate):
         # solint=10*int_time the source may be too weak, and calibration via the 
         # pipeline has failed; will need to implement a mode to cope with weak 
         # calibrators (later)
-        
-        calto = callibrary.CalTo(self.inputs.vis)
         calfrom = callibrary.CalFrom(gaintable=gtypecaltable, interp='', calwt=False)
         context.callibrary._remove(context.callibrary._active, calfrom)
 
@@ -157,11 +159,12 @@ class testBPdcals(basetask.StandardTaskTemplate):
         flaggedSolnResult1 = getCalFlaggedSoln(tablebase + table_suffix[0])
         LOG.info("For solint = "+solint+" fraction of flagged solutions = "+str(flaggedSolnResult1['all']['fraction']))
         LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult1['antmedian']['fraction']))
-        calto = callibrary.CalTo(self.inputs.vis)
-        calfrom = callibrary.CalFrom(gaintable=tablebase + table_suffix[0], interp='', calwt=False)
-        context.callibrary._remove(context.callibrary._active, calfrom)
+
+        # caltable generated above was never added, so this removal disables it from
+        # ever being active in any subsequent addition. See comment at line 107.
+        # calfrom = callibrary.CalFrom(gaintable=tablebase + table_suffix[0], interp='', calwt=False)
+        # context.callibrary._remove(context.callibrary._active, calfrom)
         
-        calto = callibrary.CalTo(self.inputs.vis)
         calfrom = callibrary.CalFrom(gaintable=ktypecaltable, interp='', calwt=False)
         context.callibrary._remove(context.callibrary._active, calfrom)
 
@@ -185,11 +188,9 @@ class testBPdcals(basetask.StandardTaskTemplate):
             flaggedSolnResult3 = getCalFlaggedSoln(tablebase + table_suffix[1])
             LOG.info("For solint = "+solint+" fraction of flagged solutions = "+str(flaggedSolnResult3['all']['fraction']))
             LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult3['antmedian']['fraction']))
-            calto = callibrary.CalTo(self.inputs.vis)
             calfrom = callibrary.CalFrom(gaintable=tablebase + table_suffix[1], interp='', calwt=False)
             context.callibrary._remove(context.callibrary._active, calfrom)
         
-            calto = callibrary.CalTo(self.inputs.vis)
             calfrom = callibrary.CalFrom(gaintable=ktypecaltable, interp='', calwt=False)
             context.callibrary._remove(context.callibrary._active, calfrom)
 
@@ -216,11 +217,9 @@ class testBPdcals(basetask.StandardTaskTemplate):
                     flaggedSolnResult10 = getCalFlaggedSoln(tablebase + table_suffix[2])
                     LOG.info("For solint = "+solint+" fraction of flagged solutions = "+str(flaggedSolnResult10['all']['fraction']))
                     LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult10['antmedian']['fraction']))
-                    calto = callibrary.CalTo(self.inputs.vis)
                     calfrom = callibrary.CalFrom(gaintable=tablebase + table_suffix[2], interp='', calwt=False)
                     context.callibrary._remove(context.callibrary._active, calfrom)
                 
-                    calto = callibrary.CalTo(self.inputs.vis)
                     calfrom = callibrary.CalFrom(gaintable=ktypecaltable, interp='', calwt=False)
                     context.callibrary._remove(context.callibrary._active, calfrom)
                 
@@ -258,8 +257,6 @@ class testBPdcals(basetask.StandardTaskTemplate):
         # print context.callibrary.active
         
         # Force calwt for the bp table to be False
-        
-        calto = callibrary.CalTo(self.inputs.vis)
         calfrom = callibrary.CalFrom(bpcaltable, interp='linearperobs,linearflag', calwt=True)
         context.callibrary._remove(context.callibrary._active, calfrom)
         
