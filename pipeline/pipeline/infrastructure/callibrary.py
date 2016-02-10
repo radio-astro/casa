@@ -649,13 +649,33 @@ class CalState(collections.defaultdict):
         """
         Mark a CalFrom as being removed from the calibration state. Rather than
         iterating through the registered calibrations, this adds the CalFrom to
-        a list of object to be ignored. When the calibrations are subsequently
+        a set of object to be ignored. When the calibrations are subsequently
         inspected, CalFroms marked as removed will be bypassed.
 
         :param calfrom: the CalFrom to remove
         :return:
         """
         self._removed.add(calfrom)
+
+    def global_reactivate(self, calfroms):
+        """
+        Reactivate a CalFrom that was marked as ignored through a call to
+        global_remove.
+
+        This will reactivate the CalFrom entry, making it appear at whatever
+        index in the CalApplications that it was originally registered, e.g.
+        if a CalFrom was 'deleted' via a call to global_remove and 3 more
+        CalFroms were added to the CalState, when the CalFrom is reactivated
+        it will appear in the original position - that is, before the 3
+        subsequent CalFroms, rather than appearing at the end of the list.
+
+        :param calfroms: the CalFroms to reactivate
+        :type calfroms: a set of CalFrom objects
+        :return: None
+        """
+        LOG.trace('Globally reactivating %s CalFroms: %s',
+                  len(calfroms), calfroms)
+        self._removed -= calfroms
 
     def get_caltable(self, caltypes=None):
         """
@@ -765,7 +785,7 @@ class CalLibrary(object):
     def _add(self, calto, calfroms, calstate):
         if type(calfroms) is not types.ListType:
             calfroms = [calfroms]
-        
+
         calto = CalToIdAdapter(self._context, calto)
         ms_name = calto.ms.name
         
@@ -828,7 +848,19 @@ class CalLibrary(object):
         LOG.trace('Calstate after _remove:\n%s', calstate.as_applycal())
 
     def add(self, calto, calfroms):
-        self._add(calto, calfroms, self._active)
+        # If we are adding a previously removed CalFrom back into a
+        # CalState, we assume that the user really want the previous
+        # CalFrom not to be ignored in future runs rather than adding
+        # a second entry for this CalFrom into the CalState.
+        if not isinstance(calfroms, collections.Iterable):
+            calfroms = [calfroms]
+
+        calfroms_to_reactivate = self._active._removed.intersection(set(calfroms))
+        self._active.global_reactivate(calfroms_to_reactivate)
+
+        calfroms_to_add = [cf for cf in calfroms if cf not in calfroms_to_reactivate]
+        if calfroms_to_add:
+            self._add(calto, calfroms_to_add, self._active)
 
     @property
     def active(self):
