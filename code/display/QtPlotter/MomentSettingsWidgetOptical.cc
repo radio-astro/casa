@@ -69,9 +69,11 @@ namespace casa {
 				//ImageInterface<Float>* img = const_cast<ImageInterface <Float>* >(taskMonitor->getImage().get());
 				//SHARED_PTR<ImageInterface<Float> > img(CONST_POINTER_CAST<ImageInterface<Float> >(taskMonitor->getImage()));
 				SHARED_PTR<const ImageInterface<Float> > img = taskMonitor->getImage();
-				collapser = new SpectralCollapser(img, String(QDir::tempPath().toStdString()));
-				changeCollapseType();
-				changeCollapseError();
+				if ( img ){
+					collapser = new SpectralCollapser(img, String(QDir::tempPath().toStdString()));
+					changeCollapseType();
+					changeCollapseError();
+				}
 			}
 
 		} catch (AipsError x) {

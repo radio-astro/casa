@@ -448,12 +448,14 @@ namespace casa {
 				if ( ! region.nfields() > 0 ){
 					String empty("");
 					SHARED_PTR<const ImageInterface<float> > image = taskMonitor->getImage();
-					SHARED_PTR<const SubImage<Float> > result =
+					if ( image ){
+						SHARED_PTR<const SubImage<Float> > result =
 							SubImageFactory<Float>::createSubImageRO(*image, region, empty, NULL);
-					ImageInterface<Float>* image2 = new SubImage<Float>( *result );
-					LogOrigin log("MomentSettingsWidgetRadio", "collapseImage", WHERE);
-					LogIO os(log);
-					imageAnalysis = new ImageMoments<Float>(*image2, os);
+						ImageInterface<Float>* image2 = new SubImage<Float>( *result );
+						LogOrigin log("MomentSettingsWidgetRadio", "collapseImage", WHERE);
+						LogIO os(log);
+						imageAnalysis = new ImageMoments<Float>(*image2, os);
+					}
 				}
 
 			}
