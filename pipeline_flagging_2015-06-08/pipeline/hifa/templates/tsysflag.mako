@@ -13,17 +13,27 @@ def percent_flagged(flagsummary):
     else:
         return '%0.1f%%' % (100.0 * flagged / total)
 
+# method to report number of lines in a file.
+def num_lines(report_dir, relpath):
+	abspath = os.path.join(report_dir, relpath)
+	if os.path.exists(abspath):
+		return sum(1 for line in open(abspath) if not line.startswith('#'))
+	else:
+		return 'N/A'
+
 comp_descriptions = {'nmedian'    : 'Flag T<sub>sys</sub> spectra with high median values.',
                  	 'derivative' : 'Flag T<sub>sys</sub> spectra with high median derivative (ringing).',
                  	 'fieldshape' : 'Flag T<sub>sys</sub> spectra whose shape differs from those associated with BANDPASS data.',
                  	 'edgechans'  : 'Flag edge channels of T<sub>sys</sub> spectra.',
-                 	 'birdies'    : 'Flag spikes or birdies in T<sub>sys</sub> spectra.'}
+                 	 'birdies'    : 'Flag spikes or birdies in T<sub>sys</sub> spectra.',
+                 	 'toomany'    : 'Flag T<sub>sys</sub> spectra with too many flagged timestamps / antennas.'}
 
 std_plot_desc = {'nmedian'    : 'shows the images used to flag',
                  'derivative' : 'shows the images used to flag',
                  'fieldshape' : 'shows the images used to flag',
                  'edgechans'  : 'shows the views used to flag',
-                 'birdies'    : 'shows the views used to flag'}
+                 'birdies'    : 'shows the views used to flag',
+                 'toomany'    : 'shows the views used to flag'}
 
 extra_plot_desc = {'nmedian'    : ' shows the spectra flagged in',
      	   		   'derivative' : ' shows the spectra flagged in',
@@ -177,10 +187,8 @@ metric separately for each polarisation. However, if the Tsys measurement for an
 antenna is found to be deviant in one polarisation, the pipeline will flag the 
 antenna for both polarisations. 
 
-<ul>
 % for component in components: 
   % if htmlreports.get(component) is not None:
-	<li>
 	<h3 id="${component}" class="jumptarget">${component}</h3>
 	${comp_descriptions[component]}
 
@@ -188,18 +196,22 @@ antenna for both polarisations.
     <table class="table table-bordered table-striped">
 	<thead>
 	    <tr>
+	    	<th>Table file</th>
 	        <th>Flagging Commands</th>
+	        <th>Number of Statements</th>
 	        <th>Flagging Report</th>
 	    </tr>
 	</thead>
 	<tbody>
-	    % for file,reports in htmlreports[component].items():
+	    % for file, relpath_reports in htmlreports[component].items():
 	    <tr>
-	        <td><a class="replace-pre" href="${reports[0]}" 
-                   data-title="Flagging Commands">${file}</a></td>
+	    	<td>${file}</td>
+	        <td><a class="replace-pre" href="${relpath_reports[0]}" 
+                   data-title="Flagging Commands">${os.path.basename(relpath_reports[0])}</a></td>
+            <td>${num_lines(pcontext.report_dir, relpath_reports[0])}</td>
 	        <td><a class="replace-pre"
-                   href="${reports[1]}" data-title="Flagging Report">
-                   printTsysFlags</a></td>
+                   href="${relpath_reports[1]}" data-title="Flagging report">
+                   Flagging report</a></td>
 	    </tr>
 	    % endfor
 	</tbody>
@@ -219,7 +231,5 @@ antenna for both polarisations.
 
 	</ul>
     % endif
-  </li>
   % endif
 % endfor
-</ul>

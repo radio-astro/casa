@@ -28,7 +28,7 @@ class TsysflagInputs(basetask.StandardInputs):
       flag_derivative=None, fd_max_limit=None,
       flag_edgechans=None, fe_edge_limit=None,
       flag_fieldshape=None, ff_refintent=None, ff_max_limit=None,
-      ff_tmf1_limit=None, tmef1_limit=None,
+      tmf1_limit=None, tmef1_limit=None, ff_tmf1_limit=None,
       flag_birdies=None, fb_sharps_limit=None, 
       metric_order=None):
 
@@ -149,28 +149,6 @@ class TsysflagInputs(basetask.StandardInputs):
             value = 5
         self._ff_max_limit = value
 
-    #FIXME: ff_tmf1_limit would need to be renamed to tmf1_limit if/when the metric
-    # is no longer strictly to be applied after "flag fieldshape" 
-    @property
-    def ff_tmf1_limit(self):
-        return self._ff_tmf1_limit
-
-    @ff_tmf1_limit.setter
-    def ff_tmf1_limit(self, value):
-        if value is None:
-            value = 0.666
-        self._ff_tmf1_limit = value
-
-    @property
-    def tmef1_limit(self):
-        return self._tmef1_limit
-
-    @tmef1_limit.setter
-    def tmef1_limit(self, value):
-        if value is None:
-            value = 0.666
-        self._tmef1_limit = value
-
     @property
     def flag_birdies(self):
         return self._flag_birdies
@@ -192,13 +170,56 @@ class TsysflagInputs(basetask.StandardInputs):
         self._fb_sharps_limit = value
 
     @property
+    def flag_toomany(self):
+        return self._flag_birdies
+
+    @flag_toomany.setter
+    def flag_toomany(self, value):
+        if value is None:
+            value = True
+        self._flag_toomany = value
+
+    #FIXME: add legacy support for ff_tmf1_limit; if set, then 
+    # raise warning that it is being deprecated and 
+    # interpreted as tmf1_limit.
+    @property
+    def ff_tmf1_limit(self):
+        return self._ff_tmf1_limit
+
+    @ff_tmf1_limit.setter
+    def ff_tmf1_limit(self, value):
+        if value is None:
+            value = 0.666
+        self._ff_tmf1_limit = value
+
+    @property
+    def tmf1_limit(self):
+        return self._tmf1_limit
+
+    @tmf1_limit.setter
+    def tmf1_limit(self, value):
+        if value is None:
+            value = 0.666
+        self._tmf1_limit = value
+
+    @property
+    def tmef1_limit(self):
+        return self._tmef1_limit
+
+    @tmef1_limit.setter
+    def tmef1_limit(self, value):
+        if value is None:
+            value = 0.666
+        self._tmef1_limit = value
+
+    @property
     def metric_order(self):
         return self._metric_order
 
     @metric_order.setter
     def metric_order(self, value):
         if value is None:
-            value = 'nmedian, derivative, edgechans, fieldshape, birdies'
+            value = 'nmedian, derivative, edgechans, fieldshape, birdies, toomany'
         self._metric_order = value
 
 
@@ -213,74 +234,72 @@ class Tsysflag(basetask.StandardTaskTemplate):
         result = TsysflagResults()
         result.caltable = inputs.caltable
 
-        # Convert metric string to list
-        metric_list = [metric.strip() for metric in inputs.metric_order.split(',')]
+        # Collect requested flag metrics from inputs into a dictionary.
+        # NOTE: each key in the dictionary below should have been added to 
+        # the default value for the "metric_order" property in TsysflagInputs,
+        # or otherwise the Tsysflag task will always end prematurely for 
+        # automatic pipeline runs.
+        metrics_from_inputs = {'nmedian': inputs.flag_nmedian,
+                               'derivative': inputs.flag_derivative,
+                               'edgechans': inputs.flag_edgechans,
+                               'fieldshape': inputs.flag_fieldshape,
+                               'birdies': inputs.flag_birdies,
+                               'toomany': inputs.flag_toomany}
+
+        # Convert metric order string to list of strings
+        metric_order_as_list = [metric.strip() for metric in inputs.metric_order.split(',')]
         
+        # If the input metric order list contains illegal values, then log
+        # an error and stop further evaluation of Tsysflag.
+        for metric in metric_order_as_list:
+            if metric not in metrics_from_inputs.keys():
+                LOG.error('Illegal value in parameter "metric_order": {0}. Legal values are: {1}.'.format(metric, ', '.join(metrics_from_inputs.keys())))
+                return result
+        
+        # If any of the requested metrics are not defined in the metric order,
+        # then log an error and stop further evaluation of Tsysflag.
+        for metric_name, metric_enabled in metrics_from_inputs.items():
+            if metric_enabled and metric_name not in metric_order_as_list:
+                LOG.error('Flagging metric "{0}" is enabled, but not specified in "metric_order", cannot continue.'.format(metric_name))
+                return result
+
         # Initialize ordered list of metrics to evaluate
-        metrics_to_evaluate = []
+        ordered_list_metrics_to_evaluate = []
         
-        # Convert requested flagging metrics to ordered list
-        # FIXME: if a requested flagging metric is missing from 
-        # the "metric order", it is skipped; raise warning in such case?
-        for metric in metric_list:
-            if metric == 'nmedian' and inputs.flag_nmedian:
-                metrics_to_evaluate.append(metric)
-            if metric == 'derivative' and inputs.flag_derivative:
-                metrics_to_evaluate.append(metric)
-            if metric == 'edgechans' and inputs.flag_edgechans:
-                metrics_to_evaluate.append(metric)
-            if metric == 'fieldshape' and inputs.flag_fieldshape:
-                metrics_to_evaluate.append(metric)
-            if metric == 'birdies' and inputs.flag_birdies:
-                metrics_to_evaluate.append(metric)
-
+        # Convert requested flagging metrics to ordered list.
+        for metric in metric_order_as_list:
+            if metrics_from_inputs[metric]:
+                ordered_list_metrics_to_evaluate.append(metric)
+                
         # Store order of metrics in result
-        result.metric_order = metrics_to_evaluate
+        result.metric_order = ordered_list_metrics_to_evaluate
 
-        # The "too many flags" or "too many entirely flagged" metrics should be
-        # added to the matrix-flagging-metric that is to be evaluated last.
-        # Determine which of the matrix metrics will be evaluated last:
-        matrix_metrics = ['nmedian','derivative','fieldshape']
-        matrix_metric_evaluated = [metric for metric in metrics_to_evaluate if metric in matrix_metrics]
-        if matrix_metric_evaluated:
-            last_matrix_metric = matrix_metric_evaluated[-1]
-        else:
-            last_matrix_metric = None
-            LOG.warning("No matrix-flagging metrics enabled ({0}), ".format(', '.join(matrix_metrics)) + \
-              "cannot evaluate the 'too many flags' or 'too many entirely flagged' metrics.")
-        
-        # Run flagger for each metric, adding the "too many" metrics to the last 
-        # last matrix metric to be run.
-        for metric in metrics_to_evaluate:
-            if metric == last_matrix_metric:
-                result.add(metric, self.run_flagger(metric, flag_tmf1=True, flag_tmef1=True))
-            else:
-                result.add(metric, self.run_flagger(metric))
+        # Run flagger for each metric.
+        for metric in ordered_list_metrics_to_evaluate:
+            result.add(metric, self._run_flagger(metric))
 
         # Extract before and after flagging summaries from individual results:
-        stats_before = result.components[metrics_to_evaluate[0]].summaries[0]
-        stats_after = result.components[metrics_to_evaluate[-1]].summaries[-1]
+        stats_before = result.components[ordered_list_metrics_to_evaluate[0]].summaries[0]
+        stats_after = result.components[ordered_list_metrics_to_evaluate[-1]].summaries[-1]
 
         # Add the "before" and "after" flagging summaries to the final result
         result.summaries = [stats_before, stats_after]
 
         return result
 
+
     def analyse(self, result):
         return result
     
-    def run_flagger(self, metric, flag_tmf1=False, flag_tmef1=False):
+    
+    def _run_flagger(self, metric):
         """
         Evaluates the Tsys spectra for a specified flagging metric.
         
         Keyword arguments:
         metric      -- string : represents the flagging metric to evaluate. 
                        Valid values: 'nmedian', 'derivative', 'edgechans', 
-                       'fieldshape', 'birdies'.
-        flag_tmf1   -- bool : if set to True, the "too many flags" rule
-                       is added to the flagging rules that are evaluated.
-        flag_tmef1  -- bool : if set to True, the "too many entirely flagged"
-                       rule is added to the flagging rules that are evaluated. 
+                       'fieldshape', 'birdies', 'toomany'.
         
         Returns:
         TsysflagspectraResults object containing the flagging views and flagging
@@ -334,7 +353,7 @@ class Tsysflag(basetask.StandardTaskTemplate):
 
         # Depending on the flagging metric, select the appropriate type of 
         # flagger task (Vector vs. Matrix)
-        if metric in ['nmedian','derivative','fieldshape']:
+        if metric in ['nmedian','derivative','fieldshape','toomany']:
             flagger = viewflaggers.NewMatrixFlagger
         elif metric in ['birdies', 'edgechans']:
             flagger = viewflaggers.NewVectorFlagger
@@ -356,17 +375,10 @@ class Tsysflag(basetask.StandardTaskTemplate):
         elif metric == 'edgechans':
             rules = flagger.make_flag_rules(
               flag_edges=True, edge_limit=inputs.fe_edge_limit)
-
-        # If requested, add the 'too many flags' or 'too many entirely flagged' metric to 
-        # the list of flagging rules.
-        if flag_tmf1:
-            extra_rule = flagger.make_flag_rules (
-              flag_tmf1=True, tmf1_axis='Antenna1', tmf1_limit=inputs.ff_tmf1_limit)
-            rules.extend(extra_rule)
-        if flag_tmef1:
-            extra_rule = flagger.make_flag_rules (
+        elif metric == 'toomany':
+            rules = flagger.make_flag_rules(
+              flag_tmf1=True, tmf1_axis='Antenna1', tmf1_limit=inputs.tmf1_limit,
               flag_tmef1=True, tmef1_axis='Antenna1', tmef1_limit=inputs.tmef1_limit)
-            rules.extend(extra_rule)
 
         # Construct the flagger task around the data view task and the
         # flagsetter task.
@@ -543,7 +555,7 @@ class TsysflagView(object):
         LOG.info ('Computing flagging metrics for caltable %s ' % (table))
         for tsysspwid in tsysspws:
             for intentgroup in self.intentgroups:
-                if self.metric == 'nmedian':
+                if self.metric in ['nmedian', 'toomany'] :
                     self.calculate_median_spectra_view(tsystable, tsysspwid, intentgroup, fieldids[intentgroup])
                 elif self.metric == 'derivative':
                     self.calculate_derivative_view(tsystable, tsysspwid, intentgroup, fieldids[intentgroup])
@@ -572,10 +584,9 @@ class TsysflagView(object):
         normalise      -- bool : if set to True, the SpectrumResult objects are normalised.
         
         Returns:
-        Tuple containing 3 elements:
+        Tuple containing 2 elements:
           tsysspectra: dictionary of TsysflagspectraResults
           times: set of unique timestamps
-          nchannels: integer representing the number of channels in each Tsysflag spectrum.
         """
 
 
@@ -613,10 +624,7 @@ class TsysflagView(object):
                       tsysspectrum)
                     times.update([row.get('TIME')])
 
-                # Store the number of channels
-                nchannels = np.shape(row.get('FPARAM'))[1]
-
-        return tsysspectra, times, nchannels
+        return tsysspectra, times
 
     
     def calculate_median_spectra_view(self, tsystable, spwid, intent, fieldids):
@@ -646,7 +654,7 @@ class TsysflagView(object):
         pols = range(len(corr_type))
 
         # Select Tsysspectra and corresponding times for specified spwid and fieldids
-        tsysspectra, times, _ = self.get_tsystable_data(tsystable,
+        tsysspectra, times = self.get_tsystable_data(tsystable,
           spwid, fieldids, antenna_names, corr_type, normalise=True)
 
         # Create separate flagging views for each polarisation
@@ -759,7 +767,7 @@ class TsysflagView(object):
         pols = range(len(corr_type))
 
         # Select Tsysspectra and corresponding times for specified spwid and fieldids
-        tsysspectra, times, _ = self.get_tsystable_data(tsystable,
+        tsysspectra, times = self.get_tsystable_data(tsystable,
           spwid, fieldids, antenna_names, corr_type, normalise=True)
 
         # Create separate flagging views for each polarisation
@@ -894,7 +902,7 @@ class TsysflagView(object):
         pols = range(len(corr_type))
 
         # Select Tsysspectra and corresponding times for specified spwid and fieldids
-        tsysspectra, times, _ = self.get_tsystable_data(tsystable,
+        tsysspectra, times = self.get_tsystable_data(tsystable,
           spwid, fieldids, antenna_names, corr_type, normalise=True)
 
         # Get ids of fields for reference spectra
@@ -1068,8 +1076,8 @@ class TsysflagView(object):
         corr_type = commonhelpermethods.get_corr_axis(self.ms, spwid)
         pols = range(len(corr_type))
 
-        # Select Tsysspectra and corresponding times for specified spwid and fieldids
-        tsysspectra, _, _ = self.get_tsystable_data(tsystable, spwid, fieldids, 
+        # Select Tsysspectra for specified spwid and fieldids
+        tsysspectra, _ = self.get_tsystable_data(tsystable, spwid, fieldids, 
           antenna_names, corr_type, normalise=True)
 
         # Initialize a stack of all Tsys spectra
@@ -1143,8 +1151,8 @@ class TsysflagView(object):
         corr_type = commonhelpermethods.get_corr_axis(self.ms, spwid)
         pols = range(len(corr_type))
 
-        # Select Tsysspectra and corresponding times for specified spwid and fieldids
-        tsysspectra, _, _ = self.get_tsystable_data(tsystable,
+        # Select Tsysspectra for specified spwid and fieldids
+        tsysspectra, _ = self.get_tsystable_data(tsystable,
           spwid, fieldids, antenna_names, corr_type, normalise=True)
 
         # Initialize spectrum stacks for antennas and for spw

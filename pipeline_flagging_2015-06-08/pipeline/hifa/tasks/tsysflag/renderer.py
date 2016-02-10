@@ -23,7 +23,8 @@ std_templates = {'nmedian': 'generic_x_vs_y_per_spw_and_pol_plots.mako',
                  'derivative': 'generic_x_vs_y_per_spw_and_pol_plots.mako',
                  'edgechans': 'generic_x_vs_y_spw_intent_plots.mako',
                  'fieldshape': 'generic_x_vs_y_spw_intent_plots.mako',
-                 'birdies': 'generic_x_vs_y_spw_ant_plots.mako'}
+                 'birdies': 'generic_x_vs_y_spw_ant_plots.mako',
+                 'toomany': 'generic_x_vs_y_per_spw_and_pol_plots.mako'}
 
 extra_templates = {'nmedian': 'generic_x_vs_y_per_spw_and_pol_plots.mako',
                    'derivative': 'generic_x_vs_y_per_spw_and_pol_plots.mako',
@@ -41,7 +42,7 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 description=description, always_rerender=always_rerender)
 
     def _do_standard_plots(self, context, result, component):
-        if component in ('nmedian','derivative','fieldshape'):
+        if component in ('nmedian','derivative','fieldshape','toomany'):
             renderer = ImageDisplayPlotRenderer(context, result, component)
         elif component in ('edgechans', 'birdies'):
             renderer = SliceDisplayPlotRenderer(context, result, component)
@@ -92,19 +93,19 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             table = os.path.basename(result.inputs['caltable'])
 
             # summarise flag state on entry
-            flag_totals[table]['before'] = self.flags_for_result(result, 
+            flag_totals[table]['before'] = self._flags_for_result(result, 
                     context, summary='first')
 
             # summarise flagging by each step
             for component, r in result.components.items():
-                flag_totals[table][component] = self.flags_for_result(r, 
+                flag_totals[table][component] = self._flags_for_result(r, 
                                                                       context)
 
             # summarise flag state on exit
-            flag_totals[table]['after'] = self.flags_for_result(result, 
+            flag_totals[table]['after'] = self._flags_for_result(result, 
                     context, summary='last')
 
-        htmlreports = self.get_htmlreports(context, results)
+        htmlreports = self._get_htmlreports(context, results)
         
         summary_plots = {}
         subpages = {}
@@ -158,7 +159,7 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                     'extraplots': extraplots,
                     'htmlreports': htmlreports})
         
-    def get_htmlreports(self, context, results):
+    def _get_htmlreports(self, context, results):
         report_dir = context.report_dir
         weblog_dir = os.path.join(report_dir,
                                   'stage%s' % results.stage_number)
@@ -172,9 +173,9 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             htmlreports[component] = {}
 
             for msresult in results:
-                flagcmd_abspath = self.write_flagcmd_to_disk(weblog_dir, 
+                flagcmd_abspath = self._write_flagcmd_to_disk(weblog_dir, 
                   msresult.components[component], component)
-                report_abspath = self.write_report_to_disk(weblog_dir, 
+                report_abspath = self._write_report_to_disk(weblog_dir, 
                   msresult.components[component], component)
 
                 flagcmd_relpath = os.path.relpath(flagcmd_abspath, report_dir)
@@ -187,17 +188,23 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
         return htmlreports
 
-    def write_flagcmd_to_disk(self, weblog_dir, result, component=None):
+    def _write_flagcmd_to_disk(self, weblog_dir, result, component=None):
         tablename = os.path.basename(result.table)
         if component:
-            filename = os.path.join(weblog_dir, '%s%s.html' % (tablename, component))
+            filename = os.path.join(weblog_dir, '%s%s-flag_commands.txt' % (tablename, component))
         else:
-            filename = os.path.join(weblog_dir, '%s.html' % (tablename))
+            filename = os.path.join(weblog_dir, '%s-flag_commands.txt' % (tablename))
 
-        rendererutils.renderflagcmds(result.flagcmds(), filename)
+        flagcmds = [l.flagcmd for l in result.flagcmds()]
+        with open(filename, 'w') as flagfile:
+            flagfile.writelines(['# Flag commands for %s\n#\n' % tablename])
+            flagfile.writelines(['%s\n' % cmd for cmd in flagcmds])
+            if not flagcmds:
+                flagfile.writelines(['# No flag commands generated\n'])
+
         return filename
 
-    def write_report_to_disk(self, weblog_dir, result, component=None):
+    def _write_report_to_disk(self, weblog_dir, result, component=None):
         # now write printTsysFlags output to a report file
         tablename = os.path.basename(result.table)
         if component:
@@ -211,7 +218,7 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         rendererutils.printTsysFlags(result.table, filename)
         return filename
 
-    def flags_for_result(self, result, context, summary=None):
+    def _flags_for_result(self, result, context, summary=None):
         name = result.caltable
         tsystable = caltableaccess.CalibrationTableDataFiller.getcal(name)
         ms = context.observing_run.get_ms(name=tsystable.vis) 
@@ -224,12 +231,12 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             # select only last summary, but keep as list
             summaries = summaries[-1:]
 
-        by_intent = self.flags_by_intent(ms, summaries)
-        by_spw = self.flags_by_spws(ms, summaries)
+        by_intent = self._flags_by_intent(ms, summaries)
+        by_spw = self._flags_by_spws(ms, summaries)
 
         return utils.dict_merge(by_intent, by_spw)
 
-    def flags_by_intent(self, ms, summaries):
+    def _flags_by_intent(self, ms, summaries):
         # create a dictionary of fields per observing intent, eg. 'PHASE':['3C273']
         intent_fields = {}
         for intent in ('BANDPASS', 'PHASE', 'AMPLITUDE', 'TARGET', 'ATMOSPHERE'):
@@ -270,7 +277,7 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 
         return total 
     
-    def flags_by_spws(self, ms, summaries):
+    def _flags_by_spws(self, ms, summaries):
         total = collections.defaultdict(dict)
     
         previous_summary = None

@@ -68,16 +68,6 @@ possible error.
         <value>5.0</value>
     </param>
 
-    <param type="double" name="ff_tmf1_limit" subparam="true">
-        <description>Flag all Tsys spectra within a timestamp for an antenna if proportion flagged already &gt; ff_tmf1_limit</description>
-        <value>0.666</value>
-    </param>
-
-    <param type="double" name="tmef1_limit" subparam="true">
-        <description>Flag all Tsys spectra for all antennas in a spw, if proportion of antennas that are already entirely flagged in all timestamps &gt; tmef1_limit</description>
-        <value>0.666</value>
-    </param>
-
     <param type="bool" name="flag_birdies">
         <description>True to flag channels covering sharp spectral features</description>
         <value>True</value>
@@ -86,6 +76,21 @@ possible error.
     <param type="double" name="fb_sharps_limit" subparam="true">
         <description>Flag channels bracketing a channel to channel difference &gt; fb_sharps_limit</description>
         <value>0.05</value>
+    </param>
+
+    <param type="bool" name="flag_toomany">
+        <description>True to flag Tsys spectra for which a proportion of timestamps or proportion of antennas that are entirely flagged exceeds their respective thresholds.</description>
+        <value>True</value>
+    </param>
+
+    <param type="double" name="tmf1_limit" subparam="true">
+        <description>Flag all Tsys spectra within a timestamp for an antenna if proportion flagged already &gt; tmf1_limit</description>
+        <value>0.666</value>
+    </param>
+
+    <param type="double" name="tmef1_limit" subparam="true">
+        <description>Flag all Tsys spectra for all antennas in a spw, if proportion of antennas that are already entirely flagged in all timestamps &gt; tmef1_limit</description>
+        <value>0.666</value>
     </param>
 
     <param type="string" name="pipelinemode">
@@ -149,8 +154,6 @@ possible error.
             <equals type="bool" value="True">
                 <default param="ff_refintent"><value type="string">BANDPASS</value></default>
                 <default param="ff_max_limit"><value>5.0</value></default>
-                <default param="ff_tmf1_limit"><value>0.666</value></default>
-                <default param="tmef1_limit"><value>0.666</value></default>
             </equals>
             <equals type="bool" value="False">
             </equals>
@@ -159,6 +162,15 @@ possible error.
         <when param="flag_birdies">
             <equals type="bool" value="True">
                 <default param="fb_sharps_limit"><value>0.05</value></default>
+            </equals>
+            <equals type="bool" value="False">
+            </equals>
+        </when>
+
+        <when param="flag_toomany">
+            <equals type="bool" value="True">
+                <default param="tmf1_limit"><value>0.666</value></default>
+                <default param="tmef1_limit"><value>0.666</value></default>
             </equals>
             <equals type="bool" value="False">
             </equals>
@@ -194,6 +206,11 @@ the BANDPASS intent or which are associated with an antenna that has
 been too heavily flagged already.
 
 5. Flag 'birdies'.
+
+6. Flag all Tsys spectra within a timestamp for an antenna if proportion 
+flagged already exceeds a threshold, and flag Tsys spectra for all antennas 
+in a spw, if proportion of antennas that are already entirely flagged in all 
+timestamps exceeds a threshold.
 
 Keyword arguments:
 
@@ -244,21 +261,25 @@ ff_max_limit -- Flag Tsys spectra with 'fieldshape' metric values &gt;
     ff_max_limit.
     default: 5.0
 
-ff_tmf1_limit -- Flag all Tsys spectra within a timestamp for an 
-antenna if proportion flagged already &gt; ff_tmf1_limit.
-    default: 0.666
-
-tmef1_limit -- Flag all Tsys spectra for all antennas in a spw, if 
-proportion of antennas that are already entirely flagged in all 
-timestamps &gt; tmef1_limit.
-    default: 0.666
-
 flag_birdies -- True to flag channels covering sharp spectral features.
     default: True
 
 fb_sharps_limit -- Flag channels bracketing a channel to channel
      difference &gt; fb_sharps_limit.
      default: 0.05
+
+flag_toomany -- True to flag Tsys spectra for which a proportion of 
+timestamps or proportion of antennas that are entirely flagged exceeds 
+their respective thresholds.
+
+tmf1_limit -- Flag all Tsys spectra within a timestamp for an 
+antenna if proportion flagged already &gt; tmf1_limit.
+    default: 0.666
+
+tmef1_limit -- Flag all Tsys spectra for all antennas in a spw, if 
+proportion of antennas that are already entirely flagged in all 
+timestamps &gt; tmef1_limit.
+    default: 0.666
 
 -- Pipeline task execution modes
 

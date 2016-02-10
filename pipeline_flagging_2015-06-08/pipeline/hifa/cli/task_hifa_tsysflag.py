@@ -8,7 +8,7 @@ def hifa_tsysflag(vis=None, caltable=None,
   flag_derivative=None, fd_max_limit=None,
   flag_edgechans=None, fe_edge_limit=None,
   flag_fieldshape=None, ff_refintent=None, ff_max_limit=None,
-  ff_tmf1_limit=None, tmef1_limit=None,
+  tmf1_limit=None, tmef1_limit=None, ff_tmf1_limit=None,
   flag_birdies=None, fb_sharps_limit=None,
   pipelinemode=None, dryrun=None, acceptresults=None):
 
