@@ -43,7 +43,7 @@ class SingleDishMSFiller {
 public:
   SingleDishMSFiller(std::string const &name) :
       ms_(), ms_columns_(), data_description_columns_(), feed_columns_(), pointing_columns_(), polarization_columns_(), syscal_columns_(), state_columns_(), reader_(
-          new Reader(name)), is_float_(false), data_key_(), reference_feed_(-1), pointing_time_(), pointing_time_max_(), pointing_time_min_(), num_pointing_time_(), syscal_list_() {
+                                                                                                                                                                     new Reader(name)), is_float_(false), data_key_(), reference_feed_(-1), pointing_time_(), pointing_time_max_(), pointing_time_min_(), num_pointing_time_(), syscal_list_(), subscan_list_(), polarization_type_pool_() {
   }
 
   ~SingleDishMSFiller() {
@@ -496,6 +496,12 @@ private:
 
   // for SYSCAL table
   std::vector<SysCalTableRecord> syscal_list_;
+
+  // for STATE table
+  std::vector<Int> subscan_list_;
+
+  // for FEED table
+  std::vector< Vector<String> *> polarization_type_pool_;
 
   // Data storage to interact with DataAccumulator
   MSDataRecord record_;

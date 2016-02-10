@@ -480,10 +480,10 @@ Int SingleDishMSFiller<T>::updateState(Int const &subscan,
     String const &obs_mode) {
   MSState &mytable = ms_->state();
   static Regex const regex("^OBSERVE_TARGET#ON_SOURCE");
-  static std::vector<Int> subscan_list;
+  //static std::vector<Int> subscan_list;
   auto comparer =
       [&](MSStateColumns &columns, uInt i) {
-        Bool match = (subscan == subscan_list[i]) && (obs_mode == columns.obsMode()(i));
+        Bool match = (subscan == subscan_list_[i]) && (obs_mode == columns.obsMode()(i));
         return match;
       };
   auto updater = [&](MSStateColumns &columns, uInt i) {
@@ -493,7 +493,7 @@ Int SingleDishMSFiller<T>::updateState(Int const &subscan,
     columns.sig().put(i, is_signal);
     columns.ref().put(i, !is_signal);
 
-    subscan_list.push_back(subscan);
+    subscan_list_.push_back(subscan);
   };
   Int state_id = ::updateTable(mytable, *(state_columns_.get()), comparer,
       updater);
@@ -509,13 +509,13 @@ Int SingleDishMSFiller<T>::updateFeed(Int const &feed_id, Int const &spw_id,
   static String const circular_type_arr[2] = { "R", "L" };
   static Vector<String> circular_type(circular_type_arr, 2, SHARE);
   static Matrix < Complex > const pol_response(num_receptors, num_receptors, Complex(0));
-  static Vector < String > *polarization_type = nullptr;
+  Vector < String > *polarization_type = nullptr;
   if (pol_type == "linear") {
     polarization_type = &linear_type;
   } else if (pol_type == "circular") {
     polarization_type = &circular_type;
   }
-  static std::vector< Vector<String> *> polarization_type_pool;
+  //static std::vector< Vector<String> *> polarization_type_pool;
 
   String polarization_type_arr[2] = { "X", "Y" };
   Vector < String > polarization_type_storage(polarization_type_arr, 2, SHARE);
@@ -523,7 +523,7 @@ Int SingleDishMSFiller<T>::updateFeed(Int const &feed_id, Int const &spw_id,
   Vector<Double> const receptor_angle(num_receptors, 0.0);
   Vector<Double> const position(3, 0.0);
   auto comparer = [&](MSFeedColumns &columns, uInt i) {
-    Vector<String> *current_polarization_type = polarization_type_pool[i];
+    Vector<String> *current_polarization_type = polarization_type_pool_[i];
     Bool match = allEQ(*polarization_type, *current_polarization_type) &&
     (feed_id == columns.feedId()(i)) &&
     (spw_id == columns.spectralWindowId()(i));
@@ -544,7 +544,7 @@ Int SingleDishMSFiller<T>::updateFeed(Int const &feed_id, Int const &spw_id,
       columns.position().put(i, position);
       columns.polResponse().put(i, pol_response);
 
-      polarization_type_pool.push_back(polarization_type);
+      polarization_type_pool_.push_back(polarization_type);
     };
   Int feed_row = ::updateTable(ms_->feed(), *(feed_columns_.get()), comparer,
       updater);
