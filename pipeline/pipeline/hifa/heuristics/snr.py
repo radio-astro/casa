@@ -98,7 +98,8 @@ the solution in the form of a dictionary
 """
 
 def estimate_bpsolint (ms, fieldlist, intent, spwidlist, compute_nantennas,
-    max_fracflagged, phaseupsnr, minphaseupints, bpsnr, minbpnchan):
+    max_fracflagged, phaseupsnr, minphaseupints, bpsnr, minbpnchan,
+    evenbpsolints=False):
 
     """
     Input Parameters
@@ -175,7 +176,8 @@ def estimate_bpsolint (ms, fieldlist, intent, spwidlist, compute_nantennas,
     # Compute the bandpass solint parameters and return a solution
     # dictionary
     solint_dict = compute_bpsolint(ms, spwidlist, spw_dict,
-        phaseupsnr, minphaseupints, bpsnr, minbpnchan)
+        phaseupsnr, minphaseupints, bpsnr, minbpnchan,
+        evenbpsolints=evenbpsolints)
 
     return solint_dict
 
@@ -1043,7 +1045,7 @@ and the spw dictionary
 """
 
 def compute_bpsolint(ms, spwlist, spw_dict, reqPhaseupSnr,
-    minBpNintervals, reqBpSnr, minBpNchan):
+    minBpNintervals, reqBpSnr, minBpNchan, evenbpsolints=False):
 
     """
     The input parameters
@@ -1059,7 +1061,7 @@ def compute_bpsolint(ms, spwlist, spw_dict, reqPhaseupSnr,
     The bandpass preaveraging dictionary keys and values
         key: the spw id     value: The science spw id as an integer
 
-    The preaveraging parameter dictionary keys abd values
+    The preaveraging parameter dictionary keys and values
         key: 'band'               value: The ALMA receiver band
         key: 'frequency_Hz'       value: The frequency of the spw
         key: 'nchan_total'        value: The total number of channels
@@ -1077,6 +1079,9 @@ def compute_bpsolint(ms, spwlist, spw_dict, reqPhaseupSnr,
         key: 'nchan_bpsolint'     value: The total number of solint channels
     """
 
+
+    if evenbpsolints:
+        LOG.info("Forcing bandpass frequency solint to divide evenly into bandpass")
 
     # Initialize the output solution interval dictionary
     solint_dict = collections.OrderedDict()
@@ -1128,6 +1133,7 @@ def compute_bpsolint(ms, spwlist, spw_dict, reqPhaseupSnr,
         bpsensitivity = ALMA_SENSITIVITIES[bandidx] * bpfactor
         snrPerChannel = spw_dict[spwid]['flux'] * 1000.0 / bpsensitivity
         requiredChannels = ( reqBpSnr / snrPerChannel ) ** 2
+        evenChannels = nextHighestDivisibleInt(spw_dict[spwid]['nchan'], int(np.ceil(requiredChannels)))
 
         # Fill in the dictionary
         solint_dict[spwid] = collections.OrderedDict()
@@ -1186,27 +1192,45 @@ def compute_bpsolint(ms, spwlist, spw_dict, reqPhaseupSnr,
             '%s Spw %d would have less than %d time intervals in its solution in MS %s' % \
             (asterisks, spwid, minBpNintervals, ms.basename))
 
-        # Bandpass solution info
+        # Bandpass solution
+        #    Determine frequenty interval in MHz
         if requiredChannels > 1.0:
-            solint_dict[spwid]['bpsolint'] = '%fMHz' % \
-                (requiredChannels * solint_dict[spwid]['chanwidth_Hz'] * 1.0e-6)
+            if evenbpsolints:
+                solint_dict[spwid]['bpsolint'] = '%fMHz' % \
+                    (evenChannels * solint_dict[spwid]['chanwidth_Hz'] * 1.0e-6)
+            else:
+                solint_dict[spwid]['bpsolint'] = '%fMHz' % \
+                    (requiredChannels * solint_dict[spwid]['chanwidth_Hz'] * 1.0e-6)
         else:
-            solint_dict[spwid]['bpsolint'] = '1ch'
-        solint_dict[spwid]['nchan_bpsolint'] = \
-            int(np.ceil(requiredChannels))
-        solChannels = solint_dict[spwid]['nchan_total'] / \
-            int(np.ceil(requiredChannels))
+            #solint_dict[spwid]['bpsolint'] = '1ch'
+            solint_dict[spwid]['bpsolint'] = '%fMHz' % \
+                    (solint_dict[spwid]['chanwidth_Hz'] * 1.0e-6)
+
+        # Determine the number of channels in the bandpass
+        # solution and the number of solutions
+        if evenbpsolints:
+            solint_dict[spwid]['nchan_bpsolint'] = \
+                int(np.ceil(evenChannels))
+            solChannels = solint_dict[spwid]['nchan_total'] / \
+                int(np.ceil(evenChannels))
+        else:
+            solint_dict[spwid]['nchan_bpsolint'] = \
+                int(np.ceil(requiredChannels))
+            solChannels = solint_dict[spwid]['nchan_total'] / \
+                int(np.ceil(requiredChannels))
+
         if solChannels  < minBpNchan:
             tooFewChannels = True
             asterisks = '***'
         else:
             tooFewChannels = False
             asterisks = ''
-        LOG.info("%sspw %2d (%4.0fMHz) requires solint='%0.3gMHz' (%d channels intervals in solution) to reach S/N=%.0f" % \
+        #LOG.info("%sspw %2d (%4.0fMHz) requires solint='%0.3gMHz' (%d channels intervals in solution) to reach S/N=%.0f" % \
+        LOG.info("%sspw %2d (%4.0fMHz) requires solint='%s' (%d channels intervals in solution) to reach S/N=%.0f" % \
             (asterisks,
             spwid,
             solint_dict[spwid]['bandwidth']*1.0e-6,
-            requiredChannels * solint_dict[spwid]['chanwidth_Hz'] * 1.0e-6,
+            solint_dict[spwid]['bpsolint'],
             solChannels,
             reqBpSnr))
         solint_dict[spwid]['nbandpass_solutions'] = solChannels
@@ -1215,3 +1239,18 @@ def compute_bpsolint(ms, spwlist, spw_dict, reqPhaseupSnr,
                 (asterisks, spwid, minBpNchan, ms.basename))
 
     return solint_dict
+
+def nextHighestDivisibleInt (n, d):
+    """
+    Checks whether an integer is evenly divisible by a second
+    integer, and if not, finds the next higher integer that is.
+
+    n: larger integer
+    d: smaller integer
+    """
+
+    dd = d
+    while (n % dd != 0 and dd < n):
+        dd += 1
+    
+    return dd
