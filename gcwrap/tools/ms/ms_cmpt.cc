@@ -1861,7 +1861,7 @@ ms::statistics2(const std::string& column,
 				retval = doClassicalStatistics(
 					sortColumnIds,
 					implicitTimeAverage,
-					new Vi2ChunkFlagCubeDataProvider(vi2));
+					new Vi2ChunkFlagCubeDataProvider(vi2, useflags));
 				// } else if (mycolumn == "WEIGHT") {
 				// } else if (mycolumn == "SIGMA") {
 
@@ -1893,25 +1893,25 @@ ms::statistics2(const std::string& column,
 				retval = doClassicalStatistics(
 					sortColumnIds,
 					implicitTimeAverage,
-					new Vi2ChunkFieldIdDataProvider(vi2));
+					new Vi2ChunkFieldIdDataProvider(vi2, useflags));
 
 			} else if (mycolumn == "ARRAY_ID") {
 				retval = doClassicalStatistics(
 					sortColumnIds,
 					implicitTimeAverage,
-					new Vi2ChunkArrayIdDataProvider(vi2));
+					new Vi2ChunkArrayIdDataProvider(vi2, useflags));
 
 			} else if (mycolumn == "DATA_DESC_ID") {
 				retval = doClassicalStatistics(
 					sortColumnIds,
 					implicitTimeAverage,
-					new Vi2ChunkDataDescriptionIdsDataProvider(vi2));
+					new Vi2ChunkDataDescriptionIdsDataProvider(vi2, useflags));
 
 			} else if (mycolumn == "FLAG_ROW") {
 				retval = doClassicalStatistics(
 					sortColumnIds,
 					implicitTimeAverage,
-					new Vi2ChunkFlagRowDataProvider(vi2));
+					new Vi2ChunkFlagRowDataProvider(vi2, useflags));
 
 			} else if (mycolumn == "INTERVAL") {
 				retval = doClassicalStatistics(
@@ -1923,7 +1923,7 @@ ms::statistics2(const std::string& column,
 				retval = doClassicalStatistics(
 					sortColumnIds,
 					implicitTimeAverage,
-					new Vi2ChunkScanDataProvider(vi2));
+					new Vi2ChunkScanDataProvider(vi2, useflags));
 
 			} else if (mycolumn == "TIME") {
 				retval = doClassicalStatistics(
