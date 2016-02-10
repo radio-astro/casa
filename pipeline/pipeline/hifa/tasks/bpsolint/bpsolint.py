@@ -15,7 +15,7 @@ class BpSolintInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, field=None,
          intent=None, spw=None, phaseupsnr=None, minphaseupints=None,
-         bpsnr=None, minbpnchan=None, hm_nantennas=None, maxfracflagged=None): 
+         evenbpints=None, bpsnr=None, minbpnchan=None, hm_nantennas=None, maxfracflagged=None): 
 
         # set the properties to the values given as input arguments
         self._init_properties(vars())
@@ -118,6 +118,18 @@ class BpSolintInputs(basetask.StandardInputs):
         self._minphaseupints = value
 
     @property
+    def evenbpints(self):
+        if self._evenbpints is not None:
+            return self._evenbpints
+        return None
+
+    @evenbpints.setter
+    def evenbpints(self, value):
+        if value is None:
+            value = False
+        self._evenbpints = value
+
+    @property
     def bpsnr(self):
         if self._bpsnr is not None:
             return self._bpsnr
@@ -199,7 +211,7 @@ class BpSolint(basetask.StandardTaskTemplate):
         solint_dict = snr_heuristics.estimate_bpsolint(inputs.ms, fieldlist,
 	    inputs.intent, spwlist, inputs.hm_nantennas, inputs.maxfracflagged,
 	    inputs.phaseupsnr, inputs.minphaseupints, inputs.bpsnr,
-	    inputs.minbpnchan)
+	    inputs.minbpnchan, evenbpsolints=inputs.evenbpints)
 
         if not solint_dict:
             LOG.info('No solution interval dictionary')
