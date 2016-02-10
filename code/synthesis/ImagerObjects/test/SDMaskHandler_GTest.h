@@ -45,8 +45,8 @@ protected:
     virtual void SetUp();
     virtual void TearDown();
     //
-    // box mask image generator
-    void generateBoxMaskImage(String imagename, Int nchan, IPosition blc, IPosition trc);
+    // box mask cube image generator (only create mask for stoke I) 
+    void generateBoxMaskImage(String imagename, Int imsize, Int nchan, IPosition blc, IPosition trc);
 
     String outMaskName;
     CoordinateSystem csys;
@@ -63,6 +63,7 @@ protected:
      void testMakeMaskByThreshold();
      void testRegionToMaskImage();
      void testRegionText();
+     void testCopyMask();
 
 };
 

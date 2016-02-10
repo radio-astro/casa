@@ -39,10 +39,10 @@ void SDMaskHandlerTest::TearDown() {
      
 }
 
-void SDMaskHandlerTest::generateBoxMaskImage(String imagename, Int nchan, IPosition blc, IPosition trc)
+void SDMaskHandlerTest::generateBoxMaskImage(String imagename, Int imsize, Int nchan, IPosition blc, IPosition trc)
 {
     //blc and trc --- 4 elements vect.
-    IPosition shape(4, 100, 100, 1, nchan);
+    IPosition shape(4, imsize, imsize, 4, nchan);
     csys=CoordinateUtil::defaultCoords4D();
     PagedImage<Float> maskImage(TiledShape(shape), csys, imagename);
     maskImage.setUnits(Unit("Jy/pixel"));
@@ -52,8 +52,8 @@ void SDMaskHandlerTest::generateBoxMaskImage(String imagename, Int nchan, IPosit
       Int dx = trc(0) - blc(0);
       Int dy = trc(1) - blc(1);
       for (uInt i=0+blc(3); i < trc(3)+1; i++) {
-        for (uInt j=0; j < (uInt)dx; j++) {
-          for (uInt k=0; k < (uInt)dy; k++) {
+        for (uInt j=0; j < (uInt)dx+1; j++) {
+          for (uInt k=0; k < (uInt)dy+1; k++) {
             IPosition loc(4,blc(0)+j, blc(1)+k, 0, Int(i));
             Float val = 1.0;
             maskImage.putAt(val, loc);
@@ -61,6 +61,9 @@ void SDMaskHandlerTest::generateBoxMaskImage(String imagename, Int nchan, IPosit
         }
       }
     }
+    else {
+     throw(AipsError("incompatible blc,trc, and/or nchan combination"));
+    } 
 }
 
 ImageInterfaceTest::ImageInterfaceTest() {}
@@ -140,8 +143,10 @@ void ImageInterfaceTest::testRegionToMaskImage()
   Vector<Double> pTrcBox(4);
   Vector<Double> wBlcBox(4);
   Vector<Double> wTrcBox(4);
+  // for regionRecord blc=(25,65,0,2) trc=(42,75,0,9)
   pBlc(0)=25.0; pBlc(1)=65.0; pBlc(2)=0; pBlc(3)=2.0;
   pTrc(0)=42.0; pTrc(1)=75.0; pTrc(2)=0; pTrc(3)=9.0;
+  // for blctrc: box with (50,10,0,0) (65,40,0,0) 
   pBlcBox(0)=50.0; pBlcBox(1)=10.0; pBlcBox(2)=0; pBlcBox(3)=0;
   pTrcBox(0)=65.0; pTrcBox(1)=40.0; pBlcBox(2)=0; pBlcBox(3)=0;
   csys.toWorld(wBlc,pBlc);
@@ -180,6 +185,32 @@ void ImageInterfaceTest::testRegionToMaskImage()
   circles(1,2) = 65;
   //SDMaskHandler::regionToImageMask(maskname, regionRec, blctrcs, circles);
   SDMaskHandler::regionToImageMask(maskImage, regionRec, blctrcs, circles);
+  //spot checks...
+  //    --- checks at boundaries
+  //a box by regionRec
+  //inside the mask 
+  ASSERT_TRUE(maskImage.getAt(IPosition(4,25,65,0,2))==Float(1.0));
+  ASSERT_TRUE(maskImage.getAt(IPosition(4,42,75,0,9))==Float(1.0));
+  ASSERT_TRUE(maskImage.getAt(IPosition(4,35,70,0,5))==Float(1.0));
+  //outside the mask 
+  ASSERT_TRUE(maskImage.getAt(IPosition(4,24,65,0,5))==Float(0.0));
+  ASSERT_TRUE(maskImage.getAt(IPosition(4,42,76,0,5))==Float(0.0));
+  ASSERT_TRUE(maskImage.getAt(IPosition(4,25,65,0,0))==Float(0.0));
+  //a box by blctrcs
+  //inside the mask
+  ASSERT_TRUE(maskImage.getAt(IPosition(4,50,10,0,0))==Float(1.0));
+  ASSERT_TRUE(maskImage.getAt(IPosition(4,65,40,0,9))==Float(1.0));
+  //outside the mask
+  ASSERT_TRUE(maskImage.getAt(IPosition(4,40,10,0,0))==Float(0.0));
+  ASSERT_TRUE(maskImage.getAt(IPosition(4,65,50,0,9))==Float(0.0));
+  //circles
+  ASSERT_TRUE(maskImage.getAt(IPosition(4,10,8,0,0))==Float(1.0));
+  ASSERT_TRUE(maskImage.getAt(IPosition(4,15,8,0,0))==Float(1.0));
+  ASSERT_TRUE(maskImage.getAt(IPosition(4,70,65,0,0))==Float(1.0));
+  ASSERT_TRUE(maskImage.getAt(IPosition(4,70,77,0,0))==Float(1.0));
+  ASSERT_TRUE(maskImage.getAt(IPosition(4,10,14,0,0))==Float(0.0));
+  ASSERT_TRUE(maskImage.getAt(IPosition(4,83,65,0,0))==Float(0.0));
+
   delete regionRec;
 }//testRegionToMaskImage
 
@@ -200,6 +231,48 @@ void ImageInterfaceTest::testRegionText()
   delete imageRegion;
 }
 
+void ImageInterfaceTest::testCopyMask()
+{
+  cout << " Test copyMask() "<<endl;
+  String inMaskImageName("inmasktemp.im");
+  IPosition blc(4,35,40,0,10);
+  IPosition trc(4,55,50,0,15);
+  // 100x100x1x50 cube with box mask between ch10-15
+  generateBoxMaskImage(inMaskImageName,100,50,blc,trc);
+  PagedImage<Float> inmask(inMaskImageName);
+  TempImage<Float> outmask(inmask.shape(),inmask.coordinates());
+  //PagedImage<Float> outmask(inmask.shape(),inmask.coordinates(),"outmasknew.im");
+  SDMaskHandler maskhandler = SDMaskHandler();
+  maskhandler.copyMask(inmask,outmask);
+  ASSERT_TRUE(outmask.getAt(IPosition(4,35,40,0,10))==Float(1.0));
+  ASSERT_TRUE(outmask.getAt(IPosition(4,35,40,0,15))==Float(1.0));
+  ASSERT_TRUE(outmask.getAt(IPosition(4,55,50,0,15))==Float(1.0));
+  ASSERT_TRUE(outmask.getAt(IPosition(4,55,50,0,15))==Float(1.0));
+  ASSERT_TRUE(outmask.getAt(IPosition(4,45,45,0,9))==Float(0.0));
+  ASSERT_TRUE(outmask.getAt(IPosition(4,45,45,0,16))==Float(0.0));
+}
+
+//methods in SDMaskHandler.h but no tests exist here
+//resetMask(SHARED_PTR<SIImageStore> imstore)
+//fillMask((SHARED_PTR<SIImageStore> imstore, Vector<String> maskStrings)
+//fillMask((SHARED_PTR<SIImageStore> imstore, String maskStrings)
+//
+//called from regionToImageMask: boxRegionToImageRegion(), circleRegionToImageRegion(), recordRegionToImageRegion()
+//
+//copyAllMasks() - calls copyMask()
+//expandMask()
+//InMaskToImageRegion()
+//maskInteractiveMask()
+//test automask...
+//makeAutoMask() - old simplistic a box around the peak
+//autoMask()
+//autoMaskByThreshold()
+//makePBMask()
+//auotMaskWithinPB()
+//checkMaskImage()
+//cloneImShape()
+
+
 // Tests
 TEST_F(ImageInterfaceTest, testMakeMaskByThreshold) {
    testMakeMaskByThreshold();
@@ -213,10 +286,13 @@ TEST_F(ImageInterfaceTest, testRegionText) {
   testRegionText();
 }
 
+TEST_F(ImageInterfaceTest, testCopyMask) {
+  testCopyMask();
+}
+
 }//test
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
-
