@@ -29,103 +29,6 @@ using namespace casa::vi;
 
 
 //////////////////////////////////////////////////////////////////////////
-// FreqAxisTVITest class
-//////////////////////////////////////////////////////////////////////////
-
-// -----------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------
-FreqAxisTVITest::FreqAxisTVITest():
-		autoMode_p(True), testResult_p(True)
-{
-
-}
-
-// -----------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------
-FreqAxisTVITest::FreqAxisTVITest(Record configuration):
-		autoMode_p(False), testResult_p(True), testConfiguration_p(configuration)
-{
-
-}
-
-// -----------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------
-FreqAxisTVITest::~FreqAxisTVITest()
-{
-	TearDown();
-
-	return;
-}
-
-// -----------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------
-void FreqAxisTVITest::autoInit()
-{
-	autoMode_p = True;
-
-	// Define inputMS
-	generateTestFile();
-
-	// Configuration for ChannelAverageTVI Factory
-	initTestConfiguration();
-
-	// Configuration for MSTransformIterator Factory
-	initReferenceConfiguration();
-}
-
-// -----------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------
-void FreqAxisTVITest::customInit(Record configuration)
-{
-	// Store inputMS name for quick access downstream
-	configuration.get (configuration.fieldNumber ("inputms"), inputMS_p);
-
-	// Init test configuration
-	testConfiguration_p.define ("inputms", inputMS_p + String(".test"));
-
-	// Configuration for MSTransformIterator Factory
-	initReferenceConfiguration();
-}
-
-// -----------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------
-void FreqAxisTVITest::SetUp()
-{
-	// Copy test file
-	string cp_command_test = String ("cp -r ") + inputMS_p + String(" ") + inputMS_p + String(".test");
-	ASSERT_EQ(system(cp_command_test.c_str()),0);
-
-	// Copy reference file
-	string cp_command_ref = String ("cp -r ") + inputMS_p + String(" ") + inputMS_p + String(".ref");
-	ASSERT_EQ(system(cp_command_ref.c_str()),0);
-}
-
-// -----------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------
-void FreqAxisTVITest::TearDown()
-{
-	String rm_command;
-	if (autoMode_p)
-	{
-		rm_command = String ("rm -rf ") + inputMS_p + String("*");
-	}
-	else
-	{
-		rm_command = String ("rm -rf ") + inputMS_p + String(".*");
-	}
-
-	system(rm_command.c_str());
-}
-
-
-//////////////////////////////////////////////////////////////////////////
 // ChannelAverageTVITest class
 //////////////////////////////////////////////////////////////////////////
 
@@ -134,9 +37,9 @@ void FreqAxisTVITest::TearDown()
 // -----------------------------------------------------------------------
 void ChannelAverageTVITest::generateTestFile()
 {
-	inputMS_p = String("Four_ants_3C286.ms");
-	String path("/data/regression/unittest/flagdata/");
-	ASSERT_TRUE(copyTestFile(path,inputMS_p));
+	String path("");
+	if (autoMode_p) path = String("/data/regression/unittest/flagdata/");
+	ASSERT_TRUE(copyTestFile(path,inpFile_p,testFile_p));
 
 	return;
 }
@@ -144,11 +47,11 @@ void ChannelAverageTVITest::generateTestFile()
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-void ChannelAverageTVITest::initTestConfiguration()
+void ChannelAverageTVITest::generateReferenceFile()
 {
-	testConfiguration_p.define ("inputms", inputMS_p + String(".test"));
-	testConfiguration_p.define ("spw", "1");
-	testConfiguration_p.define ("chanbin", 8);
+	String path("");
+	if (autoMode_p) path = String("/data/regression/unittest/flagdata/");
+	ASSERT_TRUE(copyTestFile(path,inpFile_p,referenceFile_p));
 
 	return;
 }
@@ -156,10 +59,21 @@ void ChannelAverageTVITest::initTestConfiguration()
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-void ChannelAverageTVITest::initReferenceConfiguration()
+void ChannelAverageTVITest::initTestConfiguration(Record &configuration)
 {
-	refConfiguration_p = testConfiguration_p;
-	refConfiguration_p.define ("inputms", inputMS_p + String(".ref"));
+	testConfiguration_p = configuration;
+	testConfiguration_p.define ("inputms", testFile_p);
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void ChannelAverageTVITest::initReferenceConfiguration(Record &configuration)
+{
+	refConfiguration_p = configuration;
+	refConfiguration_p.define ("inputms", referenceFile_p);
 	refConfiguration_p.define ("reindex", False);
 	refConfiguration_p.define ("chanaverage", True);
 	refConfiguration_p.define ("datacolumn", String("ALL"));
@@ -172,7 +86,15 @@ void ChannelAverageTVITest::initReferenceConfiguration()
 // -----------------------------------------------------------------------
 ChannelAverageTVITest::ChannelAverageTVITest(): FreqAxisTVITest ()
 {
-	autoInit();
+	inpFile_p = String("Four_ants_3C286.ms");
+    testFile_p = String("Four_ants_3C286.ms.test");
+    referenceFile_p = String("Four_ants_3C286.ms.ref");
+
+    Record configuration;
+    configuration.define ("spw", "1");
+    configuration.define ("chanbin", 8);
+
+	init(configuration);
 }
 
 // -----------------------------------------------------------------------
@@ -180,7 +102,7 @@ ChannelAverageTVITest::ChannelAverageTVITest(): FreqAxisTVITest ()
 // -----------------------------------------------------------------------
 ChannelAverageTVITest::ChannelAverageTVITest(Record configuration): FreqAxisTVITest(configuration)
 {
-	customInit(configuration);
+	init(configuration);
 }
 
 // -----------------------------------------------------------------------

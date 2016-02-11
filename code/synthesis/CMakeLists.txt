@@ -737,8 +737,9 @@ casa_add_assay( synthesis CalTables/test/tCTSelection.cc )
 casa_add_assay( synthesis CalTables/test/tCTGenericFill.cc )
 
 
-casa_add_test( synthesis ../mstransform/MSTransform/test/tMSTransformIterator.cc )
 casa_add_test( synthesis CalLibrary/test/tCalLibraryParse.cc )
-casa_add_google_test( MODULES mstransform SOURCES ../mstransform/TVI/test/tChannelAverageTVI.cc)
+
+casa_add_google_test( MODULES mstransform SOURCES ../mstransform/MSTransform/test/tMSTransformIterator.cc  ../mstransform/TVI/test/TestUtilsTVI.cc)
+casa_add_google_test( MODULES mstransform SOURCES ../mstransform/TVI/test/tChannelAverageTVI.cc  ../mstransform/TVI/test/TestUtilsTVI.cc)
 
 casa_add_google_test( MODULES synthesis SOURCES ImagerObjects/test/SDMaskHandler_GTest.cc )

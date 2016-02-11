@@ -28,7 +28,6 @@ casa_add_library( mstransform
  MSTransform/MSTransformIteratorFactory.cc
  MSTransform/MSUVBin.cc
  TVI/ChannelAverageTVI.cc
- TVI/test/TestUtilsTVI.cc 
 )
 
 install (FILES
@@ -42,6 +41,11 @@ install (FILES
 	MSTransform/MSUVBin.h
 	DESTINATION include/casacode/mstransform/MSTransform
 	)
+	
+install (FILES
+ 	MSTransform/test/tMSTransformIterator.h	
+	DESTINATION include/casacode/mstransform/MSTransform/test
+	)		
 	
 install (FILES
  	TVI/UtilsTVI.h	

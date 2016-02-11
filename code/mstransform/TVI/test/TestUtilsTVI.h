@@ -23,6 +23,15 @@
 #ifndef TestUtilsTVI_H_
 #define TestUtilsTVI_H_
 
+// Google test
+#include <gtest/gtest.h>
+
+// casacore containers
+#include <casacore/casa/Arrays/Cube.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Containers/Record.h>
+
 // VI/VB framework
 #include <msvis/MSVis/VisBuffer2.h>
 #include <msvis/MSVis/VisibilityIterator2.h>
@@ -51,6 +60,39 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 namespace vi { //# NAMESPACE VI - BEGIN
 
 //////////////////////////////////////////////////////////////////////////
+// FreqAxisTVITest class
+//////////////////////////////////////////////////////////////////////////
+class FreqAxisTVITest: public ::testing::Test {
+
+public:
+
+	FreqAxisTVITest();
+	FreqAxisTVITest(Record configuration);
+    virtual ~FreqAxisTVITest();
+
+    void SetUp();
+    void TearDown();
+    Bool getTestResult() {return testResult_p;}
+
+protected:
+
+    void init(Record &configuration);
+    virtual void generateTestFile() = 0;
+    virtual void generateReferenceFile() = 0;
+    virtual void initTestConfiguration(Record &configuration) = 0;
+    virtual void initReferenceConfiguration(Record &configuration) = 0;
+
+    Bool autoMode_p;
+    Bool testResult_p;
+    String inpFile_p;
+    String testFile_p;
+    String referenceFile_p;
+    Record refConfiguration_p;
+    Record testConfiguration_p;
+};
+
+
+//////////////////////////////////////////////////////////////////////////
 // Convenience methods
 //////////////////////////////////////////////////////////////////////////
 template <class T> Bool compareVector(	const Char* column,
@@ -68,7 +110,7 @@ template <class T> Bool compareCube(const Char* column,
 									const Cube<T> &ref,
 									Float tolerance = FLT_EPSILON);
 
-Bool copyTestFile(String &path,String &filename);
+Bool copyTestFile(String &path,String &filename,String &outfilename);
 
 Bool compareVisibilityIterators(VisibilityIterator2 &testTVI,
 								VisibilityIterator2 &refTVI,

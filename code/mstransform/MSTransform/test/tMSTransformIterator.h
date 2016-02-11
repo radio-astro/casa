@@ -1,4 +1,4 @@
-//# tChannelAverageTVI: This file contains the unit tests of the ChannelAverageTVI class.
+//# tMSTransformIterator: This file contains the unit tests of the MSTransformIterator class.
 //#
 //#  CASA - Common Astronomy Software Applications (http://casa.nrao.edu/)
 //#  Copyright (C) Associated Universities, Inc. Washington DC, USA 2011, All rights reserved.
@@ -20,11 +20,10 @@
 //#  MA 02111-1307  USA
 //# $Id: $
 
-#ifndef ChannelAverageTVITest_H_
-#define ChannelAverageTVITest_H_
+#ifndef MSTransformIteratorTest_H_
+#define MSTransformIteratorTest_H_
 
 #include <mstransform/TVI/test/TestUtilsTVI.h>
-#include <mstransform/TVI/ChannelAverageTVI.h>
 #include <mstransform/MSTransform/MSTransformIteratorFactory.h>
 
 using namespace std;
@@ -33,26 +32,25 @@ using namespace casa::vi;
 
 
 /////////////////////////////////////////////////////////////////////////
-// ChannelAverageTVITest class
+// MSTransformIteratorTest class
 /////////////////////////////////////////////////////////////////////////
-class ChannelAverageTVITest: public FreqAxisTVITest {
+class MSTransformIteratorTest: public FreqAxisTVITest {
 
 public:
 
-	ChannelAverageTVITest();
-	ChannelAverageTVITest(Record configuration);
+	MSTransformIteratorTest();
+	MSTransformIteratorTest(Record configuration);
+	~MSTransformIteratorTest();
 
     void TestBody();
     void testCompareTransformedData();
-    void testComparePropagatedFlags();
 
 protected:
 
-    void propagateFlags();
     void generateTestFile();
     void generateReferenceFile();
     void initTestConfiguration(Record &configuration);
     void initReferenceConfiguration(Record &configuration);
 };
 
-#endif /* ChannelAverageTVITest_H_ */
+#endif /* MSTransformIteratorTest_H_ */

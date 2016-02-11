@@ -27,6 +27,80 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 namespace vi { //# NAMESPACE VI - BEGIN
 
 //////////////////////////////////////////////////////////////////////////
+// FreqAxisTVITest class
+//////////////////////////////////////////////////////////////////////////
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+FreqAxisTVITest::FreqAxisTVITest():
+		autoMode_p(True), testResult_p(True)
+{
+
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+FreqAxisTVITest::FreqAxisTVITest(Record configuration):
+		autoMode_p(False), testResult_p(True)
+{
+	configuration.get (configuration.fieldNumber ("inputms"), inpFile_p);
+	testFile_p = inpFile_p + String(".test");
+	referenceFile_p = inpFile_p + String(".ref");
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+FreqAxisTVITest::~FreqAxisTVITest()
+{
+	TearDown();
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void FreqAxisTVITest::init(Record &configuration)
+{
+	initTestConfiguration(configuration);
+	initReferenceConfiguration(configuration);
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void FreqAxisTVITest::SetUp()
+{
+	// Generate test file
+	generateTestFile();
+
+	// Generate reference file
+	generateReferenceFile();
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void FreqAxisTVITest::TearDown()
+{
+	String rm_command;
+
+	rm_command = String ("rm -rf ") + testFile_p;
+	system(rm_command.c_str());
+
+	rm_command = String ("rm -rf ") + referenceFile_p;
+	system(rm_command.c_str());
+
+	return;
+}
+
+
+//////////////////////////////////////////////////////////////////////////
 // Convenience methods
 //////////////////////////////////////////////////////////////////////////
 
@@ -346,34 +420,46 @@ Bool compareVisibilityIterators(VisibilityIterator2 &testTVI,
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-Bool copyTestFile(String &path,String &filename)
+Bool copyTestFile(String &path,String &filename,String &outfilename)
 {
 	Bool ret = True;
-	char* pathChar = getenv ("CASAPATH");
-	if (pathChar != NULL)
+
+	if (path.size() > 0)
 	{
-		// Get base path
-		String pathStr(pathChar);
-		String res[2];
-		casa::split(pathChar,res,2,String(" "));
+		char* pathChar = getenv ("CASAPATH");
+		if (pathChar != NULL)
+		{
+			// Get base path
+			String pathStr(pathChar);
+			String res[2];
+			casa::split(pathChar,res,2,String(" "));
 
-		// Generate full qualified filename
-		String fullfilename(res[0]);
-		fullfilename += path + "/" + filename;
+			// Generate full qualified filename
+			String fullfilename(res[0]);
+			fullfilename += path + "/" + filename;
 
-		// Remove any previously existing copy
-		String rm_command = String ("rm -rf ") + filename + String("*");
-		system(rm_command.c_str());
+			// Remove any previously existing copy
+			String rm_command = String ("rm -rf ") + outfilename;
+			system(rm_command.c_str());
 
-		// Make a copy of the file in the working directory
-		String cp_command = String ("cp -r ") + fullfilename + String(" .");
-		Int ret1 = system(cp_command.c_str());
+			// Make a copy of the file in the working directory
+			String cp_command = String ("cp -r ") + fullfilename + String(" ") + outfilename;
+			Int ret1 = system(cp_command.c_str());
 
-		// Make a second copy of the MS to serve as reference file
-		if (ret1 != 0)
+			// Check that copy command was successful
+			if (ret1 != 0)
+			{
+				cout << RED;
+				cout << "TEST FILE NOT FOUND: " << fullfilename << endl;
+				cout << RESET;
+
+				ret = False;
+			}
+		}
+		else
 		{
 			cout << RED;
-			cout << "TEST FILE NOT FOUND: " << fullfilename << endl;
+			cout << "CASAPATH ENVIRONMENTAL VARIABLE NOT DEFINED" << endl;
 			cout << RESET;
 
 			ret = False;
@@ -381,11 +467,23 @@ Bool copyTestFile(String &path,String &filename)
 	}
 	else
 	{
-		cout << RED;
-		cout << "CASAPATH ENVIRONMENTAL VARIABLE NOT DEFINED" << endl;
-		cout << RESET;
+		// Remove any previously existing copy
+		String rm_command = String ("rm -rf ") + outfilename;
+		system(rm_command.c_str());
 
-		ret = False;
+		// Make a copy of the file in the working directory
+		String cp_command = String ("cp -r ") + filename + String(" ") + outfilename;
+		Int ret1 = system(cp_command.c_str());
+
+		// Check that copy command was successful
+		if (ret1 != 0)
+		{
+			cout << RED;
+			cout << "TEST FILE NOT FOUND: " << filename << endl;
+			cout << RESET;
+
+			ret = False;
+		}
 	}
 
 	return ret;
