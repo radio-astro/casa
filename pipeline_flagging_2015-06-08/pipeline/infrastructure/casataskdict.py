@@ -57,8 +57,6 @@ CasaTaskDict = {
                    'hifa_timegaincal'      : 'TimeGaincal',
                    'hifa_tsyscal'          : 'Tsyscal',
                    'hifa_tsysflag'         : 'Tsysflag',
-                   'hifa_tsysflagchans'    : 'Tsysflagchans',
-                   'hifa_tsysflagspectra'  : 'Tsysflagspectra',
                    'hifa_wvrgcal'          : 'Wvrgcal',
                    'hifa_wvrgcalflag'      : 'Wvrgcalflag',
                    'hifv_importdata'       : 'VLAImportData',
@@ -100,8 +98,6 @@ classToCASATask = {
     hifa_tasks.TimeGaincal            : 'hifa_timegaincal',
     hifa_tasks.Tsyscal                : 'hifa_tsyscal',
     hifa_tasks.Tsysflag               : 'hifa_tsysflag',
-    hifa_tasks.Tsysflagchans          : 'hifa_tsysflagchans',
-    hifa_tasks.Tsysflagspectra        : 'hifa_tsysflagspectra',
     hifa_tasks.Wvrgcal                : 'hifa_wvrgcal',
     hifa_tasks.Wvrgcalflag            : 'hifa_wvrgcalflag',
     # Interferometry tasks ---------------------------------------------------

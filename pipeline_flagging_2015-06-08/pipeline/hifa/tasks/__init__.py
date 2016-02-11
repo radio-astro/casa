@@ -13,8 +13,6 @@ from .linpolcal import Linpolcal
 from .spwphaseup import SpwPhaseup
 from .tsyscal import Tsyscal
 from .tsysflag import Tsysflag
-from .tsysflagchans import Tsysflagchans
-from .tsysflagspectra import Tsysflagspectra
 from .wvrgcal import Wvrgcal
 from .wvrgcalflag import Wvrgcalflag
 from .dbservice import Fluxdb
