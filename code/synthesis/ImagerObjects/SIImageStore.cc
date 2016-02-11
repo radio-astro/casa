@@ -1285,7 +1285,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 
     normPSF();
 
-    cout << "In dividePSFByWeight : itsUseWeight : " << itsUseWeight << endl;
+    //    cout << "In dividePSFByWeight : itsUseWeight : " << itsUseWeight << endl;
     if( itsUseWeight )
     { 
 	
