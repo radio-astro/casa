@@ -234,6 +234,10 @@ class Tsysflag(basetask.StandardTaskTemplate):
         result = TsysflagResults()
         result.caltable = inputs.caltable
 
+        # Load the input tsys caltable and store its vis in the result
+        tsystable = caltableaccess.CalibrationTableDataFiller.getcal(inputs.caltable)        
+        result.vis = tsystable.vis
+
         # Collect requested flag metrics from inputs into a dictionary.
         # NOTE: each key in the dictionary below should have been added to 
         # the default value for the "metric_order" property in TsysflagInputs,
@@ -293,7 +297,8 @@ class Tsysflag(basetask.StandardTaskTemplate):
         Analyses the Tsysflag result:
 
         Identifies, for each spw, which antennas have been entirely flagged for all timestamps,
-        and raises a warning about these. Removes fully flagged antennas from the refant list.
+        and raises a warning about these. Identifies antennas that are entirely flagged
+        in all Tsys spws.
         """
 
         # Define the 2D metrics based on which we can determine if any antennas were entirely flagged.
@@ -323,61 +328,87 @@ class Tsysflag(basetask.StandardTaskTemplate):
                     fields[time] = row.get('FIELD_ID')
             fields_sorted = [fields[time] for time in sorted(fields.keys())]
             
+            # Get the MS object and science spw ids.
             ms = self.inputs.context.observing_run.get_ms(name=self.inputs.vis)
+            science_spw_ids = [spw.id for spw in ms.get_spectral_windows(science_windows_only=True)]
+
+            # Using the CalTo object in the TsysflagspectraResults from the
+            # last-ran testable metric, identify which are the Tsys spectral
+            # windows.
+            calto = result.components[metric_to_test].final[0]
+            tsys_spw_ids = [tsys for (spw,tsys) in enumerate(calto.spwmap) 
+              if spw in science_spw_ids and spw not in result.unmappedspws]
             
             # Create translation dictionary, reject empty antenna name strings
             antenna_id_to_name = {ant.id: ant.name for ant in ms.antennas if ant.name.strip()}
-            
+
             # Perform test separately for each of these intents.
             intents = ['BANDPASS', 'AMPLITUDE', 'PHASE']
+
+            # Initialize set of antennas that are fully flagged for all spws, for any intent
+            ants_fully_flagged_in_all_spws_any_intent = set()
             
             for intent in intents:
             
-                ants_flagged = {}
+                # Initialize dictionary of antennas fully flagged for this intent
+                ants_fully_flagged = collections.defaultdict(set)
             
                 # Identify which fields belong to this intent
                 intentfields = [field for field in ms.get_fields(intent=intent)]
             
                 for intentfield in intentfields:
             
-                    # Identify which flagging view rows belong to this/these fields.
+                    # Identify which flagging view rows belong to this field, and continue 
+                    # with check if any were found.
                     intent_view_rows = [i for i, field in enumerate(fields_sorted) if field == intentfield.id]
-            
-                    # Go through each view product for the specified metric.
-                    for description in result.components[metric_to_test].descriptions():
-        
-                        # Get final view
-                        view = result.components[metric_to_test].last(description)
-        
-                        # Select the rows in the view that belong to the intentfield.
-                        flag_sel = view.flag[:,intent_view_rows]
-                        flag_reason_sel = view.flag_reason_plane[:,intent_view_rows]
-        
-                        # For each antenna, if all timestamps are flagged, save it as a warning to issue.
-                        for iant, ant in enumerate(flag_sel):
-                            # If all timestamps are flagged...
-                            if ant.all():
-                                # Create entry for spw if necessary
-                                if view.spw not in ants_flagged.keys():
-                                    ants_flagged[view.spw] = {}
-                                # Create entry for iant if necessary
-                                if iant not in ants_flagged[view.spw].keys():
-                                    ants_flagged[view.spw][iant] = set()
-                                ants_flagged[view.spw][iant].update(flag_reason_sel[iant])
-            
-                    # Raise warning for each flagged antenna:
-                    for spw, ants in ants_flagged.items():
+
+                    if intent_view_rows:
                         
-                        # Convert antenna IDs to names and create a string.
-                        ant_str = ", ".join(map(str, [antenna_id_to_name[key] for key in ants.keys()]))
-    
-                        # Raise the warning.
-                        LOG.warning("%s - for intent %s (field %s: %s) and spw %s, the following antennas are fully flagged: %s" % 
-                          (ms.basename, intent, intentfield.id, intentfield.name, spw, ant_str))
+                        # Go through each view product for the specified metric.
+                        for description in result.components[metric_to_test].descriptions():
+            
+                            # Get final view.
+                            view = result.components[metric_to_test].last(description)
+            
+                            # Select the rows in the view that belong to the intentfield.
+                            flag_selection = view.flag[:,intent_view_rows]
+            
+                            # For each antenna in selection...
+                            for iant, flag_for_ant in enumerate(flag_selection):
+
+                                # If all timestamps for antenna are flagged...
+                                if flag_for_ant.all():
+                                    # Append antenna to set of fully flagged antennas.
+                                    ants_fully_flagged[view.spw].update([iant])
+
+                        # Raise warning for each flagged antenna:
+                        for spw, iants in ants_fully_flagged.items():
+                            
+                            # Convert antenna IDs to names and create a string.
+                            ants_str = ", ".join(map(str, [antenna_id_to_name[iant] for iant in iants]))
+        
+                            # Raise the warning.
+                            LOG.warning("%s - for intent %s (field %s: %s) and spw %s, the following antennas are fully flagged: %s" % 
+                              (ms.basename, intent, intentfield.id, intentfield.name, spw, ants_str))
+                
+                # Identify if any antennas were fully flagged in all science spws:
+                # If all Tsys spws appear as keys the dictionary of fully flagged antennas...
+                if set(ants_fully_flagged.keys()) == set(tsys_spw_ids):
+                    # Update the aggregate set of fully flagged antennas with
+                    # the intersection of antennas fully flagged for each spw,
+                    # for the current intent.
+                    ants_fully_flagged_in_all_spws_any_intent.update(
+                      set.intersection(*ants_fully_flagged.values()))
         else:
             LOG.trace("Cannot test if any antennas were entirely flagged "
                       "since none of the following flagging metrics were evaluated: "
                       "{0}".format(', '.join(testable_metrics)))
+        
+        # Store the set of antennas that are fully flagged for all Tsys spws
+        # in any of the intents in the result as a list of antenna names.
+        # These antennas should be removed from the refant list upon merging 
+        # the result into the context.
+        result.bad_antennas = [antenna_id_to_name[iant] for iant in ants_fully_flagged_in_all_spws_any_intent]
         
         return result
     
