@@ -28,7 +28,7 @@ class TsysflagInputs(basetask.StandardInputs):
       flag_derivative=None, fd_max_limit=None,
       flag_edgechans=None, fe_edge_limit=None,
       flag_fieldshape=None, ff_refintent=None, ff_max_limit=None,
-      tmf1_limit=None, tmef1_limit=None, ff_tmf1_limit=None,
+      tmf1_limit=None, tmef1_limit=None,
       flag_birdies=None, fb_sharps_limit=None, 
       metric_order=None):
 
@@ -178,19 +178,6 @@ class TsysflagInputs(basetask.StandardInputs):
         if value is None:
             value = True
         self._flag_toomany = value
-
-    #FIXME: add legacy support for ff_tmf1_limit; if set, then 
-    # raise warning that it is being deprecated and 
-    # interpreted as tmf1_limit.
-    @property
-    def ff_tmf1_limit(self):
-        return self._ff_tmf1_limit
-
-    @ff_tmf1_limit.setter
-    def ff_tmf1_limit(self, value):
-        if value is None:
-            value = 0.666
-        self._ff_tmf1_limit = value
 
     @property
     def tmf1_limit(self):
