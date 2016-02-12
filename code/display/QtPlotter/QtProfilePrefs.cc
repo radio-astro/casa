@@ -55,7 +55,7 @@ namespace casa {
 	QtProfilePrefs::QtProfilePrefs(QWidget *parent, bool stateAutoX, bool stateAutoY,
 	                               int stateGrid, int stateMProf, int stateRel, bool showToolTips,
 	                               bool showTopAxis, bool displayAsStepFunction,
-	                               bool opticalFit, bool channelLine, bool singleChannelImage )
+	                               bool channelLine, bool singleChannelImage )
 		:QDialog(parent) {
 		// paint the GUI
 		setupUi(this);
@@ -78,8 +78,27 @@ namespace casa {
 		toolTipsDefault = settings.value( TOOLTIPS, showToolTips ).toBool();
 		toolTipsCheckBox -> setChecked( toolTipsDefault );
 
-		opticalDefault = settings.value( OPTICAL, opticalFit ).toBool();
+		QVariant result = settings.value( OPTICAL );
+		bool settingsSaved = true;
+		if ( !result.isNull() ){
+			opticalDefault = settings.value( OPTICAL).toBool();
+		}
+		else {
+			//If the optical versus radio setting does not exist, force users to choose.
+			if ( QMessageBox::question(this, "Radio vs Optical?",
+			              "Use the radio version instead of the optical version?",
+			              QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes){
+				opticalDefault = false;
+			}
+			else {
+				opticalDefault = true;
+			}
+			settingsSaved = false;
+		}
 		opticalSpecFitCheckBox -> setChecked( opticalDefault );
+		if ( !settingsSaved ){
+			persist();
+		}
 
 		topAxisDefault = settings.value( TOP_AXIS, showTopAxis ).toBool();
 		if ( opticalDefault ){

@@ -78,7 +78,7 @@ namespace casa {
 		QtProfilePrefs(QWidget *parent = 0);
 		QtProfilePrefs(QWidget *parent, bool stateAutoX, bool stateAutoY, int showGrid,
 		               int stateMProf, int stateRel, bool showToolTips, bool showTopAxis,
-		               bool displayStepFunction, bool opticalFitter,
+		               bool displayStepFunction,
 		               bool channelLine, bool singleChannelImage);
 		~QtProfilePrefs();
 		void syncUserPreferences();

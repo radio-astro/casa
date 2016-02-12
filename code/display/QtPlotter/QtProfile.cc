@@ -634,7 +634,7 @@ namespace casa {
 	void QtProfile::initPreferences() {
 		profilePrefs = new QtProfilePrefs(this,pixelCanvas->getAutoScaleX(), pixelCanvas->getAutoScaleY(),
 		                                  pixelCanvas->getShowGrid(),stateMProf, stateRel, pixelCanvas->getShowToolTips(), showTopAxis,
-		                                  pixelCanvas->isDisplayStepFunction(), specFitSettingsWidget->isOptical(),
+		                                  pixelCanvas->isDisplayStepFunction(),
 		                                  pixelCanvas->isShowChannelLine(), false);
 		connect(profilePrefs, SIGNAL(currentPrefs(bool, bool, int, int, int, bool, bool, bool, bool, bool, bool)),
 		        this, SLOT(setPreferences(bool, bool, int, int, int, bool, bool, bool, bool, bool, bool)));
