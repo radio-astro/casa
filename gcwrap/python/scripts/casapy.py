@@ -1537,6 +1537,6 @@ for x in os.listdir('.'):
 print "leaving casapy..."
 try:
     sys.exit(0)
-except:
+except Exception:
     print "atexit( ) handlers failed..."
     os._exit(0)
