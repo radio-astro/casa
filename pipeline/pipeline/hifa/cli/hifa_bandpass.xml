@@ -95,6 +95,11 @@ window in each measurement set.
     <value>240</value>
   </param>
 
+  <param type="bool" name="evenbpints" subparam="true">
+    <description>Force frequency solint to even bandpass intervals</description>
+    <value>True</value>
+  </param>
+
   <param type="double" name="bpsnr" subparam="true">
     <description>SNR for bandpass solution</description>
     <value>50.0</value>
@@ -189,6 +194,7 @@ window in each measurement set.
     <when param="hm_bandpass">
       <equals type="string" value="snr">
         <default param="solint"><value type="string">inf</value></default>
+        <default param="evenbpints"><value type="bool">True</value></default>
         <default param="bpsnr"><value type="double">50.0</value></default>
         <default param="bpnsols"><value type="int">8</value></default>
       </equals>
@@ -312,6 +318,11 @@ maxchannels --  The bandpass solution smoothing factor in channels. The
     Used if hm_bandpass='smoothed".
     default: 240
     example: 0
+
+evenbpints -- Force the per spe frequency solint to be evenly divisible 
+    into the spw bandpass if hm_bandpass='snr' 
+    default: True
+    example: evenbpints=False
 
 bpsnr -- The required SNR for the bandpass solution. Used only if
     hm_bandpass='snr' 
