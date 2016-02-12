@@ -13,7 +13,7 @@
 #
 # To test:  see plotbandpass_regression.py
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.77 2016/02/03 20:53:44 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.78 2016/02/12 13:06:31 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -89,7 +89,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.77 2016/02/03 20:53:44 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.78 2016/02/12 13:06:31 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -1040,7 +1040,6 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
     
     xframe = xframeStart
     previousSubplot = xframe
-    alreadyPlottedAmp = False  # needed for (overlay='baseband', yaxis='both')
     xcolor = 'b'
     ycolor = 'g'
     pcolor = ['b','g']
@@ -2349,7 +2348,6 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
               if (debug):
                   print "1)Setting xframe to %d" % xframeStart
               xframe = xframeStart
-              alreadyPlottedAmp = False  # needed for (overlay='baseband', yaxis='both')
               if (xctr+1 < len(antennasToPlot)):
                   # don't clear the final plot when finished
                   pb.clf()
@@ -2695,6 +2693,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
       spwctr = 0
       spwctrFirstToPlot = 0
       antstring, Antstring = buildAntString(xant,msFound,msAnt)
+      alreadyPlottedAmp = False  # needed for (overlay='baseband', yaxis='both')  CAS-6477
       finalSpwWasFlagged = False   # inserted on 22-Apr-2014 for g25.27
       while ((bbctr < len(spwsToPlotInBaseband) and groupByBaseband) or
              (spwctr < len(spwsToPlot) and groupByBaseband==False)
@@ -3292,6 +3291,9 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
           
 ################### Here is the amplitude plotting ############    stopping here Sep 4, 2013
                   if (yaxis.find('amp')>=0 or yaxis.find('both')>=0 or yaxis.find('ap')>=0) and doneOverlayTime==False:
+                    if (overlayBasebands and amplitudeWithPhase): # CAS-6477
+                        if (float(xframe/10) != xframe*0.1 and alreadyPlottedAmp):
+                            xframe -= 2
           
                     if (debug):
                         print "amp: xctr=%d, xant=%d, myap=%d, mytime=%d(%s), firstTimeMatch=%d, bOverlay=" % (xctr, xant, myap, mytime, utstring(uniqueTimes[mytime],3), firstTimeMatch), bOverlay
@@ -3309,7 +3311,10 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                               newylimits = [LARGE_POSITIVE, LARGE_NEGATIVE]
                     else: # (myap == 0)
                       if (overlayTimes == False or mytime==firstTimeMatch):
-                        if ((overlaySpws == False and overlayBasebands==False) or spwctr==spwctrFirstToPlot or spwctr>len(spwsToPlot)):
+                        if ((overlaySpws == False and overlayBasebands==False) or 
+                            spwctr==spwctrFirstToPlot or 
+                            (overlayBasebands and amplitudeWithPhase) or # CAS-6477
+                            spwctr>len(spwsToPlot)):
                           if (overlayAntennas==False or xctr==firstUnflaggedAntennaToPlot
                               or xctr>antennasToPlot[-1]):  # 2012-05-24, to fix the case where all ants flagged on one timerange
                               xframe += 1
@@ -3329,7 +3334,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                       if (previousSubplot != xframe):
                           drewAtmosphere = False
                       previousSubplot = xframe
-                      alreadyPlottedAmp = True  # needed for (overlay='baseband', yaxis='both')
+                      alreadyPlottedAmp = True  # needed for (overlay='baseband', yaxis='both')  CAS-6477
                       pb.hold(overlayAntennas or overlayTimes or overlaySpws or overlayBasebands)
                       gampx = np.abs(gplotx)
                       if (nPolarizations == 2):
@@ -4157,7 +4162,6 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                      if (debug):
                                          print "2)Setting xframe to %d" % xframeStart
                                      xframe = xframeStart
-                                     alreadyPlottedAmp = False  # needed for (overlay='baseband', yaxis='both')
                                      myUniqueColor = []
                                      continue
                                else:
@@ -4177,7 +4181,6 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                if (debug):
                                    print "3)Setting xframe to %d" % xframeStart
                                xframe = xframeStart
-                               alreadyPlottedAmp = False  # needed for (overlay='baseband', yaxis='both')
                                myUniqueColor = []
                       else:
                           if (debug):
@@ -4197,7 +4200,9 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                               pchannels2 = [xchannels2,ychannels2]  # this is necessary because np.diff reduces nchan by 1
                               pfrequencies2 = [xfrequencies2,yfrequencies2]  # this is necessary because np.diff reduces nchan by 1
                       if (overlayTimes == False or mytime==firstTimeMatch):  
-                        if ((overlaySpws == False and overlayBasebands==False) or spwctr==spwctrFirstToPlot or spwctr>spwsToPlot[-1]):
+                        if ((overlaySpws == False and overlayBasebands==False) or spwctr==spwctrFirstToPlot or 
+                            spwctr>spwsToPlot[-1] or
+                            (overlayBasebands and amplitudeWithPhase)): # CAS-6477
                           if (overlayAntennas==False or xctr==firstUnflaggedAntennaToPlot
                               or xctr>antennasToPlot[-1]):  # 2012-05-24, to fix the case where all ants flagged on one timerange
                               xframe += 1
@@ -4974,7 +4979,6 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                       if (debug):
                           print "4)Setting xframe to %d" % (xframeStart)
                       xframe = xframeStart
-                      alreadyPlottedAmp = False  # needed for (overlay='baseband', yaxis='both')
                       myUniqueColor = []
                       pb.subplots_adjust(hspace=myhspace, wspace=mywspace)
                       if (myinput.find('b') >= 0):
