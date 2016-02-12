@@ -35,6 +35,7 @@ class ALMAPhcorBandpassInputs(bandpassmode.BandpassModeInputs):
     #    'smoothed' mode
     maxchannels = basetask.property_with_default('maxchannels', 240)
     #    'snr' mode
+    evenbpints = basetask.property_with_default('evenbpints', True)
     bpsnr = basetask.property_with_default('bpsnr', 50.0)
     bpnsols = basetask.property_with_default('bpnsols', 8)
     
@@ -43,13 +44,13 @@ class ALMAPhcorBandpassInputs(bandpassmode.BandpassModeInputs):
                  phaseupbw=None, phaseupsolint=None,
                  phaseupsnr=None, phaseupnsols=None,
                  hm_bandpass=None, solint=None, maxchannels=None,
-                 bpsnr=None, bpnsols=None,
+                 evenbpints=None, bpsnr=None, bpnsols=None,
                  **parameters):
         super(ALMAPhcorBandpassInputs, self).__init__(context, mode='channel',
             hm_phaseup=hm_phaseup, phaseupbw=phaseupbw,
             phaseupsolint=phaseupsolint, phaseupsnr=phaseupsnr, phaseupnsols=phaseupnsols,
             hm_bandpass=hm_bandpass, solint=solint, maxchannels=maxchannels,
-            bpsnr=bpsnr, bpnsols=bpnsols,
+            evenbpints=evenbpints, bpsnr=bpsnr, bpnsols=bpnsols,
             **parameters)
 
 
@@ -119,6 +120,7 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
             spw            = inputs.spw,
             phaseupsnr     = inputs.phaseupsnr,
             minphaseupints = inputs.phaseupnsols,
+            evenbpints     = inputs.evenbpints,
             bpsnr          = inputs.bpsnr,
             minbpnchan    = inputs.bpnsols
         )
