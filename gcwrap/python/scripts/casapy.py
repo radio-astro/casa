@@ -1535,8 +1535,13 @@ for x in os.listdir('.'):
 ## leave killing off children to the watchdog...
 ## so everyone has a chance to die naturally...
 print "leaving casapy..."
-try:
-    sys.exit(0)
-except Exception:
-    print "atexit( ) handlers failed..."
-    os._exit(0)
+def excepthook(exctype, value, tb):
+    print "-----------------------------------------------------------------------------"
+    print "error during shutdown"
+    print "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --"
+    print exctype
+    print value
+    print "-----------------------------------------------------------------------------"
+
+sys.excepthook = excepthook
+sys.exit(0)
