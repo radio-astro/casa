@@ -1548,9 +1548,7 @@ void MSCache::flagToDisk(const PlotMSFlagging& flagging,
 	// Establish a scope in which the VisBuffer is properly created/destroyed
 	{
         // CAS-8325: use same datacolumn that was plotted (e.g. Float)
-        String datacol = dataColumn_;
-        if (datacol == "NONE") datacol = "DATA";
-		setUpVisIter(selection_, calibration_, datacol, True, False);
+		setUpVisIter(selection_, calibration_, dataColumn_, True, False);
 
 		vi_p->originChunks();
 		vi_p->origin();
