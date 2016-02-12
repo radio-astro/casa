@@ -158,6 +158,21 @@ class uvfits_test(unittest.TestCase):
         msname = "CAS-7696.ms"
         self.assertTrue(myms.fromfits(msname, fitsname), "Failed to import uvfits file")
         myms.done()
+
+    def test_export_overwrite(self):
+        """CAS-5492: test the overwrite parameter when exporting MSes to uvfits"""
+        myms = mstool()
+        msname = datapath + "uvfits_test.ms"
+        myms.open(msname)
+        fitsname = "CAS-5492.uvfits"
+        self.assertTrue(myms.tofits(fitsname))
+        # fail because overwrite=False
+        self.assertFalse(myms.tofits(fitsname, overwrite=False))
+        # succeed because overwrite=True
+        self.assertTrue(myms.tofits(fitsname, overwrite=True))
+        myms.done()
+        self.assertFalse(exportuvfits(msname, fitsname, overwrite=False))
+        self.assertTrue(exportuvfits(msname, fitsname, overwrite=True))
             
 def suite():
     return [uvfits_test]        

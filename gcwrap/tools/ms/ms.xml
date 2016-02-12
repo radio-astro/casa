@@ -1122,17 +1122,6 @@ the ms definition itself. -->
      <value></value>
      </param>
     
-     <!--param type="int" direction="in" name="nchan">
-     <description>number of channels in output, default of -1 implies 
-     all</description>
-     <value>-1</value>
-     </param-->	
-    
-     <!--param type="int" direction="in" name="start">
-     <description>Start channel in input data</description>
-     <value>0</value>
-     </param-->	
-    
      <param type="int" direction="in" name="width">
      <description>number of input channels to average</description>
      <value>1</value>
@@ -1143,7 +1132,6 @@ the ms definition itself. -->
      <any type="variant" />
      <value></value>
      </param>
-
      
          <param type="string" direction="in" name="time">
      <description>Limit data selected to be within a given time range. Syntax is the defined in the msselection link</description>
@@ -1193,6 +1181,12 @@ the ms definition itself. -->
      <description>If combinespw==True, pad data with flags to fit IFs</description>
      <value>false</value>
      </param>
+
+     <param type="bool" name="overwrite">
+        <description>Overwrite output file if it exists?</description>
+        <value>false</value>
+     </param>
+
   </input>
   <returns type="bool"/>
 
@@ -1259,6 +1253,10 @@ the ms definition itself. -->
     first channel of the spw expression. The number of output channels
     is determined by spw expression and the width. The width is the 
     number of channels of the input data to make 1 channel of the output data. 
+
+    One may overwrite the specified output file if it exists by specifying
+    overwrite=True.
+
   </description>
 
   <example>

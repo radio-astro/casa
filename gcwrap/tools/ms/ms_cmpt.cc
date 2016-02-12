@@ -518,13 +518,13 @@ ms::name()
 bool ms::tofits(
 	const std::string& fitsfile, const std::string& column,
 	const casac::variant& field, const casac::variant& spw,
-	const int width,
+	int width,
 	const ::casac::variant& baseline, const std::string& time,
 	const ::casac::variant& scan, const ::casac::variant& uvrange,
-	const std::string& taql, const bool writesyscal,
-	const bool multisource, const bool combinespw,
-	const bool writestation, const bool padwithflags)
-{
+	const std::string& taql, bool writesyscal,
+	bool multisource, bool combinespw,
+	bool writestation, bool padwithflags, bool overwrite
+) {
 	Bool rstat(True);
 	try {
 		if(!detached()) {
@@ -612,10 +612,10 @@ bool ms::tofits(
 					fitsfile, selms, column, istart, inchan,
 					istep, writesyscal, multisource, combinespw,
 					writestation, 1.0, padwithflags, iwidth,
-					fieldID
+					fieldID, overwrite
 					)
 				) {
-				*itsLog << LogOrigin("ms", "tofits")
+				*itsLog << LogOrigin("ms", __func__)
 				        << LogIO::SEVERE << "Conversion to FITS failed"<< LogIO::POST;
 				rstat = False;
 			}

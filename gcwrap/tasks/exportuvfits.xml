@@ -52,22 +52,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		<description>Select data based on time range</description>
 		<value></value>
 	</param>
-        <!--
-	<param type="int" name="nchan">
-		<description>Number of channels to select (superceded by spw)</description>
-		<value>-1</value>
-	</param>
-
-	<param type="int" name="start">
-		<description>Start channel (superceded by spw)</description>
-		<value>0</value>
-	</param>
-        nchan ** Number of channels to select (superceded by spw)
-                default: =&gt; -1 (all)
-        start ** Start channel (superceded by spw)
-                default =&gt; 0;
-        -->
-
 	<param type="int" name="avgchan">
 		<description>Channel averaging width (value > 1 indicates averaging)</description>
 		<value>1</value>
@@ -97,15 +81,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		<description>Fill in missing data with flags to fit IFs</description>
 		<value>False</value>
 	</param>
-
-        <constraints>
+    <param type="bool" name="overwrite">
+        <description>Overwrite output file if it exists?</description>
+        <value>False</value>
+    </param>
+    <constraints>
           <when param="combinespw">
 	    <equals type="bool" value="True">
 	      <default param="padwithflags"><value type="bool">True</value> </default>
 	    </equals>
 	    <equals type="bool" value="False"/>
           </when>
-        </constraints>
+    </constraints>
 </input>
 <example>
 
@@ -190,9 +177,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 default: True;
         writesyscal -- Write GC and TY tables
                 default: =&gt; False; Not yet available
-        async --  Run asynchronously
-                default = False;
-
+        overwrite -- Overwrite specified output file if it exists?
 </example> 
 
 </task>
