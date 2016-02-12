@@ -23,13 +23,18 @@ class TsysflagResults(resultobjects.TsyscalResults):
 
         # component results
         self.components = collections.OrderedDict()
+        
+        # task completion status / reason for incompleteness
+        self.task_incomplete_reason = ''
+        
+        # list of entirely flagged antennas (to be removed from refants)
+        self.bad_antennas = []
 
     def merge_with_context(self, context):
         
         # If any antennas were found to be fully flagged,
         # remove them from the list of reference antennas.
         if self.bad_antennas:
-
             # Get the MS, and proceed if it contains a list of 
             # reference antennas.
             ms = context.observing_run.get_ms(name=self.vis)
@@ -54,7 +59,7 @@ class TsysflagResults(resultobjects.TsyscalResults):
                     # Remove fully flagged ants from refants, and store back in MS
                     for antenna in refants_to_remove:
                         refant.remove(antenna)
-                    ms.reference_antenna = ','.join(refant)            
+                    ms.reference_antenna = ','.join(refant)
  
     def add(self, name, result):
         self.components[name] = result

@@ -244,14 +244,18 @@ class Tsysflag(basetask.StandardTaskTemplate):
         # an error and stop further evaluation of Tsysflag.
         for metric in metric_order_as_list:
             if metric not in metrics_from_inputs.keys():
-                LOG.error('Illegal value in parameter "metric_order": {0}. Legal values are: {1}.'.format(metric, ', '.join(metrics_from_inputs.keys())))
+                errmsg = "Input parameter 'metric_order' contains illegal value: '{0}'. Legal values are: {1}.".format(metric, ', '.join(metrics_from_inputs.keys()))
+                LOG.error(errmsg)
+                result.task_incomplete_reason = errmsg
                 return result
         
         # If any of the requested metrics are not defined in the metric order,
         # then log an error and stop further evaluation of Tsysflag.
         for metric_name, metric_enabled in metrics_from_inputs.items():
             if metric_enabled and metric_name not in metric_order_as_list:
-                LOG.error('Flagging metric "{0}" is enabled, but not specified in "metric_order", cannot continue.'.format(metric_name))
+                errmsg = "Flagging metric '{0}' is enabled, but not specified in 'metric_order', cannot continue.".format(metric_name)
+                LOG.error(errmsg)
+                result.task_incomplete_reason = errmsg
                 return result
 
         # Initialize ordered list of metrics to evaluate
@@ -287,15 +291,19 @@ class Tsysflag(basetask.StandardTaskTemplate):
         and raises a warning about these. Identifies antennas that are entirely flagged
         in all Tsys spws.
         """
+                
+        # If the task ended prematurely, then no need to analyse the result
+        if result.task_incomplete_reason:
+            return result
 
         # Define the 2D metrics based on which we can determine if any antennas were entirely flagged.
         testable_metrics = ['nmedian', 'derivative', 'fieldshape', 'toomany']
 
         # Identify which of the testable metrics were evaluated:
-        if hasattr(result, 'metric_order'):
+        try:
             testable_metrics_completed = [metric for metric in result.metric_order 
               if metric in testable_metrics and metric in result.components.keys()]
-        else:
+        except AttributeError:
             testable_metrics_completed = []
 
         # If any of the testable metrics were completed...

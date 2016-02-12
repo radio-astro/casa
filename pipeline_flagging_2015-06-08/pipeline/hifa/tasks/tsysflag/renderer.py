@@ -68,104 +68,127 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     def update_mako_context(self, ctx, context, results):
         weblog_dir = os.path.join(context.report_dir,
                                   'stage%s' % results.stage_number)
-
+        
+        # Initialize items that are to be exported to the
+        # mako context
+        task_incomplete_msg = collections.defaultdict(dict)
+        components = []
         stdplots = collections.defaultdict(dict)
         extraplots = collections.defaultdict(dict)
-        for result in results:
-            vis = os.path.basename(result.inputs['vis'])
-            for component, r in result.components.items():
-                if not r.view:
-                    continue
-                try:
-                    renderer = self._do_standard_plots(context, result, component)
-                    stdplots[component][vis] = renderer
-                except TypeError:
-                    continue
-
-                try:
-                    renderer = self._do_extra_plots(context, result, component)
-                    extraplots[component][vis] = renderer
-                except (TypeError, NotImplementedError):
-                    continue
-
         flag_totals = collections.defaultdict(dict)
-        for result in results:
-            table = os.path.basename(result.inputs['caltable'])
-
-            # summarise flag state on entry
-            flag_totals[table]['before'] = self._flags_for_result(result, 
-                    context, summary='first')
-
-            # summarise flagging by each step
-            for component, r in result.components.items():
-                flag_totals[table][component] = self._flags_for_result(r, 
-                                                                      context)
-
-            # summarise flag state on exit
-            flag_totals[table]['after'] = self._flags_for_result(result, 
-                    context, summary='last')
-
-        htmlreports = self._get_htmlreports(context, results)
-        
         summary_plots = {}
         subpages = {}
         eb_plots = []
         last_results = []
+
+        # For each result in the results list...
         for result in results:
-            # summary plots at end of flagging sequence, beware empty sequence
-            lastflag = result.components.keys()
-            if lastflag:
-                lastflag = lastflag[-1]
-            lastresult = result.components[lastflag]
+            
+            # If the result is marked as from a Tsysflag task that ended
+            # prematurely, then store the reason to be passed to mako context.
+            if result.task_incomplete_reason:
+                task_incomplete_msg[result.inputs['vis']] = result.task_incomplete_reason
+                
+            # Otherwise, continue with generating all necessary
+            # reports, plots, etc.
+            else:
+                
+                # Retrieve the metric_order from the result.
+                # NOTE: metric_order is assumed to be the same
+                # for all results in a ResultsList.
+                components = result.metric_order
 
-            plotter = displays.TsysSummaryChart(context, lastresult)
-            plots = plotter.plot()
-            vis = os.path.basename(lastresult.inputs['vis'])
-            summary_plots[vis] = plots
+                # Render the standard and extra plots
+                vis = os.path.basename(result.inputs['vis'])
+                for component, r in result.components.items():
+                    if not r.view:
+                        continue
+                    try:
+                        renderer = self._do_standard_plots(context, result, component)
+                        stdplots[component][vis] = renderer
+                    except TypeError:
+                        continue
+    
+                    try:
+                        renderer = self._do_extra_plots(context, result, component)
+                        extraplots[component][vis] = renderer
+                    except (TypeError, NotImplementedError):
+                        continue                
 
-            # generate per-antenna plots
-            plotter = displays.TsysPerAntennaChart(context, lastresult)
-            per_antenna_plots = plotter.plot()
+                # Create flag totals from the summaries:
+                table = os.path.basename(result.inputs['caltable'])
+    
+                # summarise flag state on entry
+                flag_totals[table]['before'] = self._flags_for_result(result, 
+                        context, summary='first')
+                
+                # summarise flagging by each step
+                for component, r in result.components.items():
+                    flag_totals[table][component] = self._flags_for_result(r, 
+                                                                          context)
+    
+                # summarise flag state on exit
+                flag_totals[table]['after'] = self._flags_for_result(result, 
+                        context, summary='last')
 
-            renderer = tsyscalrenderer.TsyscalPlotRenderer(context,
-                                                           lastresult,
-                                                           per_antenna_plots)
+                # Generate the summary plots at end of flagging sequence, 
+                # beware empty sequence
+                lastflag = result.components.keys()
+                if lastflag:
+                    lastflag = lastflag[-1]
+                lastresult = result.components[lastflag]
+    
+                plotter = displays.TsysSummaryChart(context, lastresult)
+                plots = plotter.plot()
+                vis = os.path.basename(lastresult.inputs['vis'])
+                summary_plots[vis] = plots
+    
+                # generate per-antenna plots
+                plotter = displays.TsysPerAntennaChart(context, lastresult)
+                per_antenna_plots = plotter.plot()
+    
+                renderer = tsyscalrenderer.TsyscalPlotRenderer(context,
+                                                               lastresult,
+                                                               per_antenna_plots)
+                with renderer.get_file() as fileobj:
+                    fileobj.write(renderer.render())
+                    # the filename is sanitised - the MS name is not. We need to
+                    # map MS to sanitised filename for link construction.
+                    subpages[vis] = renderer.path
+    
+                eb_plots.extend(per_antenna_plots)
+                last_results.append(lastresult)
+
+        # If there were any valid results, then additionally render plots 
+        # for all EBs in one page
+        if last_results:
+            renderer = tsyscalrenderer.TsyscalPlotRenderer(context, last_results,
+                                                       eb_plots)
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())
-                # the filename is sanitised - the MS name is not. We need to
-                # map MS to sanitised filename for link construction.
-                subpages[vis] = renderer.path
+                # .. and we want the subpage links to go to this master page
+                for vis in subpages:
+                    subpages[vis] = renderer.path
+    
+        # Generate the HTML reports
+        htmlreports = self._get_htmlreports(context, results, components)
 
-            eb_plots.extend(per_antenna_plots)
-            last_results.append(lastresult)
-
-        # additionally render plots for all EBs in one page
-        renderer = tsyscalrenderer.TsyscalPlotRenderer(context, last_results,
-                                                       eb_plots)
-        with renderer.get_file() as fileobj:
-            fileobj.write(renderer.render())
-            # .. and we want the subpage links to go to this master page
-            for vis in subpages:
-                subpages[vis] = renderer.path
-
-        components = results[0].metric_order
-
-        ctx.update({'flags': flag_totals,
-                    'components': components,
+        # Update the mako context.
+        ctx.update({'components': components,
+                    'dirname': weblog_dir,
+                    'extraplots': extraplots,
+                    'flags': flag_totals,
+                    'htmlreports': htmlreports,
+                    'stdplots': stdplots,
                     'summary_plots': summary_plots,
                     'summary_subpage': subpages,
-                    'dirname': weblog_dir,
-                    'stdplots': stdplots,
-                    'extraplots': extraplots,
-                    'htmlreports': htmlreports})
-        
-    def _get_htmlreports(self, context, results):
+                    'task_incomplete_msg': task_incomplete_msg})
+                    
+                    
+    def _get_htmlreports(self, context, results, components):
         report_dir = context.report_dir
         weblog_dir = os.path.join(report_dir,
                                   'stage%s' % results.stage_number)
-
-        r = results[0]
-        components = r.components.keys()
 
         htmlreports = {}
 
@@ -173,18 +196,19 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             htmlreports[component] = {}
 
             for msresult in results:
-                flagcmd_abspath = self._write_flagcmd_to_disk(weblog_dir, 
-                  msresult.components[component], component)
-                report_abspath = self._write_report_to_disk(weblog_dir, 
-                  msresult.components[component], component)
-
-                flagcmd_relpath = os.path.relpath(flagcmd_abspath, report_dir)
-                report_relpath = os.path.relpath(report_abspath, report_dir)
-
-                table_basename = os.path.basename(
-                  msresult.components[component].table)
-                htmlreports[component][table_basename] = \
-                  (flagcmd_relpath, report_relpath)
+                if not msresult.task_incomplete_reason:
+                    flagcmd_abspath = self._write_flagcmd_to_disk(weblog_dir, 
+                      msresult.components[component], component)
+                    report_abspath = self._write_report_to_disk(weblog_dir, 
+                      msresult.components[component], component)
+    
+                    flagcmd_relpath = os.path.relpath(flagcmd_abspath, report_dir)
+                    report_relpath = os.path.relpath(report_abspath, report_dir)
+    
+                    table_basename = os.path.basename(
+                      msresult.components[component].table)
+                    htmlreports[component][table_basename] = \
+                      (flagcmd_relpath, report_relpath)
 
         return htmlreports
 

@@ -66,6 +66,19 @@ $(document).ready(function() {
 });
 </script>
 
+% if any([msg for msg in task_incomplete_msg.values()]):
+  <h2>Error report</h2>
+  
+  <p>For the following measurement sets, the Tsysflag task ended prematurely with the following error message:</p>
+  <ul>
+  % for vis, msg in task_incomplete_msg.items():
+  	<li>${vis} :<br>
+  	${msg}</li>
+  % endfor
+  </ul>
+% endif
+
+<h2>Contents</h2>
 <ul>
 <li><a href="#plots">T<sub>sys</sub> after flagging</a></li>
 <li><a href="#summarytable">Flagged data summary</a></li>
@@ -180,12 +193,12 @@ $(document).ready(function() {
 % endfor
 
 <h2>Flag Step Details</h2>
-The following section provides plots showing the flagging metrics that the pipeline
+<p>The following section provides plots showing the flagging metrics that the pipeline
 uses to determine deviant Tsys measurements, and the flagging commands that resulted 
 from each flagging metric. For certain flagging metrics, the pipeline evaluates the 
 metric separately for each polarisation. However, if the Tsys measurement for an 
 antenna is found to be deviant in one polarisation, the pipeline will flag the 
-antenna for both polarisations. 
+antenna for both polarisations.</p>
 
 % for component in components: 
   % if htmlreports.get(component) is not None:
