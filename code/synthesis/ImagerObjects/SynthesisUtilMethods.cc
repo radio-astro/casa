@@ -1647,6 +1647,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      err +=" is also being requested. Please either reset startmodel='' to use what already exists, or delete " + imageName + ".model.tt* so that it uses the new model specified in startmodel";
 	    }
 	}
+
+	// Check that startmodel exists on disk !
+	for(uInt ss=0;ss<startModel.nelements();ss++)
+	  {
+	    File fp( startModel[ss] );
+	    if( ! fp.exists() ) {err += "Startmodel " + startModel[ss] + " cannot be found on disk.";}
+	  }
+
       }
 
     
