@@ -155,6 +155,9 @@ private:
 			  Bool setFlag,
 			  PlotMSIndexer* indexer, int dataIndex);
 
+  // Datacolumn to use (requested or "adjusted")
+  String dataColumn_;
+
   // Create map of intent names to "intent ids" 
   // since state ids can duplicate intents.
   // Then use map to assign intent ids to replace state ids

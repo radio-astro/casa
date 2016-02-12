@@ -81,7 +81,7 @@ void MSCache::loadIt(vector<PMS::Axis>& loadAxes,
 		ThreadCommunication* thread) {
 
 	// process selected columns			
-	String dataColumn = getDataColumn(loadAxes, loadData);
+	dataColumn_ = getDataColumn(loadAxes, loadData);
 
 	// Apply selections to MS to create selection MS 
 	// and channel/correlation selections
@@ -119,7 +119,7 @@ void MSCache::loadIt(vector<PMS::Axis>& loadAxes,
             try {
                 trapExcessVolume(pendingLoadAxes_);
                 // Now set up TransformingVi2 for averaging/loading data
-                setUpVisIter(selection_, calibration_, dataColumn, False, False);
+                setUpVisIter(selection_, calibration_, dataColumn_, False, False);
                 loadChunks(*vi_p, averaging_, nIterPerAve,
                    loadAxes, loadData, thread);
             } catch(AipsError& log) {
@@ -131,7 +131,7 @@ void MSCache::loadIt(vector<PMS::Axis>& loadAxes,
 		try {
 			// setUpVisIter also gets the VB shapes and 
 			// calls trapExcessVolume:
-			setUpVisIter(selection_, calibration_, dataColumn, False, True, thread);
+			setUpVisIter(selection_, calibration_, dataColumn_, False, True, thread);
 			loadChunks(*vi_p, loadAxes, loadData, thread);
 		} catch(AipsError& log) {
 			loadError(log.getMesg());
@@ -1547,7 +1547,10 @@ void MSCache::flagToDisk(const PlotMSFlagging& flagging,
 
 	// Establish a scope in which the VisBuffer is properly created/destroyed
 	{
-		setUpVisIter(selection_, calibration_, "DATA", True, False);
+        // CAS-8325: use same datacolumn that was plotted (e.g. Float)
+        String datacol = dataColumn_;
+        if (datacol == "NONE") datacol = "DATA";
+		setUpVisIter(selection_, calibration_, datacol, True, False);
 
 		vi_p->originChunks();
 		vi_p->origin();
