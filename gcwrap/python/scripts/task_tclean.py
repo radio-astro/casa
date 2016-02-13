@@ -101,7 +101,7 @@ def tclean(
     interactive,#=False, 
 
     ##### (new) Mask parameters
-    usemask,#='none',
+    usemask,#='user',
     mask,#='',
     pbmask,#='',
     maskthreshold,#='',

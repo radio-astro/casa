@@ -757,7 +757,7 @@ HPX HEALPix grid.  -->
                          ia.calc('iif("xxx.pb">0.3,1.0,0.0)');ia.close() for example), 
                          and supply it via the 'mask' parameter in a subsequent run 
                          (with calcres=F and calcpsf=F to restart directly from the minor cycle).
-                            -- Run tclean with mask='auto-pb' for it to automatically construct
+                            -- Run tclean with usemask='pb' for it to automatically construct
                          a 1/0 mask from the internal T/F mask from .pb at a fixed 0.2 threshold. 
 
                 ----- Note on making PBs for gridders other than mosaic,awproject
@@ -779,7 +779,7 @@ HPX HEALPix grid.  -->
                           niter=0, make the .pb image using the above recipe script (with its 
                           internal T/F mask set at pblimit) and then either make a 1/0 mask 
                           image at whatever desired pb level and supply it via 'mask' or set 
-                          mask='auto-pb' to automatically construct a 1/0 mask at the 0.2 level.
+                          usemask='pb' to automatically construct a 1/0 mask at the 0.2 level.
 
 </description>
 	    <value type="string">standard</value>
@@ -1670,11 +1670,10 @@ HPX HEALPix grid.  -->
     <!-- top level mask type selection -->
    
     <param type="string" name="usemask">
-           <shortdescription>Type of mask(s) for deconvolution (none,user,pb,auto-thresh)</shortdescription>
+           <shortdescription>Type of mask(s) for deconvolution (user,pb,auto-thresh)</shortdescription>
 <description>Type of mask(s) to be used for deconvolution
 
-                       none: (default) no mask 
-                       user: mask image(s) or user specified region file(s) or string CRTF expression(s)
+                       user: (default) mask image(s) or user specified region file(s) or string CRTF expression(s)
                          subparameters: mask, pbmask
                        pb: primary beam mask
                          subparameter: pbmask
@@ -1694,9 +1693,8 @@ HPX HEALPix grid.  -->
                                              or if an externally produced .pb image exists on disk)
 
 </description>
-      <value type="string">none</value>
+      <value type="string">user</value>
 	    <allowed kind="enum">
-	      <value>none</value>
               <value>user</value>
               <value>pb</value>
 	      <value>auto-thresh</value>

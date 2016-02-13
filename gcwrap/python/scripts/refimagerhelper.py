@@ -1381,7 +1381,7 @@ class ImagerParameters():
                  restoringbeam=[],
 #                 mtype='default',
 
-                 usemask='none',
+                 usemask='user',
                  mask='',
                  pbmask=0.0,
                  maskthreshold='',

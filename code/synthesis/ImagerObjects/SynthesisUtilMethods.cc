@@ -3116,7 +3116,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
           {
             autoMaskAlgorithm = "onebox";
           }
-        else if( maskType=="none" )
+        else if( maskType=="user" || maskType=="pb" )
           {
             autoMaskAlgorithm = "";
           }

@@ -65,7 +65,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				       itsBeam(0.0),
 				       itsDeconvolverId(0),
 				       itsScales(Vector<Float>()),
-                                       itsMaskType(String("none")),
+                                       itsMaskType(""),
                                        itsPBMask(0.0),
 				       //itsMaskString(String("")),
 				       itsIsMaskLoaded(False)
@@ -202,7 +202,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // Set up the mask too.
       if( itsIsMaskLoaded==False ) {
         // use mask(s) 
-        if(  itsMaskType !="none" ) {
+        //if(  itsMaskType !="none" ) {
+        if(  itsMaskList[0] != "" || itsMaskType == "pb" || itsAutoMaskAlgorithm != "" ) {
           //auto mask
           if ( itsAutoMaskAlgorithm != "" ) {
             if ( itsPBMask > 0.0 ) {
@@ -212,7 +213,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
               itsMaskHandler->autoMask( itsImages, itsAutoMaskAlgorithm, itsMaskThreshold, itsFracOfPeak, itsMaskResolution);
             }
           }
-          else if( itsMaskType=="user") {
+          else if( itsMaskType=="user" && itsMaskList[0] != "" ) {
             itsMaskHandler->fillMask( itsImages, itsMaskList);
             if( itsPBMask > 0.0 ) {  
               itsMaskHandler->makePBMask(itsImages, itsPBMask);
