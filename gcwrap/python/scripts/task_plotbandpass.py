@@ -13,7 +13,7 @@
 #
 # To test:  see plotbandpass_regression.py
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.78 2016/02/12 13:06:31 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.79 2016/02/13 05:04:12 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -89,7 +89,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.78 2016/02/12 13:06:31 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.79 2016/02/13 05:04:12 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -5844,8 +5844,9 @@ def SetLimits(plotrange, chanrange, newylimits, channels, frequencies, pfrequenc
         if (xaxis.find('chan')>=0):
             SetNewXLimits([channels[0],channels[-1]])
         else:
-#            print "SetLimits(): Setting x limits to full range (%f-%f)" % (frequencies[0], frequencies[-1])
-            SetNewXLimits([frequencies[0], frequencies[-1]])
+            if (chanrangeSetXrange or (chanrange[0]==0 and chanrange[1]==0 and chanrangePercent==None)): # CAS-7965
+                # print "SetLimits(): Setting x limits to full range (%f-%f)" % (frequencies[0], frequencies[-1])
+                SetNewXLimits([frequencies[0], frequencies[-1]])
     if (chanrange[0] != 0 or chanrange[1] != 0 or chanrangePercent != None):
         # reset the ylimits based on the channel range specified (selected via chanrange)
         if (newylimits != [LARGE_POSITIVE, LARGE_NEGATIVE]):
