@@ -16,14 +16,20 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+// forward decleration
+template<class Reader>
+class SingleDishMSFiller;
+
 struct FieldRecord {
   typedef MSField AssociatingTable;
   typedef MSFieldColumns AssociatingColumns;
 
+private:
   // external resource
   Record source_map;
   AssociatingTable table;
 
+public:
   // meta
   Int field_id;
   String source_name;
@@ -133,6 +139,9 @@ private:
     columns.phaseDir().rwKeywordSet().defineRecord("MEASINFO", meas_info);
     columns.referenceDir().rwKeywordSet().defineRecord("MEASINFO", meas_info);
   }
+
+  template<class Reader>
+  friend class SingleDishMSFiller;
 };
 
 } //# NAMESPACE CASA - END
