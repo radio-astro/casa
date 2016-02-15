@@ -6,6 +6,7 @@ import numpy
 from taskinit import casalog, gentools, qatool
 
 import asap as sd
+from asap import _to_list
 import sdutil
 import sdbeamutil
 from cleanhelper import cleanhelper
@@ -326,7 +327,9 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
 
         # Calculate Pointing center and extent (if necessary)
         # return a dictionary with keys 'center', 'width', 'height'
-        imsize = self.imsize
+        #imsize = self.imsize
+        imsize = _to_list(self.imsize, int) or \
+            _to_list(self.imsize, numpy.integer) or self.imsize
         phasecenter = self.phasecenter
         if self.phasecenter == "" or \
                len(self.imsize) == 0 or self.imsize[0] < 1:

@@ -1129,6 +1129,8 @@ def get_plotter(plotlevel=0):
 
 def get_nx_ny(n):
     nl = _to_list(n, int)
+    if not nl: # check for numpy int types
+        nl = _to_list(n, np.integer)
     if len(nl) == 1:
         nx = ny = nl[0]
     else:
