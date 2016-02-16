@@ -33,6 +33,7 @@ class VLAImportDataInputs(basetask.StandardInputs):
     save_flagonline = basetask.property_with_default('save_flagonline', True)
     asis = basetask.property_with_default('asis', 'Receiver CalAtmosphere')
     ocorr_mode = basetask.property_with_default('ocorr_mode', 'co')
+    createmms = basetask.property_with_default('createmms', 'automatic')
 
     @basetask.log_equivalent_CASA_call
     def __init__(self, context=None, vis=None, output_dir=None, 
