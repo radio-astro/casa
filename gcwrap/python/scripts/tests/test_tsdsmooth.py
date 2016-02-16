@@ -446,7 +446,7 @@ class tsdsmooth_selection(tsdsmooth_test_base, unittest.TestCase):
     common_param = dict(infile=infile, outfile=outfile,
                         kernel='boxcar', kwidth=5)
     selections=dict(intent=("CALIBRATE_ATMOSPHERE#*", [1]),
-                    antenna=("DA99&&&", [1]),
+                    antenna=("DA99", [1]),
                     field=("M1*", [0]),
                     spw=(">6", [1]),
                     timerange=("2013/4/28/4:13:21",[1]),
@@ -506,12 +506,13 @@ class tsdsmooth_selection(tsdsmooth_test_base, unittest.TestCase):
                 sp = tb.getcell(testcolumn, out_row)
                 self.assertEqual(sp.shape[0], len(polids), "Number of pol is wrong in row=%d:  %d (expected: %d)" % (out_row,len(polids),sp.shape[0]))
                 nchan = sp.shape[1]
-                for ipol in polids:
-                    reference = self._get_reference(nchan, in_row, ipol, dcol)
-                    if self.verbose: print("data=%s" % str(sp[ipol]))
-                    self.assertTrue(numpy.allclose(sp[ipol], reference,
+                for out_pol in range(len(polids)):
+                    in_pol = polids[out_pol]
+                    reference = self._get_reference(nchan, in_row, in_pol, dcol)
+                    if self.verbose: print("data=%s" % str(sp[out_pol]))
+                    self.assertTrue(numpy.allclose(sp[out_pol], reference,
                                                    atol=atol, rtol=rtol),
-                                    "Smoothed spectrum differs in row=%d, pol=%d" % (out_row, ipol))
+                                    "Smoothed spectrum differs in row=%d, pol=%d" % (out_row, out_pol))
         finally:
             tb.close()
         
@@ -524,13 +525,13 @@ class tsdsmooth_selection(tsdsmooth_test_base, unittest.TestCase):
         """Test selection by intent (corrected)"""
         self.run_test("intent", "corrected")
 
-    # def testAntennaF(self):
-    #     """Test selection by antenna (float_data)"""
-    #     self.run_test("antenna", "float_data")
+    def testAntennaF(self):
+        """Test selection by antenna (float_data)"""
+        self.run_test("antenna", "float_data")
 
-    # def testAntennaC(self):
-    #     """Test selection by antenna (corrected)"""
-    #     self.run_test("antenna", "corrected")
+    def testAntennaC(self):
+        """Test selection by antenna (corrected)"""
+        self.run_test("antenna", "corrected")
 
     def testFieldF(self):
         """Test selection by field (float_data)"""
@@ -564,13 +565,13 @@ class tsdsmooth_selection(tsdsmooth_test_base, unittest.TestCase):
         """Test selection by scan (corrected)"""
         self.run_test("scan", "corrected")
 
-    # def testPolF(self):
-    #     """Test selection by pol (float_data)"""
-    #     self.run_test("pol", "float_data")
+    def testPolF(self):
+        """Test selection by pol (float_data)"""
+        self.run_test("pol", "float_data")
 
-    # def testPolC(self):
-    #     """Test selection by pol (corrected)"""
-    #     self.run_test("pol", "corrected")
+    def testPolC(self):
+        """Test selection by pol (corrected)"""
+        self.run_test("pol", "corrected")
 
 def suite():
     return [tsdsmooth_test_fail, tsdsmooth_test_complex,

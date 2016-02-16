@@ -23,7 +23,8 @@ def tsdsmooth(infile=None, datacolumn=None, antenna=None,
         sdms.open(infile)
         sdms.set_selection(spw=spw, field=field, 
                            antenna=antenna,
-                           timerange=timerange, scan=scan, intent=intent)
+                           timerange=timerange, scan=scan,
+                           polarization=pol, intent=intent)
         sdms.smooth(type=kernel, width=kwidth, datacolumn=datacolumn, outfile=outfile)
     except Exception, instance:
         raise Exception, instance
