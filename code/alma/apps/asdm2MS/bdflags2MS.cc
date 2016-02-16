@@ -47,7 +47,7 @@ namespace po = boost::program_options;
 #include <boost/assign/std/vector.hpp> // for 'operator+=()'
 using namespace boost::assign; // bring 'operator+=()' into scope
 
-bool verbose = true;
+bool verbose = false; // By default, let's stay quiet.
 
 #include "CScanIntent.h"
 using namespace ScanIntentMod;
@@ -1080,7 +1080,8 @@ int main (int argC, char * argV[]) {
       ("flagcond,f", po::value<string>()->default_value(""), flagcondDoc.c_str())
       ("scans,s", po::value<string>(), "processes only the scans specified in the option's value. This value is a semicolon separated list of scan specifications. A scan specification consists in an exec bock index followed by the character ':' followed by a comma separated list of scan indexes or scan index ranges. A scan index is relative to the exec block it belongs to. Scan indexes are 1-based while exec blocks's are 0-based. \"0:1\" or \"2:2~6\" or \"0:1,1:2~6,8;2:,3:24~30\" \"1,2\" are valid values for the option. \"3:\" alone will be interpreted as 'all the scans of the exec block#3'. An scan index or a scan index range not preceded by an exec block index will be interpreted as 'all the scans with such indexes in all the exec blocks'.  By default all the scans are considered.")
       ("wvr-corrected-data", po::value<bool>()->default_value(false), "must be set to True (resp. False) whenever the MS to be populated contains corrected (resp. uncorrected) data (default==false)")
-      ("lazy", po::value<bool>()->default_value(false), "must be set to True if the measurement set has been produced by asdm2MS run with the option --lazy (default==false");
+      ("lazy", po::value<bool>()->default_value(false), "must be set to True if the measurement set has been produced by asdm2MS run with the option --lazy (default==false")
+      ("verbose, v",  "logs numerous informations as the application is running.");
     
     po::options_description hidden("Hidden options");
     hidden.add_options()
@@ -1105,6 +1106,9 @@ int main (int argC, char * argV[]) {
       errstream << generic << "\n" ;
       error(errstream.str());
     }
+
+    // Verbose or quiet ?
+    verbose = vm.count("verbose") > 0;
 
     // What's the dataset to use ?
     if (vm.count("asdm-directory")) {
