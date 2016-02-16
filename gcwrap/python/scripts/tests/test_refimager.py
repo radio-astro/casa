@@ -1641,14 +1641,6 @@ class test_widefield(testref_base):
           ## alpha keeps increasing in magnitude with niter.... not right.
           ## restricting this check to niter=0 only. Alpha should represent that of the PB.
 
-     def test_widefield_wbaproj_mtmfs(self):
-          """ [widefield] Test_Widefield_wbaproj_mtmfs : MFS with wideband AWProjection (wbawp=T,conjbeams=T, allspw) and nt=2 stokes I  """
-          self.prepData("refim_mawproject.ms")
-          ret = tclean(vis=self.msfile,field='*',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",niter=30,gridder='awproject',cfcache=self.img+'.cfcache',wbawp=True,conjbeams=True,psterm=False,computepastep=360.0,rotatepastep=360.0,deconvolver='mtmfs',pblimit=0.1)
-          self.checkall(imexist=[self.img+'.image.tt0', self.img+'.psf.tt0', self.img+'.weight.tt0'],imval=[(self.img+'.image.tt0',0.96,[256,256,0,0]),(self.img+'.weight.tt0',0.486,[256,256,0,0]),(self.img+'.alpha',0.0,[256,256,0,0]) ] )
-          ## alpha should be ZERO as the pb spectrum has been taken out.
-
-     
      ## CHECK NORMALIZATION OF WEIGHTIMAGE = normed to peak=1
      ## TODO : make vpman recognize EVLA in addition to VLA.
      def test_widefield_mosaicft_mfs(self):
@@ -1694,6 +1686,14 @@ class test_widefield_failing(testref_base):
 
           #do stokes V too..
 
+     def test_widefield_wbaproj_mtmfs(self):
+          """ [widefield] Test_Widefield_wbaproj_mtmfs : MFS with wideband AWProjection (wbawp=T,conjbeams=T, allspw) and nt=2 stokes I  """
+          self.prepData("refim_mawproject.ms")
+          ret = tclean(vis=self.msfile,field='*',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",niter=30,gridder='awproject',cfcache=self.img+'.cfcache',wbawp=True,conjbeams=True,psterm=False,computepastep=360.0,rotatepastep=360.0,deconvolver='mtmfs',pblimit=0.1)
+          self.checkall(imexist=[self.img+'.image.tt0', self.img+'.psf.tt0', self.img+'.weight.tt0'],imval=[(self.img+'.image.tt0',0.96,[256,256,0,0]),(self.img+'.weight.tt0',0.486,[256,256,0,0]),(self.img+'.alpha',0.0,[256,256,0,0]) ] )
+          ## alpha should be ZERO as the pb spectrum has been taken out.
+
+     
 
      def test_widefield_imagemosaic(self):
           """ [widefield] Test_Widefield_imagemosaic : Image domain mosaic for single-term mfs (or narrowband)  """
