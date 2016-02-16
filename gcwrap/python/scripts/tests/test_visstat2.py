@@ -50,6 +50,8 @@ class visstat2_test(unittest.TestCase):
         self.msfile2 ="OrionS_rawACSmod_calave.ms"
         self.msfile2_asap="OrionS_rawACSmod_calave.asap"
 
+        self.msfile3="OrionS_rawACSmod_calave_test_intent.ms"
+        self.msfile4="OrionS_rawACSmod_calave_intent_on_off.ms"
 
         #if(not os.path.exists(self.msfile)):
         #if(os.path.exists(self.msfile)):
@@ -62,6 +64,8 @@ class visstat2_test(unittest.TestCase):
         shutil.copytree(datapath+self.msfile, self.msfile)
         shutil.copytree(datapath+self.msfile2, self.msfile2)
         shutil.copytree(datapath+self.msfile2_asap, self.msfile2_asap)
+        shutil.copytree(datapath+self.msfile3, self.msfile3)
+        shutil.copytree(datapath+self.msfile4, self.msfile4)
         #clearcal(self.msfile, addmodel=True)
 
         #default('visstat')
@@ -71,6 +75,8 @@ class visstat2_test(unittest.TestCase):
         shutil.rmtree(self.msfile)
         shutil.rmtree(self.msfile2)
         shutil.rmtree(self.msfile2_asap)
+        shutil.rmtree(self.msfile3)
+        shutil.rmtree(self.msfile4)
 
 
 
@@ -896,315 +902,9 @@ class visstat2_test(unittest.TestCase):
 
 
 
-   
-
-    def test7(self):
-        '''Visstat2 7: Test using reportingaxes='field, datacolumn=data'''
-        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }   
-
-        
-
-
-        #check_datacolumn=['data', 'corrected', 'model']
-        #check_axis=['amp']
-        #check_reporitngaxis=['ddid', 'field', 'integration']
-        #check_list=['rms','medabsdevmed','min','max','sum', 'median', 'sumsq', 'stddev','var','npts','sumsq','stddev', 'mean']
-        #check_fieldnum=['0','1','2']
-
-
-        #for key in check_datacolumn:
-        #    print key
-        #    print key.upper()
-        #    visstat(vis==self.msfile, axis='amp', field='0')
-
-
-
-
-
-
-        s1_f0=visstat(vis=self.msfile, axis='amp', field='0', datacolumn='data')
-        s1_f1=visstat(vis=self.msfile, axis='amp', field='1', datacolumn='data')
-        s1_f2=visstat(vis=self.msfile, axis='amp', field='2', datacolumn='data')
-        
-        s2=visstat2(vis=self.msfile, axis='amp', reportingaxes='field', datacolumn='data')
-        
-        print ''
-        print s1_f0
-        print ''
-        print s1_f1
-        print ''
-        print s1_f2
-        print ''
-        print s2
-
-
-        
-
-
-
-
-        #rms#
-        if abs(s2['FIELD_ID=0']['rms'] - s1_f0['DATA']['rms']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-        
-        if abs(s2['FIELD_ID=1']['rms'] - s1_f1['DATA']['rms']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-        if abs(s2['FIELD_ID=2']['rms'] - s1_f2['DATA']['rms']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-
-        #medabsdevmed#
-        if abs(s2['FIELD_ID=0']['medabsdevmed'] - s1_f0['DATA']['medabsdevmed']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-        
-        if abs(s2['FIELD_ID=1']['medabsdevmed'] - s1_f1['DATA']['medabsdevmed']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-        if abs(s2['FIELD_ID=2']['medabsdevmed'] - s1_f2['DATA']['medabsdevmed']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-         
-
-        #min#
-        if abs(s2['FIELD_ID=0']['min'] - s1_f0['DATA']['min']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-        
-        if abs(s2['FIELD_ID=1']['min'] - s1_f1['DATA']['min']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-        if abs(s2['FIELD_ID=2']['min'] - s1_f2['DATA']['min']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-        #max#
-        if abs(s2['FIELD_ID=0']['max'] - s1_f0['DATA']['max']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-        
-        if abs(s2['FIELD_ID=1']['max'] - s1_f1['DATA']['max']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-        if abs(s2['FIELD_ID=2']['max'] - s1_f2['DATA']['max']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-        if abs(s2['FIELD_ID=2']['max'] - s1_f2['DATA']['max']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-        #sum#
-        if abs(s2['FIELD_ID=0']['sum'] - s1_f0['DATA']['sum']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-        
-        if abs(s2['FIELD_ID=1']['sum'] - s1_f1['DATA']['sum']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-        if abs(s2['FIELD_ID=2']['sum'] - s1_f2['DATA']['sum']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-        if abs(s2['FIELD_ID=2']['sum'] - s1_f2['DATA']['sum']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-
-        #quartile#
-        #if abs(s2['FIELD_ID=0']['quartile'] - s1_f0['DATA']['quartile']) > 0.000001:
-        #    retValue['success']= False
-        #    retValue['error_msgs']=retValue['error_msgs']\
-        #        +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-        
-        #if abs(s2['FIELD_ID=1']['quartile'] - s1_f1['DATA']['quartile']) > 0.000001:
-        #    retValue['success']= False
-        #    retValue['error_msgs']=retValue['error_msgs']\
-        #        +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-        #if abs(s2['FIELD_ID=2']['quartile'] - s1_f2['DATA']['quartile']) > 0.000001:
-        #    retValue['success']= False
-        #    retValue['error_msgs']=retValue['error_msgs']\
-        #        +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-        #if abs(s2['FIELD_ID=2']['quartile'] - s1_f2['DATA']['quartile']) > 0.000001:
-        #    retValue['success']= False
-        #    retValue['error_msgs']=retValue['error_msgs']\
-        #        +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-
-        #median#
-        if abs(s2['FIELD_ID=0']['median'] - s1_f0['DATA']['median']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-        
-        if abs(s2['FIELD_ID=1']['median'] - s1_f1['DATA']['median']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-        if abs(s2['FIELD_ID=2']['median'] - s1_f2['DATA']['median']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-        if abs(s2['FIELD_ID=2']['median'] - s1_f2['DATA']['median']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-
-        #sumsq#
-        if abs(s2['FIELD_ID=0']['sumsq'] - s1_f0['DATA']['sumsq']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-        
-        if abs(s2['FIELD_ID=1']['sumsq'] - s1_f1['DATA']['sumsq']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-        if abs(s2['FIELD_ID=2']['sumsq'] - s1_f2['DATA']['sumsq']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-        if abs(s2['FIELD_ID=2']['sumsq'] - s1_f2['DATA']['sumsq']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-        #stddev#
-        if abs(s2['FIELD_ID=0']['stddev'] - s1_f0['DATA']['stddev']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-        
-        if abs(s2['FIELD_ID=1']['stddev'] - s1_f1['DATA']['stddev']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-        if abs(s2['FIELD_ID=2']['stddev'] - s1_f2['DATA']['stddev']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-        if abs(s2['FIELD_ID=2']['stddev'] - s1_f2['DATA']['stddev']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-        #var variance#
-        if abs(s2['FIELD_ID=0']['variance'] - s1_f0['DATA']['var']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-        
-        if abs(s2['FIELD_ID=1']['variance'] - s1_f1['DATA']['var']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-        if abs(s2['FIELD_ID=2']['variance'] - s1_f2['DATA']['var']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-        if abs(s2['FIELD_ID=2']['variance'] - s1_f2['DATA']['var']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-        #npts#
-        if abs(s2['FIELD_ID=0']['npts'] - s1_f0['DATA']['npts']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-        
-        if abs(s2['FIELD_ID=1']['npts'] - s1_f1['DATA']['npts']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-        if abs(s2['FIELD_ID=2']['npts'] - s1_f2['DATA']['npts']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-        if abs(s2['FIELD_ID=2']['npts'] - s1_f2['DATA']['npts']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-
-        #mean#
-        if abs(s2['FIELD_ID=0']['mean'] - s1_f0['DATA']['mean']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-        
-        if abs(s2['FIELD_ID=1']['mean'] - s1_f1['DATA']['mean']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-        if abs(s2['FIELD_ID=2']['mean'] - s1_f2['DATA']['mean']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-        if abs(s2['FIELD_ID=2']['mean'] - s1_f2['DATA']['mean']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-
-
-        self.assertTrue(retValue['success'],retValue['error_msgs'])
-
-
 
     def test8(self):
-        '''Visstat2 7: Test when using reportingaxes='integration, correlation=all,LL,RR, datacolumn=data,corrected,model'''
+        '''Visstat2 7: Test when using reportingaxes='integration, datacolumn=data,corrected,model'''
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }   
         clearcal(self.msfile, addmodel=True)
        
@@ -1254,9 +954,9 @@ class visstat2_test(unittest.TestCase):
 
 
 
-    def test10(self):
-        '''Visstat2 10: Test using reportingaxes=field and datacolumn=corrected'''
-        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }   
+#    def test10(self):
+#        '''Visstat2 10: Test using reportingaxes=field and datacolumn=corrected'''
+#        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }   
 
         #clearcal(self.msfile)
 
@@ -1278,20 +978,20 @@ class visstat2_test(unittest.TestCase):
 
 
 
-        s1_f0=visstat(vis=self.msfile, axis='amp', field='0', datacolumn='corrected')
-        s1_f1=visstat(vis=self.msfile, axis='amp', field='1', datacolumn='corrected')
-        s1_f2=visstat(vis=self.msfile, axis='amp', field='2', datacolumn='corrected')
+ #       s1_f0=visstat(vis=self.msfile, axis='amp', field='0', datacolumn='corrected')
+ #       s1_f1=visstat(vis=self.msfile, axis='amp', field='1', datacolumn='corrected')
+ #       s1_f2=visstat(vis=self.msfile, axis='amp', field='2', datacolumn='corrected')
         
-        s2=visstat2(vis=self.msfile, axis='amp', reportingaxes='field', datacolumn='corrected')
+ #       s2=visstat2(vis=self.msfile, axis='amp', reportingaxes='field', datacolumn='corrected')
         
-        print ''
-        print s1_f0
-        print ''
-        print s1_f1
-        print ''
-        print s1_f2
-        print ''
-        print s2
+ #       print ''
+ #       print s1_f0
+ #       print ''
+ #       print s1_f1
+ #       print ''
+ #       print s1_f2
+ #       print ''
+ #       print s2
 
 
         
@@ -1300,108 +1000,108 @@ class visstat2_test(unittest.TestCase):
 
 
         #rms#
-        if abs(s2['FIELD_ID=0']['rms'] - s1_f0['CORRECTED']['rms']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+  #      if abs(s2['FIELD_ID=0']['rms'] - s1_f0['CORRECTED']['rms']) > 0.000001:
+  #          retValue['success']= False
+  #          retValue['error_msgs']=retValue['error_msgs']\
+  #              +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
         
-        if abs(s2['FIELD_ID=1']['rms'] - s1_f1['CORRECTED']['rms']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+  #      if abs(s2['FIELD_ID=1']['rms'] - s1_f1['CORRECTED']['rms']) > 0.000001:
+  #          retValue['success']= False
+  #          retValue['error_msgs']=retValue['error_msgs']\
+  #              +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
-        if abs(s2['FIELD_ID=2']['rms'] - s1_f2['CORRECTED']['rms']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+  #      if abs(s2['FIELD_ID=2']['rms'] - s1_f2['CORRECTED']['rms']) > 0.000001:
+  #          retValue['success']= False
+  #          retValue['error_msgs']=retValue['error_msgs']\
+  #              +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
 
         #medabsdevmed#
-        if abs(s2['FIELD_ID=0']['medabsdevmed'] - s1_f0['CORRECTED']['medabsdevmed']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+  #      if abs(s2['FIELD_ID=0']['medabsdevmed'] - s1_f0['CORRECTED']['medabsdevmed']) > 0.000001:
+  #          retValue['success']= False
+  #          retValue['error_msgs']=retValue['error_msgs']\
+  #              +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
         
-        if abs(s2['FIELD_ID=1']['medabsdevmed'] - s1_f1['CORRECTED']['medabsdevmed']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+  #      if abs(s2['FIELD_ID=1']['medabsdevmed'] - s1_f1['CORRECTED']['medabsdevmed']) > 0.000001:
+  #          retValue['success']= False
+  #          retValue['error_msgs']=retValue['error_msgs']\
+  #              +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
-        if abs(s2['FIELD_ID=2']['medabsdevmed'] - s1_f2['CORRECTED']['medabsdevmed']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+  #      if abs(s2['FIELD_ID=2']['medabsdevmed'] - s1_f2['CORRECTED']['medabsdevmed']) > 0.000001:
+  #          retValue['success']= False
+  #          retValue['error_msgs']=retValue['error_msgs']\
+  #              +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
          
 
         #min#
-        if abs(s2['FIELD_ID=0']['min'] - s1_f0['CORRECTED']['min']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+  #      if abs(s2['FIELD_ID=0']['min'] - s1_f0['CORRECTED']['min']) > 0.000001:
+  #          retValue['success']= False
+  #          retValue['error_msgs']=retValue['error_msgs']\
+  #              +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
         
-        if abs(s2['FIELD_ID=1']['min'] - s1_f1['CORRECTED']['min']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+  #      if abs(s2['FIELD_ID=1']['min'] - s1_f1['CORRECTED']['min']) > 0.000001:
+  #          retValue['success']= False
+  #          retValue['error_msgs']=retValue['error_msgs']\
+  #              +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
-        if abs(s2['FIELD_ID=2']['min'] - s1_f2['CORRECTED']['min']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+  #      if abs(s2['FIELD_ID=2']['min'] - s1_f2['CORRECTED']['min']) > 0.000001:
+  #          retValue['success']= False
+  #          retValue['error_msgs']=retValue['error_msgs']\
+  #              +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
         #max#
-        if abs(s2['FIELD_ID=0']['max'] - s1_f0['CORRECTED']['max']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+  #      if abs(s2['FIELD_ID=0']['max'] - s1_f0['CORRECTED']['max']) > 0.000001:
+  #          retValue['success']= False
+  #          retValue['error_msgs']=retValue['error_msgs']\
+  #              +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
         
-        if abs(s2['FIELD_ID=1']['max'] - s1_f1['CORRECTED']['max']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+  #      if abs(s2['FIELD_ID=1']['max'] - s1_f1['CORRECTED']['max']) > 0.000001:
+  #          retValue['success']= False
+  #          retValue['error_msgs']=retValue['error_msgs']\
+  #              +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
-        if abs(s2['FIELD_ID=2']['max'] - s1_f2['CORRECTED']['max']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+  #      if abs(s2['FIELD_ID=2']['max'] - s1_f2['CORRECTED']['max']) > 0.000001:
+  #          retValue['success']= False
+  #          retValue['error_msgs']=retValue['error_msgs']\
+  #              +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
-        if abs(s2['FIELD_ID=2']['max'] - s1_f2['CORRECTED']['max']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+  #      if abs(s2['FIELD_ID=2']['max'] - s1_f2['CORRECTED']['max']) > 0.000001:
+  #          retValue['success']= False
+  #          retValue['error_msgs']=retValue['error_msgs']\
+  #              +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
         #sum#
-        if abs(s2['FIELD_ID=0']['sum'] - s1_f0['CORRECTED']['sum']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+  #      if abs(s2['FIELD_ID=0']['sum'] - s1_f0['CORRECTED']['sum']) > 0.000001:
+  #          retValue['success']= False
+  #          retValue['error_msgs']=retValue['error_msgs']\
+  #              +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
         
-        if abs(s2['FIELD_ID=1']['sum'] - s1_f1['CORRECTED']['sum']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+  #      if abs(s2['FIELD_ID=1']['sum'] - s1_f1['CORRECTED']['sum']) > 0.000001:
+  #          retValue['success']= False
+  #          retValue['error_msgs']=retValue['error_msgs']\
+  #              +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
-        if abs(s2['FIELD_ID=2']['sum'] - s1_f2['CORRECTED']['sum']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+  #      if abs(s2['FIELD_ID=2']['sum'] - s1_f2['CORRECTED']['sum']) > 0.000001:
+  #          retValue['success']= False
+  #          retValue['error_msgs']=retValue['error_msgs']\
+  #              +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
-        if abs(s2['FIELD_ID=2']['sum'] - s1_f2['CORRECTED']['sum']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+  #      if abs(s2['FIELD_ID=2']['sum'] - s1_f2['CORRECTED']['sum']) > 0.000001:
+  #          retValue['success']= False
+  #          retValue['error_msgs']=retValue['error_msgs']\
+  #              +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
 
-        #quartile#
-        #if abs(s2['FIELD_ID=0']['quartile'] - s1_f0['DATA']['quartile']) > 0.000001:
-        #    retValue['success']= False
-        #    retValue['error_msgs']=retValue['error_msgs']\
-        #        +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+   #     #quartile#
+   #     #if abs(s2['FIELD_ID=0']['quartile'] - s1_f0['DATA']['quartile']) > 0.000001:
+   #     #    retValue['success']= False
+   #     #    retValue['error_msgs']=retValue['error_msgs']\
+   #     #        +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
         
         #if abs(s2['FIELD_ID=1']['quartile'] - s1_f1['DATA']['quartile']) > 0.000001:
@@ -1420,148 +1120,148 @@ class visstat2_test(unittest.TestCase):
         #        +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
 
-        #median#
-        if abs(s2['FIELD_ID=0']['median'] - s1_f0['CORRECTED']['median']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+  #      #median#
+  #      if abs(s2['FIELD_ID=0']['median'] - s1_f0['CORRECTED']['median']) > 0.000001:
+  #          retValue['success']= False
+  #          retValue['error_msgs']=retValue['error_msgs']\
+  #              +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
         
-        if abs(s2['FIELD_ID=1']['median'] - s1_f1['CORRECTED']['median']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+  #      if abs(s2['FIELD_ID=1']['median'] - s1_f1['CORRECTED']['median']) > 0.000001:
+  #          retValue['success']= False
+  #          retValue['error_msgs']=retValue['error_msgs']\
+  #              +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
-        if abs(s2['FIELD_ID=2']['median'] - s1_f2['CORRECTED']['median']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+   #     if abs(s2['FIELD_ID=2']['median'] - s1_f2['CORRECTED']['median']) > 0.000001:
+   #         retValue['success']= False
+   #         retValue['error_msgs']=retValue['error_msgs']\
+   #             +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
-        if abs(s2['FIELD_ID=2']['median'] - s1_f2['CORRECTED']['median']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+  #      if abs(s2['FIELD_ID=2']['median'] - s1_f2['CORRECTED']['median']) > 0.000001:
+  #          retValue['success']= False
+  #          retValue['error_msgs']=retValue['error_msgs']\
+  #              +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
 
         #sumsq#
-        if abs(s2['FIELD_ID=0']['sumsq'] - s1_f0['CORRECTED']['sumsq']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+   #     if abs(s2['FIELD_ID=0']['sumsq'] - s1_f0['CORRECTED']['sumsq']) > 0.000001:
+   #         retValue['success']= False
+   #         retValue['error_msgs']=retValue['error_msgs']\
+   #             +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
         
-        if abs(s2['FIELD_ID=1']['sumsq'] - s1_f1['CORRECTED']['sumsq']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+   #     if abs(s2['FIELD_ID=1']['sumsq'] - s1_f1['CORRECTED']['sumsq']) > 0.000001:
+   #         retValue['success']= False
+   #         retValue['error_msgs']=retValue['error_msgs']\
+   #             +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
-        if abs(s2['FIELD_ID=2']['sumsq'] - s1_f2['CORRECTED']['sumsq']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+#        if abs(s2['FIELD_ID=2']['sumsq'] - s1_f2['CORRECTED']['sumsq']) > 0.000001:
+#            retValue['success']= False
+#            retValue['error_msgs']=retValue['error_msgs']\
+#                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
-        if abs(s2['FIELD_ID=2']['sumsq'] - s1_f2['CORRECTED']['sumsq']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+#        if abs(s2['FIELD_ID=2']['sumsq'] - s1_f2['CORRECTED']['sumsq']) > 0.000001:
+#            retValue['success']= False
+#            retValue['error_msgs']=retValue['error_msgs']\
+#                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
         #stddev#
-        if abs(s2['FIELD_ID=0']['stddev'] - s1_f0['CORRECTED']['stddev']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+#        if abs(s2['FIELD_ID=0']['stddev'] - s1_f0['CORRECTED']['stddev']) > 0.000001:
+#            retValue['success']= False
+#            retValue['error_msgs']=retValue['error_msgs']\
+#                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
         
-        if abs(s2['FIELD_ID=1']['stddev'] - s1_f1['CORRECTED']['stddev']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+ #       if abs(s2['FIELD_ID=1']['stddev'] - s1_f1['CORRECTED']['stddev']) > 0.000001:
+ #           retValue['success']= False
+ #           retValue['error_msgs']=retValue['error_msgs']\
+ #               +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
-        if abs(s2['FIELD_ID=2']['stddev'] - s1_f2['CORRECTED']['stddev']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+  #      if abs(s2['FIELD_ID=2']['stddev'] - s1_f2['CORRECTED']['stddev']) > 0.000001:
+  #          retValue['success']= False
+  #          retValue['error_msgs']=retValue['error_msgs']\
+  #              +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
-        if abs(s2['FIELD_ID=2']['stddev'] - s1_f2['CORRECTED']['stddev']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+  #      if abs(s2['FIELD_ID=2']['stddev'] - s1_f2['CORRECTED']['stddev']) > 0.000001:
+  #          retValue['success']= False
+  #          retValue['error_msgs']=retValue['error_msgs']\
+  #              +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
         #var variance#
-        if abs(s2['FIELD_ID=0']['variance'] - s1_f0['CORRECTED']['var']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+  #      if abs(s2['FIELD_ID=0']['variance'] - s1_f0['CORRECTED']['var']) > 0.000001:
+  #          retValue['success']= False
+  #          retValue['error_msgs']=retValue['error_msgs']\
+  #              +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
         
-        if abs(s2['FIELD_ID=1']['variance'] - s1_f1['CORRECTED']['var']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+#        if abs(s2['FIELD_ID=1']['variance'] - s1_f1['CORRECTED']['var']) > 0.000001:
+#            retValue['success']= False
+#            retValue['error_msgs']=retValue['error_msgs']\
+#                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
-        if abs(s2['FIELD_ID=2']['variance'] - s1_f2['CORRECTED']['var']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+#        if abs(s2['FIELD_ID=2']['variance'] - s1_f2['CORRECTED']['var']) > 0.000001:
+#            retValue['success']= False
+#            retValue['error_msgs']=retValue['error_msgs']\
+#                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
-        if abs(s2['FIELD_ID=2']['variance'] - s1_f2['CORRECTED']['var']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+#        if abs(s2['FIELD_ID=2']['variance'] - s1_f2['CORRECTED']['var']) > 0.000001:
+#            retValue['success']= False
+#            retValue['error_msgs']=retValue['error_msgs']\
+#                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
         #npts#
-        if abs(s2['FIELD_ID=0']['npts'] - s1_f0['CORRECTED']['npts']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+#        if abs(s2['FIELD_ID=0']['npts'] - s1_f0['CORRECTED']['npts']) > 0.000001:
+#            retValue['success']= False
+#            retValue['error_msgs']=retValue['error_msgs']\
+#                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
         
-        if abs(s2['FIELD_ID=1']['npts'] - s1_f1['CORRECTED']['npts']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+#        if abs(s2['FIELD_ID=1']['npts'] - s1_f1['CORRECTED']['npts']) > 0.000001:
+#            retValue['success']= False
+#            retValue['error_msgs']=retValue['error_msgs']\
+#                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
-        if abs(s2['FIELD_ID=2']['npts'] - s1_f2['CORRECTED']['npts']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+#        if abs(s2['FIELD_ID=2']['npts'] - s1_f2['CORRECTED']['npts']) > 0.000001:
+#            retValue['success']= False
+#            retValue['error_msgs']=retValue['error_msgs']\
+#                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
-        if abs(s2['FIELD_ID=2']['npts'] - s1_f2['CORRECTED']['npts']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+#        if abs(s2['FIELD_ID=2']['npts'] - s1_f2['CORRECTED']['npts']) > 0.000001:
+#            retValue['success']= False
+#            retValue['error_msgs']=retValue['error_msgs']\
+#                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
 
         #mean#
-        if abs(s2['FIELD_ID=0']['mean'] - s1_f0['CORRECTED']['mean']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+#        if abs(s2['FIELD_ID=0']['mean'] - s1_f0['CORRECTED']['mean']) > 0.000001:
+#            retValue['success']= False
+#            retValue['error_msgs']=retValue['error_msgs']\
+#                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
         
-        if abs(s2['FIELD_ID=1']['mean'] - s1_f1['CORRECTED']['mean']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+#        if abs(s2['FIELD_ID=1']['mean'] - s1_f1['CORRECTED']['mean']) > 0.000001:
+#            retValue['success']= False
+#            retValue['error_msgs']=retValue['error_msgs']\
+#                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
-        if abs(s2['FIELD_ID=2']['mean'] - s1_f2['CORRECTED']['mean']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+#        if abs(s2['FIELD_ID=2']['mean'] - s1_f2['CORRECTED']['mean']) > 0.000001:
+#            retValue['success']= False
+#            retValue['error_msgs']=retValue['error_msgs']\
+#                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
-        if abs(s2['FIELD_ID=2']['mean'] - s1_f2['CORRECTED']['mean']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
-
-
-
-        self.assertTrue(retValue['success'],retValue['error_msgs'])
+#        if abs(s2['FIELD_ID=2']['mean'] - s1_f2['CORRECTED']['mean']) > 0.000001:
+#            retValue['success']= False
+#            retValue['error_msgs']=retValue['error_msgs']\
+#                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
 
 
-    def test11(self):
-        '''Visstat2 10: Test when using reportingaxes=field and datacolumn=model'''
-        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }   
+#        self.assertTrue(retValue['success'],retValue['error_msgs'])
+
+
+
+#    def test11(self):
+#        '''Visstat2 10: Test when using reportingaxes=field and datacolumn=model'''
+#        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }   
 
         #clearcal(self.msfile, addmodel=True)
 
@@ -1583,20 +1283,20 @@ class visstat2_test(unittest.TestCase):
 
 
 
-        s1_f0=visstat(vis=self.msfile, axis='amp', field='0', datacolumn='model')
-        s1_f1=visstat(vis=self.msfile, axis='amp', field='1', datacolumn='model')
-        s1_f2=visstat(vis=self.msfile, axis='amp', field='2', datacolumn='model')
+ #       s1_f0=visstat(vis=self.msfile, axis='amp', field='0', datacolumn='model')
+ #       s1_f1=visstat(vis=self.msfile, axis='amp', field='1', datacolumn='model')
+ #       s1_f2=visstat(vis=self.msfile, axis='amp', field='2', datacolumn='model')
         
-        s2=visstat2(vis=self.msfile, axis='amp', reportingaxes='field', datacolumn='model')
+ #       s2=visstat2(vis=self.msfile, axis='amp', reportingaxes='field', datacolumn='model')
         
-        print ''
-        print s1_f0
-        print ''
-        print s1_f1
-        print ''
-        print s1_f2
-        print ''
-        print s2
+ #       print ''
+ #       print s1_f0
+ #       print ''
+ #       print s1_f1
+ #       print ''
+ #       print s1_f2
+ #       print ''
+ #       print s2
 
 
         
@@ -1605,101 +1305,101 @@ class visstat2_test(unittest.TestCase):
 
 
         #rms#
-        if abs(s2['FIELD_ID=0']['rms'] - s1_f0['MODEL']['rms']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+ #       if abs(s2['FIELD_ID=0']['rms'] - s1_f0['MODEL']['rms']) > 0.000001:
+ #           retValue['success']= False
+ #           retValue['error_msgs']=retValue['error_msgs']\
+ #               +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
         
-        if abs(s2['FIELD_ID=1']['rms'] - s1_f1['MODEL']['rms']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+ #       if abs(s2['FIELD_ID=1']['rms'] - s1_f1['MODEL']['rms']) > 0.000001:
+ #           retValue['success']= False
+ #           retValue['error_msgs']=retValue['error_msgs']\
+ #               +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
-        if abs(s2['FIELD_ID=2']['rms'] - s1_f2['MODEL']['rms']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+ #       if abs(s2['FIELD_ID=2']['rms'] - s1_f2['MODEL']['rms']) > 0.000001:
+ #           retValue['success']= False
+ #           retValue['error_msgs']=retValue['error_msgs']\
+ #               +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
 
         #medabsdevmed#
-        if abs(s2['FIELD_ID=0']['medabsdevmed'] - s1_f0['MODEL']['medabsdevmed']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+  #      if abs(s2['FIELD_ID=0']['medabsdevmed'] - s1_f0['MODEL']['medabsdevmed']) > 0.000001:
+  #          retValue['success']= False
+  #          retValue['error_msgs']=retValue['error_msgs']\
+  #              +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
         
-        if abs(s2['FIELD_ID=1']['medabsdevmed'] - s1_f1['MODEL']['medabsdevmed']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+  #      if abs(s2['FIELD_ID=1']['medabsdevmed'] - s1_f1['MODEL']['medabsdevmed']) > 0.000001:
+  #          retValue['success']= False
+  #          retValue['error_msgs']=retValue['error_msgs']\
+  #              +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
-        if abs(s2['FIELD_ID=2']['medabsdevmed'] - s1_f2['MODEL']['medabsdevmed']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+  #      if abs(s2['FIELD_ID=2']['medabsdevmed'] - s1_f2['MODEL']['medabsdevmed']) > 0.000001:
+  #          retValue['success']= False
+  #          retValue['error_msgs']=retValue['error_msgs']\
+  #              +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
          
 
         #min#
-        if abs(s2['FIELD_ID=0']['min'] - s1_f0['MODEL']['min']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+  #      if abs(s2['FIELD_ID=0']['min'] - s1_f0['MODEL']['min']) > 0.000001:
+  #          retValue['success']= False
+  #          retValue['error_msgs']=retValue['error_msgs']\
+  #              +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
         
-        if abs(s2['FIELD_ID=1']['min'] - s1_f1['MODEL']['min']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+  #      if abs(s2['FIELD_ID=1']['min'] - s1_f1['MODEL']['min']) > 0.000001:
+  #          retValue['success']= False
+  #          retValue['error_msgs']=retValue['error_msgs']\
+  #              +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
-        if abs(s2['FIELD_ID=2']['min'] - s1_f2['MODEL']['min']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+  #      if abs(s2['FIELD_ID=2']['min'] - s1_f2['MODEL']['min']) > 0.000001:
+  #          retValue['success']= False
+  #          retValue['error_msgs']=retValue['error_msgs']\
+  #              +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
         #max#
-        if abs(s2['FIELD_ID=0']['max'] - s1_f0['MODEL']['max']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+ #       if abs(s2['FIELD_ID=0']['max'] - s1_f0['MODEL']['max']) > 0.000001:
+ #           retValue['success']= False
+ #           retValue['error_msgs']=retValue['error_msgs']\
+ #               +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
         
-        if abs(s2['FIELD_ID=1']['max'] - s1_f1['MODEL']['max']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+ #       if abs(s2['FIELD_ID=1']['max'] - s1_f1['MODEL']['max']) > 0.000001:
+ #           retValue['success']= False
+ #           retValue['error_msgs']=retValue['error_msgs']\
+ #               +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
-        if abs(s2['FIELD_ID=2']['max'] - s1_f2['MODEL']['max']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+ #       if abs(s2['FIELD_ID=2']['max'] - s1_f2['MODEL']['max']) > 0.000001:
+ #           retValue['success']= False
+ #           retValue['error_msgs']=retValue['error_msgs']\
+ #               +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
-        if abs(s2['FIELD_ID=2']['max'] - s1_f2['MODEL']['max']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+ #       if abs(s2['FIELD_ID=2']['max'] - s1_f2['MODEL']['max']) > 0.000001:
+ #           retValue['success']= False
+ #           retValue['error_msgs']=retValue['error_msgs']\
+ #               +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
         #sum#
-        if abs(s2['FIELD_ID=0']['sum'] - s1_f0['MODEL']['sum']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+ #       if abs(s2['FIELD_ID=0']['sum'] - s1_f0['MODEL']['sum']) > 0.000001:
+ #           retValue['success']= False
+ #           retValue['error_msgs']=retValue['error_msgs']\
+ #               +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
         
-        if abs(s2['FIELD_ID=1']['sum'] - s1_f1['MODEL']['sum']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+ #       if abs(s2['FIELD_ID=1']['sum'] - s1_f1['MODEL']['sum']) > 0.000001:
+ #           retValue['success']= False
+ #           retValue['error_msgs']=retValue['error_msgs']\
+ #               +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
-        if abs(s2['FIELD_ID=2']['sum'] - s1_f2['MODEL']['sum']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+ #       if abs(s2['FIELD_ID=2']['sum'] - s1_f2['MODEL']['sum']) > 0.000001:
+ #           retValue['success']= False
+ #           retValue['error_msgs']=retValue['error_msgs']\
+ #               +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
-        if abs(s2['FIELD_ID=2']['sum'] - s1_f2['MODEL']['sum']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+ #       if abs(s2['FIELD_ID=2']['sum'] - s1_f2['MODEL']['sum']) > 0.000001:
+ #           retValue['success']= False
+ #           retValue['error_msgs']=retValue['error_msgs']\
+ #               +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
 
         #quartile#
@@ -1726,141 +1426,141 @@ class visstat2_test(unittest.TestCase):
 
 
         #median#
-        if abs(s2['FIELD_ID=0']['median'] - s1_f0['MODEL']['median']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+#        if abs(s2['FIELD_ID=0']['median'] - s1_f0['MODEL']['median']) > 0.000001:
+#            retValue['success']= False
+#            retValue['error_msgs']=retValue['error_msgs']\
+#                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
         
-        if abs(s2['FIELD_ID=1']['median'] - s1_f1['MODEL']['median']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+#        if abs(s2['FIELD_ID=1']['median'] - s1_f1['MODEL']['median']) > 0.000001:
+#            retValue['success']= False
+#            retValue['error_msgs']=retValue['error_msgs']\
+#                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
-        if abs(s2['FIELD_ID=2']['median'] - s1_f2['MODEL']['median']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+ #       if abs(s2['FIELD_ID=2']['median'] - s1_f2['MODEL']['median']) > 0.000001:
+ #           retValue['success']= False
+ #           retValue['error_msgs']=retValue['error_msgs']\
+ #               +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
-        if abs(s2['FIELD_ID=2']['median'] - s1_f2['MODEL']['median']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+ #       if abs(s2['FIELD_ID=2']['median'] - s1_f2['MODEL']['median']) > 0.000001:
+ #           retValue['success']= False
+ #           retValue['error_msgs']=retValue['error_msgs']\
+ #               +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
 
         #sumsq#
-        if abs(s2['FIELD_ID=0']['sumsq'] - s1_f0['MODEL']['sumsq']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+#        if abs(s2['FIELD_ID=0']['sumsq'] - s1_f0['MODEL']['sumsq']) > 0.000001:
+#            retValue['success']= False
+#            retValue['error_msgs']=retValue['error_msgs']\
+#                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
         
-        if abs(s2['FIELD_ID=1']['sumsq'] - s1_f1['MODEL']['sumsq']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+#        if abs(s2['FIELD_ID=1']['sumsq'] - s1_f1['MODEL']['sumsq']) > 0.000001:
+#            retValue['success']= False
+#            retValue['error_msgs']=retValue['error_msgs']\
+#                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
-        if abs(s2['FIELD_ID=2']['sumsq'] - s1_f2['MODEL']['sumsq']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+#        if abs(s2['FIELD_ID=2']['sumsq'] - s1_f2['MODEL']['sumsq']) > 0.000001:
+#            retValue['success']= False
+#            retValue['error_msgs']=retValue['error_msgs']\
+#                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
-        if abs(s2['FIELD_ID=2']['sumsq'] - s1_f2['MODEL']['sumsq']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+#        if abs(s2['FIELD_ID=2']['sumsq'] - s1_f2['MODEL']['sumsq']) > 0.000001:
+#            retValue['success']= False
+#            retValue['error_msgs']=retValue['error_msgs']\
+#                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
         #stddev#
-        if abs(s2['FIELD_ID=0']['stddev'] - s1_f0['MODEL']['stddev']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+#        if abs(s2['FIELD_ID=0']['stddev'] - s1_f0['MODEL']['stddev']) > 0.000001:
+#            retValue['success']= False
+#            retValue['error_msgs']=retValue['error_msgs']\
+#                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
         
-        if abs(s2['FIELD_ID=1']['stddev'] - s1_f1['MODEL']['stddev']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+#        if abs(s2['FIELD_ID=1']['stddev'] - s1_f1['MODEL']['stddev']) > 0.000001:
+#            retValue['success']= False
+#            retValue['error_msgs']=retValue['error_msgs']\
+#                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
-        if abs(s2['FIELD_ID=2']['stddev'] - s1_f2['MODEL']['stddev']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+#        if abs(s2['FIELD_ID=2']['stddev'] - s1_f2['MODEL']['stddev']) > 0.000001:
+#            retValue['success']= False
+#            retValue['error_msgs']=retValue['error_msgs']\
+#                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
-        if abs(s2['FIELD_ID=2']['stddev'] - s1_f2['MODEL']['stddev']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+#        if abs(s2['FIELD_ID=2']['stddev'] - s1_f2['MODEL']['stddev']) > 0.000001:
+#            retValue['success']= False
+#            retValue['error_msgs']=retValue['error_msgs']\
+#                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
         #var variance#
-        if abs(s2['FIELD_ID=0']['variance'] - s1_f0['MODEL']['var']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+#        if abs(s2['FIELD_ID=0']['variance'] - s1_f0['MODEL']['var']) > 0.000001:
+#            retValue['success']= False
+#            retValue['error_msgs']=retValue['error_msgs']\
+#                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
         
-        if abs(s2['FIELD_ID=1']['variance'] - s1_f1['MODEL']['var']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+#        if abs(s2['FIELD_ID=1']['variance'] - s1_f1['MODEL']['var']) > 0.000001:
+#            retValue['success']= False
+#            retValue['error_msgs']=retValue['error_msgs']\
+#                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
-        if abs(s2['FIELD_ID=2']['variance'] - s1_f2['MODEL']['var']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+#        if abs(s2['FIELD_ID=2']['variance'] - s1_f2['MODEL']['var']) > 0.000001:
+#            retValue['success']= False
+#            retValue['error_msgs']=retValue['error_msgs']\
+#                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
-        if abs(s2['FIELD_ID=2']['variance'] - s1_f2['MODEL']['var']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+#        if abs(s2['FIELD_ID=2']['variance'] - s1_f2['MODEL']['var']) > 0.000001:
+#            retValue['success']= False
+#            retValue['error_msgs']=retValue['error_msgs']\
+#                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
         #npts#
-        if abs(s2['FIELD_ID=0']['npts'] - s1_f0['MODEL']['npts']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+ #       if abs(s2['FIELD_ID=0']['npts'] - s1_f0['MODEL']['npts']) > 0.000001:
+ #           retValue['success']= False
+ #           retValue['error_msgs']=retValue['error_msgs']\
+ #               +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
         
-        if abs(s2['FIELD_ID=1']['npts'] - s1_f1['MODEL']['npts']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+ #       if abs(s2['FIELD_ID=1']['npts'] - s1_f1['MODEL']['npts']) > 0.000001:
+ #           retValue['success']= False
+ #           retValue['error_msgs']=retValue['error_msgs']\
+ #               +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
-        if abs(s2['FIELD_ID=2']['npts'] - s1_f2['MODEL']['npts']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+ #       if abs(s2['FIELD_ID=2']['npts'] - s1_f2['MODEL']['npts']) > 0.000001:
+ #           retValue['success']= False
+ #           retValue['error_msgs']=retValue['error_msgs']\
+ #               +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
-        if abs(s2['FIELD_ID=2']['npts'] - s1_f2['MODEL']['npts']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+ #       if abs(s2['FIELD_ID=2']['npts'] - s1_f2['MODEL']['npts']) > 0.000001:
+ #           retValue['success']= False
+ #           retValue['error_msgs']=retValue['error_msgs']\
+ #               +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
 
         #mean#
-        if abs(s2['FIELD_ID=0']['mean'] - s1_f0['MODEL']['mean']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+#        if abs(s2['FIELD_ID=0']['mean'] - s1_f0['MODEL']['mean']) > 0.000001:
+#            retValue['success']= False
+#            retValue['error_msgs']=retValue['error_msgs']\
+#                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
         
-        if abs(s2['FIELD_ID=1']['mean'] - s1_f1['MODEL']['mean']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+#        if abs(s2['FIELD_ID=1']['mean'] - s1_f1['MODEL']['mean']) > 0.000001:
+#            retValue['success']= False
+#            retValue['error_msgs']=retValue['error_msgs']\
+#                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
-        if abs(s2['FIELD_ID=2']['mean'] - s1_f2['MODEL']['mean']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+#        if abs(s2['FIELD_ID=2']['mean'] - s1_f2['MODEL']['mean']) > 0.000001:
+#            retValue['success']= False
+#            retValue['error_msgs']=retValue['error_msgs']\
+#                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
-        if abs(s2['FIELD_ID=2']['mean'] - s1_f2['MODEL']['mean']) > 0.000001:
-            retValue['success']= False
-            retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
+#        if abs(s2['FIELD_ID=2']['mean'] - s1_f2['MODEL']['mean']) > 0.000001:
+#            retValue['success']= False
+#            retValue['error_msgs']=retValue['error_msgs']\
+#                +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='field')"
 
 
 
-        self.assertTrue(retValue['success'],retValue['error_msgs'])
+#        self.assertTrue(retValue['success'],retValue['error_msgs'])
 
 
 
@@ -2015,9 +1715,8 @@ class visstat2_test(unittest.TestCase):
 
 
     def test14(self):
-        '''Visstat2 13: Test using reportingaxes=integration, correlation=[all,LL,RR], datacolumn=float_data spw=[0,1,2,3], intent'''
+        '''Visstat2 14: Test using reportingaxes=integration, datacolumn=float_data, intent=on'''
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }   
-        #clearcal(self.msfile, addmodel=True)
        
         correlation_type=['RR', 'LL']
         sd_correlation_type=['0', '1']
@@ -2025,8 +1724,9 @@ class visstat2_test(unittest.TestCase):
         spw_list=['0', '1', '2', '3']
         reporting_axes=['integration']
         check_list=['rms', 'max', 'min', 'sum', 'median', 'stddev', 'mean']
-        intent_list=['OBSERVE_TARGET#ON_SOURCE,POSITION_SWITCH']
 
+        intent_list=['OBSERVE_TARGET#ON_SOURCE,POSITION_SWITCH']
+        #intent_list=['OBSERVE_TARGET#OFF_SOURCE,POSITION_SWITCH']
         tb.open(self.msfile2)
         ref=tb.getcolkeyword('TIME','MEASINFO')['Ref']
         tt=tb.getcol('TIME')
@@ -2044,6 +1744,8 @@ class visstat2_test(unittest.TestCase):
                         v2 = visstat2(vis=self.msfile2, axis='amp', timerange=str(trange),reportingaxes=reporting_axes[0], correlation=col, datacolumn=dt, spw=spwin, intent=intent_list[0])
                         v2_keys=v2.keys()
                         for check in check_list:
+                            print sd[check]
+                            print v2[str(v2_keys[0])][check]
                             if(abs((sd[check]-v2[str(v2_keys[0])][check])/sd[check]) > 0.0001):
                                 retValue['success']= False
                                 retValue['error_msgs']=retValue['error_msgs']
@@ -2054,6 +1756,234 @@ class visstat2_test(unittest.TestCase):
                             break
 
         self.assertTrue(retValue['success'],retValue['error_msgs'])
+
+
+
+
+
+
+
+
+    """    
+    def test15(self):#(<-test11)
+        '''Visstat2 15: Test using reportingaxes=field, datacolumn=model, intent=on'''
+
+        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }   
+       
+        correlation_type=['RR', 'LL']
+        #sd_correlation_type=['0', '1']
+        datacolumn_list=['model']
+        spw_list=['0']
+        reporting_axes=['field']
+        check_list=['rms', 'max', 'min', 'sum', 'median', 'stddev', 'mean']
+        intent_list=['OBSERVE_TARGET#ON_SOURCE,POSITION_SWITCH']
+        field_list=['0','1','2']
+
+
+        for dt in datacolumn_list:
+            for col in correlation_type:
+                for fd in field_list:
+                    for spwin in spw_list:
+                        v1 = visstat(vis=self.msfile, axis='amp',datacolumn=dt,correlation=col, field=fd, spw=spwin)
+                        v2 = visstat2(vis=self.msfile, axis='amp', datacolumn=dt,correlation=col, spw=spwin,
+                                      intent=intent_list[0],reportingaxes=reporting_axes[0])
+                        for check in check_list:
+                            print v1[dt.upper()][check], dt, col, fd, spwin, check
+                            print v2['FIELD_ID='+ fd][check],'FIELD_ID='+fd
+                            if(abs((v1[dt.upper()][check]-v2['FIELD_ID='+ fd][check])) > 0.0001):
+                                retValue['success']= False
+                                retValue['error_msgs']=retValue['error_msgs']
+                             #+"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='integragtion')"
+
+
+        self.assertTrue(retValue['success'],retValue['error_msgs'])
+    """
+
+
+    """    
+    def test16(self):#(<-test10)
+        '''Visstat2 16: Test using reportingaxes=field, datacolumn=corrected, intent=on'''
+
+        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }   
+       
+        correlation_type=['RR', 'LL']
+        #sd_correlation_type=['0', '1']
+        datacolumn_list=['corrected']
+        spw_list=['0']
+        reporting_axes=['field']
+        check_list=['rms', 'max', 'min', 'sum', 'median', 'stddev', 'mean']
+        intent_list=['OBSERVE_TARGET#ON_SOURCE,POSITION_SWITCH']
+        field_list=['0','1','2']
+
+
+        for dt in datacolumn_list:
+            for col in correlation_type:
+                for fd in field_list:
+                    for spwin in spw_list:
+                        v1 = visstat(vis=self.msfile, axis='amp',datacolumn=dt,correlation=col, field=fd, spw=spwin)
+                        v2 = visstat2(vis=self.msfile, axis='amp', datacolumn=dt,correlation=col, spw=spwin,
+                                      intent=intent_list[0],reportingaxes=reporting_axes[0])
+                        for check in check_list:
+                            print v1[dt.upper()][check], dt, col, fd, spwin, check
+                            print v2['FIELD_ID='+ fd][check],'FIELD_ID='+fd
+                            if(abs((v1[dt.upper()][check]-v2['FIELD_ID='+ fd][check])) > 0.0001):
+                                retValue['success']= False
+                                retValue['error_msgs']=retValue['error_msgs']
+                             #+"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='integragtion')"
+
+
+        self.assertTrue(retValue['success'],retValue['error_msgs'])
+"""
+
+    def test17(self):
+        '''Visstat2 17: Test using reportingaxes=field'''
+
+        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }   
+
+        datacolumn_list=['data', 'corrected', 'model']
+        correlation_type=['RR', 'LL']
+        field_list=['0','1','2']
+        spw_list=['0']
+        axis_list=['amp', 'scan_number']
+        field_list=['0','1','2']
+        useflags_list=[True, False]
+        reporting_axes=['field']
+        intent_list=['OBSERVE_TARGET#ON_SOURCE,POSITION_SWITCH']
+        #intent_list=['OBSERVE_TARGET#OFF_SOURCE,POSITION_SWITCH']
+
+        check_list=['rms', 'max', 'min', 'sum', 'median', 'stddev', 'mean']
+                
+        for ax in axis_list:
+            for col in correlation_type:
+                for fd in field_list:
+                    for spwin in spw_list:
+                        for fg in useflags_list:
+
+                            if(ax=='scan_number'):
+                                v1 = visstat(vis=self.msfile, axis=ax,correlation=col, field=fd, spw=spwin, useflags=fg)
+                                v2 = visstat2(vis=self.msfile, axis=ax, useflags=fg, correlation=col, 
+                                      spw=spwin, intent=intent_list[0], reportingaxes=reporting_axes[0])
+
+                                for check in check_list:
+                                    v1_first_element = ax
+
+                                    print v1[ v1_first_element.upper()][check], dt, col, fd, spwin, check
+                                    print v2['FIELD_ID='+ fd][check],'FIELD_ID='+fd
+                                    if(abs((v1[ v1_first_element.upper()][check]-v2['FIELD_ID='+ fd][check])) > 0.0001):
+                                        retValue['success']= False
+                                        retValue['error_msgs']=retValue['error_msgs']
+
+                            if(ax=='amp'):            
+                                for dt in datacolumn_list:    
+                                    v1 = visstat(vis=self.msfile, axis=ax,datacolumn=dt,correlation=col, field=fd, spw=spwin, useflags=fg)
+                                    v2 = visstat2(vis=self.msfile, axis=ax, useflags=fg, datacolumn=dt, correlation=col, 
+                                      spw=spwin, intent=intent_list[0], reportingaxes=reporting_axes[0])
+                                
+                                    for check in check_list:
+                                        v1_first_element = dt
+                                        print v1[ v1_first_element.upper()][check], dt, col, fd, spwin, check
+                                        print v2['FIELD_ID='+ fd][check],'FIELD_ID='+fd
+                                        if(abs((v1[ v1_first_element.upper()][check]-v2['FIELD_ID='+ fd][check])) > 0.0001):
+                                            retValue['success']= False
+                                            retValue['error_msgs']=retValue['error_msgs']
+                             #+"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='integragtion')"
+                             
+        self.assertTrue(retValue['success'],retValue['error_msgs'])
+
+
+
+
+
+
+
+
+"""
+#    def test18(self):#test func to check intent
+#        '''Visstat2 18: Test using reportingaxes=ddid, datacolumn=float_data, intent=on'''
+#        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }   
+#       
+#        correlation_type=['RR', 'LL']
+#        sd_correlation_type=['0', '1']
+#        datacolumn_list=['float_data']
+#        #spw_list=['0', '1', '3']
+#        spw_list=['']
+#        field_list=['1']
+#        reporting_axes=['field']
+#        check_list=['rms', 'max', 'min', 'sum', 'median', 'stddev', 'mean']
+#
+#        intent_list=['OBSERVE_TARGET#ON_SOURCE,POSITION_SWITCH']
+#        #intent_list=['OBSERVE_TARGET#OFF_SOURCE,POSITION_SWITCH']
+#        #intent_list =['']
+#
+#
+#        #ddid_list=['DATA_DESC_ID=1']
+#
+#
+#        tb.open(self.msfile2)
+#        ref=tb.getcolkeyword('TIME','MEASINFO')['Ref']
+#        tt=tb.getcol('TIME')
+#        tb.close()
+#        
+#        print ''
+#        print 'tt'
+#        print tt
+#        print ''
+
+#        trange = qa.time(me.epoch('ref','%fs' % tt[0])['m0'], prec=8, form='ymd')[0]
+#        #trange0 = qa.time(me.epoch('ref','%fs' % tt[0])['m0'], prec=8, form='ymd')[0]
+#        #trange1 = qa.time(me.epoch('ref','%fs' % tt[1])['m0'], prec=8, form='ymd')[0]
+#        #trange2 = qa.time(me.epoch('ref','%fs' % tt[2])['m0'], prec=8, form='ymd')[0]
+#        #print ''
+#        #print trange0, trange1, trange2
+#        #print
+
+
+
+
+#        for dt in datacolumn_list:
+#            for col, sd_pol in izip(correlation_type, sd_correlation_type):
+#                num_tt=0
+#                for time in tt:
+#                    for fd in field_list:
+#                        #trange = qa.time(me.epoch('ref','%fs' % time)['m0'], prec=8, form='ymd')[0]
+#                        #sd = sdstat(infile=self.msfile2_asap, timerange=str(trange), pol=sd_pol, spw=spwin)
+#
+#                        print ''
+#                        print 'msfile3', self.msfile3
+#                        print 'msfile4', self.msfile4
+#                        print ''
+#                        print 'field ', fd
+#
+#                        #sd = sdstat(infile=self.msfile3, pol=sd_pol, spw=spwin)
+#                        sd = sdstat(infile=self.msfile3, pol=sd_pol, field=fd)
+#                        
+#                        print ''
+#                        print 'sd', sd
+#                        print ''
+#                        #v2 = visstat2(vis=self.msfile2, axis='amp', timerange=str(trange),reportingaxes=reporting_axes[0], correlation=col, datacolumn=dt, spw=spwin, intent=intent_list[0])
+#                        v2 = visstat2(vis=self.msfile4, axis='amp',reportingaxes=reporting_axes[0], correlation=col, datacolumn=dt, intent=intent_list[0],field=fd)
+#                        print ''
+ #                       print 'v2', v2
+ #                       print ''
+ #                       
+#
+#                        v2_keys=v2.keys()
+#                        for check in check_list:
+#                            print sd[check]
+#                            print v2['FIELD_ID='+ fd][check]
+#                            if(abs((sd[check]-v2['FIELD_ID='+ fd][check])/sd[check]) > 0.0001):
+#                                retValue['success']= False
+#                                retValue['error_msgs']=retValue['error_msgs']
+#                            # +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='integragtion')"
+
+#                        num_tt +=1
+#                        if num_tt==3:
+#                            break
+#
+#        self.assertTrue(retValue['success'],retValue['error_msgs'])
+"""
+
+
 
 
 
