@@ -32,7 +32,7 @@ def tsdfit(infile=None, datacolumn=None, antenna=None, field=None, spw=None, tim
         sdms.open(infile)
         sdms.set_selection(spw=sdutil.get_spwids(selection), field=field, 
                            antenna=antenna, timerange=timerange, 
-                           scan=scan, intent=intent)
+                           scan=scan, polarization=pol, intent=intent)
 
         tempfile = 'temp_tsdfit_'+str(datetime.datetime.fromtimestamp(time.time())).replace('-','').replace(' ','').replace(':','')
         if os.path.exists(tempfile):

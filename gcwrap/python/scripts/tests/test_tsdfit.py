@@ -872,7 +872,7 @@ class tsdfit_selection(unittest.TestCase):
     def setUp(self):
         self._clearup()
         shutil.copytree(self.datapath+self.infile, self.infile)
-        default(tsdbaseline)
+        default(tsdfit)
 
     def tearDown(self):
         self._clearup()
@@ -951,13 +951,13 @@ class tsdfit_selection(unittest.TestCase):
         """Test selection by intent (corrected)"""
         self.run_test("intent", "corrected")
 
-    # def testAntennaF(self):
-    #     """Test selection by antenna (float_data)"""
-    #     self.run_test("antenna", "float_data")
+    def testAntennaF(self):
+        """Test selection by antenna (float_data)"""
+        self.run_test("antenna", "float_data")
 
-    # def testAntennaC(self):
-    #     """Test selection by antenna (corrected)"""
-    #     self.run_test("antenna", "corrected")
+    def testAntennaC(self):
+        """Test selection by antenna (corrected)"""
+        self.run_test("antenna", "corrected")
 
     def testFieldF(self):
         """Test selection by field (float_data)"""
@@ -991,13 +991,13 @@ class tsdfit_selection(unittest.TestCase):
         """Test selection by scan (corrected)"""
         self.run_test("scan", "corrected")
 
-    # def testPolF(self):
-    #     """Test selection by pol (float_data)"""
-    #     self.run_test("pol", "float_data")
+    def testPolF(self):
+        """Test selection by pol (float_data)"""
+        self.run_test("pol", "float_data")
 
-    # def testPolC(self):
-    #     """Test selection by pol (corrected)"""
-    #     self.run_test("pol", "corrected")
+    def testPolC(self):
+        """Test selection by pol (corrected)"""
+        self.run_test("pol", "corrected")
 
 def suite():
     return [tsdfit_basicTest, tsdfit_selection]
