@@ -60,6 +60,7 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_ia_convertflux.py
   test_ia_convolve.py
   test_ia_convolve2d.py
+  test_ia_coordmeasures.py
   test_ia_crop.py
   test_ia_decimate.py
   test_ia_decompose.py
