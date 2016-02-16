@@ -906,7 +906,8 @@ Record ImageMetaDataBase::toWorld(
     }
     else {
         ThrowCc(
-            "Error converting to world coordinates: " + csys.errorMessage());
+            "Error converting to world coordinates: " + csys.errorMessage()
+        );
     }
     return rec;
 }
@@ -1005,12 +1006,13 @@ Record ImageMetaDataBase::_worldVectorToMeasures(
         AlwaysAssert(world.nelements()==csys.nWorldAxes(), AipsError);
         s = 0;
         e = csys.nCoordinates();
-    } else {
+    }
+    else {
         AlwaysAssert(world.nelements()==csys.coordinate(c).nWorldAxes(), AipsError);
         s = c;
         e = c + 1;
     }
-    for (uInt i = s; i < e; i++) {
+    for (uInt i = s; i < e; ++i) {
         // Find the world axes in the CoordinateSystem that this coordinate belongs to
 
         const auto& worldAxes = csys.worldAxes(i);
@@ -1078,7 +1080,7 @@ Record ImageMetaDataBase::_worldVectorToMeasures(
                 Quantum<Double> t2(world2(1), units(1));
                 MDirection direction(
                     t1, t2,
-                    csys.directionCoordinate(i).directionType()
+                    csys.directionCoordinate(i).directionType(True)
                 );
                 MeasureHolder h(direction);
                 Record dirRec;
@@ -1101,7 +1103,7 @@ Record ImageMetaDataBase::_worldVectorToMeasures(
                 Record specRec, specRec1;
                 Quantum<Double> t1(world2(0), units(0));
                 const auto& sc0 = csys.spectralCoordinate(i);
-                MFrequency frequency(t1, sc0.frequencySystem());
+                MFrequency frequency(t1, sc0.frequencySystem(True));
                 MeasureHolder h(frequency);
                 ThrowIf(
                     ! h.toRecord(error, specRec1), error
