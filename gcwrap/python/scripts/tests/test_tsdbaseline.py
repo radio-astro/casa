@@ -640,7 +640,7 @@ class tsdbaseline_basicTest(tsdbaseline_unittest_base):
         maskmode = 'list'
         blfunc = 'poly'
         spw = '3'
-        pol = '1'
+        pol = 'LL'
         overwrite = True
         result = tsdbaseline(infile=infile, datacolumn=datacolumn,
                              maskmode=maskmode, blfunc=blfunc, 
@@ -651,12 +651,11 @@ class tsdbaseline_basicTest(tsdbaseline_unittest_base):
                          msg="The task returned '"+str(result)+"' instead of None")
         # uncomment the next line once blparam file can be output
         #self._compareBLparam(outfile+"_blparam.txt",self.blrefroot+tid)
-        results = self._getStats(outfile, '', pol)
-        print self._getStats(outfile, '', pol)
+        results = self._getStats(outfile)
+        print self._getStats(outfile)
         theresult = None
         for i in range(len(results)):
-            if (results[i]['pol'] == int(pol)):
-                theresult = results[i]
+            theresult = results[i]
 
         reference = {'rms': 0.16677055621054496,
                      'min': -2.5817961692810059,
@@ -676,7 +675,7 @@ class tsdbaseline_basicTest(tsdbaseline_unittest_base):
         maskmode = 'list'
         blfunc = 'chebyshev'
         spw = '3'
-        pol = '1'
+        pol = 'LL'
         overwrite = True
         result = tsdbaseline(infile=infile, datacolumn=datacolumn,
                              maskmode=maskmode, blfunc=blfunc, 
@@ -687,12 +686,11 @@ class tsdbaseline_basicTest(tsdbaseline_unittest_base):
                          msg="The task returned '"+str(result)+"' instead of None")
         # uncomment the next line once blparam file can be output
         #self._compareBLparam(outfile+"_blparam.txt",self.blrefroot+tid)
-        results = self._getStats(outfile, '', pol)
-        print self._getStats(outfile, '', pol)
+        results = self._getStats(outfile)
+        print self._getStats(outfile)
         theresult = None
         for i in range(len(results)):
-            if (results[i]['pol'] == int(pol)):
-                theresult = results[i]
+            theresult = results[i]
 
         reference = {'rms': 0.16677055621054496,
                      'min': -2.5817961692810059,
@@ -717,7 +715,7 @@ class tsdbaseline_basicTest(tsdbaseline_unittest_base):
         overwrite = True
         npiece = 3
         spw='3'
-        pol='1'
+        pol='LL'
         result = tsdbaseline(infile=infile, datacolumn=datacolumn,
                              maskmode=maskmode, blfunc=blfunc, 
                              npiece=npiece,spw=spw, 
@@ -727,13 +725,12 @@ class tsdbaseline_basicTest(tsdbaseline_unittest_base):
         # sdbaseline returns None if it runs successfully
         self.assertEqual(result,None,msg="The task returned '"+str(result)+"' instead of None")
         #self._compareBLparam(outfile+"_blparam.txt",self.blrefroot+tid) 
-        results = self._getStats(outfile, '', pol)
-        print self._getStats(outfile, '', pol)
+        results = self._getStats(outfile)
+        print self._getStats(outfile)
         
         theresult = None
         for i in range(len(results)):
-            if (results[i]['pol'] == int(pol)):
-                theresult = results[i]
+            theresult = results[i]
 
         reference = {'rms': 0.16685959517745799,
                      'min': -2.5928177833557129,
@@ -747,75 +744,33 @@ class tsdbaseline_basicTest(tsdbaseline_unittest_base):
         #***
         #*** check if baseline is subtracted ***
         #***
-       
-        tb.open(outfile)
-        num_ch=len(tb.getcell('FLOAT_DATA', 0)[0])
-        tb.close()
-
-        pol0=0
-        pol1=1        
-        orig_pol0_value=[]
-        orig_pol1_value=[]
-
-        sum_pol0=0.0
+        # Output MS only has the selected pol, LL
+        in_pol=1
+        out_pol=0
         sum_pol1=0.0
-
-        sum_square_pol0 = 0.0
         sum_square_pol1 = 0.0
 
         # open the original MS
         tb.open(infile)
-        for i in range(num_ch):
-            orig_pol0_value.append(tb.getcell('FLOAT_DATA', int(spw))[pol0][i])
-            orig_pol1_value.append(tb.getcell('FLOAT_DATA', int(spw))[pol1][i])
+        orig_pol1_value = numpy.array(tb.getcell('FLOAT_DATA', int(spw))[in_pol,:])
         tb.close()
-
-        variance_orig_pol0 = numpy.var(numpy.array(orig_pol0_value))
-        variance_orig_pol1 = numpy.var(numpy.array(orig_pol1_value))
-        
-
-        pol0_value=[]
-        pol1_value=[]
+        variance_orig_pol1 = numpy.var(orig_pol1_value)
         
         #open the MS after tsdbaseline
         tb.open(outfile)
-        for i in range(num_ch):
-            pol0_value.append(tb.getcell('FLOAT_DATA', 0)[pol0][i])
-            pol1_value.append(tb.getcell('FLOAT_DATA', 0)[pol1][i])
+        pol1_value = numpy.array(tb.getcell('FLOAT_DATA', 0)[out_pol,:])
         tb.close()
-
-      
-        variance_pol0 = numpy.var(numpy.array(pol0_value))        
-        variance_pol1 = numpy.var(numpy.array(pol1_value))        
-
-
-        #check if baseline of pol1 is subtracted and if pol0 is not.
-        #if(pol=='1'):
-        #    if((numpy.array(pol0_value) == numpy.array(orig_pol0_value)).all()):
-        #        print 'pol0: baseline subtraction is NOT performed. OK'
-        #    if((numpy.array(pol1_value) < numpy.array(orig_pol1_value)).all()):
-        #        print 'pol1: baseline subtraction is performed.OK'
-
-        
-        #cspline applied to only pol1 => pol0 should be the same before and after applying cspline
-
+        variance_pol1 = numpy.var(pol1_value)
 
         #assert pol1_value < prig_pol1_value
-        self.assertLess(pol1_value, orig_pol1_value)
+        self.assertTrue((pol1_value<orig_pol1_value).all())
         
         #assert variance of pol1_value < variance of prig_pol1_value
         self.assertLess(variance_pol1**0.5, variance_orig_pol1**0.5)
 
-        #assert pol0_value == orig_pol0_value
-        self.assertEqual(pol0_value, orig_pol0_value)
-        self.assertEqual(variance_pol0, variance_orig_pol0)
-
-
         #print '1sigma before cspline (pol1)', variance_orig_pol1**0.5 
         #print '1sigma after cspline (pol1)',  variance_pol1**0.5 
         
-        #print '1sigma before cspline (pol0)', variance_orig_pol0**0.5 
-        #print '1sigma after cspline (pol0)',  variance_pol0**0.5 
     
     def test050(self):
         """Basic Test 050: failure case: existing file as outfile with overwrite=False"""
@@ -917,7 +872,7 @@ class tsdbaseline_maskTest(tsdbaseline_unittest_base):
         datacolumn='float_data'
         mode = 'list'
         spw = '2:%s'%(';'.join(map(self._get_range_in_string,self.search)))
-        pol = '0'
+        pol = 'RR'
         blfunc = 'cspline'
         npiece = 4
 
@@ -928,7 +883,7 @@ class tsdbaseline_maskTest(tsdbaseline_unittest_base):
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF2
-        testval = self._getStats(filename=outfile, spw='', pol=pol, mask=self.search)
+        testval = self._getStats(filename=outfile, spw='', pol=0, mask=self.search)
         ref100 = {'rms': 0.18957555661537034,
                   'min': -0.48668813705444336,
                   'max': 1.9516196250915527,
@@ -946,7 +901,7 @@ class tsdbaseline_maskTest(tsdbaseline_unittest_base):
         datacolumn='float_data'
         mode = 'list'
         spw = '2:%s'%(';'.join(map(self._get_range_in_string,self.blchan2)))
-        pol = '0'
+        pol = 'RR'
 
         print 'spw =', spw
 
@@ -956,7 +911,7 @@ class tsdbaseline_maskTest(tsdbaseline_unittest_base):
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF2
-        testval = self._getStats(filename=outfile, spw='', pol=pol, mask=self.blchan2)
+        testval = self._getStats(filename=outfile, spw='', pol=0, mask=self.blchan2)
         self._compareStats(testval[0],self.ref_pol0if2)
         #self._compareBLparam(self.outroot+self.tid+'.asap_blparam.txt',\
         #                     self.blrefroot+self.tid)
@@ -1280,7 +1235,7 @@ class tsdbaseline_outbltableTest(tsdbaseline_unittest_base):
             nrow_data = tb.nrows()
         testmode = ['masked_masked', 'masked_unselect', 'unselect_masked']
         prange = [[0,1], [0], [1]]
-        polval = ['', '0', '1']
+        polval = ['', 'RR', 'LL']
         for i in range(len(blfunc)):
             for j in range(len(testmode)):
                 print 'testing blfunc='+blfunc[i]+', testmode='+testmode[j]+'...'
@@ -1329,7 +1284,7 @@ class tsdbaseline_outbltableTest(tsdbaseline_unittest_base):
             nrow_data = tb.nrows()
         testmode = ['masked_masked', 'masked_unselect', 'unselect_masked']
         prange = [[0,1], [0], [1]]
-        polval = ['', '0', '1']
+        polval = ['', 'RR', 'LL']
         for j in range(len(testmode)):
             print 'testing blfunc='+blfunc+', testmode='+testmode[j]+'...'
             #prepare input data
@@ -3084,7 +3039,7 @@ class tsdbaseline_autoTest(tsdbaseline_unittest_base):
     bloutput = outroot+"_blout"
     base_param = dict(infile=infile,
                       datacolumn='float_data',
-                      pol='0',
+                      pol='RR',
                       maskmode = 'auto',
                       thresh=5.0,
                       avg_limit=16,
@@ -3149,7 +3104,8 @@ class tsdbaseline_autoTest(tsdbaseline_unittest_base):
             task_param[key] = val
         tsdbaseline(**task_param)
         outfile = task_param['outfile']
-        currstat = self._getStats(outfile, spw='0', pol=task_param['pol'],
+        polid = 0 if task_param['pol'] in ['RR', 'LL'] else None
+        currstat = self._getStats(outfile, spw='0', pol=polid,
                                    colname=task_param['datacolumn'].upper(),
                                    mask=self.statrange)
         #print "currstat="+str(currstat)
@@ -3335,8 +3291,6 @@ class tsdbaseline_selection(unittest.TestCase):
                 nchan = sp.shape[1]
                 for out_pol in range(len(polids)):
                     in_pol = polids[out_pol]
-                    #pol selection keeps all pols in output MS
-                    if poltest: out_pol = in_pol
                     reference = self._get_reference(nchan, in_row, in_pol, dcol)
                     if self.verbose: print("data=%s" % str(sp[out_pol]))
                     self.assertTrue(numpy.allclose(sp[out_pol], reference,
@@ -3354,13 +3308,13 @@ class tsdbaseline_selection(unittest.TestCase):
         """Test selection by intent (corrected)"""
         self.run_test("intent", "corrected")
 
-    # def testAntennaF(self):
-    #     """Test selection by antenna (float_data)"""
-    #     self.run_test("antenna", "float_data")
+    def testAntennaF(self):
+        """Test selection by antenna (float_data)"""
+        self.run_test("antenna", "float_data")
 
-    # def testAntennaC(self):
-    #     """Test selection by antenna (corrected)"""
-    #     self.run_test("antenna", "corrected")
+    def testAntennaC(self):
+        """Test selection by antenna (corrected)"""
+        self.run_test("antenna", "corrected")
 
     def testFieldF(self):
         """Test selection by field (float_data)"""
@@ -3394,13 +3348,13 @@ class tsdbaseline_selection(unittest.TestCase):
         """Test selection by scan (corrected)"""
         self.run_test("scan", "corrected")
 
-    # def testPolF(self):
-    #     """Test selection by pol (float_data)"""
-    #     self.run_test("pol", "float_data")
+    def testPolF(self):
+        """Test selection by pol (float_data)"""
+        self.run_test("pol", "float_data")
 
-    # def testPolC(self):
-    #     """Test selection by pol (corrected)"""
-    #     self.run_test("pol", "corrected")
+    def testPolC(self):
+        """Test selection by pol (corrected)"""
+        self.run_test("pol", "corrected")
 
 def suite():
     return [tsdbaseline_basicTest, 

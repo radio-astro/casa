@@ -36,7 +36,7 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
             sdms.open(infile)
             sdms.set_selection(spw=sdutil.get_spwids(selection), field=field, 
                                antenna=antenna, timerange=timerange, 
-                               scan=scan, intent=intent)
+                               scan=scan, polarization=pol, intent=intent)
             sdms.apply_baseline_table(bltable=bltable,
                                       datacolumn=datacolumn,
                                       spw=spw,
@@ -64,7 +64,8 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
             sdms.open(infile)
             sdms.set_selection(spw=sdutil.get_spwids(selection),
                                field=field, antenna=antenna,
-                               timerange=timerange, scan=scan, intent=intent)
+                               timerange=timerange, scan=scan,
+                               polarization=pol, intent=intent)
             params, func = prepare_for_baselining(blfunc=blfunc,
                                                   datacolumn=datacolumn,
                                                   outfile=outfile,
