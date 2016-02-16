@@ -27,6 +27,144 @@
 
 #include <casacore/tables/Tables/TableRecord.h>
 
+using namespace casacore;
+
+namespace {
+template<class T>
+inline void resizeTo(T &array, IPosition const &shape) {
+  if (array.shape() != shape) {
+    array.resize(shape, False);
+  }
+}
+
+template<class T>
+inline void setValue1(ssize_t n, T const *src, T *dst) {
+  for (ssize_t i = 0; i < n; ++i) {
+    dst[i] = src[i];
+  }
+}
+
+template<class T>
+inline void setValueToMatrixColumn(Vector<T> const &src, ssize_t icolumn,
+    Matrix<T> &dst) {
+  IPosition const &shape = dst.shape();
+  ssize_t const nrow = shape[0];
+  ssize_t const ncolumn = shape[1];
+  if (icolumn >= ncolumn) {
+    throw AipsError("Specified column doesn't exist.");
+  }
+
+  Bool b1, b2;
+  T *dst_p = dst.getStorage(b1);
+  T *work_p = dst_p + icolumn * nrow;
+  T const *src_p = src.getStorage(b2);
+
+  setValue1(nrow, src_p, work_p);
+
+  src.freeStorage(src_p, b2);
+  dst.putStorage(dst_p, b1);
+}
+
+template<class T, class Executor>
+inline void transposeMatrix(ssize_t n, ssize_t offset_src, Matrix<T> const &src,
+    Matrix<T> &dst) {
+  Bool b1, b2;
+  T const *src_p = src.getStorage(b1);
+  T *dst_p = dst.getStorage(b2);
+  T const *wsrc_p = src_p + offset_src * n;
+  T *wdst_p = dst_p;
+
+  Executor::execute(n, wsrc_p, wdst_p);
+
+  src.freeStorage(src_p, b1);
+  dst.putStorage(dst_p, b2);
+}
+
+struct ExecuteMatrix1 {
+  template<class T>
+  static void execute(ssize_t n, T const *src, T *dst) {
+    setValue1(n, src, dst);
+  }
+};
+
+struct ExecuteMatrix2 {
+  template<class T>
+  static void execute(ssize_t n, T const *src, T *dst) {
+    T const *row0_p = src;
+    T const *row1_p = src + n;
+    for (ssize_t i = 0; i < n; ++i) {
+      dst[2 * i] = row0_p[i];
+      dst[2 * i + 1] = row1_p[i];
+    }
+  }
+};
+
+struct ExecuteMatrix4X {
+  template<class T>
+  static void execute(ssize_t n, T const *src, T *dst) {
+    throw std::runtime_error("");
+  }
+};
+
+template<>
+inline void ExecuteMatrix4X::execute(ssize_t n, Bool const *src, Bool *dst) {
+  Bool const *row0_p = src + 0 * n;
+  Bool const *row1_p = src + 1 * n;
+  Bool const *row2_p = src + 2 * n;
+  Bool const *row3_p = src + 3 * n;
+  for (ssize_t i = 0; i < n; ++i) {
+    dst[4 * i + 0] = row0_p[i];
+    Bool b = row2_p[i] || row3_p[i];
+    dst[4 * i + 1] = b;
+    dst[4 * i + 2] = b;
+    dst[4 * i + 3] = row1_p[i];
+  }
+}
+
+struct ExecuteMatrix4 {
+  template<class T>
+  static void execute(ssize_t n, T const *src, T *dst) {
+    T const *row0_p = src + 0 * n;
+    T const *row1_p = src + 1 * n;
+    T const *row2_p = src + 2 * n;
+    T const *row3_p = src + 3 * n;
+    for (ssize_t i = 0; i < n; ++i) {
+      dst[4 * i + 0] = row0_p[i];
+      dst[4 * i + 1] = row1_p[i];
+      dst[4 * i + 2] = row2_p[i];
+      dst[4 * i + 3] = row3_p[i];
+    }
+  }
+};
+
+inline void transposeMatrix4F2C(ssize_t n, Matrix<Float> const &src,
+    Matrix<Complex> &dst) {
+  Bool b1, b2;
+  Float const *src_p = src.getStorage(b1);
+  Complex *dst_p = dst.getStorage(b2);
+
+  Float const *row0_p = src_p + 0 * n;
+  Float const *row1_p = src_p + 1 * n;
+  Float const *row2_p = src_p + 2 * n;
+  Float const *row3_p = src_p + 3 * n;
+  for (ssize_t i = 0; i < n; ++i) {
+    dst_p[4 * i].real(row0_p[i]);
+    dst_p[4 * i].imag(0.0f);
+    Float fr = row2_p[i];
+    Float fi = row3_p[i];
+    dst_p[4 * i + 1].real(fr);
+    dst_p[4 * i + 1].imag(fi);
+    dst_p[4 * i + 2].real(fr);
+    dst_p[4 * i + 2].imag(-fi);
+    dst_p[4 * i + 3].real(row1_p[i]);
+    dst_p[4 * i + 3].imag(0.0f);
+  }
+
+  src.freeStorage(src_p, b1);
+  dst.putStorage(dst_p, b2);
+}
+}
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 class DataAccumulator;
@@ -63,19 +201,13 @@ public:
     return (*this.*get_num_pol_)();
   }
 
-  template<class T>
-  void resizeTo(T &array, IPosition const &shape) {
-    if (array.shape() != shape) {
-      array.resize(shape);
-    }
-  }
   void initialize(size_t num_chan) {
     num_chan_ = num_chan;
     IPosition const shape(2, num_chan_, num_pol_max_);
-    resizeTo(data_, shape);
-    resizeTo(flag_, shape);
-    resizeTo(tsys_, shape);
-    resizeTo(tcal_, shape);
+    ::resizeTo(data_, shape);
+    ::resizeTo(flag_, shape);
+    ::resizeTo(tsys_, shape);
+    ::resizeTo(tcal_, shape);
     tsys_ = -1.0f;
     tcal_ = -1.0f;
     filled_ = NoData();
@@ -129,16 +261,20 @@ public:
       return false;
     }
 
-    data_.column(polid) = data;
-    flag_.column(polid) = flag;
+    //data_.column(polid) = data;
+    ::setValueToMatrixColumn(data, polid, data_);
+    //flag_.column(polid) = flag;
+    ::setValueToMatrixColumn(flag, polid, flag_);
     flag_row_[polid] = flagrow;
     if (tsys.size() == num_chan_) {
-      tsys_.column(polid) = tsys;
+      //tsys_.column(polid) = tsys;
+      ::setValueToMatrixColumn(tsys, polid, tsys_);
     } else if (!tsys.empty()) {
       tsys_(0, polid) = tsys[0];
     }
     if (tcal.size() == num_chan_) {
-      tcal_.column(polid) = tcal;
+      //tcal_.column(polid) = tcal;
+      ::setValueToMatrixColumn(tcal, polid, tcal_);
     } else if (!tcal.empty()) {
       tcal_(0, polid) = tcal[0];
     }
@@ -247,6 +383,88 @@ private:
   bool (DataChunk::*get_chunk_)(MSDataRecord &record);
   uInt (DataChunk::*get_num_pol_)() const;
 
+  void setTsys2(MSDataRecord &record) {
+    if (num_chan_ == 1) {
+      record.setTsysSize(2, 1);
+      record.tsys(0, 0) = tsys_(0, 0);
+      record.tsys(1, 0) = tsys_(0, 1);
+    } else {
+      Float tsys00 = tsys_(0, 0);
+      Float tsys01 = tsys_(0, 1);
+      Float tsys10 = tsys_(1, 0);
+      Float tsys11 = tsys_(1, 1);
+      if ((tsys00 > 0.0f && tsys10 > 0.0f)
+          || (tsys01 > 0.0f && tsys11 > 0.0f)) {
+        record.setTsysSize(2, num_chan_);
+        transposeMatrix<Float, ExecuteMatrix2>(num_chan_, 0, tsys_,
+            record.tsys);
+      } else if (tsys00 > 0.0f || tsys01 > 0.0f) {
+        record.setTsysSize(2, 1);
+        record.tsys(0, 0) = tsys_(0, 0);
+        record.tsys(1, 0) = tsys_(0, 1);
+      }
+    }
+  }
+
+  void setTcal2(MSDataRecord &record) {
+    if (num_chan_ == 1) {
+      record.setTcalSize(2, 1);
+      record.tcal(0, 0) = tcal_(0, 0);
+      record.tcal(1, 0) = tcal_(0, 1);
+    } else {
+      Float tcal00 = tcal_(0, 0);
+      Float tcal01 = tcal_(0, 1);
+      Float tcal10 = tcal_(1, 0);
+      Float tcal11 = tcal_(1, 1);
+      if ((tcal00 > 0.0f && tcal10 > 0.0f)
+          || (tcal01 > 0.0f && tcal11 > 0.0f)) {
+        record.setTcalSize(2, num_chan_);
+        transposeMatrix<Float, ExecuteMatrix2>(num_chan_, 0, tcal_,
+            record.tcal);
+      } else if (tcal00 > 0.0f || tcal01 > 0.0f) {
+        record.setTcalSize(2, 1);
+        record.tcal(0, 0) = tcal_(0, 0);
+        record.tcal(1, 0) = tcal_(0, 1);
+      }
+    }
+  }
+
+  void setTsys1(ssize_t start_src, MSDataRecord &record) {
+    if (num_chan_ == 1) {
+      record.setTsysSize(1, 1);
+      record.tsys(0, 0) = tsys_(0, start_src);
+    } else if (tsys_(0, start_src) > 0.0f && tsys_(1, start_src) > 0.0f) {
+      // should be spectral Tsys
+      record.setTsysSize(1, num_chan_);
+      //record.tsys = -1;
+      transposeMatrix<Float, ExecuteMatrix1>(num_chan_, start_src, tsys_,
+          record.tsys);
+      //record.tsys.row(0) = tsys_.column(0);
+    } else if (tsys_(0, start_src) > 0.0f) {
+      // scalar Tsys
+      record.setTsysSize(1, 1);
+      record.tsys(0, 0) = tsys_(0, start_src);
+    }
+  }
+
+  void setTcal1(ssize_t start_src, MSDataRecord &record) {
+    if (num_chan_ == 1) {
+      record.setTcalSize(1, 1);
+      record.tcal(0, 0) = tcal_(0, start_src);
+    } else if (tcal_(0, start_src) > 0.0f && tcal_(1, start_src) > 0.0f) {
+      // should be spectral Tsys
+      record.setTcalSize(1, num_chan_);
+      //record.tsys = -1;
+      transposeMatrix<Float, ExecuteMatrix1>(num_chan_, start_src, tcal_,
+          record.tcal);
+      //record.tsys.row(0) = tsys_.column(0);
+    } else if (tcal_(0, start_src) > 0.0f) {
+      // scalar Tsys
+      record.setTcalSize(1, 1);
+      record.tcal(0, 0) = tcal_(0, start_src);
+    }
+  }
+
   bool getLinear(MSDataRecord &record) {
     POST_START;
 
@@ -257,75 +475,16 @@ private:
 //      std::cout << "set data/flag" << std::endl;
       record.setComplex();
       record.setDataSize(4, num_chan_);
-      Vector < Float > zero_vector(num_chan_, 0.0f);
-      Matrix < Complex > &data = record.complex_data;
-      Vector < Complex > complex0(data.row(0));
-      setReal(complex0, data_.column(0));
-      setImag(complex0, zero_vector);
-      complex0.reference(data.row(3));
-      setReal(complex0, data_.column(1));
-      setImag(complex0, zero_vector);
-      complex0.reference(data.row(1));
-      setReal(complex0, data_.column(2));
-      setImag(complex0, data_.column(3));
-      data.row(2) = conj(data.row(1));
-      //record.flag = flag_;
-      record.flag.row(0) = flag_.column(0);
-      record.flag.row(2) = flag_.column(2) || flag_.column(3);
-      record.flag.row(3) = flag_.column(1);
-      record.flag.row(1) = record.flag.row(2);
+      transposeMatrix4F2C(num_chan_, data_, record.complex_data);
+      transposeMatrix<Bool, ExecuteMatrix4X>(num_chan_, 0, flag_, record.flag);
       record.flag_row = anyEQ(flag_row_, True);
 //      std::cout << "weight = " << record.weight << std::endl;
 
 //      std::cout << "set tsys" << std::endl;
-      if (tsys_(0, 0) > 0.0f && tsys_(1, 0) > 0.0f) {
-        // should be spectral Tsys
-        record.setTsysSize(2, num_chan_);
-        record.tsys = -1;
-        record.tsys.row(0) = tsys_.column(0);
-      } else if (tsys_(0, 0) > 0.0f) {
-        // scalar Tsys
-        record.setTsysSize(2, 1);
-        record.tsys(0, 0) = tsys_(0, 0);
-      }
-      if (tsys_(0, 1) > 0.0f && tsys_(1, 1) > 0.0f) {
-        if (record.tsys.ncolumn() != num_chan_) {
-          record.setTsysSize(2, num_chan_);
-          record.tsys.row(0) = -1.0f;
-        }
-        record.tsys.row(1) = tsys_.column(1);
-      } else if (tsys_(0, 1) > 0.0f) {
-        if (record.tsys.ncolumn() != 1) {
-          record.setTsysSize(2, 1);
-          record.tsys(0, 0) = -1.0f;
-        }
-        record.tsys(1, 0) = tsys_(0, 1);
-      }
+      setTsys2(record);
 
 //      std::cout << "set tcal " << tcal_ << std::endl;
-      if (tcal_(0, 0) > 0.0f && tcal_(1, 0) > 0.0f) {
-        // should be spectral Tcal
-        record.setTcalSize(2, num_chan_);
-        record.tcal = -1;
-        record.tcal.row(0) = tcal_.column(0);
-      } else if (tcal_(0, 0) > 0.0f) {
-        // scalar Tcal
-        record.setTcalSize(2, num_chan_);
-        record.tcal(0, 0) = tcal_(0, 0);
-      }
-      if (tcal_(0, 1) > 0.0f && tcal_(1, 1) > 0.0f) {
-        if (record.tcal.ncolumn() != num_chan_) {
-          record.setTcalSize(2, num_chan_);
-          record.tcal.row(0) = -1.0f;
-        }
-        record.tcal.row(1) = tcal_.column(1);
-      } else if (tcal_(0, 1) > 0.0f) {
-        if (record.tcal.ncolumn() != 1) {
-          record.setTcalSize(2, 1);
-          record.tcal(0, 0) = -1.0f;
-        }
-        record.tcal(1, 0) = tcal_(0, 1);
-      }
+      setTcal2(record);
 
       record.num_pol = 4;
       record.corr_type = corr_type_;
@@ -334,63 +493,17 @@ private:
 //      std::cout << "set data/flag" << std::endl;
       record.setFloat();
       record.setDataSize(2, num_chan_);
-      record.float_data.row(0) = data_.column(0);
-      record.float_data.row(1) = data_.column(1);
-      record.flag.row(0) = flag_.column(0);
-      record.flag.row(1) = flag_.column(1);
+      transposeMatrix<Float, ExecuteMatrix2>(num_chan_, 0, data_,
+          record.float_data);
+      transposeMatrix<Bool, ExecuteMatrix2>(num_chan_, 0, flag_, record.flag);
       record.flag_row = flag_row_[0] || flag_row_[1];
 //      std::cout << "weight = " << record.weight << std::endl;
 
-      //Matrix < Float > tsys;
 //      std::cout << "set tsys" << std::endl;
-      if (tsys_(0, 0) > 0.0f && tsys_(1, 0) > 0.0f) {
-        // should be spectral Tsys
-        record.setTsysSize(2, num_chan_);
-        record.tsys = -1;
-        record.tsys.row(0) = tsys_.column(0);
-      } else if (tsys_(0, 0) > 0.0f) {
-        // scalar Tsys
-        record.setTsysSize(2, 1);
-        record.tsys(0, 0) = tsys_(0, 0);
-      }
-      if (tsys_(0, 1) > 0.0f && tsys_(1, 1) > 0.0f) {
-        if (record.tsys.ncolumn() != num_chan_) {
-          record.setTsysSize(2, num_chan_);
-          record.tsys.row(0) = -1.0f;
-        }
-        record.tsys.row(1) = tsys_.column(1);
-      } else if (tsys_(0, 1) > 0.0f) {
-        if (record.tsys.ncolumn() != 1) {
-          record.setTsysSize(2, 1);
-          record.tsys(0, 0) = -1.0f;
-        }
-        record.tsys(1, 0) = tsys_(0, 1);
-      }
+      setTsys2(record);
 
 //      std::cout << "set tcal " << tcal_ << std::endl;
-      if (tcal_(0, 0) > 0.0f && tcal_(1, 0) > 0.0f) {
-        // should be spectral Tcal
-        record.setTcalSize(2, num_chan_);
-        record.tcal = -1;
-        record.tcal.row(0) = tcal_.column(0);
-      } else if (tcal_(0, 0) > 0.0f) {
-        // scalar Tcal
-        record.setTcalSize(2, num_chan_);
-        record.tcal(0, 0) = tcal_(0, 0);
-      }
-      if (tcal_(0, 1) > 0.0f && tcal_(1, 1) > 0.0f) {
-        if (record.tcal.ncolumn() != num_chan_) {
-          record.setTcalSize(2, num_chan_);
-          record.tcal.row(0) = -1.0f;
-        }
-        record.tcal.row(1) = tcal_.column(1);
-      } else if (tcal_(0, 1) > 0.0f) {
-        if (record.tcal.ncolumn() != 1) {
-          record.setTcalSize(2, 1);
-          record.tcal(0, 0) = -1.0f;
-        }
-        record.tcal(1, 0) = tcal_(0, 1);
-      }
+      setTcal2(record);
 
       record.num_pol = 2;
       record.corr_type[0] = corr_type_[0];
@@ -400,32 +513,15 @@ private:
 //      std::cout << "set data/flag (pol 0)" << std::endl;
       record.setFloat();
       record.setDataSize(1, num_chan_);
-      record.float_data.row(0) = data_.column(0);
-      record.flag.row(0) = flag_.column(0);
+      transposeMatrix<Float, ExecuteMatrix1>(num_chan_, 0, data_,
+          record.float_data);
+      transposeMatrix<Bool, ExecuteMatrix1>(num_chan_, 0, flag_, record.flag);
       record.flag_row = flag_row_(0);
 
-      if (tsys_(0, 0) > 0.0f && tsys_(1, 0) > 0.0f) {
-        // should be spectral Tsys
-        record.setTsysSize(1, num_chan_);
-        record.tsys = -1;
-        record.tsys.row(0) = tsys_.column(0);
-      } else if (tsys_(0, 0) > 0.0f) {
-        // scalar Tsys
-        record.setTsysSize(1, 1);
-        record.tsys(0, 0) = tsys_(0, 0);
-      }
+      setTsys1(0, record);
 
 //      std::cout << "set tcal " << tcal_ << std::endl;
-      if (tcal_(0, 0) > 0.0f && tcal_(1, 0) > 0.0f) {
-        // should be spectral Tcal
-        record.setTcalSize(1, num_chan_);
-        record.tcal = -1;
-        record.tcal.row(0) = tcal_.column(0);
-      } else if (tcal_(0, 0) > 0.0f) {
-        // scalar Tcal
-        record.setTcalSize(1, 1);
-        record.tcal(0, 0) = tcal_(0, 0);
-      }
+      setTcal1(0, record);
 
       record.num_pol = 1;
       record.corr_type[0] = corr_type_[0];
@@ -434,32 +530,15 @@ private:
 //      std::cout << "set data/flag (pol 1)" << std::endl;
       record.setFloat();
       record.setDataSize(1, num_chan_);
-      record.float_data.row(0) = data_.column(1);
-      record.flag.row(0) = flag_.column(1);
+      transposeMatrix<Float, ExecuteMatrix1>(num_chan_, 1, data_,
+          record.float_data);
+      transposeMatrix<Bool, ExecuteMatrix1>(num_chan_, 1, flag_, record.flag);
       record.flag_row = flag_row_(1);
 
-      if (tsys_(0, 1) > 0.0f && tsys_(1, 1) > 0.0f) {
-        if (record.tsys.ncolumn() != num_chan_) {
-          record.setTsysSize(1, num_chan_);
-        }
-        record.tsys.row(0) = tsys_.column(1);
-      } else if (tsys_(0, 1) > 0.0f) {
-        if (record.tsys.ncolumn() != 1) {
-          record.setTsysSize(1, 1);
-        }
-        record.tsys(0, 0) = tsys_(0, 1);
-      }
+      setTsys1(1, record);
 
 //      std::cout << "set tcal " << tcal_ << std::endl;
-      if (tcal_(0, 1) > 0.0f && tcal_(1, 1) > 0.0f) {
-        // should be spectral Tcal
-        record.setTcalSize(1, num_chan_);
-        record.tcal.row(0) = tcal_.column(1);
-      } else if (tcal_(0, 1) > 0.0f) {
-        // scalar Tcal
-        record.setTcalSize(1, 1);
-        record.tcal(0, 0) = tcal_(0, 1);
-      }
+      setTcal1(1, record);
 
       record.num_pol = 1;
       record.corr_type[0] = corr_type_[3];
@@ -482,18 +561,18 @@ private:
     record.setFloat();
     if (isFullPol()) {
       record.setDataSize(4, num_chan_);
-      for (size_t i = 0; i < 4; ++i) {
-        record.float_data.row(i) = data_.column(i);
-        record.flag.row(i) = flag_.column(i);
-      }
+      transposeMatrix<Float, ExecuteMatrix4>(num_chan_, 0, data_,
+          record.float_data);
+      transposeMatrix<Bool, ExecuteMatrix4>(num_chan_, 0, flag_, record.flag);
       record.flag_row = anyTrue(flag_row_);
 
       record.num_pol = 4;
       record.corr_type = corr_type_;
     } else if (isSinglePol0()) {
       record.setDataSize(1, num_chan_);
-      record.float_data.row(0) = data_.column(0);
-      record.flag.row(0) = flag_.column(0);
+      transposeMatrix<Float, ExecuteMatrix1>(num_chan_, 0, data_,
+          record.float_data);
+      transposeMatrix<Bool, ExecuteMatrix1>(num_chan_, 0, flag_, record.flag);
       record.flag_row = flag_row_[0];
 
       record.num_pol = 1;
@@ -513,18 +592,18 @@ private:
     if (isDualPol()) {
       // POL 0 and 1
       record.setDataSize(2, num_chan_);
-      record.float_data.row(0) = data_.column(0);
-      record.float_data.row(1) = data_.column(1);
-      record.flag.row(0) = flag_.column(0);
-      record.flag.row(1) = flag_.column(1);
+      transposeMatrix<Float, ExecuteMatrix2>(num_chan_, 0, data_,
+          record.float_data);
+      transposeMatrix<Bool, ExecuteMatrix2>(num_chan_, 0, flag_, record.flag);
       record.flag_row = flag_row_[0] || flag_row_[1];
 
       record.num_pol = 2;
       record.corr_type = corr_type_;
     } else if (isSinglePol0()) {
       record.setDataSize(1, num_chan_);
-      record.float_data.row(0) = data_.column(0);
-      record.flag.row(0) = flag_.column(0);
+      transposeMatrix<Float, ExecuteMatrix1>(num_chan_, 0, data_,
+          record.float_data);
+      transposeMatrix<Bool, ExecuteMatrix1>(num_chan_, 0, flag_, record.flag);
       record.flag_row = flag_row_[0];
 
       record.num_pol = 1;
@@ -712,7 +791,7 @@ public:
     key.spw_id = record.spw_id;
     key.intent = record.intent;
     key.pol_type = record.pol_type;
-    Matrix < Double > const &direction = record.direction;
+    Matrix<Double> const &direction = record.direction;
     Double interval = record.interval;
     bool status = false;
     auto iter = indexer_.find(key);
