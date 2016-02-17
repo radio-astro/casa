@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.callibrary as callibrary
+from pipeline.infrastructure import casa_tasks
 
 import numpy as np
 
