@@ -163,11 +163,12 @@ class TimeGaincal(gaincalworker.GaincalWorker):
             phase_combine = inputs.combine
 	    phaseup_spwmap = inputs.ms.phaseup_spwmap
             phase_interp = 'linear,linear'
+        amp_calsolint = phase_calsolint
 
         # Produce the diagnostic table for displaying amplitude vs time plots. 
         #     This table is not applied to the data
 	#     No special mapping required here.
-        calampresult = self._do_caltarget_ampcal()
+        calampresult = self._do_caltarget_ampcal(solint=amp_calsolint)
         result.calampresult = calampresult
 
         # Compute the science target phase solution
@@ -274,7 +275,7 @@ class TimeGaincal(gaincalworker.GaincalWorker):
         return result
 
     # Used for diagnostics not calibration
-    def _do_caltarget_ampcal(self):
+    def _do_caltarget_ampcal(self, solint):
         inputs = self.inputs
 
         task_args = {
@@ -284,7 +285,7 @@ class TimeGaincal(gaincalworker.GaincalWorker):
           'field'       : inputs.field,
           'intent'      : inputs.intent,
           'spw'         : inputs.spw,
-          'solint'      : inputs.calsolint,
+          'solint'      : solint,
           'gaintype'    : 'T',
           'calmode'     : 'a',
           'minsnr'      : inputs.calminsnr,
