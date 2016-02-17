@@ -79,14 +79,31 @@ template <class T> class DataCubeHolder : public DataCubeHolderBase
 
 public:
 
-	DataCubeHolder(Cube<T> &dataCube);
-	DataCubeHolder(const Cube<T> &dataCube);
+	DataCubeHolder(Cube<T> &dataCube) {cube_p.reference(dataCube);}
+	DataCubeHolder(const Cube<T> &dataCube) {cube_p.reference(dataCube);}
 
-	Matrix<T> & getMatrix();
-	Vector<T> & getVector();
+	Matrix<T> & getMatrix() {return matrix_p;}
+	Vector<T> & getVector() {return vector_p;}
 
-	void setMatrixIndex(uInt matrixIndex);
-	void setVectorIndex(uInt vectorIndex);
+	void setMatrixIndex(uInt matrixIndex)
+	{
+		matrix_p.resize(); // Resize to 0 to avoid shape conformance problems
+		matrixIndex_p = matrixIndex;
+		matrix_p.reference(cube_p.xyPlane(matrixIndex));
+		matrixShape_p = matrix_p.shape();
+
+		return;
+	}
+
+	void setVectorIndex(uInt vectorIndex)
+	{
+		vector_p.resize(); // Resize to 0 to avoid shape conformance problems
+		vectorIndex_p = vectorIndex;
+		vector_p.reference(matrix_p.row(vectorIndex));
+		vectorShape_p = vector_p.shape();
+
+		return;
+	}
 
 
 protected:
@@ -114,14 +131,25 @@ public:
 	void setWindowShape(IPosition windowShape);
 	IPosition & getWindowShape();
 
-	template <class T> Vector<T> & getVector(MS::PredefinedColumns key);
-	template <class T> Matrix<T> & getMatrix(MS::PredefinedColumns key);
+	template <class T> Vector<T> & getVector(MS::PredefinedColumns key)
+	{
+		DataCubeHolder<T> *flagCubeHolder = static_cast< DataCubeHolder<T>* >(dataCubeMap_p[key]);
+		return flagCubeHolder->getVector();
+	}
+
+	template <class T> Matrix<T> & getMatrix(MS::PredefinedColumns key)
+	{
+		DataCubeHolder<T> *flagCubeHolder = static_cast< DataCubeHolder<T>* >(dataCubeMap_p[key]);
+		return flagCubeHolder->getVector();
+	}
 
 	void setMatrixIndex(uInt rowIndex);
 	void setVectorIndex(uInt vectorIndex);
 
 	IPosition & getMatrixShape();
 	IPosition & getVectorShape();
+
+	size_t nelements();
 
 
 protected:
@@ -136,9 +164,15 @@ protected:
 // Convenience methods
 //////////////////////////////////////////////////////////////////////////
 
-inline Float weightToSigma (Float weight);
+inline Float weightToSigma (Float weight)
+{
+	return weight > FLT_MIN ? 1.0 / std::sqrt (weight) : -1.0;
+}
 
-inline Float sigmaToWeight (Float sigma);
+inline Float sigmaToWeight (Float sigma)
+{
+	return sigma > FLT_MIN ? 1.0 / (sigma * sigma) : 0.0;
+}
 
 void accumulateWeightCube (	const Cube<Float> &weightCube,
 							const Cube<Bool> &flags,
@@ -156,11 +190,6 @@ void accumulateFlagCube (	const Cube<Bool> &flagCube,
 } //# NAMESPACE VI - END
 
 } //# NAMESPACE CASA - END
-
-// Include implementation file to avoid compile problems
-// due to the fact that the compiler does not now which
-// version of the template it has to instantiate
-#include <mstransform/TVI/UtilsTVI.cc>
 
 
 #endif /* UtilsTVI_H_ */

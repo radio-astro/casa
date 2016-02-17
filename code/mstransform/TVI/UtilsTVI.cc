@@ -20,13 +20,11 @@
 //#  MA 02111-1307  USA
 //# $Id: $
 
-#ifndef UtilsTVI_CC_
-#define UtilsTVI_CC_
+#include <mstransform/TVI/UtilsTVI.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 namespace vi { //# NAMESPACE VI - BEGIN
-
 
 //////////////////////////////////////////////////////////////////////////
 // DataCubeHolderBase class
@@ -63,70 +61,6 @@ IPosition & DataCubeHolderBase::getVectorShape()
 {
 	return vectorShape_p;
 }
-
-
-//////////////////////////////////////////////////////////////////////////
-// DataCubeHolder class
-//////////////////////////////////////////////////////////////////////////
-
-// -----------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------
-template<class T> DataCubeHolder<T>::DataCubeHolder(Cube<T> &dataCube)
-{
-	cube_p.reference(dataCube);
-}
-
-// -----------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------
-template<class T> DataCubeHolder<T>::DataCubeHolder(const Cube<T> &dataCube)
-{
-	cube_p.reference(dataCube);
-}
-
-// -----------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------
-template<class T> Matrix<T> & DataCubeHolder<T>::getMatrix()
-{
-	return matrix_p;
-}
-
-// -----------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------
-template<class T> Vector<T> & DataCubeHolder<T>::getVector()
-{
-	return vector_p;
-}
-
-// -----------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------
-template<class T> void DataCubeHolder<T>::setMatrixIndex(uInt matrixIndex)
-{
-	matrix_p.resize(); // Resize to 0 to avoid shape conformance problems
-	matrixIndex_p = matrixIndex;
-	matrix_p.reference(cube_p.xyPlane(matrixIndex));
-	matrixShape_p = matrix_p.shape();
-
-	return;
-}
-
-// -----------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------
-template<class T> void DataCubeHolder<T>::setVectorIndex(uInt vectorIndex)
-{
-	vector_p.resize(); // Resize to 0 to avoid shape conformance problems
-	vectorIndex_p = vectorIndex;
-	vector_p.reference(matrix_p.row(vectorIndex));
-	vectorShape_p = vector_p.shape();
-
-	return;
-}
-
 
 //////////////////////////////////////////////////////////////////////////
 // DataCubeMap class
@@ -183,24 +117,6 @@ IPosition & DataCubeMap::getWindowShape()
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-template <class T> Vector<T> & DataCubeMap::getVector(MS::PredefinedColumns key)
-{
-	DataCubeHolder<T> *flagCubeHolder = static_cast< DataCubeHolder<T>* >(dataCubeMap_p[key]);
-	return flagCubeHolder->getVector();
-}
-
-// -----------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------
-template <class T> Matrix<T> & DataCubeMap::getMatrix(MS::PredefinedColumns key)
-{
-	DataCubeHolder<T> *flagCubeHolder = static_cast< DataCubeHolder<T>* >(dataCubeMap_p[key]);
-	return flagCubeHolder->getVector();
-}
-
-// -----------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------
 void DataCubeMap::setMatrixIndex(uInt rowIndex)
 {
 	for (dataCubeMapIter_p = dataCubeMap_p.begin();dataCubeMapIter_p!= dataCubeMap_p.end();dataCubeMapIter_p++)
@@ -240,26 +156,18 @@ IPosition & DataCubeMap::getVectorShape()
 	return dataCubeMap_p.begin()->second->getVectorShape();
 }
 
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+size_t DataCubeMap::nelements()
+{
+	return dataCubeMap_p.size();
+}
+
 
 //////////////////////////////////////////////////////////////////////////
 // Convenience methods
 //////////////////////////////////////////////////////////////////////////
-
-// -----------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------
-inline Float weightToSigma (Float weight)
-{
-    return weight > FLT_MIN ? 1.0 / std::sqrt (weight) : -1.0;
-}
-
-// -----------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------
-inline Float sigmaToWeight (Float sigma)
-{
-    return sigma > FLT_MIN ? 1.0 / (sigma * sigma) : 0.0;
-}
 
 // -----------------------------------------------------------------------
 //
@@ -372,7 +280,4 @@ void accumulateFlagCube (const Cube<Bool> &flagCube, Vector<Bool> &flagRow)
 } //# NAMESPACE VI - END
 
 } //# NAMESPACE CASA - END
-
-
-#endif /* UtilsTVI_CC_ */
 

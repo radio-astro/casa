@@ -20,8 +20,7 @@
 //#  MA 02111-1307  USA
 //# $Id: $
 
-#ifndef FreqAxisTVI_CC_
-#define FreqAxisTVI_CC_
+#include <mstransform/TVI/FreqAxisTVI.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -189,52 +188,6 @@ Bool FreqAxisTVI::existsColumn (VisBufferComponent2 id) const
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-template <class T> void FreqAxisTVI::transformFreqAxis(	Cube<T> const &inputDataCube,
-														Cube<T> &outputDataCube,
-														DataCubeMap &auxiliaryData,
-														FreqAxisTransformEngine<T> &transformer) const
-{
-	// Re-shape output data cube
-	outputDataCube.resize(getVisBufferConst()->getShape(),False);
-
-	// Get data shape for iteration
-	const IPosition &inputShape = inputDataCube.shape();
-	uInt nRows = inputShape(2);
-	uInt nCorrs = inputShape(0);
-
-	// Initialize input-output planes
-	Matrix<T> inputDataPlane;
-	Matrix<T> outputDataPlane;
-
-	// Initialize input-output vectors
-	Vector<T> inputDataVector;
-	Vector<T> outputDataVector;
-
-	for (uInt row=0; row < nRows; row++)
-	{
-		// Assign input-output planes by reference
-		auxiliaryData.setMatrixIndex(row);
-		inputDataPlane.reference(inputDataCube.xyPlane(row));
-		outputDataPlane.reference(outputDataCube.xyPlane(row));
-
-		for (uInt corr=0; corr < nCorrs; corr++)
-		{
-			// Assign input-output vectors by reference
-			auxiliaryData.setVectorIndex(corr);
-			inputDataVector.reference(inputDataPlane.row(corr));
-			outputDataVector.reference(outputDataPlane.row(corr));
-
-			// Transform data
-			transformer.transform(inputDataVector,outputDataVector,auxiliaryData);
-		}
-	}
-
-	return;
-}
-
-// -----------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------
 Vector<Int> FreqAxisTVI::getChannels (Double,Int,Int spectralWindowId,Int) const
 {
 	Vector<Int> ret(spwOutChanNumMap_p[spectralWindowId]);
@@ -301,7 +254,5 @@ void FreqAxisTVI::sigma (Matrix<Float> & sigma) const
 } //# NAMESPACE VI - END
 
 } //# NAMESPACE CASA - END
-
-#endif /* FreqAxisTVI_CC_ */
 
 

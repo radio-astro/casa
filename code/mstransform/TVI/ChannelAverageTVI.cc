@@ -168,11 +168,8 @@ void ChannelAverageTVI::flag(Cube<Bool>& flagCube) const
 	uInt width = spwChanbinMap_p[inputSPW];
 	ChannelAverageTransformEngine<Bool> transformer(&(kernel),width);
 
-	// Dummy auxiliary data
-	DataCubeMap auxiliaryData;
-
 	// Transform data
-	transformFreqAxis(vb->flagCube(),flagCube,auxiliaryData,transformer);
+	transformFreqAxis(vb->flagCube(),flagCube,transformer);
 
 	return;
 }

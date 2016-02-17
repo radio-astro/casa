@@ -92,11 +92,58 @@ public:
 
 protected:
 
-    // Method implementing main loop
+    // Method implementing main loop  (with auxiliary data)
 	template <class T> void transformFreqAxis(	Cube<T> const &inputDataCube,
 												Cube<T> &outputDataCube,
 												DataCubeMap &auxiliaryData,
-												FreqAxisTransformEngine<T> &transformer) const;
+												FreqAxisTransformEngine<T> &transformer) const
+	{
+		// Re-shape output data cube
+		outputDataCube.resize(getVisBufferConst()->getShape(),False);
+
+		// Get data shape for iteration
+		const IPosition &inputShape = inputDataCube.shape();
+		uInt nRows = inputShape(2);
+		uInt nCorrs = inputShape(0);
+
+		// Initialize input-output planes
+		Matrix<T> inputDataPlane;
+		Matrix<T> outputDataPlane;
+
+		// Initialize input-output vectors
+		Vector<T> inputDataVector;
+		Vector<T> outputDataVector;
+
+		for (uInt row=0; row < nRows; row++)
+		{
+			// Assign input-output planes by reference
+			auxiliaryData.setMatrixIndex(row);
+			inputDataPlane.reference(inputDataCube.xyPlane(row));
+			outputDataPlane.reference(outputDataCube.xyPlane(row));
+
+			for (uInt corr=0; corr < nCorrs; corr++)
+			{
+				// Assign input-output vectors by reference
+				auxiliaryData.setVectorIndex(corr);
+				inputDataVector.reference(inputDataPlane.row(corr));
+				outputDataVector.reference(outputDataPlane.row(corr));
+
+				// Transform data
+				transformer.transform(inputDataVector,outputDataVector,auxiliaryData);
+			}
+		}
+
+		return;
+	}
+
+    // Method implementing main loop (without auxiliary data)
+	template <class T> void transformFreqAxis(	Cube<T> const &inputDataCube,
+												Cube<T> &outputDataCube,
+												FreqAxisTransformEngine<T> &transformer) const
+	{
+		DataCubeMap auxiliaryData;
+		transformFreqAxis(inputDataCube,outputDataCube,auxiliaryData,transformer);
+	}
 
 	String spwSelection_p;
 	mutable LogIO logger_p;
@@ -126,11 +173,6 @@ public:
 } //# NAMESPACE VI - END
 
 } //# NAMESPACE CASA - END
-
-// Include implementation file to avoid compile problems
-// due to the fact that the compiler does not now which
-// version of the template it has to instantiate
-#include <mstransform/TVI/FreqAxisTVI.cc>
 
 #endif /* FreqAxisTVI_H_ */
 
