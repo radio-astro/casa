@@ -140,10 +140,10 @@ void BaselineTable::attachOptionalColumns()
   lfavgCol_.attach(table_, "LF_AVERAGE");
   lfedgeCol_.attach(table_, "LF_EDGE");
 
-  ftypeCol_.rwKeywordSet().define("Polynomial",   (uInt)LIBSAKURA_SYMBOL(BaselineType_kPolynomial));
-  ftypeCol_.rwKeywordSet().define("Chebyshev",    (uInt)LIBSAKURA_SYMBOL(BaselineType_kChebyshev));
-  ftypeCol_.rwKeywordSet().define("Cubic Spline", (uInt)LIBSAKURA_SYMBOL(BaselineType_kCubicSpline));
-  ftypeCol_.rwKeywordSet().define("Sinusoid",     (uInt)LIBSAKURA_SYMBOL(BaselineType_kSinusoid));
+  ftypeCol_.rwKeywordSet().define("Polynomial",   BaselineType_kPolynomial);
+  ftypeCol_.rwKeywordSet().define("Chebyshev",    BaselineType_kChebyshev);
+  ftypeCol_.rwKeywordSet().define("Cubic Spline", BaselineType_kCubicSpline);
+  ftypeCol_.rwKeywordSet().define("Sinusoid",     BaselineType_kSinusoid);
 }
 
 void BaselineTable::save(const std::string &filename)

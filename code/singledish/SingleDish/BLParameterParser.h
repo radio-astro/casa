@@ -37,8 +37,8 @@
 #include <casa/aipstype.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogOrigin.h>
-
 #include <libsakura/sakura.h>
+#include <singledish/SingleDish/BaselineTable.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -64,7 +64,7 @@ struct BLParameterSet {
   BLParameterSet(string const blmask="", uint16_t const nfit_max=0,
 		 float const clipthres=3.0,
 		 LineFinderParameter lf_param=LineFinderParameter(),
-    LIBSAKURA_SYMBOL(BaselineType) const bl_type=LIBSAKURA_SYMBOL(BaselineType_kNumElements),
+		 size_t const bl_type = BaselineType_kNumElements,
 		 uint16_t const fit_order = USHRT_MAX, //UINT16_MAX,
 		 size_t const num_piece = USHRT_MAX, //SIZE_MAX,
 		 std::vector<size_t> const &nwaves = std::vector<size_t>()
@@ -101,7 +101,7 @@ struct BLParameterSet {
   uint16_t num_fitting_max;
   float clip_threshold_sigma;
   LineFinderParameter line_finder;
-  LIBSAKURA_SYMBOL(BaselineType) baseline_type;
+  size_t baseline_type;
   uint16_t order; //initialize with invalid parameters
   size_t npiece;
   std::vector<size_t> nwave;
@@ -123,10 +123,9 @@ public:
   //Returns the name of file that stores 
   inline string get_file_name(){return blparam_file_;};
   //Returns a list of baseline type in the file
-  inline std::vector<LIBSAKURA_SYMBOL(BaselineType)>
-    get_function_types(){return baseline_types_;};
+  inline std::vector<size_t> get_function_types(){return baseline_types_;};
   //Returns the maximum fit order of specified baseline type to construct BaselineContext
-  uint16_t get_max_order(LIBSAKURA_SYMBOL(BaselineType) const type);
+  uint16_t get_max_order(size_t const bltype);
 
 protected:
   //private:
@@ -146,8 +145,8 @@ protected:
   // Member variables
   string blparam_file_;
   std::map<const std::pair<size_t, size_t>, BLParameterSet*> bl_parameters_;
-  std::vector<LIBSAKURA_SYMBOL(BaselineType)> baseline_types_;
-  uint16_t max_orders_[static_cast<size_t>(LIBSAKURA_SYMBOL(BaselineType_kNumElements))];
+  std::vector<size_t> baseline_types_;
+  uint16_t max_orders_[BaselineType_kNumElements];
   // The enum for columns in fitting parameter file
   typedef enum {BLParameters_kRow = 0,
 		BLParameters_kPol,

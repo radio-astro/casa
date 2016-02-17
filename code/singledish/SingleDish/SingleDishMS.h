@@ -201,15 +201,15 @@ private:
   void get_pol_selection(string const &in_pol, size_t const num_pol,
       Vector<bool> &pol);
   // Create a set of baseline contexts
-  void get_baseline_context(LIBSAKURA_SYMBOL(BaselineType) const baseline_type,
+  void get_baseline_context(size_t const bltype,
       uint16_t order,
       size_t num_chan,
       Vector<size_t> const &nchan,
       Vector<bool> const &nchan_set,
       Vector<size_t> &ctx_indices,
-      std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> &bl_contexts);
+      std::vector<LIBSAKURA_SYMBOL(BaselineContextFloat) *> &bl_contexts);
   // Destroy a set of baseline contexts
-  void destroy_baseline_contexts(std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> &bl_contexts);void check_sakura_status(string const &name, LIBSAKURA_SYMBOL(Status) const status);
+  void destroy_baseline_contexts(std::vector<LIBSAKURA_SYMBOL(BaselineContextFloat) *> &bl_contexts);void check_sakura_status(string const &name, LIBSAKURA_SYMBOL(Status) const status);
   template<typename T, typename U>
   void set_matrix_for_bltable(size_t const num_pol, size_t const num_data_max,
       std::vector<std::vector<T> > const &in_data, Array<U> &out_data) {
@@ -230,7 +230,7 @@ private:
       out_data[i][ipol] = static_cast<U>(in_data[i]);
     }
   }
-  size_t get_num_coeff_bloutput(LIBSAKURA_SYMBOL(BaselineType) bltype,
+  size_t get_num_coeff_bloutput(size_t const bltype,
 				size_t order,
                                 size_t &num_coeff_max);
 
@@ -247,8 +247,8 @@ private:
 			  string const& in_spw,
 			  string const& in_ppp,
 			  LIBSAKURA_SYMBOL(Status)& status,
-			  std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> &bl_contexts,
-			  LIBSAKURA_SYMBOL(BaselineType) bltype,
+			  std::vector<LIBSAKURA_SYMBOL(BaselineContextFloat) *> &bl_contexts,
+			  size_t const bltype,
 			  int const order,
 			  float const clip_threshold_sigma,
 			  int const num_fitting_max,

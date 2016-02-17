@@ -38,6 +38,12 @@
 #include <tables/Tables/ArrayColumn.h>
 #include <libsakura/sakura.h>
 
+#define BaselineType_kPolynomial     0
+#define BaselineType_kChebyshev      1
+#define BaselineType_kCubicSpline    2
+#define BaselineType_kSinusoid       3
+#define BaselineType_kNumElements    4
+
 namespace casa {
 
 class BaselineTable {

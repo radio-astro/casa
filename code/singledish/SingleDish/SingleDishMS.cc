@@ -165,7 +165,7 @@ void SingleDishMS::setSelection(Record const &selection, bool const verbose) {
         uvDistExpr(""), taQLExpr(""), polnExpr(""), scanExpr(""), arrayExpr(""),
         obsExpr(""), intentExpr("");
     timeExpr = get_field_as_casa_string(selection_, "timerange");
-    antennaExpr = get_field_as_casa_string(selection_, "antenna");
+    antennaExpr = get_field_as_casa_string(selection_, "baseline");
     fieldExpr = get_field_as_casa_string(selection_, "field");
     spwExpr = get_field_as_casa_string(selection_, "spw");
     uvDistExpr = get_field_as_casa_string(selection_, "uvdist");
@@ -375,7 +375,7 @@ void SingleDishMS::format_selection(Record &selection) {
   String autoCorrSel("");
   os << "Formatting antenna selection to select only auto-correlation"
       << LogIO::POST;
-  String const antennaSel(get_field_as_casa_string(selection, "antenna"));
+  String const antennaSel(get_field_as_casa_string(selection, "baseline"));
   os << LogIO::DEBUG1 << "Input antenna expression = " << antennaSel
       << LogIO::POST;
   if (antennaSel == "") { //Antenna selection is NOT set
@@ -399,7 +399,7 @@ void SingleDishMS::format_selection(Record &selection) {
   }
   os << LogIO::DEBUG1 << "Auto-correlation selection string: " << autoCorrSel
       << LogIO::POST;
-  selection.define("antenna", autoCorrSel);
+  selection.define("baseline", autoCorrSel);
 
 }
 
@@ -592,13 +592,13 @@ void SingleDishMS::get_pol_selection(string const &in_pol, size_t const num_pol,
   }
 }
 
-void SingleDishMS::get_baseline_context(LIBSAKURA_SYMBOL(BaselineType) const baseline_type,
+void SingleDishMS::get_baseline_context(size_t const bltype,
     uint16_t order,
     size_t num_chan,
     Vector<size_t> const &nchan,
     Vector<bool> const &nchan_set,
     Vector<size_t> &ctx_indices,
-    std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> &bl_contexts)
+    std::vector<LIBSAKURA_SYMBOL(BaselineContextFloat) *> &bl_contexts)
 {
   size_t idx = 0;
   bool found = false;
@@ -617,24 +617,30 @@ void SingleDishMS::get_baseline_context(LIBSAKURA_SYMBOL(BaselineType) const bas
 
     }
 
-    LIBSAKURA_SYMBOL(BaselineContext) *context;
-    LIBSAKURA_SYMBOL(Status) status;
-    status = LIBSAKURA_SYMBOL(CreateBaselineContext)(baseline_type,
-        static_cast<uint16_t>(order),
-        static_cast<uint16_t>(order),
-        static_cast<uint16_t>(order),
-        num_chan, &context);
-    check_sakura_status("sakura_CreateBaselineContext", status);
+    LIBSAKURA_SYMBOL(BaselineContextFloat) *context;
+    LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Status_kNG);
+    if ((bltype == BaselineType_kPolynomial)||(bltype == BaselineType_kChebyshev)) {
+      status = LIBSAKURA_SYMBOL(CreateBaselineContextPolynomialFloat)(static_cast<LIBSAKURA_SYMBOL(BaselineType)>(bltype),
+                                                                      static_cast<uint16_t>(order),
+                                                                      num_chan, &context);
+    } else if (bltype == BaselineType_kCubicSpline) {
+      status = LIBSAKURA_SYMBOL(CreateBaselineContextCubicSplineFloat)(static_cast<uint16_t>(order),
+                                                                       num_chan, &context);
+    //} else if (bltype == BaselineType_kSinusoid) {
+    //status = LIBSAKURA_SYMBOL(CreateBaselineContextSinusoidFloat)(static_cast<uint16_t>(order),
+    //                                                              num_chan, &context);
+    }
+    check_sakura_status("sakura_CreateBaselineContextFloat", status);
     bl_contexts.push_back(context);
   }
 }
 
-void SingleDishMS::destroy_baseline_contexts(std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> &bl_contexts)
+void SingleDishMS::destroy_baseline_contexts(std::vector<LIBSAKURA_SYMBOL(BaselineContextFloat) *> &bl_contexts)
 {
   LIBSAKURA_SYMBOL(Status) status;
   for (size_t i = 0; i < bl_contexts.size(); ++i) {
-    status = LIBSAKURA_SYMBOL(DestroyBaselineContext)(bl_contexts[i]);
-    check_sakura_status("sakura_DestoyBaselineContext", status);
+    status = LIBSAKURA_SYMBOL(DestroyBaselineContextFloat)(bl_contexts[i]);
+    check_sakura_status("sakura_DestoyBaselineContextFloat", status);
   }
 }
 
@@ -755,16 +761,16 @@ void SingleDishMS::split_bloutputname(string str) {
   }
 }
 
-size_t SingleDishMS::get_num_coeff_bloutput(LIBSAKURA_SYMBOL(BaselineType) bltype,
+size_t SingleDishMS::get_num_coeff_bloutput(size_t const bltype,
                                             size_t order,
                                             size_t &num_coeff_max) {
   size_t num_coeff = 0;
   switch (bltype) {
-  case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
-  case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
+  case BaselineType_kPolynomial:
+  case BaselineType_kChebyshev:
     break;
-  case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
-    num_coeff = order;
+  case BaselineType_kCubicSpline:
+    num_coeff = order + 1;
     break;
   default:
     throw(AipsError("Unsupported baseline type."));
@@ -784,8 +790,8 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
                                       string const& in_spw,
                                       string const& in_ppp,
                                       LIBSAKURA_SYMBOL(Status)& status,
-                                      std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> &bl_contexts,
-                                      LIBSAKURA_SYMBOL(BaselineType) bltype,
+                                      std::vector<LIBSAKURA_SYMBOL(BaselineContextFloat) *> &bl_contexts,
+                                      size_t const bltype,
                                       int const order,
                                       float const clip_threshold_sigma,
                                       int const num_fitting_max,
@@ -952,27 +958,25 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
                 avg_limit, minwidth, edge, true, mask_data);
           }
           size_t num_coeff;
-          if (bltype == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) {
+          if (bltype == BaselineType_kCubicSpline) {
             num_coeff = order * 4;
           } else {
             status =
-              LIBSAKURA_SYMBOL(GetNumberOfCoefficients)(bl_contexts[ctx_indices[idx]],
-                                                        order, &num_coeff);
-            check_sakura_status("sakura_GetNumberOfCoefficients", status);
+              LIBSAKURA_SYMBOL(GetNumberOfCoefficientsFloat)(bl_contexts[ctx_indices[idx]],
+                                                             order, &num_coeff);
+            check_sakura_status("sakura_GetNumberOfCoefficientsFloat", status);
           }
           // Final check of the valid number of channels
-          size_t num_min =
-            (bltype == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) ?
-            order + 3 : num_coeff;
+          size_t num_min = (bltype == BaselineType_kCubicSpline) ? order + 3 : num_coeff;
           if (NValidMask(num_chan, mask_data) < num_min) {
             flag_spectrum_in_cube(flag_chunk, irow, ipol);
             apply_mtx[0][ipol] = False;
             os << LogIO::WARN
-                << "Too few valid channels to fit. Skipping Antenna "
-                << antennas[irow] << ", Beam " << beams[irow] << ", SPW "
-                << data_spw[irow] << ", Pol " << ipol << ", Time "
-                << MVTime(times[irow] / 24. / 3600.).string(MVTime::YMD, 8)
-                << LogIO::POST;
+               << "Too few valid channels to fit. Skipping Antenna "
+               << antennas[irow] << ", Beam " << beams[irow] << ", SPW "
+               << data_spw[irow] << ", Pol " << ipol << ", Time "
+               << MVTime(times[irow] / 24. / 3600.).string(MVTime::YMD, 8)
+               << LogIO::POST;
             continue;
           }
           // actual execution of single spectrum
@@ -1228,11 +1232,11 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
   }
   LIBSAKURA_SYMBOL(Status) status;
   LIBSAKURA_SYMBOL(BaselineStatus) bl_status;
-  std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> bl_contexts;
+  std::vector<LIBSAKURA_SYMBOL(BaselineContextFloat) *> bl_contexts;
   bl_contexts.clear();
-  LIBSAKURA_SYMBOL(BaselineType) bltype = LIBSAKURA_SYMBOL(BaselineType_kPolynomial);
+  size_t bltype = BaselineType_kPolynomial;
   if (blfunc == "chebyshev") {
-    bltype = LIBSAKURA_SYMBOL(BaselineType_kChebyshev);
+    bltype = BaselineType_kChebyshev;
   }
 
   doSubtractBaseline(in_column_name,
@@ -1275,8 +1279,7 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
                        status = LIBSAKURA_SYMBOL(SubtractBaselineFloat)(
                          bl_contexts[cidx], static_cast<uint16_t>(order),
                          num_chan, spec, mask, clip_threshold_sigma,
-                         num_fitting_max, true, mask, spec, rms,
-                         &bl_status);
+                         num_fitting_max, true, spec, mask, rms, &bl_status);
                        check_sakura_status("sakura_SubtractBaselineFloat", status);
                        if (bl_status != LIBSAKURA_SYMBOL(BaselineStatus_kOK)) {
                          throw(AipsError("baseline fitting isn't successful."));
@@ -1309,12 +1312,11 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
   }
   LIBSAKURA_SYMBOL(Status) status;
   LIBSAKURA_SYMBOL(BaselineStatus) bl_status;
-  std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> bl_contexts;
+  std::vector<LIBSAKURA_SYMBOL(BaselineContextFloat) *> bl_contexts;
   bl_contexts.clear();
-  LIBSAKURA_SYMBOL(BaselineType) bltype =
-    LIBSAKURA_SYMBOL(BaselineType_kCubicSpline);
-  Vector<double> boundary(npiece, ArrayInitPolicy::NO_INIT);
-  double *boundary_data = boundary.data();
+  size_t const bltype = BaselineType_kCubicSpline;
+  Vector<size_t> boundary(npiece+1, ArrayInitPolicy::NO_INIT);
+  size_t *boundary_data = boundary.data();
 
   doSubtractBaseline(in_column_name,
                      out_ms_name,
@@ -1337,7 +1339,7 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
                        status = LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsCubicSplineFloat)(
                          bl_contexts[cidx], num_chan, spec, mask,
                          clip_threshold_sigma, num_fitting_max,
-                         npiece, coeff, mask2, rms, boundary_data,
+                         npiece, reinterpret_cast<double (*)[4]>(coeff), mask2, rms, boundary_data,
                          &bl_status);
                        check_sakura_status("sakura_GetBestFitBaselineCoefficientsCubicSplineFloat", status);
                        if (bl_status != LIBSAKURA_SYMBOL(BaselineStatus_kOK)) {
@@ -1353,14 +1355,15 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
                      },
                      [&](size_t const cidx, size_t const num_chan, float *spec, double *coeff) {
                        status = LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
-                         bl_contexts[cidx], num_chan, spec, npiece, coeff, boundary_data, spec);
-                       check_sakura_status("sakura_SubtractBaselineCubicSplineUsingCoefficientsFloat", status);},
+                         bl_contexts[cidx], num_chan, spec, npiece,
+                         reinterpret_cast<double (*)[4]>(coeff), boundary_data, spec);
+                       check_sakura_status("sakura_SubtractBaselineCubicSplineUsingCoefficientsFloat", status);
+                     },
                      [&](size_t const cidx, size_t const num_chan, float *spec, bool *mask, float *rms) {
                        status = LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineFloat)(
                          bl_contexts[cidx], static_cast<uint16_t>(npiece),
-                         num_chan, spec, mask, clip_threshold_sigma,
-                         num_fitting_max, true, mask, spec, rms,
-                         boundary_data, &bl_status);
+                         num_chan, spec, mask, clip_threshold_sigma, num_fitting_max,
+                         true, spec, mask, rms, boundary_data, &bl_status);
                        check_sakura_status("sakura_SubtractBaselineCubicSplineFloat", status);
                        if (bl_status != LIBSAKURA_SYMBOL(BaselineStatus_kOK)) {
                          throw(AipsError("baseline fitting isn't successful."));
@@ -1374,7 +1377,6 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
 void SingleDishMS::applyBaselineTable(string const& in_column_name,
     string const& in_bltable_name, string const& in_spw,
     string const& out_ms_name) {
-
   LogIO os(_ORIGIN);
   os << "Apply baseline table " << in_bltable_name << " to MS. " << LogIO::POST;
 
@@ -1384,18 +1386,16 @@ void SingleDishMS::applyBaselineTable(string const& in_column_name,
 
   // parse fitting parameters in the text file
   BLTableParser parser(in_bltable_name);
-  std::vector<LIBSAKURA_SYMBOL(BaselineType)> baseline_types =
-      parser.get_function_types();
-  map<const LIBSAKURA_SYMBOL(BaselineType), uint16_t> max_orders;
+  std::vector<size_t> baseline_types = parser.get_function_types();
+  map<size_t const, uint16_t> max_orders;
   for (size_t i = 0; i < baseline_types.size(); ++i) {
     max_orders[baseline_types[i]] = parser.get_max_order(baseline_types[i]);
   }
-  { //DEBUG ouput
+  { //DEBUG output
     os << LogIO::DEBUG1 << "spw ID = " << in_spw << LogIO::POST;
     os << LogIO::DEBUG1 << "Baseline Types = " << baseline_types << LogIO::POST;
     os << LogIO::DEBUG1 << "Max Orders:" << LogIO::POST;
-    map<const LIBSAKURA_SYMBOL(BaselineType), uint16_t>::iterator iter =
-        max_orders.begin();
+    map<size_t const, uint16_t>::iterator iter = max_orders.begin();
     while (iter != max_orders.end()) {
       os << LogIO::DEBUG1 << "- type " << (*iter).first << ": "
           << (*iter).second << LogIO::POST;
@@ -1417,13 +1417,13 @@ void SingleDishMS::applyBaselineTable(string const& in_column_name,
   parse_spw(in_spw, recspw, recchan, nchan, in_mask, nchan_set);
 
   // Baseline Contexts reservoir
-  // key: Sakura_BaselineType enum,
-  // value: a vector of Sakura_BaselineContext for various nchans
+  // key: BaselineType
+  // value: a vector of Sakura_BaselineContextFloat for various nchans
   Vector<size_t> ctx_indices(nchan.nelements(), 0ul);
-  map< const LIBSAKURA_SYMBOL(BaselineType), std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> > context_reservoir;
-  map<const LIBSAKURA_SYMBOL(BaselineType), uint16_t>::iterator iter = max_orders.begin();
+  map<size_t const, std::vector<LIBSAKURA_SYMBOL(BaselineContextFloat) *> > context_reservoir;
+  map<size_t const, uint16_t>::iterator iter = max_orders.begin();
   while (iter != max_orders.end()) {
-    context_reservoir[(*iter).first] = std::vector<LIBSAKURA_SYMBOL(BaselineContext) *>();
+    context_reservoir[(*iter).first] = std::vector<LIBSAKURA_SYMBOL(BaselineContextFloat) *>();
     ++iter;
   }
 
@@ -1442,18 +1442,16 @@ void SingleDishMS::applyBaselineTable(string const& in_column_name,
       size_t const num_row = static_cast<size_t>(vb->nRows());
       Cube<Float> data_chunk(num_pol, num_chan, num_row);
       Vector<float> spec(num_chan);
+      float *spec_data = spec.data();
       Cube<Bool> flag_chunk(num_pol, num_chan, num_row);
       Vector<bool> mask(num_chan);
-      // CAUTION!!!
-      // data() method must be used with special care!!!
-      float *spec_data = spec.data();
       bool *mask_data = mask.data();
 
       bool new_nchan = false;
       get_nchan_and_mask(recspw, data_spw, recchan, num_chan, nchan, in_mask,
           nchan_set, new_nchan);
       if (new_nchan) {
-        map<const LIBSAKURA_SYMBOL(BaselineType), uint16_t>::iterator iter = max_orders.begin();
+        map<size_t const, uint16_t>::iterator iter = max_orders.begin();
         while (iter != max_orders.end()) {
           get_baseline_context(
                                (*iter).first, (*iter).second,
@@ -1506,6 +1504,7 @@ void SingleDishMS::applyBaselineTable(string const& in_column_name,
           // taking AND with user-given mask info. this is just for
           // saving memory usage...)
           get_flag_from_cube(flag_chunk, irow, ipol, num_chan, mask_data);
+
           // skip spectrum if all channels flagged
           if (allchannels_flagged(num_chan, mask_data)) {
             continue;
@@ -1515,47 +1514,46 @@ void SingleDishMS::applyBaselineTable(string const& in_column_name,
           get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec_data);
 
           // actual execution of single spectrum
-          map< const LIBSAKURA_SYMBOL(BaselineType),
-          std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> >::iterator
+          map<size_t const, std::vector<LIBSAKURA_SYMBOL(BaselineContextFloat) *> >::iterator
           iter = context_reservoir.find(fit_param.baseline_type);
           if (iter == context_reservoir.end())
             throw(AipsError("Invalid baseline type detected!"));
-          LIBSAKURA_SYMBOL(BaselineContext) * context =
+          LIBSAKURA_SYMBOL(BaselineContextFloat) * context =
               (*iter).second[ctx_indices[idx]];
           //cout << "Got context for type " << (*iter).first << ": idx=" << ctx_indices[idx] << endl;
 
           size_t num_coeff = bl_coeff.size();
           Vector<double> coeff(num_coeff);
-          // CAUTION!!!
-          // data() method must be used with special care!!!
           double *coeff_data = coeff.data();
           for (size_t i = 0; i < num_coeff; ++i) {
             coeff_data[i] = bl_coeff[i];
           }
           size_t num_boundary = bl_boundary.size();
-          Vector<double> boundary(num_boundary);
-          // CAUTION!!!
-          // data() method must be used with special care!!!
-          double *boundary_data = boundary.data();
+          Vector<size_t> boundary(num_boundary);
+          size_t *boundary_data = boundary.data();
           for (size_t i = 0; i < num_boundary; ++i) {
             boundary_data[i] = bl_boundary[i];
           }
 
           string subtract_funcname;
-          switch (fit_param.baseline_type) {
-          case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
-          case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
+          switch (static_cast<size_t>(fit_param.baseline_type)) {
+          case BaselineType_kPolynomial:
+          case BaselineType_kChebyshev:
             //cout << (fit_param.baseline_type==0 ? "poly" : "chebyshev") << ": order=" << fit_param.order << ", row=" << orig_rows[irow] << ", pol=" << ipol << ", num_chan=" << num_chan << ", num_valid_chan = " << NValidMask(num_chan, mask.data) << endl;
             status = LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(
                 context, num_chan, spec_data, num_coeff, coeff_data, spec_data);
             subtract_funcname = "sakura_SubtractBaselineUsingCoefficientsFloat";
             break;
-          case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
+          case BaselineType_kCubicSpline:
             //cout << "cspline: npiece = " << fit_param.npiece << ", row=" << orig_rows[irow] << ", pol=" << ipol << ", num_chan=" << num_chan << ", num_valid_chan = " << NValidMask(num_chan, mask.data) << endl;
             status = LIBSAKURA_SYMBOL(
                 SubtractBaselineCubicSplineUsingCoefficientsFloat)(context,
-                num_chan, spec_data, num_boundary, coeff_data, boundary_data,
-                spec_data);
+                                                                   num_chan,
+                                                                   spec_data,
+                                                                   num_boundary-1,
+                                                                   reinterpret_cast<double (*)[4]>(coeff_data),
+                                                                   boundary_data,
+                                                                   spec_data);
             subtract_funcname =
                 "sakura_SubtractBaselineCubicSplineUsingCoefficientsFloat";
             break;
@@ -1576,7 +1574,7 @@ void SingleDishMS::applyBaselineTable(string const& in_column_name,
 
   finalize_process();
   // destroy baseline contexts
-  map< const LIBSAKURA_SYMBOL(BaselineType), std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> >::iterator ctxiter = context_reservoir.begin();
+  map<size_t const, std::vector<LIBSAKURA_SYMBOL(BaselineContextFloat) *> >::iterator ctxiter = context_reservoir.begin();
   while (ctxiter != context_reservoir.end()) {
     destroy_baseline_contexts (context_reservoir[(*ctxiter).first]);
     ++ctxiter;
@@ -1950,17 +1948,15 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
 
   // parse fitting parameters in the text file
   BLParameterParser parser(param_file);
-  std::vector<LIBSAKURA_SYMBOL(BaselineType)> baseline_types =
-      parser.get_function_types();
-  map<const LIBSAKURA_SYMBOL(BaselineType), uint16_t> max_orders;
+  std::vector<size_t> baseline_types = parser.get_function_types();
+  map<size_t const, uint16_t> max_orders;
   for (size_t i = 0; i < baseline_types.size(); ++i) {
     max_orders[baseline_types[i]] = parser.get_max_order(baseline_types[i]);
   }
   { //DEBUG ouput
     os << LogIO::DEBUG1 << "Baseline Types = " << baseline_types << LogIO::POST;
     os << LogIO::DEBUG1 << "Max Orders:" << LogIO::POST;
-    map<const LIBSAKURA_SYMBOL(BaselineType), uint16_t>::iterator iter =
-        max_orders.begin();
+    map<size_t const, uint16_t>::iterator iter = max_orders.begin();
     while (iter != max_orders.end()) {
       os << LogIO::DEBUG1 << "- type " << (*iter).first << ": "
           << (*iter).second << LogIO::POST;
@@ -1970,13 +1966,12 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
 
   // Baseline Contexts reservoir
   // key: Sakura_BaselineType enum,
-  // value: a vector of Sakura_BaselineContext for various nchans
-  map<const LIBSAKURA_SYMBOL(BaselineType), std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> > context_reservoir;
+  // value: a vector of Sakura_BaselineContextFloat for various nchans
+  map<size_t const, std::vector<LIBSAKURA_SYMBOL(BaselineContextFloat) *> > context_reservoir;
   {
-    map<const LIBSAKURA_SYMBOL(BaselineType), uint16_t>::iterator iter =
-        max_orders.begin();
+    map<size_t const, uint16_t>::iterator iter = max_orders.begin();
     while (iter != max_orders.end()) {
-      context_reservoir[(*iter).first] = std::vector<LIBSAKURA_SYMBOL(BaselineContext) *>();
+      context_reservoir[(*iter).first] = std::vector<LIBSAKURA_SYMBOL(BaselineContextFloat) *>();
       ++iter;
     }
   }
@@ -2021,8 +2016,7 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
           nchan_set, new_nchan);
       if (new_nchan) {
         // Generate context for all necessary baseline types
-        map<const LIBSAKURA_SYMBOL(BaselineType), uint16_t>::iterator iter =
-            max_orders.begin();
+        map<size_t const, uint16_t>::iterator iter = max_orders.begin();
         while (iter != max_orders.end()) {
           get_baseline_context((*iter).first, (*iter).second, num_chan, nchan,
               nchan_set, ctx_indices, context_reservoir[(*iter).first]);
@@ -2133,34 +2127,31 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
           get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec_data);
 
           // get baseline context
-          map< const LIBSAKURA_SYMBOL(BaselineType),
-          std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> >::iterator
+          map<size_t const, std::vector<LIBSAKURA_SYMBOL(BaselineContextFloat) *> >::iterator
           iter = context_reservoir.find(fit_param.baseline_type);
           if (iter == context_reservoir.end()) {
             throw(AipsError("Invalid baseline type detected!"));
           }
-          LIBSAKURA_SYMBOL(BaselineContext) * context = (*iter).second[ctx_indices[idx]];
+          LIBSAKURA_SYMBOL(BaselineContextFloat) * context = (*iter).second[ctx_indices[idx]];
 
           // Number of coefficients to fit this spectrum
           size_t num_coeff;
-          switch (fit_param.baseline_type) {
-          case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
-          case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
-            status = LIBSAKURA_SYMBOL(GetNumberOfCoefficients)(context,
+          size_t bltype = static_cast<size_t>(fit_param.baseline_type);
+          switch (bltype) {
+          case BaselineType_kPolynomial:
+          case BaselineType_kChebyshev:
+            status = LIBSAKURA_SYMBOL(GetNumberOfCoefficientsFloat)(context,
                 fit_param.order, &num_coeff);
-            check_sakura_status("sakura_GetNumberOfCoefficients", status);
+            check_sakura_status("sakura_GetNumberOfCoefficientsFloat", status);
             break;
-          case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
+          case BaselineType_kCubicSpline:
             num_coeff = 4 * fit_param.npiece;
             break;
           default:
             throw(AipsError("Unsupported baseline type."));
           }
           // Final check of the valid number of channels
-          size_t num_min =
-              fit_param.baseline_type
-                  == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline) ?
-                  fit_param.npiece + 3 : num_coeff;
+          size_t num_min = (bltype == BaselineType_kCubicSpline) ? fit_param.npiece + 3 : num_coeff;
           if (NValidMask(num_chan, mask_data) < num_min) {
             flag_spectrum_in_cube(flag_chunk, irow, ipol);
             apply_mtx[0][ipol] = False;
@@ -2176,25 +2167,22 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
           // actual execution of single spectrum
           float rms;
           size_t num_boundary = 0;
-          if (fit_param.baseline_type
-              == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) {
+          if (bltype == BaselineType_kCubicSpline) {
             num_boundary = fit_param.npiece;
           }
-          Vector<double> boundary(num_boundary);
-          // CAUTION!!!
-          // data() method must be used with special care!!!
-          double *boundary_data = boundary.data();
+          Vector<size_t> boundary(num_boundary);
+          size_t *boundary_data = boundary.data();
 
           if (write_baseline_text || write_baseline_csv || write_baseline_table) {
             num_apply_true++;
             bltype_mtx[0][ipol] = (uInt)fit_param.baseline_type;
             Int fpar_tmp;
-            switch (fit_param.baseline_type) {
-            case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
-            case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
+            switch (bltype) {
+            case BaselineType_kPolynomial:
+            case BaselineType_kChebyshev:
               fpar_tmp = (Int)fit_param.order;
               break;
-            case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
+            case BaselineType_kCubicSpline:
               fpar_tmp = (Int)fit_param.npiece;
               break;
             default:
@@ -2210,9 +2198,9 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
             // data() method must be used with special care!!!
             double *coeff_data = coeff.data();
             string get_coeff_funcname;
-            switch (fit_param.baseline_type) {
-            case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
-            case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
+            switch (bltype) {
+            case BaselineType_kPolynomial:
+            case BaselineType_kChebyshev:
               status = LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsFloat)(
                   context, num_chan, spec_data, mask_data,
                   fit_param.clip_threshold_sigma, fit_param.num_fitting_max,
@@ -2229,13 +2217,13 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
 
               get_coeff_funcname = "sakura_GetBestFitBaselineCoefficientsFloat";
               break;
-            case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
+            case BaselineType_kCubicSpline:
               status = LIBSAKURA_SYMBOL(
                   GetBestFitBaselineCoefficientsCubicSplineFloat)(context,
                   num_chan, spec_data, mask_data,
                   fit_param.clip_threshold_sigma, fit_param.num_fitting_max,
-                  fit_param.npiece, coeff_data, mask2_data, &rms, boundary_data,
-                  &bl_status);
+                  fit_param.npiece, reinterpret_cast<double (*)[4]>(coeff_data),
+                  mask2_data, &rms, boundary_data, &bl_status);
 
               for (size_t i = 0; i < num_chan; ++i) {
                 if (mask_data[i] == false) {
@@ -2277,18 +2265,18 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
 
             string subtract_funcname;
             switch (fit_param.baseline_type) {
-            case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
-            case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
+            case BaselineType_kPolynomial:
+            case BaselineType_kChebyshev:
               status = LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(
                   context, num_chan, spec_data, num_coeff, coeff_data,
                   spec_data);
               subtract_funcname =
                   "sakura_SubtractBaselineUsingCoefficientsFloat";
               break;
-            case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
+            case BaselineType_kCubicSpline:
               status = LIBSAKURA_SYMBOL(
                   SubtractBaselineCubicSplineUsingCoefficientsFloat)(context,
-                  num_chan, spec_data, fit_param.npiece, coeff_data,
+                  num_chan, spec_data, fit_param.npiece, reinterpret_cast<double (*)[4]>(coeff_data),
                   boundary_data, spec_data);
               subtract_funcname =
                   "sakura_SubtractBaselineCubicSplineUsingCoefficientsFloat";
@@ -2312,21 +2300,19 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
           } else {
             string subtract_funcname;
             switch (fit_param.baseline_type) {
-            case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
-            case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
+            case BaselineType_kPolynomial:
+            case BaselineType_kChebyshev:
               status = LIBSAKURA_SYMBOL(SubtractBaselineFloat)(context,
                   fit_param.order, num_chan, spec_data, mask_data,
                   fit_param.clip_threshold_sigma, fit_param.num_fitting_max,
-                  true, mask_data, spec_data, &rms,
-                  &bl_status);
+                  true, spec_data, mask_data, &rms, &bl_status);
               subtract_funcname = "sakura_SubtractBaselineFloat";
               break;
-            case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
+            case BaselineType_kCubicSpline:
               status = LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineFloat)(
                   context, fit_param.npiece, num_chan, spec_data, mask_data,
                   fit_param.clip_threshold_sigma, fit_param.num_fitting_max,
-                  true, mask_data, spec_data, &rms, boundary_data,
-                  &bl_status);
+                  true, spec_data, mask_data, &rms, boundary_data, &bl_status);
               subtract_funcname = "sakura_SubtractBaselineCubicSplineFloat";
               break;
             default:
@@ -2493,7 +2479,7 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
   
   finalize_process();
   // destroy baseline contexts
-  map< const LIBSAKURA_SYMBOL(BaselineType), std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> >::iterator ctxiter = context_reservoir.begin();
+  map<size_t const, std::vector<LIBSAKURA_SYMBOL(BaselineContextFloat) *> >::iterator ctxiter = context_reservoir.begin();
   while (ctxiter != context_reservoir.end()) {
     destroy_baseline_contexts (context_reservoir[(*ctxiter).first]);
     ++ctxiter;

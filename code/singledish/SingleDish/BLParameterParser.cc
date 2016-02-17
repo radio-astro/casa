@@ -28,7 +28,6 @@
 #include <iostream>
 
 #include <casa/Utilities/Assert.h>
-#include <singledish/SingleDish/BaselineTable.h>
 #include <singledish/SingleDish/BLParameterParser.h>
 
 using namespace std;
@@ -67,22 +66,22 @@ void BLParameterParser::initialize()
   if (!bl_parameters_.empty()) Clearup();
   baseline_types_.resize(0);
   // initialize max orders
-  size_t num_type = static_cast<size_t>(LIBSAKURA_SYMBOL(BaselineType_kNumElements));
+  size_t num_type = BaselineType_kNumElements;
   for (size_t i=0; i<num_type; ++i) {
     max_orders_[i] = 0;
   }
 }
 
-uint16_t BLParameterParser::get_max_order(LIBSAKURA_SYMBOL(BaselineType) const type)
+uint16_t BLParameterParser::get_max_order(size_t const bltype)
 {
   
-  for (size_t i=0; i<baseline_types_.size(); ++i) {
-    if (type == baseline_types_[i]) {
-      //type is in file
-      return max_orders_[static_cast<size_t>(type)];
+  for (size_t i = 0; i < baseline_types_.size(); ++i) {
+    if (bltype == baseline_types_[i]) {
+      //bltype is in file
+      return max_orders_[bltype];
     }
   }
-  // type is not in file
+  // bltype is not in file
   throw(AipsError("The baseline type is not in file."));
 }
 
@@ -164,7 +163,7 @@ void BLParameterParser::ConvertLineToParam(string const &linestr,
     if (num_piece > USHRT_MAX)
       throw(AipsError("num_piece is larger than max of uint16_t"));
     paramset.npiece = num_piece;
-    paramset.baseline_type = LIBSAKURA_SYMBOL(BaselineType_kCubicSpline);
+    paramset.baseline_type = static_cast<LIBSAKURA_SYMBOL(BaselineType)>(BaselineType_kCubicSpline);
   }
   else if (bltype_str == "sinusoid")
   {
@@ -176,8 +175,8 @@ void BLParameterParser::ConvertLineToParam(string const &linestr,
     if (svec[BLParameters_kOrder].size()==0)
       throw(AipsError("Baseline type 'poly' and 'chebyshev' require order value."));
     paramset.baseline_type = bltype_str == "chebyshev" ?
-      LIBSAKURA_SYMBOL(BaselineType_kChebyshev) :
-      LIBSAKURA_SYMBOL(BaselineType_kPolynomial);
+      static_cast<LIBSAKURA_SYMBOL(BaselineType)>(BaselineType_kChebyshev) :
+      static_cast<LIBSAKURA_SYMBOL(BaselineType)>(BaselineType_kPolynomial);
     paramset.order = ConvertString<uint16_t>(svec[BLParameters_kOrder]);
   }
   // parse clipping parameters
@@ -213,18 +212,18 @@ void BLParameterParser::ConvertLineToParam(string const &linestr,
 
 uint16_t BLParameterParser::GetTypeOrder(BLParameterSet const &bl_param)
 {
-  LIBSAKURA_SYMBOL(BaselineType) const type = bl_param.baseline_type;
+  size_t const type = static_cast<size_t>(bl_param.baseline_type);
   switch (type)
   {
-  case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
-  case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
+  case BaselineType_kPolynomial:
+  case BaselineType_kChebyshev:
     return bl_param.order;
     break;
-  case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
+  case BaselineType_kCubicSpline:
     AlwaysAssert(bl_param.npiece<=USHRT_MAX, AipsError);//UINT16_MAX);
     return static_cast<uint16_t>(bl_param.npiece);
     break;
-//   case LIBSAKURA_SYMBOL(BaselineType_kSinusoidal):
+//   case BaselineType_kSinusoidal:
 //     return static_cast<size_t>(bl_param.nwave.size()); <== must be max of nwave elements
 //     break;
   default:
@@ -263,8 +262,8 @@ void BLTableParser::initialize()
 {
   baseline_types_.resize(0);
   // initialize max orders
-  size_t num_type = static_cast<size_t>(LIBSAKURA_SYMBOL(BaselineType_kNumElements));
-  for (size_t i=0; i<num_type; ++i) {
+  size_t num_type = BaselineType_kNumElements;
+  for (size_t i = 0; i < num_type; ++i) {
     max_orders_[i] = 0;
   }
 }
@@ -272,24 +271,22 @@ void BLTableParser::initialize()
 uint16_t BLTableParser::GetTypeOrder(size_t const &baseline_type, 
 				     uInt const irow, uInt const ipol)
 {
-  LIBSAKURA_SYMBOL(BaselineType) const type = 
-    static_cast<LIBSAKURA_SYMBOL(BaselineType)>(baseline_type);
-  switch (type)
+  switch (baseline_type)
   {
-  case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
-  case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
+  case BaselineType_kPolynomial:
+  case BaselineType_kChebyshev:
     {
       return static_cast<uint16_t>(bt_->getFPar(irow, ipol));
       break;
     }
-  case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
+  case BaselineType_kCubicSpline:
     {
       uInt npiece = bt_->getFPar(irow, ipol);
       AlwaysAssert(npiece <= USHRT_MAX, AipsError);//UINT16_MAX);
       return static_cast<uint16_t>(npiece);
       break;
     }
-//   case LIBSAKURA_SYMBOL(BaselineType_kSinusoidal):
+//   case BaselineType_kSinusoidal:
 //     return static_cast<size_t>(nwave.size());
 //     break;
   default:
@@ -448,11 +445,12 @@ void BLTableParser::GetFitParameterByIdx(size_t const idx, size_t const ipol,
 {
   apply = bt_->getApply(idx, ipol);
   if (!apply) return;
-  bl_param.baseline_type = static_cast<LIBSAKURA_SYMBOL(BaselineType)>(bt_->getBaselineType(idx, ipol));
+  size_t const type = bt_->getBaselineType(idx, ipol);
+  bl_param.baseline_type = type;
   Vector<Int> fpar(bt_->getFuncParam(idx)[0]);
-  switch (bl_param.baseline_type) {
-  case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
-  case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
+  switch (type) {
+  case BaselineType_kPolynomial:
+  case BaselineType_kChebyshev:
     bl_param.order = fpar[ipol];
     coeff.resize(bl_param.order + 1);
     for (size_t i = 0; i < coeff.size(); ++i) {
@@ -460,9 +458,9 @@ void BLTableParser::GetFitParameterByIdx(size_t const idx, size_t const ipol,
       coeff[i] = res[ipol];
     }
     break;
-  case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
+  case BaselineType_kCubicSpline:
     bl_param.npiece = fpar[ipol];
-    boundary.resize(bl_param.npiece);
+    boundary.resize(bl_param.npiece + 1);
     for (size_t i = 0; i < boundary.size(); ++i) {
       Vector<Float> ffpar(bt_->getFuncFParam(idx)[i]);
       boundary[i] = ffpar[ipol];
