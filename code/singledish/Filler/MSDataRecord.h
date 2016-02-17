@@ -58,6 +58,12 @@ struct MSDataRecord {
     direction = 0.0;
     data_shape_[0] = 0;
     flag_row = True;
+
+    temperature = 0.0f;
+    pressure = 0.0f;
+    rel_humidity = 0.0f;
+    wind_speed = 0.0f;
+    wind_direction = 0.0f;
   }
 
   void setDataSize(size_t n) {
@@ -204,6 +210,11 @@ public:
   Vector<Float> tsys;
   Vector<Float> tcal;
 
+  Float temperature;
+  Float pressure;
+  Float rel_humidity;
+  Float wind_speed;
+  Float wind_direction;
 };
 
 } //# NAMESPACE CASA - END

@@ -331,6 +331,9 @@ void SingleDishMSFiller<T>::setupMS() {
   // Set up MSStateColumns
   state_columns_.reset(new MSStateColumns(ms_->state()));
 
+  // Set up MSWeatherColumns
+  weather_columns_.reset(new MSWeatherColumns(ms_->weather()));
+
 //  std::cout << "End " << __PRETTY_FUNCTION__ << std::endl;
 }
 
@@ -415,17 +418,6 @@ void SingleDishMSFiller<T>::fillSpectralWindow() {
 
   ::fillTable(mytable, record,
       [&](SpectralWindowRecord &record) {return reader_->getSpectralWindowRow(record);});
-
-  POST_END;
-}
-
-template<class T>
-void SingleDishMSFiller<T>::fillWeather() {
-  POST_START;
-
-  WeatherRecord record;
-  ::fillTable(ms_->weather(), record,
-      [&](WeatherRecord &record) {return reader_->getWeatherRow(record);});
 
   POST_END;
 }

@@ -14,6 +14,7 @@
 
 #include <singledish/Filler/DataAccumulator.h>
 #include <singledish/Filler/SysCalRecord.h>
+#include <singledish/Filler/WeatherRecord.h>
 #include <singledish/Filler/FillerUtil.h>
 
 #include <casacore/casa/OS/File.h>
@@ -30,6 +31,7 @@
 #include <casacore/ms/MeasurementSets/MSPolColumns.h>
 #include <casacore/ms/MeasurementSets/MSFeedColumns.h>
 #include <casacore/ms/MeasurementSets/MSStateColumns.h>
+#include <casacore/ms/MeasurementSets/MSWeatherColumns.h>
 #include <casacore/tables/Tables/TableRow.h>
 #include <casacore/tables/Tables/ArrayColumn.h>
 #include <casacore/tables/Tables/ScalarColumn.h>
@@ -42,8 +44,8 @@ template<typename Reader>
 class SingleDishMSFiller {
 public:
   SingleDishMSFiller(std::string const &name) :
-      ms_(), ms_columns_(), data_description_columns_(), feed_columns_(), pointing_columns_(), polarization_columns_(), syscal_columns_(), state_columns_(), reader_(
-                                                                                                                                                                     new Reader(name)), is_float_(false), data_key_(), reference_feed_(-1), pointing_time_(), pointing_time_max_(), pointing_time_min_(), num_pointing_time_(), syscal_list_(), subscan_list_(), polarization_type_pool_() {
+      ms_(), ms_columns_(), data_description_columns_(), feed_columns_(), pointing_columns_(), polarization_columns_(), syscal_columns_(), state_columns_(), weather_columns_(), reader_(
+          new Reader(name)), is_float_(false), data_key_(), reference_feed_(-1), pointing_time_(), pointing_time_max_(), pointing_time_min_(), num_pointing_time_(), syscal_list_(), subscan_list_(), polarization_type_pool_(), weather_list_() {
   }
 
   ~SingleDishMSFiller() {
@@ -153,12 +155,6 @@ private:
     // fill SPECTRAL_WINDOW table
     fillSpectralWindow();
 
-    // fill SYSCAL table
-//    fillSysCal();
-
-    // fill WEATHER table
-    fillWeather();
-
     POST_END;
   }
 
@@ -249,6 +245,8 @@ private:
 
         updateSysCal(antenna_id, feed_id, spw_id, time, interval, record_);
 
+        updateWeather(antenna_id, time, interval, record_);
+
         updateMain(antenna_id, field_id, feed_id, data_desc_id, state_id, scan,
             time, record_);
       }
@@ -279,9 +277,6 @@ private:
 
   // fill SPECTRAL_WINDOW table
   void fillSpectralWindow();
-
-  // fill WEATHER table
-  void fillWeather();
 
   // fill HISTORY table
   void fillHistory() {
@@ -335,12 +330,36 @@ private:
       Double const &time, Double const &interval,
       Matrix<Double> const &direction);
 
+  void updateWeather(Int const &antenna_id, Double const &time,
+      Double const &interval, MSDataRecord const &data_record) {
+    WeatherRecord record;
+    record.clear();
+    record.antenna_id = antenna_id;
+    record.time = time;
+    record.interval = interval;
+    record.temperature = data_record.temperature;
+    record.pressure = data_record.pressure;
+    record.rel_humidity = data_record.rel_humidity;
+    record.wind_speed = data_record.wind_speed;
+    record.wind_direction = data_record.wind_direction;
+    auto &mytable = ms_->weather();
+    auto pos = std::find(weather_list_.begin(), weather_list_.end(), record);
+    if (pos == weather_list_.end()) {
+      weather_list_.push_back(record);
+      uInt irow = mytable.nrow();
+      mytable.addRow(1, True);
+      record.fill(irow, *(weather_columns_.get()));
+    } else {
+      auto irow = std::distance(weather_list_.begin(), pos);
+      updateWeather(*(weather_columns_.get()), irow, record);
+    }
+  }
+
   void updateSysCal(Int const &antenna_id, Int const &feed_id,
       Int const &spw_id, Double const &time, Double const &interval,
       MSDataRecord const &data_record) {
     POST_START;
 
-    //SysCalTableRecord table_record(*ms_, antenna_id, feed_id, spw_id, record);
     SysCalRecord record;
     record.clear();
     record.antenna_id = antenna_id;
@@ -386,8 +405,8 @@ private:
     POST_END;
   }
 
-  void updateSysCal(MSSysCalColumns &columns, uInt irow,
-      SysCalRecord const &record) {
+  template<class _Columns, class _Record>
+  void updateSubtable(_Columns &columns, uInt irow, _Record const &record) {
     // only update timestamp and interval
     Double time_org = columns.time()(irow);
     Double interval_org = columns.interval()(irow);
@@ -407,6 +426,16 @@ private:
       columns.time().put(irow, time_new);
       columns.interval().put(irow, interval_new);
     }
+  }
+
+  void updateSysCal(MSSysCalColumns &columns, uInt irow,
+      SysCalRecord const &record) {
+    updateSubtable(columns, irow, record);
+  }
+
+  void updateWeather(MSWeatherColumns &columns, uInt irow,
+      WeatherRecord const &record) {
+    updateSubtable(columns, irow, record);
   }
 
   // update MAIN table
@@ -475,7 +504,7 @@ private:
     POST_END;
   }
 
-  std::unique_ptr<casacore::MeasurementSet> ms_;
+  std::unique_ptr<MeasurementSet> ms_;
   std::unique_ptr<MSMainColumns> ms_columns_;
   std::unique_ptr<MSDataDescColumns> data_description_columns_;
   std::unique_ptr<MSFeedColumns> feed_columns_;
@@ -483,6 +512,7 @@ private:
   std::unique_ptr<MSPolarizationColumns> polarization_columns_;
   std::unique_ptr<MSSysCalColumns> syscal_columns_;
   std::unique_ptr<MSStateColumns> state_columns_;
+  std::unique_ptr<MSWeatherColumns> weather_columns_;
   std::unique_ptr<Reader> reader_;
   bool is_float_;
   String data_key_;
@@ -501,7 +531,10 @@ private:
   std::vector<Int> subscan_list_;
 
   // for FEED table
-  std::vector< Vector<String> *> polarization_type_pool_;
+  std::vector<Vector<String> *> polarization_type_pool_;
+
+  // for WEATHER table
+  std::vector<WeatherRecord> weather_list_;
 
   // Data storage to interact with DataAccumulator
   MSDataRecord record_;

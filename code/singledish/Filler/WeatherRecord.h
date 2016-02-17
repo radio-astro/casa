@@ -55,6 +55,14 @@ struct WeatherRecord {
     return *this;
   }
 
+  bool operator==(WeatherRecord const &other) {
+    return (antenna_id == other.antenna_id)
+        && (temperature == other.temperature) && (pressure == other.pressure)
+        && (rel_humidity == other.rel_humidity)
+        && (wind_speed == other.wind_speed)
+        && (wind_direction == other.wind_direction);
+  }
+
   void add(AssociatingTable &table, AssociatingColumns &/*columns*/) {
     table.addRow(1, True);
   }

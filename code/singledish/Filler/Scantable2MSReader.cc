@@ -116,15 +116,14 @@ String getIntent(Int srctype) {
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 Scantable2MSReader::Scantable2MSReader(std::string const &scantable_name) :
-    ReaderInterface(scantable_name), main_table_(nullptr), tcal_table_(), scan_column_(), cycle_column_(), ifno_column_(), polno_column_(), beam_column_(), flagrow_column_(), time_column_(), interval_column_(), srctype_column_(), data_column_(), flag_column_(), direction_column_(), scanrate_column_(), fieldname_column_(), tsys_column_(), tcal_id_column_(), sorted_rows_(), get_antenna_row_(
+    ReaderInterface(scantable_name), main_table_(nullptr), tcal_table_(), weather_table_(), scan_column_(), cycle_column_(), ifno_column_(), polno_column_(), beam_column_(), flagrow_column_(), time_column_(), interval_column_(), srctype_column_(), data_column_(), flag_column_(), direction_column_(), scanrate_column_(), fieldname_column_(), tsys_column_(), tcal_id_column_(), sorted_rows_(), get_antenna_row_(
         &Scantable2MSReader::getAntennaRowImpl), get_field_row_(
         &Scantable2MSReader::getFieldRowImpl), get_observation_row_(
         &Scantable2MSReader::getObservationRowImpl), get_processor_row_(
         &Scantable2MSReader::getProcessorRowImpl), get_source_row_(
         &Scantable2MSReader::getSourceRowImpl), get_spw_row_(
-        &Scantable2MSReader::getSpectralWindowRowImpl), get_weather_row_(
-        &Scantable2MSReader::getWeatherRowImpl), field_iter_(nullptr), freq_iter_(
-        nullptr), source_iter_(nullptr), weather_iter_(nullptr) {
+        &Scantable2MSReader::getSpectralWindowRowImpl), field_iter_(nullptr), freq_iter_(
+        nullptr), source_iter_(nullptr) {
 //  std::cout << "Scantabl2MSReader::Scantable2MSReader" << std::endl;
 }
 
@@ -143,6 +142,7 @@ void Scantable2MSReader::initializeSpecific() {
 
   // subtables
   tcal_table_ = main_table_->keywordSet().asTable("TCAL");
+  weather_table_ = main_table_->keywordSet().asTable("WEATHER");
 
   // attach columns
   scan_column_.attach(*main_table_, "SCANNO");
@@ -161,8 +161,15 @@ void Scantable2MSReader::initializeSpecific() {
   fieldname_column_.attach(*main_table_, "FIELDNAME");
   tsys_column_.attach(*main_table_, "TSYS");
   tcal_id_column_.attach(*main_table_, "TCAL_ID");
+  weather_id_column_.attach(*main_table_, "WEATHER_ID");
 
   tcal_column_.attach(tcal_table_, "TCAL");
+
+  temperature_column_.attach(weather_table_, "TEMPERATURE");
+  pressure_column_.attach(weather_table_, "PRESSURE");
+  humidity_column_.attach(weather_table_, "HUMIDITY");
+  wind_speed_column_.attach(weather_table_, "WINDSPEED");
+  wind_direction_column_.attach(weather_table_, "WINDAZ");
 
   // get sort index
   Sort s;
@@ -185,10 +192,17 @@ void Scantable2MSReader::initializeSpecific() {
 //  }
 
   // TCAL_ID mapping
-  ROScalarColumn<uInt> id_column(tcal_table_, "ID");
+  ROScalarColumn < uInt > id_column(tcal_table_, "ID");
   tcal_id_map_.clear();
   for (uInt i = 0; i < tcal_table_.nrow(); ++i) {
     tcal_id_map_[id_column(i)] = i;
+  }
+
+  // WEATHER_ID mapping
+  id_column.attach(weather_table_, "ID");
+  weather_id_map_.clear();
+  for (uInt i = 0; i < weather_table_.nrow(); ++i) {
+    weather_id_map_[id_column(i)] = i;
   }
 
   // polarization type from header
@@ -291,10 +305,6 @@ Bool Scantable2MSReader::getSpectralWindowRowImpl(
   return getRowImplTemplate(freq_iter_, record, get_spw_row_, &num_chan_map_);
 }
 
-Bool Scantable2MSReader::getWeatherRowImpl(WeatherRecord &record) {
-  return getRowImplTemplate(weather_iter_, record, get_weather_row_);
-}
-
 Bool Scantable2MSReader::getData(size_t irow, DataRecord &record) {
 //  std::cout << "Scantable2MSReader::getData(irow=" << irow << ")" << std::endl;
 
@@ -322,7 +332,7 @@ Bool Scantable2MSReader::getData(size_t irow, DataRecord &record) {
   record.feed_id = (Int) beam_column_(index);
   record.spw_id = (Int) ifno_column_(index);
   polno_column_.get(index, record.polno);
-  record.pol_type = pol_type_; 
+  record.pol_type = pol_type_;
 //  std::cout << "set data size to " << num_chan_map_[record.spw_id] << " shape "
 //      << record.data.shape() << std::endl;
   record.setDataSize(num_chan_map_[record.spw_id]);
@@ -355,6 +365,18 @@ Bool Scantable2MSReader::getData(size_t irow, DataRecord &record) {
       record.tcal = tcal;
     }
   }
+
+  uInt weather_id = weather_id_column_(index);
+  auto iter2 = weather_id_map_.find(weather_id);
+  if (iter2 != weather_id_map_.end()) {
+    uInt weather_row = iter2->second;
+    record.temperature = temperature_column_(weather_row);
+    record.pressure = pressure_column_(weather_row);
+    record.rel_humidity = humidity_column_(weather_row);
+    record.wind_speed = wind_speed_column_(weather_row);
+    record.wind_direction = wind_direction_column_(weather_row);
+  }
+
   return True;
 }
 

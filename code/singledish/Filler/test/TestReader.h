@@ -304,58 +304,6 @@ private:
   Vector<Int> meas_freq_ref_;
 };
 
-class WeatherIterator: public FixedNumberIteratorInterface {
-public:
-  WeatherIterator() :
-      FixedNumberIteratorInterface(2), antenna_id_(num_iter_), time_(num_iter_), interval_(
-          num_iter_), temperature_(num_iter_), pressure_(num_iter_), rel_humidity_(
-          num_iter_), wind_speed_(num_iter_), wind_direction_(num_iter_) {
-    antenna_id_[0] = 0;
-    antenna_id_[1] = -1;
-    Time t(2016, 1, 1);
-    time_[0] = t.modifiedJulianDay() * 86400.0;
-    time_[1] += 3600.0;
-    interval_ = 3600.0;
-    temperature_[0] = 273.0;
-    temperature_[1] = 275.2;
-    pressure_[0] = 987.0;
-    pressure_[1] = 994.6;
-    rel_humidity_[0] = 0.2;
-    rel_humidity_[1] = 0.15;
-    wind_speed_[0] = 20.0;
-    wind_speed_[1] = 1.2;
-    wind_direction_[0] = 0.0;
-    wind_direction_[1] = -C::pi;
-  }
-
-  virtual ~WeatherIterator() {
-  }
-
-  void getEntry(WeatherRecord &record) {
-    if (moreData()) {
-      size_t i = current_iter_;
-      record.antenna_id = antenna_id_[i];
-      record.time = time_[i];
-      record.interval = interval_[i];
-      record.temperature = temperature_[i];
-      record.pressure = pressure_[i];
-      record.rel_humidity = rel_humidity_[i];
-      record.wind_speed = wind_speed_[i];
-      record.wind_direction = wind_direction_[i];
-    }
-  }
-
-private:
-  Vector<Int> antenna_id_;
-  Vector<Double> time_;
-  Vector<Double> interval_;
-  Vector<Float> temperature_;
-  Vector<Float> pressure_;
-  Vector<Float> rel_humidity_;
-  Vector<Float> wind_speed_;
-  Vector<Float> wind_direction_;
-};
-
 // Mock object for Reader
 struct FloatDataStorage {
   size_t const kNumRow = 24;
@@ -371,11 +319,12 @@ struct FloatDataStorage {
   Double const ra_[2] = { 0.25, 0.28 };
   Double const dec_[2] = { -1.48, -1.49 };
   Double const dra_[2] = { 0.0, 0.01 };
-  Double const ddec_[2] = { 0.0, -0.07};
+  Double const ddec_[2] = { 0.0, -0.07 };
   String const intent_[2] = { "OBSERVE_TARGET#ON_SOURCE",
       "OBSERVE_TARGET#OFF_SOURCE" };
   String const field_name_[2] = { "MyField", "AnotherField" };
   String const source_name_[2] = { "M78", "HLTau" };
+  Float const temperature_[4] = { 100.0f, 150.0f, 200.0f, 250.0f };
   Bool getData(size_t irow, DataRecord &record) {
     POST_START;
 
@@ -413,6 +362,11 @@ struct FloatDataStorage {
     record.direction(1, 0) = dec_[index];
     record.direction(0, 1) = dra_[index];
     record.direction(1, 1) = ddec_[index];
+    record.temperature = temperature_[index];
+    record.pressure = 0.0f;
+    record.rel_humidity = 0.0f;
+    record.wind_speed = 0.0f;
+    record.wind_direction = 0.0f;
     Int &antenna_id = record.antenna_id;
 
     index = (irow / (n / 8)) % 2;
@@ -484,15 +438,13 @@ template<class DataStorage>
 class TestReader: public casa::ReaderInterface {
 public:
   TestReader(std::string const &name) :
-      casa::ReaderInterface(name), source_iterator_(nullptr), weather_iterator_(
-          nullptr), get_observation_row_(
+      casa::ReaderInterface(name), source_iterator_(nullptr), get_observation_row_(
           &::TestReader<DataStorage>::getObservationRowImpl), get_antenna_row_(
           &::TestReader<DataStorage>::getAntennaRowImpl), get_processor_row_(
           &::TestReader<DataStorage>::getProcessorRowImpl), get_source_row_(
           &::TestReader<DataStorage>::getSourceRowWithInitImpl), get_field_row_(
           &::TestReader<DataStorage>::getFieldRowWithInitImpl), get_spw_row_(
-          &::TestReader<DataStorage>::getSpwRowWithInitImpl), get_weather_row_(
-          &::TestReader<DataStorage>::getWeatherRowWithInitImpl), storage_() {
+          &::TestReader<DataStorage>::getSpwRowWithInitImpl), storage_() {
     POST_START;POST_END;
   }
 
@@ -574,17 +526,6 @@ public:
     return return_value;
   }
 
-  // to get WEATHER table
-  virtual Bool getWeatherRow(WeatherRecord &record) {
-    POST_START;
-
-    Bool return_value = (*this.*get_weather_row_)(record);
-
-    POST_END;
-
-    return return_value;
-  }
-
   // for DataAccumulator
   virtual Bool getData(size_t irow, DataRecord &record) {
     POST_START;
@@ -604,7 +545,6 @@ public:
   std::map<uInt, SourceRecord> source_record_;
   std::map<uInt, FieldRecord> field_record_;
   std::map<uInt, SpectralWindowRecord> spw_record_;
-  std::map<uInt, WeatherRecord> weather_record_;
   std::map<uInt, DataRecord> main_record_;
 
 protected:
@@ -620,14 +560,12 @@ private:
   std::unique_ptr<SourceIterator> source_iterator_;
   std::unique_ptr<FieldIterator> field_iterator_;
   std::unique_ptr<SpwIterator> spw_iterator_;
-  std::unique_ptr<WeatherIterator> weather_iterator_;
   Bool (::TestReader<DataStorage>::*get_observation_row_)(ObservationRecord &);
   Bool (::TestReader<DataStorage>::*get_antenna_row_)(AntennaRecord &);
   Bool (::TestReader<DataStorage>::*get_processor_row_)(ProcessorRecord &);
   Bool (::TestReader<DataStorage>::*get_source_row_)(SourceRecord &);
   Bool (::TestReader<DataStorage>::*get_field_row_)(FieldRecord &);
   Bool (::TestReader<DataStorage>::*get_spw_row_)(SpectralWindowRecord &);
-  Bool (::TestReader<DataStorage>::*get_weather_row_)(WeatherRecord &);
   DataStorage storage_;
 
   Bool getObservationRowImpl(ObservationRecord &record) {
@@ -789,24 +727,6 @@ private:
 
   Bool getSpwRowImpl(SpectralWindowRecord &record) {
     return getRowImplTemplate2(spw_iterator_, spw_record_, get_spw_row_, record);
-  }
-
-  Bool getWeatherRowWithInitImpl(WeatherRecord &record) {
-    POST_START;
-
-    weather_iterator_.reset(new ::WeatherIterator());
-    get_weather_row_ = &::TestReader<DataStorage>::getWeatherRowImpl;
-
-    Bool more_rows = getWeatherRowImpl(record);
-
-    POST_END;
-
-    return more_rows;
-  }
-
-  Bool getWeatherRowImpl(WeatherRecord &record) {
-    return getRowImplTemplate2(weather_iterator_, weather_record_,
-        get_weather_row_, record);
   }
 
   template<class _Iterator, class _InternalRecord, class _Func, class _Record>

@@ -74,6 +74,12 @@ struct DataRecord {
     setTsysSize(0);
     setTcalSize(0);
     flag_row = True;
+
+    temperature = 0.0f;
+    pressure = 0.0f;
+    rel_humidity = 0.0f;
+    wind_speed = 0.0f;
+    wind_direction = 0.0f;
   }
 
   void setDataSize(size_t n) {
@@ -181,6 +187,12 @@ struct DataRecord {
     setTcalSize(other.tcal_shape_[0]);
     tcal = other.tcal;
 
+    temperature = other.temperature;
+    pressure = other.pressure;
+    rel_humidity = other.rel_humidity;
+    wind_speed = other.wind_speed;
+    wind_direction = other.wind_direction;
+
     return *this;
   }
 
@@ -198,7 +210,7 @@ private:
   std::unique_ptr<Float[]> tcal_storage_;
 
 public:
-// mandatory
+  // mandatory
   Double time;
   Double interval;
   Int antenna_id;
@@ -218,10 +230,15 @@ public:
   Vector<Bool> flag;
   Bool flag_row;
 
-// optional
+  // optional
   Vector<Float> tsys;
   Vector<Float> tcal;
 
+  Float temperature;
+  Float pressure;
+  Float rel_humidity;
+  Float wind_speed;
+  Float wind_direction;
 };
 
 struct MSDataRecord {
@@ -272,6 +289,12 @@ struct MSDataRecord {
     setTcalSize(0, 0);
     flag_row = True;
     is_float_ = False;
+
+    temperature = 0.0f;
+    pressure = 0.0f;
+    rel_humidity = 0.0f;
+    wind_speed = 0.0f;
+    wind_direction = 0.0f;
   }
 
   Bool isFloat() const {
@@ -438,6 +461,12 @@ struct MSDataRecord {
     setTcalSize(other.tcal_shape_[0], other.tcal_shape_[1]);
     tcal = other.tcal;
 
+    temperature = other.temperature;
+    pressure = other.pressure;
+    rel_humidity = other.rel_humidity;
+    wind_speed = other.wind_speed;
+    wind_direction = other.wind_direction;
+
     return *this;
   }
 
@@ -481,9 +510,15 @@ public:
   Vector<Float> sigma;
   Vector<Float> &weight;
 
-// optional
+  // optional
   Matrix<Float> tsys;
   Matrix<Float> tcal;
+
+  Float temperature;
+  Float pressure;
+  Float rel_humidity;
+  Float wind_speed;
+  Float wind_direction;
 
 }
 ;

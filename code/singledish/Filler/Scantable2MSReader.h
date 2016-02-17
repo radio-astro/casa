@@ -112,16 +112,6 @@ public:
     return return_value;
   }
 
-  // to get WEATHER table
-  virtual Bool getWeatherRow(WeatherRecord &record) {
-    POST_START;
-
-    Bool return_value = (*this.*get_weather_row_)(record);
-
-    POST_END;
-    return return_value;
-  }
-
   // for DataAccumulator
   virtual Bool getData(size_t irow, DataRecord &record);
 
@@ -132,6 +122,7 @@ protected:
 private:
   std::unique_ptr<Table> main_table_;
   Table tcal_table_;
+  Table weather_table_;
 
   ROScalarColumn<uInt> scan_column_;
   ROScalarColumn<uInt> cycle_column_;
@@ -149,11 +140,18 @@ private:
   ROScalarColumn<String> fieldname_column_;
   ArrayColumn<Float> tsys_column_;
   ROScalarColumn<uInt> tcal_id_column_;
+  ROScalarColumn<uInt> weather_id_column_;
   ArrayColumn<Float> tcal_column_;
+  ROScalarColumn<Float> temperature_column_;
+  ROScalarColumn<Float> pressure_column_;
+  ROScalarColumn<Float> humidity_column_;
+  ROScalarColumn<Float> wind_speed_column_;
+  ROScalarColumn<Float> wind_direction_column_;
   Vector<uInt> sorted_rows_;
   ScantableFieldIterator::Product field_map_;
   ScantableFrequenciesIterator::Product num_chan_map_;
   std::map<uInt, uInt> tcal_id_map_;
+  std::map<uInt, uInt> weather_id_map_;
   String pol_type_;
 
   Bool (Scantable2MSReader::*get_antenna_row_)(AntennaRecord &);
@@ -162,12 +160,10 @@ private:
   Bool (Scantable2MSReader::*get_processor_row_)(ProcessorRecord &);
   Bool (Scantable2MSReader::*get_source_row_)(SourceRecord &);
   Bool (Scantable2MSReader::*get_spw_row_)(SpectralWindowRecord &);
-  Bool (Scantable2MSReader::*get_weather_row_)(WeatherRecord &);
 
   std::unique_ptr<ScantableFieldIterator> field_iter_;
   std::unique_ptr<ScantableFrequenciesIterator> freq_iter_;
   std::unique_ptr<ScantableSourceIterator> source_iter_;
-  std::unique_ptr<ScantableWeatherIterator> weather_iter_;
 
   Bool getAntennaRowImpl(AntennaRecord &record);
   Bool getFieldRowImpl(FieldRecord &record);
@@ -175,7 +171,6 @@ private:
   Bool getProcessorRowImpl(ProcessorRecord &record);
   Bool getSourceRowImpl(SourceRecord &record);
   Bool getSpectralWindowRowImpl(SpectralWindowRecord &record);
-  Bool getWeatherRowImpl(WeatherRecord &record);
 
   template<class _Record>
   Bool noMoreRowImpl(_Record &) {

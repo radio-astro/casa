@@ -318,23 +318,74 @@ TEST_F(SingleDishMSFillerTestFloat, FillerTest) {
     std::cout << "Verify WEATHER table" << std::endl;
     auto const mytable = myms.weather();
     auto const weather_table = scantable_header.asTable("WEATHER");
-    uInt expected_nrow = weather_table.nrow();
+    //uInt expected_nrow = weather_table.nrow();
+    ROScalarColumn < uInt > weather_id_column(myscantable, "WEATHER_ID");
+    Vector < uInt > weather_id_list = weather_id_column.getColumn();
+    Sort sorter;
+    sorter.sortKey(weather_id_list.data(), TpUInt, 0, Sort::Ascending);
+    Vector < uInt > index_vector;
+    uInt expected_nrow = sorter.sort(index_vector, weather_id_list.size(),
+        Sort::QuickSort | Sort::NoDuplicates);
     ASSERT_EQ(expected_nrow, mytable.nrow());
     ROMSWeatherColumns mycolumns(mytable);
     ROTableRow row(weather_table);
+    std::map<uInt, uInt> weather_id_map;
+    weather_id_column.attach(weather_table, "ID");
+    for (uInt i = 0; i < weather_id_column.nrow(); ++i) {
+      weather_id_map[weather_id_column(i)] = i;
+    }
     for (uInt i = 0; i < expected_nrow; ++i) {
       std::cout << "Verifying row " << i << std::endl;
-      TableRecord row_record = row.get(i);
-      uInt weather_id = row_record.asuInt("ID");
-      Double time_min = 0.0;
+      uInt weather_id = weather_id_list[index_vector[i]];
+      uInt irow_weather = weather_id_map[weather_id];
+      TableRecord row_record = row.get(irow_weather);
+      Double time_min = 1.0e30;
       Double time_max = 0.0;
+      Double expected_time = 0.0;
+      Double expected_interval = 0.0;
       auto subtable = myscantable(myscantable.col("WEATHER_ID") == weather_id);
       if (subtable.nrow() > 0) {
-        ROScalarColumn < Double > col(subtable, "TIME");
-        minMax(time_min, time_max, col.getColumn());
+        ROScalarColumn < uInt > id_column(subtable, "IFNO");
+        Vector < uInt > spw_list = id_column.getColumn();
+        Sort ss;
+        ss.sortKey(spw_list.data(), TpUInt, 0, Sort::Ascending);
+        Vector < uInt > sidx;
+        uInt num_spw = ss.sort(sidx, spw_list.size(),
+            Sort::QuickSort | Sort::NoDuplicates);
+        for (uInt ispw = 0; ispw < num_spw; ++ispw) {
+          uInt spw_id = spw_list[sidx[ispw]];
+          auto subsubtable = subtable(subtable.col("IFNO") == spw_id);
+          ROScalarColumn < Double > tcol(subsubtable, "TIME");
+          ROScalarColumn < Double > icol(subsubtable, "INTERVAL");
+          Vector < Double > time_list = tcol.getColumn();
+          Vector < Double > interval_list = icol.getColumn();
+          Sort ts;
+          ts.sortKey(time_list.data(), TpDouble, 0, Sort::Ascending);
+          Vector < uInt > tidx;
+          ts.sort(tidx, time_list.size());
+          uInt id_min = tidx[0];
+          uInt id_max = tidx[tidx.size() - 1];
+          Double time_min_in = time_list[id_min] * kDay2Sec
+              - 0.5 * interval_list[id_min];
+          Double time_max_in = time_list[id_max] * kDay2Sec
+              + 0.5 * interval_list[id_max];
+          time_min = min(time_min, time_min_in);
+          time_max = max(time_max, time_max_in);
+          expected_time = (time_max + time_min) * 0.5;
+          expected_interval = time_max - time_min;
+        }
       }
-      EXPECT_EQ(0.5 * (time_min + time_max) * kDay2Sec, mycolumns.time()(i));
-      EXPECT_EQ((time_max - time_min) * kDay2Sec, mycolumns.interval()(i));
+//      EXPECT_EQ(expected_time, mycolumns.time()(i));
+//      EXPECT_EQ(expected_interval, mycolumns.interval()(i));
+      Double diff_time = abs(
+          (mycolumns.time()(i) - expected_time) / expected_time);
+      Double diff_interval = abs(
+          (mycolumns.interval()(i) - expected_interval) / expected_interval);
+      std::cout << "diff_time = " << diff_time << " diff_interval = "
+          << diff_interval << std::endl;
+      Double const eps = 1.0e-5;
+      EXPECT_LT(diff_time, eps);
+      EXPECT_LT(diff_interval, eps);
       EXPECT_EQ(0, mycolumns.antennaId()(i));
       EXPECT_FLOAT_EQ(row_record.asFloat("TEMPERATURE"),
           mycolumns.temperature()(i));
@@ -1065,28 +1116,6 @@ TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
     }
   }
 
-  // verify WEATHER table
-  {
-    std::cout << "Verify WEATHER table" << std::endl;
-    auto const mytable = myms.weather();
-    auto expected_record = reader.weather_record_;
-    uInt expected_nrow = expected_record.size();
-    ASSERT_EQ(expected_nrow, mytable.nrow());
-    ROMSWeatherColumns mycolumns(mytable);
-    for (uInt i = 0; i < expected_nrow; ++i) {
-      std::cout << "Verifying row " << i << std::endl;
-      WeatherRecord row_record = expected_record[i];
-      EXPECT_EQ(row_record.time, mycolumns.time()(i));
-      EXPECT_EQ(row_record.interval, mycolumns.interval()(i));
-      EXPECT_EQ(row_record.antenna_id, mycolumns.antennaId()(i));
-      EXPECT_FLOAT_EQ(row_record.temperature, mycolumns.temperature()(i));
-      EXPECT_FLOAT_EQ(row_record.pressure, mycolumns.pressure()(i));
-      EXPECT_FLOAT_EQ(row_record.rel_humidity, mycolumns.relHumidity()(i));
-      EXPECT_FLOAT_EQ(row_record.wind_speed, mycolumns.windSpeed()(i));
-      EXPECT_FLOAT_EQ(row_record.wind_direction, mycolumns.windDirection()(i));
-    }
-  }
-
   // verify HISTORY table
   {
     std::cout << "Verify HISTORY table" << std::endl;
@@ -1247,7 +1276,7 @@ TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
         ;
       }
 );
-                                                                                                                                                                                        ASSERT_GT(num_chan, 0);
+                                                                                                                                                                                                    ASSERT_GT(num_chan, 0);
       Matrix < Bool > expected_flag(expected_num_pol, num_chan);
       Matrix < Float > expected_data(expected_num_pol, num_chan);
       uInt pol_id0 = row_record0.polno;
@@ -1362,7 +1391,7 @@ TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
         ;
       }
 );
-                                                                                                                                                                                        ASSERT_GT(num_chan, 0);
+                                                                                                                                                                                                    ASSERT_GT(num_chan, 0);
       expected_flag.resize(expected_num_pol, num_chan);
       expected_data.resize(expected_flag.shape());
       uInt pol_id2 = row_record2.polno;
@@ -1530,6 +1559,30 @@ TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
           allEQ(tsys_singlepol_spectral, mycolumns.tsysSpectrum()(irow)));
 
     }
+
+    // verify WEATHER table
+    {
+      std::cout << "Verify WEATHER table" << std::endl;
+      auto const mytable = myms.weather();
+      constexpr uInt expected_nrow = 2;
+      ASSERT_EQ(expected_nrow, mytable.nrow());
+      ROMSWeatherColumns mycolumns(mytable);
+      Float const expected_temperature[expected_nrow] = { 100.0f, 150.0f };
+      Double const expected_time = 0.5 * (4.0e9 - 5.0 + 4.1e9 + 5.0);
+      Double const expected_interval = 4.1e9 - 4.0e9 + 10.0;
+      for (uInt i = 0; i < expected_nrow; ++i) {
+        std::cout << "Verifying row " << i << std::endl;
+        EXPECT_EQ((Int )i, mycolumns.antennaId()(i));
+        EXPECT_EQ(expected_time, mycolumns.time()(i));
+        EXPECT_EQ(expected_interval, mycolumns.interval()(i));
+        EXPECT_EQ(expected_temperature[i], mycolumns.temperature()(i));
+        EXPECT_EQ(0.0f, mycolumns.pressure()(i));
+        EXPECT_EQ(0.0f, mycolumns.relHumidity()(i));
+        EXPECT_EQ(0.0f, mycolumns.windSpeed()(i));
+        EXPECT_EQ(0.0f, mycolumns.windDirection()(i));
+      }
+    }
+
   }
 
 }

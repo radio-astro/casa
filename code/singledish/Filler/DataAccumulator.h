@@ -755,6 +755,11 @@ public:
     record.intent = intent_[ichunk];
     record.direction = direction_[ichunk];
     record.interval = interval_[ichunk];
+    record.temperature = temperature_[ichunk];
+    record.pressure = pressure_[ichunk];
+    record.rel_humidity = rel_humidity_[ichunk];
+    record.wind_speed = wind_speed_[ichunk];
+    record.wind_direction = wind_direction_[ichunk];
 
     POST_END;
     return status;
@@ -793,6 +798,11 @@ public:
     key.pol_type = record.pol_type;
     Matrix<Double> const &direction = record.direction;
     Double interval = record.interval;
+    Float temperature = record.temperature;
+    Float pressure = record.pressure;
+    Float rel_humidity = record.rel_humidity;
+    Float wind_speed = record.wind_speed;
+    Float wind_direction = record.wind_direction;
     bool status = false;
     auto iter = indexer_.find(key);
     if (iter != indexer_.end()) {
@@ -808,6 +818,11 @@ public:
         intent_[index] = intent;
         direction_[index].assign(direction);
         interval_[index] = interval;
+        temperature_[index] = temperature;
+        pressure_[index] = pressure;
+        rel_humidity_[index] = rel_humidity;
+        wind_speed_[index] = wind_speed;
+        wind_direction_[index] = wind_direction;
       }
     } else {
       pool_.push_back(new DataChunk(poltype));
@@ -820,6 +835,11 @@ public:
       intent_.push_back("");
       direction_.push_back(Matrix<Double>());
       interval_.push_back(-1.0);
+      temperature_.push_back(0.0f);
+      pressure_.push_back(0.0f);
+      rel_humidity_.push_back(0.0f);
+      wind_speed_.push_back(0.0f);
+      wind_direction_.push_back(0.0f);
       uInt index = pool_.size() - 1;
       indexer_[key] = index;
       status = pool_[index]->accumulate(record);
@@ -833,6 +853,11 @@ public:
         intent_[index] = intent;
         direction_[index].assign(direction);
         interval_[index] = interval;
+        temperature_[index] = temperature;
+        pressure_[index] = pressure;
+        rel_humidity_[index] = rel_humidity;
+        wind_speed_[index] = wind_speed;
+        wind_direction_[index] = wind_direction;
       }
     }
 
@@ -874,6 +899,11 @@ private:
   std::vector<String> intent_;
   std::vector<Matrix<Double> > direction_;
   std::vector<Double> interval_;
+  std::vector<Float> temperature_;
+  std::vector<Float> pressure_;
+  std::vector<Float> rel_humidity_;
+  std::vector<Float> wind_speed_;
+  std::vector<Float> wind_direction_;
   std::map<DataAccumulatorKey, uInt, DataAccumulatorKey> indexer_;
   Double time_;
   std::vector<bool> is_free_;

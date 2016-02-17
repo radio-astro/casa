@@ -105,11 +105,6 @@ public:
   // If it return False, row will be invalid so it should not be used.
   virtual Bool getSpectralWindowRow(SpectralWindowRecord &row) = 0;
 
-  // to get WEATHER table
-  // The method should return True if row entry is available.
-  // If it return False, row will be invalid so it should not be used.
-  virtual Bool getWeatherRow(WeatherRecord &row) = 0;
-
   // for DataAccumulator
   virtual Bool getData(size_t irow, DataRecord &record) = 0;
 
