@@ -1741,6 +1741,25 @@ Basic unit tests for task tsdbaseline. No interactive testing.
     test040 --- blformat='',                     bloutput='' 
     test041 --- blformat='',                     bloutput='test.csv'
 
+
+
+    # 'sinusoid'
+    test042 --- blformat=['csv','text','table'], bloutput=['test.csv','test.txt','test.table']
+    test043 --- blformat=['text','csv','table'], bloutput=['test.txt','test.csv','test.table'] 
+    test044 --- blformat=['table','text','csv'], bloutput=['test.table','test.txt','test.csv']
+    test045 --- blformat=['table','text','csv'], bloutput=['','test.txt','test.csv'] 
+    test046 --- blformat=['table','text'],       bloutput=['','','']
+    test047 --- blformat=['table','text'],       bloutput=['','']
+    test048 --- blformat=['table'],              bloutput=[''] 
+    test049 --- blformat=['csv'],                bloutput=['']
+    test050 --- blformat=['text'],               bloutput=[''] 
+    test051 --- blformat=[''],                   bloutput=['']
+    test052 --- blformat=['','csv'],             bloutput=['','test.csv'] 
+    test053 --- blformat='',                     bloutput='' 
+    test054 --- blformat='',                     bloutput='test.csv'
+
+
+
     """
 
     infile = 'OrionS_rawACSmod_calave.ms'
@@ -1755,6 +1774,8 @@ Basic unit tests for task tsdbaseline. No interactive testing.
     bloutput_variable_txt ='bloutput_variable.txt'
     bloutput_variable_csv ='bloutput_variable.csv'
     blfunc ='poly'
+    bloutput_sinusoid_txt ='bloutput_sinusoid.txt'
+    bloutput_sinusoid_csv ='bloutput_sinusoid.csv'
 
     base_param = dict(infile=infile,
                       blfunc=blfunc,
@@ -1781,6 +1802,9 @@ Basic unit tests for task tsdbaseline. No interactive testing.
         shutil.copyfile(self.datapath+self.bloutput_cspline_csv, self.bloutput_cspline_csv)
         shutil.copyfile(self.datapath+self.bloutput_variable_txt, self.bloutput_variable_txt)
         shutil.copyfile(self.datapath+self.bloutput_variable_csv, self.bloutput_variable_csv)
+        shutil.copyfile(self.datapath+self.bloutput_sinusoid_csv, self.bloutput_sinusoid_csv)
+        shutil.copyfile(self.datapath+self.bloutput_sinusoid_txt, self.bloutput_sinusoid_txt)
+        
         default(tsdbaseline)
 
 
@@ -3009,6 +3033,422 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
         result_exist = not os.path.exists(self.infile + '_blparam.csv')
         self.assertEqual(result_exist, True, msg=self.infile + '_blparam.csv'+' exist!')
+
+
+
+
+
+
+
+    def test042(self):
+        """Basic Test 042: default values for all parameters except blfunc='sinusoid'"""
+
+        blfunc='sinusoid'
+        blformat=['csv','text','table']
+        bloutput=['test.csv','test.txt','test.table']
+
+        result = self.run_test(blfunc=blfunc, blformat=blformat, bloutput=bloutput)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        
+        if len(blformat)==len(bloutput):
+            self.check_bloutput(bloutput)
+        
+        result_exist = not os.path.exists(self.infile + '_blparam.bltable')
+        self.assertEqual(result_exist, True, msg=self.infile + '_blparam.bltable'+' exist!')
+
+        result_exist = not os.path.exists(self.infile + '_blparam.txt')
+        self.assertEqual(result_exist, True, msg=self.infile + '_blparam.txt'+' exist!')
+
+        result_exist = not os.path.exists(self.infile + '_blparam.csv')
+        self.assertEqual(result_exist, True, msg=self.infile + '_blparam.csv'+' exist!')
+
+        if(os.path.exists('test.csv') == True):
+            diff_value=os.system('diff test.csv ' + self.bloutput_sinusoid_csv)
+            self.assertEqual(diff_value, 0, msg=bloutput[0] + 'is not equivalent to ' + self.bloutput_sinusoid_csv)   
+
+        if(os.path.exists('test.txt') == True):
+            diff_value=os.system('diff test.txt ' + self.bloutput_sinusoid_txt)
+            self.assertEqual(diff_value, 0, msg=bloutput[1] + 'is not equivalent to ' + self.bloutput_sinusoid_txt)   
+
+
+    def test043(self):
+        """Basic Test 043: default values for all parameters except blfunc='sinusoid',blformat=['text','csv','table'] and bloutput=['test.txt','test.csv','test.table']"""
+
+        blfunc='sinusoid'
+        blformat=['text','csv','table']
+        bloutput=['test.txt','test.csv','test.table']
+
+        result = self.run_test(blfunc=blfunc, blformat=blformat, bloutput=bloutput)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        
+        if len(blformat)==len(bloutput):
+            self.check_bloutput(bloutput)
+        
+        result_exist = not os.path.exists(self.infile + '_blparam.bltable')
+        self.assertEqual(result_exist, True, msg=self.infile + '_blparam.bltable'+' exist!')
+
+        result_exist = not os.path.exists(self.infile + '_blparam.txt')
+        self.assertEqual(result_exist, True, msg=self.infile + '_blparam.txt'+' exist!')
+
+        result_exist = not os.path.exists(self.infile + '_blparam.csv')
+        self.assertEqual(result_exist, True, msg=self.infile + '_blparam.csv'+' exist!')
+
+
+        if(os.path.exists('test.csv') == True):
+            diff_value=os.system('diff test.csv ' + self.bloutput_sinusoid_csv)
+            self.assertEqual(diff_value, 0, msg=bloutput[1] + 'is not equivalent to ' + self.bloutput_sinusoid_csv)   
+
+
+        if(os.path.exists('test.txt') == True):
+            diff_value=os.system('diff test.txt ' + self.bloutput_sinusoid_txt)
+            self.assertEqual(diff_value, 0, msg=bloutput[0] + 'is not equivalent to ' + self.bloutput_sinusoid_txt)   
+
+
+    def test044(self):
+        """Basic Test 044: default values for all parameters except blfunc='sinusoid',blformat=['table','text','csv'] and bloutput=['test.table','test.txt','test.csv']"""
+
+        blfunc='sinusoid'
+        blformat=['table','text','csv']
+        bloutput=['test.table','test.txt','test.csv']
+
+        result = self.run_test(blfunc=blfunc, blformat=blformat, bloutput=bloutput)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        
+        if len(blformat)==len(bloutput):
+            self.check_bloutput(bloutput)
+        
+        result_exist = not os.path.exists(self.infile + '_blparam.bltable')
+        self.assertEqual(result_exist, True, msg=self.infile + '_blparam.bltable'+' exist!')
+
+        result_exist = not os.path.exists(self.infile + '_blparam.txt')
+        self.assertEqual(result_exist, True, msg=self.infile + '_blparam.txt'+' exist!')
+
+        result_exist = not os.path.exists(self.infile + '_blparam.csv')
+        self.assertEqual(result_exist, True, msg=self.infile + '_blparam.csv'+' exist!')
+
+
+        if(os.path.exists('test.csv') == True):
+            diff_value=os.system('diff test.csv ' + self.bloutput_sinusoid_csv)
+            self.assertEqual(diff_value, 0, msg=bloutput[1] + 'is not equivalent to ' + self.bloutput_variable_csv)   
+
+
+        if(os.path.exists('test.txt') == True):
+            diff_value=os.system('diff test.txt ' + self.bloutput_sinusoid_txt)
+            self.assertEqual(diff_value, 0, msg=bloutput[0] + 'is not equivalent to ' + self.bloutput_sinusoid_txt)   
+
+
+    def test045(self):
+        """Basic Test 045: default values for all parameters except blfunc='sinusoid',blformat=['table','text','csv'] and bloutput=['','test.txt','test.csv']"""
+
+        blfunc='sinusoid'
+        blformat=['table','text','csv']
+        bloutput=['','test.txt','test.csv']
+
+        result = self.run_test(blfunc=blfunc, blformat=blformat, bloutput=bloutput)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        
+        if len(blformat)==len(bloutput):
+            self.check_bloutput(bloutput)
+        
+        result_exist = os.path.exists(self.infile + '_blparam.bltable')
+        self.assertEqual(result_exist, True, msg=self.infile + '_blparam.bltable'+' does not exist!')
+
+        result_exist = not os.path.exists(self.infile + '_blparam.txt')
+        self.assertEqual(result_exist, True, msg=self.infile + '_blparam.txt'+' exist!')
+
+        result_exist = not os.path.exists(self.infile + '_blparam.csv')
+        self.assertEqual(result_exist, True, msg=self.infile + '_blparam.csv'+' exist!')
+
+
+        diff_value=os.system('diff test.csv ' + self.bloutput_sinusoid_csv)
+        self.assertEqual(diff_value, 0, msg=bloutput[2] + 'is not equivalent to ' + self.bloutput_sinusoid_csv)   
+
+        diff_value=os.system('diff test.txt ' + self.bloutput_sinusoid_txt)
+        self.assertEqual(diff_value, 0, msg=bloutput[1] + 'is not equivalent to ' + self.bloutput_sinusoid_txt)   
+
+
+    def test046(self):
+        """Basic Test 046: default values for all parameters except blfunc='sinusoid',blformat=['table','text','csv'] and bloutput=['','','']"""
+
+        blfunc='sinusoid'
+        blformat=['table','text','csv']
+        bloutput=['','','']
+
+        result = self.run_test(blfunc=blfunc, blformat=blformat, bloutput=bloutput)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        
+        if len(blformat)==len(bloutput):
+            self.check_bloutput(bloutput)
+        
+        result_exist = os.path.exists(self.infile + '_blparam.bltable')
+        self.assertEqual(result_exist, True, msg=self.infile + '_blparam.bltable'+' does not exist!')
+
+        result_exist = os.path.exists(self.infile + '_blparam.txt')
+        self.assertEqual(result_exist, True, msg=self.infile + '_blparam.txt'+' does not exist!')
+
+        result_exist = os.path.exists(self.infile + '_blparam.csv')
+        self.assertEqual(result_exist, True, msg=self.infile + '_blparam.csv'+' does not exist!')
+
+        diff_value=os.system('diff ' + self.infile + '_blparam.csv ' + self.bloutput_sinusoid_csv)
+        self.assertEqual(diff_value, 0, msg=self.infile + '_blparam.csv' + 'is not equivalent to ' + self.bloutput_sinusoid_csv)   
+
+        diff_value=os.system('diff ' + self.infile + '_blparam.txt ' + self.bloutput_sinusoid_txt)
+        self.assertEqual(diff_value, 0, msg=self.infile + '_blparam.txt' + 'is not equivalent to ' + self.bloutput_sinusoid_txt)   
+
+
+    def test047(self):
+        """Basic Test 047: default values for all parameters except blfunc='sinusoid',blformat=['table','text'] and bloutput=['','']"""
+
+        blfunc='sinusoid'
+        blformat=['table','text']
+        bloutput=['','']
+
+        result = self.run_test(blfunc=blfunc, blformat=blformat, bloutput=bloutput)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        
+        if len(blformat)==len(bloutput):
+            self.check_bloutput(bloutput)
+        
+        result_exist = os.path.exists(self.infile + '_blparam.bltable')
+        self.assertEqual(result_exist, True, msg=self.infile + '_blparam.bltable'+' does not exist!')
+
+        result_exist = os.path.exists(self.infile + '_blparam.txt')
+        self.assertEqual(result_exist, True, msg=self.infile + '_blparam.txt'+' does not exist!')
+
+        #result_exist = os.path.exists(self.infile + '_blparam.csv')
+        #self.assertEqual(result_exist, True, msg=self.infile + '_blparam.csv'+' does not exist!')
+
+        #diff_value=os.system('diff ' + self.infile + '_blparam.csv ' + self.bloutput_variable_csv)
+        #self.assertEqual(diff_value, 0, msg=self.infile + '_blparam.csv' + 'is not equivalent to ' + self.bloutput_variable_csv)   
+
+        diff_value=os.system('diff ' + self.infile + '_blparam.txt ' + self.bloutput_sinusoid_txt)
+        self.assertEqual(diff_value, 0, msg=self.infile + '_blparam.txt' + 'is not equivalent to ' + self.bloutput_sinusoid_txt)   
+
+
+    def test048(self):
+        """Basic Test 048: default values for all parameters except blfunc='sinusoid',blformat=['table'] and bloutput=['']"""
+
+        blfunc='sinusoid'
+        blformat=['table']
+        bloutput=['']
+
+        result = self.run_test(blfunc=blfunc, blformat=blformat, bloutput=bloutput)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        
+        if len(blformat)==len(bloutput):
+            self.check_bloutput(bloutput)
+        
+        result_exist = os.path.exists(self.infile + '_blparam.bltable')
+        self.assertEqual(result_exist, True, msg=self.infile + '_blparam.bltable'+' does not exist!')
+
+        result_exist = not os.path.exists(self.infile + '_blparam.txt')
+        self.assertEqual(result_exist, True, msg=self.infile + '_blparam.txt'+' exist!')
+
+        result_exist = not os.path.exists(self.infile + '_blparam.csv')
+        self.assertEqual(result_exist, True, msg=self.infile + '_blparam.csv'+' exist!')
+
+        #diff_value=os.system('diff ' + self.infile + '_blparam.csv ' + self.bloutput_variable_csv)
+        #self.assertEqual(diff_value, 0, msg=self.infile + '_blparam.csv' + 'is not equivalent to ' + self.bloutput_variable_csv)   
+
+        #diff_value=os.system('diff ' + self.infile + '_blparam.txt ' + self.bloutput_variable_txt)
+        #self.assertEqual(diff_value, 0, msg=self.infile + '_blparam.txt' + 'is not equivalent to ' + self.bloutput_variable_txt)   
+
+
+    def test049(self):
+        """Basic Test 049: default values for all parameters except blfunc='sinusoid',blformat=['csv'] and bloutput=['']"""
+
+        blfunc='sinusoid'
+        blformat=['csv']
+        bloutput=['']
+
+        result = self.run_test(blfunc=blfunc, blformat=blformat, bloutput=bloutput)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        
+        if len(blformat)==len(bloutput):
+            self.check_bloutput(bloutput)
+        
+        result_exist = not os.path.exists(self.infile + '_blparam.bltable')
+        self.assertEqual(result_exist, True, msg=self.infile + '_blparam.bltable'+' exist!')
+
+        result_exist = not os.path.exists(self.infile + '_blparam.txt')
+        self.assertEqual(result_exist, True, msg=self.infile + '_blparam.txt'+' exist!')
+
+        result_exist = os.path.exists(self.infile + '_blparam.csv')
+        self.assertEqual(result_exist, True, msg=self.infile + '_blparam.csv'+' does not exist!')
+
+        diff_value=os.system('diff ' + self.infile + '_blparam.csv ' + self.bloutput_sinusoid_csv)
+        self.assertEqual(diff_value, 0, msg=self.infile + '_blparam.csv' + 'is not equivalent to ' + self.bloutput_sinusoid_csv)   
+
+        #diff_value=os.system('diff ' + self.infile + '_blparam.txt ' + self.bloutput_variable_txt)
+        #self.assertEqual(diff_value, 0, msg=self.infile + '_blparam.txt' + 'is not equivalent to ' + self.bloutput_variable_txt)   
+
+
+    def test050(self):
+        """Basic Test 050: default values for all parameters except blfunc='sinusoid',blformat=['text'] and bloutput=['']"""
+
+        blfunc='sinusoid'
+        blformat=['text']
+        bloutput=['']
+
+        result = self.run_test(blfunc=blfunc, blformat=blformat, bloutput=bloutput)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        
+        if len(blformat)==len(bloutput):
+            self.check_bloutput(bloutput)
+        
+        result_exist = not os.path.exists(self.infile + '_blparam.bltable')
+        self.assertEqual(result_exist, True, msg=self.infile + '_blparam.bltable'+' exist!')
+
+        result_exist = os.path.exists(self.infile + '_blparam.txt')
+        self.assertEqual(result_exist, True, msg=self.infile + '_blparam.txt'+' does not exist!')
+
+        result_exist = not os.path.exists(self.infile + '_blparam.csv')
+        self.assertEqual(result_exist, True, msg=self.infile + '_blparam.csv'+' exist!')
+
+        diff_value=os.system('diff ' + self.infile + '_blparam.txt ' + self.bloutput_sinusoid_txt)
+        self.assertEqual(diff_value, 0, msg=self.infile + '_blparam.txt' + 'is not equivalent to ' + self.bloutput_sinusoid_txt)   
+
+        #diff_value=os.system('diff ' + self.infile + '_blparam.txt ' + self.bloutput_variable_txt)
+        #self.assertEqual(diff_value, 0, msg=self.infile + '_blparam.txt' + 'is not equivalent to ' + self.bloutput_variable_txt)   
+
+    def test051(self):
+        """Basic Test 051: default values for all parameters except blfunc='sinusoid',blformat=[''] and bloutput=['']"""
+
+        blfunc='sinusoid'
+        blformat=['']
+        bloutput=['']
+
+        result = self.run_test(blfunc=blfunc, blformat=blformat, bloutput=bloutput)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        
+        if len(blformat)==len(bloutput):
+            self.check_bloutput(bloutput)
+        
+        result_exist = not os.path.exists(self.infile + '_blparam.bltable')
+        self.assertEqual(result_exist, True, msg=self.infile + '_blparam.bltable'+' exist!')
+
+        result_exist = not os.path.exists(self.infile + '_blparam.txt')
+        self.assertEqual(result_exist, True, msg=self.infile + '_blparam.txt'+' exist!')
+
+        result_exist = not os.path.exists(self.infile + '_blparam.csv')
+        self.assertEqual(result_exist, True, msg=self.infile + '_blparam.csv'+' exist!')
+
+        #diff_value=os.system('diff ' + self.infile + '_blparam.txt ' + self.bloutput_variable_txt)
+        #self.assertEqual(diff_value, 0, msg=self.infile + '_blparam.txt' + 'is not equivalent to ' + self.bloutput_variable_txt)   
+
+        #diff_value=os.system('diff ' + self.infile + '_blparam.txt ' + self.bloutput_variable_txt)
+        #self.assertEqual(diff_value, 0, msg=self.infile + '_blparam.txt' + 'is not equivalent to ' + self.bloutput_variable_txt)   
+
+
+
+    def test052(self):
+        """Basic Test 052: default values for all parameters except blfunc='sinusoid',blformat=['','csv'] and bloutput=['','test.csv']"""
+
+        blfunc='sinusoid'
+        blformat=['','csv']
+        bloutput=['','test.csv']
+
+        result = self.run_test(blfunc=blfunc, blformat=blformat, bloutput=bloutput)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        
+        if len(blformat)==len(bloutput):
+            self.check_bloutput(bloutput)
+        
+        #result_exist = not os.path.exists(self.infile + '_blparam.bltable')
+        #self.assertEqual(result_exist, True, msg=self.infile + '_blparam.bltable'+' exist!')
+
+        #result_exist = not os.path.exists(self.infile + '_blparam.txt')
+        #self.assertEqual(result_exist, True, msg=self.infile + '_blparam.txt'+' exist!')
+
+        result_exist = not os.path.exists(self.infile + '_blparam.csv')
+        self.assertEqual(result_exist, True, msg=self.infile + '_blparam.csv'+' exist!')
+
+        #diff_value=os.system('diff ' + self.infile + '_blparam.txt ' + self.bloutput_variable_txt)
+        #self.assertEqual(diff_value, 0, msg=self.infile + '_blparam.txt' + 'is not equivalent to ' + self.bloutput_variable_txt)   
+
+
+        result_exist = os.path.exists(bloutput[1])
+        self.assertEqual(result_exist, True, msg= bloutput[1] + ' does not exist!')
+        diff_value=os.system('diff ' + bloutput[1] + ' ' + self.bloutput_sinusoid_csv)
+        self.assertEqual(diff_value, 0, msg=bloutput[1] + ' is not equivalent to ' + self.bloutput_sinusoid_csv)   
+
+
+
+    def test053(self):
+        """Basic Test 053: default values for all parameters except blfunc='sinusoid',blformat='' and  bloutput=''"""
+
+        blfunc='sinusoid'
+        blformat=''
+        bloutput=''
+
+        result = self.run_test(blfunc=blfunc, blformat=blformat, bloutput=bloutput)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        
+        #if len(blformat)==len(bloutput):
+        #    self.check_bloutput(bloutput)
+        
+        result_exist = not os.path.exists(self.infile + '_blparam.bltable')
+        self.assertEqual(result_exist, True, msg=self.infile + '_blparam.bltable'+' exist!')
+
+        result_exist = not os.path.exists(self.infile + '_blparam.txt')
+        self.assertEqual(result_exist, True, msg=self.infile + '_blparam.txt'+' exist!')
+
+        result_exist = not os.path.exists(self.infile + '_blparam.csv')
+        self.assertEqual(result_exist, True, msg=self.infile + '_blparam.csv'+' exist!')
+
+        #diff_value=os.system('diff ' + self.infile + '_blparam.txt ' + self.bloutput_variable_txt)
+        #self.assertEqual(diff_value, 0, msg=self.infile + '_blparam.txt' + 'is not equivalent to ' + self.bloutput_variable_txt)   
+
+
+        #result_exist = os.path.exists(bloutput[1])
+        #self.assertEqual(result_exist, True, msg= bloutput[1] + ' does not exist!')
+        #diff_value=os.system('diff ' + bloutput[1] + ' ' + self.bloutput_variable_csv)
+        #self.assertEqual(diff_value, 0, msg=bloutput[1] + ' is not equivalent to ' + self.bloutput_variable_csv)   
+
+    def test054(self):
+        """Basic Test 054: default values for all parameters except blfunc='sinusoid', blformat='' and  bloutput='test.csv'"""
+
+        blfunc='sinusoid'
+        blformat=''
+        bloutput='test.csv'
+
+        result = self.run_test(blfunc=blfunc, blformat=blformat, bloutput=bloutput)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        
+        #if len(blformat)==len(bloutput):
+        #    self.check_bloutput(bloutput)
+        
+        result_exist = not os.path.exists(self.infile + '_blparam.bltable')
+        self.assertEqual(result_exist, True, msg=self.infile + '_blparam.bltable'+' exist!')
+
+        result_exist = not os.path.exists(self.infile + '_blparam.txt')
+        self.assertEqual(result_exist, True, msg=self.infile + '_blparam.txt'+' exist!')
+
+        result_exist = not os.path.exists(self.infile + '_blparam.csv')
+        self.assertEqual(result_exist, True, msg=self.infile + '_blparam.csv'+' exist!')
+
+
+
+
+
+
+
+
+
+
 
 
 

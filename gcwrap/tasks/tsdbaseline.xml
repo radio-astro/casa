@@ -147,14 +147,14 @@ pipeline processing for huge dataset.
 
     <param type="string" name="blfunc" ignorecase="true">
         <shortdescription>baseline model function</shortdescription>
-        <!-- description>baseline model function [\'poly\', \'chebyshev\', \'cspline\', \'sinusoid\', or \'variable\'(expert mode)]</description -->
-        <description>baseline model function [\'poly\', \'chebyshev\', \'cspline\', or \'variable\'(expert mode)]</description>
+        <description>baseline model function [\'poly\', \'chebyshev\', \'cspline\', \'sinusoid\', or \'variable\'(expert mode)]</description>
+        <!--description>baseline model function [\'poly\', \'chebyshev\', \'cspline\', or \'variable\'(expert mode)]</description-->
         <value>poly</value>
         <allowed kind="enum">
             <value>poly</value>
             <value>chebyshev</value>
             <value>cspline</value>
-          <!--  <value>sinusoid</value> -->
+            <value>sinusoid</value>
             <value>variable</value>
         </allowed>
     </param>
@@ -190,7 +190,10 @@ pipeline processing for huge dataset.
 
     <param type="any" name="addwn" subparam="true">
         <description>additional wave numbers to use</description>
-        <value type="vector"><value>0</value></value>
+        <!--any type="variant" limittypes="string vector"/-->
+        <any type="variant" limittypes="string intArray"/>
+        <!--value type="vector"><value>0</value></value-->
+        <value type="intArray"><value>0</value></value>
     </param>
 
     <param type="any" name="rejwn" subparam="true">
@@ -278,15 +281,15 @@ pipeline processing for huge dataset.
                         <default param="clipthresh"><value>3.0</value></default>
                         <default param="clipniter"><value>0</value></default>
                 </equals>
-<!--            <equals value="sinusoid">
-                        <default param="applyfft"><value>True</value></default>
+                <equals value="sinusoid">
+                        <default param="applyfft"><value>False</value></default>
                         <default param="fftmethod"><value type="string">fft</value></default>
                         <default param="fftthresh"><value type="double">3.0</value></default>
                         <default param="addwn"><value type="vector"><value>0</value></value></default>
                         <default param="rejwn"><value type="vector"><value></value></value></default>
                         <default param="clipthresh"><value>3.0</value></default>
                         <default param="clipniter"><value>0</value></default>
-                </equals> -->
+                </equals> 
                 <equals value="variable">
                         <default param="blparam"><value type="string"></value></default>
                 </equals>

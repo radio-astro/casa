@@ -5,7 +5,9 @@ import sdutil
 from collections import Counter
 ms,sdms,tb = gentools(['ms','sdms','tb'])
 
-def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None, timerange=None, scan=None, pol=None, intent=None, maskmode=None, thresh=None, avg_limit=None, minwidth=None, edge=None, blmode=None, dosubtract=None, blformat=None, bloutput=None, bltable=None, blfunc=None, order=None, npiece=None, applyfft=None, fftmethod=None, fftthresh=None, addwn=None, rejwn=None, clipthresh=None, clipniter=None, blparam=None, verbose=None, showprogress=None, minnrow=None, outfile=None, overwrite=None):
+def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None, timerange=None, scan=None, pol=None, intent=None, maskmode=None, thresh=None, avg_limit=None, minwidth=None, edge=None, blmode=None, dosubtract=None, blformat=None, bloutput=None, bltable=None, blfunc=None, order=None, npiece=None, 
+applyfft=None, fftmethod=None, fftthresh=None, 
+addwn=None, rejwn=None, clipthresh=None, clipniter=None, blparam=None, verbose=None, showprogress=None, minnrow=None, outfile=None, overwrite=None):
 
     casalog.origin('tsdbaseline')
     try:
@@ -46,6 +48,11 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
             restore_sorted_table_keyword(infile, sorttab_info)
             
         elif (blmode == 'fit'):
+
+            
+            addwn=sdutil._parse_wn(addwn)
+            rejwn=sdutil._parse_wn(rejwn)
+
             blformat, bloutput = prepare_for_blformat_bloutput(infile, blformat, bloutput, overwrite)
 
             output_bloutput_text_header(blformat, bloutput,
@@ -82,7 +89,12 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
                                                   threshold=thresh,
                                                   avg_limit=avg_limit,
                                                   minwidth=minwidth,
-                                                  edge=edge)
+                                                  edge=edge,
+                                                  applyfft=applyfft,###############
+                                                  fftmethod=fftmethod,############
+                                                  fftthresh=fftthresh,############
+                                                  addwn=addwn,###################
+                                                  rejwn=rejwn)####################
             func(**params)
             sdms.close()
             
@@ -191,8 +203,13 @@ def output_bloutput_text_header(blformat, bloutput, blfunc, maskmode, infile, ou
         ftitles = ['Fit order']
     elif (blf == 'cspline'):
         ftitles = ['nPiece']
-    else: # sinusoid
+    elif (blf=='sinusoid'): # sinusoid########################
         ftitles = ['applyFFT', 'fftMethod', 'fftThresh', 'addWaveN', 'rejWaveN']
+    elif (blf=='variable'):#######
+        ftitles=[]##########
+    else:#############
+        raise ValueError, "Unsupported blfunc = %s" % blfunc ############
+        
 
     mm = maskmode.lower()
     if (mm == 'auto'):
@@ -226,10 +243,17 @@ def prepare_for_baselining(**keywords):
     if blfunc in ['poly', 'chebyshev']:
         keys += ['blfunc', 'order', 'clip_threshold_sigma', 'num_fitting_max']
     elif blfunc == 'cspline':
+        print 'blfunc=cspline'
         keys += ['npiece', 'clip_threshold_sigma', 'num_fitting_max']
         funcname += ('_' + blfunc)
     elif blfunc == 'variable':
+        print 'blfunc=variable'
         keys += ['blparam']
+        funcname += ('_' + blfunc)
+    elif blfunc =='sinusoid':
+        keys +=[
+        #'applyfft','fftmethod','fftthresh', 
+        'addwn','rejwn', 'clip_threshold_sigma', 'num_fitting_max'] #############
         funcname += ('_' + blfunc)
     else:
         raise ValueError, "Unsupported blfunc = %s" % blfunc

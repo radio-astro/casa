@@ -15,6 +15,11 @@ from asap import _to_list
 from asap.scantable import is_scantable, is_ms, scantable
 import rasterutil
 
+
+
+
+
+
 @contextlib.contextmanager
 def toolmanager(vis, tooltype, *args, **kwargs):
     tool = gentools([tooltype])[0]
@@ -1519,3 +1524,60 @@ def get_ms_sampling_arcsec(msname, spw='', antenna='', field='',
     return dx_rad*rad_to_asec, dy_rad*rad_to_asec, pa
     
     
+#def _parse_wn(self, wn):
+def _parse_wn(wn):
+    if isinstance(wn, list) or isinstance(wn, tuple):
+        return wn
+    elif isinstance(wn, int):
+        return [ wn ]
+    elif isinstance(wn, str):
+        if '-' in wn:                            # case 'a-b' : return [a,a+1,...,b-1,b]
+            val = wn.split('-')
+            val = [int(val[0]), int(val[1])]
+            val.sort()
+            res = [i for i in xrange(val[0], val[1]+1)]
+        elif wn[:2] == '<=' or wn[:2] == '=<':   # cases '<=a','=<a' : return [0,1,...,a-1,a]
+            val = int(wn[2:])+1
+            res = [i for i in xrange(val)]
+        elif wn[-2:] == '>=' or wn[-2:] == '=>': # cases 'a>=','a=>' : return [0,1,...,a-1,a]
+            val = int(wn[:-2])+1
+            res = [i for i in xrange(val)]
+        elif wn[0] == '<':                       # case '<a' :         return [0,1,...,a-2,a-1]
+            val = int(wn[1:])
+            res = [i for i in xrange(val)]
+        elif wn[-1] == '>':                      # case 'a>' :         return [0,1,...,a-2,a-1]
+            val = int(wn[:-1])
+            res = [i for i in xrange(val)]
+        elif wn[:2] == '>=' or wn[:2] == '=>':   # cases '>=a','=>a' : return [a,-999], which is
+                                                     #                     then interpreted in C++
+                                                     #                     side as [a,a+1,...,a_nyq]
+                                                     #                     (CAS-3759)
+            val = int(wn[2:])
+            res = [val, -999]
+            #res = [i for i in xrange(val, self.nchan()/2+1)]
+        elif wn[-2:] == '<=' or wn[-2:] == '=<': # cases 'a<=','a=<' : return [a,-999], which is
+                                                     #                     then interpreted in C++
+                                                     #                     side as [a,a+1,...,a_nyq]
+                                                     #                     (CAS-3759)
+            val = int(wn[:-2])
+            res = [val, -999]
+            #res = [i for i in xrange(val, self.nchan()/2+1)]
+        elif wn[0] == '>':                       # case '>a' :         return [a+1,-999], which is
+                                                     #                     then interpreted in C++
+                                                     #                     side as [a+1,a+2,...,a_nyq]
+                                                     #                     (CAS-3759)
+            val = int(wn[1:])+1
+            res = [val, -999]
+            #res = [i for i in xrange(val, self.nchan()/2+1)]
+        elif wn[-1] == '<':                      # case 'a<' :         return [a+1,-999], which is
+                                                     #                     then interpreted in C++
+                                                     #                     side as [a+1,a+2,...,a_nyq]
+                                                     #                     (CAS-3759)
+            val = int(wn[:-1])+1
+            res = [val, -999]
+            #res = [i for i in xrange(val, self.nchan()/2+1)]
+
+        return res
+    else:
+        msg = 'wrong value given for addwn/rejwn'
+        raise RuntimeError(msg)
