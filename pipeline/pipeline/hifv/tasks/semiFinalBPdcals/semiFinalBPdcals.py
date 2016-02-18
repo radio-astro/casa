@@ -235,9 +235,9 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
         minBL_for_cal = max(3,int(len(m.antennas)/2.0))
 
         # Add appropriate temporary tables to the callibrary
-        calto = callibrary.CalTo(self.inputs.vis)
-        calfrom = callibrary.CalFrom(gaintable=addcaltable, interp='', calwt=False)
-        context.callibrary.add(calto, calfrom)
+        ##calto = callibrary.CalTo(self.inputs.vis)
+        ##calfrom = callibrary.CalFrom(gaintable=addcaltable, interp='', calwt=False)
+        ##context.callibrary.add(calto, calfrom)
 
         # need to add scan?
         # ref antenna string needs to be lower case for gaincal
@@ -328,9 +328,9 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
         minBL_for_cal = max(3,int(len(m.antennas)/2.0))
 
         # Add appropriate temporary tables to the callibrary
-        calto = callibrary.CalTo(self.inputs.vis)
-        calfrom = callibrary.CalFrom(gaintable=addcaltable, interp='', calwt=False)
-        context.callibrary.add(calto, calfrom)
+        ##calto = callibrary.CalTo(self.inputs.vis)
+        ##calfrom = callibrary.CalFrom(gaintable=addcaltable, interp='', calwt=False)
+        ##context.callibrary.add(calto, calfrom)
         
         # need to add scan?
         # ref antenna string needs to be lower case for gaincal
