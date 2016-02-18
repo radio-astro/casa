@@ -114,17 +114,26 @@ public:
 			       vector<int> const& edge);
 
   //Sinusoid  
-  /*  void subtractBaselineSinusoid(string const& in_column_name,
-   string const& out_ms_name,
-   string const& out_bloutput_name,
-   bool const& do_subtract,
-   string const& in_spw,
-   string const& in_ppp,
-   int const npiece,
-   float const clip_threshold_sigma=3.0,
-   int const num_fitting_max=1);
+   void subtractBaselineSinusoid(string const& in_column_name,
+                    string const& out_ms_name,
+                    string const& out_bloutput_name,
+                    bool const& do_subtract,
+                    string const& in_spw,
+                    string const& in_ppp,
+                    vector<int> const& addwn,
+                    vector<int> const& rejwn,
+                    //bool const applyfft,
+                    //string const fftmethod,
+                    //float const fftthresh,
+                    float const clip_threshold_sigma,
+                    int const num_fitting_max,
+                    bool const linefinding,
+                    float const threshold,
+                    int const avg_limit,
+                    int const minwidth,
+                    vector<int> const& edge);
 
-   */
+   
 
   // variable fitting parameters stored in a text file
   void subtractBaselineVariable(string const& in_column_name,
@@ -249,8 +258,9 @@ private:
 			  LIBSAKURA_SYMBOL(Status)& status,
 			  std::vector<LIBSAKURA_SYMBOL(BaselineContextFloat) *> &bl_contexts,
 			  size_t const bltype,
-			  int const order,
-			  float const clip_threshold_sigma,
+			  //int const order,//---------------------------------------------
+			  vector<int> const& order,//--------------------------------
+              float const clip_threshold_sigma,
 			  int const num_fitting_max,
 			  bool const linefinding,
 			  float const threshold,

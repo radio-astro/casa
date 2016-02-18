@@ -626,9 +626,9 @@ void SingleDishMS::get_baseline_context(size_t const bltype,
     } else if (bltype == BaselineType_kCubicSpline) {
       status = LIBSAKURA_SYMBOL(CreateBaselineContextCubicSplineFloat)(static_cast<uint16_t>(order),
                                                                        num_chan, &context);
-    //} else if (bltype == BaselineType_kSinusoid) {
-    //status = LIBSAKURA_SYMBOL(CreateBaselineContextSinusoidFloat)(static_cast<uint16_t>(order),
-    //                                                              num_chan, &context);
+    } else if (bltype == BaselineType_kSinusoid) {
+    status = LIBSAKURA_SYMBOL(CreateBaselineContextSinusoidFloat)(static_cast<uint16_t>(order),
+                                                                  num_chan, &context);
     }
     check_sakura_status("sakura_CreateBaselineContextFloat", status);
     bl_contexts.push_back(context);
@@ -772,6 +772,8 @@ size_t SingleDishMS::get_num_coeff_bloutput(size_t const bltype,
   case BaselineType_kCubicSpline:
     num_coeff = order + 1;
     break;
+  case BaselineType_kSinusoid:///////////////////////  
+    break;
   default:
     throw(AipsError("Unsupported baseline type."));
   }
@@ -792,7 +794,9 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
                                       LIBSAKURA_SYMBOL(Status)& status,
                                       std::vector<LIBSAKURA_SYMBOL(BaselineContextFloat) *> &bl_contexts,
                                       size_t const bltype,
-                                      int const order,
+                                      //int const order,//--------------------------------
+                                      //vector<size_t> const& order,//-------------------------
+                                      vector<int> const& order,//-------------------------
                                       float const clip_threshold_sigma,
                                       int const num_fitting_max,
                                       bool const linefinding,
@@ -805,7 +809,11 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
                                       Func2 func2,
                                       Func3 func3,
                                       LogIO os) {
-  // in_ms = out_ms
+
+
+    cout << "Calling SingleDishMS::doSubtractBaseline " << endl;
+
+// in_ms = out_ms
   // in_column = [FLOAT_DATA|DATA|CORRECTED_DATA], out_column=new MS
   // no iteration is necessary for the processing.
   // procedure
@@ -882,7 +890,9 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
       get_nchan_and_mask(recspw, data_spw, recchan, num_chan, nchan, in_mask,
           nchan_set, new_nchan);
       if (new_nchan) {
-        get_baseline_context(bltype, static_cast<uint16_t>(order),
+        get_baseline_context(bltype, 
+                             //static_cast<uint16_t>(order),//////////////////////////
+                             static_cast<uint16_t>(order[order.size()-1]),/////////////////
                              num_chan, nchan, nchan_set,
                              ctx_indices, bl_contexts);
       }
@@ -908,10 +918,15 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
         //prepare varables for writing baseline table
         Array<Bool> apply_mtx(IPosition(2, num_pol, 1), True);
         Array<uInt> bltype_mtx(IPosition(2, num_pol, 1), (uInt)bltype);
-        Array<Int> fpar_mtx(IPosition(2, num_pol, 1), (Int)order);
+        Array<Int> fpar_mtx(IPosition(2, num_pol, 1), 
+        //(Int)order//////////////////////////
+        //(Int)order[0]///////////////////////////
+        (Int)order[order.size()-1]///////////////////////////
+        );
         std::vector<std::vector<double> > ffpar_mtx_tmp(num_pol);
         std::vector<std::vector<uInt> > masklist_mtx_tmp(num_pol);
         std::vector<std::vector<double> > coeff_mtx_tmp(num_pol);
+        
         Array<Float> rms_mtx(IPosition(2, num_pol, 1), (Float)0);
         Array<Float> cthres_mtx(IPosition(2, num_pol, 1), ArrayInitPolicy::NO_INIT);
         Array<uInt> citer_mtx(IPosition(2, num_pol, 1), ArrayInitPolicy::NO_INIT);
@@ -959,15 +974,63 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
           }
           size_t num_coeff;
           if (bltype == BaselineType_kCubicSpline) {
-            num_coeff = order * 4;
-          } else {
+            //num_coeff = order * 4;//////////////////////////////////////////
+            //num_coeff = order[0] * 4;/////////////////////////////////////////
+            num_coeff = order[order.size()-1] * 4;/////////////////////////////////////////
+
+          //}else{
+          } else if (bltype==BaselineType_kSinusoid) {////////////
+
+            size_t order_size = order.size();///////////////
+            cout << "order.size() " << order_size << endl;
+
+            if(order[0]==0){//////////////////////////////
+                num_coeff = order_size*2-1;//////////////
+            }else{/////////////////////////////////////
+                num_coeff = order_size*2;////////////
+            }///////////////////////////////////////////
+
+
+
+            cout << "order[0] " << order[0] << endl;/////
+            cout << "num_coeff " << num_coeff << endl;/////
+           
+
+
+            }else{
+            
+
+
+            //if(bltype != LIBSAKURA_SYMBOL(BaselineType_kSinusoid)) {
+
             status =
               LIBSAKURA_SYMBOL(GetNumberOfCoefficientsFloat)(bl_contexts[ctx_indices[idx]],
-                                                             order, &num_coeff);
-            check_sakura_status("sakura_GetNumberOfCoefficientsFloat", status);
+                                                        //order,//////////////////
+                                                        //order[0],///////////////////
+                                                        order[order.size()-1],///////////////////
+                                                        //order.size();///////////////////
+                                                        &num_coeff);
+            
+            cout << "status of LIBSAKURA_SYMBOL(GetNumberOfCoefficients)1 " << status << endl;
+            
+            
+            //check_sakura_status("sakura_GetNumberOfCoefficients", status);
+            check_sakura_status("sakura_GetNumberOfCoefficients", status);
+         
+
+            //cout << "status of LIBSAKURA_SYMBOL(GetNumberOfCoefficients)2 " << status << endl;
+            
+
+
           }
+
+
+
           // Final check of the valid number of channels
-          size_t num_min = (bltype == BaselineType_kCubicSpline) ? order + 3 : num_coeff;
+          size_t num_min =
+            (bltype == BaselineType_kCubicSpline) ?
+            /*order + 3*/ //order[0] + 3 : num_coeff;///////////////////////////////////
+            /*order + 3*/ order[order.size()-1] + 3 : num_coeff;///////////////////////////////////
           if (NValidMask(num_chan, mask_data) < num_min) {
             flag_spectrum_in_cube(flag_chunk, irow, ipol);
             apply_mtx[0][ipol] = False;
@@ -992,8 +1055,26 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
             // data() method must be used with special care!!!
             double *coeff_data = coeff.data();
 
+
+
+            cout << "num_coeff_max " << num_coeff_max << endl;///////////// 
+
+            cout << endl;    
+            cout << "just before func0 " << endl;
+            cout << "ctx_indices[idx] " << ctx_indices[idx] << endl;
+            cout << "num_chan " << num_chan << endl;
+            cout << "spec_data " << spec_data << endl;
+            cout << "mask_data " << mask_data << endl;
+            cout << "coeff_data " << coeff_data << endl;
+            cout << "mask2_data " << mask2_data << endl;
+            cout << "&rms " << &rms << endl;
+            cout << endl;
+
             //---GetBestFitBaselineCoefficientsFloat()...
             func0(ctx_indices[idx], num_chan, spec_data, mask_data, coeff_data, mask2_data, &rms);
+
+            cout << "rms " << rms << endl;
+
 
             for (size_t i = 0; i < num_chan; ++i) {
               if (mask_data[i] == false) {
@@ -1003,6 +1084,8 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
                 final_mask2[ipol] += 1;
               }
             }
+
+      
 
             //---set_array_for_bltable(ffpar_mtx_tmp)
             func1(ipol, ffpar_mtx_tmp, num_ffpar_max);
@@ -1224,12 +1307,21 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
                                     int const avg_limit,
                                     int const minwidth,
                                     vector<int> const& edge) {
+
+  vector<int> order_vect;/////////////////////////////////////////////
+  order_vect.push_back(order); 
+
   LogIO os(_ORIGIN);
+  
   os << "Fitting and subtracting polynomial baseline order = " << order
      << LogIO::POST;
   if (order < 0) {
     throw(AipsError("order must be positive or zero."));
   }
+  
+
+
+
   LIBSAKURA_SYMBOL(Status) status;
   LIBSAKURA_SYMBOL(BaselineStatus) bl_status;
   std::vector<LIBSAKURA_SYMBOL(BaselineContextFloat) *> bl_contexts;
@@ -1248,7 +1340,8 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
                      status,
                      bl_contexts,
                      bltype,
-                     order,
+                     //order,//////////////////////
+                     order_vect,///////////////////
                      clip_threshold_sigma,
                      num_fitting_max,
                      linefinding,
@@ -1260,7 +1353,9 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
                        status = LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsFloat)(
                          bl_contexts[cidx], num_chan, spec, mask,
                          clip_threshold_sigma, num_fitting_max,
-                         order+1, coeff, mask2, rms,
+                         //order+1,/////////////////////////////////
+                         order_vect[0]+1,/////////////////////////   
+                         coeff, mask2, rms,
                          &bl_status);
                        check_sakura_status("sakura_GetBestFitBaselineCoefficientsFloat", status);
                        if (bl_status != LIBSAKURA_SYMBOL(BaselineStatus_kOK)) {
@@ -1273,11 +1368,16 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
                      },
                      [&](size_t const cidx, size_t const num_chan, float *spec, double *coeff){
                        status = LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(
-                         bl_contexts[cidx], num_chan, spec, order+1, coeff, spec);
+                         bl_contexts[cidx], num_chan, spec, 
+                         //order+1, ///////////////////////////
+                         order_vect[0]+1,/////////////////////
+                         coeff, spec);
                        check_sakura_status("sakura_SubtractBaselineUsingCoefficientsFloat", status);},
                      [&](size_t const cidx, size_t const num_chan, float *spec, bool *mask, float *rms){
                        status = LIBSAKURA_SYMBOL(SubtractBaselineFloat)(
-                         bl_contexts[cidx], static_cast<uint16_t>(order),
+                         bl_contexts[cidx], 
+                         //static_cast<uint16_t>(order),///////////////////////////
+                         static_cast<uint16_t>(order_vect[0]),////////////////////
                          num_chan, spec, mask, clip_threshold_sigma,
                          num_fitting_max, true, spec, mask, rms, &bl_status);
                        check_sakura_status("sakura_SubtractBaselineFloat", status);
@@ -1304,6 +1404,9 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
                                            int const avg_limit,
                                            int const minwidth,
                                            vector<int> const& edge) {
+  vector<int> npiece_vect;/////////////////////
+  npiece_vect.push_back(npiece);
+
   LogIO os(_ORIGIN);
   os << "Fitting and subtracting cubic spline baseline npiece = " << npiece
       << LogIO::POST;
@@ -1327,7 +1430,8 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
                      status,
                      bl_contexts,
                      bltype,
-                     npiece,
+                     //npiece,////////////////////
+                     npiece_vect,////////////////
                      clip_threshold_sigma,
                      num_fitting_max,
                      linefinding,
@@ -1339,7 +1443,9 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
                        status = LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsCubicSplineFloat)(
                          bl_contexts[cidx], num_chan, spec, mask,
                          clip_threshold_sigma, num_fitting_max,
-                         npiece, reinterpret_cast<double (*)[4]>(coeff), mask2, rms, boundary_data,
+                         //npiece,/////////////////
+                         npiece_vect[0],/////////////
+                         reinterpret_cast<double (*)[4]>(coeff), mask2, rms, boundary_data,
                          &bl_status);
                        check_sakura_status("sakura_GetBestFitBaselineCoefficientsCubicSplineFloat", status);
                        if (bl_status != LIBSAKURA_SYMBOL(BaselineStatus_kOK)) {
@@ -1347,7 +1453,10 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
                        }
                      },
                      [&](size_t ipol, std::vector<std::vector<double> > &ffpar_mtx_tmp, size_t &num_ffpar_max) {
-                       size_t num_ffpar = get_num_coeff_bloutput(bltype, npiece, num_ffpar_max);
+                       size_t num_ffpar = get_num_coeff_bloutput(bltype,
+                       //npiece, 
+                       npiece_vect[0],
+                       num_ffpar_max);
                        ffpar_mtx_tmp[ipol].resize(num_ffpar);
                        for (size_t ipiece = 0; ipiece < num_ffpar; ++ipiece) {
                          ffpar_mtx_tmp[ipol][ipiece] = boundary_data[ipiece];
@@ -1355,13 +1464,16 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
                      },
                      [&](size_t const cidx, size_t const num_chan, float *spec, double *coeff) {
                        status = LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
-                         bl_contexts[cidx], num_chan, spec, npiece,
+                         bl_contexts[cidx], num_chan, spec,
+                         //npiece,////////////////
+                         npiece_vect[0],//////////
                          reinterpret_cast<double (*)[4]>(coeff), boundary_data, spec);
-                       check_sakura_status("sakura_SubtractBaselineCubicSplineUsingCoefficientsFloat", status);
-                     },
+                       check_sakura_status("sakura_SubtractBaselineCubicSplineUsingCoefficientsFloat", status);},
                      [&](size_t const cidx, size_t const num_chan, float *spec, bool *mask, float *rms) {
                        status = LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineFloat)(
-                         bl_contexts[cidx], static_cast<uint16_t>(npiece),
+                         bl_contexts[cidx], 
+                         //static_cast<uint16_t>(npiece),////////////////
+                         static_cast<uint16_t>(npiece_vect[0]),////////
                          num_chan, spec, mask, clip_threshold_sigma, num_fitting_max,
                          true, spec, mask, rms, boundary_data, &bl_status);
                        check_sakura_status("sakura_SubtractBaselineCubicSplineFloat", status);
@@ -1372,6 +1484,356 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
                      os
                      );
 }
+
+
+void SingleDishMS::subtractBaselineSinusoid(string const& in_column_name,
+                                           string const& out_ms_name, 
+                                           string const& out_bloutput_name,
+                                           bool const& do_subtract,
+                                           string const& in_spw,
+                                           string const& in_ppp,
+                                           vector<int> const& addwn_tmp,
+                                           vector<int> const& rejwn,
+                                           //bool const applyfft,
+                                           //string const fftmethod,
+                                           //float const fftthresh,
+                                           float const clip_threshold_sigma,
+                                           int const num_fitting_max,
+                                           bool const linefinding,
+                                           float const threshold,
+                                           int const avg_limit,
+                                           int const minwidth,
+                                           vector<int> const& edge) {
+
+
+  cout << "calling code########"<< endl;
+
+
+    for(size_t i=0; i < rejwn.size();++i){
+        cout << "rejwn " << rejwn[i] << endl;
+    }
+
+    for(size_t i=0; i < addwn_tmp.size();++i){
+    cout << "addwn_tmp " << addwn_tmp[i] << endl;
+    }
+
+ 
+  vector<int> addwn;
+  for(size_t i=0; i < addwn_tmp.size();++i){
+    bool flag = true;
+    for(size_t j=0; j < rejwn.size();++j){
+      if(addwn_tmp[i] == rejwn[j]){
+        flag=false;
+        //test_addwn.push_back(addwn[i]);
+        
+        //cout << "test_addwn[i]" << test_addwn[i] << endl;
+      
+      }
+
+
+    }
+    if(flag==true){
+        addwn.push_back(addwn_tmp[i]);
+    }
+
+ }
+
+
+    for(size_t i=0; i < addwn.size();++i){
+        cout << "addwn " << addwn[i] << endl;
+    }
+
+
+
+
+    
+
+  LogIO os(_ORIGIN);
+
+  for(size_t i=0; i < addwn.size(); i++){
+  os << "Fitting and subtracting sinusoid baseline addwn = " << addwn[i]
+      << LogIO::POST;
+  }
+
+  if (addwn.size() <= 0) {
+    throw(AipsError("addwn must contain at least one element."));
+  }
+
+  LIBSAKURA_SYMBOL(Status) status;
+  LIBSAKURA_SYMBOL(BaselineStatus) bl_status;
+  std::vector<LIBSAKURA_SYMBOL(BaselineContextFloat) *> bl_contexts;
+  bl_contexts.clear();
+
+ 
+  size_t bltype =
+    BaselineType_kSinusoid;
+
+  cout << "bltype " << bltype << endl;
+
+
+  //TODO  
+  //Vector<double> boundary(npiece, ArrayInitPolicy::NO_INIT);
+  //double *boundary_data = boundary.data();
+
+
+
+  cout << "doSubtractBaseline" << endl;
+
+  doSubtractBaseline(in_column_name,
+                     out_ms_name,
+                     out_bloutput_name,
+                     do_subtract,
+                     in_spw,
+                     in_ppp,
+                     status,
+                     bl_contexts,
+                     bltype,
+                     //npiece,////////////////////
+                     addwn,////////////////
+                     clip_threshold_sigma,
+                     num_fitting_max,
+                     linefinding,
+                     threshold,
+                     avg_limit,
+                     minwidth,
+                     edge,
+                     [&](size_t const cidx, size_t const num_chan, float *spec, bool *mask, double *coeff, bool *mask2, float *rms) {
+                     
+                     //vector<size_t> nwave2;
+                     Vector<size_t> addwn2(addwn.size(), ArrayInitPolicy::NO_INIT);
+                     size_t *nwave2 = addwn2.data();
+
+
+                     for(size_t i=0; i < addwn.size(); i++){
+                        //nwave2.push_back((size_t)addwn[i]);
+                        nwave2[i]=addwn[i];
+                        cout << "nwave2[" << i << "] " << nwave2[i] << endl;
+                     }
+
+                     size_t num_coeff;
+                       
+                     if(addwn[0]==0){
+                        num_coeff=(addwn.size()*2-1);
+                     }else{
+                        num_coeff=(addwn.size()*2);
+                     }
+
+                        cout << endl;
+                       cout << "just before Get BestFitBaselineCoefficientsSinusoidFloat" << endl; 
+                        cout << "bl_contexts[cidx] " << bl_contexts[cidx] << endl;
+                        cout << "num_chan " << num_chan << endl;
+                        cout << "spec " << spec << endl;
+                        //cout << "size of spec " << sizeof(spec) << endl;
+                        cout << " mask " << mask << endl;
+                        cout << " clip_threshold_sigma " << clip_threshold_sigma << endl;
+                        cout << " num_fitting_max " << num_fitting_max << endl;
+                        cout << " addwn.size() " << addwn.size() << endl;
+                        cout << "&nwave2[0] " << &nwave2[0] << endl;
+                        cout << "nwave2 " << nwave2 << endl;
+                        cout << "nwave[0] " << nwave2[0] << endl;
+                        cout << "nwave[1] " << nwave2[1] << endl;
+                        cout << "num_coeff " << num_coeff << endl;
+                        cout << endl;
+                        
+                    
+                       status = LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsSinusoidFloat)(
+                         bl_contexts[cidx], 
+                         num_chan, 
+                         spec, 
+                         mask,
+                         clip_threshold_sigma, 
+                         num_fitting_max,
+                         addwn.size(),
+                         nwave2,
+                         //&nwave2[0],
+                         //npiece,/////////////////
+                         //npiece_vect[0],/////////////
+                         num_coeff,// <--- depends on whether nwave contains 0 or not.
+                         coeff, 
+                         mask2, 
+                         rms, 
+                         //boundary_data,
+                         &bl_status);
+
+    
+
+                        cout << endl;
+                        cout << "just after Get BestFitBaselineCoefficientsSinusoidFloat" << endl;                        
+                        cout << "num_coeff " << num_coeff << endl;
+                        cout << "coeff " << coeff << endl;
+                        cout << "size of mask2 " << sizeof(mask2) << endl;
+                        cout << "rms " << rms << endl;
+                        cout << "status " << status << endl;
+                        cout << endl;
+
+
+                       //check_sakura_status("sakura_GetBestFitBaselineCoefficientsSinusoidFloat", status);
+                       
+                       
+                       //cout << "bl_status " << bl_status << endl;
+                       
+                       if (bl_status != LIBSAKURA_SYMBOL(BaselineStatus_kOK)) {
+                         throw(AipsError("baseline fitting isn't successful."));
+                       }
+                     
+                     }
+                     
+                     ,
+                     [&](size_t ipol, std::vector<std::vector<double> > &ffpar_mtx_tmp, size_t &num_ffpar_max) {
+                       size_t num_ffpar = get_num_coeff_bloutput(bltype,
+                       addwn.size(),/////////////////////////
+                       //npiece, 
+                       //npiece_vect[0],
+                       num_ffpar_max);
+                       ffpar_mtx_tmp[ipol].resize(num_ffpar);
+                       //for (size_t ipiece = 0; ipiece < num_ffpar; ++ipiece) {
+                       //  ffpar_mtx_tmp[ipol][ipiece] = boundary_data[ipiece];
+                       //}
+                     },
+                     [&](size_t const cidx, size_t const num_chan, float *spec, double *coeff) {
+                     
+                     //  vector<size_t> nwave2;
+                     //  size_t num_coeff;
+
+                     
+                      //for(size_t i=0; i < nwave.size(); i++){
+                            
+                       //     nwave2.push_back((size_t)nwave[i]);
+                       //     if(nwave[i]==0){
+                       //         num_coeff=(nwave.size()*2-1);
+                       //     }else{
+                       //         num_coeff=(nwave.size()*2);
+                       //     }
+                       
+                       //}
+
+
+
+                     Vector<size_t> addwn2(addwn.size(), ArrayInitPolicy::NO_INIT);
+                     size_t *nwave2 = addwn2.data();
+
+
+                     for(size_t i=0; i < addwn.size(); i++){
+                        //nwave2.push_back((size_t)addwn[i]);
+                        nwave2[i]=addwn[i];
+                        cout << nwave2[i] << endl;
+                     }
+
+
+    
+                     //vector<size_t> nwave2;
+                      
+                     //for(size_t i=0; i < addwn.size(); i++){
+                     //   nwave2.push_back((size_t)addwn[i]);
+                     //}
+
+                     size_t num_coeff;
+                       
+                     if(addwn[0]==0){
+                        num_coeff=(addwn.size()*2-1);
+                     }else{
+                        num_coeff=(addwn.size()*2);
+                     }
+
+                        
+                       status = LIBSAKURA_SYMBOL(SubtractBaselineSinusoidUsingCoefficientsFloat)(
+                         bl_contexts[cidx], 
+                         num_chan, 
+                         spec,
+                         addwn.size(),
+                         //npiece,////////////////
+                         &nwave2[0],//////////
+                         num_coeff,                            
+                         coeff, 
+                         //boundary_data, 
+                         spec
+                         );
+                       check_sakura_status("sakura_SubtractBaselineSinusoidUsingCoefficientsFloat", status);
+                       
+                       
+                       },
+                     [&](size_t const cidx, size_t const num_chan, float *spec, bool *mask, float *rms) {
+                       
+                     //cout << "status2" << status <<  endl;
+
+
+
+
+                     //  vector<size_t> nwave2;
+                     //  size_t num_coeff;
+
+                     
+                      //for(size_t i=0; i < nwave.size(); i++){
+                            
+                      //      nwave2.push_back((size_t)nwave[i]);
+                      //      if(nwave[i]==0){
+                      //          num_coeff=(nwave.size()*2-1);
+                      //      }else{
+                      //          num_coeff=(nwave.size()*2);
+                      //      }
+                       
+                       //}
+                       
+                   
+                     Vector<size_t> addwn2(addwn.size(), ArrayInitPolicy::NO_INIT);
+                     size_t *nwave2 = addwn2.data();
+
+
+                     for(size_t i=0; i < addwn.size(); i++){
+                        //nwave2.push_back((size_t)addwn[i]);
+                        nwave2[i]=addwn[i];
+                        cout << nwave2[i] << endl;
+                     }
+
+
+
+                     //vector<size_t> nwave2;
+                      
+                     //for(size_t i=0; i < addwn.size(); i++){
+                     //   nwave2.push_back((size_t)addwn[i]);
+                     //}
+
+                     //size_t num_coeff;
+                       
+                     //if(nwave[0]==0){
+                     //   num_coeff=(nwave.size()*2-1);
+                     //}else{
+                     //   num_coeff=(nwave.size()*2);
+                     //}
+
+
+                        
+                       status = LIBSAKURA_SYMBOL(SubtractBaselineSinusoidFloat)(
+                         bl_contexts[cidx], 
+                         //static_cast<uint16_t>(npiece),////////////////
+                         static_cast<size_t>(addwn.size()),////////
+                         &nwave2[0],
+                         num_chan, spec, mask, clip_threshold_sigma,
+                         num_fitting_max, true, spec, mask, rms,
+                         //boundary_data,
+                         &bl_status);
+
+
+                        //cout << "status3 " << status << endl;
+
+                       check_sakura_status("sakura_SubtractBaselineSinusoidFloat", status);
+                       if (bl_status != LIBSAKURA_SYMBOL(BaselineStatus_kOK)) {
+                         throw(AipsError("baseline fitting isn't successful."));
+                       }
+
+                     
+
+
+                     },
+                     os
+                     );
+
+
+
+
+
+}
+
 
 // Apply baseline table to MS
 void SingleDishMS::applyBaselineTable(string const& in_column_name,
