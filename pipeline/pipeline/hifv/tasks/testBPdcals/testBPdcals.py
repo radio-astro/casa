@@ -235,7 +235,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
 
         LOG.info("Test amp and phase calibration on delay and bandpass calibrators complete")
         LOG.info("Using short solint = "+gain_solint1)
-        context = self.inputs.context
+        #context = self.inputs.context
         
         # Add appropriate temporary tables to the callibrary
         ##calto = callibrary.CalTo(self.inputs.vis)
