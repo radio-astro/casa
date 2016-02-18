@@ -119,9 +119,15 @@ public:
 
 	// if doVelocity=True, compute spectral velocities as well as frequencies, if False, only
 	// compute frequencies.
+	// <src>dirFrame</src> and <src>freqFrame</src> are the codes for the
+	// frames for which it is desired that the returned measures should be specified.
+	// In both cases, one can specify "native" for the native coordinate frame,
+	// "cl" for the conversion layer frame, or any valid frame string from MDirection::showType()
+	// or MFrequency::showType().
 	Record toWorld(
 	    const Vector<double>& value, const String& format = "n",
-	    Bool doVelocity=True
+	    Bool doVelocity=True, const String& dirFrame="cl",
+	    const String& freqFrame="cl"
 	) const;
 
 protected:
@@ -213,12 +219,16 @@ private:
 	) const;
 
 	Record _worldVectorToRecord(
-	    const Vector<Double>& world, Int c, const String& format,
-	    Bool isAbsolute, Bool showAsAbsolute, Bool doVelocity
+	    const CoordinateSystem& csys, const Vector<Double>& world, Int c,
+	    const String& format,
+	    Bool isAbsolute, Bool showAsAbsolute, Bool doVelocity,
+	    MDirection::Types dirFrame, MFrequency::Types freqFrame
 	) const;
 
 	Record _worldVectorToMeasures(
-	    const Vector<Double>& world, Int c, Bool abs, Bool doVelocity
+	    const CoordinateSystem& csys,
+	    const Vector<Double>& world, Int c, Bool abs, Bool doVelocity,
+	    MDirection::Types dirFrame, MFrequency::Types freqFrame
 	) const;
 
 };

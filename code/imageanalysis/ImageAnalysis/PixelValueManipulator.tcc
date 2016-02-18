@@ -72,7 +72,8 @@ template<class T> void PixelValueManipulator<T>::addNoise(
 template<class T> Record* PixelValueManipulator<T>::coordMeasures(
 	Quantum<T>& intensity, Record& direction,
 	Record& frequency, Record& velocity,
-	SPCIIT image, const Vector<Double>& pixel
+	SPCIIT image, const Vector<Double>& pixel,
+	const String& dirFrame, const String& freqFrame
 ) {
 	Record *r = nullptr;
 
@@ -82,7 +83,7 @@ template<class T> Record* PixelValueManipulator<T>::coordMeasures(
 
 	String format("m");
 	ImageMetaData imd(image);
-	r = new Record(imd.toWorld(vpixel, format));
+	r = new Record(imd.toWorld(vpixel, format, True, dirFrame, freqFrame));
 
 	Vector<Int> ipixel(vpixel.size());
 	convertArray(ipixel, vpixel);

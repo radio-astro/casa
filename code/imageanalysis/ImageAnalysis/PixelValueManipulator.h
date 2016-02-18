@@ -50,10 +50,16 @@ public:
 		Bool zero, const std::pair<Int, Int> *const &seeds
 	);
 
+	// <src>dirFrame</src> and <src>freqFrame</src> are the codes for the
+	// frames for which it is desired that the returned measures should be specified.
+	// In both cases, one can specify "native" for the native coordinate frame,
+	// "cl" for the conversion layer frame, or any valid frame string from MDirection::showType()
+	// or MFrequency::showType().
 	static Record* coordMeasures(
 		Quantum<T>& intensity, Record& direction,
 		Record& frequency, Record& velocity,
-		SPCIIT image, const Vector<Double>& pixel
+		SPCIIT image, const Vector<Double>& pixel,
+		const String& dirFrame, const String& freqFrame
 	);
 
 	// set axes to average over. If invert is True, select all axes other than

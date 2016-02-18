@@ -41,7 +41,7 @@
 #include <iomanip>
 //#include <memory>
 
-#define _ORIGINB LogOrigin("ImageMetaDataBase", __FUNCTION__, WHERE)
+#define _ORIGINB LogOrigin("ImageMetaDataBase", __func__, WHERE)
 
 using namespace std;
 
@@ -877,10 +877,11 @@ template <class T> Record ImageMetaDataBase::_calcStatsT(
 }
 
 Record ImageMetaDataBase::toWorld(
-    const Vector<Double>& pixel, const String& format, Bool doVelocity
+    const Vector<Double>& pixel, const String& format, Bool doVelocity,
+    const String& dirFrame, const String& freqFrame
 ) const {
     Vector<Double> pixel2 = pixel.copy();
-    const auto& csys = _getCoords();
+    auto csys = _getCoords();
     {
         Vector<Double> replace = csys.referencePixel();
         const Int nIn = pixel2.size();
@@ -901,19 +902,84 @@ Record ImageMetaDataBase::toWorld(
 
     Vector<Double> world;
     Record rec;
-    if (csys.toWorld(world, pixel2)) {
-        rec = _worldVectorToRecord(world, -1, format, True, True, doVelocity);
-    }
-    else {
-        ThrowCc(
+    String dFrame = dirFrame;
+    dFrame.upcase();
+    String fFrame = freqFrame;
+    fFrame.upcase();
+    MDirection::Types dirType = csys.hasDirectionCoordinate()
+        ? csys.directionCoordinate().directionType(dFrame == "CL")
+        : MDirection::J2000;
+    MFrequency::Types freqType = csys.hasSpectralAxis()
+        ? csys.spectralCoordinate().frequencySystem(fFrame == "CL")
+        : MFrequency::LSRK;
+    if (
+        (! csys.hasDirectionCoordinate() || dFrame == "CL")
+        && (! csys.hasSpectralAxis() || fFrame == "CL")
+    ) {
+        ThrowIf(
+            ! csys.toWorld(world, pixel2, True),
             "Error converting to world coordinates: " + csys.errorMessage()
         );
     }
-    return rec;
+    else if (
+        (! csys.hasDirectionCoordinate() || dFrame == "NATIVE")
+        && (! csys.hasSpectralAxis() || fFrame == "NATIVE")
+    ) {
+        ThrowIf(
+            ! csys.toWorld(world, pixel2, False),
+            "Error converting to world coordinates: " + csys.errorMessage()
+        );
+    }
+    else {
+        if (csys.hasDirectionCoordinate() && dFrame != "CL") {
+            if (dFrame == "NATIVE") {
+                dirType = csys.directionCoordinate().directionType(False);
+            }
+            else {
+                ThrowIf(
+                    ! MDirection::getType(dirType, dFrame),
+                    "Unknown direction reference frame " + dirFrame
+                );
+            }
+            auto dirCoord = csys.directionCoordinate();
+            dirCoord.setReferenceConversion(dirType);
+            csys.replaceCoordinate(dirCoord, csys.directionCoordinateNumber());
+        }
+        if (csys.hasSpectralAxis() && fFrame != "CL") {
+            if (fFrame == "NATIVE") {
+                freqType = csys.spectralCoordinate().frequencySystem(False);
+            }
+            else {
+                ThrowIf(
+                    ! MFrequency::getType(freqType, fFrame),
+                    "Unknown frequency reference frame " + freqFrame
+                );
+            }
+            auto specCoord = csys.spectralCoordinate();
+            MFrequency::Types clFrame;
+            MEpoch epoch;
+            MPosition pos;
+            MDirection dir;
+            specCoord.getReferenceConversion(clFrame, epoch, pos, dir);
+            specCoord.setReferenceConversion(freqType, epoch, pos, dir);
+            csys.replaceCoordinate(specCoord, csys.spectralCoordinateNumber());
+        }
+        ThrowIf(
+            ! csys.toWorld(world, pixel2, True),
+            "Error converting to world coordinates: " + csys.errorMessage()
+        );
+
+    }
+    return _worldVectorToRecord(
+        csys, world, -1, format, True, True,
+        doVelocity, dirType, freqType
+    );
 }
 
-Record ImageMetaDataBase::_worldVectorToRecord(const Vector<Double>& world, Int c,
-    const String& format, Bool isAbsolute, Bool showAsAbsolute, Bool doVelocity
+Record ImageMetaDataBase::_worldVectorToRecord(
+    const CoordinateSystem& csys, const Vector<Double>& world, Int c,
+    const String& format, Bool isAbsolute, Bool showAsAbsolute, Bool doVelocity,
+    MDirection::Types dirFrame, MFrequency::Types freqFrame
 ) const {
     // World vector must be in the native units of cSys
     // c = -1 means world must be length cSys.nWorldAxes
@@ -922,7 +988,6 @@ Record ImageMetaDataBase::_worldVectorToRecord(const Vector<Double>& world, Int 
 
     auto ct = upcase(format);
     Vector<String> units;
-    const auto& csys = _getCoords();
     if (c < 0) {
         units = csys.worldAxisUnits();
     }
@@ -975,29 +1040,31 @@ Record ImageMetaDataBase::_worldVectorToRecord(const Vector<Double>& world, Int 
                 u, fType, world(i), worldAxes(i),
                 isAbsolute, showAsAbsolute, prec
             );
-            if ((u != "") && (u != " ")) {
+            if (! u.empty() && (u != " ")) {
                 fs(i) += " " + u;
             }
         }
-
         rec.define("string", fs);
     }
     if (ct.contains(String("M"))) {
-        Record recM = _worldVectorToMeasures(world, c, isAbsolute, doVelocity);
+        Record recM = _worldVectorToMeasures(
+            csys, world, c, isAbsolute, doVelocity,
+            dirFrame, freqFrame
+        );
         rec.defineRecord("measure", recM);
     }
     return rec;
 }
 
 Record ImageMetaDataBase::_worldVectorToMeasures(
-    const Vector<Double>& world, Int c,
-    Bool abs, Bool doVelocity
+    const CoordinateSystem& csys, const Vector<Double>& world,
+    Int c, Bool abs, Bool doVelocity, MDirection::Types dirFrame,
+    MFrequency::Types freqFrame
 ) const {
     _log << LogOrigin("ImageMetaDataBase", __func__);
     uInt directionCount, spectralCount, linearCount, stokesCount, tabularCount;
     directionCount = spectralCount = linearCount = stokesCount = tabularCount
             = 0;
-    const auto& csys = _getCoords();
     // Loop over desired Coordinates
     Record rec;
     String error;
@@ -1079,8 +1146,7 @@ Record ImageMetaDataBase::_worldVectorToMeasures(
                 Quantum<Double> t1(world2(0), units(0));
                 Quantum<Double> t2(world2(1), units(1));
                 MDirection direction(
-                    t1, t2,
-                    csys.directionCoordinate(i).directionType(True)
+                    t1, t2, dirFrame
                 );
                 MeasureHolder h(direction);
                 Record dirRec;
@@ -1103,7 +1169,7 @@ Record ImageMetaDataBase::_worldVectorToMeasures(
                 Record specRec, specRec1;
                 Quantum<Double> t1(world2(0), units(0));
                 const auto& sc0 = csys.spectralCoordinate(i);
-                MFrequency frequency(t1, sc0.frequencySystem(True));
+                MFrequency frequency(t1, freqFrame);
                 MeasureHolder h(frequency);
                 ThrowIf(
                     ! h.toRecord(error, specRec1), error
