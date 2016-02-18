@@ -182,7 +182,7 @@ PlotMSPlot* PlotMSApp::addOverPlot(const PlotMSPlotParameters* p) {
 }
 
 void PlotMSApp::clearPlots(){
-	return itsPlotManager_.clearPlotsAndCanvases( false );
+	return itsPlotManager_.clearPlotsAndCanvases();
 }
 
 bool PlotMSApp::isDrawing() const {
