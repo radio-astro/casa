@@ -3348,31 +3348,24 @@ constructor.
  
    <method type="function" name="coordmeasures">
    <shortdescription>Convert from pixel to world coordinate wrapped as Measures</shortdescription>
-<!--   
-<output>
-     <param type="record" direction="out" name="intensity">
-     <description>Returned intensity quantity for pixel</description>
-     </param>
 
-     <param type="record" direction="out" name="direction">
-     <description>Returned direction measure for pixel</description>
-     </param>
-
-     <param type="record" direction="out" name="frequency">
-     <description>Returned frequency measure for pixel</description>
-     </param>
-
-     <param type="record" direction="out" name="velocity">
-     <description>Returned radial velocity measure for pixel</description>
-     </param>
-</output>
--->
 <input>
 
      <param type="doubleArray"  name="pixel">
      <description>Absolute pixel coordinate.  Default is reference pixel.</description>
      <value>-1</value>
      </param>
+     
+     <param type="string" name="dframe">
+        <description>Direction reference frame to which to convert the direction data. Case insensitive. "cl" means use the conversion layer, if present, of the image direction coordinate. "native" means use the native native direction frame of the image. Other examples are "J2000", "B1950", "GALACTIC", etc.</description>
+        <value>cl</value>
+     </param>
+     
+     <param type="string" name="sframe">
+        <description>Spectral reference frame to which to convert the spectral data. Case insensitive. "cl" means use the conversion layer, if present, of the image spectral coordinate. "native" means use the native spectral reference frame of the image. Other examples are "LSRK", "CMB", "LGROUP", etc.</description>
+        <value>cl</value>
+     </param>
+     
 </input>
 <returns type="record"/>
 
@@ -3385,6 +3378,12 @@ absolute pixel coordinate in the image.  You specify a pixel coordinate
 If you supply fewer pixel values then there are axes in the image, your
 value will be padded out with the reference pixel for the missing axes. 
 Excess values will be ignored. 
+
+The parameters dframe and sframe allow one to specify to which reference frame
+the direction and spectral measures, respectively, should be converted. These
+values are case-insensitive. "native" means use the native reference frame of
+the coordinate in question. "cl" means use the conversion layer frame if one 
+exists (if not, the native frame will be used).
 
 The world coordinate is returned as a record of measures.  This
 function is just a wrapper for the Coordsys tool <link

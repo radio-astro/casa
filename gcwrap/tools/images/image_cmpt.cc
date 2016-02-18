@@ -1414,7 +1414,9 @@ template <class T> image* image::_decimate(
 }
 
 ::casac::record*
-image::coordmeasures(const std::vector<double>&pixel) {
+image::coordmeasures(
+    const std::vector<double>&pixel, const string& dframe, const string& sframe
+) {
 	try {
 		_log << _ORIGIN;
 		if (detached()) {
@@ -1428,13 +1430,14 @@ image::coordmeasures(const std::vector<double>&pixel) {
 			vpixel = pixel;
 		}
 		unique_ptr<Record> retval;
-		String error;
+		casa::String error;
 		Record R;
 		if (_imageF) {
 			casa::Quantum<Float> intensity;
 			retval.reset(
 				PixelValueManipulator<Float>::coordMeasures(
-					intensity, theDir, theFreq, theVel, _imageF, vpixel
+					intensity, theDir, theFreq, theVel,
+					_imageF, vpixel, dframe, sframe
 				)
 			);
 			ThrowIf(
@@ -1447,7 +1450,8 @@ image::coordmeasures(const std::vector<double>&pixel) {
 			casa::Quantum<Complex> intensity;
 			retval.reset(
 				PixelValueManipulator<Complex>::coordMeasures(
-					intensity, theDir, theFreq, theVel, _imageC, vpixel
+					intensity, theDir, theFreq, theVel,
+					_imageC, vpixel, dframe, sframe
 				)
 			);
 			ThrowIf(

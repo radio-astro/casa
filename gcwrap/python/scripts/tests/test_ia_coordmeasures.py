@@ -95,13 +95,128 @@ class ia_coordmeasures_test(unittest.TestCase):
         csys = myia.coordsys()
         csys.setconversiontype(direction='B1950', spectral='CMB')
         myia.setcoordsys(csys.torecord())
-        cm = myia.coordmeasures()
+        
+        for i in xrange(4):
+            if i == 0:
+                cm = myia.coordmeasures()
+            elif i == 1:
+                cm = myia.coordmeasures(dframe="cl", sframe="cl")
+            elif i == 2:
+                cm = myia.coordmeasures(dframe="cl")
+            elif i == 3:
+                cm = myia.coordmeasures(sframe="cl")
+            self.assertTrue(cm, "Unable to get coordmeasures")
+            self.assertTrue(abs(cm['measure']['spectral']['frequency']['m0']['value'] - 1416700650.52) < 0.1, "wrong frequency")
+            self.assertTrue(cm['measure']['spectral']['frequency']['refer'] == 'CMB', "wrong frequency reference frame")
+            self.assertTrue(abs(cm["measure"]["direction"]['m0']['value'] - -0.0111827672206) < 1e-6, "wrong RA")
+            self.assertTrue(abs(cm["measure"]["direction"]['m1']['value'] - -0.00485811473549) < 1e-6, "wrong Dec")
+            self.assertTrue(cm["measure"]["direction"]['refer'] == "B1950", "wrong direction reference frame")
+
+        cm = myia.coordmeasures(dframe="native", sframe="native")
+        self.assertTrue(cm, "Unable to get coordmeasures")
+        self.assertTrue(cm['measure']['spectral']['frequency']['m0']['value'] == 1.415e9, "wrong frequency")
+        self.assertTrue(cm['measure']['spectral']['frequency']['refer'] == "LSRK", "wrong frequency reference frame")
+        self.assertTrue(cm["measure"]["direction"]['m0']['value'] == 0, "wrong RA")
+        self.assertTrue(cm["measure"]["direction"]['m1']['value'] == 0, "wrong Dec")
+        self.assertTrue(cm["measure"]["direction"]['refer'] == "J2000", "wrong direction reference frame")
+        
+        cm = myia.coordmeasures(dframe="cl", sframe="native")
+        self.assertTrue(cm, "Unable to get coordmeasures")
+        self.assertTrue(cm['measure']['spectral']['frequency']['m0']['value'] == 1.415e9, "wrong frequency")
+        self.assertTrue(
+            abs(cm["measure"]["direction"]['m0']['value'] - -0.0111827672206) < 1e-6,
+            "wrong RA"
+        )
+        self.assertTrue(
+            abs(cm["measure"]["direction"]['m1']['value'] - -0.00485811473549) < 1e-6,
+            "wrong Dec"
+        )
+        self.assertTrue(
+            cm["measure"]["direction"]['refer'] == "B1950",
+            "wrong direction reference frame"
+        )
+        
+        cm = myia.coordmeasures(dframe="native", sframe="cl")
         self.assertTrue(cm, "Unable to get coordmeasures")
         self.assertTrue(abs(cm['measure']['spectral']['frequency']['m0']['value'] - 1416700650.52) < 0.1, "wrong frequency")
         self.assertTrue(cm['measure']['spectral']['frequency']['refer'] == 'CMB', "wrong frequency reference frame")
-        self.assertTrue(abs(cm["measure"]["direction"]['m0']['value'] - -0.0111827672206) < 1e-6, "wrong RA")
-        self.assertTrue(abs(cm["measure"]["direction"]['m1']['value'] - -0.00485811473549) < 1e-6, "wrong Dec")
-        self.assertTrue(cm["measure"]["direction"]['refer'] == "B1950", "wrong direction reference frame")
+        self.assertTrue(cm["measure"]["direction"]['m0']['value'] == 0, "wrong RA")
+        self.assertTrue(cm["measure"]["direction"]['m1']['value'] == 0, "wrong Dec")
+        self.assertTrue(cm["measure"]["direction"]['refer'] == "J2000", "wrong direction reference frame")
+        
+        cm = myia.coordmeasures(dframe="GALACTIC", sframe="cl")
+        self.assertTrue(cm, "Unable to get coordmeasures")
+        self.assertTrue(
+            abs(cm['measure']['spectral']['frequency']['m0']['value'] - 1416700650.52) < 0.1,
+            "wrong frequency"
+        )
+        self.assertTrue(
+            cm['measure']['spectral']['frequency']['refer'] == 'CMB',
+            "wrong frequency reference frame"
+        )
+        self.assertTrue(
+            abs(cm["measure"]["direction"]['m0']['value'] - 1.68140724) < 1e-6 ,
+            "wrong RA"
+        )
+        self.assertTrue(
+            abs(cm["measure"]["direction"]['m1']['value'] - -1.05048941) < 1e-6,
+            "wrong Dec"
+        )
+        self.assertTrue(
+            cm["measure"]["direction"]['refer'] == "GALACTIC",
+            "wrong direction reference frame"
+        )
+        
+        cm = myia.coordmeasures(dframe="cl", sframe="LGROUP")
+        self.assertTrue(cm, "Unable to get coordmeasures")
+        self.assertTrue(
+            abs(cm['measure']['spectral']['frequency']['m0']['value'] - 1414142155.34) < 0.1,
+            "wrong frequency"
+        )
+        self.assertTrue(
+            cm['measure']['spectral']['frequency']['refer'] == 'LGROUP',
+            "wrong frequency reference frame"
+        )
+        self.assertTrue(
+            abs(cm["measure"]["direction"]['m0']['value'] - -0.0111827672206) < 1e-6,
+            "wrong RA"
+        )
+        self.assertTrue(
+            abs(cm["measure"]["direction"]['m1']['value'] - -0.00485811473549) < 1e-6,
+            "wrong Dec"
+        )
+        self.assertTrue(
+            cm["measure"]["direction"]['refer'] == "B1950",
+            "wrong direction reference frame"
+        )
+        
+        cm = myia.coordmeasures(dframe="GALACTIC", sframe="LGROUP")
+        self.assertTrue(cm, "Unable to get coordmeasures")
+        self.assertTrue(
+            abs(cm['measure']['spectral']['frequency']['m0']['value'] - 1414142155.34) < 0.1,
+            "wrong frequency"
+        )
+        self.assertTrue(
+            cm['measure']['spectral']['frequency']['refer'] == 'LGROUP',
+            "wrong frequency reference frame"
+        )
+        self.assertTrue(
+            abs(cm["measure"]["direction"]['m0']['value'] - 1.68140724) < 1e-6 ,
+            "wrong RA"
+        )
+        self.assertTrue(
+            abs(cm["measure"]["direction"]['m1']['value'] - -1.05048941) < 1e-6,
+            "wrong Dec"
+        )
+        self.assertTrue(
+            cm["measure"]["direction"]['refer'] == "GALACTIC",
+            "wrong direction reference frame"
+        )
+        
+        self.assertRaises(Exception, myia.coordmeasures, dframe="CL", sframe="BOGUS")
+        self.assertRaises(Exception, myia.coordmeasures, dframe="BOGUS", sframe="CL")
+
+        myia.done()
         
 def suite():
     return [ia_coordmeasures_test]
