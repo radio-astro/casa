@@ -1604,6 +1604,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     String err;
 
+    if( imageName=="" ) {err += "Please supply an image name\n";}
+
     if( imsize.nelements() != 2 ){ err += "imsize must be a vector of 2 Ints\n"; }
     if( cellsize.nelements() != 2 ) { err += "cellsize must be a vector of 2 Quantities\n"; }
 
@@ -2921,6 +2923,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Check for valid FTMachine type.
     // Valid other params per FTM type, etc... ( check about nterms>1 )
 
+    if( imageName=="" ) {err += "Please supply an image name\n";}
 
     if( (ftmachine != "gridft") && (ftmachine != "wprojectft") && 
 	(ftmachine != "mosaicft") && (ftmachine != "awprojectft") && 
@@ -3246,6 +3249,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     String err;
 
+    if( imageName=="" ) {err += "Please supply an image name\n";}
     
     // Allow mask inputs in only one way. User specified OR already on disk. Not both
     if( maskString.length()>0 )

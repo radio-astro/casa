@@ -162,7 +162,7 @@ class SIImageStore
   virtual Bool hasSensitivity(){return (bool) itsWeight;}
   //virtual Bool hasPB(){return (bool) itsPB;}
 
-  virtual Bool hasMask(){return (bool) itsMask; }
+  virtual Bool hasMask(){return doesImageExist(itsImageName+imageExts(MASK)); }
   //  virtual Bool hasModel() {return (bool) itsModel;}
   virtual Bool hasModel() {return doesImageExist(itsImageName+imageExts(MODEL));}
   virtual Bool hasPsf() {return (bool) itsPsf;}

@@ -248,9 +248,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	  //	  cout << "Setting mask to 1.0 everywhere to start with.... FIX THIS for interactive masking" << endl;
 	  //	  itsMaskHandler->resetMask( itsImages );
-	  
-	  if( itsIsInteractive ) itsImages->mask()->set(0.0);
-	  else itsImages->mask()->set(1.0);
+
+	  if( ! itsImages->hasMask() ) // i.e. if there is no existing mask to re-use...
+	    {
+	      if( itsIsInteractive ) itsImages->mask()->set(0.0);
+	      else itsImages->mask()->set(1.0);
+	    }
 
 	  
 	}
