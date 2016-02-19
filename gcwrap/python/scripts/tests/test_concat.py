@@ -89,7 +89,8 @@ class test_concat(unittest.TestCase):
         if(datapathmms!=''): 
             print "\nTesting on MMSs ...\n"
 
-            nonmmsinput = ['A2256LC2_4.5s-1.ms', 'part1.ms', 'part2-mod2.ms', 'shortpart1.ms', 'sim7.ms']
+            nonmmsinput = ['A2256LC2_4.5s-1.ms', 'part1.ms', 'part2-mod2.ms', 'shortpart1.ms', 'sim7.ms', 
+                           'uid___A002_Xab8dc1_X95a-shrunk.ms', 'uid___A002_Xab8dc1_Xf13-shrunk.ms']
             os.chdir(datapathmms)
             myinputmslist = sorted(glob.glob("*.ms"))
             os.chdir(cpath)
@@ -1709,6 +1710,76 @@ class test_concat(unittest.TestCase):
 
         self.assertTrue(retValue['success'])
 
+    def test17(self):
+        '''Concat 17: 2 completely different MSs, use of ephemerides'''
+        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
+        
+        self.res = concat(vis=['uid___A002_Xab8dc1_X95a-shrunk.ms','uid___A002_Xab8dc1_Xf13-shrunk.ms'],concatvis=msname, copypointing=False)
+        self.assertEqual(self.res,True)
+        
+        print myname, ": Now checking output ..."
+        mscomponents = set(["table.dat",
+                            "table.f1",
+                            "table.f2",
+                            "table.f3",
+                            "table.f4",
+                            "table.f5",
+                            "table.f6",
+                            "table.f7",
+                            "table.f8",
+                            "ANTENNA/table.dat",
+                            "DATA_DESCRIPTION/table.dat",
+                            "FEED/table.dat",
+                            "FIELD/table.dat",
+                            "FLAG_CMD/table.dat",
+                            "HISTORY/table.dat",
+                            "OBSERVATION/table.dat",
+                            "POINTING/table.dat",
+                            "POLARIZATION/table.dat",
+                            "PROCESSOR/table.dat",
+                            "SOURCE/table.dat",
+                            "SPECTRAL_WINDOW/table.dat",
+                            "STATE/table.dat",
+                            "ANTENNA/table.f0",
+                            "DATA_DESCRIPTION/table.f0",
+                            "FEED/table.f0",
+                            "FIELD/table.f0",
+                            "FIELD/EPHEM0_Neptune_57303.95200000.tab",
+                            "FIELD/EPHEM1_Uranus_57304.04900000.tab",
+                            "FLAG_CMD/table.f0",
+                            "HISTORY/table.f0",
+                            "OBSERVATION/table.f0",
+                            "POINTING/table.f0",
+                            "POLARIZATION/table.f0",
+                            "PROCESSOR/table.f0",
+                            "SOURCE/table.f0",
+                            "SPECTRAL_WINDOW/table.f0",
+                            "STATE/table.f0"
+                            ])
+        for name in mscomponents:
+            if not os.access(msname+"/"+name, os.F_OK):
+                print myname, ": Error  ", msname+"/"+name, "doesn't exist ..."
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+msname+'/'+name+' does not exist'
+            else:
+                print myname, ": ", name, "present."
+        self.assertTrue(retValue['success'])
+        print myname, ": MS exists. All tables present. Try opening as MS ..."
+        try:
+            ms.open(msname)
+        except:
+            print myname, ": Error  Cannot open MS table", tablename
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+tablename
+        else:
+            ms.close()
+            if 'test17.ms' in glob.glob("*.ms"):
+                shutil.rmtree('test17.ms',ignore_errors=True)
+            shutil.copytree(msname,'test17.ms')
+            #print myname, ": OK. Checking tables in detail ..."
+            retValue['success']=True
+
+        self.assertTrue(retValue['success'])
 
 
 class concat_cleanup(unittest.TestCase):           
