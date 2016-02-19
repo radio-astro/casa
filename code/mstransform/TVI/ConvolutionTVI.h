@@ -55,7 +55,10 @@ public:
     								Int spectralWindowId, Int msId) const;
     void writeFlag (const Cube<Bool> & flagCube);
 
-private:
+protected:
+
+    Bool parseConfiguration(const Record &configuration);
+    void initialize();
 
     mutable Vector<Float> convCoeff_p;
 };
@@ -75,8 +78,6 @@ protected:
 
 	vi::ViImplementation2 * createVi (VisibilityIterator2 *) const;
 	vi::ViImplementation2 * createVi () const;
-
-private:
 
 	Record configuration_p;
 	ViImplementation2 *inputVii_p;;
@@ -100,7 +101,7 @@ public:
 					Vector<T> &outputVector,
 					DataCubeMap &auxiliaryData);
 
-private:
+protected:
 
 	uInt width_p;
 	// This member has to be a pointer, otherwise there

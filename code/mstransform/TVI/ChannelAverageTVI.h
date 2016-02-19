@@ -59,9 +59,6 @@ public:
 protected:
 
     void propagateChanAvgFlags (const Cube<Bool> &avgFlagCube, Cube<Bool> &expandedFlagCube);
-
-private:
-
     Bool parseConfiguration(const Record &configuration);
     void initialize();
 
@@ -85,8 +82,6 @@ protected:
 	vi::ViImplementation2 * createVi (VisibilityIterator2 *) const;
 	vi::ViImplementation2 * createVi () const;
 
-private:
-
 	Record configuration_p;
 	ViImplementation2 *inputVii_p;;
 };
@@ -109,7 +104,7 @@ public:
 					Vector<T> &outputVector,
 					DataCubeMap &auxiliaryData);
 
-private:
+protected:
 
 	uInt width_p;
 	// This member has to be a pointer, otherwise there

@@ -108,7 +108,7 @@ Bool ChannelAverageTVI::parseConfiguration(const Record &configuration)
 // -----------------------------------------------------------------------
 void ChannelAverageTVI::initialize()
 {
-	// Populate input-output maps
+	// Populate nchan input-output maps
 	Int spw;
 	uInt spw_idx = 0;
 	map<Int,vector<Int> >::iterator iter;

@@ -145,15 +145,13 @@ protected:
 		transformFreqAxis(inputDataCube,outputDataCube,auxiliaryData,transformer);
 	}
 
+	Bool parseConfiguration(const Record &configuration);
+	void initialize();
+
 	String spwSelection_p;
 	mutable LogIO logger_p;
 	mutable map<Int,uInt > spwOutChanNumMap_p; // Must be accessed from const methods
 	mutable map<Int,vector<Int> > spwInpChanIdxMap_p; // Must be accessed from const methods
-
-private:
-
-	Bool parseConfiguration(const Record &configuration);
-	void initialize();
 };
 
 //////////////////////////////////////////////////////////////////////////

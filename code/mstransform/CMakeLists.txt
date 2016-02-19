@@ -31,6 +31,7 @@ casa_add_library( mstransform
  TVI/FreqAxisTVI.cc 
  TVI/ChannelAverageTVI.cc
  TVI/ConvolutionTVI.cc
+ TVI/HanningSmoothTVI.cc	 
 )
 
 install (FILES
@@ -55,6 +56,7 @@ install (FILES
  	TVI/FreqAxisTVI.h	
 	TVI/ChannelAverageTVI.h	
 	TVI/ConvolutionTVI.h	
+	TVI/HanningSmoothTVI.h	
 	DESTINATION include/casacode/mstransform/TVI
 	)
 	

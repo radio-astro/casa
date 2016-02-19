@@ -37,6 +37,67 @@ ConvolutionTVI::ConvolutionTVI(	ViImplementation2 * inputVii,
 								const Record &configuration):
 								FreqAxisTVI (inputVii,configuration)
 {
+	// Parse and check configuration parameters
+	// Note: if a constructor finishes by throwing an exception, the memory
+	// associated with the object itself is cleaned up — there is no memory leak.
+	if (not parseConfiguration(configuration))
+	{
+		throw AipsError("Error parsing ChannelAverageTVI configuration");
+	}
+
+	initialize();
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+Bool ConvolutionTVI::parseConfiguration(const Record &configuration)
+{
+	int exists = 0;
+	Bool ret = True;
+
+	// Parse kernel parameter (optional)
+	exists = configuration.fieldNumber ("kernel");
+	if (exists >= 0)
+	{
+		if( configuration.type(exists) == casa::TpArrayFloat )
+		{
+			convCoeff_p.resize(0,False);
+			convCoeff_p = configuration.asArrayFloat( exists );
+			logger_p << LogIO::NORMAL << LogOrigin("ChannelAverageTVI", __FUNCTION__)
+					<< "Kernel is " << convCoeff_p << LogIO::POST;
+		}
+		else
+		{
+			ret = False;
+			logger_p << LogIO::SEVERE << LogOrigin("ChannelAverageTVI", __FUNCTION__)
+					<< "Wrong format of kernel parameter (only float/double/int arrays are supported) "
+					<< LogIO::POST;
+		}
+	}
+
+	return ret;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void ConvolutionTVI::initialize()
+{
+	// Populate nchan input-output maps
+	Int spw;
+	uInt spw_idx = 0;
+	map<Int,vector<Int> >::iterator iter;
+	for(iter=spwInpChanIdxMap_p.begin();iter!=spwInpChanIdxMap_p.end();iter++)
+	{
+		spw = iter->first;
+		spwOutChanNumMap_p[spw] = spwInpChanIdxMap_p[spw].size();
+
+		spw_idx++;
+	}
+
 	return;
 }
 
@@ -262,14 +323,14 @@ template<class T> void ConvolutionTransformEngine<T>::transform(Vector<T> &input
 	// Process low end
 	for (uInt chanIndex = 0; chanIndex<outChanStart; chanIndex++)
 	{
-		outputVector(chanIndex) = inputVector(chanIndex);
+		convolutionKernel_p->kernel(inputVector,outputVector,chanIndex,chanIndex);
 		chanIndex += 1;
 	}
 
 	// Process high end
 	for (uInt chanIndex = outChanStop; chanIndex<inputVector.size(); chanIndex++)
 	{
-		outputVector(chanIndex) = inputVector(chanIndex);
+		convolutionKernel_p->kernel(inputVector,outputVector,chanIndex,chanIndex);
 		chanIndex += 1;
 	}
 
@@ -306,6 +367,13 @@ template<class T> void ConvolutionDataKernel<T>::kernel(	Vector<T> &inputVector,
 															uInt startInputPos,
 															uInt outputPos)
 {
+	// Do not process edges
+	if (startInputPos == outputPos)
+	{
+		outputVector(outputPos) = inputVector(startInputPos);
+		return;
+	}
+
 	// Initialization
 	outputVector(outputPos) = (*convCoeff_p)(0)*inputVector(startInputPos);
 
@@ -340,11 +408,25 @@ template<class T> void ConvolutionLogicalORKernel<T>::kernel(	Vector<T> &inputVe
 																uInt startInputPos,
 																uInt outputPos)
 {
+	// Flag edges
+	if (startInputPos == outputPos)
+	{
+		outputVector(outputPos) = True;
+		return;
+	}
+
+	Bool outputFlag = False;
 	// Output sample is flagged if any of the contributors are flagged
 	for (uInt chanIndex = 0; chanIndex<width_p; chanIndex++)
 	{
-		if (inputVector(startInputPos+chanIndex)) outputVector(outputPos) = True;
+		if (inputVector(startInputPos+chanIndex))
+		{
+			outputFlag = True;
+			break;
+		}
 	}
+
+	outputVector(outputPos) = outputFlag;
 
 	return;
 }
@@ -370,6 +452,13 @@ template<class T> void ConvolutionWeightPropagationKernel<T>::kernel(	Vector<T> 
 																		uInt startInputPos,
 																		uInt outputPos)
 {
+	// Do not process edges
+	if (startInputPos == outputPos)
+	{
+		outputVector(outputPos) = inputVector(startInputPos);
+		return;
+	}
+
 	// Initialization (mind for zeros as there is a division operation)
 	outputVector(outputPos) = 0;
 	if (inputVector(startInputPos) > FLT_MIN)
