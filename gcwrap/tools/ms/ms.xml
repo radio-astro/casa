@@ -1590,6 +1590,15 @@ the ms definition itself. -->
       <value></value>
     </param>
 
+    <!--
+      <param type="string" name="feed">
+        <description>
+          Feed indices : example : '1,2'
+        </description>
+        <value></value>
+      </param>
+    -->
+
     <param type="string" name="baseline">
       <description>
         Baseline number(s): example: "2\&amp;3;4\&amp;5"
@@ -1621,6 +1630,13 @@ the ms definition itself. -->
     <param type="string" name="scan">
       <description>
         Scan number : example : '1,2,3'
+      </description>
+      <value></value>
+    </param>
+
+    <param type="string" name="intent">
+      <description>
+        Scan intents : example : '*AMPL*,*PHASE*'
       </description>
       <value></value>
     </param>

@@ -1576,11 +1576,13 @@ ms::statistics2(const std::string& column,
                 bool useweights,
                 const std::string& spw,
                 const std::string& field,
+//                const std::string& feed,
                 const std::string& baseline,
                 const std::string& uvrange,
                 const std::string& time,
                 const std::string& correlation,
                 const std::string& scan,
+                const std::string& intent,
                 const std::string& array,
                 const std::string& obs,
                 const std::string& reportingaxes,
@@ -1615,10 +1617,12 @@ ms::statistics2(const std::string& column,
 				       "time = " << time << endl <<
 				       "baseline = " << baseline << endl <<
 				       "field = " << field << endl <<
+//				       "feed= " << feed << endl <<
 				       "spw = " << spw << endl <<
 				       "uvrange = " << uvrange << endl <<
 				       "correlation = " << correlation << endl <<
 				       "scan = " << scan << endl <<
+				       "intent= " << intent << endl <<
 				       "array = " << array << endl <<
 				       "obs = " << obs << endl <<
 				       "reportingaxes =" << reportingaxes << endl <<
@@ -1637,8 +1641,9 @@ ms::statistics2(const std::string& column,
 			                  correlation,
 			                  scan,
 			                  array,
-			                  "",       // stateExpr
+			                  intent,
 			                  obs);
+				         // , feed);
 
 			MeasurementSet *sel_p;
 			MeasurementSet sel;
