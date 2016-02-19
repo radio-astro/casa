@@ -23,6 +23,7 @@ startProc=0.0
 endProc=0.0
 regstate = True
 standard_file = 'VLApipeline44-standard'
+MIN_CASA_REVISION = 36095
 
 def load_context(filename):
     with open(filename, 'rb') as picklefile:
@@ -35,6 +36,21 @@ EPS       = 1e-5  # Logical "zero"
 #
 def pipeline_regression():
     global regstate
+    global MIN_CASA_REVISION
+        
+    
+    revision = int(casadef.subversion_revision)
+    if MIN_CASA_REVISION > revision:
+        msg = ('Minimum CASA revision for the pipeline is r%s, '
+               'got CASA %s (r%s).' % (MIN_CASA_REVISION, 
+                casadef.casa_version,
+                casadef.subversion_revision))
+        print msg
+        regstate = False
+        raise EnvironmentError(msg)     
+    
+    
+    
     #ASDM      = "/export/home/icarus_2/awells/CASA_stable/data/regression/foo/vla_pipeline_data/rawdata/13A-537.sb24066356.eb24324502.56514.05971091435"
     ASDM = "13A-537.sb24066356.eb24324502.56514.05971091435"
     try:
