@@ -147,14 +147,14 @@ pipeline processing for huge dataset.
 
     <param type="string" name="blfunc" ignorecase="true">
         <shortdescription>baseline model function</shortdescription>
-        <description>baseline model function [\'poly\', \'chebyshev\', \'cspline\', \'sinusoid\', or \'variable\'(expert mode)]</description>
-        <!--description>baseline model function [\'poly\', \'chebyshev\', \'cspline\', or \'variable\'(expert mode)]</description-->
+        <!--description>baseline model function [\'poly\', \'chebyshev\', \'cspline\', \'sinusoid\', or \'variable\'(expert mode)]</description-->
+        <description>baseline model function [\'poly\', \'chebyshev\', \'cspline\', or \'variable\'(expert mode)]</description>
         <value>poly</value>
         <allowed kind="enum">
             <value>poly</value>
             <value>chebyshev</value>
             <value>cspline</value>
-            <value>sinusoid</value>
+            <!--value>sinusoid</value-->
             <value>variable</value>
         </allowed>
     </param>
@@ -170,13 +170,13 @@ pipeline processing for huge dataset.
     </param>
 
     <param type="bool" name="applyfft" subparam="true">
-        <description>automatically set wave numbers of sinusoids</description>
+        <description>automatically set wave numbers of sinusoids (not implemented yet)</description>
         <value>True</value>
     </param>
 
     <param type="string" name="fftmethod" subparam="true" ignorecase="true">
         <shortdescription>method for automatically set wave numbers of sinusoids [\'fft\']</shortdescription>
-        <description>method for automatically set wave numbers of sinusoids</description>
+        <description>method for automatically set wave numbers of sinusoids (not implemented yet)</description>
         <value>fft</value>
         <allowed kind="enum">
             <value>fft</value>
@@ -184,7 +184,7 @@ pipeline processing for huge dataset.
     </param>
 
     <param type="any" name="fftthresh" subparam="true">
-        <description>threshold to select wave numbers of sinusoids</description>
+        <description>threshold to select wave numbers of sinusoids (not implemented yet)</description>
         <value type="double">3.0</value>
     </param>
 
@@ -281,7 +281,7 @@ pipeline processing for huge dataset.
                         <default param="clipthresh"><value>3.0</value></default>
                         <default param="clipniter"><value>0</value></default>
                 </equals>
-                <equals value="sinusoid">
+                <!--equals value="sinusoid">
                         <default param="applyfft"><value>False</value></default>
                         <default param="fftmethod"><value type="string">fft</value></default>
                         <default param="fftthresh"><value type="double">3.0</value></default>
@@ -289,7 +289,7 @@ pipeline processing for huge dataset.
                         <default param="rejwn"><value type="vector"><value></value></value></default>
                         <default param="clipthresh"><value>3.0</value></default>
                         <default param="clipniter"><value>0</value></default>
-                </equals> 
+                </equals--> 
                 <equals value="variable">
                         <default param="blparam"><value type="string"></value></default>
                 </equals>
@@ -476,7 +476,7 @@ blmode -- baselining mode.
                 default: ''
 blfunc -- baseline model function. In cases blmode='apply' or blparam is 
           set, blfunc and its subparameters are ignored.
-        options: 'poly', 'chebyshev', 'cspline', 'sinusoid' or 'variable'
+        options: 'poly', 'chebyshev', 'cspline', <!--'sinusoid'--> or 'variable'
         default: 'poly'
         example: blfunc='poly' uses a single polynomial line of 
                  any order which should be given as an expandable 
@@ -485,7 +485,7 @@ blfunc -- baseline model function. In cases blmode='apply' or blparam is
                  blfunc='cspline' uses a cubic spline function, a piecewise 
                  cubic polynomial having C2-continuity (i.e., the second 
                  derivative is continuous at the joining points). 
-                 blfunc='sinusoid' uses a combination of sinusoidal curves. 
+                 <!--blfunc='sinusoid' uses a combination of sinusoidal curves.--> 
         NOTE blfunc='variable' IS EXPERT MODE!!!
     &gt;&gt;&gt; blfunc expandable parameters
         order -- order of baseline model function
@@ -496,20 +496,20 @@ blfunc -- baseline model function. In cases blmode='apply' or blparam is
         npiece -- number of the element polynomials of cubic spline curve
                 options: (int) (&lt;0 turns off baseline fitting)
                 default: 2
-        applyfft -- automatically set wave numbers of sinusoidal functions 
+        <!--applyfft - - automatically set wave numbers of sinusoidal functions 
                     for fitting by applying some method like FFT.
                 options: (bool) True, False
                 default: True
-        fftmethod -- method to be used when applyfft=True. Now only 
+        fftmethod - - method to be used when applyfft=True. Now only 
                      'fft' is available and it is the default.
-        fftthresh -- threshold to select wave numbers to be used for 
+        fftthresh - - threshold to select wave numbers to be used for 
                      sinusoidal fitting. both (float) and (str) accepted.
                      given a float value, the unit is set to sigma.
                      for string values, allowed formats include:
                      'xsigma' or 'x' (= x-sigma level. e.g., '3sigma'), or
                      'topx' (= the x strongest ones, e.g. 'top5').
                 default is 3.0 (unit: sigma).
-        addwn -- additional wave number(s) of sinusoids to be used 
+        addwn - - additional wave number(s) of sinusoids to be used 
                  for fitting. 
                  (list) and (int) are accepted to specify every
                  wave numbers. also (str) can be used in case
@@ -522,11 +522,11 @@ blfunc -- baseline model function. In cases blmode='apply' or blparam is
                           '&gt;=a' (= a, a+1, ... up to the maximum wave
                                    number corresponding to the Nyquist
                                    frequency for the case of FFT).
-        rejwn -- wave number(s) of sinusoid NOT to be used for fitting.
+        rejwn - - wave number(s) of sinusoid NOT to be used for fitting.
                  can be set just as addwn but has higher priority:
                  wave numbers which are specified both in addwn
                  and rejwn will NOT be used. 
-                 default: []
+                 default: []-->
         clipthresh -- clipping threshold for iterative fitting
                  default: 3
         clipniter -- maximum iteration number for iterative fitting
@@ -567,9 +567,9 @@ BASELINE MODEL FUNCTION
 The list of available model functions are shown above (see Keyword arguments
 section). In general 'cspline' or 'chebyshev' are recommended since they are
 more stable than others. 'poly' will work for lower order but will be unstable
-for higher order fitting. 'sinusoid' is kind of special mode that will be
+for higher order fitting. <!--'sinusoid' is kind of special mode that will be
 useful for the data that clearly shows standing wave in the spectral baseline.
-
+-->
 ----------------------------------
 SIGMA CLIPPING (ITERATIVE FITTING)
 ----------------------------------
@@ -606,19 +606,19 @@ clipniter, use_linefinder, thresh, edge, chan_avg_limit.
 Each row in the text file must contain the following keys and values:
 * 'row': row number,
 * 'blfunc': function name.
-     available ones include, 'poly', 'chebyshev', 'cspline' and 'sinusoid', 
+     available ones include, 'poly', 'chebyshev', 'cspline',<!-- and 'sinusoid'-->
 * 'order': maximum order of polynomial. needed when blfunc='poly'
      or 'chebyshev', 
 * 'npiece': number or piecewise polynomial. needed when blfunc='cspline',
 and
-* 'nwave': a list of sinusoidal wave numbers. needed when blfunc='sinusoid'.
+<!--* 'nwave': a list of sinusoidal wave numbers. needed when blfunc='sinusoid'.-->
 
 example:
 #row,pol,masklist,blfunc,order,npiece,nwave,clipthresh,clipniter,use_lf,thres,edge,avg_limit
 0,0,[[500,1600]],poly,5,,,,,,,,
 0,1,,chebyshev,10,,,,,,,,
 1,0,,cspline,,4,,,,,,,
-1,1,,sinusoid,,,[0,1,2,3],,,,,,
+<!--1,1,,sinusoid,,,[0,1,2,3],,,,,,-->
 
   </example>
 

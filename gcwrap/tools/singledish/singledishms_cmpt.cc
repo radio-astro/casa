@@ -161,7 +161,7 @@ singledishms::subtract_baseline(string const& datacolumn,
                                 vector<int> const& edge)
 {
 
-  cout << "subtract_baseline############" << endl;
+  //cout << "subtract_baseline############" << endl;
     
   bool rstat(false);
   *itsLog << _ORIGIN;
@@ -269,7 +269,7 @@ singledishms::subtract_baseline_sinusoid(
 
 {
 
-  cout << "_cmp1#######" << endl;
+  //cout << "_cmp1#######" << endl;
 
   bool rstat(false);
   *itsLog << _ORIGIN;

@@ -3039,9 +3039,9 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
 
-
+    """
     def test042(self):
-        """Basic Test 042: default values for all parameters except blfunc='sinusoid'"""
+        Basic Test 042: default values for all parameters except blfunc='sinusoid'
 
         blfunc='sinusoid'
         blformat=['csv','text','table']
@@ -3073,7 +3073,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test043(self):
-        """Basic Test 043: default values for all parameters except blfunc='sinusoid',blformat=['text','csv','table'] and bloutput=['test.txt','test.csv','test.table']"""
+        Basic Test 043: default values for all parameters except blfunc='sinusoid',blformat=['text','csv','table'] and bloutput=['test.txt','test.csv','test.table']
 
         blfunc='sinusoid'
         blformat=['text','csv','table']
@@ -3107,7 +3107,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test044(self):
-        """Basic Test 044: default values for all parameters except blfunc='sinusoid',blformat=['table','text','csv'] and bloutput=['test.table','test.txt','test.csv']"""
+        Basic Test 044: default values for all parameters except blfunc='sinusoid',blformat=['table','text','csv'] and bloutput=['test.table','test.txt','test.csv']
 
         blfunc='sinusoid'
         blformat=['table','text','csv']
@@ -3141,7 +3141,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test045(self):
-        """Basic Test 045: default values for all parameters except blfunc='sinusoid',blformat=['table','text','csv'] and bloutput=['','test.txt','test.csv']"""
+        Basic Test 045: default values for all parameters except blfunc='sinusoid',blformat=['table','text','csv'] and bloutput=['','test.txt','test.csv']
 
         blfunc='sinusoid'
         blformat=['table','text','csv']
@@ -3172,7 +3172,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test046(self):
-        """Basic Test 046: default values for all parameters except blfunc='sinusoid',blformat=['table','text','csv'] and bloutput=['','','']"""
+        Basic Test 046: default values for all parameters except blfunc='sinusoid',blformat=['table','text','csv'] and bloutput=['','','']
 
         blfunc='sinusoid'
         blformat=['table','text','csv']
@@ -3202,7 +3202,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test047(self):
-        """Basic Test 047: default values for all parameters except blfunc='sinusoid',blformat=['table','text'] and bloutput=['','']"""
+        Basic Test 047: default values for all parameters except blfunc='sinusoid',blformat=['table','text'] and bloutput=['','']
 
         blfunc='sinusoid'
         blformat=['table','text']
@@ -3232,7 +3232,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test048(self):
-        """Basic Test 048: default values for all parameters except blfunc='sinusoid',blformat=['table'] and bloutput=['']"""
+        Basic Test 048: default values for all parameters except blfunc='sinusoid',blformat=['table'] and bloutput=['']
 
         blfunc='sinusoid'
         blformat=['table']
@@ -3262,7 +3262,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test049(self):
-        """Basic Test 049: default values for all parameters except blfunc='sinusoid',blformat=['csv'] and bloutput=['']"""
+        Basic Test 049: default values for all parameters except blfunc='sinusoid',blformat=['csv'] and bloutput=['']
 
         blfunc='sinusoid'
         blformat=['csv']
@@ -3292,7 +3292,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test050(self):
-        """Basic Test 050: default values for all parameters except blfunc='sinusoid',blformat=['text'] and bloutput=['']"""
+        Basic Test 050: default values for all parameters except blfunc='sinusoid',blformat=['text'] and bloutput=['']
 
         blfunc='sinusoid'
         blformat=['text']
@@ -3321,7 +3321,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
         #self.assertEqual(diff_value, 0, msg=self.infile + '_blparam.txt' + 'is not equivalent to ' + self.bloutput_variable_txt)   
 
     def test051(self):
-        """Basic Test 051: default values for all parameters except blfunc='sinusoid',blformat=[''] and bloutput=['']"""
+        Basic Test 051: default values for all parameters except blfunc='sinusoid',blformat=[''] and bloutput=['']
 
         blfunc='sinusoid'
         blformat=['']
@@ -3352,7 +3352,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test052(self):
-        """Basic Test 052: default values for all parameters except blfunc='sinusoid',blformat=['','csv'] and bloutput=['','test.csv']"""
+        Basic Test 052: default values for all parameters except blfunc='sinusoid',blformat=['','csv'] and bloutput=['','test.csv']
 
         blfunc='sinusoid'
         blformat=['','csv']
@@ -3386,7 +3386,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
     def test053(self):
-        """Basic Test 053: default values for all parameters except blfunc='sinusoid',blformat='' and  bloutput=''"""
+        Basic Test 053: default values for all parameters except blfunc='sinusoid',blformat='' and  bloutput=''
 
         blfunc='sinusoid'
         blformat=''
@@ -3418,7 +3418,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
         #self.assertEqual(diff_value, 0, msg=bloutput[1] + ' is not equivalent to ' + self.bloutput_variable_csv)   
 
     def test054(self):
-        """Basic Test 054: default values for all parameters except blfunc='sinusoid', blformat='' and  bloutput='test.csv'"""
+        Basic Test 054: default values for all parameters except blfunc='sinusoid', blformat='' and  bloutput='test.csv'
 
         blfunc='sinusoid'
         blformat=''
@@ -3440,9 +3440,15 @@ Basic unit tests for task tsdbaseline. No interactive testing.
         result_exist = not os.path.exists(self.infile + '_blparam.csv')
         self.assertEqual(result_exist, True, msg=self.infile + '_blparam.csv'+' exist!')
 
+    """
 
-
-
+    def test0123(self):
+        """Basic Test 0123: failure test"""
+        blfunc='sinusoid'
+        blformat=''
+        bloutput='test.csv'
+        result = self.run_test(blfunc=blfunc, blformat=blformat, bloutput=bloutput)
+                
 
 
 
