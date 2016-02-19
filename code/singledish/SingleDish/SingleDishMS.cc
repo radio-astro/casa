@@ -855,9 +855,6 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
 
   Vector<size_t> ctx_indices(nchan.nelements(), 0ul);
 
-  Vector<bool> pol;
-  bool pol_set = false;
-
   for (vi->originChunks(); vi->moreChunks(); vi->nextChunk()) {
     for (vi->origin(); vi->more(); vi->next()) {
       Vector<Int> scans = vb->scan();
@@ -901,10 +898,6 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
       get_data_cube_float(*vb, data_chunk);
       get_flag_cube(*vb, flag_chunk);
 
-      if (!pol_set) {
-        get_pol_selection(in_ppp, num_pol, pol);
-        pol_set = true;
-      }
       // loop over MS rows
       for (size_t irow = 0; irow < num_row; ++irow) {
         size_t idx = 0;
@@ -942,12 +935,6 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
 
         // loop over polarization
         for (size_t ipol = 0; ipol < num_pol; ++ipol) {
-          // skip spectrum not selected by pol
-          if (!pol(ipol)) {
-            flag_spectrum_in_cube(flag_chunk, irow, ipol);
-            apply_mtx[0][ipol] = False;
-            continue;
-          }
           // get a channel mask from data cube
           // (note that the variable 'mask' is flag in the next line
           // actually, then it will be converted to real mask when
@@ -2094,8 +2081,6 @@ void SingleDishMS::fitLine(string const& in_column_name, string const& in_spw,
   Vector<bool> nchan_set;
   parse_spw(in_spw, recspw, recchan, nchan, in_mask, nchan_set);
 
-  Vector<bool> pol;
-  bool pol_set = false;
   std::vector<string> nfit_s = split_string(in_nfit, ',');
   std::vector<size_t> nfit;
   nfit.resize(nfit_s.size());
@@ -2131,11 +2116,6 @@ void SingleDishMS::fitLine(string const& in_column_name, string const& in_spw,
       get_data_cube_float(*vb, data_chunk);
       get_flag_cube(*vb, flag_chunk);
 
-      if (!pol_set) {
-        get_pol_selection(in_pol, num_pol, pol);
-        pol_set = true;
-      }
-
       // loop over MS rows
       for (size_t irow = 0; irow < num_row; ++irow) {
         size_t idx = 0;
@@ -2163,10 +2143,6 @@ void SingleDishMS::fitLine(string const& in_column_name, string const& in_spw,
 
         // loop over polarization
         for (size_t ipol = 0; ipol < num_pol; ++ipol) {
-          // skip spectrum not selected by pol
-          if (!pol(ipol)) {
-            continue;
-          }
           // get a channel mask from data cube
           // (note that the variable 'mask' is flag in the next line
           // actually, then it will be converted to real mask when
@@ -2440,7 +2416,6 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
   Vector<size_t> ctx_indices(nchan.nelements(), 0ul);
 
   Vector<bool> pol;
-  bool pol_set = false;
   LIBSAKURA_SYMBOL(Status) status;
   LIBSAKURA_SYMBOL(BaselineStatus) bl_status;
 
@@ -2490,10 +2465,7 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
       get_data_cube_float(*vb, data_chunk);
       get_flag_cube(*vb, flag_chunk);
 
-      if (!pol_set) {
-        get_pol_selection(in_ppp, num_pol, pol);
-        pol_set = true;
-      }
+      get_pol_selection(in_ppp, num_pol, pol);
       // loop over MS rows
       for (size_t irow = 0; irow < num_row; ++irow) {
         size_t idx = 0;
