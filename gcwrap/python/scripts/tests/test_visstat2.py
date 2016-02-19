@@ -94,7 +94,7 @@ class visstat2_test(unittest.TestCase):
                               'median': 0.053559452295303345,
                               'min': 2.2130521756480448e-05,
                               'npts': 2660994.0,
-                              'quartile': 0.30496686697006226,
+                              #'quartile': 0.30496686697006226,
                               'rms': 17.081207275390625,
                               'stddev': 16.382008275102407,
                               'sum': 12871502.415990865,
@@ -116,7 +116,7 @@ class visstat2_test(unittest.TestCase):
                                         'minDatasetIndex': 54,
                                         'minIndex': 8692,
                                         'npts': 2660994.0,
-                                        'quartile': 0.3291134536266327,
+                                        #'quartile': 0.3291134536266327,
                                         'rms': 17.081207832906546,
                                         'stddev': 16.382008276126726,
                                         'sum': 12871502.415939873,
@@ -124,27 +124,11 @@ class visstat2_test(unittest.TestCase):
                                         'variance': 268.3701951590845}}}
 
         
-
-
-
-        #print 'expected[self.msfile]', expected[self.msfile]
-        #print ''
-        #print 'expected2[self.msfile][\'DATA\']', expected2[self.msfile]['DATA_DESC_ID=0']
-        #print ''
-
-
         #visstat
         s = visstat(vis=self.msfile, axis='amp', datacolumn='data')
         
         #visstat2
         s2 = visstat2(vis=self.msfile, axis='amp', datacolumn='data', reportingaxes='ddid')
-
-        
-        #print 's', s
-        #print ''
-        #print 's2', s2
-
-
 
         #visstat
         if s.keys() != expected[self.msfile].keys():
@@ -153,27 +137,15 @@ class visstat2_test(unittest.TestCase):
                      +"\nError: Wrong dictionary keys. Expected %s, got %s" % \
                             (expected[self.msfile], s)
 
-
         #visstat2
         if s2.keys() != expected2[self.msfile].keys():
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
                      +"\nError: Wrong dictionary keys. Expected %s, got %s" % \
                             (expected[self.msfile], s2)
-
-
-
-#            raise Exception("Wrong dictionary keys. Expected %s, got %s" % \
-#                            (expected[self.msfile], s))
+            raise Exception("Wrong dictionary keys. Expected %s, got %s" % \
+                            (expected[self.msfile], s))
                             
-        # Detailed check of values, column=DATA
-        #print ''
-        #print "Expected =", expected[self.msfile]
-        #print ''
-        #print "Got =", s
-        #print ''
-        #print "Got2 =", s2
-
         #visstat
         if not s.has_key('DATA'):
             retValue['success']=False
@@ -182,16 +154,10 @@ class visstat2_test(unittest.TestCase):
 
         #visstat2
         if not s2.has_key('DATA_DESC_ID=0'):
-            #print ''
-            #print "NO DATA key"
-            #print ''
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
                      +"\nError: Dictionary returned from visstat2 does not have key DATA"
-            #print "retValue ", retValue
-
-
-#            raise Exception("Dictionary returned from visstat does not have key DATA")
+            raise Exception("Dictionary returned from visstat does not have key DATA")
 
 
         #compared results between visstat and visstat2
@@ -199,8 +165,7 @@ class visstat2_test(unittest.TestCase):
             e2=e
             if e == 'var':
                 e2='variance'
-                
-            print ''
+
             print "Checking %s: %s vs %s" % \
                    (e, expected[self.msfile]['DATA'][e], s2['DATA_DESC_ID=0'][e2])
             failed = False
@@ -210,18 +175,14 @@ class visstat2_test(unittest.TestCase):
             else:
                 if abs((expected[self.msfile]['DATA'][e] - s2['DATA_DESC_ID=0'][e2])/expected[self.msfile]['DATA'][e]) > 0.0001:
                     failed = True
+
             if failed:
                 retValue['success']=False
                 retValue['error_msgs']=retValue['error_msgs']\
                      +"\nError: Numbers differ, expected %s, got %s" % \
-                      (str(expected[self.msfile]['DATA'][e]), str(s['DATA'][e]))
-
-
-#                raise Exception("Numbers differ, expected %s, got %s" % \
-#                      (str(expected[self.msfile]['DATA'][e]), str(s['DATA'][e])))
-
-
-        print ''
+                      (str(expected[self.msfile]['DATA'][e]), str(s2['DATA_DESC_ID=0'][e2]))
+                raise Exception("Numbers differ, expected %s, got %s" % \
+                      (str(expected[self.msfile]['DATA'][e]), str(s2['DATA_DESC_ID=0'][e2])))
 
         #visstat2
         for e in expected2[self.msfile]['DATA_DESC_ID=0'].keys():
@@ -242,7 +203,13 @@ class visstat2_test(unittest.TestCase):
                       (str(expected2[self.msfile]['DATA_DESC_ID=0'][e]), str(s2['DATA_DESC_ID=0'][e]))
 
 
-#        self.assertTrue(retValue['success'],retValue['error_msgs'])
+        self.assertTrue(retValue['success'],retValue['error_msgs'])
+
+
+
+
+
+
 
 
 
@@ -412,6 +379,11 @@ class visstat2_test(unittest.TestCase):
 
 
 
+
+
+
+
+
     def test9(self):
         '''Visstat2 9: Default values with datacolum=corrected, reporingaxis=ddid'''
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }    
@@ -426,7 +398,7 @@ class visstat2_test(unittest.TestCase):
                               'median': 0.05355948396027088,
                               'min': 2.2130521756480448e-05,
                               'npts': 2660994.0,
-                              'quartile': 0.3049671892076731,
+                              #'quartile': 0.3049671892076731,
                               'rms': 17.081207275390625,
                               'stddev': 16.38200827612749,
                               'sum': 12871502.415940082,
@@ -448,7 +420,7 @@ class visstat2_test(unittest.TestCase):
                                         'minDatasetIndex': 54,
                                         'minIndex': 8692,
                                         'npts': 2660994.0,
-                                        'quartile': 0.3291134536266327,
+                                        #'quartile': 0.3291134536266327,
                                         'rms': 17.081207832906546,
                                         'stddev': 16.382008276126726,
                                         'sum': 12871502.415939873,
@@ -458,26 +430,13 @@ class visstat2_test(unittest.TestCase):
         
 
 
-
-        #print 'expected[self.msfile]', expected[self.msfile]
-        #print ''
-        #print 'expected2[self.msfile][\'DATA\']', expected2[self.msfile]['DATA_DESC_ID=0']
-        #print ''
-
-
         #visstat
         s = visstat(vis=self.msfile, axis='amp', datacolumn='corrected')
         
         #visstat2
         s2 = visstat2(vis=self.msfile, axis='amp', datacolumn='corrected', reportingaxes='ddid')
 
-        
-        #print 's', s
-        #print ''
-        #print 's2', s2
-
-
-
+ 
         #visstat
         if s.keys() != expected[self.msfile].keys():
             retValue['success']=False
@@ -485,27 +444,15 @@ class visstat2_test(unittest.TestCase):
                      +"\nError: Wrong dictionary keys. Expected %s, got %s" % \
                             (expected[self.msfile], s)
 
-
         #visstat2
         if s2.keys() != expected2[self.msfile].keys():
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
                      +"\nError: Wrong dictionary keys. Expected %s, got %s" % \
                             (expected[self.msfile], s2)
-
-
-
-#            raise Exception("Wrong dictionary keys. Expected %s, got %s" % \
-#                            (expected[self.msfile], s))
+            raise Exception("Wrong dictionary keys. Expected %s, got %s" % \
+                            (expected[self.msfile], s))
                             
-        # Detailed check of values, column=DATA
-        #print ''
-        #print "Expected =", expected[self.msfile]
-        #print ''
-        #print "Got =", s
-        #print ''
-        #print "Got2 =", s2
-
         #visstat
         if not s.has_key('CORRECTED'):
             retValue['success']=False
@@ -514,16 +461,10 @@ class visstat2_test(unittest.TestCase):
 
         #visstat2
         if not s2.has_key('DATA_DESC_ID=0'):
-            #print ''
-            #print "NO DATA key"
-            #print ''
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
                      +"\nError: Dictionary returned from visstat2 does not have key DATA"
-            #print "retValue ", retValue
-
-
-#            raise Exception("Dictionary returned from visstat does not have key DATA")
+            raise Exception("Dictionary returned from visstat does not have key DATA")
 
 
         #compared results between visstat and visstat2
@@ -546,14 +487,9 @@ class visstat2_test(unittest.TestCase):
                 retValue['success']=False
                 retValue['error_msgs']=retValue['error_msgs']\
                      +"\nError: Numbers differ, expected %s, got %s" % \
-                      (str(expected[self.msfile]['CORRECTED'][e]), str(s['CORRECTED'][e]))
-
-
-#                raise Exception("Numbers differ, expected %s, got %s" % \
-#                      (str(expected[self.msfile]['DATA'][e]), str(s['DATA'][e])))
-
-
-        print ''
+                      (str(expected[self.msfile]['CORRECTED'][e]), str(s2['CORRECTED'][e]))
+                raise Exception("Numbers differ, expected %s, got %s" % \
+                      (str(expected[self.msfile]['CORRECTED'][e]), str(s2['CORRECTED'][e])))
 
         #visstat2
         for e in expected2[self.msfile]['DATA_DESC_ID=0'].keys():
@@ -574,7 +510,7 @@ class visstat2_test(unittest.TestCase):
                       (str(expected2[self.msfile]['DATA_DESC_ID=0'][e]), str(s2['DATA_DESC_ID=0'][e]))
 
 
-#        self.assertTrue(retValue['success'],retValue['error_msgs'])
+        self.assertTrue(retValue['success'],retValue['error_msgs'])
 
 
 
@@ -618,7 +554,7 @@ class visstat2_test(unittest.TestCase):
 
 
 
-
+    """
     def test3(self):
         '''Visstat2 3: Test on different columns and axis'''
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }            
@@ -735,7 +671,7 @@ class visstat2_test(unittest.TestCase):
         print 'retValue[\'success\'] ', retValue['success']
         print 'retValue[\'error_msgs\'] ', retValue['error_msgs']
         self.assertTrue(retValue['success'],retValue['error_msgs'])
-
+        """
 
 
 
