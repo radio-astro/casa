@@ -244,21 +244,22 @@ void ImageStatsCalculator::_reportDetailedStats(
 	for (auto ax : reportAxes) {
 		if (ax == freqCol) {
 			if (doVelocity) {
-				oss << "VELOCITY column unit = "
+				oss << "#VELOCITY column unit = "
 					<< csys.spectralCoordinate().velocityUnit() << endl;
 			}
 			else {
-				oss << "FREQUENCY column unit = "
+				oss << "#FREQUENCY column unit = "
 					<< csys.spectralCoordinate().worldAxisUnits()[0] << endl;
 			}
 		}
 	}
 	auto bUnit = _getImage()->units().getName();
-	oss << "Sum column unit = " << bUnit << endl;
-	oss << "Mean column unit = " << bUnit << endl;
-	oss << "Std_dev column unit = " << bUnit << endl;
-	oss << "Minimum column unit = " << bUnit << endl;
-	oss << "Maximum column unit = " << bUnit << endl;
+	oss << "#Sum column unit = " << bUnit << endl;
+	oss << "#Mean column unit = " << bUnit << endl;
+	oss << "#Std_dev column unit = " << bUnit << endl;
+	oss << "#Minimum column unit = " << bUnit << endl;
+	oss << "#Maximum column unit = " << bUnit << endl;
+    oss << "#";
 	for (auto ax : reportAxes) {
 		String gg = worldAxes[ax];
 		gg.upcase();
@@ -268,7 +269,7 @@ void ImageStatsCalculator::_reportDetailedStats(
 		) {
 			gg = "VELOCITY";
 		}
-		colwidth.push_back(width);
+        colwidth.push_back(width);
 		oss << setw(width) << gg << "  "
 			<< gg << "(Plane)" << " ";
 		width = gg.size() + 8;
@@ -329,7 +330,10 @@ void ImageStatsCalculator::_reportDetailedStats(
 		++i;
 	}
 	uInt count = 0;
-	for (inIter.reset(); ! inIter.atEnd(); ++inIter) {
+    for (inIter.reset(); ! inIter.atEnd(); ++inIter) {
+        // add a space at the beginning of the line to account for the
+        // "#" in the column header
+        oss << " ";
 		uInt colNum = 0;
 		position = inIter.position();
 		for (uInt i=0; i<reportAxes.nelements(); ++i) {
