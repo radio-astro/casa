@@ -773,6 +773,7 @@ size_t SingleDishMS::get_num_coeff_bloutput(size_t const bltype,
     num_coeff = order + 1;
     break;
   case BaselineType_kSinusoid:///////////////////////  
+    throw(AipsError("Unsupported baseline type, sinusoid"));/////////////
     break;
   default:
     throw(AipsError("Unsupported baseline type."));
@@ -811,7 +812,7 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
                                       LogIO os) {
 
 
-    cout << "Calling SingleDishMS::doSubtractBaseline " << endl;
+    //cout << "Calling SingleDishMS::doSubtractBaseline " << endl;
 
 // in_ms = out_ms
   // in_column = [FLOAT_DATA|DATA|CORRECTED_DATA], out_column=new MS
@@ -969,7 +970,7 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
           } else if (bltype==BaselineType_kSinusoid) {////////////
 
             size_t order_size = order.size();///////////////
-            cout << "order.size() " << order_size << endl;
+            //cout << "order.size() " << order_size << endl;
 
             if(order[0]==0){//////////////////////////////
                 num_coeff = order_size*2-1;//////////////
@@ -979,8 +980,8 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
 
 
 
-            cout << "order[0] " << order[0] << endl;/////
-            cout << "num_coeff " << num_coeff << endl;/////
+            //cout << "order[0] " << order[0] << endl;/////
+            //cout << "num_coeff " << num_coeff << endl;/////
            
 
 
@@ -998,7 +999,7 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
                                                         //order.size();///////////////////
                                                         &num_coeff);
             
-            cout << "status of LIBSAKURA_SYMBOL(GetNumberOfCoefficients)1 " << status << endl;
+            //cout << "status of LIBSAKURA_SYMBOL(GetNumberOfCoefficients)1 " << status << endl;
             
             
             //check_sakura_status("sakura_GetNumberOfCoefficients", status);
@@ -1044,23 +1045,23 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
 
 
 
-            cout << "num_coeff_max " << num_coeff_max << endl;///////////// 
+            //cout << "num_coeff_max " << num_coeff_max << endl;///////////// 
 
-            cout << endl;    
-            cout << "just before func0 " << endl;
-            cout << "ctx_indices[idx] " << ctx_indices[idx] << endl;
-            cout << "num_chan " << num_chan << endl;
-            cout << "spec_data " << spec_data << endl;
-            cout << "mask_data " << mask_data << endl;
-            cout << "coeff_data " << coeff_data << endl;
-            cout << "mask2_data " << mask2_data << endl;
-            cout << "&rms " << &rms << endl;
-            cout << endl;
+            //cout << endl;    
+            //cout << "just before func0 " << endl;
+            //cout << "ctx_indices[idx] " << ctx_indices[idx] << endl;
+            //cout << "num_chan " << num_chan << endl;
+            //cout << "spec_data " << spec_data << endl;
+            //cout << "mask_data " << mask_data << endl;
+            //cout << "coeff_data " << coeff_data << endl;
+            //cout << "mask2_data " << mask2_data << endl;
+            //cout << "&rms " << &rms << endl;
+            //cout << endl;
 
             //---GetBestFitBaselineCoefficientsFloat()...
             func0(ctx_indices[idx], num_chan, spec_data, mask_data, coeff_data, mask2_data, &rms);
 
-            cout << "rms " << rms << endl;
+            //cout << "rms " << rms << endl;
 
 
             for (size_t i = 0; i < num_chan; ++i) {
@@ -1493,15 +1494,15 @@ void SingleDishMS::subtractBaselineSinusoid(string const& in_column_name,
                                            vector<int> const& edge) {
 
 
-  cout << "calling code########"<< endl;
+  //cout << "calling code########"<< endl;
 
 
     for(size_t i=0; i < rejwn.size();++i){
-        cout << "rejwn " << rejwn[i] << endl;
+        //cout << "rejwn " << rejwn[i] << endl;
     }
 
     for(size_t i=0; i < addwn_tmp.size();++i){
-    cout << "addwn_tmp " << addwn_tmp[i] << endl;
+    //cout << "addwn_tmp " << addwn_tmp[i] << endl;
     }
 
  
@@ -1527,7 +1528,7 @@ void SingleDishMS::subtractBaselineSinusoid(string const& in_column_name,
 
 
     for(size_t i=0; i < addwn.size();++i){
-        cout << "addwn " << addwn[i] << endl;
+        //cout << "addwn " << addwn[i] << endl;
     }
 
 
@@ -1555,7 +1556,7 @@ void SingleDishMS::subtractBaselineSinusoid(string const& in_column_name,
   size_t bltype =
     BaselineType_kSinusoid;
 
-  cout << "bltype " << bltype << endl;
+  //cout << "bltype " << bltype << endl;
 
 
   //TODO  
@@ -1564,7 +1565,7 @@ void SingleDishMS::subtractBaselineSinusoid(string const& in_column_name,
 
 
 
-  cout << "doSubtractBaseline" << endl;
+  //cout << "doSubtractBaseline" << endl;
 
   doSubtractBaseline(in_column_name,
                      out_ms_name,
@@ -1594,7 +1595,7 @@ void SingleDishMS::subtractBaselineSinusoid(string const& in_column_name,
                      for(size_t i=0; i < addwn.size(); i++){
                         //nwave2.push_back((size_t)addwn[i]);
                         nwave2[i]=addwn[i];
-                        cout << "nwave2[" << i << "] " << nwave2[i] << endl;
+                        //cout << "nwave2[" << i << "] " << nwave2[i] << endl;
                      }
 
                      size_t num_coeff;
@@ -1605,22 +1606,22 @@ void SingleDishMS::subtractBaselineSinusoid(string const& in_column_name,
                         num_coeff=(addwn.size()*2);
                      }
 
-                        cout << endl;
-                       cout << "just before Get BestFitBaselineCoefficientsSinusoidFloat" << endl; 
-                        cout << "bl_contexts[cidx] " << bl_contexts[cidx] << endl;
-                        cout << "num_chan " << num_chan << endl;
-                        cout << "spec " << spec << endl;
+                        //cout << endl;
+                       //cout << "just before Get BestFitBaselineCoefficientsSinusoidFloat" << endl; 
+                        //cout << "bl_contexts[cidx] " << bl_contexts[cidx] << endl;
+                        //cout << "num_chan " << num_chan << endl;
+                        //cout << "spec " << spec << endl;
                         //cout << "size of spec " << sizeof(spec) << endl;
-                        cout << " mask " << mask << endl;
-                        cout << " clip_threshold_sigma " << clip_threshold_sigma << endl;
-                        cout << " num_fitting_max " << num_fitting_max << endl;
-                        cout << " addwn.size() " << addwn.size() << endl;
-                        cout << "&nwave2[0] " << &nwave2[0] << endl;
-                        cout << "nwave2 " << nwave2 << endl;
-                        cout << "nwave[0] " << nwave2[0] << endl;
-                        cout << "nwave[1] " << nwave2[1] << endl;
-                        cout << "num_coeff " << num_coeff << endl;
-                        cout << endl;
+                        //cout << " mask " << mask << endl;
+                        //cout << " clip_threshold_sigma " << clip_threshold_sigma << endl;
+                        //cout << " num_fitting_max " << num_fitting_max << endl;
+                        //cout << " addwn.size() " << addwn.size() << endl;
+                        //cout << "&nwave2[0] " << &nwave2[0] << endl;
+                        //cout << "nwave2 " << nwave2 << endl;
+                        //cout << "nwave[0] " << nwave2[0] << endl;
+                        //cout << "nwave[1] " << nwave2[1] << endl;
+                        //cout << "num_coeff " << num_coeff << endl;
+                        //cout << endl;
                         
                     
                        status = LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsSinusoidFloat)(
@@ -1644,14 +1645,14 @@ void SingleDishMS::subtractBaselineSinusoid(string const& in_column_name,
 
     
 
-                        cout << endl;
-                        cout << "just after Get BestFitBaselineCoefficientsSinusoidFloat" << endl;                        
-                        cout << "num_coeff " << num_coeff << endl;
-                        cout << "coeff " << coeff << endl;
-                        cout << "size of mask2 " << sizeof(mask2) << endl;
-                        cout << "rms " << rms << endl;
-                        cout << "status " << status << endl;
-                        cout << endl;
+                        //cout << endl;
+                        //cout << "just after Get BestFitBaselineCoefficientsSinusoidFloat" << endl;                        
+                        //cout << "num_coeff " << num_coeff << endl;
+                        //cout << "coeff " << coeff << endl;
+                        //cout << "size of mask2 " << sizeof(mask2) << endl;
+                        //cout << "rms " << rms << endl;
+                        //cout << "status " << status << endl;
+                        //cout << endl;
 
 
                        //check_sakura_status("sakura_GetBestFitBaselineCoefficientsSinusoidFloat", status);
@@ -1703,7 +1704,7 @@ void SingleDishMS::subtractBaselineSinusoid(string const& in_column_name,
                      for(size_t i=0; i < addwn.size(); i++){
                         //nwave2.push_back((size_t)addwn[i]);
                         nwave2[i]=addwn[i];
-                        cout << nwave2[i] << endl;
+                        //cout << nwave2[i] << endl;
                      }
 
 
@@ -1769,7 +1770,7 @@ void SingleDishMS::subtractBaselineSinusoid(string const& in_column_name,
                      for(size_t i=0; i < addwn.size(); i++){
                         //nwave2.push_back((size_t)addwn[i]);
                         nwave2[i]=addwn[i];
-                        cout << nwave2[i] << endl;
+                        //cout << nwave2[i] << endl;
                      }
 
 
