@@ -1589,6 +1589,13 @@ class test_mask(testref_base):
 #     def test_mask_outlier(self):
 #          """ [mask] test_mask_outlier : With outlier fields """
 
+     def test_mask_restart(self):
+          """ [mask] test_mask_restart : Test that mask reloads upon restart """
+          self.prepData('refim_twochan.ms')
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10,deconvolver='hogbom',interactive=0,usemask='auto-thresh')
+          ret2 = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10,deconvolver='hogbom',interactive=0)
+          self.checkall(imexist=[self.img+'.mask'], imval=[(self.img+'.mask',1.0,[50,50,0,0]),(self.img+'.mask',0.0,[50,80,0,0])])
+
 
 
 ##############################################
