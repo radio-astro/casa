@@ -341,13 +341,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
       //maskImage.table().unmarkForDelete();
       maskImage.copyData(*tempmask); 
-      //PagedImage<Float> mytest1(tempmask->shape(), tempmask->coordinates(), "mytempmaskcopy");
-      //mytest1.copyData(*tempmask);
-      //PagedImage<Float> mytest2(maskImage->shape(), maskImage->coordinates(), "mymaskimagecopy");
-      //PagedImage<Float> mytest2(maskImage.shape(), maskImage.coordinates(), "mymaskimagecopy");
-      //mytest2.copyData(*maskImage);
-      //mytest2.copyData(LatticeExpr<Float>(maskImage));
-      //cerr<<"copying DONE..."<<endl;
     }
     catch (AipsError& x) {
       os << "Error in regionToMaskImage() : " << x.getMesg() << LogIO::EXCEPTION;
@@ -867,8 +860,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        npix=1;
      }
      RebinImage<Float> tempRebinnedIm( res, IPosition(4,npix,npix,1,1) );
-     PagedImage<Float> temprebincopy(TiledShape(tempRebinnedIm.shape()),tempRebinnedIm.coordinates(), String("mytemp_rebinim"));
-     temprebincopy.copyData(tempRebinnedIm);
 
      // Determine threshold 
      Double minval;
@@ -897,8 +888,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      LatticeExpr<Float> tempthresh( iif( tempRebinnedIm > thresh, 1.0, 0.0) );
      TempImage<Float> tempthreshIm(tempRebinnedIm.shape(), tempRebinnedIm.coordinates() );
      tempthreshIm.copyData(tempthresh);
-     PagedImage<Float> tempthreshimcopy(TiledShape(tempthreshIm.shape()),tempthreshIm.coordinates(), String("mytemp_threshim"));
-     tempthreshimcopy.copyData(tempthreshIm);
 
      //regrid
      IPosition axes(3,0, 1, 2);
@@ -930,6 +919,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      //Image2DConvolver<Float>::convolve(os, tempIm3_ptr, tempIm2, VectorKernel::GAUSSIAN, IPosition(2, 0, 1), convbeam, True, Double(-1.0), True, False);   
      //PagedImage<Float> tempconvim(TiledShape(res.shape()), res.coordinates(), String("mytemp_convim"));
      PagedImage<Float> tempconvim(convimname);
+     tempconvim.table().markForDelete();
      //tempconvim.copyData(*tempIm3_ptr);
 
      // fudge factor?  
