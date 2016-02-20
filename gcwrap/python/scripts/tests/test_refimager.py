@@ -639,6 +639,11 @@ class test_onefield(testref_base):
           self.checkall(imexist=[self.img+'2.image.tt0', self.img+'2.alpha'],nmajordone=1,
                              imval=[(self.img+'.alpha',-1.0,[50,50,0,0])] )
 
+     def test_onefield_rectangular_pixels(self):
+          """ [onefield] : test_onefield_rectangular_pixels : Test restoration with rectangular pixels (cas-7171)"""
+          self.prepData('refim_point.ms')
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell=['10.0arcsec','30.0arcsec'],niter=10)
+          self.checkall(imexist=[self.img+'.image'], imval=[(self.img+'.image',0.482,[50,49,0,0])] )
 
 ##############################################
 ##############################################

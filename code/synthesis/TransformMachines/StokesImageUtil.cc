@@ -234,14 +234,27 @@ void StokesImageUtil::MakeGaussianPSF(ImageInterface<Float>& psf, Vector<Float>&
   AlwaysAssert(beam(1)>0.0,AipsError);
   Double sbmaj, sbmin;
   
+  // ---old
   // Assumes that the cell sizes are the same in both directions!
-  sbmaj=4.0*log(2.0)*square(d(0)/beam(0));
-  sbmin=4.0*log(2.0)*square(d(0)/beam(1));
+  //sbmaj=4.0*log(2.0)*square(d(0)/beam(0));
+  //sbmin=4.0*log(2.0)*square(d(0)/beam(1));
+  // ---old
+
+  // Evaluate the Gaussian beam using real-world coordinates, to handle rectangular pixels (cas-7171)
+  sbmaj=4.0*log(2.0)*square(1.0/beam(0));
+  sbmin=4.0*log(2.0)*square(1.0/beam(1));
+
+  Vector<Double>fd(fabs(d));
+
   Float volume=0.0;
   for (Int j=0;j<ny;j++) {
     for (Int i=0;i<nx;i++) {
-      Double x =   cospa * (Double(i)-refi) + sinpa * (Double(j)-refj);
-      Double y = - sinpa * (Double(i)-refi) + cospa * (Double(j)-refj);
+      //   ---old
+      //      Double x =   cospa * (Double(i)-refi) + sinpa * (Double(j)-refj);
+      //      Double y = - sinpa * (Double(i)-refi) + cospa * (Double(j)-refj);
+      //   ---old
+      Double x =   cospa * (Double(i)-refi)*fd(0) + sinpa * (Double(j)-refj)*fd(1);
+      Double y = - sinpa * (Double(i)-refi)*fd(0) + cospa * (Double(j)-refj)*fd(1);
       Double radius = sbmaj*square(x) + sbmin*square(y);
       if (radius<20.) {
 	ipsf(i,j) = exp(-radius);
