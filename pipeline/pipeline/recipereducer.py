@@ -80,11 +80,19 @@ def _get_tasks(context, args, procedure='procedure_hifa.xml'):
     if not processingprocedure:
         LOG.error('Could not parse procedure file at %s.\n'
                   'Execution halted' % procedure_file)
-    
+
+    commands_seen = []
     for processingcommand in processingprocedure.findall('ProcessingCommand'):
         cli_command = processingcommand.findtext('Command')
+        commands_seen.append(cli_command)
 
+        # ignore breakpoints
         if cli_command == 'breakpoint':
+            continue
+
+        # skip exportdata when preceded by a breakpoint
+        if len(commands_seen) > 1 and commands_seen[-2] == ['breakpoint'] \
+                and cli_command == 'hif_exportdata':
             continue
 
         task_class = _get_task_class(cli_command)
@@ -111,7 +119,7 @@ def _get_tasks(context, args, procedure='procedure_hifa.xml'):
 
         task_inputs = task_class.Inputs(context, **task_args)
         task = task_class(task_inputs)
-        task._hif_call = _as_task_call(task_class, task_args) 
+        task._hif_call = _as_task_call(task_class, task_args)
         # we yield rather than return so that the context can be updated
         # between task executions 
         yield task
