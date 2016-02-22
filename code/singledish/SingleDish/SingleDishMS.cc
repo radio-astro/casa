@@ -562,36 +562,6 @@ void SingleDishMS::get_masklist_from_mask(size_t const num_chan,
   }
 }
 
-void SingleDishMS::get_pol_selection(string const &in_pol, size_t const num_pol,
-    Vector<bool> &pol) {
-  pol.resize(num_pol);
-  bool pol_val = (in_pol == "") || (in_pol == "*");
-  for (size_t i = 0; i < pol.nelements(); ++i) {
-    pol(i) = pol_val;
-  }
-  if (!pol_val) {
-    //parse_inpol
-    istringstream iss(in_pol);
-    string tmp;
-    std::vector<int> in_pol_list;
-    while (getline(iss, tmp, ',')) {
-      istringstream iss2(tmp);
-      size_t itmp;
-      iss2 >> itmp;
-      in_pol_list.push_back(itmp);
-    }
-    //set True for pol specified
-    for (size_t i = 0; i < pol.nelements(); ++i) {
-      for (size_t j = 0; j < in_pol_list.size(); ++j) {
-        if (in_pol_list[j] == (int) i) {
-          pol(i) = true;
-          break;
-        }
-      }
-    }
-  }
-}
-
 void SingleDishMS::get_baseline_context(size_t const bltype,
     uint16_t order,
     size_t num_chan,
@@ -791,7 +761,6 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
                                       string const& out_bloutput_name,
                                       bool const& do_subtract,
                                       string const& in_spw,
-                                      string const& in_ppp,
                                       LIBSAKURA_SYMBOL(Status)& status,
                                       std::vector<LIBSAKURA_SYMBOL(BaselineContextFloat) *> &bl_contexts,
                                       size_t const bltype,
@@ -1285,7 +1254,6 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
                                     string const& out_bloutput_name,
                                     bool const& do_subtract,
                                     string const& in_spw,
-                                    string const& in_ppp,
                                     string const& blfunc,
                                     int const order,
                                     float const clip_threshold_sigma,
@@ -1324,7 +1292,6 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
                      out_bloutput_name,
                      do_subtract,
                      in_spw,
-                     in_ppp,
                      status,
                      bl_contexts,
                      bltype,
@@ -1383,7 +1350,6 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
                                            string const& out_bloutput_name,
                                            bool const& do_subtract,
                                            string const& in_spw,
-                                           string const& in_ppp,
                                            int const npiece,
                                            float const clip_threshold_sigma,
                                            int const num_fitting_max,
@@ -1414,7 +1380,6 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
                      out_bloutput_name,
                      do_subtract,
                      in_spw,
-                     in_ppp,
                      status,
                      bl_contexts,
                      bltype,
@@ -1479,7 +1444,6 @@ void SingleDishMS::subtractBaselineSinusoid(string const& in_column_name,
                                            string const& out_bloutput_name,
                                            bool const& do_subtract,
                                            string const& in_spw,
-                                           string const& in_ppp,
                                            vector<int> const& addwn_tmp,
                                            vector<int> const& rejwn,
                                            //bool const applyfft,
@@ -1572,7 +1536,6 @@ void SingleDishMS::subtractBaselineSinusoid(string const& in_column_name,
                      out_bloutput_name,
                      do_subtract,
                      in_spw,
-                     in_ppp,
                      status,
                      bl_contexts,
                      bltype,
@@ -2347,7 +2310,6 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
                                             string const& out_bloutput_name,
                                             bool const& do_subtract,
                                             string const& in_spw,
-                                            string const& in_ppp,
                                             string const& param_file) {
 
   LogIO os(_ORIGIN);
@@ -2466,7 +2428,6 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
       get_data_cube_float(*vb, data_chunk);
       get_flag_cube(*vb, flag_chunk);
 
-      get_pol_selection(in_ppp, num_pol, pol);
       // loop over MS rows
       for (size_t irow = 0; irow < num_row; ++irow) {
         size_t idx = 0;
@@ -2499,12 +2460,6 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
 
         // loop over polarization
         for (size_t ipol = 0; ipol < num_pol; ++ipol) {
-          // skip spectrum not selected by pol
-          if (!pol(ipol)) {
-            flag_spectrum_in_cube(flag_chunk, irow, ipol); //flag
-            apply_mtx[0][ipol] = False;
-            continue;
-          }
           // get a channel mask from data cube
           // (note that the variable 'mask' is flag in the next line
           // actually, then it will be converted to real mask when

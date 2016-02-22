@@ -185,12 +185,6 @@ Fit baseline and subtract it from selected spectra
       <value></value>
     </param>
 
-    <param type="any" name="pol">
-      <description>Select data by polarization(s).</description>
-      <any type="variant"/>
-      <value></value>
-    </param>
-
     <param type="string" name="blfunc">
       <description>baseline function</description>
       <value>poly</value>
@@ -283,12 +277,6 @@ Fit baseline and subtract it from selected spectra
       <value></value>
     </param>
 
-    <param type="any" name="pol">
-      <description>Select data by polarization(s).</description>
-      <any type="variant"/>
-      <value></value>
-    </param>
-
     <param type="int" name="npiece">
       <description>cspline npice</description>
       <value>5</value>
@@ -377,13 +365,6 @@ Fit baseline and subtract it from selected spectra
       <any type="variant"/>
       <value></value>
     </param>
-
-    <param type="any" name="pol">
-      <description>Select data by polarization(s).</description>
-      <any type="variant"/>
-      <value></value>
-    </param>
-
 
     <param type="intArray" name="addwn">
       <description>additional wave numbers to use</description>
@@ -502,12 +483,6 @@ Fit parameters for each spectrum are obtained from a text file.
 
     <param type="any" name="spw">
       <description>Spectral Window Ids (0 relative) to select; -1 interpreted as all</description>
-      <any type="variant"/>
-      <value></value>
-    </param>
-
-    <param type="any" name="pol">
-      <description>Select data by polarization(s).</description>
       <any type="variant"/>
       <value></value>
     </param>

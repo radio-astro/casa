@@ -148,7 +148,6 @@ singledishms::subtract_baseline(string const& datacolumn,
                                 string const& bloutput,
                                 bool const dosubtract,
                                 ::casac::variant const& spw,
-                                ::casac::variant const& pol,
                                 string const& blfunc,
                                 int const order,//----------------------
                                 //vector<int> const& order,//---------------
@@ -172,7 +171,6 @@ singledishms::subtract_baseline(string const& datacolumn,
                             bloutput, 
                             dosubtract,
                             toCasaString(spw),
-                            toCasaString(pol),
                             blfunc,
                             order,
                             clip_threshold_sigma, 
@@ -197,7 +195,6 @@ singledishms::subtract_baseline_cspline(string const& datacolumn,
                                         string const& bloutput,
                                         bool const dosubtract,
                                         ::casac::variant const& spw,
-                                        ::casac::variant const& pol,
                                         int const npiece,//--------------------------
                                         //vector<int> const& npiece,//--------------------
                                         float const clip_threshold_sigma,
@@ -217,7 +214,6 @@ singledishms::subtract_baseline_cspline(string const& datacolumn,
                                    bloutput, 
                                    dosubtract,
                                    toCasaString(spw), 
-                                   toCasaString(pol),
                                    npiece, 
                                    clip_threshold_sigma,
                                    num_fitting_max, 
@@ -248,7 +244,6 @@ singledishms::subtract_baseline_sinusoid(
                                          string const& bloutput,
                                          bool const dosubtract,
                                          ::casac::variant const& spw,
-                                         ::casac::variant const& pol,
                                          vector<int> const& addwn,
                                          vector<int> const& rejwn,
                                          //bool const applyfft,
@@ -282,7 +277,6 @@ singledishms::subtract_baseline_sinusoid(
                                     bloutput, 
                                     dosubtract,
                                     toCasaString(spw), 
-                                    toCasaString(pol),
                                     addwn,
                                     rejwn,
                                     //applyfft,
@@ -312,7 +306,6 @@ singledishms::subtract_baseline_variable(string const& datacolumn,
                                          string const& bloutput,
                                          bool const dosubtract,
                                          ::casac::variant const& spw,
-                                         ::casac::variant const& pol,
                                          string const& blparam)
 {
   bool rstat(false);
@@ -324,7 +317,6 @@ singledishms::subtract_baseline_variable(string const& datacolumn,
                                     bloutput, 
                                     dosubtract,
                                     toCasaString(spw),
-                                    toCasaString(pol),
                                     blparam);
     rstat = true;
   } catch  (AipsError x) {

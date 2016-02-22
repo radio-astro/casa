@@ -239,7 +239,7 @@ def prepare_for_baselining(**keywords):
     funcname = 'subtract_baseline'
 
     blfunc = keywords['blfunc']
-    keys = ['datacolumn', 'outfile', 'bloutput', 'dosubtract', 'spw', 'pol']
+    keys = ['datacolumn', 'outfile', 'bloutput', 'dosubtract', 'spw']
     if blfunc in ['poly', 'chebyshev']:
         keys += ['blfunc', 'order', 'clip_threshold_sigma', 'num_fitting_max']
     elif blfunc == 'cspline':

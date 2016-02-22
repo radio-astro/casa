@@ -86,7 +86,6 @@ public:
 			string const& out_bloutput_name,
 			bool const& do_subtract,
 			string const& in_spw,
-			string const& in_ppp,
 			string const& blfunc,
 			int const order,
 			float const clip_threshold_sigma,
@@ -103,7 +102,6 @@ public:
 			       string const& out_bloutput_name,
 			       bool const& do_subtract,
 			       string const& in_spw,
-			       string const& in_ppp,
 			       int const npiece,
 			       float const clip_threshold_sigma,
 			       int const num_fitting_max,
@@ -119,7 +117,6 @@ public:
                     string const& out_bloutput_name,
                     bool const& do_subtract,
                     string const& in_spw,
-                    string const& in_ppp,
                     vector<int> const& addwn,
                     vector<int> const& rejwn,
                     //bool const applyfft,
@@ -141,7 +138,6 @@ public:
 				string const& out_bloutput_name,
 				bool const& do_subtract,
 				string const& in_spw,
-				string const& in_ppp,
 				string const& param_file);
 
   // apply baseline table
@@ -207,8 +203,6 @@ private:
       Vector<Bool> &mask, bool initialize = true);
   void get_masklist_from_mask(size_t const num_chan, bool const *mask,
       Vector<uInt> &masklist);
-  void get_pol_selection(string const &in_pol, size_t const num_pol,
-      Vector<bool> &pol);
   // Create a set of baseline contexts
   void get_baseline_context(size_t const bltype,
       uint16_t order,
@@ -254,7 +248,6 @@ private:
                           string const& out_bloutput_name,
 			  bool const& do_subtract,
 			  string const& in_spw,
-			  string const& in_ppp,
 			  LIBSAKURA_SYMBOL(Status)& status,
 			  std::vector<LIBSAKURA_SYMBOL(BaselineContextFloat) *> &bl_contexts,
 			  size_t const bltype,
