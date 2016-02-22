@@ -2570,6 +2570,100 @@ class sdimaging_test_mapextent(unittest.TestCase):
         #blc_ref, trc_ref = get_mapextent_ephemeris(self.infiles_ephem)
         self.verify_mapextent(npix_ref, blc_ref, trc_ref)
     
+###
+#
+# Test case for checking if spline interpolation works for fast scan data
+#
+###
+class sdimaging_test_interp(unittest.TestCase):
+    """
+    The test data 'pointing6.ms' contains 1000 rows for TP data, while only 10 rows given
+    for POINTING data. The pointing data is given as corner points of a hexagon centered at
+    (RA, Dec) = (0h00m00s, 0d00m00s) and with side of 0.001 radian.
+    The resulting pattern of weight image should be nearly circular if spline interpolation
+    does work, while it should be hexagonal if linear interpolation, the old algorithm, is
+    applied.
+    """
+    datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdimaging/'
+    params = dict(infiles = ['pointing6.ms'],
+                  outfile = "pointing6.out",
+                  antenna = "0",
+                  intent  = "*ON_SOURCE*",
+                  gridfunction = "SF",
+                  convsupport = 6,
+                  imsize = [512, 512],
+                  cell = "2arcsec",
+                  phasecenter = "J2000 0:00:00.0 00.00.00.0",
+                  ephemsrcname = "Venus",
+                  pointingcolumn = "direction")
+    outfile = params['outfile']
+
+    def __remove_table(self, f):
+        if os.path.exists(f):
+            shutil.rmtree(f)
+    
+    def __copy_table(self, f):
+        self.__remove_table(f)
+        testutils.copytree_ignore_subversion(self.datapath, f)
+        
+    def setUp(self):
+        for infile in self.params['infiles']:
+            self.__copy_table(infile)
+        default(sdimaging)
+        
+    def tearDown(self):
+        for infile in self.params['infiles']:
+            self.__remove_table(infile)
+        os.system('rm -rf %s*'%(self.outfile))
+        
+    def run_test(self, **kwargs):
+        self.params.update(**kwargs)
+        status = sdimaging(**self.params)
+        self.assertIsNone(status, msg = 'sdimaging failed to execute')
+        self.assertTrue(os.path.exists(self.outfile), msg='output image is not created.')
+        
+    def test_spline_interp(self):
+        """test_spline_interp: Check if spline interpolation works for fast scan data."""
+        
+        self.run_test()
+
+        weightfile = self.outfile + '.weight'
+        with tbmanager(weightfile) as tb:
+            mapdata = tb.getcell('map', 0)
+        # for pixels with strong weight value(>14), collect their distance from the image
+        # center and then compute the mean and sigma of their distribution.
+        dist_list = []
+        for i in range(self.params['imsize'][0]):
+            for j in range(self.params['imsize'][1]):
+                if mapdata[i][j][0][0] > 14.0:
+                    cenx = float(self.params['imsize'][0])/2.0
+                    ceny = float(self.params['imsize'][1])/2.0
+                    dx = float(i) - cenx
+                    dy = float(j) - ceny
+                    dist_list.append(numpy.sqrt(dx*dx + dy*dy))
+        dist_mean = 0.0
+        dist_mean2 = 0.0
+        for i in range(len(dist_list)):
+            dist_mean += dist_list[i]
+            dist_mean2 += dist_list[i] * dist_list[i]
+        dist_mean = dist_mean / float(len(dist_list))
+        dist_mean2 = dist_mean2 / float(len(dist_list))
+        dist_sigma = numpy.sqrt(dist_mean2 - dist_mean * dist_mean)
+
+        dist_llim = dist_mean - dist_sigma
+        dist_ulim = dist_mean + dist_sigma
+        dist_answer = 0.001*180.0/numpy.pi*3600.0/float(self.params['cell'][0])
+
+        """
+        if spline interpolation is done, the range [dist_llim, dist_ulim]
+        will be a narrow range (102.683 ~ 103.318) and encloses the answer
+        value (103.132), while linear interpolation will result in a wider
+        range (94.240 +- 4.281) and depart from the answer value at 2-sigma
+        level.
+        """
+        self.assertTrue(((dist_llim < dist_answer) and (dist_answer < dist_ulim)),
+                        msg = 'spline interpolation seems not working.')
+    
 # utility for sdimaging_test_mapextent
 def get_mapextent(infile, scan=None):
     s = sd.scantable(infile, average=False)
@@ -2654,4 +2748,5 @@ def suite():
             sdimaging_autocoord,sdimaging_test_selection,
             sdimaging_test_flag, 
             sdimaging_test_polflag,sdimaging_test_mslist,
-            sdimaging_test_restfreq, sdimaging_test_mapextent]
+            sdimaging_test_restfreq, sdimaging_test_mapextent,
+            sdimaging_test_interp]
