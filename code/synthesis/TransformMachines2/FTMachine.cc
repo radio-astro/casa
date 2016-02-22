@@ -1,9 +1,9 @@
 //# FTMachine.cc: Implementation of FTMachine class
-//# Copyright (C) 1997,1998,1999,2001,2002,2003
+//# Copyright (C) 1997-2016
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
-//# under the terms of the GNU Library General Public License as published by
+//# under the terms of the GNU General Public License as published by
 //# the Free Software Foundation; either version 2 of the License, or (at your
 //# option) any later version.
 //#
@@ -12,7 +12,7 @@
 //# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
 //# License for more details.
 //#
-//# You should have received a copy of the GNU Library General Public License
+//# You should have received a copy of the GNU General Public License
 //# along with this library; if not, write to the Free Software Foundation,
 //# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
 //#
@@ -755,8 +755,18 @@ using namespace casa::vi;
       flipdata.set(Complex(0.0));
       InterpolateArray1D<Double,Complex>::
         interpolate(flipdata,visFreq, imageFreq_p, flipgrid,freqInterpMethod_p);
+      
+
+      
+      Cube<Bool>  copyOfFlag;
+      Vector<Int> mychanmap=multiChanMap_p[vb.spectralWindows()[0]];
+      copyOfFlag.assign(vb.flagCube());
+      for (uInt k=0; k< mychanmap.nelements(); ++ k)
+	if(mychanmap(k) < 0)
+	  copyOfFlag.xzPlane(k).set(True);
       flipgrid.resize();
-      swapyz(flipgrid,flipdata);
+      swapyz(flipgrid, copyOfFlag, flipdata);
+      //swapyz(flipgrid,flipdata);
       vb.setVisCubeModel(flipgrid);
 
       return True;
@@ -975,11 +985,19 @@ using namespace casa::vi;
     //
     outRecord.define("name", this->name());
     if(withImage){
+      CoordinateSystem cs=image->coordinates();
+      DirectionCoordinate dircoord=cs.directionCoordinate(cs.findCoordinate(Coordinate::DIRECTION));
+      dircoord.setReferenceValue(mImage_p.getAngle().getValue());
       if(diskimage != ""){
 	try{
 	  PagedImage<Complex> imCopy(TiledShape(toVis_p ? griddedData.shape(): image->shape()), image->coordinates(), diskimage);
 	  toVis_p ? imCopy.put(griddedData) : imCopy.copyData(*image);
 	  ImageUtilities::copyMiscellaneous(imCopy, *image);
+	  Vector<Double> pixcen(2);
+	  pixcen(0)=Double(imCopy.shape()(0)/2); pixcen(1)=Double(imCopy.shape()(1)/2);
+	  dircoord.setReferencePixel(pixcen);
+	  cs.replaceCoordinate(dircoord, cs.findCoordinate(Coordinate::DIRECTION));
+	  imCopy.setCoordinateInfo(cs);
 	}
 	catch(...){
 	  throw(AipsError(String("Failed to save model image "+diskimage+String(" to disk")))); 
@@ -989,7 +1007,11 @@ using namespace casa::vi;
       }
       else{
 	Record imrec;
-	TempImage<Complex> imCopy(griddedData.shape(), image->coordinates());
+	Vector<Double> pixcen(2);
+	pixcen(0)=Double(griddedData.shape()(0)/2); pixcen(1)=Double(griddedData.shape()(1)/2);
+	dircoord.setReferencePixel(pixcen);
+	cs.replaceCoordinate(dircoord, cs.findCoordinate(Coordinate::DIRECTION));
+	TempImage<Complex> imCopy(griddedData.shape(), cs);
 	imCopy.put(griddedData) ;
 	ImageUtilities::copyMiscellaneous(imCopy, *image);
 	if(imCopy.toRecord(error, imrec))
@@ -1513,7 +1535,35 @@ using namespace casa::vi;
     out.putStorage(pout,deleteOut);
     in.freeStorage(pin,deleteIn);
   }
-  
+
+  void FTMachine::swapyz(Cube<Complex>& out, const Cube<Bool>& outFlag, const Cube<Complex>& in)
+  {
+    IPosition inShape=in.shape();
+    uInt nxx=inShape(0),nyy=inShape(2),nzz=inShape(1);
+    //resize breaks  references...so out better have the right shape 
+    //if references is not to be broken
+    if(out.nelements()==0)
+      out.resize(nxx,nyy,nzz);
+    Bool deleteIn,deleteOut, delFlag;
+    const Complex* pin = in.getStorage(deleteIn);
+    const Bool* poutflag= outFlag.getStorage(delFlag);
+    Complex* pout = out.getStorage(deleteOut);
+    uInt i=0, zOffset=0;
+    for (uInt iz=0; iz<nzz; ++iz, zOffset+=nxx) {
+      Int yOffset=zOffset;
+      for (uInt iy=0; iy<nyy; ++iy, yOffset+=nxx*nzz) {
+	for (uInt ix=0; ix<nxx; ++ix){ 
+	  if(!poutflag[i])
+	    pout[i] = pin[ix+yOffset];
+	  ++i;
+	}
+      }
+    }
+    out.putStorage(pout,deleteOut);
+    in.freeStorage(pin,deleteIn);
+    outFlag.freeStorage(poutflag, delFlag);
+  }
+
   // helper function to swap the y and z axes of a Cube
   void FTMachine::swapyz(Cube<Bool>& out, const Cube<Bool>& in)
   {
@@ -1585,13 +1635,21 @@ using namespace casa::vi;
       }
     }
 
+  Matrix<Double> negateUV(const vi::VisBuffer2& vb){
+    Matrix<Double> uvw(vb.uvw().shape());
+    for (Int i=0;i< vb.nRows() ; ++i) {
+      for (Int idim=0;idim<2; ++idim) uvw(idim,i)=-vb.uvw()(idim, i);
+      uvw(2,i)=vb.uvw()(2,i);
+    }
+    return uvw;
+  }
   //-----------------------------------------------------------------------------------------------------------------
   //------------  Vectorized versions of initializeToVis, initializeToSky, finalizeToSky  
   //------------  that are called from CubeSkyEquation.
   //------------  They call getImage,getWeightImage, which are implemented in all FTMs
   //------------  Also, Correlation / Stokes conversions and gS/ggS normalizations.
  
-\
+
   void FTMachine::setSkyJones(Vector<CountedPtr<casa::refim::SkyJones> >& sj){
     sj_p.resize();
     sj_p=sj;

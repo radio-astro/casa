@@ -234,7 +234,9 @@ public:
 
 
   //-------------------------------------------------------------------------------------
-
+ 
+  // Get the gridded visibilities or weight 
+  template <typename T> void getGrid(Array<T>& thegrid);
   // Get the final image
   virtual ImageInterface<Complex>& getImage(Matrix<Float>&, Bool normalize=True) = 0;
 
@@ -434,6 +436,8 @@ protected:
   //helper to save Measures in a record
   Bool saveMeasure(RecordInterface& rec, const String& name, String& error, const Measure& ms);
 
+  Matrix<Double> negateUV(const vi::VisBuffer2& vb);
+
   // Private variables needed for spectral frame conversion 
   SpectralCoordinate spectralCoord_p;
   Vector<Bool> doConversion_p;
@@ -477,10 +481,13 @@ protected:
   //interpolation on y axis of a cube. 
   
   void swapyz(Cube<Complex>& out, const Cube<Complex>& in);
+  void swapyz(Cube<Complex>& out, const Cube<Bool>& outFlag, const Cube<Complex>& in);
   void swapyz(Cube<Bool>& out, const Cube<Bool>& in);
   void convUVW(Double& dphase, Vector<Double>& thisrow);
   
 };
+
+#include <synthesis/TransformMachines/FTMachine.tcc>
 
   }//# end namespace refim
 }//#end of namespace casa
