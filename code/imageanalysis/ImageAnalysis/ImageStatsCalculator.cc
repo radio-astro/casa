@@ -241,25 +241,46 @@ void ImageStatsCalculator::_reportDetailedStats(
 	Bool doVelocity = csys.hasSpectralAxis()
 		&& csys.spectralCoordinate().restFrequency() > 0;
 	ostringstream oss;
+	// CSSC wants "#" in log file but not in logger output, sigh
 	for (auto ax : reportAxes) {
 		if (ax == freqCol) {
 			if (doVelocity) {
-				oss << "#VELOCITY column unit = "
+				oss << "VELOCITY column unit = "
 					<< csys.spectralCoordinate().velocityUnit() << endl;
 			}
 			else {
-				oss << "#FREQUENCY column unit = "
+				oss << "FREQUENCY column unit = "
 					<< csys.spectralCoordinate().worldAxisUnits()[0] << endl;
 			}
+			if (_verbose) {
+			    *_getLog() << LogIO::NORMAL << oss.str() << LogIO::POST;
+			}
+			if (_getLogFile()) {
+			    _writeLogfile("#" + oss.str(), False, False);
+			}
+		    oss.str("");
 		}
 	}
 	auto bUnit = _getImage()->units().getName();
-	oss << "#Sum column unit = " << bUnit << endl;
-	oss << "#Mean column unit = " << bUnit << endl;
-	oss << "#Std_dev column unit = " << bUnit << endl;
-	oss << "#Minimum column unit = " << bUnit << endl;
-	oss << "#Maximum column unit = " << bUnit << endl;
-    oss << "#";
+	if (_verbose) {
+	    oss.str("");
+	    oss << "Sum column unit = " << bUnit << endl;
+	    oss << "Mean column unit = " << bUnit << endl;
+	    oss << "Std_dev column unit = " << bUnit << endl;
+	    oss << "Minimum column unit = " << bUnit << endl;
+	    oss << "Maximum column unit = " << bUnit << endl;
+	    *_getLog() << LogIO::NORMAL << oss.str() << LogIO::POST;
+	}
+	if (_getLogFile()) {
+	    oss.str("");
+	    oss << "#Sum column unit = " << bUnit << endl;
+	    oss << "#Mean column unit = " << bUnit << endl;
+	    oss << "#Std_dev column unit = " << bUnit << endl;
+	    oss << "#Minimum column unit = " << bUnit << endl;
+	    oss << "#Maximum column unit = " << bUnit << endl;
+	    _writeLogfile(oss.str(), False, False);
+	    oss.str("");
+	}
 	for (auto ax : reportAxes) {
 		String gg = worldAxes[ax];
 		gg.upcase();
@@ -284,6 +305,13 @@ void ImageStatsCalculator::_reportDetailedStats(
 		oss << "  N Iter";
 	}
 	oss << endl;
+	if (_verbose) {
+	    *_getLog() << LogIO::NORMAL << oss.str() << LogIO::POST;
+	}
+	if (_getLogFile()) {
+	    _writeLogfile("#" + oss.str(), False, False);
+	}
+	oss.str("");
 	for (uInt i=0; i<7; ++i) {
 		colwidth.push_back(12);
 	}
@@ -301,7 +329,6 @@ void ImageStatsCalculator::_reportDetailedStats(
 	IPosition arrayIndex(axesMap.nelements(), 0);
 	IPosition blc = _statistics->getBlc();
     IPosition position(tempIm->ndim());
-	oss << std::scientific;
 	uInt width = 13;
 	Vector<Vector<String> > coords(reportAxes.size());
 	auto i = 0;
@@ -331,9 +358,7 @@ void ImageStatsCalculator::_reportDetailedStats(
 	}
 	uInt count = 0;
     for (inIter.reset(); ! inIter.atEnd(); ++inIter) {
-        // add a space at the beginning of the line to account for the
-        // "#" in the column header
-        oss << " ";
+        oss << std::scientific;
 		uInt colNum = 0;
 		position = inIter.position();
 		for (uInt i=0; i<reportAxes.nelements(); ++i) {
@@ -376,7 +401,9 @@ void ImageStatsCalculator::_reportDetailedStats(
 		if (_verbose) {
 			*_getLog() << LogIO::NORMAL << oss.str() << LogIO::POST;
 		}
-		_writeLogfile(oss.str(), False, False);
+		// add a space at the beginning of the line to account for the
+		// "#" in the column header
+		_writeLogfile(" " + oss.str(), False, False);
 		oss.str("");
 	}
 	_closeLogfile();
