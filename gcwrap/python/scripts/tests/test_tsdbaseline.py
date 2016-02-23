@@ -1802,8 +1802,8 @@ Basic unit tests for task tsdbaseline. No interactive testing.
         shutil.copyfile(self.datapath+self.bloutput_cspline_csv, self.bloutput_cspline_csv)
         shutil.copyfile(self.datapath+self.bloutput_variable_txt, self.bloutput_variable_txt)
         shutil.copyfile(self.datapath+self.bloutput_variable_csv, self.bloutput_variable_csv)
-        shutil.copyfile(self.datapath+self.bloutput_sinusoid_csv, self.bloutput_sinusoid_csv)
-        shutil.copyfile(self.datapath+self.bloutput_sinusoid_txt, self.bloutput_sinusoid_txt)
+        #shutil.copyfile(self.datapath+self.bloutput_sinusoid_csv, self.bloutput_sinusoid_csv)
+        #shutil.copyfile(self.datapath+self.bloutput_sinusoid_txt, self.bloutput_sinusoid_txt)
         
         default(tsdbaseline)
 
