@@ -24,6 +24,13 @@ import pipeline.domain.measures as measures
 			            <th scope="col" colspan="3">Channels</th>
 			            <th scope="col" rowspan="2">Correlator Axis</th>
 			            <th scope="col" rowspan="2">Band</th>
+						<%
+						basebandlabel=''
+						if pcontext.project_summary.telescope != 'ALMA':
+                                        basebandlabel = '<th scope="col" rowspan="2">Baseband</th>'
+						endif
+						%>
+						${basebandlabel}
 			        </tr>
 			        <tr>
 			        	<th>Start</th>
@@ -47,6 +54,14 @@ import pipeline.domain.measures as measures
 					  <td>${str(measures.LinearVelocity(299792458 * spw.channels[0].getWidth().to_units(measures.FrequencyUnits.HERTZ) / spw.centre_frequency.to_units(measures.FrequencyUnits.HERTZ), measures.LinearVelocityUnits.METRES_PER_SECOND))}</td>
 					  <td>${', '.join(sorted(ms.get_data_description(spw=spw).corr_axis))}</td>
 					  <td>${spw.band}</td>
+					  <%
+						basebanditem=''
+						if pcontext.project_summary.telescope != 'ALMA':
+						     basebandstring = spw.name.split('#')[1]
+						     basebanditem = '<td>'+basebandstring+'</td>'
+						endif
+					  %>
+					  ${basebanditem}
 					</tr>
 					% endfor
 				</tbody>
@@ -65,6 +80,13 @@ import pipeline.domain.measures as measures
 			            <th scope="col" colspan="3">Channels</th>
 			            <th scope="col" rowspan="2">Correlator Axis</th>
 			            <th scope="col" rowspan="2">Band</th>
+						<%
+						     basebandlabel=''
+						     if pcontext.project_summary.telescope != 'ALMA':
+                                 basebandlabel = '<th scope="col" rowspan="2">Baseband</th>'
+						     endif
+						%>
+						${basebandlabel}
 			            <th scope="col" rowspan="2">Intents</th>
 			        </tr>
 			        <tr>
@@ -96,6 +118,14 @@ import pipeline.domain.measures as measures
 						%>
 						<td>${polarizations}</td>
 						<td>${spw.band}</td>
+						<%
+						    basebanditem=''
+						    if pcontext.project_summary.telescope != 'ALMA':
+						        basebandstring = spw.name.split('#')[1]
+						        basebanditem = '<td>'+basebandstring+'</td>'
+						    endif
+					     %>
+					     ${basebanditem}
 				  		<td>${', '.join(sorted([i for i in spw.intents]))}</td>
 					</tr>
 					% endfor

@@ -1049,3 +1049,19 @@ def spw_intersect(spw_range, line_regions):
         spw_sel_intervals.append(spw_range)
 
     return spw_sel_intervals
+
+
+def flatten_dict(d, join=operator.add, lift=lambda x: (x,)):
+    FLAG_FIRST = object()
+
+    def visit(subdict, results, partial_key):
+        for k, v in subdict.iteritems():
+            new_key = lift(k) if partial_key is FLAG_FIRST else join(partial_key, lift(k))
+            if isinstance(v, collections.Mapping):
+                visit(v, results, new_key)
+            else:
+                results.append((new_key, v))
+
+    results = []
+    visit(d, results, FLAG_FIRST)
+    return results

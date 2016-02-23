@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.callibrary as callibrary
+from pipeline.infrastructure import casa_tasks
 
 from pipeline.hif.tasks import gaincal
 from pipeline.hif.tasks import bandpass
@@ -77,9 +78,11 @@ class testBPdcals(basetask.StandardTaskTemplate):
         fracFlaggedSolns = 1.0
         
         # critfrac = context.evla['msinfo'][m.name].critfrac
+        LOG.info("TESTBPDCALS DEBUG:  GET CRITICAL FRACTION")
         critfrac = m.get_vla_critfrac()
 
         '''
+        #Notes from original code...
         ktype_delaycal_result = self._do_ktype_delaycal(caltable=ktypecaltable, addcaltable=gtypecaltable, context=context)
         flaggedSolnResult = getCalFlaggedSoln(ktype_delaycal_result.__dict__['inputs']['caltable'])
         LOG.info("Fraction of flagged solutions = "+str(flaggedSolnResult['all']['fraction']))
@@ -101,26 +104,33 @@ class testBPdcals(basetask.StandardTaskTemplate):
         # Iterate and check the fraction of Flagged solutions, each time running gaincal in 'K' mode
         flagcount=0
         while (fracFlaggedSolns > critfrac and flagcount < 4):
-            
-            context = self.inputs.context
 
-            calto = callibrary.CalTo(self.inputs.vis)
-            calfrom = callibrary.CalFrom(gaintable=gtypecaltable, interp='', calwt=False)
-            context.callibrary._remove(calto, calfrom, context.callibrary._active)
-            
+            # Don't remove the CalFrom before its first addition! The gaincal task above
+            # was not executed with 'merge=True', so it was not added to the CalLibrary.
+            # This removal marks the CalFrom as globally removed, before it has chance to
+            # be added in the do_ktype_delaycal call; the add call in do_kytype_delaycal
+            # then just reactivates the CalFrom - but it never existed in any entry so the
+            # 'reactivated' caltable never appears in the subsequent calls.
+            #
+            # LOG.info("TESTBPDCALS DEBUG:  START CALLIBRARY")
+            # calfrom = callibrary.CalFrom(gaintable=gtypecaltable, interp='', calwt=False)
+            # context.callibrary._remove(context.callibrary._active, calfrom)
+            # LOG.info("TESTBPDCALS DEBUG:  END CALLIBRARY")
+
             ktype_delaycal_result = self._do_ktype_delaycal(caltable=ktypecaltable, addcaltable=gtypecaltable, context=context, RefAntOutput=RefAntOutput)
-            flaggedSolnResult = getCalFlaggedSoln(ktype_delaycal_result.__dict__['inputs']['caltable'])
+            #flaggedSolnResult = getCalFlaggedSoln(ktype_delaycal_result.__dict__['inputs']['caltable'])
+            flaggedSolnResult = getCalFlaggedSoln(ktypecaltable)
             (fracFlaggedSolns,RefAntOutput)  = self._check_flagSolns(flaggedSolnResult, RefAntOutput)
             LOG.info("Fraction of flagged solutions = "+str(flaggedSolnResult['all']['fraction']))
             LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult['antmedian']['fraction']))
             flagcount += 1
 
-            try:
-                calto = callibrary.CalTo(self.inputs.vis)
-                calfrom = callibrary.CalFrom(gaintable=ktypecaltable, interp='', calwt=False)
-                context.callibrary._remove(calto, calfrom, context.callibrary._active)
-            except:
-                LOG.info(ktypecaltable + " does not exist in the context callibrary, and does not need to be removed.")
+            # Removal before first addition again. See comment above.
+            # try:
+            #     calfrom = callibrary.CalFrom(gaintable=ktypecaltable, interp='', calwt=False)
+            #     context.callibrary._remove(context.callibrary._active, calfrom)
+            # except:
+            #     LOG.info(ktypecaltable + " does not exist in the context callibrary, and does not need to be removed.")
 
         # Do initial amplitude and phase gain solutions on the BPcalibrator and delay
         # calibrator; the amplitudes are used for flagging; only phase
@@ -132,10 +142,8 @@ class testBPdcals(basetask.StandardTaskTemplate):
         # solint=10*int_time the source may be too weak, and calibration via the 
         # pipeline has failed; will need to implement a mode to cope with weak 
         # calibrators (later)
-        
-        calto = callibrary.CalTo(self.inputs.vis)
-        calfrom = callibrary.CalFrom(gaintable=gtypecaltable, interp='', calwt=False)
-        context.callibrary._remove(calto, calfrom, context.callibrary._active)
+        ##calfrom = callibrary.CalFrom(gaintable=gtypecaltable, interp='', calwt=False)
+        ##context.callibrary._remove(context.callibrary._active, calfrom)
 
         context = self.inputs.context
         
@@ -147,13 +155,14 @@ class testBPdcals(basetask.StandardTaskTemplate):
         flaggedSolnResult1 = getCalFlaggedSoln(tablebase + table_suffix[0])
         LOG.info("For solint = "+solint+" fraction of flagged solutions = "+str(flaggedSolnResult1['all']['fraction']))
         LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult1['antmedian']['fraction']))
-        calto = callibrary.CalTo(self.inputs.vis)
-        calfrom = callibrary.CalFrom(gaintable=tablebase + table_suffix[0], interp='', calwt=False)
-        context.callibrary._remove(calto, calfrom, context.callibrary._active)
+
+        # caltable generated above was never added, so this removal disables it from
+        # ever being active in any subsequent addition. See comment at line 107.
+        # calfrom = callibrary.CalFrom(gaintable=tablebase + table_suffix[0], interp='', calwt=False)
+        # context.callibrary._remove(context.callibrary._active, calfrom)
         
-        calto = callibrary.CalTo(self.inputs.vis)
-        calfrom = callibrary.CalFrom(gaintable=ktypecaltable, interp='', calwt=False)
-        context.callibrary._remove(calto, calfrom, context.callibrary._active)
+        ##calfrom = callibrary.CalFrom(gaintable=ktypecaltable, interp='', calwt=False)
+        ##context.callibrary._remove(context.callibrary._active, calfrom)
 
         if (flaggedSolnResult1['all']['total'] > 0):
             fracFlaggedSolns1=flaggedSolnResult1['antmedian']['fraction']
@@ -175,13 +184,11 @@ class testBPdcals(basetask.StandardTaskTemplate):
             flaggedSolnResult3 = getCalFlaggedSoln(tablebase + table_suffix[1])
             LOG.info("For solint = "+solint+" fraction of flagged solutions = "+str(flaggedSolnResult3['all']['fraction']))
             LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult3['antmedian']['fraction']))
-            calto = callibrary.CalTo(self.inputs.vis)
-            calfrom = callibrary.CalFrom(gaintable=tablebase + table_suffix[1], interp='', calwt=False)
-            context.callibrary._remove(calto, calfrom, context.callibrary._active)
+            ##calfrom = callibrary.CalFrom(gaintable=tablebase + table_suffix[1], interp='', calwt=False)
+            ##context.callibrary._remove(context.callibrary._active, calfrom)
         
-            calto = callibrary.CalTo(self.inputs.vis)
-            calfrom = callibrary.CalFrom(gaintable=ktypecaltable, interp='', calwt=False)
-            context.callibrary._remove(calto, calfrom, context.callibrary._active)
+            ##calfrom = callibrary.CalFrom(gaintable=ktypecaltable, interp='', calwt=False)
+            ##context.callibrary._remove(context.callibrary._active, calfrom)
 
             if (flaggedSolnResult3['all']['total'] > 0):
                 fracFlaggedSolns3=flaggedSolnResult3['antmedian']['fraction']
@@ -206,13 +213,11 @@ class testBPdcals(basetask.StandardTaskTemplate):
                     flaggedSolnResult10 = getCalFlaggedSoln(tablebase + table_suffix[2])
                     LOG.info("For solint = "+solint+" fraction of flagged solutions = "+str(flaggedSolnResult10['all']['fraction']))
                     LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult10['antmedian']['fraction']))
-                    calto = callibrary.CalTo(self.inputs.vis)
-                    calfrom = callibrary.CalFrom(gaintable=tablebase + table_suffix[2], interp='', calwt=False)
-                    context.callibrary._remove(calto, calfrom, context.callibrary._active)
+                    ##calfrom = callibrary.CalFrom(gaintable=tablebase + table_suffix[2], interp='', calwt=False)
+                    ##context.callibrary._remove(context.callibrary._active, calfrom)
                 
-                    calto = callibrary.CalTo(self.inputs.vis)
-                    calfrom = callibrary.CalFrom(gaintable=ktypecaltable, interp='', calwt=False)
-                    context.callibrary._remove(calto, calfrom, context.callibrary._active)
+                    ##calfrom = callibrary.CalFrom(gaintable=ktypecaltable, interp='', calwt=False)
+                    ##context.callibrary._remove(context.callibrary._active, calfrom)
                 
 
                     if (flaggedSolnResult10['all']['total'] > 0):
@@ -230,32 +235,31 @@ class testBPdcals(basetask.StandardTaskTemplate):
 
         LOG.info("Test amp and phase calibration on delay and bandpass calibrators complete")
         LOG.info("Using short solint = "+gain_solint1)
-        context = self.inputs.context
+        #context = self.inputs.context
         
         # Add appropriate temporary tables to the callibrary
-        calto = callibrary.CalTo(self.inputs.vis)
-        calfrom = callibrary.CalFrom(gaintable=ktypecaltable, interp='', calwt=False)
-        context.callibrary.add(calto, calfrom)
+        ##calto = callibrary.CalTo(self.inputs.vis)
+        ##calfrom = callibrary.CalFrom(gaintable=ktypecaltable, interp='', calwt=False)
+        ##context.callibrary.add(calto, calfrom)
         
-        calto = callibrary.CalTo(self.inputs.vis)
-        calfrom = callibrary.CalFrom(gaintable=bpdgain_touse, interp='', calwt=False)
-        context.callibrary.add(calto, calfrom)
+        ##calto = callibrary.CalTo(self.inputs.vis)
+        ##calfrom = callibrary.CalFrom(gaintable=bpdgain_touse, interp='', calwt=False)
+        ##context.callibrary.add(calto, calfrom)
         
         # print context.callibrary.active
         
-        bandpass_result = self._do_bandpass(bpcaltable, context=context, RefAntOutput=RefAntOutput)
+        bandpass_result = self._do_bandpass(bpcaltable, context=context, RefAntOutput=RefAntOutput,
+                                            ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse)
         
         # print context.callibrary.active
         
         # Force calwt for the bp table to be False
+        ##calfrom = callibrary.CalFrom(bpcaltable, interp='linearperobs,linearflag', calwt=True)
+        ##context.callibrary._remove(context.callibrary._active, calfrom)
         
-        calto = callibrary.CalTo(self.inputs.vis)
-        calfrom = callibrary.CalFrom(bpcaltable, interp='linearperobs,linearflag', calwt=True)
-        context.callibrary._remove(calto, calfrom, context.callibrary._active)
-        
-        calto = callibrary.CalTo(self.inputs.vis)
-        calfrom = callibrary.CalFrom(bpcaltable, interp='', calwt=False)
-        context.callibrary.add(calto, calfrom)
+        ##calto = callibrary.CalTo(self.inputs.vis)
+        ##calfrom = callibrary.CalFrom(bpcaltable, interp='', calwt=False)
+        ##context.callibrary.add(calto, calfrom)
         
         # print context.callibrary.active
         
@@ -264,7 +268,8 @@ class testBPdcals(basetask.StandardTaskTemplate):
         
         LOG.info("Applying test calibrations to BP and delay calibrators")
         
-        applycal_result = self._do_applycal(context=context)
+        applycal_result = self._do_applycal(context=context, ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse,
+                                            bpcaltable=bpcaltable)
 
         return testBPdcalsResults(gain_solint1=gain_solint1, shortsol1=shortsol1, vis=self.inputs.vis, bpdgain_touse=bpdgain_touse)
 
@@ -298,11 +303,40 @@ class testBPdcals(basetask.StandardTaskTemplate):
             combine = 'scan',
             intent = '')
 
+        delaycal_task_args = {'vis'         : self.inputs.vis,
+                                'caltable'    : caltable,
+                                'field'       : delay_field_select_string,
+                                'spw'         : tst_delay_spw,
+                                'intent'      : '',
+                                'selectdata'  : True,
+                                'uvrange'     : '',
+                                'scan'        : delay_scan_select_string,
+                                'solint'      : 'int',
+                                'combine'     : 'scan',
+                                'preavg'      : -1.0,
+                                'refant'      : RefAntOutput[0].lower(),
+                                'minblperant' : minBL_for_cal,
+                                'minsnr'      : 3.0,
+                                'solnorm'     : False,
+                                'gaintype'    : 'G',
+                                'smodel'      : [],
+                                'calmode'     : 'p',
+                                'append'      : False,
+                                'docallib'    : False,
+                                'gaintable'   : list(self.inputs.context.callibrary.active.get_caltable()),
+                                'gainfield'   : [''],
+                                'interp'      : [''],
+                                'spwmap'      : [],
+                                'parang'      : False}
+
         delaycal_inputs.refant = delaycal_inputs.refant.lower()
+
 
         delaycal_task = gaincal.GTypeGaincal(delaycal_inputs)
 
-        return self._executor.execute(delaycal_task)
+        job = casa_tasks.gaincal(**delaycal_task_args)
+
+        return self._executor.execute(job)
 
     def _do_ktype_delaycal(self, caltable=None, addcaltable=None, context=None, RefAntOutput=None):
         
@@ -315,12 +349,13 @@ class testBPdcals(basetask.StandardTaskTemplate):
         minBL_for_cal = max(3,int(len(m.antennas)/2.0))
 
         # Add appropriate temporary tables to the callibrary
-        calto = callibrary.CalTo(self.inputs.vis)
-        calfrom = callibrary.CalFrom(gaintable=addcaltable, interp='', calwt=False)
-        context.callibrary.add(calto, calfrom)
+        ##calto = callibrary.CalTo(self.inputs.vis)
+        ##calfrom = callibrary.CalFrom(gaintable=addcaltable, interp='', calwt=False)
+        ##context.callibrary.add(calto, calfrom)
 
         # need to add scan?
         # ref antenna string needs to be lower case for gaincal
+        '''
         delaycal_inputs = gaincal.KTypeGaincal.Inputs(context,
             vis = self.inputs.vis,
             caltable = caltable,
@@ -335,12 +370,45 @@ class testBPdcals(basetask.StandardTaskTemplate):
             solnorm = False, 
             combine = 'scan',
             intent = '')
+        '''
 
-        delaycal_inputs.refant = delaycal_inputs.refant.lower()
+        GainTables = list(self.inputs.context.callibrary.active.get_caltable())
+        GainTables.append(addcaltable)
 
-        delaycal_task = gaincal.KTypeGaincal(delaycal_inputs)
+        delaycal_task_args = {'vis'         :self.inputs.vis,
+                              'caltable'    :caltable,
+                              'field'       : delay_field_select_string,
+                              'spw'         :'',
+                              'intent'      :'',
+                              'selectdata'  :True,
+                              'uvrange'     :'',
+                              'scan'        :delay_scan_select_string,
+                              'solint'      :'inf',
+                              'combine'     :'scan',
+                              'preavg'      :-1.0,
+                              'refant'      :RefAntOutput[0].lower(),
+                              'minblperant' :minBL_for_cal,
+                              'minsnr'      :3.0,
+                              'solnorm'     :False,
+                              'gaintype'    :'K',
+                              'smodel'      :[],
+                              'calmode'     :'p',
+                              'append'      :False,
+                              'docallib'    :False,
+                              'gaintable'   :GainTables,
+                              'gainfield'   :[''],
+                              'interp'      :[''],
+                              'spwmap'      :[],
+                              'parang'      :False}
 
-        return self._executor.execute(delaycal_task)
+
+        #delaycal_inputs.refant = delaycal_inputs.refant.lower()
+
+        #delaycal_task = gaincal.KTypeGaincal(delaycal_inputs)
+
+        job = casa_tasks.gaincal(**delaycal_task_args)
+
+        return self._executor.execute(job)
 
     def _check_flagSolns(self, flaggedSolnResult, RefAntOutput):
         
@@ -384,9 +452,9 @@ class testBPdcals(basetask.StandardTaskTemplate):
             testgainscans=bandpass_scan_select_string+','+delay_scan_select_string
         
         # Add appropriate temporary tables to the callibrary
-        calto = callibrary.CalTo(self.inputs.vis)
-        calfrom = callibrary.CalFrom(gaintable=addcaltable, interp='', calwt=False)
-        context.callibrary.add(calto, calfrom)
+        ##calto = callibrary.CalTo(self.inputs.vis)
+        ##calfrom = callibrary.CalFrom(gaintable=addcaltable, interp='', calwt=False)
+        ##context.callibrary.add(calto, calfrom)
         
         # need to add scan?
         # ref antenna string needs to be lower case for gaincal
@@ -405,13 +473,44 @@ class testBPdcals(basetask.StandardTaskTemplate):
             combine = 'scan',
             intent = '')
 
-        bpdgains_inputs.refant = bpdgains_inputs.refant.lower()
+        GainTables = list(self.inputs.context.callibrary.active.get_caltable())
+        GainTables.append(addcaltable)
 
-        bpdgains_task = gaincal.GTypeGaincal(bpdgains_inputs)
+        bpdgains_task_args = {'vis'         :self.inputs.vis,
+                              'caltable'    :caltable,
+                              'field'       :'',
+                              'spw'         :tst_bpass_spw,
+                              'intent'      :'',
+                              'selectdata'  :True,
+                              'uvrange'     :'',
+                              'scan'        :testgainscans,
+                              'solint'      :solint,
+                              'combine'     :'scan',
+                              'preavg'      :-1.0,
+                              'refant'      :RefAntOutput[0].lower(),
+                              'minblperant' :minBL_for_cal,
+                              'minsnr'      :5.0,
+                              'solnorm'     :False,
+                              'gaintype'    :'G',
+                              'smodel'      :[],
+                              'calmode'     :'ap',
+                              'append'      :False,
+                              'docallib'    :False,
+                              'gaintable'   :GainTables,
+                              'gainfield'   :[''],
+                              'interp'      :[''],
+                              'spwmap'      :[],
+                              'parang'      :False}
 
-        return self._executor.execute(bpdgains_task)
+        #bpdgains_inputs.refant = bpdgains_inputs.refant.lower()
 
-    def _do_bandpass(self, caltable, context=None, RefAntOutput=None):
+        #bpdgains_task = gaincal.GTypeGaincal(bpdgains_inputs)
+
+        job = casa_tasks.gaincal(**bpdgains_task_args)
+
+        return self._executor.execute(job)
+
+    def _do_bandpass(self, caltable, context=None, RefAntOutput=None, ktypecaltable=None, bpdgain_touse=None):
         """Run CASA task bandpass"""
 
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
@@ -437,16 +536,47 @@ class testBPdcals(basetask.StandardTaskTemplate):
             minsnr = 5.0,
             solnorm = False)
 
-        bandpass_inputs.refant = bandpass_inputs.refant.lower()
+        BPGainTables = list(self.inputs.context.callibrary.active.get_caltable())
+        BPGainTables.append(ktypecaltable)
+        BPGainTables.append(bpdgain_touse)
 
-        bandpass_task = bandpass.ChannelBandpass(bandpass_inputs)
-        
+        bandpass_task_args = {'vis'         :self.inputs.vis,
+                              'caltable'    :caltable,
+                              'field'       :bandpass_field_select_string,
+                              'spw'         :'',
+                              'intent'      :'',
+                              'selectdata'  :True,
+                              'uvrange'     :'',
+                              'scan'        :bandpass_scan_select_string,
+                              'solint'      :'inf',
+                              'combine'     :'scan',
+                              'refant'      :RefAntOutput[0].lower(),
+                              'minblperant' :minBL_for_cal,
+                              'minsnr'      :5.0,
+                              'solnorm'     :False,
+                              'bandtype'    :'B',
+                              'fillgaps'    :0,
+                              'smodel'      :[],
+                              'append'      :False,
+                              'docallib'    :False,
+                              'gaintable'   :BPGainTables,
+                              'gainfield'   :[''],
+                              'interp'      :[''],
+                              'spwmap'      :[],
+                              'parang'      :False}
+
+        #bandpass_inputs.refant = bandpass_inputs.refant.lower()
+
+        #bandpass_task = bandpass.ChannelBandpass(bandpass_inputs)
+
         LOG.info("Test bandpass calibration complete")
 
-        return self._executor.execute(bandpass_task, merge=True)
+        job = casa_tasks.bandpass(**bandpass_task_args)
+
+        return self._executor.execute(job)
 
         
-    def _do_applycal(self, context=None):
+    def _do_applycal(self, context=None, ktypecaltable=None, bpdgain_touse=None, bpcaltable=None):
         """Run CASA task applycal"""
         
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
@@ -461,7 +591,33 @@ class testBPdcals(basetask.StandardTaskTemplate):
             flagbackup = False,
             calwt = False,
             flagsum = False)
+
+        AllCalTables = list(self.inputs.context.callibrary.active.get_caltable())
+        AllCalTables.append(ktypecaltable)
+        AllCalTables.append(bpdgain_touse)
+        AllCalTables.append(bpcaltable)
+
+        ntables=len(AllCalTables)
+
+        applycal_task_args = {'vis'        :self.inputs.vis,
+                              'field'      :'',
+                              'spw'        :'',
+                              'intent'     :'',
+                              'selectdata' :True,
+                              'scan'       :testgainscans,
+                              'docallib'   :False,
+                              'gaintable'  :AllCalTables,
+                              'gainfield'  :[''],
+                              'interp'     :[''],
+                              'spwmap'     :[],
+                              'calwt'      :[False]*ntables,
+                              'parang'     :False,
+                              'applymode'  :'calflagstrict',
+                              'flagbackup' :False}
+
         
-        applycal_task = applycal.Applycal(applycal_inputs)
+        #applycal_task = applycal.Applycal(applycal_inputs)
         
-        return self._executor.execute(applycal_task)
+        job = casa_tasks.applycal(**applycal_task_args)
+
+        return self._executor.execute(job)

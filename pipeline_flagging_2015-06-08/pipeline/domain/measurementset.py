@@ -29,6 +29,7 @@ class MeasurementSet(object):
         self.reference_antenna = None
         self.reference_spwmap= None
         self.phaseup_spwmap= None
+        self.combine_spwmap= None
         self.flagcmds = []
         self.session = session
         self.filesize = self._calc_filesize() 
@@ -256,20 +257,21 @@ class MeasurementSet(object):
         """
         
         vis = self.name
+
+
+        #with casatools.TableReader(vis + '/FIELD') as table:
+        #    numFields = table.nrows()
+        #    field_positions = table.getcol('PHASE_DIR')
+        #    field_ids = range(numFields)
+        #    field_names = table.getcol('NAME')
         
-        with casatools.TableReader(vis + '/FIELD') as table:
-            numFields = table.nrows()
-            field_positions = table.getcol('PHASE_DIR')
-            field_ids = range(numFields)
-            field_names = table.getcol('NAME')
-        
-        with casatools.TableReader(vis) as table:
-            scanNums = sorted(numpy.unique(table.getcol('SCAN_NUMBER')))
-            field_scans = []
-            for ii in range(0,numFields):
-                subtable = table.query('FIELD_ID==%s'%ii)
-                field_scans.append(list(numpy.unique(subtable.getcol('SCAN_NUMBER'))))
-                subtable.close()
+        #with casatools.TableReader(vis) as table:
+        #    scanNums = sorted(numpy.unique(table.getcol('SCAN_NUMBER')))
+        #    field_scans = []
+        #    for ii in range(0,numFields):
+        #        subtable = table.query('FIELD_ID==%s'%ii)
+        #        field_scans.append(list(numpy.unique(subtable.getcol('SCAN_NUMBER'))))
+        #        subtable.close()
         
         ## field_scans is now a list of lists containing the scans for each field.
         ## so, to access all the scans for the fields, you'd:
@@ -291,8 +293,9 @@ class MeasurementSet(object):
         
         with casatools.MSReader(vis) as ms:
             scan_summary = ms.getscansummary()
-            ms_summary = ms.summary()
-        startdate=float(ms_summary['BeginTime'])
+            #ms_summary = ms.summary()
+        #startdate=float(ms_summary['BeginTime'])
+
     
         integ_scan_list = []
         for scan in scan_summary:

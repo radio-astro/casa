@@ -255,16 +255,19 @@ class CleanBase(basetask.StandardTaskTemplate):
         for freq_range in utils.merge_ranges(freq_ranges):
             aggregate_bw = casatools.quanta.add(aggregate_bw, casatools.quanta.sub('%sGHz' % (freq_range[1]), '%sGHz' % (freq_range[0])))
 
-        # Estimate memory usage and adjust chanchunks parameter to avoid
-        # exceeding the available memory.
-        mem_bytes = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')
-        mem_usable_bytes = 0.8 * mem_bytes
-        if (inputs.nchan != -1):
-            cube_bytes = inputs.imsize[0] * inputs.imsize[1] * inputs.nchan * 4
+        if (inputs.specmode == 'cube'):
+            # Estimate memory usage and adjust chanchunks parameter to avoid
+            # exceeding the available memory.
+            mem_bytes = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')
+            mem_usable_bytes = 0.8 * mem_bytes
+            if (inputs.nchan != -1):
+                cube_bytes = inputs.imsize[0] * inputs.imsize[1] * inputs.nchan * 4
+            else:
+                cube_bytes = inputs.imsize[0] * inputs.imsize[1] * max(num_channels) * 4
+            tclean_bytes = 9 * cube_bytes
+            chanchunks = int(tclean_bytes / mem_usable_bytes) + 1
         else:
-            cube_bytes = inputs.imsize[0] * inputs.imsize[1] * max(num_channels) * 4
-        tclean_bytes = 9 * cube_bytes
-        chanchunks = int(tclean_bytes / mem_usable_bytes) + 1
+            chanchunks = 1
 
         parallel = all([mpihelpers.parse_mpi_input_parameter(inputs.parallel),
                         'TARGET' in inputs.intent])
@@ -277,14 +280,16 @@ class CleanBase(basetask.StandardTaskTemplate):
                   scan=scanidlist, specmode=inputs.specmode if inputs.specmode != 'cont' else 'mfs', gridder=inputs.gridder,
                   pblimit=inputs.pblimit, niter=inputs.niter,
                   threshold=inputs.threshold, deconvolver=inputs.deconvolver,
-                  interactive=False, outframe=inputs.outframe, nchan=inputs.nchan,
+                  interactive=0, outframe=inputs.outframe, nchan=inputs.nchan,
                   start=inputs.start, width=inputs.width, imsize=inputs.imsize,
                   cell=inputs.cell, phasecenter=inputs.phasecenter,
                   stokes=inputs.stokes,
                   weighting=inputs.weighting, robust=inputs.robust,
                   npixels=inputs.npixels,
                   restoringbeam=inputs.restoringbeam, uvrange=inputs.uvrange,
-                  mask=inputs.mask, savemodel='none', nterms=result.multiterm,
+                  mask=inputs.mask, usemask='user', savemodel='none',
+                  nterms=result.multiterm,
+                  makeimages='choose', restoremodel=True,
                   chanchunks=chanchunks, parallel=parallel)
         else:
             job = casa_tasks.tclean(vis=inputs.vis, imagename='%s.%s.iter%s' %
@@ -294,16 +299,17 @@ class CleanBase(basetask.StandardTaskTemplate):
                   scan=scanidlist, specmode=inputs.specmode if inputs.specmode != 'cont' else 'mfs', gridder=inputs.gridder,
                   pblimit=inputs.pblimit, niter=inputs.niter,
                   threshold=inputs.threshold, deconvolver=inputs.deconvolver,
-                  interactive=False, outframe=inputs.outframe, nchan=inputs.nchan,
+                  interactive=0, outframe=inputs.outframe, nchan=inputs.nchan,
                   start=inputs.start, width=inputs.width, imsize=inputs.imsize,
                   cell=inputs.cell, phasecenter=inputs.phasecenter,
                   stokes=inputs.stokes,
                   weighting=inputs.weighting, robust=inputs.robust,
                   npixels=inputs.npixels,
                   restoringbeam=inputs.restoringbeam, uvrange=inputs.uvrange,
-                  mask=inputs.mask, savemodel='none',
+                  mask=inputs.mask, usemask='user', savemodel='none',
+                  makeimages='choose', restoremodel=True,
                   chanchunks=chanchunks, parallel=parallel)
-        self._executor.execute(job)
+        tclean_result = self._executor.execute(job)
 
         # Create PB for single fields since it is not auto-generated for
         # gridder='standard'.

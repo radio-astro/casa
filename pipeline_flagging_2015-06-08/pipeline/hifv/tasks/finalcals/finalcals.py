@@ -79,9 +79,9 @@ class Finalcals(basetask.StandardTaskTemplate):
                                                         addcaltable=gtypecaltable, context=context, refAnt=refAnt)
 
         # Remove the cal tables from the callibrary
-        calto = callibrary.CalTo(self.inputs.vis)
-        calfrom = callibrary.CalFrom(gaintable=gtypecaltable, interp='', calwt=False)
-        context.callibrary._remove(calto, calfrom, context.callibrary._active)
+        ##calto = callibrary.CalTo(self.inputs.vis)
+        ##calfrom = callibrary.CalFrom(gaintable=gtypecaltable, interp='', calwt=False)
+        ##context.callibrary._remove(context.callibrary._active, calfrom)
 
         LOG.info("Delay calibration complete")
 
@@ -93,36 +93,38 @@ class Finalcals(basetask.StandardTaskTemplate):
         bpdgain_touse = tablebase + table_suffix[0]
         
         # Add appropriate temporary tables to the callibrary
-        calto = callibrary.CalTo(self.inputs.vis)
-        calfrom = callibrary.CalFrom(gaintable=bpdgain_touse, interp='', calwt=False)
-        context.callibrary.add(calto, calfrom)
+        ##calto = callibrary.CalTo(self.inputs.vis)
+        ##calfrom = callibrary.CalFrom(gaintable=bpdgain_touse, interp='', calwt=False)
+        ##context.callibrary.add(calto, calfrom)
         
         LOG.info("Initial BP gain calibration complete")
         
 
-        bandpass_result = self._do_bandpass(bpcaltable, context=context, refAnt=refAnt)
+        bandpass_result = self._do_bandpass(bpcaltable, context=context, refAnt=refAnt,
+                                            ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse)
         
         # Force calwt for the bp table to be False
-        calto = callibrary.CalTo(self.inputs.vis)
-        calfrom = callibrary.CalFrom(bpcaltable, interp='linearperobs,linearflag', calwt=True)
-        context.callibrary._remove(calto, calfrom, context.callibrary._active)
+        ##calto = callibrary.CalTo(self.inputs.vis)
+        ##calfrom = callibrary.CalFrom(bpcaltable, interp='linearperobs,linearflag', calwt=True)
+        ##context.callibrary._remove(context.callibrary._active, calfrom)
         
-        calto = callibrary.CalTo(self.inputs.vis)
-        calfrom = callibrary.CalFrom(bpcaltable, interp='', calwt=False)
-        context.callibrary.add(calto, calfrom)
+        ##calto = callibrary.CalTo(self.inputs.vis)
+        ##calfrom = callibrary.CalFrom(bpcaltable, interp='', calwt=False)
+        ##context.callibrary.add(calto, calfrom)
         
         LOG.info("Bandpass calibration complete")
         
-        calto = callibrary.CalTo(self.inputs.vis)
-        calfrom = callibrary.CalFrom(gaintable=bpdgain_touse, interp='', calwt=False)
-        context.callibrary._remove(calto, calfrom, context.callibrary._active)
+        ##calto = callibrary.CalTo(self.inputs.vis)
+        ##calfrom = callibrary.CalFrom(gaintable=bpdgain_touse, interp='', calwt=False)
+        ##context.callibrary._remove(context.callibrary._active, calfrom)
 
         # Derive an average phase solution for the bandpass calibrator to apply
         # to all data to make QA plots easier to interpret.
         
         avgpgain = basevis + '.averagephasegain.g'
         
-        avgphase_result = self._do_avgphasegaincal(avgpgain, context, refAnt)
+        avgphase_result = self._do_avgphasegaincal(avgpgain, context, refAnt,
+                                                   ktypecaltable=ktypecaltable, bpcaltable=bpcaltable)
 
         # In case any antenna is flagged by this process, unflag all solutions
         # in this gain table (if an antenna does exist or has bad solutions from
@@ -130,24 +132,27 @@ class Finalcals(basetask.StandardTaskTemplate):
         
         unflag_result = self._do_unflag(avgpgain)
         
-        calto = callibrary.CalTo(self.inputs.vis)
-        calfrom = callibrary.CalFrom(gaintable=avgpgain, interp='', calwt=False)
-        context.callibrary.add(calto, calfrom)
+        ##calto = callibrary.CalTo(self.inputs.vis)
+        ##calfrom = callibrary.CalFrom(gaintable=avgpgain, interp='', calwt=False)
+        ##context.callibrary.add(calto, calfrom)
 
-        applycal_result = self._do_applycal(context=context)
+        applycal_result = self._do_applycal(context=context, ktypecaltable=ktypecaltable,
+                                            bpcaltable=bpcaltable, avgphasegaincaltable=avgpgain)
         
-        calto = callibrary.CalTo(self.inputs.vis)
-        calfrom = callibrary.CalFrom(gaintable=avgpgain, interp='', calwt=False)
-        context.callibrary._remove(calto, calfrom, context.callibrary._active)
+        ##calto = callibrary.CalTo(self.inputs.vis)
+        ##calfrom = callibrary.CalFrom(gaintable=avgpgain, interp='', calwt=False)
+        ##context.callibrary._remove(context.callibrary._active, calfrom)
         
         # ---------------------------------------------------
         
         calMs = 'finalcalibrators.ms'
         split_result = self._do_split(calMs)
 
-        all_sejy_result = self._doall_setjy(calMs)
+        field_spws = m.get_vla_field_spws()
 
-        powerfit_results = self._do_powerfit()
+        all_sejy_result = self._doall_setjy(calMs, field_spws)
+
+        powerfit_results = self._do_powerfit(field_spws)
         
         powerfit_setjy = self._do_powerfitsetjy(calMs, powerfit_results)
 
@@ -193,11 +198,39 @@ class Finalcals(basetask.StandardTaskTemplate):
             intent = '',
             antenna = '')
 
+        delaycal_task_args = {'vis'         : self.inputs.vis,
+                                'caltable'    : caltable,
+                                'field'       : delay_field_select_string,
+                                'spw'         : tst_delay_spw,
+                                'intent'      : '',
+                                'selectdata'  : True,
+                                'uvrange'     : '',
+                                'scan'        : delay_scan_select_string,
+                                'solint'      : 'int',
+                                'combine'     : 'scan',
+                                'preavg'      : -1.0,
+                                'refant'      : refAnt.lower(),
+                                'minblperant' : minBL_for_cal,
+                                'minsnr'      : 3.0,
+                                'solnorm'     : False,
+                                'gaintype'    : 'G',
+                                'smodel'      : [],
+                                'calmode'     : 'p',
+                                'append'      : False,
+                                'docallib'    : False,
+                                'gaintable'   : list(self.inputs.context.callibrary.active.get_caltable()),
+                                'gainfield'   : [''],
+                                'interp'      : [''],
+                                'spwmap'      : [],
+                                'parang'      : False}
+
         delaycal_inputs.refant = delaycal_inputs.refant.lower()
 
         delaycal_task = gaincal.GTypeGaincal(delaycal_inputs)
 
-        return self._executor.execute(delaycal_task)
+        job = casa_tasks.gaincal(**delaycal_task_args)
+
+        return self._executor.execute(job)
     
     def _do_ktype_delaycal(self, caltable=None, addcaltable=None, context=None, refAnt=None):
         
@@ -205,14 +238,14 @@ class Finalcals(basetask.StandardTaskTemplate):
         delay_field_select_string = context.evla['msinfo'][m.name].delay_field_select_string
         # tst_delay_spw = context.evla['msinfo'][m.name].tst_delay_spw
         tst_delay_spw = m.get_vla_tst_delay_spw()
-        # delay_scan_select_string = context.evla['msinfo'][m.name].delay_scan_select_string
+        delay_scan_select_string = context.evla['msinfo'][m.name].delay_scan_select_string
         # minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
         minBL_for_cal = max(3,int(len(m.antennas)/2.0))
 
         # Add appropriate temporary tables to the callibrary
-        calto = callibrary.CalTo(self.inputs.vis)
-        calfrom = callibrary.CalFrom(gaintable=addcaltable, interp='', calwt=False)
-        context.callibrary.add(calto, calfrom)
+        ##calto = callibrary.CalTo(self.inputs.vis)
+        ##calfrom = callibrary.CalFrom(gaintable=addcaltable, interp='', calwt=False)
+        ##context.callibrary.add(calto, calfrom)
 
         # need to add scan?
         # ref antenna string needs to be lower case for gaincal
@@ -225,16 +258,46 @@ class Finalcals(basetask.StandardTaskTemplate):
             calmode  = 'p',
             minsnr   = 3.0,
             refant   = refAnt.lower(),
+            scan = delay_scan_select_string,
             minblperant = minBL_for_cal,
             solnorm = False, 
             combine = 'scan',
             intent = '')
 
+        GainTables = list(self.inputs.context.callibrary.active.get_caltable())
+        GainTables.append(addcaltable)
+
+        delaycal_task_args = {'vis'         :self.inputs.vis,
+                              'caltable'    :caltable,
+                              'field'       : delay_field_select_string,
+                              'spw'         :'',
+                              'intent'      :'',
+                              'selectdata'  :True,
+                              'uvrange'     :'',
+                              'scan'        :delay_scan_select_string,
+                              'solint'      :'inf',
+                              'combine'     :'scan',
+                              'preavg'      :-1.0,
+                              'refant'      :refAnt.lower(),
+                              'minblperant' :minBL_for_cal,
+                              'minsnr'      :3.0,
+                              'solnorm'     :False,
+                              'gaintype'    :'K',
+                              'smodel'      :[],
+                              'calmode'     :'p',
+                              'append'      :False,
+                              'docallib'    :False,
+                              'gaintable'   :GainTables,
+                              'gainfield'   :[''],
+                              'interp'      :[''],
+                              'spwmap'      :[],
+                              'parang'      :False}
+
         delaycal_inputs.refant = delaycal_inputs.refant.lower()
 
-        delaycal_task = gaincal.KTypeGaincal(delaycal_inputs)
+        job = casa_tasks.gaincal(**delaycal_task_args)
 
-        return self._executor.execute(delaycal_task)
+        return self._executor.execute(job)
 
     def _do_gtype_bpdgains(self, caltable, addcaltable=None, solint='int', context=None, refAnt=None):
 
@@ -249,9 +312,9 @@ class Finalcals(basetask.StandardTaskTemplate):
         
         
         # Add appropriate temporary tables to the callibrary
-        calto = callibrary.CalTo(self.inputs.vis)
-        calfrom = callibrary.CalFrom(gaintable=addcaltable, interp='', calwt=False)
-        context.callibrary.add(calto, calfrom)
+        ##calto = callibrary.CalTo(self.inputs.vis)
+        ##calfrom = callibrary.CalFrom(gaintable=addcaltable, interp='', calwt=False)
+        ##context.callibrary.add(calto, calfrom)
         
         # need to add scan?
         # ref antenna string needs to be lower case for gaincal
@@ -271,13 +334,45 @@ class Finalcals(basetask.StandardTaskTemplate):
             intent = '',
             append=False)
 
+        GainTables = list(self.inputs.context.callibrary.active.get_caltable())
+        GainTables.append(addcaltable)
+
+        bpdgains_task_args = {'vis'         :self.inputs.vis,
+                              'caltable'    :caltable,
+                              'field'       :'',
+                              'spw'         :tst_bpass_spw,
+                              'intent'      :'',
+                              'selectdata'  :True,
+                              'uvrange'     :'',
+                              'scan'        :bandpass_scan_select_string,
+                              'solint'      :solint,
+                              'combine'     :'scan',
+                              'preavg'      :-1.0,
+                              'refant'      :refAnt.lower(),
+                              'minblperant' :minBL_for_cal,
+                              'minsnr'      :3.0,
+                              'solnorm'     :False,
+                              'gaintype'    :'G',
+                              'smodel'      :[],
+                              'calmode'     :'p',
+                              'append'      :False,
+                              'docallib'    :False,
+                              'gaintable'   :GainTables,
+                              'gainfield'   :[''],
+                              'interp'      :[''],
+                              'spwmap'      :[],
+                              'parang'      :False}
+
+
         bpdgains_inputs.refant = bpdgains_inputs.refant.lower()
 
         bpdgains_task = gaincal.GTypeGaincal(bpdgains_inputs)
 
-        return self._executor.execute(bpdgains_task)
+        job = casa_tasks.gaincal(**bpdgains_task_args)
+
+        return self._executor.execute(job)
     
-    def _do_bandpass(self, caltable, context=None, refAnt=None):
+    def _do_bandpass(self, caltable, context=None, refAnt=None, ktypecaltable=None, bpdgain_touse=None):
         """Run CASA task bandpass"""
 
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
@@ -301,13 +396,44 @@ class Finalcals(basetask.StandardTaskTemplate):
             minsnr = 5.0,
             solnorm = False)
 
-        bandpass_inputs.refant = bandpass_inputs.refant.lower()
+        BPGainTables = list(self.inputs.context.callibrary.active.get_caltable())
+        BPGainTables.append(ktypecaltable)
+        BPGainTables.append(bpdgain_touse)
 
-        bandpass_task = bandpass.ChannelBandpass(bandpass_inputs)
+        bandpass_task_args = {'vis'         :self.inputs.vis,
+                              'caltable'    :caltable,
+                              'field'       :bandpass_field_select_string,
+                              'spw'         :'',
+                              'intent'      :'',
+                              'selectdata'  :True,
+                              'uvrange'     :'',
+                              'scan'        :bandpass_scan_select_string,
+                              'solint'      :'inf',
+                              'combine'     :'scan',
+                              'refant'      :refAnt.lower(),
+                              'minblperant' :minBL_for_cal,
+                              'minsnr'      :5.0,
+                              'solnorm'     :False,
+                              'bandtype'    :'B',
+                              'fillgaps'    :0,
+                              'smodel'      :[],
+                              'append'      :False,
+                              'docallib'    :False,
+                              'gaintable'   :BPGainTables,
+                              'gainfield'   :[''],
+                              'interp'      :[''],
+                              'spwmap'      :[],
+                              'parang'      :False}
 
-        return self._executor.execute(bandpass_task, merge=True)  
+        #bandpass_inputs.refant = bandpass_inputs.refant.lower()
+
+        #bandpass_task = bandpass.ChannelBandpass(bandpass_inputs)
+
+        job = casa_tasks.bandpass(**bandpass_task_args)
+
+        return self._executor.execute(job)
       
-    def _do_avgphasegaincal(self,caltable, context, refAnt):
+    def _do_avgphasegaincal(self,caltable, context, refAnt, ktypecaltable=None, bpcaltable=None):
         
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         bandpass_field_select_string = context.evla['msinfo'][m.name].bandpass_field_select_string
@@ -333,11 +459,43 @@ class Finalcals(basetask.StandardTaskTemplate):
             intent = '',
             antenna = '')
 
+        AllCalTables = list(self.inputs.context.callibrary.active.get_caltable())
+        AllCalTables.append(ktypecaltable)
+        #AllCalTables.append(bpdgain_touse)
+        AllCalTables.append(bpcaltable)
+
+        avgphasegaincal_task_args = {'vis'         :self.inputs.vis,
+                              'caltable'    :caltable,
+                              'field'       :bandpass_field_select_string,
+                              'spw'         :'',
+                              'selectdata'  :True,
+                              'uvrange'     :'',
+                              'scan'        :bandpass_scan_select_string,
+                              'solint'      :'inf',
+                              'combine'     :'scan',
+                              'preavg'      :-1.0,
+                              'refant'      :refAnt.lower(),
+                              'minblperant' :minBL_for_cal,
+                              'minsnr'      :1.0,
+                              'solnorm'     :False,
+                              'gaintype'    :'G',
+                              'smodel'      :[],
+                              'calmode'     :'p',
+                              'append'      :False,
+                              'docallib'    :False,
+                              'gaintable'   :AllCalTables,
+                              'gainfield'   :[''],
+                              'interp'      :[''],
+                              'spwmap'      :[],
+                              'parang'      :False}
+
         gaincal_inputs.refant = gaincal_inputs.refant.lower()
 
         gaincal_task = gaincal.GTypeGaincal(gaincal_inputs)
 
-        return self._executor.execute(gaincal_task)
+        job = casa_tasks.gaincal(**avgphasegaincal_task_args)
+
+        return self._executor.execute(job)
       
     def _do_unflag(self,gaintable):
         
@@ -352,7 +510,7 @@ class Finalcals(basetask.StandardTaskTemplate):
             
         return self._executor.execute(job)
       
-    def _do_applycal(self, context=None):
+    def _do_applycal(self, context=None, ktypecaltable=None, bpcaltable=None, avgphasegaincaltable=None):
         """Run CASA task applycal"""
         
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
@@ -367,10 +525,35 @@ class Finalcals(basetask.StandardTaskTemplate):
             flagbackup = False,
             calwt = False,
             flagsum = False)
+
+        AllCalTables = list(self.inputs.context.callibrary.active.get_caltable())
+        AllCalTables.append(ktypecaltable)
+        AllCalTables.append(bpcaltable)
+        AllCalTables.append(avgphasegaincaltable)
+
+        ntables=len(AllCalTables)
+
+        applycal_task_args = {'vis'        :self.inputs.vis,
+                              'field'      :'',
+                              'spw'        :'',
+                              'intent'     :'',
+                              'selectdata' :True,
+                              'scan'       :calibrator_scan_select_string,
+                              'docallib'   :False,
+                              'gaintable'  :AllCalTables,
+                              'gainfield'  :[''],
+                              'interp'     :[''],
+                              'spwmap'     :[],
+                              'calwt'      :[False]*ntables,
+                              'parang'     :False,
+                              'applymode'  :'calflagstrict',
+                              'flagbackup' :False}
         
-        applycal_task = applycal.Applycal(applycal_inputs)
+        #applycal_task = applycal.Applycal(applycal_inputs)
         
-        return self._executor.execute(applycal_task)
+        job = casa_tasks.applycal(**applycal_task_args)
+
+        return self._executor.execute(job)
     
     def _do_split(self, calMs):
         
@@ -397,16 +580,16 @@ class Finalcals(basetask.StandardTaskTemplate):
                      'observation'  : '',
                      'keepflags'    : False}
         
-        job = casa_tasks.split2(**task_args)
+        job = casa_tasks.split(**task_args)
             
         return self._executor.execute(job)
     
-    def _doall_setjy(self, calMs):
+    def _doall_setjy(self, calMs, field_spws):
         
         context = self.inputs.context
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         # field_spws = context.evla['msinfo'][m.name].field_spws
-        field_spws = m.get_vla_field_spws()
+        # field_spws = m.get_vla_field_spws()
         # spw2band = context.evla['msinfo'][m.name].spw2band
         spw2band = m.get_vla_spw2band()
         bands = spw2band.values()
@@ -477,14 +660,14 @@ class Finalcals(basetask.StandardTaskTemplate):
             print(e)
             return None
     
-    def _do_powerfit(self):
+    def _do_powerfit(self, field_spws):
         
         context=self.inputs.context
         
         
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         # field_spws = context.evla['msinfo'][m.name].field_spws
-        field_spws = m.get_vla_field_spws()
+        # field_spws = m.get_vla_field_spws()
         sources = context.evla['msinfo'][m.name].fluxscale_sources
         flux_densities = context.evla['msinfo'][m.name].fluxscale_flux_densities
         spws = context.evla['msinfo'][m.name].fluxscale_spws

@@ -3,6 +3,8 @@ from __future__ import absolute_import
 import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure as infrastructure
+import shutil
+import os
 
 
 LOG = infrastructure.get_logger(__name__)
@@ -33,8 +35,16 @@ class Hanning(basetask.StandardTaskTemplate):
     Inputs = HanningInputs
     
     def prepare(self):
-        
-        result = self._do_hanningsmooth()
+
+        try:
+            result = self._do_hanningsmooth()
+            LOG.info("Removing original VIS "+self.inputs.vis)
+            shutil.rmtree(self.inputs.vis)
+            LOG.info("Renaming temphanning.ms to "+self.inputs.vis)
+            os.rename('temphanning.ms', self.inputs.vis)
+        except:
+            LOG.warn('Problem encountered with hanning smoothing.')
+
         
         return HanningResults()
     
@@ -43,8 +53,8 @@ class Hanning(basetask.StandardTaskTemplate):
     
     def _do_hanningsmooth(self):
 
-        task = casa_tasks.hanningsmooth(vis=self.inputs.vis, 
+        task = casa_tasks.hanningsmooth(vis=self.inputs.vis,
                                         datacolumn='data',
-                                        outputvis='')
+                                        outputvis='temphanning.ms')
 
         return self._executor.execute(task)

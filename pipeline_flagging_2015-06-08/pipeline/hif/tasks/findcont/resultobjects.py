@@ -23,21 +23,38 @@ class FindContResult(basetask.Results):
         # Store new selection for subsequent mfs or cont imaging step.
         # NOTE: This only works for the default setup, not for a user supplied list.
         # TODO: Catch user supplied list case.
+        clean_list_pending = []
         for i, target in enumerate(context.clean_list_pending):
+            new_target = target
+            target_ok = True
             if (target['specmode'] in ('mfs', 'cont')):
                 source_name = target['field']
                 spwids = target['spw']
+                new_spwids = []
                 new_spw_sel = 'NEW' in [self.result_cont_ranges[source_name][spwid]['status'] for spwid in spwids.split(',')]
 
                 if (new_spw_sel):
                     spwsel = {}
                     for spwid in spwids.split(','):
-                        if (self.cont_ranges[source_name][spwid] in [['NONE'], ['']]):
+                        if ((self.cont_ranges[source_name][spwid] == ['NONE']) and (target['intent'] == 'TARGET')):
                             spwsel['spw%s' % (spwid)] = ''
-                            LOG.warn('No continuum frequency range information found for %s, spw %s.' % (target, spwid))
+                            LOG.warn('No continuum frequency range information found for %s, spw %s.' % (target['field'], spwid))
                         else:
+                            new_spwids.append(spwid)
                             spwsel['spw%s' % (spwid)] = ';'.join(['%s~%sGHz' % (cont_range[0], cont_range[1]) for cont_range in self.cont_ranges[source_name][spwid]])
-                    context.clean_list_pending[i]['spwsel'] = spwsel
+
+                    new_spwids = ','.join(new_spwids)
+                    if ((new_spwids == '') and (target['intent'] == 'TARGET')):
+                        LOG.warn('No continuum selection for target %s, spw %s. Will not image this selection.' % (new_target['field'], new_target['spw']))
+                        target_ok = False
+                    else:
+                        new_target['spw'] = new_spwids
+                        new_target['spwsel'] = spwsel
+
+            if (target_ok):
+                clean_list_pending.append(new_target)
+
+        context.clean_list_pending = clean_list_pending
 
     def __repr__(self):
         repr = 'FindCont:\n'

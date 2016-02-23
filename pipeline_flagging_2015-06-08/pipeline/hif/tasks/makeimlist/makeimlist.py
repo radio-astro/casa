@@ -394,17 +394,29 @@ class MakeImList(basetask.StandardTaskTemplate):
         result.set_max_num_targets(len(field_intent_list)*len(spwlist))
         for field_intent in field_intent_list:
             for spwspec in spwlist:
+                spwspec_ok = True
                 if (specmode in ('mfs', 'cont')):
+                    new_spwspec = []
                     spwsel = {}
                     for spwid in spwspec.split(','):
-                        spwsel['spw%s' % (spwid)] = self.heuristics.cont_ranges_spwsel[field_intent[0].replace('"','')][spwid]
-                        if ((spwsel['spw%s' % (spwid)] == '') and (field_intent[1] == 'TARGET')):
-                            LOG.warn('No continuum frequency range information available for %s, spw %s.' % (field_intent[0], spwid))
+                        spwsel_spwid = self.heuristics.cont_ranges_spwsel[field_intent[0].replace('"','')][spwid]
+                        if ((spwsel_spwid == 'NONE') and (field_intent[1] == 'TARGET')):
+                            LOG.warn('No continuum frequency range information detected for %s, spw %s.' % (field_intent[0], spwid))
+                        else:
+                            if ((spwsel_spwid == '') and (field_intent[1] == 'TARGET')):
+                                LOG.warn('Empty continuum frequency range for %s, spw %s. Run hif_findcont ?' % (field_intent[0], spwid))
+                            new_spwspec.append(spwid)
+                            spwsel['spw%s' % (spwid)] = spwsel_spwid
+
+                    new_spwspec = ','.join(new_spwspec)
+                    if ((new_spwspec == '') and (field_intent[1] == 'TARGET')):
+                        LOG.warn('No continuum selection for target %s, spw %s. Will not image this selection.' % (field_intent[1], spwspec))
+                        spwspec_ok = False
                 else:
+                    new_spwspec = spwspec
                     spwsel = {}
 
-                if valid_data[spwspec][field_intent] and \
-                  imsizes.has_key((field_intent[0],spwspec)):
+                if spwspec_ok and valid_data[spwspec][field_intent] and imsizes.has_key((field_intent[0],spwspec)):
                     LOG.debug (
                       'field:%s intent:%s spw:%s cell:%s imsize:%s phasecenter:%s'
                       % (field_intent[0], field_intent[1], spwspec,
@@ -413,7 +425,7 @@ class MakeImList(basetask.StandardTaskTemplate):
 
                     target = {'field':field_intent[0],
                               'intent':field_intent[1],
-                              'spw': spwspec,
+                              'spw': new_spwspec,
                               'spwsel': spwsel,
                               'cell':cells[spwspec],
                               'imsize':imsizes[(field_intent[0],spwspec)],

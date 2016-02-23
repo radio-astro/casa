@@ -5,14 +5,10 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="hifa_bpsolint" category="pipeline">
-<shortdescription>Compute optimal bandpass calibration solution intervals</shortdescription>
+<task type="function" name="hifa_gaincalsnr" category="pipeline">
+<shortdescription>Compute gaincal signal to noise ratios per spw</shortdescription>
 <description>
-The optimal bandpass phaseup time and frequency solution intervals required to achieve
-the required ignal to noise ratio is estimated based on nominal ALMA array characteristics
-the meta data associated with the observation.
-
-
+Compute the gain calibration signal to noise ratios required to determine which spectral window mapping strategy to use.
 </description>
 <input>
 
@@ -28,7 +24,7 @@ the meta data associated with the observation.
 
    <param type="string" name="intent" subparam="true">
 	<description>Set of data selection observing intents</description>
-	<value>BANDPASS</value>
+	<value>PHASE</value>
    </param>
 
    <param type="string" name="spw" subparam="true">
@@ -36,30 +32,15 @@ the meta data associated with the observation.
 	<value></value>
    </param>
 
-   <param type="double" name="phaseupsnr">
-	<description>The required bandpass phaseup signal to noise</description>
-	<value>20.0</value>
+   <param type="double" name="phasesnr">
+	<description>The signal to noise minimum</description>
+	<value>25.0</value>
    </param>
 
-   <param type="int" name="minphaseupints">
-	<description>The minimum number of phaseup intervals in the time solution</description>
-	<value>2</value>
+   <param type="double" name="bwedgefrac">
+	<description>The fraction of the bandwidth edge that is flagged</description>
+	<value>0.03125</value>
    </param>
-
-   <param type="bool" name="evenbpints">
-	<description>Force the bandpass frequency solution intervals to be an even number of channels</description>
-	<value>False</value>
-   </param>
-
-   <param type="double" name="bpsnr">
-	<description>The required bandpass frequency solution signal to noise</description>
-	<value>50.0</value>
-   </param>
-
-    <param type="int" name="minbpnchan">
-	<description>The minimum number of channels in the frequency solution</description>
-	<value type="int">8</value>
-    </param>
 
    <param type="string" name="hm_nantennas">
 	<description>The antenna selection heuristic (unsupported) </description>
@@ -109,7 +90,7 @@ the meta data associated with the observation.
 	    <equals type="string" value="interactive">
 	        <default param="vis"><value type="stringArray"></value></default>
 	        <default param="field"><value type="string"></value></default>
-	        <default param="intent"><value type="string">BANDPASS</value></default>
+	        <default param="intent"><value type="string">PHASE</value></default>
 	        <default param="spw"><value type="string"></value></default>
 	        <default param="dryrun"><value type="bool">False</value></default>
 	        <default param="acceptresults"><value type="bool">True</value></default>
@@ -117,7 +98,7 @@ the meta data associated with the observation.
 	    <equals type="string" value="getinputs">
 	        <default param="vis"><value type="stringArray"></value></default>
 	        <default param="field"><value type="string"></value></default>
-	        <default param="intent"><value type="string">BANDPASS</value></default>
+	        <default param="intent"><value type="string">PHASE</value></default>
 	        <default param="spw"><value type="string"></value></default>
 	    </equals>
         </when>
@@ -135,7 +116,7 @@ the meta data associated with the observation.
 
 <example>
 
-Compute the bandpass phaseup time solution interval and bandpass frequency solution interval.
+Compute the per scan gaincal solution signal to noise ratio per science spw
 
 ---- pipeline parameter arguments which can be set in any pipeline mode
 
@@ -147,23 +128,14 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
        the task.
        default: 'automatic'.
 
-phaseupnsr -- The required phaseup gain time interval solution signal to noise
-    default: 20.0
-    example: phaseupsnr = 10.0
-
-minphaseupints -- The minimum number of time intervals in the phaseup gain
-    solution.
-    default: 2
-    example: minphaseupints=4
-
-bpnsr -- The required bandpass frequency interval solution signal to noise
-    default: 50.0
+phasensr -- The required gaincal solution signal to noise
+    default: 25.0
     example: phaseupsnr = 20.0
 
-minbpnchan -- The minimum number of frequency intervals in the bandpass
-    solution.
-    default: 8
-    example: minbpnchans=16
+bwedgefrac -- The fraction of the bandwidth edges that is flagged
+    default: 0.03125
+    example: bwedgefrac = 0.0
+
 
 hm_nantennas -- The heuristics for determines the number of antennas to use
     in the signal to noise estimate. The options are 'all' and 'unflagged'.
@@ -190,9 +162,9 @@ field -- The list of field names of sources to be used for signal to noise
     example: '3C279'
 
 intent -- A string the intent against which the the selected fields are matched.
-    Defaults to 'BANDPASS'.
-    default: 'BANDPASS' 
-    example: intent='PHASE'
+    Defaults to 'PHASE'.
+    default: 'PHASE' 
+    example: intent='BANDPASS'
 
 spw -- The list of spectral windows and channels for which gain solutions are
     computed. Defaults to all the science spectral windows for which there are
@@ -216,10 +188,10 @@ results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
 
 Description
 
-The phaseup gain time and bandpass frequency intervals are determined as
+The gaincal solution signal to noise is determined as follows
 follows.
 
-o For each data set the list of source(s) to use for bandpass solution signal
+o For each data set the list of source(s) to use for the per scan gaincal solution signal
   to noise estimation is compiled based on the values of the field, intent,
   and spw parameters. 
 
@@ -249,30 +221,22 @@ o The median Tsys value for each atmospheric spw and source combination is
 o The science spw parameters, exposure time(s), and integration time(s) are
   determined.
 
-o The phase up time interval, in time units and number of integrations required
-  to meet the phaseupsnr are computed, along with the phaseup sensitivity in mJy
-  and the signal to noise per integration.  Nominal Tsys and sensitivity values
-  per receiver band provide by the ALMA project are used for this estimate.
+o The per scan sensitivity and signal to niose estimates are computed per science
+  spectral window. Nominal Tsys and sensitivity values per receiver band provide by
+  the ALMA project are used for this estimate.
 
-o Warnings are issued if estimated phaseup gain time solution would contain fewer
-  than minphasupints  solutions
+o The QA score is based on how many signal to noise estimates greater then the
+  requested singal to noise ration can be computed.
 
-o The frequency interval, in MHz and number of channels required to meet the
-  bpsnr are computed, along with the per channel sensitivity in mJy and the
-  per channle signal to noise.  Nominal Tsys and sensitivity values per receiver
-  band provide by the ALMA project are used for this estimate.
-
-o Warnings are issued if estimated bandpass olution would contain fewer than
-  minbpnchan solutions
 
 
 
 Examples
 
-1. Estimate the phaseup gain time interval and the bandpass frequency interval
-   required to match the desired signal to noise for bandpass solutions.
+1. Estimate the per scan gaincal solution sensitivies and signal to noise
+   ratios for all the science spectral windows.
 
-hifa_bpsolint()
+hifa_gaincalsnr()
 
 </example> 
 

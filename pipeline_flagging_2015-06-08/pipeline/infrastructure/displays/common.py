@@ -527,7 +527,7 @@ class CaltableWrapperFactory(object):
             return CaltableWrapperFactory.create_param_wrapper(filename, 'FPARAM')            
         if caltype == 'bandpass':
             return CaltableWrapperFactory.create_param_wrapper(filename, 'CPARAM')            
-        raise NotImplementedError('Unhandled caltype: %s', caltype)
+        raise NotImplementedError('Unhandled caltype: %s' % viscal)
     
     @staticmethod    
     def create_gaincal_wrapper(path):

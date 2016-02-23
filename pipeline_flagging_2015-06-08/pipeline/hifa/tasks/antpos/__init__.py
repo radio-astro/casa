@@ -16,6 +16,6 @@ qaadapter.registry.register_to_calibration_topic(antpos.AntposResults)
 # Simple web log
 weblog.add_renderer(ALMAAntpos,
                     renderer.T2_4MDetailsALMAAntposRenderer(),
-                    group_by='session')
+                    group_by=weblog.UNGROUPED)
 
 

@@ -1,24 +1,18 @@
-import sys
-
 from taskinit import casalog
+import sys
 
 import pipeline.h.cli.utils as utils
 
-
-def hifa_bandpass(vis=None, caltable=None, field=None, intent=None, spw=None, 
-                 antenna=None, hm_phaseup=None, phaseupsolint=None, 
-                 phaseupbw=None, phaseupsnr=None, phaseupnsols=None,
-		 hm_bandpass=None, solint=None, maxchannels=None,
-		 evenbpints=None, bpsnr=None, bpnsols=None, hm_bandtype=None, 
-                 combine=None, refant=None, solnorm=None, minblperant=None, 
-                 minsnr=None, degamp=None, degphase=None, pipelinemode=None, 
-                 dryrun=None, acceptresults=None):
+def hifa_gaincalsnr(vis=None, field=None, intent=None, spw=None, phasesnr=None,
+          bwedgefrac=None, hm_nantennas=None, maxfracflagged=None, pipelinemode=None, dryrun=None,
+	  acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
     # constructor
     all_inputs = vars()
 
-    task_name = 'ALMAPhcorBandpass'
+    # set the name of the pipeline task to execute 
+    task_name = 'GaincalSnr'
 
     ##########################################################################
     #                                                                        #
@@ -27,7 +21,7 @@ def hifa_bandpass(vis=None, caltable=None, field=None, intent=None, spw=None,
     #                                                                        #
     ##########################################################################
     
-    # get the name of this function for the weblog, eg. 'hif_flagdata'
+    # get the name of this function for the weblog, eg. 'hifa_flagdata'
     fn_name = sys._getframe().f_code.co_name
 
     # get the context on which this task operates

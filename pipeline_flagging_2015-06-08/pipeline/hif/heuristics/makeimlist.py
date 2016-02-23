@@ -88,14 +88,17 @@ class MakeImListHeuristics(object):
             contfile_handler = contfilehandler.ContFileHandler(contfile)
 
             # read the ranges
-            cont_ranges = contfile_handler.read(skip_none = True)
+            cont_ranges = contfile_handler.read()
 
             # merge the ranges
             for source_name in self.cont_ranges_spwsel.iterkeys():
                 for spw_id in self.cont_ranges_spwsel[source_name].iterkeys():
                     if (cont_ranges.has_key(source_name)):
                         if (cont_ranges[source_name].has_key(spw_id)):
-                            self.cont_ranges_spwsel[source_name][spw_id] = ';'.join(['%s~%sGHz' % (spw_sel_interval[0], spw_sel_interval[1]) for spw_sel_interval in utils.merge_ranges(cont_ranges[source_name][spw_id])])
+                            if (cont_ranges[source_name][spw_id] != ['NONE']):
+                                self.cont_ranges_spwsel[source_name][spw_id] = ';'.join(['%s~%sGHz' % (spw_sel_interval[0], spw_sel_interval[1]) for spw_sel_interval in utils.merge_ranges(cont_ranges[source_name][spw_id])])
+                            else:
+                                self.cont_ranges_spwsel[source_name][spw_id] = 'NONE'
 
         # alternatively read and merge line regions and calculate continuum regions
         elif (os.path.isfile(linesfile)):
@@ -155,11 +158,11 @@ class MakeImListHeuristics(object):
                     # remove items from field_intent_result that are not
                     # consistent with the fields in field_list
                     temp_result = set()
-                    re_field = field
-                    for char in '()+?.^$[]{}|':
-                        re_field = re_field.replace(char, '\%s' % char)
-                    re_field = re_field.replace('*', '.*')
                     for eachfield in field_list:
+                        re_field = eachfield
+                        for char in '()+?.^$[]{}|':
+                            re_field = re_field.replace(char, '\%s' % char)
+                        re_field = re_field.replace('*', '.*')
                         temp_result.update([fir for fir in field_intent_result
                           if re.search(pattern=re_field, string=fir[0])])
                     field_intent_result = temp_result
