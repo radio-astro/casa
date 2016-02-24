@@ -1,14 +1,12 @@
 from __future__ import absolute_import
 
 import collections
-import types
 
 import pipeline.infrastructure.basetask as basetask
 from pipeline.hifa.tasks.tsyscal import resultobjects 
 from pipeline.hif.tasks.common import flaggableviewresults
 
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.utils as utils
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -27,39 +25,24 @@ class TsysflagResults(resultobjects.TsyscalResults):
         # task completion status / reason for incompleteness
         self.task_incomplete_reason = ''
         
-        # list of entirely flagged antennas (to be removed from refants)
-        self.bad_antennas = []
+        # list of entirely flagged antennas that should be removed from refants
+        self.refants_to_remove = set()
 
     def merge_with_context(self, context):
-        
         # If any antennas were found to be fully flagged,
         # remove them from the list of reference antennas.
-        if self.bad_antennas:
-            # Get the MS, and proceed if it contains a list of 
-            # reference antennas.
+        if self.refants_to_remove:
+            
+            # Get the MS
             ms = context.observing_run.get_ms(name=self.vis)
-            if hasattr(ms, 'reference_antenna') and \
-              type(ms.reference_antenna) == types.StringType:
-
-                # Create list of current refants
-                refant = ms.reference_antenna.split(',')
-                
-                # Find intersection between refants and fully flagged antennas
-                refants_to_remove = set(self.bad_antennas).intersection(refant)
-                
-                if refants_to_remove:
-                    # Log warning
-                    ant_msg = utils.commafy(refants_to_remove, quotes=False,
-                                            multi_prefix='s')
-                    LOG.warning('Antenna%s that are fully flagged in all Tsys '
-                      'spws in the "BANDPASS", "PHASE", and/or "AMPLITUDE" '
-                      'intents removed from refant list for '
-                      '%s' % (ant_msg, ms.basename))
-                    
-                    # Remove fully flagged ants from refants, and store back in MS
-                    for antenna in refants_to_remove:
-                        refant.remove(antenna)
-                    ms.reference_antenna = ','.join(refant)
+            
+            # Create list of current refants
+            refant = ms.reference_antenna.split(',')
+            
+            # Remove fully flagged ants from refants, and store back in MS
+            for antenna in self.refants_to_remove:
+                refant.remove(antenna)
+            ms.reference_antenna = ','.join(refant)
  
     def add(self, name, result):
         self.components[name] = result

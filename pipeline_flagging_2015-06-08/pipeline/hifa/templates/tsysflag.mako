@@ -209,7 +209,7 @@ antenna for both polarisations.</p>
     <table class="table table-bordered table-striped">
 	<thead>
 	    <tr>
-	    	<th>Table file</th>
+	    	<th>Table</th>
 	        <th>Flagging Commands</th>
 	        <th>Number of Statements</th>
 	        <th>Flagging Report</th>
@@ -220,7 +220,7 @@ antenna for both polarisations.</p>
 	    <tr>
 	    	<td>${file}</td>
 	        <td><a class="replace-pre" href="${relpath_reports[0]}" 
-                   data-title="Flagging Commands">${os.path.basename(relpath_reports[0])}</a></td>
+                   data-title="Flagging Commands">Flag commands file</a></td>
             <td>${num_lines(pcontext.report_dir, relpath_reports[0])}</td>
 	        <td><a class="replace-pre"
                    href="${relpath_reports[1]}" data-title="Flagging report">

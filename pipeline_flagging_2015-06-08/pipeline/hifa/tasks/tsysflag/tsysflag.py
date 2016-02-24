@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import re
 import collections
+import types
 
 import numpy as np 
 
@@ -306,6 +307,9 @@ class Tsysflag(basetask.StandardTaskTemplate):
         except AttributeError:
             testable_metrics_completed = []
 
+        # Get the MS object
+        ms = self.inputs.context.observing_run.get_ms(name=self.inputs.vis)
+
         # If any of the testable metrics were completed...
         if testable_metrics_completed:
             
@@ -323,8 +327,7 @@ class Tsysflag(basetask.StandardTaskTemplate):
                     fields[time] = row.get('FIELD_ID')
             fields_sorted = [fields[time] for time in sorted(fields.keys())]
             
-            # Get the MS object and science spw ids.
-            ms = self.inputs.context.observing_run.get_ms(name=self.inputs.vis)
+            # Get the science spw ids from the MS.
             science_spw_ids = [spw.id for spw in ms.get_spectral_windows(science_windows_only=True)]
 
             # Using the CalTo object in the TsysflagspectraResults from the
@@ -401,9 +404,31 @@ class Tsysflag(basetask.StandardTaskTemplate):
         
         # Store the set of antennas that are fully flagged for all Tsys spws
         # in any of the intents in the result as a list of antenna names.
-        # These antennas should be removed from the refant list upon merging 
-        # the result into the context.
-        result.bad_antennas = [antenna_id_to_name[iant] for iant in ants_fully_flagged_in_all_spws_any_intent]
+        bad_antennas = [antenna_id_to_name[iant] for iant in ants_fully_flagged_in_all_spws_any_intent]
+
+        # Determine a list of reference antennas that are found to be 
+        # fully flagged. These antennas should be removed from the 
+        # refant list upon merging the result into the context.
+        if bad_antennas and hasattr(ms, 'reference_antenna') and \
+          type(ms.reference_antenna) == types.StringType:
+
+            # Create list of current refants
+            refant = ms.reference_antenna.split(',')
+                
+            # Find intersection between refants and fully flagged antennas
+            # and store in result.
+            result.refants_to_remove = set(bad_antennas).intersection(refant)
+            
+            # Log a warning if any antennas are to be removed from 
+            # the refant list.
+            if result.refants_to_remove:
+                # Log warning
+                ant_msg = utils.commafy(result.refants_to_remove, quotes=False,
+                                        multi_prefix='s')
+                LOG.warning('Antenna%s that are fully flagged in all Tsys '
+                  'spws in the "BANDPASS", "PHASE", and/or "AMPLITUDE" '
+                  'intents removed from refant list for '
+                  '%s' % (ant_msg, ms.basename))
         
         return result
     
