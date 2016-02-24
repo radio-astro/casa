@@ -47,6 +47,32 @@ import os
     </tbody>
 </table>
 
+<h4>Unit Conversion Factor</h4>
+
+<p>The following files stores conversion factors to get images in the unit of Jy. Specific to single dish pipeline.</p>
+
+<table class="table table-bordered table-striped" summary="Conversion factor from Ta* to Jy">
+    <caption>Conversion factor from Ta* to Jy</caption>
+    <thead>
+	<tr>
+	    <th scope="col">Description</th>
+	    <th scope="col">File name</th>
+	</tr>
+    </thead>
+    <tbody>
+      <tr>
+          <td>Conversion Factor</td>
+%if hasattr(r, 'jyperkfile') and r.jyperkfile is not None:
+          <td>${r.jyperkfile}</td>
+%else:
+          <td></td>
+%endif
+      </tr>
+    </tbody>
+</table>
+
+
+
 <h4>Calibration Instructions and Final Flags</h4>
 
 <p>Per ASDM, text file of applycal instructions and compressed tar file of final flags </p>
