@@ -17,19 +17,24 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     The partition task creates a Multi-MS in parallel, using the CASA MPI framework.
     The user should start CASA as follows in order to run it in parallel.
     
-    1) Running on a single node with 8 engines.
-        mpicasa -n 5 casa --nogui --log2term
-        CASA> partition(.....)
+    1) Start CASA on a single node with 8 engines. The first engine will be used as the
+       MPIClient, where the user will see the CASA prompt. All other engines will be used
+       as MPIServers and will process the data in parallel.
+           mpicasa -n 8 casa --nogui --log2term
+           partition(.....)
         
     2) Running on a group of nodes in a cluster.
-        mpicasa -hostfile user_hostfile casa ....
-        CASA> partition(.....)
+           mpicasa -hostfile user_hostfile casa ....
+           partition(.....)
             
         where user_hostfile contains the names of the nodes and the number of engines to use 
         in each one of them. Example:
             pc001234a, slots=5
             pc001234b, slots=4
      
+    If CASA is started without mpicasa, it is still possible to create an MMS, but
+    the processing will be done in sequential.
+
     A multi-MS is structured to have a reference MS on the top directory and a
     sub-directory called SUBMSS, which contain each partitioned sub-MS. The
     reference MS contains links to the sub-tables of the first sub-MS. The other
@@ -242,11 +247,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             Options: any integer number (example: numsubms=4)
     
                The default 'auto' is to partition using the number of available servers in the cluster.
-               If the task is unable to determine the number of running servers, it
-               uses 8 as the default.
+               If the task is unable to determine the number of running servers, or the user did not start CASA
+               using mpicasa, numsubms will use 8 as the default.
 
                 Example: Launch CASA with 5 engines, where 4 of them will be used to create the MMS. The first
-                    engine is used as the MPI client.
+                    engine is used as the MPIClient.
       
                 mpicasa -n 5 casa --nogui --log2term
                 CASA> partition('uid__A1', outputvis='test.mms')

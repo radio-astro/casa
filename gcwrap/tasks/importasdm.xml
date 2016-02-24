@@ -244,20 +244,20 @@ createmms -- Create a multi-MS partitioned according to the given separation axi
 
             * The 'baseline' axis is mostly useful for Single-Dish data. This axis will partition the MS
               based on the available baselines. If the user wants only auto-correlations, use the
-              antenna selection such as antenna='*&amp;&amp;&amp;' together with this separation axis. Note that in
-              if numsubms='auto', partition will try to create as many subMSs as the number of available
-              servers in the cluster. If the user wants to have one subMS for each baseline, set the numsubms
-              parameter to a number higher than the number of baselines to achieve this.        
+              ocorr_mode='ao'. Note that if numsubms='auto', partition will try to create as many subMSs as 
+              the number of available servers in the cluster. If the user wants to have one subMS for each baseline, 
+              set the numsubms parameter to a number higher than the number of baselines to achieve this.        
        
         numsubms -- The number of sub-MSs to create in the Multi-Ms.
                 default: 'auto'
                 Options: any integer number (example: numsubms=4)
 
                 The default 'auto' is to partition using the number of available servers given when launching CASA.
-                If the task is unable to determine the number of running servers, it uses 8 as the default.
+                If the task is unable to determine the number of running servers, or the user did not start CASA
+                using mpicasa, numsubms will use 8 as the default.
       
                 Example: Launch CASA with 5 engines, where 4 of them will be used to create the MMS. The first
-                    engine is used as the MPI client.
+                    engine is used as the MPIClient.
       
                 mpicasa -n 5 casa --nogui --log2term
                 CASA> importasdm('uid__A1', createmms=True)
