@@ -113,21 +113,7 @@ namespace casac {
 
 const String image::_class = "image";
 
-/*
-Bool image::_openFuncsRegistered = False;
-
-void image::_registerOpenFuncs() {
-	if (! _openFuncsRegistered) {
-		FITSImage::registerOpenFunction();
-		MIRIADImage::registerOpenFunction();
-		_openFuncsRegistered = True;
-	}
-}
-*/
-
-image::image() : _log(), _imageF(), _imageC() {
-	//_registerOpenFuncs();
-}
+image::image() : _log(), _imageF(), _imageC() {}
 
 // private ImageInterface constructor for on the fly components
 // The constructed object will take over management of the provided pointer
@@ -135,22 +121,18 @@ image::image() : _log(), _imageF(), _imageC() {
 
 image::image(casa::ImageInterface<casa::Float> *inImage) :
 	_log(), _imageF(inImage), _imageC() {
-	//_registerOpenFuncs();
 }
 
 image::image(ImageInterface<Complex> *inImage) :
 	_log(), _imageF(), _imageC(inImage) {
-	//_registerOpenFuncs();
 }
 
 image::image(SPIIF inImage) :
     _log(), _imageF(inImage), _imageC() {
-	//_registerOpenFuncs();
 }
 
 image::image(SPIIC inImage) :
 	_log(), _imageF(), _imageC(inImage) {
-	//_registerOpenFuncs();
 }
 
 image::~image() {}
@@ -182,19 +164,25 @@ Bool isunset(const ::casac::variant &theVar) {
 	return new record();
 
 }
+
 bool image::fromrecord(const record& imrecord, const string& outfile) {
 	try {
 		_log << _ORIGIN;
-		std::unique_ptr<Record> tmpRecord(toRecord(imrecord));
+		std::unique_ptr<casa::Record> tmpRecord(toRecord(imrecord));
 		_reset();
 		auto imagePair = ImageFactory::fromRecord(*tmpRecord, outfile);
+		vector<String> names { "record", "outfile" };
+		vector<variant> values { imrecord, outfile };
+		auto msgs = _newHistory(__func__, names, values);
 		if (imagePair.first) {
 			_imageF = imagePair.first;
-		    //_image.reset(new ImageAnalysis(_imageF));
+			ImageHistory<Float> ih(_imageF);
+			ih.addHistory(_ORIGIN.toString(), msgs);
 		}
 		else {
 			_imageC = imagePair.second;
-		    //_image.reset(new ImageAnalysis(_imageC));
+			ImageHistory<Complex> ih(_imageC);
+			ih.addHistory(_ORIGIN.toString(), msgs);
 		}
 		return True;
 	}
@@ -442,6 +430,7 @@ image* image::imageconcat(
 			<< LogIO::POST;
 		RETHROW(x);
 	}
+	return nullptr;
 }
 
 bool image::fromarray(const std::string& outfile,
@@ -455,14 +444,6 @@ bool image::fromarray(const std::string& outfile,
 	    );
 	    _imageF = mypair.first;
 	    _imageC = mypair.second;
-	    /*
-	    if (_imageF) {
-	    	_imageF = _imageF;
-	    }
-	    else {
-	    	_imageC = _imageC;
-	    }
-	    */
 		return True;
 	}
 	catch (const AipsError& x) {
@@ -2367,15 +2348,19 @@ image* image::transpose(
 			);
 		}
 		if (doImages) {
-			std::vector<String> names { "box", "region", "chans", "stokes", "mask", "includepix",
-			                            "excludepix", "residual", "model", "estimates", "logfile",
-			                            "append", "newestimates", "complist", "dooff", "offset",
-			                            "fixoffset", "stretch", "rms", "noisefwhm" };
-			std::vector<variant> values { box, region, chans, stokes, vmask, in_includepix, in_excludepix,
-			                              residual, model, estimates, logfile, append, newestimates, complist,
-			                              dooff, offset, fixoffset, stretch, rms, noisefwhm };
-
-			String fname = String("ia.") + String(__func__);
+			vector<casa::String> names {
+			    "box", "region", "chans", "stokes", "mask", "includepix",
+			    "excludepix", "residual", "model", "estimates", "logfile",
+			    "append", "newestimates", "complist", "dooff", "offset",
+			    "fixoffset", "stretch", "rms", "noisefwhm"
+			};
+			vector<variant> values {
+			    box, region, chans, stokes, vmask, in_includepix,
+			    in_excludepix, residual, model, estimates, logfile,
+			    append, newestimates, complist, dooff, offset, fixoffset,
+			    stretch, rms, noisefwhm
+			};
+			casa::String fname = "ia." + casa::String(__func__);
 			fitter.addHistory(lor, fname, names, values);
 		}
 		std::pair<ComponentList, ComponentList> compLists = fitter.fit();
@@ -3009,6 +2994,7 @@ std::vector<std::string> image::history(bool list) {
 				<< LogIO::POST;
 		RETHROW(x);
 	}
+	return vector<string>();
 }
 
 bool image::insert(
