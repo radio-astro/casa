@@ -266,47 +266,49 @@ template<class T> SPIIT SubImageFactory<T>::createImage(
 }
 
 template<class T> void SubImageFactory<T>::_getMask(
-	CountedPtr<ImageRegion>& outMask, const String& mask,
-	Bool extendMask, const IPosition& imageShape,
-	const CoordinateSystem& csys
+    CountedPtr<ImageRegion>& outMask, const String& mask,
+    Bool extendMask, const IPosition& imageShape,
+    const CoordinateSystem& csys
 ) {
-	String mymask = mask;
-	for (uInt i=0; i<2; i++) {
-		try {
-			outMask = ImageRegion::fromLatticeExpression(mymask);
-			break;
-		}
-		catch (const AipsError& x) {
-			if (i == 0) {
-				// not an LEL expression, perhaps it's a clean mask image name
-				mymask += ">=0.5";
-				continue;
-			}
-			ThrowCc("Input mask specification is incorrect: " + x.getMesg());
-		}
-	}
+    String mymask = mask;
+    for (uInt i=0; i<2; i++) {
+        try {
+            outMask = ImageRegion::fromLatticeExpression(mymask);
+            break;
+        }
+        catch (const AipsError& x) {
+            if (i == 0) {
+                // not an LEL expression, perhaps it's a clean mask image name
+                mymask += ">=0.5";
+                continue;
+            }
+            ThrowCc("Input mask specification is incorrect: " + x.getMesg());
+        }
+    }
     if (outMask && outMask->asWCRegion().type() == "WCLELMask") {
-    	const ImageExpr<Bool> *myExpression = dynamic_cast<const WCLELMask*>(
-    		outMask->asWCRegionPtr()
-    	)->getImageExpr();
-    	if (
-    		myExpression
-    		&& ! myExpression->shape().isEqual(imageShape)
-    	) {
-    		ThrowIf(
-    			! extendMask,
-    			"The input image shape and mask shape are different, and it was specified "
-    			"that the mask should not be extended, so the mask cannot be applied to the "
-    			"(sub)image. Specifying that the mask should be extended may resolve the issue"
-    		);
-    		try {
-    			ExtendImage<Bool> exIm(*myExpression, imageShape, csys);
-    			outMask = new ImageRegion(LCMask(exIm));
-    		}
-    		catch (const AipsError& x) {
-    			ThrowCc("Unable to extend mask: " + x.getMesg());
-    		}
-    	}
+        const ImageExpr<Bool> *myExpression = dynamic_cast<const WCLELMask*>(
+            outMask->asWCRegionPtr()
+        )->getImageExpr();
+        if (
+                myExpression
+                && ! myExpression->shape().isEqual(imageShape)
+        ) {
+            if (! extendMask) {
+                ostringstream os;
+                os << "The input image shape (" << imageShape << ") and mask shape ("
+                    << myExpression->shape() << ") are different, and it was specified "
+                    "that the mask should not be extended, so the mask cannot be applied to the "
+                    "(sub)image. Specifying that the mask should be extended may resolve the issue";
+                ThrowCc(os.str());
+            }
+            try {
+                ExtendImage<Bool> exIm(*myExpression, imageShape, csys);
+                outMask = new ImageRegion(LCMask(exIm));
+            }
+            catch (const AipsError& x) {
+                ThrowCc("Unable to extend mask: " + x.getMesg());
+            }
+        }
     }
 }
 
