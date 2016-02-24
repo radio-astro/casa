@@ -1101,6 +1101,33 @@ class imregrid_test(unittest.TestCase):
         bb.done()
         myia.done()
         
+    def test_CAS_8345(self):
+        """verify fix to CAS-8345, channels not replicating properly"""
+        myia = self._myia
+        iname = "CAS_8345.im"
+        myia.fromshape(iname, [20, 20, 10])
+        myia.addnoise()
+        sname = "8345.sub"
+        sub = myia.subimage(sname, region=rg.box([0,0,5], [19,19,5]), mask=iname + ">0")
+        expec = sub.getchunk()
+        expm = sub.getchunk(getmask=True)
+        myia.done()
+        sub.done()
+        out = "8345.out"
+        imregrid(imagename=sname, template=iname, output=out, axes=[2], decimate=0)
+        myia.open(out)
+        self.assertTrue((myia.shape() == [20, 20, 10]).all(), "Shape error")
+        got = myia.getchunk()
+        gotm = myia.getchunk(getmask=True)
+        for i in xrange(20):
+            for j in xrange(20):
+                self.assertTrue((got[i,j,:] == expec[i,j]).all(), "incorrect values" )
+                self.assertTrue((gotm[i,j,:] == expm[i,j]).all(), "incorrect mask" )
+
+        myia.done()
+                
+                          
+        
 def suite():
     return [imregrid_test]
     
