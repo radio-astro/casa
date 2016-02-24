@@ -3155,7 +3155,6 @@ std::vector<std::string> image::maskhandler(
 	return vector<string>();
 }
 
-
 template<class T> vector<string>  image::_handleMask(
 	SPIIT myimage, const std::string& op,
 	const std::vector<std::string>& name
@@ -3189,7 +3188,6 @@ template<class T> vector<string>  image::_handleMask(
 	else {
 		ThrowCc("Unknown operation " + op);
 	}
-
 }
 
 record* image::miscinfo() {
@@ -3199,11 +3197,9 @@ record* image::miscinfo() {
 			return nullptr;
 		}
 		if (_imageF) {
-			// return fromRecord(_imageF->miscInfo());
 			return fromRecord(_imageF->miscInfo());
 		}
 		else {
-			// return fromRecord(_imageC->miscInfo());
 			return fromRecord(_imageC->miscInfo());
 		}
 	}
@@ -4313,7 +4309,7 @@ record* image::restoringbeam(int channel, int polarization) {
 	}
 }
 
-::casac::image* image::sepconvolve(
+image* image::sepconvolve(
 	const std::string& outfile, const std::vector<int>& axes,
 	const std::vector<std::string>& types,
 	const ::casac::variant& widths,
@@ -4392,23 +4388,13 @@ record* image::restoringbeam(int channel, int polarization) {
 		task.setKernelWidths(kernelwidths);
 		task.setStretch(stretch);
 		return new image(task.convolve());
-
-		/*
-		SHARED_PTR<ImageInterface<Float> > pImOut(
-			_image->sepconvolve(outFile,
-				smoothaxes, kernels, kernelwidths,
-				Scale, *pRegion, mask, overwrite,
-				stretch
-			)
-		);
-		return new image(pImOut);
-		*/
 	}
 	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
+	return nullptr;
 }
 
 bool image::set(
@@ -4558,6 +4544,7 @@ std::vector<int> image::shape() {
 				<< LogIO::POST;
 		RETHROW(x);
 	}
+	return vector<int>();
 }
 
 bool image::setrestoringbeam(
