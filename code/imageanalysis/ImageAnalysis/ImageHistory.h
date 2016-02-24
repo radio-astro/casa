@@ -8,76 +8,72 @@
 namespace casa {
 
 template <class T> class ImageHistory {
-	// <summary>
-	// Top level interface accessing image history data.
-	// </summary>
+    // <summary>
+    // Top level interface accessing image history data.
+    // </summary>
 
-	// <reviewed reviewer="" date="" tests="" demos="">
-	// </reviewed>
+    // <reviewed reviewer="" date="" tests="" demos="">
+    // </reviewed>
 
-	// <prerequisite>
-	// </prerequisite>
+    // <prerequisite>
+    // </prerequisite>
 
-	// <etymology>
-	// Image History access
-	// </etymology>
+    // <etymology>
+    // Image History access
+    // </etymology>
 
-	// <synopsis>
-	// Top level interface for accessing image history.
-	// </synopsis>
+    // <synopsis>
+    // Top level interface for accessing image history.
+    // </synopsis>
 
 public:
 
-	ImageHistory(
-		const SPIIT image
-	);
+    ImageHistory() = delete;
+    ImageHistory(const SPIIT image);
 
-	// destructor
-	~ImageHistory() {}
+    // destructor
+    ~ImageHistory() {}
 
-	// add a line to the history
-	void addHistory(
-		const String& origin,
-		const String& history
-	);
-
-	void addHistory(
-		const LogOrigin& origin,
-		const String& history
+    // add a line to the history
+    void addHistory(
+        const String& origin, const String& history
     );
-    // add multiple history lines, all which have the same origin
-	void addHistory(
-		const String& origin,
-		const vector<String>& history
-	);
-
-	void addHistory(
-		const String& origin,
-		const vector<string>& history
-	);
 
     void addHistory(
-		const vector<std::pair<LogOrigin, String> >& history
-	);
+        const LogOrigin& origin, const String& history
+    );
+    // add multiple history lines, all which have the same origin
+    void addHistory(
+        const String& origin, const vector<String>& history
+    );
 
-	vector<String> get(Bool list) const;
-	vector<string> getAsStdStrings(Bool list) const;
+    void addHistory(
+        const LogOrigin& origin, const vector<String>& history
+    );
 
-	//Append the specified history to this image's history
-	void append(SPCIIF image);
+    void addHistory(
+        const String& origin, const vector<string>& history
+    );
 
-	void append(SPCIIC image);
+    void addHistory(
+        const vector<std::pair<LogOrigin, String> >& history
+    );
 
-	String getClass() const { const static String s = "ImageHistory"; return s; }
+    vector<String> get(Bool list) const;
+    vector<string> getAsStdStrings(Bool list) const;
 
-	LogIO& getLogSink();
+    //Append the specified image's history to this image's history
+    void append(SPCIIF image);
+
+    void append(SPCIIC image);
+
+    String getClass() const { const static String s = "ImageHistory"; return s; }
+
+    LogIO& getLogSink();
 
 private:
 
-	const SPIIT _image;
-
-	// disallow default constructor
-	ImageHistory() {}
+    const SPIIT _image;
 
 };
 }
