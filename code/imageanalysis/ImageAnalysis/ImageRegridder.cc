@@ -113,45 +113,45 @@ SPIIF ImageRegridder::regrid() const {
 }
 
 SPIIF ImageRegridder::_regrid() const {
-	if (! _subimage) {
-		// for when this method is called directly by regridByVelocity
-		_subimage = SubImageFactory<Float>::createImage(
-			*this->_getImage(), "", *this->_getRegion(), this->_getMask(),
-			this->_getDropDegen(), False, False, this->_getStretch()
-		);
-	}
-	*this->_getLog() << LogOrigin(_class, __func__);
+    if (! _subimage) {
+        // for when this method is called directly by regridByVelocity
+        _subimage = SubImageFactory<Float>::createImage(
+            *this->_getImage(), "", *this->_getRegion(), this->_getMask(),
+            this->_getDropDegen(), False, False, this->_getStretch()
+        );
+    }
+    *this->_getLog() << LogOrigin(_class, __func__);
     ThrowIf(ImageMask::isAllMaskFalse(*_subimage), "All selected pixels are masked");
-	const CoordinateSystem csysFrom = _subimage->coordinates();
-	CoordinateSystem csysTo = _getTemplateCoords();
-	csysTo.setObsInfo(csysFrom.obsInfo());
-	std::set<Coordinate::Type> coordsToRegrid;
-	CoordinateSystem csys = ImageRegrid<Float>::makeCoordinateSystem(
-		*this->_getLog(), coordsToRegrid, csysTo, csysFrom, _getAxes(),
-		_subimage->shape(), False
-	);
-	ThrowIf(
-		csys.nPixelAxes() != _getShape().size(),
-		"The number of pixel axes in the output shape and Coordinate System must be the same. "
-		"Shape has size " + String::toString(_getShape().size()) + ". Output coordinate system "
-		"has " + String::toString(csys.nPixelAxes()) + " axes"
-	);
-	_checkOutputShape(*_subimage, coordsToRegrid);
-	SPIIF workIm(new TempImage<Float>(_getKludgedShape(), csys));
-	ImageUtilities::copyMiscellaneous(*workIm, *_subimage);
-	String maskName("");
-	ImageMaskAttacher::makeMask(*workIm, maskName, True, True, *this->_getLog(), True);
-	ThrowIf (
-		! _doImagesOverlap(_subimage, workIm),
-		"There is no overlap between the (region chosen in) the input image"
-		" and the output image with respect to the axes being regridded."
-	);
-	if (
-		coordsToRegrid.find(Coordinate::SPECTRAL) != coordsToRegrid.end()
-		&& fabs(csys.spectralCoordinate().increment()[0])
-			> fabs(csysFrom.spectralCoordinate().increment()[0])
-	) {
-		*this->_getLog() << LogOrigin(getClass(), __func__)
+    const CoordinateSystem csysFrom = _subimage->coordinates();
+    CoordinateSystem csysTo = _getTemplateCoords();
+    csysTo.setObsInfo(csysFrom.obsInfo());
+    std::set<Coordinate::Type> coordsToRegrid;
+    CoordinateSystem csys = ImageRegrid<Float>::makeCoordinateSystem(
+        *this->_getLog(), coordsToRegrid, csysTo, csysFrom, _getAxes(),
+        _subimage->shape(), False
+    );
+    ThrowIf(
+        csys.nPixelAxes() != _getShape().size(),
+        "The number of pixel axes in the output shape and Coordinate System must be the same. "
+        "Shape has size " + String::toString(_getShape().size()) + ". Output coordinate system "
+        "has " + String::toString(csys.nPixelAxes()) + " axes"
+    );
+    _checkOutputShape(*_subimage, coordsToRegrid);
+    SPIIF workIm(new TempImage<Float>(_getKludgedShape(), csys));
+    ImageUtilities::copyMiscellaneous(*workIm, *_subimage);
+    String maskName("");
+    ImageMaskAttacher::makeMask(*workIm, maskName, True, True, *this->_getLog(), True);
+    ThrowIf (
+        ! _doImagesOverlap(_subimage, workIm),
+        "There is no overlap between the (region chosen in) the input image"
+        " and the output image with respect to the axes being regridded."
+    );
+    if (
+        coordsToRegrid.find(Coordinate::SPECTRAL) != coordsToRegrid.end()
+        && fabs(csys.spectralCoordinate().increment()[0])
+        > fabs(csysFrom.spectralCoordinate().increment()[0])
+    ) {
+        *this->_getLog() << LogOrigin(getClass(), __func__)
 			<< LogIO::WARN << " imregrid/ia.regrid() interpolates over spectral "
 			<< "channels and does not average channels together. Noise in your "
 			<< "resulting image will be the noise in the original individual "
@@ -160,60 +160,61 @@ SPIIF ImageRegridder::_regrid() const {
 			<< "to smooth the spectral axis of your input cube to close to "
 			<< "desired resolution and use imregrid/ia.regrid() to regrid it to "
 			<< "the desired spectral coordinate grid.";
-	}
-	ImageRegrid<Float> ir;
-	ir.showDebugInfo(_debug);
-	ir.disableReferenceConversions(! _getDoRefChange());
-	ir.regrid(
-		*workIm, _getMethod(), _getAxes(), *_subimage,
-		_getReplicate(), _getDecimate(), True,
-		_getForceRegrid()
-	);
-	if (! _getOutputStokes().empty()) {
-		workIm = _decimateStokes(workIm);
-	}
-	ThrowIf(
-		workIm->hasPixelMask() && ImageMask::isAllMaskFalse(*workIm),
-		"All output pixels are masked"
-		+ String(
-			_getDecimate() > 1 && _regriddingDirectionAxes()
-			? ". You might want to try decreasing the value of decimate if you are regridding direction axes"
-			: ""
-		)
-	);
-	if (_getNReplicatedChans() > 1) {
-		// spectral channel needs to be replicated _nReplicatedChans times,
-		// and spectral coordinate of the template needs to be copied to the
-		// output.
-		IPosition finalShape = _getKludgedShape();
-		Int specAxisNumber = workIm->coordinates().spectralAxisNumber(False);
-		finalShape[specAxisNumber] = _getNReplicatedChans();
-		SPIIF replicatedIm(new TempImage<Float>(finalShape, csys));
+    }
+    ImageRegrid<Float> ir;
+    ir.showDebugInfo(_debug);
+    ir.disableReferenceConversions(! _getDoRefChange());
+    ir.regrid(
+        *workIm, _getMethod(), _getAxes(), *_subimage,
+        _getReplicate(), _getDecimate(), True,
+        _getForceRegrid()
+    );
+    if (! _getOutputStokes().empty()) {
+        workIm = _decimateStokes(workIm);
+    }
+    ThrowIf(
+        workIm->hasPixelMask() && ImageMask::isAllMaskFalse(*workIm),
+        "All output pixels are masked"
+        + String(
+            _getDecimate() > 1 && _regriddingDirectionAxes()
+            ? ". You might want to try decreasing the value of decimate if you are regridding direction axes"
+            : ""
+        )
+    );
+    if (_getNReplicatedChans() > 1) {
+        // spectral channel needs to be replicated _nReplicatedChans times,
+        // and spectral coordinate of the template needs to be copied to the
+        // output.
+        IPosition finalShape = _getKludgedShape();
+        Int specAxisNumber = workIm->coordinates().spectralAxisNumber(False);
+        finalShape[specAxisNumber] = _getNReplicatedChans();
+        SPIIF replicatedIm(new TempImage<Float>(finalShape, csys));
         // FIXME this will exhaust memory for large images
-		Array<Float> fillerPixels = workIm->get();
-		Array<Bool> fillerMask = workIm->pixelMask().get();
-		Array<Float> finalPixels = replicatedIm->get();
-		Array<Bool> finalMask(replicatedIm->shape());
-		IPosition begin(finalPixels.ndim(), 0);
-		IPosition end = finalPixels.shape();
-		for (uInt i=0; i<_getNReplicatedChans(); i++) {
-			begin[specAxisNumber] = i;
-			end[specAxisNumber] = 0;
-			Slicer slice(begin, end);
-			finalPixels(slice) = fillerPixels;
-			finalMask(slice) = fillerMask;
-		}
-		replicatedIm->put(finalPixels);
-		DYNAMIC_POINTER_CAST<TempImage<Float> >(replicatedIm)->attachMask(
-			ArrayLattice<Bool>(finalMask)
-		);
-		SpectralCoordinate spTo = _getTemplateCoords().spectralCoordinate();
-		CoordinateSystem csysFinal = replicatedIm->coordinates();
-		csysFinal.replaceCoordinate(spTo, csysFinal.spectralCoordinateNumber());
-		replicatedIm->setCoordinateInfo(csysFinal);
-		workIm = replicatedIm;
-	}
-	return workIm;
+        auto fillerPixels = workIm->get();
+        const auto fillerMask = workIm->pixelMask().get();
+        auto finalPixels = replicatedIm->get();
+        Array<Bool> finalMask(replicatedIm->shape());
+        IPosition begin(finalPixels.ndim(), 0);
+        IPosition end = finalPixels.shape();
+        auto n = _getNReplicatedChans();
+        for (uInt i=0; i<n; ++i) {
+            begin[specAxisNumber] = i;
+            end[specAxisNumber] = 1;
+            Slicer slice(begin, end);
+            finalPixels(slice) = fillerPixels;
+            finalMask(slice) = fillerMask;
+        }
+        replicatedIm->put(finalPixels);
+        DYNAMIC_POINTER_CAST<TempImage<Float> >(replicatedIm)->attachMask(
+            ArrayLattice<Bool>(finalMask)
+        );
+        SpectralCoordinate spTo = _getTemplateCoords().spectralCoordinate();
+        CoordinateSystem csysFinal = replicatedIm->coordinates();
+        csysFinal.replaceCoordinate(spTo, csysFinal.spectralCoordinateNumber());
+        replicatedIm->setCoordinateInfo(csysFinal);
+        workIm = replicatedIm;
+    }
+    return workIm;
 }
 
 SPIIF ImageRegridder::_decimateStokes(SPIIF workIm) const {
