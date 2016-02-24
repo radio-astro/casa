@@ -136,13 +136,13 @@ def stats():
         #value_compare43 = 0.6934577681171487
         #value_compare = 0.716367318068  #CASA 4.5
         #value_compare = 0.717857716108  #CASA 4.6
-        value_compare = 0.715229009615  #CASA 4.6.144 r36095, pipeline r36150 (trunk)
+        value_compare = 0.716364780148  #CASA 4.6.144 r36095, pipeline r36209 (trunk)
         
         #result_bool = np.isclose(fluxlist[0][0], standard_fluxlist[0][0], rtol=rtol, atol=atol, equal_nan=False)
         result_bool = np.isclose(fluxlist[0][0], value_compare, rtol=rtol, atol=atol, equal_nan=False)
         
         print >>logfile, "Accepted test value is: ", value_compare, " from CASA 4.6.144 r36095 and pipeline r36150 (trunk)"
-        print "Accepted test value is: ", value_compare, " from CASA 4.6.144 r36095 and pipeline r36150 (trunk)"
+        print "Accepted test value is: ", value_compare, " from CASA 4.6.144 r36095 and pipeline r36209 (trunk)"
         print >>logfile, "Regression generated value is: ", fluxlist[0][0]
         print "Regression generated value is: ", fluxlist[0][0]
         
