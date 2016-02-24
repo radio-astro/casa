@@ -108,7 +108,7 @@ class SDBLFlagWorker(object):
             for pol in pollist:
                 LOG.info("[ POL=%d ]" % (pol))
                 # time_table should only list on scans
-                time_table = datatable.get_timetable2(idx, spwid, pol)               
+                time_table = datatable.get_timetable(idx, spwid, pol)               
                 # Select time gap list: 'subscan': large gap; 'raster': small gap
                 if flagRule['Flagging']['ApplicableDuration'] == "subscan":
                     TimeTable = time_table[1]
