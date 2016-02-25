@@ -40,6 +40,7 @@ imcollapse.xml
 imcontsub.xml
 imfit.xml
 imhead.xml
+imhistory.xml
 immath.xml
 immoments.xml
 impbcor.xml

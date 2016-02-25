@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<!-- This is the task interface for imhistory        -->
+<!--                                                          -->
+
+<task type="function" name="imhistory" category="analysis">
+
+<shortdescription>Retrieve and modify image history</shortdescription>
+
+<input>
+    <param type="string" name="imagename" mustexist="true">
+    	<description>Name of the input image</description>
+    	<value/>
+        <example>imagenam='ngc5921.im'</example>
+    </param>
+    <param type="string" name="mode">
+        <description>Mode to run in, "list" to retrieve history, "append" to append a record to history.</description>
+        <value>list</value>
+    </param>
+    <param type="bool" name="verbose" subparam="true">
+        <description>Write history to logger if mode="list"?</description>
+        <value>True</value>
+    </param>
+    <param type="string" name="origin" subparam="true">
+        <description>Origin of appended message. Only used for mode="append".</description>
+        <value>imhistory</value>
+    </param>
+    <param type="string" name="message" subparam="true">
+        <description>eMessage to append. Only used of mode="append".</description>
+        <value/>
+    </param>
+    <constraints>
+        <when param="mode">
+            <equals type="string" value="list">
+                <default param="verbose">
+                    <value type="bool">True</value>
+                </default>
+            </equals>
+            <equals type="string" value="append">
+                <default param="origin">
+                    <value type="string">imhistory</value>
+                </default>
+                <default param="message">
+                    <value type="string"/>
+                </default>
+            </equals>
+        </when>
+    </constraints>
+</input>
+<returns type="variant"/>
+
+<example>
+PARAMETER SUMMARY
+imagename        Name of the input (CASA, FITS, MIRIAD) image
+mode             Operating mode. Either "list" or "append" is accepted.
+verbose          Log history if mode="list"?
+origin           Origin of appended message if mode="append".
+message          Message to append if mode="append".
+
+This task provides access to the logtable of an image, where generally history information is
+stored. Two operation modes are supported. When mode="list", the history messages are returned
+as an array of strings. If verbose=True, this information is also written to the logger. When
+mode="append", a specified message (along with its specified origin) are appended to the logtable
+and True is returned if successful.
+
+# get history and list to logger
+imhistory("my.im", mode="list", verbose=True)
+
+# append a message
+imhistory("my.im", origin="myorigin", "ETI signal found in this image!")
+
+</example>
+
+</task>
+
+</casaxml>

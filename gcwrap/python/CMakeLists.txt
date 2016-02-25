@@ -109,6 +109,7 @@ scripts/task_imcollapse.py
 scripts/task_imcontsub.py
 scripts/task_imfit.py
 scripts/task_imhead.py
+scripts/task_imhistory.py
 scripts/task_immath.py
 scripts/task_immoments.py
 scripts/task_impbcor.py

@@ -94,6 +94,7 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_imcontsub.py
   test_imfit.py
   test_imhead.py
+  test_imhistory.py
   test_immath.py
   test_immoments.py
   test_impbcor.py
