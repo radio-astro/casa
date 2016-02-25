@@ -1601,6 +1601,12 @@ class test_mask(testref_base):
           ret2 = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10,deconvolver='hogbom',interactive=0)
           self.checkall(imexist=[self.img+'.mask'], imval=[(self.img+'.mask',1.0,[50,50,0,0]),(self.img+'.mask',0.0,[50,80,0,0])])
 
+#     def test_mask_outregion(self):
+#          """ [mask] test_mask_outregion : Input mask has region that goes outside the image """
+#          self.prepData('refim_twochan.ms')
+#          mstr = 'circle[[50pix,110pix],20pix]'
+#          ret2 = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',niter=10,deconvolver='hogbom',interactive=0,usemask='user',mask=mstr)
+#          self.checkall(imexist=[self.img+'2.mask'], imval=[(self.img+'2.mask',0.0,[50,50,0,0]),(self.img+'2.mask',1.0,[50,95,0,0])])
 
 
 ##############################################
