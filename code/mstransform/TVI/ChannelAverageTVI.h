@@ -24,7 +24,7 @@
 #define ChannelAverageTVI_H_
 
 // Base class
-#include <mstransform/TVI/FreqAxisTVI.h>
+#include <mstransform/TVI/DecimationTVI.h>
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -35,7 +35,7 @@ namespace vi { //# NAMESPACE VI - BEGIN
 // ChannelAverageTVI class
 //////////////////////////////////////////////////////////////////////////
 
-class ChannelAverageTVI : public FreqAxisTVI
+class ChannelAverageTVI : public DecimationTVI
 {
 
 public:
@@ -50,20 +50,6 @@ public:
     void visibilityModel (Cube<Complex> & vis) const;
     void weightSpectrum(Cube<Float> &weightSp) const;
     void sigmaSpectrum (Cube<Float> &sigmaSp) const;
-
-    Vector<Double> getFrequencies (	Double time, Int frameOfReference,
-    								Int spectralWindowId, Int msId) const;
-
-    void writeFlag (const Cube<Bool> & flag);
-
-protected:
-
-    void propagateChanAvgFlags (const Cube<Bool> &avgFlagCube, Cube<Bool> &expandedFlagCube);
-    Bool parseConfiguration(const Record &configuration);
-    void initialize();
-
-	Vector<Int> chanbin_p;
-	mutable map<Int,uInt > spwChanbinMap_p; // Must be accessed from const methods
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -87,72 +73,10 @@ protected:
 };
 
 //////////////////////////////////////////////////////////////////////////
-// ChannelAverageTransformEngine class
-//////////////////////////////////////////////////////////////////////////
-
-
-template<class T> class ChannelAverageKernel; // Forward declaration
-
-template<class T> class ChannelAverageTransformEngine : public FreqAxisTransformEngine<T>
-{
-
-public:
-
-	ChannelAverageTransformEngine(ChannelAverageKernel<T> *kernel, uInt width);
-
-	void transform(Vector<T> &inputVector,
-					Vector<T> &outputVector,
-					DataCubeMap &auxiliaryData);
-
-protected:
-
-	uInt width_p;
-	// This member has to be a pointer, otherwise there
-	// are compile time problems due to the fact that
-	// it is a pure virtual class.
-	ChannelAverageKernel<T> *chanAvgKernel_p;
-};
-
-//////////////////////////////////////////////////////////////////////////
-// ChannelAverageKernel class
-//////////////////////////////////////////////////////////////////////////
-
-template<class T> class ChannelAverageKernel
-{
-
-public:
-
-	virtual void kernel(	Vector<T> &inputVector,
-							Vector<T> &outputVector,
-							DataCubeMap &,
-							uInt startInputPos,
-							uInt outputPos,
-							uInt width) = 0;
-
-};
-
-//////////////////////////////////////////////////////////////////////////
 // WeightedChannelAverageKernel class
 //////////////////////////////////////////////////////////////////////////
 
-template<class T> class WeightedChannelAverageKernel : public ChannelAverageKernel<T>
-{
-
-public:
-
-	void kernel(	Vector<T> &inputVector,
-					Vector<T> &outputVector,
-					DataCubeMap &auxiliaryData,
-					uInt startInputPos,
-					uInt outputPos,
-					uInt width);
-};
-
-//////////////////////////////////////////////////////////////////////////
-// PlainChannelAverageKernel class
-//////////////////////////////////////////////////////////////////////////
-
-template<class T> class PlainChannelAverageKernel : public ChannelAverageKernel<T>
+template<class T> class WeightedChannelAverageKernel : public DecimationKernel<T>
 {
 
 public:
@@ -169,7 +93,7 @@ public:
 // LogicalANDKernel class
 //////////////////////////////////////////////////////////////////////////
 
-template<class T> class LogicalANDKernel : public ChannelAverageKernel<T>
+template<class T> class LogicalANDKernel : public DecimationKernel<T>
 {
 
 public:
@@ -186,7 +110,7 @@ public:
 // ChannelAccumulationKernel class
 //////////////////////////////////////////////////////////////////////////
 
-template<class T> class ChannelAccumulationKernel : public ChannelAverageKernel<T>
+template<class T> class ChannelAccumulationKernel : public DecimationKernel<T>
 {
 
 public:
