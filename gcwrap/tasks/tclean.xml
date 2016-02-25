@@ -257,7 +257,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                                   the runs, set calcres=False, calcpsf=False to resume directly from
                                   the minor cycle without the (unnecessary) first major cycle.
                                 To automatically change 'imagename' with a numerical 
-                                increment, set overwrite=False (see tclean docs for 'overwrite').
+                                increment, set restart=False (see tclean docs for 'restart').
 
                         Note : An imaging run with niter=0 will not produce an output restored
                                   image (extension .image) since there is no .model to restore. 
@@ -1815,9 +1815,9 @@ HPX HEALPix grid.  -->
 <!--                            Other Operational Parameters                                       -->
 <!--============================================== -->
 
-    <param type="bool" name="overwrite">
+    <param type="bool" name="restart">
      <shortdescription>True : Re-use existing images. False : Increment imagename</shortdescription>
-<description> Overwrite existing images (and start from an existing model image) 
+<description> Restart using existing images (and start from an existing model image) 
                         or automatically increment the image name and make a new image set.
 
                         True : Re-use existing images. If imagename.model exists the subsequent
@@ -1825,6 +1825,7 @@ HPX HEALPix grid.  -->
                                   settings and starting from the residual image).  Care must be taken
                                   when combining this option with startmodel. Currently, only one or
                                   the other can be used. 
+
                                   startmodel='', imagename.model exists : 
                                             - Start from imagename.model
                                   startmodel='xxx', imagename.model does not exist : 
@@ -1836,7 +1837,11 @@ HPX HEALPix grid.  -->
                                               imagename.model that includes the content of startmodel,
                                               and wanting to restart a second run to continue deconvolution.
                                               Startmodel should be set to '' before continuing.
-                                              
+
+                                   If any change in the shape or coordinate system of the image is
+                                   desired during the restart, please change the image name and 
+                                   use the startmodel (and mask) parameter(s) so that the old model
+                                   (and mask) can be regridded to the new coordinate system before starting.
               
                          False : A convenience feature to increment imagename with '_1', '_2', 
                                     etc as suffixes so that all runs of tclean are fresh starts (without 

@@ -1358,7 +1358,7 @@ class ImagerParameters():
                  normtype='flatnoise',
 
                  outlierfile='',
-                 overwrite=True,
+                 restart=True,
 
                  weighting='natural', 
                  robust=0.5,
@@ -1420,7 +1420,7 @@ class ImagerParameters():
                                  'nterms':nterms,'restfreq':restfreq, 
                                  'outframe':outframe, 'reffreq':reffreq, 'sysvel':sysvel, 'sysvelframe':sysvelframe,
                                  'projection':projection,
-                                 'overwrite':overwrite, 'startmodel':startmodel,'deconvolver':deconvolver}    }
+                                 'restart':restart, 'startmodel':startmodel,'deconvolver':deconvolver}    }
         ######### Gridding
         self.allgridpars = { self.defaultKey :{'gridder':gridder,
                                    'aterm': aterm, 'psterm':psterm, 'mterm': mterm, 'wbawp': wbawp, 
@@ -1674,7 +1674,7 @@ class ImagerParameters():
             ### Check for name increments 
             #if self.reusename == False:
 
-            if self.allimpars['0']['overwrite'] == False:   # Later, can change this to be field dependent too.
+            if self.allimpars['0']['restart'] == False:   # Later, can change this to be field dependent too.
                 ## Get a list of image names for all fields (to sync name increment ids across fields)
                 inpnamelist={}
                 for immod in self.allimpars.keys() :

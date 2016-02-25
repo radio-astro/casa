@@ -425,6 +425,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool dbg=False;
     if( doesImageExist( imagenamefull ) )
       {
+	///// not used since itsOverWrite is hardcoded to FALSE (CAS-6937)
 	if (overwrite) //overwrite and make new image
 	  {
 	    if(dbg) cout << "Trying to overwrite and open new image named : " << imagenamefull << " ow:"<< overwrite << endl;
@@ -452,7 +453,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      }
 	    }
 	  }// overwrite existing image
-	else // open existing image
+	else // open existing image ( Always tries this )
 	  {
 	    if(Table::isWritable( imagenamefull ))
 	      {
@@ -469,22 +470,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			{
 			  ostringstream oo1,oo2;
 			  oo1 << useShape; oo2 << imPtr->shape();
-			  throw( AipsError( "Shape mismatch between existing images ("+oo2.str()+") and current parameters ("+oo1.str()+"). If attempting to restart a run, please change imagename and supply startmodel or mask via parameters so that they can be regridded to the new shape before continuing." ) );
+			  throw( AipsError( "There is a shape mismatch between existing images ("+oo2.str()+") and current parameters ("+oo1.str()+"). If you are attempting to restart a run with a new image shape, please change imagename and supply the old model or mask as inputs (via the startmodel or mask parameters) so that they can be regridded to the new shape before continuing." ) );
 			}
 		      if( itsParentCoordSys.nCoordinates()>0 &&  ! itsParentCoordSys.near( imPtr->coordinates() ) )
 			{
-			  throw( AipsError( "CoordSys mismatch between existing images on disk and current parameters("+itsParentCoordSys.errorMessage()+"). If attempting to restart a run, please change imagename and supply startmodel or mask via parameters so that they can be regridded to the new coordinate system before continuing. " ) );
+			  throw( AipsError( "There is a coordinate system mismatch between existing images on disk and current parameters ("+itsParentCoordSys.errorMessage()+"). If you are attempting to restart a run, please change imagename and supply the old model or mask as inputs (via the startmodel or mask parameters) so that they can be regridded to the new coordinate system before continuing. " ) );
 			}
 		    }// not dosumwt
 		}
 		catch (AipsError &x){
-		  throw( AipsError("Writable table exists, but cannot open "+imagenamefull+" : " + x.getMesg() ) );
+		  throw( AipsError("Cannot open existing image : "+imagenamefull+" : " + x.getMesg() ) );
 		}
 	      }// is table writable
 	    else // table exists but not writeable
 	      {
 		if(dbg)cout << "Table exists but not writeable : " << imagenamefull << "  --- Open : " << Table::isOpened( imagenamefull ) << endl;
-		throw( AipsError("Table exists but not able to open for writes :"+imagenamefull+ ". Opened elsewhere : " + String::toString(Table::isOpened(imagenamefull))) );
+		throw( AipsError("Image exists but not able to open for writes :"+imagenamefull+ ". Opened elsewhere : " + String::toString(Table::isOpened(imagenamefull))) );
 	      }
 	  }// open existing image
       }// if image exists

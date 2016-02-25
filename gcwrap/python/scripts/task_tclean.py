@@ -107,7 +107,7 @@ def tclean(
     maskthreshold,#='',
     maskresolution,#='',
 
-    overwrite,#=True,
+    restart,#=True,
 
     savemodel,#="none",
 
@@ -198,7 +198,7 @@ def tclean(
         normtype=normtype,
 
         outlierfile=outlierfile,
-        overwrite=overwrite,
+        restart=restart,
 
         weighting=weighting,
         robust=robust,

@@ -525,8 +525,8 @@ class test_onefield(testref_base):
           """ [onefield] Test_Onefield_autonames : Test auto increment of image names """
           self.prepData('refim_twochan.ms')
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec')
-          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',overwrite=False)
-          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',overwrite=False)
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',restart=False)
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',restart=False)
           self.checkall(imexist=[self.img+'.psf',self.img+'_2.psf',self.img+'_3.psf'] )
 
      def test_onefield_twoMS(self):
@@ -844,9 +844,9 @@ class test_multifield(testref_base):
           self.prepData("refim_twopoints_twochan.ms")
           self.write_file(self.img+'.out.txt', 'imagename='+self.img+'1\nnchan=1\nimsize=[80,80]\ncell=[8.0arcsec,8.0arcsec]\nphasecenter=J2000 19:58:40.895 +40.55.58.543\nusemask=user\nmask=circle[[40pix,40pix],10pix]')
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',outlierfile=self.img+'.out.txt')
-          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',outlierfile=self.img+'.out.txt',overwrite=False)
-          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',overwrite=False) # no outlier...
-          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',outlierfile=self.img+'.out.txt',overwrite=False)
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',outlierfile=self.img+'.out.txt',restart=False)
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',restart=False) # no outlier...
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',outlierfile=self.img+'.out.txt',restart=False)
 
           self.checkall(imexist=[self.img+'.psf',self.img+'1.psf',self.img+'_2.psf',self.img+'1_2.psf',self.img+'_3.psf',self.img+'_4.psf',self.img+'1_4.psf'], imexistnot=[self.img+'1_3.psf'] )
 

@@ -1524,7 +1524,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         String freqframestr = (frame!="" && qmframe!="")? qmframe:frame;
 	if( frame!="" && ! MFrequency::getType(freqFrame, freqframestr) )
 	  { err += "Invalid Frequency Frame " + freqframestr ; }
-	err += readVal( inrec, String("overwrite"), overwrite );
+	err += readVal( inrec, String("restart"), overwrite );
 
 	
 	// startmodel parsing copied in SynthesisParamDeconv. Clean this up !!! 
@@ -1820,7 +1820,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       { impar.define("sysvel", sysvel );}
     impar.define("sysvelframe", sysvelframe );
 
-    impar.define("overwrite",overwrite );
+    impar.define("restart",overwrite );
     impar.define("startmodel", startModel );
 
     if( csysRecord.nfields() != 0 )
