@@ -128,6 +128,16 @@ class SDExportDataInputs(basetask.StandardInputs):
         self._targetimages = value
         
 class SDExportDataResults(hif_exportdata.ExportDataResults):
+    def __init__(self, pprequest='', sessiondict=collections.OrderedDict(),
+                 visdict=collections.OrderedDict(), calimages=(), targetimages=(),
+                 weblog='', pipescript='', restorescript='', commandslog='', jyperkfile=''):
+        """
+        Initialise the results object with the given list of JobRequests.
+        """
+        super(SDExportDataResults, self).__init__(pprequest, sessiondict, visdict, calimages, targetimages, 
+                                                  weblog, pipescript, restorescript, commandslog)
+        self.jyperkfile = jyperkfile
+        
     def __repr__(self):
         s = 'SDExportData results:\n'
         return s 
@@ -239,7 +249,7 @@ class SDExportData(hif_exportdata.ExportData):
             pipemanifest.add_caltables(session, caltabledict[session_name])
             for vis_name in session_vislist:
                 basename = os.path.basename(vis_name)
-                pipemanifest.add_asdm (session, vis_name, flagversionsdict[basename],
+                pipemanifest.add_asdm (session, basename, flagversionsdict[basename],
                                        applydict[basename])                
             
         # Create fits files from CASA images
@@ -302,7 +312,8 @@ class SDExportData(hif_exportdata.ExportData):
                                    sessiondict=sessiondict, visdict=visdict,
                                    targetimages=(imagelist, targetimages_fitslist),
                                    restorescript='',
-                                   pipescript=casa_pipescript, commandslog=casa_commands_file)
+                                   pipescript=casa_pipescript, commandslog=casa_commands_file,
+                                   jyperkfile=jyperk_file)
      
     def init_visdict(self):
         self.visdict = {}

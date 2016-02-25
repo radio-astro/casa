@@ -1366,7 +1366,7 @@ class SDCalLibrary(CalLibrary):
                 export_file.write(ca.as_applycal())
                 export_file.write('\n')
 
-    def _remove(self, calto, calfrom, calstate):
+    def _remove(self, calstate, calfrom, calto=None):
         if type(calfrom) is not types.ListType:
             calfrom = [calfrom]
         
@@ -1387,7 +1387,7 @@ class SDCalLibrary(CalLibrary):
         LOG.trace('Calstate after _remove:\n'
                   '%s' % calstate.as_applycal())
 
-    def get_calstate(self, calto, hide_null=True):
+    def get_calstate(self, calto, hide_null=True, ignore=None):
         # wrap the text-only CalTo in a CalToIdAdapter, which will parse the
         # CalTo properties and give us the appropriate subtable IDs to iterate
         # over 
@@ -1406,7 +1406,7 @@ class SDCalLibrary(CalLibrary):
 
         return result
 
-    def import_state(self, filename=None):
+    def import_state(self, filename=None, append=False):
         filename = self._calc_filename(filename)
 
         calapps = []
