@@ -245,7 +245,7 @@ class Tsysflag(basetask.StandardTaskTemplate):
         # an error and stop further evaluation of Tsysflag.
         for metric in metric_order_as_list:
             if metric not in metrics_from_inputs.keys():
-                errmsg = "Input parameter 'metric_order' contains illegal value: '{0}'. Legal values are: {1}.".format(metric, ', '.join(metrics_from_inputs.keys()))
+                errmsg = "Input parameter 'metric_order' contains illegal value: '{0}'. Accepted values are: {1}.".format(metric, ', '.join(metrics_from_inputs.keys()))
                 LOG.error(errmsg)
                 result.task_incomplete_reason = errmsg
                 return result
@@ -254,7 +254,7 @@ class Tsysflag(basetask.StandardTaskTemplate):
         # then log an error and stop further evaluation of Tsysflag.
         for metric_name, metric_enabled in metrics_from_inputs.items():
             if metric_enabled and metric_name not in metric_order_as_list:
-                errmsg = "Flagging metric '{0}' is enabled, but not specified in 'metric_order', cannot continue.".format(metric_name)
+                errmsg = "Flagging metric '{0}' is enabled, but not specified in 'metric_order'.".format(metric_name)
                 LOG.error(errmsg)
                 result.task_incomplete_reason = errmsg
                 return result
@@ -423,12 +423,16 @@ class Tsysflag(basetask.StandardTaskTemplate):
             # the refant list.
             if result.refants_to_remove:
                 # Log warning
-                ant_msg = utils.commafy(result.refants_to_remove, quotes=False,
-                                        multi_prefix='s')
-                LOG.warning('Antenna%s that are fully flagged in all Tsys '
-                  'spws in the "BANDPASS", "PHASE", and/or "AMPLITUDE" '
-                  'intents removed from refant list for '
-                  '%s' % (ant_msg, ms.basename))
+                ant_msg = utils.commafy(result.refants_to_remove, quotes=False)
+                
+                LOG.warning('%s - the following antennas are removed from '
+                  'the refant list because they are fully flagged in all '
+                  'Tsys spws in the "BANDPASS", "PHASE", and/or "AMPLITUDE" '
+                  'intents: %s' % (ms.basename, ant_msg))
+#                 LOG.warning('Antenna%s that are fully flagged in all Tsys '
+#                   'spws in the "BANDPASS", "PHASE", and/or "AMPLITUDE" '
+#                   'intents removed from refant list for '
+#                   '%s' % (ant_msg, ms.basename))
         
         return result
     

@@ -72,7 +72,7 @@ $(document).ready(function() {
   <p>For the following measurement sets, the Tsysflag task ended prematurely with the following error message:</p>
   <ul>
   % for vis, msg in task_incomplete_msg.items():
-  	<li>${vis} :<br>
+  	<li>${os.path.basename(vis)} :<br>
   	${msg}</li>
   % endfor
   </ul>
