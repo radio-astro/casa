@@ -390,6 +390,12 @@ elseif( CMAKE_SYSTEM_NAME STREQUAL Linux )
             set( dbusxx dbus-cpp )
             add_definitions( -DDBUS_CPP )
             set( qt4 system-qt )
+	    # on RHEL7 we use the system libdbus*, here we assume
+	    # that on RHEL6 the third party packages will continue
+	    # to be installed in /usr/lib64/casa/01... (on RHEL6
+	    # we continue to use libcasa-dbus in preference to
+	    # the system libdbus...
+	    set( dbus-cpp-library-name casa-dbus-cpp )
         else( )
             set( dbusxx dbus-c++ )
             set( casa_packages /usr/lib64/casapy )
@@ -976,7 +982,7 @@ if ( ${dbusxx} STREQUAL dbus-c++ )
 else( )
   casa_find( DBUSPP_ARCH
     INCLUDES dbus/dbus-arch-deps.h
-    PREFIX_HINTS ${DBUS_ARCH_DIR} ${casa_packages}/lib/dbus-1.0 ${dbus-arch-path-guess}
+    PREFIX_HINTS ${DBUS_ARCH_DIR} ${casa_packages}/lib/dbus-1.0 ${dbus-arch-path-guess} /usr/lib64/dbus-1.0
     NO_CHECK   # This header does not compile if included directly
     NO_REQUIRE
   )
