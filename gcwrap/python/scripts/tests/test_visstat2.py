@@ -50,8 +50,10 @@ class visstat2_test(unittest.TestCase):
         self.msfile2 ="OrionS_rawACSmod_calave.ms"
         self.msfile2_asap="OrionS_rawACSmod_calave.asap"
 
-        self.msfile3="OrionS_rawACSmod_calave_test_intent.ms"
-        self.msfile4="OrionS_rawACSmod_calave_intent_on_off.ms"
+ 
+        self.msfile3="OrionS_rawACSmod_calave_intent_on1_off3.ms"
+        self.msfile4="OrionS_rawACSmod_calave_intent_on1.ms"
+        #self.msfile5="OrionS_rawACSmod_calave_intent_off.ms"
 
         #if(not os.path.exists(self.msfile)):
         #if(os.path.exists(self.msfile)):
@@ -66,6 +68,7 @@ class visstat2_test(unittest.TestCase):
         shutil.copytree(datapath+self.msfile2_asap, self.msfile2_asap)
         shutil.copytree(datapath+self.msfile3, self.msfile3)
         shutil.copytree(datapath+self.msfile4, self.msfile4)
+        #shutil.copytree(datapath+self.msfile5, self.msfile5)
         #clearcal(self.msfile, addmodel=True)
 
         #default('visstat')
@@ -1784,7 +1787,7 @@ class visstat2_test(unittest.TestCase):
         field_list=['0','1','2']
         useflags_list=[True, False]
         reporting_axes=['field']
-        intent_list=['OBSERVE_TARGET#ON_SOURCE,POSITION_SWITCH']
+        #intent_list=['OBSERVE_TARGET#ON_SOURCE,POSITION_SWITCH']
         #intent_list=['OBSERVE_TARGET#OFF_SOURCE,POSITION_SWITCH']
 
         check_list=['rms', 'max', 'min', 'sum', 'median', 'stddev', 'mean']
@@ -1798,7 +1801,7 @@ class visstat2_test(unittest.TestCase):
                             if(ax=='scan_number'):
                                 v1 = visstat(vis=self.msfile, axis=ax,correlation=col, field=fd, spw=spwin, useflags=fg)
                                 v2 = visstat2(vis=self.msfile, axis=ax, useflags=fg, correlation=col, 
-                                      spw=spwin, intent=intent_list[0], reportingaxes=reporting_axes[0])
+                                      spw=spwin, reportingaxes=reporting_axes[0])
 
                                 for check in check_list:
                                     v1_first_element = ax
@@ -1813,7 +1816,7 @@ class visstat2_test(unittest.TestCase):
                                 for dt in datacolumn_list:    
                                     v1 = visstat(vis=self.msfile, axis=ax,datacolumn=dt,correlation=col, field=fd, spw=spwin, useflags=fg)
                                     v2 = visstat2(vis=self.msfile, axis=ax, useflags=fg, datacolumn=dt, correlation=col, 
-                                      spw=spwin, intent=intent_list[0], reportingaxes=reporting_axes[0])
+                                      spw=spwin, reportingaxes=reporting_axes[0])
                                 
                                     for check in check_list:
                                         v1_first_element = dt
@@ -1833,91 +1836,40 @@ class visstat2_test(unittest.TestCase):
 
 
 
-"""
-#    def test18(self):#test func to check intent
-#        '''Visstat2 18: Test using reportingaxes=ddid, datacolumn=float_data, intent=on'''
-#        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }   
-#       
-#        correlation_type=['RR', 'LL']
-#        sd_correlation_type=['0', '1']
-#        datacolumn_list=['float_data']
-#        #spw_list=['0', '1', '3']
-#        spw_list=['']
-#        field_list=['1']
-#        reporting_axes=['field']
-#        check_list=['rms', 'max', 'min', 'sum', 'median', 'stddev', 'mean']
-#
-#        intent_list=['OBSERVE_TARGET#ON_SOURCE,POSITION_SWITCH']
-#        #intent_list=['OBSERVE_TARGET#OFF_SOURCE,POSITION_SWITCH']
-#        #intent_list =['']
-#
-#
-#        #ddid_list=['DATA_DESC_ID=1']
-#
-#
-#        tb.open(self.msfile2)
-#        ref=tb.getcolkeyword('TIME','MEASINFO')['Ref']
-#        tt=tb.getcol('TIME')
-#        tb.close()
-#        
-#        print ''
-#        print 'tt'
-#        print tt
-#        print ''
 
-#        trange = qa.time(me.epoch('ref','%fs' % tt[0])['m0'], prec=8, form='ymd')[0]
-#        #trange0 = qa.time(me.epoch('ref','%fs' % tt[0])['m0'], prec=8, form='ymd')[0]
-#        #trange1 = qa.time(me.epoch('ref','%fs' % tt[1])['m0'], prec=8, form='ymd')[0]
-#        #trange2 = qa.time(me.epoch('ref','%fs' % tt[2])['m0'], prec=8, form='ymd')[0]
-#        #print ''
-#        #print trange0, trange1, trange2
-#        #print
+    def test18(self):
+        '''Visstat2 18: Test using reportingaxes=field, datacolumn=corrected, intent=on'''
+        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }   
+       
+        correlation_type=['RR','LL']
+        sd_correlation_type=['0', '1']
+        datacolumn_list=['corrected']
+        #spw_list=['0', '1', '3']
+        spw_list=['0']
+        field_list=['1']
+        reporting_axes=['field']
+        check_list=['rms', 'max', 'min', 'sum', 'median', 'stddev', 'mean']
 
+        for dt in datacolumn_list:
+            for col, sd_pol in izip(correlation_type, sd_correlation_type):
+                    for fd in field_list:
+                        sd_intent_on  = sdstat(infile=self.msfile4, pol=sd_pol, field=fd)
+                        v2_intent_on = visstat2(vis=self.msfile3, axis='real',reportingaxes=reporting_axes[0], 
+                                         correlation=col, datacolumn=dt, intent='OBSERVE_TARGET#ON_SOURCE',field=fd)
+                        for check in check_list:
+                            print ''
+                            print 'check on', check
+                            print sd_intent_on[check]
+                            print v2_intent_on['FIELD_ID='+ fd][check]
 
+                            if(abs((sd_intent_on[check]-v2_intent_on['FIELD_ID='+ fd][check])/sd_intent_on[check]) > 0.0001):
+                                print abs((sd_intent_on[check]-v2_intent_on['FIELD_ID='+ fd][check])/sd_intent_on[check])
+                                retValue['success']= False
+                                retValue['error_msgs']=retValue['error_msgs']
+                            # +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='integragtion')"
 
+        self.assertTrue(retValue['success'],retValue['error_msgs'])
 
-#        for dt in datacolumn_list:
-#            for col, sd_pol in izip(correlation_type, sd_correlation_type):
-#                num_tt=0
-#                for time in tt:
-#                    for fd in field_list:
-#                        #trange = qa.time(me.epoch('ref','%fs' % time)['m0'], prec=8, form='ymd')[0]
-#                        #sd = sdstat(infile=self.msfile2_asap, timerange=str(trange), pol=sd_pol, spw=spwin)
-#
-#                        print ''
-#                        print 'msfile3', self.msfile3
-#                        print 'msfile4', self.msfile4
-#                        print ''
-#                        print 'field ', fd
-#
-#                        #sd = sdstat(infile=self.msfile3, pol=sd_pol, spw=spwin)
-#                        sd = sdstat(infile=self.msfile3, pol=sd_pol, field=fd)
-#                        
-#                        print ''
-#                        print 'sd', sd
-#                        print ''
-#                        #v2 = visstat2(vis=self.msfile2, axis='amp', timerange=str(trange),reportingaxes=reporting_axes[0], correlation=col, datacolumn=dt, spw=spwin, intent=intent_list[0])
-#                        v2 = visstat2(vis=self.msfile4, axis='amp',reportingaxes=reporting_axes[0], correlation=col, datacolumn=dt, intent=intent_list[0],field=fd)
-#                        print ''
- #                       print 'v2', v2
- #                       print ''
- #                       
-#
-#                        v2_keys=v2.keys()
-#                        for check in check_list:
-#                            print sd[check]
-#                            print v2['FIELD_ID='+ fd][check]
-#                            if(abs((sd[check]-v2['FIELD_ID='+ fd][check])/sd[check]) > 0.0001):
-#                                retValue['success']= False
-#                                retValue['error_msgs']=retValue['error_msgs']
-#                            # +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='integragtion')"
-
-#                        num_tt +=1
-#                        if num_tt==3:
-#                            break
-#
-#        self.assertTrue(retValue['success'],retValue['error_msgs'])
-"""
 
 
 
