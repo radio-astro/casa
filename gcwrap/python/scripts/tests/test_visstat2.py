@@ -53,7 +53,9 @@ class visstat2_test(unittest.TestCase):
  
         self.msfile3="OrionS_rawACSmod_calave_intent_on1_off3.ms"
         self.msfile4="OrionS_rawACSmod_calave_intent_on1.ms"
-        #self.msfile5="OrionS_rawACSmod_calave_intent_off.ms"
+
+        self.msfile5="OrionS_rawACSmod_calave_intent_on3_off1.ms"
+        self.msfile6="OrionS_rawACSmod_calave_intent_off1.ms"
 
         #if(not os.path.exists(self.msfile)):
         #if(os.path.exists(self.msfile)):
@@ -68,7 +70,8 @@ class visstat2_test(unittest.TestCase):
         shutil.copytree(datapath+self.msfile2_asap, self.msfile2_asap)
         shutil.copytree(datapath+self.msfile3, self.msfile3)
         shutil.copytree(datapath+self.msfile4, self.msfile4)
-        #shutil.copytree(datapath+self.msfile5, self.msfile5)
+        shutil.copytree(datapath+self.msfile5, self.msfile5)
+        shutil.copytree(datapath+self.msfile6, self.msfile6)
         #clearcal(self.msfile, addmodel=True)
 
         #default('visstat')
@@ -79,7 +82,10 @@ class visstat2_test(unittest.TestCase):
         shutil.rmtree(self.msfile2)
         shutil.rmtree(self.msfile2_asap)
         shutil.rmtree(self.msfile3)
-        shutil.rmtree(self.msfile4)
+        shutil.rmtree(self.msfile4) 
+        shutil.rmtree(self.msfile5)
+        shutil.rmtree(self.msfile6)
+
 
 
 
@@ -1853,20 +1859,39 @@ class visstat2_test(unittest.TestCase):
         for dt in datacolumn_list:
             for col, sd_pol in izip(correlation_type, sd_correlation_type):
                     for fd in field_list:
-                        sd_intent_on  = sdstat(infile=self.msfile4, pol=sd_pol, field=fd)
                         v2_intent_on = visstat2(vis=self.msfile3, axis='real',reportingaxes=reporting_axes[0], 
                                          correlation=col, datacolumn=dt, intent='OBSERVE_TARGET#ON_SOURCE',field=fd)
+                        sd_intent_on  = sdstat(infile=self.msfile4, pol=sd_pol, field=fd)
+
+
+                        v2_intent_off = visstat2(vis=self.msfile5, axis='real',reportingaxes=reporting_axes[0], 
+                                         correlation=col, datacolumn=dt, intent='OBSERVE_TARGET#OFF_SOURCE',field=fd)
+                        sd_intent_off  = sdstat(infile=self.msfile6, pol=sd_pol, field=fd)
+                        
+                        
                         for check in check_list:
                             print ''
                             print 'check on', check
                             print sd_intent_on[check]
                             print v2_intent_on['FIELD_ID='+ fd][check]
-
+                            
+                            print 'check off', check
+                            print sd_intent_off[check]
+                            print v2_intent_off['FIELD_ID='+ fd][check]
+                            
+                            
                             if(abs((sd_intent_on[check]-v2_intent_on['FIELD_ID='+ fd][check])/sd_intent_on[check]) > 0.0001):
-                                print abs((sd_intent_on[check]-v2_intent_on['FIELD_ID='+ fd][check])/sd_intent_on[check])
+                                #print abs((sd_intent_on[check]-v2_intent_on['FIELD_ID='+ fd][check])/sd_intent_on[check])
                                 retValue['success']= False
                                 retValue['error_msgs']=retValue['error_msgs']
                             # +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='integragtion')"
+                                
+
+                            if(abs((sd_intent_off[check]-v2_intent_off['FIELD_ID='+ fd][check])/sd_intent_off[check]) > 0.0001):
+                                print abs((sd_intent_off[check]-v2_intent_off['FIELD_ID='+ fd][check])/sd_intent_off[check])
+                                retValue['success']= False
+                                retValue['error_msgs']=retValue['error_msgs']
+                            # +"\nError: Failed with visstat2(vis=msfile, axis='amp', reportingaxes='integragtion')"    
 
         self.assertTrue(retValue['success'],retValue['error_msgs'])
 
