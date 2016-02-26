@@ -240,7 +240,8 @@ public:
     
     // Returns the masked data used for this plot.
     virtual PlotMaskedPointDataPtr maskedData() const = 0;
-    
+    virtual void clearData() = 0;
+
     // Returns true if this plot has lines shown for masked points, false
     // otherwise.
     virtual bool maskedLinesShown() const = 0;

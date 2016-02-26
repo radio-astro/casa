@@ -317,6 +317,9 @@ private:
     //Adjust the amount of plot data that this plot is holding.
     void resizePlots( int rows, int cols );
 
+    // Clear data when deleting cache to prevent seg fault in other thread
+    void clearPlotData();
+
     //Return the dimensions of the plot data that this plot should hold.
     void getPlotSize( Int& rows, Int& cols );
 

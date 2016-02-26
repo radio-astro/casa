@@ -132,6 +132,9 @@ public:
     // Implements MaskedScatterPlot::maskedData().
     PlotMaskedPointDataPtr maskedData() const;
 
+    // When underlying data is deleted
+    void clearData();
+
     // Implements MaskedScatterPlot::maskedLinesShown().
     bool maskedLinesShown() const;
 

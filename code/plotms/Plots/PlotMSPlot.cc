@@ -444,6 +444,7 @@ bool PlotMSPlot::updateCache() {
 	// Delete existing cache if it doesn't match
 	if (CacheFactory::needNewCache(itsCache_, data->filename())) {
 		if(itsCache_) {
+            clearPlotData();  // plot has ptr to cache indexer about to be deleted
 			delete itsCache_;
 			itsCache_ = NULL;
 		}
@@ -639,6 +640,16 @@ void PlotMSPlot::updatePlots() {
 	}
 }
 
+void PlotMSPlot::clearPlotData() {
+	for(uInt row = 0; row < itsPlots_.size(); ++row) {
+		for(uInt col = 0; col < itsPlots_[row].size(); ++col) {
+			bool plottable = itsParent_->getPlotManager().isPlottable( this );
+			if(!itsPlots_[row][col].null() && plottable ) {
+				itsPlots_[row][col]->clearData();
+			}
+		}
+	}
+}
 bool PlotMSPlot::updateIndexing() {
 	PMS_PP_Iteration *iter = itsParams_.typedGroup<PMS_PP_Iteration>();
 	PMS_PP_Axes* axes = itsParams_.typedGroup<PMS_PP_Axes>();

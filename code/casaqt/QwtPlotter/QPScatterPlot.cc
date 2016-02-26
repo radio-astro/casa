@@ -142,10 +142,10 @@ QwtDoubleRect QPScatterPlot::boundingRect() const {
         else
             ret = data->minsMaxes(xMin, xMax, yMin, yMax);
         
-    } else {
+    } else if (!m_data.null()) {
         ret = const_cast<PlotPointDataPtr&>(m_data)->minsMaxes(
                 xMin, xMax, yMin, yMax);
-    }
+    } else ret=0;
     
     // have to switch y min and max for some reason..
     if(!ret) return QwtDoubleRect();
@@ -209,6 +209,12 @@ void QPScatterPlot::setSymbol(const PlotSymbol& sym) {
 
 
 PlotMaskedPointDataPtr QPScatterPlot::maskedData() const{ return m_maskedData;}
+
+void QPScatterPlot::clearData() {
+    // null pointer when data is deleted in another thread
+    m_maskedData = PlotMaskedPointDataPtr();
+    m_data = PlotPointDataPtr();
+}
 
 bool QPScatterPlot::maskedLinesShown() const {
     return m_maskedLine.style() != PlotLine::NOLINE; }
