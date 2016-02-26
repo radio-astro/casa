@@ -8,6 +8,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
 from pipeline.infrastructure import casa_tasks
+from pipeline.hif.tasks.common import caltablefix
 from . import resultobjects
 
 LOG = infrastructure.get_logger(__name__)
@@ -83,6 +84,9 @@ class Tsyscal(basetask.StandardTaskTemplate):
         gencal_job = casa_tasks.gencal(**gencal_args)
         self._executor.execute(gencal_job)
 
+        # Fix the empheris coordinates in the caltable if necessary
+        caltablefix.fixcaltable (inputs.ms.name,  gencal_args['caltable'])
+
         LOG.todo('tsysspwmap heuristic re-reads measurement set!')
         LOG.todo('tsysspwmap heuristic won\'t handle missing file')
         nospwmap, spwmap = tsysspwmap(ms=inputs.ms, tsystable=gencal_args['caltable'],
@@ -100,6 +104,7 @@ class Tsyscal(basetask.StandardTaskTemplate):
     def analyse(self, result):
         # With no best caltable to find, our task is simply to set the one
         # caltable as the best result
+
 
         # double-check that the caltable was actually generated
         on_disk = [ca for ca in result.pool
