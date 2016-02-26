@@ -1617,7 +1617,7 @@ class visstat2_test(unittest.TestCase):
 
 
     def test13(self):
-        '''Visstat2 13: Test using reportingaxes=ddid, correlation=[all,LL,RR], datacolumn=float_data spw=[0,1,2,3], intent'''
+        '''Visstat2 13: Test using reportingaxes=ddid, correlation=[all,LL,RR], datacolumn=float_data spw=[0,1,2,3]'''
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }   
         #clearcal(self.msfile, addmodel=True)
        
@@ -1627,7 +1627,7 @@ class visstat2_test(unittest.TestCase):
         spw_list=['0', '1', '2', '3']
         reporting_axes=['ddid']
         check_list=['rms', 'max', 'min', 'sum', 'median', 'stddev', 'mean']
-        intent_list=['OBSERVE_TARGET#ON_SOURCE,POSITION_SWITCH']
+        intent_list=['']
 
         tb.open(self.msfile2)
         ref=tb.getcolkeyword('TIME','MEASINFO')['Ref']
@@ -1660,7 +1660,7 @@ class visstat2_test(unittest.TestCase):
 
 
     def test14(self):
-        '''Visstat2 14: Test using reportingaxes=integration, datacolumn=float_data, intent=on'''
+        '''Visstat2 14: Test using reportingaxes=integration, datacolumn=float_data'''
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }   
        
         correlation_type=['RR', 'LL']
@@ -1670,7 +1670,7 @@ class visstat2_test(unittest.TestCase):
         reporting_axes=['integration']
         check_list=['rms', 'max', 'min', 'sum', 'median', 'stddev', 'mean']
 
-        intent_list=['OBSERVE_TARGET#ON_SOURCE,POSITION_SWITCH']
+        intent_list=['']
         #intent_list=['OBSERVE_TARGET#OFF_SOURCE,POSITION_SWITCH']
         tb.open(self.msfile2)
         ref=tb.getcolkeyword('TIME','MEASINFO')['Ref']
@@ -1844,7 +1844,7 @@ class visstat2_test(unittest.TestCase):
 
 
     def test18(self):
-        '''Visstat2 18: Test using reportingaxes=field, datacolumn=corrected, intent=on'''
+        '''Visstat2 18: Test using reportingaxes=field, datacolumn=corrected, intent=[on,off]'''
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }   
        
         correlation_type=['RR','LL']
