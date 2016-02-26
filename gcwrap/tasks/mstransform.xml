@@ -39,6 +39,27 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     (DATA, LAG_DATA and/or FLOAT_DATA, and possibly MODEL_DATA and/or
     CORRECTED_DATA) can be selected. It can also be used to create a normal
     MS, split-based on the given data selection parameters.
+
+    The mstransform task creates a Multi-MS in parallel, using the CASA MPI framework.
+    The user should start CASA as follows in order to run it in parallel.
+    
+    1) Start CASA on a single node with 8 engines. The first engine will be used as the
+       MPIClient, where the user will see the CASA prompt. All other engines will be used
+       as MPIServers and will process the data in parallel.
+           mpicasa -n 8 casa --nogui --log2term
+           mstransform(.....)
+        
+    2) Running on a group of nodes in a cluster.
+           mpicasa -hostfile user_hostfile casa ....
+           mstransform(.....)
+            
+        where user_hostfile contains the names of the nodes and the number of engines to use 
+        in each one of them. Example:
+            pc001234a, slots=5
+            pc001234b, slots=4
+     
+    If CASA is started without mpicasa, it is still possible to create an MMS, but
+    the processing will be done in sequential.
 	
     The resulting WEIGHT_SPECTRUM produced by mstransform is in the statistical
     sense correct for the simple cases of channel average and time average, but not for
@@ -74,12 +95,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>False</value>
         </param>
         <param type="string" name="separationaxis" ignorecase="true" subparam="true">
-            <description>Axis to do parallelization across(scan,spw,auto).</description>
+            <description>Axis to do parallelization across(scan,spw,auto,baseline).</description>
             <value>auto</value>
             <allowed kind="enum" ignorecase="true">
                 <value>auto</value>
                 <value>spw</value>
                 <value>scan</value>
+                <value>baseline</value>
             </allowed>
         </param>
         <param type="any" name="numsubms" subparam="true">
@@ -441,20 +463,31 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
         separationaxis -- Axis to do parallelization across. 
             default: 'auto'
-            options: 'scan', 'spw', 'auto'
-            The 'auto' option will partition per scan/spw to obtain optimal load balancing with the
+            options: 'scan', 'spw', 'auto', 'baseline'
+
+            * The 'auto' option will partition per scan/spw to obtain optimal load balancing with the
              following criteria:
     
             1 - Maximize the scan/spw/field distribution across sub-MSs
             2 - Generate sub-MSs with similar size
+
+            * The 'scan' or 'spw' axes will partition the MS into scan or spw. The individual sub-MSs may
+            not be balanced with respect to the number of rows.
+
+            * The 'baseline' axis is mostly useful for Single-Dish data. This axis will partition the MS
+              based on the available baselines. If the user wants only auto-correlations, use the
+              antenna selection such as antenna='*&amp;&amp;&amp;' together with this separation axis. Note that in
+              if numsubms='auto', partition will try to create as many subMSs as the number of available
+              servers in the cluster. If the user wants to have one subMS for each baseline, set the numsubms
+              parameter to a number higher than the number of baselines to achieve this.        
                
         numsubms -- The number of sub-MSs to create.
             default: 'auto'
             Options: any integer number (example: numsubms=4)
     
                The default 'auto' is to partition using the number of available servers in the cluster.
-               If the task is unable to determine the number of running servers, it
-               uses 8 as the default.
+               If the task is unable to determine the number of running servers, or the user did not start CASA
+               using mpicasa, numsubms will use 8 as the default.
                 
     tileshape -- List with 1 or 3 elements describing the tile shape that will be used
                  to save the columns to disk. (list)

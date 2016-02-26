@@ -257,7 +257,7 @@ class ParallelDataHelper(ParallelTaskHelper):
                         break
                                                 
                                     
-        elif self.__taskname == "split2":                            
+        elif self.__taskname == "split2" or self.__taskname == "split":                            
             if (sepaxis != 'spw' and self.__args['combine'] == 'scan'):
                 scansel = self.__getScanIds(self.__args['vis'], self.__args['scan'])
                 timebin = self.__args['timebin']
