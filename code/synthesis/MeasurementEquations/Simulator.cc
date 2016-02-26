@@ -2007,15 +2007,15 @@ Bool Simulator::observe(const String&   sourcename,
 			const String&   spwname,
 			const Quantity& startTime, 
 			const Quantity& stopTime,
-			const Bool add_observation=True,
-			const Bool state_sig=True,
-			const Bool state_ref=True,
-			const double& state_cal=0.,
-			const double& state_load=0.,
-			const unsigned int state_sub_scan=1,
-			const String& state_obs_mode="OBSERVE_TARGET#ON_SOURCE",
-			const String& observername="CASA simulator",
-			const String& projectname="CASA simulation")
+			const Bool add_observation,
+			const Bool state_sig,
+			const Bool state_ref,
+			const double& state_cal,
+			const double& state_load,
+			const unsigned int state_sub_scan,
+			const String& state_obs_mode,
+			const String& observername,
+			const String& projectname)
 {
   LogIO os(LogOrigin("Simulator", "observe()", WHERE));
   
