@@ -6,6 +6,8 @@ import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.utils as utils
 from pipeline.infrastructure import casa_tasks
+from pipeline.hif.tasks.common import caltablefix
+
 from . import common
 
 LOG = infrastructure.get_logger(__name__)
@@ -97,6 +99,9 @@ class GaincalWorker(basetask.StandardTaskTemplate):
         # execute the jobs
         for job in jobs:
             self._executor.execute(job)
+
+        # fix the caltable for C3R4
+        caltablefix.fixcaltable (inputs.ms.name, inputs.caltable)
 
         # create the data selection target defining which data this caltable 
         # should calibrate 
