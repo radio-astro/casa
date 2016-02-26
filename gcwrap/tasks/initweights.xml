@@ -80,9 +80,9 @@
 <example>
 
       This task provides for initialization of the weight information
-      in the MS.  For ALMA and EVLA data, it should not generally be
-      necessary to use this task, as the weight information should 
-      have been initialized properly at fill time (v4.2.2 and later).
+      in the MS.  For ALMA interferometry and EVLA data, it should not
+      generally be necessary to use this task, as the weight information 
+      should have been initialized properly at fill time (v4.2.2 and later).
 
       Several initialization modes are supported via the wtmode parameter.
 
@@ -107,10 +107,28 @@
       is common, and properly initialized and calibrated weights
       will be used for imaging sensitivity estimates.
 
-      For the above wtmodes, if dowtspec=T (or if the WEIGHT_SPECTRUM
+      There are two EXPERIMENTAL modes, wtmode='tsys' and 'tinttsys'.
+      In the modes, SIGMA and WEIGHT will be initialized according to
+      Tsys, bandwidth, and integration time (used only in 'tinttsys'),
+      i.e.,
+          tsys    : weight=bw/Tsys^2
+          tinttsys: weight=bw*t_int/Tsys^2
+      These modes use Tsys values to calculate weight as is done in
+      Tsys calibration. Tsys values are taken from a tsys calibration
+      table given as tsystable. Selection of gain field (gainfield),
+      interpolation method (interp), and spectral window mapping (spwmap)
+      are supported, too.
+      Note if the weight in an MS is initialized with these modes and
+      Tsys calibration table is applied with calwt=True after that, the
+      weight would be contaminated by being devided by square of Tsys
+      twice.
+      !!! USERS ARE ADVICED TO USE THESE EXPERIMENTAL MODES WITH CARE !!!
+
+      For the above wtmodes, if dowtsp=T (or if the WEIGHT_SPECTRUM
       column already exists), the WEIGHT_SPECTRUM column will be
-      initialized (uniformly in channel), in a manner consistent with
-      the disposition of the WEIGHT column.  If the WEIGHT_SPECTRUM 
+      initialized (uniformly in channel in wtmode='nyq', 'sigma',
+      'weight', and 'ones'), in a manner consistent with the
+      disposition of the WEIGHT column.  If the WEIGHT_SPECTRUM 
       column does not exist, dowtsp=T will force its creation.
       Use of the WEIGHT_SPECTRUM column is only meaningful
       for ALMA data which will be calibrated with channelized
@@ -119,6 +137,11 @@
       channel-dependent flagging.  (A task for channel-dependent
       weight estimation from the data itself is also currently under
       development).
+      In non-channelized modes (wtmode='nyq', 'sigma', 'weight', and
+      'ones') or when dowtsp=F, SIGMA_SPECTRUM column will be removed
+      from MS. On the other hand, SIGMA_SPECTRUM column is added and
+      initialized in channelized modes (wtmode='tsys' and 'tinttsys')
+      if dowtsp=T or WEIGHT_SPECTRUM already column exists.
 
       Two additional modes are available for managing the spectral
       weight info columns; these should be used with extreme care: If
