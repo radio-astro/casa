@@ -557,11 +557,13 @@ def  _compute_alpha_beta(imagename, nterms, taylorlist, residuallist, threshold,
    ia.open(namealpha);
    ia.putchunk(alpha);
    ia.calcmask(mask='"'+nameintensity+'"'+'>'+str(threshold));
+   ia.setbrightnessunit('')
    ia.close();
    if(nterms>2):
      ia.open(namebeta);
      ia.putchunk(beta);
      ia.calcmask(mask='"'+nameintensity+'"'+'>'+str(threshold));
+     ia.setbrightnessunit('')
      ia.close();
 
    # calc error
@@ -570,6 +572,7 @@ def  _compute_alpha_beta(imagename, nterms, taylorlist, residuallist, threshold,
       ia.open(nameerror);
       ia.putchunk(aerror);
       ia.calcmask(mask='"'+nameintensity+'"'+'>'+str(threshold));
+      ia.setbrightnessunit('')
       ia.close();
 
 
