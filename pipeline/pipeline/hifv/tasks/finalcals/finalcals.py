@@ -6,6 +6,7 @@ import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.hif.heuristics.findrefant as findrefant
+import pipeline.infrastructure.utils as utils
 
 import os
 import numpy as np
@@ -611,6 +612,7 @@ class Finalcals(basetask.StandardTaskTemplate):
             for myfield in fields:
                 spws = field_spws[myfield]
                 #spws = [1,2,3]
+                jobs = []
                 for myspw in spws:
                     reference_frequency = center_frequencies[myspw]
                     try:
@@ -625,14 +627,24 @@ class Finalcals(basetask.StandardTaskTemplate):
                     
                     LOG.info("Setting model for field "+str(myfield)+" spw "+str(myspw)+" using "+model_image)
 
-                    #Double check, but the fluxdensity=-1 should not matter since
+                    # Double check, but the fluxdensity=-1 should not matter since
                     #  the model image take precedence
                     try:
-                        setjy_result = self._do_setjy(calMs, str(myfield), str(myspw), model_image, -1)
-                        #result.measurements.update(setjy_result.measurements)
+                        job = self._do_setjy(calMs, str(myfield), str(myspw), model_image, -1)
+                        jobs.append(job)
+                        # result.measurements.update(setjy_result.measurements)
                     except Exception, e:
                         # something has gone wrong, return an empty result
-                        LOG.error('Unable to complete flux scaling operation')
+                        LOG.error('Unable to add flux scaling operation')
+                        LOG.exception(e)
+
+                LOG.info("Merging flux scaling operation for setjy jobs for "+self.inputs.vis)
+                jobs_and_components = utils.merge_jobs(jobs, casa_tasks.setjy, merge=('spw',))
+                for job, _ in jobs_and_components:
+                    try:
+                        self._executor.execute(job)
+                    except Exception, e:
+                        LOG.error('Unable to complete flux scaling operation.')
                         LOG.exception(e)
                         
         
@@ -655,7 +667,7 @@ class Finalcals(basetask.StandardTaskTemplate):
         
             job = casa_tasks.setjy(**task_args)
             
-            return self._executor.execute(job)
+            return job
         except Exception, e:
             print(e)
             return None
@@ -783,6 +795,7 @@ class Finalcals(basetask.StandardTaskTemplate):
         LOG.info("Setting power-law fit in the model column")
         
         for result in results:
+            jobs_calMs = []
             for spw_i in result[1]:
                 
                 try:
@@ -800,11 +813,18 @@ class Finalcals(basetask.StandardTaskTemplate):
                                  'standard'       : 'manual',
                                  'usescratch'     : True}
         
-                    job = casa_tasks.setjy(**task_args)
+                    # job = casa_tasks.setjy(**task_args)
+                    jobs_calMs.append(casa_tasks.setjy(**task_args))
             
-                    self._executor.execute(job)
+                    #self._executor.execute(job)
                 except Exception, e:
                     print(e)
+
+            # merge identical jobs into one job with a multi-spw argument
+            LOG.info("Merging setjy jobs for calibrators.ms")
+            jobs_and_components_calMs = utils.merge_jobs(jobs_calMs, casa_tasks.setjy, merge=('spw',))
+            for job, _ in jobs_and_components_calMs:
+                self._executor.execute(job)
                 
         return True
 
