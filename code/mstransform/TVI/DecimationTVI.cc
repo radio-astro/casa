@@ -187,7 +187,8 @@ Vector<Double> DecimationTVI::getFrequencies (	Double time,
 void DecimationTVI::writeFlag (const Cube<Bool> & flag)
 {
 	// Create a flag cube with the input VI shape
-	Cube<Bool> propagatedFlagCube(getVii()->getVisBuffer()->getShape(),False);
+	Cube<Bool> propagatedFlagCube;
+	propagatedFlagCube = getVii()->getVisBuffer()->flagCube();
 
 	// Propagate flags from the input cube to the propagated flag cube
 	propagateChanAvgFlags(flag,propagatedFlagCube);
@@ -247,7 +248,7 @@ void DecimationTVI::propagateChanAvgFlags (const Cube<Bool> &transformedFlagCube
 			{
 				for (size_t corr_i =0;corr_i<nCorr;corr_i++)
 				{
-					propagatedFlagCube(corr_i,chan_i,row_i) = transformedFlagCube(corr_i,outChan,row_i);
+					if (transformedFlagCube(corr_i,outChan,row_i)) propagatedFlagCube(corr_i,chan_i,row_i) = True;
 				}
 			}
 		}

@@ -262,8 +262,7 @@ void MSTransformIterator::propagateChanAvgFlags (const Cube<Bool> &avgFlagCube, 
 	size_t nTransChan = transformedShape(1);
 
 	// Reshape flag cube to match the input shape
-	expandedFlagCube.resize(inputShape,False);
-	expandedFlagCube = False;
+	expandedFlagCube = manager_p->getVisBuffer()->flagCube();
 
 	// Map input-output channel
 	uInt binCounts = 0;
@@ -295,7 +294,7 @@ void MSTransformIterator::propagateChanAvgFlags (const Cube<Bool> &avgFlagCube, 
 			{
 				for (size_t corr_i =0;corr_i<nCorr;corr_i++)
 				{
-					expandedFlagCube(corr_i,chan_i,row_i) = avgFlagCube(corr_i,outChan,row_i);
+					if (avgFlagCube(corr_i,outChan,row_i)) expandedFlagCube(corr_i,chan_i,row_i) = True;
 				}
 			}
 		}

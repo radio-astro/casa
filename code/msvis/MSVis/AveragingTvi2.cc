@@ -2605,7 +2605,8 @@ void AveragingTvi2::writeFlag (const Cube<Bool> & flag)
 			// Allocated propagated flag vector/cube
 			uInt nOriginalRows = getVii()->getVisBuffer()->nRows();
 			Vector<Bool> flagMapped(nOriginalRows,False);
-			Cube<Bool> flagCubeMapped(flag.shape()(0),flag.shape()(1),nOriginalRows,False);
+			Cube<Bool> flagCubeMapped;
+			flagCubeMapped = getVii()->getVisBuffer()->flagCube();
 
 			// Get original ant1/ant2/spw cols. to determine the mapped index
 			Vector<Int> orgAnt1 = getVii()->getVisBuffer()->antenna1();
@@ -2617,7 +2618,14 @@ void AveragingTvi2::writeFlag (const Cube<Bool> & flag)
 			{
 				uInt index = spwAnt1Ant2IndexMap[orgSPW(row)][orgAnt1(row)][orgAnt2(row)];
 				flagMapped(row) = flagRow(index);
-				flagCubeMapped.xyPlane(row) = flag.xyPlane(index);
+
+				for (uInt chan_i=0;chan_i<flagCubeMapped.shape()(1);chan_i++)
+				{
+					for (uInt corr_i=0;corr_i<flagCubeMapped.shape()(0);corr_i++)
+					{
+						if (flag(corr_i,chan_i,index)) flagCubeMapped(corr_i,chan_i,row) = True;
+					}
+				}
 			}
 
 			// Write propagated flag vector/cube
