@@ -1,9 +1,9 @@
 //# WProjectFT.h: Definition for WProjectFT
-//# Copyright (C) 1996,1997,1998,1999,2000,2002
+//# Copyright (C) 2003-2016
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
-//# under the terms of the GNU Library General Public License as published by
+//# under the terms of the GNU General Public License as published by
 //# the Free Software Foundation; either version 2 of the License, or (at your
 //# option) any later version.
 //#
@@ -12,7 +12,7 @@
 //# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
 //# License for more details.
 //#
-//# You should have received a copy of the GNU Library General Public License
+//# You should have received a copy of the GNU General Public License
 //# along with this library; if not, write to the Free Software Foundation,
 //# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
 //#
@@ -139,16 +139,16 @@ public:
   // <group>
   WProjectFT(
 	   Int nFacets, Long cachesize, Int tilesize=16, 
-	   Bool usezero=True, Bool useDoublePrec=False);
+	   Bool usezero=True, Bool useDoublePrec=False, const Double minW=-1.0, const Double maxW=-1.0, const Double rmsW=-1.0);
   //Constructor without tangent direction
   WProjectFT(Int nFacets, MPosition mLocation,
 	     Long cachesize, Int tilesize=16, 
-	     Bool usezero=True, Float padding=1.0, Bool useDoublePrec=False);
+	     Bool usezero=True, Float padding=1.0, Bool useDoublePrec=False, const Double minW=-1.0, const Double maxW=-1.0, const Double rmsW=-1.0);
   //Deprecated no longer need ms in constructor
   WProjectFT(
 	     Int nFacets, MDirection mTangent, MPosition mLocation,
 	     Long cachesize, Int tilesize=16, 
-	     Bool usezero=True, Float padding=1.0, Bool useDoublePrec=False);
+	     Bool usezero=True, Float padding=1.0, Bool useDoublePrec=False, const Double minW=-1.0, const Double maxW=-1.0, const Double rmsW=-1.0);
   // </group>
 
   // Construct from a Record containing the WProjectFT state
@@ -226,6 +226,8 @@ public:
   CountedPtr<WPConvFunc>& getConvFunc();
   virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
   virtual void ComputeResiduals(vi::VisBuffer2& /*vb*/, Bool /*useCorrected*/) {};
+  //Helper function to calculate min, max, rms of W in the data set
+  static void wStat(vi::VisibilityIterator2& vi, Double& minW, Double& maxW, Double& rmsW); 
 
 protected:
 
@@ -250,7 +252,11 @@ protected:
   void prepGridForDegrid();
   // Is this record on Grid? check both ends. This assumes that the
   // ends bracket the middle
-  Bool recordOnGrid(const vi::VisBuffer2& vb, Int rownr) const;
+  //Bool recordOnGrid(const vi::VisBuffer2& vb, Int rownr) const;
+
+  /////for openmp sectioning
+  void   findGridSector(const Int& nxp, const Int& nyp, const Int& ixsub, const Int& iysub, const Int& minx, const Int& miny, const Int& icounter, Int& x0, Int& y0, Int& nxsub, Int& nysub, const Bool linear); 
+
 
   // Image cache
   LatticeCache<Complex> * imageCache;
@@ -303,7 +309,8 @@ protected:
   String machineName_p;
 
   CountedPtr<WPConvFunc> wpConvFunc_p;
-
+  Double timemass_p, timegrid_p, timedegrid_p;
+  Double minW_p, maxW_p, rmsW_p;
 };
 } // end namespace refim
 } //# NAMESPACE CASA - END

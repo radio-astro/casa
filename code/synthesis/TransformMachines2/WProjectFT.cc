@@ -1,18 +1,18 @@
 //# WProjectFT.cc: Implementation of WProjectFT class
-//# Copyright (C) 1997,1998,1999,2000,2001,2002,2003
+//# Copyright (C) 2003-2016
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
-//# under the terms of the GNU Library General Public License as published by
+//# under the terms of the GNU General Public License as published by
 //# the Free Software Foundation; either version 2 of the License, or (at your
 //# option) any later version.
 //#
 //# This library is distributed in the hope that it will be useful, but WITHOUT
 //# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
 //# License for more details.
 //#
-//# You should have received a copy of the GNU Library General Public License
+//# You should have received a copy of the GNU General Public License
 //# along with this library; if not, write to the Free Software Foundation,
 //# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
 //#
@@ -75,7 +75,7 @@
 #include <casa/OS/Timer.h>
 #include <casa/OS/HostInfo.h>
 #include <casa/sstream.h>
-#ifdef HAS_OMP
+#ifdef _OPENMP
 #include <omp.h>
 #endif
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -86,50 +86,51 @@ using namespace casa::vi;
 using namespace casa::refim;
 
 WProjectFT::WProjectFT( Int nWPlanes, Long icachesize, Int itilesize, 
-			Bool usezero, Bool useDoublePrec)
+			Bool usezero, Bool useDoublePrec, const Double minW, const Double maxW, const Double rmsW)
   : FTMachine(), padding_p(1.0), nWPlanes_p(nWPlanes),
     imageCache(0), cachesize(icachesize), tilesize(itilesize),
     gridder(0), isTiled(False), 
     maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)), usezero_p(usezero), 
-    machineName_p("WProjectFT")
+    machineName_p("WProjectFT"), timemass_p(0.0), timegrid_p(0.0), timedegrid_p(0.0), minW_p(minW), maxW_p(maxW), rmsW_p(rmsW)
 {
   convSize=0;
   tangentSpecified_p=False;
   lastIndex_p=0;
   useDoubleGrid_p=useDoublePrec;
-  wpConvFunc_p=new WPConvFunc();
+  wpConvFunc_p=new WPConvFunc(minW, maxW, rmsW);
 
 }
 WProjectFT::WProjectFT(Int nWPlanes, 
 		       MPosition mLocation, 
 		       Long icachesize, Int itilesize, 
-		       Bool usezero, Float padding, Bool useDoublePrec)
+		       Bool usezero, Float padding, Bool useDoublePrec, const Double minW, const Double maxW, const Double rmsW)
   : FTMachine(), padding_p(padding), nWPlanes_p(nWPlanes),
     imageCache(0), cachesize(icachesize), tilesize(itilesize),
     gridder(0), isTiled(False),  
     maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
     usezero_p(usezero),  
-    machineName_p("WProjectFT")
+    machineName_p("WProjectFT"), timemass_p(0.0), timegrid_p(0.0), timedegrid_p(0.0), minW_p(minW), maxW_p(maxW), rmsW_p(rmsW)
+
 {
   convSize=0;
   savedWScale_p=0.0;
   tangentSpecified_p=False;
   mLocation_p=mLocation;
   lastIndex_p=0;
-  wpConvFunc_p=new WPConvFunc();
+  wpConvFunc_p=new WPConvFunc(minW, maxW, rmsW);
   useDoubleGrid_p=useDoublePrec;
 }
 WProjectFT::WProjectFT(
 		       Int nWPlanes, MDirection mTangent, 
 		       MPosition mLocation, 
 		       Long icachesize, Int itilesize, 
-		       Bool usezero, Float padding, Bool useDoublePrec)
+		       Bool usezero, Float padding, Bool useDoublePrec, const Double minW, const Double maxW, const Double rmsW)
   : FTMachine(), padding_p(padding), nWPlanes_p(nWPlanes),
     imageCache(0), cachesize(icachesize), tilesize(itilesize),
     gridder(0), isTiled(False),  
     maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
     usezero_p(usezero), 
-    machineName_p("WProjectFT")
+    machineName_p("WProjectFT"), timemass_p(0.0), timegrid_p(0.0), timedegrid_p(0.0), minW_p(minW), maxW_p(maxW), rmsW_p(rmsW)
 {
   convSize=0;
   savedWScale_p=0.0;
@@ -137,12 +138,12 @@ WProjectFT::WProjectFT(
   tangentSpecified_p=True;
   mLocation_p=mLocation;
   lastIndex_p=0;
-  wpConvFunc_p=new WPConvFunc();
+  wpConvFunc_p=new WPConvFunc(minW, maxW, rmsW);
   useDoubleGrid_p=useDoublePrec;
 }
 
 WProjectFT::WProjectFT(const RecordInterface& stateRec)
-  : FTMachine(),machineName_p("WProjectFT")
+  : FTMachine(),machineName_p("WProjectFT"), timemass_p(0.0), timegrid_p(0.0), timedegrid_p(0.0)
 {
   // Construct from the input state record
   String error;
@@ -187,12 +188,18 @@ WProjectFT& WProjectFT::operator=(const WProjectFT& other)
     usezero_p=other.usezero_p;
     machineName_p=other.machineName_p;
     wpConvFunc_p=other.wpConvFunc_p;
+    timemass_p=0.0;
+    timegrid_p=0.0;
+    timedegrid_p=0.0;
+    minW_p=other.minW_p;
+    maxW_p=other.maxW_p;
+    rmsW_p=other.rmsW_p;
   };
   return *this;
 };
 
 //----------------------------------------------------------------------
-  WProjectFT::WProjectFT(const WProjectFT& other) :FTMachine(), machineName_p("WProjectFT")
+  WProjectFT::WProjectFT(const WProjectFT& other) :FTMachine(), machineName_p("WProjectFT"),timemass_p(0.0), timegrid_p(0.0), timedegrid_p(0.0)
 {
   operator=(other);
 }
@@ -232,7 +239,7 @@ void WProjectFT::init() {
  
   sumWeight.resize(npol, nchan);
   
-  wConvSize=max(1, nWPlanes_p);
+  wConvSize=max(0, nWPlanes_p);
   convSupport.resize(wConvSize);
   convSupport=0;
 
@@ -321,6 +328,8 @@ void WProjectFT::findConvFunction(const ImageInterface<Complex>& image,
 				 convFunc, convSize, convSupport, 
 				 savedWScale_p); 
 
+  nWPlanes_p=convSupport.nelements();
+  wConvSize=max(1,nWPlanes_p);
   uvScale(2)=savedWScale_p;
 
   
@@ -425,6 +434,7 @@ void WProjectFT::prepGridForDegrid(){
 
 void WProjectFT::finalizeToVis()
 {
+  timedegrid_p=0.0;
   griddedData.resize();
   if(isTiled) {
     
@@ -486,10 +496,12 @@ void WProjectFT::initializeToSky(ImageInterface<Complex>& iimage,
   }
   else {
     IPosition gridShape(4, nx, ny, npol, nchan);
-    griddedData.resize(gridShape);
-    griddedData=Complex(0.0);
-    if(useDoubleGrid_p){
-      griddedData.resize();
+    if(!useDoubleGrid_p){
+      griddedData.resize(gridShape);
+      griddedData=Complex(0.0);
+    }
+    else{
+      //griddedData.resize();
       griddedData2.resize(gridShape);
       griddedData2=DComplex(0.0);
     }
@@ -502,7 +514,8 @@ void WProjectFT::initializeToSky(ImageInterface<Complex>& iimage,
 
 void WProjectFT::finalizeToSky()
 {
-  
+  timemass_p=0.0;
+  timegrid_p=0.0;
   // Now we flush the cache and report statistics
   // For memory based, we don't write anything out yet.
   if(isTiled) {
@@ -748,7 +761,8 @@ void WProjectFT::put(const VisBuffer2& vb, Int row, Bool dopsf,
   //No point in reading data if its not matching in frequency
   if(max(chanMap)==-1)
     return;
-
+  Timer tim;
+   tim.mark();
 
   const Matrix<Float> *imagingweight;
   imagingweight=&(vb.imagingWeight());
@@ -791,16 +805,10 @@ void WProjectFT::put(const VisBuffer2& vb, Int row, Bool dopsf,
   // when null, this step takes about 50us per uvw point. This
   // is just barely noticeable for Stokes I continuum and
   // irrelevant for other cases.
-  Matrix<Double> uvw(vb.uvw().shape());
-  uvw=0.0;
+  Matrix<Double> uvw(negateUV(vb));
   Vector<Double> dphase(vb.nRows());
   dphase=0.0;
-  //NEGATING to correct for an image inversion problem
-  for (Int i=startRow;i<=endRow;i++) {
-    for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(idim,i);
-    uvw(2,i)=vb.uvw()(2, i);
-  }
-  
+ 
   rotateUVW(uvw, dphase, vb);
   refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
 
@@ -843,26 +851,29 @@ void WProjectFT::put(const VisBuffer2& vb, Int row, Bool dopsf,
   const Double * visfreqstor=interpVisFreq_p.getStorage(del);
   const Double * scalestor=uvScale.getStorage(del);
   const Double * offsetstor=uvOffset.getStorage(del);
-  Int * locstor=loc.getStorage(del);
-  Int * offstor=off.getStorage(del);
+  Bool delloc, deloff;
+  Int * locstor=loc.getStorage(delloc);
+  Int * offstor=off.getStorage(deloff);
   const Double *dpstor=dphase.getStorage(del);
   Double cinv=Double(1.0)/C::c;
   Int irow;
   Int dow=1;
   Int nth=1;
-#ifdef HAS_OMP
+#ifdef _OPENMP
   if(numthreads_p >0){
     nth=min(numthreads_p, omp_get_max_threads());
   }
   else{   
     nth= omp_get_max_threads();
   }
-  nth=min(4,nth);
+  //nth=min(4,nth);
 #endif
 
-#pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvc, scalestor, offsetstor, csamp, phasorstor, uvwstor, locstor, offstor, dpstor, cinv, dow) shared(startRow, endRow) num_threads(nth)  
+
+#pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvc, scalestor, offsetstor, csamp, phasorstor, uvwstor, locstor, offstor, dpstor, cinv, dow) shared(startRow, endRow) num_threads(nth)
+
 {
-#pragma omp for
+#pragma omp for schedule(dynamic)
   for (irow=startRow; irow<=endRow;irow++){
     //locateuvw(uvwstor,dpstor, visfreqstor, nvc, scalestor, offsetstor, csamp, 
     //	      locstor, 
@@ -871,59 +882,82 @@ void WProjectFT::put(const VisBuffer2& vb, Int row, Bool dopsf,
   }  
 
  }//end pragma parallel
-
-  Int x0, y0, nxsub, nysub, ixsub, iysub, icounter, ix, iy;
+  Int maxx=0; 
+  Int minx=1000000;
+  Int maxy=0;
+  Int miny=1000000;
+  //Int maxsupp=max(convSupport);
+  loc.putStorage(locstor, delloc);
+  maxx=max(loc.yzPlane(0));
+  maxx=min(nx-1,  maxx-1);
+  minx=min(loc.yzPlane(0));
+  minx=max(0, minx-1);
+  maxy=max(loc.yzPlane(1));
+  maxy=min(ny-1, maxy-1);
+  miny=min(loc.yzPlane(1));
+  miny=max(0,miny-1);
+  locstor=loc.getStorage(delloc);
+  //cerr << "dels " << delloc << "  " << deloff << endl;
+  //cerr << "LOC " << min(loc.xzPlane(0)) << "  max " << loc.shape() << endl;
+  timemass_p +=tim.real();
+  Int x0, y0, nxsub, nysub, ixsub, iysub, icounter;
   ixsub=1;
   iysub=1;
-  if (nth >3){
-    ixsub=2;
-    iysub=2; 
+  if (nth >4){
+    ixsub=10;
+    iysub=10; 
   }
-  else if(nth >1){
+  else {
      ixsub=2;
-     iysub=1; 
+     iysub=2; 
   }
   x0=1;
   y0=1;
-  nxsub=nx;
-  nysub=ny;
+  //nxsub=nx;
+  //nysub=ny;
+  nxsub=maxx-minx+1;
+  nysub=maxy-miny+1;
   Int rbeg=startRow+1;
   Int rend=endRow+1;
-  Block<Matrix<Double> > sumwgt(ixsub*iysub);
-  for (icounter=0; icounter < ixsub*iysub; ++icounter){
-    sumwgt[icounter].resize(sumWeight.shape());
-    sumwgt[icounter].set(0.0);
-  }
+ 
   const Int* pmapstor=polMap.getStorage(del);
   const Int *cmapstor=chanMap.getStorage(del);
   Int nc=nchan;
   Int np=npol;
-  Int nxp=nx;
-  Int nyp=ny;
+  // Int nxp=nx;
+  // Int nyp=ny;
+  minx=min(nx-maxx, minx);
+  miny=min(ny-maxy, miny);
+  maxx=nx-minx-1;
+  maxy=ny-miny-1;
+  nxsub=maxx-minx+1;
+  nysub=maxy-miny+1;
+  Int nxcopy=nx;
+  Int nycopy=ny;
+  //cerr << "maxx " << maxx << " minx " << minx << " maxy " << maxy << " miny " << miny << endl;
+  Int nxp=maxx-minx+1;
+  Int nyp=maxy-miny+1;
   Int csize=convSize;
    Int wcsize=wConvSize;
   const Int * flagstor=flags.getStorage(del);
   const Int * rowflagstor=rowFlags.getStorage(del);
   const Int * suppstor=convSupport.getStorage(del);
-
+  tim.mark(); 
+  Block<Matrix<Double> > sumwgt(ixsub*iysub);
+  for (icounter=0; icounter < ixsub*iysub; ++icounter){
+    sumwgt[icounter].resize(sumWeight.shape());
+    sumwgt[icounter].set(0.0);
+  }
   if(!useDoubleGrid_p){
     Complex *gridstor=griddedData.getStorage(gridcopy);
-#pragma omp parallel default(none) private(icounter,ix,iy,x0,y0,nxsub,nysub, del) firstprivate(idopsf, uvwstor, datStorage, wgtStorage, flagstor, rowflagstor, convstor, pmapstor, cmapstor, gridstor, suppstor, nxp, nyp, np, nc,ixsub, iysub, rend, rbeg, csamp, csize, wcsize, nvp, nvc, nvisrow, phasorstor, locstor, offstor) shared(sumwgt) num_threads(ixsub*iysub)
+#pragma omp parallel default(none) private(icounter,x0,y0,nxsub,nysub, del) firstprivate(idopsf, uvwstor, datStorage, wgtStorage, flagstor, rowflagstor, convstor, pmapstor, cmapstor, gridstor, suppstor, nxp, nyp, nxcopy, nycopy, np, nc,ixsub, iysub, rend, rbeg, csamp, csize, wcsize, nvp, nvc, nvisrow, phasorstor, locstor, offstor, minx, miny) shared(sumwgt) num_threads(nth)
     {
-#pragma omp for      
+
+#pragma omp for schedule(dynamic) 
     for(icounter=0; icounter < ixsub*iysub; ++icounter){
-      ix= (icounter+1)-((icounter)/ixsub)*ixsub;
-      iy=(icounter)/ixsub+1;
-      y0=(nyp/iysub)*(iy-1)+1;
-      nysub=nyp/iysub;
-      if( iy == iysub) {
-	nysub=nyp-(nyp/iysub)*(iy-1);
-      }
-      x0=(nxp/ixsub)*(ix-1)+1;
-      nxsub=nxp/ixsub;
-      if( ix == ixsub){
-	nxsub=nxp-(nxp/ixsub)*(ix-1);
-      } 
+     
+      findGridSector(nxp, nyp, ixsub, iysub, minx, miny, icounter, x0, y0, nxsub, nysub, True);
+      
 
       sectgwgrids(uvwstor,
 	   datStorage,
@@ -935,8 +969,8 @@ void WProjectFT::put(const VisBuffer2& vb, Int row, Bool dopsf,
 	   wgtStorage,
 	   &nvisrow,
 	   gridstor,
-	   &nxp,
-	   &nyp,
+	   &nxcopy,
+	   &nycopy,
 	   &np,
 	   &nc,
 	   suppstor,
@@ -952,7 +986,7 @@ void WProjectFT::put(const VisBuffer2& vb, Int row, Bool dopsf,
     }
     }//end pragma parallel
 
-
+    timegrid_p+=tim.real();
 
     for (icounter=0; icounter < ixsub*iysub; ++icounter){
       sumWeight=sumWeight+sumwgt[icounter];
@@ -962,22 +996,12 @@ void WProjectFT::put(const VisBuffer2& vb, Int row, Bool dopsf,
   }
   else{
     DComplex *gridstor=griddedData2.getStorage(gridcopy);
-#pragma omp parallel default(none) private(icounter,ix,iy,x0,y0,nxsub,nysub, del) firstprivate(idopsf, uvwstor, datStorage, wgtStorage, flagstor, rowflagstor, convstor, pmapstor, cmapstor, gridstor, suppstor, nxp, nyp, np, nc,ixsub, iysub, rend, rbeg, csamp, csize, wcsize, nvp, nvc, nvisrow, phasorstor, locstor, offstor) shared(sumwgt) num_threads(ixsub*iysub)
+#pragma omp parallel default(none) private(icounter,x0,y0,nxsub,nysub, del) firstprivate(idopsf, uvwstor, datStorage, wgtStorage, flagstor, rowflagstor, convstor, pmapstor, cmapstor, gridstor, suppstor, nxp, nyp, nxcopy, nycopy, np, nc,ixsub, iysub, rend, rbeg, csamp, csize, wcsize, nvp, nvc, nvisrow, phasorstor, locstor, offstor,minx,miny) shared(sumwgt) num_threads(nth)
     {
-#pragma omp for      
+#pragma omp for  schedule(dynamic)    
     for(icounter=0; icounter < ixsub*iysub; ++icounter){
-      ix= (icounter+1)-((icounter)/ixsub)*ixsub;
-      iy=(icounter)/ixsub+1;
-      y0=(nyp/iysub)*(iy-1)+1;
-      nysub=nyp/iysub;
-      if( iy == iysub) {
-	nysub=nyp-(nyp/iysub)*(iy-1);
-      }
-      x0=(nxp/ixsub)*(ix-1)+1;
-      nxsub=nxp/ixsub;
-      if( ix == ixsub){
-	nxsub=nxp-(nxp/ixsub)*(ix-1);
-      } 
+      //Int realicounter=icounter%2==0 ? ixsub*iysub/2+icounter/2 :  ixsub*iysub/2-icounter/2-1;
+      findGridSector(nxp, nyp, ixsub, iysub, minx, miny, icounter, x0, y0, nxsub, nysub, True);
 
       sectgwgridd(uvwstor,
 	   datStorage,
@@ -989,8 +1013,8 @@ void WProjectFT::put(const VisBuffer2& vb, Int row, Bool dopsf,
 	   wgtStorage,
 	   &nvisrow,
 	   gridstor,
-	   &nxp,
-	   &nyp,
+	   &nxcopy,
+	   &nycopy,
 	   &np,
 	   &nc,
 	   suppstor,
@@ -1006,7 +1030,7 @@ void WProjectFT::put(const VisBuffer2& vb, Int row, Bool dopsf,
     }
     }//end pragma parallel
 
-
+    timegrid_p+=tim.real();
 
     for (icounter=0; icounter < ixsub*iysub; ++icounter){
       sumWeight=sumWeight+sumwgt[icounter];
@@ -1020,6 +1044,95 @@ void WProjectFT::put(const VisBuffer2& vb, Int row, Bool dopsf,
     data.freeStorage(datStorage, isCopy);
   elWeight.freeStorage(wgtStorage,iswgtCopy);
 }
+
+void WProjectFT::findGridSector(const Int& nxp, const Int& nyp, const Int& ixsub, const Int& iysub, const Int& minx, const Int& miny, const Int& icounter, Int& x0, Int& y0, Int&  nxsub, Int& nysub, const Bool linear){
+  /* Vector<Int> ord(36);
+       ord(0)=14; 
+      ord(1)=15;
+      ord(2)=20;
+      ord(3)=21;ord(4)=13;
+      ord(5)=16;ord(6)=19;ord(7)=22;ord(8)=8;ord(9)=9;
+      ord(10)=26;ord(11)=27;ord(12)=25;ord(13)=28;ord(14)=7;
+      ord(15)=10;ord(16)=32;ord(17)=33;ord(18)=2;ord(19)=3;
+      ord(20)=18;ord(21)=23;ord(22)=12;ord(23)=17;ord(24)=1;
+      ord(25)=4;ord(26)=6;ord(27)=11;ord(28)=24;ord(29)=29;
+      ord(30)=31;ord(31)=34;ord(32)=0;ord(33)=5;ord(34)=30;
+      ord(35)=35;
+      */
+  /*
+      Int ix= (icounter+1)-((icounter)/ixsub)*ixsub;
+      Int iy=(icounter)/ixsub+1;
+      y0=(nyp/iysub)*(iy-1)+1+miny;
+      nysub=nyp/iysub;
+      if( iy == iysub) {
+	nysub=nyp-(nyp/iysub)*(iy-1);
+      }
+      x0=(nxp/ixsub)*(ix-1)+1+minx;
+      nxsub=nxp/ixsub;
+      if( ix == ixsub){
+	nxsub=nxp-(nxp/ixsub)*(ix-1);
+      }
+  */
+         
+         
+      {
+	Int elrow=icounter/ixsub;
+	Int elcol=(icounter-elrow*ixsub);
+	//cerr << "row "<< elrow << " col " << elcol; 
+	//nxsub=Int(floor(((ceil(fabs(float(2*elcol+1-ixsub)/2.0))-1.0)*5 +1)*nxp/36.0 + 0.5));
+	Float factor=0;
+	for (Int k=0; k < ixsub/2; ++k)
+	  factor= linear ? factor+(k+1): factor+sqrt(Float(k+1));
+	  //factor= linear ? factor+(k+1): factor+(k+1)*(k+1)*(k+1);
+	factor *= 2.0;
+	if(linear)
+	  nxsub=Int(floor((ceil(fabs(float(2*elcol+1-ixsub)/2.0))/factor)*nxp + 0.5));
+	else
+	  //nxsub=Int(floor((ceil(fabs(float(2*elcol+1-ixsub)/2.0))*ceil(fabs(float(2*elcol+1-ixsub)/2.0))*ceil(fabs(float(2*elcol+1-ixsub)/2.0))/factor)*nxp + 0.5));
+	  nxsub=Int(floor((sqrt(ceil(fabs(float(2*elcol+1-ixsub)/2.0)))/factor)*nxp + 0.5));
+        //cerr << nxp << " col " << elcol << " nxsub " << nxsub << endl;
+	x0=minx;
+	elcol-=1;
+	while(elcol >= 0){
+	  //x0+=Int(floor(((ceil(fabs(float(2*elcol+1-ixsub)/2.0))-1.0)*5 +1)*nxp/36.0+0.5));
+
+	  if(linear)
+	    x0+=Int(floor((ceil(fabs(float(2*elcol+1-ixsub)/2.0))/factor)*nxp + 0.5));
+	  else
+	    //x0+=Int(floor((ceil(fabs(float(2*elcol+1-ixsub)/2.0))*ceil(fabs(float(2*elcol+1-ixsub)/2.0))*ceil(fabs(float(2*elcol+1-ixsub)/2.0))/factor)*nxp + 0.5));
+	    x0+=Int(floor((sqrt(ceil(fabs(float(2*elcol+1-ixsub)/2.0)))/factor)*nxp + 0.5));
+	  elcol-=1;
+	}
+	factor=0;
+	for (Int k=0; k < iysub/2; ++k)
+	  //factor=linear ? factor+(k+1): factor+(k+1)*(k+1)*(k+1);
+	  factor= linear ? factor+(k+1): factor+sqrt(Float(k+1));
+	factor *= 2.0;
+	//nysub=Int(floor(((ceil(fabs(float(2*elrow+1-iysub)/2.0))-1.0)*5 +1)*nyp/36.0+0.5));
+	if(linear)
+	  nysub=Int(floor((ceil(fabs(float(2*elrow+1-iysub)/2.0))/factor)*nyp + 0.5));
+	else
+	  nysub=Int(floor((sqrt(ceil(fabs(float(2*elrow+1-iysub)/2.0)))/factor)*nyp + 0.5));
+	  //nysub=Int(floor((ceil(fabs(float(2*elrow+1-iysub)/2.0))*ceil(fabs(float(2*elrow+1-iysub)/2.0))*ceil(fabs(float(2*elrow+1-iysub)/2.0))/factor)*nyp + 0.5));
+	y0=miny;
+	elrow-=1;
+	
+	while(elrow >=0){
+	  //y0+=Int(floor(((ceil(fabs(float(2*elrow+1-iysub)/2.0))-1.0)*5 +1)*nyp/36.0+0.5));
+	  if(linear)
+	    y0+=Int(floor((ceil(fabs(float(2*elrow+1-iysub)/2.0))/factor)*nyp + 0.5));
+	  else
+	    y0+=Int(floor((sqrt(ceil(fabs(float(2*elrow+1-iysub)/2.0)))/factor)*nyp + 0.5));
+	    //y0+=Int(floor((ceil(fabs(float(2*elrow+1-iysub)/2.0))*ceil(fabs(float(2*elrow+1-iysub)/2.0))*ceil(fabs(float(2*elrow+1-iysub)/2.0))/factor)*nyp + 0.5));
+	  elrow-=1;
+	}
+      }
+      y0+=1;
+      x0+=1;
+      
+   
+}
+
 
 void WProjectFT::get(VisBuffer2& vb, Int row)
 {
@@ -1041,16 +1154,10 @@ void WProjectFT::get(VisBuffer2& vb, Int row)
   }
   
   // Get the uvws in a form that Fortran can use
-  Matrix<Double> uvw(vb.uvw().shape());
-  uvw=0.0;
+  Matrix<Double> uvw(negateUV(vb));
   Vector<Double> dphase(vb.nRows());
   dphase=0.0;
-  //NEGATING to correct for an image inversion problem
-  for (Int i=startRow;i<=endRow;i++) {
-    for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(idim,i);
-    uvw(2,i)=vb.uvw()(2,i);
-  }
-  
+   
   rotateUVW(uvw, dphase, vb);
   refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
 
@@ -1130,21 +1237,21 @@ void WProjectFT::get(VisBuffer2& vb, Int row)
   const Int * suppstor=convSupport.getStorage(del);
   Int irow;
   Int nth=1;
-#ifdef HAS_OMP
+#ifdef _OPENMP
   if(numthreads_p >0){
     nth=min(numthreads_p, omp_get_max_threads());
   }
   else{   
     nth= omp_get_max_threads();
   }
-  nth=min(4,nth);
+  // nth=min(4,nth);
 #endif
   Int dow=1;
   Double cinv=Double(1.0)/C::c;
-
-#pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvc, scalestor, offsetstor, csamp, phasorstor, uvwstor, locstor, offstor, dpstor, dow, cinv) shared(startRow, endRow) num_threads(nth) 
+  #pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvc, scalestor, offsetstor, csamp, phasorstor, uvwstor, locstor, offstor, dpstor, dow, cinv) shared(startRow, endRow) num_threads(nth) 
   {
-#pragma omp for
+
+#pragma omp for schedule(dynamic)
     for (irow=startRow; irow<=endRow; ++irow){
       /*locateuvw(uvwstor,dpstor, visfreqstor, nvc, scalestor, offsetstor, csamp, 
 		locstor, 
@@ -1155,17 +1262,15 @@ void WProjectFT::get(VisBuffer2& vb, Int row)
   }//end pragma parallel
   Int rbeg=startRow+1;
   Int rend=endRow+1;
-  Int npart=1;
-  if (nth >3){
-    npart=4;
-  }
-  else if(nth >1){
-    npart=2; 
-  }
+  Int npart=nth*2;
+  Timer tim;
+  tim.mark();
+ 
   Int ix=0;
-  #pragma omp parallel default(none) private(ix, rbeg, rend) firstprivate(uvwstor, datStorage, flagstor, rowflagstor, convstor, pmapstor, cmapstor, gridstor, nxp, nyp, np, nc, suppstor, csamp, csize, wcsize, nvp, nvc, nvisrow, phasorstor, locstor, offstor) shared(npart) num_threads(npart)
+#pragma omp parallel default(none) private(ix, rbeg, rend) firstprivate(uvwstor, datStorage, flagstor, rowflagstor, convstor, pmapstor, cmapstor, gridstor, nxp, nyp, np, nc, suppstor, csamp, csize, wcsize, nvp, nvc, nvisrow, phasorstor, locstor, offstor) shared(npart) num_threads(nth)
   {
-    #pragma omp for 
+
+#pragma omp for schedule(dynamic)
     for (ix=0; ix< npart; ++ix){
       rbeg=ix*(nvisrow/npart)+1;
       rend=(ix != (npart-1)) ? (rbeg+(nvisrow/npart)-1) : (rbeg+(nvisrow/npart)+nvisrow%npart-1) ;
@@ -1197,7 +1302,7 @@ void WProjectFT::get(VisBuffer2& vb, Int row)
   uvw.freeStorage(uvwstor, uvwcopy);
   griddedData.freeStorage(gridstor, gridcopy);
   convFunc.freeStorage(convstor, convcopy);
-  
+   timedegrid_p+=tim.real();
 
   interpolateFrequencyFromgrid(vb, data, FTMachine::MODEL);
 }
@@ -1366,6 +1471,9 @@ Bool WProjectFT::toRecord(String& error,
   if(wpConvFunc_p->toRecord(wpconvrec))
     outRec.defineRecord("wpconvfunc", wpconvrec);
   */
+   Float elpadd=padding_p;
+  if(toVis_p && withImage)
+    elpadd=1.0;
   if(!FTMachine::toRecord(error, outRec, withImage, diskimage))
     return False;
 
@@ -1382,17 +1490,21 @@ Bool WProjectFT::toRecord(String& error,
   }
   outRec.define("centerloc", center_loc);
   outRec.define("offsetloc", offset_loc);
-  outRec.define("padding", padding_p);
+  outRec.define("padding", elpadd);
   outRec.define("nwplanes", nWPlanes_p);
   outRec.define("savedwscale", savedWScale_p);
   outRec.define("usezero", usezero_p);
-  outRec.define("convfunc", convFunc);
+  ///no need to save convfunc as it can be big and is recalculated anyways
+  ///outRec.define("convfunc", convFunc);
   outRec.define("convsampling", convSampling);
   outRec.define("convsize", convSize);
   outRec.define("convsupport", convSupport);
   outRec.define("convsizes", convSizes_p);
   outRec.define("wconvsize", wConvSize);
   outRec.define("lastindex", lastIndex_p);
+  outRec.define("minw", minW_p);
+  outRec.define("maxw", maxW_p);
+  outRec.define("rmsw", rmsW_p);
 
 
 
@@ -1421,17 +1533,21 @@ Bool WProjectFT::fromRecord(String& error,
 		      center_loc(3));
   offsetLoc=IPosition(ndim4, offset_loc(0), offset_loc(1), offset_loc(2), 
 		      offset_loc(3));
+  inRec.get("minw", minW_p);
+  inRec.get("maxw", maxW_p);
+  inRec.get("rmsw", rmsW_p);
   if(inRec.isDefined("wpconvfunc")){
     wpConvFunc_p=new WPConvFunc(inRec.asRecord("wpconvfunc"));
   }
   else{
-    wpConvFunc_p=new WPConvFunc();
+    wpConvFunc_p=new WPConvFunc(minW_p, maxW_p, rmsW_p);
   }
   inRec.get("padding", padding_p);
   inRec.get("nwplanes", nWPlanes_p);
   inRec.get("savedwscale", savedWScale_p);
   inRec.get("usezero", usezero_p);
-  inRec.get("convfunc", convFunc);
+  //inRec.get("convfunc", convFunc);
+  convFunc.resize();
   inRec.get("convsampling", convSampling);
   inRec.get("convsize", convSize);
   inRec.get("convsupport", convSupport);
@@ -1525,6 +1641,29 @@ String WProjectFT::name() const {
   return machineName_p;
 
 }
+void WProjectFT::wStat(vi::VisibilityIterator2& vi, Double& minW, Double& maxW, Double& rmsW){
+  VisBuffer2* vb= vi.getVisBuffer();
+    maxW=0.0;
+    minW=1e99;
+    Double nval=0;
+    rmsW=0.0;
+    for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
+      for (vi.origin();vi.more();vi.next()) {
+	maxW=max(maxW, max(abs(vb->uvw().row(2)*max(vb->getFrequencies(0))))/C::c);
+	minW=min(minW, min(abs(vb->uvw().row(2)*min(vb->getFrequencies(0))))/C::c);
+	///////////some shenanigans as some compilers is confusing * operator for vector
+	Vector<Double> elw;
+	elw=vb->uvw().row(2);
+	elw*=vb->uvw().row(2);
+	//////////////////////////////////////////////////
+	rmsW+=sum(elw);
+
+	nval+=Double(vb->nRows());
+      }
+    }
+    rmsW=sqrt(rmsW/Double(nval))*max(vb->getFrequencies(0))/C::c;
+
+  }
 
 
 } // end of namespace refim

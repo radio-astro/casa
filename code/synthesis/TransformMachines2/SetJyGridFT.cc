@@ -223,15 +223,9 @@ Bool SetJyGridFT::fromRecord(String& error,
   }
 
 	  // Get the uvws in a form that Fortran can use
-  Matrix<Double> uvw(vb.uvw().shape());
-  uvw=0.0;
+  Matrix<Double> uvw(negateUV(vb));
   Vector<Double> dphase(vb.nRows());
   dphase=0.0;
-  //NEGATING to correct for an image inversion problem
-  for (Int i=startRow;i<=endRow;i++) {
-    for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(idim,i);
-    uvw(2,i)=vb.uvw()(2,i);
-  }
   rotateUVW(uvw, dphase, vb);
   refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
 

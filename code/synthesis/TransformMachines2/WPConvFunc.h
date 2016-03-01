@@ -1,9 +1,9 @@
-//# WPConvFunc.h: Definition for PixelatedConvFunc
-//# Copyright (C) 2007
+//# WPConvFunc.h: Definition for WPConvFunc
+//# Copyright (C) 2007-2016
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
-//# under the terms of the GNU Library General Public License as published by
+//# under the terms of the GNU General Public License as published by
 //# the Free Software Foundation; either version 2 of the License, or (at your
 //# option) any later version.
 //#
@@ -12,7 +12,7 @@
 //# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
 //# License for more details.
 //#
-//# You should have received a copy of the GNU Library General Public License
+//# You should have received a copy of the GNU General Public License
 //# along with this library; if not, write to the Free Software Foundation,
 //# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
 //#
@@ -61,8 +61,14 @@ namespace refim{// namespace for imaging refactoring
   class WPConvFunc 
     {
     public:
-      WPConvFunc();
+      WPConvFunc(const Double minW=-1.0, const Double maxW=-1.0, const Double rmsW=-1.0);
       WPConvFunc(const RecordInterface& rec);
+      //Copy constructor
+      WPConvFunc(const WPConvFunc& other);
+      //
+      WPConvFunc& operator=(const WPConvFunc&other);
+      
+
       virtual ~WPConvFunc();
 
       // Inputs are the image, visbuffer,  wConvsize
@@ -102,10 +108,10 @@ namespace refim{// namespace for imaging refactoring
       Int convSize_p;
       Vector<Int> convSupport_p;
       Cube<Complex> convFunc_p;
-      Double wScale_p;
+      Double wScaler_p;
       Int convSampling_p;
       Int nx_p, ny_p;
-
+      Double minW_p, maxW_p, rmsW_p;
 
     };
 } //end of namespace refim
