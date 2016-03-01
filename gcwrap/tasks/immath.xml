@@ -93,8 +93,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <description>Stretch the mask if necessary and possible? See help stretch.par </description>
         <value>False</value>
     </param>
-    <param type="string" name="imagemd">
-        <description>The image from which metadata should be copied. Default means no gaurantee from which image is used.</description>
+    <param type="string" name="imagemd" mustexist="true">
+        <description>An image name from which metadata should be copied. The input can be either an image listed under imagename or any other image on disk. Leaving this parameter unset may copy header metadata from any of the input images, which one is not guaranteed. </description>
         <value/>
     </param>
 	<constraints>
