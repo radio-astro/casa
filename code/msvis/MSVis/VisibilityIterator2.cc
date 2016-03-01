@@ -363,6 +363,13 @@ VisibilityIterator2::subtableColumns () const
 }
 
 void
+VisibilityIterator2::useImagingWeight (const VisImagingWeight & viw)
+{
+    CheckImplementationPointerW ();
+    impl_p->useImagingWeight(viw);
+}
+
+void
 VisibilityIterator2::writeFlag (const Cube<Bool>& flag)
 {
     CheckImplementationPointerW ();
