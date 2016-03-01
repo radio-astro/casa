@@ -157,9 +157,9 @@ class TheoreticalBeam:
         kernel = self.get_kernel(axis)
         sampling = self.get_box_kernel(axis,self.sampling_arcsec[0])
         # convolution
-        gridded = scipy.signal.convolve(beam,kernel,mode='same')
+        gridded = np.convolve(beam,kernel,mode='same')
         gridded /= max(gridded)
-        result = scipy.signal.convolve(gridded,sampling,mode='same')
+        result = np.convolve(gridded,sampling,mode='same')
         result /= max(result)
         #fwhm_arcsec = findFWHM(axis,result)
         fwhm_arcsec, dummy = self.gaussfit(axis, result, minlevel=0.0,truncate=False)
@@ -183,9 +183,9 @@ class TheoreticalBeam:
                 sampling = self.get_box_kernel(axis, self.sampling_arcsec[1])
             elif self.kernel_type == "BOX" and len(self.cell_arcsec) > 1:
                 kernel = self.get_box_kernel(axis,self.cell_arcsec[1])
-                gridded = scipy.signal.convolve(beam,kernel,mode='same')
+                gridded = np.convolve(beam,kernel,mode='same')
                 gridded /= max(gridded)
-            result = scipy.signal.convolve(gridded,sampling,mode='same')
+            result = np.convolve(gridded,sampling,mode='same')
             result /= max(result)
             #fwhm1 = findFWHM(axis,result)
             fwhm1, dummy = self.gaussfit(axis, result, minlevel=0.0,truncate=False)
@@ -694,7 +694,7 @@ def findFWHM(x,y,level=0.5, s=0):
         #print "More than two crossings (%d), fitting slope to points near that power level." % (len(result))
         #result = 2*findZeroCrossingBySlope(x, y-halfmax)
         #return(result)
-        errmsg = "Unsupported FWHM search in CASA. More than two corssings (%d) at level %f (%f \% of peak)." % (len(result), halfmax, level)
+        errmsg = "Unsupported FWHM search in CASA. More than two corssings (%d) at level %f (%f %% of peak)." % (len(result), halfmax, level)
         raise Exception, errmsg
 
 def primaryBeamArcsec(frequency, diameter, obscuration, taper, 
