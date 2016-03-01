@@ -240,6 +240,12 @@ template<class T> SPIIT ImageExprCalculator<T>::_imagecalc(
     auto copied = False;
     Unit unit;
 	if (! _copyMetaDataFromImage.empty()) {
+        // do nonexistant file handling here because users want a special message
+        ThrowIf(
+            ! File(_copyMetaDataFromImage).isReadable(),
+            "Cannot access " + _copyMetaDataFromImage
+            + " so cannot copy its metadata to output image"
+        );
         auto mypair = ImageFactory::fromFile(_copyMetaDataFromImage);
         if (mypair.first || mypair.second) {
             if (mypair.first) {
