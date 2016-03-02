@@ -53,6 +53,7 @@ def makePB(vis='',field='',spw='',timerange='',uvrange='',antenna='',observation
     celly=qa.quantity(fabs(dirs['cdelt'][1]),dirs['units'][1])
     nchan=shp[3]
     start=qa.quantity( csysa.referencevalue()['numeric'][3], csysa.units()[3] )  ## assumes refpix is zero
+    mestart = me.frequency('LSRK',start)
     step=qa.quantity( csysa.increment()['numeric'][3], csysa.units()[3] )
 
     smode='mfs'
@@ -63,7 +64,7 @@ def makePB(vis='',field='',spw='',timerange='',uvrange='',antenna='',observation
 
     im.open(vis)
     im.selectvis(field=field,spw=spw,time=timerange,intent=intent,scan=scan,uvrange=uvrange,baseline=antenna,observation=observation)
-    im.defineimage(nx=shp[0],ny=shp[0],phasecenter=phasecenter,cellx=qa.tos(cellx),celly=qa.tos(celly),nchan=nchan,start=start,step=step,mode=smode)
+    im.defineimage(nx=shp[0],ny=shp[0],phasecenter=phasecenter,cellx=qa.tos(cellx),celly=qa.tos(celly),nchan=nchan,start=mestart,step=step,mode=smode)
     im.setvp(dovp=True,telescope=tel)
     im.makeimage(type='pb',image=outimage+'.tmp')
     im.close()

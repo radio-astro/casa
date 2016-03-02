@@ -495,7 +495,8 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
       Vector<Double> imfreqres;
       //rstate=calcImFreqs(imgridfreqs, imfreqres, mfreqref, obsEpoch, obsPosition,restFreq);
       // should use obsFreqRef
-      if (!calcImFreqs(imgridfreqs, imfreqres, obsFreqRef, obsEpoch, obsPosition,restFreq)) {
+
+      if (!calcImFreqs(imgridfreqs, imfreqres, obsFreqRef, obsEpoch, mLocation_p ,restFreq)) {
          return False;
       }
       //cerr<<"imfreqres(0)="<<imfreqres(0)<<endl;
@@ -564,7 +565,7 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
     }
   
     // use data frame here (for channel mode)
-    if (!calcImFreqs(chanFreq, freqResolution, obsFreqRef, obsEpoch, obsPosition,restFreq)) {
+    if (!calcImFreqs(chanFreq, freqResolution, obsFreqRef, obsEpoch, mLocation_p,restFreq)) {
       return False;
     }
 
@@ -638,7 +639,7 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
 	mfreqref=freqFrame_p;
       mfreqref=(obsFreqRef==(MFrequency::REST)) ? MFrequency::REST : mfreqref; 
       //rstate=calcImFreqs(chanFreq, freqResolution, mfreqref, obsEpoch, obsPosition,restFreq);
-      if (!calcImFreqs(chanFreq, freqResolution, obsFreqRef, obsEpoch, obsPosition,restFreq)) {
+      if (!calcImFreqs(chanFreq, freqResolution, obsFreqRef, obsEpoch, mLocation_p, restFreq)) {
         return False;
       }
 
@@ -696,7 +697,7 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
       // when selecting in velocity its specfied freqframe or REST 
       MFrequency::Types imfreqref=(obsFreqRef==MFrequency::REST) ? MFrequency::REST : freqFrame_p;
       //rstate=calcImFreqs(chanFreq, freqResolution, imfreqref, obsEpoch, obsPosition,restFreq);
-      if (!calcImFreqs(chanFreq, freqResolution, obsFreqRef, obsEpoch, obsPosition,restFreq)) {
+      if (!calcImFreqs(chanFreq, freqResolution, obsFreqRef, obsEpoch, mLocation_p,restFreq)) {
          return False;
       }
   
