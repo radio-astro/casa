@@ -432,16 +432,29 @@ HPX HEALPix grid.  -->
                                                coordinate system and can be specified either in terms
                                                of channel numbers, frequency or velocity in whatever
                                                spectral frame is specified in 'outframe'.
-                                               All internal and output images are made only in the 
-                                               LSRK frame, with automatic internal software Doppler 
-                                               tracking. Therefore a spectral line observed over an
+                                               All internal and output images are made with outframe as the 
+                                               base spectral frame. However imaging code internally uses the fixed
+                                               spectral frame, LSRK for automatic internal software 
+                                               Doppler tracking so that a spectral line observed over an
                                                extended time range will line up appropriately.
+                                               Therefore the output images have additional spectral frame conversion 
+                                               layer in LSRK on the top the base frame. 
 
-                                               (Note : If the input parameters are specified in a frame 
+                                               
+                                               (Note : Even if the input parameters are specified in a frame 
+                                                           other than LSRK, the viewer still displays spectral 
+                                                           axis in LSRK by default because of the convesrsion frame
+                                                           layer montioned above. The viewer can be used to relabel
+                                                           the spectral axis in any desired frame - via the spectral
+                                                           reference option under axis label properties in the
+                                                           data display options window.)
+
+
+                                               <!--(Note : If the input parameters are specified in a frame 
                                                            other than LSRK, the viewer can be used to relabel
                                                            the spectral axis in that frame - via the spectral
                                                            reference option under axis label properties in the
-                                                           data display options window.)
+                                                           data display options window.)-->
 
                         mode='cubedata' : Spectral line imaging with one or more channels
                                                         There is no internal software Doppler tracking so
