@@ -738,8 +738,7 @@ casa_add_assay( synthesis CalTables/test/tCTGenericFill.cc )
 
 
 casa_add_test( synthesis CalLibrary/test/tCalLibraryParse.cc )
-####For Jim to try
-#casa_add_unit_test( MODULES synthesis SOURCES TransformMachines2/test/tGridFT2.cc TransformMachines2/test/MakeMS.cc ) 
+casa_add_unit_test( MODULES synthesis SOURCES TransformMachines2/test/tFTMachine.cc TransformMachines2/test/MakeMS.cc ) 
 casa_add_unit_test( MODULES synthesis SOURCES TransformMachines/test/tGridFT.cc TransformMachines2/test/MakeMS.cc ) 
 casa_add_google_test( MODULES mstransform SOURCES ../mstransform/MSTransform/test/tMSTransformIterator.cc  ../mstransform/TVI/test/TestUtilsTVI.cc)
 casa_add_google_test( MODULES mstransform SOURCES ../mstransform/TVI/test/tChannelAverageTVI.cc  ../mstransform/TVI/test/TestUtilsTVI.cc)
