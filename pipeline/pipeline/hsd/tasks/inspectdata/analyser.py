@@ -194,11 +194,11 @@ class DataTableAnalyser(object):
         obs_heuristic2 = heuristics.ObservingPattern2()
         time_heuristic2 = heuristics.GroupByTime2()
         merge_heuristic2 = heuristics.MergeGapTables2()
-        ra = self.datatable.getcol('RA')
-        dec = self.datatable.getcol('DEC')
-        row = self.datatable.getcol('ROW')
-        elapsed = self.datatable.getcol('ELAPSED')
-        beam = self.datatable.getcol('BEAM')
+        ra = numpy.asarray(self.datatable.getcol('RA'))
+        dec = numpy.asarray(self.datatable.getcol('DEC'))
+        row = numpy.asarray(self.datatable.getcol('ROW'))
+        elapsed = numpy.asarray(self.datatable.getcol('ELAPSED'))
+        beam = numpy.asarray(self.datatable.getcol('BEAM'))
         self.posgrp = numpy.zeros(len(self.datatable), dtype=int)
         self.timegrp = [numpy.zeros(len(self.datatable), dtype=int) - 1,
                         numpy.zeros(len(self.datatable), dtype=int) - 1]
@@ -244,7 +244,7 @@ class DataTableAnalyser(object):
                 self.posgrp_list[ant][spw] = {}
                 self.timegrp_list[ant][spw] = {}
                 for (pol,vpol) in self.by_pol.items():
-                    id_list = list(vant & vspw & vpol)
+                    id_list = numpy.array(list(vant & vspw & vpol))
                     if len(id_list) == 0:
                         continue
                     id_list.sort()
@@ -341,8 +341,8 @@ class DataTableAnalyser(object):
     def analyse_grid(self):
         qa = casatools.quanta
 
-        ra = self.datatable.getcol('RA')
-        dec = self.datatable.getcol('DEC')
+        ra = numpy.asarray(self.datatable.getcol('RA'))
+        dec = numpy.asarray(self.datatable.getcol('DEC'))
         h = heuristics.GenerateGrid()
         self.grid_position = []
         last_ra = None
@@ -364,7 +364,7 @@ class DataTableAnalyser(object):
                     r_allowance = qa.mul(radius, 0.1)
                     grid_position[src][spw] = {}
                     for (pol,vpol) in self.by_pol.items():
-                        id_list = list(vant & vspw & vpol)
+                        id_list = numpy.array(list(vant & vspw & vpol))
                         id_list.sort()
                         ra_sel = numpy.take(ra, id_list)
                         dec_sel = numpy.take(dec, id_list)
