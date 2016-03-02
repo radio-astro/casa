@@ -69,21 +69,18 @@ public:
     Bool sigmaSpectrumExists () const {return True;}
 
 	// List of methods that should be implemented by derived classes
-    virtual void flag(Cube<Bool>& flagCube) const = 0;
-    virtual void floatData (Cube<Float> & vis) const = 0;
-    virtual void visibilityObserved (Cube<Complex> & vis) const = 0;
-    virtual void visibilityCorrected (Cube<Complex> & vis) const = 0;
-    virtual void visibilityModel (Cube<Complex> & vis) const = 0;
-    virtual void weightSpectrum(Cube<Float> &weightSp) const = 0;
-    virtual void sigmaSpectrum (Cube<Float> &sigmaSp) const = 0;
-
-    virtual Vector<Double> getFrequencies (	Double time, Int frameOfReference,
-    										Int spectralWindowId, Int msId) const = 0;
-
-    virtual void writeFlag (const Cube<Bool> & flagCube) = 0;
-    void writeFlagRow (const Vector<Bool> & flag);
+    // virtual void flag(Cube<Bool>& flagCube) const = 0;
+    // virtual void floatData (Cube<Float> & vis) const = 0;
+    // virtual void visibilityObserved (Cube<Complex> & vis) const = 0;
+    // virtual void visibilityCorrected (Cube<Complex> & vis) const = 0;
+    // virtual void visibilityModel (Cube<Complex> & vis) const = 0;
+    // virtual void weightSpectrum(Cube<Float> &weightSp) const = 0;
+    // virtual void sigmaSpectrum (Cube<Float> &sigmaSp) const = 0;
+    // virtual Vector<Double> getFrequencies (	Double time, Int frameOfReference,Int spectralWindowId, Int msId) const = 0;
+    // virtual void writeFlag (const Cube<Bool> & flagCube) = 0;
 
     // Common transformation for all sub-classes
+    void writeFlagRow (const Vector<Bool> & flag);
     Vector<Int> getChannels (	Double time, Int frameOfReference,
     							Int spectralWindowId, Int msId) const;
     void flagRow (Vector<Bool> & flagRow) const;
@@ -95,7 +92,6 @@ protected:
     // Method implementing main loop  (with auxiliary data)
 	template <class T> void transformFreqAxis(	Cube<T> const &inputDataCube,
 												Cube<T> &outputDataCube,
-												DataCubeMap &auxiliaryData,
 												FreqAxisTransformEngine<T> &transformer) const
 	{
 		// Re-shape output data cube
@@ -117,32 +113,23 @@ protected:
 		for (uInt row=0; row < nRows; row++)
 		{
 			// Assign input-output planes by reference
-			auxiliaryData.setMatrixIndex(row);
+			transformer.setRowIndex(row);
 			inputDataPlane.reference(inputDataCube.xyPlane(row));
 			outputDataPlane.reference(outputDataCube.xyPlane(row));
 
 			for (uInt corr=0; corr < nCorrs; corr++)
 			{
 				// Assign input-output vectors by reference
-				auxiliaryData.setVectorIndex(corr);
+				transformer.setCorrIndex(corr);
 				inputDataVector.reference(inputDataPlane.row(corr));
 				outputDataVector.reference(outputDataPlane.row(corr));
 
 				// Transform data
-				transformer.transform(inputDataVector,outputDataVector,auxiliaryData);
+				transformer.transform(inputDataVector,outputDataVector);
 			}
 		}
 
 		return;
-	}
-
-    // Method implementing main loop (without auxiliary data)
-	template <class T> void transformFreqAxis(	Cube<T> const &inputDataCube,
-												Cube<T> &outputDataCube,
-												FreqAxisTransformEngine<T> &transformer) const
-	{
-		DataCubeMap auxiliaryData;
-		transformFreqAxis(inputDataCube,outputDataCube,auxiliaryData,transformer);
 	}
 
 	Bool parseConfiguration(const Record &configuration);
@@ -163,9 +150,15 @@ template<class T> class FreqAxisTransformEngine
 
 public:
 
-	virtual void transform(Vector<T> &inputVector,
-							Vector<T> &outputVector,
-							DataCubeMap &auxiliaryData) = 0;
+	virtual void transform(Vector<T> &inputVector,Vector<T> &outputVector) = 0;
+	virtual void setRowIndex(uInt row) {row_p = row;}
+	virtual void setCorrIndex(uInt corr) {corr_p = corr;}
+
+protected:
+
+	uInt row_p;
+	uInt corr_p;
+
 };
 
 } //# NAMESPACE VI - END

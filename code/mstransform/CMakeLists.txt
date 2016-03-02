@@ -29,10 +29,10 @@ casa_add_library( mstransform
  MSTransform/MSUVBin.cc
  TVI/UtilsTVI.cc 
  TVI/FreqAxisTVI.cc 
- TVI/DecimationTVI.cc  
  TVI/ChannelAverageTVI.cc
  TVI/ConvolutionTVI.cc
  TVI/HanningSmoothTVI.cc	 
+ TVI/PhaseShiftingTVI.cc 
 )
 
 install (FILES
@@ -55,10 +55,10 @@ install (FILES
 install (FILES
  	TVI/UtilsTVI.h	
  	TVI/FreqAxisTVI.h	
-	TVI/DecimationTVI.h	 	
 	TVI/ChannelAverageTVI.h	
 	TVI/ConvolutionTVI.h	
-	TVI/HanningSmoothTVI.h	
+	TVI/HanningSmoothTVI.h
+	TVI/PhaseShiftingTVI.h		
 	DESTINATION include/casacode/mstransform/TVI
 	)
 	

@@ -51,10 +51,6 @@ public:
     void weightSpectrum(Cube<Float> &weightSp) const;
     void sigmaSpectrum (Cube<Float> &sigmaSp) const;
 
-    Vector<Double> getFrequencies (	Double time, Int frameOfReference,
-    								Int spectralWindowId, Int msId) const;
-    void writeFlag (const Cube<Bool> & flagCube);
-
 protected:
 
     Bool parseConfiguration(const Record &configuration);
@@ -97,9 +93,7 @@ public:
 
 	ConvolutionTransformEngine(ConvolutionKernel<T> *kernel, uInt width);
 
-	void transform(Vector<T> &inputVector,
-					Vector<T> &outputVector,
-					DataCubeMap &auxiliaryData);
+	void transform(Vector<T> &inputVector,Vector<T> &outputVector);
 
 protected:
 

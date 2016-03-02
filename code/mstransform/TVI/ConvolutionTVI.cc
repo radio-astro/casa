@@ -236,27 +236,6 @@ void ConvolutionTVI::sigmaSpectrum(Cube<Float> &sigmaSp) const
 	return;
 }
 
-// -----------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------
-Vector<Double> ConvolutionTVI::getFrequencies (	Double time,
-												Int frameOfReference,
-												Int spectralWindowId,
-												Int msId) const
-{
-	return getVii()->getFrequencies (time, frameOfReference,spectralWindowId, msId);
-}
-
-// -----------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------
-void ConvolutionTVI::writeFlag (const Cube<Bool> & flag)
-{
-	getVii()->writeFlag(flag);
-
-	return;
-}
-
 //////////////////////////////////////////////////////////////////////////
 // ConvolutionTVIFactory class
 //////////////////////////////////////////////////////////////////////////
@@ -306,8 +285,7 @@ template<class T> ConvolutionTransformEngine<T>::ConvolutionTransformEngine
 //
 // -----------------------------------------------------------------------
 template<class T> void ConvolutionTransformEngine<T>::transform(Vector<T> &inputVector,
-																Vector<T> &outputVector,
-																DataCubeMap &)
+																Vector<T> &outputVector)
 {
 	uInt startChanIndex = 0;
 	uInt outChanStart = width_p / 2;
