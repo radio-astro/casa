@@ -171,7 +171,7 @@ def to_numeric(s):
 
 def get_mask_from_flagtra(flagtra):
     """Convert FLAGTRA (unsigned char) to a mask array (1=valid, 0=flagged)"""
-    return [ 0 if int(flg)!=0 else 1 for flg in flagtra ]
+    return (numpy.asarray(flagtra) == 0).astype(int)
 
 
 @contextlib.contextmanager

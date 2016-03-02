@@ -202,7 +202,7 @@ class FittingBase(common.SingleDishTaskTemplate):
                 with casatools.TableReader(filename_in) as tb:
                     spectra = numpy.array([tb.getcell('SPECTRA',row)
                                            for row in rows])
-                    flaglist = [self._mask_to_masklist([ -fchan+1 for fchan in sdutils.get_mask_from_flagtra(tb.getcell('FLAGTRA', row)) ])
+                    flaglist = [self._mask_to_masklist(-sdutils.get_mask_from_flagtra(tb.getcell('FLAGTRA', row))+1 )
                                 for row in rows]
   
                 LOG.debug("Flag Mask = %s" % str(flaglist))
@@ -379,31 +379,29 @@ class FittingBase(common.SingleDishTaskTemplate):
         Argument
             mask : an array of channel mask in values 0 (rejected) or 1 (adopted)
         """
-        nchan = len(mask)
-        istart = []
-        iend = []
-        if mask[0] == 1:
-            istart = [0]
-        for ichan in range(1, nchan):
-            switch = mask[ichan] - mask[ichan-1]
-            if switch == 0:
-                continue
-            elif switch == 1:
-                # start of mask channels (0 -> 1)
-                istart.append(ichan)
-            elif switch == -1:
-                # end of mask channels (1 -> 0)
-                iend.append(ichan)
-        if mask[nchan-1] == 1:
-            iend.append(nchan)
-        if len(istart) != len(iend):
-            raise RuntimeError, "Failed to get mask ranges. The lenght of start channels and end channels do not match."
-        masklist = []
-        for irange in range(len(istart)):
-            if istart[irange] > iend[irange]:
-                raise RuntimeError, "Failed to get mask ranges. A start channel index is larger than end channel."
-            masklist.append([istart[irange], iend[irange]])
-        return masklist
+        # get indices of clump boundaries
+        idx = (mask[1:] ^ mask[:-1]).nonzero()
+        idx = (idx[0] + 1)
+        # idx now contains pairs of start-end indices, edges need handling
+        # depending on first and last mask value
+        if mask[0]:
+            if len(idx) == 0:
+                return [[0, len(mask)]]
+            r = [[0, idx[0]]]
+            if len(idx) % 2 == 1:
+                r.extend(idx[1:].reshape(-1, 2).tolist())
+            else:
+                r.extend(idx[1:-1].reshape(-1, 2).tolist())
+        else:
+            if len(idx) == 0:
+                return []
+            if len(idx) % 2 == 1:
+                r = (idx[:-1].reshape(-1, 2).tolist())
+            else:
+                r = (idx.reshape(-1, 2).tolist())
+        if mask[-1]:
+            r.append([idx[-1], len(mask)])
+        return r
 
     def plot_spectra(self, source, ant, spwid, pols, grid_table, infile, outdir, outprefix, channelmap_range):
         st = self.inputs.context.observing_run[ant]
