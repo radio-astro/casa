@@ -647,5 +647,15 @@ class imcollapse_test(unittest.TestCase):
         self.assertTrue(bb[0, 0, 0] == 0)
         self.assertTrue(abs(bb[0, 0, 1] - 0.27735632) < 1e-6)
         
+    def test_history(self):
+        """Test history record is written"""
+        myia = iatool()
+        myia.fromshape("",[20,20,20])
+        bb = myia.collapse(function="mean", axes=2)
+        myia.done()
+        msgs = bb.history()
+        bb.done()
+        self.assertTrue("ia.collapse" in msgs[-1])
+
 def suite():
     return [imcollapse_test]

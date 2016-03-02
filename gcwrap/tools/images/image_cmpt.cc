@@ -187,6 +187,114 @@ bool image::addnoise(
 	return False;
 }
 
+image* image::collapse(
+    const string& function, const variant& axes,
+    const string& outfile, const variant& region, const string& box,
+    const string& chans, const string& stokes, const string& mask,
+    const bool overwrite, const bool stretch
+) {
+    _log << _ORIGIN;
+    if (detached()) {
+        return 0;
+    }
+    try {
+        IPosition myAxes;
+        if (axes.type() == variant::INT) {
+            myAxes = IPosition(1, axes.toInt());
+        }
+        else if (axes.type() == variant::INTVEC) {
+            myAxes = IPosition(axes.getIntVec());
+        }
+        else if (
+            axes.type() == variant::STRINGVEC
+            || axes.type() == variant::STRING
+        ) {
+            Vector<String> axVec = (axes.type() == variant::STRING)
+                ? Vector<String> (1, axes.getString())
+                : toVectorString(axes.toStringVec());
+            myAxes = IPosition(
+                _imageF
+                ? _imageF->coordinates().getWorldAxesOrder(
+                    axVec, False
+                )
+                : _imageC->coordinates().getWorldAxesOrder(
+                    axVec, False
+                )
+            );
+            for (
+                IPosition::iterator iter = myAxes.begin();
+                iter != myAxes.end(); iter++
+            ) {
+                ThrowIf(
+                    *iter < 0,
+                    "At least one specified axis does not exist"
+                );
+            }
+        }
+        else {
+            ThrowCc("Unsupported type for parameter axes");
+        }
+        SHARED_PTR<Record> regRec = _getRegion(region, True);
+        String aggString = function;
+        aggString.trim();
+        aggString.downcase();
+        ThrowIf(
+            aggString == "avdev",
+            "avdev currently not supported. Let us know if you have a need for it"
+        );
+        vector<String> names {
+            "function", "axes", "outfile", "region", "box",
+            "chans", "stokes", "mask", "overwrite", "stretch"
+        };
+        vector<variant> values {
+            function, axes, outfile, region, box,
+            chans, stokes, mask, overwrite, stretch
+        };
+
+        String myStokes = stokes;
+        if (_imageF) {
+            CasacRegionManager rm(_imageF->coordinates());
+            String diagnostics;
+            uInt nSelectedChannels;
+            Record myreg = rm.fromBCS(
+                diagnostics, nSelectedChannels, myStokes, regRec.get(),
+                "", chans, CasacRegionManager::USE_ALL_STOKES, box,
+                _imageF->shape(), mask, False
+            );
+            ImageCollapser<Float> collapser(
+                aggString, _imageF, &myreg,
+                mask, myAxes, False, outfile, overwrite
+            );
+            collapser.setStretch(stretch);
+            collapser.addHistory(_ORIGIN, "ia." + String(__func__), names, values);
+            return new image(collapser.collapse());
+        }
+        else {
+            CasacRegionManager rm(_imageC->coordinates());
+            String diagnostics;
+            uInt nSelectedChannels;
+            Record myreg = rm.fromBCS(
+                diagnostics, nSelectedChannels, myStokes, regRec.get(),
+                "", chans, CasacRegionManager::USE_ALL_STOKES, box,
+                _imageC->shape(), mask, False
+            );
+            ImageCollapser<Complex> collapser(
+                aggString, _imageC, &myreg,
+                mask, myAxes, False, outfile, overwrite
+            );
+            collapser.setStretch(stretch);
+            collapser.addHistory(_ORIGIN, "ia." + String(__func__), names, values);
+            return new image(collapser.collapse());
+        }
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
+        RETHROW(x);
+    }
+    return nullptr;
+}
+
 void image::_addHistory(
     const String& method, const vector<String>& names, const vector<variant>& values
 ) {
@@ -253,102 +361,6 @@ bool image::fromrecord(const record& imrecord, const string& outfile) {
     return new record();
 }
 
-// FIXME need to support region records as input
-image * image::collapse(
-	const string& function, const variant& axes,
-	const string& outfile, const variant& region, const string& box,
-	const string& chans, const string& stokes, const string& mask,
-	const bool overwrite, const bool stretch
-) {
-	_log << _ORIGIN;
-	if (detached()) {
-		return 0;
-	}
-	try {
-		IPosition myAxes;
-		if (axes.type() == variant::INT) {
-			myAxes = IPosition(1, axes.toInt());
-		}
-		else if (axes.type() == variant::INTVEC) {
-			myAxes = IPosition(axes.getIntVec());
-		}
-		else if (
-			axes.type() == variant::STRINGVEC
-			|| axes.type() == variant::STRING
-		) {
-			Vector<String> axVec = (axes.type() == variant::STRING)
-				? Vector<String> (1, axes.getString())
-				: toVectorString(axes.toStringVec());
-			myAxes = IPosition(
-				_imageF
-				? _imageF->coordinates().getWorldAxesOrder(
-					axVec, False
-				)
-				: _imageC->coordinates().getWorldAxesOrder(
-					axVec, False
-				)
-			);
-			for (
-				IPosition::iterator iter = myAxes.begin();
-				iter != myAxes.end(); iter++
-			) {
-				ThrowIf(
-					*iter < 0,
-					"At least one specified axis does not exist"
-				);
-			}
-		}
-		else {
-			ThrowCc("Unsupported type for parameter axes");
-		}
-		SHARED_PTR<Record> regRec = _getRegion(region, True);
-		String aggString = function;
-		aggString.trim();
-		aggString.downcase();
-		if (aggString == "avdev") {
-			_log << "avdev currently not supported. Let us know if you have a need for it"
-				<< LogIO::EXCEPTION;
-		}
-		String myStokes = stokes;
-		if (_imageF) {
-			CasacRegionManager rm(_imageF->coordinates());
-			String diagnostics;
-			uInt nSelectedChannels;
-			Record myreg = rm.fromBCS(
-				diagnostics, nSelectedChannels, myStokes, regRec.get(),
-				"", chans, CasacRegionManager::USE_ALL_STOKES, box,
-				_imageF->shape(), mask, False
-			);
-			ImageCollapser<Float> collapser(
-				aggString, _imageF, &myreg,
-				mask, myAxes, False, outfile, overwrite
-			);
-			collapser.setStretch(stretch);
-			return new image(collapser.collapse());
-		}
-		else {
-			CasacRegionManager rm(_imageC->coordinates());
-			String diagnostics;
-			uInt nSelectedChannels;
-			Record myreg = rm.fromBCS(
-				diagnostics, nSelectedChannels, myStokes, regRec.get(),
-				"", chans, CasacRegionManager::USE_ALL_STOKES, box,
-				_imageC->shape(), mask, False
-			);
-			ImageCollapser<Complex> collapser(
-				aggString, _imageC, &myreg,
-				mask, myAxes, False, outfile, overwrite
-			);
-			collapser.setStretch(stretch);
-			return new image(collapser.collapse());
-		}
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-			<< LogIO::POST;
-		RETHROW(x);
-	}
-}
 
 image* image::imagecalc(
 	const string& outfile, const string& pixels,
