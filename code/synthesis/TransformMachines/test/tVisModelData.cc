@@ -57,7 +57,7 @@ main(int argc, char **argv){
     cerr << "ISWritable " << myms.isWritable() << endl;
     
     TableExprNode condition;
-    Vector<Int> field(1); field(0)=0; //field(1)=1;
+    Vector<Int> field(1); field(0)=1; //field(1)=1;
     condition=myms.col("FIELD_ID").in(field);
     MeasurementSet mssel(myms(condition));
 
@@ -85,7 +85,7 @@ main(int argc, char **argv){
     outRec.defineRecord("cl_0", clrec);
     VisModelData vm;
     //vm.addModel(outRec, Vector<Int>(1, 0), vb);
-    Vector<Int>spws(1);
+    Vector<Int>spws(4);
     indgen(spws);
     vm.putModel(myms, container, field, spws, Vector<Int>(1,0), Vector<Int>(1,63), Vector<Int>(1,1), True, False);
     vm.clearModel(myms, "1", "2");
