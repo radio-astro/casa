@@ -295,6 +295,49 @@ image* image::collapse(
     return nullptr;
 }
 
+image* image::imagecalc(
+    const string& outfile, const string& pixels,
+    bool overwrite, const string& imagemd
+) {
+    try {
+        ThrowIf(
+            pixels.empty(),
+            "You must provide an expression using the pixels parameter"
+        );
+        DataType type = ImageExprParse::command(pixels).dataType();
+        if (type == TpComplex || type == TpDComplex) {
+            return new image(
+                _imagecalc<Complex>(outfile, pixels, overwrite, imagemd)
+            );
+        }
+        else if (type == TpFloat || type == TpDouble || type == TpInt) {
+            return new image(
+                _imagecalc<Float>(outfile, pixels, overwrite, imagemd)
+            );
+        }
+        ThrowCc("Unsupported data type for resulting image");
+    }
+    catch (const AipsError& x) {
+        RETHROW(x);
+    }
+    return nullptr;
+}
+
+template<class T> SPIIT image::_imagecalc(
+    const string& outfile, const string& pixels,
+    bool overwrite, const string& imagemd
+) {
+    ImageExprCalculator<T> calculator(pixels, outfile, overwrite);
+    calculator.setCopyMetaDataFromImage(imagemd);
+    auto out = calculator.compute();
+    vector<String> names {"outfile", "pixels", "overwrite", "imagemd"};
+    vector<variant> values {outfile, pixels, overwrite, imagemd};
+    ImageHistory<T> imh(out);
+    auto msgs = _newHistory("imagecalc", names, values);
+    imh.addHistory(_ORIGIN, msgs);
+    return out;
+}
+
 void image::_addHistory(
     const String& method, const vector<String>& names, const vector<variant>& values
 ) {
@@ -362,42 +405,6 @@ bool image::fromrecord(const record& imrecord, const string& outfile) {
 }
 
 
-image* image::imagecalc(
-	const string& outfile, const string& pixels,
-	bool overwrite, const string& imagemd
-) {
-	try {
-		ThrowIf(
-			pixels.empty(),
-			"You must provide an expression using the pixels parameter"
-		);
-		DataType type = ImageExprParse::command(pixels).dataType();
-		if (type == TpComplex || type == TpDComplex) {
-			return new image(
-				_imagecalc<Complex>(outfile, pixels, overwrite, imagemd)
-			);
-		}
-		else if (type == TpFloat || type == TpDouble || type == TpInt) {
-			return new image(
-				_imagecalc<Float>(outfile, pixels, overwrite, imagemd)
-			);
-		}
-		ThrowCc("Unsupported data type for resulting image");
-	}
-	catch (const AipsError& x) {
-		RETHROW(x);
-	}
-	return nullptr;
-}
-
-template<class T> SPIIT image::_imagecalc(
-	const string& outfile, const string& pixels,
-	bool overwrite, const string& imagemd
-) {
-	ImageExprCalculator<T> calculator(pixels, outfile, overwrite);
-	calculator.setCopyMetaDataFromImage(imagemd);
-	return calculator.compute();
-}
 
 image* image::imageconcat(
 	const string& outfile, const variant& infiles,

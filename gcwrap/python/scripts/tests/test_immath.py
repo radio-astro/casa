@@ -1638,6 +1638,20 @@ class immath_test3(unittest.TestCase):
             self.assertTrue(myia.brightnessunit() == units[i])
             myia.done()
 
+    def test_history(self):
+        """Test that history records are added"""
+        im1 = "hist1.im"
+        im2 = "hist2.im"
+        myia = iatool()
+        myia.fromshape(im1, [20, 20])
+        myia.fromshape(im2, [20, 20])
+        myia.done()
+        kk = myia.imagecalc("", im1 + "+" + im2)
+        msgs = kk.history()
+        kk.done()
+        self.assertTrue("ia.imagecalc" in msgs[-2])
+        self.assertTrue("ia.imagecalc" in msgs[-1])
+
 def suite():
     return [immath_test1, immath_test2, immath_test3]
     
