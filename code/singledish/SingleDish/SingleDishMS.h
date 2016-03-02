@@ -38,10 +38,6 @@
 #include <msvis/MSVis/VisBuffer2.h>
 #include <singledish/SingleDish/SDMSManager.h>
 
-// for importasap
-#include <singledish/Filler/SingleDishMSFiller.h>
-#include <singledish/Filler/Scantable2MSReader.h>
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 class SingleDishMS {
@@ -331,25 +327,7 @@ private:
   void split_bloutputname(string str);
 
 public:
-  static bool importAsap(string const &infile, string const &outfile) {
-    bool status = true;
-    try {
-      SingleDishMSFiller<Scantable2MSReader> filler(infile);
-      filler.fill();
-      filler.save(outfile);
-    } catch (AipsError &e) {
-      LogIO os(LogOrigin("SingleDishMS", "importAsap", WHERE));
-      os << LogIO::SEVERE << "Exception  occurred." << LogIO::POST;
-      os << LogIO::SEVERE << "Original Message: \n" << e.getMesg() << LogIO::POST;
-      os << LogIO::DEBUGGING << "Detailed Stack Trace: \n" << e.getStackTrace() << LogIO::POST;
-      status = false;
-    } catch (...) {
-      LogIO os(LogOrigin("SingleDishMS", "importAsap", WHERE));
-      os << LogIO::SEVERE << "Unknown exception occurred." << LogIO::POST;
-      status = false;
-    }
-    return status;
-  }
+  static bool importAsap(string const &infile, string const &outfile);
 };
 // class SingleDishMS -END
 

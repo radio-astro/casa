@@ -35,6 +35,10 @@
 #include <stdcasa/StdCasa/CasacSupport.h>
 #include <tables/Tables/ScalarColumn.h>
 
+// for importasap
+#include <singledish/Filler/SingleDishMSFiller.h>
+#include <singledish/Filler/Scantable2MSReader.h>
+
 #define _ORIGIN LogOrigin("SingleDishMS", __func__, WHERE)
 
 namespace {
@@ -3030,5 +3034,25 @@ void SingleDishMS::smooth(string const &kernelType, float const kernelWidth,
   finalize_process();
 }
 
+bool SingleDishMS::importAsap(string const &infile, string const &outfile)
+{
+  bool status = true;
+  try {
+    SingleDishMSFiller<Scantable2MSReader> filler(infile);
+    filler.fill();
+    filler.save(outfile);
+  } catch (AipsError &e) {
+    LogIO os(_ORIGIN);
+    os << LogIO::SEVERE << "Exception occurred." << LogIO::POST;
+    os << LogIO::SEVERE << "Original Message: \n" << e.getMesg() << LogIO::POST;
+    os << LogIO::DEBUGGING << "Detailed Stack Trace: \n" << e.getStackTrace() << LogIO::POST;
+    status = false;
+  } catch (...) {
+    LogIO os(_ORIGIN);
+    os << LogIO::SEVERE << "Unknown exception occurred." << LogIO::POST;
+    status = false;
+  }
+  return status;
+}
 }  // End of casa namespace.
 
