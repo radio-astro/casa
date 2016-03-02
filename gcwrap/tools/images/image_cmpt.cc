@@ -137,64 +137,9 @@ image::image(SPIIC inImage) :
 
 image::~image() {}
 
-Bool isunset(const ::casac::variant &theVar) {
-	Bool rstat(False);
-	if ((theVar.type() == ::casac::variant::BOOLVEC) && (theVar.size() == 0))
-		rstat = True;
-	return rstat;
-}
-
-::casac::record* image::torecord() {
-	_log << LogOrigin("image", __func__);
-	if (detached())
-		return new record();
-	try {
-		Record rec;
-		String err;
-		Bool ret = _imageF ? _imageF->toRecord(err, rec)
-			: _imageC->toRecord(err, rec);
-		ThrowIf (! ret, "Could not convert to record: " + err);
-		return fromRecord(rec);
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	return new record();
-
-}
-
-bool image::fromrecord(const record& imrecord, const string& outfile) {
-	try {
-		_log << _ORIGIN;
-		std::unique_ptr<casa::Record> tmpRecord(toRecord(imrecord));
-		_reset();
-		auto imagePair = ImageFactory::fromRecord(*tmpRecord, outfile);
-		vector<String> names { "record", "outfile" };
-		vector<variant> values { imrecord, outfile };
-		auto msgs = _newHistory(__func__, names, values);
-		if (imagePair.first) {
-			_imageF = imagePair.first;
-			ImageHistory<Float> ih(_imageF);
-			ih.addHistory(_ORIGIN.toString(), msgs);
-		}
-		else {
-			_imageC = imagePair.second;
-			ImageHistory<Complex> ih(_imageC);
-			ih.addHistory(_ORIGIN.toString(), msgs);
-		}
-		return True;
-	}
-	catch (const AipsError& x) {
-		RETHROW(x);
-	}
-	return False;
-}
-
 bool image::addnoise(
 	const std::string& type, const std::vector<double>& pars,
-	const variant& region, const bool zeroIt, const vector<int>& seeds
+	const variant& region, bool zeroIt, const vector<int>& seeds
 ) {
 	try {
 		_log << LogOrigin("image", __func__);
@@ -228,13 +173,84 @@ bool image::addnoise(
 				pars, zeroIt, seedPair.get()
 			);
 		}
-		_stats.reset(0);
+		vector<String> names { "type", "pars", "region", "zeroit", "seeds" };
+		vector<variant> values { type, pars, region, zeroIt, seeds };
+		_addHistory(__func__, names, values);
+		_stats.reset();
 		return True;
-	} catch (const AipsError& x) {
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
+	return False;
+}
+
+void image::_addHistory(
+    const String& method, const vector<String>& names, const vector<variant>& values
+) {
+    auto msgs = _newHistory(method, names, values);
+    if (_imageC) {
+        ImageHistory<Complex> ih(_imageC);
+        ih.addHistory(method, msgs);
+    }
+    else {
+        ImageHistory<Float> ih(_imageF);
+        ih.addHistory(method, msgs);
+    }
+}
+
+Bool image::_isUnset(const variant &theVar) {
+	return theVar.type() == variant::BOOLVEC
+	    && theVar.size() == 0;
+}
+
+bool image::fromrecord(const record& imrecord, const string& outfile) {
+    try {
+        _log << _ORIGIN;
+        std::unique_ptr<casa::Record> tmpRecord(toRecord(imrecord));
+        _reset();
+        auto imagePair = ImageFactory::fromRecord(*tmpRecord, outfile);
+        vector<String> names { "record", "outfile" };
+        vector<variant> values { imrecord, outfile };
+        auto msgs = _newHistory(__func__, names, values);
+        if (imagePair.first) {
+            _imageF = imagePair.first;
+            ImageHistory<Float> ih(_imageF);
+            ih.addHistory(_ORIGIN.toString(), msgs);
+        }
+        else {
+            _imageC = imagePair.second;
+            ImageHistory<Complex> ih(_imageC);
+            ih.addHistory(_ORIGIN.toString(), msgs);
+        }
+        return True;
+    }
+    catch (const AipsError& x) {
+        RETHROW(x);
+    }
+    return False;
+}
+
+::casac::record* image::torecord() {
+    _log << LogOrigin("image", __func__);
+    if (detached())
+        return new record();
+    try {
+        Record rec;
+        String err;
+        Bool ret = _imageF ? _imageF->toRecord(err, rec)
+            : _imageC->toRecord(err, rec);
+        ThrowIf (! ret, "Could not convert to record: " + err);
+        return fromRecord(rec);
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return new record();
 }
 
 // FIXME need to support region records as input
@@ -3653,7 +3669,7 @@ bool image::putregion(
 		}
 		// create Array<Float> pixels
 		Array<Float> pixels;
-		if (isunset(v_pixels)) {
+		if (_isUnset(v_pixels)) {
 			// do nothing
 		}
 		else if (v_pixels.type() == ::casac::variant::DOUBLEVEC) {
@@ -3679,7 +3695,7 @@ bool image::putregion(
 
 		// create Array<Bool> mask
 		Array<Bool> mask;
-		if (isunset(v_pixelmask)) {
+		if (_isUnset(v_pixelmask)) {
 			// do nothing
 		}
 		else if (v_pixelmask.type() == ::casac::variant::DOUBLEVEC) {
@@ -5123,7 +5139,7 @@ image::toworld(const ::casac::variant& value, const std::string& format, bool do
 			return nullptr;
         }
 		Vector<Double> pixel;
-		if (isunset(value)) {
+		if (_isUnset(value)) {
 			pixel.resize(0);
 		}
         else if (value.type() == ::casac::variant::DOUBLEVEC) {

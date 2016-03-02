@@ -17,8 +17,6 @@ private:
 
 typedef GaussianBeam Angular2DGaussian;
 
-
-
 mutable casa::LogIO _log;
 
 // This class needs to be templated. For now, we maintain two pointers.
@@ -45,24 +43,18 @@ static const casa::String _class;
 bool detached() const;
 
 casac::record* recordFromQuantity(casa::Quantity q);
+
 casac::record* recordFromQuantity(const casa::Quantum<casa::Vector<casa::Double> >& q);
-casa::Quantity _casaQuantityFromVar(const ::casac::variant& theVar);
-SHARED_PTR<casa::Record> _getRegion(
-	const variant& region, const bool nullIfEmpty,
-	const std::string& otherImageName=""
-) const;
 
-static vector<double> _toDoubleVec(const variant& v);
+template<class T> image* _adddegaxes(
+	SPCIIT inImage,
+	const std::string& outfile, bool direction,
+	bool spectral, const std::string& stokes, bool linear,
+	bool tabular, bool overwrite, bool silent
+);
 
-// static void _registerOpenFuncs();
-
-void _reset();
-
-// the returned value of pixels will have either 0 or two elements, if 0 then the returned
-// value of dir will be set
-void _processDirection(
-	casa::Vector<casa::Double>& pixels, casa::MDirection& dir, const variant& inputDirection,
-	const casa::String& paramName
+void _addHistory(
+    const String& method, const vector<String>& kyes, const vector<variant>& vals
 );
 
 template <class T> image* _boxcar(
@@ -71,6 +63,21 @@ template <class T> image* _boxcar(
 	bool stretch, int axis, int width, bool drop,
 	casa::ImageDecimatorData::Function dFunction, const casa::LogOrigin& lor,
 	const std::vector<casa::String> msgs
+);
+
+casa::Quantity _casaQuantityFromVar(const ::casac::variant& theVar);
+
+template<class T> image* _decimate(
+	SPCIIT image, const string& outfile, int axis,
+	int factor, casa::ImageDecimatorData::Function f,
+	const SHARED_PTR<casa::Record> region,
+	const string& mask, bool overwrite, bool stretch,
+	const vector<casa::String>& msgs
+) const;
+
+std::pair<SPIIF, SPIIC> _fromarray(
+    const string& outfile, const variant& pixels,
+    const record& csys, bool linear, bool overwrite, bool log
 );
 
 template<class T> casa::Record _getchunk(
@@ -89,54 +96,14 @@ template <class T> casa::Record _getprofile(
 	const casa::String& regionName
 );
 
+SHARED_PTR<casa::Record> _getRegion(
+	const variant& region, const bool nullIfEmpty,
+	const std::string& otherImageName=""
+) const;
+
 template<class T> vector<string>  _handleMask(
 	SPIIT myimage, const std::string& op,
 	const std::vector<std::string>& name
-);
-
-template<class T> SPIIT _imagecalc(
-	const string& outfile, const string& pixels,
-	bool overwrite, const string& imagemd
-);
-
-template<class T> void _putchunk(
-	SPIIT image, const casac::variant& pixels,
-	const vector<int>& blc, const vector<int>& inc,
-	const bool list, const bool locking, const bool replicate
-);
-
-template<class T> SHARED_PTR<casa::ImageInterface<T> > _subimage(
-	SHARED_PTR<casa::ImageInterface<T> > clone,
-	const casa::String& outfile, const casa::Record& region,
-	const casa::String& mask, bool dropDegenerateAxes,
-	bool overwrite, bool list, bool stretch, const vector<int>& keepaxes
-);
-
-template<class T> image* _adddegaxes(
-	SPCIIT inImage,
-	const std::string& outfile, bool direction,
-	bool spectral, const std::string& stokes, bool linear,
-	bool tabular, bool overwrite, bool silent
-);
-
-template<class T> image* _decimate(
-	SPCIIT image, const string& outfile, int axis,
-	int factor, casa::ImageDecimatorData::Function f,
-	const SHARED_PTR<casa::Record> region,
-	const string& mask, bool overwrite, bool stretch,
-	const vector<casa::String>& msgs
-) const;
-
-/*
-shared_ptr<ImageAnalysis> _fromarray(
-    const string& outfile, const variant& pixels,
-    const record& csys, bool linear, bool overwrite, bool log
-);
-*/
-
-std::pair<SPIIF, SPIIC> _fromarray(
-    const string& outfile, const variant& pixels,
-    const record& csys, bool linear, bool overwrite, bool log
 );
 
 template <class T> static image* _hanning(
@@ -147,9 +114,16 @@ template <class T> static image* _hanning(
 	const std::vector<casac::variant> values
 );
 
+template<class T> SPIIT _imagecalc(
+	const string& outfile, const string& pixels,
+	bool overwrite, const string& imagemd
+);
+
 static casa::String _inputsString(
 	const std::vector<std::pair<casa::String, casac::variant> >& inputs
 );
+
+static bool _isUnset(const variant& var);
 
 // because public method name() is not const
 casa::String _name(bool strippath=false) const;
@@ -157,6 +131,19 @@ casa::String _name(bool strippath=false) const;
 static vector<String> _newHistory(
 	const string& method, const vector<String>& names,
 	const vector<variant>& values
+);
+
+// the returned value of pixels will have either 0 or two elements, if 0 then the returned
+// value of dir will be set
+void _processDirection(
+	casa::Vector<casa::Double>& pixels, casa::MDirection& dir, const variant& inputDirection,
+	const casa::String& paramName
+);
+
+template<class T> void _putchunk(
+	SPIIT image, const casac::variant& pixels,
+	const vector<int>& blc, const vector<int>& inc,
+	const bool list, const bool locking, const bool replicate
 );
 
 template <class T> static image* _regrid(
@@ -168,13 +155,22 @@ template <class T> static image* _regrid(
 	const vector<String>& msgs
 );
 
+void _remove(bool verbose);
+
+void _reset();
+
+template<class T> SHARED_PTR<casa::ImageInterface<T> > _subimage(
+	SHARED_PTR<casa::ImageInterface<T> > clone,
+	const casa::String& outfile, const casa::Record& region,
+	const casa::String& mask, bool dropDegenerateAxes,
+	bool overwrite, bool list, bool stretch, const vector<int>& keepaxes
+);
+
+static vector<double> _toDoubleVec(const variant& v);
+
 template <class T> static SPIIT _twopointcorrelation(
 	SPIIT myimage, const string& outfile,
 	SHARED_PTR<Record> region, const casa::String& mask,
 	const casa::IPosition& axes, const std::string& method,
 	bool overwrite, bool stretch
 );
-
-void _remove(bool verbose);
-
-
