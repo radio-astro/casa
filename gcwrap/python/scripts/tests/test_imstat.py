@@ -670,5 +670,15 @@ class imstat_test(unittest.TestCase):
             self.assertTrue(stats['max'][9] == 0)
             self.assertTrue(stats['min'][9] == 0)
         myia.done()
+
+    def test_CAS8357(self):
+        """verify ellipse with center outside lattice can be specified"""
+        myia = iatool()
+        myia.fromshape("",[30,30])
+        reg = "circle[[-1pix,-1pix], 10pix]"
+        res = myia.statistics(region=reg)
+        myia.done()
+        self.assertTrue(res['npts'] == 70, 'Wrong number of points')
+
 def suite():
     return [imstat_test]
