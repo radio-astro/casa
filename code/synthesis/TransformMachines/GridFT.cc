@@ -1290,6 +1290,7 @@ ImageInterface<Complex>& GridFT::getImage(Matrix<Float>& weights, Bool normalize
       IPosition trc(blc+image->shape()-stride);
       // Do the copy
       IPosition start(4, 0);
+      cerr << "start " << start << " blc " << blc << " trc " << trc << endl;
       image->put(griddedData(blc, trc));
     }
   }

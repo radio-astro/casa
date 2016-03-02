@@ -765,9 +765,9 @@ C--------------
 
       do f=1, nvchan
          do k=1,2
-            pos=scale(k)*uvw(k,row)*freq(f)*Cinv+(offset(k)+1.0)
-            loc(k, f, row)=nint(pos)
-            off(k, f, row)=nint((loc(k, f, row)-pos)*sampling)
+           pos=scale(k)*uvw(k,row)*freq(f)*Cinv+(offset(k)+1.0)
+           loc(k, f, row)=nint(pos)
+          off(k, f, row)=nint((real(loc(k, f, row))-pos)*real(sampling))
          end do
          phase=-2.0D0*pi*dphase(row)*freq(f)*Cinv
          phasor(f,row)=cmplx(cos(phase), sin(phase))
