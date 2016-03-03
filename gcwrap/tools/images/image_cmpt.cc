@@ -295,6 +295,32 @@ image* image::collapse(
     return nullptr;
 }
 
+bool image::fromarray(const std::string& outfile,
+        const variant& pixels, const record& csys,
+        bool linear, bool overwrite, bool log) {
+    try {
+        _reset();
+        auto mypair = _fromarray(
+            outfile, pixels, csys,
+            linear,  overwrite, log
+        );
+        _imageF = mypair.first;
+        _imageC = mypair.second;
+        vector<String> names {"pixels", "csys", "linear", "overwrite", "log"};
+        variant k("[...]");
+        const auto* mpixels = pixels.size() <= 100 ? &pixels : &k;
+        vector<variant> values {*mpixels, csys, linear, overwrite, log};
+        _addHistory(__func__, names, values);
+        return True;
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return False;
+}
+
 bool image::fromrecord(const record& imrecord, const string& outfile) {
     try {
         _log << _ORIGIN;
@@ -437,7 +463,6 @@ image* image::imageconcat(
     return nullptr;
 }
 
-
 void image::_addHistory(
     const String& method, const vector<String>& names, const vector<variant>& values
 ) {
@@ -477,28 +502,6 @@ Bool image::_isUnset(const variant &theVar) {
     return new record();
 }
 
-
-
-bool image::fromarray(const std::string& outfile,
-		const ::casac::variant& pixels, const ::casac::record& csys,
-		const bool linear, const bool overwrite, const bool log) {
-	try {
-	    _reset();
-	    auto mypair = _fromarray(
-	        outfile, pixels, csys,
-	        linear,  overwrite, log
-	    );
-	    _imageF = mypair.first;
-	    _imageC = mypair.second;
-		return True;
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	return False;
-}
 
 std::pair<SPIIF, SPIIC> image::_fromarray(
     const string& outfile,

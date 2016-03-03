@@ -102,6 +102,15 @@ class ia_fromarray_test(unittest.TestCase):
                 self.assertTrue(bb[0,0] == cval)
             i += 1
         myia.done()
+
+    def test_history(self):
+        """test writing of history"""
+        myia = self._myia
+        ar1 = numpy.zeros([2, 3], numpy.float64)
+        myia.fromarray("", ar1)
+        msgs = myia.history()
+        self.assertTrue("ia.fromarray" in msgs[-2])
+        self.assertTrue("ia.fromarray" in msgs[-1])
         
 def suite():
     return [ia_fromarray_test]
