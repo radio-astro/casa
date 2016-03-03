@@ -60,7 +60,8 @@ public:
 		  const String& timetype,
 		  const String& freqtype,
 		  const String& fieldtype,
-		  Vector<Int> spwmap=Vector<Int>());
+		  Vector<Int> spwmap=Vector<Int>(),
+		  Vector<Int> fldmap=Vector<Int>());
 
   // From NewCalTable and MS 
   CTPatchedInterp(NewCalTable& ct,
@@ -128,9 +129,12 @@ private:
   void setDefFldMap() {fldMap_.resize(nMSFld_); fldMap_.set(0);};
   void setFldMap(const MSField& msfld);           // via nearest on-sky
   void setFldMap(const ROMSFieldColumns& fcol);  // via nearest on-sky
-  //void setFldMap(Vector<Int>& field);        // via ordered index list
+  void setFldMap(Vector<Int>& fldmap);        // via ordered index list
   //void setFldMap(Vector<String>& field);     // via name matching
   //void setFldMap(uInt to, uInt from);        // via single to/from 
+
+  // Calculate fldmap redundancy, enabling reuse
+  void calcAltFld();
 
   // Spw
   // default: indgen (index identity)

@@ -457,6 +457,136 @@ void doTest5 (Bool verbose=False) {
 
 }
 
+Complex NCTtestvalueC2(Int iant,Int ispw,
+		    Double freq,Double refFreq,Double fint, Int nchan,
+		    Double time,Double refTime,Double tint) {
+  Double ich=(freq-refFreq-fint/2)/fint;
+  if (ich<0.0) ich=0.0;
+  if (ich>nchan-1) ich=nchan-1;
+  return NewCalTable::NCTtestvalueC(iant,ispw,ich,time,refTime,tint);
+}
+
+
+void doTest6 (Bool verbose=False) {
+
+  cout << "****----doTest6()----****" << endl;
+
+  // Make a testing NewCalTable (Table::Memory)
+  uInt nFld(8), nAnt(1), nSpw(1), nObs(1), nScan(8),  nTime(1);
+  Vector<Int> nChan(nSpw,10);
+  Double refTime(4832568000.0); // 2012 Jan 06 @ noon
+  Double tint(60.0);
+  Bool disk(verbose);
+  NewCalTable tnct("tCTPatchedInterp_test6.ct","Complex",
+		   nObs,nScan,nTime,
+		   nAnt,nSpw,nChan,
+		   nFld,
+		   refTime,tint,disk,False);
+
+  // Remove all but 0 and 5
+  tnct.removeRow(7);
+  tnct.removeRow(6);
+  tnct.removeRow(4);
+  tnct.removeRow(3);
+  tnct.removeRow(2);
+  tnct.removeRow(1);
+  tnct.flush();
+  tnct.writeToDisk("tCTPatchedInterp_test6.ct");
+
+  // some sanity checks on the test NewCalTable
+  if (verbose) cout << "Table::Type: " << tnct.tableType() 
+		    << " (should be " << Table::Memory << ")"
+		    << endl;
+  AlwaysAssert( (tnct.tableType() == Table::Memory), AipsError);
+  if (verbose) cout << "nrow = " << tnct.nrow() 
+		    << " (should be " << nObs*nScan*nTime*nSpw*nAnt << ")"
+		    << endl;
+  //  AlwaysAssert( (tnct.nrow()==nObs*nScan*nTime*nSpw*nAnt), AipsError);
+  
+  // Make a CTPatchedInterp 
+  Vector<Int> fldmap(nFld,0);
+  fldmap(Slice(3,5,1))=5;
+  CTPatchedInterp ci(tnct,VisCalEnum::JONES,1,"nearest","linear",
+		     "map",Vector<Int>(), fldmap);
+  if (verbose) ci.state();
+
+  Int nMSCh(4);
+  Vector<Double> f(nMSCh); indgen(f);
+  f*=0.5e6;  f+=60.e9; f/=1e9;  // in GHz
+
+  Double t(4832568000.0);  // doesn't matter much, since using 'nearest'
+
+  // Invent comparison values at fraction ichans manually (see NCTtestvalueC)
+  std::map<Int,Cube<Complex> > cfval;
+  cfval[0]=Cube<Complex>(1,nMSCh,nAnt,0.0);
+  cfval[5]=Cube<Complex>(1,nMSCh,nAnt,0.0);
+
+  Double tnear0(refTime), tnear5(refTime+5*tint);
+  for (uInt iant=0;iant<nAnt;++iant) {
+    for (Int ich=0;ich<nMSCh;++ich) {
+      cfval[0](0,ich,iant) = NCTtestvalueC2(iant,0,f(ich),60.0,1.0e-3,10,
+					 tnear0,refTime,tint);
+      cfval[5](0,ich,iant) = NCTtestvalueC2(iant,0,f(ich),60.0,1.0e-3,10,
+					 tnear5,refTime,tint);
+    }
+  }
+
+  // Get interpolation for a ~random sequence of fields
+  Vector<Int> flds(13,0);
+  flds(0)=0;
+  flds(1)=2;
+  flds(2)=1;
+  flds(3)=2;
+  flds(4)=6;
+  flds(5)=3;
+  flds(6)=5;
+  flds(7)=4;
+  flds(8)=7;
+  flds(9)=1;
+  flds(10)=1;
+  flds(11)=6;
+  flds(12)=6;
+
+
+  Vector<Float*> rAddr(nFld,NULL);
+
+  for (Int i=0;i<13;++i) {
+
+    Int& fld(flds(i));
+    Bool newcal=ci.interpolate(0,fld,0,t,f);
+
+    Cube<Float> r(ci.resultF(0,fld,0));
+    if (verbose) {
+      cout.precision(7);
+      cout << "fld=" << fld
+	   << " new = " << newcal  << endl;
+      cout << "resultF = " << ci.resultF(0,fld,0) << endl;
+    }
+
+    Cube<Complex> rc(ci.resultC(0,fld,0));
+    Cube<Complex> diff;
+    diff=rc-cfval[fldmap(fld)];
+
+    if (rAddr(fld)==NULL)
+      rAddr(fld)=r.data();
+    else
+      AlwaysAssert(rAddr(fld)==r.data(),AipsError)
+
+    // if (verbose) cout << "diff = " << diff << endl;
+    Double tol(2.e-7);
+    AlwaysAssert( allNearAbs(amplitude(diff),0.0f,tol), AipsError);
+  }
+
+  if (verbose) {
+    cout << "fldmap = " << fldmap << endl;
+    cout << "rAddr = " << rAddr << endl;
+  }
+
+}
+
+
+
+
 
 int main ()
 {
@@ -467,6 +597,7 @@ int main ()
     doTest3(CTPATCHEDINTERPTEST_VERBOSE);
     doTest4(CTPATCHEDINTERPTEST_VERBOSE);
     //doTest5(CTPATCHEDINTERPTEST_VERBOSE);
+    doTest6(CTPATCHEDINTERPTEST_VERBOSE);
 
   } catch (AipsError x) {
     cout << "Unexpected exception: " << x.getMesg() << endl;

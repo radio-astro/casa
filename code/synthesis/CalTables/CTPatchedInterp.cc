@@ -48,7 +48,8 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
 				 const String& timetype,
 				 const String& freqtype,
 				 const String& fieldtype,
-				 Vector<Int> spwmap) :
+				 Vector<Int> spwmap,
+				 Vector<Int> fldmap) :
   ct_(ct),
   mtype_(mtype),
   isCmplx_(False),
@@ -57,7 +58,7 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
   timeType_(timetype),
   freqType_(freqtype),
   byObs_(timetype.contains("perobs")), // detect slicing by obs
-  byField_(fieldtype=="nearest"),     // for now we are NOT slicing by field
+  byField_(fieldtype=="nearest" || fieldtype=="map"), 
   nChanIn_(),
   freqIn_(),
   nMSObs_(1), // byObs_?ct.observation().nrow():1),  // assume CT shapes for MS shapes
@@ -176,8 +177,12 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
   setSpwMap(spwmap);
 
   // Set fldmap
-  if (byField_)
-    setFldMap(ct.field());  // Use CalTable's fields
+  if (byField_) {
+    if (fieldtype=="map")
+      setFldMap(fldmap);  // Use specified map
+    else
+      setFldMap(ct.field());  // Use CalTable's fields ('nearest')
+  }
   else
     setDefFldMap();
 
@@ -194,15 +199,7 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
   freqResFlag_.resize(nMSSpw_,nMSFld_,nMSObs_);
 
   // Figure out where we can duplicate field interpolators
-  altFld_.resize(nMSFld_);
-  for (Int iMSFld=0;iMSFld<nMSFld_;++iMSFld) {
-     altFld_(iMSFld)=iMSFld;  // nominally
-     for (Int ifld=0;ifld<iMSFld;++ifld) 
-       if (fldMap_(ifld)==fldMap_(iMSFld))
-         altFld_(iMSFld)=ifld;  
-  }
-  //  cout << "------------" << endl;
-  //  cout << "fldMap_ = " << fldMap_ << "  altFld_ = " << altFld_ << endl;
+  calcAltFld();
 
   // Setup mapped interpolators
   // TBD: defer this to later, so that spwmap, etc. can be revised
@@ -364,17 +361,8 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
   freqResFlag_.resize(nMSSpw_,nMSFld_,nMSObs_);
 
   // Figure out where we can duplicate field interpolators
-  altFld_.resize(nMSFld_);
-  for (Int iMSFld=0;iMSFld<nMSFld_;++iMSFld) {
-     altFld_(iMSFld)=iMSFld;  // nominally
-     for (Int ifld=0;ifld<iMSFld;++ifld) 
-       if (fldMap_(ifld)==fldMap_(iMSFld))
-         altFld_(iMSFld)=ifld;  
-  }
-  //  cout << "------------" << endl;
-  //  cout << "fldMap_ = " << fldMap_ << endl;
-  //  cout << "altFld_ = " << altFld_ << endl;
-
+  calcAltFld();
+  
   // Setup mapped interpolators
   // TBD: defer this to later, so that spwmap, etc. can be revised
   //   before committing to the interpolation engines
@@ -489,15 +477,7 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
   freqResFlag_.resize(nMSSpw_,nMSFld_,nMSObs_);
 
   // Figure out where we can duplicate field interpolators
-  altFld_.resize(nMSFld_);
-  for (Int iMSFld=0;iMSFld<nMSFld_;++iMSFld) {
-     altFld_(iMSFld)=iMSFld;  // nominally
-     for (Int ifld=0;ifld<iMSFld;++ifld) 
-       if (fldMap_(ifld)==fldMap_(iMSFld))
-         altFld_(iMSFld)=ifld;  
-  }
-  //  cout << "------------" << endl;
-  //  cout << "fldMap_ = " << fldMap_ << "  altFld_ = " << altFld_ << endl;
+  calcAltFld();
 
   // Setup mapped interpolators
   // TBD: defer this to later, so that spwmap, etc. can be revised
@@ -612,13 +592,12 @@ Bool CTPatchedInterp::interpolate(Int msobs, Int msfld, Int msspw, Double time, 
     //   (fills timeResult_/timeResFlag_ implicitly)
     ip(0)=iMSElem;
     if (!tI_(ip)) {
-      //      cout << "Flagging: " << ip << endl;
+      //      if (iMSElem==0) cout << "Flagging: " << ip << endl;
       newcal=True;
     }
     else {
 
-      if (tI_(ip)->interpolate(time)) {
-	
+      if (tI_(ip)->interpolate(time)) { 
 	// Resample in frequency
 	Matrix<Float> fR(freqResult_(msspw,msfld,thisobs(msobs)).xyPlane(iMSElem));
 	Matrix<Bool> fRflg(freqResFlag_(msspw,msfld,thisobs(msobs)).xyPlane(iMSElem));
@@ -642,6 +621,23 @@ Bool CTPatchedInterp::interpolate(Int msobs, Int msfld, Int msspw, Double time, 
   diffobsfld|=(byObs_ && msobs!=lastObs_(msspw));     // obs-dep, and obs changed
   newcal|=diffobsfld;  //  update newcal for return
 
+  /*
+  if (newcal) {
+    Double t0(86400.0*floor(time/86400.0));
+    cout << boolalpha
+	 << "fld="<<msfld
+	 << " obs="<<thisobs(msobs)
+	 << " spw="<<msspw
+	 << " time="<< time-t0
+	 << " diffobsfld=" << diffobsfld
+	 << " new=" << newcal
+	 << " tI_(ip)=" << tI_(ip)
+	 << " chan="<< nMSChan/2
+	 << " result=" << result_(msspw,msfld,thisobs(msobs))(0,nMSChan/2,0)
+	 << " addr=" << &result_(msspw,msfld,thisobs(msobs))(0,nMSChan/2,0)
+	 << endl;
+  }
+  */
   // Remember for next pass
   lastFld_(msspw)=msfld;
   lastObs_(msspw)=msobs;
@@ -813,6 +809,8 @@ void CTPatchedInterp::makeInterpolators() {
 
     if (altFld_(iMSFld)==iMSFld) {
 
+      //      cout << "Making  interpolators for        " << iMSFld << " (mapped from " << fldMap_(iMSFld) << ")" << endl;
+
       for (Int iMSSpw=0;iMSSpw<nMSSpw_;++iMSSpw) { 
 	
 	// Only if the required CT spw is available
@@ -861,6 +859,9 @@ void CTPatchedInterp::makeInterpolators() {
     else {
       // Point to an existing interpolator group
       Int thisAltFld=altFld_(iMSFld);
+
+      //      cout << "Reusing interpolators from " << thisAltFld << " for " << iMSFld << " (mapped to   " << fldMap_(iMSFld) << ")" << endl;
+
       for (Int iMSSpw=0;iMSSpw<nMSSpw_;++iMSSpw) { 
 	timeResult_(iMSSpw,iMSFld,iMSObs).reference(timeResult_(iMSSpw,thisAltFld,iMSObs));
 	timeResFlag_(iMSSpw,iMSFld,iMSObs).reference(timeResFlag_(iMSSpw,thisAltFld,iMSObs));
@@ -910,42 +911,116 @@ void CTPatchedInterp::setFldMap(const ROMSFieldColumns& fcol) {
    //cout << "ctFlds  = " << ctFlds << endl;
 
    // If only one CT field, just use it
+
+   Vector<Double> fseps(0);
    if (nAvFlds==1) 
      fldMap_.set(ctFlds(0));
    else {
      // For each MS field, find the nearest available CT field 
      Int nMSFlds=fcol.nrow();
+     fseps.resize(nMSFlds);
+     fseps.set(0.0);
      MDirection msdir,ctdir;
      Vector<Double> sep(nAvFlds);
      IPosition ipos(1,0);  // get the first direction stored (no poly yet)
      for (Int iMSFld=0;iMSFld<nMSFlds;++iMSFld) {
        msdir=fcol.phaseDirMeas(iMSFld);
+       //cout << iMSFld << ":" << msdir.getValue() << endl;
        sep.set(DBL_MAX);
        for (Int iCTFld=0;iCTFld<nAvFlds;++iCTFld) {
 	 // Get cal field direction, converted to ms field frame
 	 ctdir=ctcol.field().phaseDirMeas(ctFlds(iCTFld));
 	 MDirection::Convert(ctdir,msdir.getRef());
+	 //cout << "   c:" << ctFlds(iCTFld) << ":" << ctdir.getValue() << endl;
 	 sep(iCTFld)=ctdir.getValue().separation(msdir.getValue());
        }
        // Sort separations
        Vector<uInt> ord;
        Int nsep=genSort(ord,sep,Sort::Ascending,(Sort::QuickSort | Sort::Ascending));
 
-       //cout << iMSFld << ":" << endl;
-       //cout << "    ord=" << ord << endl;
-       //cout << "   nsep=" << nsep << endl;
-       //cout << "    sep=" << sep << " " << sep*(180.0/C::pi)<< endl;
-       
+       /*
+       cout << "    ord=" << ord << endl;
+       cout << "   nsep=" << nsep << endl;
+       cout << "    sep=" << sep << " " << sep*(180.0/C::pi)<< endl;
+       */
+
        // Trap case of duplication of nearest separation
        if (nsep>1 && sep(ord(1))==sep(ord(0)))
 	 throw(AipsError("Found more than one field at minimum distance, can't decide!"));
        
+       fseps(iMSFld)=sep(ord(0));
        fldMap_(iMSFld)=ctFlds(ord(0));
      }   
    }
-   //cout << "fldMap_ = " << fldMap_ << endl;
+   fseps*=(180.0/C::pi);
+   LogIO log;
+   ostringstream msg;
+   msg << "Calibration field mapping for "
+       << Path(ct_.tableName()).baseName().before(".tempMemCal")
+       << " (via gainfield='nearest'): "
+       << fldMap_ << endl
+       << " Separations (deg): " << fseps;
+   log << msg.str() << LogIO::POST;
+
+   //   cout << ct_.tableName() << ": fldMap_ = " << fldMap_ << endl;
 }   
+
+void CTPatchedInterp::setFldMap(Vector<Int>& fldmap) {
+
+  // Set the default spwmap first, then we'll ammend it
+  setDefFldMap();
+
+  Int nfld=fldmap.nelements();
+
+  // Must specify no more than needed, but at least one
+  AlwaysAssert(nfld>0,AipsError);
+  AlwaysAssert(nfld<=nMSFld_,AipsError);
+
+  // Discern _available_ fields in the CT
+  ROCTColumns ctcol(ct_);
+  Vector<Int> ctFlds;
+  ctcol.fieldId().getColumn(ctFlds);
+  Int nAvFlds=genSort(ctFlds,Sort::Ascending,(Sort::QuickSort | Sort::NoDuplicates));
+  ctFlds.resize(nAvFlds,True);
   
+  for (Int i=0;i<nfld;++i) {
+    if (!anyEQ(ctFlds,fldmap(i)))
+      throw(AipsError("Specified fldmap contains an unavailable field: "+String(fldmap(i))));
+    else
+      fldMap_(i)=fldmap(i);
+  }
+  if (nfld<nMSFld_)
+  // Fill in the rest with last-specified
+    fldMap_(Slice(nfld,nMSFld_-nfld,1))=fldMap_(nfld-1);
+
+
+   LogIO log;
+   ostringstream msg;
+   msg << "Calibration field mapping for "
+       << Path(ct_.tableName()).baseName().before(".tempMemCal")
+       << " (via user specification): "
+       << fldMap_;
+   log << msg.str() << LogIO::POST;
+
+}
+
+// Calculate fldmap redundancy
+void CTPatchedInterp::calcAltFld() {
+
+  altFld_.resize(nMSFld_);
+  for (Int iMSFld=0;iMSFld<nMSFld_;++iMSFld) {
+     altFld_(iMSFld)=iMSFld;  // nominally
+     for (Int ifld=0;ifld<iMSFld;++ifld) 
+       if (fldMap_(ifld)==fldMap_(iMSFld))
+         //altFld_(iMSFld)=ifld;  
+	 altFld_(iMSFld)=altFld_(ifld);
+  }
+  /*
+  cout << "------------" << endl;
+  cout << "fldMap_ = " << fldMap_ << endl;
+  cout << "altFld_ = " << altFld_ << endl;
+  */
+}
 
 
 
