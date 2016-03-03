@@ -25,7 +25,7 @@ def do_bandpass(vis, caltable, context=None, RefAntOutput=None, ktypecaltable=No
                           'scan'        :bandpass_scan_select_string,
                           'solint'      :'inf',
                           'combine'     :'scan',
-                          'refant'      :RefAntOutput[0].lower(),
+                          'refant'      :RefAntOutput.lower(),
                           'minblperant' :minBL_for_cal,
                           'minsnr'      :5.0,
                           'solnorm'     :False,

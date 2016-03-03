@@ -129,7 +129,7 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
         #calfrom = callibrary.CalFrom(gaintable=bpdgain_touse, interp='', calwt=False)
         #context.callibrary.add(calto, calfrom)
 
-        bandpass_job = do_bandpass(self.inputs.vis, bpcaltable, context=context, RefAntOutput=RefAntOutput,
+        bandpass_job = do_bandpass(self.inputs.vis, bpcaltable, context=context, RefAntOutput=RefAntOutput[0],
                                             ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse)
 
         self._executor.execute(bandpass_job)

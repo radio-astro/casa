@@ -251,7 +251,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
 
         LOG.info("Doing test bandpass calibration")
 
-        bandpass_job = do_bandpass(self.inputs.vis, bpcaltable, context=context, RefAntOutput=RefAntOutput,
+        bandpass_job = do_bandpass(self.inputs.vis, bpcaltable, context=context, RefAntOutput=RefAntOutput[0],
                                             ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse)
 
         self._executor.execute(bandpass_job)

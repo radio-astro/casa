@@ -20,6 +20,7 @@ from pipeline.hif.tasks import bandpass
 from pipeline.hif.tasks import applycal
 from pipeline.hifv.heuristics import find_EVLA_band, getCalFlaggedSoln, getBCalStatistics
 from pipeline.hifv.tasks.setmodel.setmodel import find_standards, standard_sources
+from pipeline.hifv.heuristics import do_bandpass
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -99,10 +100,11 @@ class Finalcals(basetask.StandardTaskTemplate):
         ##context.callibrary.add(calto, calfrom)
         
         LOG.info("Initial BP gain calibration complete")
-        
 
-        bandpass_result = self._do_bandpass(bpcaltable, context=context, refAnt=refAnt,
+        bandpass_job = do_bandpass(self.inputs.vis, bpcaltable, context=context, RefAntOutput=refAnt,
                                             ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse)
+
+        self._executor.execute(bandpass_job)
         
         # Force calwt for the bp table to be False
         ##calto = callibrary.CalTo(self.inputs.vis)
@@ -370,67 +372,6 @@ class Finalcals(basetask.StandardTaskTemplate):
         bpdgains_task = gaincal.GTypeGaincal(bpdgains_inputs)
 
         job = casa_tasks.gaincal(**bpdgains_task_args)
-
-        return self._executor.execute(job)
-    
-    def _do_bandpass(self, caltable, context=None, refAnt=None, ktypecaltable=None, bpdgain_touse=None):
-        """Run CASA task bandpass"""
-
-        m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
-        bandpass_field_select_string = context.evla['msinfo'][m.name].bandpass_field_select_string
-        bandpass_scan_select_string = context.evla['msinfo'][m.name].bandpass_scan_select_string
-        # minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
-        minBL_for_cal = max(3,int(len(m.antennas)/2.0))
-
-        # bandtype = 'B'
-        bandpass_inputs = bandpass.ChannelBandpass.Inputs(context,
-            vis = self.inputs.vis,
-            caltable = caltable,
-            field = bandpass_field_select_string,
-            spw = '',
-            intent = '',
-            scan = bandpass_scan_select_string,
-            solint = 'inf',
-            combine = 'scan',
-            refant = refAnt.lower(),
-            minblperant = minBL_for_cal,
-            minsnr = 5.0,
-            solnorm = False)
-
-        BPGainTables = list(self.inputs.context.callibrary.active.get_caltable())
-        BPGainTables.append(ktypecaltable)
-        BPGainTables.append(bpdgain_touse)
-
-        bandpass_task_args = {'vis'         :self.inputs.vis,
-                              'caltable'    :caltable,
-                              'field'       :bandpass_field_select_string,
-                              'spw'         :'',
-                              'intent'      :'',
-                              'selectdata'  :True,
-                              'uvrange'     :'',
-                              'scan'        :bandpass_scan_select_string,
-                              'solint'      :'inf',
-                              'combine'     :'scan',
-                              'refant'      :refAnt.lower(),
-                              'minblperant' :minBL_for_cal,
-                              'minsnr'      :5.0,
-                              'solnorm'     :False,
-                              'bandtype'    :'B',
-                              'fillgaps'    :0,
-                              'smodel'      :[],
-                              'append'      :False,
-                              'docallib'    :False,
-                              'gaintable'   :BPGainTables,
-                              'gainfield'   :[''],
-                              'interp'      :[''],
-                              'spwmap'      :[],
-                              'parang'      :False}
-
-        #bandpass_inputs.refant = bandpass_inputs.refant.lower()
-
-        #bandpass_task = bandpass.ChannelBandpass(bandpass_inputs)
-
-        job = casa_tasks.bandpass(**bandpass_task_args)
 
         return self._executor.execute(job)
       
