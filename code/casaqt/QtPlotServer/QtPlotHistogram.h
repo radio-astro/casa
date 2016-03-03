@@ -32,7 +32,7 @@
 #include <qglobal.h>
 #include <qcolor.h>
 #include <qwt_plot_item.h>
-#include <qwt_interval_data.h>
+#include <casaqt/QwtConfig.h>
 
 class QtPlotHistogram: public QwtPlotItem {
     public:
@@ -40,8 +40,8 @@ class QtPlotHistogram: public QwtPlotItem {
 	explicit QtPlotHistogram( const QwtText &title );
 	~QtPlotHistogram( ) { }
 
-	void setData( const QwtIntervalData &data );
-	const QwtIntervalData &data( ) const { return data_; }
+	void setData( const qwt_interval_t &data );
+	const qwt_interval_t &data( ) const { return data_; }
 
 	QwtDoubleRect boundingRect( ) const;
 	int rtti( ) const { return QwtPlotItem::Rtti_PlotHistogram; }
@@ -57,7 +57,7 @@ class QtPlotHistogram: public QwtPlotItem {
 
     private:
 	virtual void draw_bar( QPainter *, Qt::Orientation orientation, const QRect & ) const;
-	QwtIntervalData data_;
+	qwt_interval_t data_;
 	double reference_;
 	QColor color_;
 };

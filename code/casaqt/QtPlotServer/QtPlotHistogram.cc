@@ -35,7 +35,7 @@
 QtPlotHistogram::QtPlotHistogram( const QString &label ) :  QwtPlotItem(QwtText(label)), reference_(0.0) { }
 QtPlotHistogram::QtPlotHistogram( const QwtText &label ) :  QwtPlotItem(label), reference_(0.0) { }
 
-void QtPlotHistogram::setData(const QwtIntervalData &data) {
+void QtPlotHistogram::setData(const qwt_interval_t &data) {
     data_ = data;
     itemChanged();
 }
@@ -68,7 +68,7 @@ void QtPlotHistogram::setColor(const QColor &color) {
 }
 
 void QtPlotHistogram::draw(QPainter *painter, const QwtScaleMap &xMap,  const QwtScaleMap &yMap, const QRect &) const {
-    const QwtIntervalData &iData = data_;
+    const qwt_interval_t &iData = data_;
 
     painter->setPen(QPen(color_));
 

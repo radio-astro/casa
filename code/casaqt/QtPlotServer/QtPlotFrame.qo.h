@@ -32,6 +32,7 @@
 #include <map>
 #include <string>
 #include <qwt_symbol.h>
+#include <qwt_legend.h>
 #include <qwt_plot.h>
 
 namespace casa {

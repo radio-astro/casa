@@ -37,6 +37,7 @@
 #include <casaqt/QtPlotServer/QtPlotSvrPanel.qo.h>
 #include <casaqt/QtPlotServer/QtPlotFrame.qo.h>
 #include <casaqt/QtPlotServer/QtRasterData.h>
+#include <casaqt/QwtConfig.h>
 #include <qwt_plot_spectrogram.h>
 #include <qwt_legend.h>
 #include <qwt_plot_zoomer.h>
@@ -403,7 +404,7 @@ namespace casa {
 	    if ( values[x] > maximumBar ) maximumBar = values[x];
 	}
 
-	histogram->setData(QwtIntervalData(intervals, values));
+	histogram->setData(qwt_interval_t(intervals, values));
 	histogram->attach(plot);
 	plot->setAxisScale(QwtPlot::yLeft, 0.0, maximumBar + (0.1 * maximumBar));
 	plot->setAxisScale(QwtPlot::xBottom, (double) minimumValue, pos);

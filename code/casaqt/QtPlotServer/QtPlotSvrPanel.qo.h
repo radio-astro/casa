@@ -34,6 +34,7 @@
 #include <QStringList>
 #include <qwt_plot_curve.h>
 #include <qwt_color_map.h>
+#include <casaqt/QwtConfig.h>
 #include <casaqt/QtUtilities/QtId.h>
 #include <casaqt/QtUtilities/QtPanelBase.qo.h>
 #include <casaqt/QtPlotServer/QtPlotHistogram.h>
