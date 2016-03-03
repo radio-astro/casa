@@ -293,5 +293,18 @@ class ia_imageconcat_test(unittest.TestCase):
             )
         myia.done()
 
+    def test_history(self):
+        """Test history writing"""
+        im1 = "hist1.im"
+        im2 = "hist2.im"
+        myia = self._myia
+        myia.fromshape(im1, [10,10,5])
+        myia.fromshape(im2, [10,10,5])
+        myia.done()
+        zz = myia.imageconcat("", [im1, im2], relax=T)
+        msgs = zz.history()
+        self.assertTrue("ia.imageconcat" in msgs[-1])
+        self.assertTrue("ia.imageconcat" in msgs[-2])
+
 def suite():
     return [ia_imageconcat_test]

@@ -295,6 +295,33 @@ image* image::collapse(
     return nullptr;
 }
 
+bool image::fromrecord(const record& imrecord, const string& outfile) {
+    try {
+        _log << _ORIGIN;
+        std::unique_ptr<casa::Record> tmpRecord(toRecord(imrecord));
+        _reset();
+        auto imagePair = ImageFactory::fromRecord(*tmpRecord, outfile);
+        vector<String> names { "record", "outfile" };
+        vector<variant> values { imrecord, outfile };
+        auto msgs = _newHistory(__func__, names, values);
+        if (imagePair.first) {
+            _imageF = imagePair.first;
+            ImageHistory<Float> ih(_imageF);
+            ih.addHistory(_ORIGIN.toString(), msgs);
+        }
+        else {
+            _imageC = imagePair.second;
+            ImageHistory<Complex> ih(_imageC);
+            ih.addHistory(_ORIGIN.toString(), msgs);
+        }
+        return True;
+    }
+    catch (const AipsError& x) {
+        RETHROW(x);
+    }
+    return False;
+}
+
 image* image::imagecalc(
     const string& outfile, const string& pixels,
     bool overwrite, const string& imagemd
@@ -338,6 +365,79 @@ template<class T> SPIIT image::_imagecalc(
     return out;
 }
 
+image* image::imageconcat(
+    const string& outfile, const variant& infiles,
+    int axis, bool relax, bool tempclose,
+    bool overwrite, bool reorder
+) {
+    try {
+        Vector<String> inFiles;
+        if (infiles.type() == variant::BOOLVEC) {
+            inFiles.resize(0); // unset
+        }
+        else if (infiles.type() == variant::STRING) {
+            sepCommaEmptyToVectorStrings(inFiles, infiles.toString());
+        }
+        else if (infiles.type() == variant::STRINGVEC) {
+            inFiles = toVectorString(infiles.toStringVec());
+        }
+        else {
+            ThrowCc("Unrecognized infiles datatype");
+        }
+        vector<String> imageNames = Directory::shellExpand(inFiles, False).tovector();
+        ThrowIf(
+            imageNames.size() < 2,
+            "You must provide at least two images to concatentate"
+        );
+        String first = imageNames[0];
+        imageNames.erase(imageNames.begin());
+
+        SPtrHolder<LatticeBase> latt(ImageOpener::openImage(first));
+        ThrowIf (! latt.ptr(), "Unable to open image " + first);
+        DataType dataType = latt->dataType();
+        vector<String> names {
+            "outfile", "infiles", "axis", "relax", "tempclose",
+            "overwrite", "reorder"
+        };
+        vector<variant> values {
+            outfile, infiles, axis,  relax, tempclose,
+            overwrite, reorder
+        };
+        if (dataType == TpComplex) {
+            SPIIC c(dynamic_cast<ImageInterface<Complex> *>(latt.transfer()));
+            ImageConcatenator<Complex> concat(c, outfile, overwrite);
+            concat.setAxis(axis);
+            concat.setRelax(relax);
+            concat.setReorder(reorder);
+            concat.setTempClose(tempclose);
+            concat.addHistory(_ORIGIN, "ia." + String(__func__), names, values);
+            return new image(concat.concatenate(imageNames));
+        }
+        else if (dataType == TpFloat) {
+            SPIIF f(dynamic_cast<ImageInterface<Float> *>(latt.transfer()));
+            ImageConcatenator<Float> concat(f, outfile, overwrite);
+            concat.setAxis(axis);
+            concat.setRelax(relax);
+            concat.setReorder(reorder);
+            concat.setTempClose(tempclose);
+            concat.addHistory(_ORIGIN, "ia." + String(__func__), names, values);
+            return new image(concat.concatenate(imageNames));
+        }
+        else {
+            ostringstream x;
+            x << dataType;
+            ThrowCc("Unsupported data type " + x.str());
+        }
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
+        RETHROW(x);
+    }
+    return nullptr;
+}
+
+
 void image::_addHistory(
     const String& method, const vector<String>& names, const vector<variant>& values
 ) {
@@ -355,33 +455,6 @@ void image::_addHistory(
 Bool image::_isUnset(const variant &theVar) {
 	return theVar.type() == variant::BOOLVEC
 	    && theVar.size() == 0;
-}
-
-bool image::fromrecord(const record& imrecord, const string& outfile) {
-    try {
-        _log << _ORIGIN;
-        std::unique_ptr<casa::Record> tmpRecord(toRecord(imrecord));
-        _reset();
-        auto imagePair = ImageFactory::fromRecord(*tmpRecord, outfile);
-        vector<String> names { "record", "outfile" };
-        vector<variant> values { imrecord, outfile };
-        auto msgs = _newHistory(__func__, names, values);
-        if (imagePair.first) {
-            _imageF = imagePair.first;
-            ImageHistory<Float> ih(_imageF);
-            ih.addHistory(_ORIGIN.toString(), msgs);
-        }
-        else {
-            _imageC = imagePair.second;
-            ImageHistory<Complex> ih(_imageC);
-            ih.addHistory(_ORIGIN.toString(), msgs);
-        }
-        return True;
-    }
-    catch (const AipsError& x) {
-        RETHROW(x);
-    }
-    return False;
 }
 
 ::casac::record* image::torecord() {
@@ -405,68 +478,6 @@ bool image::fromrecord(const record& imrecord, const string& outfile) {
 }
 
 
-
-image* image::imageconcat(
-	const string& outfile, const variant& infiles,
-	int axis, bool relax, bool tempclose,
-	bool overwrite, bool reorder
-) {
-	try {
-		Vector<String> inFiles;
-		if (infiles.type() == variant::BOOLVEC) {
-			inFiles.resize(0); // unset
-		}
-		else if (infiles.type() == variant::STRING) {
-			sepCommaEmptyToVectorStrings(inFiles, infiles.toString());
-		}
-		else if (infiles.type() == variant::STRINGVEC) {
-			inFiles = toVectorString(infiles.toStringVec());
-		}
-		else {
-			ThrowCc("Unrecognized infiles datatype");
-		}
-		vector<String> imageNames = Directory::shellExpand(inFiles, False).tovector();
-		ThrowIf(
-			imageNames.size() < 2,
-			"You must provide at least two images to concatentate"
-		);
-		String first = imageNames[0];
-		imageNames.erase(imageNames.begin());
-
-		SPtrHolder<LatticeBase> latt(ImageOpener::openImage(first));
-		ThrowIf (! latt.ptr(), "Unable to open image " + first);
-		DataType dataType = latt->dataType();
-		if (dataType == TpComplex) {
-			SPIIC c(dynamic_cast<ImageInterface<Complex> *>(latt.transfer()));
-			ImageConcatenator<Complex> concat(c, outfile, overwrite);
-			concat.setAxis(axis);
-			concat.setRelax(relax);
-			concat.setReorder(reorder);
-			concat.setTempClose(tempclose);
-			return new image(concat.concatenate(imageNames));
-		}
-		else if (dataType == TpFloat) {
-			SPIIF f(dynamic_cast<ImageInterface<Float> *>(latt.transfer()));
-			ImageConcatenator<Float> concat(f, outfile, overwrite);
-			concat.setAxis(axis);
-			concat.setRelax(relax);
-			concat.setReorder(reorder);
-			concat.setTempClose(tempclose);
-			return new image(concat.concatenate(imageNames));
-		}
-		else {
-			ostringstream x;
-			x << dataType;
-			ThrowCc("Unsupported data type " + x.str());
-		}
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-			<< LogIO::POST;
-		RETHROW(x);
-	}
-	return nullptr;
-}
 
 bool image::fromarray(const std::string& outfile,
 		const ::casac::variant& pixels, const ::casac::record& csys,
