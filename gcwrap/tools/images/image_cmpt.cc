@@ -321,6 +321,97 @@ bool image::fromarray(const std::string& outfile,
     return False;
 }
 
+std::pair<SPIIF, SPIIC> image::_fromarray(
+    const string& outfile,
+    const variant& pixels, const record& csys,
+    bool linear, bool overwrite, bool log
+) {
+    Vector<Int> shape = pixels.arrayshape();
+    ThrowIf(
+        shape.ndim() == 0,
+        "The pixels array cannot be empty"
+    );
+    Array<Float> floatArray;
+    Array<Complex> complexArray;
+    if (pixels.type() == variant::DOUBLEVEC) {
+        std::vector<double> pixelVector = pixels.getDoubleVec();
+        floatArray.resize(IPosition(shape));
+        Vector<Double> localpix(pixelVector);
+        convertArray(floatArray, localpix.reform(IPosition(shape)));
+    }
+    else if (pixels.type() == ::casac::variant::INTVEC) {
+        vector<int> pixelVector = pixels.getIntVec();
+        floatArray.resize(IPosition(shape));
+        Vector<Int> localpix(pixelVector);
+        convertArray(floatArray, localpix.reform(IPosition(shape)));
+    }
+    else if (pixels.type() == ::casac::variant::COMPLEXVEC) {
+        vector<std::complex<double> > pixelVector = pixels.getComplexVec();
+        complexArray.resize(IPosition(shape));
+        Vector<DComplex> localpix(pixelVector);
+        convertArray(complexArray, localpix.reform(IPosition(shape)));
+    }
+    else {
+        ThrowCc(
+            "pixels is not understood, try using an array "
+        );
+    }
+    LogOrigin lor("image", __func__);
+    _log << lor;
+    std::unique_ptr<Record> coordinates(toRecord(csys));
+    SPIIF f;
+    SPIIC c;
+    if (floatArray.ndim() > 0) {
+        f = ImageFactory::imageFromArray(
+            outfile, floatArray, *coordinates,
+            linear, overwrite, log
+        );
+    }
+    else {
+        c = ImageFactory::imageFromArray(
+            outfile, complexArray, *coordinates,
+            linear, overwrite, log
+        );
+    }
+    return make_pair(f, c);
+}
+
+bool image::fromascii(
+    const string& outfile, const string& infile,
+    const vector<int>& shape, const string& sep, const record& csys,
+    bool linear, bool overwrite
+) {
+    try {
+        _log << _ORIGIN;
+        ThrowIf(infile.empty(), "infile must be specified");
+        ThrowIf(
+            shape.size() == 1 && shape[0] == -1,
+            "Image shape must be specified"
+        );
+        std::unique_ptr<Record> coordsys(toRecord(csys));
+        _reset();
+        _imageF = ImageFactory::fromASCII(
+            outfile, infile, IPosition(Vector<Int>(shape)),
+            sep, *coordsys, linear, overwrite
+        );
+        vector<String> names {
+            "outfile", "infile", "shape", "sep",
+            "csys", "linear",  "overwrite"
+        };
+        vector<variant> values {
+            outfile, infile, shape, sep,
+            csys, linear,  overwrite
+        };
+        this->_addHistory(__func__, names, values);
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return True;
+}
+
 bool image::fromrecord(const record& imrecord, const string& outfile) {
     try {
         _log << _ORIGIN;
@@ -502,114 +593,10 @@ Bool image::_isUnset(const variant &theVar) {
     return new record();
 }
 
-
-std::pair<SPIIF, SPIIC> image::_fromarray(
-    const string& outfile,
-    const variant& pixels, const record& csys,
-    bool linear, bool overwrite, bool log
-) {
-    Vector<Int> shape = pixels.arrayshape();
-    ThrowIf(
-        shape.ndim() == 0,
-        "The pixels array cannot be empty"
-    );
-    Array<Float> floatArray;
-    Array<Complex> complexArray;
-    if (pixels.type() == variant::DOUBLEVEC) {
-        std::vector<double> pixelVector = pixels.getDoubleVec();
-        floatArray.resize(IPosition(shape));
-        Vector<Double> localpix(pixelVector);
-        convertArray(floatArray, localpix.reform(IPosition(shape)));
-    }
-    else if (pixels.type() == ::casac::variant::INTVEC) {
-        vector<int> pixelVector = pixels.getIntVec();
-        floatArray.resize(IPosition(shape));
-        Vector<Int> localpix(pixelVector);
-        convertArray(floatArray, localpix.reform(IPosition(shape)));
-    }
-    else if (pixels.type() == ::casac::variant::COMPLEXVEC) {
-        vector<std::complex<double> > pixelVector = pixels.getComplexVec();
-        complexArray.resize(IPosition(shape));
-        Vector<DComplex> localpix(pixelVector);
-        convertArray(complexArray, localpix.reform(IPosition(shape)));
-    }
-    else {
-        ThrowCc(
-            "pixels is not understood, try using an array "
-        );
-    }
-    LogOrigin lor("image", __func__);
-    _log << lor;
-    std::unique_ptr<Record> coordinates(toRecord(csys));
-    vector<std::pair<LogOrigin, String> > msgs;
-    {
-        ostringstream os;
-        os << "Ran ia." << __func__;
-        msgs.push_back(make_pair(lor, os.str()));
-        vector<std::pair<String, variant> > inputs;
-        inputs.push_back(make_pair("outfile", outfile));
-        inputs.push_back(make_pair("csys", csys));
-        inputs.push_back(make_pair("linear", linear));
-        inputs.push_back(make_pair("overwrite", overwrite));
-        inputs.push_back(make_pair("log", log));
-        os.str("");
-        os << "ia." << __func__ << _inputsString(inputs);
-        msgs.push_back(make_pair(lor, os.str()));
-    }
-    SPIIF f;
-    SPIIC c;
-    if (floatArray.ndim() > 0) {
-        f = ImageFactory::imageFromArray(
-            outfile, floatArray, *coordinates,
-            linear, overwrite, log, &msgs
-        );
-        //return shared_ptr<ImageAnalysis>(new ImageAnalysis(f));
-    }
-    else {
-        c = ImageFactory::imageFromArray(
-            outfile, complexArray, *coordinates,
-            linear, overwrite, log, &msgs
-        );
-        //return shared_ptr<ImageAnalysis>(new ImageAnalysis(c));
-    }
-    return make_pair(f, c);
-}
-
 void image::_reset() {
 	_imageF.reset();
 	_imageC.reset();
 	_stats.reset();
-}
-
-bool image::fromascii(const string& outfile, const string& infile,
-		const vector<int>& shape, const string& sep, const record& csys,
-		const bool linear, const bool overwrite) {
-	try {
-		_log << _ORIGIN;
-
-		if (infile == "") {
-			_log << LogIO::SEVERE << "infile must be specified" << LogIO::POST;
-			return false;
-		}
-		if (shape.size() == 1 && shape[0] == -1) {
-			_log << LogIO::SEVERE << "Image shape must be specified"
-					<< LogIO::POST;
-			return false;
-		}
-
-		_reset();
-		std::unique_ptr<Record> coordsys(toRecord(csys));
-		_imageF = ImageFactory::fromASCII(
-			outfile, infile, IPosition(Vector<Int>(shape)),
-			sep, *coordsys, linear, overwrite
-		);
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	return True;
 }
 
 bool image::fromfits(
