@@ -388,7 +388,8 @@ VisBufferImpl2::construct (ViImplementation2 * vi, VisBufferOptions options)
 void
 VisBufferImpl2::copy (const VisBuffer2 & otherRaw, Bool fetchIfNeeded)
 {
-    copyComponents (otherRaw, VisBufferComponents2::all(), True, fetchIfNeeded);
+    copyComponents (otherRaw, VisBufferComponents2::exceptThese(FlagCategory, Unknown),
+                    True, fetchIfNeeded);
 }
 
 void
