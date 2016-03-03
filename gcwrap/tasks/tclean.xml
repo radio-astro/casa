@@ -443,8 +443,8 @@ HPX HEALPix grid.  -->
                                                
                                                (Note : Even if the input parameters are specified in a frame 
                                                            other than LSRK, the viewer still displays spectral 
-                                                           axis in LSRK by default because of the convesrsion frame
-                                                           layer montioned above. The viewer can be used to relabel
+                                                           axis in LSRK by default because of the conversion frame
+                                                           layer mentioned above. The viewer can be used to relabel
                                                            the spectral axis in any desired frame - via the spectral
                                                            reference option under axis label properties in the
                                                            data display options window.)
