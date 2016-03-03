@@ -281,7 +281,7 @@ pipeline processing for huge dataset.
                         <default param="clipthresh"><value>3.0</value></default>
                         <default param="clipniter"><value>0</value></default>
                 </equals>
-                <!--equals value="sinusoid">
+                <equals value="sinusoid">
                         <default param="applyfft"><value>False</value></default>
                         <default param="fftmethod"><value type="string">fft</value></default>
                         <default param="fftthresh"><value type="double">3.0</value></default>
@@ -289,7 +289,7 @@ pipeline processing for huge dataset.
                         <default param="rejwn"><value type="vector"><value></value></value></default>
                         <default param="clipthresh"><value>3.0</value></default>
                         <default param="clipniter"><value>0</value></default>
-                </equals--> 
+                </equals> 
                 <equals value="variable">
                         <default param="blparam"><value type="string"></value></default>
                 </equals>

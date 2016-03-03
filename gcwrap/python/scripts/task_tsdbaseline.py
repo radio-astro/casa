@@ -49,9 +49,10 @@ addwn=None, rejwn=None, clipthresh=None, clipniter=None, blparam=None, verbose=N
             
         elif (blmode == 'fit'):
 
+            if(blfunc=='sinusoid'):
+                addwn=sdutil._parse_wn(addwn)
+                rejwn=sdutil._parse_wn(rejwn)
             
-            addwn=sdutil._parse_wn(addwn)
-            rejwn=sdutil._parse_wn(rejwn)
 
             blformat, bloutput = prepare_for_blformat_bloutput(infile, blformat, bloutput, overwrite)
 
