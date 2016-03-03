@@ -502,6 +502,7 @@ bool MSCache::countChunks(vi::VisibilityIterator2& vi,
 	Int thisfld(-1), lastfld(-1);
 	Int thisspw(-1),lastspw(-1);
 	Int thisddid(-1),lastddid(-1);
+	Int thisobsid(-1),lastobsid(-1);
 	Int chunk(0);
 
 	// Averaging stats
@@ -536,13 +537,15 @@ bool MSCache::countChunks(vi::VisibilityIterator2& vi,
 			thisfld = vb->fieldId()(0);
 			thisspw = vb->spectralWindows()(0);
 			thisddid = vb->dataDescriptionIds()(0);
+			thisobsid = vb->observationId()(0);
 			// New chunk means new ave interval, IF....
-			if ( // (!combfld && !combspw) ||               // not combing fld nor spw, OR
-			     ((time1 - avetime1) >= interval) ||         // (combing fld and/or spw) and solint exceeded, OR
-		             ((time1 - avetime1) < 0.0) ||              // a negative time step occurs, OR
-			     (!combscan && (thisscan != lastscan)) ||   // not combing scans, and new scan encountered OR
-			     (!combspw && (thisspw != lastspw)) || // not combing spws, and new spw encountered  OR
-			     (!combfld && (thisfld != lastfld)) ||        // not combing fields, and new field encountered OR
+			if ( // (!combfld && !combspw) ||              // not combing fld nor spw, OR
+			     ((time1 - avetime1) >= interval) ||       // (combing fld and/or spw) and solint exceeded, OR
+		             ((time1 - avetime1) < 0.0) ||         // a negative time step occurs, OR
+			     (!combscan && (thisscan != lastscan)) ||  // not combing scans, and new scan encountered OR
+			     (!combspw && (thisspw != lastspw)) ||     // not combing spws, and new spw encountered  OR
+			     (!combfld && (thisfld != lastfld)) ||     // not combing fields, and new field encountered OR
+			     (thisobsid != lastobsid) ||               // don't average over obs id
 			     (ave == -1)) {                            // this is the first interval
 
 				if (verby) {
@@ -553,6 +556,7 @@ bool MSCache::countChunks(vi::VisibilityIterator2& vi,
 							<< (!combscan && (thisscan!=lastscan)) << " "
 							<< (!combspw && (thisspw!=lastspw)) << " "
 							<< (!combfld && (thisfld!=lastfld)) << " "
+							<< (thisobsid!=lastobsid) << " "
 							<< (ave == -1) << "\n";
 				}
 
@@ -589,6 +593,7 @@ bool MSCache::countChunks(vi::VisibilityIterator2& vi,
 				ss << "t=" << floor(time - time0)  << " (" << floor(time - avetime1) << ") ";
 				if (combfld) ss << "fl=" << vb->fieldId()(0) << " ";
 				if (combspw) ss << "sp=" << vb->spectralWindows()(0) << " ";
+				ss << "obs=" << vb->observationId()(0) << " ";
 				ss << "\n";
 
 			}
@@ -597,6 +602,7 @@ bool MSCache::countChunks(vi::VisibilityIterator2& vi,
 			lastfld  = thisfld;
 			lastspw  = thisspw;
 			lastddid = thisddid;
+			lastobsid = thisobsid;
 		}
 	}
 	// Add in the last iteration
