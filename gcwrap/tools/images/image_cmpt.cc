@@ -446,6 +446,41 @@ bool image::fromfits(
     return False;
 }
 
+bool image::fromimage(
+    const string& outfile, const string& infile,
+    const variant& region, const variant& mask,
+    bool dropdeg, bool overwrite
+) {
+    try {
+        _log << _ORIGIN;
+        String theMask = _getMask(mask);
+        SHARED_PTR<Record> regionPtr(_getRegion(region, False));
+        auto imagePair = ImageFactory::fromImage(
+            outfile, infile, *regionPtr, theMask,
+            dropdeg, overwrite
+        );
+        _reset();
+        _imageF = imagePair.first;
+        _imageC = imagePair.second;
+        vector<String> names {
+            "outfile", "infile", "region",
+            "mask", "dropdeg", "overwrite"
+        };
+        vector<variant> values {
+            outfile, infile, region, mask,
+            dropdeg, overwrite
+        };
+        _addHistory(__func__, names, values);
+        return True;
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return False;
+}
+
 bool image::fromrecord(const record& imrecord, const string& outfile) {
     try {
         _log << _ORIGIN;
@@ -608,6 +643,7 @@ record* image::torecord() {
     }
     return new record();
 }
+
 void image::_addHistory(
     const String& method, const vector<String>& names, const vector<variant>& values
 ) {
@@ -622,6 +658,18 @@ void image::_addHistory(
     }
 }
 
+String image::_getMask(const variant& mask) {
+    if (mask.type() == variant::BOOLVEC) {
+       return "";
+    }
+    else if (mask.type() == variant::STRING) {
+        return mask.toString();
+    }
+    else {
+        ThrowCc("Mask is not understood, try a valid LEL string");
+    }
+}
+
 Bool image::_isUnset(const variant &theVar) {
 	return theVar.type() == variant::BOOLVEC
 	    && theVar.size() == 0;
@@ -631,54 +679,6 @@ void image::_reset() {
 	_imageF.reset();
 	_imageC.reset();
 	_stats.reset();
-}
-
-
-
-
-bool image::fromimage(const string& outfile, const string& infile,
-		const variant& region, const variant& mask, const bool dropdeg,
-		const bool overwrite) {
-	try {
-		_reset();
-
-		_log << _ORIGIN;
-		String theMask;
-		if (mask.type() == variant::BOOLVEC) {
-			theMask = "";
-		}
-		else if (mask.type() == variant::STRING) {
-			theMask = mask.toString();
-		}
-		else {
-			_log << LogIO::SEVERE
-					<< "Mask is not understood, try a valid LEL string "
-					<< LogIO::POST;
-			return False;
-		}
-
-		SHARED_PTR<Record> regionPtr(_getRegion(region, False));
-		auto imagePair = ImageFactory::fromImage(
-		    outfile, infile, *regionPtr, theMask,
-		    dropdeg, overwrite
-		);
-		_imageF = imagePair.first;
-		_imageC = imagePair.second;
-		/*
-		_image.reset(
-		    _imageF
-		    ? new ImageAnalysis(_imageF)
-		    : new ImageAnalysis(_imageC)
-		);
-		*/
-		return True;
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	return False;
 }
 
 bool image::fromshape(
@@ -735,6 +735,7 @@ bool image::fromshape(
 				<< LogIO::POST;
 		RETHROW(x);
 	}
+	return False;
 }
 
 ::casac::image *
@@ -768,6 +769,7 @@ image::adddegaxes(
 			<< LogIO::POST;
 		RETHROW(x);
 	}
+	return nullptr;
 }
 
 template<class T> image* image::_adddegaxes(

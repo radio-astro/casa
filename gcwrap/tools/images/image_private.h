@@ -87,6 +87,8 @@ template<class T> casa::Record _getchunk(
 	bool list, bool dropdeg
 );
 
+static String _getMask(const casac::variant& mask);
+
 template <class T> casa::Record _getprofile(
 	SPCIIT myimage, int axis, const casa::String& function,
 	const casa::String& unit, const casa::Record& region,

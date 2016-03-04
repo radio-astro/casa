@@ -71,6 +71,7 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_ia_fromarray.py
   test_ia_fromascii.py
   test_ia_fromfits.py
+  test_ia_fromimage.py
   test_ia_fromrecord.py
   test_ia_fromshape.py
   test_ia_getregion.py
