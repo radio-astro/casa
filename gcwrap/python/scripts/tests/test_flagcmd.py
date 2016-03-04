@@ -590,6 +590,51 @@ class test_savepars(test_base):
         flagcmd(vis=self.vis, action='list', outfile='myflags.txt', useapplied=True, savepars=True)
         self.assertTrue(filecmp.cmp(filename1, 'myflags.txt', 1), 'Files should be equal')        
 
+    def test_overwrite_true(self):
+        '''flagcmd: Use savepars and overwrite=True'''
+        
+        # Create flag commands in file called flagcmd.txt
+        myinput = "scan='4' mode='clip' correlation='ABS_RR' clipminmax=[0, 4]\n"
+        filename = create_input(myinput)
+        # Copy it to a new file
+        newfile = 'newfile.txt'
+        os.system('rm -rf '+newfile)
+        os.system('cp '+filename+' '+newfile)
+
+        # Create different flag command 
+        myinput = "scan='1'\n"
+        filename = create_input(myinput)
+                
+        # Apply flags from filename and try to save in newfile
+        # Overwrite parameter should allow this
+        flagcmd(vis=self.vis, action='apply', inpmode='list',inpfile=filename, savepars=True, outfile=newfile,
+                flagbackup=False)
+        
+        # newfile should contain what was in filename
+        self.assertTrue(filecmp.cmp(filename, newfile, 1), 'Files should be equal')        
+        
+    def test_overwrite_false(self):
+        '''flagcmd: Use savepars and overwrite=False'''
+        
+        # Create flag commands in file called flagcmd.txt
+        myinput = "scan='4' mode='clip' correlation='ABS_RR' clipminmax=[0, 4]\n"
+        filename = create_input(myinput)
+        # Copy it to a new file
+        newfile = 'newfile.txt'
+        os.system('rm -rf '+newfile)
+        os.system('cp '+filename+' '+newfile)
+
+        # Create different flag command 
+        myinput = "scan='1'\n"
+        filename = create_input(myinput)
+                
+        # Apply flags from filename and try to save in newfile
+        # Overwrite parameter should allow this
+        flagcmd(vis=self.vis, action='apply', inpmode='list',inpfile=filename, savepars=True, outfile=newfile,
+                flagbackup=False, overwrite=False)
+        
+        # newfile should contain what was in filename
+        self.assertFalse(filecmp.cmp(filename, newfile, 1), 'Files should be different')        
 
 class test_XML(test_base):
     

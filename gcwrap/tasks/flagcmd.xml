@@ -136,6 +136,10 @@
                     <description>Name of output file to save commands</description>
                     <value></value>
             </param>
+            <param type="bool" name="overwrite" subparam="true">
+                    <description>Overwrite an existing file to save the flag commands</description>
+                    <value>True</value>
+            </param>
 
 
                 <constraints>
@@ -178,6 +182,7 @@
                         <equals type="bool" value="False" />
                         <equals type="bool" value="True">
                             <default param="outfile"><value type="string"></value></default>
+                            <default param="overwrite"><value type="bool">True</value></default>
                         </equals>
                     </when>
                     
@@ -413,6 +418,12 @@
             outfile -- Name of output file to save the flag commands.
                 default: ' '; it will save the commands in the FLAG_CMD table of the MS.
                 example: outfile='flags.txt' will save the parameters in a text file.
+
+            overwrite -- Overwrite the existing file given in 'outfile'. 
+                options: True/False
+                default: True; it will remove the existing file given in 'outfile' and save the current flag
+                               commands to a new file with the same name. If set to False, the task will exit with
+                               an error message without saving anything.
 
      ===========================================================================
 

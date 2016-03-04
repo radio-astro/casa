@@ -20,7 +20,8 @@ def flagcmd(
     rowlist=None,
     plotfile=None,
     savepars=None,
-    outfile=None
+    outfile=None,
+    overwrite=None
     ):
 
     #
@@ -49,7 +50,6 @@ def flagcmd(
         else:
             raise Exception, \
                 'Visibility data set not found - please verify the name'
-
 
         # Check if vis is a cal table:
         # typevis = 1 --> cal table
@@ -95,7 +95,10 @@ def flagcmd(
                 
             # Save the flag cmds to an output file
             if savepars:
-                fh.writeFlagCommands(vis, flagcmds, False, '', outfile, True)
+                if not overwrite:
+                    raise Exception, 'You have set overwrite to False. Remove %s before saving the flag commands'%outfile
+                    
+                fh.writeFlagCommands(vis, flagcmds, False, '', outfile, False)
                                                                 
         else:
             # Input vis is an MS
@@ -265,9 +268,12 @@ def flagcmd(
                             casalog.post('Saving commands to FLAG_CMD')
                             fh.writeFlagCommands(vis, myflagcmd, False, 
                                                  '', '', True)
+                    elif not overwrite:
+                        raise Exception, 'You have set overwrite to False. Remove %s before saving the flag commands'%outfile
+
                     else:
                         casalog.post('Saving commands to ' + outfile)
-                        fh.writeFlagCommands(vis, myflagcmd, False, '', outfile, True)
+                        fh.writeFlagCommands(vis, myflagcmd, False, '', outfile, False)
                         
             elif action == 'apply' or action == 'unapply':
     
@@ -331,20 +337,22 @@ def flagcmd(
                             casalog.post('Saving commands to FLAG_CMD')
                             fh.writeFlagCommands(vis, myflagcmd, apply, '', 
                                                  '', True)
-                    else:
-
                     # Save to a file
+                    else:                    
                         # Still need to update APPLIED column
                         if inpmode == 'table' and inpfile == '':
                             updateTable(vis, mycol='APPLIED',
                                     myval=apply, myrowlist=vrows)
 
-                        casalog.post('Saving commands to file '
-                                + outfile)
-                        fh.writeFlagCommands(vis, myflagcmd, apply, '', outfile, True)
-                else:
+                        if not overwrite:
+                            raise Exception, 'You have set overwrite to False. Remove %s before saving the flag commands'%outfile
 
+                        else:
+                            casalog.post('Saving commands to file '+ outfile)
+                            fh.writeFlagCommands(vis, myflagcmd, apply, '', outfile, False)
+                            
                 # Do not save cmds but maybe update APPLIED
+                else:
                     if inpmode == 'table' and inpfile == '':
                         updateTable(vis, mycol='APPLIED', myval=apply,
                                     myrowlist=vrows)
@@ -383,7 +391,8 @@ def flagcmd(
 
         aflocal.done()
         casalog.post('%s' % instance, 'ERROR')
-        return False
+        raise
+#        return False
         
     # Write history only to action='apply' or 'unapply'
     else:
