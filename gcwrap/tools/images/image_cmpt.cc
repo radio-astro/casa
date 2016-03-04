@@ -412,6 +412,40 @@ bool image::fromascii(
     return True;
 }
 
+bool image::fromfits(
+    const string& outfile, const string& fitsfile,
+    int whichrep, int whichhdu, bool zeroBlanks,
+    bool overwrite
+) {
+    try {
+        _log << _ORIGIN;
+        auto im = ImageFactory::fromFITS(
+            outfile, fitsfile, whichrep, whichhdu,
+            zeroBlanks, overwrite
+        );
+        if (im) {
+            _reset();
+            _imageF = im;
+            vector<String> names {
+                "outfile", "fitsfile", "whichrep",
+                "whichhdu", "zeroBlanks", "overwrite"
+            };
+            vector<variant> values {
+                outfile, fitsfile, whichrep,
+                whichhdu, zeroBlanks, overwrite
+            };
+            _addHistory(__func__, names, values);
+            return True;
+        }
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return False;
+}
+
 bool image::fromrecord(const record& imrecord, const string& outfile) {
     try {
         _log << _ORIGIN;
@@ -554,6 +588,26 @@ image* image::imageconcat(
     return nullptr;
 }
 
+record* image::torecord() {
+    _log << LogOrigin("image", __func__);
+    if (detached()) {
+        return new record();
+    }
+    try {
+        Record rec;
+        String err;
+        Bool ret = _imageF ? _imageF->toRecord(err, rec)
+            : _imageC->toRecord(err, rec);
+        ThrowIf (! ret, "Could not convert to record: " + err);
+        return fromRecord(rec);
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return new record();
+}
 void image::_addHistory(
     const String& method, const vector<String>& names, const vector<variant>& values
 ) {
@@ -573,57 +627,14 @@ Bool image::_isUnset(const variant &theVar) {
 	    && theVar.size() == 0;
 }
 
-::casac::record* image::torecord() {
-    _log << LogOrigin("image", __func__);
-    if (detached())
-        return new record();
-    try {
-        Record rec;
-        String err;
-        Bool ret = _imageF ? _imageF->toRecord(err, rec)
-            : _imageC->toRecord(err, rec);
-        ThrowIf (! ret, "Could not convert to record: " + err);
-        return fromRecord(rec);
-    }
-    catch (const AipsError& x) {
-        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-                << LogIO::POST;
-        RETHROW(x);
-    }
-    return new record();
-}
-
 void image::_reset() {
 	_imageF.reset();
 	_imageC.reset();
 	_stats.reset();
 }
 
-bool image::fromfits(
-    const string& outfile, const string& fitsfile,
-	int whichrep, int whichhdu, bool zeroBlanks,
-	bool overwrite
-) {
-	try {
-		_reset();
-		_log << _ORIGIN;
-		auto im = ImageFactory::fromFITS(
-		    outfile, fitsfile, whichrep, whichhdu,
-		    zeroBlanks, overwrite
-		);
-		if (im) {
-			_imageF = im;
-		    //_image.reset(new ImageAnalysis(im));
-		    return True;
-		}
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-    return False;
-}
+
+
 
 bool image::fromimage(const string& outfile, const string& infile,
 		const variant& region, const variant& mask, const bool dropdeg,
