@@ -224,7 +224,7 @@
                 <value type="double">1.0</value>
             </param>
             <param type="any" name="quackmode" subparam="true">
-                <description>Quack mode. \'beg\' ==> first n seconds of scan.\'endb\' ==> last n seconds of scan. \'end\' ==> all but first n seconds of scan. \'tail\' ==> all but last n seconds of scan.</description>
+                <description>Quack mode. beg: first n seconds of scan; endb: last n seconds of scan; end: all but first n seconds of scan; tail: all but last n seconds of scan.</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string">beg</value>
             </param>
@@ -968,15 +968,32 @@
     
         quack -- Option to remove specified part of scan beginning/end.
 
-               quackinterval -- Time in seconds from scan beginning/end to flag. Make time slightly 
+               quackinterval -- Time in seconds from scan beginning or end to flag. Make time slightly 
                                 smaller than the desired time.
                     default: 0.0
                quackmode -- Quack mode
                     default: 'beg'
-                    options: 'beg'  ==> beginning of scan
-                             'endb' ==> end of scan. 
-                             'tail' ==> all but beginning of scan
-                             'end'  ==> all but end of scan.
+                    options: 'beg'  ==> flag an interval at the beginning of scan
+                             'endb' ==> flag an interval at the end of scan 
+                             'tail' ==> flag all but an interval at the beginning of scan
+                             'end'  ==> flag all but an interval at end of scan
+
+                             Visual representation of quack mode flagging in one scan with 4s duration.
+                             The following diagram shows what is flagged for each quack mode when 
+                             quackinterval is set to 1.0. The flagged part is represented by crosses (+++++++++)
+
+                                         scan with 4s duration
+                             --------------------------------------------
+                                beg
+                             +++++++++++---------------------------------
+                                                                endb
+                             ---------------------------------+++++++++++
+                                                    tail
+                             -----------+++++++++++++++++++++++++++++++++
+                                        end
+                             +++++++++++++++++++++++++++++++++-----------
+
+
                quackincrement -- Quack incrementally in time?
                     default: False
                              False  ==> the quack interval is counted from the
