@@ -96,7 +96,14 @@ class ia_fromshape_test(unittest.TestCase):
             myia.open(outfile)
             self.assertTrue((myia.shape() == shape).all())
         
-        
+    def test_history(self):
+        """Test history records are written"""
+        myia = self._myia
+        myia.fromshape("", [10,10])
+        msgs = myia.history()
+        myia.done()
+        self.assertTrue("ia.fromshape" in msgs[-2])        
+        self.assertTrue("ia.fromshape" in msgs[-1])        
         
 def suite():
     return [ia_fromshape_test]

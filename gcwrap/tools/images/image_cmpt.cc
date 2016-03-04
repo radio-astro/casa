@@ -508,6 +508,54 @@ bool image::fromrecord(const record& imrecord, const string& outfile) {
     return False;
 }
 
+bool image::fromshape(
+    const string& outfile, const vector<int>& shape,
+    const record& csys, const bool linear, const bool overwrite,
+    const bool log, const string& type
+) {
+    try {
+        LogOrigin lor("image", __func__);
+        _log << lor;
+        _reset();
+        std::unique_ptr<Record> coordinates(toRecord(csys));
+        String mytype = type;
+        mytype.downcase();
+        ThrowIf(
+            ! mytype.startsWith("f") && ! mytype.startsWith("c"),
+            "Input parm type must start with either 'f' or 'c'"
+        );
+        if (mytype.startsWith("f")) {
+            _imageF = ImageFactory::floatImageFromShape(
+                outfile, shape, *coordinates,
+                linear, overwrite, log
+            );
+        }
+        else {
+            _imageC = ImageFactory::complexImageFromShape(
+                outfile, shape, *coordinates,
+                linear, overwrite, log
+            );
+        }
+        vector<String> names {
+            "outfile", "shape", "csys", "linear",
+            "overwrite", "log", "type"
+        };
+        vector<variant> values {
+            outfile, shape, csys, linear,
+            overwrite, log, type
+        };
+        _addHistory(__func__, names, values);
+        return True;
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return False;
+}
+
+
 image* image::imagecalc(
     const string& outfile, const string& pixels,
     bool overwrite, const string& imagemd
@@ -679,63 +727,6 @@ void image::_reset() {
 	_imageF.reset();
 	_imageC.reset();
 	_stats.reset();
-}
-
-bool image::fromshape(
-	const string& outfile, const vector<int>& shape,
-	const record& csys, const bool linear, const bool overwrite,
-	const bool log, const string& type
-) {
-	try {
-		LogOrigin lor("image", __func__);
-		_log << lor;
-		_reset();
-		std::unique_ptr<Record> coordinates(toRecord(csys));
-        String mytype = type;
-        mytype.downcase();
-        ThrowIf(
-            ! mytype.startsWith("f") && ! mytype.startsWith("c"),
-            "Input parm type must start with either 'f' or 'c'"
-        );
-		vector<std::pair<LogOrigin, String> > msgs;
-		{
-			ostringstream os;
-			os << "Ran ia." << __func__;
-			msgs.push_back(make_pair(lor, os.str()));
-			vector<std::pair<String, variant> > inputs;
-			inputs.push_back(make_pair("outfile", outfile));
-			inputs.push_back(make_pair("shape", shape));
-			inputs.push_back(make_pair("csys", csys));
-			inputs.push_back(make_pair("linear", linear));
-			inputs.push_back(make_pair("overwrite", overwrite));
-			inputs.push_back(make_pair("log", log));
-			inputs.push_back(make_pair("type", type));
-			os.str("");
-			os << "ia." << __func__ << _inputsString(inputs);
-			msgs.push_back(make_pair(lor, os.str()));
-		}
-        if (mytype.startsWith("f")) {
-            _imageF = ImageFactory::floatImageFromShape(
-                outfile, shape, *coordinates,
-                linear, overwrite, log, &msgs
-            );
-            //_image.reset(new ImageAnalysis(_imageF));
-        }
-        else {
-            _imageC = ImageFactory::complexImageFromShape(
-                outfile, shape, *coordinates,
-                linear, overwrite, log, &msgs
-            );
-            //_image.reset(new ImageAnalysis(_imageC));
-        }
-       	return True;
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	return False;
 }
 
 ::casac::image *
