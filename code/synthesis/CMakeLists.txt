@@ -28,12 +28,16 @@ casa_add_library( synthesis
   TransformMachines2/BeamSkyJones.cc
   TransformMachines2/ComponentFTMachine.cc
   TransformMachines2/GridFT.cc	
+  TransformMachines2/HetArrayConvFunc.cc
   TransformMachines2/FTMachine.cc
+  TransformMachines2/MosaicFT.cc
   TransformMachines2/MultiTermFTNew.cc
-  TransformMachines2/SetJyGridFT.cc	
+  TransformMachines2/SetJyGridFT.cc
+  TransformMachines2/SimplePBConvFunc.cc	
   TransformMachines2/SimpleComponentFTMachine.cc
   TransformMachines2/SkyJones.cc
   TransformMachines2/VisModelData.cc
+  TransformMachines2/VPSkyJones.cc
   TransformMachines2/WPConvFunc.cc
   TransformMachines2/WProjectFT.cc
   TransformMachines/BeamSkyJones.cc
@@ -592,12 +596,16 @@ install (FILES
 	TransformMachines2/BeamSkyJones.h
 	TransformMachines2/ComponentFTMachine.h
 	TransformMachines2/GridFT.h
+	TransformMachines2/HetArrayConvFunc.h
 	TransformMachines2/FTMachine.h
+	TransformMachines2/MosaicFT.h	
         TransformMachines2/MultiTermFTNew.h
 	TransformMachines2/SetJyGridFT.h	
 	TransformMachines2/SimpleComponentFTMachine.h
+	TransformMachines2/SimplePBConvFunc.h
 	TransformMachines2/SkyJones.h
 	TransformMachines2/VisModelData.h
+        TransformMachines2/VPSkyJones.h
 	TransformMachines2/WPConvFunc.h
 	TransformMachines2/WProjectFT.h
 	DESTINATION include/casacode/synthesis/TransformMachines2

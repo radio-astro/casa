@@ -47,6 +47,7 @@
 
 #include <msvis/MSVis/VisBuffer2.h>
 #include <msvis/MSVis/VisibilityIterator2.h>
+#include <msvis/MSVis/VisBufferComponents2.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Regions/ImageRegion.h>
 
@@ -132,9 +133,16 @@ void BeamSkyJones::updatePBMathIndices(const vi::VisBuffer2 &vb, Int row) const
   // be made protected, a change may be required here to avoid nasty
   // surprises in the future.
 
-  if (vb.rowIds()(0)==lastUpdateVisBuffer_p->rowIds()(0) && row==lastUpdateRow_p) return;
+ 
+  ///////////////AS visbuffer2 copy does not seem to work and there is no way to know the state of the previous vb...will update it anyways.
+  /*if (!lastUpdateVisBuffer_p.null() && vb.rowIds()(0)==lastUpdateVisBuffer_p->rowIds()(0) && row==lastUpdateRow_p) return;
   lastUpdateVisBuffer_p=vi::VisBuffer2::factory(vi::VbPlain, vi::VbRekeyable);
-  lastUpdateVisBuffer_p->copy(vb, True);
+  // lastUpdateVisBuffer_p->setShape(vb.getShape()(0), vb.getShape()(1), vb.getShape()(2));
+  //lastUpdateVisBuffer_p->copy(vb,True);
+  
+  vi::VisBufferComponents2 comps = vi::VisBufferComponents2::these(vi::VisBufferComponent2::DataDescriptionIds, vi::VisBufferComponent2::FieldId, vi::VisBufferComponent2::RowIds);
+  lastUpdateVisBuffer_p->copyComponents(vb, comps, True, True);
+  */
   lastUpdateRow_p=row;
 
   // Getting the reference on antennae/feed IDs is a
