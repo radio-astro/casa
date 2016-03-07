@@ -1,0 +1,96 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<?php include("base.inc"); ?>
+<title>ASAP - ATNF Spectral line Analysis Package</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<meta name="DC.Creator" lang="en" content="personalName=Marquarding,Malte" />
+<meta name="ATNF.Maintainer" content="contactName=Marquarding,Malte" />
+<meta name="DC.Title" lang="en" content="Homepage of Malte Marquarding" />
+<meta name="DC.Title.alt" lang="en" content="" />
+<meta name="DC.Subject" lang="en" content="spectral line" />
+<meta name="DC.Description" lang="en" content="Just some links and contact details" />
+<meta name="DC.Date.created" scheme="ISO8601" content="2005-08-02" />
+<meta name="ATNF.Site" content="Marsfield" />
+<meta name="ATNF.AccessPermission" content="Public" />
+<meta name="ATNF.MetaVersion" content="1.0" />
+<?php standard_head(); ?>
+<STYLE TYPE="text/css">
+<!--
+B.asap {
+ text-align: center;
+ color: blue;
+}
+B.note {
+ color: red;
+}
+-->
+</STYLE>
+</head>
+<body bgcolor="#FFFFFF" text="#000000">
+<?php
+title_bar("atnf");
+title_crumbs("/computing/software/");
+?>
+<!-- Start Content -->
+<h1>ASAP OS X (10.4) install</h1>
+This might or might not work with 10.3.
+<h2>Getting stuff</h2>
+<a href="http://pythonmac.org/packages">pythonmac.org</a> has
+a pre-packaged python and some  modules.
+<br>
+From the section <b>Packages for Universal...</b>
+<br>get and install
+<ul>
+  <li>
+<a
+      href="http://pythonmac.org/packages/py24-fat/dmg/Universal-MacPython-2.4.3-2006-04-07.dmg">Python</a> </li>
+  <li>
+<a
+      href="http://pythonmac.org/packages/py24-fat/mpkg/matplotlib-0.87.2-py2.4-macosx10.4.mpkg.zip">matplotlib</a> </li>
+</ul>
+You also need to get numpy:
+<ul>
+  <li>
+<a
+      href="http://prdownloads.sourceforge.net/numpy/numpy-0.9.6-py2.4-macosx10.4.dmg?download">numpy</a> </li>
+</ul>
+<br>
+Next get <a href="http://ipython.scipy.org/dist/ipython-0.7.2.tar.gz">ipython</a> and run:<br>
+<pre>
+sudo python setup.py install
+</pre>
+from within the ipython-0.7.2 directory.
+<br>
+Then
+<pre>
+sudo ln -s /Library/Frameworks/Python.framework/Versions/2.4/bin/ipython /usr/bin/ipython
+</pre>
+<h2>Tweaking it</h2>
+Run the following in a terminal:<br>
+As 'root' or 'sudo' edit<br>
+<b>/System/Library/Frameworks/Python.framework/Versions/2.4/lib/python2.4/site-packages/matplotlib/mpl-data/matplotlibrc</b><br>
+In this file replace<br>
+<b> backend    : WXAgg</b><br>
+with<br>
+<b> backend    : TkAgg</b><br>
+
+<h2>Oh yeah there is ASAP, too</h2>
+Get
+<a
+href="ftp://ftp.atnf.csiro.au/pub/software/asap/asap_osx.tar.bz2">this</a>.
+Unpack and run.<br>
+<pre>
+tar jxvf asap_osx.tar.bz2
+sudo sh install.sh
+</pre>
+
+<h2>Run ASAP</h2>
+Now you should be able to run "asap". On first run you might have to
+answer a few set-up questions (ipython) and get a lot of font related
+errors (matplotlib). Ignore these.
+
+<!-- End Content -->
+<?php footer(); ?>
+</body>
+</html>
