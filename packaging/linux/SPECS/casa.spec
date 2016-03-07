@@ -12,7 +12,7 @@
 %define relcount      2
 %endif
 
-%define SVNROOT       https://svn.cv.nrao.edu/svn/casa/trunk
+%define SVNROOT       https://svn.cv.nrao.edu/svn/casa/branches/release-4_6
 ###
 ### configure version and revision...
 %define ver           4.6.0

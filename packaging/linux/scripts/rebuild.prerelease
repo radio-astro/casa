@@ -3,17 +3,18 @@
 $RPM_TOP = "/opt/users/rpmbuild/casa/prerelease";
 $BLD_TOP = "/opt/users/rpmbuild/casa/prerelease";
 
-#./install.rpms --rpmdir /var/rpmbuild/RPMS/i386 --destroot /usr/src/rpmbuild/apache/content/casa/repo/el4/i386 --old-cache /usr/src/rpmbuild/apache/content/casa.old/el4/i386 --trim-cache casa-test:casa-test-shared:casa-test-symlink:casa-test-bin 20.0.3759 016
-
 use File::Basename;
 use File::Find;
 use File::Path;
+use File::Copy;
 use Cwd;
 
-$get_version = "$RPM_TOP/scripts/casa-version";
+$get_revision = "/opt/users/rpmbuild/casa/prerelease/scripts/svn-revision";
+#$get_version = "$RPM_TOP/scripts/casa-version";
 $install_rpms = "$BLD_TOP/scripts/install.rpms";
-$email_list = "darrell\@schiebel.us vsuorant\@nrao.edu";
-$distro_email_list = "ahale\@nrao.edu mrawling\@nrao.edu jkern\@nrao.edu darrell\@schiebel.us";
+#$email_list = "drs\@nrao.edu vsuorant\@nrao.edu";
+$email_list = "drs\@nrao.edu";
+$distro_email_list = $email_list;
 
 
 BEGIN {
@@ -22,10 +23,11 @@ BEGIN {
     ###
     my $HOME = $ENV{'HOME'};
     my $reference_pid = $$;
+    $state_root = "$HOME/casa";
 
-    if ( -d "$HOME/casa/state" ) {
-	if ( -e "$HOME/casa/state/rebuild-casa.pid" ) {
-	    open( PID, "< $HOME/casa/state/rebuild-casa.pid" );
+    if ( -d "$state_root/state" ) {
+	if ( -e "$state_root/state/rebuild-prerelease.pid" ) {
+	    open( PID, "< $state_root/state/rebuild-prerelease.pid" );
 	    my $pid = <PID>;
 	    close(PID);
 	    $pid =~ s|\s||g;
@@ -40,7 +42,7 @@ BEGIN {
 	    ### ... getpgrp( ) seems to fail with, e.g.
 	    ### svn update -q /opt/users/rpmbuild/casa/prerelease && /opt/users/rpmbuild/casa/prerelease/scripts/rebuild.prerelease rel=4.5.0
 	    ###
-	    if ( $pid eq $$ || $pid eq $ENV{'_REBUILD_CASA_RECURSIVE_'} ) {
+	    if ( $pid eq $$ || $pid eq $ENV{'_REBUILD_PRERELEASE_RECURSIVE_'} ) {
 		$reference_pid = $pid;
 	    } else {
 		open( PS, "ps -A |" );
@@ -50,10 +52,10 @@ BEGIN {
 		    }
 		}
 		close(PS);
-		unlink("$HOME/casa/state/rebuild-casa.pid");
+		unlink("$state_root/state/rebuild-prerelease.pid");
 	    }
 	}
-	open(PID, "> $HOME/casa/state/rebuild-casa.pid");
+	open(PID, "> $state_root/state/rebuild-prerelease.pid");
 	print PID "$reference_pid\n";
 	close(PID);
     }
@@ -64,8 +66,8 @@ END {
     ### if we make it this far, clean up our pid file...
     ###
     my $HOME = $ENV{'HOME'};
-    if ( -e "$HOME/casa/state/rebuild-casa.pid" ) {
-	unlink("$HOME/casa/state/rebuild-casa.pid");
+    if ( -e "$state_root/state/rebuild-prerelease.pid" ) {
+	unlink("$state_root/state/rebuild-prerelease.pid");
     }
 }
 
@@ -74,24 +76,42 @@ $rhver = "";
 $svnroot = "";
 $casa_svn_root = "";
 
-$repo_dir = "/usr/src/rpmbuild/apache/content/casa/repo";
-$staging_dir = "$HOME/casa/initial-state";
-$state_root = "$HOME/casa";
+#$repo_dir = "/usr/src/rpmbuild/apache/content/casa/repo";
+$staging_area = "/usr/src/rpmbuild/apache/spool/prerelease-binaries";
 $state_dir = "$state_root/state";
-$versionfile = "$state_dir/casa.test";
 
-$testrpm = "-test";
+$testrpm = "-prerelease";
 $testfile = "";
 ##$rsync_command = "/usr/bin/rsync";
 
-$self = "$BLD_TOP/scripts/rebuild.casa";
+$self = "$BLD_TOP/scripts/rebuild.prerelease";
 $selfflags = "";
 $spec_file = '';
 $backup_root = "/var/backup";
 
-sub url { return "https://svn.cv.nrao.edu/svn/casa/trunk" }
+foreach ( @ARGV ) {
+    if ( m|^rel=([0-9.]+)$| ) {
+	push(@selfflags,$_);
+	$version=$1;
+	($version_string = $version) =~ s|\.|_|g;
+	($url_version_string = $version) =~ s|(\d+)\.(\d+).*|$1_$2|;
+    }
+}
+
+die "must specify release version, e.g. rel=4.3" unless $version_string && $url_version_string;
+sub url { return "https://svn.cv.nrao.edu/svn/casa/branches/release-$url_version_string" }
 
 $casa_svn_root = url( );
+
+open( $check_url, "svn info $casa_svn_root 2>&1 |" );
+$ok = 1;
+foreach ( <$check_url> ) {
+    m|Not a valid URL| && ( $ok = 0 );
+    m|problem occurred| && ( $ok = 0 );
+}
+close( $check_url );
+
+unless( $ok ) { die "invalid subversion url: $casa_svn_root"; }
 
 ##
 ## set $arch
@@ -167,30 +187,30 @@ if ( $rhver eq "el5" ) {
 $path = dirname($0);
 chdir $path if $path;
 
-die "repo directory does not exist: $repo_dir/$rhver/$arch" unless -d "$repo_dir/$rhver/$arch";
-die "can't determine the svn root" unless $casa_svn_root =~ m@^https?://@;
+die "prerelease staging directory does not exist: $staging_area/$rhver/repo" unless -d "$staging_area/$rhver/repo";
 
-open( $ver, "$get_version 2> /dev/null |" );
-$version_string = <$ver>;
-close( $ver );
-die "bad version string: $version_string" unless $version_string =~ m|^(\d+\.\d+\.\d+)\s+(\d+)|;
-$version = $1;
-$revision = $2;
+open( $rev, "$get_revision branch=release-$url_version_string 2> /dev/null |" );
+$revision_string = <$rev>;
+close( $rev );
+die "bad version string: $revision_string" unless $revision_string =~ m|^(\d+)$|;
+$revision = $1;
 
-$testrpm = "-test";
-$testdistro = "--tag test";
+$testrpm = "-prerelease";
+$testdistro = "--tag prerelease";
 
-$etc_dir = "$BLD_TOP/etc/$rhver";
+$etc_dir = "/usr/src/rpmbuild/build/etc/$rhver";
 die "etc directory does not exist" unless -d $etc_dir;
-$logfile = "$HOME/casa/log/casa-test.$version.$revision";
+$logfile = "$state_root/log/casa-prerelease.$version.$revision";
+$versionfile = "$state_dir/casa.prerelease.$version";
 
 ##
 ## if we have email addresses to send the output to, collect it and send
 ## if necessary...
 ##
-unless ( defined $ENV{'_REBUILD_CASA_RECURSIVE_'} ) {
-    $ENV{'_REBUILD_CASA_RECURSIVE_'} = $$;
+unless ( defined $ENV{'_REBUILD_PRERELEASE_RECURSIVE_'} ) {
+    $ENV{'_REBUILD_PRERELEASE_RECURSIVE_'} = $$;
     $lines = 0;
+    my $selfflags = join(' ',@selfflags);
     open( CHILD, "$self $selfflags 2>&1 | tee $logfile.errors |" );
     while ( <CHILD> ) { ++$lines; }
     close( CHILD );
@@ -200,9 +220,9 @@ unless ( defined $ENV{'_REBUILD_CASA_RECURSIVE_'} ) {
 	if ( -e $logfile ) {
 	    my $lines_to_show = 75;
 	    if ( -e "$logfile.errors" ) {
-		exec "(echo 'build failed...  showing last $lines_to_show lines of log...' && echo '----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- -----' && cat $logfile.errors && echo '----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- -----' && tail -$lines_to_show $logfile) | /bin/mail -s '[$uname] casa rpm app build' $email_list";
+		exec "(echo 'build failed...  showing last $lines_to_show lines of log...' && echo '----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- -----' && cat $logfile.errors && echo '----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- -----' && tail -$lines_to_show $logfile) | $mail -s '[$uname] casa rpm app build' $email_list";
 	    } else {
-		exec "(echo 'build failed...  showing last $lines_to_show lines of log...' && echo '----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- -----' && tail -$lines_to_show $logfile) | /bin/mail -s '[$uname] casa rpm app build' $email_list";
+		exec "(echo 'build failed...  showing last $lines_to_show lines of log...' && echo '----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- -----' && tail -$lines_to_show $logfile) | $mail -s '[$uname] casa rpm app build' $email_list";
 	    }
 	} elsif ( -e "$logfile.errors" ) {
 	    exec "$mail -s '[$uname] casa rpm app build' $email_list < $logfile.errors";
@@ -216,42 +236,28 @@ unless ( defined $ENV{'_REBUILD_CASA_RECURSIVE_'} ) {
 }
 
 
-if ( ! -d "$HOME/casa" ) {
-    mkdir("$HOME/casa", 0755);
+if ( ! -d "$state_root" ) {
+    mkdir("$state_root", 0755);
 }
 if ( ! -d "$state_dir" ) {
     mkdir("$state_dir", 0755);
 }
-if ( ! -d "$HOME/casa/log" ) {
-    mkdir("$HOME/casa/log", 0755);
+if ( ! -d "$state_root/log" ) {
+    mkdir("$state_root/log", 0755);
 }
 
-if ( -f $versionfile ) {
-    open( IN, "<$versionfile" );
-    $last_version=<IN>;
-    $last_version =~ s/\n$//;
+$release = 0;
+if ( -f $revisionfile ) {
+    open( IN, "<$revisionfile" );
+    chomp( $last_revision=<IN> );
     close(IN);
 
-    if ( $last_version =~ m|(\d+)\.(\d+)\.(\d+)| ) {
-	$last_major = $1;
-	$last_minor = $2;
-	$last_stable = $3;
-
-	$cur_version=$version;
-	if ( $cur_version =~ m|(\d+)\.(\d+)\.(\d+)| ) {
-	    $cur_major = $1;
-	    $cur_minor = $2;
-	    $cur_stable = $3;
-
-	    exit(0) unless ( $cur_major > $last_major ||
-			     ( $cur_major == $last_major &&
-			       $cur_minor > $last_minor ) ||
-			     ( $cur_major == $last_major &&
-			       $cur_minor == $last_minor &&
-			       $cur_stable > $last_stable ) );
-	}
-    }
+    if ( $last_revision =~ m|(\d+)\s+(\d+)| ) {
+	exit(0) unless ( $revision > $1 );
+	$release = $2;
+    } else { die "format error for revision state: $last_revision" }
 }
+$release = $release + 1;
 
 die "no spec file found" unless -f $spec_file;
 
@@ -261,26 +267,20 @@ open ( LOG, "> $logfile" );
 printf LOG "%4d-%02d-%02d %02d:%02d:%02d\n",$year+1900,$mon+1,$mday,$hour,$min,$sec;
 print LOG "rpmbuild -ba $spec_file\n";
 print LOG "---------------------------------------------------------------------------\n";
-##print LOG "saving a copy of initial state...\n";
-##print LOG "$rsync_command -a --delete $state_dir $staging_dir\n";
-##open( RSYNC, "$rsync_command -a --delete $state_dir $staging_dir 2>&1 |" );
-##while ( <RSYNC> ) {
-##    print LOG "   $_";
-##}
-##print LOG "---------------------------------------------------------------------------\n";
-print LOG     "rpmbuild -D 'ver $version' -D 'rev $revision' -ba $spec_file 2>&1 | tee -a $logfile |" . "\n";
-open( UPDATE, "rpmbuild -D 'ver $version' -D 'rev $revision' -ba $spec_file 2>&1 | tee -a $logfile |" );
+print LOG     "rpmbuild -D 'rel $release' --define '_topdir /opt/users/rpmbuild/casa/prerelease' -ba $spec_file 2>&1 | tee -a $logfile |" . "\n";
+print LOG "open( UPDATE, \"rpmbuild -D 'rel $release' -ba $spec_file 2>&1 | tee -a $logfile |\" );" . "\n";
+open( UPDATE, "rpmbuild -D 'rel $release' --define '_topdir /opt/users/rpmbuild/casa/prerelease' -ba $spec_file 2>&1 | tee -a $logfile |" );
 
 @wrote = ();
 @export = ();
 $rpmver = "";
 $rpmrev = "";
 while( <UPDATE> ) {
-    ($rpmrev = $3, $rpmver = $2, push(@wrote,$1), push(@export,$1)) if m@^Wrote: (\S+?/casa(?:-test|-stable)?-($version)-(\d+)(?:\.\w+)?\.$arch\.rpm)@;
-    (push(@wrote,$1), push(@export,$1)) if m@^Wrote: (\S+?/casa(?:-test|-stable)?-shared-$version-\d+(?:\.\w+)?\.$arch\.rpm)@;
-    (push(@wrote,$1), push(@export,$1)) if m@^Wrote: (\S+?/casa(?:-test|-stable)?-bin-$version-\d+(?:\.\w+)?\.$arch\.rpm)@;
-    (push(@wrote,$1), push(@export,$1)) if m@^Wrote: (\S+?/casa(?:-test|-stable)?-opt-$version-\d+(?:\.\w+)?\.$arch\.rpm)@;
-    push(@wrote,$1) if m@^Wrote: (\S+?/casa(?:-test|-stable)?-devel-$version-\d+(?:\.\w+)?\.$arch\.rpm)@;
+    ($rpmrev = $3, $rpmver = $2, push(@wrote,$1), push(@export,$1)) if m@^Wrote: (\S+?/casa-prerelease-($version)-(\d+)(?:\.\w+)?\.$arch\.rpm)@;
+    (push(@wrote,$1), push(@export,$1)) if m@^Wrote: (\S+?/casa-prerelease-shared-$version-\d+(?:\.\w+)?\.$arch\.rpm)@;
+    (push(@wrote,$1), push(@export,$1)) if m@^Wrote: (\S+?/casa-prerelease-bin-$version-\d+(?:\.\w+)?\.$arch\.rpm)@;
+    (push(@wrote,$1), push(@export,$1)) if m@^Wrote: (\S+?/casa-prerelease-opt-$version-\d+(?:\.\w+)?\.$arch\.rpm)@;
+    push(@wrote,$1) if m@^Wrote: (\S+?/casa-prerelease-devel-$version-\d+(?:\.\w+)?\.$arch\.rpm)@;
 }
 close(UPDATE);
 
@@ -292,53 +292,48 @@ print LOG "---------------------------------------------------------------------
 if ( scalar(@wrote) >= 4 && $rpmver && $rpmrev ) {
     print LOG "...build succeeded...\n";
 
-##    print LOG "syncing repo with staging repo...\n";
-##    ## staging repo copy made in setup_casacore( )...
-##    print LOG "$rsync_command -a --delete $staging_dir/repo/$rhver/$arch $repo_dir/$rhver\n";
-##    open( RSYNC, "$rsync_command -a --delete $staging_dir/repo/$rhver/$arch $repo_dir/$rhver 2>&1 |" );
-##    while ( <RSYNC> ) {
-##	print LOG "   $_";
-##    }
-##    print LOG "---------------------------------------------------------------------------\n";
 } else {
     print LOG "...build failed...\n";
-##    print LOG "restoring initial state...\n";
-##    print LOG "$rsync_command -a --delete $staging_dir/state $state_root\n";
-##    open( RSYNC, "$rsync_command -a --delete $staging_dir/state $state_root 2>&1 |" );
-##    while ( <RSYNC> ) {
-##	print LOG "   $_";
-##    }
-##    print LOG "---------------------------------------------------------------------------\n";
     die "build failed";
 }
 
 ##
 ## sign each of the rpms
 ##
+%rpms = ( );
 foreach $rpm ( @wrote ) {
     print LOG "> $BLD_TOP/scripts/rpmsign $rpm\n";
     system(     "$BLD_TOP/scripts/rpmsign $rpm" );
+    open( my $v, "/bin/rpm -qp --qf \"%{NAME}\" $rpm 2> /dev/null |" );
+    my $name = <$v>;
+    close($v);
+    $rpms{$name} = $rpm;
 }
 print LOG "---------------------------------------------------------------------------\n";
+print LOG "staging area: $staging_area/$rhver/repo\n";
+$cwd = getcwd( );
+$rm_old_rpms = sub {  if ( -f && m|\.rpm| ) {
+                          open( my $v, "/bin/rpm -qp --qf \"%{NAME}\" $_ 2> /dev/null |" );
+			  my $name = <$v>;
+			  close($v);
+			  if ( exists $rpms{$name} ) { unlink($_) }
+			  print LOG "\t$_\n";
+		      } };
 
-##
-## clock skew: sometimes results in a tar error about untarred items with future timestamp
-##
-sleep(60);
-print LOG "> $install_rpms --rpmdir /var/rpmbuild/RPMS/$arch --destroot $repo_dir/$rhver/$arch --old-cache $backup_root/casa.old/$rhver/$arch --trim-cache casa$testrpm:casa$testrpm-shared:casa$testrpm-symlink:casa$testrpm-bin:casa$testrpm-devel $rpmver $rpmrev\n";
-system(     "$install_rpms --rpmdir /var/rpmbuild/RPMS/$arch --destroot $repo_dir/$rhver/$arch --old-cache $backup_root/casa.old/$rhver/$arch --trim-cache casa$testrpm:casa$testrpm-shared:casa$testrpm-symlink:casa$testrpm-bin:casa$testrpm-devel $rpmver $rpmrev" );
-
-print LOG "---------------------------------------------------------------------------\n";
-print LOG "> createrepo -c ~/cache/$arch $repo_dir/$rhver/$arch\n";
-close(LOG);
-system(     "createrepo -c ~/cache/$arch $repo_dir/$rhver/$arch >> $logfile 2>&1" );
+print LOG "removing old RPMs........................................\n";
+find( { wanted => $rm_old_rpms }, "$staging_area/$rhver/repo" );
+print LOG "installing new RPMs......................................\n";
+foreach $rpm ( keys %rpms ) {
+    print LOG "\t$rpms{$rpm}\n";
+    copy( $rpms{$rpm}, "$staging_area/$rhver/repo" );
+}
 
 #######################################################################################################
 #######    create binary tar distribution                                                       #######
 #######################################################################################################
 $makeapp = "$BLD_TOP/scripts/appdistro";
 if ( -x $makeapp ) {
-    my $execline = "$makeapp version=$version ws=/var/rpmbuild/BUILD/casa-test/casa-test-$version dir=/usr/src/rpmbuild/apache/content/casa/distro/linux/test/$rhver tag=test";
+    my $execline = "$makeapp version=$version ws=/var/rpmbuild/BUILD/casa-prerelease/casa-prerelease-$version dir=$staging_area/$rhver tag=prerelease";
     open ( LOG, ">> $logfile" );
     print LOG "---------------------------------------------------------------------------\n";
     print LOG "generating make-app distro\n\n";
