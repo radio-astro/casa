@@ -367,8 +367,14 @@ private:
     record.spw_id = spw_id;
     record.time = time;
     record.interval = interval;
-    if (!data_record.tcal.empty() && !allEQ(data_record.tcal, 1.0f)
-        && !allEQ(data_record.tcal, 0.0f)) {
+
+    Bool tcal_empty = False;
+    Bool tsys_empty = False;
+
+    if (data_record.tcal.empty() || allEQ(data_record.tcal, 1.0f)
+        || allEQ(data_record.tcal, 0.0f)) {
+      tcal_empty = True;
+    } else {
 //      std::cout << "tcal seems to be valid " << data_record.tcal << std::endl;
       if (data_record.float_data.shape() == data_record.tcal.shape()) {
         record.tcal_spectrum.assign(data_record.tcal);
@@ -379,8 +385,10 @@ private:
         }
       }
     }
-    if (!data_record.tsys.empty() && !allEQ(data_record.tsys, 1.0f)
-        && !allEQ(data_record.tsys, 0.0f)) {
+    if (data_record.tsys.empty() || allEQ(data_record.tsys, 1.0f)
+        || allEQ(data_record.tsys, 0.0f)) {
+      tsys_empty = True;
+    } else {
       if (data_record.float_data.shape() == data_record.tsys.shape()) {
         record.tsys_spectrum.assign(data_record.tsys);
       } else {
@@ -390,6 +398,13 @@ private:
         }
       }
     }
+
+    // do not add entry if Tsys is empty
+    //if (tcal_empty && tsys_empty) {
+    if (tsys_empty) {
+      return;
+    }
+
     auto &mytable = ms_->sysCal();
     auto pos = std::find(syscal_list_.begin(), syscal_list_.end(), record);
     if (pos == syscal_list_.end()) {
