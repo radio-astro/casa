@@ -176,10 +176,19 @@ class ia_adddegaxes_test(unittest.TestCase):
         self.assertTrue(beam["major"] == qa.quantity(major))
         self.assertTrue(beam["minor"] == qa.quantity(nminor))
         self.assertTrue(beam["positionangle"] == qa.quantity(pa))
-
         
         deg.done()
-        
+
+    def test_history(self):
+        """Test history writing"""
+        myia = self._myia
+        myia.fromshape("", [10,10])
+        deg = myia.adddegaxes(spectral=True)
+        myia.done()
+        msgs = deg.history()
+        deg.done()
+        self.assertTrue("ia.adddegaxes" in msgs[-2])        
+        self.assertTrue("ia.adddegaxes" in msgs[-1])          
 
 def suite():
     return [ia_adddegaxes_test]

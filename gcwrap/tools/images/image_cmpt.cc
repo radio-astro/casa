@@ -137,6 +137,68 @@ image::image(SPIIC inImage) :
 
 image::~image() {}
 
+image* image::adddegaxes(
+    const std::string& outfile, bool direction,
+    bool spectral, const std::string& stokes, bool linear,
+    bool tabular, bool overwrite, bool silent
+) {
+    try {
+        _log << _ORIGIN;
+        if (detached()) {
+            return 0;
+        }
+        if (_imageF) {
+            SPCIIF myim = _imageF;
+            return _adddegaxes(
+                myim, outfile, direction, spectral, stokes,
+                linear, tabular, overwrite, silent
+            );
+        }
+        else {
+            SPCIIC myim = _imageC;
+            return _adddegaxes(
+                myim, outfile, direction, spectral, stokes,
+                linear, tabular, overwrite, silent
+            );
+        }
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
+        RETHROW(x);
+    }
+    return nullptr;
+}
+
+template<class T> image* image::_adddegaxes(
+    SPCIIT inImage,
+    const std::string& outfile, bool direction,
+        bool spectral, const std::string& stokes, bool linear,
+        bool tabular, bool overwrite, bool silent
+) {
+    _log << _ORIGIN;
+    PtrHolder<ImageInterface<T> > outimage;
+    ImageUtilities::addDegenerateAxes(
+        _log, outimage, *inImage, outfile,
+        direction, spectral, stokes, linear, tabular, overwrite, silent
+    );
+    auto *outPtr = outimage.ptr();
+    outimage.clear(False);
+    SPIIT z(outPtr);
+    vector<String> names {
+        "outfile", "direction", "spectral", "stokes",
+        "linear", "tabular", "overwrite", "silent"
+    };
+    vector<variant> values {
+        outfile, direction, spectral, stokes,
+        linear, tabular, overwrite, silent
+    };
+    ImageHistory<T> imh(z);
+    auto msgs = _newHistory("adddegaxes", names, values);
+    imh.addHistory(_ORIGIN, msgs);
+    return new image(z);
+}
+
 bool image::addnoise(
 	const std::string& type, const std::vector<double>& pars,
 	const variant& region, bool zeroIt, const vector<int>& seeds
@@ -555,7 +617,6 @@ bool image::fromshape(
     return False;
 }
 
-
 image* image::imagecalc(
     const string& outfile, const string& pixels,
     bool overwrite, const string& imagemd
@@ -727,57 +788,6 @@ void image::_reset() {
 	_imageF.reset();
 	_imageC.reset();
 	_stats.reset();
-}
-
-::casac::image *
-image::adddegaxes(
-	const std::string& outfile, bool direction,
-	bool spectral, const std::string& stokes, bool linear,
-	bool tabular, bool overwrite, bool silent
-) {
-	try {
-        _log << _ORIGIN;
-		if (detached()) {
-			return 0;
-		}
-		if (_imageF) {
-			SPCIIF myim = _imageF;
-			return _adddegaxes(
-				myim, outfile, direction, spectral, stokes,
-				linear, tabular, overwrite, silent
-			);
-		}
-		else {
-			SPCIIC myim = _imageC;
-			return _adddegaxes(
-				myim, outfile, direction, spectral, stokes,
-				linear, tabular, overwrite, silent
-			);
-		}
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-			<< LogIO::POST;
-		RETHROW(x);
-	}
-	return nullptr;
-}
-
-template<class T> image* image::_adddegaxes(
-	SPCIIT inImage,
-	const std::string& outfile, bool direction,
-		bool spectral, const std::string& stokes, bool linear,
-		bool tabular, bool overwrite, bool silent
-) {
-	_log << _ORIGIN;
-	PtrHolder<ImageInterface<T> > outimage;
-	ImageUtilities::addDegenerateAxes(
-		_log, outimage, *inImage, outfile,
-		direction, spectral, stokes, linear, tabular, overwrite, silent
-	);
-	ImageInterface<T> *outPtr = outimage.ptr();
-	outimage.clear(False);
-	return new image(outPtr);
 }
 
 image* image::convolve(
