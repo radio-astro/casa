@@ -15,6 +15,7 @@ from . import applyflag
 from . import weighting
 from . import scaling
 from . import worker
+from . import sdcombine
 from . import jyperk
 from .jyperk import JyPerKItems
 from .. import common
@@ -212,6 +213,8 @@ class SDImaging(common.SingleDishTaskTemplate):
             combined_spws = []
             combined_scans = []
             combined_pols = []
+            tocombine_images = []
+
             srctype = None
             for (name, _members) in image_group.items():
                 indices = map(lambda x: x[0], _members)
@@ -288,7 +291,7 @@ class SDImaging(common.SingleDishTaskTemplate):
                 combined_spws.extend(spwids)
                 combined_pols.extend(pols)
                 combined_scans.extend(scans)
-
+                
                 imager_inputs = worker.SDImagingWorker.Inputs(context, infiles=infiles, 
                                                                outfile=imagename, mode=imagemode,
                                                                spwids=spwids,
@@ -301,7 +304,11 @@ class SDImaging(common.SingleDishTaskTemplate):
                 if imager_result.outcome is not None:
                     # Imaging was successful, proceed following steps
                     logrecords.extend(imager_result.logrecords)
-    
+
+                    # add image list to combine
+                    if os.path.exists(imagename) and os.path.exists(imagename+'.weight'):
+                        tocombine_images.append(imagename)
+
                     # Additional Step.
                     # Make grid_table and put rms and valid spectral number array 
                     # to the outcome
@@ -405,15 +412,20 @@ class SDImaging(common.SingleDishTaskTemplate):
             # Step 4.
             # Imaging
             LOG.info('Step 4. Imaging')
-            LOG.todo('Ampcal should be imaged per session, per antenna, per spw')
-            imager_inputs = worker.SDImagingWorker.Inputs(context, infiles=combined_infiles, 
-                                                           outfile=imagename, mode=imagemode,
-                                                           spwids=combined_spws,
-                                                           scans=combined_scans, pols=combined_pols,
-                                                           onsourceid=srctype, edge=edge,
-                                                           vislist=exported_mses)
-            imager_task = worker.SDImagingWorker(imager_inputs)
-            imager_result = self._executor.execute(imager_task, merge=True)
+            if False:
+                imager_inputs = worker.SDImagingWorker.Inputs(context, infiles=combined_infiles, 
+                                                              outfile=imagename, mode=imagemode,
+                                                              spwids=combined_spws,
+                                                              scans=combined_scans, pols=combined_pols,
+                                                              onsourceid=srctype, edge=edge,
+                                                              vislist=exported_mses)
+                imager_task = worker.SDImagingWorker(imager_inputs)
+                imager_result = self._executor.execute(imager_task, merge=True)
+            else:
+                combine_inputs = sdcombine.SDImageCombineInputs(context, inimages=tocombine_images,
+                                                                outfile=imagename)
+                combine_task = sdcombine.SDImageCombine(combine_inputs)
+                imager_result = self._executor.execute(combine_task, merge=True)
             
             if imager_result.outcome is not None:
                 # Imaging was successful, proceed following steps
