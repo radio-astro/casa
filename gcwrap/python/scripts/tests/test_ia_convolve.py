@@ -107,6 +107,23 @@ class ia_convolve_test(unittest.TestCase):
         self.assertTrue(type(zz) == type(yy))
         yy.done()
         zz.done()
+
+    def test_history(self):
+        """Test history writing"""
+        yy = iatool()
+        kernel = "khistory"
+        shape = [200,200,1,20]
+        yy.fromshape(kernel, shape)
+        yy.fromshape("", shape)
+        yy.addnoise()
+        yy.done()
+        yy.fromshape("", shape)
+        zz = yy.convolve("", kernel)
+        yy.done()
+        msgs = zz.history()
+        zz.done()
+        self.assertTrue("convolve" in msgs[-2])
+        self.assertTrue("convolve" in msgs[-1])
         
 def suite():
     return [ia_convolve_test]
