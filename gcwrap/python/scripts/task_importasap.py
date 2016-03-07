@@ -1,7 +1,8 @@
 import os
 import re
 from taskinit import *
-sdms = gentools(['sdms'])[0]
+import sdutil
+mysdms, mycb = gentools(['sdms', 'cb'])
 
 def importasap(infile, outputvis, overwrite):
     """
@@ -15,12 +16,18 @@ def importasap(infile, outputvis, overwrite):
         if not is_scantable(infile):
             raise RuntimeError('%s is not a valid Scantable.'%(infile))
 
-        status = sdms.importasap(infile, outputvis)
+        status = mysdms.importasap(infile, outputvis)
+        
+        # initialize weights using cb tool
+        mycb.open(outputvis, compress=False, addcorr=False, addmodel=False)
+        mycb.initweights(wtmode='nyq')
 
         return status
     except Exception, instance:
         casalog.post('*** Error *** ' + str(instance), 'SEVERE')
         raise instance
+    finally:
+        mycb.close()
 
 
 def is_scantable(filename):
@@ -28,7 +35,8 @@ def is_scantable(filename):
     Check if given data is Scantable or not
     """
     ret = False
-    if os.path.isdir(filename) and os.path.exists(filename+'/table.info') and os.path.exists(filename+'/table.dat'):
+    if os.path.isdir(filename) and os.path.exists(filename+'/table.info') \
+        and os.path.exists(filename+'/table.dat'):
         with open(filename+'/table.info') as f:
             l=f.readline()
             f.close()
