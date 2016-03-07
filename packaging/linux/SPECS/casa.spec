@@ -74,6 +74,7 @@ Source2:       asap-2_1.patch
 Source7:       find-data-version
 Source20:      casa-version
 Source22:      replace-version
+Source23:      svn-revision
 Source50:      find-templates
 Source60:      fixbrowser
 Source90:      saxon8.jar
