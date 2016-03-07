@@ -1,0 +1,11 @@
+--- code/install/avers.orig	2009-02-02 14:47:21.000000000 -0500
++++ code/install/avers	2009-02-02 14:58:31.000000000 -0500
+@@ -97,7 +97,7 @@
+ 
+ # Get CASA directory names.
+   AIPSROOT=`echo $CASAPATH | awk '{ print $1 }'`
+-  AIPSARCH=`echo $CASAPATH | awk '{ print $1 "/" $2 }'`
++  AIPSARCH=$CASAROOT
+   AIPSCODE=$AIPSROOT/code
+ 
+ 

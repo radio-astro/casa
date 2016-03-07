@@ -1,0 +1,23 @@
+#!/usr/bin/perl
+
+%template_cc = ();
+use File::Find;
+
+sub wanted {
+    if ( m/\.h(?:pp)?$/ ) {
+	open(H,"< $_");
+	while ($line = <H>) {
+	    if ($line =~ m/^\s*#\s*include\s*<([^>]+)>/) {
+		my $file = $1;
+		if ( $file =~ m/\.t?c(?:c|pp)$/ ) {
+		    $template_cc{$file} = 1;
+		}
+	    }
+	}
+    }
+}
+
+find(\&wanted, ".");
+foreach (keys %template_cc) {
+    print "$_\n";
+}

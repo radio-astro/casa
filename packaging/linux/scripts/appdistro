@@ -1,0 +1,360 @@
+#!/usr/bin/perl
+use File::Basename;
+use File::Find;
+use File::Path;
+use List::Util 'first';
+use Cwd;
+
+$| = 1;
+
+$basename='casa';
+$rhver = "";
+
+$scratchdir = '/tmp';
+$outputdir = '';
+$workdir = '';
+$worksubdirname = "appdistro.$$";
+$casa = '';            ### CASA workspace
+
+$tag = '';
+$version = '';
+$release = '';        ### prerelease numbering, e.g. "4.5.0-$release"
+
+$verbose = '';
+
+$packaging_script = "/usr/src/rpmbuild/packaging/scripts/make-app";
+
+if ( ! $rhver ) {
+
+    if ( -f "/etc/SuSE-release" ) {
+
+        $rhver = "suse";
+
+    } elsif ( -f "/etc/redhat-release" ) {
+
+        open( IN, "</etc/redhat-release" );
+        $rhver = <IN>;
+        close( IN );
+        if ( $rhver =~ m/^Red Hat Enterprise.*release 5/ ) {
+            $rhver = "el5";
+        } elsif ( $rhver =~ m/^Scientific Linux SL release 5.*/ ) {
+            $rhver = "el5";
+        } elsif ( $rhver =~ m/^Red Hat Enterprise.*release 6/ ) {
+            $rhver = "el6";
+        } elsif ( $rhver =~ m/^Scientific Linux SL release 6.*/ ) {
+            $rhver = "el6";
+        } elsif ( $rhver =~ m/^Red Hat Enterprise/ ) {
+            die "unknown enterprise version: $rhver";
+        } elsif ( $rhver =~ m/^Red Hat Linux release ([0-9.]+)/ ) {
+            die "we no longer support: $rhver";
+        } elsif ( $rhver =~ m/^Mandrake Linux/  ) {
+            die "we don't yet support mandrake";
+        } else {
+            die "cannot understand version string: $rhver";
+        }
+
+    } else {
+
+        die "we're not in linux land";
+
+    }
+}
+
+die "cant build on $rhver" unless $rhver eq "el5" || $rhver eq "el6";
+
+while ( $_ = @ARGV[0] ) {
+    shift(@ARGV);
+
+    last if /^--$/;
+    /^tag=(\S+)$/i && ($tag = $1, next);
+    /^dir=(.+)$/i && ($outputdir = $1, next);
+    /^scratch=(.+)$/i && ($scratchdir = $1, next);
+    /^ws=(.+)$/i && ($casa = $1, next);
+    
+    /^release=(\d+)$/i && ($release = "-$1", next);
+    /^version=(\d+\.\d+\.\d+)$/i && ($version = $1, next);
+
+    /^-v(?:erbose)?$/i && ($verbose='yes', next);
+
+    die "unknown option: $_\n";
+}
+
+
+die "must specify version (with 'version=...')" unless $version;
+die "must specify CASA workspace (with 'ws=...')" unless $casa && -d $casa;
+die "must specify a tag (prerelese or test)" unless $tag;
+
+die "scratch directory ($scratchdir) is not a directory..." if $scratchdir && ! -d $scratchdir;
+die "output directory ($outputdir) is not a directory..." if $outputdir && ! -d $outputdir;
+
+$outputdir = "$scratchdir" unless $outputdir;
+
+if ( ! -d $outputdir ) { mkpath $outputdir or die "could not create output directory ($outputdir)" }
+
+$workdir = "$scratchdir/$worksubdirname";
+mkpath $workdir or die "could not create work dir ($workdir)";
+
+print "creating linux app tar file in $outputdir\n";
+print "work directory is $workdir\n";
+
+print "starting: $packaging_script -ni version=$version out=$workdir type=$tag ws=$casa\n";
+open( $mafd, "$packaging_script -ni version=$version out=$workdir type=$tag ws=$casa |" );
+{ my $oldfh = select $mafd;
+  $| = 1;
+  select $oldfh;
+}
+foreach ( <$mafd> ) { print "    $_" }
+close( $mafd ) or die "$packaging_script failed";
+
+$tidy_up = sub { if ( -f $_ && $_ eq "casapy.py" ) {
+                     my $file = $_;
+                     print "tidying $File::Find::dir/$file\n";
+                     my @contents = ( );
+                     open( my $fd, "< $file" );
+                     foreach ( <$fd> ) { push( @contents, $_ ) unless m|^fullpath=| || m|__CASAPY_PYTHONDIR| }
+                     close( $fd );
+                     open( $fd, "> $file" );
+                     foreach ( @contents ) { print $fd $_ }
+                     close( $fd );
+                 }
+};
+
+find( { wanted => $tidy_up }, $workdir );
+
+$distro_dir = distro_dir( );
+chdir "$workdir/$distro_dir";
+
+### ----- ---- ---- ----- ---- ---- ----- ---- ---- ----- ---- ---- ----- ---- ----
+###   generate readme
+### ----- ---- ---- ----- ---- ---- ----- ---- ---- ----- ---- ---- ----- ---- ----
+$readme = readme( );
+open( NEW, "> README" ) or die "could not create readme file ($distro_dir/README)";
+print NEW $readme;
+close( NEW );
+
+### ----- ---- ---- ----- ---- ---- ----- ---- ---- ----- ---- ---- ----- ---- ----
+###   generate warning wrappers
+### ----- ---- ---- ----- ---- ---- ----- ---- ---- ----- ---- ---- ----- ---- ----
+open( NEW, "> casa" ) or die "could not create readme file ($distro_dir/casa)";
+print NEW warning( );
+close(NEW);
+chmod 0755, "casa";
+
+foreach $w ( "asdm2MS",
+	     "bdflags2MS",
+	     "buildmytasks",
+	     "casabrowser",
+	     "casa-config",
+	     "casafeather",
+	     "casalogger",
+	     "casaplotms",
+	     "casaviewer",
+	     "mpicasa" ) {
+
+    system( "ln -s casa $w"  );
+}
+
+open( NEW, "> casapy" ) or "could not create readme file ($distro_dir/casa)";
+print NEW casapy( );
+close(NEW);
+chmod 0755, "casapy";
+
+chdir "..";
+
+system( "tar -zcf $outputdir/$distro_dir.tar.gz $distro_dir" ) == 0 or die "distribution creation failed (tar -zcf $outputdir/$distro_dir.tar.gz $distro_dir)";
+
+chdir "$scratchdir";
+system( "rm -rf $worksubdirname" );
+print "\n$outputdir/$distro_dir.tar.gz\n";
+chdir $outputdir;
+system( "md5sum $distro_dir.tar.gz > $distro_dir.tar.gz.md5" ) == 0 or die "creation of checksum failed";
+
+print "appdistro ran to completion.\n";
+
+
+
+
+sub distro_dir {
+    opendir( my $dirh, $workdir ) || die "cannot open $workdir";
+    @distro = grep { /$version/ && -d "$workdir/$_" } readdir($dirh);
+    closedir( $dirh );
+    die "no distribution directory found" unless scalar(@distro) == 1;
+    return $distro[0];
+}
+
+sub readme {
+    my $result = <<'__README__';
+CASA Linux Distribution
+---------------------------------------------------------------------------
+To setup your environment to use CASA, add the root directory of the
+unpacked CASA distribution to your PATH environment variable. For
+example, if you unpacked the 4.4.0 casa distribution:
+
+    tar xf casa-release-4.4.0-el6.tar.gz
+
+you could setup your environment to use CASA in bash like:
+
+    cd casa-release-4.4.0-el6/bin
+    PATH=`pwd`:$PATH
+
+or if you use tcsh, you could setup your environment like:
+
+    cd casa-release-4.4.0-el6/bin
+    setenv PATH `pwd`:$PATH
+
+You can use the casa-config script for extra information about this
+distribution and for configuration. For example, to find the version
+number of this distribution:
+
+    casa-config --version
+
+or to install a package into this CASA distribution:
+
+    casa-config --exec python setup.py
+
+If you would like more information about CASA, please visit:
+
+    http://casa.nrao.edu/
+
+__README__
+    return $result;
+}
+
+sub warning {
+    my $result = <<'__WARNING__';
+#!/usr/bin/perl
+use File::Basename;
+use Cwd 'abs_path';
+use Cwd 'getcwd';
+
+$installpath = dirname(abs_path($0));
+$path        = normalize_path($installpath,$0);
+$binary      = basename($path);
+
+print banner( );
+exec( "$installpath/bin/$binary", @ARGV );
+exit 1;
+
+sub banner {
+    my $result = <<"EOF";
+
+*****************************************************************************
+*****************************************************************************
+** Please note that these scripts in the root directory of the CASA        **
+** distribution will be removed in CASA 4.7. You should instead use        **
+** the executables in the 'bin' subdirectory.                              **
+*****************************************************************************
+*****************************************************************************
+
+EOF
+    return $result;
+}
+
+sub normalize_path {
+    my $divider = '/';
+    my $root = shift(@_);
+    my $path = shift(@_);
+
+    sub normalize_worker {
+        # clean path
+        my @path = ( );
+        foreach my $e (@_) {
+            if ( $e eq '..' ) { pop(@path) }
+            elsif ( $e ne '.' ) {
+                my $path = join($divider,@path,$e);
+                # encountered symlink and still outside of installation directory
+                if ( -l $path && $path !~ m|^$root| ) {
+                    my $linkpath = readlink($path); 
+                    if ( substr($linkpath,0,1) eq $divider ) { 
+                        # link to an absolute path. Need to clear up existing path. 
+                        @path = ( ); 
+                    } 
+                    @path = normalize_worker(@path,split($divider,$linkpath)); 
+                } else {
+                    push(@path,$e);
+                }
+            }
+        }
+
+        # reconstruct path
+        return @path;
+    }
+
+    # relative path
+    if ( substr($path,0,1) ne $divider ) {
+        $path = getcwd( ) . $divider . $path;
+    }
+
+    return join('/', normalize_worker( split($divider,$path) ) );
+}
+
+__WARNING__
+    return $result;
+}
+
+sub casapy {
+    my $result = <<'__CASAPY__';
+#!/usr/bin/perl
+use File::Basename;
+use Cwd 'abs_path';
+use Cwd 'getcwd';
+
+$installpath = dirname(abs_path($0));
+$path        = normalize_path($installpath,$0);
+$binary      = basename($path);
+
+print banner( );
+exec( "$installpath/casa", @ARGV );
+exit 1;
+
+sub banner {
+    my $result = <<"EOF";
+
+!!!!!! Warning: the 'casapy' synonym for the 'casa' executable will be !!!!!!
+!!!!!! removed in CASA 4.7, please start CASA by running 'casa'        !!!!!!
+
+EOF
+    return $result;
+}
+
+sub normalize_path {
+    my $divider = '/';
+    my $root = shift(@_);
+    my $path = shift(@_);
+
+    sub normalize_worker {
+        # clean path
+        my @path = ( );
+        foreach my $e (@_) {
+            if ( $e eq '..' ) { pop(@path) }
+            elsif ( $e ne '.' ) {
+                my $path = join($divider,@path,$e);
+                # encountered symlink and still outside of installation directory
+                if ( -l $path && $path !~ m|^$root| ) {
+                    my $linkpath = readlink($path); 
+                    if ( substr($linkpath,0,1) eq $divider ) { 
+                        # link to an absolute path. Need to clear up existing path. 
+                        @path = ( ); 
+                    } 
+                    @path = normalize_worker(@path,split($divider,$linkpath)); 
+                } else {
+                    push(@path,$e);
+                }
+            }
+        }
+
+        # reconstruct path
+        return @path;
+    }
+
+    # relative path
+    if ( substr($path,0,1) ne $divider ) {
+        $path = getcwd( ) . $divider . $path;
+    }
+
+    return join('/', normalize_worker( split($divider,$path) ) );
+}
+
+__CASAPY__
+    return $result;
+}
