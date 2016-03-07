@@ -93,6 +93,7 @@ class SynthesisDeconvolver
   void setMask( TempImage<Float> &/*mask*/ );
 
   void setStartingModel();
+  void setupMask();
 
 protected:
 

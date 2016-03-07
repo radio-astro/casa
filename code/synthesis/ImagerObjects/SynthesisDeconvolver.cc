@@ -200,66 +200,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       setStartingModel();
 
       // Set up the mask too.
-      if( itsIsMaskLoaded==False ) {
-        // use mask(s) 
-        //if(  itsMaskType !="none" ) {
-        if(  itsMaskList[0] != "" || itsMaskType == "pb" || itsAutoMaskAlgorithm != "" ) {
-          //auto mask
-          if ( itsAutoMaskAlgorithm != "" ) {
-            if ( itsPBMask > 0.0 ) {
-              itsMaskHandler->autoMaskWithinPB( itsImages, itsPBMask);
-            }
-            else { 
-              itsMaskHandler->autoMask( itsImages, itsAutoMaskAlgorithm, itsMaskThreshold, itsFracOfPeak, itsMaskResolution);
-            }
-          }
-          else if( itsMaskType=="user" && itsMaskList[0] != "" ) {
-            itsMaskHandler->fillMask( itsImages, itsMaskList);
-            if( itsPBMask > 0.0 ) {  
-              itsMaskHandler->makePBMask(itsImages, itsPBMask);
-            }
-          }
-          else if( itsMaskType=="pb") {
-            itsMaskHandler->makePBMask(itsImages, itsPBMask);
-          }
-        /***
-	if(  itsMaskString.length()>0  ) {
-	  ///// Equals STRING and not 'contains'.
-          if( itsMaskString.matches("auto") ) {
-            String alg;
-	    if ( itsMaskString.matches("auto")) {
-	      itsMaskHandler->autoMask( itsImages, "");
-            }
-            else  if ( itsMaskString.matches("thresh")) {
-	      itsMaskHandler->autoMask( itsImages, "thresh");
-            }
-	    else if  ( itsMaskString.matches("auto-pb")) {
-	      itsMaskHandler->makePBMask( itsImages, 0.2);
-	    }
-	    else if  ( itsMaskString.matches("auto-within-pb")) {
-	      itsMaskHandler->autoMaskWithinPB( itsImages, 0.2);
-	    }
-          }
-          else {
-	    itsMaskHandler->fillMask( itsImages, itsMaskString );
-          }
-          ***/
-	} else {
+      setupMask();
 
-	  //	  cout << "Setting mask to 1.0 everywhere to start with.... FIX THIS for interactive masking" << endl;
-	  //	  itsMaskHandler->resetMask( itsImages );
-
-	  if( ! itsImages->hasMask() ) // i.e. if there is no existing mask to re-use...
-	    {
-	      if( itsIsInteractive ) itsImages->mask()->set(0.0);
-	      else itsImages->mask()->set(1.0);
-	    }
-
-	  
-	}
-	
-	itsIsMaskLoaded=True;
-      }
  
       // Normalize by the weight image.
       ///divideResidualByWeight();
@@ -447,6 +389,50 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     catch(AipsError &x)
       {
 	throw( AipsError("Error in setting  starting model for deconvolution: "+x.getMesg()) );
+      }
+
+  }
+
+  // Set mask
+  void SynthesisDeconvolver::setupMask()
+  {
+    LogIO os( LogOrigin("SynthesisDeconvolver","setupMask",WHERE) );
+
+      if( itsIsMaskLoaded==False ) {
+        // use mask(s) 
+        if(  itsMaskList[0] != "" || itsMaskType == "pb" || itsAutoMaskAlgorithm != "" ) {
+          //auto mask
+          if ( itsAutoMaskAlgorithm != "" ) {
+            if ( itsPBMask > 0.0 ) {
+              itsMaskHandler->autoMaskWithinPB( itsImages, itsPBMask);
+            }
+            else { 
+              itsMaskHandler->autoMask( itsImages, itsAutoMaskAlgorithm, itsMaskThreshold, itsFracOfPeak, itsMaskResolution);
+            }
+          }
+          else if( itsMaskType=="user" && itsMaskList[0] != "" ) {
+            itsMaskHandler->fillMask( itsImages, itsMaskList);
+            if( itsPBMask > 0.0 ) {  
+              itsMaskHandler->makePBMask(itsImages, itsPBMask);
+            }
+          }
+          else if( itsMaskType=="pb") {
+            itsMaskHandler->makePBMask(itsImages, itsPBMask);
+          }
+	} else {
+
+	  if( ! itsImages->hasMask() ) // i.e. if there is no existing mask to re-use...
+	    {
+	      if( itsIsInteractive ) itsImages->mask()->set(0.0);
+	      else itsImages->mask()->set(1.0);
+	    }
+
+	  
+	}
+	
+	// If anything other than automasking, don't re-make the mask here.
+	if ( itsAutoMaskAlgorithm == "" )
+	  {	itsIsMaskLoaded=True; }
       }
 
   }
