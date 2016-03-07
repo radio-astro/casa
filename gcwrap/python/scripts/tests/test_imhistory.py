@@ -89,7 +89,8 @@ class imhistory_test(unittest.TestCase):
         myia.done()
         h = imhistory(imagename, mode="list")
         self.assertTrue(len(h) == 3, "Incorrect history length")
-        for hh in h[0:2]:
+        for hh in h[1:2]:
+            print hh
             self.assertTrue("fromshape" in hh, "Incorrect message")
         msg = "fred"
         self.assertTrue(
@@ -98,7 +99,7 @@ class imhistory_test(unittest.TestCase):
         )
         h = imhistory(imagename, mode="list")
         self.assertTrue(len(h) == 4, "Incorrect history length")
-        for hh in h[0:2]:
+        for hh in h[1:2]:
             self.assertTrue("fromshape" in hh, "Incorrect message")
         self.assertTrue(msg in h[3], "Incorrect appended message")
  
