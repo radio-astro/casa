@@ -22,7 +22,7 @@ $release = '';        ### prerelease numbering, e.g. "4.5.0-$release"
 
 $verbose = '';
 
-$packaging_script = "/usr/src/rpmbuild/packaging/scripts/make-app";
+$packaging_script = "/opt/users/rpmbuild/casa/prerelease/scripts/make-app";
 
 if ( ! $rhver ) {
 

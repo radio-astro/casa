@@ -1,0 +1,1747 @@
+#!/usr/bin/env perl
+### !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+### !!!! RHEL5 ships with perl 5.8.8 which contains a version of !!!!
+### !!!! File::Path which is too old... after we retire RHEL5 we !!!!
+### !!!! should switch the startup back to #!/usr/bin/perl       !!!!
+### !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+###
+###     osx: make-app -v -ni ws=trunk arch=darwin   out=/tmp
+###   linux: make-app        ws=trunk version=4.5.0 out=tmp type=test
+###
+$longest_line = 0;
+
+use File::Basename;
+use File::Find;
+use File::Path 2.07 qw( make_path remove_tree );
+use File::Spec;
+use Cwd qw(abs_path getcwd);
+use List::Util qw(max);
+use POSIX qw(uname);
+
+use feature 'state';
+
+$osname = lc((uname( ))[0]);
+
+$spf="%6d";
+
+$workspace='';
+$arch=$osname;
+$osrel=os_release($osname);
+%types=( );
+$quiet='';
+$quiet='';
+$non_interactive='';
+$local_template_path='';
+$local_data_path='';
+$match='';
+$output_dir= '';
+$library_destination = '';
+$data_destination = '';
+$data_url = 'https://svn.cv.nrao.edu/svn/casa-data/distro';
+$ignore_missing_dep='';
+$template_url = '';
+$distro_name = 'casa';
+$branch='release';
+@prefix = ( );
+$version = '';
+$reltype = '';
+
+%exclude = ( );
+
+## unbuffer output
+$| = 1;
+
+foreach ( @ARGV ) {
+    m|^version=(\d+\.\d+\.\d+(?:-\d+)?)| && ( $version = $1 );
+    ### the "test" and "prerelease" distros are generated from a clean build
+    ### the "stable" and "release" distros are repackaged "test" and "prerelease" distros
+    ### "DEV" is a developer created distro...
+    m@^type=(prerelease|test|DEV)@ && ( $reltype = $1 );
+    m|^ws=(\S+)|i && -d "$1" && ( $workspace = $1, next );
+    m|^arch=(\S+)|i && ( $arch = $1, next );
+    m|^match=(.+)| && ( $match = $1, next );
+    m|^out=(.+)| && ( $output_dir = $1, next );
+    m|^template=(.+)| && ( $local_template_path = $1, next );
+    m|^data=(.+)| && ( $local_data_path = $1, next );
+    m|^url=(.+)| && ( $template_url = $1, next );
+    m|^branch=(.+)| && ( $branch = $1, next );
+    m|^-ignore-missing-dep|i && ( $ignore_missing_dep = 'yes', next );
+    m|^-q$|i && ( $quiet = 'yes', $verbose = '', next );
+    m|^-v$|i && ( $verbose = 'yes', $quiet = '', next );
+    m|^-ni$|i && ( $non_interactive = 'yes', next );
+    m|^-help$| && ( usage( ), exit );
+}
+
+if ( ! $workspace ) {
+    if ( $ENV{'CASAPATH'} =~ m|^(\S+)\s+\S+| ) {
+        $workspace = $1 if -d $1;
+    }
+}
+if ( ! $arch ) {
+    $ENV{'CASAPATH'} =~ m|\S+\s+(\S+)| && ( $arch = $1 );
+}
+
+###
+### set up the directory where the binary distribution will be created...
+###
+$distribution_directory='';
+if ( $osname eq "linux" ) {
+    unless( $template_url ) { $template_url = 'https://svn.cv.nrao.edu/svn/casa/development_tools/packaging/template/linux/casa-distro' }
+    if ( $template_url =~ m|/(\w+)-distro$| ) { $distro_name = $1 }
+    die "please supply a version string with 'version=<VER>'" unless $version;
+    die "please supply a release \"type\" string with 'type=[prerelease|test|DEV]'" unless $reltype;
+    $distribution_directory = "$output_dir/$distro_name\-$reltype-$version";
+    $version_file = "$distribution_directory/lib/casa/VERSION";
+
+    %exclude = map { $_ => 1 } (
+        "libXrandr", "librt", "libXi", "libatlas", "libX11", "libexpat", "libz", "libkeyutils", "libdl",
+        "libresolv", "libnsl", "libXext", "libXfixes", "libgdbm", "libSM", "libsqlite3", "libcblas",
+        "libfontconfig", "libICE", "libXinerama", "libpng12", "libcom_err", "libkrb5support", "libbz2",
+        "libutil", "libkrb5", "libxcb", "libfreetype", "libgobject-2.0", "libxml2",
+        "libgssapi_krb5", "libgthread-2.0", "libXcursor", "libselinux",
+        "libf77blas", "libc", "libXau", "libk5crypto", "libpthread", "libstdc++", "libXrender",
+        "libm", "libuuid", "libglib-2.0", "libXft", "libfreebl3.so", "libdb-4.7.so", "libgcc_s",
+        "libcrypt", "libnuma" );
+
+} elsif ( $osname eq "darwin" ) {
+    unless( $template_url ) { $template_url = 'https://svn.cv.nrao.edu/svn/casa/development_tools/packaging/template/osx/CASA.app' }
+    $distribution_directory = "$output_dir/CASA.app";
+    $version_file = "$distribution_directory/Contents/Resources/VERSION"
+} else {
+    die "unknown os environment: $osname";
+}
+
+if ( $output_dir ) {
+    die "output directory, $output_dir, does not exist..." unless -d $output_dir;
+} else {
+    die "please supply an output directory with 'out=<PATH>'";
+}
+
+if ( $local_template_path ) {
+    die "template source directory ($local_template_path) does not exist" unless -d $local_template_path;
+    if ( $local_template_path !~ m|^/| ) {
+        $local_template_path = getcwd( ) . "/$local_template_path";
+    }
+}
+if ( $local_data_path ) {
+    die "data source directory ($local_data_path) does not exist" unless -d $local_data_path;
+    if ( $local_data_path !~ m|^/| ) {
+        $local_data_path = getcwd( ) . "/$local_data_path";
+    }
+}
+
+##
+## where the otool discovered dependencies end up...
+##
+if ( $osname eq "linux" ) {
+    $library_destination = "$distribution_directory/lib";
+    $data_destination = "$distribution_directory";
+} else {
+    $library_destination = "$distribution_directory/Contents/Frameworks";
+    $data_destination = "$distribution_directory/Contents/Resources";
+}
+
+usage("could not find workspace... please specify one with 'ws=<PATH>'") unless $workspace && -d $workspace;
+usage("could not find architecture... please specify one with 'arch=<STR>'") unless $arch && -d "$workspace/$arch";
+
+$workspace = abs_path($workspace);
+
+
+## turn on auto-flushing... for carriage return output...
+if ( $verbose ) { $| = 1 }
+
+
+## fetch casa app template...
+unless ( $quiet ) { print "fetching template using subversion...\n"; }
+#fetch_template( $output_dir );
+fetch_svn( $output_dir, $template_url, $local_template_path, ($osname eq "linux" ? "$distro_name\-$reltype-$version" : '') );
+## fill in workspace references...
+$app_dir = $distribution_directory;
+fill_stubs( $app_dir, \&copy_file, "filling explicit stubs" );
+
+## scan for dependencies and discover prefix...
+scan_application( $app_dir, "initial scan of application..." );
+
+unless ( $quiet ) { print "\nfound load-time dependencies in ", scalar(keys %libraries_dirs)," directories...\n"; }
+
+@prefix = prefix( );
+die "could not find prefix path..." unless scalar(@prefix) > 0;
+unless ( $quiet ) { print "using library paths " . join(' ',@prefix) . "\n" }
+
+# now that we have the prefix, scan the application again and
+# fill in the stubs that depend on the prefix...
+fill_stubs( $app_dir, \&copy_file, "filling prefix relative stubs..." );
+
+###
+### check to see if more than one version of python is referenced...
+###
+$python_count = 0;
+foreach ( keys %libraries_dirs ) {
+    my $ref = $libraries_dirs{$_};
+    foreach ( keys %$ref ) {
+        if ( m|Python\.framework| ) { $python_count += 1; }
+    }
+}
+if ( $python_count > 1 ) { die "application is linked against more than one version of python"; }
+
+## scan for dependencies and discover prefix...
+
+$scan_count = 0;
+
+unless ( $quiet ) { print "\nbeginning multiple passes at resolving remaining dependencies...\n" }
+
+do {
+    @scan_copies = ( );
+
+    ++$scan_count;
+    scan_application( $app_dir, "rescanning application (pass $scan_count)...", 1 );
+    unless ( $quiet ) { print "\nfound load-time dependencies in ", scalar(keys %libraries_dirs)," directories...\n"; }
+
+    ###
+    ### print out dependencies for user to check...
+    ###
+    unless ( $quiet ) {
+        print_dependencies( );
+
+        unless ( $non_interactive ) {
+            my $cont = '';
+            do {
+                print "OK to continue [y/n]? ";
+                $cont = <STDIN>;
+                chomp $cont;
+                $cont =~ tr|YN|yn|;
+                die "user aborted application generation" if $cont eq 'n';
+            } while ( $cont ne 'y' );
+        }
+    }
+
+    unless( $quiet ) { print "copying dependencies to $library_destination ...\n" }
+
+    foreach $libdir ( keys %libraries_dirs ) {
+        my $ref = $libraries_dirs{$libdir};
+        ###
+        ### throw away dependencies to obvious system areas...
+        ###
+        next if m|^/System| || m|^/usr/lib|;
+        ###
+        ### copy over each dependency...
+        ###
+        foreach $dep ( keys %$ref ) {
+            my $destfile = $dep;
+            ###
+            ### stored frameworks look like:
+            ###
+            ###    QtUiTools.framework/Versions/4/QtUiTools  QtXml.framework/Versions/4/QtXml
+            ###    QtCore.framework/Versions/4/QtCore        QtDBus.framework/Versions/4/QtDBus
+            ###    Python.framework/Versions/2.7/Python      QtGui.framework/Versions/4/QtGui
+            ###
+            if ( $dep =~ m|^(\S+\.framework)| ) {
+                $destfile = $1;
+            }
+            my ($v, $d, $f) = File::Spec->splitpath($destfile);
+            unless ( -e "$library_destination/$f" ) {
+                push( @scan_copies, $f );
+            }
+
+            if ( ! -e "$libdir/$destfile" ) {
+                if ( $ignore_missing_dep ) {
+                    unless ( $quiet ) { print "warning: dependency $libdir/$destfile does NOT exist\n" }
+                } else {
+                    die "dependency $libdir/$destfile does NOT exist... $initial";
+                }
+
+            } else {
+                copy_file( "$libdir/$destfile", $library_destination );
+            }
+        }
+    }
+} until ( scalar(@scan_copies) == 0 );
+
+unless( $quiet ) { print "resolving links to outside of application directory...\n" }
+resolve_external_links( "$distribution_directory" );
+
+adjust_runtime_paths( "$distribution_directory" );
+
+adjust_version_file( "$distribution_directory", fetch_revision( $branch ) );
+osx_specific_adjustments( "$distribution_directory" );
+linux_specific_adjustments( "$distribution_directory" );
+
+create_revstate( $workspace, ($osname eq 'darwin' ? "$distribution_directory/Contents/Resources/revstate" : "$distribution_directory/.revstate" ) );
+
+print "application creation complete\n";
+exit 0;
+
+##
+## for automated builds, this should fetch version information
+## from: https://svn.cv.nrao.edu/cgi-bin/casa-version
+## for example, with the linux RPM build script 'casa-version'
+## however, when building from a developer workspace, we need
+## to somehow get the version number to use from the workspace
+##
+sub fetch_version {
+    unless ( $version ) {
+        open( my $ver, "< $workspace/code/VERSION" );
+        foreach ( <$ver> ) {
+            m|^(\d+\.\d+\.\d+)| && ( $version = $1, last );
+        }
+        close($ver);
+    }
+    return $version;
+}
+
+sub create_revstate {
+    my $workspace = shift(@_);
+    my $output_file = shift(@_);
+    my $orig_dir = getcwd( );
+    chdir($workspace) or die "could not change to workspace ($workspace): $!";
+    if ( ! -d '.svn' && -d 'code/.svn' ) { chdir( "code" ) or die "could not change to code after failing to find a subversion tree in $worksapce" }
+    my $url = '';
+    my $revision = '';
+    my $version = '';
+    open( my $svninfo, "svn info |" );
+    foreach ( <$svninfo> ) {
+        m|^URL:\s+(.*)| && ( chomp( $url = $1 ), next );
+        m|^Last Changed Rev:\s+(\d+)| && ( $revision = $1, next );
+    }
+    close( $svninfo );
+    unless( $url && $revision ) { die "could not find subversion information" }
+    $version = fetch_version( );
+    unless( $version ) { die "could not find version number" }
+    open( my $out, "> $output_file" );
+    print $out "url=\"$url\"\n";
+    print $out "revision=\"$revision\"\n";
+    print $out "version=\"$version\"\n";
+    close( $out );
+    chdir($orig_dir);
+
+}
+
+sub expand {
+    state $output_dir_expanded;
+    unless ( $output_dir_expanded ) { $output_dir_expanded = abs_path($output_dir) }
+    my $path = shift(@_);
+#   if ( -l $path && -d readlink($path) ) {
+    if ( -l $path ) {
+        my $result = abs_path($path);
+        $result =~ s|^$output_dir_expanded|$output_dir|;
+        return $result;
+    } else {
+        my $dir = dirname($path);
+        my $file = basename($path);
+        my $result = abs_path($dir);
+        $result =~ s|^$output_dir_expanded|$output_dir|;
+        return "$result/$file";
+    }
+}
+sub translate_subdir {
+    my $primary = shift(@_);
+    my $secondary = shift(@_);
+    my @primary = split('/',$primary);
+    my @secondary = split('/',$secondary);
+    my $symlinks_found = { };
+    for ( $pi = $#primary; $pi > 0; --$pi ) {
+        for ( $si = 0; $si < $#secondary; ++$si ) {
+            my $path = join('/',@primary[0 .. $pi]) . '/' . join('/',@secondary[$si .. $#secondary]);
+            if ( -e $path ) {
+                $symlinks_found->{$path} = 1;
+                last;
+            }
+        }
+    }
+    return $symlinks_found;
+}
+sub change_runtime_path {
+    my $exe = shift(@_);
+    $exe = expand($exe);
+    my $libref = shift(@_);
+    my $libraries = expand(shift(@_));
+### this exception causes many python plugins to avoid load path substitution
+#*# if ( $exe =~ m|Plugins| ) { return }
+###
+    my $common = common_prefix( { $exe => 1, $libraries => 1 } );
+    # $exe and $libraries are equal for libstdc++.6.dylib
+    # ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---
+    # bash$ otool -L /tmp/CASA.app/Contents/Frameworks/libstdc++.6.dylib
+    # /tmp/CASA.app/Contents/Frameworks/libstdc++.6.dylib:
+    #      /opt/casa/01/lib/libgcc/libstdc++.6.dylib (compatibility version 7.0.0, current version 7.20.0)
+    #      /usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1213.0.0)
+    #      /opt/casa/01/lib/libgcc/libgcc_s.1.dylib (compatibility version 1.0.0, current version 1.0.0)
+    # bash$
+    unless ( $common || $exe eq $libraries ) { die "could not resolve local path from executable $exe to library $libraries" }
+    my $local_libfile = basename($libraries);
+    my $local_libpath = dirname($libraries);
+    my $local_exepath = dirname($exe);
+    $local_libpath =~ s|^$common||;
+    $local_exepath =~ s|^$common||;
+    $local_libpath =~ s|^/||;
+    $local_exepath =~ s|^/||;
+    $local_exe =~ s|^$common/?||;
+    $local_lib =~ s|^$common/?||;
+    my @local_offset = split( '/', $local_exepath );
+    my $local_offset = scalar(@local_offset) == 0 ? ($local_libpath ? "lib/$local_libpath" : 'lib') : ( $local_libpath ? join( '/', ('..') x scalar(@local_offset), "$local_libpath") : join( '/', ('..') x scalar(@local_offset) ) );
+    unless ( -e dirname($exe) . "/$local_offset/$local_libfile" ) { die "resolved local path does not exist: " . dirname($exe) . "/$local_offset/$local_libfile" }
+    unless ( -w $exe ) { add_write_permission( $exe ) }
+    my $printed_label = '';
+    open( CHG, "install_name_tool -change \"$libref\" \"\@loader_path/$local_offset/$local_libfile\" \"$exe\" 2>&1 |" );
+    foreach ( <CHG> ) {
+        unless ( $printed_label ) {
+            print "    $exe\n";
+            $printed_label='yes';
+        }
+        print "\t\t>\t$_";
+    }
+    close( CHG );
+}
+
+sub exp_path {
+    my $path = shift( @_ );
+    return File::Spec->rel2abs( $path );
+}
+
+sub expand_prefix {
+    my $link = shift(@_);
+    $result = '';
+    if ( scalar(@prefix) > 0 ) {
+        for $dir ( @prefix ) {
+            my $path = $link;
+            ###
+            ### these @@...@@[name] search for a file called 'name'
+            ###
+            if ( $path =~ m|\@\@PREFIX\@\@\[(\S+)\]| ) {
+                my $file = $1;
+                my $found = '';
+                ## find sets $main::_
+                my $find_func = sub { unless ( $found ) {
+                                        if ( $file eq $main::_ ) {
+                                            $found = "$File::Find::dir/$main::_";
+                                        }
+                                    }
+                };
+                find( { wanted => $find_func }, $dir );
+                if ( $found ) { return $dir; }
+
+            } elsif ( $path =~ s|\@\@PREFIX\@\@|$dir| ) {
+                if ( -e $path ) {
+                    print "[expand_prefix]: found " . basename($path) . "\n";
+                    print "                       " . $path . "\n";
+                    return $dir;
+                }
+            }
+        }
+    }
+    return $result;
+}
+sub expand_stub {
+    my $dir = '';
+    my $_ = shift(@_);
+    m|^\@\@WS\@\@| && ( $dir = $workspace );
+    m|^\@\@ARCH\@\@| && ( $dir = "$workspace/$arch" );
+    m|^\@\@PREFIX\@\@| && ( $dir = expand_prefix($_) );
+
+#   die "unrecognized stub substitution..." unless $dir;
+    if ( $dir ) {
+        if ( m|\@\@\S+\@\@\[(\S+)\]| ) {
+            my $file = $1;
+            my $found = '';
+            ## find sets $main::_
+            my $find_func = sub { unless ( $found ) {
+                    if ( $file eq $main::_ ) {
+                        $found = "$File::Find::dir/$main::_";
+                    }
+                }
+            };
+            my $default = $_;
+            find( { wanted => $find_func }, $dir );
+            if ( $found ) { return $found; }
+            else { return $default; }
+        } elsif ( m|^\@\@\S+\@\@/| ) {
+            if ( $dir ) {
+                s|^\@\@\S+\@\@/|$dir/|;
+            }
+        }
+    }
+    return $_;
+}
+
+sub fill_or {
+    my $copy_func = shift(@_);
+    my $link = shift(@_);
+    my @elements = @_;
+    die "or used with fewer than two elements, $link" unless scalar(@elements) > 1;
+    for ( @elements ) {
+	if ( m|\@\@PREFIX\@\@| && scalar(@prefix) == 0 ) { return }
+        if ( m|\@\@WS\@\@| && $workspace ) {
+            my $path = $_;
+            $path =~ s|\@\@WS\@\@|$workspace|;
+            if ( -d $path ) {
+		unlink($link);
+		$copy_func->($path,$link);
+		return;
+	    }
+        } elsif ( m|\@\@ARCH\@\@| && $workspace ) {
+            my $path = $_;
+            $path =~ s|\@\@ARCH\@\@|$workspace/$arch|;
+            if ( -d $path ) {
+		unlink($link);
+		$copy_func->($path,$link);
+		return;
+	    }
+        } elsif ( m|\@\@PREFIX\@\@| && scalar(@prefix) > 0 ) {
+            my $prefix;
+            my $path = '';
+            foreach $prefix ( @prefix ) {
+                my $trypath = $_;
+                $trypath =~ s|\@\@PREFIX\@\@|$prefix|;
+                if ( -d $trypath ) {
+		    unlink($link);
+		    $copy_func->($trypath,$link);
+		    return;
+                }
+            }
+        }
+    }
+
+    die "template $_ in OR(...), no substitution found";
+}
+
+sub fill_union {
+    my $link = shift(@_);
+    my @elements = @_;
+    die "union used with fewer than two elements, $link" unless scalar(@elements) > 1;
+    my @available = ( );
+    for ( @elements ) {
+        if ( m|\@\@WS\@\@| && $workspace ) {
+            my $path = $_;
+            $path =~ s|\@\@WS\@\@|$workspace|;
+            die "workspace substitution $_ in UNION(...) does not map to a directory" unless -d $path;
+            push( @available, $path );
+        } elsif ( m|\@\@ARCH\@\@| && $workspace ) {
+            my $path = $_;
+            $path =~ s|\@\@ARCH\@\@|$workspace/$arch|;
+            die "arch substitution $_ in UNION(...) does not map to a directory" unless -d $path;
+            push( @available, $path );
+        } elsif ( m|\@\@PREFIX\@\@| && scalar(@prefix) > 0 ) {
+            my $prefix;
+            my $path = '';
+            foreach $prefix ( @prefix ) {
+                my $trypath = $_;
+                $trypath =~ s|\@\@PREFIX\@\@|$prefix|;
+                if ( -d $trypath ) {
+                    $path = $trypath;
+                    last;
+                }
+            }
+            die "prefix substitution $_ in UNION(...) failed to find a match with prefix == " . join(' ',@prefix) unless $path;
+            die "prefix substitution $_ in UNION(...) does not map to a directory" unless -d $path;
+            push( @available, $path );
+        }
+    }
+    if ( scalar(@available) == scalar(@elements) ) {
+        my $limit = 3;
+        my @output = ( );
+        my $target = $_;
+        unlink($_) or die "could not remove $_";
+        make_path($_) or die "could not create path $_";
+        for my $src ( @available ) {
+            print "copying from $src to $target...\n";
+            ##
+            ## we really only want to dereference links to directories... not e.g. shared library symlinks
+            ##
+            #open( my $tar, "(tar --dereference --hard-dereference -C $src -cf - . | tar -C $target -xf -) 2>&1 |" );
+            open( my $tar, "(tar -C $src -cf - . | tar -C $target -xf -) 2>&1 |" );
+            while ( <$tar> ) {
+                unless ( $quiet ) {
+                    if ( scalar(@output) < $limit ) { print "\t<tar> $_" }
+                    push( @output, $_ );
+                    if ( scalar(@output) > $limit ) { shift(@output) }
+                }
+            }
+            close( $tar );
+            unless ( $quiet ) {
+                print "\t<tar>\t...\n";
+                foreach ( @output ) {
+                    print "\t<tar> $_";
+                }
+            }
+        }
+    }
+}
+
+##
+## creating a casaviewer disto will require a subset of the python files...
+## i.e. those that implement the viewertool and the viewer/imview/msview tasks
+## this will fill based upon a regular expression which files are matched
+## against...
+##
+sub fill_match {
+    my $path = shift(@_);
+    my $sub = shift(@_);
+}
+sub fill_stubs {
+    my $app_path = shift(@_);
+    my $copy_func = shift(@_);
+    my $msg = shift(@_);
+    my $find_func = sub {
+        if ( -l $_ && ! -e $_ ) {
+            my $link = readlink($_);
+            if ( $link =~ m|^UNION\(\s*(\@\@.+\@\@.*?)\s*\)| ) {
+                fill_union($_,split(/\s+/,$1));
+	    } elsif( $link =~ m|^OR\(\s*(\@\@.+\@\@.*?)\s*\)| ) {
+		fill_or($copy_func,$_,split(/\s+/,$1));
+            } elsif( $link =~ m|^MATCH\(\s*\@\@(.*)\@\@.*?\s*\)| ) {
+                fill_match($_,$1);
+            } elsif( $link =~ m|^SVN\(\s*\@\@(.*)\@\@.*?\s*\)| ) {
+                unlink($_);
+                fetch_svn(dirname($_),$1,'',basename($_));
+	    } elsif( $link =~ m|^IF-OSEQ-(\w+)\(\s*(\@\@.+\@\@.*?)\s*\)| ) {
+		if ( $1 eq $osrel ) {
+		    ### copy function will unlink when copy is successful...
+		    my $path = expand_stub($2);
+		    if ( -e $path ) {
+			$copy_func->($path,$_);
+		    }
+		} else {
+		    unlink($_);
+		}
+            } elsif( $link =~ m|^\@\@\S+\@\@| ) {
+                $copy_func->(expand_stub(readlink($_)),$_);
+            }
+        }
+    };
+
+    print $msg ? $msg . "\n" : "filling template stubs...\n";
+    find( { wanted => $find_func, no_chdir=>1 }, $app_path );
+}
+
+sub copy_file {
+    my $_ = shift(@_);
+    my $to = shift(@_);
+
+    unless ( m|^\@\@\S+\@\@| ) {
+        if ( ! -e $_ ) {
+            die "source for copy does not exist, $_";
+        }
+        ### stubs are a symlink that point to something like
+        ### @@ARCH@@[somefile] or @@ARCH@@/some/path
+        ### or UNION(@@WS@@/lib/python @@PREFIX@@/lib/python)
+        ### or MATCH(@@regular-expression@@)
+        ### or SVN(@@subversion-url@@)
+        if ( -l $to && readlink($to) =~ m|^\@\@\S+\@\@| ) {
+            unlink($to);
+        } elsif ( -e $to ) {
+            if ( basename($to) eq basename($_) &&
+                 ( -f $to && -f $_              ||
+                   -l $to && -l $_              ||
+                   -d $to && -d $_ ) ) {
+                ### assume target has already been copied...
+                ### could check for differences...
+                return;
+            } elsif ( -d $to && ( -f $_ || -d $_ || -l $_ ) ) {
+                my $file = basename($_);
+                ### copy file to target directory...
+                if ( -f "$to/$file" ) {
+                    return;
+                }
+                $to = "$to/$file";
+            } elsif ( -l $to ) {
+                die "will not copy through symbolic link, $to";
+            } else {
+                die "unknown condition while trying to copy $_ to $to";
+            }
+        }
+        if ( $verbose ) {
+            print "<V>\tcopy\t$_\n";
+            print "<V>\tto\t$to\n";
+        }
+	if ( -l $to ) { unlink($to) }
+        ditto($_,$to);
+    }
+}
+
+sub collect_dependencies {
+    state %processed;
+    my $orig = shift(@_);
+    my $recursive = shift(@_);
+    %processed = ( );
+    collect_dependencies_work( \%processed, $orig, $recursive );
+}
+
+sub collect_dependencies_work {
+    my $been_there = shift(@_);
+    my $orig = shift(@_);
+    my $recursive = shift(@_);
+    my $absorig = abs_path($orig);
+
+    ###
+    ### use a hash to keep track or our (recursive) traversal...
+    ###
+    return if exists $been_there->{$absorig};
+    $been_there->{$absorig} = 1;
+
+    my ($vol, $dir, $file) = File::Spec->splitpath($orig);
+    # generate a tally of dependent library locations...
+    # may need to make this a two-pass solution to be able to use info gleaned
+    # from known subdirectories (e.g. 'Frameworks' or 'lib') in deciding how to
+    # handle outliers...
+    if ( $match && $file =~ $match && $file =~ m|$match| ) { print "<match:source> $file\n" }
+    my $libname = basename(abs_path($orig));
+    open( INFO, ($osname eq "linux" ? "ldd $orig 2> /dev/null |" : "otool -L $orig |") );
+    foreach ( <INFO> ) {
+        ###
+        ### sometimes otool output for shared libraries does not include paths:
+        ###
+        ### bash$ otool -L /tmp/CASA.app/Contents/Plugins/iconengines/libqsvgicon.dylib
+        ### /tmp/CASA.app/Contents/Plugins/iconengines/libqsvgicon.dylib:
+        ###         libqsvgicon.dylib (compatibility version 0.0.0, current version 0.0.0)
+        ###         /opt/casa/01/Library/Frameworks/QtSvg.framework/Versions/4/QtSvg (compatibility version 4.8.0, current version 4.8.6)
+        ###         /opt/casa/01/Library/Frameworks/QtGui.framework/Versions/4/QtGui (compatibility version 4.8.0, current version 4.8.6)
+        ###         /opt/casa/01/Library/Frameworks/QtCore.framework/Versions/4/QtCore (compatibility version 4.8.0, current version 4.8.6)
+        ###         /opt/casa/01/Library/Frameworks/QtXml.framework/Versions/4/QtXml (compatibility version 4.8.0, current version 4.8.6)
+        ###         /usr/lib/libstdc++.6.dylib (compatibility version 7.0.0, current version 56.0.0)
+        ###         /usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 169.3.0)
+        ### $bash$
+        ###
+        ### initial 'libqsvgicon.dylib' dependency causes 'libqsvgicon.dylib' to
+        ### show up as the directory... throw this away...
+        ###
+        next if $osname eq "darwin" && m|$libname\s+|;
+        next if $osname eq "linux" && m|not found$|;
+        next if $osname eq "linux" && m|statically linked|;
+        ### some special libraries have no corresponding path:
+        ### linux-vdso.so.1 =>  (0x00007fffd1cfa000)
+        next if $osname eq "linux" && m|\s+\S+\s+=>\s+\(0x\S+\)$|;
+        next if m|\s+(?:\S+ => )?(\S+)| && exists $exclude{libroot($1)};
+        if ( $match && m|$match| && m|\s+(?:\S+ => )(\S+)| ) { print "<match:depend> $file [$1]\n" }
+        if ( m|^\s+(?:\S+ => )?(\S+?/Frameworks)|           ||
+             m|^\s+(?:\S+ => )?($workspace/$arch)|          ||
+             m|^\s+(?:\S+ => )?(\S*?/lib)/|                 ||
+             m|^\s+(?:\S+ => )?(\S*?/lib64)/|               ||
+             m|^\s+(?:\S+ => )?(\S+)| ) {
+
+            my $dir = $1;
+
+            ###
+            ### ignore direct system dependencies...
+            ###
+            next if $osname eq "darwin" && $dir =~ m@^(?:/usr/lib|/System)@;
+            ### nrao sysadmins like to install things in /opt/local
+            ### and make them available in an ad hoc fashion...
+            next if $osname eq "linux" && $dir =~ m@^/usr/bin|^/opt/local/bin|^/opt/local/lib@;
+            if ( m|\s+(?:\S+ => )?(\S+)| ) {
+                my $file = $1;
+                if ( basename(abs_path($file)) eq basename(abs_path($orig)) ) {
+                    my $file_name = basename(abs_path($orig));
+                    ###
+                    ### ASAP python module references itself, and the path where it expects to find itself does not exist...
+                    ###
+                    ### razor:casa dschieb$ otool -L /tmp/CASA.app/Contents/Resources/python/asap/_asap.324.10.120.so | grep asap
+                    ### /tmp/CASA.app/Contents/Resources/python/asap/_asap.324.10.120.so:
+                    ###         .../release-4_2_2-prerelease-10/darwin/lib/_asap.324.10.120.so (compatibility version 324.10.120, current version 0.0.0)
+                    ###         .../release-4_2_2-prerelease-10/darwin/lib/libasap.324.10.120.dylib (compatibility version 324.10.120, current version 0.0.0)
+                    ###
+                    ### so there should be no harm in assuming that we can skip dependencies where the filename
+                    ### of the dependency is the same as the filename of the thing it depends on...
+                    if ( ! $quiet && $final_pass ) { print "\tskipping self-reference to $file_name\n" }
+                    ### the $final_pass flag signals the final scan where dependencies are tallied, using
+                    ### it in this conditional prevents notifying the user of self-references twice...
+                    next;
+                }
+
+                if ( $final_pass ) {
+                    if ( ! -e $file ) {
+                        if ( $ignore_missing_dep ) {
+                            print "warning: dependency $file does NOT exist, $orig depends on it\n";
+                        } else {
+                            if ( basename(abs_path($file)) ne basename(abs_path($orig)) ) {
+                                die "dependency $file does NOT exist, $orig depends on it";
+                            }
+                        }
+                    }
+                }
+                unless ( exists $main::libraries_dirs{$dir} ) {
+                    $main::libraries_dirs{$dir} = { };
+                }
+                my $ref = $main::libraries_dirs{$dir};
+                my $subpath = $file;
+                $subpath =~ s|^$dir/?||;
+
+                unless ( exists $ref->{$subpath} ) {
+                    $ref->{$subpath} = 1;
+                } elsif ( $recursive ) {
+                    if ( $verbose ) {
+                        state $longest_line;
+                        if ( (length($file)+10) > $longest_line ) {
+                        $longest_line = length($file)+10;
+                        }
+                        my $str = sprintf( "%-$longest_line".'s', $file );
+                        print "\r\t<R> $str";
+                    }
+                    collect_dependencies_work($been_there,$file,$recursive);
+                }
+            }
+        }
+    }
+    close( INFO );
+}
+
+sub scan_application {
+    ###
+    ### modifies global %libraries_dirs
+    ###
+    my $dir = shift( @_ );
+    my $msg = shift( @_ );
+    my $final_pass = shift( @_ );
+    my @binaries = ( );
+    my @scripts = ( );
+    my @libraries = ( );
+    %main::libraries_dirs = ( );
+
+    my $find_func = sub {  my $dir = $File::Find::dir;
+                           ## skip subversion files, cmake-created applications, and cmake build-tree files...
+                           #   if ( $dir =~ m|/\.svn| || $dir =~ m|/MacOS| || $dir =~ m|/CMakeFiles| ) { return }
+                           ## skip subversion files and cmake build-tree files... (scanning our application tree)
+                           if ( $dir =~ m|/\.svn| || $dir =~ m|/CMakeFiles| ) { return }
+                           if ( -f $_ ) {
+                               my $file_type = file($_);
+                               $file_type eq 'exe' && push( @binaries, "$File::Find::dir/$_" );
+                               $file_type eq 'sh' && push( @scripts, "$File::Find::dir/$_" );
+                               $file_type eq 'lib' && push( @libraries, "$File::Find::dir/$_" );
+                               $file_type eq 'ldso' && push( @libraries, "$File::Find::dir/$_" );
+                           }
+                        };
+
+    unless ( $quiet ) { print $msg ? $msg . "\n" : "scanning application...\n" }
+    find( { wanted => $find_func }, $dir );
+    unless ( $quiet ) { print "\tfound ",sprintf($spf,scalar(@binaries))," binaries\n" }
+    unless ( $quiet ) { print "\t      ",sprintf($spf,scalar(@scripts))," scripts\n" }
+    unless ( $quiet ) { print "\t      ",sprintf($spf,scalar(@libraries))," shared libraries\n" }
+
+    foreach ( @binaries, @libraries ) {
+        collect_dependencies( $_, $final_pass );
+    }
+    ### collect_dependencies(...) uses carriage return '\r' to rewrite
+    ### over the output of the files being scanned... and a newline here
+    ### moves us down for more output...
+    if ( $verbose ) { print "\n\n" }
+}
+
+sub file {
+    state %cache;
+    my $type = '';
+    my $f = shift(@_);
+    if ( $osname eq "linux" && -l $f ) {
+        ### internal symlinks (like all of the mpi binaries) should be disregarded
+        ### OSX looks for python library linked to Python (i.e. a symlink)... so
+        ### we only do this break for linux (there's probably a better way)
+        return "?";
+    }
+    if ( -f $f ) {
+        my $file = abs_path($f);
+        return $cache{$file} if exists $cache{$file};
+        $type = '?';
+        # assign type based upon filename
+        $f =~ m|\.h(?:pp)?$| && ($type = 'h');
+        $f =~ m@\.c(?:pp|c)?$@ && ($type = 'c');
+        $f =~ m|\.f$| && ($type = 'f');
+        $f eq 'CMakeLists.txt' && ($type = 'cmake');
+        $f =~ m@^(?:m|GNUm|M)akefile$@ && ($type = 'make');
+        if ( $type eq '?' ) {
+            # resort to using file utility...
+            my $_ = `file '$f'`;
+            m|Mach-O.*?executable| && ($type = 'exe');
+            m|Bourne-Again shell script| && ($type = 'sh');
+            m|Mach-O 64-bit bundle| && ($type = 'ldso');
+            m|archive random library| && ($type = 'a');
+            m|ELF.*executable| && ($type = 'exe');
+            if ( m@dynamically linked shared library|ELF.*shared object@ ) {
+                my $nme = basename($f);
+                ### for osx framework libraries can look like 'Python' or 'QtCore' so
+                ### this exception keys off of "*.so" for osx... for linux, the
+                ### 'lib...' check is probably enough...
+                $type =  $nme=~ m|^lib| ? 'lib' : $nme =~ m|\.so$| ? 'ldso' : 'lib';
+            }
+            ##
+            ## we absolutely have to check, because CASA's build system seems to think
+            ## that every python script should be marked as executable...
+            ##
+            if ( -x $f && m|python.*?script text executable| ) {
+                open( my $py, "< $f" );
+                my $first_line = <$py>;
+                close($py);
+                if ( $first_line =~ m|^#!| ) { $type = 'py'; }
+                ## should create remove_execute_permission(...)
+                else { system( "chmod -x $f" ) == 0 or die "could not chmod, $f" } ## fix permissions
+            }
+
+        }
+        $cache{$file} = $type;
+    }
+    return $type;
+}
+
+sub usage {
+    my $error = shift(@_);
+    print "usage:\n\tmake-app [-help] [-q] [-ni] [version=<VERSION-STR>] [template=<LOCAL-TEMPLATE-DIR>] [data=<LOCAL-DATA-DIR>] [branch=<BRANCH-FOR-REVISION>] \\\n";
+    print "\t         ws=<WORKSPACE-PATH> arch=<ARCHITECTURE> out=<OUTPUT-DIR>\n";
+    print "\t\t-q\t\tquiet\n";
+    print "\t\t-help\t\tdisplay this message and exit\n";
+    print "\t\t-ni\t\trun in non-interactive mode\n";
+    die $error if $error;
+}
+
+sub fetch_svn {
+    # Throw away errors like:
+    #
+    #    Error validating server certificate for 'https://svn.cv.nrao.edu:443':
+    #    - The certificate is not issued by a trusted authority. Use the
+    #    fingerprint to validate the certificate manually!
+    #    Certificate information:
+    #    - Hostname: *.cv.nrao.edu
+    #    - Valid: from Thu, 10 Apr 2014 15:47:13 GMT until Mon, 08 Jun 2015 17:48:00 GMT
+    #    - Issuer: http://certs.godaddy.com/repository/, GoDaddy.com, Inc., Scottsdale, Arizona, US
+    #    - Fingerprint: ec:90:2d:e0:83:11:60:b3:8f:99:a7:4c:2c:86:8a:6e:0f:ef:f7:b1
+    #    (R)eject, accept (t)emporarily or accept (p)ermanently?
+    #
+    # opening "echo t | " avoids failing with this error...
+    my $output_dir = shift( @_ );
+    my $url = shift( @_ );
+    my $override = shift( @_ );
+    my $output_target = shift( @_ );
+    my $cmd = ( scalar(@_) > 0 ? shift(@_) : 'export' );
+    my $orig_dir = getcwd( );
+    my $limit = 3;
+    my $msg = "...";
+    my $fetchdir = ($output_target ? $output_target : basename( $url ));
+
+    if ( ! -d $output_dir ) { make_path($output_dir); }
+    chdir( $output_dir ) or die "could not access the output directory '$output_dir'";
+
+    if ( -e $fetchdir ) { die "output directory ($fetchdir) exists" . ($output_dir ? " in $output_dir" : '') }
+
+    if ( $verbose ) { print "<S>\tfetching $url to $output_target" . ($output_target ? '/' : '') . "$fetchdir\n" }
+
+    if ( $override ) {
+    unless( -d $override ) { die "override directory does not exist..." }
+    $msg = "ditto $override $fetchdir";
+    open( SVN, "ditto $override $fetchdir 2>&1 |" );
+    } else {
+    open( SVN, "echo t | svn $cmd $url $fetchdir 2>&1 |" ) or die $!;
+    }
+    my @output = ( );
+    while ( <SVN> ) {
+    ###
+    ### Error validating server certificate for 'https://svn.cv.nrao.edu:443':
+    ###  - The certificate is not issued by a trusted authority. Use the
+    ###    fingerprint to validate the certificate manually!
+    ### Certificate information:
+    ###  - Hostname: *.cv.nrao.edu
+    ###  - Valid: from Thu, 10 Apr 2014 15:47:13 GMT until Mon, 08 Jun 2015 17:48:00 GMT
+    ###  - Issuer: http://certs.godaddy.com/repository/, GoDaddy.com, Inc., Scottsdale, Arizona, US
+    ###  - Fingerprint: ec:90:2d:e0:83:11:60:b3:8f:99:a7:4c:2c:86:8a:6e:0f:ef:f7:b1
+    ### (R)eject, accept (t)emporarily or accept (p)ermanently?
+    if ( m|^Error validating server certificate|               ||
+         m|certificate is not issued by a trusted authority|   ||
+         m|fingerprint to validate the certificate manually|   ||
+         m|^Certificate information:|                          ||
+             m@^ - (?:Hostname|Valid|Issuer|Fingerprint):@         ||
+         m|^\(R\)eject.*ermanently\?|  ) { next }
+        unless ( $quiet ) {
+            if ( scalar(@output) < $limit ) {
+                print "\t<svn> $_";
+            }
+            push( @output, $_ );
+            if ( scalar(@output) > $limit ) {
+                shift(@output);
+            }
+        }
+    }
+    unless ( $quiet ) {
+        print "\t<svn> $msg\n";
+        foreach ( @output ) {
+            print "\t<svn> $_";
+        }
+    }
+    close( SVN );
+    chdir( $orig_dir );
+}
+
+sub relative_path {
+    my $from = shift(@_);
+    my $to = shift(@_);
+    if ( $from eq $to ) { return "." }
+    my $from_is_dir = -d $from;
+    my $common = common_prefix( { $from => 1, $to => 1 } );
+    if ( $common ) {
+        $from =~ s|^$common/?||;
+        $to =~ s|^$common/?||;
+    }
+    my @from = split('/',($from_is_dir ? $from : dirname($from)));
+    return join( '/', ('..') x scalar(@from) ) . (scalar(@from) > 0 ? '/' . $to : $to);
+}
+
+sub common_prefix {
+    my $hash = shift(@_);
+    my @common = ( );
+    my $initialized = '';
+    if ( scalar( keys %$hash ) <= 1 ) { return '' };
+    foreach ( keys %$hash ) {
+        unless ( $initialized ) {
+            @common = split('/');
+            $initialized = 'yes';
+        } elsif ( scalar(@common) > 0 ) {
+            my @next = split('/');
+            my $limit = (scalar(@common) < scalar(@next) ? scalar(@common) : scalar(@next));
+            my @update = ( );
+            for ( $i=0; $i < $limit; ++$i ) {
+                if ( $common[$i] eq $next[$i] ) {
+                    push(@update,$common[$i]);
+                } else {
+                    last;
+                }
+            }
+            @common = @update;
+        }
+    }
+    return join( '/', @common );
+}
+
+sub prefix {
+    my $prefix_candidates = ( );
+    foreach ( keys %main::libraries_dirs ) {
+        my $dir = $_;
+        my $ref = $main::libraries_dirs{$dir};
+
+        my $root = common_prefix($ref);
+        my $prefix_candidate = $dir;
+
+        if ( $osname eq "darwin" ) {
+            $prefix_candidate =~ s|/$root$||;
+            $prefix_candidate =~ s|/Library/Frameworks$||;
+            $prefix_candidate =~ s|/lib$||;
+            $prefix_candidate =~ s|/lib64$||;
+        } elsif ( $osname eq "linux" ) {
+            if ( $prefix_candidate !~ "^/lib" ) {
+                $prefix_candidate =~ s|/lib64$||;
+                $prefix_candidate =~ s|/lib$||;
+            }
+        }
+
+        unless ( $prefix_candidate =~ m|^$workspace| ) {
+            if ( ! exists $prefix_candidates{$prefix_candidate} ) {
+                $prefix_candidates{$prefix_candidate} = 1;
+            } else {
+                $prefix_candidates{$prefix_candidate} += 1;
+            }
+            foreach $file ( keys %$ref ) {
+                $file =~ m|casa| && ( $prefix_candidates{$prefix_candidate} += 10000 );
+                $file =~ m|^libdbus-cpp| && ( $prefix_candidates{$prefix_candidate} += 700 );
+                $file =~ m|^libboost| && ( $prefix_candidates{$prefix_candidate} += 50 );
+                $file =~ m|^librpfits| && ( $prefix_candidates{$prefix_candidate} += 100 );
+                $file =~ m|libgfortran| && ( $prefix_candidates{$prefix_candidate} += 100 );
+                $file =~ m|^libalmawvr| && ( $prefix_candidates{$prefix_candidate} += 300 );
+                $file =~ m|^libwcs| && ( $prefix_candidates{$prefix_candidate} += 100 );
+                $file =~ m|^libpgplot| && ( $prefix_candidates{$prefix_candidate} += 100 );
+            }
+        }
+    }
+
+    sort { $prefix_candidates{$b} <=> $prefix_candidates{$a} } keys %prefix_candidates;
+
+}
+
+sub print_dependencies {
+    ###
+    ### uses global %libraries_dirs
+    ###
+    $python_count = 0;
+    foreach ( keys %main::libraries_dirs ) {
+        my $dir = $_;
+        my $ref = $main::libraries_dirs{$dir};
+        my $root = common_prefix($ref);
+
+        print "->  $dir\n";
+        my $count = 0;
+        my $size = 0;
+
+        foreach ( keys %$ref ) {
+            # trim off common subdirectory
+            if ( $root ) { s|^$root/?||; }
+            if ( length($_) > $size ) { $size = length($_) }
+        }
+        foreach ( keys %$ref ) {
+            if ( m|Python\.framework| ) { $python_count += 1; }
+            # trim off common subdirectory
+            if ( $root ) { s|^$root/?||; }
+            if ( $size <= 40 ) {
+                if ( $count == 0 ) { print "\t"; }
+                print sprintf("%-42s",$_);
+                if ( $count == 1 ) { print "\n"; }
+                $count = ($count + 1) % 2;
+            } else {
+                print "\t$_\n";
+            }
+        }
+        # when only one (less than 40 char) file has been output (the trailing newline is left off)...
+        if ( $count == 1 ) { print "\n"; }
+        print "\n";
+    }
+}
+
+sub resolve_external_links {
+    my $app = shift(@_);
+    unless( -d $app ) { die "cannot resolve symlinks for a non-existant directory ($app)" }
+    $app = abs_path($app);
+
+    my $last_count = 0;
+    my %external = ( );
+
+    my $find_func = sub { if ( -l $_ ) {
+                              my $link = abs_path("$File::Find::dir") . "/$_";
+                              my $target = abs_path(readlink($link));
+                              unless ( $target =~ m|^$app| ) {
+                                  my $local_resolution = check_local_symlink( "$File::Find::dir/$_", $target );
+                                  if ( $local_resolution && $local_resolution ne $_ ) {
+                                      if ( $verbose ) { print "\t\tunlink($_)\n" }
+                                      unlink($_);
+                                      if ( $verbose ) { print "\t\tsymlink($local_resolution,$_)\n" }
+                                      symlink($local_resolution,$_);
+                                  }
+                                  unless ( exists $external{$target} ) {
+                                      $external{$target} = [ ];
+                                  }
+                                  my $ref = $external{$target};
+                                  push( @$ref, $link );
+                              }
+                          } };
+
+    ## first collect up external symbolic links
+    my $trip = 0;
+    unless ( $quiet ) { print "checking symbolic links\n" }
+    while( 1 ) {
+        %external = ( );
+        find( { wanted => $find_func }, $app );
+        my $count = scalar(keys %external);
+        unless ( $quiet ) { print "\t($trip)\tfound $count external symlinks\n" }
+        if ( $count == 0 || $count == $last_count || $trip > 10 ) { last }
+        $last_count = $count;
+        $trip++;
+    }
+
+}
+
+
+##
+##  check_local_symlink( $symlink_path, $destination_path )
+##
+sub check_local_symlink {
+    my $symlink_path = shift(@_);
+    my $destination_path = shift(@_);
+    unless ( $quiet ) {
+        print "\t symlink from:\t$symlink_path\n";
+        print "\t           to:\t$destination_path\n";
+    }
+
+    my $symlinks_found = translate_subdir( $symlink_path, $destination_path );
+
+#   @symlink_path = split('/',$symlink_path);
+#   @destination_path = split('/',$destination_path);
+#   my %symlinks_found = ( );
+#   for ( $sli = $#symlink_path; $sli > 0; --$sli ) {
+#       for ( $dsi = 0; $dsi < $#destination_path; ++$dsi ) {
+#           my $path = join('/',@symlink_path[0 .. $sli]) . '/' . join('/',@destination_path[$dsi .. $#destination_path]);
+#           if ( -e $path ) {
+#               $symlinks_found{$path} = 1;
+#               last;
+#           }
+#       }
+#   }
+
+    my @found = keys %$symlinks_found;
+    my $full_app = abs_path($app_dir);
+    if ( scalar( @found ) == 1                 &&
+         ( $symlink_path =~ m|^$full_app/|     &&
+           $found[0] =~ m|^$full_app/| )       ||
+         ( $symlink_path =~ m|^$app_dir/|      &&
+           $found[0] =~ m|^$app_dir/| )     ) {
+        my $local_symlink = $symlink_path;
+        $local_symlink =~ s|^$full_app/||;
+        $local_symlink =~ s|^$app_dir/||;
+        my $local_destination = $found[0];
+        $local_destination =~ s|^$full_app/||;
+        $local_destination =~ s|^$app_dir/||;
+        my $local_symfile = basename($local_symlink);
+        my $local_destfile = basename($local_destination);
+        my $local_sympath = dirname($local_symlink);
+        my $local_destpath = dirname($local_destination);
+        my @local_sympath = split('/',$local_sympath);
+        my @local_destpath = split('/',$local_destpath);
+        my @common = ( );
+        for ( $i=0; $i < scalar(@local_sympath) && $i < scalar(@local_destpath); ++$i ) {
+            if ( $local_sympath[$i] eq $local_destpath[$i] ) {
+                push( @common, $local_sympath[$i] );
+            } else { last }
+        }
+        my $common = join( '/', @common );
+        ### symlink and destination may both be in the same directory
+        $local_sympath =~ s|^$common||;
+        $local_destpath =~ s|^$common||;
+        ### symlink and destination may not both be in the same directory
+        $local_sympath =~ s|^/||;
+        $local_destpath =~ s|^/||;
+        ### location of symlink within app
+        my @local_offset = split( '/', $local_sympath );
+        my $local_offset = scalar(@local_offset) == 0 ? ($local_destpath ? "./$local_destpath" : '.') : ( $local_destpath ? join( '/', ('..') x scalar(@local_offset), "$local_destpath" ) : join( '/', ('..') x scalar(@local_offset) ) );
+        unless ( $quiet ) { print "\tredirected to:\t$local_offset/$local_destfile ..." }
+        if ( -e dirname($symlink_path) . "/$local_offset/$local_destfile" ) {
+            print " ...exists\n";
+            return "$local_offset/$local_destfile";
+        } else {
+            print " ...does not exist\n";
+        }
+    }
+    return '';
+}
+
+###
+### takes the path to the application as an argument...
+###
+sub adjust_runtime_paths {
+    my $appdir = shift(@_);
+    my @binaries = ( );
+    my @libraries = ( );
+    my %libraries = ( );
+    my $find_func = sub {  my $dir = $File::Find::dir;
+                           ## skip subversion files, cmake-created applications, and cmake build-tree files...
+                           #   if ( $dir =~ m|/\.svn| || $dir =~ m|/MacOS| || $dir =~ m|/CMakeFiles| ) { return }
+                           ## skip subversion files and cmake build-tree files... (scanning our application tree)
+                           if ( $dir =~ m|/\.svn| || $dir =~ m|/CMakeFiles| ) { return }
+                           if ( -f $_ && $dir =~ m|^$appdir| ) {
+                               my $file_type = file($_);
+                               $file_type eq 'exe' && push( @binaries, "$File::Find::dir/$_" );
+                               $file_type eq 'ldso' && push( @binaries, "$File::Find::dir/$_" );
+                               if ( $file_type eq 'lib' ) {
+                                   push( @libraries, "$File::Find::dir/$_" );
+                                   my $abspath = abs_path("$File::Find::dir/$_");
+                                   if ( exists $libraries{$_} && abs_path($libraries{$_}) ne $abspath ) {
+                                       die "two libraries called $_ in $libraries{$_} and $abspath";
+                                   } else {
+                                       $libraries{$_} = exp_path("$File::Find::dir/$_");
+                                       #### resolved local path does not exist: /tmp/CASA.app/Contents/Frameworks/Python.framework/Versions/2.7/bin/../../../../../../../../private/tmp/CASA.app/Contents/Frameworks/Python.framework/Versions/2.7/Python at ./make-app line 201, <INFO> line 3.
+#                                      $libraries{$_} = abs_path("$File::Find::dir") . "/$_";
+#                                      $libraries{$_} = expand("$File::Find::dir") . "/$_";
+                                   }
+                               }
+                           }
+                        };
+
+    unless ( -d $appdir ) { die "adjust_runtime_paths( ) called with non-directory path argument ($appdir)..." }
+    unless ( $quiet ) { print "adjusting runtime paths...\n" }
+    find( { wanted => $find_func }, $appdir );
+    my $abs_appdir = abs_path($appdir);
+    foreach $exe ( @binaries, @libraries ) {
+        next unless -f $exe;
+        my $libname = basename(abs_path($exe));
+        if ( $verbose ) { print "<P>\t$exe\n" }
+        open( INFO, "otool -L $exe |" );
+        foreach ( <INFO> ) {
+            ###
+            ### sometimes otool output for shared libraries does not include paths:
+            ###
+            ### bash$ otool -L /tmp/CASA.app/Contents/Plugins/iconengines/libqsvgicon.dylib
+            ### /tmp/CASA.app/Contents/Plugins/iconengines/libqsvgicon.dylib:
+            ###         libqsvgicon.dylib (compatibility version 0.0.0, current version 0.0.0)
+            ###         /opt/casa/01/Library/Frameworks/QtSvg.framework/Versions/4/QtSvg (compatibility version 4.8.0, current version 4.8.6)
+            ###         /opt/casa/01/Library/Frameworks/QtGui.framework/Versions/4/QtGui (compatibility version 4.8.0, current version 4.8.6)
+            ###         /opt/casa/01/Library/Frameworks/QtCore.framework/Versions/4/QtCore (compatibility version 4.8.0, current version 4.8.6)
+            ###         /opt/casa/01/Library/Frameworks/QtXml.framework/Versions/4/QtXml (compatibility version 4.8.0, current version 4.8.6)
+            ###         /usr/lib/libstdc++.6.dylib (compatibility version 7.0.0, current version 56.0.0)
+            ###         /usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 169.3.0)
+            ### $bash$
+            ###
+            ### initial 'libqsvgicon.dylib' dependency causes 'libqsvgicon.dylib' to
+            ### show up as the directory... throw this away...
+            ###
+            ### note: name could be either the symbolic link name ($_) or the resolved
+            ###       file name (abs_path($_))...
+            ###
+            next if m|$libname|;
+            if ( m|^\s+(\S+).*| && -e $1 ) {
+                my $libref = $1;
+                my ($vol, $dir, $file) = File::Spec->splitpath(exp_path($libref));
+                if ( exists $libraries{$file} ) {
+                    if ( $verbose ) { print "<P>\t*\t$libref\n" }
+                    change_runtime_path( $exe, $libref, $libraries{$file} );
+                } else {
+                    if ( $verbose ) { print "<P>\t\t$libref\n" }
+                }
+            }
+        }
+        close( INFO );
+    }
+}
+
+sub longest_common_substring {
+    ###
+    ### From:
+    ###        http://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Longest_common_substring
+    ###
+    my ($str1, $str2) = @_;
+    my $l_length = 0; # length of longest common substring
+    my $len1 = length $str1;
+    my $len2 = length $str2;
+    my @char1 = (undef, split(//, $str1)); # $str1 as array of chars, indexed from 1
+    my @char2 = (undef, split(//, $str2)); # $str2 as array of chars, indexed from 1
+    my @lc_suffix; # "longest common suffix" table
+    my @substrings; # list of common substrings of length $l_length
+
+    for my $n1 ( 1 .. $len1 ) {
+        for my $n2 ( 1 .. $len2 ) {
+            if ($char1[$n1] eq $char2[$n2]) {
+                # We have found a matching character. Is this the first matching character, or a
+                # continuation of previous matching characters? If the former, then the length of
+                # the previous matching portion is undefined; set to zero.
+                $lc_suffix[$n1-1][$n2-1] ||= 0;
+                # In either case, declare the match to be one character longer than the match of
+                # characters preceding this character.
+                $lc_suffix[$n1][$n2] = $lc_suffix[$n1-1][$n2-1] + 1;
+                # If the resulting substring is longer than our previously recorded max length ...
+                if ($lc_suffix[$n1][$n2] > $l_length) {
+                    # ... we record its length as our new max length ...
+                    $l_length = $lc_suffix[$n1][$n2];
+                    # ... and clear our result list of shorter substrings.
+                    @substrings = ();
+                }
+                # If this substring is equal to our longest ...
+                if ($lc_suffix[$n1][$n2] == $l_length) {
+                    # ... add it to our list of solutions.
+                    push @substrings, substr($str1, ($n1-$l_length), $l_length);
+                }
+            }
+        }
+    }
+    return @substrings;
+}
+
+sub osx_specific_adjustments {
+
+    if ( $osname ne "darwin" ) { return }
+
+    my $appdir = shift( @_ );
+    my @libraries = ( );
+    my @executables = ( );
+    my @libiconv_path = ( );
+    my %libiconv_refs = ( );
+    my $iconv_func = sub {  my $file = $_;
+                            my $type = file($file);
+                            if ( m|^libiconv| ) {
+                                @libiconv_path = ( $File::Find::dir, $file );
+                            }
+                            if ( $type eq 'exe'  ||
+                                 $type eq 'lib'  ||
+                                 $type eq 'ldso'   ) {
+                                open( INFO, "otool -L $file |" );
+                                foreach ( <INFO> ) {
+                                    if ( m|^\s+(\S+libiconv\S+)| ) {
+                                        $libiconv_refs{"$File::Find::dir/$file"} = $1;
+                                    }
+                                }
+                                close( INFO );
+                            }
+                            if ( $type eq 'lib' ) {
+                                push( @libraries, "$File::Find::dir/$file" );
+                            } elsif ( $type eq 'exe' ) {
+                                push( @executables, "$File::Find::dir/$file" );
+                            }
+                         };
+    unless( $quiet ) { print "scanning application for libiconv references...\n" }
+    find( { wanted => $iconv_func }, $appdir );
+    unless( scalar( @libiconv_path ) == 2 ) { die "could not find libiconv within $appdir" }
+    my $oldiconv = $libiconv_path[1];
+    my $newiconv = $oldiconv;
+    $newiconv =~ s|libiconv|libcasa_iconv|;
+
+    unless( $quiet ) { print "\tupdating libiconv references...\n" }
+    foreach $lib ( keys %libiconv_refs ) {
+        my $oldname = $libiconv_refs{$lib};
+        my $newname = $oldname;
+        my $printed_label = '';
+        $newname =~ s|libiconv|libcasa_iconv|;
+        unless ( -w $lib ) { add_write_permission( $lib ) }
+        open( CHG, "install_name_tool -change \"$oldname\" \"$newname\" \"$lib\" 2>&1 |" );
+        foreach ( <CHG> ) {
+            unless ( $printed_label ) {
+                unless( $quiet ) { print "\t\t$lib\n" }
+                $printed_label='yes';
+            }
+            print "\t\t>\t$_";
+        }
+        close( CHG );
+    }
+
+    unless( $quiet ) { print "\tadjusting names of all shared libraries...\n" }
+    my @python_libraries = ( );
+    foreach $lib ( @libraries ) {
+        if ( -l $lib && basename($lib) eq 'Python' ) {
+            push( @python_libraries, $lib );
+        }
+
+        if ( -l $lib ) { next }               ### avoid renaming a library
+                                              ### based upon links which point to it
+        my $newname = basename($lib);
+        my $printed_label = '';
+        unless ( -w $lib )  { add_write_permission( $lib ) }
+        open( CHG, "install_name_tool -id \"$newname\" \"$lib\" 2>&1 |" );
+        foreach ( <CHG> ) {
+            unless( $printed_label ) {
+                print "\t$lib\n";
+                $printed_label='yes';
+            }
+            print "\t\t>\t$_";
+        }
+    }
+
+    if ( scalar(@python_libraries) != 1 ) { die "none or multiple python libraries found: " . join( ', ', @python_libraries ) }
+    foreach $e ( @executables ) {
+        if ( -l $e ) { next }
+        if ( basename($e) eq 'Python' ) {
+            my $libref = '';
+            open( INFO, "otool -L $e |" );
+            foreach ( <INFO> ) {
+                if ( m|^\s+(\S+/Python).*| && -e $1 ) {
+                    $libref = $1;
+                }
+            }
+            close(INFO);
+            if ( $libref ) {
+                my $lib = $python_libraries[0];
+                print "adjusting dynamic loading for $e\n";
+                print "                   of library $lib\n";
+                my $common = common_prefix( { $e => 1, $python_libraries[0] => 1 } );
+                my $libbase = $lib;
+                $libbase =~ s|^$common/?||;
+                my $exebase = $e;
+                $exebase =~ s|^$common/?||;
+                my $relpath = '@loader_path/' . relative_path( $exebase, $libbase );
+                print "               with reference $relpath\n";
+                print "           original reference $libref\n";
+                open( CHG, "install_name_tool -change \"$libref\" \"$relpath\" \"$e\" 2>&1 |" );
+                foreach ( <CHG> ) {
+                    print "\t\t>\t$_";
+                }
+                close( CHG );
+            }
+        }
+    }
+
+    unless( $quiet ) { print "\trenaming $libiconv_path[1] to $newiconv\n" }
+    rename( "$libiconv_path[0]/$libiconv_path[1]", "$libiconv_path[0]/$newiconv" );
+    unless( $quiet ) { print "\tchanging id to \"$newiconv\"...\n" }
+    open( CHG, "install_name_tool -id \"$newiconv\" \"$libiconv_path[0]/$newiconv\" 2>&1 |" );
+    foreach ( <CHG> ) {
+        print "\t\t>\t$_";
+    }
+    close( CHG );
+
+    unless( $quiet ) { print "scanning application for asdmstman plugin...\n" }
+    my $orig_dir = getcwd( );
+    chdir( "$appdir/Contents/Plugins/casa" ) or die "could not change to the plugin directory ($appdir/Contents/Plugins/casa): $!";
+    my $target = '';
+    my $find_asdmstman = sub { if ( -f $_ && m|^libasdmstman.*\.dylib$| ) { $target = "$File::Find::dir/$_" } };
+    find( { wanted => $find_asdmstman }, "../.." );
+    unless( $target ) { die "failed to find asdmstman plugin" }
+    unless( $quiet ) { print "\tcreating symlink to $target in Plugins...\n" }
+    symlink( $target, "libasdmstman.dylib" );
+    chdir( $orig_dir );
+
+    osx_inject_pipeline( );
+}
+
+sub osx_inject_pipeline {
+    print "Copying pipeline\n";
+    $pipelineDirPrefix="Pipeline";
+    # List files in the workspace
+    opendir (DIR, $workspace) or die $!;
+    while (my $file = readdir(DIR)) {
+        #print "$file\n";
+        if ($file=~ /^$pipelineDirPrefix/) {
+            print "$file found.\n";
+            $pipelineBase =  basename($file);
+            print "Base name: " . $pipelineBase."\n";
+            $pipelinedir=$workspace."/".$file;
+            print "Moving $pipelinedir to $data_destination \n";
+            $pipeline_dest = "$data_destination/".basename($file);
+            #move("$pipelinedir", $pipeline_dest);
+            open( DITTO, "/usr/bin/ditto $pipelinedir $pipeline_dest 2>&1 |" );
+            my $msg = "in copying from $_ to $to";
+            while ( <DITTO> ) {
+                if ( $msg ) {
+                    print $msg . "\n";
+                    $msg = '';
+                }
+                print "<ditto>\t\t\t$_";
+            }
+            close(DITTO);
+        }
+    }
+    closedir(DIR);
+
+    #Trim whitespaces
+    $pipelineBase =~ s/^\s+|\s+$//g;
+
+    if ($pipelineBase ne "") {
+        $currdir = getcwd;
+        chdir("$data_destination/../");
+        print "In ".getcwd."\n";
+        print "Symlinking: Resources/$pipelineBase to: ./pipeline\n";
+        symlink( "Resources/$pipelineBase", "./pipeline" );
+        chdir($currdir);
+        print "In ".getcwd."\n";
+    }
+    print "Done with pipeline\n";
+}
+
+sub linux_specific_adjustments {
+
+    if ( $osname ne "linux" ) { return }
+
+    my $appdir = shift( @_ );
+    my @libraries = ( );
+    my @executables = ( );
+    my @loadable_objects = ( );
+    my @python_scripts = ( );
+    my $executable_func = sub {  next unless -f $_;
+                                 my $file = $_;
+                                 my $type = file($file);
+                                 $type eq 'exe' &&  ( push( @executables, "$File::Find::dir/$file" ), next );
+                                 $type eq 'lib' &&  ( push( @libraries, "$File::Find::dir/$file" ), next );
+                                 $type eq 'ldso' && ( push( @loadable_objects, "$File::Find::dir/$file" ), next );
+                                 $type eq 'py' && ( push( @python_scripts, "$File::Find::dir/$file" ), next );
+                              };
+
+    unless( $quiet ) { print "scanning application for binaries...\n" }
+    find( { wanted => $executable_func }, $appdir );
+
+    if ( scalar(@executables) > 0 || scalar(@loadable_objects) > 0 || scalar(@libraries) > 0 ) {
+        print "updating executables with chrpath...\n";
+        foreach my $exe ( @executables, @loadable_objects, @libraries ) {
+            print "+++++++++++++++++>>>>>>> $exe\n";
+            my @output = ( );
+            my $relative_path = relative_path( dirname($exe),  "$appdir/lib" );
+            $relative_path =~ s|/$||;
+            unless ( -w $exe ) { add_write_permission( $exe ) }
+            print "--- chrpath -c -r '\$ORIGIN/$relative_path' $exe 2>&1 |" . "\n";
+            open( my $chrpath, "chrpath -c -r '\$ORIGIN/$relative_path' $exe 2>&1 |" );
+            foreach ( <$chrpath> ) {
+                m|$exe: RPATH converted to RUNPATH| && next;
+                m|$exe: RUNPATH=| && next;
+                m|$exe: new RUNPATH:| && next;
+                push( @output, $_ );
+            }
+            close( $chrpath );
+            foreach my $l ( @output ) {
+                print "        $l";
+            }
+        }
+    }
+
+    if ( scalar(@libraries) > 0 ) {
+        print "stripping selected libraries...\n";
+        foreach my $lib ( @libraries ) {
+            if ( $lib =~ m|Qt| ) {
+                print "        stripping ", basename($lib), "\n";
+                open( my $strip, "strip --strip-debug $lib |" );
+                while ( <$strip> ) {
+                    print "                $_";
+                }
+                close($strip);
+            }
+        }
+    }
+
+    if ( scalar(@python_scripts) > 0 ) {
+        foreach my $path ( @python_scripts ) {
+            my @script = ( );
+            open( my $s, "< $path" );
+            while ( <$s> ) {
+                if ( scalar(@script) == 0 ) {
+                    push( @script, "#!/bin/env python\n" );
+                } else {
+                    push( @script, $_ );
+                }
+            }
+            close( $s );
+            open( $s, "> $path" );
+            foreach ( @script ) {
+                print $s $_;
+            }
+            close( $s );
+        }
+    }
+
+    linux_substitute( "$appdir/bin/casa-config" ) if -f "$appdir/bin/casa-config";
+    linux_substitute( "$appdir/.revstate" ) if -f "$appdir/.revstate";
+}
+
+sub add_write_permission {
+    my $file = shift(@_);
+    unless ( -e $file ) { die "file ($file) does not exist" }
+    open( my $fh, "<",  $file );
+    my $perm = (stat $fh)[2] & 07777;
+    chmod( $perm | 0600, $fh ) or die "$file: $!";
+    close( $fh );
+}
+
+sub fetch_revision {
+    my $branch = shift(@_);
+    my $result='';
+    my $current = '';
+    my %branches = ( );
+    open( my $branches, "echo t | svn info --depth immediates https://svn.cv.nrao.edu/svn/casa/branches 2> /dev/null |" );
+    foreach ( <$branches> ) {
+        if ( m|Path:\s+$branch-(\S+)| ) {
+            my @ver = split('_',$1);
+            my $place = 1;
+            $current = 0;
+            foreach $val ( reverse @ver ) {
+                $current += $val * $place;
+                $place *= 10;
+            }
+        } elsif ( m|^Last Changed Rev: (\d+).*| && $current ) {
+            $branches{$current} = $1;
+            $current = 0;
+        }
+    }
+
+    my $version = max(keys %branches);
+    return $branches{$version};
+}
+
+sub adjust_version_file {
+    ## this script is now used to create a viewer distribution too...
+    if ( $distro_name ne 'casa' ) { return }
+    my $appdir = shift(@_);
+    my $version = shift(@_);
+    unless ( $version ) { die "could not find casa revision" }
+    unless ( -d $appdir ) { die "app directory ($appdir) does not exist" }
+    unless ( -f "$version_file" ) { die "version file ($version_file) does not exist" }
+    my @output = ( );
+    open( my $VER, "< $version_file" );
+    foreach ( <$VER> ) {
+        s|\$.*?\$|$version|;
+        push( @output, $_ );
+    }
+    close( $VER );
+    open( my $VER, "> $version_file" );
+    foreach $line ( @output ) {
+        print $VER "$line";
+    }
+    close( $VER );
+}
+
+sub ditto {
+    my $from = shift(@_);
+    my $to = shift(@_);
+
+    ## when called from 'find' python's current directory is
+    ## in the directory that we're copying to...
+    ##if ( ! -e $to ) { $to = basename($to) }
+    open( DITTO, ($osname eq "linux" ? "/bin/cp --dereference --remove-destination -Rp $from $to 2>&1 |" : "/usr/bin/ditto $from $to 2>&1 |") );
+    my $msg = "in copying from $from to $to";
+    while ( <DITTO> ) {
+        if ( $msg ) {
+            print $msg . "\n";
+            $msg = '';
+        }
+        print "<ditto>\t\t\t$from";
+    }
+}
+
+sub libroot {
+    my $_ = shift(@_);
+    if ( -e $_ ) {
+        my ($name,$path,$suffix) = fileparse($_,qr/(\.so(?:\.[^.]+)*)$/);
+        return $name;
+    }
+}
+
+sub get_revision_information {
+    my $ws = shift(@_);
+    if ( -d "$ws/.svn" ) { return get_subversion_information($ws) }
+    elsif ( -d "$ws/code/.svn" ) { return get_subversion_information("$ws/code") }
+    else { die "could not determine revision control information" }
+}
+
+sub get_subversion_information {
+    my $dir = shift(@_);
+    my $revision = "";
+    my $url = "";
+    open( my $fd, "svn info $dir |" );
+    foreach ( <$fd> ) {
+        m|^URL:\s+(.+?)\n?$| && ( $url = $1, next );
+        m|^Last Changed Rev:\s+(\S+)| && ( $revision = $1, next );
+    }
+    die "failed to find subversion information" unless $revision && $url;
+    return ($url,$revision);
+}
+
+$linux_substitute_hostinfo = '';
+$linux_substitute_svnurl = '';
+$linux_substitute_svnrev = '';
+sub linux_substitute {
+    my $path = shift(@_);
+    open( my $fd, "< $path" ) or die "could not open $path";
+    my @cache = ( );
+    unless ( $linux_substitute_hostinfo ) {
+        open( my $rhinfo, "< /etc/redhat-release" ) or die "could not determine redhat host information";
+        chomp( $linux_substitute_hostinfo = <$rhinfo> );
+        close( $rhinfo );
+    }
+    unless ( $linux_substitute_svnurl && $linux_substitute_svnrev ) {
+        ($linux_substitute_svnurl, $linux_substitute_svnrev) = get_revision_information( $workspace );
+    }
+    foreach ( <$fd> ) {
+        s|\@\@VERSION\@\@|$version|g;
+        s|\@\@HOSTINFO\@\@|$linux_substitute_hostinfo|g;
+        s|\@\@SVNROOT\@\@|$linux_substitute_svnurl|g;
+        s|\@\@SVNVERSION\@\@|$linux_substitute_svnrev|g;
+        push( @cache, $_ );
+    }
+    close( $fd );
+    open( $fd, "> $path" ) or die "could not write to $path";
+    foreach ( @cache ) {
+        print $fd $_;
+    }
+    close( $fd );
+}
+
+sub os_release {
+    my $os = shift(@_);
+    if ( $os eq "linux" ) {
+	if ( -f "/etc/SuSE-release" ) {
+	    return "suse";
+	} elsif ( -f "/etc/redhat-release" ) {
+	    open( IN, "</etc/redhat-release" );
+	    my $rhver = <IN>;
+	    close( IN );
+	    if ( $rhver =~ m/^Red Hat Enterprise.*release 5/ ) {
+		return "el5";
+	    } elsif ( $rhver =~ m/^Scientific Linux SL release 5.*/ ) {
+		return "el5";
+	    } elsif ( $rhver =~ m/^Red Hat Enterprise.*release 6/ ) {
+		return "el6";
+	    } elsif ( $rhver =~ m/^Scientific Linux SL release 6.*/ ) {
+		return "el6";
+	    } elsif ( $rhver =~ m/^Red Hat Enterprise/ ) {
+		die "unknown enterprise version: $rhver";
+	    } elsif ( $rhver =~ m/^Red Hat Linux release ([0-9.]+)/ ) {
+		die "we no longer support: $rhver";
+	    } elsif ( $rhver =~ m/^Mandrake Linux/  ) {
+		die "we don't yet support mandrake";
+	    } else {
+		die "cannot understand version string: $rhver";
+	    }
+
+	} else { die "we're not in linux land" }
+
+    } else { return $os }
+}
