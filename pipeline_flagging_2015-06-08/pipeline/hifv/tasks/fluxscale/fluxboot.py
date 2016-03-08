@@ -4,6 +4,7 @@ import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.utils as utils
 
 import numpy as np
 import math
@@ -105,6 +106,7 @@ class Fluxboot(basetask.StandardTaskTemplate):
                 for myfield in fields:
                     spws = field_spws[myfield]
                     # spws = [1,2,3]
+                    jobs = []
                     for myspw in spws:
                         reference_frequency = center_frequencies[myspw]
                         try:
@@ -122,11 +124,22 @@ class Fluxboot(basetask.StandardTaskTemplate):
                         # Double check, but the fluxdensity=-1 should not matter since
                         #  the model image take precedence
                         try:
-                            setjy_result = self._fluxgains_setjy(calMs, str(myfield), str(myspw), model_image, -1)
+                            job = self._fluxgains_setjy(calMs, str(myfield), str(myspw), model_image, -1)
+                            jobs.append(job)
+
                             # result.measurements.update(setjy_result.measurements)
                         except Exception, e:
                             # something has gone wrong, return an empty result
-                            LOG.error('Unable to complete flux scaling operation for field '+str(myfield)+', spw '+str(myspw))
+                            LOG.error('Unable merge setjy jobs for flux scaling operation for field '+str(myfield)+', spw '+str(myspw))
+                            LOG.exception(e)
+
+                    LOG.info("Merging flux scaling operation for setjy jobs for "+self.inputs.vis)
+                    jobs_and_components = utils.merge_jobs(jobs, casa_tasks.setjy, merge=('spw',))
+                    for job, _ in jobs_and_components:
+                        try:
+                            self._executor.execute(job)
+                        except Exception, e:
+                            LOG.error('Unable to complete flux scaling operation.')
                             LOG.exception(e)
 
             LOG.info("Making gain tables for flux density bootstrapping")
@@ -418,6 +431,10 @@ class Fluxboot(basetask.StandardTaskTemplate):
     def _do_setjy(self, calMs, results):
         
         for result in results:
+
+            jobs_calMs = []
+            jobs_vis = []
+
             for spw_i in result[1]:
                 
                 LOG.info('Running setjy on spw '+str(spw_i))
@@ -434,17 +451,30 @@ class Fluxboot(basetask.StandardTaskTemplate):
                              'standard'       : 'manual',
                              'usescratch'     : True}
         
-                job = casa_tasks.setjy(**task_args)
-            
-                self._executor.execute(job)
+                #job = casa_tasks.setjy(**task_args)
+                jobs_calMs.append(casa_tasks.setjy(**task_args))
+
+                #self._executor.execute(job)
                 
                 #Run on the ms
                 task_args['vis'] = self.inputs.vis
-                job = casa_tasks.setjy(**task_args)
-                self._executor.execute(job)
+                jobs_vis.append(casa_tasks.setjy(**task_args))
+                #job = casa_tasks.setjy(**task_args)
+                #self._executor.execute(job)
                 
                 if (abs(self.spix) > 5.0):
                     LOG.warn("abs(spix) > 5.0 - Fail")
+
+            # merge identical jobs into one job with a multi-spw argument
+            LOG.info("Merging setjy jobs for calibrators.ms")
+            jobs_and_components_calMs = utils.merge_jobs(jobs_calMs, casa_tasks.setjy, merge=('spw',))
+            for job, _ in jobs_and_components_calMs:
+                self._executor.execute(job)
+
+            LOG.info("Merging setjy jobs for "+self.inputs.vis)
+            jobs_and_components_vis = utils.merge_jobs(jobs_vis, casa_tasks.setjy, merge=('spw',))
+            for job, _ in jobs_and_components_vis:
+                self._executor.execute(job)
         
         LOG.info("Flux density bootstrapping finished")
         
@@ -468,7 +498,7 @@ class Fluxboot(basetask.StandardTaskTemplate):
         
             job = casa_tasks.setjy(**task_args)
             
-            return self._executor.execute(job)
+            return job
         except Exception, e:
             print(e)
             return None

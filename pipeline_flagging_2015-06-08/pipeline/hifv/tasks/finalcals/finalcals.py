@@ -6,6 +6,7 @@ import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.hif.heuristics.findrefant as findrefant
+import pipeline.infrastructure.utils as utils
 
 import os
 import numpy as np
@@ -19,6 +20,7 @@ from pipeline.hif.tasks import bandpass
 from pipeline.hif.tasks import applycal
 from pipeline.hifv.heuristics import find_EVLA_band, getCalFlaggedSoln, getBCalStatistics
 from pipeline.hifv.tasks.setmodel.setmodel import find_standards, standard_sources
+from pipeline.hifv.heuristics import do_bandpass
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -98,10 +100,11 @@ class Finalcals(basetask.StandardTaskTemplate):
         ##context.callibrary.add(calto, calfrom)
         
         LOG.info("Initial BP gain calibration complete")
-        
 
-        bandpass_result = self._do_bandpass(bpcaltable, context=context, refAnt=refAnt,
+        bandpass_job = do_bandpass(self.inputs.vis, bpcaltable, context=context, RefAntOutput=refAnt,
                                             ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse)
+
+        self._executor.execute(bandpass_job)
         
         # Force calwt for the bp table to be False
         ##calto = callibrary.CalTo(self.inputs.vis)
@@ -371,67 +374,6 @@ class Finalcals(basetask.StandardTaskTemplate):
         job = casa_tasks.gaincal(**bpdgains_task_args)
 
         return self._executor.execute(job)
-    
-    def _do_bandpass(self, caltable, context=None, refAnt=None, ktypecaltable=None, bpdgain_touse=None):
-        """Run CASA task bandpass"""
-
-        m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
-        bandpass_field_select_string = context.evla['msinfo'][m.name].bandpass_field_select_string
-        bandpass_scan_select_string = context.evla['msinfo'][m.name].bandpass_scan_select_string
-        # minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
-        minBL_for_cal = max(3,int(len(m.antennas)/2.0))
-
-        # bandtype = 'B'
-        bandpass_inputs = bandpass.ChannelBandpass.Inputs(context,
-            vis = self.inputs.vis,
-            caltable = caltable,
-            field = bandpass_field_select_string,
-            spw = '',
-            intent = '',
-            scan = bandpass_scan_select_string,
-            solint = 'inf',
-            combine = 'scan',
-            refant = refAnt.lower(),
-            minblperant = minBL_for_cal,
-            minsnr = 5.0,
-            solnorm = False)
-
-        BPGainTables = list(self.inputs.context.callibrary.active.get_caltable())
-        BPGainTables.append(ktypecaltable)
-        BPGainTables.append(bpdgain_touse)
-
-        bandpass_task_args = {'vis'         :self.inputs.vis,
-                              'caltable'    :caltable,
-                              'field'       :bandpass_field_select_string,
-                              'spw'         :'',
-                              'intent'      :'',
-                              'selectdata'  :True,
-                              'uvrange'     :'',
-                              'scan'        :bandpass_scan_select_string,
-                              'solint'      :'inf',
-                              'combine'     :'scan',
-                              'refant'      :refAnt.lower(),
-                              'minblperant' :minBL_for_cal,
-                              'minsnr'      :5.0,
-                              'solnorm'     :False,
-                              'bandtype'    :'B',
-                              'fillgaps'    :0,
-                              'smodel'      :[],
-                              'append'      :False,
-                              'docallib'    :False,
-                              'gaintable'   :BPGainTables,
-                              'gainfield'   :[''],
-                              'interp'      :[''],
-                              'spwmap'      :[],
-                              'parang'      :False}
-
-        #bandpass_inputs.refant = bandpass_inputs.refant.lower()
-
-        #bandpass_task = bandpass.ChannelBandpass(bandpass_inputs)
-
-        job = casa_tasks.bandpass(**bandpass_task_args)
-
-        return self._executor.execute(job)
       
     def _do_avgphasegaincal(self,caltable, context, refAnt, ktypecaltable=None, bpcaltable=None):
         
@@ -611,6 +553,7 @@ class Finalcals(basetask.StandardTaskTemplate):
             for myfield in fields:
                 spws = field_spws[myfield]
                 #spws = [1,2,3]
+                jobs = []
                 for myspw in spws:
                     reference_frequency = center_frequencies[myspw]
                     try:
@@ -625,14 +568,24 @@ class Finalcals(basetask.StandardTaskTemplate):
                     
                     LOG.info("Setting model for field "+str(myfield)+" spw "+str(myspw)+" using "+model_image)
 
-                    #Double check, but the fluxdensity=-1 should not matter since
+                    # Double check, but the fluxdensity=-1 should not matter since
                     #  the model image take precedence
                     try:
-                        setjy_result = self._do_setjy(calMs, str(myfield), str(myspw), model_image, -1)
-                        #result.measurements.update(setjy_result.measurements)
+                        job = self._do_setjy(calMs, str(myfield), str(myspw), model_image, -1)
+                        jobs.append(job)
+                        # result.measurements.update(setjy_result.measurements)
                     except Exception, e:
                         # something has gone wrong, return an empty result
-                        LOG.error('Unable to complete flux scaling operation')
+                        LOG.error('Unable to add flux scaling operation')
+                        LOG.exception(e)
+
+                LOG.info("Merging flux scaling operation for setjy jobs for "+self.inputs.vis)
+                jobs_and_components = utils.merge_jobs(jobs, casa_tasks.setjy, merge=('spw',))
+                for job, _ in jobs_and_components:
+                    try:
+                        self._executor.execute(job)
+                    except Exception, e:
+                        LOG.error('Unable to complete flux scaling operation.')
                         LOG.exception(e)
                         
         
@@ -655,7 +608,7 @@ class Finalcals(basetask.StandardTaskTemplate):
         
             job = casa_tasks.setjy(**task_args)
             
-            return self._executor.execute(job)
+            return job
         except Exception, e:
             print(e)
             return None
@@ -783,6 +736,7 @@ class Finalcals(basetask.StandardTaskTemplate):
         LOG.info("Setting power-law fit in the model column")
         
         for result in results:
+            jobs_calMs = []
             for spw_i in result[1]:
                 
                 try:
@@ -800,11 +754,18 @@ class Finalcals(basetask.StandardTaskTemplate):
                                  'standard'       : 'manual',
                                  'usescratch'     : True}
         
-                    job = casa_tasks.setjy(**task_args)
+                    # job = casa_tasks.setjy(**task_args)
+                    jobs_calMs.append(casa_tasks.setjy(**task_args))
             
-                    self._executor.execute(job)
+                    #self._executor.execute(job)
                 except Exception, e:
                     print(e)
+
+            # merge identical jobs into one job with a multi-spw argument
+            LOG.info("Merging setjy jobs for calibrators.ms")
+            jobs_and_components_calMs = utils.merge_jobs(jobs_calMs, casa_tasks.setjy, merge=('spw',))
+            for job, _ in jobs_and_components_calMs:
+                self._executor.execute(job)
                 
         return True
 

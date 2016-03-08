@@ -41,13 +41,29 @@ class T2_4MDetailsGaincalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         phase_vs_time_subpages = {}
         diagnostic_amp_vs_time_subpages = {}
         diagnostic_phase_vs_time_subpages = {}
-
+        diagnostic_solints = collections.defaultdict(dict)
 
         for result in results:
             vis = os.path.basename(result.inputs['vis'])
             ms = context.observing_run.get_ms(vis)
 
-            applications.extend(self.get_gaincal_applications(context, result, ms))
+            ms_applications = self.get_gaincal_applications(context, result, ms)
+            applications.extend(ms_applications)
+
+            try:
+                diag_phase = [a for a in ms_applications
+                              if a.calmode == 'Phase only'
+                              and 'TARGET' not in a.intent][0]
+                solint = 'int' if 'Per integration' in diag_phase.solint else diag_phase.solint
+                diagnostic_solints[vis]['phase'] = solint
+            except IndexError:
+                diagnostic_solints[vis]['phase'] = 'N/A'
+
+            try:
+                diag_solint = result.calampresult.final[0].origin.inputs['solint']
+                diagnostic_solints[vis]['amp'] = diag_solint
+            except IndexError:
+                diagnostic_solints[vis]['amp'] = 'N/A'
 
             # generate the phase structure plots
             plotter = gaincal_displays.RMSOffsetVsRefAntDistanceChart(context, result)
@@ -161,7 +177,8 @@ class T2_4MDetailsGaincalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             'amp_vs_time_subpages': amp_vs_time_subpages,
             'phase_vs_time_subpages': phase_vs_time_subpages,
             'diagnostic_amp_vs_time_subpages': diagnostic_amp_vs_time_subpages,
-            'diagnostic_phase_vs_time_subpages': diagnostic_phase_vs_time_subpages
+            'diagnostic_phase_vs_time_subpages': diagnostic_phase_vs_time_subpages,
+            'diagnostic_solints': diagnostic_solints
         })
 
     def get_gaincal_applications(self, context, result, ms):
@@ -194,7 +211,7 @@ class T2_4MDetailsGaincalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
             calmode = calapp.origin.inputs['calmode']
             calmode = calmode_map.get(calmode, calmode)
-            a = GaincalApplication(ms.basename, gaintable, solint, calmode,
+            a = GaincalApplication(ms.basename, gaintable, calmode, solint,
                                    to_intent, spw)
             applications.append(a)
 

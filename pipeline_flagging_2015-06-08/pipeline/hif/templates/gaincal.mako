@@ -82,8 +82,8 @@ $(document).ready(function() {
 % for application in applications:
 		<tr>
 			<td>${application.ms}</td>
-		  	<td>${application.solint}</td>
 		  	<td>${application.calmode}</td>
+		  	<td>${application.solint}</td>
 		  	<td>${application.intent}</td>
 		  	<td>${application.spw}</td>
 		  	<td>${application.gaintable}</td>
@@ -208,18 +208,24 @@ $(document).ready(function() {
                   title_id="diagnostic_phase_vs_time_plots">
 
 	<%def name="title()">
-		Phase vs time for solint='int'
+		Phase vs time
 	</%def>
 
 	<%def name="preamble()">
-		<p>Plots show the phase correction calculated using solint='int'. This
-		correction is not applied to the target. 
-		A plot is shown for each spectral window, with phase correction data points
-		plotted per antenna and correlation as a function of time.</p>
+		<p>These diagnostic plots show the phase solution for a calibration
+            generated using a short solution interval. This calibration is not applied
+            to the target. One plot is shown for each non-combined spectral
+            window, with phase correction plotted per antenna and
+            correlation as a function of time.</p>
 
-		<p>Click the summary plots to enlarge them, or the spectral window heading to
-		see detailed plots per spectral window and antenna.</p> 
+		<p>Click the summary plots to enlarge them, or the spectral window
+            heading to see detailed plots per spectral window and antenna.</p>
 	</%def>
+
+    <%def name="ms_preamble(ms)">
+        <p>Plots show the diagnostic phase calibration for ${ms} calculated
+            using solint='${diagnostic_solints[ms]['phase']}'.</p>
+    </%def>
 
 	<%def name="mouseover(plot)">Click to show phase vs time for spectral window ${plot.parameters['spw']}</%def>
 
@@ -244,18 +250,24 @@ $(document).ready(function() {
                   title_id="diagnostic_amp_vs_time_plots">
 
 	<%def name="title()">
-		Amplitude vs time for solint='int'
+		Amplitude vs time
 	</%def>
 
 	<%def name="preamble()">
-		<p>Plots show the amplitude correction calculated using solint='int'. This
-		correction is not applied to the target. 
-		A plot is shown for each spectral window, with phase correction data points
-		plotted per antenna and correlation as a function of time.</p>
+		<p>These diagnostic plots show the amplitude solution for a calibration
+            generated using a short solution interval. This calibration is not applied
+            to the target. One plot is shown for each non-combined spectral
+            window, with amplitude correction plotted per antenna and
+            correlation as a function of time.</p>
 
-		<p>Click the summary plots to enlarge them, or the spectral window heading to
-		see detailed plots per spectral window and antenna.</p> 
+		<p>Click the summary plots to enlarge them, or the spectral window
+            heading to see detailed plots per spectral window and antenna.</p>
 	</%def>
+
+    <%def name="ms_preamble(ms)">
+        <p>Plots show the diagnostic amplitude calibration for ${ms} calculated
+            using solint='${diagnostic_solints[ms]['amp']}'.</p>
+    </%def>
 
 	<%def name="mouseover(plot)">Click to show amplitude vs time for spectral window ${plot.parameters['spw']}</%def>
 

@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 import os
 import re
-import tempfile
+import subprocess
 import types
 
 import pipeline.infrastructure as infrastructure
@@ -122,7 +122,11 @@ class FindCont(basetask.StandardTaskTemplate):
 
                     # Estimate memory usage and adjust chanchunks parameter to avoid
                     # exceeding the available memory.
-                    mem_bytes = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')
+                    try:
+                        mem_bytes = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')
+                    except ValueError:
+                        # SC_PHYS_PAGES can be missing on OS X
+                        mem_bytes = int(subprocess.check_output(['sysctl', '-n', 'hw.memsize']).strip())
                     mem_usable_bytes = 0.8 * mem_bytes
                     ms = context.observing_run.get_ms(name=inputs.vis[0])
                     spw_info = ms.get_spectral_window(spwid)
