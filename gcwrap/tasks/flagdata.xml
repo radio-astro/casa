@@ -978,11 +978,11 @@
                              'tail' ==> flag all but an interval at the beginning of scan
                              'end'  ==> flag all but an interval at end of scan
 
-                             Visual representation of quack mode flagging in one scan with 4s duration.
+                             Visual representation of quack mode flagging one scan with 1s duration.
                              The following diagram shows what is flagged for each quack mode when 
-                             quackinterval is set to 1.0. The flagged part is represented by crosses (+++++++++)
+                             quackinterval is set to 0.25s. The flagged part is represented by crosses (+++++++++)
 
-                                         scan with 4s duration
+                                         scan with 1s duration
                              --------------------------------------------
                              beg
                              +++++++++++---------------------------------
