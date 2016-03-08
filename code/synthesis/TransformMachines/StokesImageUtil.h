@@ -148,6 +148,8 @@ public:
   
   // Convert to Stokes PSF
   static void ToStokesPSF(ImageInterface<Float>& out, ImageInterface<Complex>& in);
+
+  static void ToStokesSumWt(Matrix<Float> sumwtStokes, Matrix<Float> sumwtCorr);
   
   // Find the mapping from pixel on the Stokes Axis to I,Q,U,V
   static Int StokesPolMap(Vector<Int>& map, const CoordinateSystem& coord);

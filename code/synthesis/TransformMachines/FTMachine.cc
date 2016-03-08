@@ -2093,12 +2093,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  // during PSF generation.
 	}
 
-	// TODO : Need a function that takes sumWeights from corrToStokes here....
-		
-	AlwaysAssert( ( (imstore->sumwt())->shape()[2] == sumWeights.shape()[0] ) && 
-		      ((imstore->sumwt())->shape()[3] == sumWeights.shape()[1] ) , AipsError );
+	// Take sumWeights from corrToStokes here....
+	Matrix<Float> sumWeightStokes( (imstore->sumwt())->shape()[2], (imstore->sumwt())->shape()[3]   );
+	StokesImageUtil::ToStokesSumWt( sumWeightStokes, sumWeights );
 
-	(imstore->sumwt())->put( sumWeights.reform((imstore->sumwt())->shape()) );
+	AlwaysAssert( ( (imstore->sumwt())->shape()[2] == sumWeightStokes.shape()[0] ) && 
+		      ((imstore->sumwt())->shape()[3] == sumWeightStokes.shape()[1] ) , AipsError );
+
+	(imstore->sumwt())->put( sumWeightStokes.reform((imstore->sumwt())->shape()) );
 	
 
       }

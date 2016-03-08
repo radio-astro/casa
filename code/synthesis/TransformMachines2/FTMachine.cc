@@ -1902,6 +1902,10 @@ using namespace casa::vi;
 	  // during PSF generation.
 	}
 	
+	// Take sumWeights from corrToStokes here....
+	Matrix<Float> sumWeightStokes( (imstore->sumwt())->shape()[2], (imstore->sumwt())->shape()[3]   );
+	StokesImageUtil::ToStokesSumWt( sumWeightStokes, sumWeights );
+
 	AlwaysAssert( ( (imstore->sumwt())->shape()[2] == sumWeights.shape()[0] ) && 
 		      ((imstore->sumwt())->shape()[3] == sumWeights.shape()[1] ) , AipsError );
 

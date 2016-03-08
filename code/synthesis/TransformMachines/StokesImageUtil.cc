@@ -1177,6 +1177,24 @@ void StokesImageUtil::ToStokesPSF(ImageInterface<Float>& out, ImageInterface<Com
   }
 };
 
+void StokesImageUtil::ToStokesSumWt(Matrix<Float> sumwtStokes, Matrix<Float> sumwtCorr)
+{
+  AlwaysAssert( sumwtStokes.shape()[1] == sumwtCorr.shape()(1) , AipsError ); //same nchan
+  AlwaysAssert( sumwtCorr.shape()[0] > 0, AipsError ); // at least one correlation gridded.
+
+  /// Pick the value from the first correlation plane, and fill it into all stokes planes.
+  /// This is valid when the same weights are used across correlations.
+  for(uInt pol=0;pol<sumwtStokes.shape()[0];pol++)
+    {
+      for(uInt chan=0;chan<sumwtStokes.shape()[1];chan++)
+	{
+	  sumwtStokes(pol,chan) = sumwtCorr(0,chan);
+	}
+    }
+
+}
+
+
 #if 0
 void StokesImageUtil::ToStokesPSF(ImageInterface<Float>& out, ImageInterface<Complex>& in) {
   

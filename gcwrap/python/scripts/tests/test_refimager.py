@@ -931,11 +931,23 @@ class test_stokes(testref_base):
           tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10, stokes='QU')
           self.checkall(imexist=[self.img+'.image'],imval=[(self.img+'.image',2.0,[50,50,0,0]),(self.img+'.image',3.0,[50,50,1,0])  ])
 
-#     def test_stokes_mfs_Q(self):
-#          """ [onefield] Test_Stokes_mfs_Q : mfs with stokes Q"""
-#          self.prepData('refim_point_linRL.ms')
-#          tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10, stokes='Q')
-#          self.checkall(imexist=[self.img+'.image'],imval=[(self.img+'.image',2.0,[50,50,0,0]) ] )
+     def test_stokes_mfs_Q(self):
+          """ [onefield] Test_Stokes_mfs_Q : mfs with stokes Q"""
+          self.prepData('refim_point_linRL.ms')
+          tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10, stokes='Q')
+          self.checkall(imexist=[self.img+'.image'],imval=[(self.img+'.image',2.0,[50,50,0,0]) ] )
+
+     def test_stokes_mfs_U(self):
+          """ [onefield] Test_Stokes_mfs_U : mfs with stokes U"""
+          self.prepData('refim_point_linRL.ms')
+          tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10, stokes='U')
+          self.checkall(imexist=[self.img+'.image'],imval=[(self.img+'.image',3.0,[50,50,0,0]) ] )
+
+     def test_stokes_mfs_V(self):
+          """ [onefield] Test_Stokes_mfs_V : mfs with stokes V"""
+          self.prepData('refim_point_linRL.ms')
+          tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10, stokes='V')
+          self.checkall(imexist=[self.img+'.image'],imval=[(self.img+'.image',4.0,[50,50,0,0]) ] )
 
      def test_stokes_cube_I(self):
           """ [onefield] Test_Stokes_cube_I : cube with stokes I"""
@@ -955,22 +967,34 @@ class test_stokes(testref_base):
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10, stokes='QU',interactive=0,specmode='cube',interpolation='nearest')
           self.checkall(imexist=[self.img+'.image'],imval=[(self.img+'.image',2.0,[50,50,0,0]),(self.img+'.image',2.0,[50,50,0,1]),(self.img+'.image',2.0,[50,50,0,2]),  (self.img+'.image',3.0,[50,50,1,0]),(self.img+'.image',3.0,[50,50,1,1]),(self.img+'.image',3.0,[50,50,1,2])] )
 
-#     def test_stokes_cube_Q(self):
-#          """ [onefield] Test_Stokes_cube_Q : cube with stokes Q"""
-#          self.prepData('refim_point_linRL.ms')
-#          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10, stokes='Q',interactive=0,specmode='cube',interpolation='nearest')
-#          self.checkall(imexist=[self.img+'.image'],imval=[(self.img+'.image',2.0,[50,50,0,0]),(self.img+'.image',2.0,[50,50,0,1]) ,(self.img+'.image',2.0,[50,50,0,2]) ])
+     def test_stokes_cube_Q(self):
+          """ [onefield] Test_Stokes_cube_Q : cube with stokes Q"""
+          self.prepData('refim_point_linRL.ms')
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10, stokes='Q',interactive=0,specmode='cube',interpolation='nearest')
+          self.checkall(imexist=[self.img+'.image'],imval=[(self.img+'.image',2.0,[50,50,0,0]),(self.img+'.image',2.0,[50,50,0,1]) ,(self.img+'.image',2.0,[50,50,0,2]) ])
+
+     def test_stokes_cube_U(self):
+          """ [onefield] Test_Stokes_cube_U : cube with stokes U"""
+          self.prepData('refim_point_linRL.ms')
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10, stokes='U',interactive=0,specmode='cube',interpolation='nearest')
+          self.checkall(imexist=[self.img+'.image'],imval=[(self.img+'.image',3.0,[50,50,0,0]),(self.img+'.image',3.0,[50,50,0,1]) ,(self.img+'.image',3.0,[50,50,0,2]) ])
+
+     def test_stokes_cube_V(self):
+          """ [onefield] Test_Stokes_cube_V : cube with stokes V"""
+          self.prepData('refim_point_linRL.ms')
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10, stokes='V',interactive=0,specmode='cube',interpolation='nearest')
+          self.checkall(imexist=[self.img+'.image'],imval=[(self.img+'.image',4.0,[50,50,0,0]),(self.img+'.image',4.0,[50,50,0,1]) ,(self.img+'.image',4.0,[50,50,0,2]) ])
 
      def test_stokes_cube_IQUV_fromRL(self):
           """ [onefield] Test_Stokes_cube_IQUV_fromRL : cube with stokes IQUV"""
           self.prepData('refim_point_linRL.ms')
-          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10, stokes='IQUV',interactive=0,specmode='cube')
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10, stokes='IQUV',interactive=0,specmode='cube',interpolation='nearest')
           self.checkall(imexist=[self.img+'.image'],imval=[(self.img+'.image',1.0,[50,50,0,1]),(self.img+'.image',2.0,[50,50,1,1]), (self.img+'.image',3.0,[50,50,2,1]),(self.img+'.image',4.0,[50,50,3,1]) ])
 
      def test_stokes_cube_IQUV_fromXY(self):
           """ [onefield] Test_Stokes_cube_IQUV_fromXY : cube with stokes IQUV"""
           self.prepData('refim_point_linXY.ms')
-          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10, stokes='IQUV',interactive=0,specmode='cube')
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10, stokes='IQUV',interactive=0,specmode='cube',interpolation='nearest')
           self.checkall(imexist=[self.img+'.image'],imval=[(self.img+'.image',1.0,[50,50,0,1]),(self.img+'.image',2.0,[50,50,1,1]), (self.img+'.image',3.0,[50,50,2,1]),(self.img+'.image',4.0,[50,50,3,1]) ])
 
 #     def test_stokes_cube_I_flags(self):
