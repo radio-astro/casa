@@ -1,0 +1,29 @@
+#!/bin/env groovy
+
+//------------------------------------------------------------------------------------------------------------------------
+//---- script used to generate https://safe.nrao.edu/wiki/bin/view/Software/CASA/DownloadHierarchy                    ----
+//------------------------------------------------------------------------------------------------------------------------
+import java.nio.file.Paths
+import static groovy.io.FileType.FILES
+
+String script_name = getClass().protectionDomain.codeSource.location.path
+
+if ( args.size( ) != 1 ) throw new RuntimeException("${script_name}: one directory path expected")
+File dir = new File(args[0])
+if ( ! dir.isDirectory( ) ) throw new RuntimeException("${script_name}: one directory path expected")
+
+def files = [ ]
+def skip = [ "osx_distro/", "linux_distro/" ]
+dir.eachFileRecurse(FILES) {
+    if ( it.name == '.description.txt' ) {
+        files << it
+    }
+}
+
+files.toSorted( ).each {
+    def path = it.path.replaceFirst("${dir}/?","").replaceAll("/.description.txt","")
+    if ( ! skip.find { path.startsWith(it) } ) {
+        println "---++++ ${path}"
+        println it.text
+    }
+}

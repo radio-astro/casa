@@ -1,0 +1,12 @@
+loading properties from /Users/rpmbuild/gradle/gradle.properties
+:createStable
+distro_in:  https://svn.cv.nrao.edu/casa/osx_distro/test/10.11/
+distro_out: /tmp
+start osx 4.6.168 stable creation Sun Mar 06 23:55:03 EST 2016
+not running tests, last good version (4.6.168) is the most recent version from https://svn.cv.nrao.edu/casa/osx_distro/test/10.11/
+end osx 4.6.168 stable creation Sun Mar 06 23:55:04 EST 2016
+1.083 seconds
+
+BUILD SUCCESSFUL
+
+Total time: 3.73 secs

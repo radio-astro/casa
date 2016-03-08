@@ -1,0 +1,70 @@
+# SVN settings
+casa.build.svn.testbranch=trunk
+casa.build.svn.releasebranch=release-4_5
+casa.build.svnroot=https://svn.cv.nrao.edu/svn/casa/
+casa.build.svn.pipelineRoot=https://svn.cv.nrao.edu/svn/casa/branches/project/
+casa.build.svn.pipelineBranch=Pipeline-Cycle3-R3-B
+
+# Git settings
+casa.build.gitrepossh=git@gitlab.nrao.edu:casa/casa.git
+casa.build.gitrepohttp=http://gitlab.nrao.edu/casa/casa.git
+
+# Default vcs 
+casa.build.vcsType=svn
+
+# Id to use with releases (this can probably be factored out)
+casa.build.releaseId=4.5.0
+
+casa.build.testBranchId=4.6.0
+
+# Default directory for sources
+casa.build.sourcedir=../workdir/casasources
+
+# Directories for builds and published packages
+casa.build.buildDirectory=../workdir/casasources
+casa.build.publishDirectory=../workdir/dmgs
+casa.build.packagingdir=development_tools/packaging
+casa.build.dmgtmpdir=/tmp/CASA
+
+# Test and release branch settings
+casa.build.git.testbranch=master
+casa.build.git.releasebranch=rel-4.6.0
+
+# Temporary directory for OS X dmg
+casa.build.osx.dmgtmpdir=/tmp/CASA
+
+# Set to build from the latest tag for either master or release branch
+casa.build.buildFromLatestTag=true
+
+# Set to check if the build was already run
+casa.build.nightlyBuild=true
+
+# Cmake commands
+casa.build.osx.casacorecmake=cmake -DCASA_BUILD=1 -DCXX11=1 -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_Fortran_COMPILER=/opt/casa/01/bin/gfortran-mp-4.9 -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DPYTHON_LIBRARY=/opt/casa/01/lib/libpython2.7.dylib -DCMAKE_INSTALL_PREFIX=../../darwin -DBUILD_PYTHON=1 ..
+casa.build.osx.codecmake=cmake -DCXX11=1 -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_Fortran_COMPILER=/opt/casa/01/bin/gfortran-mp-4.9 -DLLVMCOMPILER=1 -DREADLINE_ROOT_DIR=/opt/casa/01 -Darch=darwin -DCMAKE_BUILD_TYPE=Release -DINTERACTIVE_ITERATION=1 -Dpgplot_ext=_nox -DCMAKE_INSTALL_PREFIX=../../darwin ..
+casa.build.osx.gcwrapcmake=cmake -DCXX11=1 -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_Fortran_COMPILER=/opt/casa/01/bin/gfortran-mp-4.9 -DLLVMCOMPILER=1 -DREADLINE_ROOT_DIR=/opt/casa/01 -Darch=darwin -DCMAKE_BUILD_TYPE=Release -DINTERACTIVE_ITERATION=1 -Dpgplot_ext=_nox -DCMAKE_INSTALL_PREFIX=../../darwin ..
+casa.build.osx.asapcmake=cmake -DCXX11=1 -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_Fortran_COMPILER=/opt/casa/01/bin/gfortran-mp-4.9 -DLLVMCOMPILER=1 -Dcasa_packages=/opt/casa/01 -DPYTHON_LIBNAME=2.7 -Darch=darwin -DCMAKE_BUILD_TYPE=Release ..
+
+casa.build.el5.casacorecmake=cmake28 -DBoost_NO_BOOST_CMAKE=1 -DCASA_BUILD=1 -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=../../linux -DBUILD_PYTHON=1 -DPYTHON_INCLUDE_DIR=/usr/lib64/casa/01/include/python2.7 -DPYTHON_LIBRARY=/usr/lib64/casa/01/lib/libpython2.7.so -DBOOST_ROOT=/usr/lib64/casa/01 -DCXX11=1 -DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-2/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-2/root/usr/bin/gcc -DCMAKE_Fortran_COMPILER=/opt/rh/devtoolset-2/root/usr/bin/gfortran ..
+casa.build.el5.codecmake=cmake28  -DBoost_NO_BOOST_CMAKE=1 -Darch=linux -DCXX11=1 -DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-2/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-2/root/usr/bin/gcc -DCMAKE_Fortran_COMPILER=/opt/rh/devtoolset-2/root/usr/bin/gfortran ..
+casa.build.el5.gcwrapcmake=cmake28 -DBoost_NO_BOOST_CMAKE=1 -Darch=linux -DCXX11=1 -DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-2/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-2/root/usr/bin/gcc -DCMAKE_Fortran_COMPILER=/opt/rh/devtoolset-2/root/usr/bin/gfortran ..
+casa.build.el5.asapcmake=cmake28 -DBoost_NO_BOOST_CMAKE=1 -Darch=linux -DCXX11=1 -DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-2/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-2/root/usr/bin/gcc -DCMAKE_Fortran_COMPILER=/opt/rh/devtoolset-2/root/usr/bin/gfortran ..
+
+casa.build.el6.casacorecmake=cmake -DBoost_NO_BOOST_CMAKE=1 -DCASA_BUILD=1 -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=../../linux -DBUILD_PYTHON=1 -DPYTHON_INCLUDE_DIR=/usr/lib64/casa/01/include/python2.7 -DPYTHON_LIBRARY=/usr/lib64/casa/01/lib/libpython2.7.so -DBOOST_ROOT=/usr/lib64/casa/01 -DCMAKE_BUILD_TYPE=Release -DCXX11=1 -DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-3/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-3/root/usr/bin/gcc -DCMAKE_Fortran_COMPILER=/opt/rh/devtoolset-3/root/usr/bin/gfortran ..
+casa.build.el6.codecmake=cmake -DBoost_NO_BOOST_CMAKE=1 '-DEXTRA_C_FLAGS=-DPG_PPU -I/usr/include/wcslib' -Darch=linux -DBoost_NO_BOOST_CMAKE=1 -DCMAKE_BUILD_TYPE=Release -DCXX11=1 -DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-3/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-3/root/usr/bin/gcc -DCMAKE_Fortran_COMPILER=/opt/rh/devtoolset-3/root/usr/bin/gfortran ..
+casa.build.el6.gcwrapcmake=cmake -DBoost_NO_BOOST_CMAKE=1 -Darch=linux -DSWIG_EXECUTABLE=/usr/lib64/casa/01/bin/swig -DBoost_NO_BOOST_CMAKE=1 -DCMAKE_BUILD_TYPE=Release -DCXX11=1 -DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-3/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-3/root/usr/bin/gcc -DCMAKE_Fortran_COMPILER=/opt/rh/devtoolset-3/root/usr/bin/gfortran ..
+casa.build.el6.asapcmake=cmake -DBoost_NO_BOOST_CMAKE=1 -DEXTRA_C_FLAGS=-I/usr/include/wcslib -Darch=linux -DBoost_NO_BOOST_CMAKE=1 -DCMAKE_BUILD_TYPE=Release -DCXX11=1 -DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-3/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-3/root/usr/bin/gcc -DCMAKE_Fortran_COMPILER=/opt/rh/devtoolset-3/root/usr/bin/gfortran ..
+
+# Test directories
+casa.test.osx.testdirectory=tmpTest
+casa.test.osx.testlogdir=testlogs
+
+# New template
+test.distro.in=https://svn.cv.nrao.edu/casa/osx_distro/test/10.11/
+test.distro.out=/tmp
+test.dir.osx.work=../workdir
+test.dir.log=
+test.dir.backup=
+test.dir.work=
+# location of unpacked application to use for testing
+test.dir.app=

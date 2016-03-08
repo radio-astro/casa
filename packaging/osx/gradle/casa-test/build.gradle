@@ -1,0 +1,556 @@
+import edu.nrao.gradle.casa.Version
+import edu.nrao.gradle.casa.DevVersion
+import edu.nrao.gradle.casa.Workspace
+import edu.nrao.gradle.casa.Repo
+import edu.nrao.gradle.casa.Sys
+import edu.nrao.gradle.casa.Rpm
+import edu.nrao.gradle.casa.TempCleaner
+import edu.nrao.gradle.casa.PackedDistro
+import edu.nrao.gradle.casa.UnpackedDistro
+import java.nio.file.Files
+import java.nio.file.Paths
+
+Class.forName("edu.nrao.gradle.casa.Init")
+
+/*
+ * Set up OSX test directories
+ * */
+
+// Set up Common OSX directories
+String osxTestDirectoryRelative = properties("casa.test.osx.testdirectory");
+String osxTestLogDirRelative = properties('casa.test.osx.testlogdir');
+File osxWorkDir = properties("test.dir.osx.work") == null ?
+                  TempCleaner.cleanup(File.createTempDir( )) :
+                  new File (properties("test.dir.osx.work"))
+File osxTestDirectory = file(osxWorkDir.toString()+"/"+osxTestDirectoryRelative)
+File osxTestLogDir = file(osxWorkDir.toString()+"/"+osxTestLogDirRelative)
+
+// Stable specific directories
+File osxStableTestLogDir = file(osxTestLogDir.toString()+"/stable-tests")
+File stablePublishDmgDir = file(osxWorkDir.toString()+"/dmgs/stable-pub/")
+// Pre-release specific directories
+File osxPrereleaseTestLogDir = file(osxTestLogDir.toString()+"/prerelease-tests")
+File prereleaseDmgDir = file(osxWorkDir.toString()+"/dmgs/prerelease/")
+File prereleasePublishDmgDir = file(osxWorkDir.toString()+"/dmgs/prerelease-pub/")
+File prereleaseErrDmgDir = file(osxWorkDir.toString()+"/dmgs/prerelease-err/")
+
+// Add the new files to an array
+ArrayList<File> directoriesToCreate = new ArrayList<File>();
+
+directoriesToCreate.add(osxWorkDir);
+directoriesToCreate.add(osxTestDirectory);
+directoriesToCreate.add(osxTestLogDir);
+directoriesToCreate.add(osxPrereleaseTestLogDir);
+directoriesToCreate.add(osxStableTestLogDir);
+
+directoriesToCreate.add(stablePublishDmgDir);
+directoriesToCreate.add(prereleaseDmgDir);
+directoriesToCreate.add(prereleasePublishDmgDir);
+directoriesToCreate.add(prereleaseErrDmgDir);
+
+// Create directories
+for (File f: directoriesToCreate) {
+	if (!f.exists()) {
+		f.mkdir();
+	}
+}
+
+
+/**
+ * Remove old test dmgs
+ */
+
+def deleteoldTestPackageOSX(File osxTestDir) {
+	FileCollection dmgs=files {file(osxTestDir.toString()).listFiles().findAll {it.name.endsWith('.dmg')}}
+	for (File f: dmgs) {
+	   println "Deleting previous test package(s): " + f
+	   delete(f)
+	}
+}
+
+
+//--------------------------------------------------------------------------------------
+//---- location of data repository                                                  ----
+//--------------------------------------------------------------------------------------
+def defaultDataDir = [ properties("test.dir.data"), '/export/data_1/casa/data', '/export/home/rh6tst/casa/data', '/home/zuul03/casa/data', '/home/casa/data/trunk','/opt/casa/data/trunk','/opt/casa/data','/opt/casa/01/data'].findAll{it != null}.findResult { new File(it).isDirectory() ? it : null }
+
+def run_regression_tests( String type ) {
+    def start_time = new Date( )
+    def os = Sys.os( )
+	def binPath = properties("url.distro.${type}")
+
+    println "Downloading package from: " + binPath
+	def binary = new Repo(binPath).current( )
+    println "start ${os} stable[regression] ${type} run ${start_time}"
+    println "using binary distribution ${binary}"
+    def data = ['/export/home/rh6tst/casa/data', '/home/zuul03/casa/data', '/home/casa/data/trunk','/opt/casa/data/trunk','/opt/casa/data','/opt/casa/01/data'].findResult { new File(it).isDirectory() ? it : null }
+    if ( data == null ) { throw new GradleException('cannot find a complete CASA data repository to use to run the tests') }
+    println "using ${data} as the data for running regressions"
+    def distro = binary.unpack( )
+    println "unpacked distribution in ${distro}"
+    distro.useData(data)
+    if ( os == "linux" ) {
+        def xvfb = Sys.startXvfb(true)
+        if ( xvfb['proc'] == null ) throw RuntimeException( "failed to start xvfb" )
+        distro.env(['DISPLAY': xvfb['display'],'XAUTHORITY': xvfb['auth']]).runRegression( 'regression' )
+         } else {
+        distro.runRegression( 'regression' )
+         }
+    def end_time = new Date( )
+    println "end ${os} stable[regression] run ${end_time}"
+    use ( groovy.time.TimeCategory ) {
+        println end_time - start_time
+    }
+}
+
+buildscript {
+    repositories {
+        mavenCentral()
+        maven {
+            url uri('../repo')
+        }
+    }
+    dependencies {
+        classpath group: 'net.sourceforge.htmlcleaner', name: 'htmlcleaner', version: '2.6.1'
+        classpath group: 'edu.nrao.gradle', name: 'casa-bt-tasks',
+                  version: '1.0-SNAPSHOT'
+    }
+}
+
+task tryTryTry << {
+     properties( ).each{ println it }
+}
+
+task runStableSmokeTests << {
+    def start_time = new Date( )
+    def os = Sys.os( )
+	def binPath = properties("url.distro.test")
+
+	println "Downloading package from: " + binPath
+    def binary = new Repo(binPath).current( )
+    println "start ${os} stable[smoke] test run ${start_time}"
+    println "using binary distribution ${binary}"
+    def data = ['/home/zuul03/casa/data', '/home/casa/data/trunk','/opt/casa/data/trunk','/opt/casa/data','/opt/casa/01/data'].findResult { new File(it).isDirectory() ? it : null }
+    if ( data == null ) { throw new GradleException('cannot find a complete CASA data repository to use to run the tests') }
+    println "using ${data} as the data for running regressions"
+    def distro = binary.unpack( )
+    println "unpacked distribution in ${distro}"
+    distro.useData(data)
+	if ( os == "linux" ) {
+        def xvfb = Sys.startXvfb(true)
+        if ( xvfb['proc'] == null ) throw RuntimeException( "failed to start xvfb" )
+        distro.env(['DISPLAY': xvfb['display'],'XAUTHORITY': xvfb['auth']]).runRegression( )
+	} else {
+        distro.runRegression( )
+	}
+    def end_time = new Date( )
+    println "end ${os} stable[smoke] run ${end_time}"
+    use ( groovy.time.TimeCategory ) {
+        println end_time - start_time
+    }
+}
+
+task runStableRegressionTests << {
+    run_regression_tests( "test" )
+}
+
+task runStablePrereleaseTests << {
+    run_regression_tests( "prerelease" )
+}
+
+task runTest << {
+    // specify tests with: gradle runTest "-Ptest=cleanhelper_test, 3C129, csvclean"
+    //                                     -Ptest=vishead
+    //                                     -Ptest.dir.app=/path/to/CASA.app
+    //                                     -Ptest.dir.app=https://svn.cv.nrao.edu/casa/distro/osx/test/10.10
+    //                                     -Ptest.dir.app=/home/svn.cv.nrao.edu/content/casa/osx_distro/test/10.10
+    //                                     -Pdata=/home/zuul03/dschieb/gradle-testing/data/trunk
+    //                                     -Plog=/tmp/outdir
+    //
+    def tests_to_run = null
+    try { tests_to_run = test.split(/\s*,\s*/) }
+    catch ( any ) {
+        println "no tests to run..."
+        return
+    }
+
+    def start_time = new Date( )
+    def app_path = properties("test.dir.app")
+    try { app_path = app }
+    catch ( any ) { }
+    
+    def distro = null
+    def binary = null
+    if ( app_path != null )
+        distro = UnpackedDistro.create( app_path, properties("test.dir.work") )
+    else {
+        binary = new Repo(properties("url.distro.test")).current( )
+        distro = binary.unpack( )
+    }
+
+    println "unpacked distribution in ${distro}"
+
+    // allow for overriding default data directory with a command line parameter...
+    def data_dir = defaultDataDir
+    try { data_dir = data }
+    catch ( any ) { }
+    if ( data_dir == null ) {  throw new GradleException('cannot find a complete CASA data repository to use to run the tests') }
+    println "using ${data_dir} as the data for running regressions"
+    distro.useData(data_dir)
+
+    // allow for overriding the default output directory with a command line parameter...
+    def log_dir = properties("test.dir.log")
+    try { log_dir = log }
+    catch ( any ) { }
+
+    def os = Sys.os( )
+    if ( os == "linux" ) {
+        def xvfb = Sys.startXvfb(true)
+        if ( xvfb['proc'] == null ) throw RuntimeException( "failed to start xvfb" )
+        distro.env(['DISPLAY': xvfb['display'],'XAUTHORITY': xvfb['auth']]).runTests( tests_to_run, log_dir )
+    } else {
+        distro.runTests( tests_to_run, log_dir )
+    }
+    distro.testStatus( true )
+    def end_time = new Date( )
+    println "end ${os} run ${end_time}"
+    use ( groovy.time.TimeCategory ) {
+        println end_time - start_time
+    }
+}
+
+
+/**
+ *
+ * Run tests on the test package and convert to a stable package if all of the tests pass
+ *
+ * */
+
+task createStable << {
+    def start_time = new Date( )
+    def os = Sys.os( )
+    def log_dir = properties("test.dir.log")
+    def backup_dir = properties("test.dir.backup")
+    def work_dir = properties("test.dir.work")
+    def distro_in = properties("test.distro.in")
+    def distro_out = properties("test.distro.out")
+    assert distro_in != null
+    println "distro_in:  ${distro_in}"
+    println "distro_out: ${distro_out}"
+    if ( distro_out == null ) distro_out = distro_in
+    def binary = new Repo(distro_in).current( )
+    def curver = binary.version( )
+    println "start ${os} ${curver} stable creation ${start_time}"
+
+	File stateDir = file("state/stable-tests/")
+	if (!stateDir.exists()) {
+		stateDir.mkdirs();
+	}
+
+    def lastver = new Version(file("state/stable-tests/last-version"))
+    if ( curver > lastver ) {
+        println "using binary distribution ${binary}"
+        if ( defaultDataDir == null ) { throw new GradleException('cannot find a complete CASA data repository to use to run the tests') }
+        if ( os == "linux" ) {
+			def distro = binary.unpack( work_dir != null ? "${work_dir}/${curver}" : null )
+			println "unpacked distribution in ${distro}"
+			distro.useData(defaultDataDir)
+            def rpm_in = properties("test.rpm.in")
+            def rpm_out = properties("test.rpm.out")
+            assert rpm_in != null
+            println "rpm_in:  ${rpm_in}"
+            println "rpm_out: ${rpm_out}"
+            if ( rpm_out == null ) rpm_out = rpm_in
+            // must pre-fetch RPMs because the "test" RPMs could have been
+            // replaced before we have finished our tests...
+            def rpms = binary.fetchRpms( rpm_in )
+            def xvfb = Sys.startXvfb(true)
+            if ( xvfb['proc'] == null ) throw RuntimeException( "failed to start xvfb" )
+            // if ( distro.env(['DISPLAY': xvfb['display'],'XAUTHORITY': xvfb['auth']]).runTests( ['vishead'], log_dir ) ) {
+            if ( distro.env(['DISPLAY': xvfb['display'],'XAUTHORITY': xvfb['auth']]).runRegression( 'regression', log_dir ) ) {
+                println "test sucess detected, proceeding with installation"
+                def output_dir = new File( rpm_out )
+                if ( ! output_dir.exists( ) && output_dir.mkdirs(  ) == false )
+                    throw new GradleException("cannot create RPM output directory: ${output_dir}")
+                def repo = new Repo(output_dir,'stable')
+                repo.pruneRpms( backup_dir )
+                println "installing RPMs into ${output_dir}"
+                def stables = rpms.collect { it.toStable(output_dir) }
+                println "inputs:  ${rpms}"
+                println "outputs: ${stables}"
+                repo.updateMeta( )
+                binary.repackage(distro_out,{x->x.replaceAll('test','stable')})
+                println "updating version state from ${lastver} to ${curver}"
+                lastver << curver
+            } else {
+                println "test failure detected"
+            }
+        }
+		if ( os == "osx" ) {
+			println "Running OSX tests: "
+			println "Test dirs: "
+			println "  osxTestDirectory: " + osxTestDirectory.toString()
+			println "  osxTestLogDir: " + osxTestLogDir.toString()
+			println "  osxStableTestLogDir: " + osxStableTestLogDir.toString()
+			println "  stablePublishDmgDir: " + stablePublishDmgDir.toString()
+
+			deleteoldTestPackageOSX(osxTestDirectory)
+
+			def osver = System.getProperty("os.version");
+			def osxMajor = osver.toString().split('\\.')[0]
+			def osxMinor = osver.toString().split('\\.')[1]
+
+			def repoUrl = properties("url.distro.test")
+
+			println "Fetching distro from: " + repoUrl
+
+			def distroX = new Repo(repoUrl,'test').current( )
+			println "distroX:\t${distroX}"
+
+			def udistroX = distroX.unpack(osxTestDirectory)
+			println "udistroX:\t${udistroX}"
+			udistroX.useData(defaultDataDir)
+			// returns true if all regressions pass... false otherwise
+			udistroX.runRegression( 'regression' )
+			//udistroX.runRegression( )
+			udistroX.installRegressionLog(osxStableTestLogDir.toString())
+
+			// If the tests pass, copy test to stable
+			if (udistroX.testOK()) {
+
+				// Copy dmg
+				def infile = distroX.getMyPath()
+
+				if (infile == null) {
+					println "Couldn't find a file to copy."
+					System.exit(1)
+				}
+
+				def outfile = file(stablePublishDmgDir.toString()+"/"+infile.getName().replaceAll("-test-","-stable-"))
+				println infile.toString()
+				println outfile.toString()
+				Files.copy(infile.toPath(),outfile.toPath())
+
+				// Checksum and rename the MD5 files to md5
+				ant.checksum file: outfile
+				def md5file = new File(outfile.toString()+".MD5")
+				def newmd5File= new File (outfile.toString()+".md5")
+				md5file.renameTo(newmd5File)
+
+			}
+			// Updating the last tested version
+			println "updating version state from ${lastver} to ${curver}"
+			lastver << curver
+		}
+    } else {
+        println "not running tests, last good version (${lastver}) is the most recent version from ${distro_in}"
+    }
+    def end_time = new Date( )
+    println "end ${os} ${curver} stable creation ${end_time}"
+    use ( groovy.time.TimeCategory ) {
+        println end_time - start_time
+    }
+}
+
+
+task installPrerelease << {
+    def start_time = new Date( )
+    def os = Sys.os( )
+    def log_dir = properties("test.dir.log")
+    def backup_dir = properties("test.dir.backup")
+    def work_dir = properties("test.dir.work")
+    def distro_in = properties("test.distro.in")
+    def distro_out = properties("test.distro.out")
+    assert distro_in != null
+    println "distro_in:  ${distro_in}"
+    println "distro_out: ${distro_out}"
+    if ( distro_out == null ) distro_out = distro_in
+    def binary = new Repo(distro_in,'prerelease').current( )
+    def curver = binary.version( )
+    println "start ${os} ${curver} prerelease tests ${start_time}"
+
+	File stateDir = file("state/prerelease-tests/")
+	if (!stateDir.exists()) {
+		stateDir.mkdirs();
+	}
+
+    def lastver = new Version(file("state/prerelease-tests/last-version"))
+    if ( curver > lastver ) {
+        println "using binary distribution ${binary}"
+        if ( defaultDataDir == null ) { throw new GradleException('cannot find a complete CASA data repository to use to run the tests') }
+        if ( os == "linux" ) {
+			def distro = binary.unpack( work_dir != null ? "${work_dir}/${curver}" : null )
+            println "unpacked distribution in ${distro}"
+			//Fix revision number
+			try {
+				String [] distroNameParts=binary.toString().split("-")
+				String revParts = distroNameParts[distroNameParts.length-1]
+				String revision = revParts.split("\\.")[0]
+				println "Revision: " +  revision
+				distro.setPrereleaseRevisionNumber(revision);
+			} catch (Exception e) {
+				println "Failed to set revision number"
+				println e
+			}	
+			distro.useData(defaultDataDir)
+            def rpm_in = properties("test.rpm.in")
+            def rpm_out = properties("test.rpm.out")
+            assert rpm_in != null
+            println "rpm_in:  ${rpm_in}"
+            println "rpm_out: ${rpm_out}"
+            if ( rpm_out == null ) rpm_out = rpm_in
+            // pre-fetch RPMs for symmetry with stable tests...
+            def rpms = binary.fetchRpms( rpm_in )
+            def xvfb = Sys.startXvfb(true)
+            if ( xvfb['proc'] == null ) throw RuntimeException( "failed to start xvfb" )
+            // if ( distro.env(['DISPLAY': xvfb['display'],'XAUTHORITY': xvfb['auth']]).runTests( ['importasdm'], log_dir ) ) {
+            // if ( distro.env(['DISPLAY': xvfb['display'],'XAUTHORITY': xvfb['auth']]).runTests( ['vishead'], log_dir ) ) {
+            if ( distro.env(['DISPLAY': xvfb['display'],'XAUTHORITY': xvfb['auth']]).runRegression( 'regression', log_dir ) ) {
+                println "test sucess detected, proceeding with installation"
+                def output_dir = new File( rpm_out )
+                if ( ! output_dir.exists( ) && output_dir.mkdirs(  ) == false )
+                    throw new GradleException("cannot create RPM output directory: ${output_dir}")
+                def repo = new Repo(output_dir,'prerelease')
+                repo.pruneRpms( backup_dir )
+                println "installing RPMs into ${output_dir}"
+                rpms.each { it.copy(output_dir) }
+                println "copy ${binary} to ${distro_out}"
+                binary.copy(distro_out).md5( )
+                repo.updateMeta( )
+                println "updating version state from ${lastver} to ${curver}"
+                lastver << curver
+            } else {
+                println "test failure detected"
+            }
+        }
+    } else {
+        println "not running tests, last good version (${lastver}) is the most recent version from ${distro_in}"
+    }
+    def end_time = new Date( )
+    println "end ${os} ${curver} stable creation ${end_time}"
+    use ( groovy.time.TimeCategory ) {
+        println end_time - start_time
+    }
+}
+
+
+task taskOSXprerelauto() << {
+
+		println "Test dirs: "
+		println "  osxTestDirectory: " + osxTestDirectory.toString()
+		println "  osxTestLogDir: " + osxTestLogDir.toString()
+		println "  osxPrereleaseTestLogDir: " + osxPrereleaseTestLogDir.toString()
+		println "  prereleaseDmgDir: " + prereleaseDmgDir.toString()
+		println "  prereleasePublishDmgDir: " + prereleasePublishDmgDir.toString()
+		println "  prereleaseErrDmgDir: " + prereleaseErrDmgDir.toString()
+
+		deleteoldTestPackageOSX(osxTestDirectory);
+
+		def distroX = new Repo(prereleaseDmgDir.toString(),'prerelease').current( )
+
+		println "distroX:\t${distroX}"
+
+		def udistroX = distroX.unpack(osxTestDirectory.toString())
+		println "udistroX:\t${udistroX}"
+		udistroX.useData('/opt/casa/data')
+
+		//udistroX.installRegressionLog(osxTestLogDir+"/prerelease-tests")
+		String [] distroNameParts=distroX.toString().split("-")
+		//println [distroNameParts.length-1]
+		String revParts = distroNameParts[distroNameParts.length-1]
+		String revision = revParts.split("\\.")[0]
+		println "Revision: " +  revision
+		udistroX.setPrereleaseRevisionNumber(revision);
+
+		udistroX.runRegression( 'regression' )
+		//udistroX.runRegression( )
+
+		udistroX.installPrereleaseRegressionLog(osxPrereleaseTestLogDir.toString(), revision)
+
+		// Move files to dmgDestDir. If there are errors, target is prereleaseErrDmgDir, else prereleasePublishDmgDir
+		String dmgDestDir=prereleaseErrDmgDir;
+		if (udistroX.testOK()) {
+			dmgDestDir=prereleasePublishDmgDir
+		}
+
+        def osver = System.getProperty("os.version");
+        def osxMajor = osver.toString().split('\\.')[0]
+        def osxMinor = osver.toString().split('\\.')[1]
+		
+		def newTail=""
+		
+		// Move dmg
+		def infile = file(distroX.toString())
+		// Fix the tail of the package name to match stable naming convention
+		newTail = "-" + osxMajor + "."+ osxMinor+".dmg"
+		def outfile = file(dmgDestDir.toString()+"/"+infile.getName().replace(".dmg",newTail))
+		println "Moving " + infile.toString() + " to " + outfile.toString()
+		Files.move(infile.toPath(),outfile.toPath())
+		// Move md5
+		infile = file(distroX.toString() + ".md5")
+		newTail = "-" + osxMajor + "."+ osxMinor+".dmg.md5"
+		outfile = file(dmgDestDir.toString()+"/"+infile.getName().replace(".dmg.md5",newTail))
+		println "Moving " + infile.toString() + " to " + outfile.toString()
+		Files.move(infile.toPath(),outfile.toPath())
+}
+
+task osxAcceptedTests() << {
+	
+			println "Test dirs: "
+			println "  osxTestDirectory: " + osxTestDirectory.toString()
+			println "  osxTestLogDir: " + osxTestLogDir.toString()
+			println "  osxPrereleaseTestLogDir: " + osxPrereleaseTestLogDir.toString()
+			println "  prereleaseDmgDir: " + prereleaseDmgDir.toString()
+			println "  prereleasePublishDmgDir: " + prereleasePublishDmgDir.toString()
+			println "  prereleaseErrDmgDir: " + prereleaseErrDmgDir.toString()
+	
+			deleteoldTestPackageOSX(osxTestDirectory);
+	
+			def distroX = new Repo(prereleaseDmgDir.toString(),'prerelease').current( )
+	
+			println "distroX:\t${distroX}"
+	
+			def udistroX = distroX.unpack(osxTestDirectory.toString())
+			println "udistroX:\t${udistroX}"
+			udistroX.useData('/opt/casa/data')
+	
+			//udistroX.installRegressionLog(osxTestLogDir+"/prerelease-tests")
+			String [] distroNameParts=distroX.toString().split("-")
+			//println [distroNameParts.length-1]
+			String revParts = distroNameParts[distroNameParts.length-1]
+			String revision = revParts.split("\\.")[0]
+			println "Revision: " +  revision
+			udistroX.setPrereleaseRevisionNumber(revision);
+	
+			udistroX.setRegressionUrl("/Users/vsuorant/localtests/")
+			udistroX.runRegression( 'regression' )
+			//udistroX.runRegression( )
+	
+			udistroX.installPrereleaseRegressionLog(osxPrereleaseTestLogDir.toString(), revision)
+	
+			// Move files to dmgDestDir. If there are errors, target is prereleaseErrDmgDir, else prereleasePublishDmgDir
+			String dmgDestDir=prereleaseErrDmgDir;
+			if (udistroX.testOK()) {
+				dmgDestDir=prereleasePublishDmgDir
+			}
+	
+			def osver = System.getProperty("os.version");
+			def osxMajor = osver.toString().split('\\.')[0]
+			def osxMinor = osver.toString().split('\\.')[1]
+			
+			def newTail=""
+			
+			// Move dmg
+			def infile = file(distroX.toString())
+			// Fix the tail of the package name to match stable naming convention
+			newTail = "-" + osxMajor + "."+ osxMinor+".dmg"
+			def outfile = file(dmgDestDir.toString()+"/"+infile.getName().replace(".dmg",newTail))
+			println "Moving " + infile.toString() + " to " + outfile.toString()
+			Files.move(infile.toPath(),outfile.toPath())
+			// Move md5
+			infile = file(distroX.toString() + ".md5")
+			newTail = "-" + osxMajor + "."+ osxMinor+".dmg.md5"
+			outfile = file(dmgDestDir.toString()+"/"+infile.getName().replace(".dmg.md5",newTail))
+			println "Moving " + infile.toString() + " to " + outfile.toString()
+			Files.move(infile.toPath(),outfile.toPath())
+	}

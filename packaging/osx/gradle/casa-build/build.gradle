@@ -1,0 +1,1062 @@
+import java.util.ArrayList
+import java.nio.file.Files
+import edu.nrao.gradle.casa.SvnUtils
+import edu.nrao.gradle.casa.PreReleaseVersionFile
+import edu.nrao.gradle.casa.Sys
+import edu.nrao.gradle.casa.build.CasaApp
+import edu.nrao.gradle.casa.build.BuildConfig
+import edu.nrao.gradle.casa.build.SvnRepository
+import edu.nrao.gradle.casa.build.GitRepository
+import edu.nrao.gradle.casa.build.SubSystem
+import edu.nrao.gradle.casa.build.SourceRepository
+import edu.nrao.gradle.casa.build.BuildConfig
+import edu.nrao.gradle.casa.build.BundleFixer
+
+/* Leaving these here as STS seems to like to randomly nuke the imports
+import edu.nrao.gradle.casa.SvnUtils
+import edu.nrao.gradle.casa.PreReleaseVersionFile
+import edu.nrao.gradle.casa.Sys
+import edu.nrao.gradle.casa.build.CasaApp
+import edu.nrao.gradle.casa.build.BuildConfig
+import edu.nrao.gradle.casa.build.SvnRepository
+import edu.nrao.gradle.casa.build.GitRepository
+import edu.nrao.gradle.casa.build.SubSystem
+import edu.nrao.gradle.casa.build.SourceRepository
+import edu.nrao.gradle.casa.build.BuildConfig
+import edu.nrao.gradle.casa.build.FixSVN
+import edu.nrao.gradle.casa.build.BundleFixer
+ */
+
+// Load properties
+Class.forName("edu.nrao.gradle.casa.Init")
+
+ext.svnRoot="https://svn.cv.nrao.edu/svn/casa/"
+ext.casaApp = new CasaApp();
+
+ext.sourceDir = project.hasProperty('sourceDir') ? file(project.getProperty('sourceDir')) : file(properties("casa.build.sourcedir"))
+ext.vcsType = project.hasProperty('vcsType') ? project.getProperty('vcsType') : properties("casa.build.vcstype")
+ext.devToolsVcsType = project.hasProperty('devToolsVcsType') ? project.getProperty('devToolsVcsType') : properties("casa.build.devtoolsvcstype")
+ext.buildDirectory = project.hasProperty('buildDirectory') ? file(project.getProperty('buildDirectory')) : file(properties("casa.build.buildDirectory"))
+ext.publishDirectory = project.hasProperty('publishDirectory') ? file(project.getProperty('publishDirectory')) : file(properties("casa.build.publishDirectory"))
+ext.releaseId = project.hasProperty('releaseId') ? project.getProperty('releaseId') : properties("casa.build.releaseId")
+ext.testBranchId = project.hasProperty('testBranchId') ? project.getProperty('testBranchId') : properties("casa.build.testBranchId")
+ext.buildType = project.hasProperty('buildType') ? project.getProperty('buildType') : "test"
+ext.buildFromLatestTag = project.hasProperty('buildFromLatestTag') ? project.getProperty('buildFromLatestTag') : properties("casa.build.buildFromLatestTag")
+ext.nightlyBuild = project.hasProperty('nightlyBuild') ? project.getProperty('nightlyBuild') : properties("casa.build.nightlyBuild")
+
+ext.pipelineSvnRoot = project.hasProperty('pipelineRoot') ? project.getProperty('pipelineRoot') : properties("casa.build.svn.pipelineRoot")
+ext.pipelineSvnBranch = project.hasProperty('pipelineBranch') ? project.getProperty('pipelineBranch') : properties("casa.build.svn.pipelineBranch")
+
+ext.testPublishDir=file(publishDirectory.toString() + "/test")
+ext.prPublishDir=file(publishDirectory.toString() +"/prerelease")
+
+ext.devDummyBuildId = "dev-1.1.1"
+
+// Allow an alternate revision of packaging and pipeline (for patch builds)
+ext.packagingRevision = project.hasProperty('packagingRevision') ? project.getProperty('packagingRevision') : null
+ext.pipelineRevision = project.hasProperty('pipelineRevision') ? project.getProperty('pipelineRevision') : null
+
+println("project.sourceDir: " + project.sourceDir.toString())
+println("project.vcsType: " + project.vcsType)
+println("project.buildDirectory: " + project.buildDirectory.toString())
+println("project.publishDirectory: " + project.publishDirectory.toString())
+println("project.releaseId: " + project.releaseId)
+println("project.testBranchId: " + project.testBranchId)
+println("project.buildType: " + project.buildType)
+println("project.buildFromLatestTag: " + project.buildFromLatestTag)
+println("project.nightlyBuild: " + project.nightlyBuild )
+println "Test dmgs published to: " + project.testPublishDir.toString()
+println "Prerelease dmgs published to: " + project.prPublishDir.toString()
+
+
+// Add the new files to an arraylist
+def directoriesToCreate = []  
+directoriesToCreate << testPublishDir
+directoriesToCreate << prPublishDir
+
+// Create directories
+directoriesToCreate.each {
+	if (!it.exists()) {
+		it.mkdirs();
+	}
+}
+
+apply plugin: 'groovy'
+dependencies {
+	compile gradleApi()
+	compile localGroovy()
+}
+
+	
+buildscript {
+	repositories {
+		mavenCentral()
+		maven {
+			url uri('../repo')
+		}
+	}
+	dependencies {
+		classpath group: 'net.sourceforge.htmlcleaner', name: 'htmlcleaner', version: '2.6.1'
+		classpath group: 'edu.nrao.gradle', name: 'casa-bt-tasks',
+				  version: '1.0-SNAPSHOT'
+	}
+}
+
+// Helper method to set the correct tagType
+public void setTagType() {
+	if (project.branch=="master") {
+		ext.tagType = "dev" 
+	}
+	else {
+		ext.tagType = project.branch
+	}
+	println "ext.tagType set to "+ ext.tagType
+}
+
+
+// Determine branch properties
+if (project.vcsType=="git") {
+	
+	ext.vcs = project.hasProperty('vcs') ? project.getProperty('vcs') : properties("casa.build.gitrepohttp")
+	
+	if (project.buildType!="test") {
+		ext.branch=project.hasProperty('releasebranch') ? project.getProperty('releasebranch') : properties("casa.build.git.releasebranch")
+		if (project.branch.startsWith("rel")) {
+			ext.checkoutDir = project.branch.replaceAll("rel-", "");
+		}
+	}
+	else {
+		ext.branch=properties("casa.build.git.testbranch")
+		ext.checkoutDir = project.branch
+	}
+	
+}
+else {
+	ext.vcs = project.hasProperty('vcs') ? project.getProperty('vcs') : properties("casa.build.svnroot")
+	
+	if (project.buildType!="test") {
+		ext.branch=project.hasProperty('releasebranch') ? project.getProperty('releasebranch') : properties("casa.build.svn.releasebranch")
+		println "project.branch: " + project.branch
+	}
+	else {
+		ext.branch=properties("casa.build.svn.testbranch")
+		println "project.branch: " + project.branch
+	}
+	ext.checkoutDir = project.branch
+}
+
+
+// Using separate methods for tasks so that these can be mixed and matched on the wrapper tasks.
+// The could be their own tasks, but then the execution order and parametrization gets messy.
+
+public void deleteSourceDir()  {
+	
+		ArrayList env = System.getenv().collect { k, v -> "$k=$v" }
+		try {
+			println "Deleting sourceDir " +project.sourceDir
+		}
+		catch (groovy.lang.MissingPropertyException e) {
+			println e
+			println "--------------------------------------------------------------"
+			println "You must provide "+ e.getProperty() + " from the command line."
+			println "For example: "
+			println "gradle deleteSourceDir -PsourceDir=/tmp/casasources"
+			println "--------------------------------------------------------------"
+			throw e
+		}
+		if (file(project.sourceDir).exists()) {
+			file(project.sourceDir).deleteDir()
+		}
+}
+
+
+public void buildVersion(CasaApp app) {
+	    println "#### Build version" 
+	    
+		ArrayList env = System.getenv().collect { k, v -> "$k=$v" }
+		try {
+			println "Getting revision for: " + project.branch
+			println "VCS: " +  project.vcs
+		}
+		catch (groovy.lang.MissingPropertyException e) {
+			println e
+			println "--------------------------------------------------------------"
+			println "You must provide "+ e.getProperty() + " from the command line."
+			println "For example: "
+			println "gradle buildVersion -Pbranch=release-4_5 -Pvcs=https://svn.cv.nrao.edu/svn/casa/  -PsourceDir=/tmp/casasources" 
+			println "--------------------------------------------------------------"
+			throw e
+		}
+	
+	  
+	  ext.svnBranchVersionFile = file(branch+"_svn_version.txt")
+	  ext.gitBranchVersionFile = file(branch+"_git_version.txt")
+	  
+	  // Set the build id 
+	  //SourceRepository sp;
+	  if (project.vcsType=="svn") {
+		      println "Setting Build id from Svn"
+		  	  ext.sp = new SvnRepository();
+			  if (project.buildType=="test") {
+				  app.setBuildId(project.svnRoot, project.branch);
+			  }
+			  else {
+				  SvnUtils svnUtils = new SvnUtils();
+				  app.setVersion(project.releaseId)
+				  println "project.branch : " +  project.branch
+			  	  app.setRevision(svnUtils.getRevisionForBranch(project.vcs+"branches/"+project.branch).toString().trim())
+			  }
+	  }
+	  else if (project.vcsType=="git"){
+		  println "Setting Build id from Git"
+		  ext.sp = new GitRepository();
+		  setTagType()
+		  println project.tagType
+		  def tag
+		  if (project.nightlyBuild=="true") {
+			  tag = project.sp.getLastTag(project.sourceDir.toString() +"/"+ project.checkoutDir, project.tagType, env)
+		  }
+		  else {
+			  tag = project.devDummyBuildId
+		  }
+		  println tag
+		  println tag.split("-")[0].trim()
+		  String tagTail = tag.split("-")[1].trim()
+		  println tagTail
+		  
+		  def major = tagTail.split('\\.')[0].trim()
+		  def minor = tagTail.split('\\.')[1].trim()
+		  def micro = tagTail.split('\\.')[2].trim()
+		  
+		  Integer revision = 1
+		  if (tag.startsWith("rel")) {
+			  revision = Integer.valueOf(tag.split("-")[2].trim())
+		  }
+		  	
+		  println "Version components: " + major +  " " + minor + " " + micro + " " + revision
+		  if (project.buildType=="test") {
+			  app.setVersion(major + "." + minor + "." + micro )
+		  }
+		  else {
+			  app.setVersion(project.releaseId)
+		  }
+		  app.setRevision(revision.toString())
+		  // Can't use this for Git
+		  //app.setBuildId(tag.split("-")[0]+"-"+tag.split("-")[1], revision.toString()) 
+	  }
+
+	  println "-----"
+	  println "Version set to: " + app.getVersion()
+	  println "Revision set to: " + app.getRevision()
+	  println "-----"
+
+	  def previousBranchBuildRevision = 0
+	  def previousTrunkBuildRevision  = 0
+	  
+	  // Fix the svn path
+	  def branchMod
+	  if (project.vcsType=="svn" && project.branch!="trunk") { 
+		  branchMod="branches/"+project.branch 
+	  }
+	  else { 
+		  branchMod=project.branch 
+	  }
+	  
+	  def branchSvnPath=project.vcs + "/" + branchMod
+	  
+	  // Check if there are updates
+	  if (project.sp instanceof SvnRepository) {
+		  if (svnBranchVersionFile.exists()) {
+				previousBranchBuildRevision=Integer.valueOf(svnBranchVersionFile.text.trim());
+				println "previousBranchBuildRevision" + previousBranchBuildRevision
+		  }
+		  else {
+			  svnBranchVersionFile.text="0"
+		  }
+	    
+		  SvnUtils svnUtils = new SvnUtils()
+		  
+		  println "nightlyBuild set to " + project.nightlyBuild
+		  if (svnUtils.isBranchChanged(branchSvnPath, previousBranchBuildRevision)) {
+			  println "previous version" + previousBranchBuildRevision
+			  println("Branch: "+ branchSvnPath)
+			  svnBranchVersionFile.text=app.getRevision()
+		  }
+		  else if (project.nightlyBuild=="true"){
+			 println "No changes detected. Not running a build."
+			 System.exit(0);
+		  }
+		  
+		  // Update prerelease revisionhistory as necessary
+		  
+		  if (project.branch !="trunk") {
+			  
+			  def pvf = file(project.branch+"_svn_revision_history.txt")
+			  
+			  if (!pvf.exists()) {
+				  pvf.text="0 0"
+			  }
+			  
+			  PreReleaseVersionFile vf = new PreReleaseVersionFile(pvf.toString());
+				  
+			  if (Integer.valueOf(app.getRevision())>vf.getLastRevision()){
+					 vf.updateCounter(Integer.valueOf(app.getRevision()))
+			  }
+			  else if (Integer.valueOf(app.getRevision())==vf.getLastRevision()){
+				   println "New revision is equal to the existing one. Using the latest counter."
+			  }
+			  else {
+				   println "New revision is less than the current one. Not moving files"
+				   return;
+			  }
+		  }
+	  }
+
+	  if (project.sp instanceof GitRepository) {
+		  setTagType()
+		  println project.tagType
+		  def tag
+		  if (project.nightlyBuild=="true") {
+			  tag = project.sp.getLastTag(project.sourceDir.toString() +"/"+ project.checkoutDir.toString(), tagType, env)
+		  }
+		  else {
+			  tag = project.devDummyBuildId
+		  }
+		  
+		  if (gitBranchVersionFile.exists()) {
+				previousBranchBuildRevision=gitBranchVersionFile.text.trim();
+				println "previousBranchBuildRevision" + previousBranchBuildRevision
+		  }
+		  else {
+			  gitBranchVersionFile.text="0"
+		  }
+		  
+		  println "nightlyBuild set to " + project.nightlyBuild
+		  if (tag.trim() ==previousBranchBuildRevision && project.nightlyBuild=="true") {
+			  println "No changes detected. Not running a build."
+			  System.exit(0);
+		  }
+		  else {
+			 println "Previous version: " + previousBranchBuildRevision
+			 println "Current version: " + tag
+			 gitBranchVersionFile.text=tag
+		  
+			 // Update history file
+			 def pvf = file(project.branch+"_git_revision_history.txt")
+			 if (!pvf.exists()) {
+				  pvf.text="0"
+			 }
+			 
+			 pvf.append(System.getProperty("line.separator"))
+			 pvf.append(tag.trim())
+			
+		  }
+	  }
+
+	  
+}
+	
+
+public void  checkOut(CasaApp app) {
+	  ArrayList env = System.getenv().collect { k, v -> "$k=$v" }
+      print env
+      try {
+        println "Retrieving: " + project.branch
+        println "From: " + project.vcs
+		println "To: " + project.sourceDir
+		if (project.branch!="trunk") {
+			println "releaseId: " + project.releaseId
+		}
+      }
+      catch (groovy.lang.MissingPropertyException e) {
+        println e
+        println "--------------------------------------------------------------"
+        println "You must provide "+ e.getProperty() + " from the command line."
+        println "For example: "
+        println "gradle checkout -Pbranch=release-4_5 -Pvcs=https://svn.cv.nrao.edu/svn/casa/ -PsourceDir=/tmp/casasources -PreleaseId=4.5.0"
+        println "--------------------------------------------------------------"
+      throw e
+      }
+	  
+	  // Set the repository type
+	  if (project.vcsType=="svn") {
+		  ext.sp = new SvnRepository();
+		  if (project.branch=="trunk" && project.nightlyBuild=="true") {
+			  project.sp.getSourceFromRevision(project.sourceDir.toString(),project.vcs, project.branch,app.getRevision(), env);
+		  } 
+		  else {
+			  project.sp.getSource(project.sourceDir.toString(),project.vcs, project.branch, env);
+		  }
+	  }
+	  else {
+		  println "Check out from Git"
+		  ext.sp = new GitRepository();
+		  project.sp.getSource(project.sourceDir.toString(),project.vcs, project.branch, env);
+	  }
+	  
+	  
+	  
+	  // This can be put back once the svn dependencies are removed
+	  if (project.nightlyBuild=="true") {
+		  if (devToolsVcsType=="svn") {
+			  SourceRepository packagingRepo = new SvnRepository();
+			  if (packagingRevision==null) { 
+				  packagingRepo.getSource(project.sourceDir.toString(),project.svnRoot+"/development_tools/", "packaging", env);
+			  }
+			  else {
+				  packagingRepo.getSourceFromRevision(project.sourceDir.toString(),project.svnRoot+"/development_tools/", "packaging", packagingRevision, env);
+			  }
+		  }
+		  else if (devToolsVcsType=="git"){
+			  SourceRepository packagingRepo = new GitRepository();
+			  def devToolsRepo = project.hasProperty('devToolsGitRepoHttp') ? project.getProperty('devToolsGitRepoHttp') : properties("casa.build.devtoolsgitrepohttp")
+              println "devToolsRepo: " + devToolsRepo 
+			  packagingRepo.getPackaging(devToolsRepo, project.sourceDir.toString(),env);
+		  }
+		  else {
+			  println "Unrecognized development_tools repository " + devToolsVcsType
+		  }
+	  }
+	  if (project.sp instanceof SvnRepository) {
+		  app.setBuildId(project.vcs,project.branch) 
+	  }
+	
+	  def tag;
+	  Integer revision = 1
+	
+	  if (project.sp instanceof GitRepository) {
+		  setTagType()
+		  println project.tagType
+		
+		  if (project.nightlyBuild=="true") {
+			  tag = project.sp.getLastTag(project.sourceDir.toString() +"/"+ project.checkoutDir, project.tagType, env)
+		  }
+		  else {
+			  tag = project.devDummyBuildId
+		  }
+		  
+		  if (tag.startsWith("rel")) {
+			  revision = Integer.valueOf(tag.split("-")[2].trim())
+		  }
+		   
+		  String osId;
+		  
+		  if (Sys.os().toLowerCase()=="linux") {
+			  osId=Sys.osLabel()
+		  }
+		  else if (Sys.os().toLowerCase()=="osx") {
+			  osId=Sys.os()
+		  }
+		  else {
+			  println "Can't determine operating system."
+			  System.exit(1);
+		  }
+	  	 
+		  println "buildFromLatestTag: " + project.buildFromLatestTag
+		  if (project.buildFromLatestTag==true || project.buildFromLatestTag=="true" || project.buildFromLatestTag=="1") {
+			  project.sp.checkoutVersion (project.sourceDir.toString() +"/"+ project.checkoutDir, tag, env)
+		  }
+		  else {
+			  println "buildFromLatestTag not set. Setting version string to indicate developer build."
+			  tag=project.devDummyBuildId
+		  }
+		  
+		  println "Setting buildId: ";
+		  println "  Tag: " + tag.trim();
+		  println "  Revision: " + revision;
+		  app.setBuildId(tag.trim(), revision)
+	  }
+	  if (project.branch=="trunk") {
+		    println "Replacing version: " +  app.getVersion() +" " + app.getRevision()
+	 	    app.replaceVersion(project.sourceDir, project.branch, project.vcs, app.getVersion(), app.getRevision(), env)
+	  }
+	  else {
+		  if (project.sp instanceof GitRepository) {
+			  app.setRevision(revision.toString())
+		      println "TagType: " + project.tagType
+			  if (project.tagType == "dev" ) {
+			    println "Replacing version: " + app.getVersion() +" " + app.getRevision()
+			  	app.replaceVersion(project.sourceDir, project.branch, project.vcs, app.getVersion(), app.getRevision(), env)
+		  	  }
+		  	  else {
+			    println "Replacing version: " + project.releaseId +" " + app.getRevision()
+				app.replaceVersion(project.sourceDir, project.branch, project.vcs, project.releaseId, app.getRevision(), env)
+			  }
+		  }
+		  else {
+			    println "Replacing version: " + project.releaseId +" " + app.getRevision()
+			  app.replaceVersion(project.sourceDir, project.branch, project.vcs, project.releaseId, app.getRevision(), env)
+		  }
+	  }
+	  
+
+}
+
+
+public Integer getPipelineSvnRevision() {
+	if (pipelineRevision==null) {
+		SvnUtils svnUtils = new SvnUtils();
+		return svnUtils.getRevisionForBranch(pipelineSvnRoot + pipelineSvnBranch)
+	} 
+	else {
+	   return Integer.valueOf(pipelineRevision);
+	}
+	
+}
+
+public void  checkoutPipeline(CasaApp app) {
+	ArrayList env = System.getenv().collect { k, v -> "$k=$v" }
+	print env
+	
+	try {
+	  println "Retrieving pipeline from : " + pipelineSvnRoot + pipelineSvnBranch
+	}
+	catch (groovy.lang.MissingPropertyException e) {
+	  println e
+	  throw e
+	}
+	
+	SourceRepository packagingRepo = new SvnRepository();
+
+	def pipelineDir = project.sourceDir.toString() + "/" + project.checkoutDir.toString() + "/"+pipelineSvnBranch + "." + getPipelineSvnRevision()
+	
+	String checkoutCommand = null;
+	
+	if (pipelineRevision==null) {
+		checkoutCommand = "svn checkout " + pipelineSvnRoot + pipelineSvnBranch + " " +pipelineDir
+	}
+	else {
+		checkoutCommand = "svn checkout -r" + pipelineRevision + " " + pipelineSvnRoot + pipelineSvnBranch + " " +pipelineDir
+	}
+	
+	//String checkoutCommand= "svn checkout " + pipelineSvnRoot + pipelineSvnBranch + " " +pipelineDir
+	println "Executing: " + checkoutCommand
+	
+	def outputStream = new StringBuffer();
+	def proc=checkoutCommand.execute()
+	proc.waitForProcessOutput(System.out, System.err)
+	println outputStream.toString()
+	
+}
+
+
+
+
+public void  setupPipeline(CasaApp app) {
+	ArrayList env = System.getenv().collect { k, v -> "$k=$v" }
+	for (int i = 0; i< env.size(); i++) {
+		if (env[i].startsWith("PATH=")) {
+			env[i] = "PATH=" + buildDirectory.toString()+"/"+branch+"/darwin/bin:" + env[i]
+			println env[i]
+		}
+	}
+	env.add("CASAPATH=" + project.sourceDir.toString() + "/" + project.checkoutDir + "/darwin/")
+	println env
+	try {
+	  println "Retrieving pipeline from : " + pipelineSvnRoot + pipelineSvnBranch
+	}
+	catch (groovy.lang.MissingPropertyException e) {
+	  println e
+	  throw e
+	}
+	
+	String setupCmd= "./runsetup"
+	println "Executing: " + setupCmd
+	
+	def outputStream = new StringBuffer();
+	def pipelineDir = project.sourceDir.toString() + "/" + project.checkoutDir.toString() + "/"+pipelineSvnBranch + "." + getPipelineSvnRevision()
+	def proc=setupCmd.execute(env, file(pipelineDir + "/"))
+	proc.waitForProcessOutput(System.out, System.err)
+	println outputStream.toString() 
+		
+}
+
+public void fixPipelinePaths (CasaApp) {
+	ArrayList env = System.getenv().collect { k, v -> "$k=$v" }
+	
+	def pipelineDir = project.sourceDir.toString() + "/" + project.checkoutDir.toString() + "/"+pipelineSvnBranch + "." + getPipelineSvnRevision()
+	def pipelineRevision = 	getPipelineSvnRevision()
+	def initFile = file(pipelineDir+"/pipeline/__init__.py")
+	def initFileText = initFile.text;
+	initFileText = initFileText.replaceAll(/(?s)def _get_revision\(\):.+?_get_revision\(\)/, "def _get_revision():")  
+	initFile.write(initFileText);
+	initFile.append("    return '%s (%s)' % ('r${pipelineRevision}','${pipelineSvnBranch}')")
+	initFile.append("\n\n")
+	initFile.append("revision = _get_revision()\n")
+	
+	//sed -i -e "/def _get_revision():/a\ \ \ \ return \'%s (%s)\' % (\'r${PIPELINE_REVISION}\',\'${PIPELINE_BRANCH}\')" pipeline/__init__.py
+	
+	file(pipelineDir).eachFileRecurse(
+		{file ->
+			// The original sed scripts apparently only touched .py files
+		    if (file.isFile() && file.getName().substring(file.getName().lastIndexOf(".") + 1)=="py") {
+				//println "Fixing: " +  file.toString()
+			    def fileText = file.text;
+				//def pipeDirString = pipeDir.toString()
+				if (fileText.contains("//"+pipelineDir)) {
+					fileText = fileText.replaceAll(pipelineDir, "\"+os.environ.get('CASAPATH').split()[0]+\"/pipeline")
+  				  	println file.toString() + " matched " + "//" + pipelineDir
+		    	}
+			    if (fileText.contains("'"+pipelineDir)) {
+					fileText = fileText.replaceAll("'"+pipelineDir, "casa['dirs']['pipeline']+'")
+					println file.toString() + " matched '" +pipelineDir 
+			    }
+				file.write(fileText);
+		    }
+		}
+	) 
+	
+}
+
+public void configureAndBuild(CasaApp app) {
+	
+		if (project.vcsType=="svn") {
+			println "Building from Svn"
+			ext.sp = new SvnRepository();
+		}
+		else {
+			println "Building from Git"
+			ext.sp = new GitRepository();
+		}
+	  
+		// Set number of parallel cores
+	    println "Available processors: " +  Runtime.runtime.availableProcessors()
+		Integer numCores=Runtime.runtime.availableProcessors()/2
+		println numCores
+		
+		ArrayList env = System.getenv().collect { k, v -> "$k=$v" }
+	    def buildDir;
+    
+		String osId;
+		if (Sys.os().toLowerCase()=="linux") {
+			osId=Sys.osLabel()
+		}
+		else if (Sys.os().toLowerCase()=="osx") {
+			osId=Sys.os()
+		}
+		else {
+			println "Can't determine operating system."
+			System.exit(1);
+		}
+
+		try {
+			buildDir=project.sourceDir.toString() + "/" + project.checkoutDir
+			println "Building casa source from : " + buildDir
+			println "vcs: " + project.vcs
+ 		}
+		catch (groovy.lang.MissingPropertyException e) {
+			println e
+			println "--------------------------------------------------------------"
+			println "You must provide "+ e.getProperty() + " from the command line."
+			println "For example: "
+			println "gradle configureAndBuild -PsourceDir=/tmp/casasources -Pbranch=release-4_5 -Pvcs=https://svn.cv.nrao.edu/svn/casa/"
+			println "--------------------------------------------------------------"
+		  throw e
+		}
+		
+		
+	    print env
+		print "OS: " + osId
+		BuildConfig buildConfig = new BuildConfig(osId);
+		buildConfig.loadConfig(file("../gradle.properties"))
+		
+		// def subSystems = ["casacore", "code", "asap", "gcwrap"]
+		// Unfortunately code can't be configured before casacore has been build
+		String casaCoreId = "casacore"
+		
+		SubSystem  subSystem = new SubSystem();
+		subSystem.setId (casaCoreId);
+		println "Configuring " + casaCoreId
+		subSystem.runCMake(env, buildConfig, buildDir)
+			
+		println "Building Casacore"
+		subSystem.runMake(buildDir, numCores, env)
+		// Casacore is the only one with the separate install target
+		println "make install".execute(env, new File(buildDir+"/casacore/build")).text
+						
+		def subSystems = ["code", "gcwrap", "asap"] 
+		
+		// Fix the svn path
+		def branchMod
+		if (project.branch!="trunk") {
+			branchMod="branches/"+project.branch
+		}
+		else {
+			branchMod=project.branch
+		}
+		def branchSvnPath=project.vcs + "/" + branchMod
+		//environment "SVNGEN_URL", branchSvnPath
+		//environment "SVNGEN_REVISION", app.getRevision()
+		env.add("SVNGEN_URL=$branchSvnPath")
+		def rev=app.getRevision();
+		env.add("SVNGEN_REVISION=$rev")
+		
+		for (String subSystemId: subSystems) {
+			subSystem = new SubSystem();
+			subSystem.setId (subSystemId);
+			println "Configuring " + subSystemId
+			subSystem.runCMake(env, buildConfig, buildDir)
+				
+			println "Building " + subSystemId
+			subSystem.runMake(buildDir, numCores, env)
+		}
+				
+}
+
+public void makeDoc(CasaApp app) {
+
+	ArrayList env = System.getenv().collect { k, v -> "$k=$v" }
+	
+	def buildDir=sourceDir + "/" + project.branch
+	// Gcwrap is the only subsystem with the doc target at the moment	
+	def subSystems = ["gcwrap"]
+	
+	SubSystem subSystem;
+	for (String subSystemId: subSystems) {
+		subSystem = new SubSystem();
+		subSystem.setId (subSystemId);
+
+		println "Building documentation for " + subSystemId
+		subSystem.makeDoc(buildDir, env)
+	}
+	
+}
+
+public void makeApp(CasaApp app) {
+		ArrayList env = System.getenv().collect { k, v -> "$k=$v" }
+		try {
+			println "Making app for  : " + project.branch
+			println "sourceDir: " + project.sourceDir.toString()
+			println "checkoutDir: " + project.checkoutDir
+		}
+		catch (groovy.lang.MissingPropertyException e) {
+			println e
+			println "--------------------------------------------------------------"
+			println "You must provide "+ e.getProperty() + " from the command line."
+			println "For example: "
+			println "gradle makeApp -Pbranch=release-4_5 -PsourceDir=/tmp/casasources"
+			println "--------------------------------------------------------------"
+		  throw e
+		}
+		
+		def srcDir= project.sourceDir
+		def appDir= new File("/tmp/CASA.app");
+		if (packagingRevision!=null) {
+			File packagingTemplate = file("/tmp/osxPackagingTemplate")
+			// Remove old template
+			packagingTemplate.deleteDir()
+			// Create app
+			app.createApp (appDir,srcDir, project.checkoutDir, packagingTemplate, packagingRevision, env) ;
+		}
+		else {
+			app.createApp (appDir,srcDir, project.checkoutDir, env) ;
+		}
+		// Fix the version file
+		String verTmp=app.getVersion().trim()
+		if (project.buildType!="test") {
+			verTmp=app.getVersion().trim()+"-"+app.getRevision()
+		}
+		
+		if (project.vcsType=="git") {
+			
+			setTagType()
+			println project.tagType
+			
+			if (project.branch.startsWith("rel"))  {
+				verTmp=project.checkoutDir;
+			}
+			else {
+				def tag = project.sp.getLastTag(project.sourceDir.toString() +"/"+ project.checkoutDir.toString(),  project.tagType , env)
+				verTmp=tag.split("-")[1].trim();
+			}
+			println "Writing $verTmp in the version file"
+			File versionFile= new File(appDir.toString()+"/Contents/Resources/VERSION").withWriter('utf-8') { writer ->
+				writer.writeLine verTmp.trim() + " " + (new Date()).toString()
+			}
+		}
+		
+}
+
+
+    
+public void packageApp(CasaApp app) {
+		ArrayList env = System.getenv().collect { k, v -> "$k=$v" }
+		try {
+			"sourceDir: " + project.sourceDir.toString()
+		}
+		catch (groovy.lang.MissingPropertyException e) {
+			println e
+			println "--------------------------------------------------------------"
+			println "You must provide "+ e.getProperty() + " from the command line."
+			println "For example: "
+			println "gradle packageApp -PsourceDir=/tmp/casasources"
+			println "--------------------------------------------------------------"
+		  throw e
+		}
+		
+		println "Packaging application"
+		 
+		def dmgTempDir= new File("/tmp/CASA");
+		def appDir= new File("/tmp/CASA.app");
+		//CasaApp app = new CasaApp();
+		def srcDir= new File(project.sourceDir.toString())
+		
+		app.packageApp(appDir, srcDir, dmgTempDir,env);
+		
+		// Checksum
+		FileCollection dmgs=files {srcDir.listFiles().findAll {it.name.endsWith('.dmg')}}
+		for (File f: dmgs) {
+		   println f
+		   ant.checksum file: f
+		}
+		 
+}
+
+
+public void publishDmg() {
+	ArrayList env = System.getenv().collect { k, v -> "$k=$v" }
+	/*//task publishDmg(type:Copy){ */
+
+	//version =3
+	//revision = 33170
+
+	try {
+		println "Publishing" 
+		println "Branch: " + project.branch
+		println "To: " + project.publishDirectory.toString()
+	    println "From : " + project.buildDirectory.toString()
+	}
+	catch (groovy.lang.MissingPropertyException e) {
+		println e
+		println "--------------------------------------------------------------"
+		println "You must provide "+ e.getProperty() + " from the command line."
+		println "For example: "
+		println "gradle publishDmg -PbuildDirectory=/tmp/casasources -Pbranch=release-4_5 -PpublishDirectory=/tmp/prereleasefiles"
+		println "--------------------------------------------------------------"
+	  throw e
+	}
+	
+	if (!project.publishDirectory.exists()) {
+		project.publishDirectory.mkdirs()
+	}
+	
+	copy { 
+		from project.buildDirectory
+		into project.buildDirectory
+		include '*.MD5'
+		rename { String filename ->
+			filename.replace('MD5', 'md5')
+		}
+	   
+		def srcDir= project.buildDirectory
+		if (project.buildType=="test") {
+			from project.buildDirectory
+			into project.testPublishDir
+			include '*.dmg'
+			include '*.md5'
+			rename { String filename ->
+				filename.replace('CASA-', 'CASA-test-')
+			}
+		}
+		else {
+
+			// Rename the dmg
+
+			String fileVer;
+			
+			if (project.vcsType=="svn") {
+				def pvf = file(project.branch+"_svn_revision_history.txt")
+				PreReleaseVersionFile vf = new PreReleaseVersionFile(pvf.toString());
+				fileVer = vf.getLastCounter()
+			}
+			else if (project.vcsType=="git"){ 
+				ext.sp = new GitRepository();
+				setTagType()
+				println project.tagType
+				def tag
+				if (project.nightlyBuild=="true") {
+					tag = project.sp.getLastTag(project.sourceDir.toString() +"/"+ project.checkoutDir, project.tagType, env)
+				}
+				else {
+					tag = project.devDummyBuildId
+				}
+				println "Tag: " + tag
+				if (project.buildType=="test") {
+					fileVer=tag.split("-")[1]
+				}
+				else {
+					String revision = tag.split("-")[2]
+					println "Revision: " + revision
+					fileVer=revision.trim()
+				}
+				logger.debug("fileVer:" +  fileVer)
+				
+			}
+			
+			println "Latest prerelease revision: " + fileVer
+			from project.buildDirectory
+			into project.prPublishDir
+			include '*.dmg'
+			include '*.md5'
+			rename { String filename ->
+				filename.replace('CASA-', 'CASA-'+project.buildType+'-')
+			}
+			rename { String filename ->
+				filename.replace('-10.10', '')
+			}
+			rename { String filename ->
+				filename.replace('-10.9', '')
+			}
+			rename { String filename ->
+				filename.replace(".dmg","-"+fileVer+".dmg")
+			}
+		}
+	}
+} 
+
+public void sign () {
+	BundleFixer bf = new BundleFixer();
+	println "Fixing bundle"
+	bf.fixBundle("/tmp/CASA.app")
+	def signScript = file("./sign.sh")
+	println "Signing package"
+	bf.sign(signScript.absolutePath, "/tmp/CASA.app")
+}
+
+///////////////////////////////////////////
+// Tasks
+///////////////////////////////////////////
+
+task deleteSourceDir<< {
+	deleteSourceDir()
+}
+
+task buildVersion << {
+	buildVersion(project.casaApp)
+}
+
+task checkOut << {
+	checkOut(project.casaApp)
+}
+
+task configureAndBuild << {
+	configureAndBuild(project.casaApp)
+}
+
+task makeDoc << {
+	makeDoc(project.casaApp)
+}
+
+task makeApp << {
+	makeApp(project.casaApp)
+}
+
+task sign << {
+	sign()
+}
+
+task packageApp << {
+    packageApp(project.casaApp)
+}
+
+task publishDmg << {
+	publishDmg()
+}
+
+task buildAndPublish << {
+	 println "Running and end-to-end build and package process"	
+	 try {
+		 println "Publishing"
+		 //println "Branch: " + project.branch
+		 println "To: " + project.publishDirectory.toString()
+		 println "From : " + project.buildDirectory.toString()
+		 println "sourceDir: " + project.sourceDir.toString()
+	     println "vcs: " +  project.vcs
+	 }
+	 catch (groovy.lang.MissingPropertyException e) {
+		 println e
+		 println "--------------------------------------------------------------"
+		 println "You must provide "+ e.getProperty() + " from the command line."
+		 println "For example: "
+		 println "gradle buildAndPublish -Pvcs=https://svn.cv.nrao.edu/svn/casa -PsourceDir=/tmp/casasources/ -PbuildDirectory=/tmp/casasources -Pbranch=release-4_5 -PpublishDirectory=/tmp/prereleasefiles -PreleaseId=4.5.0"
+		 println "--------------------------------------------------------------"
+	   throw e
+	 }
+	 
+	 // Switch the sequence of checkout and figuring out the build version
+	 // based on the type of version control system used
+	 
+	 deleteSourceDir()
+	 if (project.vcsType=="svn") {
+		 println "Checking out sources from Svn."
+		 buildVersion(project.casaApp)
+		 checkOut(project.casaApp)
+	 }
+	 else if (project.vcsType=="git"){
+	 	 println "Checking out sources from Git."
+		 checkOut(project.casaApp)
+		 buildVersion(project.casaApp)
+	 }
+	 else {
+		 println "Unrecognized version Control system"
+	 }
+	 
+	 configureAndBuild(project.casaApp)
+	 //makeDoc(project.casaApp)
+	 checkoutPipeline()
+	 setupPipeline()
+	 fixPipelinePaths()
+	 makeApp(project.casaApp)
+	 sign()
+	 packageApp(project.casaApp)
+	 publishDmg()	 
+}
+/*buildVersion.mustRunAfter deleteSourceDir
+checkOut.mustRunAfter buildVersion
+configureAndBuild.mustRunAfter checkOut
+build.mustRunAfter configureAndBuild
+makeApp.mustRunAfter build
+packageApp.mustRunAfter makeApp
+publishDmg.mustRunAfter packageApp */
+
+task freshBuild << {
+	
+	deleteSourceDir()
+	if (project.vcsType=="svn") {
+		println "Checking out sources from Svn."
+		buildVersion(project.casaApp)
+		checkOut(project.casaApp)
+	}
+	else if (project.vcsType=="git"){
+		println "Checking out sources from Git."
+		checkOut(project.casaApp)
+		buildVersion(project.casaApp)
+	}
+	else {
+		println "Unrecognized version Control system"
+	}
+	
+	configureAndBuild(project.casaApp)
+	//makeDoc(app)
+
+}
+
+task updateMe() {
+    println "Updating build system"
+}
+
+task checkoutPipeline() << {
+	checkoutPipeline()
+}
+task getPipelineSvnRevision	() << {
+	getPipelineSvnRevision	()
+}
+
+task setupPipeline() << {
+	setupPipeline()
+}
+task fixPipelinePaths() << {
+	fixPipelinePaths()
+}
+
+
