@@ -21,6 +21,7 @@ import pipeline.infrastructure.tablereader as tablereader
 import pipeline.infrastructure.utils as utils
 from pipeline.infrastructure import casa_tasks, casatools
 #from pipeline.hifv.tasks.vlautils import VLAUtils
+import pipeline.infrastructure.mpihelpers as mpihelpers
 from pipeline.hifv.heuristics.vlascanheuristics import VLAScanHeuristics
 from pipeline.hif.tasks.common import commonfluxresults
 
@@ -533,6 +534,8 @@ class VLAImportData(basetask.StandardTaskTemplate):
         #                             shadow=True)
         '''
 
+        createmms = mpihelpers.parse_mpi_input_parameter(self.inputs.createmms)
+
         task = casa_tasks.importasdm(asdm=asdm, 
                                      vis=vis, 
                                      savecmds=self.inputs.save_flagonline,
@@ -540,7 +543,8 @@ class VLAImportData(basetask.StandardTaskTemplate):
                                      ocorr_mode=self.inputs.ocorr_mode,
                                      #process_caldevice=False,
                                      asis="",
-                                     overwrite=self.inputs.overwrite)
+                                     overwrite=self.inputs.overwrite,
+                                     createmms=createmms)
         
         
         
