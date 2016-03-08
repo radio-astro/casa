@@ -13,19 +13,27 @@ def percent_flagged(flagsummary):
     else:
         return '%0.1f%%' % (100.0 * flagged / total)
 
-steps = ['nmedian', 'derivative', 'edgechans', 'fieldshape', 'birdies']
+# method to report number of lines in a file.
+def num_lines(report_dir, relpath):
+	abspath = os.path.join(report_dir, relpath)
+	if os.path.exists(abspath):
+		return sum(1 for line in open(abspath) if not line.startswith('#'))
+	else:
+		return 'N/A'
 
 comp_descriptions = {'nmedian'    : 'Flag T<sub>sys</sub> spectra with high median values.',
                  	 'derivative' : 'Flag T<sub>sys</sub> spectra with high median derivative (ringing).',
                  	 'fieldshape' : 'Flag T<sub>sys</sub> spectra whose shape differs from those associated with BANDPASS data.',
                  	 'edgechans'  : 'Flag edge channels of T<sub>sys</sub> spectra.',
-                 	 'birdies'    : 'Flag spikes or birdies in T<sub>sys</sub> spectra.'}
+                 	 'birdies'    : 'Flag spikes or birdies in T<sub>sys</sub> spectra.',
+                 	 'toomany'    : 'Flag T<sub>sys</sub> spectra with too many flagged timestamps / antennas.'}
 
 std_plot_desc = {'nmedian'    : 'shows the images used to flag',
                  'derivative' : 'shows the images used to flag',
                  'fieldshape' : 'shows the images used to flag',
                  'edgechans'  : 'shows the views used to flag',
-                 'birdies'    : 'shows the views used to flag'}
+                 'birdies'    : 'shows the views used to flag',
+                 'toomany'    : 'shows the views used to flag'}
 
 extra_plot_desc = {'nmedian'    : ' shows the spectra flagged in',
      	   		   'derivative' : ' shows the spectra flagged in',
@@ -58,6 +66,19 @@ $(document).ready(function() {
 });
 </script>
 
+% if any([msg for msg in task_incomplete_msg.values()]):
+  <h2>Error report</h2>
+  
+  <p>For the following measurement sets, the Tsysflag task ended prematurely with the following error message:</p>
+  <ul>
+  % for vis, msg in task_incomplete_msg.items():
+  	<li>${os.path.basename(vis)} :<br>
+  	${msg}</li>
+  % endfor
+  </ul>
+% endif
+
+<h2>Contents</h2>
 <ul>
 <li><a href="#plots">T<sub>sys</sub> after flagging</a></li>
 <li><a href="#summarytable">Flagged data summary</a></li>
@@ -107,7 +128,7 @@ $(document).ready(function() {
 	<thead>
 		<tr>
 			<th>Measurement Set</th>
-			% for step in steps:
+			% for step in components:
 			<th>${step}</th>
 			% endfor
 		</tr>                           
@@ -116,7 +137,7 @@ $(document).ready(function() {
 	% for ms in flags.keys():
 		<tr>
 			<td>${ms}</td>
-			% for step in steps:
+			% for step in components:
 			% if flags[ms].get(step) is None:
 			<td><span class="glyphicon glyphicon-remove"></span></td>
       		% else:
@@ -143,11 +164,11 @@ $(document).ready(function() {
 			<th rowspan="2">Data Selection</th>
 			<!-- flags before task is always first agent -->
 			<th rowspan="2">flagged before</th>
-			<th colspan="${len(steps)}">Flagging Step</th>
+			<th colspan="${len(components)}">Flagging Step</th>
 			<th rowspan="2">flagged after</th>
 		</tr>
 		<tr>
-			% for step in steps:
+			% for step in components:
 			<th>${step}</th>
 			% endfor
 		</tr>
@@ -156,7 +177,7 @@ $(document).ready(function() {
 		% for k in ['TOTAL', 'BANDPASS', 'AMPLITUDE', 'PHASE', 'TARGET','ATMOSPHERE']: 
 		<tr>
 			<th>${k}</th>               
-			% for step in ['before'] + steps + ['after']:
+			% for step in ['before'] + components + ['after']:
 			% if flags[ms].get(step) is not None:
 				##<td>${step} ${k} ${flags[ms][step]['Summary'][k]}</td>
 				<td>${percent_flagged(flags[ms][step]['Summary'][k])}</td>
@@ -172,17 +193,15 @@ $(document).ready(function() {
 % endfor
 
 <h2>Flag Step Details</h2>
-The following section provides plots showing the flagging metrics that the pipeline
+<p>The following section provides plots showing the flagging metrics that the pipeline
 uses to determine deviant Tsys measurements, and the flagging commands that resulted 
 from each flagging metric. For certain flagging metrics, the pipeline evaluates the 
 metric separately for each polarisation. However, if the Tsys measurement for an 
 antenna is found to be deviant in one polarisation, the pipeline will flag the 
-antenna for both polarisations. 
+antenna for both polarisations.</p>
 
-<ul>
 % for component in components: 
   % if htmlreports.get(component) is not None:
-	<li>
 	<h3 id="${component}" class="jumptarget">${component}</h3>
 	${comp_descriptions[component]}
 
@@ -190,18 +209,22 @@ antenna for both polarisations.
     <table class="table table-bordered table-striped">
 	<thead>
 	    <tr>
+	    	<th>Table</th>
 	        <th>Flagging Commands</th>
+	        <th>Number of Statements</th>
 	        <th>Flagging Report</th>
 	    </tr>
 	</thead>
 	<tbody>
-	    % for file,reports in htmlreports[component].items():
+	    % for file, relpath_reports in htmlreports[component].items():
 	    <tr>
-	        <td><a class="replace-pre" href="${reports[0]}" 
-                   data-title="Flagging Commands">${file}</a></td>
+	    	<td>${file}</td>
+	        <td><a class="replace-pre" href="${relpath_reports[0]}" 
+                   data-title="Flagging Commands">Flag commands file</a></td>
+            <td>${num_lines(pcontext.report_dir, relpath_reports[0])}</td>
 	        <td><a class="replace-pre"
-                   href="${reports[1]}" data-title="Flagging Report">
-                   printTsysFlags</a></td>
+                   href="${relpath_reports[1]}" data-title="Flagging report">
+                   Flagging report</a></td>
 	    </tr>
 	    % endfor
 	</tbody>
@@ -221,7 +244,5 @@ antenna for both polarisations.
 
 	</ul>
     % endif
-  </li>
   % endif
 % endfor
-</ul>

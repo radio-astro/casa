@@ -22,10 +22,18 @@ class TsysflagQAHandler(pqa.QAResultHandler):
         caltable = os.path.basename(result.inputs['caltable'])
         vis = os.path.basename(result.inputs['vis'])
         ms = context.observing_run.get_ms(vis)
-    
-        scores = [qacalc.score_fraction_newly_flagged(caltable,
-                                                      result.summaries,
-                                                      ms.basename)]
+
+        if result.task_incomplete_reason:
+            scores = [pqa.QAScore(0.0, longmsg='Task ended prematurely',
+              shortmsg='Task ended prematurely', vis=vis)]
+        else:
+            try:
+                scores = [qacalc.score_fraction_newly_flagged(caltable,
+                  result.summaries, ms.basename)]
+            except AttributeError:
+                scores = [pqa.QAScore(0.0, longmsg='No flagging summaries available',
+                  shortmsg='No flag summaries', vis=vis)]
+            
         result.qa.pool[:] = scores
 
         result.qa.all_unity_longmsg = 'No extra data was flagged in %s' % caltable

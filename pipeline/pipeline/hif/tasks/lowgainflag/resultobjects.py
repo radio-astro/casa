@@ -1,6 +1,4 @@
 from __future__ import absolute_import
-import collections
-import copy
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
