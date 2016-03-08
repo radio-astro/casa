@@ -11,6 +11,9 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+PCMContext *g_context_p = nullptr;
+DataRecord *g_storage_p = nullptr;
+
 template class SingleDishMSFiller<Scantable2MSReader>;
 
 } //# NAMESPACE CASA - END

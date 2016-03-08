@@ -25,6 +25,7 @@ casa_add_library( singledish
     SingleDish/LineFinder.cc
     SingleDish/SDMSManager.cc
     SingleDish/SingleDishMS.cc
+    Filler/PThreadUtil.cc
     Filler/Scantable2MSReader.cc
     Filler/SingleDishMSFiller.cc
 )
@@ -41,6 +42,7 @@ install (FILES
 
 install (FILES
 	Filler/FillerUtil.h
+	Filler/PThreadUtil.h
     Filler/AntennaRecord.h
     Filler/DataRecord.h
     Filler/FieldRecord.h

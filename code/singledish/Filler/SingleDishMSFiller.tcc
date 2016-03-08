@@ -123,6 +123,199 @@ void makeSourceMap(MSSource const &table, Record &source_map) {
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+static constexpr ssize_t CONTEXT_BUFFER_SIZE = 10;
+static constexpr ssize_t FILLER_STORAGE_SIZE = CONTEXT_BUFFER_SIZE + 2;
+typedef sdfiller::ProducerConsumerModelContext<ssize_t, CONTEXT_BUFFER_SIZE> PCMContext;
+
+extern PCMContext *g_context_p;
+extern DataRecord *g_storage_p;
+
+template<class T>
+void SingleDishMSFiller<T>::create_context() {
+  static_assert(0 < FILLER_STORAGE_SIZE && FILLER_STORAGE_SIZE < SSIZE_MAX,
+      "FILLER_STORAGE_SIZE is wrong value");
+  static_assert(CONTEXT_BUFFER_SIZE + 2 <= FILLER_STORAGE_SIZE,
+      "FILLER_STORAGE_SIZE < CONTEXT_BUFFER_SIZE + 2");
+
+  constexpr ssize_t END_OF_PRODUCTION = -1;
+  if (!g_context_p) {
+    g_context_p = new PCMContext(END_OF_PRODUCTION);
+  }
+  if (!g_storage_p) {
+    g_storage_p = new DataRecord[FILLER_STORAGE_SIZE];
+  }
+}
+
+template<class T>
+void SingleDishMSFiller<T>::destroy_context() {
+  if (g_context_p) {
+    delete g_context_p;
+    g_context_p = nullptr;
+  }
+  if (g_storage_p) {
+    delete[] g_storage_p;
+    g_storage_p = nullptr;
+  }
+}
+
+template<class T>
+void *SingleDishMSFiller<T>::consume(void *arg) {
+  POST_START;
+
+  try {
+    auto filler = reinterpret_cast<SingleDishMSFiller<T> *>(arg);
+    auto reader = filler->reader_.get();
+
+//      std::ostringstream oss;
+
+    size_t nrow = reader->getNumberOfRows();
+    assert(nrow < SIZE_MAX);
+    DataAccumulator accumulator;
+
+//      oss << "consume: nrow = " << nrow;
+//      PCMContext::locked_print(oss.str(), g_context_p);
+
+    ssize_t storage_index;
+    for (size_t irow = 0; irow < nrow + 1; ++irow) {
+//        oss.str("");
+//        oss << "consume: start row " << irow;
+//        PCMContext::locked_print(oss.str(), g_context_p);
+      bool more_products = PCMContext::consume(g_context_p, &storage_index);
+      assert(storage_index < FILLER_STORAGE_SIZE);
+
+//        oss.str("");
+//        oss << "consume index " << storage_index << " more_products = "
+//            << more_products;
+//        PCMContext::locked_print(oss.str(), g_context_p);
+
+      if (more_products) {
+        DataRecord *record = &g_storage_p[storage_index];
+
+//          oss.str("");
+//          oss << "Accumulate record: time = " << record->time << " interval = "
+//              << record->interval;
+//          PCMContext::locked_print(oss.str(), g_context_p);
+
+        Bool is_ready = accumulator.queryForGet(record->time);
+        if (is_ready) {
+          filler->flush(accumulator);
+        }
+        Bool astatus = accumulator.accumulate(*record);
+        (void) astatus;
+
+//          oss.str("");
+//          oss << "astatus = " << astatus;
+//          PCMContext::locked_print(oss.str(), g_context_p);
+      } else {
+        break;
+      }
+    }
+
+//      PCMContext::locked_print("Final flush", g_context_p);
+    filler->flush(accumulator);
+  } catch (std::runtime_error &e) {
+    std::ostringstream oss;
+    oss << "Exception: " << e.what();
+    PCMContext::locked_print(oss.str(), g_context_p);
+  } catch (...) {
+    PCMContext::locked_print("Unknown exception", g_context_p);
+  }
+
+  POST_END;
+  pthread_exit(0);
+}
+
+template<class T>
+void *SingleDishMSFiller<T>::produce(void *arg) {
+  POST_START;
+
+  try {
+    auto filler = reinterpret_cast<SingleDishMSFiller<T> *>(arg);
+    auto reader = filler->reader_.get();
+
+//      std::ostringstream oss;
+
+    size_t nrow = reader->getNumberOfRows();
+
+//      oss << "produce: nrow = " << nrow;
+//      PCMContext::locked_print(oss.str(), g_context_p);
+
+    ssize_t storage_index = 0;
+
+    for (size_t irow = 0; irow < nrow; ++irow) {
+
+      DataRecord *record = &g_storage_p[storage_index];
+      Bool status = reader->getData(irow, *record);
+
+//        oss.str("");
+//        oss << "irow " << irow << " status " << status << std::endl;
+//        oss << "   TIME=" << record->time << " INTERVAL=" << record->interval
+//            << std::endl;
+//        oss << "status = " << status;
+//        PCMContext::locked_print(oss.str(), g_context_p);
+
+      if (status) {
+//          oss.str("");
+//          oss << "produce index " << storage_index;
+//          PCMContext::locked_print(oss.str(), g_context_p);
+
+        PCMContext::produce(g_context_p, storage_index);
+      } else {
+        break;
+      }
+
+      storage_index++;
+      storage_index %= FILLER_STORAGE_SIZE;
+    }
+
+//      PCMContext::locked_print("Done production", g_context_p);
+
+    PCMContext::complete_production(g_context_p);
+
+  } catch (std::runtime_error &e) {
+    std::ostringstream oss;
+    oss << "Exception: " << e.what();
+    PCMContext::locked_print(oss.str(), g_context_p);
+
+    PCMContext::complete_production(g_context_p);
+  } catch (...) {
+    PCMContext::locked_print("Unknown exception", g_context_p);
+
+    PCMContext::complete_production(g_context_p);
+  }
+
+  POST_END;
+  pthread_exit(0);
+}
+
+template<class T>
+void SingleDishMSFiller<T>::fillMainMT(SingleDishMSFiller<T> *filler) {
+  POST_START;
+
+  pthread_t consumer_id;
+  pthread_t producer_id;
+
+  // create context
+  SingleDishMSFiller<T>::create_context();
+
+  try {
+    sdfiller::create_thread(&consumer_id, NULL, SingleDishMSFiller<T>::consume,
+        filler);
+    sdfiller::create_thread(&producer_id, NULL, SingleDishMSFiller<T>::produce,
+        filler);
+
+    sdfiller::join_thread(&consumer_id, NULL);
+    sdfiller::join_thread(&producer_id, NULL);
+  } catch (...) {
+    SingleDishMSFiller<T>::destroy_context();
+    throw;
+  }
+
+  SingleDishMSFiller<T>::destroy_context();
+
+  POST_END;
+}
+
 template<class T>
 void SingleDishMSFiller<T>::save(std::string const &name) {
   POST_START;
@@ -314,7 +507,8 @@ void SingleDishMSFiller<T>::setupMS() {
   ms_columns_.reset(new MSMainColumns(*ms_));
 
   // Set up MSDataDescColumns
-  data_description_columns_.reset(new MSDataDescColumns(ms_->dataDescription()));
+  data_description_columns_.reset(
+      new MSDataDescColumns(ms_->dataDescription()));
 
   // Set up MSFeedColumns
   feed_columns_.reset(new MSFeedColumns(ms_->feed()));
@@ -441,7 +635,8 @@ Int SingleDishMSFiller<T>::updatePolarization(Vector<Int> const &corr_type,
     columns.corrType().put(i, corr_type);
     columns.corrProduct().put(i, corr_product);
   };
-  Int polarization_id = ::updateTable(mytable, *(polarization_columns_.get()), comparer, updater);
+  Int polarization_id = ::updateTable(mytable, *(polarization_columns_.get()),
+      comparer, updater);
   return polarization_id;
 }
 
@@ -462,7 +657,8 @@ Int SingleDishMSFiller<T>::updateDataDescription(Int const &polarization_id,
     columns.polarizationId().put(i, polarization_id);
     columns.spectralWindowId().put(i, spw_id);
   };
-  Int data_desc_id = ::updateTable(mytable, *(data_description_columns_.get()), comparer, updater);
+  Int data_desc_id = ::updateTable(mytable, *(data_description_columns_.get()),
+      comparer, updater);
 
   return data_desc_id;
 }
@@ -500,7 +696,8 @@ Int SingleDishMSFiller<T>::updateFeed(Int const &feed_id, Int const &spw_id,
   static Vector<String> linear_type(linear_type_arr, 2, SHARE);
   static String const circular_type_arr[2] = { "R", "L" };
   static Vector<String> circular_type(circular_type_arr, 2, SHARE);
-  static Matrix < Complex > const pol_response(num_receptors, num_receptors, Complex(0));
+  static Matrix<Complex> const pol_response(num_receptors, num_receptors,
+      Complex(0));
   Vector < String > *polarization_type = nullptr;
   if (pol_type == "linear") {
     polarization_type = &linear_type;

@@ -16,6 +16,7 @@
 #include <singledish/Filler/SysCalRecord.h>
 #include <singledish/Filler/WeatherRecord.h>
 #include <singledish/Filler/FillerUtil.h>
+#include <singledish/Filler/PThreadUtil.h>
 
 #include <casacore/casa/OS/File.h>
 #include <casacore/casa/OS/Path.h>
@@ -43,9 +44,21 @@ class DataAccumulator;
 template<typename Reader>
 class SingleDishMSFiller {
 public:
+  // static methods for parallel processing
+  inline static void create_context();
+  inline static void destroy_context();
+  static void *consume(void *arg);
+  static void *produce(void *arg);
+  inline static void fillMainMT(SingleDishMSFiller<Reader> *filler);
+
   SingleDishMSFiller(std::string const &name) :
-      ms_(), ms_columns_(), data_description_columns_(), feed_columns_(), pointing_columns_(), polarization_columns_(), syscal_columns_(), state_columns_(), weather_columns_(), reader_(
-          new Reader(name)), is_float_(false), data_key_(), reference_feed_(-1), pointing_time_(), pointing_time_max_(), pointing_time_min_(), num_pointing_time_(), syscal_list_(), subscan_list_(), polarization_type_pool_(), weather_list_() {
+      ms_(), ms_columns_(), data_description_columns_(), feed_columns_(),
+      pointing_columns_(), polarization_columns_(), syscal_columns_(),
+      state_columns_(), weather_columns_(), reader_(new Reader(name)),
+      is_float_(false), data_key_(), reference_feed_(-1), pointing_time_(),
+      pointing_time_max_(), pointing_time_min_(), num_pointing_time_(),
+      syscal_list_(), subscan_list_(), polarization_type_pool_(),
+      weather_list_() {
   }
 
   ~SingleDishMSFiller() {
@@ -71,7 +84,11 @@ public:
     fillPreProcessTables();
 
     // main loop
+#if 0
+    SingleDishMSFiller<Reader>::fillMainMT(this);
+#else
     fillMain();
+#endif
 
     // Fill tables that must be processed after main loop
     fillPostProcessTables();
@@ -178,8 +195,6 @@ private:
     size_t nrow = reader_->getNumberOfRows();
     DataAccumulator accumulator;
     DataRecord record;
-    //DataRecord previous_record;
-    Double current_time;
 //    std::cout << "nrow = " << nrow << std::endl;
     for (size_t irow = 0; irow < nrow; ++irow) {
       Bool status = reader_->getData(irow, record);
@@ -190,22 +205,20 @@ private:
       if (status) {
         Bool is_ready = accumulator.queryForGet(record.time);
         if (is_ready) {
-          flush(current_time, accumulator);
+          flush(accumulator);
         }
         Bool astatus = accumulator.accumulate(record);
         (void) astatus;
 //        std::cout << "astatus = " << astatus << std::endl;
-        //previous_record = record;
-        current_time = record.time;
       }
     }
 
-    flush(record.time, accumulator);
+    flush(accumulator);
 
     POST_END;
   }
 
-  void flush(Double const &time, DataAccumulator &accumulator) {
+  void flush(DataAccumulator &accumulator) {
     POST_START;
 
     size_t nchunk = accumulator.getNumberOfChunks();
@@ -215,14 +228,11 @@ private:
       return;
     }
 
-    //Double time = main_record.time;
-
-    //MSDataRecord data_record;
     for (size_t ichunk = 0; ichunk < nchunk; ++ichunk) {
-      //MSDataRecord data_record;
       Bool status = accumulator.get(ichunk, record_);
 //      std::cout << "accumulator status = " << std::endl;
       if (status) {
+        Double time = record_.time;
         Int antenna_id = record_.antenna_id;
         Int spw_id = record_.spw_id;
         Int feed_id = record_.feed_id;
@@ -368,12 +378,12 @@ private:
     record.time = time;
     record.interval = interval;
 
-    Bool tcal_empty = False;
+    //Bool tcal_empty = False;
     Bool tsys_empty = False;
 
     if (data_record.tcal.empty() || allEQ(data_record.tcal, 1.0f)
         || allEQ(data_record.tcal, 0.0f)) {
-      tcal_empty = True;
+      //tcal_empty = True;
     } else {
 //      std::cout << "tcal seems to be valid " << data_record.tcal << std::endl;
       if (data_record.float_data.shape() == data_record.tcal.shape()) {
@@ -553,6 +563,7 @@ private:
 
   // Data storage to interact with DataAccumulator
   MSDataRecord record_;
+
 }
 ;
 
