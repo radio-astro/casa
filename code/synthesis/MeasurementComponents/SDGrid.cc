@@ -25,56 +25,58 @@
 //#
 //# $Id$
 
-#include <msvis/MSVis/VisibilityIterator.h>
-#include <casa/Quanta/UnitMap.h>
-#include <casa/Quanta/UnitVal.h>
-#include <casa/Quanta/MVTime.h>
-#include <casa/Quanta/MVAngle.h>
-#include <measures/Measures/Stokes.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
-#include <coordinates/Coordinates/DirectionCoordinate.h>
-#include <coordinates/Coordinates/SpectralCoordinate.h>
-#include <coordinates/Coordinates/StokesCoordinate.h>
-#include <coordinates/Coordinates/Projection.h>
-#include <ms/MeasurementSets/MSColumns.h>
-#include <casa/BasicSL/Constants.h>
-#include <synthesis/MeasurementComponents/SDGrid.h>
-#include <synthesis/TransformMachines/SkyJones.h>
-#include <scimath/Mathematics/RigidVector.h>
-#include <msvis/MSVis/StokesVector.h>
-#include <synthesis/TransformMachines/StokesImageUtil.h>
-#include <msvis/MSVis/VisBuffer.h>
-
-#include <components/ComponentModels/Flux.h>
-#include <components/ComponentModels/PointShape.h>
-#include <components/ComponentModels/ConstantSpectrum.h>
-
-#include <images/Images/ImageInterface.h>
-#include <images/Images/TempImage.h>
-#include <images/Images/PagedImage.h>
-#include <casa/Containers/Block.h>
-#include <casa/Arrays/MaskedArray.h>
+#include <casa/Arrays/Array.h>
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/Array.h>
+#include <casa/Arrays/Cube.h>
+#include <casa/Arrays/MaskedArray.h>
+#include <casa/Arrays/Matrix.h>
+#include <casa/Arrays/MatrixIter.h>
 #include <casa/Arrays/Slice.h>
 #include <casa/Arrays/Vector.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/Arrays/Cube.h>
-#include <casa/Arrays/MatrixIter.h>
+#include <casa/BasicSL/Constants.h>
 #include <casa/BasicSL/String.h>
-#include <casa/Utilities/Assert.h>
+#include <casa/Containers/Block.h>
 #include <casa/Exceptions/Error.h>
+#include <casa/OS/Timer.h>
+#include <casa/Quanta/MVAngle.h>
+#include <casa/Quanta/MVTime.h>
+#include <casa/Quanta/UnitMap.h>
+#include <casa/Quanta/UnitVal.h>
+#include <casa/sstream.h>
+#include <casa/Utilities/Assert.h>
+
+#include <components/ComponentModels/ConstantSpectrum.h>
+#include <components/ComponentModels/Flux.h>
+#include <components/ComponentModels/PointShape.h>
+
+#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <coordinates/Coordinates/DirectionCoordinate.h>
+#include <coordinates/Coordinates/Projection.h>
+#include <coordinates/Coordinates/SpectralCoordinate.h>
+#include <coordinates/Coordinates/StokesCoordinate.h>
+
+#include <images/Images/ImageInterface.h>
+#include <images/Images/PagedImage.h>
+#include <images/Images/TempImage.h>
+
 #include <lattices/Lattices/ArrayLattice.h>
 #include <lattices/Lattices/LatticeCache.h>
-#include <lattices/LEL/LatticeExpr.h>
-#include <lattices/LRegions/LCBox.h>
-#include <lattices/Lattices/SubLattice.h>
 #include <lattices/Lattices/LatticeIterator.h>
 #include <lattices/Lattices/LatticeStepper.h>
-#include <casa/OS/Timer.h>
-#include <casa/sstream.h>
+#include <lattices/Lattices/SubLattice.h>
+#include <lattices/LEL/LatticeExpr.h>
+#include <lattices/LRegions/LCBox.h>
+
+#include <measures/Measures/Stokes.h>
+#include <ms/MeasurementSets/MSColumns.h>
+#include <msvis/MSVis/StokesVector.h>
+#include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisibilityIterator.h>
+#include <scimath/Mathematics/RigidVector.h>
+#include <synthesis/MeasurementComponents/SDGrid.h>
+#include <synthesis/TransformMachines/SkyJones.h>
+#include <synthesis/TransformMachines/StokesImageUtil.h>
 
 namespace casa {
 
@@ -86,7 +88,7 @@ SDGrid::SDGrid(SkyJones& sj, Int icachesize, Int itilesize,
     pointingToImage(0), userSetSupport_p(userSupport),
     truncate_p(-1.0), gwidth_p(0.0), jwidth_p(0.0),
     minWeight_p(0.), useImagingWeight_p(useImagingWeight), lastAntID_p(-1), msId_p(-1),
-    isSplineInterpolationReady(False)
+    isSplineInterpolationReady(False), interpolator(0)
 {
   lastIndex_p=0;
 }
@@ -99,7 +101,7 @@ SDGrid::SDGrid(MPosition& mLocation, SkyJones& sj, Int icachesize, Int itilesize
     pointingToImage(0), userSetSupport_p(userSupport),
     truncate_p(-1.0), gwidth_p(0.0),  jwidth_p(0.0),
     minWeight_p(minweight), useImagingWeight_p(useImagingWeight), lastAntID_p(-1), msId_p(-1),
-    isSplineInterpolationReady(False)
+    isSplineInterpolationReady(False), interpolator(0)
 {
   mLocation_p=mLocation;
   lastIndex_p=0;
@@ -113,7 +115,7 @@ SDGrid::SDGrid(Int icachesize, Int itilesize,
     pointingToImage(0), userSetSupport_p(userSupport),
     truncate_p(-1.0), gwidth_p(0.0), jwidth_p(0.0),
     minWeight_p(0.), useImagingWeight_p(useImagingWeight), lastAntID_p(-1), msId_p(-1),
-    isSplineInterpolationReady(False)
+    isSplineInterpolationReady(False), interpolator(0)
 {
   lastIndex_p=0;
 }
@@ -127,7 +129,7 @@ SDGrid::SDGrid(MPosition &mLocation, Int icachesize, Int itilesize,
     truncate_p(-1.0), gwidth_p(0.0), jwidth_p(0.0),
     minWeight_p(minweight), useImagingWeight_p(useImagingWeight), lastAntID_p(-1),
     msId_p(-1),
-    isSplineInterpolationReady(False)
+    isSplineInterpolationReady(False), interpolator(0)
 {
   mLocation_p=mLocation;
   lastIndex_p=0;
@@ -142,7 +144,7 @@ SDGrid::SDGrid(MPosition &mLocation, Int icachesize, Int itilesize,
     pointingToImage(0), userSetSupport_p(-1),
     truncate_p(truncate), gwidth_p(gwidth), jwidth_p(jwidth),
     minWeight_p(minweight), useImagingWeight_p(useImagingWeight), lastAntID_p(-1), msId_p(-1),
-    isSplineInterpolationReady(False)
+    isSplineInterpolationReady(False), interpolator(0)
 {
   mLocation_p=mLocation;
   lastIndex_p=0;
@@ -395,11 +397,12 @@ void SDGrid::init() {
 // This is nasty, we should use CountedPointers here.
 SDGrid::~SDGrid() {
   //fclose(pfile);
-  if(imageCache) delete imageCache; imageCache=0;
-  if(arrayLattice) delete arrayLattice; arrayLattice=0;
-  if(wImage) delete wImage; wImage=0;
-  if(wImageCache) delete wImageCache; wImageCache=0;
-  if(wArrayLattice) delete wArrayLattice; wArrayLattice=0;
+  if (imageCache) delete imageCache; imageCache = 0;
+  if (arrayLattice) delete arrayLattice; arrayLattice = 0;
+  if (wImage) delete wImage; wImage = 0;
+  if (wImageCache) delete wImageCache; wImageCache = 0;
+  if (wArrayLattice) delete wArrayLattice; wArrayLattice = 0;
+  if (interpolator) delete interpolator; interpolator = 0;
 }
 
 void SDGrid::findPBAsConvFunction(const ImageInterface<Complex>& image,
@@ -1395,78 +1398,6 @@ Int SDGrid::getIndex(const ROMSPointingColumns& mspc, const Double& time,
   return -1;
 }
 
-void SDGrid::getSplineCoeff(const Vector<Double>& time,
-                            const Vector<Vector<Double> >& dir,
-                            Vector<Vector<Vector<Double> > >& coeff) {
-  Vector<Double> h, vx, vy;
-  Vector<Double> a;
-  Vector<Double> c;
-  Vector<Double> alpha, beta, gamma;
-  Vector<Double> wx, wy;
-  Vector<Double> ux, uy;
-
-  Int const num_data = time.nelements();
-  h.resize(num_data-1);
-  vx.resize(num_data-1);
-  vy.resize(num_data-1);
-  a.resize(num_data-1);
-  c.resize(num_data-1);
-  alpha.resize(num_data-1);
-  beta.resize(num_data-1);
-  gamma.resize(num_data-1);
-  wx.resize(num_data-1);
-  wy.resize(num_data-1);
-  ux.resize(num_data);
-  uy.resize(num_data);
-
-  h(0) = time(1) - time(0);
-  for (Int i = 1; i < num_data-1; ++i) {
-    h(i) = time(i+1) - time(i);
-    vx(i) = 6.0*((dir(i+1)(0)-dir(i)(0))/h(i) - (dir(i)(0)-dir(i-1)(0))/h(i-1));
-    vy(i) = 6.0*((dir(i+1)(1)-dir(i)(1))/h(i) - (dir(i)(1)-dir(i-1)(1))/h(i-1));
-    a(i) = 2.0*(time(i+1) - time(i-1));
-    c(i) = h(i);
-    gamma(i) = c(i);
-  }
-  alpha(2) = c(1)/a(1);
-  for (Int i = 3; i < num_data-1; ++i) {
-    alpha(i) = c(i-1)/(a(i-1) - alpha(i-1)*c(i-2));
-  }
-  beta(1) = a(1);
-  for (Int i = 2; i < num_data-2; ++i) {
-    beta(i) = c(i)/alpha(i+1);
-  }
-  beta(num_data-2) = a(num_data-2) - alpha(num_data-2) * c(num_data-3);
-  wx(0) = 0.0;
-  wx(1) = vx(1);
-  wy(0) = 0.0;
-  wy(1) = vy(1);
-  for (Int i = 2; i < num_data-1; ++i) {
-    wx(i) = vx(i) - alpha(i)*wx(i-1);
-    wy(i) = vy(i) - alpha(i)*wy(i-1);
-  }
-  ux(num_data-1) = 0.0;
-  uy(num_data-1) = 0.0;
-  for (Int i = num_data-2; i >= 1; --i) {
-    ux(i) = (wx(i) - gamma(i)*ux(i+1))/beta(i);
-    uy(i) = (wy(i) - gamma(i)*uy(i+1))/beta(i);
-  }
-  ux(0) = 0.0;
-  uy(0) = 0.0;
-
-  for (Int i = 0; i < num_data-1; ++i) {
-    coeff(i)(0)(0) = dir(i)(0);
-    coeff(i)(1)(0) = dir(i)(1);
-    coeff(i)(0)(1) = (dir(i+1)(0)-dir(i)(0))/(time(i+1)-time(i)) - (time(i+1)-time(i))*(2.0*ux(i)+ux(i+1))/6.0;
-    coeff(i)(1)(1) = (dir(i+1)(1)-dir(i)(1))/(time(i+1)-time(i)) - (time(i+1)-time(i))*(2.0*uy(i)+uy(i+1))/6.0;
-    coeff(i)(0)(2) = ux(i)/2.0;
-    coeff(i)(1)(2) = uy(i)/2.0;
-    coeff(i)(0)(3) = (ux(i+1)-ux(i))/(time(i+1)-time(i))/6.0;
-    coeff(i)(1)(3) = (uy(i+1)-uy(i))/(time(i+1)-time(i))/6.0;
-  }
-
-}
-
 Bool SDGrid::getXYPos(const VisBuffer& vb, Int row) {
 
   Bool dointerp;
@@ -1497,82 +1428,10 @@ Bool SDGrid::getXYPos(const VisBuffer& vb, Int row) {
   dointerp = False;
   if (!nullPointingTable && (vb.timeInterval()(row) < act_mspc.interval()(pointIndex))) {
     dointerp = True;
-
     if (!isSplineInterpolationReady) {
-      //(1)get number of pointing data for each antennaID
-      Int nant = vb.msColumns().antenna().name().nrow();
-      Vector<uInt> nPointingData(nant);
-      nPointingData = 0;
-      Int npoi = act_mspc.time().nrow();
-      for (Int i = 0; i < npoi; ++i) {
-        nPointingData(act_mspc.antennaId()(i)) += 1;
-      }
-      
-      //(2)setup spline coefficients for each antenna ID that
-      //   appear in the main table (spectral data) if there
-      //   are enough number of pointing data (4 or more).
-      //   in case there exists antenna ID for which not enough
-      //   (i.e., 1, 2 or 3) pointing data are given, linear
-      //   interpolation is applied for that antenna ID as
-      //   previously done.
-      timePointing.resize(nant);
-      dirPointing.resize(nant);
-      splineCoeff.resize(nant);
-      doSplineInterpolation.resize(nant);
-      doSplineInterpolation = False;
-      for (Int i = 0; i < nant; ++i) {
-        if (nPointingData(i) >= 4) {
-          doSplineInterpolation(i) = True;
-          timePointing(i).resize(nPointingData(i));
-          dirPointing(i).resize(nPointingData(i));
-          splineCoeff(i).resize(nPointingData(i) - 1);
-          for (uInt j = 0; j < dirPointing(i).nelements(); ++j) {
-            dirPointing(i)(j).resize(2);
-          }
-          for (uInt j = 0; j < splineCoeff(i).nelements(); ++j) {
-            splineCoeff(i)(j).resize(2);
-            splineCoeff(i)(j)(0).resize(4); // x
-            splineCoeff(i)(j)(1).resize(4); // y
-          }
-          //set ptime array etc. need for spline calculation...
-          Int tidx = 0;
-          for (Int j = 0; j < npoi; ++j) {
-            if (act_mspc.antennaId()(j) == i) {
-              timePointing(i)(tidx) = act_mspc.time()(j);
-              if (pointingDirCol_p == "TARGET") {
-                dirPointing(i)(tidx) = act_mspc.targetMeas(j).getAngle("rad").getValue();
-              } else if (pointingDirCol_p == "POINTING_OFFSET") {
-                if (!act_mspc.pointingOffsetMeasCol().isNull()) {
-                  dirPointing(i)(tidx) = act_mspc.pointingOffsetMeas(j).getAngle("rad").getValue();
-                } else {
-                  cerr << "No PONTING_OFFSET column in POINTING table" << endl;
-                }
-              } else if (pointingDirCol_p == "SOURCE_OFFSET") {
-                if (!act_mspc.sourceOffsetMeasCol().isNull()) {
-                  dirPointing(i)(tidx) = act_mspc.sourceOffsetMeas(j).getAngle("rad").getValue();
-                } else {
-                  cerr << "No SOURCE_OFFSET column in POINTING table" << endl;
-                }
-              } else if (pointingDirCol_p == "ENCODER") {
-                if (!act_mspc.encoderMeas().isNull()) {
-                  dirPointing(i)(tidx) = act_mspc.encoderMeas()(j).getAngle("rad").getValue();
-                } else {
-                  cerr << "No ENCODER column in POINTING table" << endl;
-                }
-              } else {
-                dirPointing(i)(tidx) = act_mspc.directionMeas(j).getAngle("rad").getValue();
-              }
-              //
-              tidx++;
-            }
-          }
-          getSplineCoeff(timePointing(i), dirPointing(i), splineCoeff(i));
-        }
-      }
-
+      interpolator = new SDPosInterpolator(vb, pointingDirCol_p);
       isSplineInterpolationReady = True;
     }
-
   }
 
   MEpoch epoch(Quantity(vb.time()(row), "s"));
@@ -1691,8 +1550,8 @@ MDirection SDGrid::directionMeas(const ROMSPointingColumns& mspc, const Int& ind
   //spline interpolation
   if (isSplineInterpolationReady) {
     Int antid = mspc.antennaId()(index);
-    if (doSplineInterpolation(antid)) {
-      return interpolateDirectionMeasSpline(mspc, time, index, antid);
+    if (interpolator->doSplineInterpolation(antid)) {
+      return interpolator->interpolateDirectionMeasSpline(mspc, time, index, antid);
     }
   }
 
@@ -1716,41 +1575,6 @@ MDirection SDGrid::directionMeas(const ROMSPointingColumns& mspc, const Int& ind
     }
   }
   return interpolateDirectionMeas(mspc, time, index, index1, index2);
-}
-
-MDirection SDGrid::interpolateDirectionMeasSpline(const ROMSPointingColumns& mspc,
-                                                  const Double& time,
-                                                  const Int& index,
-                                                  const Int& antid) {
-  Int lastIndex = timePointing(antid).nelements() - 1;
-  Int aindex = lastIndex;
-  for (uInt i = 0; i < timePointing(antid).nelements(); ++i) {
-    if (time < timePointing(antid)(i)) {
-      aindex = i-1;
-      break;
-    }
-  }
-  if (aindex < 0) aindex = 0;
-  if (lastIndex <= aindex) aindex = lastIndex - 1;
-
-  Vector<Vector<Double> > coeff;
-  coeff.resize(2);
-  for (uInt i = 0; i < coeff.nelements(); ++i) {
-    coeff(i).resize(4);
-    for (uInt j = 0; j < coeff(i).nelements(); ++j) {
-      coeff(i)(j) = splineCoeff(antid)(aindex)(i)(j);
-    }
-  }
-  Double dt = time - timePointing(antid)(aindex);
-  Vector<Double> newdir(2);
-  newdir(0) = coeff(0)(0) + coeff(0)(1)*dt + coeff(0)(2)*dt*dt + coeff(0)(3)*dt*dt*dt;
-  newdir(1) = coeff(1)(0) + coeff(1)(1)*dt + coeff(1)(2)*dt*dt + coeff(1)(3)*dt*dt*dt;
-  
-  Quantity rDirLon(newdir(0), "rad");
-  Quantity rDirLat(newdir(1), "rad");
-  MDirection::Ref rf = mspc.directionMeas(index).getRef();
-
-  return MDirection(rDirLon, rDirLat, rf);
 }
 
 MDirection SDGrid::interpolateDirectionMeas(const ROMSPointingColumns& mspc,

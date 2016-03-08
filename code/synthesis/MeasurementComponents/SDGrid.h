@@ -29,23 +29,23 @@
 #ifndef SYNTHESIS_SDGRID_H
 #define SYNTHESIS_SDGRID_H
 
-#include <synthesis/TransformMachines/FTMachine.h>
-#include <synthesis/TransformMachines/SkyJones.h>
-#include <casa/Arrays/Matrix.h>
-#include <scimath/Mathematics/FFTServer.h>
-#include <msvis/MSVis/VisBuffer.h>
-#include <images/Images/ImageInterface.h>
-#include <casa/Containers/Block.h>
 #include <casa/Arrays/Array.h>
-#include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
-#include <lattices/Lattices/LatticeCache.h>
+#include <casa/Arrays/Vector.h>
+#include <casa/Containers/Block.h>
+#include <coordinates/Coordinates/DirectionCoordinate.h>
+#include <images/Images/ImageInterface.h>
 #include <lattices/Lattices/ArrayLattice.h>
-#include <ms/MeasurementSets/MSColumns.h>
+#include <lattices/Lattices/LatticeCache.h>
 #include <measures/Measures/Measure.h>
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MPosition.h>
-#include <coordinates/Coordinates/DirectionCoordinate.h>
+#include <ms/MeasurementSets/MSColumns.h>
+#include <msvis/MSVis/VisBuffer.h>
+#include <scimath/Mathematics/FFTServer.h>
+#include <synthesis/MeasurementComponents/SDPosInterpolator.h>
+#include <synthesis/TransformMachines/FTMachine.h>
+#include <synthesis/TransformMachines/SkyJones.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -289,14 +289,7 @@ private:
   Int msId_p;
 
   Bool isSplineInterpolationReady;
-  Vector<Bool> doSplineInterpolation;
-  Vector<Vector<Double> > timePointing; //(antid)(index)
-  Vector<Vector<Vector<Double> > > dirPointing; //(antid)(index)(xy)
-  Vector<Vector<Vector<Vector<Double> > > > splineCoeff; //(antid)(index)(xy)(order)
-
-  void getSplineCoeff(const Vector<Double>& time,
-		      const Vector<Vector<Double> >& dir,
-		      Vector<Vector<Vector<Double> > >& coeff);
+  SDPosInterpolator* interpolator;
   
   Int getIndex(const ROMSPointingColumns& mspc, const Double& time,
 	       const Double& interval=-1.0, const Int& antid=-1);
@@ -308,9 +301,6 @@ private:
   MDirection directionMeas(const ROMSPointingColumns& mspc, const Int& index, const Double& time);
   MDirection interpolateDirectionMeas(const ROMSPointingColumns& mspc, const Double& time,
                                   const Int& index, const Int& index1, const Int& index2);
-  MDirection interpolateDirectionMeasSpline(const ROMSPointingColumns& mspc, const Double& time,
-					    const Int& index,
-					    const Int& antid);
 
   void pickWeights(const VisBuffer&vb, Matrix<Float>& weight);
 
