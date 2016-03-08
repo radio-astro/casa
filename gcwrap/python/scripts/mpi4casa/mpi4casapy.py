@@ -2,7 +2,43 @@
 import os 
 import sys
 import time
+import signal
 
+# Create a watchdog to kill all processes in the group on exit
+# as it seems that OpenMPI 1.10.2 only kills the main process
+# but waits until all processes in the group finish
+#
+# Notice that it is not necessary to finalize MPI in the watchdog
+# because it is not initialize either (MPI initialization happens
+# when mpi4py is imported for the first time in MPIEnvironment)
+if os.fork( ) == 0 :
+    
+    # Install signal handlers
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+    signal.signal(signal.SIGTERM, signal.SIG_IGN)
+    signal.signal(signal.SIGHUP, signal.SIG_IGN)
+    
+    # Close standard input to avoid terminal interrupts
+    sys.stdin.close( )
+    sys.stdout.close( )
+    sys.stderr.close( )
+    os.close(0)
+    os.close(1)
+    os.close(2)
+    
+    # Check that parent process is alive
+    ppid = os.getppid( )
+    while True :
+        try:
+            os.kill(ppid,0)
+        except:
+            break
+        time.sleep(3)
+
+    # Kill process group
+    os.killpg(ppid, signal.SIGTERM)
+    sys.exit(1)
+        
 # CASA dictionary must be initialize here so that it can be found by stack inspection
 casa = {}
 
