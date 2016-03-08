@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 $RPM_TOP = "/opt/users/rpmbuild/casa/prerelease";
-$BLD_TOP = "/opt/users/rpmbuild/casa/prerelease";
+$PKG_TOP = "/opt/users/rpmbuild/casa/prerelease";
 
 use File::Basename;
 use File::Find;
@@ -9,11 +9,10 @@ use File::Path;
 use File::Copy;
 use Cwd;
 
-$get_revision = "/opt/users/rpmbuild/casa/prerelease/scripts/svn-revision";
-#$get_version = "$RPM_TOP/scripts/casa-version";
-$install_rpms = "$BLD_TOP/scripts/install.rpms";
-#$email_list = "drs\@nrao.edu vsuorant\@nrao.edu";
-$email_list = "drs\@nrao.edu";
+$get_revision = "$PKG_TOP/scripts/svn-revision";
+$get_version = "$PKG_TOP/scripts/casa-version";
+$install_rpms = "$RPM_TOP/scripts/install.rpms";
+$email_list = "drs\@nrao.edu vsuorant\@nrao.edu";
 $distro_email_list = $email_list;
 
 
@@ -24,10 +23,11 @@ BEGIN {
     my $HOME = $ENV{'HOME'};
     my $reference_pid = $$;
     $state_root = "$HOME/casa";
+    $TAG        = "prerelease";
 
     if ( -d "$state_root/state" ) {
-	if ( -e "$state_root/state/rebuild-prerelease.pid" ) {
-	    open( PID, "< $state_root/state/rebuild-prerelease.pid" );
+	if ( -e "$state_root/state/rebuild-$TAG.pid" ) {
+	    open( PID, "< $state_root/state/rebuild-$TAG.pid" );
 	    my $pid = <PID>;
 	    close(PID);
 	    $pid =~ s|\s||g;
@@ -42,7 +42,7 @@ BEGIN {
 	    ### ... getpgrp( ) seems to fail with, e.g.
 	    ### svn update -q /opt/users/rpmbuild/casa/prerelease && /opt/users/rpmbuild/casa/prerelease/scripts/rebuild.prerelease rel=4.5.0
 	    ###
-	    if ( $pid eq $$ || $pid eq $ENV{'_REBUILD_PRERELEASE_RECURSIVE_'} ) {
+	    if ( $pid eq $$ || $pid eq $ENV{"_REBUILD_RECURSIVE_$TAG"} ) {
 		$reference_pid = $pid;
 	    } else {
 		open( PS, "ps -A |" );
@@ -52,10 +52,10 @@ BEGIN {
 		    }
 		}
 		close(PS);
-		unlink("$state_root/state/rebuild-prerelease.pid");
+		unlink("$state_root/state/rebuild-$TAG.pid");
 	    }
 	}
-	open(PID, "> $state_root/state/rebuild-prerelease.pid");
+	open(PID, "> $state_root/state/rebuild-$TAG.pid");
 	print PID "$reference_pid\n";
 	close(PID);
     }
@@ -66,8 +66,8 @@ END {
     ### if we make it this far, clean up our pid file...
     ###
     my $HOME = $ENV{'HOME'};
-    if ( -e "$state_root/state/rebuild-prerelease.pid" ) {
-	unlink("$state_root/state/rebuild-prerelease.pid");
+    if ( -e "$state_root/state/rebuild-$TAG.pid" ) {
+	unlink("$state_root/state/rebuild-$TAG.pid");
     }
 }
 
@@ -76,15 +76,14 @@ $rhver = "";
 $svnroot = "";
 $casa_svn_root = "";
 
-#$repo_dir = "/usr/src/rpmbuild/apache/content/casa/repo";
+$repo_dir = "/usr/src/rpmbuild/apache/content/casa/repo";
 $staging_area = "/usr/src/rpmbuild/apache/spool/prerelease-binaries";
 $state_dir = "$state_root/state";
 
-$testrpm = "-prerelease";
 $testfile = "";
 ##$rsync_command = "/usr/bin/rsync";
 
-$self = "$BLD_TOP/scripts/rebuild.prerelease";
+$self = "$RPM_TOP/scripts/rebuild.$TAG";
 $selfflags = "";
 $spec_file = '';
 $backup_root = "/var/backup";
@@ -143,16 +142,16 @@ if ( ! $rhver ) {
         } elsif ( $rhver =~ m/^Scientific Linux SL release 4.*/ ) {
             $rhver = "el4";
         } elsif ( $rhver =~ m/^Red Hat Enterprise.*release 5/ ) {
-	    $spec_file = "$BLD_TOP/SPECS/casa_el5.spec";
+	    $spec_file = "$RPM_TOP/SPECS/casa_el5.spec";
             $rhver = "el5";
         } elsif ( $rhver =~ m/^Scientific Linux SL release 5.*/ ) {
-	    $spec_file = "$BLD_TOP/SPECS/casa_el5.spec";
+	    $spec_file = "$RPM_TOP/SPECS/casa_el5.spec";
             $rhver = "el5";
         } elsif ( $rhver =~ m/^Red Hat Enterprise.*release 6/ ) {
-	    $spec_file = "$BLD_TOP/SPECS/casa.spec";
+	    $spec_file = "$RPM_TOP/SPECS/casa.spec";
             $rhver = "el6";
         } elsif ( $rhver =~ m/^Scientific Linux SL release 6.*/ ) {
-	    $spec_file = "$BLD_TOP/SPECS/casa.spec";
+	    $spec_file = "$RPM_TOP/SPECS/casa.spec";
             $rhver = "el6";
         } elsif ( $rhver =~ m/^Red Hat Enterprise/ ) {
             die "unknown enterprise version: $rhver";
@@ -195,20 +194,20 @@ close( $rev );
 die "bad version string: $revision_string" unless $revision_string =~ m|^(\d+)$|;
 $revision = $1;
 
-$testrpm = "-prerelease";
-$testdistro = "--tag prerelease";
+$testrpm = "-$TAG";
+$testdistro = "--tag $TAG";
 
 $etc_dir = "/usr/src/rpmbuild/build/etc/$rhver";
 die "etc directory does not exist" unless -d $etc_dir;
-$logfile = "$state_root/log/casa-prerelease.$version.$revision";
-$versionfile = "$state_dir/casa.prerelease.$version";
+$logfile = "$state_root/log/casa-$TAG.$version.$revision";
+$versionfile = "$state_dir/casa.$TAG.$version";
 
 ##
 ## if we have email addresses to send the output to, collect it and send
 ## if necessary...
 ##
-unless ( defined $ENV{'_REBUILD_PRERELEASE_RECURSIVE_'} ) {
-    $ENV{'_REBUILD_PRERELEASE_RECURSIVE_'} = $$;
+unless ( defined $ENV{"_REBUILD_RECURSIVE_$TAG"} ) {
+    $ENV{"_REBUILD_RECURSIVE_$TAG"} = $$;
     $lines = 0;
     my $selfflags = join(' ',@selfflags);
     open( CHILD, "$self $selfflags 2>&1 | tee $logfile.errors |" );
@@ -267,20 +266,20 @@ open ( LOG, "> $logfile" );
 printf LOG "%4d-%02d-%02d %02d:%02d:%02d\n",$year+1900,$mon+1,$mday,$hour,$min,$sec;
 print LOG "rpmbuild -ba $spec_file\n";
 print LOG "---------------------------------------------------------------------------\n";
-print LOG     "rpmbuild -D 'rel $release' --define '_topdir /opt/users/rpmbuild/casa/prerelease' -ba $spec_file 2>&1 | tee -a $logfile |" . "\n";
+print LOG     "rpmbuild -D 'rel $release' --define '_topdir $RPM_TOP' -ba $spec_file 2>&1 | tee -a $logfile |" . "\n";
 print LOG "open( UPDATE, \"rpmbuild -D 'rel $release' -ba $spec_file 2>&1 | tee -a $logfile |\" );" . "\n";
-open( UPDATE, "rpmbuild -D 'rel $release' --define '_topdir /opt/users/rpmbuild/casa/prerelease' -ba $spec_file 2>&1 | tee -a $logfile |" );
+open( UPDATE, "rpmbuild -D 'rel $release' --define '_topdir $RPM_TOP' -ba $spec_file 2>&1 | tee -a $logfile |" );
 
 @wrote = ();
 @export = ();
 $rpmver = "";
 $rpmrev = "";
 while( <UPDATE> ) {
-    ($rpmrev = $3, $rpmver = $2, push(@wrote,$1), push(@export,$1)) if m@^Wrote: (\S+?/casa-prerelease-($version)-(\d+)(?:\.\w+)?\.$arch\.rpm)@;
-    (push(@wrote,$1), push(@export,$1)) if m@^Wrote: (\S+?/casa-prerelease-shared-$version-\d+(?:\.\w+)?\.$arch\.rpm)@;
-    (push(@wrote,$1), push(@export,$1)) if m@^Wrote: (\S+?/casa-prerelease-bin-$version-\d+(?:\.\w+)?\.$arch\.rpm)@;
-    (push(@wrote,$1), push(@export,$1)) if m@^Wrote: (\S+?/casa-prerelease-opt-$version-\d+(?:\.\w+)?\.$arch\.rpm)@;
-    push(@wrote,$1) if m@^Wrote: (\S+?/casa-prerelease-devel-$version-\d+(?:\.\w+)?\.$arch\.rpm)@;
+    ($rpmrev = $3, $rpmver = $2, push(@wrote,$1), push(@export,$1)) if m@^Wrote: (\S+?/casa-$TAG-($version)-(\d+)(?:\.\w+)?\.$arch\.rpm)@;
+    (push(@wrote,$1), push(@export,$1)) if m@^Wrote: (\S+?/casa-$TAG-shared-$version-\d+(?:\.\w+)?\.$arch\.rpm)@;
+    (push(@wrote,$1), push(@export,$1)) if m@^Wrote: (\S+?/casa-$TAG-bin-$version-\d+(?:\.\w+)?\.$arch\.rpm)@;
+    (push(@wrote,$1), push(@export,$1)) if m@^Wrote: (\S+?/casa-$TAG-opt-$version-\d+(?:\.\w+)?\.$arch\.rpm)@;
+    push(@wrote,$1) if m@^Wrote: (\S+?/casa-$TAG-devel-$version-\d+(?:\.\w+)?\.$arch\.rpm)@;
 }
 close(UPDATE);
 
@@ -302,8 +301,8 @@ if ( scalar(@wrote) >= 4 && $rpmver && $rpmrev ) {
 ##
 %rpms = ( );
 foreach $rpm ( @wrote ) {
-    print LOG "> $BLD_TOP/scripts/rpmsign $rpm\n";
-    system(     "$BLD_TOP/scripts/rpmsign $rpm" );
+    print LOG "> $RPM_TOP/scripts/rpmsign $rpm\n";
+    system(     "$RPM_TOP/scripts/rpmsign $rpm" );
     open( my $v, "/bin/rpm -qp --qf \"%{NAME}\" $rpm 2> /dev/null |" );
     my $name = <$v>;
     close($v);
@@ -331,9 +330,9 @@ foreach $rpm ( keys %rpms ) {
 #######################################################################################################
 #######    create binary tar distribution                                                       #######
 #######################################################################################################
-$makeapp = "$BLD_TOP/scripts/appdistro";
+$makeapp = "$RPM_TOP/scripts/appdistro";
 if ( -x $makeapp ) {
-    my $execline = "$makeapp version=$version ws=/var/rpmbuild/BUILD/casa-prerelease/casa-prerelease-$version dir=$staging_area/$rhver tag=prerelease";
+    my $execline = "$makeapp version=$version ws=/var/rpmbuild/BUILD/casa-$TAG/casa-$TAG-$version dir=$staging_area/$rhver tag=$TAG";
     open ( LOG, ">> $logfile" );
     print LOG "---------------------------------------------------------------------------\n";
     print LOG "generating make-app distro\n\n";
