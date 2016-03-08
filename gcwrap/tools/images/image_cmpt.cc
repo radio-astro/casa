@@ -363,6 +363,50 @@ template <class T> image* image::_boxcar(
     return new image(smoother.smooth());
 }
 
+std::string image::brightnessunit() {
+    if (detached()) {
+        return "";
+    }
+    try {
+        auto unit =_imageF
+            ? _imageF->units().getName()
+            : _imageC->units().getName();
+       return unit;
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return "";
+}
+
+bool image::calc(const std::string& expr, bool verbose) {
+    try {
+        _log << _ORIGIN;
+        if (detached()) {
+            return False;
+        }
+        if (_imageF) {
+            ImageExprCalculator<Float>::compute2(_imageF, expr, verbose);
+        }
+        else {
+            ImageExprCalculator<Complex>::compute2(_imageC, expr, verbose);
+        }
+        vector<String> names = {"expr", "verbose"};
+        vector<variant> values = {expr, verbose};
+        _addHistory(__func__, names, values);
+        _stats.reset();
+        return True;
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
+        RETHROW(x);
+    }
+    return False;
+}
+
 image* image::collapse(
     const string& function, const variant& axes,
     const string& outfile, const variant& region, const string& box,
@@ -974,50 +1018,6 @@ void image::_reset() {
 	_imageF.reset();
 	_imageC.reset();
 	_stats.reset();
-}
-
-std::string image::brightnessunit() {
-    if (detached()) {
-        return "";
-    }
-    try {
-        auto unit =_imageF
-            ? _imageF->units().getName()
-            : _imageC->units().getName();
-       return unit;
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	return "";
-}
-
-bool image::calc(const std::string& expr, bool verbose) {
-    try {
-        _log << _ORIGIN;
-        if (detached()) {
-            return False;
-        }
-        if (_imageF) {
-        	ImageExprCalculator<Float>::compute2(_imageF, expr, verbose);
-        	//_image.reset(new ImageAnalysis(_imageF));
-        }
-        else {
-        	ImageExprCalculator<Complex>::compute2(_imageC, expr, verbose);
-        	//_image.reset(new ImageAnalysis(_imageC));
-        }
-        //_image->calc(expr, verbose);
-        _stats.reset();
-        return True;
-    }    
-    catch (const AipsError& x) { 
-        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-            << LogIO::POST;
-        RETHROW(x);
-    }    
-    return False;
 }
 
 bool image::calcmask(

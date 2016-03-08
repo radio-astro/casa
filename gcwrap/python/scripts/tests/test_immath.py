@@ -1652,6 +1652,13 @@ class immath_test3(unittest.TestCase):
         self.assertTrue("ia.imagecalc" in msgs[-2])
         self.assertTrue("ia.imagecalc" in msgs[-1])
 
+        myia.open(im1)
+        self.assertTrue(myia.calc(im1 + "+" + im2))
+        msgs = myia.history()
+        myia.done()
+        self.assertTrue("ia.calc" in msgs[-2])
+        self.assertTrue("ia.calc" in msgs[-1])
+
 def suite():
     return [immath_test1, immath_test2, immath_test3]
     
