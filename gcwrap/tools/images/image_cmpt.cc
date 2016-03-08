@@ -249,6 +249,120 @@ bool image::addnoise(
 	return False;
 }
 
+record* image::boundingbox(const variant& region) {
+    try {
+        _log << _ORIGIN;
+        if (detached()) {
+            return nullptr;
+        }
+        auto myreg = _getRegion(region, False);
+        unique_ptr<ImageMetaData> md(
+            _imageF
+            ? new ImageMetaData(_imageF)
+            : new ImageMetaData(_imageC)
+        );
+        return fromRecord(*md->getBoundingBox(*myreg));
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
+        RETHROW(x);
+    }
+    return nullptr;
+}
+
+image* image::boxcar(
+    const string& outfile, const variant& region,
+    const variant& vmask, int axis, int width, bool drop,
+    const string& dmethod,
+    bool overwrite, bool stretch
+) {
+    LogOrigin lor(_class, __func__);
+    _log << lor;
+    if (detached()) {
+        throw AipsError("Unable to create image");
+    }
+    try {
+        if (axis < 0) {
+            const auto& csys = _imageF
+                ? _imageF->coordinates()
+                : _imageC->coordinates();
+            ThrowIf(
+                ! csys.hasSpectralAxis(),
+                "Axis not specified and image has no spectral coordinate"
+            );
+            axis = csys.spectralAxisNumber(False);
+        }
+        if (_imageF) {
+            SPCIIF image = _imageF;
+            return _boxcar(
+                image, region, vmask, outfile,
+                overwrite, stretch, axis, width, drop,
+                dmethod, lor
+            );
+        }
+        else {
+            SPCIIC image = _imageC;
+            return _boxcar(
+                image, region, vmask, outfile,
+                overwrite, stretch, axis, width, drop,
+                dmethod, lor
+            );
+        }
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
+        RETHROW(x);
+    }
+    return nullptr;
+}
+
+template <class T> image* image::_boxcar(
+    SPCIIT myimage, const variant& region,
+    const variant& mask, const string& outfile, bool overwrite,
+    bool stretch, int axis, int width, bool drop,
+    const string& dmethod, const LogOrigin& lor
+) {
+    ImageBoxcarSmoother<T> smoother(
+        myimage, _getRegion(region, True).get(),
+        _getMask(mask), outfile, overwrite
+    );
+    smoother.setAxis(axis);
+    smoother.setDecimate(drop);
+    smoother.setStretch(stretch);
+    smoother.setWidth(width);
+    ImageDecimatorData::Function dFunction = ImageDecimatorData::NFUNCS;
+    if (drop) {
+        String mymethod = dmethod;
+        mymethod.downcase();
+        if (mymethod.startsWith("m")) {
+            dFunction = ImageDecimatorData::MEAN;
+        }
+        else if (mymethod.startsWith("c")) {
+            dFunction = ImageDecimatorData::COPY;
+        }
+        else {
+            ThrowCc(
+                "Value of dmethod must be "
+                    "either 'm'(ean) or 'c'(opy)"
+            );
+        }
+        smoother.setDecimationFunction(dFunction);
+    }
+    vector<String> names {
+        "outfile", "region", "mask", "axis", "width",
+        "drop", "dmethod", "overwrite", "stretch"
+    };
+    vector<variant> values {
+        outfile, region, mask, axis, width,
+        drop, dmethod, overwrite, stretch
+    };
+    auto msgs = _newHistory("boxcar", names, values);
+    smoother.addHistory(lor, msgs);
+    return new image(smoother.smooth());
+}
+
 image* image::collapse(
     const string& function, const variant& axes,
     const string& outfile, const variant& region, const string& box,
@@ -860,138 +974,6 @@ void image::_reset() {
 	_imageF.reset();
 	_imageC.reset();
 	_stats.reset();
-}
-
-record* image::boundingbox(const variant& region) {
-	try {
-		_log << _ORIGIN;
-		if (detached()) {
-			return nullptr;
-		}
-		auto myreg = _getRegion(region, False);
-		unique_ptr<ImageMetaData> md(
-		    _imageF
-		    ? new ImageMetaData(_imageF)
-		    : new ImageMetaData(_imageC)
-		);
-		return fromRecord(*md->getBoundingBox(*myreg));
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-			<< LogIO::POST;
-		RETHROW(x);
-	}
-	return nullptr;
-}
-
-image* image::boxcar(
-	const string& outfile, const variant& region,
-	const variant& vmask, int axis, int width, bool drop,
-	const string& dmethod,
-	bool overwrite, bool stretch
-) {
-	LogOrigin lor(_class, __func__);
-	_log << lor;
-	if (detached()) {
-		throw AipsError("Unable to create image");
-	}
-	try {
-		SHARED_PTR<const Record> myregion = _getRegion(
-			region, True
-		);
-		String mask = vmask.toString();
-		if (mask == "[]") {
-			mask = "";
-		}
-		if (axis < 0) {
-			const auto& csys = _imageF
-				? _imageF->coordinates()
-				: _imageC->coordinates();
-			ThrowIf(
-				! csys.hasSpectralAxis(),
-				"Axis not specified and image has no spectral coordinate"
-			);
-			axis = csys.spectralAxisNumber(False);
-		}
-        ImageDecimatorData::Function dFunction = ImageDecimatorData::NFUNCS;
-        if (drop) {
-            String mymethod = dmethod;
-            mymethod.downcase();
-            if (mymethod.startsWith("m")) {
-                dFunction = ImageDecimatorData::MEAN;
-            }
-            else if (mymethod.startsWith("c")) {
-                dFunction = ImageDecimatorData::COPY;
-            }
-            else {
-                ThrowCc(
-                    "Value of dmethod must be "
-                    "either 'm'(ean) or 'c'(opy)"
-                );
-            }
-        }
-		vector<String> msgs;
-		{
-			ostringstream os;
-			os << "Ran ia." << __func__ << "() on image " << _name();
-			msgs.push_back(os.str());
-			vector<std::pair<String, variant> > inputs;
-			inputs.push_back(make_pair("outfile", outfile));
-			inputs.push_back(make_pair("region", region));
-			inputs.push_back(make_pair("mask", vmask));
-			inputs.push_back(make_pair("axis", axis));
-			inputs.push_back(make_pair("width", width));
-			inputs.push_back(make_pair("drop", drop));
-			inputs.push_back(make_pair("dmethod", dmethod));
-			inputs.push_back(make_pair("overwrite", overwrite));
-			inputs.push_back(make_pair("stretch", stretch));
-			os.str("");
-			os << "ia." << __func__ << _inputsString(inputs);
-			msgs.push_back(os.str());
-		}
-		if (_imageF) {
-			SPCIIF image = _imageF;
-			return _boxcar(
-				image, myregion, mask, outfile,
-				overwrite, stretch, axis, width, drop,
-				dFunction, lor, msgs
-			);
-		}
-		else {
-			SPCIIC image = _imageC;
-			return _boxcar(
-				image, myregion, mask, outfile,
-				overwrite, stretch, axis, width, drop,
-				dFunction, lor, msgs
-			);
-		}
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-			<< LogIO::POST;
-		RETHROW(x);
-	}
-}
-
-template <class T> image* image::_boxcar(
-	SPCIIT myimage, SHARED_PTR<const Record> region,
-	const String& mask, const string& outfile, bool overwrite,
-	bool stretch, int axis, int width, bool drop,
-	ImageDecimatorData::Function dFunction, const LogOrigin& lor,
-	const vector<String> msgs
-) {
-	ImageBoxcarSmoother<T> smoother(
-		myimage, region.get(), mask, outfile, overwrite
-	);
-	smoother.setAxis(axis);
-	smoother.setDecimate(drop);
-	smoother.setStretch(stretch);
-	if (drop) {
-		smoother.setDecimationFunction(dFunction);
-	}
-	smoother.setWidth(width);
-	smoother.addHistory(lor, msgs);
-	return new image(smoother.smooth());
 }
 
 std::string image::brightnessunit() {
@@ -5674,7 +5656,5 @@ vector<double> image::_toDoubleVec(const variant& v) {
 	}
 	return output;
 }
-
-
 
 } // casac namespace

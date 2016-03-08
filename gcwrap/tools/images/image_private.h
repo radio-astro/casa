@@ -58,11 +58,10 @@ void _addHistory(
 );
 
 template <class T> image* _boxcar(
-	SPCIIT myimage, SHARED_PTR<const casa::Record> region,
-	const casa::String& mask, const std::string& outfile, bool overwrite,
+	SPCIIT myimage, const variant& region,
+	const casac::variant& mask, const std::string& outfile, bool overwrite,
 	bool stretch, int axis, int width, bool drop,
-	casa::ImageDecimatorData::Function dFunction, const casa::LogOrigin& lor,
-	const std::vector<casa::String> msgs
+	const string& dmethod, const casa::LogOrigin& lor
 );
 
 casa::Quantity _casaQuantityFromVar(const ::casac::variant& theVar);

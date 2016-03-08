@@ -206,6 +206,17 @@ class ia_boxcar_test(unittest.TestCase):
                                 self.assertTrue((abs(got/expec - 1) < 1e-6).all())
                                 boxcar.done()
         myia.done()
+
+    def test_history(self):
+        """test writing of history"""
+        myia = iatool()
+        myia.fromshape("",[20,20,20])
+        zz = myia.boxcar()
+        orig = len(myia.history())
+        end = len(zz.history())
+        myia.done()
+        zz.done()
+        self.assertTrue(end > orig, "Wrong number of history records found")
     
 def suite():
     return [ia_boxcar_test]
