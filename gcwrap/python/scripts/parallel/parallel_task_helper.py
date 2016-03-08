@@ -507,6 +507,10 @@ class ParallelTaskHelper:
         return input
 
     @staticmethod
+    def isMPIEnabled():
+        return MPIEnvironment.is_mpi_enabled
+
+    @staticmethod
     def listToCasaString(inputList):
         """
         This Method will take a list of integers and try to express them as a 

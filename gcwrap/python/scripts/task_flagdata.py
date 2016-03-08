@@ -166,7 +166,7 @@ def flagdata(vis,
         flagbackup = False
 
     # Initialize the helper class
-    orig_locals = locals()
+    orig_locals = copy.deepcopy(locals())
     FHelper = FlagHelper()
 
     # Check if vis is a MS, MMS or cal table:
@@ -181,7 +181,7 @@ def flagdata(vis,
 
     # ***************** Input is MMS -- Parallel Processing ***********************   
          
-    if typevis == 2 and action != '' and action != 'none':
+    if FHelper.isMPIEnabled() and typevis == 2 and action != '' and action != 'none':
                             
         # Create a temporary input file with .tmp extension.
         # Use this file for all the processing from now on.
