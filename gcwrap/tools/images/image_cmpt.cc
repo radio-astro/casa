@@ -407,6 +407,36 @@ bool image::calc(const std::string& expr, bool verbose) {
     return False;
 }
 
+bool image::calcmask(
+	const string& mask, const string& maskName, bool makeDefault
+) {
+	try {
+		_log << _ORIGIN;
+		if (detached()) {
+			return False;
+		}
+		Record region;
+		if (_imageF) {
+			ImageMaskHandler<Float> imh(_imageF);
+			imh.calcmask(mask, region, maskName, makeDefault);
+		}
+		else {
+			ImageMaskHandler<Complex> imh(_imageC);
+			imh.calcmask(mask, region, maskName, makeDefault);
+		}
+		vector<String> names {"mask", "name", "asdefault"};
+		vector<variant> values {mask, maskName, makeDefault};
+		_addHistory(__func__, names, values);
+		return True;
+	}
+	catch (const AipsError& x) {
+		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+			<< LogIO::POST;
+		RETHROW(x);
+	}
+	return False;
+}
+
 image* image::collapse(
     const string& function, const variant& axes,
     const string& outfile, const variant& region, const string& box,
@@ -1020,32 +1050,6 @@ void image::_reset() {
 	_stats.reset();
 }
 
-bool image::calcmask(
-	const string& mask, const string& maskName, bool makeDefault
-) {
-	try {
-		_log << _ORIGIN;
-		if (detached()) {
-			return False;
-		}
-		Record region;
-		if (_imageF) {
-			ImageMaskHandler<Float> imh(_imageF);
-			imh.calcmask(mask, region, maskName, makeDefault);
-		}
-		else {
-			ImageMaskHandler<Complex> imh(_imageC);
-			imh.calcmask(mask, region, maskName, makeDefault);
-		}
-		return True;
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-			<< LogIO::POST;
-		RETHROW(x);
-	}
-	return False;
-}
 
 bool image::close() {
 	try {

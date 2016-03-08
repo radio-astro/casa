@@ -111,8 +111,16 @@ class ia_calcmask_test(unittest.TestCase):
                 else:
                     self.assertTrue(mask[i, j])
         
-        
-        
+    def test_history(self):
+        """Test history is written"""
+        myia = iatool()
+        name = "hist.im"
+        myia.fromshape(name,[20,20])
+        myia.calcmask(name + "== 0")
+        msgs = myia.history()
+        myia.done()
+        self.assertTrue("ia.calcmask" in msgs[-2])
+        self.assertTrue("ia.calcmask" in msgs[-1])
 
 def suite():
     return [ia_calcmask_test]
