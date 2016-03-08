@@ -117,7 +117,7 @@ namespace casa {
 		void updateReferenceFrame();
 		static void setInitialReferenceFrame( QString initialReferenceStr );
 		void setResultDisplay( SearchMoleculesResultDisplayer* resultDisplay );
-		double getRedShiftedValue( bool reverseRedshift, double value ) const;
+		double getRedShiftedValue( bool reverseRedshift, double value, bool* valid ) const;
 
 		vector<SplatResult> getSearchResults() const;
 		MDoppler::Types getDopplerType() const;
@@ -147,7 +147,7 @@ namespace casa {
 
 		void setAstronomicalFilters( Searcher* searcher );
 		void convertRangeLineEdit( QLineEdit* lineEdit, Converter* converter );
-		void initializeSearchRange( QLineEdit* lineEdit, Double& value );
+		void initializeSearchRange( QLineEdit* lineEdit, Double& value, bool* valid );
 		vector<string> initializeChemicalNames();
 		vector<string> initializeChemicalFormulas();
 		QList<QString> getSearchChemicals();
@@ -155,7 +155,7 @@ namespace casa {
 		void startSearchThread();
 		void setSearchRangeDefault();
 		double setRangeValue( double value, QString units );
-
+		double getRedShift() const;
 		MDoppler getRedShiftAdjustment( bool reverseRedshift) const;
 
 		enum AstroFilters { NONE, TOP_20, PLANETARY_ATMOSPHERE,HOT_CORES,

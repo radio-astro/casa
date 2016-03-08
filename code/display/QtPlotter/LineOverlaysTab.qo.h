@@ -64,7 +64,7 @@ namespace casa {
 		void addLineToPixelCanvas( float center, float peak,
 		                           QString molecularName, QString chemicalName,
 		                           QString resolvedQNs, QString frequencyUnit, Converter* converter);
-		float getShiftedCenter( float center, Converter* converter );
+		float getShiftedCenter( float center, Converter* converter, bool* valid );
 		Ui::LineOverlaysTabClass ui;
 		SearchMoleculesWidget* searchWidget;
 		QtCanvas* pixelCanvas;

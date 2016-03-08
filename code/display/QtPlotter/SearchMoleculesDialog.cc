@@ -84,8 +84,8 @@ namespace casa {
 		                                     chemicalName, resolvedQNs, frequencyUnit );
 	}
 
-	double SearchMoleculesDialog::getRedShiftedValue( bool reverseRedshift, float value ) const {
-		return searchWidget->getRedShiftedValue( reverseRedshift, value );
+	double SearchMoleculesDialog::getRedShiftedValue( bool reverseRedshift, float value, bool* valid ) const {
+		return searchWidget->getRedShiftedValue( reverseRedshift, value, valid );
 	}
 
 

@@ -30,10 +30,12 @@
 #include <display/Display/Options.h>
 #include <spectrallines/Splatalogue/SplatalogueTable.h>
 #include <measures/Measures/MeasConvert.h>
+#include <measures/Measures/VelocityMachine.h>
 #include <measures/Measures/MCDoppler.h>
 #include <casa/Quanta/MVDoppler.h>
 #include <QFileDialog>
 #include <QTemporaryFile>
+#include <QtCore/qmath.h>
 #include <QTimer>
 #include <QDebug>
 #include <assert.h>
@@ -269,7 +271,8 @@ namespace casa {
 					MRadialVelocity mVelocity = MRadialVelocity::fromDoppler(doppler, referenceType);
 					Quantity velQuantity = mVelocity.get( unitString );
 					val = velQuantity.getValue();
-				} else {
+				}
+				else {
 					//From velocity to doppler
 					MDoppler dop = MRadialVelocity( Quantity(val, unitString), referenceType).toDoppler();
 					MDoppler doppler = MDoppler::Convert ( dop, dopplerType)();
@@ -310,7 +313,7 @@ namespace casa {
 
 
 
-	void SearchMoleculesWidget::initializeSearchRange( QLineEdit* lineEdit, Double& value/*, MDoppler redShift*/ ) {
+	void SearchMoleculesWidget::initializeSearchRange( QLineEdit* lineEdit, Double& value, bool* valid/*, MDoppler redShift*/ ) {
 		QString valueStr = lineEdit->text();
 		if ( !valueStr.isEmpty() ) {
 			value = valueStr.toDouble();
@@ -322,7 +325,7 @@ namespace casa {
 			}
 
 			//Factor in the specified redshift.
-			value = getRedShiftedValue( true, value );
+			value = getRedShiftedValue( true, value, valid );
 		}
 	}
 
@@ -378,16 +381,76 @@ namespace casa {
 		return chemFormulas;
 	}
 
-	double SearchMoleculesWidget::getRedShiftedValue( bool reverseRedshift, double value ) const {
+	double SearchMoleculesWidget::getRedShift() const {
+		QString redShiftStr = ui.dopplerLineEdit->text();
+		double redshift = 0;
+		if ( ! redShiftStr.isEmpty() ) {
+			redshift = redShiftStr.toDouble();
+		}
+		return redshift;
+	}
+
+	double SearchMoleculesWidget::getRedShiftedValue( bool reverseRedshift,
+			double value, bool* valid ) const {
+		Unit unit( "km/s");
+		Unit splatalogueUnit( SPLATALOGUE_UNITS.toStdString() );
 		Vector<Double> inputValues(1);
 		inputValues[0] = value;
-		Unit splatalogueUnit( SPLATALOGUE_UNITS.toStdString());
 		Quantum< Vector<Double> > quantum( inputValues, splatalogueUnit );
-		MDoppler doppler = getRedShiftAdjustment( reverseRedshift );
-		Quantum< Vector<Double> > outputQuantum = doppler.shiftFrequency(inputValues);
-		Vector<Double> outputValues = outputQuantum.getValue();
-		double result = outputValues[0];
+		double result = nan("");
+		const float SPEED_LIGHT = 299791.2;
+		*valid = true;
+		if ( !ui.redshiftRadio->isChecked() ) {
+			MDoppler doppler = getRedShiftAdjustment( reverseRedshift );
+			double dopValue = doppler.get(unit).getValue();
+			if ( dopValue >= SPEED_LIGHT ){
+				*valid = false;
+			}
+			else {
+				Quantum< Vector<Double> > outputQuantum = doppler.shiftFrequency(inputValues);
+				Vector<Double> outputValues = outputQuantum.getValue();
+				result = outputValues[0];
+			}
+		}
+		else {
+			double redshift = getRedShift();
+			MDoppler::Types dopplerType = getDopplerType();
+			Quantity quant( redshift );
+			MDoppler dIN( quant, MDoppler::Ref( dopplerType ));
+			double velo = MRadialVelocity::fromDoppler( dIN, MRadialVelocity::LSRK).get( unit ).getValue();
+			if ( velo >= SPEED_LIGHT ){
+				*valid = false;
+			}
+			else {
+				if ( reverseRedshift ){
+					MFrequency::Ref frqref(MFrequency::LSRK);
+					MDoppler::Ref velref(dopplerType);
+					MVFrequency restfrq(quantum);
+					MeasFrame frame;
+					VelocityMachine vm(frqref, splatalogueUnit, restfrq,  velref, unit, frame);
+					Quantity outputvalue=vm.makeFrequency(velo);
+					result = outputvalue.getValue( "MHz");
+				}
+				else {
+					//Code does not seem to be available in casacore
+					//so doing it here.
+					if ( dopplerType == MDoppler::RADIO ){
+						result = value / ( 1 - velo / SPEED_LIGHT );
+					}
+					else if (dopplerType == MDoppler::OPTICAL ){
+						result = value *  ( 1 + velo / SPEED_LIGHT );
+					}
+					else {
+						//Relativistic
+						double beta = velo / SPEED_LIGHT;
+						result = value / qSqrt( ( 1 - beta ) / (1 + beta ) );
+					}
+				}
+			}
+		}
+
 		return result;
+
 	}
 
 	void SearchMoleculesWidget::setAstronomicalFilters( Searcher* searcher ) {
@@ -500,8 +563,15 @@ namespace casa {
 		//to use the min/max range of the canvas.  Apparently searches
 		//using the splatalogue default min and max are not useful.
 		setSearchRangeDefault();
-		initializeSearchRange( ui.rangeMinLineEdit, minValue );
-		initializeSearchRange( ui.rangeMaxLineEdit, maxValue );
+		bool minValid;
+		bool maxValid;
+		initializeSearchRange( ui.rangeMinLineEdit, minValue, &minValid );
+		initializeSearchRange( ui.rangeMaxLineEdit, maxValue, &maxValid );
+		if ( !minValid || !maxValid ){
+			QString msg( "Velocity was invalid.");
+			Util::showUserMessage( msg, this );
+			return;
+		}
 		if ( minValue > maxValue ) {
 			double tmp = minValue;
 			minValue = maxValue;
@@ -595,8 +665,8 @@ namespace casa {
 					redShift = redShift * -1;
 				}
 				MVDoppler mvDoppler( redShift);
-				doppler.set(mvDoppler);
-			} else {
+			}
+			else {
 				//Velocity units:  convert to a doppler
 				QString unitString = ui.dopplerUnitsComboBox->currentText();
 				MRadialVelocity::Types referenceType = getReferenceFrame();

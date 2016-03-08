@@ -70,7 +70,8 @@ namespace casa {
 				if ( originalUnits != graphUnits ){
 					converter = Converter::getConverter( originalUnits,graphUnits );
 				}
-				float shiftedCenter = getShiftedCenter( lineCenter, converter );
+				bool centerValid = true;
+				float shiftedCenter = getShiftedCenter( lineCenter, converter, &centerValid );
 				lines[i]->setCenter( shiftedCenter );
 			}
 			pixelCanvas->refreshPixmap();
@@ -142,9 +143,9 @@ namespace casa {
 		delete converter;
 	}
 
-	float LineOverlaysTab::getShiftedCenter( float center, Converter* converter ){
+	float LineOverlaysTab::getShiftedCenter( float center, Converter* converter, bool* valid ){
 		//First we have to make the frequency value redshifted.
-		double shiftedCenter = searchWidget->getRedShiftedValue( false, center );
+		double shiftedCenter = searchWidget->getRedShiftedValue( false, center, valid );
 
 		//Now Convert it to the same units the pixel canvas is using.
 		if ( converter != NULL ) {
@@ -155,11 +156,12 @@ namespace casa {
 
 	void LineOverlaysTab::addLineToPixelCanvas( float center, float peak, QString molecularName,
 	        QString chemicalName, QString resolvedQNs, QString frequencyUnit, Converter* converter) {
-		double shiftedCenter = getShiftedCenter( center, converter );
+		bool centerValid = false;
+		double shiftedCenter = getShiftedCenter( center, converter, &centerValid );
 
 
 		//Add the line to the pixel canvas.
-		if ( pixelCanvas != NULL ) {
+		if ( pixelCanvas != NULL && centerValid ) {
 			MolecularLine* line = new MolecularLine( shiftedCenter, peak,
 			        molecularName, chemicalName, resolvedQNs, frequencyUnit, center );
 			pixelCanvas->addMolecularLine( line );
@@ -219,7 +221,8 @@ namespace casa {
 			Converter* converter = NULL;
 			if ( originalUnits != graphUnits ){
 				converter = Converter::getConverter( originalUnits,graphUnits );
-				float shiftedCenter = getShiftedCenter( lineCenter, converter );
+				bool centerValid = true;
+				float shiftedCenter = getShiftedCenter( lineCenter, converter, &centerValid );
 				lines[i]->setCenter( shiftedCenter );
 			}
 			delete converter;
