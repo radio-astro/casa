@@ -344,26 +344,11 @@ template <class T> SPIIT ImageTask<T>::_prepareOutputImage(
     const IPosition *const outShape, const CoordinateSystem *const coordsys,
 	const String *const outname, Bool overwrite, Bool dropDegen
 ) const {
-    /*
-	_timer.stop();
-	cout << __FILE__ << " " << __LINE__ << " " << _timer.duration() << endl;
-	_timer.start();
-	*/
 	IPosition oShape = outShape == 0 ? image.shape() : *outShape;
 	CoordinateSystem csys = coordsys == 0 ? image.coordinates() : *coordsys;
-	/*
-	_timer.stop();
-	cout << __FILE__ << " " << __LINE__ << " " << _timer.duration() << endl;
-	_timer.start();
-	*/
 	SHARED_PTR<TempImage<T> > tmpImage(
 		new TempImage<T>(TiledShape(oShape), csys)
 	);
-	/*
-	_timer.stop();
-	cout << __FILE__ << " " << __LINE__ << " " << _timer.duration() << endl;
-	_timer.start();
-	*/
 	if (mask != 0) {
 		if (! ImageMask::isAllMaskTrue(*mask)) {
 			tmpImage->attachMask(*mask);
@@ -375,11 +360,6 @@ template <class T> SPIIT ImageTask<T>::_prepareOutputImage(
 	else if (image.hasPixelMask() || image.isMasked()) {
 		// A paged array is stored on disk and is preferred over an
 		// ArrayLattice which will exhaust memory for large images.
-	    /*
-		_timer.stop();
-		cout << __FILE__ << " " << __LINE__ << " " << _timer.duration() << endl;
-		_timer.start();
-		*/
 		std::unique_ptr<Lattice<Bool>> mymask;
 		if (image.size() > 4096*4096) {
 			mymask.reset(new PagedArray<Bool>(image.shape()));
@@ -387,30 +367,10 @@ template <class T> SPIIT ImageTask<T>::_prepareOutputImage(
 		else {
 			mymask.reset(new ArrayLattice<Bool>(image.shape()));
 		}
-		/*
-		_timer.stop();
-		cout << __FILE__ << " " << __LINE__ << " " << _timer.duration() << endl;
-		_timer.start();
-		*/
 		_copyMask(*mymask, image);
-		/*
-		_timer.stop();
-		cout << __FILE__ << " " << __LINE__ << " " << _timer.duration() << endl;
-		_timer.start();
-		*/
 		if (! ImageMask::isAllMaskTrue(image)) {
-		    /*
-			_timer.stop();
-			cout << __FILE__ << " " << __LINE__ << " " << _timer.duration() << endl;
-			_timer.start();
-			*/
 			tmpImage->attachMask(*mymask);
 		}
-		/*
-		_timer.stop();
-		cout << __FILE__ << " " << __LINE__ << " " << _timer.duration() << endl;
-		_timer.start();
-		*/
 	}
 	String myOutname = outname ? *outname : _outname;
 	if (! outname) {
@@ -421,52 +381,22 @@ template <class T> SPIIT ImageTask<T>::_prepareOutputImage(
 		outImage->put(*values);
 	}
 	else {
-	    /*
-		_timer.stop();
-		cout << __FILE__ << " " << __LINE__ << " " << _timer.duration() << endl;
-		_timer.start();
-		*/
 	    // FIXME this is a superfluous copy if  dropgen || ! myOutname.empty()
 		_copyData(*outImage, image);
-		/*
-		_timer.stop();
-		cout << __FILE__ << " " << __LINE__ << " " << _timer.duration() << endl;
-		_timer.start();
-		*/
 	}
 	if (dropDegen || ! myOutname.empty()) {
 		if (! myOutname.empty()) {
 			_removeExistingFileIfNecessary(myOutname, overwrite);
 		}
-		/*
-		_timer.stop();
-		cout << __FILE__ << " " << __LINE__ << " " << _timer.duration() << endl;
-		_timer.start();
-		*/
 		String emptyMask = "";
 		Record empty;
         outImage = SubImageFactory<T>::createImage(
         	*tmpImage, myOutname, empty, emptyMask,
         	dropDegen, False, True, False
         );
-        /*
-    	_timer.stop();
-    	cout << __FILE__ << " " << __LINE__ << " " << _timer.duration() << endl;
-    	_timer.start();
-    	*/
 	}
 	ImageUtilities::copyMiscellaneous(*outImage, image);
-	/*
-	_timer.stop();
-	cout << __FILE__ << " " << __LINE__ << " " << _timer.duration() << endl;
-	_timer.start();
-	*/
 	_doHistory(outImage);
-	/*
-	_timer.stop();
-	cout << __FILE__ << " " << __LINE__ << " " << _timer.duration() << endl;
-	_timer.start();
-	*/
 	return outImage;
 }
 
@@ -501,15 +431,18 @@ template <class T> SPIIT ImageTask<T>::_prepareOutputImage(
     _doHistory(outImage);
     return outImage;
 }
+
 template <class T> void ImageTask<T>::_doHistory(SPIIT image) const {
     if (! _suppressHistory) {
         ImageHistory<T> history(image);
+        if (history.get(False).empty()) {
+            history.append(_image);
+        }
         for (const auto& line: _newHistory) {
             history.addHistory(line.first, line.second);
         }
     }
 }
-
 
 }
 

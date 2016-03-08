@@ -52,12 +52,10 @@ template<class T> SPIIT ImageDecimator<T>::decimate() const {
 	);
 	LogOrigin lor = LogOrigin(getClass(), __func__);
 	*this->_getLog() << lor;
-	//SPIIT clone(this->_getImage()->cloneII());
-	SHARED_PTR<const SubImage<T> >subImage = SubImageFactory<T>::createSubImageRO(
+	auto subImage = SubImageFactory<T>::createSubImageRO(
 		*this->_getImage(), *this->_getRegion(), this->_getMask(), 0,
 		AxesSpecifier(), this->_getStretch()
 	);
-	//clone.reset();
 	if (_factor == 1) {
 		*this->_getLog() << LogIO::WARN << "A decimation factor "
 			<< "of 1 has been specified which means no planes will "
@@ -170,8 +168,8 @@ template<class T> SPIIT ImageDecimator<T>::decimate() const {
             << "image to form plane i in the output image.";
     }
 	this->addHistory(lor, os.str());
-	SPIIT tmp(
-		this->_prepareOutputImage(out, 0, outMask.get())
+    SPIIT tmp(
+		this->_prepareOutputImage(out, nullptr, outMask.get())
 	);
     return tmp;
 }
