@@ -24,6 +24,7 @@ except:
     import StringIO
 import types
 import uuid
+import numpy as np
 
 import cachetools
 
@@ -1065,3 +1066,22 @@ def flatten_dict(d, join=operator.add, lift=lambda x: (x,)):
     results = []
     visit(d, results, FLAG_FIRST)
     return results
+
+def flagged_intervals(vec):
+    '''
+    Find islands of non-zeros in the vector vec
+    Used to find contiguous flagged channels in a given spw.  Returns a list of tuples with the start and end channels.
+    '''
+    if len(vec)==0:
+        return []
+    elif not isinstance(vec, np.ndarray):
+        vec = np.array(vec)
+
+    edges, = np.nonzero(np.diff((vec==True)*1))
+    edge_vec = [edges+1]
+    if vec[0] != 0:
+        edge_vec.insert(0, [0])
+    if vec[-1] != 0:
+        edge_vec.append([len(vec)])
+    edges = np.concatenate(edge_vec)
+    return zip(edges[::2], edges[1::2]-1)
