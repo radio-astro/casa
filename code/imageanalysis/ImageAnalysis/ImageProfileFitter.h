@@ -246,8 +246,7 @@ private:
 		_fwhmErrName, _ampName, _ampErrName,
 		_integralName, _integralErrName, _plpName, _plpErrName,
 		_ltpName, _ltpErrName, _sigmaName, _abscissaDivisorForDisplay;
-	Bool /*_logfileAppend, _fitConverged, _fitDone, */ _multiFit,
-		/*_deleteImageOnDestruct,*/ _logResults, _isSpectralIndex,
+	Bool  _multiFit, _logResults, _isSpectralIndex,
 		_createResid, _overwrite, _storeFits;
 	Int _polyOrder, _fitAxis;
 	uInt _nGaussSinglets, _nGaussMultiplets, _nLorentzSinglets,

@@ -65,10 +65,7 @@ template <class T> ImageTask<T>::ImageTask(
     const String& outname, Bool overwrite
 ) : _image(image), _regionPtr(regionPtr),
 	_region(), _box(), _chan(), _stokesString(), _mask(mask),
-	_outname(outname), _overwrite(overwrite) {
-	//FITSImage::registerOpenFunction();
-	//MIRIADImage::registerOpenFunction();
-}
+	_outname(outname), _overwrite(overwrite) {}
 
 template <class T> ImageTask<T>::~ImageTask() {}
 
@@ -133,8 +130,8 @@ template <class T> void ImageTask<T>::setRegion(const Record& region) {
 }
 
 template <class T> void ImageTask<T>::_removeExistingFileIfNecessary(
-	const String& filename, Bool overwrite
-) {
+	const String& filename, Bool overwrite, Bool warnOnly
+) const {
 	File out(filename);
 	if (out.exists()) {
 		// remove file if it exists which prevents emission of
@@ -154,10 +151,14 @@ template <class T> void ImageTask<T>::_removeExistingFileIfNecessary(
 			}
 		}
 		else {
-			ThrowCc(
-				"File " + filename + " exists but overwrite is false "
-				"so it cannot be overwritten"
-			);
+		    String msg = "File " + filename + " exists but overwrite is false "
+				"so it cannot be overwritten";
+		    if (warnOnly) {
+		        *_log << LogIO::WARN << msg << LogIO::POST;
+		    }
+		    else {
+		        ThrowCc(msg);
+		    }
 		}
 	}
 }
@@ -415,6 +416,24 @@ template <class T> SPIIT ImageTask<T>::_prepareOutputImage(
     _doHistory(outImage);
     return outImage;
 }
+
+template <class T> SPIIT ImageTask<T>::_prepareOutputImage(
+    const ImageInterface<T>& image, const String& outname,
+    Bool overwrite, Bool warnOnly
+) const {
+    if (! outname.empty()) {
+        _removeExistingFileIfNecessary(outname, overwrite, warnOnly);
+    }
+    static const Record empty;
+    static const String emptyString;
+    auto outImage = SubImageFactory<T>::createImage(
+        image, outname, empty, emptyString, False,
+        overwrite, True, False, False
+    );
+    _doHistory(outImage);
+    return outImage;
+}
+
 
 template <class T> SPIIT ImageTask<T>::_prepareOutputImage(
     const ImageInterface<T>& image, const Lattice<T>& data

@@ -331,39 +331,14 @@ Record ImageProfileFitter::fit(Bool doDetailedResults) {
 		_results = resultHandler.getResults();
 	}
 	resultHandler.writeImages(_nConverged > 0);
-	if (
-		! _model.empty()
-		&& ! (
-			_modelImage = SubImageFactory<Float>::createImage(
-				*_modelImage, _model, Record(), "",
-				False, _overwrite ,True, False, True
-			)
-		)
-	) {
-		*_getLog() << LogIO::WARN << "Failed to write model image "
-			<< _model << LogIO::POST;
+	if (_modelImage) {
+	    _modelImage = _prepareOutputImage(*_modelImage, _model, _overwrite, True);
 	}
-	if (
-		! _residual.empty()
-		&& ! (
-			_residImage = SubImageFactory<Float>::createImage(
-				*_residImage, _residual, Record(), "",
-				False, _overwrite ,True, False, True
-			)
-		)
-	) {
-		*_getLog() << LogIO::WARN << "Failed to write residual image "
-			<< _residual << LogIO::POST;
+	if (_residImage) {
+		_residImage = _prepareOutputImage(*_residImage, _residual, _overwrite, True);
 	}
-
-	if (originalSigma.get() && ! _sigmaName.empty()) {
-		_removeExistingFileIfNecessary(_sigmaName, True);
-    	PagedImage<Float> outputSigma(
-    		originalSigma->shape(), originalSigma->coordinates(),
-    		_sigmaName
-    	);
-    	outputSigma.put(originalSigma->get());
-    	ImageUtilities::copyMiscellaneous(outputSigma, *originalSigma);
+	if (originalSigma && ! _sigmaName.empty()) {
+	    _prepareOutputImage(*originalSigma, _sigmaName, True, True);
     }
 	return _results;
 }

@@ -147,9 +147,11 @@ protected:
 
     void _removeExistingOutfileIfNecessary() const;
 
-    static void _removeExistingFileIfNecessary(
-    	const String& filename, const Bool overwrite
-    );
+    // if warnOnly is True, log a warning message if file exists and
+    // overwrite is True, else throw an exception.
+    void _removeExistingFileIfNecessary(
+    	const String& filename, const Bool overwrite, Bool warnOnly=False
+    ) const;
 
     String _summaryHeader() const;
 
@@ -199,6 +201,13 @@ protected:
     	const ImageInterface<T>& image, Bool dropDegen=False
     ) const;
 
+    // if warnOnly is True, only log a warning message if the file exists and
+    // overwrite is True, else throw an excepction
+    SPIIT _prepareOutputImage(
+        const ImageInterface<T>& image, const String& outname,
+        Bool overwrite, Bool warnOnly
+    ) const;
+
     // data are copied to the output image from the <src>data</src>
     // lattice. The mask is copied from the input image.
     SPIIT _prepareOutputImage(
@@ -217,9 +226,11 @@ protected:
 
     static void _copyData(Lattice<T>& data, const ImageInterface<T>& image);
 
+    void _doHistory(SPIIT image) const;
+
 private:
     const SPCIIT _image;
-    SHARED_PTR<LogIO> _log = SHARED_PTR<LogIO>(new LogIO());
+    mutable SHARED_PTR<LogIO> _log = SHARED_PTR<LogIO>(new LogIO());
     const Record *const _regionPtr;
     Record _regionRecord;
     String _region = "";
@@ -239,8 +250,6 @@ private:
 	mutable vector<std::pair<String, String> > _newHistory;
 
 	mutable C11Timer _timer;
-
-	void _doHistory(SPIIT image) const;
 };
 
 }
