@@ -39,7 +39,6 @@
 #include <lattices/LatticeMath/Fit2D.h>
 #include <lattices/LatticeMath/LatticeFit.h>
 #include <lattices/LEL/LatticeExprNode.h>
-#include <lattices/LEL/LatticeExprNode.h>
 #include <lattices/Lattices/LatticeIterator.h>
 #include <lattices/LRegions/LatticeRegion.h>
 #include <lattices/LatticeMath/LatticeSlice1D.h>
@@ -432,6 +431,21 @@ bool image::calcmask(
 	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;
+		RETHROW(x);
+	}
+	return False;
+}
+
+bool image::close() {
+	try {
+	    _log << _ORIGIN;
+	    _reset();
+        MeasIERS::closeTables();
+        return True;
+	}
+	catch (const AipsError& x) {
+		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+				<< LogIO::POST;
 		RETHROW(x);
 	}
 	return False;
@@ -1050,25 +1064,6 @@ void image::_reset() {
 	_stats.reset();
 }
 
-
-bool image::close() {
-	try {
-		_log << _ORIGIN;
-		//_image.reset();
-		_imageF.reset();
-		_imageC.reset();
-		_stats.reset();
-        MeasIERS::closeTables();
-        return True;
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	return False;
-}
-
 image* image::continuumsub(
 	const string& outline, const string& outcont,
 	const variant& region, const vector<int>& channels,
@@ -1111,6 +1106,16 @@ image* image::continuumsub(
 			fitter.setGoodPlanes(std::set<uInt>(myplanes.begin(), myplanes.end()));
 		}
 		fitter.createResidualImage(True);
+		vector<String> names {
+		    "outline", "outcont", "region", "channels",
+		    "pol", "fitorder", "overwrite"
+		};
+		vector<variant> values {
+		    outline, outcont, region, channels,
+		    pol, in_fitorder, overwrite
+		};
+		auto msgs = _newHistory(__func__, names, values);
+		fitter.addHistory(_ORIGIN, msgs);
 		fitter.fit(False);
 		return new image(fitter.getResidual());
 	}

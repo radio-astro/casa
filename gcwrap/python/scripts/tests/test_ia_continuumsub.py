@@ -105,5 +105,26 @@ class ia_continuumsub_test(unittest.TestCase):
         self.assertTrue(myia.restoringbeam() == resid.restoringbeam())
         resid.done()
 
+    def test_history(self):
+        "verify history is written to output"""
+        g1d = fn.gaussian1d(40, 30, 10)
+        myia = self._myia
+        myia.fromshape("", [1,1,50])
+        bb = myia.getchunk()
+        for i in xrange(50):
+            bb[0,0,i] = g1d.f(i)
+        myia.putchunk(bb)
+        outline = "outline"
+        outcont = "outcont"
+        xx = myia.continuumsub(outline=outline, outcont=outcont)
+        myia.done()
+        xx.done()
+        for x in [outline, outcont]:
+            myia.open(x)
+            msgs = myia.history()
+            myia.done() 
+            self.assertTrue("ia.continuumsub" in msgs[-2]) 
+            self.assertTrue("ia.continuumsub" in msgs[-1])
+
 def suite():
     return [ia_continuumsub_test]
