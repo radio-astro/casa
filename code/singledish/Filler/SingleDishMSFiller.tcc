@@ -68,8 +68,8 @@ inline void fillTable(_Table &table, _Record &record, _Reader const &reader) {
 }
 
 template<class _Table, class _Columns, class _Comparer, class _Updater>
-Int updateTable(_Table &mytable, _Columns &mycolumns, _Comparer const &comparer,
-    _Updater const &updater) {
+inline Int updateTable(_Table &mytable, _Columns &mycolumns,
+    _Comparer const &comparer, _Updater const &updater) {
   POST_START;
 
   Int id = -1;
@@ -91,11 +91,35 @@ Int updateTable(_Table &mytable, _Columns &mycolumns, _Comparer const &comparer,
   return id;
 }
 
+template<class _Columns, class _Record>
+inline void updateSubtable(_Columns &columns, uInt irow,
+    _Record const &record) {
+  // only update timestamp and interval
+  Double time_org = columns.time()(irow);
+  Double interval_org = columns.interval()(irow);
+
+  Double time_min_org = time_org - interval_org / 2.0;
+  Double time_max_org = time_org + interval_org / 2.0;
+
+  Double time_min_in = record.time - record.interval / 2.0;
+  Double time_max_in = record.time + record.interval / 2.0;
+
+  Double time_min_new = min(time_min_org, time_min_in);
+  Double time_max_new = max(time_max_org, time_max_in);
+
+  if (time_min_new != time_min_org || time_max_new != time_max_org) {
+    Double time_new = (time_min_new + time_max_new) / 2.0;
+    Double interval_new = time_max_new - time_min_new;
+    columns.time().put(irow, time_new);
+    columns.interval().put(irow, interval_new);
+  }
+}
+
 void makeSourceMap(MSSource const &table, Record &source_map) {
   POST_START;
 
-  ROScalarColumn < String > name_column(table, "NAME");
-  ROScalarColumn < Int > id_column(table, "SOURCE_ID");
+  ROScalarColumn<String> name_column(table, "NAME");
+  ROScalarColumn<Int> id_column(table, "SOURCE_ID");
   Vector<Int> id = id_column.getColumn();
 
   Sort sorter;
@@ -112,12 +136,6 @@ void makeSourceMap(MSSource const &table, Record &source_map) {
 
   POST_END;
 }
-
-//struct Deleter {
-//  void operator()(void *p) {
-//    free(p);
-//  }
-//};
 
 }// anonymous namespace
 
@@ -312,6 +330,89 @@ void SingleDishMSFiller<T>::fillMainMT(SingleDishMSFiller<T> *filler) {
   }
 
   SingleDishMSFiller<T>::destroy_context();
+
+  POST_END;
+}
+
+template<class T>
+SingleDishMSFiller<T>::SingleDishMSFiller(std::string const &name) :
+    ms_(), ms_columns_(), data_description_columns_(), feed_columns_(),
+    pointing_columns_(), polarization_columns_(), syscal_columns_(),
+    state_columns_(), weather_columns_(), reader_(new T(name)),
+    is_float_(false), data_key_(), reference_feed_(-1), pointing_time_(),
+    pointing_time_max_(), pointing_time_min_(), num_pointing_time_(),
+    syscal_list_(), subscan_list_(), polarization_type_pool_(), weather_list_() {
+}
+
+template<class T>
+SingleDishMSFiller<T>::~SingleDishMSFiller() {
+}
+
+template<class T>
+void SingleDishMSFiller<T>::fill() {
+  POST_START;
+
+  // initialization
+  initialize();
+
+  // Fill tables that can be processed prior to main loop
+  fillPreProcessTables();
+
+  // main loop
+#if 0
+  SingleDishMSFiller<Reader>::fillMainMT(this);
+#else
+  fillMain();
+#endif
+
+  // Fill tables that must be processed after main loop
+  fillPostProcessTables();
+
+  // finalization
+  finalize();
+
+  POST_END;
+}
+
+template<class T>
+void SingleDishMSFiller<T>::initialize() {
+  POST_START;
+
+  // initialize reader
+  reader_->initialize();
+
+  // query if the data is complex or float
+  is_float_ = reader_->isFloatData();
+  if (is_float_) {
+//      std::cout << "data column is FLOAT_DATA" << std::endl;
+    data_key_ = "FLOAT_DATA";
+  } else {
+//      std::cout << "data column is DATA" << std::endl;
+    data_key_ = "DATA";
+  }
+
+  // setup MS
+  setupMS();
+
+  // frame information
+  MDirection::Types direction_frame = reader_->getDirectionFrame();
+  auto mytable = ms_->pointing();
+  ArrayColumn<Double> direction_column(mytable, "DIRECTION");
+  TableRecord &record = direction_column.rwKeywordSet();
+  Record meas_info = record.asRecord("MEASINFO");
+  String ref_string = MDirection::showType(direction_frame);
+  meas_info.define("Ref", ref_string);
+  record.defineRecord("MEASINFO", meas_info);
+
+  POST_END;
+}
+
+template<class T>
+void SingleDishMSFiller<T>::finalize() {
+  POST_START;
+
+  // finalize reader
+  reader_->finalize();
 
   POST_END;
 }
@@ -532,6 +633,74 @@ void SingleDishMSFiller<T>::setupMS() {
 }
 
 template<class T>
+void SingleDishMSFiller<T>::fillPreProcessTables() {
+  POST_START;
+
+  // fill OBSERVATION table
+  fillObservation();
+
+  // fill ANTENNA table
+  fillAntenna();
+
+  // fill PROCESSOR table
+  fillProcessor();
+
+  // fill SOURCE table
+  fillSource();
+
+  // fill FIELD table
+  fillField();
+
+  // fill SPECTRAL_WINDOW table
+  fillSpectralWindow();
+
+  POST_END;
+}
+
+template<class T>
+void SingleDishMSFiller<T>::fillPostProcessTables() {
+  POST_START;
+
+  // fill HISTORY table
+  fillHistory();
+
+  // flush POINTING entry
+  sortPointing();
+
+  POST_END;
+}
+
+template<class T>
+void SingleDishMSFiller<T>::fillMain() {
+  POST_START;
+
+  size_t nrow = reader_->getNumberOfRows();
+  DataAccumulator accumulator;
+  DataRecord record;
+//    std::cout << "nrow = " << nrow << std::endl;
+  for (size_t irow = 0; irow < nrow; ++irow) {
+    Bool status = reader_->getData(irow, record);
+//      std::cout << "irow " << irow << " status " << status << std::endl;
+//      std::cout << "   TIME=" << record.time << " INTERVAL=" << record.interval
+//          << std::endl;
+//      std::cout << "status = " << status << std::endl;
+    if (status) {
+      Bool is_ready = accumulator.queryForGet(record.time);
+      if (is_ready) {
+        flush(accumulator);
+      }
+      Bool astatus = accumulator.accumulate(record);
+      (void) astatus;
+//        std::cout << "astatus = " << astatus << std::endl;
+    }
+  }
+
+  flush(accumulator);
+
+  POST_END;
+}
+
+template<class T>
 void SingleDishMSFiller<T>::fillAntenna() {
   POST_START;
 
@@ -544,7 +713,7 @@ void SingleDishMSFiller<T>::fillAntenna() {
   uInt nrow = mytable.nrow();
   num_pointing_time_.resize(nrow);
   for (uInt i = 0; i < nrow; ++i) {
-    pointing_time_[i] = Vector < Double > (ARRAY_BLOCK_SIZE, -1.0);
+    pointing_time_[i] = Vector<Double>(ARRAY_BLOCK_SIZE, -1.0);
     pointing_time_min_[i] = -1.0;
     pointing_time_max_[i] = 1.0e30;
     num_pointing_time_[i] = 0;
@@ -599,6 +768,25 @@ void SingleDishMSFiller<T>::fillField() {
 
   ::fillTable(mytable, record,
       [&](FieldRecord &record) {return reader_->getFieldRow(record);});
+
+  POST_END;
+}
+
+template<class T>
+void SingleDishMSFiller<T>::fillHistory() {
+  POST_START;
+
+  // HISTORY table should be filled by upper-level
+  // application command (e.g. importscantable)
+//    ms_->history().addRow(1, True);
+//    Vector<String> cols(2);
+//    cols[0] = "APP_PARAMS";
+//    cols[1] = "CLI_COMMAND";
+//    TableRow row(ms_->history(), cols, True);
+//    // TODO: fill HISTORY row here
+//    TableRecord record = row.record();
+//    record.print(std::cout);
+//    row.put(0, record);
 
   POST_END;
 }
@@ -698,7 +886,7 @@ Int SingleDishMSFiller<T>::updateFeed(Int const &feed_id, Int const &spw_id,
   static Vector<String> circular_type(circular_type_arr, 2, SHARE);
   static Matrix<Complex> const pol_response(num_receptors, num_receptors,
       Complex(0));
-  Vector < String > *polarization_type = nullptr;
+  Vector<String> *polarization_type = nullptr;
   if (pol_type == "linear") {
     polarization_type = &linear_type;
   } else if (pol_type == "circular") {
@@ -707,7 +895,7 @@ Int SingleDishMSFiller<T>::updateFeed(Int const &feed_id, Int const &spw_id,
   //static std::vector< Vector<String> *> polarization_type_pool;
 
   String polarization_type_arr[2] = { "X", "Y" };
-  Vector < String > polarization_type_storage(polarization_type_arr, 2, SHARE);
+  Vector<String> polarization_type_storage(polarization_type_arr, 2, SHARE);
   Matrix<Double> const beam_offset(2, num_receptors, 0.0);
   Vector<Double> const receptor_angle(num_receptors, 0.0);
   Vector<Double> const position(3, 0.0);
@@ -762,7 +950,7 @@ Int SingleDishMSFiller<T>::updatePointing(Int const &antenna_id,
   uInt *n = &num_pointing_time_[antenna_id];
   Double *time_max = &pointing_time_max_[antenna_id];
   Double *time_min = &pointing_time_min_[antenna_id];
-  Vector < Double > *time_list = &pointing_time_[antenna_id];
+  Vector<Double> *time_list = &pointing_time_[antenna_id];
 
   auto addPointingRow =
       [&]() {
@@ -808,6 +996,222 @@ Int SingleDishMSFiller<T>::updatePointing(Int const &antenna_id,
 }
 
 template<class T>
+void SingleDishMSFiller<T>::updateWeather(Int const &antenna_id,
+    Double const &time, Double const &interval,
+    MSDataRecord const &data_record) {
+  WeatherRecord record;
+  record.clear();
+  record.antenna_id = antenna_id;
+  record.time = time;
+  record.interval = interval;
+  record.temperature = data_record.temperature;
+  record.pressure = data_record.pressure;
+  record.rel_humidity = data_record.rel_humidity;
+  record.wind_speed = data_record.wind_speed;
+  record.wind_direction = data_record.wind_direction;
+  auto &mytable = ms_->weather();
+  auto pos = std::find(weather_list_.begin(), weather_list_.end(), record);
+  if (pos == weather_list_.end()) {
+    weather_list_.push_back(record);
+    uInt irow = mytable.nrow();
+    mytable.addRow(1, True);
+    record.fill(irow, *(weather_columns_.get()));
+  } else {
+    auto irow = std::distance(weather_list_.begin(), pos);
+    updateWeather(*(weather_columns_.get()), irow, record);
+  }
+}
+
+template<class T>
+void SingleDishMSFiller<T>::updateWeather(MSWeatherColumns &columns, uInt irow,
+    WeatherRecord const &record) {
+  ::updateSubtable(columns, irow, record);
+}
+
+template<class T>
+void SingleDishMSFiller<T>::updateSysCal(Int const &antenna_id,
+    Int const &feed_id, Int const &spw_id, Double const &time,
+    Double const &interval, MSDataRecord const &data_record) {
+  POST_START;
+
+  SysCalRecord record;
+  record.clear();
+  record.antenna_id = antenna_id;
+  record.feed_id = feed_id;
+  record.spw_id = spw_id;
+  record.time = time;
+  record.interval = interval;
+
+  //Bool tcal_empty = False;
+  Bool tsys_empty = False;
+
+  if (data_record.tcal.empty() || allEQ(data_record.tcal, 1.0f)
+      || allEQ(data_record.tcal, 0.0f)) {
+    //tcal_empty = True;
+  } else {
+//      std::cout << "tcal seems to be valid " << data_record.tcal << std::endl;
+    if (data_record.float_data.shape() == data_record.tcal.shape()) {
+      record.tcal_spectrum.assign(data_record.tcal);
+    } else {
+      Matrix<Float> tcal = data_record.tcal;
+      if (!tcal.empty()) {
+        record.tcal.assign(tcal.column(0));
+      }
+    }
+  }
+  if (data_record.tsys.empty() || allEQ(data_record.tsys, 1.0f)
+      || allEQ(data_record.tsys, 0.0f)) {
+    tsys_empty = True;
+  } else {
+    if (data_record.float_data.shape() == data_record.tsys.shape()) {
+      record.tsys_spectrum.assign(data_record.tsys);
+    } else {
+      Matrix<Float> tsys = data_record.tsys;
+      if (!tsys.empty()) {
+        record.tsys.assign(tsys.column(0));
+      }
+    }
+  }
+
+  // do not add entry if Tsys is empty
+  //if (tcal_empty && tsys_empty) {
+  if (tsys_empty) {
+    return;
+  }
+
+  auto &mytable = ms_->sysCal();
+  auto pos = std::find(syscal_list_.begin(), syscal_list_.end(), record);
+  if (pos == syscal_list_.end()) {
+    uInt irow = mytable.nrow();
+    mytable.addRow(1, True);
+    record.fill(irow, *(syscal_columns_.get()));
+    syscal_list_.push_back(SysCalTableRecord(ms_.get(), irow, record));
+  } else {
+    auto irow = std::distance(syscal_list_.begin(), pos);
+    updateSysCal(*(syscal_columns_.get()), irow, record);
+  }
+
+  POST_END;
+}
+
+template<class T>
+void SingleDishMSFiller<T>::updateSysCal(MSSysCalColumns &columns, uInt irow,
+    SysCalRecord const &record) {
+  ::updateSubtable(columns, irow, record);
+}
+
+template<class T>
+void SingleDishMSFiller<T>::updateMain(Int const &antenna_id, Int field_id,
+    Int feedId, Int dataDescriptionId, Int stateId, Int const &scan_number,
+    Double const &time, MSDataRecord const &dataRecord) {
+  POST_START;
+
+  // constant stuff
+  static Vector<Double> const uvw(3, 0.0);
+  static Array<Bool> const flagCategory(IPosition(3, 0, 0, 0));
+
+  // target row id
+  uInt irow = ms_->nrow();
+
+  // add new row
+  //ms_->addRow(1, True);
+  ms_->addRow(1, False);
+
+  ms_columns_->uvw().put(irow, uvw);
+  ms_columns_->flagCategory().put(irow, flagCategory);
+  ms_columns_->antenna1().put(irow, antenna_id);
+  ms_columns_->antenna2().put(irow, antenna_id);
+  ms_columns_->fieldId().put(irow, field_id);
+  ms_columns_->feed1().put(irow, feedId);
+  ms_columns_->feed2().put(irow, feedId);
+  ms_columns_->dataDescId().put(irow, dataDescriptionId);
+  ms_columns_->stateId().put(irow, stateId);
+  ms_columns_->scanNumber().put(irow, scan_number);
+  ms_columns_->time().put(irow, time);
+  ms_columns_->timeCentroid().put(irow, time);
+  Double const &interval = dataRecord.interval;
+  ms_columns_->interval().put(irow, interval);
+  ms_columns_->exposure().put(irow, interval);
+
+  if (is_float_) {
+    Matrix<Float> floatData;
+    if (dataRecord.isFloat()) {
+      floatData.reference(dataRecord.float_data);
+    } else {
+      floatData.assign(real(dataRecord.complex_data));
+    }
+    ms_columns_->floatData().put(irow, floatData);
+  } else {
+    Matrix<Complex> data;
+    if (dataRecord.isFloat()) {
+      data.assign(
+          makeComplex(dataRecord.float_data,
+              Matrix<Float>(dataRecord.float_data.shape(), 0.0f)));
+    } else {
+      data.reference(dataRecord.complex_data);
+    }
+    ms_columns_->data().put(irow, data);
+  }
+
+  ms_columns_->flag().put(irow, dataRecord.flag);
+  ms_columns_->flagRow().put(irow, dataRecord.flag_row);
+  ms_columns_->sigma().put(irow, dataRecord.sigma);
+  ms_columns_->weight().put(irow, dataRecord.weight);
+
+  POST_END;
+}
+
+template<class T>
+void SingleDishMSFiller<T>::flush(DataAccumulator &accumulator) {
+  POST_START;
+
+  size_t nchunk = accumulator.getNumberOfChunks();
+//    std::cout << "nchunk = " << nchunk << std::endl;
+
+  if (nchunk == 0) {
+    return;
+  }
+
+  for (size_t ichunk = 0; ichunk < nchunk; ++ichunk) {
+    Bool status = accumulator.get(ichunk, record_);
+//      std::cout << "accumulator status = " << std::endl;
+    if (status) {
+      Double time = record_.time;
+      Int antenna_id = record_.antenna_id;
+      Int spw_id = record_.spw_id;
+      Int feed_id = record_.feed_id;
+      Int field_id = record_.field_id;
+      Int scan = record_.scan;
+      Int subscan = record_.subscan;
+      String pol_type = record_.pol_type;
+      String obs_mode = record_.intent;
+      Int num_pol = record_.num_pol;
+      Vector<Int> &corr_type = record_.corr_type;
+      Int polarization_id = updatePolarization(corr_type, num_pol);
+      updateFeed(feed_id, spw_id, pol_type);
+      Int data_desc_id = updateDataDescription(polarization_id, spw_id);
+      Int state_id = updateState(subscan, obs_mode);
+      Matrix<Double> &direction = record_.direction;
+      Double interval = record_.interval;
+
+      // updatePointing must be called after updateFeed
+      updatePointing(antenna_id, feed_id, time, interval, direction);
+
+      updateSysCal(antenna_id, feed_id, spw_id, time, interval, record_);
+
+      updateWeather(antenna_id, time, interval, record_);
+
+      updateMain(antenna_id, field_id, feed_id, data_desc_id, state_id, scan,
+          time, record_);
+    }
+  }
+//    std::cout << "clear accumulator" << std::endl;
+  accumulator.clear();
+
+  POST_END;
+}
+
+template<class T>
 void SingleDishMSFiller<T>::sortPointing() {
   POST_START;
 
@@ -820,12 +1224,12 @@ void SingleDishMSFiller<T>::sortPointing() {
   auto mytable = ms_->pointing();
   MSPointingColumns mycolumns(mytable);
   uInt nrow = mytable.nrow();
-  Vector < Int > antenna_id_list = mycolumns.antennaId().getColumn();
-  Vector < Double > time_list = mycolumns.time().getColumn();
+  Vector<Int> antenna_id_list = mycolumns.antennaId().getColumn();
+  Vector<Double> time_list = mycolumns.time().getColumn();
   Sort sorter;
   sorter.sortKey(antenna_id_list.data(), TpInt);
   sorter.sortKey(time_list.data(), TpDouble);
-  Vector < uInt > index_vector;
+  Vector<uInt> index_vector;
   sorter.sort(index_vector, nrow);
 
   size_t storage_size = nrow * 2 * sizeof(Double);
@@ -833,9 +1237,8 @@ void SingleDishMSFiller<T>::sortPointing() {
 
   // sort TIME
   {
-    Vector < Double
-        > sorted(IPosition(1, nrow), reinterpret_cast<Double *>(storage.get()),
-            SHARE);
+    Vector<Double> sorted(IPosition(1, nrow),
+        reinterpret_cast<Double *>(storage.get()), SHARE);
     for (uInt i = 0; i < nrow; ++i) {
       sorted[i] = time_list[index_vector[i]];
     }
@@ -843,9 +1246,8 @@ void SingleDishMSFiller<T>::sortPointing() {
   }
   // sort ANTENNA_ID
   {
-    Vector < Int
-        > sorted(IPosition(1, nrow), reinterpret_cast<Int *>(storage.get()),
-            SHARE);
+    Vector<Int> sorted(IPosition(1, nrow),
+        reinterpret_cast<Int *>(storage.get()), SHARE);
     for (uInt i = 0; i < nrow; ++i) {
       sorted[i] = antenna_id_list[index_vector[i]];
     }
@@ -854,11 +1256,10 @@ void SingleDishMSFiller<T>::sortPointing() {
 
   // sort NUM_POLY
   {
-    Vector < Int > num_poly_list(antenna_id_list);
+    Vector<Int> num_poly_list(antenna_id_list);
     mycolumns.numPoly().getColumn(num_poly_list);
-    Vector < Int
-        > sorted(IPosition(1, nrow), reinterpret_cast<Int *>(storage.get()),
-            SHARE);
+    Vector<Int> sorted(IPosition(1, nrow),
+        reinterpret_cast<Int *>(storage.get()), SHARE);
     for (uInt i = 0; i < nrow; ++i) {
       sorted[i] = antenna_id_list[index_vector[i]];
     }
