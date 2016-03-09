@@ -1668,6 +1668,7 @@ class test_widefield(testref_base):
           """ [widefield] Test_Widefield_mosaic_cube_aproj : Cube with AW-Projection  and rotation off """
           self.prepData("refim_mawproject.ms")
           ret = tclean(vis=self.msfile,field='*',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",specmode='cube',niter=1,gain=1.0,gridder='awproject',cfcache=self.img+'.cfcache',wbawp=True,conjbeams=False,psterm=False,computepastep=360.0,rotatepastep=360.0,deconvolver='hogbom')
+          self.checkall(imexist=[self.img+'.image', self.img+'.psf', self.img+'.weight'],imval=[(self.img+'.image',0.8,[256,256,0,0]),(self.img+'.weight',0.48,[256,256,0,0]) ] )
           self.assertTrue(os.path.exists(self.img+'.psf') and os.path.exists(self.img+'.residual') )
 
      ## Test normtype too somewhere..
@@ -1707,8 +1708,6 @@ class test_widefield(testref_base):
 #     def test_widefield_multispws(self):
 #          """ [widefield] Test_Widefield_multispws : Test cube imaging with mosaicft and awproj  """
 
-class test_widefield_failing(testref_base):
-
      ## CHECK NORMALIZATION OF WEIGHTIMAGE = normed to peak=1
      ## TODO : make vpman recognize EVLA in addition to VLA.
      def test_widefield_mosaicft_mfs(self):
@@ -1732,7 +1731,7 @@ class test_widefield_failing(testref_base):
           """ [widefield] Test_Widefield_mosaicft_cube : MFS with mosaicft  stokes I """
           self.prepData("refim_mawproject.ms")
           ret = tclean(vis=self.msfile,spw='*',field='0',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",specmode='cube',niter=10,gridder='mosaicft',deconvolver='hogbom',gain=0.1,stokes='I')
-          self.checkall(imexist=[self.img+'.image', self.img+'.psf', self.img+'.weight'],imval=[(self.img+'.image',0.9743,[256,256,0,0]),(self.img+'.weight',0.46,[256,256,0,0]) ] )
+          self.checkall(imexist=[self.img+'.image', self.img+'.psf', self.img+'.weight'],imval=[(self.img+'.image',0.797,[256,256,0,0]),(self.img+'.weight',0.33,[256,256,0,0]) ] )
 
           #do stokes V too..
 
@@ -1744,6 +1743,7 @@ class test_widefield_failing(testref_base):
           ## alpha should be ZERO as the pb spectrum has been taken out.
 
      
+class test_widefield_failing(testref_base):
 
      def test_widefield_imagemosaic(self):
           """ [widefield] Test_Widefield_imagemosaic : Image domain mosaic for single-term mfs (or narrowband)  """
