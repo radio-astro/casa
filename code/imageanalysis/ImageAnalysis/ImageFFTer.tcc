@@ -50,58 +50,67 @@ template<class T> void ImageFFTer<T>::fft() const {
 
 	String maskName("");
 	if (! _real.empty()) {
-		PagedImage<Float> x = _createFloatImage(_real, *subImage);
-		fft.getReal(x);
+		auto x = _createFloatImage(_real, *subImage);
+		fft.getReal(*x);
+		this->_doHistory(x);
 	}
 	if (! _imag.empty()) {
-		PagedImage<Float> x = _createFloatImage(_imag, *subImage);
-		fft.getImaginary(x);
+		auto x = _createFloatImage(_imag, *subImage);
+		fft.getImaginary(*x);
+		this->_doHistory(x);
 	}
 	if (! _amp.empty()) {
-		PagedImage<Float> x = _createFloatImage(_amp, *subImage);
-		fft.getAmplitude(x);
+		auto x = _createFloatImage(_amp, *subImage);
+		fft.getAmplitude(*x);
+		this->_doHistory(x);
 	}
 	if (! _phase.empty()) {
-		PagedImage<Float> x = _createFloatImage(_phase, *subImage);
-		fft.getPhase(x);
+		auto x = _createFloatImage(_phase, *subImage);
+		fft.getPhase(*x);
+		this->_doHistory(x);
 	}
 	if (! _complex.empty()) {
-		PagedImage<Complex> x = _createComplexImage(_complex, *subImage);
-		fft.getComplex(x);
+		auto x = _createComplexImage(_complex, *subImage);
+		fft.getComplex(*x);
+		this->_doHistory(x);
 	}
 }
 
-template<class T> PagedImage<Float> ImageFFTer<T>::_createFloatImage(
+template<class T> SPIIF ImageFFTer<T>::_createFloatImage(
 	const String& name, const SubImage<T>& subImage
 ) const {
 	*this->_getLog() << LogIO::NORMAL << "Creating image '"
 		<< name << "'" << LogIO::POST;
-	PagedImage<Float> image(
-		subImage.shape(), subImage.coordinates(),
-		name
+	SPIIF image(
+	    new PagedImage<Float>(
+	        subImage.shape(), subImage.coordinates(),
+	        name
+	    )
 	);
 	if (subImage.isMasked()) {
 		String x;
 		ImageMaskAttacher::makeMask(
-			image, x, False, True, *this->_getLog(), True
+			*image, x, False, True, *this->_getLog(), True
 		);
 	}
 	return image;
 }
 
-template<class T> PagedImage<Complex> ImageFFTer<T>::_createComplexImage(
+template<class T> SPIIC ImageFFTer<T>::_createComplexImage(
 	const String& name, const SubImage<T>& subImage
 ) const {
 	*this->_getLog() << LogIO::NORMAL << "Creating image '"
 		<< name << "'" << LogIO::POST;
-	PagedImage<Complex> image(
-		subImage.shape(), subImage.coordinates(),
-		name
+	SPIIC image(
+	    new PagedImage<Complex>(
+	        subImage.shape(), subImage.coordinates(),
+	        name
+	    )
 	);
 	if (subImage.isMasked()) {
 		String x;
 		ImageMaskAttacher::makeMask(
-			image, x, False, True, *this->_getLog(), True
+			*image, x, False, True, *this->_getLog(), True
 		);
 	}
 	return image;

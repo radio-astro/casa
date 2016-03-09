@@ -226,7 +226,7 @@ protected:
 
     static void _copyData(Lattice<T>& data, const ImageInterface<T>& image);
 
-    void _doHistory(SPIIT image) const;
+    template <class U> void _doHistory(SHARED_PTR<ImageInterface<U>>& image) const;
 
 private:
     const SPCIIT _image;

@@ -451,9 +451,10 @@ template <class T> SPIIT ImageTask<T>::_prepareOutputImage(
     return outImage;
 }
 
-template <class T> void ImageTask<T>::_doHistory(SPIIT image) const {
+template <class T>
+template <class U> void ImageTask<T>::_doHistory(SHARED_PTR<ImageInterface<U>>& image) const {
     if (! _suppressHistory) {
-        ImageHistory<T> history(image);
+        ImageHistory<U> history(image);
         if (history.get(False).empty()) {
             history.append(_image);
         }

@@ -63,11 +63,11 @@ private:
 	// disallow default constructor
 	ImageFFTer();
 
-	PagedImage<Float> _createFloatImage(
+	SPIIF _createFloatImage(
 		const String& name, const SubImage<T>& subimage
 	) const;
 
-	PagedImage<Complex> _createComplexImage(
+	SPIIC _createComplexImage(
 		const String& name, const SubImage<T>& subimage
 	) const;
 
