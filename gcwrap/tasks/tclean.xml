@@ -1726,6 +1726,7 @@ HPX HEALPix grid.  -->
                        The name of a CASA image or region file or region string that specifies
                        a 1/0 mask to be used for deconvolution. Only locations with value 1 will
                        be considered for the centers of flux components in the minor cycle.
+                       If regions specified fall completely outside of the image, tclean will throw an error.
 
                        Manual mask options/examples : 
 
