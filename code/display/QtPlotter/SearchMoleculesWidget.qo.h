@@ -122,6 +122,7 @@ namespace casa {
 		vector<SplatResult> getSearchResults() const;
 		MDoppler::Types getDopplerType() const;
 		MRadialVelocity::Types getReferenceFrame() const;
+		MFrequency::Types getReferenceFrequency() const;
 		~SearchMoleculesWidget();
 		static const QString SPLATALOGUE_UNITS;
 		static const QString SEARCH_DEFAULT_UNITS;
@@ -152,6 +153,8 @@ namespace casa {
 		vector<string> initializeChemicalFormulas();
 		QList<QString> getSearchChemicals();
 		vector<string> convertStringFormats( const QList<QString>& names );
+		double redShiftToVelocity( QString velocityUnits) const;
+		double velocityToRedshift( QString velocityUnits ) const;
 		void startSearchThread();
 		void setSearchRangeDefault();
 		double setRangeValue( double value, QString units );
@@ -184,6 +187,9 @@ namespace casa {
 		int searchResultCount;
 		int searchResultOffset;
 		int searchResultLimit;
+		static const double SPEED_LIGHT;
+		static const QString M_PER_SEC;
+		static const QString KM_PER_SEC;
 
 		static const double SPLATALOGUE_DEFAULT_MIN;
 		static const double SPLATALOGUE_DEFAULT_MAX;

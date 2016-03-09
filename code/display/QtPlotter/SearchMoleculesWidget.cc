@@ -49,6 +49,10 @@ namespace casa {
 	const QString SearchMoleculesWidget::SEARCH_DEFAULT_UNITS = "GHz";
 	const double SearchMoleculesWidget::SPLATALOGUE_DEFAULT_MIN = -1;
 	const double SearchMoleculesWidget::SPLATALOGUE_DEFAULT_MAX = -1;
+	const double SearchMoleculesWidget::SPEED_LIGHT = 299791.2;
+	const QString SearchMoleculesWidget::M_PER_SEC = "m/s";
+	const QString SearchMoleculesWidget::KM_PER_SEC = "km/s";
+
 
 	QString SearchMoleculesWidget::initialReferenceStr = "LSRK";
 
@@ -119,7 +123,7 @@ namespace casa {
 		for ( int i = 0; i < keys.size(); i++ ) {
 			ui.referenceFrameCombo->addItem( keys[i] );
 		}
-		velocityUnitsList<<"km/s"<<"m/s";
+		velocityUnitsList<<KM_PER_SEC<<M_PER_SEC;
 		for ( int i = 0; i < velocityUnitsList.size(); i++ ) {
 			ui.dopplerUnitsComboBox->addItem( velocityUnitsList[i] );
 		}
@@ -260,24 +264,19 @@ namespace casa {
 				String unitString = unitStr.toStdString();
 				double val = valStr.toDouble();
 				QString referenceStr = ui.referenceFrameCombo->currentText();
-				MRadialVelocity::Types referenceType = radialVelocityTypeMap.value( referenceStr );
+				//MRadialVelocity::Types referenceType = radialVelocityTypeMap.value( referenceStr );
 				QString dopplerTypeStr = ui.dopplerTypeCombo->currentText();
-				MDoppler::Types dopplerType = dopplerTypeMap.value( dopplerTypeStr );
+				//MDoppler::Types dopplerType = dopplerTypeMap.value( dopplerTypeStr );
 				Bool valid = true;
 				if ( unitsVelocity ) {
 					//From doppler to velocity
-					MVDoppler mvDoppler( val );
-					MDoppler doppler( mvDoppler, dopplerType );
-					MRadialVelocity mVelocity = MRadialVelocity::fromDoppler(doppler, referenceType);
-					Quantity velQuantity = mVelocity.get( unitString );
-					val = velQuantity.getValue();
+					Unit unit( unitString );
+					val = redShiftToVelocity( unitStr );
 				}
 				else {
 					//From velocity to doppler
-					MDoppler dop = MRadialVelocity( Quantity(val, unitString), referenceType).toDoppler();
-					MDoppler doppler = MDoppler::Convert ( dop, dopplerType)();
-					val = doppler.getValue ();
-					if ( std::isnan( val )) {
+					val = velocityToRedshift( unitStr );
+					if ( std::isnan( val )){
 						valid = false;
 					}
 				}
@@ -390,20 +389,44 @@ namespace casa {
 		return redshift;
 	}
 
+	double SearchMoleculesWidget::redShiftToVelocity( QString velocityUnits) const {
+		double redshift = getRedShift();
+		double zPlus = (1 + redshift) * (1 + redshift);
+		double velocity = ( zPlus - 1 ) / ( zPlus + 1 ) * SPEED_LIGHT;
+		if ( velocityUnits == M_PER_SEC){
+			velocity = velocity * 1000;
+		}
+		return velocity;
+	}
+
+	double SearchMoleculesWidget::velocityToRedshift( QString velocityUnits ) const {
+		double velocity = getRedShift();
+		if ( velocityUnits == M_PER_SEC){
+			velocity = velocity * 1000;
+		}
+		double redshift = nan("");
+		if ( velocity < SPEED_LIGHT ){
+			double ratio = velocity / SPEED_LIGHT;
+			redshift = qSqrt( ( 1 + ratio ) / (1 - ratio) ) - 1;
+		}
+		return redshift;
+	}
+
 	double SearchMoleculesWidget::getRedShiftedValue( bool reverseRedshift,
 			double value, bool* valid ) const {
-		Unit unit( "km/s");
+		const QString unitStr( KM_PER_SEC);
+		Unit unit( unitStr.toStdString());
 		Unit splatalogueUnit( SPLATALOGUE_UNITS.toStdString() );
 		Vector<Double> inputValues(1);
 		inputValues[0] = value;
 		Quantum< Vector<Double> > quantum( inputValues, splatalogueUnit );
 		double result = nan("");
-		const float SPEED_LIGHT = 299791.2;
+
 		*valid = true;
 		if ( !ui.redshiftRadio->isChecked() ) {
 			MDoppler doppler = getRedShiftAdjustment( reverseRedshift );
 			double dopValue = doppler.get(unit).getValue();
-			if ( dopValue >= SPEED_LIGHT ){
+			if ( dopValue >= SPEED_LIGHT || std::isnan( dopValue ) ){
 				*valid = false;
 			}
 			else {
@@ -413,23 +436,21 @@ namespace casa {
 			}
 		}
 		else {
-			double redshift = getRedShift();
 			MDoppler::Types dopplerType = getDopplerType();
-			Quantity quant( redshift );
-			MDoppler dIN( quant, MDoppler::Ref( dopplerType ));
-			double velo = MRadialVelocity::fromDoppler( dIN, MRadialVelocity::LSRK).get( unit ).getValue();
+			double velo = redShiftToVelocity( unitStr );
 			if ( velo >= SPEED_LIGHT ){
 				*valid = false;
 			}
 			else {
 				if ( reverseRedshift ){
-					MFrequency::Ref frqref(MFrequency::LSRK);
+					MFrequency::Types refType = getReferenceFrequency();
+					MFrequency::Ref frqref( refType );
 					MDoppler::Ref velref(dopplerType);
 					MVFrequency restfrq(quantum);
 					MeasFrame frame;
 					VelocityMachine vm(frqref, splatalogueUnit, restfrq,  velref, unit, frame);
 					Quantity outputvalue=vm.makeFrequency(velo);
-					result = outputvalue.getValue( "MHz");
+					result = outputvalue.getValue( SPLATALOGUE_UNITS.toStdString());
 				}
 				else {
 					//Code does not seem to be available in casacore
@@ -653,36 +674,31 @@ namespace casa {
 
 
 	MDoppler SearchMoleculesWidget::getRedShiftAdjustment( bool reverseDirection ) const {
-		QString redShiftStr = ui.dopplerLineEdit->text();
+		//QString redShiftStr = ui.dopplerLineEdit->text();
 		MDoppler::Types dopplerType = getDopplerType();
 		MVDoppler defaultValue( 0 );
 		MDoppler doppler( defaultValue, dopplerType );
-		if ( ! redShiftStr.isEmpty() ) {
-			double redShift = redShiftStr.toDouble();
-			if ( ui.redshiftRadio->isChecked() ) {
-				//Set the value of the doppler
-				if ( reverseDirection ) {
-					redShift = redShift * -1;
-				}
-				MVDoppler mvDoppler( redShift);
+		//if ( ! redShiftStr.isEmpty() ) {
+		QString unitString = ui.dopplerUnitsComboBox->currentText();
+		double redShift = getRedShift();
+
+		//Velocity units:  convert to a doppler
+
+		MRadialVelocity::Types referenceType = getReferenceFrame();
+		String unitStr( unitString.toStdString());
+		MDoppler baseDoppler = MDoppler::Convert ( MRadialVelocity( Quantity(redShift, unitStr ),
+				referenceType).toDoppler(),dopplerType)();
+		//Reverse the sign
+		MVDoppler mvValue = baseDoppler.getValue();
+		double redshiftVal = mvValue.getValue();
+			if ( reverseDirection ) {
+				redshiftVal = redshiftVal * -1;
 			}
-			else {
-				//Velocity units:  convert to a doppler
-				QString unitString = ui.dopplerUnitsComboBox->currentText();
-				MRadialVelocity::Types referenceType = getReferenceFrame();
-				String unitStr( unitString.toStdString());
-				MDoppler baseDoppler = MDoppler::Convert ( MRadialVelocity( Quantity(redShift, unitStr ),
-				                       referenceType).toDoppler(),dopplerType)();
-				//Reverse the sign
-				MVDoppler mvValue = baseDoppler.getValue();
-				double redshiftVal = mvValue.getValue();
-				if ( reverseDirection ) {
-					redshiftVal = redshiftVal * -1;
-				}
-				MVDoppler reverseMvValue( redshiftVal );
-				doppler.set( reverseMvValue );
-			}
-		}
+			MVDoppler reverseMvValue( redshiftVal );
+			doppler.set( reverseMvValue );
+		//doppler.set( mvValue );
+		//}
+
 		return doppler;
 	}
 //-----------------------------------------------------------------------------
@@ -714,6 +730,21 @@ namespace casa {
 		QString referenceStr = ui.referenceFrameCombo->currentText();
 		MRadialVelocity::Types velocityType = radialVelocityTypeMap[referenceStr ];
 		return velocityType;
+	}
+
+	MFrequency::Types SearchMoleculesWidget::getReferenceFrequency() const {
+		MFrequency::Types type = MFrequency::LSRK;
+		MRadialVelocity::Types vType = getReferenceFrame();
+		if ( vType == MRadialVelocity::LSRD ){
+			type = MFrequency::LSRD;
+		}
+		else if ( vType == MRadialVelocity::BARY ){
+			type = MFrequency::BARY;
+		}
+		else if ( vType == MRadialVelocity::TOPO ){
+			type = MFrequency::TOPO;
+		}
+		return type;
 	}
 
 	void SearchMoleculesWidget::stopSearch() {
