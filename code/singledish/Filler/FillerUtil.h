@@ -18,8 +18,8 @@
 #define POST_END
 #endif
 
-namespace casa {
-namespace sdfiller {
+namespace casa { //# NAMESPACE CASA - BEGIN
+namespace sdfiller { //# NAMESPACE SDFILLER - BEGIN
 struct Deleter {
   void operator()(void *p) {
     if (p) {
@@ -27,7 +27,7 @@ struct Deleter {
     }
   }
 };
-}
-}
+} //# NAMESPACE SDFILLER - BEGIN
+} //# NAMESPACE CASA - END
 
 #endif /* SINGLEDISH_FILLER_FILLERUTIL_H_ */
