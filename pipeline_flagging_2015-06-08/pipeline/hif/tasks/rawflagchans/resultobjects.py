@@ -1,6 +1,4 @@
 from __future__ import absolute_import
-import collections
-import copy
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -19,8 +17,6 @@ class RawflagchansResults(basetask.Results,
         flaggableviewresults.FlaggableViewResults.__init__(self)
 
     def merge_with_context(self, context):
-        # do nothing, the tsys cal files should already be in the context
-        # and we don't want to insert them twice.
         pass
 
     def __repr__(self):

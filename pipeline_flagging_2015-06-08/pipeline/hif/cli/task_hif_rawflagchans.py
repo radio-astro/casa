@@ -1,7 +1,5 @@
 import sys
 
-from taskinit import casalog
-
 import pipeline.h.cli.utils as utils
 
 

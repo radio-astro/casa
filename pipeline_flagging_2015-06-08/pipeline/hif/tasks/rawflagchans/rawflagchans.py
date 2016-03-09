@@ -234,9 +234,9 @@ class Rawflagchans(basetask.StandardTaskTemplate):
         stats_after = self._executor.execute(summary_job)
         result.summaries = [stats_before, stats_after]
 
-	# This is a patch to deal with the case when no view is computed
-	if not result.view:
-	    result.table = inputs.ms.name 
+        # This is a patch to deal with the case when no view is computed
+        if not result.view:
+            result.table = inputs.ms.name 
 
         return result
 
@@ -257,32 +257,8 @@ class RawflagchansWorker(basetask.StandardTaskTemplate):
         super(RawflagchansWorker, self).__init__(inputs)
         self.result = RawflagchansResults()
 
-    def _readfile(self, file):
-
-        with open(file, 'r') as f:
-            lines = f.readlines()
-            for line in lines:
-                if line[0] == '#':
-                    # ignore comments
-                    continue
-
-                try:
-                    words = line.split()
-                    chan = int(words[0])
-                    data = float(words[1])
-                    spwid = int(words[11])
-                    corr = words[12]
-                    ant1 = int(words[5])
-                    ant2 = int(words[6])
-
-                    self._plotdata[(spwid,corr,ant1,ant2,chan)] = data
-                except:
-                    print 'fail:', line
-
     def prepare(self):
         inputs = self.inputs
-
-        final = []
 
         self.result.vis = inputs.vis
 
@@ -346,12 +322,12 @@ class RawflagchansWorker(basetask.StandardTaskTemplate):
 
             LOG.info('calculating flagging view for spw %s' % spwid)
             casatools.ms.open(self.inputs.vis)
-	    try:
+            try:
                 casatools.ms.msselect({'scanintent':'*BANDPASS*','spw':str(spwid)})
-	    except:
+            except:
                 LOG.warning('Unable to compute flagging view for spw %s' % spwid)
-		casatools.ms.close()
-	        continue
+                casatools.ms.close()
+                continue
             casatools.ms.iterinit(maxrows=500)
             casatools.ms.iterorigin()
             iterating = True
@@ -369,18 +345,18 @@ class RawflagchansWorker(basetask.StandardTaskTemplate):
                         continue
 
                     for icorr,corrlist in enumerate(corrs):
-                       data[icorr,ant1,:,ant2][
-                         rec['flag'][icorr,:,row]==False]\
-                         += rec['data'][icorr,:,row][
-                         rec['flag'][icorr,:,row]==False]
-                       ndata[icorr,ant1,:,ant2][
-                         rec['flag'][icorr,:,row]==False] += 1
-                       data[icorr,ant2,:,ant1][
-                         rec['flag'][icorr,:,row]==False]\
-                         += rec['data'][icorr,:,row][
-                         rec['flag'][icorr,:,row]==False]
-                       ndata[icorr,ant2,:,ant1][
-                         rec['flag'][icorr,:,row]==False] += 1
+                        data[icorr,ant1,:,ant2][
+                          rec['flag'][icorr,:,row]==False]\
+                          += rec['data'][icorr,:,row][
+                          rec['flag'][icorr,:,row]==False]
+                        ndata[icorr,ant1,:,ant2][
+                          rec['flag'][icorr,:,row]==False] += 1
+                        data[icorr,ant2,:,ant1][
+                          rec['flag'][icorr,:,row]==False]\
+                          += rec['data'][icorr,:,row][
+                          rec['flag'][icorr,:,row]==False]
+                        ndata[icorr,ant2,:,ant1][
+                          rec['flag'][icorr,:,row]==False] += 1
 
                 iterating = casatools.ms.iternext()
 
@@ -476,15 +452,15 @@ class RawflagchansWorker(basetask.StandardTaskTemplate):
               (self.antenna_ids[-1]+1) * (self.antenna_ids[-1]+1)], np.int)
 
             LOG.info('Calculating flagging view for spw %s' % spwid)
-	    # Modify to tuse the with construct at some point
-	    # Note bandpass is set explicity here not intent
+            # Modify to tuse the with construct at some point
+            # Note bandpass is set explicity here not intent
             casatools.ms.open(self.inputs.vis)
-	    try:
+            try:
                 casatools.ms.msselect({'scanintent':'*BANDPASS*','spw':str(spwid)})
-	    except:
+            except:
                 LOG.warning('Unable to compute flagging view for spw %s' % spwid)
-		casatools.ms.close()
-	        continue
+                casatools.ms.close()
+                continue
 
             casatools.ms.iterinit(maxrows=500)
             casatools.ms.iterorigin()
@@ -506,18 +482,18 @@ class RawflagchansWorker(basetask.StandardTaskTemplate):
                     baseline2 = ant2 * (ants[-1] + 1) + ant1
 
                     for icorr,corrlist in enumerate(corrs):
-                       data[icorr,:,baseline1][
-                         rec['flag'][icorr,:,row]==False]\
-                         += rec['data'][icorr,:,row][
-                         rec['flag'][icorr,:,row]==False]
-                       ndata[icorr,:,baseline1][
-                         rec['flag'][icorr,:,row]==False] += 1
-                       data[icorr,:,baseline2][
-                         rec['flag'][icorr,:,row]==False]\
-                         += rec['data'][icorr,:,row][
-                         rec['flag'][icorr,:,row]==False]
-                       ndata[icorr,:,baseline2][
-                         rec['flag'][icorr,:,row]==False] += 1
+                        data[icorr,:,baseline1][
+                          rec['flag'][icorr,:,row]==False]\
+                          += rec['data'][icorr,:,row][
+                          rec['flag'][icorr,:,row]==False]
+                        ndata[icorr,:,baseline1][
+                          rec['flag'][icorr,:,row]==False] += 1
+                        data[icorr,:,baseline2][
+                          rec['flag'][icorr,:,row]==False]\
+                          += rec['data'][icorr,:,row][
+                          rec['flag'][icorr,:,row]==False]
+                        ndata[icorr,:,baseline2][
+                          rec['flag'][icorr,:,row]==False] += 1
 
                 iterating = casatools.ms.iternext()
 
