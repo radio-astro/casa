@@ -151,7 +151,14 @@ def compTables(referencetab, testtab, excludecols, tolerance=0.001, mode="percen
                                         rval = False
                                         break
                                 elif (isinstance(a[i][j],list)) or (isinstance(a[i][j],np.ndarray)):
-                                    for k in range(0,len(a[i][j])):
+                                    it = xrange(0,len(a[i][j]))
+                                    if mode=="percentage":
+                                        diff = np.abs(np.subtract(a[i][j], b[i][j])) > tolerance * np.abs(a[i][j])
+                                        it = np.where(diff)[0]
+                                    elif (mode=="absolute"):
+                                        diff = np.abs(np.subtract(a[i][j], b[i][j])) > tolerance
+                                        it = np.where(diff)[0]
+                                    for k in it:
                                         if differs: break
                                         if ( ((mode=="percentage") and (abs(a[i][j][k]-b[i][j][k]) > tolerance*abs(a[i][j][k]))) \
                                                  or ((mode=="absolute") and (abs(a[i][j][k]-b[i][j][k]) > tolerance)) \
