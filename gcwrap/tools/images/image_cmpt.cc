@@ -248,6 +248,59 @@ bool image::addnoise(
 	return False;
 }
 
+record* image::beamforconvolvedsize(
+    const variant& source, const variant& convolved
+) {
+    try {
+        _log << _ORIGIN;
+        Vector<casa::Quantity> sourceParam, convolvedParam;
+        if (
+            ! toCasaVectorQuantity(source, sourceParam)
+            || sourceParam.size() != 3
+        ) {
+            throw(AipsError("Cannot understand source values"));
+        }
+        if (
+            ! toCasaVectorQuantity(convolved, convolvedParam)
+            && convolvedParam.size() != 3
+        ) {
+            throw(AipsError("Cannot understand target values"));
+        }
+        Angular2DGaussian mySource(sourceParam[0], sourceParam[1], sourceParam[2]);
+        GaussianBeam myConvolved(convolvedParam[0], convolvedParam[1], convolvedParam[2]);
+        GaussianBeam neededBeam;
+        try {
+            if (GaussianDeconvolver::deconvolve(neededBeam, myConvolved, mySource)) {
+                // throw without a message here, it will be caught
+                // in the associated catch block and a new error will
+                // be thrown with the appropriate message.
+                throw AipsError();
+            }
+        }
+        catch (const AipsError& x) {
+            ostringstream os;
+            os << "Unable to reach target resolution of "
+                << myConvolved << " Input source "
+                << mySource << " is probably too large.";
+            throw AipsError(os.str());
+        }
+        Record ret;
+        QuantumHolder qh(neededBeam.getMajor());
+        ret.defineRecord("major", qh.toRecord());
+        qh = QuantumHolder(neededBeam.getMinor());
+        ret.defineRecord("minor", qh.toRecord());
+        qh = QuantumHolder(neededBeam.getPA());
+        ret.defineRecord("pa", qh.toRecord());
+        return fromRecord(ret);
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
+        RETHROW(x);
+    }
+    return nullptr;
+}
+
 record* image::boundingbox(const variant& region) {
     try {
         _log << _ORIGIN;
@@ -550,6 +603,42 @@ image* image::collapse(
             collapser.addHistory(_ORIGIN, "ia." + String(__func__), names, values);
             return new image(collapser.collapse());
         }
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
+        RETHROW(x);
+    }
+    return nullptr;
+}
+
+record* image::commonbeam() {
+    try {
+        _log << _ORIGIN;
+        if (detached()) {
+            return nullptr;
+        }
+        ImageInfo myInfo = _imageF ? _imageF->imageInfo() : _imageC->imageInfo();
+        ThrowIf(
+            ! myInfo.hasBeam(),
+            "This image has no beam(s)."
+        );
+        GaussianBeam beam;
+        if (myInfo.hasSingleBeam()) {
+            _log << LogIO::WARN
+                << "This image only has one beam, so just returning that"
+                << LogIO::POST;
+            beam = myInfo.restoringBeam();
+        }
+        else {
+            // multiple beams in this image
+            beam = CasaImageBeamSet(myInfo.getBeamSet()).getCommonBeam();
+        }
+        beam.setPA(casa::Quantity(beam.getPA("deg", True), "deg"));
+        Record x = beam.toRecord();
+        x.defineRecord("pa", x.asRecord("positionangle"));
+        x.removeField("positionangle");
+        return fromRecord(x);
     }
     catch (const AipsError& x) {
         _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
@@ -866,6 +955,64 @@ image* image::convolve2d(
 	return nullptr;
 }
 
+record* image::coordmeasures(
+    const std::vector<double>&pixel, const string& dframe,
+    const string& sframe
+) {
+    try {
+        _log << _ORIGIN;
+        if (detached()) {
+            return nullptr;
+        }
+        casa::Record theDir;
+        casa::Record theFreq;
+        casa::Record theVel;
+        Vector<Double> vpixel;
+        if (!(pixel.size() == 1 && pixel[0] == -1)) {
+            vpixel = pixel;
+        }
+        unique_ptr<Record> retval;
+        casa::String error;
+        Record R;
+        if (_imageF) {
+            casa::Quantum<Float> intensity;
+            retval.reset(
+                PixelValueManipulator<Float>::coordMeasures(
+                    intensity, theDir, theFreq, theVel,
+                    _imageF, vpixel, dframe, sframe
+                )
+            );
+            ThrowIf(
+                ! QuantumHolder(intensity).toRecord(error, R),
+                "Could not convert intensity to record. "
+                + error
+            );
+        }
+        else {
+            casa::Quantum<Complex> intensity;
+            retval.reset(
+                PixelValueManipulator<Complex>::coordMeasures(
+                    intensity, theDir, theFreq, theVel,
+                    _imageC, vpixel, dframe, sframe
+                )
+            );
+            ThrowIf(
+                ! QuantumHolder(intensity).toRecord(error, R),
+                "Could not convert intensity to record. "
+                + error
+            );
+        }
+        retval->defineRecord(RecordFieldId("intensity"), R);
+        return fromRecord(*retval);
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return nullptr;
+}
+
 coordsys* image::coordsys(const std::vector<int>& pixelAxes) {
 	_log << _ORIGIN;
 	try {
@@ -974,6 +1121,260 @@ template <class T> image* image::_decimate(
     decimator.addHistory(_ORIGIN, msgs);
     SPIIT out = decimator.decimate();
     return new image(out);
+}
+
+record* image::decompose(
+    const variant& region, const ::casac::variant& vmask,
+    bool simple, double threshold, int ncontour, int minrange,
+    int naxis, bool fit, double maxrms, int maxretry, int maxiter,
+    double convcriteria, bool stretch
+) {
+    try {
+        _log << _ORIGIN;
+        if (detached()) {
+            return nullptr;
+        }
+        ThrowIf(! _imageF, "This application supports only real-valued images");
+        ThrowIf(
+            threshold < 0,
+            "Threshold = " + String::toString(threshold)
+            + ". You must specify a nonnegative threshold"
+        );
+        auto Region = _getRegion(region, False);
+        String mask = _getMask(vmask);
+        Matrix<Int> blcs;
+        Matrix<Int> trcs;
+        casa::Record outrec1;
+        ImageDecomposerTask<Float> idt(_imageF, Region.get(), mask);
+        idt.setSimple(simple);
+        idt.setDeblendOptions(threshold, ncontour, minrange, naxis);
+        idt.setFit(fit);
+        idt.setFitOptions(maxrms, maxretry, maxiter, convcriteria);
+        idt.setStretch(stretch);
+        outrec1.define("components", idt.decompose(blcs, trcs));
+        outrec1.define("blc", blcs);
+        outrec1.define("trc", trcs);
+        return fromRecord(outrec1);
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
+        RETHROW(x);
+    }
+    return nullptr;
+}
+
+record* image::deconvolvecomponentlist(
+    const record& complist, int channel, int polarization
+) {
+    _log << _ORIGIN;
+    if (detached()) {
+        return nullptr;
+    }
+    try {
+        std::unique_ptr<Record> compList(toRecord(complist));
+        ComponentList cl, clOut;
+        casa::String err;
+        ThrowIf(
+            ! cl.fromRecord(err, *compList),
+            "Input dictionary is not a valid component list: " + err
+        );
+        if (_imageF) {
+            ComponentListDeconvolver<Float> cld(_imageF);
+            clOut = cld.deconvolve(cl, channel, polarization);
+        }
+        else {
+            ComponentListDeconvolver<Complex> cld(_imageC);
+            clOut = cld.deconvolve(cl, channel, polarization);
+        }
+        Record rec;
+        ThrowIf(
+            ! clOut.toRecord(err, rec),
+            "Cannot convert resulting component list to record: " + err
+        );
+        return fromRecord(rec);
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
+        RETHROW(x);
+    }
+    return nullptr;
+}
+
+record* image::deconvolvefrombeam(
+    const variant& source, const variant& beam
+) {
+    try {
+        _log << _ORIGIN;
+        Vector<casa::Quantity> sourceParam, beamParam;
+        Angular2DGaussian mySource;
+        if (
+            ! toCasaVectorQuantity(source, sourceParam)
+            || (sourceParam.nelements() == 0)
+            || sourceParam.nelements() > 3
+        ) {
+            throw(AipsError("Cannot understand source values"));
+        }
+        else {
+            if (sourceParam.nelements() == 1) {
+                sourceParam.resize(3, True);
+                sourceParam[1] = sourceParam[0];
+                sourceParam[2] = casa::Quantity(0, "deg");
+            }
+            else if (sourceParam.nelements() == 2) {
+                sourceParam.resize(3, True);
+                sourceParam[2] = casa::Quantity(0, "deg");
+            }
+            mySource = Angular2DGaussian(
+                sourceParam[0], sourceParam[1], sourceParam[2]
+            );
+        }
+        if (
+            ! toCasaVectorQuantity(beam, beamParam)
+            || (beamParam.nelements() == 0)) {
+            throw(AipsError("Cannot understand beam values"));
+        }
+        else {
+            if (beamParam.nelements() == 1) {
+                beamParam.resize(3, True);
+                beamParam[1] = beamParam[0];
+                beamParam[2] = casa::Quantity(0.0, "deg");
+            }
+            if (beamParam.nelements() == 2) {
+                beamParam.resize(3, True);
+                beamParam[2] = casa::Quantity(0.0, "deg");
+            }
+        }
+        GaussianBeam myBeam(beamParam[0], beamParam[1], beamParam[2]);
+        Bool success = False;
+        Angular2DGaussian decon;
+        Bool retval = False;
+        try {
+            retval = GaussianDeconvolver::deconvolve(decon, mySource, myBeam);
+            success = True;
+        }
+        catch (const AipsError& x) {
+            retval = False;
+            success = False;
+        }
+        Record deconval = decon.toRecord();
+        deconval.defineRecord("pa", deconval.asRecord("positionangle"));
+        deconval.removeField("positionangle");
+        deconval.define("success", success);
+        Record outrec1;
+        outrec1.define("return", retval);
+        outrec1.defineRecord("fit", deconval);
+        return fromRecord(outrec1);
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return nullptr;
+}
+
+bool image::done(const bool remove, const bool verbose) {
+    try {
+        _log << _ORIGIN;
+        // resetting _stats must come before the table removal or the table
+        // removal will fail
+        _stats.reset(0);
+        MeasIERS::closeTables();
+        if (remove && !detached()) {
+            _remove(verbose);
+        }
+        else {
+            _imageF.reset();
+            _imageC.reset();
+        }
+        return True;
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return False;
+}
+
+bool image::fft(
+    const string& realOut, const string& imagOut,
+    const string& ampOut, const string& phaseOut,
+    const std::vector<int>& axes, const variant& region,
+    const variant& vmask, bool stretch,
+    const string& complexOut
+) {
+    try {
+        _log << LogOrigin(_class, __func__);
+        if (detached()) {
+            return false;
+        }
+        SHARED_PTR<Record> myregion(_getRegion(region, False));
+        String mask = vmask.toString();
+        if (mask == "[]") {
+            mask = "";
+        }
+        Vector<uInt> leAxes(0);
+        if (
+            axes.size() > 1
+            || (axes.size() == 1 && axes[0] >= 0)
+        ) {
+            leAxes.resize(axes.size());
+            for (uInt i=0; i<axes.size(); i++) {
+                ThrowIf(
+                    axes[i] < 0,
+                    "None of the elements of axes may be less than zero"
+                );
+                leAxes[i] = axes[i];
+            }
+        }
+        vector<String> names = {
+            "real", "imag", "amp", "phase", "axes",
+            "region", "mask", "stretch", "complex"
+        };
+        vector<variant> values = {
+            realOut, imagOut, ampOut, phaseOut, axes,
+            region, vmask, stretch, complexOut
+        };
+        auto msgs = _newHistory(__func__, names, values);
+        if (_imageF) {
+            ImageFFTer<Float> ffter(
+                _imageF,
+                myregion.get(), mask, leAxes
+            );
+            ffter.setStretch(stretch);
+            ffter.setReal(realOut);
+            ffter.setImag(imagOut);
+            ffter.setAmp(ampOut);
+            ffter.setPhase(phaseOut);
+            ffter.setComplex(complexOut);
+            ffter.addHistory(_ORIGIN, msgs);
+            ffter.fft();
+        }
+        else {
+            ImageFFTer<Complex> ffter(
+                _imageC,
+                myregion.get(), mask, leAxes
+            );
+            ffter.setStretch(stretch);
+            ffter.setReal(realOut);
+            ffter.setImag(imagOut);
+            ffter.setAmp(ampOut);
+            ffter.setPhase(phaseOut);
+            ffter.setComplex(complexOut);
+            ffter.addHistory(_ORIGIN, msgs);
+            ffter.fft();
+        }
+        return True;
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
+        RETHROW(x);
+    }
+    return False;
 }
 
 bool image::fromarray(
@@ -1353,6 +1754,81 @@ image* image::imageconcat(
     return nullptr;
 }
 
+bool image::remove(const bool finished, const bool verbose) {
+    try {
+        _log << _ORIGIN;
+
+        if (detached()) {
+            return False;
+        }
+        _remove(verbose);
+        if (finished) {
+            done();
+        }
+        return True;
+    }
+    catch (const AipsError &x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return False;
+}
+
+void image::_remove(bool verbose) {
+    pair<SPIIF,SPIIC> mypair;
+    if (_imageF) {
+        mypair.first = _imageF;
+    }
+    else {
+        mypair.second = _imageC;
+    }
+    _stats.reset();
+    _imageF.reset();
+    _imageC.reset();
+    //_image.reset();
+    if (mypair.first) {
+        ImageFactory::remove(mypair.first, verbose);
+    }
+    else {
+        ImageFactory::remove(mypair.second, verbose);
+    }
+}
+
+bool image::removefile(const std::string& filename) {
+    bool rstat(false);
+    try {
+        _log << LogOrigin("image", "removefile");
+
+        String fileName(filename);
+        if (fileName.empty()) {
+            _log << LogIO::WARN << "Empty filename" << LogIO::POST;
+            return rstat;
+        }
+        File f(fileName);
+        if (!f.exists()) {
+            _log << LogIO::WARN << fileName << " does not exist."
+                    << LogIO::POST;
+            return rstat;
+        }
+
+        // Now try and blow it away.  If it's open, tabledelete won't delete it.
+        String message;
+        if (Table::canDeleteTable(message, fileName, True)) {
+            Table::deleteTable(fileName, True);
+            rstat = true;
+        } else {
+            _log << LogIO::WARN << "Cannot delete file " << fileName
+                    << " because " << message << LogIO::POST;
+        }
+    } catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return rstat;
+}
+
 record* image::torecord() {
     _log << LogOrigin("image", __func__);
     if (detached()) {
@@ -1400,18 +1876,6 @@ String image::_getMask(const variant& mask) {
     }
 }
 
-Bool image::_isUnset(const variant &theVar) {
-	return theVar.type() == variant::BOOLVEC
-	    && theVar.size() == 0;
-}
-
-void image::_reset() {
-	_imageF.reset();
-	_imageC.reset();
-	_stats.reset();
-}
-
-
 String image::_inputsString(const vector<std::pair<String, variant> >& inputs) {
 	String out = "(";
 	String quote;
@@ -1426,509 +1890,30 @@ String image::_inputsString(const vector<std::pair<String, variant> >& inputs) {
 		out += iter->first + "=" + quote;
 		out += iter->second.toString();
 		out += quote;
-		iter++;
+		++iter;
 	}
 	out += ")";
 	return out;
 }
 
-::casac::record*
-image::coordmeasures(
-    const std::vector<double>&pixel, const string& dframe, const string& sframe
-) {
-	try {
-		_log << _ORIGIN;
-		if (detached()) {
-			return nullptr;
-		}
-		casa::Record theDir;
-		casa::Record theFreq;
-		casa::Record theVel;
-		Vector<Double> vpixel;
-		if (!(pixel.size() == 1 && pixel[0] == -1)) {
-			vpixel = pixel;
-		}
-		unique_ptr<Record> retval;
-		casa::String error;
-		Record R;
-		if (_imageF) {
-			casa::Quantum<Float> intensity;
-			retval.reset(
-				PixelValueManipulator<Float>::coordMeasures(
-					intensity, theDir, theFreq, theVel,
-					_imageF, vpixel, dframe, sframe
-				)
-			);
-			ThrowIf(
-				! QuantumHolder(intensity).toRecord(error, R),
-				"Could not convert intensity to record. "
-				+ error
-			);
-		}
-		else {
-			casa::Quantum<Complex> intensity;
-			retval.reset(
-				PixelValueManipulator<Complex>::coordMeasures(
-					intensity, theDir, theFreq, theVel,
-					_imageC, vpixel, dframe, sframe
-				)
-			);
-			ThrowIf(
-				! QuantumHolder(intensity).toRecord(error, R),
-				"Could not convert intensity to record. "
-				+ error
-			);
-		}
-		retval->defineRecord(RecordFieldId("intensity"), R);
-		return fromRecord(*retval);
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	return nullptr;
+Bool image::_isUnset(const variant &theVar) {
+	return theVar.type() == variant::BOOLVEC
+	    && theVar.size() == 0;
 }
 
-::casac::record*
-image::decompose(const variant& region, const ::casac::variant& vmask,
-	bool simple, double threshold, int ncontour, int minrange,
-	int naxis, bool fit, double maxrms, int maxretry, int maxiter,
-	double convcriteria, bool stretch
-) {
-	try {
-		_log << _ORIGIN;
-		if (detached()) {
-			return nullptr;
-		}
-		ThrowIf(! _imageF, "This application supports only real-valued images");
-		ThrowIf(
-			threshold < 0,
-			"Threshold = " + String::toString(threshold)
-			+ ". You must specify a nonnegative threshold"
-		);
-		auto Region = _getRegion(region, False);
-		String mask = vmask.toString();
-		if (mask == "[]") {
-			mask = "";
-		}
-		Matrix<Int> blcs;
-		Matrix<Int> trcs;
-		casa::Record outrec1;
-		//if (_imageF) {
-			ImageDecomposerTask<Float> idt(_imageF, Region.get(), mask);
-			idt.setSimple(simple);
-			idt.setDeblendOptions(threshold, ncontour, minrange, naxis);
-			idt.setFit(fit);
-			idt.setFitOptions(maxrms, maxretry, maxiter, convcriteria);
-			idt.setStretch(stretch);
-			outrec1.define("components", idt.decompose(blcs, trcs));
-			/*
-		}
-		else {
-			ImageDecomposerTask<Complex> idt(_imageC, Region.get(), mask);
-			idt.setSimple(simple);
-			idt.setDeblendOptions(threshold, ncontour, minrange, naxis);
-			idt.setFit(fit);
-			idt.setFitOptions(maxrms, maxretry, maxiter, convcriteria);
-			idt.setStretch(stretch);
-			outrec1.define("components", idt.decompose(blcs, trcs));
-		}
-	*/
-		/*
-		Matrix<Float> cl = _image->decompose(
-			blcs, trcs, *Region, mask, simple, Threshold,
-			nContour, minRange, nAxis, fit, maxrms,
-			maxRetry, maxIter, convCriteria, stretch
-		);
-		*/
-
-
-		outrec1.define("blc", blcs);
-		outrec1.define("trc", trcs);
-		return fromRecord(outrec1);
-
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-			<< LogIO::POST;
-		RETHROW(x);
-	}
-	return nullptr;
-}
-
-record* image::deconvolvecomponentlist(
-	const record& complist, int channel, int polarization
-) {
-	_log << _ORIGIN;
-	if (detached()) {
-		return nullptr;
-	}
-	try {
-		std::unique_ptr<Record> compList(toRecord(complist));
-		ComponentList cl, clOut;
-		casa::String err;
-		ThrowIf(
-			! cl.fromRecord(err, *compList),
-			"Input dictionary is not a valid component list: " + err
-		);
-		if (_imageF) {
-			ComponentListDeconvolver<Float> cld(_imageF);
-			clOut = cld.deconvolve(cl, channel, polarization);
-		}
-		else {
-			ComponentListDeconvolver<Complex> cld(_imageC);
-			clOut = cld.deconvolve(cl, channel, polarization);
-		}
-		Record rec;
-		ThrowIf(
-			! clOut.toRecord(err, rec),
-			"Cannot convert resulting component list to record: " + err
-		);
-		return fromRecord(rec);
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-			<< LogIO::POST;
-		RETHROW(x);
-	}
-	return nullptr;
-}
-
-record* image::deconvolvefrombeam(
-	const ::casac::variant& source,
-	const ::casac::variant& beam
-) {
-
-	try {
-		_log << _ORIGIN;
-		Vector<casa::Quantity> sourceParam, beamParam;
-		Angular2DGaussian mySource;
-		if (
-			! toCasaVectorQuantity(source, sourceParam)
-			|| (sourceParam.nelements() == 0)
-			|| sourceParam.nelements() > 3
-		) {
-			throw(AipsError("Cannot understand source values"));
-		}
-		else {
-			if (sourceParam.nelements() == 1) {
-				sourceParam.resize(3, True);
-				sourceParam[1] = sourceParam[0];
-				sourceParam[2] = casa::Quantity(0, "deg");
-			}
-			else if (sourceParam.nelements() == 2) {
-				sourceParam.resize(3, True);
-				sourceParam[2] = casa::Quantity(0, "deg");
-			}
-			mySource = Angular2DGaussian(
-				sourceParam[0], sourceParam[1], sourceParam[2]
-			);
-		}
-		if (
-			! toCasaVectorQuantity(beam, beamParam)
-			|| (beamParam.nelements() == 0)) {
-			throw(AipsError("Cannot understand beam values"));
-		}
-		else {
-			if (beamParam.nelements() == 1) {
-				beamParam.resize(3, True);
-				beamParam[1] = beamParam[0];
-				beamParam[2] = casa::Quantity(0.0, "deg");
-			}
-			if (beamParam.nelements() == 2) {
-				beamParam.resize(3, True);
-				beamParam[2] = casa::Quantity(0.0, "deg");
-			}
-		}
-		GaussianBeam myBeam(beamParam[0], beamParam[1], beamParam[2]);
-		Bool success = False;
-		Angular2DGaussian decon;
-		Bool retval = False;
-		try {
-			retval = GaussianDeconvolver::deconvolve(decon, mySource, myBeam);
-			success = True;
-		}
-		catch (const AipsError& x) {
-			retval = False;
-			success = False;
-		}
-		Record deconval = decon.toRecord();
-		deconval.defineRecord("pa", deconval.asRecord("positionangle"));
-		deconval.removeField("positionangle");
-		deconval.define("success", success);
-		Record outrec1;
-		outrec1.define("return", retval);
-		outrec1.defineRecord("fit", deconval);
-		return fromRecord(outrec1);
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-}
-
-
-record* image::beamforconvolvedsize(
-	const variant& source, const variant& convolved
-) {
-
-	try {
-		_log << _ORIGIN;
-		Vector<casa::Quantity> sourceParam, convolvedParam;
-		if (
-			! toCasaVectorQuantity(source, sourceParam)
-			|| sourceParam.size() != 3
-		) {
-			throw(AipsError("Cannot understand source values"));
-		}
-		if (
-			! toCasaVectorQuantity(convolved, convolvedParam)
-			&& convolvedParam.size() != 3
-		) {
-			throw(AipsError("Cannot understand target values"));
-		}
-		Angular2DGaussian mySource(sourceParam[0], sourceParam[1], sourceParam[2]);
-		GaussianBeam myConvolved(convolvedParam[0], convolvedParam[1], convolvedParam[2]);
-		GaussianBeam neededBeam;
-		try {
-			if (GaussianDeconvolver::deconvolve(neededBeam, myConvolved, mySource)) {
-				// throw without a message here, it will be caught
-				// in the associated catch block and a new error will
-				// be thrown with the appropriate message.
-				throw AipsError();
-			}
-		}
-		catch (const AipsError& x) {
-			ostringstream os;
-			os << "Unable to reach target resolution of "
-				<< myConvolved << " Input source "
-				<< mySource << " is probably too large.";
-			throw AipsError(os.str());
-		}
-		Record ret;
-		QuantumHolder qh(neededBeam.getMajor());
-		ret.defineRecord("major", qh.toRecord());
-		qh = QuantumHolder(neededBeam.getMinor());
-		ret.defineRecord("minor", qh.toRecord());
-		qh = QuantumHolder(neededBeam.getPA());
-		ret.defineRecord("pa", qh.toRecord());
-		return fromRecord(ret);
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-			<< LogIO::POST;
-		RETHROW(x);
-	}
-}
-
-record* image::commonbeam() {
-	try {
-		_log << _ORIGIN;
-		if (detached()) {
-			return 0;
-		}
-		ThrowIf(
-			! _imageF,
-			"This method only supports Float valued images"
-		);
-		ImageInfo myInfo = _imageF->imageInfo();
-		if (! myInfo.hasBeam()) {
-			throw AipsError("This image has no beam(s).");
-		}
-		GaussianBeam beam;
-		if (myInfo.hasSingleBeam()) {
-			_log << LogIO::WARN
-				<< "This image only has one beam, so just returning that"
-				<< LogIO::POST;
-			beam = myInfo.restoringBeam();
-
-		}
-		else {
-			// multiple beams in this image
-			beam = CasaImageBeamSet(myInfo.getBeamSet()).getCommonBeam();
-		}
-		beam.setPA(casa::Quantity(beam.getPA("deg", True), "deg"));
-		Record x = beam.toRecord();
-		x.defineRecord("pa", x.asRecord("positionangle"));
-		x.removeField("positionangle");
-		return fromRecord(x);
-
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-			<< LogIO::POST;
-		RETHROW(x);
-	}
-
-}
-
-bool image::remove(const bool finished, const bool verbose) {
-	try {
-		_log << _ORIGIN;
-
-		if (detached()) {
-			return False;
-		}
-		_remove(verbose);
-		if (finished) {
-			done();
-		}
-		return True;
-	}
-	catch (const AipsError &x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	return False;
-}
-
-void image::_remove(bool verbose) {
-	pair<SPIIF,SPIIC> mypair;
-	if (_imageF) {
-		mypair.first = _imageF;
-	}
-	else {
-		mypair.second = _imageC;
-	}
-	_stats.reset();
+void image::_reset() {
 	_imageF.reset();
 	_imageC.reset();
-	//_image.reset();
-	if (mypair.first) {
-		ImageFactory::remove(mypair.first, verbose);
-	}
-	else {
-		ImageFactory::remove(mypair.second, verbose);
-	}
+	_stats.reset();
 }
 
-bool image::removefile(const std::string& filename) {
-	bool rstat(false);
-	try {
-		_log << LogOrigin("image", "removefile");
 
-		String fileName(filename);
-		if (fileName.empty()) {
-			_log << LogIO::WARN << "Empty filename" << LogIO::POST;
-			return rstat;
-		}
-		File f(fileName);
-		if (!f.exists()) {
-			_log << LogIO::WARN << fileName << " does not exist."
-					<< LogIO::POST;
-			return rstat;
-		}
 
-		// Now try and blow it away.  If it's open, tabledelete won't delete it.
-		String message;
-		if (Table::canDeleteTable(message, fileName, True)) {
-			Table::deleteTable(fileName, True);
-			rstat = true;
-		} else {
-			_log << LogIO::WARN << "Cannot delete file " << fileName
-					<< " because " << message << LogIO::POST;
-		}
-	} catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	return rstat;
-}
 
-bool image::done(const bool remove, const bool verbose) {
-	try {
-		_log << _ORIGIN;
-		// resetting _stats must come before the table removal or the table
-		// removal will fail
-		_stats.reset(0);
-        MeasIERS::closeTables();
 
-		if (remove && !detached()) {
-			_remove(verbose);
-		}
-		else {
-			_imageF.reset();
-			_imageC.reset();
-			//_image.reset();
-		}
-		return True;
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-}
 
-bool image::fft(
-	const string& realOut, const string& imagOut,
-	const string& ampOut, const string& phaseOut,
-	const std::vector<int>& axes, const variant& region,
-	const variant& vmask, const bool stretch,
-	const string& complexOut
-) {
-	try {
-		_log << LogOrigin(_class, __func__);
-		if (detached()) {
-			return false;
-		}
-		SHARED_PTR<Record> myregion(_getRegion(region, False));
-		String mask = vmask.toString();
-		if (mask == "[]") {
-			mask = "";
-		}
-		Vector<uInt> leAxes(0);
-		if (
-			axes.size() > 1
-			|| (axes.size() == 1 && axes[0] >= 0)
-		) {
-			leAxes.resize(axes.size());
-			for (uInt i=0; i<axes.size(); i++) {
-				ThrowIf(
-					axes[i] < 0,
-					"None of the elements of axes may be less than zero"
-				);
-				leAxes[i] = axes[i];
-			}
-		}
-		if (_imageF) {
-			ImageFFTer<Float> ffter(
-				_imageF,
-				myregion.get(), mask, leAxes
-			);
-			ffter.setStretch(stretch);
-			ffter.setReal(realOut);
-			ffter.setImag(imagOut);
-			ffter.setAmp(ampOut);
-			ffter.setPhase(phaseOut);
-			ffter.setComplex(complexOut);
-			ffter.fft();
-		}
-		else {
-			ImageFFTer<Complex> ffter(
-				_imageC,
-				myregion.get(), mask, leAxes
-			);
-			ffter.setStretch(stretch);
-			ffter.setReal(realOut);
-			ffter.setImag(imagOut);
-			ffter.setAmp(ampOut);
-			ffter.setPhase(phaseOut);
-			ffter.setComplex(complexOut);
-			ffter.fft();
-		}
-		return True;
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-			<< LogIO::POST;
-		RETHROW(x);
-	}
-}
+
+
 
 ::casac::record*
 image::findsources(

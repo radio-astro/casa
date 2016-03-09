@@ -203,6 +203,20 @@ class ia_fft_test(unittest.TestCase):
        
         ok = testim.done() and im1.done() and im2.done() and im3.done() and im4.done()
         self.assertTrue(ok)
+
+    def test_history(self):
+        """verify history writing"""
+        myia = iatool()
+        (real, imag, amp, phase, complx) = ("myreal.im", "myimag.im", "myamp.im", "myphase.im", "mycomplex.im")
+        myia.fromshape("", [20,20])
+        myia.fft(real=real, imag=imag, amp=amp, phase=phase, complex=complx)
+        myia.done()
+        for im in (real, imag, amp, phase, complx):
+            myia.open(im)
+            msgs = myia.history()
+            myia.done()
+            self.assertTrue("ia.fft" in msgs[-2])
+            self.assertTrue("ia.fft" in msgs[-1])
         
 def suite():
     return [ia_fft_test]
