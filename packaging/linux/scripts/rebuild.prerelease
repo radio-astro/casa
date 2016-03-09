@@ -332,7 +332,7 @@ foreach $rpm ( keys %rpms ) {
 #######################################################################################################
 $makeapp = "$RPM_TOP/scripts/appdistro";
 if ( -x $makeapp ) {
-    my $execline = "$makeapp version=$version ws=/var/rpmbuild/BUILD/casa-$TAG/casa-$TAG-$version dir=$staging_area/$rhver tag=$TAG";
+    my $execline = "$makeapp version=$version-$release ws=/var/rpmbuild/BUILD/casa-$TAG/casa-$TAG-$version dir=$staging_area/$rhver tag=$TAG";
     open ( LOG, ">> $logfile" );
     print LOG "---------------------------------------------------------------------------\n";
     print LOG "generating make-app distro\n\n";
@@ -355,9 +355,9 @@ if ( -x $makeapp ) {
 
 open ( LOG, ">> $logfile" );
 print LOG "---------------------------------------------------------------------------\n";
-print LOG "storing version ($version) in $versionfile\n";
+print LOG "storing version ($version-$revision) from $revision in $versionfile\n";
 open( OUT, ">$versionfile" );
-print OUT "$version\n";
+print OUT "$revision $release\n";
 close( OUT );
 
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);

@@ -72,7 +72,7 @@ while ( $_ = @ARGV[0] ) {
     /^ws=(.+)$/i && ($casa = $1, next);
     
     /^release=(\d+)$/i && ($release = "-$1", next);
-    /^version=(\d+\.\d+\.\d+)$/i && ($version = $1, next);
+    /^version=(\d+\.\d+\.\d+(?:-\d+)?)/i && ( $version = $1, next );
 
     /^-v(?:erbose)?$/i && ($verbose='yes', next);
 
