@@ -388,7 +388,7 @@ VisBufferImpl2::construct (ViImplementation2 * vi, VisBufferOptions options)
 void
 VisBufferImpl2::copy (const VisBuffer2 & otherRaw, Bool fetchIfNeeded)
 {
-    copyComponents (otherRaw, VisBufferComponents2::exceptThese(FlagCategory, Unknown),
+    copyComponents (otherRaw, VisBufferComponents2::exceptThese({FlagCategory}),
                     True, fetchIfNeeded);
 }
 
@@ -459,16 +459,16 @@ VisBufferImpl2::copyCoordinateInfo (const VisBuffer2 * vb, Bool dirDependent,
 {
 
     VisBufferComponents2 components =
-        VisBufferComponents2::these (Antenna1, Antenna2, ArrayId, DataDescriptionIds,
-                                     FieldId, SpectralWindows, casa::vi::Time,
-                                     NRows, Feed1, Feed2, Unknown);
+        VisBufferComponents2::these ({Antenna1, Antenna2, ArrayId, DataDescriptionIds,
+                                      FieldId, SpectralWindows, casa::vi::Time,
+		    NRows, Feed1, Feed2});
 
     copyComponents (* vb, components, allowShapeChange, fetchIfNeeded);
 
     if(dirDependent){
 
         VisBufferComponents2 components =
-                VisBufferComponents2::these (Direction1, Direction2, FeedPa1, FeedPa2, Unknown);
+	    VisBufferComponents2::these ({Direction1, Direction2, FeedPa1, FeedPa2});
 
         copyComponents (* vb, components, allowShapeChange, fetchIfNeeded);
     }

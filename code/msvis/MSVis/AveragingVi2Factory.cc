@@ -82,10 +82,9 @@ AveragingParameters::operator= (const AveragingParameters & other)
 VisBufferComponents2
 AveragingParameters::allDataColumns () const
 {
-    return VisBufferComponents2::these (VisibilityModel,
-                                        VisibilityObserved,
-                                        VisibilityCorrected,
-                                        Unknown);
+    return VisBufferComponents2::these ({VisibilityModel,
+                                         VisibilityObserved,
+                                         VisibilityCorrected});
 }
 
 Double

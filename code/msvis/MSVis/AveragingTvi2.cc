@@ -1943,31 +1943,30 @@ VbAvg::setupArrays (Int nCorrelations, Int nChannels, Int nBaselines)
     // optional ones.
 
     VisBufferComponents2 including =
-            VisBufferComponents2::these (Antenna1,
-                                         Antenna2,
-                                         ArrayId,
-                                         CorrType,
-                                         DataDescriptionIds,
-                                         Exposure,
-                                         Feed1,
-                                         Feed2,
-                                         FieldId,
-                                         FlagCategory,
-                                         FlagCube,
-                                         FlagRow,
-                                         ObservationId,
-                                         ProcessorId,
-                                         RowIds,
-                                         Scan,
-                                         Sigma,
-                                         SpectralWindows,
-                                         StateId,
-                                         Time,
-                                         TimeCentroid,
-                                         TimeInterval,
-                                         Weight,
-                                         Uvw,
-                                         Unknown);
+	VisBufferComponents2::these ({Antenna1,
+		    Antenna2,
+		    ArrayId,
+		    CorrType,
+		    DataDescriptionIds,
+		    Exposure,
+		    Feed1,
+		    Feed2,
+		    FieldId,
+		    FlagCategory,
+		    FlagCube,
+		    FlagRow,
+		    ObservationId,
+		    ProcessorId,
+		    RowIds,
+		    Scan,
+		    Sigma,
+		    SpectralWindows,
+		    StateId,
+		    Time,
+		    TimeCentroid,
+		    TimeInterval,
+		    Weight,
+		    Uvw});
 
     if (doing_p.modelData_p){
         including += VisibilityCubeModel;
@@ -2517,7 +2516,8 @@ Float AveragingTvi2::weightToSigma (Float weight)
     return weight > FLT_MIN ? 1.0 / std::sqrt (weight) : -1.0; // bogosity indicator
 }
 
-Vector<Float> AveragingTvi2::average (const Matrix<Float> &data, const Matrix<Bool> &flags)
+Vector<Float>
+AveragingTvi2::average (const Matrix<Float> &data, const Matrix<Bool> &flags)
 {
     IPosition shape = data.shape();
     Vector<Float> result(shape(0),0);

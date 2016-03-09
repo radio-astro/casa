@@ -2950,7 +2950,7 @@ VisibilityIteratorImpl2::getVisBuffer ()
 VisBuffer2 *
 VisibilityIteratorImpl2::getVisBuffer (const VisibilityIterator2 * vi)
 {
-    ThrowIf (vb_p == nullptr, "VI Implementation has not VisBuffer.");
+    ThrowIf (vb_p == nullptr, "VI Implementation has no VisBuffer.");
     vb_p->associateWithVi2 (vi);
     return vb_p;
 }

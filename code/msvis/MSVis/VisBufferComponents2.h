@@ -2,6 +2,7 @@
 #define MSVIS_VisBufferComponents2_H
 
 #include <casa/BasicSL/String.h>
+#include <initializer_list>
 #include <set>
 
 namespace casa {
@@ -117,12 +118,22 @@ public:
     String toString () const;
 
     static VisBufferComponents2 all ();
+
+    // * exceptThese *: n.b., use the component "Unknown" as the last one in the list so that the variadic
+    // framework knows when to stop.
+
     static VisBufferComponents2 exceptThese (VisBufferComponent2 component, ...);
+    static VisBufferComponents2 exceptThese (std::initializer_list <VisBufferComponent2> components);
+
     static String name (Int id);
     static VisBufferComponents2 none ();
     static VisBufferComponents2 singleton (VisBufferComponent2 component);
-    static VisBufferComponents2 these (VisBufferComponent2 component, ...);
 
+    // * these * : n.b., use the component "Unknown" as the last one in the list so that the variadic
+    // framework knows when to stop.
+
+    static VisBufferComponents2 these (VisBufferComponent2 component, ...);
+    static VisBufferComponents2 these (std::initializer_list<VisBufferComponent2> components);
 
 protected:
 

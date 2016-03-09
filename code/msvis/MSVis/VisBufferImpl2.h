@@ -69,6 +69,11 @@ namespace avg {
     class VbAvg;
 }
 
+namespace tavg {
+
+    class VbAvg;
+}
+
 
 
 //<summary>VisBufferImpls encapsulate one chunk of visibility data for processing.</summary>
@@ -115,6 +120,7 @@ class VisBufferImpl2 : public VisBuffer2 {
 
     friend class VLAT; // for async i/o
     friend class casa::vi::avg::VbAvg;
+    friend class casa::vi::tavg::VbAvg;
     friend class AveragingTvi2;
     friend class VbCacheItemBase;
     friend class VisBufferCache;

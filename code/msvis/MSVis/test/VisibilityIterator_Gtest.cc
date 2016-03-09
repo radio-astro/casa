@@ -243,8 +243,8 @@ gtestLog << "--- Starting sweepMs" << endl;
                     nRowsProcessed += vb->nRows();
 
                     nextSubchunk (* vi, vb);
-
                 }
+
                 endOfChunk (* vi, vb);
             }
 
