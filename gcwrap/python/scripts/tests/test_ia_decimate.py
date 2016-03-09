@@ -188,7 +188,16 @@ class ia_decimate_test(unittest.TestCase):
         bb.done()
         myia.done()
         
-        
+    def test_history(self):
+        """Verify history writing"""
+        myia = iatool()
+        myia.fromshape("",[20,20,20])
+        bb = myia.decimate("")
+        myia.done()
+        msgs = bb.history()
+        bb.done()
+        self.assertTrue("ia.decimate" in msgs[-2])        
+        self.assertTrue("ia.decimate" in msgs[-1])        
         
 def suite():
     return [ia_decimate_test]

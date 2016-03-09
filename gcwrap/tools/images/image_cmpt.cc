@@ -876,19 +876,14 @@ coordsys* image::coordsys(const std::vector<int>& pixelAxes) {
 		if (pixelAxes.size() == 1 && pixelAxes[0] == -1) {
 			myAxes.clear();
 		}
+		unique_ptr<ImageMetaData> imd(
+		    _imageF
+		    ? new ImageMetaData(_imageF)
+		    : new ImageMetaData(_imageC)
+		);
+		auto csys =  imd->coordsys(myAxes);
 		std::unique_ptr<casac::coordsys> rstat;
-		// Return coordsys object
 		rstat.reset(new ::casac::coordsys());
-		//auto csys = _image->coordsys(Vector<Int> (pixelAxes));
-		CoordinateSystem csys;
-		if (_imageF) {
-			ImageMetaData imd(_imageF);
-			csys = imd.coordsys(myAxes);
-		}
-		else {
-			ImageMetaData imd(_imageC);
-			csys = imd.coordsys(myAxes);
-		}
 		rstat->setcoordsys(csys);
 		return rstat.release();
 	}
@@ -900,9 +895,92 @@ coordsys* image::coordsys(const std::vector<int>& pixelAxes) {
 	return nullptr;
 }
 
-bool image::fromarray(const std::string& outfile,
-        const variant& pixels, const record& csys,
-        bool linear, bool overwrite, bool log) {
+image* image::decimate(
+	const string& outfile, int axis, int factor, const string& method,
+	const variant& region, const string& mask, bool overwrite, bool stretch
+) {
+	try {
+	    if (detached()) {
+	        return nullptr;
+	    }
+		ThrowIf(
+			axis < 0,
+			"The value of axis cannot be negative"
+		);
+		ThrowIf(
+			factor < 0,
+			"The value of factor cannot be negative"
+		);
+		String mymethod = method;
+		mymethod.downcase();
+		ImageDecimatorData::Function f;
+		if (mymethod.startsWith("c")) {
+			f = ImageDecimatorData::COPY;
+		}
+		else if (mymethod.startsWith("m")) {
+			f = ImageDecimatorData::MEAN;
+		}
+		else {
+			ThrowCc("Unsupported decimation method " + method);
+		}
+		SHARED_PTR<Record> regPtr(_getRegion(region, True));
+		vector<String> names {
+		    "outfile", "axis", "factor", "method",
+		    "region", "mask", "overwrite", "stretch"
+		};
+		vector<variant> values {
+		    outfile, axis, factor, method, region, mask, overwrite, stretch
+		};
+		auto msgs = _newHistory(__func__, names, values);
+		if (_imageF) {
+			SPCIIF myim = _imageF;
+			return _decimate(
+				myim, outfile, axis, factor, f,
+				regPtr, mask, overwrite, stretch, msgs
+			);
+		}
+		else {
+			SPCIIC myim = _imageC;
+			return _decimate(
+				myim, outfile, axis, factor, f,
+				regPtr, mask, overwrite, stretch, msgs
+			);
+		}
+	}
+	catch (const AipsError& x) {
+		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+			<< LogIO::POST;
+		RETHROW(x);
+	}
+	return nullptr;
+}
+
+template <class T> image* image::_decimate(
+    const SPCIIT myimage,
+    const string& outfile, int axis, int factor,
+    ImageDecimatorData::Function f,
+    const SHARED_PTR<Record> region,
+    const string& mask, bool overwrite, bool stretch,
+    const vector<String>& msgs
+) const {
+    ImageDecimator<T> decimator(
+        myimage, region.get(),
+        mask, outfile, overwrite
+    );
+    decimator.setFunction(f);
+    decimator.setAxis(axis);
+    decimator.setFactor(factor);
+    decimator.setStretch(stretch);
+    decimator.addHistory(_ORIGIN, msgs);
+    SPIIT out = decimator.decimate();
+    return new image(out);
+}
+
+bool image::fromarray(
+    const std::string& outfile,
+    const variant& pixels, const record& csys,
+    bool linear, bool overwrite, bool log
+) {
     try {
         _reset();
         auto mypair = _fromarray(
@@ -1334,72 +1412,6 @@ void image::_reset() {
 }
 
 
-image* image::decimate(
-	const string& outfile, int axis, int factor, const string& method,
-	const variant& region, const string& mask, bool overwrite, bool stretch
-) {
-	ThrowIf(
-		detached(),
-		"Tool is not attached to an image"
-	);
-	try {
-		ThrowIf(
-			axis < 0,
-			"The value of axis cannot be negative"
-		);
-		ThrowIf(
-			factor < 0,
-			"The value of factor cannot be negative"
-		);
-		String mymethod = method;
-		mymethod.downcase();
-		ImageDecimatorData::Function f;
-		if (mymethod.startsWith("c")) {
-			f = ImageDecimatorData::COPY;
-		}
-		else if (mymethod.startsWith("m")) {
-			f = ImageDecimatorData::MEAN;
-		}
-		else {
-			ThrowCc("Unsupported decimation method " + method);
-		}
-		SHARED_PTR<Record> regPtr(_getRegion(region, True));
-		vector<String> msgs;
-		{
-			msgs.push_back("Ran ia.decimate() on image " + _name());
-			vector<std::pair<String, variant> > inputs;
-			inputs.push_back(make_pair("outfile", outfile));
-			inputs.push_back(make_pair("axis", axis));
-			inputs.push_back(make_pair("factor", factor));
-			inputs.push_back(make_pair("method", method));
-			inputs.push_back(make_pair("region", region));
-			inputs.push_back(make_pair("mask", mask));
-			inputs.push_back(make_pair("overwrite", overwrite));
-			inputs.push_back(make_pair("stretch", stretch));
-			msgs.push_back("ia.decimate" + _inputsString(inputs));
-		}
-		if (_imageF) {
-			SPCIIF myim = _imageF;
-			return _decimate(
-				myim, outfile, axis, factor, f,
-				regPtr, mask, overwrite, stretch, msgs
-			);
-		}
-		else {
-			SPCIIC myim = _imageC;
-			return _decimate(
-				myim, outfile, axis, factor, f,
-				regPtr, mask, overwrite, stretch, msgs
-			);
-		}
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-			<< LogIO::POST;
-		RETHROW(x);
-	}
-}
-
 String image::_inputsString(const vector<std::pair<String, variant> >& inputs) {
 	String out = "(";
 	String quote;
@@ -1418,29 +1430,6 @@ String image::_inputsString(const vector<std::pair<String, variant> >& inputs) {
 	}
 	out += ")";
 	return out;
-}
-
-template <class T> image* image::_decimate(
-	const SPCIIT myimage,
-	const string& outfile, int axis, int factor,
-	ImageDecimatorData::Function f,
-	const SHARED_PTR<Record> region,
-	const string& mask, bool overwrite, bool stretch,
-	const vector<String>& msgs
-) const {
-	ImageDecimator<T> decimator(
-		myimage, region.get(),
-		mask, outfile, overwrite
-	);
-	decimator.setFunction(f);
-	decimator.setAxis(axis);
-	decimator.setFactor(factor);
-	decimator.setStretch(stretch);
-	decimator.addHistory(
-		LogOrigin("image", __func__), msgs
-	);
-	SPIIT out = decimator.decimate();
-	return new image(out);
 }
 
 ::casac::record*
