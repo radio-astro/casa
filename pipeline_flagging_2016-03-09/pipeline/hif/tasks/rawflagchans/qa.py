@@ -1,5 +1,4 @@
 from __future__ import absolute_import
-import os
 
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
@@ -26,7 +25,7 @@ class RawflagchansQAHandler(pqa.QAResultHandler):
                                                              result.summaries,
                                                              ms.basename)
         score2 = qacalc.score_flagging_view_exists(ms.basename, result.view)
-	scores = [score1, score2]
+        scores = [score1, score2]
         result.qa.pool[:] = scores
 
         result.qa.all_unity_longmsg = 'No extra data was flagged in %s' % vis
