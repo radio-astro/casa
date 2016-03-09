@@ -41,7 +41,7 @@ public:
       is_float = False;
     } else {
       String pol_type = main_table_->keywordSet().asString("POLTYPE");
-      ROScalarColumn < uInt > polno_column(*main_table_, "POLNO");
+      ROScalarColumn<uInt> polno_column(*main_table_, "POLNO");
       uInt max_pol = max(polno_column.getColumn());
 //      std::cout << "pol_type=" << pol_type << " max_pol=" << max_pol << std::endl;
       if ((max_pol == 3) && (pol_type == "linear" || pol_type == "circular")) {
@@ -53,7 +53,7 @@ public:
   }
 
   // to get OBSERVATION table
-  virtual Bool getObservationRow(ObservationRecord &record) {
+  virtual Bool getObservationRow(sdfiller::ObservationRecord &record) {
     POST_START;
 
     Bool return_value = (*this.*get_observation_row_)(record);
@@ -63,7 +63,7 @@ public:
   }
 
   // to get ANTENNA table
-  virtual Bool getAntennaRow(AntennaRecord &record) {
+  virtual Bool getAntennaRow(sdfiller::AntennaRecord &record) {
     POST_START;
 
     Bool return_value = (*this.*get_antenna_row_)(record);
@@ -73,7 +73,7 @@ public:
   }
 
   // to get PROCESSOR table
-  virtual Bool getProcessorRow(ProcessorRecord &record) {
+  virtual Bool getProcessorRow(sdfiller::ProcessorRecord &record) {
     POST_START;
 
     Bool return_value = (*this.*get_processor_row_)(record);
@@ -83,7 +83,7 @@ public:
   }
 
   // to get SOURCE table
-  virtual Bool getSourceRow(SourceRecord &record) {
+  virtual Bool getSourceRow(sdfiller::SourceRecord &record) {
     POST_START;
 
     Bool return_value = (*this.*get_source_row_)(record);
@@ -93,7 +93,7 @@ public:
   }
 
   // to get FIELD table
-  virtual Bool getFieldRow(FieldRecord &record) {
+  virtual Bool getFieldRow(sdfiller::FieldRecord &record) {
     POST_START;
 
     Bool return_value = (*this.*get_field_row_)(record);
@@ -103,7 +103,7 @@ public:
   }
 
   // to get SOURCE table
-  virtual Bool getSpectralWindowRow(SpectralWindowRecord &record) {
+  virtual Bool getSpectralWindowRow(sdfiller::SpectralWindowRecord &record) {
     POST_START;
 
     Bool return_value = (*this.*get_spw_row_)(record);
@@ -113,7 +113,7 @@ public:
   }
 
   // for DataAccumulator
-  virtual Bool getData(size_t irow, DataRecord &record);
+  virtual Bool getData(size_t irow, sdfiller::DataRecord &record);
 
 protected:
   void initializeSpecific();
@@ -124,29 +124,19 @@ private:
   Table tcal_table_;
   Table weather_table_;
 
-  ROScalarColumn<uInt> scan_column_;
-  ROScalarColumn<uInt> cycle_column_;
-  ROScalarColumn<uInt> ifno_column_;
-  ROScalarColumn<uInt> polno_column_;
-  ROScalarColumn<uInt> beam_column_;
-  ROScalarColumn<uInt> flagrow_column_;
-  ROScalarColumn<Double> time_column_;
-  ROScalarColumn<Double> interval_column_;
-  ROScalarColumn<Int> srctype_column_;
+  ROScalarColumn<uInt> scan_column_;ROScalarColumn<uInt> cycle_column_;ROScalarColumn<
+      uInt> ifno_column_;ROScalarColumn<uInt> polno_column_;ROScalarColumn<uInt> beam_column_;ROScalarColumn<
+      uInt> flagrow_column_;ROScalarColumn<Double> time_column_;ROScalarColumn<
+      Double> interval_column_;ROScalarColumn<Int> srctype_column_;
   ArrayColumn<Float> data_column_;
   ArrayColumn<uChar> flag_column_;
   ArrayColumn<Double> direction_column_;
-  ArrayColumn<Double> scanrate_column_;
-  ROScalarColumn<String> fieldname_column_;
-  ArrayColumn<Float> tsys_column_;
-  ROScalarColumn<uInt> tcal_id_column_;
-  ROScalarColumn<uInt> weather_id_column_;
-  ArrayColumn<Float> tcal_column_;
-  ROScalarColumn<Float> temperature_column_;
-  ROScalarColumn<Float> pressure_column_;
-  ROScalarColumn<Float> humidity_column_;
-  ROScalarColumn<Float> wind_speed_column_;
-  ROScalarColumn<Float> wind_direction_column_;
+  ArrayColumn<Double> scanrate_column_;ROScalarColumn<String> fieldname_column_;
+  ArrayColumn<Float> tsys_column_;ROScalarColumn<uInt> tcal_id_column_;ROScalarColumn<
+      uInt> weather_id_column_;
+  ArrayColumn<Float> tcal_column_;ROScalarColumn<Float> temperature_column_;ROScalarColumn<
+      Float> pressure_column_;ROScalarColumn<Float> humidity_column_;ROScalarColumn<
+      Float> wind_speed_column_;ROScalarColumn<Float> wind_direction_column_;
   Vector<uInt> sorted_rows_;
   ScantableFieldIterator::Product field_map_;
   ScantableFrequenciesIterator::Product num_chan_map_;
@@ -154,23 +144,24 @@ private:
   std::map<uInt, uInt> weather_id_map_;
   String pol_type_;
 
-  Bool (Scantable2MSReader::*get_antenna_row_)(AntennaRecord &);
-  Bool (Scantable2MSReader::*get_field_row_)(FieldRecord &);
-  Bool (Scantable2MSReader::*get_observation_row_)(ObservationRecord &);
-  Bool (Scantable2MSReader::*get_processor_row_)(ProcessorRecord &);
-  Bool (Scantable2MSReader::*get_source_row_)(SourceRecord &);
-  Bool (Scantable2MSReader::*get_spw_row_)(SpectralWindowRecord &);
+  Bool (Scantable2MSReader::*get_antenna_row_)(sdfiller::AntennaRecord &);
+  Bool (Scantable2MSReader::*get_field_row_)(sdfiller::FieldRecord &);
+  Bool (Scantable2MSReader::*get_observation_row_)(
+      sdfiller::ObservationRecord &);
+  Bool (Scantable2MSReader::*get_processor_row_)(sdfiller::ProcessorRecord &);
+  Bool (Scantable2MSReader::*get_source_row_)(sdfiller::SourceRecord &);
+  Bool (Scantable2MSReader::*get_spw_row_)(sdfiller::SpectralWindowRecord &);
 
   std::unique_ptr<ScantableFieldIterator> field_iter_;
   std::unique_ptr<ScantableFrequenciesIterator> freq_iter_;
   std::unique_ptr<ScantableSourceIterator> source_iter_;
 
-  Bool getAntennaRowImpl(AntennaRecord &record);
-  Bool getFieldRowImpl(FieldRecord &record);
-  Bool getObservationRowImpl(ObservationRecord &record);
-  Bool getProcessorRowImpl(ProcessorRecord &record);
-  Bool getSourceRowImpl(SourceRecord &record);
-  Bool getSpectralWindowRowImpl(SpectralWindowRecord &record);
+  Bool getAntennaRowImpl(sdfiller::AntennaRecord &record);
+  Bool getFieldRowImpl(sdfiller::FieldRecord &record);
+  Bool getObservationRowImpl(sdfiller::ObservationRecord &record);
+  Bool getProcessorRowImpl(sdfiller::ProcessorRecord &record);
+  Bool getSourceRowImpl(sdfiller::SourceRecord &record);
+  Bool getSpectralWindowRowImpl(sdfiller::SpectralWindowRecord &record);
 
   template<class _Record>
   Bool noMoreRowImpl(_Record &) {

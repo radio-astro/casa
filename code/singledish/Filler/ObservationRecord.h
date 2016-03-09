@@ -13,6 +13,7 @@
 #include <casacore/ms/MeasurementSets/MSObsColumns.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
+namespace sdfiller { //# NAMESPACE SDFILLER - BEGIN
 
 struct ObservationRecord {
   typedef MSObservation AssociatingTable;
@@ -83,6 +84,7 @@ struct ObservationRecord {
   }
 };
 
+} //# NAMESPACE SDFILLER - END
 } //# NAMESPACE CASA - END
 
 #endif /* SINGLEDISH_FILLER_OBSERVATIONRECORD_H_ */

@@ -35,19 +35,23 @@ void copyStorage(size_t n, size_t m, size_t stride, T const *src, T *dst) {
 }
 
 namespace casa { //# NAMESPACE CASA - BEGIN
+namespace sdfiller { //# NAMESPACE SDFILLER - BEGIN
 
 struct DataRecord {
   DataRecord() :
-      block_size_(16384u), num_data_storage_(block_size_), num_tsys_storage_(
-          block_size_), num_tcal_storage_(block_size_), data_shape_(1, 0), tsys_shape_(
-          1, 0), tcal_shape_(1, 0), data_storage_(new Float[num_data_storage_]), flag_storage_(
-          new Bool[num_data_storage_]), tsys_storage_(
-          new Float[num_tsys_storage_]), tcal_storage_(
-          new Float[num_tcal_storage_]), direction(2, 2, 0.0), direction_slice(IPosition(2, 2, 1), direction.data(), SHARE), direction_vector(
-          direction.column(0)), scan_rate(direction.column(1)), data(data_shape_, data_storage_.get(), SHARE), flag(
-          data_shape_, flag_storage_.get(), SHARE), tsys(tsys_shape_,
-          tsys_storage_.get(), SHARE), tcal(tcal_shape_, tcal_storage_.get(),
-          SHARE) {
+      block_size_(16384u), num_data_storage_(block_size_),
+      num_tsys_storage_(block_size_), num_tcal_storage_(block_size_),
+      data_shape_(1, 0), tsys_shape_(1, 0), tcal_shape_(1, 0),
+      data_storage_(new Float[num_data_storage_]),
+      flag_storage_(new Bool[num_data_storage_]),
+      tsys_storage_(new Float[num_tsys_storage_]),
+      tcal_storage_(new Float[num_tcal_storage_]), direction(2, 2, 0.0),
+      direction_slice(IPosition(2, 2, 1), direction.data(), SHARE),
+      direction_vector(direction.column(0)), scan_rate(direction.column(1)),
+      data(data_shape_, data_storage_.get(), SHARE),
+      flag(data_shape_, flag_storage_.get(), SHARE),
+      tsys(tsys_shape_, tsys_storage_.get(), SHARE),
+      tcal(tcal_shape_, tcal_storage_.get(), SHARE) {
 //    std::cout << "DataRecord::DataRecord()" << std::endl;
     clear();
   }
@@ -175,7 +179,8 @@ struct DataRecord {
     intent = other.intent;
     pol_type = other.pol_type;
     direction = other.direction;
-    direction_slice.takeStorage(direction_slice.shape(), direction.data(), SHARE);
+    direction_slice.takeStorage(direction_slice.shape(), direction.data(),
+        SHARE);
     direction_vector.reference(direction.column(0));
     scan_rate.reference(direction.column(1));
     flag_row = other.flag_row;
@@ -243,21 +248,32 @@ public:
 
 struct MSDataRecord {
   MSDataRecord() :
-      block_size_(131072u), num_data_storage_(block_size_), num_tsys_storage_(
-          block_size_), num_tcal_storage_(block_size_), data_shape_(2, 0, 0), tsys_shape_(
-          2, 0, 0), tcal_shape_(2, 0, 0), corr_type_shape_(1, 0), corr_type_storage_(
-          4), data_storage_(malloc(num_data_storage_ * sizeof(Complex))), flag_storage_(
-          malloc(num_data_storage_ * sizeof(Bool))), tsys_storage_(
-          malloc(num_tsys_storage_ * sizeof(Float))), tcal_storage_(
-          malloc(num_tcal_storage_ * sizeof(Float))), sigma_storage_(
-          new Float[4]), is_float_(False), corr_type(corr_type_shape_,
-          corr_type_storage_.storage(), SHARE), direction(2, 2, 0.0), direction_slice(IPosition(2,2,1),direction.data(),SHARE), float_data(
-          data_shape_, reinterpret_cast<Float *>(data_storage_.get()), SHARE), complex_data(
-          data_shape_, reinterpret_cast<Complex *>(data_storage_.get()), SHARE), flag(
-          data_shape_, reinterpret_cast<Bool *>(flag_storage_.get()), SHARE), sigma(
-          corr_type_shape_, sigma_storage_.get(), SHARE), weight(sigma), tsys(
-          tsys_shape_, reinterpret_cast<Float *>(tsys_storage_.get()), SHARE), tcal(
-          tcal_shape_, reinterpret_cast<Float *>(tcal_storage_.get()), SHARE) {
+      block_size_(131072u),
+      num_data_storage_(block_size_),
+      num_tsys_storage_(block_size_),
+      num_tcal_storage_(block_size_),
+      data_shape_(2, 0, 0),
+      tsys_shape_(2, 0, 0),
+      tcal_shape_(2, 0, 0),
+      corr_type_shape_(1, 0),
+      corr_type_storage_(4),
+      data_storage_(malloc(num_data_storage_ * sizeof(Complex))),
+      flag_storage_(malloc(num_data_storage_ * sizeof(Bool))),
+      tsys_storage_(malloc(num_tsys_storage_ * sizeof(Float))),
+      tcal_storage_(malloc(num_tcal_storage_ * sizeof(Float))),
+      sigma_storage_(new Float[4]),
+      is_float_(False),
+      corr_type(corr_type_shape_, corr_type_storage_.storage(), SHARE),
+      direction(2, 2, 0.0),
+      direction_slice(IPosition(2, 2, 1), direction.data(), SHARE),
+      float_data(data_shape_, reinterpret_cast<Float *>(data_storage_.get()),
+          SHARE),
+      complex_data(data_shape_,
+          reinterpret_cast<Complex *>(data_storage_.get()), SHARE),
+      flag(data_shape_, reinterpret_cast<Bool *>(flag_storage_.get()), SHARE),
+      sigma(corr_type_shape_, sigma_storage_.get(), SHARE), weight(sigma),
+      tsys(tsys_shape_, reinterpret_cast<Float *>(tsys_storage_.get()), SHARE),
+      tcal(tcal_shape_, reinterpret_cast<Float *>(tcal_storage_.get()), SHARE) {
     if (!data_storage_ || !flag_storage_ || !tsys_storage_ || !tcal_storage_) {
       throw AipsError("Failed to allocate memory.");
     }
@@ -311,12 +327,12 @@ struct MSDataRecord {
 
   void setDataSize(size_t n, size_t m) {
     Bool redirect = False;
-    if (data_shape_[0] != (ssize_t)n) {
+    if (data_shape_[0] != (ssize_t) n) {
 //      std::cout << "resize data to " << n << std::endl;
       data_shape_[0] = n;
       redirect = True;
     }
-    if (data_shape_[1] != (ssize_t)m) {
+    if (data_shape_[1] != (ssize_t) m) {
       data_shape_[1] = m;
       redirect = True;
     }
@@ -367,12 +383,12 @@ struct MSDataRecord {
 
   void setTsysSize(size_t n, size_t m) {
     Bool redirect = False;
-    if (tsys_shape_[0] != (ssize_t)n) {
+    if (tsys_shape_[0] != (ssize_t) n) {
 //      std::cout << "resize tsys to " << n << std::endl;
       tsys_shape_[0] = n;
       redirect = True;
     }
-    if (tsys_shape_[1] != (ssize_t)m) {
+    if (tsys_shape_[1] != (ssize_t) m) {
 //      std::cout << "resize tsys to " << n << std::endl;
       tsys_shape_[1] = m;
       redirect = True;
@@ -399,12 +415,12 @@ struct MSDataRecord {
 
   void setTcalSize(size_t n, size_t m) {
     Bool redirect = False;
-    if (tcal_shape_[0] != (ssize_t)n) {
+    if (tcal_shape_[0] != (ssize_t) n) {
 //      std::cout << "resize tcal to " << n << std::endl;
       tcal_shape_[0] = n;
       redirect = True;
     }
-    if (tcal_shape_[1] != (ssize_t)m) {
+    if (tcal_shape_[1] != (ssize_t) m) {
 //      std::cout << "resize tcal to " << n << std::endl;
       tcal_shape_[1] = m;
       redirect = True;
@@ -446,7 +462,8 @@ struct MSDataRecord {
     pol_type = other.pol_type;
     num_pol = other.num_pol;
     direction = other.direction;
-    direction_slice.takeStorage(direction_slice.shape(), direction.data(), SHARE);
+    direction_slice.takeStorage(direction_slice.shape(), direction.data(),
+        SHARE);
     flag_row = other.flag_row;
     setDataSize(other.data_shape_[0], other.data_shape_[1]);
     corr_type = other.corr_type;
@@ -520,8 +537,9 @@ public:
   Float wind_speed;
   Float wind_direction;
 
-}
-;
+};
+
+} //# NAMESPACE SDFILLER - END
 } //# NAMESPACE CASA - END
 
 #endif /* SINGLEDISH_FILLER_DATARECORD_H_ */

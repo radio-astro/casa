@@ -13,7 +13,6 @@
 #include <singledish/Filler/SourceRecord.h>
 #include <singledish/Filler/SpectralWindowRecord.h>
 #include <singledish/Filler/SysCalRecord.h>
-#include <singledish/Filler/WeatherRecord.h>
 
 #include <casacore/casa/Arrays/Vector.h>
 #include <casacore/casa/Utilities/Compare.h>
@@ -125,7 +124,7 @@ public:
   virtual ~ScantableFrequenciesIterator() {
   }
 
-  void getEntry(SpectralWindowRecord &record) {
+  void getEntry(sdfiller::SpectralWindowRecord &record) {
     size_t const irow = current_iter_;
 //    std::cout << "getEntry for row " << irow << std::endl;
     Int spw_id = ifno_list_[irow];
@@ -203,7 +202,7 @@ public:
   virtual ~ScantableFieldIterator() {
   }
 
-  void getEntry(FieldRecord &record) {
+  void getEntry(sdfiller::FieldRecord &record) {
     uInt const irow = row_list_[current_iter_];
     String field_name_with_id = field_column_(irow);
     auto pos = field_name_with_id.find("__");
@@ -380,7 +379,7 @@ public:
   virtual ~ScantableSourceIterator() {
   }
 
-  void getEntry(SourceRecord &record) {
+  void getEntry(sdfiller::SourceRecord &record) {
     uInt const irow = row_list_[current_iter_];
     uInt const ifno = ifno_column_(irow);
     record.name = name_column_(irow);

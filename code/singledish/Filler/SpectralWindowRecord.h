@@ -15,6 +15,7 @@
 #include <casacore/ms/MeasurementSets/MSSpWindowColumns.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
+namespace sdfiller { //# NAMESPACE SDFILLER - BEGIN
 
 struct SpectralWindowRecord {
   typedef MSSpectralWindow AssociatingTable;
@@ -85,7 +86,7 @@ struct SpectralWindowRecord {
 
     uInt nrow = columns.nrow();
 
-    if (nrow <= (uInt)spw_id) {
+    if (nrow <= (uInt) spw_id) {
       return False;
     }
 
@@ -95,7 +96,7 @@ struct SpectralWindowRecord {
     columns.totalBandwidth().put(spw_id, tot_bw);
     Double ref_frequency = refval - refpix * increment;
     columns.refFrequency().put(spw_id, ref_frequency);
-    Vector < Double > freq(num_chan);
+    Vector<Double> freq(num_chan);
     indgen(freq, ref_frequency, increment);
     columns.chanFreq().put(spw_id, freq);
     freq = increment;
@@ -109,13 +110,14 @@ struct SpectralWindowRecord {
     }
     columns.netSideband().put(spw_id, net_sideband);
     if (name.size() > 0) {
-    columns.name().put(spw_id, name);
+      columns.name().put(spw_id, name);
     }
 
     return True;
   }
 };
 
+} //# NAMESPACE SDFILLER - END
 } //# NAMESPACE CASA - END
 
 #endif /* SINGLEDISH_FILLER_SPECTRALWINDOWRECORD_H_ */

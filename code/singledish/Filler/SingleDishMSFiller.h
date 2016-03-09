@@ -38,8 +38,9 @@
 #include <casacore/tables/Tables/ScalarColumn.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
-
+namespace sdfiller {
 class DataAccumulator;
+}
 
 template<typename Reader>
 class SingleDishMSFiller {
@@ -93,7 +94,7 @@ private:
   void fillMain();
 
   // flush accumulated data
-  inline void flush(DataAccumulator &accumulator);
+  inline void flush(sdfiller::DataAccumulator &accumulator);
 
   void sortPointing();
 
@@ -156,17 +157,17 @@ private:
       Matrix<Double> const &direction);
 
   inline void updateWeather(Int const &antenna_id, Double const &time,
-      Double const &interval, MSDataRecord const &data_record);
+      Double const &interval, sdfiller::MSDataRecord const &data_record);
 
   inline void updateWeather(MSWeatherColumns &columns, uInt irow,
-      WeatherRecord const &record);
+      sdfiller::WeatherRecord const &record);
 
   inline void updateSysCal(Int const &antenna_id, Int const &feed_id,
       Int const &spw_id, Double const &time, Double const &interval,
-      MSDataRecord const &data_record);
+      sdfiller::MSDataRecord const &data_record);
 
   inline void updateSysCal(MSSysCalColumns &columns, uInt irow,
-      SysCalRecord const &record);
+      sdfiller::SysCalRecord const &record);
 
   // update MAIN table
   // @param[in] fieldId field id
@@ -176,7 +177,7 @@ private:
   // @param[in] mainSpec main table row specification except id
   inline void updateMain(Int const &antenna_id, Int field_id, Int feedId,
       Int dataDescriptionId, Int stateId, Int const &scan_number,
-      Double const &time, MSDataRecord const &dataRecord);
+      Double const &time, sdfiller::MSDataRecord const &dataRecord);
 
   std::unique_ptr<MeasurementSet> ms_;
   std::unique_ptr<MSMainColumns> ms_columns_;
@@ -199,7 +200,7 @@ private:
   Vector<uInt> num_pointing_time_;
 
   // for SYSCAL table
-  std::vector<SysCalTableRecord> syscal_list_;
+  std::vector<sdfiller::SysCalTableRecord> syscal_list_;
 
   // for STATE table
   std::vector<Int> subscan_list_;
@@ -208,10 +209,10 @@ private:
   std::vector<Vector<String> *> polarization_type_pool_;
 
   // for WEATHER table
-  std::vector<WeatherRecord> weather_list_;
+  std::vector<sdfiller::WeatherRecord> weather_list_;
 
   // Data storage to interact with DataAccumulator
-  MSDataRecord record_;
+  sdfiller::MSDataRecord record_;
 
 }
 ;

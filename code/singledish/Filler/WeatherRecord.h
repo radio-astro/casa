@@ -14,6 +14,7 @@
 #include <casacore/ms/MeasurementSets/MSWeatherColumns.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
+namespace sdfiller { //# NAMESPACE SDFILLER - BEGIN
 
 struct WeatherRecord {
   typedef MSWeather AssociatingTable;
@@ -85,6 +86,7 @@ struct WeatherRecord {
   }
 };
 
+} //# NAMESPACE SDFILLER - END
 } //# NAMESPACE CASA - END
 
 #endif /* SINGLEDISH_FILLER_WeatherRECORD_H_ */

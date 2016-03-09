@@ -20,6 +20,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 template<class Reader>
 class SingleDishMSFiller;
 
+namespace sdfiller { //# NAMESPACE SDFILLER - BEGIN
+
 struct FieldRecord {
   typedef MSField AssociatingTable;
   typedef MSFieldColumns AssociatingColumns;
@@ -107,7 +109,7 @@ public:
       setFrame(columns);
     }
 
-    if (table.nrow() <= (uInt)field_id) {
+    if (table.nrow() <= (uInt) field_id) {
       return False;
     }
 
@@ -141,9 +143,10 @@ private:
   }
 
   template<class Reader>
-  friend class SingleDishMSFiller;
+  friend class casa::SingleDishMSFiller;
 };
 
+} //# NAMESPACE SDFILLER - END
 } //# NAMESPACE CASA - END
 
 #endif /* SINGLEDISH_FILLER_FIELDRECORD_H_ */

@@ -23,6 +23,7 @@
 
 using namespace casa;
 using namespace casacore;
+using namespace sdfiller;
 
 class FixedNumberIteratorInterface {
 public:
@@ -49,12 +50,12 @@ protected:
 class SourceIterator: public FixedNumberIteratorInterface {
 public:
   SourceIterator() :
-      FixedNumberIteratorInterface(4), source_id_(num_iter_), time_(num_iter_), interval_(
-          num_iter_), spectral_window_id_(num_iter_), num_lines_(num_iter_), name_(
-          num_iter_), calibration_group_(num_iter_), code_(num_iter_), direction_(
-          num_iter_, Vector < Double > (2)), proper_motion_(num_iter_,
-          Vector < Double > (2)), transition_(num_iter_), rest_frequency_(
-          num_iter_), sysvel_(num_iter_) {
+      FixedNumberIteratorInterface(4), source_id_(num_iter_), time_(num_iter_),
+      interval_(num_iter_), spectral_window_id_(num_iter_),
+      num_lines_(num_iter_), name_(num_iter_), calibration_group_(num_iter_),
+      code_(num_iter_), direction_(num_iter_, Vector<Double>(2)),
+      proper_motion_(num_iter_, Vector<Double>(2)), transition_(num_iter_),
+      rest_frequency_(num_iter_), sysvel_(num_iter_) {
     POST_START;
 
     source_id_[0] = 0;
@@ -72,14 +73,14 @@ public:
     interval_ = 3600.0;
     calibration_group_ = -1;
     code_ = "";
-    Vector < Double > direction(2, 0.0);
+    Vector<Double> direction(2, 0.0);
     direction_[0] = direction;
     direction_[1] = direction;
     direction[0] += C::pi;
     direction[1] -= C::pi;
     direction_[2] = direction;
     direction_[3] = direction;
-    Vector < Double > proper_motion(direction);
+    Vector<Double> proper_motion(direction);
     proper_motion = 0.0;
     proper_motion_[0] = proper_motion;
     proper_motion_[1] = proper_motion;
@@ -98,19 +99,19 @@ public:
     transition_[0] = Vector<String>();
     rest_frequency_[0] = Vector<Double>();
     sysvel_[0] = Vector<Double>();
-    transition_[1] = Vector < String > (1, "12CO(1-0)");
-    rest_frequency_[1] = Vector < Double > (1, 115.271203e9);
-    sysvel_[1] = Vector < Double > (1, 10.0);
+    transition_[1] = Vector<String>(1, "12CO(1-0)");
+    rest_frequency_[1] = Vector<Double>(1, 115.271203e9);
+    sysvel_[1] = Vector<Double>(1, 10.0);
     transition_[2] = transition_[0];
     rest_frequency_[2] = rest_frequency_[0];
     sysvel_[2] = sysvel_[0];
-    transition_[3] = Vector < String > (2);
+    transition_[3] = Vector<String>(2);
     transition_[3][0] = "12CO(1-0)";
     transition_[3][1] = "13CO(1-0)";
-    rest_frequency_[3] = Vector < Double > (2);
+    rest_frequency_[3] = Vector<Double>(2);
     rest_frequency_[3][0] = 115.271203e9;
     rest_frequency_[3][1] = 110.20137e9;
-    sysvel_[3] = Vector < Double > (2, 15.0);
+    sysvel_[3] = Vector<Double>(2, 15.0);
 
     POST_END;
   }
@@ -160,10 +161,10 @@ private:
 class FieldIterator: public FixedNumberIteratorInterface {
 public:
   FieldIterator() :
-      FixedNumberIteratorInterface(4), field_id_(num_iter_), time_(num_iter_), interval_(
-          num_iter_), name_(num_iter_), source_name_(num_iter_), code_(
-          num_iter_), direction_(num_iter_, Vector < Double > (2)), scan_rate_(
-          num_iter_, Vector < Double > (2)) {
+      FixedNumberIteratorInterface(4), field_id_(num_iter_), time_(num_iter_),
+      interval_(num_iter_), name_(num_iter_), source_name_(num_iter_),
+      code_(num_iter_), direction_(num_iter_, Vector<Double>(2)),
+      scan_rate_(num_iter_, Vector<Double>(2)) {
     POST_START;
 
     field_id_[0] = 1;
@@ -189,7 +190,7 @@ public:
     code_[1] = "Southern area of " + source_name_[1];
     code_[2] = "East area of " + source_name_[2];
     code_[3] = "West area of " + source_name_[3];
-    Vector < Double > direction(2, 0.0);
+    Vector<Double> direction(2, 0.0);
     direction_[0] = direction;
     direction_[0][1] += 0.1;
     direction_[1] = direction;
@@ -200,7 +201,7 @@ public:
     direction_[2][0] -= 0.1;
     direction_[3] = direction;
     direction_[3][0] += 0.1;
-    Vector < Double > scan_rate(2, 0.0);
+    Vector<Double> scan_rate(2, 0.0);
     scan_rate_[0] = scan_rate;
     scan_rate_[1] = scan_rate;
     scan_rate[0] = 0.1;
@@ -222,7 +223,7 @@ public:
       record.source_name = source_name_[i];
       record.time = time_[i];
       record.code = code_[i];
-      Matrix < Double > direction(direction_[i]);
+      Matrix<Double> direction(direction_[i]);
       if (scan_rate_[i].nelements() > 0 && anyNE(scan_rate_[i], 0.0)) {
         direction.resize(2, 2, True);
         direction.column(1) = scan_rate_[i];
@@ -246,9 +247,9 @@ private:
 class SpwIterator: public FixedNumberIteratorInterface {
 public:
   SpwIterator() :
-      FixedNumberIteratorInterface(4), spw_id_(num_iter_), name_(num_iter_), refpix_(
-          num_iter_), refval_(num_iter_), increment_(num_iter_), num_chan_(
-          num_iter_), meas_freq_ref_(num_iter_) {
+      FixedNumberIteratorInterface(4), spw_id_(num_iter_), name_(num_iter_),
+      refpix_(num_iter_), refval_(num_iter_), increment_(num_iter_),
+      num_chan_(num_iter_), meas_freq_ref_(num_iter_) {
     spw_id_[0] = 0;
     spw_id_[1] = 1;
     spw_id_[2] = 4;
@@ -392,7 +393,7 @@ struct FloatDataStorage {
     } else {
       num_chan_tsys = num_chan_[index];
     }
-    Float tsys_value = (Float)(spw_[index] + antenna_id + 1);
+    Float tsys_value = (Float) (spw_[index] + antenna_id + 1);
 
     if (irow % 3 == 1) {
       index = 1;
@@ -403,7 +404,7 @@ struct FloatDataStorage {
     if (2ul <= index)
       return false;;
     record.polno = index;
-    tsys_value *= (Float)(index + 1) * 100.0f;
+    tsys_value *= (Float) (index + 1) * 100.0f;
 
     record.pol_type = "linear";
 
@@ -414,7 +415,7 @@ struct FloatDataStorage {
     record.flag_row = flag_row;
     record.interval = 10.0;
 
-    Vector < Float > tsys(num_chan_tsys, tsys_value);
+    Vector<Float> tsys(num_chan_tsys, tsys_value);
     record.setTsysSize(num_chan_tsys);
     record.tsys = tsys_value;
 
@@ -438,13 +439,14 @@ template<class DataStorage>
 class TestReader: public casa::ReaderInterface {
 public:
   TestReader(std::string const &name) :
-      casa::ReaderInterface(name), source_iterator_(nullptr), get_observation_row_(
-          &::TestReader<DataStorage>::getObservationRowImpl), get_antenna_row_(
-          &::TestReader<DataStorage>::getAntennaRowImpl), get_processor_row_(
-          &::TestReader<DataStorage>::getProcessorRowImpl), get_source_row_(
-          &::TestReader<DataStorage>::getSourceRowWithInitImpl), get_field_row_(
-          &::TestReader<DataStorage>::getFieldRowWithInitImpl), get_spw_row_(
-          &::TestReader<DataStorage>::getSpwRowWithInitImpl), storage_() {
+      casa::ReaderInterface(name), source_iterator_(nullptr),
+      get_observation_row_(&::TestReader<DataStorage>::getObservationRowImpl),
+      get_antenna_row_(&::TestReader<DataStorage>::getAntennaRowImpl),
+      get_processor_row_(&::TestReader<DataStorage>::getProcessorRowImpl),
+      get_source_row_(&::TestReader<DataStorage>::getSourceRowWithInitImpl),
+      get_field_row_(&::TestReader<DataStorage>::getFieldRowWithInitImpl),
+      get_spw_row_(&::TestReader<DataStorage>::getSpwRowWithInitImpl),
+      storage_() {
     POST_START;POST_END;
   }
 
@@ -574,7 +576,7 @@ private:
     String telescope_name = "MyTelescope";
     record.telescope_name = telescope_name;
     observation_record_.define("TELESCOPE_NAME", telescope_name);
-    Vector < Double > time_range(2);
+    Vector<Double> time_range(2);
     Time t(2016, 1, 1);
     time_range[0] = t.modifiedJulianDay() * 86400.0; // sec
     t = t + 3600.0;
@@ -594,7 +596,7 @@ private:
     Double release_date = t.modifiedJulianDay();
     record.release_date = release_date;
     observation_record_.define("RELEASE_DATE", release_date);
-    Vector < String > strvec(1, "");
+    Vector<String> strvec(1, "");
     record.log = strvec;
     observation_record_.define("LOG", strvec);
     strvec[0] = "NextSchedule";
@@ -602,8 +604,8 @@ private:
     observation_record_.define("SCHEDULE", strvec);
 
     // redirect function pointer to noMoreRowImpl
-    get_observation_row_ = &::TestReader < DataStorage
-        > ::noMoreRowImplTemplate<ObservationRecord>;
+    get_observation_row_ = &::TestReader<DataStorage>::noMoreRowImplTemplate<
+        ObservationRecord>;
 
     POST_END;
 
@@ -629,7 +631,7 @@ private:
         Quantity(-1.1825465955049892, "rad"),
         Quantity(-0.4018251640113072, "rad"));
     MPosition position(mvposition, MPosition::WGS84);
-    Quantum < Vector<Double> > position_val = MPosition::Convert(position,
+    Quantum<Vector<Double> > position_val = MPosition::Convert(position,
         MPosition::ITRF)().get("m");
     MPosition position_itrf(position_val, MPosition::ITRF);
     record.position = position_itrf;
@@ -644,8 +646,8 @@ private:
     record.dish_diameter = dish_diameter;
     antenna_record_.define("DISH_DIAMETER", dish_diameter);
 
-    get_antenna_row_ = &::TestReader < DataStorage
-        > ::noMoreRowImplTemplate<AntennaRecord>;
+    get_antenna_row_ = &::TestReader<DataStorage>::noMoreRowImplTemplate<
+        AntennaRecord>;
 
     POST_END;
 
@@ -669,8 +671,8 @@ private:
     processor_record_.define("MODE_ID", mode_id);
 
     // redirect function pointer to noMoreRowImpl
-    get_processor_row_ = &::TestReader < DataStorage
-        > ::noMoreRowImplTemplate<ProcessorRecord>;
+    get_processor_row_ = &::TestReader<DataStorage>::noMoreRowImplTemplate<
+        ProcessorRecord>;
 
     POST_END;
     return True;
@@ -747,7 +749,7 @@ private:
       internal_record[i] = record;
     } else {
       iter.reset(nullptr);
-      func = &::TestReader < DataStorage > ::noMoreRowImplTemplate<_Record>;
+      func = &::TestReader<DataStorage>::noMoreRowImplTemplate<_Record>;
     }
 
     POST_END;

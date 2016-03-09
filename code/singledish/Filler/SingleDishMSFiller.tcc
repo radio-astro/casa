@@ -43,6 +43,7 @@
 #include <casacore/tables/Tables/SetupNewTab.h>
 
 using namespace casacore;
+using namespace sdfiller;
 
 #define ARRAY_BLOCK_SIZE 1024
 
@@ -137,7 +138,7 @@ void makeSourceMap(MSSource const &table, Record &source_map) {
   POST_END;
 }
 
-}// anonymous namespace
+} // anonymous namespace
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

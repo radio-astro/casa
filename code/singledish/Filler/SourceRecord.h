@@ -15,6 +15,7 @@
 #include <casacore/ms/MeasurementSets/MSSourceColumns.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
+namespace sdfiller { //# NAMESPACE SDFILLER - BEGIN
 
 struct SourceRecord {
   typedef MSSource AssociatingTable;
@@ -116,6 +117,7 @@ struct SourceRecord {
   }
 };
 
+} //# NAMESPACE SDFILLER - END
 } //# NAMESPACE CASA - END
 
 #endif /* SINGLEDISH_FILLER_SOURCERECORD_H_ */

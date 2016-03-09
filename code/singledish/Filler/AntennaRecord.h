@@ -14,6 +14,7 @@
 #include <casacore/ms/MeasurementSets/MSAntennaColumns.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
+namespace sdfiller { //# NAMESPACE SDFILLER - BEGIN
 
 struct AntennaRecord {
   typedef MSAntenna AssociatingTable;
@@ -76,6 +77,7 @@ struct AntennaRecord {
   }
 };
 
+} //# NAMESPACE SDFILLER - END
 } //# NAMESPACE CASA - END
 
 #endif /* SINGLEDISH_FILLER_ANTENNARECORD_H_ */

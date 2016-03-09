@@ -13,6 +13,7 @@
 #include <casacore/ms/MeasurementSets/MSProcessorColumns.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
+namespace sdfiller { //# NAMESPACE SDFILLER - BEGIN
 
 struct ProcessorRecord {
   typedef MSProcessor AssociatingTable;
@@ -58,6 +59,7 @@ struct ProcessorRecord {
   }
 };
 
+} //# NAMESPACE SDFILLER - END
 } //# NAMESPACE CASA - END
 
 #endif /* SINGLEDISH_FILLER_PROCESSORRECORD_H_ */

@@ -44,6 +44,7 @@
 
 using namespace casa;
 using namespace casacore;
+using namespace sdfiller;
 
 #define CASA_EXPECT_STREQ(expected, actual) EXPECT_STREQ((expected).c_str(), (actual).c_str())
 #define CASA_ASSERT_STREQ(expected, actual) ASSERT_STREQ((expected).c_str(), (actual).c_str())

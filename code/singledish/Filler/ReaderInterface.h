@@ -18,8 +18,6 @@
 #include <singledish/Filler/FieldRecord.h>
 #include <singledish/Filler/SourceRecord.h>
 #include <singledish/Filler/SpectralWindowRecord.h>
-#include <singledish/Filler/SysCalRecord.h>
-#include <singledish/Filler/WeatherRecord.h>
 #include <singledish/Filler/DataRecord.h>
 
 // casacore includes
@@ -31,17 +29,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // NonCopyable Mixin (CRTP)
 template<class T>
-class NonCopyable
-{
+class NonCopyable {
 protected:
-  NonCopyable() {}
-  ~NonCopyable() {}
+  NonCopyable() {
+  }
+  ~NonCopyable() {
+  }
 private:
-  NonCopyable(NonCopyable const &) {}
-  T &operator=(T const &) {}
+  NonCopyable(NonCopyable const &) {
+  }
+  T &operator=(T const &) {
+  }
 };
 
-class ReaderInterface : private NonCopyable<ReaderInterface>{
+class ReaderInterface: private NonCopyable<ReaderInterface> {
 public:
   ReaderInterface(std::string const &name) :
       name_(name) {
@@ -78,35 +79,35 @@ public:
   // to get OBSERVATION table
   // The method should return True if row entry is available.
   // If it return False, row will be invalid so it should not be used.
-  virtual Bool getObservationRow(ObservationRecord &record) = 0;
+  virtual Bool getObservationRow(sdfiller::ObservationRecord &record) = 0;
 
   // to get ANTENNA table
   // The method should return True if row entry is available.
   // If it return False, row will be invalid so it should not be used.
-  virtual Bool getAntennaRow(AntennaRecord &record) = 0;
+  virtual Bool getAntennaRow(sdfiller::AntennaRecord &record) = 0;
 
   // to get PROCESSOR table
   // The method should return True if row entry is available.
   // If it return False, row will be invalid so it should not be used.
-  virtual Bool getProcessorRow(ProcessorRecord &record) = 0;
+  virtual Bool getProcessorRow(sdfiller::ProcessorRecord &record) = 0;
 
   // to get SOURCE table
   // The method should return True if row entry is available.
   // If it return False, row will be invalid so it should not be used.
-  virtual Bool getSourceRow(SourceRecord &row) = 0;
+  virtual Bool getSourceRow(sdfiller::SourceRecord &row) = 0;
 
   // to get FIELD table
   // The method should return True if row entry is available.
   // If it return False, row will be invalid so it should not be used.
-  virtual Bool getFieldRow(FieldRecord &row) = 0;
+  virtual Bool getFieldRow(sdfiller::FieldRecord &row) = 0;
 
   // to get SPECTRAL WINDOW table
   // The method should return True if row entry is available.
   // If it return False, row will be invalid so it should not be used.
-  virtual Bool getSpectralWindowRow(SpectralWindowRecord &row) = 0;
+  virtual Bool getSpectralWindowRow(sdfiller::SpectralWindowRecord &row) = 0;
 
   // for DataAccumulator
-  virtual Bool getData(size_t irow, DataRecord &record) = 0;
+  virtual Bool getData(size_t irow, sdfiller::DataRecord &record) = 0;
 
 protected:
   virtual void initializeSpecific() = 0;
@@ -116,8 +117,10 @@ protected:
 
 private:
   // common initialization/finalization actions
-  void initializeCommon() {}
-  void finalizeCommon() {}
+  void initializeCommon() {
+  }
+  void finalizeCommon() {
+  }
 };
 
 } //# NAMESPACE CASA - END

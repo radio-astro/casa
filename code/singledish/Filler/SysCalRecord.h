@@ -16,6 +16,7 @@
 #include <casacore/ms/MeasurementSets/MSSysCalColumns.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
+namespace sdfiller { //# NAMESPACE SDFILLER - BEGIN
 
 struct SysCalRecord {
   typedef MSSysCal AssociatingTable;
@@ -99,7 +100,7 @@ struct SysCalTableRecord {
     antenna_id = record.antenna_id;
     feed_id = record.feed_id;
     spw_id = record.spw_id;
-    ROScalarColumn < Int > num_chan_column(ms_->spectralWindow(), "NUM_CHAN");
+    ROScalarColumn<Int> num_chan_column(ms_->spectralWindow(), "NUM_CHAN");
     num_chan = num_chan_column(spw_id);
     if (record.tsys_spectrum.empty()) {
       num_corr = record.tsys.size();
@@ -128,8 +129,8 @@ struct SysCalTableRecord {
       tcal_nominal = record.tcal_spectrum(0, 0);
     }
   }
-  SysCalTableRecord(SysCalTableRecord const &other)
-  : ms_(other.ms_), columns_(ms_->sysCal()), irow_(other.irow_) {
+  SysCalTableRecord(SysCalTableRecord const &other) :
+      ms_(other.ms_), columns_(ms_->sysCal()), irow_(other.irow_) {
     antenna_id = other.antenna_id;
     feed_id = other.feed_id;
     spw_id = other.spw_id;
@@ -173,12 +174,13 @@ struct SysCalTableRecord {
 
     bool is_tsys_same;
     if (tsys_status == Status::Spectral) {
-      is_tsys_same = num_chan > 0 && (uInt)num_chan == record.tsys_spectrum.ncolumn()
-          && num_corr > 0 && (uInt)num_corr == record.tsys_spectrum.nrow()
+      is_tsys_same = num_chan > 0
+          && (uInt) num_chan == record.tsys_spectrum.ncolumn() && num_corr > 0
+          && (uInt) num_corr == record.tsys_spectrum.nrow()
           && tsys_nominal == record.tsys_spectrum(0, 0)
           && allEQ(columns_.tsysSpectrum()(irow_), record.tsys_spectrum);
     } else if (tsys_status == Status::Scalar) {
-      is_tsys_same = num_corr > 0 && (uInt)num_corr == record.tsys.size()
+      is_tsys_same = num_corr > 0 && (uInt) num_corr == record.tsys.size()
           && tsys_nominal == record.tsys[0]
           && allEQ(columns_.tsys()(irow_), record.tsys);
     } else {
@@ -191,12 +193,13 @@ struct SysCalTableRecord {
 
     bool is_tcal_same;
     if (tcal_status == Status::Spectral) {
-      is_tcal_same = num_chan > 0 && (uInt)num_chan == record.tcal_spectrum.ncolumn()
-          && num_corr > 0 && (uInt)num_corr == record.tcal_spectrum.nrow()
+      is_tcal_same = num_chan > 0
+          && (uInt) num_chan == record.tcal_spectrum.ncolumn() && num_corr > 0
+          && (uInt) num_corr == record.tcal_spectrum.nrow()
           && tcal_nominal == record.tcal_spectrum(0, 0)
           && allEQ(columns_.tcalSpectrum()(irow_), record.tcal_spectrum);
     } else if (tcal_status == Status::Scalar) {
-      is_tcal_same = num_corr > 0 && (uInt)num_corr == record.tcal.size()
+      is_tcal_same = num_corr > 0 && (uInt) num_corr == record.tcal.size()
           && tcal_nominal == record.tcal[0]
           && allEQ(columns_.tcal()(irow_), record.tcal);
     } else {
@@ -214,9 +217,9 @@ private:
   MeasurementSet *ms_;
   MSSysCalColumns columns_;
   uInt irow_;
-}
-;
+};
 
+} //# NAMESPACE SDFILLER - END
 } //# NAMESPACE CASA - END
 
 #endif /* SINGLEDISH_FILLER_SYSCALRECORD_H_ */

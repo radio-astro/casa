@@ -166,6 +166,7 @@ inline void transposeMatrix4F2C(ssize_t n, Matrix<Float> const &src,
 }
 
 namespace casa { //# NAMESPACE CASA - BEGIN
+namespace sdfiller { //# NAMESPACE SDFILLER - BEGIN
 
 class DataAccumulator;
 
@@ -174,10 +175,11 @@ public:
   friend DataAccumulator;
 
   DataChunk(String const &poltype) :
-      num_pol_max_(4), num_chan_(0), data_(), flag_(), flag_row_(num_pol_max_,
-          False), tsys_(), tcal_(), weight_(num_pol_max_, 1.0f), sigma_(
-          weight_), poltype_(poltype), corr_type_(), filled_(NoData()), get_chunk_(
-          nullptr), get_num_pol_(nullptr) {
+      num_pol_max_(4), num_chan_(0), data_(), flag_(),
+      flag_row_(num_pol_max_, False), tsys_(), tcal_(),
+      weight_(num_pol_max_, 1.0f), sigma_(weight_), poltype_(poltype),
+      corr_type_(), filled_(NoData()), get_chunk_(nullptr),
+      get_num_pol_(nullptr) {
     POST_START;
 
     setPolType(poltype);
@@ -246,12 +248,12 @@ public:
       return false;
     }
 
-    Vector < Float > tsys;
+    Vector<Float> tsys;
     if (!record.tsys.empty()) {
 //      std::cout << "tsys is not empty: " << record.tsys << std::endl;
       tsys.assign(record.tsys);
     }
-    Vector < Float > tcal;
+    Vector<Float> tcal;
     if (!record.tcal.empty()) {
 //      std::cout << "tcal is not empty: " << record.tcal << std::endl;
       tcal.assign(record.tcal);
@@ -468,8 +470,8 @@ private:
   bool getLinear(MSDataRecord &record) {
     POST_START;
 
-    Vector < Float > weight;
-    Vector < Float > sigma;
+    Vector<Float> weight;
+    Vector<Float> sigma;
     if (isFullPol()) {
       // POL 0, 1, 2, and 3
 //      std::cout << "set data/flag" << std::endl;
@@ -688,8 +690,9 @@ private:
 
 public:
   DataAccumulator() :
-      pool_(), antenna_id_(), spw_id_(), field_id_(), feed_id_(), scan_(), subscan_(), intent_(), direction_(), interval_(), indexer_(), time_(
-          -1.0), is_free_() {
+      pool_(), antenna_id_(), spw_id_(), field_id_(), feed_id_(), scan_(),
+      subscan_(), intent_(), direction_(), interval_(), indexer_(), time_(-1.0),
+      is_free_() {
   }
 
   virtual ~DataAccumulator() {
@@ -909,6 +912,7 @@ private:
   std::vector<bool> is_free_;
 };
 
+} //# NAMESPACE SDFILLER - END
 } //# NAMESPACE CASA - END
 
 #endif /* SINGLEDISH_FILLER_DATAACCUMULATOR_H_ */

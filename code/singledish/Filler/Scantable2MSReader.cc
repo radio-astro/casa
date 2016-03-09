@@ -20,6 +20,7 @@
 #include <casacore/tables/Tables/Table.h>
 
 using namespace casacore;
+using namespace sdfiller;
 
 namespace {
 Double queryAntennaDiameter(String const &name) {
@@ -116,14 +117,19 @@ String getIntent(Int srctype) {
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 Scantable2MSReader::Scantable2MSReader(std::string const &scantable_name) :
-    ReaderInterface(scantable_name), main_table_(nullptr), tcal_table_(), weather_table_(), scan_column_(), cycle_column_(), ifno_column_(), polno_column_(), beam_column_(), flagrow_column_(), time_column_(), interval_column_(), srctype_column_(), data_column_(), flag_column_(), direction_column_(), scanrate_column_(), fieldname_column_(), tsys_column_(), tcal_id_column_(), sorted_rows_(), get_antenna_row_(
-        &Scantable2MSReader::getAntennaRowImpl), get_field_row_(
-        &Scantable2MSReader::getFieldRowImpl), get_observation_row_(
-        &Scantable2MSReader::getObservationRowImpl), get_processor_row_(
-        &Scantable2MSReader::getProcessorRowImpl), get_source_row_(
-        &Scantable2MSReader::getSourceRowImpl), get_spw_row_(
-        &Scantable2MSReader::getSpectralWindowRowImpl), field_iter_(nullptr), freq_iter_(
-        nullptr), source_iter_(nullptr) {
+    ReaderInterface(scantable_name), main_table_(nullptr), tcal_table_(),
+    weather_table_(), scan_column_(), cycle_column_(), ifno_column_(),
+    polno_column_(), beam_column_(), flagrow_column_(), time_column_(),
+    interval_column_(), srctype_column_(), data_column_(), flag_column_(),
+    direction_column_(), scanrate_column_(), fieldname_column_(),
+    tsys_column_(), tcal_id_column_(), sorted_rows_(),
+    get_antenna_row_(&Scantable2MSReader::getAntennaRowImpl),
+    get_field_row_(&Scantable2MSReader::getFieldRowImpl),
+    get_observation_row_(&Scantable2MSReader::getObservationRowImpl),
+    get_processor_row_(&Scantable2MSReader::getProcessorRowImpl),
+    get_source_row_(&Scantable2MSReader::getSourceRowImpl),
+    get_spw_row_(&Scantable2MSReader::getSpectralWindowRowImpl),
+    field_iter_(nullptr), freq_iter_(nullptr), source_iter_(nullptr) {
 //  std::cout << "Scantabl2MSReader::Scantable2MSReader" << std::endl;
 }
 
@@ -173,13 +179,13 @@ void Scantable2MSReader::initializeSpecific() {
 
   // get sort index
   Sort s;
-  Vector < Double > time_list = time_column_.getColumn();
+  Vector<Double> time_list = time_column_.getColumn();
   s.sortKey(time_list.data(), TpDouble, 0, Sort::Ascending);
-  Vector < uInt > beamno_list = beam_column_.getColumn();
+  Vector<uInt> beamno_list = beam_column_.getColumn();
   s.sortKey(beamno_list.data(), TpUInt, 0, Sort::Ascending);
-  Vector < uInt > ifno_list = ifno_column_.getColumn();
+  Vector<uInt> ifno_list = ifno_column_.getColumn();
   s.sortKey(ifno_list.data(), TpUInt, 0, Sort::Ascending);
-  Vector < uInt > polno_list = polno_column_.getColumn();
+  Vector<uInt> polno_list = polno_column_.getColumn();
   s.sortKey(polno_list.data(), TpUInt, 0, Sort::Ascending);
   uInt n = s.sort(sorted_rows_, main_table_->nrow());
   if (n != main_table_->nrow()) {
@@ -192,7 +198,7 @@ void Scantable2MSReader::initializeSpecific() {
 //  }
 
   // TCAL_ID mapping
-  ROScalarColumn < uInt > id_column(tcal_table_, "ID");
+  ROScalarColumn<uInt> id_column(tcal_table_, "ID");
   tcal_id_map_.clear();
   for (uInt i = 0; i < tcal_table_.nrow(); ++i) {
     tcal_id_map_[id_column(i)] = i;
@@ -238,9 +244,9 @@ Bool Scantable2MSReader::getAntennaRowImpl(AntennaRecord &record) {
   record.type = "GROUND-BASED";
   record.mount = "ALT-AZ";
 
-  Vector < Double > antenna_position_value = header.asArrayDouble(
+  Vector<Double> antenna_position_value = header.asArrayDouble(
       "AntennaPosition");
-  Vector < Quantity > antenna_position_quant(3);
+  Vector<Quantity> antenna_position_quant(3);
   antenna_position_quant[0] = Quantity(antenna_position_value[0], "m");
   antenna_position_quant[1] = Quantity(antenna_position_value[1], "m");
   antenna_position_quant[2] = Quantity(antenna_position_value[2], "m");
@@ -256,8 +262,8 @@ Bool Scantable2MSReader::getAntennaRowImpl(AntennaRecord &record) {
 Bool Scantable2MSReader::getObservationRowImpl(ObservationRecord &record) {
 //  std::cout << "Scantabl2MSReader::getObservationRowImpl" << std::endl;
 
-  ROScalarColumn < Double > column(*main_table_, "TIME");
-  Vector < Double > time_list = column.getColumn();
+  ROScalarColumn<Double> column(*main_table_, "TIME");
+  Vector<Double> time_list = column.getColumn();
   if (record.time_range.size() != 2) {
     record.time_range.resize(2);
   }
@@ -337,7 +343,7 @@ Bool Scantable2MSReader::getData(size_t irow, DataRecord &record) {
 //      << record.data.shape() << std::endl;
   record.setDataSize(num_chan_map_[record.spw_id]);
   data_column_.get(index, record.data);
-  Vector < uChar > flag = flag_column_(index);
+  Vector<uChar> flag = flag_column_(index);
   convertArray(record.flag, flag);
   uInt flagrow = flagrow_column_(index);
   Bool bflagrow = (flagrow != 0);
@@ -347,7 +353,7 @@ Bool Scantable2MSReader::getData(size_t irow, DataRecord &record) {
 //    std::cout << "set tsys size to " << tsys_column_.shape(index)[0]
 //        << " shape " << record.tsys.shape() << std::endl;
     record.setTsysSize(tsys_column_.shape(index)[0]);
-    Vector < Float > tsys = tsys_column_(index);
+    Vector<Float> tsys = tsys_column_(index);
     if (!allEQ(tsys, 1.0f) || !allEQ(tsys, 0.0f)) {
       record.tsys = tsys;
     }
@@ -360,7 +366,7 @@ Bool Scantable2MSReader::getData(size_t irow, DataRecord &record) {
 //    std::cout << "set tsys size to " << tcal_column.shape(0)[0] << " shape "
 //        << record.tcal.shape() << std::endl;
     record.setTcalSize(tcal_column_.shape(tcal_row)[0]);
-    Vector < Float > tcal = tcal_column_(tcal_row);
+    Vector<Float> tcal = tcal_column_(tcal_row);
     if (!allEQ(tcal, 1.0f) || !allEQ(tcal, 0.0f)) {
       record.tcal = tcal;
     }
