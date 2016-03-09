@@ -1406,8 +1406,18 @@ class imsmooth_test(unittest.TestCase):
         myia.done()
         diff = conv - bessel
         self.assertTrue(abs(diff).max() < 2e-7)
-        
-        
+
+    def test_history(self):
+        """Test that history is written"""
+        myia = self.ia
+        myia.fromshape("", [20,20])
+        bb = myia.convolve2d("", major="2arcmin",  minor="2arcmin", pa="0deg")        
+        myia.done()
+        msgs = bb.history()
+        bb.done()
+        self.assertTrue("ia.convolve2d" in msgs[-2])     
+        self.assertTrue("ia.convolve2d" in msgs[-1])     
+
 def suite():
     return [imsmooth_test]    
     
