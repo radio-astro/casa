@@ -739,7 +739,14 @@ using namespace casa::vi;
       else{
         origdata=const_cast<Cube<Complex>* >(&(vb.visCube()));
       }
-      if((imageFreq_p.nelements()==1) || (freqInterpMethod_p== InterpolateArray1D<Double, Complex>::nearestNeighbour)){
+    //
+    // If visibility data (vb) has only one channel, or the image cube
+    // has only one channel, resort to nearestNeighbour interpolation.
+    // Honour user selection of nearestNeighbour.
+    //
+    if((imageFreq_p.nelements()==1) || 
+       (vb.nChannels()==1) || 
+       (freqInterpMethod_p== InterpolateArray1D<Double, Complex>::nearestNeighbour)){
         origdata->reference(data);
         return False;
       }

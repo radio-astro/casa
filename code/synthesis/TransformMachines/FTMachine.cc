@@ -756,7 +756,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     else{
       origdata=&(vb.visCube());
     }
-    if((imageFreq_p.nelements()==1) || (freqInterpMethod_p== InterpolateArray1D<Double, Complex>::nearestNeighbour)){
+
+    //
+    // If visibility data (vb) has only one channel, or the image cube
+    // has only one channel, resort to nearestNeighbour interpolation.
+    // Honour user selection of nearestNeighbour.
+    //
+    if((imageFreq_p.nelements()==1) || 
+       (vb.nChannel()==1) || 
+       (freqInterpMethod_p== InterpolateArray1D<Double, Complex>::nearestNeighbour)){
       origdata->reference(data);
       return False;
     }
@@ -1706,6 +1714,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     spwFreqSel_p.assign(spwFreqs);
     SynthesisUtils::expandFreqSelection(spwFreqs,expandedSpwFreqSel_p, expandedSpwConjFreqSel_p);
+    //cerr << expandedSpwFreqSel_p << endl;
   }
 
   void FTMachine::setSpectralFlag(const VisBuffer& vb, Cube<Bool>& modflagcube){
