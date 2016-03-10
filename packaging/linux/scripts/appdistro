@@ -71,8 +71,12 @@ while ( $_ = @ARGV[0] ) {
     /^scratch=(.+)$/i && ($scratchdir = $1, next);
     /^ws=(.+)$/i && ($casa = $1, next);
     
+    # just release
     /^release=(\d+)$/i && ($release = "-$1", next);
-    /^version=(\d+\.\d+\.\d+(?:-\d+)?)/i && ( $version = $1, next );
+    # version+release =>  4.6.0-1
+    /^version=(\d+\.\d+\.\d+)-(\d+)/i && ( $version = $1, $release = "-$2", next );
+    # just version
+    /^version=(\d+\.\d+\.\d+)/i && ( $version = $1, next );
 
     /^-v(?:erbose)?$/i && ($verbose='yes', next);
 
