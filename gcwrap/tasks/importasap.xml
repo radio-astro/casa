@@ -22,6 +22,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
           <value></value>
     </param>
 
+    <param type="bool" name="flagbackup">
+      <description>Back up flag column before applying flags.</description>
+      <value>True</value>
+    </param>
+
     <param type="bool" name="overwrite">
 	    <description>Over write an existing MS(s)</description>
 	    <value>False</value>
@@ -38,6 +43,9 @@ asdm -- Name of input ASAP Scantable data
 
 outputvis       -- Root ms name. Note that a prefix (.ms) is NOT appended to this name.
              default: none; example outputvis='myms.ms'
+
+flagbackup   -- Backup original flags in &gt;ms&lt;.flagversions 
+                default: True
 
 overwrite   -- overwrite an existing MS
                 default: False (do not overwrite)
