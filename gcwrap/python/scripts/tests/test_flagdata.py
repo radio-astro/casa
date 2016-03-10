@@ -1453,14 +1453,14 @@ class test_list_file(test_base):
                 "mode='manual' scan='2'\n"\
                 "scan='3' reason='SCAN_3'\n"\
                 "scan='4' reason=''"
-        filename = 'input3.txt'
+        filename = 'listinput3.txt'
         create_input(myinput, filename)
         
-        flagdata(vis=self.vis, mode='list', inpfile=filename, savepars=True, outfile='reason3a.txt',
+        flagdata(vis=self.vis, mode='list', inpfile=filename, savepars=True, outfile='listreason3a.txt',
                   cmdreason='MANUALFLAG', action='')
         
         # Apply the flag cmds
-        flagdata(vis=self.vis, mode='list', inpfile='reason3a.txt', reason='MANUALFLAG',
+        flagdata(vis=self.vis, mode='list', inpfile='listreason3a.txt', reason='MANUALFLAG',
                  flagbackup=False)
         
         res = flagdata(vis=self.vis, mode='summary')
@@ -1472,14 +1472,14 @@ class test_list_file(test_base):
         myinput = "scan='1' spw='0:10~20' reason='NONE'\n"\
                 "scan='2' reason='EVEN'\n"\
                 "scan='3' reason='ODD'"
-        filename1 = 'reasonfile1.txt'
+        filename1 = 'listreasonfile1.txt'
         create_input(myinput, filename1)
         
         # Create second input file
         myinput = "scan='5' reason='ODD'\n"\
                 "scan='6' reason='EVEN'\n"\
                 "scan='7' reason='ODD'"        
-        filename2 = 'reasonfile2.txt'
+        filename2 = 'listreasonfile2.txt'
         create_input(myinput, filename2)
         
         # Apply flag cmds on ODD reason
@@ -1506,10 +1506,10 @@ class test_list_file(test_base):
     def test_anychar(self):
         '''flagdata: Do not continue if parameter doesn't exist'''
         myinput = "mode=manualflag field='Any $3[=character (}'"
-        filename = 'anychar.txt'
+        filename = 'listanychar.txt'
         create_input(myinput, filename)
         
-        outname = 'wrongpar.txt'
+        outname = 'listwrongpar.txt'
         
         # CAS-6704: should raise an exception because parameter $3[ doesn't exist in flagdata
         try:
@@ -1579,7 +1579,7 @@ class test_list_file(test_base):
         myinput = "mode='manual' scan=1\n"\
                   "scan='2'\n"\
                   "mode='summary'"
-        filename = 'intscan.txt'
+        filename = 'listintscan.txt'
         create_input(myinput, filename)
         
         try:
@@ -1603,7 +1603,73 @@ class test_list_file(test_base):
         except exceptions.IOError, instance:
             print 'Expected error!'
                
+    def test_file_overwrite_true(self):
+        '''flagdata: Use savepars and overwrite=True'''
         
+        # Create flag commands in file called flagcmd.txt
+        filename = 'listscan4clip.txt'
+        myinput = "scan='4' mode='clip' correlation='ABS_RR' clipminmax=[0, 4]\n"
+        create_input(myinput, filename)
+        # Copy it to a new file
+        newfile = 'listnewfile.txt'
+        os.system('rm -rf '+newfile)
+        os.system('cp '+filename+' '+newfile)
+
+        # Create different flag command 
+        myinput = "scan='1'\n"
+        filename = 'listscan1.txt'
+        create_input(myinput, filename)
+                
+        # Apply flags from filename and try to save in newfile
+        # Overwrite parameter should allow this
+        flagdata(vis=self.vis, action='calculate', mode='list', inpfile=filename, savepars=True, outfile=newfile,
+                flagbackup=False)
+        
+        # newfile should contain what was in filename
+        self.assertTrue(filecmp.cmp(filename, newfile, 1), 'Files should be equal')        
+        
+    def test_file_overwrite_false(self):
+        '''flagdata: Use savepars and overwrite=False with an existing file'''
+        
+        # Create flag commands in file called flagcmd.txt
+        myinput = "scan='4' mode='clip' correlation='ABS_RR' clipminmax=[0, 4]\n"
+        filename = 'listscan4clip.txt'
+        create_input(myinput, filename)
+        # Copy it to a new file
+        newfile = 'listnewfile.txt'
+        os.system('rm -rf '+newfile)
+        os.system('cp '+filename+' '+newfile)
+
+        # Create different flag command 
+        myinput = "scan='1'\n"
+        filename = 'listscan1.txt'
+        create_input(myinput, filename)
+                
+        # Apply flags from file and try to save in newfile
+        # Overwrite parameter should give an error and not save
+        flagdata(vis=self.vis, action='calculate', mode='list',inpfile=filename, savepars=True, outfile=newfile,
+                flagbackup=False, overwrite=False)
+        
+        # newfile should not be overwritten
+        self.assertFalse(filecmp.cmp(filename, newfile, 1), 'Files should be different')        
+
+    def test_file_overwrite_false1(self):
+        '''flagdata: Use savepars and overwrite=False'''
+        
+        # Create flag commands in file called flagcmd.txt
+        myinput = "scan='4' mode='clip' correlation='ABS_RR' clipminmax=[0, 4]\n"
+        filename = 'listscan4clip.txt'
+        create_input(myinput, filename)
+        
+        newfile='listmyflags.txt'
+        # Apply flags from file and try to save in newfile
+        # Overwrite=False should allow it since newfile doesn't exist
+        flagdata(vis=self.vis, action='calculate', mode='list',inpfile=filename, savepars=True, outfile=newfile,
+                flagbackup=False, overwrite=False)
+        
+        # newfile should not be overwritten
+        self.assertTrue(filecmp.cmp(filename, newfile, 1), 'Files should be the same')        
+
 
 class test_list_list(test_base):
     """Test of mode = 'list' using input list"""
@@ -1716,14 +1782,16 @@ class test_list_list(test_base):
     # The new parser allows whitespaces in reason values. Change the test
     def test_cmdreason1(self):
         '''flagdata: allow whitespace in cmdreason'''
-        outtxt = 'spacereason.txt'
-        flagdata(vis=self.vis, scan='1,3', action='calculate', savepars=True, outfile=outtxt, 
+        outtxt1 = 'spacereason1.txt'
+        flagdata(vis=self.vis, scan='1,3', action='calculate', savepars=True, outfile=outtxt1, 
                  cmdreason='ODD SCANS')
-        flagdata(vis=self.vis, scan='2,4', action='calculate', savepars=True, outfile=outtxt, 
+        outtxt2 = 'spacereason2.txt'
+        flagdata(vis=self.vis, scan='2,4', action='calculate', savepars=True, outfile=outtxt2, 
                  cmdreason='EVEN SCANS')
+        os.system("cat "+outtxt1+" >> "+outtxt2)
         
         # Apply the cmd with blanks in reason.
-        flagdata(vis=self.vis, mode='list', inpfile=outtxt, reason='ODD SCANS')
+        flagdata(vis=self.vis, mode='list', inpfile=outtxt2, reason='ODD SCANS')
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['scan']['1']['flagged'], 568134)
         self.assertEqual(res['scan']['3']['flagged'], 762048)
