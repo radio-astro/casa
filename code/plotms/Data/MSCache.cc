@@ -113,14 +113,14 @@ void MSCache::loadIt(vector<PMS::Axis>& loadAxes,
 		// Use plotms code to determine nChunks and memory requirements
 		vi::VisibilityIterator2* cvi = setUpVisIter(*selMS, chansel, corrsel);
 		bool chunksCounted = countChunks(*cvi, nIterPerAve, thread);
-		delete cvi;
+		//delete cvi;
 		delete selMS;  // close open tables
         if (chunksCounted) {
             try {
                 trapExcessVolume(pendingLoadAxes_);
                 // Now set up TransformingVi2 for averaging/loading data
-                setUpVisIter(selection_, calibration_, dataColumn_, False, False);
-                loadChunks(*vi_p, averaging_, nIterPerAve,
+                //setUpVisIter(selection_, calibration_, dataColumn_, False, False);
+                loadChunks(*cvi, averaging_, nIterPerAve,
                    loadAxes, loadData, thread);
             } catch(AipsError& log) {
                 loadError(log.getMesg());	
@@ -539,8 +539,8 @@ bool MSCache::countChunks(vi::VisibilityIterator2& vi,
 			thisddid = vb->dataDescriptionIds()(0);
 			thisobsid = vb->observationId()(0);
 			// New chunk means new ave interval, IF....
-			if ( // (!combfld && !combspw) ||              // not combing fld nor spw, OR
-			     ((time1 - avetime1) >= interval) ||       // (combing fld and/or spw) and solint exceeded, OR
+			if ( // (!combfld && !combspw)                // not combing fld nor spw, OR
+			     ((time1 - avetime1) > interval) ||       // (combing fld and/or spw) and solint exceeded, OR
 		             ((time1 - avetime1) < 0.0) ||         // a negative time step occurs, OR
 			     (!combscan && (thisscan != lastscan)) ||  // not combing scans, and new scan encountered OR
 			     (!combspw && (thisspw != lastspw)) ||     // not combing spws, and new spw encountered  OR
@@ -735,9 +735,9 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
 	Bool verby(false);
 	stringstream ss;
 
-	vi.originChunks();
-	vi.origin();
 	vi::VisBuffer2* vb = vi.getVisBuffer();
+	//vi.originChunks();
+	//vi.origin();
 	nAnt_ = vb->nAntennas();  // needed to set up indexer
 
 	// set frame; VB2 does not handle N_Types, just passes it along
@@ -753,6 +753,9 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
 	double progress;
 	Int nAnts;
 	vi::VisBuffer2* vbToUse = NULL;
+
+	vi.originChunks();
+	vi.origin();
 
 	for (Int chunk=0; chunk<nChunk_; ++chunk) {
 
@@ -781,21 +784,35 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
 		// Set averaging options in averager
 		pmsvba.setBlnAveraging(averaging.baseline());
 		pmsvba.setAntAveraging(averaging.antenna());
+		pmsvba.setSpwAveraging(averaging.spw());
 		pmsvba.setScalarAve(averaging.scalarAve());
 		// Sort out which data to read
 		discernData(loadAxes,loadData,pmsvba);
-		stringstream ss;
-		if (verby) {
-			ss << chunk << "----------------------------------\n"
-			   << "ck=" << chunk << " (" << nIterPerAve(chunk) << ");  "
-			   << "sc=" << vb->scan()(0) << " "
-			   << "time=" << vb->time()(0)-time0 << " "
-			   << "fl=" << vb->fieldId()(0) << " "
-			   << "sp=" << vb->spectralWindows()(0) << " " << endl;
-		}
 
-		// Accumulate into the averager
-		pmsvba.accumulate(*vb);
+		stringstream ss;
+
+        for (Int iter=0;iter<nIterPerAve(chunk);++iter) {
+            if (verby) {
+			    ss << "----------------------------------\n";
+			    ss << "ck=" << chunk << " iter=" << iter << " (" << nIterPerAve(chunk) << ") ";
+			    ss << "sc=" << vb->scan()(0) << " ";
+			    ss << "time=" << vb->time()(0)-time0 << " ";
+			    ss << "fl=" << vb->fieldId()(0) << " ";
+			    ss << "sp=" << vb->spectralWindows()(0) << " " << endl;
+                // print and reset output
+                logLoad(ss.str());
+                ss.str("");
+		    }
+		    // Accumulate into the averager
+		    pmsvba.accumulate(*vb);
+
+            // Advance to next vb
+            vi.next();
+            if (!vi.more()) {
+                vi.nextChunk();
+                vi.origin();
+            }
+        }
 		// Finalize the averaging
 		pmsvba.finalizeAverage();
 		// The averaged VisBuffer
@@ -831,20 +848,6 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
 			goodChunk_(chunk) = False;
 			chshapes_.column(chunk) = 0;
 		}
-
-        // Advance to next VB
-		vi.next();
-		if (verby) ss << " next VB ";
-
-		if (!vi.more() && vi.moreChunks()) {
-			// go to first vb in next chunk
-			if (verby) ss << "  next chunk";
-			vi.nextChunk();
-			vi.origin();
-		}
-
-		if (verby) ss << "\n";
-		if (verby) logLoad(ss.str());
 	}
 
 	//cout << boolalpha << "goodChunk_ = " << goodChunk_ << endl;

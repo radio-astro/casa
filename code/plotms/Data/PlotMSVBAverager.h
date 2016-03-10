@@ -87,6 +87,9 @@ public:
   // Set up antenna averaging
   inline void setAntAveraging(Bool doAnt) { 
     antAve_p = doAnt; if (doAnt) setBlnAveraging(False); };
+  // Set up spw averaging
+  inline void setSpwAveraging(Bool doSpw) { 
+    spwAve_p = doSpw; };
   // Set scalar averaging flag 
   inline void setScalarAve(Bool doScalar) { 
     //    cout << "Using " << (doScalar ? "SCALAR" : "VECTOR") << " averaging." << endl;
@@ -152,6 +155,9 @@ private:
 
   // Are we incoherently (scalar) averaging?
   Bool inCoh_p;
+
+  // Are we spw averaging?
+  Bool spwAve_p;
 
   // Accumulation helpers...
   Double timeRef_p;
