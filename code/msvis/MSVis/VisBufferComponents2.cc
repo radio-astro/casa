@@ -89,31 +89,6 @@ VisBufferComponents2::exceptThese (std::initializer_list<VisBufferComponent2> co
    return result;
 }
 
-
-//VisBufferComponents2
-//VisBufferComponents2::exceptThese (VisBufferComponent2 component, ...)
-//{
-//    va_list vaList;
-//
-//    va_start (vaList, component);
-//
-//    VisBufferComponent2 c = component;
-//    VisBufferComponents2 dirtyComponents = all();
-//
-//    while (c != Unknown){
-//
-//        //ThrowIf (! all().contains (c), "Not a writable VB component: " + String::toString (c));
-//
-//        dirtyComponents.set_p.erase (c);
-//        c = (VisBufferComponent2) va_arg (vaList, Int);
-//    }
-//
-//    va_end (vaList);
-//
-//    return dirtyComponents;
-//
-//}
-
 VisBufferComponents2
 VisBufferComponents2::initializeAll ()
 {
@@ -229,29 +204,6 @@ VisBufferComponents2::singleton (VisBufferComponent2 component)
     result.set_p.insert (component);
 
     return result;
-}
-
-VisBufferComponents2
-VisBufferComponents2::these (VisBufferComponent2 component, ...)
-{
-   va_list vaList;
-
-   va_start (vaList, component);
-
-   VisBufferComponent2 c = component;
-   VisBufferComponents2 dirtyComponents;
-
-   while (c != Unknown){
-
-       //ThrowIf (! all().contains (c), "Not a writable VB component: " + String::toString (c));
-
-       dirtyComponents.set_p.insert (c);
-       c = (VisBufferComponent2 ) va_arg (vaList, Int);
-   }
-
-   va_end (vaList);
-
-   return dirtyComponents;
 }
 
 VisBufferComponents2

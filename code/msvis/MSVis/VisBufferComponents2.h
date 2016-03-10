@@ -122,7 +122,6 @@ public:
     // * exceptThese *: n.b., use the component "Unknown" as the last one in the list so that the variadic
     // framework knows when to stop.
 
-    static VisBufferComponents2 exceptThese (VisBufferComponent2 component, ...);
     static VisBufferComponents2 exceptThese (std::initializer_list <VisBufferComponent2> components);
 
     static String name (Int id);
@@ -132,7 +131,6 @@ public:
     // * these * : n.b., use the component "Unknown" as the last one in the list so that the variadic
     // framework knows when to stop.
 
-    static VisBufferComponents2 these (VisBufferComponent2 component, ...);
     static VisBufferComponents2 these (std::initializer_list<VisBufferComponent2> components);
 
 protected:
