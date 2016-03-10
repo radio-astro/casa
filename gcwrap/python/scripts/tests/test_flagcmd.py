@@ -636,6 +636,26 @@ class test_savepars(test_base):
         # newfile should contain what was in filename
         self.assertFalse(filecmp.cmp(filename, newfile, 1), 'Files should be different')        
 
+    def test_overwrite_false1(self):
+        '''flagcmd: Use savepars and overwrite=False'''
+        
+        # Remove any cmd from table
+        flagcmd(vis=self.vis, action='clear', clearall=True)
+        
+        # Create flag commands in file called flagcmd.txt
+        myinput = "scan='4' mode='clip' correlation='ABS_RR' clipminmax=[0, 4]\n"
+        filename = create_input(myinput)
+
+        newfile = 'myflags.txt'                
+        # Apply flags from filename and try to save in newfile
+        # Overwrite=False shouldn't do anything as newfile doesn't exist
+        flagcmd(vis=self.vis, action='apply', inpmode='list',inpfile=filename, savepars=True, outfile=newfile,
+                flagbackup=False, overwrite=False)
+        
+        # newfile should contain what was in filename
+        self.assertTrue(filecmp.cmp(filename, newfile, 1), 'Files should be the same')        
+
+
 class test_XML(test_base):
     
     def setUp(self):
