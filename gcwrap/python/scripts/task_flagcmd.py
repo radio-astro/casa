@@ -95,7 +95,7 @@ def flagcmd(
                 
             # Save the flag cmds to an output file
             if savepars:
-                if not overwrite:
+                if not overwrite and os.path.exists(outfile):
                     raise Exception, 'You have set overwrite to False. Remove %s before saving the flag commands'%outfile
                     
                 fh.writeFlagCommands(vis, flagcmds, False, '', outfile, False)
@@ -268,7 +268,7 @@ def flagcmd(
                             casalog.post('Saving commands to FLAG_CMD')
                             fh.writeFlagCommands(vis, myflagcmd, False, 
                                                  '', '', True)
-                    elif not overwrite:
+                    elif not overwrite and os.path.exists(outfile):
                         raise Exception, 'You have set overwrite to False. Remove %s before saving the flag commands'%outfile
 
                     else:
@@ -344,7 +344,7 @@ def flagcmd(
                             updateTable(vis, mycol='APPLIED',
                                     myval=apply, myrowlist=vrows)
 
-                        if not overwrite:
+                        if not overwrite and os.path.exists(outfile):
                             raise Exception, 'You have set overwrite to False. Remove %s before saving the flag commands'%outfile
 
                         else:
