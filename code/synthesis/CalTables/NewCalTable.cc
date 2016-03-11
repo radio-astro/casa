@@ -30,6 +30,7 @@
 #include <synthesis/CalTables/CTColumns.h>
 #include <synthesis/CalTables/CTMainColumns.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
+#include <ms/MSOper/MSMetaData.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/ScaColDesc.h>
 #include <tables/Tables/SetupNewTab.h>
@@ -338,11 +339,11 @@ void NewCalTable::createSubTables() {
   SetupNewTable antennatab(calAntennaName,CTAntenna::requiredTableDesc(),access); 
   this->rwKeywordSet().defineTable("ANTENNA", Table(antennatab,type));
   antenna_p = CTAntenna(this->keywordSet().asTable("ANTENNA"));
-  
+
   SetupNewTable fieldtab(calFieldName,CTField::requiredTableDesc(),access); 
   this->rwKeywordSet().defineTable("FIELD", Table(fieldtab,type));
   field_p = CTField(this->keywordSet().asTable("FIELD"));
-  
+
   SetupNewTable spwtab(calSpectralWindowName,CTSpectralWindow::requiredTableDesc(),access); 
   this->rwKeywordSet().defineTable("SPECTRAL_WINDOW", Table(spwtab,type));
   spectralWindow_p = CTSpectralWindow(this->keywordSet().asTable("SPECTRAL_WINDOW"));
@@ -466,9 +467,14 @@ void NewCalTable::setMetaInfo(const String& msName)
   //copy antenna table
   CTAntenna calantab(this->antenna());
   TableCopy::copyRows(calantab,msantab);
+
   //copy field table
   CTField calfldtab(this->field());
   TableCopy::copyRows(calfldtab,msfldtab);
+
+  // copy nominal Eph object directions into CTField
+  handleEphObj(msfldtab,msName);
+
   //copy spectralWindow table
   CTSpectralWindow calspwtab(this->spectralWindow());
   TableCopy::copyRows(calspwtab,msspwtab);
@@ -476,6 +482,37 @@ void NewCalTable::setMetaInfo(const String& msName)
   // Record only the basename of the MS 
   this->rwKeywordSet().define(RecordFieldId("MSName"),Path(msName).baseName());
 }
+
+void NewCalTable::handleEphObj(const MSField& msfldtab,const String& msName) {
+
+  // If EPHEMERIS_ID column exists in the MS FIELD subtable, we
+  //   may have some Eph Objects to get directions for.
+  const String ephColName = MSField::columnName(MSField::EPHEMERIS_ID);
+  if (msfldtab.actualTableDesc().isColumn(ephColName)) {
+    ROMSFieldColumns msfcol(msfldtab);
+    Vector<Int> ephid=msfcol.ephemerisId().getColumn();
+
+    // Do nothing if no eph objects
+    if (max(ephid)<0) return;
+    
+    const MeasurementSet ms(msName);
+    MSMetaData msmd(&ms,-1.0f);
+    CTFieldColumns ctfcol(field_p);
+    for (uInt i=0;i<ephid.nelements();++i) {
+      if (ephid(i)>-1) {
+	Matrix<Double> dir(2,1,0.0);
+	// Calculate nominal position from the MS
+	dir=msmd.getReferenceDirection(i).getAngle().getValue();
+	// Write the nominal position into the caltable dir columns
+	ctfcol.referenceDir().put(i,dir);
+	ctfcol.phaseDir().put(i,dir);
+	ctfcol.delayDir().put(i,dir);
+      }
+    }
+  }
+}
+
+
 //----------------------------------------------------------------------------
 Bool NewCalTable::conformant(const TableDesc& tabDesc)
 {

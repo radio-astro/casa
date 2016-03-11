@@ -271,6 +271,10 @@ class NewCalTable : public Table
    //  (by adding a phoney one with a single OBS_ID
    void addPhoneyObs();
 
+   // Handle Eph objects...
+   void handleEphObj(const MSField& msfldtab,const String& msName);
+
+
    // The subtables
    CTObservation observation_p;
    CTAntenna antenna_p;
