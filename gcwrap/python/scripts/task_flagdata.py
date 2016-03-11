@@ -142,6 +142,7 @@ def flagdata(vis,
              savepars,      # save the current parameters to FLAG_CMD  or to a file
              cmdreason,     # reason to save to flag cmd
              outfile,       # output file to save flag commands
+             overwrite,     # overwrite the outfile file
              writeflags    # HIDDEN parameter
             ):      
 
@@ -604,8 +605,11 @@ def flagdata(vis,
                 if iscal and outfile == '':
                     casalog.post('Saving to FLAG_CMD is not supported for cal tables', 'WARN')
 
+                if not overwrite and os.path.exists(outfile):
+                    raise Exception, 'You have set overwrite to False. Remove %s before saving the flag commands'%outfile
+
                 else:                                 
-                    fh.writeFlagCommands(vis, flagcmd, writeflags, cmdreason, outfile, True) 
+                    fh.writeFlagCommands(vis, flagcmd, writeflags, cmdreason, outfile, False) 
                      
             aflocal.done()
             return summary_stats
@@ -710,13 +714,16 @@ def flagdata(vis,
 
         # Save the current parameters/list to FLAG_CMD or to output
         if savepars:  
+            if not overwrite and os.path.exists(outfile):
+                raise Exception, 'You have set overwrite to False. Remove %s before saving the flag commands'%outfile            
+            
             # Cal table type
             if iscal:
                 if outfile == '':
                     casalog.post('Saving to FLAG_CMD is not supported for cal tables', 'WARN')
                 else:
                     casalog.post('Saving parameters to '+outfile)
-                    fh.writeFlagCommands(vis, flagcmd, writeflags, cmdreason, outfile, True)  
+                    fh.writeFlagCommands(vis, flagcmd, writeflags, cmdreason, outfile, False)  
                     
             # MS type
             else:                
@@ -725,7 +732,7 @@ def flagdata(vis,
                 else:
                     casalog.post('Saving parameters to '+outfile)                                          
                 
-                fh.writeFlagCommands(vis, flagcmd, writeflags, cmdreason, outfile, True)
+                fh.writeFlagCommands(vis, flagcmd, writeflags, cmdreason, outfile, False)
             
         # Destroy the tool
         aflocal.done()

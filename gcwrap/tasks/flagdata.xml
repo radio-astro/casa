@@ -435,6 +435,10 @@
                     <description>Name of output file to save current parameters. If empty, save to FLAG_CMD</description>
                     <value></value>
             </param>
+            <param type="bool" name="overwrite" subparam="true">
+                    <description>Overwrite an existing file to save the flag commands</description>
+                    <value>True</value>
+            </param>
             <param type="bool" name="writeflags" subparam="true" visibility="hidden">
                 <description>Internal hidden parameter. Do not modify.</description>
                 <value type="bool">True</value>
@@ -674,6 +678,7 @@
                  <equals type="bool" value="True">
                     <default param="cmdreason"><value type="string"></value></default>
                     <default param="outfile"><value type="string"></value></default>
+                    <default param="overwrite"><value type="bool">True</value></default>
                 </equals>
                </when>
                 
@@ -978,11 +983,11 @@
                              'tail' ==> flag all but an interval at the beginning of scan
                              'end'  ==> flag all but an interval at end of scan
 
-                             Visual representation of quack mode flagging in one scan with 4s duration.
+                             Visual representation of quack mode flagging one scan with 1s duration.
                              The following diagram shows what is flagged for each quack mode when 
-                             quackinterval is set to 1.0. The flagged part is represented by crosses (+++++++++)
+                             quackinterval is set to 0.25s. The flagged part is represented by crosses (+++++++++)
 
-                                         scan with 4s duration
+                                         scan with 1s duration
                              --------------------------------------------
                              beg
                              +++++++++++---------------------------------
@@ -1603,6 +1608,12 @@
                 outfile -- Name of output file to save the current parameters.
                     default: ' '; it will save the parameters to the FLAG_CMD table of the MS.
                     example: outfile='flags.txt' will save the parameters in a text file.
+
+                overwrite -- Overwrite the existing file given in 'outfile'. 
+                    options: True/False
+                    default: True; it will remove the existing file given in 'outfile' and save the current flag
+                                   commands to a new file with the same name. When set to False, the task will exit with
+                                   an error message if the file exist.
                     
     
 ---- EXAMPLES ----

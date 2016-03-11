@@ -422,8 +422,8 @@
             overwrite -- Overwrite the existing file given in 'outfile'. 
                 options: True/False
                 default: True; it will remove the existing file given in 'outfile' and save the current flag
-                               commands to a new file with the same name. If set to False, the task will exit with
-                               an error message without saving anything.
+                               commands to a new file with the same name. When set to False, the task will exit with
+                               an error message if the file exist.
 
      ===========================================================================
 
