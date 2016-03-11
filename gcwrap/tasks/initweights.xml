@@ -38,7 +38,7 @@
 	</param>
 
 	<param type="string" name="interp" subparam="true">
-		<description>Interp type in time[,freq]. default==linear,linear</description>
+		<description>Interpolation type in time[,freq]. default==linear,linear</description>
 		<value></value>
 	</param>
 
@@ -118,6 +118,13 @@
       table given as tsystable. Selection of gain field (gainfield),
       interpolation method (interp), and spectral window mapping (spwmap)
       are supported, too.
+      Available types of interpolation are,
+          Time: 'nearest', 'linear', the variation of those with 'perobs',
+                e.g., 'linearperobs' (enforce obsId boundaries in interpolation)
+          Freq: 'nearest', 'linear', 'cubic', 'spline', and the variation
+                of those with 'flag', e.g., 'linearflag' (with
+                channelized flag).
+      See the help of applycal for details of interpolations.
       Note if the weight in an MS is initialized with these modes and
       Tsys calibration table is applied with calwt=True after that, the
       weight would be contaminated by being devided by square of Tsys
