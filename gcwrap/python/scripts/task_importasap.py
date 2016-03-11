@@ -1,26 +1,54 @@
 import os
 import re
 from taskinit import *
-import sdutil
+from casac import casac
+
 mysdms, mycb = gentools(['sdms', 'cb'])
 
-def importasap(infile, outputvis, overwrite):
+def importasap(infile=None, outputvis=None, flagbackup=None, overwrite=None):
     """
     """
     casalog.origin('importasap')
 
     try:
+        if infile is None or outputvis is None:
+            raise RuntimeError('Error: infile and outputvis must be specified.')
+
+        # default value
+        if flagbackup is None:
+            flagbackup = True
+
+        if overwrite is None:
+            overwrite = False
+
+        # basic check
         if os.path.exists(outputvis) and not overwrite:
             raise RuntimeError('%s exists.'%(outputvis))
         
         if not is_scantable(infile):
             raise RuntimeError('%s is not a valid Scantable.'%(infile))
 
+        # import
         status = mysdms.importasap(infile, outputvis)
-        
-        # initialize weights using cb tool
-        mycb.open(outputvis, compress=False, addcorr=False, addmodel=False)
-        mycb.initweights(wtmode='nyq')
+
+        if status == True:
+            # flagversions file must be deleted 
+            flagversions = outputvis.rstrip('/') + '.flagversions'
+            if os.path.exists(flagversions):
+                os.system('rm -rf %s'%(flagversions))
+
+            # initialize weights using cb tool
+            mycb.open(outputvis, compress=False, addcorr=False, addmodel=False)
+            mycb.initweights(wtmode='nyq')
+
+            # create flagbackup file if user requests it
+            if flagbackup == True:
+                aflocal = casac.agentflagger()
+                aflocal.open(outputvis)
+                aflocal.saveflagversion('Original',
+                                        comment='Original flags at import into CASA using importasap',
+                                        merge='save')
+                aflocal.done()
 
         return status
     except Exception, instance:
