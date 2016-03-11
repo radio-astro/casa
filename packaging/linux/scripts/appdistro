@@ -100,7 +100,6 @@ mkpath $workdir or die "could not create work dir ($workdir)";
 
 print "creating linux app tar file in $outputdir\n";
 print "work directory is $workdir\n";
-
 print "starting: $packaging_script -ni version=$version out=$workdir type=$tag ws=$casa\n";
 open( $mafd, "$packaging_script -ni version=$version out=$workdir type=$tag ws=$casa |" );
 { my $oldfh = select $mafd;
@@ -126,6 +125,18 @@ $tidy_up = sub { if ( -f $_ && $_ eq "casapy.py" ) {
 find( { wanted => $tidy_up }, $workdir );
 
 $distro_dir = distro_dir( );
+###
+### add release identifier (used with prerelease) to the distribution
+### directory name and the tar file for the distribution
+###
+### make-app does not worry about release numbers; it just turns
+### workspaces into relocatable apps...
+###
+if ( $release ) {
+    rename "$workdir/$distro_dir", "$workdir/$distro_dir$release" or die "could not add release string ($release) to directory name";
+    $distro_dir = "$distro_dir$release";
+    print "changed release directory and tar-file basename to $distro_dir\n";
+}
 chdir "$workdir/$distro_dir";
 
 ### ----- ---- ---- ----- ---- ---- ----- ---- ---- ----- ---- ---- ----- ---- ----
