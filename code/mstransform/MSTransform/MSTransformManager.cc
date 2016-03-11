@@ -2118,8 +2118,17 @@ void MSTransformManager::initDataSelectionParams()
 // -----------------------------------------------------------------------
 void MSTransformManager::initRefFrameTransParams()
 {
-    // Determine input reference frame from the first row in the SPW sub-table of the output (selected) MS
-	MSSpectralWindow spwTable = outputMs_p->spectralWindow();
+    // Determine input reference frame from the first row in the SPW sub-table of the output/selected MS
+	MSSpectralWindow spwTable;
+	if (userBufferMode_p)
+	{
+		spwTable = selectedInputMs_p->spectralWindow();
+	}
+	else
+	{
+		spwTable = outputMs_p->spectralWindow();
+	}
+
 	MSSpWindowColumns spwCols(spwTable);
     inputReferenceFrame_p = MFrequency::castType(spwCols.measFreqRef()(0));
 
@@ -2147,8 +2156,17 @@ void MSTransformManager::initRefFrameTransParams()
     }
 
 
-    // Determine observatory position from the first row in the observation sub-table of the output (selected) MS
-    MSObservation observationTable = outputMs_p->observation();
+    // Determine observatory position from the first row in the observation sub-table of the output/selected MS
+    MSObservation observationTable;
+    if (userBufferMode_p)
+    {
+    	observationTable = selectedInputMs_p->observation();
+    }
+    else
+    {
+    	observationTable = outputMs_p->observation();
+    }
+
     MSObservationColumns observationCols(observationTable);
     String observatoryName = observationCols.telescopeName()(0);
     MeasTable::Observatory(observatoryPosition_p,observatoryName);
@@ -2190,22 +2208,30 @@ void MSTransformManager::initRefFrameTransParams()
     {
     	String phaseCenter = phaseCenterPar_p->toString(True);
 
-    	// Determine phase center from the first row in the FIELD sub-table of the output (selected) MS
     	if (phaseCenter.empty())
     	{
+        	// Determine phase center from the first row in the FIELD sub-table of the output/selected MS
+    		MSFieldColumns *fieldCols;
+    	    if (userBufferMode_p)
+    	    {
+    	    	fieldCols = inputMSFieldCols_p;
+    	    }
+    	    else
+    	    {
+    	    	MSField fieldTable = outputMs_p->field();
+    	    	fieldCols = new MSFieldColumns(fieldTable);
+    	    }
 
-    		MSField fieldTable = outputMs_p->field();
-    		MSFieldColumns fieldCols(fieldTable);
 
     		// CAS-6778: Support for new ref. frame SOURCE that requires radial velocity correction
     		if (radialVelocityCorrection_p)
     		{
-    			radialVelocity_p = fieldCols.radVelMeas(0, referenceTime_p.get("s").getValue());
-    			phaseCenter_p = fieldCols.phaseDirMeas(0,referenceTime_p.get("s").getValue());
+    			radialVelocity_p = fieldCols->radVelMeas(0, referenceTime_p.get("s").getValue());
+    			phaseCenter_p = fieldCols->phaseDirMeas(0,referenceTime_p.get("s").getValue());
     		}
     		else
     		{
-    			phaseCenter_p = fieldCols.phaseDirMeasCol()(0)(IPosition(1,0));
+    			phaseCenter_p = fieldCols->phaseDirMeasCol()(0)(IPosition(1,0));
     		}
     	}
     	// Parse phase center

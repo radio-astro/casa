@@ -59,8 +59,8 @@ public:
 	~FreqAxisTVI();
 
 	// Navigation methods
-	void origin ();
-	void next ();
+	virtual void origin ();
+	virtual void next ();
 
 	// General TVI info (common for all sub-classes)
     Bool existsColumn (VisBufferComponent2 id) const;
