@@ -7,13 +7,12 @@ import string
 import shutil
 
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.casatools as casatools
 import pipeline.domain as domain
-from pipeline.infrastructure import tablereader
+import pipeline.domain.measures as measures
+import pipeline.domain.singledish as singledish
 from ... import heuristics
-from .. import common
-from ..common import utils
 
 import pipeline.hif.tasks.importdata.importdata as importdata
 import pipeline.hifa.tasks.importdata.almaimportdata as almaimportdata
@@ -43,10 +42,11 @@ class SDImportDataResults(basetask.Results):
     SetJy results generated from flux entries in Source.xml.
     '''
     
-    def __init__(self, mses=None, setjy_results=None):
+    def __init__(self, mses=None, reduction_group=None, setjy_results=None):
         super(SDImportDataResults, self).__init__()
         self.mses = [] if mses is None else mses
         self.setjy_results = setjy_results
+        self.reduction_group = reduction_group
         self.origin = {}
         self.results = importdata.ImportDataResults(mses=mses, setjy_results=setjy_results)
         
@@ -54,6 +54,7 @@ class SDImportDataResults(basetask.Results):
         if not isinstance(context.observing_run, domain.ScantableList):
             context.observing_run = domain.ScantableList()
         self.results.merge_with_context(context)
+        context.observing_run.ms_reduction_group = self.reduction_group
            
     def __repr__(self):
         return 'SDImportDataResults:\n\t{0}'.format(
@@ -63,7 +64,98 @@ class SDImportData(importdata.ImportData):
     Inputs = SDImportDataInputs 
     
     def prepare(self, **parameters):
+        # get results object by running super.prepare()
         results = super(SDImportData, self).prepare()
-        myresults = SDImportDataResults(mses=results.mses, setjy_results=results.setjy_results)
+        
+        # inspection: beam size
+        for ms in results.mses:
+            self._inspect_beam_size(ms)
+            
+        # inspection: reduction group
+        reduction_group = self._inspect_reduction_group(results.mses)
+        
+        # create results object
+        myresults = SDImportDataResults(mses=results.mses, reduction_group=reduction_group, 
+                                        setjy_results=results.setjy_results)
         myresults.origin = results.origin
         return myresults
+        
+    def _inspect_beam_size(self, ms):
+        beam_size_heuristics = heuristics.SingleDishBeamSize()
+        beam_sizes = {}
+        for antenna in ms.antennas:
+            diameter = antenna.diameter 
+            antenna_id = antenna.id
+            beam_size_for_antenna = {}
+            for spw in ms.spectral_windows:
+                spw_id = spw.id
+                center_frequency = float(spw.centre_frequency.convert_to(measures.FrequencyUnits.GIGAHERTZ).value)
+                beam_size = beam_size_heuristics(diameter=diameter, frequency=center_frequency)
+                beam_size_quantity = casatools.quanta.quantity(beam_size, 'arcsec')
+                beam_size_for_antenna[spw_id] = beam_size_quantity
+            beam_sizes[antenna_id] = beam_size_for_antenna
+        ms.beam_sizes = beam_sizes
+        
+    def _inspect_reduction_group(self, mslist):
+        reduction_group = {}
+        group_spw_names = {}
+        antenna_index= 0
+        for (index, ms) in enumerate(mslist):
+            science_windows = ms.get_spectral_windows(science_windows_only=True)
+            for spw in science_windows:
+                data_description = ms.get_data_description(spw=spw) # returns only one data description
+                name = spw.name
+                nchan = spw.num_channels
+                min_frequency = float(spw._min_frequency.value)
+                max_frequency = float(spw._max_frequency.value)
+                polarization_id = data_description.pol_id
+                corr_type_string = ms.polarizations[polarization_id].corr_type_string.squeeze()
+                polarizations = map(lambda x: singledish.Polarization.to_polid[x], corr_type_string)
+                if len(name) > 0:
+                    # grouping by name
+                    match = self.__find_match_by_name(name, group_spw_names)
+                else:
+                    # grouping by frequency range
+                    match = self.__find_match_by_coverage(nchan, min_frequency, max_frequency, 
+                                                          reduction_group, fraction=0.99)
+                if match == False:
+                    # add new group
+                    key = len(reduction_group)
+                    group_spw_names[key] = name
+                    newgroup = singledish.ReductionGroupDesc(frequency_range=[min_frequency, max_frequency], 
+                                                             nchan=nchan)
+                    reduction_group[key] = newgroup
+                else:
+                    key = match
+                for antenna in ms.antennas:
+                    reduction_group[key].add_member(antenna_index + antenna.id, spw.id, polarizations)
+            antenna_index += len(ms.antennas)
+        
+        return reduction_group
+    
+    def __find_match_by_name(self, spw_name, spw_names):
+        match = False
+        for (group_key,group_spw_name) in spw_names.items():
+            if (group_spw_name==''): 
+                raise RuntimeError, "Got empty group spectral window name"
+            elif spw_name == group_spw_name:
+                match = group_key
+                break
+        return match
+
+    def __find_match_by_coverage(self, nchan, min_frequency, max_frequency, reduction_group, fraction=0.99):
+        if fraction<=0 or fraction>1.0:
+            raise ValueError, "overlap fraction should be between 0.0 and 1.0"
+        LOG.warn("Creating reduction group by frequency overlap. This may be not proper if observation dates extend over long period.")
+        match = False
+        for (group_key,group_desc) in reduction_group.items():
+            group_range = group_desc.frequency_range
+            group_nchan = group_desc.nchan
+            overlap = max( 0.0, min(group_range[1], max_frequency)
+                           - max(group_range[0], min_frequency))
+            width = max(group_range[1], max_frequency) - min(group_range[0], min_frequency)
+            coverage = overlap/width
+            if nchan == group_nchan and coverage >= fraction:
+                match = group_key
+                break
+        return match

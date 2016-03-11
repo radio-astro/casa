@@ -336,8 +336,8 @@ class SpectralWindowAdapter:
     
     @property
     def channels(self):
-        #return self.spw.channels
-        return []
+        return self.spw.channels
+        #return []
     
     @property
     def frame(self):
