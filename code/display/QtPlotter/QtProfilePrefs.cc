@@ -86,7 +86,7 @@ namespace casa {
 		else {
 			//If the optical versus radio setting does not exist, force users to choose.
 			if ( QMessageBox::question(this, "Radio vs Optical?",
-			              "Use the radio version instead of the optical version?",
+"The default mode for the profile and moments tool is the optical version. Would you like to set your preference to use the radio version instead? (This setting can be changed in the preferences tab at any time.)",
 			              QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes){
 				opticalDefault = false;
 			}
