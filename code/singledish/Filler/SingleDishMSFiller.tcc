@@ -361,7 +361,7 @@ void SingleDishMSFiller<T>::fill() {
 
   // main loop
 #if 0
-  SingleDishMSFiller<Reader>::fillMainMT(this);
+  SingleDishMSFiller<T>::fillMainMT(this);
 #else
   fillMain();
 #endif
