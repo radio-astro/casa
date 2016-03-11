@@ -537,6 +537,7 @@ def flagdata(vis,
             agent_pars['basecnt'] = basecnt
             agent_pars['fieldcnt'] = fieldcnt
             agent_pars['name'] = name
+            agent_pars['display'] = display
             
             # Disable writeflags and savepars
             writeflags = False
