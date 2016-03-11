@@ -59,8 +59,10 @@ def setjy(vis=None, field=None, spw=None,
     casalog.post("standard="+standard,'DEBUG1')
     mylocals = locals()
 
-    sh = SetjyHelper(vis)
-    rstat = sh.resetModelCol()
+    if not listmodels: # listmmodels=T does not require vis 
+        sh = SetjyHelper(vis)
+        rstat = sh.resetModelCol()
+
 
     # Take care of the trivial parallelization
     if ( not listmodels and ParallelTaskHelper.isParallelMS(vis) and usescratch):
