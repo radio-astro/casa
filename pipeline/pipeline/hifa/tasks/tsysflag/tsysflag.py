@@ -29,8 +29,8 @@ class TsysflagInputs(basetask.StandardInputs):
       flag_derivative=None, fd_max_limit=None,
       flag_edgechans=None, fe_edge_limit=None,
       flag_fieldshape=None, ff_refintent=None, ff_max_limit=None,
-      tmf1_limit=None, tmef1_limit=None,
       flag_birdies=None, fb_sharps_limit=None, 
+      flag_toomany=None, tmf1_limit=None, tmef1_limit=None,
       metric_order=None):
 
         # set the properties to the values given as input arguments
