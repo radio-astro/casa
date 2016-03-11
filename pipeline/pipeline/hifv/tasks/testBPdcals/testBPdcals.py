@@ -10,16 +10,18 @@ from pipeline.hif.tasks import bandpass
 from pipeline.hif.tasks import applycal
 from pipeline.hifv.heuristics import getCalFlaggedSoln, getBCalStatistics
 import pipeline.hif.heuristics.findrefant as findrefant
-from pipeline.hifv.heuristics import do_bandpass
+from pipeline.hifv.heuristics import weakbp, do_bandpass
 
 LOG = infrastructure.get_logger(__name__)
 
 
 class testBPdcalsInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
-    def __init__(self, context, vis=None):
+    def __init__(self, context, vis=None, weakbp=None):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
+
+        weakbp = basetask.property_with_default('weakbp', True)
 
         self.gain_solint1 = 'int'
         self.gain_solint2 = 'int'
@@ -79,7 +81,6 @@ class testBPdcals(basetask.StandardTaskTemplate):
         fracFlaggedSolns = 1.0
         
         # critfrac = context.evla['msinfo'][m.name].critfrac
-        LOG.info("TESTBPDCALS DEBUG:  GET CRITICAL FRACTION")
         critfrac = m.get_vla_critfrac()
 
         '''
@@ -251,10 +252,20 @@ class testBPdcals(basetask.StandardTaskTemplate):
 
         LOG.info("Doing test bandpass calibration")
 
-        bandpass_job = do_bandpass(self.inputs.vis, bpcaltable, context=context, RefAntOutput=RefAntOutput[0],
-                                            ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse)
+        #flagdata_task_args = {'vis'         :self.inputs.vis, 'spw' : '0:125~875'}
 
-        self._executor.execute(bandpass_job)
+        #job = casa_tasks.flagdata(**flagdata_task_args)
+
+        #self._executor.execute(job)
+
+        if (self.inputs.weakbp == True):
+            interp = weakbp(self.inputs.vis, bpcaltable, context=context, RefAntOutput=RefAntOutput[0],
+                                            ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse, solint='inf', append=False)
+        else:
+            interp = ''
+            bandpass_job = do_bandpass(self.inputs.vis, bpcaltable, context=context, RefAntOutput=RefAntOutput[0],
+                                            ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse, solint='inf', append=False)
+            self._executor.execute(bandpass_job)
 
         LOG.info("Test bandpass calibration complete")
 
@@ -276,7 +287,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
         LOG.info("Applying test calibrations to BP and delay calibrators")
         
         applycal_result = self._do_applycal(context=context, ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse,
-                                            bpcaltable=bpcaltable)
+                                            bpcaltable=bpcaltable, interp=interp)
 
         return testBPdcalsResults(gain_solint1=gain_solint1, shortsol1=shortsol1, vis=self.inputs.vis, bpdgain_touse=bpdgain_touse)
 
@@ -517,7 +528,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
 
         return self._executor.execute(job)
 
-    def _do_applycal(self, context=None, ktypecaltable=None, bpdgain_touse=None, bpcaltable=None):
+    def _do_applycal(self, context=None, ktypecaltable=None, bpdgain_touse=None, bpcaltable=None, interp=None):
         """Run CASA task applycal"""
         
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
@@ -549,7 +560,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
                               'docallib'   :False,
                               'gaintable'  :AllCalTables,
                               'gainfield'  :[''],
-                              'interp'     :[''],
+                              'interp'     :[interp],
                               'spwmap'     :[],
                               'calwt'      :[False]*ntables,
                               'parang'     :False,
