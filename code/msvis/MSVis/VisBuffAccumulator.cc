@@ -197,8 +197,13 @@ void VisBuffAccumulator::accumulate (const VisBuffer& vb)
       // Record the row in vb that corresponds to outrow in avBuf_p.
       outToInRow_p[outrow] = row;
 
-      Float wt = vb.weight()(row);
       Vector<Float> wtM(vb.weightMat().column(row));
+      // Row weight for timestamp ave:
+      //  (used to use vb.weight(), which read WEIGHT col 
+      //   directly, which is wrong because it might be calibrated!)
+      //  The following is what vb.weight() does, but here with
+      //   the weigthMat info, which has been reset from SIGMA
+      Float wt = (wtM(0)+wtM(nCorr-1))/2;  
 
       // (Prenormalization removed!)
 
