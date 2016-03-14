@@ -1738,6 +1738,34 @@ TfOpac::~TfOpac() {
   if (prtlev()>2) cout << "TfOpac::~TfOpac()" << endl;
 }
 
+void TfOpac::calcAllJones() {
+
+  if (prtlev()>6) cout << "       TfOpac::calcAllJones()" << endl;
+
+  // Nominally no opacity
+  currJElem()=Complex(1.0);
+  currJElemOK()=currParOK();
+
+  Complex* J=currJElem().data();
+  Float*  op=currRPar().data();
+  Bool*   opok=currParOK().data();
+  Double* a=za().data();
+  for (Int iant=0; iant<nAnt(); ++iant,++a) {
+    for (Int ich=0; ich<nChanMat(); ich++, J++, op++, opok++) {
+      if ((*opok) && (*a)<C::pi_2) 
+        (*J) = Complex(sqrt(exp(-1.0 * Double(*op)/cos(*a))));
+    }
+  }
+}
+
+
+void TfOpac::calcWtScale() {
+
+  // Initialize - not used for TfOpac, but we need to overwrite the
+  // single channel version or it will throw an exception
+  currWtScale()=1.0;
+
+}
 
 
 

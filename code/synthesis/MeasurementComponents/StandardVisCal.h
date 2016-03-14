@@ -575,11 +575,13 @@ public:
 
 protected:
 
-  // <nothing>
+  // Calculate the TfOpac matrix for all ants
+  virtual void calcAllJones();
 
 private:
 
-  // <nothing>
+  //  Frequency weight scaling factors
+  virtual void calcWtScale();
   
 };
 

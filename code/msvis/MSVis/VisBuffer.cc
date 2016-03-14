@@ -1194,7 +1194,7 @@ void VisBuffer::sortCorr()
 
       Vector<Float> wtmp(nRow());
       Vector<Float> w1, w2, w3;
-      IPosition wblc(1, 0, 0), wtrc(3, 0, nRow() - 1), vec(1, nRow());
+      IPosition wblc(2, 0, 0), wtrc(2, 0, nRow() - 1), vec(1, nRow());
 
       wblc(0) = wtrc(0) = 1;
       w1.reference(weightMat_p(wblc, wtrc).reform(vec));
