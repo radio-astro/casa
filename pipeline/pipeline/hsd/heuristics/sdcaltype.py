@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import os
 import numpy
 
 import pipeline.infrastructure.api as api

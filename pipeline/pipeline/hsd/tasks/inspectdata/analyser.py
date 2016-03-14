@@ -29,6 +29,12 @@ class DataTableAnalyser(object):
         #self.analyse_grid()
         
     def analyse_reduction_group(self):
+        # 
+        if hasattr(self.scantablelist, 'ms_reduction_group'):
+            LOG.debug('MS based inspection has been done. Set reduction group to MS based one.')
+            self.reduction_group = self.scantablelist.ms_reduction_group
+            return
+        
         # reset reduction_group
         self.reduction_group = {}
         
@@ -99,9 +105,19 @@ class DataTableAnalyser(object):
     def analyse_calibration(self):
         self.calibration_strategy = []
         spwmap_per_ms = {}
+        h_calmode = heuristics.CalibrationTypeHeuristics()
+        h_srctype = heuristics.SrcTypeHeuristics()
         for item in self.scantablelist:
-            # strategy for tsys transfer
             myms = item.ms
+            if hasattr(myms, 'calibration_strategy'):
+                LOG.debug('MS based inspection has been done. Set calibration strategy to MS based one.')
+                ms_calibration_strategy = myms.calibration_strategy.copy()
+                srctype = h_srctype(ms_calibration_strategy['calmode'])
+                ms_calibration_strategy['srctype'] = srctype
+                self.calibration_strategy.append(ms_calibration_strategy)
+                continue
+            
+            # strategy for tsys transfer
             if item.tsys_transfer:
                 #tsys_strategy = item.tsys_transfer_list
                 if not spwmap_per_ms.has_key(myms):
@@ -113,9 +129,7 @@ class DataTableAnalyser(object):
                 tsys_strategy = None
 
             # strategy for off-position calibration
-            h_calmode = heuristics.CalibrationTypeHeuristics()
             calmode = h_calmode(item.name)
-            h_srctype = heuristics.SrcTypeHeuristics()
             srctype = h_srctype(calmode)
             
             entry = {
@@ -141,11 +155,19 @@ class DataTableAnalyser(object):
 
         h = heuristics.SingleDishBeamSizeFromName()
         for item in self.scantablelist:
-            antenna = item.antenna.name
+            myms = item.ms
+            antenna_name = item.antenna.name
+            if hasattr(myms, 'beam_sizes'):
+                LOG.debug('MS based inspection has been done. Set beam size to MS based one.')
+                myantenna = myms.get_antenna(antenna_name)
+                antenna_id = myantenna[0].id
+                self.beam_size.append(myms.beam_sizes[antenna_id])
+                continue
+            
             entry = {}
             for (spw,v) in item.spectral_window.items():
                 center_freq = 0.5 * sum(v.frequency_range) * 1.0e-9 #GHz
-                _beam_size = qa.quantity(h(antenna, center_freq), 'arcsec')
+                _beam_size = qa.quantity(h(antenna_name, center_freq), 'arcsec')
                 entry[spw] = _beam_size
 
             # register beam size to domain object

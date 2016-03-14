@@ -67,21 +67,59 @@ class SDImportData(importdata.ImportData):
         # get results object by running super.prepare()
         results = super(SDImportData, self).prepare()
         
-        # inspection: beam size
+        # per ms inspection: beam size and calibration strategy
         for ms in results.mses:
             self._inspect_beam_size(ms)
+            self._inspect_calibration_strategy(ms)
             
         # inspection: reduction group
         reduction_group = self._inspect_reduction_group(results.mses)
-        
+                
         # create results object
         myresults = SDImportDataResults(mses=results.mses, reduction_group=reduction_group, 
                                         setjy_results=results.setjy_results)
         myresults.origin = results.origin
         return myresults
+    
+    def _inspect_calibration_strategy(self, ms):
+        tsys_transfer = []
+        calibration_type_heuristic = heuristics.CalibrationTypeHeuristics()
+        spwmap_heuristic = heuristics.TsysSpwMapHeuristics()
+        calibration_type = calibration_type_heuristic(ms.name)
+        science_windows = ms.get_spectral_windows(science_windows_only=True)
+        tsys_windows = [spw for spw in ms.spectral_windows \
+                        if 'ATMOSPHERE' in spw.intents and spw.name.find('CH_AVG') == -1]
+        TOL = singledish.ScantableRep.tolerance
+        for spwa in tsys_windows:
+            fmina = float(spwa._min_frequency.value)
+            fmaxa = float(spwa._max_frequency.value)
+            for spwt in science_windows:
+                if spwa == spwt:
+                    # identical spw, skip (not necessary to transfer Tsys)
+                    continue
+                elif spwa.baseband != spwt.baseband:
+                    # different baseband, skip
+                    continue
+                else:
+                    fmint = float(spwt._min_frequency.value)
+                    fmaxt = float(spwt._max_frequency.value)
+                    dfmin = (fmint - fmina) / fmina
+                    dfmax = (fmaxt - fmaxa) / fmaxa
+                    LOG.trace('(fmina,fmaxa) = (%s, %s)'%(fmina, fmaxa))
+                    LOG.trace('(fmint,fmaxt) = (%s, %s)'%(fmint, fmaxt))
+                    LOG.trace('dfmin = %s, dfmax=%s, TOL = %s'%(dfmin, dfmax, TOL))
+                    if dfmin >= -TOL and dfmax <= TOL:
+                        tsys_transfer.append([spwa.id, spwt.id])
+        do_tsys_transfer = len(tsys_transfer) > 0
+        spwmap = spwmap_heuristic(ms, tsys_transfer)
+        calibration_strategy = {'tsys': do_tsys_transfer,
+                                'tsys_strategy': spwmap,
+                                'calmode': calibration_type}
+        ms.calibration_strategy = calibration_strategy
+        
         
     def _inspect_beam_size(self, ms):
-        beam_size_heuristics = heuristics.SingleDishBeamSize()
+        beam_size_heuristic = heuristics.SingleDishBeamSize()
         beam_sizes = {}
         for antenna in ms.antennas:
             diameter = antenna.diameter 
@@ -90,7 +128,7 @@ class SDImportData(importdata.ImportData):
             for spw in ms.spectral_windows:
                 spw_id = spw.id
                 center_frequency = float(spw.centre_frequency.convert_to(measures.FrequencyUnits.GIGAHERTZ).value)
-                beam_size = beam_size_heuristics(diameter=diameter, frequency=center_frequency)
+                beam_size = beam_size_heuristic(diameter=diameter, frequency=center_frequency)
                 beam_size_quantity = casatools.quanta.quantity(beam_size, 'arcsec')
                 beam_size_for_antenna[spw_id] = beam_size_quantity
             beam_sizes[antenna_id] = beam_size_for_antenna
