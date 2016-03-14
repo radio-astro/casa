@@ -659,9 +659,8 @@ msmetadata* ms::metadata(const float cachesize)
 		*itsLog << LogOrigin("ms", __func__);
 		// pass the original MS name to the constructor
 		// so that it is correctly printed in the output
-		MSSummary mss(itsMS, itsOriginalMS->tableName());
+		MSSummary mss(itsMS, itsOriginalMS->tableName(), cachesize);
 		mss.setListUnflaggedRowCount(listunfl);
-		mss.setMetaDataCacheSizeInMB(cachesize);
 		casa::Record outRec;
 		if (! listfile.empty()){
 			File diskfile(listfile);
