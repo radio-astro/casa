@@ -1275,7 +1275,7 @@ record* image::deconvolvefrombeam(
     return nullptr;
 }
 
-bool image::done(const bool remove, const bool verbose) {
+bool image::done(bool remove, bool verbose) {
     try {
         _log << _ORIGIN;
         // resetting _stats must come before the table removal or the table
@@ -1297,6 +1297,40 @@ bool image::done(const bool remove, const bool verbose) {
         RETHROW(x);
     }
     return False;
+}
+
+record* image::findsources(
+    int nMax, double cutoff, const variant& region,
+    const variant& vmask, bool point, int width, bool absFind
+) {
+    try {
+        _log << _ORIGIN;
+        if (detached()) {
+            return nullptr;
+        }
+        ThrowIf(_imageC, "This application supports only real-valued images");
+        SHARED_PTR<Record> Region(_getRegion(region, False));
+        auto mask = _getMask(vmask);
+        ImageSourceFinder<Float> sf(_imageF, Region.get(), mask);
+        sf.setCutoff(cutoff);
+        sf.setDoPoint(point);
+        sf.setWidth(width);
+        sf.setAbsFind(absFind);
+        auto cl = sf.findSources(nMax);
+        Record rec;
+        casa::String error;
+        ThrowIf (
+            ! cl.toRecord(error, rec),
+            "Failed to convert component list to record: " + error
+        );
+        return fromRecord(rec);
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
+        RETHROW(x);
+    }
+    return nullptr;
 }
 
 bool image::fft(
@@ -1375,6 +1409,227 @@ bool image::fft(
         RETHROW(x);
     }
     return False;
+}
+
+record* image::fitprofile(const string& box, const variant& region,
+    const string& chans, const string& stokes, int axis,
+    const variant& vmask, int ngauss, int poly,
+    const string& estimates, int minpts, bool multifit,
+    const string& model, const string& residual, const string& amp,
+    const string& amperr, const string& center, const string& centererr,
+    const string& fwhm, const string& fwhmerr, const string& integral,
+    const string& integralerr, bool stretch, bool logResults,
+    const variant& pampest, const variant& pcenterest,
+    const variant& pfwhmest, const variant& pfix, const variant& gmncomps,
+    const variant& gmampcon, const variant& gmcentercon,
+    const variant& gmfwhmcon, const vector<double>& gmampest,
+    const vector<double>& gmcenterest, const vector<double>& gmfwhmest,
+    const variant& gmfix, const string& spxtype, const vector<double>& spxest,
+    const vector<bool>& spxfix, const variant& div, const string& spxsol,
+    const string& spxerr, const string& logfile, bool append,
+    const variant& pfunc, const vector<double>& goodamprange,
+    const vector<double>& goodcenterrange,
+    const vector<double>& goodfwhmrange, const variant& sigma,
+    const string& outsigma, const vector<int>& planes
+) {
+    _log << LogOrigin(_class, __func__);
+    if (detached()) {
+        return 0;
+    }
+    try {
+        ThrowIf(
+            ! _imageF,
+            "This method only supports Float valued images"
+        );
+        String regionName;
+        SHARED_PTR<Record> regionPtr = _getRegion(region, True);
+        if (ngauss < 0) {
+            _log << LogIO::WARN
+                << "ngauss < 0 is meaningless. Setting ngauss = 0 "
+                << LogIO::POST;
+            ngauss = 0;
+        }
+        vector<double> mygoodamps = toVectorDouble(goodamprange, "goodamprange");
+        if (mygoodamps.size() > 2) {
+            _log << "Too many elements in goodamprange" << LogIO::EXCEPTION;
+        }
+        vector<double> mygoodcenters = toVectorDouble(goodcenterrange, "goodcenterrange");
+        if (mygoodcenters.size() > 2) {
+            _log << "Too many elements in goodcenterrange" << LogIO::EXCEPTION;
+        }
+        vector<double> mygoodfwhms = toVectorDouble(goodfwhmrange, "goodcenterrange");
+        if (mygoodfwhms.size() > 2) {
+            _log << "Too many elements in goodfwhmrange" << LogIO::EXCEPTION;
+        }
+        String mask = _getMask(vmask);
+        std::unique_ptr<Array<Float> > sigmaArray;
+        std::unique_ptr<PagedImage<Float> > sigmaImage;
+        if (sigma.type() == variant::STRING) {
+            String sigmaName = sigma.toString();
+            if (! sigmaName.empty()) {
+                sigmaImage.reset(new PagedImage<Float>(sigmaName));
+            }
+        }
+        else if (
+            sigma.type() == variant::DOUBLEVEC
+            || sigma.type() == variant::INTVEC
+        ) {
+            sigmaArray.reset(new Array<Float>());
+            vector<double> sigmaVector = sigma.getDoubleVec();
+            Vector<Int> shape = sigma.arrayshape();
+            sigmaArray->resize(IPosition(shape));
+            convertArray(
+                *sigmaArray,
+                Vector<Double>(sigmaVector).reform(IPosition(shape))
+            );
+        }
+        else if (sigma.type() == variant::BOOLVEC) {
+            // nothing to do
+        }
+        else {
+            _log << LogIO::SEVERE
+                << "Unrecognized type for sigma. Use either a string (image name) or a numpy array"
+                << LogIO::POST;
+            return 0;
+        }
+        String myspxtype;
+        vector<double> plpest, ltpest;
+        vector<bool> plpfix, ltpfix;
+        if (! spxtype.empty()) {
+            myspxtype = String(spxtype);
+            myspxtype.downcase();
+            if (myspxtype == "plp") {
+                plpest = spxest;
+                plpfix = spxfix;
+            }
+            else if (myspxtype == "ltp") {
+                ltpest = spxest;
+                ltpfix = spxfix;
+            }
+            else {
+                ThrowCc("Unsupported value for spxtype");
+            }
+        }
+        SpectralList spectralList = SpectralListFactory::create(
+            _log, pampest, pcenterest, pfwhmest, pfix, gmncomps,
+            gmampcon, gmcentercon, gmfwhmcon, gmampest,
+            gmcenterest, gmfwhmest, gmfix, pfunc, plpest, plpfix,
+            ltpest, ltpfix
+        );
+        ThrowIf(
+            ! estimates.empty() && spectralList.nelements() > 0,
+            "You cannot specify both an "
+            "estimates file and set estimates "
+            "directly. You may only do one or "
+            "the either (or neither in which "
+            "case you must specify ngauss and/or poly)"
+        );
+        SHARED_PTR<ImageProfileFitter> fitter;
+        if (spectralList.nelements() > 0) {
+            fitter.reset(new ImageProfileFitter(
+                _imageF, regionName, regionPtr.get(),
+                box, chans, stokes, mask, axis,
+                spectralList
+            ));
+        }
+        else if (! estimates.empty()) {
+            fitter.reset(new ImageProfileFitter(
+                _imageF, regionName, regionPtr.get(),
+                box, chans, stokes, mask, axis,
+                estimates
+            ));
+        }
+        else {
+            fitter.reset(new ImageProfileFitter(
+                _imageF, regionName, regionPtr.get(),
+                box, chans, stokes, mask, axis,
+                ngauss
+            ));
+        }
+        fitter->setDoMultiFit(multifit);
+        if (poly >= 0) {
+            fitter->setPolyOrder(poly);
+        }
+        fitter->setModel(model);
+        fitter->setResidual(residual);
+        fitter->setAmpName(amp);
+        fitter->setAmpErrName(amperr);
+        fitter->setCenterName(center);
+        fitter->setCenterErrName(centererr);
+        fitter->setFWHMName(fwhm);
+        fitter->setFWHMErrName(fwhmerr);
+        fitter->setIntegralName(integral);
+        fitter->setIntegralErrName(integralerr);
+        fitter->setMinGoodPoints(minpts > 0 ? minpts : 0);
+        fitter->setStretch(stretch);
+        fitter->setLogResults(logResults);
+        if (! planes.empty()) {
+            std::set<int> myplanes(planes.begin(), planes.end());
+            ThrowIf(*myplanes.begin() < 0, "All planes must be nonnegative");
+            fitter->setGoodPlanes(std::set<uInt>(myplanes.begin(), myplanes.end()));
+        }
+        if (! logfile.empty()) {
+            fitter->setLogfile(logfile);
+            fitter->setLogfileAppend(append);
+        }
+        if (mygoodamps.size() == 2) {
+            fitter->setGoodAmpRange(mygoodamps[0], mygoodamps[1]);
+        }
+        if (mygoodcenters.size() == 2) {
+            fitter->setGoodCenterRange(mygoodcenters[0], mygoodcenters[1]);
+        }
+        if (mygoodfwhms.size() == 2) {
+            fitter->setGoodFWHMRange(mygoodfwhms[0], mygoodfwhms[1]);
+        }
+        if (sigmaImage.get()) {
+            fitter->setSigma(sigmaImage.get());
+        }
+        else if (sigmaArray.get()) {
+            fitter->setSigma(*sigmaArray);
+        }
+        if (! outsigma.empty()) {
+            if (sigmaImage.get() || sigmaArray.get()) {
+                fitter->setOutputSigmaImage(outsigma);
+            }
+            else {
+                _log << LogIO::WARN
+                    << "outsigma specified but no sigma image "
+                    << "or array specified. outsigma will be ignored"
+                    << LogIO::POST;
+            }
+        }
+        if (plpest.size() > 0 || ltpest.size() > 0) {
+            variant::TYPE t = div.type();
+            if (div.type() == variant::BOOLVEC) {
+                fitter->setAbscissaDivisor(0);
+            }
+            else if (t == variant::INT || t == variant::DOUBLE) {
+                fitter->setAbscissaDivisor(div.toDouble());
+            }
+            else if (t == variant::STRING || t == variant::RECORD) {
+                fitter->setAbscissaDivisor(casaQuantity(div));
+            }
+            else {
+                throw AipsError("Unsupported type " + div.typeString() + " for div");
+            }
+            if (! myspxtype.empty()) {
+                if (myspxtype == "plp") {
+                    fitter->setPLPName(spxsol);
+                    fitter->setPLPErrName(spxerr);
+                }
+                else if (myspxtype == "ltp") {
+                    fitter->setLTPName(spxsol);
+                    fitter->setLTPErrName(spxerr);
+                }
+            }
+        }
+        return fromRecord(fitter->fit());
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
+        RETHROW(x);
+    }
 }
 
 bool image::fromarray(
@@ -1850,6 +2105,74 @@ record* image::torecord() {
     return new record();
 }
 
+image* image::transpose(
+    const std::string& outfile,
+    const variant& order
+) {
+    try {
+        _log << LogOrigin("image", __func__);
+
+        if (detached()) {
+            throw AipsError("No image specified to transpose");
+            return 0;
+        }
+        ThrowIf(
+            ! _imageF,
+            "This method only supports Float valued images"
+        );
+        std::unique_ptr<ImageTransposer> transposer;
+        switch(order.type()) {
+        case variant::INT:
+            transposer.reset(
+                new ImageTransposer(
+                    _imageF,
+                    order.toInt(), outfile
+                )
+            );
+            break;
+        case variant::STRING:
+            transposer.reset(
+                new ImageTransposer(
+                    _imageF,
+                    order.toString(), outfile
+                )
+            );
+            break;
+        case variant::STRINGVEC:
+            {
+                Vector<String> orderVec = toVectorString(order.toStringVec());
+                transposer.reset(
+                    new ImageTransposer(
+                        _imageF, orderVec,
+                        outfile
+                    )
+                );
+            }
+            break;
+        default:
+            _log << "Unsupported type for order parameter " << order.type()
+                << ". Supported types are a non-negative integer, a single "
+                << "string containing all digits or a list of strings which "
+                << "unambiguously match the image axis names."
+                << LogIO::EXCEPTION;
+            break;
+        }
+        vector<String> names = {"outfile", "order"};
+        vector<variant> values = {outfile, order};
+        auto msgs = _newHistory(__func__, names, values);
+        transposer->addHistory(_ORIGIN, msgs);
+        return new image(
+            transposer->transpose()
+        );
+    }
+    catch (const AipsError& x) {
+        _log << "Exception Reported: " << x.getMesg()
+           << LogIO::EXCEPTION;
+        RETHROW(x);
+    }
+    return nullptr;
+}
+
 void image::_addHistory(
     const String& method, const vector<String>& names, const vector<variant>& values
 ) {
@@ -1915,331 +2238,8 @@ void image::_reset() {
 
 
 
-::casac::record*
-image::findsources(
-	int nMax, double cutoff, const variant& region,
-	const variant& vmask, bool point, int width, bool absFind
-) {
-	try {
-		_log << _ORIGIN;
-		if (detached()) {
-			return nullptr;
-		}
-		ThrowIf(_imageC, "This application supports only real-valued images");
-		SHARED_PTR<Record> Region(_getRegion(region, False));
-		auto mask = vmask.toString();
-		if (mask == "[]") {
-			mask = "";
-		}
-		ImageSourceFinder<Float> sf(_imageF, Region.get(), mask);
-		sf.setCutoff(cutoff);
-		sf.setDoPoint(point);
-		sf.setWidth(width);
-		sf.setAbsFind(absFind);
-		auto cl = sf.findSources(nMax);
-		Record rec;
-		casa::String error;
-		ThrowIf (
-			! cl.toRecord(error, rec), "Failed to convert component list to record: " + error
-		);
-		return fromRecord(rec);
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	return nullptr;
-}
 
-record* image::fitprofile(const string& box, const variant& region,
-	const string& chans, const string& stokes, const int axis,
-	const variant& vmask, int ngauss, const int poly,
-	const string& estimates, const int minpts, const bool multifit,
-	const string& model, const string& residual, const string& amp,
-	const string& amperr, const string& center, const string& centererr,
-	const string& fwhm, const string& fwhmerr,
-	const string& integral, const string& integralerr, const bool stretch,
-	const bool logResults, const variant& pampest,
-	const variant& pcenterest, const variant& pfwhmest,
-	const variant& pfix, const variant& gmncomps,
-    const variant& gmampcon, const variant& gmcentercon,
-    const variant& gmfwhmcon, const vector<double>& gmampest,
-    const vector<double>& gmcenterest, const vector<double>& gmfwhmest,
-    const variant& gmfix, const string& spxtype, const vector<double>& spxest,
-    const vector<bool>& spxfix, const variant& div, const string& spxsol,
-    const string& spxerr, const string& logfile,
-    const bool append, const variant& pfunc,
-    const vector<double>& goodamprange,
-    const vector<double>& goodcenterrange,
-    const vector<double>& goodfwhmrange, const variant& sigma,
-    const string& outsigma, const vector<int>& planes
-) {
-	_log << LogOrigin(_class, __func__);
-	if (detached()) {
-		return 0;
-	}
-	try {
-		ThrowIf(
-			! _imageF,
-			"This method only supports Float valued images"
-		);
-		String regionName;
-		SHARED_PTR<Record> regionPtr = _getRegion(region, True);
-		if (ngauss < 0) {
-			_log << LogIO::WARN
-				<< "ngauss < 0 is meaningless. Setting ngauss = 0 "
-				<< LogIO::POST;
-			ngauss = 0;
-		}
-		vector<double> mygoodamps = toVectorDouble(goodamprange, "goodamprange");
-		if (mygoodamps.size() > 2) {
-			_log << "Too many elements in goodamprange" << LogIO::EXCEPTION;
-		}
-		vector<double> mygoodcenters = toVectorDouble(goodcenterrange, "goodcenterrange");
-		if (mygoodcenters.size() > 2) {
-			_log << "Too many elements in goodcenterrange" << LogIO::EXCEPTION;
-		}
-		vector<double> mygoodfwhms = toVectorDouble(goodfwhmrange, "goodcenterrange");
-		if (mygoodfwhms.size() > 2) {
-			_log << "Too many elements in goodfwhmrange" << LogIO::EXCEPTION;
-		}
-		String mask = vmask.toString();
-		if (mask == "[]") {
-			mask = "";
-		}
-		std::unique_ptr<Array<Float> > sigmaArray;
-		std::unique_ptr<PagedImage<Float> > sigmaImage;
-		if (sigma.type() == variant::STRING) {
-			String sigmaName = sigma.toString();
-			if (! sigmaName.empty()) {
-				sigmaImage.reset(new PagedImage<Float>(sigmaName));
-			}
-		}
-		else if (
-			sigma.type() == variant::DOUBLEVEC
-			|| sigma.type() == variant::INTVEC
-		) {
-			sigmaArray.reset(new Array<Float>());
-			vector<double> sigmaVector = sigma.getDoubleVec();
-			Vector<Int> shape = sigma.arrayshape();
-			sigmaArray->resize(IPosition(shape));
-			convertArray(
-				*sigmaArray,
-				Vector<Double>(sigmaVector).reform(IPosition(shape))
-			);
-		}
-		else if (sigma.type() == variant::BOOLVEC) {
-			// nothing to do
-		}
-		else {
-			_log << LogIO::SEVERE
-				<< "Unrecognized type for sigma. Use either a string (image name) or a numpy array"
-				<< LogIO::POST;
-			return 0;
-		}
-		String myspxtype;
-		vector<double> plpest, ltpest;
-		vector<bool> plpfix, ltpfix;
-		if (! spxtype.empty()) {
-			myspxtype = String(spxtype);
-			myspxtype.downcase();
-			if (myspxtype == "plp") {
-				plpest = spxest;
-				plpfix = spxfix;
-			}
-			else if (myspxtype == "ltp") {
-				ltpest = spxest;
-				ltpfix = spxfix;
-			}
-			else {
-				ThrowCc("Unsupported value for spxtype");
-			}
-		}
-		SpectralList spectralList = SpectralListFactory::create(
-			_log, pampest, pcenterest, pfwhmest, pfix, gmncomps,
-			gmampcon, gmcentercon, gmfwhmcon, gmampest,
-			gmcenterest, gmfwhmest, gmfix, pfunc, plpest, plpfix,
-			ltpest, ltpfix
-		);
-		ThrowIf(
-			! estimates.empty() && spectralList.nelements() > 0,
-			"You cannot specify both an "
-			"estimates file and set estimates "
-			"directly. You may only do one or "
-			"the either (or neither in which "
-			"case you must specify ngauss and/or poly)"
-		);
-		SHARED_PTR<ImageProfileFitter> fitter;
-		if (spectralList.nelements() > 0) {
-			fitter.reset(new ImageProfileFitter(
-				_imageF, regionName, regionPtr.get(),
-				box, chans, stokes, mask, axis,
-				spectralList
-			));
-		}
-		else if (! estimates.empty()) {
-			fitter.reset(new ImageProfileFitter(
-				_imageF, regionName, regionPtr.get(),
-				box, chans, stokes, mask, axis,
-				estimates
-			));
-		}
-		else {
-			fitter.reset(new ImageProfileFitter(
-				_imageF, regionName, regionPtr.get(),
-				box, chans, stokes, mask, axis,
-				ngauss
-			));
-		}
-		fitter->setDoMultiFit(multifit);
-		if (poly >= 0) {
-			fitter->setPolyOrder(poly);
-		}
-		fitter->setModel(model);
-		fitter->setResidual(residual);
-		fitter->setAmpName(amp);
-		fitter->setAmpErrName(amperr);
-		fitter->setCenterName(center);
-		fitter->setCenterErrName(centererr);
-		fitter->setFWHMName(fwhm);
-		fitter->setFWHMErrName(fwhmerr);
-		fitter->setIntegralName(integral);
-		fitter->setIntegralErrName(integralerr);
-		fitter->setMinGoodPoints(minpts > 0 ? minpts : 0);
-		fitter->setStretch(stretch);
-		fitter->setLogResults(logResults);
-		if (! planes.empty()) {
-			std::set<int> myplanes(planes.begin(), planes.end());
-			ThrowIf(*myplanes.begin() < 0, "All planes must be nonnegative");
-			fitter->setGoodPlanes(std::set<uInt>(myplanes.begin(), myplanes.end()));
-		}
-		if (! logfile.empty()) {
-			fitter->setLogfile(logfile);
-			fitter->setLogfileAppend(append);
-		}
-		if (mygoodamps.size() == 2) {
-			fitter->setGoodAmpRange(mygoodamps[0], mygoodamps[1]);
-		}
-		if (mygoodcenters.size() == 2) {
-			fitter->setGoodCenterRange(mygoodcenters[0], mygoodcenters[1]);
-		}
-		if (mygoodfwhms.size() == 2) {
-			fitter->setGoodFWHMRange(mygoodfwhms[0], mygoodfwhms[1]);
-		}
-		if (sigmaImage.get()) {
-			fitter->setSigma(sigmaImage.get());
-		}
-		else if (sigmaArray.get()) {
-			fitter->setSigma(*sigmaArray);
-		}
-		if (! outsigma.empty()) {
-			if (sigmaImage.get() || sigmaArray.get()) {
-				fitter->setOutputSigmaImage(outsigma);
-			}
-			else {
-				_log << LogIO::WARN
-					<< "outsigma specified but no sigma image "
-					<< "or array specified. outsigma will be ignored"
-					<< LogIO::POST;
-			}
-		}
-		if (plpest.size() > 0 || ltpest.size() > 0) {
-			variant::TYPE t = div.type();
-			if (div.type() == variant::BOOLVEC) {
-				fitter->setAbscissaDivisor(0);
-			}
-			else if (t == variant::INT || t == variant::DOUBLE) {
-				fitter->setAbscissaDivisor(div.toDouble());
-			}
-			else if (t == variant::STRING || t == variant::RECORD) {
-				fitter->setAbscissaDivisor(casaQuantity(div));
-			}
-			else {
-				throw AipsError("Unsupported type " + div.typeString() + " for div");
-			}
-			if (! myspxtype.empty()) {
-				if (myspxtype == "plp") {
-					fitter->setPLPName(spxsol);
-					fitter->setPLPErrName(spxerr);
-				}
-				else if (myspxtype == "ltp") {
-					fitter->setLTPName(spxsol);
-					fitter->setLTPErrName(spxerr);
-				}
-			}
-		}
-		return fromRecord(fitter->fit());
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-			<< LogIO::POST;
-		RETHROW(x);
-	}
-}
 
-image* image::transpose(
-	const std::string& outfile,
-	const variant& order
-) {
-	try {
-		_log << LogOrigin("image", __func__);
-
-		if (detached()) {
-			throw AipsError("No image specified to transpose");
-			return 0;
-		}
-		ThrowIf(
-			! _imageF,
-			"This method only supports Float valued images"
-		);
-		std::unique_ptr<ImageTransposer> transposer;
-		switch(order.type()) {
-		case variant::INT:
-			transposer.reset(
-				new ImageTransposer(
-					_imageF,
-					order.toInt(), outfile
-				)
-			);
-			break;
-		case variant::STRING:
-			transposer.reset(
-				new ImageTransposer(
-					_imageF,
-					order.toString(), outfile
-				)
-			);
-			break;
-		case variant::STRINGVEC:
-			{
-				Vector<String> orderVec = toVectorString(order.toStringVec());
-				transposer.reset(
-					new ImageTransposer(
-						_imageF, orderVec,
-						outfile
-					)
-				);
-			}
-			break;
-		default:
-			_log << "Unsupported type for order parameter " << order.type()
-					<< ". Supported types are a non-negative integer, a single "
-					<< "string containing all digits or a list of strings which "
-					<< "unambiguously match the image axis names."
-					<< LogIO::EXCEPTION;
-		}
-		
-		image *rstat =new image(
-			transposer->transpose()
-		);
-		if(!rstat)
-			throw AipsError("Unable to transpose image");
-		return rstat;
-	} catch (const AipsError& x) {
-		RETHROW(x);
-	}
-}
 
 ::casac::record* image::fitcomponents(
 		const string& box, const variant& region, const variant& chans,

@@ -208,6 +208,16 @@ class imtrans_test(unittest.TestCase):
         myia.done()
         shutil.rmtree(cas_2364im)
 
+    def test_history(self):
+        """Test history records are written"""
+        myia = iatool()
+        myia.fromshape("", [10,10,4,10])
+        kk = myia.transpose("","3210")
+        myia.done()
+        msgs = kk.history()
+        kk.done()
+        self.assertTrue("ia.transpose" in msgs[-2])    
+        self.assertTrue("ia.transpose" in msgs[-1])
 
 def suite():
     return [imtrans_test]
