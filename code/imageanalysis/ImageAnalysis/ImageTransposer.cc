@@ -140,15 +140,7 @@ SPIIF ImageTransposer::transpose() const {
 			ArrayLattice<Bool>(reorderArray(maskCopy, _order))
 		);
 	}
-	ImageUtilities::copyMiscellaneous(*output, *_getImage());
-	if (! _getOutname().empty()) {
-		Record empty;
-		output = SubImageFactory<Float>::createImage(
-			*output, _getOutname(), empty, "",
-			False, False, True, False
-		);
-	}
-	return output;
+	return this->_prepareOutputImage(*output);
 }
 
 ImageTransposer::~ImageTransposer() {}
