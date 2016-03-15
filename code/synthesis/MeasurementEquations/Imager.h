@@ -263,10 +263,11 @@ class Imager
   // Set the single dish processing options
   Bool setsdoptions(const Float scale, const Float weight, 
 		    const Int convsupport=-1, String pointingColToUse="DIRECTION",
-                    const Quantity truncate=Quantity(),
-                    const Quantity gwidth=Quantity(),
-                    const Quantity jwidth=Quantity(),
-		    const Float minweight=0.);
+		    const Quantity truncate=Quantity(),
+		    const Quantity gwidth=Quantity(),
+		    const Quantity jwidth=Quantity(),
+		    const Float minweight=0.,
+		    const Bool clipminmax=False);
 
   // Set the voltage pattern
   Bool setvp(const Bool dovp,
@@ -727,6 +728,8 @@ protected:
   Quantity qjwidth_p;
 
   Float minWeight_p;
+
+  Bool clipminmax_p;
 
   // special mf control parms, etc
   Float cyclefactor_p;

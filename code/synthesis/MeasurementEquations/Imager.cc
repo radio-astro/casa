@@ -243,6 +243,7 @@ traceEvent(1,"Entering imager::defaults",25);
   telescope_p="";
   gridfunction_p="SF";
   minWeight_p=0.;
+  clipminmax_p=False;
   doMultiFields_p=False;
   doWideBand_p=False;
   multiFields_p=False;
@@ -1952,9 +1953,9 @@ Bool Imager::setoptions(const String& ftmachine, const Long cache, const Int til
 
 Bool Imager::setsdoptions(const Float scale, const Float weight, 
 			  const Int convsupport, String pointCol,
-                          const Quantity truncate, 
-                          const Quantity gwidth, const Quantity jwidth,
-			  const Float minweight)
+			  const Quantity truncate,
+			  const Quantity gwidth, const Quantity jwidth,
+			  const Float minweight, const Bool clipminmax)
 {
 
 
@@ -1982,6 +1983,8 @@ Bool Imager::setsdoptions(const Float scale, const Float weight,
   qgwidth_p=gwidth;
   qjwidth_p=jwidth;
   minWeight_p = minweight;
+  clipminmax_p = clipminmax;
+
   // Destroy the FTMachine
   if(ft_p) {delete ft_p; ft_p=0;}
   if(gvp_p) {delete gvp_p; gvp_p=0;}

@@ -141,14 +141,16 @@ public:
 	 String convType="BOX", Int userSupport=-1, Bool useImagingWeight=False);
   SDGrid(MPosition& ml, SkyJones& sj, Int cachesize,
 	 Int tilesize, String convType="BOX", Int userSupport=-1,
-	 Float minweight=0., Bool useImagingWeight=False);
+	 Float minweight=0., Bool clipminmax=False, Bool useImagingWeight=False);
   SDGrid(Int cachesize, Int tilesize,
 	 String convType="BOX", Int userSupport=-1, Bool useImagingWeight=False);
   SDGrid(MPosition& ml, Int cachesize, Int tilesize,
-	 String convType="BOX", Int userSupport=-1, Float minweight=0., Bool useImagingWeight=False);
+	 String convType="BOX", Int userSupport=-1, Float minweight=0., Bool clipminmax=False,
+	 Bool useImagingWeight=False);
   SDGrid(MPosition& ml, Int cachesize, Int tilesize,
 	 String convType="TGAUSS", Float truncate=-1.0, 
-         Float gwidth=0.0, Float jwidth=0.0, Float minweight=0., Bool useImagingWeight=False);
+	 Float gwidth=0.0, Float jwidth=0.0, Float minweight=0., Bool clipminmax=False,
+	 Bool useImagingWeight=False);
   // </group>
 
   // Copy constructor
@@ -290,7 +292,17 @@ private:
 
   Bool isSplineInterpolationReady;
   SDPosInterpolator* interpolator;
-  
+
+  // for minmax clipping
+  Bool clipminmax_;
+  Array<Complex> gmin_;
+  Array<Complex> gmax_;
+  Array<Float> wmin_;
+  Array<Float> wmax_;
+  Array<Float> cmin_;
+  Array<Float> cmax_;
+  Array<Int> npoints_;
+
   Int getIndex(const ROMSPointingColumns& mspc, const Double& time,
 	       const Double& interval=-1.0, const Int& antid=-1);
 

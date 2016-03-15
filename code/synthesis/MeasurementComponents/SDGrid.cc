@@ -88,20 +88,20 @@ SDGrid::SDGrid(SkyJones& sj, Int icachesize, Int itilesize,
     pointingToImage(0), userSetSupport_p(userSupport),
     truncate_p(-1.0), gwidth_p(0.0), jwidth_p(0.0),
     minWeight_p(0.), useImagingWeight_p(useImagingWeight), lastAntID_p(-1), msId_p(-1),
-    isSplineInterpolationReady(False), interpolator(0)
+    isSplineInterpolationReady(False), interpolator(0), clipminmax_(False)
 {
   lastIndex_p=0;
 }
 
 SDGrid::SDGrid(MPosition& mLocation, SkyJones& sj, Int icachesize, Int itilesize,
-	       String iconvType, Int userSupport, Float minweight, Bool useImagingWeight)
+	       String iconvType, Int userSupport, Float minweight, Bool clipminmax, Bool useImagingWeight)
   : FTMachine(),  sj_p(&sj), imageCache(0), wImageCache(0),
   cachesize(icachesize), tilesize(itilesize),
   isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
     pointingToImage(0), userSetSupport_p(userSupport),
     truncate_p(-1.0), gwidth_p(0.0),  jwidth_p(0.0),
     minWeight_p(minweight), useImagingWeight_p(useImagingWeight), lastAntID_p(-1), msId_p(-1),
-    isSplineInterpolationReady(False), interpolator(0)
+    isSplineInterpolationReady(False), interpolator(0), clipminmax_(clipminmax)
 {
   mLocation_p=mLocation;
   lastIndex_p=0;
@@ -115,13 +115,13 @@ SDGrid::SDGrid(Int icachesize, Int itilesize,
     pointingToImage(0), userSetSupport_p(userSupport),
     truncate_p(-1.0), gwidth_p(0.0), jwidth_p(0.0),
     minWeight_p(0.), useImagingWeight_p(useImagingWeight), lastAntID_p(-1), msId_p(-1),
-    isSplineInterpolationReady(False), interpolator(0)
+    isSplineInterpolationReady(False), interpolator(0), clipminmax_(False)
 {
   lastIndex_p=0;
 }
 
 SDGrid::SDGrid(MPosition &mLocation, Int icachesize, Int itilesize,
-	       String iconvType, Int userSupport, Float minweight, Bool useImagingWeight)
+	       String iconvType, Int userSupport, Float minweight, Bool clipminmax, Bool useImagingWeight)
   : FTMachine(), sj_p(0), imageCache(0), wImageCache(0),
   cachesize(icachesize), tilesize(itilesize),
   isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
@@ -129,7 +129,7 @@ SDGrid::SDGrid(MPosition &mLocation, Int icachesize, Int itilesize,
     truncate_p(-1.0), gwidth_p(0.0), jwidth_p(0.0),
     minWeight_p(minweight), useImagingWeight_p(useImagingWeight), lastAntID_p(-1),
     msId_p(-1),
-    isSplineInterpolationReady(False), interpolator(0)
+    isSplineInterpolationReady(False), interpolator(0), clipminmax_(clipminmax)
 {
   mLocation_p=mLocation;
   lastIndex_p=0;
@@ -137,14 +137,14 @@ SDGrid::SDGrid(MPosition &mLocation, Int icachesize, Int itilesize,
 
 SDGrid::SDGrid(MPosition &mLocation, Int icachesize, Int itilesize,
 	       String iconvType, Float truncate, Float gwidth, Float jwidth,
-	       Float minweight, Bool useImagingWeight)
+	       Float minweight, Bool clipminmax, Bool useImagingWeight)
   : FTMachine(), sj_p(0), imageCache(0), wImageCache(0),
   cachesize(icachesize), tilesize(itilesize),
   isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
     pointingToImage(0), userSetSupport_p(-1),
     truncate_p(truncate), gwidth_p(gwidth), jwidth_p(jwidth),
     minWeight_p(minweight), useImagingWeight_p(useImagingWeight), lastAntID_p(-1), msId_p(-1),
-    isSplineInterpolationReady(False), interpolator(0)
+    isSplineInterpolationReady(False), interpolator(0), clipminmax_(clipminmax)
 {
   mLocation_p=mLocation;
   lastIndex_p=0;
@@ -188,6 +188,7 @@ SDGrid& SDGrid::operator=(const SDGrid& other)
     lastAntID_p=-1;
     msId_p=-1;
     useImagingWeight_p=other.useImagingWeight_p;
+    clipminmax_=other.clipminmax_;
   };
   return *this;
 };
@@ -694,6 +695,8 @@ void SDGrid::initializeToSky(ImageInterface<Complex>& iimage,
   else*/
   {
     IPosition gridShape(4, nx, ny, npol, nchan);
+    logIO() << LogOrigin("SDGrid", "initializeToSky", WHERE) << LogIO::DEBUGGING
+        << "gridShape = " << gridShape << LogIO::POST;
     griddedData.resize(gridShape);
     griddedData=Complex(0.0);
     if(arrayLattice) delete arrayLattice; arrayLattice=0;
@@ -704,6 +707,24 @@ void SDGrid::initializeToSky(ImageInterface<Complex>& iimage,
     if(wArrayLattice) delete wArrayLattice; wArrayLattice=0;
     wArrayLattice = new ArrayLattice<Float>(wGriddedData);
     wLattice=wArrayLattice;
+
+    // clipping related stuff
+    if (clipminmax_) {
+      gmin_.resize(gridShape);
+      gmin_ = Complex(FLT_MAX);
+      gmax_.resize(gridShape);
+      gmax_ = Complex(-FLT_MAX);
+      wmin_.resize(gridShape);
+      wmin_ = 0.0f;
+      wmax_.resize(gridShape);
+      wmax_ = 0.0f;
+      cmin_.resize(gridShape);
+      cmin_ = 0.0f;
+      cmax_.resize(gridShape);
+      cmax_ = 0.0f;
+      npoints_.resize(gridShape.getFirst(3));
+      npoints_ = 0;
+    }
   }
   AlwaysAssert(lattice, AipsError);
   AlwaysAssert(wLattice, AipsError);
@@ -751,6 +772,7 @@ Array<Float>* SDGrid::getWDataPointer(const IPosition& centerLoc2D,
 #define NEED_UNDERSCORES
 #if defined(NEED_UNDERSCORES)
 #define ggridsd ggridsd_
+#define ggridsd2 ggridsd2_
 #define dgridsd dgridsd_
 #endif
 
@@ -777,6 +799,35 @@ extern "C" {
 		Int*,
 		Int*,
 		Double*);
+   void ggridsd2(Double*,
+                 const Complex*,
+                 Int*,
+                 Int*,
+                 Int*,
+                 const Int*,
+                 const Int*,
+                 const Float*,
+                 Int*,
+                 Int*,
+                 Complex*,
+                 Float*,
+                 Int*,
+                 Complex*,
+                 Float*,
+                 Float*,
+                 Complex*,
+                 Float*,
+                 Float*,
+                 Int*,
+                 Int*,
+                 Int *,
+                 Int *,
+                 Int*,
+                 Int*,
+                 Float*,
+                 Int*,
+                 Int*,
+                 Double*);
    void dgridsd(Double*,
 		Complex*,
                 Int*,
@@ -935,6 +986,10 @@ void SDGrid::put(const VisBuffer& vb, Int row, Bool dopsf,
       Complex * datStor=griddedData.getStorage(datCopy);
       Float * wgtStor=wGriddedData.getStorage(wgtCopy);
 
+      Bool call_ggridsd = !clipminmax_ || dopsf;
+
+      if (call_ggridsd) {
+
       ggridsd(xyPositions.getStorage(del),
 	      datStorage,
 	      &s[0],
@@ -957,6 +1012,63 @@ void SDGrid::put(const VisBuffer& vb, Int row, Bool dopsf,
 	      chanMap.getStorage(del),
 	      polMap.getStorage(del),
 	      sumWeight.getStorage(del));
+
+      } else {
+        Bool gminCopy;
+        Complex *gminStor = gmin_.getStorage(gminCopy);
+        Bool gmaxCopy;
+        Complex *gmaxStor = gmax_.getStorage(gmaxCopy);
+        Bool wminCopy;
+        Float *wminStor = wmin_.getStorage(wminCopy);
+        Bool wmaxCopy;
+        Float *wmaxStor = wmax_.getStorage(wmaxCopy);
+        Bool cminCopy;
+        Float *cminStor = cmin_.getStorage(cminCopy);
+        Bool cmaxCopy;
+        Float *cmaxStor = cmax_.getStorage(cmaxCopy);
+        Bool npCopy;
+        Int *npStor = npoints_.getStorage(npCopy);
+        
+        ggridsd2(xyPositions.getStorage(del),
+          datStorage,
+          &s[0],
+          &s[1],
+          &idopsf,
+          flags.getStorage(del),
+          rowFlags.getStorage(del),
+          wgtStorage,
+          &s[2],
+          &row,
+          datStor,
+          wgtStor,
+          npStor,
+          gminStor,
+          wminStor,
+          cminStor,
+          gmaxStor,
+          wmaxStor,
+          cmaxStor,
+          &nx,
+          &ny,
+          &npol,
+          &nchan,
+          &convSupport,
+          &convSampling,
+          convFunc.getStorage(del),
+          chanMap.getStorage(del),
+          polMap.getStorage(del),
+          sumWeight.getStorage(del));
+
+        gmin_.putStorage(gminStor, gminCopy);
+        gmax_.putStorage(gmaxStor, gmaxCopy);
+        wmin_.putStorage(wminStor, wminCopy);
+        wmax_.putStorage(wmaxStor, wmaxCopy);
+        cmin_.putStorage(cminStor, cminCopy);
+        cmax_.putStorage(cmaxStor, cmaxCopy);
+        npoints_.putStorage(npStor, npCopy);
+
+        os << "Done ggridsd2" << LogIO::POST;
+      }
       griddedData.putStorage(datStor, datCopy);
       wGriddedData.putStorage(wgtStor, wgtCopy);
     }
@@ -1185,6 +1297,14 @@ void SDGrid::get(VisBuffer& vb, Int row)
       vi.origin();
       initializeToSky(*imCopy,wgtcopy,vb);
    
+
+      // for minmax clipping
+      logIO() << LogOrigin("SDGrid", "makeImage", WHERE) << LogIO::DEBUGGING
+          << "doclip_ = " << (clipminmax_ ? "TRUE" : "FALSE") << " (" << clipminmax_ << ")" << LogIO::POST;
+      if (clipminmax_) {
+        logIO() << LogOrigin("SDGRID", "makeImage", WHERE)
+             << LogIO::DEBUGGING << "use ggridsd2 for imaging" << LogIO::POST;
+      }
 
       // Loop over the visibilities, putting VisBuffers
       for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
