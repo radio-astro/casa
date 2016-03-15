@@ -5,7 +5,7 @@ from casac import casac
 
 mysdms, mycb = gentools(['sdms', 'cb'])
 
-def importasap(infile=None, outputvis=None, flagbackup=None, overwrite=None):
+def importasap(infile=None, outputvis=None, flagbackup=None, overwrite=None, parallel=None):
     """
     """
     casalog.origin('importasap')
@@ -29,7 +29,7 @@ def importasap(infile=None, outputvis=None, flagbackup=None, overwrite=None):
             raise RuntimeError('%s is not a valid Scantable.'%(infile))
 
         # import
-        status = mysdms.importasap(infile, outputvis)
+        status = mysdms.importasap(infile, outputvis, parallel)
 
         if status == True:
             # flagversions file must be deleted 

@@ -464,12 +464,12 @@ singledishms::smooth(string const &type, float const width,
 }
 
 bool
-singledishms::importasap(string const &infile, string const &outfile)
+singledishms::importasap(string const &infile, string const &outfile, bool const parallel)
 {
     bool rstat(false);
     *itsLog << _ORIGIN;
     try {
-      rstat = SingleDishMS::importAsap(infile, outfile);
+      rstat = SingleDishMS::importAsap(infile, outfile, parallel);
     } catch  (AipsError x) {
       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
           << LogIO::POST;

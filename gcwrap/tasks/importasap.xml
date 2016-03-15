@@ -32,6 +32,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <value>False</value>
     </param>
 
+    <param type="bool" name="parallel">
+	    <description>Turn on parallel execution</description>
+	    <value>False</value>
+    </param>
+
     </input>
 
   <returns type="bool"/>
@@ -49,6 +54,9 @@ flagbackup   -- Backup original flags in &gt;ms&lt;.flagversions
 
 overwrite   -- overwrite an existing MS
                 default: False (do not overwrite)
+                
+parallel    -- Turn on parallel execution
+                default: False (serial execution)
   </example>
 
 </task>

@@ -740,6 +740,11 @@ sdms.set_selection(field="M100", spw="3,5")
       <description>The name of output MeasurementSet</description>
       <value></value>
     </param>
+    
+    <param type="bool" name="parallel">
+      <description>Turn on parallel execution</description>
+      <value>false</value>
+    </param>
   </input> 
   
   <returns type="bool"/>
