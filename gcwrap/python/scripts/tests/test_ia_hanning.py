@@ -236,8 +236,16 @@ class ia_hanning_test(unittest.TestCase):
                             han.done()
         myia.done()
             
-        
-        
+    def test_history(self):
+        """Test history records are written"""
+        myia = iatool()
+        myia.fromshape("",[20,20,20])
+        bb = myia.hanning()
+        myia.done()
+        msgs = bb.history()
+        bb.done()
+        self.assertTrue("ia.hanning" in msgs[-4])    
+        self.assertTrue("ia.hanning" in msgs[-3])        
     
 def suite():
     return [ia_hanning_test]

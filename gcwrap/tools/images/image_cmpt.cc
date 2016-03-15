@@ -2175,6 +2175,280 @@ template<class T> Record image::_getchunk(
     return pvm.get();
 }
 
+record* image::getprofile(
+    int axis, const string& function, const variant& region,
+    const string& mask, const string& unit, bool stretch,
+    const string& spectype, const variant& restfreq,
+    const string& frame, const string& logfile
+) {
+    try {
+        _log << _ORIGIN;
+        ThrowIf(
+            detached(), "No image attached to tool"
+        );
+        ThrowIf(axis<0, "Axis must be greater than 0");
+        SHARED_PTR<Record> myregion(_getRegion(region, False));
+        SHARED_PTR<casa::Quantity> rfreq;
+        if (restfreq.type() != variant::BOOLVEC) {
+            String rf = restfreq.toString();
+            rf.trim();
+            if (! rf.empty()) {
+                rfreq.reset(
+                    new casa::Quantity(_casaQuantityFromVar(variant(restfreq)))
+                );
+            }
+        }
+        String regionName = region.type() == variant::STRING
+            ? region.toString() : "";
+        String myframe = frame;
+        myframe.trim();
+        if (_imageF) {
+            SPCIIF myimage = _imageF;
+            return fromRecord(
+                _getprofile(
+                    myimage, axis, function, unit,
+                    *myregion, mask, stretch,
+                    spectype, rfreq.get(), myframe,
+                    logfile, regionName
+                )
+            );
+        }
+        else {
+            SPCIIC myimage = _imageC;
+            return fromRecord(
+                _getprofile(
+                    myimage, axis, function, unit,
+                    *myregion, mask, stretch,
+                    spectype, rfreq.get(), myframe,
+                    logfile, regionName
+                )
+            );
+        }
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
+        RETHROW(x);
+    }
+    return nullptr;
+}
+
+template <class T> Record image::_getprofile(
+    SPCIIT myimage, int axis, const String& function,
+    const String& unit, const Record& region, const String& mask,
+    bool stretch, const String& spectype,
+    const casa::Quantity* const &restfreq, const String& frame,
+    const String& logfile, const String& regionName
+) {
+    PixelValueManipulatorData::SpectralType type = PixelValueManipulatorData::spectralType(spectype);
+    PixelValueManipulator<T> pvm(myimage, &region, mask);
+    pvm.setLogfile(logfile);
+    pvm.setRegionName(regionName);
+    pvm.setStretch(stretch);
+    Record x = pvm.getProfile(axis, function, unit, type, restfreq, frame);
+    return x;
+}
+
+variant* image::getregion(
+    const variant& region, const std::vector<int>& axes,
+    const ::casac::variant& mask, bool list, bool dropdeg,
+    bool getmask, bool stretch
+) {
+    try {
+        _log << _ORIGIN;
+        if (detached()) {
+            return 0;
+        }
+        SHARED_PTR<Record> Region(_getRegion(region, False));
+        auto Mask = _getMask(mask);
+        Vector<Int> iaxes(axes);
+        // if default value change it to empty vector
+        if (iaxes.size() == 1 && iaxes[0] < 0) {
+            iaxes.resize();
+        }
+        Record ret;
+        if (_imageF) {
+            PixelValueManipulator<Float> pvm(
+                _imageF, Region.get(), Mask
+            );
+            pvm.setAxes(IPosition(iaxes));
+            pvm.setVerbosity(
+                list ? ImageTask<Float>::DEAFENING : ImageTask<Float>::QUIET
+            );
+            pvm.setDropDegen(dropdeg);
+            pvm.setStretch(stretch);
+            ret = pvm.get();
+        }
+        else {
+            PixelValueManipulator<Complex> pvm(
+                _imageC, Region.get(), Mask
+            );
+            pvm.setAxes(IPosition(iaxes));
+            pvm.setVerbosity(
+                list ? ImageTask<Complex>::DEAFENING : ImageTask<Complex>::QUIET
+            );
+            pvm.setDropDegen(dropdeg);
+            pvm.setStretch(stretch);
+            ret = pvm.get();
+        }
+        Array<Bool> pixelmask = ret.asArrayBool("mask");
+        std::vector<int> s_shape = pixelmask.shape().asStdVector();
+        if (getmask) {
+            pixelmask.shape().asVector().tovector(s_shape);
+            std::vector<bool> s_pixelmask(pixelmask.begin(), pixelmask.end());
+            return new ::casac::variant(s_pixelmask, s_shape);
+        }
+        else if (_imageF) {
+            Array<Float> pixels = ret.asArrayFloat("values");
+            std::vector<double> d_pixels(pixels.begin(), pixels.end());
+            return new ::casac::variant(d_pixels, s_shape);
+        }
+        else {
+            Array<Complex> pixels = ret.asArrayComplex("values");
+            std::vector<std::complex<double> > d_pixels(pixels.begin(), pixels.end());
+            return new ::casac::variant(d_pixels, s_shape);
+        }
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return nullptr;
+}
+
+record* image::getslice(
+    const std::vector<double>& x, const std::vector<double>& y,
+    const std::vector<int>& axes, const std::vector<int>& coord,
+    int npts, const std::string& method
+) {
+    try {
+        _log << _ORIGIN;
+        if (detached()) {
+            return nullptr;
+        }
+        ThrowIf(
+            _imageC,
+            "This method only supports Float valued images"
+        );
+        // handle default coord
+        vector<int> ncoord(coord);
+        if (ncoord.size() == 1 && ncoord[0] == -1) {
+            ncoord.assign(_imageF->ndim(), 0);
+        }
+        unique_ptr<Record> outRec;
+        if (_imageF) {
+            outRec.reset(
+                PixelValueManipulator<Float>::getSlice(
+                    _imageF, Vector<Double>(x), Vector<Double>(y),
+                    Vector<Int> (axes), Vector<Int> (ncoord),
+                    npts, method
+                )
+            );
+        }
+        return fromRecord(*outRec);
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return nullptr;
+}
+
+image* image::hanning(
+    const string& outfile, const variant& region,
+    const variant& vmask, int axis, bool drop,
+    bool overwrite, bool /* async */, bool stretch,
+    const string& dmethod
+) {
+    LogOrigin lor(_class, __func__);
+    _log << lor;
+    if (detached()) {
+        throw AipsError("Unable to create image");
+    }
+    try {
+        auto myregion = _getRegion(
+            region, True
+        );
+        auto mask = _getMask(vmask);
+        if (axis < 0) {
+            const CoordinateSystem csys = _imageF
+                ? _imageF->coordinates()
+                : _imageC->coordinates();
+            ThrowIf(
+                ! csys.hasSpectralAxis(),
+                "Axis not specified and image has no spectral coordinate"
+            );
+            axis = csys.spectralAxisNumber(False);
+        }
+        ImageDecimatorData::Function dFunction = ImageDecimatorData::NFUNCS;
+        if (drop) {
+            String mymethod = dmethod;
+            mymethod.downcase();
+            if (mymethod.startsWith("m")) {
+                dFunction = ImageDecimatorData::MEAN;
+            }
+            else if (mymethod.startsWith("c")) {
+                dFunction = ImageDecimatorData::COPY;
+            }
+            else {
+                ThrowCc(
+                    "Value of dmethod must be "
+                    "either 'm'(ean) or 'c'(opy)"
+                );
+            }
+        }
+        vector<variant> values { outfile, region, vmask, axis, drop, overwrite, stretch, dmethod };
+        if (_imageF) {
+            SPCIIF image = _imageF;
+            return _hanning(
+                image, myregion, mask, outfile,
+                overwrite, stretch, axis, drop,
+                dFunction, values
+            );
+        }
+        else {
+            SPCIIC image = _imageC;
+            return _hanning(
+                image, myregion, mask, outfile,
+                overwrite, stretch, axis, drop,
+                dFunction, values
+            );
+        }
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
+        RETHROW(x);
+    }
+}
+
+template <class T> image* image::_hanning(
+    SPCIIT myimage, SHARED_PTR<const Record> region,
+    const String& mask, const string& outfile, bool overwrite,
+    bool stretch, int axis, bool drop,
+    ImageDecimatorData::Function dFunction,
+    const vector<variant> values
+) {
+    ImageHanningSmoother<T> smoother(
+        myimage, region.get(), mask, outfile, overwrite
+    );
+    smoother.setAxis(axis);
+    smoother.setDecimate(drop);
+    smoother.setStretch(stretch);
+    if (drop) {
+        smoother.setDecimationFunction(dFunction);
+    }
+    vector<String> names {
+        "outfile", "region", "mask", "axis",
+        "drop", "overwrite", "stretch", "dmethod"
+    };
+    auto msgs = _newHistory("hanning", names, values);
+    smoother.addHistory(_ORIGIN, msgs);
+    return new image(smoother.smooth());
+}
+
 image* image::imagecalc(
     const string& outfile, const string& pixels,
     bool overwrite, const string& imagemd
@@ -2609,301 +2883,6 @@ void image::_reset() {
 
 
 
-
-record* image::getprofile(
-	int axis, const string& function, const variant& region,
-	const string& mask, const string& unit, bool stretch,
-	const string& spectype, const variant& restfreq,
-	const string& frame, const string& logfile
-) {
-	try {
-		_log << _ORIGIN;
-		ThrowIf(
-			detached(), "No image attached to tool"
-		);
-		ThrowIf(axis<0, "Axis must be greater than 0");
-		SHARED_PTR<Record> myregion(_getRegion(region, False));
-		SHARED_PTR<casa::Quantity> rfreq;
-		if (restfreq.type() != variant::BOOLVEC) {
-			String rf = restfreq.toString();
-			rf.trim();
-			if (! rf.empty()) {
-				rfreq.reset(
-					new casa::Quantity(_casaQuantityFromVar(variant(restfreq)))
-				);
-			}
-		}
-		String regionName = region.type() == variant::STRING
-			? region.toString() : "";
-		String myframe = frame;
-		myframe.trim();
-		if (_imageF) {
-			SPCIIF myimage = _imageF;
-			return fromRecord(
-				_getprofile(
-					myimage, axis, function, unit,
-					*myregion, mask, stretch,
-					spectype, rfreq.get(), myframe,
-					logfile, regionName
-				)
-			);
-		}
-		else {
-			SPCIIC myimage = _imageC;
-			return fromRecord(
-				_getprofile(
-					myimage, axis, function, unit,
-					*myregion, mask, stretch,
-					spectype, rfreq.get(), myframe,
-					logfile, regionName
-				)
-			);
-		}
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-			<< LogIO::POST;
-		RETHROW(x);
-	}
-	return nullptr;
-}
-template <class T> Record image::_getprofile(
-	SPCIIT myimage, int axis, const String& function,
-	const String& unit, const Record& region, const String& mask,
-	bool stretch, const String& spectype,
-	const casa::Quantity* const &restfreq, const String& frame,
-	const String& logfile, const String& regionName
-) {
-	PixelValueManipulatorData::SpectralType type = PixelValueManipulatorData::spectralType(spectype);
-	PixelValueManipulator<T> pvm(myimage, &region, mask);
-	pvm.setLogfile(logfile);
-	pvm.setRegionName(regionName);
-	pvm.setStretch(stretch);
-	Record x = pvm.getProfile(axis, function, unit, type, restfreq, frame);
-	return x;
-}
-
-variant* image::getregion(
-	const variant& region, const std::vector<int>& axes,
-	const ::casac::variant& mask, bool list, bool dropdeg,
-	bool getmask, bool stretch
-) {
-	try {
-		_log << _ORIGIN;
-		if (detached()) {
-			return 0;
-		}
-		SHARED_PTR<Record> Region(_getRegion(region, False));
-		String Mask;
-		if (mask.type() == ::casac::variant::BOOLVEC) {
-			Mask = "";
-		}
-		else if (
-			mask.type() == ::casac::variant::STRING
-			|| mask.type() == ::casac::variant::STRINGVEC
-		) {
-			Mask = mask.toString();
-		}
-		else {
-			_log << LogIO::WARN
-				<< "Only LEL string handled for mask...region is yet to come"
-				<< LogIO::POST;
-			Mask = "";
-		}
-		Vector<Int> iaxes(axes);
-		// if default value change it to empty vector
-		if (iaxes.size() == 1 && iaxes[0] < 0) {
-			iaxes.resize();
-		}
-		Record ret;
-		if (_imageF) {
-			PixelValueManipulator<Float> pvm(
-				_imageF, Region.get(), Mask
-			);
-			pvm.setAxes(IPosition(iaxes));
-			pvm.setVerbosity(
-				list ? ImageTask<Float>::DEAFENING : ImageTask<Float>::QUIET
-			);
-			pvm.setDropDegen(dropdeg);
-			pvm.setStretch(stretch);
-			ret = pvm.get();
-		}
-		else {
-			PixelValueManipulator<Complex> pvm(
-				_imageC, Region.get(), Mask
-			);
-			pvm.setAxes(IPosition(iaxes));
-			pvm.setVerbosity(
-				list ? ImageTask<Complex>::DEAFENING : ImageTask<Complex>::QUIET
-			);
-			pvm.setDropDegen(dropdeg);
-			pvm.setStretch(stretch);
-			ret = pvm.get();
-		}
-		Array<Bool> pixelmask = ret.asArrayBool("mask");
-		std::vector<int> s_shape = pixelmask.shape().asStdVector();
-		if (getmask) {
-			pixelmask.shape().asVector().tovector(s_shape);
-			std::vector<bool> s_pixelmask(pixelmask.begin(), pixelmask.end());
-			return new ::casac::variant(s_pixelmask, s_shape);
-		}
-		else if (_imageF) {
-			Array<Float> pixels = ret.asArrayFloat("values");
-			std::vector<double> d_pixels(pixels.begin(), pixels.end());
-			return new ::casac::variant(d_pixels, s_shape);
-		}
-		else {
-			Array<Complex> pixels = ret.asArrayComplex("values");
-			std::vector<std::complex<double> > d_pixels(pixels.begin(), pixels.end());
-			return new ::casac::variant(d_pixels, s_shape);
-		}
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-}
-
-::casac::record* image::getslice(
-	const std::vector<double>& x, const std::vector<double>& y,
-	const std::vector<int>& axes, const std::vector<int>& coord,
-	int npts, const std::string& method
-) {
-	try {
-		_log << _ORIGIN;
-		if (detached()) {
-			return nullptr;
-		}
-		ThrowIf(
-			_imageC ,
-			"This method only supports Float valued images"
-		);
-		// handle default coord
-		std::vector<int> ncoord(coord);
-		if (ncoord.size() == 1 && ncoord[0] == -1) {
-			int n = _imageF->ndim();
-			ncoord.resize(n);
-			for (int i = 0; i < n; i++) {
-				//ncoord[i]=i;
-				ncoord[i] = 0;
-			}
-		}
-		unique_ptr<Record> outRec;
-		if (_imageF) {
-			outRec.reset(
-				PixelValueManipulator<Float>::getSlice(
-					_imageF, Vector<Double>(x), Vector<Double>(y),
-					Vector<Int> (axes), Vector<Int> (ncoord),
-					npts, method
-				)
-			);
-		}
-		return fromRecord(*outRec);
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	return nullptr;
-}
-
-image* image::hanning(
-	const string& outfile, const variant& region,
-	const variant& vmask, int axis, bool drop,
-	bool overwrite, bool /* async */, bool stretch,
-    const string& dmethod
-) {
-	LogOrigin lor(_class, __func__);
-	_log << lor;
-	if (detached()) {
-		throw AipsError("Unable to create image");
-	}
-	try {
-		SHARED_PTR<const Record> myregion = _getRegion(
-			region, True
-		);
-		String mask = vmask.toString();
-		if (mask == "[]") {
-			mask = "";
-		}
-		if (axis < 0) {
-			const CoordinateSystem csys = _imageF
-				? _imageF->coordinates()
-				: _imageC->coordinates();
-			ThrowIf(
-				! csys.hasSpectralAxis(),
-				"Axis not specified and image has no spectral coordinate"
-			);
-			axis = csys.spectralAxisNumber(False);
-		}
-        ImageDecimatorData::Function dFunction = ImageDecimatorData::NFUNCS;
-        if (drop) {
-            String mymethod = dmethod;
-            mymethod.downcase();
-            if (mymethod.startsWith("m")) {
-                dFunction = ImageDecimatorData::MEAN;
-            }
-            else if (mymethod.startsWith("c")) {
-                dFunction = ImageDecimatorData::COPY;
-            }
-            else {
-                ThrowCc(
-                    "Value of dmethod must be "
-                    "either 'm'(ean) or 'c'(opy)"
-                );
-            }
-        }
-		vector<variant> values { outfile, region, vmask, axis, drop, overwrite, stretch, dmethod };
-		if (_imageF) {
-			SPCIIF image = _imageF;
-			return _hanning(
-				image, myregion, mask, outfile,
-				overwrite, stretch, axis, drop,
-				dFunction, values
-			);
-		}
-		else {
-			SPCIIC image = _imageC;
-			return _hanning(
-				image, myregion, mask, outfile,
-				overwrite, stretch, axis, drop,
-				dFunction, values
-			);
-		}
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-			<< LogIO::POST;
-		RETHROW(x);
-	}
-}
-
-template <class T> image* image::_hanning(
-	SPCIIT myimage, SHARED_PTR<const Record> region,
-	const String& mask, const string& outfile, bool overwrite,
-	bool stretch, int axis, bool drop,
-	ImageDecimatorData::Function dFunction,
-	const std::vector<casac::variant> values
-) {
-	ImageHanningSmoother<T> smoother(
-		myimage, region.get(), mask, outfile, overwrite
-	);
-	smoother.setAxis(axis);
-	smoother.setDecimate(drop);
-	smoother.setStretch(stretch);
-	if (drop) {
-		smoother.setDecimationFunction(dFunction);
-	}
-	vector<String> names { "outfile", "region", "mask", "axis",
-	                       "drop", "overwrite", "stretch", "dmethod" };
-	smoother.addHistory(
-		LogOrigin(_class, __func__), "ia.hanning",
-		names, values
-	);
-	return new image(smoother.smooth());
-}
 
 std::vector<bool> image::haslock() {
 	try {
