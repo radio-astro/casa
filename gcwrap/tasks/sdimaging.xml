@@ -247,6 +247,11 @@ available.
             <value>0.1</value>
     </param>
    
+   	<param type="bool" name="clipminmax">
+   			<shortdescription>Clip minimum and maximum value from each pixel</shortdescription>
+   			<description>Clip minimum and maximum value from each pixel</description>
+   			<value>False</value>
+   	</param>
 
     <constraints>
             <when param="mode">
@@ -484,6 +489,8 @@ minweight -- Minimum weight ratio to the median of weight used in
              weight correction and weight based masking
         default: 0.1
         example: minweight = 0.
+clipminmax -- do min/max cliping if True
+        default: False
 
 
 -----------------

@@ -4123,6 +4123,10 @@ is multiplied by this factor.
      <value>0.</value>
      </param>
 
+	 <param type="bool" name="clipminmax">
+	 <description>Clip minimum and maximum values from each grid</description>
+	 <value>false</value>
+	 </param>
 
 </input>
 <returns type="bool"/>

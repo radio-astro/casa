@@ -1776,7 +1776,9 @@ imager::settaylorterms(const int ntaylorterms, const double reffreq)
 }
 
 bool
-imager::setsdoptions(const double scale, const double weight, const int convsupport, const std::string& pointingcolumntouse, const ::casac::variant &truncate, const ::casac::variant &gwidth, const ::casac::variant &jwidth, const double minweight)
+imager::setsdoptions(const double scale, const double weight, const int convsupport, const std::string& pointingcolumntouse,
+    const ::casac::variant &truncate, const ::casac::variant &gwidth, const ::casac::variant &jwidth,
+    const double minweight, const bool clipminmax)
 {
 
    Bool rstat(False);
@@ -1791,7 +1793,7 @@ imager::setsdoptions(const double scale, const double weight, const int convsupp
              << "qJWidth=" << qJWidth.getValue() << qJWidth.getUnit() << LogIO::POST;
      rstat = itsImager->setsdoptions(scale, weight, convsupport, pcolToUse,
                                      qTruncate, qGWidth, qJWidth,
-				     Float(minweight));
+                                     Float(minweight), Bool(clipminmax));
    } catch  (AipsError x) {
      //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
      RETHROW(x);

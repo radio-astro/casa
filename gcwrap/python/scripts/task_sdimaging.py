@@ -12,7 +12,7 @@ import sdbeamutil
 from cleanhelper import cleanhelper
 
 @sdutil.sdtask_decorator
-def sdimaging(infiles, outfile, overwrite, field, spw, antenna, scan, intent, mode, nchan, start, width, veltype, outframe, gridfunction, convsupport, truncate, gwidth, jwidth, imsize, cell, phasecenter, ephemsrcname, pointingcolumn, restfreq, stokes, minweight):
+def sdimaging(infiles, outfile, overwrite, field, spw, antenna, scan, intent, mode, nchan, start, width, veltype, outframe, gridfunction, convsupport, truncate, gwidth, jwidth, imsize, cell, phasecenter, ephemsrcname, pointingcolumn, restfreq, stokes, minweight, clipminmax):
     with sdutil.sdtask_manager(sdimaging_worker, locals()) as worker:
         worker.initialize()
         worker.execute()
@@ -428,7 +428,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
 
         self.imager.defineimage(**self.imager_param)#self.__get_param())
         self.imager.setoptions(ftmachine='sd', gridfunction=self.gridfunction)
-        self.imager.setsdoptions(pointingcolumntouse=self.pointingcolumn, convsupport=self.convsupport, truncate=self.truncate, gwidth=self.gwidth, jwidth=self.jwidth, minweight = 0.)
+        self.imager.setsdoptions(pointingcolumntouse=self.pointingcolumn, convsupport=self.convsupport, truncate=self.truncate, gwidth=self.gwidth, jwidth=self.jwidth, minweight = 0., clipminmax=self.clipminmax)
         self.imager.makeimage(type='singledish', image=self.outfile)
         weightfile = self.outfile+".weight"
         self.imager.makeimage(type='coverage', image=weightfile)
