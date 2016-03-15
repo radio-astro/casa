@@ -21,10 +21,22 @@ class testBPdcalsInputs(basetask.StandardInputs):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
 
-        weakbp = basetask.property_with_default('weakbp', True)
+        self._weakbp = weakbp
 
         self.gain_solint1 = 'int'
         self.gain_solint2 = 'int'
+
+    @property
+    def weakbp(self):
+        return self._weakbp
+
+    @weakbp.setter
+    def weakbp(self, value):
+
+        if self._weakbp is None:
+            self._weakbp = True
+
+        self._weakbp = value
 
 
 class testBPdcalsResults(basetask.Results):
@@ -50,6 +62,8 @@ class testBPdcals(basetask.StandardTaskTemplate):
     Inputs = testBPdcalsInputs
 
     def prepare(self):
+
+
         
         gtypecaltable = 'testdelayinitialgain.g'
         ktypecaltable = 'testdelay.k'
@@ -252,18 +266,26 @@ class testBPdcals(basetask.StandardTaskTemplate):
 
         LOG.info("Doing test bandpass calibration")
 
-        #flagdata_task_args = {'vis'         :self.inputs.vis, 'spw' : '0:125~875'}
+        '''
+        flagdata_task_args = {'vis'         :self.inputs.vis, 'spw' : '0:35~40'}
+        job = casa_tasks.flagdata(**flagdata_task_args)
+        self._executor.execute(job)
 
-        #job = casa_tasks.flagdata(**flagdata_task_args)
+        flagdata_task_args = {'vis'         :self.inputs.vis, 'spw' : '3:35~40'}
+        job = casa_tasks.flagdata(**flagdata_task_args)
+        self._executor.execute(job)
+        '''
 
-        #self._executor.execute(job)
+        print "WEAKBP: ", self.inputs.weakbp
 
         if (self.inputs.weakbp == True):
+            print "USING WEAKBP HEURISTICS"
             interp = weakbp(self.inputs.vis, bpcaltable, context=context, RefAntOutput=RefAntOutput[0],
                                             ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse, solint='inf', append=False)
         else:
+            print "Using REGULAR heuristics"
             interp = ''
-            bandpass_job = do_bandpass(self.inputs.vis, bpcaltable, context=context, RefAntOutput=RefAntOutput[0],
+            bandpass_job = do_bandpass(self.inputs.vis, bpcaltable, context=context, RefAntOutput=RefAntOutput[0], spw='',
                                             ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse, solint='inf', append=False)
             self._executor.execute(bandpass_job)
 

@@ -23,7 +23,19 @@ class semiFinalBPdcalsInputs(basetask.StandardInputs):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
 
-        weakbp = basetask.property_with_default('weakbp', True)
+        self._weakbp = weakbp
+
+    @property
+    def weakbp(self):
+        return self._weakbp
+
+    @weakbp.setter
+    def weakbp(self, value):
+
+        if self._weakbp is None:
+            self._weakbp = True
+
+        self._weakbp = value
 
 
 class semiFinalBPdcalsResults(basetask.Results):
@@ -136,7 +148,7 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
                                             ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse, solint='inf', append=False)
         else:
             interp = ''
-            bandpass_job = do_bandpass(self.inputs.vis, bpcaltable, context=context, RefAntOutput=RefAntOutput[0],
+            bandpass_job = do_bandpass(self.inputs.vis, bpcaltable, context=context, RefAntOutput=RefAntOutput[0], spw='',
                                             ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse, solint='inf', append=False)
             self._executor.execute(bandpass_job)
 

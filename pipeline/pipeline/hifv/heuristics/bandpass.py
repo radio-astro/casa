@@ -89,7 +89,7 @@ def computeChanFlag(vis, caltable, context):
     return (largechunk, spwids)
 
 
-def do_bandpass(vis, caltable, context=None, RefAntOutput=None, ktypecaltable=None, bpdgain_touse=None, solint=None, append=None):
+def do_bandpass(vis, caltable, context=None, RefAntOutput=None, spw=None, ktypecaltable=None, bpdgain_touse=None, solint=None, append=None):
     """Run CASA task bandpass"""
 
     m = context.observing_run.get_ms(vis)
@@ -104,7 +104,7 @@ def do_bandpass(vis, caltable, context=None, RefAntOutput=None, ktypecaltable=No
     bandpass_task_args = {'vis'         :vis,
                           'caltable'    :caltable,
                           'field'       :bandpass_field_select_string,
-                          'spw'         :'',
+                          'spw'         :spw,
                           'intent'      :'',
                           'selectdata'  :True,
                           'uvrange'     :'',
@@ -136,7 +136,7 @@ def weakbp(vis, caltable, context=None, RefAntOutput=None, ktypecaltable=None, b
     m = context.observing_run.get_ms(vis)
     channels = m.get_vla_numchan()  #Number of channels before averaging
 
-    bpjob = do_bandpass(vis, caltable, context=context, RefAntOutput=RefAntOutput,
+    bpjob = do_bandpass(vis, caltable, context=context, spw='', RefAntOutput=RefAntOutput,
                         ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse, solint='inf', append=False)
     bpjob.execute()
     (largechunk, spwids) = computeChanFlag(vis, caltable, context)
@@ -153,10 +153,9 @@ def weakbp(vis, caltable, context=None, RefAntOutput=None, ktypecaltable=None, b
         LOG.info("Removing rows in table " + caltable + " for spwids="+','.join([str(i) for i in spwids]))
         removeRows(caltable, spwids)
         solint = 'inf,'+str(cpa)+'ch'
-        for spw in spwids:
-            LOG.warning("Largest contiguous set of channels with no BP solution is greater than maximum allowable 1/32 fractional bandwidth for spwid="+str(spw)+"."+ "  Using solint=" + solint)
+        LOG.warning("Largest contiguous set of channels with no BP solution is greater than maximum allowable 1/32 fractional bandwidth for spwid="+','.join([str(i) for i in spwids])+"."+ "  Using solint=" + solint)
         LOG.info('Weak bandpass heuristics.  Using solint='+solint)
-        bpjob = do_bandpass(vis, caltable, context=context, RefAntOutput=RefAntOutput,
+        bpjob = do_bandpass(vis, caltable, context=context, RefAntOutput=RefAntOutput, spw=','.join([str(i) for i in spwids]),
                             ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse, solint=solint, append=True)
         bpjob.execute()
         (largechunk, spwids) = computeChanFlag(vis, caltable, context)
