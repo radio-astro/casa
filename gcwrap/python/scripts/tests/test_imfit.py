@@ -1842,5 +1842,20 @@ class imfit_test(unittest.TestCase):
             self.assertTrue(res['min'][0] == 0)
         myia.done()
 
+    def test_history(self):
+        """Test history records are written"""
+        myia = iatool()
+        image = datapath + convolved_model
+        resid = "myres.im"
+        model = "mymod.im"
+        myia.open(image)
+        myia.fitcomponents(residual=resid, model=model)
+        for im in (resid, model):
+            myia.open(im)
+            msgs = myia.history()
+            myia.done()
+            self.assertTrue("ia.fitcomponents" in msgs[-2])    
+            self.assertTrue("ia.fitcomponents" in msgs[-1])
+
 def suite():
     return [imfit_test]

@@ -1411,6 +1411,154 @@ bool image::fft(
     return False;
 }
 
+record* image::fitcomponents(
+    const string& box, const variant& region, const variant& chans,
+    const string& stokes, const variant& vmask,
+    const vector<double>& in_includepix,
+    const vector<double>& in_excludepix, const string& residual,
+    const string& model, const string& estimates,
+    const string& logfile, const bool append,
+    const string& newestimates, const string& complist,
+    bool overwrite, bool dooff, double offset,
+    bool fixoffset, bool stretch, const variant& rms,
+    const variant& noisefwhm
+) {
+    if (detached()) {
+        return nullptr;
+    }
+    _log << _ORIGIN;
+    try {
+        ThrowIf(
+            ! _imageF,
+            "This method only supports Float valued images"
+        );
+        int num = in_includepix.size();
+        Vector<Float> includepix(num);
+        num = in_excludepix.size();
+        Vector<Float> excludepix(num);
+        convertArray(includepix, Vector<Double> (in_includepix));
+        convertArray(excludepix, Vector<Double> (in_excludepix));
+        if (includepix.size() == 1 && includepix[0] == -1) {
+            includepix.resize();
+        }
+        if (excludepix.size() == 1 && excludepix[0] == -1) {
+            excludepix.resize();
+        }
+        String mask = _getMask(vmask);
+        ImageFitterResults::CompListWriteControl writeControl = complist.empty()
+            ? ImageFitterResults::NO_WRITE
+            : overwrite
+                ? ImageFitterResults::OVERWRITE
+                : ImageFitterResults::WRITE_NO_REPLACE;
+        String sChans;
+        if (chans.type() == variant::BOOLVEC) {
+            // for some reason which eludes me, the default variant type is boolvec
+            sChans = "";
+        }
+        else if (chans.type() == variant::STRING) {
+            sChans = chans.toString();
+        }
+        else if (chans.type() == variant::INT) {
+            sChans = String::toString(chans.toInt());
+        }
+        else {
+            ThrowCc(
+                "Unsupported type for chans. chans must "
+                "be either an integer or a string"
+            );
+        }
+        SHARED_PTR<Record> regionRecord = _getRegion(region, True);
+        auto doImages = ! residual.empty() || ! model.empty();
+        ImageFitter fitter(
+            _imageF, "", regionRecord.get(), box, sChans,
+            stokes, mask, estimates, newestimates, complist
+        );
+        if (includepix.size() == 1) {
+            fitter.setIncludePixelRange(
+                std::make_pair(includepix[0],includepix[0])
+            );
+        }
+        else if (includepix.size() == 2) {
+            fitter.setIncludePixelRange(
+                std::make_pair(includepix[0],includepix[1])
+            );
+        }
+        if (excludepix.size() == 1) {
+            fitter.setExcludePixelRange(
+                std::make_pair(excludepix[0],excludepix[0])
+            );
+        }
+        else if (excludepix.size() == 2) {
+            fitter.setExcludePixelRange(
+                std::make_pair(excludepix[0],excludepix[1])
+            );
+        }
+        fitter.setWriteControl(writeControl);
+        fitter.setStretch(stretch);
+        fitter.setModel(model);
+        fitter.setResidual(residual);
+        if (! logfile.empty()) {
+            fitter.setLogfile(logfile);
+            fitter.setLogfileAppend(append);
+        }
+        if (dooff) {
+            fitter.setZeroLevelEstimate(offset, fixoffset);
+        }
+        auto myrms = (rms.type() == variant::DOUBLE || rms.type() == variant::INT)
+            ? casa::Quantity(rms.toDouble(), brightnessunit())
+            : _casaQuantityFromVar(rms);
+        if (myrms.getValue() > 0) {
+            fitter.setRMS(myrms);
+        }
+        auto noiseType = noisefwhm.type();
+        if (noiseType == variant::DOUBLE || noiseType == variant::INT) {
+            fitter.setNoiseFWHM(noisefwhm.toDouble());
+        }
+        else if (noiseType == variant::BOOLVEC) {
+            fitter.clearNoiseFWHM();
+        }
+        else if (
+            noiseType == variant::STRING || noiseType == variant::RECORD
+        ) {
+            if (noiseType == variant::STRING && noisefwhm.toString().empty()) {
+                fitter.clearNoiseFWHM();
+            }
+            else {
+                fitter.setNoiseFWHM(_casaQuantityFromVar(noisefwhm));
+            }
+        }
+        else {
+            ThrowCc(
+                "Unsupported data type for noisefwhm: " + noisefwhm.typeString()
+            );
+        }
+        if (doImages) {
+            vector<casa::String> names {
+                "box", "region", "chans", "stokes", "mask", "includepix",
+                "excludepix", "residual", "model", "estimates", "logfile",
+                "append", "newestimates", "complist", "dooff", "offset",
+                "fixoffset", "stretch", "rms", "noisefwhm"
+            };
+            vector<variant> values {
+                box, region, chans, stokes, vmask, in_includepix,
+                in_excludepix, residual, model, estimates, logfile,
+                append, newestimates, complist, dooff, offset, fixoffset,
+                stretch, rms, noisefwhm
+            };
+            auto msgs = _newHistory(__func__, names, values);
+            fitter.addHistory(_ORIGIN, msgs);
+        }
+        auto compLists = fitter.fit();
+        return fromRecord(fitter.getOutputRecord());
+    }
+    catch (const AipsError& x) {
+        FluxRep<Double>::clearAllowedUnits();
+        _log << "Exception Reported: " << x.getMesg()
+            << LogIO::EXCEPTION;
+        RETHROW(x);
+    }
+    return nullptr;
+}
 record* image::fitprofile(const string& box, const variant& region,
     const string& chans, const string& stokes, int axis,
     const variant& vmask, int ngauss, int poly,
@@ -2110,11 +2258,9 @@ image* image::transpose(
     const variant& order
 ) {
     try {
-        _log << LogOrigin("image", __func__);
-
+        _log << _ORIGIN;
         if (detached()) {
             throw AipsError("No image specified to transpose");
-            return 0;
         }
         ThrowIf(
             ! _imageF,
@@ -2150,11 +2296,12 @@ image* image::transpose(
             }
             break;
         default:
-            _log << "Unsupported type for order parameter " << order.type()
-                << ". Supported types are a non-negative integer, a single "
-                << "string containing all digits or a list of strings which "
-                << "unambiguously match the image axis names."
-                << LogIO::EXCEPTION;
+            ThrowCc(
+                "Unsupported type for order parameter " + order.typeString()
+                + ". Supported types are a non-negative integer, a single "
+                "string containing all digits or a list of strings which "
+                "unambiguously match the image axis names."
+            );
             break;
         }
         vector<String> names = {"outfile", "order"};
@@ -2241,161 +2388,6 @@ void image::_reset() {
 
 
 
-::casac::record* image::fitcomponents(
-		const string& box, const variant& region, const variant& chans,
-		const string& stokes, const variant& vmask,
-		const vector<double>& in_includepix,
-		const vector<double>& in_excludepix, const string& residual,
-		const string& model, const string& estimates,
-		const string& logfile, const bool append,
-		const string& newestimates, const string& complist,
-		bool overwrite, bool dooff, double offset,
-		bool fixoffset, bool stretch, const variant& rms,
-		const variant& noisefwhm
-) {
-	if (detached()) {
-		return 0;
-	}
-	LogOrigin lor(_class, __func__);
-	_log << lor;
-
-	try {
-		ThrowIf(
-			! _imageF,
-			"This method only supports Float valued images"
-		);
-		int num = in_includepix.size();
-		Vector<Float> includepix(num);
-		num = in_excludepix.size();
-		Vector<Float> excludepix(num);
-		convertArray(includepix, Vector<Double> (in_includepix));
-		convertArray(excludepix, Vector<Double> (in_excludepix));
-		if (includepix.size() == 1 && includepix[0] == -1) {
-			includepix.resize();
-		}
-		if (excludepix.size() == 1 && excludepix[0] == -1) {
-			excludepix.resize();
-		}
-		String mask = vmask.toString();
-		if (mask == "[]") {
-			mask = "";
-		}
-        SPCIIF image = _imageF;
-		ImageFitterResults::CompListWriteControl writeControl = complist.empty()
-			? ImageFitterResults::NO_WRITE
-			: overwrite
-				? ImageFitterResults::OVERWRITE
-				: ImageFitterResults::WRITE_NO_REPLACE;
-		String sChans;
-		if (chans.type() == variant::BOOLVEC) {
-			// for some reason which eludes me, the default variant type is boolvec
-			sChans = "";
-		}
-		else if (chans.type() == variant::STRING) {
-			sChans = chans.toString();
-		}
-		else if (chans.type() == variant::INT) {
-			sChans = String::toString(chans.toInt());
-		}
-		else {
-			ThrowCc(
-				"Unsupported type for chans. chans must "
-				"be either an integer or a string"
-			);
-		}
-		SHARED_PTR<Record> regionRecord = _getRegion(region, True);
-		vector<String> msgs;
-		Bool doImages = ! residual.empty() || ! model.empty();
-
-		ImageFitter fitter(
-			image, "", regionRecord.get(), box, sChans,
-			stokes, mask, estimates, newestimates, complist
-		);
-		if (includepix.size() == 1) {
-			fitter.setIncludePixelRange(
-				std::make_pair(includepix[0],includepix[0])
-			);
-		}
-		else if (includepix.size() == 2) {
-			fitter.setIncludePixelRange(
-				std::make_pair(includepix[0],includepix[1])
-			);
-		}
-		if (excludepix.size() == 1) {
-			fitter.setExcludePixelRange(
-				std::make_pair(excludepix[0],excludepix[0])
-			);
-		}
-		else if (excludepix.size() == 2) {
-			fitter.setExcludePixelRange(
-				std::make_pair(excludepix[0],excludepix[1])
-			);
-		}
-		fitter.setWriteControl(writeControl);
-		fitter.setStretch(stretch);
-		fitter.setModel(model);
-		fitter.setResidual(residual);
-		if (! logfile.empty()) {
-			fitter.setLogfile(logfile);
-			fitter.setLogfileAppend(append);
-		}
-		if (dooff) {
-			fitter.setZeroLevelEstimate(offset, fixoffset);
-		}
-		auto myrms = (rms.type() == variant::DOUBLE || rms.type() == variant::INT)
-			? casa::Quantity(rms.toDouble(), brightnessunit())
-			: _casaQuantityFromVar(rms);
-		if (myrms.getValue() > 0) {
-			fitter.setRMS(myrms);
-		}
-		auto noiseType = noisefwhm.type();
-		if (noiseType == variant::DOUBLE || noiseType == variant::INT) {
-			fitter.setNoiseFWHM(noisefwhm.toDouble());
-		}
-		else if (noiseType == variant::BOOLVEC) {
-			fitter.clearNoiseFWHM();
-		}
-		else if (
-			noiseType == variant::STRING || noiseType == variant::RECORD
-		) {
-			if (noiseType == variant::STRING && noisefwhm.toString().empty()) {
-				fitter.clearNoiseFWHM();
-			}
-			else {
-				fitter.setNoiseFWHM(_casaQuantityFromVar(noisefwhm));
-			}
-		}
-		else {
-			ThrowCc(
-				"Unsupported data type for noisefwhm: " + noisefwhm.typeString()
-			);
-		}
-		if (doImages) {
-			vector<casa::String> names {
-			    "box", "region", "chans", "stokes", "mask", "includepix",
-			    "excludepix", "residual", "model", "estimates", "logfile",
-			    "append", "newestimates", "complist", "dooff", "offset",
-			    "fixoffset", "stretch", "rms", "noisefwhm"
-			};
-			vector<variant> values {
-			    box, region, chans, stokes, vmask, in_includepix,
-			    in_excludepix, residual, model, estimates, logfile,
-			    append, newestimates, complist, dooff, offset, fixoffset,
-			    stretch, rms, noisefwhm
-			};
-			casa::String fname = "ia." + casa::String(__func__);
-			fitter.addHistory(lor, fname, names, values);
-		}
-		std::pair<ComponentList, ComponentList> compLists = fitter.fit();
-		return fromRecord(fitter.getOutputRecord());
-	}
-	catch (const AipsError& x) {
-		FluxRep<Double>::clearAllowedUnits();
-		_log << "Exception Reported: " << x.getMesg()
-			<< LogIO::EXCEPTION;
-		RETHROW(x);
-	}
-}
 
 variant* image::getchunk(
 	const std::vector<int>& blc, const std::vector<int>& trc,
