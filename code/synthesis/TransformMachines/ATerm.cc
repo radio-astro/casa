@@ -46,7 +46,7 @@ namespace casa{
     if (userValue != cachedOverSampling_p)
       {
 	cachedOverSampling_p = userValue;
-	cerr << "Oversampling set to " << cachedOverSampling_p << endl;
+	//	cerr << "Oversampling set to " << cachedOverSampling_p << endl;
       }
 
 
@@ -55,7 +55,7 @@ namespace casa{
     if (userValue != cachedConvSize_p)
       {
 	cachedConvSize_p = userValue;
-	cerr << "ConvFuncSize set to " << cachedConvSize_p << endl;
+	//cerr << "ConvFuncSize set to " << cachedConvSize_p << endl;
       }
   };
 
