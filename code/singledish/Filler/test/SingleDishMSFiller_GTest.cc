@@ -200,12 +200,608 @@ class SingleDishMSFillerTestWithStub: public SingleDishMSFillerTestBase {
 };
 
 class SingleDishMSFillerTestFloat: public SingleDishMSFillerTestBase {
+private:
   virtual std::string getDataName() {
     return "uid___A002_X85c183_X36f.test.asap";
   }
   virtual std::string getMSName() {
     return "floatdata.ms";
   }
+
+protected:
+  void Verify() {
+    MeasurementSet myms(my_ms_name_);
+    Table myscantable(my_data_name_, Table::Old);
+    TableRecord const &scantable_header = myscantable.keywordSet();
+    constexpr double kDay2Sec = 86400.0;
+
+    // Verify OBSERVATION table
+    {
+      std::cout << "Verify OBSERVATION table" << std::endl;
+      auto const mytable = myms.observation();
+      ASSERT_EQ(uInt(1), mytable.nrow());
+      ROMSObservationColumns mycolumns(mytable);
+      CASA_EXPECT_STREQ(scantable_header.asString("Observer"),
+          mycolumns.observer()(0));
+      CASA_EXPECT_STREQ(scantable_header.asString("Project"),
+          mycolumns.project()(0));
+      String antenna_name = scantable_header.asString("AntennaName");
+      String expected_telescope_name;
+      String::size_type pos = antenna_name.find("//");
+      if (pos != String::npos) {
+        expected_telescope_name = antenna_name.substr(0, pos);
+      } else {
+        expected_telescope_name = antenna_name.substr(0,
+            antenna_name.find("@"));
+      }
+      CASA_EXPECT_STREQ(expected_telescope_name, mycolumns.telescopeName()(0));
+      ROScalarColumn<Double> column(myscantable, "TIME");
+      Vector<Double> time_list = column.getColumn();
+      Vector<Double> time_range = mycolumns.timeRange()(0);
+      ASSERT_EQ(2u, time_range.nelements());
+      EXPECT_EQ(min(time_list), time_range[0]);
+      EXPECT_EQ(max(time_list), time_range[1]);
+    }
+
+    // verify PROCESSOR table
+    {
+      std::cout << "Verify PROCESSOR table" << std::endl;
+      auto const mytable = myms.processor();
+      // just to confirm it has only one row
+      ASSERT_EQ(uInt(1), mytable.nrow());
+    }
+
+    // verify ANTENNA table
+    {
+      std::cout << "Verify ANTENNA table" << std::endl;
+      auto const mytable = myms.antenna();
+      ASSERT_EQ(uInt(1), mytable.nrow());
+      ROMSAntennaColumns mycolumns(mytable);
+      String header_antenna_name = scantable_header.asString("AntennaName");
+      String antenna_name;
+      String expected_name;
+      String expected_station;
+      String::size_type pos = header_antenna_name.find("//");
+      if (pos != String::npos) {
+        antenna_name = header_antenna_name.substr(pos + 2);
+      } else {
+        antenna_name = header_antenna_name;
+      }
+      pos = antenna_name.find("@");
+      if (pos != String::npos) {
+        expected_name = antenna_name.substr(0, pos);
+        expected_station = antenna_name.substr(pos + 1);
+      } else {
+        expected_name = antenna_name;
+        expected_station = "";
+      }
+      CASA_EXPECT_STREQ(expected_name, mycolumns.name()(0));
+      CASA_EXPECT_STREQ(expected_station, mycolumns.station()(0));
+      CASA_EXPECT_STREQ(String("GROUND-BASED"), mycolumns.type()(0));
+      CASA_EXPECT_STREQ(String("ALT-AZ"), mycolumns.mount()(0));
+      auto const position_meas_column = mycolumns.positionMeas();
+      auto const position = position_meas_column(0);
+      auto const position_val = position.get("m");
+      Vector<Double> expected_position = scantable_header.asArrayDouble(
+          "AntennaPosition");
+      CASA_EXPECT_STREQ(String("ITRF"), position.getRefString());
+      EXPECT_TRUE(allEQ(expected_position, position_val.getValue()));
+      EXPECT_EQ(12.0, mycolumns.dishDiameter()(0));
+    }
+
+    // verify WEATHER table
+    {
+      std::cout << "Verify WEATHER table" << std::endl;
+      auto const mytable = myms.weather();
+      auto const weather_table = scantable_header.asTable("WEATHER");
+      //uInt expected_nrow = weather_table.nrow();
+      ROScalarColumn<uInt> weather_id_column(myscantable, "WEATHER_ID");
+      Vector<uInt> weather_id_list = weather_id_column.getColumn();
+      Sort sorter;
+      sorter.sortKey(weather_id_list.data(), TpUInt, 0, Sort::Ascending);
+      Vector<uInt> index_vector;
+      uInt expected_nrow = sorter.sort(index_vector, weather_id_list.size(),
+          Sort::QuickSort | Sort::NoDuplicates);
+      ASSERT_EQ(expected_nrow, mytable.nrow());
+      ROMSWeatherColumns mycolumns(mytable);
+      ROTableRow row(weather_table);
+      std::map<uInt, uInt> weather_id_map;
+      weather_id_column.attach(weather_table, "ID");
+      for (uInt i = 0; i < weather_id_column.nrow(); ++i) {
+        weather_id_map[weather_id_column(i)] = i;
+      }
+      for (uInt i = 0; i < expected_nrow; ++i) {
+        std::cout << "Verifying row " << i << std::endl;
+        uInt weather_id = weather_id_list[index_vector[i]];
+        uInt irow_weather = weather_id_map[weather_id];
+        TableRecord row_record = row.get(irow_weather);
+        Double time_min = 1.0e30;
+        Double time_max = 0.0;
+        Double expected_time = 0.0;
+        Double expected_interval = 0.0;
+        auto subtable = myscantable(
+            myscantable.col("WEATHER_ID") == weather_id);
+        if (subtable.nrow() > 0) {
+          ROScalarColumn<uInt> id_column(subtable, "IFNO");
+          Vector<uInt> spw_list = id_column.getColumn();
+          Sort ss;
+          ss.sortKey(spw_list.data(), TpUInt, 0, Sort::Ascending);
+          Vector<uInt> sidx;
+          uInt num_spw = ss.sort(sidx, spw_list.size(),
+              Sort::QuickSort | Sort::NoDuplicates);
+          for (uInt ispw = 0; ispw < num_spw; ++ispw) {
+            uInt spw_id = spw_list[sidx[ispw]];
+            auto subsubtable = subtable(subtable.col("IFNO") == spw_id);
+            ROScalarColumn<Double> tcol(subsubtable, "TIME");
+            ROScalarColumn<Double> icol(subsubtable, "INTERVAL");
+            Vector<Double> time_list = tcol.getColumn();
+            Vector<Double> interval_list = icol.getColumn();
+            Sort ts;
+            ts.sortKey(time_list.data(), TpDouble, 0, Sort::Ascending);
+            Vector<uInt> tidx;
+            ts.sort(tidx, time_list.size());
+            uInt id_min = tidx[0];
+            uInt id_max = tidx[tidx.size() - 1];
+            Double time_min_in = time_list[id_min] * kDay2Sec
+                - 0.5 * interval_list[id_min];
+            Double time_max_in = time_list[id_max] * kDay2Sec
+                + 0.5 * interval_list[id_max];
+            time_min = min(time_min, time_min_in);
+            time_max = max(time_max, time_max_in);
+            expected_time = (time_max + time_min) * 0.5;
+            expected_interval = time_max - time_min;
+          }
+        }
+//      EXPECT_EQ(expected_time, mycolumns.time()(i));
+//      EXPECT_EQ(expected_interval, mycolumns.interval()(i));
+        Double diff_time = abs(
+            (mycolumns.time()(i) - expected_time) / expected_time);
+        Double diff_interval = abs(
+            (mycolumns.interval()(i) - expected_interval) / expected_interval);
+        std::cout << "diff_time = " << diff_time << " diff_interval = "
+            << diff_interval << std::endl;
+        Double const eps = 1.0e-5;
+        EXPECT_LT(diff_time, eps);
+        EXPECT_LT(diff_interval, eps);
+        EXPECT_EQ(0, mycolumns.antennaId()(i));
+        EXPECT_FLOAT_EQ(row_record.asFloat("TEMPERATURE"),
+            mycolumns.temperature()(i));
+        EXPECT_FLOAT_EQ(row_record.asFloat("PRESSURE"),
+            mycolumns.pressure()(i));
+        EXPECT_FLOAT_EQ(row_record.asFloat("HUMIDITY"),
+            mycolumns.relHumidity()(i));
+        EXPECT_FLOAT_EQ(row_record.asFloat("WINDSPEED"),
+            mycolumns.windSpeed()(i));
+        EXPECT_FLOAT_EQ(row_record.asFloat("WINDAZ"),
+            mycolumns.windDirection()(i));
+      }
+    }
+
+    // verify SOURCE table
+    Record source_map;
+    {
+      std::cout << "verify SOURCE table" << std::endl;
+      auto const mytable = myms.source();
+      auto const molecules_table = scantable_header.asTable("MOLECULES");
+      ROScalarColumn<String> srcname_column(myscantable, "SRCNAME");
+      ROScalarColumn<uInt> ifno_column(myscantable, "IFNO");
+      ROScalarColumn<uInt> molecule_id_column(myscantable, "MOLECULE_ID");
+      ArrayColumn<Double> proper_motion_column(myscantable, "SRCPROPERMOTION");
+      ROScalarColumn<Double> sysvel_column(myscantable, "SRCVELOCITY");
+      Vector<String> srcname_list = srcname_column.getColumn();
+      Vector<uInt> ifno_list = ifno_column.getColumn();
+      Sort sorter;
+      sorter.sortKey(srcname_list.data(), TpString);
+      Vector<uInt> index_vector;
+      uInt num_source = sorter.sort(index_vector, myscantable.nrow(),
+          Sort::QuickSort | Sort::NoDuplicates);
+      for (uInt i = 0; i < num_source; ++i) {
+        source_map.define(srcname_list[index_vector[i]], (Int) i);
+      }
+      sorter.sortKey(ifno_list.data(), TpUInt);
+      index_vector.resize();
+      uInt expected_nrow = sorter.sort(index_vector, myscantable.nrow(),
+          Sort::QuickSort | Sort::NoDuplicates);
+      ASSERT_EQ(expected_nrow, mytable.nrow());
+      ROMSSourceColumns mycolumns(mytable);
+      for (uInt i = 0; i < expected_nrow; ++i) {
+        std::cout << "Verifying row " << i << std::endl;
+        uInt j = index_vector[i];
+        String expected_name = srcname_list[j];
+        uInt expected_spw_id = ifno_list[j];
+        Int expected_source_id = source_map.asInt(expected_name);
+        EXPECT_EQ((Int )expected_spw_id, mycolumns.spectralWindowId()(i));
+        CASA_EXPECT_STREQ(expected_name, mycolumns.name()(i));
+        EXPECT_EQ(expected_source_id, mycolumns.sourceId()(i));
+        EXPECT_TRUE(
+            allEQ(proper_motion_column(j), mycolumns.properMotion()(i)));
+        uInt molecule_id = molecule_id_column(j);
+
+        Table t = molecules_table(molecules_table.col("ID") == molecule_id, 1);
+        ASSERT_EQ(1u, t.nrow());
+        ArrayColumn<Double> rest_freq_column(t, "RESTFREQUENCY");
+        ArrayColumn<String> transition_column(t, "NAME");
+        Vector<Double> expected_rest_freq;
+        Vector<String> expected_transition;
+        if (rest_freq_column.isDefined(0)
+            && rest_freq_column.shape(0).product() > 0) {
+          Vector<Double> expected_rest_freq = rest_freq_column(0);
+          Int expected_num_lines = expected_rest_freq.size();
+          EXPECT_EQ(expected_num_lines, mycolumns.numLines()(i));
+          EXPECT_TRUE(allEQ(expected_rest_freq, mycolumns.restFrequency()(i)));
+          EXPECT_TRUE(allEQ(mycolumns.sysvel()(i), sysvel_column(j)));
+        } else {
+          EXPECT_EQ(0, mycolumns.numLines()(i));
+          EXPECT_FALSE(mycolumns.restFrequency().isDefined(i));
+          EXPECT_FALSE(mycolumns.sysvel().isDefined(i));
+        }
+        if (transition_column.isDefined(0)
+            && transition_column.shape(0).product() > 0) {
+          Vector < String > expected_transition = transition_column(0);
+          EXPECT_TRUE(allEQ(expected_transition, mycolumns.transition()(i)));
+        } else {
+          EXPECT_FALSE(mycolumns.transition().isDefined(i));
+        }
+
+        t = myscantable(
+            myscantable.col("SRCNAME") == expected_name
+                && myscantable.col("IFNO") == expected_spw_id);
+        ROScalarColumn<Double> time_column(t, "TIME");
+        ROScalarColumn<Double> interval_column(t, "INTERVAL");
+        Vector<Double> time_list = time_column.getColumn();
+        Sort s;
+        s.sortKey(time_list.data(), TpDouble);
+        Vector<uInt> x;
+        uInt m = s.sort(x, t.nrow());
+        uInt imin = x[0];
+        uInt imax = x[m - 1];
+        Double tmin = time_list[imin] * kDay2Sec - 0.5 * interval_column(imin);
+        Double tmax = time_list[imax] * kDay2Sec + 0.5 * interval_column(imax);
+        Double expected_time = 0.5 * (tmin + tmax);
+        Double expected_interval = (tmax - tmin);
+        EXPECT_EQ(expected_time, mycolumns.time()(i));
+        EXPECT_EQ(expected_interval, mycolumns.interval()(i));
+      }
+    }
+
+    // verify FIELD table
+    {
+      std::cout << "verify FIELD table" << std::endl;
+      auto const mytable = myms.field();
+      ROScalarColumn<String> fieldname_column(myscantable, "FIELDNAME");
+      ROScalarColumn<String> srcname_column(myscantable, "SRCNAME");
+      ROScalarColumn<Double> time_column(myscantable, "TIME");
+      ArrayColumn<Double> srcdir_column(myscantable, "SRCDIRECTION");
+      ArrayColumn<Double> scanrate_column(myscantable, "SCANRATE");
+      Vector<String> fieldname_list = fieldname_column.getColumn();
+      Sort sorter;
+      sorter.sortKey(fieldname_list.data(), TpString);
+      Vector<uInt> index_vector;
+      uInt num_records = sorter.sort(index_vector, myscantable.nrow(),
+          Sort::QuickSort | Sort::NoDuplicates);
+      ROMSFieldColumns mycolumns(mytable);
+      std::vector<uInt> processed_rows;
+      for (uInt i = 0; i < num_records; ++i) {
+        std::cout << "Verifying row " << i << std::endl;
+        uInt j = index_vector[i];
+        String field_name = fieldname_list(j);
+        auto pos = field_name.find("__");
+        String expected_name = fieldname_list(j);
+        Int field_id = i;
+        if (pos != String::npos) {
+          expected_name = field_name.substr(0, pos);
+          field_id = String::toInt(field_name.substr(pos + 2));
+        }
+        ASSERT_GE(field_id, 0);
+        ASSERT_LT((uInt )field_id, mycolumns.nrow());
+        CASA_EXPECT_STREQ(expected_name, mycolumns.name()(field_id));
+        Int expected_source_id = source_map.asInt(srcname_column(j));
+        EXPECT_EQ(expected_source_id, mycolumns.sourceId()(field_id));
+        Double expected_time = time_column(j) * kDay2Sec;
+        EXPECT_EQ(expected_time, mycolumns.time()(field_id));
+        Vector<Double> expected_direction = srcdir_column(j);
+        Vector<Double> expected_scan_rate = scanrate_column(j);
+        Matrix<Double> direction = mycolumns.phaseDir()(field_id);
+        if (allEQ(expected_scan_rate, 0.0)) {
+          IPosition expected_shape(2, 2, 1);
+          EXPECT_EQ(expected_shape, direction.shape());
+          EXPECT_TRUE(allEQ(expected_direction, direction.column(0)));
+        } else {
+          IPosition expected_shape(2, 2, 2);
+          EXPECT_EQ(expected_shape, direction.shape());
+          EXPECT_TRUE(allEQ(expected_direction, direction.column(0)));
+          EXPECT_TRUE(allEQ(expected_scan_rate, direction.column(1)));
+        }
+        CASA_EXPECT_STREQ(String("J2000"),
+            mycolumns.phaseDir().keywordSet().asRecord("MEASINFO").asString(
+                "Ref"));
+      }
+    }
+
+    // Verify MAIN
+    // The test data should contain
+    //    - spws 0 (1 pol), 9, 10, 17, 18 (2 pols)
+    //    - scans 0, 5, 6
+    //    - cycles < 20
+    // DD_ID 0 WVR (1 pol)
+    // DD_ID > 0 non-WVR (2 pol)
+    {
+      std::cout << "Verifying MAIN and STATE" << std::endl;
+      ASSERT_TRUE(myms.tableDesc().isColumn("FLOAT_DATA"));
+      ROMSMainColumns mycolumns(myms);
+      ROMSDataDescColumns data_desc_columns(myms.dataDescription());
+      ROMSFieldColumns field_columns(myms.field());
+      ROMSStateColumns state_columns(myms.state());
+      ROMSPolarizationColumns pol_columns(myms.polarization());
+      ROMSSpWindowColumns spw_columns(myms.spectralWindow());
+      uInt const nrow = myms.nrow();
+      Table t = myscantable(myscantable.col("IFNO") == (uInt) 0);
+      uInt expected_nrow = t.nrow() + (myscantable.nrow() - t.nrow()) / 2;
+      ASSERT_EQ(expected_nrow, nrow);
+      // alias
+      Table &s = myscantable;
+      for (uInt i = 0; i < nrow; ++i) {
+        std::cout << "Verifying row " << i << std::endl;
+
+        // some trivial stuff
+        EXPECT_EQ(0, mycolumns.antenna1()(i));
+        EXPECT_EQ(mycolumns.antenna1()(i), mycolumns.antenna2()(i));
+        EXPECT_EQ(IPosition(1, 3), mycolumns.uvw().shape(i));
+        EXPECT_TRUE(allEQ(mycolumns.uvw()(i), 0.0));
+        EXPECT_EQ(mycolumns.feed1()(i), mycolumns.feed2()(i));
+        EXPECT_EQ(mycolumns.time()(i), mycolumns.timeCentroid()(i));
+        EXPECT_EQ(mycolumns.interval()(i), mycolumns.exposure()(i));
+        EXPECT_TRUE(allEQ(mycolumns.sigma()(i), 1.0f));
+        EXPECT_TRUE(allEQ(mycolumns.sigma()(i), mycolumns.weight()(i)));
+
+        // row matching
+        Double time = mycolumns.time()(i);
+        Double interval = mycolumns.interval()(i);
+        Int field_id = mycolumns.fieldId()(i);
+        Int feed_id = mycolumns.feed1()(i);
+        Int data_desc_id = mycolumns.dataDescId()(i);
+        Int state_id = mycolumns.stateId()(i);
+        Int scan = mycolumns.scanNumber()(i);
+        Bool flag_row = mycolumns.flagRow()(i);
+        Int subscan = state_columns.subScan()(state_id);
+        Int pol_id = data_desc_columns.polarizationId()(data_desc_id);
+        Int spw_id = data_desc_columns.spectralWindowId()(data_desc_id);
+        String field_name = field_columns.name()(field_id) + "__"
+            + String::toString(field_id);
+        Int num_corr = pol_columns.numCorr()(pol_id);
+        Int num_chan = spw_columns.numChan()(spw_id);
+        std::cout << "TIME " << time / kDay2Sec << " BEAM " << feed_id
+            << " FEILD " << field_name << " SPW " << spw_id << std::endl;
+        Table ss = s(
+            s.col("TIME") * kDay2Sec == time && s.col("BEAMNO") == feed_id
+                && s.col("FIELDNAME") == field_name && s.col("IFNO") == spw_id);
+        Table so = ss.sort("POLNO", Sort::Ascending);
+        EXPECT_TRUE(allEQ(getScalarColumn<uInt>(so, "SCANNO"), (uInt )scan));
+        EXPECT_TRUE(
+            allEQ(getScalarColumn<uInt>(so, "CYCLENO"), (uInt )subscan));
+        Vector<Double> sc_interval = getScalarColumn<Double>(so, "INTERVAL");
+        EXPECT_TRUE(allEQ(sc_interval, interval));
+        EXPECT_EQ(anyGT(getScalarColumn<uInt>(so, "FLAGROW"), 0u), flag_row);
+        EXPECT_EQ(so.nrow(), (uInt )num_corr);
+        EXPECT_EQ(IPosition(1, num_corr), mycolumns.sigma().shape(i));
+        IPosition expected_shape(2, num_corr, num_chan);
+        EXPECT_EQ(expected_shape, mycolumns.floatData().shape(i));
+        EXPECT_EQ(expected_shape, mycolumns.flag().shape(i));
+
+        // flag and data
+        Matrix<uChar> sc_flag(getArrayColumn<uChar>(so, "FLAGTRA"));
+        Matrix<Bool> expected_flag(sc_flag.shape());
+        convertArray(expected_flag, sc_flag);
+        Matrix<Float> expected_data(getArrayColumn<Float>(so, "SPECTRA"));
+        Matrix<Float> data = mycolumns.floatData()(i);
+        Matrix<Bool> flag = mycolumns.flag()(i);
+        if (spw_id == 0) {
+          std::cout << "1 pol" << std::endl;
+          EXPECT_EQ(1u, so.nrow());
+          EXPECT_TRUE(allEQ(expected_flag.column(0), flag.row(0)));
+          EXPECT_TRUE(allEQ(expected_data.column(0), data.row(0)));
+        } else {
+          std::cout << "2 pols" << std::endl;
+          EXPECT_EQ(2u, so.nrow());
+          EXPECT_TRUE(allEQ(expected_flag.column(0), flag.row(0)));
+          EXPECT_TRUE(allEQ(expected_flag.column(1), flag.row(1)));
+          EXPECT_TRUE(allEQ(expected_data.column(0), data.row(0)));
+          EXPECT_TRUE(allEQ(expected_data.column(1), data.row(1)));
+        }
+
+      }
+    }
+
+    // Verify SPECTRAL_WINDOW
+    {
+      constexpr Int kExpectedNumRow = 19;
+      Int const valid_spw_list[] = { 0, 9, 10, 17, 18 };
+      Vector<Int> const valid_spw_vector(IPosition(1, 5),
+          const_cast<Int *>(valid_spw_list), SHARE);
+      std::cout << "verify SPECTRAL_WINDOW table" << std::endl;
+      auto const mytable = myms.spectralWindow();
+      ROMSSpWindowColumns mycolumns(mytable);
+      Table frequencies_table = myscantable.keywordSet().asTable("FREQUENCIES");
+      ASSERT_EQ((uInt )kExpectedNumRow, mytable.nrow());
+      for (Int irow = 0; irow < kExpectedNumRow; ++irow) {
+        std::cout << "Verifying row " << irow << std::endl;
+        if (anyEQ(valid_spw_vector, irow)) {
+          Table t = myscantable(myscantable.col("IFNO") == (uInt) irow, 1);
+          ASSERT_EQ(1u, t.nrow());
+          ROScalarColumn<uInt> freq_id_column(t, "FREQ_ID");
+          ArrayColumn<uChar> flag_column(t, "FLAGTRA");
+          Int expected_num_chan = flag_column.shape(0)[0];
+          uInt freq_id = freq_id_column(0);
+          t = frequencies_table(frequencies_table.col("ID") == freq_id, 1);
+          ASSERT_EQ(1u, t.nrow());
+          ROScalarColumn<Double> column(t, "REFPIX");
+          Double refpix = column(0);
+          column.attach(t, "REFVAL");
+          Double refval = column(0);
+          column.attach(t, "INCREMENT");
+          Double increment = column(0);
+          Int expected_sideband = (increment > 0.0) ? 0 : 1;
+          Double expected_bandwidth = expected_num_chan * abs(increment);
+          Vector<Double> expected_chan_freq(expected_num_chan);
+          Double expected_ref_freq = refval - refpix * increment;
+          indgen(expected_chan_freq, expected_ref_freq, increment);
+          String freq_frame = frequencies_table.keywordSet().asString(
+              "BASEFRAME");
+          MFrequency::Types expected_type;
+          Bool status = MFrequency::getType(expected_type, freq_frame);
+          ASSERT_TRUE(status);
+
+          EXPECT_EQ(expected_num_chan, mycolumns.numChan()(irow));
+          EXPECT_EQ(expected_num_chan, mycolumns.chanFreq().shape(irow)[0]);
+          EXPECT_EQ(expected_num_chan, mycolumns.chanWidth().shape(irow)[0]);
+          EXPECT_EQ(expected_num_chan, mycolumns.effectiveBW().shape(irow)[0]);
+          EXPECT_TRUE(allEQ(expected_chan_freq, mycolumns.chanFreq()(irow)));
+          EXPECT_TRUE(allEQ(mycolumns.chanWidth()(irow), increment));
+          EXPECT_TRUE(allEQ(mycolumns.effectiveBW()(irow), abs(increment)));
+          EXPECT_EQ(expected_ref_freq, mycolumns.refFrequency()(irow));
+          EXPECT_EQ(expected_sideband, mycolumns.netSideband()(irow));
+          EXPECT_EQ(expected_bandwidth, mycolumns.totalBandwidth()(irow));
+          EXPECT_EQ(expected_type, mycolumns.measFreqRef()(irow));
+        } else {
+          EXPECT_EQ(1, mycolumns.numChan()(irow));
+          EXPECT_EQ(0.0, mycolumns.refFrequency()(irow));
+          EXPECT_EQ(0.0, mycolumns.totalBandwidth()(irow));
+          Vector<Double> chan_freq = mycolumns.chanFreq()(irow);
+          EXPECT_EQ(1u, chan_freq.size());
+          EXPECT_EQ(0.0, chan_freq[0]);
+          Vector<Double> chan_width = mycolumns.chanWidth()(irow);
+          EXPECT_EQ(1u, chan_width.size());
+          EXPECT_EQ(0.0, chan_width[0]);
+          Vector<Double> effbw = mycolumns.effectiveBW()(irow);
+          EXPECT_EQ(1u, effbw.size());
+          EXPECT_EQ(0.0, effbw[0]);
+        }
+        EXPECT_TRUE(
+            allEQ(mycolumns.effectiveBW()(irow), mycolumns.resolution()(irow)));
+      }
+    }
+
+    // Verify POLARIZATION
+    // should have two rows that corresponds to WVR (1 pol) and others (2 pols)
+    {
+      std::cout << "Verify POLARIZATION table" << std::endl;
+      auto const mytable = myms.polarization();
+      ROMSPolarizationColumns const mycolumns(mytable);
+      ASSERT_EQ(2u, mycolumns.nrow());
+      Vector<Int> expected_corr_type(2);
+      String poltype = myscantable.keywordSet().asString("POLTYPE");
+      if (poltype == "linear") {
+        expected_corr_type[0] = Stokes::XX;
+        expected_corr_type[1] = Stokes::YY;
+      } else if (poltype == "circular") {
+        expected_corr_type[0] = Stokes::RR;
+        expected_corr_type[1] = Stokes::LL;
+      }
+      EXPECT_EQ(1, mycolumns.numCorr()(0));
+      Vector<Int> corr_type = mycolumns.corrType()(0);
+      EXPECT_EQ(1u, corr_type.size());
+      EXPECT_EQ(expected_corr_type[0], corr_type[0]);
+      EXPECT_EQ(2, mycolumns.numCorr()(1));
+      corr_type.assign(mycolumns.corrType()(1));
+      EXPECT_EQ(2u, corr_type.size());
+      EXPECT_EQ(expected_corr_type[0], corr_type[0]);
+      EXPECT_EQ(expected_corr_type[1], corr_type[1]);
+    }
+
+    // Verify DATA_DESCRIPTION
+    // expected configuration is
+    // DD_ID POL_ID SPW_ID
+    //   0      0      0
+    //   1      1      9
+    //   2      1     10
+    //   3      1     17
+    //   4      1     18
+    {
+      std::cout << "Verify DATA_DESCRIPTION table" << std::endl;
+      auto const mytable = myms.dataDescription();
+      ROMSDataDescColumns const mycolumns(mytable);
+      ASSERT_EQ(5u, mytable.nrow());
+      EXPECT_EQ(0, mycolumns.polarizationId()(0));
+      EXPECT_EQ(0, mycolumns.spectralWindowId()(0));
+      EXPECT_EQ(1, mycolumns.polarizationId()(1));
+      EXPECT_EQ(9, mycolumns.spectralWindowId()(1));
+      EXPECT_EQ(1, mycolumns.polarizationId()(2));
+      EXPECT_EQ(10, mycolumns.spectralWindowId()(2));
+      EXPECT_EQ(1, mycolumns.polarizationId()(3));
+      EXPECT_EQ(17, mycolumns.spectralWindowId()(3));
+      EXPECT_EQ(1, mycolumns.polarizationId()(4));
+      EXPECT_EQ(18, mycolumns.spectralWindowId()(4));
+    }
+
+    // Verify POINTING
+    {
+      std::cout << "Verify POINTING table" << std::endl;
+      auto const mytable = myms.pointing();
+      ROMSPointingColumns const mycolumns(mytable);
+      uInt nrow = mytable.nrow();
+      Table t = myscantable;
+      ROScalarColumn<Double> time_column(t, "TIME");
+      ROScalarColumn<Double> interval_column(t, "INTERVAL");
+      ArrayColumn<Double> direction_column(t, "DIRECTION");
+      ArrayColumn<Double> scanrate_column(t, "SCANRATE");
+      Vector<Double> time_list = time_column.getColumn();
+      Sort s;
+      s.sortKey(time_list.data(), TpDouble);
+      Vector<uInt> index_vector;
+      uInt expected_nrow = s.sort(index_vector, myscantable.nrow(),
+          Sort::QuickSort | Sort::NoDuplicates);
+      ASSERT_EQ(expected_nrow, nrow);
+      for (uInt irow = 0; irow < nrow; ++irow) {
+        std::cout << "Verifying row " << irow << std::endl;
+        uInt index = index_vector[irow];
+        EXPECT_EQ(0, mycolumns.antennaId()(irow));
+        Double expected_time = time_list[index] * kDay2Sec;
+        Table tsel = t(t.col("TIME") == time_list[index]);
+        Table tsort = tsel.sort("IFNO");
+        ROScalarColumn<Double> col(tsort, "INTERVAL");
+        Double expected_interval = col(0);
+        Vector<Double> expected_direction = direction_column(index);
+        Vector<Double> expected_scanrate = scanrate_column(index);
+        EXPECT_EQ(expected_time, mycolumns.time()(irow));
+        EXPECT_EQ(expected_interval, mycolumns.interval()(irow));
+        Matrix<Double> direction = mycolumns.direction()(irow);
+        if (allEQ(expected_scanrate, 0.0)) {
+          EXPECT_EQ(IPosition(2, 2, 1), direction.shape());
+          EXPECT_TRUE(allEQ(expected_direction, direction.column(0)));
+        } else {
+          EXPECT_EQ(IPosition(2, 2, 2), direction.shape());
+          EXPECT_TRUE(allEQ(expected_direction, direction.column(0)));
+          EXPECT_TRUE(allEQ(expected_scanrate, direction.column(1)));
+        }
+      }
+    }
+
+    // Verify FEED
+    // expected configuration is
+    // FEED_ID SPW_ID
+    //     0      0
+    //     0      9
+    //     0     10
+    //     0     17
+    //     0     18
+    {
+      std::cout << "Verify FEED table" << std::endl;
+      auto const mytable = myms.feed();
+      ROMSFeedColumns const mycolumns(mytable);
+      ASSERT_EQ(5u, mytable.nrow());
+      EXPECT_EQ(0, mycolumns.feedId()(0));
+      EXPECT_EQ(0, mycolumns.spectralWindowId()(0));
+      EXPECT_EQ(0, mycolumns.feedId()(1));
+      EXPECT_EQ(9, mycolumns.spectralWindowId()(1));
+      EXPECT_EQ(0, mycolumns.feedId()(2));
+      EXPECT_EQ(10, mycolumns.spectralWindowId()(2));
+      EXPECT_EQ(0, mycolumns.feedId()(3));
+      EXPECT_EQ(17, mycolumns.spectralWindowId()(3));
+      EXPECT_EQ(0, mycolumns.feedId()(4));
+      EXPECT_EQ(18, mycolumns.spectralWindowId()(4));
+    }
+  }
+
 };
 
 class SingleDishMSFillerTestComplex: public SingleDishMSFillerTestBase {
@@ -226,601 +822,30 @@ class DISABLED_SingleDishMSFillerTestPerformance: public SingleDishMSFillerTestB
   }
 };
 
-TEST_F(SingleDishMSFillerTestFloat, FillerTest) {
+TEST_F(SingleDishMSFillerTestFloat, SerialFillerTest) {
   // Create filler
-  std::cout << "create filler" << std::endl;
-  SingleDishMSFiller<Scantable2MSReader> filler(my_data_name_);
+  std::cout << "create serial filler" << std::endl;
+  SingleDishMSFiller<Scantable2MSReader> filler(my_data_name_, false);
 
   // Run filler
   std::cout << "run filler" << std::endl;
   ExecuteFiller(filler);
 
   // verify table contents
-  MeasurementSet myms(my_ms_name_);
-  Table myscantable(my_data_name_, Table::Old);
-  TableRecord const &scantable_header = myscantable.keywordSet();
-  constexpr double kDay2Sec = 86400.0;
+  Verify();
+}
 
-  // Verify OBSERVATION table
-  {
-    std::cout << "Verify OBSERVATION table" << std::endl;
-    auto const mytable = myms.observation();
-    ASSERT_EQ(uInt(1), mytable.nrow());
-    ROMSObservationColumns mycolumns(mytable);
-    CASA_EXPECT_STREQ(scantable_header.asString("Observer"),
-        mycolumns.observer()(0));
-    CASA_EXPECT_STREQ(scantable_header.asString("Project"),
-        mycolumns.project()(0));
-    String antenna_name = scantable_header.asString("AntennaName");
-    String expected_telescope_name;
-    String::size_type pos = antenna_name.find("//");
-    if (pos != String::npos) {
-      expected_telescope_name = antenna_name.substr(0, pos);
-    } else {
-      expected_telescope_name = antenna_name.substr(0, antenna_name.find("@"));
-    }
-    CASA_EXPECT_STREQ(expected_telescope_name, mycolumns.telescopeName()(0));
-    ROScalarColumn < Double > column(myscantable, "TIME");
-    Vector < Double > time_list = column.getColumn();
-    Vector < Double > time_range = mycolumns.timeRange()(0);
-    ASSERT_EQ(2u, time_range.nelements());
-    EXPECT_EQ(min(time_list), time_range[0]);
-    EXPECT_EQ(max(time_list), time_range[1]);
-  }
+TEST_F(SingleDishMSFillerTestFloat, ParallelFillerTest) {
+  // Create filler
+  std::cout << "create parallel filler" << std::endl;
+  SingleDishMSFiller<Scantable2MSReader> filler(my_data_name_, true);
 
-  // verify PROCESSOR table
-  {
-    std::cout << "Verify PROCESSOR table" << std::endl;
-    auto const mytable = myms.processor();
-    // just to confirm it has only one row
-    ASSERT_EQ(uInt(1), mytable.nrow());
-  }
+  // Run filler
+  std::cout << "run filler" << std::endl;
+  ExecuteFiller(filler);
 
-  // verify ANTENNA table
-  {
-    std::cout << "Verify ANTENNA table" << std::endl;
-    auto const mytable = myms.antenna();
-    ASSERT_EQ(uInt(1), mytable.nrow());
-    ROMSAntennaColumns mycolumns(mytable);
-    String header_antenna_name = scantable_header.asString("AntennaName");
-    String antenna_name;
-    String expected_name;
-    String expected_station;
-    String::size_type pos = header_antenna_name.find("//");
-    if (pos != String::npos) {
-      antenna_name = header_antenna_name.substr(pos + 2);
-    } else {
-      antenna_name = header_antenna_name;
-    }
-    pos = antenna_name.find("@");
-    if (pos != String::npos) {
-      expected_name = antenna_name.substr(0, pos);
-      expected_station = antenna_name.substr(pos + 1);
-    } else {
-      expected_name = antenna_name;
-      expected_station = "";
-    }
-    CASA_EXPECT_STREQ(expected_name, mycolumns.name()(0));
-    CASA_EXPECT_STREQ(expected_station, mycolumns.station()(0));
-    CASA_EXPECT_STREQ(String("GROUND-BASED"), mycolumns.type()(0));
-    CASA_EXPECT_STREQ(String("ALT-AZ"), mycolumns.mount()(0));
-    auto const position_meas_column = mycolumns.positionMeas();
-    auto const position = position_meas_column(0);
-    auto const position_val = position.get("m");
-    Vector < Double > expected_position = scantable_header.asArrayDouble(
-        "AntennaPosition");
-    CASA_EXPECT_STREQ(String("ITRF"), position.getRefString());
-    EXPECT_TRUE(allEQ(expected_position, position_val.getValue()));
-    EXPECT_EQ(12.0, mycolumns.dishDiameter()(0));
-  }
-
-  // verify WEATHER table
-  {
-    std::cout << "Verify WEATHER table" << std::endl;
-    auto const mytable = myms.weather();
-    auto const weather_table = scantable_header.asTable("WEATHER");
-    //uInt expected_nrow = weather_table.nrow();
-    ROScalarColumn < uInt > weather_id_column(myscantable, "WEATHER_ID");
-    Vector < uInt > weather_id_list = weather_id_column.getColumn();
-    Sort sorter;
-    sorter.sortKey(weather_id_list.data(), TpUInt, 0, Sort::Ascending);
-    Vector < uInt > index_vector;
-    uInt expected_nrow = sorter.sort(index_vector, weather_id_list.size(),
-        Sort::QuickSort | Sort::NoDuplicates);
-    ASSERT_EQ(expected_nrow, mytable.nrow());
-    ROMSWeatherColumns mycolumns(mytable);
-    ROTableRow row(weather_table);
-    std::map<uInt, uInt> weather_id_map;
-    weather_id_column.attach(weather_table, "ID");
-    for (uInt i = 0; i < weather_id_column.nrow(); ++i) {
-      weather_id_map[weather_id_column(i)] = i;
-    }
-    for (uInt i = 0; i < expected_nrow; ++i) {
-      std::cout << "Verifying row " << i << std::endl;
-      uInt weather_id = weather_id_list[index_vector[i]];
-      uInt irow_weather = weather_id_map[weather_id];
-      TableRecord row_record = row.get(irow_weather);
-      Double time_min = 1.0e30;
-      Double time_max = 0.0;
-      Double expected_time = 0.0;
-      Double expected_interval = 0.0;
-      auto subtable = myscantable(myscantable.col("WEATHER_ID") == weather_id);
-      if (subtable.nrow() > 0) {
-        ROScalarColumn < uInt > id_column(subtable, "IFNO");
-        Vector < uInt > spw_list = id_column.getColumn();
-        Sort ss;
-        ss.sortKey(spw_list.data(), TpUInt, 0, Sort::Ascending);
-        Vector < uInt > sidx;
-        uInt num_spw = ss.sort(sidx, spw_list.size(),
-            Sort::QuickSort | Sort::NoDuplicates);
-        for (uInt ispw = 0; ispw < num_spw; ++ispw) {
-          uInt spw_id = spw_list[sidx[ispw]];
-          auto subsubtable = subtable(subtable.col("IFNO") == spw_id);
-          ROScalarColumn < Double > tcol(subsubtable, "TIME");
-          ROScalarColumn < Double > icol(subsubtable, "INTERVAL");
-          Vector < Double > time_list = tcol.getColumn();
-          Vector < Double > interval_list = icol.getColumn();
-          Sort ts;
-          ts.sortKey(time_list.data(), TpDouble, 0, Sort::Ascending);
-          Vector < uInt > tidx;
-          ts.sort(tidx, time_list.size());
-          uInt id_min = tidx[0];
-          uInt id_max = tidx[tidx.size() - 1];
-          Double time_min_in = time_list[id_min] * kDay2Sec
-              - 0.5 * interval_list[id_min];
-          Double time_max_in = time_list[id_max] * kDay2Sec
-              + 0.5 * interval_list[id_max];
-          time_min = min(time_min, time_min_in);
-          time_max = max(time_max, time_max_in);
-          expected_time = (time_max + time_min) * 0.5;
-          expected_interval = time_max - time_min;
-        }
-      }
-//      EXPECT_EQ(expected_time, mycolumns.time()(i));
-//      EXPECT_EQ(expected_interval, mycolumns.interval()(i));
-      Double diff_time = abs(
-          (mycolumns.time()(i) - expected_time) / expected_time);
-      Double diff_interval = abs(
-          (mycolumns.interval()(i) - expected_interval) / expected_interval);
-      std::cout << "diff_time = " << diff_time << " diff_interval = "
-          << diff_interval << std::endl;
-      Double const eps = 1.0e-5;
-      EXPECT_LT(diff_time, eps);
-      EXPECT_LT(diff_interval, eps);
-      EXPECT_EQ(0, mycolumns.antennaId()(i));
-      EXPECT_FLOAT_EQ(row_record.asFloat("TEMPERATURE"),
-          mycolumns.temperature()(i));
-      EXPECT_FLOAT_EQ(row_record.asFloat("PRESSURE"), mycolumns.pressure()(i));
-      EXPECT_FLOAT_EQ(row_record.asFloat("HUMIDITY"),
-          mycolumns.relHumidity()(i));
-      EXPECT_FLOAT_EQ(row_record.asFloat("WINDSPEED"),
-          mycolumns.windSpeed()(i));
-      EXPECT_FLOAT_EQ(row_record.asFloat("WINDAZ"),
-          mycolumns.windDirection()(i));
-    }
-  }
-
-  // verify SOURCE table
-  Record source_map;
-  {
-    std::cout << "verify SOURCE table" << std::endl;
-    auto const mytable = myms.source();
-    auto const molecules_table = scantable_header.asTable("MOLECULES");
-    ROScalarColumn < String > srcname_column(myscantable, "SRCNAME");
-    ROScalarColumn < uInt > ifno_column(myscantable, "IFNO");
-    ROScalarColumn < uInt > molecule_id_column(myscantable, "MOLECULE_ID");
-    ArrayColumn<Double> proper_motion_column(myscantable, "SRCPROPERMOTION");
-    ROScalarColumn < Double > sysvel_column(myscantable, "SRCVELOCITY");
-    Vector < String > srcname_list = srcname_column.getColumn();
-    Vector < uInt > ifno_list = ifno_column.getColumn();
-    Sort sorter;
-    sorter.sortKey(srcname_list.data(), TpString);
-    Vector < uInt > index_vector;
-    uInt num_source = sorter.sort(index_vector, myscantable.nrow(),
-        Sort::QuickSort | Sort::NoDuplicates);
-    for (uInt i = 0; i < num_source; ++i) {
-      source_map.define(srcname_list[index_vector[i]], (Int) i);
-    }
-    sorter.sortKey(ifno_list.data(), TpUInt);
-    index_vector.resize();
-    uInt expected_nrow = sorter.sort(index_vector, myscantable.nrow(),
-        Sort::QuickSort | Sort::NoDuplicates);
-    ASSERT_EQ(expected_nrow, mytable.nrow());
-    ROMSSourceColumns mycolumns(mytable);
-    for (uInt i = 0; i < expected_nrow; ++i) {
-      std::cout << "Verifying row " << i << std::endl;
-      uInt j = index_vector[i];
-      String expected_name = srcname_list[j];
-      uInt expected_spw_id = ifno_list[j];
-      Int expected_source_id = source_map.asInt(expected_name);
-      EXPECT_EQ((Int )expected_spw_id, mycolumns.spectralWindowId()(i));
-      CASA_EXPECT_STREQ(expected_name, mycolumns.name()(i));
-      EXPECT_EQ(expected_source_id, mycolumns.sourceId()(i));
-      EXPECT_TRUE(allEQ(proper_motion_column(j), mycolumns.properMotion()(i)));
-      uInt molecule_id = molecule_id_column(j);
-
-      Table t = molecules_table(molecules_table.col("ID") == molecule_id, 1);
-      ASSERT_EQ(1u, t.nrow());
-      ArrayColumn<Double> rest_freq_column(t, "RESTFREQUENCY");
-      ArrayColumn<String> transition_column(t, "NAME");
-      Vector < Double > expected_rest_freq;
-      Vector < String > expected_transition;
-      if (rest_freq_column.isDefined(0)
-          && rest_freq_column.shape(0).product() > 0) {
-        Vector < Double > expected_rest_freq = rest_freq_column(0);
-        Int expected_num_lines = expected_rest_freq.size();
-        EXPECT_EQ(expected_num_lines, mycolumns.numLines()(i));
-        EXPECT_TRUE(allEQ(expected_rest_freq, mycolumns.restFrequency()(i)));
-        EXPECT_TRUE(allEQ(mycolumns.sysvel()(i), sysvel_column(j)));
-      } else {
-        EXPECT_EQ(0, mycolumns.numLines()(i));
-        EXPECT_FALSE(mycolumns.restFrequency().isDefined(i));
-        EXPECT_FALSE(mycolumns.sysvel().isDefined(i));
-      }
-      if (transition_column.isDefined(0)
-          && transition_column.shape(0).product() > 0) {
-        Vector < String > expected_transition = transition_column(0);
-        EXPECT_TRUE(allEQ(expected_transition, mycolumns.transition()(i)));
-      } else {
-        EXPECT_FALSE(mycolumns.transition().isDefined(i));
-      }
-
-      t = myscantable(
-          myscantable.col("SRCNAME") == expected_name
-              && myscantable.col("IFNO") == expected_spw_id);
-      ROScalarColumn < Double > time_column(t, "TIME");
-      ROScalarColumn < Double > interval_column(t, "INTERVAL");
-      Vector < Double > time_list = time_column.getColumn();
-      Sort s;
-      s.sortKey(time_list.data(), TpDouble);
-      Vector < uInt > x;
-      uInt m = s.sort(x, t.nrow());
-      uInt imin = x[0];
-      uInt imax = x[m - 1];
-      Double tmin = time_list[imin] * kDay2Sec - 0.5 * interval_column(imin);
-      Double tmax = time_list[imax] * kDay2Sec + 0.5 * interval_column(imax);
-      Double expected_time = 0.5 * (tmin + tmax);
-      Double expected_interval = (tmax - tmin);
-      EXPECT_EQ(expected_time, mycolumns.time()(i));
-      EXPECT_EQ(expected_interval, mycolumns.interval()(i));
-    }
-  }
-
-  // verify FIELD table
-  {
-    std::cout << "verify FIELD table" << std::endl;
-    auto const mytable = myms.field();
-    ROScalarColumn < String > fieldname_column(myscantable, "FIELDNAME");
-    ROScalarColumn < String > srcname_column(myscantable, "SRCNAME");
-    ROScalarColumn < Double > time_column(myscantable, "TIME");
-    ArrayColumn<Double> srcdir_column(myscantable, "SRCDIRECTION");
-    ArrayColumn<Double> scanrate_column(myscantable, "SCANRATE");
-    Vector < String > fieldname_list = fieldname_column.getColumn();
-    Sort sorter;
-    sorter.sortKey(fieldname_list.data(), TpString);
-    Vector < uInt > index_vector;
-    uInt num_records = sorter.sort(index_vector, myscantable.nrow(),
-        Sort::QuickSort | Sort::NoDuplicates);
-    ROMSFieldColumns mycolumns(mytable);
-    std::vector<uInt> processed_rows;
-    for (uInt i = 0; i < num_records; ++i) {
-      std::cout << "Verifying row " << i << std::endl;
-      uInt j = index_vector[i];
-      String field_name = fieldname_list(j);
-      auto pos = field_name.find("__");
-      String expected_name = fieldname_list(j);
-      Int field_id = i;
-      if (pos != String::npos) {
-        expected_name = field_name.substr(0, pos);
-        field_id = String::toInt(field_name.substr(pos + 2));
-      }
-      ASSERT_GE(field_id, 0);
-      ASSERT_LT((uInt )field_id, mycolumns.nrow());
-      CASA_EXPECT_STREQ(expected_name, mycolumns.name()(field_id));
-      Int expected_source_id = source_map.asInt(srcname_column(j));
-      EXPECT_EQ(expected_source_id, mycolumns.sourceId()(field_id));
-      Double expected_time = time_column(j) * kDay2Sec;
-      EXPECT_EQ(expected_time, mycolumns.time()(field_id));
-      Vector < Double > expected_direction = srcdir_column(j);
-      Vector < Double > expected_scan_rate = scanrate_column(j);
-      Matrix < Double > direction = mycolumns.phaseDir()(field_id);
-      if (allEQ(expected_scan_rate, 0.0)) {
-        IPosition expected_shape(2, 2, 1);
-        EXPECT_EQ(expected_shape, direction.shape());
-        EXPECT_TRUE(allEQ(expected_direction, direction.column(0)));
-      } else {
-        IPosition expected_shape(2, 2, 2);
-        EXPECT_EQ(expected_shape, direction.shape());
-        EXPECT_TRUE(allEQ(expected_direction, direction.column(0)));
-        EXPECT_TRUE(allEQ(expected_scan_rate, direction.column(1)));
-      }
-      CASA_EXPECT_STREQ(String("J2000"),
-          mycolumns.phaseDir().keywordSet().asRecord("MEASINFO").asString(
-              "Ref"));
-    }
-  }
-
-  // Verify MAIN
-  // The test data should contain
-  //    - spws 0 (1 pol), 9, 10, 17, 18 (2 pols)
-  //    - scans 0, 5, 6
-  //    - cycles < 20
-  // DD_ID 0 WVR (1 pol)
-  // DD_ID > 0 non-WVR (2 pol)
-  {
-    std::cout << "Verifying MAIN and STATE" << std::endl;
-    ASSERT_TRUE(myms.tableDesc().isColumn("FLOAT_DATA"));
-    ROMSMainColumns mycolumns(myms);
-    ROMSDataDescColumns data_desc_columns(myms.dataDescription());
-    ROMSFieldColumns field_columns(myms.field());
-    ROMSStateColumns state_columns(myms.state());
-    ROMSPolarizationColumns pol_columns(myms.polarization());
-    ROMSSpWindowColumns spw_columns(myms.spectralWindow());
-    uInt const nrow = myms.nrow();
-    Table t = myscantable(myscantable.col("IFNO") == (uInt) 0);
-    uInt expected_nrow = t.nrow() + (myscantable.nrow() - t.nrow()) / 2;
-    ASSERT_EQ(expected_nrow, nrow);
-    // alias
-    Table &s = myscantable;
-    for (uInt i = 0; i < nrow; ++i) {
-      std::cout << "Verifying row " << i << std::endl;
-
-      // some trivial stuff
-      EXPECT_EQ(0, mycolumns.antenna1()(i));
-      EXPECT_EQ(mycolumns.antenna1()(i), mycolumns.antenna2()(i));
-      EXPECT_EQ(IPosition(1, 3), mycolumns.uvw().shape(i));
-      EXPECT_TRUE(allEQ(mycolumns.uvw()(i), 0.0));
-      EXPECT_EQ(mycolumns.feed1()(i), mycolumns.feed2()(i));
-      EXPECT_EQ(mycolumns.time()(i), mycolumns.timeCentroid()(i));
-      EXPECT_EQ(mycolumns.interval()(i), mycolumns.exposure()(i));
-      EXPECT_TRUE(allEQ(mycolumns.sigma()(i), 1.0f));
-      EXPECT_TRUE(allEQ(mycolumns.sigma()(i), mycolumns.weight()(i)));
-
-      // row matching
-      Double time = mycolumns.time()(i);
-      Double interval = mycolumns.interval()(i);
-      Int field_id = mycolumns.fieldId()(i);
-      Int feed_id = mycolumns.feed1()(i);
-      Int data_desc_id = mycolumns.dataDescId()(i);
-      Int state_id = mycolumns.stateId()(i);
-      Int scan = mycolumns.scanNumber()(i);
-      Bool flag_row = mycolumns.flagRow()(i);
-      Int subscan = state_columns.subScan()(state_id);
-      Int pol_id = data_desc_columns.polarizationId()(data_desc_id);
-      Int spw_id = data_desc_columns.spectralWindowId()(data_desc_id);
-      String field_name = field_columns.name()(field_id) + "__"
-          + String::toString(field_id);
-      Int num_corr = pol_columns.numCorr()(pol_id);
-      Int num_chan = spw_columns.numChan()(spw_id);
-      std::cout << "TIME " << time / kDay2Sec << " BEAM " << feed_id
-          << " FEILD " << field_name << " SPW " << spw_id << std::endl;
-      Table ss = s(
-          s.col("TIME") * kDay2Sec == time && s.col("BEAMNO") == feed_id
-              && s.col("FIELDNAME") == field_name && s.col("IFNO") == spw_id);
-      Table so = ss.sort("POLNO", Sort::Ascending);
-      EXPECT_TRUE(allEQ(getScalarColumn<uInt>(so, "SCANNO"), (uInt )scan));
-      EXPECT_TRUE(allEQ(getScalarColumn<uInt>(so, "CYCLENO"), (uInt )subscan));
-      Vector < Double > sc_interval = getScalarColumn<Double>(so, "INTERVAL");
-      EXPECT_TRUE(allEQ(sc_interval, interval));
-      EXPECT_EQ(anyGT(getScalarColumn<uInt>(so, "FLAGROW"), 0u), flag_row);
-      EXPECT_EQ(so.nrow(), (uInt )num_corr);
-      EXPECT_EQ(IPosition(1, num_corr), mycolumns.sigma().shape(i));
-      IPosition expected_shape(2, num_corr, num_chan);
-      EXPECT_EQ(expected_shape, mycolumns.floatData().shape(i));
-      EXPECT_EQ(expected_shape, mycolumns.flag().shape(i));
-
-      // flag and data
-      Matrix < uChar > sc_flag(getArrayColumn<uChar>(so, "FLAGTRA"));
-      Matrix < Bool > expected_flag(sc_flag.shape());
-      convertArray(expected_flag, sc_flag);
-      Matrix < Float > expected_data(getArrayColumn<Float>(so, "SPECTRA"));
-      Matrix < Float > data = mycolumns.floatData()(i);
-      Matrix < Bool > flag = mycolumns.flag()(i);
-      if (spw_id == 0) {
-        std::cout << "1 pol" << std::endl;
-        EXPECT_EQ(1u, so.nrow());
-        EXPECT_TRUE(allEQ(expected_flag.column(0), flag.row(0)));
-        EXPECT_TRUE(allEQ(expected_data.column(0), data.row(0)));
-      } else {
-        std::cout << "2 pols" << std::endl;
-        EXPECT_EQ(2u, so.nrow());
-        EXPECT_TRUE(allEQ(expected_flag.column(0), flag.row(0)));
-        EXPECT_TRUE(allEQ(expected_flag.column(1), flag.row(1)));
-        EXPECT_TRUE(allEQ(expected_data.column(0), data.row(0)));
-        EXPECT_TRUE(allEQ(expected_data.column(1), data.row(1)));
-      }
-
-    }
-  }
-
-  // Verify SPECTRAL_WINDOW
-  {
-    constexpr Int kExpectedNumRow = 19;
-    Int const valid_spw_list[] = { 0, 9, 10, 17, 18 };
-    Vector<Int> const valid_spw_vector(IPosition(1, 5),
-        const_cast<Int *>(valid_spw_list), SHARE);
-    std::cout << "verify SPECTRAL_WINDOW table" << std::endl;
-    auto const mytable = myms.spectralWindow();
-    ROMSSpWindowColumns mycolumns(mytable);
-    Table frequencies_table = myscantable.keywordSet().asTable("FREQUENCIES");
-    ASSERT_EQ((uInt )kExpectedNumRow, mytable.nrow());
-    for (Int irow = 0; irow < kExpectedNumRow; ++irow) {
-      std::cout << "Verifying row " << irow << std::endl;
-      if (anyEQ(valid_spw_vector, irow)) {
-        Table t = myscantable(myscantable.col("IFNO") == (uInt) irow, 1);
-        ASSERT_EQ(1u, t.nrow());
-        ROScalarColumn < uInt > freq_id_column(t, "FREQ_ID");
-        ArrayColumn<uChar> flag_column(t, "FLAGTRA");
-        Int expected_num_chan = flag_column.shape(0)[0];
-        uInt freq_id = freq_id_column(0);
-        t = frequencies_table(frequencies_table.col("ID") == freq_id, 1);
-        ASSERT_EQ(1u, t.nrow());
-        ROScalarColumn < Double > column(t, "REFPIX");
-        Double refpix = column(0);
-        column.attach(t, "REFVAL");
-        Double refval = column(0);
-        column.attach(t, "INCREMENT");
-        Double increment = column(0);
-        Int expected_sideband = (increment > 0.0) ? 0 : 1;
-        Double expected_bandwidth = expected_num_chan * abs(increment);
-        Vector < Double > expected_chan_freq(expected_num_chan);
-        Double expected_ref_freq = refval - refpix * increment;
-        indgen(expected_chan_freq, expected_ref_freq, increment);
-        String freq_frame = frequencies_table.keywordSet().asString(
-            "BASEFRAME");
-        MFrequency::Types expected_type;
-        Bool status = MFrequency::getType(expected_type, freq_frame);
-        ASSERT_TRUE(status);
-
-        EXPECT_EQ(expected_num_chan, mycolumns.numChan()(irow));
-        EXPECT_EQ(expected_num_chan, mycolumns.chanFreq().shape(irow)[0]);
-        EXPECT_EQ(expected_num_chan, mycolumns.chanWidth().shape(irow)[0]);
-        EXPECT_EQ(expected_num_chan, mycolumns.effectiveBW().shape(irow)[0]);
-        EXPECT_TRUE(allEQ(expected_chan_freq, mycolumns.chanFreq()(irow)));
-        EXPECT_TRUE(allEQ(mycolumns.chanWidth()(irow), increment));
-        EXPECT_TRUE(allEQ(mycolumns.effectiveBW()(irow), abs(increment)));
-        EXPECT_EQ(expected_ref_freq, mycolumns.refFrequency()(irow));
-        EXPECT_EQ(expected_sideband, mycolumns.netSideband()(irow));
-        EXPECT_EQ(expected_bandwidth, mycolumns.totalBandwidth()(irow));
-        EXPECT_EQ(expected_type, mycolumns.measFreqRef()(irow));
-      } else {
-        EXPECT_EQ(1, mycolumns.numChan()(irow));
-        EXPECT_EQ(0.0, mycolumns.refFrequency()(irow));
-        EXPECT_EQ(0.0, mycolumns.totalBandwidth()(irow));
-        Vector < Double > chan_freq = mycolumns.chanFreq()(irow);
-        EXPECT_EQ(1u, chan_freq.size());
-        EXPECT_EQ(0.0, chan_freq[0]);
-        Vector < Double > chan_width = mycolumns.chanWidth()(irow);
-        EXPECT_EQ(1u, chan_width.size());
-        EXPECT_EQ(0.0, chan_width[0]);
-        Vector < Double > effbw = mycolumns.effectiveBW()(irow);
-        EXPECT_EQ(1u, effbw.size());
-        EXPECT_EQ(0.0, effbw[0]);
-      }
-      EXPECT_TRUE(
-          allEQ(mycolumns.effectiveBW()(irow), mycolumns.resolution()(irow)));
-    }
-  }
-
-  // Verify POLARIZATION
-  // should have two rows that corresponds to WVR (1 pol) and others (2 pols)
-  {
-    std::cout << "Verify POLARIZATION table" << std::endl;
-    auto const mytable = myms.polarization();
-    ROMSPolarizationColumns const mycolumns(mytable);
-    ASSERT_EQ(2u, mycolumns.nrow());
-    Vector < Int > expected_corr_type(2);
-    String poltype = myscantable.keywordSet().asString("POLTYPE");
-    if (poltype == "linear") {
-      expected_corr_type[0] = Stokes::XX;
-      expected_corr_type[1] = Stokes::YY;
-    } else if (poltype == "circular") {
-      expected_corr_type[0] = Stokes::RR;
-      expected_corr_type[1] = Stokes::LL;
-    }
-    EXPECT_EQ(1, mycolumns.numCorr()(0));
-    Vector < Int > corr_type = mycolumns.corrType()(0);
-    EXPECT_EQ(1u, corr_type.size());
-    EXPECT_EQ(expected_corr_type[0], corr_type[0]);
-    EXPECT_EQ(2, mycolumns.numCorr()(1));
-    corr_type.assign(mycolumns.corrType()(1));
-    EXPECT_EQ(2u, corr_type.size());
-    EXPECT_EQ(expected_corr_type[0], corr_type[0]);
-    EXPECT_EQ(expected_corr_type[1], corr_type[1]);
-  }
-
-  // Verify DATA_DESCRIPTION
-  // expected configuration is
-  // DD_ID POL_ID SPW_ID
-  //   0      0      0
-  //   1      1      9
-  //   2      1     10
-  //   3      1     17
-  //   4      1     18
-  {
-    std::cout << "Verify DATA_DESCRIPTION table" << std::endl;
-    auto const mytable = myms.dataDescription();
-    ROMSDataDescColumns const mycolumns(mytable);
-    ASSERT_EQ(5u, mytable.nrow());
-    EXPECT_EQ(0, mycolumns.polarizationId()(0));
-    EXPECT_EQ(0, mycolumns.spectralWindowId()(0));
-    EXPECT_EQ(1, mycolumns.polarizationId()(1));
-    EXPECT_EQ(9, mycolumns.spectralWindowId()(1));
-    EXPECT_EQ(1, mycolumns.polarizationId()(2));
-    EXPECT_EQ(10, mycolumns.spectralWindowId()(2));
-    EXPECT_EQ(1, mycolumns.polarizationId()(3));
-    EXPECT_EQ(17, mycolumns.spectralWindowId()(3));
-    EXPECT_EQ(1, mycolumns.polarizationId()(4));
-    EXPECT_EQ(18, mycolumns.spectralWindowId()(4));
-  }
-
-  // Verify POINTING
-  {
-    std::cout << "Verify POINTING table" << std::endl;
-    auto const mytable = myms.pointing();
-    ROMSPointingColumns const mycolumns(mytable);
-    uInt nrow = mytable.nrow();
-    Table t = myscantable;
-    ROScalarColumn < Double > time_column(t, "TIME");
-    ROScalarColumn < Double > interval_column(t, "INTERVAL");
-    ArrayColumn<Double> direction_column(t, "DIRECTION");
-    ArrayColumn<Double> scanrate_column(t, "SCANRATE");
-    Vector < Double > time_list = time_column.getColumn();
-    Sort s;
-    s.sortKey(time_list.data(), TpDouble);
-    Vector < uInt > index_vector;
-    uInt expected_nrow = s.sort(index_vector, myscantable.nrow(),
-        Sort::QuickSort | Sort::NoDuplicates);
-    ASSERT_EQ(expected_nrow, nrow);
-    for (uInt irow = 0; irow < nrow; ++irow) {
-      std::cout << "Verifying row " << irow << std::endl;
-      uInt index = index_vector[irow];
-      EXPECT_EQ(0, mycolumns.antennaId()(irow));
-      Double expected_time = time_list[index] * kDay2Sec;
-      Table tsel = t(t.col("TIME") == time_list[index]);
-      Table tsort = tsel.sort("IFNO");
-      ROScalarColumn < Double > col(tsort, "INTERVAL");
-      Double expected_interval = col(0);
-      Vector < Double > expected_direction = direction_column(index);
-      Vector < Double > expected_scanrate = scanrate_column(index);
-      EXPECT_EQ(expected_time, mycolumns.time()(irow));
-      EXPECT_EQ(expected_interval, mycolumns.interval()(irow));
-      Matrix < Double > direction = mycolumns.direction()(irow);
-      if (allEQ(expected_scanrate, 0.0)) {
-        EXPECT_EQ(IPosition(2, 2, 1), direction.shape());
-        EXPECT_TRUE(allEQ(expected_direction, direction.column(0)));
-      } else {
-        EXPECT_EQ(IPosition(2, 2, 2), direction.shape());
-        EXPECT_TRUE(allEQ(expected_direction, direction.column(0)));
-        EXPECT_TRUE(allEQ(expected_scanrate, direction.column(1)));
-      }
-    }
-  }
-
-  // Verify FEED
-  // expected configuration is
-  // FEED_ID SPW_ID
-  //     0      0
-  //     0      9
-  //     0     10
-  //     0     17
-  //     0     18
-  {
-    std::cout << "Verify FEED table" << std::endl;
-    auto const mytable = myms.feed();
-    ROMSFeedColumns const mycolumns(mytable);
-    ASSERT_EQ(5u, mytable.nrow());
-    EXPECT_EQ(0, mycolumns.feedId()(0));
-    EXPECT_EQ(0, mycolumns.spectralWindowId()(0));
-    EXPECT_EQ(0, mycolumns.feedId()(1));
-    EXPECT_EQ(9, mycolumns.spectralWindowId()(1));
-    EXPECT_EQ(0, mycolumns.feedId()(2));
-    EXPECT_EQ(10, mycolumns.spectralWindowId()(2));
-    EXPECT_EQ(0, mycolumns.feedId()(3));
-    EXPECT_EQ(17, mycolumns.spectralWindowId()(3));
-    EXPECT_EQ(0, mycolumns.feedId()(4));
-    EXPECT_EQ(18, mycolumns.spectralWindowId()(4));
-  }
+  // verify table contents
+  Verify();
 }
 
 TEST_F(SingleDishMSFillerTestComplex, FillerTest) {
@@ -840,14 +865,14 @@ TEST_F(SingleDishMSFillerTestComplex, FillerTest) {
 
   Table t = myscantable.sort("POLNO");
   ArrayColumn<Float> c(t, "SPECTRA");
-  Vector < Float > data0real = c(0);
-  Vector < Float > data3real = c(1);
-  Vector < Float > data1real = c(2);
-  Vector < Float > data1imag = c(3);
+  Vector<Float> data0real = c(0);
+  Vector<Float> data3real = c(1);
+  Vector<Float> data1real = c(2);
+  Vector<Float> data1imag = c(3);
 
   ASSERT_TRUE(myms.tableDesc().isColumn("DATA"));
   ArrayColumn<Complex> data_column(myms, "DATA");
-  Matrix < Complex > data = data_column(0);
+  Matrix<Complex> data = data_column(0);
   EXPECT_TRUE(allEQ(data0real, real(data.row(0))));
   EXPECT_TRUE(allEQ(imag(data.row(0)), 0.0f));
   EXPECT_TRUE(allEQ(data1real, real(data.row(1))));
@@ -890,11 +915,11 @@ TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
     EXPECT_TRUE(
         allEQ(expected_record.asArrayDouble("TIME_RANGE"),
             mycolumns.timeRange()(0)));
-    Vector < String > mylog = mycolumns.log()(0);
+    Vector<String> mylog = mycolumns.log()(0);
     EXPECT_EQ(size_t(1), mylog.size());
     CASA_EXPECT_STREQ(expected_record.asArrayString("LOG")(IPosition(1, 0)),
         mylog[0]);
-    Vector < String > myschedule = mycolumns.schedule()(0);
+    Vector<String> myschedule = mycolumns.schedule()(0);
     EXPECT_EQ(size_t(1), myschedule.size());
     CASA_EXPECT_STREQ(
         expected_record.asArrayString("SCHEDULE")(IPosition(1, 0)),
@@ -932,7 +957,7 @@ TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
     auto const position_val = position.get("m");
     CASA_EXPECT_STREQ(String("ITRF"), position.getRefString());
     EXPECT_TRUE(
-        allEQ(Vector < Double > (expected_record.asArrayDouble("POSITION")),
+        allEQ(Vector<Double>(expected_record.asArrayDouble("POSITION")),
             position_val.getValue()));
     auto const offset_meas_column = mycolumns.offsetMeas();
     auto const offset = offset_meas_column(0);
@@ -1023,7 +1048,7 @@ TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
       std::cout << "field " << field_id << std::endl;
       processed_rows.push_back((uInt) field_id);
       ASSERT_GE(field_id, 0);
-      if ((uInt)(field_id + 1) > expected_nrow) {
+      if ((uInt) (field_id + 1) > expected_nrow) {
         expected_nrow = field_id + 1;
       }
       EXPECT_EQ(row_record.time, mycolumns.time()(field_id));
@@ -1074,7 +1099,7 @@ TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
       std::cout << "spw " << spw_id << std::endl;
       processed_rows.push_back((uInt) spw_id);
       ASSERT_GE(spw_id, 0);
-      if ((uInt)(spw_id + 1) > expected_nrow) {
+      if ((uInt) (spw_id + 1) > expected_nrow) {
         expected_nrow = spw_id + 1;
       }
       EXPECT_EQ(row_record.meas_freq_ref, mycolumns.measFreqRef()(spw_id));
@@ -1087,18 +1112,18 @@ TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
       Double expected_increment = row_record.increment;
       Int expected_net_sideband = (expected_increment < 0.0) ? 1 : 0;
       EXPECT_EQ(expected_net_sideband, mycolumns.netSideband()(spw_id));
-      Vector < Double > chan_freq = mycolumns.chanFreq()(spw_id);
+      Vector<Double> chan_freq = mycolumns.chanFreq()(spw_id);
       Double freq0 = chan_freq[0];
-      Vector < Double > chan_width = mycolumns.chanWidth()(spw_id);
+      Vector<Double> chan_width = mycolumns.chanWidth()(spw_id);
       Double incr0 = chan_width[0];
       Double refval = freq0 + expected_refpix * incr0;
       Double bandwidth = abs(expected_increment) * num_chan;
       EXPECT_EQ(bandwidth, mycolumns.totalBandwidth()(spw_id));
       EXPECT_EQ(expected_refval, refval);
       EXPECT_TRUE(allEQ(chan_width, expected_increment));
-      Vector < Double > resolution = mycolumns.resolution()(spw_id);
+      Vector<Double> resolution = mycolumns.resolution()(spw_id);
       EXPECT_TRUE(allEQ(resolution, abs(expected_increment)));
-      Vector < Double > effective_bw = mycolumns.effectiveBW()(spw_id);
+      Vector<Double> effective_bw = mycolumns.effectiveBW()(spw_id);
       EXPECT_TRUE(allEQ(effective_bw, abs(expected_increment)));
       Double ref_freq = mycolumns.refFrequency()(spw_id);
       EXPECT_EQ(chan_freq[0], ref_freq);
@@ -1146,8 +1171,8 @@ TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
   }
 
   // prepare for verifying DATA_DESCRIPTION table
-  Vector < Int > dd_polarization_id;
-  Vector < Int > dd_spw_id;
+  Vector<Int> dd_polarization_id;
+  Vector<Int> dd_spw_id;
   {
     auto const mytable = myms.dataDescription();
     ROMSDataDescColumns const mycolumns(mytable);
@@ -1156,7 +1181,7 @@ TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
   }
 
   // prepare for verifying POLARIZATION table
-  Vector < Int > num_pol_map;
+  Vector<Int> num_pol_map;
   {
     auto const mytable = myms.polarization();
     ROMSPolarizationColumns const mycolumns(mytable);
@@ -1164,7 +1189,7 @@ TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
   }
 
   // prepare for verifying FEED table
-  Matrix < Int > feed_id_matrix;
+  Matrix<Int> feed_id_matrix;
   {
     auto const mytable = myms.feed();
     ROMSFeedColumns const mycolumns(mytable);
@@ -1175,8 +1200,8 @@ TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
   }
 
   // prepare for verifying STATE table
-  Vector < Int > subscan_map;
-  Vector < String > obs_mode_map;
+  Vector<Int> subscan_map;
+  Vector<String> obs_mode_map;
   {
     auto const mytable = myms.state();
     ROMSStateColumns const mycolumns(mytable);
@@ -1187,9 +1212,9 @@ TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
   // verify MAIN table with several subtables
   constexpr size_t kNumPointing = 4;
   size_t pointing_count = 0;
-  Vector < Double > pointing_time(kNumPointing);
-  Vector < Int > pointing_antenna(kNumPointing);
-  Vector < Int > pointing_num_poly(kNumPointing);
+  Vector<Double> pointing_time(kNumPointing);
+  Vector<Int> pointing_antenna(kNumPointing);
+  Vector<Int> pointing_num_poly(kNumPointing);
   Cube<Double> pointing_direction(IPosition(3, 2, 2, kNumPointing));
   {
     std::cout << "Verify MAIN table" << std::endl;
@@ -1277,9 +1302,9 @@ TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
         ;
       }
 );
-                                                                                                                                                                                                    ASSERT_GT(num_chan, 0);
-      Matrix < Bool > expected_flag(expected_num_pol, num_chan);
-      Matrix < Float > expected_data(expected_num_pol, num_chan);
+                                                                                                                                                                                                          ASSERT_GT(num_chan, 0);
+      Matrix<Bool> expected_flag(expected_num_pol, num_chan);
+      Matrix<Float> expected_data(expected_num_pol, num_chan);
       uInt pol_id0 = row_record0.polno;
       uInt pol_id1 = row_record1.polno;
       ASSERT_LT(pol_id0, 2u);
@@ -1392,7 +1417,7 @@ TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
         ;
       }
 );
-                                                                                                                                                                                                    ASSERT_GT(num_chan, 0);
+                                                                                                                                                                                                          ASSERT_GT(num_chan, 0);
       expected_flag.resize(expected_num_pol, num_chan);
       expected_data.resize(expected_flag.shape());
       uInt pol_id2 = row_record2.polno;
@@ -1423,14 +1448,14 @@ TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
     Sort sorter;
     sorter.sortKey(pointing_antenna.data(), TpInt);
     sorter.sortKey(pointing_time.data(), TpDouble);
-    Vector < uInt > sort_index;
+    Vector<uInt> sort_index;
     sorter.sort(sort_index, pointing_count);
     for (size_t i = 0; i < nrow; ++i) {
       size_t j = sort_index[i];
       EXPECT_EQ(pointing_time[j], mycolumns.time()(i));
       EXPECT_EQ(pointing_antenna[j], mycolumns.antennaId()(i));
       EXPECT_EQ(pointing_num_poly[j], mycolumns.numPoly()(i));
-      Matrix < Double > expected_direction = pointing_direction.xyPlane(j);
+      Matrix<Double> expected_direction = pointing_direction.xyPlane(j);
       if (allEQ(expected_direction.column(1), 0.0)) {
         EXPECT_TRUE(
             allEQ(expected_direction(IPosition(2, 0, 0), IPosition(2, 1, 0)),
@@ -1476,7 +1501,7 @@ TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
       EXPECT_EQ(0, mycolumns.spectralWindowId()(irow));
       EXPECT_EQ(expected_time, mycolumns.time()(irow));
       EXPECT_EQ(expected_interval, mycolumns.interval()(irow));
-      Vector < Float > tsys_dualpol_scalar(2);
+      Vector<Float> tsys_dualpol_scalar(2);
       tsys_dualpol_scalar[0] = 100.0;
       tsys_dualpol_scalar[1] = 200.0;
       EXPECT_TRUE(allEQ(tsys_dualpol_scalar, mycolumns.tsys()(irow)));
@@ -1488,7 +1513,7 @@ TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
       EXPECT_EQ(1, mycolumns.spectralWindowId()(irow));
       EXPECT_EQ(expected_time, mycolumns.time()(irow));
       EXPECT_EQ(expected_interval, mycolumns.interval()(irow));
-      Vector < Float > tsys_singlepol_scalar(1);
+      Vector<Float> tsys_singlepol_scalar(1);
       tsys_singlepol_scalar[0] = 200.0;
       EXPECT_TRUE(allEQ(tsys_singlepol_scalar, mycolumns.tsys()(irow)));
 
@@ -1499,7 +1524,7 @@ TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
       EXPECT_EQ(0, mycolumns.spectralWindowId()(irow));
       EXPECT_EQ(expected_time, mycolumns.time()(irow));
       EXPECT_EQ(expected_interval, mycolumns.interval()(irow));
-      Matrix < Float > tsys_dualpol_spectral(2, num_chan_map[0]);
+      Matrix<Float> tsys_dualpol_spectral(2, num_chan_map[0]);
       tsys_dualpol_spectral.row(0) = 100.0;
       tsys_dualpol_spectral.row(1) = 200.0;
       EXPECT_TRUE(allEQ(tsys_dualpol_spectral, mycolumns.tsysSpectrum()(irow)));
@@ -1511,7 +1536,7 @@ TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
       EXPECT_EQ(1, mycolumns.spectralWindowId()(irow));
       EXPECT_EQ(expected_time, mycolumns.time()(irow));
       EXPECT_EQ(expected_interval, mycolumns.interval()(irow));
-      Matrix < Float > tsys_singlepol_spectral(1, num_chan_map[1]);
+      Matrix<Float> tsys_singlepol_spectral(1, num_chan_map[1]);
       tsys_singlepol_spectral.row(0) = 200.0;
       EXPECT_TRUE(
           allEQ(tsys_singlepol_spectral, mycolumns.tsysSpectrum()(irow)));
@@ -1628,23 +1653,23 @@ struct BasicPolarizationTester {
       corr_type_list[1] = Stokes::Pangle;
     }
     if (num_pol == 2) {
-      Vector < Int > expected_corr = corr_type_list;
-      Vector < Int > corr = output_record.corr_type;
+      Vector<Int> expected_corr = corr_type_list;
+      Vector<Int> corr = output_record.corr_type;
       ASSERT_TRUE(allEQ(expected_corr, corr));
     } else {
       Int corr_index = input_record[0].polno;
-      Vector < Int > expected_corr(1, corr_type_list[corr_index]);
-      Vector < Int > corr = output_record.corr_type;
+      Vector<Int> expected_corr(1, corr_type_list[corr_index]);
+      Vector<Int> corr = output_record.corr_type;
       ASSERT_TRUE(allEQ(expected_corr, corr));
     }
 
     TestShape(num_pol, num_chan, output_record, "FLOAT_DATA");
 
-    Matrix < Float > out_data = output_record.float_data;
-    Matrix < Bool > out_flag = output_record.flag;
+    Matrix<Float> out_data = output_record.float_data;
+    Matrix<Bool> out_flag = output_record.flag;
     Bool out_flag_row = output_record.flag_row;
-    Vector < Float > out_sigma = output_record.sigma;
-    Vector < Float > out_weight = output_record.weight;
+    Vector<Float> out_sigma = output_record.sigma;
+    Vector<Float> out_weight = output_record.weight;
     Bool net_flag_row = False;
     for (size_t i = 0; i < num_pol; ++i) {
       std::cout << "Verifying i " << i << " polid " << input_record[i].polno
@@ -1653,8 +1678,8 @@ struct BasicPolarizationTester {
       if (num_pol == 2) {
         polid = input_record[i].polno;
       }
-      Vector < Float > data = input_record[i].data;
-      Vector < Bool > flag = input_record[i].flag;
+      Vector<Float> data = input_record[i].data;
+      Vector<Bool> flag = input_record[i].flag;
       net_flag_row = net_flag_row || input_record[i].flag_row;
       EXPECT_TRUE(allEQ(out_data.row(polid), data));
       EXPECT_TRUE(allEQ(out_flag.row(polid), flag));
@@ -1688,20 +1713,20 @@ struct FullPolarizationTester {
       expected_corr[2] = Stokes::LR;
       expected_corr[3] = Stokes::LL;
     }
-    Vector < Int > corr = output_record.corr_type;
+    Vector<Int> corr = output_record.corr_type;
     ASSERT_TRUE(allEQ(expected_corr, corr));
 
     TestShape(num_pol, num_chan, output_record, "DATA");
 
-    Matrix < Float > data_real(IPosition(2, num_pol, num_chan), 0.0f);
-    Matrix < Float > data_imag(data_real.shape(), 0.0f);
-    Matrix < Bool > flag(data_real.shape(), False);
+    Matrix<Float> data_real(IPosition(2, num_pol, num_chan), 0.0f);
+    Matrix<Float> data_imag(data_real.shape(), 0.0f);
+    Matrix<Bool> flag(data_real.shape(), False);
     Bool net_flag_row = False;
     for (size_t i = 0; i < num_pol; ++i) {
       uInt polid = polid_list[i];
       ASSERT_LT(polid, num_pol);
-      Vector < Float > input_data = input_record[i].data;
-      Vector < Bool > input_flag = input_record[i].flag;
+      Vector<Float> input_data = input_record[i].data;
+      Vector<Bool> input_flag = input_record[i].flag;
       net_flag_row = net_flag_row || input_record[i].flag_row;
       if (polid == 0) {
         data_real.row(0) = input_data;
@@ -1722,15 +1747,15 @@ struct FullPolarizationTester {
     flag.row(1) = flag.row(1) || flag.row(2);
     flag.row(2) = flag.row(1);
 
-    Matrix < Complex > out_data = output_record.complex_data;
+    Matrix<Complex> out_data = output_record.complex_data;
     EXPECT_TRUE(allEQ(data_real, real(out_data)));
     EXPECT_TRUE(allEQ(data_imag, imag(out_data)));
-    Matrix < Bool > out_flag = output_record.flag;
+    Matrix<Bool> out_flag = output_record.flag;
     EXPECT_TRUE(allEQ(flag, out_flag));
     Bool out_flag_row = output_record.flag_row;
     EXPECT_EQ(net_flag_row, out_flag_row);
-    Vector < Float > out_sigma = output_record.sigma;
-    Vector < Float > out_weight = output_record.weight;
+    Vector<Float> out_sigma = output_record.sigma;
+    Vector<Float> out_weight = output_record.weight;
     EXPECT_TRUE(allEQ(out_sigma, 1.0f));
     EXPECT_TRUE(allEQ(out_weight, 1.0f));
   }
@@ -1755,22 +1780,22 @@ struct StokesFullPolarizationTester {
     expected_corr[1] = Stokes::Q;
     expected_corr[2] = Stokes::U;
     expected_corr[3] = Stokes::V;
-    Vector < Int > corr = output_record.corr_type;
+    Vector<Int> corr = output_record.corr_type;
     ASSERT_TRUE(allEQ(expected_corr, corr));
 
     TestShape(num_pol, num_chan, output_record, "FLOAT_DATA");
 
-    Matrix < Float > out_data = output_record.float_data;
-    Matrix < Bool > out_flag = output_record.flag;
+    Matrix<Float> out_data = output_record.float_data;
+    Matrix<Bool> out_flag = output_record.flag;
     Bool out_flag_row = output_record.flag_row;
-    Vector < Float > out_sigma = output_record.sigma;
-    Vector < Float > out_weight = output_record.weight;
+    Vector<Float> out_sigma = output_record.sigma;
+    Vector<Float> out_weight = output_record.weight;
     Bool net_flag_row = False;
     for (size_t i = 0; i < num_pol; ++i) {
       uInt polid = polid_list[i];
       ASSERT_LT(polid, num_pol);
-      Vector < Float > data = input_record[i].data;
-      Vector < Bool > flag = input_record[i].flag;
+      Vector<Float> data = input_record[i].data;
+      Vector<Bool> flag = input_record[i].flag;
       Bool flag_row = input_record[i].flag_row;
       net_flag_row = net_flag_row || flag_row;
       EXPECT_TRUE(allEQ(data, out_data.row(polid)));
@@ -1787,9 +1812,9 @@ struct StandardInitializer {
   static void Initialize(size_t const num_chan, Vector<uInt> const &polid_list,
       Vector<DataRecord> &input_record, DataChunk &chunk) {
     chunk.initialize(num_chan);
-    Matrix < Float > data(4, num_chan, 0.5);
-    Matrix < Bool > flag(4, num_chan, False);
-    Vector < Bool > flag_row(4, False);
+    Matrix<Float> data(4, num_chan, 0.5);
+    Matrix<Bool> flag(4, num_chan, False);
+    Vector<Bool> flag_row(4, False);
     data(0, 16) = -0.5;
     flag(0, 16) = True;
     data(1, 8) = 1.e10;
@@ -1835,7 +1860,7 @@ void TestPolarization(String const &poltype, Vector<uInt> const &polid_list) {
 }
 
 void TestSinglePolarization(String const &poltype, uInt const polid) {
-  Vector < uInt > polid_list(1, polid);
+  Vector<uInt> polid_list(1, polid);
   TestPolarization(poltype, polid_list);
 }
 
@@ -1875,7 +1900,7 @@ TEST(DataChunkTest, SinglePolarizationTest) {
 
 TEST(DataChunkTest, DualPolarizationTest) {
 // POL 0 and 1
-  Vector < uInt > polid_list(2);
+  Vector<uInt> polid_list(2);
   polid_list[0] = 0;
   polid_list[1] = 1;
 
@@ -1910,7 +1935,7 @@ TEST(DataChunkTest, DualPolarizationTest) {
 }
 
 TEST(DataChunkTest, FullPolarizationTest) {
-  Vector < uInt > polid_list(4);
+  Vector<uInt> polid_list(4);
 
 // Usual accumulation order
   polid_list[0] = 0;
@@ -1961,8 +1986,8 @@ TEST(DataChunkTest, WhiteBoxTest) {
   DataChunk chunk("linear");
   CASA_ASSERT_STREQ(String("linear"), chunk.getPolType());
   DataRecord record;
-  Vector < Float > data1(1);
-  Vector < Bool > flag1(1);
+  Vector<Float> data1(1);
+  Vector<Bool> flag1(1);
   record.polno = 0u;
   record.data.assign(data1);
   record.flag.assign(flag1);
@@ -1989,8 +2014,8 @@ TEST(DataChunkTest, WhiteBoxTest) {
   EXPECT_EQ(0u, chunk.getNumPol());
 
 // Accumulate different shaped data
-  Vector < Float > data2(2);
-  Vector < Bool > flag2(2);
+  Vector<Float> data2(2);
+  Vector<Bool> flag2(2);
   chunk.initialize(1);
   record.polno = 0u;
   record.data.assign(data2);
@@ -2038,7 +2063,7 @@ TEST(DataChunkTest, WhiteBoxTest) {
   ASSERT_TRUE(status);
   status = chunk.get(output_record);
   ASSERT_TRUE(status);
-  Matrix < Float > output_data = output_record.float_data;
+  Matrix<Float> output_data = output_record.float_data;
   EXPECT_EQ(IPosition(2, 1, 2), output_data.shape());
   EXPECT_TRUE(allEQ(output_data, 1.0f));
 
@@ -2055,7 +2080,7 @@ TEST(DataChunkTest, WhiteBoxTest) {
   EXPECT_EQ(2u, chunk.getNumPol());
   status = chunk.get(output_record);
   ASSERT_TRUE(status);
-  Matrix < Float > data = output_record.float_data;
+  Matrix<Float> data = output_record.float_data;
   EXPECT_EQ(IPosition(2, 2, 2), data.shape());
   EXPECT_TRUE(allEQ(data, 3.0f));
 
@@ -2081,7 +2106,7 @@ TEST(DataChunkTest, WhiteBoxTest) {
   EXPECT_EQ(1u, stokes_chunk.getNumPol());
   status = stokes_chunk.get(output_record);
   ASSERT_TRUE(status);
-  Matrix < Float > data_stokes = output_record.float_data;
+  Matrix<Float> data_stokes = output_record.float_data;
   EXPECT_EQ(IPosition(2, 1, 2), data_stokes.shape());
   EXPECT_TRUE(allEQ(data_stokes, 4.0f));
 
@@ -2124,7 +2149,7 @@ TEST(DataChunkTest, WhiteBoxTest) {
   EXPECT_EQ(2u, linpol_chunk.getNumPol());
   status = linpol_chunk.get(output_record);
   ASSERT_TRUE(status);
-  Matrix < Float > data_linpol = output_record.float_data;
+  Matrix<Float> data_linpol = output_record.float_data;
   EXPECT_EQ(IPosition(2, 2, 2), data_linpol.shape());
   EXPECT_TRUE(allEQ(data_linpol, 8.0f));
 
@@ -2217,7 +2242,7 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
   Int feed_id = 2;
   Int scan = 29;
   Int subscan = 5;
-  Matrix < Double > direction(2, 1, 0.0);
+  Matrix<Double> direction(2, 1, 0.0);
   Double interval = 0.48;
   String intent = "ON_SOURCE";
   String poltype = "linear";
@@ -2233,8 +2258,8 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
   r1.direction_slice = direction;
   r1.interval = interval;
   size_t const num_chan = 4;
-  Matrix < Float > data(IPosition(2, 4, num_chan), 0.0f);
-  Matrix < Bool > flag(IPosition(2, 4, num_chan), False);
+  Matrix<Float> data(IPosition(2, 4, num_chan), 0.0f);
+  Matrix<Bool> flag(IPosition(2, 4, num_chan), False);
   data(0, 0) = 1.e10;
   flag(0, 0) = True;
   data(1, 1) = 1.e10;
@@ -2243,7 +2268,7 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
   flag(2, 2) = True;
   data(3, 3) = 1.e10;
   flag(3, 3) = True;
-  Vector < Bool > flag_row(4, False);
+  Vector<Bool> flag_row(4, False);
   flag_row[3] = True;
   r1.polno = 0u;
   r1.setDataSize(num_chan);
@@ -2278,8 +2303,8 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
   status = a.get(0, output_record);
   ASSERT_TRUE(status);
   IsValidOutputRecord(output_record);
-  Matrix < Float > output_data = output_record.float_data;
-  Matrix < Bool > output_flag = output_record.flag;
+  Matrix<Float> output_data = output_record.float_data;
+  Matrix<Bool> output_flag = output_record.flag;
   IPosition const expected_shape1(2, 1, num_chan);
   EXPECT_EQ(expected_shape1, output_data.shape());
   EXPECT_EQ(expected_shape1, output_flag.shape());
@@ -2337,7 +2362,7 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
   status = a.get(0, output_record);
   ASSERT_TRUE(status);
   IsValidOutputRecord(output_record);
-  Matrix < Complex > output_cdata = output_record.complex_data;
+  Matrix<Complex> output_cdata = output_record.complex_data;
   output_flag.assign(output_record.flag);
   IPosition const expected_shape4(2, 4, num_chan);
   EXPECT_EQ(expected_shape4, output_cdata.shape());
@@ -2364,8 +2389,8 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
   r1.feed_id = feed_id + 1;
   r1.intent = intent2;
   r1.pol_type = poltype2;
-  Vector < Float > data2(8, -1.0f);
-  Vector < Bool > flag2(8, False);
+  Vector<Float> data2(8, -1.0f);
+  Vector<Bool> flag2(8, False);
   r1.setDataSize(8);
   r1.data = data2;
   r1.flag = flag2;
@@ -2380,17 +2405,17 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
   status = a.get(0, output_record);
   ASSERT_TRUE(status);
   IsValidOutputRecord(output_record);
-  Matrix < Complex > output_cdata2 = output_record.complex_data;
+  Matrix<Complex> output_cdata2 = output_record.complex_data;
   EXPECT_EQ(output_cdata.shape(), output_cdata2.shape());
   EXPECT_TRUE(allEQ(output_cdata, output_cdata2));
   ClearRecord(output_record);
   status = a.get(1, output_record);
   ASSERT_TRUE(status);
   IsValidOutputRecord(output_record);
-  Matrix < Float > output_data2 = output_record.float_data;
+  Matrix<Float> output_data2 = output_record.float_data;
   EXPECT_EQ(IPosition(2, 1, 8), output_data2.shape());
   EXPECT_TRUE(allEQ(output_data2.row(0), data2));
-  Matrix < Bool > output_flag2 = output_record.flag;
+  Matrix<Bool> output_flag2 = output_record.flag;
   EXPECT_EQ(output_data2.shape(), output_flag2.shape());
   EXPECT_TRUE(allEQ(output_flag2.row(0), flag2));
 
@@ -2430,11 +2455,20 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
 //
 //   2. run singledishMSFiller_GTest with the following option
 //
-//       --gtest_also_run_disabled_tests --gtest_filter="*Performance*"
+//       --gtest_also_run_disabled_tests --gtest_filter="*Performance*Serial*"
+//       --gtest_also_run_disabled_tests --gtest_filter="*Performance*Parallel*"
 //
-TEST_F(DISABLED_SingleDishMSFillerTestPerformance, Test) {
+TEST_F(DISABLED_SingleDishMSFillerTestPerformance, TestSerial) {
   // Create filler
-  SingleDishMSFiller<Scantable2MSReader> filler(my_data_name_);
+  SingleDishMSFiller<Scantable2MSReader> filler(my_data_name_, false);
+
+  // Run filler
+  ExecuteFiller(filler);
+}
+
+TEST_F(DISABLED_SingleDishMSFillerTestPerformance, TestParallel) {
+  // Create filler
+  SingleDishMSFiller<Scantable2MSReader> filler(my_data_name_, true);
 
   // Run filler
   ExecuteFiller(filler);

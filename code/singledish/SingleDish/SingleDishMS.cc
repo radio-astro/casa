@@ -3034,11 +3034,11 @@ void SingleDishMS::smooth(string const &kernelType, float const kernelWidth,
   finalize_process();
 }
 
-bool SingleDishMS::importAsap(string const &infile, string const &outfile)
+bool SingleDishMS::importAsap(string const &infile, string const &outfile, bool const parallel)
 {
   bool status = true;
   try {
-    SingleDishMSFiller<Scantable2MSReader> filler(infile);
+    SingleDishMSFiller<Scantable2MSReader> filler(infile, parallel);
     filler.fill();
     filler.save(outfile);
   } catch (AipsError &e) {

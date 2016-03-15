@@ -53,7 +53,7 @@ public:
   inline static void fillMainMT(SingleDishMSFiller<Reader> *filler);
 
   // constructor
-  SingleDishMSFiller(std::string const &name);
+  SingleDishMSFiller(std::string const &name, bool parallel=false);
 
   // destructor
   ~SingleDishMSFiller();
@@ -214,6 +214,8 @@ private:
   // Data storage to interact with DataAccumulator
   sdfiller::MSDataRecord record_;
 
+  // for parallel processing
+  Bool const parallel_;
 }
 ;
 

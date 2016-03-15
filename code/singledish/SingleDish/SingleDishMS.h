@@ -327,7 +327,7 @@ private:
   void split_bloutputname(string str);
 
 public:
-  static bool importAsap(string const &infile, string const &outfile);
+  static bool importAsap(string const &infile, string const &outfile, bool const parallel=false);
 };
 // class SingleDishMS -END
 

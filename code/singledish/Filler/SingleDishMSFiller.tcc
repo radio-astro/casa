@@ -336,13 +336,15 @@ void SingleDishMSFiller<T>::fillMainMT(SingleDishMSFiller<T> *filler) {
 }
 
 template<class T>
-SingleDishMSFiller<T>::SingleDishMSFiller(std::string const &name) :
+SingleDishMSFiller<T>::SingleDishMSFiller(std::string const &name,
+    bool parallel) :
     ms_(), ms_columns_(), data_description_columns_(), feed_columns_(),
     pointing_columns_(), polarization_columns_(), syscal_columns_(),
     state_columns_(), weather_columns_(), reader_(new T(name)),
     is_float_(false), data_key_(), reference_feed_(-1), pointing_time_(),
     pointing_time_max_(), pointing_time_min_(), num_pointing_time_(),
-    syscal_list_(), subscan_list_(), polarization_type_pool_(), weather_list_() {
+    syscal_list_(), subscan_list_(), polarization_type_pool_(), weather_list_(),
+    parallel_(parallel) {
 }
 
 template<class T>
@@ -360,11 +362,14 @@ void SingleDishMSFiller<T>::fill() {
   fillPreProcessTables();
 
   // main loop
-#if 0
-  SingleDishMSFiller<T>::fillMainMT(this);
-#else
-  fillMain();
-#endif
+  LogIO os(LogOrigin("SingleDishMSFiller", "fill", WHERE));
+  if (parallel_) {
+    os << "Parallel execution of fillMain" << LogIO::POST;
+    SingleDishMSFiller<T>::fillMainMT(this);
+  } else {
+    os << "Serial execution of fillMain" << LogIO::POST;
+    fillMain();
+  }
 
   // Fill tables that must be processed after main loop
   fillPostProcessTables();
