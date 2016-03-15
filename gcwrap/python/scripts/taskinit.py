@@ -27,7 +27,9 @@ def __taskinit_casa( ) :
 	a=inspect.stack()
 	stacklevel=0
 	for k in range(len(a)):
-		if a[k][1] == "<string>" or string.find(a[k][1], 'ipython console') > 0 or string.find(a[k][1],"casapy.py") > 0:
+		if a[k][1] == "<string>" or string.find(a[k][1], 'ipython console') > 0 or \
+                   string.find(a[k][1],"casapy.py") > 0 or \
+                   string.find(a[k][1],"casa.py") > 0:
 			stacklevel=k
 			# jagonzal: Take the first level that matches the requirement
 			break
@@ -42,7 +44,6 @@ def __taskinit_casa( ) :
 #
 ##casa state...
 casa = __taskinit_casa( )
-
 #
 ##allow globals for taskby default
 casaglobals=True
