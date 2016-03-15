@@ -360,5 +360,18 @@ class impbcor_test(unittest.TestCase):
         )
         self.assertTrue(os.path.exists(outfile))
 
+    def test_history(self):
+        """Test history records are written"""
+        myia = iatool()
+        myia.fromshape("",[20,20])
+        gg = myia.getchunk()
+        gg[:] = 1
+        zz = myia.pbcor(gg, "")
+        myia.done()
+        msgs = zz.history()
+        zz.done()
+        self.assertTrue("ia.pbcor" in msgs[-2])    
+        self.assertTrue("ia.pbcor" in msgs[-1])
+
 def suite():
     return [impbcor_test]

@@ -1432,7 +1432,7 @@ record* image::fitcomponents(
             ! _imageF,
             "This method only supports Float valued images"
         );
-        int num = in_includepix.size();
+        auto num = in_includepix.size();
         Vector<Float> includepix(num);
         num = in_excludepix.size();
         Vector<Float> excludepix(num);
@@ -1444,7 +1444,7 @@ record* image::fitcomponents(
         if (excludepix.size() == 1 && excludepix[0] == -1) {
             excludepix.resize();
         }
-        String mask = _getMask(vmask);
+        auto mask = _getMask(vmask);
         ImageFitterResults::CompListWriteControl writeControl = complist.empty()
             ? ImageFitterResults::NO_WRITE
             : overwrite
@@ -1467,7 +1467,7 @@ record* image::fitcomponents(
                 "be either an integer or a string"
             );
         }
-        SHARED_PTR<Record> regionRecord = _getRegion(region, True);
+        auto regionRecord = _getRegion(region, True);
         auto doImages = ! residual.empty() || ! model.empty();
         ImageFitter fitter(
             _imageF, "", regionRecord.get(), box, sChans,
@@ -1559,6 +1559,7 @@ record* image::fitcomponents(
     }
     return nullptr;
 }
+
 record* image::fitprofile(const string& box, const variant& region,
     const string& chans, const string& stokes, int axis,
     const variant& vmask, int ngauss, int poly,
@@ -1778,6 +1779,7 @@ record* image::fitprofile(const string& box, const variant& region,
             << LogIO::POST;
         RETHROW(x);
     }
+    return nullptr;
 }
 
 bool image::fromarray(
@@ -2042,6 +2044,137 @@ bool image::fromshape(
     return False;
 }
 
+variant* image::getchunk(
+    const std::vector<int>& blc, const std::vector<int>& trc,
+    const std::vector<int>& inc, const std::vector<int>& axes,
+    bool list, bool dropdeg, bool getmask
+) {
+    try {
+
+        _log << _ORIGIN;
+        if (detached()) {
+            return nullptr;
+        }
+        Record ret;
+        if (_imageF) {
+            ret = _getchunk<Float>(
+                _imageF, blc, trc, inc,
+                axes, list, dropdeg
+            );
+            if (! getmask) {
+                Array<Float> vals = ret.asArrayFloat("values");
+                vector<double> v(vals.begin(), vals.end());
+                return new variant(v, vals.shape().asStdVector());
+            }
+        }
+        else {
+            ret = _getchunk<Complex> (
+                _imageC, blc, trc, inc,
+                axes, list, dropdeg
+            );
+            if (! getmask) {
+                Array<Complex> vals = ret.asArrayComplex("values");
+                vector<std::complex<double> > v(vals.begin(), vals.end());
+                return new variant(v, vals.shape().asStdVector());
+            }
+        }
+        if (getmask) {
+            Array<Bool> pixelMask = ret.asArrayBool("mask");
+            std::vector<bool> s_pixelmask(pixelMask.begin(), pixelMask.end());
+            return new variant(s_pixelmask, pixelMask.shape().asStdVector());
+        }
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    // eliminate compiler warning, execution should never get here
+    return nullptr;
+}
+
+template<class T> Record image::_getchunk(
+    SPCIIT myimage,
+    const vector<int>& blc, const vector<int>& trc,
+    const vector<int>& inc, const vector<int>& axes,
+    bool list, bool dropdeg
+) {
+    Array<T> pixels;
+    Array<Bool> pixelMask;
+    Vector<Int> iaxes(axes);
+    // if default value change it to empty vector
+    if (iaxes.size() == 1 && iaxes[0] < 0) {
+        iaxes.resize();
+    }
+    uInt ndim = myimage->ndim();
+
+    if (iaxes.size() == 1 && iaxes[0] < 0) {
+        iaxes.resize();
+    }
+    // We have to support handling of sloppy inputs for backwards
+    // compatibility. Ugh.
+    vector<int> mblc(ndim);
+    vector<int> mtrc(ndim);
+    vector<int> minc(ndim);
+    if (blc.size() == 1 && blc[0] < 0) {
+        IPosition x(ndim, 0);
+        mblc = x.asStdVector();
+    }
+    else {
+        for (uInt i=0; i<ndim; i++) {
+            mblc[i] = i < blc.size() ? blc[i] : 0;
+        }
+    }
+    IPosition shape = myimage->shape();
+    if (trc.size() == 1 && trc[0] < 0) {
+        mtrc = (shape - 1).asStdVector();
+    }
+    else {
+        for (uInt i=0; i<ndim; i++) {
+            mtrc[i] = i < trc.size() ? trc[i] : shape[i] - 1;
+        }
+    }
+    if (inc.size() == 1 && inc[0] == 1) {
+        IPosition x(ndim, 1);
+        minc = x.asStdVector();
+    }
+    else {
+        for (uInt i=0; i<ndim; i++) {
+            minc[i] = i < inc.size() ? inc[i] : 1;
+        }
+    }
+    for (uInt i=0; i<ndim; i++) {
+        if (mblc[i] < 0 || mblc[i] > shape[i] - 1) {
+            mblc[i] = 0;
+        }
+        if (mtrc[i] < 0 || mtrc[i] > shape[i] - 1) {
+            mtrc[i] = shape[i] - 1;
+        }
+        if (mblc[i] > mtrc[i]) {
+            mblc[i] = 0;
+            mtrc[i] = shape[i] - 1;
+        }
+        if (inc[i] > shape[i]) {
+            minc[i] = 1;
+        }
+    }
+    Vector<Double> vblc(mblc);
+    Vector<Double> vtrc(mtrc);
+    Vector<Double> vinc(minc);
+    LCSlicer slicer(vblc, vtrc, vinc);
+    Record rec;
+    rec.assign(slicer.toRecord(""));
+    PixelValueManipulator<T> pvm(myimage, &rec, "");
+    if (axes.size() != 1 || axes[0] >= 0) {
+        pvm.setAxes(IPosition(axes));
+    }
+    pvm.setVerbosity(
+        list ? ImageTask<T>::DEAFENING : ImageTask<T>::QUIET
+    );
+    pvm.setDropDegen(dropdeg);
+    return pvm.get();
+}
+
 image* image::imagecalc(
     const string& outfile, const string& pixels,
     bool overwrite, const string& imagemd
@@ -2155,6 +2288,94 @@ image* image::imageconcat(
         RETHROW(x);
     }
     return nullptr;
+}
+
+image* image::pbcor(
+    const variant& pbimage, const string& outfile,
+    bool overwrite, const string& box,
+    const variant& region, const string& chans,
+    const string& stokes, const string& mask,
+    const string& mode, float cutoff,
+    bool stretch
+) {
+    if (detached()) {
+        throw AipsError("Unable to create image");
+    }
+    try {
+        _log << _ORIGIN;
+        ThrowIf(
+            ! _imageF,
+            "This method only supports Float valued images"
+        );
+        Array<Float> pbPixels;
+        SPCIIF pb_ptr;
+        if (pbimage.type() == variant::DOUBLEVEC) {
+            Vector<Int> shape = pbimage.arrayshape();
+            pbPixels.resize(IPosition(shape));
+            Vector<Double> localpix(pbimage.getDoubleVec());
+            casa::convertArray(pbPixels, localpix.reform(IPosition(shape)));
+        }
+        else if (pbimage.type() == variant::STRING) {
+            ImageInterface<Float>* pb;
+            ImageUtilities::openImage(pb, pbimage.getString());
+            if (pb == 0) {
+                _log << "Unable to open primary beam image " << pbimage.getString()
+                    << LogIO::EXCEPTION;
+            }
+            pb_ptr.reset(pb);
+        }
+        else {
+            ThrowCc(
+                "Unsupported type " + pbimage.typeString() + " for pbimage"
+            );
+        }
+        auto myRegion = _getRegion(region, False);
+        String modecopy = mode;
+        modecopy.downcase();
+        modecopy.trim();
+        if (! modecopy.startsWith("d") && ! modecopy.startsWith("m")) {
+            throw AipsError("Unknown mode " + mode);
+        }
+        ImagePrimaryBeamCorrector::Mode myMode = modecopy.startsWith("d")
+            ? ImagePrimaryBeamCorrector::DIVIDE
+            : ImagePrimaryBeamCorrector::MULTIPLY;
+        Bool useCutoff = cutoff >= 0.0;
+        SPCIIF shImage = _imageF;
+        std::unique_ptr<ImagePrimaryBeamCorrector> pbcor(
+            (!pb_ptr)
+            ? new ImagePrimaryBeamCorrector(
+                shImage, pbPixels, myRegion.get(),
+                "", box, chans, stokes, mask, outfile, overwrite,
+                cutoff, useCutoff, myMode
+            )
+            : new ImagePrimaryBeamCorrector(
+                shImage, pb_ptr, myRegion.get(),
+                "", box, chans, stokes, mask, outfile, overwrite,
+                cutoff, useCutoff, myMode
+            )
+        );
+        pbcor->setStretch(stretch);
+        vector<String> names = {
+            "pbimage", "outfile", "overwrite", "box",
+            "region", "chans", "stokes", "mask", "mode",
+            "cutoff", "stretch"
+        };
+        vector<variant> values = {
+            pbimage.type() == variant::DOUBLEVEC
+                && pbimage.size() > 100
+                    ? "(...)" : pbimage,
+            outfile, overwrite, box, region, chans,
+            stokes, mask, mode, cutoff, stretch
+        };
+        auto msgs = _newHistory(__func__, names, values);
+        pbcor->addHistory(_ORIGIN, msgs);
+        return new image(pbcor->correct(True));
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
+        RETHROW(x);
+    }
 }
 
 bool image::remove(const bool finished, const bool verbose) {
@@ -2388,224 +2609,6 @@ void image::_reset() {
 
 
 
-
-variant* image::getchunk(
-	const std::vector<int>& blc, const std::vector<int>& trc,
-	const std::vector<int>& inc, const std::vector<int>& axes,
-	bool list, bool dropdeg, bool getmask
-) {
-	try {
-
-		_log << _ORIGIN;
-		if (detached()) {
-			return 0;
-		}
-		Record ret;
-		if (_imageF) {
-			ret = _getchunk<Float>(
-				_imageF, blc, trc, inc,
-				axes, list, dropdeg
-			);
-			if (! getmask) {
-				Array<Float> vals = ret.asArrayFloat("values");
-				vector<double> v(vals.begin(), vals.end());
-				return new variant(v, vals.shape().asStdVector());
-			}
-		}
-		else {
-			ret = _getchunk<Complex> (
-				_imageC, blc, trc, inc,
-				axes, list, dropdeg
-			);
-			if (! getmask) {
-				Array<Complex> vals = ret.asArrayComplex("values");
-				vector<std::complex<double> > v(vals.begin(), vals.end());
-				return new variant(v, vals.shape().asStdVector());
-			}
-		}
-		if (getmask) {
-			Array<Bool> pixelMask = ret.asArrayBool("mask");
-			std::vector<bool> s_pixelmask(pixelMask.begin(), pixelMask.end());
-			return new variant(s_pixelmask, pixelMask.shape().asStdVector());
-		}
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	// eliminate compiler warning, execution should never get here
-	return 0;
-}
-
-template<class T> Record image::_getchunk(
-	SPCIIT myimage,
-	const vector<int>& blc, const vector<int>& trc,
-	const vector<int>& inc, const vector<int>& axes,
-	bool list, bool dropdeg
-) {
-	Array<T> pixels;
-	Array<Bool> pixelMask;
-	Vector<Int> iaxes(axes);
-	// if default value change it to empty vector
-	if (iaxes.size() == 1 && iaxes[0] < 0) {
-		iaxes.resize();
-	}
-	uInt ndim = myimage->ndim();
-
-	if (iaxes.size() == 1 && iaxes[0] < 0) {
-		iaxes.resize();
-	}
-	// We have to support handling of sloppy inputs for backwards
-	// compatibility. Ugh.
-	vector<int> mblc(ndim);
-	vector<int> mtrc(ndim);
-	vector<int> minc(ndim);
-	if (blc.size() == 1 && blc[0] < 0) {
-		IPosition x(ndim, 0);
-		mblc = x.asStdVector();
-	}
-	else {
-		for (uInt i=0; i<ndim; i++) {
-			mblc[i] = i < blc.size() ? blc[i] : 0;
-		}
-	}
-	IPosition shape = myimage->shape();
-	if (trc.size() == 1 && trc[0] < 0) {
-		mtrc = (shape - 1).asStdVector();
-	}
-	else {
-		for (uInt i=0; i<ndim; i++) {
-			mtrc[i] = i < trc.size() ? trc[i] : shape[i] - 1;
-		}
-	}
-	if (inc.size() == 1 && inc[0] == 1) {
-		IPosition x(ndim, 1);
-		minc = x.asStdVector();
-	}
-	else {
-		for (uInt i=0; i<ndim; i++) {
-			minc[i] = i < inc.size() ? inc[i] : 1;
-		}
-	}
-	for (uInt i=0; i<ndim; i++) {
-		if (mblc[i] < 0 || mblc[i] > shape[i] - 1) {
-			mblc[i] = 0;
-		}
-		if (mtrc[i] < 0 || mtrc[i] > shape[i] - 1) {
-			mtrc[i] = shape[i] - 1;
-		}
-		if (mblc[i] > mtrc[i]) {
-			mblc[i] = 0;
-			mtrc[i] = shape[i] - 1;
-		}
-		if (inc[i] > shape[i]) {
-			minc[i] = 1;
-		}
-	}
-	Vector<Double> vblc(mblc);
-	Vector<Double> vtrc(mtrc);
-	Vector<Double> vinc(minc);
-	LCSlicer slicer(vblc, vtrc, vinc);
-	Record rec;
-	rec.assign(slicer.toRecord(""));
-	PixelValueManipulator<T> pvm(myimage, &rec, "");
-	if (axes.size() != 1 || axes[0] >= 0) {
-		pvm.setAxes(IPosition(axes));
-	}
-	pvm.setVerbosity(
-		list ? ImageTask<T>::DEAFENING : ImageTask<T>::QUIET
-	);
-	pvm.setDropDegen(dropdeg);
-	return pvm.get();
-}
-
-image* image::pbcor(
-	const variant& pbimage, const string& outfile,
-	const bool overwrite, const string& box,
-	const variant& region, const string& chans,
-	const string& stokes, const string& mask,
-	const string& mode, const float cutoff,
-	const bool stretch
-) {
-	if (detached()) {
-		throw AipsError("Unable to create image");
-		return 0;
-	}
-	try {
-		_log << _ORIGIN;
-		ThrowIf(
-			! _imageF,
-			"This method only supports Float valued images"
-		);
-		Array<Float> pbPixels;
-        SPCIIF pb_ptr;
-		if (pbimage.type() == variant::DOUBLEVEC) {
-			Vector<Int> shape = pbimage.arrayshape();
-			pbPixels.resize(IPosition(shape));
-			Vector<Double> localpix(pbimage.getDoubleVec());
-			casa::convertArray(pbPixels, localpix.reform(IPosition(shape)));
-		}
-		else if (pbimage.type() == variant::STRING) {
-            ImageInterface<Float>* pb;
-            ImageUtilities::openImage(pb, pbimage.getString());
-			if (pb == 0) {
-				_log << "Unable to open primary beam image " << pbimage.getString()
-					<< LogIO::EXCEPTION;
-			}
-            pb_ptr.reset(pb);
-		}
-		else {
-			_log << "Unsupported type " << pbimage.typeString()
-				<< " for pbimage" << LogIO::EXCEPTION;
-		}
-
-		String regionString = "";
-		std::unique_ptr<Record> regionRecord;
-		if (region.type() == variant::STRING || region.size() == 0) {
-			regionString = (region.size() == 0) ? "" : region.toString();
-		}
-		else if (region.type() == variant::RECORD) {
-			regionRecord.reset(toRecord(region.clone()->asRecord()));
-		}
-		else {
-			_log << "Unsupported type for region " << region.type()
-				<< LogIO::EXCEPTION;
-		}
-		String modecopy = mode;
-		modecopy.downcase();
-		modecopy.trim();
-		if (! modecopy.startsWith("d") && ! modecopy.startsWith("m")) {
-			throw AipsError("Unknown mode " + mode);
-		}
-		ImagePrimaryBeamCorrector::Mode myMode = modecopy.startsWith("d")
-			? ImagePrimaryBeamCorrector::DIVIDE
-			: ImagePrimaryBeamCorrector::MULTIPLY;
-		Bool useCutoff = cutoff >= 0.0;
-        SPCIIF shImage = _imageF;
-        std::unique_ptr<ImagePrimaryBeamCorrector> pbcor(
-			(!pb_ptr)
-			? new ImagePrimaryBeamCorrector(
-				shImage, pbPixels, regionRecord.get(),
-				regionString, box, chans, stokes, mask, outfile, overwrite,
-				cutoff, useCutoff, myMode
-			)
-			: new ImagePrimaryBeamCorrector(
-				shImage, pb_ptr, regionRecord.get(),
-				regionString, box, chans, stokes, mask, outfile, overwrite,
-				cutoff, useCutoff, myMode
-			)
-		);
-		pbcor->setStretch(stretch);
-        SHARED_PTR<ImageInterface<Float> > corrected(pbcor->correct(True));
-		return new image(corrected);
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-			<< LogIO::POST;
-		RETHROW(x);
-	}
-}
 
 record* image::getprofile(
 	int axis, const string& function, const variant& region,
