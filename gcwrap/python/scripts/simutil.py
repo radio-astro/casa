@@ -649,9 +649,20 @@ class simutil:
         while (len(line)>0):
             try: 
                 line=f.readline()
-                if not line.startswith('#'):
+                if (not line.startswith('#')) and (not line.startswith("RA")) and (not line.startswith("--")):
+                ### it could be the new OT format                    
+                    if (line.find('SEXAGESIMAL')>0):
+                        splitline = line.split(',')
+                        if len(splitline)>4:
+                            time.append(float(splitline[4]))
+                        else:
+                            time.append(0.)
+                        xstr = qa.formxxx(qa.quantity(splitline[0]), format='hms',prec=5)
+                        ystr = qa.formxxx(qa.quantity(splitline[1]), format='dms',prec=5)
+                        # ASSUME ICRS
+                        pointings.append("ICRS %s %s" % (xstr,ystr))
                 ### ignoring line that has less than 3 elements
-                    if(len(line.split()) >2):
+                    elif(len(line.split()) >2):
                         splitline=line.split()
                         epoch=splitline[0]
                         ra0=splitline[1]
@@ -663,17 +674,6 @@ class simutil:
                         xstr = qa.formxxx(qa.quantity(ra0), format='hms',prec=5)
                         ystr = qa.formxxx(qa.quantity(de0), format='dms',prec=5)
                         pointings.append("%s %s %s" % (epoch,xstr,ystr))
-                ### except that it could be the new OT format
-                    else:
-                        if (line.find('SEXAGESIMAL')>0):
-                             splitline = line.split(',')
-                             if len(splitline)>4:
-                                 time.append(float(splitline[4]))
-                             else:
-                                 time.append(0.)
-                             xstr = qa.formxxx(qa.quantity(splitline[0]), format='hms',prec=5)
-                             ystr = qa.formxxx(qa.quantity(splitline[1]), format='dms',prec=5)
-                             pointings.append("%s %s %s" % (epoch,xstr,ystr))
             except:
                 break
         f.close()
