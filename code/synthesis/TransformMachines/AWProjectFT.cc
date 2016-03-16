@@ -985,7 +985,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // Extract the shape of the array to be sliced.
     //
-    //    Array<Int> stokesForAllIFs = vb.msColumns().polarization().corrType().getColumn();
     log_l << "############....temp code!!!!!!!!!! "
 	  << SynthesisUtils::mapSpwIDToPolID(vb,selectedSpw_p(0))
 	  << LogIO::DEBUG1;
@@ -1238,7 +1237,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	if (dryRun())
 	  {
-	    PagedImage<Complex> thisGrid(lattice->shape(),image.coordinates(), 
+	    // PagedImage<Complex> thisGrid(lattice->shape(),image.coordinates(), 
+	    // 				 cfCache_p->getCacheDir()+"/uvgrid.im");
+	    PagedImage<Complex> thisGrid(image.shape(),image.coordinates(), 
 					 cfCache_p->getCacheDir()+"/uvgrid.im");
 	  }
 
@@ -1745,9 +1746,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     setupVBStore(vbs,vb, elWeight,data,uvw,flags, dphase,dopsf,gridShape);
 
     if (useDoubleGrid_p)
-      resampleDataToGrid(griddedData2, vbs, vb, dopsf);//, *imagingweight, *data, uvw,flags,dphase,dopsf);
+      {
+	resampleDataToGrid(griddedData2, vbs, vb, dopsf);//, *imagingweight, *data, uvw,flags,dphase,dopsf);
+	//storeArrayAsImage(String("cgrid_awp_d.im"), image->coordinates(), griddedData2);
+      }
     else
-      resampleDataToGrid(griddedData, vbs, vb, dopsf);//, *imagingweight, *data, uvw,flags,dphase,dopsf);
+      {
+	resampleDataToGrid(griddedData, vbs, vb, dopsf);//, *imagingweight, *data, uvw,flags,dphase,dopsf);
+	// String msg("WTH");
+	// isVBNaN(vb,msg);
+	//storeArrayAsImage(String("cgrid_awp_s.im"), image->coordinates(), griddedData);
+      }
   }
   //
   //-------------------------------------------------------------------------
@@ -1935,6 +1944,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	else
 	  {
 	    arrayLattice = new ArrayLattice<Complex>(griddedData);
+	    //cerr << "##### " << griddedData2.shape() << endl;
+	    //storeArrayAsImage(String("cgrid_awp.im"), image->coordinates(), griddedData);
 	    lattice=arrayLattice;
 	    LatticeFFT::cfft2d(*lattice,False);
 	  }

@@ -933,7 +933,7 @@ namespace casa{
 	//   (coords.increment()(0)*screen.shape()(0));
 
 	Float psScale = (2*coords.increment()(0))/(nx*image.coordinates().increment()(0)),
-	  innerQuaterFraction=1.0;
+	  innerQuaterFraction=0.5;
 	// psScale when using SynthesisUtils::libreSpheroidal() is
 	// 2.0/nSupport.  nSupport is in pixels and the 2.0 is due to
 	// the center being at Nx/2.  Here the nSupport is determined
@@ -1070,12 +1070,21 @@ namespace casa{
       xSupport=ySupport=Int(0.5+Float(R)/sampling)+1;
     // tim.show("findSupport:");
 
-    if (xSupport*sampling > convFuncOrigin)
+    // If the support size overflows, give a warning and set the
+    // support size to be convFuncSize/2 + the max. possible offset in
+    // the oversamplied grid.  The max. possible offset would 0.5
+    // pixels on the sky, which would be sampling/2.0.
+    //
+    // If the extra buffer (max(offset)) is not included, the problem
+    // will show up when gridding the data or weights.  It will not
+    // show up when making the avgPB since the gridding for that is
+    // always centered on the center of the image.
+    if (xSupport*sampling + int(sampling/2.0+0.5) > convFuncOrigin)
       {
-	log_l << "Convolution function support size > N/2.  Limiting it to N/2, but this should be considered a bug"
-	      << "(threshold = " << threshold << ")"
+	log_l << "Convolution function support size > N/2.  Limiting it to N/2 "
+	      << "(threshold = " << threshold << ")."
 	      << LogIO::WARN;
-	xSupport = ySupport = (Int)(convFuncOrigin/sampling);
+	xSupport = ySupport = (Int)(convFuncOrigin/sampling-1);
       }
 
     if(xSupport<1) 
@@ -1288,6 +1297,8 @@ namespace casa{
   {
     LogIO log_l(LogOrigin("AWConvFunc", "normalizeAvgPB[R&D]"));
     
+    String name("avgpb.im");
+    storeImg(name,inImage);
     IPosition inShape(inImage.shape()),ndx(4,0,0,0,0);
     Vector<Complex> peak(inShape(2));
     
