@@ -1,7 +1,15 @@
 import os
 import re
 import sys
+import time
 from casac import *
+
+homedir = os.getenv('HOME')
+if homedir == None :
+   print "Environment variable HOME is not set, please set it"
+   sys.exit(1)
+
+import casadef
 
 ##
 ## first set up CASAPATH
@@ -21,10 +29,45 @@ else :
     else :
         raise RuntimeError, "CASAPATH environment variable must be set"
 
+casa = { 'build': {
+             'time': casadef.build_time,
+             'version': casadef.casa_version,
+             'number': casadef.subversion_revision
+         },
+         'source': {
+             'url': casadef.subversion_url,
+             'revision': casadef.subversion_revision
+         },
+         'helpers': {
+             'logger': 'casalogger',
+             'viewer': 'casaviewer',
+             'info': None,
+             'dbus': None,
+             'ipcontroller': None,
+             'ipengine': None
+         },
+         'dirs': {
+             'rc': homedir + '/.casa',
+             'data': __casapath__ + "/data",
+             'recipes': __casapath__ + "/lib/python2.7/recipes",
+             'root': __casapath__,
+             'python':  __casapath__ + "/lib/python2.7",
+             'pipeline': None,
+             'xml': __casapath__ + "/xml"
+         },
+         'flags': { },
+         'files': { 
+             'logfile': os.getcwd( ) + '/casapy-'+time.strftime("%Y%m%d-%H%M%S", time.gmtime())+'.log'
+         },
+         'state' : {
+             'startup': True,
+             'unwritable': set( )
+         }
+       }
+
 ##
 ## next adjust the PYTHONPATH
 ##
-
 def adapt_pythonpath(searchroot):
     # tarball location
     guess = os.path.join(searchroot, 'lib/python2.7/site-packages/numpy')
