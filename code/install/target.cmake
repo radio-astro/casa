@@ -99,16 +99,21 @@ macro( casa_add_executable module name )
   set( _sources ${ARGN})
 
   add_executable( ${name} ${_sources} )
-  if (${module}_WarningsAsErrors)
-    set_property (TARGET ${name} APPEND PROPERTY COMPILE_FLAGS "-Werror")
-    message ("-- Executable ${name} has WarningsAsErrors")
+
+  if (NOT ${module} STREQUAL NONE)
+
+    if (${module}_WarningsAsErrors)
+      set_property (TARGET ${name} APPEND PROPERTY COMPILE_FLAGS "-Werror")
+      message ("-- Executable ${name} has WarningsAsErrors")
+    endif ()
+
+    target_link_libraries( ${name} lib${module} )
+    add_dependencies( ${module}_fast ${name}_fast )
+
   endif ()
 
   add_dependencies( inst ${name} )
   add_custom_target( ${name}_fast ${CMAKE_BUILD_TOOL} ${name}/fast )
-  add_dependencies( ${module}_fast ${name}_fast )
-
-  target_link_libraries( ${name} lib${module} )
 
   install( TARGETS ${name} RUNTIME DESTINATION bin )
 
