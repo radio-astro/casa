@@ -1299,7 +1299,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                    Default = 0
 	       Exception: when choosing superuniform it does not make sense to 
 	       use npixels=0 as it is  uniform thus if npixels is 0  it will be forced to 6 or 
-	       a box of -3pixels  to 3pixels
+	       a box from -3pixels  to 3pixels
                    
        restoringbeam -- Output Gaussian restoring beam for CLEAN image
                [bmaj, bmin, bpa] elliptical Gaussian restoring beam

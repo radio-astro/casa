@@ -221,6 +221,21 @@ lm.saultweightimage('test_sault.linmos')
    
 <description>
 Use this function if the mosaicing is to be done using a non optimal weighting mode.
+ 
+
+For now {\tt optimal} (which is the default) follows this equation
+\begin{equation}
+I^{lm}(\theta)={{\sum_p A_p(\theta)(I_p(\theta)A_p(\theta))w_p}\over{\sum_p A_p^2(\theta)w_p}}
+\end{equation}
+
+And {\tt pbweight} follows this one
+\begin{equation}
+I^{lm}(\theta)={{\sum_p (I_p(\theta)A_p(\theta))w_p}\over{\sum_p A_p(\theta)w_p}}
+\end{equation}
+
+where $A_p(\theta)$ is the primary beam (PB) of a given pointing $p$, $w_p$ is a sensitivity weight and the image of that pointing is $I_p(\theta)$; the linear mosaic being $I^{lm}(\theta)$
+For now  $w_p=1$
+
 
 </description>
 <input>
