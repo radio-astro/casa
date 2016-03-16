@@ -26,6 +26,7 @@ import impbcor_pg
 import importasdm_cli
 import importevla_cli
 import listobs_cli
+import mstransform_cli
 import partition_cli
 import plotants_cli
 import plotbandpass_cli
@@ -345,6 +346,9 @@ class CASATaskJobGenerator(object):
 
     def listobs(self, *v, **k):
         return self._get_job(listobs_cli.listobs_cli, *v, **k)
+
+    def mstransform(self, *v, **k):
+        return self._get_job(mstransform_cli.mstransform_cli, *v, **k)
 
     def partition(self, *v, **k):
         return self._get_job(partition_cli.partition_cli, *v, **k)
