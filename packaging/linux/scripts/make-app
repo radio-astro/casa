@@ -473,7 +473,7 @@ sub fill_or {
         if ( m|\@\@WS\@\@| && $workspace ) {
             my $path = $_;
             $path =~ s|\@\@WS\@\@|$workspace|;
-            if ( -d $path ) {
+            if ( -e $path ) {
 		unlink($link);
 		$copy_func->($path,$link);
 		return;
@@ -481,7 +481,7 @@ sub fill_or {
         } elsif ( m|\@\@ARCH\@\@| && $workspace ) {
             my $path = $_;
             $path =~ s|\@\@ARCH\@\@|$workspace/$arch|;
-            if ( -d $path ) {
+            if ( -e $path ) {
 		unlink($link);
 		$copy_func->($path,$link);
 		return;
@@ -492,7 +492,7 @@ sub fill_or {
             foreach $prefix ( @prefix ) {
                 my $trypath = $_;
                 $trypath =~ s|\@\@PREFIX\@\@|$prefix|;
-                if ( -d $trypath ) {
+                if ( -e $trypath ) {
 		    unlink($link);
 		    $copy_func->($trypath,$link);
 		    return;
