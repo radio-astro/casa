@@ -2268,6 +2268,23 @@ class test_subtables_alma(test_base):
         mytb.close()
         self.assertEqual(nrows, 1*4)
         self.assertEqual(bbcNo[0], 1)
+
+    def test_chanwidth_sign(self):
+        # mstransform: Check that chanwidth sign is correct after regridding without combine
+        self.outputms = 'combined.ms'
+        mstransform(self.vis, outputvis=self.outputms, datacolumn='data', regridms=True)
+
+        mytb = tbtool()
+        mytb.open(self.outputms + '/SPECTRAL_WINDOW')
+        cw = mytb.getcol('CHAN_WIDTH').T
+        cf = mytb.getcol('CHAN_FREQ').T
+        for w, f in zip(cw, cf):
+            if numpy.diff(f)[0] < 0:
+                self.assertTrue((w < 0).all())
+            else:
+                self.assertTrue((w > 0).all())
+        self.assertTrue((mytb.getcol('TOTAL_BANDWIDTH') > 0).all())
+        mytb.close()
         
                
 class test_radial_velocity_correction(test_base_compare):
