@@ -21,6 +21,7 @@ from .lowgainflag import Lowgainflag
 from .makecleanlist import MakeCleanList
 from .makeimages import MakeImages
 from .makeimlist import MakeImList
+from .mstransform import Mstransform
 from .rawflagchans import Rawflagchans
 from .refant import RefAnt
 from .restoredata import RestoreData
