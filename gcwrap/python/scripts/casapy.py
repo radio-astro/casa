@@ -6,7 +6,7 @@ import time
 import signal
 import filecmp
 import traceback # To pretty-print tracebacks
-
+from subprocess import Popen, PIPE, STDOUT
 
 # jagonzal: MPIServer initialization before wathdog fork
 from mpi4casa.MPIEnvironment import MPIEnvironment
@@ -479,10 +479,15 @@ def casalogger(logfile=''):
 
     pid=9999
     if (os.uname()[0]=='Darwin'):
-	if casa['helpers']['logger'] == 'console':
+        if casa['helpers']['logger'] == 'console':
            os.system("open -a console " + logfile)
         else:
-           pid=os.spawnvp(os.P_NOWAIT,casa['helpers']['logger'],[casa['helpers']['logger'], logfile])
+           # XCode7 writes debug messages to stderr, which then end up in the
+           # Casa console. Hence the stderr is directed to devnull
+           #pid=os.spawnvp(os.P_NOWAIT,casa['helpers']['logger'],[casa['helpers']['logger'], logfile])
+           DEVNULL = open(os.devnull, 'w')
+           pid = Popen([casa['helpers']['logger'],logfile], stderr=DEVNULL).pid
+           #pid = Popen([casa['helpers']['logger'],logfile], stdin=PIPE, stdout=FNULL, stderr=STDOUT).pid
 
     elif (os.uname()[0]=='Linux'):
         pid=os.spawnlp(os.P_NOWAIT,casa['helpers']['logger'],casa['helpers']['logger'],logfile)
