@@ -227,9 +227,9 @@ def setjy_core(vis=None, field=None, spw=None,
                          'SEVERE')
                     for c in candidates:
                         casalog.post("\t" + c, 'SEVERE')
-                        casalog.post("Please pick 1 and use the absolute path (starting with /).",
+                    casalog.post("Please pick 1 and use the absolute path (starting with /).",
                            'SEVERE')
-                        return False
+                    return False
                 else:
                     modimage = candidates[0]
                     casalog.post("Using %s for modimage." % modimage, 'INFO')
