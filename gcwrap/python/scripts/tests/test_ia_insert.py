@@ -101,7 +101,20 @@ class ia_insert_test(unittest.TestCase):
         self.assertTrue(stats["max"] == 20)
         self.assertTrue(stats["min"] == 10)
 
- 
+    def test_history(self):
+        """Verify ia.insert writes history to image"""
+        myia = self.ia
+        insert = "hist_zxye.im"
+        myia.fromshape(insert, [10, 10, 10])
+        myia.set(10)
+        myia.done()
+        myia.fromshape("", [20,20,20])
+        myia.set(20)
+        self.assertTrue(myia.insert(infile=insert))
+        msgs = myia.history()
+        myia.done()
+        self.assertTrue("ia.insert" in msgs[-2]) 
+        self.assertTrue("ia.insert" in msgs[-1])
    
 def suite():
     return [ia_insert_test]

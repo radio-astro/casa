@@ -2449,6 +2449,105 @@ template <class T> image* image::_hanning(
     return new image(smoother.smooth());
 }
 
+vector<bool> image::haslock() {
+    try {
+        _log << _ORIGIN;
+        if (detached()) {
+            return vector<bool>();
+        }
+        if (_imageF) {
+            return vector<bool> {
+                _imageF->hasLock(FileLocker::Read),
+                _imageF->hasLock(FileLocker::Write)
+            };
+        }
+        else {
+            return vector<bool> {
+                _imageC->hasLock(FileLocker::Read),
+                _imageC->hasLock(FileLocker::Write)
+            };
+        }
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return vector<bool>();
+}
+
+record* image::histograms(
+    const vector<int>& axes,
+    const variant& region, const variant& mask,
+    int nbins, const vector<double>& includepix,
+    bool cumu, bool log, bool stretch
+) {
+    _log << _ORIGIN;
+    if (detached()) {
+        return 0;
+    }
+    try {
+        vector<uInt> myaxes;
+        if (axes.size() != 1 || axes[0] != -1) {
+            ThrowIf(
+                *min_element(axes.begin(), axes.end()) < 0,
+                "All axes must be nonnegative"
+            );
+            myaxes.insert(begin(myaxes), begin(axes), end(axes));
+        }
+        SHARED_PTR<Record> regionRec(_getRegion(region, False));
+        String Mask = _getMask(mask);
+        vector<Double> myIncludePix;
+        if (!(includepix.size() == 1 && includepix[0] == -1)) {
+            myIncludePix = includepix;
+        }
+        ImageHistogramsCalculator ihc(
+            _imageF, regionRec.get(), Mask
+        );
+        if (! myaxes.empty()) {
+            ihc.setAxes(myaxes);
+        }
+        ihc.setNBins(nbins);
+        if (! myIncludePix.empty()) {
+            ihc.setIncludeRange(myIncludePix);
+        }
+        ihc.setCumulative(cumu);
+        ihc.setDoLog10(log);
+        ihc.setStretch(stretch);
+        return fromRecord(ihc.compute());
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return nullptr;
+}
+
+std::vector<std::string> image::history(bool list) {
+    try {
+        _log << _ORIGIN;
+        if (detached()) {
+            return vector<string>();
+        }
+        if (_imageF) {
+            SPIIF im = _imageF;
+            ImageHistory<Float> hist(im);
+            return fromVectorString(hist.get(list));
+        }
+        else {
+            SPIIC im = _imageC;
+            ImageHistory<Complex> hist(im);
+            return fromVectorString(hist.get(list));
+        }
+    } catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return vector<string>();
+}
+
 image* image::imagecalc(
     const string& outfile, const string& pixels,
     bool overwrite, const string& imagemd
@@ -2562,6 +2661,55 @@ image* image::imageconcat(
         RETHROW(x);
     }
     return nullptr;
+}
+
+bool image::insert(
+    const std::string& infile, const variant& region,
+    const std::vector<double>& locate, bool verbose
+) {
+    try {
+        _log << _ORIGIN;
+        if (detached()) {
+            return False;
+        }
+        Vector<Double> locatePixel(locate);
+        if (locatePixel.size() == 1 && locatePixel[0] < 0) {
+            locatePixel.resize(0);
+        }
+        auto Region = _getRegion(region, False);
+        auto imagePair = ImageFactory::fromFile(infile);
+
+        if (imagePair.first && _imageF) {
+            PixelValueManipulator<Float>::insert(
+                *_imageF, *imagePair.first, *Region,
+                locatePixel, verbose
+            );
+        }
+        else if (imagePair.second && ! _imageC){
+            PixelValueManipulator<Complex>::insert(
+                *_imageC, *imagePair.second, *Region,
+                locatePixel, verbose
+            );
+        }
+        else {
+            ThrowCc("Attached image pixel data type differs from that of " + infile);
+        }
+        vector<String> names = {
+           "infile", "region", "locate", "verbose"
+        };
+        vector<variant> values = {
+            infile, region, locate, verbose
+        };
+        _addHistory(__func__, names, values);
+        _stats.reset();
+        return True;
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
+        RETHROW(x);
+    }
+    return False;
 }
 
 image* image::pbcor(
@@ -2884,157 +3032,10 @@ void image::_reset() {
 
 
 
-std::vector<bool> image::haslock() {
-	try {
-		_log << LogOrigin("image", __func__);
-		if (detached()) {
-			return vector<bool>();
-		}
-		if (_imageF) {
-			return vector<bool> {
-				_imageF->hasLock(FileLocker::Read),
-				_imageF->hasLock(FileLocker::Write)
-			};
-		}
-		else {
-			return vector<bool> {
-				_imageC->hasLock(FileLocker::Read),
-				_imageC->hasLock(FileLocker::Write)
-			};
-		}
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	return vector<bool>();
-}
 
-record* image::histograms(
-	const vector<int>& axes,
-	const variant& region, const variant& mask,
-	const int nbins, const vector<double>& includepix,
-	const bool cumu, const bool log, bool stretch
-) {
-	_log << LogOrigin(_class, __func__);
-	if (detached()) {
-		return 0;
-	}
-	try {
-	    vector<uInt> myaxes;
-	    if (axes.size() != 1 || axes[0] != -1) {
-	        ThrowIf(
-	            *min_element(axes.begin(), axes.end()) < 0,
-	            "All axes must be nonnegative"
-	        );
-	        myaxes.insert(begin(myaxes), begin(axes), end(axes));
-	    }
-		SHARED_PTR<Record> regionRec(_getRegion(region, False));
-		String Mask;
-		if (mask.type() == variant::BOOLVEC) {
-			Mask = "";
-		}
-		else if (
-			mask.type() == variant::STRING
-			|| mask.type() == variant::STRINGVEC
-		) {
-			Mask = mask.toString();
-		}
-		else {
-		    ThrowCc("Unsupported type for mask parameter");
-		}
-		vector<Double> myIncludePix;
-		if (!(includepix.size() == 1 && includepix[0] == -1)) {
-			myIncludePix = includepix;
-		}
-		ImageHistogramsCalculator ihc(
-		    _imageF, regionRec.get(), Mask
-		);
-		if (! myaxes.empty()) {
-		    ihc.setAxes(myaxes);
-		}
-		ihc.setNBins(nbins);
-		if (! myIncludePix.empty()) {
-		    ihc.setIncludeRange(myIncludePix);
-		}
-		ihc.setCumulative(cumu);
-		ihc.setDoLog10(log);
-		ihc.setStretch(stretch);
-        return fromRecord(ihc.compute());
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-}
 
-std::vector<std::string> image::history(bool list) {
-	try {
-		_log << LogOrigin("image", __func__);
-		if (detached()) {
-			return vector<string>();
-		}
-		if (_imageF) {
-			SPIIF im = _imageF;
-			ImageHistory<Float> hist(im);
-			return fromVectorString(hist.get(list));
-		}
-		else {
-			SPIIC im = _imageC;
-			ImageHistory<Complex> hist(im);
-			return fromVectorString(hist.get(list));
-		}
-	} catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	return vector<string>();
-}
 
-bool image::insert(
-	const std::string& infile, const variant& region,
-	const std::vector<double>& locate, bool verbose
-) {
-	try {
-		_log << _ORIGIN;
-		if (detached()) {
-			return 0;
-		}
-		Vector<Double> locatePixel(locate);
-		if (locatePixel.size() == 1 && locatePixel[0] < 0) {
-			locatePixel.resize(0);
-		}
-		auto Region = _getRegion(region, False);
-		auto imagePair = ImageFactory::fromFile(infile);
 
-		if (imagePair.first && _imageF) {
-			PixelValueManipulator<Float>::insert(
-				*_imageF, *imagePair.first, *Region,
-				locatePixel, verbose
-			);
-		}
-		else if (imagePair.second && ! _imageC){
-			PixelValueManipulator<Complex>::insert(
-				*_imageC, *imagePair.second, *Region,
-				locatePixel, verbose
-			);
-		}
-		else {
-			ThrowCc("Attached image pixel data type differs from that of " + infile);
-		}
-		_stats.reset();
-		return True;
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-			<< LogIO::POST;
-		RETHROW(x);
-	}
-	return False;
-}
 
 bool image::isopen() {
 	try {
