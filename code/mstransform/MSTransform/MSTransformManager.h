@@ -295,10 +295,22 @@ struct spwInfo {
 		if (CHAN_FREQ(NUM_CHAN - 1) > CHAN_FREQ(0)) {
 			upperBound = CHAN_FREQ(NUM_CHAN-1) + 0.5 * std::abs(CHAN_WIDTH(NUM_CHAN-1));
 			lowerBound = CHAN_FREQ(0) - 0.5 * std::abs(CHAN_WIDTH(0));
+			// ensure width is positive
+			for (auto it = CHAN_WIDTH.begin(); it != CHAN_WIDTH.end(); ++it) {
+				*it = std::abs(*it);
+			}
 		}
 		else {
 			upperBound = CHAN_FREQ(0) + 0.5 * std::abs(CHAN_WIDTH(0));
 			lowerBound = CHAN_FREQ(NUM_CHAN-1) - 0.5 * std::abs(CHAN_WIDTH(NUM_CHAN-1));
+			// ensure width is negative, may not be the case regridding (without combine)
+			// preserves the sign but the width computation is always positive due to use
+			// of original combine+regrid cvel code that converts all channels to ascending
+			for (auto it = CHAN_WIDTH.begin(); it != CHAN_WIDTH.end(); ++it) {
+				if (*it > 0) {
+					*it = -*it;
+				}
+			}
 		}
 
 		TOTAL_BANDWIDTH = upperBound - lowerBound;
