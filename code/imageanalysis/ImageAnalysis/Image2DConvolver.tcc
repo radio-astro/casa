@@ -325,15 +325,16 @@ template <class T> void Image2DConvolver<T>::_convolve(
 					brightnessUnit, i == 0
 				);
 				{
-					os << LogIO::NORMAL << "Scaling pixel values by ";
+                    os << LogIO::NORMAL << "Scaling pixel values by ";
 					if (logFactors) {
 						if (_targetres) {
 							GaussianBeam kernelBeam(kernelParms);
 							factor1 = pixelArea/kernelBeam.getArea("arcsec*arcsec");
 						}
 						Double factor2 = beamOut.getArea("arcsec*arcsec")/inputBeam.getArea("arcsec*arcsec");
-						os << factor1 << "*" << factor2 << " = ";
-					}
+						os << "inverse of area of convolution kernel in pixels (" << factor1
+                            << ") times the ratio of the beam areas (" << factor2 << ") = ";
+                    }
 					os << scaleFactor
 						<< " for ";
 					if (channel >= 0) {
@@ -420,7 +421,8 @@ template <class T> void Image2DConvolver<T>::_convolve(
         		factor1 = pixelArea/kernelBeam.getArea("arcsec*arcsec");
         	}
         	Double factor2 = beamOut.getArea("arcsec*arcsec")/inputBeam.getArea("arcsec*arcsec");
-        	os << factor1 << "*" << factor2 << " = ";
+			os << "inverse of area of convolution kernel in pixels (" << factor1
+                << ") times the ratio of the beam areas (" << factor2 << ") = ";
         }
         os << scaleFactor << LogIO::POST;
 		if (_targetres && near(beamOut.getMajor(), beamOut.getMinor(), 1e-7)) {
