@@ -388,7 +388,7 @@
                    example: using wildcard characters, 
                             intent="*CALIBRATE_AMPLI*"
                             will match field(s) contains CALIBRATE_AMPLI in a list of intents
-                   WARNING: If a source with a specific field id has scans that can be distiguishable
+                   WARNING: If a source with a specific field id has scans that can be distinguishable
                             with intent selection, one should set usescatch=True. Otherwise, any existing
                             model of the source may be cleared and overwritten even if the part of the scans
                             not selected by intent.
@@ -548,9 +548,10 @@
 
             listmodels -- If True, do nothing but list candidates for model
                 (for extragalactic calibrators) that are present on the system.  
-		It looks for *.im* *.mod* in ., CalModels, and CalModels directories 
-		in the casa['dirs']['data'] tree.  It does not check whether they are 
-		appropriate for the MS!
+		It looks for *.im* *.mod* in . including its sub-directories but skipping
+		any directory name start with ".",   
+		CalModels, and CalModels directories in the casa['dirs']['data'] tree.  
+		It does not check whether they are appropriate for the MS!
 		If standard='Butler-JPL-Horizons 2012', Tb models (frequency-depended
 		brightness temperature models) for Solar System objects used in the 
 		standard.  For standard='Butler-JPL-Horizons 2010', the recognized

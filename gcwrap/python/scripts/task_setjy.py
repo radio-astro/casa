@@ -1,5 +1,6 @@
 from glob import glob
 import os
+import re
 import sys
 import shutil
 from setjy_helper import * 
@@ -59,8 +60,10 @@ def setjy(vis=None, field=None, spw=None,
     casalog.post("standard="+standard,'DEBUG1')
     mylocals = locals()
 
-    sh = SetjyHelper(vis)
-    rstat = sh.resetModelCol()
+    if not listmodels: # listmmodels=T does not require vis 
+        sh = SetjyHelper(vis)
+        rstat = sh.resetModelCol()
+
 
     # Take care of the trivial parallelization
     if ( not listmodels and ParallelTaskHelper.isParallelMS(vis) and usescratch):
@@ -404,7 +407,8 @@ def lsmodims(path, modpat='*', header='Candidate modimages'):
 
 def findCalModels(target='CalModels',
                   roots=['.', casa['dirs']['data']],
-                  permexcludes = ['.svn', 'regression', 'ephemerides',
+                  #permexcludes = ['.svn', 'regression', 'ephemerides',
+                  permexcludes = ['regression', 'ephemerides',
                                   'geodetic', 'gui'],
                   exts=['.ms', '.im', '.tab']):
     """
@@ -414,6 +418,8 @@ def findCalModels(target='CalModels',
     directories, branches matching permexcludes or exts are excluded for speed.
     """
     retset = set([])
+    # exclulde all hidden(.xxx) directories
+    regex = re.compile('^\.\S+')
     for root in roots:
       # Do a walk to find target directories in root.
       # 7/5/2011: glob('/export/data_1/casa/gnuactive/data/*/CalModels/*') doesn't work.
@@ -421,11 +427,14 @@ def findCalModels(target='CalModels',
           excludes = permexcludes[:]
           for ext in exts:
               excludes += [d for d in dirs if ext in d]
+              excludes += [m.group(0) for d in dirs for m in [regex.search(d)] if m]
           for d in excludes:
               if d in dirs:
                   dirs.remove(d)
           if path.split('/')[-1] == target:
-              retset.add(path)
+              # make path realpath to resolve the issue with duplicated path resulted from symlinks
+              realpath = os.path.realpath(path)
+              retset.add(realpath)
     return retset             
 
 
