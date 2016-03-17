@@ -3194,6 +3194,13 @@ If the user sets a value for {\stfaf scale}, then the convolution kernel
 will be scaled by this value. Note that it has peak of unity before the
 application of this scale factor.
 
+If the units on the original image include Jy/beam, the units on the
+output image will be rescaled by the ratio of the input and output
+beams as well as rescaling by the area of convolution kernel.
+
+If the units on the original image include K, then only the image
+convolution kernel rescaling is done. 
+
 If targetres=True and type="gaussian" and the input image has a restoring beam,
 this method will interpret the values of major, minor, and pa as the resolution
 of the final image and will calculate the parameters of the Gaussian to use
