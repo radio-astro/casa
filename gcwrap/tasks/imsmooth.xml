@@ -269,6 +269,13 @@ each plane will be convolved with a Gaussian specified by beam (and hence, in
 general, the output image will also have multiple beams that vary with spectral channel
 and/or polarization).
 
+If the units on the original image include Jy/beam, the units on the
+output image will be rescaled by the ratio of the input and output
+beams as well as rescaling by the area of convolution kernel.
+
+If the units on the original image include K, then only the image
+convolution kernel rescaling is done. 
+
 BOXCAR KERNEL
 
 major is length of the box along the y-axis and minor is length of the box along the x-axis.
