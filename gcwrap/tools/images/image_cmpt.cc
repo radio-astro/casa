@@ -2712,6 +2712,105 @@ bool image::insert(
     return False;
 }
 
+bool image::isopen() {
+    try {
+        _log << _ORIGIN;
+        return _imageF || _imageC;
+    } catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return False;
+}
+
+bool image::ispersistent() {
+    try {
+        _log << LogOrigin("image", "ispersistent");
+        if (detached()) {
+            return False;
+        }
+        if (_imageF) {
+            return _imageF->isPersistent();
+        }
+        else {
+            return _imageC->isPersistent();
+        }
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return False;
+}
+
+bool image::lock(bool writelock, int nattempts) {
+    try {
+        _log << LogOrigin("image", __func__);
+        if (detached()) {
+            return False;
+        }
+        FileLocker::LockType locker = FileLocker::Read;
+        if (writelock) {
+            locker = FileLocker::Write;
+        }
+        uInt n = max(0, nattempts);
+        if (_imageF) {
+            return _imageF->lock(locker, n);
+        }
+        else {
+            return _imageC->lock(locker, n);
+        }
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return False;
+}
+
+bool image::makecomplex(
+    const std::string& outfile, const std::string& imagFile,
+    const variant& region, bool overwrite
+) {
+    try {
+        _log << _ORIGIN;
+        if (detached()) {
+            return False;
+        }
+        ThrowIf(
+            ! _imageF, "The attached image must be real valued"
+        );
+        SHARED_PTR<Record> Region(_getRegion(region, False));
+        auto mypair = ImageFactory::fromFile(imagFile);
+        ThrowIf(
+            ! mypair.first, imagFile + " does not have real valued pixels"
+        );
+        auto cImage = ImageFactory::makeComplex(
+            _imageF, mypair.first, outfile,
+            *Region, overwrite
+        );
+        vector<String> names = {
+            "outfile", "imag", "region", "overwrite"
+        };
+        vector<variant> values = {
+            outfile, imagFile, region, overwrite
+        };
+        auto msgs = _newHistory(__func__, names, values);
+        ImageHistory<Complex> imh(cImage);
+        imh.addHistory(_ORIGIN, msgs);
+        return True;
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return False;
+}
+
 image* image::pbcor(
     const variant& pbimage, const string& outfile,
     bool overwrite, const string& box,
@@ -2798,6 +2897,7 @@ image* image::pbcor(
             << LogIO::POST;
         RETHROW(x);
     }
+    return nullptr;
 }
 
 bool image::remove(const bool finished, const bool verbose) {
@@ -3037,95 +3137,10 @@ void image::_reset() {
 
 
 
-bool image::isopen() {
-	try {
-		_log << _ORIGIN;
-		return _imageF || _imageC;
-	} catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	return False;
-}
 
-bool image::ispersistent() {
-	try {
-		_log << LogOrigin("image", "ispersistent");
-		if (detached()) {
-			return False;
-		}
-		if (_imageF) {
-			return _imageF->isPersistent();
-		}
-		else {
-			return _imageC->isPersistent();
-		}
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	return False;
-}
 
-bool image::lock(bool writelock, int nattempts) {
-	try {
-		_log << LogOrigin("image", __func__);
-		if (detached()) {
-			return False;
-		}
-		FileLocker::LockType locker = FileLocker::Read;
-		if (writelock) {
-			locker = FileLocker::Write;
-		}
-		uInt n = max(0, nattempts);
-		if (_imageF) {
-			return _imageF->lock(locker, n);
-		}
-		else {
-			return _imageC->lock(locker, n);
-		}
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	return False;
-}
 
-bool image::makecomplex(
-	const std::string& outfile, const std::string& imagFile,
-	const variant& region, bool overwrite
-) {
-	try {
-		_log << _ORIGIN;
-		if (detached()) {
-			return False;
-		}
-		ThrowIf(
-			! _imageF, "The attached image must be real valued"
-		);
-		SHARED_PTR<Record> Region(_getRegion(region, False));
-		auto mypair = ImageFactory::fromFile(imagFile);
-		ThrowIf(
-			! mypair.first, imagFile + " does not have real valued pixels"
-		);
-		auto cImage = ImageFactory::makeComplex(
-			_imageF, mypair.first, outfile,
-			*Region, overwrite
-		);
-		return True;
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	return False;
-}
+
 
 std::vector<std::string> image::maskhandler(
 	const std::string& op,
