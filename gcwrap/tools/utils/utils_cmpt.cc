@@ -23,6 +23,8 @@
 #include <tables/Tables/Table.h>
 #include <casa/System/Aipsrc.h>
 #include <casa/OS/HostInfo.h>
+#include <stdcasa/StdCasa/CrashReporter.h>
+#include <signal.h>
 
 using namespace std;
 using namespace casa;
@@ -329,6 +331,45 @@ void
 utils::c_exception_clear ()
 {
   AipsError::clearLastInfo ();
+}
+
+void bogusHandler (int, siginfo_t *, void *)
+{
+    // Do nothing
+}
+
+bool
+utils::_crash_reporter_initialize ()
+{
+    // *NOTE*: Not intended for casual use!
+
+    bool status = casa::CrashReporter::initialize();
+
+    return status;
+}
+
+bool
+utils::_trigger_segfault (int faultType)
+{
+    // *NOTE*: Not intended for casual use!
+
+    switch (faultType) {
+
+    case 0:{
+	bool * p = 0;
+	return * p;
+	break;
+    }
+
+    default:
+    case 1:{
+	throw exception();
+	break;
+    }
+
+    }
+
+    return false;
 }
 
 

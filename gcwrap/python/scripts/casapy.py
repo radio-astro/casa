@@ -1474,6 +1474,7 @@ except:
 casalog.showconsole(showconsole)
 casalog.version()
 
+
 ### Try loading ASAP
 try:
     asap_init()
@@ -1522,6 +1523,14 @@ import shutil
 ###
 if os.environ.has_key('_PYTHONPATH'):
     sys.path.extend(os.getenv('_PYTHONPATH').split(':'))
+
+import signal
+
+try:
+    casac.utils()._crash_reporter_initialize()
+except Exception as e:
+    print "***\n*** Crash reporter initialization failed.\n***"
+    print "*** esception={0}\n***".format (e)
 
 ipshell.mainloop( )
 if(os.uname()[0] == 'Darwin') and type(casa) == "<type 'dict'>" and casa['flags'].has_key('--maclogger') :

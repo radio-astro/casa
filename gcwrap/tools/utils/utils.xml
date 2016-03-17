@@ -258,6 +258,54 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 
 </method>
 
+<method type="function" name="_crash_reporter_initialize">
+
+	<shortdescription>Initializes the crash reporter.</shortdescription>
+
+  <description>
+    Initializes the crash reporter which will generate a crash report if casapy
+    crashes.  For reporter purposes a crash is the reception of an signal by
+    casapy which would normally result in the program being terminated.  This includes
+    segfaults, aborts, etc., plus any unhandled C++ exceptions (C++ generates an
+    abort signal for unhandled exceptions).  This method is intended for use by the
+    casapy infrastructure and should not be called by other code or by users; however,
+    the call will only install the crash reporter the first time it is called so any
+    subsequent calls should be no-ops.  Returns true if initialization occurred and
+    false if the crash reporter was stubbed out (i.e., symbol UseCrashReporter was
+    not defined).
+  </description>
+
+  <input/>
+
+  <returns type="bool"/>
+
+  <example></example>
+
+</method>
+
+<method type="function" name="_trigger_segfault">
+
+	<shortdescription>Crashes casa with segfault.</shortdescription>
+
+  <description>
+    This triggers a segfault for testing the crash reporter.  Obviously you 
+    shouldn't call this unless that's what you want.  It's in here for 
+    development/debugging purposes and ought to be removed before you see this.
+  </description>
+
+  <input>
+    <param type="int" name="faultType">
+	    <description>How to kill the program</description>
+	    <value>0</value>
+    </param>
+  </input>
+
+
+  <returns type="bool"/>
+
+  <example></example>
+
+</method>
 
 
 </tool>

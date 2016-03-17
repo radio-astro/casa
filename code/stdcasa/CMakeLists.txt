@@ -91,13 +91,23 @@ else ()
 			DEPENDS definitions
 		    )
 endif ()
+
 casa_add_library( stdcasa
+        StdCasa/CrashReporter.cc
 	StdCasa/CasacSupport.cc
 	StdCasa/record.cc
 	StdCasa/variant.cc
 	version2.cc
 	version.cc
 	)
+
+if (UseCrashReporter)
+   message ("DEBUG Adding UseCrashReporter to definitions")
+    add_definitions( -DUseCrashReporter )
+    target_link_libraries( libstdcasa /home/orion/lib/libbreakpad_client.a)
+    target_include_directories ( libstdcasa PRIVATE /home/orion/pkg/breakpad/src)
+endif ()
+
 add_dependencies( libstdcasa_fast stdcasa_definitions )
 add_dependencies( libstdcasa      stdcasa_definitions )
 install (FILES
@@ -111,6 +121,7 @@ install (FILES
 	DESTINATION include/casacode/stdcasa
 	)
 install (FILES
+        StdCasa/CrashReporter.h
 	StdCasa/CasacSupport.h
 	StdCasa/string_conversions
 	DESTINATION include/casacode/stdcasa/StdCasa
