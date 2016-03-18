@@ -68,18 +68,28 @@ def computeChanFlag(vis, caltable, context):
 
             # print rangeA, rangeB
 
-            # Determine contiguous lengths, but ignoring edge flagging
+            # If no solutions are found, only one tuple is returned and make note
+            try:
+                if ((rangeA[0][0] == 0 and rangeA[0][1] == len(flagArr[0])-1) or (rangeB[0][0] == 0 and rangeB[0][1] == len(flagArr[1])-1)):
+                    LOG.warn("Weak bandpass heuristic could not recover solutions for spwid="+str(spwArr[0]))
+                    print rangeA, rangeB
+                    spwids.append(spwArr[0])
+                    largechunk = True
+            except:
+                LOG.warn("Problem with using weakbp heuristics - check CASA log")
+
+            # Determine contiguous lengths for both polarizations, but ignoring edge flagging
             for row in rangeA[1:-1]:
                 length = row[-1]-row[0]
                 spwids.append(spwArr[0])
                 if length > len(flagArr[0])/32.0:
-                    largechunk=True
+                    largechunk = True
 
             for row in rangeB[1:-1]:
                 length = row[-1]-row[0]
                 spwids.append(spwArr[0])
-                if length > len(flagArr[0])/32.0:
-                    largechunk=True
+                if length > len(flagArr[1])/32.0:
+                    largechunk = True
 
             #print rrow.rjust(4), 'Pol A:', str(np.sum(flagArr[0])).rjust(4),' Pol B:', str(np.sum(flagArr[1])).rjust(4),                                 ' / ',str(len(flagArr[0])), ' chan flagged ', '(', 100.0*float(np.sum(flagArr[0]))/len(flagArr[0]),'%,  ',                                 100.0*float(np.sum(flagArr[1]))/len(flagArr[1]), '%)'
 
@@ -162,11 +172,12 @@ def weakbp(vis, caltable, context=None, RefAntOutput=None, ktypecaltable=None, b
         for spw in spwids:
             preavgnchan = channels[spw]/float(cpa)
             LOG.debug("CPA: "+str(cpa)+"   NCHAN: "+str(preavgnchan)+"    NCHAN/32: "+str(preavgnchan/32.0))
-            if (cpa >= preavgnchan/32.0):
-                LOG.warn("Pre-averaging has exceeded Nchan/32 for spwid="+str(spw))
+            if (cpa > preavgnchan/32.0):
+                LOG.warn("Limiting pre-averaging to maximum 1/32 fractional bandwidth for spwid="+str(spw)+". Interpolation in applycal will need to extend over greater than 1/32 fractional bandwidth, which may fail to capture significant bandpass structure.")
                 largechunk = False  #This will break the while loop and move onto applycal
         cpa = cpa * 2
 
-    LOG.warning("Gaps in bandpass solutions will be linearly interpolated over in applycal.")
+    LOG.warning("Channel gaps in bandpass solutions will be linearly interpolated over in applycal.")
+    LOG.warning("Accuracy of bandpass solutions will be slightly degraded at interpolated channels, particularly if these fall at spectral window edges where applycal will need to extrapolate.")
     interp = 'nearest'
     return interp
