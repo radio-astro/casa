@@ -178,6 +178,6 @@ def weakbp(vis, caltable, context=None, RefAntOutput=None, ktypecaltable=None, b
         cpa = cpa * 2
 
     LOG.warning("Channel gaps in bandpass solutions will be linearly interpolated over in applycal.")
-    LOG.warning("Accuracy of bandpass solutions will be slightly degraded at interpolated channels, particularly if these fall at spectral window edges where applycal will need to extrapolate.")
+    LOG.warning("Accuracy of bandpass solutions will be slightly degraded at interpolated channels, particularly if these fall at spectral window edges where applycal will perform 'nearest' extrapolation.")
     interp = 'nearest'
     return interp
