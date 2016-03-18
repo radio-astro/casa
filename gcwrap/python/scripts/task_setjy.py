@@ -420,21 +420,27 @@ def findCalModels(target='CalModels',
     retset = set([])
     # exclulde all hidden(.xxx) directories
     regex = re.compile('^\.\S+')
+    # extra skip for OSX 
+    if sys.platform == "darwin": 
+        permexcludes.append('Frameworks')
+        permexcludes.append('Library')
+        permexcludes.append('lib')
     for root in roots:
       # Do a walk to find target directories in root.
       # 7/5/2011: glob('/export/data_1/casa/gnuactive/data/*/CalModels/*') doesn't work.
       for path, dirs, fnames in os.walk(root, followlinks=True):
-          excludes = permexcludes[:]
-          for ext in exts:
-              excludes += [d for d in dirs if ext in d]
-              excludes += [m.group(0) for d in dirs for m in [regex.search(d)] if m]
-          for d in excludes:
-              if d in dirs:
-                  dirs.remove(d)
-          if path.split('/')[-1] == target:
+          realpath = os.path.realpath(path)
+          if not realpath in retset:
+              excludes = permexcludes[:]
+              for ext in exts:
+                  excludes += [d for d in dirs if ext in d]
+                  excludes += [m.group(0) for d in dirs for m in [regex.search(d)] if m]
+              for d in excludes:
+                  if d in dirs:
+                      dirs.remove(d)
+              if path.split('/')[-1] == target:
               # make path realpath to resolve the issue with duplicated path resulted from symlinks
-              realpath = os.path.realpath(path)
-              retset.add(realpath)
+                  retset.add(realpath)
     return retset             
 
 
