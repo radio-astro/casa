@@ -59,7 +59,8 @@ def mstransform(
              disableparallel,    # HIDDEN parameter to create MMS in sequential
              ddistart,           # HIDDEN internal parameter for the sub-table re-indexing
              taql,               # HIDDEN internal parameter
-             monolithic_processing      # HIDDEN parameter for the MMS monolithic processing
+             monolithic_processing,      # HIDDEN parameter for the MMS monolithic processing
+             reindex             # HIDDEN parameter for use in the pipeline context only
              ):
 
     ''' This task can replace split, cvel, partition and hanningsmooth '''
@@ -178,6 +179,9 @@ def mstransform(
         
         # ddistart will be used in the tool when re-indexing the spw table
         config['ddistart'] = ddistart
+        
+        # re-index parameter is used by the pipeline to not re-index any sub-table and the associated IDs
+        config['reindex'] = reindex        
         
         config['datacolumn'] = datacolumn
         dc = datacolumn.upper()            

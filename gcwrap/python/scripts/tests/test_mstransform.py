@@ -294,7 +294,8 @@ class test_base_compare(test_base):
         self.subtables=['/ANTENNA','/DATA_DESCRIPTION','/FEED','/FIELD','/FLAG_CMD',
                         '/POINTING','/POLARIZATION','/PROCESSOR','/STATE']
         self.sortorder=['OBSERVATION_ID','ARRAY_ID','SCAN_NUMBER','FIELD_ID','DATA_DESC_ID','ANTENNA1','ANTENNA2','TIME']
-
+        self.excludecols=['WEIGHT_SPECTRUM','SIGMA_SPECTRUM','SIGMA','FLAG_CATEGORY']
+        
     def tearDown(self):
         os.system('rm -rf '+ self.vis)
         os.system('rm -rf '+ self.outvis)
@@ -345,7 +346,7 @@ class test_base_compare(test_base):
 
     def compare_main_table_columns(self,startrow = 0, nrow = -1, rowincr = 1):
         for col in self.columns:
-            if col != "WEIGHT_SPECTRUM" and col != "SIGMA_SPECTRUM" and col != "SIGMA" and col != "FLAG_CATEGORY":
+            if col not in self.excludecols:
                     tmpcolumn = self.columns[:]
                     tmpcolumn.remove(col)
                     self.assertTrue(th.compTables(self.refvis_sorted,self.outvis_sorted,tmpcolumn,self.tolerance[col],self.mode[col],startrow,nrow,rowincr))
@@ -5441,7 +5442,37 @@ class test_otf_calibration(test_base_compare):
         self.generate_tolerance_map()
         
         self.post_process()        
-                                                
+        
+class test_no_reindexing(test_base_compare):
+    '''Test using no-reindexing feature'''
+
+    def setUp(self):
+        super(test_no_reindexing,self).setUp()
+        self.setUp_sub_tables_alma()
+        self.outvis = 'test_no_reindexing_noreidnex.ms'
+        self.refvis = 'test_no_reindexing_reindex.ms'
+        self.outvis_sorted = self.outvis
+        self.refvis_sorted = self.refvis
+        os.system('rm -rf test_no_reindexing_*')
+
+    def tearDown(self):
+        super(test_no_reindexing,self).tearDown()
+
+    def test_regrid_SPWs_separately_with_no_reindexing(self):
+        '''mstransform: Change ref. frame to LSRK for each SPW separately w/o reindexing'''
+
+        mstransform(vis=self.vis,outputvis=self.outvis,regridms=True,datacolumn='ALL',
+                    field='SXDF-NB1006-4',spw='1:10~20,2:30~40',outframe='lsrk',reindex=False)
+        mstransform(vis=self.vis,outputvis=self.refvis,regridms=True,datacolumn='ALL',
+                    field='SXDF-NB1006-4',spw='1:10~20,2:30~40',outframe='lsrk')
+        
+        listobs(self.outvis, listfile='list.obs')
+        self.assertTrue(os.path.exists('list.obs'), 'Probable error in sub-table re-indexing')        
+
+        self.excludecols = ['DATA_DESC_ID','FIELD_ID','FLAG_CATEGORY','WEIGHT_SPECTRUM','SIGMA_SPECTRUM']
+        self.generate_tolerance_map()
+        self.compare_main_table_columns()
+        
 # Cleanup class
 class Cleanup(test_base):
 
@@ -5497,6 +5528,7 @@ def suite():
             test_spectrum_transformations_mean,
             test_otf_calibration,
             test_polarization_reindex,
+            test_no_reindexing,
             # jagonzal: Replace median with mean to capture overall behaviour
             # test_spectrum_transformations_median,
             # jagonzal: mstransform has been optimized to not use weight spectrum for chan. avg. DATA when 

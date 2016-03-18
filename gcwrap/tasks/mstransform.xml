@@ -377,6 +377,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <description>Hidden parameter for internal use only. Do not change it!</description>
             <value>False</value>
         </param>
+        <param type="bool" name="reindex" subparam="true" visibility="hidden">
+            <description>Hidden parameter for use in the pipeline context only</description>
+            <value>True</value>
+        </param>        
                         
     <constraints>
           <when param="createmms">

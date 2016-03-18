@@ -36,7 +36,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-MSTransformDataHandler::MSTransformDataHandler(String& theMS, Table::TableOption option, Bool virtualModelCol,Bool virtualCorrectedCol) :
+MSTransformDataHandler::MSTransformDataHandler(	String& theMS, Table::TableOption option,
+												Bool virtualModelCol,Bool virtualCorrectedCol,
+												Bool reindex) :
 		  ms_p(MeasurementSet(theMS, option)),
 		  mssel_p(ms_p),
 		  msc_p(NULL),
@@ -56,7 +58,8 @@ MSTransformDataHandler::MSTransformDataHandler(String& theMS, Table::TableOption
 		  fitspw_p("*"),
 		  fitoutspw_p("*"),
 		  virtualModelCol_p(virtualModelCol),
-		  virtualCorrectedCol_p(virtualCorrectedCol)
+		  virtualCorrectedCol_p(virtualCorrectedCol),
+		  reindex_p(reindex)
 {
 	return;
 }
@@ -64,7 +67,9 @@ MSTransformDataHandler::MSTransformDataHandler(String& theMS, Table::TableOption
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-MSTransformDataHandler::MSTransformDataHandler(MeasurementSet& ms, Bool virtualModelCol,Bool virtualCorrectedCol) :
+MSTransformDataHandler::MSTransformDataHandler(	MeasurementSet& ms,
+												Bool virtualModelCol,Bool virtualCorrectedCol,
+												Bool reindex) :
 		   ms_p(ms),
 		   mssel_p(ms_p),
 		   msc_p(NULL),
@@ -84,7 +89,8 @@ MSTransformDataHandler::MSTransformDataHandler(MeasurementSet& ms, Bool virtualM
 		   fitspw_p("*"),
 		   fitoutspw_p("*"),
 		   virtualModelCol_p(virtualModelCol),
-		   virtualCorrectedCol_p(virtualCorrectedCol)
+		   virtualCorrectedCol_p(virtualCorrectedCol),
+		   reindex_p(reindex)
 {
 	return;
 }
@@ -1653,6 +1659,14 @@ Bool MSTransformDataHandler::fillFieldTable()
 	time.keywordSet().asRecord("MEASINFO").get("Ref", refstr);
 	msField.time().rwKeywordSet().asrwRecord("MEASINFO").define("Ref", refstr);
 
+	if (!reindex_p)
+	{
+		const MSField &inputField = mssel_p.field();
+		MSField &outputField = msOut_p.field();
+		TableCopy::copyRows(outputField, inputField);
+		return True;
+	}
+
 	// fieldRelabel_p size: nrow of a input MS, -1 for unselected field ids
 	fieldRelabel_p.resize(mscIn_p->field().nrow());
 	fieldRelabel_p.set(-1);
@@ -1791,7 +1805,7 @@ Bool MSTransformDataHandler::fillPolTable()
 	LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
 
 	// Input polarization table
-	const MSPolarization poltable = mssel_p.polarization();
+	const MSPolarization &poltable = mssel_p.polarization();
 	ROScalarColumn<Int> numCorr(poltable,MSPolarization::columnName(MSPolarization::NUM_CORR));
 	ROArrayColumn<Int> corrType(poltable,MSPolarization::columnName(MSPolarization::CORR_TYPE));
 	ROArrayColumn<Int> corrProd(poltable,MSPolarization::columnName(MSPolarization::CORR_PRODUCT));
@@ -1799,6 +1813,13 @@ Bool MSTransformDataHandler::fillPolTable()
 
 	// Output polarization table
 	MSPolarizationColumns& msPol(msc_p->polarization());
+
+	if (!reindex_p)
+	{
+		MSPolarization &outputPol = msOut_p.polarization();
+		TableCopy::copyRows(outputPol, poltable);
+		return True;
+	}
 
 	// Fill output polarization table
 	uInt nPol = poltable.nrow(); // nOutputPol = nInputPol (no PolId re-index)
@@ -1879,7 +1900,8 @@ Bool MSTransformDataHandler::fillDDITable()
 	uInt nddid = spw2ddid_p.size();
 
 	// Input ddi table
-	const MSDataDescription inputDDI = mssel_p.dataDescription();
+	const MSDataDescription &inputDDI = mssel_p.dataDescription();
+
 	ROScalarColumn<Int> polIdCol(inputDDI, MSDataDescription::columnName(MSDataDescription::POLARIZATION_ID));
 	ROScalarColumn<Int> spwIdCol(inputDDI,MSDataDescription::columnName(MSDataDescription::SPECTRAL_WINDOW_ID));
 
@@ -1906,6 +1928,13 @@ Bool MSTransformDataHandler::fillDDITable()
 	{
 		spw_uniq_p[k] = spw_p[spwuniqinds[k]];
 		spwRelabel_p[spw_uniq_p[k]] = k;
+	}
+
+	if (!reindex_p)
+	{
+		MSDataDescription &outputDDI = msOut_p.dataDescription();
+		TableCopy::copyRows(outputDDI, inputDDI);
+		return True;
 	}
 
 	// Output SPECTRAL_WINDOW_ID column
@@ -1970,6 +1999,17 @@ Bool MSTransformDataHandler::fillSPWTable()
 		inNumChan_p[k] = inSpWCols.numChan()(spw_p[k]);
 	}
 
+	if (reindex_p)
+	{
+		msOut_p.spectralWindow().addRow(nuniqSpws);
+	}
+	else
+	{
+		const MSSpectralWindow &inputSPW = mssel_p.spectralWindow();
+		MSSpectralWindow &outputSPW = msOut_p.spectralWindow();
+		TableCopy::copyRows(outputSPW, inputSPW);
+	}
+
 
 	Vector<Vector<Int> > spwinds_of_uniq_spws(nuniqSpws);
 	totnchan_p.resize(nuniqSpws);
@@ -1977,9 +2017,6 @@ Bool MSTransformDataHandler::fillSPWTable()
 	{
 		Int maxchan = 0;
 		uInt j = 0;
-
-		// Add rows to output MS SPW table
-		msOut_p.spectralWindow().addRow();
 
 		totnchan_p[k] = 0;
 		spwinds_of_uniq_spws[k].resize();
@@ -2016,6 +2053,7 @@ Bool MSTransformDataHandler::fillSPWTable()
 	for (uInt min_k = 0; min_k < nuniqSpws; ++min_k)
 	{
 		uInt k = spwinds_of_uniq_spws[min_k][0];
+		uInt outSPWId = reindex_p? min_k : spw_p[k];
 
 		if (spwinds_of_uniq_spws[min_k].nelements() > 1 || nchan_p[k] != inSpWCols.numChan()(spw_p[k]))
 		{
@@ -2101,73 +2139,80 @@ Bool MSTransformDataHandler::fillSPWTable()
 			}
 			--outChan;
 
-			msSpW.chanFreq().put(min_k, chanFreqOut);
-			msSpW.refFrequency().put(min_k,min(chanFreqOut[0], chanFreqOut[chanFreqOut.size() - 1]));
-			msSpW.resolution().put(min_k, spwResolOut);
-			msSpW.numChan().put(min_k, nOutChan);
-			msSpW.chanWidth().put(min_k, chanWidthOut);
-			msSpW.effectiveBW().put(min_k, spwResolOut);
-			msSpW.totalBandwidth().put(min_k, totalBW);
+			msSpW.chanFreq().put(outSPWId, chanFreqOut);
+			msSpW.refFrequency().put(outSPWId,min(chanFreqOut[0], chanFreqOut[chanFreqOut.size() - 1]));
+			msSpW.resolution().put(outSPWId, spwResolOut);
+			msSpW.numChan().put(outSPWId, nOutChan);
+			msSpW.chanWidth().put(outSPWId, chanWidthOut);
+			msSpW.effectiveBW().put(outSPWId, spwResolOut);
+			msSpW.totalBandwidth().put(outSPWId, totalBW);
 		}
 		else
 		{
-			msSpW.chanFreq().put(min_k, inSpWCols.chanFreq()(spw_p[k]));
-			msSpW.refFrequency().put(min_k, inSpWCols.refFrequency()(spw_p[k]));
-			msSpW.resolution().put(min_k, inSpWCols.resolution()(spw_p[k]));
-			msSpW.numChan().put(min_k, inSpWCols.numChan()(spw_p[k]));
-			msSpW.chanWidth().put(min_k, inSpWCols.chanWidth()(spw_p[k]));
-			msSpW.effectiveBW().put(min_k, inSpWCols.effectiveBW()(spw_p[k]));
-			msSpW.totalBandwidth().put(min_k,inSpWCols.totalBandwidth()(spw_p[k]));
+			msSpW.chanFreq().put(outSPWId, inSpWCols.chanFreq()(spw_p[k]));
+			msSpW.refFrequency().put(outSPWId, inSpWCols.refFrequency()(spw_p[k]));
+			msSpW.resolution().put(outSPWId, inSpWCols.resolution()(spw_p[k]));
+			msSpW.numChan().put(outSPWId, inSpWCols.numChan()(spw_p[k]));
+			msSpW.chanWidth().put(outSPWId, inSpWCols.chanWidth()(spw_p[k]));
+			msSpW.effectiveBW().put(outSPWId, inSpWCols.effectiveBW()(spw_p[k]));
+			msSpW.totalBandwidth().put(outSPWId,inSpWCols.totalBandwidth()(spw_p[k]));
 		}
 
-		msSpW.flagRow().put(min_k, inSpWCols.flagRow()(spw_p[k]));
-		msSpW.freqGroup().put(min_k, inSpWCols.freqGroup()(spw_p[k]));
-		msSpW.freqGroupName().put(min_k, inSpWCols.freqGroupName()(spw_p[k]));
-		msSpW.ifConvChain().put(min_k, inSpWCols.ifConvChain()(spw_p[k]));
-		msSpW.measFreqRef().put(min_k, inSpWCols.measFreqRef()(spw_p[k]));
-		msSpW.name().put(min_k, inSpWCols.name()(spw_p[k]));
-		msSpW.netSideband().put(min_k, inSpWCols.netSideband()(spw_p[k]));
+		msSpW.flagRow().put(outSPWId, inSpWCols.flagRow()(spw_p[k]));
+		msSpW.freqGroup().put(outSPWId, inSpWCols.freqGroup()(spw_p[k]));
+		msSpW.freqGroupName().put(outSPWId, inSpWCols.freqGroupName()(spw_p[k]));
+		msSpW.ifConvChain().put(outSPWId, inSpWCols.ifConvChain()(spw_p[k]));
+		msSpW.measFreqRef().put(outSPWId, inSpWCols.measFreqRef()(spw_p[k]));
+		msSpW.name().put(outSPWId, inSpWCols.name()(spw_p[k]));
+		msSpW.netSideband().put(outSPWId, inSpWCols.netSideband()(spw_p[k]));
 
 
-		if (haveSpwBN) msSpW.bbcNo().put(min_k, inSpWCols.bbcNo()(spw_p[k]));
-		if (haveSpwBS) msSpW.bbcSideband().put(min_k, inSpWCols.bbcSideband()(spw_p[k]));
-		if (haveSpwDI) msSpW.dopplerId().put(min_k, inSpWCols.dopplerId()(spw_p[k]));
+		if (haveSpwBN) msSpW.bbcNo().put(outSPWId, inSpWCols.bbcNo()(spw_p[k]));
+		if (haveSpwBS) msSpW.bbcSideband().put(outSPWId, inSpWCols.bbcSideband()(spw_p[k]));
+		if (haveSpwDI) msSpW.dopplerId().put(outSPWId, inSpWCols.dopplerId()(spw_p[k]));
 
 
 		if (haveSpwASI)
 		{
-			// Get list of SPWs associated to his one
-			std::vector<Int> selectedSPWs = spw_p.tovector();
-
-			// Get the list of selected SPWs and association nature
-			Array<Int> assocSpwId = inSpWCols.assocSpwId()(spw_p[k]);
-			Array<String> assocNature = inSpWCols.assocNature()(spw_p[k]);
-
-			// Find which associated SPWs are selected, and store the transformed Id
-			std::vector<Int>::iterator findIt;
-			std::vector<Int> selectedAssocSpwId;
-			std::vector<String> selectedAssocNature;
-			for (uInt idx=0;idx<assocSpwId.size();idx++)
+			if (reindex_p)
 			{
-				IPosition pos(1,idx);
-				Int spw = assocSpwId(pos);
-				findIt = find (selectedSPWs.begin(), selectedSPWs.end(), spw);
-				if (findIt != selectedSPWs.end())
+				// Get list of SPWs associated to his one
+				std::vector<Int> selectedSPWs = spw_p.tovector();
+
+				// Get the list of selected SPWs and association nature
+				Array<Int> assocSpwId = inSpWCols.assocSpwId()(spw_p[k]);
+				Array<String> assocNature = inSpWCols.assocNature()(spw_p[k]);
+
+				// Find which associated SPWs are selected, and store the transformed Id
+				std::vector<Int>::iterator findIt;
+				std::vector<Int> selectedAssocSpwId;
+				std::vector<String> selectedAssocNature;
+				for (uInt idx=0;idx<assocSpwId.size();idx++)
 				{
-					selectedAssocSpwId.push_back(spwRelabel_p[spw]);
-					if (haveSpwAN) selectedAssocNature.push_back(assocNature(pos));
+					IPosition pos(1,idx);
+					Int spw = assocSpwId(pos);
+					findIt = find (selectedSPWs.begin(), selectedSPWs.end(), spw);
+					if (findIt != selectedSPWs.end())
+					{
+						selectedAssocSpwId.push_back(spwRelabel_p[spw]);
+						if (haveSpwAN) selectedAssocNature.push_back(assocNature(pos));
+					}
+				}
+
+				// Store selected associated SPW Ids
+				Vector<Int> selectedAssocSpwIdVector(selectedAssocSpwId);
+				msSpW.assocSpwId().put(min_k, selectedAssocSpwIdVector);
+
+				// Store selected association nature
+				if (haveSpwAN)
+				{
+					Vector<String> selectedAssocNatureVector(selectedAssocNature);
+					msSpW.assocNature().put(min_k, selectedAssocNatureVector);
 				}
 			}
-
-			// Store selected associated SPW Ids
-			Vector<Int> selectedAssocSpwIdVector(selectedAssocSpwId);
-			msSpW.assocSpwId().put(min_k, selectedAssocSpwIdVector);
-
-			// Store selected association nature
-			if (haveSpwAN)
+			else
 			{
-				Vector<String> selectedAssocNatureVector(selectedAssocNature);
-				msSpW.assocNature().put(min_k, selectedAssocNatureVector);
+				msSpW.assocNature().put(outSPWId, inSpWCols.assocNature()(outSPWId));
 			}
 		}
 	}
@@ -2323,8 +2368,10 @@ Bool MSTransformDataHandler::copyPointing()
 	{
 		const MSPointing& oldPoint = mssel_p.pointing();
 
-		if (!antennaSel_p && timeRange_p == "")
+		if ((!antennaSel_p && timeRange_p == "") or !reindex_p)
 		{
+			// jagonzal: copySubtables works with POINTING because it
+			// is not created by default in the method createSubtables
 			copySubtable(MS::keywordName(MS::POINTING), oldPoint);
 		}
 		else
@@ -2456,6 +2503,12 @@ Bool MSTransformDataHandler::copySource()
 		outcols.setFrequencyRef(MFrequency::castType(incols.restFrequencyMeas().getMeasRef().getType()));
 		outcols.setRadialVelocityRef(MRadialVelocity::castType(incols.sysvelMeas().getMeasRef().getType()));
 
+		if (!reindex_p)
+		{
+			TableCopy::copyRows(newSource, oldSource);
+			return True;
+		}
+
 		const ROScalarColumn<Int>& inSId = incols.sourceId();
 		ScalarColumn<Int>& outSId = outcols.sourceId();
 		const ROScalarColumn<Int>& inSPW = incols.spectralWindowId();
@@ -2516,7 +2569,7 @@ Bool MSTransformDataHandler::copyAntenna()
     //TableCopy::copyRows(newAnt, oldAnt);
     //retval = True;
 
-	if (!antennaSel_p)
+	if (!antennaSel_p or !reindex_p)
 	{
 		TableCopy::copyRows(newAnt, oldAnt);
 		retval = True;
@@ -2554,7 +2607,7 @@ Bool MSTransformDataHandler::copyFeed()
 	outcols.setEpochRef(MEpoch::castType(incols.timeMeas().getMeasRef().getType()));
 	outcols.setPositionRef(MPosition::castType(incols.positionMeas().getMeasRef().getType()));
 
-	if (!antennaSel_p && allEQ(spwRelabel_p, spw_p))
+	if ((!antennaSel_p && allEQ(spwRelabel_p, spw_p)) or !reindex_p)
 	{
 		TableCopy::copyRows(newFeed, oldFeed);
 	}
@@ -2708,7 +2761,7 @@ Bool MSTransformDataHandler::copyObservation()
 	newObsCols.setEpochRef(MEpoch::castType(oldObsCols.releaseDateMeas().getMeasRef().getType()));
 
 	uInt nObs = selObsId_p.nelements();
-	if (nObs > 0)
+	if (nObs > 0 and reindex_p)
 	{
 		for (uInt outrn = 0; outrn < nObs; ++outrn)
 		{
@@ -2750,7 +2803,7 @@ Bool MSTransformDataHandler::copyState()
 
 		if (oldState.nrow() > 0)
 		{
-			if (!intentString_p.empty())
+			if (!intentString_p.empty() and reindex_p)
 			{
 				MSState& newState = msOut_p.state();
 				const ROMSStateColumns oldStateCols(oldState);
@@ -2839,7 +2892,7 @@ Bool MSTransformDataHandler::copySyscal()
 			MSSysCalColumns outcols(newSysc);
 			outcols.setEpochRef(MEpoch::castType(incols.timeMeas().getMeasRef().getType()));
 
-			if (!antennaSel_p && allEQ(spwRelabel_p, spw_p))
+			if ((!antennaSel_p && allEQ(spwRelabel_p, spw_p)) or !reindex_p)
 			{
 				TableCopy::copyRows(newSysc, oldSysc);
 			}
@@ -2911,7 +2964,7 @@ Bool MSTransformDataHandler::copyWeather()
 			MSWeatherColumns newWCs(newWeath);
 			newWCs.setEpochRef(MEpoch::castType(oldWCs.timeMeas().getMeasRef().getType()));
 
-			if (!antennaSel_p)
+			if (!antennaSel_p or !reindex_p)
 			{
 				TableCopy::copyRows(newWeath, oldWeath);
 			}
@@ -2975,7 +3028,7 @@ Bool MSTransformDataHandler::filterOptSubtable(const String& subtabname)
 		if (intab.nrow() > 0) {
 
 			// Add feed if selecting by it is ever added.
-			Bool doFilter = antennaSel_p || !allEQ(spwRelabel_p, spw_p);
+			Bool doFilter = (antennaSel_p || !allEQ(spwRelabel_p, spw_p)) && reindex_p;
 
 			copySubtable(subtabname, intab, doFilter);
 

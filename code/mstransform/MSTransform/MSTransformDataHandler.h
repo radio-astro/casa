@@ -59,8 +59,11 @@ public:
 	};
 
 	MSTransformDataHandler(	String& theMS, Table::TableOption option,
-							Bool virtualModelCol=False, Bool virtualCorrectedCol=False);
-	MSTransformDataHandler(MeasurementSet& ms, Bool virtualModelCol=False, Bool virtualCorrectedCol=False);
+							Bool virtualModelCol=False, Bool virtualCorrectedCol=False,
+							Bool reindex=True);
+	MSTransformDataHandler(	MeasurementSet& ms,
+							Bool virtualModelCol=False, Bool virtualCorrectedCol=False,
+							Bool reindex=True);
 	~MSTransformDataHandler();
 
 	// Declared static because it's used in setupMS().
@@ -305,6 +308,7 @@ public:
 	// Accesors for additional parameters
 	void setVirtualModelCol(Bool virtualModelCol) {virtualModelCol_p = virtualModelCol;};
 	void setVirtualCorrectedCol(Bool virtualCorrectedCol) {virtualCorrectedCol_p = virtualCorrectedCol;};
+	void setReindex(Bool reindex) {reindex_p = reindex;};
 
 protected:
 
@@ -372,6 +376,7 @@ protected:
 
 	Bool virtualModelCol_p; // CAS-5348 (jagonzal): Make virtual MODEL data column real
 	Bool virtualCorrectedCol_p; //CAS-7286 (jagonzal): Make virtual CORRECTED data column real
+	Bool reindex_p; // jagonzal: In order not to re-index asub-tables
 
 };
 

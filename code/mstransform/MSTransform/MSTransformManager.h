@@ -409,6 +409,7 @@ protected:
 	void regridSpwSubTable();
 	void regridAndCombineSpwSubtable();
 	void regridSpwAux(	Int spwId,
+						MFrequency::Types spwInputRefFrame,
 						Vector<Double> &inputCHAN_FREQ,
 						Vector<Double> &inputCHAN_WIDTH,
 						Vector<Double> &originalCHAN_FREQ,
