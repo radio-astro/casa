@@ -637,6 +637,7 @@ class plotms_test_display(plotms_test_base):
                      highres=True)
         self.assertTrue(res)
         self.checkPlotfile(plotfile2_jpg, 50000)
+        self.removePlotfile(plotfile2_jpg)
         print
 
     def test_display_legend(self):
@@ -947,18 +948,16 @@ class plotms_test_grid(plotms_test_base):
         self.assertTrue(res)
         self.checkPlotfile(plotfile1_jpg, 140000)
         # with external axes
-        plotfile2_jpg = self.outputDir + "testGrid06_Scan1,2,3,4.jpg"
-        self.removePlotfile(plotfile2_jpg)
+        self.removePlotfile(plotfile1_jpg)
         time.sleep(5)
         res = plotms(vis=self.ms, plotfile=plotfile_jpg, expformat="jpg", 
                      showgui=False, highres=False, iteraxis='scan',
                      gridrows=2, gridcols=2, xsharedaxis=True,
                      ysharedaxis=True, xselfscale=True, yselfscale=True)   
         self.assertTrue(res)
-        self.checkPlotfile(plotfile2_jpg, 80000)
+        self.checkPlotfile(plotfile1_jpg, 80000)
         # with 
-        plotfile3_jpg = self.outputDir + "testGrid06_Scan1,2,3,4.jpg"
-        self.removePlotfile(plotfile3_jpg)
+        self.removePlotfile(plotfile1_jpg)
         time.sleep(5)
         res = plotms(vis=self.ms, plotfile=plotfile_jpg, expformat="jpg", 
                      showgui=False, highres=False, iteraxis='scan',
@@ -966,7 +965,8 @@ class plotms_test_grid(plotms_test_base):
                      ysharedaxis=True, xselfscale=True, yselfscale=True,
                      yaxislocation='right')   
         self.assertTrue(res)
-        self.checkPlotfile(plotfile3_jpg, 80000)
+        self.checkPlotfile(plotfile1_jpg, 80000)
+        self.removePlotfile(plotfile1_jpg)
         print
 
 # ------------------------------------------------------------------------------
