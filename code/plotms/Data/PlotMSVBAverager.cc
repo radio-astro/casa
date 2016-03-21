@@ -313,7 +313,6 @@ void PlotMSVBAverager::initialize(vi::VisBuffer2& vb)
 	++ibln;
       }
     }
-    if (spwAve_p) spw_.set(-1);
   }
 
   // Resize 

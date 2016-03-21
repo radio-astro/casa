@@ -186,6 +186,9 @@ void MSTransformManager::initialize()
 	callib_p = "";
 	callibRec_p = Record();
 
+    // Spw averaging
+	spwAverage_p = False;
+
 	// Weight Spectrum parameters
 	usewtspectrum_p = False;
 	spectrumTransformation_p = False;
@@ -313,6 +316,7 @@ void MSTransformManager::configure(Record &configuration)
 	parsePhaseShiftParams(configuration);
 	parseTimeAvgParams(configuration);
 	parseCalParams(configuration);
+	setSpwAvg(configuration);
 
 
 	return;
@@ -1118,6 +1122,25 @@ void MSTransformManager::parseCalParams(Record &configuration)
 	return;
 }
 
+// -----------------------------------------------------------------------
+// Method to set spw averaging
+// -----------------------------------------------------------------------
+void MSTransformManager::setSpwAvg(Record &configuration)
+{
+	int exists = 0;
+
+	exists = configuration.fieldNumber ("spwaverage");
+	if (exists >= 0)
+	{
+		configuration.get (exists, spwAverage_p);
+
+		if (spwAverage_p)
+		{
+			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+					<< "Spw average is activated" << LogIO::POST;
+		}
+	}
+}
 
 // -----------------------------------------------------------------------
 // Method to open the input MS, select the data and create the
@@ -4907,7 +4930,7 @@ void MSTransformManager::setIterationApproach()
 	if (timespan_p.contains("scan")) nSortColumns -= 1;
 	if (timespan_p.contains("state")) nSortColumns -= 1;
 	if (timespan_p.contains("field")) nSortColumns -= 1;
-	if (combinespws_p) nSortColumns -= 1;
+	if ((combinespws_p) || (spwAverage_p)) nSortColumns -= 1;
 
 	sortColumns_p = Block<Int>(nSortColumns);
 	uInt sortColumnIndex = 0;
@@ -4951,7 +4974,7 @@ void MSTransformManager::setIterationApproach()
 				<< "Combining data through field time average" << LogIO::POST;
 	}
 
-	if (!combinespws_p)
+	if ((!combinespws_p) && (!spwAverage_p))
 	{
 		sortColumns_p[sortColumnIndex] =  MS::DATA_DESC_ID;
 		sortColumnIndex += 1;

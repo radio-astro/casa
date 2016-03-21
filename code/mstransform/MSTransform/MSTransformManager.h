@@ -399,6 +399,7 @@ protected:
 	void parsePhaseShiftParams(Record &configuration);
 	void parseTimeAvgParams(Record &configuration);
 	void parseCalParams(Record &configuration);
+	void setSpwAvg(Record &configuration);
 
 	// From input MS
 	void initDataSelectionParams();
@@ -1310,6 +1311,9 @@ protected:
 	Bool calibrate_p;
 	String callib_p;
 	Record callibRec_p;
+
+	// Spw averaging parameters
+	Bool spwAverage_p;
 
 	// Weight Spectrum parameters
 	Bool usewtspectrum_p;

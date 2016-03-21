@@ -113,9 +113,10 @@ private:
   void deleteVm();
   void loadError(String mesg);
 
-  // Count the chunks with averaging
+  // Estimate cache size for averaging
   bool countChunks(vi::VisibilityIterator2& vi, Vector<Int>& nIterPerAve, 
                    /*PlotMSCacheThread**/ThreadCommunication* thread);
+  void updateEstimateProgress(ThreadCommunication* thread);
 
   // Trap attempt to use to much memory (too many points)
   void trapExcessVolume(map<PMS::Axis,Bool> pendingLoadAxes);
@@ -132,6 +133,7 @@ private:
 		  const vector<PMS::Axis> loadAxes,
 		  const vector<PMS::DataColumn> loadData,
 		  /*PlotMSCacheThread**/ThreadCommunication* thread);
+  void updateProgress(ThreadCommunication* thread, Int chunk);
 
   // Force read on vb for requested axes 
   //   (so pre-cache averaging treats all data it should)
