@@ -658,7 +658,12 @@ class simutil:
                         else:
                             time.append(0.)
                         xstr = qa.formxxx(qa.quantity(splitline[0]), format='hms',prec=5)
-                        ystr = qa.formxxx(qa.quantity(splitline[1]), format='dms',prec=5)
+                        de0=splitline[1]
+                        # casa insists that strings with : are RA, so...
+                        if de0.count(":")>0:
+                            ystr = qa.formxxx(qa.div(qa.quantity(de0),15), format='dms',prec=5)
+                        else:
+                            ystr = qa.formxxx(qa.quantity(de0), format='dms',prec=5)
                         # ASSUME ICRS
                         pointings.append("ICRS %s %s" % (xstr,ystr))
                 ### ignoring line that has less than 3 elements
@@ -671,9 +676,6 @@ class simutil:
                             time.append(float(splitline[3]))
                         else:
                             time.append(0.)
-                        # casa insists that strings with : are RA, so...
-                        if de0.count(":")>0:
-                            de0=de0/15
                         xstr = qa.formxxx(qa.quantity(ra0), format='hms',prec=5)
                         ystr = qa.formxxx(qa.quantity(de0), format='dms',prec=5)
                         pointings.append("%s %s %s" % (epoch,xstr,ystr))
