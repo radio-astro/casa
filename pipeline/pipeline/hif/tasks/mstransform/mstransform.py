@@ -132,6 +132,8 @@ class MstransformInputs(basetask.StandardInputs):
             if ignore in d:
                 del d[ignore]
 
+        # Force the data column to be 'corrected'
+        d['datacolumn'] = 'corrected'
         return d
 
 class Mstransform(basetask.StandardTaskTemplate):
