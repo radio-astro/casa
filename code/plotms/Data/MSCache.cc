@@ -83,54 +83,50 @@ void MSCache::loadIt(vector<PMS::Axis>& loadAxes,
 	// process selected columns			
 	dataColumn_ = getDataColumn(loadAxes, loadData);
 
-	// Apply selections to MS to create selection MS 
-	// and channel/correlation selections
-	Vector<Vector<Slice> > chansel;
-	Vector<Vector<Slice> > corrsel;
-	MeasurementSet* selMS = new MeasurementSet();
-	Table::TableOption tabopt(Table::Old);
-	MeasurementSet* inputMS = new MeasurementSet(filename_, TableLock(TableLock::AutoLocking), tabopt);
-	getNamesFromMS(*inputMS);
-	// improper selection can cause exception
-	try {
-		selection_.apply(*inputMS, *selMS, chansel, corrsel);
-	} catch(AipsError& log) {
-		delete inputMS;
-		delete selMS;
-		loadError(log.getMesg());
-	}
-	vm_ = new MSCacheVolMeter(*inputMS, averaging_, chansel, corrsel);
-	delete inputMS;
+    // Get strings stored in MS 
+    Table::TableOption tabopt(Table::Old);
+    MeasurementSet* inputMS = new MeasurementSet(filename_, TableLock(TableLock::AutoLocking), tabopt);
+    getNamesFromMS(*inputMS);
 
-	Vector<Int> nIterPerAve;
-	visBufferShapes_.clear();
+    // Apply selections to MS to create selection MS and channel/correlation selections
+    Vector<Vector<Slice> > chansel;
+    Vector<Vector<Slice> > corrsel;
+    MeasurementSet* selMS = new MeasurementSet();
+    try {
+        // get chansel, corrsel
+        selection_.apply(*inputMS, *selMS, chansel, corrsel);
+    } catch(AipsError& log) {
+        // improper selection can cause exception
+        delete inputMS;
+        delete selMS;
+        loadError(log.getMesg());
+    }
+    // Make volume meter for countChunks to estimate memory requirements
+    vm_ = new MSCacheVolMeter(*inputMS, averaging_, chansel, corrsel);
+    delete inputMS;
+    delete selMS;
+    Vector<Int> nIterPerAve;
 
-	// Note: MSTransformVI/VB handles channel and time averaging
-	// It does not handle Antenna, Baseline, and SPW averaging yet
-	// so for now we'll do it the old way
-	if ( averaging_.baseline() || averaging_.antenna() || averaging_.spw() || averaging_.scalarAve() ) {
-		// make a "counting VI" -- plain VI2 is faster than TransformingTvi2.
-		// Use plotms code to determine nChunks and memory requirements
-		vi::VisibilityIterator2* cvi = setUpVisIter(*selMS, chansel, corrsel);
-		bool chunksCounted = countChunks(*cvi, nIterPerAve, thread);
-		//delete cvi;
-		delete selMS;  // close open tables
+	if ( averaging_.baseline() || averaging_.antenna() || averaging_.scalarAve() ) {
+        // Averaging with PlotMSVBAverager
+        // Create visibility iterator vi_p
+        setUpVisIter(selection_, calibration_, dataColumn_, False, False);
+        // Set nIterPerAve (number of chunks per average)
+		bool chunksCounted = countChunks(*vi_p, nIterPerAve, thread);
         if (chunksCounted) {
             try {
-                trapExcessVolume(pendingLoadAxes_);
-                // Now set up TransformingVi2 for averaging/loading data
-                //setUpVisIter(selection_, calibration_, dataColumn_, False, False);
-                loadChunks(*cvi, averaging_, nIterPerAve,
-                   loadAxes, loadData, thread);
+                trapExcessVolume(pendingLoadAxes_);  // check mem req using VolMeter
+                deleteVm();
+                loadChunks(*vi_p, averaging_, nIterPerAve, loadAxes, loadData, thread);
             } catch(AipsError& log) {
+                deleteVm();
                 loadError(log.getMesg());	
             }
         }    
-	} else { 
-		delete selMS;  // close open tables
+	} else {
+        // Averaging with TransformingVI2 
 		try {
-			// setUpVisIter also gets the VB shapes and 
-			// calls trapExcessVolume:
+			// setUpVisIter also gets the VB shapes and calls trapExcessVolume:
 			setUpVisIter(selection_, calibration_, dataColumn_, False, True, thread);
 			loadChunks(*vi_p, loadAxes, loadData, thread);
 		} catch(AipsError& log) {
@@ -370,7 +366,7 @@ void MSCache::setUpVisIter(PlotMSSelection& selection,
 		configuration.define("callib", calibration.calLibrary());
 	}	
 
-	// Apply time and channel averaging
+	// Apply averaging
 	if (averaging_.time()){
 		configuration.define("timeaverage", True);
 		configuration.define("timebin", averaging_.timeStr());
@@ -386,6 +382,9 @@ void MSCache::setUpVisIter(PlotMSSelection& selection,
 		int chanVal = static_cast<int>(averaging_.channelValue());
 		configuration.define("chanbin", chanVal);
 	}
+    if (averaging_.spw()) {
+        configuration.define("spwaverage", True);
+    }
 
     LogFilter oldFilter(plotms_->getParameters().logPriority());
 	MSTransformIteratorFactory* factory = NULL;
@@ -393,20 +392,17 @@ void MSCache::setUpVisIter(PlotMSSelection& selection,
         // Filter out MSTransformManager setup messages
         LogFilter filter(LogMessage::WARN);
         LogSink().globalSink().filter(filter);
-
 		factory = new MSTransformIteratorFactory(configuration);
-
 		if (estimateMemory) {
-            if (thread != NULL) {
-                thread->setStatus("Establishing cache size.  Please wait...");
-                thread->setAllowedOperations(false,false,false);
-                thread->setProgress(2);
-            }
+            if (thread != NULL)
+                updateEstimateProgress(thread);
 			visBufferShapes_ = factory->getVisBufferStructure();
 			Int chunks = visBufferShapes_.size();
 			if(chunks != nChunk_) increaseChunks(chunks);
 			trapExcessVolume(pendingLoadAxes_);
-		}
+		} else {
+            visBufferShapes_.clear();
+        }
 		vi_p = new vi::VisibilityIterator2(*factory);
 	} catch(AipsError& log) {
         // now put filter back
@@ -475,50 +471,47 @@ void MSCache::setUpFrequencySelectionChannels(vi::FrequencySelectionUsingChannel
 	}
 }
 
+void MSCache::updateEstimateProgress(ThreadCommunication* thread) {
+    thread->setStatus("Establishing cache size.  Please wait...");
+    thread->setAllowedOperations(false,false,true);
+    thread->setProgress(2);
+}
+
 bool MSCache::countChunks(vi::VisibilityIterator2& vi,
-		Vector<Int>& nIterPerAve, 
-		ThreadCommunication* thread) {
-	/* Let plotms count the chunks for memory estimation 
-	   when baseline/antenna/spw averaging */
-	if (thread != NULL) {
-		thread->setStatus("Establishing cache size.  Please wait...");
-		thread->setAllowedOperations(false,false,true);
-	}
+        Vector<Int>& nIterPerAve, ThreadCommunication* thread) {
+    // Let plotms count the chunks for memory estimation 
+    //   when baseline/antenna/spw averaging
+    if (thread != NULL)
+        updateEstimateProgress(thread);
 
-	Bool verby(false);
-	stringstream ss;
+    Bool verby(false);
+    stringstream ss;
 
-	Bool combscan(averaging_.scan());
-	Bool combfld(averaging_.field());
-	Bool combspw(averaging_.spw());
+    Bool combscan(averaging_.scan());
+    Bool combfld(averaging_.field());
+    Bool combspw(averaging_.spw());
 
-	vi.originChunks();
-	vi.origin();
-	vi::VisBuffer2* vb = vi.getVisBuffer();
+    vi::VisBuffer2* vb = vi.getVisBuffer();
+    vi.originChunks();
+    vi.origin();
 
-	Double time0(86400.0 * floor(vb->time()(0)/86400.0));
-	Double time1(0.0), time(0.0);
-	Int thisscan(-1),lastscan(-1);
-	Int thisfld(-1), lastfld(-1);
-	Int thisspw(-1),lastspw(-1);
-	Int thisddid(-1),lastddid(-1);
-	Int thisobsid(-1),lastobsid(-1);
-	Int chunk(0);
+    Double thistime(-1),avetime1(-1);
+    Int thisscan(-1),lastscan(-1);
+    Int thisfld(-1), lastfld(-1);
+    Int thisspw(-1),lastspw(-1);
+    Int thisddid(-1),lastddid(-1);
+    Int thisobsid(-1),lastobsid(-1);
+    Int chunk(0), subchunk(0);
 
-	// Averaging stats
-	Int maxAveNRows(0);
-	nIterPerAve.resize(100);
-	nIterPerAve = 0;	
-	Int ave(-1);
-	Double avetime1(-1.0);
+    // Averaging stats
+    Int maxAveNRows(0);
+    nIterPerAve.resize(100);
+    nIterPerAve = 0;
+    Int nAveInterval(-1);
 
-	// Time averaging interval
-	Double interval(0.0);
-	if (averaging_.time())
-		interval = averaging_.timeValue();
-
-	for (vi.originChunks(); vi.moreChunks(); vi.nextChunk(), chunk++) {
-		for (vi.origin(); vi.more(); vi.next()) {
+    for (vi.originChunks(); vi.moreChunks(); vi.nextChunk(), chunk++) {
+        subchunk = 0;
+        for (vi.origin(); vi.more(); vi.next(), subchunk++) {
             // If a thread is given, check if the user canceled.
             if (thread != NULL) {
                 if (thread->wasCanceled()) {
@@ -532,91 +525,85 @@ bool MSCache::countChunks(vi::VisibilityIterator2& vi,
                 }
             }
 
-			time1 = vb->time()(0);  // first time in this vb
-			thisscan = vb->scan()(0);
-			thisfld = vb->fieldId()(0);
-			thisspw = vb->spectralWindows()(0);
-			thisddid = vb->dataDescriptionIds()(0);
-			thisobsid = vb->observationId()(0);
-			// New chunk means new ave interval, IF....
-			if ( // (!combfld && !combspw)                // not combing fld nor spw, OR
-			     ((time1 - avetime1) > interval) ||       // (combing fld and/or spw) and solint exceeded, OR
-		             ((time1 - avetime1) < 0.0) ||         // a negative time step occurs, OR
-			     (!combscan && (thisscan != lastscan)) ||  // not combing scans, and new scan encountered OR
-			     (!combspw && (thisspw != lastspw)) ||     // not combing spws, and new spw encountered  OR
-			     (!combfld && (thisfld != lastfld)) ||     // not combing fields, and new field encountered OR
-			     (thisobsid != lastobsid) ||               // don't average over obs id
-			     (ave == -1)) {                            // this is the first interval
+            thistime = vb->time()(0);
+            thisscan = vb->scan()(0);
+            thisfld = vb->fieldId()(0);
+            thisspw = vb->spectralWindows()(0);
+            thisddid = vb->dataDescriptionIds()(0);
+            thisobsid = vb->observationId()(0);
 
-				if (verby) {
-					ss << "--------------------------------\n";
-					ss << boolalpha << interval << " "
-							<< ((time1-avetime1) > interval)  << " "
-							<< ((time1-avetime1) < 0.0) << " "
-							<< (!combscan && (thisscan!=lastscan)) << " "
-							<< (!combspw && (thisspw!=lastspw)) << " "
-							<< (!combfld && (thisfld!=lastfld)) << " "
-							<< (thisobsid!=lastobsid) << " "
-							<< (ave == -1) << "\n";
-				}
+            // New ave interval if:
+            if ( ((thistime - avetime1) != 0.0) ||         // new timestamp
+                 (!combscan && (thisscan != lastscan)) ||  // not combing scans, and new scan encountered OR
+                 (!combfld && (thisfld != lastfld)) ||     // not combing fields, and new field encountered OR
+                 (!combspw && (thisspw != lastspw)) ||     // not combing spws, and new spw encountered  OR
+                 (thisobsid != lastobsid) ||               // don't average over obs id
+                 (nAveInterval == -1)) {                   // this is the first interval
 
-				// If we have accumulated enough info, poke the volume meter,
-				//  with the _previous_ info, and reset the ave'd row counter
-				if (ave > -1) {
-					vm_->add(lastddid, maxAveNRows);
-					maxAveNRows = 0;
-				}
+                if (verby) {
+                    ss << "--------------------------------\n";
+                    ss << "New ave interval: "
+                       << (thistime - avetime1) << " "
+                       << (!combscan && (thisscan!=lastscan)) << " "
+                       << (!combspw && (thisspw!=lastspw)) << " "
+                       << (!combfld && (thisfld!=lastfld)) << " "
+                       << (!combspw && (thisspw!=lastspw)) << " "
+                       << (thisobsid!=lastobsid) << " "
+                       << (nAveInterval == -1) << "\n";
+                }
 
-				avetime1 = time1;  // for next go
-				ave++;
-				if (verby) ss << "ave = " << ave << "\n";
+                // If we have accumulated enough info, poke the volume meter,
+                //  with the _previous_ info, and reset the ave'd row counter
+                if (nAveInterval > -1) {
+                    vm_->add(lastddid, maxAveNRows);
+                    maxAveNRows = 0;
+                }
 
-				// increase size of nIterPerAve array, if needed
-				if (nIterPerAve.nelements() < uInt(ave+1))
-					nIterPerAve.resize(nIterPerAve.nelements()+100, True);
-				nIterPerAve(ave) = 0;
-			}
+                nAveInterval++;
+                if (verby) ss << "ave = " << nAveInterval << "\n";
 
-			// Keep track of the maximum # of rows that might get averaged
-			maxAveNRows = max(maxAveNRows, vb->nRows());
-			// Increment chunk-per-sol count for current solution
-			nIterPerAve(ave)++;
+                // increase size of nIterPerAve array, if needed
+                if (nIterPerAve.nelements() < uInt(nAveInterval+1))
+                    nIterPerAve.resize(nIterPerAve.nelements()+100, True);
+                // initialize next ave interval
+                nIterPerAve(nAveInterval) = 0;
+                avetime1 = thistime;
+            }
 
-			if (verby) {
-				ss << "          chunk=" << chunk << " " << avetime1 - time0 << "\n";
-				time = vb->time()(0);
-				ss  << "                 " << "vb=" << vb->getSubchunk().toString() << " ";
-				ss << "ar=" << vb->arrayId()(0) << " ";
-				ss << "sc=" << vb->scan()(0) << " ";
-				if (!combfld) ss << "fl=" << vb->fieldId()(0) << " ";
-				if (!combspw) ss << "sp=" << vb->spectralWindows()(0) << " ";
-				ss << "t=" << floor(time - time0)  << " (" << floor(time - avetime1) << ") ";
-				if (combfld) ss << "fl=" << vb->fieldId()(0) << " ";
-				if (combspw) ss << "sp=" << vb->spectralWindows()(0) << " ";
-				ss << "obs=" << vb->observationId()(0) << " ";
-				ss << "\n";
+            // Keep track of the maximum # of rows that might get averaged
+            maxAveNRows = max(maxAveNRows, vb->nRows());
+            // Increment chunk-per-sol count for current solution
+            nIterPerAve(nAveInterval)++;
 
-			}
+            if (verby) {
+                ss << "     chunk=" << chunk << " subchunk " << subchunk << "\n";
+                ss << "         time=" << thistime << " ";
+                ss << "arrayId=" << vb->arrayId()(0) << " ";
+                ss << "scan" << thisscan << " ";
+                ss << "fieldId=" << thisfld << " ";
+                ss << "spw=" << thisspw << " ";
+                ss << "obsId=" << thisobsid << "\n";
+            }
 
-			lastscan = thisscan;
-			lastfld  = thisfld;
-			lastspw  = thisspw;
-			lastddid = thisddid;
-			lastobsid = thisobsid;
-		}
-	}
-	// Add in the last iteration
-	vm_->add(lastddid,maxAveNRows);
+            lastscan = thisscan;
+            lastfld  = thisfld;
+            lastspw  = thisspw;
+            lastddid = thisddid;
+            lastobsid = thisobsid;
+        }
+    }
+    // Add in the last iteration
+    vm_->add(lastddid,maxAveNRows);
 
-	Int nAve(ave+1);
-	nIterPerAve.resize(nAve, True);
-	if (nChunk_ != nAve) increaseChunks(nAve);
+    Int nAve(nAveInterval+1);
+    nIterPerAve.resize(nAve, True);
+    if (nChunk_ != nAve) increaseChunks(nAve);  // sets nChunk_
 
-	if (verby) {
-		ss << "nIterPerAve = " << nIterPerAve;
-		logInfo("count_chunks", ss.str());
-	}
-	// cout << "Found " << nChunk_ << " chunks." << endl;
+    if (verby) {
+        ss << "nIterPerAve = " << nIterPerAve << "\n";
+        ss << "Found " << nChunk_ << " chunks." << endl;
+        logInfo("count_chunks", ss.str());
+    }
     return true;
 }
 
@@ -647,7 +634,17 @@ void MSCache::trapExcessVolume(map<PMS::Axis,Bool> pendingLoadAxes) {
 		   << " letting other memory-intensive processes finish.";
 		throw(AipsError(ss.str()));
 	}
-	deleteVm();
+}
+
+void MSCache::updateProgress(ThreadCommunication* thread, Int chunk) {
+	double progress;
+	// Update progress meter
+	if((nChunk_ <= (int)THREAD_SEGMENT || chunk % THREAD_SEGMENT == 0)) {
+		thread->setStatus("Loading chunk " + String::toString(chunk) +
+				" / " + String::toString(nChunk_) + ".");
+		progress = ((double)chunk+1) / nChunk_;
+		thread->setProgress((unsigned int)((progress * 100) + 0.5));
+    }
 }
 
 void MSCache::loadChunks(vi::VisibilityIterator2& vi,
@@ -677,7 +674,6 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
 	chshapes_.resize(4,nChunk_);
 	goodChunk_.resize(nChunk_);
 	goodChunk_.set(False);
-	double progress;
 
 	for(vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
 		for(vi.origin(); vi.more(); vi.next()) {
@@ -689,13 +685,8 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
                 }
 
                 // If a thread is given, update its chunk number and progress bar
-                if(thread != NULL && (nChunk_ <= (int)THREAD_SEGMENT ||
-                        chunk % THREAD_SEGMENT == 0)) {
-                    thread->setStatus("Loading chunk " + String::toString(chunk) +
-                            " / " + String::toString(nChunk_) + ".");
-                    progress = ((double)chunk+1) / nChunk_;
-                    thread->setProgress((unsigned int)((progress * 100) + 0.5));
-                }
+                if(thread != NULL)
+                    updateProgress(thread, chunk);
 
                 // Cache the data shapes
                 chshapes_(0,chunk) = vb->nCorrelations();
@@ -721,113 +712,101 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
 }
 
 void MSCache::loadChunks(vi::VisibilityIterator2& vi,
-		const PlotMSAveraging& averaging,
-		const Vector<Int>& nIterPerAve,
-		const vector<PMS::Axis> loadAxes,
-		const vector<PMS::DataColumn> loadData,
-		ThreadCommunication* thread) {
+        const PlotMSAveraging& averaging,
+        const Vector<Int>& nIterPerAve,
+        const vector<PMS::Axis> loadAxes,
+        const vector<PMS::DataColumn> loadData,
+        ThreadCommunication* thread) {
 
-	// permit cancel in progress meter:
-	if(thread != NULL)
-		thread->setAllowedOperations(false,false,true);
+    // permit cancel in progress meter:
+    if(thread != NULL)
+        thread->setAllowedOperations(false,false,true);
+    logLoad("Loading chunks with averaging.....");
 
-	logLoad("Loading chunks with averaging.....");
-	Bool verby(false);
-	stringstream ss;
+    Bool verby(false);
 
-	vi::VisBuffer2* vb = vi.getVisBuffer();
-	//vi.originChunks();
-	//vi.origin();
-	nAnt_ = vb->nAntennas();  // needed to set up indexer
+    vi::VisBuffer2* vb = vi.getVisBuffer();
+    vi.originChunks();
+    vi.origin();
+    nAnt_ = vb->nAntennas();  // needed to set up indexer
 
-	// set frame; VB2 does not handle N_Types, just passes it along
-	// and fails check in MFrequency so handle it here
-	freqFrame_ = transformations_.frame();
-	if (freqFrame_ == MFrequency::N_Types)
-		freqFrame_ = static_cast<MFrequency::Types>(vi.getReportingFrameOfReference());
+    // set frame; VB2 does not handle N_Types, just passes it along
+    // and fails check in MFrequency so handle it here
+    freqFrame_ = transformations_.frame();
+    if (freqFrame_ == MFrequency::N_Types)
+        freqFrame_ = static_cast<MFrequency::Types>(vi.getReportingFrameOfReference());
 
-	Double time0 = 86400.0 * floor(vb->time()(0)/86400.0);
-	chshapes_.resize(4, nChunk_);
-	goodChunk_.resize(nChunk_);
-	goodChunk_.set(False);
-	double progress;
-	Int nAnts;
-	vi::VisBuffer2* vbToUse = NULL;
+    chshapes_.resize(4, nChunk_);
+    goodChunk_.resize(nChunk_);
+    goodChunk_.set(False);
+    Int nAnts;
+    vi::VisBuffer2* vbToUse = NULL;
 
-	vi.originChunks();
-	vi.origin();
-
-	for (Int chunk=0; chunk<nChunk_; ++chunk) {
-
-		if (chunk >= nChunk_) {  // nChunk_ was just an estimate
-			increaseChunks(chunk-nChunk_+1);  // updates nChunk_
-			chshapes_.resize(4, nChunk_, True);
-			goodChunk_.resize(nChunk_, True);
-		}
-
-		// If a thread is given, update it.
-		if(thread != NULL && (nChunk_ <= (int)THREAD_SEGMENT ||
-				chunk % THREAD_SEGMENT == 0)) {
-			thread->setStatus("Loading chunk " + String::toString(chunk) +
-					" / " + String::toString(nChunk_) + ".");
-			progress = ((double)chunk+1) / nChunk_;
-			thread->setProgress((unsigned int)((progress * 100) + 0.5));
+    for (Int chunk=0; chunk<nChunk_; ++chunk) {
+        if (chunk >= nChunk_) {               // nChunk_ was just an estimate!
+            increaseChunks(chunk-nChunk_+1);  // updates nChunk_
+            chshapes_.resize(4, nChunk_, True);
+            goodChunk_.resize(nChunk_, True);
         }
 
-		// Save some data from vb 
-		// (averaged vb not attached to VI so cannot get this later)
-		// (and no VB2 set method to do it in averager)
-		nAnts = vb->nAntennas();
+        // If a thread is given, update it.
+        if(thread != NULL)
+            updateProgress(thread, chunk);
 
-		// Arrange to accumulate many VBs into one
-		PlotMSVBAverager pmsvba(nAnts);
-		// Set averaging options in averager
-		pmsvba.setBlnAveraging(averaging.baseline());
-		pmsvba.setAntAveraging(averaging.antenna());
-		pmsvba.setSpwAveraging(averaging.spw());
-		pmsvba.setScalarAve(averaging.scalarAve());
-		// Sort out which data to read
-		discernData(loadAxes,loadData,pmsvba);
+        // Set up VB averager
+        nAnts = vb->nAntennas();
+        PlotMSVBAverager pmsvba(nAnts);
+        pmsvba.setBlnAveraging(averaging.baseline());
+        pmsvba.setAntAveraging(averaging.antenna());
+        pmsvba.setScalarAve(averaging.scalarAve());
+        // Sort out which data to read
+        discernData(loadAxes,loadData,pmsvba);
 
-		stringstream ss;
+        stringstream ss;
+        if (verby) ss << "Chunk " << chunk << " ----------------------------------\n";
 
-        for (Int iter=0;iter<nIterPerAve(chunk);++iter) {
+        Int iter=0;
+        while (iter < nIterPerAve(chunk)) {
             if (verby) {
-			    ss << "----------------------------------\n";
-			    ss << "ck=" << chunk << " iter=" << iter << " (" << nIterPerAve(chunk) << ") ";
-			    ss << "sc=" << vb->scan()(0) << " ";
-			    ss << "time=" << vb->time()(0)-time0 << " ";
-			    ss << "fl=" << vb->fieldId()(0) << " ";
-			    ss << "sp=" << vb->spectralWindows()(0) << " " << endl;
-                // print and reset output
-                logLoad(ss.str());
-                ss.str("");
-		    }
-		    // Accumulate into the averager
-		    pmsvba.accumulate(*vb);
-
-            // Advance to next vb
-            vi.next();
-            if (!vi.more()) {
-                vi.nextChunk();
-                vi.origin();
+                ss << "chunk=" << chunk << " iter=" << iter << " nIterPerAve =" << nIterPerAve(chunk) << " ";
+                ss << "scan=" << vb->scan()(0) << " ";
+                ss << "fieldId=" << vb->fieldId()(0) << " ";
+                ss << "spw=" << vb->spectralWindows()(0) << " ";
+                ss << "freq=" << vb->getFrequencies(0, freqFrame_) << " ";
             }
+            // Accumulate into the averager
+            pmsvba.accumulate(*vb);
+
+            // Advance to next VB unless you are going to finalize
+            if (iter+1 < nIterPerAve(chunk)) {
+                if (verby) ss << " next VB "; 
+                vi.next(); 
+                if (!vi.more() && vi.moreChunks()) { 
+                     // go to first vb in next chunk 
+                     if (verby) ss << "  stepping VI"; 
+                     vi.nextChunk(); 
+                     vi.origin(); 
+                }
+            }
+            if (verby) ss << "\n";
+            ++iter;
         }
-		// Finalize the averaging
-		pmsvba.finalizeAverage();
-		// The averaged VisBuffer
-		vi::VisBuffer2& avb(pmsvba.aveVisBuff());
 
-		// Only if the average yielded some data
-		if (avb.nRows() > 0) {
-			// Cache the data shapes
-			chshapes_(0,chunk) = avb.nCorrelations();
-			chshapes_(1,chunk) = avb.nChannels();
-			chshapes_(2,chunk) = avb.nRows();
-			chshapes_(3,chunk) = nAnts;
-			goodChunk_(chunk)  = True;
+        if (verby) ss << "Finalize average\n";
+        // Finalize the averaging
+        pmsvba.finalizeAverage();
+        // The averaged VisBuffer
+        vi::VisBuffer2& avb(pmsvba.aveVisBuff());
+        // Only if the average yielded some data:
+        if (avb.nRows() > 0) {
+            // Cache the data shapes
+            chshapes_(0,chunk) = avb.nCorrelations();
+            chshapes_(1,chunk) = avb.nChannels();
+            chshapes_(2,chunk) = avb.nRows();
+            chshapes_(3,chunk) = nAnts;
+            goodChunk_(chunk)  = True;
 
-			for(unsigned int i = 0; i < loadAxes.size(); i++) {
+            for(unsigned int i = 0; i < loadAxes.size(); i++) {
                 // If a thread is given, check if the user canceled.
                 if(thread != NULL && thread->wasCanceled()) {
                     dataLoaded_ = false;
@@ -835,25 +814,34 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
                     goodChunk_(chunk)  = False;
                     return;
                 }
-				if (useAveragedVisBuffer(loadAxes[i])) {
-					vbToUse = &avb;
+                if (useAveragedVisBuffer(loadAxes[i])) {
+                    vbToUse = &avb;
                 } else {
-					vbToUse = vb;
+                    vbToUse = vb;
                 }
-				loadAxis(vbToUse, chunk, loadAxes[i], loadData[i]);
-			}
-		}
-		else {
-			// no points in this chunk
-			goodChunk_(chunk) = False;
-			chshapes_.column(chunk) = 0;
-		}
-	}
-
-	//cout << boolalpha << "goodChunk_ = " << goodChunk_ << endl;
+                loadAxis(vbToUse, chunk, loadAxes[i], loadData[i]);
+            }
+        } else {
+            // no points in this chunk
+            goodChunk_(chunk) = False;
+            chshapes_.column(chunk) = 0;
+        }
+        // Now advance to next chunk
+        if (verby) ss << " next VB "; 
+        vi.next();
+        if (!vi.more() && vi.moreChunks()) { 
+             // go to first vb in next chunk 
+             if (verby) ss << "  stepping VI"; 
+             vi.nextChunk(); 
+             vi.origin(); 
+        }
+        if(verby) {
+            ss << "\n";
+            logLoad(ss.str());
+        }
+    }
+    //cout << boolalpha << "goodChunk_ = " << goodChunk_ << endl;
 }
-
-
 
 bool MSCache::useAveragedVisBuffer(PMS::Axis axis) {
 	// Some axes should be obtained from the VB2 provided by the VI2

@@ -255,7 +255,7 @@ void PlotMSVBAverager::initialize(vi::VisBuffer2& vb)
 
   // Assign main meta info
   vi::VisBufferComponents2 components = vi::VisBufferComponents2::these(
-    vi::FieldId, vi::ObservationId, vi::SpectralWindows, vi::StateId);
+      vi::FieldId, vi::ObservationId, vi::SpectralWindows, vi::StateId);
   avBuf_p->copyComponents(vb, components, True, False);
   fieldid_ = vb.fieldId();
   spw_ = vb.spectralWindows();
@@ -313,7 +313,6 @@ void PlotMSVBAverager::initialize(vi::VisBuffer2& vb)
 	++ibln;
       }
     }
-    if (spwAve_p) spw_.set(-1);
   }
 
   // Resize 
