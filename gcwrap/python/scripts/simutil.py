@@ -671,6 +671,9 @@ class simutil:
                             time.append(float(splitline[3]))
                         else:
                             time.append(0.)
+                        # casa insists that strings with : are RA, so...
+                        if de0.count(":")>0:
+                            de0=de0/15
                         xstr = qa.formxxx(qa.quantity(ra0), format='hms',prec=5)
                         ystr = qa.formxxx(qa.quantity(de0), format='dms',prec=5)
                         pointings.append("%s %s %s" % (epoch,xstr,ystr))
