@@ -598,7 +598,9 @@ TEST_F(SingleDishMSFillerTestFloat, FillerTest) {
               && s.col("FIELDNAME") == field_name && s.col("IFNO") == spw_id);
       Table so = ss.sort("POLNO", Sort::Ascending);
       EXPECT_TRUE(allEQ(getScalarColumn<uInt>(so, "SCANNO"), (uInt )scan));
-      EXPECT_TRUE(allEQ(getScalarColumn<uInt>(so, "CYCLENO"), (uInt )subscan));
+      // subscan doesn't refer CYCLENO from now on
+//        EXPECT_TRUE(
+//            allEQ(getScalarColumn<uInt>(so, "CYCLENO"), (uInt )subscan));
       Vector < Double > sc_interval = getScalarColumn<Double>(so, "INTERVAL");
       EXPECT_TRUE(allEQ(sc_interval, interval));
       EXPECT_EQ(anyGT(getScalarColumn<uInt>(so, "FLAGROW"), 0u), flag_row);
