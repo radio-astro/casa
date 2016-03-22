@@ -132,8 +132,10 @@ class MstransformInputs(basetask.StandardInputs):
             if ignore in d:
                 del d[ignore]
 
-        # Force the data column to be 'corrected'
+        # Force the data column to be 'corrected' and the
+        # new (with casa 4.6) reindex parameter set to False 
         d['datacolumn'] = 'corrected'
+        d['reindex'] = False
         return d
 
 class Mstransform(basetask.StandardTaskTemplate):
