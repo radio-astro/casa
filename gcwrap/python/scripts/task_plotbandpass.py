@@ -13,7 +13,7 @@
 #
 # To test:  see plotbandpass_regression.py
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.80 2016/03/10 12:45:13 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.81 2016/03/22 22:09:43 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -89,7 +89,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.80 2016/03/10 12:45:13 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.81 2016/03/22 22:09:43 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -6752,8 +6752,22 @@ def getWeather(vis='', scan='', antenna='0',verbose=False, mymsmd=None):
       npat = np.array(azeltime)
       matches = np.where(npat>myTimes[0])[0]
       matches2 = np.where(npat<myTimes[-1])[0]
-      conditions['azimuth'] = np.mean(azimuth[matches[0]:matches2[-1]+1])
-      conditions['elevation'] = np.mean(elevation[matches[0]:matches2[-1]+1])
+      if (len(matches2) > 0 and len(matches) > 0):
+          if verbose: print "matches[0]=%d, matches2[-1]=%d" % (matches[0],matches[-1])
+          matchingIndices = range(matches[0],matches2[-1]+1)
+      else:
+          matchingIndices = []
+      if (len(matchingIndices) > 0):  # CAS-8440
+          conditions['azimuth'] = np.mean(azimuth[matches[0]:matches2[-1]+1])
+          conditions['elevation'] = np.mean(elevation[matches[0]:matches2[-1]+1])
+      elif (len(matches) > 0):        # CAS-8440
+          if verbose: print "using mean of all az/el values after time 0"
+          conditions['azimuth'] = np.mean(azimuth[matches[0]])
+          conditions['elevation'] = np.mean(elevation[matches[0]])
+      else:                           # CAS-8440
+          if verbose: print "using mean of all az/el values"
+          conditions['azimuth'] = np.mean(azimuth)
+          conditions['elevation'] = np.mean(elevation)
       conditions['solarangle'] = angularSeparation(azsun,elsun,conditions['azimuth'],conditions['elevation'])
       conditions['solarelev'] = elsun
       conditions['solarazim'] = azsun
