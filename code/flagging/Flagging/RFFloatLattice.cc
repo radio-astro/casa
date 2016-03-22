@@ -26,30 +26,9 @@
 //# $Id$
 #include <lattices/Lattices/LatticeStepper.h>
 #include <flagging/Flagging/RFFloatLattice.h>
-#include <limits>
-#include <algorithm>
+#include <flagging/Flagging/RFCommon.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
-
-static std::vector<bool> bitvec_from_ulong( unsigned long val, size_t len = std::numeric_limits<unsigned long>::digits ) {
-    std::vector<bool> result(len,false);
-    unsigned long mask = 1;
-    for( size_t i=0; i < result.size( ); ++i ) {
-        result[i] = mask & val ? true : false;
-        mask = mask << 1;
-    }
-    return result;
-}
-
-static unsigned long bitvec_to_ulong( const std::vector<bool> &val) {
-    unsigned long result = 0;
-    unsigned long mask = 1;
-    for( size_t i=0; i < std::min((size_t)std::numeric_limits<unsigned long>::digits,(size_t)val.size()); ++i ) {
-        result |= (val[i] ? mask : 0);
-        mask = mask << 1;
-    }
-    return result;
-}
 
 RFFloatLatticeIterator::RFFloatLatticeIterator ()
   : n_chan(0), n_ifr(0), n_time(0), n_bit(0), n_corr(0)

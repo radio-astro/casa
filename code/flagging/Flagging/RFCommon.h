@@ -32,6 +32,8 @@
 #include <casa/Containers/RecordInterface.h>
 #include <casa/Containers/RecordInterface.h>
 #include <casa/Logging/LogIO.h>
+#include <algorithm>
+#include <limits>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -195,6 +197,25 @@ inline String stringUpper ( const String &in )
 // a debug-printf function, for printf-ing debug messages
 int dprintf( LogIO &os, const char *format, ... );
 
+inline std::vector<bool> bitvec_from_ulong( unsigned long val, size_t len = std::numeric_limits<unsigned long>::digits ) {
+    std::vector<bool> result(len,false);
+    unsigned long mask = 1;
+    for( size_t i=0; i < result.size( ); ++i ) {
+        result[i] = mask & val ? true : false;
+        mask = mask << 1;
+    }
+    return result;
+}
+
+inline unsigned long bitvec_to_ulong( const std::vector<bool> &val) {
+    unsigned long result = 0;
+    unsigned long mask = 1;
+    for( size_t i=0; i < std::min((size_t)std::numeric_limits<unsigned long>::digits,(size_t)val.size()); ++i ) {
+        result |= (val[i] ? mask : 0);
+        mask = mask << 1;
+    }
+    return result;
+}
 
 } //# NAMESPACE CASA - END
 
