@@ -49,8 +49,6 @@
 #include <algorithm>
 #include <boost/regex.hpp>
 
-#include <boost/iterator/counting_iterator.hpp>
-
 #include <casa/namespace.h>
 
 #define _ORIGIN *_log << LogOrigin("msmetadata_cmpt.cc", __FUNCTION__, __LINE__);
@@ -78,6 +76,14 @@
 	}
 
 namespace casac {
+
+template<class T> struct counting_iterator : public std::iterator<std::input_iterator_tag, T> {
+    bool operator!=(const counting_iterator &other) { return val != other.val; }
+    T operator*( ) { return val; }
+    void operator++( ) { ++val; }
+    counting_iterator( T v ) : val(v) { }
+    T val;
+};
 
 msmetadata::msmetadata() : _log(new LogIO()) {}
 
@@ -111,8 +117,8 @@ vector<int> msmetadata::almaspws(
 		if (complement) {
 			uInt nspw = _msmd->nSpw(True);
 			set<uInt> allSpws(
-				boost::counting_iterator<int>(0),
-				boost::counting_iterator<int>(nspw)
+				counting_iterator<int>(0),
+				counting_iterator<int>(nspw)
 			);
 			vector<uInt> mycompl(nspw);
 			vector<uInt>::iterator begin = mycompl.begin();
@@ -1732,8 +1738,8 @@ vector<int> msmetadata::wvrspws(bool complement) {
 		vector<int> wvrs = _setUIntToVectorInt(_msmd->getWVRSpw());
 		if (complement) {
 			vector<int> nonwvrs(
-				boost::counting_iterator<int>(0),
-				boost::counting_iterator<int>(_msmd->nSpw(True)));
+				counting_iterator<int>(0),
+				counting_iterator<int>(_msmd->nSpw(True)));
 			vector<int>::iterator begin = nonwvrs.begin();
 			for_each(wvrs.rbegin(), wvrs.rend(), [&](int spw){ nonwvrs.erase(begin + spw); });
 			return nonwvrs;
