@@ -13,7 +13,7 @@
 #
 # To test:  see plotbandpass_regression.py
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.79 2016/02/13 05:04:12 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.81 2016/03/22 22:09:43 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -89,7 +89,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.79 2016/02/13 05:04:12 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.81 2016/03/22 22:09:43 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -2996,7 +2996,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                  vm, mymsmd, msName, asdm, xant, uniqueTimes[mytime],
                                  interval, uFFI, refFreq[originalSpw[ispw]],
                                  net_sideband[originalSpw[ispw]], mytime, 
-                                 missingCalWVRErrorPrinted, verbose=DEBUG)
+                                 missingCalWVRErrorPrinted, caltable, verbose=DEBUG)
                       if (showimage):
 #                          print "len(lo1s)=%d =  " % (len(lo1s)), lo1s
                           if (lo1 != ''):
@@ -3042,8 +3042,11 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                                   pwv, vm, mymsmd, msName, asdm, xant, uniqueTimes[mytime],
                                                   interval, uFFI, refFreq[originalSpw[ispw]],
                                                   net_sideband[originalSpw[ispw]], mytime, 
-                                                  missingCalWVRErrorPrinted, verbose=DEBUG)
-                          atmfreqImage = list(2*LO1 - np.array(atmfreqImage))
+                                                  missingCalWVRErrorPrinted, caltable, verbose=DEBUG)
+                          # difference between the requested Atm freq and actual Atm calcuation
+                          chanDifference = atmfreq[0]-frequencies[0] 
+                          chanImageDifference = atmfreqImage[0]-frequenciesImage[-1]
+                          atmfreqImage = list(2*LO1 - np.array(atmfreqImage) + 2*chanDifference + chanImageDifference)  # CAS-7715 adds final 2 terms
                           atmfreqImage.reverse()
                           atmchanImage.reverse()
           
@@ -5337,7 +5340,7 @@ def complexMeanDeg(phases):
 
 def CalcAtmTransmission(chans,freqs,xaxis,pwv,vm, mymsmd,vis,asdm,antenna,timestamp,
                         interval,field,refFreqInTable, net_sideband,
-                        mytime, missingCalWVRErrorPrinted,
+                        mytime, missingCalWVRErrorPrinted, caltable,
                         verbose=False):
     """
     chans: all channels, regardless of whether they are flagged
@@ -5348,7 +5351,7 @@ def CalcAtmTransmission(chans,freqs,xaxis,pwv,vm, mymsmd,vis,asdm,antenna,timest
 #    print "interval = ", interval
 #    print "refFreqInTable = ", refFreqInTable
     if (type(mymsmd) == str):
-        telescopeName = 'unknown'
+        telescopeName = getTelescopeNameFromCaltable(caltable)
     else:
         telescopeName = mymsmd.observatorynames()[0]
     if (telescopeName.find('ALMA') >= 0):
@@ -6749,8 +6752,22 @@ def getWeather(vis='', scan='', antenna='0',verbose=False, mymsmd=None):
       npat = np.array(azeltime)
       matches = np.where(npat>myTimes[0])[0]
       matches2 = np.where(npat<myTimes[-1])[0]
-      conditions['azimuth'] = np.mean(azimuth[matches[0]:matches2[-1]+1])
-      conditions['elevation'] = np.mean(elevation[matches[0]:matches2[-1]+1])
+      if (len(matches2) > 0 and len(matches) > 0):
+          if verbose: print "matches[0]=%d, matches2[-1]=%d" % (matches[0],matches[-1])
+          matchingIndices = range(matches[0],matches2[-1]+1)
+      else:
+          matchingIndices = []
+      if (len(matchingIndices) > 0):  # CAS-8440
+          conditions['azimuth'] = np.mean(azimuth[matches[0]:matches2[-1]+1])
+          conditions['elevation'] = np.mean(elevation[matches[0]:matches2[-1]+1])
+      elif (len(matches) > 0):        # CAS-8440
+          if verbose: print "using mean of all az/el values after time 0"
+          conditions['azimuth'] = np.mean(azimuth[matches[0]])
+          conditions['elevation'] = np.mean(elevation[matches[0]])
+      else:                           # CAS-8440
+          if verbose: print "using mean of all az/el values"
+          conditions['azimuth'] = np.mean(azimuth)
+          conditions['elevation'] = np.mean(elevation)
       conditions['solarangle'] = angularSeparation(azsun,elsun,conditions['azimuth'],conditions['elevation'])
       conditions['solarelev'] = elsun
       conditions['solarazim'] = azsun
