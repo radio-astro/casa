@@ -102,7 +102,7 @@ SPIIT ImageConcatenator<T>::concatenate(
 	//}
 	String myName = myImage->name();
 	Bool isIncreasing = False;
-	//boost::scoped_array<Double> minVals, maxVals;
+
 	vector<Double> minVals, maxVals;
 	uInt n = 0;
 	if (! _relax || _reorder) {

@@ -21,7 +21,6 @@ extern "C" {
     // Antenna number
     size_t antno;
     // Observed sky brightness
-    //boost::array<double, 4> TObs;
     double TObs[4];
     // Elevation
     double el;
