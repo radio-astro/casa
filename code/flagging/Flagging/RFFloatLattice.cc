@@ -26,8 +26,30 @@
 //# $Id$
 #include <lattices/Lattices/LatticeStepper.h>
 #include <flagging/Flagging/RFFloatLattice.h>
+#include <limits>
+#include <algorithm>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
+
+static std::vector<bool> bitvec_from_ulong( unsigned long val, size_t len = std::numeric_limits<unsigned long>::digits ) {
+    std::vector<bool> result(len,false);
+    unsigned long mask = 1;
+    for( size_t i=0; i < result.size( ); ++i ) {
+        result[i] = mask & val ? true : false;
+        mask = mask << 1;
+    }
+    return result;
+}
+
+static unsigned long bitvec_to_ulong( const std::vector<bool> &val) {
+    unsigned long result = 0;
+    unsigned long mask = 1;
+    for( size_t i=0; i < std::min((size_t)std::numeric_limits<unsigned long>::digits,(size_t)val.size()); ++i ) {
+        result |= (val[i] ? mask : 0);
+        mask = mask << 1;
+    }
+    return result;
+}
 
 RFFloatLatticeIterator::RFFloatLatticeIterator ()
   : n_chan(0), n_ifr(0), n_time(0), n_bit(0), n_corr(0)
@@ -37,7 +59,7 @@ RFFloatLatticeIterator::RFFloatLatticeIterator ()
   lattice = NULL;
 }
 
- RFFloatLatticeIterator::RFFloatLatticeIterator(std::vector<boost::dynamic_bitset<> > *lat,
+ RFFloatLatticeIterator::RFFloatLatticeIterator(std::vector<std::vector<bool> > *lat,
 								   unsigned nchan, unsigned nifr, 
 								   unsigned ntime, unsigned nbit,
 								   unsigned ncorr)
@@ -76,9 +98,9 @@ void RFFloatLatticeIterator::update_curs()
 
     //curs = (*lattice)[iter_pos];
 
-    boost::dynamic_bitset<> &l = (*lattice)[iter_pos];
-    
-    boost::dynamic_bitset<> val(n_bit);
+    std::vector<bool> &l = (*lattice)[iter_pos];
+
+    std::vector<bool> val(n_bit);
     if (n_corr == 1) {
       val.resize(n_bit+1);
     }
@@ -105,7 +127,7 @@ void RFFloatLatticeIterator::update_curs()
 	  }
         }
 
-        curs(chan, ifr) = val.to_ulong();
+        curs(chan, ifr) = bitvec_to_ulong(val);
       }
     }
   }
@@ -119,30 +141,17 @@ void RFFloatLatticeIterator::flush_curs()
   if (lattice != NULL && iter_pos < lattice->size()) {
 
     //(*lattice)[iter_pos] = curs;
-    boost::dynamic_bitset<> &l = (*lattice)[iter_pos];
+    std::vector<bool> &l = (*lattice)[iter_pos];
     
-    boost::dynamic_bitset<> val(n_bit+1);
+    std::vector<bool> val(n_bit+1);
 
     for (unsigned ifr = 0; ifr < n_ifr; ifr++) {
       for (unsigned chan = 0; chan < n_chan; chan++) {
 
-	/* It would be faster to avoid this allocation,
-	   and put the bit pattern from curs(chan,ifr) in val
-	   in some other way.  There doesn't seem to be a
-	   val.set_from_ulong(curs(chan,ifr));
-	*/
-	   
-	if (0) {
-	  /* This costs a malloc+free */
-	  val = boost::dynamic_bitset<> ((int)(n_bit+1), (unsigned)curs(chan, ifr));
-	}
-	else {
-	  /* This is faster */
-	  unsigned c = (unsigned) curs(chan, ifr);
-	  for (unsigned i = 0; i < n_bit+1; i++) {
-	    val[i] = (c & 1);
-	    c = c >> 1;
-	  }
+	unsigned c = (unsigned) curs(chan, ifr);
+	for (unsigned i = 0; i < n_bit+1; i++) {
+	  val[i] = (c & 1);
+	  c = c >> 1;
 	}
 
 	if (n_corr <= 1) {
@@ -249,10 +258,10 @@ RFFloatLattice::init(uInt nchan,
   
   lat_shape = IPosition(3,nchan,nifr,ntime);
   
-  lat = std::vector<boost::dynamic_bitset<> >(ntime);
+  lat = std::vector<std::vector<bool> >(ntime);
   for (unsigned i = 0; i < ntime; i++) {
       //lat[i] = Matrix<Float>(IPosition(2, nchan, nifr));
-      lat[i] = boost::dynamic_bitset<>(nchan * nifr * (ncorr+nAgent));
+      lat[i] = std::vector<bool>(nchan * nifr * (ncorr+nAgent));
   }
   
   iter = RFFloatLatticeIterator(&lat, nchan, nifr, ntime, ncorr+nAgent, ncorr);
@@ -284,7 +293,7 @@ void RFFloatLattice::init(uInt nchan,
 
   /* Write init_val to every matrix element.
      See above for description of format */
-  boost::dynamic_bitset<> val((int)(nbits+1), reinterpret_cast<const unsigned &>(init_val));
+  std::vector<bool> val = bitvec_from_ulong(reinterpret_cast<const unsigned &>(init_val),nbits+1);
   for (unsigned i = 0; i < ntime; i++) {
     for (unsigned chan = 0; chan < nchan; chan++) {
       for (unsigned ifr = 0; ifr < nifr; ifr++) {

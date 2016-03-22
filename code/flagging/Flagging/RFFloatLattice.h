@@ -30,7 +30,6 @@
 #include <casa/Arrays/Matrix.h> 
 #include <lattices/Lattices/TempLattice.h> 
 #include <lattices/Lattices/LatticeIterator.h> 
-#include <boost/dynamic_bitset.hpp>
 #include <vector>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -64,7 +63,8 @@ class RFFloatLattice;
 class RFFloatLatticeIterator
 {
   private:
-    std::vector<boost::dynamic_bitset<> > *lattice;
+    // vector<bool>: is a space-efficient specialization of std::vector for the type bool
+    std::vector<std::vector<bool> > *lattice;
 
     Matrix<Float> curs;
 
@@ -79,7 +79,7 @@ class RFFloatLatticeIterator
     RFFloatLatticeIterator();
     
     // creates and attaches to lattice
-    RFFloatLatticeIterator(std::vector<boost::dynamic_bitset<> > *lat, 
+    RFFloatLatticeIterator(std::vector<std::vector<bool> > *lat, 
 			  unsigned nchan, unsigned nifr, 
 			  unsigned ntime, unsigned nbit, unsigned ncorr);
     
@@ -161,7 +161,7 @@ class RFFloatLattice
 {
 protected:
   IPosition                              lat_shape;
-  std::vector<boost::dynamic_bitset<> >  lat;
+  std::vector<std::vector<bool> >        lat;
   RFFloatLatticeIterator                 iter;
   unsigned n_chan, n_ifr, n_time, n_bit, n_corr;
 
@@ -207,7 +207,7 @@ public:
   Float & operator () ( uInt i,uInt j )  { return (*iter.cursor())(i,j); }
   
 // provides access to lattice itself  
-//  std::vector<boost::dynamic_bitset<> > & lattice()    { return lat; }
+//  std::vector<std::vector<bool> > & lattice()    { return lat; }
 
 // provides access to iterator  
   RFFloatLatticeIterator & iterator()    { return iter; }
