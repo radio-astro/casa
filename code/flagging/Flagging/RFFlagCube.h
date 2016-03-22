@@ -35,7 +35,6 @@
 #include <casa/Arrays/LogiMatrix.h>
 #include <casa/Arrays/LogiVector.h>
 #include <casa/Logging/LogIO.h>
-#include <boost/dynamic_bitset.hpp>
 #include <stdexcept>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -203,8 +202,7 @@ public:
   RFChunkStats &chunk;                  // chunk
 
   bool kiss;  // do things simpler (faster) if there is nothing but RFAselector agents
-  bool kiss_flagrow;  // Use boost::dynamic_bitset for 'flagrow' if only RFA agents and
-                      // more than 32 (or so) agents
+  bool kiss_flagrow;
 
   static Cube<Bool> in_flags;
   static int in_flags_time;  //time stamp that in_flags has reached
@@ -215,7 +213,7 @@ public:
       
   static RFCubeLattice<RFlagWord> flag; // global flag lattice
   static FlagMatrix flagrow;             // (nIfr,nTime) matrix of row flags
-  static Matrix<boost::dynamic_bitset<> > flagrow_kiss;
+  static Matrix<std::vector<bool> > flagrow_kiss;
   static Int pos_get_flag,pos_set_flag; 
 
   static Bool reset_preflags; // flag: RESET policy specified for at least one instance

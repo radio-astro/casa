@@ -26,6 +26,7 @@
 //# $Id$
 #include <lattices/Lattices/LatticeStepper.h>
 #include <flagging/Flagging/RFCubeLattice.h>
+#include <flagging/Flagging/RFCommon.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -37,7 +38,7 @@ template<class T> RFCubeLatticeIterator<T>::RFCubeLatticeIterator ()
   lattice = NULL;
 }
 
- template<class T> RFCubeLatticeIterator<T>::RFCubeLatticeIterator(std::vector<boost::dynamic_bitset<> > *lat,
+ template<class T> RFCubeLatticeIterator<T>::RFCubeLatticeIterator(std::vector<std::vector<bool> > *lat,
 								   unsigned nchan, unsigned nifr, 
 								   unsigned ntime, unsigned nbit,
 								   unsigned ncorr)
@@ -83,7 +84,7 @@ RFCubeLatticeIterator<T>::operator()(uInt chan, uInt ifr) const
 { 
     T val = 0;
     
-    boost::dynamic_bitset<> &l = (*lattice)[iter_pos];
+    std::vector<bool> &l = (*lattice)[iter_pos];
 
     if (n_bit == 2) {
         unsigned indx = n_bit*(chan + n_chan*ifr);
@@ -119,7 +120,7 @@ RFCubeLatticeIterator<T>::operator()(uInt chan, uInt ifr) const
 template<class T> void 
 RFCubeLatticeIterator<T>::set( uInt chan, uInt ifr, const T &val )
 {
-    boost::dynamic_bitset<> &l = (*lattice)[iter_pos];
+    std::vector<bool> &l = (*lattice)[iter_pos];
 
     if (n_bit == 2) {
       unsigned indx = n_bit*(chan + n_chan*ifr);
@@ -152,7 +153,7 @@ RFCubeLatticeIterator<T>::set( uInt ichan,
                                uInt icorr, 
                                bool val)
 {
-  boost::dynamic_bitset<> &l = (*lattice)[iter_pos];
+  std::vector<bool> &l = (*lattice)[iter_pos];
 
   unsigned indx = icorr + n_bit*(ichan + n_chan*ifr);
     
@@ -210,9 +211,9 @@ RFCubeLattice<T>::init(uInt nchan,
 
   lat_shape = IPosition(3, nchan, nifr, ntime);
 
-  lat = std::vector<boost::dynamic_bitset<> >(ntime);
+  lat = std::vector<std::vector<bool> >(ntime);
   for (unsigned i = 0; i < ntime; i++) {
-    lat[i] = boost::dynamic_bitset<>(nchan * nifr * (ncorr+nAgent));
+    lat[i] = std::vector<bool>(nchan * nifr * (ncorr+nAgent));
   }
 
   iter = RFCubeLatticeIterator<T>(&lat, nchan, nifr, ntime, ncorr+nAgent, ncorr);
@@ -241,7 +242,7 @@ template<class T> void RFCubeLattice<T>::init(uInt nchan,
 
   /* Write init_val to every matrix element.
      See above for description of format */
-  boost::dynamic_bitset<> val((int)(nbits+1), (unsigned) init_val);
+  std::vector<bool> val = bitvec_from_ulong( (unsigned) init_val, nbits+1 );
   for (unsigned i = 0; i < ntime; i++) {
     if (n_bit == 2) {
         unsigned indx = 0;

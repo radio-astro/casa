@@ -132,7 +132,7 @@ class RFFloatLatticeIterator
 //
 // The buffer is no longer implemented using a TempLattice because the
 // template parameter to TempLattice is restricted to certain types, and
-// cannot be boost::dynamic_bitset<>. Besides, TempLattice is currently(?)
+// cannot be dynamic_bitset<>. Besides, TempLattice is currently(?)
 // *not* well implemented: it creates TempLattice disk files although most
 // of the RAM is free.
 //

@@ -30,7 +30,6 @@
 #include <casa/Arrays/Matrix.h> 
 #include <lattices/Lattices/TempLattice.h> 
 #include <lattices/Lattices/LatticeIterator.h> 
-#include <boost/dynamic_bitset.hpp>
 #include <vector>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -69,7 +68,7 @@ class RFCubeLattice;
 template<class T> class RFCubeLatticeIterator
 {
   private:
-    std::vector<boost::dynamic_bitset<> > *lattice;
+    std::vector<std::vector<bool> > *lattice;
 
     unsigned int iter_pos;   // current time
 
@@ -82,7 +81,7 @@ template<class T> class RFCubeLatticeIterator
     RFCubeLatticeIterator();
     
     // creates and attaches to lattice
-    RFCubeLatticeIterator(std::vector<boost::dynamic_bitset<> > *lat, 
+    RFCubeLatticeIterator(std::vector<std::vector<bool> > *lat, 
 			  unsigned nchan, unsigned nifr, 
 			  unsigned ntime, unsigned nbit, unsigned ncorr);
     
@@ -135,7 +134,7 @@ template<class T> class RFCubeLatticeIterator
 //
 // The buffer is no longer implemented using a TempLattice because the
 // template parameter to TempLattice is restricted to certain types, and
-// cannot be boost::dynamic_bitset<>. Besides, TempLattice is currently(?)
+// cannot be dynamic_bitset<>. Besides, TempLattice is currently(?)
 // *not* well implemented: it creates TempLattice disk files although most
 // of the RAM is free.
 //
@@ -164,7 +163,7 @@ template<class T> class RFCubeLattice
 {
 protected:
   IPosition                              lat_shape;
-  std::vector<boost::dynamic_bitset<> >  lat;
+  std::vector<std::vector<bool> >        lat;
   RFCubeLatticeIterator<T>               iter;
   unsigned n_chan, n_ifr, n_time, n_bit, n_corr;
 
@@ -218,7 +217,7 @@ public:
   void set_column( uInt ifr, const T &val );
 
 // provides access to lattice itself  
-//  std::vector<boost::dynamic_bitset<> > & lattice()    { return lat; }
+//  std::vector<std::vector<bool> > & lattice()    { return lat; }
 
 // provides access to iterator  
   RFCubeLatticeIterator<T> & iterator()    { return iter; }

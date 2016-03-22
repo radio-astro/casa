@@ -37,7 +37,6 @@
 #include <memory>
 #include <stdio.h>
 
-using namespace boost;
 using namespace std;
         
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -52,7 +51,7 @@ int RFFlagCube::in_flags_time;
 bool RFFlagCube::in_flags_flushed;
 
 FlagMatrix RFFlagCube::flagrow;     // this data type supports only up to 32 agents (bad design)
-Matrix<dynamic_bitset<> > RFFlagCube::flagrow_kiss;  // in kiss mode, support more agents
+Matrix<vector<bool> > RFFlagCube::flagrow_kiss;  // in kiss mode, support more agents
 Int RFFlagCube::pos_get_flag=-1,RFFlagCube::pos_set_flag=-1;
 
 RFlagWord RFFlagCube::base_flagmask=1,
@@ -174,9 +173,7 @@ void RFFlagCube::init( RFlagWord corrmsk, uInt nAgent, bool only_selector, const
         else {
             flagrow_kiss.resize(num(IFR),num(TIME));
             unsigned long val = (RowFlagged|RowAbsent);
-            flagrow_kiss = dynamic_bitset<>((num(CORR) >= 2 ?
-                                             num(CORR) : 2) + nAgent,
-                                            val);
+            flagrow_kiss = bitvec_from_ulong( val, (num(CORR) >= 2 ? num(CORR) : 2) + nAgent );
         }
 
 	pos_get_flag = pos_set_flag = -1;
@@ -345,7 +342,7 @@ Bool RFFlagCube::setRowFlag ( uInt ifr, uInt itime )
 {
     if (kiss_flagrow){
 
-        const dynamic_bitset<> &oldfl(flagrow_kiss(ifr, itime));
+        const std::vector<bool> &oldfl = flagrow_kiss(ifr, itime);
 
         if ( ! oldfl[flagmask_kiss] ) {
             tot_row_fl_raised++;
@@ -377,7 +374,7 @@ Bool RFFlagCube::clearRowFlag ( uInt ifr,uInt itime )
 {
     if (kiss_flagrow){
 
-        const dynamic_bitset<> &oldfl(flagrow_kiss(ifr, itime));
+        const std::vector<bool> &oldfl = flagrow_kiss(ifr, itime);
 
         if ( oldfl[flagmask_kiss] ) {
             tot_row_fl_raised--;

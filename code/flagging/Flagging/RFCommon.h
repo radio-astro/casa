@@ -200,7 +200,7 @@ int dprintf( LogIO &os, const char *format, ... );
 inline std::vector<bool> bitvec_from_ulong( unsigned long val, size_t len = std::numeric_limits<unsigned long>::digits ) {
     std::vector<bool> result(len,false);
     unsigned long mask = 1;
-    for( size_t i=0; i < result.size( ); ++i ) {
+    for( size_t i=0; i < std::min((size_t)result.size( ),(size_t)std::numeric_limits<unsigned long>::digits); ++i ) {
         result[i] = mask & val ? true : false;
         mask = mask << 1;
     }
