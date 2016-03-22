@@ -26,6 +26,11 @@ Fit the continuum in the UV plane using polynomials.
                 <value type="string"></value>
         </param>
 
+        <param type="string" name="intent">
+                <description>Select intents</description>
+                <value type="string"></value>
+        </param>
+
 	<param type="string" name="spw">
 		<description>Spectral window / channels for fitting the continuum</description>
 		<value></value>
@@ -45,6 +50,11 @@ Fit the continuum in the UV plane using polynomials.
 	<param type="int" name="fitorder">
 		<description>Polynomial order for the continuum fits</description>
 		<value>0</value>
+	</param>
+
+	<param type="bool" name="append">
+		<description>Append to a pre-existing table</description>
+		<value>False</value>
 	</param>
 
 </input>

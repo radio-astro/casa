@@ -19,8 +19,8 @@ mycb, myms, mytb = gentools(['cb', 'ms', 'tb'])
 #    caltable computation, but it is used to computed channel ranges
 #    Leave in place for now
 
-def uvcontfit (vis=None, caltable=None, field=None, spw=None,
-    combine=None, solint=None, fitorder=None):
+def uvcontfit (vis=None, caltable=None, field=None, intent=None, spw=None,
+    combine=None, solint=None, fitorder=None, append=None):
     
     # Python script
     casalog.origin('uvcontfit')
@@ -29,7 +29,7 @@ def uvcontfit (vis=None, caltable=None, field=None, spw=None,
     try:
 
         # Determine the channels to be used in the fit
-        #    Not sure why this is needed but leave code in place. What is wrong with frequency ranges ?
+        #    Not sure why this was needed but leave code in place for now. What is wrong with frequency ranges ?
         #if spw.count('Hz'):
             #locfitspw = _new_quantityRangesToChannels(vis,field,fitspw,False)
         #else:
@@ -42,13 +42,18 @@ def uvcontfit (vis=None, caltable=None, field=None, spw=None,
             raise Exception, 'Visibility data set not found - please verify the name'
 
         # Select the data for continuum subtraction
+        #   Intent forces the selection to be on TARGET data only
+        #   Field is needed because the continuum regions will be different for different target fields
+        #   Spw selection will include and spw and frequency change   
         mycb.reset()
-        mycb.selectvis(spw=locfitspw)
+        mycb.selectvis(field=field, intent=intent, spw=locfitspw)
 
+        # Add append parameter because it may be needed to deal with data sets with multiple
+        # targets.
         mycb.setsolve(type='A', t=solint, table=caltable, combine=combine,
-            fitorder=fitorder)
+            fitorder=fitorder, append=append)
 
-        # solve for the continuum
+        # Solve for the continuum
         mycb.solve()
 
         mycb.close()
