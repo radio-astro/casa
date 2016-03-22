@@ -54,6 +54,16 @@ Double queryAntennaDiameter(String const &name) {
   return diameter;
 }
 
+template<class T, class U>
+U getMapValue(std::map<T, U> const mymap, T const key, U const default_value) {
+  auto iter = mymap.find(key);
+  if (iter != mymap.end()) {
+    return iter->second;
+  } else {
+    return default_value;
+  }
+}
+
 String getIntent(Int srctype) {
   static std::map<Int, String> intent_map;
   if (intent_map.size() == 0) {
@@ -105,12 +115,45 @@ String getIntent(Int srctype) {
     intent_map[91] = target + sep1 + offstr + sep2 + unspecified;
     intent_map[92] = anycal + sep1 + offstr + sep2 + unspecified;
   }
-  String stype = "UNKNOWN_INTENT";
-  auto iter = intent_map.find(srctype);
-  if (iter != intent_map.end()) {
-    stype = iter->second;
+  String default_type = "UNKNOWN_INTENT";
+  return getMapValue(intent_map, srctype, default_type);
+}
+
+Int getSubscan(Int srctype) {
+  static std::map<Int, Int> subscan_map;
+  if (subscan_map.size() == 0) {
+    subscan_map[0] = 1;
+    subscan_map[1] = 2;
+    subscan_map[2] = 1;
+    subscan_map[3] = 1;
+    subscan_map[4] = 2;
+    subscan_map[6] = 1;
+    subscan_map[7] = 2;
+    subscan_map[8] = 3;
+    subscan_map[9] = 4;
+    subscan_map[10] = 5;
+    subscan_map[11] = 6;
+    subscan_map[12] = 7;
+    subscan_map[13] = 8;
+    subscan_map[14] = 9;
+    subscan_map[20] = 1;
+    subscan_map[21] = 2;
+    subscan_map[26] = 1;
+    subscan_map[27] = 2;
+    subscan_map[28] = 3;
+    subscan_map[29] = 4;
+    subscan_map[30] = 3;
+    subscan_map[31] = 4;
+    subscan_map[36] = 5;
+    subscan_map[37] = 6;
+    subscan_map[38] = 7;
+    subscan_map[39] = 8;
+    subscan_map[90] = 1;
+    subscan_map[91] = 2;
+    subscan_map[92] = 1;
   }
-  return stype;
+  Int default_subscan = 1;
+  return getMapValue(subscan_map, srctype, default_subscan);
 }
 }
 
@@ -327,9 +370,10 @@ Bool Scantable2MSReader::getData(size_t irow, DataRecord &record) {
   interval_column_.get(index, record.interval);
 //  std::cout << "TIME=" << record.time << " INTERVAL=" << record.interval
 //      << std::endl;
-  record.intent = getIntent(srctype_column_(index));
+  Int srctype = srctype_column_(index);
+  record.intent = getIntent(srctype);
   record.scan = (Int) scan_column_(index);
-  record.subscan = (Int) cycle_column_(index);
+  record.subscan = getSubscan(srctype); 
   String field_name = fieldname_column_.get(index);
   record.field_id = field_map_[field_name];
   record.antenna_id = (Int) 0;
