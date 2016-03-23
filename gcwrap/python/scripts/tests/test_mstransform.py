@@ -621,7 +621,7 @@ class test_Regridms3(test_base):
         self.assertEqual(spw_col['r1'][0], 0,'Error re-indexing DATA_DESCRIPTION table')
 
 # Uncomment after seg fault is fixed
-    @unittest.skip('Skip until seg fault in InterpolateArray1D.tcc is fixed.')
+    #@unittest.skip('Skip until seg fault in InterpolateArray1D.tcc is fixed.')
     def test_regrid3_2(self):
         '''mstransform: Combine spw and regrid MS with two spws, select one field and 2 spws'''
         # cvel: test8

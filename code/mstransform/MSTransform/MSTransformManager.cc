@@ -8172,16 +8172,25 @@ template <class T> void MSTransformManager::interpol1D(	Int inputSpw,
 															Vector<T> &outputDataStripe,
 															Vector<Bool> &outputFlagsStripe)
 {
-	InterpolateArray1D<Double,T>::interpolate(	outputDataStripe, // Output data
-	    										outputFlagsStripe, // Output flags
-	    										inputOutputSpwMap_p[inputSpw].second.CHAN_FREQ, // Out chan freq
-	    										inputOutputSpwMap_p[inputSpw].first.CHAN_FREQ_aux, // In chan freq
-	    										inputDataStripe, // Input data
-	    										inputFlagsStripe, // Input Flags
-	    										interpolationMethod_p, // Interpolation method
-	    										False, // A good data point has its flag set to False
-	    										False // If False extrapolated data points are set flagged
-							    				);
+	if (inputDataStripe.size() > 1)
+	{
+		InterpolateArray1D<Double,T>::interpolate(	outputDataStripe, // Output data
+		    										outputFlagsStripe, // Output flags
+		    										inputOutputSpwMap_p[inputSpw].second.CHAN_FREQ, // Out chan freq
+		    										inputOutputSpwMap_p[inputSpw].first.CHAN_FREQ_aux, // In chan freq
+		    										inputDataStripe, // Input data
+		    										inputFlagsStripe, // Input Flags
+		    										interpolationMethod_p, // Interpolation method
+		    										False, // A good data point has its flag set to False
+		    										False // If False extrapolated data points are set flagged
+								    				);
+	}
+	else
+	{
+		outputDataStripe = inputDataStripe(0);
+		outputFlagsStripe = True;
+	}
+
 	return;
 }
 
