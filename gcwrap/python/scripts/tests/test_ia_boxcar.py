@@ -217,6 +217,26 @@ class ia_boxcar_test(unittest.TestCase):
         myia.done()
         zz.done()
         self.assertTrue(end > orig, "Wrong number of history records found")
+
+    def test_iicopy(self):
+        """Test image info copy"""
+        myia = iatool()
+        myia.fromshape("",[20,20,20])
+        major = qa.quantity("10arcmin")
+        minor = qa.quantity("5arcmin")
+        pa = qa.quantity("20deg")
+        unit = "Jy/beam"
+        myia.setrestoringbeam(major=major, minor=minor, pa=pa)
+        myia.setbrightnessunit(unit)
+        zz = myia.boxcar()
+        myia.done()
+        beam = zz.restoringbeam()
+        self.assertTrue(len(beam) == 3, "Incorrect beam")
+        self.assertTrue(beam['major'] == major, "Wrong major axis")
+        self.assertTrue(beam['minor'] == minor, "Wrong minor axis")
+        self.assertTrue(beam['positionangle'] == pa, "Wrong pa")
+        self.assertTrue(zz.brightnessunit() == unit, "Wrong unit")
+        zz.done()
     
 def suite():
     return [ia_boxcar_test]
