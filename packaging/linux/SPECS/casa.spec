@@ -318,7 +318,7 @@ gmake 'VERBOSE=1'
 
 cd $top/asap
 mkdir build && cd build
-cmake $COMPILERS -DBoost_NO_BOOST_CMAKE=1 -DEXTRA_C_FLAGS="-I/usr/include/wcslib-4.3" -Darch=linux -DPYTHONLIBD=%{pylibdir} -DPYTHONTASKD=%{pylibdir} -DCMAKE_BUILD_TYPE=Release ..
+cmake $COMPILERS -DBoost_NO_BOOST_CMAKE=1 -DEXTRA_C_FLAGS="-I/usr/include/wcslib-4.3" -Darch=linux -DPYTHONLIBD=%{pylibdir} -DPYTHONTASKD=%{pylibdir} -DCMAKE_BUILD_TYPE=Release %{boost_python_loading} ..
 gmake 'VERBOSE=1'
 
 ###
