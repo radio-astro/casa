@@ -61,8 +61,7 @@ template<class T> SPIIT ImageDecimator<T>::decimate() const {
 			<< "of 1 has been specified which means no planes will "
 			<< "be removed. The resulting image will be a straight "
 			<< "copy of the selected image." << LogIO::POST;
-		SPIIT tmp(this->_prepareOutputImage(*subImage));
-    	return tmp;
+		return this->_prepareOutputImage(*subImage);
 	}
 	CoordinateSystem csys = subImage->coordinates();
 	Vector<Double> refPix = csys.referencePixel();
@@ -167,11 +166,12 @@ template<class T> SPIIT ImageDecimator<T>::decimate() const {
         os << "Averaging every i to i*(n-1) planes in the input "
             << "image to form plane i in the output image.";
     }
+    // FIXME decimating multiple beams not yet supported
+    ImageUtilities::copyMiscellaneous(
+        out, *subImage, ! subImage->imageInfo().hasMultipleBeams()
+    );
 	this->addHistory(lor, os.str());
-    SPIIT tmp(
-		this->_prepareOutputImage(out, nullptr, outMask.get())
-	);
-    return tmp;
+    return this->_prepareOutputImage(out, nullptr, outMask.get());
 }
 
 
