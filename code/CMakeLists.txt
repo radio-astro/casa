@@ -915,6 +915,18 @@ if( CMAKE_SYSTEM_NAME STREQUAL Linux )
     )
 endif()
 
+option(USE_MPI "Use MPI compiler" NO)
+set( CASAMPI "" )
+if (USE_MPI)
+  find_package(MPI)
+  if( MPI_CXX_FOUND )
+    set( CASACORE_DEFINITIONS ${CASACORE_DEFINITIONS}
+      -DHAVE_MPI
+      )
+    set( CASAMPI "MPI" )
+  endif()
+endif()
+
 # ALMAWVR
 if( USE_ALMAWVR )
   message(STATUS "Directive USE_ALMAWVR is deprecated and no longer needed.")
