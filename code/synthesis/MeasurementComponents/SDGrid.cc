@@ -1066,8 +1066,6 @@ void SDGrid::put(const VisBuffer& vb, Int row, Bool dopsf,
         cmin_.putStorage(cminStor, cminCopy);
         cmax_.putStorage(cmaxStor, cmaxCopy);
         npoints_.putStorage(npStor, npCopy);
-
-        os << "Done ggridsd2" << LogIO::POST;
       }
       griddedData.putStorage(datStor, datCopy);
       wGriddedData.putStorage(wgtStor, wgtCopy);
@@ -1385,6 +1383,10 @@ ImageInterface<Complex>& SDGrid::getImage(Matrix<Float>& weights,
   thisScreen2.copyData(le2);
   }*/
   /////////////////////
+
+  // execute minmax clipping
+  clipMinMax();
+
   if(normalize) {
     if(max(weights)==0.0) {
       //logIO() << LogIO::WARN << "No useful data in SDGrid: weights all zero"
@@ -1810,5 +1812,47 @@ void SDGrid::pickWeights(const VisBuffer& vb, Matrix<Float>& weight){
   }
 }
 
+void SDGrid::clipMinMax() {
+  if (clipminmax_) {
+    Bool gmin_b, gmax_b, wmin_b, wmax_b, cmin_b, cmax_b, np_b;
+    const auto *gmin_p = gmin_.getStorage(gmin_b);
+    const auto *gmax_p = gmax_.getStorage(gmax_b);
+    const auto *wmin_p = wmin_.getStorage(wmin_b);
+    const auto *wmax_p = wmax_.getStorage(wmax_b);
+    const auto *cmin_p = cmin_.getStorage(cmin_b);
+    const auto *cmax_p = cmax_.getStorage(cmax_b);
+    const auto *np_p = npoints_.getStorage(np_b);
+
+    Bool data_b, weight_b;
+    auto data_p = griddedData.getStorage(data_b);
+    auto weight_p = wGriddedData.getStorage(weight_b);
+
+    auto arrayShape = griddedData.shape();
+    size_t num_data = arrayShape.getFirst(3).product();
+    size_t num_chan = arrayShape.getLast(1).product();
+    for (size_t i = 0; i < num_data; ++i) {
+      if (np_p[i] > 2) {
+        for (size_t j = 0; j < num_chan; ++j) {
+          auto k = i * num_chan + j;
+          auto amin = cmin_p[k] * wmin_p[k];
+          auto amax = cmax_p[k] * wmax_p[k];
+          data_p[k] -= amin * gmin_p[k] + amax * gmax_p[k];
+          weight_p[k] -= amin + amax;
+        }
+      }
+    }
+
+    wGriddedData.putStorage(weight_p, weight_b);
+    griddedData.putStorage(data_p, data_b);
+
+    npoints_.freeStorage(np_p, np_b);
+    cmax_.freeStorage(cmax_p, cmax_b);
+    cmin_.freeStorage(cmin_p, cmin_b);
+    wmax_.freeStorage(wmax_p, wmax_b);
+    wmin_.freeStorage(wmin_p, wmin_b);
+    gmax_.freeStorage(gmax_p, gmax_b);
+    gmin_.freeStorage(gmin_p, gmin_b);
+  }
+}
 
 } //#End casa namespace

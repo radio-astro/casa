@@ -302,6 +302,7 @@ private:
   Array<Float> cmin_;
   Array<Float> cmax_;
   Array<Int> npoints_;
+  void clipMinMax();
 
   Int getIndex(const ROMSPointingColumns& mspc, const Double& time,
 	       const Double& interval=-1.0, const Int& antid=-1);
