@@ -72,6 +72,8 @@ AveragingParameters::operator= (const AveragingParameters & other)
         sortColumns_p = other.sortColumns_p;
         weightScaling_p = other.weightScaling_p;
         isWritable_p = other.isWritable_p;
+        XpcOffset_p = other.XpcOffset_p;
+        YpcOffset_p = other.YpcOffset_p;
 
         validate ();
     }
