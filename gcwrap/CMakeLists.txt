@@ -821,6 +821,14 @@ casa_find( CASACODE
 	   DEPENDS CASACORE LAPACK CFITSIO WCSLIB FFTW3 DL LIBSAKURA
 	   NO_LINK )
 
+option(USE_MPI "Use MPI compiler" NO)
+set( CASAMPI_LIBRARIES "" )
+if (USE_MPI)
+  find_package(MPI)
+  if( MPI_CXX_FOUND )
+    set( CASAMPI_LIBRARIES ${MPI_CXX_LIBRARIES} )
+  endif()
+endif()
 
 # Python
 
