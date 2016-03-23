@@ -832,7 +832,6 @@ VisibilityIteratorReadImpl::setTileCache ()
             else {
 
                 ROTiledStManAccessor tacc (theMs, columns[k], True);
-		tacc.clearCaches (); //One tile only for now ...seems to work faster
 
 
 		// Cleverly sense full-row cache size (in tiles)
