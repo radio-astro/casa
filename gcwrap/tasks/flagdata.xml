@@ -1245,6 +1245,15 @@
 
                  It is recommended to extend the flags after running this algorithm. 
                  See the sub-parameter extendflags below.
+                 
+                 Notice that by default the flag implementation in CASA is able to calculate the 
+                 thresholds and apply them on-the-fly (OTF). There is a significant performance 
+                 gain with this approach, as the visibilities don't have to be read twice, 
+                 and therefore is highly recommended (see example 1). Otherwise it is possible to
+                 reproduce the AIPS usage pattern by doing a first run with 'calculate' mode and 
+                 a second run with 'apply' mode. The advantage of this approach is that the thresholds 
+                 are calculated using the data from all scans, instead of calculating them for 
+                 one scan only (see example 3)
 
                  Example usage : 
 
