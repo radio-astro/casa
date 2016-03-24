@@ -1025,6 +1025,20 @@ int main(int argc,  char* argv[])
 									 offsetstable)
 						   );
 
+     // For debug purposes, print the loaded WVR data: 
+     // for(size_t j=0; j<d->g_time().size(); ++j)
+     // {
+     // 	for(size_t i=0; i < ms.antenna().nrow(); ++i)
+     // 	  {
+     // 	    std::cout << "row ant data " << j << " " << i << " "
+     // 		      << d->g_wvrdata()[j][i][0] << " "
+     // 		      << d->g_wvrdata()[j][i][1] << " " 
+     // 		      << d->g_wvrdata()[j][i][2] << " "
+     // 		      << d->g_wvrdata()[j][i][3] << std::endl; 
+     // 	  }
+     // }
+     
+
      interpwvrs.insert(flaggedantsInMain.begin(),flaggedantsInMain.end()); // for flagInterp()
      wvrflag.insert(flaggedantsInMain.begin(),flaggedantsInMain.end());
 

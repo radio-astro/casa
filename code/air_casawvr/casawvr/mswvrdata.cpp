@@ -13,6 +13,7 @@
 #include <set>
 #include <memory>
 #include <iostream>
+#include <iomanip>
 
 #include "mswvrdata.hpp"
 #include "msspec.hpp"
@@ -359,19 +360,22 @@ namespace LibAIR2 {
 			       std::string offsetstable)
   {
     bool haveOffsets=false;
+    casa::Vector<casa::Double> offsetTime;
     casa::Vector<casa::Int> offsetAnts;
-    casa::Matrix<casa::Float> offsets;
+    casa::Matrix<casa::Double> offsets;
     if(offsetstable!=""){
       try{
 	casa::Table offsettab(offsetstable);
-	casa::ScalarColumn<casa::Int> antcol(offsettab,"ANTENNA");
-	casa::ArrayColumn<casa::Float> offsetcol(offsettab,"OFFSETS");
+	casa::ScalarColumn<casa::Double> timecol(offsettab, "TIME");
+	casa::ScalarColumn<casa::Int> antcol(offsettab, "ANTENNA");
+	casa::ArrayColumn<casa::Double> offsetcol(offsettab, "OFFSETS");
 	if(offsettab.nrow()>0){
+	  timecol.getColumn(offsetTime, casa::True);
 	  antcol.getColumn(offsetAnts, casa::True);
 	  offsetcol.getColumn(offsets, casa::True);
 	  haveOffsets=true;
 	  //for(size_t i=0; i<offsetAnts.size(); i++){
-	  //  std::cout << offsetAnts[i] << " " << offsets.column(i) << std::endl;
+	  //  std::cout << std::setprecision(15) << offsetTime[i] << " " << offsetAnts[i] << " " << offsets.column(i) << std::endl;
 	  //}
 	}
 	else{
@@ -413,7 +417,7 @@ namespace LibAIR2 {
 	sortedI[i] = (size_t) sortedIV(i); 
       }
     }
-    
+
     std::vector<double> times, az, el;
     std::vector<size_t> states, fields, source;
     WVRTimeStatePoints(ms,
@@ -455,48 +459,44 @@ namespace LibAIR2 {
     std::vector<size_t> nunflagged(nAnts, 0);
     std::vector<size_t> ntotal(nAnts, 0);
 
-    std::vector<size_t> offnstart(nAnts, 0); // to be filled with the indices at which each antenna offset data starts
-    if(haveOffsets){
-      //std::cout << "i offnstart " << std:: endl;
-      size_t cAnt=(size_t)offsetAnts[0];
-      if(cAnt!=0){
-	throw LibAIR2::MSInputDataError("Offsets Table does not contain data for antenna 0 or is not sorted by antenna id.");
-      }
-      offnstart[0]=0;
-      for(size_t i=0; i<offsetAnts.size(); i++){ // loop over the array of antenna ids in the offset data
-	size_t j = (size_t)offsetAnts[i];
-	if(j>=nAnts){
-	  throw LibAIR2::MSInputDataError("Offsets Table contains data for antennas not present in the MS.");
-	}
-	if(j!=cAnt){
-	  if(j!=cAnt+1){
-	    throw LibAIR2::MSInputDataError("Offsets Table is not sorted by antenna id.");
+    casa::ROArrayColumn<casa::Complex> indata(ms, casa::MS::columnName(casa::MS::DATA));
+    casa::ROScalarColumn<casa::Int> indsc_id(ms, casa::MS::columnName(casa::MS::DATA_DESC_ID));
+    casa::ROScalarColumn<casa::Int> a1(ms, casa::MS::columnName(casa::MS::ANTENNA1));
+    casa::ROScalarColumn<casa::Int> a2(ms, casa::MS::columnName(casa::MS::ANTENNA2));
+
+    casa::ROArrayColumn<casa::Bool> inflags(ms, casa::MS::columnName(casa::MS::FLAG));
+
+    casa::ROScalarColumn<casa::Double> c_times(ms, casa::MS::columnName(casa::MS::TIME));
+
+    std::vector<size_t> offsetSortedI;
+    size_t nOffRows=0;
+
+    if(haveOffsets){ // prepare offset application
+      for(casa::uInt i=0; i<nrows; i++){ 
+	if (a1(i) == a2(i) and 
+	    dsc_ids.count(indsc_id(i)) > 0)
+	  {
+	    ++nOffRows;
 	  }
-	  offnstart[j]=i;
-	  //std::cout << j << " " << offnstart[j] << std::endl;
-	  cAnt=j;
-	}
+      }
+
+      if(offsetTime.size() != nOffRows){
+	std::cout << "offsetTime.size() nOffRows nrows " << offsetTime.size() << " " 
+		  <<  nOffRows << " " << nrows << std::endl;
+	throw LibAIR2::MSInputDataError("Provided Offsets Table number of rows does not match the number of WVR data rows in MS.");
+      }
+      offsetSortedI.resize(nOffRows);
+
+      casa::Vector<casa::uInt> offsetSortedIV(nOffRows);
+      casa::GenSortIndirect<casa::Double>::sort(offsetSortedIV,offsetTime);
+      for(casa::uInt i=0; i<nOffRows; i++){ // necessary for type conversion 
+	offsetSortedI[i] = (size_t) offsetSortedIV(i); 
       }
     }
 
-
-    casa::ROArrayColumn<casa::Complex> indata(ms, 
-					      casa::MS::columnName(casa::MS::DATA));
-    casa::ROScalarColumn<casa::Int> indsc_id(ms,
-					      casa::MS::columnName(casa::MS::DATA_DESC_ID));
-    casa::ROScalarColumn<casa::Int> a1(ms,
-				       casa::MS::columnName(casa::MS::ANTENNA1));
-    casa::ROScalarColumn<casa::Int> a2(ms,
-				       casa::MS::columnName(casa::MS::ANTENNA2));
-
-    casa::ROArrayColumn<casa::Bool> inflags(ms,
-					    casa::MS::columnName(casa::MS::FLAG));
-
-    casa::ROScalarColumn<casa::Double> c_times(ms,
-					       casa::MS::columnName(casa::MS::TIME));
-
-    size_t offsetIndex=0;
-
+    //size_t offsetIndex=0;
+    size_t offI=0;
+    size_t offRow=0;
     double prevtime=0;
 
     for(size_t ii=0; ii<nrows; ++ii)
@@ -506,6 +506,11 @@ namespace LibAIR2 {
       if (a1(i) == a2(i) and 
 	  dsc_ids.count(indsc_id(i)) > 0)
       {
+
+	if(haveOffsets){
+	  offI = offsetSortedI[offRow];
+	  ++offRow;
+	}
 
 	int newtimestamp = 0;
 	if(c_times(i)>prevtime)
@@ -519,10 +524,10 @@ namespace LibAIR2 {
 
 	  if(newtimestamp==1)
 	  {
-	    counter++;
+	    ++counter;
 	  }
 
-	  ntotal[a1(i)]++;
+	  ++(ntotal[a1(i)]);
 
 	  casa::Array<casa::Bool> fl;
 	  inflags.get(i, fl, ::casa::True);
@@ -532,18 +537,29 @@ namespace LibAIR2 {
 	    casa::Array<std::complex<float> > a;
 	    indata.get(i,a, casa::True);
 	    bool tobsbad=false;
-
+	    bool matchingOffset=true;
 	    
 	    if(haveOffsets){
-	      offsetIndex = offnstart[a1(i)]+ntotal[a1(i)]-1;
+	      if(offsetTime(offI) != c_times(i)){
+		std::cerr << "WARNING: time disagreement: j i (offsetTime(j) - c_times(i)) "
+			  << offI << " " << i << " " << offsetTime(offI) - c_times(i)
+			  << std::endl;
+		matchingOffset=false;
+	      }
+	      if(offsetAnts(offI) != a1(i)){
+		std::cerr << "WARNING: antenna mismatch: j i offsetAnts(j) a1(i) "
+			  << offI << " " << i << " " << offsetAnts(offI) << " " << a1(i)
+			  << std::endl;
+		matchingOffset=false;
+	      }
 	    }
 
 	    for(size_t k=0; k<4; ++k)
             {
 	      casa::Double rdata = a(casa::IPosition(2,k,0)).real();
 		
-	      if(haveOffsets){
-		rdata -= offsets(k, offsetIndex);
+	      if(haveOffsets && matchingOffset){
+		rdata -= offsets(k, offI);
 	      }
 
 	      if(2.7<rdata and rdata<300.){
@@ -551,7 +567,6 @@ namespace LibAIR2 {
 			 a1(i),
 			 k,
 			 rdata);
-		//std::cout << "i, a1, k, rdata " << i << " " << a1(i) << " " << k << " " << rdata << std::endl;
 	      }
 	      else{
 		tobsbad=true;
