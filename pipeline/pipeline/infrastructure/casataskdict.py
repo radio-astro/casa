@@ -30,6 +30,7 @@ CasaTaskDict = {
                    'hif_setjy'             : 'Setjy',
                    'hif_setmodels'         : 'SetModels',
 		   'hif_tclean'            : 'Tclean', 
+                   'hif_uvcontfit'         : 'UVcontFit',
                    'hsd_calsky'            : 'SDCalSky',
                    'hsd_caltsys'           : 'SDCalTsys',
                    'hsd_applycal'          : 'SDApplyCal',
@@ -130,6 +131,7 @@ classToCASATask = {
     hif_tasks.Setjy                   : 'hif_setjy',
     hif_tasks.SetModels               : 'hif_setmodels',
     hif_tasks.Tclean                  : 'hif_tclean',
+    hif_tasks.UVcontFit               : 'hif_uvcontfit',
     # Single dish tasks ------------------------------------------------------
     hsd_tasks.SDCalSky                : 'hsd_calsky',
     hsd_tasks.SDCalTsys               : 'hsd_caltsys',
