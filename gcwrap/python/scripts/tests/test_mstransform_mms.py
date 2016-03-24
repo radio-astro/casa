@@ -95,6 +95,15 @@ class test_base(unittest.TestCase):
             
         os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
         default(mstransform) 
+        
+    def setUp_sub_tables_alma(self):
+
+        self.vis = 'test-subtables-alma.ms'
+        if os.path.exists(self.vis):
+           self.cleanup()
+            
+        os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
+        default(mstransform)                
                            
     def createMMS(self, msfile, axis='auto',scans='',spws='', numms='auto'):
         '''Create MMSs for tests with input MMS'''
@@ -1267,7 +1276,43 @@ class test_otf_calibration(test_base_compare):
         # Compare results
         self.generate_tolerance_map()
         self.post_process()  
-              
+       
+        
+class test_no_reindexing(test_base):
+    '''Test using no-reindexing feature'''
+    
+    def setUp(self):
+        
+        # Fetch data        
+        self.setUp_sub_tables_alma()
+        
+        # Define filenames
+        self.previs = 'test-subtables-alma.ms'
+        self.vis = 'test-subtables-alma.mms'
+        self.outvis = 'test_no_reindexing_noreidnex.mms'
+        
+        # First part ms
+        partition(vis=self.previs,outputvis=self.vis)     
+        
+    def tearDown(self):
+        os.system('rm -rf '+ self.previs)
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf '+ self.outvis)
+    
+    def test_regrid_SPWs_separately_with_no_reindexing(self):   
+        
+        # Run mstransform
+        mstransform(vis=self.vis,outputvis=self.outvis,regridms=True,datacolumn='ALL',correlation='XX',
+                    field='SXDF-NB1006-4',spw='1:10~20,2:30~40',outframe='lsrk',reindex=False)
+        
+        # Verify that sub-tables have not been reindex
+        spw_col = th.getVarCol(self.outvis+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')
+        self.assertEqual(spw_col.keys().__len__(), 4, 'Wrong number of rows in DDI table')
+        self.assertEqual(spw_col['r1'][0], 0,'Error, DATA_DESCRIPTION tablehas been re-index')
+        self.assertEqual(spw_col['r2'][0], 1,'Error, DATA_DESCRIPTION tablehas been re-index')
+        self.assertEqual(spw_col['r3'][0], 2,'Error, DATA_DESCRIPTION tablehas been re-index')
+        self.assertEqual(spw_col['r4'][0], 3,'Error, DATA_DESCRIPTION tablehas been re-index')        
+       
 
 # Cleanup class
 class Cleanup(test_base):
@@ -1295,4 +1340,5 @@ def suite():
             test_vla_mixed_polarizations_mms,
             test_alma_wvr_correlation_products_mms,
             test_otf_calibration,
+            test_no_reindexing,
             Cleanup]
