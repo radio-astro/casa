@@ -448,6 +448,11 @@ class CalibrationTable(NamingTemplate):
         ''' 
         return self.extension('ants')
 
+    def uvcont_cal(self):
+        '''Set the filename extension as appropriate for a uv continuum calibration.
+        ''' 
+        return self.extension('uvcont')
+
     def tsys_cal(self):
         '''Set the filename extension as appropriate for a tsys calibration.
         ''' 
@@ -645,6 +650,11 @@ class AntposCalibrationTable(CalibrationTable):
     def __init__(self, other=None):
         super(AntposCalibrationTable, self).__init__(other)
         self.antpos_cal()
+
+class UVcontCalibrationTable(CalibrationTable):
+    def __init__(self, other=None):
+        super(UVcontCalibrationTable, self).__init__(other)
+        self.uvcont_cal()
 
 class BandpassCalibrationTable(CalibrationTable):
     def __init__(self, other=None):
