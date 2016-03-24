@@ -392,6 +392,12 @@ class CASATaskJobGenerator(object):
     def visstat(self, *v, **k):
         return self._get_job(visstat_cli.visstat_cli, *v, **k)
 
+    def uvcontfit(self, *v, **k):
+        # Note this is pipeline CASA style task not a CASA task
+        #    See if the import works here.
+        import uvcontfit_cli
+        return self._get_job(uvcontfit_cli.uvcontfit_cli, *v, **k)
+
     def sdbaseline2(self, *v, **k):
         return self._get_job(sdbaseline2_pg.sdbaseline2_pg, *v, **k)
 
