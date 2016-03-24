@@ -817,7 +817,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SDMaskHandler","autoMaskByThreshold",WHERE) );
      Array<Double> rms, max;
-     Double thresh, rmsthresh, maxval;
+     Double thresh, rmsthresh, minval, maxval;
      Int npix;
      // taking account for beam or input resolution
      TempImage<Float> tempmask(mask.shape(), mask.coordinates());
@@ -828,7 +828,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      if (resolution.get().getValue() ) {
        //npix = 2*Int(abs( resolution.getValue()/qinc.getValue(resolution.getUnit()) ) );
        npix = 2*Int(abs( resolution/(qinc.convert(resolution),qinc) ).getValue() );
-       os << LogIO::DEBUG1 << "Use the input resolution:"<<resolution<<" fo binning (2*resollution)"<< LogIO::POST;
+       os << LogIO::DEBUG1 << "Use the input resolution:"<<resolution<<" fo binning (2*resolution)"<< LogIO::POST;
      }
      else {
        //use beam from residual or psf
@@ -864,12 +864,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      RebinImage<Float> tempRebinnedIm( res, IPosition(4,npix,npix,1,1) );
 
      // Determine threshold 
-     Double minval;
+     Double minmaxval, maxmaxval;
+     stats.get(RecordFieldId("max"), max);
+     minMax(minmaxval,maxmaxval,max);
      if (fracofpeak) {
-       stats.get(RecordFieldId("max"), max);
-       minMax(minval,maxval,max);
-       //cerr<<"minval="<<minval<<" maxval="<<maxval<<endl;
-       rmsthresh = maxval * fracofpeak; 
+       rmsthresh = maxmaxval * fracofpeak; 
      }
      else if (sigma) {
        stats.get(RecordFieldId("rms"), rms);
@@ -882,9 +881,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        if ( rmsthresh==0.0 ) 
          { throw(AipsError("Threshold for automask is not set"));}
      }
+     
      os << LogIO::DEBUG1 <<"sigma="<<sigma<<" rmsthresh="<<rmsthresh<<LogIO::POST;
-
-     if (rmsthresh > maxval) {
+     os << LogIO::DEBUG1 <<"max="<<maxmaxval<<endl;
+     if (rmsthresh > maxmaxval) {
        os << LogIO::WARN <<" The threshold value for making a mask is greater than max value in the image. Mask image will be empty."<< LogIO::POST;
      }
      thresh = 3.0*rmsthresh / sqrt(npix);
