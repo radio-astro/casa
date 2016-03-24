@@ -25,6 +25,9 @@ message( STATUS "PKSMS = " ${PKSMS} )
 # Use casapy's fork of casacore
 if ( NOT STANDALONE )
   add_definitions( -DUSE_CASAPY )
+  option( PYTHON_SHARED_LINKER_FLAGS
+          "set extra LINK_FLAGS for python shared objects and libraries"
+          OFF )
 endif ()
 
 # Define compiler paths on OSX 10.5. This must be done before invoking project()
@@ -756,3 +759,9 @@ add_custom_target( inst ALL ${CMAKE_BUILD_TOOL} install/fast )
 # subdirectories
 #
 asap_add_subdirectory()
+
+if (NOT STANDALONE AND PYTHON_SHARED_LINKER_FLAGS)
+    set_target_properties(${ATNFLIB} PROPERTIES LINK_FLAGS ${PYTHON_SHARED_LINKER_FLAGS})
+    set_target_properties(${ASAPLIB} PROPERTIES LINK_FLAGS ${PYTHON_SHARED_LINKER_FLAGS})
+    set_target_properties(${ASAPPYLIB} PROPERTIES LINK_FLAGS ${PYTHON_SHARED_LINKER_FLAGS})
+endif (NOT STANDALONE AND PYTHON_SHARED_LINKER_FLAGS)
