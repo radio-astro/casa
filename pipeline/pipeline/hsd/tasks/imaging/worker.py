@@ -14,12 +14,109 @@ from ..common import utils
 
 LOG = infrastructure.get_logger(__name__)
 
+def ALMAImageCoordinateUtil(context, datatable, infiles, spw_list, pols_list, srctype, vislist):
+    """
+    An utility function to calculate spatial coordinate of image for ALMA
+    """
+    antenna_list = [context.observing_run.st_names.index(f) 
+                    for f in infiles]
+    vislist = [vislist[i] for i in antenna_list]
+    reference_data = context.observing_run[antenna_list[0]]
+    ref_spw = spw_list[0]
+    target_sources = [v for v in reference_data.source.values() 
+                      if 'TARGET' in v.intents]
+    source_name = target_sources[0].name
+
+    # qa tool
+    qa = casatools.quanta
+    ### ALMA specific part ###
+    # the number of pixels per beam
+    grid_factor = 9.0
+    # recommendation by EOC
+    fwhmfactor = 1.13
+    # hard-coded for ALMA-TP array
+    diameter_m = 12.0 #max([ context.observing_run[antid].antenna.diameter for antid in antenna_list ])
+    obscure_alma = 0.75
+    ### END OF ALMA part ###
+    with casatools.MSMDReader(vislist[0]) as msmd:
+        freq_hz = msmd.meanfreq(ref_spw)
+        fnames = [name for name in msmd.fieldnames() if name.find(source_name) > -1 ]
+        me_center = msmd.phasecenter(msmd.fieldsforname(fnames[0])[0])
+
+    # cellx and celly
+    import sdbeamutil
+    theory_beam_arcsec = sdbeamutil.primaryBeamArcsec(freq_hz, diameter_m, obscure_alma, 10.0, fwhmfactor=fwhmfactor)
+    grid_size = qa.quantity(theory_beam_arcsec, 'arcsec')
+    cellx = qa.div(grid_size, grid_factor)
+    celly = cellx
+    cell_in_deg = qa.convert(cellx, 'deg')['value']
+    LOG.info('Calculating image coordinate of field \'%s\', reference frequency %fGHz' % (fnames[0], freq_hz*1.e-9))
+    LOG.info('cell=%s' % (qa.tos(cellx)))
+    
+    # phasecenter = field direction
+    ra_center = qa.convert(me_center['m0'], 'deg')
+    dec_center = qa.convert(me_center['m1'], 'deg')
+    ra_center_in_deg = qa.getvalue(ra_center)
+    dec_center_in_deg = qa.getvalue(dec_center)
+    phasecenter = 'J2000 %s %s' % (qa.formxxx(ra_center, 'hms'),
+                                     qa.formxxx(dec_center, 'dms'))
+    LOG.info('phasecenter=\'%s\'' % (phasecenter, ))
+
+    # nx and ny
+    index_list = common.get_index_list(datatable, antenna_list, spw_list, pols_list, srctype)
+    
+    if len(index_list) == 0:
+        antenna_name = reference_data.antenna.name
+        LOG.warn('No valid data for source %s antenna %s spw %s. Image will not be created.'%(source_name, antenna_name, ref_spw))
+        return False
+        
+    index_list.sort()
+    
+    ra = datatable.tb1.getcol('RA').take(index_list)
+    dec = datatable.tb1.getcol('DEC').take(index_list)
+    
+    ra_min = min(ra)
+    ra_max = max(ra)
+    dec_min = min(dec)
+    dec_max = max(dec)
+    dec_correction = 1.0 / math.cos(dec_center_in_deg / 180.0 * 3.1415926535897931)
+    width = 2*max(abs(ra_center_in_deg-ra_min), abs(ra_max-ra_center_in_deg))
+    height = 2*max(abs(dec_center_in_deg-dec_min), abs(dec_max-dec_center_in_deg))
+    LOG.debug('Map extent: [%f, %f] arcmin' % (width/60., height/60.))
+    
+    nx = int(width / (cell_in_deg * dec_correction)) + 1
+    ny = int(height / cell_in_deg) + 1
+    
+    # Adjust nx and ny to be even number for performance (which is 
+    # recommended by imager). 
+    # Also increase nx and ny  by 2 if they are even number. 
+    # This is due to a behavior of the imager. The imager configures 
+    # direction axis as follows:
+    #     reference value: phasecenter
+    #           increment: cellx, celly
+    #     reference pixel: ceil((nx-1)/2), ceil((ny-1)/2)
+    # It means that reference pixel will not be map center if nx/ny 
+    # is even number. It results in asymmetric area coverage on both 
+    # sides of the reference pixel, which may miss certain range of 
+    # (order of 1 pixel) observed area near the edge. 
+    if nx % 2 == 0:
+        nx += 2
+    else:
+        nx += 1
+    if ny % 2 == 0:
+        ny += 2
+    else:
+        ny += 1
+    
+    LOG.info('nx,ny=%s,%s' % (nx, ny))
+    return phasecenter, cellx, celly, nx, ny    
+
 class SDImagingWorkerInputs(common.SingleDishInputs):
     """
     Inputs for imaging worker
     """
     def __init__(self, context, infiles, outfile, mode, spwids, scans, pols, onsourceid, 
-                 edge=None, vislist=None):
+                 edge=None, vislist=None, phasecenter=None, cellx=None, celly=None, nx=None, ny=None):
         # NOTE: spwids and pols are list of numeric id list while scans
         #       is string (mssel) list
         self._init_properties(vars())
@@ -48,8 +145,9 @@ class SDImagingWorker(common.SingleDishTaskTemplate):
         scan_list = self.inputs.scans
         pols_list = self.inputs.pols
         imagemode = self.inputs.mode
- 
-        status = self._do_imaging(infiles, spwid_list, scan_list, pols_list, outfile, imagemode, edge)
+        phasecenter, cellx, celly, nx, ny = self._get_map_coord(self.inputs, self.context, self.datatable, infiles, spwid_list, pols_list)
+        
+        status = self._do_imaging(infiles, spwid_list, scan_list, outfile, imagemode, edge, phasecenter, cellx, celly, nx, ny)
  
         if status is True:
             result = SDImagingWorkerResults(task=self.__class__,
@@ -71,22 +169,25 @@ class SDImagingWorker(common.SingleDishTaskTemplate):
     def analyse(self, result):
         return result
 
-    def _do_imaging(self, infiles, spwid_list, scan_list, pols_list, imagename, imagemode, edge):
+    def _get_map_coord(self, inputs, context, datatable, infiles, spw_list, pols_list):
+        params = (inputs.phasecenter, inputs.cellx, inputs.celly, inputs.nx, inputs.ny)
+        coord_set = (params.count(None) == 0)
+        if coord_set:
+            return params
+        else:
+            return ALMAImageCoordinateUtil(context, datatable, infiles, spw_list, pols_list, inputs.onsourceid, inputs.vislist)
+
+    def _do_imaging(self, infiles, spwid_list, scan_list, imagename, imagemode, edge, phasecenter, cellx, celly, nx, ny):
         context = self.context
-        datatable = self.datatable
         antenna_list = [context.observing_run.st_names.index(f) 
                         for f in infiles]
         vislist = [self.inputs.vislist[i] for i in antenna_list]
-        srctype = self.inputs.onsourceid
         reference_data = context.observing_run[antenna_list[0]]
         spwid = spwid_list[0]
         
         LOG.debug('Members to be processed:')
         for (a,s) in zip(antenna_list, spwid_list):
             LOG.debug('\tAntenna %s Spw %s'%(a,s))
-    
-        # qa tool
-        qa = casatools.quanta
     
         # field
         target_sources = [v for v in reference_data.source.values() 
@@ -102,79 +203,6 @@ class SDImagingWorker(common.SingleDishTaskTemplate):
     
         # baseline
         #baseline = '0&&&'
-    
-       # the number of pixels per beam
-        grid_factor = 9.0
-        # cellx and celly
-        import sdbeamutil
-        # recommendation by EOC
-        fwhmfactor = 1.13
-        # hard-coded for ALMA-TP array
-        diameter_m = 12.0 #max([ context.observing_run[antid].antenna.diameter for antid in antenna_list ])
-        obscure_alma = 0.75
-        with casatools.MSMDReader(vislist[0]) as msmd:
-            freq_hz = msmd.meanfreq(spwid)
-        theory_beam_arcsec = sdbeamutil.primaryBeamArcsec(freq_hz, diameter_m, obscure_alma, 10.0, fwhmfactor=fwhmfactor)
-        grid_size = qa.quantity(theory_beam_arcsec, 'arcsec')
-#         grid_size = reference_data.beam_size[spwid]
-        cellx = qa.div(grid_size, grid_factor)
-        celly = cellx
-        cell_in_deg = qa.convert(cellx, 'deg')['value']
-        print 'cell=%s' % (cellx)
-    
-        # nx and ny
-        index_list = common.get_index_list(datatable, antenna_list, spwid_list, pols_list, srctype)
-        
-        if len(index_list) == 0:
-            antenna_name = reference_data.antenna.name
-            LOG.warn('No valid data for source %s antenna %s spw %s. Image will not be created.'%(source_name, antenna_name, spwid))
-            return False
-        
-        index_list.sort()
-    
-        ra = datatable.tb1.getcol('RA').take(index_list)
-        dec = datatable.tb1.getcol('DEC').take(index_list)
-    
-        ra_min = min(ra)
-        ra_max = max(ra)
-        dec_min = min(dec)
-        dec_max = max(dec)
-        dec_correction = 1.0 / math.cos(0.5 * (dec_min + dec_max) / 180.0 * 3.1415926535897931)
-    
-        nx = int((ra_max - ra_min) / (cell_in_deg * dec_correction)) + 1
-        ny = int((dec_max - dec_min) / cell_in_deg) + 1
-        
-        # Adjust nx and ny to be even number for performance (which is 
-        # recommended by imager). 
-        # Also increase nx and ny  by 2 if they are even number. 
-        # This is due to a behavior of the imager. The imager configures 
-        # direction axis as follows:
-        #     reference value: phasecenter
-        #           increment: cellx, celly
-        #     reference pixel: ceil((nx-1)/2), ceil((ny-1)/2)
-        # It means that reference pixel will not be map center if nx/ny 
-        # is even number. It results in asymmetric area coverage on both 
-        # sides of the reference pixel, which may miss certain range of 
-        # (order of 1 pixel) observed area near the edge. 
-        if nx % 2 == 0:
-            nx += 2
-        else:
-            nx += 1
-        if ny % 2 == 0:
-            ny += 2
-        else:
-            ny += 1
-    
-        LOG.info('nx,ny=%s,%s' % (nx, ny))
-    
-        # phasecenter
-        ra_center_in_deg = (ra_min + ra_max) * 0.5
-        dec_center_in_deg = (dec_min + dec_max) * 0.5
-        ra_center = qa.quantity(ra_center_in_deg, 'deg')
-        dec_center = qa.quantity(dec_center_in_deg, 'deg')
-        phasecenter = 'J2000 %s %s' % (qa.formxxx(ra_center, 'hms'),
-                                     qa.formxxx(dec_center, 'dms'))
-        LOG.info('phasecenter=\'%s\'' % (phasecenter))
     
         # mode
         mode = 'channel'
@@ -217,6 +245,7 @@ class SDImagingWorker(common.SingleDishTaskTemplate):
     
 #         temporary_name = imagename.rstrip('/')+'.tmp'
         cleanup_params = ['outfile', 'infiles', 'spw', 'scan']
+        qa = casatools.quanta
         image_args = {'field': field, 
                       'mode': mode,
                       'nchan': nchan,
