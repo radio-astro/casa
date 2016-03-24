@@ -1570,7 +1570,7 @@ void MSTransformManager::setup()
 		separateSysPowerSubtable();
 
 		// CAS-5404. DDI sub-table has to be re-indexed after separating SPW sub-table
-		reindexDDISubTable();
+		if (not combinespws_p) reindexDDISubTable();
 	}
 	else
 	{
@@ -2809,50 +2809,54 @@ void MSTransformManager::separateSpwSubtable()
 			// Calculate bandwidth per output spw
 			Double totalBandwidth = chanWidth(0)*chansPerOutputSpw_p;
 
-			uInt rowIndex = 1;
+			uInt rowIndex = 0;
 			for (uInt spw_i=0; spw_i<nspws_p; spw_i++)
 			{
-				// Add row
-				spwTable.addRow(1,True);
-
 				// Columns that can be just copied
-				spwCols.measFreqRef().put(rowIndex,spwCols.measFreqRef()(0));
-				spwCols.flagRow().put(rowIndex,spwCols.flagRow()(0));
-				spwCols.freqGroup().put(rowIndex,spwCols.freqGroup()(0));
-				spwCols.freqGroupName().put(rowIndex,spwCols.freqGroupName()(0));
-				spwCols.ifConvChain().put(rowIndex,spwCols.ifConvChain()(0));
-				spwCols.name().put(rowIndex,spwCols.name()(0));
-				spwCols.netSideband().put(rowIndex,spwCols.netSideband()(0));
-
-				// Optional columns
-				if (MSTransformDataHandler::columnOk(spwCols.bbcNo()))
+				if (rowIndex > 0)
 				{
-					spwCols.bbcNo().put(rowIndex,spwCols.bbcNo()(0));
-				}
+					// Add row
+					spwTable.addRow(1,True);
 
-				if (MSTransformDataHandler::columnOk(spwCols.assocSpwId()))
-				{
-					spwCols.assocSpwId().put(rowIndex,spwCols.assocSpwId()(0));
-				}
+					spwCols.measFreqRef().put(rowIndex,spwCols.measFreqRef()(0));
+					spwCols.flagRow().put(rowIndex,spwCols.flagRow()(0));
+					spwCols.freqGroup().put(rowIndex,spwCols.freqGroup()(0));
+					spwCols.freqGroupName().put(rowIndex,spwCols.freqGroupName()(0));
+					spwCols.ifConvChain().put(rowIndex,spwCols.ifConvChain()(0));
+					spwCols.name().put(rowIndex,spwCols.name()(0));
+					spwCols.netSideband().put(rowIndex,spwCols.netSideband()(0));
 
-				if (MSTransformDataHandler::columnOk(spwCols.assocNature()))
-				{
-					spwCols.assocNature().put(rowIndex,spwCols.assocNature()(0));
-				}
+					// Optional columns
+					if (MSTransformDataHandler::columnOk(spwCols.bbcNo()))
+					{
+						spwCols.bbcNo().put(rowIndex,spwCols.bbcNo()(0));
+					}
 
-				if (MSTransformDataHandler::columnOk(spwCols.bbcSideband()))
-				{
-					spwCols.bbcSideband().put(rowIndex,spwCols.bbcSideband()(0));
-				}
+					if (MSTransformDataHandler::columnOk(spwCols.assocSpwId()))
+					{
+						spwCols.assocSpwId().put(rowIndex,spwCols.assocSpwId()(0));
+					}
 
-				if (MSTransformDataHandler::columnOk(spwCols.dopplerId()))
-				{
-					spwCols.dopplerId().put(rowIndex,spwCols.dopplerId()(0));
-				}
+					if (MSTransformDataHandler::columnOk(spwCols.assocNature()))
+					{
+						spwCols.assocNature().put(rowIndex,spwCols.assocNature()(0));
+					}
 
-				if (MSTransformDataHandler::columnOk(spwCols.receiverId()))
-				{
-					spwCols.receiverId().put(rowIndex,spwCols.receiverId()(0));
+					if (MSTransformDataHandler::columnOk(spwCols.bbcSideband()))
+					{
+						spwCols.bbcSideband().put(rowIndex,spwCols.bbcSideband()(0));
+					}
+
+					if (MSTransformDataHandler::columnOk(spwCols.dopplerId()))
+					{
+						spwCols.dopplerId().put(rowIndex,spwCols.dopplerId()(0));
+					}
+
+					if (MSTransformDataHandler::columnOk(spwCols.receiverId()))
+					{
+						spwCols.receiverId().put(rowIndex,spwCols.receiverId()(0));
+					}
+
 				}
 
 				if ( (spw_i < nspws_p-1) or (tailOfChansforLastSpw_p == 0) )
@@ -2891,7 +2895,7 @@ void MSTransformManager::separateSpwSubtable()
 			}
 
 			// Remove first row
-			spwTable.removeRow(0);
+			// spwTable.removeRow(0);
 
 			// Flush changes
 			spwTable.flush(True,True);
@@ -3864,34 +3868,46 @@ void MSTransformManager::reindexDDISubTable()
     	MSDataDescColumns ddiCols(ddiTable);
 
     	// Add a new row for each of the separated SPWs
-    	uInt rowIndex = ddiCols.nrow();
+    	uInt rowIndex = 0;
     	for (uInt spw_i=0; spw_i<nspws_p; spw_i++)
     	{
-    		// Add row
-    		ddiTable.addRow(1,True);
+    		if (rowIndex > 0)
+    		{
+        		// Add row
+        		ddiTable.addRow(1,True);
 
-    	    // Copy polID and flagRow from the first original SPW
-    		ddiCols.polarizationId().put(rowIndex,ddiCols.polarizationId()(0));
-    		ddiCols.flagRow().put(rowIndex,ddiCols.flagRow()(0));
+        	    // Copy polID and flagRow from the first original SPW
+        		ddiCols.polarizationId().put(rowIndex,ddiCols.polarizationId()(0));
+        		ddiCols.flagRow().put(rowIndex,ddiCols.flagRow()(0));
+
+        		// Optional columns
+        		if (ddiCols.lagId().isNull()==false and ddiCols.lagId().hasContent()==true)
+        		{
+        			ddiCols.lagId().put(rowIndex,ddiCols.lagId()(0));
+        		}
+    		}
 
     		// Set SPW id separately
     		ddiCols.spectralWindowId().put(rowIndex,ddiStart_p+spw_i);
-
-    		// Optional columns
-    		if (ddiCols.lagId().isNull()==false and ddiCols.lagId().hasContent()==true)
-    		{
-    			ddiCols.lagId().put(rowIndex,ddiCols.lagId()(0));
-    		}
 
     		rowIndex += 1;
     	}
 
         // Delete the old rows
-    	uInt rowsToDelete = ddiCols.nrow()-nspws_p;
-    	for(uInt rowsDeleted=0; rowsDeleted<rowsToDelete; rowsDeleted++)
+    	uInt nrowsToDelete = ddiCols.nrow()-nspws_p;
+    	if (nrowsToDelete > 0)
     	{
-    		ddiTable.removeRow(0);
+        	uInt rownr = ddiCols.nrow()-1;
+        	Vector<uInt> rowsToDelete(nrowsToDelete);
+        	for(uInt idx=0; idx<nrowsToDelete; idx++)
+        	{
+        		rowsToDelete(idx) = rownr;
+        		rownr -= 1;
+        	}
+
+        	ddiTable.removeRow(rowsToDelete);
     	}
+
 
         // Flush changes
         outputMs_p->flush(True);
