@@ -355,14 +355,16 @@ class CalFrom(object):
         'opac'              : 8,
         'rq'                : 9,
         'swpow'             : 10,
-        'finalcal'          : 11
+        'finalcal'          : 11,
+        'uvcont'            : 12
     }
 
     CALTYPE_TO_VISCAL = {
         'gaincal'  : ('G JONES', 'GSPLINE', 'T JONES'),
         'bandpass' : ('B JONES', 'BPOLY'),
         'tsys'     : ('B TSYS',),
-        'antpos'   : ('KANTPOS JONES',)
+        'antpos'   : ('KANTPOS JONES',),
+        'uvcont'   : ('A MUELLER',)
     }
     
     VISCAL = {
@@ -388,6 +390,7 @@ class CalFrom(object):
         'BPOLY'         : 'B Jones Poly (bandpass)',
         'GSPLINE'       : 'G Jones SPLINE (elec. gain)',
         'KANTPOS JONES' : 'KAntPos Jones (antenna position errors)',
+        'A MUELLER'     : 'A Mueller (baseline-based)',
     }
 
     # Hundreds of thousands of CalFroms can be created and stored in a context.
