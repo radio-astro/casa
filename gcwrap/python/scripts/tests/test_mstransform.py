@@ -5459,9 +5459,9 @@ class test_no_reindexing(test_base_compare):
     def test_regrid_SPWs_separately_with_no_reindexing(self):
         '''mstransform: Change ref. frame to LSRK for each SPW separately w/o reindexing'''
 
-        mstransform(vis=self.vis,outputvis=self.outvis,regridms=True,datacolumn='ALL',
+        mstransform(vis=self.vis,outputvis=self.outvis,regridms=True,datacolumn='ALL',correlation='XX',
                     field='SXDF-NB1006-4',spw='1:10~20,2:30~40',outframe='lsrk',reindex=False)
-        mstransform(vis=self.vis,outputvis=self.refvis,regridms=True,datacolumn='ALL',
+        mstransform(vis=self.vis,outputvis=self.refvis,regridms=True,datacolumn='ALL',correlation='XX',
                     field='SXDF-NB1006-4',spw='1:10~20,2:30~40',outframe='lsrk')
         
         listobs(self.outvis, listfile='list.obs')

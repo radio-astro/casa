@@ -1814,13 +1814,6 @@ Bool MSTransformDataHandler::fillPolTable()
 	// Output polarization table
 	MSPolarizationColumns& msPol(msc_p->polarization());
 
-	if (!reindex_p)
-	{
-		MSPolarization &outputPol = msOut_p.polarization();
-		TableCopy::copyRows(outputPol, poltable);
-		return True;
-	}
-
 	// Fill output polarization table
 	uInt nPol = poltable.nrow(); // nOutputPol = nInputPol (no PolId re-index)
 	corrSlice_p.resize(nPol);
