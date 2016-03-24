@@ -2428,12 +2428,12 @@ AveragingTvi2::produceSubchunk ()
         		vb->visCube();
         	}
 
-        	if (averagingOptions_p.contains (AveragingOptions::AverageModel))
+        	if (averagingOptions_p.contains (AveragingOptions::AverageCorrected))
         	{
         		vb->visCubeCorrected();
         	}
 
-        	if (averagingOptions_p.contains (AveragingOptions::AverageCorrected))
+        	if (averagingOptions_p.contains (AveragingOptions::AverageModel))
         	{
         		vb->visCubeModel();
         	}
