@@ -717,7 +717,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //  onebox: a box around a max (box size +/-5pix around max position)
     //  thresh: threshold based auto masking (uses threshold or fracofpeak, and resolution)
     //      
-    os<<"algorithm:"<<alg<<LogIO::POST;
+    os << LogIO::NORMAL2 <<"algorithm:"<<alg<<LogIO::POST;
     TempImage<Float>* tempres = new TempImage<Float>(imstore->residual()->shape(), imstore->residual()->coordinates()); 
     Array<Float> resdata;
     Array<Float> maskdata;
@@ -749,7 +749,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Quantity::read(qreso,resolution);
     //cerr<<"input resolution : qreso.getValue()="<<qreso.getValue()<<endl;
     if( alg=="thresh" ) 
-      os<<"Input resolution : "<<qreso.getValue()<<" "<<qreso.getUnit()<<LogIO::POST;
+      os<< LogIO::NORMAL2 << "Input resolution : "<<qreso.getValue()<<" "<<qreso.getUnit()<<LogIO::POST;
     Float sigma = 0.0;
     // if fracofpeak (fraction of a peak) is specified, use it to set a threshold
     if ( fracofpeak != 0.0 ) {
@@ -761,7 +761,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // evaluate threshold input 
       //cerr<<"qthresh="<<qthresh.get().getValue()<<" unit="<<qthresh.getUnit()<<endl;
       if( alg=="thresh" ) 
-        os << "Input threshold (qthresh) ="<<qthresh.getValue(qthresh.getUnit())<<" "<<qthresh.getUnit()<<LogIO::POST;
+        os << LogIO::NORMAL2 << "Input threshold (qthresh) ="<<qthresh.getValue(qthresh.getUnit())<<" "<<qthresh.getUnit()<<LogIO::POST;
       if (qthresh.getUnit()!="") {
         // use qthresh and set sigma =0.0 to ignore
         sigma = 0.0;
@@ -828,6 +828,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      if (resolution.get().getValue() ) {
        //npix = 2*Int(abs( resolution.getValue()/qinc.getValue(resolution.getUnit()) ) );
        npix = 2*Int(abs( resolution/(qinc.convert(resolution),qinc) ).getValue() );
+       os << LogIO::DEBUG1 << "Use the input resolution:"<<resolution<<" fo binning (2*resollution)"<< LogIO::POST;
      }
      else {
        //use beam from residual or psf
@@ -848,13 +849,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
            beam = CasaImageBeamSet(psfInfo.getBeamSet()).getCommonBeam(); 
          }
          Quantity bmaj = beam.getMajor();
-         npix = 2*Int( abs( (bmaj/(qinc.convert(bmaj),bmaj)).get().getValue() ) );
+         npix = 2*Int( abs( (bmaj/(qinc.convert(bmaj),qinc)).get().getValue() ) );
+         os << LogIO::DEBUG1 << "Use a beam size(maj):"<<bmaj<<" as resolution of binning (2*beam)"<< LogIO::POST;
        }
        else {
           throw(AipsError("No restoring beam(s) in the input image/psf or resolution is given"));
        }
      }
-     //cerr<<"npix="<<npix<<endl;
+     os << LogIO::DEBUG1 << "npix="<<npix<< LogIO::POST;
      if (npix==0) {
        os << "Resolution too small. No binning (nbin=1)  is applied input image to evaluate the threshold." << LogIO::POST;
        npix=1;
@@ -880,11 +882,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        if ( rmsthresh==0.0 ) 
          { throw(AipsError("Threshold for automask is not set"));}
      }
-     os<<"sigma="<<sigma<<" rmsthresh="<<rmsthresh<<LogIO::POST;
+     os << LogIO::DEBUG1 <<"sigma="<<sigma<<" rmsthresh="<<rmsthresh<<LogIO::POST;
 
-     thresh = rmsthresh / sqrt(npix);
-     //cerr<<" thresh="<<thresh<<endl;
+     if (rmsthresh > maxval) {
+       os << LogIO::WARN <<" The threshold value for making a mask is greater than max value in the image. Mask image will be empty."<< LogIO::POST;
+     }
+     thresh = 3.0*rmsthresh / sqrt(npix);
+     os << LogIO::DEBUG1 <<"final thresh="<<thresh<<LogIO::POST;
      // apply threshold to rebinned image to generate a temp image mask
+     // TODO: need warn if thresh exceed the max in the binned image
      LatticeExpr<Float> tempthresh( iif( tempRebinnedIm > thresh, 1.0, 0.0) );
      TempImage<Float> tempthreshIm(tempRebinnedIm.shape(), tempRebinnedIm.coordinates() );
      tempthreshIm.copyData(tempthresh);
