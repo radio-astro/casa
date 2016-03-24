@@ -410,6 +410,7 @@ protected:
 	void regridSpwSubTable();
 	void regridAndCombineSpwSubtable();
 	void regridSpwAux(	Int spwId,
+						MFrequency::Types spwInputRefFrame,
 						Vector<Double> &inputCHAN_FREQ,
 						Vector<Double> &inputCHAN_WIDTH,
 						Vector<Double> &originalCHAN_FREQ,
@@ -1312,7 +1313,7 @@ protected:
 	String callib_p;
 	Record callibRec_p;
 
-	// Spw averaging parameters
+	// Spw avergain parameters
 	Bool spwAverage_p;
 
 	// Weight Spectrum parameters

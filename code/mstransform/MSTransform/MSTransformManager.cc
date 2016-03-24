@@ -186,7 +186,7 @@ void MSTransformManager::initialize()
 	callib_p = "";
 	callibRec_p = Record();
 
-    // Spw averaging
+	// Spw averaging
 	spwAverage_p = False;
 
 	// Weight Spectrum parameters
@@ -1176,6 +1176,7 @@ void MSTransformManager::open()
 
 	// Once the input MS is opened we can get the selection indexes,
 	// in this way we also validate the selection parameters
+	dataHandler_p->setReindex(reindex_p);
 	initDataSelectionParams();
 
 	// Determine channel specification for output MS
@@ -1270,9 +1271,9 @@ void MSTransformManager::open()
     */
 
     // jagonzal (CAS-5349): Reindex antenna columns when there is antenna selection
-    Vector<Int> antennaRemapper = dataHandler_p->getAntennaRemapper();
-    if (!baselineSelection_p.empty())
+    if (!baselineSelection_p.empty() and reindex_p)
     {
+    	Vector<Int> antennaRemapper = dataHandler_p->getAntennaRemapper();
     	for (uInt oldIndex=0;oldIndex<antennaRemapper.size();oldIndex++)
     	{
     		inputOutputAntennaIndexMap_p[oldIndex] = antennaRemapper[oldIndex];
@@ -1569,7 +1570,7 @@ void MSTransformManager::setup()
 		separateSysPowerSubtable();
 
 		// CAS-5404. DDI sub-table has to be re-indexed after separating SPW sub-table
-		reindexDDISubTable();
+		if (not combinespws_p) reindexDDISubTable();
 	}
 	else
 	{
@@ -1844,70 +1845,74 @@ void MSTransformManager::initDataSelectionParams()
 {
 	MSSelection mssel;
 
-	if (!observationSelection_p.empty())
+	if (reindex_p)
 	{
-		mssel.setObservationExpr(observationSelection_p);
-		Vector<Int> observationList = mssel.getObservationList(inputMs_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
-				<< "Selected Observations Ids are " << observationList << LogIO::POST;
-
-		for (uInt index=0; index < observationList.size(); index++)
+		if (!observationSelection_p.empty())
 		{
-			inputOutputObservationIndexMap_p[observationList(index)] = index;
+			mssel.setObservationExpr(observationSelection_p);
+			Vector<Int> observationList = mssel.getObservationList(inputMs_p);
+			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+					<< "Selected Observations Ids are " << observationList << LogIO::POST;
+
+			for (uInt index=0; index < observationList.size(); index++)
+			{
+				inputOutputObservationIndexMap_p[observationList(index)] = index;
+			}
+		}
+
+		if (!arraySelection_p.empty())
+		{
+			mssel.setArrayExpr(arraySelection_p);
+			Vector<Int> arrayList = mssel.getSubArrayList(inputMs_p);
+			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+					<< "Selected Arrays Ids are " << arrayList << LogIO::POST;
+
+			for (uInt index=0; index < arrayList.size(); index++)
+			{
+				inputOutputArrayIndexMap_p[arrayList(index)] = index;
+			}
+		}
+
+		if (!scanSelection_p.empty())
+		{
+			mssel.setScanExpr(scanSelection_p);
+			Vector<Int> scanList = mssel.getScanList(inputMs_p);
+			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+					<< "Selected Scans Ids are " << scanList << LogIO::POST;
+
+			for (uInt index=0; index < scanList.size(); index++)
+			{
+				inputOutputScanIndexMap_p[scanList(index)] = index;
+			}
+		}
+
+		if (!scanIntentSelection_p.empty())
+		{
+			mssel.setStateExpr(scanIntentSelection_p);
+			Vector<Int> scanIntentList = mssel.getStateObsModeList(inputMs_p);
+			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+					<< "Selected Scans Intents Ids are " << scanIntentList << LogIO::POST;
+
+			for (uInt index=0; index < scanIntentList.size(); index++)
+			{
+				inputOutputScanIntentIndexMap_p[scanIntentList(index)] = index;
+			}
+		}
+
+		if (!fieldSelection_p.empty())
+		{
+			mssel.setFieldExpr(fieldSelection_p);
+			Vector<Int> fieldList = mssel.getFieldList(inputMs_p);
+			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+					<< "Selected Fields Ids are " << fieldList << LogIO::POST;
+
+			for (uInt index=0; index < fieldList.size(); index++)
+			{
+				inputOutputFieldIndexMap_p[fieldList(index)] = index;
+			}
 		}
 	}
 
-	if (!arraySelection_p.empty())
-	{
-		mssel.setArrayExpr(arraySelection_p);
-		Vector<Int> arrayList = mssel.getSubArrayList(inputMs_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
-				<< "Selected Arrays Ids are " << arrayList << LogIO::POST;
-
-		for (uInt index=0; index < arrayList.size(); index++)
-		{
-			inputOutputArrayIndexMap_p[arrayList(index)] = index;
-		}
-	}
-
-	if (!scanSelection_p.empty())
-	{
-		mssel.setScanExpr(scanSelection_p);
-		Vector<Int> scanList = mssel.getScanList(inputMs_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
-				<< "Selected Scans Ids are " << scanList << LogIO::POST;
-
-		for (uInt index=0; index < scanList.size(); index++)
-		{
-			inputOutputScanIndexMap_p[scanList(index)] = index;
-		}
-	}
-
-	if (!scanIntentSelection_p.empty())
-	{
-		mssel.setStateExpr(scanIntentSelection_p);
-		Vector<Int> scanIntentList = mssel.getStateObsModeList(inputMs_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
-				<< "Selected Scans Intents Ids are " << scanIntentList << LogIO::POST;
-
-		for (uInt index=0; index < scanIntentList.size(); index++)
-		{
-			inputOutputScanIntentIndexMap_p[scanIntentList(index)] = index;
-		}
-	}
-
-	if (!fieldSelection_p.empty())
-	{
-		mssel.setFieldExpr(fieldSelection_p);
-		Vector<Int> fieldList = mssel.getFieldList(inputMs_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
-				<< "Selected Fields Ids are " << fieldList << LogIO::POST;
-
-		for (uInt index=0; index < fieldList.size(); index++)
-		{
-			inputOutputFieldIndexMap_p[fieldList(index)] = index;
-		}
-	}
 
 	if (!spwSelection_p.empty())
 	{
@@ -1950,12 +1955,15 @@ void MSTransformManager::initDataSelectionParams()
 		//	2	2		1
 
 		// Do the mapping of DD between input and output
-		for(uInt selection_ii=0;selection_ii<nddi;selection_ii++)
+		if (reindex_p)
 		{
-			// Get dd id and set the input-output dd map
-			// This will only be used to write the DD ids in the main table
-			ddid = spwddi[selection_ii];
-			inputOutputDDIndexMap_p[ddid] = selection_ii + ddiStart_p;
+			for(uInt selection_ii=0;selection_ii<nddi;selection_ii++)
+			{
+				// Get dd id and set the input-output dd map
+				// This will only be used to write the DD ids in the main table
+				ddid = spwddi[selection_ii];
+				inputOutputDDIndexMap_p[ddid] = selection_ii + ddiStart_p;
+			}
 		}
 
 	    IPosition shape = spwchan.shape();
@@ -1977,11 +1985,14 @@ void MSTransformManager::initDataSelectionParams()
 			channelWidth = channelStop-channelStart+1;
 			channelSelector_p->add (spw, channelStart, channelWidth,channelStep);
 
-			if (inputOutputSPWIndexMap_p.find(spw) == inputOutputSPWIndexMap_p.end())
+			if (numOfSelChanMap_p.find(spw) == numOfSelChanMap_p.end())
 			{
-				inputOutputSPWIndexMap_p[spw] = outputSpwIndex + ddiStart_p;
+				if (reindex_p)
+				{
+					inputOutputSPWIndexMap_p[spw] = outputSpwIndex + ddiStart_p;
 
-				outputInputSPWIndexMap_p[outputSpwIndex] = spw;
+					outputInputSPWIndexMap_p[outputSpwIndex] = spw;
+				}
 
 				numOfSelChanMap_p[spw] = channelWidth;
 
@@ -2116,7 +2127,8 @@ void MSTransformManager::initDataSelectionParams()
 
 		// Get the DDs related to the polarization selection
 		// when there is no spw selection
-		if (spwSelection_p.empty()){
+		if (spwSelection_p.empty() and reindex_p)
+		{
 			Vector<Int> polddids = mssel.getDDIDList(inputMs_p);
 
 			// Make the in/out DD mapping
@@ -2149,11 +2161,22 @@ void MSTransformManager::initRefFrameTransParams()
 	}
 	else
 	{
-		spwTable = outputMs_p->spectralWindow();
+		 spwTable = outputMs_p->spectralWindow();
 	}
-
 	MSSpWindowColumns spwCols(spwTable);
-    inputReferenceFrame_p = MFrequency::castType(spwCols.measFreqRef()(0));
+
+	if (reindex_p)
+	{
+		inputReferenceFrame_p = MFrequency::castType(spwCols.measFreqRef()(0));
+	}
+	else
+	{
+		Int firstSelectedDDI = selectedInputMsCols_p->dataDescId()(0);
+		MSDataDescription ddiTable = outputMs_p->dataDescription();
+		MSDataDescColumns ddiCols(ddiTable);
+		Int firstSelectedSPW = ddiCols.spectralWindowId()(firstSelectedDDI);
+		inputReferenceFrame_p = MFrequency::castType(spwCols.measFreqRef()(firstSelectedSPW));
+	}
 
     // Parse output reference frame
     refFrameTransformation_p = True;
@@ -2179,7 +2202,7 @@ void MSTransformManager::initRefFrameTransParams()
     }
 
 
-    // Determine observatory position from the first row in the observation sub-table of the output/selected MS
+    // Determine observatory position from the first row in the observation sub-table of the output (selected) MS
     MSObservation observationTable;
     if (userBufferMode_p)
     {
@@ -2189,7 +2212,6 @@ void MSTransformManager::initRefFrameTransParams()
     {
     	observationTable = outputMs_p->observation();
     }
-
     MSObservationColumns observationCols(observationTable);
     String observatoryName = observationCols.telescopeName()(0);
     MeasTable::Observatory(observatoryPosition_p,observatoryName);
@@ -2231,30 +2253,31 @@ void MSTransformManager::initRefFrameTransParams()
     {
     	String phaseCenter = phaseCenterPar_p->toString(True);
 
+    	// Determine phase center from the first row in the FIELD sub-table of the output (selected) MS
     	if (phaseCenter.empty())
     	{
-        	// Determine phase center from the first row in the FIELD sub-table of the output/selected MS
     		MSFieldColumns *fieldCols;
-    	    if (userBufferMode_p)
-    	    {
-    	    	fieldCols = inputMSFieldCols_p;
-    	    }
-    	    else
-    	    {
-    	    	MSField fieldTable = outputMs_p->field();
-    	    	fieldCols = new MSFieldColumns(fieldTable);
-    	    }
+    		if (userBufferMode_p)
+    		{
+    			fieldCols = inputMSFieldCols_p;
+    		}
+    		else
+    		{
+    			MSField fieldTable = outputMs_p->field();
+    			fieldCols = new MSFieldColumns(fieldTable);
+    		}
 
+    		Int firstSelectedField = reindex_p? 0:selectedInputMsCols_p->fieldId()(0);
 
     		// CAS-6778: Support for new ref. frame SOURCE that requires radial velocity correction
     		if (radialVelocityCorrection_p)
     		{
-    			radialVelocity_p = fieldCols->radVelMeas(0, referenceTime_p.get("s").getValue());
-    			phaseCenter_p = fieldCols->phaseDirMeas(0,referenceTime_p.get("s").getValue());
+    			radialVelocity_p = fieldCols->radVelMeas(firstSelectedField, referenceTime_p.get("s").getValue());
+    			phaseCenter_p = fieldCols->phaseDirMeas(firstSelectedField,referenceTime_p.get("s").getValue());
     		}
     		else
     		{
-    			phaseCenter_p = fieldCols->phaseDirMeasCol()(0)(IPosition(1,0));
+    			phaseCenter_p = fieldCols->phaseDirMeasCol()(firstSelectedField)(IPosition(1,0));
     		}
     	}
     	// Parse phase center
@@ -2312,6 +2335,9 @@ void MSTransformManager::regridSpwSubTable()
     		spwId = spw_idx;
     	}
 
+    	// jagonzal: Skip this SPW in non-reindex mode
+    	if ((!reindex_p) and (numOfSelChanMap_p.find(spwId) == numOfSelChanMap_p.end())) continue;
+
     	logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
     			<< "Regridding SPW with Id " <<  spwId << LogIO::POST;
 
@@ -2324,7 +2350,7 @@ void MSTransformManager::regridSpwSubTable()
         Vector<Double> regriddedCHAN_WIDTH;
         Vector<Double> inputCHAN_FREQ;
         Vector<Double> inputCHAN_WIDTH;
-        regridSpwAux(spwId,originalChanFreq,originalChanWidth,inputCHAN_FREQ,inputCHAN_WIDTH,regriddedCHAN_FREQ,regriddedCHAN_WIDTH,string("Input"));
+        regridSpwAux(spwId,MFrequency::castType(spwCols.measFreqRef()(spw_idx)),originalChanFreq,originalChanWidth,inputCHAN_FREQ,inputCHAN_WIDTH,regriddedCHAN_FREQ,regriddedCHAN_WIDTH,string("Input"));
         spwInfo inputSpw(inputCHAN_FREQ,inputCHAN_WIDTH);
         spwInfo outputSpw(regriddedCHAN_FREQ,regriddedCHAN_WIDTH);
 
@@ -2401,6 +2427,19 @@ void MSTransformManager::regridAndCombineSpwSubtable()
     vector<channelInfo> inputChannels;
     for(uInt spw_idx=0; spw_idx<nInputSpws; spw_idx++)
     {
+    	Int spwId;
+		if (outputInputSPWIndexMap_p.size())
+		{
+			spwId = outputInputSPWIndexMap_p[spw_idx];
+		}
+		else
+		{
+			spwId = spw_idx;
+		}
+
+		// jagonzal: Skip this SPW in non-reindex mode
+    	if ((!reindex_p) and (numOfSelChanMap_p.find(spw_idx) == numOfSelChanMap_p.end())) continue;
+
     	Vector<Double> originalChanFreq(chanFreqCol(spw_idx));
     	Vector<Double> originalChanWidth(chanWidthCol(spw_idx));
     	Vector<Double> inputEffectiveBW(effectiveBWCol(spw_idx));
@@ -2410,14 +2449,7 @@ void MSTransformManager::regridAndCombineSpwSubtable()
     	for (uInt chan_idx=0;chan_idx<nChannels;chan_idx++)
     	{
     		channelInfo channelInfo_idx;
-    		if (outputInputSPWIndexMap_p.size())
-    		{
-    			channelInfo_idx.SPW_id = outputInputSPWIndexMap_p[spw_idx];
-    		}
-    		else
-    		{
-    			channelInfo_idx.SPW_id = spw_idx;
-    		}
+    		channelInfo_idx.SPW_id = spwId;
 
     		channelInfo_idx.inpChannel = chan_idx;
     		channelInfo_idx.CHAN_FREQ = originalChanFreq(chan_idx);
@@ -2470,14 +2502,20 @@ void MSTransformManager::regridAndCombineSpwSubtable()
 	// there the overlap is 1 even though combchannel->overlap(inputchannel) is slightly smaller than 1
 	inputOutputChanFactorMap_p.clear();
 
-	for (auto combChanIter = combinedChannels.begin(); combChanIter != combinedChannels.end(); combChanIter++) {
-		for (auto k = 0lu; k < combChanIter->contribFrac.size(); k++) {
+	for (auto combChanIter = combinedChannels.begin(); combChanIter != combinedChannels.end(); combChanIter++)
+	{
+		for (auto k = 0lu; k < combChanIter->contribFrac.size(); k++)
+		{
 			// combineSpws sorts spw so we need to map back to input selection to get correct input spw
 			uInt spw_idx = combChanIter->contribSPW_id[k];
 			if (outputInputSPWIndexMap_p.size())
 			{
 				spw_idx = outputInputSPWIndexMap_p[spw_idx];
 			}
+
+			// jagonzal: Skip this SPW in non-reindex mode
+	    	if ((!reindex_p) and (numOfSelChanMap_p.find(spw_idx) == numOfSelChanMap_p.end())) continue;
+
 			inputOutputChanFactorMap_p[combChanIter->inpChannel].
 			push_back(channelContribution(spw_idx, combChanIter->contribChannel[k], combChanIter->inpChannel, combChanIter->contribFrac[k]));
 		}
@@ -2488,7 +2526,7 @@ void MSTransformManager::regridAndCombineSpwSubtable()
     Vector<Double> regriddedCHAN_WIDTH;
     Vector<Double> inputCHAN_FREQ;
     Vector<Double> inputCHAN_WIDTH;
-    regridSpwAux(0,combinedCHAN_FREQ,combinedCHAN_WIDTH,inputCHAN_FREQ,inputCHAN_WIDTH,regriddedCHAN_FREQ,regriddedCHAN_WIDTH,string("Combined"));
+    regridSpwAux(0,inputReferenceFrame_p,combinedCHAN_FREQ,combinedCHAN_WIDTH,inputCHAN_FREQ,inputCHAN_WIDTH,regriddedCHAN_FREQ,regriddedCHAN_WIDTH,string("Combined"));
     spwInfo inputSpw(inputCHAN_FREQ,inputCHAN_WIDTH);
     spwInfo outputSpw(regriddedCHAN_FREQ,regriddedCHAN_WIDTH);
 
@@ -2546,6 +2584,7 @@ void MSTransformManager::regridAndCombineSpwSubtable()
 // Auxiliary method common whenever re-gridding is necessary (with or without combining the SPWs)
 // -----------------------------------------------------------------------
 void MSTransformManager::regridSpwAux(	Int spwId,
+										MFrequency::Types spwInputRefFrame,
 										Vector<Double> &originalCHAN_FREQ,
 										Vector<Double> &originalCHAN_WIDTH,
 										Vector<Double> &inputCHAN_FREQ,
@@ -2605,7 +2644,7 @@ void MSTransformManager::regridSpwAux(	Int spwId,
 											inputCHAN_FREQ,
 											inputCHAN_WIDTH,
 											phaseCenter_p,
-											inputReferenceFrame_p,
+											spwInputRefFrame,
 											referenceTime_p,
 											observatoryPosition_p,
 											mode_p,
@@ -2624,7 +2663,6 @@ void MSTransformManager::regridSpwAux(	Int spwId,
 				 << LogIO::EXCEPTION;
 	}
 
-
 	/*
 	ostringstream oss_debug;
     oss_debug 	<< " phaseCenter_p=" << phaseCenter_p << endl
@@ -2640,8 +2678,7 @@ void MSTransformManager::regridSpwAux(	Int spwId,
 				<< " velocityType_p=" << velocityType_p << endl
 				<< " radialVelocity_p=" << radialVelocity_p;
     logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) << oss_debug.str() << LogIO::POST;
-    */
-
+	*/
 
     // jagonzal (new WEIGHT/SIGMA convention in CASA 4.2.2)
 	if (newWeightFactorMap_p.find(spwId) == newWeightFactorMap_p.end())
@@ -2796,50 +2833,54 @@ void MSTransformManager::separateSpwSubtable()
 			// Calculate bandwidth per output spw
 			Double totalBandwidth = chanWidth(0)*chansPerOutputSpw_p;
 
-			uInt rowIndex = 1;
+			uInt rowIndex = 0;
 			for (uInt spw_i=0; spw_i<nspws_p; spw_i++)
 			{
-				// Add row
-				spwTable.addRow(1,True);
-
 				// Columns that can be just copied
-				spwCols.measFreqRef().put(rowIndex,spwCols.measFreqRef()(0));
-				spwCols.flagRow().put(rowIndex,spwCols.flagRow()(0));
-				spwCols.freqGroup().put(rowIndex,spwCols.freqGroup()(0));
-				spwCols.freqGroupName().put(rowIndex,spwCols.freqGroupName()(0));
-				spwCols.ifConvChain().put(rowIndex,spwCols.ifConvChain()(0));
-				spwCols.name().put(rowIndex,spwCols.name()(0));
-				spwCols.netSideband().put(rowIndex,spwCols.netSideband()(0));
-
-				// Optional columns
-				if (MSTransformDataHandler::columnOk(spwCols.bbcNo()))
+				if (rowIndex > 0)
 				{
-					spwCols.bbcNo().put(rowIndex,spwCols.bbcNo()(0));
-				}
+					// Add row
+					spwTable.addRow(1,True);
 
-				if (MSTransformDataHandler::columnOk(spwCols.assocSpwId()))
-				{
-					spwCols.assocSpwId().put(rowIndex,spwCols.assocSpwId()(0));
-				}
+					spwCols.measFreqRef().put(rowIndex,spwCols.measFreqRef()(0));
+					spwCols.flagRow().put(rowIndex,spwCols.flagRow()(0));
+					spwCols.freqGroup().put(rowIndex,spwCols.freqGroup()(0));
+					spwCols.freqGroupName().put(rowIndex,spwCols.freqGroupName()(0));
+					spwCols.ifConvChain().put(rowIndex,spwCols.ifConvChain()(0));
+					spwCols.name().put(rowIndex,spwCols.name()(0));
+					spwCols.netSideband().put(rowIndex,spwCols.netSideband()(0));
 
-				if (MSTransformDataHandler::columnOk(spwCols.assocNature()))
-				{
-					spwCols.assocNature().put(rowIndex,spwCols.assocNature()(0));
-				}
+					// Optional columns
+					if (MSTransformDataHandler::columnOk(spwCols.bbcNo()))
+					{
+						spwCols.bbcNo().put(rowIndex,spwCols.bbcNo()(0));
+					}
 
-				if (MSTransformDataHandler::columnOk(spwCols.bbcSideband()))
-				{
-					spwCols.bbcSideband().put(rowIndex,spwCols.bbcSideband()(0));
-				}
+					if (MSTransformDataHandler::columnOk(spwCols.assocSpwId()))
+					{
+						spwCols.assocSpwId().put(rowIndex,spwCols.assocSpwId()(0));
+					}
 
-				if (MSTransformDataHandler::columnOk(spwCols.dopplerId()))
-				{
-					spwCols.dopplerId().put(rowIndex,spwCols.dopplerId()(0));
-				}
+					if (MSTransformDataHandler::columnOk(spwCols.assocNature()))
+					{
+						spwCols.assocNature().put(rowIndex,spwCols.assocNature()(0));
+					}
 
-				if (MSTransformDataHandler::columnOk(spwCols.receiverId()))
-				{
-					spwCols.receiverId().put(rowIndex,spwCols.receiverId()(0));
+					if (MSTransformDataHandler::columnOk(spwCols.bbcSideband()))
+					{
+						spwCols.bbcSideband().put(rowIndex,spwCols.bbcSideband()(0));
+					}
+
+					if (MSTransformDataHandler::columnOk(spwCols.dopplerId()))
+					{
+						spwCols.dopplerId().put(rowIndex,spwCols.dopplerId()(0));
+					}
+
+					if (MSTransformDataHandler::columnOk(spwCols.receiverId()))
+					{
+						spwCols.receiverId().put(rowIndex,spwCols.receiverId()(0));
+					}
+
 				}
 
 				if ( (spw_i < nspws_p-1) or (tailOfChansforLastSpw_p == 0) )
@@ -2878,7 +2919,7 @@ void MSTransformManager::separateSpwSubtable()
 			}
 
 			// Remove first row
-			spwTable.removeRow(0);
+			// spwTable.removeRow(0);
 
 			// Flush changes
 			spwTable.flush(True,True);
@@ -3851,34 +3892,46 @@ void MSTransformManager::reindexDDISubTable()
     	MSDataDescColumns ddiCols(ddiTable);
 
     	// Add a new row for each of the separated SPWs
-    	uInt rowIndex = ddiCols.nrow();
+    	uInt rowIndex = 0;
     	for (uInt spw_i=0; spw_i<nspws_p; spw_i++)
     	{
-    		// Add row
-    		ddiTable.addRow(1,True);
+    		if (rowIndex > 0)
+    		{
+        		// Add row
+        		ddiTable.addRow(1,True);
 
-    	    // Copy polID and flagRow from the first original SPW
-    		ddiCols.polarizationId().put(rowIndex,ddiCols.polarizationId()(0));
-    		ddiCols.flagRow().put(rowIndex,ddiCols.flagRow()(0));
+        	    // Copy polID and flagRow from the first original SPW
+        		ddiCols.polarizationId().put(rowIndex,ddiCols.polarizationId()(0));
+        		ddiCols.flagRow().put(rowIndex,ddiCols.flagRow()(0));
+
+        		// Optional columns
+        		if (ddiCols.lagId().isNull()==false and ddiCols.lagId().hasContent()==true)
+        		{
+        			ddiCols.lagId().put(rowIndex,ddiCols.lagId()(0));
+        		}
+    		}
 
     		// Set SPW id separately
     		ddiCols.spectralWindowId().put(rowIndex,ddiStart_p+spw_i);
-
-    		// Optional columns
-    		if (ddiCols.lagId().isNull()==false and ddiCols.lagId().hasContent()==true)
-    		{
-    			ddiCols.lagId().put(rowIndex,ddiCols.lagId()(0));
-    		}
 
     		rowIndex += 1;
     	}
 
         // Delete the old rows
-    	uInt rowsToDelete = ddiCols.nrow()-nspws_p;
-    	for(uInt rowsDeleted=0; rowsDeleted<rowsToDelete; rowsDeleted++)
+    	uInt nrowsToDelete = ddiCols.nrow()-nspws_p;
+    	if (nrowsToDelete > 0)
     	{
-    		ddiTable.removeRow(0);
+        	uInt rownr = ddiCols.nrow()-1;
+        	Vector<uInt> rowsToDelete(nrowsToDelete);
+        	for(uInt idx=0; idx<nrowsToDelete; idx++)
+        	{
+        		rowsToDelete(idx) = rownr;
+        		rownr -= 1;
+        	}
+
+        	ddiTable.removeRow(rowsToDelete);
     	}
+
 
         // Flush changes
         outputMs_p->flush(True);
@@ -4213,6 +4266,9 @@ void MSTransformManager::dropNonUniformWidthChannels()
     	{
     		spwId = spw_idx;
     	}
+
+    	// Skip this SPW in non-reindex mode
+    	if ((!reindex_p) and (numOfSelChanMap_p.find(spwId) == numOfSelChanMap_p.end())) continue;
 
 		uInt nchanInAvg = (uInt)floor((widthVector(nChans-1) / (widthVector(0) / freqbinMap_p[spwId])) + 0.5);
 
@@ -8156,16 +8212,25 @@ template <class T> void MSTransformManager::interpol1D(	Int inputSpw,
 															Vector<T> &outputDataStripe,
 															Vector<Bool> &outputFlagsStripe)
 {
-	InterpolateArray1D<Double,T>::interpolate(	outputDataStripe, // Output data
-	    										outputFlagsStripe, // Output flags
-	    										inputOutputSpwMap_p[inputSpw].second.CHAN_FREQ, // Out chan freq
-	    										inputOutputSpwMap_p[inputSpw].first.CHAN_FREQ_aux, // In chan freq
-	    										inputDataStripe, // Input data
-	    										inputFlagsStripe, // Input Flags
-	    										interpolationMethod_p, // Interpolation method
-	    										False, // A good data point has its flag set to False
-	    										False // If False extrapolated data points are set flagged
-							    				);
+	if (inputDataStripe.size() > 1)
+	{
+		InterpolateArray1D<Double,T>::interpolate(	outputDataStripe, // Output data
+		    										outputFlagsStripe, // Output flags
+		    										inputOutputSpwMap_p[inputSpw].second.CHAN_FREQ, // Out chan freq
+		    										inputOutputSpwMap_p[inputSpw].first.CHAN_FREQ_aux, // In chan freq
+		    										inputDataStripe, // Input data
+		    										inputFlagsStripe, // Input Flags
+		    										interpolationMethod_p, // Interpolation method
+		    										False, // A good data point has its flag set to False
+		    										False // If False extrapolated data points are set flagged
+								    				);
+	}
+	else
+	{
+		outputDataStripe = inputDataStripe(0);
+		outputFlagsStripe = True;
+	}
+
 	return;
 }
 
