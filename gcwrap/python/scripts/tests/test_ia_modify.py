@@ -137,6 +137,21 @@ class ia_modify_test(unittest.TestCase):
             cc = myia.getchunk()
             myia.done()
             self.assertTrue((bb == cc).all())
-    
+
+    def test_history(self):
+        """Test history is added"""
+        mycl = cltool()
+        mycl.addcomponent(flux=1, dir=['J2000', '00:00:00.00', '00.00.00.0'])
+        myia = iatool()
+        myia.fromshape("", [200, 200, 1, 1])
+        self.assertTrue(
+            myia.modify(model=mycl.torecord()), "Failed to run ia.modify"
+        )
+        msgs = myia.history()
+        mycl.done()
+        myia.done()
+        self.assertTrue("ia.modify" in msgs[-2], "History not written")
+        self.assertTrue("ia.modify" in msgs[-1], "History not written")
+ 
 def suite():
     return [ia_modify_test]

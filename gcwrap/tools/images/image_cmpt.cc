@@ -2905,6 +2905,55 @@ record* image::miscinfo() {
     }
     return nullptr;
 }
+bool image::modify(
+    const record& model, const variant& region,
+    const variant& vmask, bool subtract, bool list,
+    bool stretch
+) {
+    _log << _ORIGIN;
+    if (detached()) {
+        return False;
+    }
+    try {
+        ThrowIf(
+            ! _imageF,
+            "This method only supports real valued images"
+        );
+        String error;
+        std::unique_ptr<Record> mymodel(toRecord(model));
+        ComponentList cl;
+        ThrowIf(
+            ! cl.fromRecord(error, *mymodel),
+            "model is an invalid componentlist record"
+        );
+        SHARED_PTR<Record> Region = _getRegion(region, False);
+        String mask = _getMask(vmask);
+        ComponentImager ci(
+            _imageF, Region.get(), mask
+        );
+        ci.setComponentList(cl);
+        ci.setSubtract(subtract);
+        ci.setStretch(stretch);
+        ci.modify(list);
+        _stats.reset();
+        vector<String> names {
+            "model", "region", "mask",
+            "subtract", "list", "stretch"
+        };
+        vector<variant> values {
+            model, region, vmask,
+            subtract, list, stretch
+        };
+        _addHistory(String(__func__), names, values);
+        return True;
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return False;
+}
 
 image* image::pbcor(
     const variant& pbimage, const string& outfile,
@@ -3240,49 +3289,7 @@ void image::_reset() {
 
 
 
-bool image::modify(
-	const ::casac::record& model, const variant& region,
-	const ::casac::variant& vmask, bool subtract, bool list,
-	bool stretch
-) {
-	_log << _ORIGIN;
-	if (detached()) {
-		return false;
-	}
-	try {
-		ThrowIf(
-			! _imageF,
-			"This method only supports real valued images"
-		);
-		String error;
-		std::unique_ptr<Record> mymodel(toRecord(model));
-		ComponentList cl;
-		ThrowIf(
-			! cl.fromRecord(error, *mymodel),
-			"model is an invalid componentlist record"
-		);
-		SHARED_PTR<Record> Region = _getRegion(region, False);
-		String mask = vmask.toString();
-		if (mask == "[]") {
-			mask = "";
-		}
-		ComponentImager ci(
-			_imageF, Region.get(), mask
-		);
-		ci.setComponentList(cl);
-		ci.setSubtract(subtract);
-		ci.setStretch(stretch);
-		ci.modify(list);
-		_stats.reset();
-		return True;
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	return False;
-}
+
 
 record* image::maxfit(
 	const variant& region, bool doPoint,
