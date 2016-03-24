@@ -24,7 +24,7 @@ class MstransformInputs(basetask.StandardInputs):
         self._init_properties(vars())
 
     # Revisit this later
-    #    For now use a default name convention
+    #    For now use a simple default naming convention
     #    Borrow the output file name list handling technique from
     #    the hif_flagdata interface
     @property
@@ -128,9 +128,9 @@ class MstransformInputs(basetask.StandardInputs):
 
         # Filter out field and spw for now and use defaults for
         # now. Note that the trailing , is required
-        for ignore in ('field', 'spw', ):
-            if ignore in d:
-                del d[ignore]
+        #for ignore in ('field', 'spw', ):
+            #if ignore in d:
+                #del d[ignore]
 
         # Force the data column to be 'corrected' and the
         # new (with casa 4.6) reindex parameter set to False 

@@ -14,4 +14,4 @@ from .mstransform import Mstransform
 #pipelineqa.registry.add_handler(qa.MstransformListQAHandler())
 qaadapter.registry.register_to_dataset_topic(mstransform.MstransformResults)
 
-weblog.add_renderer(Mstransform, basetemplates.T2_4MDetailsDefaultRenderer(description='Generate the TARGET source MS'), group_by=weblog.UNGROUPED)
+weblog.add_renderer(Mstransform, basetemplates.T2_4MDetailsDefaultRenderer(description='Generate imaging MS(s) from calibrated MS(s)'), group_by=weblog.UNGROUPED)
