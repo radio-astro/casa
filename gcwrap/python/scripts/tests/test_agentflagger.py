@@ -705,8 +705,8 @@ class test_bpass(test_base):
         assert abs(summary['report0']['correlation']['Sol1']['flagged'] - 30427) <= 5
         
         # flags from second summary, tfcrop+extend
-        assert abs(summary['report2']['flagged'] - 2*30427) <= 10
-        assert abs(summary['report2']['correlation']['Sol2']['flagged'] - 30427) <= 5        
+        assert abs(summary['report1']['flagged'] - 2*30427) <= 10
+        assert abs(summary['report1']['correlation']['Sol2']['flagged'] - 30427) <= 5        
 
 class test_MS(test_base):
 
@@ -746,13 +746,15 @@ class test_MS(test_base):
         aflocal.done()
         
         # It creates 2 reports per summary agent. One is type='summary',
-        # ther other is type='plotpoints'
+        # the other is type='plotpoints'
+        # jagonzal: Not anymore, now it creates only 1 report per summary
+        # agent unless display is 'report' or 'both'
         self.assertEqual(summary['report0']['name'],'summary_1')
-        self.assertEqual(summary['report2']['name'],'summary_2')
-        self.assertEqual(summary['report4']['name'],'summary_3')
+        self.assertEqual(summary['report1']['name'],'summary_2')
+        self.assertEqual(summary['report2']['name'],'summary_3')
         self.assertEqual(summary['report0']['flagged'], 0)
-        self.assertEqual(summary['report2']['flagged'], 0)
-        self.assertEqual(summary['report4']['spw']['0']['flagged'], summary['report4']['spw']['0']['total'])
+        self.assertEqual(summary['report1']['flagged'], 0)
+        self.assertEqual(summary['report2']['spw']['0']['flagged'], summary['report2']['spw']['0']['total'])
 
              
 class test_display(test_base):

@@ -94,6 +94,7 @@ private:
 	Bool spwPolarizationCounts;
 	Bool baselineCounts;
 	Bool fieldCounts;
+	String display_p;
 
 	std::map<std::string, summary* > fieldSummaryMap;
 	summary *currentSummary;

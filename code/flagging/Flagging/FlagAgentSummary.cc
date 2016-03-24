@@ -43,6 +43,7 @@ FlagAgentSummary::FlagAgentSummary(FlagDataHandler *dh, Record config):
     spwPolarizationCounts = False;
     baselineCounts = False;
     fieldCounts = False;
+    display_p = String("none");
 
     setAgentParameters(config);
 
@@ -193,6 +194,19 @@ FlagAgentSummary::setAgentParameters(Record config)
         *logger_p << LogIO::NORMAL << " Field breakdown deactivated " << LogIO::POST;
     }
 
+	exists = config.fieldNumber ("display");
+	if (exists >= 0)
+	{
+		if( config.type(exists) != TpString )
+		{
+			throw( AipsError ( "Parameter 'display' must be of type 'string'" ) );
+		}
+
+		display_p = config.asString("display");
+		*logger_p << LogIO::NORMAL << " display is: " << display_p << LogIO::POST;
+	}
+
+
     return;
 }
 
@@ -234,7 +248,8 @@ FlagAgentSummary::preProcessBuffer(const vi::VisBuffer2 &visBuffer)
         }
         else
         {
-        	fieldSummaryMap[fieldId_str] = new summary();
+        	summary *newsummary = new summary();
+        	fieldSummaryMap.insert(std::pair<std::string, summary*>(fieldId_str,newsummary) );
         	currentSummary = fieldSummaryMap[fieldId_str];
         }
     }
@@ -370,7 +385,10 @@ FlagAgentSummary::getReport()
     ////////  return FlagReport("summary", agentName_p, getResult());
 
     // Add a list of reports from the flag-count dictionary
-    summarylist.addReport ( buildFlagCountPlots() );
+    if ( (display_p == String("report")) or (display_p == String("both")) )
+    {
+        summarylist.addReport ( buildFlagCountPlots() );
+    }
 
     //         // Make a report (or a list of them )for a view, and add it to the list
     //         FlagReport viewrep("plotline",agentName_p,"title","xaxis","yaxis")
@@ -383,6 +401,9 @@ FlagAgentSummary::getReport()
 FlagReport
 FlagAgentSummary::buildFlagCountPlots()
 {
+    logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+    *logger_p << LogIO::NORMAL << "Generating flag count reports for display" << LogIO::POST;
+
     FlagReport countRepList("list");
 
     // (1) Plot of fraction flagged vs frequency (only if spwchan==True)
@@ -468,9 +489,10 @@ FlagAgentSummary::buildFlagCountPlots()
         countRepList.addReport( subRep2 );
     }
 
+    Int nBase= baselineCounts? 0:currentSummary->accumtotal["baseline"].size();
+
     // (3) Plot of fraction flagged vs baseline-length
-    Int nBase=currentSummary->accumtotal["baseline"].size();
-    if(nBase>0 && baselineCounts==True) // Perhaps put a parameter to control this ?
+    if(nBase>0) // Perhaps put a parameter to control this ?
     {
         Vector<Float> baselineLength(nBase), flagFraction(nBase);
         Int baseCount=0;
@@ -509,7 +531,7 @@ FlagAgentSummary::buildFlagCountPlots()
     }
 
     // jagonzal: CAS-3450
-    if(nBase>0 && baselineCounts==True)
+    if(nBase>0)
     {
         Int totalNAnt = flagDataHandler_p->antennaNames_p->size();
         // Add ant1xant2 summary views
