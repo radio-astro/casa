@@ -310,8 +310,8 @@ def remove_cloud(vis=None, correct_ms=False, offsetstable='', verbose=False, dop
     dooffsets=False
     if offsetstable!='':
         try:
-            os.system('echo "0 0 0 0 0" > mydummy.txt')
-            ok = mytb.fromascii(offsetstable, sep=" ", columnnames=['ANTENNA','OFFSETS'], datatypes=['I', 'R4'], 
+            os.system('echo "0 0 0 0 0 0" > mydummy.txt')
+            ok = mytb.fromascii(offsetstable, sep=" ", columnnames=['TIME','ANTENNA','OFFSETS'], datatypes=['D', 'I', 'D4'], 
                                 asciifile='mydummy.txt')
             mytb.close()
         except:
@@ -330,8 +330,7 @@ def remove_cloud(vis=None, correct_ms=False, offsetstable='', verbose=False, dop
     if correct_ms:
 	mytb.open(vis,nomodify=False)
     else:
-	mytb.open(vis,nomodify=True)    # for testing, dont modify asdm
-
+	mytb.open(vis,nomodify=True)    # dont modify 
 
     tsrcn=np.zeros(4)
     # values for each ant
@@ -342,7 +341,7 @@ def remove_cloud(vis=None, correct_ms=False, offsetstable='', verbose=False, dop
 
     for iant in range(nant):
         casalog.post('- Processing antenna#'+str(iant)+' ('+antnames[iant]+') ...', 'INFO')
-        tb1=mytb.query("ANTENNA1==%d && PROCESSOR_ID==%d" % (iant,proc_id), sortlist='TIME')
+        tb1=mytb.query("PROCESSOR_ID==%d && ANTENNA1==%d" % (proc_id,iant), sortlist='TIME')
         temp=tb1.getcol('DATA')
         nsamples=len(temp[0][0])
         pwvna=np.zeros(nsamples)
@@ -350,10 +349,13 @@ def remove_cloud(vis=None, correct_ms=False, offsetstable='', verbose=False, dop
         tau_con=np.zeros(nsamples)
 
         offsets=None
+        rowtimes=None
         if dooffsets:
+            rowtimes = tb1.getcol('TIME')
             offsets=np.zeros((4,nsamples))
 
         for isam in range(nsamples):
+
             tsrc=[(temp[0][0][isam]).real, (temp[0][1][isam]).real, (temp[0][2][isam]).real, (temp[0][3][isam]).real]
 
             # got temps, now convert to pwv
@@ -373,10 +375,12 @@ def remove_cloud(vis=None, correct_ms=False, offsetstable='', verbose=False, dop
             casalog.post('   Writing the offset values for antenna '+str(iant)+' to '+offsetstable, 'INFO')
             startrow=tbo.nrows()
             tbo.addrows(nsamples)
+            tbo.putcol('TIME', rowtimes, startrow)
             tbo.putcol('OFFSETS', offsets, startrow)
             ants = np.empty(nsamples)
             ants.fill(iant)
             tbo.putcol('ANTENNA', ants, startrow)
+            
 
         if correct_ms:
             casalog.post('   Writing new values for antenna '+str(iant)+' to Main table of '+vis, 'INFO')
