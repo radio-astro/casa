@@ -2811,6 +2811,80 @@ bool image::makecomplex(
     return False;
 }
 
+vector<string> image::maskhandler(
+    const string& op, const vector<string>& name
+) {
+    try {
+        _log << _ORIGIN;
+        if (detached()) {
+            return vector<string>(0);
+        }
+        String oper = op;
+        oper.upcase();
+        vector<string> res = _imageF
+            ? _handleMask(_imageF, oper, name)
+            : _handleMask(_imageC, oper, name);
+        if (res.empty()) {
+            res = vector<string>(1, "T");
+        }
+        if (
+            oper.startsWith("SET") || oper.startsWith("DEL")
+            || oper.startsWith("REN") || oper.startsWith("COPY")
+        ) {
+            vector<String> names {"op", "name"};
+            vector<variant> values {op, name};
+            _addHistory(__func__, names, values);
+            _stats.reset(0);
+        }
+        return res;
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return vector<string>();
+}
+
+template<class T> vector<string>  image::_handleMask(
+    SPIIT myimage, const String& oper,
+    const vector<string>& name
+) {
+    ImageMaskHandler<T> imh(myimage);
+    if (oper.startsWith("SET")) {
+        auto myname = name.empty() ? "" : name[0];
+        imh.set(myname);
+        return vector<string>();
+    }
+    else if (oper.startsWith("DEF")) {
+        return vector<string>(1, imh.defaultMask());
+    }
+    else if (oper.startsWith("DEL")) {
+        imh.deleteMasks(std::set<casa::String>(name.begin(), name.end()));
+        return vector<string>();
+    }
+    else if (oper.startsWith("REN")) {
+        ThrowIf(
+            name.size() != 2,
+            "name must be an array of size exactly two. "
+            + String::toString(name.size()) + " values were "
+            "given"
+        );
+        imh.rename(name[0], name[1]);
+        return vector<string>();
+    }
+    else if (oper.startsWith("GET")) {
+        return fromVectorString(imh.get());
+    }
+    else if (oper.startsWith("COP")) {
+        imh.copy(name[0], name[1]);
+        return vector<string>();
+    }
+    else {
+        ThrowCc("Unknown operation " + oper);
+    }
+}
+
 image* image::pbcor(
     const variant& pbimage, const string& outfile,
     bool overwrite, const string& box,
@@ -3142,66 +3216,6 @@ void image::_reset() {
 
 
 
-std::vector<std::string> image::maskhandler(
-	const std::string& op,
-	const std::vector<std::string>& name
-) {
-	try {
-		_log << _ORIGIN;
-		if (detached()) {
-			return std::vector<string>(0);
-		}
-		vector<string> res = _imageF
-			? _handleMask(_imageF, op, name)
-			: _handleMask(_imageC, op, name);
-		if (res.empty()) {
-			res = vector<string>(1, "T");
-		}
-		_stats.reset(0);
-		return res;
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	return vector<string>();
-}
-
-template<class T> vector<string>  image::_handleMask(
-	SPIIT myimage, const std::string& op,
-	const std::vector<std::string>& name
-) {
-	ImageMaskHandler<T> imh(myimage);
-	casa::String oper = op;
-	oper.upcase();
-	if (oper.startsWith("SET")) {
-		auto myname = name.empty() ? "" : name[0];
-		imh.set(myname);
-		return vector<string>();
-	}
-	else if (oper.startsWith("DEF")) {
-		return vector<string>(1, imh.defaultMask());
-	}
-	else if (oper.startsWith("DEL")) {
-		imh.deleteMasks(std::set<casa::String>(name.begin(), name.end()));
-		return vector<string>();
-	}
-	else if (oper.startsWith("REN")) {
-		imh.rename(name[0], name[1]);
-		return vector<string>();
-	}
-	else if (oper.startsWith("GET")) {
-		return fromVectorString(imh.get());
-	}
-	else if (oper.startsWith("COP")) {
-		imh.copy(name[0], name[1]);
-		return vector<string>();
-	}
-	else {
-		ThrowCc("Unknown operation " + op);
-	}
-}
 
 record* image::miscinfo() {
 	try {

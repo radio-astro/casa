@@ -103,8 +103,8 @@ SHARED_PTR<casa::Record> _getRegion(
 ) const;
 
 template<class T> vector<string>  _handleMask(
-	SPIIT myimage, const std::string& op,
-	const std::vector<std::string>& name
+	SPIIT myimage, const String& op,
+	const vector<string>& name
 );
 
 template <class T> static image* _hanning(

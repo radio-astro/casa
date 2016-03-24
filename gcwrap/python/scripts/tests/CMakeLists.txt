@@ -81,6 +81,7 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_ia_insert.py
   test_ia_isconform.py
   test_ia_makecomplex.py
+  test_ia_maskhandler.py
   test_ia_pad.py
   test_ia_putchunk.py
   test_ia_pv.py
