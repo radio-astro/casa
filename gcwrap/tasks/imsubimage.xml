@@ -62,6 +62,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <description>Stretch the mask if necessary and possible? </description>
             <value>False</value>
         </param>
+        <param type="intArray" name="keepaxes" subparam="true">
+            <description>If dropdeg=True, these are the degenerate axes to keep. Nondegenerate axes are implicitly always kept.</description>
+            <value/>
+        </param>
+        
         <constraints>
             <when param="mask">
                 <notequals type="string" value="">
@@ -76,6 +81,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                         <value>False</value>
                     </default>
                 </notequals>
+            </when>
+            <when param="dropdeg">
+                <equals type="bool" value="True">
+                    <default param="keepaxes" type="intArray">
+                        <value>[]</value>
+                    </default>
+                </equals>
             </when>
         </constraints>
     </input>
@@ -98,6 +110,9 @@ overwrite        If True, a pre-existing file of the same name as outfile will b
 verbose          Post additional informative messages to the logger.
 stretch          Stretch the input mask if necessary and possible. Only used if a mask is specified.
                  See help par.stretch.
+keepaxes         If dropdeg=True, these are the degenerate axes to keep. Nondegenerate axes are
+                 implicitly always kept.
+       
 
 OVERVIEW
 

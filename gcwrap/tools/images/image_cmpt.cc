@@ -2885,6 +2885,27 @@ template<class T> vector<string>  image::_handleMask(
     }
 }
 
+record* image::miscinfo() {
+    try {
+        _log << LogOrigin("image", "miscinfo");
+        if (detached()) {
+            return nullptr;
+        }
+        if (_imageF) {
+            return fromRecord(_imageF->miscInfo());
+        }
+        else {
+            return fromRecord(_imageC->miscInfo());
+        }
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return nullptr;
+}
+
 image* image::pbcor(
     const variant& pbimage, const string& outfile,
     bool overwrite, const string& box,
@@ -3217,26 +3238,7 @@ void image::_reset() {
 
 
 
-record* image::miscinfo() {
-	try {
-		_log << LogOrigin("image", "miscinfo");
-		if (detached()) {
-			return nullptr;
-		}
-		if (_imageF) {
-			return fromRecord(_imageF->miscInfo());
-		}
-		else {
-			return fromRecord(_imageC->miscInfo());
-		}
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	return nullptr;
-}
+
 
 bool image::modify(
 	const ::casac::record& model, const variant& region,
@@ -4893,19 +4895,6 @@ template <class T> SPIIT image::_twopointcorrelation(
 
 		//SHARED_PTR<ImageAnalysis> ia;
 		if (_imageF) {
-			/*
-			ia.reset(
-				new ImageAnalysis(
-					_subimage<Float>(
-						SHARED_PTR<ImageInterface<Float> >(
-							_imageF->cloneII()
-						),
-						outfile, *regionRec, mask, dropDegenerateAxes,
-						overwrite, list, stretch, keepaxes
-					)
-				)
-			);
-			*/
 			auto im = _subimage<Float>(
 				SHARED_PTR<ImageInterface<Float> >(
 					_imageF->cloneII()
@@ -4917,19 +4906,6 @@ template <class T> SPIIT image::_twopointcorrelation(
 			return res;
 		}
 		else {
-			/*
-			ia.reset(
-				new ImageAnalysis(
-					_subimage<Complex>(
-						SHARED_PTR<ImageInterface<Complex> >(
-							_imageC->cloneII()
-						),
-						outfile, *regionRec, mask, dropDegenerateAxes,
-						overwrite, list, stretch, keepaxes
-					)
-				)
-			);
-			*/
 			auto im = _subimage<Complex>(
 				SHARED_PTR<ImageInterface<Complex> >(
 					_imageC->cloneII()
@@ -4940,10 +4916,6 @@ template <class T> SPIIT image::_twopointcorrelation(
 			auto res = wantreturn ? new image(im) : nullptr;
 			return res;
 		}
-		/*
-		image *res = wantreturn ? new image(ia) : 0;
-		return res;
-		*/
 	}
 	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()

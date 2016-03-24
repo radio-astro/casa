@@ -262,7 +262,8 @@ class ia_subimage_test(unittest.TestCase):
         zz = myia.subimage("", dropdeg=True, keepaxes=[0])
         self.assertTrue((zz.shape() == [10, 20, 30]).all())
         
-        myia.fromshape("", [10, 20, 1, 1])
+        imagename = "keep.im"
+        myia.fromshape(imagename, [10, 20, 1, 1])
         zz = myia.subimage("", dropdeg=False)
         self.assertTrue((zz.shape() == [10, 20, 1, 1]).all())
         zz = myia.subimage("", dropdeg=True)
@@ -275,9 +276,34 @@ class ia_subimage_test(unittest.TestCase):
         self.assertTrue((zz.shape() == [10, 20, 1, 1]).all())
         zz = myia.subimage("", dropdeg=True, keepaxes=[3])
         self.assertTrue((zz.shape() == [10, 20, 1]).all())
-        
         zz.done()
         myia.done()
+        
+        outfile = "keep_out.im"
+        imsubimage(imagename, outfile=outfile, dropdeg=False, overwrite=True)
+        zz.open(outfile)
+        self.assertTrue((zz.shape() == [10, 20, 1, 1]).all())
+        zz.done()
+        imsubimage(imagename, outfile=outfile, dropdeg=True, overwrite=True)
+        zz.open(outfile)
+        self.assertTrue((zz.shape() == [10, 20]).all())
+        zz.done()
+        imsubimage(imagename, outfile=outfile, dropdeg=False, keepaxes=[0], overwrite=True)
+        zz.open(outfile)
+        self.assertTrue((zz.shape() == [10, 20, 1, 1]).all())
+        zz.done()
+        imsubimage(imagename, outfile=outfile, dropdeg=True, keepaxes=[0], overwrite=True)
+        zz.open(outfile)
+        self.assertTrue((zz.shape() == [10, 20]).all())
+        zz.done()
+        imsubimage(imagename, outfile=outfile, dropdeg=False, keepaxes=[0], overwrite=True)
+        zz.open(outfile)
+        self.assertTrue((zz.shape() == [10, 20, 1, 1]).all())
+        zz.done()
+        imsubimage(imagename, outfile=outfile, dropdeg=True, keepaxes=[3], overwrite=True)
+        zz.open(outfile)
+        self.assertTrue((zz.shape() == [10, 20, 1]).all())
+        zz.done()
 
 def suite():
     return [ia_subimage_test]

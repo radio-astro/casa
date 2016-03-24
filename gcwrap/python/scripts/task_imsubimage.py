@@ -2,7 +2,7 @@ from taskinit import *
 
 def imsubimage(
     imagename, outfile, box, region, chans, stokes, mask, dropdeg,
-    overwrite, verbose, stretch
+    overwrite, verbose, stretch, keepaxes
 ):
     casalog.origin('imsubimage')
     myia = iatool()
@@ -19,7 +19,7 @@ def imsubimage(
             )
         outia = myia.subimage(
             outfile=outfile, region=region, mask=mask, dropdeg=dropdeg,
-            overwrite=overwrite, list=verbose, stretch=stretch
+            overwrite=overwrite, list=verbose, stretch=stretch, keepaxes=keepaxes
         )
         return True
     except Exception, instance:
