@@ -620,8 +620,6 @@ class test_Regridms3(test_base):
         self.assertEqual(spw_col.keys().__len__(), 1, 'Wrong number of rows in DD table')
         self.assertEqual(spw_col['r1'][0], 0,'Error re-indexing DATA_DESCRIPTION table')
 
-# Uncomment after seg fault is fixed
-    #@unittest.skip('Skip until seg fault in InterpolateArray1D.tcc is fixed.')
     def test_regrid3_2(self):
         '''mstransform: Combine spw and regrid MS with two spws, select one field and 2 spws'''
         # cvel: test8
@@ -1089,7 +1087,7 @@ class test_SeparateSPWs(test_base):
         mytbMain.close()
 
     def test_CAS_5403_2(self):
-        '''mstransform: combine spw 0,1,2 into one spw and then break it doen in 4 spws.
+        '''mstransform: combine spw 0,1,2 into one spw and then break it down in 4 spws.
                         and then check that DDI subtable is reindexed properly'''
         self.outputms = "test_5403_2.ms"
         mstransform(vis=self.vis, outputvis=self.outputms,regridms=True,spw='0,1,2',nspw=4)
@@ -5461,9 +5459,9 @@ class test_no_reindexing(test_base_compare):
     def test_regrid_SPWs_separately_with_no_reindexing(self):
         '''mstransform: Change ref. frame to LSRK for each SPW separately w/o reindexing'''
 
-        mstransform(vis=self.vis,outputvis=self.outvis,regridms=True,datacolumn='ALL',
+        mstransform(vis=self.vis,outputvis=self.outvis,regridms=True,datacolumn='ALL',correlation='XX',
                     field='SXDF-NB1006-4',spw='1:10~20,2:30~40',outframe='lsrk',reindex=False)
-        mstransform(vis=self.vis,outputvis=self.refvis,regridms=True,datacolumn='ALL',
+        mstransform(vis=self.vis,outputvis=self.refvis,regridms=True,datacolumn='ALL',correlation='XX',
                     field='SXDF-NB1006-4',spw='1:10~20,2:30~40',outframe='lsrk')
         
         listobs(self.outvis, listfile='list.obs')
