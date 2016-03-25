@@ -1809,10 +1809,11 @@ HPX HEALPix grid.  -->
 </description>
 	    <value type="string"></value>
     </param>
-    <param type="string" name="maskresolution" subparam="true">
-	   <shortdescription>resolution for automasking (string, e.g. "10arcsec")</shortdescription>
+    <param type="any" name="maskresolution" subparam="true">
+	   <shortdescription>resolution for automasking (string, e.g. "10arcsec", or a float value as multicative factor of the beam)</shortdescription>
 <description>resolution for automasking
                        Examples : maskresolution='10arcsec'
+                                  maskresolution=2.0 (2 x bmaj)
                                   maskresolution=''  (default, use a restoring beam major axis)
 </description>
 	    <value type="string"></value>

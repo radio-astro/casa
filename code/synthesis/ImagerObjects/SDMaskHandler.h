@@ -103,12 +103,14 @@ public:
                 const String& alg="",
                 const String& threshold="",
                 const Float& fracpeak=0.0,
-                const String& resolution="");
+                const String& resolution="",
+                const Float& resbybeam=0.0);
   // automask algorithms...  
   void autoMaskByThreshold (ImageInterface<Float>& mask,
                            const ImageInterface<Float>& res, 
                            const ImageInterface<Float>& psf, 
                            const Quantity& resolution, 
+                           const Float& resbybeam, 
                            const Quantity& qthreshold, 
                            const Float& fracofpeak, 
                            const Record& theStats,

@@ -3146,6 +3146,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
             if( inrec.dataType("maskthreshold")==TpString )
               {
                 err += readVal( inrec, String("maskthreshold"), maskThreshold );
+                //deal with the case a string is a float value without unit
+                Quantity testThresholdString;
+                Quantity::read(testThresholdString,maskThreshold);
+                if( testThresholdString.getUnit()=="" )
+                  {
+                    if(testThresholdString.getValue()<1.0)
+                      {
+                          fracOfPeak = testThresholdString.getValue();
+                          maskThreshold=String("");
+                      }
+                  }
               }
             else if( inrec.dataType("maskthreshold")==TpFloat || inrec.dataType("maskthreshold")==TpDouble )
               {
@@ -3164,9 +3175,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                 err += "maskthreshold must be a string, float, or double";
               }
            }
-         if( inrec.isDefined("maskresolution") ) 
-           { 
-             err += readVal(inrec, String("maskresolution"), maskResolution );
+        if( inrec.isDefined("maskresolution") ) 
+          { 
+            if( inrec.dataType("maskresolution")==TpString )
+              {
+                err += readVal(inrec, String("maskresolution"), maskResolution );
+                //deal with the case a string is a float value without unit
+                Quantity testResolutionString;
+                Quantity::read(testResolutionString,maskResolution);
+                if( testResolutionString.getUnit()=="" )
+                  {
+                      maskResByBeam = testResolutionString.getValue();
+                      maskResolution=String("");
+                  }
+              }
+            else if( inrec.dataType("maskresolution")==TpFloat || inrec.dataType("maskresolution")==TpDouble )
+              {
+
+                err += readVal( inrec, String("maskresolution"), maskResByBeam );
+              }
+            else 
+              {
+                err += "maskresolution must be a string, float, or double";
+              }
            }
              
        

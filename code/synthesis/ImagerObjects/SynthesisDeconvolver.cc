@@ -168,6 +168,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         itsMaskThreshold = decpars.maskThreshold;
         itsFracOfPeak = decpars.fracOfPeak;
         itsMaskResolution = decpars.maskResolution;
+        itsMaskResByBeam = decpars.maskResByBeam;
 	itsIsInteractive = decpars.interactive;
       }
     catch(AipsError &x)
@@ -407,7 +408,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
               itsMaskHandler->autoMaskWithinPB( itsImages, itsPBMask);
             }
             else { 
-              itsMaskHandler->autoMask( itsImages, itsAutoMaskAlgorithm, itsMaskThreshold, itsFracOfPeak, itsMaskResolution);
+              itsMaskHandler->autoMask( itsImages, itsAutoMaskAlgorithm, itsMaskThreshold, itsFracOfPeak, itsMaskResolution, itsMaskResByBeam);
             }
           }
           else if( itsMaskType=="user" && itsMaskList[0] != "" ) {

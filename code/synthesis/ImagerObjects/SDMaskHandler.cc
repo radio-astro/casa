@@ -709,7 +709,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                                const String& alg, 
                                const String& threshold, 
                                const Float& fracofpeak, 
-                               const String& resolution)
+                               const String& resolution,
+                               const Float& resbybeam)
   {
     LogIO os( LogOrigin("SDMaskHandler","autoMask",WHERE) );
     
@@ -747,9 +748,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Quantity qthresh(0,"");
     Quantity qreso(0,"");
     Quantity::read(qreso,resolution);
-    //cerr<<"input resolution : qreso.getValue()="<<qreso.getValue()<<endl;
-    if( alg=="thresh" ) 
-      os<< LogIO::NORMAL2 << "Input resolution : "<<qreso.getValue()<<" "<<qreso.getUnit()<<LogIO::POST;
     Float sigma = 0.0;
     // if fracofpeak (fraction of a peak) is specified, use it to set a threshold
     if ( fracofpeak != 0.0 ) {
@@ -760,8 +758,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     else if(Quantity::read(qthresh,threshold) ) {
       // evaluate threshold input 
       //cerr<<"qthresh="<<qthresh.get().getValue()<<" unit="<<qthresh.getUnit()<<endl;
-      if( alg=="thresh" ) 
-        os << LogIO::NORMAL2 << "Input threshold (qthresh) ="<<qthresh.getValue(qthresh.getUnit())<<" "<<qthresh.getUnit()<<LogIO::POST;
       if (qthresh.getUnit()!="") {
         // use qthresh and set sigma =0.0 to ignore
         sigma = 0.0;
@@ -798,7 +794,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       makeAutoMask(imstore);
     }
     else if (alg==String("thresh")) {
-      autoMaskByThreshold(*tempmask, *tempres, *temppsf, qreso, qthresh, fracofpeak, thestats, sigma);
+      autoMaskByThreshold(*tempmask, *tempres, *temppsf, qreso, resbybeam, qthresh, fracofpeak, thestats, sigma);
       //cerr<<" automaskbyThreshold...."<<endl;
       tempmask->get(maskdata);
       imstore->mask()->put(maskdata);
@@ -809,7 +805,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SDMaskHandler::autoMaskByThreshold(ImageInterface<Float>& mask,
                                           const ImageInterface<Float>& res, 
                                           const ImageInterface<Float>& psf, 
-                                          const Quantity& resolution, 
+                                          const Quantity& resolution,
+                                          const Float& resbybeam,
                                           const Quantity& qthresh, 
                                           const Float& fracofpeak,
                                           const Record& stats, 
@@ -828,7 +825,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      if (resolution.get().getValue() ) {
        //npix = 2*Int(abs( resolution.getValue()/qinc.getValue(resolution.getUnit()) ) );
        npix = 2*Int(abs( resolution/(qinc.convert(resolution),qinc) ).getValue() );
-       os << LogIO::DEBUG1 << "Use the input resolution:"<<resolution<<" fo binning (2*resolution)"<< LogIO::POST;
+       os << LogIO::NORMAL2 << "Use the input resolution:"<<resolution<<" fo binning (=2*resolution)"<< LogIO::POST;
      }
      else {
        //use beam from residual or psf
@@ -849,14 +846,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
            beam = CasaImageBeamSet(psfInfo.getBeamSet()).getCommonBeam(); 
          }
          Quantity bmaj = beam.getMajor();
-         npix = 2*Int( abs( (bmaj/(qinc.convert(bmaj),qinc)).get().getValue() ) );
-         os << LogIO::DEBUG1 << "Use a beam size(maj):"<<bmaj<<" as resolution of binning (2*beam)"<< LogIO::POST;
+         if (resbybeam > 0.0 ) {
+           npix = 2*Int( Double(resbybeam) * abs( (bmaj/(qinc.convert(bmaj),qinc)).get().getValue() ) );
+           os << LogIO::NORMAL2 << "Use "<< resbybeam <<" x  beam size(maj)="<< Double(resbybeam)*bmaj <<" for binning. Actual bin size is 2x the value."<< LogIO::POST;
+         }
+         else {
+           npix = 2*Int( abs( (bmaj/(qinc.convert(bmaj),qinc)).get().getValue() ) );
+           os << LogIO::NORMAL2 << "Use a beam size(maj):"<<bmaj<<" for binning. Actual bin size is 2x the value."<< LogIO::POST;
+         } 
        }
        else {
           throw(AipsError("No restoring beam(s) in the input image/psf or resolution is given"));
        }
      }
-     os << LogIO::DEBUG1 << "npix="<<npix<< LogIO::POST;
+     os << LogIO::DEBUG1 << "Acutal bin size used: npix="<<npix<< LogIO::POST;
      if (npix==0) {
        os << "Resolution too small. No binning (nbin=1)  is applied input image to evaluate the threshold." << LogIO::POST;
        npix=1;
@@ -868,11 +871,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      stats.get(RecordFieldId("max"), max);
      minMax(minmaxval,maxmaxval,max);
      if (fracofpeak) {
+       os << LogIO::NORMAL2 <<"Threshold by fraction of the peak: "<<fracofpeak<< LogIO::POST;
        rmsthresh = maxmaxval * fracofpeak; 
      }
      else if (sigma) {
        stats.get(RecordFieldId("rms"), rms);
        minMax(minval,maxval,rms); 
+       os << LogIO::NORMAL2 <<"Threshold by sigma * rms: "<<sigma<< LogIO::POST;
        //cerr<<"minval="<<minval<<" maxval="<<maxval<<endl;
        rmsthresh = maxval * sigma;
      }      
@@ -885,10 +890,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      os << LogIO::DEBUG1 <<"sigma="<<sigma<<" rmsthresh="<<rmsthresh<<LogIO::POST;
      os << LogIO::DEBUG1 <<"max="<<maxmaxval<<endl;
      if (rmsthresh > maxmaxval) {
-       os << LogIO::WARN <<" The threshold value for making a mask is greater than max value in the image. Mask image will be empty."<< LogIO::POST;
+       os << LogIO::WARN <<" The threshold value for making a mask is greater than max value in the image. Mask will be a full image."<< LogIO::POST;
      }
      thresh = 3.0*rmsthresh / sqrt(npix);
-     os << LogIO::DEBUG1 <<"final thresh="<<thresh<<LogIO::POST;
+     os << LogIO::DEBUG1 <<"final thresh (for binned image) ="<<thresh<<LogIO::POST;
      // apply threshold to rebinned image to generate a temp image mask
      // TODO: need warn if thresh exceed the max in the binned image
      LatticeExpr<Float> tempthresh( iif( tempRebinnedIm > thresh, 1.0, 0.0) );

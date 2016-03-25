@@ -150,6 +150,7 @@ protected:
   String itsMaskThreshold;
   Float itsFracOfPeak;
   String itsMaskResolution;
+  Float itsMaskResByBeam;
   Bool itsIsMaskLoaded; // Try to get rid of this state variable ! 
   Bool itsIsInteractive;
  
