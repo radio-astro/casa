@@ -32,7 +32,26 @@ class DataTableAnalyser(object):
         # 
         if hasattr(self.scantablelist, 'ms_reduction_group'):
             LOG.debug('MS based inspection has been done. Set reduction group to MS based one.')
-            self.reduction_group = self.scantablelist.ms_reduction_group
+            ms_reduction_group = self.scantablelist.ms_reduction_group
+            self.reduction_group = {}
+            for (group_id, ms_group) in ms_reduction_group.items():
+                frequency_range = [ms_group.min_frequency, ms_group.max_frequency]
+                nchan = ms_group.nchan
+                group = singledish.ReductionGroupDesc(frequency_range=frequency_range, nchan=nchan)
+                for member in ms_group:
+                    ms_index = self.scantablelist.measurement_sets.index(member.ms)
+                    ant_offset = 0
+                    for i in xrange(ms_index):
+                        ms = self.scantablelist.measurement_sets[i]
+                        ant_offset += len(ms.antennas)
+                    antenna = member.antenna + ant_offset
+                    spw = member.spw
+                    dd = member.ms.get_data_description(spw=spw)
+                    polarization = member.ms.polarizations[dd.pol_id]
+                    corr_type_string = polarization.corr_type_string.flatten()
+                    pols = map(lambda x: singledish.Polarization.to_polid[x], corr_type_string)
+                    group.add_member(antenna, spw, pols)
+                self.reduction_group[group_id] = group
             return
         
         # reset reduction_group

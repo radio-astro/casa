@@ -114,8 +114,12 @@ OnlineFlagIndex = 3
 def absolute_path(name):
     return os.path.abspath(os.path.expanduser(os.path.expandvars(name)))
 
-def timetable_key(table_type, antenna, spw, polarization):
-    return 'TIMETABLE_%s_ANT%s_SPW%s_POL%s'%(table_type,antenna,spw,polarization)    
+def timetable_key(table_type, antenna, spw, polarization=None):
+    if polarization is None:
+        key = 'TIMETABLE_%s_ANT%s_SPW%s'%(table_type,antenna,spw)    
+    else:
+        key = 'TIMETABLE_%s_ANT%s_SPW%s_POL%s'%(table_type,antenna,spw,polarization) 
+    return key   
     
 class DataTableImpl( object ):
     """
@@ -138,7 +142,7 @@ class DataTableImpl( object ):
                            0,        1,        2
     Note for Flags: 1 is valid, 0 is invalid
     """ 
-    def __init__(self, name=None):
+    def __init__(self, name=None, readonly=None):
         """
         name (optional) -- name of DataTable
         """
@@ -152,12 +156,18 @@ class DataTableImpl( object ):
         (self.tb1,self.tb2) = gentools( ['tb','tb'] )
         self.isopened = False
         if name is None or len(name) == 0:
-            self._create()
+            if readonly is None:
+                readonly = False
+            self._create(readonly=readonly)
         elif not os.path.exists(name):
-            self._create()
+            if readonly is None:
+                readonly = False
+            self._create(readonly=readonly)
             self.plaintable = absolute_path(name)
         else:
-            self.importdata(name=name, minimal=False)
+            if readonly is None:
+                readonly = True
+            self.importdata(name=name, minimal=False, readonly=readonly)
 
     def __del__( self ):
         # make sure that table is closed
@@ -238,7 +248,7 @@ class DataTableImpl( object ):
         """
         return self.tb2.getkeyword( name )
 
-    def importdata( self, name, minimal=True ):
+    def importdata( self, name, minimal=True, readonly=True ):
         """
         name -- name of DataTable to be imported
         """
@@ -247,7 +257,7 @@ class DataTableImpl( object ):
         # copy input table to memory
         self._copyfrom( name, minimal )
         self.plaintable = absolute_path(name)
-        self.__init_cols(readonly=True)
+        self.__init_cols(readonly=readonly)
 
     def sync(self, minimal=True):
         """
@@ -291,7 +301,7 @@ class DataTableImpl( object ):
         tbloc.close()
         self.plaintable = abspath
 
-    def _create( self ):
+    def _create( self, readonly=False ):
         self._close()
         self.tb1.create( tablename=self.memtable1,
                          tabledesc=TABLEDESC_RO,
@@ -302,7 +312,7 @@ class DataTableImpl( object ):
                          memtype='memory',
                          nrow=self.nrow )
         self.isopened = True
-        self.__init_cols(readonly=False)
+        self.__init_cols(readonly=readonly)
 
     def __init_cols(self, readonly=True):
         self.cols.clear()
