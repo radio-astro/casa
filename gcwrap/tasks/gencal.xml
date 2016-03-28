@@ -103,7 +103,7 @@
         'gc' = Gain curve (zenith-angle-dependent gain) (VLA only)
         'eff' = Antenna efficiency (sqrt(K/Jy)) (VLA only)
         'gceff' = Gain curve and efficiency (VLA only)
-        'tecim' = Time-dep TEC image specified in infile
+        'tecim' = Time-dep TEC image specified in infile (EXPERIMENTAL)
 
      Generic calibration parameters should be specified in the 'parameter'
      argument as a list.  The length of the list must correspond
@@ -187,6 +187,10 @@
      ignored.  These caltypes are currently only supported
      for VLA processing.  (Appropriate factors for ALMA are TBD.)
 
+     For caltype='tecim', specify a TEC image in the infile parameter.
+     The TEC image can be obtained via the tec_maps module; please
+     consult the CASA Cookbook (section 4.3) for more details.
+
      Keyword arguments:
 
      vis -- Name of input visibility file
@@ -223,8 +227,11 @@
                  'gc' = Antenna zenith-angle dependent gain curve (auto-lookup)
                  'gceff' = Gain curve and efficiency (auto-lookup)
                  'eff' = Antenna efficiency (auto-lookup)
+                 'tecim' = Time-dep TEC image specified in infile (EXPERIMENTAL)
                  default: none.
                  example: caltype='ph'
+     infile -- For caltype='tecim', the input TEC image from tec_maps
+                default: none
      spw -- Spectral window selection for specified parameters. 
              default: spw='' (specified parameters apply to all spws)
              example: spw = '2,3,4'
