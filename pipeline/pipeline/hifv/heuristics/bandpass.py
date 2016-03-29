@@ -69,6 +69,7 @@ def computeChanFlag(vis, caltable, context):
             # print rangeA, rangeB
 
             # If no solutions are found, only one tuple is returned and make note
+            '''
             try:
                 if ((rangeA[0][0] == 0 and rangeA[0][1] == len(flagArr[0])-1) or (rangeB[0][0] == 0 and rangeB[0][1] == len(flagArr[1])-1)):
                     LOG.warn("Weak bandpass heuristic could not recover solutions for spwid="+str(spwArr[0]))
@@ -77,6 +78,7 @@ def computeChanFlag(vis, caltable, context):
                     largechunk = True
             except:
                 LOG.warn("Problem with using weakbp heuristics - check CASA log")
+            '''
 
             # Determine contiguous lengths for both polarizations, but ignoring edge flagging
             for row in rangeA[1:-1]:
