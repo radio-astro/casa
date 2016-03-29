@@ -1042,6 +1042,62 @@ coordsys* image::coordsys(const std::vector<int>& pixelAxes) {
 	return nullptr;
 }
 
+image* image::crop(
+    const string& outfile, const vector<int>& axes,
+    bool overwrite, const variant& region, const string& box,
+    const string& chans, const string& stokes, const string& mask,
+    bool  stretch, bool wantreturn
+) {
+    try {
+        _log << _ORIGIN;
+        if (detached()) {
+            return nullptr;
+        }
+        ThrowIf(
+            ! _imageF,
+            "This method only supports Float valued images"
+        );
+        if (axes.size() > 0) {
+            std::set<int> saxes(axes.begin(), axes.end());
+            if (*saxes.begin() < 0) {
+                _log << "All axes values must be >= 0" << LogIO::EXCEPTION;
+            }
+        }
+        std::set<uInt> saxes(axes.begin(), axes.end());
+        SHARED_PTR<Record> regionPtr = _getRegion(region, True);
+        ImageCropper<Float> cropper(
+            _imageF, regionPtr.get(), box,
+            chans, stokes, mask, outfile, overwrite
+        );
+        cropper.setStretch(stretch);
+        cropper.setAxes(saxes);
+        vector<String> names {
+            "outfile", "axes", "overwrite",
+            "region", "box", "chans", "stokes",
+            "mask", "stretch",  "wantreturn"
+        };
+        vector<variant> values {
+            outfile, axes, overwrite,
+            region, box, chans, stokes,
+            mask, stretch,  wantreturn
+        };
+        auto msgs = _newHistory(__func__, names, values);
+        cropper.addHistory(_ORIGIN, msgs);
+        auto out(cropper.crop(wantreturn));
+        if (wantreturn) {
+            return new image(out);
+        }
+        return nullptr;
+
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
+        RETHROW(x);
+    }
+    return nullptr;
+}
+
 image* image::decimate(
 	const string& outfile, int axis, int factor, const string& method,
 	const variant& region, const string& mask, bool overwrite, bool stretch
@@ -3533,67 +3589,6 @@ void image::_reset() {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-image* image::crop(
-	const string& outfile, const vector<int>& axes,
-	bool overwrite, const variant& region, const string& box,
-	const string& chans, const string& stokes, const string& mask,
-	bool  stretch, bool wantreturn
-) {
-	try {
-		_log << _ORIGIN;
-		if (detached()) {
-			return 0;
-		}
-		ThrowIf(
-			! _imageF,
-			"This method only supports Float valued images"
-		);
-        if (axes.size() > 0) {
-            std::set<int> saxes(axes.begin(), axes.end());
-	    	if (*saxes.begin() < 0) {
-			    _log << "All axes values must be >= 0" << LogIO::EXCEPTION;
-		    }
-        }
-        std::set<uInt> saxes(axes.begin(), axes.end());
-		SHARED_PTR<Record> regionPtr = _getRegion(region, True);
-
-		ImageCropper<Float> cropper(
-			_imageF, regionPtr.get(), box,
-			chans, stokes, mask, outfile, overwrite
-		);
-		cropper.setStretch(stretch);
-        cropper.setAxes(saxes);
-        SHARED_PTR<ImageInterface<Float> > out(cropper.crop(wantreturn));
-		if (wantreturn) {
-			return new image(out);
-		}
-		return 0;
-
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-			<< LogIO::POST;
-		RETHROW(x);
-	}
-}
 
 ::casac::record*
 image::pixelvalue(const std::vector<int>& pixel) {

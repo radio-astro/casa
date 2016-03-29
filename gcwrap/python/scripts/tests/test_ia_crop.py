@@ -113,7 +113,16 @@ class ia_crop_test(unittest.TestCase):
         self.assertTrue((crop.shape() == [16, 14, 12]).all())
         crop.done()
         
-
+    def test_history(self):
+        """Verify history writing"""
+        myia = self._myia
+        myia.fromshape("",[20,20])
+        bb = myia.crop()
+        myia.done()
+        msgs = bb.history()
+        bb.done()
+        self.assertTrue("ia.crop" in msgs[-2])
+        self.assertTrue("ia.crop" in msgs[-1])
         
 def suite():
     return [ia_crop_test]
