@@ -1,7 +1,11 @@
 from __future__ import absolute_import
+import pprint
 import string
 
 import pipeline.infrastructure.casatools as casatools
+
+
+_pprinter = pprint.PrettyPrinter(width=1e99)
 
 
 class Field(object):
@@ -18,14 +22,27 @@ class Field(object):
         self.valid_spws = set()
         self.flux_densities = set()
 
+    def __repr__(self):
+        name = self.name
+        if '"' in name:
+            name = name[1:-1]
+
+        return 'Field({0}, {1!r}, {2}, {3}, {4})'.format(
+            self.id,
+            name,
+            self.source_id,
+            'numpy.array(%r)' % self.time.tolist(),
+            _pprinter.pformat(self._mdirection)
+        )
+
     @property
     def clean_name(self):
-        '''
+        """
         Get the field name with illegal characters replaced with underscores.
         
         This property is used to determine whether the field name, when given
         as a CASA argument, should be enclosed in quotes. 
-        '''
+        """
         allowed = string.ascii_letters + string.digits + '+-'
         fn = lambda c : c if c in allowed else '_'
         return ''.join(map(fn, self._name))
@@ -90,7 +107,7 @@ class Field(object):
             if source_type.find(intent) != -1:
                 self.intents.add(intent)
 
-    def __repr__(self):
+    def __str__(self):
         return '<Field {id}: name=\'{name}\' intents=\'{intents}\'>'.format(
             id=self.identifier, name=self.name, 
             intents=','.join(self.intents))

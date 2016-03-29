@@ -1,9 +1,14 @@
 from __future__ import absolute_import
 import datetime
+import pprint
+
+import operator
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.utils as utils
+
+_pprinter = pprint.PrettyPrinter()
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -85,6 +90,45 @@ class Scan(object):
                 self.__end_time = range_end_epoch
 
     def __repr__(self):
+        mt = casatools.measures
+        qt = casatools.quanta
+
+        start_epoch = self.start_time
+        end_epoch = self.end_time
+
+        scan_times = {}
+        for spw_id, interval in self.__mean_intervals.items():
+            interval_quanta = qt.unit('{0}s'.format(interval.total_seconds()))
+            half_interval = qt.div(interval_quanta, 2)
+
+            exposure = qt.unit('{0}s'.format(self.__exposure_time[spw_id].total_seconds()))
+            half_exposure = qt.div(exposure, 2)
+
+            start_midpoint = qt.add(mt.getvalue(start_epoch)['m0'],
+                                    half_interval)
+            end_midpoint = qt.sub(mt.getvalue(end_epoch)['m0'],
+                                  half_interval)
+
+            e1 = mt.epoch(v0=start_midpoint, rf=start_epoch['refer'])
+            e2 = mt.epoch(v0=end_midpoint, rf=end_epoch['refer'])
+
+            scan_times[spw_id] = [(e1, interval_quanta),
+                                  (e2, interval_quanta)]
+
+        sort_by_id = lambda l: sorted(l, key=operator.attrgetter('id'))
+
+        return ('Scan(id={id}, antennas={antennas!r}, intents={intents!r}, '
+                'fields={fields!r}, states={states!r}, data_descriptions={dds!r}, '
+                'scan_times={scan_times})'.format(
+                    id=self.id,
+                    antennas=sort_by_id(self.antennas),
+                    intents=sorted(self.intents),
+                    fields=sort_by_id(self.fields),
+                    states=sort_by_id(self.states),
+                    dds=sort_by_id(self.data_descriptions),
+                    scan_times=_pprinter.pformat(scan_times)))
+
+    def __str__(self):
         return ('<Scan #{id}: intents=\'{intents}\' start=\'{start}\' '
                 'end=\'{end}\' duration=\'{duration}\'>'.format(
                     id=self.id,

@@ -17,6 +17,7 @@ import pipeline.domain.measures as measures
 
 LOG = logging.get_logger(__name__)
 
+
 def find_EVLA_band(frequency, bandlimits=None, BBAND='?4PLSCXUKAQ?'):
     """identify VLA band"""
     if bandlimits is None:
@@ -342,10 +343,8 @@ class SpectralWindowTable(object):
             chan_freqs = msmd.chanfreqs(i)
             chan_widths = msmd.chanwidths(i)            
             sideband = msmd.sideband(i)
-            baseband = msmd.baseband(i)                            
-
-            ref_freq_hz = casatools.quanta.convertfreq(msmd.reffreq(i)['m0'], 'Hz')
-            ref_freq = casatools.quanta.getvalue(ref_freq_hz)[0]
+            baseband = msmd.baseband(i)
+            ref_freq = msmd.reffreq(i)
 
             spw = domain.SpectralWindow(i, spw_name, spw_type, bandwidth,
                     ref_freq, mean_freq, chan_freqs, chan_widths, sideband,
@@ -376,8 +375,6 @@ class ObservationTable(object):
 
             schedblock_id = d.get('SchedulingBlock', 'N/A')
             execblock_id = d.get('ExecBlock', 'N/A')
-
-        
 
         return observer, project_id, schedblock_id, execblock_id
 

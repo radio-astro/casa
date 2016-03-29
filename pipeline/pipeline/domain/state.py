@@ -22,7 +22,11 @@ class State(object):
         # work around NumPy bug with empty strings
         # http://projects.scipy.org/numpy/ticket/1239
         self.obs_mode = str(obs_mode)
-    
+
+    def __repr__(self):
+        return '{0}({1!r}, {2!r})'.format(
+            self.__class__.__name__, self.id, self.obs_mode)
+
     @property
     def intents(self):
         # return all intents
@@ -68,7 +72,7 @@ class State(object):
                 if pipeline_intent in intents
                 and self.obs_mode.find(mode) != -1]
 
-    def __repr__(self):
+    def __str__(self):
         return '{0}(id={1}, intents={2})'.format(self.__class__.__name__, 
                                                  self.id, self.intents)
 

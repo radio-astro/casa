@@ -11,11 +11,21 @@ from . import measures
     
 Baseline = collections.namedtuple('Baseline', 'antenna1 antenna2 length')
 
-class AntennaArray(object):    
-    def __init__(self, name, position):
+
+class AntennaArray(object):
+    def __init__(self, name, position, antennas=None):
         self.__name = name
         self.__position = position
-        self.antennas = []
+        if antennas is None:
+            antennas = []
+        self.antennas = antennas
+
+    def __repr__(self):
+        return 'AntennaArray({0!r}, {1}, {2!r})'.format(
+            self.__name,
+            self.__position,
+            self.antennas
+        )
 
     @property
     def name(self):
@@ -185,7 +195,7 @@ class AntennaArray(object):
         return mt.direction(v0=qt.quantity(med_lon, 'rad'), 
                             v1=qt.quantity(med_lat, 'rad'))
 
-    def __repr__(self):
+    def __str__(self):
         names = ', '.join([antenna.name for antenna in self.antennas])
         return 'AntennaArray({0})'.format(names)
-        
+

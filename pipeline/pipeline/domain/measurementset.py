@@ -33,11 +33,12 @@ class MeasurementSet(object):
         self.flagcmds = []
         self.session = session
         self.filesize = self._calc_filesize() 
+        self.parent_ms = None
 
     def _calc_filesize(self):
-        '''
+        """
         Calculate the disk usage of this measurement set.
-        '''
+        """
         total_bytes = 0
         for dirpath, _, filenames in os.walk(self.name):
             for f in filenames:
@@ -47,7 +48,7 @@ class MeasurementSet(object):
         return measures.FileSize(total_bytes, 
                                  measures.FileSizeUnits.BYTES)
     
-    def __repr__(self):
+    def __str__(self):
         return 'MeasurementSet({0})'.format(self.name)
         
     @property

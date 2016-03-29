@@ -1,8 +1,11 @@
 """The antenna module defines the Antenna class.
 """
 from __future__ import absolute_import
+import pprint
 
 import pipeline.infrastructure.casatools as casatools
+
+_pprinter = pprint.PrettyPrinter()
 
     
 class Antenna(object):
@@ -62,6 +65,16 @@ class Antenna(object):
         self.direction = mt.direction(v0=self.longitude, v1=self.latitude)
 
     def __repr__(self):
+        return '{0}({1}, {2!r}, {3!r}, {4}, {5}, {6})'.format(
+            self.__class__.__name__,
+            self.id,
+            self.name,
+            self.station,
+            _pprinter.pformat(self.position),
+            _pprinter.pformat(self.offset),
+            self.diameter)
+
+    def __str__(self):
         qt = casatools.quanta
         lon = qt.tos(self.longitude) 
         lat = qt.tos(self.latitude) 
