@@ -595,7 +595,7 @@ Bool SpectralCollapser::_moments(const ImageInterface<Float> *image, const Vecto
 	   *_log << LogIO::SEVERE << exc.getMesg() << LogIO::POST;
 	   return False;
    }
-   std::vector<std::unique_ptr<MaskedLattice<Float> > > images;
+   std::vector<SHARED_PTR<MaskedLattice<Float> > > images;
    try {
 	   images = moment.createMoments(False, outname, False);
    }

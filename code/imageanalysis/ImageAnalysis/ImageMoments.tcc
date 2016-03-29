@@ -355,7 +355,7 @@ Bool ImageMoments<T>::setSmoothMethod(
 }
 
 template <class T>
-std::vector<std::unique_ptr<MaskedLattice<T> > > ImageMoments<T>::createMoments(
+vector<SHARED_PTR<MaskedLattice<T> > > ImageMoments<T>::createMoments(
     Bool doTemp, const String& outName, Bool removeAxis
 ) {
     LogOrigin myOrigin("ImageMoments", __func__);
@@ -426,37 +426,7 @@ std::vector<std::unique_ptr<MaskedLattice<T> > > ImageMoments<T>::createMoments(
             throw AipsError(error_p);
         }
         pSmoothedImage = pSmoothedImageHolder.ptr();
-        // Find the auto Y plot range.   The smooth & clip and the window
-        // methods only plot the smoothed data.
-        /*
-        if (doPlot && fixedYLimits_p && (smoothClipMethod || windowMethod)) {
-            ImageStatistics<T> stats(*pSmoothedImage, False);
-            Array<T> data;
-            stats.getConvertedStatistic(data, LatticeStatsBase::MIN, True);
-            yMin_p = data(IPosition(data.nelements(),0));
-            stats.getConvertedStatistic(data, LatticeStatsBase::MAX, True);
-            yMax_p = data(IPosition(data.nelements(),0));
-        }
-        */
     }
-    // Find the auto Y plot range if not smoothing and stretch
-    // limits for plotting
-    /*
-    if (fixedYLimits_p && doPlot) {
-        if (!doSmooth_p && (clipMethod || windowMethod || fitMethod)) {
-            ImageStatistics<T> stats(*_image, False);
-            Array<T> data;
-            if (!stats.getConvertedStatistic(data, LatticeStatsBase::MIN, True)) {
-                throw AipsError("Error finding minimum of input image");
-            }
-            yMin_p = data(IPosition(data.nelements(),0));
-            if (!stats.getConvertedStatistic(data, LatticeStatsBase::MAX, True)) {
-                throw AipsError("Error finding maximum of input image");
-            }
-            yMax_p = data(IPosition(data.nelements(),0));
-        }
-    }
-    */
     // Set output images shape and coordinates.
     IPosition outImageShape;
     const auto cSysOut = this->makeOutputCoordinates(
@@ -465,7 +435,7 @@ std::vector<std::unique_ptr<MaskedLattice<T> > > ImageMoments<T>::createMoments(
     );
     auto nMoments = moments_p.nelements();
     // Resize the vector of pointers for output images
-    std::vector<std::unique_ptr<MaskedLattice<T> > > outPt(nMoments);
+    vector<SHARED_PTR<MaskedLattice<T> > > outPt(nMoments);
     // Loop over desired output moments
     String suffix;
     Bool goodUnits;
@@ -480,7 +450,7 @@ std::vector<std::unique_ptr<MaskedLattice<T> > > ImageMoments<T>::createMoments(
             moments_p(i), convertToVelocity_p
         );
         // Create output image(s).    Either PagedImage or TempImage
-        unique_ptr<ImageInterface<Float> > imgp;
+        SPIIT imgp;
         if (!doTemp) {
             const String in = _image->name(False);
             String outFileName;
@@ -533,8 +503,8 @@ std::vector<std::unique_ptr<MaskedLattice<T> > > ImageMoments<T>::createMoments(
                 giveMessage = False;
             }
         }
-
-        outPt[i] = move(imgp);
+        // outPt[i] = move(imgp);
+        outPt[i] = imgp;
     }
     // If the user is using the automatic, non-fitting window method, they need
     // a good assessment of the noise.  The user can input that value, but if
@@ -555,15 +525,7 @@ std::vector<std::unique_ptr<MaskedLattice<T> > > ImageMoments<T>::createMoments(
         }
         stdDeviation_p = noise;
     }
-    // Set up some plotting things
-    /*
-    if (doPlot) {
-        plotter_p.subp(nxy_p(0), nxy_p(1));
-        plotter_p.ask(True);
-        plotter_p.sch(1.5);
-        plotter_p.vstd();
-    }
-    */
+
     // Create appropriate MomentCalculator object
     os_p << LogIO::NORMAL << "Begin computation of moments" << LogIO::POST;
     PtrHolder<MomentCalcBase<T> > pMomentCalculatorHolder;
@@ -608,7 +570,9 @@ std::vector<std::unique_ptr<MaskedLattice<T> > > ImageMoments<T>::createMoments(
             os_p << LogIO::NORMAL << "There were " <<  pMomentCalculator->nFailedFits() << " failed fits" << LogIO::POST;
         }
     }
-    if (pProgressMeter != 0) delete pProgressMeter;
+    if (pProgressMeter != 0) {
+        delete pProgressMeter;
+    }
     if (pSmoothedImage) {
         // Remove the smoothed image file if they don't want to save it
         pSmoothedImageHolder.clear(True);

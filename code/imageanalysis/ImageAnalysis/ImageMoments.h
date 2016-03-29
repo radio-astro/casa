@@ -330,7 +330,7 @@ public:
    // this will be the actual name of the output file.  If you don't set this
    // variable, the default state of the class is to set the output name root to
    // the name of the input file.
-   std::vector<std::unique_ptr<MaskedLattice<T> > >  createMoments(
+   vector<SHARED_PTR<MaskedLattice<T> > >  createMoments(
        Bool doTemp, const String& outFileName,
        Bool removeAxes=True
    );

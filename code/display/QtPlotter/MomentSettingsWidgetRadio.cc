@@ -48,7 +48,7 @@ namespace casa {
 		imageAnalysis->setProgressMonitor( this );
 	}
 
-	CollapseResult::CollapseResult( const String& outputName, bool tmp, ImageInterface<Float>* img ):
+	CollapseResult::CollapseResult( const String& outputName, bool tmp, SHARED_PTR<ImageInterface<Float>> img ):
 				outputFileName(outputName),
 				temporary( tmp ),
 				image(img) {}
@@ -182,11 +182,11 @@ namespace casa {
 						collapseError = true;
 					}
 					else {
-						std::vector<std::unique_ptr<MaskedLattice<Float> > > newImages = analysis->createMoments(
+						auto newImages = analysis->createMoments(
 							   false, outFile, false );
 						int newImageCount = newImages.size();
 						for ( int i = 0; i < newImageCount; i++ ){
-							ImageInterface<Float>* newImage = dynamic_cast<ImageInterface<Float>*> (newImages[i].release());
+							SHARED_PTR<ImageInterface<Float>> newImage = dynamic_pointer_cast<ImageInterface<Float>> (newImages[i]);
 							CollapseResult result( outFile, outputFileTemporary, newImage );
 							collapseResults.push_back( result );
 						}

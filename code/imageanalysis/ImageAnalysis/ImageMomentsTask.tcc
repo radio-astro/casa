@@ -137,13 +137,16 @@ template<class T> SPIIT ImageMomentsTask<T>::makeMoments() const {
         // Else PagedImage results
         Bool doTemp = _momentName.empty() && _moments.size() == 1;
         // Create moments
-        std::vector<std::unique_ptr<MaskedLattice<Float> > > images =
-            momentMaker.createMoments(doTemp, _momentName, _removeAxis);
-        //momentMaker.closePlotting();
+        auto images = momentMaker.createMoments(doTemp, _momentName, _removeAxis);
         // Return handle of first image
-        pIm.reset(
-            dynamic_cast<ImageInterface<T>*> (images[0].release())
-        );
+        for (auto& image: images) {
+            SPIIT x = dynamic_pointer_cast<ImageInterface<T>>(image);
+            this->_doHistory(x);
+        }
+        pIm = dynamic_pointer_cast<ImageInterface<T>>(images[0]);
+        //pIm.reset(
+            // dynamic_cast<ImageInterface<T>*> (images[0].release())
+        //);
     }
     catch (const AipsError& x) {
         if (! tmpImageName.empty()) {
