@@ -38,6 +38,11 @@
 # 12/17/12 STM add phases to getCalStatistics
 ######################################################################
 from taskinit import *
+import pipeline.infrastructure.contfilehandler as contfilehandler
+import pipeline.infrastructure as infrastructure
+
+
+LOG = infrastructure.get_logger(__name__)
 
 def find_EVLA_band(frequency, bandlimits=[0.0e6, 150.0e6, 700.0e6, 2.0e9, 4.0e9, 8.0e9, 12.0e9, 18.0e9, 26.5e9, 40.0e9, 56.0e9], BBAND='?4PLSCXUKAQ?'):
     from bisect import bisect_left
@@ -45,6 +50,34 @@ def find_EVLA_band(frequency, bandlimits=[0.0e6, 150.0e6, 700.0e6, 2.0e9, 4.0e9,
     i = bisect_left(bandlimits, frequency)
 
     return BBAND[i]
+
+def cont_file_to_CASA(contfile):
+        '''
+        Take the dictionary created by _read_cont_file and put it into the format:
+        spw = '0:1.380~1.385GHz;1.390~1.400GHz'
+        '''
+
+        contfile_handler = contfilehandler.ContFileHandler(contfile)
+        contdict = contfile_handler.read()
+
+        if contdict == {}:
+            LOG.error(contfile + " is empty, does not exist or cannot be read.")
+            return {}
+
+        fielddict = {}
+
+        for field in contdict.keys():
+            spwstring = ''
+            for spw in contdict[field].keys():
+                spwstring = spwstring + spw + ':'
+                for freqtuple in contdict[field][spw]:
+                    spwstring = spwstring + str(freqtuple[0]) + '~' + str(freqtuple[1]) + 'GHz;'
+                spwstring = spwstring[:-1]
+                spwstring = spwstring + ','
+            spwstring = spwstring[:-1]
+            fielddict[field] = spwstring
+
+        return fielddict
 
 
 def getCalFlaggedSoln(calTable):

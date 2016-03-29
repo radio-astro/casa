@@ -58,7 +58,7 @@ regions is specified, then rflag will only flag those spw and frequency ranges p
     </p>
 
     % if single_result.inputs['contfile'] != '':
-        <p><b>Continuum Mask File (with intent='*TARGET*'): </b> ${single_result.inputs['contfile']} </p>
+        <p><b>Spectral Exclusion File (with intent='*TARGET*'): </b> ${single_result.inputs['contfile']} </p>
     % endif
 
 % endfor

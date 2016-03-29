@@ -5,24 +5,12 @@ import types
 import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.contfilehandler as contfilehandler
+from pipeline.hifv.heuristics import cont_file_to_CASA
 
 LOG = infrastructure.get_logger(__name__)
 
 # CHECKING FLAGGING OF ALL CALIBRATORS
 # use rflag mode of flagdata
-
-def read_contfile(contfile):
-    '''
-    Read in the spws/frequencies into a dictionary
-    '''
-
-    #First check to see if the file exists
-
-    contfile_handler = contfilehandler.ContFileHandler(contfile)
-    contdict = contfile_handler.read()
-
-    return contdict
 
 
 class TargetflagInputs(basetask.StandardInputs):
@@ -118,7 +106,7 @@ class Targetflag(basetask.StandardTaskTemplate):
 
         if ('TARGET' in self.inputs.intents and self.inputs.contfile):
             LOG.info("TARGETFLAG INFO:  SPECTRAL LINE - CONTINUUM MASKING")
-            fielddict = self._cont_file_to_CASA()
+            fielddict = cont_file_to_CASA(self.inputs.contfile)
 
             for field in fielddict.keys():
                 method_args = {'field'       : field,
@@ -162,28 +150,3 @@ class Targetflag(basetask.StandardTaskTemplate):
 
 
 
-    def _cont_file_to_CASA(self):
-        '''
-        Take the dictionary created by _read_cont_file and put it into the format:
-        spw = '0:1.380~1.385GHz;1.390~1.400GHz'
-        '''
-
-        contdict = read_contfile(self.inputs.contfile)
-        if contdict == {}:
-            LOG.error(self.inputs.contfile + " is empty, does not exist or cannot be read.")
-            return {}
-
-        fielddict = {}
-
-        for field in contdict.keys():
-            spwstring = ''
-            for spw in contdict[field].keys():
-                spwstring = spwstring + spw + ':'
-                for freqtuple in contdict[field][spw]:
-                    spwstring = spwstring + str(freqtuple[0]) + '~' + str(freqtuple[1]) + 'GHz;'
-                spwstring = spwstring[:-1]
-                spwstring = spwstring + ','
-            spwstring = spwstring[:-1]
-            fielddict[field] = spwstring
-
-        return fielddict
