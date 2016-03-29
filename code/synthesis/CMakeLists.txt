@@ -299,6 +299,7 @@ casa_add_library( synthesis
  Parallel/MPITransport.cc
  Parallel/PabloIO.cc
  Parallel/SerialTransport.cc
+ Utilities/FFT2D.cc	
  Utilities/FixVis.cc
  Utilities/SigHandler.cc
  Utilities/ThreadCoordinator.cc
@@ -688,6 +689,7 @@ install (FILES
 	)
 install (FILES
 	Utilities/AppRC.h
+        Utilities/FFT2D.h
 	Utilities/FixVis.h
 	Utilities/SigHandler.h 
 	Utilities/ThreadCoordinator.h
@@ -750,6 +752,7 @@ casa_add_assay( synthesis CalTables/test/tCTGenericFill.cc )
 casa_add_test( synthesis CalLibrary/test/tCalLibraryParse.cc )
 casa_add_unit_test( MODULES synthesis SOURCES TransformMachines2/test/tFTMachine.cc TransformMachines2/test/MakeMS.cc ) 
 casa_add_unit_test( MODULES synthesis SOURCES TransformMachines/test/tGridFT.cc TransformMachines2/test/MakeMS.cc ) 
+casa_add_unit_test( MODULES synthesis SOURCES Utilities/test/tFFT2D.cc  ) 
 casa_add_unit_test( MODULES synthesis SOURCES CalTables/test/tCTPatchedInterp.cc )
 casa_add_google_test( MODULES mstransform SOURCES ../mstransform/MSTransform/test/tMSTransformIterator.cc  ../mstransform/TVI/test/TestUtilsTVI.cc)
 casa_add_google_test( MODULES mstransform SOURCES ../mstransform/TVI/test/tChannelAverageTVI.cc  ../mstransform/TVI/test/TestUtilsTVI.cc)
