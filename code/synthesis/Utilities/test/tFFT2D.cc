@@ -114,17 +114,23 @@ int main(int argc, char **argv)
 #ifdef _OPENMP
        wtime0=omp_get_wtime();
 #endif
+
        Bool del;
        Complex *scr= arr1.getStorage(del);
        ft.doFFT(scr, Long(x), Long(y), True);
+
 #ifdef _OPENMP
        cerr << "FFTW forward " << x << " by " << y << " complex takes " << omp_get_wtime()-wtime0 << endl;
        wtime0=omp_get_wtime();
 #endif
+
        ft.doFFT(scr, Long(x), Long(y), False);
+
 #ifdef _OPENMP
        cerr << "FFTW backward " << x << " by " << y << " complex takes " << omp_get_wtime()-wtime0 << endl;
 #endif
+
+
        arr1.putStorage(scr, del);
      }
    
@@ -133,26 +139,31 @@ int main(int argc, char **argv)
        
       
        im.get(arr1, True);
+
 #ifdef _OPENMP
        numthreads=omp_get_max_threads();
        omp_set_num_threads(1);
        wtime0=omp_get_wtime();
 #endif
+
        FFT2D ft(True);
        Bool del;
        Complex *scr= arr1.getStorage(del);
        ft.doFFT(scr, Long(x), Long(y), True);
+
 #ifdef _OPENMP
        cerr << "FFTW 1-thread forward " << x << " by " << y << " complex takes " << omp_get_wtime()-wtime0 << endl;
        omp_set_num_threads(numthreads);
        wtime0=omp_get_wtime();
 #endif
+
        ft.doFFT(scr, Long(x), Long(y), False);
+
 #ifdef _OPENMP
        cerr << "FFTW 1-thread backward " << x << " by " << y << " complex takes " << omp_get_wtime()-wtime0 << endl;
        arr1.putStorage(scr, del);
-     }
 #endif
+     }
      //Bool del;
      //Complex *scr0=arr0.getStorage(del);
      //Complex *scr1=arr1.getStorage(del);
@@ -199,10 +210,10 @@ int main(int argc, char **argv)
 #ifdef _OPENMP 
    cerr << "lat fft " << omp_get_wtime()-wtime1 << endl;
 #endif
-   Array<Complex> arr1;
+   Array<Complex> arr2;
    im.get(arr, True);
-   im3.get(arr1, True);
-   cerr << "max diff lattFFT and FFT2D " << max(arr-arr1) << endl;
+   im3.get(arr2, True);
+   cerr << "max diff lattFFT and FFT2D " << max(arr-arr2) << endl;
    
 
   }catch( AipsError e ){
