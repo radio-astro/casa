@@ -1,7 +1,13 @@
 #!/usr/bin/perl
 
-$prefix="@PREFIX@";
-$include="@INCLUDE@";
+if ( exists $ENV{CASA_INSTALLATION_TYPE} && $ENV{CASA_INSTALLATION_TYPE} eq "rpm-installation" && exists $ENV{CASAPATH} ) {
+    my @path = split(/\s+/,$ENV{CASAPATH});
+    $prefix=$path[0];
+} else {
+    $prefix="@PREFIX@";
+    $include="@INCLUDE@";
+}
+
 $lddpath="@LDDPATH@";
 $lddpreload="@LDDPRELOAD@";
 $libversion="@LIBVERSION@";
