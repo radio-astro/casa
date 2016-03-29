@@ -24,7 +24,9 @@
 #
 import os
 import time
-import numpy,math
+import numpy
+import math
+import re
 
 from taskinit import gentools
 
@@ -72,7 +74,8 @@ TD_DESC_RO = [
     __coldesc('double',  0, 0, -1, 'Tsys', 'K'),
     __coldesc('string',  0, 0, -1, 'Target name'),
     __coldesc('integer', 0, 0, -1, 'Antenna index'),
-    __coldesc('integer', 0, 0, -1, 'Source type enum')
+    __coldesc('integer', 0, 0, -1, 'Source type enum'),
+    __coldesc('integer', 0, 0, -1, 'MS index')
     ]
 
 TD_DESC_RW = [
@@ -91,7 +94,7 @@ def __tabledescro():
         'ROW', 'SCAN', 'IF', 'POL', 'BEAM', 'DATE',
         'TIME', 'ELAPSED', 'EXPOSURE', 'RA', 'DEC',
         'AZ', 'EL', 'NCHAN', 'TSYS', 'TARGET', 'ANTENNA',
-        'SRCTYPE'
+        'SRCTYPE', 'MS'
         ]
     return dict( zip(name,TD_DESC_RO) )
 
@@ -114,11 +117,13 @@ OnlineFlagIndex = 3
 def absolute_path(name):
     return os.path.abspath(os.path.expanduser(os.path.expandvars(name)))
 
-def timetable_key(table_type, antenna, spw, polarization=None):
-    if polarization is None:
-        key = 'TIMETABLE_%s_ANT%s_SPW%s'%(table_type,antenna,spw)    
-    else:
-        key = 'TIMETABLE_%s_ANT%s_SPW%s_POL%s'%(table_type,antenna,spw,polarization) 
+def timetable_key(table_type, antenna, spw, polarization=None, ms=None):
+    key = 'TIMETABLE_%s'%(table_type)
+    if ms is not None:
+        key = key + '_%s'%(ms.replace('.','_'))
+    key = key + '_ANT%s_SPW%s'%(antenna, spw)
+    if polarization is not None:
+        key = key + '_POL%s'%(polarization) 
     return key   
     
 class DataTableImpl( object ):
@@ -189,6 +194,38 @@ class DataTableImpl( object ):
     def name(self):
         return self.plaintable
 
+    @property
+    def position_group_id(self):
+        key = 'POSGRP_REP'
+        if self.has_key(key):
+            return numpy.max(numpy.fromiter((int(x) for x in self.getkeyword(key).keys()), dtype=numpy.int32)) + 1
+        else:
+            return 0
+    
+    @property
+    def time_group_id_small(self):
+        return self.__get_time_group_id(True)
+    
+    @property
+    def time_group_id_large(self):
+        return self.__get_time_group_id(False)
+                    
+    def __get_time_group_id(self, small=True):
+        if small:
+            subkey = 'SMALL'
+        else:
+            subkey = 'LARGE'
+        pattern = '^TIMETABLE_%s_.*'%(subkey)
+        if numpy.any(numpy.fromiter((re.match(pattern, x) is not None for x in self.keywordnames()), dtype=bool)):
+            group_id = 0
+            for key in self.tb2.keywordnames():
+                if re.match(pattern, key) is not None:
+                    max_id = numpy.max(numpy.fromiter((int(x) for x in self.getkeyword(key).keys()), dtype=numpy.int32)) + 1
+                    group_id = max(group_id, max_id)
+            return group_id
+        else:
+            return 0
+        
     def get_row_index_simple(self, col, val):
         vals = self.getcol(col)
         return [i for i in xrange(self.nrow) if vals[i] == val]
@@ -247,6 +284,12 @@ class DataTableImpl( object ):
         name -- keyword name
         """
         return self.tb2.getkeyword( name )
+    
+    def keywordnames(self):
+        """
+        return table keyword names
+        """
+        return self.tb2.keywordnames()
 
     def importdata( self, name, minimal=True, readonly=True ):
         """
@@ -390,7 +433,7 @@ class DataTableImpl( object ):
 
         return posdict
     
-    def set_timetable(self, ant, spw, pol, mygrp, timegrp_s, timegrp_l):
+    def set_timetable(self, ant, spw, pol, mygrp, timegrp_s, timegrp_l, ms=None):
         # time table format
         # TimeTable: [TimeTableSmallGap, TimeTableLargeGap]
         # TimeTableXXXGap: [[[row0, row1, ...], [idx0, idx1, ...]], ...]
@@ -413,8 +456,8 @@ class DataTableImpl( object ):
         
         # put time table to table keyword
         start_time2 = time.time()
-        key_small = timetable_key('SMALL', ant, spw, pol)
-        key_large = timetable_key('LARGE', ant, spw, pol)
+        key_small = timetable_key('SMALL', ant, spw, pol, ms)
+        key_large = timetable_key('LARGE', ant, spw, pol, ms)
         keys = self.tb2.keywordnames()
         LOG.debug('add time table: keys for small gap \'%s\' large gap \'%s\''%(key_small,key_large))
         dictify = lambda x:  dict([(str(i), t) for (i,t) in enumerate(x)])
@@ -742,8 +785,7 @@ def _interpolate(v, t, tref):
 
 def construct_timegroup(rows, group_id_list, group_association_list):
     timetable_dict = dict(map(lambda x: (x, [[],[]]), group_id_list))
-    for idx in xrange(len(rows)):
-        group_id = group_association_list[idx]
+    for (idx, group_id) in enumerate(group_association_list):
         if group_id not in group_id_list:
             continue
         timetable_dict[group_id][0].append(rows[idx])

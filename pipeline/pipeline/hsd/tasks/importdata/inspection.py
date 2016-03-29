@@ -14,8 +14,8 @@ from . import reader
 LOG = infrastructure.get_logger(__name__)
 
 class SDMSInspection(object):
-    def __init__(self, table_name, mses=None):
-        self.mses = [] if mses is None else mses
+    def __init__(self, table_name, ms=None):
+        self.ms = ms
         self.table_name = table_name
             
     def execute(self, dry_run=True):
@@ -23,35 +23,83 @@ class SDMSInspection(object):
             return None
         
         # per ms inspection: beam size and calibration strategy
-        for ms in self.mses:
-            self._inspect_beam_size(ms)
-            self._inspect_calibration_strategy(ms)
+        LOG.debug('inspect_beam_size')
+        self._inspect_beam_size()
+        LOG.debug('inspect_calibration_strategy')
+        self._inspect_calibration_strategy()
             
-        # MS-wide inspection: reduction group
+        # per ms inspection: reduction group
+        LOG.debug('inspect_reduction_group')
         reduction_group = self._inspect_reduction_group()
 
         # generate MS-based DataTable
-        datatable = self._generate_datatable(self.table_name)
+        LOG.debug('register meta data to DataTable')
+        table_name = self.table_name
+        worker = reader.MetaDataReader(ms=self.ms, table_name=table_name)
+        LOG.debug('table_name=%s'%(table_name))
+        
+        dry_run = not os.path.exists(self.ms.name)
+        #worker.set_name(ms.name)
+        worker.execute(dry_run=dry_run)
+
+        datatable = worker.get_datatable()
         datatable.exportdata(minimal=False)
         
+        appended_row = worker.appended_row
+        nrow = datatable.nrow
+        startrow = nrow - appended_row
+        LOG.debug('%s rows are appended (total %s, startrow %s)'%(appended_row, nrow, startrow))
+    
         # MS-wide inspection: data grouping
-        grouping_result = self._group_data(datatable)
-        
+        LOG.debug('_group_data: ms = %s'%(self.ms.basename))
+        position_group_id = datatable.position_group_id
+        time_group_id_small = datatable.time_group_id_small
+        time_group_id_large = datatable.time_group_id_large
+        grouping_result = self._group_data(datatable, position_group_id, 
+                                           time_group_id_small, time_group_id_large,
+                                           startrow=startrow, nrow=appended_row)
+    
         # merge grouping result with MS-based DataTable
-        datatable.putcol('POSGRP', grouping_result['POSGRP'])
-        datatable.putkeyword('POSGRP_REP', grouping_result['POSGRP_REP'])
-        datatable.putkeyword('POSGRP_LIST', grouping_result['POSGRP_LIST'])
+        position_group = grouping_result['POSGRP']
+        LOG.debug('len(position_group) = %s appended_row = %s'%(len(position_group), appended_row))
+        LOG.debug('position_group = %s'%(position_group))
+        datatable.putcol('POSGRP', position_group[startrow:], startrow=startrow, nrow=appended_row)
+    
         time_gap = grouping_result['TIMEGAP']
+        def _g():
+            yield 'POSGRP_REP', None
+            yield 'POSGRP_LIST', None
+            yield 'TIMEGAP_S', time_gap[0]
+            yield 'TIMEGAP_L', time_gap[1]
+        for key, value in _g():
+            LOG.debug('key, value = %s, %s'%(key, value))
+            if value is None:
+                value = grouping_result[key]
+                LOG.debug('updated value = %s'%(value))
+            if datatable.has_key(key):
+                LOG.debug('Updating %s'%(key))
+                LOG.debug('before: %s'%(datatable.getkeyword(key)))
+                current_value = datatable.getkeyword(key)
+                current_value.update(value)
+                datatable.tb2.putkeyword(key, current_value)
+            else:
+                LOG.debug('Adding %s'%(key))
+                datatable.tb2.putkeyword(key, value)
+            LOG.debug('after: %s'%(datatable.getkeyword(key)))
+        #datatable.putkeyword('POSGRP_LIST', grouping_result['POSGRP_LIST'])
         time_group = grouping_result['TIMEGRP']
         time_group_list = grouping_result['TIMEGRP_LIST']
-        datatable.putkeyword('TIMEGAP_S', time_gap[0])
-        datatable.putkeyword('TIMEGAP_L', time_gap[1])
+        #datatable.putkeyword('TIMEGAP_S', time_gap[0])
+        #datatable.putkeyword('TIMEGAP_L', time_gap[1])
         for (group_id, member_list) in reduction_group.items():
             for member in member_list:
+                ms = member.ms
                 ant = member.antenna
                 spw = member.spw
-                LOG.info('Adding time table for Reduction Group %s (antenna %s spw %s)'%(group_id,ant,spw))
-                datatable.set_timetable(ant, spw, None, time_group_list[ant][spw], numpy.array(time_group[0]), numpy.array(time_group[1]))
+                LOG.info('Adding time table for Reduction Group %s (ms %s antenna %s spw %s)'%(group_id,ms.basename,ant,spw))
+                datatable.set_timetable(ant, spw, None, time_group_list[ant][spw], 
+                                        numpy.array(time_group[0]), numpy.array(time_group[1]),
+                                        ms=ms.basename)
         datatable.exportdata(minimal=False) 
         
         return reduction_group       
@@ -59,61 +107,60 @@ class SDMSInspection(object):
     def _inspect_reduction_group(self):
         reduction_group = {}
         group_spw_names = {}
-        #antenna_index= 0
-        for ms in self.mses:
-            science_windows = ms.get_spectral_windows(science_windows_only=True)
-            for spw in science_windows:
-                name = spw.name
-                nchan = spw.num_channels
-                min_frequency = float(spw._min_frequency.value)
-                max_frequency = float(spw._max_frequency.value)
-                if len(name) > 0:
-                    # grouping by name
-                    match = self.__find_match_by_name(name, group_spw_names)
-                else:
-                    # grouping by frequency range
-                    match = self.__find_match_by_coverage(nchan, min_frequency, max_frequency, 
-                                                          reduction_group, fraction=0.99)
-                if match == False:
-                    # add new group
-                    key = len(reduction_group)
-                    group_spw_names[key] = name
-                    newgroup = singledish.MSReductionGroupDesc(min_frequency=min_frequency, 
-                                                               max_frequency=max_frequency, 
-                                                               nchan=nchan)
-                    reduction_group[key] = newgroup
-                else:
-                    key = match
-                for antenna in ms.antennas:
-                    reduction_group[key].add_member(ms, antenna.id, spw.id)
-            #antenna_index += len(ms.antennas)
+        ms = self.ms
+        science_windows = ms.get_spectral_windows(science_windows_only=True)
+        for spw in science_windows:
+            name = spw.name
+            nchan = spw.num_channels
+            min_frequency = float(spw._min_frequency.value)
+            max_frequency = float(spw._max_frequency.value)
+            if len(name) > 0:
+                # grouping by name
+                match = self.__find_match_by_name(name, group_spw_names)
+            else:
+                # grouping by frequency range
+                match = self.__find_match_by_coverage(nchan, min_frequency, max_frequency, 
+                                                      reduction_group, fraction=0.99)
+            if match == False:
+                # add new group
+                key = len(reduction_group)
+                group_spw_names[key] = name
+                newgroup = singledish.MSReductionGroupDesc(min_frequency=min_frequency, 
+                                                           max_frequency=max_frequency, 
+                                                           nchan=nchan)
+                reduction_group[key] = newgroup
+            else:
+                key = match
+            for antenna in ms.antennas:
+                reduction_group[key].add_member(ms, antenna.id, spw.id)
         
         return reduction_group
     
-    def _generate_datatable(self, table_name):
-        # create DataTableReader instance
-        worker = reader.MetaDataReader(mses=self.mses, table_name=table_name)
-        LOG.debug('table_name=%s'%(table_name))
-
-        for ms in self.mses:
-            dry_run = not os.path.exists(ms.name)
-            worker.set_name(ms.name)
-            worker.execute(dry_run=dry_run)
-
-        return worker.get_datatable()
-    
-    def __select_data(self, datatable, ms_ant_map):
+    def __select_data(self, datatable, ms_ant_map, startrow=0, nrow=-1):
+        ms_name = self.ms.name
+        filenames = datatable.getkeyword('FILENAMES')
+        assert ms_name in filenames
+        ms_index = numpy.argwhere(filenames == ms_name)[0][0]
+        
+        ms_id = datatable.getcol('MS', startrow=startrow, nrow=nrow)
+        assert numpy.all(ms_id == ms_index)
+        
         by_antenna = {}
         by_spw = {}
-        ant = datatable.getcol('ANTENNA')
-        spw = datatable.getcol('IF')
-        for i in xrange(datatable.nrow):
+        ant = datatable.getcol('ANTENNA', startrow=startrow, nrow=nrow)
+        spw = datatable.getcol('IF', startrow=startrow, nrow=nrow)
+        LOG.debug('ant=%s'%(ant))
+        LOG.debug('spw=%s'%(spw))
+        if nrow < 0:
+            nrow = datatable.nrow - startrow
+        LOG.debug('nrow = %s'%(nrow))
+        for i in xrange(nrow):
             thisant = ant[i]
             thisspw = spw[i]
             
-            ms = ms_ant_map[thisant]
-            
-            spw_domain = ms.spectral_windows[thisspw]
+            spw_domain = self.ms.spectral_windows[thisspw]
+            LOG.debug('spw.name=\'%s\''%(spw_domain.name))
+            LOG.debug('spw.intents=%s'%(spw_domain.intents))
             if re.search('^WVR#', spw_domain.name) is not None \
                 or re.search('#CH_AVG$', spw_domain.name) is not None \
                 or 'TARGET' not in spw_domain.intents:
@@ -121,27 +168,32 @@ class SDMSInspection(object):
 
             if not by_antenna.has_key(thisant):
                 by_antenna[thisant] = set()
-            by_antenna[thisant].add(i)
+            by_antenna[thisant].add(i + startrow)
 
             if not by_spw.has_key(thisspw):
                 by_spw[thisspw] = set()
-            by_spw[thisspw].add(i)
+            by_spw[thisspw].add(i + startrow)
         
         return by_antenna, by_spw
         
-    def _group_data(self, datatable):
+    def _group_data(self, datatable, position_group_id, time_group_id_small, time_group_id_large, startrow=0, nrow=-1):
         ms_ant_map = {}
         id_ant_map = {}
         ant_offset = 0
-        for ms in self.mses:
-            nant = len(ms.antennas)
-            for a in xrange(nant):
-                key = a + ant_offset
-                ms_ant_map[key] = ms
-                id_ant_map[key] = ms.antennas[a].id
-            ant_offset += nant
+        ms = self.ms
+        nant = len(ms.antennas)
+        for a in xrange(nant):
+            key = a + ant_offset
+            ms_ant_map[key] = ms
+            id_ant_map[key] = ms.antennas[a].id
+        ant_offset += nant
         
-        by_antenna, by_spw = self.__select_data(datatable, ms_ant_map)
+        if nrow < 0:
+            nrow = datatable.nrow - startrow
+        by_antenna, by_spw = self.__select_data(datatable, ms_ant_map, startrow=startrow, nrow=nrow)
+        LOG.debug('by_antenna=%s'%(by_antenna))
+        LOG.debug('by_spw=%s'%(by_spw))
+        LOG.debug('len(by_antenna)=%s len(by_spw)=%s'%(len(by_antenna),len(by_spw)))
         
         qa = casatools.quanta
 
@@ -154,9 +206,9 @@ class SDMSInspection(object):
         row = numpy.asarray(datatable.getcol('ROW'))
         elapsed = numpy.asarray(datatable.getcol('ELAPSED'))
         beam = numpy.asarray(datatable.getcol('BEAM'))
-        posgrp = numpy.zeros(len(datatable), dtype=int)
-        timegrp = [numpy.zeros(len(datatable), dtype=int) - 1,
-                        numpy.zeros(len(datatable), dtype=int) - 1]
+        posgrp = numpy.zeros(datatable.nrow, dtype=numpy.int32) - 1
+        timegrp = [numpy.zeros(datatable.nrow, dtype=numpy.int32) - 1,
+                        numpy.zeros(datatable.nrow, dtype=numpy.int32) - 1]
         posgrp_rep = {}
         posgrp_list = {}
         timegrp_list = {}
@@ -170,14 +222,18 @@ class SDMSInspection(object):
         time_gap = None
         merge_table = None
         merge_gap = None
-        observing_pattern = []
+        observing_pattern = {}
 
-        posgrp_id = 0
-        timegrp_id = [0,0]
+        posgrp_id = position_group_id
+        LOG.debug('POSGRP: starting ID is %s'%(posgrp_id))
+        timegrp_id = [time_group_id_small, time_group_id_large]
+        LOG.debug('TIMEGRP: starting ID is %s'%(timegrp_id))
 
+        ms = self.ms
         for (ant,vant) in by_antenna.items():
+            LOG.debug('Start ant %s'%(ant))
             pattern_dict = {}
-            ms = ms_ant_map[ant]
+            #ms = ms_ant_map[ant]
             observatory = ms.antenna_array.name
             _beam_size = ms.beam_sizes[id_ant_map[ant]]
             for i in (0,1):
@@ -185,6 +241,7 @@ class SDMSInspection(object):
             posgrp_list[ant] = {}
             timegrp_list[ant] = {}
             for (spw,vspw) in by_spw.items():
+                LOG.debug('Start spw %s'%(spw))
                 try:
                     spw_domain = ms.get_spectral_window(spw_id=spw)
                 except KeyError:
@@ -204,6 +261,7 @@ class SDMSInspection(object):
                 if len(id_list) == 0:
                     continue
                 id_list.sort()
+                LOG.debug('id_list=%s'%(id_list))
                 row_sel = numpy.take(row, id_list)
                 ra_sel = numpy.take(ra, id_list)
                 dec_sel = numpy.take(dec, id_list)
@@ -233,12 +291,16 @@ class SDMSInspection(object):
                 
                 ### prepare for Self.Datatable ###
                 #posgrp_list[ant][spw][pol] = []
+                LOG.debug('pos_dict = %s'%(pos_dict))
+                LOG.debug('last_ra = %s last_dec = %s'%(last_ra, last_dec))
                 for (k,v) in pos_dict.items():
                     if v[0] == -1:
                         continue
-                    posgrp_rep[posgrp_id] = id_list[v[0]]
+                    LOG.debug('POSGRP_REP: add %s as a representative of group %s'%(id_list[v[0]], posgrp_id))
+                    posgrp_rep[int(posgrp_id)] = int(id_list[v[0]])
                     for id in v:
-                        posgrp[id_list[id]] = posgrp_id
+                        _id = id_list[id]
+                        posgrp[_id] = posgrp_id
                     posgrp_list[ant][spw].append(posgrp_id)
                     posgrp_id += 1
                 ###
@@ -278,7 +340,7 @@ class SDMSInspection(object):
 
             # register observing pattern to domain object
             #self[ant].pattern = pattern_dict
-            observing_pattern.append(pattern_dict)
+            observing_pattern[ant] = pattern_dict
             
         grouping_result= {}
         grouping_result['POSGRP'] = posgrp
@@ -287,10 +349,14 @@ class SDMSInspection(object):
         grouping_result['TIMEGRP_LIST'] = timegrp_list
         grouping_result['TIMEGRP'] = timegrp
         grouping_result['TIMEGAP'] = timegap
-        grouping_result['OBSERVING_PATTERN'] = observing_pattern
+        #grouping_result['OBSERVING_PATTERN'] = observing_pattern
+        
+        ms.observing_pattern = observing_pattern
         
         return grouping_result
-    def _inspect_calibration_strategy(self, ms):
+    
+    def _inspect_calibration_strategy(self):
+        ms = self.ms
         tsys_transfer = []
         calibration_type_heuristic = heuristics.CalibrationTypeHeuristics()
         spwmap_heuristic = heuristics.TsysSpwMapHeuristics()
@@ -326,7 +392,8 @@ class SDMSInspection(object):
                                 'calmode': calibration_type}
         ms.calibration_strategy = calibration_strategy
         
-    def _inspect_beam_size(self, ms):
+    def _inspect_beam_size(self):
+        ms = self.ms
         beam_size_heuristic = heuristics.SingleDishBeamSize()
         beam_sizes = {}
         for antenna in ms.antennas:

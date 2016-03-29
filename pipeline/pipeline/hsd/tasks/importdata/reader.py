@@ -22,35 +22,23 @@ def get_value_in_deg(quantity):
     return qa.getvalue(qa.convert(quantity, 'deg'))
 
 class MetaDataReader(object):
-    def __init__(self, mses, table_name):
+    def __init__(self, ms, table_name):
         """
         mses -- list of measurementset domain objects
         table_name -- name of DataTable
         """
-        self.mses = mses
+        self.ms = ms
         self.table_name = table_name
         self.datatable = DataTable(name=self.table_name, readonly=False)
         self.vAnt = 0
+        self.appended_row = 0
         
     @property
-    def ms(self):
-        if not hasattr(self, 'name'):
-            return None
-        else:
-            absolute_name = absolute_path(self.name)
-            mses = [ms for ms in self.mses if ms.name == absolute_name]
-            assert len(mses) == 1
-            ms = mses[0]
-            return ms
-
+    def name(self):
+        return self.ms.name
+        
     def get_datatable(self):
         return self.datatable
-
-    def set_name(self, name):
-        """
-        Set name of the data to be read
-        """
-        self.name = name.rstrip('/')
 
     def detect_target_spw(self):
         if not hasattr(self, 'name'):
@@ -87,9 +75,14 @@ class MetaDataReader(object):
         LOG.info('name=%s'%(name))
         if self.datatable.has_key('FILENAMES'):
             filenames = self.datatable.getkeyword('FILENAMES')
+            if name in filenames:
+                # the data is already registered, return
+                self.appended_row = 0
+                return
             filenames = numpy.concatenate((filenames,[name]))
         else:
             filenames = [name]
+        ms_id = len(filenames) - 1
         self.datatable.putkeyword('FILENAMES',filenames)
 
 
@@ -228,9 +221,12 @@ class MetaDataReader(object):
         intArr[:] = -1
         self.datatable.putcol('NOCHANGE',intArr,startrow=ID)
         self.datatable.putcol('POSGRP',intArr,startrow=ID)
-        Tant += self.vAnt
+        #Tant += self.vAnt
         self.datatable.putcol('ANTENNA',Tant,startrow=ID)
         self.datatable.putcol('SRCTYPE',Tsrctype,startrow=ID)
+        intArr[:] = ms_id
+        self.datatable.putcol('MS', intArr, startrow=ID)
+        
         # row base storing
         stats = [-1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0]
         flags = [1, 1, 1, 1, 1, 1, 1]
@@ -251,6 +247,8 @@ class MetaDataReader(object):
 
         num_antenna = len(self.ms.antennas)
         self.vAnt += num_antenna
+        
+        self.appended_row = nrow
 
     def detect_exclude_type(self):
         return map(int, [sd.srctype.poncal, sd.srctype.poffcal])
