@@ -216,5 +216,16 @@ class ia_pad_test(unittest.TestCase):
         pad.done()
         myia.done()
     
+    def test_history(self):
+        """Verify history writing"""
+        myia = iatool()
+        myia.fromshape("",[20,20])
+        bb = myia.pad()
+        myia.done()
+        msgs = bb.history()
+        bb.done()
+        self.assertTrue("ia.pad" in msgs[-2])
+        self.assertTrue("ia.pad" in msgs[-1])
+
 def suite():
     return [ia_pad_test]

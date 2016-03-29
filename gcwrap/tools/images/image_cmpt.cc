@@ -2981,7 +2981,6 @@ bool image::modify(
     return False;
 }
 
-
 image* image::moments(
     const vector<int>& moments, int axis,
     const variant& region, const variant& vmask,
@@ -3117,6 +3116,103 @@ image* image::moments(
     catch (const AipsError& x) {
         _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
                         << LogIO::POST;
+        RETHROW(x);
+    }
+    return nullptr;
+}
+
+std::string image::name(const bool strippath) {
+    try {
+        _log << _ORIGIN;
+        if (detached()) {
+            return "none";
+        }
+        return _name(strippath);
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return "";
+}
+
+String image::_name(bool strippath) const {
+    if (_imageF) {
+        return _imageF->name(strippath);
+    }
+    else {
+        return _imageC->name(strippath);
+    }
+}
+
+bool image::open(const std::string& infile) {
+    try {
+        _log << _ORIGIN;
+        if (_imageF || _imageC) {
+            _log << LogIO::WARN << "Another image is already open, closing first"
+                << LogIO::POST;
+        }
+        _reset();
+        auto ret = ImageFactory::fromFile(infile);
+        _imageF = ret.first;
+        _imageC = ret.second;
+        return True;
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return False;
+}
+
+image* image::pad(
+    const string& outfile, int npixels, double value, bool padmask,
+    bool overwrite, const variant& region, const string& box,
+    const string& chans, const string& stokes, const string& mask,
+    bool  stretch, bool wantreturn
+) {
+    try {
+        _log << _ORIGIN;
+        if (detached()) {
+            return nullptr;
+        }
+        ThrowIf(
+            ! _imageF,
+            "This method only supports Float valued images"
+        );
+        if (npixels <= 0) {
+            _log << "Value of npixels must be greater than zero" << LogIO::EXCEPTION;
+        }
+        auto regionPtr = _getRegion(region, True);
+        ImagePadder padder(
+            _imageF, regionPtr.get(), box,
+            chans, stokes, mask, outfile, overwrite
+        );
+        padder.setStretch(stretch);
+        padder.setPaddingPixels(npixels, value, padmask);
+        vector<String> names {
+            "outfile", "npixels", "value", "padmask",
+            "overwrite", "region", "box", "chans",
+            "stokes", "mask", "stretch", "wantreturn"
+        };
+        vector<variant> values {
+            outfile, npixels, value, padmask,
+            overwrite, region, box, chans,
+            stokes, mask, stretch, wantreturn
+        };
+        auto msgs = this->_newHistory(__func__, names, values);
+        padder.addHistory(_ORIGIN, msgs);
+        auto out = padder.pad(wantreturn);
+        if (wantreturn) {
+            return new image(out);
+        }
+        return nullptr;
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
         RETHROW(x);
     }
     return nullptr;
@@ -3454,89 +3550,6 @@ void image::_reset() {
 
 
 
-std::string image::name(const bool strippath) {
-	try {
-		_log << _ORIGIN;
-		if (detached()) {
-			return "none";
-		}
-		return _name(strippath);
-	} catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-}
-
-String image::_name(bool strippath) const {
-	if (_imageF) {
-		return _imageF->name(strippath);
-	}
-	else {
-		return _imageC->name(strippath);
-	}
-}
-
-bool image::open(const std::string& infile) {
-	try {
-		_log << _ORIGIN;
-		if (_imageF || _imageC) {
-			_log << LogIO::WARN << "Another image is already open, closing first"
-				<< LogIO::POST;
-		}
-		_reset();
-		auto ret = ImageFactory::fromFile(infile);
-		_imageF = ret.first;
-		_imageC = ret.second;
-		return True;
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	return False;
-}
-
-image* image::pad(
-	const string& outfile, int npixels, double value, bool padmask,
-	bool overwrite, const variant& region, const string& box,
-	const string& chans, const string& stokes, const string& mask,
-	bool  stretch, bool wantreturn
-) {
-	try {
-		_log << _ORIGIN;
-		if (detached()) {
-			return 0;
-		}
-		ThrowIf(
-			! _imageF,
-			"This method only supports Float valued images"
-		);
-		if (npixels <= 0) {
-			_log << "Value of npixels must be greater than zero" << LogIO::EXCEPTION;
-		}
-		SHARED_PTR<Record> regionPtr = _getRegion(region, True);
-
-		ImagePadder padder(
-			_imageF, regionPtr.get(), box,
-			chans, stokes, mask, outfile, overwrite
-		);
-		padder.setStretch(stretch);
-		padder.setPaddingPixels(npixels, value, padmask);
-		SHARED_PTR<ImageInterface<Float> > out(padder.pad(wantreturn));
-		if (wantreturn) {
-			return new image(out);
-		}
-		return 0;
-
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-			<< LogIO::POST;
-		RETHROW(x);
-	}
-}
 
 image* image::crop(
 	const string& outfile, const vector<int>& axes,

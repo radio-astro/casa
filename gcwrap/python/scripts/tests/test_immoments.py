@@ -1343,7 +1343,16 @@ class immoment_test2(unittest.TestCase):
         zz.done()
         myia.done()
                 
-        
+    def test_history(self):
+        """Verify that history is written"""
+        myia = iatool()
+        myia.fromshape("", [20, 20, 20])
+        bb = myia.moments()
+        myia.done()
+        msgs = bb.history()
+        bb.done()
+        self.assertTrue("ia.moments" in msgs[-2])        
+        self.assertTrue("ia.moments" in msgs[-1])        
         
 def suite():
     return [immoment_test1,immoment_test2]        
