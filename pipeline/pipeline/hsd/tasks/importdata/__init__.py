@@ -20,5 +20,5 @@ qaadapter.registry.register_to_dataset_topic(importdataold.SDImportDataOldResult
 weblog.add_renderer(SDImportDataOld, renderer.T2_4MDetailsSingleDishImportDataOldRenderer(), group_by=weblog.UNGROUPED)
 
 # use the standard ImportData renderer to render ALMAImportData results
-weblog.add_renderer(SDImportData, super_renderer.T2_4MDetailsImportDataRenderer(), group_by=weblog.UNGROUPED)
+weblog.add_renderer(SDImportData, super_renderer.T2_4MDetailsImportDataRenderer(uri='hsd_importdata.mako'), group_by=weblog.UNGROUPED)
 
