@@ -361,9 +361,15 @@ def get_calfroms(inputs, caltypes=None):
     calto = callibrary.CalTo(vis=inputs.vis)
     calstate = inputs.context.callibrary.get_calstate(calto)
 
-    calfroms = (itertools.chain(*calstate.merged().values()))
-
-    return [cf for cf in calfroms if cf.caltype in caltypes]
+    try:
+        # old dict-based callibrary implementation
+        calfroms = (itertools.chain(*calstate.merged().values()))
+        return [cf for cf in calfroms if cf.caltype in caltypes]
+    except AttributeError:
+        # it's a new IntervalTree-based callibrary
+        return [calfrom for _, calfroms in calstate.merged()
+                for calfrom in calfroms
+                if calfrom.caltype in caltypes]
 
 
 def areEqual(a, b):
