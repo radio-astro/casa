@@ -1,18 +1,18 @@
-//# tImager.cc:  this tests Imager
-//# Copyright (C) 1996,1997,1999,2001
+//# tFFT2D.cc:  this tests FFT2D
+//# Copyright (C) 2016
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
-//# under the terms of the GNU Library General Public License as published by
+//# under the terms of the GNU General Public License as published by
 //# the Free Software Foundation; either version 2 of the License, or (at your
 //# option) any later version.
 //#
 //# This library is distributed in the hope that it will be useful, but WITHOUT
 //# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU  General Public
 //# License for more details.
 //#
-//# You should have received a copy of the GNU Library General Public License
+//# You should have received a copy of the GNU  General Public License
 //# along with this library; if not, write to the Free Software Foundation,
 //# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
 //#
@@ -31,7 +31,6 @@
 #include <casa/BasicSL/String.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Arrays/ArrayMath.h>
-#include <lattices/Lattices/LatticeFFT.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageConcat.h>
 #include <casa/namespace.h>
@@ -92,10 +91,19 @@ int main(int argc, char **argv)
 #endif
        Bool del;
        Complex *scr= arr0.getStorage(del);
-       ft.fftShift(scr, Long(x), Long(y), True);
+       //ft.fftShift(scr, Long(x), Long(y), True);
        ft.doFFT(scr, Long(x), Long(y), True);
 #ifdef _OPENMP
-       cerr << "FFTPack " << x << " by " << y << " complex takes " << omp_get_wtime()-wtime0 << endl;
+       cerr << "FFTPack forward " << x << " by " << y << " complex takes " << omp_get_wtime()-wtime0 << endl;
+       arr0.putStorage(scr, del);
+       arr0=Complex(x*y)*arr0;
+       scr= arr0.getStorage(del);
+       wtime0=omp_get_wtime();
+#endif
+       
+       ft.doFFT(scr, Long(x), Long(y), False);
+#ifdef _OPENMP
+       cerr << "FFTPack backward " << x << " by " << y << " complex takes " << omp_get_wtime()-wtime0 << endl;
 #endif
        arr0.putStorage(scr, del);
      }
@@ -110,7 +118,12 @@ int main(int argc, char **argv)
        Complex *scr= arr1.getStorage(del);
        ft.doFFT(scr, Long(x), Long(y), True);
 #ifdef _OPENMP
-       cerr << "FFTW " << x << " by " << y << " complex takes " << omp_get_wtime()-wtime0 << endl;
+       cerr << "FFTW forward " << x << " by " << y << " complex takes " << omp_get_wtime()-wtime0 << endl;
+       wtime0=omp_get_wtime();
+#endif
+       ft.doFFT(scr, Long(x), Long(y), False);
+#ifdef _OPENMP
+       cerr << "FFTW backward " << x << " by " << y << " complex takes " << omp_get_wtime()-wtime0 << endl;
 #endif
        arr1.putStorage(scr, del);
      }
@@ -130,15 +143,20 @@ int main(int argc, char **argv)
        Complex *scr= arr1.getStorage(del);
        ft.doFFT(scr, Long(x), Long(y), True);
 #ifdef _OPENMP
-       cerr << "FFTW 1-thread " << x << " by " << y << " complex takes " << omp_get_wtime()-wtime0 << endl;
+       cerr << "FFTW 1-thread forward " << x << " by " << y << " complex takes " << omp_get_wtime()-wtime0 << endl;
        omp_set_num_threads(numthreads);
+       wtime0=omp_get_wtime();
 #endif
+       ft.doFFT(scr, Long(x), Long(y), False);
+#ifdef _OPENMP
+       cerr << "FFTW 1-thread backward " << x << " by " << y << " complex takes " << omp_get_wtime()-wtime0 << endl;
        arr1.putStorage(scr, del);
      }
+#endif
      //Bool del;
      //Complex *scr0=arr0.getStorage(del);
      //Complex *scr1=arr1.getStorage(del);
-     cerr << "max bet FFTW/FFTPack " << max(arr0-arr1) << endl;
+     cerr << "max bet FFTW/FFTPack " << max(arr0) << "   " << max(arr1) << endl;
    }
 #ifdef _OPENMP
   wtime0=omp_get_wtime();
@@ -184,7 +202,7 @@ int main(int argc, char **argv)
    Array<Complex> arr1;
    im.get(arr, True);
    im3.get(arr1, True);
-   cerr << "max bet lattFFT and FFT2D " << max(arr-arr1) << endl;
+   cerr << "max diff lattFFT and FFT2D " << max(arr-arr1) << endl;
    
 
   }catch( AipsError e ){
