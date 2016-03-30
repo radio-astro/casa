@@ -113,6 +113,7 @@ casa_add_library( tools
  synthesis/imagertask_cmpt.cc
  synthesis/linearmosaic_cmpt.cc
  synthesis/CalTables/PlotCal.cc
+ synthesis/parallelimager_cmpt.cc
  synthesis/simulator_cmpt.cc
  synthesis/synthesisimager_cmpt.cc
  synthesis/synthesisdeconvolver_cmpt.cc
@@ -179,6 +180,7 @@ casa_add_tools( tools_swig tools_sources tools_py
  synthesis/imagertask.xml
  synthesis/imager.xml
  synthesis/linearmosaic.xml
+ synthesis/parallelimager.xml
  synthesis/simulator.xml
  synthesis/synthesisimager.xml
  synthesis/synthesisdeconvolver.xml

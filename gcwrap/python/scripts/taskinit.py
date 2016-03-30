@@ -94,6 +94,7 @@ mttool = casac.mstransformer
 mt = mttool()
 sdmstool = casac.singledishms
 sdms = sdmstool()
+parallelimager = casac.parallelimager()
 
 # Log initialization ###################################################################################################
 

@@ -244,6 +244,7 @@ from tsdbaseline_pg import tsdbaseline_pg as tsdbaseline
 from tsdcal_pg import tsdcal_pg as tsdcal
 from tsdfit_pg import tsdfit_pg as tsdfit
 from tclean_pg import tclean_pg as tclean
+from tclean2_pg import tclean2_pg as tclean2
 
 ##
 ## asap may not be available with every casa installation

@@ -216,6 +216,7 @@ from specfit import  specfit
 from split import  split
 #from split2 import split2
 from tclean import tclean
+from tclean2 import tclean2
 from tsdbaseline import tsdbaseline
 from tsdcal import tsdcal
 from tsdfit import tsdfit

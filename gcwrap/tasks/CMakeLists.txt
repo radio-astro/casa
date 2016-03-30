@@ -125,6 +125,7 @@ split.xml
 spxfit.xml
 statwt.xml
 tclean.xml
+tclean2.xml
 testconcat.xml
 tsdbaseline.xml
 tsdcal.xml

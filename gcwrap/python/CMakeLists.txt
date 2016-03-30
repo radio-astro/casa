@@ -194,6 +194,7 @@ scripts/task_split.py
 scripts/task_spxfit.py
 scripts/task_statwt.py
 scripts/task_tclean.py
+scripts/task_tclean2.py
 scripts/task_testconcat.py
 scripts/task_tsdbaseline.py
 scripts/task_tsdcal.py
