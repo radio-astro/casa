@@ -76,9 +76,13 @@ int main(int argc, char **argv)
    Double wtime1=0.0;
    Double wtime2=0.0;
    
-   Int numthreads=1;
-   if(argc >1 )
+   Int numthreads=-1;
+   if(argc >1 ){
      numthreads=atoi(argv[1]);
+#ifdef _OPENMP
+     omp_set_num_threads(numthreads);
+#endif
+   }
    {
      Array<Complex> arr0;
      Array<Complex> arr1;
@@ -167,7 +171,7 @@ int main(int argc, char **argv)
      //Bool del;
      //Complex *scr0=arr0.getStorage(del);
      //Complex *scr1=arr1.getStorage(del);
-     cerr << "max bet FFTW/FFTPack " << max(arr0) << "   " << max(arr1) << endl;
+     cerr << std::setprecision(9) <<  "max bet FFTW/FFTPack " << max(arr0) << "   " << max(arr1) << endl;
    }
 #ifdef _OPENMP
   wtime0=omp_get_wtime();
@@ -187,7 +191,9 @@ int main(int argc, char **argv)
 #endif
     if(!isRef)
      im.put(arr.reform(IPosition(4, x, y,1,1)));
+    Double totTimeFFT2D=0.0;
 #ifdef _OPENMP
+      totTimeFFT2D= -wtime0  +  omp_get_wtime();
     cerr << "getting array " << wtime1-wtime0 << " fft " << wtime2-wtime1 << " put " << omp_get_wtime()-wtime2 << endl;
    wtime0=omp_get_wtime();
 #endif
@@ -208,7 +214,7 @@ int main(int argc, char **argv)
      LatticeFFT::cfft2d(im3, True);
    }
 #ifdef _OPENMP 
-   cerr << "lat fft " << omp_get_wtime()-wtime1 << endl;
+   cerr << "LatticeFFT::cfft2d " << omp_get_wtime()-wtime1 << " as compared to  disk array based FFT2D " << totTimeFFT2D <<  endl;
 #endif
    Array<Complex> arr2;
    im.get(arr, True);
