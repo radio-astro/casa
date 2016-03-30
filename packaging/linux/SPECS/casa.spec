@@ -38,7 +38,7 @@
 %define _prefix /usr
 %define optdir /opt/casa
 %define topdir %{optdir}/versions
-%define rootdir %{topdir}/%{CASAVER}
+%define rootdir %{topdir}/%{CASAVER}R
 %define incdir %{rootdir}/include
 %define libdir %{rootdir}/lib
 %define bindir %{rootdir}/bin
