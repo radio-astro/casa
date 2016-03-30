@@ -54,6 +54,7 @@
 # define MPI_BOOL 0
 # define MPI_INT 1
 # define MPI_FLOAT 2
+# define MPI_DOUBLE 3
 namespace casa {
 typedef int MPI_Comm;
 typedef int MPI_Group;
@@ -66,7 +67,7 @@ typedef std::ptrdiff_t MPI_Aint;
 # define MPI_COMM_NULL -1
 # define MPI_GROUP_NULL -1
 # define MPI_UNDEFINED -1
-# define MPI_IN_PLACE -1
+# define MPI_IN_PLACE nullptr
 # define MPI_Comm_size(c, sp)                       \
 	do {                                            \
 		*(sp) = (((c) != MPI_COMM_NULL) ? 1 : 0);   \
