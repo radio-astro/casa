@@ -92,7 +92,7 @@ available.
     <param type="any" name="intent">
             <description>select data by observational intent, e.g. \'*ON_SOURCE*\' (\'\'=all)</description>
             <any type="variant" limittypes="string stringArray"/>
-            <value type="string"></value>
+            <value type="string">OBSERVE_TARGET#ON_SOURCE</value>
     </param>
 
     <param type="string" name="mode">
@@ -378,8 +378,9 @@ scan -- select data by scan numbers
                  scan='0~100 (scan ids 0-100 for all input MSes)
         this selection is in addition to the other selections to data
 intent -- select data by observational intent, also referred to as 'scan intent'
-        default: '' (use all scan intents)
-        example: intent='*ON_SOURCE*' (any valid scan-intent expression accepted by the MSSelection module can be specified)
+        default: 'OBSERVE_TARGET#ON_SOURCE' (ALMA ON-source intent)
+        example: intent='' (use all scan intents)
+                 intent='*ON_SOURCE*' (any valid scan-intent expression accepted by the MSSelection module can be specified)
                  For multiple MS input, a list of scan-intent expressions can be used:
                  intent=['ON_SOURCE','CALIBRATE_BANDPASS'] (scan intent ON_SOURCE for the first MS
                  and CALIBRATE_BANDPASS for the second)
