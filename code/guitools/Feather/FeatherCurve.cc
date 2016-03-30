@@ -31,14 +31,18 @@
 #include <QtCore/qmath.h>
 #include <qwt_plot_curve.h>
 #include <qwt_symbol.h>
-#include <qwt_legend_item.h>
+//#include <qwt_legend_item.h>
 
 namespace casa {
 
 FeatherCurve::FeatherCurve(FeatherPlot* plot, QwtPlot::Axis xAxis,
 		QwtPlot::Axis yAxis, bool scaledCurve ){
 	plotCurve = new LegendCurve( this );
+#if QWT_VERSION >= 0x060000
+	plotCurve->setAxes( xAxis, yAxis );
+#else
 	plotCurve->setAxis( xAxis, yAxis );
+#endif
 	plotCurve->attach( plot );
 	scatterPlot = false;
 	scaleLogUV = false;
@@ -54,7 +58,12 @@ void FeatherCurve::initScatterPlot( int dotSize ){
 	QwtSymbol* symbol = new QwtSymbol();
 	symbol->setSize( dotSize, dotSize );
 	symbol->setStyle( QwtSymbol::XCross );
+#if QWT_VERSION >= 0x060000
+	plotCurve->setSymbol( symbol );
+#else
 	plotCurve->setSymbol( *symbol );
+#endif
+
 	scatterPlot = true;
 }
 
@@ -87,8 +96,13 @@ void FeatherCurve::setCurveSize( bool scatterPlot, bool diagonalLine,
 	QString curveTitle = plotCurve->title().text();
 	if ( scatterPlot ){
 		if ( !diagonalLine ){
+#if QWT_VERSION >= 0x060000
+			QwtSymbol* symbol = const_cast<QwtSymbol*>(plotCurve->symbol());
+			symbol->setSize( dotSize, dotSize );
+#else
 			QwtSymbol symbol = plotCurve->symbol();
 			symbol.setSize( dotSize, dotSize );
+#endif
 			plotCurve->setSymbol( symbol );
 		}
 		//y=x
@@ -217,10 +231,18 @@ void FeatherCurve::adjustData( bool uvLog, bool ampLog ){
 					j++;
 				}
 			}
+#if QWT_VERSION >= 0x060000
+			plotCurve->setSamples( goodXValues, goodYValues, scaledSize );
+#else
 			plotCurve->setData( goodXValues, goodYValues, scaledSize );
+#endif
 		}
 		else {
+#if QWT_VERSION >= 0x060000
+			plotCurve->setSamples( scaledXValues, scaledYValues, scaledSize );
+#else
 			plotCurve->setData( scaledXValues, scaledYValues, scaledSize );
+#endif
 		}
 		delete[] scaledXValues;
 		delete[] scaledYValues;
@@ -320,10 +342,17 @@ void FeatherCurve::setFunctionColor( const QColor& color, bool diagonalLine ){
 			setCurvePenColor( color );
 		}
 		else {
+#if QWT_VERSION >= 0x060000
+			QwtSymbol* curveSymbol = const_cast<QwtSymbol*>(plotCurve->symbol());
+			QPen curvePen = curveSymbol->pen();
+			curvePen.setColor( color );
+			curveSymbol->setPen( curvePen );
+#else
 			QwtSymbol curveSymbol = plotCurve->symbol();
 			QPen curvePen = curveSymbol.pen();
 			curvePen.setColor( color );
 			curveSymbol.setPen( curvePen );
+#endif
 			plotCurve->setSymbol( curveSymbol );
 		}
 	}

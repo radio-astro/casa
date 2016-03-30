@@ -33,7 +33,6 @@ namespace casa {
 /////////////////////////////
 // QPPOINTDATA DEFINITIONS //
 /////////////////////////////
-
 QPPointData::QPPointData(PlotPointDataPtr data) : m_data(data) { }
 
 QPPointData::~QPPointData() { }
@@ -42,7 +41,16 @@ QPPointData::~QPPointData() { }
 PlotPointDataPtr QPPointData::data() { return m_data; }
 const PlotPointDataPtr QPPointData::data() const { return m_data; }
 
+#if QWT_VERSION >= 0x060000
+QPPointData* QPPointData::copy() const { return new QPPointData(m_data); }
+
+QPointF QPPointData::sample(size_t i) const { 
+	return QPointF(x(i), y(i));
+}
+
+#else
 QwtData* QPPointData::copy() const { return new QPPointData(m_data); }
+#endif
 
 size_t QPPointData::size() const {
     if(m_data.null()) return 0;

@@ -33,6 +33,10 @@
 #include <qwt_painter.h>
 #include <qwt_scale_widget.h>
 
+#if QWT_VERSION >= 0x060000
+#include <qwt_plot_renderer.h>
+#endif
+
 namespace casa {
 
 /////////////////////////
@@ -172,17 +176,20 @@ const String QPLayeredCanvas::CLASS_NAME = "QPLayeredCanvas";
 
 QPLayeredCanvas::QPLayeredCanvas(QPCanvas* parent, QWidget* parentWidget) :
         QwtPlot(parentWidget), m_parent(parent) {
+    m_grid = new QPGrid();
     initialize();
 }
 
 QPLayeredCanvas::QPLayeredCanvas(const QwtText& title, QPCanvas* parent,
         QWidget* parentWidget): QwtPlot(title, parentWidget), m_parent(parent){
+    m_grid = new QPGrid();
     initialize();
 }
 
 QPLayeredCanvas::~QPLayeredCanvas() {
     foreach(QPCanvasLayer* layer, m_layers)
         delete layer;
+    delete m_grid;
 }
 
 
@@ -213,6 +220,44 @@ QRect QPLayeredCanvas::canvasDrawRect() const {
     return rect;
 }
 
+#if QWT_VERSION >= 0x060000
+void QPLayeredCanvas::print(QPainter* painter, const QRect& rect) {
+    m_parent->logMethod(CLASS_NAME, "print", true);
+    if(painter == NULL) {
+        m_parent->logMethod(CLASS_NAME, "print", false);
+        return;
+    }
+    
+    // Set up operation.
+    PlotOperationPtr op = m_parent->operationExport();
+    if(!op.null()) {
+        op->reset();
+        op->setInProgress(true);
+    }
+    
+    if(!m_printPainters.contains(painter))
+        const_cast<QList<QPainter*>&>(m_printPainters).append(painter);
+    const_cast<bool&>(m_isPrinting) = true;
+    QwtPlotRenderer qprend;
+    qprend.render(this, painter, rect);
+    const_cast<QList<QPainter*>&>(m_printPainters).removeAll(painter);
+    const_cast<bool&>(m_isPrinting) = false;
+    
+    // Finish operation and set status as saving to file.
+    if(!op.null()) {
+        op->finish();
+        op->setCurrentStatus("Saving to file (may take a while)...");
+    }
+    m_parent->logMethod(CLASS_NAME, "print", false);
+}
+
+void QPLayeredCanvas::print(QPaintDevice& paintDev) {
+	QRect rect(0, 0, paintDev.width(), paintDev.height());
+	QPainter p(&paintDev);
+	print (&p, rect);
+}
+
+#else
 void QPLayeredCanvas::print(QPainter* painter, const QRect& rect,
         const QwtPlotPrintFilter& filter) const {
     m_parent->logMethod(CLASS_NAME, "print", true);
@@ -242,11 +287,12 @@ void QPLayeredCanvas::print(QPainter* painter, const QRect& rect,
     }
     m_parent->logMethod(CLASS_NAME, "print", false);
 }
+#endif
 
 bool QPLayeredCanvas::eventFilter(QObject* watched, QEvent* event) {
     if(watched == NULL || event == NULL || m_parent == NULL) return false;
     
-    QwtPlotCanvas* c = canvas();
+    QwtPlotCanvas* c = static_cast<QwtPlotCanvas*>(canvas());
     
     // Steal input events and send to canvas.
     if(watched == m_legendFrame && dynamic_cast<QInputEvent*>(event) != NULL) {
@@ -309,8 +355,19 @@ void QPLayeredCanvas::detachLayeredItem(QPPlotItem* item) {
     }
 }
 
+#if QWT_VERSION >= 0x060000
 void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& cRect,
-        const QwtScaleMap cMaps[axisCnt], const QwtPlotPrintFilter& pf) const {
+        const QwtScaleMap cMaps[axisCnt]){
+    m_parent->logMethod(CLASS_NAME, "drawItems", true);    
+    
+    if(m_printPainters.contains(painter)) {
+        printItems(painter, cRect, cMaps);
+        m_parent->logMethod(CLASS_NAME, "drawItems", false);
+        return;
+    }
+#else
+void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& cRect,
+        const QwtScaleMap cMaps[axisCnt], const QwtPlotPrintFilter& pf) {
     m_parent->logMethod(CLASS_NAME, "drawItems", true);    
     
     if(m_printPainters.contains(painter)) {
@@ -318,7 +375,8 @@ void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& cRect,
         m_parent->logMethod(CLASS_NAME, "drawItems", false);
         return;
     }
-    
+#endif
+ 
     PlotLoggerPtr infoLog = m_parent->logger();
 
     // Adjust drawing rectangle and scale maps for drawing into a cached image.
@@ -554,7 +612,7 @@ Bool QPLayeredCanvas::isDrawing( ){
 }
 
 void QPLayeredCanvas::printItems(QPainter* painter, const QRect& rect,
-        const QwtScaleMap maps[axisCnt], const QwtPlotPrintFilter& /*pf*/) const {
+        const QwtScaleMap maps[axisCnt]) {
     m_parent->logMethod(CLASS_NAME, "printItems", true);
     
     // Determine total draw segments.
@@ -578,35 +636,27 @@ void QPLayeredCanvas::printItems(QPainter* painter, const QRect& rect,
         layers[i]->drawItems(painter, rect, maps, op, index, nseg);
         index += segments[i];
     }
-    
+   
     // Draw internal legend if needed.
     if(drawLegend) {
+#if QWT_VERSION >= 0x060000 
+    	QwtPlot::insertLegend(m_parent->m_legend->legend());
+#else
         // printLegend needs the metrics map set.
         QwtMetricsMap old = QwtPainter::metricsMap();
         QwtPainter::setMetricsMap(this, painter->device());
-        
         // Have to convert the canvas rect from device to layout, then find the
         // legend draw rect.
         QRect legendRect = QwtPainter::metricsMap().deviceToLayout(rect);
-        legendRect = m_parent->m_legend->internalLegendRect(legendRect, false);
+        legendRect = m_parent->m_legend->internalLegendRect(legendRect);
 
-        printLegend_(painter, legendRect);
+	m_parent->m_legend->drawOutlineAndBackground(painter, rect, true);
+	QwtPlot::printLegend(painter, rect);
         QwtPainter::setMetricsMap(old);
+#endif 
     }
-    
+
     m_parent->logMethod(CLASS_NAME, "printItems", false);
-}
-
-void QPLayeredCanvas::printLegend(QPainter* painter, const QRect& rect) const {
-    // Only draw if external.  Internal plots will be drawn later because they
-    // must go on top of the plot items.
-    if(m_parent->m_legend->legendShown() && !m_parent->m_legend->isInternal())
-        printLegend_(painter, rect);
-}
-
-void QPLayeredCanvas::printLegend_(QPainter* painter, const QRect& rect) const{
-    m_parent->m_legend->drawOutlineAndBackground(painter, rect, true);
-    QwtPlot::printLegend(painter, rect);
 }
 
 bool QPLayeredCanvas::drawingIsHeld() const { return m_drawingHeld; }
@@ -645,8 +695,8 @@ int QPLayeredCanvas::changedLayersFlag() const {
     return flag;
 }
 
-const QPGrid& QPLayeredCanvas::grid() const { return m_grid; }
-QPGrid& QPLayeredCanvas::grid() { return m_grid; }
+const QPGrid& QPLayeredCanvas::grid() const { return *m_grid; }
+QPGrid& QPLayeredCanvas::grid() { return *m_grid; }
 
 const QHash<PlotAxis, QPCartesianAxis*>& QPLayeredCanvas::cartesianAxes()const{
     return m_cartAxes; }
@@ -698,19 +748,19 @@ void QPLayeredCanvas::initialize() {
     m_redrawWaiting = false;
     m_isPrinting = false;
     
-    m_grid.enableX(false);
-    m_grid.enableXMin(false);
-    m_grid.enableY(false);
-    m_grid.enableYMin(false);
-    m_layerBase.addItem(&m_grid);
-    m_grid.qpAttach(m_parent);
+    m_grid->enableX(false);
+    m_grid->enableXMin(false);
+    m_grid->enableY(false);
+    m_grid->enableYMin(false);
+    m_layerBase.addItem(m_grid);
+    m_grid->qpAttach(m_parent);
     
     m_cartAxes[X_BOTTOM] = NULL;
     m_cartAxes[X_TOP] = NULL;
     m_cartAxes[Y_LEFT] = NULL;
     m_cartAxes[Y_RIGHT] = NULL;
     
-    QwtPlotCanvas* c = canvas();
+    QwtPlotCanvas* c = static_cast<QwtPlotCanvas*>(canvas());
     c->setFrameStyle(QFrame::NoFrame | QFrame::Plain);
     c->setAttribute(Qt::WA_PaintOutsidePaintEvent, true); 
 }

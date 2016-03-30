@@ -71,9 +71,10 @@ public:
     
     // QPPlotItem Methods //
     
+#if QWT_VERSION < 0x060000 
     // Overrides QwtPlotItem::legendItem().
     virtual QWidget* legendItem() const;
-    
+#endif    
     
     // PlotShape Methods //
     
@@ -162,12 +163,19 @@ protected:
     const String& className() const { return CLASS_NAME; }
     
     // Implements QPLayerItem::draw_().  Ignores draw index and count.
+#if QWT_VERSION >= 0x060000
+    void draw_(QPainter* painter, const QwtScaleMap& xMap,
+              const QwtScaleMap& yMap, const QRectF& canvasRect,
+              unsigned int drawIndex, unsigned int drawCount) const;
+#else
     void draw_(QPainter* painter, const QwtScaleMap& xMap,
               const QwtScaleMap& yMap, const QRect& canvasRect,
               unsigned int drawIndex, unsigned int drawCount) const;
-    
+#endif
+
     // Implements QPShape::legendStyle().
     QwtSymbol::Style legendStyle() const { return QwtSymbol::Rect; }
+    
     
 private:
     PlotCoordinate m_upperLeft;  // upper left coordinate
@@ -237,10 +245,16 @@ protected:
     const String& className() const { return CLASS_NAME; }
     
     // Implements QPLayerItem::draw_().  Ignores draw index and count.
+#if QWT_VERSION >= 0x060000
+    void draw_(QPainter* painter, const QwtScaleMap& xMap,
+              const QwtScaleMap& yMap, const QRectF& canvasRect,
+              unsigned int drawIndex, unsigned int drawCount) const;
+#else
     void draw_(QPainter* painter, const QwtScaleMap& xMap,
               const QwtScaleMap& yMap, const QRect& canvasRect,
               unsigned int drawIndex, unsigned int drawCount) const;
-    
+#endif
+ 
     // Implements QPShape::legendStyle().
     QwtSymbol::Style legendStyle() const { return QwtSymbol::Ellipse; }
     
@@ -293,9 +307,15 @@ protected:
     const String& className() const { return CLASS_NAME; }
     
     // Implements QPLayerItem::draw_().
+#if QWT_VERSION >= 0x060000
+    void draw_(QPainter* painter, const QwtScaleMap& xMap,
+              const QwtScaleMap& yMap, const QRectF& canvasRect,
+              unsigned int drawIndex, unsigned int drawCount) const;
+#else
     void draw_(QPainter* painter, const QwtScaleMap& xMap,
               const QwtScaleMap& yMap, const QRect& canvasRect,
               unsigned int drawIndex, unsigned int drawCount) const;
+#endif
     
     // Implements QPShape::legendStyle().
     QwtSymbol::Style legendStyle() const { return QwtSymbol::Hexagon; }
@@ -357,10 +377,16 @@ protected:
     const String& className() const { return CLASS_NAME; }
     
     // Implements QPLayerItem::draw_().  Ignores draw index and count.
+#if QWT_VERSION >= 0x060000
+    void draw_(QPainter* painter, const QwtScaleMap& xMap,
+              const QwtScaleMap& yMap, const QRectF& canvasRect,
+              unsigned int drawIndex, unsigned int drawCount) const;
+#else
     void draw_(QPainter* painter, const QwtScaleMap& xMap,
               const QwtScaleMap& yMap, const QRect& canvasRect,
               unsigned int drawIndex, unsigned int drawCount) const;
-    
+#endif
+ 
     // Implements QPShape::legendStyle().
     QwtSymbol::Style legendStyle() const { return QwtSymbol::HLine; }
     
@@ -450,9 +476,15 @@ protected:
     const String& className() const { return CLASS_NAME; }
     
     // Implements QPLayerItem::draw_().  Ignores draw index and count.
+#if QWT_VERSION >= 0x060000
+    void draw_(QPainter* painter, const QwtScaleMap& xMap,
+              const QwtScaleMap& yMap, const QRectF& canvasRect,
+              unsigned int drawIndex, unsigned int drawCount) const;
+#else
     void draw_(QPainter* painter, const QwtScaleMap& xMap,
               const QwtScaleMap& yMap, const QRect& canvasRect,
               unsigned int drawIndex, unsigned int drawCount) const;
+#endif
     
     // Implements QPShape::legendStyle().
     QwtSymbol::Style legendStyle() const { return QwtSymbol::HLine; }
@@ -517,9 +549,15 @@ protected:
     const String& className() const { return CLASS_NAME; }
     
     // Implements QPLayerItem::draw_().
+#if QWT_VERSION >= 0x060000
+    void draw_(QPainter* painter, const QwtScaleMap& xMap,
+              const QwtScaleMap& yMap, const QRectF& canvasRect,
+              unsigned int drawIndex, unsigned int drawCount) const;
+#else
     void draw_(QPainter* painter, const QwtScaleMap& xMap,
               const QwtScaleMap& yMap, const QRect& canvasRect,
               unsigned int drawIndex, unsigned int drawCount) const;
+#endif
     
     // Implements QPShape::legendStyle().
     QwtSymbol::Style legendStyle() const { return QwtSymbol::HLine; }
@@ -608,9 +646,15 @@ protected:
     const String& className() const { return CLASS_NAME; }
     
     // Implements QPLayerItem::draw_().  Ignores draw index and count.
+#if QWT_VERSION >= 0x060000
+    void draw_(QPainter* painter, const QwtScaleMap& xMap,
+              const QwtScaleMap& yMap, const QRectF& canvasRect,
+              unsigned int drawIndex, unsigned int drawCount) const;
+#else
     void draw_(QPainter* painter, const QwtScaleMap& xMap,
               const QwtScaleMap& yMap, const QRect& canvasRect,
               unsigned int drawIndex, unsigned int drawCount) const;
+#endif
     
     // Implements QPShape::legendStyle().
     QwtSymbol::Style legendStyle() const { return QwtSymbol::HLine; }
@@ -661,10 +705,11 @@ public:
 
     // Overrides QwtPlotItem::boundingRect();
     QwtDoubleRect boundingRect() const;
-    
+
+#if QWT_VERSION < 0x060000 
     // Overrides QwtPlotItem::legendItem().
     QWidget* legendItem() const;
-    
+#endif 
     
     // PlotPoint Methods //
     
@@ -685,9 +730,15 @@ protected:
     const String& className() const { return CLASS_NAME; }
     
     // Implements QPLayerItem::draw_().  Ignores draw index and count.
+#if QWT_VERSION >= 0x060000
+    void draw_(QPainter* painter, const QwtScaleMap& xMap,
+              const QwtScaleMap& yMap, const QRectF& canvasRect,
+              unsigned int drawIndex, unsigned int drawCount) const;
+#else
     void draw_(QPainter* painter, const QwtScaleMap& xMap,
               const QwtScaleMap& yMap, const QRect& canvasRect,
               unsigned int drawIndex, unsigned int drawCount) const;
+#endif
     
 private:
     QPSymbol m_symbol;      // symbol

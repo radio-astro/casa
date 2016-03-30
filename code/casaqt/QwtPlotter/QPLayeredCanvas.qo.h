@@ -228,7 +228,6 @@ public:
     
     
     // Include overloaded methods.
-    using QwtPlot::print;
     using QwtPlot::replot;
 
     
@@ -249,8 +248,14 @@ public:
     // Draw Methods //
     
     // Overrides QwtPlot::print() to properly handle pixmap caches.
+#if QWT_VERSION >= 0x060000
+    void print(QPainter* painter, const QRect& rect);
+    void print(QPaintDevice& paintDev);
+#else
+    using QwtPlot::print;
     void print(QPainter* painter, const QRect& rect,
             const QwtPlotPrintFilter& filter = QwtPlotPrintFilter()) const;
+#endif
     
     // Is drawing in progress?
     virtual Bool isDrawing();
@@ -277,21 +282,33 @@ protected:
     // Draw Methods //
     
     // Overrides QwtPlot::drawItems().
+    // No QwtPlotPrintFilter in qwt 6
+    void drawItems(QPainter* painter, const QRect& rect,
+                   const QwtScaleMap maps[axisCnt]);
+    void printItems(QPainter* painter, const QRect& rect,
+                   const QwtScaleMap maps[axisCnt]);
+
+#if QWT_VERSION < 0x060000
+    // QwtPlotPrintFilter  not used, keep signature but call other method
     void drawItems(QPainter* painter, const QRect& rect,
                    const QwtScaleMap maps[axisCnt],
-                   const QwtPlotPrintFilter& filter) const;
-    
+                   const QwtPlotPrintFilter& );
+
     // Like drawItems, but doesn't do threaded/cached drawing.
+    // QwtPlotPrintFilter  not used, keep signature but call other method
     void printItems(QPainter* painter, const QRect& rect,
                    const QwtScaleMap maps[axisCnt],
-                   const QwtPlotPrintFilter& filter) const;
-    
+                   const QwtPlotPrintFilter& /*filter*/) {
+	printItems(painter, rect, maps);
+    }
+#endif
+ 
     // Overrides QwtPlot::printLegend().
-    void printLegend(QPainter* painter, const QRect& rect) const;
+    //void printLegend(QPainter* painter, const QRect& rect) const;
     
     // Provides access to QwtPlot::printLegend(), and also lets the legend
     // draw its outline and background if needed.
-    void printLegend_(QPainter* painter, const QRect& rect) const;
+    //void printLegend_(QPainter* painter, const QRect& rect) const;
     
     // Hold/Release drawing.
     // <group>
@@ -383,7 +400,7 @@ private:
     
     
     // Canvas grid.
-    QPGrid m_grid;
+    QPGrid* m_grid;
     
     // Cartesian axes.
     QHash<PlotAxis, QPCartesianAxis*> m_cartAxes;

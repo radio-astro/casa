@@ -29,13 +29,15 @@
 #include <casa/BasicSL/Constants.h>
 
 #ifdef AIPS_HAS_QWT
-    #include <casaqt/QwtPlotter/QPCanvas.qo.h>
-    #include <casaqt/QwtPlotter/QPFactory.h>
+#include <casaqt/QwtPlotter/QPCanvas.qo.h>
+#include <casaqt/QwtPlotter/QPFactory.h>
 
-    #include <qwt_painter.h>
-    #include <qwt_legend_item.h>
+#include <qwt_painter.h>
+#if QWT_VERSION < 0x060000
+#include <qwt_legend_item.h>
+#endif
 
-    #include <QPainter>
+#include <QPainter>
 #endif
 
 #include <math.h>
@@ -194,6 +196,7 @@ QPShape::QPShape(const PlotShape& copy) {
 QPShape::~QPShape() { }
 
 
+#if QWT_VERSION < 0x060000
 QWidget* QPShape::legendItem() const {
     QwtSymbol s(legendStyle(), m_area.asQBrush(), m_line.asQPen(),
                 QSize(10, 10));
@@ -203,7 +206,7 @@ QWidget* QPShape::legendItem() const {
                             QwtLegendItem::ShowText);
     return item;
 }
-
+#endif
 
 bool QPShape::lineShown() const { return m_line.style() != PlotLine::NOLINE; }
 void QPShape::setLineShown(bool l) {
@@ -305,14 +308,23 @@ void QPRectangle::setRectCoordinates(const PlotCoordinate& ul,
     }
 }
 
-
+#if QWT_VERSION >= 0x060000
 void QPRectangle::draw_(QPainter* painter, const QwtScaleMap& xMap,
-        const QwtScaleMap& yMap, const QRect& /*canvasRect*/,
+        const QwtScaleMap& yMap, const QRectF& /*canvasRect*/,
         unsigned int /*drawIndex*/, unsigned int /*drawCount*/) const {
     logMethod("draw_", true);
     QRectF rect = boundingRect();
     if(rect.isValid()) {
+        const QRectF r = paintRect(xMap, yMap);
+#else
+void QPRectangle::draw_(QPainter* painter, const QwtScaleMap& xMap,
+        const QwtScaleMap& yMap, const QRect& /*canvasRect*/,
+        unsigned int /*drawIndex*/, unsigned int /*drawCount*/) const {
+    logMethod("draw_", true);
+    QwtDoubleRect rect = boundingRect();
+    if(rect.isValid()) {
         const QRect r = transform(xMap, yMap, rect);
+#endif
         painter->setPen(m_line.asQPen());
         painter->setBrush(m_area.asQBrush());        
         painter->drawRect(r);
@@ -413,9 +425,15 @@ void QPEllipse::setCenter(const PlotCoordinate& center) {
 }
 
 
+#if QWT_VERSION >= 0x060000
+void QPEllipse::draw_(QPainter* painter, const QwtScaleMap& xMap,
+        const QwtScaleMap& yMap, const QRectF& /*canvasRect*/,
+        unsigned int /*drawIndex*/, unsigned int /*drawCount*/) const {
+#else
 void QPEllipse::draw_(QPainter* painter, const QwtScaleMap& xMap,
         const QwtScaleMap& yMap, const QRect& /*canvasRect*/,
         unsigned int /*drawIndex*/, unsigned int /*drawCount*/) const {
+#endif
     logMethod("draw_", true);
     QRectF rect = boundingRect();
     if(rect.isValid()) {
@@ -514,9 +532,15 @@ void QPPolygon::setCoordinates(const vector<PlotCoordinate>& c) {
 }
 
 
+#if QWT_VERSION >= 0x060000
+void QPPolygon::draw_(QPainter* painter, const QwtScaleMap& xMap,
+        const QwtScaleMap& yMap, const QRectF& /*canvasRect*/,
+        unsigned int drawIndex, unsigned int drawCount) const {
+#else
 void QPPolygon::draw_(QPainter* painter, const QwtScaleMap& xMap,
         const QwtScaleMap& yMap, const QRect& /*canvasRect*/,
         unsigned int drawIndex, unsigned int drawCount) const {
+#endif
     logMethod("draw_", true);
     if(isValid() && m_canvas != NULL) {
         unsigned int n = m_coords.size();
@@ -616,9 +640,15 @@ double QPLineShape::location() const {
 PlotAxis QPLineShape::axis() const { return m_axis; }
 
 
+#if QWT_VERSION >= 0x060000
+void QPLineShape::draw_(QPainter* painter, const QwtScaleMap& xMap,
+        const QwtScaleMap& yMap, const QRectF& canvasRect,
+        unsigned int /*drawIndex*/, unsigned int /*drawCount*/) const {
+#else
 void QPLineShape::draw_(QPainter* painter, const QwtScaleMap& xMap,
         const QwtScaleMap& yMap, const QRect& canvasRect,
         unsigned int /*drawIndex*/, unsigned int /*drawCount*/) const {
+#endif
     logMethod("draw_", true);
     const_cast<QwtPlotMarker&>(m_marker).setLinePen(m_line.asQPen());
     m_marker.draw(painter, xMap, yMap, canvasRect);
@@ -723,9 +753,15 @@ void QPArrow::setArrowSize(double size) {
 }
 
 
+#if QWT_VERSION >= 0x060000
+void QPArrow::draw_(QPainter* painter, const QwtScaleMap& xMap,
+        const QwtScaleMap& yMap, const QRectF& /*canvasRect*/,
+        unsigned int /*drawIndex*/, unsigned int /*drawCount*/) const {
+#else
 void QPArrow::draw_(QPainter* painter, const QwtScaleMap& xMap,
         const QwtScaleMap& yMap, const QRect& /*canvasRect*/,
         unsigned int /*drawIndex*/, unsigned int /*drawCount*/) const {
+#endif
     logMethod("draw_", true);
     QRectF rect = boundingRect();
     if(rect.isValid() || m_from.x() == m_to.x() || m_from.y() == m_to.y()) {        
@@ -849,9 +885,15 @@ void QPPath::setCoordinates(const vector<PlotCoordinate>& coords) {
 }
 
 
+#if QWT_VERSION >= 0x060000
+void QPPath::draw_(QPainter* painter, const QwtScaleMap& xMap,
+        const QwtScaleMap& yMap, const QRectF& /*canvasRect*/,
+        unsigned int drawIndex, unsigned int drawCount) const {
+#else
 void QPPath::draw_(QPainter* painter, const QwtScaleMap& xMap,
         const QwtScaleMap& yMap, const QRect& /*canvasRect*/,
         unsigned int drawIndex, unsigned int drawCount) const {
+#endif
     logMethod("draw_", true);
     unsigned int n = m_coords.size();
     if(n <= 1 || m_canvas == NULL || drawIndex >= n) {
@@ -1013,9 +1055,15 @@ void QPArc::setOrientation(int o) {
 }
 
 
+#if QWT_VERSION >= 0x060000
+void QPArc::draw_(QPainter* painter, const QwtScaleMap& xMap,
+        const QwtScaleMap& yMap, const QRectF& /*canvasRect*/,
+        unsigned int /*drawIndex*/, unsigned int /*drawCount*/) const {
+#else
 void QPArc::draw_(QPainter* painter, const QwtScaleMap& xMap,
         const QwtScaleMap& yMap, const QRect& /*canvasRect*/,
         unsigned int /*drawIndex*/, unsigned int /*drawCount*/) const {
+#endif
     logMethod("draw_", true);
     if(m_canvas != NULL) {
         painter->save();
@@ -1131,6 +1179,7 @@ QwtDoubleRect QPPoint::boundingRect() const {
     } else return QwtDoubleRect();
 }
 
+#if QWT_VERSION < 0x060000
 QWidget* QPPoint::legendItem() const {
     QwtLegendItem* item = new QwtLegendItem(m_symbol, QPen(),
                                             QwtPlotItem::title());
@@ -1138,7 +1187,7 @@ QWidget* QPPoint::legendItem() const {
                             QwtLegendItem::ShowText);
     return item;
 }
-
+#endif
 
 PlotCoordinate QPPoint::coordinate() const { return m_coord; }
 
@@ -1149,7 +1198,17 @@ void QPPoint::setCoordinate(const PlotCoordinate& coordinate) {
     }
 }
 
-PlotSymbolPtr QPPoint::symbol() const { return new QPSymbol(m_symbol); }
+PlotSymbolPtr QPPoint::symbol() const { 
+#if QWT_VERSION >= 0x060000
+    psize_t casasize = m_symbol.size();
+    QSize qsize = QSize(casasize.first, casasize.second);
+    QPSymbol* symbol = new QPSymbol(m_symbol.style(),
+        m_symbol.drawBrush(), m_symbol.drawPen(), qsize);
+    return symbol;
+#else
+	return new QPSymbol(m_symbol); 
+#endif
+}
 
 void QPPoint::setSymbol(const PlotSymbol& s) {
     if(s != *symbol()) {
@@ -1158,9 +1217,15 @@ void QPPoint::setSymbol(const PlotSymbol& s) {
     }
 }
 
+#if QWT_VERSION >= 0x060000
+void QPPoint::draw_(QPainter* painter, const QwtScaleMap& xMap,
+        const QwtScaleMap& yMap, const QRectF& /*canvasRect*/,
+        unsigned int /*drawIndex*/, unsigned int /*drawCount*/) const {
+#else
 void QPPoint::draw_(QPainter* painter, const QwtScaleMap& xMap,
         const QwtScaleMap& yMap, const QRect& /*canvasRect*/,
         unsigned int /*drawIndex*/, unsigned int /*drawCount*/) const {
+#endif
     logMethod("draw_", true);
     painter->save();
     
@@ -1169,9 +1234,13 @@ void QPPoint::draw_(QPainter* painter, const QwtScaleMap& xMap,
         painter->setBrush(m_symbol.brush());
     } else painter->setPen(m_symbol.brush().color());
 
+#if QWT_VERSION >= 0x060000
+    QRect rect = m_symbol.boundingRect();
+#else
     QRect rect;
     rect.setSize(QwtPainter::metricsMap().screenToLayout(
                  dynamic_cast<const QwtSymbol*>(&m_symbol)->size()));
+#endif
 
     PlotCoordinate c = m_coord;
     if(c.system() != PlotCoordinate::WORLD)

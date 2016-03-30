@@ -320,7 +320,11 @@ namespace casa {
 	delete [] a;
 #endif
 
+#if QWT_VERSION >= 0x060000
+	curve->setSamples( x.toVector( ), y.toVector( ) );
+#else
 	curve->setData( x.toVector( ), y.toVector( ) );
+#endif
 	curve->setPen(QPen(QColor(color)));
 	curve->attach(plot);
 
@@ -338,7 +342,11 @@ namespace casa {
 	    curve->setItemAttribute( QwtPlotItem::Legend, false );
 	}
 
-	curve->setData( x.toVector( ), y.toVector( )  );
+#if QWT_VERSION >= 0x060000
+	curve->setSamples( x.toVector( ), y.toVector( ) );
+#else
+	curve->setData( x.toVector( ), y.toVector( ) );
+#endif
 	QPen pen = QPen(QColor(color));
 	if ( symbol.length( ) == 0 ) {
 	    curve->setStyle(QwtPlotCurve::Dots);
@@ -346,13 +354,17 @@ namespace casa {
 	    curve->setPen(pen);
 	} else {
 	    curve->setStyle( dot_size < 0 ? QwtPlotCurve::NoCurve : QwtPlotCurve::Dots );
-	    QwtSymbol sym = plot->symbol(symbol);
+	    QwtSymbol* sym = plot->symbol(symbol);
 	    if ( symbol_size > 0 ) {
 		QSize size(symbol_size,symbol_size);
-		sym.setSize(size);
+		sym->setSize(size);
 	    }
-	    sym.setPen(pen);
+	    sym->setPen(pen);
+#if QWT_VERSION >= 0x060000
 	    curve->setSymbol(sym);
+#else
+	    curve->setSymbol(*sym);
+#endif
 	    QPen plot_pen(pen);
 	    plot_pen.setWidth(dot_size < 0 ? 0 : dot_size);
 	    curve->setPen(plot_pen);
@@ -404,7 +416,16 @@ namespace casa {
 	    if ( values[x] > maximumBar ) maximumBar = values[x];
 	}
 
+#if QWT_VERSION >= 0x060000
+	QVector<QwtIntervalSample> samples;
+	for ( int x = 0; x < (int) values.size(); ++x ) {
+		samples.append(QwtIntervalSample(values[x], intervals[x]));
+	}
+	histogram->setData(qwt_interval_t(samples));
+#else
 	histogram->setData(qwt_interval_t(intervals, values));
+#endif
+
 	histogram->attach(plot);
 	plot->setAxisScale(QwtPlot::yLeft, 0.0, maximumBar + (0.1 * maximumBar));
 	plot->setAxisScale(QwtPlot::xBottom, (double) minimumValue, pos);
@@ -424,10 +445,18 @@ namespace casa {
 	box.setBottom(sizey);
 	data.setBoundingRect( box );
 	data.setData( matrix, sizex, sizey );
+#if QWT_VERSION >= 0x060000
+	result->setData(&data);
+#else
 	result->setData(data);
+#endif
 	colormap_map::iterator it = colormaps_->find(colormap);
 	if ( it != colormaps_->end() ) {
-	    result->setColorMap( *(it->second) );
+#if QWT_VERSION >= 0x060000
+	    result->setColorMap( &*( it->second) );
+#else
+	    result->setColorMap( *( it->second) );
+#endif
 	}
 	result->attach(plot);
 	plot->replot( );

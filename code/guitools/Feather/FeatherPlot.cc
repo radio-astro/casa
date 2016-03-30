@@ -36,9 +36,9 @@
 #include <QtCore/qmath.h>
 #include <qwt_plot_curve.h>
 #include <qwt_symbol.h>
-#include <qwt_data.h>
+//#include <qwt_data.h>
 #include <qwt_scale_draw.h>
-#include <qwt_legend_item.h>
+//#include <qwt_legend_item.h>
 
 namespace casa {
 
@@ -197,7 +197,11 @@ void FeatherPlot::updateAxes(){
 
 void FeatherPlot::clearLegend(){
 	if ( externalLegend != NULL ){
+#if QWT_VERSION >= 0x060000
+		insertLegend( NULL );
+#else
 		insertLegend( NULL, QwtPlot::ExternalLegend );
+#endif
 		delete externalLegend;
 		externalLegend = NULL;
 	}
@@ -209,9 +213,13 @@ void FeatherPlot::resetLegend(){
 
 void FeatherPlot::setLegendSize(){
 	if ( legendParent != NULL && externalLegend != NULL ){
+#if QWT_VERSION >= 0x060000
+		int height = externalLegend->sizeHint().height();
+#else
 		int itemCount = externalLegend->itemCount();
 		int rowCount = static_cast<int>(itemCount / 4.0) + 1;
 		int height = rowCount * 25;
+#endif
 		legendParent->setMinimumSize( 800, height);
 	}
 }
@@ -226,7 +234,11 @@ void FeatherPlot::insertSingleLegend( QWidget* parent ){
 		externalLegend->setPalette( legendPalette );
 		externalLegend->setSizePolicy( QSizePolicy::Preferred, QSizePolicy::Minimum );
 	}
+#if QWT_VERSION >= 0x060000
+	insertLegend( externalLegend );
+#else
 	insertLegend( externalLegend, QwtPlot::ExternalLegend );
+#endif
 	if ( parent != NULL ){
 		QLayout* parentLayout = parent->layout();
 		if ( parentLayout == NULL ){

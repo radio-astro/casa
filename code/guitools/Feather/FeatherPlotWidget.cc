@@ -31,6 +31,11 @@
 #include <qwt_plot_picker.h>
 #include <qwt_plot_marker.h>
 #include <qwt_symbol.h>
+
+#if QWT_VERSION >= 0x060000
+#include <qwt_picker_machine.h>
+#endif
+
 #include <limits>
 
 namespace casa {
@@ -106,10 +111,17 @@ void FeatherPlotWidget::setLineThickness( int thickness ){
 		diameterSelector -> setTrackerPen( pen );
 	}
 	if ( diameterMarker != NULL ){
+#if QWT_VERSION >= 0x060000
+		QwtSymbol* symbol = const_cast<QwtSymbol*>(diameterMarker->symbol());
+		QPen pen = symbol->pen();
+		pen.setWidth( thickness );
+		symbol->setPen( pen );
+#else
 		QwtSymbol symbol = diameterMarker->symbol();
 		QPen pen = symbol.pen();
 		pen.setWidth( thickness );
 		symbol.setPen( pen );
+#endif
 		diameterMarker->setSymbol( symbol );
 	}
 	plot->setLineThickness( thickness );
@@ -234,7 +246,11 @@ void FeatherPlotWidget::initializeDiameterSelector(){
 		pen.setWidth( MARKER_WIDTH );
 		diameterSelector -> setTrackerPen( pen );
 		diameterSelector -> setAxis(QwtPlot::xBottom, QwtPlot::yLeft);
+#if QWT_VERSION >= 0x060000
+		diameterSelector->setStateMachine(new QwtPickerDragPointMachine());
+#else
 		diameterSelector->setSelectionFlags(QwtPlotPicker::PointSelection | QwtPlotPicker::DragSelection);
+#endif
 		diameterSelector->setRubberBand( QwtPlotPicker::VLineRubberBand );
 		diameterSelector->setTrackerMode( QwtPlotPicker::AlwaysOff );
 		connect( diameterSelector, SIGNAL(selected ( const QwtDoublePoint& )), this, SLOT(diameterSelected( const QwtDoublePoint& )));
@@ -253,7 +269,11 @@ void FeatherPlotWidget::initializeDiameterMarker(){
 		symbol->setPen( pen );
 		symbol->setBrush( Qt::blue );
 		symbol->setStyle( QwtSymbol::VLine );
+#if QWT_VERSION >= 0x060000
+		diameterMarker->setSymbol( symbol );
+#else
 		diameterMarker->setSymbol( *symbol );
+#endif
 		diameterMarker->setXAxis( QwtPlot::xBottom );
 		diameterMarker->setYAxis( QwtPlot::yRight);
 	}
@@ -274,10 +294,17 @@ void FeatherPlotWidget::diameterSelected( const QwtDoublePoint& pos ){
 
 void FeatherPlotWidget::resetDishDiameterLineColor(){
 	if ( diameterMarker != NULL){
+#if QWT_VERSION >= 0x060000
+		QwtSymbol* diameterSymbol = const_cast<QwtSymbol*>(diameterMarker->symbol());
+		QPen pen = diameterSymbol->pen();
+		pen.setColor( curvePreferences[FeatherCurveType::DISH_DIAMETER].getColor() );
+		diameterSymbol->setPen( pen );
+#else
 		QwtSymbol diameterSymbol = diameterMarker->symbol();
 		QPen pen = diameterSymbol.pen();
 		pen.setColor( curvePreferences[FeatherCurveType::DISH_DIAMETER].getColor() );
 		diameterSymbol.setPen( pen );
+#endif
 		diameterMarker->setSymbol( diameterSymbol );
 		diameterMarker->setLinePen( pen );
 		if ( diameterSelector != NULL ){
@@ -300,9 +327,15 @@ void FeatherPlotWidget::setDishDiameter( double position, bool scale ){
 	}
 	if ( diameterMarker != NULL ){
 		//Set the size
+#if QWT_VERSION >= 0x060000
+		QwtSymbol* symbol = const_cast<QwtSymbol*>(diameterMarker->symbol());
+		int canvasHeight = height();
+		symbol->setSize( 2 * canvasHeight );
+#else
 		QwtSymbol symbol = diameterMarker->symbol();
 		int canvasHeight = height();
 		symbol.setSize( 2 * canvasHeight );
+#endif
 		diameterMarker->setSymbol( symbol );
 
 		//Set the position
@@ -340,7 +373,11 @@ void FeatherPlotWidget::initializeZooming(){
 		pen.setWidth( 2 );
 		zoomer -> setTrackerPen( pen );
 		zoomer -> setAxis(QwtPlot::xBottom, QwtPlot::yLeft);
+#if QWT_VERSION >= 0x060000
+		zoomer->setStateMachine(new QwtPickerDragRectMachine());
+#else
 		zoomer -> setSelectionFlags(QwtPlotPicker::RectSelection | QwtPlotPicker::DragSelection);
+#endif
 		zoomer -> setRubberBand( QwtPlotPicker::RectRubberBand );
 		zoomer->setTrackerMode( QwtPlotPicker::AlwaysOff );
 		zoomer->setMousePattern( QwtEventPattern::MouseSelect1, Qt::NoButton );

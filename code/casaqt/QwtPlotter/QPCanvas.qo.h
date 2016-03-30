@@ -207,7 +207,7 @@ public:
     // Implements PlotCanvas::showColorBar().
     void showColorBar(bool show = true, PlotAxis axis = Y_RIGHT);
 
-    
+   
     // Implements PlotCanvas::axisRange().
     prange_t axisRange(PlotAxis axis) const;
 
@@ -580,7 +580,8 @@ private:
     static PlotAxis axisIndex(unsigned int i);
     // </group>
     
-    
+    const QwtScaleDiv* getAxisScaleDiv(int axisId) const;
+	
     QSize minSizeHint;
 
 

@@ -76,8 +76,10 @@ public:
     // Overrides QwtPlotItem::boundingRect();
     QwtDoubleRect boundingRect() const;
     
+#if QWT_VERSION < 0x060000
     // Overrides QwtPlotItem::legendItem().
     QWidget* legendItem() const;
+#endif
     
     
     // Plot Methods //
@@ -120,10 +122,16 @@ protected:
     const String& className() const { return CLASS_NAME; }
     
     // Implements QPLayerItem::draw_().
+#if QWT_VERSION >= 0x060000
+    void draw_(QPainter* painter, const QwtScaleMap& xMap,
+              const QwtScaleMap& yMap, const QRectF& canvasRect,
+              unsigned int drawIndex, unsigned int drawCount) const;
+#else
     void draw_(QPainter* painter, const QwtScaleMap& xMap,
               const QwtScaleMap& yMap, const QRect& canvasRect,
               unsigned int drawIndex, unsigned int drawCount) const;
-    
+#endif
+ 
 private:
     QPPointData m_data;    // Data
     double m_barWidth;     // Bar width

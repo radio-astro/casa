@@ -207,7 +207,8 @@ void QPTrackerTool::attach(PlotCanvas* canvas) {
     QPCanvas* c = dynamic_cast<QPCanvas*>(canvas);
     if(c != NULL) {
         PlotMouseTool::attach(c);
-        m_tracker = new QPTracker(*this, c->asQwtPlot().canvas());
+	QwtPlotCanvas* qwtcanvas = dynamic_cast<QwtPlotCanvas*>(c->asQwtPlot().canvas());
+        m_tracker = new QPTracker(*this, qwtcanvas);
         m_annotation = m_tracker->getAnnotation();
         m_tracker->setTrackerMode((m_active && m_drawText) ?
                        QwtPlotPicker::AlwaysOn : QwtPlotPicker::AlwaysOff);
@@ -231,7 +232,8 @@ void QPTrackerTool::detach() {
 
 QPTracker::QPTracker(QPTrackerTool& tracker, QwtPlotCanvas* canvas) :
         QwtPlotPicker(QPOptions::axis(tracker.getXAxis()),
-        QPOptions::axis(tracker.getYAxis()), canvas), m_tracker(tracker),
+        QPOptions::axis(tracker.getYAxis()), canvas), 
+	m_tracker(tracker),
         m_annotation("", PlotCoordinate()) { }
 
 QPTracker::~QPTracker() { }

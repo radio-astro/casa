@@ -94,7 +94,11 @@ double ExternalAxisWidget::getTickStartPixel( QwtPlot::Axis axis ){
 	//Figure out where to start the first tick.  There will be a small distance
 	//between the first tick and the start of the axis due to the difference between
 	//the upper bound and the first tick location.
-	QwtScaleDiv* scaleDiv = plot->axisScaleDiv( axis );
+#if QWT_VERSION >= 0x060000
+	const QwtScaleDiv* scaleDiv = &plot->axisScaleDiv( axis );
+#else
+	const QwtScaleDiv* scaleDiv = plot->axisScaleDiv( axis );
+#endif
 	double upperBound = scaleDiv->upperBound();
 	double lowerBound = scaleDiv->lowerBound();
 	double axisExtent = upperBound - lowerBound;
@@ -123,7 +127,11 @@ void ExternalAxisWidget::setAxisFont(const QFont& font){
 }
 
 double ExternalAxisWidget::getTickDistance(QwtPlot::Axis axis ){
-	QwtScaleDiv* scaleDiv = plot->axisScaleDiv( axis );
+#if QWT_VERSION >= 0x060000
+	const QwtScaleDiv* scaleDiv = &plot->axisScaleDiv( axis );
+#else
+	const QwtScaleDiv* scaleDiv = plot->axisScaleDiv( axis );
+#endif
 	const QList<double> axisTicks = scaleDiv->ticks( axis);
 	double tickDistance = scaleDiv->upperBound() - scaleDiv->lowerBound();
 	for ( int i = 0; i < axisTicks.size() - 1; i++ ){
@@ -137,7 +145,11 @@ double ExternalAxisWidget::getTickDistance(QwtPlot::Axis axis ){
 
 int ExternalAxisWidget::getCanvasHeight() const {
 	int canvasHeight = height();
+#if QWT_VERSION >= 0x060000
+	QWidget* canvas = plot->canvas();
+#else
 	QwtPlotCanvas* canvas = plot->canvas();
+#endif
 	if ( canvas != NULL ){
 		canvasHeight = canvas->height();
 	}
@@ -146,7 +158,11 @@ int ExternalAxisWidget::getCanvasHeight() const {
 
 int ExternalAxisWidget::getCanvasWidth() const {
 	int canvasWidth = width();
+#if QWT_VERSION >= 0x060000
+	QWidget* canvas = plot->canvas();
+#else
 	QwtPlotCanvas* canvas = plot->canvas();
+#endif
 	if ( canvas != NULL ){
 		canvasWidth = canvas->width();
 	}
@@ -154,7 +170,11 @@ int ExternalAxisWidget::getCanvasWidth() const {
 }
 
 double ExternalAxisWidget::getTickIncrement( double tickDistance, QwtPlot::Axis axis ){
-	QwtScaleDiv* scaleDiv = plot->axisScaleDiv( axis );
+#if QWT_VERSION >= 0x060000
+	const QwtScaleDiv* scaleDiv = &plot->axisScaleDiv( axis );
+#else
+	const QwtScaleDiv* scaleDiv = plot->axisScaleDiv( axis );
+#endif
 	double axisExtent = scaleDiv->upperBound() - scaleDiv->lowerBound();
 	double tickPercentage = tickDistance / axisExtent;
 

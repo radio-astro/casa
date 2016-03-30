@@ -24,6 +24,7 @@
 //#
 
 #include "LegendItemRect.h"
+#if QWT_VERSION < 0x060000
 #include <guitools/Feather/ColorProvider.h>
 #include <QDebug>
 
@@ -46,5 +47,6 @@ void LegendItemRect::drawIdentifier( QPainter* painter, const QRect& rect ) cons
 
 LegendItemRect::~LegendItemRect() {
 }
-
 } /* namespace casa */
+#endif /* QWT_VERSION */
+

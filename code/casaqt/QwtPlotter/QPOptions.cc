@@ -253,9 +253,14 @@ void QPAreaFill::setAsQBrush(const QBrush& b) {
 QPSymbol::QPSymbol() : m_style(QPOptions::symbol(style())), m_char('o'),
         m_heightIsPixel(true), m_drawPen(&pen()), m_drawBrush(&brush()) { }
 
+#if QWT_VERSION >= 0x060000
+QPSymbol::QPSymbol(QwtSymbol::Style style, const QBrush & brush, 
+	const QPen & pen, const QSize & sz) : QwtSymbol(style, brush, pen, sz) { }
+#else	
 QPSymbol::QPSymbol(const QwtSymbol& s): QwtSymbol(s),
         m_style(QPOptions::symbol(s.style())), m_char('o'),
         m_heightIsPixel(true), m_drawPen(&pen()), m_drawBrush(&brush()) { }
+#endif
 
 QPSymbol::QPSymbol(const PlotSymbol& copy) : m_style(QPOptions::symbol(style())),
         m_heightIsPixel(true), m_drawPen(&pen()), m_drawBrush(&brush()) {
@@ -350,11 +355,15 @@ void QPSymbol::draw(QPainter* p, const QRect& r) const {
         p->drawPoint(r.center());
     } else {
         // draw using the normal QwtSymbol::draw() method.
+#if QWT_VERSION >= 0x060000
+        QwtSymbol::drawSymbol(p, r);
+#else
         QwtSymbol::draw(p, r);
+#endif
     }
 }
 
-QwtSymbol* QPSymbol::clone() const { return new QPSymbol(*this); }
+//QwtSymbol* QPSymbol::clone() const { return new QPSymbol(*this); }
 
 
 const QPen& QPSymbol::drawPen() const { return *m_drawPen; }
@@ -411,16 +420,16 @@ PlotAxis  QPOptions::axis(QwtPlot::Axis a)    {
 
 
 
-QwtLinearColorMap QPOptions::standardSpectrogramMap() {
-    QwtLinearColorMap colorMap(Qt::darkCyan, Qt::red);
-    colorMap.addColorStop(0.1, Qt::cyan);
-    colorMap.addColorStop(0.6, Qt::green);
-    colorMap.addColorStop(0.95, Qt::yellow);
+QwtLinearColorMap* QPOptions::standardSpectrogramMap() {
+    QwtLinearColorMap* colorMap = new QwtLinearColorMap(Qt::darkCyan, Qt::red);
+    colorMap->addColorStop(0.1, Qt::cyan);
+    colorMap->addColorStop(0.6, Qt::green);
+    colorMap->addColorStop(0.95, Qt::yellow);
     return colorMap;
 }
 
-QwtLinearColorMap QPOptions::standardRasterMap() {
-    QwtLinearColorMap colorMap(QColor("#000000"), QColor("#FFFFFF"));
+QwtLinearColorMap* QPOptions::standardRasterMap() {
+    QwtLinearColorMap* colorMap = new QwtLinearColorMap(QColor("#000000"), QColor("#FFFFFF"));
     
     int numStops = 25;
     unsigned int rgb = 0;
@@ -428,19 +437,19 @@ QwtLinearColorMap QPOptions::standardRasterMap() {
     double interval = 1.0 / (numStops + 1);
     for(int i = 1; i <= numStops; i++) {
         rgb += delta;
-        colorMap.addColorStop(i * interval, QColor(0xFF000000 + rgb));
+        colorMap->addColorStop(i * interval, QColor(0xFF000000 + rgb));
     }
     
     return colorMap;
 }
 
-QwtLinearColorMap QPOptions::rasterMap(const vector<double>& vals) {
-    QwtLinearColorMap colorMap(QColor("#000000"), QColor("#FFFFFF"));
+QwtLinearColorMap* QPOptions::rasterMap(const vector<double>& vals) {
+    QwtLinearColorMap* colorMap = new QwtLinearColorMap(QColor("#000000"), QColor("#FFFFFF"));
     
     unsigned int white = 0xFFFFFF;
     for(unsigned int i = 0; i < vals.size(); i++) {
         if(vals[i] == white || vals[i] == 0xFFFFFF) continue;
-        colorMap.addColorStop(vals[i] / white, QColor((unsigned int)vals[i]));
+        colorMap->addColorStop(vals[i] / white, QColor((unsigned int)vals[i]));
     }
     
     return colorMap;

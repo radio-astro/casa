@@ -36,7 +36,11 @@ QtPlotHistogram::QtPlotHistogram( const QString &label ) :  QwtPlotItem(QwtText(
 QtPlotHistogram::QtPlotHistogram( const QwtText &label ) :  QwtPlotItem(label), reference_(0.0) { }
 
 void QtPlotHistogram::setData(const qwt_interval_t &data) {
+#if QWT_VERSION >= 0x060000
+    data_.setSamples(data.samples());
+#else
     data_ = data;
+#endif
     itemChanged();
 }
 
@@ -67,7 +71,11 @@ void QtPlotHistogram::setColor(const QColor &color) {
     }
 }
 
+#if QWT_VERSION >= 0x060000
+void QtPlotHistogram::draw(QPainter *painter, const QwtScaleMap &xMap,  const QwtScaleMap &yMap, const QRectF &) const {
+#else
 void QtPlotHistogram::draw(QPainter *painter, const QwtScaleMap &xMap,  const QwtScaleMap &yMap, const QRect &) const {
+#endif
     const qwt_interval_t &iData = data_;
 
     painter->setPen(QPen(color_));
@@ -76,6 +84,27 @@ void QtPlotHistogram::draw(QPainter *painter, const QwtScaleMap &xMap,  const Qw
     const int y0 = yMap.transform(baseline());
 
     for ( int i = 0; i < (int)iData.size(); i++ ) {
+#if QWT_VERSION >= 0x060000
+ 	const int y2 = yMap.transform(iData.sample(i).value);
+	if ( y2 == y0 )
+	    continue;
+
+	int x1 = xMap.transform(iData.sample(i).interval.minValue());
+	int x2 = xMap.transform(iData.sample(i).interval.maxValue());
+	if ( x1 > x2 ) qSwap(x1, x2);
+
+	if ( i < (int)iData.size() - 2 ) {
+	    const int xx1 = xMap.transform(iData.sample(i+1).interval.minValue());
+	    const int xx2 = xMap.transform(iData.sample(i+1).interval.maxValue());
+	    if ( x2 == qwtMin(xx1, xx2) ) {
+		const int yy2 = yMap.transform(iData.sample(i+1).value);
+		if ( yy2 != y0 && ( (yy2 < y0 && y2 < y0) || (yy2 > y0 && y2 > y0) ) ) {
+		    // One pixel distance between neighboured bars
+		    x2--;
+		}
+	    }
+	}
+#else
  	const int y2 = yMap.transform(iData.value(i));
 	if ( y2 == y0 )
 	    continue;
@@ -87,7 +116,6 @@ void QtPlotHistogram::draw(QPainter *painter, const QwtScaleMap &xMap,  const Qw
 	if ( i < (int)iData.size() - 2 ) {
 	    const int xx1 = xMap.transform(iData.interval(i+1).minValue());
 	    const int xx2 = xMap.transform(iData.interval(i+1).maxValue());
-
 	    if ( x2 == qwtMin(xx1, xx2) ) {
 		const int yy2 = yMap.transform(iData.value(i+1));
 		if ( yy2 != y0 && ( (yy2 < y0 && y2 < y0) || (yy2 > y0 && y2 > y0) ) ) {
@@ -96,6 +124,7 @@ void QtPlotHistogram::draw(QPainter *painter, const QwtScaleMap &xMap,  const Qw
 		}
 	    }
 	}
+#endif
 	draw_bar(painter, Qt::Vertical, QRect(x1, y0, x2 - x1, y2 - y0) );
     }
 }

@@ -27,8 +27,11 @@
 #ifdef AIPS_HAS_QWT
 
 #include <casaqt/QwtPlotter/QPScatterPlot.h>
-
 #include <casaqt/QwtPlotter/QPFactory.h>
+
+#if QWT_VERSION < 0x060000
+#include <qwt_legend_item.h>
+#endif
 
 #include <QPainter>
 #include <QDebug>
@@ -152,6 +155,7 @@ QwtDoubleRect QPScatterPlot::boundingRect() const {
     else return QwtDoubleRect(QPointF(xMin, yMin), QPointF(xMax, yMax));
 }
 
+#if QWT_VERSION < 0x060000
 QWidget* QPScatterPlot::legendItem() const {
 	QPen legendPen = m_line.asQPen();
 	if ( !linesShown() ){
@@ -164,7 +168,7 @@ QWidget* QPScatterPlot::legendItem() const {
                          QwtLegendItem::ShowText);
     return i;
 }
-
+#endif
 
 bool QPScatterPlot::linesShown() const {
     return m_line.style() != PlotLine::NOLINE; }
@@ -198,7 +202,17 @@ void QPScatterPlot::setSymbolsShown(bool show) {
 }
 
 PlotSymbolPtr QPScatterPlot::symbol() const {
-    return new QPSymbol(m_symbol); }
+#if QWT_VERSION >= 0x060000
+    psize_t casasize = m_symbol.size();
+    QSize qsize = QSize(casasize.first, casasize.second);
+    QPSymbol* symbol = new QPSymbol(m_symbol.style(), 
+	m_symbol.drawBrush(), m_symbol.drawPen(), qsize);
+    return symbol;
+#else
+    return new QPSymbol(m_symbol);
+#endif
+}
+
 void QPScatterPlot::setSymbol(const PlotSymbol& sym) {
     if(sym != m_symbol) {
         m_symbol = sym;
@@ -245,7 +259,17 @@ void QPScatterPlot::setMaskedSymbolsShown(bool s) {
 }
 
 PlotSymbolPtr QPScatterPlot::maskedSymbol() const {
-    return new QPSymbol(m_maskedSymbol); }
+#if QWT_VERSION >= 0x060000
+    psize_t casasize = m_maskedSymbol.size();
+    QSize qsize = QSize(casasize.first, casasize.second);
+    QPSymbol* symbol = new QPSymbol(m_maskedSymbol.style(), 
+	m_maskedSymbol.drawBrush(), m_maskedSymbol.drawPen(), qsize);
+    return symbol;
+#else
+    return new QPSymbol(m_maskedSymbol);
+#endif
+}
+
 void QPScatterPlot::setMaskedSymbol(const PlotSymbol& symbol) {
     if(symbol != m_maskedSymbol) {
         m_maskedSymbol = symbol;
@@ -308,9 +332,15 @@ void QPScatterPlot::setColorForBin(unsigned int bin, const PlotColorPtr color){
 
 // Protected Methods //
 
+#if QWT_VERSION >= 0x060000
+void QPScatterPlot::draw_(QPainter* p, const QwtScaleMap& xMap,
+        const QwtScaleMap& yMap, const QRectF& brect,
+        unsigned int drawIndex, unsigned int drawCount) const {
+#else
 void QPScatterPlot::draw_(QPainter* p, const QwtScaleMap& xMap,
         const QwtScaleMap& yMap, const QRect& brect,
         unsigned int drawIndex, unsigned int drawCount) const {
+#endif
     //logMethod("draw_", true);
     unsigned int n = m_data->size();
     if(!isValid() || n == 0 || drawIndex >= n) {

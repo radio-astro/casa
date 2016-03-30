@@ -99,9 +99,9 @@ QwtDoubleRect QPAnnotation::boundingRect() const {
             y = yMap.transform(c.y());
         }
         
-        QSize s = m_label.textSize(m_label.font());
-        x += s.width();
-        y += s.height();
+        //QSize s = m_label.textSize(m_label.font());
+        x += m_label.textSize(m_label.font()).width();
+        y += m_label.textSize(m_label.font()).height();
         
         double dx, dy;
         if(m_coord.system() == PlotCoordinate::PIXEL) {
@@ -123,9 +123,26 @@ QwtDoubleRect QPAnnotation::boundingRect() const {
     } else return QRectF();
 }
 
+QPen QPAnnotation::getLabelPen() const {
+#if QWT_VERSION >= 0x060000
+	return m_label.borderPen();
+#else
+	return m_label.backgroundPen();
+#endif
+}
+
+void QPAnnotation::setPen(QwtText text, QPen pen) const {
+#if QWT_VERSION >= 0x060000
+    text.setBorderPen(pen);
+#else
+    text.setBackgroundPen(pen);
+#endif
+}
+
+
 QWidget* QPAnnotation::legendItem() const {
     QwtText text = QwtPlotItem::title();
-    text.setBackgroundPen(m_label.backgroundPen());
+	setPen(text, getLabelPen());
     text.setBackgroundBrush(m_label.backgroundBrush());
     return new QwtTextLabel(text);
 }
@@ -173,24 +190,24 @@ void QPAnnotation::setCoordinate(const PlotCoordinate& coord) {
 }
 
 bool QPAnnotation::outlineShown() const {
-    return m_label.backgroundPen().style() != Qt::NoPen; }
+    return getLabelPen().style() != Qt::NoPen; }
 
 void QPAnnotation::setOutlineShown(bool show) {
     if(show != outlineShown()) {
-        QPen p = m_label.backgroundPen();
+        QPen p = getLabelPen();
         p.setStyle(show ? Qt::SolidLine : Qt::NoPen);
-        m_label.setBackgroundPen(p);
+        setPen(m_label, p);
         itemChanged();
     }
 }
 
 PlotLinePtr QPAnnotation::outline() const {
-    return new QPLine(m_label.backgroundPen()); }
+    return new QPLine(getLabelPen()); }
 
 void QPAnnotation::setOutline(const PlotLine& line) {
     if(line != *outline()) {
         QPLine l(line);        
-        m_label.setBackgroundPen(l.asQPen());
+        setPen(m_label, l.asQPen());
         itemChanged();
     }
 }
@@ -212,10 +229,15 @@ const QwtText& QPAnnotation::asQwtText() const { return m_label; }
 
 
 // Protected Methods //
-
+#if QWT_VERSION >= 0x060000
+void QPAnnotation::draw_(QPainter* painter, const QwtScaleMap& xMap,
+        const QwtScaleMap& yMap, const QRectF& /*canvasRect*/,
+        unsigned int /*drawIndex*/, unsigned int /*drawCount*/) const {
+#else
 void QPAnnotation::draw_(QPainter* painter, const QwtScaleMap& xMap,
         const QwtScaleMap& yMap, const QRect& /*canvasRect*/,
         unsigned int /*drawIndex*/, unsigned int /*drawCount*/) const {
+#endif
     logMethod("draw_", true);
     if(!m_label.isEmpty() && m_canvas != NULL) {
         painter->save();
@@ -237,10 +259,10 @@ void QPAnnotation::draw_(QPainter* painter, const QwtScaleMap& xMap,
     
         QRectF r(p, m_label.textSize(m_label.font()));
     
-        if(m_label.backgroundPen().style() != Qt::NoPen ||
+        if(getLabelPen().style() != Qt::NoPen ||
                 m_label.backgroundBrush().style() != Qt::NoBrush) {
             // draw background        
-            painter->setPen(m_label.backgroundPen());
+            painter->setPen(getLabelPen());
             painter->setBrush(m_label.backgroundBrush());        
             painter->drawRect(r);
         }

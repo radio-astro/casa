@@ -32,10 +32,17 @@
 
 namespace casa {
 
+#if QWT_VERSION >= 0x060000
+ToolTipPicker::ToolTipPicker( int xAxis, int yAxis, RubberBand rubberBand,
+			DisplayMode trackorMode, QWidget* canvas ):
+				QwtPlotPicker( xAxis, yAxis, rubberBand,
+						trackorMode, canvas ){
+#else
 ToolTipPicker::ToolTipPicker( int xAxis, int yAxis, int selectionFlags, RubberBand rubberBand,
 			DisplayMode trackorMode, QwtPlotCanvas* canvas ):
 				QwtPlotPicker( xAxis, yAxis, selectionFlags, rubberBand,
 						trackorMode, canvas ){
+#endif
 	logScaleY = false;
 }
 

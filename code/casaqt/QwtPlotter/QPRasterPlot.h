@@ -119,9 +119,10 @@ public:
     // Overrides QwtPlotSpectrogram::boundingRect().
     QwtDoubleRect boundingRect() const;
     
+#if QWT_VERSION < 0x060000
     // Overrides QwtPlotSpectrogram::legendItem().
     QWidget* legendItem() const;
-    
+#endif 
     
     // Plot Methods //
     
@@ -177,20 +178,35 @@ protected:
     const String& className() const { return CLASS_NAME; }
     
     // Implements QPLayerItem::draw_().
+#if QWT_VERSION >= 0x060000
+    void draw_(QPainter* painter, const QwtScaleMap& xMap,
+              const QwtScaleMap& yMap, const QRectF& canvasRect,
+              unsigned int drawIndex, unsigned int drawCount) const;
+#else
     void draw_(QPainter* painter, const QwtScaleMap& xMap,
               const QwtScaleMap& yMap, const QRect& canvasRect,
               unsigned int drawIndex, unsigned int drawCount) const;
+#endif
     
 private:
+
     QPRasterData m_data;                   // Data
     PlotRasterData::Format m_format;       // Data format
+#if QWT_VERSION >= 0x060000
+    QwtLinearColorMap* m_spectMap;          // Spectrogram color map
+    QPRasterMap* m_rasterMap;               // Raster color map
+    
+    QRectF totalArea() const;
+    
+#else
     QwtLinearColorMap m_spectMap;          // Spectrogram color map
     QPRasterMap m_rasterMap;               // Raster color map
-    
     
     // Returns the rectangle in screen pixel coordinates that will contain the
     // entire raster image.
     QRect totalArea() const;
+    
+#endif
     
     // Converts between Qt's image format and CASA's.
     // <group>

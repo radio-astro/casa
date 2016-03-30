@@ -27,7 +27,7 @@
 
 #include <casaqt/QtPlotServer/QtPlotFrame.qo.h>
 #include <qwt_legend.h>
-#include <qwt_legend_item.h>
+#include <casaqt/QwtConfig.h>
 
 namespace casa {
 
@@ -40,7 +40,7 @@ namespace casa {
 
     void QtPlotFrame::initialize_symbol_map( ) {
 	#define INSERT_SYMBOL(STRING,VALUE) \
-	symbol_map.insert( symbol_map_type::value_type(STRING, QwtSymbol(QwtSymbol::VALUE, QBrush( ), QPen( ), QSize(default_size))) )
+	symbol_map.insert( symbol_map_type::value_type(STRING, new QwtSymbol(QwtSymbol::VALUE, QBrush( ), QPen( ), QSize(default_size))) )
 
 	QSize default_size(12,12);
 
@@ -101,10 +101,10 @@ namespace casa {
 	return result;
     }
 
-    QwtSymbol QtPlotFrame::symbol(const QString &s) {
+    QwtSymbol* QtPlotFrame::symbol(const QString &s) {
 	symbol_map_type::const_iterator iter = symbol_map.find( s );
 	if ( iter == symbol_map.end( ) ) {
-	    return QwtSymbol( );
+	    return new QwtSymbol( );
 	}
 	return iter->second;
     }

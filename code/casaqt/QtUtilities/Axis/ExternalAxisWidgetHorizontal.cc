@@ -69,7 +69,11 @@ void ExternalAxisWidgetHorizontal::drawTicks( QPainter* painter, int tickLength 
 
 	//We don't want to draw too many ticks so adjust the number
 	//of ticks we draw accordingly.
-	QwtScaleDiv* scaleDiv = plot->axisScaleDiv( QwtPlot::xBottom );
+#if QWT_VERSION >= 0x060000
+	const QwtScaleDiv* scaleDiv = &plot->axisScaleDiv( QwtPlot::xBottom );
+#else
+	const QwtScaleDiv* scaleDiv = plot->axisScaleDiv( QwtPlot::xBottom );
+#endif	
 	const QList<double> axisTicks = scaleDiv->ticks(QwtPlot::xBottom);
 	int originalTickCount = axisTicks.size();
 	int tickIncrement = getTickIncrement( originalTickCount );

@@ -49,11 +49,19 @@ double ExternalAxisControl::getTickStartPixel( QwtPlot::Axis axis ){
 	//Figure out where to start the first tick.  There will be a small distance
 	//between the first tick and the start of the axis do to the difference between
 	//the upper bound and the first tick location.
+#if QWT_VERSION >= 0x060000
+	QwtScaleDiv scaleDiv = plot->axisScaleDiv( axis );
+	double upperBound = scaleDiv.upperBound();
+	double lowerBound = scaleDiv.lowerBound();
+	double axisExtent = upperBound - lowerBound;
+	const QList<double> axisTicks = scaleDiv.ticks(axis);
+#else
 	QwtScaleDiv* scaleDiv = plot->axisScaleDiv( axis );
 	double upperBound = scaleDiv->upperBound();
 	double lowerBound = scaleDiv->lowerBound();
 	double axisExtent = upperBound - lowerBound;
 	const QList<double> axisTicks = scaleDiv->ticks(axis);
+#endif
 	double endDistancePercentage = 0;
 	if ( axisTicks.size() > 0  ){
 		double lowerBoundDistance = qAbs(lowerBound - axisTicks[0]);
@@ -72,9 +80,15 @@ double ExternalAxisControl::getTickStartPixel( QwtPlot::Axis axis ){
 }
 
 double ExternalAxisControl::getTickDistance(QwtPlot::Axis axis ){
+#if QWT_VERSION >= 0x060000
+	QwtScaleDiv scaleDiv = plot->axisScaleDiv( axis );
+	const QList<double> axisTicks = scaleDiv.ticks( axis);
+	double tickDistance = scaleDiv.upperBound() - scaleDiv.lowerBound();
+#else
 	QwtScaleDiv* scaleDiv = plot->axisScaleDiv( axis );
 	const QList<double> axisTicks = scaleDiv->ticks( axis);
 	double tickDistance = scaleDiv->upperBound() - scaleDiv->lowerBound();
+#endif
 	for ( int i = 0; i < axisTicks.size() - 1; i++ ){
 		double tDistance = axisTicks[i+1] - axisTicks[i];
 		if ( tDistance < tickDistance ){
@@ -85,11 +99,18 @@ double ExternalAxisControl::getTickDistance(QwtPlot::Axis axis ){
 }
 
 double ExternalAxisControl::getTickIncrement( double tickDistance, QwtPlot::Axis axis ){
+#if QWT_VERSION >= 0x060000
+	QwtScaleDiv scaleDiv = plot->axisScaleDiv( axis );
+	double axisExtent = scaleDiv.upperBound() - scaleDiv.lowerBound();
+	double tickPercentage = tickDistance / axisExtent;
+	QwtPlotCanvas* canvas = static_cast<QwtPlotCanvas*>(plot->canvas());
+#else
 	QwtScaleDiv* scaleDiv = plot->axisScaleDiv( axis );
 	double axisExtent = scaleDiv->upperBound() - scaleDiv->lowerBound();
 	double tickPercentage = tickDistance / axisExtent;
-
 	QwtPlotCanvas* canvas = plot->canvas();
+#endif
+
 	int canvasLimit = canvas->width();
 	if ( axis != QwtPlot::xBottom ){
 		canvasLimit = getCanvasHeight();
@@ -100,8 +121,7 @@ double ExternalAxisControl::getTickIncrement( double tickDistance, QwtPlot::Axis
 }
 
 int ExternalAxisControl::getCanvasHeight() const {
-	QwtPlotCanvas* canvas = plot->canvas();
-	return canvas->height();
+	return plot->canvas()->height();
 }
 
 int ExternalAxisControl::getTickIncrement( int tickCount ) const {

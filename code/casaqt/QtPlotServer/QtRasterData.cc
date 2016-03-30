@@ -66,9 +66,13 @@ namespace casa {
     }
 
     void QtRasterData::setBoundingRect( const QwtDoubleRect &rect ) {
+#if QWT_VERSION >= 0x060000
+	initRaster(rect, QSize());
+#else
 	bounding_box = rect;
 	// if ( output_limit < 20) fprintf( stderr, "setBoundingRect( ): (%f, %f) (%f, %f)\n", rect.left(), rect.right(), rect.top(), rect.bottom() );
 	QwtRasterData::setBoundingRect( rect );
+#endif
     }
 
     void QtRasterData::setData( const QList<double> &array, int sizex, int sizey) {

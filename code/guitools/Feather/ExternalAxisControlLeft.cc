@@ -71,9 +71,8 @@ void ExternalAxisControlLeft::drawTick( QPainter* painter, float yPixel, double 
 }
 
 int ExternalAxisControlLeft::getStartY() const {
-	QwtPlotCanvas* canvas = plot->canvas();
-	int canvasHeight = canvas->height();
-	int heightDiff =  height() - canvas->height();
+	int canvasHeight = plot->canvas()->height();
+	int heightDiff =  height() - canvasHeight;
 	if ( canvasHeight < MIN_START_Y ){
 		heightDiff = MIN_START_Y;
 	}
@@ -87,8 +86,13 @@ void ExternalAxisControlLeft::drawTicks( QPainter* painter, int tickLength ){
 
 	//We don't want to draw too many ticks so adjust the number
 	//of ticks we draw accordingly.
+#if QWT_VERSION >= 0x060000
+	QwtScaleDiv scaleDiv = plot->axisScaleDiv( QwtPlot::yLeft );
+	const QList<double> axisTicks = scaleDiv.ticks(QwtPlot::yLeft);
+#else
 	QwtScaleDiv* scaleDiv = plot->axisScaleDiv( QwtPlot::yLeft );
 	const QList<double> axisTicks = scaleDiv->ticks(QwtPlot::yLeft);
+#endif
 	int originalTickCount = axisTicks.size();
 	int tickIncrement = getTickIncrement( originalTickCount );
 

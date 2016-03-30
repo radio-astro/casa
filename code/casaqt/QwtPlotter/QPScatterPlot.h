@@ -33,9 +33,6 @@
 #include <casaqt/QwtPlotter/QPOptions.h>
 #include <casaqt/QwtPlotter/QPPlotItem.qo.h>
 
-#include <qwt_plot_item.h>
-#include <qwt_legend_item.h>
-
 #include <QObject>
 
 #include <casa/namespace.h>
@@ -50,8 +47,7 @@ public:
     
     // Convenient access to class name (QPScatterPlot).
     const static String CLASS_NAME;
-    
-    
+        
     // Non-Static //
     
     // Constructor which takes the data (and determines its type) and an
@@ -86,9 +82,11 @@ public:
     
     // Overrides QwtPlotItem::boundingRect();
     QwtDoubleRect boundingRect() const;
-    
+
+#if QWT_VERSION < 0x060000    
     // Overrides QwtPlotItem::legendItem().
     QWidget* legendItem() const;
+#endif
     
     
     // Plot Methods //
@@ -200,9 +198,15 @@ protected:
     const String& className() const { return CLASS_NAME; }
     
     // Implements QPLayerItem::draw_().
+#if QWT_VERSION >= 0x060000
+    void draw_(QPainter* painter, const QwtScaleMap& xMap,
+              const QwtScaleMap& yMap, const QRectF& canvasRect,
+              unsigned int drawIndex, unsigned int drawCount) const;
+#else
     void draw_(QPainter* painter, const QwtScaleMap& xMap,
               const QwtScaleMap& yMap, const QRect& canvasRect,
               unsigned int drawIndex, unsigned int drawCount) const;
+#endif
     
 private:
     // Data pointers.

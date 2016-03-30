@@ -32,11 +32,16 @@
 #include <guitools/Feather/FeatherDataType.h>
 #include <guitools/Feather/FeatherCurveType.h>
 #include <guitools/Feather/CurveDisplay.h>
+#include <casaqt/QwtConfig.h>
 #include <casa/Arrays/Vector.h>
 #include <qwt_plot.h>
 #include <qwt_legend.h>
+
+#if QWT_VERSION < 0x060000
 #include <qwt_polygon.h>
 #include <qwt_double_rect.h>
+#endif
+
 using namespace std;
 
 class QwtPlotPicker;

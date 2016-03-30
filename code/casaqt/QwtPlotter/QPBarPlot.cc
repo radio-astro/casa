@@ -27,12 +27,14 @@
 #ifdef AIPS_HAS_QWT
 
 #include <casaqt/QwtPlotter/QPBarPlot.h>
-
 #include <casaqt/QwtPlotter/QPFactory.h>
+
+#if QWT_VERSION < 0x060000
+#include <qwt_legend_item.h>
+#endif
 
 #include <QPainter>
 
-#include <qwt_legend_item.h>
 
 namespace casa {
 
@@ -47,7 +49,7 @@ const String QPBarPlot::CLASS_NAME = "QPBarPlot";
 
 // Constructors/Destructors //
 
-QPBarPlot::QPBarPlot(PlotPointDataPtr data, const String& title): m_data(data){
+QPBarPlot::QPBarPlot(PlotPointDataPtr data, const String& title) : m_data(data) {
     QPPlotItem::setTitle(title);
     
     setLine(QPFactory::defaultShapeLine());
@@ -81,6 +83,7 @@ bool QPBarPlot::isValid() const { return m_data.size() > 0; }
 
 QwtDoubleRect QPBarPlot::boundingRect() const { return m_data.boundingRect(); }
 
+#if QWT_VERSION < 0x060000
 QWidget* QPBarPlot::legendItem() const {
     QwtSymbol s(QwtSymbol::Rect, m_areaFill.asQBrush(), m_line.asQPen(),
                 QSize(10, 10));
@@ -90,7 +93,7 @@ QWidget* QPBarPlot::legendItem() const {
                             QwtLegendItem::ShowText);
     return item;
 }
-
+#endif
 
 bool QPBarPlot::linesShown() const {
     return m_line.style() != PlotLine::NOLINE; }
@@ -137,9 +140,15 @@ void QPBarPlot::setAreaFill(const PlotAreaFill& areaFill) {
 
 // Protected Methods //
 
+#if QWT_VERSION >= 0x060000
+void QPBarPlot::draw_(QPainter* p, const QwtScaleMap& xMap,
+        const QwtScaleMap& yMap, const QRectF& /*canvasRect*/,
+        unsigned int drawIndex, unsigned int drawCount) const {
+#else
 void QPBarPlot::draw_(QPainter* p, const QwtScaleMap& xMap,
         const QwtScaleMap& yMap, const QRect& /*canvasRect*/,
         unsigned int drawIndex, unsigned int drawCount) const {
+#endif
     logMethod("draw_", true);
     /*
     if(to < 0) to = m_data.size() - 1;

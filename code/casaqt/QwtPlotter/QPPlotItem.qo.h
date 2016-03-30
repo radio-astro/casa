@@ -29,11 +29,10 @@
 
 #ifdef AIPS_HAS_QWT
 
-#include <graphics/GenericPlotter/PlotItem.h>
-
 #include <casaqt/QwtPlotter/QPImageCache.h>
 #include <graphics/GenericPlotter/PlotLogger.h>
 #include <graphics/GenericPlotter/PlotOperation.h>
+#include <graphics/GenericPlotter/PlotItem.h>
 
 #include <QHash>
 #include <QPainter>
@@ -66,9 +65,14 @@ public:
     
     
     // Implements QwtPlotItem::draw().
+#if QWT_VERSION >= 0x060000
+    virtual void draw(QPainter* p, const QwtScaleMap& xMap,
+            const QwtScaleMap& yMap, const QRectF& canvasRect) const;
+#else
     virtual void draw(QPainter* p, const QwtScaleMap& xMap,
             const QwtScaleMap& yMap, const QRect& canvasRect) const;
-    
+#endif
+ 
     // See PlotItem::drawSegments().
     virtual unsigned int itemDrawSegments(unsigned int segmentThreshold) const;
     
@@ -95,9 +99,15 @@ protected:
     // drawCount items starting at drawIndex.  The indexing may not be
     // applicable to all layer items (i.e., some items may draw everything in
     // this call rather than segmenting).
+#if QWT_VERSION >= 0x060000
+    virtual void draw_(QPainter* p, const QwtScaleMap& xMap,
+            const QwtScaleMap& yMap, const QRectF& drawRect,
+            unsigned int drawIndex, unsigned int drawCount) const = 0;
+#else
     virtual void draw_(QPainter* p, const QwtScaleMap& xMap,
             const QwtScaleMap& yMap, const QRect& drawRect,
             unsigned int drawIndex, unsigned int drawCount) const = 0;
+#endif
 };
 
 
@@ -113,7 +123,7 @@ public:
     // Convenient access to "origin" name for draw method for logging.
     static const String DRAW_NAME;
     
-    
+    using QPLayerItem::draw;
     // Returns true if the given pointer is a Qwt plotter implementation,
     // false otherwise.
     static bool isQPPlotItem(const PlotItemPtr item);
@@ -205,9 +215,12 @@ public:
     
     // Forces children to override QwtPlotItem::boundingRect().
     virtual QwtDoubleRect boundingRect() const = 0;
-    
+
+#if QWT_VERSION < 0x060000
+    // Legends are totally different in Qwt 6
     // Forces children to override QwtPlotItem::legendItem().
     virtual QWidget* legendItem() const = 0;
+#endif
     
 protected:    
     // Attached canvas (or NULL for none).

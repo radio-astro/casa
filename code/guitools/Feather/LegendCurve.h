@@ -41,7 +41,9 @@ class LegendCurve : public QwtPlotCurve, public ColorProvider {
 public:
 	LegendCurve( ColorProvider* colorProvider );
 	virtual QColor getRectColor( ) const;
+#if QWT_VERSION < 0x060000
 	QWidget* legendItem() const;
+#endif
 	virtual ~LegendCurve();
 private:
 	LegendCurve( const LegendCurve& other );

@@ -70,7 +70,11 @@ void ExternalAxisWidgetVertical::drawTicks( QPainter* painter, int tickLength ){
 	double startPixelY = getTickStartPixel(QwtPlot::yLeft);
 
 	//Draw the ticks.
-	QwtScaleDiv* scaleDiv = plot->axisScaleDiv( axisScale );
+#if QWT_VERSION >= 0x060000
+        const QwtScaleDiv* scaleDiv = &plot->axisScaleDiv( axisScale );
+#else
+	const QwtScaleDiv* scaleDiv = plot->axisScaleDiv( axisScale );
+#endif
 	double lowerBound = scaleDiv->lowerBound();
 	double upperBound = scaleDiv->upperBound();
 	int tickCount = 10;

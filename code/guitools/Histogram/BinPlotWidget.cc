@@ -50,9 +50,15 @@
 #include <qwt_text_label.h>
 #include <qwt_scale_div.h>
 #include <qwt_color_map.h>
-#include <qwt_double_interval.h>
 #include <qwt_scale_widget.h>
 #include <qwt_scale_engine.h>
+
+#include <casaqt/QwtConfig.h>
+#if QWT_VERSION >= 0x060000
+#include <qwt_plot_renderer.h>
+#else
+#include <qwt_double_interval.h>
+#endif
 
 namespace casa {
 
@@ -547,7 +553,11 @@ void BinPlotWidget::setDisplayLogY( bool display ){
 				}
 				//maxBinCount = minMaxBinCount.second;
 			}
+#if QWT_VERSION >= 0x060000
+			binPlot.setAxisScaleEngine( QwtPlot::yLeft, new QwtLogScaleEngine );
+#else
 			binPlot.setAxisScaleEngine( QwtPlot::yLeft, new QwtLog10ScaleEngine );
+#endif
 		}
 		else {
 			binPlot.setAxisScaleEngine( QwtPlot::yLeft, new QwtLinearScaleEngine );
@@ -576,9 +586,14 @@ void BinPlotWidget::initializeRangeControls( bool enable ){
 		rectMarker->attach( &binPlot );
 
 		//This is what draws the rectangle while it is being dragged.
+#if QWT_VERSION >= 0x060000
+		dragLine = new QwtPlotPicker( QwtPlot::xBottom, QwtPlot::yLeft,
+					QwtPlotPicker::VLineRubberBand, QwtPlotPicker::ActiveOnly, binPlot.canvas() );
+#else
 		dragLine = new QwtPlotPicker( QwtPlot::xBottom, QwtPlot::yLeft,
 					QwtPlotPicker::PointSelection | QwtPlotPicker::DragSelection,
 					QwtPlotPicker::VLineRubberBand, QwtPlotPicker::ActiveOnly, binPlot.canvas() );
+#endif
 		connect( dragLine, SIGNAL(selected(const QwtDoublePoint &)), this, SLOT(lineSelected()));
 		connect( dragLine, SIGNAL(moved(const QPoint&)), this, SLOT(lineMoved( const QPoint&)));
 
@@ -596,9 +611,15 @@ void BinPlotWidget::initializeRangeControls( bool enable ){
 	connect( rangeControlWidget, SIGNAL(rangeCleared()), this, SLOT(clearRange()));
 
 	//Tool tips
+#if QWT_VERSION >= 0x060000
+	toolTipPicker = new ToolTipPicker( QwtPlot::xBottom, QwtPlot::yLeft,
+			QwtPlotPicker::NoRubberBand,
+			QwtPlotPicker::AlwaysOn, binPlot.canvas());
+#else
 	toolTipPicker = new ToolTipPicker( QwtPlot::xBottom, QwtPlot::yLeft,
 			QwtPlotPicker::PointSelection, QwtPlotPicker::NoRubberBand,
 			QwtPlotPicker::AlwaysOn, binPlot.canvas());
+#endif
 }
 
 void BinPlotWidget::zoomContextFinished(){
@@ -668,9 +689,15 @@ void BinPlotWidget::zoomRangeMarker( double /*sValue*/, double /*eValue*/ ){
 	//scale div to get a range.  This is because the plot automatically makes
 	//an adjustment so that the axis numbers come out well when you specify
 	//a zoom range.
+#if QWT_VERSION >= 0x060000
+	QwtScaleDiv scaleDiv = binPlot.axisScaleDiv( QwtPlot::xBottom );
+	double startValue = scaleDiv.lowerBound();
+	double endValue = scaleDiv.upperBound();
+#else
 	QwtScaleDiv* scaleDiv = binPlot.axisScaleDiv( QwtPlot::xBottom );
 	double startValue = scaleDiv->lowerBound();
 	double endValue = scaleDiv->upperBound();
+#endif
 	if ( rangeControlWidget != NULL && rectMarker != NULL ){
 		pair<double,double> worldRange = rangeControlWidget->getMinMaxValues();
 		double worldMin = qMax( worldRange.first, startValue );
@@ -945,8 +972,7 @@ void BinPlotWidget::showContextMenu( const QPoint& pt ){
 		if ( contextMenuMode == FIT_CONTEXT ){
 			//Change x by the amount the y-axis takes up.
 			QRect plotGeom = ui.plotHolder->geometry();
-			QwtPlotCanvas* plotCanvas = binPlot.canvas();
-			int yAxisSpace = binPlot.width() - plotCanvas->width();
+			int yAxisSpace = binPlot.width() - binPlot.canvas()->width();
 			QwtTextLabel* titleLabel = binPlot.titleLabel();
 			int titleSpace = 0;
 			if ( titleLabel != NULL ){
@@ -1029,7 +1055,11 @@ void BinPlotWidget::fitDone( const QString& msg ){
 QwtPlotCurve* BinPlotWidget::addCurve( QVector<double>& xValues,
 		QVector<double>& yValues, const QColor& histColor ){
 	QwtPlotCurve* curve  = new QwtPlotCurve();
+#if QWT_VERSION >= 0x060000
+	curve->setSamples( xValues, yValues );
+#else
 	curve->setData( xValues, yValues );
+#endif
 	QPen curvePen( histColor );
 	if ( histColor == curveColor ){
 		curvePen.setWidth( 2 );
@@ -1459,8 +1489,7 @@ void BinPlotWidget::clearRange(){
 }
 
 int BinPlotWidget::getCanvasHeight() {
-	QwtPlotCanvas* canvas = binPlot.canvas();
-	QSize canvasSize = canvas->size();
+	QSize canvasSize = binPlot.canvas()->size();
 	int height = canvasSize.height();
 	return height;
 }
@@ -1535,10 +1564,15 @@ void BinPlotWidget::toPing( const QString& filePath, int width, int height ){
 
 	QPixmap pixmap(width, height);
 	pixmap.fill(Qt::white );
+#if QWT_VERSION >= 0x060000
+	QwtPlotRenderer qprend;
+	qprend.renderTo(&binPlot, pixmap);
+#else
 	QwtPlotPrintFilter filter;
 	int options = QwtPlotPrintFilter::PrintFrameWithScales | QwtPlotPrintFilter::PrintBackground;
 	filter.setOptions( options );
 	binPlot.print( pixmap, filter );
+#endif
 	bool imageSaved = pixmap.save( filePath, "png");
 	if ( !imageSaved ){
 		QString msg("There was a problem saving the histogram.\nPlease check the file path.");

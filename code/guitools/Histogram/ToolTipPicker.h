@@ -25,15 +25,23 @@
 #ifndef TOOLTIPPICKER_H_
 #define TOOLTIPPICKER_H_
 
+#include <casaqt/QwtConfig.h>
+
 #include <qwt_plot_picker.h>
+#include <qwt_plot_canvas.h>
 
 namespace casa {
 
 class ToolTipPicker :QwtPlotPicker {
 
 public:
+#if QWT_VERSION >= 0x060000
+	ToolTipPicker( int xAxis, int yAxis, RubberBand rubberBand,
+			DisplayMode trackorMode, QWidget* canvas );
+#else
 	ToolTipPicker( int xAxis, int yAxis, int selectionFlags, RubberBand rubberBand,
 			DisplayMode trackorMode, QwtPlotCanvas* canvas );
+#endif
 	void setData( const std::vector<float>& xVal, const std::vector<float>& yVal );
 	void setLogScaleY( bool logScale );
 	virtual QwtText trackerText( const QwtDoublePoint & pos ) const;

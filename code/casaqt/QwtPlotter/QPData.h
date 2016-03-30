@@ -29,9 +29,13 @@
 
 #ifdef AIPS_HAS_QWT
 
+#include <casaqt/QwtConfig.h>
 #include <graphics/GenericPlotter/PlotData.h>
 
+#if QWT_VERSION < 0x060000
 #include <qwt_data.h>
+#endif
+
 #include <qwt_raster_data.h>
 
 #include <casa/namespace.h>
@@ -39,14 +43,17 @@
 namespace casa {
 
 // Connects PlotPointData and QwtData.
+#if QWT_VERSION >= 0x060000
+class QPPointData : public QwtSeriesData<QPointF> {
+#else
 class QPPointData : public QwtData {
+#endif
+    
 public:
     // Constructor which takes the data.
     QPPointData(PlotPointDataPtr data);
-    
     // Destructor.
     ~QPPointData();
-    
     
     // Returns the point data.
     // <group>
@@ -58,7 +65,15 @@ public:
     // QwtData Methods //
     
     // Implements QwtData::copy().
+#if QWT_VERSION >= 0x060000
+    QPPointData* copy() const;
+
+    // Implements QwtSeriesData::sample().
+    QPointF sample(size_t i) const;
+
+#else
     QwtData* copy() const;
+#endif
     
     // Implements QwtData::size().
     size_t size() const;

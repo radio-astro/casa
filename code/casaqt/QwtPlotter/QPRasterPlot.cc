@@ -31,7 +31,9 @@
 #include <casaqt/QwtPlotter/QPCanvas.qo.h>
 #include <casaqt/QwtPlotter/QPOptions.h>
 
+#if QWT_VERSION < 0x060000
 #include <qwt_legend_item.h>
+#endif
 
 namespace casa {
 
@@ -67,17 +69,29 @@ const String QPRasterPlot::CLASS_NAME = "QPRasterPlot";
 
 // Constructors/Destructors //
 
+#if QWT_VERSION >= 0x060000
 QPRasterPlot::QPRasterPlot(PlotRasterDataPtr data, PlotRasterData::Format form,
         const String& title) : m_data(data), m_format(form),
         m_spectMap(QPOptions::standardSpectrogramMap()) {
-    QPPlotItem::setTitle(title);
+    m_rasterMap = new QPRasterMap();
+    setData(&m_data);
+#else    
+QPRasterPlot::QPRasterPlot(PlotRasterDataPtr data, PlotRasterData::Format form,
+        const String& title) : m_data(data), m_format(form),
+        m_spectMap(*QPOptions::standardSpectrogramMap()) {
     setData(m_data);
-    
+#endif
+
+    QPPlotItem::setTitle(title);
     QPPlotItem::setItemAttribute(QwtPlotItem::AutoScale);
 
     if(m_format == PlotRasterData::SPECTROGRAM) setColorMap(m_spectMap);
     else {
+#if QWT_VERSION >= 0x060000
+        m_rasterMap->setIsARGB(m_format == PlotRasterData::ARGB32);
+#else
         m_rasterMap.setIsARGB(m_format == PlotRasterData::ARGB32);
+#endif
         setColorMap(m_rasterMap);
     }
     
@@ -85,20 +99,30 @@ QPRasterPlot::QPRasterPlot(PlotRasterDataPtr data, PlotRasterData::Format form,
     setDisplayMode(QwtPlotSpectrogram::ContourMode);
 }
 
+#if QWT_VERSION >= 0x060000
 QPRasterPlot::QPRasterPlot(const RasterPlot& copy) : m_data(copy.rasterData()),
         m_format(copy.dataFormat()),
         m_spectMap(QPOptions::standardSpectrogramMap()) {
-    QPPlotItem::setTitle(copy.title());
+    m_rasterMap = new QPRasterMap();
+    setData(&m_data);
+#else    
+QPRasterPlot::QPRasterPlot(const RasterPlot& copy) : m_data(copy.rasterData()),
+        m_format(copy.dataFormat()),
+        m_spectMap(*QPOptions::standardSpectrogramMap()) {
     setData(m_data);
-    
+#endif
+    QPPlotItem::setTitle(copy.title());
+    QPPlotItem::setItemAttribute(QwtPlotItem::AutoScale);
     setContourLines(copy.contourLines());
     setLine(copy.line());
     
-    QPPlotItem::setItemAttribute(QwtPlotItem::AutoScale);
-    
     if(m_format == PlotRasterData::SPECTROGRAM) setColorMap(m_spectMap);
     else {
+#if QWT_VERSION >= 0x060000
+        m_rasterMap->setIsARGB(m_format == PlotRasterData::ARGB32);
+#else
         m_rasterMap.setIsARGB(m_format == PlotRasterData::ARGB32);
+#endif
         setColorMap(m_rasterMap);
     }
     
@@ -107,6 +131,10 @@ QPRasterPlot::QPRasterPlot(const RasterPlot& copy) : m_data(copy.rasterData()),
 }
 
 QPRasterPlot::~QPRasterPlot() {
+#if QWT_VERSION >= 0x060000
+    delete m_spectMap;
+    m_spectMap = NULL;
+#endif
     logDestruction();
 }
 
@@ -118,7 +146,11 @@ bool QPRasterPlot::isValid() const { return m_data.isValid(); }
 unsigned int QPRasterPlot::drawCount() const {
     if(m_canvas == NULL) return 0;
 
+#if QWT_VERSION >= 0x060000
+    QRectF prect = totalArea();
+#else
     QRect prect = totalArea();
+#endif
     if(!prect.isValid()) return 0;
     else return prect.width() * prect.height();
 }
@@ -130,6 +162,7 @@ void QPRasterPlot::itemChanged() { QPPlotItem::itemChanged(); }
 QwtDoubleRect QPRasterPlot::boundingRect() const {
     return m_data.boundingRect(); }
 
+#if QWT_VERSION < 0x060000
 QWidget* QPRasterPlot::legendItem() const {
     QwtLegendItem* item = new QwtLegendItem();
     item->setText(qwtTitle());
@@ -137,7 +170,7 @@ QWidget* QPRasterPlot::legendItem() const {
     item->setIdentifierMode(QwtLegendItem::ShowLine | QwtLegendItem::ShowText);
     return item;
 }
-
+#endif
 
 bool QPRasterPlot::linesShown() const {
     return defaultContourPen().style() != Qt::NoPen; }
@@ -188,7 +221,11 @@ void QPRasterPlot::setDataFormat(PlotRasterData::Format f) {
         m_format = f;
         if(m_format == PlotRasterData::SPECTROGRAM) setColorMap(m_spectMap);
         else {
+#if QWT_VERSION >= 0x060000
+            m_rasterMap->setIsARGB(m_format == PlotRasterData::ARGB32);
+#else
             m_rasterMap.setIsARGB(m_format == PlotRasterData::ARGB32);
+#endif
             setColorMap(m_rasterMap);
         }
         itemChanged();
@@ -219,21 +256,34 @@ void QPRasterPlot::setContourLines(const vector<double>& lines) {
 
 
 // Protected Methods //
-
+#if QWT_VERSION >= 0x060000
+void QPRasterPlot::draw_(QPainter* painter, const QwtScaleMap& xMap,
+          const QwtScaleMap& yMap, const QRectF& canvasRect,
+          unsigned int drawIndex, unsigned int drawCount) const {
+#else
 void QPRasterPlot::draw_(QPainter* painter, const QwtScaleMap& xMap,
           const QwtScaleMap& yMap, const QRect& canvasRect,
           unsigned int drawIndex, unsigned int drawCount) const {
+#endif
     logMethod("draw_", true);
     if(!canvasRect.isValid()) {
         logMethod("draw_", false);
         return;
     }
     
+#if QWT_VERSION >= 0x060000
+    QRectF adjArea = canvasRect;
+#else    
     QRect adjArea = canvasRect;    
+#endif   
     
     // adjust for draw index and draw count if needed
     if(drawIndex > 0 || drawCount < this->drawCount()) {
+#if QWT_VERSION >= 0x060000
+        QRectF prect = totalArea();
+#else
         QRect prect = totalArea();
+#endif
         if(adjArea.isValid()) {
             int height = adjArea.height(), left = adjArea.left(),
                 right = adjArea.right();
@@ -261,8 +311,11 @@ void QPRasterPlot::draw_(QPainter* painter, const QwtScaleMap& xMap,
     logMethod("draw_", false);
 }
 
-
+#if QWT_VERSION >= 0x060000
+QRectF QPRasterPlot::totalArea() const {
+#else
 QRect QPRasterPlot::totalArea() const {
+#endif
     if(m_canvas == NULL) return QRect();
     
     PlotRegion ranges = m_canvas->axesRanges(QPPlotItem::xAxis(),
@@ -277,9 +330,15 @@ QRect QPRasterPlot::totalArea() const {
     
     if(brect.isValid()) area &= brect;
     
+#if QWT_VERSION >= 0x060000
+    return QPPlotItem::paintRect(
+            m_canvas->asQwtPlot().canvasMap(qwtXAxis()),
+            m_canvas->asQwtPlot().canvasMap(qwtYAxis()));
+#else
     return QPPlotItem::transform(
             m_canvas->asQwtPlot().canvasMap(qwtXAxis()),
             m_canvas->asQwtPlot().canvasMap(qwtYAxis()), area);
+#endif
 }
 
 }

@@ -146,11 +146,21 @@ protected:
     const String& className() const { return CLASS_NAME; }
     
     // Implements QPLayerItem::draw_().  Ignores draw index and count.
+#if QWT_VERSION >= 0x060000
+    void draw_(QPainter* painter, const QwtScaleMap& xMap,
+              const QwtScaleMap& yMap, const QRectF& canvasRect,
+              unsigned int drawIndex, unsigned int drawCount) const;
+#else
     void draw_(QPainter* painter, const QwtScaleMap& xMap,
               const QwtScaleMap& yMap, const QRect& canvasRect,
               unsigned int drawIndex, unsigned int drawCount) const;
-    
+#endif
+ 
 private:
+
+	QPen getLabelPen() const;
+	void setPen(QwtText text, QPen pen) const;	
+
     QwtText m_label;        // text, font, outline, and background
     PlotCoordinate m_coord; // location
     int m_orient;           // orientation

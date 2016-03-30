@@ -39,6 +39,7 @@
 #include <casaqt/QwtPlotter/AxisListener.h>
 
 #include <qwt_scale_widget.h>
+#include <qwt_picker_machine.h>
 
 namespace casa {
 
@@ -256,8 +257,13 @@ QPCanvas::QPCanvas(QPPlotter* parent) : m_parent(parent), m_canvas(this),
     
     setCursor(NORMAL_CURSOR);
     
+#if QWT_VERSION >= 0x060000
+    QwtPickerDragRectMachine* dragRect = new QwtPickerDragRectMachine();
+    m_picker.setStateMachine(dragRect);
+#else
     m_picker.setSelectionFlags(QwtPicker::RectSelection |
                                QwtPicker::DragSelection);
+#endif
     m_picker.setRubberBand(QwtPicker::RectRubberBand);
     m_picker.setRubberBandPen(QPen(Qt::NoPen));
     m_picker.setTrackerMode(QwtPicker::AlwaysOff);
@@ -548,12 +554,22 @@ void QPCanvas::showColorBar(bool show, PlotAxis axis) {
     scale->setColorBarEnabled(true);
     
     if(r->dataFormat() == PlotRasterData::SPECTROGRAM) {
+#if QWT_VERSION >= 0x060000
         scale->setColorMap(QwtDoubleInterval(v.first, v.second),
-                           r->colorMap());
+                           const_cast<QwtColorMap*>(r->colorMap()));
     } else {
         vector<double>* vals = r->rasterData()->colorBarValues();
         scale->setColorMap(QwtDoubleInterval(v.first, v.second),
                            QPOptions::rasterMap(*vals));
+#else
+        scale->setColorMap(QwtDoubleInterval(v.first, v.second),
+                           r->colorMap());
+    } else {
+        vector<double>* vals = r->rasterData()->colorBarValues();
+
+        scale->setColorMap(QwtDoubleInterval(v.first, v.second),
+                           *QPOptions::rasterMap(*vals));
+#endif
         delete vals;
     }
 
@@ -563,10 +579,19 @@ void QPCanvas::showColorBar(bool show, PlotAxis axis) {
     else                    setAxisRange(axis, v.first - 0.5, v.second + 0.5);
 }
 
+const QwtScaleDiv* QPCanvas::getAxisScaleDiv(int axisId) const {
+#if QWT_VERSION >= 0x060000
+    const QwtScaleDiv* div = &(m_canvas.axisScaleDiv(axisId));
+#else
+    const QwtScaleDiv* div = m_canvas.axisScaleDiv(axisId);
+#endif
+    return div;
+}
+
 
 prange_t QPCanvas::axisRange(PlotAxis axis) const {
+    const QwtScaleDiv* div = getAxisScaleDiv(QPOptions::axis(axis));
     
-    const QwtScaleDiv* div = m_canvas.axisScaleDiv(QPOptions::axis(axis));
 #if QWT_VERSION < 0x050200
     return prange_t(div->lBound(), div->hBound());
 #else
@@ -629,7 +654,7 @@ void QPCanvas::setAxesRanges(PlotAxis xAxis, double xFrom, double xTo,
         for(unsigned int i = 0; i < m_axesRatios.size(); i++) {
             if(axisIndex(xAxis) != i) {
                 newSize = size * m_axesRatios[i];
-                div = m_canvas.axisScaleDiv(QPOptions::axis(axisIndex(i)));
+                div = getAxisScaleDiv(QPOptions::axis(axisIndex(i)));
 #if QWT_VERSION < 0x050200
                 midPoint = (div->range() / 2) + div->lBound();
 #else
@@ -678,7 +703,7 @@ void QPCanvas::setAxesAutoRescale(bool autoRescale) {
         
         const QwtScaleDiv* div;
         for(int a = 0; a < QwtPlot::axisCnt; a++) {
-            div = m_canvas.axisScaleDiv(a);
+            div = getAxisScaleDiv(a);
 #if QWT_VERSION < 0x050200
             m_canvas.setAxisScale(a, div->lBound(), div->hBound(),
                     m_canvas.axisStepSize(a));
@@ -726,13 +751,13 @@ void QPCanvas::setAxesRatioLocked(bool locked) {
     
     // recalculate ratios
     m_axesRatios[axisIndex(X_BOTTOM)] = 1;
-    const QwtScaleDiv* div = m_canvas.axisScaleDiv(QPOptions::axis(X_BOTTOM));
+    const QwtScaleDiv* div = getAxisScaleDiv(QPOptions::axis(X_BOTTOM));
     double xSize = div->range();
     
     double size;
     for(unsigned int i = 0; i < m_axesRatios.size(); i++) {
         if(i != axisIndex(X_BOTTOM)) {
-            div = m_canvas.axisScaleDiv(QPOptions::axis(axisIndex(i)));
+            div = getAxisScaleDiv(QPOptions::axis(axisIndex(i)));
             size = div->range();
             m_axesRatios[i] = size / xSize;
         }
@@ -808,8 +833,13 @@ bool QPCanvas::plotItem(PlotItemPtr item, PlotCanvasLayer layer) {
     ScatterPlot* sp;
     if(m_autoIncColors && ((sp = dynamic_cast<ScatterPlot*>(&*item)) != NULL)){
         QPLine line = sp->line();
-        QPSymbol symbol = sp->symbol();
-        
+#if QWT_VERSION >= 0x060000
+	QPSymbol* symbol = new QPSymbol();
+	symbol->fromRecord(sp->symbol()->toRecord());
+#else
+	QPSymbol symbol = sp->symbol();
+#endif
+
         int ri;
         bool contains = true;
         unsigned int i;
@@ -826,9 +856,16 @@ bool QPCanvas::plotItem(PlotItemPtr item, PlotCanvasLayer layer) {
         QString eh = QPPlotter::GLOBAL_COLORS[ri];
         QPColor color(eh);
         line.setColor(color);
-        symbol.setColor(color);
         sp->setLine(line);
+
+#if QWT_VERSION >= 0x060000
+	QwtSymbol* qwtsymbol = dynamic_cast<QwtSymbol*>(symbol);
+        qwtsymbol->setColor(QColor(eh));
         sp->setSymbol(symbol);
+#else
+        symbol.setColor(color);
+        sp->setSymbol(symbol);
+#endif
     }
     
     // Update title font for legend.
@@ -1078,7 +1115,11 @@ void QPCanvas::showGrid(bool xMajor, bool xMinor, bool yMajor,bool yMinor) {
 
 
 PlotLinePtr QPCanvas::gridMajorLine() const {
-    return new QPLine(m_canvas.grid().majPen()); 
+#if QWT_VERSION >= 0x060000
+    return new QPLine(m_canvas.grid().majorPen());
+#else 
+    return new QPLine(m_canvas.grid().majPen());
+#endif
 }
 
 
@@ -1089,14 +1130,23 @@ void QPCanvas::setGridMajorLine(const PlotLine& line) {
         
         m_canvas.grid().enableX(l.style() != PlotLine::NOLINE);
         m_canvas.grid().enableY(l.style() != PlotLine::NOLINE);
+#if QWT_VERSION >= 0x060000
+        m_canvas.grid().setMajorPen(l.asQPen());
+#else 
         m_canvas.grid().setMajPen(l.asQPen());
+#endif
     }
 }
 
 
 
 PlotLinePtr QPCanvas::gridMinorLine() const {
-    return new QPLine(m_canvas.grid().minPen()); }
+#if QWT_VERSION >= 0x060000
+    return new QPLine(m_canvas.grid().minorPen());
+#else 
+    return new QPLine(m_canvas.grid().minPen());
+#endif
+}
 
 void QPCanvas::setGridMinorLine(const PlotLine& line) {
     if(line != *gridMinorLine()) {
@@ -1104,7 +1154,11 @@ void QPCanvas::setGridMinorLine(const PlotLine& line) {
         
         m_canvas.grid().enableXMin(l.style() != PlotLine::NOLINE);
         m_canvas.grid().enableYMin(l.style() != PlotLine::NOLINE);
+#if QWT_VERSION >= 0x060000
+        m_canvas.grid().setMinorPen(l.asQPen());
+#else 
         m_canvas.grid().setMinPen(l.asQPen());
+#endif
     }
 }
 
@@ -1262,6 +1316,7 @@ PlotCoordinate QPCanvas::convertCoordinate(const PlotCoordinate& coord,
             return PlotCoordinate(x, y, newSystem);
             
         } 
+	/* xTransform not available in Qwt 6.0 but not needed--?
         else if(newSystem == PlotCoordinate::PIXEL) {
             QwtScaleMap map = m_canvas.canvasMap(QwtPlot::xBottom);
             double x = map.xTransform(coord.x());
@@ -1270,22 +1325,26 @@ PlotCoordinate QPCanvas::convertCoordinate(const PlotCoordinate& coord,
             
             return PlotCoordinate(x, y, newSystem);
         }
+	*/
         
     } 
     else if(coord.system() == PlotCoordinate::NORMALIZED_WORLD) {
-        if(newSystem == PlotCoordinate::WORLD ||
-           newSystem == PlotCoordinate::PIXEL) {
+        if(newSystem == PlotCoordinate::WORLD) { 
+        //if(newSystem == PlotCoordinate::WORLD ||
+        //   newSystem == PlotCoordinate::PIXEL) {
             prange_t range = axisRange(X_BOTTOM);
             double x = (coord.x()*(range.first - range.second)) + range.first;
             range = axisRange(Y_LEFT);
             double y = (coord.y()*(range.first - range.second)) + range.first;
             
+	    /* xTransform not available in Qwt 6.0 but not needed--?
             if(newSystem == PlotCoordinate::PIXEL) {
                 QwtScaleMap map = m_canvas.canvasMap(QwtPlot::xBottom);
                 x = map.xTransform(x);
                 map = m_canvas.canvasMap(QwtPlot::yLeft);
                 y = map.xTransform(y);
             }
+	    */
             
             return PlotCoordinate(x, y, newSystem);
 

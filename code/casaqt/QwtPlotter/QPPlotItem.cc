@@ -49,8 +49,13 @@ QPLayerItem::QPLayerItem() { }
 
 QPLayerItem::~QPLayerItem() { }
 
+#if QWT_VERSION >= 0x060000
+void QPLayerItem::draw(QPainter* p, const QwtScaleMap& xMap,
+        const QwtScaleMap& yMap, const QRectF& canvasRect) const {
+#else
 void QPLayerItem::draw(QPainter* p, const QwtScaleMap& xMap,
         const QwtScaleMap& yMap, const QRect& canvasRect) const {
+#endif
     draw_(p, xMap, yMap, canvasRect, 0, itemDrawCount()); }
 
 unsigned int QPLayerItem::itemDrawSegments(unsigned int segThreshold) const {
@@ -171,7 +176,13 @@ void QPPlotItem::setTitle(const String& newTitle) {
         
         // Update the legend.
         m_canvas = c;
-        if(m_canvas != NULL) updateLegend(m_canvas->asQwtPlot().legend());
+        if(m_canvas != NULL) {
+#if QWT_VERSION >= 0x060000
+        	legendChanged();
+#else
+		updateLegend(m_canvas->asQwtPlot().legend());
+#endif
+	}
     }
 }
 

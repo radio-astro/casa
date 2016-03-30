@@ -48,14 +48,14 @@ namespace casa {
 
 	    static QStringList colors( );
 	    static QStringList symbols( );
-	    QwtSymbol symbol(const QString &s);
+	    QwtSymbol* symbol(const QString &s);
 
 	    QSize minimumSizeHint( ) const;
 	    QSize sizeHint( ) const;
 
 	private:
 	    QSize size_;
-	    typedef std::map<QString,QwtSymbol> symbol_map_type;
+	    typedef std::map<QString,QwtSymbol*> symbol_map_type;
 	    static symbol_map_type symbol_map;
 	    static void initialize_symbol_map( );
 	    QwtLegend *legend;

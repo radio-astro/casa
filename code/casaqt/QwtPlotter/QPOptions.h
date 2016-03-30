@@ -313,9 +313,15 @@ class QPSymbol : public PlotSymbol, public QwtSymbol {
 public:
     // Defaults to QwtSymbol::QwtSymbol().
     QPSymbol();
-    
-    // Copy constructor for QwtSymbol.
+   
+#if QWT_VERSION >= 0x060000
+    // Implement QwtSymbol constructor
+    QPSymbol(QwtSymbol::Style style, const QBrush & brush, 
+	const QPen & pen, const QSize & sz);
+#else
+    // Copy constructor for QwtSymbol (private in Qwt6)
     QPSymbol(const QwtSymbol& s);
+#endif
     
     // Copy constructor for generic PlotSymbol.
     // <group>
@@ -387,7 +393,7 @@ public:
     void draw(QPainter* p, const QRect& r) const;
     
     // Overrides QwtSymbol::clone().
-    QwtSymbol* clone() const;
+    //QwtSymbol* clone() const;
     
     
     // QPSymbol Methods //
@@ -588,9 +594,9 @@ public:
     
     // Returns color maps for standard CASA objects.
     // <group>
-    static QwtLinearColorMap standardSpectrogramMap();    
-    static QwtLinearColorMap standardRasterMap();    
-    static QwtLinearColorMap rasterMap(const vector<double>& values);
+    static QwtLinearColorMap* standardSpectrogramMap();    
+    static QwtLinearColorMap* standardRasterMap();   
+    static QwtLinearColorMap* rasterMap(const vector<double>& values);
     // </group>
 };
 

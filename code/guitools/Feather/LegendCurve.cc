@@ -26,7 +26,6 @@
 #include "LegendCurve.h"
 
 #include <guitools/Feather/LegendItemRect.h>
-#include <qwt_legend_item.h>
 #include <qwt_symbol.h>
 #include <QDebug>
 
@@ -36,10 +35,13 @@ LegendCurve::LegendCurve(ColorProvider* provider ):
 	colorSource( provider ){
 }
 
+#if QWT_VERSION < 0x060000
 QWidget* LegendCurve::legendItem() const{
 	LegendItemRect* legendRect = new LegendItemRect( this );
 	return legendRect;
 }
+#endif
+
 QColor LegendCurve::getRectColor( ) const {
 	return colorSource->getRectColor();
 }

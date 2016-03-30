@@ -46,6 +46,14 @@ QPMouseFilter::QPMouseFilter(QwtPlotCanvas* canvas) : m_canvas(canvas) {
     canvas->installEventFilter(this);
 }
 
+QPMouseFilter::QPMouseFilter(QWidget* widget) {
+    QwtPlotCanvas* canvas = dynamic_cast<QwtPlotCanvas*>(widget);
+    if (canvas != NULL) {
+	m_canvas = canvas; 
+    	canvas->installEventFilter(this);
+    }
+}
+
 QPMouseFilter::~QPMouseFilter() { }
 
 void QPMouseFilter::turnTracking(bool on) {
@@ -85,7 +93,11 @@ void QPScaleDraw::setScale(PlotAxisScale scale) {
         m_scale = scale;
         if ( m_parent != NULL ){
             if(m_scale == LOG10){
+#if QWT_VERSION >= 0x060000
+                m_parent->setAxisScaleEngine(m_axis, new QwtLogScaleEngine());
+#else
                 m_parent->setAxisScaleEngine(m_axis, new QwtLog10ScaleEngine());
+#endif
             }
             else {
                 m_parent->setAxisScaleEngine(m_axis, new QwtLinearScaleEngine());
@@ -100,10 +112,15 @@ void QPScaleDraw::draw(QPainter* painter, const QPalette& palette) const {
 	QwtScaleDraw::draw( painter, palette );
 }
 
-int QPScaleDraw::extent( const QPen& pen, const QFont& font ) const{
-	int extent = QwtScaleDraw::extent( pen, font );
-	return extent;
+#if QWT_VERSION >= 0x060000
+double QPScaleDraw::extent( const QFont& font ) const{
+	return QwtScaleDraw::extent( font );
 }
+#else
+int QPScaleDraw::extent( const QPen& pen, const QFont& font ) const{
+	return QwtScaleDraw::extent( pen, font );
+}
+#endif
 
 const String& QPScaleDraw::dateFormat() const { return m_dateFormat; }
 void QPScaleDraw::setDateFormat(const String& newFormat) {
@@ -270,7 +287,11 @@ QPLegendHolder::legendPosition(PlotCanvas::LegendPosition pos) {
     case PlotCanvas::EXT_RIGHT:  return QwtPlot::RightLegend;
     case PlotCanvas::EXT_LEFT:   return QwtPlot::LeftLegend;
     case PlotCanvas::EXT_BOTTOM: return QwtPlot::BottomLegend;
+#if QWT_VERSION >= 0x060000
+    default:                     return QwtPlot::RightLegend;
+#else
     default:                     return QwtPlot::ExternalLegend;
+#endif
     }
 }
 
@@ -330,18 +351,19 @@ void QPLegendHolder::setPosition(PlotCanvas::LegendPosition pos) {
     m_canvas->asQwtPlot().insertLegend(m_legend, legendPosition(pos));
 }
 
-QRect QPLegendHolder::internalLegendRect(const QRect& canvRect,
-        bool useQwtPainter) const {
+QRect QPLegendHolder::internalLegendRect(const QRect& canvRect) const {
     if(!legendShown() || !isInternal()) return QRect();
     
     QSize size = m_legend->sizeHint();
     int paddingx = m_padding, paddingy = m_padding;
     
+    /* this is never true in casa code
     if(useQwtPainter && !QwtPainter::metricsMap().isIdentity()) {
         size = QwtPainter::metricsMap().layoutToDevice(size);
         paddingx = QwtPainter::metricsMap().layoutToDeviceX(paddingx);
         paddingy = QwtPainter::metricsMap().layoutToDeviceY(paddingy);
     }
+    */
     
     QRect rect(QPoint(0, 0), size);
     if(m_position == PlotCanvas::INT_ULEFT ||
@@ -378,7 +400,11 @@ void QPLegendHolder::updateSpacers() {
     // Adjust spacing for actual canvas.
     QRect orect = m_canvas->contentsRect();
     orect.moveTopLeft(m_canvas->mapToGlobal(orect.topLeft()));
+#if QWT_VERSION >= 0x060000
+    QwtPlotCanvas* canv = static_cast<QwtPlotCanvas*>(m_canvas->asQwtPlot().canvas());
+#else
     QwtPlotCanvas* canv = m_canvas->asQwtPlot().canvas();
+#endif
     QRect irect = canv->contentsRect();
     irect.moveTopLeft(canv->mapToGlobal(irect.topLeft()));
     if(top > 0) top += irect.top() - orect.top();
@@ -429,9 +455,15 @@ QPGrid::QPGrid() { QPBaseItem::setZ(BASE_Z_GRID); }
 QPGrid::~QPGrid() { }
 
 bool QPGrid::shouldDraw() const {
+#if QWT_VERSION >= 0x060000
+    bool drawMaj = majorPen().style() != Qt::NoPen && (xEnabled() || yEnabled());
+    bool drawMin = minorPen().style() != Qt::NoPen &&
+                   (xMinEnabled() || yMinEnabled());
+#else
     bool drawMaj = majPen().style() != Qt::NoPen && (xEnabled() || yEnabled());
     bool drawMin = minPen().style() != Qt::NoPen &&
                    (xMinEnabled() || yMinEnabled());
+#endif
     return drawMaj || drawMin;
 }
 
@@ -443,10 +475,13 @@ bool QPGrid::shouldDraw() const {
 QPCartesianAxis::QPCartesianAxis(QwtPlot::Axis master, QwtPlot::Axis slave) :
         m_axis(master), m_scaleDraw() 
 {
-    if(master == QwtPlot::yLeft || master == QwtPlot::yRight)
-        setAxis(slave, master);
-    else
-        setAxis(master, slave);
+    if(master == QwtPlot::yLeft || master == QwtPlot::yRight) {
+        setXAxis(slave);
+        setYAxis(master);
+    }else {
+        setXAxis(master);
+        setYAxis(slave);
+    }
     
     
     switch(master) {
@@ -465,8 +500,15 @@ QPCartesianAxis::QPCartesianAxis(QwtPlot::Axis master, QwtPlot::Axis slave) :
 
 QPCartesianAxis::~QPCartesianAxis() { }
 
-
-
+#if QWT_VERSION >= 0x060000
+void QPCartesianAxis::draw_(QPainter* painter, const QwtScaleMap& /*xMap*/,
+                  const QwtScaleMap& /*yMap*/, const QRectF& /*drawRect*/,
+                  unsigned int /*drawIndex*/, unsigned int /*drawCount*/) const {
+    QwtScaleDraw* s = const_cast<QwtScaleDraw*>(&m_scaleDraw);
+    // Qwt 6 has no QwtScaleMap::xTransform or equivalent
+    s->setScaleDiv(plot()->axisScaleDiv(m_axis));
+    s->draw(painter, plot()->palette());
+#else
 void QPCartesianAxis::draw_(QPainter* painter, const QwtScaleMap& xMap,
                   const QwtScaleMap& yMap, const QRect& /*drawRect*/,
                   unsigned int /*drawIndex*/, unsigned int /*drawCount*/) const {
@@ -484,9 +526,10 @@ void QPCartesianAxis::draw_(QPainter* painter, const QwtScaleMap& xMap,
                 QPOptions::round(yMap.xTransform(0.0)));
         s->setLength(QPOptions::round(xMap.p2() - xMap.p1()));
 		}
-    
+ 
     s->setScaleDiv(*(plot()->axisScaleDiv(m_axis)));
     s->draw(painter, plot()->palette());
+#endif
 }
 
 }

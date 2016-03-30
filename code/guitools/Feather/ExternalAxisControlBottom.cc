@@ -73,8 +73,13 @@ void ExternalAxisControlBottom::drawTicks( QPainter* painter, int tickLength ){
 
 	//We don't want to draw too many ticks so adjust the number
 	//of ticks we draw accordingly.
+#if QWT_VERSION >= 0x060000
+	QwtScaleDiv scaleDiv = plot->axisScaleDiv( QwtPlot::xBottom );
+	const QList<double> axisTicks = scaleDiv.ticks(QwtPlot::xBottom);
+#else
 	QwtScaleDiv* scaleDiv = plot->axisScaleDiv( QwtPlot::xBottom );
 	const QList<double> axisTicks = scaleDiv->ticks(QwtPlot::xBottom);
+#endif
 	int originalTickCount = axisTicks.size();
 	int tickIncrement = getTickIncrement( originalTickCount );
 

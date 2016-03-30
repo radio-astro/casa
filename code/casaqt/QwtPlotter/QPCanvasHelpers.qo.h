@@ -60,7 +60,8 @@ class QPMouseFilter : public QObject {
 public:
     // Constructor which takes the canvas to install itself on.
     QPMouseFilter(QwtPlotCanvas* canvas);
-    
+    QPMouseFilter(QWidget* widget);
+
     // Destructor.
     ~QPMouseFilter();
     
@@ -127,7 +128,11 @@ public:
     QwtText label(double value) const;
     
     virtual void draw(QPainter* painter, const QPalette& palette) const;
+#if QWT_VERSION >= 0x060000
+    virtual double extent( const QFont& font ) const;
+#else
     virtual int extent( const QPen& pen, const QFont& font ) const;
+#endif
 
 private:
 	// Parent.
@@ -227,7 +232,7 @@ public:
     // Destructor.
     ~QPLegendHolder();
 
-    
+    QPLegend* legend() { return m_legend; }
     // Shows/hides the legend.
     // <group>
     bool legendShown() const;
@@ -260,8 +265,7 @@ public:
     // </group>
     
     // Returns the rect for the internal legend, given a canvas rect.
-    QRect internalLegendRect(const QRect& canvasRect,
-            bool useQwtPainter = false) const;
+    QRect internalLegendRect(const QRect& canvasRect) const;
     
     // See QPLegend::drawOutlineAndBackground.
     void drawOutlineAndBackground(QPainter* painter, const QRect& rect,
@@ -361,9 +365,15 @@ public:
     
 protected:
     // Implements QPLayerItem::draw_().  Ignores draw index and count.
+#if QWT_VERSION >= 0x060000
+    void draw_(QPainter* p, const QwtScaleMap& xMap,
+                const QwtScaleMap& yMap, const QRectF& drawRect,
+                unsigned int drawIndex, unsigned int drawCount) const {
+#else
     void draw_(QPainter* p, const QwtScaleMap& xMap,
                 const QwtScaleMap& yMap, const QRect& drawRect,
                 unsigned int drawIndex, unsigned int drawCount) const {
+#endif
 		(void)drawIndex; (void)drawCount;
         QwtPlotGrid::draw(p, xMap, yMap, drawRect); }
 };
@@ -389,10 +399,16 @@ public:
     
 protected:
     // Implements QPLayerItem::draw_().  Ignores draw index and count.
+#if QWT_VERSION >= 0x060000
+    void draw_(QPainter* p, const QwtScaleMap& xMap,
+                const QwtScaleMap& yMap, const QRectF& drawRect,
+                unsigned int drawIndex, unsigned int drawCount) const;
+#else
     void draw_(QPainter* p, const QwtScaleMap& xMap,
                 const QwtScaleMap& yMap, const QRect& drawRect,
                 unsigned int drawIndex, unsigned int drawCount) const;
-    
+#endif
+
 private:
     // Master axis.
     QwtPlot::Axis m_axis;

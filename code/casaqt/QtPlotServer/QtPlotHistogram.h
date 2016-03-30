@@ -46,7 +46,11 @@ class QtPlotHistogram: public QwtPlotItem {
 	QwtDoubleRect boundingRect( ) const;
 	int rtti( ) const { return QwtPlotItem::Rtti_PlotHistogram; }
 
+#if QWT_VERSION >= 0x060000
+	void draw( QPainter *, const QwtScaleMap &xMap, const QwtScaleMap &yMap, const QRectF & ) const;
+#else
 	void draw( QPainter *, const QwtScaleMap &xMap, const QwtScaleMap &yMap, const QRect & ) const;
+#endif
 
 	void setBaseline(double reference);
 	double baseline() const { return reference_; }
