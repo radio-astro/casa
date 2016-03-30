@@ -3591,6 +3591,221 @@ bool image::putregion(
     return False;
 }
 
+image* image::pv(
+    const string& outfile, const variant& start,
+    const variant& end, const variant& center, const variant& length,
+    const variant& pa, const variant& width, const string& unit,
+    bool overwrite, const variant& region, const string& chans,
+    const string& stokes, const string& mask, bool stretch,
+    bool wantreturn
+) {
+    if (detached()) {
+        return nullptr;
+    }
+    try {
+        _log << _ORIGIN;
+        ThrowIf(
+            ! _imageF,
+            "This method only supports Float valued images"
+        );
+        SHARED_PTR<casa::MDirection> startMD, endMD, centerMD;
+        Vector<Double> startPix, endPix, centerPix;
+        SHARED_PTR<casa::Quantity> lengthQ;
+        Double lengthD = 0;
+        if (! start.empty() && ! end.empty()) {
+            ThrowIf(
+                ! center.empty() || ! length.empty()
+                || ! pa.empty(),
+                "None of center, length, nor pa may be specified if start and end are specified"
+            );
+            ThrowIf(
+                start.type() != end.type(),
+                "start and end must be the same data type"
+            );
+            casa::MDirection dir;
+            _processDirection(startPix, dir, start, String("start"));
+            if (startPix.size() == 0) {
+                startMD.reset(new casa::MDirection(dir));
+            }
+            _processDirection(endPix, dir, end, "end");
+            if (endPix.size() == 0) {
+                endMD.reset(new casa::MDirection(dir));
+            }
+        }
+        else if (
+            ! center.empty() && ! length.empty()
+            && ! pa.empty()
+        ) {
+            ThrowIf(
+                ! start.empty() || ! end.empty(),
+                "Neither start nor end may be specified "
+                "if center, length, and pa are specified"
+            );
+            casa::MDirection dir;
+            _processDirection(centerPix, dir, center, "center");
+            if (centerPix.size() == 0) {
+                centerMD.reset(new casa::MDirection(dir));
+            }
+            if (length.type() == variant::INT || length.type() == variant::DOUBLE) {
+                lengthD = length.toDouble();
+            }
+            else {
+                lengthQ.reset(
+                    new casa::Quantity(_casaQuantityFromVar(length))
+                );
+            }
+        }
+        else {
+            ThrowCc(
+                "Either both of start and end or all three of "
+                "center, width, and pa must be specified"
+            );
+        }
+        _log << _ORIGIN;
+
+        uInt intWidth = 0;
+        casa::Quantity qWidth;
+        if (width.type() == variant::INT) {
+            intWidth = width.toInt();
+            ThrowIf(
+                intWidth % 2 == 0 || intWidth < 1,
+                "width must be an odd integer >= 1"
+            );
+        }
+        else if (
+            width.type() == variant::STRING
+            || width.type() == variant::RECORD
+        ) {
+            qWidth = _casaQuantityFromVar(width);
+        }
+        else if (width.type() == variant::BOOLVEC && width.empty()) {
+            intWidth = 1;
+        }
+        else {
+            ThrowCc("Unsupported data type for width " + width.typeString());
+        }
+        if (outfile.empty() && ! wantreturn) {
+            _log << LogIO::WARN << "outfile was not specified and wantreturn is false. "
+                << "The resulting image will be inaccessible" << LogIO::POST;
+        }
+        SHARED_PTR<Record> regionPtr = _getRegion(region, True);
+        PVGenerator pv(
+            _imageF, regionPtr.get(),
+            chans, stokes, mask, outfile, overwrite
+        );
+        if (startPix.size() == 2) {
+            pv.setEndpoints(
+                make_pair(startPix[0], startPix[1]),
+                make_pair(endPix[0], endPix[1])
+            );
+        }
+        else if (startMD) {
+            pv.setEndpoints(*startMD, *endMD);
+        }
+        else if (centerMD) {
+            if (lengthQ) {
+                pv.setEndpoints(
+                    *centerMD, *lengthQ, _casaQuantityFromVar(pa)
+                );
+            }
+            else {
+                pv.setEndpoints(
+                    *centerMD, lengthD, _casaQuantityFromVar(pa)
+                );
+            }
+        }
+        else {
+            if (lengthQ) {
+                pv.setEndpoints(
+                    make_pair(centerPix[0], centerPix[1]),
+                    *lengthQ, _casaQuantityFromVar(variant(pa))
+                );
+            }
+            else {
+                pv.setEndpoints(
+                        make_pair(centerPix[0], centerPix[1]),
+                    lengthD, _casaQuantityFromVar(variant(pa))
+                );
+            }
+        }
+        if (intWidth == 0) {
+            pv.setWidth(qWidth);
+        }
+        else {
+            pv.setWidth(intWidth);
+        }
+        pv.setStretch(stretch);
+        pv.setOffsetUnit(unit);
+        _log << _ORIGIN;
+        vector<String> names {
+            "outfile", "start", "end", "center", "length",
+            "pa", "width", "unit", "overwrite", "region", "chans",
+            "stokes", "mask", "stretch", "wantreturn"
+        };
+        vector<variant> values {
+            outfile, start, end, center, length,
+            pa, width, unit, overwrite, region, chans,
+            stokes, mask, stretch, wantreturn
+        };
+        auto msgs = _newHistory(__func__, names, values);
+        pv.addHistory(_ORIGIN, msgs);
+        auto out = pv.generate();
+        image *ret = wantreturn ? new image(out) : nullptr;
+        return ret;
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
+        RETHROW(x);
+    }
+    return nullptr;
+}
+
+void image::_processDirection(
+    Vector<Double>& pixel, casa::MDirection& dir,
+    const variant& inputDirection, const String& paramName
+) {
+    variant::TYPE myType = inputDirection.type();
+    ThrowIf(
+        (
+            myType == variant::INTVEC
+            || myType == variant::DOUBLEVEC
+            || myType == variant::STRINGVEC
+        ) &&
+        inputDirection.size() != 2,
+        "If specified as an array, " + paramName
+        + " must have exactly two elements"
+    );
+    pixel.resize(0);
+    if (myType == variant::INTVEC || myType == variant::DOUBLEVEC) {
+        pixel = Vector<Double>(_toDoubleVec(inputDirection));
+    }
+    else if(myType == variant::STRINGVEC) {
+        vector<string> x = inputDirection.toStringVec();
+        casa::Quantity q0 = _casaQuantityFromVar(variant(x[0]));
+        casa::Quantity q1 = _casaQuantityFromVar(variant(x[1]));
+        dir = casa::MDirection(q0, q1);
+    }
+    else if (myType == variant::STRING) {
+        string parts[3];
+        split(inputDirection.toString(), parts, 3, Regex("[, \n\t\r\v\f]+"));
+        casa::MDirection::Types frame;
+        casa::MDirection::getType(frame, parts[0]);
+        dir = casa::MDirection::getType(frame, parts[0])
+            ? casa::MDirection(
+                _casaQuantityFromVar(parts[1]),
+                _casaQuantityFromVar(parts[2]), frame
+            )
+            : casa::MDirection(
+                _casaQuantityFromVar(parts[0]),
+                _casaQuantityFromVar(parts[1])
+            );
+    }
+    else {
+        ThrowCc("Unsupported type for " + paramName);
+    }
+}
+
 bool image::remove(const bool finished, const bool verbose) {
     try {
         _log << _ORIGIN;
@@ -3820,207 +4035,8 @@ void image::_reset() {
 
 
 
-image* image::pv(
-	const string& outfile, const variant& start,
-	const variant& end, const variant& center, const variant& length,
-	const variant& pa, const variant& width, const string& unit,
-	const bool overwrite, const variant& region, const string& chans,
-	const string& stokes, const string& mask, const bool stretch,
-	const bool wantreturn
-) {
-	if (detached()) {
-		return 0;
-	}
-	try {
-		_log << _ORIGIN;
-		ThrowIf(
-			! _imageF,
-			"This method only supports Float valued images"
-		);
-		SHARED_PTR<casa::MDirection> startMD, endMD, centerMD;
-		Vector<Double> startPix, endPix, centerPix;
-		SHARED_PTR<casa::Quantity> lengthQ;
-		Double lengthD = 0;
-		if (! start.empty() && ! end.empty()) {
-			ThrowIf(
-				! center.empty() || ! length.empty()
-				|| ! pa.empty(),
-				"None of center, length, nor pa may be specified if start and end are specified"
-			);
-			ThrowIf(
-				start.type() != end.type(),
-				"start and end must be the same data type"
-			);
-			casa::MDirection dir;
-			_processDirection(startPix, dir, start, String("start"));
-			if (startPix.size() == 0) {
-				startMD.reset(new casa::MDirection(dir));
-			}
-			_processDirection(endPix, dir, end, "end");
-			if (endPix.size() == 0) {
-				endMD.reset(new casa::MDirection(dir));
-			}
-		}
-		else if (
-			! center.empty() && ! length.empty()
-			&& ! pa.empty()
-		) {
-			ThrowIf(
-				! start.empty() || ! end.empty(),
-				"Neither start nor end may be specified "
-				"if center, length, and pa are specified"
-			);
-			casa::MDirection dir;
-			_processDirection(centerPix, dir, center, "center");
-			if (centerPix.size() == 0) {
-				centerMD.reset(new casa::MDirection(dir));
-			}
-			if (length.type() == variant::INT || length.type() == variant::DOUBLE) {
-				lengthD = length.toDouble();
-			}
-			else {
-				lengthQ.reset(
-					new casa::Quantity(_casaQuantityFromVar(variant(length)))
-				);
-			}
-		}
-		else {
-			ThrowCc(
-				"Either both of start and end or all three of "
-				"center, width, and pa must be specified"
-			);
-		}
-		_log << _ORIGIN;
 
-		uInt intWidth = 0;
-		casa::Quantity qWidth;
-		if (width.type() == variant::INT) {
-			intWidth = width.toInt();
-			ThrowIf(
-				intWidth % 2 == 0 || intWidth < 1,
-				"width must be an odd integer >= 1"
-			);
-		}
-		else if (
-			width.type() == variant::STRING
-			|| width.type() == variant::RECORD
-		) {
-			qWidth = _casaQuantityFromVar(width);
-		}
-		else if (width.type() == variant::BOOLVEC && width.empty()) {
-			intWidth = 1;
-		}
-		else {
-			ThrowCc("Unsupported data type for width " + width.typeString());
-		}
-		if (outfile.empty() && ! wantreturn) {
-			_log << LogIO::WARN << "outfile was not specified and wantreturn is false. "
-				<< "The resulting image will be inaccessible" << LogIO::POST;
-		}
-		SHARED_PTR<Record> regionPtr = _getRegion(region, True);
-		PVGenerator pv(
-			_imageF, regionPtr.get(),
-			chans, stokes, mask, outfile, overwrite
-		);
-		if (startPix.size() == 2) {
-			pv.setEndpoints(
-				make_pair(startPix[0], startPix[1]),
-				make_pair(endPix[0], endPix[1])
-			);
-		}
-		else if (startMD) {
-			pv.setEndpoints(*startMD, *endMD);
-		}
-		else if (centerMD) {
-			if (lengthQ) {
-				pv.setEndpoints(
-					*centerMD, *lengthQ, _casaQuantityFromVar(variant(pa))
-				);
-			}
-			else {
-				pv.setEndpoints(
-					*centerMD, lengthD, _casaQuantityFromVar(variant(pa))
-				);
-			}
-		}
-		else {
-			if (lengthQ) {
-				pv.setEndpoints(
-					make_pair(centerPix[0], centerPix[1]),
-					*lengthQ, _casaQuantityFromVar(variant(pa))
-				);
-			}
-			else {
-				pv.setEndpoints(
-						make_pair(centerPix[0], centerPix[1]),
-					lengthD, _casaQuantityFromVar(variant(pa))
-				);
-			}
-		}
-		if (intWidth == 0) {
-			pv.setWidth(qWidth);
-		}
-		else {
-			pv.setWidth(intWidth);
-		}
-		pv.setStretch(stretch);
-		pv.setOffsetUnit(unit);
-		_log << _ORIGIN;
-		SPIIF out = pv.generate();
-		image *ret = wantreturn ? new image(out) : 0;
-		return ret;
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-			<< LogIO::POST;
-		RETHROW(x);
-	}
-}
 
-void image::_processDirection(
-	Vector<Double>& pixel, casa::MDirection& dir,
-	const variant& inputDirection, const String& paramName
-) {
-	variant::TYPE myType = inputDirection.type();
-	ThrowIf(
-		(
-			myType == variant::INTVEC
-			|| myType == variant::DOUBLEVEC
-			|| myType == variant::STRINGVEC
-		) &&
-		inputDirection.size() != 2,
-		"If specified as an array, " + paramName
-		+ " must have exactly two elements"
-	);
-	pixel.resize(0);
-	if (myType == variant::INTVEC || myType == variant::DOUBLEVEC) {
-		pixel = Vector<Double>(_toDoubleVec(inputDirection));
-	}
-	else if(myType == variant::STRINGVEC) {
-		vector<string> x = inputDirection.toStringVec();
-		casa::Quantity q0 = _casaQuantityFromVar(variant(x[0]));
-		casa::Quantity q1 = _casaQuantityFromVar(variant(x[1]));
-		dir = casa::MDirection(q0, q1);
-	}
-	else if (myType == variant::STRING) {
-		string parts[3];
-		split(inputDirection.toString(), parts, 3, Regex("[, \n\t\r\v\f]+"));
-		casa::MDirection::Types frame;
-		casa::MDirection::getType(frame, parts[0]);
-		dir = casa::MDirection::getType(frame, parts[0])
-			? casa::MDirection(
-				_casaQuantityFromVar(parts[1]),
-				_casaQuantityFromVar(parts[2]), frame
-			)
-			: casa::MDirection(
-				_casaQuantityFromVar(parts[0]),
-				_casaQuantityFromVar(parts[1])
-			);
-	}
-	else {
-		ThrowCc("Unsupported type for " + paramName);
-	}
-}
 
 image* image::rebin(
 	const std::string& outfile, const std::vector<int>& bin,

@@ -445,5 +445,18 @@ class ia_pv_test(unittest.TestCase):
             )
         )
 
+    def test_history(self):
+        """Verify history is written to created image"""
+        myia = self.ia
+        myia.fromshape("", [30, 30, 30])
+        length = "14arcmin"
+        center = [15, 15]
+        bb = myia.pv("", center=center, length=length, pa="45deg")
+        myia.done()
+        msgs = bb.history()
+        bb.done()
+        self.assertTrue("ia.pv" in msgs[-2])
+        self.assertTrue("ia.pv" in msgs[-1])
+
 def suite():
     return [ia_pv_test]
