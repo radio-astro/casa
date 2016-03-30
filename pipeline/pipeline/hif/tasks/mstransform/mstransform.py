@@ -5,6 +5,7 @@ import os
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.tablereader as tablereader
 from pipeline.infrastructure import casa_tasks
 
 LOG = infrastructure.get_logger(__name__)
@@ -85,9 +86,7 @@ class MstransformInputs(basetask.StandardInputs):
     # Select TARGET data by default
     @property
     def intent(self):
-        if self._intent is not None:
-            return self._intent
-        return None
+        return self._intent
 
     @intent.setter
     def intent(self, value):
@@ -138,15 +137,12 @@ class MstransformInputs(basetask.StandardInputs):
         d['reindex'] = False
         return d
 
+
 class Mstransform(basetask.StandardTaskTemplate):
     Inputs = MstransformInputs
 
     def prepare(self):
         inputs = self.inputs
-
-        # Create results object
-        result = MstransformResults (vis=inputs.vis,
-            outputvis=inputs.outputvis)
 
         # Check whether or not there is any target data
         #    If not don't execute
@@ -156,38 +152,50 @@ class Mstransform(basetask.StandardTaskTemplate):
         mstransform_job = casa_tasks.mstransform(**mstransform_args)
         self._executor.execute(mstransform_job)
 
+        result = MstransformResults(vis=inputs.vis,
+                                    outputvis=inputs.outputvis)
         return result
 
     def analyse (self, result):
-
         # Check for existence of the output vis
         # and set it to '' if it does not exist
         # on disk.
         if not os.path.exists(result.outputvis):
-            result.outputvis = ''
+            LOG.error('Error executing mstransform')
+            return result
+
+        to_import = os.path.abspath(result.outputvis)
+        observing_run = tablereader.ObservingRunReader.get_observing_run(to_import)
+        # adopt same session as source measurement set
+        for ms in observing_run.measurement_sets:
+            LOG.debug('Setting session to %s for %s', self.inputs.ms.session, ms.basename)
+            ms.session = self.inputs.ms.session
+            ms.is_imaging_ms = True
+
+        result.mses.extend(observing_run.measurement_sets)
+
         return result
 
-class MstransformResults(basetask.Results):
-    def __init__(self, vis, outputvis=''):
-        super(MstransformResults, self).__init__()
 
+class MstransformResults(basetask.Results):
+    def __init__(self, vis, outputvis):
+        super(MstransformResults, self).__init__()
         self.vis = vis
         self.outputvis = outputvis
+        self.mses = []
 
     def merge_with_context(self, context):
-
         # Check for an output vis
-        if not self.outputvis:
+        if not self.mses:
             LOG.error('No results to merge')
             return
 
-        # TBD
-        # Import the transformed target MS into
-        # the pipeline context using TBD light
-        # weight import data
+        target = context.observing_run
+        for ms in self.mses:
+            LOG.info('Adding {} to context'.format(ms.name))
+            target.add_measurement_set(ms)
 
-
-    def __repr__(self):
+    def __str__(self):
         # Format the Mstransform results.
         s = 'MstransformResults:\n'
         s += '\tOriginal MS {vis} transformed to {outputvis}\n'.format(
@@ -196,5 +204,5 @@ class MstransformResults(basetask.Results):
 
         return s
 
-
-
+    def __repr__(self):
+        return 'MstranformResults({}, {})'.format(self.vis, self.outputvis)

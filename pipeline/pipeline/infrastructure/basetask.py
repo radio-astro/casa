@@ -264,17 +264,15 @@ class MandatoryInputsMixin(object):
         if self._vis is not None:
             return self._vis
 
-        return [ms.name for ms in self.context.observing_run.measurement_sets]
-
-#         ms_names = [ms.name 
-#                     for ms in self.context.observing_run.measurement_sets]
-#         return ms_names[0] if len(ms_names) == 1 else ms_names
+        imaging_preferred = get_imaging_preferred(self)
+        return [ms.name for ms in self.context.observing_run.get_measurement_sets(imaging_preferred=imaging_preferred)]
 
     @vis.setter    
     def vis(self, value):
         if value is None:
-            vislist = [ms.name 
-                       for ms in self.context.observing_run.measurement_sets]
+            imaging_preferred = get_imaging_preferred(self)
+            vislist =[ms.name for ms in
+                      self.context.observing_run.get_measurement_sets(imaging_preferred=imaging_preferred)]
         else:
             vislist = value if type(value) is types.ListType else [value,]
 
@@ -304,6 +302,18 @@ class MandatoryInputsMixin(object):
     @output_dir.setter
     def output_dir(self, value):
         self._output_dir = value
+
+
+class ImagingMeasurementSetsPreferred(object):
+    """
+    Class used to register Inputs classes that prefer to see post-mstransform
+    data when available.
+    """
+    __metaclass__ = abc.ABCMeta
+
+
+def get_imaging_preferred(inputs):
+    return isinstance(inputs, ImagingMeasurementSetsPreferred)
 
 
 class OnTheFlyCalibrationMixin(object):

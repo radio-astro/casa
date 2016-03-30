@@ -1,20 +1,20 @@
 from __future__ import absolute_import
 
-import types
 import os
+import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.callibrary as callibrary
 from pipeline.infrastructure import casa_tasks
 
 from pipeline.hif.heuristics import caltable as uvcaltable
-import pipeline.infrastructure.callibrary as callibrary
-
 
 LOG = infrastructure.get_logger(__name__)
 
 # Fit the contininuum in the UV plane using the CASA style
 # uvcontfit task written by the pipeline.
+
 
 class UVcontFitInputs(basetask.StandardInputs):
 
@@ -101,9 +101,7 @@ class UVcontFitInputs(basetask.StandardInputs):
     # Select TARGET data by default
     @property
     def intent(self):
-        if self._intent is not None:
-            return self._intent
-        return None
+        return self._intent
 
     @intent.setter
     def intent(self, value):
@@ -139,9 +137,7 @@ class UVcontFitInputs(basetask.StandardInputs):
 
     @property
     def combine(self):
-        if self._combine is not None:
-            return self._combine
-        return None
+        return self._combine
 
     @combine.setter
     def combine(self, value):
@@ -151,9 +147,7 @@ class UVcontFitInputs(basetask.StandardInputs):
 
     @property
     def solint(self):
-        if self._solint is not None:
-            return self._solint
-        return None
+        return self._solint
 
     @solint.setter
     def solint(self, value):
@@ -163,9 +157,7 @@ class UVcontFitInputs(basetask.StandardInputs):
 
     @property
     def fitorder(self):
-        if self._fitorder is not None:
-            return self._fitorder
-        return None
+        return self._fitorder
 
     @fitorder.setter
     def fitorder(self, value):
@@ -186,6 +178,12 @@ class UVcontFitInputs(basetask.StandardInputs):
 
         d['append'] = append
         return d
+
+
+# tell the infrastructure to give us mstransformed data when possible by
+# registering our preference for imaging measurement sets
+basetask.ImagingMeasurementSetsPreferred.register(UVcontFitInputs)
+
 
 class UVcontFit(basetask.StandardTaskTemplate):
     Inputs = UVcontFitInputs

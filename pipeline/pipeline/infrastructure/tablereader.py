@@ -35,6 +35,9 @@ def _get_ms_name(ms):
 class ObservingRunReader(object):
     @staticmethod
     def get_observing_run(ms_files):
+        if isinstance(ms_files, str):
+            ms_files = [ms_files]
+
         observing_run = domain.ObservingRun()
         for ms_file in ms_files:
             ms = MeasurementSetReader.get_measurement_set(ms_file)

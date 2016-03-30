@@ -33,7 +33,7 @@ class MeasurementSet(object):
         self.flagcmds = []
         self.session = session
         self.filesize = self._calc_filesize() 
-        self.parent_ms = None
+        self.is_imaging_ms = False
 
     def _calc_filesize(self):
         """
