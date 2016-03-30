@@ -70,6 +70,12 @@ add_dependencies( inst tools_python_casadef )
 add_dependencies( tools_fast tools_python_casadef )
 install( PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/casadef.py DESTINATION python/${PYTHONV} )
 
+if( MPI_CXX_FOUND )
+  set( tools_DEFINITIONS ${tools_DEFINITIONS}
+    -DHAVE_MPI
+    )
+endif()
+
 casa_add_library( tools
  atmosphere/atmosphere_cmpt.cc
  atnf/atcafiller_cmpt.cc

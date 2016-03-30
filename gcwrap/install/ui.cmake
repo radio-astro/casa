@@ -281,7 +281,8 @@ macro( casa_add_tools out_swig out_sources out_py )
 				  ${DBUS_LIBRARIES}
 				  ${DL_LIBRARIES}
 				  ${READLINE_LIBRARIES}
-				  ${XERCES_LIBRARIES})
+				  ${XERCES_LIBRARIES}
+                                  ${CASAMPI_LIBRARIES})
 			  #install( FILES ${CMAKE_CURRENT_BINARY_DIR}/_${_base}.so
 			  #${CMAKE_CURRENT_BINARY_DIR}/${_base}.py
 			  #DESTINATION python/${PYTHONV}/casac/${_base} )
