@@ -40,7 +40,7 @@ namespace casa {
 
 	void SearchMoleculesResultsWidget::initializeTable() {
 		QStringList tableHeaders(QStringList() << "ID"<<"Species" << "Chemical Name" <<
-		                         "Frequency(MHz)" << "Resolved QNs" << "Intensity" );
+		                         "Frequency(MHz)" << "Resolved QNs" << "Intensity" <<"Energy Upper(K)" );
 		ui.searchResultsTable->setColumnCount( COLUMN_COUNT );
 		ui.searchResultsTable->setHorizontalHeaderLabels( tableHeaders );
 		ui.searchResultsTable->setSelectionBehavior(QAbstractItemView::SelectRows);
@@ -77,7 +77,12 @@ namespace casa {
 			//Frequency
 			pair<double,string> freqResult = results[i].getFrequency();
 			//Default frequency units seem to be GHz
-			setTableValue( i, COL_FREQUENCY, freqResult.first );
+			setTableValue( i, COL_FREQUENCY, QString::number(freqResult.first, 'g',8) );
+
+			//Temperature
+			pair<double,string> tempResult = results[i].getTemperature();
+			//Default frequency units are K
+			setTableValue( i, COL_TEMPERATURE, tempResult.first );
 
 			//QNS
 			string qns = results[i].getQuantumNumbers();
@@ -130,7 +135,7 @@ namespace casa {
 
 	void SearchMoleculesResultsWidget::getLines( QList<float>& peaks,
 	        QList<float>& centers, QString molecularName, QList<QString>& chemNames,
-	        QList<QString>& resolvedQNSs, QString frequencyUnit ) const {
+	        QList<QString>& resolvedQNSs, QString frequencyUnit) const {
 		int rowCount = ui.searchResultsTable->rowCount();
 		for ( int i = 0; i < rowCount; i++ ) {
 			QLabel* speciesItem = dynamic_cast<QLabel*>(ui.searchResultsTable->cellWidget( i, COL_SPECIES ));
@@ -172,6 +177,7 @@ namespace casa {
 			}
 			frequencyUnits = SearchMoleculesWidget::SPLATALOGUE_UNITS;
 
+
 			//Intensity
 			QTableWidgetItem* peakItem = ui.searchResultsTable->item(lineIndex, COL_INTENSITY );
 			if ( peakItem != NULL ) {
@@ -190,7 +196,8 @@ namespace casa {
 			QLabel* label =	dynamic_cast<QLabel*>(ui.searchResultsTable->cellWidget( lineIndex, COL_QN ));
 			QString qnsHtml = label->text();
 			resolvedQNs = Util::stripFont( qnsHtml );
-		} else {
+		}
+		else {
 			lineExists = false;
 		}
 

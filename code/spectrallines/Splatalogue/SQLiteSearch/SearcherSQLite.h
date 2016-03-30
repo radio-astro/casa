@@ -154,6 +154,7 @@ private:
 
 	//Table columns
 	const static std::string FREQUENCY_COLUMN;
+	const static std::string TEMPERATURE_COLUMN;
 	const static std::string SPECIES_ID_COLUMN;
 	const static std::string SPECIES_COLUMN;
 	const static std::string SMU2_COLUMN;
@@ -164,7 +165,7 @@ private:
 	const static std::string RESOLVED_QNS_COLUMN;
 	const static std::string CHEMICAL_NAME_COLUMN;
 	enum TableColumns { SPECIES_ID_COL, SPECIES_NAME_COL, CHEMICAL_NAME_COL,
-		FREQUENCY_COL, RESOLVED_QNS_COL, INTENSITY_COL, SMU2_COL, LOGA_COL, EL_COL,
+		FREQUENCY_COL, TEMPERATURE_COL, RESOLVED_QNS_COL, INTENSITY_COL, SMU2_COL, LOGA_COL, EL_COL,
 		EU_COL, END_COL };
 	static std::vector<string> resultColumns;
 

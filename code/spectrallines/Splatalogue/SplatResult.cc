@@ -31,6 +31,7 @@ namespace casa {
 SplatResult::SplatResult(int speciesId, const string& species,
 		const string& chemicalName, const string& quantumNumbers,
 		const pair<double,string>& frequency,
+		const pair<double,string>& temperature,
 		double smu2, const pair<double,string>& el,
 		const pair<double,string>& eu, double logA, double intensity) {
 	this->_speciesId = speciesId;
@@ -38,6 +39,7 @@ SplatResult::SplatResult(int speciesId, const string& species,
 	this->_chemicalName = chemicalName;
 	this->_quantumNumbers = quantumNumbers;
 	this->_frequency = frequency;
+	this->_temperature = temperature;
 	this->_smu2 = smu2;
 	this->_el = el;
 	this->_eu = eu;
@@ -63,6 +65,11 @@ std::string SplatResult::getQuantumNumbers() const {
 pair<double,std::string> SplatResult::getFrequency() const {
 	return _frequency;
 }
+
+pair<double,std::string> SplatResult::getTemperature() const {
+	return _temperature;
+}
+
 double SplatResult::getSmu2() const {
 	return _smu2;
 }
@@ -84,6 +91,7 @@ string SplatResult::toString() const {
 	os << "Species:      "<< _species << "\n";
 	os << "Chemical Name:"<< _chemicalName << "\n";
 	os << "Frequency:    "<< _frequency.first << " "<<_frequency.second<<"\n";
+	os << "Temperature:  "<< _temperature.first << " "<<_temperature.second<<"\n";
 	os << "Resolved QNs: "<< _quantumNumbers << "\n";
 	os << "Intensity:    "<< _intensity << "\n";
 	os << "Siju2:        "<< _smu2 << "\n";
@@ -105,6 +113,8 @@ string SplatResult::toLine( string spacer ) const {
 	sprintf( chemStr, formatStr.c_str(), _chemicalName.c_str());
 	char freqStr[NUM_COLUMN_WIDTH];
 	sprintf( freqStr, numFormatStr.c_str(), _frequency.first );
+	char tempStr[NUM_COLUMN_WIDTH];
+	sprintf( tempStr, numFormatStr.c_str(), _temperature.first);
 	char qnsStr[COLUMN_WIDTH];
 	sprintf( qnsStr, formatStr.c_str(), _quantumNumbers.c_str() );
 	char intStr[NUM_COLUMN_WIDTH];
@@ -118,6 +128,7 @@ string SplatResult::toLine( string spacer ) const {
 	char euStr[NUM_COLUMN_WIDTH];
 	sprintf( euStr, numFormatStr.c_str(), _eu.first );
 	os << speciesStr << spacer << chemStr << spacer << freqStr << spacer <<
+			tempStr << spacer <<
 			qnsStr<< spacer << intStr<< spacer << spacer << smu2Str<< spacer
 			<< spacer << logaStr<< spacer <<elStr << spacer << euStr << endl;
 	return os.str();

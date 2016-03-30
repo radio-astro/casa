@@ -35,6 +35,7 @@ public:
 	SplatResult( int speciesId, const string& species,
 			const string& chemicalName,
 			const string& quantumNumbers, const pair<double,string>& frequency,
+			const pair<double,string>& temperature,
 			double smu2, const pair<double,string>& el,
 			const pair<double,string>& eu, double logA, double intensity  );
 	int getSpeciesId() const;
@@ -42,6 +43,7 @@ public:
 	std::string getChemicalName() const;
 	std::string getQuantumNumbers() const;
 	pair<double,std::string> getFrequency() const;
+	pair<double,std::string> getTemperature() const;
 	pair<double,std::string> getEL() const;
 	pair<double,std::string> getEU() const;
 	double getLogA() const;
@@ -56,6 +58,7 @@ private:
 	std::string _quantumNumbers;
 	int _speciesId;
 	pair<double,std::string> _frequency;
+	pair<double,std::string> _temperature;
 	pair<double,std::string> _el;
 	pair<double,std::string> _eu;
 	double _smu2;

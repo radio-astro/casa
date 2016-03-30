@@ -38,6 +38,7 @@ const std::string SearcherSQLite::TABLE_MAIN = "main";
 
 const std::string SearcherSQLite::SPECIES_ID_COLUMN = "species_id"; //Type 1
 const std::string SearcherSQLite::FREQUENCY_COLUMN = "orderedfreq"; //Type 2
+const std::string SearcherSQLite::TEMPERATURE_COLUMN ="upper_state_energy_K";
 const std::string SearcherSQLite::SPECIES_COLUMN = "s_name"; //Type 3
 const std::string SearcherSQLite::SMU2_COLUMN = "sijmu2";
 const std::string SearcherSQLite::LOGA_COLUMN = "aij";
@@ -93,6 +94,7 @@ SearcherSQLite::SearcherSQLite( const string& databasePath):
 		resultColumns[SPECIES_NAME_COL] = SPECIES_COLUMN;
 		resultColumns[CHEMICAL_NAME_COL] = CHEMICAL_NAME_COLUMN;
 		resultColumns[FREQUENCY_COL] = FREQUENCY_COLUMN;
+		resultColumns[TEMPERATURE_COL]= TEMPERATURE_COLUMN;
 		resultColumns[RESOLVED_QNS_COL] = RESOLVED_QNS_COLUMN;
 		resultColumns[INTENSITY_COL] = INTENSITY_COLUMN;
 		resultColumns[SMU2_COL] = SMU2_COLUMN;
@@ -343,6 +345,7 @@ vector<SplatResult> SearcherSQLite::doSearch( string& errorMsg, int offset ){
 			string chemicalName = reinterpret_cast<const char*>(sqlite3_column_text( statement, CHEMICAL_NAME_COL ));
 			string speciesName = reinterpret_cast<const char*>(sqlite3_column_text( statement, SPECIES_NAME_COL ));
 			double frequency = sqlite3_column_double( statement, FREQUENCY_COL );
+			double temperature = sqlite3_column_double( statement, TEMPERATURE_COL );
 			double smu2 = sqlite3_column_double( statement, SMU2_COL );
 			double loga = sqlite3_column_double( statement, LOGA_COL );
 			double el = sqlite3_column_double( statement, EL_COL );
@@ -350,10 +353,11 @@ vector<SplatResult> SearcherSQLite::doSearch( string& errorMsg, int offset ){
 			string resolvedQNs = reinterpret_cast<const char*>(sqlite3_column_text( statement, RESOLVED_QNS_COL ));
 			double intensity = sqlite3_column_double( statement, INTENSITY_COL );
 			pair<double,string> freqPair( frequency, "MHz");
+			pair<double,string> tempPair( temperature, "K");
 			pair<double,string> elPair( el, "cm-1" );
 			pair<double,string> euPair( eu, "cm-1" );
 			SplatResult result( speciesId, speciesName, chemicalName, resolvedQNs,
-						freqPair, smu2, elPair, euPair, loga, intensity );
+						freqPair, tempPair, smu2, elPair, euPair, loga, intensity );
 			results.push_back( result );
 			//cout << result.toLine();
 		}
