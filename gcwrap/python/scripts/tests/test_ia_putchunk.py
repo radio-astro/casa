@@ -105,6 +105,18 @@ class ia_putchunk_test(unittest.TestCase):
         self.assertTrue((abs(myia.getchunk() - fval) < 1e-6).all())
         #can't put a complex valued array in a float valued image
         self.assertRaises(Exception, myia.putchunk, bb)
+
+    def test_history(self):
+        """Verify history is written"""
+        myia = self._myia
+        myia.fromshape("", [20,20])
+        bb = myia.getchunk()
+        bb[:] = 5
+        myia.putchunk(bb)
+        msgs = myia.history()
+        myia.done()
+        self.assertTrue("ia.putchunk" in msgs[-2])
+        self.assertTrue("ia.putchunk" in msgs[-1])
         
 def suite():
     return [ia_putchunk_test]

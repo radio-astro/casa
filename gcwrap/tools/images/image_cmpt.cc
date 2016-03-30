@@ -3363,6 +3363,124 @@ image* image::pbcor(
     return nullptr;
 }
 
+record* image::pixelvalue(const vector<int>& pixel) {
+    try {
+        _log << _ORIGIN;
+        if (detached()) {
+            return nullptr;
+        }
+        if(_imageF) {
+            PixelValueManipulator<Float> pvm(
+                _imageF, nullptr, "", False
+            );
+            return fromRecord(pvm.pixelValue(Vector<Int> (pixel)));
+        }
+        else {
+            PixelValueManipulator<Complex> pvm(
+                _imageC, nullptr, "", False
+            );
+            return fromRecord(pvm.pixelValue(Vector<Int> (pixel)));
+        }
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return nullptr;
+}
+
+bool image::putchunk(
+    const variant& pixels,
+    const vector<int>& blc, const vector<int>& inc,
+    bool list, bool locking, bool replicate
+) {
+    try {
+        _log << _ORIGIN;
+        if (detached()) {
+            return False;
+        }
+        if (_imageF) {
+            _putchunk(
+                _imageF, pixels, blc, inc, list, locking, replicate
+            );
+        }
+        else {
+            if (
+                pixels.type() == variant::COMPLEXVEC
+            ) {
+                Array<Complex> pixelsArray;
+                std::vector<std::complex<double> > pixelVector = pixels.getComplexVec();
+                Vector<Int> shape = pixels.arrayshape();
+                pixelsArray.resize(IPosition(shape));
+                Vector<std::complex<double> > localpix(pixelVector);
+                casa::convertArray(pixelsArray, localpix.reform(IPosition(shape)));
+                PixelValueManipulator<Complex>::put(
+                    _imageC, pixelsArray, Vector<Int>(blc),
+                    Vector<Int>(inc), list, locking,
+                    replicate
+                );
+            }
+            else {
+                _putchunk(
+                    _imageC, pixels, blc, inc,
+                    list, locking, replicate
+                );
+            }
+        }
+        vector<String> names {
+            "pixels", "blc", "inc",
+            "list", "locking", "replicate"
+        };
+        vector<variant> values {
+            pixels.size() > 100 ? "[...]" : pixels, blc, inc,
+            list, locking, replicate
+        };
+        _addHistory(__func__, names, values);
+        return True;
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return False;
+}
+
+template<class T> void image::_putchunk(
+    SPIIT myimage, const variant& pixels,
+    const vector<int>& blc, const vector<int>& inc,
+    const bool list, const bool locking, const bool replicate
+) {
+    Array<T> pixelsArray;
+    Vector<Int> shape = pixels.arrayshape();
+    pixelsArray.resize(IPosition(shape));
+    if (pixels.type() == variant::DOUBLEVEC) {
+        std::vector<double> pixelVector = pixels.getDoubleVec();
+        Vector<Double> localpix(pixelVector);
+        casa::convertArray(pixelsArray, localpix.reform(IPosition(shape)));
+    }
+    else if (pixels.type() == variant::INTVEC) {
+        std::vector<int> pixelVector = pixels.getIntVec();
+        Vector<Int> localpix(pixelVector);
+        casa::convertArray(pixelsArray, localpix.reform(IPosition(shape)));
+    }
+    else {
+        String types = myimage->dataType() == TpFloat
+            ? "doubles or ints"
+            : "complexes, doubles, or ints";
+        ThrowCc(
+            "Unsupported type for pixels parameter. It "
+            "must be either a vector of " + types
+        );
+    }
+    PixelValueManipulator<T>::put(
+        myimage, pixelsArray, Vector<Int>(blc),
+        Vector<Int>(inc), list, locking,
+        replicate
+    );
+}
+
 bool image::remove(const bool finished, const bool verbose) {
     try {
         _log << _ORIGIN;
@@ -3590,114 +3708,6 @@ void image::_reset() {
 
 
 
-::casac::record*
-image::pixelvalue(const std::vector<int>& pixel) {
-	try {
-		_log << _ORIGIN;
-		if (detached()) {
-			return nullptr;
-		}
-		if(_imageF) {
-		    PixelValueManipulator<Float> pvm(
-		        _imageF, nullptr, "", False
-		    );
-		    return fromRecord(pvm.pixelValue(Vector<Int> (pixel)));
-		}
-		else {
-		    PixelValueManipulator<Complex> pvm(
-		        _imageC, nullptr, "", False
-		    );
-		    return fromRecord(pvm.pixelValue(Vector<Int> (pixel)));
-		}
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	return nullptr;
-}
-
-bool image::putchunk(
-	const variant& pixels,
-	const vector<int>& blc, const vector<int>& inc,
-	const bool list, const bool locking, const bool replicate
-) {
-	try {
-		_log << _ORIGIN;
-		if (detached()) {
-			return false;
-		}
-		if (_imageF) {
-			_putchunk(
-				_imageF, pixels, blc, inc, list, locking, replicate
-			);
-		}
-		else {
-			if (
-				pixels.type() == variant::COMPLEXVEC
-			) {
-				Array<Complex> pixelsArray;
-				std::vector<std::complex<double> > pixelVector = pixels.getComplexVec();
-				Vector<Int> shape = pixels.arrayshape();
-				pixelsArray.resize(IPosition(shape));
-				Vector<std::complex<double> > localpix(pixelVector);
-				casa::convertArray(pixelsArray, localpix.reform(IPosition(shape)));
-				PixelValueManipulator<Complex>::put(
-					_imageC, pixelsArray, Vector<Int>(blc),
-					Vector<Int>(inc), list, locking,
-					replicate
-				);
-			}
-			else {
-				_putchunk(
-					_imageC, pixels,
-					blc, inc, list, locking, replicate
-				);
-			}
-		}
-		return True;
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-}
-
-template<class T> void image::_putchunk(
-	SPIIT myimage, const variant& pixels,
-	const vector<int>& blc, const vector<int>& inc,
-	const bool list, const bool locking, const bool replicate
-) {
-	Array<T> pixelsArray;
-	Vector<Int> shape = pixels.arrayshape();
-	pixelsArray.resize(IPosition(shape));
-	if (pixels.type() == variant::DOUBLEVEC) {
-		std::vector<double> pixelVector = pixels.getDoubleVec();
-		Vector<Double> localpix(pixelVector);
-		casa::convertArray(pixelsArray, localpix.reform(IPosition(shape)));
-	}
-	else if (pixels.type() == variant::INTVEC) {
-		std::vector<int> pixelVector = pixels.getIntVec();
-		Vector<Int> localpix(pixelVector);
-		casa::convertArray(pixelsArray, localpix.reform(IPosition(shape)));
-	}
-	else {
-		String types = myimage->dataType() == TpFloat
-			? "doubles or ints"
-			: "complexes, doubles, or ints";
-		ThrowCc(
-			"Unsupported type for pixels parameter. It "
-			"must be either a vector of " + types
-		);
-	}
-	PixelValueManipulator<T>::put(
-		myimage, pixelsArray, Vector<Int>(blc),
-		Vector<Int>(inc), list, locking,
-		replicate
-	);
-}
 
 bool image::putregion(
     const variant& v_pixels, const variant& v_pixelmask,
