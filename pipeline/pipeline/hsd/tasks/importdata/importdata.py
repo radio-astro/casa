@@ -36,10 +36,11 @@ class SDImportDataResults(basetask.Results):
     SetJy results generated from flux entries in Source.xml.
     '''
     
-    def __init__(self, mses=None, reduction_group_list=None, setjy_results=None):
+    def __init__(self, mses=None, reduction_group_list=None, datatable_name=None, setjy_results=None):
         super(SDImportDataResults, self).__init__()
         self.mses = [] if mses is None else mses
         self.reduction_group_list = reduction_group_list
+        self.datatable_name = datatable_name
         self.setjy_results = setjy_results
         self.origin = {}
         self.results = importdata.ImportDataResults(mses=mses, setjy_results=setjy_results)
@@ -49,6 +50,7 @@ class SDImportDataResults(basetask.Results):
             context.observing_run = domain.ScantableList()
         self.results.merge_with_context(context)
         self.__merge_reduction_group(context.observing_run, self.reduction_group_list)
+        context.observing_run.ms_datatable_name = self.datatable_name
         
     def __merge_reduction_group(self, observing_run, reduction_group_list):
         if not hasattr(observing_run, 'ms_reduction_group'):
@@ -96,7 +98,8 @@ class SDImportData(importdata.ImportData):
             
         # create results object
         myresults = SDImportDataResults(mses=results.mses,
-                                        reduction_group_list=reduction_group_list, 
+                                        reduction_group_list=reduction_group_list,
+                                        datatable_name=table_name,
                                         setjy_results=results.setjy_results)
         
         myresults.origin = results.origin

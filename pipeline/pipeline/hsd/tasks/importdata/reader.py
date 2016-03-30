@@ -21,6 +21,21 @@ def get_value_in_deg(quantity):
     qa = casatools.quanta
     return qa.getvalue(qa.convert(quantity, 'deg'))
 
+def get_state_id(ms, spw, intent):
+    states = (s for s in ms.states if intent in s.intents)
+    obs_modes = set()
+    for s in states:
+        modes = set(s.get_obs_mode_for_intent(intent))
+        obs_modes.update(modes)
+    state_ids = set()
+    with casatools.MSReader(ms.name) as msreader:
+        for obs_mode in obs_modes:
+            msreader.msselect({'spw': spw, 'scanintent': obs_mode}, onlyparse=True)
+            indices = msreader.msselectedindices()
+            state_ids.update(indices['stateid'])
+    return numpy.fromiter(state_ids, dtype=numpy.int32)
+        
+
 class MetaDataReader(object):
     def __init__(self, ms, table_name):
         """
@@ -90,19 +105,27 @@ class MetaDataReader(object):
         assert ms is not None
         spwsel = ','.join(map(str, spwids))
         target = 'TARGET'
+        reference = 'REFERENCE'
         assert target in ms.intents
-        states = [s for s in ms.states if target in s.intents]
-        obs_modes = set()
-        for s in states:
-            modes = set(s.get_obs_mode_for_intent(target))
-            obs_modes.update(modes)
-        state_ids = set()
-        with casatools.MSReader(name) as msreader:
-            for obs_mode in obs_modes:
-                msreader.msselect({'spw': spwsel, 'scanintent': obs_mode}, onlyparse=True)
-                indices = msreader.msselectedindices()
-                state_ids.update(indices['stateid'])
-        state_ids = numpy.fromiter(state_ids, dtype=numpy.int32)
+        #assert reference in ms.intents
+        target_states = get_state_id(ms, spwsel, target)
+        reference_states = get_state_id(ms, spwsel, reference)
+#         target_states = (s for s in ms.states if target in s.intents)
+#         reference_states = (s for s in ms.states if reference in s.intents)
+#         target_obs_modes = set()
+#         for s in target_states:
+#             modes = set(s.get_obs_mode_for_intent(target))
+#             target_obs_modes.update(modes)
+#             modes = set(s.get_obs_mode_for_intent(reference))
+#             obs_modes.update(modes)
+#         state_ids = set()
+#         with casatools.MSReader(name) as msreader:
+#             for obs_mode in obs_modes:
+#                 msreader.msselect({'spw': spwsel, 'scanintent': obs_mode}, onlyparse=True)
+#                 indices = msreader.msselectedindices()
+#                 state_ids.update(indices['stateid'])
+#         state_ids = numpy.fromiter(state_ids, dtype=numpy.int32)
+        state_ids = numpy.concatenate([target_states, reference_states])
         
         with TableSelector(name, 'ANTENNA1 == ANTENNA2 && FEED1 == FEED2 && DATA_DESC_ID IN %s && STATE_ID IN %s'%(list(ddids), list(state_ids))) as tb:
             nrow = tb.nrows()
@@ -118,7 +141,7 @@ class MetaDataReader(object):
             Tpol = numpy.zeros(nrow, dtype=numpy.int32)
             Tant = tb.getcol('ANTENNA1')
             Tbeam = tb.getcol('FEED1')
-            Tsrctype = Tpol.copy()
+            Tsrctype = numpy.fromiter((0 if i in target_states else 1 for i in tb.getcol('STATE_ID')), dtype=numpy.int32)
             Tflagrow = tb.getcol('FLAG_ROW')
             field_ids = tb.getcol('FIELD_ID')
             getsourcename = numpy.vectorize(lambda x: ms.get_fields(x)[0].source.name, otypes=['string'])
