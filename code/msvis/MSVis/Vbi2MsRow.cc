@@ -155,17 +155,17 @@ Vbi2MsRow::copy (Vbi2MsRow * other,
 
     // Optionally copied fields
 
-    copyIf (componentsToCopy.contains (vi::VisibilityCubeCorrected), other,
+    copyIf (componentsToCopy.contains (VisBufferComponent2::VisibilityCubeCorrected), other,
             & Vbi2MsRow::setCorrected, & Vbi2MsRow::corrected );
-    copyIf (componentsToCopy.contains (vi::VisibilityCubeModel), other,
+    copyIf (componentsToCopy.contains (VisBufferComponent2::VisibilityCubeModel), other,
             & Vbi2MsRow::setModel, & Vbi2MsRow::model );
-    copyIf (componentsToCopy.contains (vi::VisibilityCubeObserved), other,
+    copyIf (componentsToCopy.contains (VisBufferComponent2::VisibilityCubeObserved), other,
             & Vbi2MsRow::setObserved, & Vbi2MsRow::observed );
-    copyIf (componentsToCopy.contains (vi::VisibilityCubeFloat), other,
+    copyIf (componentsToCopy.contains (VisBufferComponent2::VisibilityCubeFloat), other,
             & Vbi2MsRow::setSingleDishData, & Vbi2MsRow::singleDishData );
-    copyIf (componentsToCopy.contains (vi::WeightSpectrum), other,
+    copyIf (componentsToCopy.contains (VisBufferComponent2::WeightSpectrum), other,
             & Vbi2MsRow::setWeightSpectrum, & Vbi2MsRow::weightSpectrum );
-    copyIf (componentsToCopy.contains (vi::SigmaSpectrum), other,
+    copyIf (componentsToCopy.contains (VisBufferComponent2::SigmaSpectrum), other,
             & Vbi2MsRow::setSigmaSpectrum, & Vbi2MsRow::sigmaSpectrum );
 }
 
