@@ -87,17 +87,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			void denyCallbacks( SIIterBot_adaptor *siba ) { callback->removeHandler(siba); }
 
 			/* Wait for an Interactive Clean Cycle */
-			bool interactiveInputRequired();
-			void waitForInteractiveInput(); 
+			virtual bool interactiveInputRequired();
+			virtual void waitForInteractiveInput(); 
 
 			// virtual bool majorCycleRequired(Float currentPeakResidual);
 
-			int cleanComplete();
+			virtual int cleanComplete();
     
 			/* --- Functions for interacting with Minor Cycle Control --- */
-			Record getMinorCycleControls();
-			void   mergeCycleInitializationRecord(Record&);
-			void   mergeCycleExecutionRecord(Record&);
+			virtual Record getMinorCycleControls();
+			virtual void   mergeCycleInitializationRecord(Record&);
+			virtual void   mergeCycleExecutionRecord(Record&);
     
 
 			//void mergeSubIterBot(SISubIterBot& subIterBot);
@@ -137,7 +137,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			void setControlsFromRecord(Record &recordIn);
          	        Float readThreshold( Record recordIn, String id );
 
-			Record getDetailsRecord(); 
+			virtual Record getDetailsRecord();
 			//Record getSubIterBotRecord();
 
 			/* ------ END Functions for runtime parameter modification -------*/
@@ -204,11 +204,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			   - summaryminor
 			   - summarymajor
 			*/
-			Record getSummaryRecord();
+			virtual Record getSummaryRecord();
 
 		protected:
 
-			void mergeMinorCycleSummary(const Array<Double>& summary);
+			virtual void mergeMinorCycleSummary(const Array<Double>& summary);
 
 			/* For testing/debugging. Print out the contents of the iterbot */
 			void printOut(String prefix, Bool verbose); 

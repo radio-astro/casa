@@ -327,6 +327,9 @@ casa_add_library( synthesis
  ImagerObjects/SDMaskHandler.cc
  ImagerObjects/SynthesisNormalizer.cc
  ImagerObjects/SynthesisUtilMethods.cc
+ ImagerObjects/DistributedSynthesisIterBot.cc
+ ImagerObjects/DistSIIterBot.cc
+ ImagerObjects/ParallelImagerFactory.cc
 # ImagerObjects2/SynthesisImager.cc
 # ImagerObjects2/SIMapperCollection.cc
 # ImagerObjects2/SIMapper.cc
@@ -576,6 +579,24 @@ install (FILES
 	ImagerObjects/SDMaskHandler.h
 	ImagerObjects/SynthesisNormalizer.h
 	ImagerObjects/SynthesisUtilMethods.h
+        ImagerObjects/SynthesisNormalizer.h
+        ImagerObjects/SynthesisUtilMethods.h
+        ImagerObjects/ContinuumPartitionMixin.h
+        ImagerObjects/CubePartitionMixin.h
+        ImagerObjects/DistributedSynthesisIterBot.h
+        ImagerObjects/DistSIIterBot.h
+        ImagerObjects/IterationControl.h
+        ImagerObjects/MultiParamFieldIterator.h
+        ImagerObjects/ParallelImager.h
+        ImagerObjects/ParallelImagerAdaptor.h
+        ImagerObjects/ParallelImagerFactory.h
+        ImagerObjects/ParallelImagerMixin.h
+        ImagerObjects/ParallelImagerParams.h
+        ImagerObjects/ParamFieldIterator.h
+        ImagerObjects/SerialPartitionMixin.h
+        ImagerObjects/SynthesisDeconvolverMixin.h
+        ImagerObjects/SynthesisImagerMixin.h
+        ImagerObjects/SynthesisNormalizerMixin.h
 	ImagerObjects/SDAlgorithmBase.h
 	ImagerObjects/SDAlgorithmHogbomClean.h
 	ImagerObjects/SDAlgorithmMSMFS.h
@@ -585,6 +606,7 @@ install (FILES
 	ImagerObjects/SDAlgorithmMEM.h
 	ImagerObjects/SDAlgorithmAAspClean.h
 	ImagerObjects/InteractiveMasking.h
+        ImagerObjects/MPIGlue.h
 	DESTINATION include/casacode/synthesis/ImagerObjects
 	)
 install (FILES
