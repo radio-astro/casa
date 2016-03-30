@@ -172,7 +172,8 @@ public:
 				my_params.deconvolution, to_synthesis_params_deconv);
 
 		auto to_vector_params = [] (const Record &r) {
-			return r;
+			Record result = r;
+			return result;
 		};
 		vector<Record> normalization_params =
 			transformed_by_field<Record>(my_params.normalization, to_vector_params);
