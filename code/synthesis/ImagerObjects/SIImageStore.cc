@@ -712,7 +712,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Directory immodel( modelname ); //  +String(".model") );
     if( !immodel.exists() ) 
       {
-	os << "Starting model image " << modelname <<  " does not exist. No initial prediction will be done" << ((nterm>0)?String(" for term")+String::toString(nterm) :"") << LogIO::POST;
+	os << "Starting model image " << modelname <<  " does not exist. No initial prediction will be done" << ((multiterm)?String(" for term")+String::toString(nterm) :"") << LogIO::POST;
 	return;
       }
 
@@ -763,7 +763,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  if( (newmodel->shape() != model(nterm)->shape()) ||  (! itsCoordSys.near(newmodel->coordinates() )) )
 	    {
 	      os << "Regridding input model " << modelname << " to target coordinate system for " << itsImageName << ".model" << ((multiterm)?".tt"+String::toString(nterm) :"") << LogIO::POST;
-	      regridToModelImage( maskmodel );
+	      regridToModelImage( maskmodel, nterm );
 	    }
 	  else
 	    {
@@ -784,7 +784,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if( (newmodel->shape() != model(nterm)->shape()) ||  (! itsCoordSys.near(newmodel->coordinates() )) )
 	  {
 	    os << "Regridding input model " << modelname << " to target coordinate system for " << itsImageName << ".model" << ((multiterm)?".tt"+String::toString(nterm) :"") << LogIO::POST;
-	    regridToModelImage( *newmodel );
+	    regridToModelImage( *newmodel, nterm );
 	  }
 	else
 	  {

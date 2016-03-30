@@ -189,20 +189,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     setupImagesOnDisk(); // To open up and initialize itsPartImages.
 
     //    os << "In ScatterModel : " << itsPartImages.nelements() << " for " << itsPartImageNames << LogIO::POST;
-
-    if( itsPartImages.nelements() > 0 && itsImages->doesImageExist(itsImages->getName()+".model") )
+    
+    if( itsPartImages.nelements() > 0 ) // && itsImages->doesImageExist(modelName) )
       {
 	os << "Send the model from : " << itsImageName << " to all nodes :" << itsPartImageNames << LogIO::POST;
 	
+	// Make the list of model images. This list is of length >1 only for multi-term runs.
+	Vector<String> modelNames( itsImages->getNTaylorTerms() );
+	if( modelNames.nelements() ==1 ) modelNames[0] = itsImages->getName()+".model";
+	if( modelNames.nelements() > 1 ) 
+	  {
+	    for( uInt nt=0;nt<itsImages->getNTaylorTerms();nt++)
+	      modelNames[nt] = itsImages->getName()+".model.tt" + String::toString(nt);
+	  }
+	
 	for( uInt part=0;part<itsPartImages.nelements();part++)
 	  {
-	    itsPartImages[part]->setModelImage( itsImages->getModelImageName() );
+	    itsPartImages[part]->setModelImage( modelNames );
 	    itsPartImages[part]->releaseLocks();
 	  }
 	itsImages->releaseLocks();
       }
+    
   }// end of scatterModel
-
+  
   void SynthesisNormalizer::scatterWeightDensity()
   {
 
