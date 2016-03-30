@@ -28,7 +28,7 @@ from .restoredata import RestoreData
 from .setmodel import Setjy
 from .setmodel import SetModels
 from .tclean import Tclean
-from .uvcontsub import UVcontFit
+from .uvcontsub import UVcontFit, UVcontSub
 
 # set default tasks for tasks with several implementations to our desired
 # specific implementation
