@@ -341,8 +341,8 @@ public:
     virtual Bool isNewMs() const = 0;
     virtual Bool isNewSpectralWindow () const = 0;
     virtual Bool isWritable () const = 0;
-    virtual Int msId() const = 0;
-    virtual String msName (Bool stripPath = False) const = 0;
+    virtual Int msId() const /*__attribute__((deprecated))*/ = 0;
+    virtual String msName (Bool stripPath = False) const /*__attribute__((deprecated))*/ = 0;
     virtual Subchunk getSubchunk () const = 0;
     virtual Bool modelDataIsVirtual () const = 0;
 

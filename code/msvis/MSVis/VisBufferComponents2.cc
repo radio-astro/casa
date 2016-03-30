@@ -111,7 +111,7 @@ VisBufferComponents2::initializeAll ()
 //                             WeightMat,
 //                             Unknown};
 
-    for (Int i = 0; i < N_VisBufferComponents2; i++){
+    for (Int i = 0; i < static_cast<int> (VisBufferComponent2::N_VisBufferComponents2); i++){
 
         all.set_p.insert (static_cast<VisBufferComponent2> (i));
     }
@@ -121,72 +121,70 @@ VisBufferComponents2::initializeAll ()
 
 
 String
-VisBufferComponents2::name (Int id)
+VisBufferComponents2::name (VisBufferComponent2 id)
 {
-    assert (id >= 0 && id < N_VisBufferComponents2);
+   // This method is called only occasionally for debugging so at this time a
+   // brute-force implmentation is acceptable.
 
-    // This method is called only occasionally for debugging so at this time a
-    // brute-force implmentation is acceptable.
+    map<VisBufferComponent2,String> names;
 
-    map<Int,String> names;
+    names [VisBufferComponent2::AllBeamOffsetsZero] = "AllBeamOffsetsZero";
+    names [VisBufferComponent2::AntennaMounts] = "AntennaMounts";
+    names [VisBufferComponent2::Antenna1] = "Antenna1";
+    names [VisBufferComponent2::Antenna2] = "Antenna2";
+    names [VisBufferComponent2::ArrayId] = "ArrayId";
+    names [VisBufferComponent2::BeamOffsets] = "BeamOffsets";
+    names [VisBufferComponent2::CorrType] = "CorrType";
+    names [VisBufferComponent2::DataDescriptionIds] = "DataDescriptionIds";
+    names [VisBufferComponent2::Direction1] = "Direction1";
+    names [VisBufferComponent2::Direction2] = "Direction2";
+    names [VisBufferComponent2::Exposure] = "Exposure";
+    names [VisBufferComponent2::Feed1] = "Feed1";
+    names [VisBufferComponent2::FeedPa1] = "FeedPa1";
+    names [VisBufferComponent2::Feed2] = "Feed2";
+    names [VisBufferComponent2::FeedPa2] = "FeedPa2";
+    names [VisBufferComponent2::FieldId] = "FieldId";
+    //names [VisBufferComponent2::Flag] = "Flag";
+    names [VisBufferComponent2::FlagCategory] = "FlagCategory";
+    names [VisBufferComponent2::FlagCube] = "FlagCube";
+    names [VisBufferComponent2::FlagRow] = "FlagRow";
+    names [VisBufferComponent2::FloatData] = "FloatData";
+    names [VisBufferComponent2::Frequencies] = "Frequencies";
+    names [VisBufferComponent2::ImagingWeight] = "ImagingWeight";
+    names [VisBufferComponent2::JonesC] = "JonesC";
+    names [VisBufferComponent2::NAntennas] = "NAntennas";
+    names [VisBufferComponent2::NChannels] = "NChannels";
+    names [VisBufferComponent2::NCorrelations] = "NCorrelations";
+    names [VisBufferComponent2::NRows] = "NRows";
+    names [VisBufferComponent2::ObservationId] = "ObservationId";
+    names [VisBufferComponent2::PhaseCenter] = "PhaseCenter";
+    names [VisBufferComponent2::PolFrame] = "PolFrame";
+    names [VisBufferComponent2::PolarizationId] = "PolarizationId";
+    names [VisBufferComponent2::ProcessorId] = "ProcessorId";
+    names [VisBufferComponent2::ReceptorAngles] = "ReceptorAngles";
+    names [VisBufferComponent2::RowIds] = "RowIds";
+    names [VisBufferComponent2::Scan] = "Scan";
+    names [VisBufferComponent2::Sigma] = "Sigma";
+    names [VisBufferComponent2::SpectralWindows] = "SpectralWindows";
+    names [VisBufferComponent2::StateId] = "StateId";
+    names [VisBufferComponent2::Time] = "Time";
+    names [VisBufferComponent2::TimeCentroid] = "TimeCentroid";
+    names [VisBufferComponent2::TimeInterval] = "TimeInterval";
+    names [VisBufferComponent2::Weight] = "Weight";
+    names [VisBufferComponent2::WeightScaled] = "WeightScaled";
+    names [VisBufferComponent2::WeightSpectrum] = "WeightSpectrum";
+    names [VisBufferComponent2::SigmaSpectrum] = "SigmaSpectrum";
+    names [VisBufferComponent2::WeightSpectrumScaled] = "WeightSpectrumScaled";
+    names [VisBufferComponent2::Uvw] = "Uvw";
+    names [VisBufferComponent2::VisibilityCorrected] = "VisibilityCorrected";
+    names [VisBufferComponent2::VisibilityModel] = "VisibilityModel";
+    names [VisBufferComponent2::VisibilityObserved] = "VisibilityObserved";
+    names [VisBufferComponent2::VisibilityCubeCorrected] = "VisibilityCubeCorrected";
+    names [VisBufferComponent2::VisibilityCubeModel] = "VisibilityCubeModel";
+    names [VisBufferComponent2::VisibilityCubeObserved] = "VisibilityCubeObserved";
+    names [VisBufferComponent2::VisibilityCubeFloat] = "VisibilityCubeFloat";
 
-    names [AllBeamOffsetsZero] = "AllBeamOffsetsZero";
-    names [AntennaMounts] = "AntennaMounts";
-    names [Antenna1] = "Antenna1";
-    names [Antenna2] = "Antenna2";
-    names [ArrayId] = "ArrayId";
-    names [BeamOffsets] = "BeamOffsets";
-    names [CorrType] = "CorrType";
-    names [DataDescriptionIds] = "DataDescriptionIds";
-    names [Direction1] = "Direction1";
-    names [Direction2] = "Direction2";
-    names [Exposure] = "Exposure";
-    names [Feed1] = "Feed1";
-    names [FeedPa1] = "FeedPa1";
-    names [Feed2] = "Feed2";
-    names [FeedPa2] = "FeedPa2";
-    names [FieldId] = "FieldId";
-    //names [Flag] = "Flag";
-    names [FlagCategory] = "FlagCategory";
-    names [FlagCube] = "FlagCube";
-    names [FlagRow] = "FlagRow";
-    names [FloatData] = "FloatData";
-    names [Frecuencies] = "Frecuencies";
-    names [ImagingWeight] = "ImagingWeight";
-    names [JonesC] = "JonesC";
-    names [NAntennas] = "NAntennas";
-    names [NChannels] = "NChannels";
-    names [NCorrelations] = "NCorrelations";
-    names [NRows] = "NRows";
-    names [ObservationId] = "ObservationId";
-    names [PhaseCenter] = "PhaseCenter";
-    names [PolFrame] = "PolFrame";
-    names [PolarizationId] = "PolarizationId";
-    names [ProcessorId] = "ProcessorId";
-    names [ReceptorAngles] = "ReceptorAngles";
-    names [RowIds] = "RowIds";
-    names [Scan] = "Scan";
-    names [Sigma] = "Sigma";
-    names [SpectralWindows] = "SpectralWindows";
-    names [StateId] = "StateId";
-    names [Time] = "Time";
-    names [TimeCentroid] = "TimeCentroid";
-    names [TimeInterval] = "TimeInterval";
-    names [Weight] = "Weight";
-    names [WeightScaled] = "WeightScaled";
-    names [WeightSpectrum] = "WeightSpectrum";
-    names [SigmaSpectrum] = "SigmaSpectrum";
-    names [WeightSpectrumScaled] = "WeightSpectrumScaled";
-    names [Uvw] = "Uvw";
-    names [VisibilityCorrected] = "VisibilityCorrected";
-    names [VisibilityModel] = "VisibilityModel";
-    names [VisibilityObserved] = "VisibilityObserved";
-    names [VisibilityCubeCorrected] = "VisibilityCubeCorrected";
-    names [VisibilityCubeModel] = "VisibilityCubeModel";
-    names [VisibilityCubeObserved] = "VisibilityCubeObserved";
-    names [VisibilityCubeFloat] = "VisibilityCubeFloat";
-
-    assert (names.size() == N_VisBufferComponents2);
+    assert (names.size() == static_cast<int> (VisBufferComponent2::N_VisBufferComponents2));
 
     return names [id];
 }

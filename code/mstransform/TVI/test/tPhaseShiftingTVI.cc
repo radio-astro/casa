@@ -141,9 +141,9 @@ void PhaseShiftingTVITest::testCompareTransformedData()
 
 	// Determine columns to check
 	VisBufferComponents2 columns;
-	columns += VisibilityCubeObserved;
-	columns += VisibilityCubeCorrected;
-	columns += VisibilityCubeModel;
+	columns += VisBufferComponent2::VisibilityCubeObserved;
+	columns += VisBufferComponent2::VisibilityCubeCorrected;
+	columns += VisBufferComponent2::VisibilityCubeModel;
 
 	// Compare
 	Bool res = compareVisibilityIterators(testTVI,refTVI,columns,tolerance);

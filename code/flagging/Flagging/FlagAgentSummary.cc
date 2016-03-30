@@ -62,13 +62,13 @@ FlagAgentSummary::FlagAgentSummary(FlagDataHandler *dh, Record config):
     flagDataHandler_p->setMapPolarizations(true);
 
     // Request pre-loading array,field,spw, scan, observation, antenna1, antenna2
-    flagDataHandler_p->preLoadColumn(vi::ArrayId);
-    flagDataHandler_p->preLoadColumn(vi::FieldId);
-    flagDataHandler_p->preLoadColumn(vi::Scan);
-    flagDataHandler_p->preLoadColumn(vi::ObservationId);
-    flagDataHandler_p->preLoadColumn(vi::SpectralWindows);
-    flagDataHandler_p->preLoadColumn(vi::Antenna1);
-    flagDataHandler_p->preLoadColumn(vi::Antenna2);
+    flagDataHandler_p->preLoadColumn(VisBufferComponent2::ArrayId);
+    flagDataHandler_p->preLoadColumn(VisBufferComponent2::FieldId);
+    flagDataHandler_p->preLoadColumn(VisBufferComponent2::Scan);
+    flagDataHandler_p->preLoadColumn(VisBufferComponent2::ObservationId);
+    flagDataHandler_p->preLoadColumn(VisBufferComponent2::SpectralWindows);
+    flagDataHandler_p->preLoadColumn(VisBufferComponent2::Antenna1);
+    flagDataHandler_p->preLoadColumn(VisBufferComponent2::Antenna2);
     //flagDataHandler_p->preLoadColumn(vi::Freq);
 }
 

@@ -255,7 +255,7 @@ void PlotMSVBAverager::initialize(vi::VisBuffer2& vb)
 
   // Assign main meta info
   vi::VisBufferComponents2 components = vi::VisBufferComponents2::these(
-      {vi::FieldId, vi::ObservationId, vi::SpectralWindows, vi::StateId});
+      {VisBufferComponent2::FieldId, VisBufferComponent2::ObservationId, VisBufferComponent2::SpectralWindows, VisBufferComponent2::StateId});
   avBuf_p->copyComponents(vb, components, True, False);
   fieldid_ = vb.fieldId();
   spw_ = vb.spectralWindows();

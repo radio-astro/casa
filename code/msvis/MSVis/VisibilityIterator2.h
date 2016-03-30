@@ -645,9 +645,9 @@ public:
 
   //reference to actual ms in interator
 
-  const MeasurementSet& ms() const;
+  const MeasurementSet& ms() const /*__attribute__((deprecated))*/;
 
-  const vi::SubtableColumns & subtableColumns () const;
+  const vi::SubtableColumns & subtableColumns () const /*__attribute__((deprecated))*/;
 
   static String getAipsRcBase () { return "VisibilityIterator2";}
 

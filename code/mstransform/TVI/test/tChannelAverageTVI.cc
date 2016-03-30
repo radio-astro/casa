@@ -143,20 +143,20 @@ void ChannelAverageTVITest::testCompareTransformedData()
 
 	// Determine columns to check
 	VisBufferComponents2 columns;
-	columns += NRows;
-	columns += NChannels;
-	columns += NCorrelations;
-	columns += FlagRow;
-	columns += FlagCube;
-	columns += VisibilityCubeObserved;
-	columns += VisibilityCubeCorrected;
-	columns += VisibilityCubeModel;
-	columns += VisibilityCubeFloat;
-	columns += WeightSpectrum;
-	columns += SigmaSpectrum;
-	columns += Weight;
-	columns += Sigma;
-	columns += Frecuencies;
+	columns += VisBufferComponent2::NRows;
+	columns += VisBufferComponent2::NChannels;
+	columns += VisBufferComponent2::NCorrelations;
+	columns += VisBufferComponent2::FlagRow;
+	columns += VisBufferComponent2::FlagCube;
+	columns += VisBufferComponent2::VisibilityCubeObserved;
+	columns += VisBufferComponent2::VisibilityCubeCorrected;
+	columns += VisBufferComponent2::VisibilityCubeModel;
+	columns += VisBufferComponent2::VisibilityCubeFloat;
+	columns += VisBufferComponent2::WeightSpectrum;
+	columns += VisBufferComponent2::SigmaSpectrum;
+	columns += VisBufferComponent2::Weight;
+	columns += VisBufferComponent2::Sigma;
+	columns += VisBufferComponent2::Frequencies;
 
 	// Compare
 	Bool res = compareVisibilityIterators(testTVI,refTVI,columns,tolerance);
@@ -191,7 +191,7 @@ void ChannelAverageTVITest::testComparePropagatedFlags()
 
 	// Determine columns to check
 	VisBufferComponents2 columns;
-	columns += FlagCube;
+	columns += VisBufferComponent2::FlagCube;
 
 	// Compare
 	Bool res = compareVisibilityIterators(*testTVI,*refTVI,columns,tolerance);

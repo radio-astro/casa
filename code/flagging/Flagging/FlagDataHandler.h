@@ -864,7 +864,7 @@ public:
 
 	// Pre-Load columns (in order to avoid parallelism problems when not using
 	// async i/o, and also to know what columns to pre-fetch in async i/o mode)
-	void preLoadColumn(uInt column);
+	void preLoadColumn(VisBufferComponent2 column);
 	void preFetchColumns();
 
 	// Stop iterating
@@ -985,7 +985,7 @@ protected:
 	bool asyncio_enabled_p;
 	// Pre-Load columns (in order to avoid parallelism problems when not using
 	// async i/o, and also to know what columns to pre-fetch in async i/o mode)
-	vector<uInt> preLoadColumns_p;
+	vector<VisBufferComponent2> preLoadColumns_p;
 
 	// Iteration parameters
 	uShort iterationApproach_p;

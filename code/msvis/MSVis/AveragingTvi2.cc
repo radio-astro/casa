@@ -1937,59 +1937,60 @@ VbAvg::setupVbAvg (const VisBuffer2 * vb)
 void
 VbAvg::setupArrays (Int nCorrelations, Int nChannels, Int nBaselines)
 {
+
     setShape (nCorrelations, nChannels, nBaselines);
 
     // Start out with all of the array-valued components except the
     // optional ones.
 
     VisBufferComponents2 including =
-	VisBufferComponents2::these ({Antenna1,
-		    Antenna2,
-		    ArrayId,
-		    CorrType,
-		    DataDescriptionIds,
-		    Exposure,
-		    Feed1,
-		    Feed2,
-		    FieldId,
-		    FlagCategory,
-		    FlagCube,
-		    FlagRow,
-		    ObservationId,
-		    ProcessorId,
-		    RowIds,
-		    Scan,
-		    Sigma,
-		    SpectralWindows,
-		    StateId,
-		    Time,
-		    TimeCentroid,
-		    TimeInterval,
-		    Weight,
-		    Uvw});
+	VisBufferComponents2::these ({VisBufferComponent2::Antenna1,
+		    VisBufferComponent2::Antenna2,
+		    VisBufferComponent2::ArrayId,
+		    VisBufferComponent2::CorrType,
+		    VisBufferComponent2::DataDescriptionIds,
+		    VisBufferComponent2::Exposure,
+		    VisBufferComponent2::Feed1,
+		    VisBufferComponent2::Feed2,
+		    VisBufferComponent2::FieldId,
+		    VisBufferComponent2::FlagCategory,
+		    VisBufferComponent2::FlagCube,
+		    VisBufferComponent2::FlagRow,
+		    VisBufferComponent2::ObservationId,
+		    VisBufferComponent2::ProcessorId,
+		    VisBufferComponent2::RowIds,
+		    VisBufferComponent2::Scan,
+		    VisBufferComponent2::Sigma,
+		    VisBufferComponent2::SpectralWindows,
+		    VisBufferComponent2::StateId,
+		    VisBufferComponent2::Time,
+		    VisBufferComponent2::TimeCentroid,
+		    VisBufferComponent2::TimeInterval,
+		    VisBufferComponent2::Weight,
+		    VisBufferComponent2::Uvw});
 
     if (doing_p.modelData_p){
-        including += VisibilityCubeModel;
+        including += VisBufferComponent2::VisibilityCubeModel;
     }
 
     if (doing_p.correctedData_p){
-        including += VisibilityCubeCorrected;
+        including += VisBufferComponent2::VisibilityCubeCorrected;
     }
 
     if (doing_p.observedData_p){
-        including += VisibilityCubeObserved;
+        including += VisBufferComponent2::VisibilityCubeObserved;
     }
 
     if (doing_p.floatData_p){
-        including += VisibilityCubeFloat;
+        including += VisBufferComponent2::VisibilityCubeFloat;
     }
 
     if (doing_p.weightSpectrumOut_p){
-        including += WeightSpectrum;
+        including += VisBufferComponent2::WeightSpectrum;
     }
 
     if (doing_p.sigmaSpectrumOut_p){
-        including += SigmaSpectrum;
+        including += VisBufferComponent2::SigmaSpectrum;
     }
 
     cacheResizeAndZero (including);
@@ -2011,10 +2012,10 @@ VbAvg::startChunk (ViImplementation2 * vi)
     // See if the new MS has corrected and/or model data columns
 
     doing_p.observedData_p = averagingOptions_p.contains (AveragingOptions::AverageObserved);
-    doing_p.correctedData_p = vi->existsColumn (VisibilityCubeCorrected) &&
+    doing_p.correctedData_p = vi->existsColumn (VisBufferComponent2::VisibilityCubeCorrected) &&
                               averagingOptions_p.contains (AveragingOptions::AverageCorrected);
     doing_p.modelData_p = averagingOptions_p.contains (AveragingOptions::AverageModel);
-    doing_p.floatData_p = vi->existsColumn (VisibilityCubeFloat) &&
+    doing_p.floatData_p = vi->existsColumn (VisBufferComponent2::VisibilityCubeFloat) &&
                           averagingOptions_p.contains (AveragingOptions::AverageFloat);
 
     doing_p.weightSpectrumIn_p = doing_p.correctedData_p;
@@ -2032,27 +2033,27 @@ VbAvg::startChunk (ViImplementation2 * vi)
     optionalComponentsToCopy_p = VisBufferComponents2::none();
 
     if (doing_p.observedData_p){
-        optionalComponentsToCopy_p += VisibilityCubeObserved;
+        optionalComponentsToCopy_p += VisBufferComponent2::VisibilityCubeObserved;
     }
 
     if (doing_p.correctedData_p){
-        optionalComponentsToCopy_p += VisibilityCubeCorrected;
+        optionalComponentsToCopy_p += VisBufferComponent2::VisibilityCubeCorrected;
     }
 
     if (doing_p.modelData_p){
-        optionalComponentsToCopy_p += VisibilityCubeModel;
+        optionalComponentsToCopy_p += VisBufferComponent2::VisibilityCubeModel;
     }
 
     if (doing_p.floatData_p){
-        optionalComponentsToCopy_p += VisibilityCubeFloat;
+        optionalComponentsToCopy_p += VisBufferComponent2::VisibilityCubeFloat;
     }
 
     if (doing_p.weightSpectrumOut_p){
-        optionalComponentsToCopy_p += WeightSpectrum;
+        optionalComponentsToCopy_p += VisBufferComponent2::WeightSpectrum;
     }
 
     if (doing_p.sigmaSpectrumOut_p){
-        optionalComponentsToCopy_p += SigmaSpectrum;
+        optionalComponentsToCopy_p += VisBufferComponent2::SigmaSpectrum;
     }
 }
 

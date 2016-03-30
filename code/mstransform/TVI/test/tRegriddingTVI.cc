@@ -144,10 +144,10 @@ void RegriddingTVITest::testCompareTransformedData()
 
 	// Determine columns to check
 	VisBufferComponents2 columns;
-	columns += NRows;
-	columns += NChannels;
-	columns += NCorrelations;
-	columns += Frecuencies;
+	columns += VisBufferComponent2::NRows;
+	columns += VisBufferComponent2::NChannels;
+	columns += VisBufferComponent2::NCorrelations;
+	columns += VisBufferComponent2::Frequencies;
 
 	// Compare
 	Bool res = compareVisibilityIterators(testTVI,refTVI,columns,tolerance);

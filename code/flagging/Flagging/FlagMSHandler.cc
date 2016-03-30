@@ -435,10 +435,10 @@ FlagMSHandler::generateIterator()
 		{
 			// Set preFetchColumns
 			prefetchColumns_p = new VisBufferComponents2();
-			prefetchColumns_p->operator +=(vi::FlagCube);
-			prefetchColumns_p->operator +=(vi::FlagRow);
-			prefetchColumns_p->operator +=(vi::NRows);
-			prefetchColumns_p->operator +=(vi::FieldId);
+			prefetchColumns_p->operator +=(VisBufferComponent2::FlagCube);
+			prefetchColumns_p->operator +=(VisBufferComponent2::FlagRow);
+			prefetchColumns_p->operator +=(VisBufferComponent2::NRows);
+			prefetchColumns_p->operator +=(VisBufferComponent2::FieldId);
 
 			preFetchColumns();
 

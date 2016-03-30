@@ -49,7 +49,7 @@ FlagAgentManual::initialize(Record config)
 	// For the auto-correlation flagging
 	if (flagDataHandler_p->tableTye_p == FlagDataHandler::MEASUREMENT_SET
 			and autocorr){
-		flagDataHandler_p->preLoadColumn(vi::ProcessorId);
+		flagDataHandler_p->preLoadColumn(VisBufferComponent2::ProcessorId);
 		flagDataHandler_p->loadProcessorTable_p = true;
 	}
 

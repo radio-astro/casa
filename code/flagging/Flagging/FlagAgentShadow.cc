@@ -40,12 +40,12 @@ FlagAgentShadow::FlagAgentShadow(FlagDataHandler *dh, Record config, Bool writeP
 	preProcessingDone_p = false;
 
 	// Request loading antenna1,antenna2 and uvw
-	flagDataHandler_p->preLoadColumn(vi::Antenna1);
-	flagDataHandler_p->preLoadColumn(vi::Antenna2);
-	flagDataHandler_p->preLoadColumn(vi::Uvw);
-	/////flagDataHandler_p->preLoadColumn(vi::Time);
-	flagDataHandler_p->preLoadColumn(vi::TimeCentroid);
-	flagDataHandler_p->preLoadColumn(vi::PhaseCenter);
+	flagDataHandler_p->preLoadColumn(VisBufferComponent2::Antenna1);
+	flagDataHandler_p->preLoadColumn(VisBufferComponent2::Antenna2);
+	flagDataHandler_p->preLoadColumn(VisBufferComponent2::Uvw);
+	/////flagDataHandler_p->preLoadColumn(VisBufferComponent2::Time);
+	flagDataHandler_p->preLoadColumn(VisBufferComponent2::TimeCentroid);
+	flagDataHandler_p->preLoadColumn(VisBufferComponent2::PhaseCenter);
 	/////flagDataHandler_p->preLoadColumn(vi::Direction1);
 
 	// FlagAgentShadow counters and ids to handle static variables

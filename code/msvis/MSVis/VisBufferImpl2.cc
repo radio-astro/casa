@@ -60,61 +60,96 @@ VisBufferCache::initialize (VisBufferImpl2 * vb)
     // with the vb object to allow it to iterate over the cached
     // values.
 
-    antenna1_p.initialize (this, vb, & VisBufferImpl2::fillAntenna1, Antenna1, Nr);
-    antenna2_p.initialize (this, vb, &VisBufferImpl2::fillAntenna2, Antenna2, Nr);
-    arrayId_p.initialize (this, vb, &VisBufferImpl2::fillArrayId, ArrayId, Nr);
-    cjones_p.initialize (this, vb, &VisBufferImpl2::fillJonesC, JonesC, NoCheck);
+    antenna1_p.initialize (this, vb, & VisBufferImpl2::fillAntenna1,
+                           VisBufferComponent2::Antenna1, Nr);
+    antenna2_p.initialize (this, vb, &VisBufferImpl2::fillAntenna2,
+                           VisBufferComponent2::Antenna2, Nr);
+    arrayId_p.initialize (this, vb, &VisBufferImpl2::fillArrayId,
+                          VisBufferComponent2::ArrayId, Nr);
+    cjones_p.initialize (this, vb, &VisBufferImpl2::fillJonesC,
+                         VisBufferComponent2::JonesC, NoCheck);
     correctedVisCube_p.initialize (this, vb, &VisBufferImpl2::fillCubeCorrected,
-                                   VisibilityCubeCorrected, NcNfNr, False);
-//    correctedVisibility_p.initialize (this, vb, &VisBufferImpl2::fillVisibilityCorrected,
-//                                      VisibilityCorrected, NcNfNr, False);
-    corrType_p.initialize (this, vb, &VisBufferImpl2::fillCorrType, CorrType, NoCheck);
-    //dataDescriptionId_p.initialize (this, vb, &VisBufferImpl2::fillDataDescriptionId, DataDescriptionId);
-    dataDescriptionIds_p.initialize (this, vb, &VisBufferImpl2::fillDataDescriptionIds, DataDescriptionIds, Nr);
-    direction1_p.initialize (this, vb, &VisBufferImpl2::fillDirection1, Direction1, NoCheck);
-    direction2_p.initialize (this, vb, &VisBufferImpl2::fillDirection2, Direction2, NoCheck);
-    exposure_p.initialize (this, vb, &VisBufferImpl2::fillExposure, Exposure, Nr);
-    feed1_p.initialize (this, vb, &VisBufferImpl2::fillFeed1, Feed1, Nr);
-    feed1Pa_p.initialize (this, vb, &VisBufferImpl2::fillFeedPa1, FeedPa1, NoCheck);
-    feed2_p.initialize (this, vb, &VisBufferImpl2::fillFeed2, Feed2, Nr);
-    feed2Pa_p.initialize (this, vb, &VisBufferImpl2::fillFeedPa2, FeedPa2, NoCheck);
-    fieldId_p.initialize (this, vb, &VisBufferImpl2::fillFieldId, FieldId, Nr);
-    //flag_p.initialize (this, vb, &VisBufferImpl2::fillFlag, Flag, NoCheck, False);
-    flagCategory_p.initialize (this, vb, &VisBufferImpl2::fillFlagCategory, FlagCategory, NoCheck, False);
-        // required column but not used in casa, make it a nocheck for shape validation
-    flagCube_p.initialize (this, vb, &VisBufferImpl2::fillFlagCube, FlagCube, NcNfNr, False);
-    flagRow_p.initialize (this, vb, &VisBufferImpl2::fillFlagRow, FlagRow, Nr, False);
-    floatDataCube_p.initialize (this, vb, &VisBufferImpl2::fillFloatData, VisibilityCubeFloat, NcNfNr, False);
-    imagingWeight_p.initialize (this, vb, &VisBufferImpl2::fillImagingWeight, ImagingWeight, NoCheck);
-    modelVisCube_p.initialize (this, vb, &VisBufferImpl2::fillCubeModel, VisibilityCubeModel, NcNfNr, False);
-//    modelVisibility_p.initialize (this, vb, &VisBufferImpl2::fillVisibilityModel, VisibilityModel, NoCheck, False);
-    nAntennas_p.initialize (this, vb, &VisBufferImpl2::fillNAntennas, NAntennas);
-    nChannels_p.initialize (this, vb, &VisBufferImpl2::fillNChannel, NChannels);
-    nCorrelations_p.initialize (this, vb, &VisBufferImpl2::fillNCorr, NCorrelations);
-    nRows_p.initialize (this, vb, &VisBufferImpl2::fillNRow, NRows);
-    observationId_p.initialize (this, vb, &VisBufferImpl2::fillObservationId, ObservationId, Nr);
-    phaseCenter_p.initialize (this, vb, &VisBufferImpl2::fillPhaseCenter, PhaseCenter);
-    polFrame_p.initialize (this, vb, &VisBufferImpl2::fillPolFrame, PolFrame);
-    polarizationId_p.initialize (this, vb, &VisBufferImpl2::fillPolarizationId, PolarizationId);
-    processorId_p.initialize (this, vb, &VisBufferImpl2::fillProcessorId, ProcessorId, Nr);
-    rowIds_p.initialize (this, vb, &VisBufferImpl2::fillRowIds, RowIds, Nr);
-    scan_p.initialize (this, vb, &VisBufferImpl2::fillScan, Scan, Nr);
-    sigma_p.initialize (this, vb, &VisBufferImpl2::fillSigma, Sigma, NcNr, False);
-    //sigmaMat_p.initialize (this, vb, &VisBufferImpl2::fillSigmaMat, SigmaMat);
-    spectralWindows_p.initialize (this, vb, &VisBufferImpl2::fillSpectralWindows, SpectralWindows, Nr);
-    stateId_p.initialize (this, vb, &VisBufferImpl2::fillStateId, StateId, Nr);
-    time_p.initialize (this, vb, &VisBufferImpl2::fillTime, casa::vi::Time, Nr);
-    timeCentroid_p.initialize (this, vb, &VisBufferImpl2::fillTimeCentroid, TimeCentroid, Nr);
-    timeInterval_p.initialize (this, vb, &VisBufferImpl2::fillTimeInterval, TimeInterval, Nr);
-    uvw_p.initialize (this, vb, &VisBufferImpl2::fillUvw, Uvw, I3Nr);
-    visCube_p.initialize (this, vb, &VisBufferImpl2::fillCubeObserved, VisibilityCubeObserved, NcNfNr, False);
-    //visibility_p.initialize (this, vb, &VisBufferImpl2::fillVisibilityObserved, VisibilityObserved, NoCheck, False);
-    weight_p.initialize (this, vb, &VisBufferImpl2::fillWeight, Weight, NcNr, False);
+                                   VisBufferComponent2::VisibilityCubeCorrected,
+                                   NcNfNr, False);
+    corrType_p.initialize (this, vb, &VisBufferImpl2::fillCorrType,
+                           VisBufferComponent2::CorrType, NoCheck);
+    dataDescriptionIds_p.initialize (this, vb, &VisBufferImpl2::fillDataDescriptionIds,
+                                     VisBufferComponent2::DataDescriptionIds, Nr);
+    direction1_p.initialize (this, vb, &VisBufferImpl2::fillDirection1,
+                             VisBufferComponent2::Direction1, NoCheck);
+    direction2_p.initialize (this, vb, &VisBufferImpl2::fillDirection2,
+                             VisBufferComponent2::Direction2, NoCheck);
+    exposure_p.initialize (this, vb, &VisBufferImpl2::fillExposure,
+                           VisBufferComponent2::Exposure, Nr);
+    feed1_p.initialize (this, vb, &VisBufferImpl2::fillFeed1,
+                        VisBufferComponent2::Feed1, Nr);
+    feed1Pa_p.initialize (this, vb, &VisBufferImpl2::fillFeedPa1,
+                          VisBufferComponent2::FeedPa1, NoCheck);
+    feed2_p.initialize (this, vb, &VisBufferImpl2::fillFeed2,
+                        VisBufferComponent2::Feed2, Nr);
+    feed2Pa_p.initialize (this, vb, &VisBufferImpl2::fillFeedPa2,
+                          VisBufferComponent2::FeedPa2, NoCheck);
+    fieldId_p.initialize (this, vb, &VisBufferImpl2::fillFieldId,
+                          VisBufferComponent2::FieldId, Nr);
+    flagCategory_p.initialize (this, vb, &VisBufferImpl2::fillFlagCategory,
+                               VisBufferComponent2::FlagCategory, NoCheck, False);
+    // required column but not used in casa, make it a nocheck for shape validation
+    flagCube_p.initialize (this, vb, &VisBufferImpl2::fillFlagCube,
+                           VisBufferComponent2::FlagCube, NcNfNr, False);
+    flagRow_p.initialize (this, vb, &VisBufferImpl2::fillFlagRow,
+                          VisBufferComponent2::FlagRow, Nr, False);
+    floatDataCube_p.initialize (this, vb, &VisBufferImpl2::fillFloatData,
+                                VisBufferComponent2::VisibilityCubeFloat, NcNfNr, False);
+    imagingWeight_p.initialize (this, vb, &VisBufferImpl2::fillImagingWeight,
+                                VisBufferComponent2::ImagingWeight, NoCheck);
+    modelVisCube_p.initialize (this, vb, &VisBufferImpl2::fillCubeModel,
+                               VisBufferComponent2::VisibilityCubeModel, NcNfNr, False);
+    nAntennas_p.initialize (this, vb, &VisBufferImpl2::fillNAntennas,
+                            VisBufferComponent2::NAntennas);
+    nChannels_p.initialize (this, vb, &VisBufferImpl2::fillNChannel,
+                            VisBufferComponent2::NChannels);
+    nCorrelations_p.initialize (this, vb, &VisBufferImpl2::fillNCorr,
+                                VisBufferComponent2::NCorrelations);
+    nRows_p.initialize (this, vb, &VisBufferImpl2::fillNRow,
+                        VisBufferComponent2::NRows);
+    observationId_p.initialize (this, vb, &VisBufferImpl2::fillObservationId,
+                                VisBufferComponent2::ObservationId, Nr);
+    phaseCenter_p.initialize (this, vb, &VisBufferImpl2::fillPhaseCenter,
+                              VisBufferComponent2::PhaseCenter);
+    polFrame_p.initialize (this, vb, &VisBufferImpl2::fillPolFrame,
+                           VisBufferComponent2::PolFrame);
+    polarizationId_p.initialize (this, vb, &VisBufferImpl2::fillPolarizationId,
+                                 VisBufferComponent2::PolarizationId);
+    processorId_p.initialize (this, vb, &VisBufferImpl2::fillProcessorId,
+                              VisBufferComponent2::ProcessorId, Nr);
+    rowIds_p.initialize (this, vb, &VisBufferImpl2::fillRowIds,
+                         VisBufferComponent2::RowIds, Nr);
+    scan_p.initialize (this, vb, &VisBufferImpl2::fillScan,
+                       VisBufferComponent2::Scan, Nr);
+    sigma_p.initialize (this, vb, &VisBufferImpl2::fillSigma,
+                        VisBufferComponent2::Sigma, NcNr, False);
+    spectralWindows_p.initialize (this, vb, &VisBufferImpl2::fillSpectralWindows,
+                                  VisBufferComponent2::SpectralWindows, Nr);
+    stateId_p.initialize (this, vb, &VisBufferImpl2::fillStateId,
+                          VisBufferComponent2::StateId, Nr);
+    time_p.initialize (this, vb, &VisBufferImpl2::fillTime,
+                       VisBufferComponent2::Time, Nr);
+    timeCentroid_p.initialize (this, vb, &VisBufferImpl2::fillTimeCentroid,
+                               VisBufferComponent2::TimeCentroid, Nr);
+    timeInterval_p.initialize (this, vb, &VisBufferImpl2::fillTimeInterval,
+                               VisBufferComponent2::TimeInterval, Nr);
+    uvw_p.initialize (this, vb, &VisBufferImpl2::fillUvw,
+                      VisBufferComponent2::Uvw, I3Nr);
+    visCube_p.initialize (this, vb, &VisBufferImpl2::fillCubeObserved,
+                          VisBufferComponent2::VisibilityCubeObserved, NcNfNr, False);
+    weight_p.initialize (this, vb, &VisBufferImpl2::fillWeight,
+                         VisBufferComponent2::Weight, NcNr, False);
     weightSpectrum_p.initialize (this, vb, &VisBufferImpl2::fillWeightSpectrum,
-                                 WeightSpectrum, NcNfNr, False);
+                                 VisBufferComponent2::WeightSpectrum,
+                                 NcNfNr, False);
     sigmaSpectrum_p.initialize (this, vb, &VisBufferImpl2::fillSigmaSpectrum,
-    		                    SigmaSpectrum, NcNfNr, False);
-
+                                VisBufferComponent2::SigmaSpectrum,
+                                NcNfNr, False);
 }
 
 void
@@ -388,7 +423,7 @@ VisBufferImpl2::construct (ViImplementation2 * vi, VisBufferOptions options)
 void
 VisBufferImpl2::copy (const VisBuffer2 & otherRaw, Bool fetchIfNeeded)
 {
-    copyComponents (otherRaw, VisBufferComponents2::exceptThese({FlagCategory}),
+    copyComponents (otherRaw, VisBufferComponents2::exceptThese({VisBufferComponent2::FlagCategory}),
                     True, fetchIfNeeded);
 }
 
@@ -459,16 +494,26 @@ VisBufferImpl2::copyCoordinateInfo (const VisBuffer2 * vb, Bool dirDependent,
 {
 
     VisBufferComponents2 components =
-        VisBufferComponents2::these ({Antenna1, Antenna2, ArrayId, DataDescriptionIds,
-                                      FieldId, SpectralWindows, casa::vi::Time,
-		    NRows, Feed1, Feed2});
+        VisBufferComponents2::these ({VisBufferComponent2::Antenna1,
+                                      VisBufferComponent2::Antenna2,
+                                      VisBufferComponent2::ArrayId,
+                                      VisBufferComponent2::DataDescriptionIds,
+                                      VisBufferComponent2::FieldId,
+                                      VisBufferComponent2::SpectralWindows,
+                                      VisBufferComponent2::Time,
+                                      VisBufferComponent2::NRows,
+                                      VisBufferComponent2::Feed1,
+                                      VisBufferComponent2::Feed2});
 
     copyComponents (* vb, components, allowShapeChange, fetchIfNeeded);
 
     if(dirDependent){
 
         VisBufferComponents2 components =
-	    VisBufferComponents2::these ({Direction1, Direction2, FeedPa1, FeedPa2});
+	    VisBufferComponents2::these ({VisBufferComponent2::Direction1,
+                                      VisBufferComponent2::Direction2,
+                                      VisBufferComponent2::FeedPa1,
+                                      VisBufferComponent2::FeedPa2});
 
         copyComponents (* vb, components, allowShapeChange, fetchIfNeeded);
     }
@@ -619,7 +664,7 @@ VisBufferImpl2::dirtyComponentsGet () const
 
             VisBufferComponent2 component = (* i)->getComponent ();
 
-            if (component != Unknown){
+            if (component != VisBufferComponent2::Unknown){
                 dirtyComponents = dirtyComponents +
                                   VisBufferComponents2::singleton (component);
             }

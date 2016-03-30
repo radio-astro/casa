@@ -573,7 +573,7 @@ FlagAgentBase::setDataSelection(Record config)
 				filterRows_p=true;
 
 				// Request to pre-load ArrayId
-				flagDataHandler_p->preLoadColumn(vi::ArrayId);
+				flagDataHandler_p->preLoadColumn(VisBufferComponent2::ArrayId);
 
 				*logger_p << LogIO::DEBUG1 << " array selection is " << arraySelection_p << LogIO::POST;
 				*logger_p << LogIO::DEBUG1 << " array ids are " << arrayList_p << LogIO::POST;
@@ -603,7 +603,7 @@ FlagAgentBase::setDataSelection(Record config)
 				filterRows_p=true;
 
 				// Request to pre-load FieldId
-				flagDataHandler_p->preLoadColumn(vi::FieldId);
+				flagDataHandler_p->preLoadColumn(VisBufferComponent2::FieldId);
 
 				*logger_p << LogIO::DEBUG1 << " field selection is " << fieldSelection_p << LogIO::POST;
 				*logger_p << LogIO::DEBUG1 << " field ids are " << fieldList_p << LogIO::POST;
@@ -634,7 +634,7 @@ FlagAgentBase::setDataSelection(Record config)
 				filterRows_p=true;
 
 				// Request to pre-load scan
-				flagDataHandler_p->preLoadColumn(vi::Scan);
+				flagDataHandler_p->preLoadColumn(VisBufferComponent2::Scan);
 
 				*logger_p << LogIO::DEBUG1 << " scan selection is " << scanSelection_p << LogIO::POST;
 				*logger_p << LogIO::DEBUG1 << " scan ids are " << scanList_p << LogIO::POST;
@@ -664,7 +664,7 @@ FlagAgentBase::setDataSelection(Record config)
 				filterRows_p=true;
 
 				// Request to pre-load time
-				flagDataHandler_p->preLoadColumn(vi::Time);
+				flagDataHandler_p->preLoadColumn(VisBufferComponent2::Time);
 
 				*logger_p << LogIO::DEBUG1 << " timerange selection is " << timeSelection_p << LogIO::POST;
 				*logger_p << LogIO::DEBUG1 << " time ranges in MJD are " << timeList_p << LogIO::POST;
@@ -697,7 +697,7 @@ FlagAgentBase::setDataSelection(Record config)
 				filterChannels_p=true;
 
 				// Request to pre-load spw
-				flagDataHandler_p->preLoadColumn(vi::SpectralWindows);
+				flagDataHandler_p->preLoadColumn(VisBufferComponent2::SpectralWindows);
 
 				*logger_p << LogIO::DEBUG1 << " spw selection is " << spwSelection_p << LogIO::POST;
 				*logger_p << LogIO::DEBUG1 << " channel selection are " << channelList_p << LogIO::POST;
@@ -740,8 +740,8 @@ FlagAgentBase::setDataSelection(Record config)
 				filterRows_p=true;
 
 				// Request to pre-load antenna1/2
-				flagDataHandler_p->preLoadColumn(vi::Antenna1);
-				flagDataHandler_p->preLoadColumn(vi::Antenna2);
+				flagDataHandler_p->preLoadColumn(VisBufferComponent2::Antenna1);
+				flagDataHandler_p->preLoadColumn(VisBufferComponent2::Antenna2);
 
 				*logger_p << LogIO::DEBUG1 << " selected antenna1 list is " << antenna1List_p << LogIO::POST;
 				*logger_p << LogIO::DEBUG1 << " selected antenna2 list is " << antenna2List_p << LogIO::POST;
@@ -782,7 +782,7 @@ FlagAgentBase::setDataSelection(Record config)
 				filterRows_p=true;
 
 				// Request to pre-load uvw
-				flagDataHandler_p->preLoadColumn(vi::Uvw);
+				flagDataHandler_p->preLoadColumn(VisBufferComponent2::Uvw);
 
 				*logger_p << LogIO::DEBUG1 << " uvrange selection is " << uvwSelection_p << LogIO::POST;
 				*logger_p << LogIO::DEBUG1 << " uvrange ids are " << uvwList_p << LogIO::POST;
@@ -837,7 +837,7 @@ FlagAgentBase::setDataSelection(Record config)
 					filterPols_p=true;
 
 					// Request to pre-load CorrType
-					flagDataHandler_p->preLoadColumn(vi::CorrType);
+					flagDataHandler_p->preLoadColumn(VisBufferComponent2::CorrType);
 
 					// NOTE: casa::LogIO does not support outstream from OrderedMap<Int, Vector<Int> > objects yet
 					ostringstream polarizationListToPrint (ios::in | ios::out);
@@ -881,7 +881,7 @@ FlagAgentBase::setDataSelection(Record config)
 				filterRows_p=true;
 
 				// Request to pre-load ObservationId
-				flagDataHandler_p->preLoadColumn(vi::ObservationId);
+				flagDataHandler_p->preLoadColumn(VisBufferComponent2::ObservationId);
 
 				*logger_p << LogIO::DEBUG1 << " observation selection is " << observationList_p << LogIO::POST;
 				*logger_p << LogIO::DEBUG1 << " observation ids are " << observationList_p << LogIO::POST;
@@ -911,7 +911,7 @@ FlagAgentBase::setDataSelection(Record config)
 				filterRows_p=true;
 
 				// Request to pre-load StateId
-				flagDataHandler_p->preLoadColumn(vi::StateId);
+				flagDataHandler_p->preLoadColumn(VisBufferComponent2::StateId);
 
 				*logger_p << LogIO::DEBUG1 << " scan intent selection is " << scanIntentList_p << LogIO::POST;
 				*logger_p << LogIO::DEBUG1 << " scan intent ids are " << scanIntentList_p << LogIO::POST;
@@ -1232,72 +1232,72 @@ FlagAgentBase::setAgentParameters(Record config)
 			dataReference_p = DATA;
 
 			// Request to pre-load ObservedCube
-			flagDataHandler_p->preLoadColumn(vi::VisibilityCubeObserved);
+			flagDataHandler_p->preLoadColumn(VisBufferComponent2::VisibilityCubeObserved);
 		}
 		else if (dataColumn_p.compare("CORRECTED") == 0)
 		{
 			dataReference_p = CORRECTED;
 
 			// Request to pre-load CorrectedCube
-			flagDataHandler_p->preLoadColumn(vi::VisibilityCubeCorrected);
+			flagDataHandler_p->preLoadColumn(VisBufferComponent2::VisibilityCubeCorrected);
 		}
 		else if (dataColumn_p.compare("MODEL") == 0)
 		{
 			dataReference_p = MODEL;
 
 			// Request to pre-load ModelCube
-			flagDataHandler_p->preLoadColumn(vi::VisibilityCubeModel);
+			flagDataHandler_p->preLoadColumn(VisBufferComponent2::VisibilityCubeModel);
 		}
 		else if (dataColumn_p.compare("RESIDUAL") == 0)
 		{
 			dataReference_p = RESIDUAL;
 
 			// Request to pre-load CorrectedCube and ModelCube
-			flagDataHandler_p->preLoadColumn(vi::VisibilityCubeCorrected);
-			flagDataHandler_p->preLoadColumn(vi::VisibilityCubeModel);
+			flagDataHandler_p->preLoadColumn(VisBufferComponent2::VisibilityCubeCorrected);
+			flagDataHandler_p->preLoadColumn(VisBufferComponent2::VisibilityCubeModel);
 		}
 		else if (dataColumn_p.compare("RESIDUAL_DATA") == 0)
 		{
 			dataReference_p = RESIDUAL_DATA;
 
 			// Request to pre-load ObservedCube and ModelCube
-			flagDataHandler_p->preLoadColumn(vi::VisibilityCubeObserved);
-			flagDataHandler_p->preLoadColumn(vi::VisibilityCubeModel);
+			flagDataHandler_p->preLoadColumn(VisBufferComponent2::VisibilityCubeObserved);
+			flagDataHandler_p->preLoadColumn(VisBufferComponent2::VisibilityCubeModel);
 		}
 		else if (dataColumn_p.compare("FPARAM") == 0)
 		{
 			dataReference_p = DATA;
 
 			// Request to pre-load ObservedCube
-			flagDataHandler_p->preLoadColumn(vi::VisibilityCubeObserved);
+			flagDataHandler_p->preLoadColumn(VisBufferComponent2::VisibilityCubeObserved);
 		}
 		else if (dataColumn_p.compare("CPARAM") == 0)
 		{
 			dataReference_p = CORRECTED;
 
 			// Request to pre-load CorrectedCube
-			flagDataHandler_p->preLoadColumn(vi::VisibilityCubeCorrected);
+			flagDataHandler_p->preLoadColumn(VisBufferComponent2::VisibilityCubeCorrected);
 		}
 		else if (dataColumn_p.compare("SNR") == 0)
 		{
 			dataReference_p = MODEL;
 
 			// Request to pre-load ModelCube
-			flagDataHandler_p->preLoadColumn(vi::VisibilityCubeModel);
+			flagDataHandler_p->preLoadColumn(VisBufferComponent2::VisibilityCubeModel);
 		}
 		else if (dataColumn_p.compare("WEIGHT_SPECTRUM") == 0)
 		{
 			dataReference_p = WEIGHT_SPECTRUM;
 
 			// Request to pre-load WeightSpectrum
-			flagDataHandler_p->preLoadColumn(vi::WeightSpectrum);
+			flagDataHandler_p->preLoadColumn(VisBufferComponent2::WeightSpectrum);
 		}
 		else if (dataColumn_p.compare("WEIGHT") == 0)
 		{
 			dataReference_p = WEIGHT_SPECTRUM;
 
 			// Request to pre-load WeightSpectrum instead of Weight
-			flagDataHandler_p->preLoadColumn(vi::WeightSpectrum);
+			flagDataHandler_p->preLoadColumn(VisBufferComponent2::WeightSpectrum);
 		}
 		else if (dataColumn_p.compare("FLOAT_DATA") == 0)
 
@@ -1305,7 +1305,7 @@ FlagAgentBase::setAgentParameters(Record config)
 			dataReference_p = DATA;
 
 			// Request to pre-load ObservedCube
-			flagDataHandler_p->preLoadColumn(vi::VisibilityCubeObserved);
+			flagDataHandler_p->preLoadColumn(VisBufferComponent2::VisibilityCubeObserved);
 		}
 		else
 		{
@@ -1315,7 +1315,7 @@ FlagAgentBase::setAgentParameters(Record config)
 			dataColumn_p = "data";
 
 			// Request to pre-load ObservedCube
-			flagDataHandler_p->preLoadColumn(vi::VisibilityCubeObserved);
+			flagDataHandler_p->preLoadColumn(VisBufferComponent2::VisibilityCubeObserved);
 		}
 
 		*logger_p << logLevel_p << " data column is " << dataColumn_p << LogIO::POST;
@@ -1454,8 +1454,8 @@ FlagAgentBase::setAgentParameters(Record config)
 		*logger_p << logLevel_p << " Visibility expression is " << expression_p << LogIO::POST;
 
 		// Request to pre-load spw and corrType
-		flagDataHandler_p->preLoadColumn(vi::SpectralWindows);
-		flagDataHandler_p->preLoadColumn(vi::CorrType);
+		flagDataHandler_p->preLoadColumn(VisBufferComponent2::SpectralWindows);
+		flagDataHandler_p->preLoadColumn(VisBufferComponent2::CorrType);
 
 	}
 

@@ -31,7 +31,7 @@ FlagAgentRFlag::FlagAgentRFlag(FlagDataHandler *dh, Record config, Bool writePri
 	setAgentParameters(config);
 
 	// Request pre-loading spw
-	flagDataHandler_p->preLoadColumn(vi::SpectralWindows);
+	flagDataHandler_p->preLoadColumn(VisBufferComponent2::SpectralWindows);
 	// flagDataHandler_p->preLoadColumn(vi::Freq);
 
 	// Initialize parameters for robust stats (spectral analysis)

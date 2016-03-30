@@ -165,12 +165,12 @@ Bool FreqAxisTVI::existsColumn (VisBufferComponent2 id) const
 	Bool ret;
 	switch (id)
 	{
-		case WeightSpectrum:
+		case VisBufferComponent2::WeightSpectrum:
 		{
 			ret = True;
 			break;
 		}
-		case SigmaSpectrum:
+		case VisBufferComponent2::SigmaSpectrum:
 		{
 			ret = True;
 			break;

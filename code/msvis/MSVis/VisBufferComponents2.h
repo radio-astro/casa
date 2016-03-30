@@ -9,7 +9,7 @@ namespace casa {
 
 namespace vi {
 
-typedef enum {
+enum class VisBufferComponent2 {
 
     Unknown=-1,
 
@@ -33,7 +33,7 @@ typedef enum {
     FlagCube,
     FlagRow,
     FloatData,
-    Frecuencies,
+    Frequencies,
     ImagingWeight,
     JonesC,
     NAntennas,
@@ -70,7 +70,7 @@ typedef enum {
 
     N_VisBufferComponents2 // must be last
 
-} VisBufferComponent2;
+};
 
 
 // <summary>
@@ -124,7 +124,7 @@ public:
 
     static VisBufferComponents2 exceptThese (std::initializer_list <VisBufferComponent2> components);
 
-    static String name (Int id);
+    static String name (VisBufferComponent2 id);
     static VisBufferComponents2 none ();
     static VisBufferComponents2 singleton (VisBufferComponent2 component);
 

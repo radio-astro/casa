@@ -1416,38 +1416,38 @@ VisibilityIteratorImpl2::existsColumn (VisBufferComponent2 id) const
     Bool result;
     switch (id){
 
-    case VisibilityCorrected:
-    case VisibilityCubeCorrected:
+    case VisBufferComponent2::VisibilityCorrected:
+    case VisBufferComponent2::VisibilityCubeCorrected:
 
         result = ! columns_p.corrVis_p.isNull() && columns_p.corrVis_p.isDefined(0);
         break;
 
-    case VisibilityModel:
-    case VisibilityCubeModel:
+    case VisBufferComponent2::VisibilityModel:
+    case VisBufferComponent2::VisibilityCubeModel:
 
         result = ! columns_p.modelVis_p.isNull() && columns_p.modelVis_p.isDefined(0);
         break;
 
-    case VisibilityObserved:
-    case VisibilityCubeObserved:
+    case VisBufferComponent2::VisibilityObserved:
+    case VisBufferComponent2::VisibilityCubeObserved:
 
         result = (! columns_p.vis_p.isNull() && columns_p.vis_p.isDefined(0)) ||
         		(columns_p.floatVis_p.isNull() && columns_p.floatVis_p.isNull());
 
         break;
 
-    case VisibilityCubeFloat:
+    case VisBufferComponent2::VisibilityCubeFloat:
 
         result = ! columns_p.floatVis_p.isNull() && columns_p.floatVis_p.isDefined(0);
 
         break;
 
-    case WeightSpectrum:
+    case VisBufferComponent2::WeightSpectrum:
 
         result = ! columns_p.weightSpectrum_p.isNull() && columns_p.weightSpectrum_p.isDefined(0);
         break;
 
-    case SigmaSpectrum:
+    case VisBufferComponent2::SigmaSpectrum:
 
     	result = ! columns_p.sigmaSpectrum_p.isNull() && columns_p.sigmaSpectrum_p.isDefined(0);
         break;
@@ -3438,26 +3438,26 @@ VisibilityIteratorImpl2::writeBackChanges (VisBuffer2 * vb)
 void
 VisibilityIteratorImpl2::initializeBackWriters ()
 {
-    backWriters_p [FlagCube] =
+    backWriters_p [VisBufferComponent2::FlagCube] =
         makeBackWriter (& VisibilityIteratorImpl2::writeFlag, & VisBuffer2::flagCube);
-    backWriters_p [FlagRow] =
+    backWriters_p [VisBufferComponent2::FlagRow] =
         makeBackWriter (& VisibilityIteratorImpl2::writeFlagRow, & VisBuffer2::flagRow);
-    backWriters_p [FlagCategory] =
+    backWriters_p [VisBufferComponent2::FlagCategory] =
         makeBackWriter (& VisibilityIteratorImpl2::writeFlagCategory, & VisBuffer2::flagCategory);
-    backWriters_p [Sigma] =
+    backWriters_p [VisBufferComponent2::Sigma] =
         makeBackWriter (& VisibilityIteratorImpl2::writeSigma, & VisBuffer2::sigma);
-    backWriters_p [Weight] =
+    backWriters_p [VisBufferComponent2::Weight] =
         makeBackWriter (& VisibilityIteratorImpl2::writeWeight, & VisBuffer2::weight);
-    backWriters_p [WeightSpectrum] =
+    backWriters_p [VisBufferComponent2::WeightSpectrum] =
         makeBackWriter (& VisibilityIteratorImpl2::writeWeightSpectrum, & VisBuffer2::weightSpectrum);
 
     // Now do the visibilities.
 
-    backWriters_p [VisibilityCubeObserved] =
+    backWriters_p [VisBufferComponent2::VisibilityCubeObserved] =
         makeBackWriter (& VisibilityIteratorImpl2::writeVisObserved, & VisBuffer2::visCube);
-    backWriters_p [VisibilityCubeCorrected] =
+    backWriters_p [VisBufferComponent2::VisibilityCubeCorrected] =
         makeBackWriter (& VisibilityIteratorImpl2::writeVisCorrected, & VisBuffer2::visCubeCorrected);
-    backWriters_p [VisibilityCubeModel] =
+    backWriters_p [VisBufferComponent2::VisibilityCubeModel] =
         makeBackWriter (& VisibilityIteratorImpl2::writeVisModel, & VisBuffer2::visCubeModel);
 
 }

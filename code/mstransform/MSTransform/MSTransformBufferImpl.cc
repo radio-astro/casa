@@ -886,7 +886,7 @@ const Cube<Complex> & MSTransformBufferImpl::visCube () const
 
 	if (applyPhaseShifting_p and not visCubeOk_p)
 	{
-		manager_p->getVisBuffer()->dirtyComponentsAdd(vi::VisibilityCubeObserved);
+		manager_p->getVisBuffer()->dirtyComponentsAdd(VisBufferComponent2::VisibilityCubeObserved);
 		manager_p->getVisBuffer()->visCube();
 		manager_p->getVisBuffer()->phaseCenterShift(dx_p,dy_p);
 	}
@@ -936,7 +936,7 @@ const Cube<Complex> & MSTransformBufferImpl::visCubeCorrected () const
 
 	if (applyPhaseShifting_p and not visCubeCorrectedOk_p)
 	{
-		manager_p->getVisBuffer()->dirtyComponentsAdd(vi::VisibilityCubeCorrected);
+		manager_p->getVisBuffer()->dirtyComponentsAdd(VisBufferComponent2::VisibilityCubeCorrected);
 		manager_p->getVisBuffer()->visCubeCorrected();
 		manager_p->getVisBuffer()->phaseCenterShift(dx_p,dy_p);
 	}
@@ -987,7 +987,7 @@ const Cube<Complex> & MSTransformBufferImpl::visCubeModel () const
 
 	if (applyPhaseShifting_p and not visCubeModelOk_p)
 	{
-		manager_p->getVisBuffer()->dirtyComponentsAdd(vi::VisibilityCubeModel);
+		manager_p->getVisBuffer()->dirtyComponentsAdd(VisBufferComponent2::VisibilityCubeModel);
 		manager_p->getVisBuffer()->visCubeModel();
 		manager_p->getVisBuffer()->phaseCenterShift(dx_p,dy_p);
 	}

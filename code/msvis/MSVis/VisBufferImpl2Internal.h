@@ -45,7 +45,7 @@ class VbCacheItemBase {
 
 public:
 
-    VbCacheItemBase () : isKey_p (False), vbComponent_p (Unknown), vb_p (0) {}
+    VbCacheItemBase () : isKey_p (False), vbComponent_p (VisBufferComponent2::Unknown), vb_p (0) {}
 
     virtual ~VbCacheItemBase () {}
 
@@ -187,7 +187,7 @@ public:
 
     void
     initialize (VisBufferCache * cache, VisBufferImpl2 * vb, Filler filler,
-                VisBufferComponent2 component = Unknown,
+                VisBufferComponent2 component = VisBufferComponent2::Unknown,
                 Bool isKey = True)
     {
         VbCacheItemBase::initialize (cache, vb, component, isKey);
