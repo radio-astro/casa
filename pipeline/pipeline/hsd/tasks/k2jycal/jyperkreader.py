@@ -11,7 +11,7 @@ LOG = infrastructure.get_logger(__name__)
 def read(context, filename):
     """
     Reads jyperk factors from a file and returns a string list
-    of ['MS,ant,spwid,polid,factor', ...]
+    of [['MS','ant','spwid','polid','factor'], ...]
     """
     filetype = inspect_type(filename)
     if filetype == 'MS-Based':

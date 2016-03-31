@@ -11,7 +11,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 Derive the Kelvin to Jy calibration for list of measurement sets
 </description>
 <input>
-    <param type="string" name="reffile">
+    <param type="string" name="reffile" mustexist="true">
         <description>File of Jy/K conversion factor</description>
         <value>jyperk.csv</value>
     </param>
