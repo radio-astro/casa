@@ -34,7 +34,8 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
         flag_totals = {}
         for r in result:
-            flag_totals = utils.dict_merge(flag_totals, 
+            if r.inputs['flagsum'] == True:
+                flag_totals = utils.dict_merge(flag_totals,
                                            self.flags_for_result(r, context))
 
         calapps = {}

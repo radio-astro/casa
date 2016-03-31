@@ -141,7 +141,7 @@ class ApplycalInputs(basetask.StandardInputs,
     def applymode(self, value):
         if value is None:
             value = 'calflagstrict'
-	elif value == '':
+        elif value == '':
             value = 'calflagstrict'
         self._applymode = value
         
@@ -248,15 +248,15 @@ class Applycal(basetask.StandardTaskTemplate):
 
             # set the on-the-fly calibration state for the data selection.  
             calapp = callibrary.CalApplication(calto, calfroms)
-	    ### Note this is a temporary workaround ### 
+            ### Note this is a temporary workaround ###
             args['antenna'] = '*&*'
-	    ### Note this is a temporary workaround ### 
+            ### Note this is a temporary workaround ###
             args['gaintable'] = calapp.gaintable
             args['gainfield'] = calapp.gainfield
             args['spwmap']    = calapp.spwmap
             args['interp']    = calapp.interp
             args['calwt']     = calapp.calwt
-	    args['applymode'] = inputs.applymode
+            args['applymode'] = inputs.applymode
             
             jobs.append(casa_tasks.applycal(**args))
 
@@ -282,62 +282,58 @@ class Applycal(basetask.StandardTaskTemplate):
         #Flagging stats by spw and antenna
 
         if inputs.flagsum:
-	    ms = self.inputs.context.observing_run.get_ms(inputs.vis)
-	    spws = ms.get_spectral_windows()
-	    spwids = [spw.id for spw in spws]
-	    
-	    fields = ms.get_fields(intent='BANDPASS,PHASE,AMPLITUDE,CHECK,TARGET')
-	    flagsummary = {}
-	    flagkwargs = []        
-	    
-	    for field in fields:
-	        flagsummary[field.name.strip('"')] = {}
-	    
-	    
-	    for spwid in spwids:
-		flagline = "spw='" + str(spwid) + "' fieldcnt=True mode='summary' name='AntSpw" + str(spwid).zfill(3)
-		flagkwargs.append(flagline)
-	
-	    #print "flagkwargs: ", flagkwargs
-	    
-	
-	
-	    #BRK note - Added kwarg fieldcnt based on Justo's changes, July 2015
-	    # Need to have fieldcnt in the flagline above
-	    flaggingjob = casa_tasks.flagdata(vis=inputs.vis, mode='list', inpfile=flagkwargs, flagbackup=False)
-	    #flaggingjob = casa_tasks.flagdata(vis=inputs.vis, mode='summary', fieldcnt=True)
-	    flagdicts = self._executor.execute(flaggingjob)
-	    
-	    #print "flagdicts keys: ", flagdicts.keys()
-	    #print flagdicts
-	    
-	    #BRK note - for Justo's new flagging scheme, need to rearrrange
-	    # the dictionary keys in the order of field, spw report, antenna, with added name and type keys
-	    #   on the third dictionary level.
-	    
-	    #Set into single dictionary report (single spw) if only one dict returned
-	    if len(flagkwargs) == 1 :
-	        flagdictssingle = flagdicts
-	        flagdicts = {}
-	        flagdicts['report0'] = flagdictssingle
-	    
-	    for key in flagdicts.keys():  #report level
-	        #print 'FIELDNAMES: ', flagdicts[key]
-	        fieldnames = flagdicts[key].keys()
-	        fieldnames.remove('name')
-	        fieldnames.remove('type')
-	        for fieldname in fieldnames:
-		    try:
-		        flagsummary[fieldname][key] = flagdicts[key][fieldname]
-		        spwid = flagdicts[key][fieldname]['spw'].keys()[0]
-		        flagsummary[fieldname][key]['name'] = 'AntSpw'+str(spwid).zfill(3)+'Field_'+str(fieldname)
-		        flagsummary[fieldname][key]['type'] = 'summary'
-		        
-		    except:
-		        LOG.debug("No flags to report for "+str(key))
-		
-	    result.flagsummary = flagsummary
-	    #result.flagdicts = flagdicts
+            ms = self.inputs.context.observing_run.get_ms(inputs.vis)
+            spws = ms.get_spectral_windows()
+            spwids = [spw.id for spw in spws]
+
+            fields = ms.get_fields(intent='BANDPASS,PHASE,AMPLITUDE,CHECK,TARGET')
+            flagsummary = {}
+            flagkwargs = []
+
+            for field in fields:
+                flagsummary[field.name.strip('"')] = {}
+
+            for spwid in spwids:
+                flagline = "spw='" + str(spwid) + "' fieldcnt=True mode='summary' name='AntSpw" + str(spwid).zfill(3)
+                flagkwargs.append(flagline)
+
+            #print "flagkwargs: ", flagkwargs
+
+            #BRK note - Added kwarg fieldcnt based on Justo's changes, July 2015
+            # Need to have fieldcnt in the flagline above
+            flaggingjob = casa_tasks.flagdata(vis=inputs.vis, mode='list', inpfile=flagkwargs, flagbackup=False)
+            #flaggingjob = casa_tasks.flagdata(vis=inputs.vis, mode='summary', fieldcnt=True)
+            flagdicts = self._executor.execute(flaggingjob)
+
+            #print "flagdicts keys: ", flagdicts.keys()
+            #print flagdicts
+
+            #BRK note - for Justo's new flagging scheme, need to rearrrange
+            # the dictionary keys in the order of field, spw report, antenna, with added name and type keys
+            #   on the third dictionary level.
+
+            #Set into single dictionary report (single spw) if only one dict returned
+            if len(flagkwargs) == 1 :
+                flagdictssingle = flagdicts
+                flagdicts = {}
+                flagdicts['report0'] = flagdictssingle
+
+            for key in flagdicts.keys():  #report level
+                #print 'FIELDNAMES: ', flagdicts[key]
+                fieldnames = flagdicts[key].keys()
+                fieldnames.remove('name')
+                fieldnames.remove('type')
+                for fieldname in fieldnames:
+                    try:
+                        flagsummary[fieldname][key] = flagdicts[key][fieldname]
+                        spwid = flagdicts[key][fieldname]['spw'].keys()[0]
+                        flagsummary[fieldname][key]['name'] = 'AntSpw'+str(spwid).zfill(3)+'Field_'+str(fieldname)
+                        flagsummary[fieldname][key]['type'] = 'summary'
+                    except:
+                        LOG.debug("No flags to report for "+str(key))
+
+            result.flagsummary = flagsummary
+            #result.flagdicts = flagdicts
 
         return result
 
