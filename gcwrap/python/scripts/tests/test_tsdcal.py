@@ -948,6 +948,79 @@ class tsdcal_test_otfraster(tsdcal_test_base):
         self.result = tsdcal(infile=self.infile, outfile=self.outfile,
                              calmode='otfraster', fraction='90%', noff=3)
         
+class tsdcal_test_otf(tsdcal_test_base):   
+    """
+    Unit test for task tsdcal (OTF non-raster sky calibration).
+
+    The list of tests:
+    test_otf07 --- OTF calibration ('otf') with default setting
+    """
+    invalid_argument_case = tsdcal_test_base.invalid_argument_case
+    exception_case = tsdcal_test_base.exception_case
+    infile = 'lissajous.ms'
+    applytable = infile + '.sky'
+    
+    @staticmethod
+    def calculate_expected_value(table, numedge=1):
+        expected_value = {}
+        # TODO
+      
+        return expected_value
+
+    @property
+    def outfile(self):
+        return self.applytable
+
+    def setUp(self):
+        self._setUp([self.infile], tsdcal)
+
+    def tearDown(self):
+        self._tearDown([self.infile, self.outfile])
+
+    def normal_case(numedge=1, **kwargs):
+        """
+        Decorator for tests verifying normal execution result.
+
+        numedge --- expected number of edge points
+        selection --- data selection parameter as dictionary
+
+        Here, expected result is as follows:
+            - total number of rows is 24
+            - number of antennas is 2
+            - number of spectral windows is 2
+            - each (antenna,spw) pair has 6 rows
+        """
+        def wrapper(func):
+            import functools
+            @functools.wraps(func)
+            def _wrapper(self):
+                func(self)
+
+                # sanity check
+                self.assertIsNone(self.result, msg='The task must complete without error')
+                self.assertTrue(os.path.exists(self.outfile), msg='Output file is not properly created.')
+
+                # check number of rows
+                # TODO
+                
+                # check sky spectra
+                # TODO
+
+            return _wrapper
+        return wrapper
+
+
+
+    @normal_case(numedge=1)
+    def test_otf07(self):
+        """
+        test_otf07 --- OTF calibration ('otf') with default setting
+        """
+        self.result = tsdcal(infile=self.infile, outfile=self.outfile,
+                             calmode='otf')
+
+
+        
 
 # interpolator utility for testing
 class Interpolator(object):
@@ -1535,7 +1608,10 @@ class tsdcal_test_apply(tsdcal_test_base):
                spwmap={1:[9], 3:[11]})
 
 def suite():
-    return [tsdcal_test, tsdcal_test_ps,
-            tsdcal_test_otfraster, tsdcal_test_apply]
+    return [  tsdcal_test
+            , tsdcal_test_ps
+            , tsdcal_test_otfraster
+            , tsdcal_test_otf
+            , tsdcal_test_apply]
 
 

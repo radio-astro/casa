@@ -13,35 +13,39 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   <shortdescription> MS SD calibration task</shortdescription>
 
   <description>
-Task tsdcal is an implementation of a calibration scheme like as 
-interferometry, i.e., generate caltables and apply them. Available 
-calibration modes are 'ps', 'otfraster', and 'tsys'. Those 
-modes generates caltables for sky or Tsys calibration. The
-caltables can be applied to the data by using calmode 'apply'.
+Task tsdcal implements a single-dish data calibration scheme similar to that of 
+interferometry, i.e., generate calibration tables (caltables) and apply them. 
+Available calibration modes are:
+    'ps', 'otfraster', 'otf' for sky calibration
+    'tsys' for Tsys calibration 
+Each mode generates a caltable.
+Caltables can be applied to the data by combining calibration
+modes with the keyword 'apply'.
 
-First two calibration modes, 'ps' and 'otfraster', generate sky
-calibration tables. The user should choose appropriate calibration
-mode depending on the data. Use case for each mode is as follows:
-
+Calibration mode must be set in accordance with the observing mode
+of the data. Use case for each mode is as follows:
     'ps': position switch (including OTF) with explicit
           reference (OFF) spectra
     'otfraster': raster OTF scan without explicit OFFs
+    'otf': non-raster OTF (e.g. double-circle) scan without explicit OFFs
 
 So, if the data contains explicit reference spectra, 'ps' should
-be used. Otherwise, 'otfraster' is appropriate for raster OTF data.
-Non-raster OTF data is not supported yet. In 'otfraster' mode, the
-task first try to find several integrations near edge as OFF spectra,
-then the data are calibrated using those OFFs. If the observing pattern
-is raster, you should use the 'otfraster' mode to calibrate data. The
-'otfraster' mode is designed for OTF observations without explicit OFF
-spectra. However, these modes should work even if explicit reference
-spectra exist. In this case, these spectra will be ignored and spectra
-near edges detected by edge marker will be used as reference.
+be used. Otherwise, 'otfraster' or 'otf' should be used.
+In 'otfraster' and 'otf' modes, an edge marker automatically marks spectra from
+specific regions of the observation pattern as reference (OFF) spectra.
+These specific regions are:
+- in 'otfraster' mode: regions near the beginning and the end of the raster 
+scan lines.
+- in 'otf' mode: regions near the periphery of the observation pattern.
+Note: The 'otfraster' mode is designed for OTF observations without explicit OFF
+spectra. However, it should work even if explicit reference spectra exist.
+In that case, these spectra are ignored and spectra marked by edge marker are 
+used as reference.
 
-Except for how to choose OFFs, the procedure to derive calibrated
-spectra is common for the above two modes. Selected (or preset) 
-OFF integrations are separated by its continuity in time domain, 
-averaged in each segment, then interpolated to timestamps for ON 
+Apart from the way reference spectra are selected, the procedure to derive 
+calibrated spectra is the same for all modes. Selected (or preset) 
+OFF integrations are separated based on continuity in time domain, 
+averaged in each segment, and then interpolated to timestamps for ON 
 integrations. Effectively, it means that OFF integrations are 
 averaged by each OFF spectrum for 'ps' mode, averaged by either ends 
 of each raster row for 'otfraster' mode. The formula for calibrated 
@@ -59,19 +63,22 @@ spectrum is
     </param>
 
     <param type="string" name="calmode">
-      <shortdescription>SD calibration mode [\'ps\',\'otf\',\'otfraster\',\'tsys\',\'apply\', and their possible combinations]</shortdescription>
+      <shortdescription>SD calibration mode [\'ps\',\'otfraster\',\'otf\',\'tsys\',\'apply\', and allowed combinations]</shortdescription>
       <description>SD calibration mode</description>
       <value>ps</value>
       <allowed kind="enum">
-	<value>ps</value>
+	    <value>ps</value>
         <value>otfraster</value>
-	<value>tsys</value>
-	<value>apply</value>
+        <value>otf</value>
+	    <value>tsys</value>
+	    <value>apply</value>
         <value>ps,apply</value>
         <value>tsys,apply</value>
         <value>ps,tsys,apply</value>
         <value>otfraster,apply</value>
         <value>otfraster,tsys,apply</value>
+        <value>otf,apply</value>
+        <value>otf,tsys,apply</value>
       </allowed>
     </param>
 
@@ -95,18 +102,6 @@ spectrum is
       <description>whether observed area is elongated in one direction or not</description>
       <value>False</value>
     </param>
-
-<!--	
-    <param type="bool" name="tsysavg" subparam="true">
-      <description>Whether Tsys is averaged in spectral axis or not</description>
-      <value>False</value>
-    </param>
-    
-    <param type="string" name="tsysspw" subparam="true">
-      <description>list of spectral window IDs and their channel ranges of averaging for Tsys calibration.</description>
-      <value></value>
-    </param>
--->
 
     <param type="any" name="applytable" subparam="true">
       <description>(List of) sky and/or tsys tables</description>
@@ -150,6 +145,11 @@ spectrum is
       <description>select data by scan numbers, e.g. \'21~23\' (\'\'=all)</description>
       <value></value>
     </param>
+    
+    <param type="string" name="intent" subparam="true">
+      <description>select data by observation intent, e.g. \'OBSERVE_TARGET#ON_SOURCE\' (\'\'=all)</description>
+      <value></value>
+    </param>
 
     <constraints>
       <when param="calmode">
@@ -162,15 +162,17 @@ spectrum is
           <default param="noff"><value type="int">-1</value></default>
           <default param="outfile"><value type="string"></value></default>
           <default param="overwrite"><value type="bool">False</value></default>
+          <default param="intent"><value type="string">OBSERVE_TARGET#ON_SOURCE</value></default>
         </equals>
-
+        <equals value="otf">
+          <default param="fraction"><value type="string">10%</value></default>
+          <default param="outfile"><value type="string"></value></default>
+          <default param="overwrite"><value type="bool">False</value></default>
+          <default param="intent"><value type="string">OBSERVE_TARGET#ON_SOURCE</value></default>
+        </equals>
         <equals value="tsys">
           <default param="outfile"><value type="string"></value></default>
           <default param="overwrite"><value type="bool">False</value></default>
-<!--
-          <default param="tsysavg"><value type="bool">False</value></default>
-          <default param="tsysspw"><value type="string"/></default>
--->
         </equals>
         <equals value="apply">
           <default param="applytable"><value type="string"></value></default>
@@ -188,10 +190,6 @@ spectrum is
           <default param="spwmap"><value type="dict">{}</value></default>
         </equals>
         <equals value="ps,tsys,apply">
-<!--
-          <default param="tsysavg"><value type="bool">False</value></default>
-          <default param="tsysspw"><value type="string"/></default>
--->
           <default param="applytable"><value type="string"></value></default>
           <default param="interp"><value type="string"></value></default>
           <default param="spwmap"><value type="dict">{}</value></default>
@@ -202,14 +200,25 @@ spectrum is
           <default param="applytable"><value type="string"></value></default>
           <default param="interp"><value type="string"></value></default>
           <default param="spwmap"><value type="dict">{}</value></default>
+          <default param="intent"><value type="string">OBSERVE_TARGET#ON_SOURCE</value></default>
         </equals>
         <equals value="otfraster,tsys,apply">
           <default param="fraction"><value type="string">10%</value></default>
           <default param="noff"><value type="int">-1</value></default>
-<!--
-          <default param="tsysavg"><value type="bool">False</value></default>
-          <default param="tsysspw"><value type="string"/></default>
--->
+          <default param="applytable"><value type="string"></value></default>
+          <default param="interp"><value type="string"></value></default>
+          <default param="spwmap"><value type="dict">{}</value></default>
+        </equals>
+        <equals value="otf,apply">
+          <default param="fraction"><value type="string">10%</value></default>
+          <default param="applytable"><value type="string"></value></default>
+          <default param="interp"><value type="string"></value></default>
+          <default param="spwmap"><value type="dict">{}</value></default>
+          <default param="intent"><value type="string">OBSERVE_TARGET#ON_SOURCE</value></default>
+        </equals>
+        <equals value="otf,tsys,apply">
+          <default param="fraction"><value type="string">10%</value></default>
+          <default param="noff"><value type="int">-1</value></default>
           <default param="applytable"><value type="string"></value></default>
           <default param="interp"><value type="string"></value></default>
           <default param="spwmap"><value type="dict">{}</value></default>
@@ -225,15 +234,13 @@ spectrum is
 Keyword arguments:
 infile -- Name of input SD dataset
 calmode -- Calibration mode. If you want to generate calibration table 
-           or apply existing calibration tables, set calmode to simple 
-           string. On the other hand, if you want to calibrate data 
-           on-the-fly, you have to set calmode to a composite calmode 
-           string separated by comma. So far, sky calibration has two 
-           types, 'ps' and 'otfraster'. If observation is 
+           or apply existing calibration tables, set calmode to a simple 
+           string. If you want to calibrate data on-the-fly, set calmode 
+           to a composite (comma-separated) string. So far, sky calibration has  
+           three types, 'ps', 'otfraster' and 'otf'. If observation is 
            configured to observe reference position, calmode must be 
-           'ps'. Otherwise, 'otfraster' should be used. Non-raster
-           observing pattern is not supported yet (e.g., Lissajous).
-        options: 'ps','otfraster','tsys','apply'
+           'ps'. Otherwise, 'otfraster' or 'otf' should be used.
+        options: 'ps','otfraster','otf','tsys','apply'
         default: 'ps'
         example: Here is an example for composite calmode.
                  'ps,apply' (do sky cal and apply)
