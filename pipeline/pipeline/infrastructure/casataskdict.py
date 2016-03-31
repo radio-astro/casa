@@ -47,6 +47,7 @@ CasaTaskDict = {
                    'hsd_plotflagbaseline'  : 'SDPlotFlagBaseline',
                    'hsd_flagdata'          : 'FlagDeterALMASingleDish',
                    'hsd_simplescale'       : 'SDSimpleScale',
+                   'hsdms_k2jycal'         : 'SDK2JyCal',
                    'hifa_importdata'       : 'ALMAImportData',
                    'hifa_antpos'           : 'ALMAAntpos',
                    'hifa_bandpass'         : 'ALMAPhcorBandpass',
@@ -150,6 +151,7 @@ classToCASATask = {
     hsd_tasks.SDPlotFlagBaseline      : 'hsd_plotflagbaseline',
     hsd_tasks.FlagDeterALMASingleDish : 'hsd_flagdata',
     hsd_tasks.SDSimpleScale           : 'hsd_simplescale',
+    hsd_tasks.SDK2JyCal               : 'hsdms_k2jycal',
     #VLA tasks
     hifv_tasks.VLAImportData          : 'hifv_importdata',
     hifv_tasks.Hanning                : 'hifv_hanning',
@@ -350,6 +352,9 @@ TASK_COMMENTS = {
     (hsd_tasks.SDSimpleScale,) : (
         'Scale spectra in scantables. This task is used for'
         'non-linearity correction.'
+    ),
+    (hsd_tasks.SDK2JyCal,) : (
+        'The Kelvin to Jy calibration tables are generated.'
     ),
 }
 

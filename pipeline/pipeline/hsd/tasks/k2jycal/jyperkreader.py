@@ -9,6 +9,10 @@ import pipeline.infrastructure as infrastructure
 LOG = infrastructure.get_logger(__name__)
 
 def read(context, filename):
+    """
+    Reads jyperk factors from a file and returns a string list
+    of ['MS,ant,spwid,polid,factor', ...]
+    """
     filetype = inspect_type(filename)
     if filetype == 'MS-Based':
         LOG.debug('MS-Based Jy/K factors file is specified')
@@ -101,6 +105,15 @@ class JyPerKDataParser(object):
             return None
 
 class JyPerK(object):
+    """
+    Parse session based jyperk csv and store.
+    * meta stores meta data information from the lines in the form, '#name=value',
+        as a dictionary, meta[name]=value.
+    * header stores column label from the line in the form '#header0, header1, ...'
+        as a list, header = ['header0', 'header1', ...]
+    * data stores values in csv file as a dictionary,
+        data['header0'] = [data00, data01, ...]
+    """
     def __init__(self):
         self.meta = dict()
         self.header = []
@@ -122,6 +135,10 @@ class JyPerK(object):
 
 @contextlib.contextmanager
 def associate(context, factors):
+    """
+    Convert data collected from session based jyperk csv as JyPerK object
+    to MS-beased csv, i.e., a string list of ['MS,ant,spwid,polid,factor', ...]
+    """
     stream = StringIO.StringIO()
     try:
         data = factors.data

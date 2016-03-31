@@ -15,4 +15,5 @@ from .flagbaseline import SDFlagBaseline
 from .flagbaseline import SDPlotFlagBaseline
 from .flagging import FlagDeterALMASingleDish
 from .simplescale import SDSimpleScale
+from .k2jycal import SDK2JyCal
 
