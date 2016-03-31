@@ -387,7 +387,7 @@ public:
 
   // Constructor
   SingleDishOtfCal(VisSet& vs);
-  SingleDishOtfCal(const Int& nAnt);
+  // Renaud: disabledSingleDishOtfCal(const Int& nAnt);
 
   // Destructor
   virtual ~SingleDishOtfCal();
@@ -396,8 +396,69 @@ public:
   virtual String typeName()     { return "SDSKY_OTF"; };
   virtual String longTypeName() { return "SDSKY_OTF (position switch sky subtraction specific to OTF fast scan)"; };
 
-  // data selection specific to otf mode
+  // Data selection specific to otf mode
   virtual String configureSelection();
+  virtual void setSolve(const Record& solve);
+
+private:
+  // Edge detection parameters for otf mode
+  Float fraction_;
+  Float pixel_scale_;
+
+  // MeasurementSet filtered with user-specified selection
+  const MeasurementSet & msSel_ ;
+
+  // Partially projection code from ASAP GenericEdgeDetector
+  class Projector
+  {
+	  public:
+	  	  Projector() {};
+	  	  virtual ~Projector() {};
+	  	  void setDirection( const Matrix<Double> &dir ) ;
+	  	  virtual const Matrix<Double>& project() = 0 ;
+	  protected:
+	  	  // From asap/src/MathUtils
+	  	  void rotateRA( Vector<Double> &v ) ;
+	  	  // Input data
+	  	  Matrix<Double> dir_ ;
+	  	  // logging
+	  	  casa::LogIO os_ ;
+  };
+  class OrthographicProjector; // Forward declaration
+  friend class OrthographicProjector;
+  class OrthographicProjector : public Projector
+  {
+  public:
+	  OrthographicProjector(Float pixel_scale=0.5);
+	  virtual ~OrthographicProjector();
+	  const Matrix<Double>& project() ;
+	  const Vector<Double>& p_center() const { return p_center_; };
+	  const Vector<Double>& p_size() const { return p_size_; };
+	  Double pixel_size() const { return dy_ ; } ;
+
+  private:
+	  void scale_and_center();
+	  // options
+	  Float pixel_scale_ ;
+	  // pixel info
+	  casa::Double cenx_ ;
+	  casa::Double ceny_ ;
+	  casa::Double pcenx_ ;
+	  casa::Double pceny_ ;
+	  casa::uInt nx_ ;
+	  casa::uInt ny_ ;
+	  casa::Double dx_ ;
+	  casa::Double dy_ ;
+
+	  // storage for projection
+	  Matrix<Double> pdir_ ;
+
+	  // projection parameters computed from input directions
+	  casa::Vector<Double> p_center_ ;
+	  casa::Vector<Double> p_size_ ;
+  };
+
+
 };
 
 } //# NAMESPACE CASA - END

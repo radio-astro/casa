@@ -45,6 +45,9 @@
 #include <synthesis/CalTables/CTInterface.h>
 #include <ms/MSSel/MSSelection.h>
 #include <ms/MSSel/MSSelectionTools.h>
+#include <synthesis/Utilities/PointingDirectionCalculator.h>
+#include <coordinates/Coordinates/DirectionCoordinate.h>
+#include <libsakura/sakura.h>
 
 // Debug Message Handling
 // if SDCALSKY_DEBUG is defined, the macro debuglog and
@@ -1145,17 +1148,35 @@ String SingleDishRasterCal::configureSelection()
 // Constructor
 SingleDishOtfCal::SingleDishOtfCal(VisSet& vs)
   : VisCal(vs),
-    SingleDishSkyCal(vs)
+    SingleDishSkyCal(vs),
+    fraction_(0.1),
+	pixel_scale_(0.5),
+	msSel_(vs.iter().ms())
 {
   debuglog << "SingleDishOtfCal::SingleDishOtfCal(VisSet& vs)" << debugpost;
 }
-  
+
+void SingleDishOtfCal::setSolve(const Record& solve)
+{
+  // edge detection parameter for otfraster mode
+  if (solve.isDefined("fraction")) {
+    fraction_ = solve.asFloat("fraction");
+  }
+
+  logSink() << "fraction=" << fraction_ << LogIO::POST;
+
+  // call parent setSolve
+  SolvableVisCal::setSolve(solve);
+}
+
+/*
 SingleDishOtfCal::SingleDishOtfCal(const Int& nAnt)
   : VisCal(nAnt),
     SingleDishSkyCal(nAnt)
 {
   debuglog << "SingleDishOtfCal::SingleDishOtfCal(const Int& nAnt)" << debugpost;
 }
+*/
 
 // Destructor
 SingleDishOtfCal::~SingleDishOtfCal()
@@ -1165,7 +1186,313 @@ SingleDishOtfCal::~SingleDishOtfCal()
 
 String SingleDishOtfCal::configureSelection()
 {
-  throw AipsError("Single-dish OTF calibration is not implemented yet");
+  PointingDirectionCalculator calc(msSel_);
+  calc.setDirectionListMatrixShape(PointingDirectionCalculator::ROW_MAJOR);
+
+  // Check the coordinates system type used to store the pointing measurements
+  const MSPointing& tbl_pointing = msSel_.pointing();
+  ROMSPointingColumns pointing_cols(tbl_pointing);
+  const ROArrayMeasColumn< MDirection >& direction_cols =  pointing_cols.directionMeasCol();
+  const MeasRef<MDirection>& direction_ref_frame = direction_cols.getMeasRef();
+  uInt ref_frame_type = direction_ref_frame.getType();
+
+  // If non-celestial coordinates (AZEL*) are used, convert to celestial ones
+  switch (ref_frame_type) {
+  case MDirection::AZEL : // Fall through
+  case MDirection::AZELSW :
+  case MDirection::AZELGEO :
+  case MDirection::AZELSWGEO : {
+	  	  const String& ref_frame_name = MDirection::showType(ref_frame_type);
+	  	  debuglog << "Reference frame of pointings coordinates is non-celestial: " << ref_frame_name << debugpost;
+	  	  String j2000(MDirection::showType(MDirection::J2000));
+	  	  debuglog << "Pointings coordinates will be converted to: " << j2000 << debugpost;
+		  calc.setFrame(j2000);
+  	  }
+  }
+  // Extract edge pointings for each (field_id,antenna,spectral window) triple
+  // MeasurementSet 2 specification / FIELD table:
+  //   . FIELD_ID column is removed
+  //   . FIELD table is directly indexed using the FIELD_ID value in MAIN
+  const MSField& tbl_field = msSel_.field();
+  const MSAntenna& tbl_antenna = msSel_.antenna();
+  const String &col_name_str = tbl_antenna.columnName(MSAntenna::MSAntennaEnums::NAME);
+  ScalarColumn<String> antenna_name(tbl_antenna,col_name_str);
+  const MSSpectralWindow& tbl_spectral_window = msSel_.spectralWindow();
+
+  ostringstream taql_oss;
+  const char delimiter = ',';
+  taql_oss << "SELECT FROM $1 WHERE ROWID() IN [ ";
+
+  for (uInt field_id=0; field_id < tbl_field.nrow(); ++field_id){
+	  String field_sel(casacore::String::toString<uInt>(field_id));
+	  for (uInt ant_id=0; ant_id < tbl_antenna.nrow(); ++ant_id){
+		  String ant_sel(antenna_name(ant_id) + "&&&");
+		  for (uInt spw_id=0; spw_id < tbl_spectral_window.nrow(); ++spw_id){
+			  String spw_sel(casacore::String::toString<uInt>(spw_id));
+			  // Filter user selection by (field_id,antenna,spectral window) triple
+			  try {
+				  calc.selectData(ant_sel,spw_sel,field_sel);
+			  }
+			  catch (AipsError& e) { // Empty selection
+				  // Note: when the underlying MSSelection is empty
+				  // MSSelection internally catches an MSSelectionError error
+				  // but does not re-throw it. It throws instead an AipsError
+				  // copy-constructed from the MSSelectionError
+				  continue;
+			  }
+			  debuglog << "field_id: " << field_id
+					   << " ant_id: "  << ant_id
+					   << " spw: "     << spw_id
+			           << "  ==> selection rows: " << calc.getNrowForSelectedMS() << debugpost;
+			  // Get time-interpolated celestial pointing directions for the filtered user selection
+			  Matrix<Double> pointings_dirs = calc.getDirection();
+			  // Project directions onto image plane
+			  // pixel_scale_ :
+			  //   . hard-coded to 0.5 in constructor
+			  //   . is applied to the median separation of consecutive pointing directions by the projector
+			  //   . projector pixel size = 0.5*directions_median
+			  debuglog << "pixel_scale:" << pixel_scale_ << debugpost;
+			  OrthographicProjector p(pixel_scale_);
+			  p.setDirection(pointings_dirs);
+			  const Matrix<Double> &pointings_coords = p.project();
+			  // Extract edges of the observed region for the (field_id,antenna,spectral window) triple
+			  Vector<Double> pointings_x(pointings_coords.row(0).copy());
+			  Vector<Double> pointings_y(pointings_coords.row(1).copy());
+			  Vector<Bool> is_edge(pointings_coords.ncolumn(),false);
+			  const double pixel_size = 0.0;
+			  // libsakura 2.0: setting pixel_size=0.0 means that CreateMaskNearEdgeDouble will
+			  //   . compute the median separation of consecutive pointing coordinates
+			  //   . use an "edge detection pixel size" = 0.5*coordinates_median (pixel scale hard-coded to 0.5)
+			  debuglog << "sakura library function call: parameters info:" << debugpost;
+			  debuglog << "in: fraction: " << fraction_ << debugpost;
+			  debuglog << "in: pixel size: " << pixel_size << debugpost;
+			  debuglog << "in: pixels count: (nx = " << p.p_size()[0] << " , ny = " << p.p_size()[1] << debugpost;
+			  debuglog << "in: pointings_coords.ncolumn(): " << pointings_coords.ncolumn() << debugpost;
+			  LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(CreateMaskNearEdgeDouble)(
+			    fraction_, pixel_size,
+				pointings_coords.ncolumn(), pointings_x.data(), pointings_y.data(),
+			    nullptr /* blc_x */, nullptr /* blc_y */,
+			    nullptr /* trc_x */, nullptr /* trc_y */,
+				is_edge.data());
+			  bool edges_detection_ok = ( status == LIBSAKURA_SYMBOL(Status_kOK) );
+			  if ( ! edges_detection_ok ) {
+				  debuglog << "sakura error: status=" << status << debugpost;
+			  }
+			  AlwaysAssert(edges_detection_ok,AipsError);
+			  // Compute ROW ids of detected edges. ROW "ids" are ROW ids in the original MS, not filtered by user selection.
+			  Vector<uInt> index_2_rowid = calc.getRowId();
+			  uInt edges_count = 0;
+			  for (size_t i = 0; i < is_edge.size(); ++i){
+				  if ( is_edge[i] ) {
+					  ++edges_count;
+					  taql_oss << index_2_rowid[i] << delimiter ;
+				  }
+			  }
+			  debuglog << "edges_count=" << edges_count << debugpost;
+			  AlwaysAssert(edges_count > 0, AipsError);
+#ifdef SDCALSKY_DEBUG
+			  stringstream fname;
+			  fname << calTableName().c_str() << ".edges."
+		            << field_id << "_" << ant_id << "_" << spw_id
+					<< ".csv" ;
+			  debuglog << "Save pointing directions and coordinates to:" << debugpost;
+			  debuglog << fname.str() << debugpost;
+			  ofstream ofs(fname.str());
+			  AlwaysAssert(ofs.good(), AipsError);
+			  ofs << "row_id,field_id,ant_id,spw_id,triple_key,dir_0,dir_1,coord_0,coord_1,edge_0,edge_1,is_edge" << endl;
+			  const auto &d0 =  pointings_dirs.row(0);
+			  const auto &d1 =  pointings_dirs.row(1);
+			  const auto &c0 =  pointings_coords.row(0);
+			  const auto &c1 =  pointings_coords.row(1);
+			  for (uInt j=0; j<d0.size(); j++) {
+				  ofs << index_2_rowid[j] << ","
+					  << field_id << "," << ant_id << "," << spw_id << ","
+					  << field_id << "_" << ant_id << "_" << spw_id << ","
+				      << d0(j) << "," << d1(j) << ","
+				      << c0(j) << "," << c1(j) << "," ;
+				  if ( is_edge[j] ) ofs << c0(j) << "," << c1(j) << "," << 1 << endl;
+				  else ofs << ",," << 0 << endl;
+			  }
+#endif
+		  }
+	  }
+  }
+  String taql(taql_oss);
+  Bool have_off_spectra =  ( taql.back() == delimiter );
+  AlwaysAssert(have_off_spectra, AipsError);
+  taql.pop_back();
+  taql += " ] ORDER BY FIELD_ID, ANTENNA1, FEED1, DATA_DESC_ID, TIME";
+
+  return taql;
+}
+
+SingleDishOtfCal::OrthographicProjector::~OrthographicProjector()
+{
+	// Do nothing
+}
+
+SingleDishOtfCal::OrthographicProjector::OrthographicProjector(Float pixel_scale)
+  : SingleDishOtfCal::Projector(),
+	pixel_scale_(pixel_scale),
+	p_center_(2,0.0),
+	p_size_(2,0.0)
+
+{
+}
+
+
+void SingleDishOtfCal::Projector::setDirection( const Matrix<Double> &dir )
+{
+  dir_.reference(dir.copy());
+  Vector<Double> ra( dir_.row(0) ) ;
+  rotateRA( ra ) ;
+}
+
+
+void SingleDishOtfCal::Projector::rotateRA( Vector<Double> &v )
+{
+  uInt len = v.nelements() ;
+  Vector<Double> work( len ) ;
+
+  for ( uInt i = 0 ; i < len ; i++ ) {
+	work[i] = fmod( v[i], C::_2pi ) ;
+	if ( work[i] < 0.0 ) {
+	  work[i] += C::_2pi ;
+	}
+  }
+
+  Vector<uInt> quad( len ) ;
+  Vector<uInt> nquad( 4, 0 ) ;
+  for ( uInt i = 0 ; i < len ; i++ ) {
+	uInt q = uInt( work[i] / C::pi_2 ) ;
+	nquad[q]++ ;
+	quad[i] = q ;
+  }
+
+  Vector<Bool> rot( 4, False ) ;
+  if ( nquad[0] > 0 && nquad[3] > 0
+	   && ( nquad[1] == 0 || nquad[2] == 0 ) ) {
+	//cout << "need rotation" << endl ;
+	rot[3] = True ;
+	rot[2] = (nquad[1]==0 && nquad[2]>0) ;
+  }
+
+  for ( uInt i = 0 ; i < len ; i++ ) {
+	if ( rot[quad[i]] ) {
+	  v[i] = work[i] - C::_2pi ;
+	}
+	else {
+	  v[i] = work[i] ;
+	}
+  }
+}
+
+
+const Matrix<Double>& SingleDishOtfCal::OrthographicProjector::project()
+{
+	scale_and_center();
+	// using DirectionCoordinate
+	Matrix<Double> identity(2,2,Double(0.0)) ;
+	identity.diagonal() = 1.0 ;
+	DirectionCoordinate coord( MDirection::J2000,
+							 Projection( Projection::SIN ),
+							 cenx_, ceny_,
+							 dx_, dy_,
+							 identity,
+							 pcenx_, pceny_);
+
+	Double *pdir_p = new Double[dir_.nelements()] ;
+	pdir_.takeStorage( dir_.shape(), pdir_p, TAKE_OVER ) ;
+	uInt len = dir_.ncolumn() ;
+	Bool b ;
+	Double *dir_p = dir_.getStorage( b ) ;
+	Double *wdir_p = dir_p ;
+	Vector<Double> world ;
+	Vector<Double> pixel ;
+	IPosition vshape( 1, 2 ) ;
+	for ( uInt i = 0 ; i < len ; i++ ) {
+		world.takeStorage( vshape, wdir_p, SHARE ) ;
+		pixel.takeStorage( vshape, pdir_p, SHARE ) ;
+		coord.toPixel( pixel, world ) ;
+		pdir_p += 2 ;
+		wdir_p += 2 ;
+	}
+	dir_.putStorage( dir_p, b ) ;
+	return pdir_;
+}
+
+void SingleDishOtfCal::OrthographicProjector::scale_and_center()
+{
+	  os_.origin(LogOrigin( "OrthographicProjector", "scale_and_center", WHERE )) ;
+
+	  Double xmax, xmin, ymax, ymin ;
+	  minMax( xmin, xmax, dir_.row( 0 ) ) ;
+	  minMax( ymin, ymax, dir_.row( 1 ) ) ;
+	  Double wx = ( xmax - xmin ) * 1.1 ;
+	  Double wy = ( ymax - ymin ) * 1.1 ;
+
+	  cenx_ = 0.5 * ( xmin + xmax ) ;
+	  ceny_ = 0.5 * ( ymin + ymax ) ;
+	  Double decCorr = cos( ceny_ ) ;
+
+	  // Renaud: uInt len = time_.nelements() ;
+	  uInt len = dir_.ncolumn();
+	  Matrix<Double> dd = dir_.copy() ;
+	  for ( uInt i = len-1 ; i > 0 ; i-- ) {
+	    //dd(0,i) = ( dd(0,i) - dd(0,i-1) ) * decCorr ;
+	    dd(0,i) = ( dd(0,i) - dd(0,i-1) ) * cos( 0.5*(dd(1,i-1)+dd(1,i)) ) ;
+	    dd(1,i) = dd(1,i) - dd(1,i-1) ;
+	  }
+	  Vector<Double> dr( len-1 ) ;
+	  Bool b ;
+	  const Double *dir_p = dd.getStorage( b ) ;
+	  const Double *x_p = dir_p + 2 ;
+	  const Double *y_p = dir_p + 3 ;
+	  for ( uInt i = 0 ; i < len-1 ; i++ ) {
+	    dr[i] = sqrt( (*x_p) * (*x_p) + (*y_p) * (*y_p) ) ;
+	    x_p += 2 ;
+	    y_p += 2 ;
+	  }
+	  dir_.freeStorage( dir_p, b ) ;
+	  Double med = median( dr, False, True, True ) ;
+	  dy_ = med * pixel_scale_ ;
+	  dx_ = dy_ / decCorr ;
+
+	  Double nxTemp = ceil(wx / dx_);
+	  Double nyTemp = ceil(wy / dy_);
+
+	  os_ << LogIO::DEBUGGING
+		  << "len = " << len
+	      << "range x = (" << xmin << "," << xmax << ")" << endl
+	      << "range y = (" << ymin << "," << ymax << ")" << endl
+		  << "direction center = (" << cenx_ << "," << ceny_ << ")" << endl
+		  << "declination correction: cos(dir_center.y)=" << decCorr << endl
+	      << "median separation between pointings: " << med << endl
+	      << "dx=" << dx_ << ", dy=" << dy_ << endl
+	      << "wx=" << wx  << ", wy=" << wy  << endl
+		  << "nxTemp=" << nxTemp  << ", nyTemp=" << nyTemp  << LogIO::POST ;
+
+	  if (nxTemp > (Double)UINT_MAX || nyTemp > (Double)UINT_MAX) {
+		  throw AipsError("Error in setup: Too large number of pixels.");
+	  }
+	  nx_ = uInt( nxTemp ) ;
+	  ny_ = uInt( nyTemp ) ;
+
+	  // Renaud debug
+	  p_size_[0] = nxTemp;
+	  p_size_[1] = nyTemp;
+
+	  pcenx_ = 0.5 * Double( nx_ - 1 ) ;
+	  pceny_ = 0.5 * Double( ny_ - 1 ) ;
+
+	  // Renaud debug
+	  p_center_[0] = pcenx_;
+	  p_center_[1] = pceny_;
+
+	  os_ << LogIO::DEBUGGING
+		  << "pixel center = (" << pcenx_ << "," << pceny_ << ")" << endl
+	      << "nx=" << nx_ << ", ny=" << ny_
+		  << "n_pointings=" << len << " must be < n_pixels=" << nx_ * ny_ << LogIO::POST ;
 }
 
 
