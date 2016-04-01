@@ -25,8 +25,8 @@
 //#
 //#
 //# $Id$
-#ifndef TRANSFORM2_VISMODELDATA_H
-#define TRANSFORM2_VISMODELDATA_H
+#ifndef TRANSFORM2_TRANSFORM2_VISMODELDATA_H
+#define TRANSFORM2_TRANSFORM2_VISMODELDATA_H
 #include <casa/aips.h>
 #include <casa/Containers/Record.h>
 #include <casa/Containers/Block.h>

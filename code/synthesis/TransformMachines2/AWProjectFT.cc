@@ -40,13 +40,12 @@
 
 #include <synthesis/TransformMachines/StokesImageUtil.h>
 #include <synthesis/TransformMachines/SynthesisError.h>
-#include <synthesis/TransformMachines/AWProjectFT.h>
-#include <synthesis/TransformMachines/AWConvFunc.h>
-#include <synthesis/TransformMachines/CFStore2.h>
+#include <synthesis/TransformMachines2/AWProjectFT.h>
+#include <synthesis/TransformMachines2/CFStore2.h>
 #include <synthesis/MeasurementComponents/ExpCache.h>
 #include <synthesis/MeasurementComponents/CExp.h>
-#include <synthesis/TransformMachines/AWVisResampler.h>
-#include <synthesis/TransformMachines/VBStore.h>
+#include <synthesis/TransformMachines2/AWVisResampler.h>
+#include <synthesis/TransformMachines2/VBStore.h>
 
 #include <scimath/Mathematics/FFTServer.h>
 #include <scimath/Mathematics/MathFunc.h>
@@ -54,11 +53,11 @@
 #include <casa/iostream.h>
 #include <casa/OS/Timer.h>
 
-#include <synthesis/TransformMachines/ATerm.h>
-#include <synthesis/TransformMachines/NoOpATerm.h>
-#include <synthesis/TransformMachines/AWConvFunc.h>
-#include <synthesis/TransformMachines/EVLAAperture.h>
-#include <synthesis/TransformMachines/AWConvFuncEPJones.h>
+#include <synthesis/TransformMachines2/ATerm.h>
+#include <synthesis/TransformMachines2/NoOpATerm.h>
+#include <synthesis/TransformMachines2/AWConvFunc.h>
+#include <synthesis/TransformMachines2/EVLAAperture.h>
+#include <synthesis/TransformMachines2/AWConvFuncEPJones.h>
 
 //#define CONVSIZE (1024*2)
 // #define OVERSAMPLING 2
@@ -71,8 +70,9 @@
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
-  
+  using namespace vi;  
 #define NEED_UNDERSCORES
+  namespace refim{
   extern "C" 
   {
     //
@@ -91,8 +91,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     //---------------------------------------------------------------
     //
-    IlluminationConvFunc awEij;
-    void awcppeij(Double *griduvw, Double *area,
+    IlluminationConvFunc awEij2;
+    void awcppeij2(Double *griduvw, Double *area,
 		 Double *raoff1, Double *decoff1,
 		 Double *raoff2, Double *decoff2, 
 		 Int *doGrad,
@@ -102,7 +102,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		 Double *currentCFPA)
     {
       Complex w,d1,d2;
-      awEij.getValue(griduvw, raoff1, raoff2, decoff1, decoff2,
+      awEij2.getValue(griduvw, raoff1, raoff2, decoff1, decoff2,
 		    area,doGrad,w,d1,d2,*currentCFPA);
       *weight   = w;
       *dweight1 = d1;
@@ -135,13 +135,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							    const Bool psTermOn,
 							    const Bool wTermOn,
 							    const Bool mTermOn,
-							    const Bool wbAWP)
+							    const Bool wbAWP,
+							    const Int cfBufferSize,
+							    const Int cfOversampling)
   {
     (void)wTermOn;//Unused
     CountedPtr<ATerm> apertureFunction = AWProjectFT::createTelescopeATerm(telescopeName, aTermOn);
     CountedPtr<PSTerm> psTerm = new PSTerm();
     CountedPtr<WTerm> wTerm = new WTerm();
-    
+    if (cfBufferSize > 0) apertureFunction->setConvSize(cfBufferSize);
+    if (cfOverSampling > 0) apertureFunction->setOversampling(cfOversampling);
     //
     // Selectively switch off CFTerms.
     //
@@ -490,7 +493,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int N=500000;
     StepSize = abs((((2*nx)/uvScale(0))/(sigma) + 
 		    MAXPOINTINGERROR*1.745329E-02*(sigma)/3600.0))/N;
-    if (!awEij.isReady())
+    if (!awEij2.isReady())
       {
 	log_l << "Making lookup table for exp function with a resolution of " 
 	      << StepSize << " radians.  "
@@ -498,8 +501,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      << LogIO::NORMAL 
 	      <<LogIO::POST;
 	
-	awEij.setSigma(sigma);
-	awEij.initExpTable(N,StepSize);
+	awEij2.setSigma(sigma);
+	awEij2.initExpTable(N,StepSize);
 	//    ExpTab.build(N,StepSize);
 	
 	log_l << "Making lookup table for complex exp function with a resolution of " 
@@ -507,7 +510,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      << "Memory used: " << 2*sizeof(Float)*N/(1024.0*1024.0) << " MB." 
 	      << LogIO::NORMAL
 	      << LogIO::POST;
-	awEij.initCExpTable(N);
+	awEij2.initCExpTable(N);
 	//    CExpTab.build(N);
       }
 #endif
@@ -520,7 +523,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //---------------------------------------------------------------
   //
-  MDirection::Convert AWProjectFT::makeCoordinateMachine(const VisBuffer& vb,
+  MDirection::Convert AWProjectFT::makeCoordinateMachine(const VisBuffer2& vb,
 							 const MDirection::Types& From,
 							 const MDirection::Types& To,
 							 MEpoch& last)
@@ -534,7 +537,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // ...now make an object to hold the observatory position info...
     //
     MPosition pos;
-    String ObsName=vb.msColumns().observation().telescopeName()(vb.arrayId());
+    String ObsName=(vb.getVi()->subtableColumns()).observation().telescopeName()(vb.arrayId()(0));
     
     if (!MeasTable::Observatory(pos,ObsName))
       log_l << "Observatory position for "+ ObsName + " not found"
@@ -559,7 +562,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //---------------------------------------------------------------
   //
-  int AWProjectFT::findPointingOffsets(const VisBuffer& vb, 
+  int AWProjectFT::findPointingOffsets(const VisBuffer2& vb, 
 					Array<Float> &l_off,
 					Array<Float> &m_off,
 					Bool Evaluate)
@@ -610,7 +613,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // An array of shape [2,1,1]!
     //
-    Array<Double> phaseDir = vb.msColumns().field().phaseDir().getColumn();
+    Array<Double> phaseDir = vb.getVi()->subtableColumns().field().phaseDir().getColumn();
     Double RA0   = phaseDir(IPosition(3,0,0,0));
     Double Dec0  = phaseDir(IPosition(3,1,0,0));
     //  
@@ -677,7 +680,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //---------------------------------------------------------------
   //
-  int AWProjectFT::findPointingOffsets(const VisBuffer& vb, 
+  int AWProjectFT::findPointingOffsets(const VisBuffer2& vb, 
 					 Cube<Float>& pointingOffsets,
 					Array<Float> &l_off,
 					Array<Float> &m_off,
@@ -736,7 +739,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // An array of shape [2,1,1]!
     //
-    Array<Double> phaseDir = vb.msColumns().field().phaseDir().getColumn();
+    Array<Double> phaseDir = vb.getVi()->subtableColumns().field().phaseDir().getColumn();
     Double RA0   = phaseDir(IPosition(3,0,0,0));
     Double Dec0  = phaseDir(IPosition(3,1,0,0));
     //  
@@ -803,7 +806,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //---------------------------------------------------------------
   //
-  void AWProjectFT::makeSensitivityImage(const VisBuffer& vb, 
+  void AWProjectFT::makeSensitivityImage(const VisBuffer2& vb, 
 					 const ImageInterface<Complex>& imageTemplate,
 					 ImageInterface<Float>& sensitivityImage)
   {
@@ -946,11 +949,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   //
   //---------------------------------------------------------------
-  void AWProjectFT::makeCFPolMap(const VisBuffer& vb, const Vector<Int>& locCfStokes,
+  void AWProjectFT::makeCFPolMap(const VisBuffer2& vb, const Vector<Int>& locCfStokes,
 				 Vector<Int>& polM)
   {
     LogIO log_l(LogOrigin("AWProjectFT", "makeCFPolMap[R&D]"));
-    Vector<Int> msStokes = vb.corrType();
+    //    Vector<Int> msStokes = vb.corrType();
+    // cerr << "Using vb2.correlationTypes() in place of vb.corrType(): AWPFT.cc:954" << endl;
+    Vector<Int> msStokes = vb.correlationTypes();
     Int nPol = msStokes.nelements();
     polM.resize(polMap.shape());
     polM = -1;
@@ -966,11 +971,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // Given a polMap (mapping of which Visibility polarization is
   // gridded onto which grid plane), make a map of the conjugate
   // planes of the grid E.g, for Stokes-I and -V imaging, the two
-  // planes of the uv-grid are [LL,RR].  For input VisBuffer
+  // planes of the uv-grid are [LL,RR].  For input VisBuffer2
   // visibilites in order [RR,RL,LR,LL], polMap = [1,-1,-1,0].  The
   // conjugate map will be [0,-1,-1,1].
   //
-  void AWProjectFT::makeConjPolMap(const VisBuffer& vb, 
+  void AWProjectFT::makeConjPolMap(const VisBuffer2& vb, 
 				     const Vector<Int> cfPolMap, 
 				     Vector<Int>& conjPolMap)
   {
@@ -985,6 +990,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // Extract the shape of the array to be sliced.
     //
+    //    Array<Int> stokesForAllIFs = vb.subtableColumns().polarization().corrType().getColumn();
     log_l << "############....temp code!!!!!!!!!! "
 	  << SynthesisUtils::mapSpwIDToPolID(vb,selectedSpw_p(0))
 	  << LogIO::DEBUG1;
@@ -997,7 +1003,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // have the same pol. setup.
     //
     Int polID=polIDs(0);
-    Array<Int> stokesForAllIFs = vb.msColumns().polarization().corrType().get(polID);
+    Array<Int> stokesForAllIFs = (vb.getVi()->subtableColumns()).polarization().corrType().get(polID);
     IPosition stokesShape(stokesForAllIFs.shape());
     IPosition firstIFStart(stokesShape),firstIFLength(stokesShape);
     //
@@ -1140,7 +1146,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // later use.
   //
   void AWProjectFT::findConvFunction(const ImageInterface<Complex>& image,
-				     const VisBuffer& vb)
+				     const VisBuffer2& vb)
   {
     LogIO log_l(LogOrigin("AWProjectFT", "findConvFunction[R&D]"));
     if (!paChangeDetector.changed(vb,0)) return;
@@ -1168,7 +1174,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (cfSource == CFDefs::NOTCACHED)
       {
 	PolMapType polMat, polIndexMat, conjPolMat, conjPolIndexMat;
-	Vector<Int> visPolMap(vb.corrType());
+	Vector<Int> visPolMap(vb.correlationTypes());
 	polMat = pop_p->makePolMat(visPolMap,polMap);
 	polIndexMat = pop_p->makePol2CFMat(visPolMap,polMap);
 
@@ -1205,7 +1211,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     if (!cfCache_p->OTODone())
       {
-	Vector<Int> visPolMap(vb.corrType());
+	//Vector<Int> visPolMap(vb.corrType());
+	Vector<Int> visPolMap(vb.correlationTypes());
 
 	PolMapType polMat, conjPolMat;
 	polMat = pop_p->makePolMat(visPolMap,polMap);
@@ -1237,9 +1244,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	if (dryRun())
 	  {
-	    // PagedImage<Complex> thisGrid(lattice->shape(),image.coordinates(), 
-	    // 				 cfCache_p->getCacheDir()+"/uvgrid.im");
-	    PagedImage<Complex> thisGrid(image.shape(),image.coordinates(), 
+	    PagedImage<Complex> thisGrid(lattice->shape(),image.coordinates(), 
 					 cfCache_p->getCacheDir()+"/uvgrid.im");
 	  }
 
@@ -1295,7 +1300,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				    PtrBlock<SubImage<Float> *>& weightImageVec, 
 				    PtrBlock<SubImage<Float> *>& /*fluxScaleVec*/, 
 				    Block<Matrix<Float> >& weightsVec,
-				    const VisBuffer& vb)
+				    const VisBuffer2& vb)
   {
     LogIO log_p(LogOrigin("AWProjectFT","initToVis[V][R&D]"));
     //
@@ -1361,7 +1366,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //------------------------------------------------------------------------------
   //
   void AWProjectFT::initializeToVis(ImageInterface<Complex>& iimage,
-				    const VisBuffer& vb)
+				    const VisBuffer2& vb)
   {
     LogIO log_l(LogOrigin("AWProjectFT", "initializeToVis[R&D]"));
     image=&iimage;
@@ -1502,7 +1507,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //---------------------------------------------------------------
   //
   void AWProjectFT::initializeToVis(ImageInterface<Complex>& iimage,
-				     const VisBuffer& vb,
+				     const VisBuffer2& vb,
 				     Array<Complex>& griddedVis,
 				     Vector<Double>& uvscale)
   {
@@ -1543,7 +1548,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   void AWProjectFT::initializeToSky(ImageInterface<Complex>& iimage,
 				     Matrix<Float>& weight,
-				     const VisBuffer& vb)
+				     const VisBuffer2& vb)
   {
     LogIO log_l(LogOrigin("AWProjectFT", "initializeToSky[R&D]"));
     
@@ -1653,7 +1658,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //---------------------------------------------------------------
   //
-  void AWProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
+    void AWProjectFT::put(const VisBuffer2& vb, Int /*row*/, Bool dopsf,
 			FTMachine::Type type)
   {
     LogIO log_l(LogOrigin("AWProjectFT", "put[R&D]"));
@@ -1671,7 +1676,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     if (isDryRun) return;
 
-    Nant_p     = vb.msColumns().antenna().nrow();
+    Nant_p     = vb.getVi()->subtableColumns().antenna().nrow();
 
     const Matrix<Float> *imagingweight;
     imagingweight=&(vb.imagingWeight());
@@ -1688,19 +1693,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // If row is -1 then we pass through all rows
     //
-    Int startRow, endRow, nRow;
-    if (row==-1) 
-      {
-	nRow=vb.nRow();
-	startRow=0;
-	endRow=nRow-1;
-      } 
-    else 
-      {
-	nRow=1;
-	startRow=row;
-	endRow=row;
-      }
+    // Int nRow;
+    // if (row==-1) 
+    //   {
+    // 	nRow=vb.nRows();
+    // 	//startRow=0;
+    // 	//endRow=nRow-1;
+    //   } 
+    // else 
+    //   {
+    // 	nRow=1;
+    // 	// startRow=row;
+    // 	// endRow=row;
+    //   }
     //    
     // Get the uvws in a form that Fortran can use and do that
     // necessary phase rotation. On a Pentium Pro 200 MHz when null,
@@ -1708,17 +1713,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // noticeable for Stokes I continuum and irrelevant for other
     // cases.
     //
-    Matrix<Double> uvw(3, vb.uvw().nelements());
-    uvw=0.0;
-    Vector<Double> dphase(vb.uvw().nelements());
-    dphase=0.0;
-    //NEGATING to correct for an image inversion problem
-    for (Int i=startRow;i<=endRow;i++) 
-      {
-	for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(i)(idim);
-	uvw(2,i)=vb.uvw()(i)(2);
-      }
+    Matrix<Double> uvw(negateUV(vb));
+    // Matrix<Double> uvw(3, vb.uvw().nelements());
+    // uvw=0.0;
+    // //NEGATING to correct for an image inversion problem
+    // for (Int i=startRow;i<=endRow;i++) 
+    //   {
+    // 	for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(i)(idim);
+    // 	uvw(2,i)=vb.uvw()(i)(2);
+    //   }
     
+    Vector<Double> dphase(vb.nRows());
+    dphase=0.0;
     doUVWRotation_p=True;
     rotateUVW(uvw, dphase, vb);
     refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
@@ -1727,20 +1733,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // dphase*=-1.0;
 
     //Check if ms has changed then cache new spw and chan selection
-    if(vb.newMS())
-      matchAllSpwChans(vb);  
+    // if(vb.newMS())
+    //   matchAllSpwChans(vb);  
     
     //Here we redo the match or use previous match
     
     //Channel matching for the actual spectral window of buffer
-    if(doConversion_p[vb.spectralWindow()])
-      matchChannel(vb.spectralWindow(), vb);
-    else
-      {
-	chanMap.resize();
-	chanMap=multiChanMap_p[vb.spectralWindow()];
-      }
+    // if(doConversion_p[vb.spectralWindow()])
+    //   matchChannel(vb.spectralWindow(), vb);
+    // else
+    //   {
+    // 	chanMap.resize();
+    // 	chanMap=multiChanMap_p[vb.spectralWindow()];
+    //   }
 
+    matchChannel(vb);
     VBStore vbs;
     Vector<Int> gridShape = griddedData2.shape().asVector();
     setupVBStore(vbs,vb, elWeight,data,uvw,flags, dphase,dopsf,gridShape);
@@ -1762,7 +1769,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //-------------------------------------------------------------------------
   // Gridding
   void AWProjectFT::resampleDataToGrid(Array<Complex>& griddedData_l, VBStore& vbs, 
-				       const VisBuffer& /*vb*/, Bool& dopsf)
+				       const VisBuffer2& /*vb*/, Bool& dopsf)
   {
     LogIO log_l(LogOrigin("AWProjectFT", "resampleDataToGrid[R&D]"));
     visResampler_p->DataToGrid(griddedData_l, vbs, sumWeight, dopsf); 
@@ -1772,7 +1779,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //-------------------------------------------------------------------------
   // Gridding
   void AWProjectFT::resampleDataToGrid(Array<DComplex>& griddedData_l, VBStore& vbs, 
-				       const VisBuffer& /*vb*/, Bool& dopsf)
+				       const VisBuffer2& /*vb*/, Bool& dopsf)
   {
     LogIO log_l(LogOrigin("AWProjectFT", "resampleDataToGridD[R&D]"));
     visResampler_p->DataToGrid(griddedData_l, vbs, sumWeight, dopsf); 
@@ -1781,47 +1788,48 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //---------------------------------------------------------------
   //
-  void AWProjectFT::get(VisBuffer& vb, Int row)
+  void AWProjectFT::get(VisBuffer2& vb, Int row)
   {
     LogIO log_l(LogOrigin("AWProjectFT", "get[R&D]"));
     // If row is -1 then we pass through all rows
 
     //------COMMON FROM HERE
-    Int startRow, endRow, nRow;
-    if (row==-1) 
-      {
-	nRow=vb.nRow();
-	startRow=0;
-	endRow=nRow-1;
-	vb.modelVisCube()=Complex(0.0,0.0);
-      }
-    else 
-      {
-	nRow=1;
-	startRow=row;
-	endRow=row;
-	vb.modelVisCube().xyPlane(row)=Complex(0.0,0.0);
-      }
+    //Int nRow;
+    // if (row==-1) 
+    //   {
+    // 	//nRow=vb.nRows();
+    // 	//startRow=0;
+    // 	//endRow=nRow-1;
+    // 	//vb.setVisCubeModel(Complex(0.0,0.0));
+    //   }
+    // else 
+    //   {
+    // 	//nRow=1;
+    // 	//startRow=row;
+    // 	//endRow=row;
+    // 	//vb.visCubeModel().xyPlane(row)=Complex(0.0,0.0);
+    //   }
     
     findConvFunction(*image, vb);
     
-    Nant_p     = vb.msColumns().antenna().nrow();
+    Nant_p     = vb.getVi()->subtableColumns().antenna().nrow();
     Int NAnt=0;
     if (doPointing)   NAnt = findPointingOffsets(vb,l_offsets,m_offsets,True);
     NAnt=NAnt;  // Dummy statement to supress complier warnings and will be used when pointing offsets are used.
     
     // Get the uvws in a form that Fortran can use
-    Matrix<Double> uvw(3, vb.uvw().nelements());
-    uvw=0.0;
-    Vector<Double> dphase(vb.uvw().nelements());
-    dphase=0.0;
-    //NEGATING to correct for an image inversion problem
-    for (Int i=startRow;i<=endRow;i++) 
-      {
-	for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(i)(idim);
-	uvw(2,i)=vb.uvw()(i)(2);
-      }
+    Matrix<Double> uvw(negateUV(vb));
+    // Matrix<Double> uvw(3, vb.uvw().nelements());
+    // uvw=0.0;
+    // //NEGATING to correct for an image inversion problem
+    // for (Int i=startRow;i<=endRow;i++) 
+    //   {
+    // 	for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(i)(idim);
+    // 	uvw(2,i)=vb.uvw()(i)(2);
+    //   }
 
+    Vector<Double> dphase(vb.nRows());
+    dphase=0.0;
     doUVWRotation_p=True;
     rotateUVW(uvw, dphase, vb);
     refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
@@ -1830,20 +1838,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //    dphase*=-1.0;
     
     //Check if ms has changed then cache new spw and chan selection
-    if(vb.newMS())
-      matchAllSpwChans(vb);
+    // if(vb.isNewMS())
+    //   matchAllSpwChans(vb);
     
     //Here we redo the match or use previous match
     //
     //Channel matching for the actual spectral window of buffer
     //
-    if(doConversion_p[vb.spectralWindow()])
-      matchChannel(vb.spectralWindow(), vb);
-    else
-      {
-	chanMap.resize();
-	chanMap=multiChanMap_p[vb.spectralWindow()];
-      }
+
+    // if(doConversion_p[vb.spectralWindow()])
+    //   matchChannel(vb.spectralWindow(), vb);
+    // else
+    //   {
+    // 	chanMap.resize();
+    // 	chanMap=multiChanMap_p[vb.spectralWindow()];
+    //   }
+    matchChannel(vb);
     //No point in reading data if its not matching in frequency
     if(max(chanMap)==-1) return;
     //-----COMMONG TILL HERE
@@ -1876,7 +1886,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //-------------------------------------------------------------------------
   // De-gridding
   void AWProjectFT::resampleGridToData(VBStore& vbs, Array<Complex>& griddedData_l,
-				       const VisBuffer& /*vb*/)
+				       const VisBuffer2& /*vb*/)
   {
     LogIO log_l(LogOrigin("AWProjectFT", "resampleGridToData[R&D]"));
     //    Timer tim;
@@ -1944,8 +1954,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	else
 	  {
 	    arrayLattice = new ArrayLattice<Complex>(griddedData);
-	    //cerr << "##### " << griddedData2.shape() << endl;
-	    //storeArrayAsImage(String("cgrid_awp.im"), image->coordinates(), griddedData);
+	// cerr << "##### " << griddedData2.shape() << endl;
+	// storeArrayAsImage(String("cgrid_awp.im"), image->coordinates(), griddedData);
 	    lattice=arrayLattice;
 	    LatticeFFT::cfft2d(*lattice,False);
 	  }
@@ -2205,77 +2215,77 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // Stokes. The polarization representation is that required for the
   // visibilities.
   //
-  void AWProjectFT::makeImage(FTMachine::Type type, 
-			      VisSet& vs,
-			      ImageInterface<Complex>& theImage,
-			      Matrix<Float>& weight) 
-  {
-    LogIO log_l(LogOrigin("AWProjectFT", "makeImage[R&D]"));
+  // void AWProjectFT::makeImage(FTMachine::Type type, 
+  // 			      VisSet& vs,
+  // 			      ImageInterface<Complex>& theImage,
+  // 			      Matrix<Float>& weight) 
+  // {
+  //   LogIO log_l(LogOrigin("AWProjectFT", "makeImage[R&D]"));
     
-    if(type==FTMachine::COVERAGE) 
-      log_l << "Type COVERAGE not defined for Fourier transforms"
-	    << LogIO::EXCEPTION;
+  //   if(type==FTMachine::COVERAGE) 
+  //     log_l << "Type COVERAGE not defined for Fourier transforms"
+  // 	    << LogIO::EXCEPTION;
     
     
-    // Initialize the gradients
-    ROVisIter& vi(vs.iter());
+  //   // Initialize the gradients
+  //   ROVisIter& vi(vs.iter());
     
-    // Loop over all visibilities and pixels
-    VisBuffer vb(vi);
+  //   // Loop over all visibilities and pixels
+  //   VisBuffer2 vb(vi);
     
-    // Initialize put (i.e. transform to Sky) for this model
-    vi.origin();
+  //   // Initialize put (i.e. transform to Sky) for this model
+  //   vi.origin();
     
-    if(vb.polFrame()==MSIter::Linear) 
-      StokesImageUtil::changeCStokesRep(theImage, StokesImageUtil::LINEAR);
-    else 
-      StokesImageUtil::changeCStokesRep(theImage, StokesImageUtil::CIRCULAR);
+  //   if(vb.polarizationFrame()==MSIter::Linear) 
+  //     StokesImageUtil::changeCStokesRep(theImage, StokesImageUtil::LINEAR);
+  //   else 
+  //     StokesImageUtil::changeCStokesRep(theImage, StokesImageUtil::CIRCULAR);
     
-    initializeToSky(theImage,weight,vb);
+  //   initializeToSky(theImage,weight,vb);
 
-    //    
-    // Loop over the visibilities, putting VisBuffers
-    //
-    paChangeDetector.reset();
+  //   //    
+  //   // Loop over the visibilities, putting VisBuffer2s
+  //   //
+  //   paChangeDetector.reset();
 
-    for (vi.originChunks();vi.moreChunks();vi.nextChunk()) 
-      {
-	for (vi.origin(); vi.more(); vi++) 
-	  {
-	    if (type==FTMachine::PSF) makingPSF=True;
-	    findConvFunction(theImage,vb);
+  //   for (vi.originChunks();vi.moreChunks();vi.nextChunk()) 
+  //     {
+  // 	for (vi.origin(); vi.more(); vi++) 
+  // 	  {
+  // 	    if (type==FTMachine::PSF) makingPSF=True;
+  // 	    findConvFunction(theImage,vb);
 	    
-	    switch(type) 
-	      {
-	      case FTMachine::RESIDUAL:
-		vb.visCube()=vb.correctedVisCube();
-		vb.visCube()-=vb.modelVisCube();
-		put(vb, -1, False);
-		break;
-	      case FTMachine::MODEL:
-		vb.visCube()=vb.modelVisCube();
-		put(vb, -1, False);
-		break;
-	      case FTMachine::CORRECTED:
-		vb.visCube()=vb.correctedVisCube();
-		put(vb, -1, False);
-		break;
-	      case FTMachine::PSF:
-		vb.visCube()=Complex(1.0,0.0);
-		makingPSF = True;
-		put(vb, -1, True);
-		break;
-	      case FTMachine::OBSERVED:
-	      default:
-		put(vb, -1, False);
-		break;
-	      }
-	  }
-      }
-    finalizeToSky();
-    // Normalize by dividing out weights, etc.
-    getImage(weight, True);
-  }
+  // 	    switch(type) 
+  // 	      {
+  // 	      case FTMachine::RESIDUAL:
+  // 		vb.setVisCube(vb.visCubeCorrected());
+  // 		vb.visCube()-=vb.visCubeModel();
+  // 		put(vb, -1, False);
+  // 		break;
+  // 	      case FTMachine::MODEL:
+  // 		vb.setVisCube(vb.visCubeModel());
+  // 		put(vb, -1, False);
+  // 		break;
+  // 	      case FTMachine::CORRECTED:
+  // 		vb.setVisCube(vb.visCubeCorrected());
+  // 		put(vb, -1, False);
+  // 		break;
+  // 	      case FTMachine::PSF:
+  // 		vb.setVisCube(Complex(1.0,0.0));
+  // 		makingPSF = True;
+  // 		put(vb, -1, True);
+  // 		break;
+  // 	      case FTMachine::OBSERVED:
+  // 	      default:
+  // 		put(vb, -1, False);
+  // 		break;
+  // 	      }
+  // 	  }
+  //     }
+  //   finalizeToSky();
+  //   // Normalize by dividing out weights, etc.
+  //   getImage(weight, True);
+  // }
   //
   //-------------------------------------------------------------------------
   //  
@@ -2355,7 +2365,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //-------------------------------------------------------------------------
   //  
   void AWProjectFT::setupVBStore(VBStore& vbs,
-				 const VisBuffer& vb, 
+				 const VisBuffer2& vb, 
 				 const Matrix<Float>& imagingweight,
 				 const Cube<Complex>& visData,
 				 const Matrix<Double>& uvw,
@@ -2380,22 +2390,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Set up VBStore object to point to the relavent info. of the VB.
     //
     vbs.imRefFreq_p = imRefFreq_p;
-    vbs.nRow_p = vb.nRow();
+    vbs.nRow_p = vb.nRows();
     vbs.beginRow_p = 0;
     vbs.endRow_p = vbs.nRow_p;
-    vbs.spwID_p = vb.spectralWindow();
+    vbs.spwID_p = vb.spectralWindows()(0);
     vbs.nDataPol_p  = flagCube.shape()[0];
     vbs.nDataChan_p = flagCube.shape()[1];
 
     vbs.antenna1_p.reference(vb.antenna1());
     vbs.antenna2_p.reference(vb.antenna2());
     vbs.paQuant_p = Quantity(getPA(vb),"rad");
-    vbs.corrType_p.reference(vb.corrType());
+    //    vbs.corrType_p.reference(vb.corrType());
+    vbs.corrType_p.reference(vb.correlationTypes());
     vbs.uvw_p.reference(uvw);
     vbs.imagingWeight_p.reference(imagingweight);
     vbs.visCube_p.reference(visData);
     //    vbs.freq_p.reference(interpVisFreq_p);
-    vbs.freq_p.reference(vb.frequency());
+    vbs.freq_p.reference(vb.getFrequencies(0));
     //    vbs.rowFlag_p.assign(vb.flagRow());  
     vbs.rowFlag_p.reference(vb.flagRow());
     if(!usezero_p) 
@@ -2465,7 +2476,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // Predict the coherences as well as their derivatives w.r.t. the
   // pointing offsets.
   //
-  void AWProjectFT::nget(VisBuffer& vb,
+  void AWProjectFT::nget(VisBuffer2& vb,
 			  // These offsets should be appropriate for the VB
 			  Array<Float>& l_off, Array<Float>& m_off,
 			  Cube<Complex>& Mout,
@@ -2475,7 +2486,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO log_l(LogOrigin("AWProjectFT", "nget[R&D]"));
     Int startRow, endRow, nRow;
-    nRow=vb.nRow();
+    nRow=vb.nRows();
     startRow=0;
     endRow=nRow-1;
 
@@ -2483,23 +2494,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     findConvFunction(*image, vb);
     Int NAnt=0;
-    Nant_p     = vb.msColumns().antenna().nrow();
+    Nant_p     = vb.getVi()->subtableColumns().antenna().nrow();
     if (doPointing)   
       NAnt = findPointingOffsets(vb,l_offsets,m_offsets,False);
 
     l_offsets=l_off;
     m_offsets=m_off;
-    Matrix<Double> uvw(3, vb.uvw().nelements());
-    uvw=0.0;
-    Vector<Double> dphase(vb.uvw().nelements());
-    dphase=0.0;
-    //NEGATING to correct for an image inversion problem
-    for (Int i=startRow;i<=endRow;i++) 
-      {
-	for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(i)(idim);
-	uvw(2,i)=vb.uvw()(i)(2);
-      }
+    Matrix<Double> uvw(negateUV(vb));
+    // Matrix<Double> uvw(3, vb.uvw().nelements());
+    // uvw=0.0;
+    // //NEGATING to correct for an image inversion problem
+    // for (Int i=startRow;i<=endRow;i++) 
+    //   {
+    // 	for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(i)(idim);
+    // 	uvw(2,i)=vb.uvw()(i)(2);
+    //   }
     
+    Vector<Double> dphase(vb.nRows());
+    dphase=0.0;
     doUVWRotation_p=True;
     rotateUVW(uvw, dphase, vb);
     refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
@@ -2512,22 +2524,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     flags(vb.flagCube())=True;
     
     //Check if ms has changed then cache new spw and chan selection
-    if(vb.newMS())
-      matchAllSpwChans(vb);
+    // if(vb.newMS())
+    //   matchAllSpwChans(vb);
     
     //Here we redo the match or use previous match
     //
     //Channel matching for the actual spectral window of buffer
     //
-    if(doConversion_p[vb.spectralWindow()])
-      matchChannel(vb.spectralWindow(), vb);
-    else
-      {
-	chanMap.resize();
-	chanMap=multiChanMap_p[vb.spectralWindow()];
-      }
+    // if(doConversion_p[vb.spectralWindow()])
+    //   matchChannel(vb.spectralWindow(), vb);
+    // else
+    //   {
+    // 	chanMap.resize();
+    // 	chanMap=multiChanMap_p[vb.spectralWindow()];
+    //   }
     
-    Vector<Int> rowFlags(vb.nRow());
+    Vector<Int> rowFlags(vb.nRows());
     rowFlags=0;
     rowFlags(vb.flagRow())=True;
     if(!usezero_p) 
@@ -2560,7 +2572,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(isTiled) 
       {
 	log_l << "The sky model is tiled" << LogIO::NORMAL << LogIO::POST;
-	Double invLambdaC=vb.frequency()(0)/C::c;
+	Double invLambdaC=vb.getFrequencies(0)(0)/C::c;
 	Vector<Double> uvLambda(2);
 	Vector<Int> centerLoc2D(2);
 	centerLoc2D=0;
@@ -2593,7 +2605,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  actualOffset(i)=uvOffset(i)-Double(offsetLoc(i));
 		
 		actualOffset(2)=uvOffset(2);
-		IPosition s(vb.modelVisCube().shape());
+		IPosition s(vb.visCubeModel().shape());
 		
 		Int ScanNo=0, tmpPAI;
 		Double area=1.0;
@@ -2608,7 +2620,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     else 
       {
-	IPosition s(vb.modelVisCube().shape());
+	IPosition s(vb.visCubeModel().shape());
 	Int ScanNo=0, tmpPAI, trow=-1;
 	Double area=1.0;
 	tmpPAI = 1;
@@ -2620,9 +2632,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     
   }
-  void AWProjectFT::get(VisBuffer& vb,       
-			 VisBuffer& gradVBAz,
-			 VisBuffer& gradVBEl,
+  void AWProjectFT::get(VisBuffer2& vb,       
+			 VisBuffer2& gradVBAz,
+			 VisBuffer2& gradVBEl,
 			 Cube<Float>& pointingOffsets,
 			 Int row,  // default row=-1 
 			 Type whichVBColumn, // default whichVBColumn = FTMachine::MODEL
@@ -2633,7 +2645,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int startRow, endRow, nRow;
     if (row==-1) 
       {
-	nRow=vb.nRow();
+	nRow=vb.nRows();
 	startRow=0;
 	endRow=nRow-1;
 	initVisBuffer(vb,whichVBColumn);
@@ -2658,22 +2670,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     findConvFunction(*image, vb);
 
-    Nant_p     = vb.msColumns().antenna().nrow();
+    Nant_p     = vb.getVi()->subtableColumns().antenna().nrow();
     Int NAnt=0;
     if (doPointing)   
       NAnt = findPointingOffsets(vb,pointingOffsets,l_offsets,m_offsets,False);
 
-    Matrix<Double> uvw(3, vb.uvw().nelements());
-    uvw=0.0;
-    Vector<Double> dphase(vb.uvw().nelements());
-    dphase=0.0;
-    //NEGATING to correct for an image inversion problem
-    for (Int i=startRow;i<=endRow;i++) 
-      {
-	for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(i)(idim);
-	uvw(2,i)=vb.uvw()(i)(2);
-      }
+    Matrix<Double> uvw(negateUV(vb));
+    // Matrix<Double> uvw(3, vb.uvw().nelements());
+    // uvw=0.0;
+    // //NEGATING to correct for an image inversion problem
+    // for (Int i=startRow;i<=endRow;i++) 
+    //   {
+    // 	for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(i)(idim);
+    // 	uvw(2,i)=vb.uvw()(i)(2);
+    //   }
     
+    Vector<Double> dphase(vb.nRows());
+    dphase=0.0;
     doUVWRotation_p=True;
     rotateUVW(uvw, dphase, vb);
     refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
@@ -2688,21 +2701,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //    
     //Check if ms has changed then cache new spw and chan selection
     //
-    if(vb.newMS()) matchAllSpwChans(vb);
+    // if(vb.newMS()) matchAllSpwChans(vb);
     
     //Here we redo the match or use previous match
     //
     //Channel matching for the actual spectral window of buffer
     //
-    if(doConversion_p[vb.spectralWindow()])
-      matchChannel(vb.spectralWindow(), vb);
-    else
-      {
-	chanMap.resize();
-	chanMap=multiChanMap_p[vb.spectralWindow()];
-      }
+    // if(doConversion_p[vb.spectralWindow()])
+    //   matchChannel(vb.spectralWindow(), vb);
+    // else
+    //   {
+    // 	chanMap.resize();
+    // 	chanMap=multiChanMap_p[vb.spectralWindow()];
+    //   }
     
-    Vector<Int> rowFlags(vb.nRow());
+    matchChannel(vb);
+    Vector<Int> rowFlags(vb.nRows());
     rowFlags=0;
     rowFlags(vb.flagRow())=True;
     if(!usezero_p) 
@@ -2717,8 +2731,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Cube<Complex> visdata,gradVisAzData,gradVisElData;
     if (whichVBColumn == FTMachine::MODEL) 
       {
-	s = vb.modelVisCube().shape();
-	visdata.reference(vb.modelVisCube());
+	s = vb.visCubeModel().shape();
+	visdata.reference(vb.visCubeModel());
       }
     else if (whichVBColumn == FTMachine::OBSERVED)  
       {
@@ -2731,8 +2745,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if (whichGradVBColumn == FTMachine::MODEL) 
 	  {
 	    //	    gradS = gradVBAz.modelVisCube().shape();
-	    gradVisAzData.reference(gradVBAz.modelVisCube());
-	    gradVisElData.reference(gradVBEl.modelVisCube());
+	    gradVisAzData.reference(gradVBAz.visCubeModel());
+	    gradVisElData.reference(gradVBEl.visCubeModel());
 	  }
 	else if (whichGradVBColumn == FTMachine::OBSERVED)  
 	  {
@@ -2751,7 +2765,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     if(isTiled) 
       {
-	Double invLambdaC=vb.frequency()(0)/C::c;
+	Double invLambdaC=vb.getFrequencies(0)(0)/C::c;
 	Vector<Double> uvLambda(2);
 	Vector<Int> centerLoc2D(2);
 	centerLoc2D=0;
@@ -2784,7 +2798,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  actualOffset(i)=uvOffset(i)-Double(offsetLoc(i));
 		
 		actualOffset(2)=uvOffset(2);
-		IPosition s(vb.modelVisCube().shape());
+		IPosition s(vb.visCubeModel().shape());
 		
 		Int ScanNo=0, tmpPAI;
 		Double area=1.0;
@@ -2800,7 +2814,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     else 
       {
 	
-	IPosition s(vb.modelVisCube().shape());
+	IPosition s(vb.visCubeModel().shape());
 	Int ScanNo=0, tmpPAI;
 	Double area=1.0;
 
@@ -2819,7 +2833,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //---------------------------------------------------------------
   //
-  void AWProjectFT::get(VisBuffer& vb, Cube<Complex>& modelVis, 
+  void AWProjectFT::get(VisBuffer2& vb, Cube<Complex>& modelVis, 
 			 Array<Complex>& griddedVis, Vector<Double>& scale,
 			 Int row)
   {
@@ -2835,7 +2849,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int startRow, endRow, nRow;
     if (row==-1) 
       {
-	nRow=vb.nRow();
+	nRow=vb.nRows();
 	startRow=0;
 	endRow=nRow-1;
 	modelVis.set(Complex(0.0,0.0));
@@ -2845,7 +2859,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	nRow=1;
 	startRow=row;
 	endRow=row;
-	modelVis.xyPlane(row)=Complex(0.0,0.0);
+	//modelVis.xyPlane(row)=Complex(0.0,0.0);
       }
     
     Int NAnt=0;
@@ -2857,19 +2871,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //  
     // Get the uvws in a form that Fortran can use
     //
-    Matrix<Double> uvw(3, vb.uvw().nelements());
-    uvw=0.0;
-    Vector<Double> dphase(vb.uvw().nelements());
-    dphase=0.0;
-    //
-    //NEGATING to correct for an image inversion problem
-    //
-    for (Int i=startRow;i<=endRow;i++) 
-      {
-	for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(i)(idim);
-	uvw(2,i)=vb.uvw()(i)(2);
-      }
+    Matrix<Double> uvw(negateUV(vb));
+    // Matrix<Double> uvw(3, vb.uvw().nelements());
+    // uvw=0.0;
+    // //
+    // //NEGATING to correct for an image inversion problem
+    // //
+    // for (Int i=startRow;i<=endRow;i++) 
+    //   {
+    // 	for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(i)(idim);
+    // 	uvw(2,i)=vb.uvw()(i)(2);
+    //   }
     
+    Vector<Double> dphase(vb.nRows());
+    dphase=0.0;
     doUVWRotation_p=True;
     rotateUVW(uvw, dphase, vb);
     refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
@@ -2882,19 +2897,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     flags(vb.flagCube())=True;
     
     //Check if ms has changed then cache new spw and chan selection
-    if(vb.newMS())
-      matchAllSpwChans(vb);
+    // if(vb.newMS())
+    //   matchAllSpwChans(vb);
     
     //Channel matching for the actual spectral window of buffer
-    if(doConversion_p[vb.spectralWindow()])
-      matchChannel(vb.spectralWindow(), vb);
-    else
-      {
-	chanMap.resize();
-	chanMap=multiChanMap_p[vb.spectralWindow()];
-      }
+    // if(doConversion_p[vb.spectralWindow()])
+    //   matchChannel(vb.spectralWindow(), vb);
+    // else
+    //   {
+    // 	chanMap.resize();
+    // 	chanMap=multiChanMap_p[vb.spectralWindow()];
+    //   }
     
-    Vector<Int> rowFlags(vb.nRow());
+    matchChannel(vb);
+    Vector<Int> rowFlags(vb.nRows());
     rowFlags=0;
     rowFlags(vb.flagRow())=True;
     if(!usezero_p) 
@@ -2909,39 +2925,45 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int Conj=0,doGrad=0,ScanNo=0;
     Double area=1.0;
     Int tmpPAI=1;
-    runFortranGet(uvw,dphase,vb.modelVisCube(),s,Conj,flags,rowFlags,row,
+    Cube<Complex> visCubeModel(vb.visCubeModel());
+    runFortranGet(uvw,dphase,visCubeModel,s,Conj,flags,rowFlags,row,
 		  offset,&griddedVis,nx,ny,npol,nchan,vb,NAnt,ScanNo,sigma,
 		  l_offsets,m_offsets,area,doGrad,tmpPAI);
+    vb.setVisCubeModel(visCubeModel);
   }
   //
   //----------------------------------------------------------------------
   //
-  void AWProjectFT::initVisBuffer(VisBuffer& vb, Type whichVBColumn)
+  void AWProjectFT::initVisBuffer(VisBuffer2& vb, Type whichVBColumn)
   {
-    if (whichVBColumn      == FTMachine::MODEL)    vb.modelVisCube()=Complex(0.0,0.0);
-    else if (whichVBColumn == FTMachine::OBSERVED) vb.visCube()=Complex(0.0,0.0);
+    if (whichVBColumn      == FTMachine::MODEL)    vb.setVisCubeModel(Complex(0.0,0.0));
+    else if (whichVBColumn == FTMachine::OBSERVED) vb.setVisCube(Complex(0.0,0.0));
   }
   //
   //----------------------------------------------------------------------
   //
-  void AWProjectFT::initVisBuffer(VisBuffer& vb, Type whichVBColumn, Int row)
+    void AWProjectFT::initVisBuffer(VisBuffer2&, // vb
+				    Type, // whichVBColumn
+				    Int // row
+				    )
   {
-    if (whichVBColumn == FTMachine::MODEL)
-      vb.modelVisCube().xyPlane(row)=Complex(0.0,0.0);
-    else if (whichVBColumn == FTMachine::OBSERVED)
-      vb.visCube().xyPlane(row)=Complex(0.0,0.0);
+    cerr << "AWProjectFT::initVisBuffer(VisBuffer2& vb, Type whichVBColumn, Int row) disabled" << endl;
+    // if (whichVBColumn == FTMachine::MODEL)
+    //   vb.visCubeModel().xyPlane(row)=Complex(0.0,0.0);
+    // else if (whichVBColumn == FTMachine::OBSERVED)
+    //   vb.visCube().xyPlane(row)=Complex(0.0,0.0);
   }
 
-  void AWProjectFT::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
+  void AWProjectFT::ComputeResiduals(VisBuffer2&vb, Bool useCorrected)
   {
     VBStore vbs;
 
-    vbs.nRow_p = vb.nRow();
+    vbs.nRow_p = vb.nRows();
     vbs.beginRow_p = 0;
     vbs.endRow_p = vbs.nRow_p;
 
-    vbs.modelCube_p.reference(vb.modelVisCube());
-    if (useCorrected) vbs.correctedCube_p.reference(vb.correctedVisCube());
+    vbs.modelCube_p.reference(vb.visCubeModel());
+    if (useCorrected) vbs.correctedCube_p.reference(vb.visCubeCorrected());
     else vbs.visCube_p.reference(vb.visCube());
     vbs.useCorrected_p = useCorrected;
     visResampler_p->ComputeResiduals(vbs);
@@ -2958,7 +2980,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // }
 
 } //# NAMESPACE CASA - END
-
+};
 
 
 

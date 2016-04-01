@@ -64,7 +64,7 @@
 
 #include <msvis/MSVis/VisBuffer2.h>
 
-#include <synthesis/TransformMachines/Utils.h>
+#include <synthesis/TransformMachines2/Utils.h>
 #include <synthesis/TransformMachines/PBMath1DAiry.h>
 #include <synthesis/TransformMachines/PBMath1DNumeric.h>
 #include <synthesis/TransformMachines/PBMath2DImage.h>

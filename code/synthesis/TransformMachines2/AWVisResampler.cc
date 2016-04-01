@@ -27,8 +27,8 @@
 //# $Id$
 
 #include <synthesis/TransformMachines/SynthesisError.h>
-#include <synthesis/TransformMachines/AWVisResampler.h>
-#include <synthesis/TransformMachines/Utils.h>
+#include <synthesis/TransformMachines2/AWVisResampler.h>
+#include <synthesis/TransformMachines2/Utils.h>
 #include <synthesis/TransformMachines/SynthesisMath.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
@@ -37,7 +37,7 @@
 #include <iostream>
 #include <typeinfo>
 #include <iomanip>
-#include <synthesis/TransformMachines/FortranizedLoops.h>
+#include <synthesis/TransformMachines2/FortranizedLoops.h>
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -46,7 +46,7 @@ extern "C" {
 };
 //#include <casa/BasicMath/Functors.h>
 namespace casa{
-
+  using namespace refim;
   //
   //-----------------------------------------------------------------------------------
   // Re-sample the griddedData on the VisBuffer (a.k.a gridding)
@@ -510,7 +510,7 @@ namespace casa{
    Bool isGridSinglePrecision=(typeid(gridStore[0]) == typeid(wt));
 
    //   Double conjRefFreq = vbs.imRefFreq();
-   Int vbSpw = (vbs.vb_p)->spectralWindow();
+   Int vbSpw = (vbs.vb_p)->spectralWindows()(0);
 
    for(Int irow=rbeg; irow< rend; irow++){   
       //      if ((vbs.uvw_p.nelements() == 0)) 
@@ -527,7 +527,7 @@ namespace casa{
 		  if((targetIMChan>=0) && (targetIMChan<nGridChan)) 
 		    {
 		      timer_p.mark();
-		      Double dataWVal = vbs.vb_p->uvw()(irow)(2);
+		      Double dataWVal = vbs.vb_p->uvw()(2,irow);
 		      Int wndx = cfb.nearestWNdx(abs(dataWVal)*freq[ichan]/C::c);
 		      // Double conjFreq=sqrt(2*conjRefFreq*conjRefFreq - freq[ichan]*freq[ichan]);
 		      // Int fndx = cfb.nearestFreqNdx(freq[ichan]),
@@ -620,7 +620,7 @@ namespace casa{
 					  Bool psfOnly=((dopsf==True) && (accumCFs==False));
 					  if (finitePointingOffsets )
 					    cachePhaseGrad_p(pointingOffset, cfShape, convOrigin, cfRefFreq, vbs.imRefFreq(),
-							     ((const Int)(vbs.vb_p)->spectralWindow()),((const Int)((vbs.vb_p)->fieldId())));
+							     ((const Int)(vbs.vb_p)->spectralWindows()(0)),((const Int)((vbs.vb_p)->fieldId()(0))));
 					  
 					  cacheAxisIncrements(cfShape, cfInc_p);
 					  
@@ -634,7 +634,7 @@ timer_p.mark();
 					  // 			   off, convOrigin, cfShape, loc, igrdpos,
 					  // 			   sinDPA, cosDPA,finitePointingOffsets,psfOnly);
 // cerr << vbs.vb_p->spectralWindow() << " " << vbs.vb_p->rowIds()(irow) << " " << irow << " " << ichan << " " << ipol << " " << mRow << endl;
-#include <synthesis/TransformMachines/FortranizedLoopsToGrid.cc>
+#include <synthesis/TransformMachines2/FortranizedLoopsToGrid.cc>
 //clLoopsToGrid();
 runTimeG7_p += timer_p.real();
 					}
@@ -720,7 +720,7 @@ runTimeG7_p += timer_p.real();
 			       (fabs(pointingOffset(0))>0) ||  
 			       (fabs(pointingOffset(1))>0)
 			       );
-    Int vbSpw = (vbs.vb_p)->spectralWindow();
+    Int vbSpw = (vbs.vb_p)->spectralWindows()(0);
 
     for(Int irow=rbeg; irow<rend; irow++) {
       if(!rowFlag[irow]) {
@@ -736,7 +736,7 @@ runTimeG7_p += timer_p.real();
 	  
 	  if((achan>=0) && (achan<nGridChan)) {
 	    //	    lambda = C::c/freq[ichan];
-	    Double dataWVal = (vbs.vb_p->uvw()(irow)(2));
+	    Double dataWVal = (vbs.vb_p->uvw()(2,irow));
 	    Int wndx = cfb.nearestWNdx(abs(dataWVal)*freq[ichan]/C::c);
 	    //Int fndx = cfb.nearestFreqNdx(freq[ichan]);
 	    Int fndx = cfb.nearestFreqNdx(vbSpw,ichan);
@@ -798,7 +798,7 @@ runTimeG7_p += timer_p.real();
 			convOrigin = (cfShape)/2;
 			if (finitePointingOffset)
 			  cachePhaseGrad_p(pointingOffset, cfShape, convOrigin, cfRefFreq, vbs.imRefFreq(),
-					   ((const Int)(vbs.vb_p)->spectralWindow()),((const Int)((vbs.vb_p)->fieldId())));
+					   ((const Int)(vbs.vb_p)->spectralWindows()(0)),((const Int)((vbs.vb_p)->fieldId()(0))));
 			
 			//
 			// ALERT: The -1 in the expression for iloc
@@ -818,7 +818,7 @@ runTimeG7_p += timer_p.real();
 			// 		   cfShape, loc, phasor, sinDPA, cosDPA, 
 			// 		   finitePointingOffset, cached_phaseGrad_p);
 // Timer timer;
-#include <synthesis/TransformMachines/FortranizedLoopsFromGrid.cc>
+#include <synthesis/TransformMachines2/FortranizedLoopsFromGrid.cc>
 // runTimeDG_p += timer.real();
 
 			 // //--------------------------------------------------------------------------------

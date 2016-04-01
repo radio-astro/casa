@@ -26,17 +26,17 @@
 //#
 //# $Id$
 //
-#ifndef SYNTHESIS_EVLACONVFUNC_H
-#define SYNTHESIS_EVLACONVFUNC_H
+#ifndef SYNTHESIS_TRANSFORM2_EVLACONVFUNC_H
+#define SYNTHESIS_TRANSFORM2_EVLACONVFUNC_H
 
 #include <images/Images/ImageInterface.h>
-#include <synthesis/TransformMachines/Utils.h>
+#include <synthesis/TransformMachines2/Utils.h>
 #include <synthesis/TransformMachines/BeamCalc.h>
-#include <synthesis/TransformMachines/CFStore.h>
-#include <synthesis/TransformMachines/VLACalcIlluminationConvFunc.h>
+#include <synthesis/TransformMachines2/CFStore.h>
+#include <synthesis/TransformMachines2/VLACalcIlluminationConvFunc.h>
 //#include <synthesis/MeasurementComponents/IlluminationConvFunc.h>
 //#include <synthesis/MeasurementComponents/PixelatedConvFunc.h>
-#include <synthesis/TransformMachines/ConvolutionFunction.h>
+#include <synthesis/TransformMachines2/ConvolutionFunction.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/StokesCoordinate.h>
@@ -48,7 +48,8 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
   template<class T> class ImageInterface;
   template<class T> class Matrix;
-  class VisBuffer;
+  //class VisBuffer2;
+  namespace refim{
   class EVLAConvFunc : public ConvolutionFunction
   {
   public:
@@ -62,14 +63,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int getVLABandID(Double& freq,String&telescopeName);
     Bool findSupport(Array<Complex>& func, Float& threshold,Int& origin, Int& R);
     void makeConvFunction(const ImageInterface<Complex>& image,
-			  const VisBuffer& vb,
+			  const VisBuffer2& vb,
 			  const Int wConvSize,
 			  const Float pa,
 			  const Float dpa,
 			  CFStore& cfs,
 			  CFStore& cfwts, Bool fillCF=True);
-    int getVisParams(const VisBuffer& vb);
-    Int makePBPolnCoords(const VisBuffer&vb,
+    int getVisParams(const VisBuffer2& vb);
+    Int makePBPolnCoords(const VisBuffer2 &vb,
 			 const Vector<Int>& polMap,
 			 const Int& convSize,
 			 const Int& convSampling,
@@ -92,5 +93,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<Int> feedStokes_p;
     CountedPtr<IlluminationConvFunc> ATerm_p;
   };
+};
 };
 #endif

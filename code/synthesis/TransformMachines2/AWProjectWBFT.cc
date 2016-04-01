@@ -26,8 +26,8 @@
 //#
 //# $Id$
 
-#include <synthesis/TransformMachines/AWProjectWBFT.h>
-#include <synthesis/TransformMachines/AWVisResampler.h>
+#include <synthesis/TransformMachines2/AWProjectWBFT.h>
+#include <synthesis/TransformMachines2/AWVisResampler.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <scimath/Mathematics/FFTServer.h>
@@ -35,7 +35,7 @@
 #include <lattices/LatticeMath/LatticeFFT.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBuffer2.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Slice.h>
 #include <casa/Arrays/ArrayMath.h>
@@ -52,6 +52,7 @@
 // determine the resolution of the
 // tabulated exp() function.
 namespace casa { //# NAMESPACE CASA - BEGIN
+  namespace refim{
   //
   //---------------------------------------------------------------
   //
@@ -152,7 +153,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //----------------------------------------------------------------------
   //
-  Int AWProjectWBFT::findPointingOffsets(const VisBuffer& vb, 
+  Int AWProjectWBFT::findPointingOffsets(const VisBuffer2& vb, 
 					 Array<Float> &l_off,
 					 Array<Float> &m_off,
 					 Bool Evaluate)
@@ -171,7 +172,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     if (NAnt <=0 )
       {
-	NAnt=vb.msColumns().antenna().nrow();
+	NAnt=vb.getVi()->subtableColumns().antenna().nrow();
 	l_off.resize(IPosition(3,1,1,NAnt)); // Poln x NChan x NAnt 
 	m_off.resize(IPosition(3,1,1,NAnt)); // Poln x NChan x NAnt 
 	l_off = m_off = 0.0; 
@@ -281,7 +282,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // call to getImage().  In subsequent calls to getImage() these
   // calls are NoOps.
   //
-  void AWProjectWBFT::makeSensitivityImage(const VisBuffer&,
+  void AWProjectWBFT::makeSensitivityImage(const VisBuffer2&,
 					   const ImageInterface<Complex>& /*imageTemplate*/,
 					   ImageInterface<Float>& /*sensitivityImage*/)
   {
@@ -764,7 +765,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // 				 Int& rownr,Vector<Double>& actualOffset,
 // 				 Array<Complex>* dataPtr,
 // 				 Int& aNx, Int& aNy, Int& npol, Int& nchan,
-// 				 VisBuffer& vb,Int& Nant_p, Int& scanNo,
+// 				 VisBuffer2& vb,Int& Nant_p, Int& scanNo,
 // 				 Double& sigma,
 // 				 Array<Float>& l_off,
 // 				 Array<Float>& m_off,
@@ -921,7 +922,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // 				     Int& rownr,Vector<Double>& actualOffset,
 // 				     Array<Complex>* dataPtr,
 // 				     Int& aNx, Int& aNy, Int& npol, Int& nchan,
-// 				     VisBuffer& vb,Int& Nant_p, Int& scanNo,
+// 				     VisBuffer2& vb,Int& Nant_p, Int& scanNo,
 // 				     Double& sigma,
 // 				     Array<Float>& l_off,
 // 				     Array<Float>& m_off,
@@ -1071,7 +1072,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // 				 Int& rownr,Vector<Double>& actualOffset,
 // 				 Array<Complex>& dataPtr,
 // 				 Int& aNx, Int& aNy, Int& npol, Int& nchan,
-// 				 const VisBuffer& vb,Int& Nant_p, Int& scanNo,
+// 				 const VisBuffer2& vb,Int& Nant_p, Int& scanNo,
 // 				 Double& sigma,
 // 				 Array<Float>& l_off,
 // 				 Array<Float>& m_off,
@@ -1281,7 +1282,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   void AWProjectWBFT::initializeToSky(ImageInterface<Complex>& iimage,
 				   Matrix<Float>& weight,
-				   const VisBuffer& vb)
+				   const VisBuffer2& vb)
   {
     LogIO log_l(LogOrigin("AWProjectWBFT","initializeToSky[R&D]"));
     AWProjectFT::initializeToSky(iimage,weight,vb);
@@ -1398,7 +1399,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //---------------------------------------------------------------
   //
   void AWProjectWBFT::resampleCFToGrid(Array<Complex>& gwts, 
-				       VBStore& vbs, const VisBuffer& vb)
+				       VBStore& vbs, const VisBuffer2& vb)
   {
     //
     // Grid the weighted convolution function as well
@@ -1445,7 +1446,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //---------------------------------------------------------------
   //
   void AWProjectWBFT::resampleDataToGrid(Array<Complex>& griddedData_l,
-					 VBStore& vbs, const VisBuffer& vb, 
+					 VBStore& vbs, const VisBuffer2& vb, 
 					 Bool& dopsf) 
   {
     AWProjectFT::resampleDataToGrid(griddedData_l,vbs,vb,dopsf);
@@ -1464,7 +1465,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //---------------------------------------------------------------
   //
   void AWProjectWBFT::resampleDataToGrid(Array<DComplex>& griddedData_l,
-					 VBStore& vbs, const VisBuffer& vb, 
+					 VBStore& vbs, const VisBuffer2& vb, 
 					 Bool& dopsf) 
   {
     AWProjectFT::resampleDataToGrid(griddedData_l,vbs,vb,dopsf);
@@ -1479,7 +1480,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	resampleCFToGrid(gwts, vbs, vb);
       }
   };
-  //  void AWProjectWBFT::resampleGridToData(VBStore& vbs, const VisBuffer& vb) {};
+  //  void AWProjectWBFT::resampleGridToData(VBStore& vbs, const VisBuffer2& vb) {};
   
   void AWProjectWBFT::setCFCache(CountedPtr<CFCache>& cfc, const Bool resetCFC) 
   {
@@ -1496,3 +1497,4 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
 } //# NAMESPACE CASA - END
+};

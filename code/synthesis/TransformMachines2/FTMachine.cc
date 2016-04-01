@@ -25,8 +25,6 @@
 //#
 //# $Id$
 #include <cmath>
-
-
 #include <casa/Quanta/Quantum.h>
 #include <casa/Quanta/UnitMap.h>
 #include <casa/Quanta/UnitVal.h>
@@ -45,7 +43,7 @@
 #include <synthesis/TransformMachines2/SkyJones.h>
 #include <scimath/Mathematics/RigidVector.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
-#include <synthesis/TransformMachines/Utils.h>
+#include <synthesis/TransformMachines2/Utils.h>
 #include <msvis/MSVis/VisibilityIterator2.h>
 #include <msvis/MSVis/VisBuffer2.h>
 #include <msvis/MSVis/StokesVector.h>
@@ -84,7 +82,7 @@ namespace refim {//# namespace refactor imaging
 using namespace casa;
 using namespace casa::refim;
 using namespace casa::vi;
-  FTMachine::FTMachine() : image(0), uvwMachine_p(0), 
+  FTMachine::FTMachine() : isDryRun(False), image(0), uvwMachine_p(0), 
 			   tangentSpecified_p(False), fixMovingSource_p(False),
 			   distance_p(0.0), lastFieldId_p(-1),lastMSId_p(-1), 
 			   useDoubleGrid_p(False), 
@@ -102,7 +100,7 @@ using namespace casa::vi;
   }
   
   FTMachine::FTMachine(CountedPtr<CFCache>& cfcache,CountedPtr<ConvolutionFunction>& cf):
-    image(0), uvwMachine_p(0), 
+    isDryRun(False), image(0), uvwMachine_p(0), 
     tangentSpecified_p(False), fixMovingSource_p(False),
     distance_p(0.0), lastFieldId_p(-1),lastMSId_p(-1), 
     useDoubleGrid_p(False), 
@@ -199,6 +197,7 @@ using namespace casa::vi;
       pbLimit_p=other.pbLimit_p;
       sj_p.resize();
       sj_p=other.sj_p;
+      isDryRun=other.isDryRun;
     };
     return *this;
   };
@@ -1997,6 +1996,10 @@ using namespace casa::vi;
       internalRow=True;
     }
     return (firstRow || internalRow) ;
+  }
+  void FTMachine::setCFCache(CountedPtr<CFCache>& /*cfc*/, const Bool /*loadCFC*/) 
+  {
+    throw(AipsError("FTMachine::setCFCache() directly called!"));
   }
   
 

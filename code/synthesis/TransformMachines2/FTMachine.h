@@ -43,11 +43,11 @@
 #include <images/Images/TempImage.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <scimath/Mathematics/InterpolateArray1D.h>
-#include <synthesis/TransformMachines/CFCache.h>
-#include <synthesis/TransformMachines/CFStore2.h>
+#include <synthesis/TransformMachines2/CFCache.h>
+#include <synthesis/TransformMachines2/CFStore2.h>
 
-#include <synthesis/TransformMachines/ConvolutionFunction.h>
-#include <synthesis/TransformMachines/PolOuterProduct.h>
+#include <synthesis/TransformMachines2/ConvolutionFunction.h>
+#include <synthesis/TransformMachines2/PolOuterProduct.h>
 
 #include <images/Images/ImageInterface.h>
 #include <images/Images/SubImage.h>
@@ -334,7 +334,22 @@ public:
   void setnumthreads(Int n);
   Int getnumthreads();
 
+  virtual void setCFCache(CountedPtr<CFCache>& cfc, const Bool resetCFC=True);
+  CountedPtr<CFCache> getCFCache() {return cfCache_p;};
   String getCacheDir() { return cfCache_p->getCacheDir(); };
+
+  virtual void setDryRun(Bool val) 
+  {
+    isDryRun=val;
+    //cerr << "FTM: " << isDryRun << endl;
+  };
+  virtual Bool dryRun() {return isDryRun;}
+  virtual Bool isUsingCFCache() 
+  {
+    // cerr << "@#%$@% = " << cfCache_p.nrefs() << endl;
+    return (cfCache_p.nrefs()!=0);
+  }
+  Bool isDryRun;
 
 protected:
 
@@ -454,7 +469,7 @@ protected:
   Int polInUse_p;
   CountedPtr<CFCache> cfCache_p;
   CFStore cfs_p, cfwts_p;
-  CFStore2 cfs2_p, cfwts2_p;
+  CountedPtr<CFStore2> cfs2_p, cfwts2_p;
 
   CountedPtr<ConvolutionFunction> convFuncCtor_p;
   CountedPtr<PolOuterProduct> pop_p;

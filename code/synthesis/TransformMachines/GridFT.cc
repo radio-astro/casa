@@ -41,6 +41,7 @@
 #include <scimath/Mathematics/RigidVector.h>
 #include <msvis/MSVis/StokesVector.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
+#include <synthesis/TransformMachines/Utils.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisSet.h>
 #include <images/Images/ImageInterface.h>
@@ -1233,6 +1234,7 @@ ImageInterface<Complex>& GridFT::getImage(Matrix<Float>& weights, Bool normalize
     if(useDoubleGrid_p)
       {
 	ArrayLattice<DComplex> darrayLattice(griddedData2);
+	
 	LatticeFFT::cfft2d(darrayLattice,False);
 	griddedData.resize(griddedData2.shape());
 	convertArray(griddedData, griddedData2);
@@ -1246,6 +1248,8 @@ ImageInterface<Complex>& GridFT::getImage(Matrix<Float>& weights, Bool normalize
       }
     else{
       arrayLattice = new ArrayLattice<Complex>(griddedData);
+	cerr << "##### " << griddedData2.shape() << endl;
+	storeArrayAsImage(String("cgrid_ft.im"), image->coordinates(), griddedData);
       lattice=arrayLattice;
       LatticeFFT::cfft2d(*lattice,False);
     }

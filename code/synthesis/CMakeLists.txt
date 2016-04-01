@@ -25,8 +25,10 @@ FLEX_TARGET (CalLibraryGram CalLibrary/CalLibraryGram.ll ${CMAKE_CURRENT_BINARY_
 include_directories (${CMAKE_CURRENT_BINARY_DIR})
 
 casa_add_library( synthesis
+ TransformMachines2/Utils.cc
   TransformMachines2/BeamSkyJones.cc
   TransformMachines2/ComponentFTMachine.cc
+ TransformMachines2/VLAIlluminationConvFunc.cc
   TransformMachines2/GridFT.cc	
   TransformMachines2/HetArrayConvFunc.cc
   TransformMachines2/FTMachine.cc
@@ -40,6 +42,28 @@ casa_add_library( synthesis
   TransformMachines2/VPSkyJones.cc
   TransformMachines2/WPConvFunc.cc
   TransformMachines2/WProjectFT.cc
+  TransformMachines2/CFCell.cc
+  TransformMachines2/ConvolutionFunction.cc
+ TransformMachines2/AWProjectFT.cc
+ TransformMachines2/AWProjectWBFT.cc
+ TransformMachines2/AWProjectWBFTNew.cc
+ TransformMachines2/CFBuffer.cc
+ TransformMachines2/EVLAAperture.cc
+ TransformMachines2/AzElAperture.cc
+ TransformMachines2/CFStore.cc
+ TransformMachines2/CFStore2.cc
+ TransformMachines2/ATerm.cc
+ TransformMachines2/PSTerm.cc
+ TransformMachines2/WTerm.cc
+ TransformMachines2/VLACalcIlluminationConvFunc.cc
+ TransformMachines2/IlluminationConvFunc.cc
+ TransformMachines2/CFCache.cc
+ TransformMachines2/AWConvFuncEPJones.cc
+ TransformMachines2/AWConvFunc.cc
+  TransformMachines2/PolOuterProduct.cc
+  TransformMachines2/AWVisResampler.cc
+ TransformMachines2/VisibilityResamplerBase.cc
+ TransformMachines2/VisibilityResampler.cc
   TransformMachines/BeamSkyJones.cc
   TransformMachines/BeamSquint.cc
   TransformMachines/CFCache.cc
@@ -772,6 +796,7 @@ casa_add_assay( synthesis CalTables/test/tCTGenericFill.cc )
 
 
 casa_add_test( synthesis CalLibrary/test/tCalLibraryParse.cc )
+casa_add_unit_test( MODULES synthesis SOURCES TransformMachines2/test/tAWPFTM.cc TransformMachines2/test/MakeMS.cc ) 
 casa_add_unit_test( MODULES synthesis SOURCES TransformMachines2/test/tFTMachine.cc TransformMachines2/test/MakeMS.cc ) 
 casa_add_unit_test( MODULES synthesis SOURCES TransformMachines/test/tGridFT.cc TransformMachines2/test/MakeMS.cc ) 
 casa_add_unit_test( MODULES synthesis SOURCES Utilities/test/tFFT2D.cc  ) 
