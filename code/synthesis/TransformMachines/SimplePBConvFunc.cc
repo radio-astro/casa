@@ -64,10 +64,14 @@
 
 #include <synthesis/TransformMachines/SimplePBConvFunc.h>
 #include <synthesis/TransformMachines/SkyJones.h>
-
+#include <scimath/Mathematics/FFTPack.h>
+#include <scimath/Mathematics/FFTW.h>
+#include <scimath/Mathematics/FFTServer.h>
 #include <casa/Utilities/CompositeNumber.h>
 #include <math.h>
-
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
@@ -78,6 +82,7 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
     //
 
     pbClass_p=PBMathInterface::COMMONPB;
+    ft_p=FFT2D(True);
 }
 
   SimplePBConvFunc::SimplePBConvFunc(const PBMathInterface::PBClass typeToUse): 
@@ -86,7 +91,7 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
      calcFluxScale_p(True), convFunctionMap_p(-1), actualConvIndex_p(-1), convSize_p(0), convSupport_p(0), pointingPix_p() {
     //
     pbClass_p=typeToUse;
-
+    ft_p=FFT2D(True);
   }
   SimplePBConvFunc::SimplePBConvFunc(const RecordInterface& rec, const Bool calcfluxneeded)
   : nchan_p(-1),npol_p(-1),pointToPix_p(), directionIndex_p(-1), thePix_p(0), filledFluxScale_p(False),
@@ -95,9 +100,11 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
   {
     String err;
     fromRecord(err, rec, calcfluxneeded);
+    ft_p=FFT2D(True);
   }
   SimplePBConvFunc::~SimplePBConvFunc(){
     //
+   
 
   }
 
@@ -311,6 +318,7 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
 
       //convSize_p=4*(sj_p->support(vb, coords));
       convSize_p=Int(max(nx_p, ny_p)/2)*2*convSamp;
+      //cerr << "convSize_p " << convSize_p << " support " << sj_p->support(vb, coords) << endl;
       // Make this a nice composite number, to speed up FFTs
       //cerr << "convSize_p 0 " <<  convSize_p << " convSamp " << convSamp<< endl;
       CompositeNumber cn(uInt(convSize_p*2.0));  
@@ -381,21 +389,23 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
       
       Int tempConvSize=((convSize_p/4/(convSamp/convSampling))/2)*2;
       IPosition pbShape(4, tempConvSize, tempConvSize, 1, nBeamChans);
-      Int memtobeused=0;
+      
       Long memtot=HostInfo::memoryFree();
+      Double memtobeused= Double(memtot)*1024.0;
+      //cerr << "Mem to be used " << memtobeused << " arraysize " << Double(convSize_p*convSize_p)*8.0 << endl;;
       //check for 32 bit OS and limit it to 2Gbyte
       if( sizeof(void*) == 4){
     	  if(memtot > 2000000)
     		  memtot=2000000;
       }
       if(memtot <= 2000000)
-    	  memtobeused=0;
+    	  memtobeused=0.0;
       //cerr << "mem to be used " << memtobeused << endl;
       //tim.mark();
       IPosition start(4, 0, 0, 0, 0);
       //IPosition pbSlice(4, convSize_p, convSize_p, 1, 1);
       //cerr << "pbshape " << pbShape << endl;
-      TempImage<Complex> twoDPB(TiledShape(pbShape, IPosition(4, pbShape(0), pbShape(1), 1, 1)), coords, memtobeused);
+      TempImage<Complex> twoDPB(TiledShape(pbShape, IPosition(4, pbShape(0), pbShape(1), 1, 1)), coords, memtobeused/10.0);
 
       //tim.show("after making one image");
       convFunc_p.resize(tempConvSize, tempConvSize);
@@ -414,22 +424,66 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
       //trcin[3]=k;
       //Slicer slin(blcin, trcin, Slicer::endIsLast);
       //SubImage<Complex> subim(twoDPB, slin, True);
-      TempImage<Complex> subim(IPosition(4, convSize_p, convSize_p, 1, 1), coordLastPlane);
+      TempImage<Complex> subim(IPosition(4, convSize_p, convSize_p, 1, 1), coordLastPlane, memtobeused/2.2);
       subim.set(Complex(1.0,0.0));
       //twoDPB.putSlice(screen, start);
-      sj_p->apply(subim, subim, vb, 0); 
-      LatticeFFT::cfft2d(subim);
+      /////////////
+      //Double wtime0=omp_get_wtime();
+      //////////
+      sj_p->apply(subim, subim, vb, 0);
+      ///////////////
+      //Double wtime1=omp_get_wtime();
+      /////////////////
+
+      //LatticeFFT::cfft2d(subim);
+      //////
+   
+
+      ft_p.c2cFFT(subim);
+      
+     
+      // cerr << "make pb " << wtime1-wtime0 << " fft " << omp_get_wtime()-wtime1 << endl;
 	//  }
       //tim.show("after an apply" );
       //tim.mark();
-      TempImage<Float> screen2(TiledShape(IPosition(4, convSize_p, convSize_p, 1, 1)), coordLastPlane, memtobeused);
+      TempImage<Float> screen2(TiledShape(IPosition(4, convSize_p, convSize_p, 1, 1)), coordLastPlane, memtobeused/2.2);
       screen2.set(1.0);
-      TempImage<Complex> subout(TiledShape(IPosition(4, convSize_p, convSize_p, 1, 1)), coordLastPlane, memtobeused);
+      TempImage<Complex> subout(TiledShape(IPosition(4, convSize_p, convSize_p, 1, 1)), coordLastPlane, memtobeused/2.2);
+      
       //////Making a reference on half of the lattice as on the Mac rcfft is failing for some 
       //////reason
-      SubImage<Complex> halfsubout(subout, Slicer(IPosition(4, 0, 0, 0, 0), IPosition(4, convSize_p/2, convSize_p-1, 0, 0), Slicer::endIsLast), True);
+      SubImage<Complex> halfsubout(subout, Slicer(IPosition(4, 0, 0, 0, 0), 
+						  IPosition(4, convSize_p/2, convSize_p-1, 0, 0), 
+						  Slicer::endIsLast), True);
+      /////////////////////
+      //wtime0=omp_get_wtime();
+      ///////////////////
       sj_p->applySquare(screen2, screen2, vb, 0); 
-      LatticeFFT::rcfft(halfsubout, screen2, True, False);
+      ///////////////
+      //wtime1=omp_get_wtime();
+      /////////////////
+      /////////
+      /*  arr.resize();
+      Array<Float> arrf;
+      screen2.get(arrf, False);
+      isRef=halfsubout.get (arr,False);
+      Bool delf;
+      Float* scrf=arrf.getStorage(delf);
+      scr= arr.getStorage(del);
+      
+      ft_p.r2cFFT(scr, scrf, Long(convSize_p), Long(convSize_p));
+      cerr << "isRef " << isRef << " iscopy " << del << " delf " << delf << endl; 
+      if(del)
+	arr.putStorage(scr, del);
+      if(delf)
+	arrf.putStorage(scrf, delf);
+      if(!isRef)
+	halfsubout.put(arr.reform(IPosition(4, convSize_p/2+1, convSize_p, 1, 1)));
+      */
+      ////////////////////
+      ft_p.r2cFFT(halfsubout, screen2);
+      //LatticeFFT::rcfft(halfsubout, screen2, True, False);
+      //cerr << "make pb2 " << wtime1-wtime0 << " fft " << omp_get_wtime()-wtime1 << endl;
       //Real FFT fills only first half of the array
       //making it look like a Complex to Complex FFT
       IPosition iblc(4, 0, 3*subout.shape()(1)/8, 0, 0);
@@ -456,7 +510,10 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
       }
       //End of FFT's
       //tim.show("After apply2 ");
-      TempImage<Complex> twoDPB2(TiledShape(pbShape, IPosition(4, pbShape(0), pbShape(1), 1, 1)), coords, memtobeused);
+       /////////////////////
+      //wtime0=omp_get_wtime();
+      ///////////////////
+      TempImage<Complex> twoDPB2(TiledShape(pbShape, IPosition(4, pbShape(0), pbShape(1), 1, 1)), coords, memtobeused/10.0);
       
       IPosition blcout(4, 0, 0, 0, nBeamChans-1);
       IPosition trcout(4, pbShape(0)-1, pbShape(1)-1, 0,nBeamChans-1);
@@ -526,7 +583,7 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
 	}
 	
       }
-
+      //cerr << "make multfreq beam " << omp_get_wtime()-wtime0 << endl;
       /*
       {
 	TempImage<Float> screen2(TiledShape(pbShape, IPosition(4, pbShape(0), pbShape(1), 1, 1)), coords, memtobeused);
@@ -894,7 +951,6 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
 
 
   }
-
   ImageInterface<Float>&  SimplePBConvFunc::getFluxScaleImage(){
 
     if(!calcFluxScale_p)

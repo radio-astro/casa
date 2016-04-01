@@ -73,7 +73,9 @@
 #include <synthesis/MeasurementEquations/VPManager.h>
 
 #include <casa/OS/Timer.h>
-
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -431,17 +433,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //weightConvFunc_p=0.0;
       IPosition begin(5, 0, 0, 0, 0, 0);
       IPosition end(5, convFuncTemp.shape()[0]-1,  convFuncTemp.shape()[1]-1, nBeamPols-1, nBeamChans-1, 0);
-      FFTServer<Float, Complex> fft(IPosition(2, convSize_p, convSize_p));
+      //FFTServer<Float, Complex> fft(IPosition(2, convSize_p, convSize_p));
       //TempImage<Complex> pBScreen(TiledShape(pbShape, IPosition(4, convSize_p, convSize_p, 1, 1)), coords, 0);
       //TempImage<Complex> pB2Screen(TiledShape(pbShape, IPosition(4, convSize_p, convSize_p, 1, 1)), coords, 0);
-      TempImage<Complex> pBScreen(TiledShape(pbShape), coords, 0);
-      TempImage<Complex> pB2Screen(TiledShape(pbShape), coords, 0);
+      Long memtot=HostInfo::memoryFree();
+      Double memtobeused= Double(memtot)*1024.0;
+      if(memtot <= 2000000)
+    	  memtobeused=0.0;
+      //cerr << "Shape " << pbShape << endl;
+      TempImage<Complex> pBScreen(TiledShape(pbShape), coords, memtobeused/2.2);
+      TempImage<Complex> pB2Screen(TiledShape(pbShape), coords, memtobeused/2.2);
       IPosition start(4, 0, 0, 0, 0);
       convSupport_p.resize(ndishpair);
+      
       for (uInt k=0; k < ndish; ++k){
       
 	for (uInt j =k ; j < ndish; ++j){
-	  Timer tim;
+	  //Timer tim;
 	  //Matrix<Complex> screen(convSize_p, convSize_p);
 	  //screen=1.0;
 	  //pBScreen.putSlice(screen, start);
@@ -455,6 +463,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	   blcin[3]=kk;
 	   trcin[3]=kk;
 	   //    tim.mark(); 
+	   // Double wtime0=omp_get_wtime();
 	   //cerr << "Doing channel " << kk << endl;
 	   Slicer slin(blcin, trcin, Slicer::endIsLast);
 	   SubImage<Complex> subim(pBScreen, slin, True);
@@ -473,13 +482,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  //Then the other
 	   (antMath_p[j])->applyPB(subim2, subim2, direction2_p);
 	  
+	   //Double wtime1=omp_get_wtime();
 	   //tim.show("After Apply2 ");
 	   //tim.mark();
 	   //subim.copyData((LatticeExpr<Complex>) (iif(abs(subim)> 5e-2, subim, 0)));
 	   //subim2.copyData((LatticeExpr<Complex>) (iif(abs(subim2)> 25e-4, subim2, 0)));
-	    LatticeFFT::cfft2d(subim);
-	    LatticeFFT::cfft2d(subim2);
+	
+	   ft_p.c2cFFT(subim);
+	  
+	   ft_p.c2cFFT(subim2);
+	   //LatticeFFT::cfft2d(subim2);
 	    //  tim.show("after ffts ");
+	   // cerr << kk << " applies " << wtime1-wtime0 << " ffts " << omp_get_wtime()-wtime1 << endl;
        
 
 	 }

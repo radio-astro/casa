@@ -26,10 +26,12 @@
 //#
 //# $kgolap$
 //DEDICATED TO HONGLIN YE 
+
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/Array.h>
 #include <casa/OS/HostInfo.h>
 #include <synthesis/Utilities/FFT2D.h>
+#include <lattices/Lattices/Lattice.h>
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -52,11 +54,92 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        fftw_cleanup_threads();
 
   }
-  void  FFT2D::r2cFFT(Complex*& out, Float*& in, Long x, Long y){
 
+  FFT2D& FFT2D::operator=(const FFT2D& other){
+    if(this != &other){
+      planC2C_p=other.planC2C_p;
+      planR2C_p=other.planR2C_p;
+      useFFTW_p=other.useFFTW_p;
+      wsave_p.resize(other.wsave_p.size());
+      wsave_p=other.wsave_p;
+      lsav_p=other.lsav_p;
+
+    }
+    return *this;
+  }
+
+  void FFT2D::r2cFFT(Lattice<Complex>& out, Lattice<Float>& in){
+    
+    IPosition shp=in.shape();
+    if(shp.nelements() <2)
+      throw(AipsError("Lattice has to be 2 dimensional to use FFT2D"));
+    Long x= in.shape()(0);
+    Long y=in.shape()(1);
+    if(out.shape()(0) < (x/2+1))
+      throw(AipsError("out shape has to be x/2+1 in size  for real to complex FFT2D"));
+    for(uInt k=1; k < shp.nelements(); ++k){
+      if(shp(k) != out.shape()(k))
+	throw(AipsError("shapes of out lattice does not match in lattice for FFT2D")); 
+    }
+    Long numplanes=shp.product()/x/y;
+    IPosition blc(shp.nelements(), 0);
+    IPosition shape=in.shape();
+   
+    for (uInt ax=2; ax < shp.nelements(); ++ax)
+      shape(ax)=1;
+    IPosition outshape=shape;
+    outshape(0)=x/2+1;
+ 
+    Array<Complex> arr;
+    Array<Float> arrf;
+    Bool isRef;
+    Bool del;
+    Bool delf;
+    Complex *scr;
+    Float *scrf;
+    
+    
+    
+    for (Long n=0; n< numplanes; ++n){
+      isRef=out.getSlice(arr, blc, outshape); 
+      scr=arr.getStorage(del);
+      ///Use this method rather than arrf=in.getSlice(blc,shape) 
+      ///as this may be a reference ..the other is a copy always...
+      /// can gain 0.8s or so for a 10000x10000 array circa 2016
+      in.getSlice( arrf, blc, shape);
+      scrf=arrf.getStorage(delf);
+      r2cFFT(scr, scrf, x, y);      
+      arr.putStorage(scr, del);
+      arrf.putStorage(scrf, delf);
+      
+      if(!isRef){
+	out.putSlice(arr, blc);
+	
+      }
+      //Now calculate next plane
+       
+      Bool addNextAx=True;
+      for (uInt ax=2; ax < shp.nelements(); ++ax){
+	if(addNextAx){
+	  blc(ax) +=1;
+	  addNextAx=False;
+	}
+	if(blc(ax)> shp(ax)-1){
+	  blc(ax)=0;
+	  addNextAx=True;
+	}
+       
+      }
+      
+    }
+  }
+  void  FFT2D::r2cFFT(Complex*& out,  Float*& in, Long x, Long y){
+    if(x%2 != 0 || y%2 != 0)
+      throw(AipsError("Programmer error: FFT2D does not deal with odd numbers on x-y plane"));
     fftShift(in, x, y);
-    fft1_p.plan_r2c(IPosition(2,x,y), in, out);
-    fft1_p.r2c(IPosition(2,x,y), in, out);
+    doFFT(out, in, x, y);
+    //fft1_p.plan_r2c(IPosition(2,x,y), in, out);
+    //fft1_p.r2c(IPosition(2,x,y), in, out);
     //flipArray out is of shape x/2+1, y
     Complex* scr=out;
     Matrix<Complex> tmpo(x/2+1, y/2);
@@ -77,9 +160,50 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	} 
 
   }
+  void FFT2D::c2cFFT(Lattice<Complex>& inout, Bool toFreq){
+    IPosition shp=inout.shape();
+    if(shp.nelements() <2)
+      throw(AipsError("Lattice has to be 2 dimensional to use FFT2D"));
+    Long x= inout.shape()(0);
+    Long y=inout.shape()(1);
+    Long numplanes=inout.shape().product()/x/y;
+    IPosition blc(inout.shape().nelements(), 0);
+    IPosition shape=inout.shape();
+    for (uInt ax=2; ax < shp.nelements(); ++ax)
+      shape(ax)=1;
+    Array<Complex> arr;
+    Bool isRef;
+    Bool del;
+    Complex *scr;
+
+    for (Long n=0; n< numplanes; ++n){
+      isRef=inout.getSlice(arr, blc, shape); 
+      scr=arr.getStorage(del);
+      c2cFFT(scr, x, y, toFreq);
+      arr.putStorage(scr, del);
+      if(!isRef)
+	inout.putSlice(arr, blc);
+      //Now calculate next plane 
+      Bool addNextAx=True;
+      for (uInt ax=2; ax < shp.nelements(); ++ax){
+	if(addNextAx){
+	  blc(ax) +=1;
+	  addNextAx=False;
+	}
+	if(blc(ax)> shp(ax)-1){
+	  blc(ax)=0;
+	  addNextAx=True;
+	}
+       
+      }
+    }
+  }
   void FFT2D::c2cFFT(Complex*& out, Long x, Long y, Bool toFreq){
+    if(x%2 != 0 || y%2 !=0)
+      throw(AipsError("Programmer error: FFT2D does not deal with odd numbers on x-y plane"));
     fftShift(out, x, y, True);
-    Int dim[2]={Int(x), Int(y)};
+    doFFT(out, x, y, toFreq);
+    /*Int dim[2]={Int(x), Int(y)};
     if(toFreq){
       
       planC2C_p=fftwf_plan_dft(2, dim,  reinterpret_cast<fftwf_complex *>(out),  reinterpret_cast<fftwf_complex *>(out), FFTW_FORWARD, FFTW_ESTIMATE);
@@ -91,6 +215,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //  fft1_p.plan_c2c_backward(IPosition(2, x, y),  out);
     }
     fftwf_execute(planC2C_p);
+    */
     fftShift(out, x, y, toFreq);
 
   }
@@ -129,6 +254,40 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	FFTPack::cfft2f(x1, y1, x1, out, wsaveptr, lsav_p, workptr, lenwrk, ier);
       else
 	FFTPack::cfft2b(x1, y1, x1, out, wsaveptr, lsav_p, workptr, lenwrk, ier);
+    }
+  }
+  void FFT2D::doFFT(Complex*& out, Float*& in, Long x, Long y){
+    if(useFFTW_p){
+      Int dim[2]={Int(x), Int(y)};
+	
+      planR2C_p=fftwf_plan_dft_r2c(2, dim,  in, reinterpret_cast<fftwf_complex *>(out), FFTW_ESTIMATE);
+      
+      //fft1_p.plan_c2c_forward(IPosition(2, x, y),  out);
+     
+      fftwf_execute(planR2C_p);
+      
+    }
+    else{
+      /*
+      Int ier;
+      Int x1=Int(x);
+      Int y1=Int(y);
+      if(wsave_p.size()==0){
+	wsave_p.resize(2*x1*y1+15);
+	lsav_p=2*x1*y1+15;
+	Float *wsaveptr=wsave_p.data();
+	FFTPack::cfft2i(x1, y1, wsaveptr, lsav_p, ier);
+      }
+      std::vector<Float> work(2*x1*y1);
+      Int lenwrk=2*x1*y1;
+      Float* workptr=work.data();
+      Float* wsaveptr=wsave_p.data();
+      if(toFreq)
+	FFTPack::cfft2f(x1, y1, x1, out, wsaveptr, lsav_p, workptr, lenwrk, ier);
+      else
+	FFTPack::cfft2b(x1, y1, x1, out, wsaveptr, lsav_p, workptr, lenwrk, ier);
+      */
+      throw(AipsError("Not implemented FFTPack r2c yet"));
     }
   }
 

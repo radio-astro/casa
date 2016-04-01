@@ -33,7 +33,7 @@
 #include <casa/Containers/Block.h>
 #include <casa/Utilities/CountedPtr.h>
 #include <msvis/MSVis/VisBufferUtil.h>
-
+#include <synthesis/Utilities/FFT2D.h>
 #include <wcslib/wcsconfig.h>  /** HAVE_SINCOS **/
 
 #if HAVE_SINCOS
@@ -127,7 +127,6 @@ namespace casa{
       virtual Bool fromRecord(String& err, const RecordInterface& rec, Bool calcFluxneeded=False);
       //give possibility to erase history
       virtual void reset();
-
     protected:
       SkyJones* sj_p;
       TempImage<Float> fluxScale_p;
@@ -157,6 +156,7 @@ namespace casa{
       virtual void findUsefulChannels(Vector<Int>& chanMap, Vector<Double>& chanFreqs,  const VisBuffer& vb, const Vector<Double>& visFreq);
       //return the direction pixel corresponding to a direction
       virtual void toPix(const VisBuffer& vb);
+      FFT2D ft_p;
       CountedPtr<TempImage<Float> > convWeightImage_p;
     private:
       Bool checkPBOfField(const VisBuffer& vb);
