@@ -237,7 +237,7 @@ casa_add_unit_test ( MODULES msvis SOURCES MSVis/test/VisibilityIterator_Test.cc
 casa_add_google_test (MODULES msvis SOURCES MSVis/test/VisibilityIterator_Gtest.cc MSVis/test/MsFactory.cc) 
 casa_add_google_test (MODULES msvis SOURCES MSVis/test/MSChecker_Gtest.cc MSVis/test/MSCheckerTest.cc) 
 
-#casa_add_google_test (MODULES msvis SOURCES MSVis/test/tSimpleSimVi2_GT.cc) 
+casa_add_google_test (MODULES msvis SOURCES MSVis/test/tSimpleSimVi2_GT.cc) 
 casa_add_google_test (MODULES msvis SOURCES MSVis/test/tViiLayerFactory_GT.cc) 
 
 #casa_add_unit_test (msvis MSVis/test/VisibilityIterator_Test.cc MSVis/test/MsFactory.cc) 
