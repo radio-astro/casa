@@ -9,12 +9,12 @@ LOG = infrastructure.get_logger(__name__)
 class UVcontSubInputs(applycal.ApplycalInputs):
 
     # Property overrides
-    intent = basetask.property_with_default('intent', 'TARGET')
+    #intent = basetask.property_with_default('intent', 'TARGET')
     applymode = basetask.property_with_default('applymode','calonly')
 
-    # Would liek to set this to False in future but this causes
+    # Would like to set this to False in future but this causes
     # an issue with the results handling.
-    #flagsum = basetask.property_with_default('flagsum', True)
+    flagsum = basetask.property_with_default('flagsum', False)
     #flagbackup = basetask.property_with_default('flagbackup', False)
 
     """
@@ -30,6 +30,17 @@ class UVcontSubInputs(applycal.ApplycalInputs):
                  opacity=None, parang=None, applymode=None, calwt=None,
                  flagbackup=None, scan=None, flagsum=None):
         self._init_properties(vars())
+
+    @property
+    def intent(self):
+        return self._intent
+
+    @intent.setter
+    def intent(self, value):
+        if value is None:
+            value = 'TARGET'
+        self._intent = value.replace('*', '')
+
 
 # Register this as an imaging MS(s) preferred task
 basetask.ImagingMeasurementSetsPreferred.register(UVcontSubInputs)

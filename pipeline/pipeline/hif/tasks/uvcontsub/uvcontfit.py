@@ -6,9 +6,11 @@ import types
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
+import pipeline.infrastructure.utils as utils
 from pipeline.infrastructure import casa_tasks
 
 from pipeline.hif.heuristics import caltable as uvcaltable
+import pipeline.infrastructure.contfilehandler as contfilehandler
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -55,7 +57,7 @@ class UVcontFitInputs(basetask.StandardInputs):
         return self._contfile
 
     @contfile.setter
-    def contfile(self, value=None):
+    def contfile(self, value):
         if value in (None, ''):
             if self.context.contfile:
                 value = self.context.contfile
@@ -67,10 +69,7 @@ class UVcontFitInputs(basetask.StandardInputs):
     def caltype(self):
         return 'uvcont'
 
-    # Find all the fields with TARGET intent
-    #     Put in the code for proper field selection but don't pass this
-    #     selection to CASA mstransform until the no redindexing capability
-    #     is available at the ms transform user level.
+    # Find all the fields with the specified intent
     @property
     def field(self):
         # If field was explicitly set, return that value
@@ -109,11 +108,9 @@ class UVcontFitInputs(basetask.StandardInputs):
             value = 'TARGET'
         self._intent = value
 
-    # Find all the the spws TARGET intent. These may be a subset of the
+    # Find all the the spws with the specified intent. These may be a subset of the
     # science windows which included calibration spws.
-    #     Put in the code for proper spw selection but don't pass this
-    #     selection to CASA mstransform until the no redindexing capability
-    #     is available at the ms transform user level.
+
     @property
     def spw(self):
         if self._spw is not None:
@@ -165,18 +162,25 @@ class UVcontFitInputs(basetask.StandardInputs):
             value = 1
         self._fitorder = value
 
-    def to_casa_args(self, append=False):
-        # Override the field and spw selection for the
-        # time being.
+    def to_casa_args(self, caltable, field='', spw='', append=False):
         d = super(UVcontFitInputs, self).to_casa_args()
 
-        # Filter out field and spw for now and use defaults for
-        # now. Note that the trailing , is required
-        for ignore in ('caltype', ):
+        # Note that the trailing , is required
+        for ignore in ('caltype', 'contfile', ):
             if ignore in d:
                 del d[ignore]
 
+        # Fix caltable
+        d['caltable'] = caltable
+
+        # If field and spw are not defined use the default
+        if field:
+            d['field'] = field
+        if spw:
+            d['spw'] = spw
+
         d['append'] = append
+
         return d
 
 
@@ -191,13 +195,42 @@ class UVcontFit(basetask.StandardTaskTemplate):
     def prepare(self):
         inputs = self.inputs
 
-        if not inputs.context.contfile:
-            uvcontfit_args = inputs.to_casa_args()
+        inputs.caltable = inputs.caltable
+        if not inputs.contfile:
+            uvcontfit_args = inputs.to_casa_args(caltable=inputs.caltable)
             uvcontfit_job = casa_tasks.uvcontfit(**uvcontfit_args)
             self._executor.execute(uvcontfit_job)
         else:
-            pass
-            # Put continuum file reading loop here
+            # Get the continuum ranges
+            cranges_spwsel = self._get_ranges_spwsel()
+
+            # Initialize uvcontfit append mode
+            append = False
+
+            # Loop over the ranges calling uvcontfit once per source
+            for sname in cranges_spwsel.iterkeys():
+                # Translate to field selection
+                sfields = self._get_source_fields (sname)
+                if not sfields:
+                    continue
+                spwstr = ''
+                for spw_id in cranges_spwsel[sname].iterkeys():
+                    # Skip empty entry
+                    if cranges_spwsel[sname][spw_id] == 'NONE':
+                        continue
+                    # Accumulate spw selection string or this source
+                    if not spwstr:
+                        spwstr =  spwstr + '%s:%s' % (spw_id, cranges_spwsel[sname][spw_id])
+                    else:
+                        spwstr =  spwstr + ',%s:%s' % (spw_id, cranges_spwsel[sname][spw_id])
+
+                # Fire off task
+                uvcontfit_args = inputs.to_casa_args(caltable=inputs.caltable, field=sfields, spw=spwstr, append=append)
+                uvcontfit_job = casa_tasks.uvcontfit(**uvcontfit_args)
+                self._executor.execute(uvcontfit_job)
+                
+                # Switch to append mode
+                append = True
 
         calto = callibrary.CalTo(vis=inputs.vis)
         # careful now! Calling inputs.caltable mid-task will remove the
@@ -210,8 +243,8 @@ class UVcontFit(basetask.StandardTaskTemplate):
 
         calapp = callibrary.CalApplication(calto, calfrom)
 
-
         return UVcontFitResults(pool=[calapp])
+
 
     def analyse (self, result):
 
@@ -229,6 +262,49 @@ class UVcontFit(basetask.StandardTaskTemplate):
         result.error.update(missing)
 
         return result
+
+    def _get_ranges_spwsel(self):
+        inputs = self.inputs
+
+        # Initialize the continuum ranges dictionary
+        cranges_spwsel = {}
+        for sname in [field.source.name for field in inputs.ms.get_fields(task_arg=inputs.field)]:
+            cranges_spwsel[sname] = {}
+            for spwid in [spw.id for spw in inputs.ms.get_spectral_windows(task_arg=inputs.spw)]:
+                cranges_spwsel[sname][str(spwid)] = ''
+
+        # Read continuum file
+        contfile_handler = contfilehandler.ContFileHandler(inputs.contfile)
+        cranges = contfile_handler.read()
+
+        # Merge the ranges
+        for sname in cranges_spwsel.iterkeys():
+            for spw_id in cranges_spwsel[sname].iterkeys():
+                if (cranges.has_key(sname)):
+                    if (cranges[sname].has_key(spw_id)):
+                        if (cranges[sname][spw_id] != ['NONE']):
+                            cranges_spwsel[sname][spw_id] = ';'.join(['%s~%sGHz' % (spw_sel_interval[0], spw_sel_interval[1]) for spw_sel_interval in utils.merge_ranges(cranges[sname][spw_id])])
+                        else:
+                            cranges_spwsel[sname][spw_id] = 'NONE'
+
+        return cranges_spwsel
+
+    def _get_source_fields(self, sname):
+        inputs = self.inputs
+
+        # Get fields which match the input selection and
+        # filter on source name
+        fields = inputs.ms.get_fields(task_arg=inputs.field)
+        unique_field_names = set([f.name for f in fields if f.name == sname])
+        field_ids = set([f.id for f in fields if f.name == sname])
+
+        # Fields with different intents may have the same name. Check for this
+        # and return the IDs if necessary
+        if len(unique_field_names) is len(field_ids):
+            return ','.join(unique_field_names)
+        else:
+            return ','.join([str(i) for i in field_ids])
+
 
 class UVcontFitResults(basetask.Results):
     def __init__(self, final=[], pool=[], preceding=[]):
