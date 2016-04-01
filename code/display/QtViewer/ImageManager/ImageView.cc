@@ -459,7 +459,7 @@ namespace casa {
 					newValue = converter->convert( oldValue, coord );
 				}
 				delete converter;
-				if ( newValue != oldValue && ! isnan( newValue )){
+				if ( newValue != oldValue && ! std::isnan( newValue )){
 					ui.restLineEdit->setText( QString::number( newValue ));
 				}
 			}

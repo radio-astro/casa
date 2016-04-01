@@ -256,8 +256,8 @@ namespace casa{
     IPosition ndx(3,0);
     Int N = vb.nRow();
     for(ndx(2)=0;ndx(2)<N;ndx(2)++)
-      if (isnan(vb.modelVisCube()(ndx).real()) ||
-	  isnan(vb.modelVisCube()(ndx).imag())
+      if (std::isnan(vb.modelVisCube()(ndx).real()) ||
+	  std::isnan(vb.modelVisCube()(ndx).imag())
 	  )
 	{
 	  ostringstream os;
