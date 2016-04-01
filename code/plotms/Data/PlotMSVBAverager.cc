@@ -254,8 +254,8 @@ void PlotMSVBAverager::initialize(vi::VisBuffer2& vb)
   if (prtlev()>2) cout << "  PMSVBA::initialize()" << endl;
 
   // Assign main meta info
-  vi::VisBufferComponents2 components = vi::VisBufferComponents2::these(
-      {VisBufferComponent2::FieldId, VisBufferComponent2::ObservationId, VisBufferComponent2::SpectralWindows, VisBufferComponent2::StateId});
+  vi::VisBufferComponents2 components = vi::VisBufferComponents2::these
+      ({VisBufferComponent2::FieldId, VisBufferComponent2::ObservationId, VisBufferComponent2::SpectralWindows, VisBufferComponent2::StateId});
   avBuf_p->copyComponents(vb, components, True, False);
   fieldid_ = vb.fieldId();
   spw_ = vb.spectralWindows();
@@ -315,11 +315,13 @@ void PlotMSVBAverager::initialize(vi::VisBuffer2& vb)
     }
   }
 
-  // Resize 
+  // Resize and fill if larger
+  Int nRows = vb.nRows();
   fieldid_.resize(nBlnMax_p, True);
   spw_.resize(nBlnMax_p, True);
   obsid_.resize(nBlnMax_p, True);
   stateid_.resize(nBlnMax_p, True);
+  if (nBlnMax_p > nRows) fillIds(nRows);
   // Resize and initialize everything else
   avgTime_.resize(nBlnMax_p, False); 
   avgTime_.set(0.0);
@@ -781,6 +783,18 @@ void PlotMSVBAverager::convertToAP(Cube<Complex>& d) {
   }
 }
 
-
+//----------------------------------------------------------------------------
+void PlotMSVBAverager::fillIds(Int nrows) {
+    // when you are resizing bigger than number of rows,
+    // have to fill rest of vector or get seg fault from
+    // invalid value (whatever is in memory; 
+    // fill with last value in id vector
+    for (Int i=nrows; i<nBlnMax_p; ++i) {
+        fieldid_[i] = fieldid_[nrows-1];
+        spw_[i] = spw_[nrows-1];
+        obsid_[i] = obsid_[nrows-1];
+        stateid_[i] = stateid_[nrows-1];
+    }
+}
 } //# NAMESPACE CASA - END
 
