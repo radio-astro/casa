@@ -341,10 +341,9 @@ void QPScatterPlot::draw_(QPainter* p, const QwtScaleMap& xMap,
         const QwtScaleMap& yMap, const QRect& brect,
         unsigned int drawIndex, unsigned int drawCount) const {
 #endif
-    //logMethod("draw_", true);
+    if (!shouldDraw()) return;
     unsigned int n = m_data->size();
-    if(!isValid() || n == 0 || drawIndex >= n) {
-        //logMethod("draw_", false);
+    if(n == 0 || drawIndex >= n) {
         return;
     }
         
