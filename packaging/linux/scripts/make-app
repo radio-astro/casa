@@ -96,7 +96,7 @@ if ( $osname eq "linux" ) {
     %exclude = map { $_ => 1 } (
         "libXrandr", "librt", "libXi", "libatlas", "libX11", "libexpat", "libz", "libkeyutils", "libdl",
         "libresolv", "libnsl", "libXext", "libXfixes", "libgdbm", "libSM", "libsqlite3", "libcblas",
-        "libfontconfig", "libICE", "libXinerama", "libpng12", "libcom_err", "libkrb5support", "libbz2",
+        "libfontconfig", "libICE", "libXinerama", "libcom_err", "libkrb5support", "libbz2",
         "libutil", "libkrb5", "libxcb", "libfreetype", "libgobject-2.0", "libxml2",
         "libgssapi_krb5", "libgthread-2.0", "libXcursor", "libselinux",
         "libf77blas", "libc", "libXau", "libk5crypto", "libpthread", "libstdc++", "libXrender",
