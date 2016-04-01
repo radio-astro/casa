@@ -126,8 +126,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
    [ Optionally, skip PB-correction, and only recalculate spectral index
       with a different threshold ]
 
-   This is a temporary task, meant for use until projection-based gridding algorithms
-   are available via the 'clean' task.
+   This is a temporary task, meant for use until a widebandpbcor option is enabled from
+   within the tclean task.
 
    An output directory named imagename.pbcor.workdirectory is created, and filled with
    an image-cube of the evaluated primary beams at all specified frequencies,
@@ -140,8 +140,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
            example : vis = 'ngc5921.ms'
               Only one MS can be specified here, and it must contain at-least one
                timestep of data at all frequencies required to calculate the PB spectrum. 
-              ( In case of multiple MSs with different spectral windows, for now, 
-                please split/concat a small fraction of the data to form such an MS )
+
+              Note : If the imaging was done using a list of MSs, and any one MS covers
+                        the entire frequency range, then it will suffice to supply only that one
+                        MS.  This MS is used only to extract frequencies at which to compute
+                        primary beams before fitting Taylor polynomials.
+
+              Note : In case of multiple MSs that cover different frequency ranges, 
+                        please split/concat a small fraction of the data from each MS to form
+                        one single MS that contains the full frequency range. This task uses
+                        the MS only for frequency meta-data.
 
    imagename -- Pre-name of input and output images. Same as in the clean task.           
            example : imagename = 'run1'
@@ -217,6 +225,31 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                      These weights are applied to the PB spectrum while computing
                      PB Taylor-coefficients. Setting weights to anything other than 1.0
                      makes a difference only with very lop-sided weights. 
+
+
+    NOTE : One frequently asked question relates to how best to choose spwlist,chanlist,weightlist.
+
+               The basic principles at work here are
+
+               (1) Imaging = fitting a polynomial to a noisy spectrum (with weights). 
+                                      The polynomial represents I(nu) x P(nu)
+
+               (2) PB model = fitting a polynomial to a collection of PBs at different 
+                                       frequencies (with weights). The polynomial represents P(nu)
+
+               (3) Dividing the two polynomials via their coefficients.
+
+               Steps (1) and (2) need to be consistent with each other (w.r.to frequencies used 
+               and their weights) to produce fits that when divided give exactly only the sky parameters. 
+               Unless you use the same math (and code) for both, they won't be exactly consistent. 
+               The way to minimize differences is to choose a list of frequencies (via spws/chans)
+               and weights for widebandpbcor that resemble the frequency structure of the data you 
+               have used for imaging. 
+               For example, if you have 3 spws in your data and the middle spw has a factor of 10 
+               less weight in the data, then, using just one channel each from the two outer spws for 
+               the PB modeling may be close enough to using all 3 spws. Or, you could also pick 
+               the middle channel of all 3 spws, and assign weights as [1.0, 0.1, 1.0].
+
 
   </example>
 
