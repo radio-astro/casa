@@ -156,7 +156,7 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_po_sigmalinpolposang.py
   test_po_totpolint.py
   test_refimager.py
-  test_refimager_old.py
+  test_refimager_parallel.py
   test_report.py
   test_rg_selectedchannels.py
   test_rg_frombcs.py
