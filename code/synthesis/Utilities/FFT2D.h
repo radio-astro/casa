@@ -48,22 +48,27 @@ namespace casa{
    void r2cFFT(Lattice<Complex>& out, Lattice<Float>& in);
    ///In place 2D FFT; out has to be of shape [x,y] (origin is at the x/2,y/2)
    void c2cFFT(Complex*& out, Long x, Long y, Bool toFreq=True);
+   void c2cFFT(DComplex*& out, Long x, Long y, Bool toFreq=True);
    //This will return the 2D FFT of each x-y planes back into the lattice.
    void c2cFFT(Lattice<Complex>& inout, Bool toFreq=True);
+   void c2cFFT(Lattice<DComplex>& inout, Bool toFreq=True);
    //The toFreq=False in FFTShift does the normalization of 1/N_sample expected of ifft
    void fftShift(Complex*& scr,  Long x, Long y, Bool toFreq=False);
+   void fftShift(DComplex*& scr,  Long x, Long y, Bool toFreq=False);
    void fftShift(Float*& scr,  Long x, Long y);
    void doFFT(Complex*& out, Long x, Long y, Bool toFreq);
+   void doFFT(DComplex*& out, Long x, Long y, Bool toFreq);
    void doFFT(Complex*& out, Float *& in, Long x, Long y);
  private:
    //FFTW stuff
    fftwf_plan planC2C_p;
    fftwf_plan planR2C_p;
+   fftw_plan planC2CD_p;
    Bool useFFTW_p;
    //FFTPack stuff
    std::vector<Float> wsave_p;
    Int lsav_p;
-   FFTW fft1_p;
+   //FFTW fft1_p;
  };
 };// end of namespace casa
 #endif

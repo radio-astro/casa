@@ -45,7 +45,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 #endif      
       fftwf_init_threads();
       fftwf_plan_with_nthreads(numThreads);
-
+      ///For double precision
+      fftw_init_threads();
+      fftw_plan_with_nthreads(numThreads);
     }
    
   }
@@ -198,6 +200,46 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     }
   }
+
+  void FFT2D::c2cFFT(Lattice<DComplex>& inout, Bool toFreq){
+    IPosition shp=inout.shape();
+    if(shp.nelements() <2)
+      throw(AipsError("Lattice has to be 2 dimensional to use FFT2D"));
+    Long x= inout.shape()(0);
+    Long y=inout.shape()(1);
+    Long numplanes=inout.shape().product()/x/y;
+    IPosition blc(inout.shape().nelements(), 0);
+    IPosition shape=inout.shape();
+    for (uInt ax=2; ax < shp.nelements(); ++ax)
+      shape(ax)=1;
+    Array<DComplex> arr;
+    Bool isRef;
+    Bool del;
+    DComplex *scr;
+
+    for (Long n=0; n< numplanes; ++n){
+      isRef=inout.getSlice(arr, blc, shape); 
+      scr=arr.getStorage(del);
+      c2cFFT(scr, x, y, toFreq);
+      arr.putStorage(scr, del);
+      if(!isRef)
+	inout.putSlice(arr, blc);
+      //Now calculate next plane 
+      Bool addNextAx=True;
+      for (uInt ax=2; ax < shp.nelements(); ++ax){
+	if(addNextAx){
+	  blc(ax) +=1;
+	  addNextAx=False;
+	}
+	if(blc(ax)> shp(ax)-1){
+	  blc(ax)=0;
+	  addNextAx=True;
+	}
+       
+      }
+    }
+  }
+
   void FFT2D::c2cFFT(Complex*& out, Long x, Long y, Bool toFreq){
     if(x%2 != 0 || y%2 !=0)
       throw(AipsError("Programmer error: FFT2D does not deal with odd numbers on x-y plane"));
@@ -219,9 +261,38 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     fftShift(out, x, y, toFreq);
 
   }
- 
-  void FFT2D::doFFT(Complex*& out, Long x, Long y, Bool toFreq){
+ void FFT2D::c2cFFT(DComplex*& out, Long x, Long y, Bool toFreq){
+    if(x%2 != 0 || y%2 !=0)
+      throw(AipsError("Programmer error: FFT2D does not deal with odd numbers on x-y plane"));
+    fftShift(out, x, y, True);
+    doFFT(out, x, y, toFreq); 
+    fftShift(out, x, y, toFreq);
+
+  }
+  void FFT2D::doFFT(DComplex*& out, Long x, Long y, Bool toFreq){
     if(useFFTW_p){
+      //Will need to seperate the plan from the execute if we want to run this in multiple threads
+      Int dim[2]={Int(x), Int(y)};
+      if(toFreq){
+	
+	planC2CD_p=fftw_plan_dft(2, dim,  reinterpret_cast<fftw_complex *>(out),  reinterpret_cast<fftw_complex *>(out), FFTW_FORWARD, FFTW_ESTIMATE);
+      
+	//fft1_p.plan_c2c_forward(IPosition(2, x, y),  out);
+      }
+      else{
+	planC2CD_p=fftw_plan_dft(2, dim,  reinterpret_cast<fftw_complex *>(out),  reinterpret_cast<fftw_complex *>(out), FFTW_BACKWARD, FFTW_ESTIMATE);
+	//  fft1_p.plan_c2c_backward(IPosition(2, x, y),  out);
+      }
+      fftw_execute(planC2CD_p);
+      
+    }
+    else{
+      throw(AipsError("Double precision FFT with FFTPack is not implemented"));
+    }
+  }
+   void FFT2D::doFFT(Complex*& out, Long x, Long y, Bool toFreq){
+    if(useFFTW_p){
+      //Will need to seperate the plan from the execute if we want to run this in multiple threads
       Int dim[2]={Int(x), Int(y)};
       if(toFreq){
 	
@@ -314,6 +385,83 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       Float divid=1.0f;
       if(!toFreq)
 	divid=1.0f/(Float(x)*Float(y));
+#pragma omp parallel for default(none) firstprivate(x, y, tmpptr, scr, divid)
+      for (Long jj=0; jj< y/2; ++jj){
+	for(Long ii=0; ii < x/2; ++ii){
+	  tmpptr[jj*x/2+ii]=scr[(y/2)*x+(jj*x+x/2)+ii]*divid;
+	  scr[(y/2)*x+(jj*x+x/2)+ii]=scr[jj*x+ii]*divid;
+	}
+      }
+#pragma omp parallel for default(none) firstprivate(x,y, tmpptr, scr)
+	  for (Long jj=0; jj< y/2; ++jj){
+	    for(Long ii=0; ii < x/2; ++ii){
+	      scr[jj*x+ii]=tmpptr[jj*x/2+ii];
+	    }
+	  }
+#pragma omp parallel for default(none) firstprivate(x,y, tmpptr, scr, divid)
+	  for (Long jj=0; jj< y/2; ++jj){
+	    for(Long ii=0; ii < x/2; ++ii){
+	      tmpptr[jj*x/2+ii]=scr[(jj*x+x/2)+ii]*divid;
+	      scr[(jj*x+x/2)+ii]=scr[(y/2)*x+jj*x+ii]*divid;
+	    }
+	  }
+#pragma omp parallel for default(none) firstprivate(x, y, tmpptr, scr)
+	  for (Long jj=0; jj< y/2; ++jj){
+	    for(Long ii=0; ii < x/2; ++ii){
+	      scr[(y/2)*x+jj*x+ii]=tmpptr[jj*x/2+ii];
+	    }
+	  }
+	  tmpo.putStorage(tmpptr, gool);
+    }
+    
+    ////
+    
+    //if(rot)
+    /*{
+      
+      Matrix<Complex> tmpo(x, y/2);
+      Complex* tmpptr=tmpo.getStorage(gool);
+      for (Long jj=0; jj< y/2; ++jj){
+      for(Long ii=0; ii < x; ++ii){
+      tmpptr[jj*x+ii]=scr[(y-jj-1)*x+(x-ii-1)];
+      scr[(y-jj-1)*x+(x-ii-1)]=scr[jj*x+ii];
+      }
+      }
+      for (Long jj=0; jj< y/2; ++jj){
+      for(Long ii=0; ii < x; ++ii){
+      scr[jj*x+ii]= tmpptr[jj*x+ii];
+      }
+      }
+      }*/
+    
+    
+    
+
+  }
+
+void FFT2D::fftShift(DComplex*& s,  Long x, Long y, Bool toFreq){
+    ////Lets try our own flip
+    
+    Bool gool;
+    DComplex* scr=s;
+    {
+      Matrix<DComplex> tmpo(x/2, y/2);
+      DComplex* tmpptr=tmpo.getStorage(gool);
+      ////TEST
+	  //omp_set_num_threads(1);
+	  /////
+	  /*
+	    #pragma omp parallel for default(none) firstprivate(x, y, tmpptr, scr)
+	    for (Long jj=0; jj< y/2; ++jj){
+	    for(Long ii=0; ii < x/2; ++ii){
+	    tmpptr[jj*x/2+ii]=scr[(y/2-jj-1)*x+(x/2-ii-1)];
+	    scr[(y/2)*x+(jj*x+x/2)+ii]=scr[jj*x+ii];
+	    }
+	    }
+	  */
+      Double divid=1.0f;
+      if(!toFreq)
+	divid=1.0f/(Double(x)*Double(y));
 #pragma omp parallel for default(none) firstprivate(x, y, tmpptr, scr, divid)
       for (Long jj=0; jj< y/2; ++jj){
 	for(Long ii=0; ii < x/2; ++ii){
