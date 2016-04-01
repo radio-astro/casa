@@ -658,7 +658,6 @@ def imagetest(which=None, size=[32,32,8]):
         if not ok:
             raise RuntimeError, 'setmiscinfo failed in fitsreflect'
         myim.sethistory(history=["A","B","C","D"])
-        history = myim.history(F)
         #
         p1 = myim.getregion()
         m1 = myim.getregion(getmask=T)
@@ -674,6 +673,7 @@ def imagetest(which=None, size=[32,32,8]):
         #
         bitpix = -32
         if do16: bitpix = 16
+        history = myim.history(F)
         ok = myim.tofits(outfile=fitsfile, bitpix=bitpix)
         if not ok:
             raise RuntimeError, 'tofits failed in fitsreflect'
