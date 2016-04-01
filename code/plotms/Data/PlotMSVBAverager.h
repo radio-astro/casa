@@ -135,6 +135,9 @@ private:
   // Convert r/i to a/p
   void convertToAP(Cube<Complex>& d);
 
+  // fill vector that is resized larger
+  void fillIds(Int nrows);
+
   // Number of antennas, correlations, and channels
   Int nAnt_p, nCorr_p, nChan_p, nBlnMax_p;
 
