@@ -43,7 +43,7 @@ namespace casa{
     virtual void setMaximumCacheSize(const Long howManyRealPixels=-1) {cacheSizeInPixels_p=howManyRealPixels;}
     virtual Long maximumCacheSize() {return cacheSizeInPixels_p;}
     virtual void initTables(Int ){};
-    virtual void prepareConvFunction(const VisBuffer2& /*vb*/, CFStore& /*cfs*/){};
+    virtual void prepareConvFunction(const VisBuffer2& /*vb*/, VBRow2CFBMapType& /*cfs*/){};
   private:
     Long cacheSizeInPixels_p;
   };

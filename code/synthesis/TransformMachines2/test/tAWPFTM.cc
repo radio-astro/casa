@@ -70,7 +70,8 @@ using namespace casa::test;
 void createAWPFTMachine(CountedPtr<FTMachine>& theFT, CountedPtr<FTMachine>& theIFT, 
 			const String& telescopeName,
 			MPosition& observatoryLocation,
-			const Int=1,
+			const Int cfBufferSize=1024,
+			const Int cfOversampling=20,
 			//------------------------------
 			const Int wprojPlane=1,
 			const Float=1.0,
@@ -80,8 +81,6 @@ void createAWPFTMachine(CountedPtr<FTMachine>& theFT, CountedPtr<FTMachine>& the
 			const Bool psTermOn= True,
 			const Bool mTermOn= False,
 			const Bool wbAWP= True,
-			const Int cfBufferSize=1024,
-			const Int cfOversampling=20,
 			const String cfCache= "testCF.cf",
 			const Bool doPointing= False,
 			const Bool doPBCorr= True,
@@ -161,10 +160,13 @@ void createAWPFTMachine(CountedPtr<FTMachine>& theFT, CountedPtr<FTMachine>& the
 
 Int main(int argc, char **argv)
 {
+  Int NX=256, NY=256, cfBufferSize=512, cfOversampling=20;
+  if (argc > 1) {sscanf(argv[1],"%d",&NX); NY=NX;}
+  if (argc > 2) {sscanf(argv[2],"%d",&cfBufferSize);};
+  if (argc > 3) {sscanf(argv[3],"%d",&cfOversampling);};
+  
   try
     {
-      Int NX=512, NY=512;
-
       MDirection thedir(Quantity(20.0, "deg"), Quantity(20.0, "deg"));
       String msname("Test.ms");
       MakeMS::makems(msname, thedir);
@@ -199,7 +201,7 @@ Int main(int argc, char **argv)
       MeasTable::Observatory(loc, MSColumns(thems).observation().telescopeName()(0));
       createAWPFTMachine(ftm, iftm,
 			 String("EVLA"),
-			 loc);
+			 loc, cfBufferSize, cfOversampling);
       {
 	MSSelection thisSelection;
 	thisSelection.setSpwExpr(String("*"));
