@@ -1682,6 +1682,14 @@ the ms definition itself. -->
       </description>
       <value></value>
     </param>
+
+    <param type="double" name="maxuvwdistance">
+      <description>
+	Maximum separation of start-to-end baselines that can be included in an
+	average. (meters)
+      </description>
+      <value>0.0</value>
+    </param>
   </input>
   <returns type="record"/>
 

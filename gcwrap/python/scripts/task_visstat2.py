@@ -65,7 +65,8 @@ def visstat2(vis=None,
                             reportingaxes=str(reportingaxes),
                             timeaverage=timeaverage,
                             timebin=timebin,
-                            timespan=timespan)
+                            timespan=timespan,
+                            maxuvwdistance=maxuvwdistance)
     
     mslocal.close()
 

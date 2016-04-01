@@ -1391,24 +1391,18 @@ class ChunkStatisticsAccumulator
 
 	Record &acc;
 	vector<Int> &sortColumnIds;
-	bool implicitTimeAverage;
 
 public:
-	ChunkStatisticsAccumulator(
-		Record &acc, vector<Int> &sortColumnIds, bool implicitTimeAverage)
+	ChunkStatisticsAccumulator(Record &acc, vector<Int> &sortColumnIds)
 		: acc(acc)
-		, sortColumnIds(sortColumnIds)
-		, implicitTimeAverage(implicitTimeAverage) {};
+		, sortColumnIds(sortColumnIds) {};
 
 	void nextChunk(StatisticsAlgorithm<A,D,M,W> &statistics, const vi::VisBuffer2 *vb) {
 		string keyvals;
 		string delim;
 		for (auto const & id : sortColumnIds) {
-			if (!(id == MSMainEnums::PredefinedColumns::TIME
-			      && implicitTimeAverage)) {
-				keyvals += delim + mkKey(id, vb);
-				delim = ",";
-			}
+			keyvals += delim + mkKey(id, vb);
+			delim = ",";
 		}
 		Record stats = toRecord(statistics.getStatistics());
 
@@ -1437,7 +1431,6 @@ template <class DataProvider,
 static ::casac::record *
 doStatistics(
 	vector<Int> &sortColumnIds,
-	bool implicitTimeAverage,
 	DataProvider *dataProvider)
 {
 	Record result;
@@ -1452,7 +1445,7 @@ doStatistics(
 	                           typename DataProvider::DataIteratorType,
 	                           typename DataProvider::WeightsIteratorType,
 	                           typename DataProvider::MaskIteratorType>
-		accumulateChunkStatistics(result, sortColumnIds, implicitTimeAverage);
+		accumulateChunkStatistics(result, sortColumnIds);
 
 	dp->foreachChunk(statistics, accumulateChunkStatistics);
 	return fromRecord(result);
@@ -1464,11 +1457,10 @@ template <class DataProvider>
 static ::casac::record *
 doClassicalStatistics(
 	vector<Int> &sortColumnIds,
-	bool implicitTimeAverage,
 	DataProvider *dataProvider)
 {
 	return doStatistics<DataProvider,ClassicalStatistics>(
-		sortColumnIds, implicitTimeAverage, dataProvider);
+		sortColumnIds, dataProvider);
 }
 
 // Convert string provided as a statistics "reporting axis" to MS column id.
@@ -1553,18 +1545,13 @@ timespanBoundaries(const string &s, bool &spanScan, bool &spanSubscan)
 // * obs: obs selection
 // * reportingaxes: comma separated string to select axes along which statistics
 //                  are reported
-// * timeaverage: whether to do time averaging (note that the decision to do
-//                time averaging is affected by a number of argument
-//                values...the current implementation may not be final)
+// * timeaverage: whether to do time averaging
 // * timebin: time averaging interval
 // * timespan: whether time averaging crosses span or subscan boundaries; value
 //             is a string consisting of "scan" and/or "subscan", separated by
 //             commas
-//
-// TODO: determine format of returned record
-//
-// TODO: determine proper handling of time averaging, as determined by values of
-// "reportingaxes", "timeaverage", "timebin" and "timespan"
+// * maxuvwdistance: Maximum separation of start-to-end baselines that can be
+//                   included in an average
 //
 // TODO: how to handle WEIGHT, SIGMA and UVW columns?
 //
@@ -1587,7 +1574,8 @@ ms::statistics2(const std::string& column,
                 const std::string& reportingaxes,
                 bool timeaverage,
                 const std::string& timebin,
-                const std::string& timespan)
+                const std::string& timespan,
+                double maxuvwdistance)
 {
 
 	// const std::array<Int,6> validSortColumnIds = {
@@ -1683,43 +1671,39 @@ ms::statistics2(const std::string& column,
 			// each time into its own iterator chunk. For this reason, when the
 			// user specifies "integration" as a statistics reporting axis, we
 			// will use a small strictly positive value for timeInterval to
-			// force every integration into its own chunk. Also, when implicit
-			// time averaging over the entire MS selection is desired, we set
-			// timeInterval to zero to put all times into one chunk.
+			// force every integration into its own chunk.
 			const Double positiveButShorterThanEveryIntegrationSec = 1.0e-4;
 			const Double allTimesInOneChunkSec = 0;
-			Double timeInterval = (timeaverage
-			                       ? casaQuantity(timebin).get("s").getValue()
-			                       : positiveButShorterThanEveryIntegrationSec);
+			Double chunkInterval;
+			Double averagingInterval = 0;
 			vector<Int> sortColumnIds = reportingAxisIds(reportingaxes);
-			bool implicitTimeAverage = false;
 
-			// Set timeInterval and modify sortColumnIds to support the call to
+			// Set chunkInterval and modify sortColumnIds to support the call to
 			// doStatistics.
-			if (!timeaverage) {
-				vector<Int>::const_iterator endIter = sortColumnIds.cend();
-				if (find(sortColumnIds.cbegin(), endIter,
-				         MSMainEnums::PredefinedColumns::TIME) == endIter) {
-					// TIME is absent from sortColumnIds. This actually is a
-					// case of time averaging, where the averaging is done over
-					// the entire time span of the MS selection. In this case,
-					// we ignore the value of 'timespan', and will average
-					// across scan/sub-scan boundaries (if the choice of sort
-					// columns allows that).
-					timeInterval = allTimesInOneChunkSec;
-					implicitTimeAverage = true;
-					sortColumnIds.push_back(
-						MSMainEnums::PredefinedColumns::TIME);
-				}
+			vector<Int>::const_iterator endIter = sortColumnIds.cend();
+			if (find(sortColumnIds.cbegin(), endIter,
+			         MSMainEnums::PredefinedColumns::TIME) == endIter) {
+				chunkInterval = allTimesInOneChunkSec;
+				sortColumnIds.push_back(
+					MSMainEnums::PredefinedColumns::TIME);
 			} else {
-				// remove TIME from sortColumnIds
+				chunkInterval = positiveButShorterThanEveryIntegrationSec;
+			}
+			if (timeaverage) {
+				averagingInterval =
+					casaQuantity(timebin).get("s").getValue();
+				// remove TIME from sortColumnIds and determine chunkInterval
 				auto endIter = sortColumnIds.end();
 				auto timeColIter = find(
 					sortColumnIds.begin(),
 					endIter,
 					MSMainEnums::PredefinedColumns::TIME);
-				if (timeColIter != endIter)
+				if (timeColIter != endIter) {
 					sortColumnIds.erase(timeColIter);
+					chunkInterval = averagingInterval;
+				} else {
+					chunkInterval = allTimesInOneChunkSec;
+				}
 
 				bool spanScan;
 				bool spanSubscan;
@@ -1757,8 +1741,93 @@ ms::statistics2(const std::string& column,
 			Block<Int> sortColumnsBlock(
 				sortColumnIds.size(), sortColumnIdsData, false);
 			vi::SortColumns sortColumns(sortColumnsBlock, false);
-			vi::VisibilityIterator2 *vi2 = new vi::VisibilityIterator2(
-				*sel_p, sortColumns, false, 0, timeInterval);
+			vi::VisibilityIterator2 *vi2;
+
+			if (!timeaverage) {
+				vi2 = new vi::VisibilityIterator2(
+					*sel_p, sortColumns, false, 0, chunkInterval);
+			} else if (!(mycolumn == "DATA" || mycolumn == "CORRECTED" ||
+			             mycolumn == "MODEL" || mycolumn == "FLOAT")) {
+				stringstream ss;
+				ss << "Time averaging of '" << mycolumn
+				   << "' is not supported";
+				throw AipsError(ss.str());
+			} else {
+				// To use AveragingVi2Factory, we must decide how to apply
+				// weights and flags upon construction. After doing that, we set
+				// the useweights and useflags variables to false, as the
+				// statistics framework classes should not need to handle
+				// weights and flags.
+				int options = vi::AveragingOptions::Nothing;
+				if (mycolumn == "DATA") {
+					options = vi::AveragingOptions::AverageObserved;
+					if (useweights) {
+						if (useflags)
+							options |= vi::AveragingOptions::ObservedFlagWeightAvgFromSIGMA;
+						else
+							options |= vi::AveragingOptions::ObservedWeightAvgFromSIGMA;
+					} else {
+						if (useflags)
+							options |= vi::AveragingOptions::ObservedFlagAvg;
+						else
+							options |= vi::AveragingOptions::ObservedPlainAvg;
+					}
+					useweights = false;
+					useflags = false;
+				} else if (mycolumn == "CORRECTED") {
+					options = vi::AveragingOptions::AverageCorrected;
+					if (useweights) {
+						if (useflags)
+							options |= vi::AveragingOptions::CorrectedFlagWeightAvgFromWEIGHT;
+						else
+							options |= vi::AveragingOptions::CorrectedWeightAvgFromWEIGHT;
+					} else {
+						if (useflags)
+							options |= vi::AveragingOptions::CorrectedFlagAvg;
+						else
+							options |= vi::AveragingOptions::CorrectedPlainAvg;
+					}
+					useweights = false;
+					useflags = false;
+				} else if (mycolumn == "MODEL") {
+					options = vi::AveragingOptions::AverageModel;
+					if (useweights) {
+						bool hasCorrected = sel_p->isColumn(
+							MSMainEnums::PredefinedColumns::CORRECTED_DATA);
+						bool hasObserved = sel_p->isColumn(
+							MSMainEnums::PredefinedColumns::DATA);
+						if (useflags) {
+							if (hasCorrected)
+								options |= vi::AveragingOptions::ModelFlagWeightAvgFromWEIGHT;
+							else if (hasObserved)
+								options |= vi::AveragingOptions::ModelFlagWeightAvgFromSIGMA;
+							else
+								options |= vi::AveragingOptions::ModelFlagAvg;
+						} else {
+							if (hasCorrected)
+								options |= vi::AveragingOptions::ModelWeightAvgFromWEIGHT;
+							else if (hasObserved)
+								options |= vi::AveragingOptions::ModelWeightAvgFromSIGMA;
+							else
+								options |= vi::AveragingOptions::ModelPlainAvg;
+						}
+					} else {
+						if (useflags)
+							options |= vi::AveragingOptions::ModelFlagAvg;
+						else
+							options |= vi::AveragingOptions::ModelPlainAvg;
+					}
+					useweights = false;
+					useflags = false;
+				} else if (mycolumn == "FLOAT") {
+					options = vi::AveragingOptions::AverageFloat;
+				}
+				vi::AveragingParameters params(averagingInterval, chunkInterval,
+				                               sortColumns, options,
+				                               maxuvwdistance);
+				vi::AveragingVi2Factory factory(params, sel_p);
+				vi2 = new vi::VisibilityIterator2(factory);
+			}
 
 			/* Apply selection */
 			vi::FrequencySelectionUsingChannels freqSelection;
@@ -1777,94 +1846,92 @@ ms::statistics2(const std::string& column,
 				if (complex_value == "amplitude" || complex_value == "amp")
 					retval = doClassicalStatistics(
 						sortColumnIds,
-						implicitTimeAverage,
-						new Vi2ChunkObservedVisAmplitudeProvider(vi2, useflags, useweights));
+						new Vi2ChunkObservedVisAmplitudeProvider(
+							vi2, useflags, useweights));
 
 				else if (complex_value == "phase")
 					retval = doClassicalStatistics(
 						sortColumnIds,
-						implicitTimeAverage,
-						new Vi2ChunkObservedVisPhaseProvider(vi2, useflags, useweights));
+						new Vi2ChunkObservedVisPhaseProvider(
+							vi2, useflags, useweights));
 
 				else if (complex_value == "imaginary" || complex_value == "imag")
 					retval = doClassicalStatistics(
 						sortColumnIds,
-						implicitTimeAverage,
-						new Vi2ChunkObservedVisImaginaryProvider(vi2, useflags, useweights));
+						new Vi2ChunkObservedVisImaginaryProvider(
+							vi2, useflags, useweights));
 
 				else if (complex_value == "real")
 					retval = doClassicalStatistics(
 						sortColumnIds,
-						implicitTimeAverage,
-						new Vi2ChunkObservedVisRealProvider(vi2, useflags, useweights));
+						new Vi2ChunkObservedVisRealProvider(
+							vi2, useflags, useweights));
 
 			} else if (mycolumn == "CORRECTED") {
 				if (complex_value == "amplitude" || complex_value == "amp")
 					retval = doClassicalStatistics(
 						sortColumnIds,
-						implicitTimeAverage,
-						new Vi2ChunkCorrectedVisAmplitudeProvider(vi2, useflags, useweights));
+						new Vi2ChunkCorrectedVisAmplitudeProvider(
+							vi2, useflags, useweights));
 
 				else if (complex_value == "phase")
 					retval = doClassicalStatistics(
 						sortColumnIds,
-						implicitTimeAverage,
-						new Vi2ChunkCorrectedVisPhaseProvider(vi2, useflags, useweights));
+						new Vi2ChunkCorrectedVisPhaseProvider(
+							vi2, useflags, useweights));
 
 				else if (complex_value == "imaginary" || complex_value == "imag")
 					retval = doClassicalStatistics(
 						sortColumnIds,
-						implicitTimeAverage,
-						new Vi2ChunkCorrectedVisImaginaryProvider(vi2, useflags, useweights));
+						new Vi2ChunkCorrectedVisImaginaryProvider(
+							vi2, useflags, useweights));
 
 				else if (complex_value == "real")
 					retval = doClassicalStatistics(
 						sortColumnIds,
-						implicitTimeAverage,
-						new Vi2ChunkCorrectedVisRealProvider(vi2, useflags, useweights));
+						new Vi2ChunkCorrectedVisRealProvider(
+							vi2, useflags, useweights));
 
 			} else if (mycolumn == "MODEL") {
 				if (complex_value == "amplitude" || complex_value == "amp")
 					retval = doClassicalStatistics(
 						sortColumnIds,
-						implicitTimeAverage,
-						new Vi2ChunkModelVisAmplitudeProvider(vi2, useflags, useweights));
+						new Vi2ChunkModelVisAmplitudeProvider(
+							vi2, useflags, useweights));
 
 				else if (complex_value == "phase")
 					retval = doClassicalStatistics(
 						sortColumnIds,
-						implicitTimeAverage,
-						new Vi2ChunkModelVisPhaseProvider(vi2, useflags, useweights));
+						new Vi2ChunkModelVisPhaseProvider(
+							vi2, useflags, useweights));
 
 				else if (complex_value == "imaginary" || complex_value == "imag")
 					retval = doClassicalStatistics(
 						sortColumnIds,
-						implicitTimeAverage,
-						new Vi2ChunkModelVisImaginaryProvider(vi2, useflags, useweights));
+						new Vi2ChunkModelVisImaginaryProvider(
+							vi2, useflags, useweights));
 
 				else if (complex_value == "real")
 					retval = doClassicalStatistics(
 						sortColumnIds,
-						implicitTimeAverage,
-						new Vi2ChunkModelVisRealProvider(vi2, useflags, useweights));
+						new Vi2ChunkModelVisRealProvider(
+							vi2, useflags, useweights));
 
 			} else if (mycolumn == "FLOAT") {
 				retval = doClassicalStatistics(
 					sortColumnIds,
-					implicitTimeAverage,
-					new Vi2ChunkFloatVisDataProvider(vi2, useflags, useweights));
+					new Vi2ChunkFloatVisDataProvider(
+						vi2, useflags, useweights));
 				// } else if (mycolumn == "UVW") {
 
 			} else if (mycolumn == "UVRANGE") {
 				retval = doClassicalStatistics(
 					sortColumnIds,
-					implicitTimeAverage,
 					new Vi2ChunkUVRangeDataProvider(vi2, useflags));
 
 			} else if (mycolumn == "FLAG") {
 				retval = doClassicalStatistics(
 					sortColumnIds,
-					implicitTimeAverage,
 					new Vi2ChunkFlagCubeDataProvider(vi2, useflags));
 				// } else if (mycolumn == "WEIGHT") {
 				// } else if (mycolumn == "SIGMA") {
@@ -1872,73 +1939,61 @@ ms::statistics2(const std::string& column,
 			} else if (mycolumn == "ANTENNA1") {
 				retval = doClassicalStatistics(
 					sortColumnIds,
-					implicitTimeAverage,
 					new Vi2ChunkAntenna1DataProvider(vi2, useflags));
 
 			} else if (mycolumn == "ANTENNA2") {
 				retval = doClassicalStatistics(
 					sortColumnIds,
-					implicitTimeAverage,
 					new Vi2ChunkAntenna2DataProvider(vi2, useflags));
 
 			} else if (mycolumn == "FEED1") {
 				retval = doClassicalStatistics(
 					sortColumnIds,
-					implicitTimeAverage,
 					new Vi2ChunkFeed1DataProvider(vi2, useflags));
 
 			} else if (mycolumn == "FEED2") {
 				retval = doClassicalStatistics(
 					sortColumnIds,
-					implicitTimeAverage,
 					new Vi2ChunkFeed2DataProvider(vi2, useflags));
 
 			} else if (mycolumn == "FIELD_ID") {
 				retval = doClassicalStatistics(
 					sortColumnIds,
-					implicitTimeAverage,
 					new Vi2ChunkFieldIdDataProvider(vi2, useflags));
 
 			} else if (mycolumn == "ARRAY_ID") {
 				retval = doClassicalStatistics(
 					sortColumnIds,
-					implicitTimeAverage,
 					new Vi2ChunkArrayIdDataProvider(vi2, useflags));
 
 			} else if (mycolumn == "DATA_DESC_ID") {
 				retval = doClassicalStatistics(
 					sortColumnIds,
-					implicitTimeAverage,
 					new Vi2ChunkDataDescriptionIdsDataProvider(vi2, useflags));
 
 			} else if (mycolumn == "FLAG_ROW") {
 				retval = doClassicalStatistics(
 					sortColumnIds,
-					implicitTimeAverage,
 					new Vi2ChunkFlagRowDataProvider(vi2, useflags));
 
 			} else if (mycolumn == "INTERVAL") {
 				retval = doClassicalStatistics(
 					sortColumnIds,
-					implicitTimeAverage,
 					new Vi2ChunkIntervalDataProvider(vi2, useflags));
 
 			} else if (mycolumn == "SCAN_NUMBER" || mycolumn == "SCAN") {
 				retval = doClassicalStatistics(
 					sortColumnIds,
-					implicitTimeAverage,
 					new Vi2ChunkScanDataProvider(vi2, useflags));
 
 			} else if (mycolumn == "TIME") {
 				retval = doClassicalStatistics(
 					sortColumnIds,
-					implicitTimeAverage,
 					new Vi2ChunkTimeDataProvider(vi2, useflags));
 
 			} else if (mycolumn == "WEIGHT_SPECTRUM") {
 				retval = doClassicalStatistics(
 					sortColumnIds,
-					implicitTimeAverage,
 					new Vi2ChunkWeightSpectrumDataProvider(vi2, useflags));
 
 			} else {
