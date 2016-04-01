@@ -301,7 +301,7 @@ namespace casa{
     if (row1<0) row1=0;
     Int jrow = row2;
     if (jrow < 0) jrow = vb.nRows()-1;
-    DebugAssert(jrow<vb.nRow(),AipsError);
+    DebugAssert(jrow<vb.nRows(),AipsError);
     
     // It is not important now to have a separate function for a "block"
     // operation. Because an appropriate caching is implemented inside
