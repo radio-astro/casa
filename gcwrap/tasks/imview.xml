@@ -26,6 +26,8 @@
 	You can provide the restore filename on the command line or
 	select it from the Load Data window.
 	
+	It is possible to use the viewer GUI tool to perform image manipulation
+	and analysis tasks that are not available from the command-line start.
     </description>
     <input>
 	<param type="any" name="raster">
