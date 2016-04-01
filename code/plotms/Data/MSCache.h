@@ -40,7 +40,6 @@
 #include <casa/aips.h>
 #include <casa/Arrays.h>
 #include <casa/Containers/Block.h>
-#include <measures/Measures/MFrequency.h>
 #include <msvis/MSVis/VisibilityIterator2.h>
 #include <msvis/MSVis/VisBuffer2.h>
 #include <msvis/MSVis/VisBufferUtil.h>
@@ -177,9 +176,6 @@ private:
 
   // Volume meter for volume calculation
   MSCacheVolMeter* vm_;
-
-  // Set frame from VI if not specified by user (for VI2::getFrequencies)
-  MFrequency::Types freqFrame_;
 
   Vector<Double> calcVelocity(vi::VisBuffer2* vb); 
 

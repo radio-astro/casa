@@ -127,6 +127,9 @@ PlotMSCacheBase::PlotMSCacheBase(PlotMSApp* parent):
 			loadedAxesData_[axes[i]]= PMS::DEFAULT_DATACOLUMN;
 	}
 	this->iterAxis = PMS::NONE;
+
+    // Default frequency frame
+    freqFrame_ = MFrequency::N_Types;
 }
 
 PlotMSCacheBase::~PlotMSCacheBase() {

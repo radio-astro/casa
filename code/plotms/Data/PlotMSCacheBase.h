@@ -36,6 +36,7 @@
 #include <casa/aips.h>
 #include <casa/Arrays.h>
 #include <casa/Containers/Block.h>
+#include <measures/Measures/MFrequency.h>
 
 #include <QVector>
 
@@ -123,6 +124,9 @@ public:
   
   // Report the reference time for this cache (in seconds)
   inline Double refTime() const { return refTime_p; };
+
+  // Frequency frame in original MS or requested by user
+  inline MFrequency::Types getFreqFrame() const { return freqFrame_; };
 
   // Returns which axes have been loaded into the cache, including metadata.
   // Also includes the size (number of points) for each axis (which will
@@ -339,6 +343,10 @@ protected:
 
   // The number of antennas
   Int nAnt_;
+
+  // Set frame from VI if not specified by user
+  // (for VI2::getFrequencies and axis label)
+  MFrequency::Types freqFrame_;
 
   // Global min/max
   Double minX_,maxX_,minY_,maxY_;

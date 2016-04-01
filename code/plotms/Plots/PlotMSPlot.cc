@@ -1692,6 +1692,7 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
 	if(set && showX) {
 		PMS::DataColumn xDataColumn = cacheParams->xDataColumn();
 		String xLabelSingle = canvParams->xLabelFormat().getLabel(x, xref, xrefval, xDataColumn);
+        if (x == PMS::FREQUENCY) xLabelSingle = addFreqFrame(xLabelSingle);
         if (axisIsAveraged(x, averaging)) xLabelSingle = "Average " + xLabelSingle;
 		canvas->setAxisLabel(cx, xLabelSingle);
 		PlotFontPtr xFont = canvas->axisFont(cx);
@@ -1718,6 +1719,7 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
 				double yrefval = itsCache_->referenceValue(y);
 				PMS::DataColumn yDataColumn = plotCacheParams->yDataColumn(i);
 				String yLabelSingle = canvParams->yLabelFormat( ).getLabel(y, yref, yrefval, yDataColumn );
+                if (y == PMS::FREQUENCY) yLabelSingle = addFreqFrame(yLabelSingle);
                 if (axisIsAveraged(y, averaging)) yLabelSingle = "Average " + yLabelSingle;
 				if ( cy == Y_LEFT ){
 					if ( yLabelLeft.size() > 0 ){
@@ -1869,4 +1871,8 @@ bool PlotMSPlot::axisIsAveraged(PMS::Axis axis, PlotMSAveraging averaging) {
     }
     return avgAxis;
 }
-            
+
+String PlotMSPlot::addFreqFrame(String freqLabel) {
+    String freqType = MFrequency::showType(itsCache_->getFreqFrame());
+    return freqLabel + " " + freqType;
+}
