@@ -824,8 +824,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      Quantity qinc(incVal[0],incUnit[0]);
      if (resolution.get().getValue() ) {
        //npix = 2*Int(abs( resolution.getValue()/qinc.getValue(resolution.getUnit()) ) );
-       npix = 2*Int(abs( resolution/(qinc.convert(resolution),qinc) ).getValue() );
-       os << LogIO::NORMAL2 << "Use the input resolution:"<<resolution<<" fo binning (=2*resolution)"<< LogIO::POST;
+       //npix = 2*Int(abs( resolution/(qinc.convert(resolution),qinc) ).getValue() );
+       npix = Int(abs( resolution/(qinc.convert(resolution),qinc) ).getValue() );
+       os << LogIO::NORMAL2 << "Use the input resolution:"<<resolution<<" fo binning "<< LogIO::POST;
      }
      else {
        //use beam from residual or psf
@@ -847,12 +848,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
          }
          Quantity bmaj = beam.getMajor();
          if (resbybeam > 0.0 ) {
-           npix = 2*Int( Double(resbybeam) * abs( (bmaj/(qinc.convert(bmaj),qinc)).get().getValue() ) );
-           os << LogIO::NORMAL2 << "Use "<< resbybeam <<" x  beam size(maj)="<< Double(resbybeam)*bmaj <<" for binning. Actual bin size is 2x the value."<< LogIO::POST;
+           //npix = 2*Int( Double(resbybeam) * abs( (bmaj/(qinc.convert(bmaj),qinc)).get().getValue() ) );
+           npix = Int( Double(resbybeam) * abs( (bmaj/(qinc.convert(bmaj),qinc)).get().getValue() ) );
+           os << LogIO::NORMAL2 << "Use "<< resbybeam <<" x  beam size(maj)="<< Double(resbybeam)*bmaj <<" for binning."<< LogIO::POST;
          }
          else {
-           npix = 2*Int( abs( (bmaj/(qinc.convert(bmaj),qinc)).get().getValue() ) );
-           os << LogIO::NORMAL2 << "Use a beam size(maj):"<<bmaj<<" for binning. Actual bin size is 2x the value."<< LogIO::POST;
+           //npix = 2*Int( abs( (bmaj/(qinc.convert(bmaj),qinc)).get().getValue() ) );
+           npix = Int( abs( (bmaj/(qinc.convert(bmaj),qinc)).get().getValue() ) );
+           os << LogIO::NORMAL2 << "Use a beam size(maj):"<<bmaj<<" for binning."<< LogIO::POST;
          } 
        }
        else {
@@ -877,9 +880,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      else if (sigma) {
        stats.get(RecordFieldId("rms"), rms);
        minMax(minval,maxval,rms); 
-       os << LogIO::NORMAL2 <<"Threshold by sigma * rms: "<<sigma<< LogIO::POST;
        //cerr<<"minval="<<minval<<" maxval="<<maxval<<endl;
        rmsthresh = maxval * sigma;
+       os << LogIO::NORMAL2 <<"Threshold by sigma(="<<sigma<<")* rms:"<<rmsthresh<< LogIO::POST;
      }      
      else {
        rmsthresh = qthresh.getValue(Unit("Jy"));
@@ -893,7 +896,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        os << LogIO::WARN <<" The threshold value for making a mask is greater than max value in the image. Mask will be a full image."<< LogIO::POST;
      }
      thresh = 3.0*rmsthresh / sqrt(npix);
-     os << LogIO::DEBUG1 <<"final thresh (for binned image) ="<<thresh<<LogIO::POST;
+     //thresh = rmsthresh;
+     os << LogIO::DEBUG1 <<"final thresh (for binned image) actually used ="<<thresh<<LogIO::POST;
      // apply threshold to rebinned image to generate a temp image mask
      // TODO: need warn if thresh exceed the max in the binned image
      LatticeExpr<Float> tempthresh( iif( tempRebinnedIm > thresh, 1.0, 0.0) );

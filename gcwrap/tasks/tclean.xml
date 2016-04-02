@@ -1812,6 +1812,7 @@ HPX HEALPix grid.  -->
     <param type="any" name="maskresolution" subparam="true">
 	   <shortdescription>resolution for automasking (string, e.g. "10arcsec", or a float value as multicative factor of the beam)</shortdescription>
 <description>resolution for automasking
+                       The residual image is binned (npix x npix), where npix is maskresolution converted in the number of pixels 
                        Examples : maskresolution='10arcsec'
                                   maskresolution=2.0 (2 x bmaj)
                                   maskresolution=''  (default, use a restoring beam major axis)
