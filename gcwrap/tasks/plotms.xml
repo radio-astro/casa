@@ -142,6 +142,8 @@ MS Parameters
       <value>delay</value><value>del</value>
       <value>opac</value><value>opacity</value>
       <value>swp</value><value>swpower</value><value>switchedpower</value>
+      <value>tsys</value>
+      <value>snr</value>
       <value>radialvelocity</value>
       <value>rho</value>
     </allowed>
@@ -256,6 +258,8 @@ MS Parameters
       <value>swp</value>
       <value>swpower</value>
       <value>switchedpower</value>
+      <value>tsys</value>
+      <value>snr</value>
     </allowed>
     </param>
     

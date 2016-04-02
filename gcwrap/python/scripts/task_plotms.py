@@ -232,6 +232,8 @@ def plotms(vis=None,
         synonyms['swp']=synonyms['swpower']=synonyms['switchedpower']='swpower'
         synonyms['opac']=synonyms['opacity']='opac'
         synonyms['del']=synonyms['delay']='delay'
+        synonyms['tsys']=synonyms['Tsys']=synonyms['TSYS']='tsys'
+        synonyms['snr']=synonyms['SNR']='SNR'
         
         if(synonyms.has_key(xaxis)): xaxis = synonyms[xaxis]
         if type(yaxis) is str:
