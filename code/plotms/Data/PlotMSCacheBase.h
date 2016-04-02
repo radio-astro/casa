@@ -231,6 +231,8 @@ public:
 
   // These support generic non-complex calibration
   inline Double getPar(Int chnk,Int irel)  { return *(par_[chnk]->data()+irel); };
+  inline Double getSnr(Int chnk,Int irel)  { return *(snr_[chnk]->data()+irel); };
+  inline Double getTsys(Int chnk,Int irel)  { return *(tsys_[chnk]->data()+irel); };
 
   // Returns a list of channel numbers that were averaged together in that chunk
   inline Vector<Int> getChansPerBin(Int chnk,Int irel) { return (*chansPerBin_[chnk])[irel]; };
@@ -387,7 +389,7 @@ protected:
   Vector<Double> radialVelocity_, rho_;
   Vector<Double> az0_,el0_,ha0_,pa0_;
 
-  PtrBlock<Array<Float>*> par_;
+  PtrBlock<Array<Float>*> par_, snr_, tsys_;
 
   // Current setup/state.
   bool dataLoaded_;

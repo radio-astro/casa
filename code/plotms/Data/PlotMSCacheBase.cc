@@ -651,12 +651,13 @@ void PlotMSCacheBase::release(const vector<PMS::Axis>& axes) {
 			case PMS::DELAY:
 			case PMS::OPAC:
 			case PMS::SWP: PMSC_DELETE(par_) break;
+			case PMS::SNR: PMSC_DELETE(snr_) break;
+			case PMS::TSYS: PMSC_DELETE(tsys_) break;
 			case PMS::OBSERVATION: PMSC_DELETE(obsid_) break;
 			case PMS::INTENT: PMSC_DELETE(intent_) break;
 			case PMS::FEED1: PMSC_DELETE(feed1_) break;
 			case PMS::FEED2: PMSC_DELETE(feed2_) break;
 
-			case PMS::TSYS:
 			case PMS::NONE: break;
 			}
 
@@ -1120,6 +1121,8 @@ void PlotMSCacheBase::increaseChunks(Int nc) {
 	parang_.resize(nChunk_,False,True);
 
 	par_.resize(nChunk_,False,True);
+	snr_.resize(nChunk_,False,True);
+	tsys_.resize(nChunk_,False,True);
 
 
 	// Construct (empty) pointed-to Vectors/Arrays
@@ -1157,6 +1160,8 @@ void PlotMSCacheBase::increaseChunks(Int nc) {
 		el_[ic] = new Vector<Double>();
 		parang_[ic] = new Vector<Float>();
 		par_[ic] = new Array<Float>();
+		snr_[ic] = new Array<Float>();
+		tsys_[ic] = new Array<Float>();
 		obsid_[ic] = new Vector<Int>();
 		intent_[ic] = new Vector<Int>();
 		feed1_[ic] = new Vector<Int>();
@@ -1258,6 +1263,7 @@ void PlotMSCacheBase::setAxesMask(PMS::Axis axis,Vector<Bool>& axismask) {
 	case PMS::HA0:
 	case PMS::PA0:
 	case PMS::TSYS:
+	case PMS::SNR:
 	case PMS::RADIAL_VELOCITY:
 	case PMS::RHO:
 	case PMS::OBSERVATION:
@@ -1391,6 +1397,8 @@ unsigned int PlotMSCacheBase::nPointsForAxis(PMS::Axis axis) const {
 	case PMS::DELAY:
 	case PMS::SWP:
 	case PMS::OPAC:
+	case PMS::SNR:
+	case PMS::TSYS:
 	case PMS::OBSERVATION:
 	case PMS::INTENT:
 	case PMS::FEED1:
@@ -1435,7 +1443,9 @@ unsigned int PlotMSCacheBase::nPointsForAxis(PMS::Axis axis) const {
 			else if(axis == PMS::FLAG_ROW) n += flagrow_[i]->size();
 			else if(axis == PMS::DELAY ||
 					axis == PMS::SWP ||
-					axis == PMS::OPAC)     n += par_[i]->size();
+					axis == PMS::OPAC)      n += par_[i]->size();
+			else if(axis == PMS::TSYS)      n += snr_[i]->size();
+			else if(axis == PMS::SNR)       n += tsys_[i]->size();
 			else if(axis == PMS::OBSERVATION)  n += obsid_[i]->size();
 			else if(axis == PMS::INTENT)  n += intent_[i]->size();
 			else if(axis == PMS::FEED1)  n += feed1_[i]->size();
@@ -1457,7 +1467,6 @@ unsigned int PlotMSCacheBase::nPointsForAxis(PMS::Axis axis) const {
 	case PMS::HA0:           return ha0_.size();
 	case PMS::PA0:           return pa0_.size();
 
-	case PMS::TSYS:
 	case PMS::NONE: return 0;
 
 	}

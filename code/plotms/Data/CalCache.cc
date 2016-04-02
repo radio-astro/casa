@@ -311,7 +311,6 @@ void CalCache::loadCalChunks(ROCTIter& ci,
 }
 
   void CalCache::loadCalAxis(ROCTIter& cti, Int chunk, PMS::Axis axis) {
-
   switch(axis) {
     
   case PMS::SCAN: // assumes scan unique
@@ -455,7 +454,11 @@ void CalCache::loadCalChunks(ROCTIter& ci,
     break;
   }
   case PMS::TSYS: {
-    throw(AipsError("Tsys NYI"));
+    throw(AipsError("Tsys not yet implemented"));
+    break;
+  }
+  case PMS::SNR: {
+	*snr_[chunk] = cti.snr();
     break;
   }
                 
@@ -512,6 +515,7 @@ void CalCache::loadCalChunks(ROCTIter& ci,
     break;
   }
   case PMS::INTENT: {
+    // metadata axis that always gets loaded so don't want to throw exception
     break;
   }
   default:

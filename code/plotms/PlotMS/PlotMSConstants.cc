@@ -71,7 +71,7 @@ PMS::AxisType PMS::axisType(Axis axis) {
     case INTENT: case FEED1: case FEED2:
         return TINT;
     
-    case AMP: case PHASE: case REAL: case IMAG: case PARANG:
+    case AMP: case PHASE: case REAL: case IMAG: case PARANG: case SNR:
         return TFLOAT;
     
     case TIME: case TIME_INTERVAL:
@@ -130,6 +130,7 @@ PMS::AxisUnit PMS::axisUnit(Axis axis) {
     //time varying so Jansky is not accurate.  For now, we are not including
     //units with them.
     //AMP, REAL, IMAG, GAMP, GPHASE, GREAL, GIMAG, SWP, SIGMA
+    //SNR
     }
 }
 

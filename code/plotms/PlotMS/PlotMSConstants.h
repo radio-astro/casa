@@ -122,7 +122,7 @@ public:
 	      ANTENNA,AZIMUTH,ELEVATION,
 	      PARANG,
 	      GAMP,GPHASE,GREAL,GIMAG,
-	      DELAY,SWP,TSYS,OPAC,
+	      DELAY,SWP,TSYS,OPAC, SNR,
 	      RADIAL_VELOCITY, RHO,
 	      NONE)
 
@@ -137,7 +137,7 @@ public:
 	      "Azimuth","Elevation","HourAngle","ParAngle",
 	      "Antenna","Ant-Azimuth","Ant-Elevation","Ant-ParAngle",
 	      "GainAmp","GainPhase","GainReal","GainImag",
-	      "Delay","SwPower","Tsys","Opac",
+	      "Delay","SwPower","Tsys","Opac", "SNR",
 	      "Radial Velocity [km/s]", "Distance (rho) [km]",
 	      "None")
 

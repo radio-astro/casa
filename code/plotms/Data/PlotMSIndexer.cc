@@ -861,7 +861,12 @@ void PlotMSIndexer::setMethod(CacheMemPtr& getmethod,PMS::Axis axis) {
 	case PMS::OPAC:
 		getmethod = &PlotMSCacheBase::getPar;
 		break;
-
+	case PMS::SNR:
+		getmethod = &PlotMSCacheBase::getSnr;
+		break;
+	case PMS::TSYS:
+		getmethod = &PlotMSCacheBase::getTsys;
+		break;
 	default:
 		throw(AipsError("Can't find get method for "+PMS::axis(axis)+"."));
 		break;
@@ -911,6 +916,8 @@ void PlotMSIndexer::setIndexer(IndexerMethPtr& indexmethod,PMS::Axis axis) {
 	case PMS::DELAY:
 	case PMS::SWP:
 	case PMS::OPAC:
+	case PMS::SNR:
+	case PMS::TSYS:
 	case PMS::WTxAMP:
 	case PMS::WTSP:
 	case PMS::SIGMASP:
