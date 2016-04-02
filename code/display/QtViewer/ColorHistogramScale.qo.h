@@ -27,8 +27,8 @@
 #define COLORHISTOGRAMSCALE_H_
 
 #include <QVector>
+#include <casaqt/QwtConfig.h>
 #include <qwt_color_map.h>
-#include <qwt_double_interval.h>
 #include <casa/BasicSL/String.h>
 
 namespace casa {

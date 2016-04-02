@@ -37,7 +37,7 @@ namespace casa {
 	public:
 		SegmentTracer( int regionId, int index, QwtPlot* canvas );
 		void setData( const QVector<double> xValues, const QVector<double> yValues );
-		virtual QwtText trackerText( const QwtDoublePoint & pos ) const;
+		virtual QwtText trackerText( const QPointF & pos ) const;
 		virtual ~SegmentTracer();
 
 	private:

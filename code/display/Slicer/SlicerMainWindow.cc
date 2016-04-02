@@ -120,7 +120,7 @@ namespace casa {
 
 	void SlicerMainWindow::initializeZooming() {
 
-		plotZoomer = new SliceZoomer( slicePlot.canvas() );
+		plotZoomer = new SliceZoomer( (QwtPlotCanvas*) slicePlot.canvas() );
 		connect( plotZoomer, SIGNAL(zoomed(const QwtDoubleRect&)), this, SLOT(checkZoom()));
 
 		connect(ui.actionZoomIn, SIGNAL(triggered()), this, SLOT( zoomIn()));
@@ -225,6 +225,7 @@ namespace casa {
 
 
 	bool SlicerMainWindow::toImageFormat( const QString& fileName, const QString& format ) {
+#if QWT_VERSION <= 0x060000
 		QSize plotSize = ui.plotFrame->size();
 		QPixmap pixmap(plotSize.width(), plotSize.height());
 		pixmap.fill(Qt::white );
@@ -238,6 +239,9 @@ namespace casa {
 			QMessageBox::warning( this, "Save Problem", msg);
 		}
 		return imageSaved;
+#else
+		return false;
+#endif
 	}
 
 //-------------------------------------------------------------------------------

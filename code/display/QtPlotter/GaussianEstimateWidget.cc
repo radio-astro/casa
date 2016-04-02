@@ -28,6 +28,7 @@
 #include <QVector>
 #include <QDebug>
 #include <QDoubleValidator>
+#include <casaqt/QwtConfig.h>
 #include <qwt_plot.h>
 #include <qwt_plot_curve.h>
 #include <qwt_plot_grid.h>
@@ -132,7 +133,7 @@ namespace casa {
 		}
 		QPen fitCurvePen( fitCurveColor );
 		fitCurve -> setPen( fitCurvePen );
-		fitCurve->setData( copiedXVals, yVals );
+		set_data( fitCurve, copiedXVals, yVals );
 		plot->replot();
 	}
 
@@ -170,7 +171,7 @@ namespace casa {
 			curve->attach( plot );
 		}
 
-		curve->setData( xVals, yVals );
+		set_data( curve, xVals, yVals );
 		plot->replot();
 	}
 

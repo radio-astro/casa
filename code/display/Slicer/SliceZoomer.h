@@ -41,7 +41,7 @@ namespace casa {
 		void zoomIn();
 		void zoomOut();
 		void zoomNeutral();
-		virtual void zoom( const QwtDoubleRect & );
+		virtual void zoom( const QRectF & );
 
 
 	protected:

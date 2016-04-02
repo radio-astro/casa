@@ -29,6 +29,7 @@
 #include <QtCore/qmath.h>
 #include <msvis/MSVis/UtilJ.h>
 #include <QDebug>
+#include <casaqt/QwtConfig.h>
 #include <qwt_plot.h>
 #include <qwt_plot_curve.h>
 
@@ -62,7 +63,7 @@ namespace casa {
 		plotCurve = new QwtPlotCurve();
 		plotCurve->attach( plot );
 		resetCurveWidth();
-		plotCurve->setData( xValues, yValues );
+		set_data( plotCurve, xValues, yValues );
 		setCurveColor();
 		segmentTracer = new SegmentTracer(regionId, index, plot);
 		segmentTracer->setData( xValues, yValues );

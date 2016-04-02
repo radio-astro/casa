@@ -29,7 +29,6 @@
 #include <QTextDocument>
 #include <QTextStream>
 #include <qwt_scale_map.h>
-#include <qwt_double_rect.h>
 
 namespace casa {
 

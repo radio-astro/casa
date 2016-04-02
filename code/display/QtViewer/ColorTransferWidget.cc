@@ -24,11 +24,11 @@
 //#
 #include "ColorTransferWidget.qo.h"
 #include <display/QtViewer/InvisibleAxis.h>
+#include <casaqt/QwtConfig.h>
 #include <qwt_plot.h>
 #include <qwt_plot_curve.h>
 #include <qwt_color_map.h>
 #include <qwt_scale_widget.h>
-#include <qwt_double_interval.h>
 #include <QDebug>
 
 namespace casa {
@@ -70,8 +70,10 @@ namespace casa {
 				colorCurve = NULL;
 			}
 			colorCurve  = new QwtPlotCurve();
+#if QWT_VERSION <= 0x060000
 			colorCurve->setAxis( QwtPlot::xBottom, QwtPlot::yLeft);
-			colorCurve->setData( intensities, yVals );
+#endif
+			set_data( colorCurve, intensities, yVals );
 			QPen curvePen( Qt::blue );
 			curvePen.setWidth( 2 );
 			colorCurve->setPen(curvePen);
@@ -95,7 +97,7 @@ namespace casa {
 			QwtDoubleInterval range( colorScaleMin, colorScaleMax);
 			QwtScaleWidget* scale = plot->axisWidget( QwtPlot::yLeft );
 			scale->setColorBarEnabled( true );
-			scale->setColorMap( range, *colorMap );
+			set_color_map( scale, range, *colorMap );
 			QwtScaleDraw* axisPaint = new InvisibleAxis();
 			scale->setScaleDraw( axisPaint );
 			plot->setAxisScale( QwtPlot::yLeft, range.minValue(), range.maxValue() );

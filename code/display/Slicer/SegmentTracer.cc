@@ -25,6 +25,7 @@
 
 #include "SegmentTracer.h"
 #include <display/Slicer/SlicePlot.qo.h>
+#include <casaqt/QwtConfig.h>
 #include <qwt_plot_marker.h>
 #include <qwt_plot_canvas.h>
 #include <qwt_plot.h>
@@ -35,11 +36,13 @@ namespace casa {
 
 	SegmentTracer::SegmentTracer( int regionId, int index, QwtPlot* plot ):
 		QwtPlotPicker( QwtPlot::xBottom, QwtPlot::yLeft,
+#if QWT_VERSION <= 0x060000
 		               QwtPlotPicker::PointSelection,
+#endif
 		               QwtPlotPicker::NoRubberBand, QwtPlotPicker::AlwaysOn, plot->canvas() ) {
 		marker = new QwtPlotMarker();
 		QwtSymbol* traceSymbol = new QwtSymbol( QwtSymbol::Star1, QBrush(Qt::red), QPen(Qt::black), QSize(10,10));
-		marker->setSymbol( *traceSymbol );
+		set_symbol( marker, *traceSymbol );
 		marker->attach( plot );
 		marker->hide();
 		slicePlot = plot;
@@ -69,7 +72,7 @@ namespace casa {
 		return between;
 	}
 
-	QwtText SegmentTracer::trackerText( const QwtDoublePoint & pos ) const {
+	QwtText SegmentTracer::trackerText( const QPointF & pos ) const {
 		bool found = false;
 		int count = xValues.size() - 1;
 		for ( int i = 0; i < count; i++ ) {

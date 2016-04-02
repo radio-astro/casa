@@ -30,6 +30,9 @@
 #include <QKeyEvent>
 #include <QDebug>
 #include <QCursor>
+#if QWT_VERSION >= 0x060000
+#include <qwt_picker_machine.h>
+#endif
 
 namespace casa {
 
@@ -38,9 +41,13 @@ namespace casa {
 		canvas = plotCanvas;
 		zoomMode = false;
 
+#if QWT_VERSION >= 0x060000
+		setStateMachine(new QwtPickerDragRectMachine);
+#else
 		//You can zoom by dragging a rectangle or you can zoom a fixed amount
 		//by clicking
 		setSelectionFlags( QwtPicker::DragSelection | QwtPicker::PointSelection);
+#endif
 		setRubberBand( QwtPicker::RectRubberBand );
 
 		//Normally the zoom activates with the control-left button.
@@ -67,7 +74,7 @@ namespace casa {
 
 
 
-	void SliceZoomer::zoom( const QwtDoubleRect& rect) {
+	void SliceZoomer::zoom( const QRectF& rect) {
 		QwtPlotZoomer::zoom( rect );
 		zoomMode = false;
 	}
@@ -105,7 +112,7 @@ namespace casa {
 				float boxHalfWidth = qMin( widthMax, zoomedWidth);
 				float boxHalfHeight = qMin( heightMax, zoomedHeight );
 
-				QwtDoubleRect rect( position.x() - boxHalfWidth, position.y() - boxHalfHeight,
+				QRectF rect( position.x() - boxHalfWidth, position.y() - boxHalfHeight,
 				                    2 * boxHalfWidth, 2 * boxHalfHeight );
 				zoom( rect );
 

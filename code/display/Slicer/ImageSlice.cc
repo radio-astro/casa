@@ -32,6 +32,7 @@
 #include <QPen>
 #include <QDebug>
 #include <QtCore/qmath.h>
+#include <casaqt/QwtConfig.h>
 #include <qwt_plot_curve.h>
 #include <qwt_plot_marker.h>
 #include <qwt_symbol.h>
@@ -70,9 +71,14 @@ namespace casa {
 			markerSize = cornerSize;
 			int markerCount = segmentCorners.size();
 			for ( int i = 0; i < markerCount; i++ ) {
+#if QWT_VERSION >= 0x060000
+				const QwtSymbol *sym = segmentCorners[i]->symbol();
+				QwtSymbol symbol(sym->style(),sym->brush(),sym->pen(),sym->size());
+#else
 				QwtSymbol symbol = segmentCorners[i]->symbol();
+#endif
 				symbol.setSize( markerSize );
-				segmentCorners[i]->setSymbol(symbol);
+				set_symbol( segmentCorners[i], symbol );
 			}
 		}
 		if ( lineWidth != curveWidth ) {
@@ -300,7 +306,6 @@ namespace casa {
 
 	void ImageSlice::updatePositionInformation(const QVector<String>& info ) {
 		int segmentCount = segments.size();
-		int infoCount = info.size();
 		Assert( segmentCount = infoCount - 1 );
 		for ( int i = 0; i< segmentCount; i++ ) {
 			segments[i]->updateEnds( info[i], info[i+1]);
@@ -366,7 +371,7 @@ namespace casa {
 			QwtSymbol* sym = new QwtSymbol( QwtSymbol::Cross, QBrush(Qt::black), QPen( Qt::black), QSize(5,5));
 			QwtPlotMarker* corner = new QwtPlotMarker();
 			sym->setSize( markerSize );
-			corner->setSymbol( *sym );
+			set_symbol( corner, *sym );
 			corner->setValue( xValue, yValue );
 			corner->attach( plot );
 			segmentCorners.append( corner );
