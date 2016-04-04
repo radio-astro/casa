@@ -4042,6 +4042,38 @@ bool image::removefile(const std::string& filename) {
     return rstat;
 }
 
+bool image::rename(const string& name, bool overwrite) {
+    try {
+        _log << _ORIGIN;
+        if (detached()) {
+            return False;
+        }
+        _stats.reset();
+        if (_imageF) {
+            auto myimage = _imageF;
+            _imageF.reset();
+            ImageFactory::rename(myimage, name, overwrite);
+            _imageF = myimage;
+        }
+        else {
+            auto myimage = _imageC;
+            _imageC.reset();
+            ImageFactory::rename(myimage, name, overwrite);
+            _imageC = myimage;
+        }
+        vector<String> names = { "name", "overwrite" };
+        vector<variant> values = { name, overwrite };
+        _addHistory(__func__, names, values);
+        return True;
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return False;
+}
+
 image* image::rotate(
     const string& outfile, const vector<int>& inshape,
     const variant& inpa, const variant& region,
@@ -4297,39 +4329,6 @@ void image::_reset() {
 
 
 
-
-bool image::rename(const std::string& name, bool overwrite) {
-	try {
-		_log << _ORIGIN;
-		if (detached()) {
-			return False;
-		}
-		_stats.reset();
-		if (_imageF) {
-			auto myimage = _imageF;
-			//_image.reset();
-			_imageF.reset();
-			ImageFactory::rename(myimage, name, overwrite);
-			//_image.reset(new ImageAnalysis(myimage));
-			_imageF = myimage;
-		}
-		else {
-			auto myimage = _imageC;
-			//_image.reset();
-			_imageC.reset();
-			ImageFactory::rename(myimage, name, overwrite);
-			//_image.reset(new ImageAnalysis(myimage));
-			_imageC = myimage;
-		}
-		return True;
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	return False;
-}
 
 bool image::replacemaskedpixels(
 	const variant& pixels,
