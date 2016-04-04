@@ -151,9 +151,9 @@ class visstat2_test(unittest.TestCase):
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
                      +"\nError: Wrong dictionary keys. Expected %s, got %s" % \
-                            (expected[self.msfile], s2)
+                            (expected2[self.msfile], s2)
             raise Exception("Wrong dictionary keys. Expected %s, got %s" % \
-                            (expected[self.msfile], s))
+                            (expected2[self.msfile], s2))
                             
         #visstat
         if not s.has_key('DATA'):
