@@ -68,20 +68,26 @@ PlotMSCanvasTab::PlotMSCanvasTab(PlotMSPlotTab* plotTab,PlotMSPlotter* parent):
     
     itsLabelDefaults_.insert(titleLabel, titleLabel->text());
     itsLabelDefaults_.insert(legendLabel, legendLabel->text());
-    itsLabelDefaults_.insert(xAxisLabel, xAxisLabel->text());
+    itsLabelDefaults_.insert(xAxisSection, xAxisLabel->text());
     itsLabelDefaults_.insert(xLabelLabel, xLabelLabel->text());
-    itsLabelDefaults_.insert(yAxisLabel, yAxisLabel->text());
+    itsLabelDefaults_.insert(yAxisSection, yAxisLabel->text());
     itsLabelDefaults_.insert(yLabelLabel, yLabelLabel->text());
     itsLabelDefaults_.insert(gridLabel, gridLabel->text());
     
     // Connect widgets.
     connect(itsTitleWidget_, SIGNAL(changed()), SIGNAL(changed()));
+    connect(titleFont, SIGNAL(toggled(bool)), SLOT(tfontChanged()));
+    connect(titleFontSpinner, SIGNAL(valueChanged(int)), this, SLOT(tfontChanged()));
     connect(legend, SIGNAL(toggled(bool)), SIGNAL(changed()));
     connect(legendChooser,SIGNAL(currentIndexChanged(int)), SIGNAL(changed()));
     connect(xAxis, SIGNAL(toggled(bool)), SIGNAL(changed()));
     connect(itsXLabelWidget_, SIGNAL(changed()), SIGNAL(changed()));
+    connect(xAxisFont, SIGNAL(toggled(bool)), SLOT(xfontChanged()));
+    connect(xAxisFontSpinner, SIGNAL(valueChanged(int)), this, SLOT(xfontChanged()));
     connect(yAxis, SIGNAL(toggled(bool)), SIGNAL(changed()));
     connect(itsYLabelWidget_, SIGNAL(changed()), SIGNAL(changed()));
+    connect(yAxisFont, SIGNAL(toggled(bool)), SLOT(yfontChanged()));
+    connect(yAxisFontSpinner, SIGNAL(valueChanged(int)), this, SLOT(yfontChanged()));
     connect(gridMajor, SIGNAL(toggled(bool)), SIGNAL(changed()));
     connect(itsGridMajorLineWidget_, SIGNAL(changed()), SIGNAL(changed()));
     connect(gridMinor, SIGNAL(toggled(bool)), SIGNAL(changed()));
@@ -104,12 +110,23 @@ void PlotMSCanvasTab::getValue(PlotMSPlotParameters& params) const {
     }
     
     c->setTitleFormat(itsTitleWidget_->getValue());
+    c->setTitleFontSet(titleFont->isChecked());
+    c->setTitleFont(titleFontSpinner->value());
+
     c->showLegend(legend->isChecked());
     c->setLegendPosition( PlotCanvas::legendPosition(
                   legendChooser->currentText().toStdString()));
-    c->showXAxis(xAxis->isChecked()); c->showYAxis(yAxis->isChecked());
+
+    c->showXAxis(xAxis->isChecked());
+    c->setXFontSet(xAxisFont->isChecked());
+    c->setXAxisFont(xAxisFontSpinner->value());
     c->setXLabelFormat(itsXLabelWidget_->getValue());
+
+    c->showYAxis(yAxis->isChecked());
+    c->setYFontSet(yAxisFont->isChecked());
+    c->setYAxisFont(yAxisFontSpinner->value());
     c->setYLabelFormat(itsYLabelWidget_->getValue());
+
     c->showGrid(gridMajor->isChecked(), gridMinor->isChecked(),
             itsGridMajorLineWidget_->getLine(),
             itsGridMinorLineWidget_->getLine());
@@ -121,14 +138,20 @@ void PlotMSCanvasTab::setValue(const PlotMSPlotParameters& params) {
     if(c == NULL || d == NULL) return; // shouldn't happen
     
     itsTitleWidget_->setValue(c->titleFormat().format);
+    titleFont->setChecked(c->titleFontSet());
+    titleFontSpinner->setValue(c->titleFont());
     
     legend->setChecked(c->legendShown());
     setChooser(legendChooser, PlotCanvas::legendPosition(c->legendPosition()));
     
     xAxis->setChecked(c->xAxisShown());
     itsXLabelWidget_->setValue(c->xLabelFormat().format);
+    xAxisFont->setChecked(c->xFontSet());
+    xAxisFontSpinner->setValue(c->xAxisFont());
     yAxis->setChecked(c->yAxisShown());
     itsYLabelWidget_->setValue(c->yLabelFormat().format);
+    yAxisFont->setChecked(c->yFontSet());
+    yAxisFontSpinner->setValue(c->yAxisFont());
 
     gridMajor->setChecked(c->gridMajorShown());
     itsGridMajorLineWidget_->setLine(c->gridMajorLine());
@@ -144,13 +167,19 @@ void PlotMSCanvasTab::update(const PlotMSPlot& plot) {
     const PMS_PP_Canvas* c = params.typedGroup<PMS_PP_Canvas>(),
                        *c2 = newParams.typedGroup<PMS_PP_Canvas>();
     
-    highlightWidgetText(titleLabel, c->titleFormat() != c2->titleFormat());
+    highlightWidgetText(titleLabel, c->titleFormat() != c2->titleFormat() ||
+                                    c->titleFontSet() != c2->titleFontSet() ||
+                                    c->titleFont() != c2->titleFont());
     highlightWidgetText(legendLabel, c->legendShown() != c2->legendShown() ||
                 (c->legendShown()&&c->legendPosition()!=c2->legendPosition()));
     
     highlightWidgetText(xAxisLabel, c->xAxisShown() != c2->xAxisShown());
+    highlightWidgetText(xAxisSection, c->xFontSet() != c2->xFontSet() ||
+                                      c->xAxisFont() != c2->xAxisFont());
     highlightWidgetText(xLabelLabel, c->xLabelFormat() != c2->xLabelFormat());
     highlightWidgetText(yAxisLabel, c->yAxisShown() != c2->yAxisShown());
+    highlightWidgetText(yAxisSection, c->yFontSet() != c2->yFontSet() ||
+                                      c->yAxisFont() != c2->yAxisFont());
     highlightWidgetText(yLabelLabel, c->yLabelFormat() != c2->yLabelFormat());
     
     highlightWidgetText(gridLabel, c->gridMajorShown() != c2->gridMajorShown() ||
@@ -159,6 +188,21 @@ void PlotMSCanvasTab::update(const PlotMSPlot& plot) {
                  *c->gridMajorLine() != *c2->gridMajorLine()) ||
                 (c->gridMinorShown() &&
                  *c->gridMinorLine() != *c2->gridMinorLine()));
+}
+
+void PlotMSCanvasTab::tfontChanged() {
+    titleFontSpinner->setEnabled(titleFont->isChecked());
+    changed();
+}
+
+void PlotMSCanvasTab::xfontChanged() {
+    xAxisFontSpinner->setEnabled(xAxisFont->isChecked());
+    changed();
+}
+
+void PlotMSCanvasTab::yfontChanged() {
+    yAxisFontSpinner->setEnabled(yAxisFont->isChecked());
+    changed();
 }
 
 }

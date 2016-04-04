@@ -289,6 +289,8 @@ public:
     static const PlotAxis DEFAULT_CANVAS_XAXIS;
     static const PlotAxis DEFAULT_CANVAS_YAXIS;
     static const String DEFAULT_CANVAS_AXIS_LABEL_FORMAT;
+    static const bool DEFAULT_FONTSET;
+    static const int DEFAULT_FONT;
     static const bool DEFAULT_SHOWAXIS;
     static const bool DEFAULT_SHOWLEGEND;
     static const PlotCanvas::LegendPosition DEFAULT_LEGENDPOSITION;

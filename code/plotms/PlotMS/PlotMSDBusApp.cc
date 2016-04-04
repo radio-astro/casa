@@ -85,8 +85,11 @@ const String PlotMSDBusApp::PARAM_EXPORT_ASYNC = "exportasync";
 const String PlotMSDBusApp::PARAM_COLORIZE = "colorize";
 const String PlotMSDBusApp::PARAM_COLORAXIS = "coloraxis";
 const String PlotMSDBusApp::PARAM_CANVASTITLE = "canvastitle";
+const String PlotMSDBusApp::PARAM_CANVASTITLEFONT = "canvastitlefont";
 const String PlotMSDBusApp::PARAM_XAXISLABEL = "xaxislabel";
 const String PlotMSDBusApp::PARAM_YAXISLABEL = "yaxislabel";
+const String PlotMSDBusApp::PARAM_XAXISFONT = "xaxisfont";
+const String PlotMSDBusApp::PARAM_YAXISFONT = "yaxisfont";
 
 const String PlotMSDBusApp::PARAM_SHOWMAJORGRID  = "showmajorgrid";
 const String PlotMSDBusApp::PARAM_SHOWMINORGRID  = "showminorgrid";
@@ -405,8 +408,11 @@ void PlotMSDBusApp::dbusRunXmlMethod(
 
 			if (can!=NULL)   {
 				ret.define(PARAM_CANVASTITLE,  can->titleFormat().format);
+				ret.define(PARAM_CANVASTITLEFONT,  can->titleFont());
 				ret.define(PARAM_XAXISLABEL,  can->xLabelFormat().format);
 				ret.define(PARAM_YAXISLABEL,  can->yLabelFormat().format);
+				ret.define(PARAM_XAXISFONT,  can->xAxisFont());
+				ret.define(PARAM_YAXISFONT,  can->yAxisFont());
 				ret.define(PARAM_SHOWMAJORGRID,  can->gridMajorShown());
 				ret.define(PARAM_SHOWMINORGRID,  can->gridMinorShown());
 				PlotLinePtr majplp = can->gridMajorLine();
@@ -567,6 +573,12 @@ void PlotMSDBusApp::dbusRunXmlMethod(
 			ppcan->setTitleFormat(f);
 		}
 
+        if(parameters.isDefined(PARAM_CANVASTITLEFONT) &&
+				parameters.dataType(PARAM_CANVASTITLEFONT) == TpInt)   {
+			Int size = parameters.asInt(PARAM_CANVASTITLEFONT);
+            ppcan->setTitleFontSet((size > 0));
+			ppcan->setTitleFont(size);
+		}
 
 		if(parameters.isDefined(PARAM_XAXISLABEL) &&
 				parameters.dataType(PARAM_XAXISLABEL) == TpString)   {
@@ -578,8 +590,6 @@ void PlotMSDBusApp::dbusRunXmlMethod(
 				f.format = S;
 			ppcan->setXLabelFormat(f);
 		}
-
-
 		if(parameters.isDefined(PARAM_YAXISLABEL) &&
 				parameters.dataType(PARAM_YAXISLABEL) == TpString)   {
 			String S = parameters.asString(PARAM_YAXISLABEL);
@@ -589,6 +599,19 @@ void PlotMSDBusApp::dbusRunXmlMethod(
 			else
 				f.format = S;
 			ppcan->setYLabelFormat(f);
+		}
+
+        if(parameters.isDefined(PARAM_XAXISFONT) &&
+				parameters.dataType(PARAM_XAXISFONT) == TpInt)   {
+			Int size = parameters.asInt(PARAM_XAXISFONT);
+            ppcan->setXFontSet((size > 0));
+			ppcan->setXAxisFont(size);
+		}
+        if(parameters.isDefined(PARAM_YAXISFONT) &&
+				parameters.dataType(PARAM_YAXISFONT) == TpInt)   {
+			Int size = parameters.asInt(PARAM_YAXISFONT);
+            ppcan->setYFontSet((size > 0));
+			ppcan->setYAxisFont(size);
 		}
 
 		if (parameters.isDefined( PARAM_AXIS_Y_LOCATION ) &&

@@ -68,7 +68,12 @@ public:
     // Implements PlotMSPlotSubtab::update().  WARNING: for now, only works
     // with PlotMSSinglePlotParameters.
     void update(const PlotMSPlot& plot);
-    
+
+private slots:
+    void tfontChanged();
+    void xfontChanged();
+    void yfontChanged();
+
 private:
     // Widgets for titles/labels for the canvas, x axis, and y axis,
     // respectively.

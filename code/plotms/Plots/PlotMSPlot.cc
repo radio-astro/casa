@@ -1678,7 +1678,8 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
 
 	// Title font
 	PlotFontPtr font = canvas->titleFont();
-	font->setPointSize(std::max(16. - rows*cols+1., 8.));
+    Int pointsize = (canvParams->titleFontSet()) ? canvParams->titleFont(): std::max(16. - rows*cols+1., 8.);
+	font->setPointSize(pointsize);
 	font->setBold(true);
 	canvas->setTitleFont(font);
 	int gridRow = iter->getGridRow();
@@ -1696,7 +1697,8 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
         if (axisIsAveraged(x, averaging)) xLabelSingle = "Average " + xLabelSingle;
 		canvas->setAxisLabel(cx, xLabelSingle);
 		PlotFontPtr xFont = canvas->axisFont(cx);
-		xFont->setPointSize(std::max(12. - rows*cols+1., 8.));
+        pointsize = (canvParams->xFontSet()) ? canvParams->xAxisFont(): std::max(12. - rows*cols+1., 8.);
+		xFont->setPointSize(pointsize);
 		canvas->setAxisFont(cx, xFont);
 	}
 
@@ -1737,16 +1739,17 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
 		}
 	}
     if (showY) {
+        pointsize = (canvParams->yFontSet()) ? canvParams->yAxisFont(): std::max(12. - rows*cols+1., 8.);
         if ( yLabelLeft.size() > 0 ){
             canvas->setAxisLabel(Y_LEFT, yLabelLeft);
             PlotFontPtr yFont = canvas->axisFont( Y_LEFT);
-            yFont->setPointSize(std::max(12. - rows*cols+1., 8.));
+		    yFont->setPointSize(pointsize);
             canvas->setAxisFont(Y_LEFT, yFont);
         }
         if ( yLabelRight.size() > 0 ){
             canvas->setAxisLabel(Y_RIGHT, yLabelRight);
             PlotFontPtr yFont = canvas->axisFont( Y_RIGHT);
-            yFont->setPointSize(std::max(12. - rows*cols+1., 8.));
+		    yFont->setPointSize(pointsize);
             canvas->setAxisFont(Y_RIGHT, yFont);
         }
     }

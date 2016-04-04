@@ -275,6 +275,8 @@ const String PMS::DEFAULT_CANVAS_AXIS_LABEL_FORMAT =
     PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_IF_UNIT())+" (" +
     PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_UNIT())+")" +
     PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_ENDIF_UNIT());
+const bool PMS::DEFAULT_FONTSET = false;
+const int PMS::DEFAULT_FONT = 0;
 const bool PMS::DEFAULT_SHOWAXIS = true;
 const bool PMS::DEFAULT_SHOWLEGEND = false;
 const PlotCanvas::LegendPosition PMS::DEFAULT_LEGENDPOSITION =

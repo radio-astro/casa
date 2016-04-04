@@ -829,6 +829,81 @@ public:
 		}
 	}
 
+	const vector < bool > &xFontsSet() const {
+		return itsXFontsSet_;
+	}
+	void setXFontsSet (const vector < bool > &value) {
+		if (itsXFontsSet_ != value) {
+			itsXFontsSet_ = value;
+			updated();
+		}
+	}
+	bool xFontSet (unsigned int index = 0) const {
+		return itsXFontsSet_[index];
+	}
+	void setXFontSet (const bool & value, unsigned int index = 0) {
+		if (itsXFontsSet_[index] != value) {
+			itsXFontsSet_[index] = value;
+			updated();
+		}
+	}
+    const vector < bool > &yFontsSet() const {
+		return itsYFontsSet_;
+	}
+	void setYFontsSet (const vector < bool > &value) {
+		if (itsYFontsSet_ != value) {
+			itsYFontsSet_ = value;
+			updated();
+		}
+	}
+	bool yFontSet (unsigned int index = 0) const {
+		return itsYFontsSet_[index];
+	}
+	void setYFontSet (const bool & value, unsigned int index = 0) {
+		if (itsYFontsSet_[index] != value) {
+			itsYFontsSet_[index] = value;
+			updated();
+		}
+	}
+
+    const vector < Int > &xAxisFonts() const {
+		return itsXAxisFonts_;
+	}
+	void setXAxisFonts (const vector < Int > &value) {
+		if (itsXAxisFonts_ != value) {
+			itsXAxisFonts_ = value;
+			updated();
+		}
+	}
+	const Int & xAxisFont (unsigned int index = 0) const {
+		return itsXAxisFonts_[index];
+	}
+	void setXAxisFont (const Int value, unsigned int index = 0) {
+		if (itsXAxisFonts_[index] != value) {
+			itsXAxisFonts_[index] = value;
+			updated();
+		}
+	}
+
+    const vector < Int > &yAxisFonts() const {
+		return itsYAxisFonts_;
+	}
+	void setYAxisFonts (const vector < Int > &value) {
+		if (itsYAxisFonts_ != value) {
+			itsYAxisFonts_ = value;
+			updated();
+		}
+	}
+	const Int & yAxisFont (unsigned int index = 0) const {
+		return itsYAxisFonts_[index];
+	}
+	void setYAxisFont (const Int value, unsigned int index = 0) {
+		if (itsYAxisFonts_[index] != value) {
+			itsYAxisFonts_[index] = value;
+			updated();
+		}
+	}
+
 
 	const vector < bool > &xAxesShown() const {
 		return itsXAxesShown_;
@@ -947,7 +1022,43 @@ public:
 			updated();
 		}
 	}
-
+	const vector < bool > &titleFontsSet() const {
+		return itsTitleFontsSet_;
+	}
+	void setTitleFontsSet (const vector < bool > &value) {
+		if (itsTitleFontsSet_ != value) {
+			itsTitleFontsSet_ = value;
+			updated();
+		}
+	}
+	bool titleFontSet (unsigned int index = 0) const {
+		return itsTitleFontsSet_[index];
+	}
+	void setTitleFontSet (const bool & value, unsigned int index = 0) {
+		if (itsTitleFontsSet_[index] != value) {
+			itsTitleFontsSet_[index] = value;
+			updated();
+		}
+	}
+    const vector < Int > &titleFonts() const {
+		return itsTitleFonts_;
+	}
+	void setTitleFonts (const vector < Int > &value) {
+		if (itsTitleFonts_ != value) {
+			itsTitleFonts_ = value;
+			updated();
+		}
+	}
+	const Int & titleFont (unsigned int index = 0) const {
+		return itsTitleFonts_[index];
+	}
+	void setTitleFont (const Int value, unsigned int index =
+			0) {
+		if (itsTitleFonts_[index] != value) {
+			itsTitleFonts_[index] = value;
+			updated();
+		}
+	}
 
 	const vector < bool > &gridMajorsShown() const {
 		return itsGridMajsShown_;
@@ -1054,12 +1165,18 @@ private:
 
 	/* Parameters' values */
 	vector<PlotMSLabelFormat> itsXLabels_;
+	vector<bool> itsXFontsSet_;
+	vector<Int> itsXAxisFonts_;
 	vector<PlotMSLabelFormat> itsYLabels_;
+	vector<bool> itsYFontsSet_;
+	vector<Int> itsYAxisFonts_;
 	vector<bool> itsXAxesShown_;
 	vector<bool> itsYAxesShown_;
 	vector<bool> itsLegendsShown_;
 	vector<PlotCanvas::LegendPosition > itsLegendsPos_;
 	vector<PlotMSLabelFormat> itsTitles_;
+	vector<bool> itsTitleFontsSet_;
+	vector<Int> itsTitleFonts_;
 	vector<bool> itsGridMajsShown_;
 	vector<bool> itsGridMinsShown_;
 	vector<PlotLinePtr> itsGridMajLines_;
@@ -1067,12 +1184,18 @@ private:
 
 	/* Key strings for Record */
 	static const String REC_XLABELS;
+	static const String REC_XFONTSSET;
+	static const String REC_XAXISFONTS;
 	static const String REC_YLABELS;
+	static const String REC_YFONTSSET;
+	static const String REC_YAXISFONTS;
 	static const String REC_SHOWXAXES;
 	static const String REC_SHOWYAXES;
 	static const String REC_SHOWLEGENDS;
 	static const String REC_LEGENDSPOS;
 	static const String REC_TITLES;
+	static const String REC_TITLEFONTSSET;
+	static const String REC_TITLEFONTS;
 	static const String REC_SHOWGRIDMAJS;
 	static const String REC_SHOWGRIDMINS;
 	static const String REC_GRIDMAJLINES;

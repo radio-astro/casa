@@ -700,12 +700,18 @@ void PMS_PP_Axes::setRanges(const bool& xSet, const bool& ySet,
 
 // PMS_PP_Canvas record keys.
 const String PMS_PP_Canvas::REC_XLABELS = "xLabelFormats";
+const String PMS_PP_Canvas::REC_XFONTSSET = "xFontsSet";
+const String PMS_PP_Canvas::REC_XAXISFONTS = "xAxisFonts";
 const String PMS_PP_Canvas::REC_YLABELS = "yLabelFormats";
+const String PMS_PP_Canvas::REC_YFONTSSET = "yFontsSet";
+const String PMS_PP_Canvas::REC_YAXISFONTS = "yAxisFonts";
 const String PMS_PP_Canvas::REC_SHOWXAXES = "showXAxes";
 const String PMS_PP_Canvas::REC_SHOWYAXES = "showYAxes";
 const String PMS_PP_Canvas::REC_SHOWLEGENDS = "showLegends";
 const String PMS_PP_Canvas::REC_LEGENDSPOS = "legendPositions";
 const String PMS_PP_Canvas::REC_TITLES = "canvasTitleFormats";
+const String PMS_PP_Canvas::REC_TITLEFONTSSET = "canvasTitleFontsSet";
+const String PMS_PP_Canvas::REC_TITLEFONTS = "canvasTitleFonts";
 const String PMS_PP_Canvas::REC_SHOWGRIDMAJS = "showGridMajors";
 const String PMS_PP_Canvas::REC_SHOWGRIDMINS = "showGridMinors";
 const String PMS_PP_Canvas::REC_GRIDMAJLINES = "gridMajorLines";
@@ -738,6 +744,10 @@ Record PMS_PP_Canvas::toRecord() const
 	}
 	rec.define(REC_SHOWXAXES, Vector<bool>(itsXAxesShown_));
 	rec.define(REC_SHOWYAXES, Vector<bool>(itsYAxesShown_));
+	rec.define(REC_XFONTSSET, Vector<bool>(itsXFontsSet_));
+	rec.define(REC_YFONTSSET, Vector<bool>(itsYFontsSet_));
+	rec.define(REC_XAXISFONTS, Vector<int>(itsXAxisFonts_));
+	rec.define(REC_YAXISFONTS, Vector<int>(itsYAxisFonts_));
 	rec.define(REC_SHOWLEGENDS, Vector<bool>(itsLegendsShown_));
 	rec.define(REC_LEGENDSPOS, PMS::toIntVector<PlotCanvas::LegendPosition>(itsLegendsPos_));
 	{
@@ -745,6 +755,8 @@ Record PMS_PP_Canvas::toRecord() const
 		for (unsigned int i = 0; i < itsTitles_.size(); i++) tmpRec.define(i, itsTitles_[i] .format);
 		rec.defineRecord(REC_TITLES, tmpRec);
 	}
+	rec.define(REC_TITLEFONTSSET, Vector<bool>(itsTitleFontsSet_));
+	rec.define(REC_TITLEFONTS, Vector<int>(itsTitleFonts_));
 	rec.define(REC_SHOWGRIDMAJS, Vector<bool>(itsGridMajsShown_));
 	rec.define(REC_SHOWGRIDMINS, Vector<bool>(itsGridMinsShown_));
 	{
@@ -788,6 +800,46 @@ void PMS_PP_Canvas::fromRecord(const Record& record)
 				itsYLabels_[i] = tmpRec.asString(i);
 				valuesChanged = true;
 			}
+		}
+	}
+    if (record.isDefined(REC_XFONTSSET) && record.dataType(REC_XFONTSSET) == TpArrayBool)
+	{
+		vector<bool> tmp;
+		record.asArrayBool(REC_XFONTSSET).tovector(tmp);
+		if (itsXFontsSet_ != tmp)
+		{
+			itsXFontsSet_ = tmp;
+			valuesChanged = true;
+		}
+	}
+    if (record.isDefined(REC_YFONTSSET) && record.dataType(REC_YFONTSSET) == TpArrayBool)
+	{
+		vector<bool> tmp;
+		record.asArrayBool(REC_YFONTSSET).tovector(tmp);
+		if (itsYFontsSet_ != tmp)
+		{
+			itsYFontsSet_ = tmp;
+			valuesChanged = true;
+		}
+	}
+    if (record.isDefined(REC_XAXISFONTS) && record.dataType(REC_XAXISFONTS) == TpArrayInt)
+	{
+		vector<int> tmp;
+		record.asArrayInt(REC_XAXISFONTS).tovector(tmp);
+		if (itsXAxisFonts_ != tmp)
+		{
+			itsXAxisFonts_ = tmp;
+			valuesChanged = true;
+		}
+	}
+    if (record.isDefined(REC_YAXISFONTS) && record.dataType(REC_YAXISFONTS) == TpArrayInt)
+	{
+		vector<int> tmp;
+		record.asArrayInt(REC_YAXISFONTS).tovector(tmp);
+		if (itsYAxisFonts_ != tmp)
+		{
+			itsYAxisFonts_ = tmp;
+			valuesChanged = true;
 		}
 	}
 	if (record.isDefined(REC_SHOWXAXES) && record.dataType(REC_SHOWXAXES) == TpArrayBool)
@@ -840,6 +892,26 @@ void PMS_PP_Canvas::fromRecord(const Record& record)
 				itsTitles_[i] = tmpRec.asString(i);
 				valuesChanged = true;
 			}
+		}
+	}
+    if (record.isDefined(REC_TITLEFONTSSET) && record.dataType(REC_TITLEFONTSSET) == TpArrayBool)
+	{
+		vector<bool> tmp;
+		record.asArrayBool(REC_TITLEFONTSSET).tovector(tmp);
+		if (itsTitleFontsSet_ != tmp)
+		{
+			itsTitleFontsSet_ = tmp;
+			valuesChanged = true;
+		}
+	}
+    if (record.isDefined(REC_TITLEFONTS) && record.dataType(REC_TITLEFONTS) == TpArrayInt)
+	{
+		vector<int> tmp;
+		record.asArrayInt(REC_TITLEFONTS).tovector(tmp);
+		if (itsTitleFonts_ != tmp)
+		{
+			itsTitleFonts_ = tmp;
+			valuesChanged = true;
 		}
 	}
 	if (record.isDefined(REC_SHOWGRIDMAJS) && record.dataType(REC_SHOWGRIDMAJS) == TpArrayBool)
@@ -933,11 +1005,17 @@ PMS_PP_Canvas& PMS_PP_Canvas::assign(const PMS_PP_Canvas* o ){
 	{
 		itsXLabels_ = o->itsXLabels_;
 		itsYLabels_ = o->itsYLabels_;
+		itsXFontsSet_ = o->itsXFontsSet_;
+		itsXAxisFonts_ = o->itsXAxisFonts_;
+		itsYFontsSet_ = o->itsYFontsSet_;
+		itsYAxisFonts_ = o->itsYAxisFonts_;
 		itsXAxesShown_ = o->itsXAxesShown_;
 		itsYAxesShown_ = o->itsYAxesShown_;
 		itsLegendsShown_ = o->itsLegendsShown_;
 		itsLegendsPos_ = o->itsLegendsPos_;
 		itsTitles_ = o->itsTitles_;
+		itsTitleFontsSet_ = o->itsTitleFontsSet_;
+		itsTitleFonts_ = o->itsTitleFonts_;
 		itsGridMajsShown_ = o->itsGridMajsShown_;
 		itsGridMinsShown_ = o->itsGridMinsShown_;
 		itsGridMajLines_.resize(o->itsGridMajLines_.size());
@@ -956,11 +1034,17 @@ bool PMS_PP_Canvas::operator==(const Group& other) const
 	if (o == NULL) return false;
 	if (itsXLabels_ != o->itsXLabels_) return false;
 	if (itsYLabels_ != o->itsYLabels_) return false;
+	if (itsXFontsSet_ != o->itsXFontsSet_) return false;
+	if (itsYFontsSet_ != o->itsYFontsSet_) return false;
+	if (itsXAxisFonts_ != o->itsXAxisFonts_) return false;
+	if (itsYAxisFonts_ != o->itsYAxisFonts_) return false;
 	if (itsXAxesShown_ != o->itsXAxesShown_) return false;
 	if (itsYAxesShown_ != o->itsYAxesShown_) return false;
 	if (itsLegendsShown_.size() != o->itsLegendsShown_.size() || itsLegendsPos_.size() != o->itsLegendsPos_.size() || itsLegendsShown_.size() != itsLegendsPos_.size()) return false;
 	for (unsigned int i = 0; i < itsLegendsShown_.size(); i++) if (itsLegendsShown_[i] != o->itsLegendsShown_[i] || (itsLegendsShown_[i] && itsLegendsPos_[i] != o->itsLegendsPos_[i])) return false;
 	if (itsTitles_ != o->itsTitles_) return false;
+	if (itsTitleFontsSet_ != o->itsTitleFontsSet_) return false;
+	if (itsTitleFonts_ != o->itsTitleFonts_) return false;
 	if (itsGridMajsShown_.size() != o->itsGridMajsShown_.size() || itsGridMajLines_.size() != o->itsGridMajLines_.size() || itsGridMajsShown_.size() != itsGridMajLines_.size()) return false;
 	for (unsigned int i = 0; i < itsGridMajsShown_.size(); i++) if (itsGridMajsShown_[i] != o->itsGridMajsShown_[i] || (itsGridMajsShown_[i] && *itsGridMajLines_[i] != *o->itsGridMajLines_[i])) return false;
 	if (itsGridMinsShown_.size() != o->itsGridMinsShown_.size() || itsGridMinLines_.size() != o->itsGridMinLines_.size() || itsGridMinsShown_.size() != itsGridMinLines_.size()) return false;
@@ -973,11 +1057,17 @@ void PMS_PP_Canvas::setDefaults()
 {
 	itsXLabels_ = vector<PlotMSLabelFormat>(1, PlotMSLabelFormat(PMS::DEFAULT_CANVAS_AXIS_LABEL_FORMAT));
 	itsYLabels_ = vector<PlotMSLabelFormat>(1, PlotMSLabelFormat(PMS::DEFAULT_CANVAS_AXIS_LABEL_FORMAT));
+	itsXFontsSet_ = vector<bool>(1, PMS::DEFAULT_FONTSET);
+	itsYFontsSet_ = vector<bool>(1, PMS::DEFAULT_FONTSET);
+	itsXAxisFonts_ = vector<Int>(1, PMS::DEFAULT_FONT);
+	itsYAxisFonts_ = vector<Int>(1, PMS::DEFAULT_FONT);
 	itsXAxesShown_ = vector<bool>(1, PMS::DEFAULT_SHOWAXIS);
 	itsYAxesShown_ = vector<bool>(1, PMS::DEFAULT_SHOWAXIS);
 	itsLegendsShown_ = vector<bool>(1, PMS::DEFAULT_SHOWLEGEND);
 	itsLegendsPos_ = vector<PlotCanvas::LegendPosition>(1, PMS::DEFAULT_LEGENDPOSITION);
 	itsTitles_ = vector<PlotMSLabelFormat>(1, PlotMSLabelFormat(PMS::DEFAULT_TITLE_FORMAT));
+	itsTitleFontsSet_ = vector<bool>(1, PMS::DEFAULT_FONTSET);
+	itsTitleFonts_ = vector<Int>(1, PMS::DEFAULT_FONT);
 	itsGridMajsShown_ = vector<bool>(1, PMS::DEFAULT_SHOW_GRID);
 	itsGridMinsShown_ = vector<bool>(1, PMS::DEFAULT_SHOW_GRID);
 	itsGridMajLines_ = vector<PlotLinePtr>(1, PMS::DEFAULT_GRID_LINE(factory()));

@@ -98,9 +98,12 @@ public:
     static const String PARAM_COLORIZE;      // bool
     static const String PARAM_COLORAXIS;     // string
     static const String PARAM_CANVASTITLE;    // string
+    static const String PARAM_CANVASTITLEFONT;  // int
     static const String PARAM_DATA_INDEX;    //int
     static const String PARAM_XAXISLABEL;    // string
     static const String PARAM_YAXISLABEL;    // string
+    static const String PARAM_XAXISFONT;    // int
+    static const String PARAM_YAXISFONT;    // int
     static const String PARAM_SHOWMAJORGRID;  // bool
     static const String PARAM_SHOWMINORGRID;  // bool
     static const String PARAM_MAJORCOLOR;    // string
