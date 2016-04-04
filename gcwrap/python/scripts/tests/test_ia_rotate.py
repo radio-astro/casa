@@ -117,7 +117,17 @@ class ia_rotate_test(unittest.TestCase):
         myia.done()
         self.assertTrue(numpy.abs(got - expec).max() < 10e-22)
         
-        
+    def test_history(self):
+        """Verify history is written"""
+        myia = iatool()
+        myia.open(datapath + "prerot.im")
+        rot = myia.rotate(pa="45deg")
+        myia.done()
+        msgs = rot.history()
+        print "msgs ", msgs
+        rot.done()
+        self.assertTrue("ia.rotate" in msgs[-2])
+        self.assertTrue("ia.rotate" in msgs[-1])
     
 def suite():
     return [ia_rotate_test]

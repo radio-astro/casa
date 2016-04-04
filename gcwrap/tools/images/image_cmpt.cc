@@ -3806,6 +3806,167 @@ void image::_processDirection(
     }
 }
 
+image* image::rebin(
+    const string& outfile, const vector<int>& bin,
+    const variant& region, const variant& vmask,
+    bool dropdeg, bool overwrite, bool /* async */,
+    bool stretch, bool crop
+) {
+    LogOrigin lor(_class, __func__);
+    _log << lor;
+    ThrowIf(
+        detached(), "Unable to create image"
+    );
+    Vector<Int> mybin(bin);
+    ThrowIf(
+        anyTrue(mybin <= 0),
+        "All binning factors must be positive."
+    );
+    try {
+        vector<String> names {
+            "outfile", "bin", "region", "mask",
+            "dropdeg", "overwrite", "stretch", "crop"
+        };
+        vector<variant> values {
+            outfile, bin, region, vmask,
+            dropdeg, overwrite, stretch, crop
+        };
+
+        auto msgs = _newHistory(__func__, names, values);
+        auto mask = _getMask(vmask);
+        if (_imageF) {
+            SPIIF myfloat = _imageF;
+            ImageRebinner<Float> rebinner(
+                myfloat, _getRegion(region, True).get(),
+                mask, outfile, overwrite
+            );
+            rebinner.setFactors(mybin);
+            rebinner.setStretch(stretch);
+            rebinner.setDropDegen(dropdeg);
+            rebinner.addHistory(lor, msgs);
+            rebinner.setCrop(crop);
+            return new image(rebinner.rebin());
+        }
+        else {
+            SPIIC myComplex = _imageC;
+            ImageRebinner<Complex> rebinner(
+                myComplex, _getRegion(region, True).get(),
+                mask, outfile, overwrite
+            );
+            rebinner.setFactors(mybin);
+            rebinner.setStretch(stretch);
+            rebinner.setDropDegen(dropdeg);
+            rebinner.addHistory(lor, msgs);
+            rebinner.setCrop(crop);
+            return new image(rebinner.rebin());
+        }
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return nullptr;
+}
+
+image* image::regrid(
+    const string& outfile, const vector<int>& inshape,
+    const record& csys, const vector<int>& inaxes,
+    const variant& region, const variant& vmask,
+    const string& method, int decimate, bool replicate,
+    bool doRefChange, bool dropDegenerateAxes,
+    bool overwrite, bool forceRegrid,
+    bool specAsVelocity, bool /* async */,
+    bool stretch
+) {
+    try {
+        LogOrigin lor(_class, __func__);
+        _log << lor;
+        if (detached()) {
+                throw AipsError("Unable to create image");
+            return 0;
+        }
+        unique_ptr<Record> csysRec(toRecord(csys));
+        unique_ptr<CoordinateSystem> coordinates(CoordinateSystem::restore(*csysRec, ""));
+        ThrowIf (
+            ! coordinates.get(),
+            "Invalid specified coordinate system record."
+        );
+        auto regionPtr = _getRegion(region, True);
+        String mask = _getMask(vmask);
+        Vector<Int> axes;
+        if (!((inaxes.size() == 1) && (inaxes[0] == -1))) {
+            axes = inaxes;
+        }
+        vector<String> names {
+            "outfile", "shape", "csys", "axes",
+            "region", "mask", "method", "decimate",
+            "replicate", "doref", "dropdegen",
+            "overwrite", "force", "asvelocity", "stretch"
+        };
+        vector<variant> values {
+            outfile, inshape, csys, inaxes,
+            region, vmask, method, decimate, replicate,
+            doRefChange, dropDegenerateAxes,
+            overwrite, forceRegrid,
+            specAsVelocity, stretch
+        };
+
+        vector<String> msgs = _newHistory(__func__, names, values);
+        if (_imageF) {
+            ImageRegridder regridder(
+                _imageF, regionPtr.get(),
+                mask, outfile, overwrite, *coordinates,
+                IPosition(axes), IPosition(inshape)
+            );
+            return _regrid(
+                regridder, method, decimate, replicate,
+                doRefChange, forceRegrid, specAsVelocity,
+                stretch, dropDegenerateAxes, lor, msgs
+            );
+        }
+        else {
+            ComplexImageRegridder regridder(
+                _imageC, regionPtr.get(),
+                mask, outfile, overwrite, *coordinates,
+                IPosition(axes), IPosition(inshape)
+            );
+            return _regrid(
+                regridder, method, decimate, replicate,
+                doRefChange, forceRegrid, specAsVelocity,
+                stretch, dropDegenerateAxes, lor, msgs
+            );
+        }
+
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
+        RETHROW(x);
+    }
+    return nullptr;
+}
+
+template <class T> image* image::_regrid(
+    ImageRegridderBase<T>& regridder,
+    const string& method, int decimate, bool replicate,
+    bool doRefChange, bool forceRegrid,
+    bool specAsVelocity, bool stretch,
+    bool dropDegenerateAxes, const LogOrigin& lor,
+    const vector<String>& msgs
+) {
+    regridder.setMethod(method);
+    regridder.setDecimate(decimate);
+    regridder.setReplicate(replicate);
+    regridder.setDoRefChange(doRefChange);
+    regridder.setForceRegrid(forceRegrid);
+    regridder.setSpecAsVelocity(specAsVelocity);
+    regridder.setStretch(stretch);
+    regridder.setDropDegen(dropDegenerateAxes);
+    regridder.addHistory(lor, msgs);
+    return new image(regridder.regrid());
+}
+
 bool image::remove(const bool finished, const bool verbose) {
     try {
         _log << _ORIGIN;
@@ -3879,6 +4040,55 @@ bool image::removefile(const std::string& filename) {
         RETHROW(x);
     }
     return rstat;
+}
+
+image* image::rotate(
+    const string& outfile, const vector<int>& inshape,
+    const variant& inpa, const variant& region,
+    const variant& vmask, const string& method,
+    int decimate, bool replicate, bool dropdeg,
+    bool overwrite, bool stretch
+) {
+    try {
+        _log << _ORIGIN;
+        ThrowIf(detached(), "Unable to create image");
+        Vector<Int> shape(inshape);
+        if (shape.size() == 1 && shape[0] == -1) {
+            shape.resize(0);
+        }
+        auto pa = _casaQuantityFromVar(inpa);
+        auto Region = _getRegion(region, False);
+        auto mask = _getMask(vmask);
+        ImageRotator rotator(
+            _imageF, Region.get(), mask, outfile, overwrite
+        );
+        rotator.setShape(IPosition(shape));
+        rotator.setAngle(pa);
+        rotator.setInterpolationMethod(method);
+        rotator.setDecimate(decimate);
+        rotator.setReplicate(replicate);
+        rotator.setDropDegen(dropdeg);
+        rotator.setStretch(stretch);
+        vector<String> names = {
+            "outfile", "shape", "pa", "region",
+            "mask", "method", "decimate", "replicate",
+            "dropdeg", "overwrite", "stretch"
+        };
+        vector<variant> values = {
+            outfile, inshape, inpa, region,
+            vmask, method, decimate, replicate,
+            dropdeg, overwrite, stretch
+        };
+        auto msgs = _newHistory(__func__, names, values);
+        rotator.addHistory(_ORIGIN, msgs);
+        return new image(rotator.rotate());
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return nullptr;
 }
 
 record* image::torecord() {
@@ -4020,6 +4230,25 @@ Bool image::_isUnset(const variant &theVar) {
 	    && theVar.size() == 0;
 }
 
+vector<String> image::_newHistory(
+    const string& method, const vector<String>& names,
+    const vector<variant>& values
+) {
+    AlwaysAssert(names.size() == values.size(), AipsError);
+    vector<String> msgs;
+    ostringstream os;
+    os << "Ran ia." << method;
+    msgs.push_back(os.str());
+    vector<std::pair<String, variant> > inputs;
+    for (uInt i=0; i<names.size(); ++i) {
+        inputs.push_back(make_pair(names[i], values[i]));
+    }
+    os.str("");
+    os << "ia." << method << _inputsString(inputs);
+    msgs.push_back(os.str());
+    return msgs;
+}
+
 void image::_reset() {
 	_imageF.reset();
 	_imageC.reset();
@@ -4038,221 +4267,8 @@ void image::_reset() {
 
 
 
-image* image::rebin(
-	const std::string& outfile, const std::vector<int>& bin,
-	const variant& region, const ::casac::variant& vmask,
-	bool dropdeg, bool overwrite, bool /* async */,
-	bool stretch, bool crop
-) {
-	LogOrigin lor(_class, __func__);
-	_log << lor;
-	ThrowIf(
-		detached(), "Unable to create image"
-	);
-	Vector<Int> mybin(bin);
-	ThrowIf(
-		anyTrue(mybin <= 0),
-		"All binning factors must be positive."
-	);
-	try {
-		std::vector<String> names { "outfile", "bin", "region", "mask",
-		                            "dropdeg", "overwrite", "stretch", "crop" };
-		std::vector<variant> values { outfile, bin, region, vmask,
-		                              dropdeg, overwrite, stretch, crop };
 
-		vector<String> msgs = _newHistory(__func__, names, values);
-		String mask = vmask.toString();
-		if (mask == "[]") {
-			mask = "";
-		}
-		if (_imageF) {
-			SPIIF myfloat = _imageF;
-			ImageRebinner<Float> rebinner(
-				myfloat, _getRegion(region, True).get(),
-				mask, outfile, overwrite
-			);
-			rebinner.setFactors(mybin);
-			rebinner.setStretch(stretch);
-			rebinner.setDropDegen(dropdeg);
-			rebinner.addHistory(lor, msgs);
-			rebinner.setCrop(crop);
-			return new image(rebinner.rebin());
-		}
-		else {
-			SPIIC myComplex = _imageC;
-			ImageRebinner<Complex> rebinner(
-				myComplex, _getRegion(region, True).get(),
-				mask, outfile, overwrite
-			);
-			rebinner.setFactors(mybin);
-			rebinner.setStretch(stretch);
-			rebinner.setDropDegen(dropdeg);
-			rebinner.addHistory(lor, msgs);
-			rebinner.setCrop(crop);
-			return new image(rebinner.rebin());
-		}
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-}
 
-image* image::regrid(
-	const string& outfile, const vector<int>& inshape,
-	const record& csys, const vector<int>& inaxes,
-	const variant& region, const variant& vmask,
-	const string& method, int decimate, bool replicate,
-	bool doRefChange, bool dropDegenerateAxes,
-	bool overwrite, bool forceRegrid,
-	bool specAsVelocity, bool /* async */,
-	bool stretch
-) {
-	try {
-		LogOrigin lor(_class, __func__);
-		_log << lor;
-		if (detached()) {
-		        throw AipsError("Unable to create image");
-			return 0;
-		}
-		unique_ptr<Record> csysRec(toRecord(csys));
-		unique_ptr<CoordinateSystem> coordinates(CoordinateSystem::restore(*csysRec, ""));
-		ThrowIf (
-			! coordinates.get(),
-			"Invalid specified coordinate system record."
-		);
-		SHARED_PTR<Record> regionPtr(_getRegion(region, True));
-		String mask = vmask.toString();
-		if (mask == "[]") {
-			mask = "";
-		}
-		Vector<Int> axes;
-		if (!((inaxes.size() == 1) && (inaxes[0] == -1))) {
-			axes = inaxes;
-		}
-		vector<String> names { "outfile", "shape", "csys", "axes",
-		                       "region", "mask", "method", "decimate",
-		                       "replicate", "doref", "dropdegen",
-		                       "overwrite", "force", "asvelocity", "stretch" };
-		vector<variant> values { outfile, inshape, csys, inaxes,
-		                         region, vmask, method, decimate, replicate,
-		                         doRefChange, dropDegenerateAxes,
-		                         overwrite, forceRegrid,
-		                         specAsVelocity, stretch };
-
-		vector<String> msgs = _newHistory(__func__, names, values);
-		if (_imageF) {
-			ImageRegridder regridder(
-				_imageF, regionPtr.get(),
-				mask, outfile, overwrite, *coordinates,
-				IPosition(axes), IPosition(inshape)
-			);
-			return _regrid(
-				regridder, method, decimate, replicate,
-				doRefChange, forceRegrid, specAsVelocity,
-				stretch, dropDegenerateAxes, lor, msgs
-			);
-		}
-		else {
-			ComplexImageRegridder regridder(
-				_imageC, regionPtr.get(),
-				mask, outfile, overwrite, *coordinates,
-				IPosition(axes), IPosition(inshape)
-			);
-			return _regrid(
-				regridder, method, decimate, replicate,
-				doRefChange, forceRegrid, specAsVelocity,
-				stretch, dropDegenerateAxes, lor, msgs
-			);
-		}
-
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-			<< LogIO::POST;
-		RETHROW(x);
-	}
-}
-
-vector<String> image::_newHistory(
-	const string& method, const vector<String>& names,
-	const vector<variant>& values
-) {
-	AlwaysAssert(names.size() == values.size(), AipsError);
-	vector<String> msgs;
-	ostringstream os;
-	os << "Ran ia." << method;
-	msgs.push_back(os.str());
-	vector<std::pair<String, variant> > inputs;
-	for (uInt i=0; i<names.size(); ++i) {
-		inputs.push_back(make_pair(names[i], values[i]));
-	}
-	os.str("");
-	os << "ia." << method << _inputsString(inputs);
-	msgs.push_back(os.str());
-	return msgs;
-}
-
-template <class T> image* image::_regrid(
-	ImageRegridderBase<T>& regridder,
-	const string& method, int decimate,	bool replicate,
-	bool doRefChange, bool forceRegrid,
-	bool specAsVelocity, bool stretch,
-	bool dropDegenerateAxes, const LogOrigin& lor,
-	const vector<String>& msgs
-) {
-	regridder.setMethod(method);
-	regridder.setDecimate(decimate);
-	regridder.setReplicate(replicate);
-	regridder.setDoRefChange(doRefChange);
-	regridder.setForceRegrid(forceRegrid);
-	regridder.setSpecAsVelocity(specAsVelocity);
-	regridder.setStretch(stretch);
-	regridder.setDropDegen(dropDegenerateAxes);
-	regridder.addHistory(lor, msgs);
-	return new image(regridder.regrid());
-}
-
-image* image::rotate(
-	const std::string& outfile, const std::vector<int>& inshape,
-	const variant& inpa, const variant& region,
-	const variant& vmask, const std::string& method,
-	const int decimate, const bool replicate, const bool dropdeg,
-	const bool overwrite, const bool stretch
-) {
-	try {
-		_log << _ORIGIN;
-		ThrowIf(detached(), "Unable to create image");
-		Vector<Int> shape(inshape);
-		if (shape.size() == 1 && shape[0] == -1) {
-		    shape.resize(0);
-		}
-		Quantum<Double> pa(_casaQuantityFromVar(inpa));
-		SHARED_PTR<Record> Region(_getRegion(region, False));
-		auto mask = vmask.toString();
-		if (mask == "[]") {
-			mask = "";
-		}
-		ImageRotator rotator(
-		    _imageF, Region.get(),
-		    mask, outfile, overwrite
-		);
-		rotator.setShape(IPosition(shape));
-		rotator.setAngle(pa);
-		rotator.setInterpolationMethod(method);
-		rotator.setDecimate(decimate);
-		rotator.setReplicate(replicate);
-		rotator.setDropDegen(dropdeg);
-		rotator.setStretch(stretch);
-		return new image(rotator.rotate());
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-}
 
 bool image::rotatebeam(const variant& angle) {
 	try {
