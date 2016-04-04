@@ -400,6 +400,11 @@ class CalibrationTable(NamingTemplate):
 
     #- calibration type convenience methods ------------------------------------
 
+    def amplitude_cal(self):
+        '''Set the filename extension as appropriate for a amplitude calibration.
+        ''' 
+        return self.extension('ampcal')
+
     def bandpass_cal(self):
         '''Set the filename extension as appropriate for a bandpass calibration.
         ''' 
@@ -645,6 +650,11 @@ class MosaicImage(Image):
         '''
 #        self._associations.flag_marks(flag_marks)
         return self
+
+class AmplitudeCalibrationTable(CalibrationTable):
+    def __init__(self, other=None):
+        super(AmplitudeCalibrationTable, self).__init__(other)
+        self.amplitude_cal()
 
 class AntposCalibrationTable(CalibrationTable):
     def __init__(self, other=None):

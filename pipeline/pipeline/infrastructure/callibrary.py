@@ -362,7 +362,8 @@ class CalFrom(object):
         'rq'                : 9,
         'swpow'             : 10,
         'finalcal'          : 11,
-        'uvcont'            : 12
+        'uvcont'            : 12,
+        'amp'               : 13
     }
 
     CALTYPE_TO_VISCAL = {
@@ -370,7 +371,8 @@ class CalFrom(object):
         'bandpass' : ('B JONES', 'BPOLY'),
         'tsys'     : ('B TSYS',),
         'antpos'   : ('KANTPOS JONES',),
-        'uvcont'   : ('A MUELLER',)
+        'uvcont'   : ('A MUELLER',),
+        'amp'      : ('G JONES',)
     }
     
     VISCAL = {
@@ -566,6 +568,7 @@ class CalToIdAdapter(object):
         # if the field names are unique, we can return field names. Otherwise,
         # we fall back to field IDs.
         all_field_names = [f.name for f in self.ms.get_fields()]
+#         return [f.id for f in fields]
         if len(set(all_field_names)) == len(all_field_names):
             return [f.name for f in fields]
         else:
