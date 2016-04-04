@@ -557,6 +557,10 @@ public:
     void
     set (const U & newItem)
     {
+        if (! this->isPresent()){ // Not present so give it a shape
+            set (T (this->getVb()->getValidShape (shapePattern_p)));
+        }
+
         VbCacheItem<T,IsComputed>::set (newItem);
     }
 
