@@ -4091,6 +4091,34 @@ image* image::rotate(
     return nullptr;
 }
 
+bool image::rotatebeam(const variant& angle) {
+    try {
+        _log << _ORIGIN;
+        if(detached()) {
+            return False;
+        }
+        Quantum<Double> pa(_casaQuantityFromVar(angle));
+        if (_imageF) {
+            BeamManipulator<Float> bManip(_imageF);
+            bManip.rotate(pa);
+        }
+        else {
+            BeamManipulator<Complex> bManip(_imageC);
+            bManip.rotate(pa);
+        }
+        vector<String> names { "angle" };
+        vector<variant> values { angle };
+        _addHistory(__func__, names, values);
+        return True;
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
+        RETHROW(x);
+    }
+    return False;
+}
+
 record* image::torecord() {
     _log << LogOrigin("image", __func__);
     if (detached()) {
@@ -4269,30 +4297,6 @@ void image::_reset() {
 
 
 
-
-bool image::rotatebeam(const variant& angle) {
-	try {
-		_log << _ORIGIN;
-		if(detached()) {
-			return False;
-		}
-		Quantum<Double> pa(_casaQuantityFromVar(angle));
-		if (_imageF) {
-			BeamManipulator<Float> bManip(_imageF);
-			bManip.rotate(pa);
-		}
-		else {
-			BeamManipulator<Complex> bManip(_imageC);
-			bManip.rotate(pa);
-		}
-		return true;
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-			<< LogIO::POST;
-		RETHROW(x);
-	}
-}
 
 bool image::rename(const std::string& name, bool overwrite) {
 	try {

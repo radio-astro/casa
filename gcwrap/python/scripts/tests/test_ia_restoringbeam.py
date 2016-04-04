@@ -327,6 +327,16 @@ class ia_restoringbeam_test(unittest.TestCase):
                 "100deg"
             )
         )
+
+    def test_history(self):
+        """verify history writing"""
+        myia = self._myia
+        myia.fromshape("",[20, 20])
+        myia.setrestoringbeam(major="5arcmin", minor="3arcmin", pa="45deg")
+        myia.rotatebeam("20deg")
+        msgs = myia.history()
+        self.assertTrue("ia.rotatebeam" in msgs[-2])
+        self.assertTrue("ia.rotatebeam" in msgs[-1])
         
 def suite():
     return [ia_restoringbeam_test]
