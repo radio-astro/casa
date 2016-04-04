@@ -81,6 +81,7 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
     //
 
     pbClass_p=PBMathInterface::COMMONPB;
+    ft_p=FFT2D(True);
 }
 
   SimplePBConvFunc::SimplePBConvFunc(const PBMathInterface::PBClass typeToUse): 
@@ -89,7 +90,7 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
      calcFluxScale_p(True), convFunctionMap_p(-1), actualConvIndex_p(-1), convSize_p(0), convSupport_p(0), pointingPix_p() {
     //
     pbClass_p=typeToUse;
-
+    ft_p=FFT2D(True);
   }
   SimplePBConvFunc::SimplePBConvFunc(const RecordInterface& rec, const Bool calcfluxneeded)
   : nchan_p(-1),npol_p(-1),pointToPix_p(), directionIndex_p(-1), thePix_p(0), filledFluxScale_p(False),
@@ -98,6 +99,7 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
   {
     String err;
     fromRecord(err, rec, calcfluxneeded);
+    ft_p=FFT2D(True);
   }
   SimplePBConvFunc::~SimplePBConvFunc(){
     //
@@ -385,21 +387,22 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
       
       Int tempConvSize=((convSize_p/4/(convSamp/convSampling))/2)*2;
       IPosition pbShape(4, tempConvSize, tempConvSize, 1, nBeamChans);
-      Int memtobeused=0;
+      
       Long memtot=HostInfo::memoryFree();
+      Double memtobeused= Double(memtot)*1024.0;
       //check for 32 bit OS and limit it to 2Gbyte
       if( sizeof(void*) == 4){
     	  if(memtot > 2000000)
     		  memtot=2000000;
       }
       if(memtot <= 2000000)
-    	  memtobeused=0;
+    	  memtobeused=0.0;
       //cerr << "mem to be used " << memtobeused << endl;
       //tim.mark();
       IPosition start(4, 0, 0, 0, 0);
       //IPosition pbSlice(4, convSize_p, convSize_p, 1, 1);
       //cerr << "pbshape " << pbShape << endl;
-      TempImage<Complex> twoDPB(TiledShape(pbShape, IPosition(4, pbShape(0), pbShape(1), 1, 1)), coords, memtobeused);
+      TempImage<Complex> twoDPB(TiledShape(pbShape, IPosition(4, pbShape(0), pbShape(1), 1, 1)), coords, memtobeused/10.0);
 
       //tim.show("after making one image");
       convFunc_p.resize(tempConvSize, tempConvSize);
@@ -418,22 +421,24 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
       //trcin[3]=k;
       //Slicer slin(blcin, trcin, Slicer::endIsLast);
       //SubImage<Complex> subim(twoDPB, slin, True);
-      TempImage<Complex> subim(IPosition(4, convSize_p, convSize_p, 1, 1), coordLastPlane);
+      TempImage<Complex> subim(IPosition(4, convSize_p, convSize_p, 1, 1), coordLastPlane, memtobeused/2.2);
       subim.set(Complex(1.0,0.0));
       //twoDPB.putSlice(screen, start);
       sj_p->apply(subim, subim, vb, 0); 
-      LatticeFFT::cfft2d(subim);
+      //LatticeFFT::cfft2d(subim);
+      ft_p.c2cFFT(subim);
 	//  }
       //tim.show("after an apply" );
       //tim.mark();
-      TempImage<Float> screen2(TiledShape(IPosition(4, convSize_p, convSize_p, 1, 1)), coordLastPlane, memtobeused);
+      TempImage<Float> screen2(TiledShape(IPosition(4, convSize_p, convSize_p, 1, 1)), coordLastPlane, memtobeused/2.2);
       screen2.set(1.0);
-      TempImage<Complex> subout(TiledShape(IPosition(4, convSize_p, convSize_p, 1, 1)), coordLastPlane, memtobeused);
+      TempImage<Complex> subout(TiledShape(IPosition(4, convSize_p, convSize_p, 1, 1)), coordLastPlane, memtobeused/2.2);
       //////Making a reference on half of the lattice as on the Mac rcfft is failing for some 
       //////reason
       SubImage<Complex> halfsubout(subout, Slicer(IPosition(4, 0, 0, 0, 0), IPosition(4, convSize_p/2, convSize_p-1, 0, 0), Slicer::endIsLast), True);
       sj_p->applySquare(screen2, screen2, vb, 0); 
-      LatticeFFT::rcfft(halfsubout, screen2, True, False);
+      ft_p.r2cFFT(halfsubout, screen2);
+      //LatticeFFT::rcfft(halfsubout, screen2, True, False);
       //Real FFT fills only first half of the array
       //making it look like a Complex to Complex FFT
       IPosition iblc(4, 0, 3*subout.shape()(1)/8, 0, 0);
@@ -460,7 +465,7 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
       }
       //End of FFT's
       //tim.show("After apply2 ");
-      TempImage<Complex> twoDPB2(TiledShape(pbShape, IPosition(4, pbShape(0), pbShape(1), 1, 1)), coords, memtobeused);
+      TempImage<Complex> twoDPB2(TiledShape(pbShape, IPosition(4, pbShape(0), pbShape(1), 1, 1)), coords, memtobeused/10.0);
       
       IPosition blcout(4, 0, 0, 0, nBeamChans-1);
       IPosition trcout(4, pbShape(0)-1, pbShape(1)-1, 0,nBeamChans-1);

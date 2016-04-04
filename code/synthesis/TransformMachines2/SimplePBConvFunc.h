@@ -33,6 +33,7 @@
 #include <casa/Containers/Block.h>
 #include <casa/Utilities/CountedPtr.h>
 #include <msvis/MSVis/VisBufferUtil.h>
+#include <synthesis/Utilities/FFT2D.h>
 
 #include <wcslib/wcsconfig.h>  /** HAVE_SINCOS **/
 
@@ -164,6 +165,7 @@ namespace refim{ //namespace for imaging refactor
       virtual void findUsefulChannels(Vector<Int>& chanMap, Vector<Double>& chanFreqs,  const vi::VisBuffer2& vb, const Vector<Double>& visFreq);
       //return the direction pixel corresponding to a direction
       virtual void toPix(const vi::VisBuffer2& vb);
+      FFT2D ft_p;
       CountedPtr<TempImage<Float> > convWeightImage_p;
     private:
       Bool checkPBOfField(const vi::VisBuffer2& vb);
