@@ -248,7 +248,9 @@ Int main(int argc, char **argv)
 	  {
 	    for (vi2.origin(); vi2.more(); vi2.next())
 	      {
-		//vb->setVisCubeModel(Complex(0.0,0.0));
+		// Initializing the model cube.  It needs to be touched before it can be set.
+		vb->visCubeModel();// Touch the cube.  This will "load" it and expand the buffer to the required shape.
+		vb->setVisCubeModel(Complex(0.0,0.0)); // Set the internal buffer.
 		ftm->get(*vb);
 		//		cerr << "mod " << vb->visCubeModel().shape() << " " << (vb->visCubeModel())(0,0,0) << endl;
 		AlwaysAssertExit(near(999.0, abs((vb->visCubeModel())(0,0,0)), 1e-5 ));
