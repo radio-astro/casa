@@ -30,7 +30,6 @@
 #include <components/ComponentModels/ComponentList.h>
 #include <components/ComponentModels/ComponentShape.h>
 #include <components/ComponentModels/Flux.h>
-#include <tables/Tables/ExprNode.h>
 #include <measures/Measures/MeasTable.h>
 #include <ms/MSSel/MSSelection.h>
 
