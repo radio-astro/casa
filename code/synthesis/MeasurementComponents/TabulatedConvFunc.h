@@ -36,8 +36,8 @@ namespace casa{
   class TabulatedConvFunc: public ConvolutionFunction
   {
   public:
-    TabulatedConvFunc(): ConvolutionFunction()   {};
-    TabulatedConvFunc(Int n): ConvolutionFunction(n) {};
+    TabulatedConvFunc(): ConvolutionFunction(),cacheSizeInPixels_p(-1)   {};
+    TabulatedConvFunc(Int n): ConvolutionFunction(n),cacheSizeInPixels_p(-1) {};
     ~TabulatedConvFunc() {};
 
     virtual void setMaximumCacheSize(const Long howManyRealPixels=-1) {cacheSizeInPixels_p=howManyRealPixels;}

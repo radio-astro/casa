@@ -48,7 +48,10 @@ namespace casa{
   public:
 
     VLACalcIlluminationConvFunc();
-    VLACalcIlluminationConvFunc(Int n):IlluminationConvFunc(n)    {pbRead_p=False;};
+    VLACalcIlluminationConvFunc(Int n):
+      IlluminationConvFunc(n),
+      convFunc_p(),resolution(),pbRead_p(False),freq_p(0),lastPA(0),ap()
+    {pbRead_p=False;};
     ~VLACalcIlluminationConvFunc() {delete ap.aperture;};
 
     void setBandID(Int bandID) {ap.band=bandID;}

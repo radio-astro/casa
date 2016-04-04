@@ -92,7 +92,7 @@ void createAWPFTMachine(CountedPtr<FTMachine>& theFT, CountedPtr<FTMachine>& the
 			const String imageNamePrefix=String("img"))
   
 {
-  LogIO os( LogOrigin("SynthesisImager","createAWPFTMachine",WHERE));
+  LogIO os( LogOrigin("tAWPFTM","createAWPFTMachine",WHERE));
   
   if (wprojPlane<=1)
     {
@@ -260,8 +260,8 @@ Int main(int argc, char **argv)
     } 
   catch (AipsError x) 
     {
-      cout << "Caught exception " << endl;
-      cout << x.getMesg() << endl;
+      cerr << "Caught exception " << endl;
+      cerr << x.getMesg() << endl;
       return(1);
     }
   cerr <<"OK" << endl;

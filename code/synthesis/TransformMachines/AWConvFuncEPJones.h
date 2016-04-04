@@ -51,7 +51,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		      const CountedPtr<PSTerm> psTerm,
 		      const CountedPtr<WTerm> wTerm,
 		      const Bool wbAWP=False):
-      AWConvFunc(ATerm,psTerm,wTerm,wbAWP), imageDC_p(),imageObsInfo_p()
+      AWConvFunc(ATerm,psTerm,wTerm,wbAWP), imageDC_p(),imageObsInfo_p(),
+      nx_p(-1), ny_p(-1),nchan_p(-1),npol_p(-1),csys_p(),dc_p(),pointToPix_p(),
+      pointFrame_p(),timeMType_p(),timeUnit_p(),directionIndex_p(-1),
+      direction1_p(), direction2_p()
     {};
     ~AWConvFuncEPJones() {};
     AWConvFuncEPJones& operator=(const AWConvFuncEPJones& other);
