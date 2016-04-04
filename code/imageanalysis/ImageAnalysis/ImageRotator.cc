@@ -104,6 +104,7 @@ SPIIF ImageRotator::rotate() {
     regridder.setMethod(_method);
     regridder.setReplicate(_replicate);
     regridder.setShape(_shape);
+    regridder.addHistory(this->getHistory());
     return regridder.regrid();
 }
 
