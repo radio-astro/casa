@@ -718,11 +718,7 @@ void SDGrid::initializeToSky(ImageInterface<Complex>& iimage,
       wmin_ = 0.0f;
       wmax_.resize(gridShape);
       wmax_ = 0.0f;
-      cmin_.resize(gridShape);
-      cmin_ = 0.0f;
-      cmax_.resize(gridShape);
-      cmax_ = 0.0f;
-      npoints_.resize(gridShape.getFirst(3));
+      npoints_.resize(gridShape);
       npoints_ = 0;
     }
   }
@@ -772,8 +768,8 @@ Array<Float>* SDGrid::getWDataPointer(const IPosition& centerLoc2D,
 #define NEED_UNDERSCORES
 #if defined(NEED_UNDERSCORES)
 #define ggridsd ggridsd_
-#define ggridsd2 ggridsd2_
 #define dgridsd dgridsd_
+#define ggridsdclip ggridsdclip_
 #endif
 
 extern "C" { 
@@ -799,9 +795,8 @@ extern "C" {
 		Int*,
 		Int*,
 		Double*);
-   void ggridsd2(Double*,
+   void ggridsdclip(Double*,
                  const Complex*,
-                 Int*,
                  Int*,
                  Int*,
                  const Int*,
@@ -814,9 +809,7 @@ extern "C" {
                  Int*,
                  Complex*,
                  Float*,
-                 Float*,
                  Complex*,
-                 Float*,
                  Float*,
                  Int*,
                  Int*,
@@ -1022,18 +1015,13 @@ void SDGrid::put(const VisBuffer& vb, Int row, Bool dopsf,
         Float *wminStor = wmin_.getStorage(wminCopy);
         Bool wmaxCopy;
         Float *wmaxStor = wmax_.getStorage(wmaxCopy);
-        Bool cminCopy;
-        Float *cminStor = cmin_.getStorage(cminCopy);
-        Bool cmaxCopy;
-        Float *cmaxStor = cmax_.getStorage(cmaxCopy);
         Bool npCopy;
         Int *npStor = npoints_.getStorage(npCopy);
         
-        ggridsd2(xyPositions.getStorage(del),
+        ggridsdclip(xyPositions.getStorage(del),
           datStorage,
           &s[0],
           &s[1],
-          &idopsf,
           flags.getStorage(del),
           rowFlags.getStorage(del),
           wgtStorage,
@@ -1044,10 +1032,8 @@ void SDGrid::put(const VisBuffer& vb, Int row, Bool dopsf,
           npStor,
           gminStor,
           wminStor,
-          cminStor,
           gmaxStor,
           wmaxStor,
-          cmaxStor,
           &nx,
           &ny,
           &npol,
@@ -1063,8 +1049,6 @@ void SDGrid::put(const VisBuffer& vb, Int row, Bool dopsf,
         gmax_.putStorage(gmaxStor, gmaxCopy);
         wmin_.putStorage(wminStor, wminCopy);
         wmax_.putStorage(wmaxStor, wmaxCopy);
-        cmin_.putStorage(cminStor, cminCopy);
-        cmax_.putStorage(cmaxStor, cmaxCopy);
         npoints_.putStorage(npStor, npCopy);
       }
       griddedData.putStorage(datStor, datCopy);
@@ -1367,6 +1351,9 @@ ImageInterface<Complex>& SDGrid::getImage(Matrix<Float>& weights,
 
   logIO() << LogOrigin("SDGrid", "getImage") << LogIO::NORMAL;
 
+  // execute minmax clipping
+  clipMinMax();
+
   weights.resize(sumWeight.shape());
 
   convertArray(weights,sumWeight);
@@ -1383,9 +1370,6 @@ ImageInterface<Complex>& SDGrid::getImage(Matrix<Float>& weights,
   thisScreen2.copyData(le2);
   }*/
   /////////////////////
-
-  // execute minmax clipping
-  clipMinMax();
 
   if(normalize) {
     if(max(weights)==0.0) {
@@ -1814,40 +1798,47 @@ void SDGrid::pickWeights(const VisBuffer& vb, Matrix<Float>& weight){
 
 void SDGrid::clipMinMax() {
   if (clipminmax_) {
-    Bool gmin_b, gmax_b, wmin_b, wmax_b, cmin_b, cmax_b, np_b;
+    Bool gmin_b, gmax_b, wmin_b, wmax_b, np_b;
     const auto *gmin_p = gmin_.getStorage(gmin_b);
     const auto *gmax_p = gmax_.getStorage(gmax_b);
     const auto *wmin_p = wmin_.getStorage(wmin_b);
     const auto *wmax_p = wmax_.getStorage(wmax_b);
-    const auto *cmin_p = cmin_.getStorage(cmin_b);
-    const auto *cmax_p = cmax_.getStorage(cmax_b);
     const auto *np_p = npoints_.getStorage(np_b);
 
-    Bool data_b, weight_b;
+    Bool data_b, weight_b, sumw_b;
     auto data_p = griddedData.getStorage(data_b);
     auto weight_p = wGriddedData.getStorage(weight_b);
+    auto sumw_p = sumWeight.getStorage(sumw_b);
 
     auto arrayShape = griddedData.shape();
-    size_t num_data = arrayShape.getFirst(3).product();
-    size_t num_chan = arrayShape.getLast(1).product();
-    for (size_t i = 0; i < num_data; ++i) {
-      if (np_p[i] > 2) {
-        for (size_t j = 0; j < num_chan; ++j) {
-          auto k = i * num_chan + j;
-          auto amin = cmin_p[k] * wmin_p[k];
-          auto amax = cmax_p[k] * wmax_p[k];
-          data_p[k] -= amin * gmin_p[k] + amax * gmax_p[k];
-          weight_p[k] -= amin + amax;
+    size_t num_xy = arrayShape.getFirst(2).product();
+    size_t num_polchan = arrayShape.getLast(2).product();
+    for (size_t i = 0; i < num_xy; ++i) {
+      for (size_t j = 0; j < num_polchan; ++j) {
+        auto k = i * num_polchan + j;
+        if (np_p[k] == 1) {
+          auto wt = wmin_p[k];
+          data_p[k] = wt * gmin_p[k];
+          weight_p[k] = wt;
+          sumw_p[j] += wt;
+        } else if (np_p[k] == 2) {
+          auto wt = wmin_p[k];
+          data_p[k] = wt * gmin_p[k];
+          weight_p[k] = wt;
+          sumw_p[j] += wt;
+          wt = wmax_p[k];
+          data_p[k] += wt * gmax_p[k];
+          weight_p[k] += wt;
+          sumw_p[j] += wt;
         }
       }
     }
 
     wGriddedData.putStorage(weight_p, weight_b);
     griddedData.putStorage(data_p, data_b);
+    sumWeight.putStorage(sumw_p, sumw_b);
 
     npoints_.freeStorage(np_p, np_b);
-    cmax_.freeStorage(cmax_p, cmax_b);
-    cmin_.freeStorage(cmin_p, cmin_b);
     wmax_.freeStorage(wmax_p, wmax_b);
     wmin_.freeStorage(wmin_p, wmin_b);
     gmax_.freeStorage(gmax_p, gmax_b);

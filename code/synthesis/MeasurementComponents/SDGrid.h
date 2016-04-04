@@ -299,8 +299,6 @@ private:
   Array<Complex> gmax_;
   Array<Float> wmin_;
   Array<Float> wmax_;
-  Array<Float> cmin_;
-  Array<Float> cmax_;
   Array<Int> npoints_;
   void clipMinMax();
 

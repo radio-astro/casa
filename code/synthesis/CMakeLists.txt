@@ -128,6 +128,7 @@ casa_add_library( synthesis
   fortran/wprojgrid.f
   fortran/faccumulateToGrid.f
   fortran/faccumulateFromGrid.f
+  fortran/fgridsdclip.f
   CalLibrary/CalLibraryTools.cc
   CalLibrary/CalLibraryParse.cc
   CalTables/BJonesDesc.cc
