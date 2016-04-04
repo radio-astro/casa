@@ -8,6 +8,7 @@ import unittest
 import sha
 import time
 import numpy
+import math
 import re
 import string
 
@@ -2656,6 +2657,226 @@ class sdimaging_test_interp(unittest.TestCase):
         self.assertTrue(((dist_llim < dist_answer) and (dist_answer < dist_ulim)),
                         msg = 'spline interpolation seems not working.')
     
+    
+class sdimaging_test_clipping(sdimaging_unittest_base):
+    """
+    test_1row: check if clipping is not activated (1 spectrum)
+    test_2rows: check if clipping is not activated (2 spectra)
+    test_3rows: check if clipping is activated (3 spectra)
+    test_multivis: check if clipping properly handles multiple ms inputs
+    test_clip: check if clipping is applied to every image pixel separately
+    test_clip2: check if clipping is activated on one pixel but is not on others
+    test_suprious: check if clipping properly handles suprious data 
+    """
+    data_list = ['clipping_1row.ms', 'clipping_2rows.ms', 'clipping_3rows.ms', 
+                 'clipping_3rows_suprious.ms']
+    outfile = 'sdimaging_test_clipping.im'
+    outfile_ref = 'sdimaging_test_clipping.ref.im'
+    def setUp(self):
+        default(sdimaging)
+        
+        # clear up test data
+        self.__clear_up()
+    
+    def tearDown(self):
+        # remove test data
+        self.__clear_up()
+        
+    def __clear_up(self):
+        for data in self.data_list:
+            if os.path.exists(data):
+                shutil.rmtree(data)
+        if os.path.exists(self.outfile):
+            shutil.rmtree(self.outfile)
+            shutil.rmtree(self.outfile + '.weight')
+        if os.path.exists(self.outfile_ref):
+            shutil.rmtree(self.outfile_ref)
+            shutil.rmtree(self.outfile_ref + '.weight')
+    
+    def _test_clipping(self, infiles, is_clip_effective=True):
+        if isinstance(infiles, str):
+            self._test_clipping([infiles], is_clip_effective)
+            return
+        
+        for infile in infiles:
+            self.assertTrue(infile in self.data_list)
+            self.assertFalse(os.path.exists(infile))
+            testutils.copytree_ignore_subversion(self.datapath, infile)
+            
+        # image with clipping
+        outfile = self.outfile
+        overwrite = False
+        mode = 'channel'
+        nchan = 1
+        start = 0
+        width = 1
+        gridfunction = 'BOX'
+        imsize = 3
+        cell = '1arcmin'
+        phasecenter = 'J2000 0h0m0s 0d0m0s'
+        sdimaging(infiles=infiles, outfile=outfile, overwrite=overwrite, 
+                  mode=mode, nchan=nchan, start=start, width=width, 
+                  gridfunction=gridfunction, imsize=imsize, cell=cell,
+                  phasecenter=phasecenter, clipminmax=True)
+        self.assertTrue(os.path.exists(self.outfile))
+        
+        if is_clip_effective == True:
+            # pre-flag the data to be clipped
+            myme, mymsmd, mytb = gentools(['me', 'msmd', 'tb'])
+            myqa = qa
+            center = myme.direction('J2000', myqa.quantity(0, 'rad'), myqa.quantity(0, 'rad'))
+            offset_plus = myqa.convert(myqa.quantity('1arcmin'), 'rad')
+            offset_minus = myqa.mul(offset_plus, -1)
+            grid = [[[], [], []],
+                    [[], [], []],
+                    [[], [], []]]
+            gridmeta = [[[], [], []],
+                        [[], [], []],
+                        [[], [], []]]
+            ra_list = [offset_plus['value'], 0, offset_minus['value']]
+            dec_list = [offset_minus['value'], 0, offset_plus['value']]
+            for infile in infiles:
+                mymsmd.open(infile)
+                try:
+                    for irow in xrange(int(mymsmd.nrows())):
+                        pointingdirection = mymsmd.pointingdirection(irow)['antenna1']['pointingdirection']
+                        ra = pointingdirection['m0']['value']
+                        dec = pointingdirection['m1']['value']
+                        min_separation = 1e10
+                        min_ra = -1
+                        min_dec = -1
+                        for ira in xrange(imsize):
+                            for idec in xrange(imsize):
+                                gra = ra_list[ira]
+                                gdec = dec_list[idec]
+                                separation = math.sqrt(math.pow(ra - gra, 2) + math.pow(dec - gdec, 2))
+                                if separation < min_separation:
+                                    min_ra = ira
+                                    min_dec = idec
+                                    min_separation = separation
+                        gridmeta[min_ra][min_dec].append((infile, irow))
+                finally:
+                    mymsmd.close()
+            
+            print '### gridmeta', gridmeta
+            for ira in xrange(imsize):
+                for idec in xrange(imsize):
+                    meta = gridmeta[ira][idec]
+                    for imeta in xrange(len(meta)):
+                        infile, irow = meta[imeta]
+                        mytb.open(infile)
+                        try:
+                            data = mytb.getcell('FLOAT_DATA', irow)[0][0]
+                        finally:
+                            mytb.close()
+                        grid[ira][idec].append(data)
+            
+            for ira in xrange(imsize):
+                for idec in xrange(imsize):
+                    data = grid[ira][idec]
+                    print '### ira', ira, 'idec', idec, 'data', data
+                    if len(data) < 3:
+                        continue
+                    argmin = numpy.argmin(data)
+                    argmax = numpy.argmax(data)
+                    print '### ira', ira, 'idec', idec, 'argmin', argmin, 'argmax', argmax
+                    for imeta in (argmin, argmax):
+                        infile, irow = gridmeta[ira][idec][imeta]
+                        mytb.open(infile, nomodify=False)
+                        try:
+                            print '### clip', infile, 'row', irow, 'data', mytb.getcell('FLOAT_DATA', irow)
+                            mytb.putcell('FLAG_ROW', irow, True)
+                        finally:
+                            mytb.close()
+                    
+        outfile = self.outfile_ref
+        sdimaging(infiles=infiles, outfile=outfile, overwrite=overwrite, 
+                  mode=mode, nchan=nchan, start=start, width=width, 
+                  gridfunction=gridfunction, imsize=imsize, cell=cell,
+                  phasecenter=phasecenter, clipminmax=False)
+        self.assertTrue(os.path.exists(self.outfile_ref))
+            
+        # compare
+        myia = gentools(['ia'])[0]
+        myia.open(self.outfile)
+        result = myia.getchunk()
+        result_mask = myia.getchunk(getmask=True)
+        myia.close()
+        
+        myia.open(self.outfile_ref)
+        reference = myia.getchunk()
+        reference_mask = myia.getchunk(getmask=True)
+        myia.close()
+        
+        print '### result', result.flatten()
+        print '### mask', result_mask.flatten()
+        print '### reference', reference.flatten()
+        print '### mask', reference_mask.flatten()
+        
+        self.assertTrue(numpy.all(result_mask == reference_mask))
+        
+        mresult = result[result_mask]
+        mreference = reference[reference_mask]
+        self.assertTrue(mresult.shape == mreference.shape)
+        #self.assertTrue(numypy.all(result == reference))
+        diff = lambda v, r: abs((v - r) / r) if r != 0.0 else abs(v)
+        vdiff = numpy.vectorize(diff)
+        err = vdiff(mresult, mreference)
+        eps = 1.0e-6
+        print 'err = %s (max %s min %s)'%(err, err.max(), err.min())
+        self.assertTrue(numpy.all(err < eps)) 
+    
+    def test_1row(self):
+        """test_1row: check if clipping is not activated (1 spectrum)"""
+        infile = 'clipping_1row.ms'
+        self._test_clipping(infile, is_clip_effective=False)
+    
+    def test_2rows(self):
+        """test_2rows: check if clipping is not activated (2 spectra)"""
+        infile = 'clipping_2rows.ms'
+        self._test_clipping(infile, is_clip_effective=False)
+    
+    def test_3rows(self):
+        """test_3rows: check if clipping is activated (3 spectra)"""
+        infile = 'clipping_3rows.ms'
+        self._test_clipping(infile, is_clip_effective=True)
+    
+    def test_multivis(self):
+        """test_multivis: check if clipping properly handles multiple ms inputs"""
+        infiles = ['clipping_1row.ms', 'clipping_2rows.ms']
+        self._test_clipping(infiles, is_clip_effective=True)
+        
+    def test_clip(self):
+        """test_clip: check if clipping is applied to every image pixel separately"""
+        infiles = ['clipping_1row.ms', 'clipping_2rows.ms', 'clipping_3rows.ms']
+        self._test_clipping(infiles, is_clip_effective=True)
+        
+    def test_clip2(self):
+        """test_clip2: check if clipping is activated on one pixel but is not on others"""
+        infiles = ['clipping_1row.ms', 'clipping_3rows.ms']
+        self._test_clipping(infiles, is_clip_effective=True)
+        
+    def test_suprious(self):
+        """test_suprious: check if clipping properly handles suprious data"""
+        # This test is defined to verify new clipping algorithm
+        #
+        # Test data contains suprious. It is 10 orders of magnitude larger 
+        # than orginary data so that ordinary data will disappear due to 
+        # the loss of trailing digits when suprious data is accumulated to grid.
+        # (NOTE: grid data is signle-precision)
+        #
+        # Old algorithm keeps track of minimum and maximum data during accumulation. 
+        # However, it accumulates whole data once, then subtract minimum and maximum 
+        # from accumulated result. In this procedure, suprious data must be accumulated 
+        # to grid. Thus, the result is suffered from the loss of trailing digits.
+        #  
+        # On the other hand, new algorithm doesn't accumulate mininum and maximum. 
+        # If clipping cannot apply (i.e., number of accumulated data is less than 
+        # 3), these values are accumulated at the post-accumulation step.
+        infile = 'clipping_3rows_suprious.ms'
+        self._test_clipping(infile, is_clip_effective=True)
+        
+
 # utility for sdimaging_test_mapextent
 def get_mapextent(infile, scan=None):
     s = sd.scantable(infile, average=False)
@@ -2741,4 +2962,4 @@ def suite():
             sdimaging_test_flag, 
             sdimaging_test_polflag,sdimaging_test_mslist,
             sdimaging_test_restfreq, sdimaging_test_mapextent,
-            sdimaging_test_interp]
+            sdimaging_test_interp, sdimaging_test_clipping]
