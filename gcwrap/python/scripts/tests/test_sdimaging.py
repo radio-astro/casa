@@ -2667,9 +2667,10 @@ class sdimaging_test_clipping(sdimaging_unittest_base):
     test_clip: check if clipping is applied to every image pixel separately
     test_clip2: check if clipping is activated on one pixel but is not on others
     test_suprious: check if clipping properly handles suprious data 
+    test_multichan: check if clipping handles multi-channel data properly
     """
     data_list = ['clipping_1row.ms', 'clipping_2rows.ms', 'clipping_3rows.ms', 
-                 'clipping_3rows_suprious.ms']
+                 'clipping_3rows_suprious.ms', 'clipping_3rows_2chans.ms']
     outfile = 'sdimaging_test_clipping.im'
     outfile_ref = 'sdimaging_test_clipping.ref.im'
     def setUp(self):
@@ -2707,7 +2708,7 @@ class sdimaging_test_clipping(sdimaging_unittest_base):
         outfile = self.outfile
         overwrite = False
         mode = 'channel'
-        nchan = 1
+        nchan = -1
         start = 0
         width = 1
         gridfunction = 'BOX'
@@ -2766,28 +2767,35 @@ class sdimaging_test_clipping(sdimaging_unittest_base):
                         infile, irow = meta[imeta]
                         mytb.open(infile)
                         try:
-                            data = mytb.getcell('FLOAT_DATA', irow)[0][0]
+                            data = mytb.getcell('FLOAT_DATA', irow)[0]
                         finally:
                             mytb.close()
                         grid[ira][idec].append(data)
             
             for ira in xrange(imsize):
                 for idec in xrange(imsize):
-                    data = grid[ira][idec]
-                    print '### ira', ira, 'idec', idec, 'data', data
+                    data = numpy.asarray(grid[ira][idec], dtype=numpy.float64)
                     if len(data) < 3:
                         continue
-                    argmin = numpy.argmin(data)
-                    argmax = numpy.argmax(data)
-                    print '### ira', ira, 'idec', idec, 'argmin', argmin, 'argmax', argmax
-                    for imeta in (argmin, argmax):
-                        infile, irow = gridmeta[ira][idec][imeta]
-                        mytb.open(infile, nomodify=False)
-                        try:
-                            print '### clip', infile, 'row', irow, 'data', mytb.getcell('FLOAT_DATA', irow)
-                            mytb.putcell('FLAG_ROW', irow, True)
-                        finally:
-                            mytb.close()
+                    print '### ira', ira, 'idec', idec, 'data', data
+                    for ichan in xrange(data.shape[1]):
+                        slice = data[:,ichan]
+                        argmin = numpy.argmin(slice)
+                        argmax = numpy.argmax(slice)
+                        print '### ira', ira, 'idec', idec, 'argmin', argmin, 'argmax', argmax
+                        for imeta in (argmin, argmax):
+                            infile, irow = gridmeta[ira][idec][imeta]
+                            mytb.open(infile, nomodify=False)
+                            try:
+                                print '### clip', infile, 'row', irow, 'chan', ichan, 'data', mytb.getcell('FLOAT_DATA', irow)
+                                #mytb.putcell('FLAG_ROW', irow, True)
+                                flag = mytb.getcell('FLAG', irow)
+                                print '### flag (before)', flag
+                                flag[0,ichan] = True
+                                print '### flag (after)', flag
+                                mytb.putcell('FLAG', irow, flag)
+                            finally:
+                                mytb.close()
                     
         outfile = self.outfile_ref
         sdimaging(infiles=infiles, outfile=outfile, overwrite=overwrite, 
@@ -2874,6 +2882,11 @@ class sdimaging_test_clipping(sdimaging_unittest_base):
         # If clipping cannot apply (i.e., number of accumulated data is less than 
         # 3), these values are accumulated at the post-accumulation step.
         infile = 'clipping_3rows_suprious.ms'
+        self._test_clipping(infile, is_clip_effective=True)
+        
+    def test_multichan(self):
+        """test_multichan: check if clipping handles multi-channel data properly"""
+        infile = 'clipping_3rows_2chans.ms'
         self._test_clipping(infile, is_clip_effective=True)
         
 
