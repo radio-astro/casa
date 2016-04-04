@@ -447,6 +447,16 @@ void plotms::setTitle(const string& text,  const bool updateImmediately, const i
             PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, /*true*/asyncCall);
 }
 
+void plotms::setTitleFont(const int size,  const bool updateImmediately, const int plotIndex) 
+{
+    launchApp();
+    Record params;
+    params.define(PlotMSDBusApp::PARAM_CANVASTITLEFONT,  size);
+    params.define(PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY, updateImmediately);
+    params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);
+    QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName( ),
+            PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, /*true*/asyncCall);
+}
 
 void plotms::setXAxisLabel(const string& text,  const bool updateImmediately, const int plotIndex) 
 {
@@ -459,7 +469,27 @@ void plotms::setXAxisLabel(const string& text,  const bool updateImmediately, co
             PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, /*true*/asyncCall);
 }
 
+void plotms::setXAxisFont(const int size,  const bool updateImmediately, const int plotIndex) 
+{
+    launchApp();
+    Record params;
+    params.define(PlotMSDBusApp::PARAM_XAXISFONT,  size);
+    params.define(PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY, updateImmediately);
+    params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);
+    QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName( ),
+            PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, /*true*/asyncCall);
+}
 
+void plotms::setYAxisFont(const int size,  const bool updateImmediately, const int plotIndex) 
+{
+    launchApp();
+    Record params;
+    params.define(PlotMSDBusApp::PARAM_YAXISFONT,  size);
+    params.define(PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY, updateImmediately);
+    params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);
+    QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName( ),
+            PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, /*true*/asyncCall);
+}
 
 void plotms::setExportRange(const string& range )
 {

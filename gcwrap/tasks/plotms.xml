@@ -719,14 +719,29 @@ Label Paramlegeters
     <value />
   </param>
   
+  <param type="int" name="titlefont">
+    <description>Font for plot title</description>
+    <value>0</value>
+  </param>
+
   <param type="string" name="xlabel">    
     <description>Text for horizontal axis. Blank for default.</description>
     <value />
   </param>
   
+  <param type="int" name="xaxisfont">
+    <description>Font for plot x-axis</description>
+    <value>0</value>
+  </param>
+
   <param type="string" name="ylabel">    
     <description>Text for vertical axis. Blank for default.</description>
     <value />
+  </param>
+
+  <param type="int" name="yaxisfont">
+    <description>Font for plot y-axis.</description>
+    <value>0</value>
   </param>
 
 
@@ -1645,9 +1660,14 @@ Constraints
                                   ymin=-2.0, ymax=14.0
 
     title  -- title along top of plot (called "canvas" in some places)
-    
-    xlabel -- text to label horizontal axis, with formatting using '%%' 
+    titlefont -- plot title font size
+                 default: 0 (autosize depending on grid)
+    xlabel -- text to label horizontal axis, with formatting using '%%'
+    xaxisfont -- x-axis font size
+                 default: 0 (autosize)
     ylabel -- text to label horizontal axis, with formatting using '%%' 
+    yaxisfont -- y-axis font size
+                 default: 0 (autosize)
     
     
     showmajorgrid  -- show major grid lines (horiz and vert.)

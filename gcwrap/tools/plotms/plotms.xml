@@ -935,6 +935,30 @@ Plot Axes Parameters Methods
   <returns />
 </method>
 
+<method type="function" name="setTitleFont">
+  <keyword>setTitleFont</keyword>
+  <shortdescription>Sets the title font for a plot</shortdescription>
+  <description />
+  <input>
+    <param type="int" name="size">
+      <description>Title font (0 for automatic sizing)</description>
+      <value>0</value>
+    </param>
+    
+    <param type="bool" name="updateImmediately">
+      <description>whether to apply this change immediately, IF the window is currently shown</description>
+      <value>true</value>
+    </param>
+    
+    <param type="int" name="plotIndex">
+      <description>Index of the plot (0-based).</description>
+      <value>0</value>
+    </param>
+    
+  </input>
+  <example />  
+  <returns />
+</method>
 
 <method type="function" name="setXAxisLabel">
   <keyword>setXAxisLabel</keyword>
@@ -961,6 +985,30 @@ Plot Axes Parameters Methods
   <returns />
 </method>
 
+<method type="function" name="setXAxisFont">
+  <keyword>setXAxisFont</keyword>
+  <shortdescription>Sets the x-axis font for a plot</shortdescription>
+  <description />
+  <input>
+    <param type="int" name="size">
+      <description>X-axis font (0 for automatic sizing)</description>
+      <value>0</value>
+    </param>
+    
+    <param type="bool" name="updateImmediately">
+      <description>whether to apply this change immediately, IF the window is currently shown</description>
+      <value>true</value>
+    </param>
+    
+    <param type="int" name="plotIndex">
+      <description>Index of the plot (0-based).</description>
+      <value>0</value>
+    </param>
+    
+  </input>
+  <example />  
+  <returns />
+</method>
 
 <method type="function" name="setYAxisLabel">
   <keyword>setYAxisLabel</keyword>
@@ -987,7 +1035,30 @@ Plot Axes Parameters Methods
   <returns />
 </method>
 
-
+<method type="function" name="setYAxisFont">
+  <keyword>setYLabelFont</keyword>
+  <shortdescription>Sets the y-axis font for a plot</shortdescription>
+  <description />
+  <input>
+    <param type="int" name="size">
+      <description>Y-axis font (0 for automatic sizing)</description>
+      <value>0</value>
+    </param>
+    
+    <param type="bool" name="updateImmediately">
+      <description>whether to apply this change immediately, IF the window is currently shown</description>
+      <value>true</value>
+    </param>
+    
+    <param type="int" name="plotIndex">
+      <description>Index of the plot (0-based).</description>
+      <value>0</value>
+    </param>
+    
+  </input>
+  <example />  
+  <returns />
+</method>
 
 <method type="function" name="getTitle">
   <keyword>getTitle</keyword>

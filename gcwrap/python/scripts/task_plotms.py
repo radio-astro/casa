@@ -29,7 +29,8 @@ def plotms(vis=None,
            flaggedsymbolsize=None, flaggedsymbolcolor=None,
            flaggedsymbolfill=None, flaggedsymboloutline=None,
            plotrange=None,
-           title=None, xlabel=None, ylabel=None,
+           title=None, titlefont=None, 
+           xlabel=None, xaxisfont=None, ylabel=None, yaxisfont=None,
            showmajorgrid=None, majorwidth=None, majorstyle=None,  majorcolor=None,    
            showminorgrid=None, minorwidth=None, minorstyle=None,  minorcolor=None, 
            showlegend=None, legendposition=None,   
@@ -172,9 +173,12 @@ def plotms(vis=None,
                      default: ''  (ignored - same as colorizing off)              
     
     title  -- title along top of plot (called "canvas" in some places)
+    titlefont -- plot title font size
+                 default: 0 (autosize depending on grid)
     exprange -- Export all iteration plots ('all') or only the current one.
                     default: '' (only export the current iteration plot)
     xlabel, ylabel -- text to label horiz. and vert. axes, with formatting (%% and so on)
+    xaxisfont, yaxisfont -- int for axis font size
     
     showlegend -- show a legend on the plot
                     default: False
@@ -619,8 +623,11 @@ def plotms(vis=None,
         
         # Set various user-directed appearance parameters
         pm.setTitle(title,False,plotindex)
+        pm.setTitleFont(titlefont,False,plotindex)
         pm.setXAxisLabel(xlabel,False,plotindex)
+        pm.setXAxisFont(xaxisfont,False,plotindex)
         pm.setYAxisLabel(ylabel,False,plotindex)
+        pm.setYAxisFont(yaxisfont,False,plotindex)
         pm.setGridParams(showmajorgrid, majorwidth, majorstyle, majorcolor,
                          showminorgrid, minorwidth, minorstyle, minorcolor, False, plotindex)
         
