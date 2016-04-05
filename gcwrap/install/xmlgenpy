@@ -2,7 +2,7 @@
 CASAROOT=`echo $CASAPATH | awk '{print $1}'`
 CASAARCH=`echo $CASAPATH | awk '{printf "%s/%s", $1, $2}'`
 
-if [[ -e "$CASAROOT/xml/casa2pyimp.xsl" ]]; then
+if [ -e "$CASAROOT/xml/casa2pyimp.xsl" ]; then
    XMLROOT="$CASAROOT/xml"
 else
    XMLROOT="$CASAARCH/xml"
