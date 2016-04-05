@@ -543,6 +543,7 @@ Iteration Parameters
         <value>baseline</value>
         <value>antenna</value>
         <value>time</value>
+        <value>corr</value>
       </allowed>
    </param>
 
@@ -1601,7 +1602,7 @@ Constraints
 
     iteraxis -- axis upon which iterate plots (one plot per page, for now)
                 default: '' (no iteration)
-                options: 'scan','field','spw','baseline','antenna', 'time',''
+                options: 'scan','field','spw','baseline','antenna','time','corr',''
       &gt;&gt;&gt; iteraxis expandable parameters
         xselfscale -- If true, iterated plots should share a common x-axis label per column.
         yselfscale -- If true, iterated plots should share a common y-axis label per row.

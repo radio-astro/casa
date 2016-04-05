@@ -1187,7 +1187,25 @@ class plotms_test_iteration(plotms_test_base):
             self.checkPlotfile(plotFiles[i], 50000)
             self.removePlotfile(plotFiles[i])
         print
- 
+
+    def test_iteration_corr(self):
+        '''test_iteraxis_corr: Iterate by correlation and export all'''
+        plotfile_jpg = self.outputDir + "testIteration11.jpg"
+        plotfile1_jpg = self.outputDir + "testIteration11_CorrRR.jpg"
+        plotfile2_jpg = self.outputDir + "testIteration11_CorrLL_2.jpg"
+        # Create the plot and check that there are 27 iterations
+        res = plotms(vis=self.ms, plotfile = plotfile_jpg, exprange='all',
+                     showgui=False, iteraxis='corr', overwrite=True,
+                     highres=True)
+        self.assertTrue(res)
+        fileCount = self.getFilecount(self.outputDir, "testIteration11_")
+        self.assertEqual(fileCount, 2)
+        self.checkPlotfile(plotfile1_jpg, 250000)
+        self.removePlotfile(plotfile1_jpg)
+        self.checkPlotfile(plotfile2_jpg, 250000)
+        self.removePlotfile(plotfile2_jpg)
+        print
+
 # ------------------------------------------------------------------------------
 
 class plotms_test_multi(plotms_test_base):
