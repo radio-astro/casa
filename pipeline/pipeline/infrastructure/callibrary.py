@@ -363,7 +363,9 @@ class CalFrom(object):
         'swpow'             : 10,
         'finalcal'          : 11,
         'uvcont'            : 12,
-        'amp'               : 13
+        'amp'               : 13,
+        'ps'                : 14,
+        'otfraster'         : 15
     }
 
     CALTYPE_TO_VISCAL = {

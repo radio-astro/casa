@@ -48,6 +48,7 @@ CasaTaskDict = {
                    'hsd_flagdata'          : 'FlagDeterALMASingleDish',
                    'hsd_simplescale'       : 'SDSimpleScale',
                    'hsdms_k2jycal'         : 'SDK2JyCal',
+                   'hsdms_skycal'          : 'SDMSSkyCal',
                    'hifa_importdata'       : 'ALMAImportData',
                    'hifa_antpos'           : 'ALMAAntpos',
                    'hifa_bandpass'         : 'ALMAPhcorBandpass',
@@ -152,6 +153,7 @@ classToCASATask = {
     hsd_tasks.FlagDeterALMASingleDish : 'hsd_flagdata',
     hsd_tasks.SDSimpleScale           : 'hsd_simplescale',
     hsd_tasks.SDK2JyCal               : 'hsdms_k2jycal',
+    hsd_tasks.SDMSSkyCal              : 'hsdms_skycal',
     #VLA tasks
     hifv_tasks.VLAImportData          : 'hifv_importdata',
     hifv_tasks.Hanning                : 'hifv_hanning',
@@ -313,7 +315,8 @@ TASK_COMMENTS = {
         'and to group data for the following processing. \n'
         '' + SILENT_TASK_COMMENT
     ),
-    (hsd_tasks.SDCalSky,) : (
+    (hsd_tasks.SDCalSky,
+     hsd_tasks.SDMSSkyCal) : (
         'Generates sky calibration table according to calibration '
         'strategy. '
     ),
@@ -355,7 +358,7 @@ TASK_COMMENTS = {
     ),
     (hsd_tasks.SDK2JyCal,) : (
         'The Kelvin to Jy calibration tables are generated.'
-    ),
+    )
 }
 
 

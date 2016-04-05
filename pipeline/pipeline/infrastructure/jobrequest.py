@@ -47,6 +47,7 @@ import sdflag_cli
 import sdimaging_cli
 import sdsave_cli
 import sdscale_cli
+import tsdcal_cli
 
 from . import casatools
 from . import logging
@@ -415,6 +416,9 @@ class CASATaskJobGenerator(object):
 
     def sdscale(self, *v, **k):
         return self._get_job(sdscale_cli.sdscale_cli, *v, **k)
+    
+    def tsdcal(self, *v, **k):
+        return self._get_job(tsdcal_cli.tsdcal_cli, *v, **k)
 
     def _get_job(self, task, *v, **k):
         job = JobRequest(task, *v, **k)
