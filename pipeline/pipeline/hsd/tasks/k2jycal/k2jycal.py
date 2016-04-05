@@ -107,9 +107,7 @@ class SDK2JyCal(basetask.StandardTaskTemplate):
 
         callist = []
         # Loop over MS and generate a caltable per MS
-        LOG.warn("vislist: %s" % str(self.inputs.vis))
         for msname in self.inputs.vis:
-            LOG.warn("Processing: %s" % msname)
             if not os.path.exists(msname):
                 LOG.error("Could not find MS '%s'" % msname)
                 continue
