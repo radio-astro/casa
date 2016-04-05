@@ -49,6 +49,12 @@
         <value type="string"></value>
       </param>
 
+
+     
+
+
+
+
       <param type="bool" name="selectdata">
         <description>More data selection parameters (antenna, timerange etc)</description>
         <value>True</value>
@@ -90,6 +96,22 @@
         <any type="variant" limittypes="string int"/>
         <value type="string"></value>
       </param>
+
+    <!--param type="bool" name="timeaverag">
+        <description>Average data in time.</description>
+        <value>False</value>
+    </param>
+       <param type="string" name="timebin" subparam="true">
+        <description>Bin width for time averaging.</description>
+        <value type="string">0s</value>
+        </param>       
+        <param type="any" name="timespan" subparam="true"> 
+        <description>Span the timebin across scan, state or both.</description>
+        <any type="variant" limittypes="string stringArray"/>
+        <value type="string"></value>
+        </param-->
+
+
 
       <param type="bool" name="timeaverage">
         <description>Average data in time.</description>
@@ -138,8 +160,6 @@
      </param>
 
 
-
-
       <param type="string" name="reportingaxes">
         <description>Which reporting axis to use (ddid, field, integration)</description>
         <value type="string">ddid</value>
@@ -149,11 +169,6 @@
           <value>integration</value>
         </allowed>
       </param>
-
-
-
-
-
 
 
       <constraints>
@@ -191,6 +206,15 @@
           <equals type="bool" value="False"/>
         </when>
 
+        <!--when param="timeaverag">
+         <equals type="bool" value="False"/>
+        <equals type="bool" value="True">
+        <default param="timebin"><value type="string">0s</value></default>
+        <default param="timespan"><value type="string"></value></default>
+        <default param="maxuvwdistance"><value type="double">0.0</value></default>
+         </equals>
+         </when-->
+
 
         <when param="timeaverage">
           <equals type="bool" value="False"/>
@@ -200,10 +224,6 @@
             <default param="maxuvwdistance"><value type="double">0.0</value></default>
           </equals>
         </when>
-
-
-
-
 
       </constraints>
     </input>
