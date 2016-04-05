@@ -102,5 +102,17 @@ class ia_replacemaskedpixels_test(unittest.TestCase):
         self.assertTrue(zz)
         yy.done()
     
+    def test_history(self):
+        """Verify history writing"""
+        yy = iatool()
+        mymask = "history.im"
+        yy.fromshape(mymask, [20, 20])
+        yy.addnoise()
+        yy.replacemaskedpixels(pixels=-255, mask=mymask + ">0")
+        msgs = yy.history()
+        yy.done()
+        self.assertTrue("ia.replacemaskedpixels" in msgs[-2])
+        self.assertTrue("ia.replacemaskedpixels" in msgs[-1])
+
 def suite():
     return [ia_replacemaskedpixels_test]

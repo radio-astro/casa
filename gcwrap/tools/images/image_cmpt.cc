@@ -4074,6 +4074,55 @@ bool image::rename(const string& name, bool overwrite) {
     return False;
 }
 
+bool image::replacemaskedpixels(
+    const variant& pixels, const variant& region,
+    const variant& vmask, bool updateMask, bool list,
+    bool stretch
+) {
+    _log << _ORIGIN;
+    if (detached()) {
+        return False;
+    }
+    try {
+        auto regionPtr = _getRegion(region, True);
+        auto mask = _getMask(vmask);
+        if (_imageF) {
+            auto myfloat = _imageF;
+            ImageMaskedPixelReplacer<Float> impr(
+                myfloat, regionPtr.get(), mask
+            );
+            impr.setStretch(stretch);
+            impr.replace(pixels.toString(), updateMask, list);
+            _imageF = myfloat;
+        }
+        else {
+            auto mycomplex = _imageC;
+            ImageMaskedPixelReplacer<Complex> impr(
+                mycomplex, regionPtr.get(), mask
+            );
+            impr.setStretch(stretch);
+            impr.replace(pixels.toString(), updateMask, list);
+            _imageC = mycomplex;
+        }
+        _stats.reset();
+        vector<String> names = {
+            "pixels", "region", "mask", "update",
+            "list", "stretch"
+        };
+        vector<variant> values = {
+            pixels, region, vmask, updateMask,
+            list, stretch
+        };
+        _addHistory(__func__, names, values);
+        return True;
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+}
+
 image* image::rotate(
     const string& outfile, const vector<int>& inshape,
     const variant& inpa, const variant& region,
@@ -4330,72 +4379,6 @@ void image::_reset() {
 
 
 
-bool image::replacemaskedpixels(
-	const variant& pixels,
-	const variant& region, const variant& vmask,
-	const bool updateMask, const bool list,
-	const bool stretch
-) {
-	_log << _ORIGIN;
-	if (detached()) {
-		return False;
-	}
-	try {
-		SHARED_PTR<Record> regionPtr = _getRegion(region, True);
-
-		String mask = vmask.toString();
-		if (mask == "[]") {
-			mask = "";
-		}
-		vector<std::pair<LogOrigin, String> > msgs;
-		{
-			ostringstream os;
-			os << "Ran ia." << __func__;
-			msgs.push_back(make_pair(_ORIGIN, os.str()));
-			vector<std::pair<String, variant> > inputs;
-			inputs.push_back(make_pair("pixels", pixels));
-			inputs.push_back(make_pair("region", region));
-			inputs.push_back(make_pair("mask", vmask));
-			inputs.push_back(make_pair("update", updateMask));
-			inputs.push_back(make_pair("list", list));
-			inputs.push_back(make_pair("stretch", stretch));
-			os.str("");
-			os << "ia." << __func__ << _inputsString(inputs);
-			msgs.push_back(make_pair(_ORIGIN, os.str()));
-		}
-		if (_imageF) {
-			auto myfloat = _imageF;
-			ImageMaskedPixelReplacer<Float> impr(
-				myfloat, regionPtr.get(), mask
-			);
-			impr.setStretch(stretch);
-			impr.replace(pixels.toString(), updateMask, list);
-			//_image.reset(new ImageAnalysis(myfloat));
-			_imageF = myfloat;
-			ImageHistory<Float> hist(myfloat);
-			hist.addHistory(msgs);
-		}
-		else {
-			auto mycomplex = _imageC;
-			ImageMaskedPixelReplacer<Complex> impr(
-				mycomplex, regionPtr.get(), mask
-			);
-			impr.setStretch(stretch);
-			impr.replace(pixels.toString(), updateMask, list);
-			//_image.reset(new ImageAnalysis(mycomplex));
-			_imageC = mycomplex;
-			ImageHistory<Complex> hist(mycomplex);
-			hist.addHistory(msgs);
-		}
-		_stats.reset();
-		return True;
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-}
 
 record* image::restoringbeam(int channel, int polarization) {
 	try {
