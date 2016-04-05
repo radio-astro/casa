@@ -289,7 +289,7 @@ class Gainflagger(basetask.StandardTaskTemplate):
 
         # Translate the input flagging parameters to a more compact
         # list of rules.
-        rules = viewflaggers.MatrixFlagger.make_flag_rules(
+        rules = viewflaggers.NewMatrixFlagger.make_flag_rules(
           flag_maxabs=inputs.flag_maxabs,
           fmax_limit=inputs.fmax_limit)
 

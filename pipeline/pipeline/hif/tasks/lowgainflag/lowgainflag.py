@@ -115,7 +115,7 @@ class Lowgainflag(basetask.StandardTaskTemplate):
         # Construct the generator that will create the view of the data
         # that is the basis for flagging.
         viewtask = LowgainflagView(context=inputs.context,
-          output_dir=inputs.output_dir, vis=inputs.vis, intent=inputs.intent,
+          vis=inputs.vis, intent=inputs.intent,
           spw=inputs.spw, refant=inputs.refant)
 
         # Construct the task that will set any flags raised in the
@@ -126,7 +126,7 @@ class Lowgainflag(basetask.StandardTaskTemplate):
 
         # Translate the input flagging parameters to a more compact
         # list of rules.
-        rules = viewflaggers.MatrixFlagger.make_flag_rules (
+        rules = viewflaggers.NewMatrixFlagger.make_flag_rules (
           flag_nmedian=inputs.flag_nmedian,
           fnm_lo_limit=inputs.fnm_lo_limit,
           fnm_hi_limit=inputs.fnm_hi_limit)
@@ -229,7 +229,7 @@ class LowgainflagData(basetask.StandardTaskTemplate):
  
 class LowgainflagView(object):
 
-    def __init__(self, context, output_dir=None, vis=None, 
+    def __init__(self, context, vis=None, 
       intent=None, spw=None, refant=None):
         
         self.context = context
