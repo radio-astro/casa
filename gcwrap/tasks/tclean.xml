@@ -1704,7 +1704,6 @@ HPX HEALPix grid.  -->
       <value type="string">user</value>
 	    <allowed kind="enum">
               <value>user</value>
-              <value>none</value>
               <value>pb</value>
 	      <value>auto-thresh</value>
 	    </allowed>
@@ -2313,7 +2312,6 @@ HPX HEALPix grid.  -->
 
 <!-- mask params -->
    <when param="usemask">
-       <equals type="string" value="none"/>
        <equals type="string" value="user">
          <default param="mask"><value>""</value></default>
          <default param="pbmask"><value>0.0</value></default>
