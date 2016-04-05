@@ -4328,6 +4328,51 @@ image* image::sepconvolve(
     return nullptr;
 }
 
+bool image::set(
+    const variant& vpixels, int pixelmask,
+    const variant& region, bool list
+) {
+    try {
+        _log << _ORIGIN;
+        if (detached()) {
+            return False;
+        }
+        auto pixels = vpixels.toString();
+        if (pixels == "[]") {
+            pixels = "";
+        }
+        auto pRegion = _getRegion(region, False);
+        if (pixels == "" && pixelmask == -1) {
+            _log << LogIO::WARN
+                << "You must specify at least either the pixels or the mask to set"
+                << LogIO::POST;
+            return False;
+        }
+        if (
+            PixelValueManipulator<Float>::set(
+                _imageF, pixels, pixelmask, *pRegion, list
+            )
+        ) {
+            _stats.reset(0);
+            vector<String> names = {
+                "pixels", "pixelmask", "region", "list"
+            };
+            vector<variant> values = {
+                vpixels, pixelmask, region, list
+            };
+            _addHistory(__func__, names, values);
+            return True;
+        }
+        ThrowCc("Error setting pixel values.");
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return False;
+}
+
 
 record* image::torecord() {
     _log << LogOrigin("image", __func__);
@@ -4510,42 +4555,6 @@ void image::_reset() {
 
 
 
-bool image::set(
-	const variant& vpixels, int pixelmask,
-	const variant& region, bool list
-) {
-	try {
-		_log << _ORIGIN;
-		if (detached()) {
-			return False;
-		}
-		String pixels = vpixels.toString();
-		if (pixels == "[]")
-			pixels = "";
-		SHARED_PTR<Record> pRegion(_getRegion(region, False));
-		if (pixels == "" && pixelmask == -1) {
-			_log << LogIO::WARN
-					<< "You must specify at least either the pixels or the mask to set"
-					<< LogIO::POST;
-			return False;
-		}
-		if (
-		    PixelValueManipulator<Float>::set(
-		        _imageF, pixels, pixelmask, *pRegion, list
-		    )
-		) {
-		    _stats.reset(0);
-			return True;
-		}
-		ThrowCc("Error setting pixel values.");
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	return False;
-}
 
 bool image::setbrightnessunit(const std::string& unit) {
 	try {
