@@ -488,6 +488,17 @@ void PlotMSIndexer::setUpIndexing() {
 		}
 		break;
 	}
+    case PMS::CORR: {
+		nSegment_=0;
+		for (Int ich=0; ich<nChunk(); ++ich)
+			// only check for non-empty chunks
+			if (plotmscache_->goodChunk(ich)) {
+				for (Int icorr=0; icorr<chsh(0,ich); ++icorr)
+					if (*(plotmscache_->corr_[ich]->data()+icorr) == iterValue_) 
+						nSegment_ += ichanbslnmax_[ich];
+			}
+		break;
+	}
 	default:
 		// most iteration axis have nChunk segments
 		nSegment_ = nChunk();
@@ -605,7 +616,21 @@ void PlotMSIndexer::setUpIndexing() {
 			}
 			break;
 		}
-		default:
+        case PMS::CORR: {
+            Int nCorr = chsh(0,ic);
+            for (Int icorr=0; icorr<nCorr; ++icorr) {
+                if (*(plotmscache_->corr_[ic]->data()+icorr) == iterValue_) {
+                    for (Int nPoints=0; nPoints<ichanbslnmax_[ic]; ++nPoints) {
+                        ++iseg;
+                        cacheChunk_(iseg)  = ic;
+                        cacheOffset_(iseg) = icorr + nPoints*nCorr;
+					    nSegPoints_(iseg)  = 1;
+                    }
+                }
+            }
+            break;
+        }
+        default:
 			// shouldn't reach here...
 			throw(AipsError("Unsupported iteration axis: "+PMS::axis(iterAxis_)));
 			break;
@@ -1417,6 +1442,9 @@ String PlotMSIndexer::iterValue() {
 	case PMS::ANTENNA:
 		return plotmscache_->antstanames_(iterValue_);
 		break;
+	case PMS::CORR:
+        return plotmscache_->polname(iterValue_);
+        break;
 	default:
 		return String("");
 		//    throw(AipsError("Unsupported iteration axis: "+PMS::axis(iterAxis_)));

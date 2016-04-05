@@ -36,7 +36,8 @@
 #include <lattices/Lattices/ArrayLattice.h>
 #include <lattices/LatticeMath/LatticeFFT.h>
 #include <scimath/Mathematics/FFTServer.h>
-#include <ms/MeasurementSets/MSColumns.h> 	 
+#include <ms/MeasurementSets/MSColumns.h>
+#include <measures/Measures/Stokes.h>
 #include <msvis/MSVis/VisSet.h>
 #include <msvis/MSVis/VisBuffer2.h>
 #include <msvis/MSVis/VisBufferUtil.h>
@@ -818,7 +819,6 @@ void PlotMSCacheBase::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange,
 	case PMS::SCAN: {
 		iterValues=scan_(goodChunk_).getCompressedArray();
 		nIter=genSort(iterValues,Sort::Ascending,(Sort::QuickSort | Sort::NoDuplicates));
-
 		break;
 	}
 	case PMS::SPW: {
@@ -863,7 +863,6 @@ void PlotMSCacheBase::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange,
 		iterValues=bslnList(bslnMask).getCompressedArray();
 		nIter=iterValues.nelements();
 		//    cout << "nIter = " << nIter << " iterValues = " << iterValues << endl;
-
 		break;
 	}
 	case PMS::ANTENNA: {
@@ -956,6 +955,28 @@ void PlotMSCacheBase::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange,
 		}
 		break;
 	}
+    case PMS::CORR: {
+        // Revise axes mask, etc., to ensure correlation-dependence
+        if (!netAxesMask_[dataIndex](0)) {
+            netAxesMask_[dataIndex](0)=True;
+            setPlotMask( dataIndex );
+        }
+
+        Int nCorrMax = Stokes::NumberOfTypes;
+        Vector<Int> corrList(nCorrMax);
+        Vector<Bool> corrMask(nCorrMax,False);
+        indgen(corrList);
+        for (Int ich=0;ich<nChunk_;++ich){
+            if (goodChunk_(ich)){
+                for (Int icorr=0; icorr<chunkShapes()(0,ich); ++icorr) {
+                    corrMask(*(corr_[ich]->data()+icorr))=True;
+                }
+            }
+        }
+        iterValues=corrList(corrMask).getCompressedArray();
+        nIter=iterValues.nelements();
+        break;
+    }
 	case PMS::NONE: {
 		nIter=1;
 		iterValues.resize(1);
