@@ -101,6 +101,17 @@ class ia_sepconvolve_test(unittest.TestCase):
         self.assertTrue(zz and type(zz) == type(yy))
         yy.done()
         zz.done()
+
+    def test_history(self):
+        """Verify history writing"""
+        yy = iatool()
+        yy.fromshape("", [20, 20])
+        zz = yy.sepconvolve(widths=[2])
+        yy.done()
+        msgs = zz.history()
+        zz.done()
+        self.assertTrue("ia.sepconvolve" in msgs[-2])
+        self.assertTrue("ia.sepconvolve" in msgs[-1])
     
 def suite():
     return [ia_sepconvolve_test]
