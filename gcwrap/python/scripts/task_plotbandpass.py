@@ -13,7 +13,7 @@
 #
 # To test:  see plotbandpass_regression.py
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.81 2016/03/22 22:09:43 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.82 2016/04/05 15:04:32 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -89,7 +89,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.81 2016/03/22 22:09:43 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.82 2016/04/05 15:04:32 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -3017,7 +3017,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                 if (originalSpw[ispw] > len(lo1s)):
                                     print "There is a problem in reading the LO1 values, cannot showimage for this dataset."
                                     showimage = False
-                                    LO1 = None
+                                    LO1 = ''
                                 else:
                                   LO1 = lo1s[originalSpw[ispw]]*1e-9  
                                   if (ispw not in foundLO1Message):
