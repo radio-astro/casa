@@ -19,35 +19,37 @@ class T2_4MDetailsSingleDishK2JyCalRenderer(basetemplates.T2_4MDetailsDefaultRen
                                          lambda: collections.defaultdict(
                                          lambda: collections.defaultdict(lambda: 'N/A (1.0)'))))
         reffile = None
-        # for r in results:
-        #     # rearrange jyperk factors
-        #     for ms in pcontext.observing_run.measurement_sets:
-        #         vis = ms.basename
-        #         for ant in ms.get_antenna():
-        #             ant_name = ant.name
-        #             if not r.outcome['factors'].has_key(vis) or \
-        #                     not r.outcome['factors'][vis].has_key(ant):
-        #                 continue
-        #             fs = r.outcome['factors'][vis][ant]
-        #             for spw in ms.get_spectral_windows(science_windows_only=True):
-        #                 spwid = spw.id
-        #                 ddid = ms.get_data_description(spw=spwid)
-        #                 corrs = map(ddid.get_polarization_label, range(ddid.num_polarizations))
-        #                 if fs.has_key(spwid) and spw.is_target and spw.nchan > 1 and spw.nchan != 4:
-        #                     fp = fs[spwid]
-        #                     LOG.info('fp=%s'%(fp))
-        #                     LOG.info('corrs=%s'%(corrs))
-        #                     for corr in corrs:
-        #                         if corr in fp.keys():
-        #                             ckey = corr
-        #                         elif 'I' in fp.keys() and corr in ['XX', 'YY', 'RR', 'LL']:
-        #                             ckey = 'I'
-        #                         else:
-        #                             ckey = None
-        #                         LOG.info('corr=%s ckey=%s'%(corr,ckey))
-        #                         if ckey is not None:
-        #                             jyperk[vis][ant][spwid][corr] = fp[ckey]
-        #     reffile = r.outcome['reffile']
+        r = results
+        for r in results:
+            # rearrange jyperk factors
+            for ms in context.observing_run.measurement_sets:
+                vis = ms.basename
+                for spw in ms.get_spectral_windows(science_windows_only=True):
+                    spwid = spw.id
+                    ddid = ms.get_data_description(spw=spwid)
+                    if not r.factors.has_key(vis) or \
+                            not r.factors[vis].has_key(spwid):
+                        continue
+                    fs = r.factors[vis][spwid]
+                    for ant in ms.get_antenna():
+                        ant_name = ant.name
+                        corrs = map(ddid.get_polarization_label, range(ddid.num_polarizations))
+                        if fs.has_key(ant_name):
+                            fp = fs[ant_name]
+                            LOG.info('fp=%s'%(fp))
+                            LOG.info('corrs=%s'%(corrs))
+                            for corr in corrs:
+                                if corr in fp.keys():
+                                    ckey = corr
+                                elif 'I' in fp.keys() and corr in ['XX', 'YY', 'RR', 'LL']:
+                                    ckey = 'I'
+                                else:
+                                    ckey = None
+                                LOG.info('corr=%s ckey=%s'%(corr,ckey))
+                                if ckey is not None:
+                                    jyperk[vis][spwid][ant_name][corr] = fp[ckey]
+
+            reffile = r.reffile
         reffile_copied = None
         if reffile is not None and os.path.exists(reffile):
             stage_dir = os.path.join(context.report_dir, 'stage%s'%(results.stage_number))
@@ -56,4 +58,4 @@ class T2_4MDetailsSingleDishK2JyCalRenderer(basetemplates.T2_4MDetailsDefaultRen
             reffile_copied = os.path.join(stage_dir, os.path.basename(reffile))
         ctx.update({'jyperk': jyperk,
                     'reffile': reffile_copied})
-            
+

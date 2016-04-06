@@ -7,12 +7,12 @@ from numpy import sqrt
 from pipeline.hif.heuristics import caltable as caltable_heuristic
 
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
 from pipeline.infrastructure import casa_tasks
 
 from . import jyperkreader
+#from . import worker
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -94,9 +94,8 @@ class SDK2JyCal(basetask.StandardTaskTemplate):
 
         if self.inputs.reffile is None or not os.path.exists(self.inputs.reffile):
             LOG.error('No scaling factors available')
-            return resultobjects.TsyscalResults(pool=[])
+            return SDK2JyCalResults(pool=[])
         # read scaling factor list
-        #factors_list = read_scaling_factor(reffile)
         reffile = os.path.abspath(os.path.expandvars(os.path.expanduser(inputs.reffile)))
         factors_list = jyperkreader.read(inputs.context, reffile)
         LOG.debug('factors_list=%s'%(factors_list))
@@ -107,6 +106,11 @@ class SDK2JyCal(basetask.StandardTaskTemplate):
 
         callist = []
         # Loop over MS and generate a caltable per MS
+        # k2jycal_inputs = worker.SDK2JyCalWorker.Inputs(inputs.context, inputs.output_dir, inputs.vis,
+        #                                                inputs.caltable, factors)
+        # k2jycal_task = worker.SDK2JyCalWorker(k2jycal_inputs)
+        # k2jycal_result = self._executor.execute(k2jycal_task)
+        # callist.append(k2jycal_result.calapp)
         for msname in self.inputs.vis:
             if not os.path.exists(msname):
                 LOG.error("Could not find MS '%s'" % msname)
@@ -122,8 +126,8 @@ class SDK2JyCal(basetask.StandardTaskTemplate):
             origin = callibrary.CalAppOrigin(task=SDK2JyCal, 
                                              inputs=inputs.to_casa_args())
             common_params = inputs.to_casa_args()
-            ms_factor = factors[msname]
-            for spw, spw_factor in ms_factor.items():
+            factors_for_ms = factors[msname]
+            for spw, spw_factor in factors_for_ms.items():
                 for ant, ant_factor in spw_factor.items():
                     # handle anonymous antenna
                     if ant.upper()=='ANONYMOUS': ant=''
@@ -131,9 +135,10 @@ class SDK2JyCal(basetask.StandardTaskTemplate):
                     pol_list = ant_factor.keys()
                     pols=str(',').join(map(polmap.get, pol_list))
                     gain_factor = [ 1./sqrt(ant_factor[pol]) for pol in pol_list ]
-                    gencal_job = casa_tasks.gencal(spw=str(spw), antenna=ant, pol=pols,
-                                                   parameter=gain_factor,
-                                                   **common_params)
+                    gencal_args = dict(spw=str(spw), antenna=ant, pol=pols,
+                                       parameter=gain_factor)
+                    gencal_args.update(common_params)
+                    gencal_job = casa_tasks.gencal(**gencal_args)
                     self._executor.execute(gencal_job)
             # generate callibrary for the caltable
             calto = callibrary.CalTo(vis=common_params['vis'])
@@ -141,7 +146,6 @@ class SDK2JyCal(basetask.StandardTaskTemplate):
                                          gainfield='', spwmap=None, interp='nearest,nearest')
             calapp = callibrary.CalApplication(calto, calfrom, origin)
             callist.append(calapp)
-
 
         return SDK2JyCalResults(pool=callist, factors=factors)
 
@@ -175,6 +179,7 @@ def rearrange_factors_list(factors_list):
                 if factors[vis][spwid].has_key(ant):
                     if factors[vis][spwid][ant].has_key(pol):
                         LOG.info('There are duplicate rows in reffile, use %s instead of %s for (%s,%s,%s,%s)'%\
+
                                  (factors[vis][spwid][ant][pol],factor,vis,spwid,ant,pol))
                         factors[vis][spwid][ant][pol] = factor
                     else:
@@ -189,7 +194,7 @@ def rearrange_factors_list(factors_list):
     return factors
 
 class SDK2JyCalResults(basetask.Results):
-    def __init__(self, final=[], pool=[], factors={}):
+    def __init__(self, final=[], pool=[], factors={}, reffile=None):
         super(SDK2JyCalResults, self).__init__()
 
         self.vis = None
@@ -197,6 +202,7 @@ class SDK2JyCalResults(basetask.Results):
         self.final = final[:]
         self.factors=factors
         self.error = set()
+        self.reffile = reffile
 
     def merge_with_context(self, context):
         if not self.final:
