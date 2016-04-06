@@ -718,7 +718,7 @@ class MSReductionGroupMember(object):
         return 'MSReductionGroupMember(ms=\'%s\', antenna=%s, spw=%s)' % (self.ms.basename, self.antenna, self.spw)
 
     def __eq__(self, other):
-        LOG.debug('MSReductionGroupMember.__eq__')
+        #LOG.debug('MSReductionGroupMember.__eq__')
         return other.ms.name == self.ms.name and other.antenna == self.antenna and other.spw == self.spw
 
     def __ne__(self, other):
@@ -737,9 +737,9 @@ class MSReductionGroupDesc(list):
     def merge(self, other):
         assert self == other
         for member in other:
-            LOG.info('ms.name=\"%s\" antenna=%s spw=%s'%(member.ms.name, member.antenna, member.spw))
+            LOG.trace('ms.name=\"%s\" antenna=%s spw=%s'%(member.ms.name, member.antenna, member.spw))
             if not member in self:
-                LOG.info('Adding (%s, %s, %s)'%(member.ms.name,member.antenna,member.spw))
+                LOG.debug('Adding (%s, %s, %s)'%(member.ms.name,member.antenna,member.spw))
                 self.append(member)
 
     def add_member(self, ms, antenna, spw):
@@ -767,7 +767,7 @@ class MSReductionGroupDesc(list):
                 break
             
     def __eq__(self, other):
-        LOG.debug('MSReductionGroupDesc.__eq__')
+        #LOG.debug('MSReductionGroupDesc.__eq__')
         return self.max_frequency == other.max_frequency \
             and self.min_frequency == other.min_frequency \
             and self.nchan == other.nchan
