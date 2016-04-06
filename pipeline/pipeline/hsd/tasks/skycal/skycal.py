@@ -72,6 +72,9 @@ class SDMSSkyCalResults(common.SingleDishResults):
         if calapp is not None:
             context.callibrary.add(calapp.calto, calapp.calfrom)
         
+    def _outcome_name(self):
+        return str(self.outcome)
+        
 class SDMSSkyCal(basetask.StandardTaskTemplate):
     Inputs = SDMSSkyCalInputs
     
@@ -127,8 +130,13 @@ class SDMSSkyCal(basetask.StandardTaskTemplate):
                                      interp='',
                                      caltype=args['calmode'])
 
-        # create SDCalApplication object
-        calapp = callibrary.SDCalApplication(calto, calfrom)
+        # make a note of the current inputs state before we start fiddling
+        # with it. This origin will be attached to the final CalApplication.
+        origin = callibrary.CalAppOrigin(task=SDMSSkyCal, 
+                                         inputs=args)
+
+        # create CalApplication object
+        calapp = callibrary.CalApplication(calto, calfrom, origin)
         
         results = SDMSSkyCalResults(task=self.__class__,
                                     success=True,
