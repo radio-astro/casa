@@ -103,6 +103,9 @@ class SDK2JyCalWorker(basetask.StandardTaskTemplate):
         pol_to_map_i = ('XX', 'YY', 'RR', 'LL', 'I')
         for spw in ms.get_spectral_windows(science_windows_only=True):
             spwid = spw.id
+            if not result.ms_factors.has_key(spwid):
+                result.factors_ok = False
+                continue
             ddid = ms.get_data_description(spw=spwid)
             pol_list = map(ddid.get_polarization_label,
                            range(ddid.num_polarizations))
@@ -112,6 +115,9 @@ class SDK2JyCalWorker(basetask.StandardTaskTemplate):
             for ant in ms.get_antenna():
                 ant_name = ant.name
                 if is_anonymous_ant: result.ms_factors[spwid][ant_name] = all_ant_factor
+                elif not result.ms_factors[spwid].has_key(ant_name):
+                    result.factors_ok = False
+                    continue
                 is_anonymous_pol = result.ms_factors[spwid][ant_name].has_key('I')
                 all_pol_factor = result.ms_factors[spwid][ant_name].pop('I') if is_anonymous_pol else {}
                 for pol in pol_list:
