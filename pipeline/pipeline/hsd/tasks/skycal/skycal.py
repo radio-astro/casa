@@ -65,6 +65,7 @@ class SDMSSkyCalResults(common.SingleDishResults):
     """
     def __init__(self, task=None, success=None, outcome=None):
         super(SDMSSkyCalResults, self).__init__(task, success, outcome)
+        self.final = [self.outcome]
 
     def merge_with_context(self, context):
         super(SDMSSkyCalResults, self).merge_with_context(context)

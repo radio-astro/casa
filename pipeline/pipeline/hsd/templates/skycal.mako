@@ -12,22 +12,6 @@ import os
 
 <script>
 $(document).ready(function() {
-    // return a function that sets the SPW text field to the given spw
-    var createSpwSetter = function(spw) {
-        return function() {
-            // trigger a change event, otherwise the filters are not changed
-            $("#select-spw").select2("val", [spw]).trigger("change");
-        };
-    };
-
-    // create a callback function for each overview plot that will select the
-    // appropriate spw once the page has loaded
-    $(".thumbnail a").each(function (i, v) {
-        var o = $(v);
-        var spw = o.data("spw");
-        o.data("callback", createSpwSetter(spw));
-    });
-
     $(".fancybox").fancybox({
         type: 'image',
         prevEffect: 'none',
@@ -81,3 +65,39 @@ $(document).ready(function() {
 	</tbody>
 </table>
 
+<h2>Plots</h2>
+% for ms in pcontext.observing_run.measurement_sets:
+    <% 
+        vis = ms.basename 
+        subpage = os.path.join(dirname, amp_subpages[vis])
+    %>
+    <h4><a class="replace" href="${subpage}">${vis}</a></h4>
+    % for plot in summary_amp[vis]:
+        % if os.path.exists(plot.thumbnail):
+            <% 
+                img_path = os.path.relpath(plot.abspath, pcontext.report_dir)
+                thumbnail_path = os.path.relpath(plot.thumbnail, pcontext.report_dir)
+                ant = plot.parameters['ant']
+            %>
+ 	        <div class="col-md-3">
+	            <div class="thumbnail">
+	                <a href="${img_path}" class="fancybox" rel="thumbs">
+	                    <img src="${thumbnail_path}"
+	                         title="Sky level summary for Antenna ${ant}"
+	                         data-thumbnail="${thumbnail_path}">
+	                </a>
+	                <div class="caption">
+	                    <h4>
+	                        <a href="${subpage}" class="replace" data-ant="${ant}">
+	                           Antenna ${ant}
+	                        </a>
+	                    </h4>
+	
+	                    <p>Plot of sky level for antenna ${ant}.</p>
+	                </div>
+	            </div>
+	        </div>
+        % endif
+    % endfor
+	<div class="clearfix"></div><!--  flush plots, break to next row -->
+% endfor
