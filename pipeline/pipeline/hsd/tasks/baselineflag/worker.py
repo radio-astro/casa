@@ -519,7 +519,7 @@ class SDBLFlagWorker(object):
             integ_time_fact = sc_fact_dict['integ_time_fact']
             LOG.info("Using scaling factors tsys_fact=%f, nebw_fact=%f and integ_time_fact=%f for flagging based on expected RMS." % (tsys_fact, nebw_fact, integ_time_fact))
         except:
-            LOG.warn("Cannot read scaling factors for flagging based on expected RMS. Using 1.0.")
+            LOG.info("Cannot read scaling factors for flagging based on expected RMS. Using 1.0.")
             tsys_fact = 1.0
             nebw_fact = 1.0
             integ_time_fact = 1.0
