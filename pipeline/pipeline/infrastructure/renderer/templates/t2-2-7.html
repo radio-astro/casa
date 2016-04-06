@@ -11,6 +11,15 @@ def antenna_name(plot):
 	
 def intent(plot):
 	return plot.parameters['intent'].capitalize()
+	
+def caption_string(plot):
+    if plot.parameters['intent'].capitalize() == 'Target':
+        return 'raster scan on source'
+    else:
+        return 'raster scan including reference'
+
+# TODO: multi-source support
+field_name = ms.get_fields(intent='TARGET')[0].name
 %>
 
 <div class="row">      
@@ -19,7 +28,7 @@ def intent(plot):
 		% for plot in plots:
 			<div class="col-md-6">
 				<a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}" class="fancybox">
-					<h3>Antenna ${antenna_name(plot)} (${intent(plot)})</h3>
+					<h3>Antenna ${antenna_name(plot)} Field ${field_name}</h3>
 				</a>
 				<div class="col-md-6">
 				  	<div class="thumbnail">
@@ -30,7 +39,7 @@ def intent(plot):
 								 alt="Telescope pointing for antenna ${antenna_name(plot)}" />
 					    </a>
 				    	<div class="caption">
-							<h4>Antenna ${antenna_name(plot)} (${intent(plot)})</h4>
+							<h4>${caption_string(plot)}</h4>
 						</div>
 					</div>
 				</div>

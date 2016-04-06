@@ -189,7 +189,7 @@ class SingleDishPointingChart(object):
         return figfile
 
     def _get_plot_object(self):
-        intent = 'target' if self.target_only == True else 'all'
+        intent = 'target' if self.target_only == True else 'target,reference'
         return logger.Plot(self.figfile,
                            x_axis='R.A.',
                            y_axis='Declination',
