@@ -9,4 +9,4 @@ from . import renderer
 
 qaadapter.registry.register_to_calibration_topic(skycal.SDMSSkyCalResults)
 
-weblog.add_renderer(SDMSSkyCal, renderer.T2_4MDetailsSingleDishCalSkyRenderer(), group_by='ungrouped')
+weblog.add_renderer(SDMSSkyCal, renderer.T2_4MDetailsSingleDishSkyCalRenderer(), group_by='ungrouped')
