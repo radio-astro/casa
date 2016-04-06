@@ -36,8 +36,8 @@ class T2_4MDetailsSingleDishK2JyCalRenderer(basetemplates.T2_4MDetailsDefaultRen
                         corrs = map(ddid.get_polarization_label, range(ddid.num_polarizations))
                         if fs.has_key(ant_name):
                             fp = fs[ant_name]
-                            LOG.info('fp=%s'%(fp))
-                            LOG.info('corrs=%s'%(corrs))
+                            LOG.debug('fp=%s'%(fp))
+                            LOG.debug('corrs=%s'%(corrs))
                             for corr in corrs:
                                 jyperk[vis][spwid][ant_name][corr] = fp[corr]
 

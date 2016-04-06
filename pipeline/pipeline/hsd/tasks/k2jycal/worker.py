@@ -77,6 +77,8 @@ class SDK2JyCalWorker(basetask.StandardTaskTemplate):
                 pols=str(',').join(map(polmap.get, pol_list))
                 for pol in pol_list:
                     factors_used[spw][ant][pol] = ant_factor[pol]
+                    LOG.debug("%s, SPW %d, %s, %s: factor=%f" % \
+                              (vis, spw, ant, pol, factors_used[spw][ant][pol]))
                 # handle anonymous antenna
                 ant_sel = '' if ant.upper()=='ANONYMOUS' else ant
                 gain_factor = [ 1./sqrt(ant_factor[pol]) for pol in pol_list ]
@@ -126,6 +128,16 @@ class SDK2JyCalWorker(basetask.StandardTaskTemplate):
                         result.ms_factors[spwid][ant_name][pol] = all_pol_factor
                     # check factors provided for all spw, antenna, and pol
                     result.factors_ok &= self.__check_factor(result.ms_factors, spwid, ant_name, pol)
+        # LOG information
+        sep = "*"*40
+        LOG.info("")
+        LOG.info(sep)
+        LOG.info("Summary of Jy/K factors of %s" % name)
+        LOG.info(sep)
+        for spw, facs in result.ms_factors.items():
+            for ant, faca in facs.items():
+                for pol, facp in faca.items():
+                    LOG.info("SPW %d, %s, %s: %f" % (spw, ant, pol, facp))
         return result
 
     def __check_factor(self, factors, spw, ant, pol):
