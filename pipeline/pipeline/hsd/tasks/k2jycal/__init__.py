@@ -5,10 +5,12 @@ import pipeline.infrastructure.renderer.weblog as weblog
 
 from .k2jycal import SDK2JyCal
 from . import jyperkreader
+from . import worker
 from . import renderer
 from . import qa
 
-pipelineqa.registry.add_handler(qa.K2JyCalQAHandler())
+pipelineqa.registry.add_handler(qa.SDK2JyCalQAHandler())
+pipelineqa.registry.add_handler(qa.SDK2JyCalListQAHandler())
 
 qaadapter.registry.register_to_calibration_topic(k2jycal.SDK2JyCalResults)
 

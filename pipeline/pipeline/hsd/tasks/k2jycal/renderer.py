@@ -39,15 +39,7 @@ class T2_4MDetailsSingleDishK2JyCalRenderer(basetemplates.T2_4MDetailsDefaultRen
                             LOG.info('fp=%s'%(fp))
                             LOG.info('corrs=%s'%(corrs))
                             for corr in corrs:
-                                if corr in fp.keys():
-                                    ckey = corr
-                                elif 'I' in fp.keys() and corr in ['XX', 'YY', 'RR', 'LL']:
-                                    ckey = 'I'
-                                else:
-                                    ckey = None
-                                LOG.info('corr=%s ckey=%s'%(corr,ckey))
-                                if ckey is not None:
-                                    jyperk[vis][spwid][ant_name][corr] = fp[ckey]
+                                jyperk[vis][spwid][ant_name][corr] = fp[corr]
 
             reffile = r.reffile
         reffile_copied = None

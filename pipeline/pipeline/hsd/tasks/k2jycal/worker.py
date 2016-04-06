@@ -1,108 +1,132 @@
 from __future__ import absolute_import
 
 import os
-import types
 
-from pipeline.hif.heuristics import caltable as caltable_heuristic
+from numpy import sqrt
 
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
-
-from pipeline.hifa.tasks.tsyscal import resultobjects
+from pipeline.infrastructure import casa_tasks
 
 LOG = infrastructure.get_logger(__name__)
 
 class SDK2JyCalWorkerInputs(basetask.StandardInputs):
-    @basetask.log_equivalent_CASA_call
-    def __init__(self, context, output_dir=None, infiles=None, caltable=None,
-                 reffile=None):
+    def __init__(self, context, output_dir, vis, caltable, factors):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
-
-    @property
-    def caltable(self):
-        # The value of caltable is ms-dependent, so test for multiple
-        # measurement sets and listify the results if necessary 
-        if type(self.infiles) is types.ListType:
-            return self._handle_multiple_vis('caltable')
-        
-        # Get the name.
-        if callable(self._caltable):
-            casa_args = self._get_partial_task_args()
-            return self._caltable(output_dir=self.output_dir,
-                                  stage=self.context.stage,
-                                  **casa_args)
-        return self._caltable
-        
-    @caltable.setter
-    def caltable(self, value):
-        if value is None:
-            value = caltable_heuristic.GaincalCaltable()
-        self._caltable = value
 
     @property
     def caltype(self):
         return 'amp'
 
-    @property
-    def reffile(self):
-        return self._reffile
-    
-    @reffile.setter
-    def reffile(self, value):
-        if value is None:
-            value = 1
-        self._reffile = value
-
-    # Avoids circular dependency on caltable.
-    def _get_partial_task_args(self):
-        return {'vis'     : self.infiles, 
-                'caltype' : self.caltype}
-
     # Convert to CASA gencal task arguments.
     def to_casa_args(self):
-        return {'vis'      : self.infiles,
+        return {'vis'      : self.vis,
                 'caltable' : self.caltable,
                 'caltype'  : self.caltype}
 
+class SDK2JyCalWorkerResults(basetask.Results):
+    def __init__(self, vis, calapp=None, factors={}):
+        super(SDK2JyCalWorkerResults, self).__init__()
+        self.calapp = calapp
+        self.vis = vis
+        self.ms_factors = factors
+        self.factors_ok = (calapp != None)
+
+    def merge_with_context(self, context):
+        if not os.path.exists(self.vis):
+            LOG.error("Invalid MS name passed to Result class")
+        if self.calapp is None:
+            LOG.error("caltable generation failed")
 
 class SDK2JyCalWorker(basetask.StandardTaskTemplate):
+    """
+    Per MS caltable creation
+    """
     Inputs = SDK2JyCalWorkerInputs    
 
     def prepare(self):
         inputs = self.inputs
+        vis = inputs.vis
+        factors = inputs.factors
+
+        polmap = {'XX': 'X', 'YY': 'Y', 'I': ''}
+
+        if not os.path.exists(vis):
+            LOG.error("Could not find MS '%s'" % vis)
+            return SDK2JyCalWorkerResults()
+        vis = os.path.basename(vis)
+        if not factors.has_key(vis):
+            LOG.error("%s does not have factors for MS '%s'" % (inputs.reffile, vis))
+            return SDK2JyCalWorkerResults()
 
         # make a note of the current inputs state before we start fiddling
         # with it. This origin will be attached to the final CalApplication.
-        origin = callibrary.CalAppOrigin(task=SDK2JyCalWorker, 
+        origin = callibrary.CalAppOrigin(task=SDK2JyCalWorker,
                                          inputs=inputs.to_casa_args())
-
-        # construct the Tsys cal file
-        gencal_args = inputs.to_casa_args()
-        gencal_job = casa_tasks.gencal(**gencal_args)
-        self._executor.execute(gencal_job)
-
-        callist = []
-        calto = callibrary.CalTo(vis=inputs.infiles)
-        calfrom = callibrary.CalFrom(gencal_args['caltable'], caltype='amp',
-          gainfield='', spwmap=None, interp='nearest,nearest')
+        common_params = inputs.to_casa_args()
+        factors_for_ms = factors[vis]
+        factors_used = {}
+        for spw, spw_factor in factors_for_ms.items():
+            factors_used[spw] = {}
+            for ant, ant_factor in spw_factor.items():
+                factors_used[spw][ant] = {}
+                # map polarization
+                pol_list = ant_factor.keys()
+                pols=str(',').join(map(polmap.get, pol_list))
+                for pol in pol_list:
+                    factors_used[spw][ant][pol] = ant_factor[pol]
+                # handle anonymous antenna
+                ant_sel = '' if ant.upper()=='ANONYMOUS' else ant
+                gain_factor = [ 1./sqrt(ant_factor[pol]) for pol in pol_list ]
+                gencal_args = dict(spw=str(spw), antenna=ant_sel, pol=pols,
+                                   parameter=gain_factor)
+                gencal_args.update(common_params)
+                gencal_job = casa_tasks.gencal(**gencal_args)
+                self._executor.execute(gencal_job)
+        # generate callibrary for the caltable
+        calto = callibrary.CalTo(vis=common_params['vis'])
+        calfrom = callibrary.CalFrom(common_params['caltable'], 
+                                     caltype=inputs.caltype,
+                                     gainfield='', spwmap=None,
+                                     interp='nearest,nearest')
         calapp = callibrary.CalApplication(calto, calfrom, origin)
-        callist.append(calapp)
-
-        return resultobjects.TsyscalResults(pool=callist)
+        return SDK2JyCalWorkerResults(vis, calapp=calapp, factors=factors_used)
 
     def analyse(self, result):
-        # With no best caltable to find, our task is simply to set the one
-        # caltable as the best result
-
-        # double-check that the caltable was actually generated
-        on_disk = [ca for ca in result.pool
-                   if ca.exists() or self._executor._dry_run]
-        result.final[:] = on_disk
-
-        missing = [ca for ca in result.pool
-                   if ca not in on_disk and not self._executor._dry_run]
-        result.error.clear()
-        result.error.update(missing)
-
+        """
+        Define factors actually used and analyze if the factors are provided to all relevant data in MS.
+        """
+        name = result.vis
+        ms = self.inputs.context.observing_run.get_ms(name)
+        pol_to_map_i = ('XX', 'YY', 'RR', 'LL', 'I')
+        for spw in ms.get_spectral_windows(science_windows_only=True):
+            spwid = spw.id
+            ddid = ms.get_data_description(spw=spwid)
+            pol_list = map(ddid.get_polarization_label,
+                           range(ddid.num_polarizations))
+            # mapping for anonymous antenna if necessary
+            is_anonymous_ant = result.ms_factors[spwid].has_key('ANONYMOUS')
+            all_ant_factor = result.ms_factors[spwid].pop('ANONYMOUS') if is_anonymous_ant else {}
+            for ant in ms.get_antenna():
+                ant_name = ant.name
+                if is_anonymous_ant: result.ms_factors[spwid][ant_name] = all_ant_factor
+                is_anonymous_pol = result.ms_factors[spwid][ant_name].has_key('I')
+                all_pol_factor = result.ms_factors[spwid][ant_name].pop('I') if is_anonymous_pol else {}
+                for pol in pol_list:
+                    # mapping for stokes I if necessary
+                    if is_anonymous_pol and pol in pol_to_map_i:
+                        result.ms_factors[spwid][ant_name][pol] = all_pol_factor
+                    # check factors provided for all spw, antenna, and pol
+                    result.factors_ok &= self.__check_factor(result.ms_factors, spwid, ant_name, pol)
         return result
+
+    def __check_factor(self, factors, spw, ant, pol):
+        if (not factors.has_key(spw) or \
+                factors[spw] is None): return False
+        if (not factors[spw].has_key(ant) or \
+                factors[spw][ant] is None): return False
+        if (not factors[spw][ant].has_key(pol) or \
+                factors[spw][ant][pol] is None): return False
+        return True

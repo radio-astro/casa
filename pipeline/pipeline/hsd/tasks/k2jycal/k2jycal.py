@@ -2,17 +2,15 @@ from __future__ import absolute_import
 
 import os
 import types
-from numpy import sqrt
 
 from pipeline.hif.heuristics import caltable as caltable_heuristic
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
-from pipeline.infrastructure import casa_tasks
 
 from . import jyperkreader
-#from . import worker
+from . import worker
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -27,21 +25,11 @@ class SDK2JyCalInputs(basetask.StandardInputs):
             self.vis = [ self.vis ]
 
     @property
-    def ms(self):
-        return self._ms
-
-    @ms.setter
-    def ms(self, value):
-        if value is None:
-            value = self.infiles[0]
-        self._ms = value
-
-    @property
     def caltable(self):
-        # # The value of caltable is ms-dependent, so test for multiple
-        # # measurement sets and listify the results if necessary 
-        # if type(self.infiles) is types.ListType:
-        #     return self._handle_multiple_vis('caltable')
+        # The value of caltable is ms-dependent, so test for multiple
+        # measurement sets and listify the results if necessary 
+        if type(self.infiles) is types.ListType:
+            return self._handle_multiple_vis('caltable')
         
         # Get the name.
         if callable(self._caltable):
@@ -73,21 +61,11 @@ class SDK2JyCalInputs(basetask.StandardInputs):
 
     # Avoids circular dependency on caltable.
     def _get_partial_task_args(self):
-        return {'vis'     : self.ms,
+        return {'vis'     : self.vis,
                 'caltype' : self.caltype}
-
-    # Convert to CASA gencal task arguments.
-    def to_casa_args(self):
-        return {'vis'      : self.ms,
-                'caltable' : self.caltable,
-                'caltype'  : self.caltype}
-
 
 class SDK2JyCal(basetask.StandardTaskTemplate):
     Inputs = SDK2JyCalInputs    
-
-    def is_multi_vis_task(self):
-        return True
 
     def prepare(self):
         inputs = self.inputs
@@ -102,52 +80,21 @@ class SDK2JyCal(basetask.StandardTaskTemplate):
         
         # generate scaling factor dictionary
         factors = rearrange_factors_list(factors_list)
-        polmap = {'XX': 'X', 'YY': 'Y', 'I': ''}
 
         callist = []
+        valid_factors = {}
+        all_factors_ok = True
         # Loop over MS and generate a caltable per MS
-        # k2jycal_inputs = worker.SDK2JyCalWorker.Inputs(inputs.context, inputs.output_dir, inputs.vis,
-        #                                                inputs.caltable, factors)
-        # k2jycal_task = worker.SDK2JyCalWorker(k2jycal_inputs)
-        # k2jycal_result = self._executor.execute(k2jycal_task)
-        # callist.append(k2jycal_result.calapp)
-        for msname in self.inputs.vis:
-            if not os.path.exists(msname):
-                LOG.error("Could not find MS '%s'" % msname)
-                continue
-            msname = os.path.basename(msname)
-            if msname not in factors.keys():
-                LOG.error("%s does not have factors for MS '%s'" % (inputs.reffile, msname))
-                continue
-            inputs.ms = msname
-            
-            # make a note of the current inputs state before we start fiddling
-            # with it. This origin will be attached to the final CalApplication.
-            origin = callibrary.CalAppOrigin(task=SDK2JyCal, 
-                                             inputs=inputs.to_casa_args())
-            common_params = inputs.to_casa_args()
-            factors_for_ms = factors[msname]
-            for spw, spw_factor in factors_for_ms.items():
-                for ant, ant_factor in spw_factor.items():
-                    # handle anonymous antenna
-                    if ant.upper()=='ANONYMOUS': ant=''
-                    # map polarization
-                    pol_list = ant_factor.keys()
-                    pols=str(',').join(map(polmap.get, pol_list))
-                    gain_factor = [ 1./sqrt(ant_factor[pol]) for pol in pol_list ]
-                    gencal_args = dict(spw=str(spw), antenna=ant, pol=pols,
-                                       parameter=gain_factor)
-                    gencal_args.update(common_params)
-                    gencal_job = casa_tasks.gencal(**gencal_args)
-                    self._executor.execute(gencal_job)
-            # generate callibrary for the caltable
-            calto = callibrary.CalTo(vis=common_params['vis'])
-            calfrom = callibrary.CalFrom(common_params['caltable'], caltype=inputs.caltype,
-                                         gainfield='', spwmap=None, interp='nearest,nearest')
-            calapp = callibrary.CalApplication(calto, calfrom, origin)
-            callist.append(calapp)
+        k2jycal_inputs = worker.SDK2JyCalWorker.Inputs(inputs.context, inputs.output_dir, inputs.vis,
+                                                       inputs.caltable, factors)
+        k2jycal_task = worker.SDK2JyCalWorker(k2jycal_inputs)
+        k2jycal_result = self._executor.execute(k2jycal_task)
+        callist.append(k2jycal_result.calapp)
+        valid_factors[k2jycal_result.vis] = k2jycal_result.ms_factors
+        all_factors_ok &= k2jycal_result.factors_ok
 
-        return SDK2JyCalResults(pool=callist, factors=factors)
+        return SDK2JyCalResults(pool=callist, reffile=reffile,
+                                factors=valid_factors, all_ok = all_factors_ok)
 
     def analyse(self, result):
         # With no best caltable to find, our task is simply to set the one
@@ -194,15 +141,16 @@ def rearrange_factors_list(factors_list):
     return factors
 
 class SDK2JyCalResults(basetask.Results):
-    def __init__(self, final=[], pool=[], factors={}, reffile=None):
+    def __init__(self, final=[], pool=[], reffile=None, factors={}, all_ok=False):
         super(SDK2JyCalResults, self).__init__()
 
         self.vis = None
         self.pool = pool[:]
         self.final = final[:]
-        self.factors=factors
         self.error = set()
         self.reffile = reffile
+        self.factors=factors
+        self.all_ok = all_ok
 
     def merge_with_context(self, context):
         if not self.final:
