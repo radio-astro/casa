@@ -64,6 +64,38 @@ class SDK2JyCalInputs(basetask.StandardInputs):
         return {'vis'     : self.vis,
                 'caltype' : self.caltype}
 
+class SDK2JyCalResults(basetask.Results):
+    def __init__(self, final=[], pool=[], reffile=None, factors={},
+                 all_ok=False):
+        super(SDK2JyCalResults, self).__init__()
+
+        self.vis = None
+        self.pool = pool[:]
+        self.final = final[:]
+        self.error = set()
+        self.reffile = reffile
+        self.factors=factors
+        self.all_ok = all_ok
+
+    def merge_with_context(self, context):
+        if not self.final:
+            LOG.error('No results to merge')
+            return
+
+        for calapp in self.final:            
+            LOG.debug('Adding calibration to callibrary:\n'
+                      '%s\n%s' % (calapp.calto, calapp.calfrom))
+            context.callibrary.add(calapp.calto, calapp.calfrom)
+
+    def __repr__(self):
+        # Format the Tsyscal results.
+        s = 'SDK2JyCalResults:\n'
+        for calapplication in self.final:
+            s += '\tBest caltable for spw #{spw} in {vis} is {name}\n'.format(
+                spw=calapplication.spw, vis=os.path.basename(calapplication.vis),
+                name=calapplication.gaintable)
+        return s
+
 class SDK2JyCal(basetask.StandardTaskTemplate):
     Inputs = SDK2JyCalInputs    
 
@@ -89,7 +121,8 @@ class SDK2JyCal(basetask.StandardTaskTemplate):
                                                        inputs.caltable, factors)
         k2jycal_task = worker.SDK2JyCalWorker(k2jycal_inputs)
         k2jycal_result = self._executor.execute(k2jycal_task)
-        callist.append(k2jycal_result.calapp)
+        if k2jycal_result.calapp is not None:
+            callist.append(k2jycal_result.calapp)
         valid_factors[k2jycal_result.vis] = k2jycal_result.ms_factors
         all_factors_ok &= k2jycal_result.factors_ok
 
@@ -140,33 +173,3 @@ def rearrange_factors_list(factors_list):
 
     return factors
 
-class SDK2JyCalResults(basetask.Results):
-    def __init__(self, final=[], pool=[], reffile=None, factors={}, all_ok=False):
-        super(SDK2JyCalResults, self).__init__()
-
-        self.vis = None
-        self.pool = pool[:]
-        self.final = final[:]
-        self.error = set()
-        self.reffile = reffile
-        self.factors=factors
-        self.all_ok = all_ok
-
-    def merge_with_context(self, context):
-        if not self.final:
-            LOG.error('No results to merge')
-            return
-
-        for calapp in self.final:            
-            LOG.debug('Adding calibration to callibrary:\n'
-                      '%s\n%s' % (calapp.calto, calapp.calfrom))
-            context.callibrary.add(calapp.calto, calapp.calfrom)
-
-    def __repr__(self):
-        # Format the Tsyscal results.
-        s = 'SDK2JyCalResults:\n'
-        for calapplication in self.final:
-            s += '\tBest caltable for spw #{spw} in {vis} is {name}\n'.format(
-                spw=calapplication.spw, vis=os.path.basename(calapplication.vis),
-                name=calapplication.gaintable)
-        return s

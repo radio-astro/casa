@@ -55,11 +55,11 @@ class SDK2JyCalWorker(basetask.StandardTaskTemplate):
 
         if not os.path.exists(vis):
             LOG.error("Could not find MS '%s'" % vis)
-            return SDK2JyCalWorkerResults()
+            return SDK2JyCalWorkerResults(vis)
         vis = os.path.basename(vis)
         if not factors.has_key(vis):
-            LOG.error("%s does not have factors for MS '%s'" % (inputs.reffile, vis))
-            return SDK2JyCalWorkerResults()
+            LOG.error("No factors found for MS '%s'" % (vis))
+            return SDK2JyCalWorkerResults(vis)
 
         # make a note of the current inputs state before we start fiddling
         # with it. This origin will be attached to the final CalApplication.

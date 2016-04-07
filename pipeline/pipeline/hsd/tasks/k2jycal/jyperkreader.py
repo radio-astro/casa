@@ -24,7 +24,7 @@ def read(context, filename):
 def inspect_type(filename):
     with open(filename, 'r') as f:
         line = f.readline()
-    if line[0] == '#':
+    if len(line) > 0 and line[0] == '#':
         return 'Session-Based'
     else:
         return 'MS-Based'
@@ -57,8 +57,9 @@ def _read_stream(stream):
     reader = csv.reader(stream)
     # Check if first line is header or not
     line = reader.next()
-    if line[0].strip().upper() == 'MS' or line[0].strip()[0] == '#':
-        # must be a header or commented line
+    if  len(line) == 0 or \
+            line[0].strip().upper() == 'MS' or line[0].strip()[0] == '#':
+        # must be a header, commented line, or empty line
         pass
     elif len(line) == 5:
         # may be a data record
