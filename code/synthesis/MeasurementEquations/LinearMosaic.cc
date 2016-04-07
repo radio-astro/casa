@@ -132,33 +132,35 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			  const ImageInterface<Float>& inWgt, Bool unWeightOutIm){
 
 		if(inIm.shape() != inWgt.shape())
-			ThrowCc("Image and Weight image have to be similar...please regrid appropriately");
+		  ThrowCc("Image "+ inIm.name() + " and Weight image "+inWgt.name() +". have to be similar...please regrid appropriately");
 		Double meminMB=Double(HostInfo::memoryTotal(true))/1024.0;
 
 		//if(!outImIsWeighted){
 		{
-		  //cerr << "limosType " << linmosType_p << " imageWeightType " << imageWeightType_p << " weightType " << weightType_p << endl;
+		  // cerr << "limosType " << linmosType_p << " imageWeightType " << imageWeightType_p << " weightType " << weightType_p << endl;
 			if(linmosType_p==2){
-				if(imageWeightType_p==1)
-					outim.copyData((LatticeExpr<Float>)(outim*outwgt));
-				else if( imageWeightType_p==0)
-					outim.copyData((LatticeExpr<Float>)(outim*outwgt*outwgt));
-				imageWeightType_p=2;
-				if(weightType_p==1)
-					outwgt.copyData((LatticeExpr<Float>)(outwgt*outwgt));
-				weightType_p=2;
+			  if(weightType_p==1)
+			    outwgt.copyData((LatticeExpr<Float>)(outwgt*outwgt));
+			  weightType_p=2;
+			  if(imageWeightType_p==1)
+			    outim.copyData((LatticeExpr<Float>)(outim*sqrt(outwgt)));
+			  else if( imageWeightType_p==0)
+			    outim.copyData((LatticeExpr<Float>)(outim*outwgt));
+			  imageWeightType_p=2;
+			    
 			}
 			//cerr << " imageWeightType " << imageWeightType_p << " weightType " << weightType_p << endl;
 			if(linmosType_p==1){
+			  	if(weightType_p==2)
+					outwgt.copyData((LatticeExpr<Float>)(sqrt(abs(outwgt))));
+				weightType_p=1;
 				if(imageWeightType_p==0)
 					outim.copyData((LatticeExpr<Float>)(outim*outwgt));
 				else if( imageWeightType_p==2)
 					outim.copyData((LatticeExpr<Float>)(iif(outwgt > (0.0),
 						       (outim/outwgt), 0)));
 				imageWeightType_p=1;
-				if(weightType_p==2)
-					outwgt.copyData((LatticeExpr<Float>)(sqrt(abs(outwgt))));
-				weightType_p=1;
+			       
 			}
 		}
 
@@ -236,16 +238,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		subOutWgt.copyData((LatticeExpr<Float>)(subOutWgt+fullWeight));
-		//LatticeExprNode elmax = max( outwgt );
-		//Float wMax =  elmax.getFloat();
+		
 		subOutIm.copyData((LatticeExpr<Float>)(subOutIm+fullImage));
 		//if(wMax > 0.0){
 		//	outim.copyData((LatticeExpr<Float>)(outim/wMax));
 		//	outwgt.copyData((LatticeExpr<Float>)(outwgt/wMax));
 		//}
 		if(unWeightOutIm){
-			outim.copyData((LatticeExpr<Float>)(iif(outwgt > (0.0),
+		  //LatticeExprNode outmax0 = max( outim );
+		  
+		  //cerr << "Bef max of out " << outmax0.getFloat() << endl;
+		  
+		  LatticeExprNode elmax = max( outwgt );
+		  
+		  //Cannot trust anything below 1e-6
+		  Float wMinLimit =  1e-6* elmax.getFloat();
+		  outim.copyData((LatticeExpr<Float>)(iif(outwgt > (wMinLimit),
 						       (outim/outwgt), 0)));
+		  //LatticeExprNode outmax = max( outim );
+		  
+		  //cerr << "max of out " << outmax.getFloat() << endl;
 			imageWeightType_p=0;
 		}
 
