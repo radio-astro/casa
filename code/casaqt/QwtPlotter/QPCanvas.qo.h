@@ -29,6 +29,7 @@
 
 #ifdef AIPS_HAS_QWT
 
+#include <casaqt/QwtConfig.h>
 #include <graphics/GenericPlotter/PlotOptions.h>
 #include <graphics/GenericPlotter/PlotLogger.h>
 #include <graphics/GenericPlotter/Plotter.h>
@@ -587,7 +588,10 @@ private:
 
 private slots:    
     // For when the selecter has selected a region; emit a PlotSelectEvent.
+    // Include Qwt5 and Qwt6 definitions for moc;
+    // signal comes from QwtPlotPicker
     void regionSelected(const QwtDoubleRect&);
+    void regionSelected2(const QRectF&);
     
     // For catching single vs. double clicks.
     // void timeout();

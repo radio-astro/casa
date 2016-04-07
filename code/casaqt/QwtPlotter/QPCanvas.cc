@@ -1,4 +1,3 @@
-#include <stdio.h>
 //# QPCanvas.cc: Qwt implementation of generic PlotCanvas class.
 //# Copyright (C) 2008
 //# Associated Universities, Inc. Washington DC, USA.
@@ -284,10 +283,14 @@ QPCanvas::QPCanvas(QPPlotter* parent) : m_parent(parent), m_canvas(this),
     m_canvas.enableAxis(QwtPlot::xBottom, false);
     m_canvas.enableAxis(QwtPlot::yLeft, false);
     m_canvas.setAutoReplot(true);
-    
+
+#if QWT_VERSION >= 0x060000
+   connect(&m_picker, SIGNAL(selected(const QRectF&)),
+          this, SLOT(regionSelected2(const QRectF&)));
+#else 
     connect(&m_picker, SIGNAL(selected(const QwtDoubleRect&)),
             this, SLOT(regionSelected(const QwtDoubleRect&)));
-    //connect(&m_timer, SIGNAL(timeout()), this, SLOT(timeout()));
+#endif
 }
 
 void QPCanvas::enableAxis( QwtPlot::Axis axis, bool enable ){
@@ -1653,9 +1656,14 @@ bool QPCanvas::isThreading() const {
 
 
 // Private Slots //
-
+// define slots for Qwt5 and Qwt6 for moc
+#if QWT_VERSION >= 0x060000
+void QPCanvas::regionSelected(const QwtDoubleRect& /*region*/) { }
+void QPCanvas::regionSelected2(const QRectF& region) {
+#else
+void QPCanvas::regionSelected2(const QRectF& /*region*/) { }
 void QPCanvas::regionSelected(const QwtDoubleRect& region) {
-    // wtf?
+#endif
     double l = (region.left() < region.right())? region.left(): region.right(),
            r = (region.right() > region.left())? region.right(): region.left(),
            t = (region.top() > region.bottom())? region.top(): region.bottom(),
