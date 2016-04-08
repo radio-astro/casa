@@ -645,6 +645,10 @@ class Imager
           const String &pointingColumn, Vector<Double> &center, Vector<Double> &blc,
           Vector<Double> &trc, Vector<Double> &extent);
 
+  //Helper function to transfer history table to a logger holder
+  //which can be stored in images
+  static void transferHistory(LoggerHolder& imageLog, ROMSHistoryColumns& msHis);
+
 protected:
 
   CountedPtr<MeasurementSet> ms_p;

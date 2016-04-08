@@ -4050,7 +4050,7 @@ Bool Imager::makePBImage(const CoordinateSystem& imageCoord,
   String telName=telescopeName;
   if(telName=="ALMA" &&  diam < 12.0)
     telName="ACA";
-  //cerr << "Telescope Name is " << telName<< endl;
+  cerr << "Telescope Name is " << telName<< " qFreq " << qFreq << endl;
   PBMath::CommonPB whichPB;
   PBMath::enumerateCommonPB(telName, whichPB);  
   PBMath myPB;
@@ -4151,6 +4151,43 @@ Bool Imager::makePBImage(PBMath& pbMath, ImageInterface<Float>& pbImage){
 
 
   return True;
+}
+void Imager::transferHistory(LoggerHolder& imagelog, ROMSHistoryColumns& msHis){
+  LogIO os(LogOrigin("imager", "transferHistory"));
+  LogSink& sink = imagelog.sink();
+  const ROScalarColumn<Double> &time_col = msHis.time();
+  const ROScalarColumn<String> &origin_col = msHis.origin();
+  const ROArrayColumn<String> &cli_col = msHis.cliCommand();
+  const ROScalarColumn<String> &message_col = msHis.message();
+  //const ROScalarColumn<String> &priority_col = msHis.priority();
+  if (msHis.nrow()>0) {
+	    //ostringstream oos;
+	    uInt nmessages = time_col.nrow();
+	    for (uInt i=0; i < nmessages; i++) {
+	      try{
+		ostringstream oos;
+		oos << cli_col(i);
+		LogMessage msg1(String("CLI_COMM: " + String(oos) + "; MESSAGE: " +message_col(i)), LogOrigin(origin_col(i)), LogMessage::NORMAL);
+		msg1.messageTime( time_col(i));
+	   
+		/*	String tmp=frmtTime(time_col(i));
+		oos << tmp
+		    << "  HISTORY " << origin_col(i);
+		oos << " " << cli_col(i) << " ";
+		oos << message_col(i)
+		<< endl;*/
+		
+		sink.postLocally(msg1);	
+	      }
+	      catch(exception& y){
+		os << LogIO::DEBUG2 << "Skipping history-table row " << i << " while filling output logsink-header " << LogIO::POST;
+	      }
+	      
+	    }
+	    // String historyline(oos);
+	    //sink.postLocally(msg.message(oos.str()));
+	  }
+
 }
 void Imager::setObsInfo(ObsInfo& obsinfo){
 

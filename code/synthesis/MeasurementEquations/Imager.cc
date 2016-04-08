@@ -3682,9 +3682,9 @@ Record Imager::clean(const String& algorithm,
 #ifdef PABLO_IO
   traceEvent(1,"Entering Imager::clean",22);
 #endif
-
-
-
+  ////////////////////////
+  //Double wtime0=omp_get_wtime();
+  //////////////////////
 
 
   Record retval;
@@ -4073,7 +4073,10 @@ Record Imager::clean(const String& algorithm,
     for (uInt k=0 ; k < residuals_p.nelements(); ++k){
       (residuals_p[k])->copyData(sm_p->getResidual(k));
     }
-   
+    /////////////
+
+    //cerr << "Time taken " << omp_get_wtime()-wtime0 << endl;
+    ////////////
     retval.define("maxresidual", (sm_p->threshold()));
     retval.define("iterations", (sm_p->numberIterations()));
     retval.define("converged", converged);
@@ -4326,22 +4329,8 @@ Bool Imager::mem(const String& algorithm,
 	LogOrigin lor( String("imager"), String("mem()") );
 	LogMessage msg(lor);
 	sink.postLocally(msg);
-	
 	ROMSHistoryColumns msHis(ms_p->history());
-	if (msHis.nrow()>0) {
-	  ostringstream oos;
-	  uInt nmessages = msHis.time().nrow();
-	  for (uInt i=0; i < nmessages; ++i) {
-	    oos << frmtTime((msHis.time())(i))
-		<< "  HISTORY " << (msHis.origin())(i);
-	    oos << " " << (msHis.cliCommand())(i) << " ";
-	    oos << (msHis.message())(i)
-		<< endl;
-	  }
-	  String historyline(oos);
-	  sink.postLocally(msg.message(historyline));
-	}
-	
+	transferHistory(imagelog, msHis);
 	for (Int thismodel=0;thismodel<Int(model.nelements());++thismodel) {
 	  PagedImage<Float> restoredImage(image(thismodel),
 					  TableLock(TableLock::UserLocking));
@@ -6949,7 +6938,7 @@ Bool Imager::plotweights(const Bool gridded, const Int increment)
       }
 
       plotter->raster( data, (int) shape[1], (int) shape[0] );
-      plotter->release( panel_id.getInt( ) );
+      //  plotter->release( panel_id.getInt( ) );
 
     }
     else {
@@ -7039,7 +7028,7 @@ Bool Imager::plotweights(const Bool gridded, const Int increment)
 
       
       plotter->scatter(dbus::af(uvDistance),dbus::af(weights),"blue","","hexagon",4,-1,panel_id.getInt( ));
-      plotter->release( panel_id.getInt( ) );
+      //plotter->release( panel_id.getInt( ) );
     }
     
 
@@ -7774,32 +7763,8 @@ Int Imager::interactivemask(const String& image, const String& mask,
 	  LogOrigin lor( String("imager"), String("clean()") );
 	  LogMessage msg(lor);
 	  sink.postLocally(msg);
-      
 	  ROMSHistoryColumns msHis(ms_p->history());
-	  const ROScalarColumn<Double> &time_col = msHis.time();
-	  const ROScalarColumn<String> &origin_col = msHis.origin();
-	  const ROArrayColumn<String> &cli_col = msHis.cliCommand();
-	  const ROScalarColumn<String> &message_col = msHis.message();
-	  if (msHis.nrow()>0) {
-	    ostringstream oos;
-	    uInt nmessages = time_col.nrow();
-	    for (uInt i=0; i < nmessages; i++) {
-	      try{
-		String tmp=frmtTime(time_col(i));
-		oos << tmp
-		    << "  HISTORY " << origin_col(i);
-		oos << " " << cli_col(i) << " ";
-		oos << message_col(i)
-		    << endl;
-	      }
-	      catch(exception& y){
-		os << LogIO::DEBUG2 << "Skipping history-table row " << i << " while filling output image-header " << LogIO::POST;
-	      }
-	      
-	    }
-	    // String historyline(oos);
-	    sink.postLocally(msg.message(oos.str()));
-	  }
+	  transferHistory(imagelog, msHis);
 	  for (Int thismodel=0;thismodel<Int(aimage.nelements());++thismodel) {
 	    if(Table::isWritable(aimage(thismodel))){
 	      PagedImage<Float> restoredImage(aimage(thismodel),
