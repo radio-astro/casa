@@ -134,7 +134,7 @@ def tsdcal(infile=None, calmode='tsys', fraction='10%', noff=-1,
                     raise ValueError, 'Too many edge points. fraction must be < 0.5.'
                 # Setup calibrator
                 cb.selectvis(spw=spw, scan=scan, field=field, intent=intent)
-                cb.setsolve(type=cpp_calmode[calmode], table=outfile, fraction=fraction_numeric)
+                cb.setsolve(type=cpp_calmode[calmode], table=outfile, fraction=fraction_numeric, numedge=noff)
                 # Compute calibration table
                 cb.solve()
 

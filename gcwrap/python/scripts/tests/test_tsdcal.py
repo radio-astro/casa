@@ -618,7 +618,7 @@ class tsdcal_test_ps(tsdcal_test_base):
         """
         self.result = tsdcal(infile=self.infile, calmode='ps', spw='99', outfile=self.outfile)
 
-    @exception_case(RuntimeError, '^Output file \'.+\' exists\.$')
+    @exception_case(RuntimeError, '^overwrite is False and output file exists:')
     def test_ps03(self):
         """
         test_ps03 --- outfile exists (overwrite=False)
@@ -1432,14 +1432,14 @@ class tsdcal_test_apply(tsdcal_test_base):
         """
         self.result = tsdcal(infile=self.infile, calmode='apply', applytable=[])
 
-    @exception_case(Exception, '^Table \".+\" doesn\'t exist\.$')
+    @exception_case(Exception, "^Table doesn't exist:")
     def test_apply_sky03(self):
         """
         test_apply_sky03 --- unexisting applytable
         """
         self.result = tsdcal(infile=self.infile, calmode='apply', applytable='notexist.sky')
 
-    @exception_case(Exception, '^Table \".+\" doesn\'t exist\.$')
+    @exception_case(Exception, "^Table doesn't exist:")
     def test_apply_sky04(self):
         """
         test_apply_sky04 --- unexisting applytable (list ver.)
@@ -1611,7 +1611,7 @@ def suite():
     return [  tsdcal_test
             , tsdcal_test_ps
             , tsdcal_test_otfraster
-            , tsdcal_test_otf
+            #, tsdcal_test_otf
             , tsdcal_test_apply]
 
 
