@@ -128,6 +128,8 @@ public:
 	void add(MS::PredefinedColumns key,DataCubeHolderBase* dataCubeHolder);
 	void add(MS::PredefinedColumns key,DataCubeHolderBase &dataCubeHolder);
 
+	Bool present(MS::PredefinedColumns key);
+
 	void setWindowShape(IPosition windowShape);
 	IPosition & getWindowShape();
 

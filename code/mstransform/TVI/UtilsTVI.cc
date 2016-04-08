@@ -101,6 +101,21 @@ void DataCubeMap::add(MS::PredefinedColumns key,DataCubeHolderBase &dataCubeHold
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
+Bool DataCubeMap::present(MS::PredefinedColumns key)
+{
+	if (dataCubeMap_p.find(key) != dataCubeMap_p.end())
+	{
+		return True;
+	}
+	else
+	{
+		return False;
+	}
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
 void DataCubeMap::setWindowShape(IPosition windowShape)
 {
 	windowShape_p = windowShape;

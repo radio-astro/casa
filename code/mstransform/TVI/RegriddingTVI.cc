@@ -54,6 +54,7 @@ RegriddingTVI::RegriddingTVI(	ViImplementation2 * inputVii,
 	refFrameTransformation_p = False;
 	radialVelocityCorrection_p = False;
 	fftShift_p = 0;
+	transformFlags_p = False;
 
 	// SPW-indexed maps
     weightFactorMap_p.clear();
@@ -210,6 +211,14 @@ Bool RegriddingTVI::parseConfiguration(const Record &configuration)
 		configuration.get (exists, velocityType_p);
 		logger_p << LogIO::NORMAL << LogOrigin("RegriddingTVI", __FUNCTION__)
 				<< "Velocity type is " << velocityType_p << LogIO::POST;
+	}
+
+	exists = configuration.fieldNumber ("flags");
+	if ((exists >= 0))
+	{
+		configuration.get (exists, transformFlags_p);
+		logger_p << LogIO::NORMAL << LogOrigin("RegriddingTVI", __FUNCTION__)
+				<< "Transform flags us " << transformFlags_p << LogIO::POST;
 	}
 
 	return ret;
@@ -379,6 +388,7 @@ void RegriddingTVI::initFrequencyGrid()
 		Vector<Double> outputWidth;
 
 		// Use calcChanFreqs to change reference frame and regrid
+		MFrequency::Types inputRefFrame = static_cast<MFrequency::Types> (getVii()->getReportingFrameOfReference());
 		Bool ret = MSTransformRegridder::calcChanFreqs(	logger_p,
 														outputFreq,
 														outputWidth,
@@ -386,7 +396,7 @@ void RegriddingTVI::initFrequencyGrid()
 														inputFreq,
 														inputWidth,
 														phaseCenter_p,
-														inputReferenceFrame_p,
+														inputRefFrame,
 														referenceTime_p,
 														observatoryPosition_p,
 														mode_p,
@@ -462,8 +472,11 @@ void RegriddingTVI::initFrequencyTransformationEngine() const
 			inputFieldDirection = vb->phaseCenter();
 		}
 
+		// Get input Ref. Frame (can be different for each SPWs)
+		MFrequency::Types inputRefFrame = static_cast<MFrequency::Types> (getVii()->getReportingFrameOfReference());
+
 		// Construct reference frame transformation engine
-		MFrequency::Ref inputFrameRef = MFrequency::Ref(inputReferenceFrame_p,
+		MFrequency::Ref inputFrameRef = MFrequency::Ref(inputRefFrame,
 														MeasFrame(inputFieldDirection,
 																observatoryPosition_p,
 																currentRowTime));
@@ -574,7 +587,45 @@ Vector<Double> RegriddingTVI::getFrequencies (	Double time,
 // -----------------------------------------------------------------------
 void RegriddingTVI::flag(Cube<Bool>& flagCube) const
 {
+	// Get input VisBuffer and SPW
+	VisBuffer2 *vb = getVii()->getVisBuffer();
+	Int inputSPW = vb->spectralWindows()(0);
+
+	// Configure Transformation Engine
 	initFrequencyTransformationEngine();
+
+	// Get input and output shape
+	const IPosition &inputShape = flagCube.shape();
+	IPosition outputShape(inputShape(0),spwOutChanNumMap_p[inputSPW],inputShape(2));
+	flagCube.resize(getVisBufferConst()->getShape(),False);
+
+	// Gather input data
+	DataCubeMap inputData;
+	DataCubeHolder<Bool> inputFlagCubeHolder(vb->flagCube());
+	inputData.add(MS::FLAG,inputFlagCubeHolder);
+	inputData.setWindowShape(inputShape);
+
+	// Gather output data
+	DataCubeMap outputData;
+	DataCubeHolder<Bool> outputFlagCubeHolder(flagCube);
+	outputData.add(MS::FLAG,outputFlagCubeHolder);
+	outputData.setWindowShape(outputShape);
+
+	// Configure kernel
+	if (fftShiftEnabled_p)
+	{
+		DataFFTKernel<Float> kernel(interpolationMethod_p);
+		RegriddingTransformEngine<Float> transformer(&kernel,&inputData,&outputData);
+		transformFreqAxis2(inputShape,transformer);
+	}
+	else
+	{
+		Vector<Double> *inputFreq = &(inputOutputSpwMap_p[inputSPW].first.CHAN_FREQ_aux);
+		Vector<Double> *outputFreq = &(inputOutputSpwMap_p[inputSPW].second.CHAN_FREQ);
+		DataInterpolationKernel<Float> kernel(interpolationMethod_p,inputFreq,outputFreq);
+		RegriddingTransformEngine<Float> transformer(&kernel,&inputData,&outputData);
+		transformFreqAxis2(inputShape,transformer);
+	}
 
 	return;
 }
@@ -584,7 +635,7 @@ void RegriddingTVI::flag(Cube<Bool>& flagCube) const
 // -----------------------------------------------------------------------
 void RegriddingTVI::floatData (Cube<Float> & vis) const
 {
-	initFrequencyTransformationEngine();
+	transformDataCube(getVii()->getVisBuffer()->visCubeFloat(),vis);
 
 	return;
 }
@@ -594,7 +645,7 @@ void RegriddingTVI::floatData (Cube<Float> & vis) const
 // -----------------------------------------------------------------------
 void RegriddingTVI::visibilityObserved (Cube<Complex> & vis) const
 {
-	initFrequencyTransformationEngine();
+	transformDataCube(getVii()->getVisBuffer()->visCube(),vis);
 
 	return;
 }
@@ -604,7 +655,7 @@ void RegriddingTVI::visibilityObserved (Cube<Complex> & vis) const
 // -----------------------------------------------------------------------
 void RegriddingTVI::visibilityCorrected (Cube<Complex> & vis) const
 {
-	initFrequencyTransformationEngine();
+	transformDataCube(getVii()->getVisBuffer()->visCubeCorrected(),vis);
 
 	return;
 }
@@ -614,7 +665,7 @@ void RegriddingTVI::visibilityCorrected (Cube<Complex> & vis) const
 // -----------------------------------------------------------------------
 void RegriddingTVI::visibilityModel (Cube<Complex> & vis) const
 {
-	initFrequencyTransformationEngine();
+	transformDataCube(getVii()->getVisBuffer()->visCubeModel(),vis);
 
 	return;
 }
@@ -624,7 +675,13 @@ void RegriddingTVI::visibilityModel (Cube<Complex> & vis) const
 // -----------------------------------------------------------------------
 void RegriddingTVI::weightSpectrum(Cube<Float> &weightSp) const
 {
+	// Get input VisBuffer and SPW
+	VisBuffer2 *vb = getVii()->getVisBuffer();
+	Int inputSPW = vb->spectralWindows()(0);
+
+	// Multiply input weight spectrum by the scaling factor
 	initFrequencyTransformationEngine();
+	weightSp = weightFactorMap_p[inputSPW]*(vb->weightSpectrum());
 
 	return;
 }
@@ -634,7 +691,63 @@ void RegriddingTVI::weightSpectrum(Cube<Float> &weightSp) const
 // -----------------------------------------------------------------------
 void RegriddingTVI::sigmaSpectrum (Cube<Float> &sigmaSp) const
 {
+	// Get input VisBuffer and SPW
+	VisBuffer2 *vb = getVii()->getVisBuffer();
+	Int inputSPW = vb->spectralWindows()(0);
+
+	// Multiply input sigma spectrum by the scaling factor
 	initFrequencyTransformationEngine();
+	sigmaSp = sigmaFactorMap_p[inputSPW]*(vb->sigmaSpectrum());
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template<class T> void RegriddingTVI::transformDataCube(const Cube<T> &inputVis,Cube<T> &outputVis) const
+{
+	// Get input VisBuffer and SPW
+	VisBuffer2 *vb = getVii()->getVisBuffer();
+	Int inputSPW = vb->spectralWindows()(0);
+
+	// Configure Transformation Engine
+	initFrequencyTransformationEngine();
+
+	// Get input and output shape
+	const IPosition &inputShape = inputVis.shape();
+	IPosition outputShape(inputShape(0),spwOutChanNumMap_p[inputSPW],inputShape(2));
+	outputVis.resize(getVisBufferConst()->getShape(),False);
+
+	// Gather input data
+	DataCubeMap inputData;
+	DataCubeHolder<Bool> inputFlagCubeHolder(vb->flagCube());
+	DataCubeHolder<T> inputVisCubeHolder(inputVis);
+	inputData.add(MS::FLAG,inputFlagCubeHolder);
+	inputData.add(MS::DATA,inputVisCubeHolder);
+	inputData.setWindowShape(inputShape);
+
+	// Gather output data
+	DataCubeMap outputData;
+	DataCubeHolder<T> outputVisCubeHolder(outputVis);
+	outputData.add(MS::DATA,outputVisCubeHolder);
+	outputData.setWindowShape(outputShape);
+
+	// Configure kernel
+	if (fftShiftEnabled_p)
+	{
+		DataFFTKernel<T> kernel(interpolationMethod_p);
+		RegriddingTransformEngine<T> transformer(&kernel,&inputData,&outputData);
+		transformFreqAxis2(inputShape,transformer);
+	}
+	else
+	{
+		Vector<Double> *inputFreq = &(inputOutputSpwMap_p[inputSPW].first.CHAN_FREQ_aux);
+		Vector<Double> *outputFreq = &(inputOutputSpwMap_p[inputSPW].second.CHAN_FREQ);
+		DataInterpolationKernel<T> kernel(interpolationMethod_p,inputFreq,outputFreq);
+		RegriddingTransformEngine<T> transformer(&kernel,&inputData,&outputData);
+		transformFreqAxis2(inputShape,transformer);
+	}
 
 	return;
 }
@@ -664,9 +777,249 @@ vi::ViImplementation2 * RegriddingTVIFactory::createVi(VisibilityIterator2 *) co
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
+
 vi::ViImplementation2 * RegriddingTVIFactory::createVi() const
 {
 	return new RegriddingTVI(inputVii_p,configuration_p);
+}
+
+//////////////////////////////////////////////////////////////////////////
+// RegriddingTransformEngine class
+//////////////////////////////////////////////////////////////////////////
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template<class T> RegriddingTransformEngine<T>::RegriddingTransformEngine(	RegriddingKernel<T> *kernel,
+																			DataCubeMap *inputData,
+																			DataCubeMap *outputData):
+																			FreqAxisTransformEngine2<T>(inputData,
+																										outputData)
+{
+
+	regriddingKernel_p = kernel;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template<class T> void RegriddingTransformEngine<T>::transform()
+{
+	regriddingKernel_p->kernel(inputData_p,outputData_p);
+
+	return;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// RegriddingKernel class
+//////////////////////////////////////////////////////////////////////////
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template<class T> RegriddingKernel<T>::RegriddingKernel()
+{
+	inputDummyFlagVectorInitialized_p = False;
+	outputDummyFlagVectorInitialized_p = False;
+	inputDummyDataVectorInitialized_p = False;
+	outputDummyDataVectorInitialized_p = False;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template<class T> Vector<Bool>& RegriddingKernel<T>::getInputFlagVector(DataCubeMap *inputData)
+{
+	if (inputData->present(MS::FLAG))
+	{
+		return inputData->getVector<Bool>(MS::FLAG);
+	}
+	else if (not inputDummyFlagVectorInitialized_p)
+	{
+		inputDummyFlagVectorInitialized_p = True;
+		inputDummyFlagVector_p.resize(inputData->getWindowShape()(1),False);
+	}
+
+	return inputDummyFlagVector_p;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template<class T> Vector<Bool>& RegriddingKernel<T>::getOutputFlagVector(DataCubeMap *outputData)
+{
+	if (outputData->present(MS::FLAG))
+	{
+		return outputData->getVector<Bool>(MS::FLAG);
+	}
+	else if (not outputDummyFlagVectorInitialized_p)
+	{
+		outputDummyFlagVectorInitialized_p = True;
+		outputDummyFlagVector_p.resize(outputData->getWindowShape()(1),False);
+	}
+
+	return outputDummyFlagVector_p;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template<class T> Vector<T>& RegriddingKernel<T>::getInputDataVector(DataCubeMap *inputData)
+{
+	if (inputData->present(MS::DATA))
+	{
+		return inputData->getVector<T>(MS::DATA);
+	}
+	else if (not inputDummyDataVectorInitialized_p)
+	{
+		inputDummyDataVectorInitialized_p = True;
+		inputDummyDataVector_p.resize(inputData->getWindowShape()(1),False);
+	}
+
+	return inputDummyDataVector_p;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template<class T> Vector<T>& RegriddingKernel<T>::getOutputDataVector(DataCubeMap *outputData)
+{
+	if (outputData->present(MS::DATA))
+	{
+		return outputData->getVector<T>(MS::DATA);
+	}
+	else if (not outputDummyDataVectorInitialized_p)
+	{
+		outputDummyDataVectorInitialized_p = True;
+		outputDummyDataVector_p.resize(outputData->getWindowShape()(1),False);
+	}
+
+	return outputDummyDataVector_p;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// DataInterpolationKernel class
+//////////////////////////////////////////////////////////////////////////
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template<class T> DataInterpolationKernel<T>::DataInterpolationKernel(	uInt interpolationMethod,
+																		Vector<Double> *inputFreq,
+																		Vector<Double> *outputFreq)
+{
+	interpolationMethod_p = interpolationMethod;
+	inputFreq_p = inputFreq;
+	outputFreq_p = outputFreq;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template<class T> void DataInterpolationKernel<T>::kernel(	DataCubeMap *inputData,
+															DataCubeMap *outputData)
+{
+	Vector<T> &inputDataVector = getInputDataVector(inputData);
+	Vector<T> &outputDataVector = getOutputDataVector(outputData);
+
+	if (inputDataVector.size() > 1)
+	{
+		Vector<Bool> &inputFlagVector = getInputFlagVector(inputData);
+		Vector<Bool> &outputFlagVector = getOutputFlagVector(outputData);
+
+		InterpolateArray1D<Double,T>::interpolate(	outputDataVector, // Output data
+													outputFlagVector, // Output flags
+		    										*outputFreq_p, // Out chan freq
+		    										*inputFreq_p, // In chan freq
+		    										inputDataVector, // Input data
+		    										inputFlagVector, // Input Flags
+		    										interpolationMethod_p, // Interpolation method
+		    										False, // A good data point has its flag set to False
+		    										False // If False extrapolated data points are set flagged
+								    				);
+	}
+	else
+	{
+		outputDataVector = inputDataVector(0);
+	}
+
+	return;
+}
+
+
+
+//////////////////////////////////////////////////////////////////////////
+// DataFFTKernel class
+//////////////////////////////////////////////////////////////////////////
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template<class T> DataFFTKernel<T>::DataFFTKernel(Double fftShift)
+{
+	fftShift_p = fftShift;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template<class T> void DataFFTKernel<T>::kernel(DataCubeMap *inputData,DataCubeMap *outputData)
+{
+	Vector<T> &inputDataVector = getInputDataVector(inputData);
+	Vector<T> &outputDataVector = getOutputDataVector(outputData);
+
+	if (inputDataVector.size() > 1)
+	{
+		Vector<Bool> &inputFlagVector = getInputFlagVector(inputData);
+		Vector<Bool> &outputFlagVector = getOutputFlagVector(outputData);
+
+		fftshift(inputDataVector,inputFlagVector,outputDataVector,outputFlagVector);
+	}
+	else
+	{
+		outputDataVector = inputDataVector(0);
+	}
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template<class T> void DataFFTKernel<T>::fftshift(	Vector<Complex> &inputDataVector,
+													Vector<Bool> &inputFlagVector,
+													Vector<Complex> &outputDataVector,
+													Vector<Bool> &outputFlagVector)
+{
+	fFFTServer_p.fftshift(	outputDataVector,
+							outputFlagVector,
+    						(const Vector<T>)inputDataVector,
+    						(const Vector<Bool>)inputFlagVector,
+    						(const uInt)0, // In vectors axis 0 is the only dimension
+    						(const Double)fftShift_p,
+    						False, // A good data point has its flag set to False
+    						False);
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template<class T> void DataFFTKernel<T>::fftshift(	Vector<Float> &inputDataVector,
+													Vector<Bool> &inputFlagVector,
+													Vector<Float> &outputDataVector,
+													Vector<Bool> &outputFlagVector)
+{
+	fFFTServer_p.fftshift(	outputDataVector,
+							outputFlagVector,
+    						(const Vector<T>)inputDataVector,
+    						(const Vector<Bool>)inputFlagVector,
+    						(const uInt)0, // In vectors axis 0 is the only dimension
+    						(const Double)fftShift_p,
+    						False); // A good data point has its flag set to False
+
+	return;
 }
 
 } //# NAMESPACE VI - END

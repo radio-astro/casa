@@ -97,6 +97,8 @@ protected:
     void initFrequencyGrid();
     void initFrequencyTransformationEngine() const;
 
+    template<class T> void transformDataCube(const Cube<T> &inputVis,Cube<T> &outputVis) const;
+
 	int nChan_p;
 	String mode_p;
 	String start_p;
@@ -112,6 +114,7 @@ protected:
 	Bool refFrameTransformation_p;
 	Bool radialVelocityCorrection_p;
 	Bool radialVelocityCorrectionSignificant_p;
+	Bool transformFlags_p;
 
 	MEpoch referenceTime_p;
 	MDirection phaseCenter_p;
@@ -129,10 +132,11 @@ protected:
 	ROMSColumns *selectedInputMsCols_p;
 	MSFieldColumns *inputMSFieldCols_p;
 
-    map<Int,Float> weightFactorMap_p;
-	map<Int,Float> sigmaFactorMap_p;
+	mutable map<Int,Float> weightFactorMap_p;
+	mutable map<Int,Float> sigmaFactorMap_p;
 	mutable inputOutputSpwMap inputOutputSpwMap_p;
 };
+
 
 //////////////////////////////////////////////////////////////////////////
 // RegriddingTVIFactory class
@@ -151,10 +155,132 @@ protected:
 	vi::ViImplementation2 * createVi () const;
 
 	Record configuration_p;
-	ViImplementation2 *inputVii_p;;
+	ViImplementation2 *inputVii_p;
 };
 
+//////////////////////////////////////////////////////////////////////////
+// RegriddingTransformEngine class
+//////////////////////////////////////////////////////////////////////////
 
+template<class T> class RegriddingKernel; // Forward declaration
+
+template<class T> class RegriddingTransformEngine : public FreqAxisTransformEngine2<T>
+{
+
+	using FreqAxisTransformEngine2<T>::inputData_p;
+	using FreqAxisTransformEngine2<T>::outputData_p;
+
+public:
+
+	RegriddingTransformEngine	(	RegriddingKernel<T> *kernel,
+									DataCubeMap *inputData,
+									DataCubeMap *outputData);
+
+	void transform();
+
+protected:
+
+	// This member has to be a pointer, otherwise there
+	// are compile time problems due to the fact that
+	// it is a pure virtual class.
+	RegriddingKernel<T> *regriddingKernel_p;
+};
+
+//////////////////////////////////////////////////////////////////////////
+// RegriddingKernel class
+//////////////////////////////////////////////////////////////////////////
+
+template<class T> class RegriddingKernel
+{
+
+public:
+
+	RegriddingKernel();
+	virtual void kernel(DataCubeMap *inputData,DataCubeMap *outputData) = 0;
+	virtual ~RegriddingKernel() {}
+
+protected:
+
+	Vector<Bool> & getInputFlagVector(DataCubeMap *inputData);
+	Vector<Bool> & getOutputFlagVector(DataCubeMap *outputData);
+	Vector<T> & getInputDataVector(DataCubeMap *inputData);
+	Vector<T> & getOutputDataVector(DataCubeMap *outputData);
+
+	Vector<Bool> inputDummyFlagVector_p;
+	Vector<Bool> outputDummyFlagVector_p;
+	Vector<T> inputDummyDataVector_p;
+	Vector<T> outputDummyDataVector_p;
+
+	Bool inputDummyFlagVectorInitialized_p;
+	Bool outputDummyFlagVectorInitialized_p;
+	Bool inputDummyDataVectorInitialized_p;
+	Bool outputDummyDataVectorInitialized_p;
+
+};
+
+//////////////////////////////////////////////////////////////////////////
+// DataInterpolationKernel class
+//////////////////////////////////////////////////////////////////////////
+
+template<class T> class DataInterpolationKernel : public RegriddingKernel<T>
+{
+	using RegriddingKernel<T>::getInputFlagVector;
+	using RegriddingKernel<T>::getOutputFlagVector;
+	using RegriddingKernel<T>::getInputDataVector;
+	using RegriddingKernel<T>::getOutputDataVector;
+
+public:
+
+	DataInterpolationKernel(	uInt interpolationMethod,
+								Vector<Double> *inputFreq,
+								Vector<Double> *outputFreq);
+
+	~DataInterpolationKernel() {}
+
+	void kernel(DataCubeMap *inputData,DataCubeMap *outputData);
+
+protected:
+
+	uInt interpolationMethod_p;
+	Vector<Double> *inputFreq_p;
+	Vector<Double> *outputFreq_p;
+};
+
+//////////////////////////////////////////////////////////////////////////
+// FlagFFTKernel class
+//////////////////////////////////////////////////////////////////////////
+
+template<class T> class DataFFTKernel : public RegriddingKernel<T>
+{
+	using RegriddingKernel<T>::getInputFlagVector;
+	using RegriddingKernel<T>::getOutputFlagVector;
+	using RegriddingKernel<T>::getInputDataVector;
+	using RegriddingKernel<T>::getOutputDataVector;
+
+public:
+
+	DataFFTKernel(Double fftShift);
+
+	~DataFFTKernel() {}
+
+	void kernel(DataCubeMap *inputData,DataCubeMap *outputData);
+
+protected:
+
+	void fftshift(	Vector<Complex> &inputDataVector,
+					Vector<Bool> &inputFlagVector,
+					Vector<Complex> &outputDataVector,
+					Vector<Bool> &outputFlagVector);
+
+	void fftshift(	Vector<Float> &inputDataVector,
+					Vector<Bool> &inputFlagVector,
+					Vector<Float> &outputDataVector,
+					Vector<Bool> &outputFlagVector);
+
+
+	Double fftShift_p;
+	FFTServer<Float, Complex> fFFTServer_p;
+};
 
 } //# NAMESPACE VI - END
 

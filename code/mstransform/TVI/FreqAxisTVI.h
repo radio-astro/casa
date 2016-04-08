@@ -48,6 +48,7 @@ namespace vi { //# NAMESPACE VI - BEGIN
 //////////////////////////////////////////////////////////////////////////
 
 template<class T> class FreqAxisTransformEngine; // Forward declaration
+template<class T> class FreqAxisTransformEngine2; // Forward declaration
 
 class FreqAxisTVI : public TransformingVi2
 {
@@ -132,6 +133,27 @@ protected:
 		return;
 	}
 
+    // Method implementing main loop  (with auxiliary data)
+	template <class T> void transformFreqAxis2(	const IPosition &inputShape,
+												FreqAxisTransformEngine2<T> &transformer) const
+	{
+		uInt nRows = inputShape(2);
+		uInt nCorrs = inputShape(0);
+
+		for (uInt row=0; row < nRows; row++)
+		{
+			transformer.setRowIndex(row);
+
+			for (uInt corr=0; corr < nCorrs; corr++)
+			{
+				transformer.setCorrIndex(corr);
+				transformer.transform();
+			}
+		}
+
+		return;
+	}
+
 	Bool parseConfiguration(const Record &configuration);
 	void initialize();
 
@@ -150,7 +172,7 @@ template<class T> class FreqAxisTransformEngine
 
 public:
 
-	virtual void transform(Vector<T> &inputVector,Vector<T> &outputVector) = 0;
+	virtual void transform(	Vector<T> &,Vector<T> &) {};
 	virtual void setRowIndex(uInt row) {row_p = row;}
 	virtual void setCorrIndex(uInt corr) {corr_p = corr;}
 
@@ -158,6 +180,46 @@ protected:
 
 	uInt row_p;
 	uInt corr_p;
+
+};
+
+//////////////////////////////////////////////////////////////////////////
+// FreqAxisTransformEngine2 class
+//////////////////////////////////////////////////////////////////////////
+
+template<class T> class FreqAxisTransformEngine2
+{
+
+public:
+
+	FreqAxisTransformEngine2(DataCubeMap *inputData,DataCubeMap *outputData)
+	{
+		inputData_p = inputData;
+		outputData_p = outputData;
+	}
+
+	void setRowIndex(uInt row)
+	{
+		inputData_p->setMatrixIndex(row);
+		outputData_p->setMatrixIndex(row);
+
+		return;
+	}
+
+	void setCorrIndex(uInt corr)
+	{
+		inputData_p->setVectorIndex(corr);
+		outputData_p->setVectorIndex(corr);
+
+		return;
+	}
+
+	virtual void transform() {}
+
+protected:
+
+	DataCubeMap *inputData_p;
+	DataCubeMap *outputData_p;
 
 };
 
