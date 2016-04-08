@@ -6453,6 +6453,24 @@ template <class T> void MSTransformManager::writeMatrix(	const Matrix<T> &inputM
 	}
 	else
 	{
+		// jagonzal (CAS-8492): Huge bug, each input row must
+		// be copied n times not the whole matrix n times
+		uInt outRowIdx = 0;
+		uInt nInputRows = inputMatrix.shape()(1);
+		Matrix<T> outputMatrix(IPosition(2,3,nInputRows*nBlocks));
+		for (uInt inputRowIdx = 0; inputRowIdx<nInputRows; inputRowIdx++)
+		{
+			for (uInt blockIdx = 0; blockIdx<nBlocks; blockIdx++)
+			{
+				outputMatrix.column(outRowIdx) = inputMatrix.column(inputRowIdx);
+				outRowIdx += 1;
+			}
+		}
+
+		RefRows outRowRef(rowRef.firstRow(),rowRef.firstRow()+nInputRows*nBlocks-1);
+		outputCol.putColumnCells(outRowRef, outputMatrix);
+
+		/*
 		uInt offset = 0;
 		for (uInt block_i=0;block_i<nBlocks;block_i++)
 		{
@@ -6461,6 +6479,7 @@ template <class T> void MSTransformManager::writeMatrix(	const Matrix<T> &inputM
 		    outputCol.putColumnCells(rowRef_i, inputMatrix);
 		    offset += inputMatrix.shape()(1);
 		}
+		*/
 	}
 	return;
 }
