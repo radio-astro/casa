@@ -47,6 +47,7 @@ CasaTaskDict = {
                    'hsd_plotflagbaseline'  : 'SDPlotFlagBaseline',
                    'hsd_flagdata'          : 'FlagDeterALMASingleDish',
                    'hsd_simplescale'       : 'SDSimpleScale',
+                   'hsdms_applycal'        : 'SDMSApplycal',
                    'hsdms_k2jycal'         : 'SDK2JyCal',
                    'hsdms_skycal'          : 'SDMSSkyCal',
                    'hifa_importdata'       : 'ALMAImportData',
@@ -152,6 +153,7 @@ classToCASATask = {
     hsd_tasks.SDPlotFlagBaseline      : 'hsd_plotflagbaseline',
     hsd_tasks.FlagDeterALMASingleDish : 'hsd_flagdata',
     hsd_tasks.SDSimpleScale           : 'hsd_simplescale',
+    hsd_tasks.SDMSApplycal            : 'hsdms_applycal',
     hsd_tasks.SDK2JyCal               : 'hsdms_k2jycal',
     hsd_tasks.SDMSSkyCal              : 'hsdms_skycal',
     #VLA tasks
@@ -284,7 +286,7 @@ TASK_COMMENTS = {
     (hifa_tasks.TimeGaincal,) : (
         'Time dependent gain calibrations are computed. '
     ),
-    (hif_tasks.Applycal,) : (
+    (hif_tasks.Applycal, hsd_tasks.SDMSApplycal) : (
         'Calibrations are applied  to the data. Final flagging summaries '
 	'are computed'
     ),

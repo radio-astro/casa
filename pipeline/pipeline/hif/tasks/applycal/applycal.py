@@ -219,7 +219,9 @@ class Applycal(basetask.StandardTaskTemplate):
     on-the-fly calibration arguments.
     """
     Inputs = ApplycalInputs
-    
+    ### Note this is a temporary workaround ###
+    antenna_to_apply = '*&*'
+
     def prepare(self):
         inputs = self.inputs
 
@@ -249,7 +251,7 @@ class Applycal(basetask.StandardTaskTemplate):
             # set the on-the-fly calibration state for the data selection.  
             calapp = callibrary.CalApplication(calto, calfroms)
             ### Note this is a temporary workaround ###
-            args['antenna'] = '*&*'
+            args['antenna'] = self.antenna_to_apply
             ### Note this is a temporary workaround ###
             args['gaintable'] = calapp.gaintable
             args['gainfield'] = calapp.gainfield
