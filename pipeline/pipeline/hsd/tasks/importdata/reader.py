@@ -166,6 +166,7 @@ class MetaDataReader(object):
         self.datatable.putcol('TIME',Tmjd/86400.0,startrow=ID)
         self.datatable.putcol('ELAPSED',Tmjd-Tmjd[0],startrow=ID)
         self.datatable.putcol('EXPOSURE',Texpt,startrow=ID)
+        self.datatable.putcol('FIELD_ID', field_ids, startrow=ID)
         Tra = numpy.zeros(nrow, dtype=numpy.float64)
         Tdec = numpy.zeros(nrow, dtype=numpy.float64)
         Taz = numpy.zeros(nrow, dtype=numpy.float64)

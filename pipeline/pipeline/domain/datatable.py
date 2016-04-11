@@ -75,7 +75,8 @@ TD_DESC_RO = [
     __coldesc('string',  0, 0, -1, 'Target name'),
     __coldesc('integer', 0, 0, -1, 'Antenna index'),
     __coldesc('integer', 0, 0, -1, 'Source type enum'),
-    __coldesc('integer', 0, 0, -1, 'MS index')
+    __coldesc('integer', 0, 0, -1, 'MS index'),
+    __coldesc('integer', 0, 0, -1, 'Field ID')
     ]
 
 TD_DESC_RW = [
@@ -94,7 +95,7 @@ def __tabledescro():
         'ROW', 'SCAN', 'IF', 'POL', 'BEAM', 'DATE',
         'TIME', 'ELAPSED', 'EXPOSURE', 'RA', 'DEC',
         'AZ', 'EL', 'NCHAN', 'TSYS', 'TARGET', 'ANTENNA',
-        'SRCTYPE', 'MS'
+        'SRCTYPE', 'MS', 'FIELD_ID'
         ]
     return dict( zip(name,TD_DESC_RO) )
 
