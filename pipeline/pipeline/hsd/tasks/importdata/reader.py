@@ -11,9 +11,8 @@ import pipeline.infrastructure.casatools as casatools
 from pipeline.domain.datatable import DataTableImpl as DataTable
 from pipeline.domain.datatable import DataTableColumnMaskList as ColMaskList
 from pipeline.domain.datatable import OnlineFlagIndex
-from pipeline.domain.datatable import absolute_path
 
-from ..common import science_spw, mjd_to_datestring, TableSelector
+from ..common import mjd_to_datestring, TableSelector
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -171,21 +170,30 @@ class MetaDataReader(object):
         Tdec = numpy.zeros(nrow, dtype=numpy.float64)
         Taz = numpy.zeros(nrow, dtype=numpy.float64)
         Tel = numpy.zeros(nrow, dtype=numpy.float64)
-        index = numpy.argsort(Tant)
+        index = numpy.lexsort((Tant, Tmjd))
         LOG.info('Start reading direction (convert if necessary). It may take a while.')
         with casatools.MSMDReader(name) as msmd:
             nprogress = 5000
             iprogress = 0
+            last_mjd = None
+            last_antenna = None
+            last_result = None
             for irow in index:
                 iprogress += 1
                 if iprogress >= nprogress and iprogress % nprogress == 0:
                     print '%s/%s'%(iprogress,nrow)
                 row = rows[irow]
                 mjd_in_sec = Tmjd[irow]
+                antenna_id = Tant[irow]
+                if mjd_in_sec == last_mjd and antenna_id == last_antenna:
+                    Taz[irow] = last_result[0]
+                    Tel[irow] = last_result[1]
+                    Tra[irow] = last_result[2]
+                    Tdec[irow] = last_result[3]
+                    continue
                 me = casatools.measures
                 qa = casatools.quanta
                 mepoch = me.epoch(rf=time_frame, v0=qa.quantity(mjd_in_sec, 's'))
-                antenna_id = Tant[irow]
                 antennas = self.ms.get_antenna(antenna_id)
                 assert len(antennas) == 1
                 antenna_domain = antennas[0]
@@ -203,7 +211,7 @@ class MetaDataReader(object):
                     Tel[irow] = get_value_in_deg(lat)
                     
                     # conversion to J2000
-                    ra, dec = self.direction_convert(pointing_direction, mepoch, mposition, outframe='J2000')                    
+                    ra, dec = direction_convert(pointing_direction, mepoch, mposition, outframe='J2000')                    
                     Tra[irow] = get_value_in_deg(ra)
                     Tdec[irow] = get_value_in_deg(dec)
                 elif ref in ['J2000']:
@@ -214,7 +222,7 @@ class MetaDataReader(object):
                     Tdec[irow] = get_value_in_deg(lat)
                     
                     # conversion to AZELGEO
-                    az, el = self.direction_convert(pointing_direction, mepoch, mposition, outframe='AZELGEO')                  
+                    az, el = direction_convert(pointing_direction, mepoch, mposition, outframe='AZELGEO')                  
                     Taz[irow] = get_value_in_deg(az)
                     Tel[irow] = get_value_in_deg(el)
                 else:
@@ -222,14 +230,17 @@ class MetaDataReader(object):
                         LOG.info('Require direction conversion from %s to J2000 as well as to AZELGEO'%(ref))
                         
                     # conversion to J2000
-                    ra, dec = self.direction_convert(pointing_direction, mepoch, mposition, outframe='J2000')
+                    ra, dec = direction_convert(pointing_direction, mepoch, mposition, outframe='J2000')
                     Tra[irow] = get_value_in_deg(ra)
                     Tdec[irow] = get_value_in_deg(dec)
 
                     # conversion to AZELGEO
-                    az, el = self.direction_convert(pointing_direction, mepoch, mposition, outframe='AZELGEO')
+                    az, el = direction_convert(pointing_direction, mepoch, mposition, outframe='AZELGEO')
                     Taz[irow] = get_value_in_deg(az)
                     Tel[irow] = get_value_in_deg(el)
+                last_mjd = mjd_in_sec
+                last_antenna = antenna_id
+                last_result = (Taz[irow], Tel[irow], Tra[irow], Tdec[irow],)
         LOG.info('Done reading direction (convert if necessary).')
         self.datatable.putcol('RA',Tra,startrow=ID)
         self.datatable.putcol('DEC',Tdec,startrow=ID)
@@ -277,19 +288,19 @@ class MetaDataReader(object):
     def detect_exclude_type(self):
         return map(int, [sd.srctype.poncal, sd.srctype.poffcal])
     
-    def direction_convert(self, direction, mepoch, mposition, outframe):
-        direction_type = direction['type']
-        assert direction_type == 'direction'
-        inframe = direction['refer']
-        
-        # if outframe is same as input direction reference, just return 
-        # direction as it is
-        if outframe == inframe:
-            return direction
-        
-        # conversion using measures tool
-        me = casatools.measures
-        me.doframe(mepoch)
-        me.doframe(mposition)
-        out_direction = me.measure(direction, outframe)
-        return out_direction['m0'], out_direction['m1']
+def direction_convert(direction, mepoch, mposition, outframe):
+    direction_type = direction['type']
+    assert direction_type == 'direction'
+    inframe = direction['refer']
+    
+    # if outframe is same as input direction reference, just return 
+    # direction as it is
+    if outframe == inframe:
+        return direction
+    
+    # conversion using measures tool
+    me = casatools.measures
+    me.doframe(mepoch)
+    me.doframe(mposition)
+    out_direction = me.measure(direction, outframe)
+    return out_direction['m0'], out_direction['m1']
