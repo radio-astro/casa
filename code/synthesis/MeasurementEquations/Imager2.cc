@@ -4159,7 +4159,9 @@ void Imager::transferHistory(LoggerHolder& imagelog, ROMSHistoryColumns& msHis){
   const ROScalarColumn<String> &origin_col = msHis.origin();
   const ROArrayColumn<String> &cli_col = msHis.cliCommand();
   const ROScalarColumn<String> &message_col = msHis.message();
-  //const ROScalarColumn<String> &priority_col = msHis.priority();
+  const ROScalarColumn<String> &priority_col = msHis.priority();
+  std::map<String, LogMessage::Priority> prio={{"DEBUGGING", LogMessage::DEBUGGING},
+					       {"DEBUG2", LogMessage::DEBUG2},{"DEBUG1", LogMessage::DEBUG1},  {"NORMAL5", LogMessage::NORMAL5}, {"NORMAL4",  LogMessage::NORMAL4}, {"NORMAL3", LogMessage::NORMAL3}, {"NORMAL2",   LogMessage::NORMAL2}, {"NORMAL1",  LogMessage::NORMAL1}, {"NORMAL",   LogMessage::NORMAL}, {"WARN",  LogMessage::WARN}, {"SEVERE", LogMessage::SEVERE}};
   if (msHis.nrow()>0) {
 	    //ostringstream oos;
 	    uInt nmessages = time_col.nrow();
@@ -4167,8 +4169,8 @@ void Imager::transferHistory(LoggerHolder& imagelog, ROMSHistoryColumns& msHis){
 	      try{
 		ostringstream oos;
 		oos << cli_col(i);
-		LogMessage msg1(String("CLI_COMM: " + String(oos) + "; MESSAGE: " +message_col(i)), LogOrigin(origin_col(i)), LogMessage::NORMAL);
-		msg1.messageTime( time_col(i));
+		LogMessage msg1(String("CLI_COMM: " + String(oos) + "; MESSAGE: " +message_col(i)), LogOrigin(origin_col(i)), prio.find(priority_col(i)) != prio.end() ? prio[priority_col(i)] :LogMessage::NORMAL);
+		msg1.messageTime( MVTime(Quantity(time_col(i), "s")).getTime());
 	   
 		/*	String tmp=frmtTime(time_col(i));
 		oos << tmp
