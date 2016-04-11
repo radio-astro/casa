@@ -5158,6 +5158,7 @@ void MSTransformManager::setupBufferTransformations(vi::VisBuffer2 *vb)
 	{
 		// Fill baseline map using as key Ant1,Ant2,Scan and State,
 		// Which are the elements that can be combined in one chunk
+		rowIndex_p.clear();
 		baselineMap_p.clear();
 		Vector<Int> antenna1 = vb->antenna1();
 		Vector<Int> antenna2 = vb->antenna2();
@@ -5166,20 +5167,34 @@ void MSTransformManager::setupBufferTransformations(vi::VisBuffer2 *vb)
 		Int relativeTimeInMiliseconds = 0;
 		for (uInt row=0;row<antenna1.size();row++)
 		{
-			pair<Int,Int> baseline = std::make_pair(antenna1(row),antenna2(row));
+			pair<uInt,uInt> baseline = std::make_pair(antenna1(row),antenna2(row));
 			relativeTimeInMiliseconds = (Int)floor(1E3*(vb->time()(row) - vb->time()(0)));
-			baselineMap_p[std::make_pair(baseline,relativeTimeInMiliseconds)].push_back(row);
+			pair< pair<uInt,uInt>, uInt > baselineTime = std::make_pair(baseline,relativeTimeInMiliseconds);
+
+			// Fill row index vector with to the first row for every element in the baseline map
+			if (baselineMap_p.find(baselineTime) == baselineMap_p.end())
+			{
+				rowIndex_p.push_back(row);
+			}
+
+			baselineMap_p[baselineTime].push_back(row);
+
 		}
 
 		rowsToAdd = baselineMap_p.size();
 
 		// Fill row index vector with to the first row for every element in the baseline map
-		uInt rowIndex = 0;
-		rowIndex_p.clear();
-		for (baselineMap::iterator iter = baselineMap_p.begin(); iter != baselineMap_p.end(); iter++)
+		// jagonzal (CAS-8492): For SPW separation only we don't
+		// follow the baselineMap order but the input order
+		if (combinespws_p)
 		{
-			rowIndex_p.push_back((iter->second)[0]);
-			rowIndex ++;
+			uInt rowIndex = 0;
+			rowIndex_p.clear();
+			for (baselineMap::iterator iter = baselineMap_p.begin(); iter != baselineMap_p.end(); iter++)
+			{
+				rowIndex_p.push_back((iter->second)[0]);
+				rowIndex ++;
+			}
 		}
 	}
 	else
