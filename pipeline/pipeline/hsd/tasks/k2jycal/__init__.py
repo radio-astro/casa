@@ -13,4 +13,4 @@ pipelineqa.registry.add_handler(qa.SDK2JyCalListQAHandler())
 
 qaadapter.registry.register_to_calibration_topic(k2jycal.SDK2JyCalResults)
 
-weblog.add_renderer(SDK2JyCal, renderer.T2_4MDetailsSingleDishK2JyCalRenderer(), group_by='ungrouped')
+weblog.add_renderer(SDK2JyCal, renderer.T2_4MDetailsSingleDishK2JyCalRenderer(), group_by=weblog.UNGROUPED)
