@@ -1625,6 +1625,23 @@ class imhead_test(unittest.TestCase):
         myimd = imdtool()
         self.assertTrue(myimd.open(imagename))
         myimd.done()
+
+    def test_masked(self):
+        """CAS-8500 test imhead on completely masked image does not segfault"""
+        myia = iatool()
+        ary = myia.makearray(v=2.5, shape=[2,2,1,2])
+        imagename = 'CAS-8500.im'
+        self.assertTrue(
+            myia.fromarray(outfile=imagename, pixels=ary, overwrite=True),
+            "Failed to create image from array"
+        )
+        myia.done()
+        outfile = "CAS-8500_mom.im"
+        immoments(imagename,outfile=outfile,excludepix=[-10,10])
+        self.assertTrue(
+            imhead(outfile, mode='list'),
+            "Failed to run imhead"
+        ) 
  
 def suite():
     return [imhead_test]    
