@@ -216,7 +216,13 @@ public:
 
 MSFlagEval::MSFlagEval(FLAGSTYPE mask, FLAGSTYPE ignore):mask(mask),ignore(ignore) {;}
 MSFlagEval::~MSFlagEval() {;}
-char MSFlagEval::operator()(FLAGSTYPE f) { return ((f == ignore) || (f & mask & 0x0000FFFF) == 0) ? 0 : 1; }
+//char MSFlagEval::operator()(FLAGSTYPE f) { return ((f == ignore) || (f & mask & 0x0000FFFF) == 0) ? 0 : 1; }
+char MSFlagEval::operator()(FLAGSTYPE f) { return ((f == ignore) || (f & mask) == 0) ? 0 : 1; } // As of 2015.8 correlator 
+                                                                                                // uses the definitions for binary
+                                                                                                // contained in BinaryFlags
+                                                                                                // see https://bugs.nrao.edu/browse/CAS-8491
+                                                                                                // There is no reason to continue to
+                                                                                                // ignore the 16 upper bits.
 MSFlagEval & MSFlagEval::operator=(const MSFlagEval& other) {
   if ( this != &other ) {
     mask = other.mask;
@@ -1360,8 +1366,16 @@ int main (int argC, char * argV[]) {
   SDMDataObjectStreamReader sdosr;
   SDMDataObjectReader sdor;
 
-
-  MSFlagEval flagEval(flagmask.to_ulong(), processUncorrectedData ? 3 : 0); // If we process uncorrected data we ignore the combination
+  unsigned long fm2Ulong = 0;
+  if (processUncorrectedData) {                  // A bit of manipulation on the mask in the case of uncorrected data...
+    bitset<32> UDflagmask(flagmask.to_ulong());  // ... because ...
+    UDflagmask.reset(abbrev2bitpos["WVR_APC"]);  // the mask must NOT have the WVR_APC bit set to 1 !
+    fm2Ulong = UDflagmask.to_ulong();            // (see https://bugs.nrao.edu/browse/CAS-8491)
+  }
+  else {
+    fm2Ulong = flagmask.to_ulong();
+  }
+  MSFlagEval flagEval(fm2Ulong, processUncorrectedData ? 3 : 0); // If we process uncorrected data we ignore the combination
                                                                             // 3 = WVR_APC | INTEGRATION_FULLY_BLANKED
 
  
