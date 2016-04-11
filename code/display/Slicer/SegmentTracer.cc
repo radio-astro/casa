@@ -36,7 +36,7 @@ namespace casa {
 
 	SegmentTracer::SegmentTracer( int regionId, int index, QwtPlot* plot ):
 		QwtPlotPicker( QwtPlot::xBottom, QwtPlot::yLeft,
-#if QWT_VERSION <= 0x060000
+#if QWT_VERSION < 0x060000
 		               QwtPlotPicker::PointSelection,
 #endif
 		               QwtPlotPicker::NoRubberBand, QwtPlotPicker::AlwaysOn, plot->canvas() ) {

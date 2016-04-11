@@ -70,7 +70,10 @@ namespace casa {
 				colorCurve = NULL;
 			}
 			colorCurve  = new QwtPlotCurve();
-#if QWT_VERSION <= 0x060000
+#if QWT_VERSION >= 0x060000
+			plot->enableAxis( QwtPlot::xBottom );
+			plot->enableAxis( QwtPlot::yLeft );
+#else
 			colorCurve->setAxis( QwtPlot::xBottom, QwtPlot::yLeft);
 #endif
 			set_data( colorCurve, intensities, yVals );

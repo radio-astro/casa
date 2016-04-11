@@ -27,6 +27,9 @@
 #include <display/Slicer/SliceZoomer.h>
 #include <display/Slicer/SliceColorPreferences.qo.h>
 #include <display/Slicer/SlicePlotPreferences.qo.h>
+#if QWT_VERSION >= 0x060000
+#include <qwt_plot_renderer.h>
+#endif
 
 #include <QDebug>
 #include <QMessageBox>
@@ -225,23 +228,26 @@ namespace casa {
 
 
 	bool SlicerMainWindow::toImageFormat( const QString& fileName, const QString& format ) {
-#if QWT_VERSION <= 0x060000
 		QSize plotSize = ui.plotFrame->size();
 		QPixmap pixmap(plotSize.width(), plotSize.height());
 		pixmap.fill(Qt::white );
+#if QWT_VERSION >= 0x060000
+		QwtPlotRenderer filter;
+		filter.setDiscardFlags(QwtPlotRenderer::DiscardNone);
+		filter.setLayoutFlag(QwtPlotRenderer::FrameWithScales);
+		filter.renderTo(&slicePlot,pixmap);
+#else
 		QwtPlotPrintFilter filter;
 		int options = QwtPlotPrintFilter::PrintFrameWithScales | QwtPlotPrintFilter::PrintBackground;
 		filter.setOptions( options );
 		slicePlot.print( pixmap, filter );
+#endif
 		bool imageSaved = pixmap.save( fileName, format.toStdString().c_str());
 		if ( !imageSaved ) {
 			QString msg("There was a problem saving the histogram.\nPlease check the file path.");
 			QMessageBox::warning( this, "Save Problem", msg);
 		}
 		return imageSaved;
-#else
-		return false;
-#endif
 	}
 
 //-------------------------------------------------------------------------------
