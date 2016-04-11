@@ -49,7 +49,7 @@ ImageMetaDataRW::ImageMetaDataRW( SPIIC image ) : ImageMetaDataBase(), _floatIma
 
 Record ImageMetaDataRW::toRecord(Bool verbose) const {
 	if (_header.empty()) {
-		_header = _makeHeader();
+        _header = _makeHeader();
 	}
 	if (verbose) {
 		_toLog(_header);
@@ -1169,32 +1169,32 @@ String ImageMetaDataRW::_getRefFreqType() const {
 }
 
 Quantity ImageMetaDataRW::_getRestFrequency() const {
-	const CoordinateSystem& csys = _getCoords();
-	ThrowIf(
-		! csys.hasSpectralAxis(),
-		"Image has no spectral axis so there is no rest frequency"
-	);
-	if (_restFreq.getValue() == 0) {
-		_restFreq = Quantity(
-			csys.spectralCoordinate().restFrequency(),
-			csys.spectralCoordinate().worldAxisUnits()[0]
-		);
-	}
-	return _restFreq;
+    const CoordinateSystem& csys = _getCoords();
+    ThrowIf(
+        ! csys.hasSpectralAxis(),
+        "Image has no spectral axis so there is no rest frequency"
+    );
+    if (_restFreq.getValue() == 0) {
+        _restFreq = Quantity(
+            csys.spectralCoordinate().restFrequency(),
+            csys.spectralCoordinate().worldAxisUnits()[0]
+        );
+    }
+    return _restFreq;
 }
 
 String ImageMetaDataRW::_getTelescope() const {
-	if (_telescope.empty()) {
-		_telescope = _getCoords().obsInfo().telescope();
-	}
-	return _telescope;
+    if (_telescope.empty()) {
+        _telescope = _getCoords().obsInfo().telescope();
+    }
+    return _telescope;
 }
 
 Record ImageMetaDataRW::_getStatistics() const {
-	if (_stats.nfields() == 0 && ! _complexImage) {
-		_stats = _calcStats();
-	}
-	return _stats;
+    if (_stats.nfields() == 0 && ! _complexImage) {
+        _stats = _calcStats();
+    }
+    return _stats;
 }
 
 } //# NAMESPACE CASA - END

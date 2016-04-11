@@ -79,81 +79,79 @@ const String ImageMetaDataBase::_SHAPE = "shape";
 const String ImageMetaDataBase::_TELESCOPE = "telescope";
 
 Record ImageMetaDataBase::_makeHeader() const {
-	Record header;
-	header.define(_IMTYPE, _getImType());
-	header.define(_OBJECT, _getObject());
+    Record header;
+    header.define(_IMTYPE, _getImType());
+    header.define(_OBJECT, _getObject());
+    const auto& csys = _getCoords();
 
-	const CoordinateSystem& csys = _getCoords();
-
-	if (csys.hasDirectionCoordinate()) {
-		const DirectionCoordinate& dc = csys.directionCoordinate();
-		String equinox = MDirection::showType(
-			dc.directionType()
-		);
-		header.define(_EQUINOX, _getEquinox());
-		header.define(_PROJECTION, _getProjection());
-	}
-	header.define(_OBSDATE, _getEpochString());
-	header.define(MASKS, _getMasks());
-	header.define(_OBSERVER, _getObserver());
-	header.define(_SHAPE, _getShape().asVector());
-	header.define(_TELESCOPE, _getTelescope());
-	header.define(_BUNIT, _getBrightnessUnit());
-	if (csys.hasSpectralAxis()) {
-		const SpectralCoordinate& sc = csys.spectralCoordinate();
-		header.define(_RESTFREQ, sc.restFrequencies());
-		header.define(
-			_REFFREQTYPE , _getRefFreqType()
-		);
-	}
-
-	const ImageInfo& info = _getInfo();
-	if (info.hasSingleBeam()) {
-		GaussianBeam beam = _getBeam();
-		header.defineRecord(
-			_BEAMMAJOR,
-			QuantumHolder(beam.getMajor()).toRecord()
-		);
-		header.defineRecord(
-			_BEAMMINOR,
-			QuantumHolder(beam.getMinor()).toRecord()
-		);
-		header.defineRecord(
-			_BEAMPA,
-			QuantumHolder(beam.getPA(True)).toRecord()
-		);
-	}
-	else if (info.hasMultipleBeams()) {
-		String error;
-		Record rec;
-		info.toRecord(error, rec);
-		static const String recName = "perplanebeams";
-		Record beamRec = rec.asRecord(recName);
-		beamRec.defineRecord(
-			"median area beam", info.getBeamSet().getMedianAreaBeam().toRecord()
-		);
-		header.defineRecord(recName, beamRec);
-	}
-	vector<Quantity> cdelt = _getIncrements();
-	Vector<String> units = _getAxisUnits();
-	Vector<Double> crpix = _getRefPixel();
-	Vector<Quantity> crval = _getRefValue();
-	Vector<String> types = _getAxisNames();
-	header.merge(_getStatistics());
-	for (uInt i=0; i<cdelt.size(); i++) {
-		String iString = String::toString(i + 1);
-		String delt = _CDELT + iString;
-		header.define(delt, cdelt[i].getValue());
-		String unit = _CUNIT + iString;
-		header.define(unit, units[i]);
-		String pix = _CRPIX + iString;
-		header.define(pix, crpix[i]);
-		String val = _CRVAL + iString;
-		header.define(val, crval[i].getValue());
-		String type = _CTYPE + iString;
-		header.define(type, types[i]);
-	}
-	return header;
+    if (csys.hasDirectionCoordinate()) {
+        const DirectionCoordinate& dc = csys.directionCoordinate();
+        String equinox = MDirection::showType(
+                dc.directionType()
+        );
+        header.define(_EQUINOX, _getEquinox());
+        header.define(_PROJECTION, _getProjection());
+    }
+    header.define(_OBSDATE, _getEpochString());
+    header.define(MASKS, _getMasks());
+    header.define(_OBSERVER, _getObserver());
+    header.define(_SHAPE, _getShape().asVector());
+    header.define(_TELESCOPE, _getTelescope());
+    header.define(_BUNIT, _getBrightnessUnit());
+    if (csys.hasSpectralAxis()) {
+        const SpectralCoordinate& sc = csys.spectralCoordinate();
+        header.define(_RESTFREQ, sc.restFrequencies());
+        header.define(
+            _REFFREQTYPE , _getRefFreqType()
+        );
+    }
+    const auto& info = _getInfo();
+    if (info.hasSingleBeam()) {
+        GaussianBeam beam = _getBeam();
+        header.defineRecord(
+            _BEAMMAJOR,
+            QuantumHolder(beam.getMajor()).toRecord()
+        );
+        header.defineRecord(
+            _BEAMMINOR,
+            QuantumHolder(beam.getMinor()).toRecord()
+        );
+        header.defineRecord(
+            _BEAMPA,
+            QuantumHolder(beam.getPA(True)).toRecord()
+        );
+    }
+    else if (info.hasMultipleBeams()) {
+        String error;
+        Record rec;
+        info.toRecord(error, rec);
+        static const String recName = "perplanebeams";
+        Record beamRec = rec.asRecord(recName);
+        beamRec.defineRecord(
+            "median area beam", info.getBeamSet().getMedianAreaBeam().toRecord()
+        );
+        header.defineRecord(recName, beamRec);
+    }
+    auto cdelt = _getIncrements();
+    auto units = _getAxisUnits();
+    auto crpix = _getRefPixel();
+    auto crval = _getRefValue();
+    auto types = _getAxisNames();
+    header.merge(_getStatistics());
+    for (uInt i=0; i<cdelt.size(); ++i) {
+        auto iString = String::toString(i + 1);
+        auto delt = _CDELT + iString;
+        header.define(delt, cdelt[i].getValue());
+        auto unit = _CUNIT + iString;
+        header.define(unit, units[i]);
+        auto pix = _CRPIX + iString;
+        header.define(pix, crpix[i]);
+        auto val = _CRVAL + iString;
+        header.define(val, crval[i].getValue());
+        auto type = _CTYPE + iString;
+        header.define(type, types[i]);
+    }
+    return header;
 }
 
 const TableRecord ImageMetaDataBase::_miscInfo() const {
@@ -812,68 +810,71 @@ Bool ImageMetaDataBase::areChannelAndStokesValid(
 }
 
 Record ImageMetaDataBase::_calcStats() const {
-	SHARED_PTR<const ImageInterface<Float> > imf = _getFloatImage();
-	SHARED_PTR<const ImageInterface<Complex> > imc = _getComplexImage();
-	if (imf) {
-		return _calcStatsT(imf);
-	}
-	else {
-		return _calcStatsT(imc);
-	}
+    SHARED_PTR<const ImageInterface<Float> > imf = _getFloatImage();
+    SHARED_PTR<const ImageInterface<Complex> > imc = _getComplexImage();
+    if (imf) {
+        return _calcStatsT(imf);
+    }
+    else {
+        return _calcStatsT(imc);
+    }
 }
 
 template <class T> Record ImageMetaDataBase::_calcStatsT(
-	SHARED_PTR<const ImageInterface<T> > image
+        SHARED_PTR<const ImageInterface<T> > image
 ) const {
-	if ( _getComplexImage()) {
-		// the min and max and associated positions
-		// cannot be calculated for complex images
-		return Record();
-	}
-	ImageStatistics<T> stats(*image);
-	Array<typename NumericTraits<T>::PrecisionType> min;
-	stats.getStatistic(min, LatticeStatsBase::MIN);
-	Record x;
-	x.define(ImageMetaDataBase::_DATAMIN, min(IPosition(min.ndim(), 0)));
-	Array<typename NumericTraits<T>::PrecisionType> max;
-	stats.getStatistic(max, LatticeStatsBase::MAX);
-	x.define(ImageMetaDataBase::_DATAMAX, max(IPosition(max.ndim(), 0)));
-	IPosition minPixPos, maxPixPos;
-	stats.getMinMaxPos(minPixPos, maxPixPos);
-	x.define(ImageMetaDataBase::_MINPIXPOS, minPixPos.asVector());
-	x.define(ImageMetaDataBase::_MAXPIXPOS, maxPixPos.asVector());
+    Record x;
+    if ( _getComplexImage()) {
+        // the min and max and associated positions
+        // cannot be calculated for complex images
+        return x;
+    }
+    ImageStatistics<T> stats(*image);
+    Array<typename NumericTraits<T>::PrecisionType> min;
+    stats.getStatistic(min, LatticeStatsBase::MIN);
+    if (min.size() == 0) {
+        // image is completely masked
+        return x;
+    }
+    x.define(ImageMetaDataBase::_DATAMIN, min(IPosition(min.ndim(), 0)));
+    Array<typename NumericTraits<T>::PrecisionType> max;
+    stats.getStatistic(max, LatticeStatsBase::MAX);
+    x.define(ImageMetaDataBase::_DATAMAX, max(IPosition(max.ndim(), 0)));
+    IPosition minPixPos, maxPixPos;
+    stats.getMinMaxPos(minPixPos, maxPixPos);
+    x.define(ImageMetaDataBase::_MINPIXPOS, minPixPos.asVector());
+    x.define(ImageMetaDataBase::_MAXPIXPOS, maxPixPos.asVector());
+    const auto& csys = _getCoords();
+    Vector<Double> minPos = csys.toWorld(minPixPos);
+    Vector<Double> maxPos = csys.toWorld(maxPixPos);
 
-	const CoordinateSystem& csys = _getCoords();
-	Vector<Double> minPos = csys.toWorld(minPixPos);
-	Vector<Double> maxPos = csys.toWorld(maxPixPos);
+    String minFormat, maxFormat;
+    uInt ndim = csys.nPixelAxes();
+    Int spAxis = csys.spectralAxisNumber();
 
-	String minFormat, maxFormat;
-	uInt ndim = csys.nPixelAxes();
-	Int spAxis = csys.spectralAxisNumber();
-
-	for (uInt i=0; i<ndim; i++) {
-		Int worldAxis = csys.pixelAxisToWorldAxis(i);
-		String foundUnit;
-		minFormat += csys.format(
-			foundUnit, Coordinate::DEFAULT,
-			minPos[i], worldAxis
-		);
-		maxFormat += csys.format(
-			foundUnit, Coordinate::DEFAULT,
-			maxPos[i], worldAxis
-		);
-		if ((Int)i == spAxis) {
-			minFormat += foundUnit;
-			maxFormat += foundUnit;
-		}
-		if (i != ndim-1) {
-			minFormat += " ";
-			maxFormat += " ";
-		}
-	}
-	x.define(ImageMetaDataBase::_MINPOS, minFormat);
-	x.define(ImageMetaDataBase::_MAXPOS, maxFormat);
-	return x;
+    for (uInt i=0; i<ndim; i++) {
+        Int worldAxis = csys.pixelAxisToWorldAxis(i);
+        String foundUnit;
+        minFormat += csys.format(
+            foundUnit, Coordinate::DEFAULT,
+            minPos[i], worldAxis
+        );
+        maxFormat += csys.format(
+            foundUnit, Coordinate::DEFAULT,
+            maxPos[i], worldAxis
+        );
+        if ((Int)i == spAxis) {
+            minFormat += foundUnit;
+            maxFormat += foundUnit;
+        }
+        if (i != ndim-1) {
+            minFormat += " ";
+            maxFormat += " ";
+        }
+    }
+    x.define(ImageMetaDataBase::_MINPOS, minFormat);
+    x.define(ImageMetaDataBase::_MAXPOS, maxFormat);
+    return x;
 }
 
 Record ImageMetaDataBase::toWorld(
