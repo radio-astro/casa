@@ -36,4 +36,10 @@
         </ParameterSet>
     </ProcessingCommand>
 
+    <ProcessingCommand>
+        <Command xmlns="">hsdms_applycal</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
 </ProcessingProcedure>

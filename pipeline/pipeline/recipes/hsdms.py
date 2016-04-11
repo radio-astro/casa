@@ -64,8 +64,8 @@ def hsdms (vislist, importonly=False, pipelinemode='automatic', interactive=True
         # Compute the Kelvin to Jansky calibration
         hsdms_k2jycal (pipelinemode=pipelinemode)
     
-        # # Apply the calibrations
-        # hsdms_applycal (pipelinemode=pipelinemode)
+        # Apply the calibrations
+        hsdms_applycal (pipelinemode=pipelinemode)
         
         # # Improve line mask for baseline subtraction by executing 
         # # hsd_baseline and hsd_blflag iteratively
