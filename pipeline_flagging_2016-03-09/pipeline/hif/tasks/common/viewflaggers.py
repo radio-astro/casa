@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import math
 import os
 import numpy as np
+import copy
 
 from . import arrayflaggerbase
 from . import flaggableviewresults
@@ -883,7 +884,7 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
             # Run the data task if needed
             if counter == 1:
                 # Always run data task on first iteration
-                data = self._executor.execute(inputs.datatask)
+                dataresult = self._executor.execute(inputs.datatask)
             elif inputs.iter_datatask is True:
                 # If requested to re-run datatask on iteration, then
                 # run the flag-setting task which modifies the data
@@ -896,13 +897,15 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
                 else:
                     _, _ = self.set_flags(newflags)
                     
-                data = self._executor.execute(inputs.datatask)
+                dataresult = self._executor.execute(inputs.datatask)
             else:
-                # TODO: implement flagging mask for the case where iter_datatask = False
-                raise(NotImplementedError)
+                # If not iterating the datatask, the previous 
+                # data result will be re-used, but marked here as no 
+                # longer new.
+                dataresult.new = False
 
             # Create flagging view                
-            viewresult = inputs.viewtask(data)
+            viewresult = inputs.viewtask(dataresult)
 
             # If a view could be created, continue with flagging
             if viewresult.descriptions():
@@ -930,7 +933,7 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
                 for description in newflags_reason.keys():
                     if flag_reason_plane.has_key(description):
                         flag_reason_plane[description][newflags_reason[description] > 0] = \
-                            newflags_reason[newflags_reason[description] > 0]
+                            newflags_reason[description][newflags_reason[description] > 0]
                     else:
                         flag_reason_plane[description] = newflags_reason[description]
                 
@@ -952,7 +955,7 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
                 
                 # If datatask needs to be iterated, and max number of iterations is
                 # not 1, then the "before" summary has already been done, so only 
-                # need to set flags and do "after" summary
+                # need to set the new flags and do "after" summary
                 if inputs.iter_datatask is True and inputs.niter != 1:
                     
                     # Set flags, and include "after" summary
@@ -960,16 +963,18 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
                                                      summarize_after=True)   
 
                     # With new flags set, re-run the data task
-                    data = self._executor.execute(inputs.datatask)
+                    dataresult = self._executor.execute(inputs.datatask)
                                  
-                # Otherwise, set flags, and include both "before" and "after" summary
+                # If the datatask did not need to be iterated, then no flags
+                # were set yet and no "before" summary was performed yet, 
+                # so set all flags and include both "before" and "after" summary.
                 else:
-                    stats_before, stats_after = self.set_flags(newflags, 
+                    stats_before, stats_after = self.set_flags(flags, 
                                                                summarize_before=True, 
                                                                summarize_after=True)
                 
                 # Create final post-flagging view                
-                viewresult = inputs.viewtask(data)
+                viewresult = inputs.viewtask(dataresult)
 
                 # Import the post-flagging view into the final result
                 self.result.importfrom(viewresult)
@@ -983,9 +988,11 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
                 if inputs.iter_datatask is True:
                     summary_job = casa_tasks.flagdata(vis=inputs.flagsettertask.inputs.table, mode='summary')
                     stats_after = self._executor.execute(summary_job)
-                # Otherwise, set flags, and include both "before" and "after" summary
+                # If the datatask did not need to be iterated, then no flags
+                # were set yet and no "before" summary was performed yet, 
+                # so set all flags and include both "before" and "after" summary.
                 else:
-                    stats_before, stats_after = self.set_flags(newflags, 
+                    stats_before, stats_after = self.set_flags(flags, 
                                                                summarize_before=True, 
                                                                summarize_after=True)
             
@@ -1001,11 +1008,11 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
             # and "after" summary.
             summary_job = casa_tasks.flagdata(vis=inputs.flagsettertask.inputs.table, mode='summary')
             stats_before = self._executor.execute(summary_job)
-            stats_after = stats_before        
+            stats_after = copy.deepcopy(stats_before)        
         
         # Store in the final result the name of the measurement set or caltable to 
         # which any potentially found flags would need to be applied to
-        self.result.table = self.inputs.flagsettertask.inputs.table
+        self.result.table = inputs.flagsettertask.inputs.table
         
         # Store the flagging summaries in the final result
         self.result.summaries = [stats_before, stats_after]
@@ -1054,17 +1061,26 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
         # Run flag setting task
         flagsetterresult = self._executor.execute(self.inputs.flagsettertask)
 
-        # Extract "before" summary if necessary
+        # Initialize "before" and/or "after" summaries, if necessary
         if summarize_before:
             stats_before = {}
+        if summarize_after:
+            stats_after = {}
+
+        # Extract "before" and/or "after" summary
+        if all(['report' in k for k in flagsetterresult.results[0].keys()]):
+            # Go through dictionary of reports...
             for report in flagsetterresult.results[0].keys():
                 if flagsetterresult.results[0][report]['name'] == 'before':
                     stats_before = flagsetterresult.results[0][report]
-        if summarize_after:
-            stats_after = {}
-            for report in flagsetterresult.results[0].keys():
                 if flagsetterresult.results[0][report]['name'] == 'after':
                     stats_after = flagsetterresult.results[0][report]
+        else:
+            # Go through single report.
+            if flagsetterresult.results[0]['name'] == 'before':
+                stats_before = flagsetterresult.results[0]
+            if flagsetterresult.results[0]['name'] == 'after':
+                stats_after = flagsetterresult.results[0]
         
         return stats_before, stats_after
         
@@ -1800,7 +1816,8 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
 
         # consolidate flagcmds that specify individual channels into fewer
         # flagcmds that specify ranges
-        newflags = arrayflaggerbase.consolidate_flagcmd_channels(newflags)
+        newflags = arrayflaggerbase.consolidate_flagcmd_channels(newflags,
+          antenna_id_to_name=antenna_id_to_name)
 
         return newflags, flag_reason
 
@@ -2368,7 +2385,7 @@ class NewVectorFlagger(basetask.StandardTaskTemplate):
             # Run the data task if needed
             if counter == 1:
                 # Always run data task on first iteration
-                data = self._executor.execute(self.inputs.datatask)
+                dataresult = self._executor.execute(self.inputs.datatask)
             elif inputs.iter_datatask is True:
                 # If requested to re-run datatask on iteration, then
                 # run the flag-setting task which modifies the data
@@ -2381,13 +2398,15 @@ class NewVectorFlagger(basetask.StandardTaskTemplate):
                 else:
                     _, _ = self.set_flags(newflags)
                     
-                data = self._executor.execute(inputs.datatask)
+                dataresult = self._executor.execute(inputs.datatask)
             else:
-                # TODO: implement flagging mask for the case where iter_datatask = False
-                raise(NotImplementedError)
+                # If not iterating the datatask, the previous 
+                # data result will be re-used, but marked here as no 
+                # longer new.
+                dataresult.new = False
 
             # Create flagging view                
-            viewresult = inputs.viewtask(data)
+            viewresult = inputs.viewtask(dataresult)
 
             # If a view could be created, continue with flagging
             if viewresult.descriptions():
@@ -2438,16 +2457,18 @@ class NewVectorFlagger(basetask.StandardTaskTemplate):
                                                      summarize_after=True)   
 
                     # With new flags set, re-run the data task
-                    data = self._executor.execute(inputs.datatask)
+                    dataresult = self._executor.execute(inputs.datatask)
                                  
-                # Otherwise, set flags, and include both "before" and "after" summary
+                # If the datatask did not need to be iterated, then no flags
+                # were set yet and no "before" summary was performed yet, 
+                # so set all flags and include both "before" and "after" summary.
                 else:
-                    stats_before, stats_after = self.set_flags(newflags, 
+                    stats_before, stats_after = self.set_flags(flags, 
                                                                summarize_before=True, 
                                                                summarize_after=True)
                 
                 # Create final post-flagging view                
-                viewresult = inputs.viewtask(data)
+                viewresult = inputs.viewtask(dataresult)
 
                 # Import the post-flagging view into the final result
                 self.result.importfrom(viewresult)
@@ -2461,9 +2482,11 @@ class NewVectorFlagger(basetask.StandardTaskTemplate):
                 if inputs.iter_datatask is True:
                     summary_job = casa_tasks.flagdata(vis=inputs.flagsettertask.inputs.table, mode='summary')
                     stats_after = self._executor.execute(summary_job)
-                # Otherwise, set flags, and include both "before" and "after" summary
+                # If the datatask did not need to be iterated, then no flags
+                # were set yet and no "before" summary was performed yet, 
+                # so set all flags and include both "before" and "after" summary.
                 else:
-                    stats_before, stats_after = self.set_flags(newflags, 
+                    stats_before, stats_after = self.set_flags(flags, 
                                                                summarize_before=True, 
                                                                summarize_after=True)
             
@@ -2476,7 +2499,7 @@ class NewVectorFlagger(basetask.StandardTaskTemplate):
             # and "after" summary.
             summary_job = casa_tasks.flagdata(vis=inputs.flagsettertask.inputs.table, mode='summary')
             stats_before = self._executor.execute(summary_job)
-            stats_after = stats_before        
+            stats_after = copy.deepcopy(stats_before)        
         
         # Store in the final result the name of the measurement set or caltable to 
         # which any potentially found flags would need to be applied to
@@ -2524,17 +2547,26 @@ class NewVectorFlagger(basetask.StandardTaskTemplate):
         # Run flag setting task
         flagsetterresult = self._executor.execute(self.inputs.flagsettertask)
 
-        # Extract "before" summary if necessary
+        # Initialize "before" and/or "after" summaries, if necessary
         if summarize_before:
             stats_before = {}
+        if summarize_after:
+            stats_after = {}
+
+        # Extract "before" and/or "after" summary
+        if all(['report' in k for k in flagsetterresult.results[0].keys()]):
+            # Go through dictionary of reports...
             for report in flagsetterresult.results[0].keys():
                 if flagsetterresult.results[0][report]['name'] == 'before':
                     stats_before = flagsetterresult.results[0][report]
-        if summarize_after:
-            stats_after = {}
-            for report in flagsetterresult.results[0].keys():
                 if flagsetterresult.results[0][report]['name'] == 'after':
                     stats_after = flagsetterresult.results[0][report]
+        else:
+            # Go through single report.
+            if flagsetterresult.results[0]['name'] == 'before':
+                stats_before = flagsetterresult.results[0]
+            if flagsetterresult.results[0]['name'] == 'after':
+                stats_after = flagsetterresult.results[0]
         
         return stats_before, stats_after
 

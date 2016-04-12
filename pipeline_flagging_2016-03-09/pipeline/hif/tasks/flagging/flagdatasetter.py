@@ -104,11 +104,18 @@ class FlagdataSetter(basetask.StandardTaskTemplate):
 
     def flags_to_set(self, flags):
         """
-        Add flags to list or template file.
+        Set the list of flags.
         """
         inputs = self.inputs
+        
         if type(inputs.inpfile) is types.ListType:
-            # add to list of flagcmds
+            # Always start with an empty list of flagcmds,
+            # i.e. do not retain what flagcmds were added 
+            # previously (e.g. for previous calls to 
+            # FlagdataSetter).
+            inputs.inpfile = []
+            
+            # Add to list of flagcmds.
             for flag in flags:
                 if isinstance(flag, FlagCmd):
                     inputs.inpfile.append(flag.flagcmd)
