@@ -211,22 +211,22 @@ Fit baseline and subtract it from selected spectra
     </param>
 
     <param type="float" name="threshold" subparam="true">
-        <description>S/N threshold for linefinder</description>
+        <description>S/N threshold for line finder</description>
         <value>5.0</value>
     </param>
 
     <param type="int" name="avg_limit">
-        <description>channel averaging for broad lines</description>
+        <description>channel averaging for broad lines in line finding</description>
         <value>4</value>
     </param>
 
     <param type="int" name="minwidth">
-        <description>the minimum channel width to detect as a line</description>
+        <description>the minimum channel width to detect as a line by line finder</description>
         <value>4</value>
     </param>
 
     <param type="intArray" name="edge">
-        <description>channels to drop at beginning and end of spectrum</description>
+        <description>channels to drop at beginning and end of spectrum in line finding</description>
         <value type="vector"><value>0</value><value>0</value></value>
     </param>
 
@@ -299,22 +299,22 @@ Fit baseline and subtract it from selected spectra
     </param>
 
     <param type="float" name="threshold" subparam="true">
-        <description>S/N threshold for linefinder</description>
+        <description>S/N threshold for line finder</description>
         <value>5.0</value>
     </param>
 
     <param type="int" name="avg_limit">
-        <description>channel averaging for broad lines</description>
+        <description>channel averaging for broad lines in line finding</description>
         <value>4</value>
     </param>
 
     <param type="int" name="minwidth">
-        <description>the minimum channel width to detect as a line</description>
+        <description>the minimum channel width to detect as a line by line finder</description>
         <value>4</value>
     </param>
 
     <param type="intArray" name="edge">
-        <description>channels to drop at beginning and end of spectrum</description>
+        <description>channels to drop at beginning and end of spectrum in line finding</description>
         <value type="vector"><value>0</value><value>0</value></value>
     </param>
 
@@ -414,22 +414,22 @@ Fit baseline and subtract it from selected spectra
     </param>
 
     <param type="float" name="threshold" subparam="true">
-        <description>S/N threshold for linefinder</description>
+        <description>S/N threshold for line finder</description>
         <value>5.0</value>
     </param>
 
     <param type="int" name="avg_limit">
-        <description>channel averaging for broad lines</description>
+        <description>channel averaging for broad lines in line finding</description>
         <value>4</value>
     </param>
 
     <param type="int" name="minwidth">
-        <description>the minimum channel width to detect as a line</description>
+        <description>the minimum channel width to detect as a line by line finder</description>
         <value>4</value>
     </param>
 
     <param type="intArray" name="edge">
-        <description>channels to drop at beginning and end of spectrum</description>
+        <description>channels to drop at beginning and end of spectrum in line finding</description>
         <value type="vector"><value>0</value><value>0</value></value>
     </param>
 
@@ -587,7 +587,7 @@ Fit line profile to selected spectra and obtain the best-fit parameter values
     </param>
 
     <param type="string" name="nfit">
-      <description>Comma-separated numbers of gaussian/lorentzian lines to fit in maskline region</description>
+      <description>Comma-separated numbers of gaussian/lorentzian lines to fit in maskline region. ignored when linefinding=true.</description>
       <value>0</value>
     </param>
 
@@ -597,22 +597,22 @@ Fit line profile to selected spectra and obtain the best-fit parameter values
     </param>
 
     <param type="float" name="threshold">
-        <description>S/N threshold for linefinder</description>
+        <description>S/N threshold for line finder</description>
         <value>5.0</value>
     </param>
 
     <param type="int" name="avg_limit">
-        <description>channel averaging for broad lines</description>
+        <description>channel averaging for broad lines in line finding</description>
         <value>4</value>
     </param>
 
     <param type="int" name="minwidth">
-        <description>the minimum channel width to detect as a line</description>
+        <description>the minimum channel width to detect as a line by line finder</description>
         <value>4</value>
     </param>
 
     <param type="intArray" name="edge">
-        <description>channels to drop at beginning and end of spectrum</description>
+        <description>channels to drop at beginning and end of spectrum in line finding</description>
         <value type="vector"><value>0</value><value>0</value></value>
     </param>
 

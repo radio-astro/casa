@@ -46,8 +46,8 @@ def tsdfit(infile=None, datacolumn=None, antenna=None, field=None, spw=None,
             if os.path.exists(tempoutfile):
                 raise Exception('temporary ms file ' + tempoutfile + ' exists...')
         
-        num_fit_str = '1' if (fitmode=='auto') else str(',').join(map(str, nfit))
         if fitmode=='auto': nfit = [-1]
+        num_fit_str = str(',').join(map(str, nfit))
 
         sdms.fit_line(datacolumn=datacolumn, spw=spw, pol=pol, fitfunc=fitfunc,
                       nfit=num_fit_str,
