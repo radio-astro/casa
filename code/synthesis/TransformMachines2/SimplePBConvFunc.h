@@ -72,7 +72,7 @@ namespace casa{
  
   class CoordinateSystem;
   class DirectionCoordinate;
-  namespace vi{class VisBuffer;}
+  namespace vi{class VisBuffer2;}
 
 
 namespace refim{ //namespace for imaging refactor
