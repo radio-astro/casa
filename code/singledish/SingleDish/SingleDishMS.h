@@ -144,6 +144,8 @@ public:
   // fit line profile
   void fitLine(string const& in_column_name, string const& in_spw,
       string const& in_pol, string const& fitfunc, string const& in_nfit,
+      bool const linefinding, float const threshold, int const avg_limit,
+      int const minwidth, vector<int> const& edge,
       string const& tempfile_name, string const& temp_out_ms_name);
 
   // smooth data with arbitrary smoothing kernel

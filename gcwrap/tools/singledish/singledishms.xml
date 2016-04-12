@@ -209,6 +209,7 @@ Fit baseline and subtract it from selected spectra
       <description>do line finding</description>
       <value>false</value>
     </param>
+
     <param type="float" name="threshold" subparam="true">
         <description>S/N threshold for linefinder</description>
         <value>5.0</value>
@@ -588,6 +589,31 @@ Fit line profile to selected spectra and obtain the best-fit parameter values
     <param type="string" name="nfit">
       <description>Comma-separated numbers of gaussian/lorentzian lines to fit in maskline region</description>
       <value>0</value>
+    </param>
+
+    <param type="bool" name="linefinding">
+      <description>do line finding</description>
+      <value>false</value>
+    </param>
+
+    <param type="float" name="threshold">
+        <description>S/N threshold for linefinder</description>
+        <value>5.0</value>
+    </param>
+
+    <param type="int" name="avg_limit">
+        <description>channel averaging for broad lines</description>
+        <value>4</value>
+    </param>
+
+    <param type="int" name="minwidth">
+        <description>the minimum channel width to detect as a line</description>
+        <value>4</value>
+    </param>
+
+    <param type="intArray" name="edge">
+        <description>channels to drop at beginning and end of spectrum</description>
+        <value type="vector"><value>0</value><value>0</value></value>
     </param>
 
     <param type="string" name="tempfile">

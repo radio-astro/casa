@@ -76,21 +76,15 @@ or sdreduce.
     </param>
 
     <param type="string" name="fitmode">
-<!--        <shortdescription>mode for fitting [\'auto\', \'list\', or \'interact\']</shortdescription> -->
-        <shortdescription>mode for fitting. only \'list\' is available now.</shortdescription>
-        <description>mode for fitting</description>
+<!--        <shortdescription>mode for setting additional channel masks [\'auto\', \'list\', or \'interact\']</shortdescription> -->
+        <shortdescription>mode for setting additional channel masks. \'list\' and \'auto\' are available now.</shortdescription>
+        <description>mode for setting additional channel masks.</description>
         <value>list</value>
         <allowed kind="enum">
-<!--            <value>auto</value> -->
+            <value>auto</value>
             <value>list</value>
 <!--            <value>interact</value> -->
         </allowed>
-    </param>
-
-    <param type="intArray" name="nfit">
-<!--        <description>list of number of lines to fit in maskline region (ignored when fitmode="auto")</description> -->
-        <description>list of number of lines to fit in maskline region.</description>
-        <value type="vector"><value>0</value></value>
     </param>
 
     <param type="double" name="thresh" subparam="true">
@@ -98,23 +92,24 @@ or sdreduce.
         <value>5.0</value>
     </param>
 
-    <param type="int" name="min_nchan" subparam="true">
-        <description>minimum number of consecutive channels for linefinder</description>
-        <value>3</value>
-    </param>
-
     <param type="int" name="avg_limit" subparam="true">
         <description>channel averaging for broad lines</description>
         <value>4</value>
     </param>
 
-    <param type="double" name="box_size" subparam="true">
-        <description>running mean box size</description>
-        <value>0.2</value>
+    <param type="int" name="minwidth" subparam="true">
+        <description>the minimum channel width to detect as a line</description>
+        <value>4</value>
     </param>
 
     <param type="intArray" name="edge" subparam="true">
         <description>channels to drop at beginning and end of spectrum</description>
+        <value type="vector"><value>0</value><value>0</value></value>
+    </param>
+
+    <param type="intArray" name="nfit">
+<!--        <description>list of number of lines to fit in maskline region (ignored when fitmode="auto")</description> -->
+        <description>list of number of lines to fit in maskline region.</description>
         <value type="vector"><value>0</value></value>
     </param>
 
@@ -131,16 +126,13 @@ or sdreduce.
 
     <constraints>
             <when param="fitmode">
-<!--
+                <equals value="list"/>
                 <equals value="auto">
                         <default param="thresh"><value>5.0</value></default>
-                        <default param="min_nchan"><value>3</value></default>
                         <default param="avg_limit"><value>4</value></default>
-                        <default param="box_size"><value>0.2</value></default>
+                        <default param="minwidth"><value>4</value></default>
                         <default param="edge"><value type='vector'><value>0</value></value></default>
                 </equals>
--->
-                <equals value="list"/>
                 <equals value="interact"/>
             </when>
     </constraints>
@@ -211,7 +203,7 @@ fitmode -- mode for fitting
         default: 'list'
         example: 'list' will use channel ranges specified in the parameter 
                         spw to fit for lines
-                 'auto' will use the linefinder to fit for lines
+                 'auto'  will use the linefinder to fit for lines
                         using the following parameters
                  'interact' allows adding and deleting mask 
                         regions by drawing rectangles on the plot 
@@ -222,16 +214,13 @@ fitmode -- mode for fitting
         thresh -- S/N threshold for linefinder. a single channel S/N ratio
                   above which the channel is considered to be a detection.
                 default: 5
-        min_nchan -- minimum number of consecutive channels required to
-                     pass threshold
-                       default: 3
         avg_limit -- channel averaging for broad lines. a number of
                      consecutive channels not greater than this parameter
                      can be averaged to search for broad lines.
                 default: 4
-        box_size -- running mean box size specified as a fraction
-                    of the total spectrum length
-                default: 0.2
+        minwidth -- minimum number of consecutive channels required to
+                     pass threshold
+                default: 4
         edge -- channels to drop at beginning and end of spectrum
                 default: 0
                 example: edge=[1000] drops 1000 channels at beginning AND end.

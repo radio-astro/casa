@@ -353,6 +353,11 @@ singledishms::fit_line(string const& datacolumn,
 		       ::casac::variant const& pol,
 		       string const& fitfunc,
 		       string const& nfit,
+		       bool const linefinding,
+		       float const threshold,
+		       int const avg_limit,
+		       int const minwidth,
+		       vector<int> const& edge,
 		       string const& tempfile,
 		       string const& tempoutfile)
 {
@@ -361,7 +366,8 @@ singledishms::fit_line(string const& datacolumn,
   try {
     assert_valid_ms();
     itsSd->fitLine(datacolumn, toCasaString(spw), toCasaString(pol), 
-		   fitfunc, nfit, tempfile, tempoutfile);
+		   fitfunc, nfit, linefinding, threshold, avg_limit,
+		   minwidth, edge, tempfile, tempoutfile);
     rstat = true;
   } catch  (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 

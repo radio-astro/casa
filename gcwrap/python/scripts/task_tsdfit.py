@@ -10,9 +10,11 @@ from numpy import ma, array, logical_not, logical_and
 
 
 @sdutil.sdtask_decorator
-def tsdfit(infile=None, datacolumn=None, antenna=None, field=None, spw=None, timerange=None, scan=None, pol=None, intent=None,
-           fitfunc=None, fitmode=None, nfit=None, thresh=None, min_nchan=None, avg_limit=None, box_size=None,
-           edge=None, outfile=None, overwrite=None):
+def tsdfit(infile=None, datacolumn=None, antenna=None, field=None, spw=None,
+           timerange=None, scan=None, pol=None, intent=None,
+           fitfunc=None, fitmode=None, thresh=None, avg_limit=None,
+           minwidth=None, edge=None, nfit=None, 
+           outfile=None, overwrite=None):
     casalog.origin('tsdbaseline')
 
     try:
@@ -21,7 +23,7 @@ def tsdfit(infile=None, datacolumn=None, antenna=None, field=None, spw=None, tim
                 os.system('rm -rf %s' % outfile)
             else:
                 raise ValueError(outfile + ' exists.')
-        if (fitmode != 'list'):
+        if (fitmode not in  ['list', 'auto']):
             raise ValueError, "fitmode='%s' is not supported yet" % fitmode
         if (spw == ''): spw = '*'
 
@@ -47,6 +49,8 @@ def tsdfit(infile=None, datacolumn=None, antenna=None, field=None, spw=None, tim
 
         sdms.fit_line(datacolumn=datacolumn, spw=spw, pol=pol, fitfunc=fitfunc,
                       nfit=str(nfit)[1:-1].replace(' ', ''),
+                      linefinding=(fitmode=='auto'), threshold=thresh,
+                      avg_limit=avg_limit, minwidth=minwidth, edge=edge,
                       tempfile=tempfile, tempoutfile=tempoutfile)
 
         if os.path.exists(tempfile):

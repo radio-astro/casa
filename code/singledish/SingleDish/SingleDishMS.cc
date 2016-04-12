@@ -2001,6 +2001,8 @@ void SingleDishMS::applyBaselineTable(string const& in_column_name,
 // Fit line profile
 void SingleDishMS::fitLine(string const& in_column_name, string const& in_spw,
     string const& in_pol, string const& fitfunc, string const& in_nfit,
+    bool const linefinding, float const threshold, int const avg_limit,
+    int const minwidth, vector<int> const& edge,
     string const& tempfile_name, string const& temp_out_ms_name) {
 
   // in_column = [FLOAT_DATA|DATA|CORRECTED_DATA]
@@ -2129,6 +2131,12 @@ void SingleDishMS::fitLine(string const& in_column_name, string const& in_spw,
           }
           // get a spectrum from data cube
           get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec_data);
+
+          // line finding. get fit mask (invert=false)
+          if (linefinding) {
+            findLineAndGetMask(num_chan, spec_data, mask_data, threshold,
+                avg_limit, minwidth, edge, false, mask_data);
+          }
 
           Vector<Float> x_;
           x_.resize(num_chan);
