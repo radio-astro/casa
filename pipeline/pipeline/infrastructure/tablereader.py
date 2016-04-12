@@ -245,8 +245,16 @@ class MeasurementSetReader(object):
             # flatten the state IDs to a 1D list
             state_ids = set(itertools.chain(*state_ids))            
             states = [ms.get_state(i) for i in state_ids]
-            field.states.update(states)
-            for state in states:
+            
+            # some scans may have multiple fields and/or intents so 
+            # it is necessary to distinguish which intents belong to 
+            # each field
+            obs_modes_for_field = set(msmd.intentsforfield(field.id))
+            states_for_field = [s for s in states \
+                if not obs_modes_for_field.isdisjoint(s.obs_mode.split(','))]
+            
+            field.states.update(states_for_field)
+            for state in states_for_field:
                 field.intents.update(state.intents)
             
     @staticmethod
