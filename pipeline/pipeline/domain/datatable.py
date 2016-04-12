@@ -118,10 +118,12 @@ OnlineFlagIndex = 3
 def absolute_path(name):
     return os.path.abspath(os.path.expanduser(os.path.expandvars(name)))
 
-def timetable_key(table_type, antenna, spw, polarization=None, ms=None):
+def timetable_key(table_type, antenna, spw, polarization=None, ms=None, field_id=None):
     key = 'TIMETABLE_%s'%(table_type)
     if ms is not None:
         key = key + '_%s'%(ms.replace('.','_'))
+    if field_id is not None:
+        key = key + '_FIELD%s'%(field_id)
     key = key + '_ANT%s_SPW%s'%(antenna, spw)
     if polarization is not None:
         key = key + '_POL%s'%(polarization) 
@@ -434,7 +436,7 @@ class DataTableImpl( object ):
 
         return posdict
     
-    def set_timetable(self, ant, spw, pol, mygrp, timegrp_s, timegrp_l, ms=None):
+    def set_timetable(self, ant, spw, pol, mygrp, timegrp_s, timegrp_l, ms=None, field_id=None):
         # time table format
         # TimeTable: [TimeTableSmallGap, TimeTableLargeGap]
         # TimeTableXXXGap: [[[row0, row1, ...], [idx0, idx1, ...]], ...]
@@ -457,8 +459,8 @@ class DataTableImpl( object ):
         
         # put time table to table keyword
         start_time2 = time.time()
-        key_small = timetable_key('SMALL', ant, spw, pol, ms)
-        key_large = timetable_key('LARGE', ant, spw, pol, ms)
+        key_small = timetable_key('SMALL', ant, spw, pol, ms, field_id)
+        key_large = timetable_key('LARGE', ant, spw, pol, ms, field_id)
         keys = self.tb2.keywordnames()
         LOG.debug('add time table: keys for small gap \'%s\' large gap \'%s\''%(key_small,key_large))
         dictify = lambda x:  dict([(str(i), t) for (i,t) in enumerate(x)])
@@ -470,11 +472,11 @@ class DataTableImpl( object ):
         LOG.info('put timetable: Elapsed time %s sec'%(end_time - start_time2))
         LOG.info('set get_timetable end: Elapsed time %s sec'%(end_time - start_time))
 
-    def get_timetable(self, ant, spw, pol):
+    def get_timetable(self, ant, spw, pol, ms=None, field_id=None):
         LOG.info('new get_timetable start')
         start_time = time.time()
-        key_small = timetable_key('SMALL', ant, spw, pol)
-        key_large = timetable_key('LARGE', ant, spw, pol)
+        key_small = timetable_key('SMALL', ant, spw, pol, ms, field_id)
+        key_large = timetable_key('LARGE', ant, spw, pol, ms, field_id)
         keys = self.tb2.keywordnames()
         LOG.debug('get time table: keys for small gap \'%s\' large gap \'%s\''%(key_small,key_large))
         if key_small in keys and key_large in keys:

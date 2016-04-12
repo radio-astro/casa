@@ -124,13 +124,25 @@ def draw_pointing(axes_manager, RA, DEC, FLAG=None, plotfile=None, connect=True,
         obj.remove()
     
 class SingleDishPointingChart(object):    
-    def __init__(self, context, ms, antenna, target_only=True):
+    def __init__(self, context, ms, antenna, target_field_id=None, reference_field_id=None, target_only=True):
         self.context = context
         self.ms = ms
         self.antenna = antenna
+        self.target_field = self.__get_field(target_field_id)
+        self.reference_field = self.__get_field(reference_field_id) 
         self.target_only = target_only
         self.figfile = self._get_figfile()
         self.axes_manager = PointingAxesManager()
+        
+    def __get_field(self, field_id):
+        if field_id is not None:
+            fields = self.ms.get_fields(field_id)
+            assert len(fields) == 1
+            field = fields[0]
+            LOG.debug('found field domain for %s'%(field_id))
+            return field
+        else:
+            return None
         
     def plot(self):
         if os.path.exists(self.figfile):
@@ -152,16 +164,30 @@ class SingleDishPointingChart(object):
         ms_ids = datatable.tb1.getcol('MS')
         antenna_ids = datatable.tb1.getcol('ANTENNA')
         spw_ids = datatable.tb1.getcol('IF')
-        if self.target_only == True:
-            srctypes = datatable.tb1.getcol('SRCTYPE')
-            func = lambda i, j, k, l: i == ms_id and j == antenna_id and k == spw_id and l == 0
-            vfunc = numpy.vectorize(func)
-            dt_rows = vfunc(ms_ids, antenna_ids, spw_ids, srctypes)
+        if self.target_field is None or self.reference_field is None:
+            # plot pointings regardless of field
+            if self.target_only == True:
+                srctypes = datatable.tb1.getcol('SRCTYPE')
+                func = lambda i, j, k, l: i == ms_id and j == antenna_id and k == spw_id and l == 0
+                vfunc = numpy.vectorize(func)
+                dt_rows = vfunc(ms_ids, antenna_ids, spw_ids, srctypes)
+            else:
+                func = lambda i, j, k: i == ms_id and j == antenna_id and k == spw_id
+                vfunc = numpy.vectorize(func)
+                dt_rows = vfunc(ms_ids, antenna_ids, spw_ids)
         else:
-            func = lambda i, j, k: i == ms_id and j == antenna_id and k == spw_id
-            vfunc = numpy.vectorize(func)
-            dt_rows = vfunc(ms_ids, antenna_ids, spw_ids)
-            
+            field_ids = datatable.tb1.getcol('FIELD_ID')
+            if self.target_only == True:
+                srctypes = datatable.tb1.getcol('SRCTYPE')
+                field_id = [self.target_field.id]
+                func = lambda i, f, j, k, l: i == ms_id and f in field_id and j == antenna_id and k == spw_id and l == 0
+                vfunc = numpy.vectorize(func)
+                dt_rows = vfunc(ms_ids, field_ids, antenna_ids, spw_ids, srctypes)
+            else:
+                field_id = [self.target_field.id, self.reference_field.id]
+                func = lambda i, f, j, k: i == ms_id and f in field_id and j == antenna_id and k == spw_id 
+                vfunc = numpy.vectorize(func)
+                dt_rows = vfunc(ms_ids, field_ids, antenna_ids, spw_ids)
         
         RA = datatable.tb1.getcol('RA')[dt_rows]
         DEC = datatable.tb1.getcol('DEC')[dt_rows]
@@ -176,23 +202,34 @@ class SingleDishPointingChart(object):
         session_part = self.ms.session
         ms_part = self.ms.basename
         antenna_part = self.antenna.name
-        if self.target_only == True:
-            figfile = os.path.join(self.context.report_dir, 
-                                   'session%s' % session_part, 
-                                   ms_part,
-                                   'target_pointing.%s.png'%(antenna_part))
+        if self.target_field is None or self.reference_field is None:
+            identifier = antenna_part
         else:
-            figfile = os.path.join(self.context.report_dir,
-                                   'session%s' % session_part,
-                                   ms_part, 
-                                   'whole_pointing.%s.png'%(antenna_part))
+            clean_name = self.target_field.clean_name
+            identifier = antenna_part + '.%s'%(clean_name)
+        if self.target_only == True:
+            basename = 'target_pointing.%s'%(identifier)
+        else:
+            basename = 'whole_pointing.%s'%(identifier)
+        figfile = os.path.join(self.context.report_dir, 
+                               'session%s' % session_part, 
+                               ms_part,
+                               '%s.png'%(basename))
         return figfile
 
     def _get_plot_object(self):
         intent = 'target' if self.target_only == True else 'target,reference'
+        if self.target_field is None or self.reference_field is None:
+            field_name = ''
+        else:
+            if self.target_only or self.target_field.name == self.reference_field.name:
+                field_name = self.target_field.name
+            else:
+                field_name = self.target_field.name + ',' + self.reference_field.name
         return logger.Plot(self.figfile,
                            x_axis='R.A.',
                            y_axis='Declination',
                            parameters={'vis' : self.ms.basename,
                                        'antenna': self.antenna.name,
+                                       'field': field_name,
                                        'intent': intent})

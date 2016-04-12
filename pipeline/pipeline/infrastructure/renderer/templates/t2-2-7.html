@@ -20,6 +20,13 @@ def caption_string(plot):
 
 # TODO: multi-source support
 field_name = ms.get_fields(intent='TARGET')[0].name
+
+def get_field_name(plot):
+    field_attr = plot.parameters['field']
+    if len(field_attr) == '':
+        return field_name
+    else:
+        return field_attr.replace('"','')
 %>
 
 <div class="row">      
@@ -28,7 +35,7 @@ field_name = ms.get_fields(intent='TARGET')[0].name
 		% for plot in plots:
 			<div class="col-md-6">
 				<a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}" class="fancybox">
-					<h3>Antenna ${antenna_name(plot)} Field ${field_name}</h3>
+					<h3>Antenna ${antenna_name(plot)} Field ${get_field_name(plot)}</h3>
 				</a>
 				<div class="col-md-6">
 				  	<div class="thumbnail">

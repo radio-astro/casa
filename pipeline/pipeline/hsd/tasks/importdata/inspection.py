@@ -96,10 +96,11 @@ class SDMSInspection(object):
                 ms = member.ms
                 ant = member.antenna
                 spw = member.spw
-                LOG.info('Adding time table for Reduction Group %s (ms %s antenna %s spw %s)'%(group_id,ms.basename,ant,spw))
-                datatable.set_timetable(ant, spw, None, time_group_list[ant][spw], 
+                field_id = member.field_id
+                LOG.info('Adding time table for Reduction Group %s (ms %s antenna %s spw %s field_id %s)'%(group_id,ms.basename,ant,spw,field_id))
+                datatable.set_timetable(ant, spw, None, time_group_list[ant][spw][field_id], 
                                         numpy.array(time_group[0]), numpy.array(time_group[1]),
-                                        ms=ms.basename)
+                                        ms=ms.basename, field_id=field_id)
         datatable.exportdata(minimal=False) 
         
         return reduction_group       
@@ -109,30 +110,38 @@ class SDMSInspection(object):
         group_spw_names = {}
         ms = self.ms
         science_windows = ms.get_spectral_windows(science_windows_only=True)
-        for spw in science_windows:
-            name = spw.name
-            nchan = spw.num_channels
-            min_frequency = float(spw._min_frequency.value)
-            max_frequency = float(spw._max_frequency.value)
-            if len(name) > 0:
-                # grouping by name
-                match = self.__find_match_by_name(name, group_spw_names)
-            else:
-                # grouping by frequency range
-                match = self.__find_match_by_coverage(nchan, min_frequency, max_frequency, 
-                                                      reduction_group, fraction=0.99)
-            if match == False:
-                # add new group
-                key = len(reduction_group)
-                group_spw_names[key] = name
-                newgroup = singledish.MSReductionGroupDesc(min_frequency=min_frequency, 
-                                                           max_frequency=max_frequency, 
-                                                           nchan=nchan)
-                reduction_group[key] = newgroup
-            else:
-                key = match
-            for antenna in ms.antennas:
-                reduction_group[key].add_member(ms, antenna.id, spw.id)
+        assert hasattr(ms, 'calibration_strategy')
+        field_strategy = ms.calibration_strategy['field_strategy']
+        for field_id in field_strategy.keys():
+            fields = ms.get_fields(field_id)
+            assert len(fields) == 1
+            field = fields[0]
+            field_name = field.name
+            for spw in science_windows:
+                spw_name = spw.name
+                nchan = spw.num_channels
+                min_frequency = float(spw._min_frequency.value)
+                max_frequency = float(spw._max_frequency.value)
+                if len(spw_name) > 0:
+                    # grouping by name
+                    match = self.__find_match_by_name(spw_name, field_name, group_spw_names)
+                else:
+                    # grouping by frequency range
+                    match = self.__find_match_by_coverage(nchan, min_frequency, max_frequency, 
+                                                          reduction_group, fraction=0.99, field_name=field_name)
+                if match == False:
+                    # add new group
+                    key = len(reduction_group)
+                    group_spw_names[key] = (spw_name, field_name)
+                    newgroup = singledish.MSReductionGroupDesc(min_frequency=min_frequency, 
+                                                               max_frequency=max_frequency, 
+                                                               nchan=nchan,
+                                                               field=field)
+                    reduction_group[key] = newgroup
+                else:
+                    key = match
+                for antenna in ms.antennas:
+                    reduction_group[key].add_member(ms, antenna.id, spw.id, field_id)
         
         return reduction_group
     
@@ -147,20 +156,27 @@ class SDMSInspection(object):
         
         by_antenna = {}
         by_spw = {}
+        by_field = {}
         ant = datatable.getcol('ANTENNA', startrow=startrow, nrow=nrow)
         spw = datatable.getcol('IF', startrow=startrow, nrow=nrow)
-        LOG.debug('ant=%s'%(ant))
-        LOG.debug('spw=%s'%(spw))
+        field_id = datatable.getcol('FIELD_ID', startrow=startrow, nrow=nrow)
+        srctype = datatable.getcol('SRCTYPE', startrow=startrow, nrow=nrow)
+        LOG.trace('ant=%s'%(ant))
+        LOG.trace('spw=%s'%(spw))
         if nrow < 0:
             nrow = datatable.nrow - startrow
         LOG.debug('nrow = %s'%(nrow))
         for i in xrange(nrow):
+            if srctype[i] != 0:
+                continue
+            
             thisant = ant[i]
             thisspw = spw[i]
+            thisfield = field_id[i]
             
             spw_domain = self.ms.spectral_windows[thisspw]
-            LOG.debug('spw.name=\'%s\''%(spw_domain.name))
-            LOG.debug('spw.intents=%s'%(spw_domain.intents))
+            #LOG.debug('spw.name=\'%s\''%(spw_domain.name))
+            #LOG.debug('spw.intents=%s'%(spw_domain.intents))
             if re.search('^WVR#', spw_domain.name) is not None \
                 or re.search('#CH_AVG$', spw_domain.name) is not None \
                 or 'TARGET' not in spw_domain.intents:
@@ -173,8 +189,12 @@ class SDMSInspection(object):
             if not by_spw.has_key(thisspw):
                 by_spw[thisspw] = set()
             by_spw[thisspw].add(i + startrow)
+            
+            if not by_field.has_key(thisfield):
+                by_field[thisfield] = set()
+            by_field[thisfield].add(i + startrow)
         
-        return by_antenna, by_spw
+        return by_antenna, by_spw, by_field
         
     def _group_data(self, datatable, position_group_id, time_group_id_small, time_group_id_large, startrow=0, nrow=-1):
         ms_ant_map = {}
@@ -190,10 +210,10 @@ class SDMSInspection(object):
         
         if nrow < 0:
             nrow = datatable.nrow - startrow
-        by_antenna, by_spw = self.__select_data(datatable, ms_ant_map, startrow=startrow, nrow=nrow)
-        LOG.debug('by_antenna=%s'%(by_antenna))
-        LOG.debug('by_spw=%s'%(by_spw))
-        LOG.debug('len(by_antenna)=%s len(by_spw)=%s'%(len(by_antenna),len(by_spw)))
+        by_antenna, by_spw, by_field = self.__select_data(datatable, ms_ant_map, startrow=startrow, nrow=nrow)
+        LOG.trace('by_antenna=%s'%(by_antenna))
+        LOG.trace('by_spw=%s'%(by_spw))
+        LOG.trace('len(by_antenna)=%s len(by_spw)=%s'%(len(by_antenna),len(by_spw)))
         
         qa = casatools.quanta
 
@@ -246,97 +266,104 @@ class SDMSInspection(object):
                     spw_domain = ms.get_spectral_window(spw_id=spw)
                 except KeyError:
                     continue
-                pattern_dict[spw] = None
+                pattern_dict[spw] = {}
+                posgrp_list[ant][spw] = {}
+                timegrp_list[ant][spw] = {}
+                for i in (0,1):
+                    timegap[i][ant][spw] = {}
                 # beam radius
                 radius = qa.mul(_beam_size[spw],0.5)
                 r_combine = radius
                 r_allowance = qa.mul(radius, 0.1)
-                for i in (0,1):
-                    timegap[i][ant][spw] = None
-                posgrp_list[ant][spw] = []
-                timegrp_list[ant][spw] = None
                 
-                #for (pol,vpol) in self.by_pol.items():
-                id_list = numpy.fromiter(vant & vspw, dtype=numpy.int32)
-                if len(id_list) == 0:
-                    continue
-                id_list.sort()
-                LOG.debug('id_list=%s'%(id_list))
-                row_sel = numpy.take(row, id_list)
-                ra_sel = numpy.take(ra, id_list)
-                dec_sel = numpy.take(dec, id_list)
-                time_sel = numpy.take(elapsed, id_list)
-                beam_sel = numpy.take(beam, id_list)
-
-                ### new GroupByPosition with translation ###
-                update_pos = (last_ra is None or \
-                              len(ra_sel) != len(last_ra) or \
-                              len(dec_sel) != len(last_dec) or \
-                              not (all(ra_sel==last_ra) and \
-                                   all(dec_sel==last_dec)))
-                if update_pos:
-                    (pos_dict,pos_gap) = pos_heuristic2(ra_sel, dec_sel,
-                                                        r_combine, r_allowance)
-                    last_ra = ra_sel
-                    last_dec = dec_sel
-
-                    ### ObsPatternAnalysis ###
-                    # 2014/02/04 TN
-                    # Temporary workaround for TP acceptance data issue
-                    # Observing pattern is always 'RASTER' for ALMA
-                    if observatory == 'ALMA':
-                        pattern = 'RASTER'
-                    else:
-                        pattern = obs_heuristic2(pos_dict)
-                
-                ### prepare for Self.Datatable ###
-                #posgrp_list[ant][spw][pol] = []
-                LOG.debug('pos_dict = %s'%(pos_dict))
-                LOG.debug('last_ra = %s last_dec = %s'%(last_ra, last_dec))
-                for (k,v) in pos_dict.items():
-                    if v[0] == -1:
+                for (field_id,vfield) in by_field.items():
+                    pattern_dict[spw][field_id] = None
+                    for i in (0,1):
+                        timegap[i][ant][spw][field_id] = None
+                    posgrp_list[ant][spw][field_id] = []
+                    timegrp_list[ant][spw][field_id] = None
+                    
+                    #for (pol,vpol) in self.by_pol.items():
+                    id_list = numpy.fromiter(vant & vspw & vfield, dtype=numpy.int32)
+                    if len(id_list) == 0:
                         continue
-                    LOG.debug('POSGRP_REP: add %s as a representative of group %s'%(id_list[v[0]], posgrp_id))
-                    posgrp_rep[int(posgrp_id)] = int(id_list[v[0]])
-                    for id in v:
-                        _id = id_list[id]
-                        posgrp[_id] = posgrp_id
-                    posgrp_list[ant][spw].append(posgrp_id)
-                    posgrp_id += 1
-                ###
-
-                ### new GroupByTime with translation ###
-                time_diff = time_sel[1:] - time_sel[:-1]
-                update_time = (last_time is None \
-                               or len(time_diff) != len(last_time) or \
-                               not all(time_diff == last_time))
-                if update_time:
-                    (time_table,time_gap) = time_heuristic2(time_sel, time_diff)
-                    last_time = time_diff
-
-                ### new MergeGapTable with translation ###
-                if update_pos or update_time:
-                    (merge_table,merge_gap) = merge_heuristic2(time_gap, time_table, pos_gap, beam_sel)
-
-                ### prepare for Self.Datatable ###
-                key = ['small','large']
-                grp_list = {key[0]:[], key[1]:[]}
-                for idx in (0,1):
-                    table = merge_table[idx]
-                    for item in table:
-                        for id in item:
-                            timegrp[idx][id_list[id]] = timegrp_id[idx]
-                        grp_list[key[idx]].append(timegrp_id[idx])
-                        timegrp_id[idx] = timegrp_id[idx] + 1
-                    gap = merge_gap[idx]
-                    gap_id = []
-                    for v in gap:
-                        gap_id.append(id_list[v])
-                    timegap[idx][ant][spw] = gap_id
-                timegrp_list[ant][spw] = grp_list
-                ###
-
-                pattern_dict[spw] = pattern
+                    id_list.sort()
+                    LOG.debug('id_list=%s'%(id_list))
+                    row_sel = numpy.take(row, id_list)
+                    ra_sel = numpy.take(ra, id_list)
+                    dec_sel = numpy.take(dec, id_list)
+                    time_sel = numpy.take(elapsed, id_list)
+                    beam_sel = numpy.take(beam, id_list)
+    
+                    ### new GroupByPosition with translation ###
+                    update_pos = (last_ra is None or \
+                                  len(ra_sel) != len(last_ra) or \
+                                  len(dec_sel) != len(last_dec) or \
+                                  not (all(ra_sel==last_ra) and \
+                                       all(dec_sel==last_dec)))
+                    if update_pos:
+                        (pos_dict,pos_gap) = pos_heuristic2(ra_sel, dec_sel,
+                                                            r_combine, r_allowance)
+                        last_ra = ra_sel
+                        last_dec = dec_sel
+    
+                        ### ObsPatternAnalysis ###
+                        # 2014/02/04 TN
+                        # Temporary workaround for TP acceptance data issue
+                        # Observing pattern is always 'RASTER' for ALMA
+                        if observatory == 'ALMA':
+                            pattern = 'RASTER'
+                        else:
+                            pattern = obs_heuristic2(pos_dict)
+                    
+                    ### prepare for Self.Datatable ###
+                    #posgrp_list[ant][spw][pol] = []
+                    LOG.debug('pos_dict = %s'%(pos_dict))
+                    LOG.debug('last_ra = %s last_dec = %s'%(last_ra, last_dec))
+                    for (k,v) in pos_dict.items():
+                        if v[0] == -1:
+                            continue
+                        LOG.debug('POSGRP_REP: add %s as a representative of group %s'%(id_list[v[0]], posgrp_id))
+                        posgrp_rep[int(posgrp_id)] = int(id_list[v[0]])
+                        for id in v:
+                            _id = id_list[id]
+                            posgrp[_id] = posgrp_id
+                        posgrp_list[ant][spw][field_id].append(posgrp_id)
+                        posgrp_id += 1
+                    ###
+    
+                    ### new GroupByTime with translation ###
+                    time_diff = time_sel[1:] - time_sel[:-1]
+                    update_time = (last_time is None \
+                                   or len(time_diff) != len(last_time) or \
+                                   not all(time_diff == last_time))
+                    if update_time:
+                        (time_table,time_gap) = time_heuristic2(time_sel, time_diff)
+                        last_time = time_diff
+    
+                    ### new MergeGapTable with translation ###
+                    if update_pos or update_time:
+                        (merge_table,merge_gap) = merge_heuristic2(time_gap, time_table, pos_gap, beam_sel)
+    
+                    ### prepare for Self.Datatable ###
+                    key = ['small','large']
+                    grp_list = {key[0]:[], key[1]:[]}
+                    for idx in (0,1):
+                        table = merge_table[idx]
+                        for item in table:
+                            for id in item:
+                                timegrp[idx][id_list[id]] = timegrp_id[idx]
+                            grp_list[key[idx]].append(timegrp_id[idx])
+                            timegrp_id[idx] = timegrp_id[idx] + 1
+                        gap = merge_gap[idx]
+                        gap_id = []
+                        for v in gap:
+                            gap_id.append(id_list[v])
+                        timegap[idx][ant][spw][field_id] = gap_id
+                    timegrp_list[ant][spw][field_id] = grp_list
+                    ###
+    
+                    pattern_dict[spw][field_id] = pattern
 
             # register observing pattern to domain object
             #self[ant].pattern = pattern_dict
@@ -387,9 +414,28 @@ class SDMSInspection(object):
                         tsys_transfer.append([spwa.id, spwt.id])
         do_tsys_transfer = len(tsys_transfer) > 0
         spwmap = spwmap_heuristic(ms, tsys_transfer)
+        
+        # field mapping (for multi-source EB)
+        # {target field: reference field}
+        target_fields = ms.get_fields(intent='TARGET')
+        reference_fields = ms.get_fields(intent='REFERENCE')
+        field_map = {}
+        for target in target_fields:
+            target_name = target.name
+            LOG.debug('target name: \'%s\''%(target_name))
+            for reference in reference_fields:
+                reference_name = reference.name
+                LOG.debug('reference name: \'%s\''%(reference_name))
+                tpattern = '^%s_[0-9]$'%(target_name)
+                rpattern = '^%s_[0-9]$'%(reference_name)
+                if target_name == reference_name:
+                    field_map[target.id] = reference.id
+                elif re.match(tpattern, reference_name) or re.match(rpattern, target_name):
+                    field_map[target.id] = reference.id
         calibration_strategy = {'tsys': do_tsys_transfer,
                                 'tsys_strategy': spwmap,
-                                'calmode': calibration_type}
+                                'calmode': calibration_type,
+                                'field_strategy': field_map}
         ms.calibration_strategy = calibration_strategy
         
     def _inspect_beam_size(self):
@@ -412,22 +458,27 @@ class SDMSInspection(object):
 
     
     
-    def __find_match_by_name(self, spw_name, spw_names):
+    def __find_match_by_name(self, spw_name, field_name, group_names):
         match = False
-        for (group_key,group_spw_name) in spw_names.items():
+        for (group_key,names) in group_names.items():
+            group_spw_name = names[0]
+            group_field_name = names[1]
             if (group_spw_name==''): 
                 raise RuntimeError, "Got empty group spectral window name"
-            elif spw_name == group_spw_name:
+            elif spw_name == group_spw_name and field_name == group_field_name:
                 match = group_key
                 break
         return match
 
-    def __find_match_by_coverage(self, nchan, min_frequency, max_frequency, reduction_group, fraction=0.99):
+    def __find_match_by_coverage(self, nchan, min_frequency, max_frequency, reduction_group, fraction=0.99, field_name=None):
         if fraction<=0 or fraction>1.0:
             raise ValueError, "overlap fraction should be between 0.0 and 1.0"
-        LOG.warn("Creating reduction group by frequency overlap. This may be not proper if observation dates extend over long period.")
+        LOG.warn("Creating reduction group by frequency overlap. This may not be proper if observation dates extend over long period.")
         match = False
         for (group_key,group_desc) in reduction_group.items():
+            group_field_name = group_desc.field
+            if field_name is not None and group_field_name != field_name:
+                continue 
             group_range = group_desc.frequency_range
             group_nchan = group_desc.nchan
             overlap = max( 0.0, min(group_range[1], max_frequency)

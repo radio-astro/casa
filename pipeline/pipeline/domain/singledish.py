@@ -689,10 +689,11 @@ class ReductionGroupDesc(list):
 
 
 class MSReductionGroupMember(object):
-    def __init__(self, ms, antenna, spw):
+    def __init__(self, ms, antenna, spw, field_id=None):
         self.ms = ms
         self.antenna = antenna
         self.spw = spw
+        self.field_id = -1 if field_id is None else field_id
         self.iteration = 0
         self.linelist = []
         self.channelmap_range = []
@@ -715,54 +716,59 @@ class MSReductionGroupMember(object):
             self.channelmap_range = linelist
 
     def __repr__(self):
-        return 'MSReductionGroupMember(ms=\'%s\', antenna=%s, spw=%s)' % (self.ms.basename, self.antenna, self.spw)
+        return 'MSReductionGroupMember(ms=\'%s\', antenna=%s, spw=%s, field_id=%s)' % (self.ms.basename, self.antenna, self.spw, self.field_id)
 
     def __eq__(self, other):
         #LOG.debug('MSReductionGroupMember.__eq__')
-        return other.ms.name == self.ms.name and other.antenna == self.antenna and other.spw == self.spw
+        return other.ms.name == self.ms.name and other.antenna == self.antenna and other.spw == self.spw and other.field_id == self.field_id
 
     def __ne__(self, other):
-        return other.ms.name != self.ms.name or other.antenna != self.antenna or other.spw != self.spw
+        return other.ms.name != self.ms.name or other.antenna != self.antenna or other.spw != self.spw or other.field_id != self.field_id
      
 class MSReductionGroupDesc(list):
-    def __init__(self, min_frequency=None, max_frequency=None, nchan=None):
+    def __init__(self, min_frequency=None, max_frequency=None, nchan=None, field=None):
         self.max_frequency = max_frequency
         self.min_frequency = min_frequency
         self.nchan = nchan
+        self.field = field
         
     @property
     def frequency_range(self):
         return [self.min_frequency, self.max_frequency]
+    
+    @property
+    def field_name(self):
+        return self.field.name.strip('"')
 
     def merge(self, other):
         assert self == other
         for member in other:
-            LOG.trace('ms.name=\"%s\" antenna=%s spw=%s'%(member.ms.name, member.antenna, member.spw))
+            LOG.trace('ms.name=\"%s\" antenna=%s spw=%s, field_id=%s'%(member.ms.name, member.antenna, member.spw, member.field_id))
             if not member in self:
-                LOG.debug('Adding (%s, %s, %s)'%(member.ms.name,member.antenna,member.spw))
+                LOG.debug('Adding (%s, %s, %s, %s)'%(member.ms.name,member.antenna,member.spw,member.field_id))
                 self.append(member)
 
-    def add_member(self, ms, antenna, spw):
-        new_member = MSReductionGroupMember(ms, antenna, spw)
+    def add_member(self, ms, antenna, spw, field_id=None):
+        new_member = MSReductionGroupMember(ms, antenna, spw, field_id)
         if not new_member in self:
             self.append(new_member)
 
-    def get_iteration(self, ms, antenna, spw):
-        member = self[self.__search_member(ms, antenna, spw)]
+    def get_iteration(self, ms, antenna, spw, field_id=None):
+        member = self[self.__search_member(ms, antenna, spw, field_id)]
         return member.iteration
             
-    def iter_countup(self, antenna, spw, pols=None):
-        member = self[self.__search_member(antenna, spw)]
-        member.iter_countup(pols)
+    def iter_countup(self, ms, antenna, spw, field_id=None):
+        member = self[self.__search_member(ms, antenna, spw, field_id)]
+        member.iter_countup()
 
-    def add_linelist(self, linelist, antenna, spw, pols=None, channelmap_range=None):
-        member = self[self.__search_member(antenna, spw)]
-        member.add_linelist(linelist, pols, channelmap_range=channelmap_range)
+    def add_linelist(self, linelist, antenna, spw, field_id=None, channelmap_range=None):
+        member = self[self.__search_member(antenna, spw, field_id)]
+        member.add_linelist(linelist, channelmap_range=channelmap_range)
 
-    def __search_member(self, ms, antenna, spw):
+    def __search_member(self, ms, antenna, spw, field_id=None):
         for indx in xrange(len(self)):
             member = self[indx]
-            if member.ms.name == ms.name and member.antenna == antenna and member.spw == spw:
+            if member.ms.name == ms.name and member.antenna == antenna and member.spw == spw and member.field_id == field_id:
                 return indx
                 break
             
@@ -770,12 +776,14 @@ class MSReductionGroupDesc(list):
         #LOG.debug('MSReductionGroupDesc.__eq__')
         return self.max_frequency == other.max_frequency \
             and self.min_frequency == other.min_frequency \
-            and self.nchan == other.nchan
+            and self.nchan == other.nchan \
+            and self.field_name == other.field_name
             
     def __ne__(self, other):
         return self.max_frequency != other.max_frequency \
             or self.min_frequency != other.min_frequency \
-            or self.nchan != other.nchan
+            or self.nchan != other.nchan \
+            or self.field_name != other.field_name
 
     def __repr__(self):
-        return 'MSReductionGroupDesc(frequency_range=%s, nchan=%s, member=%s)' % (self.frequency_range, self.nchan, self[:])
+        return 'MSReductionGroupDesc(frequency_range=%s, nchan=%s, field=\'%s\', member=%s)' % (self.frequency_range, self.nchan, self.field_name, self[:])

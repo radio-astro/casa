@@ -890,10 +890,18 @@ class T2_2_7Renderer(T2_2_XRendererBase):
         whole_pointings = []
         if is_singledish_ms(context):
             for antenna in ms.antennas:
-                task = drawpointing.SingleDishPointingChart(context, ms, antenna, target_only=True)
-                target_pointings.append(task.plot())
-                task = drawpointing.SingleDishPointingChart(context, ms, antenna, target_only=False)
-                whole_pointings.append(task.plot())
+                for (target, reference) in ms.calibration_strategy['field_strategy'].items():
+                    LOG.debug('target field id %s / reference field id %s'%(target,reference))
+                    task = drawpointing.SingleDishPointingChart(context, ms, antenna, 
+                                                                target_field_id=target,
+                                                                reference_field_id=reference,
+                                                                target_only=True)
+                    target_pointings.append(task.plot())
+                    task = drawpointing.SingleDishPointingChart(context, ms, antenna, 
+                                                                target_field_id=target,
+                                                                reference_field_id=reference,
+                                                                target_only=False)
+                    whole_pointings.append(task.plot())
 
         dirname = os.path.join('session%s' % ms.session,
                                ms.basename)
