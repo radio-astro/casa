@@ -359,8 +359,15 @@ def plotms(vis=None,
         if avgbaseline and avgantenna:
             casalog.post('Averaging over baselines is mutually exclusive with per-antenna averaging.', "SEVERE")
             return False
-        if (avgchannel and float(avgchannel) < 0.0) or (avgtime and float(avgtime) < 0.0):
-            casalog.post('Cannot average negative value', "SEVERE")
+        if avgchannel and (float(avgchannel) < 0.0):
+            casalog.post('Cannot average negative number of channels', "SEVERE")
+            return False
+        try:
+            if avgtime and (float(avgtime) < 0.0):
+                casalog.post('Cannot average negative time value', "SEVERE")
+                return False
+        except ValueError:
+            casalog.post('avgtime value must be numerical string in seconds (no units)', "SEVERE")
             return False
         pm.setPlotMSAveraging(avgchannel, avgtime, avgscan, avgfield, avgbaseline, 
                               avgantenna, avgspw, scalar, False, plotindex)
