@@ -2051,11 +2051,15 @@ void SingleDishMS::fitLine(string const& in_column_name, string const& in_spw,
   Vector<bool> nchan_set;
   parse_spw(in_spw, recspw, recchan, nchan, in_mask, nchan_set);
 
-  std::vector<string> nfit_s = split_string(in_nfit, ',');
   std::vector<size_t> nfit;
-  nfit.resize(nfit_s.size());
-  for (size_t i = 0; i < nfit_s.size(); ++i) {
-    nfit[i] = std::stoi(nfit_s[i]);
+  if (linefinding) {
+    os << "Defining line ranges using line finder. nfit will be ignored." << LogIO::POST;
+  } else {
+    std::vector<string> nfit_s = split_string(in_nfit, ',');
+    nfit.resize(nfit_s.size());
+    for (size_t i = 0; i < nfit_s.size(); ++i) {
+      nfit[i] = std::stoi(nfit_s[i]);
+    }
   }
 
   for (vi->originChunks(); vi->moreChunks(); vi->nextChunk()) {
@@ -2106,7 +2110,7 @@ void SingleDishMS::fitLine(string const& in_column_name, string const& in_spw,
             fitrange_end.push_back(recchan.row(i)(2));
           }
         }
-        if (nfit.size() != fitrange_start.size()) {
+	if (!linefinding && nfit.size() != fitrange_start.size()) {
           throw(AipsError(
               "the number of elements of nfit and fitranges specified in spw must be identical."));
         }
@@ -2134,8 +2138,23 @@ void SingleDishMS::fitLine(string const& in_column_name, string const& in_spw,
 
           // line finding. get fit mask (invert=false)
           if (linefinding) {
-            findLineAndGetMask(num_chan, spec_data, mask_data, threshold,
-                avg_limit, minwidth, edge, false, mask_data);
+              list<pair<size_t, size_t>> line_ranges
+	      = findLineAndGetRanges(num_chan, spec_data, mask_data,
+				       threshold, avg_limit, minwidth,
+				       edge, false);
+	    if (line_ranges.size()==0) {
+	      continue;
+	    }
+	    size_t nline = line_ranges.size();
+	    fitrange_start.resize(nline);
+	    fitrange_end.resize(nline);
+	    nfit.resize(nline);
+	    auto range=line_ranges.begin();
+	    for (size_t iline=0; iline<nline; ++iline){
+	      fitrange_start[iline] = (*range).first;
+	      fitrange_end[iline] = (*range).second;
+	      nfit[iline] = 1;
+	    }
           }
 
           Vector<Float> x_;
@@ -2888,11 +2907,10 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
   }
 } //end subtractBaselineVariable
 
-void SingleDishMS::findLineAndGetMask(size_t const num_data, float const* data,
-    bool const* in_mask, float const threshold, int const avg_limit,
-    int const minwidth, vector<int> const& edge, bool const invert,
-    bool* out_mask) {
-  // inpu value check
+list<pair<size_t, size_t>> SingleDishMS::findLineAndGetRanges(size_t const num_data, float const* data,
+    bool * mask, float const threshold, int const avg_limit,
+    int const minwidth, vector<int> const& edge, bool const invert) {
+  // input value check
   AlwaysAssert(minwidth > 0, AipsError);
   AlwaysAssert(avg_limit >= 0, AipsError);
   size_t max_iteration = 10;
@@ -2911,15 +2929,9 @@ void SingleDishMS::findLineAndGetMask(size_t const num_data, float const* data,
     lf_edge = pair<size_t, size_t>(static_cast<size_t>(edge[0]),
         static_cast<size_t>(edge[1]));
   }
-  // copy input mask to output mask vector if necessary
-  if (in_mask != out_mask) {
-    for (size_t i = 0; i < num_data; ++i) {
-      out_mask[i] = in_mask[i];
-    }
-  }
   // line detection
   list<pair<size_t, size_t>> line_ranges = linefinder::MADLineFinder(num_data,
-      data, out_mask, threshold, max_iteration, static_cast<size_t>(minwidth),
+      data, mask, threshold, max_iteration, static_cast<size_t>(minwidth),
       maxwidth, static_cast<size_t>(avg_limit), lf_edge);
   // debug output
   LogIO os(_ORIGIN);
@@ -2936,6 +2948,23 @@ void SingleDishMS::findLineAndGetMask(size_t const num_data, float const* data,
       line_ranges.push_back(
           pair<size_t, size_t>(num_data - lf_edge.second, num_data - 1));
   }
+  return line_ranges;
+}
+
+void SingleDishMS::findLineAndGetMask(size_t const num_data, float const* data,
+    bool const* in_mask, float const threshold, int const avg_limit,
+    int const minwidth, vector<int> const& edge, bool const invert,
+    bool* out_mask) {
+  // copy input mask to output mask vector if necessary
+  if (in_mask != out_mask) {
+    for (size_t i = 0; i < num_data; ++i) {
+      out_mask[i] = in_mask[i];
+    }
+  }
+  // line finding
+  list<pair<size_t, size_t>> line_ranges
+    = findLineAndGetRanges(num_data, data, out_mask, threshold,
+			     avg_limit, minwidth, edge, invert);
   // line mask creation (do not initialize in case of baseline mask)
   linefinder::getMask(num_data, out_mask, line_ranges, invert, !invert);
 }

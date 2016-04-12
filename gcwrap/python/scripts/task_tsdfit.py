@@ -12,10 +12,9 @@ from numpy import ma, array, logical_not, logical_and
 @sdutil.sdtask_decorator
 def tsdfit(infile=None, datacolumn=None, antenna=None, field=None, spw=None,
            timerange=None, scan=None, pol=None, intent=None,
-           fitfunc=None, fitmode=None, thresh=None, avg_limit=None,
-           minwidth=None, edge=None, nfit=None, 
-           outfile=None, overwrite=None):
-    casalog.origin('tsdbaseline')
+           fitfunc=None, fitmode=None, nfit=None, thresh=None, avg_limit=None,
+           minwidth=None, edge=None, outfile=None, overwrite=None):
+    casalog.origin('tsdfit')
 
     try:
         if os.path.exists(outfile):
@@ -46,9 +45,12 @@ def tsdfit(infile=None, datacolumn=None, antenna=None, field=None, spw=None,
             tempoutfile += str(datetime.datetime.fromtimestamp(time.time())).replace('-','').replace(' ','').replace(':','')
             if os.path.exists(tempoutfile):
                 raise Exception('temporary ms file ' + tempoutfile + ' exists...')
+        
+        num_fit_str = '1' if (fitmode=='auto') else str(',').join(map(str, nfit))
+        if fitmode=='auto': nfit = [-1]
 
         sdms.fit_line(datacolumn=datacolumn, spw=spw, pol=pol, fitfunc=fitfunc,
-                      nfit=str(nfit)[1:-1].replace(' ', ''),
+                      nfit=num_fit_str,
                       linefinding=(fitmode=='auto'), threshold=thresh,
                       avg_limit=avg_limit, minwidth=minwidth, edge=edge,
                       tempfile=tempfile, tempoutfile=tempoutfile)
@@ -83,13 +85,13 @@ def get_results(tempfile, fitfunc, nfit, outfile):
         
         for line in f:
             component = line.strip().split(':')   # split into each component
-            if (0 < ncomp): 
+            if (ncomp > 0): 
                 assert(len(component) == ncomp)
             res['cent'].append([])
             res['peak'].append([])
             res['fwhm'].append([])
-            res['nfit'].append(ncomp)
-            for icomp in range(ncomp):
+            res['nfit'].append(ncomp if ncomp>=0 else len(component))
+            for icomp in range(res['nfit'][-1]):
                 fit_result = component[icomp].split(',')   # split into each parameter
                 num_ids = 6 # scan, time, ant, beam, spw, pol
                 assert(len(fit_result) == 2*(len(res.keys())-1)+num_ids)

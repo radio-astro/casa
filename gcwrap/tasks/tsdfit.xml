@@ -87,6 +87,11 @@ or sdreduce.
         </allowed>
     </param>
 
+    <param type="intArray" name="nfit" subparam="true">
+        <description>list of number of lines to fit in maskline region.</description>
+        <value type="vector"><value>0</value></value>
+    </param>
+
     <param type="double" name="thresh" subparam="true">
         <description>S/N threshold for linefinder</description>
         <value>5.0</value>
@@ -107,12 +112,6 @@ or sdreduce.
         <value type="vector"><value>0</value><value>0</value></value>
     </param>
 
-    <param type="intArray" name="nfit">
-<!--        <description>list of number of lines to fit in maskline region (ignored when fitmode="auto")</description> -->
-        <description>list of number of lines to fit in maskline region.</description>
-        <value type="vector"><value>0</value></value>
-    </param>
-
     <param type="string" name="outfile">
         <description>name of output file</description>
         <value></value>
@@ -126,14 +125,18 @@ or sdreduce.
 
     <constraints>
             <when param="fitmode">
-                <equals value="list"/>
+                <equals value="list">
+                        <default param="nfit"><value type='vector'><value>0</value></value></default>
+                </equals>
                 <equals value="auto">
                         <default param="thresh"><value>5.0</value></default>
                         <default param="avg_limit"><value>4</value></default>
                         <default param="minwidth"><value>4</value></default>
                         <default param="edge"><value type='vector'><value>0</value></value></default>
                 </equals>
-                <equals value="interact"/>
+                <equals value="interact">
+                        <default param="nfit"><value type='vector'><value>0</value></value></default>
+                </equals>
             </when>
     </constraints>
   </input>
@@ -211,6 +214,12 @@ fitmode -- mode for fitting
                         to ADD the region to the mask and with RIGHT-mouse 
                         to DELETE the region. 
     &gt;&gt;&gt; fitmode expandable parameters     
+        nfit -- list of number of lines to fit in each region specified by the 
+                parameter spw
+                default: [0] (no fitting)
+                example: nfit=[1] for single line in single region,
+                         nfit=[2] for two lines in single region,
+                         nfit=[1,1] for single lines in each of two regions, etc.
         thresh -- S/N threshold for linefinder. a single channel S/N ratio
                   above which the channel is considered to be a detection.
                 default: 5
@@ -231,12 +240,6 @@ fitmode -- mode for fitting
         and avg_limit decreased (or even switched off completely by
         setting this parameter to 1) to avoid detecting baseline
         undulations instead of real lines.
-nfit -- list of number of lines to fit in each region specified by the 
-        parameter spw <!--(ignored when fitmode='auto')-->
-        default: [0] (no fitting)
-        example: nfit=[1] for single line in single region,
-                 nfit=[2] for two lines in single region,
-                 nfit=[1,1] for single lines in each of two regions, etc.
 outfile -- name of output file
         default: no output fit file
         example: 'mysd.fit'

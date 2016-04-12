@@ -235,6 +235,12 @@ private:
 				size_t order,
                                 size_t &num_coeff_max);
 
+  list<pair<size_t, size_t>> findLineAndGetRanges(size_t const num_data,
+      float const data[/*num_data*/],
+      bool mask[/*num_data*/], float const threshold,
+      int const avg_limit, int const minwidth, vector<int> const& edge,
+      bool const invert);
+
   void findLineAndGetMask(size_t const num_data, float const data[/*num_data*/],
       bool const in_mask[/*num_data*/], float const threshold,
       int const avg_limit, int const minwidth, vector<int> const& edge,
