@@ -358,7 +358,10 @@ def plotms(vis=None,
             scalar = False
         if avgbaseline and avgantenna:
             casalog.post('Averaging over baselines is mutually exclusive with per-antenna averaging.', "SEVERE")
-            return False  
+            return False
+        if (avgchannel and float(avgchannel) < 0.0) or (avgtime and float(avgtime) < 0.0):
+            casalog.post('Cannot average negative value', "SEVERE")
+            return False
         pm.setPlotMSAveraging(avgchannel, avgtime, avgscan, avgfield, avgbaseline, 
                               avgantenna, avgspw, scalar, False, plotindex)
         # Set transformations
