@@ -150,7 +150,7 @@ void MSCache::loadError(String mesg) {
 	clear();
 	deleteVi();  // close any open tables
 	stringstream ss;
-	ss << "Error loading cache";
+	ss << mesg;
 	throw(AipsError(ss.str()));
 }
 
@@ -378,8 +378,15 @@ void MSCache::setUpVisIter(PlotMSSelection& selection,
 		configuration.define("timespan", timespanStr);
 	}
 	if (averaging_.channel()) {
+        int chanVal;
+        if (averaging_.channelValue() > INT_MAX) {
+            cout << "\nWARNING: avgchannel value exceeds maximum integer allowed, setting to " + String::toString(INT_MAX) << endl;
+            logWarn(PMS::LOG_ORIGIN_LOAD_CACHE, "avgchannel value exceeds maximum integer allowed, setting to " + String::toString(INT_MAX));
+            chanVal = INT_MAX;
+        } else {
+		    chanVal = static_cast<int>(averaging_.channelValue());
+        }
 		configuration.define("chanaverage", True);
-		int chanVal = static_cast<int>(averaging_.channelValue());
 		configuration.define("chanbin", chanVal);
 	}
     if (averaging_.spw()) {
