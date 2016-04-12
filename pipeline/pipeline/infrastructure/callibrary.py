@@ -571,6 +571,7 @@ class CalToIdAdapter(object):
         # if the field names are unique, we can return field names. Otherwise,
         # we fall back to field IDs.
         all_field_names = [f.name for f in self.ms.get_fields()]
+        ### Activate the following line for NRO ###
 #         return [f.id for f in fields]
         if len(set(all_field_names)) == len(all_field_names):
             return [f.name for f in fields]
