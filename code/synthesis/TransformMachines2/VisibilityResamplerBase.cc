@@ -115,7 +115,7 @@ namespace casa{
 					       const Vector<Int>& /*dataPol2ImPolMap*/,
 					       const Vector<Double>& pointingOffset)
   {
-    LogIO log_l(LogOrigin("VisibilityResamplerBase", "makeVBRow2CFMap"));
+    LogIO log_l(LogOrigin("VisibilityResamplerBase2", "makeVBRow2CFMap"));
     //    VBRow2CFMapType& vbRow2CFMap_p,
     const Int nRow=vbs.nRows(); 
     //UNUSED: nChan=dataChan2ImChanMap.nelements(), 

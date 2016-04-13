@@ -60,7 +60,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				    const Matrix<Float>& sumWt,
 				    const Bool& doFFTNorm)
   {
-    LogIO log_l(LogOrigin("AWProjectWBFTNew", "ftWeightImage[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectWBFTNew2", "ftWeightImage[R&D]"));
     if (wtImageFTDone_p) return;
 
     // Bool doSumWtNorm=True;

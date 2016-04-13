@@ -40,10 +40,6 @@
 #include <tables/TaQL/ExprNode.h>
 #include <measures/Measures/MeasTable.h>
 #include <ms/MSSel/MSSelection.h>
-#include <synthesis/TransformMachines2/FTMachine.h>
-#include <synthesis/TransformMachines2/GridFT.h>
-#include <synthesis/TransformMachines2/SetJyGridFT.h>
-#include <synthesis/TransformMachines2/WProjectFT.h>
 #include <synthesis/TransformMachines2/SimpleComponentFTMachine.h>
 #include <msvis/MSVis/VisImagingWeight.h>
 #include <msvis/MSVis/VisibilityIterator2.h>
@@ -52,16 +48,12 @@
 #include <casa/OS/Directory.h>
 #include <casa/Utilities/Regex.h>
 #include <synthesis/TransformMachines2/test/MakeMS.h>
+//#include <synthesis/TransformMachines/FTMachine.h>
 #include <synthesis/TransformMachines2/FTMachine.h>
-#include <synthesis/TransformMachines2/AWProjectFT.h>
 #include <synthesis/TransformMachines2/AWProjectWBFTNew.h>
-#include <synthesis/TransformMachines2/AWConvFunc.h>
 #include <synthesis/TransformMachines2/AWConvFuncEPJones.h>
-#include <synthesis/TransformMachines2/ATerm.h>
 #include <synthesis/TransformMachines2/EVLAAperture.h>
-#include <synthesis/TransformMachines2/NoOpATerm.h>
 #include <synthesis/TransformMachines2/AWVisResampler.h>
-#include <ms/MSSel/MSSelection.h>
 
 using namespace casa;
 using namespace casa::refim;
@@ -269,3 +261,4 @@ Int main(int argc, char **argv)
   cerr <<"OK" << endl;
   exit(0);
 }
+

@@ -50,7 +50,7 @@ namespace casa{
   //
   void CFCache::initCache()
   {
-    LogOrigin logOrigin("CFCache", "initCache");
+    LogOrigin logOrigin("CFCache2", "initCache");
     LogIO log_l(logOrigin);
 
     ostringstream name;
@@ -141,7 +141,7 @@ namespace casa{
   //
   void CFCache::summarize(CFStoreCacheType2& memStore, const String& message, const Bool cfsInfo)
   {
-    LogOrigin logOrigin("CFCache", "summarize");
+    LogOrigin logOrigin("CFCache2", "summarize");
     LogIO log_l(logOrigin);
 
     IPosition cfsShp=memStore[0].getShape();
@@ -208,7 +208,7 @@ namespace casa{
 
   void CFCache::initCache2(Bool verbose, Float selectedPA, Float dPA)
   {
-    LogOrigin logOrigin("CFCache", "initCache2");
+    LogOrigin logOrigin("CFCache2", "initCache2");
     LogIO log_l(logOrigin);
 
     Directory dirObj(Dir);
@@ -255,7 +255,7 @@ namespace casa{
 				   Bool showInfo, Float selectPAVal, Float dPA,
 				   const Int verbose)
   {
-    LogOrigin logOrigin("CFCache", "fillCFListFromDisk");
+    LogOrigin logOrigin("CFCache2", "fillCFListFromDisk");
     LogIO log_l(logOrigin);
     (void)showInfo;
     Bool selectPA = (fabs(selectPAVal) <= 360.0);
@@ -478,7 +478,7 @@ namespace casa{
 				Bool showInfo, Float selectPAVal, Float dPA, 
 				const Int verbose)
   {
-    LogOrigin logOrigin("CFCache", "fillCFSFromDisk");
+    LogOrigin logOrigin("CFCache2", "fillCFSFromDisk");
     LogIO log_l(logOrigin);
     try
       {
@@ -692,7 +692,7 @@ namespace casa{
 				 String nameQualifier,
 				 Bool savePA)
   {
-    LogIO log_l(LogOrigin("CFCache","cacheConvFunction"));
+    LogIO log_l(LogOrigin("CFCache2","cacheConvFunction"));
     Int whereCached_l=-1;
     if (Dir.length() == 0) return whereCached_l;
     if (which < 0) 
@@ -822,7 +822,7 @@ namespace casa{
     // If WtImagePrefix is set, no need to save avgPB in the CFCache
     if (WtImagePrefix != "") return;
 
-    LogIO log_l(LogOrigin("CFCache", "flush"));
+    LogIO log_l(LogOrigin("CFCache2", "flush"));
 
     if (Dir.length() == 0) return;
     ostringstream name;
@@ -858,7 +858,7 @@ namespace casa{
     // If WtImagePrefix is set, no need to save avgPB in the CFCache
     if (WtImagePrefix != "") return;
 
-    LogIO log_l(LogOrigin("CFCache", "flush"));
+    LogIO log_l(LogOrigin("CFCache2", "flush"));
 
     if (Dir.length() == 0) return;
     flush();
@@ -882,7 +882,7 @@ namespace casa{
   //
   Int CFCache::loadWtImage(ImageInterface<Float>& avgPB, String qualifier)
   {
-    LogIO log_l(LogOrigin("CFCache", "loadWtImage"));
+    LogIO log_l(LogOrigin("CFCache2", "loadWtImage"));
     ostringstream name, sumWtName;
     name << WtImagePrefix << ".weight" << qualifier;
     if (qualifier != "") sumWtName << WtImagePrefix << ".sumwt.tt0";// << qualifier;
@@ -929,7 +929,7 @@ namespace casa{
   //
   Int CFCache::loadAvgPB(ImageInterface<Float>& avgPB, String qualifier)
   {
-    LogIO log_l(LogOrigin("CFCache", "loadAvgPB"));
+    LogIO log_l(LogOrigin("CFCache2", "loadAvgPB"));
 
     if (WtImagePrefix != "") 
       {
@@ -977,7 +977,7 @@ namespace casa{
 			    Int Nw, CFStoreCacheType &convFuncCache,
 			    CFStore& cfs, String nameQualifier)
   {
-    LogIO log_l(LogOrigin("CFCache", "loadFromDisk"));
+    LogIO log_l(LogOrigin("CFCache2", "loadFromDisk"));
 
     Vector<Int> xconvSupport,yconvSupport;;
     Vector<Float> convSampling;
@@ -1109,7 +1109,7 @@ namespace casa{
 				  const String& nameQualifier,
 				  const Int /*mosXPos*/, const Int /*mosYPos*/)
   {
-    LogIO log_l(LogOrigin("CFCache", "locatedConvFunction"));
+    LogIO log_l(LogOrigin("CFCache2", "locatedConvFunction"));
 
     Int paKey,retVal=NOTCACHED; 
     Bool found;
@@ -1165,7 +1165,7 @@ namespace casa{
   //
   // void CFCache::constructTable_p(CFCache::CFCacheTable& tab)
   // {
-  //   TableDesc td("CFCache","0.0",TableDesc::Scratch);
+  //   TableDesc td("CFCache2","0.0",TableDesc::Scratch);
     
   //   add PA and baseline type info.
 

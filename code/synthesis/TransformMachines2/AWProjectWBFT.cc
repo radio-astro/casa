@@ -102,7 +102,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   AWProjectWBFT::AWProjectWBFT(const RecordInterface& stateRec)
     : AWProjectFT(stateRec), oneTimeMessage_p(False)
   {
-    LogIO log_l(LogOrigin("AWProjectWBFT", "AWProjectWBFT[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectWBFT2", "AWProjectWBFT[R&D]"));
     // Construct from the input state record
     
     //    if (!fromRecord(error, stateRec)) 
@@ -158,7 +158,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					 Array<Float> &m_off,
 					 Bool Evaluate)
   {
-    LogIO log_l(LogOrigin("AWProjectWBFT","findPointingOffsets[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectWBFT2","findPointingOffsets[R&D]"));
     Int NAnt=0;
     //
     // This will return 0 if EPJ Table is not given.  Otherwise will
@@ -263,7 +263,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   void AWProjectWBFT::normalizeAvgPB()
   {
-    LogIO log_l(LogOrigin("AWProjectWBFT","normalizeAvgPB[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectWBFT2","normalizeAvgPB[R&D]"));
     // We accumulated normalized PBs.  So don't normalize the average
     // PB.
     pbNormalized_p = False;
@@ -288,7 +288,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     if (oneTimeMessage_p == False)
       {
-	LogIO log_l(LogOrigin("AWProjectWBFT", "makeSensitivityImage[R&D]"));
+	LogIO log_l(LogOrigin("AWProjectWBFT2", "makeSensitivityImage[R&D]"));
 	log_l << "Setting up for weights accumulation ";
 	if (sensitivityPatternQualifierStr_p != "") log_l << "for term " << sensitivityPatternQualifier_p << " ";
 	log_l << "during gridding to compute sensitivity pattern." 
@@ -305,7 +305,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				    const Matrix<Float>& sumWt,
 				    const Bool& doFFTNorm)
   {
-    LogIO log_l(LogOrigin("AWProjectWBFT", "ftWeightImage[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectWBFT2", "ftWeightImage[R&D]"));
     if (wtImageFTDone_p) return;
 
     //cerr << "From ftWeightImage" << endl;
@@ -399,7 +399,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					     const Bool& doFFTNorm)
   {
     //    if (avgPBReady_p) return;
-    LogIO log_l(LogOrigin("AWProjectWBFT", "makeSensitivitySqImage[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectWBFT2", "makeSensitivitySqImage[R&D]"));
 
     //    avgPBReady_p=True;
 
@@ -463,7 +463,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					   const Bool& doFFTNorm)
   {
     if (avgPBReady_p) return;
-    LogIO log_l(LogOrigin("AWProjectWBFT", "makeSensitivityImage[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectWBFT2", "makeSensitivityImage[R&D]"));
 
 
     // Matrix<Float> cfWts(sumWt.shape());
@@ -570,7 +570,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 						   Bool fftNormalization) 
   {
     AlwaysAssert(image, AipsError);
-    LogIO log_l(LogOrigin("AWProjectWBFT", "getImage[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectWBFT2", "getImage[R&D]"));
 
     weights.resize(sumWeight.shape());
     convertArray(weights, sumWeight);//I suppose this converts a
@@ -1284,7 +1284,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				   Matrix<Float>& weight,
 				   const VisBuffer2& vb)
   {
-    LogIO log_l(LogOrigin("AWProjectWBFT","initializeToSky[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectWBFT2","initializeToSky[R&D]"));
     AWProjectFT::initializeToSky(iimage,weight,vb);
     // The following code is same as that in the parent class call above. 
 //     image=&iimage;
@@ -1351,7 +1351,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   void AWProjectWBFT::finalizeToSky()
   {
-    LogIO log_l(LogOrigin("AWProjectWBFT", "finalizeToSky[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectWBFT2", "finalizeToSky[R&D]"));
     AWProjectFT::finalizeToSky();
     // The following commented code is the same as in the parent class
     // call above.
@@ -1404,7 +1404,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // Grid the weighted convolution function as well
     //
-    LogIO log_l(LogOrigin("AWProjectFT", "resampleCFToGrid[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectFT2", "resampleCFToGrid[R&D]"));
     //
     // Now rotate and put the rotated convolution weight function
     // in rotatedCFWts_l object.

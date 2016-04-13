@@ -29,7 +29,7 @@
 #define SYNTHESIS_TRANSFORM2_CFSTORE2_H
 #include <synthesis/TransformMachines2/CFDefs.h>
 #include <synthesis/TransformMachines2/CFBuffer.h>
-#include <synthesis/TransformMachines2/CFCell.h>
+#include <synthesis/TransformMachines/CFCell.h>
 #include <synthesis/TransformMachines2/VBStore.h>
 #include <synthesis/TransformMachines/SynthesisError.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>

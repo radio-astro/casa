@@ -30,7 +30,7 @@
 #include <synthesis/TransformMachines/SynthesisError.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <synthesis/TransformMachines2/CFDefs.h>
-#include <synthesis/TransformMachines2/CFCell.h>
+#include <synthesis/TransformMachines/CFCell.h>
 #include <synthesis/TransformMachines2/Utils.h>
 #include <images/Images/ImageInterface.h>
 #include <casa/Utilities/CountedPtr.h>

@@ -112,7 +112,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   ATerm* AWProjectFT::createTelescopeATerm(const String& telescopeName, const Bool& isATermOn)
   {
-    LogIO os(LogOrigin("AWProjectFT", "createTelescopeATerm",WHERE));
+    LogIO os(LogOrigin("AWProjectFT2", "createTelescopeATerm",WHERE));
     
     if (!isATermOn) return new NoOpATerm();
     
@@ -279,7 +279,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   AWProjectFT::AWProjectFT(const RecordInterface& stateRec)
     : FTMachine(),Second("s"),Radian("rad"),Day("d"),visResampler_p()//, cfs2_p(), cfwts2_p()
   {
-    LogIO log_l(LogOrigin("AWProjectFT", "AWProjectFT[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectFT2", "AWProjectFT[R&D]"));
     //
     // Construct from the input state record
     //
@@ -420,7 +420,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   void AWProjectFT::init() 
   {
-    LogIO log_l(LogOrigin("AWProjectFT", "init[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectFT2", "init[R&D]"));
 
     nx    = image->shape()(0);
     ny    = image->shape()(1);
@@ -528,7 +528,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							 const MDirection::Types& To,
 							 MEpoch& last)
   {
-    LogIO log_l(LogOrigin("AWProjectFT","makeCoordinateMachine[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectFT2","makeCoordinateMachine[R&D]"));
     Double time = getCurrentTimeStamp(vb);
     
     MEpoch epoch(Quantity(time,Second),MEpoch::TAI);
@@ -567,7 +567,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					Array<Float> &m_off,
 					Bool Evaluate)
   {
-    LogIO log_l(LogOrigin("AWProjectFT", "findPointingOffsets[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectFT2", "findPointingOffsets[R&D]"));
     Int NAnt = 0;
     MEpoch LAST;
     Double thisTime = getCurrentTimeStamp(vb);
@@ -686,7 +686,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					Array<Float> &m_off,
 					Bool Evaluate)
   {
-    LogIO log_l(LogOrigin("AWProjectFT", "findPointingOffsets[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectFT2", "findPointingOffsets[R&D]"));
     Int NAnt = 0;
     //Float tmp;
     // TBD: adapt the following to VisCal mechanism:
@@ -819,7 +819,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void AWProjectFT::normalizeAvgPB(ImageInterface<Complex>& inImage,
 				   ImageInterface<Float>& outImage)
   {
-    LogIO log_l(LogOrigin("AWProjectFT", "normalizeAvgPB[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectFT2", "normalizeAvgPB[R&D]"));
     if (pbNormalized_p) return;
     IPosition inShape(inImage.shape()),ndx(4,0,0,0,0);
     Vector<Complex> peak(inShape(2));
@@ -887,7 +887,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   void AWProjectFT::normalizeAvgPB()
   {
-    LogIO log_l(LogOrigin("AWProjectFT", "normalizeAvgPB[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectFT2", "normalizeAvgPB[R&D]"));
     if (pbNormalized_p) return;
     Bool isRefF;
     Array<Float> avgPBBuf;
@@ -952,7 +952,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void AWProjectFT::makeCFPolMap(const VisBuffer2& vb, const Vector<Int>& locCfStokes,
 				 Vector<Int>& polM)
   {
-    LogIO log_l(LogOrigin("AWProjectFT", "makeCFPolMap[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectFT2", "makeCFPolMap[R&D]"));
     //    Vector<Int> msStokes = vb.corrType();
     // cerr << "Using vb2.correlationTypes() in place of vb.corrType(): AWPFT.cc:954" << endl;
     Vector<Int> msStokes = vb.correlationTypes();
@@ -981,7 +981,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     if (conjPolMap.nelements() > 0) return;
 
-    LogIO log_l(LogOrigin("AWProjectFT", "makConjPolMap[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectFT2", "makConjPolMap[R&D]"));
 
     //
     // All the Natak (Drama) below with slicers etc. is to extract the
@@ -1058,7 +1058,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   void AWProjectFT::makeWBCFWt(CFStore2& cfs, const Double imRefFreq)
   {
-    LogIO log_l(LogOrigin("AWProjectFT", "makeWBCFWt[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectFT2", "makeWBCFWt[R&D]"));
     log_l << "Converting WTCFs to wide-band versions" << LogIO::POST;
 
     Vector<Int> ant1List, ant2List;
@@ -1148,7 +1148,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void AWProjectFT::findConvFunction(const ImageInterface<Complex>& image,
 				     const VisBuffer2& vb)
   {
-    LogIO log_l(LogOrigin("AWProjectFT", "findConvFunction[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectFT2", "findConvFunction[R&D]"));
     if (!paChangeDetector.changed(vb,0)) return;
     Int cfSource=CFDefs::NOTCACHED;
     CoordinateSystem ftcoords;
@@ -1302,7 +1302,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				    Block<Matrix<Float> >& weightsVec,
 				    const VisBuffer2& vb)
   {
-    LogIO log_p(LogOrigin("AWProjectFT","initToVis[V][R&D]"));
+    LogIO log_p(LogOrigin("AWProjectFT2","initToVis[V][R&D]"));
     //
     // Setting the image below is crucial since init() and
     // initMaps(vb) below expect this to be set.
@@ -1368,7 +1368,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void AWProjectFT::initializeToVis(ImageInterface<Complex>& iimage,
 				    const VisBuffer2& vb)
   {
-    LogIO log_l(LogOrigin("AWProjectFT", "initializeToVis[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectFT2", "initializeToVis[R&D]"));
     image=&iimage;
     
     ok();
@@ -1520,7 +1520,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   void AWProjectFT::finalizeToVis()
   {
-    LogIO log_l(LogOrigin("AWProjectFT", "finalizeToVis[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectFT2", "finalizeToVis[R&D]"));
     
     //    cerr << "De-gridding run time = " << visResampler_p->runTimeDG_p << endl;
     visResampler_p->runTimeDG_p=0.0;
@@ -1550,7 +1550,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				     Matrix<Float>& weight,
 				     const VisBuffer2& vb)
   {
-    LogIO log_l(LogOrigin("AWProjectFT", "initializeToSky[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectFT2", "initializeToSky[R&D]"));
     
     // image always points to the image
     image=&iimage;
@@ -1617,7 +1617,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Now we flush the cache and report statistics For memory based,
     // we don't write anything out yet.
     //
-    LogIO log_l(LogOrigin("AWProjectFT", "finalizeToSky[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectFT2", "finalizeToSky[R&D]"));
 
     if(isTiled) 
       {
@@ -1661,7 +1661,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void AWProjectFT::put(const VisBuffer2& vb, Int /*row*/, Bool dopsf,
 			FTMachine::Type type)
   {
-    LogIO log_l(LogOrigin("AWProjectFT", "put[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectFT2", "put[R&D]"));
     // Take care of translation of Bools to Integer
     makingPSF=dopsf;
     
@@ -1771,7 +1771,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void AWProjectFT::resampleDataToGrid(Array<Complex>& griddedData_l, VBStore& vbs, 
 				       const VisBuffer2& /*vb*/, Bool& dopsf)
   {
-    LogIO log_l(LogOrigin("AWProjectFT", "resampleDataToGrid[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectFT2", "resampleDataToGrid[R&D]"));
     visResampler_p->DataToGrid(griddedData_l, vbs, sumWeight, dopsf); 
     //    cerr << "####SumWt(C): " << sumWeight << endl;
   }
@@ -1781,16 +1781,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void AWProjectFT::resampleDataToGrid(Array<DComplex>& griddedData_l, VBStore& vbs, 
 				       const VisBuffer2& /*vb*/, Bool& dopsf)
   {
-    LogIO log_l(LogOrigin("AWProjectFT", "resampleDataToGridD[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectFT2", "resampleDataToGridD[R&D]"));
     visResampler_p->DataToGrid(griddedData_l, vbs, sumWeight, dopsf); 
     //    cerr << "####SumWt(DC): " << sumWeight << endl;
   }
   //
   //---------------------------------------------------------------
   //
-  void AWProjectFT::get(VisBuffer2& vb, Int row)
+  void AWProjectFT::get(VisBuffer2& vb, Int /*row*/)
   {
-    LogIO log_l(LogOrigin("AWProjectFT", "get[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectFT2", "get[R&D]"));
     // If row is -1 then we pass through all rows
 
     //------COMMON FROM HERE
@@ -1888,7 +1888,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void AWProjectFT::resampleGridToData(VBStore& vbs, Array<Complex>& griddedData_l,
 				       const VisBuffer2& /*vb*/)
   {
-    LogIO log_l(LogOrigin("AWProjectFT", "resampleGridToData[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectFT2", "resampleGridToData[R&D]"));
     //    Timer tim;
     //    tim.mark();
     visResampler_p->GridToData(vbs, griddedData_l);
@@ -1902,7 +1902,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   ImageInterface<Complex>& AWProjectFT::getImage(Matrix<Float>& weights,
 						  Bool fftNormalization) 
   {
-    LogIO log_l(LogOrigin("AWProjectFT", "getImage[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectFT2", "getImage[R&D]"));
     //
     // There are three objects held by the FTMachine objects: (1)
     // *image, (2) *lattice, and (3) griddedData.
@@ -2040,7 +2040,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void AWProjectFT::getWeightImage(ImageInterface<Float>& weightImage,
 				   Matrix<Float>& weights) 
   {
-    LogIO log_l(LogOrigin("AWProjectFT", "getWeightImage[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectFT2", "getWeightImage[R&D]"));
     
     weights.resize(sumWeight.shape());
     convertArray(weights,sumWeight);
@@ -2071,7 +2071,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   Bool AWProjectFT::toRecord(RecordInterface& outRec, Bool withImage) 
   {
-    LogIO log_l(LogOrigin("AWProjectFT", "toRecord[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectFT2", "toRecord[R&D]"));
     
     // Save the current AWProjectFT object to an output state record
     Bool retval = True;
@@ -2121,7 +2121,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   Bool AWProjectFT::fromRecord(const RecordInterface& inRec)
   {
-    LogIO log_l(LogOrigin("AWProjectFT", "fromRecord[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectFT2", "fromRecord[R&D]"));
 
     Bool retval = True;
     imageCache=0; lattice=0; arrayLattice=0;
@@ -2220,7 +2220,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // 			      ImageInterface<Complex>& theImage,
   // 			      Matrix<Float>& weight) 
   // {
-  //   LogIO log_l(LogOrigin("AWProjectFT", "makeImage[R&D]"));
+  //   LogIO log_l(LogOrigin("AWProjectFT2", "makeImage[R&D]"));
     
   //   if(type==FTMachine::COVERAGE) 
   //     log_l << "Type COVERAGE not defined for Fourier transforms"
@@ -2292,7 +2292,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void AWProjectFT::setPAIncrement(const Quantity& computePAIncrement,
 				   const Quantity& rotateOTFPAIncrement)
   {
-    LogIO log_l(LogOrigin("AWProjectFT", "setPAIncrement[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectFT2", "setPAIncrement[R&D]"));
 
     // Quantity tmp(abs(paIncrement.getValue("deg")), "deg");
     // if (paIncrement.getValue("rad") < 0)
@@ -2321,7 +2321,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //  
   Bool AWProjectFT::verifyShapes(IPosition pbShape, IPosition skyShape)
   {
-    LogIO log_l(LogOrigin("AWProjectFT", "verifyShapes[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectFT2", "verifyShapes[R&D]"));
 
     if ((pbShape(0) != skyShape(0)) && // X-axis
 	(pbShape(1) != skyShape(1)) && // Y-axis
@@ -2374,7 +2374,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				 const Bool& dopsf,
 				 const Vector<Int>& /*gridShape*/)
   {
-    LogIO log_l(LogOrigin("AWProjectFT", "setupVBStore[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectFT2", "setupVBStore[R&D]"));
 
     //    Vector<Int> ConjCFMap, CFMap;
 
@@ -2484,7 +2484,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			  Cube<Complex>& dMout2,
 			  Int Conj, Int doGrad)
   {
-    LogIO log_l(LogOrigin("AWProjectFT", "nget[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectFT2", "nget[R&D]"));
     Int startRow, endRow, nRow;
     nRow=vb.nRows();
     startRow=0;

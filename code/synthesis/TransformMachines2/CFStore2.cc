@@ -27,7 +27,6 @@
 //# $Id$
 #include <synthesis/TransformMachines2/CFStore2.h>
 #include <synthesis/TransformMachines2/CFBuffer.h>
-#include <synthesis/TransformMachines2/CFCell.h>
 #include <synthesis/TransformMachines2/Utils.h>
 #include <synthesis/TransformMachines/SynthesisError.h>
 #include <synthesis/TransformMachines2/PolOuterProduct.h>

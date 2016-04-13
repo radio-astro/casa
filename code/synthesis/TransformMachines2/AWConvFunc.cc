@@ -113,7 +113,7 @@ using namespace casa::vi;
   void AWConvFunc::makeConjPolAxis(CoordinateSystem& cs,
 				   Int conjStokes_in)
   {
-    LogIO log_l(LogOrigin("AWConvFunc", "makeConjPolAxis[R&D]"));
+    LogIO log_l(LogOrigin("AWConvFunc2", "makeConjPolAxis[R&D]"));
     IPosition dummy;
     Vector<String> csList;
     Vector<Int> stokes, conjStokes;
@@ -169,7 +169,7 @@ using namespace casa::vi;
     (void)psScale;
     (void)muellerElementsIndex;
     (void)freqHi;
-    LogIO log_l(LogOrigin("AWConvFunc", "fillConvFuncBuffer[R&D]"));
+    LogIO log_l(LogOrigin("AWConvFunc2", "fillConvFuncBuffer[R&D]"));
     //    Int ttt=0;
     Complex cfNorm, cfWtNorm;
     //Double vbPA = getPA(vb);
@@ -559,7 +559,7 @@ using namespace casa::vi;
 			     const Int& xSupport, const Int& ySupport,
 			     const Float& sampling)
   {
-    LogIO log_l(LogOrigin("AWConvFunc","cfArea"));
+    LogIO log_l(LogOrigin("AWConvFunc2","cfArea"));
     Complex cfNorm=0;
     Int origin=cf.shape()(0)/2;
     Float peak=0;
@@ -714,7 +714,7 @@ using namespace casa::vi;
 				    CFStore2& cfwts2,
 				    Bool fillCF)
   {
-    LogIO log_l(LogOrigin("AWConvFunc", "makeConvFunction[R&D]"));
+    LogIO log_l(LogOrigin("AWConvFunc2", "makeConvFunction[R&D]"));
     Int convSize, convSampling, polInUse;
     Double wScale=0.0; Int bandID_l=-1;
     Array<Complex> convFunc_l, convWeights_l;
@@ -1042,7 +1042,7 @@ using namespace casa::vi;
   Bool AWConvFunc::setUpCFSupport(Array<Complex>& func, Int& xSupport, Int& ySupport,
 				  const Float& sampling, const Complex& peak)
   {
-    LogIO log_l(LogOrigin("AWConvFunc", "setUpCFSupport[R&D]"));
+    LogIO log_l(LogOrigin("AWConvFunc2", "setUpCFSupport[R&D]"));
     //
     // Find the convolution function support size.  No assumption
     // about the symmetry of the conv. func. can be made (except that
@@ -1101,7 +1101,7 @@ using namespace casa::vi;
   Bool AWConvFunc::resizeCF(Array<Complex>& func, Int& xSupport, Int& ySupport,
 			    const Int& supportBuffer, const Float& sampling, const Complex& peak)
   {
-    LogIO log_l(LogOrigin("AWConvFunc", "resizeCF[R&D]"));
+    LogIO log_l(LogOrigin("AWConvFunc2", "resizeCF[R&D]"));
     Int ConvFuncOrigin=func.shape()[0]/2;  // Conv. Func. is half that size of convSize
     
     Bool found = setUpCFSupport(func, xSupport, ySupport, sampling,peak);
@@ -1170,7 +1170,7 @@ using namespace casa::vi;
   Bool AWConvFunc::awFindSupport(Array<Complex>& func, Float& threshold, 
 			       Int& origin, Int& radius)
   {
-    LogIO log_l(LogOrigin("AWConvFunc", "findSupport[R&D]"));
+    LogIO log_l(LogOrigin("AWConvFunc2", "findSupport[R&D]"));
 
     Int nCFS=func.shape().nelements(),
       PixInc=1, R0, R1, R, convSize;
@@ -1223,7 +1223,7 @@ using namespace casa::vi;
   // Bool AWConvFunc::findSupport(Array<Complex>& func, Float& threshold,
   // 			       Int& origin, Int& R)
   // {
-  //   LogIO log_l(LogOrigin("AWConvFunc", "findSupport[R&D]"));
+  //   LogIO log_l(LogOrigin("AWConvFunc2", "findSupport[R&D]"));
   //   Double NSteps;
   //   Int PixInc=1;
   //   Vector<Complex> vals;
@@ -1274,7 +1274,7 @@ using namespace casa::vi;
 				       ImageInterface<Complex>& theavgPB,
 				       Bool reset)
   {
-    LogIO log_l(LogOrigin("AWConvFunc","makeAverageResponse(Complex)[R&D]"));
+    LogIO log_l(LogOrigin("AWConvFunc2","makeAverageResponse(Complex)[R&D]"));
     
     log_l << "Making the average response for " << aTerm_p->name() 
 	  << LogIO::NORMAL  << LogIO::POST;
@@ -1298,7 +1298,7 @@ using namespace casa::vi;
   void AWConvFunc::normalizeAvgPB(ImageInterface<Complex>& inImage,
 				  ImageInterface<Float>& outImage)
   {
-    LogIO log_l(LogOrigin("AWConvFunc", "normalizeAvgPB[R&D]"));
+    LogIO log_l(LogOrigin("AWConvFunc2", "normalizeAvgPB[R&D]"));
     
     String name("avgpb.im");
     storeImg(name,inImage);
@@ -1371,7 +1371,7 @@ using namespace casa::vi;
 					   ImageInterface<Float>& theavgPB,
 					   Bool reset)
   {
-    LogIO log_l(LogOrigin("AWConvFunc", "makeAverageResponse_org[R&D]"));
+    LogIO log_l(LogOrigin("AWConvFunc2", "makeAverageResponse_org[R&D]"));
     TempImage<Float> localPB;
     
     log_l << "Making the average response for " 
@@ -1460,7 +1460,7 @@ using namespace casa::vi;
 
     if (fabs(dPA) <= fabs(rotateCFOTFAngleRad_p)) return;
 
-    LogIO log_l(LogOrigin("AWConvFunc", "prepareConvFunction"));
+    LogIO log_l(LogOrigin("AWConvFunc2", "prepareConvFunction"));
 
 //     Int Nth=1;
 // #ifdef _OPENMP
@@ -1525,7 +1525,7 @@ using namespace casa::vi;
 				       PSTerm& psTerm, WTerm& wTerm, ATerm& aTerm)
 
   {
-    LogIO log_l(LogOrigin("AWConvFunc", "fillConvFuncBuffer2[R&D]"));
+    LogIO log_l(LogOrigin("AWConvFunc2", "fillConvFuncBuffer2[R&D]"));
     Complex cfNorm, cfWtNorm;
     Complex cpeak,wtcpeak;
     {
@@ -1794,7 +1794,7 @@ using namespace casa::vi;
 				     const Bool psTermOn,
 				     const Bool aTermOn)
   {
-    LogIO log_l(LogOrigin("AWConvFunc", "makeConvFunction2[R&D]"));
+    LogIO log_l(LogOrigin("AWConvFunc2", "makeConvFunction2[R&D]"));
     Int convSize, convSampling;//, polInUse;
     Array<Complex> convFunc_l, convWeights_l;
     //  

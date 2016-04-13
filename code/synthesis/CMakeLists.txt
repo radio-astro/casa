@@ -25,10 +25,8 @@ FLEX_TARGET (CalLibraryGram CalLibrary/CalLibraryGram.ll ${CMAKE_CURRENT_BINARY_
 include_directories (${CMAKE_CURRENT_BINARY_DIR})
 
 casa_add_library( synthesis
- TransformMachines2/Utils.cc
   TransformMachines2/BeamSkyJones.cc
   TransformMachines2/ComponentFTMachine.cc
- TransformMachines2/VLAIlluminationConvFunc.cc
   TransformMachines2/GridFT.cc	
   TransformMachines2/HetArrayConvFunc.cc
   TransformMachines2/FTMachine.cc
@@ -42,28 +40,32 @@ casa_add_library( synthesis
   TransformMachines2/VPSkyJones.cc
   TransformMachines2/WPConvFunc.cc
   TransformMachines2/WProjectFT.cc
-  TransformMachines2/CFCell.cc
+#
+  TransformMachines2/Utils.cc
+  TransformMachines2/VLAIlluminationConvFunc.cc
+#  TransformMachines2/CFCell.cc
   TransformMachines2/ConvolutionFunction.cc
- TransformMachines2/AWProjectFT.cc
- TransformMachines2/AWProjectWBFT.cc
- TransformMachines2/AWProjectWBFTNew.cc
- TransformMachines2/CFBuffer.cc
- TransformMachines2/EVLAAperture.cc
- TransformMachines2/AzElAperture.cc
- TransformMachines2/CFStore.cc
- TransformMachines2/CFStore2.cc
- TransformMachines2/ATerm.cc
- TransformMachines2/PSTerm.cc
- TransformMachines2/WTerm.cc
- TransformMachines2/VLACalcIlluminationConvFunc.cc
- TransformMachines2/IlluminationConvFunc.cc
- TransformMachines2/CFCache.cc
- TransformMachines2/AWConvFuncEPJones.cc
- TransformMachines2/AWConvFunc.cc
+  TransformMachines2/AWProjectFT.cc
+  TransformMachines2/AWProjectWBFT.cc
+  TransformMachines2/AWProjectWBFTNew.cc
+  TransformMachines2/CFBuffer.cc
+  TransformMachines2/EVLAAperture.cc
+  TransformMachines2/AzElAperture.cc
+  TransformMachines2/CFStore.cc
+  TransformMachines2/CFStore2.cc
+  TransformMachines2/ATerm.cc
+  TransformMachines2/PSTerm.cc
+  TransformMachines2/WTerm.cc
+  TransformMachines2/VLACalcIlluminationConvFunc.cc
+  TransformMachines2/IlluminationConvFunc.cc
+  TransformMachines2/CFCache.cc
+  TransformMachines2/AWConvFuncEPJones.cc
+  TransformMachines2/AWConvFunc.cc
   TransformMachines2/PolOuterProduct.cc
   TransformMachines2/AWVisResampler.cc
- TransformMachines2/VisibilityResamplerBase.cc
- TransformMachines2/VisibilityResampler.cc
+  TransformMachines2/VisibilityResamplerBase.cc
+  TransformMachines2/VisibilityResampler.cc
+#
   TransformMachines/BeamSkyJones.cc
   TransformMachines/BeamSquint.cc
   TransformMachines/CFCache.cc
@@ -658,6 +660,31 @@ install (FILES
         TransformMachines2/VPSkyJones.h
 	TransformMachines2/WPConvFunc.h
 	TransformMachines2/WProjectFT.h
+#
+        TransformMachines2/Utils.h
+        TransformMachines2/VLAIlluminationConvFunc.h
+#        TransformMachines2/CFCell.h
+        TransformMachines2/ConvolutionFunction.h
+        TransformMachines2/AWProjectFT.h
+        TransformMachines2/AWProjectWBFT.h
+        TransformMachines2/AWProjectWBFTNew.h
+        TransformMachines2/CFBuffer.h
+        TransformMachines2/EVLAAperture.h
+        TransformMachines2/AzElAperture.h
+        TransformMachines2/CFStore.h
+        TransformMachines2/CFStore2.h
+        TransformMachines2/ATerm.h
+        TransformMachines2/PSTerm.h
+        TransformMachines2/WTerm.h
+        TransformMachines2/VLACalcIlluminationConvFunc.h
+        TransformMachines2/IlluminationConvFunc.h
+        TransformMachines2/CFCache.h
+        TransformMachines2/AWConvFuncEPJones.h
+        TransformMachines2/AWConvFunc.h
+        TransformMachines2/PolOuterProduct.h
+        TransformMachines2/AWVisResampler.h
+        TransformMachines2/VisibilityResamplerBase.h
+        TransformMachines2/VisibilityResampler.h
 	DESTINATION include/casacode/synthesis/TransformMachines2
        )
 install (FILES
