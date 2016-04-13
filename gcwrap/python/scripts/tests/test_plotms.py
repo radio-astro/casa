@@ -1307,7 +1307,7 @@ class plotms_test_multi(plotms_test_base):
         
         res = plotms(vis=self.ms, ydatacolumn="corrected", field="1", 
                      scan="2,3", correlation="LL,RR", coloraxis="antenna2",
-                     avgtime="1e8s", avgscan=True, veldef="RADIO",
+                     avgtime="1e8", avgscan=True, veldef="RADIO",
                      customsymbol=True, symbolshape="autoscaling", symbolsize=2,
                      symbolcolor="0000ff",symbolfill="fill",symboloutline=False,
                      customflaggedsymbol=False, flaggedsymboloutline=False,
