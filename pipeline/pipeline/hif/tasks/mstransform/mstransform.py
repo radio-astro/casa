@@ -53,9 +53,6 @@ class MstransformInputs(basetask.StandardInputs):
 
 
     # Find all the fields with TARGET intent
-    #     Put in the code for proper field selection but don't pass this
-    #     selection to CASA mstransform until the no redindexing capability
-    #     is available at the ms transform user level.
     @property
     def field(self):
         # If field was explicitly set, return that value
@@ -96,9 +93,6 @@ class MstransformInputs(basetask.StandardInputs):
 
     # Find all the the spws TARGET intent. These may be a subset of the
     # science windows which included calibration spws.
-    #     Put in the code for proper spw selection but don't pass this
-    #     selection to CASA mstransform until the no redindexing capability
-    #     is available at the ms transform user level.
     @property
     def spw(self):
         if self._spw is not None:
@@ -121,18 +115,18 @@ class MstransformInputs(basetask.StandardInputs):
         self._spw = value
 
     def to_casa_args(self):
-        # Override the field and spw selection for the
-        # time being.
         d = super(MstransformInputs, self).to_casa_args()
 
-        # Filter out field and spw for now and use defaults for
-        # now. Note that the trailing , is required
+        # Filter out unwanted parameters
+        #     Note that the trailing , is required
+        #     Leave the commented out code in place
+        #     as an example.
         #for ignore in ('field', 'spw', ):
             #if ignore in d:
                 #del d[ignore]
 
         # Force the data column to be 'corrected' and the
-        # new (with casa 4.6) reindex parameter set to False 
+        # new (with casa 4.6) reindex parameter to False 
         d['datacolumn'] = 'corrected'
         d['reindex'] = False
         return d
@@ -144,34 +138,34 @@ class Mstransform(basetask.StandardTaskTemplate):
     def prepare(self):
         inputs = self.inputs
 
-        # Check whether or not there is any target data
-        #    If not don't execute
+        # Create the results structure
+        result = MstransformResults(vis=inputs.vis,
+            outputvis=inputs.outputvis)
 
-        #  Run task
+        # Run CASA task
+        #    Does this need a try / except block 
+
         mstransform_args = inputs.to_casa_args()
         mstransform_job = casa_tasks.mstransform(**mstransform_args)
         self._executor.execute(mstransform_job)
 
-        result = MstransformResults(vis=inputs.vis,
-                                    outputvis=inputs.outputvis)
         return result
 
     def analyse (self, result):
-        # Check for existence of the output vis
-        # and set it to '' if it does not exist
-        # on disk.
+        # Check for existence of the output vis. 
         if not os.path.exists(result.outputvis):
-            LOG.error('Error executing mstransform')
+            LOG.debug('Error creating target MS %s' % (os.path.basename(result.outputvis)))
             return result
 
+        # Import the new measurement set.
         to_import = os.path.abspath(result.outputvis)
         observing_run = tablereader.ObservingRunReader.get_observing_run(to_import)
-        # adopt same session as source measurement set
+
+        # Adopt same session as source measurement set
         for ms in observing_run.measurement_sets:
             LOG.debug('Setting session to %s for %s', self.inputs.ms.session, ms.basename)
             ms.session = self.inputs.ms.session
             ms.is_imaging_ms = True
-
         result.mses.extend(observing_run.measurement_sets)
 
         return result
@@ -187,7 +181,7 @@ class MstransformResults(basetask.Results):
     def merge_with_context(self, context):
         # Check for an output vis
         if not self.mses:
-            LOG.error('No results to merge')
+            LOG.error('No hif_mstransform results to merge')
             return
 
         target = context.observing_run
@@ -205,4 +199,4 @@ class MstransformResults(basetask.Results):
         return s
 
     def __repr__(self):
-        return 'MstranformResults({}, {})'.format(self.vis, self.outputvis)
+        return 'MstranformResults({}, {})'.format(os.path.basename(self.vis), os.path.basename(self.outputvis))
