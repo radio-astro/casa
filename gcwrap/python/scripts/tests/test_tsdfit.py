@@ -839,7 +839,13 @@ class tsdfit_basicTest(tsdfit_unittest_base):
                             self.assertTrue(((result_lower <= answer[key][i][j]) and (answer[key][i][j] <= result_upper)),
                                             msg="row%s, comp%s result inconsistent with answer"%(i, j))
 
-class tsdfit_selection(unittest.TestCase):
+class tsdfit_selection(tsdfit_unittest_base,unittest.TestCase):
+    """
+    This class tests data selection parameters,
+    i.e.,
+        intent, antenna, field, spw, timerange, scan, and pol,
+    in combination with datacolumn selection = {corrected | float_data}
+    """
     datapath = os.environ.get('CASAPATH').split()[0] + \
         '/data/regression/unittest/tsdfit/'
     infile = "analytic_type1.fit.ms"
@@ -862,20 +868,13 @@ class tsdfit_selection(unittest.TestCase):
                                'fwhm': [20, 30, 40, 10]} }
     templist = [infile]
 
-    def _clearup(self):
-        for name in self.templist:
-            if os.path.isdir(name):
-                shutil.rmtree(name)
-            elif os.path.exists(name):
-                os.remove(name)
-
     def setUp(self):
-        self._clearup()
+        self._remove(self.templist)
         shutil.copytree(self.datapath+self.infile, self.infile)
         default(tsdfit)
 
     def tearDown(self):
-        self._clearup()
+        self._remove(self.templist)
 
     def _get_selection_string(self, key):
         if key not in self.selections.keys():
@@ -999,5 +998,99 @@ class tsdfit_selection(unittest.TestCase):
         """Test selection by pol (corrected)"""
         self.run_test("pol", "corrected")
 
+class tsdfit_auto(tsdfit_unittest_base,unittest.TestCase):
+    """
+    This class tests fitmode='auto'
+    """
+    datapath = os.environ.get('CASAPATH').split()[0] + \
+        '/data/regression/unittest/tsdfit/'
+    infile = "analytic_type2.fit1row.ms"
+    common_param = dict(infile=infile, outfile='',datacolumn='float_data',
+                        fitfunc='gaussian',fitmode='auto')
+
+    base_ref = {'cent': [[[15.01435947, 0.04727064], [61.4384346, 0.28429195]],
+                         [[15.01435947, 0.04727064], [61.4384346, 0.28429195], [109.98206329, 0.04793143]]],
+                'fwhm': [[[3.91396165, 0.11442509], [9.12826347, 0.76987672]],
+                         [[3.91396165, 0.11442509], [9.12826347, 0.76987672], [4.15206718, 0.11788968]]],
+                'nfit': [2, 3],
+                'peak': [[[2.57547307, 0.06348492], [0.71636099, 0.04436332]],
+                         [[2.57547307, 0.06348492], [0.71636099, 0.04436332], [2.47170353, 0.05822786]]]}
+    center_id = [1, 1]
+
+    def setUp(self):
+        self._remove([self.infile])
+        shutil.copytree(self.datapath+self.infile, self.infile)
+        default(tsdfit)
+
+    def tearDown(self):
+        self._remove([self.infile])
+
+    def get_reference_from_base(self, is_center):
+        ref_val = {}
+        for key, value in self.base_ref.items():
+            if key=='nfit':
+                if is_center:
+                    ref_val[key] = [ 1 for idx in self.center_id ]
+                else:
+                    ref_val[key] = [ len(value[irow])-1 for irow in range(len(self.center_id)) ]
+                continue
+            else:
+                ref_val[key] = []
+
+            for irow in range(len(self.center_id)):
+                nrowval = len(value[irow])
+                if is_center:
+                    ref_val[key].append([ value[irow][self.center_id[irow]] ])
+                else:
+                    ref_val[key].append([ value[irow][ival] for ival in range(nrowval) if ival != self.center_id[irow] ])
+        return ref_val
+
+    def run_test(self, is_center, reference=None, **kwarg):
+        param = dict(**self.common_param)
+        param.update(kwarg)
+        fit_val = tsdfit(**param)
+        #print("Return:",fit_val)
+        if reference is None:
+            reference = self.get_reference_from_base(is_center)
+        #print("Reference:",reference)
+        for irow in range(len(fit_val['nfit'])):
+            # test the number of detected lines
+            self.assertEqual(fit_val['nfit'][irow], reference['nfit'][irow],
+                             "The number of lines in row %d differ: %d (expected: %d)" % (irow, fit_val['nfit'][irow], reference['nfit'][irow]))
+            nline = fit_val['nfit'][irow]
+            for key in fit_val.keys():
+                if key=='nfit': continue
+                for iline in range(nline):
+                    test = fit_val[key][irow][iline]
+                    ref = reference[key][irow][iline][0]
+                    self.assertTrue(numpy.allclose(test, ref, rtol=1.e2),
+                                    "%s in row %d line %d differs" % (key, irow, iline))
+
+    def testAuto(self):
+        """Test fitmode='auto' with default parameters"""
+        self.run_test(False, self.base_ref)
+
+    def testAutoMask(self):
+        """Test fitmode='auto' with line mask by spw parameter"""
+        self.run_test(True, None, spw='6:20~100')
+
+    # def testAutoThres(self):
+    #     """Test fitmode='auto' with threshold"""
+    #     thresh = 15.0
+
+    def testAutoMinwidth(self):
+        """Test fitmode='auto' with minwidth"""
+        self.run_test(True, None, minwidth=10)
+
+    def testAutoEdge(self):
+        """Test fitmode='auto' with edge"""
+        self.run_test(True, None, edge=[20,27])
+
+    def testAutoFlag(self):
+        """Test fitmode='auto' of flagged data """
+        # flagg edge channels
+        flagdata(vis=self.infile, spw='6:0~19;101~127')
+        self.run_test(True, None, spw='', edge=[0])
+
 def suite():
-    return [tsdfit_basicTest, tsdfit_selection]
+    return [tsdfit_basicTest, tsdfit_selection, tsdfit_auto]
