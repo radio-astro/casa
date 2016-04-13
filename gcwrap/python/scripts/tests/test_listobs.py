@@ -17,8 +17,9 @@ Unit tests for task listobs. It tests the following parameters:
     listfile:   save on a file
     
 '''
-
-datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/listobs/'
+dataroot = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/'
+datapath = dataroot + 'listobs/'
+datapath2 = dataroot + 'mstransform/'
 
 # Pick up alternative data directory to run tests on MMSs
 testmms = False
@@ -189,6 +190,11 @@ class listobs_test1(unittest.TestCase):
         )
         got = _sha1it(listfile)
         self.assertTrue(got == expec)
+
+    def test_CAS_6733(self):
+        """Verify listobs runs to completion on data set in CAS-6733. This was an infinite loop bugfix"""
+        vis = datapath2 + "CAS-6733.ms"
+        self.assertTrue(listobs(vis=vis))
         
 class listobs_cleanup(unittest.TestCase):
     
