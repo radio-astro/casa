@@ -2013,22 +2013,8 @@ void SingleDishMS::fitLine(string const& in_column_name, string const& in_spw,
   // 3. fit Gaussian or Lorentzian profile to each spectrum
   // 4. write fitting results to outfile
 
-/*
-   std::cout << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&" << std::flush << std::endl;
-   std::cout << "datacolumn :  " << in_column_name << std::flush << std::endl;
-   std::cout << "spw :         " << in_spw << std::flush << std::endl;
-   std::cout << "pol :         " << in_pol << std::flush << std::endl;
-   std::cout << "fitfunc :     " << fitfunc << std::flush << std::endl;
-   std::cout << "nfit :        " << in_nfit << std::flush << std::endl;
-   std::cout << "tempfile :    " << tempfile_name << std::flush << std::endl;
-   std::cout << "tempoutfile : " << temp_out_ms_name << std::flush << std::endl;
-   std::cout << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&" << std::flush << std::endl;
-   */
-
   LogIO os(_ORIGIN);
   os << "Fitting line profile with " << fitfunc << LogIO::POST;
-
-  //double tstart = gettimeofday_sec();
 
   if (file_exists(temp_out_ms_name)) {
     throw(AipsError("temporary ms file unexpectedly exists."));
@@ -2154,6 +2140,7 @@ void SingleDishMS::fitLine(string const& in_column_name, string const& in_spw,
 	      fitrange_start[iline] = (*range).first;
 	      fitrange_end[iline] = (*range).second;
 	      nfit[iline] = 1;
+	      ++range;
 	    }
           }
 
@@ -2186,12 +2173,6 @@ void SingleDishMS::fitLine(string const& in_column_name, string const& in_spw,
 
             if (0 < ifit)
               ofs << ":";
-
-            /*
-             std::cout << "### [ ifit = " << ifit << "] ###" << std::flush << std::endl;
-             std::cout << "   start(" << fitrange_start[ifit] << ") - end(" << fitrange_end[ifit]
-             << ")" << std::flush << std::endl;
-             */
 
             //extract spec/mask within fitrange
             for (size_t ichan = 0; ichan < num_chan; ++ichan) {
@@ -2311,15 +2292,6 @@ void SingleDishMS::fitLine(string const& in_column_name, string const& in_spw,
                   << parameters_[offset + 0] << "," << error_[offset + 0] << "," // peak
                   << parameters_[offset + 2] << "," << error_[offset + 2]; // fwhm
             }
-            /*
-             for (size_t iparam = 0; iparam < parameters_.nelements(); ++iparam) {
-             std::cout << "   result[" << iparam << "] = " << parameters_[iparam] << std::flush << std::endl;
-             }
-             for (size_t ierr = 0; ierr < error_.nelements(); ++ierr) {
-             std::cout << "      err[" << ierr << "] = " << error_[ierr] << std::flush << std::endl;
-             }
-             std::cout << "###--------------------------###" << std::flush << std::endl;
-             */
           }        //end of nfit loop
 
           ofs << "\n";
@@ -2331,8 +2303,6 @@ void SingleDishMS::fitLine(string const& in_column_name, string const& in_spw,
 
   finalize_process();
   ofs.close();
-  //double tend = gettimeofday_sec();
-  //std::cout << "Elapsed time = " << (tend - tstart) << " sec." << std::endl;
 }
 
 //Subtract baseline by per spectrum fitting parameters
