@@ -44,7 +44,11 @@ def is_binary(filename):
     return False
 
 def getMemorySize():
-    return(os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES'))
+    try:
+        return os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')
+    except ValueError:
+        # SC_PHYS_PAGES can be missing on OS X
+        return int(subprocess.check_output(['sysctl', '-n', 'hw.memsize']).strip())
 
 def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineModeB='min',
                   sigmaCube=3, nBaselineChannels=0.19, sigmaFindContinuum='auto',
