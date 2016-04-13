@@ -102,6 +102,10 @@ class CalibrationTable(SDNamingTemplate):
         self._associations.asdm(uid)
         return self
     
+    def field(self, field_name):
+        self._associations.source(field_name)
+        return self
+    
     def antenna_name(self, antenna_name):
         self._associations.antenna_name(antenna_name)
         return self

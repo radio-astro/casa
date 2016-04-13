@@ -2,9 +2,7 @@ import os
 
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.logging as logging
-import pipeline.infrastructure.displays.bandpass as bandpass
-
-from ..common import renderer as sdsharedrenderer
+import pipeline.infrastructure.displays.singledish.skycal as skycal_display
 
 LOG = logging.get_logger(__name__)
 
@@ -23,6 +21,7 @@ class T2_4MDetailsSingleDishSkyCalRenderer(basetemplates.T2_4MDetailsDefaultRend
 
         applications = []
         summary_amp = {}
+        details_amp = {}
         amp_vs_freq_subpages = {}
         for result in results:
             if not result.final:
@@ -36,19 +35,36 @@ class T2_4MDetailsSingleDishSkyCalRenderer(basetemplates.T2_4MDetailsDefaultRend
             ms_applications = self.get_skycal_applications(context, result, ms)
             applications.extend(ms_applications)
             
-            # summary plots
-            summary_plotter = bandpass.BandpassAmpVsFreqSummaryChart(context, result)
-            summaries = summary_plotter.plot()
-            summary_amp[vis] = summaries 
+            # iterate over CalApplication instances
+            final_original = result.final
             
-            # detail plots
-            detail_plotter = bandpass.BandpassAmpVsFreqDetailChart(context, result)
-            details = detail_plotter.plot()
-            print details
+            summaries = []
+            details = []
+            for calapp in final_original:
+                result.final = [calapp]
+                gainfield = calapp.calfrom[0].gainfield
+                
+                # summary plots
+                summary_plotter = skycal_display.SingleDishSkyCalSummaryChart(context, result, gainfield)
+                summaries.extend(summary_plotter.plot())
+                
+                # detail plots
+                detail_plotter = skycal_display.SingleDishSkyCalDetailChart(context, result, gainfield)
+                details.extend(detail_plotter.plot())
             
-            #renderer = sdsharedrenderer.SingleDishGenericPlotsRenderer(context, results, vis, details,
-            #                                                           'Sky Level vs Frequency')
-            renderer = basetemplates.JsonPlotRenderer(uri='generic_x_vs_y_spw_ant_plots.mako',
+            if summary_amp.has_key(vis):
+                summary_amp[vis].extend(summaries)
+            else:
+                summary_amp[vis] = summaries
+            if details_amp.has_key(vis):
+                details_amp[vis].extend(details)
+            else:
+                details_amp[vis] = details 
+
+            result.final = final_original    
+            
+        for vis, details in details_amp.items():
+            renderer = basetemplates.JsonPlotRenderer(uri='generic_x_vs_y_field_spw_ant_detail_plots.mako',
                                                       context=context,
                                                       result=result,
                                                       plots=details,
@@ -69,23 +85,24 @@ class T2_4MDetailsSingleDishSkyCalRenderer(basetemplates.T2_4MDetailsDefaultRend
         calmode_map = {'ps':'Position-switch',
                        'otfraster':'OTF raster edge'}
         
-        calapp = result.outcome
-        caltype = calmode_map[calapp.origin.inputs['calmode']]
-        gaintable = os.path.basename(calapp.gaintable)
-        spw = calapp.spw.replace(',', ', ')
-        intent = calapp.intent.replace(',', ', ')
-        antenna = calapp.antenna
-        if antenna == '':
-            antenna = ', '.join([a.name for a in ms.antennas])
-        field = calapp.field.strip('"')
-        
-        applications.append({'ms': ms.basename,
-                             'gaintable': gaintable,
-                             'spw': spw,
-                             'intent': intent,
-                             'field': field,
-                             'antenna': antenna,
-                             'caltype': caltype})
+        calapps = result.outcome
+        for calapp in calapps:
+            caltype = calmode_map[calapp.origin.inputs['calmode']]
+            gaintable = os.path.basename(calapp.gaintable)
+            spw = calapp.spw.replace(',', ', ')
+            intent = calapp.intent.replace(',', ', ')
+            antenna = calapp.antenna
+            if antenna == '':
+                antenna = ', '.join([a.name for a in ms.antennas])
+            field = ms.get_fields(calapp.field)[0].name
+            
+            applications.append({'ms': ms.basename,
+                                 'gaintable': gaintable,
+                                 'spw': spw,
+                                 'intent': intent,
+                                 'field': field,
+                                 'antenna': antenna,
+                                 'caltype': caltype})
         
         return applications
         

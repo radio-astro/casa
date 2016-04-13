@@ -78,22 +78,23 @@ $(document).ready(function() {
                 img_path = os.path.relpath(plot.abspath, pcontext.report_dir)
                 thumbnail_path = os.path.relpath(plot.thumbnail, pcontext.report_dir)
                 ant = plot.parameters['ant']
+                field = plot.parameters['field']
             %>
  	        <div class="col-md-3">
 	            <div class="thumbnail">
 	                <a href="${img_path}" class="fancybox" rel="thumbs">
 	                    <img src="${thumbnail_path}"
-	                         title="Sky level summary for Antenna ${ant}"
+	                         title="Sky level summary for Field ${field}, Antenna ${ant}"
 	                         data-thumbnail="${thumbnail_path}">
 	                </a>
 	                <div class="caption">
 	                    <h4>
-	                        <a href="${subpage}" class="replace" data-ant="${ant}">
-	                           Antenna ${ant}
+	                        <a href="${subpage}" class="replace" data-field="${field}" data-ant="${ant}">
+	                           Field ${field} Antenna ${ant}
 	                        </a>
 	                    </h4>
 	
-	                    <p>Plot of sky level for antenna ${ant}.</p>
+	                    <p>Plot of sky level for field ${field}, antenna ${ant}.</p>
 	                </div>
 	            </div>
 	        </div>
