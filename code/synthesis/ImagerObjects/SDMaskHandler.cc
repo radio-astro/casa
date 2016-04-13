@@ -883,11 +883,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      if (fracofpeak) {
        rmsthresh = maxmaxval * fracofpeak; 
        os << LogIO::NORMAL2 <<"Threshold by fraction of the peak(="<<fracofpeak<<") * max: "<<rmsthresh<< LogIO::POST;
+       os << LogIO::DEBUG1 <<"max at "<<maxmaxpos<<"dynamic range = "<<maxmaxval/rms(maxmaxpos) << LogIO::POST;
      }
      else if (sigma) {
        //cerr<<"minval="<<minval<<" maxval="<<maxval<<endl;
        rmsthresh = maxrmsval * sigma;
        os << LogIO::NORMAL2 <<"Threshold by sigma(="<<sigma<<")* rms (="<<maxrmsval<<") :"<<rmsthresh<< LogIO::POST;
+       os << LogIO::DEBUG1 <<"max rms at "<<maxrmspos<<"dynamic range = "<<max(maxrmspos)/maxrmsval << LogIO::POST;
      }      
      else {
        rmsthresh = qthresh.getValue(Unit("Jy"));
@@ -896,16 +898,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      }
      
      os << LogIO::NORMAL2 <<" thresh="<<rmsthresh<<LogIO::POST;
-     if (rmsthresh > maxmaxval) {
-       os << LogIO::WARN <<" The threshold value for making a mask is greater than max value in the image. Mask will be a full image."<< LogIO::POST;
-     }
      //thresh = 3.0*rmsthresh / sqrt(npix);
      thresh = rmsthresh / sqrt(npix);
      //thresh = rmsthresh;
 
      //stats on the binned image (the info not used for mask criteria yet)
-     Array<Double> binnedrms, binnedmax;
-     Double minbinrmsval, maxbinrmsval, minbinmaxval, maxbinmaxval;
+     Array<Double> binnedrms, binnedmax, binnedmin;
+     Double minbinrmsval, maxbinrmsval, minbinmaxval, maxbinmaxval, minbinminval, maxbinminval;
      TempImage<Float>* tempImForStat = new TempImage<Float>(tempRebinnedIm.shape(), tempRebinnedIm.coordinates() );
      tempImForStat->copyData(tempRebinnedIm);
      SHARED_PTR<casa::ImageInterface<float> > temprebin_ptr(tempImForStat);
@@ -917,11 +916,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      Record binnedimstats = imcalc.statistics();
      binnedimstats.get(RecordFieldId("rms"),binnedrms);
      binnedimstats.get(RecordFieldId("max"),binnedmax);
+     binnedimstats.get(RecordFieldId("min"),binnedmin);
      minMax(minbinrmsval,maxbinrmsval,binnedrms);
      minMax(minbinmaxval,maxbinmaxval,binnedmax);
+     minMax(minbinminval,maxbinminval,binnedmin);
 
-     os << LogIO::DEBUG1 <<"final thresh (for binned image) actually used ="<<thresh<<LogIO::POST;
+     os << LogIO::DEBUG1 <<" thresh for binned image (modified by sqrt(npix))   ="<<thresh<<LogIO::POST;
      os << LogIO::DEBUG1 <<"stats on binned image: max="<<maxbinmaxval<<" rms="<<maxbinrmsval<<LogIO::POST;
+     if (thresh > maxmaxval) {
+       os << LogIO::WARN <<" The threshold value for making a mask is greater than max value in the image. Mask will be a full image."<< LogIO::POST;
+     }
      // apply threshold to rebinned image to generate a temp image mask
      // TODO: need warn if thresh exceed the max in the binned image
      LatticeExpr<Float> tempthresh( iif( abs(tempRebinnedIm) > thresh, 1.0, 0.0) );
@@ -991,11 +995,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }// end of makePBMask
 
-  void SDMaskHandler::autoMaskWithinPB(SHARED_PTR<SIImageStore> imstore, Float pblimit)
-  {
+  void SDMaskHandler::autoMaskWithinPB(SHARED_PTR<SIImageStore> imstore, 
+                                       const String& alg, 
+                                       const String& threshold, 
+                                       const Float& fracofpeak, 
+                                       const String& resolution,
+                                       const Float& resbybeam, 
+                                       Float pblimit)
+  { 
     LogIO os( LogOrigin("SDMaskHandler","autoMaskWithinPB",WHERE) );
 
-    autoMask( imstore, "thresh" );
+    autoMask( imstore, alg, threshold, fracofpeak, resolution, resbybeam);
 
     if( imstore->hasPB() ) // Projection algorithms will have this.
       {

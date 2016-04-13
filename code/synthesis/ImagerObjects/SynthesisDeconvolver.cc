@@ -405,7 +405,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
           //auto mask
           if ( itsAutoMaskAlgorithm != "" ) {
             if ( itsPBMask > 0.0 ) {
-              itsMaskHandler->autoMaskWithinPB( itsImages, itsPBMask);
+              //itsMaskHandler->autoMaskWithinPB( itsImages, itsPBMask);
+              itsMaskHandler->autoMaskWithinPB( itsImages, itsAutoMaskAlgorithm, itsMaskThreshold, itsFracOfPeak, itsMaskResolution, itsMaskResByBeam, itsPBMask);
             }
             else { 
               itsMaskHandler->autoMask( itsImages, itsAutoMaskAlgorithm, itsMaskThreshold, itsFracOfPeak, itsMaskResolution, itsMaskResByBeam);

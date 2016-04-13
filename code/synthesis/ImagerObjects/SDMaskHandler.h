@@ -119,7 +119,13 @@ public:
 
 
   void makePBMask(SHARED_PTR<SIImageStore> imstore, Float pblimit=0.1);
-  void autoMaskWithinPB(SHARED_PTR<SIImageStore> imstore, Float pblimit=0.1);
+  void autoMaskWithinPB(SHARED_PTR<SIImageStore> imstore, 
+                        const String& alg="",
+                        const String& threshold="",
+                        const Float& fracpeak=0.0,
+                        const String& resolution="",
+                        const Float& resbybeam=0.0,
+                        Float pblimit=0.1);
 
   // check if input image is a mask image with 0 or a value (if normalize=true, 1)
   Bool checkMaskImage(ImageInterface<Float>& maskiamge, Bool normalize=True);
