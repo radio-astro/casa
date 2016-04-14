@@ -66,12 +66,12 @@ def cont_file_to_CASA(contfile):
 
         fielddict = {}
 
-        for field in contdict.keys():
+        for field in contdict['fields'].keys():
             spwstring = ''
-            for spw in contdict[field].keys():
+            for spw in contdict['fields'][field].keys():
                 spwstring = spwstring + spw + ':'
-                for freqtuple in contdict[field][spw]:
-                    spwstring = spwstring + str(freqtuple[0]) + '~' + str(freqtuple[1]) + 'GHz;'
+                for freqrange in contdict['fields'][field][spw]:
+                    spwstring = spwstring + str(freqrange['range'][0]) + '~' + str(freqrange['range'][1]) + 'GHz;'
                 spwstring = spwstring[:-1]
                 spwstring = spwstring + ','
             spwstring = spwstring[:-1]

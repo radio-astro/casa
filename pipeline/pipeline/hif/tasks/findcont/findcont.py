@@ -62,17 +62,17 @@ class FindCont(basetask.StandardTaskTemplate):
         num_total = 0
         for i, target in enumerate(inputs.target_list):
             for spwid in target['spw'].split(','):
-                source_name = target['field']
+                source_name = utils.dequote(target['field'])
 
                 if (not result_cont_ranges.has_key(source_name)):
                     result_cont_ranges[source_name] = {}
 
                 cont_ranges_source_spw = []
-                if (cont_ranges.has_key(source_name)):
-                    if (cont_ranges[source_name].has_key(spwid)):
-                        cont_ranges_source_spw = cont_ranges[source_name][spwid]
+                if (cont_ranges['fields'].has_key(source_name)):
+                    if (cont_ranges['fields'][source_name].has_key(spwid)):
+                        cont_ranges_source_spw = cont_ranges['fields'][source_name][spwid]
                 else:
-                    cont_ranges[source_name] = {}
+                    cont_ranges['fields'][source_name] = {}
 
                 if (cont_ranges_source_spw != []):
                     LOG.info('Using existing selection "%s" for field %s, spw %s' % (cont_ranges_source_spw, source_name, spwid))
@@ -102,6 +102,7 @@ class FindCont(basetask.StandardTaskTemplate):
                     re_field = re_field.replace('(', '\(')
                     re_field = re_field.replace(')', '\)')
                     re_field = re_field.replace('+', '\+')
+                    re_field = utils.dequote(re_field)
 
                     # Use scanids to select data with the specified intent
                     # Not CASA clean now supports intent selectin but leave
@@ -136,14 +137,14 @@ class FindCont(basetask.StandardTaskTemplate):
 
                     parallel = mpihelpers.parse_mpi_input_parameter(inputs.parallel)
 
-                    # Need to make a cube in the spw frequency frame to get
-                    # correct frequency ranges. Assume TOPO for now, read from
-                    # MS later.
+                    # Need to make an LSRK cube to get the real ranges in the source
+                    # frame. The LSRK ranges will need to be translated to the
+                    # individual TOPO ranges for the involved MSs.
                     job = casa_tasks.tclean(vis=inputs.vis, imagename=findcont_basename,
                         spw=spwid, intent=utils.to_CASA_intent(inputs.ms[0], target['intent']),
                         scan=scanidlist, specmode='cube', gridder=gridder, pblimit=0.2,
                         niter=0, threshold='0mJy', deconvolver='hogbom',
-                        interactive=False, outframe='TOPO', nchan=-1,
+                        interactive=False, outframe='LSRK', nchan=-1,
                         width='', imsize=target['imsize'],
                         cell=target['cell'], phasecenter=target['phasecenter'],
                         stokes='I', weighting='briggs', robust=0.5,
@@ -152,11 +153,11 @@ class FindCont(basetask.StandardTaskTemplate):
                     self._executor.execute(job)
 
                     # Try detecting continuum frequency ranges
-                    cont_ranges[source_name][spwid], png = findcont_heuristics.find_continuum('%s.residual' % (findcont_basename))
+                    cont_ranges['fields'][source_name][spwid], png = findcont_heuristics.find_continuum('%s.residual' % (findcont_basename))
 
-                    result_cont_ranges[source_name][spwid] = {'cont_ranges': cont_ranges[source_name][spwid], 'plotfile': png, 'status': 'NEW'}
+                    result_cont_ranges[source_name][spwid] = {'cont_ranges': cont_ranges['fields'][source_name][spwid], 'plotfile': png, 'status': 'NEW'}
 
-                    if (cont_ranges[source_name][spwid] not in [['NONE'], ['']]):
+                    if (cont_ranges['fields'][source_name][spwid] not in [['NONE'], ['']]):
                         num_found += 1
 
                 num_total += 1

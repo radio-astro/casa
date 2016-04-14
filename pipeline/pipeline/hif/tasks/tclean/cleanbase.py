@@ -138,6 +138,7 @@ class CleanBase(basetask.StandardTaskTemplate):
         re_field = re_field.replace('(', '\(')
         re_field = re_field.replace(')', '\)')
         re_field = re_field.replace('+', '\+')
+        re_field = utils.dequote(re_field)
 
         # Use scanids to select data with the specified intent
         # Note CASA clean now supports intent selectin but leave
@@ -235,8 +236,11 @@ class CleanBase(basetask.StandardTaskTemplate):
             num_channels.append(spw_info.num_channels)
             if (inputs.spwsel.has_key('spw%s' % (spwid))):
                 if (inputs.spwsel['spw%s' % (spwid)] != ''):
-                    spw_param_list.append('%s:%s' % (spwid, inputs.spwsel['spw%s' % (spwid)]))
-                    for freq_range in inputs.spwsel['spw%s' % (spwid)].split(';'):
+                    freq_selection, refer = inputs.spwsel['spw%s' % (spwid)].split()
+                    if (refer == 'LSRK'):
+                        LOG.warning('Still need to add LSRK to TOPO conversion.')
+                    spw_param_list.append('%s:%s' % (spwid, freq_selection))
+                    for freq_range in freq_selection.split(';'):
                         f1, sep, f2, unit = p.findall(freq_range)[0]
                         freq_ranges.append((float(f1), float(f2)))
                 else:

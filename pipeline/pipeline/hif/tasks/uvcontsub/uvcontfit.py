@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import os
 import types
+import numpy as np
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -220,9 +221,9 @@ class UVcontFit(basetask.StandardTaskTemplate):
                         continue
                     # Accumulate spw selection string or this source
                     if not spwstr:
-                        spwstr =  spwstr + '%s:%s' % (spw_id, cranges_spwsel[sname][spw_id])
+                        spwstr =  spwstr + '%s:%s' % (spw_id, cranges_spwsel[sname][spw_id].split()[0])
                     else:
-                        spwstr =  spwstr + ',%s:%s' % (spw_id, cranges_spwsel[sname][spw_id])
+                        spwstr =  spwstr + ',%s:%s' % (spw_id, cranges_spwsel[sname][spw_id].split()[0])
 
                 # Fire off task
                 uvcontfit_args = inputs.to_casa_args(caltable=inputs.caltable, field=sfields, spw=spwstr, append=append)
@@ -266,26 +267,15 @@ class UVcontFit(basetask.StandardTaskTemplate):
     def _get_ranges_spwsel(self):
         inputs = self.inputs
 
-        # Initialize the continuum ranges dictionary
+        # Read continuum file
+        contfile_handler = contfilehandler.ContFileHandler(inputs.contfile)
+
+        # Collect the merged ranges
         cranges_spwsel = {}
         for sname in [field.source.name for field in inputs.ms.get_fields(task_arg=inputs.field)]:
             cranges_spwsel[sname] = {}
             for spwid in [spw.id for spw in inputs.ms.get_spectral_windows(task_arg=inputs.spw)]:
-                cranges_spwsel[sname][str(spwid)] = ''
-
-        # Read continuum file
-        contfile_handler = contfilehandler.ContFileHandler(inputs.contfile)
-        cranges = contfile_handler.read()
-
-        # Merge the ranges
-        for sname in cranges_spwsel.iterkeys():
-            for spw_id in cranges_spwsel[sname].iterkeys():
-                if (cranges.has_key(sname)):
-                    if (cranges[sname].has_key(spw_id)):
-                        if (cranges[sname][spw_id] != ['NONE']):
-                            cranges_spwsel[sname][spw_id] = ';'.join(['%s~%sGHz' % (spw_sel_interval[0], spw_sel_interval[1]) for spw_sel_interval in utils.merge_ranges(cranges[sname][spw_id])])
-                        else:
-                            cranges_spwsel[sname][spw_id] = 'NONE'
+                cranges_spwsel[sname][spw_id] = contfile_handler.get_merged_selection(sname, spw_id)
 
         return cranges_spwsel
 
