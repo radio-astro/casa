@@ -124,23 +124,26 @@ class Lowgainflag(basetask.StandardTaskTemplate):
           vis=inputs.vis, table=inputs.vis, inpfile=[])
         flagsettertask = FlagdataSetter(flagsetterinputs)
 
+        # Define which type of flagger to use.
+        flagger = viewflaggers.NewMatrixFlagger
+
         # Translate the input flagging parameters to a more compact
         # list of rules.
-        rules = viewflaggers.MatrixFlagger.make_flag_rules (
+        rules = flagger.make_flag_rules (
           flag_nmedian=inputs.flag_nmedian,
           fnm_lo_limit=inputs.fnm_lo_limit,
           fnm_hi_limit=inputs.fnm_hi_limit)
 
         # Construct the flagger task around the data view task and the
         # flagsetter task. 
-        matrixflaggerinputs = viewflaggers.NewMatrixFlaggerInputs(
+        matrixflaggerinputs = flagger.Inputs(
           context=inputs.context, output_dir=inputs.output_dir,
           vis=inputs.vis, datatask=datatask, viewtask=viewtask, 
           flagsettertask=flagsettertask, rules=rules, niter=inputs.niter,
           extendfields=['field', 'timerange'], iter_datatask=True)
-        flaggertask = viewflaggers.NewMatrixFlagger(matrixflaggerinputs)
+        flaggertask = flagger(matrixflaggerinputs)
 
-        # Execute the flagger task
+        # Execute the flagger task.
         flaggerresult = self._executor.execute(flaggertask)
         
         # Import views, flags, and "measurement set or caltable to flag"
