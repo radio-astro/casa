@@ -6,11 +6,10 @@ import pipeline.infrastructure.renderer.weblog as weblog
 from .flagcorrected import Flagcorrected
 from . import resultobjects
 from . import renderer
-
-from pipeline.hif.tasks.flagcorrected import qa
+from . import qa
 
 pipelineqa.registry.add_handler(qa.FlagcorrectedQAHandler())
 pipelineqa.registry.add_handler(qa.FlagcorrectedListQAHandler())
 qaadapter.registry.register_to_flagging_topic(resultobjects.FlagcorrectedResults)
 
-weblog.add_renderer(Flagcorrected, renderer.T2_4MDetailsFlagcorrectedRenderer(), group_by='session')
+weblog.add_renderer(Flagcorrected, renderer.T2_4MDetailsFlagcorrectedRenderer(), group_by=weblog.UNGROUPED)

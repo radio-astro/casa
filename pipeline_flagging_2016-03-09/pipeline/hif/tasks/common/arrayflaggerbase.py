@@ -128,7 +128,6 @@ class FlagCmd(object):
         self.channel_axis = channel_axis
         self.reason = reason
         self.extendfields = extendfields
-        self.antenna_id_to_name = antenna_id_to_name
 
         # construct the corresponding flag command
         flagcmd = ""
@@ -230,7 +229,18 @@ class FlagCmd(object):
         # have to be careful with antenna as it may have been set during
         # the analysis of flagcoords
         if self.antenna is not None and 'antenna' not in flagcmd:
-            flagcmd += " antenna='%s'" % (self.antenna)
+            # If provided a dictionary to translate antenna IDs
+            # to antenna names, then use antenna names in the 
+            # flagging commands.
+            if antenna_id_to_name is None:
+                flagcmd += " antenna='%s'" % (self.antenna)
+            else:
+                # Antenna axis can be either single antenna or a
+                # baseline.
+                antenna_name = '&'.join(
+                  [antenna_id_to_name[int(ant)] for ant 
+                  in str(self.antenna).split('&')])
+                flagcmd += " antenna='%s'" % (antenna_name)
 
         flagcmd += " reason='%s'" % reason
 

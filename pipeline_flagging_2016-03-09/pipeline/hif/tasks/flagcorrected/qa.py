@@ -1,5 +1,4 @@
 from __future__ import absolute_import
-import os
 
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa

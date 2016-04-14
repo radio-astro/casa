@@ -1580,65 +1580,99 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
                     number_limit = rule['number_limit']
                     minsample = rule['minsample']
 
+                    # Only continue if the x-axis is for antenna.
                     if 'ANTENNA' in xtitle.upper():
 
-                        i, _ = np.indices(np.shape(data))
+                        #i, _ = np.indices(np.shape(data))
 
-                        for ant in range(np.shape(flag)[0]):
-                            ant_data = data[ant,:]
-                            ant_flag = flag[ant,:]
+                        # For every antenna on the x-axis...
+                        for iant in range(np.shape(flag)[0]):
+                            # For current antenna, create references to the 
+                            # corresponding column in data, flag, and flag_reason.
+                            ant_data = data[iant,:]
+                            ant_flag = flag[iant,:]
+                            ant_flag_reason = flag_reason[iant,:]
+
+                            # Identify valid (non-flagged) data. 
                             valid_ant_data = ant_data[np.logical_not(ant_flag)]
 
-                            # Sample too small?
+                            # If the sample of unflagged datapoints is smaller than 
+                            # the minimum threshold, skip this antenna.
                             if len(valid_ant_data) < minsample:
                                 continue
 
-                            # find low outlier flags first
+                            # For current antenna data selection, identify points
+                            # that are both low outliers and not already flagged.
                             j_ant = np.arange(np.shape(ant_flag)[0])
                             j2flag_lo = j_ant[np.logical_and(data_median - ant_data > \
                               mad_max * data_mad, np.logical_not(ant_flag))]
  
-                            # No flagged data?
+                            # If no low outliers were found, skip this antenna.
                             if len(j2flag_lo) <= 0:
                                 continue
 
-                            # is the antenna bad?
+                            # Determine number of points found to be low outliers that
+                            # were not previously flagged. 
                             nflags = len(j2flag_lo)
+                            
+                            # Determine fraction of newly found low outliers over 
+                            # total number of data points in current antenna data 
+                            # selection.
                             flagsfrac = float(nflags) / float(np.shape(ant_flag)[0])
 
+                            # If the number of newly found low outliers equals-or-exceeds
+                            # a minimum threshold number, and the fraction of newly 
+                            # found flags exceeds a minimum threshold fraction, then 
+                            # proceed with actually generating flagging commands.
                             if nflags >= number_limit or \
                                flagsfrac > frac_limit:
 
-                                # Only once we get here do we actually flag
-                                # the view and the data
-
-                                # first flag the view, specifying the reason
-                                # for each flagged point
-                                i2flag = np.zeros(np.shape(j2flag_lo), np.int)
-                                i2flag += ant
-
+                                # If we get here, then a sufficient number and 
+                                # fraction of low outliers were identified for 
+                                # the current antenna, such that the antenna is 
+                                # considered "bad" and should be flagged entirely.
+                                
+                                # In this case, the low outlier data points are 
+                                # explicitly flagged as "low outlier", while the 
+                                # remaining non-flagged data points for this antenna 
+                                # are flagged as "bad antenna".
+                                
+                                # For current antenna data selection, flag the points
+                                # that were identified to be low outliers and not
+                                # already flagged, and set corresponding flag reason.
                                 ant_flag[j2flag_lo] = True
-                                flag_reason[i2flag, j2flag_lo] = \
+                                ant_flag_reason[j2flag_lo] = \
                                   self.flag_reason_index['low outlier']
+                                  
+                                # Create a flagging command that flags these 
+                                # low outliers in the data.
+                                flagcoords=zip(xdata[[iant]], ydata[j2flag_lo])
+                                for flagcoord in flagcoords:
+                                    newflags.append(arrayflaggerbase.FlagCmd(
+                                      reason='low outlier', filename=table,
+                                      rulename='low outlier', spw=spw, pol=pol,
+                                      axisnames=[xtitle, ytitle], flagcoords=flagcoord,
+                                      antenna_id_to_name=antenna_id_to_name))
 
+                                # For current antenna data selection, identify the 
+                                # remaining non-flagged data points.
                                 j2flag_bad = j_ant[np.logical_not(ant_flag)]
-                                i2flag_bad = np.zeros(np.shape(j2flag_bad), np.int)
-                                i2flag_bad += ant
 
+                                # Flag the remaining non-flagged data points as
+                                # "bad antenna". 
                                 ant_flag[j2flag_bad] = True
-                                flag_reason[i2flag_bad, j2flag_bad] = \
+                                ant_flag_reason[j2flag_bad] = \
                                   self.flag_reason_index['bad antenna']
 
-                                # copy flags back into view
-                                data[ant,:] = ant_data
-                                flag[ant,:] = ant_flag
-
-                                # Just flag the entire antenna in the data
-                                newflags.append(arrayflaggerbase.FlagCmd(
-                                  reason='bad antenna', filename=table,
-                                  rulename=rulename, spw=spw, pol=pol,
-                                  antenna=ant,
-                                  antenna_id_to_name=antenna_id_to_name))
+                                # Create a flagging command that flags the remaining
+                                # data points as "bad antenna". 
+                                flagcoords=zip(xdata[[iant]], ydata[j2flag_bad])
+                                for flagcoord in flagcoords:
+                                    newflags.append(arrayflaggerbase.FlagCmd(
+                                      reason='bad antenna', filename=table,
+                                      rulename='bad antenna', spw=spw, pol=pol,
+                                      axisnames=[xtitle, ytitle], flagcoords=flagcoord,
+                                      antenna_id_to_name=antenna_id_to_name))
 
                 elif rulename == 'bad quadrant':
                     # this test should be run before the others 
