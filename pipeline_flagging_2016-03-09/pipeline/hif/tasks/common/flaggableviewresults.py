@@ -63,4 +63,10 @@ class FlaggableViewResults(object):
             except AttributeError:
                 pass
             
-    
+    def sort_flagcmds(self):
+        # Try to sort the flagging commands by antenna and spw.
+        try:
+            self.flagging.sort(key=lambda k: k.antenna)
+            self.flagging.sort(key=lambda k: k.spw)
+        except:
+            pass

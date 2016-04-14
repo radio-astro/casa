@@ -1017,6 +1017,9 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
         # Store the flagging summaries in the final result
         self.result.summaries = [stats_before, stats_after]
 
+        # Sort the final list of flagging commands.
+        self.result.sort_flagcmds()
+
         return self.result
 
     def analyse(self, result):
@@ -2541,6 +2544,9 @@ class NewVectorFlagger(basetask.StandardTaskTemplate):
         
         # Store the flagging summaries in the final result
         self.result.summaries = [stats_before, stats_after]
+
+        # Sort the final list of flagging commands.
+        self.result.sort_flagcmds()
 
         return self.result
 
