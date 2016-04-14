@@ -1739,7 +1739,7 @@ class test_mpi4casa_plotms(unittest.TestCase):
         command_request_id_list = []
         for server in self.server_list:
             plotfile = 'test_mpi4casa_plotms_concurrent-%s.png' % str(server)
-            cmd = "plotms('%s', avgchannel='8',avgtime='60s',plotfile='%s',showgui=False)" % (self.vis,plotfile)
+            cmd = "plotms('%s', avgchannel='8',avgtime='60',plotfile='%s',showgui=False)" % (self.vis,plotfile)
             command_request_id = self.client.push_command_request(cmd,False,server)
             command_request_id_list.append(command_request_id[0])
             
