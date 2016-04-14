@@ -274,7 +274,7 @@ class UVcontFit(basetask.StandardTaskTemplate):
         cranges_spwsel = {}
         for sname in [field.source.name for field in inputs.ms.get_fields(task_arg=inputs.field)]:
             cranges_spwsel[sname] = {}
-            for spwid in [spw.id for spw in inputs.ms.get_spectral_windows(task_arg=inputs.spw)]:
+            for spw_id in [str(spw.id) for spw in inputs.ms.get_spectral_windows(task_arg=inputs.spw)]:
                 cranges_spwsel[sname][spw_id] = contfile_handler.get_merged_selection(sname, spw_id)
 
         return cranges_spwsel
