@@ -1091,7 +1091,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	   //	   os << "Setting uv-taper" << LogIO::POST;
 	   imwgt_p.setFilter( filtertype,  filterbmaj, filterbmin, filterbpa );
 	 }
-	 
 	 rvi_p->useImagingWeight(imwgt_p);
       ///////////////////////////////
 	 
@@ -1107,7 +1106,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        return True;
   }
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+  
   //// Get/Set Weight Grid.... write to disk and read
 
   /// todo : do for full mapper list, and taylor terms.

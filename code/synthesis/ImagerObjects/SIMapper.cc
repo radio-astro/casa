@@ -51,6 +51,7 @@
 #include <synthesis/TransformMachines/BeamSkyJones.h>
 #include <synthesis/TransformMachines/SkyJones.h>
 #include <synthesis/TransformMachines/SimpleComponentFTMachine.h>
+#include <synthesis/TransformMachines2/SimpleComponentFTMachine.h>
 #include <synthesis/TransformMachines/SimpCompGridMachine.h>
 //#include <synthesis/ImagerObjects/SIMapperBase.h>
 #include <synthesis/ImagerObjects/SIMapper.h>
@@ -64,27 +65,47 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   SIMapper::SIMapper( CountedPtr<SIImageStore>& imagestore, 
 		      CountedPtr<FTMachine>& ftm, 
-		      CountedPtr<FTMachine>& iftm) 
+		      CountedPtr<FTMachine>& iftm) : useViVb2_p(False)
   {
     LogIO os( LogOrigin("SIMapper","Construct a mapper",WHERE) );
     ft_p=ftm;
     ift_p=iftm;
+    ft2_p=NULL;
+    ift2_p=NULL;
     cft_p=NULL;
     itsImages=imagestore;
   }
-  
+  SIMapper::SIMapper( CountedPtr<SIImageStore>& imagestore, 
+		      CountedPtr<refim::FTMachine>& ftm, 
+		      CountedPtr<refim::FTMachine>& iftm) : useViVb2_p(True)
+  {
+    LogIO os( LogOrigin("SIMapper","Construct a mapper",WHERE) );
+    ft2_p=ftm;
+    ift2_p=iftm;
+    cft_p=NULL;
+    itsImages=imagestore;
+  }
+
   SIMapper::SIMapper(const ComponentList& cl, 
 		     String& whichMachine)
   {
     ft_p=NULL;
     ift_p=NULL;
+    ft2_p=NULL;
+    ift2_p=NULL;
+    
     itsImages=NULL;
 
-    if(whichMachine=="SimpleComponentFTMachine")
+    if(whichMachine=="SimpleComponentFTMachine"){
       cft_p=new SimpleComponentFTMachine();
-    else
+      cft2_p=new refim::SimpleComponentFTMachine();
+    }
+    else{
       //SD style component gridding
       cft_p=new SimpleComponentGridMachine();
+      /////NEED to be done here
+      //cft2_p=
+    }
     cl_p=cl;
       
   }
@@ -98,12 +119,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // #######  Gridding / De-gridding functions ###########
   // #############################################
   // #############################################
+  void SIMapper::initializeGrid(vi::VisBuffer2& vb, Bool dopsf, Bool /*firstaccess*/)
+  {
+    
+    LogIO os( LogOrigin("SIMapper","initializeGrid",WHERE) );
+    if(!useViVb2_p)
+      throw(AipsError("Programmer Error: using vi2 mode with vi1 constructor"));
+       //Componentlist FTM has nothing to do
 
+       if(ift2_p.null())
+       	return;
+
+       ift2_p->initializeToSkyNew( dopsf, vb, itsImages);
+
+       /////////////DEBUG
+       //       CoordinateSystem csys = itsImages->getCSys();
+       //       cout << "SIMapper : im spectral axis : " <<  csys.spectralCoordinate().referenceValue() << " at " << csys.spectralCoordinate().referencePixel() << " with increment " << csys.spectralCoordinate().increment() << endl;
+
+     }
 
   void SIMapper::initializeGrid(VisBuffer& vb, Bool dopsf, Bool /*firstaccess*/)
      {
 
        LogIO os( LogOrigin("SIMapper","initializeGrid",WHERE) );
+       if(useViVb2_p)
+	 throw(AipsError("Programmer Error: using vi1 mode with vi2 constructor"));
        //Componentlist FTM has nothing to do
        if(ift_p.null())
        	return;
@@ -116,11 +156,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
      }
 
+
+  void SIMapper::grid(vi::VisBuffer2& vb, Bool dopsf, refim::FTMachine::Type col,
+		      const Int whichFTM)
+   {
+     LogIO os( LogOrigin("SIMapper","grid",WHERE) );
+     if(!useViVb2_p)
+       throw(AipsError("Programmer Error: using vi2 mode with vi1 constructor"));
+     //Componentlist FTM has no gridding to do
+     (void)whichFTM;
+
+     if(ift2_p.null())
+       return;
+     
+     ift2_p->put(vb, -1, dopsf, col);
+     
+   }
+
   /////////////////OLD vi/vb version
   void SIMapper::grid(VisBuffer& vb, Bool dopsf, FTMachine::Type col,
 		      const Int whichFTM)
    {
      LogIO os( LogOrigin("SIMapper","grid",WHERE) );
+      if(useViVb2_p)
+	 throw(AipsError("Programmer Error: using vi1 mode with vi2 constructor"));
      //Componentlist FTM has no gridding to do
      (void)whichFTM;
 
@@ -131,11 +190,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      
    }
 
+  void SIMapper::finalizeGrid(vi::VisBuffer2& vb, Bool dopsf)
+    {
+      LogIO os( LogOrigin("SIMapper","finalizeGrid",WHERE) );
+      if(!useViVb2_p)
+	 throw(AipsError("Programmer Error: using vi2 mode with vi1 constructor"));
+      if(ift2_p.null())
+      	return;
+
+      ift2_p->finalizeToSkyNew( dopsf, vb, itsImages );
+
+    }
   //////////////OLD VI/VB version
   void SIMapper::finalizeGrid(VisBuffer& vb, Bool dopsf)
     {
       LogIO os( LogOrigin("SIMapper","finalizeGrid",WHERE) );
-
+       if(useViVb2_p)
+	 throw(AipsError("Programmer Error: using vi1 mode with vi2 constructor"));
       if(ift_p.null())
       	return;
 
@@ -143,11 +214,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     }
 
-  
+  void SIMapper::initializeDegrid(vi::VisBuffer2& vb, const Int /*row*/)
+  {
+    LogIO os( LogOrigin("SIMapper", "initializeDegrid",WHERE) );
+     if(!useViVb2_p)
+       throw(AipsError("Programmer Error: using vi2 mode with vii constructor"));
+    if(ft2_p.null() && cft2_p.null())
+      return;
+
+    ft2_p->initializeToVisNew(vb, itsImages);
+
+  }
   //////////////////OLD vi/vb version
   void SIMapper::initializeDegrid(VisBuffer& vb, const Int /*row*/)
   {
     LogIO os( LogOrigin("SIMapper", "initializeDegrid",WHERE) );
+     if(useViVb2_p)
+       throw(AipsError("Programmer Error: using vi1 mode with vi2 constructor"));
     if(ft_p.null() && cft_p.null())
       return;
 
@@ -155,12 +238,40 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
+  void SIMapper::degrid(vi::VisBuffer2& vb)
+    {
+      LogIO os( LogOrigin("SIMapper","degrid",WHERE) );
+     if(!useViVb2_p)
+       throw(AipsError("Programmer Error: using vi2 mode with vi1 constructor"));
+
+    
+      ///This should not be called even but heck let's ignore
+      if(ft2_p.null() and cft2_p.null())
+      	return;
+
+      Cube<Complex> origCube;
+      origCube.assign(vb.visCubeModel()); 
+
+      
+      
+      Cube<Complex> mod(vb.nCorrelations(), vb.nChannels(), vb.nRows(), Complex(0.0));
+      vb.setVisCubeModel( mod);
+      if( ! ft2_p.null() ) { ft2_p->get(vb); }
+      if( ! cft2_p.null() ) { cft2_p->get(vb, cl_p); }
+      
+      origCube+=vb.visCubeModel();
+      vb.setVisCubeModel(origCube);
+
+    }
 
   ////////////////////Old vi/Vb version
 
   void SIMapper::degrid(VisBuffer& vb)
     {
       LogIO os( LogOrigin("SIMapper","degrid",WHERE) );
+    
+     if(useViVb2_p)
+       throw(AipsError("Programmer Error: using vi1 mode with vi2 constructor"));
       ///This should not be called even but heck let's ignore
       if(ft_p.null() and cft_p.null())
       	return;
@@ -188,20 +299,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   Bool SIMapper::getFTMRecord(Record& rec, const String diskimage)
   {
     LogIO os( LogOrigin("SIMapper","getFTMRecord",WHERE) );
-    if(ft_p.null())
+    if(ft_p.null() && !useViVb2_p)
+    	return False;
+     if(ft2_p.null() && useViVb2_p)
     	return False;
     String err;
-    return ft_p->toRecord(err, rec, True, diskimage);
+    if(!useViVb2_p)
+      return ft_p->toRecord(err, rec, True, diskimage);
+    return ft2_p->toRecord(err, rec, True, diskimage);
     // rec = itsFTM->toRecord();
 
   }
   Bool SIMapper::getCLRecord(Record& rec)
   {
-	  if(cft_p.null())
-	      	return False;
-	  String err;
-	  return cl_p.toRecord(err, rec);
-
+    if(cft_p.null() && cft2_p.null())
+      return False;
+    String err;
+    return cl_p.toRecord(err, rec);
   }
 
   /*

@@ -36,13 +36,15 @@
 #include <measures/Measures/MDirection.h>
 
 #include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBuffer2.h>
 #include <synthesis/TransformMachines/FTMachine.h>
-
+#include <synthesis/TransformMachines2/FTMachine.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Forward declarations
   class ComponentFTMachine;
+  namespace refim{class ComponentFTMachine;}
   class SkyJones;
 template<class T> class ImageInterface;
 
@@ -56,12 +58,22 @@ template<class T> class ImageInterface;
   SIMapper( CountedPtr<SIImageStore>& imagestore,
             CountedPtr<FTMachine>& ftm, 
 	    CountedPtr<FTMachine>& iftm);
+
+  ///Vi2/VisBuffer2 constructor
+   SIMapper( CountedPtr<SIImageStore>& imagestore,
+	     CountedPtr<refim::FTMachine>& ftm, 
+	     CountedPtr<refim::FTMachine>& iftm);
+
   SIMapper(const ComponentList& cl, 
 	   String& whichMachine);
   virtual ~SIMapper();
 
   ///// Major Cycle Functions
-
+  virtual void initializeGrid(vi::VisBuffer2& vb, Bool dopsf, Bool firstaccess=False);
+  virtual void grid(vi::VisBuffer2& vb, Bool dopsf, refim::FTMachine::Type col, const Int whichFTM=-1);
+  virtual void finalizeGrid(vi::VisBuffer2& vb, Bool dopsf);
+  virtual void initializeDegrid(vi::VisBuffer2& vb, Int row=-1);
+  virtual void degrid(vi::VisBuffer2& vb);
   /////////////////////// OLD VI/VB versions
   virtual void initializeGrid(VisBuffer& vb, Bool dopsf, Bool firstaccess=False);
   virtual void grid(VisBuffer& vb, Bool dopsf, FTMachine::Type col, const Int whichFTM=-1);
@@ -80,6 +92,7 @@ template<class T> class ImageInterface;
   virtual Bool releaseImageLocks(){return itsImages->releaseLocks();};
 
   const CountedPtr<FTMachine>& getFTM(const Bool ift=True) {if (ift) return ift_p; else return ft_p;};
+  const CountedPtr<refim::FTMachine>& getFTM2(const Bool ift=True) {if (ift) return ift2_p; else return ft2_p;};
 
   /*
   virtual void initPB();
@@ -89,10 +102,11 @@ template<class T> class ImageInterface;
 protected:
 
   CountedPtr<FTMachine> ft_p, ift_p; 
-
+  CountedPtr<refim::FTMachine> ft2_p, ift2_p; 
   CountedPtr<ComponentFTMachine> cft_p;
+  CountedPtr<refim::ComponentFTMachine> cft2_p;
   ComponentList cl_p;
-
+  Bool useViVb2_p;
   CountedPtr<SIImageStore> itsImages;
 
 };

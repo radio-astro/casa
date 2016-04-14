@@ -243,7 +243,30 @@ Bool VisBufferUtil::interpolateFrequency(Cube<Complex>& data,
   return True;
 
 }
+  void VisBufferUtil::getFreqRange(Double& freqMin, Double& freqMax, vi::VisibilityIterator2& vi, MFrequency::Types freqFrame){
+    vi.originChunks();
+    vi.origin();
 
+    Double freqEnd=0.0;
+    Double freqStart=C::dbl_max;
+    vi::VisBuffer2* vb=vi.getVisBuffer();
+    for (vi.originChunks(); vi.moreChunks();vi.nextChunk())
+    	{
+	  for (vi.origin(); vi.more();vi.next())
+    		{
+		  Double localmax, localmin;
+		  Vector<Double> freqs=vb->getFrequencies(0, freqFrame);
+		  localmax=max(freqs);
+		  localmin=min(freqs);
+		  freqEnd=max(freqEnd, localmax);
+		  freqStart=max(freqStart, localmin);
+		}
+	}
+    freqMin=freqStart;
+    freqMax=freqEnd;
+
+
+  }
 void VisBufferUtil::convertFrequency(Vector<Double>& outFreq, 
 				     const VisBuffer& vb, 
 				     const MFrequency::Types freqFrame){

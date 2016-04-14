@@ -51,6 +51,7 @@
 #include <synthesis/TransformMachines/BeamSkyJones.h>
 #include <synthesis/TransformMachines/SkyJones.h>
 #include <synthesis/TransformMachines/SimpleComponentFTMachine.h>
+#include <synthesis/TransformMachines2/SimpleComponentFTMachine.h>
 #include <synthesis/TransformMachines/SimpCompGridMachine.h>
 
 #include <synthesis/ImagerObjects/SIMapperImageMosaic.h>
@@ -85,12 +86,32 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     firstaccess_p = True;
 
   }
-  
+  SIMapperImageMosaic::SIMapperImageMosaic( CountedPtr<SIImageStore>& imagestore, 
+					    CountedPtr<refim::FTMachine>& ftm, 
+					    CountedPtr<refim::FTMachine>& iftm)
+    //		      CountedPtr<VPSkyJones>& vp)
+    : SIMapper( imagestore, ftm, iftm ), vb_p (vi::VisBuffer2::factory (vi::VbPlain, vi::VbRekeyable))
+  {
+    LogIO os( LogOrigin("SIMapperImageMosaic","Constructor",WHERE) );
+
+    /*
+    if( !vp.null() ) {
+      ejgrid_p=vp;
+      ejdegrid_p=vp;
+    }
+    else {
+      ejgrid_p=NULL;
+      ejdegrid_p=NULL;
+    }
+    */
+
+    firstaccess_p = True;
+
+  }
   SIMapperImageMosaic::SIMapperImageMosaic(const ComponentList& cl, 
 					   String& whichMachine)
     //		     CountedPtr<VPSkyJones>& vp)
-    : SIMapper(cl, whichMachine )
-    //      vb_p (vi::VisBuffer2::factory (vi::VbPlain, vi::VbRekeyable))
+    : SIMapper(cl, whichMachine ), vb_p (vi::VisBuffer2::factory (vi::VbPlain, vi::VbRekeyable))
   {
 
     /*
@@ -118,12 +139,35 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // #######  Gridding / De-gridding functions ###########
   // #############################################
   // #############################################
-
+  void SIMapperImageMosaic::initializeGrid(vi::VisBuffer2& vb, Bool dopsf, Bool firstaccess)
+  {
+    
+    LogIO os( LogOrigin("SIMapperImageMosaic","initializeGrid",WHERE) );
+    if(!useViVb2_p)
+      throw(AipsError("Programmer Error: using vi2 mode with vi1 constructor"));
+    //Componentlist FTM has nothing to do
+    if(ift2_p.null())
+      return;
+    
+    ift2_p->initializeToSkyNew( dopsf, vb, itsImages);
+    /*
+    Bool dirDep= ift2_p->isSkyJonesSet(); //  (!ejgrid_p.null());
+    dirDep= dirDep || ((ift2_p->name()) == "MosaicFT");
+    ovb_p.assign(vb, False);
+    ovb_p.updateCoordInfo(&vb, dirDep);
+    */
+    vb_p->copy(vb, False);
+    firstaccess_p = firstaccess;
+    
+  }
+  
 
   void SIMapperImageMosaic::initializeGrid(VisBuffer& vb, Bool dopsf, Bool firstaccess)
   {
     
     LogIO os( LogOrigin("SIMapperImageMosaic","initializeGrid",WHERE) );
+    if(useViVb2_p)
+      throw(AipsError("Programmer Error: using vi1 mode with vi2 constructor"));
     //Componentlist FTM has nothing to do
     if(ift_p.null())
       return;
@@ -140,10 +184,67 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   
 
+  void SIMapperImageMosaic::grid(vi::VisBuffer2& vb, Bool dopsf, refim::FTMachine::Type col)
+   {
+     LogIO os( LogOrigin("SIMapperImageMosaic","grid",WHERE) );
+     if(!useViVb2_p)
+	 throw(AipsError("Programmer Error: using vi2 mode with vi1 constructor"));
+     //Componentlist FTM has no gridding to do
+     if(ift2_p.null())
+       return;
+     
+      Int nRow=vb.nRows();
+      Bool internalChanges=False;  // Does this VB change inside itself?
+      Bool firstOneChanges=False;  // Has this VB changed from the previous one?
+      if((ift2_p->name() != "MosaicFT")    && (ift2_p->name() != "PBWProjectFT") &&
+	 (ift2_p->name() != "AWProjectFT") && (ift2_p->name() != "AWProjectWBFT")) {
+	ift2_p->changedSkyJonesLogic(vb, firstOneChanges, internalChanges);
+      }
+      //First ft machine change should be indicative
+      //anyways right now we are allowing only 1 ftmachine for GridBoth
+      Bool IFTChanged=ift2_p->changed(vb);
+
+      // cout << "gridCoreMos : internalChanges : " << internalChanges << "  firstchange : " << firstOneChanges << endl;
+      
+      if(internalChanges) {
+	// Yes there are changes: go row by row.
+	for (Int row=0; row<nRow; row++) 
+	  {
+	    ////	  if(IFTChanged||ejgrid_p->changed(vb,row)) 
+	    if(IFTChanged|| ift2_p->isSkyJonesChanged(vb,row)) 
+	      {
+		// Need to apply the SkyJones from the previous row
+		// and finish off before starting with this row
+
+		finalizeGrid( *vb_p, dopsf );
+		initializeGrid( vb, dopsf );
+		
+	      }
+	    ift2_p->put(vb, row, dopsf, col);
+	    //gridCore( vb, dopsf, col, ftm, row );
+	  }
+      } else if (IFTChanged || firstOneChanges) {
+	//IMPORTANT:We need to finalize here by checking that we are not at the begining of the iteration
+	if( !firstaccess_p )
+	  {
+	    finalizeGrid( *vb_p, dopsf );
+	    firstaccess_p=False;
+	  }
+	initializeGrid( vb, dopsf );
+	ift2_p->put(vb, -1, dopsf, col);
+      } else  {
+	ift2_p->put(vb, -1, dopsf, col);
+      }
+     
+   }
+
+
   /////////////////OLD vi/vb version
   void SIMapperImageMosaic::grid(VisBuffer& vb, Bool dopsf, FTMachine::Type col)
    {
      LogIO os( LogOrigin("SIMapperImageMosaic","grid",WHERE) );
+     if(useViVb2_p)
+	 throw(AipsError("Programmer Error: using vi1 mode with vi2 constructor"));
      //Componentlist FTM has no gridding to do
      if(ift_p.null())
        return;
@@ -193,22 +294,75 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      
    }
 
+  void SIMapperImageMosaic::finalizeGrid(vi::VisBuffer2& vb, Bool dopsf)
+    {
+      LogIO os( LogOrigin("SIMapperImageMosaic","finalizeGrid",WHERE) );
+     if(!useViVb2_p)
+	 throw(AipsError("Programmer Error: using vi2 mode with vi1 constructor"));
+      
+      if(ift2_p.null())
+      	return;
+
+      ift2_p->finalizeToSkyNew( dopsf, vb, itsImages );
+    }
 
   //////////////OLD VI/VB version
   void SIMapperImageMosaic::finalizeGrid(VisBuffer& vb, Bool dopsf)
     {
       LogIO os( LogOrigin("SIMapperImageMosaic","finalizeGrid",WHERE) );
-    
+     if(useViVb2_p)
+	 throw(AipsError("Programmer Error: using vi1 mode with vi2 constructor"));
+      
       if(ift_p.null())
       	return;
 
       ift_p->finalizeToSkyNew( dopsf, vb, itsImages );
     }
 
+  void SIMapperImageMosaic::initializeDegrid(vi::VisBuffer2& vb, const Int /*row*/)
+  {
+    LogIO os( LogOrigin("SIMapperImageMosaic", "initializeDegrid",WHERE) );
+     if(!useViVb2_p)
+	 throw(AipsError("Programmer Error: using vi2 mode with vi1 constructor"));
+    if(ft2_p.null() && cft2_p.null())
+      return;
+
+    ft2_p->initializeToVisNew(vb, itsImages);
+
+    /// Add a call here, to do corrupt cl_p and create clCorrupted_p;
+    /// This should happen inside the SimpleComponentMachine, which will be init'd with the SkyJones.
+    /// For now, it's just clCorrupted_p = cl_p.
+
+    /*
+      if(!cftm.null()) {
+	clCorrupted_p=ComponentList();
+	for (uInt k=0; k < cl.nelements(); ++k){
+	  SkyComponent comp=cl.component(k).copy();
+	  if(vb.polFrame()==MSIter::Linear) {
+	    if(comp.flux().pol()==ComponentType::STOKES) {
+	      comp.flux().convertPol(ComponentType::LINEAR);
+	    }
+	  }
+	  else {
+	    if(comp.flux().pol()==ComponentType::STOKES) {
+	      comp.flux().convertPol(ComponentType::CIRCULAR);
+	    }
+	  }
+	  ////We might have to deal with the right row here if the visbuffer is has changed internally
+	  ejdegrid_p->apply(comp, comp, vb,row, True);
+	  clCorrupted_p.add(comp);
+	}
+      }
+    */
+
+  }
+
   //////////////////OLD vi/vb version
   void SIMapperImageMosaic::initializeDegrid(VisBuffer& vb, const Int /*row*/)
   {
     LogIO os( LogOrigin("SIMapperImageMosaic", "initializeDegrid",WHERE) );
+     if(useViVb2_p)
+	 throw(AipsError("Programmer Error: using vi1 mode with vi2 constructor"));
     if(ft_p.null() && cft_p.null())
       return;
 
@@ -242,12 +396,73 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
+  void SIMapperImageMosaic::degrid(vi::VisBuffer2& vb)
+    {
+      LogIO os( LogOrigin("SIMapperImageMosaic","degrid",WHERE) );
+      if(!useViVb2_p)
+	 throw(AipsError("Programmer Error: using vi2 mode with vi1 constructor"));
+      ///This should not be called even but heck let's ignore
+      if(ft2_p.null() and cft2_p.null())
+      	return;
+
+      Cube<Complex> origCube;
+      origCube.assign(vb.visCubeModel()); 
+
+      Int nRow=vb.nRows();
+      Bool internalChanges=False;  // Does this VB change inside itself?
+      Bool firstOneChanges=False;  // Has this VB changed from the previous one?
+      
+      if((!ft2_p.null() && (ft2_p->name() != "MosaicFT")    && (ft2_p->name() != "PBWProjectFT") &&
+	  (ft2_p->name() != "AWProjectFT") && (ft2_p->name() != "AWProjectWBFT")) || (!cft2_p.null())) {
+	ft2_p->changedSkyJonesLogic(vb, firstOneChanges, internalChanges);
+      }
+      //anyways right now we are allowing only 1 ftmachine for GridBoth
+      Bool FTChanged=ft2_p->changed(vb);
+      
+      if(internalChanges)
+	{
+	  // Yes there are changes within this buffer: go row by row.
+	  // This will automatically catch a change in the FTMachine so
+	  // we don't have to check for that.
+	  for (Int row=0; row<nRow; row++)
+	    {
+	      ////	      if(FTChanged||ejdegrid_p->changed(vb,row))
+	      if(FTChanged||  ft2_p->isSkyJonesChanged(vb,row) )
+		{
+		  // Need to apply the SkyJones from the previous row
+		  // and finish off before starting with this row
+		  finalizeDegrid();
+		  initializeDegrid(vb,row);
+		}
+	      ft2_p.null() ? cft2_p->get(vb, clCorrupted_p, row) : ft2_p->get(vb, row);
+	      
+	    }
+	  
+	}
+      else if (FTChanged||firstOneChanges) {
+	// This buffer has changed wrt the previous buffer, but
+	// this buffer has no changes within it. Again we don't need to
+	// check for the FTMachine changing.
+	finalizeDegrid();
+	initializeDegrid(vb, 0);
+
+	ft2_p.null() ? cft2_p->get(vb, clCorrupted_p) : ft2_p->get(vb);
+      }
+      else {
+	ft2_p.null() ? cft2_p->get(vb, clCorrupted_p) : ft2_p->get(vb);
+      }
+      origCube+=vb.visCubeModel();
+      vb.setVisCubeModel(origCube);
+
+    }
 
   ////////////////////Old vi/Vb version
 
   void SIMapperImageMosaic::degrid(VisBuffer& vb)
     {
       LogIO os( LogOrigin("SIMapperImageMosaic","degrid",WHERE) );
+      if(useViVb2_p)
+	 throw(AipsError("Programmer Error: using vi1 mode with vi2 constructor"));
       ///This should not be called even but heck let's ignore
       if(ft_p.null() and cft_p.null())
       	return;

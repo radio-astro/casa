@@ -41,6 +41,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Forward declarations
   class ComponentFTMachine;
+  namespace refim{class ComponentFTMachine;}
   class SkyJones;
 template<class T> class ImageInterface;
 
@@ -55,13 +56,20 @@ template<class T> class ImageInterface;
             CountedPtr<FTMachine>& ftm, 
 		       CountedPtr<FTMachine>& iftm);
   //	    CountedPtr<VPSkyJones>& vp);
+   SIMapperImageMosaic( CountedPtr<SIImageStore>& imagestore,
+			CountedPtr<refim::FTMachine>& ftm, 
+			CountedPtr<refim::FTMachine>& iftm);
   SIMapperImageMosaic(const ComponentList& cl, 
 		      String& whichMachine);
   //	   CountedPtr<VPSkyJones>& vp);
   virtual ~SIMapperImageMosaic();
 
   ///// Major Cycle Functions
-
+  void initializeGrid(vi::VisBuffer2& vb, Bool dopsf, Bool firstaccess=False);
+  void grid(vi::VisBuffer2& vb, Bool dopsf, refim::FTMachine::Type col);
+  void finalizeGrid(vi::VisBuffer2& vb, Bool dopsf);
+  void initializeDegrid(vi::VisBuffer2& vb, Int row=-1);
+  void degrid(vi::VisBuffer2& vb);
   /////////////////////// OLD VI/VB versions
   void initializeGrid(VisBuffer& vb, Bool dopsf, Bool firstaccess=False);
   void grid(VisBuffer& vb, Bool dopsf, FTMachine::Type col);
@@ -86,6 +94,7 @@ protected:
   ComponentList clCorrupted_p;
   //  CountedPtr<VPSkyJones>  ejgrid_p, ejdegrid_p;
   VisBuffer ovb_p;
+  vi::VisBuffer2* vb_p;
 
   Bool firstaccess_p;
 

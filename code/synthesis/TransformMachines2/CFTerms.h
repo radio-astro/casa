@@ -38,6 +38,7 @@
 #include <casa/Containers/Block.h>
 
 namespace casa{
+  namespace refim{
   using namespace vi;
   // <summary>  
   //  The base class to represent the Aperture-Term of the Measurement Equation. 
@@ -139,6 +140,6 @@ namespace casa{
     OpCodes opCode_p;
   };
 
-};
-
+  }///refim
+}//casa
 #endif

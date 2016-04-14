@@ -53,7 +53,7 @@
 
 #include <synthesis/TransformMachines/VisModelData.h>
 #include <images/Regions/WCBox.h>
-
+#include <msvis/MSVis/VisibilityIteratorImpl2.h>
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -164,6 +164,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////  Start VB dependent code /////////////////////////////////////////////
+  void SIMapperCollection::initializeGrid(vi::VisBuffer2& vb, Bool dopsf, const Int mapperid)
+  {
+    if(mapperid<0)
+      {
+	for (uInt k=0; k < itsMappers.nelements(); ++k)
+	  {
+	    (itsMappers[k])->initializeGrid(vb,dopsf,True);
+  	  }
+      }
+    else 
+      {
+	if (mapperid > (Int)itsMappers.nelements())
+	  throw ( AipsError("Internal Error : SIMapperCollection::initializeGrid(): mapperid out of range") );
+	else itsMappers[mapperid]->initializeGrid(vb, dopsf, True);
+      }
+  }
+
+
 
   ////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////OLD vi/vb //////////////////////////////////////////////
@@ -184,7 +202,48 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
   }
 
-  /////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
+
+  void SIMapperCollection::grid(vi::VisBuffer2& vb, Bool dopsf, refim::FTMachine::Type col,
+				Int mapperid)
+  {
+    if( itsIsNonZeroModel == True ) // Try to subtract model visibilities only if a model exists.
+	{
+	  if(col==refim::FTMachine::CORRECTED){
+	//Dang i thought the new vb will return Data or FloatData if correctedData was
+	//not there
+	    if(ROMSMainColumns(vb.getVi()->ms()).correctedData().isNull()){
+	      col=refim::FTMachine::OBSERVED;
+	      //			  cerr << "Max of visCube" << max(vb.visCube()) << " model " << max(vb.modelVisCube())<< endl;
+	      vb.setVisCube(vb.visCube()-vb.visCubeModel());
+	    }
+	    else{
+	      vb.setVisCubeCorrected(vb.visCubeCorrected()-vb.visCubeModel());
+	    }
+	  } 
+	  else if (col==refim::FTMachine::OBSERVED) {
+	    vb.setVisCube(vb.visCube()-vb.visCubeModel());
+	    
+	  }
+	}// if non zero model
+
+    if (mapperid < 0)
+      {
+	for (uInt k=0; k < itsMappers.nelements(); ++k)
+	  {
+	    (itsMappers[k])->grid(vb, dopsf, col);
+	    
+	  }
+      }
+    else 
+      {
+	if (mapperid > (Int)itsMappers.nelements())
+	  throw ( AipsError("Internal Error : SIMapperCollection::grid(): mapperid out of range") );
+	else itsMappers[mapperid]->grid(vb, dopsf, col);
+      }
+  }
+
+///////////////////
   ///////////////////////////////////////OLD VI/VB ///////////////////////////////////
   void SIMapperCollection::grid(VisBuffer& vb, Bool dopsf, FTMachine::Type col,
 				Int mapperid)
@@ -223,6 +282,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   ///////////////////////////////
   ////////////////////////////////
+  void SIMapperCollection::finalizeGrid(vi::VisBuffer2& vb, Bool dopsf,const Int mapperid)
+  {
+    if(mapperid<0)
+      {
+	for (uInt k=0; k < itsMappers.nelements(); ++k)
+      	  {
+	    (itsMappers[k])->finalizeGrid(vb, dopsf);
+      	  }
+      }
+    else 
+      {
+	if (mapperid > (Int)itsMappers.nelements())
+	  throw ( AipsError("Internal Error : SIMapperCollection::finalizeGrid(): mapperid out of range") );
+	else itsMappers[mapperid]->finalizeGrid(vb, dopsf);
+      }
+  }
+  
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////OLD VI/VB////////////////////////////////////////////////
@@ -245,6 +321,34 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
+  void SIMapperCollection::initializeDegrid(vi::VisBuffer2& vb, const Int mapperid)
+    {
+
+      itsIsNonZeroModel = anyNonZeroModels();
+
+      if( itsIsNonZeroModel == True )
+	{
+	  //	  vb.setModelVisCube( Complex(0.0,0.0) );
+	  
+	  if(mapperid<0)
+	    {
+	      for (uInt k=0; k < itsMappers.nelements(); ++k)
+		{
+    		  (itsMappers[k])->initializeDegrid(vb);
+		}
+	    }
+	  else 
+	    {
+	      if (mapperid > (Int)itsMappers.nelements())
+		throw ( AipsError("Internal Error : SIMapperCollection::initializeDegrid(): mapperid out of range") );
+	      else itsMappers[mapperid]->initializeDegrid(vb);
+	    }
+	  
+	}// if non zero model 
+    }
+
+
+
 ///////////////////////////////////////OLD VI/VB ///////////////////////////////////////////////////
   void SIMapperCollection::initializeDegrid(VisBuffer& vb, const Int mapperid)
     {
@@ -273,6 +377,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
 
   ////////////////////////////////////////////////////////////////////////////////////////////////
+  void SIMapperCollection::degrid(vi::VisBuffer2& vb, Bool saveVirtualMod, const Int mapperid)
+    {
+      if( itsIsNonZeroModel == True )
+	{
+	  if(mapperid<0)
+	    {
+	      for (uInt k=0; k < itsMappers.nelements(); ++k)
+		{
+		  (itsMappers[k])->degrid(vb);
+		}
+	    }
+	  else 
+	    {
+	      if (mapperid > (Int)itsMappers.nelements())
+		throw ( AipsError("Internal Error : SIMapperCollection::degrid(): mapperid out of range") );
+	      else itsMappers[mapperid]->degrid(vb);
+	    }
+	  
+	  if(saveVirtualMod){
+	    saveVirtualModel(vb);
+	  }
+	}// if non zero model
+    }
+  
+
   /////////////////////////////////////OLD VI/VB ////////////////////////////////////////////////////
   void SIMapperCollection::degrid(VisBuffer& vb, Bool saveVirtualMod, const Int mapperid)
     {
@@ -352,9 +481,62 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
+  void SIMapperCollection::saveVirtualModel(vi::VisBuffer2& vb){
+
+
+
+	  if(vb.msId() != oldMsId_p){
+	    oldMsId_p=vb.msId();
+	    vi::VisibilityIterator2 *viloc=const_cast<vi::VisibilityIterator2 *>(vb.getVi());
+	    
+	    for (uInt k=0; k < itsMappers.nelements(); ++k){
+	      Record rec;
+	      String modImage=viloc->ms().getPartNames()[0];
+	      if(!((viloc->ms()).source().isNull()))
+		modImage=(viloc->ms()).source().tableName();
+	      modImage=File::newUniqueName(modImage, "FT_MODEL").absoluteName();
+	      Bool iscomp=itsMappers[k]->getCLRecord(rec);
+	      if(iscomp || itsMappers[k]->getFTMRecord(rec, modImage)){
+
+		////Darn not implemented  
+		static_cast<VisibilityIteratorImpl2 *>(viloc->getImpl())->writeModel(rec, iscomp, True);
+				  //				  VisModelData::listModel(vb.getVisibilityIterator()->ms());
+			  }
+
+		  }
+
+
+
+	  }
+
+
+
+  }
+
 
   /////////////////////////////////////////////////////////
-  ////////////////////////////////////////////////////////
+  void SIMapperCollection::finalizeDegrid(vi::VisBuffer2& /*vb*/, const Int mapperid)
+    {
+      if( itsIsNonZeroModel == True )
+	{
+	  if(mapperid<0)
+	    {
+	      for (uInt k=0; k < itsMappers.nelements(); ++k)
+		{
+  		  (itsMappers[k])->finalizeDegrid();
+		  
+		}
+	    }
+	  else 
+	    {
+	      if (mapperid > (Int)itsMappers.nelements())
+		throw ( AipsError("Internal Error : SIMapperCollection::finalizeDegrid(): mapperid out of range") );
+	      else itsMappers[mapperid]->finalizeDegrid();
+	    }
+	}// if non zero model
+    }
+  
+ ////////////////////////////////////////////////////////
   void SIMapperCollection::finalizeDegrid(VisBuffer& /*vb*/, const Int mapperid)
     {
       if( itsIsNonZeroModel == True )

@@ -107,6 +107,10 @@ public:
   void convertFrequency(Vector<Double>& outFreq, 
 			const vi::VisBuffer2& vb, 
 			const MFrequency::Types freqFrame);
+  //This is a helper function as vi2 does not have a get Freq range for the data selected
+  static void getFreqRange(Double& freqMin, Double& freqMax,  vi::VisibilityIterator2& vi, MFrequency::Types freqFrame);
+  
+
   // Converts the frequency in this VisBuffer to velocity in the frame/def requested
   void toVelocity(Vector<Double>& outVel, 
 		  const VisBuffer& vb, 

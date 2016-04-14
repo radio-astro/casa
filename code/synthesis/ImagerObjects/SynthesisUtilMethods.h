@@ -46,7 +46,7 @@
 #include <scimath/Mathematics/GaussianBeam.h>
 
 #include <msvis/MSVis/VisibilityIterator.h>
-
+#include <msvis/MSVis/VisibilityIterator2.h>
 //#include <synthesis/ImagerObjects/TmpSwitch.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -128,6 +128,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // in the vis-iter loops to block invalid VBs from flowing down
     // the pipes.
     static Int validate(const VisBuffer& vb);
+    static Int validate(const vi::VisBuffer2& vb);
 
 
     static Int getOptimumSize(const Int npix);
@@ -212,7 +213,7 @@ public:
 
   // Generate Coordinate System 
   CoordinateSystem buildCoordinateSystem(ROVisibilityIterator* rvi);
-  CoordinateSystem buildCoordinateSystem(vi::VisibilityIterator2* vi2);
+  CoordinateSystem buildCoordinateSystem(vi::VisibilityIterator2& vi2);
   CoordinateSystem buildCoordinateSystemCore(MeasurementSet& msobj, 
 					     Vector<Int> spwids, Int fld, 
 					     Double freqmin, Double freqmax, 

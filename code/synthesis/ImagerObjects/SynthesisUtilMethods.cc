@@ -63,7 +63,7 @@
 #include <msvis/MSVis/MSUtil.h>
 
 #include <msvis/MSVis/VisibilityIterator2.h>
-
+#include <msvis/MSVis/VisBufferUtil.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <limits>
@@ -95,6 +95,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return M;
   }
 
+  Int SynthesisUtilMethods::validate(const vi::VisBuffer2& vb)
+  {
+    Int N=vb.nRows(),M=-1;
+    for(Int i=0;i<N;i++)
+      {
+	if ((!vb.flagRow()(i)) && (vb.antenna1()(i) != vb.antenna2()(i)))
+	  {M++;break;}
+      }
+    return M;
+  }
   // Get the next largest even composite of 2,3,5,7.
   // This is to ensure a 'good' image size for FFTW.
   // Translated from gcwrap/scripts/cleanhelper.py : getOptimumSize
@@ -1842,24 +1852,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   ////       ( need to supply MS only to add  'ObsInfo' to the csys )
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /*
-  CoordinateSystem SynthesisParamsImage::buildCoordinateSystem(vi::VisibilityIterator2* vi2) const
+  
+  CoordinateSystem SynthesisParamsImage::buildCoordinateSystem(vi::VisibilityIterator2& vi2) 
   {
     /// This version uses the new vi2/vb2
     // get the first ms for multiple MSes
-    const MeasurementSet msobj=vi2->getMeasurementSet();
+    MeasurementSet msobj=vi2.ms();
     Vector<Int> spwids;
-    vi2->spectralWindows( spwids );
+    vi2.getImpl()->spectralWindows( spwids );
     Vector<Int> flds;
-    vi2->fieldIds( flds );
+    vi2.getImpl()->fieldIds( flds );
     AlwaysAssert( flds.nelements()>0 , AipsError );
     Int fld = flds[0];
     Double freqmin=0, freqmax=0;
     freqFrameValid=(freqFrame != MFrequency::REST || mode != "cubedata" );
-    vi2->getFreqInSpwRange(freqmin,freqmax,freqFrameValid? freqFrame:MFrequency::REST );
-    return buildCoordinateSystemCore( msobj, spwids, fld, freqmin, freqmax );
+    VisBufferUtil::getFreqRange(freqmin,freqmax, vi2, freqFrameValid? freqFrame:MFrequency::REST );
+    MFrequency::Types dataFrame=(MFrequency::Types)vi2.subtableColumns().spectralWindow().measFreqRef()(spwids[0]);
+    Double datafstart, datafend;
+    VisBufferUtil::getFreqRange(datafstart, datafend, vi2, dataFrame );
+    return buildCoordinateSystemCore( msobj, spwids, fld, freqmin, freqmax, datafstart, datafend );
   }
-  */
+  
 
   CoordinateSystem SynthesisParamsImage::buildCoordinateSystem(ROVisibilityIterator* rvi ) 
   {
