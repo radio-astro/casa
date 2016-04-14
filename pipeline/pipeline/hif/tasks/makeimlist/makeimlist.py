@@ -414,7 +414,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                             spwsel_spwid_freqs, spwsel_spwid_refer = spwsel_spwid.split()
 
                         if (spwsel_spwid_refer != 'LSRK'):
-                            LOG.warn('Frequency selection is specified in %s but must be in LSRK' % (spwsel_refer))
+                            LOG.warn('Frequency selection is specified in %s but must be in LSRK' % (spwsel_spwid_refer))
                             # TODO: skip this field and/or spw ?
 
                         new_spwspec.append(spwid)
