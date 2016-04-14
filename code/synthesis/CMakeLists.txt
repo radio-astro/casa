@@ -662,6 +662,7 @@ install (FILES
 	TransformMachines2/CFStore2.h
 	TransformMachines2/CFTerms.h
 	TransformMachines2/ComponentFTMachine.h
+	TransformMachines2/ConvolutionFunction.h
 	TransformMachines2/EVLAAperture.h
 	TransformMachines2/EVLAConvFunc.h
 	TransformMachines2/FortranizedLoops.h
