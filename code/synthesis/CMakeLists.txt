@@ -31,6 +31,7 @@ casa_add_library( synthesis
   TransformMachines2/HetArrayConvFunc.cc
   TransformMachines2/FTMachine.cc
   TransformMachines2/MosaicFT.cc
+  TransformMachines2/MosaicFTNew.cc
   TransformMachines2/MultiTermFTNew.cc
   TransformMachines2/SetJyGridFT.cc
   TransformMachines2/SimplePBConvFunc.cc	
@@ -334,6 +335,7 @@ casa_add_library( synthesis
  fortran/fpbwproj.f	
  fortran/leakantso.f
  ImagerObjects/SynthesisImager.cc
+ ImagerObjects/SynthesisImagerVi2.cc
  ImagerObjects/SIImageStore.cc
  ImagerObjects/SIImageStoreMultiTerm.cc
  ImagerObjects/SIMapperCollection.cc
@@ -594,6 +596,7 @@ install (FILES
 	)
 install (FILES
 	ImagerObjects/SynthesisImager.h
+        ImagerObjects/SynthesisImagerVi2.h
 	ImagerObjects/SIImageStore.h
 	ImagerObjects/SIImageStoreMultiTerm.h
 	ImagerObjects/SIMapperCollection.h
@@ -650,7 +653,8 @@ install (FILES
 	TransformMachines2/GridFT.h
 	TransformMachines2/HetArrayConvFunc.h
 	TransformMachines2/FTMachine.h
-	TransformMachines2/MosaicFT.h	
+	TransformMachines2/MosaicFT.h
+	TransformMachines2/MosaicFTNew.h	
         TransformMachines2/MultiTermFTNew.h
 	TransformMachines2/SetJyGridFT.h	
 	TransformMachines2/SimpleComponentFTMachine.h
