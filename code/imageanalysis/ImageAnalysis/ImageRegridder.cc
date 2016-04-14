@@ -151,7 +151,7 @@ SPIIF ImageRegridder::_regrid() const {
         && fabs(csys.spectralCoordinate().increment()[0])
         > fabs(csysFrom.spectralCoordinate().increment()[0])
     ) {
-        *this->_getLog() << LogOrigin(getClass(), __func__)
+        *_getLog() << LogOrigin(getClass(), __func__)
 			<< LogIO::WARN << " imregrid/ia.regrid() interpolates over spectral "
 			<< "channels and does not average channels together. Noise in your "
 			<< "resulting image will be the noise in the original individual "
@@ -159,7 +159,13 @@ SPIIF ImageRegridder::_regrid() const {
 			<< "channels together, use specsmooth (or ia.boxcar() or ia.hanning) "
 			<< "to smooth the spectral axis of your input cube to close to "
 			<< "desired resolution and use imregrid/ia.regrid() to regrid it to "
-			<< "the desired spectral coordinate grid.";
+			<< "the desired spectral coordinate grid." << LogIO::POST;
+        *_getLog() << LogOrigin(getClass(), __func__) << LogIO::WARN
+            << "Warning: template/imagename relative channel size is "
+            << fabs(
+                csys.spectralCoordinate().increment()[0]
+                /csysFrom.spectralCoordinate().increment()[0]
+            ) << LogIO::POST;
     }
     ImageRegrid<Float> ir;
     ir.showDebugInfo(_debug);
