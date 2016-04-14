@@ -50,8 +50,8 @@ ${importdata.body()}
 
 <h4>Summary of Reduction Group</h4>
 <p>Reduction group is a set of data that will be processed together at the following stages such as 
-baseline subtraction and imaging. Grouping was performed based on frequency coverage and number of 
-channels of spectral window.</p>
+baseline subtraction and imaging. Grouping is performed based on field and spectral window properties 
+(frequency coverage and number of channels).</p>
 
 <table class="table table-bordered table-striped table-condensed"
        summary="Summary of Reduction Group">
@@ -94,7 +94,7 @@ channels of spectral window.</p>
 </table>
 
 <h4>Calibration Strategy</h4>
-<p>Below is a summary of sky calibration mode, spectral window mapping for T<sub>sys</sub> calibration, 
+<p>Summary of sky calibration mode, spectral window mapping for T<sub>sys</sub> calibration, 
 and mapping information on reference and target fields.</p>
 <table class="table table-bordered table-striped table-condensed"
        summary="Summary of Calibration Strategy">
