@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="plotprofilemap" category="visualization">
+
+  <shortdescription>Makes profile map.</shortdescription>
+      
+  <description>
+  The plotprofilemap makes spectral profile map from specified image. 
+  The task accepts both CASA image and FITS cube as an input.
+  </description>
+
+  <input>
+    <param type="string" name="imagename" mustexist="true">
+      <description>Input image name (CASA image or FITS)</description>
+      <value></value>
+    </param>
+
+    <param type="string" name="figfile">
+      <description>Output figure name</description>
+      <value></value>
+    </param>
+
+    <param type="bool" name="overwrite" subparam="true">
+      <description>Overwrite existing figfile</description>
+      <value>False</value>
+    </param>
+
+    <constraints>
+      <when param="figfile">
+        <notequals type="string" value="">
+          <default param="overwrite"><value type="bool">False</value></default>
+        </notequals>
+      </when>
+    </constraints>
+  </input>
+
+  <returns type="variant" limittypes="void record">
+  </returns>
+
+  <example>
+
+    The plotprofilemap makes spectral profile map from specified image. 
+    The task accepts both CASA image and FITS cube as an input.
+    
+    It is necessary to specify existing CASA image or FITS cube as an 
+    imagename. Otherwise, the task will fail. If figfile is specified, 
+    profile map is saved as an PNG image. Please set overwrite to False 
+    if you don't want to overwrite existing file. 
+
+    Keyword arguments:
+    imagename -- input image name (CASA image or FITS cube)
+    figfile -- output PNG image name. No output if figfile is empty
+               default: '' (no output)
+    overwrite -- overwrite existing output file
+                 default: False
+
+
+  </example>
+
+</task>
+
+</casaxml>

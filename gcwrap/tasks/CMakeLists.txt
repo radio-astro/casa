@@ -84,6 +84,7 @@ plotcal.xml
 plotms.xml
 plotuv.xml
 plotweather.xml
+plotprofilemap.xml
 #plotxy.xml
 partition.xml
 polcal.xml
