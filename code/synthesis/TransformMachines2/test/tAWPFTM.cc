@@ -48,7 +48,7 @@
 #include <casa/OS/Directory.h>
 #include <casa/Utilities/Regex.h>
 #include <synthesis/TransformMachines2/test/MakeMS.h>
-//#include <synthesis/TransformMachines/FTMachine.h>
+#include <synthesis/TransformMachines/FTMachine.h>
 #include <synthesis/TransformMachines2/FTMachine.h>
 #include <synthesis/TransformMachines2/AWProjectWBFTNew.h>
 #include <synthesis/TransformMachines2/AWConvFuncEPJones.h>
@@ -59,7 +59,7 @@ using namespace casa;
 using namespace casa::refim;
 using namespace casa::test;
 
-void createAWPFTMachine(CountedPtr<FTMachine>& theFT, CountedPtr<FTMachine>& theIFT, 
+void createAWPFTMachine(CountedPtr<refim::FTMachine>& theFT, CountedPtr<refim::FTMachine>& theIFT, 
 			const String& telescopeName,
 			MPosition& observatoryLocation,
 			const Int cfBufferSize=1024,
@@ -103,33 +103,33 @@ void createAWPFTMachine(CountedPtr<FTMachine>& theFT, CountedPtr<FTMachine>& the
   
   // ROMSObservationColumns msoc(mss4vi_p[0].observation());
   // String telescopeName=msoc.telescopeName()(0);
-  CountedPtr<ConvolutionFunction> awConvFunc = AWProjectFT::makeCFObject(telescopeName, 
+  CountedPtr<refim::ConvolutionFunction> awConvFunc = AWProjectFT::makeCFObject(telescopeName, 
 									 aTermOn,
 									 psTermOn, True, mTermOn, wbAWP,
 									 cfBufferSize, cfOversampling);
   //
   // Construct the appropriate re-sampler.
   //
-  CountedPtr<VisibilityResamplerBase> visResampler;
-  visResampler = new AWVisResampler();
+  CountedPtr<refim::VisibilityResamplerBase> visResampler;
+  visResampler = new refim::AWVisResampler();
   //
   // Construct and initialize the CF cache object.
   //
-  CountedPtr<CFCache> cfCacheObj;
+  CountedPtr<refim::CFCache> cfCacheObj;
   
   //
   // Finally construct the FTMachine with the CFCache, ConvFunc and
   // Re-sampler objects.  
   //
   Float pbLimit_l=1e-3;
-  theFT = new AWProjectWBFTNew(wprojPlane, cache/2, 
+  theFT = new refim::AWProjectWBFTNew(wprojPlane, cache/2, 
 			       cfCacheObj, awConvFunc, 
 			       visResampler,
 			       /*True */doPointing, doPBCorr, 
 			       tile, computePAStep, pbLimit_l, True,conjBeams,
 			       useDoublePrec);
   
-  cfCacheObj = new CFCache();
+  cfCacheObj = new refim::CFCache();
   cfCacheObj->setCacheDir(cfCache.data());
   cfCacheObj->setWtImagePrefix(imageNamePrefix.c_str());
   cfCacheObj->initCache2();
@@ -138,10 +138,10 @@ void createAWPFTMachine(CountedPtr<FTMachine>& theFT, CountedPtr<FTMachine>& the
   
   
   Quantity rotateOTF(rotatePAStep,"deg");
-  static_cast<AWProjectWBFTNew &>(*theFT).setObservatoryLocation(observatoryLocation);
-  static_cast<AWProjectWBFTNew &>(*theFT).setPAIncrement(Quantity(computePAStep,"deg"),rotateOTF);
+  static_cast<refim::AWProjectWBFTNew &>(*theFT).setObservatoryLocation(observatoryLocation);
+  static_cast<refim::AWProjectWBFTNew &>(*theFT).setPAIncrement(Quantity(computePAStep,"deg"),rotateOTF);
   
-  theIFT = new AWProjectWBFTNew(static_cast<AWProjectWBFTNew &>(*theFT));
+  theIFT = new refim::AWProjectWBFTNew(static_cast<refim::AWProjectWBFTNew &>(*theFT));
   
   //// Send in Freq info.
   // os << "Sending frequency selection information " <<  mssFreqSel_p  <<  " to AWP FTM." << LogIO::POST;
@@ -187,7 +187,7 @@ Int main(int argc, char **argv)
       cs.addCoordinate(dc); cs.addCoordinate(stc); cs.addCoordinate(spc);
       TempImage<Complex> im(IPosition(4,NX,NY,1,1), cs);//, "gulu.image");
 
-      CountedPtr<FTMachine> ftm,iftm;
+      CountedPtr<refim::FTMachine> ftm,iftm;
       //FTMachine * ftm=nullptr;
       MPosition loc;
       MeasTable::Observatory(loc, MSColumns(thems).observation().telescopeName()(0));
