@@ -67,6 +67,14 @@ class SIMapperCollection
 		  IPosition imShape, 
 		  const Bool overwrite );
   */
+  void initializeGrid(vi::VisBuffer2& vb, Bool dopsf=False,const Int mapperid=-1);
+  void grid(vi::VisBuffer2& vb, Bool dopsf=False, refim::FTMachine::Type col=refim::FTMachine::CORRECTED,
+	    const Int mapperid=-1);
+  void finalizeGrid(vi::VisBuffer2& vb, Bool dopsf=False,const Int mapperid=-1);
+  void initializeDegrid(vi::VisBuffer2& vb,const Int mapperid=-1);
+  void degrid(vi::VisBuffer2& vb, Bool saveVirtualMod=False,const Int mapperid=-1);
+  void saveVirtualModel(vi::VisBuffer2& vb);
+  void finalizeDegrid(vi::VisBuffer2& vb,const Int mapperid=-1);
 
   //////////// OLD VI/VB : Version that use old vi/vb can be removed the vi2/vb2 works
   void initializeGrid(VisBuffer& vb, Bool dopsf=False,const Int mapperid=-1);

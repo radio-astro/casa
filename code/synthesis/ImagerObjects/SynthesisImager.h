@@ -66,6 +66,7 @@ class SynthesisImager
   //Imager& operator=(const Imager&);
 
   virtual Bool selectData(const SynthesisParamsSelect& selpars);
+ 
 
   // make all pure-inputs const
   virtual Bool selectData(const String& msname, 
@@ -146,7 +147,7 @@ class SynthesisImager
 
   virtual void setComponentList(const ComponentList& cl, 
 				Bool sdgrid=False);
-  Bool weight(const String& type="natural", 
+  virtual Bool weight(const String& type="natural", 
 	      const String& rmode="norm",
 	      const Quantity& noise=Quantity(0.0, "Jy"), 
 	      const Double robust=0.0,
@@ -252,7 +253,7 @@ protected:
 
   Bool toUseWeightImage(CountedPtr<FTMachine>& ftm, String mappertype);
 
-  void createVisSet(const Bool writeaccess=False);
+  virtual void createVisSet(const Bool writeaccess=False);
   
   void createAWPFTMachine(CountedPtr<FTMachine>& theFT, CountedPtr<FTMachine>& theIFT, 
 			  const String& ftmName,
@@ -280,10 +281,10 @@ protected:
   ATerm* createTelescopeATerm(const MeasurementSet& ms, const Bool& isATermOn);
 
   // Do the major cycle
-  void runMajorCycle(const Bool dopsf=False, const Bool savemodel=False);
+  virtual void runMajorCycle(const Bool dopsf=False, const Bool savemodel=False);
 
   // Version of major cycle code with mappers in a loop outside vi/vb.
-  void runMajorCycle2(const Bool dopsf=False, const Bool savemodel=False);
+  virtual void runMajorCycle2(const Bool dopsf=False, const Bool savemodel=False);
 
   /////This function should be called at every define image
   /////It associated the ftmachine with a given field
@@ -305,7 +306,7 @@ protected:
 			  uInt ntaylorterms=1,
 			  Vector<String> startmodel=Vector<String>(0));
 
-  void unlockMSs();
+  virtual void unlockMSs();
 
   /////////////// Member Objects
 
@@ -328,8 +329,14 @@ protected:
   // Image Definition
   // Imaging/Gridding
 
+  ///Vi2 stuff
+  Block<const MeasurementSet *> mss_p;
+  vi::FrequencySelections fselections_p;
+  CountedPtr<vi::VisibilityIterator2>  vi_p;
+
   // Other Options
   ////////////////////////////////////Till VisibilityIterator2 works as advertised
+  Bool useViVb2_p;
   Block<MeasurementSet> mss4vi_p;
   VisibilityIterator* wvi_p;
   ROVisibilityIterator* rvi_p;
