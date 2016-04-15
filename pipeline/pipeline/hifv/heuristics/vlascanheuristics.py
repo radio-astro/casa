@@ -612,7 +612,7 @@ class VLAScanHeuristics(object):
         return True
 
 
-    def calibratorIntents(self):
+    def calibratorIntentsOld(self):
         """
             # Identify scans and fields associated with different calibrator intents
 
@@ -1074,7 +1074,7 @@ class VLAScanHeuristics(object):
         return True
 
 
-    def calibratorIntents2(self):
+    def calibratorIntents(self):
         """
             # Identify scans and fields associated with different calibrator intents
 
@@ -1252,7 +1252,7 @@ def testCalibratorIntents(vis):
     exceptionThrown = False
     try:
         start=datetime.datetime.now()
-        origObj.calibratorIntents()
+        origObj.calibratorIntentsOld()
         print 'origObj:', datetime.datetime.now()-start
     except Exception as e:
         print e
@@ -1260,7 +1260,7 @@ def testCalibratorIntents(vis):
 
     try:
         start=datetime.datetime.now()
-        newObj.calibratorIntents2()
+        newObj.calibratorIntents()
         print 'newObj:', datetime.datetime.now()-start
     except Exception as e:
         print e

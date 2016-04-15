@@ -212,8 +212,11 @@ class Solint(basetask.StandardTaskTemplate):
             scan_summary = ms.getscansummary()    
             
             m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
-            phase_scan_list = self.inputs.context.evla['msinfo'][m.name].phase_scan_list
-            
+            #phase_scan_list = self.inputs.context.evla['msinfo'][m.name].phase_scan_list
+
+            phase_scan_list = self.inputs.context.evla['msinfo'][m.name].phase_scan_select_string.split(',')
+            phase_scan_list = [int(i) for i in phase_scan_list]
+
             print phase_scan_list
             
             for kk in range(len(phase_scan_list)):
