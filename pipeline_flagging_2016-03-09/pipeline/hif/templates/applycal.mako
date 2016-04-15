@@ -240,7 +240,7 @@ def space_comma(s):
 	</tbody>
 </table>
 
-% if amp_vs_freq_plots or phase_vs_freq_plots or amp_vs_time_plots or amp_vs_uv_plots or phase_vs_time_plots:
+% if amp_vs_freq_plots or phase_vs_freq_plots or amp_vs_time_plots or amp_vs_uv_plots or phase_vs_time_plots or science_amp_vs_freq_plots:
 <h2>Plots</h2>
 
 <%self:plot_group plot_dict="${amp_vs_freq_plots}"

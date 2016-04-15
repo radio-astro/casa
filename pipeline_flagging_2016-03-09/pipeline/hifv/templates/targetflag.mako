@@ -5,7 +5,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 %>
 <%inherit file="t2-4m_details-base.html"/>
 
-<%block name="title">Targetflag (all data through rflag)</%block>
+<%block name="title">Targetflag </%block>
 
 <script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
 
@@ -45,7 +45,23 @@ $(document).ready(function() {
 });
 </script>
 
-<p>Run all calibrated data (including intent='TARGET') through rflag.</p>
+<p>Run all calibrated data (including intent='*CALIBRATE*,*TARGET*') through rflag if specified.  If a file with continuum
+regions is specified, then rflag will only flag those spw and frequency ranges per the pipeline spectral line heuristics.</p>
+
+% for single_result in result:
+    <p><b>Intents through rflag:</b>
+    % if single_result.inputs['intents'] == '':
+          All intents used
+    % else:
+          ${single_result.inputs['intents']}
+    % endif
+    </p>
+
+    % if single_result.inputs['contfile'] != '':
+        <p><b>Spectral Exclusion File (with intent='*TARGET*'): </b> ${single_result.inputs['contfile']} </p>
+    % endif
+
+% endfor
 
 
 

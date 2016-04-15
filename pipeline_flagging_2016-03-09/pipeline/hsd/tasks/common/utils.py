@@ -40,7 +40,16 @@ def asdm_name(scantable_object):
        - MS is generated from ASDM
        - MS name is <uid>.ms
     """
-    ms_basename = scantable_object.ms.basename
+    return asdm_name_from_ms(scantable_object.ms)
+
+def asdm_name_from_ms(ms_domain):
+    """
+    Return ASDM name that target ms originates from.
+    Assumptions are:
+       - MS is generated from ASDM
+       - MS name is <uid>.ms
+    """
+    ms_basename = ms_domain.basename
     index_for_suffix = ms_basename.rfind('.')
     asdm = ms_basename[:index_for_suffix] if index_for_suffix > 0 \
            else ms_basename

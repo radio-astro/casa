@@ -19,7 +19,10 @@ class ApplycalQAHandler(pqa.QAResultHandler):
     
         # calculate QA scores from agentflagger summary dictionary, adopting
         # the minimum score as the representative score for this task
-        scores = [qacalc.score_applycal_agents(ms, result.summaries)]
+        try:
+            scores = [qacalc.score_applycal_agents(ms, result.summaries)]
+        except:
+            scores = [pqa.QAScore(1.0,longmsg='Flag Summary off', shortmsg='Flag Summary off')]
         
         result.qa.pool[:] = scores
 

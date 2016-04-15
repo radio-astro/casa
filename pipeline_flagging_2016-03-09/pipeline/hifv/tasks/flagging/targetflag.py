@@ -1,9 +1,11 @@
 from __future__ import absolute_import
 
+import types
+
 import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure as infrastructure
-
+from pipeline.hifv.heuristics import cont_file_to_CASA
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -13,7 +15,7 @@ LOG = infrastructure.get_logger(__name__)
 
 class TargetflagInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
-    def __init__(self, context, vis=None, intents=None, spw=None):
+    def __init__(self, context, vis=None, intents=None, contfile=None):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
 
@@ -32,6 +34,18 @@ class TargetflagInputs(basetask.StandardInputs):
     @intents.setter
     def intents(self, value):
         self._intents = value
+
+    @property
+    def contfile(self):
+
+        if self._contfile is not None:
+            return self._contfile
+
+        return ''
+
+    @contfile.setter
+    def contfile(self, value):
+        self._contfile = value
 
 
 class TargetflagResults(basetask.Results):
@@ -56,15 +70,54 @@ class Targetflag(basetask.StandardTaskTemplate):
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         # corrstring = self.inputs.context.evla['msinfo'][m.name].corrstring
         corrstring = m.get_vla_corrstring()
-        
-        method_args = {'field'       : '',
-                       'correlation' : 'ABS_' + corrstring,
-                       'scan'        : '',
-                       'intent'      : '',
-                       'spw'         : ''}
 
-        rflag_result = self._do_rflag(**method_args)
-        
+
+        if ('CALIBRATE' in self.inputs.intents):
+            LOG.info("TARGETFLAG INFO: DOING CONTINUUM CALIBRATE")
+            method_args = {'field'       : '',
+                           'correlation' : 'ABS_' + corrstring,
+                           'scan'        : '',
+                           'intent'      : '*CALIBRATE*',
+                           'spw'         : ''}
+
+            rflag_result = self._do_rflag(**method_args)
+
+        if ('TARGET' in self.inputs.intents and self.inputs.contfile == ''):
+            LOG.info("TARGETFLAG INFO:  DOING CONTINUUM TARGET")
+            method_args = {'field'       : '',
+                           'correlation' : 'ABS_' + corrstring,
+                           'scan'        : '',
+                           'intent'      : '*TARGET*',
+                           'spw'         : ''}
+
+            rflag_result = self._do_rflag(**method_args)
+
+        if (self.inputs.intents == '' and self.inputs.contfile == ''):
+            LOG.info("TARGETFLAG INFO:  DOING EVERYTHING")
+            method_args = {'field'       : '',
+                           'correlation' : 'ABS_' + corrstring,
+                           'scan'        : '',
+                           'intent'      : '',
+                           'spw'         : ''}
+
+            rflag_result = self._do_rflag(**method_args)
+
+            return TargetflagResults([rflag_result])
+
+        if ('TARGET' in self.inputs.intents and self.inputs.contfile):
+            LOG.info("TARGETFLAG INFO:  SPECTRAL LINE - CONTINUUM MASKING")
+            fielddict = cont_file_to_CASA(self.inputs.contfile)
+
+            for field in fielddict.keys():
+                method_args = {'field'       : field,
+                               'correlation' : 'ABS_' + corrstring,
+                               'scan'        : '',
+                               'intent'      : '*TARGET*',
+                               'spw'         : fielddict[field]}
+
+                rflag_result = self._do_rflag(**method_args)
+
+
         return TargetflagResults([rflag_result])
     
     def analyse(self, results):
@@ -94,3 +147,6 @@ class Targetflag(basetask.StandardTaskTemplate):
         job = casa_tasks.flagdata(**task_args)
             
         return self._executor.execute(job)
+
+
+

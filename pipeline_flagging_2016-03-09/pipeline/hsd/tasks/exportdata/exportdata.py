@@ -610,7 +610,7 @@ class SDExportData(hif_exportdata.ExportData):
     
                 # Create the list of applied caltables for that vis
                 caltable_list = []
-                callib = callibrary.CalState()
+                callib = callibrary.DictCalState()
                 callib[visfile] = context.callibrary.applied[visfile]
                 callib_merged = callib.merged()
                 for calto, calfrom in callib_merged.iteritems():

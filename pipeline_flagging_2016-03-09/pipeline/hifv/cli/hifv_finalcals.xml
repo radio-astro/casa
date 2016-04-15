@@ -36,14 +36,20 @@
 	<value>True</value>
     </param>
 
+    <param type="bool" name="weakbp">
+	<description>Activate weak bandpass heuristics</description>
+	<value>True</value>
+    </param>
+
     <constraints>
 	<when param="pipelinemode">
 	    <equals type="string" value="automatic">
 	    </equals>
 	    <equals type="string" value="interactive">
                 <default param="vis"><value type="stringArray"></value></default>
-		<default param="dryrun"><value type="bool">False</value></default>
-		<default param="acceptresults"><value type="bool">True</value></default>
+		        <default param="dryrun"><value type="bool">False</value></default>
+		        <default param="acceptresults"><value type="bool">True</value></default>
+                <default param="weakbp"><value type="bool">True</value></default>
 	    </equals>
 	    <equals type="string" value="getinputs">
                 <default param="vis"><value type="stringArray"></value></default>
@@ -99,6 +105,9 @@ dryrun -- Run the commands (True) or generate the commands to be run but
 
 acceptresults -- Add the results of the task to the pipeline context (True) or
    reject them (False).
+   default: True
+
+weakbp -- Activate the weak bandpass calibrator heuristics
    default: True
 
 Output:

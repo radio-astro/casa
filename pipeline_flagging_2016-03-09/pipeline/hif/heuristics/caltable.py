@@ -52,10 +52,17 @@ class CaltableNamer(api.Heuristic):
         pass
 
 
+class AmpCaltable(CaltableNamer):
+    def get_namer(self):
+        return filenamer.AmplitudeCalibrationTable()
+
 class AntposCaltable(CaltableNamer):
     def get_namer(self):
         return filenamer.AntposCalibrationTable()
 
+class UVcontCaltable(CaltableNamer):
+    def get_namer(self):
+        return filenamer.UVcontCalibrationTable()
 
 class BandpassCaltable(CaltableNamer):
     def get_namer(self):

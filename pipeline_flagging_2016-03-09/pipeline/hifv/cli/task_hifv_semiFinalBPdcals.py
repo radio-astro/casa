@@ -5,7 +5,7 @@ from taskinit import casalog
 import pipeline.h.cli.utils as utils
 
 
-def hifv_semiFinalBPdcals(vis=None, pipelinemode=None, dryrun=None, acceptresults=None):
+def hifv_semiFinalBPdcals(vis=None, pipelinemode=None, dryrun=None, acceptresults=None, weakbp=None):
 
     # create a dictionary containing all the arguments given in the
     # constructor

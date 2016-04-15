@@ -24,11 +24,14 @@ CasaTaskDict = {
 		   'hif_makecleanlist'     : 'MakeCleanList', 
 		   'hif_makeimages'        : 'MakeImages', 
 		   'hif_makeimlist'        : 'MakeImList', 
+		   'hif_mstransform'       : 'Mstransform', 
                    'hif_refant'            : 'RefAnt',
 		   'hif_restoredata'       : 'RestoreData',
                    'hif_setjy'             : 'Setjy',
                    'hif_setmodels'         : 'SetModels',
 		   'hif_tclean'            : 'Tclean', 
+                   'hif_uvcontfit'         : 'UVcontFit',
+                   'hif_uvcontsub'         : 'UVcontSub',
                    'hsd_calsky'            : 'SDCalSky',
                    'hsd_caltsys'           : 'SDCalTsys',
                    'hsd_applycal'          : 'SDApplyCal',
@@ -44,6 +47,9 @@ CasaTaskDict = {
                    'hsd_plotflagbaseline'  : 'SDPlotFlagBaseline',
                    'hsd_flagdata'          : 'FlagDeterALMASingleDish',
                    'hsd_simplescale'       : 'SDSimpleScale',
+                   'hsdms_applycal'        : 'SDMSApplycal',
+                   'hsdms_k2jycal'         : 'SDK2JyCal',
+                   'hsdms_skycal'          : 'SDMSSkyCal',
                    'hifa_importdata'       : 'ALMAImportData',
                    'hifa_antpos'           : 'ALMAAntpos',
                    'hifa_bandpass'         : 'ALMAPhcorBandpass',
@@ -123,11 +129,14 @@ classToCASATask = {
     hif_tasks.MakeCleanList           : 'hif_makecleanlist',
     hif_tasks.MakeImages              : 'hif_makeimages',
     hif_tasks.MakeImList              : 'hif_makeimlist',
+    hif_tasks.Mstransform             : 'hif_mstransform',
     hif_tasks.RefAnt                  : 'hif_refant',
     hif_tasks.RestoreData             : 'hif_restoredata',
     hif_tasks.Setjy                   : 'hif_setjy',
     hif_tasks.SetModels               : 'hif_setmodels',
     hif_tasks.Tclean                  : 'hif_tclean',
+    hif_tasks.UVcontFit               : 'hif_uvcontfit',
+    hif_tasks.UVcontSub               : 'hif_uvcontsub',
     # Single dish tasks ------------------------------------------------------
     hsd_tasks.SDCalSky                : 'hsd_calsky',
     hsd_tasks.SDCalTsys               : 'hsd_caltsys',
@@ -144,6 +153,9 @@ classToCASATask = {
     hsd_tasks.SDPlotFlagBaseline      : 'hsd_plotflagbaseline',
     hsd_tasks.FlagDeterALMASingleDish : 'hsd_flagdata',
     hsd_tasks.SDSimpleScale           : 'hsd_simplescale',
+    hsd_tasks.SDMSApplycal            : 'hsdms_applycal',
+    hsd_tasks.SDK2JyCal               : 'hsdms_k2jycal',
+    hsd_tasks.SDMSSkyCal              : 'hsdms_skycal',
     #VLA tasks
     hifv_tasks.VLAImportData          : 'hifv_importdata',
     hifv_tasks.Hanning                : 'hifv_hanning',
@@ -274,7 +286,7 @@ TASK_COMMENTS = {
     (hifa_tasks.TimeGaincal,) : (
         'Time dependent gain calibrations are computed. '
     ),
-    (hif_tasks.Applycal,) : (
+    (hif_tasks.Applycal, hsd_tasks.SDMSApplycal) : (
         'Calibrations are applied  to the data. Final flagging summaries '
 	'are computed'
     ),
@@ -305,7 +317,8 @@ TASK_COMMENTS = {
         'and to group data for the following processing. \n'
         '' + SILENT_TASK_COMMENT
     ),
-    (hsd_tasks.SDCalSky,) : (
+    (hsd_tasks.SDCalSky,
+     hsd_tasks.SDMSSkyCal) : (
         'Generates sky calibration table according to calibration '
         'strategy. '
     ),
@@ -345,6 +358,9 @@ TASK_COMMENTS = {
         'Scale spectra in scantables. This task is used for'
         'non-linearity correction.'
     ),
+    (hsd_tasks.SDK2JyCal,) : (
+        'The Kelvin to Jy calibration tables are generated.'
+    )
 }
 
 

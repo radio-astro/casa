@@ -214,8 +214,8 @@ $(document).ready(function(){
 	% if pcontext.project_summary.telescope.lower() in ('alma') and tpsampling_plot is not None:
 	
 	<div class="col-md-6">
-		<a href="${os.path.relpath(tpsampling_plot.abspath, pcontext.report_dir)}" class="fancybox">
-			<h3>TPSampling</h3>
+		<a class="replace" href="${os.path.join(dirname, "t2-2-7.html")}">
+			<h3>Telescope Pointing</h3>
 		</a>
 		<div class="col-md-6">
 		  	<div class="thumbnail">

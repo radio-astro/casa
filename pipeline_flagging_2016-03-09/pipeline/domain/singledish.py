@@ -22,11 +22,11 @@ def to_numeric_freq(m, unit=measures.FrequencyUnits.HERTZ):
 
 class ScantableList(observingrun.ObservingRun, list):
     def __init__(self):
-        super(ScantableList,self).__init__()
+        super(ScantableList, self).__init__()
         self.reduction_group = {}
         self.grid_position = {}
         self.datatable_instance = None
-        self.datatable_name = None#os.path.join(context.name,'DataTable.tbl')
+        self.datatable_name = None  # os.path.join(context.name,'DataTable.tbl')
 
     def __getstate__(self):
         mydict = self.__dict__.copy()
@@ -51,9 +51,9 @@ class ScantableList(observingrun.ObservingRun, list):
         else:
             return None
         qt = casatools.quanta
-        s = sorted(obj, 
+        s = sorted(obj,
                    key=lambda st: st.start_time['m0'],
-                   cmp=lambda x,y: 1 if qt.gt(x,y) else 0 if qt.eq(x,y) else -1)
+                   cmp=lambda x, y: 1 if qt.gt(x, y) else 0 if qt.eq(x, y) else -1)
         return s[0].start_time
 
     @property
@@ -65,9 +65,9 @@ class ScantableList(observingrun.ObservingRun, list):
         else:
             return None
         qt = casatools.quanta
-        s = sorted(obj, 
+        s = sorted(obj,
                    key=lambda st: st.end_time['m0'],
-                   cmp=lambda x,y: 1 if qt.gt(x,y) else 0 if qt.eq(x,y) else -1)
+                   cmp=lambda x, y: 1 if qt.gt(x, y) else 0 if qt.eq(x, y) else -1)
         return s[-1].end_time
 
     @property
@@ -93,7 +93,7 @@ class ScantableList(observingrun.ObservingRun, list):
 
     def add_scantable(self, s):
         if s.basename in self.st_names:
-            msg = '%s is already in the pipeline context'%(s.name)
+            msg = '%s is already in the pipeline context' % (s.name)
             LOG.error(msg)
             raise Exception, msg
 
@@ -126,7 +126,7 @@ class ScantableList(observingrun.ObservingRun, list):
         return self.__get_spw_from_condition(spw, lambda v: (v.is_target or v.is_atmcal) and v.type != 'WVR' and v.nchan > 1)
 
     def __get_spw_from_condition(self, spw_list, condition):
-        return [k for (k,v) in spw_list.items() if condition(v) is True]
+        return [k for (k, v) in spw_list.items() if condition(v) is True]
 
     def get_calmode(self, name):
         st = self.get_scantable(name)
@@ -146,17 +146,17 @@ class ScantableList(observingrun.ObservingRun, list):
 
 class SingleDishBase(object):
     def __repr__(self):
-        s = '%s:\n'%(self.__class__.__name__)
-        for (k,v) in self.__dict__.items():
+        s = '%s:\n' % (self.__class__.__name__)
+        for (k, v) in self.__dict__.items():
             if k[0] == '_':
                 key = k[1:]
             else:
                 key = k
-            s += '\t%s=%s\n'%(key,v)
+            s += '\t%s=%s\n' % (key, v)
         return s
 
     def _init_properties(self, properties={}, kw_ignore=['self']):
-        for (k,v) in properties.items():
+        for (k, v) in properties.items():
             if k not in kw_ignore:
                 setattr(self, k, v)
 
@@ -212,16 +212,16 @@ class ScantableRep(SingleDishBase):
         return self.name + '_corrected'
 
     def __repr__(self):
-        return 'Scantable(%s)'%(self.name)
+        return 'Scantable(%s)' % (self.name)
 
 class Polarization(SingleDishBase):
-    to_polid = {'XX': 0, 'YY': 1, 'XY': 2, 'YX': 3, 
+    to_polid = {'XX': 0, 'YY': 1, 'XY': 2, 'YX': 3,
                 'RR': 0, 'LL': 1, 'RL': 2, 'LR': 3,
-                'I' : 0,  'Q': 1, 'U' : 2, 'V' : 3} 
-    to_polenum = {'XX':  9, 'YY': 12, 'XY': 10, 'YX': 11, 
+                'I' : 0, 'Q': 1, 'U' : 2, 'V' : 3} 
+    to_polenum = {'XX':  9, 'YY': 12, 'XY': 10, 'YX': 11,
                   'RR':  5, 'LL':  8, 'RL':  6, 'LR':  7,
-                  'I' :  1,  'Q':  2, 'U' :  3, 'V' :  4}
-    polarization_map = { 'linear': { 0: ['XX',  9],
+                  'I' :  1, 'Q':  2, 'U' :  3, 'V' :  4}
+    polarization_map = { 'linear': { 0: ['XX', 9],
                                      1: ['YY', 12],
                                      2: ['XY', 10],
                                      3: ['YX', 11] },
@@ -233,11 +233,11 @@ class Polarization(SingleDishBase):
                                      1: ['Q', 2],
                                      2: ['U', 3],
                                      3: ['V', 4] },
-                         'linpol': { 0: ['Ptotal',   28],
-                                     1: ['Plinear',  29],
-                                     2: ['PFtotal',  30],
+                         'linpol': { 0: ['Ptotal', 28],
+                                     1: ['Plinear', 29],
+                                     2: ['PFtotal', 30],
                                      3: ['PFlinear', 31],
-                                     4: ['Pangle',   32] } }
+                                     4: ['Pangle', 32] } }
     @staticmethod
     def from_data_desc(datadesc):
         npol = datadesc.num_polarizations
@@ -287,7 +287,7 @@ class SpectralWindowAdapter:
         return state_dictionary
 
     def __setstate__(self, d):
-        for (k,v) in d.items():
+        for (k, v) in d.items():
             if not hasattr(self, k):
                 setattr(self, k, v)
         self.__dict__ = d
@@ -307,9 +307,9 @@ class SpectralWindowAdapter:
     
     @property
     def bandwidth(self):
-        #if not hasattr(self, '_bandwidth') or self._bandwidth is None:
+        # if not hasattr(self, '_bandwidth') or self._bandwidth is None:
         #    self._bandwidth = to_numeric_freq(self.spw.bandwidth)
-        #return self._bandwidth
+        # return self._bandwidth
         return self.spw.bandwidth
     
     @property
@@ -336,8 +336,8 @@ class SpectralWindowAdapter:
     
     @property
     def channels(self):
-        #return self.spw.channels
-        return []
+        return self.spw.channels
+        # return []
     
     @property
     def frame(self):
@@ -362,8 +362,8 @@ class SpectralWindowAdapter:
     def frequency_range(self):
         return [self.freq_min, self.freq_max]
     
-    #@property
-    #def hif_spw(self):
+    # @property
+    # def hif_spw(self):
     #    return None
      
     @property
@@ -408,7 +408,7 @@ class SpectralWindowAdapter:
     
     @property
     def is_target(self):
-        #return (self.type == 'SP' and self.intent.find('TARGET') != -1)
+        # return (self.type == 'SP' and self.intent.find('TARGET') != -1)
         return (self.intent.find('TARGET') != -1)
 
     @property
@@ -495,7 +495,7 @@ class SpectralWindowAdapter:
         return ('TP' if self.nchan == 1 else ('WVR' if self.nchan == 4 else 'SP'))
 
     def __repr__(self):
-        args = map(str, [self.id, self.centre_frequency, self.bandwidth, 
+        args = map(str, [self.id, self.centre_frequency, self.bandwidth,
                          self.type])
         return 'SpectralWindow({0})'.format(', '.join(args))
     
@@ -647,7 +647,7 @@ class ReductionGroupMember(object):
                 yield self.pols.index(i)
 
     def __repr__(self):
-        return 'ReductionGroupMember(antenna=%s, spw=%s, pols=%s)'%(self.antenna, self.spw, self.pols)
+        return 'ReductionGroupMember(antenna=%s, spw=%s, pols=%s)' % (self.antenna, self.spw, self.pols)
 
     def __eq__(self, other):
         return other.antenna == self.antenna and other.spw == self.spw and other.pols == self.pols 
@@ -685,4 +685,105 @@ class ReductionGroupDesc(list):
                 break
 
     def __repr__(self):
-        return 'ReductionGroupDesc(frequency_range=%s, nchan=%s, member=%s)'%(self.frequency_range, self.nchan, self[:])
+        return 'ReductionGroupDesc(frequency_range=%s, nchan=%s, member=%s)' % (self.frequency_range, self.nchan, self[:])
+
+
+class MSReductionGroupMember(object):
+    def __init__(self, ms, antenna, spw, field_id=None):
+        self.ms = ms
+        self.antenna = antenna
+        self.spw = spw
+        self.field_id = -1 if field_id is None else field_id
+        self.iteration = 0
+        self.linelist = []
+        self.channelmap_range = []
+
+    @property
+    def npol(self):
+        return 1
+
+    def iter_countup(self):
+        self.iteration += 1
+
+    def iter_reset(self):
+        self.iteration = 0
+
+    def add_linelist(self, linelist, pols=None, channelmap_range=None):
+        self.linelist = linelist
+        if channelmap_range is not None:
+            self.channelmap_range = channelmap_range
+        else:
+            self.channelmap_range = linelist
+
+    def __repr__(self):
+        return 'MSReductionGroupMember(ms=\'%s\', antenna=%s, spw=%s, field_id=%s)' % (self.ms.basename, self.antenna, self.spw, self.field_id)
+
+    def __eq__(self, other):
+        #LOG.debug('MSReductionGroupMember.__eq__')
+        return other.ms.name == self.ms.name and other.antenna == self.antenna and other.spw == self.spw and other.field_id == self.field_id
+
+    def __ne__(self, other):
+        return other.ms.name != self.ms.name or other.antenna != self.antenna or other.spw != self.spw or other.field_id != self.field_id
+     
+class MSReductionGroupDesc(list):
+    def __init__(self, min_frequency=None, max_frequency=None, nchan=None, field=None):
+        self.max_frequency = max_frequency
+        self.min_frequency = min_frequency
+        self.nchan = nchan
+        self.field = field
+        
+    @property
+    def frequency_range(self):
+        return [self.min_frequency, self.max_frequency]
+    
+    @property
+    def field_name(self):
+        return self.field.name.strip('"')
+
+    def merge(self, other):
+        assert self == other
+        for member in other:
+            LOG.trace('ms.name=\"%s\" antenna=%s spw=%s, field_id=%s'%(member.ms.name, member.antenna, member.spw, member.field_id))
+            if not member in self:
+                LOG.debug('Adding (%s, %s, %s, %s)'%(member.ms.name,member.antenna,member.spw,member.field_id))
+                self.append(member)
+
+    def add_member(self, ms, antenna, spw, field_id=None):
+        new_member = MSReductionGroupMember(ms, antenna, spw, field_id)
+        if not new_member in self:
+            self.append(new_member)
+
+    def get_iteration(self, ms, antenna, spw, field_id=None):
+        member = self[self.__search_member(ms, antenna, spw, field_id)]
+        return member.iteration
+            
+    def iter_countup(self, ms, antenna, spw, field_id=None):
+        member = self[self.__search_member(ms, antenna, spw, field_id)]
+        member.iter_countup()
+
+    def add_linelist(self, linelist, antenna, spw, field_id=None, channelmap_range=None):
+        member = self[self.__search_member(antenna, spw, field_id)]
+        member.add_linelist(linelist, channelmap_range=channelmap_range)
+
+    def __search_member(self, ms, antenna, spw, field_id=None):
+        for indx in xrange(len(self)):
+            member = self[indx]
+            if member.ms.name == ms.name and member.antenna == antenna and member.spw == spw and member.field_id == field_id:
+                return indx
+                break
+            
+    def __eq__(self, other):
+        #LOG.debug('MSReductionGroupDesc.__eq__')
+        return self.max_frequency == other.max_frequency \
+            and self.min_frequency == other.min_frequency \
+            and self.nchan == other.nchan \
+            and self.field_name == other.field_name
+            
+    def __ne__(self, other):
+        return self.max_frequency != other.max_frequency \
+            or self.min_frequency != other.min_frequency \
+            or self.nchan != other.nchan \
+            or self.field_name != other.field_name
+
+    def __repr__(self):
+        return 'MSReductionGroupDesc(frequency_range=%s, nchan=%s, field=\'%s\', member=%s)' % (self.frequency_range, self.nchan, self.field_name, self[:])

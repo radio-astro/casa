@@ -34,17 +34,24 @@
 	<value>True</value>
     </param>
 
+    <param type="string" name="contfile" subparam="true">
+	    <description>Areas of continuum for flagging</description>
+	    <value></value>
+	</param>
+
     <constraints>
 	<when param="pipelinemode">
 	    <equals type="string" value="automatic">
 	    </equals>
 	    <equals type="string" value="interactive">
                 <default param="vis"><value type="stringArray"></value></default>
+                <default param="contfile"><value type="string"></value></default>
 		<default param="dryrun"><value type="bool">False</value></default>
 		<default param="acceptresults"><value type="bool">True</value></default>
 	    </equals>
 	    <equals type="string" value="getinputs">
                 <default param="vis"><value type="stringArray"></value></default>
+                <default param="contfile"><value type="string"></value></default>
 	    </equals>
 	</when>
     </constraints>

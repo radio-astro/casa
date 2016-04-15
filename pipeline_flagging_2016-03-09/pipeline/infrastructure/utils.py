@@ -361,9 +361,15 @@ def get_calfroms(inputs, caltypes=None):
     calto = callibrary.CalTo(vis=inputs.vis)
     calstate = inputs.context.callibrary.get_calstate(calto)
 
-    calfroms = (itertools.chain(*calstate.merged().values()))
-
-    return [cf for cf in calfroms if cf.caltype in caltypes]
+    try:
+        # old dict-based callibrary implementation
+        calfroms = (itertools.chain(*calstate.merged().values()))
+        return [cf for cf in calfroms if cf.caltype in caltypes]
+    except AttributeError:
+        # it's a new IntervalTree-based callibrary
+        return [calfrom for _, calfroms in calstate.merged()
+                for calfrom in calfroms
+                if calfrom.caltype in caltypes]
 
 
 def areEqual(a, b):
@@ -966,15 +972,15 @@ def selection_to_frequencies(img, selection, unit='GHz'):
             f0 = qaTool.convert({'value': refFreq + (c0 - refPix) * deltaFreq, 'unit': freqUnit}, unit)
             f1 = qaTool.convert({'value': refFreq + (c1 - refPix) * deltaFreq, 'unit': freqUnit}, unit)
             if (qaTool.lt(f0, f1)):
-                print '%.9f~%.9f%s' % (f0['value'], f1['value'], unit)
+                #print '%.9f~%.9f%s' % (f0['value'], f1['value'], unit)
                 frequencies.append((f0['value'], f1['value']))
             else:
-                print '%.9f~%.9f%s' % (f1['value'], f0['value'], unit)
+                #print '%.9f~%.9f%s' % (f1['value'], f0['value'], unit)
                 frequencies.append((f1['value'], f0['value']))
         iaTool.close()
     else:
         frequencies = ['NONE']
-        print 'None'
+        #print 'None'
 
     return frequencies
 
@@ -1067,6 +1073,7 @@ def flatten_dict(d, join=operator.add, lift=lambda x: (x,)):
     visit(d, results, FLAG_FIRST)
     return results
 
+
 def flagged_intervals(vec):
     '''
     Find islands of non-zeros in the vector vec
@@ -1085,3 +1092,9 @@ def flagged_intervals(vec):
         edge_vec.append([len(vec)])
     edges = np.concatenate(edge_vec)
     return zip(edges[::2], edges[1::2]-1)
+
+
+def dequote(s):
+    '''Remove any kind of quotes from a string to faciliate comparisons.'''
+
+    return s.replace('"','').replace("'","")

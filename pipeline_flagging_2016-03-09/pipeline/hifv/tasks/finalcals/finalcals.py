@@ -8,6 +8,7 @@ import pipeline.infrastructure.callibrary as callibrary
 import pipeline.hif.heuristics.findrefant as findrefant
 import pipeline.infrastructure.utils as utils
 
+
 import os
 import numpy as np
 import math
@@ -20,16 +21,30 @@ from pipeline.hif.tasks import bandpass
 from pipeline.hif.tasks import applycal
 from pipeline.hifv.heuristics import find_EVLA_band, getCalFlaggedSoln, getBCalStatistics
 from pipeline.hifv.tasks.setmodel.setmodel import find_standards, standard_sources
-from pipeline.hifv.heuristics import do_bandpass
+from pipeline.hifv.heuristics import weakbp, do_bandpass
 
 LOG = infrastructure.get_logger(__name__)
 
 
 class FinalcalsInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
-    def __init__(self, context, vis=None):
+    def __init__(self, context, vis=None, weakbp=None):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
+
+        self._weakbp = weakbp
+
+    @property
+    def weakbp(self):
+        return self._weakbp
+
+    @weakbp.setter
+    def weakbp(self, value):
+
+        if self._weakbp is None:
+            self._weakbp = True
+
+        self._weakbp = value
 
 
 class FinalcalsResults(basetask.Results):
@@ -101,10 +116,17 @@ class Finalcals(basetask.StandardTaskTemplate):
         
         LOG.info("Initial BP gain calibration complete")
 
-        bandpass_job = do_bandpass(self.inputs.vis, bpcaltable, context=context, RefAntOutput=refAnt,
-                                            ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse)
+        if (self.inputs.weakbp == True):
+            interp = weakbp(self.inputs.vis, bpcaltable, context=context, RefAntOutput=RefAntOutput[0],
+                                            ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse, solint='inf', append=False)
+        else:
+            interp = ''
+            bandpass_job = do_bandpass(self.inputs.vis, bpcaltable, context=context, RefAntOutput=RefAntOutput[0], spw='',
+                                            ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse, solint='inf', append=False)
+            self._executor.execute(bandpass_job)
 
-        self._executor.execute(bandpass_job)
+
+        #self._executor.execute(bandpass_job)
         
         # Force calwt for the bp table to be False
         ##calto = callibrary.CalTo(self.inputs.vis)
@@ -140,7 +162,7 @@ class Finalcals(basetask.StandardTaskTemplate):
         ##context.callibrary.add(calto, calfrom)
 
         applycal_result = self._do_applycal(context=context, ktypecaltable=ktypecaltable,
-                                            bpcaltable=bpcaltable, avgphasegaincaltable=avgpgain)
+                                            bpcaltable=bpcaltable, avgphasegaincaltable=avgpgain, interp=interp)
         
         ##calto = callibrary.CalTo(self.inputs.vis)
         ##calfrom = callibrary.CalFrom(gaintable=avgpgain, interp='', calwt=False)
@@ -452,7 +474,7 @@ class Finalcals(basetask.StandardTaskTemplate):
             
         return self._executor.execute(job)
       
-    def _do_applycal(self, context=None, ktypecaltable=None, bpcaltable=None, avgphasegaincaltable=None):
+    def _do_applycal(self, context=None, ktypecaltable=None, bpcaltable=None, avgphasegaincaltable=None, interp=None):
         """Run CASA task applycal"""
         
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
@@ -484,7 +506,7 @@ class Finalcals(basetask.StandardTaskTemplate):
                               'docallib'   :False,
                               'gaintable'  :AllCalTables,
                               'gainfield'  :[''],
-                              'interp'     :[''],
+                              'interp'     :[interp],
                               'spwmap'     :[],
                               'calwt'      :[False]*ntables,
                               'parang'     :False,

@@ -17,6 +17,7 @@ import pipeline.domain.measures as measures
 
 LOG = logging.get_logger(__name__)
 
+
 def find_EVLA_band(frequency, bandlimits=None, BBAND='?4PLSCXUKAQ?'):
     """identify VLA band"""
     if bandlimits is None:
@@ -34,6 +35,9 @@ def _get_ms_name(ms):
 class ObservingRunReader(object):
     @staticmethod
     def get_observing_run(ms_files):
+        if isinstance(ms_files, str):
+            ms_files = [ms_files]
+
         observing_run = domain.ObservingRun()
         for ms_file in ms_files:
             ms = MeasurementSetReader.get_measurement_set(ms_file)
@@ -241,8 +245,16 @@ class MeasurementSetReader(object):
             # flatten the state IDs to a 1D list
             state_ids = set(itertools.chain(*state_ids))            
             states = [ms.get_state(i) for i in state_ids]
-            field.states.update(states)
-            for state in states:
+            
+            # some scans may have multiple fields and/or intents so 
+            # it is necessary to distinguish which intents belong to 
+            # each field
+            obs_modes_for_field = set(msmd.intentsforfield(field.id))
+            states_for_field = [s for s in states \
+                if not obs_modes_for_field.isdisjoint(s.obs_mode.split(','))]
+            
+            field.states.update(states_for_field)
+            for state in states_for_field:
                 field.intents.update(state.intents)
             
     @staticmethod
@@ -342,10 +354,8 @@ class SpectralWindowTable(object):
             chan_freqs = msmd.chanfreqs(i)
             chan_widths = msmd.chanwidths(i)            
             sideband = msmd.sideband(i)
-            baseband = msmd.baseband(i)                            
-
-            ref_freq_hz = casatools.quanta.convertfreq(msmd.reffreq(i)['m0'], 'Hz')
-            ref_freq = casatools.quanta.getvalue(ref_freq_hz)[0]
+            baseband = msmd.baseband(i)
+            ref_freq = msmd.reffreq(i)
 
             spw = domain.SpectralWindow(i, spw_name, spw_type, bandwidth,
                     ref_freq, mean_freq, chan_freqs, chan_widths, sideband,
@@ -376,8 +386,6 @@ class ObservationTable(object):
 
             schedblock_id = d.get('SchedulingBlock', 'N/A')
             execblock_id = d.get('ExecBlock', 'N/A')
-
-        
 
         return observer, project_id, schedblock_id, execblock_id
 

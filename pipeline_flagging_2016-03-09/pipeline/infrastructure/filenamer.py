@@ -400,6 +400,11 @@ class CalibrationTable(NamingTemplate):
 
     #- calibration type convenience methods ------------------------------------
 
+    def amplitude_cal(self):
+        '''Set the filename extension as appropriate for a amplitude calibration.
+        ''' 
+        return self.extension('ampcal')
+
     def bandpass_cal(self):
         '''Set the filename extension as appropriate for a bandpass calibration.
         ''' 
@@ -447,6 +452,11 @@ class CalibrationTable(NamingTemplate):
         '''Set the filename extension as appropriate for an antpos  calibration.
         ''' 
         return self.extension('ants')
+
+    def uvcont_cal(self):
+        '''Set the filename extension as appropriate for a uv continuum calibration.
+        ''' 
+        return self.extension('uvcont')
 
     def tsys_cal(self):
         '''Set the filename extension as appropriate for a tsys calibration.
@@ -641,10 +651,20 @@ class MosaicImage(Image):
 #        self._associations.flag_marks(flag_marks)
         return self
 
+class AmplitudeCalibrationTable(CalibrationTable):
+    def __init__(self, other=None):
+        super(AmplitudeCalibrationTable, self).__init__(other)
+        self.amplitude_cal()
+
 class AntposCalibrationTable(CalibrationTable):
     def __init__(self, other=None):
         super(AntposCalibrationTable, self).__init__(other)
         self.antpos_cal()
+
+class UVcontCalibrationTable(CalibrationTable):
+    def __init__(self, other=None):
+        super(UVcontCalibrationTable, self).__init__(other)
+        self.uvcont_cal()
 
 class BandpassCalibrationTable(CalibrationTable):
     def __init__(self, other=None):

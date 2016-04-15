@@ -26,6 +26,7 @@ import impbcor_pg
 import importasdm_cli
 import importevla_cli
 import listobs_cli
+import mstransform_cli
 import partition_cli
 import plotants_cli
 import plotbandpass_cli
@@ -46,6 +47,7 @@ import sdflag_cli
 import sdimaging_cli
 import sdsave_cli
 import sdscale_cli
+import tsdcal_cli
 
 from . import casatools
 from . import logging
@@ -346,6 +348,9 @@ class CASATaskJobGenerator(object):
     def listobs(self, *v, **k):
         return self._get_job(listobs_cli.listobs_cli, *v, **k)
 
+    def mstransform(self, *v, **k):
+        return self._get_job(mstransform_cli.mstransform_cli, *v, **k)
+
     def partition(self, *v, **k):
         return self._get_job(partition_cli.partition_cli, *v, **k)
 
@@ -388,6 +393,12 @@ class CASATaskJobGenerator(object):
     def visstat(self, *v, **k):
         return self._get_job(visstat_cli.visstat_cli, *v, **k)
 
+    def uvcontfit(self, *v, **k):
+        # Note this is pipeline CASA style task not a CASA task
+        #    See if the import works here.
+        import uvcontfit_cli
+        return self._get_job(uvcontfit_cli.uvcontfit_cli, *v, **k)
+
     def sdbaseline2(self, *v, **k):
         return self._get_job(sdbaseline2_pg.sdbaseline2_pg, *v, **k)
 
@@ -405,6 +416,9 @@ class CASATaskJobGenerator(object):
 
     def sdscale(self, *v, **k):
         return self._get_job(sdscale_cli.sdscale_cli, *v, **k)
+    
+    def tsdcal(self, *v, **k):
+        return self._get_job(tsdcal_cli.tsdcal_cli, *v, **k)
 
     def _get_job(self, task, *v, **k):
         job = JobRequest(task, *v, **k)

@@ -3,6 +3,7 @@ import types
 import os
 
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.basetask as basetask
 from .resultobjects import MakeImListResult
 from pipeline.hif.heuristics import makeimlist 
@@ -399,14 +400,25 @@ class MakeImList(basetask.StandardTaskTemplate):
                     new_spwspec = []
                     spwsel = {}
                     for spwid in spwspec.split(','):
-                        spwsel_spwid = self.heuristics.cont_ranges_spwsel[field_intent[0].replace('"','')][spwid]
-                        if ((spwsel_spwid == 'NONE') and (field_intent[1] == 'TARGET')):
-                            LOG.warn('No continuum frequency range information detected for %s, spw %s.' % (field_intent[0], spwid))
-                        else:
-                            if ((spwsel_spwid == '') and (field_intent[1] == 'TARGET')):
+                        spwsel_spwid = self.heuristics.cont_ranges_spwsel[utils.dequote(field_intent[0])][spwid]
+                        if (field_intent[1] == 'TARGET'):
+                            if (spwsel_spwid == 'NONE'):
+                                LOG.warn('No continuum frequency range information detected for %s, spw %s.' % (field_intent[0], spwid))
+                            elif (spwsel_spwid == ''):
                                 LOG.warn('Empty continuum frequency range for %s, spw %s. Run hif_findcont ?' % (field_intent[0], spwid))
-                            new_spwspec.append(spwid)
-                            spwsel['spw%s' % (spwid)] = spwsel_spwid
+
+                        if (spwsel_spwid in ('', 'NONE')):
+                            spwsel_spwid_freqs = ''
+                            spwsel_spwid_refer = 'LSRK'
+                        else:
+                            spwsel_spwid_freqs, spwsel_spwid_refer = spwsel_spwid.split()
+
+                        if (spwsel_spwid_refer != 'LSRK'):
+                            LOG.warn('Frequency selection is specified in %s but must be in LSRK' % (spwsel_spwid_refer))
+                            # TODO: skip this field and/or spw ?
+
+                        new_spwspec.append(spwid)
+                        spwsel['spw%s' % (spwid)] = spwsel_spwid
 
                     new_spwspec = ','.join(new_spwspec)
                     if ((new_spwspec == '') and (field_intent[1] == 'TARGET')):

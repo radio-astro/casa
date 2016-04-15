@@ -3,6 +3,7 @@ import pipeline.infrastructure.pipelineqa as pipelineqa
 import pipeline.infrastructure.renderer.qaadapter as qaadapter
 import pipeline.infrastructure.renderer.weblog as weblog
 
+from .applycal import ApplycalResults
 from .applycal import Applycal
 from . import qa
 from . import applycal

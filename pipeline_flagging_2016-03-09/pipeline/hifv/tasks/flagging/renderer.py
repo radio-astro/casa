@@ -161,7 +161,7 @@ class T2_4MDetailsVLAAgentFlaggerRenderer(basetemplates.T2_4MDetailsDefaultRende
 
 
 
-
+#not used in 4.5.2+ and C3R4+
 class T2_4MDetailstargetflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     def __init__(self, uri='targetflag.mako', 
                  description='Targetflag (All targets through RFLAG)', always_rerender=False):
@@ -177,13 +177,15 @@ class T2_4MDetailstargetflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         
         summary_plots = {}
 
+        '''
         for result in results:
             
             plotter = targetflagdisplay.targetflagSummaryChart(context, result)
             plots = plotter.plot()
             ms = os.path.basename(result.inputs['vis'])
             summary_plots[ms] = plots
-            
+        '''
+
         ctx.update({'summary_plots'   : summary_plots,
                     'dirname'         : weblog_dir})
                 

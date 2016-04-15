@@ -14,6 +14,8 @@ import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.renderer.logger as logger
 
+import numpy
+
 LOG = logging.get_logger(__name__)
 
 
@@ -50,14 +52,22 @@ class T2_4MDetailsFindContRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                     rows.append(TR(field=field, spw=spw, min='None', max='',
                                    frame='None', status=status, spectrum=plotfile))
                 else:
-                    sorted_ranges = sorted(ranges_for_spw, key=operator.itemgetter(0))
+                    raw_ranges_for_spw = [item['range'] for item in ranges_for_spw]
+                    refers = numpy.array([item['refer'] for item in ranges_for_spw])
+                    if ((refers == 'TOPO').all()):
+                        refer = 'TOPO'
+                    elif ((refers == 'LSRK').all()):
+                        refer = 'LSRK'
+                    else:
+                        refer = 'UNDEFINED'
+                    sorted_ranges = sorted(raw_ranges_for_spw, key=operator.itemgetter(0))
                     for (range_min, range_max) in sorted_ranges:
                         # default units for Frequency is GHz, which matches the
                         # units of cont_ranges values
                         min_freq = measures.Frequency(range_min)
                         max_freq = measures.Frequency(range_max)
                         rows.append(TR(field=field, spw=spw, min=min_freq,
-                                       max=max_freq, frame='TOPO', status=status,
+                                       max=max_freq, frame=refer, status=status,
                                        spectrum=plotfile))
 
         return utils.merge_td_columns(rows)

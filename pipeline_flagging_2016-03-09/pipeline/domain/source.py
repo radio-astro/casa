@@ -1,7 +1,11 @@
 from __future__ import absolute_import
 import itertools
+import pprint
 
 import pipeline.infrastructure.casatools as casatools
+
+
+_pprinter = pprint.PrettyPrinter()
 
 
 class Source(object):
@@ -11,6 +15,16 @@ class Source(object):
         self.fields = []
         self._direction = direction
         self._proper_motion = proper_motion
+
+    def __repr__(self):
+        # use pretty printer so we have consistent ordering of dicts
+        return '{0}({1}, {2!r}, {3}, {4})'.format(
+            self.__class__.__name__,
+            self.id,
+            self.name,
+            _pprinter.pformat(self._direction),
+            _pprinter.pformat(self._proper_motion)
+        )
 
     @property
     def dec(self):
@@ -57,7 +71,7 @@ class Source(object):
         units = qa.getunit(self._proper_motion[axis])
         return '' if val == 0 else '%.3e %s' % (val, units)
 
-    def __repr__(self):
+    def __str__(self):
         return ('Source({0}:{1}, pos={2} {3} ({4}), pm={5})'
                 ''.format(self.id, self.name, self.ra, self.dec, self.frame, 
                           self.proper_motion))

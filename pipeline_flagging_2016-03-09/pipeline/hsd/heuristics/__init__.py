@@ -9,6 +9,7 @@ from .grouping import MergeGapTables
 from .grouping2 import MergeGapTables2
 from .observingpattern import ObservingPattern
 from .observingpattern2 import ObservingPattern2
+from .sdbeamsize import SingleDishBeamSize
 from .sdbeamsize import SingleDishBeamSizeFromName
 from .sdbeamsize import AntennaDiameter
 from .sddatatype import DataTypeHeuristics

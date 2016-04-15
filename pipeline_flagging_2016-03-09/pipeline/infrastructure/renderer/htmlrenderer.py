@@ -21,6 +21,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.casataskdict as casataskdict
 import pipeline.infrastructure.displays.summary as summary
+import pipeline.infrastructure.displays.singledish.drawpointing as drawpointing
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.logging as logging
 from pipeline.infrastructure.renderer.templates import resources
@@ -600,10 +601,20 @@ class T2_1DetailsRenderer(object):
             tpsampling_plot = task.plot()
             #LOG.debug('TPSampling plot is disabled for the time being (see CAS-8067)')
             #tpsampling_plot = None
+            
+            LOG.debug('Pointing plot is enabled for single dish MS')
+            pointing_plots = []
+            for antenna in ms.antennas:
+                task = drawpointing.SingleDishPointingChart(context, ms, antenna, target_only=True)
+                pointing_plots.append(task.plot())
+                task = drawpointing.SingleDishPointingChart(context, ms, antenna, target_only=False)
+                pointing_plots.append(task.plot())
         else:
             tpsampling_plot = None
+            pointing_plots = []
             
         LOG.trace('tpsampling_plot = %s'%(tpsampling_plot))
+        LOG.trace('pointint_plots = %s'%(pointing_plots))
 
         dirname = os.path.join('session%s' % ms.session,
                                ms.basename)
@@ -865,6 +876,41 @@ class T2_2_6Renderer(T2_2_XRendererBase):
                 'ms'           : ms,
                 'tablerows'    : tablerows}
 
+
+class T2_2_7Renderer(T2_2_XRendererBase):
+    """
+    T2-2-7 renderer (single dish specific)
+    """
+    output_file = 't2-2-7.html'
+    template = 't2-2-7.html'
+
+    @staticmethod
+    def get_display_context(context, ms):
+        target_pointings = []
+        whole_pointings = []
+        if is_singledish_ms(context):
+            for antenna in ms.antennas:
+                for (target, reference) in ms.calibration_strategy['field_strategy'].items():
+                    LOG.debug('target field id %s / reference field id %s'%(target,reference))
+                    task = drawpointing.SingleDishPointingChart(context, ms, antenna, 
+                                                                target_field_id=target,
+                                                                reference_field_id=reference,
+                                                                target_only=True)
+                    target_pointings.append(task.plot())
+                    task = drawpointing.SingleDishPointingChart(context, ms, antenna, 
+                                                                target_field_id=target,
+                                                                reference_field_id=reference,
+                                                                target_only=False)
+                    whole_pointings.append(task.plot())
+
+        dirname = os.path.join('session%s' % ms.session,
+                               ms.basename)
+
+        return {'pcontext'        : context,
+                'ms'              : ms,
+                'target_pointing' : target_pointings,
+                'whole_pointing'  : whole_pointings,
+                'dirname'         : dirname}
 
 class T2_3_XMBaseRenderer(RendererBase):
     # the filename to which output will be directed
@@ -1468,6 +1514,7 @@ class WebLogGenerator(object):
                  T2_2_4Renderer,       # sky setup
                  T2_2_5Renderer,       # weather
                  T2_2_6Renderer,       # scans
+                 T2_2_7Renderer,       # telescope pointing (single dish specific)
                  T2_3_1MRenderer,      # data set topic
                  T2_3_2MRenderer,      # calibration topic
                  T2_3_3MRenderer,      # flagging topic

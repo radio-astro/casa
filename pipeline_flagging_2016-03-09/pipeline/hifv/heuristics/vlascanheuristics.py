@@ -20,6 +20,8 @@ import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.api as api
 import pipeline.infrastructure.utils as utils
 
+import datetime
+
 
 
 # the logger for this module
@@ -29,27 +31,27 @@ LOG = logging.get_logger(__name__)
 def buildscans(msfile, scd):
     """
     buildscans:  compile scan information for msfile
-  
-    Created S.T. Myers 2012-05-07  v1.0 
+
+    Created S.T. Myers 2012-05-07  v1.0
     Updated S.T. Myers 2012-05-14  v1.1 add corrtype
     Updated S.T. Myers 2012-06-27  v1.2 add corrdesc lookup
     Updated S.T. Myers 2012-11-13  v2.0 STM casa 4.0 new calls
-             
+
     Usage:
           from lib_EVLApipeutils import buildscans
-  
+
     Input:
-  
+
            msfile   -   name of MS
-  
+
     Output: scandict (return value)
-  
+
     Examples:
-  
+
     CASA <2>: from lib_EVLApipeutils import buildscans
-   
+
     CASA <3>: msfile = 'TRSR0045_sb600507.55900.ms'
-   
+
     CASA <4>: myscans = buildscans(msfile)
     Getting scansummary from MS
     Found 16 DataDescription IDs
@@ -73,15 +75,15 @@ def buildscans(msfile, scd):
     Found total 54752 times
     Found 175 scans min=1 max=180
     Size of scandict in memory is 248 bytes
-   
+
     CASA <5>: myscans['Scans'][1]['intents']
      Out[5]: 'CALIBRATE_AMPLI#UNSPECIFIED,UNSPECIFIED#UNSPECIFIED'
-   
+
     CASA <6>: myscans['Scans'][1]['dd']
      Out[6]: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
-   
+
     CASA <7>: myscans['DataDescription'][0]
-     Out[7]: 
+     Out[7]:
     {'corrdesc': ['RR', 'RL', 'LR'', 'LL'],
     'corrtype': [5, 6, 7, 8],
     'ipol': 0,
@@ -92,7 +94,7 @@ def buildscans(msfile, scd):
     'spwname': 'Subband:0'}
 
     CASA <8>: myscans['Scans'][1]['times'][0]
-     Out[8]: 
+     Out[8]:
     [4829843281.500001,
     4829843282.5,
     4829843283.5,
@@ -106,9 +108,9 @@ def buildscans(msfile, scd):
     in the 'Scans' part to index into the 'DataDescription' info.
 
     You can also list the keys available in the Scans sub-dictionary:
-   
+
     CASA <9>: myscans['Scans'][1].keys()
-     Out[9]: 
+     Out[9]:
     ['scan_mid',
     'intents',
     'field',
@@ -163,7 +165,7 @@ def buildscans(msfile, scd):
     # Usage: find desc for an index, e.g. cordesclist[corrtype]
     #        find index for a desc, e.g. cordesclist.index(corrdesc)
     #
-    
+
     #try:
     #    import casac
     #except ImportError, e:
@@ -173,7 +175,7 @@ def buildscans(msfile, scd):
     #ms = casac.ms = mstool.create()
     #tbtool = casac.homefinder.find_home_by_name('tableHome')
     #tb = casac.tb = tbtool.create()
-    
+
     ####ms = casatools.casac.ms()
     tb = casatools.casac.table()
 
@@ -192,7 +194,7 @@ def buildscans(msfile, scd):
     ####print 'Getting scansummary from MS'
     # get the scan summary using ms.getscansummary method
     #mysc = ms.getscansummary()
-    
+
     #Already open - uncomment to run getscansummary
     #scd = ms.getscansummary()
 
@@ -229,7 +231,7 @@ def buildscans(msfile, scd):
     ####print 'Extracted information for '+str(nspw)+' SpectralWindows'
     #
     # Now the polarizations (number of correlations in each pol id
-    
+
     with casatools.TableReader(msfile + '/POLARIZATION') as table:
         #tb.open(msfile+"/POLARIZATION")
         ncorarr=table.getcol("NUM_CORR")
@@ -254,8 +256,8 @@ def buildscans(msfile, scd):
         # for alma this would be 9,10,11,12 for XX,XY,YX,YY respectively
         # cordesc are the strings associated with the types (enum for casa)
         #tb.close()
-        
-        
+
+
     ####print 'Extracted information for '+str(npols)+' Polarization Setups'
     #
     # Build the DD index
@@ -312,9 +314,9 @@ def buildscans(msfile, scd):
     ddlookup = {}
     ddscantimes = {}
     ntottimes=0
-    
+
     with casatools.MSReader(msfile) as ms:
-    
+
 	for idd in range(ndd):
 	    # Select this DD (after reset if needed)
 	    if idd>0: ms.selectinit(reset=True)
@@ -346,7 +348,7 @@ def buildscans(msfile, scd):
 		    ddlookup[isc] = [idd]
 		    ddscantimes[isc] = {}
 		    ddscantimes[isc][idd] = [tim]
-        
+
     #
     ####print 'Found total '+str(ntottimes)+' times'
 
@@ -354,7 +356,7 @@ def buildscans(msfile, scd):
     ####ms.close()
     ####
 
-    # compile a list of scan times 
+    # compile a list of scan times
     #
     #scd = mysc['summary']
     scanlist = []
@@ -375,7 +377,7 @@ def buildscans(msfile, scd):
 
     # Put DataDescription lookup into dictionary
     scandict['DataDescription'] = ddindex
-        
+
     # Put Scan information in dictionary
     scandict['Scans'] = {}
     for isc in scanlist:
@@ -428,26 +430,26 @@ def buildscans(msfile, scd):
         # DDs for this scan
         ddlist = ddlookup[isc]
         scandict['Scans'][isc]['dd'] = ddlist
-        
+
         # number of polarizations for this list of dds
         ddnpollist = []
         for idd in ddlist:
             npol = ddindex[idd]['npol']
             ddnpollist.append(npol)
         scandict['Scans'][isc]['npol'] = ddnpollist
-        
+
         # visibility times per dd in this scan
         #
         scandict['Scans'][isc]['times'] = {}
         for idd in ddlist:
             scandict['Scans'][isc]['times'][idd] = ddscantimes[isc][idd]
-        
+
     mysize = scandict.__sizeof__()
     ####print 'Size of scandict in memory is '+str(mysize)+' bytes'
-    
+
     print 'CACHE END'
     print tb.showcache()
-    
+
     return scandict
 
 
@@ -456,22 +458,22 @@ def buildscans(msfile, scd):
 class VLAScanHeuristics(object):
     def __init__(self, vis):
         self.vis = vis
-    # link the accompanying inputs to this task 
+    # link the accompanying inputs to this task
     #Inputs = VLAUtilsInputs
 
     #def prepare(self):
     #    return True
-    
+
     #def analyse(self, results):
     #	    return results
-    
+
     '''
     def convertspw2band(self):
         """match spw number to EVLA band identifier
         """
-        
+
         spw2band = {}
-        
+
         cordesclist = ['Undefined','I','Q','U','V',
                        'RR','RL','LR','LL',
                        'XX','XY','YX','YY',
@@ -482,7 +484,7 @@ class VLAScanHeuristics(object):
                        'Linear','Ptotal',
                        'Plinear','PFtotal',
                        'PFlinear','Pangle' ]
-        
+
         with casatools.TableReader(self.vis + '/DATA_DESCRIPTION') as table:
             #tb.open(msfile+"/DATA_DESCRIPTION")
             ddspwarr=table.getcol("SPECTRAL_WINDOW_ID")
@@ -491,7 +493,7 @@ class VLAScanHeuristics(object):
         ddspwlist = ddspwarr.tolist()
         ddpollist = ddpolarr.tolist()
         ndd = len(ddspwlist)
-        
+
         with casatools.TableReader(self.vis + '/SPECTRAL_WINDOW') as table:
             #tb.open(msfile+"/SPECTRAL_WINDOW")
             nchanarr=table.getcol("NUM_CHAN")
@@ -505,7 +507,7 @@ class VLAScanHeuristics(object):
             spwlookup[isp]['nchan'] = nchanarr[isp]
             spwlookup[isp]['name'] = str( spwnamearr[isp] )
             spwlookup[isp]['reffreq'] = reffreqarr[isp]
-        
+
         with casatools.TableReader(self.vis + '/POLARIZATION') as table:
             #tb.open(msfile+"/POLARIZATION")
             ncorarr=table.getcol("NUM_CORR")
@@ -524,8 +526,8 @@ class VLAScanHeuristics(object):
 		    cordescs.append(cde)
 		polindex[ip] = cortypes
 		poldescr[ip] = cordescs
-            
-            
+
+
         ddindex = {}
         ncorlist=ncorarr.tolist()
         for idd in range(ndd):
@@ -541,8 +543,8 @@ class VLAScanHeuristics(object):
             ddindex[idd]['npol'] = ncorlist[ipol]
             ddindex[idd]['corrtype'] = polindex[ipol]
             ddindex[idd]['corrdesc'] = poldescr[ipol]
-        
-        
+
+
         for spw in ddindex:
 
             strelems =  list(ddindex[spw]['spwname'])
@@ -557,26 +559,26 @@ class VLAScanHeuristics(object):
                 spw2band[spw] = 'A'
 
         return spw2band
-    '''    
-    
-    
-    
-    
+    '''
+
+
+
+
     def makescandict(self):
         """Run Steve's buildscans"""
-        
+
         with casatools.MSReader(self.vis) as ms:
             self.scan_summary = ms.getscansummary()
             self.ms_summary = ms.summary()
-        
+
         ####self.scandict = buildscans(self.vis, self.scan_summary)
         #self.startdate=float(self.ms_summary['BeginTime'])
-               
+
         #with casatools.TableReader(self.inputs.vis) as table:
         #    self.scanNums = sorted(numpy.unique(table.getcol('SCAN_NUMBER')))
 
-        
-        
+
+
         #These will be needed later in the pipeline
         self.gain_solint1 = 'int'
         self.gain_solint2 = 'int'
@@ -585,16 +587,16 @@ class VLAScanHeuristics(object):
         self.longsolint = 0.0
         self.short_solint = 0.0
         self.new_gain_solint1 = '1.0s'
-        
+
         self.fluxscale_sources = []
         self.fluxscale_flux_densities = []
         self.fluxscale_spws = []
-        
+
         self.flagspw1  = ''
         self.flagspw1b = ''
         self.flagspw2  = ''
-        
-        
+
+
         """
         Prep string listing of correlations from dictionary created by method buildscans
         For now, only use the parallel hands.  Cross hands will be implemented later.
@@ -603,19 +605,13 @@ class VLAScanHeuristics(object):
         ##self.removal_list = ['RL', 'LR', 'XY', 'YX']
         ##self.corrstring_list = list(set(self.corrstring_list).difference(set(self.removal_list)))
         ##self.corrstring = string.join(self.corrstring_list,',')
-        
+
         #Create dictionary of band names from spw ids
         ##self.spw2band = self.convertspw2band()
-        
+
         return True
-        
-        
-        
-    
-    
-    
-    
-    
+
+
     def calibratorIntents(self):
         """
             # Identify scans and fields associated with different calibrator intents
@@ -623,23 +619,23 @@ class VLAScanHeuristics(object):
             # NB: the scan intent definitions changed in the OPT on Feb 21,
             # 2012.  So test on date:
         """
-        
+
         tb = casatools.casac.table()
-        
-        print 'CAL INTENT CACHE 1:'
-        print tb.showcache()
-        
-        
+
+        #print 'CAL INTENT CACHE 1:'
+        #print tb.showcache()
+
+
         with casatools.TableReader(self.vis+'/SPECTRAL_WINDOW') as table:
             channels = table.getcol('NUM_CHAN')
-        
+
         numSpws = len(channels)
-        
+
         with casatools.MSReader(self.vis) as ms:
-            ms_summary = ms.summary()
-        
+            self.ms_summary = ms.summary()
+
         startdate=float(self.ms_summary['BeginTime'])
-        
+
         with casatools.TableReader(self.vis+'/STATE') as table:
             intents=casatools.table.getcol('OBS_MODE')
 
@@ -651,9 +647,9 @@ class VLAScanHeuristics(object):
         self.amp_state_IDs = []
         self.calibrator_state_IDs = []
         self.pointing_state_IDs = []
-        
-        print 'CAL INTENT CACHE 2:'
-        print tb.showcache()
+
+        #print 'CAL INTENT CACHE 2:'
+        #print tb.showcache()
 
         if startdate <= 55978.50:
             for state_ID in range(0,len(intents)):
@@ -679,9 +675,9 @@ class VLAScanHeuristics(object):
                     elif (self.scan_intent == 'CALIBRATE_POINTING'):
                         self.pointing_state_IDs.append(state_ID)
                         self.calibrator_state_IDs.append(state_ID)
-        
+
             ####casatools.table.open(self.vis)
-        
+
             if (len(self.flux_state_IDs) == 0):
                 #QA_msinfo='Fail'
                 #logprint("ERROR: No flux density calibration scans found", logfileout='logs/msinfo.log')
@@ -691,10 +687,10 @@ class VLAScanHeuristics(object):
                 for state_ID in range(1,len(self.flux_state_IDs)):
                     self.flux_state_select_string += (',%s')%self.flux_state_IDs[state_ID]
                 self.flux_state_select_string += ']'
-                
-                print 'CAL INTENT CACHE 3:'
-                print tb.showcache()
-                
+
+                #print 'CAL INTENT CACHE 3:'
+                #print tb.showcache()
+
                 with casatools.TableReader(self.vis) as table:
 		    subtable = table.query(self.flux_state_select_string)
 		    self.flux_scan_list = list(numpy.unique(subtable.getcol('SCAN_NUMBER')))
@@ -704,10 +700,10 @@ class VLAScanHeuristics(object):
 		    self.flux_field_select_string = ','.join(["%s" % ii for ii in self.flux_field_list])
 		    #logprint ("Flux density calibrator(s) are fields "+flux_field_select_string, logfileout='logs/msinfo.log')
 		    subtable.close()
-		    
-		print 'CAL INTENT CACHE 4:'
-                print tb.showcache()
-        
+
+		    #print 'CAL INTENT CACHE 4:'
+            #print tb.showcache()
+
             if (len(self.bandpass_state_IDs) == 0):
                 #logprint ("No bandpass calibration scans defined, using flux density calibrator(s)")
                 self.bandpass_scan_select_string=self.flux_scan_select_string
@@ -719,11 +715,11 @@ class VLAScanHeuristics(object):
                 for state_ID in range(1,len(self.bandpass_state_IDs)):
                     self.bandpass_state_select_string += (',%s')%self.bandpass_state_IDs[state_ID]
                 self.bandpass_state_select_string += ']'
-                
-                
-                print 'CAL INTENT CACHE 5:'
-                print tb.showcache()
-                
+
+
+                #print 'CAL INTENT CACHE 5:'
+                #print tb.showcache()
+
                 with casatools.TableReader(self.vis) as table:
 		    subtable = table.query(self.bandpass_state_select_string)
 		    self.bandpass_scan_list = list(numpy.unique(subtable.getcol('SCAN_NUMBER')))
@@ -739,10 +735,10 @@ class VLAScanHeuristics(object):
 			#logprint ("WARNING: only the first field.", logfileout='logs/msinfo.log')
 			self.bandpass_field_select_string = str(self.bandpass_field_list[0])
 		    subtable.close()
-        
-                print 'CAL INTENT CACHE 6:'
-                print tb.showcache()
-        
+
+                #print 'CAL INTENT CACHE 6:'
+                #print tb.showcache()
+
             if (len(self.delay_state_IDs) == 0):
                 #logprint ("No delay calibration scans defined, using bandpass calibrator")
                 self.delay_scan_select_string=self.bandpass_scan_select_string
@@ -754,7 +750,7 @@ class VLAScanHeuristics(object):
                 for state_ID in range(1,len(self.delay_state_IDs)):
                     self.delay_state_select_string += (',%s')%self.delay_state_IDs[state_ID]
                 self.delay_state_select_string += ']'
-                
+
                 with casatools.TableReader(self.vis) as table:
 		    subtable = table.query(self.delay_state_select_string)
 		    self.delay_scan_list = list(numpy.unique(subtable.getcol('SCAN_NUMBER')))
@@ -770,10 +766,10 @@ class VLAScanHeuristics(object):
 			#logprint ("WARNING: only the first field.", logfileout='logs/msinfo.log')
 			self.delay_field_select_string = str(self.delay_field_list[0])
 		    subtable.close()
-        
-                print 'CAL INTENT CACHE 7:'
-                print tb.showcache()
-        
+
+                #print 'CAL INTENT CACHE 7:'
+                #print tb.showcache()
+
             if (len(self.polarization_state_IDs) == 0):
                 #logprint ("No polarization calibration scans defined, no polarization calibration possible", logfileout='logs/msinfo.log')
                 self.polarization_scan_select_string=''
@@ -784,7 +780,7 @@ class VLAScanHeuristics(object):
                 for state_ID in range(1,len(self.polarization_state_IDs)):
                     self.polarization_state_select_string += (',%s')%self.polarization_state_IDs[state_ID]
                 self.polarization_state_select_string += ']'
-                
+
                 with casatools.TableReader(self.vis) as table:
 		    subtable = table.query(self.polarization_state_select_string)
 		    self.polarization_scan_list = list(numpy.unique(subtable.getcol('SCAN_NUMBER')))
@@ -794,10 +790,10 @@ class VLAScanHeuristics(object):
 		    self.polarization_field_select_string = ','.join(["%s" % ii for ii in self.polarization_field_list])
 		    #logprint ("Polarization calibrator(s) are fields "+polarization_field_select_string, logfileout='logs/msinfo.log'
 		    subtable.close()
-        
-                print 'CAL INTENT CACHE 8:'
-                print tb.showcache()
-        
+
+                #print 'CAL INTENT CACHE 8:'
+                #print tb.showcache()
+
             if (len(self.phase_state_IDs) == 0):
                 #QA_msinfo='Fail'
                 #logprint("ERROR: No gain calibration scans found", logfileout='logs/msinfo.log')
@@ -807,9 +803,9 @@ class VLAScanHeuristics(object):
                 for state_ID in range(1,len(self.phase_state_IDs)):
                     self.phase_state_select_string += (',%s')%self.phase_state_IDs[state_ID]
                 self.phase_state_select_string += ']'
-                
-                
-                
+
+
+
                 with casatools.TableReader(self.vis) as table:
 		    subtable = table.query(self.phase_state_select_string)
 		    self.phase_scan_list = list(numpy.unique(subtable.getcol('SCAN_NUMBER')))
@@ -819,19 +815,19 @@ class VLAScanHeuristics(object):
 		    self.phase_field_select_string = ','.join(["%s" % ii for ii in self.phase_field_list])
 		    #logprint ("Phase calibrator(s) are fields "+phase_field_select_string, logfileout='logs/msinfo.log')
 		    subtable.close()
-        
-        
-                print 'CAL INTENT CACHE 9:'
-                print tb.showcache()
-        
+
+
+                #print 'CAL INTENT CACHE 9:'
+                #print tb.showcache()
+
         # Find all calibrator scans and fields
-        
+
             self.calibrator_state_select_string = ('STATE_ID in [%s'%self.calibrator_state_IDs[0])
             for state_ID in range(1,len(self.calibrator_state_IDs)):
                 self.calibrator_state_select_string += (',%s')%self.calibrator_state_IDs[state_ID]
-        
+
             self.calibrator_state_select_string += ']'
-            
+
             with casatools.TableReader(self.vis) as table:
 		subtable = table.query(self.calibrator_state_select_string)
 		self.calibrator_scan_list = list(numpy.unique(subtable.getcol('SCAN_NUMBER')))
@@ -839,12 +835,12 @@ class VLAScanHeuristics(object):
 		self.calibrator_field_list = list(numpy.unique(subtable.getcol('FIELD_ID')))
 		self.calibrator_field_select_string = ','.join(["%s" % ii for ii in self.calibrator_field_list])
 		subtable.close()
-        
-            print 'CAL INTENT CACHE 10:'
-            print tb.showcache()
-        
+
+            #print 'CAL INTENT CACHE 10:'
+            #print tb.showcache()
+
             ####casatools.table.close()
-            
+
         else:
             for state_ID in range(0,len(intents)):
                 self.state_intents = intents[state_ID].rsplit(',')
@@ -871,10 +867,10 @@ class VLAScanHeuristics(object):
                         self.calibrator_state_IDs.append(state_ID)
                     elif (self.scan_intent == 'CALIBRATE_POINTING'):
                         self.pointing_state_IDs.append(state_ID)
-                        self.calibrator_state_IDs.append(state_ID)   
-            
+                        self.calibrator_state_IDs.append(state_ID)
+
             ####casatools.table.open(self.vis)
-            
+
             if (len(self.flux_state_IDs) == 0):
                 #QA_msinfo='Fail'
                 #logprint("ERROR: No flux density calibration scans found", logfileout='logs/msinfo.log')
@@ -884,9 +880,9 @@ class VLAScanHeuristics(object):
                 for state_ID in range(1,len(self.flux_state_IDs)):
                     self.flux_state_select_string += (',%s')%self.flux_state_IDs[state_ID]
                 self.flux_state_select_string += ']'
-                
-                
-                
+
+
+
                 with casatools.TableReader(self.vis) as table:
 		    subtable = table.query(self.flux_state_select_string)
 		    self.flux_scan_list = list(numpy.unique(subtable.getcol('SCAN_NUMBER')))
@@ -896,11 +892,11 @@ class VLAScanHeuristics(object):
 		    self.flux_field_select_string = ','.join(["%s" % ii for ii in self.flux_field_list])
 		    #logprint ("Flux density calibrator(s) are fields "+flux_field_select_string, logfileout='logs/msinfo.log')
 		    subtable.close()
- 
-                print 'CAL INTENT CACHE 11:'
-                print tb.showcache()
- 
- 
+
+                #print 'CAL INTENT CACHE 11:'
+                #print tb.showcache()
+
+
             if (len(self.bandpass_state_IDs) == 0):
                 #logprint ("No bandpass calibration scans defined, using flux density calibrator", logfileout='logs/msinfo.log')
                 self.bandpass_scan_select_string=self.flux_scan_select_string
@@ -912,7 +908,7 @@ class VLAScanHeuristics(object):
                 for state_ID in range(1,len(self.bandpass_state_IDs)):
                     self.bandpass_state_select_string += (',%s')%self.bandpass_state_IDs[state_ID]
                 self.bandpass_state_select_string += ']'
-                
+
                 with casatools.TableReader(self.vis) as table:
 		    subtable = table.query(self.bandpass_state_select_string)
 		    self.bandpass_scan_list = list(numpy.unique(subtable.getcol('SCAN_NUMBER')))
@@ -928,10 +924,10 @@ class VLAScanHeuristics(object):
 			#logprint ("WARNING: only the first field.", logfileout='logs/msinfo.log')
 			self.bandpass_field_select_string = str(self.bandpass_field_list[0])
 		    subtable.close()
-        
-                print 'CAL INTENT CACHE 12:'
-                print tb.showcache()
-        
+
+                #print 'CAL INTENT CACHE 12:'
+                #print tb.showcache()
+
             if (len(self.delay_state_IDs) == 0):
                 #logprint ("No delay calibration scans defined, using bandpass calibrator", logfileout='logs/msinfo.log')
                 self.delay_scan_select_string=self.bandpass_scan_select_string
@@ -943,7 +939,7 @@ class VLAScanHeuristics(object):
                 for state_ID in range(1,len(self.delay_state_IDs)):
                     self.delay_state_select_string += (',%s')%self.delay_state_IDs[state_ID]
                 self.delay_state_select_string += ']'
-                
+
                 with casatools.TableReader(self.vis) as table:
 		    subtable = table.query(self.delay_state_select_string)
 		    self.delay_scan_list = list(numpy.unique(subtable.getcol('SCAN_NUMBER')))
@@ -953,10 +949,10 @@ class VLAScanHeuristics(object):
 		    self.delay_field_select_string = ','.join(["%s" % ii for ii in self.delay_field_list])
 		    #logprint ("Delay calibrator(s) are fields "+delay_field_select_string, logfileout='logs/msinfo.log')
 		    subtable.close()
-            
-                print 'CAL INTENT CACHE 13:'
-                print tb.showcache()
-            
+
+                #print 'CAL INTENT CACHE 13:'
+                #print tb.showcache()
+
             if (len(self.polarization_state_IDs) == 0):
                 #logprint ("No polarization calibration scans defined, no polarization calibration possible", logfileout='logs/msinfo.log')
                 self.polarization_scan_select_string=''
@@ -967,7 +963,7 @@ class VLAScanHeuristics(object):
                 for state_ID in range(1,len(self.polarization_state_IDs)):
                     self.polarization_state_select_string += (',%s')%self.polarization_state_IDs[state_ID]
                 self.polarization_state_select_string += ']'
-                
+
                 with casatools.TableReader(self.vis) as table:
 		    subtable = table.query(self.polarization_state_select_string)
 		    self.polarization_scan_list = list(numpy.unique(subtable.getcol('SCAN_NUMBER')))
@@ -977,10 +973,10 @@ class VLAScanHeuristics(object):
 		    self.polarization_field_select_string = ','.join(["%s" % ii for ii in self.polarization_field_list])
 		    #logprint ("Polarization calibrator(s) are fields "+polarization_field_select_string, logfileout='logs/msinfo.log')
 		    subtable.close()
-            
-                print 'CAL INTENT CACHE 14:'
-                print tb.showcache()
-            
+
+                #print 'CAL INTENT CACHE 14:'
+                #print tb.showcache()
+
             if (len(self.phase_state_IDs) == 0):
                 #QA_msinfo='Fail'
                 #logprint("ERROR: No gain calibration scans found", logfileout='logs/msinfo.log')
@@ -990,7 +986,7 @@ class VLAScanHeuristics(object):
                 for state_ID in range(1,len(self.phase_state_IDs)):
                     self.phase_state_select_string += (',%s')%self.phase_state_IDs[state_ID]
                 self.phase_state_select_string += ']'
-                
+
                 with casatools.TableReader(self.vis) as table:
 		    subtable = table.query(self.phase_state_select_string)
 		    self.phase_scan_list = list(numpy.unique(subtable.getcol('SCAN_NUMBER')))
@@ -1000,10 +996,10 @@ class VLAScanHeuristics(object):
 		    self.phase_field_select_string = ','.join(["%s" % ii for ii in self.phase_field_list])
 		    #logprint ("Phase calibrator(s) are fields "+phase_field_select_string, logfileout='logs/msinfo.log')
 		    subtable.close()
-            
-                print 'CAL INTENT CACHE 15:'
-                print tb.showcache()
-            
+
+                #print 'CAL INTENT CACHE 15:'
+                #print tb.showcache()
+
             if (len(self.amp_state_IDs) == 0):
                 #logprint ("No amplitude calibration scans defined, will use phase calibrator", logfileout='logs/msinfo.log')
                 self.amp_scan_select_string=self.phase_scan_select_string
@@ -1015,7 +1011,7 @@ class VLAScanHeuristics(object):
                 for state_ID in range(1,len(self.amp_state_IDs)):
                     self.amp_state_select_string += (',%s')%self.amp_state_IDs[state_ID]
                 self.amp_state_select_string += ']'
-                
+
                 with casatools.TableReader(self.vis) as table:
 		    subtable = table.query(self.amp_state_select_string)
 		    self.amp_scan_list = list(numpy.unique(subtable.getcol('SCAN_NUMBER')))
@@ -1025,18 +1021,18 @@ class VLAScanHeuristics(object):
 		    self.amp_field_select_string = ','.join(["%s" % ii for ii in self.amp_field_list])
 		    #logprint ("Amplitude calibrator(s) are fields "+amp_field_select_string, logfileout='logs/msinfo.log')
 		    subtable.close()
-            
-                print 'CAL INTENT CACHE 16:'
-                print tb.showcache()
-            
+
+                #print 'CAL INTENT CACHE 16:'
+                #print tb.showcache()
+
             # Find all calibrator scans and fields
-            
+
             self.calibrator_state_select_string = ('STATE_ID in [%s'%self.calibrator_state_IDs[0])
             for state_ID in range(1,len(self.calibrator_state_IDs)):
                 self.calibrator_state_select_string += (',%s')%self.calibrator_state_IDs[state_ID]
-            
+
             self.calibrator_state_select_string += ']'
-            
+
             with casatools.TableReader(self.vis) as table:
 		subtable = table.query(self.calibrator_state_select_string)
 		self.calibrator_scan_list = list(numpy.unique(subtable.getcol('SCAN_NUMBER')))
@@ -1044,62 +1040,173 @@ class VLAScanHeuristics(object):
 		self.calibrator_field_list = list(numpy.unique(subtable.getcol('FIELD_ID')))
 		self.calibrator_field_select_string = ','.join(["%s" % ii for ii in self.calibrator_field_list])
 		subtable.close()
-            
-            print 'CAL INTENT CACHE 17:'
-            print tb.showcache()
-            
+
+            #print 'CAL INTENT CACHE 17:'
+            #print tb.showcache()
+
             ####casatools.table.close()
-            
+
         #If there are any pointing state IDs, subtract 2 from the number of
         #science spws -- needed for QA scores
         if (len(self.pointing_state_IDs)>0):
             self.numSpws2 = numSpws - 2
         else:
             self.numSpws2 = numSpws
-        
+
         if (self.delay_scan_select_string == self.bandpass_scan_select_string):
             self.testgainscans=self.bandpass_scan_select_string
         else:
             self.testgainscans=self.bandpass_scan_select_string+','+self.delay_scan_select_string
 
-        
-        
-        
+
+
+
         self.checkflagfields=''
         if (self.bandpass_field_select_string == self.delay_field_select_string):
             self.checkflagfields = self.bandpass_field_select_string
         else:
             self.checkflagfields = (self.bandpass_field_select_string+','+ self.delay_field_select_string)
-        
-        
-        
-        
-        
+
+
+
+
+
         return True
-            
-    
-    
-    
-    
+
+
+    def calibratorIntents2(self):
+        """
+            # Identify scans and fields associated with different calibrator intents
+
+            # NB: the scan intent definitions changed in the OPT on Feb 21,
+            # 2012.  So test on date:
+            # Test Implementation: JSK April 11, 2016
+        """
+
+        def buildSelectionString(selectionList):
+            return  ','.join(["%s" % item for item in selectionList])
+
+
+        with casatools.MSMDReader(self.vis) as msmd:
+            # We used to use CALIBRATE_AMPLI rather than FLUX
+            # Note that in the current epoch we do not use the
+            # CALIBRATE_AMPLI intent for anything.
+            # There is an implicit assumption here that we only have one
+            # observation in the MS
+            if casatools.quanta.le(msmd.timerangeforobs(0)['begin']['m0'],
+                      casatools.quanta.quantity("2012/02/21 12:00:00")):
+                self.flux_scan_select_string = \
+                    buildSelectionString(msmd.scansforintent("CALIBRATE_AMPLI*"))
+                self.flux_field_select_string = \
+                    buildSelectionString(msmd.fieldsforintent("CALIBRATE_AMPLI*"))
+            else:
+                self.flux_scan_select_string = \
+                    buildSelectionString(msmd.scansforintent("CALIBRATE_FLUX*"))
+                self.flux_field_select_string = \
+                    buildSelectionString(msmd.fieldsforintent("CALIBRATE_FLUX*"))
+
+            if (self.flux_field_select_string == ''):
+                raise Exception("No flux density calibration fields found")
+
+            # Bandpass Cal Intent
+            self.bandpass_scan_select_string = \
+                buildSelectionString(msmd.scansforintent("CALIBRATE_BANDPASS*"))
+            self.bandpass_field_select_string = \
+                buildSelectionString(msmd.fieldsforintent("CALIBRATE_BANDPASS*"))
+
+            if (self.bandpass_scan_select_string == '' or
+                self.bandpass_field_select_string == ''):
+                # Default to using the flux scan for bandpass
+                self.bandpass_scan_select_string  = self.flux_scan_select_string
+                self.bandpass_field_select_string = self.flux_scan_select_string
+
+            # Delay Cal Intent
+            self.delay_scan_select_string = \
+                buildSelectionString(msmd.scansforintent("CALIBRATE_DELAY*"))
+            self.delay_field_select_string =\
+                buildSelectionString(msmd.fieldsforintent("CALIBRATE_DELAY*"))
+            if (self.delay_scan_select_string == '' or
+                self.delay_field_select_string == ''):
+                #Default to using the bandpass for the delay
+                self.delay_scan_select_string  = self.bandpass_scan_select_string
+                self.delay_field_select_string = self.bandpass_field_select_string
+
+
+            #Polarization Cal Intent
+            self.polarization_scan_select_string = \
+                buildSelectionString(msmd.scansforintent("CALIBRATE_POLARIZATION*"))
+            self.polarization_field_select_string =\
+                buildSelectionString(msmd.fieldsforintent("CALIBRATE_POLARIZATION*"))
+
+            #Phase Cal Intent
+            self.phase_scan_select_string = \
+                buildSelectionString(msmd.scansforintent("CALIBRATE_PHASE*"))
+            self.phase_field_select_string = \
+                buildSelectionString(msmd.fieldsforintent("CALIBRATE_PHASE*"))
+            if (self.phase_scan_select_string == '' or
+                self.phase_field_select_string == ''):
+                raise Exception("No gain calibration scans found")
+
+            # Find all calibrator scans and fields
+            self.calibrator_scan_select_string = \
+                buildSelectionString(msmd.scansforintent("CALIBRATE*"))
+            self.calibrator_field_select_string = \
+                buildSelectionString(msmd.fieldsforintent("CALIBRATE*"))
+
+
+            # JSK: Modifying the heuristic for dealing with the number of
+            #      science SPWs after discussion with Claire 4/12/2016.
+            # New Heuristic is: from numSpws2 subtract the number of spws that
+            #     only appear in pointing scans.
+            #
+            # Here is the Old hueristic
+            #If there are any pointing state IDs, subtract 2 from the number of
+            #science spws -- needed for QA scores
+            #if (len(self.pointing_state_IDs)>0):
+            #    self.numSpws2 = numSpws - 2
+            #else:
+            #    self.numSpws2 = numSpws
+            self.numSpws2 = msmd.nspw()
+            obsTargetSpws = msmd.spwsforintent("OBSERVE_TARGET*").tolist()
+            pointingSpws = msmd.spwsforintent("CALIBRATE_POINTING*").tolist()
+            for spw in pointingSpws:
+                if not obsTargetSpws.count(spw):
+                    self.numSpws2 -= 1
+
+            # Here we pass through a set construct to get the unique union.
+            self.testgainscans=  buildSelectionString(set
+                 (msmd.scansforintent("CALIBRATE_BANDPASS*").tolist() +
+                  msmd.scansforintent("CALIBRATE_DELAY*").tolist()))
+
+            self.checkflagfields=  buildSelectionString(set
+                 (msmd.fieldsforintent("CALIBRATE_BANDPASS*").tolist() +
+                  msmd.fieldsforintent("CALIBRATE_DELAY*").tolist()))
+
+        return True
+
+
+
+
+
     def find_3C84(self, positions):
         MAX_SEPARATION = 60*2.0e-5
         position_3C84 = casatools.measures.direction('j2000', '3h19m48.160', '41d30m42.106')
         fields_3C84 = []
-    
+
         for ii in range(0,len(positions)):
             position = casatools.measures.direction('j2000', str(positions[ii][0])+'rad', str(positions[ii][1])+'rad')
             separation = casatools.measures.separation(position,position_3C84)['value'] * math.pi/180.0
             if (separation < MAX_SEPARATION):
                     fields_3C84.append(ii)
-    
+
         return fields_3C84
-        
-        
+
+
     def determine3C84(self):
         """
         #Determine if 3C84 was used as a bandpass or delay calibrator
         """
-        
+
         self.positions = []
 
         with casatools.TableReader(self.vis+'/FIELD') as table:
@@ -1107,14 +1214,14 @@ class VLAScanHeuristics(object):
 
         for ii in range(0,len(self.field_positions[0][0])):
             self.positions.append([self.field_positions[0][0][ii], self.field_positions[1][0][ii]])
-            
+
         self.fields_3C84 = self.find_3C84(self.positions)
-        
+
         self.cal3C84_d = False
         self.cal3C84_bp = False
         #uvrange3C84 = '0~1800klambda'
         self.uvrange3C84 = ''
-        
+
         if self.fields_3C84 != []:
             for field_int in self.fields_3C84:
                 if (str(field_int) in self.delay_field_select_string):
@@ -1130,3 +1237,120 @@ class VLAScanHeuristics(object):
             self.cal3C84=False
 
         return True
+
+
+def testCalibratorIntents(vis):
+    # This is a temporary test program to see if the two methods of generating
+    # intents yield the same answers.
+    # To use:
+    # from pipeline.hifv.heuristics.vlascanheuristics import testCalibratorIntents
+    # testCalibratorIntents(<Name of MS>)
+    print "Testing Comparison of: ",vis
+
+    origObj = VLAScanHeuristics(vis)
+    newObj  = VLAScanHeuristics(vis)
+    exceptionThrown = False
+    try:
+        start=datetime.datetime.now()
+        origObj.calibratorIntents()
+        print 'origObj:', datetime.datetime.now()-start
+    except Exception as e:
+        print e
+        exceptionThrown = True
+
+    try:
+        start=datetime.datetime.now()
+        newObj.calibratorIntents2()
+        print 'newObj:', datetime.datetime.now()-start
+    except Exception as e:
+        print e
+        exceptionThrown = True
+
+    # Now do the comparison:
+    if origObj.flux_scan_select_string != newObj.flux_scan_select_string:
+        print "flux_scan_select_strings Differ:"
+        print "\tOrig: ",origObj.flux_scan_select_string
+        print "\tNew:  ",newObj.flux_scan_select_string
+
+
+    if origObj.flux_field_select_string != newObj.flux_field_select_string:
+        print "flux_field_select_strings Differ:"
+        print "\tOrig: ",origObj.flux_field_select_string
+        print "\tNew:  ",newObj.flux_field_select_string
+
+
+    if origObj.bandpass_scan_select_string != newObj.bandpass_scan_select_string:
+        print "bandpass_scan_select_strings Differ:"
+        print "\tOrig: ",origObj.bandpass_scan_select_string
+        print "\tNew:  ",newObj.bandpass_scan_select_string
+
+
+    if origObj.bandpass_field_select_string != newObj.bandpass_field_select_string:
+        print "bandpass_field_select_strings Differ:"
+        print "\tOrig: ",origObj.bandpass_field_select_string
+        print "\tNew:  ",newObj.bandpass_field_select_string
+
+
+    if origObj.delay_scan_select_string != newObj.delay_scan_select_string:
+        print "delay_scan_select_strings Differ:"
+        print "\tOrig: ",origObj.delay_scan_select_string
+        print "\tNew:  ",newObj.delay_scan_select_string
+
+
+    if origObj.delay_field_select_string != newObj.delay_field_select_string:
+        print "delay_field_select_strings Differ:"
+        print "\tOrig: ",origObj.delay_field_select_string
+        print "\tNew:  ",newObj.delay_field_select_string
+
+
+    if origObj.polarization_scan_select_string != newObj.polarization_scan_select_string:
+        print "polarization_scan_select_strings Differ:"
+        print "\tOrig: ",origObj.polarization_scan_select_string
+        print "\tNew:  ",newObj.polarization_scan_select_string
+
+
+    if origObj.polarization_field_select_string != newObj.polarization_field_select_string:
+        print "polarization_field_select_strings Differ:"
+        print "\tOrig: ",origObj.polarization_field_select_string
+        print "\tNew:  ",newObj.polarization_field_select_string
+
+
+    if origObj.phase_scan_select_string != newObj.phase_scan_select_string:
+        print "phase_scan_select_strings Differ:"
+        print "\tOrig: ",origObj.phase_scan_select_string
+        print "\tNew:  ",newObj.phase_scan_select_string
+
+
+    if origObj.phase_field_select_string != newObj.phase_field_select_string:
+        print "phase_field_select_strings Differ:"
+        print "\tOrig: ",origObj.phase_field_select_string
+        print "\tNew:  ",newObj.phase_field_select_string
+
+
+    if origObj.calibrator_scan_select_string != newObj.calibrator_scan_select_string:
+        print "calibrator_scan_select_strings Differ:"
+        print "\tOrig: ",origObj.calibrator_scan_select_string
+        print "\tNew:  ",newObj.calibrator_scan_select_string
+
+
+    if origObj.calibrator_field_select_string != newObj.calibrator_field_select_string:
+        print "calibrator_field_select_strings Differ:"
+        print "\tOrig: ",origObj.calibrator_field_select_string
+        print "\tNew:  ",newObj.calibrator_field_select_string
+
+
+    if origObj.testgainscans != newObj.testgainscans:
+        print "testgainscanss Differ:"
+        print "\tOrig: ",origObj.testgainscans
+        print "\tNew:  ",newObj.testgainscans
+
+
+    if origObj.checkflagfields != newObj.checkflagfields:
+        print "checkflagfieldss Differ:"
+        print "\tOrig: ",origObj.checkflagfields
+        print "\tNew:  ",newObj.checkflagfields
+
+    if origObj.numSpws2 != newObj.numSpws2:
+        print "numSpws2 Differ:"
+        print "\tOrig: ",origObj.numSpws2
+        print "\tNew:  ",newObj.numSpws2

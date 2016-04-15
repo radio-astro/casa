@@ -29,8 +29,8 @@ class TsysflagInputs(basetask.StandardInputs):
       flag_derivative=None, fd_max_limit=None,
       flag_edgechans=None, fe_edge_limit=None,
       flag_fieldshape=None, ff_refintent=None, ff_max_limit=None,
-      tmf1_limit=None, tmef1_limit=None,
       flag_birdies=None, fb_sharps_limit=None, 
+      flag_toomany=None, tmf1_limit=None, tmef1_limit=None,
       metric_order=None):
 
         # set the properties to the values given as input arguments
@@ -418,21 +418,35 @@ class Tsysflag(basetask.StandardTaskTemplate):
             # Find intersection between refants and fully flagged antennas
             # and store in result.
             result.refants_to_remove = set(bad_antennas).intersection(refant)
-            
-            # Log a warning if any antennas are to be removed from 
-            # the refant list.
+
+            # If refants were found to be flagged and in need of removal...
             if result.refants_to_remove:
-                # Log warning
+
+                # Create string for log message.            
                 ant_msg = utils.commafy(result.refants_to_remove, quotes=False)
-                
-                LOG.warning('%s - the following antennas are removed from '
-                  'the refant list because they are fully flagged in all '
-                  'Tsys spws in the "BANDPASS", "PHASE", and/or "AMPLITUDE" '
-                  'intents: %s' % (ms.basename, ant_msg))
-#                 LOG.warning('Antenna%s that are fully flagged in all Tsys '
-#                   'spws in the "BANDPASS", "PHASE", and/or "AMPLITUDE" '
-#                   'intents removed from refant list for '
-#                   '%s' % (ant_msg, ms.basename))
+    
+                # Check if removal of refants would result in an empty refant list,
+                # in which case the refant update is skipped.
+                if result.refants_to_remove == set(refant):
+                    
+                    # Log warning that refant list should have been updated, but 
+                    # will not be updated so as to avoid an empty refant list.
+                    LOG.warning('%s - the following antennas are fully flagged '
+                      'in all Tsys spws in the "BANDPASS", "PHASE", and/or '
+                      '"AMPLITUDE" intents, but are *NOT* removed from the '
+                      'refant list because doing so would result in an '
+                      'empty refant list: %s' % (ms.basename, ant_msg))
+                    
+                    # Reset the refant removal list in the result to be empty.
+                    result.refants_to_remove = []
+                else:
+                    # Log a warning if any antennas are to be removed from 
+                    # the refant list.
+                        # Log warning
+                        LOG.warning('%s - the following antennas are removed from '
+                          'the refant list because they are fully flagged in all '
+                          'Tsys spws in the "BANDPASS", "PHASE", and/or "AMPLITUDE" '
+                          'intents: %s' % (ms.basename, ant_msg))
         
         return result
     

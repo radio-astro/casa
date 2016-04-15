@@ -113,6 +113,11 @@ class Context(object):
         now = datetime.datetime.utcnow()
         self.name = name if name else now.strftime('pipeline-%Y%m%dT%H%M%S')
 
+        # domain depends on infrastructure.casatools, so infrastructure cannot
+        # depend on domain hence the run-time import
+        import pipeline.domain as domain
+        self.observing_run = domain.ObservingRun()
+
         self.callibrary = callibrary.CalLibrary(self)
         self.calimlist = imagelibrary.ImageLibrary()
         self.sciimlist = imagelibrary.ImageLibrary()
@@ -127,11 +132,6 @@ class Context(object):
         self.logs = {}
         self.contfile = None
         self.linesfile = None
-
-        # domain depends on infrastructure.casatools, so infrastructure cannot
-        # depend on domain hence the run-time import
-        import pipeline.domain as domain
-        self.observing_run = domain.ObservingRun()
 
         LOG.trace('Creating report directory \'%s\'' % self.report_dir)
         utils.mkdir_p(self.report_dir)

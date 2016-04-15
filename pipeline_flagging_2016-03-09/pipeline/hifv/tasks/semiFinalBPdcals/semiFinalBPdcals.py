@@ -12,16 +12,30 @@ from pipeline.hif.tasks import bandpass
 from pipeline.hif.tasks import applycal
 from pipeline.hifv.heuristics import getCalFlaggedSoln, getBCalStatistics
 import pipeline.hif.heuristics.findrefant as findrefant
-from pipeline.hifv.heuristics import do_bandpass
+from pipeline.hifv.heuristics import weakbp, do_bandpass
 
 LOG = infrastructure.get_logger(__name__)
 
 
 class semiFinalBPdcalsInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
-    def __init__(self, context, vis=None):
+    def __init__(self, context, vis=None, weakbp=None):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
+
+        self._weakbp = weakbp
+
+    @property
+    def weakbp(self):
+        return self._weakbp
+
+    @weakbp.setter
+    def weakbp(self, value):
+
+        if self._weakbp is None:
+            self._weakbp = True
+
+        self._weakbp = value
 
 
 class semiFinalBPdcalsResults(basetask.Results):
@@ -129,10 +143,17 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
         #calfrom = callibrary.CalFrom(gaintable=bpdgain_touse, interp='', calwt=False)
         #context.callibrary.add(calto, calfrom)
 
-        bandpass_job = do_bandpass(self.inputs.vis, bpcaltable, context=context, RefAntOutput=RefAntOutput[0],
-                                            ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse)
+        if (self.inputs.weakbp == True):
+            interp = weakbp(self.inputs.vis, bpcaltable, context=context, RefAntOutput=RefAntOutput[0],
+                                            ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse, solint='inf', append=False)
+        else:
+            interp = ''
+            bandpass_job = do_bandpass(self.inputs.vis, bpcaltable, context=context, RefAntOutput=RefAntOutput[0], spw='',
+                                            ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse, solint='inf', append=False)
+            self._executor.execute(bandpass_job)
 
-        self._executor.execute(bandpass_job)
+
+        #self._executor.execute(bandpass_job)
         
         # Force calwt for the bp table to be False
         #calto = callibrary.CalTo(self.inputs.vis)
@@ -158,7 +179,7 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
         # context.callibrary.add(calto, calfrom)
 
         applycal_result = self._do_applycal(context=context, ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse,
-                                            bpcaltable=bpcaltable)
+                                            bpcaltable=bpcaltable, interp=interp)
 
         return semiFinalBPdcalsResults(bpdgain_touse=bpdgain_touse)
 
@@ -390,7 +411,7 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
 
         return self._executor.execute(job)
       
-    def _do_applycal(self, context=None, ktypecaltable=None, bpdgain_touse=None, bpcaltable=None):
+    def _do_applycal(self, context=None, ktypecaltable=None, bpdgain_touse=None, bpcaltable=None, interp=None):
         """Run CASA task applycal"""
         
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
@@ -424,7 +445,7 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
                               'docallib'   :False,
                               'gaintable'  :AllCalTables,
                               'gainfield'  :[''],
-                              'interp'     :[''],
+                              'interp'     :[interp],
                               'spwmap'     :[],
                               'calwt'      :[False]*ntables,
                               'parang'     :False,

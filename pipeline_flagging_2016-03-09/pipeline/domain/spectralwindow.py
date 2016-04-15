@@ -8,6 +8,7 @@ import numpy
 
 from . import measures
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.casatools as casatools
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -24,21 +25,21 @@ def expand_ap(ap):
 
 class SpectralWindow(object):
     """
-    SpectralWindow is a logical representation of a spectral window. 
-    
+    SpectralWindow is a logical representation of a spectral window.
+
     .. py:attribute:: id
-    
+
         the numerical identifier of this spectral window within the
         SPECTRAL_WINDOW subtable of the measurement set
 
     .. py:attribute:: channels
-    
+
         the number of channels
-        
+
     .. py:attribute:: bandwidth
-    
+
         the total bandwidth
-        
+
     .. py:attribute:: ref_frequency
 
         the reference frequency
@@ -52,46 +53,79 @@ class SpectralWindow(object):
         the observing intents that have been observed using this spectral
         window
     """
-    
+
     __slots__ = ('id', 'band', 'bandwidth', 'type', 'intents',
                  'ref_frequency', 'name', 'baseband', 'sideband',
                  'mean_frequency', '_min_frequency', '_max_frequency',
                  '_centre_frequency', '_chan_freqs', '_chan_widths',
-                 '_channels', '_num_channels')
+                 '_channels', '_num_channels', '_ref_frequency_frame')
 
     def __getstate__(self):
         return (self.id, self.band, self.bandwidth, self.type, self.intents,
-                self.ref_frequency, self.name, self.baseband, self.sideband, 
-                self.mean_frequency, self._min_frequency, 
+                self.ref_frequency, self.name, self.baseband, self.sideband,
+                self.mean_frequency, self._min_frequency,
                 self._max_frequency, self._centre_frequency, self._chan_freqs,
-                self._chan_widths, self._num_channels)
+                self._chan_widths, self._num_channels,
+                self._ref_frequency_frame)
 
     def __setstate__(self, state):
         (self.id, self.band, self.bandwidth, self.type, self.intents,
-                self.ref_frequency, self.name, self.baseband, self.sideband, 
-                self.mean_frequency, self._min_frequency, 
+                self.ref_frequency, self.name, self.baseband, self.sideband,
+                self.mean_frequency, self._min_frequency,
                 self._max_frequency, self._centre_frequency, self._chan_freqs,
-                self._chan_widths, self._num_channels) = state
-    
+                self._chan_widths, self._num_channels,
+                self._ref_frequency_frame) = state
+
+    def __repr__(self):
+        chan_freqs = self._chan_freqs
+        if isinstance(chan_freqs, ArithmeticProgression):
+            chan_freqs = numpy.array(list(expand_ap(chan_freqs)))
+
+        chan_widths = self._chan_widths
+        if isinstance(chan_widths, ArithmeticProgression):
+            chan_widths = numpy.array(list(expand_ap(chan_widths)))
+
+        return 'SpectralWindow({0!r}, {1!r}, {2!r}, {3!r}, {4!r}, {5!r}, {6}, {7}, {8!r}, {9!r}, {10!r})'.format(
+            self.id,
+            self.name,
+            self.type,
+            float(self.bandwidth.to_units(measures.FrequencyUnits.HERTZ)),
+            dict(m0={'unit': 'Hz',
+                     'value': float(self.ref_frequency.to_units(measures.FrequencyUnits.HERTZ))},
+                 refer=self._ref_frequency_frame,
+                 type='frequency'),
+            float(self.mean_frequency.to_units(measures.FrequencyUnits.HERTZ)),
+            'numpy.array(%r)' % chan_freqs.tolist(),
+            'numpy.array(%r)' % chan_widths.tolist(),
+            self.sideband,
+            self.baseband,
+            self.band
+        )
+
     def __init__(self, spw_id, name, spw_type, bandwidth, ref_freq, mean_freq,
                  chan_freqs, chan_widths, sideband, baseband, band='Unknown'):
         self.id = spw_id
         self.bandwidth = measures.Frequency(bandwidth,
                                             measures.FrequencyUnits.HERTZ)
-        self.ref_frequency = measures.Frequency(ref_freq, 
+
+        ref_freq_hz = casatools.quanta.convertfreq(ref_freq['m0'], 'Hz')
+        ref_freq_val = casatools.quanta.getvalue(ref_freq_hz)[0]
+        self.ref_frequency = measures.Frequency(ref_freq_val,
                                                 measures.FrequencyUnits.HERTZ)
-        self.mean_frequency = measures.Frequency(mean_freq, 
+        self._ref_frequency_frame = ref_freq['refer']
+
+        self.mean_frequency = measures.Frequency(mean_freq,
                                                  measures.FrequencyUnits.HERTZ)
         self.band = band
         self.type = spw_type
         self.intents = set()
-        
+
         # work around NumPy bug with empty strings
         # http://projects.scipy.org/numpy/ticket/1239
         self.name = str(name)
         self.sideband = str(sideband)
         self.baseband = str(baseband)
-    
+
         self._chan_freqs = self.__create_arithmetic_progression(chan_freqs)
         self._chan_widths = self.__create_arithmetic_progression(chan_widths)
 
@@ -121,21 +155,21 @@ class SpectralWindow(object):
         return self._centre_frequency
 
     def channel_range(self, minfreq, maxfreq):
-        '''
-    	    # More work on this in future 
-    	    minfreq -- measures.Frequency object in HERTZ
-    	    maxfreq -- measures.Frequency object in HERTZ
-    	'''
+        """
+        # More work on this in future
+        minfreq -- measures.Frequency object in HERTZ
+        maxfreq -- measures.Frequency object in HERTZ
+        """
         freqmin = minfreq
         freqmax = maxfreq
-    
+
         # Check for the no overlap case.
         nchan = self.num_channels
         if freqmax < self.min_frequency:
             return (None, None)
         if freqmin > self.max_frequency:
             return (None, None)
-    
+
         # Find the minimum channel
         chanmin = 0
         if self.channels[0].low < self.channels[nchan-1].low:
@@ -148,7 +182,7 @@ class SpectralWindow(object):
                 if self.channels[i].high < freqmax:
                     break
                 chanmin = i
-    
+
         # Find the maximum channel
         chanmax = nchan - 1
         if self.channels[0].low < self.channels[nchan-1].low:
@@ -161,7 +195,7 @@ class SpectralWindow(object):
                 if self.channels[i].low > freqmin:
                     break
                 chanmax = i
-    
+
         return (chanmin, chanmax)
 
     @property
@@ -192,19 +226,23 @@ class SpectralWindow(object):
         return self._channels
 
     @property
+    def frame(self):
+        return self._ref_frequency_frame
+
+    @property
     def min_frequency(self):
         return self._min_frequency
-        
+
     @property
     def max_frequency(self):
         return self._max_frequency
-        
+
     @property
     def num_channels(self):
         return self._num_channels
 
-    def __repr__(self):
-        args = map(str, [self.id, self.centre_frequency, self.bandwidth, 
+    def __str__(self):
+        args = map(str, [self.id, self.centre_frequency, self.bandwidth,
                          self.type])
         return 'SpectralWindow({0})'.format(', '.join(args))
 

@@ -51,33 +51,44 @@ class ObservingRun(object):
             raise KeyError, ('No measurement set found with '
                              'intent {0}'.format(intent))
 
-    def get_measurement_sets(self, names=None, intents=None, fields=None):
+    def get_measurement_sets(self, names=None, intents=None, fields=None, imaging_preferred=False):
         """
         Returns measurement sets matching the given arguments.
         """
-        match = list(self.measurement_sets)
-        
-        if names is not None:        
-            match = [ms for ms in match if ms.name in names] 
+        candidates = self.measurement_sets
 
+        # filter out MeasurementSets with no vis hits
+        if names is not None:
+            candidates = [ms for ms in candidates
+                          if ms.name in names]
+
+        # filter out MeasurementSets with no intent hits
         if intents is not None:
             if type(intents) is types.StringType:
-                intents = intents.split(',')
+                intents = utils.safe_split(intents)
             intents = set(intents)
-            match = [ms for ms in match if intents.issubset(ms.intents)] 
 
+            candidates = [ms for ms in candidates
+                          if intents.issubset(ms.intents)]
+
+        # filter out MeasurementSets with no field name hits
         if fields is not None:
             if type(fields) is types.StringType:
                 fields = utils.safe_split(fields)
-            fields = set(fields)                
-            ms_with_field = []
-            for ms in match:
-                field_names = set([field.name for field in ms.fields])
-                if not field_names.isdisjoint(fields):
-                    ms_with_field.append(ms)
-            match = ms_with_field
+            fields_to_match = set(fields)
 
-        return match
+            candidates = [ms for ms in candidates
+                          if fields_to_match.isdisjoint({field.name for field in ms.fields})]
+
+        # When requested, and if any imaging MeasurementSets have been
+        # registered with the context, filter out the non-imaging objects
+        if imaging_preferred:
+            imaging_flags = [getattr(ms, 'is_imaging_ms', False) for ms in candidates]
+            if any(imaging_flags):
+                candidates = [ms for ms, is_imaging_ms in zip(candidates, imaging_flags)
+                              if is_imaging_ms]
+
+        return candidates
 
     def get_fields(self, names=None):
         """

@@ -9,6 +9,10 @@ import pipeline.infrastructure as infrastructure
 LOG = infrastructure.get_logger(__name__)
 
 def read(context, filename):
+    """
+    Reads jyperk factors from a file and returns a string list
+    of [['MS','ant','spwid','polid','factor'], ...]
+    """
     filetype = inspect_type(filename)
     if filetype == 'MS-Based':
         LOG.debug('MS-Based Jy/K factors file is specified')
@@ -20,7 +24,7 @@ def read(context, filename):
 def inspect_type(filename):
     with open(filename, 'r') as f:
         line = f.readline()
-    if line[0] == '#':
+    if len(line) > 0 and line[0] == '#':
         return 'Session-Based'
     else:
         return 'MS-Based'
@@ -53,8 +57,9 @@ def _read_stream(stream):
     reader = csv.reader(stream)
     # Check if first line is header or not
     line = reader.next()
-    if line[0].strip().upper() == 'MS' or line[0].strip()[0] == '#':
-        # must be a header or commented line
+    if  len(line) == 0 or \
+            line[0].strip().upper() == 'MS' or line[0].strip()[0] == '#':
+        # must be a header, commented line, or empty line
         pass
     elif len(line) == 5:
         # may be a data record
@@ -101,6 +106,15 @@ class JyPerKDataParser(object):
             return None
 
 class JyPerK(object):
+    """
+    Parse session based jyperk csv and store.
+    * meta stores meta data information from the lines in the form, '#name=value',
+        as a dictionary, meta[name]=value.
+    * header stores column label from the line in the form '#header0, header1, ...'
+        as a list, header = ['header0', 'header1', ...]
+    * data stores values in csv file as a dictionary,
+        data['header0'] = [data00, data01, ...]
+    """
     def __init__(self):
         self.meta = dict()
         self.header = []
@@ -122,6 +136,10 @@ class JyPerK(object):
 
 @contextlib.contextmanager
 def associate(context, factors):
+    """
+    Convert data collected from session based jyperk csv as JyPerK object
+    to MS-beased csv, i.e., a string list of ['MS,ant,spwid,polid,factor', ...]
+    """
     stream = StringIO.StringIO()
     try:
         data = factors.data

@@ -216,6 +216,7 @@ class SDImaging(common.SingleDishTaskTemplate):
             tocombine_images = []
 
             srctype = None
+            coord_set = False
             for (name, _members) in image_group.items():
                 indices = map(lambda x: x[0], _members)
                 spwids = map(lambda x: x[1], _members)
@@ -285,6 +286,11 @@ class SDImaging(common.SingleDishTaskTemplate):
                 scansels = [scansel_list[i] for i in indices]
                 scans = map(common.selection_to_list, scansels)
 
+                # map coordinate (use identical map coordinate per spw)
+                if not coord_set:
+                    phasecenter, cellx, celly, nx, ny = worker.ALMAImageCoordinateUtil(context, self.datatable, infiles, spwids, pols, srctype, exported_mses)
+                    coord_set = True
+
                 # register data for combining
                 combined_indices.extend(indices)
                 combined_infiles.extend(infiles)
@@ -293,11 +299,14 @@ class SDImaging(common.SingleDishTaskTemplate):
                 combined_scans.extend(scans)
                 
                 imager_inputs = worker.SDImagingWorker.Inputs(context, infiles=infiles, 
-                                                               outfile=imagename, mode=imagemode,
-                                                               spwids=spwids,
-                                                               scans=scans, pols=pols,
-                                                               onsourceid=srctype, edge=edge,
-                                                               vislist=exported_mses)
+                                                              outfile=imagename, mode=imagemode,
+                                                              spwids=spwids,
+                                                              scans=scans, pols=pols,
+                                                              onsourceid=srctype, edge=edge,
+                                                              vislist=exported_mses,
+                                                              phasecenter=phasecenter,
+                                                              cellx=cellx, celly=celly,
+                                                              nx=nx, ny=ny)
                 imager_task = worker.SDImagingWorker(imager_inputs)
                 imager_result = self._executor.execute(imager_task, merge=True)
                 
@@ -418,7 +427,10 @@ class SDImaging(common.SingleDishTaskTemplate):
                                                               spwids=combined_spws,
                                                               scans=combined_scans, pols=combined_pols,
                                                               onsourceid=srctype, edge=edge,
-                                                              vislist=exported_mses)
+                                                              vislist=exported_mses,
+                                                              phasecenter=phasecenter,
+                                                              cellx=cellx, celly=celly,
+                                                              nx=nx, ny=ny)
                 imager_task = worker.SDImagingWorker(imager_inputs)
                 imager_result = self._executor.execute(imager_task, merge=True)
             else:

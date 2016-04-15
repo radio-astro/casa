@@ -5,7 +5,7 @@ from taskinit import casalog
 import pipeline.h.cli.utils as utils
 
 
-def hifv_targetflag(vis=None, pipelinemode=None, dryrun=None, acceptresults=None):
+def hifv_targetflag(vis=None, pipelinemode=None, dryrun=None, acceptresults=None, intents=None, contfile=None):
 
     # create a dictionary containing all the arguments given in the
     # constructor

@@ -8,7 +8,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casatools
 from .. import common
-from . import jyperkreader
+from ..k2jycal import jyperkreader
 
 LOG = infrastructure.get_logger(__name__)
 

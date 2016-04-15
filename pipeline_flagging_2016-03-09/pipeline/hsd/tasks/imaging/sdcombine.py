@@ -55,7 +55,11 @@ class SDImageCombine(common.SingleDishTaskTemplate):
         if status is True:
             # Need to replace NaNs in masked pixels
             with casatools.ImageReader(outfile) as ia:
-                ia.replacemaskedpixels(0.0, update=False)
+                stat = ia.statistics()
+                shape = ia.shape()
+                # replacemaskedpixels fails if all pixels are valid
+                if shape.prod() > stat['npts'][0]:
+                    ia.replacemaskedpixels(0.0, update=False)
 
             result = worker.SDImagingWorkerResults(task=self.__class__,
                                                    success=True,

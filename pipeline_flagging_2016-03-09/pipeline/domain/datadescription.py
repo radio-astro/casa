@@ -24,7 +24,6 @@ to_polid = {'XX': 0, 'YY': 1, 'XY': 2, 'YX': 3,
 
 
 class DataDescription(object):
-
     def __init__(self, dd_id, spw, pol_id):
         self.id = dd_id
         self.spw = spw
@@ -35,6 +34,11 @@ class DataDescription(object):
         self.group_name = ''
 
     def __repr__(self):
+        return 'DataDescription({0}, {1!r}, {2!r})'.format(
+            self.id, self.spw, self.pol_id
+        )
+
+    def __str__(self):
         args = map(str, (self.id, self.spw.id, self.pol_id))
         return 'DataDescription({0})'.format(', '.join(args))
 
