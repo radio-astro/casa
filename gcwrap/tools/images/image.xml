@@ -9689,6 +9689,16 @@ ia.close()
 #
 """
 
+# As an example of the usage of the keepaxes parameter, consider an image
+# that has axes RA, Dec, Stokes, and Freq. The Stokes and Freq axes are both
+# degenerate while the RA and Dec axes are not, and it is desired to make a
+# subimage in which the Stokes axis is discarded. The following command will
+# accomplish that.
+ia.open("my.im")
+subim = ia.subimage(outfile="discarded_stokes.im", dropdeg=True, keepaxes=[3])
+ia.done()
+subim.done()
+
 </example>
 </method>
 
