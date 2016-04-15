@@ -5,7 +5,7 @@ from taskinit import casalog
 import pipeline.h.cli.utils as utils
 
 
-def hifv_statwt(vis=None, pipelinemode=None, dryrun=None, acceptresults=None, contfile=None):
+def hifv_statwt(vis=None, pipelinemode=None, dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
     # constructor

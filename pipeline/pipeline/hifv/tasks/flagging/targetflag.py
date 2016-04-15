@@ -15,7 +15,7 @@ LOG = infrastructure.get_logger(__name__)
 
 class TargetflagInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
-    def __init__(self, context, vis=None, intents=None, contfile=None):
+    def __init__(self, context, vis=None, intents=None):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
 
@@ -35,17 +35,6 @@ class TargetflagInputs(basetask.StandardInputs):
     def intents(self, value):
         self._intents = value
 
-    @property
-    def contfile(self):
-
-        if self._contfile is not None:
-            return self._contfile
-
-        return ''
-
-    @contfile.setter
-    def contfile(self, value):
-        self._contfile = value
 
 
 class TargetflagResults(basetask.Results):
@@ -71,9 +60,14 @@ class Targetflag(basetask.StandardTaskTemplate):
         # corrstring = self.inputs.context.evla['msinfo'][m.name].corrstring
         corrstring = m.get_vla_corrstring()
 
+        fielddict = cont_file_to_CASA()
+
+        if fielddict != {}: LOG.info('cont.dat file present.  Using VLA Spectral Line Heuristics for task targetflag.')
+
+        print self.inputs.intents
 
         if ('CALIBRATE' in self.inputs.intents):
-            LOG.info("TARGETFLAG INFO: DOING CONTINUUM CALIBRATE")
+            LOG.info("TARGETFLAG INFO: Running RFLAG ON intent=*CALIBRATE*")
             method_args = {'field'       : '',
                            'correlation' : 'ABS_' + corrstring,
                            'scan'        : '',
@@ -82,8 +76,8 @@ class Targetflag(basetask.StandardTaskTemplate):
 
             rflag_result = self._do_rflag(**method_args)
 
-        if ('TARGET' in self.inputs.intents and self.inputs.contfile == ''):
-            LOG.info("TARGETFLAG INFO:  DOING CONTINUUM TARGET")
+        if ('TARGET' in self.inputs.intents and fielddict == {}):
+            LOG.info("TARGETFLAG INFO:  Running RFLAG ON intent=*TARGET* for all spws and frequencies.")
             method_args = {'field'       : '',
                            'correlation' : 'ABS_' + corrstring,
                            'scan'        : '',
@@ -92,8 +86,8 @@ class Targetflag(basetask.StandardTaskTemplate):
 
             rflag_result = self._do_rflag(**method_args)
 
-        if (self.inputs.intents == '' and self.inputs.contfile == ''):
-            LOG.info("TARGETFLAG INFO:  DOING EVERYTHING")
+        if (self.inputs.intents == '' and fielddict == {}):
+            LOG.info("TARGETFLAG INFO:  Running RFLAG on ALL intents for all spws and frequencies.")
             method_args = {'field'       : '',
                            'correlation' : 'ABS_' + corrstring,
                            'scan'        : '',
@@ -104,9 +98,8 @@ class Targetflag(basetask.StandardTaskTemplate):
 
             return TargetflagResults([rflag_result])
 
-        if ('TARGET' in self.inputs.intents and self.inputs.contfile):
-            LOG.info("TARGETFLAG INFO:  SPECTRAL LINE - CONTINUUM MASKING")
-            fielddict = cont_file_to_CASA(self.inputs.contfile)
+        if ('TARGET' in self.inputs.intents and fielddict != {}):
+            LOG.info("TARGETFLAG INFO:  Spectral line heuristics for intent=*TARGET*")
 
             for field in fielddict.keys():
                 method_args = {'field'       : field,

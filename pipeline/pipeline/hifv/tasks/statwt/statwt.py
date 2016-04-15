@@ -13,21 +13,10 @@ LOG = infrastructure.get_logger(__name__)
 
 class StatwtInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
-    def __init__(self, context, vis=None, contfile=None):
+    def __init__(self, context, vis=None):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
 
-    @property
-    def contfile(self):
-
-        if self._contfile is not None:
-            return self._contfile
-
-        return ''
-
-    @contfile.setter
-    def contfile(self, value):
-        self._contfile = value
 
 
 class StatwtResults(basetask.Results):
@@ -57,7 +46,11 @@ class Statwt(basetask.StandardTaskTemplate):
     
     def _do_statwt(self):
 
-        if (self.inputs.contfile == ''):
+        fielddict = cont_file_to_CASA()
+
+        if fielddict != {}: LOG.info('cont.dat file present.  Using VLA Spectral Line Heuristics for task statwt.')
+
+        if (fielddict == {}):
             task_args = {'vis'          : self.inputs.vis,
                          'dorms'        : False,
                          'fitspw'       : '',
@@ -72,8 +65,8 @@ class Statwt(basetask.StandardTaskTemplate):
             
             return self._executor.execute(job)
 
-        if (self.inputs.contfile):
-            fielddict = cont_file_to_CASA(self.inputs.contfile)
+        if (fielddict != {}):
+
 
             for field in fielddict.keys():
                 task_args = {'vis'          : self.inputs.vis,

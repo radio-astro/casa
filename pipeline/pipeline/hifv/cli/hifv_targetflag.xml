@@ -36,22 +36,18 @@
 
     <param type="string" name="intents" subparam="true">
 	    <description>List of intents of scans to be flagged</description>
-	    <value>CALIBRATE,TARGET</value>
+	    <value>*CALIBRATE*,*TARGET*</value>
 	</param>
 
-    <param type="string" name="contfile" subparam="true">
-	    <description>Areas of continuum for flagging</description>
-	    <value></value>
-	</param>
 
     <constraints>
 	<when param="pipelinemode">
 	    <equals type="string" value="automatic">
+                <default param="intents"><value type="string">*CALIBRATE*,*TARGET*</value></default>
 	    </equals>
 	    <equals type="string" value="interactive">
                 <default param="vis"><value type="stringArray"></value></default>
-                <default param="intents"><value type="string">CALIBRATE,TARGET</value></default>
-                <default param="contfile"><value type="string"></value></default>
+                <default param="intents"><value type="string">*CALIBRATE*,*TARGET*</value></default>
 		<default param="dryrun"><value type="bool">False</value></default>
 		<default param="acceptresults"><value type="bool">True</value></default>
 	    </equals>

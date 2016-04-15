@@ -11,8 +11,5 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 
 % for single_result in result:
 
-    % if single_result.inputs['contfile'] != '':
-        <p><b>Spectral Exclusion File used: </b> ${single_result.inputs['contfile']} </p>
-    % endif
 
 % endfor

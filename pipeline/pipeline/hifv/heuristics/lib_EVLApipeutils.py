@@ -51,7 +51,7 @@ def find_EVLA_band(frequency, bandlimits=[0.0e6, 150.0e6, 700.0e6, 2.0e9, 4.0e9,
 
     return BBAND[i]
 
-def cont_file_to_CASA(contfile):
+def cont_file_to_CASA(contfile='cont.dat'):
         '''
         Take the dictionary created by _read_cont_file and put it into the format:
         spw = '0:1.380~1.385GHz;1.390~1.400GHz'
@@ -60,9 +60,11 @@ def cont_file_to_CASA(contfile):
         contfile_handler = contfilehandler.ContFileHandler(contfile)
         contdict = contfile_handler.read()
 
-        if contdict == {}:
-            LOG.error(contfile + " is empty, does not exist or cannot be read.")
-            return {}
+
+        #if contdict == {}:
+        #    #LOG.error(contfile + " is empty, does not exist or cannot be read.")
+        #    LOG.info('cont.dat file not present.  Default to VLA Continuum Heuristics.')
+        #    return {}
 
         fielddict = {}
 
