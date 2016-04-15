@@ -22,13 +22,12 @@ class ContFileHandler(object):
 
     def __init__(self, filename):
         self.filename = filename
+        self.p = re.compile('([\d.]*)(~)([\d.]*)(\D*)')
         self.cont_ranges = self.read()
 
     def read(self, skip_none=False):
 
         cont_ranges = {'fields': {}, 'version': 2}
-
-        p = re.compile('([\d.]*)(~)([\d.]*)(\D*)')
 
         try:
             cont_region_data = [item.replace('\n', '') for item in open(self.filename, 'r').readlines() if item != '\n']
@@ -58,7 +57,7 @@ class ContFileHandler(object):
                 elif ((item == 'NONE') and not skip_none):
                     cont_ranges['fields'][field_name][spw_id].append('NONE')
                 else:
-                    cont_regions = p.findall(item.replace(';',''))
+                    cont_regions = self.p.findall(item.replace(';',''))
                     for cont_region in cont_regions:
                         if (cont_ranges['version'] == 1):
                             unit = cont_region[3]
@@ -67,7 +66,7 @@ class ContFileHandler(object):
                             unit, refer = cont_region[3].split()
                         fLow = casatools.quanta.convert('%s%s' % (cont_region[0], unit), 'GHz')['value']
                         fHigh = casatools.quanta.convert('%s%s' % (cont_region[2], unit), 'GHz')['value']
-                        cont_ranges['fields'][field_name][spw_id].append({'range': (fLow,fHigh), 'refer': refer})
+                        cont_ranges['fields'][field_name][spw_id].append({'range': (fLow, fHigh), 'refer': refer})
             except:
                 pass
 
@@ -105,7 +104,7 @@ class ContFileHandler(object):
 
     def get_merged_selection(self, field_name, spw_id, cont_ranges = None):
 
-        if ( cont_ranges is None):
+        if (cont_ranges is None):
             cont_ranges = self.cont_ranges
 
         if (cont_ranges['fields'].has_key(field_name)):
@@ -129,3 +128,51 @@ class ContFileHandler(object):
             cont_ranges_spwsel = ''
 
         return cont_ranges_spwsel
+
+    def lsrk_to_topo(self, selection, msnames, fields, spwid):
+
+        freq_selection, refer = selection.split()
+        if (refer != 'LSRK'):
+            LOG.error('Original reference frame must be LSRK.')
+            raise Exception, 'Original reference frame must be LSRK.'
+
+        if (len(msnames) != len(fields)):
+            LOG.error('MS names and fields lists must match in length.')
+            raise Exception, 'MS names and fields lists must match in length.'
+
+        imTool = casatools.imager
+
+        freq_ranges = []
+        cont_regions = self.p.findall(freq_selection.replace(';',''))
+        for cont_region in cont_regions:
+            fLow = casatools.quanta.convert('%s%s' % (cont_region[0], cont_region[3]), 'Hz')['value']
+            fHigh = casatools.quanta.convert('%s%s' % (cont_region[2], cont_region[3]), 'Hz')['value']
+            freq_ranges.append((fLow, fHigh))
+
+        chan_selections = []
+        freq_selections = []
+        for i in xrange(len(msnames)):
+            msname = msnames[i]
+            field = fields[i]
+            chan_selection = []
+            freq_selection = []
+            if (field != -1):
+                for freq_range in freq_ranges:
+                    try:
+                        imTool.selectvis(vis = msname, field = field, spw = spwid)
+                        result = imTool.advisechansel(freqstart = freq_range[0], freqend = freq_range[1], freqstep = 100., freqframe = 'LSRK')
+                        spw_index = result['ms_0']['spw'].tolist().index(spwid)
+                        start = result['ms_0']['start'][spw_index]
+                        stop = start + result['ms_0']['nchan'][spw_index] - 1
+                        chan_selection.append((start, stop))
+                        imTool.done()
+                        result = imTool.advisechansel(msname = msname, spwselection = '%d:%d~%d' % (spwid, start, stop), getfreqrange = True)
+                        fLow = casatools.quanta.convert('%sHz' % (result['freqstart']), 'GHz')['value']
+                        fHigh = casatools.quanta.convert('%sHz' % (result['freqend']), 'GHz')['value']
+                        freq_selection.append((fLow, fHigh))
+                    except:
+                        pass
+            chan_selections.append(';'.join('%d~%d' % (item[0], item[1]) for item in chan_selection))
+            freq_selections.append('%s TOPO' % (';'.join('%s~%sGHz' % (item[0], item[1]) for item in freq_selection)))
+
+        return freq_selections, chan_selections
