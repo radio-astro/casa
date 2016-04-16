@@ -51,28 +51,34 @@
 #include <images/Images/TempImage.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
 #include <ms/MSSel/MSSourceIndex.h>
+#include <synthesis/TransformMachines2/test/MakeMS.h>
 
 int main(int argc, char **argv)
 {
   using namespace std;
   using namespace casa;
+  using namespace casa::test;
   try{
 
 
 
-	  if (argc<2) {
+    /*  if (argc<2) {
 		  cout <<"Usage: tSynthesisImager ms-table-name  [continuum, cube, cubeslice, widefield, facet]  [vi2] "<<endl;
 		  exit(1);
 	  }
-	  Bool useViVb2=True;
-
-	  String msname=String(argv[1]);
+    */	 
 	  String imtype=String("continuum");
-	  if(argc>2)
-		  imtype=String(argv[2]);
-	  if(argc > 3){
-		  useViVb2=((String(argv[3])==String("vi2"))) ? True: False;
-	  }
+	  if(argc>1)
+		  imtype=String(argv[1]);
+
+	  MDirection thedir(Quantity(20.0, "deg"), Quantity(20.0, "deg"));
+	  String msname("Test.ms");
+	  MakeMS::makems(msname, thedir);
+	  MeasurementSet thems(msname, Table::Update);
+	  thems.markForDelete();
+	  MSColumns(thems).data().fillColumn(Matrix<Complex>(4,100, Complex(6.66e-2)));
+	  MSColumns(thems).correctedData().fillColumn(Matrix<Complex>(4,100, Complex(6.66e-2)));
+	  thems.flush();
 	  SynthesisImager* imgr = new SynthesisImager();
 	  imgr->selectData(msname, /*spw=*/"0",/*freqBeg*/"", /*freqEnd*/"", /*freqFrame*/MFrequency::LSRK, /*field=*/"0",  /*antenna=*/"",  /*timestr*/"", /*scan*/"", /*obs*/"", /*state*/"",/*uvdist*/"", 
     		/*taql*/"", /*usescratch*/False, /*readonly*/False);
@@ -85,8 +91,8 @@ int main(int argc, char **argv)
 	  freqWidth-=freqBeg;
 	  int nx = 100;
 	  int ny = 100;
-	  Quantity cellx( 30, "arcsec" );
-	  Quantity celly( 30, "arcsec" );
+	  Quantity cellx( 0.5, "arcsec" );
+	  Quantity celly( 0.5, "arcsec" );
 	  Vector<Int> spwids(2);
 	  String stokes="I";
 	  Int nchan=1;
@@ -102,7 +108,7 @@ int main(int argc, char **argv)
 
 
 		  	  imgr->defineImage(/*imagename*/"test_cont_image", nx, ny, cellx, celly,
-			   stokes,phasecenter, nchan,
+			   stokes,phasecenter, -1,
 			   freqBeg, freqWidth, Vector<Quantity>(1,Quantity(1.420, "GHz")), 1);
 		  /*
 			   const String& ftmachine="GridFT",
@@ -135,7 +141,7 @@ int main(int argc, char **argv)
 				    freqBeg, freqWidth, Vector<Quantity>(1,Quantity(1.420, "GHz")),
 
 				    /*facets*/1, 
-				    "WProjectFT",/*ntaylor*/ 1,freqBeg, Projection::SIN, Quantity(0,"m"), 
+				    "wprojectft",/*ntaylor*/ 1,freqBeg, Projection::SIN, Quantity(0,"m"), 
 				    MFrequency::LSRK, /*tracksource*/ False,  
 				    MDirection(Quantity(0.0, "deg"), Quantity(90.0, "deg")), False, 
 				    1.0, /*useauto*/False,  /*doubleprec*/True, 64, "SF" );
@@ -171,26 +177,30 @@ int main(int argc, char **argv)
 //////#pragma omp for
 
 	  		  for (Int k=0; k < nchan; ++k){
-	  			  SubImage<Float> *subresid=SpectralImageUtil::getChannel(*resid, k, k, True);
-	  			  SubImage<Float> *subpsf= SpectralImageUtil::getChannel(*psf, k, k, True);
-	  			  SubImage<Float>* subwgt= SpectralImageUtil::getChannel(*wgt, k, k, True);
-	  			  SubImage<Float>* submod= SpectralImageUtil::getChannel(*mod, k, k, True);
-	  			  SubImage<Float>* subrestor= SpectralImageUtil::getChannel(*restor, k, k, True);
-	  			  String freqBeg=String::toString(SpectralImageUtil::worldFreq(subresid->coordinates(), Double(-0.5)))+"Hz";
-	  			  String freqEnd=String::toString(SpectralImageUtil::worldFreq(subresid->coordinates(), Double(0.5)))+"Hz";
-	  			  CountedPtr<SIImageStore> subImStor=new SIImageStore(submod, subresid, subpsf, subwgt, subrestor);
-	  			  SynthesisImager subImgr;
+			    /*    std::shared_ptr<ImageInterface<Float> >subresid=std::make_shared<SubImage<Float> >(SpectralImageUtil::getChannel(*resid, k, k, True));
+			    SHARED_PTR<ImageInterface<Float> >subpsf= std::make_shared<SubImage<Float> >(SpectralImageUtil::getChannel(*psf, k, k, True));
+			    SHARED_PTR<ImageInterface<Float> > subwgt= std::make_shared<SubImage<Float> >(SpectralImageUtil::getChannel(*wgt, k, k, True));
+			    SHARED_PTR<ImageInterface<Float> > submod=std::make_shared<SubImage<Float> >( SpectralImageUtil::getChannel(*mod, k, k, True));
+			    SHARED_PTR<ImageInterface<Float> > subrestor= std::make_shared<SubImage<Float> >(SpectralImageUtil::getChannel(*restor, k, k, True));
+			    String freqBeg=String::toString(SpectralImageUtil::worldFreq(subresid->coordinates(), Double(-0.5)))+"Hz";
+			    String freqEnd=String::toString(SpectralImageUtil::worldFreq(subresid->coordinates(), Double(0.5)))+"Hz";
+			    CountedPtr<SIImageStore> subImStor=new SIImageStore(submod, subresid, subpsf, subwgt, subrestor, nullptr, nullptr, resid->coordinates(), "");
+			    */
+			    SHARED_PTR<SIImageStore> subImStor=si->getSubImageStore(0, 1, k, nchan, 0,1);
+			    String freqBeg=String::toString(SpectralImageUtil::worldFreq((subImStor->residual())->coordinates(), Double(-0.5)))+"Hz";
+			    String freqEnd=String::toString(SpectralImageUtil::worldFreq((subImStor->residual())->coordinates(), Double(0.5)))+"Hz";
+			    SynthesisImager subImgr;
 	  			  //can select the right channel to match subimage
-	  			  subImgr.selectData(msname, /*spw=*/"0", freqBeg, freqEnd, MFrequency::LSRK, /*field=*/"0",  /*antenna=*/"",  /*timestr*/"", /*scan*/"", /*obs*/"", /*state*/"",/*uvdist*/"", 
+			    subImgr.selectData(msname, /*spw=*/"0", freqBeg, freqEnd, MFrequency::LSRK, /*field=*/"0",  /*antenna=*/"",  /*timestr*/"", /*scan*/"", /*obs*/"", /*state*/"",/*uvdist*/"", 
 						     /*taql*/"", /*usescratch*/False, /*readonly*/False, /*incrmodel*/True);
 
-	  			  subImgr.defineImage(subImStor, "GridFT");
-	  			  subImgr.weight("natural");
-	  			  Record rec;
-	  			  subImgr.executeMajorCycle(rec, useViVb2);
-	  			  //subImgr.makePSF(useViVb2);
+			    subImgr.defineImage(subImStor, "gridft");
+			    subImgr.weight("natural");
+			    Record rec;
+			    subImgr.executeMajorCycle(rec);
+			    subImgr.makePSF();
 	  		  }
-
+			  
 	  		  }
 	  		  //We can do the division at the end
 	  		  si->dividePSFByWeight();
@@ -209,7 +219,7 @@ int main(int argc, char **argv)
 		  imgr->defineImage(/*imagename*/"test_cont_image", nx, ny, cellx, celly,
 				  stokes,phasecenter, nchan,
 				  freqBeg, freqWidth, Vector<Quantity>(1,Quantity(1.420, "GHz")), 1);
-		  imgr->predictModel(useViVb2);
+		  imgr->predictModel();
 		  delete imgr;
 		  return 0;
 	  }
@@ -218,16 +228,22 @@ int main(int argc, char **argv)
 	  }
 	  imgr->weight("natural");
 	  Record rec;
-	  imgr->executeMajorCycle(rec, useViVb2);
+	  imgr->executeMajorCycle(rec);
+	  imgr->makePSF();
 	  //imgr->makePSF(useViVb2);
 	  CountedPtr<SIImageStore> images=imgr->imageStore(0);
-	  LatticeExprNode LEN = max( *(images->residual()) );
-	  cerr << "Max of residual=" << LEN.getFloat() << endl;
-	  LatticeExprNode psfmax = max( *(images->psf()) );
-	  LatticeExprNode psfmin = min( *(images->psf()) );
-	  cerr <<"Min max of psf "<< psfmin.getFloat() << " " << psfmax.getFloat() << endl;
+	 
 	  images->dividePSFByWeight();
 	  images->divideResidualByWeight();
+	  {
+	    //After Normalization
+	    LatticeExprNode LEN = max( *(images->residual()) );
+	    AlwaysAssertExit(near(6.66e-2, LEN.getFloat(), 1.0e-5));
+	    cerr << "Max of residual=" << LEN.getFloat() << endl;
+	    LatticeExprNode psfmax = max( *(images->psf()) );
+	    LatticeExprNode psfmin = min( *(images->psf()) );
+	    cerr <<"Min max of psf "<< psfmin.getFloat() << " " << psfmax.getFloat() << endl;
+	  }
 	  delete imgr;
 
 
@@ -235,5 +251,6 @@ int main(int argc, char **argv)
     cout << "Exception ocurred." << endl;
     cout << e.getMesg() << endl;
   }
+  cout << "OK" << endl;
   return 0;
 };

@@ -101,7 +101,7 @@ class SynthesisImager
 			   const Vector<Quantity>& restFreq,
 			   const Int facets=1,
 			   //			   const Int chanchunks=1,
-			   const String ftmachine="GridFT",
+			   const String ftmachine="gridft",
 			   const Int nTaylorTerms=1,
 			   const Quantity& refFreq = Quantity(0,"Hz"),
 			   const Projection& projection=Projection::SIN,

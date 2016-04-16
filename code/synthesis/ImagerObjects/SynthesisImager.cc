@@ -606,7 +606,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				    )
 {
   String err("");
-
+  LogIO os( LogOrigin("SynthesisImager","defineImage",WHERE) );
   SynthesisParamsImage impars;
   impars.imageName=imagename;
   Vector<Int> ims(2);ims[0]=nx; ims[1]=ny;
@@ -628,7 +628,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   impars.startModel.resize(1); impars.startModel[0]=startmodel;
 
   err += impars.verify();
-
+  
+  if(err.length() >0) 
+    os << LogIO::WARN  << "impars verify error " << err << LogIO::POST;
+  err="";
   SynthesisParamsGrid gridpars;
   gridpars.ftmachine=ftmachine;
   gridpars.distance=distance;
@@ -651,10 +654,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   gridpars.conjBeams=conjBeams;
   gridpars.computePAStep=computePAStep;
   gridpars.rotatePAStep=rotatePAStep;
-
+  gridpars.imageName="YAKYAK"; // no clue why gridpars has imageName..verify needs it
   err += gridpars.verify();
-
-  if( err.length()>0 ) throw(AipsError("Invalid Image/Gridding parameters : " + err));
+  if(err.length() >0) 
+    os << LogIO::WARN  << "gridpars verify error " << err << LogIO::POST;
+  //if( err.length()>0 ) throw(AipsError("Invalid Image/Gridding parameters : " + err));
 
   defineImage( impars, gridpars );
 
