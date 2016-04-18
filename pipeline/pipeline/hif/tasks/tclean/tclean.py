@@ -196,7 +196,6 @@ class Tclean(cleanbase.CleanBase):
                 inputs.imsize = imsize
                 LOG.info('Heuristic imsize: %s', imsize)
 
-        print 'DEBUG_DM:', inputs.field, inputs.intent
         # Get a noise estimate from the CASA sensitivity calculator
         sensitivity = self._do_sensitivity()
         LOG.info('Sensitivity estimate from CASA %s', sensitivity)
@@ -405,7 +404,6 @@ class Tclean(cleanbase.CleanBase):
         context = self.inputs.context
         inputs = self.inputs
         field = inputs.field
-        print 'DEBUG_DM:', field
         spw = inputs.spw
 
         # Calculate sensitivities
@@ -417,7 +415,6 @@ class Tclean(cleanbase.CleanBase):
         else:
             raise Exception, 'Unknown specmode "%s"' % (inputs.specmode)
         for ms in context.observing_run.measurement_sets:
-            print 'DEBUG_DM:', ms, field
             for intSpw in [int(s) for s in spw.split(',')]:
                 with casatools.ImagerReader(ms.name) as imTool:
                     try:
