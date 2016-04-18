@@ -241,8 +241,10 @@ using namespace casa::vi;
       AlwaysAssert(image, AipsError);
 
       // Set the frame for the UVWMachine
-      mFrame_p=MeasFrame(MEpoch(Quantity(vb.time()(0), "s"), ROMSColumns(vb.getVi()->ms()).timeMeas()(0).getRef()), mLocation_p);
-
+      if(vb.getVi())
+	mFrame_p=MeasFrame(MEpoch(Quantity(vb.time()(0), "s"), ROMSColumns(vb.getVi()->ms()).timeMeas()(0).getRef()), mLocation_p);
+      else
+	throw(AipsError("Cannot define some frame as no Visiter/MS is attached"));
       // First get the CoordinateSystem for the image and then find
       // the DirectionCoordinate
       casa::CoordinateSystem coords=image->coordinates();
@@ -302,9 +304,11 @@ using namespace casa::vi;
 
       // Set up the UVWMachine.
       if(uvwMachine_p) delete uvwMachine_p; uvwMachine_p=0;
-
-
-      String observatory=ROMSColumns(vb.getVi()->ms()).observation().telescopeName()(0);
+      String observatory;
+      if(vb.getVi())
+	observatory=ROMSColumns(vb.getVi()->ms()).observation().telescopeName()(0);
+      else
+	throw(AipsError("Cannot define frame because of no access to OBSERVATION table")); 
       if(observatory.contains("ATCA") || observatory.contains("DRAO")
          || observatory.contains("WSRT")){
         uvwMachine_p=new casa::UVWMachine(mImage_p, vb.phaseCenter(), mFrame_p,
@@ -792,10 +796,11 @@ using namespace casa::vi;
         doUVWRotation_p=True;
       if(doUVWRotation_p || tangentSpecified_p || fixMovingSource_p){
         ok();
-
+	
         mFrame_p.epoch() != 0 ?
-  	mFrame_p.resetEpoch(MEpoch(Quantity(vb.time()(0), "s"))):
-  	mFrame_p.set(mLocation_p, MEpoch(Quantity(vb.time()(0), "s"), ROMSColumns(vb.getVi()->ms()).timeMeas()(0).getRef()));
+	  mFrame_p.resetEpoch(MEpoch(Quantity(vb.time()(0), "s"))):
+	 
+	  mFrame_p.set(mLocation_p, MEpoch(Quantity(vb.time()(0), "s"), ROMSColumns(vb.getVi()->ms()).timeMeas()(0).getRef()));
 
         MDirection phasecenter=mImage_p;
         if(fixMovingSource_p){
