@@ -166,7 +166,7 @@ class ContFileHandler(object):
                         stop = start + result['ms_0']['nchan'][spw_index] - 1
                         chan_selection.append((start, stop))
                         imTool.done()
-                        result = imTool.advisechansel(msname = msname, spwselection = '%d:%d~%d' % (spwid, start, stop), getfreqrange = True)
+                        result = imTool.advisechansel(msname = msname, fieldid = field, spwselection = '%d:%d~%d' % (spwid, start, stop), getfreqrange = True)
                         fLow = casatools.quanta.convert('%sHz' % (result['freqstart']), 'GHz')['value']
                         fHigh = casatools.quanta.convert('%sHz' % (result['freqend']), 'GHz')['value']
                         freq_selection.append((fLow, fHigh))
