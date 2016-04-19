@@ -229,6 +229,7 @@ protected:
 					 CoordinateSystem& cSys,
 					 IPosition imShape, 
 					 const Bool overwrite,
+					 ROMSColumns& msc, 
 					 String mappertype="default", 
 					 uInt ntaylorterms=1,
 					 Quantity distance=Quantity(0.0, "m"),

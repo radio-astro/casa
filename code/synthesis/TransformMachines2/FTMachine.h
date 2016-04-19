@@ -424,7 +424,7 @@ protected:
   Bool matchChannel(const vi::VisBuffer2& vb);
   //redo all spw chan match especially if ms has changed underneath 
   Bool matchAllSpwChans(const VisBuffer& vb);
-  Bool matchAllSpwChans(const vi::VisBuffer2& vb);
+  //Bool matchAllSpwChans(const vi::VisBuffer2& vb);
   //interpolate visibility data of vb to grid frequency definition
   //flag will be set the one as described in interpolateArray1D
   //return False if no interpolation is done...for e.g for nearest case
@@ -455,7 +455,7 @@ protected:
 
   // Private variables needed for spectral frame conversion 
   SpectralCoordinate spectralCoord_p;
-  Vector<Bool> doConversion_p;
+  //Vector<Bool> doConversion_p;
   Bool freqFrameValid_p;
   Vector<Double> imageFreq_p;
   //Vector of float lsrfreq needed for regridding

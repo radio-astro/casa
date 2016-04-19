@@ -259,7 +259,7 @@ Bool VisBufferUtil::interpolateFrequency(Cube<Complex>& data,
 		  localmax=max(freqs);
 		  localmin=min(freqs);
 		  freqEnd=max(freqEnd, localmax);
-		  freqStart=max(freqStart, localmin);
+		  freqStart=min(freqStart, localmin);
 		}
 	}
     freqMin=freqStart;

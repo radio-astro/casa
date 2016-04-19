@@ -171,8 +171,8 @@ using namespace casa::vi;
       nVisChan_p.resize();
       nVisChan_p=other.nVisChan_p;
       spectralCoord_p=other.spectralCoord_p;
-      doConversion_p.resize();
-      doConversion_p=other.doConversion_p;
+      //doConversion_p.resize();
+      //doConversion_p=other.doConversion_p;
       pointingDirCol_p=other.pointingDirCol_p;
       //moving source stuff
       movingDir_p=other.movingDir_p;
@@ -326,6 +326,7 @@ using namespace casa::vi;
       // Set up maps
       Int spectralIndex=coords.findCoordinate(Coordinate::SPECTRAL);
       AlwaysAssert(spectralIndex>-1, AipsError);
+      
       spectralCoord_p=coords.spectralCoordinate(spectralIndex);
 
       //Store the image/grid channels freq values
@@ -369,11 +370,11 @@ using namespace casa::vi;
         setSpw(myspw, freqFrameValid_p);
       }
 
-      matchAllSpwChans(vb);
-
+      //matchAllSpwChans(vb);
+      
       chanMap.resize();
-
-      chanMap=multiChanMap_p[vb.spectralWindows()(0)];
+      matchChannel(vb);
+      //chanMap=multiChanMap_p[vb.spectralWindows()(0)];
       if(chanMap.nelements() == 0)
         chanMap=Vector<Int>(vb.getFrequencies(0).nelements(), -1);
 
@@ -471,7 +472,8 @@ using namespace casa::vi;
       Cube<Complex> origdata;
       Cube<Bool> modflagCube;
       Vector<Double> visFreq(vb.getFrequencies(0).nelements());
-      if(doConversion_p[vb.spectralWindows()[0]]){
+      //if(doConversion_p[vb.spectralWindows()[0]]){
+      if(freqFrameValid_p){
         visFreq.resize(lsrFreq_p.shape());
         convertArray(visFreq, lsrFreq_p);
       }
@@ -726,7 +728,8 @@ using namespace casa::vi;
       Cube<Complex> *origdata;
       Vector<Double> visFreq(vb.getFrequencies(0).nelements());
 
-      if(doConversion_p[vb.spectralWindows()[0]]){
+      //if(doConversion_p[vb.spectralWindows()[0]]){
+      if(freqFrameValid_p){
         convertArray(visFreq, lsrFreq_p);
       }
       else{
@@ -769,10 +772,10 @@ using namespace casa::vi;
 
       
       Cube<Bool>  copyOfFlag;
-      Vector<Int> mychanmap=multiChanMap_p[vb.spectralWindows()[0]];
+      //Vector<Int> mychanmap=multiChanMap_p[vb.spectralWindows()[0]];
       copyOfFlag.assign(vb.flagCube());
-      for (uInt k=0; k< mychanmap.nelements(); ++ k)
-	if(mychanmap(k) < 0)
+      for (uInt k=0; k< chanMap.nelements(); ++ k)
+	if(chanMap(k) < 0)
 	  copyOfFlag.xzPlane(k).set(True);
       flipgrid.resize();
       swapyz(flipgrid, copyOfFlag, flipdata);
@@ -1061,7 +1064,7 @@ using namespace casa::vi;
     outRecord.define("polmap", polMap);
     outRecord.define("nvischanmulti", nVisChan_p);
     spectralCoord_p.save(outRecord, "spectralcoord");
-    outRecord.define("doconversion", doConversion_p);
+    //outRecord.define("doconversion", doConversion_p);
     outRecord.define("pointingdircol", pointingDirCol_p);
     saveMeasure(outRecord, "movingdir_rec", error, movingDir_p);
     outRecord.define("fixmovingsource", fixMovingSource_p);
@@ -1198,7 +1201,7 @@ using namespace casa::vi;
       spectralCoord_p=*tmpSpec;
       delete tmpSpec;
     }
-    inRecord.get("doconversion", doConversion_p);
+    //inRecord.get("doconversion", doConversion_p);
     inRecord.get("pointingdircol", pointingDirCol_p);
     { const Record rec=inRecord.asRecord("movingdir_rec");
       MeasureHolder mh;
@@ -1316,7 +1319,7 @@ using namespace casa::vi;
     return False;
   }
   
-
+  /*
   Bool FTMachine::matchAllSpwChans(const vi::VisBuffer2& vb){
 
 	  //////I have no clue how to get all the channel and data selection from all
@@ -1336,7 +1339,7 @@ using namespace casa::vi;
 	  }
 	  elfinc=(spectralCoord_p.increment()(0));
 
-	  //cerr << "elfstart " << elfstart << " elfend " << elfend << " elfinc "<< elfinc << endl;
+	  cerr << "elfstart " << elfstart << " elfend " << elfend << " elfinc "<< elfinc << endl;
 
 	  MSUtil::getSpwInFreqRangeAllFields(elspw, elstart,
 			  elnchan,vb.getVi()->ms(), elfstart,elfend,elfinc, MFrequency::LSRK);
@@ -1344,10 +1347,10 @@ using namespace casa::vi;
 	  selectedSpw_p=elspw;
 	  nVisChan_p.resize();
 	  nVisChan_p=elnchan;
+	  cerr << "elspw " << elspw << " elstart " << elstart  << " elnchan " << endl;
 
-
-      doConversion_p.resize(max(selectedSpw_p)+1);
-      doConversion_p.set(True);
+	  //doConversion_p.resize(max(selectedSpw_p)+1);
+	  //doConversion_p.set(True);
 
       multiChanMap_p.resize(max(selectedSpw_p)+1, True);
       matchChannel(vb);
@@ -1368,18 +1371,19 @@ using namespace casa::vi;
   	      << LogIO::WARN << LogIO::POST;
 
       }
-         */
+     //////////////////////
       return True;
 
     }
+  */
 
   Bool FTMachine::matchChannel(const vi::VisBuffer2& vb){
 
-	  Int spw=vb.spectralWindows()[0];
-      nvischan  = vb.nChannels();
-      chanMap.resize(nvischan);
-      chanMap.set(-1);
-      Vector<Double> lsrFreq(0);
+    Int spw=vb.spectralWindows()[0];
+    nvischan  = vb.nChannels();
+    chanMap.resize(nvischan);
+    chanMap.set(-1);
+    Vector<Double> lsrFreq(0);
 
       //cerr << "doConve " << spw << "   " << doConversion_p[spw] << " freqframeval " << freqFrameValid_p << endl;
 //cerr <<"valid frame " << freqFrameValid_p << " polmap "<< polMap << endl;
@@ -1389,9 +1393,9 @@ using namespace casa::vi;
     	 lsrFreq=vb.getFrequencies(0);
 
      //cerr << "lsrFreq " << lsrFreq.shape() << " nvischan " << nvischan << endl;
-     if(doConversion_p.nelements() < uInt(spw+1))
-    	 doConversion_p.resize(spw+1, True);
-      doConversion_p[spw]=freqFrameValid_p;
+     //     if(doConversion_p.nelements() < uInt(spw+1))
+     //	 doConversion_p.resize(spw+1, True);
+     // doConversion_p[spw]=freqFrameValid_p;
 
       if(lsrFreq.nelements() ==0){
         return False;

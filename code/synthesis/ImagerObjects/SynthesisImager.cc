@@ -1181,6 +1181,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							  CoordinateSystem& cSys,
 							  IPosition imShape, 
 							  const Bool overwrite,
+							  ROMSColumns& msc,
 							  String mappertype,
 							  uInt ntaylorterms,
 							  Quantity distance,
@@ -1211,7 +1212,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
 	
 	// Fill in miscellaneous information needed by FITS
-	ROMSColumns msc(mss4vi_p[0]);
+	//ROMSColumns msc(mss4vi_p[0]);
 	Record info;
 	String objectName=msc.field().name()(msc.fieldId()(0));
 	String telescop=msc.observation().telescopeName()(0);
@@ -1438,7 +1439,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
       // Create the ImageStore object
       CountedPtr<SIImageStore> imstor;
-      imstor = createIMStore(imagename, csys, imshape, overwrite,mappertype, ntaylorterms, distance,facets, iftm->useWeightImage(), startmodel );
+      ROMSColumns msc(mss4vi_p[0]);
+      imstor = createIMStore(imagename, csys, imshape, overwrite, msc, mappertype, ntaylorterms, distance,facets, iftm->useWeightImage(), startmodel );
 
       // Create the Mappers
       if( facets<2 && chanchunks<2) // One facet. Just add the above imagestore to the mapper list.

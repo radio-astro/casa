@@ -215,7 +215,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       uInt nSelections = shape[0];
       if(selpars.freqbeg==""){
 	vi::FrequencySelectionUsingChannels channelSelector;
+
 	channelSelector.add(thisSelection, mss_p[mss_p.nelements()-1]);
+
 	fselections_p.add(channelSelector);
 	 
       }
@@ -549,7 +551,8 @@ void SynthesisImagerVi2::appendToMapperList(String imagename,
 
       // Create the ImageStore object
       CountedPtr<SIImageStore> imstor;
-      imstor = createIMStore(imagename, csys, imshape, overwrite,mappertype, ntaylorterms, distance,facets, iftm->useWeightImage(), startmodel );
+      ROMSColumns msc(*(mss_p[0]));
+      imstor = createIMStore(imagename, csys, imshape, overwrite,msc, mappertype, ntaylorterms, distance,facets, iftm->useWeightImage(), startmodel );
 
       // Create the Mappers
       if( facets<2 && chanchunks<2) // One facet. Just add the above imagestore to the mapper list.
@@ -1145,7 +1148,9 @@ void SynthesisImagerVi2::createVisSet(const Bool writeAccess)
     vi_p=new vi::VisibilityIterator2(mss_p, vi::SortColumns(), writeAccess);
     if(fselections_p.size() !=0)
       vi_p->setFrequencySelection (fselections_p);
-    
+    //
+    vi_p->originChunks();
+    vi_p->origin();
   }// end of createVisSet
 
 
