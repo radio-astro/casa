@@ -155,15 +155,15 @@ using namespace casa::vi;
       spwChanSelFlag_p.resize();
       spwChanSelFlag_p=other.spwChanSelFlag_p;
       freqFrameValid_p=other.freqFrameValid_p;
-      selectedSpw_p.resize();
-      selectedSpw_p=other.selectedSpw_p;
+      //selectedSpw_p.resize();
+      //selectedSpw_p=other.selectedSpw_p;
       imageFreq_p.resize();
       imageFreq_p=other.imageFreq_p;
       lsrFreq_p.resize();
       lsrFreq_p=other.lsrFreq_p;
       interpVisFreq_p.resize();
       interpVisFreq_p=other.interpVisFreq_p;
-      multiChanMap_p=other.multiChanMap_p;
+      //multiChanMap_p=other.multiChanMap_p;
       chanMap.resize();
       chanMap=other.chanMap;
       polMap.resize();
@@ -364,11 +364,12 @@ using namespace casa::vi;
       nvischan  = vb.getFrequencies(0).nelements();
       interpVisFreq_p.resize();
       interpVisFreq_p=vb.getFrequencies(0);
-      if(selectedSpw_p.nelements() < 1){
+      /*if(selectedSpw_p.nelements() < 1){
         Vector<Int> myspw(1);
         myspw[0]=vb.spectralWindows()(0);
         setSpw(myspw, freqFrameValid_p);
       }
+      */
 
       //matchAllSpwChans(vb);
       
@@ -1052,14 +1053,14 @@ using namespace casa::vi;
     outRecord.define("freqinterpmethod", static_cast<Int>(freqInterpMethod_p));
     outRecord.define("spwchanselflag", spwChanSelFlag_p);
     outRecord.define("freqframevalid", freqFrameValid_p);
-    outRecord.define("selectedspw", selectedSpw_p);
+    //outRecord.define("selectedspw", selectedSpw_p);
     outRecord.define("imagefreq", imageFreq_p);
     outRecord.define("lsrfreq", lsrFreq_p);
     outRecord.define("interpvisfreq", interpVisFreq_p);
     Record multichmaprec;
-    for (uInt k=0; k < multiChanMap_p.nelements(); ++k)
-      multichmaprec.define(k, multiChanMap_p[k]);
-    outRecord.defineRecord("multichanmaprec", multichmaprec);
+    //for (uInt k=0; k < multiChanMap_p.nelements(); ++k)
+    //  multichmaprec.define(k, multiChanMap_p[k]);
+    //outRecord.defineRecord("multichanmaprec", multichmaprec);
     outRecord.define("chanmap", chanMap);
     outRecord.define("polmap", polMap);
     outRecord.define("nvischanmulti", nVisChan_p);
@@ -1185,14 +1186,14 @@ using namespace casa::vi;
     //We won't respect the chanselflag as the vister may have different selections
     spwChanSelFlag_p.resize();
     inRecord.get("freqframevalid", freqFrameValid_p);
-    inRecord.get("selectedspw", selectedSpw_p);
+    //inRecord.get("selectedspw", selectedSpw_p);
     inRecord.get("imagefreq", imageFreq_p);
     inRecord.get("lsrfreq", lsrFreq_p);
     inRecord.get("interpvisfreq", interpVisFreq_p);
-    const Record multichmaprec=inRecord.asRecord("multichanmaprec");
-    multiChanMap_p.resize(multichmaprec.nfields(), True, False);
-    for (uInt k=0; k < multichmaprec.nfields(); ++k)
-      multichmaprec.get(k, multiChanMap_p[k]);
+    //const Record multichmaprec=inRecord.asRecord("multichanmaprec");
+    //multiChanMap_p.resize(multichmaprec.nfields(), True, False);
+    //for (uInt k=0; k < multichmaprec.nfields(); ++k)
+    //  multichmaprec.get(k, multiChanMap_p[k]);
     inRecord.get("chanmap", chanMap);
     inRecord.get("polmap", polMap);
     inRecord.get("nvischanmulti", nVisChan_p);
@@ -1306,17 +1307,10 @@ using namespace casa::vi;
   
   
   
-  Bool FTMachine::setSpw(Vector<Int>& spws, Bool validFrame){
+  Bool FTMachine::setFrameValidity(Bool validFrame){
     
     freqFrameValid_p=validFrame;
-    if(spws.nelements() >= 1){
-      selectedSpw_p.resize();
-      selectedSpw_p=spws;
-      multiChanMap_p.resize(max(spws)+1);
-      return True;
-    }
-    
-    return False;
+    return True;
   }
   
   /*
@@ -1434,11 +1428,11 @@ using namespace casa::vi;
         }
       }
 
-      if(multiChanMap_p.nelements() < uInt(spw+1))
+      /* if(multiChanMap_p.nelements() < uInt(spw+1))
     	  multiChanMap_p.resize(spw+1);
       multiChanMap_p[spw].resize();
       multiChanMap_p[spw]=chanMap;
-
+      */
 
       if(nFound==0) {
         /*

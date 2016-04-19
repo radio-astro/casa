@@ -992,9 +992,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     //    Array<Int> stokesForAllIFs = vb.subtableColumns().polarization().corrType().getColumn();
     log_l << "############....temp code!!!!!!!!!! "
-	  << SynthesisUtils::mapSpwIDToPolID(vb,selectedSpw_p(0))
+	  << SynthesisUtils::mapSpwIDToPolID(vb, vb.spectralWindows()[0])
 	  << LogIO::DEBUG1;
-    Vector<Int> polIDs=SynthesisUtils::mapSpwIDToPolID(vb,selectedSpw_p(0));
+    Vector<Int> polIDs=SynthesisUtils::mapSpwIDToPolID(vb,vb.spectralWindows()[0]);
     if (polIDs.nelements()==0)
       log_l << "Internal Error: Selected SPW did not map to any pol!" << LogIO::EXCEPTION;
     //

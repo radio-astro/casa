@@ -943,11 +943,10 @@ void SynthesisImagerVi2::unlockMSs()
 
     //// For mode=cubedata, set the freq frame to invalid..
     // get this info from buildCoordSystem
-    Vector<Int> tspws(0);
     //theFT->setSpw( tspws, False );
     //theIFT->setSpw( tspws, False );
-    theFT->setSpw( tspws, freqFrameValid );
-    theIFT->setSpw( tspws, freqFrameValid );
+    theFT->setFrameValidity( freqFrameValid );
+    theIFT->setFrameValidity( freqFrameValid );
 
     //// Set interpolation mode
     theFT->setFreqInterpolation( interpolation );

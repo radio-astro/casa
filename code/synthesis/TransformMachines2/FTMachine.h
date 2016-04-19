@@ -280,8 +280,8 @@ public:
   // Can this FTMachine be represented by Fourier convolutions?
   virtual Bool isFourier() {return False;}
 
-  //set  spw for cube that will be used;
-  Bool setSpw(Vector<Int>& spw, Bool validFrame);
+  //set  otf spectral frame transform is on or off;
+  Bool setFrameValidity(Bool validFrame);
 
   //return whether the ftmachine is using a double precision grid
   virtual Bool doublePrecGrid();
@@ -416,8 +416,8 @@ protected:
 
   
   // setup multiple spectral window for cubes
-  Block <Vector <Int> > multiChanMap_p;
-  Vector<Int> selectedSpw_p;
+  //Block <Vector <Int> > multiChanMap_p;
+  //Vector<Int> selectedSpw_p;
   Vector<Int> nVisChan_p;
   Bool matchChannel(const Int& spw, 
 		    const VisBuffer& vb);
