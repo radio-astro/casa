@@ -655,7 +655,6 @@ msmetadata* ms::metadata(const float cachesize)
 	}
 	::casac::record *header = 0;
 	try {
-
 		*itsLog << LogOrigin("ms", __func__);
 		// pass the original MS name to the constructor
 		// so that it is correctly printed in the output
@@ -684,27 +683,30 @@ msmetadata* ms::metadata(const float cachesize)
 			// Redirect cout's buffer to string
 			osbuf = ostr.rdbuf();
 			cout.rdbuf(osbuf);
-
 			// Sink the messages locally to a string
 			LogSink sink(LogMessage::NORMAL, &ostr, False);
 			LogIO os(sink);
-
 			// Call the listing routines
 			mss.list(os, outRec, verbose, True);
 			header=fromRecord(outRec);
-
 			// Restore cout's buffer
 			cout.rdbuf(backup);
-
-			// Remove the extra fields (time, severity) from the output string
 			String str(ostr.str());
-			str.gsub (Regex(".*\tINFO\t[+]?\t"), "");
-
-			// Write output string to a file
+            Int count = str.freq('\n') + 1;
+            String *s = new String[count];
+            static const Regex regx(".*\tINFO\t[+]?\t");
+            casa::split(str, s, count, "\n");
 			ofstream file;
 			file.open(listfile.data());
-			file << str;
-
+            for (Int i=0; i<count; ++i) {
+			    // Remove the extra fields (time, severity) from the output string
+			    // Write output string to a file
+                file << s[i].after(regx);
+                if (i < count - 1) {
+                    file << "\n";
+                }
+            }
+            delete [] s;
 			file.close();
 		}
 		else {
