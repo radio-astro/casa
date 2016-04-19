@@ -547,19 +547,19 @@ class Tsysflag(basetask.StandardTaskTemplate):
           rules=rules, niter=1, prepend='flag {0} - '.format(metric))
         flaggertask = flagger(flaggerinputs)
 
-        # Execute the flagger task
+        # Execute the flagger task.
         flaggerresult = self._executor.execute(flaggertask)
         
         # Import views, flags, and "measurement set or caltable to flag"
-        # into final result
+        # into final result.
         result.importfrom(flaggerresult)
 
-        # Save a snapshot of the inputs of the datatask
+        # Save a snapshot of the inputs of the datatask.
         result.inputs = datainputs.as_dict()
         result.caltable = inputs.caltable
         result.stage_number = inputs.context.task_counter
         
-        # Copy flagging summaries to final result
+        # Copy flagging summaries to final result.
         result.summaries = flaggerresult.summaries
 
         return result

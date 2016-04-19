@@ -31,7 +31,11 @@ class T2_4MDetailsFlagcorrectedRenderer(basetemplates.T2_4MDetailsDefaultRendere
             if not result.view:
                 continue
             
-            renderer = BaselineVsChannelsPlotRenderer(pipeline_context, result)
+            if result.metric == 'antenna':
+                renderer = TimeVsAntennaPlotRenderer(pipeline_context, result)
+            elif result.metric == 'baseline':
+                renderer = BaselineVsTimePlotRenderer(pipeline_context, result)
+            
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())
 
@@ -75,11 +79,11 @@ class T2_4MDetailsFlagcorrectedRenderer(basetemplates.T2_4MDetailsDefaultRendere
         return filename
 
 
-class BaselineVsChannelsPlotRenderer(basetemplates.JsonPlotRenderer):
+class BaselineVsTimePlotRenderer(basetemplates.JsonPlotRenderer):
     def __init__(self, context, result):
         vis = os.path.basename(result.inputs['vis'])
-        title = 'Baseline vs channels plots for %s' % vis
-        outfile = filenamer.sanitize('baseline_vs_channels-%s.html' % vis)
+        title = 'Baseline vs Time plots for %s' % vis
+        outfile = filenamer.sanitize('baseline_vs_time-%s.html' % vis)
 
         stage = 'stage%s' % result.stage_number
         dirname = os.path.join(context.report_dir, stage)
@@ -87,6 +91,24 @@ class BaselineVsChannelsPlotRenderer(basetemplates.JsonPlotRenderer):
         plotter = image.ImageDisplay()
         plots = plotter.plot(context=context, results=result, reportdir=dirname)
         
-        super(BaselineVsChannelsPlotRenderer, self).__init__(
+        super(BaselineVsTimePlotRenderer, self).__init__(
+                'generic_x_vs_y_per_spw_and_pol_plots.mako', context, 
+                result, plots, title, outfile)
+
+
+class TimeVsAntennaPlotRenderer(basetemplates.JsonPlotRenderer):
+    def __init__(self, context, result):
+
+        vis = os.path.basename(result.inputs['vis'])
+        title = 'Time vs Antenna plots for %s' % vis
+        outfile = filenamer.sanitize('time_vs_ant-%s.html' % vis)
+
+        stage = 'stage%s' % result.stage_number
+        dirname = os.path.join(context.report_dir, stage)
+
+        plotter = image.ImageDisplay()
+        plots = plotter.plot(context, results=result, reportdir=dirname)
+        
+        super(TimeVsAntennaPlotRenderer, self).__init__(
                 'generic_x_vs_y_per_spw_and_pol_plots.mako', context, 
                 result, plots, title, outfile)

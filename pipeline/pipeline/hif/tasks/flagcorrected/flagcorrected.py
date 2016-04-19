@@ -1,19 +1,20 @@
 from __future__ import absolute_import
 
-import numpy as np 
-import os
 import types
 
-from pipeline.infrastructure import casa_tasks
+import numpy as np 
+
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
+
+from pipeline.hif.tasks.common import commonresultobjects
 from pipeline.hif.tasks.common import commonhelpermethods
+from pipeline.hif.tasks.common import viewflaggers
+
 from pipeline.hif.tasks.flagging.flagdatasetter import FlagdataSetter
 
-from .resultobjects import FlagcorrectedResults
-from ..common import commonresultobjects
-from ..common import viewflaggers
+from .resultobjects import FlagcorrectedResults, FlagcorrectedDataResults, FlagcorrectedViewResults
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -133,286 +134,366 @@ class Flagcorrected(basetask.StandardTaskTemplate):
     def prepare(self):
         inputs = self.inputs
 
-        # Construct the task that will read the data and create the
-        # view of the data that is the basis for flagging.
-        datainputs = FlagcorrectedWorkerInputs(context=inputs.context,
-          output_dir=inputs.output_dir, vis=inputs.vis, spw=inputs.spw,
-          intent=inputs.intent, metric=inputs.metric)
-        datatask = FlagcorrectedWorker(datainputs)
+        # Initialize result and store vis in result
+        result = FlagcorrectedResults()
+        result.vis = inputs.vis
+
+        # Construct the task that will read the data.
+        datainputs = FlagcorrectedDataInputs(context=inputs.context,
+          vis=inputs.vis, spw=inputs.spw, intent=inputs.intent, 
+          metric=inputs.metric)
+        datatask = FlagcorrectedData(datainputs)
+        
+        # Construct the generator that will create the view of the data
+        # that is the basis for flagging.
+        viewtask = FlagcorrectedView(metric=inputs.metric)
 
         # Construct the task that will set any flags raised in the
         # underlying data.
         flagsetterinputs = FlagdataSetter.Inputs(context=inputs.context,
-          vis=inputs.vis, inpfile=[], table=inputs.vis)
+          vis=inputs.vis, table=inputs.vis, inpfile=[])
         flagsettertask = FlagdataSetter(flagsetterinputs)
+
+        # Define which type of flagger to use.
+        flagger = viewflaggers.NewMatrixFlagger
 
         # Translate the input flagging parameters to a more compact
         # list of rules.
-        rules = viewflaggers.MatrixFlagger.make_flag_rules (
+        # FIXME: if metric='baseline', these flagging rules are possibly
+        # not appropriate; need to add a switch for generating rules
+        # depending on metric.
+        rules = flagger.make_flag_rules (
           flag_bad_antenna=inputs.flag_bad_antenna, 
           fba_lo_limit=inputs.fba_lo_limit,
           fba_minsample=inputs.fba_minsample,
           fba_frac_limit=inputs.fba_frac_limit,
           fba_number_limit=inputs.fba_number_limit)
-        flagger = viewflaggers.MatrixFlagger
  
-        # Construct the flagger task around the data view task  and the
-        # flagger task. When executed this will:
-        #   loop:
-        #     execute datatask to obtain view from underlying data
-        #     examine view, raise flags
-        #     execute flagsetter task to set flags in underlying data        
-        #     exit loop if no flags raised or if # iterations > niter 
+        # Construct the flagger task around the data view task and the
+        # flagger task. 
         flaggerinputs = flagger.Inputs(
           context=inputs.context, output_dir=inputs.output_dir,
-          vis=inputs.vis, datatask=datatask, flagsettertask=flagsettertask,
-          rules=rules, niter=inputs.niter)
+          vis=inputs.vis, datatask=datatask, viewtask=viewtask, 
+          flagsettertask=flagsettertask, rules=rules, niter=inputs.niter,
+          iter_datatask=True)
         flaggertask = flagger(flaggerinputs)
 
-        # Execute it to flag the data view
-        summary_job = casa_tasks.flagdata(vis=inputs.vis, mode='summary', name='before')
-        stats_before = self._executor.execute(summary_job)
-        result = self._executor.execute(flaggertask)
-        summary_job = casa_tasks.flagdata(vis=inputs.vis, mode='summary', name='after')
-        stats_after = self._executor.execute(summary_job)
+        # Execute the flagger task.
+        flaggerresult = self._executor.execute(flaggertask)
 
-        result.summaries = [stats_before, stats_after]
+        # Import views, flags, and "measurement set or caltable to flag"
+        # into final result.
+        result.importfrom(flaggerresult)
+
+        # Copy flagging summaries to final result, and update
+        # names to match expectations by renderer.
+        result.summaries = flaggerresult.summaries
+        result.summaries[0]['name'] = 'before'
+        result.summaries[-1]['name'] = 'after'
+
+        # Store flagging metric in result (for renderer).
+        result.metric = inputs.metric
+
         return result
 
     def analyse(self, result):
         return result
 
 
-class FlagcorrectedWorkerInputs(basetask.StandardInputs):
-    def __init__(self, context, output_dir=None, vis=None, spw=None,
+class FlagcorrectedDataInputs(basetask.StandardInputs):
+    
+    def __init__(self, context, vis=None, spw=None,
       intent=None, metric=None):
+        """
+        Keyword arguments:
+        spw    -- views are created for these spws.
+        intent -- views are created for this intent.
+        metric -- 'antenna' : create an "antenna" flagging view.
+                  'baseline' : create a "baseline" flagging view.
+        """
+        
         self._init_properties(vars())
 
 
-class FlagcorrectedWorker(basetask.StandardTaskTemplate):
-    Inputs = FlagcorrectedWorkerInputs
+class FlagcorrectedData(basetask.StandardTaskTemplate):
+    Inputs = FlagcorrectedDataInputs
 
     def __init__(self, inputs):
-        super(FlagcorrectedWorker, self).__init__(inputs)
-        self.result = FlagcorrectedResults()
-
+        super(FlagcorrectedData, self).__init__(inputs)
+        
     def prepare(self):
-        inputs = self.inputs
 
-        final = []
+        # Initialize result structure.
+        result = FlagcorrectedDataResults()
+        result.data = {}
+        result.intent = self.inputs.intent
+        result.new = True
 
-        self.result.vis = inputs.vis
+        # Get metric from inputs.
+        metric = self.inputs.metric
+
+        # Take vis from inputs, and add to result.
+        result.table = self.inputs.vis
+
+        LOG.info ('Reading flagging view data for vis %s ' % (self.inputs.vis))
+        
+        # Get the spws to use.
+        spwids = map(int, self.inputs.spw.split(','))
 
         # Get the MS object.
-        self.ms = inputs.context.observing_run.get_ms(name=self.result.vis)
-
-        # Get the spws to use
-        spwids = map(int, inputs.spw.split(','))
+        ms = self.inputs.context.observing_run.get_ms(name=self.inputs.vis)
 
         # Get antenna names, ids
         self.antenna_name, self.antenna_ids = \
-          commonhelpermethods.get_antenna_names(self.ms)
+          commonhelpermethods.get_antenna_names(ms)
+        ants = np.array(self.antenna_ids)
+        nants = len(ants)
 
-        LOG.info ('Computing flagging metrics for vis %s ' % (self.result.vis))
+        # Create a list of antenna baselines.
+        baselines = []
+        for ant1 in ants:
+            for ant2 in ants: 
+                baselines.append('%s&%s' % (ant1, ant2))
+        nbaselines = len(baselines)
 
-        # calculate views
-        if inputs.metric == 'baseline':
-            self.calculate_baseline_view(spwids, inputs.intent)
-        elif inputs.metric == 'antenna':
-            self.calculate_antenna_view(spwids, inputs.intent)
-        else:
-            raise Exception, 'bad metric: %s' % inputs.metric
+        # Read in data for separately for each spw.
+        for spwid in spwids:
 
-        return self.result
+            LOG.info('Reading flagging view data for spw %s' % spwid)
+
+            # Get the correlation products.
+            corrs = commonhelpermethods.get_corr_products(ms, spwid)
+        
+            # Open MS and read in required data.       
+            with casatools.MSReader(ms.name) as openms:
+                try:
+                    openms.msselect({'scanintent':'*%s*' % self.inputs.intent, 'spw':str(spwid)})
+                except:
+                    LOG.warning('Unable to compute flagging view for spw %s' % spwid)
+                    openms.close()
+                    # Continue to next spw.
+                    continue
+
+                # Extract the unique time stamps present in the current selection of the MS.
+                rec = openms.getdata(['time'])
+                times = np.sort(np.unique(rec['time']))
+                ntimes = len(times)
+    
+                # Initialize output arrays based on metric.
+                if metric == 'baseline':
+                    # Initialize the data with zeroes.
+                    data = np.zeros([len(corrs), ntimes, nbaselines])
+                    # Initialize the flagging state as ones, i.e. data=flagged.
+                    flag = np.ones([len(corrs), ntimes, nbaselines], np.bool)
+                elif metric == 'antenna':
+                    # Initialize the data, and number of data points
+                    # used, for the flagging view.
+                    data = np.zeros([len(corrs), nants, ntimes], np.complex)
+                    ndata = np.zeros([len(corrs), nants, ntimes], np.int)
+                else:
+                    raise Exception, 'bad metric: %s' % metric
+    
+                # Read in the MS data in chunks of limited number of rows at a time.
+                openms.iterinit(maxrows=500)
+                openms.iterorigin()
+                iterating = True
+                while iterating:
+                    # Get first chunk of records; stop if no "corrected_data" are
+                    # present.
+                    rec = openms.getdata(['corrected_data', 'flag', 'antenna1',
+                      'antenna2', 'time'])
+                    if 'corrected_data' not in rec.keys():
+                        break
+    
+                    for row in range(np.shape(rec['corrected_data'])[2]):
+                        # Extract antennas and time stamp from current row.
+                        ant1 = rec['antenna1'][row]
+                        ant2 = rec['antenna2'][row]
+                        tim = rec['time'][row]
+    
+                        # Skip auto-correlation data.                        
+                        if ant1==ant2:
+                            continue
+    
+                        # Treat data for each polarisation independently.
+                        for icorr in range(len(corrs)):
+                            # Get corrected data, flags, and derive unflagged data.
+                            corrected_data = rec['corrected_data'][icorr,:,row]
+                            corrected_flag = rec['flag'][icorr,:,row]
+                            valid_data = corrected_data[corrected_flag==False]
+
+                            # If unflagged data is found...
+                            if len(valid_data):
+                                # Store data in the correct output arrays, depending on 
+                                # metric.
+                                if metric == 'baseline':
+                                    # Determine which baselines these data belong to.
+                                    baseline1 = ant1 * (ants[-1] + 1) + ant2
+                                    baseline2 = ant2 * (ants[-1] + 1) + ant1
+                                    
+                                    # Create complex measurement from real and imag
+                                    # data.
+                                    med_data_real = np.median(valid_data.real)
+                                    med_data_imag = np.median(valid_data.imag)
+                                    med_data = abs(complex(med_data_real, med_data_imag))
+                                    
+                                    # Store data for each baseline, and set corresponding
+                                    # flag to unflagged.
+                                    data[icorr, times==tim, baseline1] = med_data
+                                    flag[icorr, times==tim, baseline1] = 0
+                                    data[icorr, times==tim, baseline2] = med_data
+                                    flag[icorr, times==tim, baseline2] = 0
+                                elif metric == 'antenna':
+                                    # Take median of unflagged data.
+                                    med_data = np.median(valid_data)
+                                    
+                                    # Store data for each antenna, and set corresponding
+                                    # flag to unflagged.
+                                    data[icorr, ant1, times==tim] += med_data
+                                    data[icorr, ant2, times==tim] += med_data
+                                    ndata[icorr, ant1, times==tim] += 1
+                                    ndata[icorr, ant2, times==tim] += 1
+    
+                    iterating = openms.iternext()
+    
+            # Process the read in data, if needed, and store in result.
+            if metric == 'baseline':
+                # Store data and related information for this spwid.
+                result.data[spwid] = {
+                  'data': data,
+                  'flag': flag,
+                  'times': times,
+                  'baselines': baselines,
+                  'corrs': corrs}
+                
+            elif metric == 'antenna':
+                # Calculate the average data value.
+                # Suppress any divide by 0 error messages.
+                old_settings = np.seterr(divide='ignore')
+                data /= ndata
+                np.seterr(**old_settings)
+
+                # Take the absolute value of the data points.
+                data = np.abs(data)
+                
+                # Set flagging state to "True" wherever no data points were available.
+                flag = ndata==0
+
+                # Store data and related information for this spwid.
+                result.data[spwid] = {
+                  'data': data,
+                  'flag': flag,
+                  'times': times,
+                  'ants': ants,
+                  'corrs': corrs}
+
+        return result
 
     def analyse(self, result):
         return result
 
-    def calculate_baseline_view(self, spwids, intent):
+
+class FlagcorrectedView(object):
+
+    def __init__(self, metric=None):
         """
-        spwids -- views will be calculated using data for each spw id
-                  in this list.
+        Creates an FlagcorrectedView instance.
+
+        Keyword arguments:
+        metric    -- the name of the view metric:
+                        'antenna' creates an antenna flagging view.
+                        'baseline' creates a baseline flagging view.
         """
+        
+        # Store input parameters.
+        self.metric = metric
+        
+        # Initialize result structure.
+        self.result = FlagcorrectedViewResults()
 
-        # the current view will be very similar to the last, if available.
-        # For now approximate as being identical which will save having to
-        # recalculate
-        prev_descriptions = self.result.descriptions()
-        if prev_descriptions:
-            for description in prev_descriptions:
-                prev_result = self.result.last(description)
 
-                self.result.addview(description, prev_result)
-
-            # EARLY RETURN
-            return
-
-        ants = np.array(self.antenna_ids)
-
-        # now construct the views
-        for spwid in spwids:
-            corrs = commonhelpermethods.get_corr_products(self.ms, spwid)
-
-            casatools.ms.open(self.inputs.vis)
-            casatools.ms.msselect({'scanintent':'*%s*' % intent,
-              'spw':str(spwid)})
-            rec = casatools.ms.getdata(['time'])
-            times = set(rec['time'])
-            times = list(times)
-            times.sort()
-            times = np.array(times)
-            ntimes = len(times)
-
-            ants = np.array(self.antenna_ids)
-            baselines = []
-            for ant1 in ants:
-                for ant2 in ants: 
-                    baselines.append('%s&%s' % (ant1, ant2))
-            nbaselines = len(baselines)
-
-            axes = [
-              commonresultobjects.ResultAxis(name='Time',
-              units='', data=times),
-              commonresultobjects.ResultAxis(name='Baseline',
-              units='', data=np.array(baselines), channel_width=1)]
-
-            data = np.zeros([len(corrs), ntimes, nbaselines])
-            flag = np.ones([len(corrs), ntimes, nbaselines], np.bool)
-
-            LOG.info('calculating flagging view for spw %s' % spwid)
-            casatools.ms.iterinit(maxrows=500)
-            casatools.ms.iterorigin()
-            iterating = True
-            while iterating:
-                rec = casatools.ms.getdata(['corrected_data', 'flag', 'antenna1',
-                  'antenna2', 'time'])
-                if 'corrected_data' not in rec.keys():
-                    break
-
-                for row in range(np.shape(rec['corrected_data'])[2]):
-                    ant1 = rec['antenna1'][row]
-                    ant2 = rec['antenna2'][row]
-                    tim = rec['time'][row]
-
-                    if ant1==ant2:
-                        continue
-
-                    baseline1 = ant1 * (ants[-1] + 1) + ant2
-                    baseline2 = ant2 * (ants[-1] + 1) + ant1
-
-                    for icorr,corrlist in enumerate(corrs):
-                        corrected_data = rec['corrected_data'][icorr,:,row]
-                        corrected_flag = rec['flag'][icorr,:,row]
-
-                        valid_data = corrected_data[corrected_flag==False]            
-                        if len(valid_data):
-                            med_data_real = np.median(valid_data.real)
-                            med_data_imag = np.median(valid_data.imag)
-                            med_data = abs(complex(med_data_real, med_data_imag))
-                            data[icorr,times==tim,baseline1] = med_data
-                            flag[icorr,times==tim,baseline1] = 0
-                            data[icorr,times==tim,baseline2] = med_data
-                            flag[icorr,times==tim,baseline2] = 0
-
-                iterating = casatools.ms.iternext()
-
-            casatools.ms.close()
-
-            # store the views
-            for icorr,corrlist in enumerate(corrs):
-                corr = corrlist[0]
-
-                viewresult = commonresultobjects.ImageResult(
-                  filename=self.inputs.vis, data=data[icorr],
-                  flag=flag[icorr], axes=axes, datatype='Mean amplitude',
-                  spw=spwid, pol=corr, intent=intent)
-
-                # add the view results to the result structure
-                self.result.addview(viewresult.description, viewresult)
-
-    def calculate_antenna_view(self, spwids, intent):
+    def __call__(self, dataresult):
         """
-        spwids -- views will be calculated using data for each spw id
-                  in this list.
+        When called, the FlagcorrectedView object calculates flagging views
+        for the vis / table provided by FlagcorrectedDataResults.
+
+        dataresult  -- FlagcorrectedDataResults object.
+                    
+        Returns:
+        FlagcorrectedViewResults object containing the flagging view.
         """
 
-        ants = np.array(self.antenna_ids)
+        # Take vis from data task results, and add to result.
+        self.result.vis = dataresult.table
 
-        # now construct the views
-        for spwid in spwids:
-            corrs = commonhelpermethods.get_corr_products(self.ms, spwid)
+        LOG.info ('Computing flagging metrics for vis %s ' % (self.result.vis))
 
-            casatools.ms.open(self.inputs.vis)
-            casatools.ms.msselect({'scanintent':'*%s*' % intent,
-              'spw':str(spwid)})
-            rec = casatools.ms.getdata(['time'])
-            times = set(rec['time'])
-            times = list(times)
-            times.sort()
-            times = np.array(times)
-            ntimes = len(times)
-            ants = np.array(self.antenna_ids)
-            nants = np.max(ants) + 1
+        # Check if dataresult is new for current iteration, or created during 
+        # a previous iteration.
+        
+        if dataresult.new:
+            # If the dataresult is from a newly run datatask, then 
+            # create the flagging view.
 
-            axes = [
-              commonresultobjects.ResultAxis(name='Antenna',
-              units='', data=ants, channel_width=1),
-              commonresultobjects.ResultAxis(name='Time',
-              units='', data=times)]
+            # Get intent from dataresult
+            intent = dataresult.intent
 
-            data = np.zeros([len(corrs), nants, ntimes], np.complex)
-            ndata = np.zeros([len(corrs), nants, ntimes], np.int)
-            flag = np.ones([len(corrs), nants, ntimes], np.bool)
+            # The dataresult should have stored separate results
+            # for each spwid it could find data for in the MS.
+            # Create a separate flagging view for each spw.
+            for spwid, spwdata in dataresult.data.items():
+   
+                LOG.info('Calculating flagging view for spw %s' % spwid)
 
-            LOG.info('calculating flagging view for spw %s' % spwid)
-            casatools.ms.iterinit(maxrows=500)
-            casatools.ms.iterorigin()
-            iterating = True
-            while iterating:
-                rec = casatools.ms.getdata(['corrected_data', 'flag', 'antenna1',
-                  'antenna2', 'time'])
-                if 'corrected_data' not in rec.keys():
-                    break
+                # Create axes for flagging view.
+                if self.metric == 'baseline':
+                    axes = [
+                      commonresultobjects.ResultAxis(name='Time',
+                      units='', data=spwdata['times']),
+                      commonresultobjects.ResultAxis(name='Baseline',
+                      units='', data=np.array(spwdata['baselines']), channel_width=1)]
+                elif self.metric == 'antenna':
+                    axes = [
+                      commonresultobjects.ResultAxis(name='Antenna',
+                      units='', data=spwdata['ants'], channel_width=1),
+                      commonresultobjects.ResultAxis(name='Time',
+                      units='', data=spwdata['times'])]
+    
+                # From the data array, create a view for each polarisation. 
+                for icorr,corrlist in enumerate(spwdata['corrs']):
+                    corr = corrlist[0]
+    
+                    viewresult = commonresultobjects.ImageResult(
+                      filename=self.result.vis, data=spwdata['data'][icorr],
+                      flag=spwdata['flag'][icorr], axes=axes, datatype='Mean amplitude',
+                      spw=spwid, pol=corr, intent=intent)
+    
+                    # add the view results to the result structure
+                    self.result.addview(viewresult.description, viewresult)
+        else:
+            # If the dataresult is from a previously run datatask, then
+            # the datatask is not being iterated, and instead the 
+            # flagging view will be taken from an earlier flagging view.
+            
+            # Check in the result structure stored in this instance of RawflagchansView
+            # for the presence of previous result descriptions.
+            prev_descriptions = self.result.descriptions()
+            if prev_descriptions:
+                # If result descriptions are present, then this instance was called 
+                # before, and views were already calculated previously. 
+                # Since the current view will be very similar to the last, it is
+                # approximated to be identical, which saves having to recalculate.
+                for description in prev_descriptions:
+                    
+                    # Get a deep copy to the last result belonging to the description.
+                    prev_result = self.result.last(description)
+    
+                    # Store this view as the new view in the result structure.
+                    self.result.addview(description, prev_result)
+            else:
+                LOG.error('Not iterating datatask, but no previous flagging '
+                          ' views available to create a refined view from. '
+                          'Cannot create flagging views.')
 
-                for row in range(np.shape(rec['corrected_data'])[2]):
-                    ant1 = rec['antenna1'][row]
-                    ant2 = rec['antenna2'][row]
-                    tim = rec['time'][row]
+        return self.result
 
-                    if ant1==ant2:
-                        continue
-
-                    for icorr,corrlist in enumerate(corrs):
-                        corrected_data = rec['corrected_data'][icorr,:,row]
-                        corrected_flag = rec['flag'][icorr,:,row]
-
-                        valid_data = corrected_data[corrected_flag==False]            
-                        if len(valid_data):
-                            med_data = np.median(valid_data)
-                            data[icorr,ant1,times==tim] += med_data
-                            data[icorr,ant2,times==tim] += med_data
-                            ndata[icorr,ant1,times==tim] += 1
-                            ndata[icorr,ant2,times==tim] += 1
-
-                iterating = casatools.ms.iternext()
-
-            casatools.ms.close()
-
-            old_settings = np.seterr(divide='ignore')
-            data /= ndata
-            data = np.abs(data)
-            np.seterr(**old_settings)
-            flag = ndata==0
-
-            # store the views
-            for icorr,corrlist in enumerate(corrs):
-                corr = corrlist[0]
-
-                viewresult = commonresultobjects.ImageResult(
-                  filename=self.inputs.vis, data=data[icorr],
-                  flag=flag[icorr], axes=axes, datatype='Mean amplitude',
-                  spw=spwid, pol=corr, intent=intent)
-
-                # add the view results to the result structure
-                self.result.addview(viewresult.description, viewresult)
-         

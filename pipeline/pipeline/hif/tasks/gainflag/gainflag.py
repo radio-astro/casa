@@ -287,9 +287,12 @@ class Gainflagger(basetask.StandardTaskTemplate):
           vis=inputs.vis, table=inputs.vis, inpfile=[])
         flagsettertask = FlagdataSetter(flagsetterinputs)
 
+        # Define which type of flagger to use.
+        flagger = viewflaggers.NewMatrixFlagger
+
         # Translate the input flagging parameters to a more compact
         # list of rules.
-        rules = viewflaggers.NewMatrixFlagger.make_flag_rules(
+        rules = flagger.make_flag_rules(
           flag_maxabs=inputs.flag_maxabs,
           fmax_limit=inputs.fmax_limit)
 
@@ -297,15 +300,15 @@ class Gainflagger(basetask.StandardTaskTemplate):
         # flagger task. Extend any newly found flags by removing selection
         # of "FIELD" and "TIMERANGE". Extend any newly found flags in a spw
         # by flagging same in all spws of corresponding baseband.
-        matrixflaggerinputs = viewflaggers.NewMatrixFlaggerInputs(
+        matrixflaggerinputs = flagger.Inputs(
           context=inputs.context, output_dir=inputs.output_dir,
           vis=inputs.vis, datatask=datatask, viewtask=viewtask, 
           flagsettertask=flagsettertask, rules=rules, niter=inputs.niter,
           extendfields=['field', 'timerange'], extendbaseband=True,
           prepend=inputs.prepend, iter_datatask=True)
-        flaggertask = viewflaggers.NewMatrixFlagger(matrixflaggerinputs)
+        flaggertask = flagger(matrixflaggerinputs)
 
-        # Execute it to flag the data view
+        # Execute the flagger task.
         flaggerresult = self._executor.execute(flaggertask)
         
         # Import views, flags, and "measurement set or caltable to flag"

@@ -24,7 +24,7 @@ def channel_ranges(channels):
     # get here if last channel reached
     return [range]        
 
-def consolidate_flagcmd_channels(flagcmds):
+def consolidate_flagcmd_channels(flagcmds, antenna_id_to_name=None):
     """Method to consolidate multiple flagcmds that specify a single
        channel into fewer flagcmds with channel ranges."""
 
@@ -86,7 +86,8 @@ def consolidate_flagcmd_channels(flagcmds):
           flagcoords=flagcoords,
           channel_axis=ftuple[9],
           reason=ftuple[10],
-          extendfields=ftuple[11]))
+          extendfields=ftuple[11], 
+          antenna_id_to_name=antenna_id_to_name))
 
     return consolidated_flagcmds
 
@@ -127,7 +128,6 @@ class FlagCmd(object):
         self.channel_axis = channel_axis
         self.reason = reason
         self.extendfields = extendfields
-        self.antenna_id_to_name = antenna_id_to_name
 
         # construct the corresponding flag command
         flagcmd = ""
@@ -195,10 +195,18 @@ class FlagCmd(object):
                 elif name.upper()=='BASELINE':
                     ax_antenna = flagcoords[k]
             if ax_antenna is not None:
+                # If provided a dictionary to translate antenna IDs
+                # to antenna names, then use antenna names in the 
+                # flagging commands.
                 if antenna_id_to_name is None:
                     flagcmd += " antenna='%s'" % (ax_antenna)
                 else:
-                    flagcmd += " antenna='%s'" % (antenna_id_to_name[ax_antenna])
+                    # Antenna axis can be either single antenna or a
+                    # baseline.
+                    ax_antenna_name = '&'.join(
+                      [antenna_id_to_name[int(ant)] for ant 
+                      in str(ax_antenna).split('&')])
+                    flagcmd += " antenna='%s'" % (ax_antenna_name)
                 
 #                self.antenna = ax_antenna
 
@@ -221,7 +229,18 @@ class FlagCmd(object):
         # have to be careful with antenna as it may have been set during
         # the analysis of flagcoords
         if self.antenna is not None and 'antenna' not in flagcmd:
-            flagcmd += " antenna='%s'" % (self.antenna)
+            # If provided a dictionary to translate antenna IDs
+            # to antenna names, then use antenna names in the 
+            # flagging commands.
+            if antenna_id_to_name is None:
+                flagcmd += " antenna='%s'" % (self.antenna)
+            else:
+                # Antenna axis can be either single antenna or a
+                # baseline.
+                antenna_name = '&'.join(
+                  [antenna_id_to_name[int(ant)] for ant 
+                  in str(self.antenna).split('&')])
+                flagcmd += " antenna='%s'" % (antenna_name)
 
         flagcmd += " reason='%s'" % reason
 
