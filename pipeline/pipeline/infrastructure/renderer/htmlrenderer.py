@@ -3,12 +3,12 @@ import collections
 import contextlib
 import datetime
 import itertools
-
 import math
 import os
 import pydoc
 import re
 import shutil
+import types
 import zipfile
 
 import casadef
@@ -59,19 +59,19 @@ def get_task_description(result_obj):
     if description is None:
         description = _get_task_description_for_class(task_cls)    
 
-    d = {'description' : description,
-         'task_name'   : get_task_name(result_obj, include_stage=False),
-         'stage'       : get_stage_number(result_obj)}
+    d = {'description': description,
+         'task_name': get_task_name(result_obj, include_stage=False),
+         'stage': get_stage_number(result_obj)}
     return '{stage}. <strong>{task_name}</strong>: {description}'.format(**d)
 
-def _get_task_description_for_class(task_cls):
 
+def _get_task_description_for_class(task_cls):
     if LOG.isEnabledFor(LOG.todo):
         LOG.todo('No task description for \'%s\'' % task_cls.__name__)
         return ('\'%s\' (developers should add a task description)'
                 '' % task_cls.__name__)
 
-    return ('\'%s\'' % task_cls.__name__)
+    return '\'%s\'' % task_cls.__name__
 
 
 def get_task_name(result_obj, include_stage=True):
@@ -121,6 +121,7 @@ def is_singledish_ms(context):
         result_repr = str(importdata_result)
     return result_repr.find('SDImportDataResults') != -1
 
+
 class Session(object):
     def __init__(self, mses=None, name='Unnamed Session'):
         self.mses = [] if mses is None else mses
@@ -128,9 +129,9 @@ class Session(object):
 
     @staticmethod
     def get_sessions(context):
-        d = collections.defaultdict(list)
-        for ms in context.observing_run.measurement_sets:
-            d[ms.session].append(ms)
+        d = {}
+        for ms in get_mses_by_time(context):
+            d.setdefault(ms.session, []).append(ms)
 
         return [Session(v, k) for k, v in d.items()]
 
@@ -198,8 +199,8 @@ class T1_1Renderer(RendererBase):
         execblock_uids = ', '.join(context.observing_run.execblock_ids)
         observers = ', '.join(context.observing_run.observers)
 
-        array_names = set([ms.antenna_array.name
-                           for ms in context.observing_run.measurement_sets])
+        array_names = {ms.antenna_array.name
+                       for ms in context.observing_run.measurement_sets}
 
         # pipeline execution start, end and duration
         exec_start = context.results[0].timestamps.start
@@ -215,7 +216,7 @@ class T1_1Renderer(RendererBase):
         
         #Observation Summary (formerly the T1-2 page)
         ms_summary_rows = []
-        for ms in context.observing_run.measurement_sets:
+        for ms in get_mses_by_time(context):
             link = 'sidebar_%s' % re.sub('[^a-zA-Z0-9]', '_', ms.basename)
             href = os.path.join('t2-1.html?sidebar=%s' % link)
 
@@ -306,7 +307,7 @@ class T1_2Renderer(RendererBase):
     @staticmethod
     def get_display_context(context):
         ms_summary_rows = []
-        for ms in context.observing_run.measurement_sets:
+        for ms in get_mses_by_time(context):
             href = os.path.join('t2-1.html?ms=%s' % ms.basename)
 
             num_antennas = len(ms.antennas)
@@ -352,8 +353,8 @@ class T1_2Renderer(RendererBase):
         
             ms_summary_rows.append(row)
         
-        return {'pcontext'        : context,
-                'ms_summary_rows' : ms_summary_rows}
+        return {'pcontext': context,
+                'ms_summary_rows': ms_summary_rows}
 
 
 class T1_3MRenderer(RendererBase):
@@ -373,11 +374,10 @@ class T1_3MRenderer(RendererBase):
 
         scores = {}
         tablerows = []
-        results_list = []
         flagtables = {}
         for result in context.results:
             scores[result.stage_number] = result.qa.representative
-            results_list = result
+            results_list = get_results_by_time(context, result)
         
             qa_errors = cls._filter_qascores(results_list, -0.1, 0.1)
             tablerows.extend(cls._qascores_to_tablerows(qa_errors,
@@ -427,12 +427,11 @@ class T1_3MRenderer(RendererBase):
                 except:
                     LOG.debug('No flag summary table available yet from applycal')
 
-        return {'pcontext' : context,
-                'registry' : registry,
-                'scores'   : scores,
+        return {'pcontext': context,
+                'registry': registry,
+                'scores': scores,
                 'tablerows': tablerows,
                 'flagtables': flagtables}
-
 
     @classmethod
     def _filter_qascores(cls, results_list, lo, hi):
@@ -1782,3 +1781,28 @@ def update_with_temp_renderers():
     """  
     from . import weblog
     renderer_map[T2_4MDetailsRenderer].update(weblog.TEMP_RENDERER_MAP)
+
+
+def get_mses_by_time(context):
+    return sorted(context.observing_run.measurement_sets,
+                  key=lambda ms: ms.start_time['m0']['value'])
+
+
+def get_results_by_time(context, resultslist):
+    # as this is a ResultsList with important properties attached, results
+    # should be sorted in place.
+    if hasattr(resultslist, 'sort'):
+        # sort the list of results by the MS start time
+        resultslist.sort(key=lambda r: get_ms_start_time_for_result(context, r))
+    return resultslist
+
+
+def get_ms_start_time_for_result(context, result):
+    vis = result.inputs['vis']
+    return get_ms_attr_for_result(context, vis, lambda ms: ms.start_time['m0']['value'])
+
+
+def get_ms_attr_for_result(context, vis, accessor):
+    ms_basename = os.path.basename(vis)
+    ms = context.observing_run.get_ms(ms_basename)
+    return accessor(ms)
