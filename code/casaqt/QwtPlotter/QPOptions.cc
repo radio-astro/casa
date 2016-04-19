@@ -298,6 +298,7 @@ void QPSymbol::setHeightIsPixel(bool pixel) {
 }
 
 PlotSymbol::Symbol QPSymbol::symbol() const { return m_style; }
+
 void QPSymbol::setSymbol(Symbol symbol) {
     if(symbol != m_style) {
         m_style = symbol;

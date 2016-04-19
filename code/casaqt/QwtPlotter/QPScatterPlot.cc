@@ -68,6 +68,7 @@ QPScatterPlot::QPScatterPlot(PlotPointDataPtr data, const String& title):
     }
     
     setItemAttribute(QwtPlotItem::AutoScale);
+    setItemAttribute(QwtPlotItem::Legend, true);
 }
 
 QPScatterPlot::QPScatterPlot(const ScatterPlot& copy) :
@@ -106,6 +107,7 @@ QPScatterPlot::QPScatterPlot(const ScatterPlot& copy) :
     }
     
     setItemAttribute(QwtPlotItem::AutoScale);
+    setItemAttribute(QwtPlotItem::Legend, true);
 }
 
 QPScatterPlot::~QPScatterPlot() {
@@ -155,7 +157,24 @@ QwtDoubleRect QPScatterPlot::boundingRect() const {
     else return QwtDoubleRect(QPointF(xMin, yMin), QPointF(xMax, yMax));
 }
 
-#if QWT_VERSION < 0x060000
+#if QWT_VERSION >= 0x060000
+QwtGraphic QPScatterPlot::legendIcon(int /*index*/, const QSizeF& size) const {
+    const QPSymbol* plotsymbol;
+    if (symbolsShown()) {
+        plotsymbol = &m_symbol;
+    } else if (maskedSymbolsShown()) {
+        plotsymbol = &m_maskedSymbol;
+    }
+    QwtSymbol* iconsymbol = new QwtSymbol(QwtSymbol::HLine);
+    iconsymbol->setPen(plotsymbol->drawPen().color());
+    QwtGraphic icon = iconsymbol->graphic();
+    icon.setDefaultSize(QSizeF(size.width()*2.0, size.height()*2.0));
+    QPainter painter(&icon);
+    const QRectF rect (0.0, 0.0, size.width()*2.0, size.height()*2.0);
+    iconsymbol->drawSymbol(&painter, rect);
+    return icon;
+}
+#else
 QWidget* QPScatterPlot::legendItem() const {
 	QPen legendPen = m_line.asQPen();
 	if ( !linesShown() ){

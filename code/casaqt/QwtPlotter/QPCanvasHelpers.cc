@@ -112,11 +112,7 @@ void QPScaleDraw::draw(QPainter* painter, const QPalette& palette) const {
 	QwtScaleDraw::draw( painter, palette );
 }
 
-#if QWT_VERSION >= 0x060000
-double QPScaleDraw::extent( const QFont& font ) const{
-	return QwtScaleDraw::extent( font );
-}
-#else
+#if QWT_VERSION < 0x060000
 int QPScaleDraw::extent( const QPen& pen, const QFont& font ) const{
 	return QwtScaleDraw::extent( pen, font );
 }
@@ -295,6 +291,27 @@ QPLegendHolder::legendPosition(PlotCanvas::LegendPosition pos) {
     }
 }
 
+#if QWT_VERSION >= 0x060000
+void QPLegendHolder::setAlignment(PlotCanvas::LegendPosition pos) {
+    switch(pos) {
+        case PlotCanvas::INT_URIGHT:
+            m_legendItem->setAlignment(Qt::AlignRight | Qt::AlignTop);
+            break;
+        case PlotCanvas::INT_LRIGHT:
+            m_legendItem->setAlignment(Qt::AlignRight | Qt::AlignBottom);
+            break;
+        case PlotCanvas::INT_ULEFT:
+            m_legendItem->setAlignment(Qt::AlignLeft | Qt::AlignTop);
+            break;
+        case PlotCanvas::INT_LLEFT:
+            m_legendItem->setAlignment(Qt::AlignLeft | Qt::AlignBottom);
+            break;
+        default:
+            m_legendItem->setAlignment(Qt::AlignRight | Qt::AlignTop);
+            break;
+    }
+}
+#endif
 
 // Constructor which takes the canvas and initial position.
 QPLegendHolder::QPLegendHolder(QPCanvas* canvas, PlotCanvas::LegendPosition ps,
@@ -317,38 +334,94 @@ QPLegendHolder::QPLegendHolder(QPCanvas* canvas, PlotCanvas::LegendPosition ps,
     // Add to canvas.
     QtLayeredLayout* cl = dynamic_cast<QtLayeredLayout*>(canvas->layout());
     if(cl != NULL) cl->addWidget(this);
+#if QWT_VERSION >= 0x060000
+    // need this before setPosition
+    setupLegendItem();
+#endif
     setPosition(ps);
     
     // Set up tracking, etc.
     canvas->asQwtPlot().installLegendFilter(this);
     setMouseTracking(true);
+
 }
 
 QPLegendHolder::~QPLegendHolder() { }
 
+#if QWT_VERSION >= 0x060000
+void QPLegendHolder::setupLegendItem() {
+    m_legendItem = new QwtPlotLegendItem();
+    m_legendItem->setMaxColumns(1);
+    m_legendItem->setAlignment(Qt::AlignRight | Qt::AlignTop);
+    m_legendItem->setBackgroundMode(QwtPlotLegendItem::LegendBackground);
+    m_legendItem->setBackgroundBrush(QBrush(QColor(Qt::white)));
+    m_legendItem->setBorderRadius(0);
+    m_legendItem->setBorderPen(QPen(QColor(Qt::black)));
+    m_legendItem->setMargin(4);
+    m_legendItem->setSpacing(2);
+    m_legendItem->setItemMargin(0);
+}
+#endif
 
 bool QPLegendHolder::legendShown() const {
-    return isVisible() && m_legend->isVisible(); }
+#if QWT_VERSION >= 0x060000
+    return (m_legend != NULL);
+#else
+    return isVisible() && m_legend->isVisible(); 
+#endif
+}
+
 void QPLegendHolder::showLegend(bool show) {
+#if QWT_VERSION >= 0x060000
+	// In Qwt6, cannot set visibility of legend; if it exists,
+	// it will be shown
+    if(show) {
+        if(isInternal()) {
+            m_canvas->asQwtPlot().insertLegend(NULL);
+            m_legendItem->detach();
+            QwtPlot* plot = dynamic_cast<QwtPlot*>(&m_canvas->asQwtPlot());
+            if (plot) m_legendItem->attach(plot);
+        } else {
+            if (!m_legend) m_legend = new QPLegend();
+            m_canvas->asQwtPlot().insertLegend(m_legend,
+                legendPosition(m_position));
+        }
+	} else {
+		delete m_legend;
+		m_legend = NULL;
+        m_canvas->asQwtPlot().insertLegend(m_legend);
+        m_legendItem->detach();
+	}
+#else
     m_legend->setVisible(show);
     m_canvas->asQwtPlot().insertLegend(show ? m_legend : NULL,
             legendPosition(m_position));
+#endif
 }
 
 bool QPLegendHolder::isInternal() const {
     return PlotCanvas::legendPositionIsInternal(m_position); }
+
 PlotCanvas::LegendPosition QPLegendHolder::position() const { return m_position; }
+
 void QPLegendHolder::setPosition(PlotCanvas::LegendPosition pos) {
     m_position = pos;
 
+#if QWT_VERSION >= 0x060000
+    if (isInternal()) {
+        setAlignment(pos);
+    } else {
+	    m_canvas->asQwtPlot().insertLegend(m_legend, legendPosition(pos));
+    }
+#else
     QGridLayout* l = dynamic_cast<QGridLayout*>(layout());
     l->removeWidget(m_legend);
     if(isInternal()) {
         l->addWidget(m_legend, 1, 1);
         updateSpacers();
     }
-
-    m_canvas->asQwtPlot().insertLegend(m_legend, legendPosition(pos));
+	m_canvas->asQwtPlot().insertLegend(m_legend, legendPosition(pos));
+#endif
 }
 
 QRect QPLegendHolder::internalLegendRect(const QRect& canvRect) const {

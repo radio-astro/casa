@@ -83,7 +83,10 @@ public:
     // Overrides QwtPlotItem::boundingRect();
     QwtDoubleRect boundingRect() const;
 
-#if QWT_VERSION < 0x060000    
+#if QWT_VERSION >= 0x060000
+    // implements QwtPlotItem::legendIcon
+    QwtGraphic legendIcon(int index, const QSizeF& size) const;
+#else 
     // Overrides QwtPlotItem::legendItem().
     QWidget* legendItem() const;
 #endif

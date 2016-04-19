@@ -34,6 +34,9 @@
 #include <graphics/GenericPlotter/PlotCanvas.h>
 
 #include <qwt_legend.h>
+#if QWT_VERSION >= 0x060000
+#include <qwt_plot_legenditem.h>
+#endif
 #include <qwt_plot.h>
 #include <qwt_plot_grid.h>
 #include <qwt_scale_draw.h>
@@ -128,9 +131,8 @@ public:
     QwtText label(double value) const;
     
     virtual void draw(QPainter* painter, const QPalette& palette) const;
-#if QWT_VERSION >= 0x060000
-    virtual double extent( const QFont& font ) const;
-#else
+
+#if QWT_VERSION < 0x060000
     virtual int extent( const QPen& pen, const QFont& font ) const;
 #endif
 
@@ -260,8 +262,10 @@ public:
     const QBrush& brush() const { return m_legend->brush(); }
     //The update flag allows an export operation to set the fill without
     //affecting what is shown on the GUI.
-    void setAreaFill(const PlotAreaFill& fill, bool update = true ) { m_legend->setAreaFill(fill, update); }
-    void setAreaFill(const QBrush& brush) { m_legend->setAreaFill(brush); }
+    void setAreaFill(const PlotAreaFill& fill, bool update = true ) {
+        if (m_legend) m_legend->setAreaFill(fill, update); }
+    void setAreaFill(const QBrush& brush) { 
+        if (m_legend) m_legend->setAreaFill(brush); }
     // </group>
     
     // Returns the rect for the internal legend, given a canvas rect.
@@ -279,6 +283,12 @@ private:
     // Actual legend.
     QPLegend* m_legend;
     
+#if QWT_VERSION >= 0x060000
+    QwtPlotLegendItem* m_legendItem;
+    void setupLegendItem();
+    void setAlignment(PlotCanvas::LegendPosition pos);
+#endif
+
     // Current position.
     PlotCanvas::LegendPosition m_position;
     
