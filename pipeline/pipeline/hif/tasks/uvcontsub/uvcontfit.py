@@ -87,7 +87,7 @@ class UVcontFitInputs(basetask.StandardInputs):
         unique_field_names = set([f.name for f in fields])
         field_ids = set([f.id for f in fields])
 
-        # Fields with different intents may have the same name. Check for this
+        #Fields with different intents may have the same name. Check for this
         # and return the IDs if necessary
         if len(unique_field_names) is len(field_ids):
             return ','.join(unique_field_names)
@@ -269,13 +269,28 @@ class UVcontFit(basetask.StandardTaskTemplate):
 
         # Read continuum file
         contfile_handler = contfilehandler.ContFileHandler(inputs.contfile)
+        all_fields = inputs.ms.get_fields(task_arg=inputs.field)
+        if len(all_fields) > 1:
+            rep_field = all_fields[1]
+        else:
+            rep_field = all_fields[0]
 
         # Collect the merged ranges
+        #    Error checking ?
         cranges_spwsel = {}
-        for sname in [field.source.name for field in inputs.ms.get_fields(task_arg=inputs.field)]:
+        for sname in [field.source.name for field in all_fields]:
             cranges_spwsel[sname] = {}
             for spw_id in [str(spw.id) for spw in inputs.ms.get_spectral_windows(task_arg=inputs.spw)]:
                 cranges_spwsel[sname][spw_id] = contfile_handler.get_merged_selection(sname, spw_id)
+                LOG.info('Input frequency ranges for MS %s and spw %d are %s' % (inputs.ms.basename, int(spw_id),
+                    cranges_spwsel[sname][spw_id]))
+                freq_ranges, chan_ranges = contfile_handler.lsrk_to_topo(cranges_spwsel[sname][spw_id],
+                    [inputs.vis], [rep_field.id], int(spw_id))
+                LOG.info('Output frequency range for MS %s and spw %d are %s' % (inputs.ms.basename, int(spw_id),
+                    freq_ranges))
+                LOG.info('Output channel ranges for MS %s and spw %d are %s' % (inputs.ms.basename, int(spw_id),
+                    chan_ranges))
+                cranges_spwsel[sname][spw_id] = freq_ranges[0]
 
         return cranges_spwsel
 
