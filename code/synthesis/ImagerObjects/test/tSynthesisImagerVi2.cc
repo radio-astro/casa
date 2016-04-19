@@ -75,7 +75,7 @@ int main(int argc, char **argv)
 	     exit(-1);
 	    }
 	  MDirection thedir(Quantity(20.0, "deg"), Quantity(20.0, "deg"));
-	  String msname("Test.ms");
+	  String msname("Test2.ms");
 	  MakeMS::makems(msname, thedir);
 	  MeasurementSet thems(msname, Table::Update);
 	  thems.markForDelete();
@@ -110,7 +110,7 @@ int main(int argc, char **argv)
 	  if(imtype==String("continuum")){
 
 
-		  	  imgr->defineImage(/*imagename*/"test_cont_image", nx, ny, cellx, celly,
+		  	  imgr->defineImage(/*imagename*/"test_cont_image2", nx, ny, cellx, celly,
 			   stokes,phasecenter, -1,
 			   freqBeg, freqWidth, Vector<Quantity>(1,Quantity(1.420, "GHz")), 1);
 		  /*
@@ -128,7 +128,7 @@ int main(int argc, char **argv)
 		  ////lets do a cube of ndatachan
 		  nchan=ndataChan;
 		  freqWidth /= Double(nchan);
-		  imgr->defineImage(/*imagename*/"test_cube_image", nx, ny, cellx, celly,
+		  imgr->defineImage(/*imagename*/"test_cube_image2", nx, ny, cellx, celly,
 				  stokes,phasecenter, nchan,
 				  freqBeg, freqWidth, Vector<Quantity>(1,Quantity(1.420, "GHz")), 1);
 
@@ -139,7 +139,7 @@ int main(int argc, char **argv)
 
 		  ///64 projplanes
 		  ////		  imgr->setupImaging(1.0, False, True, 64, "SF");
-		  imgr->defineImage(/*imagename*/"test_widefield_image", nx, ny, cellx, celly,
+		  imgr->defineImage(/*imagename*/"test_widefield_image2", nx, ny, cellx, celly,
 				  stokes,phasecenter, nchan,
 				    freqBeg, freqWidth, Vector<Quantity>(1,Quantity(1.420, "GHz")),
 
@@ -152,7 +152,7 @@ int main(int argc, char **argv)
 	  else if(imtype==String("facet")){
 		  nx = 300;
 	  		  ny = 300;
-	  		  imgr->defineImage(/*imagename*/"test_facet_image", nx, ny, cellx, celly,
+	  		  imgr->defineImage(/*imagename*/"test_facet_image2", nx, ny, cellx, celly,
 	  				  stokes,phasecenter, nchan,
 	  				  freqBeg, freqWidth, Vector<Quantity>(1,Quantity(1.420, "GHz")), 2);
 	  }
@@ -162,7 +162,7 @@ int main(int argc, char **argv)
 	  		  ny = 100;
 	  		  nchan=ndataChan;
 	  		  freqWidth /= Double(nchan);
-	  		  imgr->defineImage(/*imagename*/"test_cubesliced_image", nx, ny, cellx, celly,
+	  		  imgr->defineImage(/*imagename*/"test_cubesliced_image2", nx, ny, cellx, celly,
 	  				  stokes,phasecenter, nchan,
 	  				  freqBeg, freqWidth, Vector<Quantity>(1,Quantity(1.420, "GHz")), 1);
 	  		  CountedPtr<SIImageStore> si=imgr->imageStore(0);
