@@ -106,10 +106,10 @@ int main(int argc, char **argv)
 	  freqWidth /= Double(nchan);
 	  if(imtype==String("continuum")){
 
-
-		  	  imgr->defineImage(/*imagename*/"test_cont_image", nx, ny, cellx, celly,
-			   stokes,phasecenter, -1,
-			   freqBeg, freqWidth, Vector<Quantity>(1,Quantity(1.420, "GHz")), 1);
+	    system("rm -rf test_cont_image.*");
+	    imgr->defineImage(/*imagename*/"test_cont_image", nx, ny, cellx, celly,
+			      stokes,phasecenter, -1,
+			      freqBeg, freqWidth, Vector<Quantity>(1,Quantity(1.420, "GHz")), 1);
 		  /*
 			   const String& ftmachine="GridFT",
 			   const Projection& projection=Projection::SIN,
@@ -250,6 +250,7 @@ int main(int argc, char **argv)
   }catch( AipsError e ){
     cout << "Exception ocurred." << endl;
     cout << e.getMesg() << endl;
+    exit(-1);
   }
   cout << "OK" << endl;
   return 0;

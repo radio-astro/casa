@@ -109,10 +109,10 @@ int main(int argc, char **argv)
 	  freqWidth /= Double(nchan);
 	  if(imtype==String("continuum")){
 
-
-		  	  imgr->defineImage(/*imagename*/"test_cont_image2", nx, ny, cellx, celly,
-			   stokes,phasecenter, -1,
-			   freqBeg, freqWidth, Vector<Quantity>(1,Quantity(1.420, "GHz")), 1);
+	    system("rm -rf test_cont_image2.*");
+	    imgr->defineImage(/*imagename*/"test_cont_image2", nx, ny, cellx, celly,
+			      stokes,phasecenter, -1,
+			      freqBeg, freqWidth, Vector<Quantity>(1,Quantity(1.420, "GHz")), 1);
 		  /*
 			   const String& ftmachine="GridFT",
 			   const Projection& projection=Projection::SIN,
