@@ -163,20 +163,17 @@ class ContFileHandler(object):
             freq_selection = []
             if (field != -1):
                 for freq_range in freq_ranges:
-                    try:
-                        imTool.selectvis(vis = msname, field = field, spw = spw_id)
-                        result = imTool.advisechansel(freqstart = freq_range[0], freqend = freq_range[1], freqstep = 100., freqframe = 'LSRK')
-                        spw_index = result['ms_0']['spw'].tolist().index(spw_id)
-                        start = result['ms_0']['start'][spw_index]
-                        stop = start + result['ms_0']['nchan'][spw_index] - 1
-                        chan_selection.append((start, stop))
-                        imTool.done()
-                        result = imTool.advisechansel(msname = msname, fieldid = field, spwselection = '%d:%d~%d' % (spw_id, start, stop), getfreqrange = True)
-                        fLow = casatools.quanta.convert('%sHz' % (result['freqstart']), 'GHz')['value']
-                        fHigh = casatools.quanta.convert('%sHz' % (result['freqend']), 'GHz')['value']
-                        freq_selection.append((fLow, fHigh))
-                    except:
-                        pass
+                    imTool.selectvis(vis = msname, field = field, spw = spw_id)
+                    result = imTool.advisechansel(freqstart = freq_range[0], freqend = freq_range[1], freqstep = 100., freqframe = 'LSRK')
+                    spw_index = result['ms_0']['spw'].tolist().index(spw_id)
+                    start = result['ms_0']['start'][spw_index]
+                    stop = start + result['ms_0']['nchan'][spw_index] - 1
+                    chan_selection.append((start, stop))
+                    imTool.done()
+                    result = imTool.advisechansel(msname = msname, fieldid = field, spwselection = '%d:%d~%d' % (spw_id, start, stop), getfreqrange = True)
+                    fLow = casatools.quanta.convert('%sHz' % (result['freqstart']), 'GHz')['value']
+                    fHigh = casatools.quanta.convert('%sHz' % (result['freqend']), 'GHz')['value']
+                    freq_selection.append((fLow, fHigh))
             chan_selections.append(';'.join('%d~%d' % (item[0], item[1]) for item in chan_selection))
             freq_selections.append('%s TOPO' % (';'.join('%s~%sGHz' % (item[0], item[1]) for item in freq_selection)))
 
