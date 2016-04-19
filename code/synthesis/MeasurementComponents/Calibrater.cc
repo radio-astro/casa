@@ -182,6 +182,11 @@ Bool Calibrater::initialize(MeasurementSet& inputMS,
       AlwaysAssert(ms_p,AipsError);
     };
 
+    // Disabled 2016/04/19 (gmoellen): avoid direct MS.HISTORY 
+    //   updates from below the python level, FOR NOW
+
+    /*
+
     // Setup to write LogIO to HISTORY Table in MS
     if(!(Table::isReadable(ms_p->historyTableName()))){
       // create a new HISTORY table if its not there
@@ -201,6 +206,7 @@ Bool Calibrater::initialize(MeasurementSet& inputMS,
     if (hist_p) delete hist_p;
     hist_p= new MSHistoryHandler(*ms_p, "calibrater");
 
+    // (2016/04/19) */
 
     // Remember the ms's name
     msname_p=ms_p->tableName();
@@ -3867,8 +3873,13 @@ Bool Calibrater::ok() {
   }
 }
 
-void Calibrater::writeHistory(LogIO& os, Bool cliCommand)
+void Calibrater::writeHistory(LogIO& /*os*/, Bool /*cliCommand*/)
 {
+  // Disabled 2016/04/19: avoid direct MS.HISTORY updates from
+  //   below the python level, FOR NOW
+
+  return;
+  /*
   if (!historytab_p.isNull()) {
     if (histLockCounter_p == 0) {
       historytab_p.lock(False);
@@ -3891,6 +3902,7 @@ void Calibrater::writeHistory(LogIO& os, Bool cliCommand)
   } else {
     os << LogIO::SEVERE << "calibrater is not yet initialized" << LogIO::POST;
   }
+  */
 }
 
 CorrectorVp *

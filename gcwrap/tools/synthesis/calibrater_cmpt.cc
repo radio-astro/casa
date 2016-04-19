@@ -179,7 +179,7 @@ calibrater::selectvis(const ::casac::variant& time,
       << (mmStep.getUnit()).getName() << "' msSelect="
       << "'" << msselect << "'";
     os << o.str();
-    itsCalibrater->writeHistory(os,True);
+    //itsCalibrater->writeHistory(os,True);
     rstat = True;
   } catch  (AipsError x) {
 
@@ -599,7 +599,7 @@ calibrater::solve()
      LogIO os (LogOrigin ("calibrater", "solve"), logSink_p);
      os << "Beginning solve-----------------------------" << LogIO::POST;
      // Update HISTORY table
-     itsCalibrater->writeHistory(os);
+     //     itsCalibrater->writeHistory(os);
 
      // Forward to Calibrater object:
      retval=itsCalibrater->solve();
@@ -637,7 +637,7 @@ calibrater::correct(const std::string& applymode)
      LogIO os (LogOrigin ("calibrater", "correct"), logSink_p);
      os << "Beginning correct---------------------------" << LogIO::POST;
      // Update HISTORY table
-     itsCalibrater->writeHistory(os);
+     //itsCalibrater->writeHistory(os);
 
      // Apply the calibration solutions to the uv-data
      retval = itsCalibrater->correct2(appmode);
@@ -672,7 +672,7 @@ calibrater::corrupt()
      LogIO os (LogOrigin ("calibrater", "corrupt"), logSink_p);
      os << "Beginning corrupt---------------------------" << LogIO::POST;
      // Update HISTORY table
-     itsCalibrater->writeHistory(os);
+     //itsCalibrater->writeHistory(os);
 
      // Apply the calibration solutions to the uv-data
      retval = itsCalibrater->corrupt();
@@ -731,7 +731,7 @@ calibrater::initweights(const std::string& wtmode, const bool dowtsp,
     LogIO os (LogOrigin ("calibrater", "initweights"), logSink_p);
     os << "Beginning initweights---------------------------" << LogIO::POST;
     // Update HISTORY table
-    itsCalibrater->writeHistory(os);
+    //itsCalibrater->writeHistory(os);
     
     // Initialize the SIGMA, WEIGHT, and (optionally) WEIGHT_SPECTRUM columns
     if (wtmode.find("tsys") != std::string::npos) {
@@ -1098,7 +1098,7 @@ calibrater::posangcal(const std::vector<double>& /*posangcor*/,
   throw("posangcal temporarily disabled (2006/11/11)");
 
   os << "Finished position angle calibration." << LogIO::POST;
-  itsCalibrater->writeHistory(os);
+  //itsCalibrater->writeHistory(os);
 
   } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
@@ -1362,7 +1362,7 @@ void calibrater::uvtaql(std::string& uvsel, bool& noselect,
       noselect = false;
       os << "Applying a uv-range selection of " << uvlim[0]/1000.0
 	 << " to " << uvlim[1]/1000.0 << " klambda";
-      itsCalibrater->writeHistory(os,True);
+      //itsCalibrater->writeHistory(os,True);
     }
     uvsel += " )";
 

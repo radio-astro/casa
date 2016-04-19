@@ -286,10 +286,6 @@ class Calibrater
 
   Bool cleanup();
 
-  // Method to update MS HISTORY Table
-  void writeHistory(LogIO& os, 
-		    Bool cliCommand=False);
-
   CorrectorVp * getCorrectorVp ();
 
   // Handle caltable backward compatibility
@@ -302,6 +298,10 @@ class Calibrater
   // Log functions and variables
   LogIO sink_p;
   LogIO& logSink();
+
+  // Method to update MS HISTORY Table
+  void writeHistory(LogIO& os, 
+		    Bool cliCommand=False);
 
   // Time functions and variables
   String timerString();
