@@ -104,6 +104,9 @@ class ContFileHandler(object):
 
     def get_merged_selection(self, field_name, spw_id, cont_ranges = None):
 
+        field_name = str(field_name)
+        spw_id = str(spw_id)
+
         if (cont_ranges is None):
             cont_ranges = self.cont_ranges
 
@@ -129,7 +132,7 @@ class ContFileHandler(object):
 
         return cont_ranges_spwsel
 
-    def lsrk_to_topo(self, selection, msnames, fields, spwid):
+    def lsrk_to_topo(self, selection, msnames, fields, spw_id):
 
         freq_selection, refer = selection.split()
         if (refer != 'LSRK'):
@@ -139,6 +142,8 @@ class ContFileHandler(object):
         if (len(msnames) != len(fields)):
             LOG.error('MS names and fields lists must match in length.')
             raise Exception, 'MS names and fields lists must match in length.'
+
+        spw_id = int(spw_id)
 
         imTool = casatools.imager
 
@@ -153,20 +158,20 @@ class ContFileHandler(object):
         freq_selections = []
         for i in xrange(len(msnames)):
             msname = msnames[i]
-            field = fields[i]
+            field = int(fields[i])
             chan_selection = []
             freq_selection = []
             if (field != -1):
                 for freq_range in freq_ranges:
                     try:
-                        imTool.selectvis(vis = msname, field = field, spw = spwid)
+                        imTool.selectvis(vis = msname, field = field, spw = spw_id)
                         result = imTool.advisechansel(freqstart = freq_range[0], freqend = freq_range[1], freqstep = 100., freqframe = 'LSRK')
-                        spw_index = result['ms_0']['spw'].tolist().index(spwid)
+                        spw_index = result['ms_0']['spw'].tolist().index(spw_id)
                         start = result['ms_0']['start'][spw_index]
                         stop = start + result['ms_0']['nchan'][spw_index] - 1
                         chan_selection.append((start, stop))
                         imTool.done()
-                        result = imTool.advisechansel(msname = msname, fieldid = field, spwselection = '%d:%d~%d' % (spwid, start, stop), getfreqrange = True)
+                        result = imTool.advisechansel(msname = msname, fieldid = field, spwselection = '%d:%d~%d' % (spw_id, start, stop), getfreqrange = True)
                         fLow = casatools.quanta.convert('%sHz' % (result['freqstart']), 'GHz')['value']
                         fHigh = casatools.quanta.convert('%sHz' % (result['freqend']), 'GHz')['value']
                         freq_selection.append((fLow, fHigh))
