@@ -33,12 +33,12 @@ using namespace casa;
      
 namespace casac {
 
-  synthesisimager::synthesisimager(/*const bool usevivb2*/) 
+  synthesisimager::synthesisimager() 
 {
-  // if(usevivb2)
-    itsImager = new SynthesisImagerVi2();
-  //else
-  // itsImager = new SynthesisImager();
+  
+  // itsImager = new SynthesisImagerVi2();
+ 
+   itsImager = new SynthesisImager();
 }
 
 synthesisimager::~synthesisimager()
