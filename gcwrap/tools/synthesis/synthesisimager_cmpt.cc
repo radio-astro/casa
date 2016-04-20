@@ -18,11 +18,10 @@
 
 //#include <synthesis/ImagerObjects/TmpSwitch.h>
 
-//#ifdef USEVIVB2
-//#include <synthesis/ImagerObjects2/SynthesisImager.h>
-//#else
+
 #include <synthesis/ImagerObjects/SynthesisImager.h>
-//#endif
+#include <synthesis/ImagerObjects/SynthesisImagerVi2.h>
+
 
 #include <synthesis/ImagerObjects/SynthesisUtilMethods.h>
 
@@ -34,9 +33,12 @@ using namespace casa;
      
 namespace casac {
 
-synthesisimager::synthesisimager() 
+  synthesisimager::synthesisimager(/*const bool usevivb2*/) 
 {
-  itsImager = new SynthesisImager();
+  // if(usevivb2)
+    itsImager = new SynthesisImagerVi2();
+  //else
+  // itsImager = new SynthesisImager();
 }
 
 synthesisimager::~synthesisimager()
@@ -68,7 +70,7 @@ synthesisimager::setdata(const std::string& msname,
 		 if( ! itsImager ) itsImager = new SynthesisImager();
 		 MFrequency::Types freqtype;
 		 MFrequency::getType(freqtype, freqframe);
-		 itsImager->selectData(msname, spw, freqbeg, freqend, freqtype,field, antenna, timestr, scan, obs, state,
+		 rstat=itsImager->selectData(msname, spw, freqbeg, freqend, freqtype,field, antenna, timestr, scan, obs, state,
 				 uvdist, taql, usescratch, readonly, incrmodel );
 
 	 }
@@ -516,7 +518,7 @@ casac::record* synthesisimager::getcsys()
 
 int synthesisimager::updatenchan()
 {
-  int rstat;
+  int rstat=-1;
   try
     {
       if ( itsImager )
