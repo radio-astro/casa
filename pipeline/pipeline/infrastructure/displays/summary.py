@@ -312,10 +312,11 @@ class FieldVsTimeChart(object):
         # set FIELD_ID axis ticks etc.
         if nfield < 11:
             majorLocator = ticker.FixedLocator(np.arange(0, nfield+1))
+            minorLocator = ticker.MultipleLocator(1)
+            ax.yaxis.set_minor_locator(minorLocator)
         else:
-            majorLocator = ticker.FixedLocator(np.arange(0, nfield+1, 5))
+            majorLocator = ticker.FixedLocator(np.arange(0, nfield+1, 400))
         ax.yaxis.set_major_locator(majorLocator)
-        ax.yaxis.set_minor_locator(ticker.MultipleLocator(1))
         ax.grid(True)
 
         pylab.ylabel('Field ID')
