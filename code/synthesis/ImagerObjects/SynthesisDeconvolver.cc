@@ -256,8 +256,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //      SDMaskHandler masker;
       String strthresh = String::toString(threshold)+"Jy";
       String strcycthresh = String::toString(cyclethreshold)+"Jy";
+
       if( itsMaskString.length()>0 ) {
-	itsMaskHandler->fillMask( itsImages, itsMaskString );
+	  itsMaskHandler->fillMask( itsImages, itsMaskString );
       }
       
       Int iterleft = niter - iterdone;
@@ -295,6 +296,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     SynthesisUtilMethods::getResource("Start Deconvolver");
 
     try {
+      if ( !itsIsInteractive ) setAutoMask();
       itsLoopController.setCycleControls(minorCycleControlRec);
 
       itsDeconvolver->deconvolve( itsLoopController, itsImages, itsDeconvolverId );
@@ -399,46 +401,63 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SynthesisDeconvolver","setupMask",WHERE) );
 
-      if( itsIsMaskLoaded==False ) {
-        // use mask(s) 
-        if(  itsMaskList[0] != "" || itsMaskType == "pb" || itsAutoMaskAlgorithm != "" ) {
-          //auto mask
-          if ( itsAutoMaskAlgorithm != "" ) {
-            if ( itsPBMask > 0.0 ) {
-              //itsMaskHandler->autoMaskWithinPB( itsImages, itsPBMask);
-              itsMaskHandler->autoMaskWithinPB( itsImages, itsAutoMaskAlgorithm, itsMaskThreshold, itsFracOfPeak, itsMaskResolution, itsMaskResByBeam, itsPBMask);
-            }
-            else { 
-              itsMaskHandler->autoMask( itsImages, itsAutoMaskAlgorithm, itsMaskThreshold, itsFracOfPeak, itsMaskResolution, itsMaskResByBeam);
-            }
+    if( itsIsMaskLoaded==False ) {
+      // use mask(s) 
+      if(  itsMaskList[0] != "" || itsMaskType == "pb" || itsAutoMaskAlgorithm != "" ) {
+        // Skip automask for non-interactive mode. 
+        if ( itsAutoMaskAlgorithm != "" && itsIsInteractive) {
+          setAutoMask();
+          /***
+          if ( itsPBMask > 0.0 ) {
+            itsMaskHandler->autoMaskWithinPB( itsImages, itsAutoMaskAlgorithm, itsMaskThreshold, itsFracOfPeak, itsMaskResolution, itsMaskResByBeam, itsPBMask);
           }
-          else if( itsMaskType=="user" && itsMaskList[0] != "" ) {
-            itsMaskHandler->fillMask( itsImages, itsMaskList);
-            if( itsPBMask > 0.0 ) {  
-              itsMaskHandler->makePBMask(itsImages, itsPBMask);
-            }
+          else { 
+            cerr<<"automask by automask.."<<endl;
+            itsMaskHandler->autoMask( itsImages, itsAutoMaskAlgorithm, itsMaskThreshold, itsFracOfPeak, itsMaskResolution, itsMaskResByBeam);
           }
-          else if( itsMaskType=="pb") {
+          ***/
+        }
+        //else if( itsMaskType=="user" && itsMaskList[0] != "" ) {
+        if( itsMaskType=="user" && itsMaskList[0] != "" ) {
+          itsMaskHandler->fillMask( itsImages, itsMaskList);
+          if( itsPBMask > 0.0 ) {  
             itsMaskHandler->makePBMask(itsImages, itsPBMask);
           }
-	} else {
+        }
+        else if( itsMaskType=="pb") {
+          itsMaskHandler->makePBMask(itsImages, itsPBMask);
+        }
+      } else {
 
-	  if( ! itsImages->hasMask() ) // i.e. if there is no existing mask to re-use...
-	    {
-	      if( itsIsInteractive ) itsImages->mask()->set(0.0);
-	      else itsImages->mask()->set(1.0);
-	    }
-
-	  
-	}
-	
-	// If anything other than automasking, don't re-make the mask here.
-	if ( itsAutoMaskAlgorithm == "" )
-	  {	itsIsMaskLoaded=True; }
+        if( ! itsImages->hasMask() ) // i.e. if there is no existing mask to re-use...
+          {
+	    if( itsIsInteractive ) itsImages->mask()->set(0.0);
+	    else itsImages->mask()->set(1.0);
+	 }
       }
+	
+      // If anything other than automasking, don't re-make the mask here.
+      if ( itsAutoMaskAlgorithm == "" )
+        {	itsIsMaskLoaded=True; }
+    }
+    else {
+    }
 
   }
-  
+
+  void SynthesisDeconvolver::setAutoMask()
+  {
+     //modify mask using automask otherwise no-op
+     if ( itsAutoMaskAlgorithm != "" && !itsIsInteractive) {
+       if ( itsPBMask > 0.0 ) {
+         itsMaskHandler->autoMaskWithinPB( itsImages, itsAutoMaskAlgorithm, itsMaskThreshold, itsFracOfPeak, itsMaskResolution, itsMaskResByBeam, itsPBMask);
+       }
+       else {
+         itsMaskHandler->autoMask( itsImages, itsAutoMaskAlgorithm, itsMaskThreshold, itsFracOfPeak, itsMaskResolution, itsMaskResByBeam);
+       }
+     }
+  }
+ 
   // This is for interactive-clean.
   void SynthesisDeconvolver::getCopyOfResidualAndMask( TempImage<Float> &/*residual*/,
                                            TempImage<Float> &/*mask*/ )
