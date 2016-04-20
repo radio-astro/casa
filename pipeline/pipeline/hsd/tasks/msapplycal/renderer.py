@@ -153,7 +153,7 @@ class T2_4MDetailsSDApplycalRenderer(T2_4MDetailsApplycalRenderer,
             for source_id, brightest_field in brightest_fields.items():
                 plots = self.science_plots_for_result(context,
                                                       result, 
-                                                      applycal.AmpVsFrequencySummaryChart,
+                                                      applycal.RealVsFrequencySummaryChart,
                                                       [brightest_field.id],
                                                       uv_range, correlation=correlation)
                 amp_vs_freq_summary_plots[vis][source_id] = plots
