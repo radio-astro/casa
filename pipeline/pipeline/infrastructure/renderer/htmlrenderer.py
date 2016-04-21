@@ -552,6 +552,7 @@ class T2_1DetailsRenderer(object):
         inputs = summary.FieldVsTimeChart.Inputs(context, vis=ms.basename)
         task = summary.FieldVsTimeChart(inputs)
         field_vs_time = task.plot()
+        
 
         science_spws = ms.get_spectral_windows(science_windows_only=True)
         all_bands = sorted(set([spw.band for spw in ms.spectral_windows]))
@@ -1797,8 +1798,7 @@ def get_results_by_time(context, resultslist):
 
 
 def get_ms_start_time_for_result(context, result):
-    data_key = 'vis' if 'vis' in result.inputs else 'infiles'
-    vis = getattr(result.inputs, data_key)
+    vis = result.inputs['vis']
     return get_ms_attr_for_result(context, vis, lambda ms: ms.start_time['m0']['value'])
 
 
