@@ -197,8 +197,10 @@ class UVcontFit(basetask.StandardTaskTemplate):
         inputs = self.inputs
 
         inputs.caltable = inputs.caltable
+        orig_spw = ','.join([spw.split(':')[0] for spw in inputs.spw.split(',')])
+
         if not inputs.contfile:
-            uvcontfit_args = inputs.to_casa_args(caltable=inputs.caltable)
+            uvcontfit_args = inputs.to_casa_args(inputs.caltable)
             uvcontfit_job = casa_tasks.uvcontfit(**uvcontfit_args)
             self._executor.execute(uvcontfit_job)
         else:
@@ -207,11 +209,12 @@ class UVcontFit(basetask.StandardTaskTemplate):
 
             # Initialize uvcontfit append mode
             append = False
+            orig_intent = inputs.intent
 
             # Loop over the ranges calling uvcontfit once per source
             for sname in cranges_spwsel.iterkeys():
                 # Translate to field selection
-                sfields = self._get_source_fields (sname)
+                sfields, sintents = self._get_source_fields (sname)
                 if not sfields:
                     continue
                 spwstr = ''
@@ -226,14 +229,16 @@ class UVcontFit(basetask.StandardTaskTemplate):
                         spwstr =  spwstr + ',%s:%s' % (spw_id, cranges_spwsel[sname][spw_id].split()[0])
 
                 # Fire off task
-                uvcontfit_args = inputs.to_casa_args(caltable=inputs.caltable, field=sfields, spw=spwstr, append=append)
+                inputs.intent = sintents
+                uvcontfit_args = inputs.to_casa_args(inputs.caltable, field=sfields, spw=spwstr, append=append)
                 uvcontfit_job = casa_tasks.uvcontfit(**uvcontfit_args)
                 self._executor.execute(uvcontfit_job)
                 
                 # Switch to append mode
                 append = True
+                inputs.intent = orig_intent
 
-        calto = callibrary.CalTo(vis=inputs.vis)
+        calto = callibrary.CalTo(vis=inputs.vis, spw=orig_spw, intent=inputs.intent)
         # careful now! Calling inputs.caltable mid-task will remove the
         # newly-created caltable, so we must look at the task arguments
         # instead
@@ -269,28 +274,39 @@ class UVcontFit(basetask.StandardTaskTemplate):
 
         # Read continuum file
         contfile_handler = contfilehandler.ContFileHandler(inputs.contfile)
+
+        # Get all the selected fields
         all_fields = inputs.ms.get_fields(task_arg=inputs.field)
-        if len(all_fields) > 1:
-            rep_field = all_fields[1]
-        else:
-            rep_field = all_fields[0]
+
+        # Get all the associated sources
+        all_sources = [f.source for f in all_fields]
+        all_source_names = list(set ([f.source.name for f in all_fields]))
 
         # Collect the merged ranges
         #    Error checking ?
         cranges_spwsel = {}
-        for sname in [field.source.name for field in all_fields]:
+        for sname in all_source_names:
+            source_fields =  [s.fields for s in all_sources if s.name == sname][0]
+            if len(source_fields) > 1:
+                rep_field = source_fields[1]
+            else:
+                rep_field = source_fields[0]
             cranges_spwsel[sname] = {}
             for spw_id in [str(spw.id) for spw in inputs.ms.get_spectral_windows(task_arg=inputs.spw)]:
                 cranges_spwsel[sname][spw_id] = contfile_handler.get_merged_selection(sname, spw_id)
                 LOG.info('Input frequency ranges for MS %s and spw %d are %s' % (inputs.ms.basename, int(spw_id),
                     cranges_spwsel[sname][spw_id]))
-                freq_ranges, chan_ranges = contfile_handler.lsrk_to_topo(cranges_spwsel[sname][spw_id],
-                    [inputs.vis], [rep_field.id], int(spw_id))
-                LOG.info('Output frequency range for MS %s and spw %d are %s' % (inputs.ms.basename, int(spw_id),
-                    freq_ranges))
-                LOG.info('Output channel ranges for MS %s and spw %d are %s' % (inputs.ms.basename, int(spw_id),
-                    chan_ranges))
-                cranges_spwsel[sname][spw_id] = freq_ranges[0]
+                try:
+                    freq_ranges, chan_ranges = contfile_handler.lsrk_to_topo(cranges_spwsel[sname][spw_id],
+                        [inputs.vis], [rep_field.id], int(spw_id))
+                    LOG.info('Output frequency range for MS %s and spw %d are %s' % (inputs.ms.basename, int(spw_id),
+                        freq_ranges[0]))
+                    LOG.info('Output channel ranges for MS %s and spw %d are %s' % (inputs.ms.basename, int(spw_id),
+                       chan_ranges[0]))
+                    cranges_spwsel[sname][spw_id] = freq_ranges[0]
+                except:
+                    LOG.info('Frequency ranges for MS %s and spw %d are %s' % (inputs.ms.basename, int(spw_id),
+                        cranges_spwsel[sname][spw_id]))
 
         return cranges_spwsel
 
@@ -298,17 +314,30 @@ class UVcontFit(basetask.StandardTaskTemplate):
         inputs = self.inputs
 
         # Get fields which match the input selection and
-        # filter on source name
+        # filter on source name. Use field names for now
+        #    The '''' are a work around
         fields = inputs.ms.get_fields(task_arg=inputs.field)
-        unique_field_names = set([f.name for f in fields if f.name == sname])
-        field_ids = set([f.id for f in fields if f.name == sname])
+        unique_field_names = set([f.name for f in fields if (f.name == sname or f.name == '"'+sname+'"')])
+        field_ids = set([f.id for f in fields if (f.name == sname or f.name == '"'+sname+'"')])
+
+        # Add proper intent filter
+        #    May not be necessary
+        field_intents = []
+        for f in fields:
+            if f.name == sname or f.name == '"'+sname+'"':
+                field_intents.extend(list(f.intents))
+        field_intents = set(inputs.intent.split(',')).intersection(set(field_intents))
 
         # Fields with different intents may have the same name. Check for this
         # and return the IDs if necessary
         if len(unique_field_names) is len(field_ids):
-            return ','.join(unique_field_names)
+            fieldstr = ','.join(unique_field_names)
+            intentstr = ','.join(field_intents)
         else:
-            return ','.join([str(i) for i in field_ids])
+            fieldstr = ','.join([str(i) for i in field_ids])
+            intentstr = ','.join(field_intents)
+
+        return fieldstr, intentstr
 
 
 class UVcontFitResults(basetask.Results):
