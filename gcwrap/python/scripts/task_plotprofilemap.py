@@ -5,7 +5,7 @@ import pylab as pl
 from taskinit import casalog, gentools, qa
 
 def plotprofilemap(imagename=None, figfile=None, overwrite=None, 
-                   
+                   separatepanel=None,
                    horizontalbind=None, verticalbind=None, spectralrange=None, trasnparent=None):
     casalog.origin('plotprofilemap')
     
@@ -14,7 +14,7 @@ def plotprofilemap(imagename=None, figfile=None, overwrite=None,
             raise RuntimeError('overwrite is False and output file exists: \'%s\''%(figfile))
     
         image = SpectralImage(imagename)
-        plot_profile_map(image, figfile)
+        plot_profile_map(image, figfile, separatepanel)
     except Exception, e:
         casalog.post('Error: %s'%(str(e)), priority='SEVERE')
         import traceback
@@ -71,7 +71,7 @@ class ProfileMapAxesManager(object):
     label_map = {'Right Ascension': 'RA',
                  'Declination': 'Dec'}
     def __init__(self, nh, nv, brightnessunit, direction_label, direction_reference, 
-                 ticksize, clearpanel=True):
+                 ticksize, separatepanel=True, clearpanel=True):
         self.nh = nh
         self.nv = nv
         self.ticksize = ticksize
@@ -79,6 +79,7 @@ class ProfileMapAxesManager(object):
         self.numeric_formatter = pl.FormatStrFormatter('%.2f')
         self.direction_label = direction_label
         self.direction_reference = direction_reference
+        self.separatepanel = separatepanel
         
         self._axes_spmap = None
         
@@ -106,46 +107,51 @@ class ProfileMapAxesManager(object):
         return self.nh + 1
 
     @property
-    def margin(self):
-        # [left margin, right margin, bottom margin, top margin]
-        return [0.03, 0.01, 0.06, 0.01]
-
-    @property
     def left_margin(self):
-        return self.margin[0]
+        return 0.01 + 0.2 / self.ncolumn
 
     @property
     def right_margin(self):
-        return self.margin[1]
-
-    @property
-    def bottom_margin(self):
-        return self.margin[2]
-
-    @property
-    def top_margin(self):
-        return self.margin[3]
-
-    @property
-    def space(self):
         return 0.01
 
     @property
+    def bottom_margin(self):
+        return 0.01 + 0.5 / self.nrow
+
+    @property
+    def top_margin(self):
+        return 0.01
+        
+    @property
+    def horizontal_space(self):
+        if self.separatepanel:
+            return self.horizontal_subplot_size * 0.1
+        else:
+            return 0.
+    
+    @property
+    def vertical_space(self):
+        if self.separatepanel:
+            return self.vertical_subplot_size * 0.1
+        else:
+            return 0.
+
+    @property
     def horizontal_subplot_size(self):
-        return (1.0 - sum(self.margin[:2])) / self.ncolumn 
+        return (1.0 - self.left_margin - self.right_margin) / self.ncolumn 
 
     @property
     def vertical_subplot_size(self):
-        return (1.0 - sum(self.margin[2:])) / self.nrow 
+        return (1.0 - self.bottom_margin - self.top_margin) / self.nrow 
 
     def __axes_spmap(self):
         for x in xrange(self.nh):
             for y in xrange(self.nv):
                 w = self.horizontal_subplot_size
                 h = self.vertical_subplot_size
-                l = 1.0 - self.right_margin - w * (x + 1) + 0.5 * self.space
-                b = self.bottom_margin + h * y + 0.5 * self.space
-                axes = pl.axes([l, b, w - self.space, h - self.space])
+                l = 1.0 - self.right_margin - w * (x + 1) + 0.5 * self.horizontal_space
+                b = self.bottom_margin + h * y + 0.5 * self.vertical_space
+                axes = pl.axes([l, b, w - self.horizontal_space, h - self.vertical_space])
                 axes.cla()
 #                if y == 0 and x == self.nh - 1:
                 if False:
@@ -211,7 +217,9 @@ class ProfileMapAxesManager(object):
                 horizontalalignment='right', verticalalignment='center', 
                 rotation='vertical', size=(self.ticksize+2))
 
-def plot_profile_map(image, figfile):
+def plot_profile_map(image, figfile, separatepanel=False):
+    if separatepanel is None:
+        separatepanel = True
 
     x_max = image.nx - 1
     x_min = 0
@@ -232,6 +240,7 @@ def plot_profile_map(image, figfile):
     direction_reference = image.direction_reference
     plotter = SDProfileMapPlotter(NH, NV, STEP, image.brightnessunit, 
                                   direction_label, direction_reference,
+                                  separatepanel=separatepanel,
                                   clearpanel=True)
 
     masked_data = image.data * image.mask
@@ -276,7 +285,7 @@ def plot_profile_map(image, figfile):
     
 class SDProfileMapPlotter(object):
     def __init__(self, nh, nv, step, brightnessunit, direction_label, direction_reference, 
-                 clearpanel=True):
+                 separatepanel=True, clearpanel=True):
         self.step = step
         if step > 1:
             ticksize = 10 - int(max(nh, nv) * step / (step - 1)) / 2
@@ -284,7 +293,8 @@ class SDProfileMapPlotter(object):
             ticksize = 10 - int(max(nh, nv)) / 2
         self.axes = ProfileMapAxesManager(nh, nv, brightnessunit, 
                                           direction_label, direction_reference,
-                                          ticksize, clearpanel)
+                                          ticksize, separatepanel=separatepanel, 
+                                          clearpanel=clearpanel)
         self.lines_averaged = None
         self.lines_map = None
         self.reference_level = None
