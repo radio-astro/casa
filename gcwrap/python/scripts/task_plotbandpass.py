@@ -13,7 +13,7 @@
 #
 # To test:  see plotbandpass_regression.py
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.82 2016/04/05 15:04:32 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.83 2016/04/21 15:38:35 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -89,7 +89,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.82 2016/04/05 15:04:32 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.83 2016/04/21 15:38:35 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -1738,6 +1738,10 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
           casalogPost(debug,"%d field(s) in the solution = %s = %s" % (len(uniqueFields2), uniqueFields2, msFieldsList))
   
     # Parse the timeranges field from the command line
+    if timeranges != '':    # CAS-8439
+        timerangesWasSpecified = True
+    else:
+        timerangesWasSpecified = False
     if (type(timeranges) == str):
         # a list of antenna numbers was given
         tokens = timeranges.split(',')
@@ -1771,6 +1775,17 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
         # It's a single, integer entry
         timerangeList = [timeranges]
   
+    if (timerangesWasSpecified and scans != ''):  # CAS-8489
+        if (type(scans) == list or type(scans) == np.ndarray):
+            myscan = int(scans[0])
+        else:
+            myscan = int(str(scans).split(',')[0])
+        if (myscan not in scansForUniqueTimes):
+            print "No rows for scan %d, only " % (myscan), np.unique(scansForUniqueTimes)
+            return
+        timerangeOffset = scansForUniqueTimes.index(myscan)
+        timerangeList = np.array(timerangeList) + timerangeOffset
+        if (debug): print "Since both timeranges and scans was specified, generated new effective timerangeList: ", timerangeList
     if (max(timerangeList) >= len(uniqueTimes)):
         print "Invalid timerange.  Solution has %d times (%d~%d)" % (len(uniqueTimes),0,len(uniqueTimes)-1)
         return
@@ -5262,13 +5277,22 @@ def computeScansForUniqueTimes(uniqueTimes, cal_scans, times, unique_cal_scans,
         scansForUniqueTimes.append(cal_scans[list(times).index(uT)])
     if (len(unique_cal_scans) == 1):
         if (unique_cal_scans[0] != -1): 
-            nUniqueTimes = len(np.unique(scansForUniqueTimes))
+            if (len(scansForUniqueTimes) != len(np.unique(scansForUniqueTimes))):
+                if debug:
+                    print "Because there are multiple timestamps per scan, I will not assume there is a one-to-one match."
+            else:
+                nUniqueTimes = len(np.unique(scansForUniqueTimes))
         else:
             # This 3.4 table does not have the scan numbers populated
             scansForUniqueTimes = []
-            print "Because the scan numbers are either not filled in this table, or the solutions span multiple scans, I will use timestamps instead."
+            if debug:
+                print "Because the scan numbers are either not filled in this table, or the solutions span multiple scans, I will use timestamps instead."
     else:
-        nUniqueTimes = len(np.unique(scansForUniqueTimes))
+        if (len(scansForUniqueTimes) != len(np.unique(scansForUniqueTimes))):
+            if debug:
+                print "Because there are multiple timestamps per scan, I will not assume there is a one-to-one match."
+        else:
+            nUniqueTimes = len(np.unique(scansForUniqueTimes))
     return(scansForUniqueTimes, nUniqueTimes)
     
 
