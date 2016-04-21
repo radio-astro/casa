@@ -66,12 +66,17 @@ def DDMMSSs(x, pos):
 
 
 class ProfileMapAxesManager(object):
-    def __init__(self, nh, nv, brightnessunit, ticksize, clearpanel=True):
+    label_map = {'Right Ascension': 'RA',
+                 'Declination': 'Dec'}
+    def __init__(self, nh, nv, brightnessunit, direction_label, direction_reference, 
+                 ticksize, clearpanel=True):
         self.nh = nh
         self.nv = nv
         self.ticksize = ticksize
         self.brightnessunit = brightnessunit
         self.numeric_formatter = pl.FormatStrFormatter('%.2f')
+        self.direction_label = direction_label
+        self.direction_reference = direction_reference
         
         self._axes_spmap = None
         
@@ -92,17 +97,53 @@ class ProfileMapAxesManager(object):
     
     @property
     def nrow(self):
-        return self.nv + 1
+        return self.nv
     
     @property
     def ncolumn(self):
         return self.nh + 1
 
+    @property
+    def mergin(self):
+        # [left mergin, right mergin, bottom mergin, top mergin]
+        return [0.03, 0.01, 0.06, 0.01]
+
+    @property
+    def left_mergin(self):
+        return self.mergin[0]
+
+    @property
+    def right_mergin(self):
+        return self.mergin[1]
+
+    @property
+    def bottom_mergin(self):
+        return self.mergin[2]
+
+    @property
+    def top_mergin(self):
+        return self.mergin[3]
+
+    @property
+    def space(self):
+        return 0.01
+
+    @property
+    def horizontal_subplot_size(self):
+        return (1.0 - sum(self.mergin[:2])) / self.ncolumn 
+
+    @property
+    def vertical_subplot_size(self):
+        return (1.0 - sum(self.mergin[2:])) / self.nrow 
+
     def __axes_spmap(self):
         for x in xrange(self.nh):
             for y in xrange(self.nv):
-#                 axes = pl.subplot(self.nrow, self.ncolumn, (self.nv - 1 - y + 2) * (self.nh + 1) + (self.nh - 1 - x) + 2)
-                axes = pl.subplot(self.nrow, self.ncolumn, self.ncolumn * (self.nrow - 1 - y) - x)
+                w = self.horizontal_subplot_size
+                h = self.vertical_subplot_size
+                l = 1.0 - self.right_mergin - w * (x + 1) + 0.5 * self.space
+                b = self.bottom_mergin + h * y + 0.5 * self.space
+                axes = pl.axes([l, b, w - self.space, h - self.space])
                 axes.cla()
 #                if y == 0 and x == self.nh - 1:
                 if False:
@@ -121,27 +162,52 @@ class ProfileMapAxesManager(object):
 
     def setup_labels(self, label_ra, label_dec):
         for x in xrange(self.nh):
-#             a1 = pl.subplot(self.nrow, self.ncolumn, (self.nv + 2) * (self.nh + 1) + self.nh - x + 1)
-            a1 = pl.subplot(self.nrow, self.ncolumn, self.ncolumn * self.nrow - x)
+            w = self.horizontal_subplot_size
+            l = 1.0 - self.right_mergin - w * (x + 1)
+            h = self.bottom_mergin * 0.5
+            b = self.bottom_mergin - h
+            a1 = pl.axes([l, b, w, h])
             a1.set_axis_off()
             if len(a1.texts) == 0:
-                pl.text(0.5, 0.5, HHMMSSss((label_ra[x][0]+label_ra[x][1])/2.0, 0), horizontalalignment='center', verticalalignment='center', size=self.ticksize)
+                pl.text(0.5, 0.5, HHMMSSss((label_ra[x][0]+label_ra[x][1])/2.0, 0), 
+                        horizontalalignment='center', verticalalignment='center', size=self.ticksize)
             else:
                 a1.texts[0].set_text(HHMMSSss((label_ra[x][0]+label_ra[x][1])/2.0, 0))
         for y in xrange(self.nv):
-#             a1 = pl.subplot(self.nrow, self.ncolumn, (self.nv + 1 - y) * (self.nh + 1) + 1)
-            a1 = pl.subplot(self.nrow, self.ncolumn, self.ncolumn * (self.nrow - 2) + 1 - self.ncolumn * y)
+            l = self.left_mergin
+            w = self.horizontal_subplot_size
+            h = self.vertical_subplot_size
+            b = self.bottom_mergin + y * h
+            a1 = pl.axes([l, b, w, h])
             a1.set_axis_off()
             if len(a1.texts) == 0:
-                pl.text(0.5, 0.5, DDMMSSs((label_dec[y][0]+label_dec[y][1])/2.0, 0), horizontalalignment='center', verticalalignment='center', size=self.ticksize)
+                pl.text(0.5, 0.5, DDMMSSs((label_dec[y][0]+label_dec[y][1])/2.0, 0), 
+                        horizontalalignment='center', verticalalignment='center', size=self.ticksize)
             else:
                 a1.texts[0].set_text(DDMMSSs((label_dec[y][0]+label_dec[y][1])/2.0, 0))
-        a1 = pl.subplot(self.nrow, self.ncolumn, self.ncolumn * (self.nrow - 1) + 1)
+        # longitude label
+        l = self.left_mergin
+        h = self.bottom_mergin * 0.5 
+        b = 0.
+        w = 1.0 - l
+        a1 = pl.axes([l, b, w, h])
         a1.set_axis_off()
-        pl.text(0.5, 1, 'Dec', horizontalalignment='center', verticalalignment='bottom', size=(self.ticksize+1))
-        pl.text(1, 0.5, 'RA', horizontalalignment='center', verticalalignment='center', size=(self.ticksize+1))
+        xpos = (1.0 + 0.5 * self.nh) / self.ncolumn
+        casalog.post('xpos=%s'%(xpos), priority='DEBUG')
+        pl.text(xpos, 0.5, '%s (%s)'%(self.direction_label[0],self.direction_reference),
+                horizontalalignment='center', verticalalignment='center',
+                size=(self.ticksize+2))
 
-
+        # latitude label
+        l = 0.0
+        w = self.left_mergin
+        h = self.vertical_subplot_size
+        b = self.bottom_mergin + 0.5 * (h * self.nrow - self.vertical_subplot_size)
+        a1 = pl.axes([l, b, w, h])
+        a1.set_axis_off()
+        pl.text(1.0, 0.5, '%s (%s)'%(self.direction_label[1],self.direction_reference),
+                horizontalalignment='right', verticalalignment='center', 
+                rotation='vertical', size=(self.ticksize+2))
 
 def plot_profile_map(image, figfile):
 
@@ -160,7 +226,11 @@ def plot_profile_map(image, figfile):
     chan0 = 0
     chan1 = image.nchan
     
-    plotter = SDProfileMapPlotter(NH, NV, STEP, image.brightnessunit)
+    direction_label = image.direction_label
+    direction_reference = image.direction_reference
+    plotter = SDProfileMapPlotter(NH, NV, STEP, image.brightnessunit, 
+                                  direction_label, direction_reference,
+                                  clearpanel=True)
 
     masked_data = image.data * image.mask
 
@@ -180,13 +250,10 @@ def plot_profile_map(image, figfile):
         
         masked_data_p = masked_data.take([pol], axis=image.id_stokes).squeeze()
         Plot = numpy.zeros((num_panel, num_panel, (chan1 - chan0)), numpy.float32) + NoData
-        #TotalSP = masked_data_p.sum(axis=0).sum(axis=0)
         mask_p = image.mask.take([pol], axis=image.id_stokes).squeeze()
-        #isvalid = mask_p.prod(axis=2)
         isvalid = numpy.any(mask_p, axis=2)
         Nsp = sum(isvalid.flatten())
         casalog.post('Nsp=%s'%(Nsp))
-        #TotalSP /= Nsp
 
         for x in xrange(NH):
             x0 = x * STEP
@@ -199,20 +266,23 @@ def plot_profile_map(image, figfile):
                 valid_sp = chunk[valid_index[0],valid_index[1],:]
                 Plot[x][y] = valid_sp.mean(axis=0)
 
-        status = plotter.plot(Plot, #TotalSP, 
+        status = plotter.plot(Plot, 
                               image.frequency[chan0:chan1], 
                               figfile=figfile)
         
     plotter.done()
     
 class SDProfileMapPlotter(object):
-    def __init__(self, nh, nv, step, brightnessunit, clearpanel=True):
+    def __init__(self, nh, nv, step, brightnessunit, direction_label, direction_reference, 
+                 clearpanel=True):
         self.step = step
         if step > 1:
             ticksize = 10 - int(max(nh, nv) * step / (step - 1)) / 2
         elif step == 1:
             ticksize = 10 - int(max(nh, nv)) / 2
-        self.axes = ProfileMapAxesManager(nh, nv, brightnessunit, ticksize, clearpanel)
+        self.axes = ProfileMapAxesManager(nh, nv, brightnessunit, 
+                                          direction_label, direction_reference,
+                                          ticksize, clearpanel)
         self.lines_averaged = None
         self.lines_map = None
         self.reference_level = None
@@ -354,6 +424,9 @@ class SpectralImage(object):
             self.coordsys = ia.coordsys()
             coord_types = self.coordsys.axiscoordinatetypes()
             self.units = self.coordsys.units()
+            self.names = self.coordsys.names()
+            self.direction_reference = self.coordsys.referencecode('dir')[0]
+            self.spectral_reference = self.coordsys.referencecode('spectral')[0]
             self.id_direction = coord_types.index('Direction')
             self.id_direction = [self.id_direction, self.id_direction+1]
             self.id_spectral = coord_types.index('Spectral')
@@ -400,6 +473,10 @@ class SpectralImage(object):
     def brightnessunit(self):
         return self._brightnessunit
 
+    @property
+    def direction_label(self):
+        return [self.names[i] for i in self.id_direction]
+        
     def to_velocity(self, frequency, freq_unit='GHz'):
         rest_frequency = self.coordsys.restfrequency()
         if rest_frequency['unit'] != freq_unit:
@@ -413,7 +490,7 @@ class SpectralImage(object):
 
     def direction_axis(self, idx, unit='deg'):
         return self.__axis(self.id_direction[idx], unit=unit)
-        
+    
     def __axis(self, idx, unit):
         refpix = self.coordsys.referencepixel()['numeric'][idx]
         refval = self.coordsys.referencevalue()['numeric'][idx]
