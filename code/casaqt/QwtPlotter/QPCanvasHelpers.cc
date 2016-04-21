@@ -524,7 +524,14 @@ void QPBaseItem::qpDetach() {
 // QPGRID DEFINITIONS //
 ////////////////////////
 
-QPGrid::QPGrid() { QPBaseItem::setZ(BASE_Z_GRID); }
+QPGrid::QPGrid() { 
+    QPBaseItem::setZ(BASE_Z_GRID);
+#if QWT_VERSION >= 0x060000
+    // to trigger calling updateScaleDiv for gridlines
+    QPBaseItem::setItemInterest(QwtPlotItem::ScaleInterest, true);
+#endif
+}
+
 QPGrid::~QPGrid() { }
 
 bool QPGrid::shouldDraw() const {
