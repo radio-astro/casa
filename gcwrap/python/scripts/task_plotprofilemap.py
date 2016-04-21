@@ -4,7 +4,9 @@ import pylab as pl
 
 from taskinit import casalog, gentools, qa
 
-def plotprofilemap(imagename=None, figfile=None, overwrite=None, horizontalbind=None, verticalbind=None, spectralrange=None, trasnparent=None):
+def plotprofilemap(imagename=None, figfile=None, overwrite=None, 
+                   
+                   horizontalbind=None, verticalbind=None, spectralrange=None, trasnparent=None):
     casalog.origin('plotprofilemap')
     
     try:
@@ -104,25 +106,25 @@ class ProfileMapAxesManager(object):
         return self.nh + 1
 
     @property
-    def mergin(self):
-        # [left mergin, right mergin, bottom mergin, top mergin]
+    def margin(self):
+        # [left margin, right margin, bottom margin, top margin]
         return [0.03, 0.01, 0.06, 0.01]
 
     @property
-    def left_mergin(self):
-        return self.mergin[0]
+    def left_margin(self):
+        return self.margin[0]
 
     @property
-    def right_mergin(self):
-        return self.mergin[1]
+    def right_margin(self):
+        return self.margin[1]
 
     @property
-    def bottom_mergin(self):
-        return self.mergin[2]
+    def bottom_margin(self):
+        return self.margin[2]
 
     @property
-    def top_mergin(self):
-        return self.mergin[3]
+    def top_margin(self):
+        return self.margin[3]
 
     @property
     def space(self):
@@ -130,19 +132,19 @@ class ProfileMapAxesManager(object):
 
     @property
     def horizontal_subplot_size(self):
-        return (1.0 - sum(self.mergin[:2])) / self.ncolumn 
+        return (1.0 - sum(self.margin[:2])) / self.ncolumn 
 
     @property
     def vertical_subplot_size(self):
-        return (1.0 - sum(self.mergin[2:])) / self.nrow 
+        return (1.0 - sum(self.margin[2:])) / self.nrow 
 
     def __axes_spmap(self):
         for x in xrange(self.nh):
             for y in xrange(self.nv):
                 w = self.horizontal_subplot_size
                 h = self.vertical_subplot_size
-                l = 1.0 - self.right_mergin - w * (x + 1) + 0.5 * self.space
-                b = self.bottom_mergin + h * y + 0.5 * self.space
+                l = 1.0 - self.right_margin - w * (x + 1) + 0.5 * self.space
+                b = self.bottom_margin + h * y + 0.5 * self.space
                 axes = pl.axes([l, b, w - self.space, h - self.space])
                 axes.cla()
 #                if y == 0 and x == self.nh - 1:
@@ -163,9 +165,9 @@ class ProfileMapAxesManager(object):
     def setup_labels(self, label_ra, label_dec):
         for x in xrange(self.nh):
             w = self.horizontal_subplot_size
-            l = 1.0 - self.right_mergin - w * (x + 1)
-            h = self.bottom_mergin * 0.5
-            b = self.bottom_mergin - h
+            l = 1.0 - self.right_margin - w * (x + 1)
+            h = self.bottom_margin * 0.5
+            b = self.bottom_margin - h
             a1 = pl.axes([l, b, w, h])
             a1.set_axis_off()
             if len(a1.texts) == 0:
@@ -174,10 +176,10 @@ class ProfileMapAxesManager(object):
             else:
                 a1.texts[0].set_text(HHMMSSss((label_ra[x][0]+label_ra[x][1])/2.0, 0))
         for y in xrange(self.nv):
-            l = self.left_mergin
+            l = self.left_margin
             w = self.horizontal_subplot_size
             h = self.vertical_subplot_size
-            b = self.bottom_mergin + y * h
+            b = self.bottom_margin + y * h
             a1 = pl.axes([l, b, w, h])
             a1.set_axis_off()
             if len(a1.texts) == 0:
@@ -186,8 +188,8 @@ class ProfileMapAxesManager(object):
             else:
                 a1.texts[0].set_text(DDMMSSs((label_dec[y][0]+label_dec[y][1])/2.0, 0))
         # longitude label
-        l = self.left_mergin
-        h = self.bottom_mergin * 0.5 
+        l = self.left_margin
+        h = self.bottom_margin * 0.5 
         b = 0.
         w = 1.0 - l
         a1 = pl.axes([l, b, w, h])
@@ -200,9 +202,9 @@ class ProfileMapAxesManager(object):
 
         # latitude label
         l = 0.0
-        w = self.left_mergin
+        w = self.left_margin
         h = self.vertical_subplot_size
-        b = self.bottom_mergin + 0.5 * (h * self.nrow - self.vertical_subplot_size)
+        b = self.bottom_margin + 0.5 * (h * self.nrow - self.vertical_subplot_size)
         a1 = pl.axes([l, b, w, h])
         a1.set_axis_off()
         pl.text(1.0, 0.5, '%s (%s)'%(self.direction_label[1],self.direction_reference),
