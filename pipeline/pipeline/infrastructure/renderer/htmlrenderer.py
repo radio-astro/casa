@@ -1798,7 +1798,8 @@ def get_results_by_time(context, resultslist):
 
 
 def get_ms_start_time_for_result(context, result):
-    vis = result.inputs['vis']
+    key = 'vis' if 'vis' in result.inputs else 'infiles'
+    vis = result.inputs[key]
     return get_ms_attr_for_result(context, vis, lambda ms: ms.start_time['m0']['value'])
 
 
