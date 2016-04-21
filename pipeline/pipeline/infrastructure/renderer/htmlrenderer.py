@@ -1792,14 +1792,21 @@ def get_results_by_time(context, resultslist):
     # as this is a ResultsList with important properties attached, results
     # should be sorted in place.
     if hasattr(resultslist, 'sort'):
-        # sort the list of results by the MS start time
-        resultslist.sort(key=lambda r: get_ms_start_time_for_result(context, r))
+        if len(resultslist) is not 1:
+            try:
+                # sort the list of results by the MS start time
+                resultslist.sort(key=lambda r: get_ms_start_time_for_result(context, r))
+            except AttributeError:
+                LOG.info('Could not time sort results for stage %s' % resultslist.stage_number)
     return resultslist
 
 
 def get_ms_start_time_for_result(context, result):
-    key = 'vis' if 'vis' in result.inputs else 'infiles'
-    vis = result.inputs[key]
+    # single dish tasks do not attach Inputs to their component results, so
+    # there's no reference or sort the results by.
+    vis = result.inputs.get('vis', None)
+    if vis is None:
+        raise AttributeError
     return get_ms_attr_for_result(context, vis, lambda ms: ms.start_time['m0']['value'])
 
 
