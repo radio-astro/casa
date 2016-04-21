@@ -621,9 +621,9 @@ class TsysflagView(object):
 
         # Set group of intents-of-interest based on metric:
         if self.metric == 'edgechans':
-            self.intentgroups = ['ATMOSPHERE','BANDPASS','AMPLITUDE']
+            self.intentgroup = ['ATMOSPHERE','BANDPASS','AMPLITUDE']
         else:
-            self.intentgroups = ['ATMOSPHERE']
+            self.intentgroup = ['ATMOSPHERE']
 
     
     def __call__(self, data):
@@ -706,24 +706,24 @@ class TsysflagView(object):
        
         # Get ids of fields for intents of interest
         fieldids = {}
-        for intentgroup in self.intentgroups:
-            fieldids_for_intent = self.intent_ids(intentgroup, self.ms) 
-            fieldids[intentgroup] = fieldids_for_intent
+        for intent in self.intentgroup:
+            fieldids_for_intent = self.intent_ids(intent, self.ms) 
+            fieldids[intent] = fieldids_for_intent
 
-        # Compute the flagging view for every spw and every intentgroup
+        # Compute the flagging view for every spw and every intent
         LOG.info ('Computing flagging metrics for caltable %s ' % (table))
         for tsysspwid in tsysspws:
-            for intentgroup in self.intentgroups:
+            for intent in self.intentgroup:
                 if self.metric in ['nmedian', 'toomany'] :
-                    self.calculate_median_spectra_view(tsystable, tsysspwid, intentgroup, fieldids[intentgroup])
+                    self.calculate_median_spectra_view(tsystable, tsysspwid, intent, fieldids[intent])
                 elif self.metric == 'derivative':
-                    self.calculate_derivative_view(tsystable, tsysspwid, intentgroup, fieldids[intentgroup])
+                    self.calculate_derivative_view(tsystable, tsysspwid, intent, fieldids[intent])
                 elif self.metric == 'fieldshape':
-                    self.calculate_fieldshape_view(tsystable, tsysspwid, intentgroup, fieldids[intentgroup], self.refintent)
+                    self.calculate_fieldshape_view(tsystable, tsysspwid, intent, fieldids[intent], self.refintent)
                 elif self.metric == 'birdies':
-                    self.calculate_antenna_diff_channel_view(tsystable, tsysspwid, intentgroup, fieldids[intentgroup])
+                    self.calculate_antenna_diff_channel_view(tsystable, tsysspwid, intent, fieldids[intent])
                 elif self.metric == 'edgechans':
-                    self.calculate_median_channel_view(tsystable, tsysspwid, intentgroup, fieldids[intentgroup])   
+                    self.calculate_median_channel_view(tsystable, tsysspwid, intent, fieldids[intent])   
 
 
     def get_tsystable_data(self, tsystable, spwid, fieldids, antenna_names, corr_type, normalise=None):
