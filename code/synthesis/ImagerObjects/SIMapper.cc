@@ -292,7 +292,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SIMapper::finalizeDegrid()
   {
     LogIO os( LogOrigin("SIMapper","finalizeDegrid",WHERE) );
-    ft_p->finalizeToVis();
+    if(!useViVb2_p)
+      ft_p->finalizeToVis();
+    else
+      ft2_p->finalizeToVis();
   }
 
 

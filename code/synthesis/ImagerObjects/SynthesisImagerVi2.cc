@@ -1138,13 +1138,13 @@ void SynthesisImagerVi2::unlockMSs()
   }
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void SynthesisImagerVi2::createVisSet(const Bool writeAccess)
+  void SynthesisImagerVi2::createVisSet(const Bool /*writeAccess*/)
   {
     LogIO os( LogOrigin("SynthesisImager","createVisSet",WHERE) );
     if(mss_p.nelements() != uInt(fselections_p.size()) && (fselections_p.size() !=0)){
       throw(AipsError("Discrepancy between Number of MSs and Frequency selections"));
     }
-    vi_p=new vi::VisibilityIterator2(mss_p, vi::SortColumns(), writeAccess);
+    vi_p=new vi::VisibilityIterator2(mss_p, vi::SortColumns(), True); //writeAccess);
     if(fselections_p.size() !=0)
       vi_p->setFrequencySelection (fselections_p);
     //
