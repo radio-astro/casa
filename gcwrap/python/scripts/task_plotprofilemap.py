@@ -6,7 +6,7 @@ from taskinit import casalog, gentools, qa
 
 def plotprofilemap(imagename=None, figfile=None, overwrite=None, 
                    linecolor=None, linestyle=None, linewidth=None,
-                   separatepanel=None, 
+                   separatepanel=None, plotmasked=None, maskedcolor=None,
                    horizontalbind=None, verticalbind=None, spectralrange=None, trasnparent=None):
     casalog.origin('plotprofilemap')
     
@@ -16,7 +16,7 @@ def plotprofilemap(imagename=None, figfile=None, overwrite=None,
     
         image = SpectralImage(imagename)
         plot_profile_map(image, figfile, linecolor, linestyle, linewidth,
-                         separatepanel)
+                         separatepanel, plotmasked, maskedcolor)
     except Exception, e:
         casalog.post('Error: %s'%(str(e)), priority='SEVERE')
         import traceback
@@ -220,7 +220,20 @@ class ProfileMapAxesManager(object):
                 rotation='vertical', size=(self.ticksize+2))
 
 def plot_profile_map(image, figfile, linecolor=None, linestyle=None, linewidth=None,
-                     separatepanel=False):
+                     separatepanel=None, plotmasked=None, maskedcolor=None):
+    """
+    image 
+    figfile
+    linecolor
+    linestyle
+    linewidth
+    separatepanel
+    plotmasked -- 'none': show neither lines nor panels
+                  'empty': show empty panel
+                  'text': show 'NO DATA' symbol
+                  'zero': plot zero level
+                  'plot': plot masked data with different color
+    """
     if linecolor is None:
         linecolor = 'b'
     if linestyle is None:
@@ -229,6 +242,10 @@ def plot_profile_map(image, figfile, linecolor=None, linestyle=None, linewidth=N
         linewidth = 0.2
     if separatepanel is None:
         separatepanel = True
+    if plotmasked is None:
+        plotmasked = 'none'
+    if maskedcolor is None:
+        maskedcolor = 'gray' if linecolor != 'gray' else 'black'
 
     x_max = image.nx - 1
     x_min = 0
@@ -249,7 +266,7 @@ def plot_profile_map(image, figfile, linecolor=None, linestyle=None, linewidth=N
     direction_reference = image.direction_reference
     plotter = SDProfileMapPlotter(NH, NV, STEP, image.brightnessunit, 
                                   direction_label, direction_reference,
-                                  separatepanel=separatepanel,
+                                  separatepanel=separatepanel, 
                                   clearpanel=True)
 
     masked_data = image.data * image.mask
@@ -286,12 +303,13 @@ def plot_profile_map(image, figfile, linecolor=None, linestyle=None, linewidth=N
                 valid_sp = chunk[valid_index[0],valid_index[1],:]
                 Plot[x][y] = valid_sp.mean(axis=0)
 
-        status = plotter.plot(Plot, 
+        status = plotter.plot(figfile, Plot, 
                               image.frequency[chan0:chan1], 
                               linecolor=linecolor,
                               linestyle=linestyle,
                               linewidth=linewidth,
-                              figfile=figfile)
+                              plotmasked=plotmasked,
+                              maskedcolor=maskedcolor)
         
     plotter.done()
     
@@ -364,8 +382,9 @@ class SDProfileMapPlotter(object):
     def set_deviation_mask(self, mask):
         self.deviation_mask = mask
         
-    def plot(self, map_data, frequency, linecolor='b', linestyle='-', linewidth=0.2,
-             figfile=None):        
+    def plot(self, figfile, map_data, frequency, 
+             linecolor='b', linestyle='-', linewidth=0.2,
+             plotmasked='none', maskedcolor='gray'):        
         global_xmin = min(frequency[0], frequency[-1])
         global_xmax = max(frequency[0], frequency[-1])
         casalog.post('global_xmin=%s, global_xmax=%s'%(global_xmin,global_xmax))
@@ -390,6 +409,7 @@ class SDProfileMapPlotter(object):
         casalog.post('global_ymin=%s, global_ymax=%s'%(global_ymin,global_ymax))
 
         pl.ioff()
+        
 
         no_data = numpy.zeros(len(frequency), dtype=numpy.float32)
         for x in xrange(self.nh):
@@ -417,10 +437,24 @@ class SDProfileMapPlotter(object):
                     pl.plot(frequency, map_data[x][y], color=linecolor, linestyle=linestyle, 
                             linewidth=linewidth)
                 else:
-#                     pl.text((xmin+xmax)/2.0, (ymin+ymax)/2.0, 'NO DATA', ha='center', va='center', 
-#                                      size=(self.TickSize + 1))
-#                     pl.plot(frequency, no_data, color='b', linestyle='-', linewidth=0.2)
-                    pass
+                    if plotmasked == 'empty':
+                        pass
+                    elif plotmasked == 'text':
+                        pl.text((xmin+xmax)/2.0, (ymin+ymax)/2.0, 'NO DATA', ha='center', va='center', 
+                                size=(self.TickSize + 1))
+                    elif plotmasked == 'zero':
+                        pl.plot(frequency, no_data, 
+                                color=maskedcolor, linestyle=linestyle, linewidth=linewidth)
+                    elif plotmasked == 'none':
+                        a = pl.gcf().gca()
+                        a.set_axis_off()
+                    elif plotmasked == 'plot':
+                        m = map_data[x][y] == NoDataThreshold
+                        if not all(m):
+                            ma = pl.ma.masked_array(map_data[x][y], m)
+                            pl.plot(frequency, ma, 
+                                    color=maskedcolor, linestyle=linestyle, linewidth=linewidth)
+                        
                 pl.axis((xmin, xmax, ymin, ymax))
 
         pl.ion()

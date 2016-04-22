@@ -50,12 +50,39 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <description>Separate plots</description>
       <value>True</value>
     </param>
+    
+    <param type="string" name="plotmasked">
+      <description>Masked data handling</description>
+      <value>empty</value>
+      <allowed kind="enum">
+        <value>empty</value>
+        <value>text</value>
+        <value>zero</value>
+        <value>none</value>
+        <value>plot</value>
+      </allowed>
+    </param>
+    
+    <param type="string" name="maskedcolor" subparam="true">
+      <description>Line color for masked data</description>
+      <value>gray</value>
+    </param>
 
     <constraints>
       <when param="figfile">
         <notequals type="string" value="">
           <default param="overwrite"><value type="bool">False</value></default>
         </notequals>
+      </when>
+      <when param="plotmasked">
+        <equals type="string" value="empty">
+        </equals>
+        <equals type="string" value="plot">
+          <default param="maskedcolor"><value type="string">gray</value></default>
+        </equals>
+        <equals type="string" value="zero">
+          <default param="maskedcolor"><value type="string">gray</value></default>
+        </equals>
       </when>
     </constraints>
   </input>
@@ -89,6 +116,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  default: 0.2
     separatepanel -- separate panels
                      default: True
+    plotmasked -- masked data handling
+                  default: 'empty' (show empty panel)
+                  option: 'zero' (plot zero level)
+                          'none' (show nothing)
+                          'text' (show text indicating 'NO DATA')
+                          'plot' (plot masked data with different 
+                                  color specified by maskedcolor)
+    maskedcolor -- line color for masked data
 
 
   </example>
