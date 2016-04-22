@@ -233,7 +233,8 @@ int main(int argc, char **argv)
 	  imgr->makePSF();
 	  //imgr->makePSF(useViVb2);
 	  CountedPtr<SIImageStore> images=imgr->imageStore(0);
-	 
+	  if(images.null())
+	    throw(AipsError(" no image store out " ));
 	  images->dividePSFByWeight();
 	  images->divideResidualByWeight();
 	  {

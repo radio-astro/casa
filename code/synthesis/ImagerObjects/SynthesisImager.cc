@@ -1198,7 +1198,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
 	if( mappertype=="default" || mappertype=="imagemosaic" )
 	  {
-	    imstor=new SIImageStore(imageName, cSys, imShape, overwrite, (useweightimage || (mappertype=="imagemosaic") ));
+	    imstor=std::make_shared<SIImageStore>(imageName, cSys, imShape, overwrite, (useweightimage || (mappertype=="imagemosaic") ));
 	    //	    imstor=new SIImageStore(imageName, cSys, imShape, facets, overwrite, (useweightimage || (mappertype=="imagemosaic") ));
 	  }
 	else if (mappertype == "multiterm" )  // Currently does not support imagemosaic.
