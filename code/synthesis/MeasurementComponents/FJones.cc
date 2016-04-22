@@ -545,31 +545,34 @@ void FJones::calcAllJones() {
   Bool*   lostecok=currParOK().data();
   Double f,rotpers2,tec,del,rot;
   Complex cdel;
-  
+
+  // For now, ignore dispersive delay part (we don't know the diffs)
+  del=0.0;
+
   for (Int iant=0; iant<nAnt(); ++iant,++lostec,++lostecok) {
     if ((*lostecok)) { 
       tec = Double(*lostec); 
-      rotpers2 = radper_*tec*BlosG_(iant);
+     rotpers2 = radper_*tec*BlosG_(iant);
 
       for (Int ich=0;ich<nChanMat();++ich) {
 	f=currFreq()(ich)*1.0e9;   // Hz
-	del = 8.4483e-7*tec/f;
+	//del = 8.4483e-7*tec/f;
 	rot = rotpers2/f/f;
 
 	switch (jonesType()) {
 	  // Circular version:
 	case Jones::Diagonal: {
-	  J[0]=Complex(cos(del-rot),sin(del-rot));
-	  J[1]=Complex(cos(del+rot),sin(del+rot));
+	  J[0]=Complex(cos(del+rot),sin(del+rot));
+	  J[1]=Complex(cos(del-rot),sin(del-rot));
 	  J+=2;
 	  break;
 	}
 	  // Linear version:
 	case Jones::General: {
 	  cdel=Complex(cos(del),sin(del));
-	  J[0]=J[3]=cdel*cos(rot);
-	  J[1]=cdel*sin(rot);
-	  J[2]=cdel*sin(-rot);
+	  J[0]=J[3]=cdel*cos(-rot);
+	  J[1]=cdel*sin(-rot);
+	  J[2]=-J[1];
 	  J+=4;
 	  break;
 	}
