@@ -5,6 +5,7 @@ import pylab as pl
 from taskinit import casalog, gentools, qa
 
 def plotprofilemap(imagename=None, figfile=None, overwrite=None, 
+                   title=None,
                    linecolor=None, linestyle=None, linewidth=None,
                    separatepanel=None, plotmasked=None, maskedcolor=None, 
                    showaxislabel=None, showtick=None, showticklabel=None,
@@ -16,7 +17,7 @@ def plotprofilemap(imagename=None, figfile=None, overwrite=None,
             raise RuntimeError('overwrite is False and output file exists: \'%s\''%(figfile))
     
         image = SpectralImage(imagename)
-        plot_profile_map(image, figfile, linecolor, linestyle, linewidth,
+        plot_profile_map(image, figfile, title, linecolor, linestyle, linewidth,
                          separatepanel, plotmasked, maskedcolor,
                          showaxislabel, showtick, showticklabel)
     except Exception, e:
@@ -75,8 +76,9 @@ class ProfileMapAxesManager(object):
     label_map = {'Right Ascension': 'RA',
                  'Declination': 'Dec'}
     def __init__(self, nh, nv, brightnessunit, direction_label, direction_reference, 
-                 spectral_label, spectral_unit, ticksize, separatepanel=True, 
+                 spectral_label, spectral_unit, ticksize, title='', separatepanel=True, 
                  showaxislabel=False, showtick=False, showticklabel=False,
+                 
                  clearpanel=True):
         self.nh = nh
         self.nv = nv
@@ -91,6 +93,7 @@ class ProfileMapAxesManager(object):
         self.showaxislabel = showaxislabel
         self.showtick = showtick
         self.showticklabel = showticklabel
+        self.title = title
         
         self._axes_spmap = None
         
@@ -160,6 +163,13 @@ class ProfileMapAxesManager(object):
             return 0.02
         else:
             return 0.
+        
+    @property
+    def title_area(self):
+        if isinstance(self.title, str) and len(self.title) > 0:
+            return 0.04 * (self.title.count('\n') + 1)
+        else:
+            return 0.
 
     @property
     def horizontal_subplot_size(self):
@@ -167,7 +177,7 @@ class ProfileMapAxesManager(object):
 
     @property
     def vertical_subplot_size(self):
-        return (1.0 - self.bottom_margin - self.top_margin - self.xlabel_area) / self.nrow 
+        return (1.0 - self.bottom_margin - self.top_margin - self.xlabel_area - self.title_area) / self.nrow 
 
     def __axes_spmap(self):
         for x in xrange(self.nh):
@@ -233,10 +243,10 @@ class ProfileMapAxesManager(object):
                 a1.texts[0].set_text(DDMMSSs((label_dec[y][0]+label_dec[y][1])/2.0, 0))
                 
         # longitude label
-        l = self.left_margin
+        l = self.left_margin + self.xlabel_area
         h = self.bottom_margin * 0.5 
         b = 0.
-        w = 1.0 - l
+        w = 1.0 - l - self.right_margin
         a1 = pl.axes([l, b, w, h])
         a1.set_axis_off()
         xpos = (1.0 + 0.5 * self.nh) / self.ncolumn
@@ -255,8 +265,21 @@ class ProfileMapAxesManager(object):
         pl.text(1.0, 0.5, '%s (%s)'%(self.direction_label[1],self.direction_reference),
                 horizontalalignment='right', verticalalignment='center', 
                 rotation='vertical', size=(self.ticksize+2))
+        
+        # title
+        if self.title_area > 0.:
+            left = self.left_margin + self.xlabel_area
+            bottom = 1.0 - self.title_area - self.top_margin
+            width = 1.0 - left - self.right_margin
+            height = self.title_area
+            a1 = pl.axes([left, bottom, width, height])
+            a1.set_axis_off()
+            xpos = (1.0 + 0.5 * self.nh) / self.ncolumn
+            pl.text(xpos, 0.1, self.title, 
+                    horizontalalignment='center', verticalalignment='bottom',
+                    size=self.ticksize+4)
 
-def plot_profile_map(image, figfile, linecolor=None, linestyle=None, linewidth=None,
+def plot_profile_map(image, figfile, title=None, linecolor=None, linestyle=None, linewidth=None,
                      separatepanel=None, plotmasked=None, maskedcolor=None,
                      showaxislabel=None, showtick=None, showticklabel=None):
     """
@@ -313,6 +336,7 @@ def plot_profile_map(image, figfile, linecolor=None, linestyle=None, linewidth=N
     plotter = SDProfileMapPlotter(NH, NV, STEP, image.brightnessunit, 
                                   direction_label, direction_reference,
                                   spectral_label, spectral_unit,
+                                  title=title,
                                   separatepanel=separatepanel, 
                                   showaxislabel=showaxislabel,
                                   showtick=showtick,
@@ -365,7 +389,7 @@ def plot_profile_map(image, figfile, linecolor=None, linestyle=None, linewidth=N
     
 class SDProfileMapPlotter(object):
     def __init__(self, nh, nv, step, brightnessunit, direction_label, direction_reference, 
-                 spectral_label, spectral_unit, separatepanel=True, 
+                 spectral_label, spectral_unit, title=None, separatepanel=True, 
                  showaxislabel=False, showtick=False, showticklabel=False,
                  clearpanel=True):
         self.step = step
@@ -376,7 +400,8 @@ class SDProfileMapPlotter(object):
         self.axes = ProfileMapAxesManager(nh, nv, brightnessunit, 
                                           direction_label, direction_reference,
                                           spectral_label, spectral_unit,
-                                          ticksize, separatepanel=separatepanel, 
+                                          ticksize, title=title, 
+                                          separatepanel=separatepanel, 
                                           showaxislabel=showaxislabel,
                                           showtick=showtick,
                                           showticklabel=showticklabel,

@@ -30,6 +30,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <description>Overwrite existing figfile</description>
       <value>False</value>
     </param>
+    
+    <param type="string" name="title">
+      <description>Title of the plot</description>
+      <value></value>
+    </param>
 
 	<param type="string" name="linecolor">
 	  <description>Line color</description>
@@ -126,6 +131,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                default: '' (no output)
     overwrite -- overwrite existing output file
                  default: False
+    title -- title of the plot
+             default: '' (no title)
     linecolor -- line color in matplotlib format
                  default: 'b' (blue)
                  example: 'r' (red), 'black', '#ff99ff'
