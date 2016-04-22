@@ -71,7 +71,7 @@ class PipelineManifest(object):
 
     def add_aqua_report (self, ous, aqua_report):
 	"""
-        Add the AQAUA report to the OUS element
+        Add the AQUA report to the OUS element
 	"""
         eltree.SubElement (ous, "aqua_report", name=aqua_report)
 

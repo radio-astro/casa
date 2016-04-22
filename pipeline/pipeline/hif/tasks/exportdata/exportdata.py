@@ -321,7 +321,7 @@ class ExportData(basetask.StandardTaskTemplate):
         apply_file_list = []
         for visfile in vislist:
             apply_file =  self._export_final_applylist (inputs.context, \
-                                                        visfile, inputs.products_dir)
+                visfile, inputs.products_dir)
             apply_file_list.append (apply_file)
 
         # Create the ordered vis dictionary
@@ -342,7 +342,7 @@ class ExportData(basetask.StandardTaskTemplate):
         caltable_file_list = []
         for i in range(len(session_names)):
             caltable_file = self._export_final_calfiles (inputs.context, oussid,
-                                                         session_names[i], session_vislists[i], inputs.products_dir)
+                session_names[i], session_vislists[i], inputs.products_dir)
             caltable_file_list.append (caltable_file)
 
         # Create the ordered session dictionary
@@ -417,7 +417,7 @@ class ExportData(basetask.StandardTaskTemplate):
             LOG.info ('Exporting pipeline AQUA report')
             pipe_aquareport_file = self._export_aqua_report (inputs.context,
                                                              oussid, aqua_reportfile, inputs.products_dir)
-            # Don't add to the pipeline manifest as AQUA takes care of this
+            pipemanifest.add_aqua_report(ouss, os.path.basename(pipe_aquareport_file))
 
         # Export the pipeline manifest file
         casa_pipe_manifest = self._export_pipe_manifest(inputs.context, oussid,
@@ -561,8 +561,10 @@ class ExportData(basetask.StandardTaskTemplate):
         LOG.info('Storing calibration apply list for %s in  %s',
                  os.path.basename(vis), applyfile_name)
 
-        if not self._executor._dry_run:
+        if self._executor._dry_run:
+            return applyfile_name
 
+        try:
             calto = callibrary.CalTo(vis=vis)
             applied_calstate = context.callibrary.applied.trimmed(context, calto)
 
@@ -582,6 +584,9 @@ class ExportData(basetask.StandardTaskTemplate):
             with open(os.path.join(products_dir, applyfile_name), "w") as applyfile:
                 applyfile.write('# Apply file for %s\n' % (os.path.basename(vis)))
                 applyfile.write(applied_calstate.as_applycal())
+        except:
+            applyfile_name = 'Undefined'
+            LOG.info('No calibrations for MS %s' % os.path.basename(vis)) 
 
         return applyfile_name
 
@@ -658,22 +663,30 @@ class ExportData(basetask.StandardTaskTemplate):
             LOG.info('Saving final caltables for %s in %s', session, tarfilename)
 
             # Create the tar file
-            if not self._executor._dry_run:
-                caltables = set()
+            if self._executor._dry_run:
+                return tarfilename
 
-                for visfile in vislist:
-                    LOG.info('Collecting final caltables for %s in %s',
-                             os.path.basename(visfile), tarfilename)
+            caltables = set()
 
-                    # Create the list of applied caltables for that vis
+            for visfile in vislist:
+                LOG.info('Collecting final caltables for %s in %s',
+                         os.path.basename(visfile), tarfilename)
+
+                # Create the list of applied caltables for that vis
+                try:
                     calto = callibrary.CalTo(vis=visfile)
                     calstate = context.callibrary.applied.trimmed(context, calto)
                     caltables.update(calstate.get_caltable())
+                except:
+                    LOG.info('No caltables for MS %s' % os.path.basename(visfile))
 
-                with tarfile.open(os.path.join(products_dir, tarfilename), 'w:gz') as tar:
-                    # Tar the session list.
-                    for table in caltables:
-                        tar.add(table)
+            if not caltables:
+                return 'Undefined'
+
+            with tarfile.open(os.path.join(products_dir, tarfilename), 'w:gz') as tar:
+                # Tar the session list.
+                for table in caltables:
+                    tar.add(table)
 
             return tarfilename
 
@@ -746,14 +759,15 @@ class ExportData(basetask.StandardTaskTemplate):
 
         ps = context.project_structure
         if ps is None:
-            aqua_file = os.path.join (context.report_dir, aquareport_name)
+            aqua_file = os.path.join (context.output_dir, aquareport_name)
             out_aqua_file = os.path.join (products_dir, aquareport_name)
         elif ps.ousstatus_entity_id == 'unknown':
-            aqua_file = os.path.join (context.report_dir, aquareport_name)
+            aqua_file = os.path.join (context.output_dir, aquareport_name)
             out_aqua_file = os.path.join (products_dir, aquareport_name)
         else:
-            aqua_file = os.path.join (context.report_dir, aquareport_name)
+            aqua_file = os.path.join (context.output_dir, aquareport_name)
             out_aqua_file = os.path.join (products_dir, oussid + '.' + aquareport_name)
+        print 'AQUA INPUT OUTPUT', aqua_file, out_aqua_file
 
         if os.path.exists(aqua_file):
             LOG.info('Copying AQUA report %s to %s' % \
