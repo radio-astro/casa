@@ -35,7 +35,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <description>Title of the plot</description>
       <value></value>
     </param>
-
+    
 	<param type="string" name="linecolor">
 	  <description>Line color</description>
 	  <value>b</value>
@@ -88,6 +88,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value>False</value>
     </param>
 
+    <param type="string" name="figsize">
+      <description>Size of the figure</description>
+      <value></value>
+    </param>
+    
     <constraints>
       <when param="figfile">
         <notequals type="string" value="">
@@ -157,6 +162,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	            default: False
 	showticklabel -- Show tick labels on the bottom left panel
 	                 default: False
+    figsize -- size of the figure
+             default: '' (matplotlib default)
+             example: '10cm' (10cm square)
+                      '122mm,10cm' (122mm width and 10cm height)
 
   </example>
 

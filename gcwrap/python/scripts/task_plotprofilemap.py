@@ -5,10 +5,11 @@ import pylab as pl
 from taskinit import casalog, gentools, qa
 
 def plotprofilemap(imagename=None, figfile=None, overwrite=None, 
-                   title=None,
+                   title=None, 
                    linecolor=None, linestyle=None, linewidth=None,
                    separatepanel=None, plotmasked=None, maskedcolor=None, 
                    showaxislabel=None, showtick=None, showticklabel=None,
+                   figsize=None,
                    horizontalbind=None, verticalbind=None, spectralrange=None, trasnparent=None):
     casalog.origin('plotprofilemap')
     
@@ -17,9 +18,10 @@ def plotprofilemap(imagename=None, figfile=None, overwrite=None,
             raise RuntimeError('overwrite is False and output file exists: \'%s\''%(figfile))
     
         image = SpectralImage(imagename)
+        parsed_size = parse_figsize(figsize)
         plot_profile_map(image, figfile, title, linecolor, linestyle, linewidth,
                          separatepanel, plotmasked, maskedcolor,
-                         showaxislabel, showtick, showticklabel)
+                         showaxislabel, showtick, showticklabel, parsed_size)
     except Exception, e:
         casalog.post('Error: %s'%(str(e)), priority='SEVERE')
         import traceback
@@ -71,14 +73,31 @@ def DDMMSSs(x, pos):
     sstr = ('%3.1f'%(s-int(s))).lstrip('0')
     return '%+02d%s%02d\'%02d\"%s' % (d, dsyb, m, sint, sstr)
 
+def parse_figsize(figsize):
+    """
+    return figsize in inches
+    """
+    casalog.post('parse_figsize input: {input}'.format(input=figsize), priority='DEBUG')
+    parsed = None
+    if figsize is not None and isinstance(figsize, str) and len(figsize) > 0:
+        size_list = figsize.split(',')
+        size_inch_list = [x / 25.4 for s in size_list for x in qa.getvalue(qa.convert(qa.quantity(s),outunit='mm'))]
+        if len(size_inch_list) == 1:
+            s = size_inch_list[0]
+            parsed = (s, s)
+        else:
+            parsed = tuple(size_inch_list[:2])
+    casalog.post('parse_figsize output: {output}'.format(output=parsed), priority='DEBUG')
+    return parsed
 
 class ProfileMapAxesManager(object):
     label_map = {'Right Ascension': 'RA',
                  'Declination': 'Dec'}
     def __init__(self, nh, nv, brightnessunit, direction_label, direction_reference, 
-                 spectral_label, spectral_unit, ticksize, title='', separatepanel=True, 
+                 spectral_label, spectral_unit, ticksize, title='', 
+                 separatepanel=True, 
                  showaxislabel=False, showtick=False, showticklabel=False,
-                 
+                 figsize=None,
                  clearpanel=True):
         self.nh = nh
         self.nv = nv
@@ -94,16 +113,21 @@ class ProfileMapAxesManager(object):
         self.showtick = showtick
         self.showticklabel = showticklabel
         self.title = title
+        self.figsize = figsize
+        casalog.post('figsize={figsize}'.format(figsize=self.figsize), priority='DEBUG')
         
         self._axes_spmap = None
         
-        pl.figure(self.MATPLOTLIB_FIGURE_ID)
+        if self.figsize is None:
+            pl.figure(self.MATPLOTLIB_FIGURE_ID)
+        else:
+            pl.figure(self.MATPLOTLIB_FIGURE_ID, figsize=self.figsize)
         if clearpanel:
             pl.clf()
             
     @property
     def MATPLOTLIB_FIGURE_ID(self):
-        return 8910
+        return "ProfileMap"
 
     @property
     def axes_spmap(self):
@@ -279,9 +303,11 @@ class ProfileMapAxesManager(object):
                     horizontalalignment='center', verticalalignment='bottom',
                     size=self.ticksize+4)
 
-def plot_profile_map(image, figfile, title=None, linecolor=None, linestyle=None, linewidth=None,
+def plot_profile_map(image, figfile, title=None, 
+                     linecolor=None, linestyle=None, linewidth=None,
                      separatepanel=None, plotmasked=None, maskedcolor=None,
-                     showaxislabel=None, showtick=None, showticklabel=None):
+                     showaxislabel=None, showtick=None, showticklabel=None,
+                     figsize=None):
     """
     image 
     figfile
@@ -341,6 +367,7 @@ def plot_profile_map(image, figfile, title=None, linecolor=None, linestyle=None,
                                   showaxislabel=showaxislabel,
                                   showtick=showtick,
                                   showticklabel=showticklabel,
+                                  figsize=figsize,
                                   clearpanel=True)
 
     masked_data = image.data * image.mask
@@ -391,6 +418,7 @@ class SDProfileMapPlotter(object):
     def __init__(self, nh, nv, step, brightnessunit, direction_label, direction_reference, 
                  spectral_label, spectral_unit, title=None, separatepanel=True, 
                  showaxislabel=False, showtick=False, showticklabel=False,
+                 figsize=None,
                  clearpanel=True):
         self.step = step
         if step > 1:
@@ -405,6 +433,7 @@ class SDProfileMapPlotter(object):
                                           showaxislabel=showaxislabel,
                                           showtick=showtick,
                                           showticklabel=showticklabel,
+                                          figsize=figsize,
                                           clearpanel=clearpanel)
         self.lines_averaged = None
         self.lines_map = None
@@ -447,10 +476,6 @@ class SDProfileMapPlotter(object):
             LabelDEC[y][1] = refval + (y1 - refpix) * increment
         self.axes.setup_labels(LabelRA, LabelDEC)
         
-    def setup_lines(self, lines_averaged, lines_map=None):
-        self.lines_averaged = lines_averaged
-        self.lines_map = lines_map
-        
     def setup_reference_level(self, level=0.0):
         self.reference_level = level
         
@@ -459,9 +484,6 @@ class SDProfileMapPlotter(object):
         
     def unset_global_scaling(self):
         self.global_scaling = False
-        
-    def set_deviation_mask(self, mask):
-        self.deviation_mask = mask
         
     def plot(self, figfile, map_data, frequency, 
              linecolor='b', linestyle='-', linewidth=0.2,
