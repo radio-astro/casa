@@ -43,10 +43,10 @@ Previous calibrations are applied on the fly.
 
    <param type="string" name="hm_spwmapmode">
 	<description>The spw mapping mode</description>
-	<value>simple</value>
+	<value>auto</value>
 	<allowed kind="enum">
-	    <value>simple</value>
 	    <value>auto</value>
+	    <value>simple</value>
 	    <value>combine</value>
 	    <value>default</value>
 	</allowed>
@@ -134,16 +134,16 @@ Previous calibrations are applied on the fly.
     <constraints>
 
         <when param="hm_spwmapmode">
-	    <equals type="string" value="simple">
-	        <default param="maxnarrowbw"><value type="string">300MHz</value></default>
-	        <default param="minfracmaxbw"><value type="double">0.8</value></default>
-	        <default param="samebb"><value type="bool">True</value></default>
-	    </equals>
 	    <equals type="string" value="auto">
 	        <default param="phasesnr"><value type="double">25.0</value></default>
 	        <default param="bwedgefrac"><value type="double">0.03125</value></default>
 	        <default param="hm_nantennas"><value type="string">all</value></default>
                 <default param="maxfracflagged"><value type="double">0.90</value></default>
+	    </equals>
+	    <equals type="string" value="simple">
+	        <default param="maxnarrowbw"><value type="string">300MHz</value></default>
+	        <default param="minfracmaxbw"><value type="double">0.8</value></default>
+	        <default param="samebb"><value type="bool">True</value></default>
 	    </equals>
 	    <equals type="string" value="combine">
 	    </equals>
