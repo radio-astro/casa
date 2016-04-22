@@ -1005,7 +1005,14 @@ def regridmask(inputmask,template,outputmask,axes=[3,0,1],method='linear',chanra
     if oshp[tmp_axes[0]]==1:
        axes=[0,1]
     try:
-        ir=ia.regrid(outfile=outputmask,shape=oshp,csys=ocsys.torecord(),axes=axes,region=rgn,method=method)       
+        #check for an appropriate decimation factor
+        min_axlen=min(oshp[:2])
+        if min_axlen < 30:
+            decfactor=min_axlen/3
+            if decfactor==0: decfactor=1
+        else:
+            decfactor=10
+        ir=ia.regrid(outfile=outputmask,shape=oshp,csys=ocsys.torecord(),axes=axes,region=rgn,method=method,decimate=decfactor)       
         
     except:
         pass

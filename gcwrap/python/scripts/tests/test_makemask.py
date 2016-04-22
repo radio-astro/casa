@@ -53,11 +53,13 @@ class test_copy(makemaskTestBase):
     inimage3='ngc5921.cube1.bmask'
     inimage4='ngc5921.cube1.image' # actual cube image
     inimage5='ngc5921.cube1.UNKNOWNTEL.mask'# unknown telesocpe
+    inimage6='3x3.image'
 
     outimage1='ngc5921.cube1.copy.mask'
     outimage2='ngc5921.cube1.copyinimage.mask'
     outimage3='ngc5921.cube2.copyinimage.mask'
     outimage4='ngc5921.cube2.copy.mask'
+    outimage5='3x3b.image'
    
     refimage4=datapath+'reference/ngc5921.copytest4.ref.mask'
     refimage6=datapath+'reference/ngc5921.copytest6.ref.mask'
@@ -66,7 +68,8 @@ class test_copy(makemaskTestBase):
         #for img in [self.inimage,self.outimage1,self.outimage2, self.outimage3]:
         #    if os.path.isdir(img):
         #        shutil.rmtree(img)
-        for img in [self.inimage,self.inimage2,self.inimage3, self.inimage4, self.inimage5]:
+        for img in [self.inimage,self.inimage2,self.inimage3, self.inimage4,
+            self.inimage5, self.inimage6]:
             if not os.path.isdir(img):
                 shutil.copytree(datapath+img,img)
 
@@ -236,6 +239,19 @@ class test_copy(makemaskTestBase):
                 shutil.rmtree(inpimagename) 
             if os.path.isdir(inpmaskname):
                 shutil.rmtree(inpmaskname) 
+
+    def test10_copyimagemask(self):
+        """ (copy mode) testcopy10: copying a small image with an internal mask
+        to another small image with the same shape"""
+        try:
+            makemask(mode='copy',inpimage=self.inimage6,inpmask=self.inimage6+':mask0',output=self.outimage5+':mask0')
+        except Exception, e:
+            print "\nError running makemask"
+            raise e
+        
+        self.assertTrue(os.path.exists(self.outimage5))           
+        self.assertTrue(self.compareimpix(self.inimage5,self.outimage5))           
+
 
 class test_merge(makemaskTestBase):
     """test merging of multiple masks in copy mode"""
