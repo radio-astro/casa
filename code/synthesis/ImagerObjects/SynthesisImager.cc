@@ -114,6 +114,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      rvi_p=0;
 
      facetsStore_p=-1;
+     chanChunksStore_p=-1;
      unFacettedImStore_p=NULL;
      unChanChunkedImStore_p=NULL;
      dataSel_p.resize();
