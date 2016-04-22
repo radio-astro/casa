@@ -289,6 +289,7 @@ class ExportData(basetask.StandardTaskTemplate):
         vislist = inputs.vis
         if type(vislist) is types.StringType:
             vislist = [vislist,]
+        vislist = [vis for vis in vislist if not inputs.context.observing_run.get_ms(name=vis).is_imaging_ms]
 
         # Locate and copy the pipeline processing request.
         #     There should normally be at most one pipeline processing request.
