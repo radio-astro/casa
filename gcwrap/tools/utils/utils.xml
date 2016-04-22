@@ -275,9 +275,20 @@ file:///opt/casa/code/tools/xml/casa.xsd">
     not defined).
   </description>
 
-  <input/>
+  <input>
+    <param type="string" name="crashDumpDirectory">
+	    <description>Directory to write crash dumps into.</description>
+    </param> 
+    <param type="string" name="crashDumpPosterApplication">
+	    <description>Application to post crash dumps to http server.</description>
+    </param>
+    <param type="string" name="crashPostingUrl">
+	    <description>URL to use when posting crash report.</description>
+    </param>
+    
+  </input>
 
-  <returns type="bool"/>
+  <returns type="string"/>
 
   <example></example>
 

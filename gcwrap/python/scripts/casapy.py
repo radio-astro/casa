@@ -123,6 +123,7 @@ casa = { 'build': {
              'revision': casadef.subversion_revision
          },
          'helpers': {
+             'crashPoster' : 'CrashReportPoster',
              'logger': 'casalogger',
              'viewer': 'casaviewer',
              'info': None,
@@ -233,6 +234,7 @@ if os.path.exists( __casapath__ + "/bin/casapyinfo") :
 ##   note:  hosts which have dbus-daemon-1 but not dbus-daemon seem to have a broken dbus-daemon-1...
 ##
 for info in [ (['dbus-daemon'],'dbus'),
+              (['CrashReportPoster'],'crashPoster'),
               (['ipcontroller','ipcontroller-2.6'], 'ipcontroller'),
               (['ipengine','ipengine-2.6'], 'ipengine') ]:
     exelist = info[0]
@@ -1524,10 +1526,20 @@ import shutil
 if os.environ.has_key('_PYTHONPATH'):
     sys.path.extend(os.getenv('_PYTHONPATH').split(':'))
 
+###
+### Initialize the crash dump feature
+###
+
 import signal
+import tempfile
 
 try:
-    casac.utils()._crash_reporter_initialize()
+    temporaryDirectory = tempfile.gettempdir()
+    posterApp = casa['helpers']['crashPoster']
+    postingUrl = "http:/127.0.0.1:8080/CasaCrashUpload"
+    message = casac.utils()._crash_reporter_initialize(temporaryDirectory, posterApp, postingUrl)
+    if len (message) > 0:
+        print ("***\n*** Crash reporter failed to initialize: " + message)
 except Exception as e:
     print "***\n*** Crash reporter initialization failed.\n***"
     print "*** esception={0}\n***".format (e)

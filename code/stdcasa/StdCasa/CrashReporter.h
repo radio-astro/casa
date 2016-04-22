@@ -8,13 +8,18 @@
 #ifndef STDCASA_STDCASA_CRASHREPORTER_H_
 #define STDCASA_STDCASA_CRASHREPORTER_H_
 
+#include <string>
+
 namespace casa {
 
 class CrashReporter {
 
 public:
 
-    static bool initialize ();
+    static std::string initialize (const std::string & crashDumpDirectory,
+                                   const std::string & crashDumpPosterApplication,
+                                   const std::string & crashPostingUrl);
+    static std::string initializeFromApplication (const char * applicationArg0);
 
 };
 

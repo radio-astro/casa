@@ -1,8 +1,9 @@
-#include <unistd.h>
-
+#include "http_upload.h"
 #include <errno.h>
 #include <fstream>
+#include <ios>
 #include <iostream>
+#include <memory>
 #include <numeric>
 #include <stdexcept>
 #include <sstream>
@@ -12,13 +13,51 @@
 #include <vector>
 
 using namespace std;
-
+using google_breakpad::HTTPUpload;
 
 #define Throw(x) throw CrashException (__FILE__, __LINE__, x)
 #define ThrowIf(c,x) { if (c) { Throw(x); } }
 #define ThrowOrLogIf(c, doThrow, log, message) \
         { if (doThrow) { ThrowIf (c, message); } \
           else if (c) { log << "Exception in " << __FILE__ << ":" << __LINE__ << ":: " << (message) << endl; } }
+
+
+class OstreamSet : public ostream {
+public:
+        OstreamSet () {}
+
+        void loan (ostream * stream) { add (shared_ptr<ostream> (stream, [] (ostream *) {}));}
+        void add (shared_ptr<ostream> stream) { streams_p.push_back (stream); }
+
+        ostream& operator<< (ostream & (*pf)(ostream &))
+        {
+            for (auto stream : streams()){
+                pf (* stream);
+            }
+
+            return * this;
+        }
+
+private:
+
+template <typename T>
+friend
+OstreamSet & operator<< (OstreamSet & ostreamSet, T value);
+
+    vector<shared_ptr<ostream>> streams () { return streams_p;}
+
+    vector<shared_ptr<ostream>> streams_p;
+};
+
+template <typename T>
+OstreamSet & operator<< (OstreamSet & ostreamSet, T value)
+{
+    for (auto stream : ostreamSet.streams()){
+        (* stream) << value;
+    }
+
+    return ostreamSet;
+}
 
 class CrashException : public runtime_error {
 
@@ -70,11 +109,25 @@ private:
 
     string archiveFilename_p;
     string arguments_p;
-    ofstream logStream_p;
+    string crashPostingUrl_p;
+    OstreamSet logStream_p;
     vector<string> manifest_p;
     string manifestString_p;
     string outputDirectory_p;
+
+    static const string AppName;
+    static const string CaCertificateFile;
+    static const string CrashReportName;
+    static const string Proxy;
+    static const string ProxyPassword;
+
 };
+
+const string CrashReportPoster::AppName = "CrashReportPoster";
+const string CrashReportPoster::CaCertificateFile = "";
+const string CrashReportPoster::CrashReportName = "crashReport";
+const string CrashReportPoster::Proxy = "";
+const string CrashReportPoster::ProxyPassword = "";
 
 int
 main (int nArgs, char ** args)
@@ -94,14 +147,14 @@ CrashReportPoster::CrashReportPoster (int nArgs, char ** args)
 void
 CrashReportPoster::cleanup ()
 {
+    logStream_p << "Cleaning up files." << endl;
     // Delete all the files
 
     doSystem ("rm " + manifestString_p, false);
 
     // Close out the log file entry.
 
-    logStream_p << "------------------------------" << endl;
-    logStream_p.close();
+    logStream_p << "... done\n------------------------------" << endl;
 }
 
 void
@@ -166,7 +219,7 @@ CrashReportPoster::doSystem (const string & command, bool throwOnError)
     ThrowOrLogIf (! ok, throwOnError, logStream_p,
                   string ("Command failed: ") + strerror (code) +
                   "(code=" + std::to_string (code) +
-                  ")\n...'" + command + "'");
+                  ")\n... command='" + command + "'");
     return ok;
 }
 
@@ -179,11 +232,17 @@ CrashReportPoster::parseArguments (int nArgs, char ** args)
         arguments_p += string (" ") + args [i];
     }
 
-    ThrowIf (nArgs < 2, "At least one argument required.");
+    ThrowIf (nArgs < 3, "At least two arguments required.");
 
     // Add crash report to the manifest.
 
     string crashDumpFile = args [1];
+    crashPostingUrl_p = args [2];
+
+    if (nArgs >= 4 && string (args[3]) == "stderr"){
+
+        logStream_p.loan (& cerr);
+    }
 
     // Get the output directory by chopping everything preceding
     // the rightmost slash.
@@ -208,7 +267,35 @@ CrashReportPoster::parseArguments (int nArgs, char ** args)
 void
 CrashReportPoster::postArchiveToServer ()
 {
-    logStream_p << "Posting archived report to server" << endl;
+    logStream_p << "Posting archived report to server at "
+                << crashPostingUrl_p << endl;
+
+    string errorDescription;
+    string responseBody;
+    long responseCode;
+
+    map<string, string> uploadParameters; // None right now
+
+    map<string, string> uploadFiles;
+    uploadFiles [CrashReportName] = archiveFilename_p;
+
+    bool ok = HTTPUpload::SendRequest (crashPostingUrl_p,
+                                       uploadParameters,
+                                       uploadFiles,
+                                       Proxy,
+                                       ProxyPassword,
+                                       CaCertificateFile,
+                                       & responseBody,
+                                       & responseCode,
+                                       & errorDescription);
+
+    if (! ok){
+
+        logStream_p << AppName << ": Upload failed: code=" << responseCode
+                    << "; description=" << errorDescription << endl;
+
+    }
+
 }
 
 int
@@ -242,13 +329,15 @@ CrashReportPoster::setup ()
 
     string logFilename = "CrashReporter.log";
 
-    logStream_p.open (logFilename, ios::app);
+    logStream_p.add (std::shared_ptr<ostream> (new ofstream (logFilename, ios::app)));
 
     time_t seconds;
     struct tm * timeInfo;
 
     time (& seconds);
     timeInfo = localtime (& seconds);
+
+    logStream_p << endl;
 
     logStream_p << "++++++++++++++++++++++++++++++\nCrash Reporter: starting at "
                 << asctime (timeInfo) << endl;

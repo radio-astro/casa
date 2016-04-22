@@ -1236,7 +1236,7 @@ casa_add_module( singledish CASACORE casa_sakura msvis mstransform)
 casa_add_module( bnmin1 Boost GSL GSLCBLAS CASACORE )
 casa_add_module( air_casawvr CASACORE bnmin1 Boost synthesis WCSLIB CFITSIO LAPACK )
 
-add_subdirectory( crash)
+### add_subdirectory( crash) Add to build once the 3rd party dependencies are resolved
 
 #
 # ASAP's build depends on something called a makedefs file. Fake one of those.
