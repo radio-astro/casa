@@ -197,6 +197,10 @@ class MakeImListInputs(basetask.StandardInputs):
         self._width = value
 
 
+# tell the infrastructure to give us mstransformed data when possible by
+# registering our preference for imaging measurement sets
+basetask.ImagingMeasurementSetsPreferred.register(MakeImListInputs)
+
 class MakeImList(basetask.StandardTaskTemplate):
     Inputs = MakeImListInputs
 
