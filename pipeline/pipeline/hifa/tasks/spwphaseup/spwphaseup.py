@@ -23,7 +23,7 @@ class SpwPhaseupInputs(gaincalmode.GaincalModeInputs):
 
     # Set the spw map determination parameters here.
     intent = basetask.property_with_default('intent', 'BANDPASS')
-    hm_spwmapmode = basetask.property_with_default('hm_spwmapmode', 'simple')
+    hm_spwmapmode = basetask.property_with_default('hm_spwmapmode', 'auto')
 
     # Auto mode mapping parameters
     phasesnr = basetask.property_with_default('phasesnr', 25.0)
