@@ -883,6 +883,11 @@ class T2_2_7Renderer(T2_2_XRendererBase):
     output_file = 't2-2-7.html'
     template = 't2-2-7.html'
 
+    @classmethod
+    def render(cls, context):
+        if is_singledish_ms(context):
+           super(T2_2_7Renderer, cls).render(context)
+
     @staticmethod
     def get_display_context(context, ms):
         target_pointings = []
@@ -910,6 +915,7 @@ class T2_2_7Renderer(T2_2_XRendererBase):
                 'target_pointing' : target_pointings,
                 'whole_pointing'  : whole_pointings,
                 'dirname'         : dirname}
+
 
 class T2_3_XMBaseRenderer(RendererBase):
     # the filename to which output will be directed
