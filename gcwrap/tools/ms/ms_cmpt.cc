@@ -646,14 +646,14 @@ msmetadata* ms::metadata(const float cachesize)
 	}
 }
 
-::casac::record* ms::summary(
+record* ms::summary(
 	bool verbose, const string& listfile, bool listunfl,
-	double cachesize, bool overwrite)
-{
+	double cachesize, bool overwrite, bool wantreturn
+) {
 	if (detached()) {
 		return 0;
 	}
-	::casac::record *header = 0;
+	record *header = 0;
 	try {
 		*itsLog << LogOrigin("ms", __func__);
 		// pass the original MS name to the constructor
@@ -687,8 +687,10 @@ msmetadata* ms::metadata(const float cachesize)
 			LogSink sink(LogMessage::NORMAL, &ostr, False);
 			LogIO os(sink);
 			// Call the listing routines
-			mss.list(os, outRec, verbose, True);
-			header=fromRecord(outRec);
+			mss.list(os, outRec, verbose, wantreturn);
+            if (wantreturn) {
+			    header = fromRecord(outRec);
+            }
 			// Restore cout's buffer
 			cout.rdbuf(backup);
 			String str(ostr.str());
@@ -710,8 +712,10 @@ msmetadata* ms::metadata(const float cachesize)
 			file.close();
 		}
 		else {
-			mss.list(*itsLog, outRec, verbose, True);
-			header=fromRecord(outRec);
+			mss.list(*itsLog, outRec, verbose, wantreturn);
+            if (wantreturn) {
+			    header = fromRecord(outRec);
+            }
 		}
 	}
 	catch (const AipsError& x) {

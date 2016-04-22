@@ -56,7 +56,7 @@ def listobs(
         myms.msselect(sel, False)
         myms.summary(
             verbose=verbose, listfile=listfile, listunfl=listunfl,
-            cachesize=cachesize, overwrite=overwrite
+            cachesize=cachesize, overwrite=overwrite, wantreturn=False
         )
         return True
     except Exception, instance:
