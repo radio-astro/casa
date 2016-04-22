@@ -31,6 +31,21 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value>False</value>
     </param>
 
+	<param type="string" name="linecolor">
+	  <description>Line color</description>
+	  <value>b</value>
+	</param>
+	
+	<param type="string" name="linestyle">
+	  <description>Line style</description>
+	  <value>-</value>
+	</param>
+	
+	<param type="double" name="linewidth">
+	  <description>Line width in points</description>
+	  <value>0.2</value>
+	</param>
+
     <param type="bool" name="separatepanel">
       <description>Separate plots</description>
       <value>True</value>
@@ -64,6 +79,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                default: '' (no output)
     overwrite -- overwrite existing output file
                  default: False
+    linecolor -- line color in matplotlib format
+                 default: 'b' (blue)
+                 example: 'r' (red), 'black', '#ff99ff'
+    linestyle -- line style in matplotlib format
+                 default: '-' (solid line)
+                 example: '..' (dotted line), '.-' (solid line with point marker) 
+    linewidth -- line width in points
+                 default: 0.2
     separatepanel -- separate panels
                      default: True
 

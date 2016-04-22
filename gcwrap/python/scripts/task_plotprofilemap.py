@@ -5,7 +5,8 @@ import pylab as pl
 from taskinit import casalog, gentools, qa
 
 def plotprofilemap(imagename=None, figfile=None, overwrite=None, 
-                   separatepanel=None,
+                   linecolor=None, linestyle=None, linewidth=None,
+                   separatepanel=None, 
                    horizontalbind=None, verticalbind=None, spectralrange=None, trasnparent=None):
     casalog.origin('plotprofilemap')
     
@@ -14,7 +15,8 @@ def plotprofilemap(imagename=None, figfile=None, overwrite=None,
             raise RuntimeError('overwrite is False and output file exists: \'%s\''%(figfile))
     
         image = SpectralImage(imagename)
-        plot_profile_map(image, figfile, separatepanel)
+        plot_profile_map(image, figfile, linecolor, linestyle, linewidth,
+                         separatepanel)
     except Exception, e:
         casalog.post('Error: %s'%(str(e)), priority='SEVERE')
         import traceback
@@ -217,7 +219,14 @@ class ProfileMapAxesManager(object):
                 horizontalalignment='right', verticalalignment='center', 
                 rotation='vertical', size=(self.ticksize+2))
 
-def plot_profile_map(image, figfile, separatepanel=False):
+def plot_profile_map(image, figfile, linecolor=None, linestyle=None, linewidth=None,
+                     separatepanel=False):
+    if linecolor is None:
+        linecolor = 'b'
+    if linestyle is None:
+        linestyle = '-'
+    if linewidth is None:
+        linewidth = 0.2
     if separatepanel is None:
         separatepanel = True
 
@@ -279,6 +288,9 @@ def plot_profile_map(image, figfile, separatepanel=False):
 
         status = plotter.plot(Plot, 
                               image.frequency[chan0:chan1], 
+                              linecolor=linecolor,
+                              linestyle=linestyle,
+                              linewidth=linewidth,
                               figfile=figfile)
         
     plotter.done()
@@ -352,7 +364,8 @@ class SDProfileMapPlotter(object):
     def set_deviation_mask(self, mask):
         self.deviation_mask = mask
         
-    def plot(self, map_data, frequency, fit_result=None, figfile=None):        
+    def plot(self, map_data, frequency, linecolor='b', linestyle='-', linewidth=0.2,
+             figfile=None):        
         global_xmin = min(frequency[0], frequency[-1])
         global_xmax = max(frequency[0], frequency[-1])
         casalog.post('global_xmin=%s, global_xmax=%s'%(global_xmin,global_xmax))
@@ -378,8 +391,6 @@ class SDProfileMapPlotter(object):
 
         pl.ioff()
 
-        is_valid_fit_result = (fit_result is not None and fit_result.shape == map_data.shape)
-
         no_data = numpy.zeros(len(frequency), dtype=numpy.float32)
         for x in xrange(self.nh):
             for y in xrange(self.nv):
@@ -403,7 +414,8 @@ class SDProfileMapPlotter(object):
                     casalog.post('Per panel scaling turned on: ymin=%s, ymax=%s (global ymin=%s, ymax=%s)'%(ymin,ymax,global_ymin,global_ymax))
                 pl.gcf().sca(self.axes.axes_spmap[y+(self.nh-x-1)*self.nv])
                 if map_data[x][y].min() > NoDataThreshold:
-                    pl.plot(frequency, map_data[x][y], color='b', linestyle='-', linewidth=0.2)
+                    pl.plot(frequency, map_data[x][y], color=linecolor, linestyle=linestyle, 
+                            linewidth=linewidth)
                 else:
 #                     pl.text((xmin+xmax)/2.0, (ymin+ymax)/2.0, 'NO DATA', ha='center', va='center', 
 #                                      size=(self.TickSize + 1))
