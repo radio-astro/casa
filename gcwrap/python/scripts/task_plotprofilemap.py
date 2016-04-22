@@ -6,7 +6,8 @@ from taskinit import casalog, gentools, qa
 
 def plotprofilemap(imagename=None, figfile=None, overwrite=None, 
                    linecolor=None, linestyle=None, linewidth=None,
-                   separatepanel=None, plotmasked=None, maskedcolor=None,
+                   separatepanel=None, plotmasked=None, maskedcolor=None, 
+                   showaxislabel=None, showtick=None, showticklabel=None,
                    horizontalbind=None, verticalbind=None, spectralrange=None, trasnparent=None):
     casalog.origin('plotprofilemap')
     
@@ -16,7 +17,8 @@ def plotprofilemap(imagename=None, figfile=None, overwrite=None,
     
         image = SpectralImage(imagename)
         plot_profile_map(image, figfile, linecolor, linestyle, linewidth,
-                         separatepanel, plotmasked, maskedcolor)
+                         separatepanel, plotmasked, maskedcolor,
+                         showaxislabel, showtick, showticklabel)
     except Exception, e:
         casalog.post('Error: %s'%(str(e)), priority='SEVERE')
         import traceback
@@ -73,7 +75,9 @@ class ProfileMapAxesManager(object):
     label_map = {'Right Ascension': 'RA',
                  'Declination': 'Dec'}
     def __init__(self, nh, nv, brightnessunit, direction_label, direction_reference, 
-                 ticksize, separatepanel=True, clearpanel=True):
+                 spectral_label, spectral_unit, ticksize, separatepanel=True, 
+                 showaxislabel=False, showtick=False, showticklabel=False,
+                 clearpanel=True):
         self.nh = nh
         self.nv = nv
         self.ticksize = ticksize
@@ -82,6 +86,11 @@ class ProfileMapAxesManager(object):
         self.direction_label = direction_label
         self.direction_reference = direction_reference
         self.separatepanel = separatepanel
+        self.spectral_label = spectral_label
+        self.spectral_unit = spectral_unit
+        self.showaxislabel = showaxislabel
+        self.showtick = showtick
+        self.showticklabel = showticklabel
         
         self._axes_spmap = None
         
@@ -137,14 +146,28 @@ class ProfileMapAxesManager(object):
             return self.vertical_subplot_size * 0.1
         else:
             return 0.
+        
+    @property
+    def xlabel_area(self):
+        if self.showaxislabel or (self.showtick and self.showticklabel):
+            return 0.02
+        else:
+            return 0.
+    
+    @property
+    def ylabel_area(self):
+        if self.showaxislabel or (self.showtick and self.showticklabel):
+            return 0.02
+        else:
+            return 0.
 
     @property
     def horizontal_subplot_size(self):
-        return (1.0 - self.left_margin - self.right_margin) / self.ncolumn 
+        return (1.0 - self.left_margin - self.right_margin - self.ylabel_area) / self.ncolumn 
 
     @property
     def vertical_subplot_size(self):
-        return (1.0 - self.bottom_margin - self.top_margin) / self.nrow 
+        return (1.0 - self.bottom_margin - self.top_margin - self.xlabel_area) / self.nrow 
 
     def __axes_spmap(self):
         for x in xrange(self.nh):
@@ -152,17 +175,30 @@ class ProfileMapAxesManager(object):
                 w = self.horizontal_subplot_size
                 h = self.vertical_subplot_size
                 l = 1.0 - self.right_margin - w * (x + 1) + 0.5 * self.horizontal_space
-                b = self.bottom_margin + h * y + 0.5 * self.vertical_space
+                b = self.bottom_margin + self.ylabel_area + h * y + 0.5 * self.vertical_space
                 axes = pl.axes([l, b, w - self.horizontal_space, h - self.vertical_space])
                 axes.cla()
-#                if y == 0 and x == self.nh - 1:
-                if False:
-                    axes.xaxis.set_major_locator(pl.LinearLocator(numticks=3))
-                    axes.yaxis.set_major_locator(pl.LinearLocator(numticks=5))
-                    axes.yaxis.set_major_formatter(pl.FormatStrFormatter('%.2f'))
-                    axes.xaxis.set_major_formatter(pl.FormatStrFormatter('%.4f'))
-                    axes.xaxis.set_tick_params(labelsize='xx-small')
-                    axes.yaxis.set_tick_params(labelsize='xx-small')
+                if self.showaxislabel and y == 0 and x == self.nh - 1:
+                    axes.xaxis.set_label_text('%s [%s]'%(self.spectral_label,self.spectral_unit),
+                                              size=self.ticksize)
+                    axes.yaxis.set_label_text('Intensity [%s]'%(self.brightnessunit), 
+                                              size=self.ticksize, rotation='vertical')
+                if self.showtick:
+                    axes.xaxis.tick_bottom()
+                    axes.yaxis.tick_left()
+                    if self.showticklabel: 
+                        locator = pl.LinearLocator(numticks=4)
+                        axes.xaxis.set_major_locator(locator)
+                        axes.yaxis.set_major_locator(locator)
+                        axes.xaxis.set_tick_params(labelsize=max(self.ticksize-2,1))
+                        axes.yaxis.set_tick_params(labelsize=max(self.ticksize-2,1))
+                        if y != 0 or x != self.nh - 1:
+                            axes.xaxis.set_major_formatter(pl.NullFormatter())
+                            axes.yaxis.set_major_formatter(pl.NullFormatter())
+                    else:
+                        axes.xaxis.set_major_formatter(pl.NullFormatter())
+                        axes.yaxis.set_major_formatter(pl.NullFormatter())
+                    
                 else:
                     axes.yaxis.set_major_locator(pl.NullLocator())
                     axes.xaxis.set_major_locator(pl.NullLocator())
@@ -179,7 +215,7 @@ class ProfileMapAxesManager(object):
             a1 = pl.axes([l, b, w, h])
             a1.set_axis_off()
             if len(a1.texts) == 0:
-                pl.text(0.5, 0.5, HHMMSSss((label_ra[x][0]+label_ra[x][1])/2.0, 0), 
+                pl.text(0.5, 0.2, HHMMSSss((label_ra[x][0]+label_ra[x][1])/2.0, 0), 
                         horizontalalignment='center', verticalalignment='center', size=self.ticksize)
             else:
                 a1.texts[0].set_text(HHMMSSss((label_ra[x][0]+label_ra[x][1])/2.0, 0))
@@ -195,6 +231,7 @@ class ProfileMapAxesManager(object):
                         horizontalalignment='center', verticalalignment='center', size=self.ticksize)
             else:
                 a1.texts[0].set_text(DDMMSSs((label_dec[y][0]+label_dec[y][1])/2.0, 0))
+                
         # longitude label
         l = self.left_margin
         h = self.bottom_margin * 0.5 
@@ -220,7 +257,8 @@ class ProfileMapAxesManager(object):
                 rotation='vertical', size=(self.ticksize+2))
 
 def plot_profile_map(image, figfile, linecolor=None, linestyle=None, linewidth=None,
-                     separatepanel=None, plotmasked=None, maskedcolor=None):
+                     separatepanel=None, plotmasked=None, maskedcolor=None,
+                     showaxislabel=None, showtick=None, showticklabel=None):
     """
     image 
     figfile
@@ -246,6 +284,12 @@ def plot_profile_map(image, figfile, linecolor=None, linestyle=None, linewidth=N
         plotmasked = 'none'
     if maskedcolor is None:
         maskedcolor = 'gray' if linecolor != 'gray' else 'black'
+    if showaxislabel is None:
+        showaxislabel = False
+    if showtick is None:
+        showtick = False
+    if showticklabel is None:
+        showticklabel = False
 
     x_max = image.nx - 1
     x_min = 0
@@ -264,9 +308,15 @@ def plot_profile_map(image, figfile, linecolor=None, linestyle=None, linewidth=N
     
     direction_label = image.direction_label
     direction_reference = image.direction_reference
+    spectral_label = image.spectral_label
+    spectral_unit = image.spectral_unit
     plotter = SDProfileMapPlotter(NH, NV, STEP, image.brightnessunit, 
                                   direction_label, direction_reference,
+                                  spectral_label, spectral_unit,
                                   separatepanel=separatepanel, 
+                                  showaxislabel=showaxislabel,
+                                  showtick=showtick,
+                                  showticklabel=showticklabel,
                                   clearpanel=True)
 
     masked_data = image.data * image.mask
@@ -315,7 +365,9 @@ def plot_profile_map(image, figfile, linecolor=None, linestyle=None, linewidth=N
     
 class SDProfileMapPlotter(object):
     def __init__(self, nh, nv, step, brightnessunit, direction_label, direction_reference, 
-                 separatepanel=True, clearpanel=True):
+                 spectral_label, spectral_unit, separatepanel=True, 
+                 showaxislabel=False, showtick=False, showticklabel=False,
+                 clearpanel=True):
         self.step = step
         if step > 1:
             ticksize = 10 - int(max(nh, nv) * step / (step - 1)) / 2
@@ -323,7 +375,11 @@ class SDProfileMapPlotter(object):
             ticksize = 10 - int(max(nh, nv)) / 2
         self.axes = ProfileMapAxesManager(nh, nv, brightnessunit, 
                                           direction_label, direction_reference,
+                                          spectral_label, spectral_unit,
                                           ticksize, separatepanel=separatepanel, 
+                                          showaxislabel=showaxislabel,
+                                          showtick=showtick,
+                                          showticklabel=showticklabel,
                                           clearpanel=clearpanel)
         self.lines_averaged = None
         self.lines_map = None
@@ -447,7 +503,10 @@ class SDProfileMapPlotter(object):
                                 color=maskedcolor, linestyle=linestyle, linewidth=linewidth)
                     elif plotmasked == 'none':
                         a = pl.gcf().gca()
-                        a.set_axis_off()
+                        if self.axes.xlabel_area > 0. and y == 0 and x == 0:
+                            pass
+                        else:
+                            a.set_axis_off()
                     elif plotmasked == 'plot':
                         m = map_data[x][y] == NoDataThreshold
                         if not all(m):
@@ -473,10 +532,10 @@ class SDProfileMapPlotter(object):
 
 class SpectralImage(object):
     def __init__(self, imagename):
+        self.imagename = imagename
         # read data to storage
         ia = gentools(['ia'])[0]
-        ia.open(imagename)
-        # TODO: FITS handling
+        ia.open(self.imagename)
         try:
             self.image_shape = ia.shape()
             self.coordsys = ia.coordsys()
@@ -534,6 +593,14 @@ class SpectralImage(object):
     @property
     def direction_label(self):
         return [self.names[i] for i in self.id_direction]
+    
+    @property
+    def spectral_label(self):
+        return self.names[self.id_spectral]
+    
+    @property
+    def spectral_unit(self):
+        return self.units[self.id_spectral]
         
     def to_velocity(self, frequency, freq_unit='GHz'):
         rest_frequency = self.coordsys.restfrequency()

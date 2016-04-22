@@ -67,6 +67,21 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <description>Line color for masked data</description>
       <value>gray</value>
     </param>
+    
+    <param type="bool" name="showaxislabel">
+      <description>Show axis labels on the bottom left panel</description>
+      <value>False</value>
+    </param>
+    
+    <param type="bool" name="showtick">
+      <description>Show axis ticks</description>
+      <value>False</value>
+    </param>
+    
+    <param type="bool" name="showticklabel" subparam="true">
+      <description>Show axis tick labels on the bottom left panel</description>
+      <value>False</value>
+    </param>
 
     <constraints>
       <when param="figfile">
@@ -75,13 +90,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         </notequals>
       </when>
       <when param="plotmasked">
-        <equals type="string" value="empty">
-        </equals>
+        <equals type="string" value="empty"/>
         <equals type="string" value="plot">
           <default param="maskedcolor"><value type="string">gray</value></default>
         </equals>
         <equals type="string" value="zero">
           <default param="maskedcolor"><value type="string">gray</value></default>
+        </equals>
+      </when>
+      <when param="showtick">
+        <equals type="bool" value="False"/>
+        <equals type="bool" value="True">
+          <default param="showticklabel"><value type="bool">False</value></default>
         </equals>
       </when>
     </constraints>
@@ -124,7 +144,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                           'plot' (plot masked data with different 
                                   color specified by maskedcolor)
     maskedcolor -- line color for masked data
-
+	showaxislabel -- Show axis labels on the bottom left panel
+	                 default: False
+	showtick -- Show ticks
+	            default: False
+	showticklabel -- Show tick labels on the bottom left panel
+	                 default: False
 
   </example>
 
