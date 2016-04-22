@@ -45,6 +45,10 @@ class MakeImagesInputs(basetask.StandardInputs):
     weighting = basetask.property_with_default('weighting', 'briggs')
 
 
+# tell the infrastructure to give us mstransformed data when possible by
+# registering our preference for imaging measurement sets
+basetask.ImagingMeasurementSetsPreferred.register(MakeImagesInputs)
+
 class MakeImages(basetask.StandardTaskTemplate):
     Inputs = MakeImagesInputs
 
