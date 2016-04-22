@@ -35,6 +35,9 @@ class FindContInputs(basetask.StandardInputs):
             value = self.context.clean_list_pending
         self._target_list = value
 
+# tell the infrastructure to give us mstransformed data when possible by
+# registering our preference for imaging measurement sets
+basetask.ImagingMeasurementSetsPreferred.register(FindContInputs)
 
 class FindCont(basetask.StandardTaskTemplate):
     Inputs = FindContInputs
