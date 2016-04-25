@@ -109,7 +109,7 @@ void LineFinderUtils::deBinRanges(size_t const bin_size, size_t const offset,
   for(list<pair<size_t,size_t>>::iterator iter=range_list.begin();
         iter!=range_list.end(); ++iter) {
     (*iter).first = (*iter).first*bin_size + offset;
-    (*iter).second = (*iter).second*bin_size + offset;
+    (*iter).second = (*iter).second*bin_size+(bin_size-1) + offset;
     }
 }
 
