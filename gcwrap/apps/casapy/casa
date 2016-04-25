@@ -108,7 +108,7 @@ p_path=${__CASAPY_PYTHONDIR}:${__CASAPY_PYTHONDIR}/regressions/admin:${p_path}
 
 export PYTHONHOME=${p_root}
 export PYTHONPATH=${p_path}:${PYTHONPATH}
-export CASAPATH="$a_root $a_arch $a_site $a_host"
+export CASAPATH="$a_root $a_arch"
 # echo "DEBUG: CASAPATH = ${CASAPATH}"
 export DISPLAY=${DISPLAY=:0.0}
 
