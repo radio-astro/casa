@@ -8,6 +8,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.utils as utils
+import pipeline.infrastructure.casatools as casatools
 from pipeline.infrastructure import casa_tasks
 
 from pipeline.hif.heuristics import caltable as uvcaltable
@@ -288,9 +289,12 @@ class UVcontFit(basetask.StandardTaskTemplate):
         for sname in all_source_names:
             source_fields =  [s.fields for s in all_sources if s.name == sname][0]
             if len(source_fields) > 1:
-                rep_field = source_fields[1]
+                rep_field_id = self._get_rep_field (source_fields)
+                if rep_field_id < 0:
+                    rep_field_id = source_fields[1].id
             else:
-                rep_field = source_fields[0]
+                rep_field_id = source_fields[0].id
+            LOG.info('Representative field id for MS %s source %s is %d' % (inputs.ms.basename, sname, rep_field_id))
             cranges_spwsel[sname] = {}
             for spw_id in [str(spw.id) for spw in inputs.ms.get_spectral_windows(task_arg=inputs.spw)]:
                 cranges_spwsel[sname][spw_id] = contfile_handler.get_merged_selection(sname, spw_id)
@@ -298,7 +302,7 @@ class UVcontFit(basetask.StandardTaskTemplate):
                     cranges_spwsel[sname][spw_id]))
                 try:
                     freq_ranges, chan_ranges = contfile_handler.lsrk_to_topo(cranges_spwsel[sname][spw_id],
-                        [inputs.vis], [rep_field.id], int(spw_id))
+                        [inputs.vis], [rep_field], int(spw_id))
                     LOG.info('Output frequency range for MS %s and spw %d are %s' % (inputs.ms.basename, int(spw_id),
                         freq_ranges[0]))
                     LOG.info('Output channel ranges for MS %s and spw %d are %s' % (inputs.ms.basename, int(spw_id),
@@ -309,6 +313,71 @@ class UVcontFit(basetask.StandardTaskTemplate):
                         cranges_spwsel[sname][spw_id]))
 
         return cranges_spwsel
+
+    # This code is a duplciate of the imaging heuristics code which
+    # estimates the phase center of a mosaic.
+    #    This and the imaging code heuristics should be refactored at
+    #    some point.
+    def _get_rep_field (self, source_fields):
+
+        # Initialize
+        rep_field = -1
+
+        # Get CASA tools
+        cqa = casatools.quanta
+        cme = casatools.measures
+
+        # First estimate the phase center
+
+        # Get the individual field directions in  ICRS coordinates
+        mdirections = []
+        for field in source_fields:
+            phase_dir = cme.measure(field.mdirection, 'ICRS')
+            mdirections.append(phase_dir)
+
+        # Compute offsets from field 0.
+        xsep = []; ysep = []
+        for mdirection in mdirections:
+            pa = cme.posangle(mdirections[0], mdirection)
+            sep = cme.separation(mdirections[0], mdirection)
+            xs = cqa.mul(sep, cqa.sin(pa))
+            ys = cqa.mul(sep, cqa.cos(pa))
+            xs = cqa.convert(xs, 'arcsec')
+            ys = cqa.convert(ys, 'arcsec')
+            xsep.append(cqa.getvalue(xs))
+            ysep.append(cqa.getvalue(ys))
+        xsep = np.array(xsep)
+        ysep = np.array(ysep)
+
+        # Estimate the x and y center offsets
+        xcen = xsep.min() + (xsep.max() - xsep.min()) / 2.0
+        ycen = ysep.min() + (ysep.max() - ysep.min()) / 2.0
+
+        # Initialize phase center
+        ref =  cme.getref(mdirections[0])
+        md = cme.getvalue(mdirections[0])
+        m0 = cqa.quantity(md['m0'])
+        m1 = cqa.quantity(md['m1'])
+
+        # Get direction of image centre crudely by adding offset
+        # of center to ref values of first field.
+        m0 = cqa.add(m0, cqa.div('%sarcsec' % xcen, cqa.cos(m1)))
+        m1 = cqa.add(m1, '%sarcsec' % ycen)
+        if ref=='ICRS' or ref=='J2000' or ref=='B1950':
+            m0 = cqa.time(m0, prec=10)[0]
+        else:
+            m0 = cqa.angle(m0, prec=9)[0]
+        m1 = cqa.angle(m1, prec=9)[0]
+        phase_center = '%s %s %s' % (ref, m0, m1)
+        phase_dir = cme.source(phase_center) 
+
+        # Then find the field with smallest separation from the phase center
+
+        field_ids = [f.id for f in source_fields]
+        separations = [cme.separation(phase_dir, f.mdirection)['value'] for f in source_fields]
+        rep_field = field_ids[separations.index(min(separations))]
+
+        return rep_field
 
     def _get_source_fields(self, sname):
         inputs = self.inputs
