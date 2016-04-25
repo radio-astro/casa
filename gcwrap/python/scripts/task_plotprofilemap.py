@@ -117,6 +117,10 @@ class ProfileMapAxesManager(object):
         casalog.post('figsize={figsize}'.format(figsize=self.figsize), priority='DEBUG')
         
         self._axes_spmap = None
+
+        # to resize matplotlib window to specified size        
+        pl.figure(self.MATPLOTLIB_FIGURE_ID)
+        pl.close()
         
         if self.figsize is None:
             pl.figure(self.MATPLOTLIB_FIGURE_ID)
