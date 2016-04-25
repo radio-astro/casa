@@ -5,7 +5,7 @@ import pylab as pl
 from taskinit import casalog, gentools, qa
 
 def plotprofilemap(imagename=None, figfile=None, overwrite=None, transparent=None,
-                   pol=None, title=None, 
+                   pol=None, spectralaxis=None, title=None, 
                    linecolor=None, linestyle=None, linewidth=None,
                    separatepanel=None, plotmasked=None, maskedcolor=None, 
                    showaxislabel=None, showtick=None, showticklabel=None,
@@ -23,7 +23,7 @@ def plotprofilemap(imagename=None, figfile=None, overwrite=None, transparent=Non
 
         parsed_size = parse_figsize(figsize)
         nx, ny = parse_numpanels(numpanels)
-        plot_profile_map(image, figfile, pol, title, linecolor, linestyle, linewidth,
+        plot_profile_map(image, figfile, pol, spectralaxis, title, linecolor, linestyle, linewidth,
                          separatepanel, plotmasked, maskedcolor,
                          showaxislabel, showtick, showticklabel, parsed_size,
                          nx, ny, transparent)
@@ -234,7 +234,12 @@ class ProfileMapAxesManager(object):
                 axes = pl.axes([l, b, w - self.horizontal_space, h - self.vertical_space])
                 axes.cla()
                 if self.showaxislabel and y == 0 and x == self.nh - 1:
-                    axes.xaxis.set_label_text('%s [%s]'%(self.spectral_label,self.spectral_unit),
+                    casalog.post('label "{label}" unit "{unit}"'.format(label=self.spectral_label,unit=self.spectral_unit), priority='DEBUG')
+                    if self.spectral_unit is not None and len(self.spectral_unit) > 0:
+                        spectral_label = '%s [%s]'%(self.spectral_label,self.spectral_unit)
+                    else:
+                        spectral_label = self.spectral_label
+                    axes.xaxis.set_label_text(spectral_label,
                                               size=self.ticksize)
                     axes.yaxis.set_label_text('Intensity [%s]'%(self.brightnessunit), 
                                               size=self.ticksize, rotation='vertical')
@@ -324,7 +329,7 @@ class ProfileMapAxesManager(object):
                     horizontalalignment='center', verticalalignment='bottom',
                     size=self.ticksize+4)
 
-def plot_profile_map(image, figfile, pol, title=None, 
+def plot_profile_map(image, figfile, pol, spectralaxis='', title=None, 
                      linecolor='b', linestyle='-', linewidth=0.2,
                      separatepanel=True, plotmasked=None, maskedcolor=None,
                      showaxislabel=False, showtick=False, showticklabel=False,
@@ -390,8 +395,30 @@ def plot_profile_map(image, figfile, pol, title=None,
     
     direction_label = image.direction_label
     direction_reference = image.direction_reference
-    spectral_label = image.spectral_label
-    spectral_unit = image.spectral_unit
+    default_spectral_label = image.spectral_label
+    default_spectral_unit = image.spectral_unit
+    if default_spectral_label == 'Frequency':
+        default_spectral_unit = 'GHz'
+    default_spectral_data = image.spectral_data[chan0:chan1]
+    if spectralaxis is None or spectralaxis == '' or spectralaxis == default_spectral_label.lower():
+        spectral_label = default_spectral_label
+        spectral_unit = default_spectral_unit
+        spectral_data = default_spectral_data
+    elif spectralaxis == 'channel':
+        spectral_label = 'Channel'
+        spectral_unit = ''
+        spectral_data = numpy.arange(chan0, chan1, dtype=numpy.int32)
+    else:
+        spectral_label = spectralaxis.capitalize()
+        if spectralaxis == 'frequency':
+            spectral_unit = 'GHz'
+            spectral_data = numpy.fromiter((image.to_frequency(v, freq_unit='GHz') \
+                                            for v in default_spectral_data), dtype=numpy.float64)
+        elif spectralaxis == 'velocity':
+            spectral_unit = 'km/s'
+            spectral_data = numpy.fromiter((image.to_velocity(f, freq_unit='GHz') \
+                                            for f in default_spectral_data), dtype=numpy.float64)
+        
     plotter = SDProfileMapPlotter(NH, NV, xSTEP, ySTEP, image.brightnessunit, 
                                   direction_label, direction_reference,
                                   spectral_label, spectral_unit,
@@ -435,7 +462,7 @@ def plot_profile_map(image, figfile, pol, title=None,
             Plot[x][y] = valid_sp.mean(axis=0)
 
     status = plotter.plot(figfile, Plot, 
-                          image.frequency[chan0:chan1], 
+                          spectral_data, 
                           linecolor=linecolor,
                           linestyle=linestyle,
                           linewidth=linewidth,
@@ -645,8 +672,12 @@ class SpectralImage(object):
             self.dec_min = bottom[key(self.id_direction[1])]
             self.dec_max = top[key(self.id_direction[1])]
             self._brightnessunit = ia.brightnessunit()
-            refpix, refval, increment = self.spectral_axis(unit='GHz')
-            self.frequency = numpy.array([refval+increment*(i-refpix) for i in xrange(self.nchan)])
+            if self.spectral_label == 'Frequency':
+                refpix, refval, increment = self.spectral_axis(unit='GHz')
+                self.spectral_data = numpy.array([refval+increment*(i-refpix) for i in xrange(self.nchan)])
+            elif self.spectral_label == 'Velocity':
+                refpix, refval, increment = self.spectral_axis(unit='km/s')
+                self.spectral_data = numpy.array([refval+increment*(i-refpix) for i in xrange(self.nchan)])                
             self.stokes = self.coordsys.stokes()
         finally:
             ia.close()
@@ -690,6 +721,14 @@ class SpectralImage(object):
         else:
             vrf = rest_frequency['value']
         return (1.0 - (frequency / vrf)) * LightSpeed
+    
+    def to_frequency(self, velocity, freq_unit='km/s'):
+        rest_frequency = self.coordsys.restfrequency()
+        if rest_frequency['unit'] != freq_unit:
+            vrf = qa.convert(rest_frequency, freq_unit)['value']
+        else:
+            vrf = rest_frequency['value']
+        return (1.0 - velocity / LightSpeed) * vrf
 
     def spectral_axis(self, unit='GHz'):
         return self.__axis(self.id_spectral, unit=unit)

@@ -41,6 +41,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value>0</value>
     </param>
     
+    <param type="string" name="spectralaxis">
+      <description>Type of spectral axis</description>
+      <value></value>
+      <allowed kind="enum">
+        <value></value>
+        <value>frequency</value>
+        <value>channel</value>
+        <value>velocity</value>
+      </allowed>
+    </param>
+    
     <param type="string" name="title">
       <description>Title of the plot</description>
       <value></value>
@@ -157,6 +168,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     pol -- polarization component to be plotted. It is an index for stokes axis 
            of the image.
            default: 0
+    spectralaxis -- spectral axis type
+                    default: '' (use image's spectral axis)
+                    options: 'channel', 'freuquency', 'velocity'
     title -- title of the plot
              default: '' (no title)
     linecolor -- line color in matplotlib format
