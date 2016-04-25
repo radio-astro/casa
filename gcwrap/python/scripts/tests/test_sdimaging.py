@@ -778,6 +778,26 @@ class sdimaging_test1(sdimaging_unittest_base):
                              compstats=self.keys, ignoremask=False)
 
 
+    def test111(self):
+        """Test 100: imsize in float (ntegrated image)"""
+        outshape = (self.imsize[0],self.imsize[1],1,1)
+        imsize = [ float(v) for v in self.imsize ]
+        self.task_param.update(dict(nchan=1,start=0,width=self.ms_nchan,
+                                    imsize=imsize))
+        self.run_test_common(self.task_param, self.statsinteg, outshape, compstats=self.keys,
+                             ignoremask=True)
+
+
+    def test112(self):
+        """Test 100: round-up imsize in float (integrated image)"""
+        outshape = (self.imsize[0],self.imsize[1],1,1)
+        imsize = [ float(v)-0.8 for v in self.imsize ]
+        self.task_param.update(dict(nchan=1,start=0,width=self.ms_nchan,
+                                    imsize=imsize))
+        self.run_test_common(self.task_param, self.statsinteg, outshape, compstats=self.keys,
+                             ignoremask=True)
+
+
 ###
 # Test frequency imaging
 ###

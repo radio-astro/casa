@@ -193,8 +193,9 @@ available.
             <value type="int">-1</value>
     </param>
 
-    <param type="intArray" name="imsize">
+    <param type="any" name="imsize">
             <description>x and y image size in pixels, e.g., [64,64]. Single value: same for both spatial axes ([] = number of pixels to cover whole pointings in MSes)</description>
+	    <any type="variant" limittypes="intArray doubleArray"/>
             <value type="vector">
             </value>
     </param>

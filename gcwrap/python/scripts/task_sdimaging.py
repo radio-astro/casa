@@ -5,8 +5,7 @@ import numpy
 
 from taskinit import casalog, gentools, qatool
 
-import asap as sd
-from asap import _to_list
+#from asap import _to_list
 import sdutil
 import sdbeamutil
 from cleanhelper import cleanhelper
@@ -328,19 +327,25 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         # Calculate Pointing center and extent (if necessary)
         # return a dictionary with keys 'center', 'width', 'height'
         #imsize = self.imsize
-        imsize = _to_list(self.imsize, int) or \
-            _to_list(self.imsize, numpy.integer) or self.imsize
+        imsize = sdutil._to_list(self.imsize, int) or \
+            sdutil._to_list(self.imsize, numpy.integer)
+        if imsize is None:
+            imsize = self.imsize if hasattr(self.imsize, '__iter__') else [ self.imsize ]
+            imsize = [ int(numpy.ceil(v)) for v in imsize ]
+            casalog.post("imsize is not integers. force converting to integer pixel numbers.", priority="WARN")
+            casalog.post("rounded-up imsize: %s --> %s" % (str(self.imsize), str(imsize)))
+
         phasecenter = self.phasecenter
         if self.phasecenter == "" or \
-               len(self.imsize) == 0 or self.imsize[0] < 1:
+               len(imsize) == 0 or imsize[0] < 1:
             map_param = self._get_pointing_extent()
             # imsize
             if len(imsize) == 0 or imsize[0] < 1:
                 imsize = self._get_imsize(map_param['width'], map_param['height'], cellx, celly)
                 if self.phasecenter != "":
-                    casalog.post("You defined phasecenter but not imsize. The image will cover as wide area as pointing in MS extends, but be centered at phasecenter. This could result in a strange image if your phasecenter is a part from the center of pointings", priority='warn')
+                    casalog.post("You defined phasecenter but not imsize. The image will cover as wide area as pointing in MS extends, but be centered at phasecenter. This could result in a strange image if your phasecenter is a part from the center of pointings", priority='WARN')
                 if imsize[0] > 1024 or imsize[1] > 1024:
-                    casalog.post("The calculated image pixel number is larger than 1024. It could take time to generate the image depending on your computer resource. Please wait...", priority='warn')
+                    casalog.post("The calculated image pixel number is larger than 1024. It could take time to generate the image depending on your computer resource. Please wait...", priority='WARN')
 
             # phasecenter
             # if empty, it should be determined here...

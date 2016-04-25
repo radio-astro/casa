@@ -1,5 +1,5 @@
 import os
-import numpy as np
+import numpy
 import traceback
 import string
 import functools
@@ -11,7 +11,7 @@ import contextlib
 from casac import casac
 from taskinit import casalog, gentools, qatool
 import asap as sd
-from asap import _to_list
+#from asap import _to_list
 from asap.scantable import is_scantable, is_ms, scantable
 import rasterutil
 
@@ -751,8 +751,8 @@ def normalise_restfreq(in_restfreq):
         return float(in_restfreq)
     elif isinstance(in_restfreq, str):
         return get_restfreq_in_Hz(in_restfreq)
-    elif isinstance(in_restfreq, list) or isinstance(in_restfreq, np.ndarray):
-        if isinstance(in_restfreq, np.ndarray):
+    elif isinstance(in_restfreq, list) or isinstance(in_restfreq, numpy.ndarray):
+        if isinstance(in_restfreq, numpy.ndarray):
             if len(in_restfreq.shape) > 1:
                 mesg = "given in numpy.ndarray, in_restfreq must be 1-D."
                 raise Exception, mesg
@@ -893,7 +893,7 @@ def set_fluxunit(s, fluxunit, telescopeparam, insitu=True):
             # Ideally would use a freq in center of
             # band, but rest freq is what I have
             rf = s.get_restfreqs()[0][0]*1.0e-9 # GHz
-            eta = eta_0*np.exp(-0.001757*(eps*rf)**2)
+            eta = eta_0*numpy.exp(-0.001757*(eps*rf)**2)
             #print "Calculated ap.eff. eta = %5.3f " % (eta)
             #print "At rest frequency %5.3f GHz" % (rf)
             casalog.post( "Calculated ap.eff. eta = %5.3f " % (eta) )
@@ -1135,7 +1135,7 @@ def get_plotter(plotlevel=0):
 def get_nx_ny(n):
     nl = _to_list(n, int)
     if not nl: # check for numpy int types
-        nl = _to_list(n, np.integer)
+        nl = _to_list(n, numpy.integer)
     if len(nl) == 1:
         nx = ny = nl[0]
     else:
@@ -1146,8 +1146,8 @@ def get_nx_ny(n):
 def get_cellx_celly(c,unit='arcsec'):
     if isinstance(c, str):
         cellx = celly = c
-    #elif isinstance(c, list) or isinstance(c, np.ndarray):
-    elif type(c) in (list, tuple, np.ndarray):
+    #elif isinstance(c, list) or isinstance(c, numpy.ndarray):
+    elif type(c) in (list, tuple, numpy.ndarray):
         if len(c) == 1:
             cellx = celly = __to_quantity_string(c[0],unit)
         elif len(c) > 1:
@@ -1486,7 +1486,7 @@ def get_ms_sampling_arcsec(msname, spw='', antenna='', field='',
     #row_idx = retval['rows']
     #times = retval['time']
     # unit time stamp
-    times, idx = np.unique(times,return_index=True)
+    times, idx = numpy.unique(times,return_index=True)
     row_idx = row_idx[idx]
     del idx
     # sort by time
@@ -1520,7 +1520,7 @@ def get_ms_sampling_arcsec(msname, spw='', antenna='', field='',
             dec_rad.append(dir_conv['m1']['value'])
     direction_rad = [ra_rad, dec_rad]
     dx_rad, dy_rad, pa = rasterutil._get_sampling(direction_rad,row_gap)
-    rad_to_asec = 180./np.pi*3600
+    rad_to_asec = 180./numpy.pi*3600
     return dx_rad*rad_to_asec, dy_rad*rad_to_asec, pa
     
     
@@ -1581,3 +1581,36 @@ def _parse_wn(wn):
     else:
         msg = 'wrong value given for addwn/rejwn'
         raise RuntimeError(msg)
+
+
+def _is_sequence_or_number(param, ptype=int):
+    """
+    Returns true if input is an array type or a number with a give data type.
+    Arguments
+        param : an array or number to test
+        ptype : the data type that param should be.
+    """
+    if hasattr(param, '__iter__'):
+        out = True
+        for p in param:
+            out &= isinstance(p, ptype)
+        return out
+    else:
+        return isinstance(param, ptype)
+
+def _to_list(param, ptype=int, convert=False):
+    """
+    Convert a number, an array type or a string to a list.
+    The function returns None if input values are not ptype and convert=False.
+    When convert is True, force converting input values to a list of ptype.
+    """
+    if isinstance(param, ptype): # a string or a number
+        if ptype is str: return param.split()
+        elif convert: 
+            return [ ptype(param) ]
+        else: return [ param ]
+    if _is_sequence_or_number(param, ptype):
+        return list(param)
+    elif convert:
+        return [ ptype(p) for p in param]
+    return None
