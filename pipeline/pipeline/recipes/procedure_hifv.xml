@@ -19,6 +19,10 @@
                 <Keyword xmlns="">hm_tbuff</Keyword>
                 <Value xmlns="">1.5int</Value>
             </Parameter>
+            <Parameter>
+                <Keyword xmlns="">intents</Keyword>
+                <Value xmlns="">*POINTING*,*FOCUS*,*ATMOSPHERE*,*SIDEBAND_RATIO*, *UNKNOWN*, *SYSTEM_CONFIGURATION*, *UNSPECIFIED#UNSPECIFIED*</Value>
+            </Parameter>
         </ParameterSet>
     </ProcessingCommand>
 
@@ -103,6 +107,10 @@
     <ProcessingCommand>
         <Command xmlns="">hifv_targetflag</Command>
         <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">intents</Keyword>
+                <Value xmlns="">*CALIBRATE*,*TARGET*</Value>
+            </Parameter>
         </ParameterSet>
     </ProcessingCommand>
 

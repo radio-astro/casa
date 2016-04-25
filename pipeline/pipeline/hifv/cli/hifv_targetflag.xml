@@ -53,7 +53,6 @@
 	    </equals>
 	    <equals type="string" value="getinputs">
                 <default param="vis"><value type="stringArray"></value></default>
-                <default param="contfile"><value type="string"></value></default>
 	    </equals>
 	</when>
     </constraints>

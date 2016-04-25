@@ -80,7 +80,7 @@ def hifv (vislist, importonly=False, pipelinemode='automatic', interactive=True)
         hifv_hanning (pipelinemode=pipelinemode)
     
         # Flag known bad data
-        hifv_flagdata (pipelinemode=pipelinemode, scan=True, hm_tbuff='1.5int')
+        hifv_flagdata (pipelinemode=pipelinemode, scan=True, hm_tbuff='1.5int', intents='*POINTING*,*FOCUS*,*ATMOSPHERE*,*SIDEBAND_RATIO*, *UNKNOWN*, *SYSTEM_CONFIGURATION*, *UNSPECIFIED#UNSPECIFIED*')
     
         # Fill model columns for primary calibrators
         hifv_vlasetjy (pipelinemode=pipelinemode)
@@ -147,7 +147,7 @@ def hifv (vislist, importonly=False, pipelinemode='automatic', interactive=True)
         # hifv_uncalspw(pipelinemode=pipelinemode, delaycaltable='finaldelay.k', bpcaltable='finalBPcal.b')
     
         # Now run all calibrated data, including the target, through rflag
-        hifv_targetflag (pipelinemode=pipelinemode)
+        hifv_targetflag (pipelinemode=pipelinemode, intents='*CALIBRATE*,*TARGET*')
     
         # Calculate data weights based on standard deviation within each spw
         hifv_statwt(pipelinemode=pipelinemode)
