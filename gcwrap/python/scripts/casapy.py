@@ -45,6 +45,17 @@ if MPIEnvironment.is_mpi_enabled and not MPIEnvironment.is_mpi_client:
 #if os.path.isdir(pymodules_dir) and pymodules_dir not in sys.path:
 #    sys.path.append(pymodules_dir)
 
+
+##
+## ensure that we're the process group leader
+## of all processes that we fork...
+##
+try:
+    os.setpgid(0,0)
+except OSError, e:
+    print "setgpid( ) failed: " + e.strerror
+    print "                   processes may be left dangling..."
+
 ##
 ## watchdog... which is *not* in the casapy process group
 ##
@@ -59,7 +70,13 @@ if os.fork( ) == 0 :
     os.close(0)
     os.close(1)
     os.close(2)
+    # get parent process to monitor
     ppid = os.getppid( )
+    # create our own process group
+    try:
+        os.setpgid(0,0)
+    except:
+        pass
     while True :
         try:
             os.kill(ppid,0)
@@ -68,23 +85,22 @@ if os.fork( ) == 0 :
         time.sleep(3)
     # jagonzal: Don't be gentle in a MPI environment in order not to block the mpirun command
     if MPIEnvironment.mpi_initialized and MPIEnvironment.mpi_world_size > 1:
-        os.killpg(ppid, signal.SIGTERM)
-        sys.exit(1)
+        sleeptime = 2
     else:
-        os.killpg(ppid, signal.SIGTERM)
-        time.sleep(120)
-        os.killpg(ppid, signal.SIGKILL)
-        sys.exit(1)
-
-##
-## ensure that we're the process group leader
-## of all processes that we fork...
-##
-try:
-    os.setpgid(0,0)
-except OSError, e:
-    print "setgpid( ) failed: " + e.strerror
-    print "                   processes may be left dangling..."
+        sleeptime = 120
+    os.killpg(ppid, signal.SIGTERM)
+    time.sleep(0.1)
+    # wait for group to die
+    for i in range(sleeptime):
+        try:
+            os.killpg(ppid, 0)
+        except:
+            # group has died, done
+            sys.exit(1)
+        time.sleep(1)
+    # force kill it
+    os.killpg(ppid, signal.SIGKILL)
+    sys.exit(1)
 
 
 ##
