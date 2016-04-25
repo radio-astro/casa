@@ -5,12 +5,12 @@ import pylab as pl
 from taskinit import casalog, gentools, qa
 
 def plotprofilemap(imagename=None, figfile=None, overwrite=None, 
-                   title=None, 
+                   pol=None, title=None, 
                    linecolor=None, linestyle=None, linewidth=None,
                    separatepanel=None, plotmasked=None, maskedcolor=None, 
                    showaxislabel=None, showtick=None, showticklabel=None,
                    figsize=None, numpanels=None,
-                   horizontalbind=None, verticalbind=None, spectralrange=None, trasnparent=None):
+                   trasnparent=None):
     casalog.origin('plotprofilemap')
     
     try:
@@ -18,9 +18,13 @@ def plotprofilemap(imagename=None, figfile=None, overwrite=None,
             raise RuntimeError('overwrite is False and output file exists: \'%s\''%(figfile))
     
         image = SpectralImage(imagename)
+        npol = len(image.stokes)
+        if pol < 0 or pol > npol - 1:
+            raise RuntimeError('pol {pol} is out of range (Stokes axis {stokes})'.format(pol=pol,stokes=image.stokes))        
+
         parsed_size = parse_figsize(figsize)
         nx, ny = parse_numpanels(numpanels)
-        plot_profile_map(image, figfile, title, linecolor, linestyle, linewidth,
+        plot_profile_map(image, figfile, pol, title, linecolor, linestyle, linewidth,
                          separatepanel, plotmasked, maskedcolor,
                          showaxislabel, showtick, showticklabel, parsed_size,
                          nx, ny)
@@ -321,7 +325,7 @@ class ProfileMapAxesManager(object):
                     horizontalalignment='center', verticalalignment='bottom',
                     size=self.ticksize+4)
 
-def plot_profile_map(image, figfile, title=None, 
+def plot_profile_map(image, figfile, pol, title=None, 
                      linecolor=None, linestyle=None, linewidth=None,
                      separatepanel=None, plotmasked=None, maskedcolor=None,
                      showaxislabel=None, showtick=None, showticklabel=None,
@@ -409,36 +413,33 @@ def plot_profile_map(image, figfile, title=None,
     refpix[1], refval[1], increment[1] = image.direction_axis(1, unit='deg')
     plotter.setup_labels(refpix, refval, increment)
     
-    
-    # loop over pol
-    npol = 1
-    for pol in xrange(npol):
-        
-        masked_data_p = masked_data.take([pol], axis=image.id_stokes).squeeze()
-        Plot = numpy.zeros((NH, NV, (chan1 - chan0)), numpy.float32) + NoData
-        mask_p = image.mask.take([pol], axis=image.id_stokes).squeeze()
-        isvalid = numpy.any(mask_p, axis=2)
-        Nsp = sum(isvalid.flatten())
-        casalog.post('Nsp=%s'%(Nsp))
+    stokes = image.stokes[pol]
+    casalog.post('Generate profile map for pol {stokes}'.format(stokes=stokes))
+    masked_data_p = masked_data.take([pol], axis=image.id_stokes).squeeze()
+    Plot = numpy.zeros((NH, NV, (chan1 - chan0)), numpy.float32) + NoData
+    mask_p = image.mask.take([pol], axis=image.id_stokes).squeeze()
+    isvalid = numpy.any(mask_p, axis=2)
+    Nsp = sum(isvalid.flatten())
+    casalog.post('Nsp=%s'%(Nsp))
 
-        for x in xrange(NH):
-            x0 = x * xSTEP
-            x1 = (x + 1) * xSTEP
-            for y in xrange(NV):
-                y0 = y * ySTEP
-                y1 = (y + 1) * ySTEP
-                valid_index = isvalid[x0:x1,y0:y1].nonzero()
-                chunk = masked_data_p[x0:x1,y0:y1]
-                valid_sp = chunk[valid_index[0],valid_index[1],:]
-                Plot[x][y] = valid_sp.mean(axis=0)
+    for x in xrange(NH):
+        x0 = x * xSTEP
+        x1 = (x + 1) * xSTEP
+        for y in xrange(NV):
+            y0 = y * ySTEP
+            y1 = (y + 1) * ySTEP
+            valid_index = isvalid[x0:x1,y0:y1].nonzero()
+            chunk = masked_data_p[x0:x1,y0:y1]
+            valid_sp = chunk[valid_index[0],valid_index[1],:]
+            Plot[x][y] = valid_sp.mean(axis=0)
 
-        status = plotter.plot(figfile, Plot, 
-                              image.frequency[chan0:chan1], 
-                              linecolor=linecolor,
-                              linestyle=linestyle,
-                              linewidth=linewidth,
-                              plotmasked=plotmasked,
-                              maskedcolor=maskedcolor)
+    status = plotter.plot(figfile, Plot, 
+                          image.frequency[chan0:chan1], 
+                          linecolor=linecolor,
+                          linestyle=linestyle,
+                          linewidth=linewidth,
+                          plotmasked=plotmasked,
+                          maskedcolor=maskedcolor)
         
     plotter.done()
     
@@ -644,6 +645,7 @@ class SpectralImage(object):
             self._brightnessunit = ia.brightnessunit()
             refpix, refval, increment = self.spectral_axis(unit='GHz')
             self.frequency = numpy.array([refval+increment*(i-refpix) for i in xrange(self.nchan)])
+            self.stokes = self.coordsys.stokes()
         finally:
             ia.close()
         

@@ -31,6 +31,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value>False</value>
     </param>
     
+    <param type="int" name="pol">
+      <description>Polarization component to be plotted</description>
+      <value>0</value>
+    </param>
+    
     <param type="string" name="title">
       <description>Title of the plot</description>
       <value></value>
@@ -141,6 +146,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                default: '' (no output)
     overwrite -- overwrite existing output file
                  default: False
+    pol -- polarization component to be plotted. It is an index for stokes axis 
+           of the image.
+           default: 0
     title -- title of the plot
              default: '' (no title)
     linecolor -- line color in matplotlib format
