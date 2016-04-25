@@ -352,8 +352,8 @@ TEST_F(LineFindingUtilsTest, DeBin) {
     size_t const offset = 1;  
     LineRangeList lines = {LineRange(0,2), LineRange(5,6),
 			   LineRange(20,20), LineRange(72,80)};
-    LineRangeList ref_lines = {LineRange(1,9), LineRange(21,25),
-			       LineRange(81,81), LineRange(289,321)};
+    LineRangeList ref_lines = {LineRange(1,12), LineRange(21,28),
+			       LineRange(81,84), LineRange(289,324)};
     if (verbose_) {
       PrintLine(lines);
     }

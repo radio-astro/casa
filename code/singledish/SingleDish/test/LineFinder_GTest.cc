@@ -75,8 +75,8 @@ protected:
     LineRangeList::iterator refiter = reference.begin();
     for (;outiter!=data.end() && refiter!=reference.end();
 	 ++outiter, ++refiter) {
-      EXPECT_EQ((*outiter).first, (*refiter).first);
-      EXPECT_EQ((*outiter).second, (*refiter).second);
+      EXPECT_EQ((*refiter).first, (*outiter).first);
+      EXPECT_EQ((*refiter).second, (*outiter).second);
     }
   }
 
@@ -120,7 +120,7 @@ TEST_F(LineFinderTest, LineFinding) {
     cout << "[Line finding result]" << endl;
     PrintLine(line_list);
   }
-  LineRangeList line_ref = {LineRange(490, 532), LineRange(758, 779)};
+  LineRangeList line_ref = {LineRange(490, 533), LineRange(758, 781)};
   AssertLineRanges(line_list, line_ref);
 }
 
