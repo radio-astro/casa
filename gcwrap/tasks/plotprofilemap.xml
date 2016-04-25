@@ -31,6 +31,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value>False</value>
     </param>
     
+    <param type="bool" name="transparent" subparam="true">
+      <description>Output transparent figure</description>
+      <value>False</value>
+    </param>
+    
     <param type="int" name="pol">
       <description>Polarization component to be plotted</description>
       <value>0</value>
@@ -107,6 +112,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <when param="figfile">
         <notequals type="string" value="">
           <default param="overwrite"><value type="bool">False</value></default>
+          <default param="transparent"><value type="bool">False</value></default>
         </notequals>
       </when>
       <when param="plotmasked">
@@ -146,6 +152,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                default: '' (no output)
     overwrite -- overwrite existing output file
                  default: False
+    transparent -- output transparent figure
+                   default: False
     pol -- polarization component to be plotted. It is an index for stokes axis 
            of the image.
            default: 0

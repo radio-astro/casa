@@ -4,13 +4,12 @@ import pylab as pl
 
 from taskinit import casalog, gentools, qa
 
-def plotprofilemap(imagename=None, figfile=None, overwrite=None, 
+def plotprofilemap(imagename=None, figfile=None, overwrite=None, transparent=None,
                    pol=None, title=None, 
                    linecolor=None, linestyle=None, linewidth=None,
                    separatepanel=None, plotmasked=None, maskedcolor=None, 
                    showaxislabel=None, showtick=None, showticklabel=None,
-                   figsize=None, numpanels=None,
-                   trasnparent=None):
+                   figsize=None, numpanels=None):
     casalog.origin('plotprofilemap')
     
     try:
@@ -27,7 +26,7 @@ def plotprofilemap(imagename=None, figfile=None, overwrite=None,
         plot_profile_map(image, figfile, pol, title, linecolor, linestyle, linewidth,
                          separatepanel, plotmasked, maskedcolor,
                          showaxislabel, showtick, showticklabel, parsed_size,
-                         nx, ny)
+                         nx, ny, transparent)
     except Exception, e:
         casalog.post('Error: %s'%(str(e)), priority='SEVERE')
         import traceback
@@ -326,10 +325,10 @@ class ProfileMapAxesManager(object):
                     size=self.ticksize+4)
 
 def plot_profile_map(image, figfile, pol, title=None, 
-                     linecolor=None, linestyle=None, linewidth=None,
-                     separatepanel=None, plotmasked=None, maskedcolor=None,
-                     showaxislabel=None, showtick=None, showticklabel=None,
-                     figsize=None, nx=-1, ny=-1):
+                     linecolor='b', linestyle='-', linewidth=0.2,
+                     separatepanel=True, plotmasked=None, maskedcolor=None,
+                     showaxislabel=False, showtick=False, showticklabel=False,
+                     figsize=None, nx=-1, ny=-1, transparent=False):
     """
     image 
     figfile
@@ -361,6 +360,8 @@ def plot_profile_map(image, figfile, pol, title=None,
         showtick = False
     if showticklabel is None:
         showticklabel = False
+    if transparent is None:
+        transparent = False
 
     x_max = image.nx - 1
     x_min = 0
@@ -439,7 +440,8 @@ def plot_profile_map(image, figfile, pol, title=None,
                           linestyle=linestyle,
                           linewidth=linewidth,
                           plotmasked=plotmasked,
-                          maskedcolor=maskedcolor)
+                          maskedcolor=maskedcolor,
+                          transparent=transparent)
         
     plotter.done()
     
@@ -518,7 +520,7 @@ class SDProfileMapPlotter(object):
         
     def plot(self, figfile, map_data, frequency, 
              linecolor='b', linestyle='-', linewidth=0.2,
-             plotmasked='none', maskedcolor='gray'):        
+             plotmasked='none', maskedcolor='gray', transparent=False):        
         global_xmin = min(frequency[0], frequency[-1])
         global_xmax = max(frequency[0], frequency[-1])
         casalog.post('global_xmin=%s, global_xmax=%s'%(global_xmin,global_xmax))
@@ -600,7 +602,7 @@ class SDProfileMapPlotter(object):
         casalog.post('figfile=\'%s\''%(figfile), priority='DEBUG')
         if figfile is not None and len(figfile) > 0:
             casalog.post('Output profile map to %s'%(figfile))
-            pl.savefig(figfile, format='png', dpi=DPIDetail)
+            pl.savefig(figfile, format='png', dpi=DPIDetail, transparent=transparent)
         
         return True
     
