@@ -9,7 +9,7 @@ def plotprofilemap(imagename=None, figfile=None, overwrite=None,
                    linecolor=None, linestyle=None, linewidth=None,
                    separatepanel=None, plotmasked=None, maskedcolor=None, 
                    showaxislabel=None, showtick=None, showticklabel=None,
-                   figsize=None,
+                   figsize=None, numpanels=None,
                    horizontalbind=None, verticalbind=None, spectralrange=None, trasnparent=None):
     casalog.origin('plotprofilemap')
     
@@ -19,9 +19,11 @@ def plotprofilemap(imagename=None, figfile=None, overwrite=None,
     
         image = SpectralImage(imagename)
         parsed_size = parse_figsize(figsize)
+        nx, ny = parse_numpanels(numpanels)
         plot_profile_map(image, figfile, title, linecolor, linestyle, linewidth,
                          separatepanel, plotmasked, maskedcolor,
-                         showaxislabel, showtick, showticklabel, parsed_size)
+                         showaxislabel, showtick, showticklabel, parsed_size,
+                         nx, ny)
     except Exception, e:
         casalog.post('Error: %s'%(str(e)), priority='SEVERE')
         import traceback
@@ -89,6 +91,18 @@ def parse_figsize(figsize):
             parsed = tuple(size_inch_list[:2])
     casalog.post('parse_figsize output: {output}'.format(output=parsed), priority='DEBUG')
     return parsed
+
+def parse_numpanels(numpanels):
+    parsed = (-1, -1)
+    if isinstance(numpanels, str) and len(numpanels) > 0:
+        n = map(int, numpanels.split(','))
+        if len(n) == 1:
+            parsed = (n[0], n[0])
+        else:
+            parsed = (n[0], n[1])
+    casalog.post('parse_numpanels output: {output}'.format(output=parsed), priority='DEBUG')
+    return parsed
+        
 
 class ProfileMapAxesManager(object):
     label_map = {'Right Ascension': 'RA',
@@ -311,7 +325,7 @@ def plot_profile_map(image, figfile, title=None,
                      linecolor=None, linestyle=None, linewidth=None,
                      separatepanel=None, plotmasked=None, maskedcolor=None,
                      showaxislabel=None, showtick=None, showticklabel=None,
-                     figsize=None):
+                     figsize=None, nx=-1, ny=-1):
     """
     image 
     figfile
@@ -353,8 +367,18 @@ def plot_profile_map(image, figfile, title=None,
     STEP = int((max(x_max - x_min + 1, y_max - y_min + 1) - 1) / num_panel) + 1
     NH = (x_max - x_min) / STEP + 1
     NV = (y_max - y_min) / STEP + 1
+    xSTEP = STEP
+    ySTEP = STEP
+    
+    if nx > 0:
+        NH = nx
+        xSTEP = image.nx / NH + (1 if image.nx % NH > 0 else 0)
+    if ny > 0:
+        NV = ny
+        ySTEP = image.ny / NV + (1 if image.ny % NV > 0 else 0)
+    
 
-    casalog.post('num_panel=%s, STEP=%s, NH=%s, NV=%s'%(num_panel,STEP,NH,NV))
+    casalog.post('num_panel=%s, xSTEP=%s, ySTEP=%s, NH=%s, NV=%s'%(num_panel,xSTEP,ySTEP,NH,NV))
 
     chan0 = 0
     chan1 = image.nchan
@@ -363,7 +387,7 @@ def plot_profile_map(image, figfile, title=None,
     direction_reference = image.direction_reference
     spectral_label = image.spectral_label
     spectral_unit = image.spectral_unit
-    plotter = SDProfileMapPlotter(NH, NV, STEP, image.brightnessunit, 
+    plotter = SDProfileMapPlotter(NH, NV, xSTEP, ySTEP, image.brightnessunit, 
                                   direction_label, direction_reference,
                                   spectral_label, spectral_unit,
                                   title=title,
@@ -391,18 +415,18 @@ def plot_profile_map(image, figfile, title=None,
     for pol in xrange(npol):
         
         masked_data_p = masked_data.take([pol], axis=image.id_stokes).squeeze()
-        Plot = numpy.zeros((num_panel, num_panel, (chan1 - chan0)), numpy.float32) + NoData
+        Plot = numpy.zeros((NH, NV, (chan1 - chan0)), numpy.float32) + NoData
         mask_p = image.mask.take([pol], axis=image.id_stokes).squeeze()
         isvalid = numpy.any(mask_p, axis=2)
         Nsp = sum(isvalid.flatten())
         casalog.post('Nsp=%s'%(Nsp))
 
         for x in xrange(NH):
-            x0 = x * STEP
-            x1 = (x + 1) * STEP
+            x0 = x * xSTEP
+            x1 = (x + 1) * xSTEP
             for y in xrange(NV):
-                y0 = y * STEP
-                y1 = (y + 1) * STEP
+                y0 = y * ySTEP
+                y1 = (y + 1) * ySTEP
                 valid_index = isvalid[x0:x1,y0:y1].nonzero()
                 chunk = masked_data_p[x0:x1,y0:y1]
                 valid_sp = chunk[valid_index[0],valid_index[1],:]
@@ -419,15 +443,17 @@ def plot_profile_map(image, figfile, title=None,
     plotter.done()
     
 class SDProfileMapPlotter(object):
-    def __init__(self, nh, nv, step, brightnessunit, direction_label, direction_reference, 
+    def __init__(self, nh, nv, xstep, ystep, brightnessunit, direction_label, direction_reference, 
                  spectral_label, spectral_unit, title=None, separatepanel=True, 
                  showaxislabel=False, showtick=False, showticklabel=False,
                  figsize=None,
                  clearpanel=True):
-        self.step = step
-        if step > 1:
+        self.xstep = xstep
+        self.ystep = ystep
+        if self.xstep > 1 or self.ystep > 1:
+            step = max(self.xstep, self.ystep)
             ticksize = 10 - int(max(nh, nv) * step / (step - 1)) / 2
-        elif step == 1:
+        else:
             ticksize = 10 - int(max(nh, nv)) / 2
         self.axes = ProfileMapAxesManager(nh, nv, brightnessunit, 
                                           direction_label, direction_reference,
@@ -465,8 +491,8 @@ class SDProfileMapPlotter(object):
         increment = increment_list[0]
         #casalog.post('axis 0: refpix,refval,increment=%s,%s,%s'%(refpix,refval,increment))
         for x in xrange(self.nh):
-            x0 = (self.nh - x - 1) * self.step
-            x1 = (self.nh - x - 2) * self.step + 1
+            x0 = (self.nh - x - 1) * self.xstep
+            x1 = (self.nh - x - 2) * self.xstep + 1
             LabelRA[x][0] = refval + (x0 - refpix) * increment
             LabelRA[x][1] = refval + (x1 - refpix) * increment
         refpix = refpix_list[1]
@@ -474,8 +500,8 @@ class SDProfileMapPlotter(object):
         increment = increment_list[1]
         #casalog.post('axis 1: refpix,refval,increment=%s,%s,%s'%(refpix,refval,increment))
         for y in xrange(self.nv):
-            y0 = y * self.step
-            y1 = (y + 1) * self.step - 1
+            y0 = y * self.ystep
+            y1 = (y + 1) * self.ystep - 1
             LabelDEC[y][0] = refval + (y0 - refpix) * increment
             LabelDEC[y][1] = refval + (y1 - refpix) * increment
         self.axes.setup_labels(LabelRA, LabelDEC)

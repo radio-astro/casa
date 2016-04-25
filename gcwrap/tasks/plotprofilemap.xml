@@ -93,6 +93,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value></value>
     </param>
     
+    <param type="string" name="numpanels">
+      <description>Number of panels</description>
+      <value></value>
+    </param>
+    
     <constraints>
       <when param="figfile">
         <notequals type="string" value="">
@@ -163,9 +168,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	showticklabel -- Show tick labels on the bottom left panel
 	                 default: False
     figsize -- size of the figure
-             default: '' (matplotlib default)
-             example: '10cm' (10cm square)
-                      '122mm,10cm' (122mm width and 10cm height)
+               default: '' (matplotlib default)
+               example: '10cm' (10cm square)
+                        '122mm,10cm' (122mm width and 10cm height)
+    numpanels -- Number of panels
+                 default: '' (auto)
+                 example: '6,8' (nx=6, ny=8)
+                          '8' (nx=8, ny=8)
 
   </example>
 
