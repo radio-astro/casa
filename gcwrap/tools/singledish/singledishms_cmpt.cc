@@ -246,9 +246,9 @@ singledishms::subtract_baseline_sinusoid(
                                          ::casac::variant const& spw,
                                          vector<int> const& addwn,
                                          vector<int> const& rejwn,
-                                         //bool const applyfft,
-                                         //string const& fftmethod,
-                                         //float const fftthresh,
+                                         bool const applyfft,
+                                         string const& fftmethod,
+                                         float const fftthresh,
                                          float const clip_threshold_sigma,
                                          int const num_fitting_max,
                                          bool const linefinding,
@@ -264,7 +264,7 @@ singledishms::subtract_baseline_sinusoid(
 
 {
 
-  //cout << "_cmp1#######" << endl;
+  cout << "_cmp1#######" << endl;
 
   bool rstat(false);
   *itsLog << _ORIGIN;
@@ -279,9 +279,9 @@ singledishms::subtract_baseline_sinusoid(
                                     toCasaString(spw), 
                                     addwn,
                                     rejwn,
-                                    //applyfft,
-                                    //fftmethod,
-                                    //fftthresh,
+                                    applyfft,
+                                    fftmethod,
+                                    fftthresh,
                                     clip_threshold_sigma,
                                     num_fitting_max,
                                     linefinding,

@@ -380,7 +380,7 @@ Fit baseline and subtract it from selected spectra
     </param>
 
     
-    <!--param type="bool" name="applyfft">
+    <param type="bool" name="applyfft">
       <description>automatically set wave numbers of sinusoids</description>
       <value>false</value>
     </param>
@@ -395,7 +395,7 @@ Fit baseline and subtract it from selected spectra
     <param type="float" name="fftthresh">
       <description>threshold to select wave numbers of sinusoids</description>
       <value>3.0</value>
-    </param-->
+    </param>
 
 
     <param type="float" name="clip_threshold_sigma">

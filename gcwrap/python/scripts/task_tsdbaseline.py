@@ -3,7 +3,7 @@ import os
 from taskinit import gentools, casalog
 import sdutil
 from collections import Counter
-ms,sdms,tb = gentools(['ms','sdms','tb'])
+ms,sdms,tb,msmd = gentools(['ms','sdms','tb', 'msmd'])
 
 def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None, timerange=None, scan=None, pol=None, intent=None, maskmode=None, thresh=None, avg_limit=None, minwidth=None, edge=None, blmode=None, dosubtract=None, blformat=None, bloutput=None, bltable=None, blfunc=None, order=None, npiece=None, 
 applyfft=None, fftmethod=None, fftthresh=None, 
@@ -49,10 +49,48 @@ addwn=None, rejwn=None, clipthresh=None, clipniter=None, blparam=None, verbose=N
             
         elif (blmode == 'fit'):
 
+            #if(blfunc=='sinusoid'):
+            #    addwn=sdutil._parse_wn(addwn)
+            #    rejwn=sdutil._parse_wn(rejwn)
+      
+
+            sep=['-','<=','<','>=','>']
+            addwn_tmp=[]
+
             if(blfunc=='sinusoid'):
-                addwn=sdutil._parse_wn(addwn)
-                rejwn=sdutil._parse_wn(rejwn)
-            
+                if(type(addwn)==str):
+                    for isep in sep:
+                        if(addwn.find(isep) != -1 and isep=='-'):
+                            for i in range(int(addwn.split('-')[1].strip())+1):
+                                addwn_tmp.append(i)
+                            for i in range(int(addwn.split('-')[0].strip())):
+                                addwn_tmp.remove(i)
+                        
+                        if(addwn.find(isep) != -1 and isep=='<'):
+                            if(addwn.split('<')[0].strip()=='' and type(int(addwn.split('<')[1].strip()))==int):
+                                for i in  range(int(addwn.split('<')[1].strip())):
+                                    addwn_tmp.append(i)
+                                break
+                            elif(addwn.split('<')[1].strip()=='' and type(int(addwn.split('<')[0].strip()))==int):
+                                addwn_tmp=addwn_string_greaterthan(infile, addwn, spw, inequality='<')
+                                break
+                            elif(addwn.split('<=')[1].strip()=='' and type(int(addwn.split('<=')[0].strip()))==int):
+                                addwn_tmp=addwn_string_greaterthan(infile, addwn, spw, inequality='<=')
+                                break
+                        if(addwn.find(isep) != -1 and isep=='>'):
+                            if(addwn.split('>=')[0].strip()=='' and type(int(addwn.split('>=')[1].strip()))==int):
+                                addwn_tmp=addwn_string_greaterthan(infile, addwn, spw, inequality='>=')
+                                break
+                            elif(addwn.split('>')[1].strip()=='' and type(int(addwn.split('>')[0].strip()))==int):
+                                for i in  range(int(addwn.split('>')[0].strip())):
+                                    addwn_tmp.append(i)
+                                break
+                            elif(addwn.split('>')[0].strip()=='' and type(int(addwn.split('>')[1].strip()))==int):
+                                addwn_tmp=addwn_string_greaterthan(infile, addwn, spw, inequality='>')
+                                break
+                            
+                #print addwn_tmp
+                    addwn=addwn_tmp
 
             blformat, bloutput = prepare_for_blformat_bloutput(infile, blformat, bloutput, overwrite)
 
@@ -108,6 +146,34 @@ addwn=None, rejwn=None, clipthresh=None, clipniter=None, blparam=None, verbose=N
 
 blformat_item = ['csv', 'text', 'table']
 blformat_ext  = ['csv', 'txt',  'bltable']
+
+
+def addwn_string_greaterthan(infile, addwn, spw, inequality): 
+    
+    addwn2=[]
+    addwn_rm=0
+
+    if(inequality=='<'):
+        addwn_rm=int(addwn.split(inequality)[0].strip())+1
+    elif(inequality=='<='):
+        addwn_rm=int(addwn.split(inequality)[0].strip())
+    elif(inequality=='>'):
+        addwn_rm=int(addwn.split(inequality)[1].strip())+1
+    elif(inequality=='>='):
+        addwn_rm=int(addwn.split(inequality)[1].strip())
+
+    msmd.open(infile)
+    ch=msmd.nchan(int(spw))
+    msmd.close()
+
+    for i in range(ch/2-1):
+        addwn2.append(i)
+    for i in  range(addwn_rm):
+        addwn2.remove(i)
+
+    return addwn2 
+
+
 
 
 def prepare_for_blformat_bloutput(infile, blformat, bloutput, overwrite):
@@ -253,7 +319,7 @@ def prepare_for_baselining(**keywords):
         funcname += ('_' + blfunc)
     elif blfunc =='sinusoid':
         keys +=[
-        #'applyfft','fftmethod','fftthresh', 
+        'applyfft','fftmethod','fftthresh', 
         'addwn','rejwn', 'clip_threshold_sigma', 'num_fitting_max'] #############
         funcname += ('_' + blfunc)
     else:

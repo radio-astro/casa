@@ -747,7 +747,7 @@ size_t SingleDishMS::get_num_coeff_bloutput(size_t const bltype,
     num_coeff = order + 1;
     break;
   case BaselineType_kSinusoid:///////////////////////  
-    throw(AipsError("Unsupported baseline type, sinusoid"));/////////////
+    //throw(AipsError("Unsupported baseline type, sinusoid"));/////////////
     break;
   default:
     throw(AipsError("Unsupported baseline type."));
@@ -785,7 +785,7 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
                                       LogIO os) {
 
 
-    //cout << "Calling SingleDishMS::doSubtractBaseline " << endl;
+    cout << "Calling SingleDishMS::doSubtractBaseline " << endl;
 
 // in_ms = out_ms
   // in_column = [FLOAT_DATA|DATA|CORRECTED_DATA], out_column=new MS
@@ -1150,23 +1150,110 @@ void SingleDishMS::doSubtractBaseline(string const& in_column_name,
             Matrix<Int> fpar_mtx2 = fpar_mtx[0][ipol];
             Matrix<Float> rms_mtx2 = rms_mtx[0][ipol];
             string bltype_name;
+
+
+            string order_or_nwave =" order = ";
+
             if (bltype_mtx2(0, 0) == (uInt)0) {
               bltype_name = "poly";
             } else if (bltype_mtx2(0, 0) == (uInt)1) {
               bltype_name = "chebyshev";
+            } else if (bltype_mtx2(0, 0) == (uInt)2) {
+                bltype_name = "cspline";
+            } else if (bltype_mtx2(0,0)==(uInt)3){
+                order_or_nwave=" nwave = ";
+                bltype_name="sinusoid";
             }
 
+
+
+
             ofs_txt << "Baseline parameters  Function = "
-                    << bltype_name.c_str() << ' ' << " order = "
-                    << fpar_mtx2(0, 0) << endl;
+                    << bltype_name.c_str() << ' ' << order_or_nwave; 
+                    //ofs_txt << " order = "
+                    if(bltype_mtx2(0,0)==(uInt)3){
+                        for(size_t num = 0; num < order.size(); ++num){
+                          //ofs_txt << fpar_mtx2(0, icoeff) << " ";
+                            ofs_txt << order[num] << " ";
+                            //ofs_txt << order[num] ;
+                        }
+                        ofs_txt << endl;
+                    }else{
+                        ofs_txt << fpar_mtx2(0, 0) << endl;
+                    }
+
             ofs_txt << endl;
             ofs_txt << "Results of baseline fit" << endl;
             ofs_txt << endl;
             Matrix<Float> coeff_mtx2 = coeff_mtx;
-            for (size_t icoeff = 0; icoeff < num_coeff_max; ++icoeff) {
-              ofs_txt << "p" << icoeff << " = ";
-              ofs_txt << setprecision(8) << coeff_mtx2(ipol, icoeff) << "  ";
+            
+
+            if(bltype_mtx2(0,0)==(uInt)0 || bltype_mtx2(0,0)==(uInt)1 || bltype_mtx2(0,0)==(uInt)2){
+                for(size_t icoeff = 0;icoeff < num_coeff_max; ++icoeff){
+                    ofs_txt << "p" << icoeff << " = " << setprecision(8) << coeff_mtx2(ipol, icoeff) << "  ";
+                }
             }
+
+
+
+
+            if(bltype_mtx2(0,0)==(uInt)3){
+                size_t wn=0;
+                string c_s ="s";
+                if(order[0]==0){
+                    ofs_txt << "c" << order[wn] << " = " <<setw(13)<<left<< setprecision(8) << coeff_mtx2(ipol, 0) << "  "; 
+                    wn=1;
+                    for(size_t icoeff = 1;icoeff < num_coeff_max; ++icoeff){
+                        ofs_txt << c_s << order[wn] << " = " <<setw(13)<<left<< setprecision(8) << coeff_mtx2(ipol, icoeff) << "  ";
+                        c_s=="s" ? (c_s="c"):(c_s="s");
+                        if(icoeff%2 ==0) ++wn;
+                    }
+                }else{
+                    wn=0;
+                    for(size_t icoeff = 0;icoeff < num_coeff_max; ++icoeff){
+                        ofs_txt << c_s << order[wn] << " = " <<setw(13)<<left<< setprecision(8) << coeff_mtx2(ipol, icoeff) << "  ";
+                        c_s=="s" ? (c_s="c"):(c_s="s");
+                        if(icoeff%2 !=0) ++wn;
+                    }
+                }
+
+
+
+                /*
+                if(order[0]==0){
+                    size_t wn=0;
+                    for(size_t icoeff = 0;icoeff < num_coeff_max; icoeff+=2){
+                        ofs_txt << "c" << order[wn] << " = " <<setw(13)<<left<< setprecision(8) << coeff_mtx2(ipol, icoeff) << "  ";
+                        ++wn;
+                    }
+                    wn=1;
+                    ofs_txt << endl;
+                    ofs_txt << setw(20)<<' ';
+                    for(size_t icoeff = 1;icoeff < num_coeff_max; icoeff+=2){
+                        ofs_txt << "s" << order[wn] << " = " <<setw(13)<< left << setprecision(8) << coeff_mtx2(ipol, icoeff) << "  " ;
+                        ++wn;
+                    }
+
+                }else if(order[0] != 0){
+
+                    size_t wn=0;
+                    for(size_t icoeff = 1;icoeff < num_coeff_max; icoeff+=2){
+                        ofs_txt << "c" << order[wn] << " = " <<setw(13)<<left<< setprecision(8) << coeff_mtx2(ipol, icoeff) << "  ";
+                        ++wn;
+                    }
+
+                    wn=0;
+                    ofs_txt << endl;
+                    for(size_t icoeff = 0;icoeff < num_coeff_max; icoeff+=2){
+                        ofs_txt << "s" << order[wn] << " = " <<setw(13)<<left<< setprecision(8) << coeff_mtx2(ipol, icoeff) << "  " ;
+                        ++wn;
+                    }
+                }
+                */
+            
+            }//if(bltype_mtx2(0,0)==(uInt)3)
+
+
             ofs_txt << endl;
             ofs_txt << endl;
             ofs_txt << "rms = ";
@@ -1450,9 +1537,9 @@ void SingleDishMS::subtractBaselineSinusoid(string const& in_column_name,
                                            string const& in_spw,
                                            vector<int> const& addwn_tmp,
                                            vector<int> const& rejwn,
-                                           //bool const applyfft,
-                                           //string const fftmethod,
-                                           //float const fftthresh,
+                                           bool const applyfft,
+                                           string const fftmethod,
+                                           float const fftthresh,
                                            float const clip_threshold_sigma,
                                            int const num_fitting_max,
                                            bool const linefinding,
@@ -1466,11 +1553,11 @@ void SingleDishMS::subtractBaselineSinusoid(string const& in_column_name,
 
 
     for(size_t i=0; i < rejwn.size();++i){
-        //cout << "rejwn " << rejwn[i] << endl;
+        cout << "rejwn " << rejwn[i] << endl;
     }
 
     for(size_t i=0; i < addwn_tmp.size();++i){
-    //cout << "addwn_tmp " << addwn_tmp[i] << endl;
+    cout << "addwn_tmp " << addwn_tmp[i] << endl;
     }
 
  
@@ -1496,7 +1583,7 @@ void SingleDishMS::subtractBaselineSinusoid(string const& in_column_name,
 
 
     for(size_t i=0; i < addwn.size();++i){
-        //cout << "addwn " << addwn[i] << endl;
+        cout << "addwn " << addwn[i] << endl;
     }
 
 
@@ -1781,13 +1868,10 @@ void SingleDishMS::subtractBaselineSinusoid(string const& in_column_name,
 
                      },
                      os
-                     );
+                     );// doSubtractBaseline
+}//void SingleDishMS::subtractBaselineSinusoid
 
 
-
-
-
-}
 
 
 // Apply baseline table to MS
