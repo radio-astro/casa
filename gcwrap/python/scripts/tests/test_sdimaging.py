@@ -779,7 +779,7 @@ class sdimaging_test1(sdimaging_unittest_base):
 
 
     def test111(self):
-        """Test 100: imsize in float (ntegrated image)"""
+        """imsize in float (ntegrated image)"""
         outshape = (self.imsize[0],self.imsize[1],1,1)
         imsize = [ float(v) for v in self.imsize ]
         self.task_param.update(dict(nchan=1,start=0,width=self.ms_nchan,
@@ -789,7 +789,7 @@ class sdimaging_test1(sdimaging_unittest_base):
 
 
     def test112(self):
-        """Test 100: round-up imsize in float (integrated image)"""
+        """round-up imsize in float (integrated image)"""
         outshape = (self.imsize[0],self.imsize[1],1,1)
         imsize = [ float(v)-0.8 for v in self.imsize ]
         self.task_param.update(dict(nchan=1,start=0,width=self.ms_nchan,
