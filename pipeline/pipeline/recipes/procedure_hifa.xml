@@ -135,6 +135,12 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
+        <Command xmlns="">hif_mstransform</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
         <Command xmlns="">hif_makeimlist</Command>
         <ParameterSet>
             <Parameter>
@@ -146,6 +152,18 @@
 
     <ProcessingCommand>
         <Command xmlns="">hif_findcont</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_uvcontfit</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_uvcontsub</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
@@ -185,10 +203,6 @@
     <ProcessingCommand>
         <Command xmlns="">hif_makeimages</Command>
         <ParameterSet>
-            <Parameter>
-                <Keyword xmlns="">subcontms</Keyword>
-                <Value xmlns="">False</Value>
-            </Parameter>
         </ParameterSet>
     </ProcessingCommand>
 

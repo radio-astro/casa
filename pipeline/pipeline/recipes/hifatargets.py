@@ -20,7 +20,10 @@ __rethrow_casa_exceptions = True
 #     Clunky but import casa does not work for pipeline tasks
 from h_init_cli import h_init_cli as h_init
 from hifa_importdata_cli import hifa_importdata_cli as hifa_importdata
+from hif_mstransform_cli import hif_mstransform_cli as hif_mstransform
 from hif_findcont_cli import hif_findcont_cli as hif_findcont
+from hif_uvcontfit_cli import hif_uvcontfit_cli as hif_uvcontfit
+from hif_uvcontsub_cli import hif_uvcontsub_cli as hif_uvcontsub
 from hif_makeimlist_cli import hif_makeimlist_cli as hif_makeimlist
 from hif_makeimages_cli import hif_makeimages_cli as hif_makeimages
 from hif_exportdata_cli import hif_exportdata_cli as hif_exportdata
@@ -46,11 +49,20 @@ def hifatargets (vislist, importonly=False, pipelinemode='automatic', interactiv
         if importonly:
             raise Exception(IMPORT_ONLY)
 
+        # Split out the target data
+        hif_mstransform (pipelinemode=pipelinemode)
+ 
         # Make a list of expected targets to be cleaned in cont (aggregate over all spws) mode
         hif_makeimlist (specmode='cont', pipelinemode=pipelinemode)
  
         # Find continuum frequency ranges
         hif_findcont(pipelinemode=pipelinemode)
+
+        # Fit the continuum using frequency ranges from hif_findcont
+        hif_uvcontfit(pipelinemode=pipelinemode)
+
+        # Subtract the continuum fit
+        hif_uvcontsub(pipelinemode=pipelinemode)
 
         # Make clean cont images for the selected targets
         hif_makeimages (pipelinemode=pipelinemode)
