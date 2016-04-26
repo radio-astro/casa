@@ -2811,9 +2811,10 @@ VisBufferImpl2::fillWeightSpectrum (Cube<Float>& value) const
 
             for (Int correlation = 0; correlation < nCorrelations (); correlation ++){
 
+                Int nChan = nChannels();
                 float theWeight = theWeights (correlation, row);
 
-                for (Int channel = 0; channel < nChannels(); channel ++){
+                for (Int channel = 0; channel < nChan; channel ++){
 
                     value (correlation, channel, row) = theWeight;
                 }
