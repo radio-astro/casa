@@ -1652,8 +1652,8 @@ in the ascii file. If the shape of the image having N axes is to be
 [s\_0, s\_1, s\_2, ..., s\_(N-1)],
 where s\_i is the integral number of pixels along axis number i, the file must have
 (s\_1 * s\_2 * ... * s\_(N-1)) rows and each row must have s\_0 numerical
-values delimited by the value specified by the sep parameter, or spaces if sep is
-not specified. Pixel locations are incremented by row number in such a way that the second
+values delimited by the value specified by the sep parameter.
+Pixel locations are incremented by row number in such a way that the second
 axis changes fastest. As an example, say we want to create an image with
 shape=[3,4,2]. There must be 4*2 = 8 rows in the ascii file, and each row must have
 3 space-delimited numerical values. The first row represents values of pixels
