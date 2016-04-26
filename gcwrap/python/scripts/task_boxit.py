@@ -32,11 +32,8 @@ def boxit(imagename, regionfile, threshold, maskname, chanrange, polrange, minsi
         myia.open(imagename)
         if len(myia.shape()) != 4:
             raise Exception("Only 4D images with direction, spectral, and stokes coordinates are supported")
-        # CAS-2059 escape characters in image name that will confuse the lattice expression processor
-        escaped_imagename = imagename
-        for escapeme in ['-', '+', '*', '/' ]:
-            escaped_imagename = re.sub("[" + escapeme + "]", "\\" + escapeme, escaped_imagename)         
-        mask = escaped_imagename+'>'+str(threshold)
+        # CAS-2059/CAS-7202 escape characters in image name that will confuse the lattice expression processor
+        mask = "'" + imagename + "'>" + str(threshold)
         fullmask = myia.getregion(mask=mask, getmask=True)
         if not(fullmask.max()):
             casalog.post('Maximum flux in image is below threshold.', 'WARN')

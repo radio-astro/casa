@@ -196,11 +196,11 @@ class boxit_test(unittest.TestCase):
         test = "CAS-2059: confirm imagename can contain dashes"
         success = True
         global msgs, imagename
-        myimagename = "I+am-a*weird*name"
+        myimagename = "./I+am-a*weird*name"
         shutil.copytree(imagename, myimagename)
         regionfile = 'boxit_basic_2.box'
         mask = 'boxit_basic_2.mask'
-        boxit(imagename=myimagename, threshold=.5, regionfile=regionfile, maskname=mask)
+        boxit(imagename=myimagename+"/", threshold=.5, regionfile=regionfile, maskname=mask)
         if (not compare_region(exp_basic_rgn, regionfile)):
             success = False
             msgs += test + ": region file not correctly written" 
