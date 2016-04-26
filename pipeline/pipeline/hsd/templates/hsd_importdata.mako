@@ -7,18 +7,24 @@ import os
 <%block name="title">${importdata.title()}</%block>
 
 <%
-def get_spwmap(tsys_strategy):
+def get_spwmap(ms):
+    dotsysspwmap = ms.calibration_strategy['tsys']
+    tsys_strategy = ms.calibration_strategy['tsys_strategy']
     spwmap = {}
-    for l in tsys_strategy:
-        if spwmap.has_key(l[0]):
-            spwmap[l[0]].append(l[1])
-        else:
-            spwmap[l[0]] = [l[1]]
+    if dotsysspwmap == True:
+        for l in tsys_strategy:
+            if spwmap.has_key(l[0]):
+                spwmap[l[0]].append(l[1])
+            else:
+                spwmap[l[0]] = [l[1]]
+    else:
+        for spw in ms.get_spectral_windows(science_windows_only=True):
+            spwmap[spw.id] = [spw.id]
     return spwmap
   
 spwmap = {}
 for ms in pcontext.observing_run.measurement_sets:
-    spwmap[ms.basename] = get_spwmap(ms.calibration_strategy['tsys_strategy'])
+    spwmap[ms.basename] = get_spwmap(ms)
     
 fieldmap = {}
 for ms in pcontext.observing_run.measurement_sets:
@@ -29,6 +35,7 @@ contents = {}
 for vis, _spwmap in spwmap.items():
     _fieldmap = fieldmap[vis]
     _spwkeys = _spwmap.keys()
+    _spwkeys.sort()
     _fieldkeys = _fieldmap.keys()
     l = max(len(_spwkeys), len(_fieldkeys))
     _contents = []
