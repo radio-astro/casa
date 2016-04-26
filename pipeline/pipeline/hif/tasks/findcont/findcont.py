@@ -53,7 +53,11 @@ class FindCont(basetask.StandardTaskTemplate):
         # single measurement set
         if type(inputs.vis) is not types.ListType:
             inputs.vis = [inputs.vis]
-
+        targetmslist = [vis for vis in inputs.vis if context.observing_run.get_ms(name=vis).is_imaging_ms]
+        if len(targetmslist) > 0:
+            datacolumn = 'data'
+        else:
+            datacolumn = 'corrected'
 
         findcont_heuristics = findcont.FindContHeuristics(context)
 
@@ -144,6 +148,7 @@ class FindCont(basetask.StandardTaskTemplate):
                     # frame. The LSRK ranges will need to be translated to the
                     # individual TOPO ranges for the involved MSs.
                     job = casa_tasks.tclean(vis=inputs.vis, imagename=findcont_basename,
+                        datacolumn=datacolumn,
                         spw=spwid, intent=utils.to_CASA_intent(inputs.ms[0], target['intent']),
                         scan=scanidlist, specmode='cube', gridder=gridder, pblimit=0.2,
                         niter=0, threshold='0mJy', deconvolver='hogbom',
