@@ -4,11 +4,13 @@ import numpy
 
 import pipeline.domain.measures as measures
 from pipeline.hif.heuristics import tclean
+from pipeline.hif.heuristics import mosaicoverlap
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.mpihelpers as mpihelpers
 import pipeline.infrastructure.pipelineqa as pipelineqa
+import pipeline.infrastructure.utils as utils
 from pipeline.infrastructure import casa_tasks
 from .basecleansequence import BaseCleanSequence
 from .imagecentrethresholdsequence import ImageCentreThresholdSequence
@@ -421,17 +423,38 @@ class Tclean(cleanbase.CleanBase):
             for intSpw in [int(s) for s in spw.split(',')]:
                 with casatools.ImagerReader(ms.name) as imTool:
                     try:
-                        # TODO: Add scan selection
-                        imTool.selectvis(spw=intSpw, field=field)
-                        imTool.defineimage(mode=specmode, spw=intSpw,
-                                           cellx=inputs.cell[0], celly=inputs.cell[0],
-                                           nx=inputs.imsize[0], ny=inputs.imsize[1])
-                        # TODO: Mosaic switch needed ?
-                        imTool.weight(type=inputs.weighting, robust=inputs.robust)
+                        if (inputs.gridder == 'mosaic'):
+                            field_sensitivities = []
+                            for field_id in [f.id for f in ms.fields if (utils.dequote(f.name) == utils.dequote(field) and inputs.intent in f.intents)]:
+                                # TODO: Add scan selection ?
+                                imTool.defineimage(mode=specmode, spw=intSpw,
+                                                   cellx=inputs.cell[0], celly=inputs.cell[0],
+                                                   nx=inputs.imsize[0], ny=inputs.imsize[1])
+                                # TODO: Mosaic switch needed ?
+                                imTool.weight(type=inputs.weighting, robust=inputs.robust)
+                                imTool.selectvis(spw=intSpw, field=field_id)
+                                result = imTool.apparentsens()
+                                if (result[1] != 0.0):
+                                    field_sensitivities.append(result[1])
 
-                        result = imTool.apparentsens()
-                        if (result[1] != 0.0):
-                            sensitivities.append(result[1])
+                            # Calculate mosaic overlap factor
+                            source_name = [f.source.name for f in ms.fields if (utils.dequote(f.name) == utils.dequote(field) and inputs.intent in f.intents)][0]
+                            diameter = numpy.median([a.diameter for a in ms.antennas])
+                            overlap_factor = mosaicoverlap.mosaicOverlapFactorMS(ms, source_name, intSpw, diameter)
+
+                            sensitivities.append(numpy.median(field_sensitivities) / overlap_factor)
+                        else:
+                            # TODO: Add scan selection ?
+                            imTool.defineimage(mode=specmode, spw=intSpw,
+                                               cellx=inputs.cell[0], celly=inputs.cell[0],
+                                               nx=inputs.imsize[0], ny=inputs.imsize[1])
+                            # TODO: Mosaic switch needed ?
+                            imTool.weight(type=inputs.weighting, robust=inputs.robust)
+                            imTool.selectvis(spw=intSpw, field=field)
+                            result = imTool.apparentsens()
+                            if (result[1] != 0.0):
+                                sensitivities.append(result[1])
+                            imtTool.done()
                     except Exception as e:
                         # Simply pass as this could be a case of a source not
                         # being present in the MS.
