@@ -1720,7 +1720,7 @@ in the resulting coordinate system.
 """
 # say the above file presented above is stored in a file
 # named image.txt
-ia.fromascii(outfile="myimage.im", infile='image.txt', shape=[3,4,2], overwrite=true)
+ia.fromascii(outfile="myimage.im", infile='image.txt', shape=[3,4,2], sep=" ", overwrite=true)
 # should return [3, 4, 2]
 ia.shape()
 # call other ia methods then close the tool
