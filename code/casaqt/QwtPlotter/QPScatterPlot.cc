@@ -560,11 +560,19 @@ void QPScatterPlot::draw_(QPainter* p, const QwtScaleMap& xMap,
                         if(!sameBrush) p->setBrush(brush);
                     }
                     if(diffColor) {
-                        p->setBrush(m_coloredBrushes[m_coloredData->binAt(i)]);
-                        p->setPen(
-                            m_coloredBrushes[m_coloredData->binAt(i)].color());
+                        QBrush coloredBrush = m_coloredBrushes[m_coloredData->binAt(i)];
+                        QColor brushColor = coloredBrush.color();
+                        p->setBrush(coloredBrush);
+                        p->setPen(brushColor);
+#if QWT_VERSION >= 0x060000
+                        QPSymbol* coloredSym = coloredSymbol(brushColor);
+                        coloredSym->draw(p, rect);
+                    } else
+                        m_symbol.draw(p, rect);
+#else
                     }
                     m_symbol.draw(p, rect);
+#endif
                 } else if(drawMaskedSymbol && mask) {
                     mRect.moveCenter(QPoint(xMap.transform(tempx),
                                             yMap.transform(tempy)));
@@ -574,11 +582,19 @@ void QPScatterPlot::draw_(QPainter* p, const QwtScaleMap& xMap,
                         if(!sameBrush) p->setBrush(mbrush);
                     }
                     if(diffColor) {
-                        p->setBrush(m_coloredBrushes[m_coloredData->binAt(i)]);
-                        p->setPen(
-                            m_coloredBrushes[m_coloredData->binAt(i)].color());
+                        QBrush coloredBrush = m_coloredBrushes[m_coloredData->binAt(i)];
+                        QColor brushColor = coloredBrush.color();
+                        p->setBrush(coloredBrush);
+                        p->setPen(brushColor);
+#if QWT_VERSION >= 0x060000
+                        QPSymbol* coloredSym = coloredSymbol(brushColor);
+                        coloredSym->draw(p, mRect);
+                    } else
+                        m_maskedSymbol.draw(p, mRect);
+#else
                     }
                     m_maskedSymbol.draw(p, mRect);
+#endif
                 }
             }
 
@@ -625,6 +641,19 @@ void QPScatterPlot::draw_(QPainter* p, const QwtScaleMap& xMap,
 
 
 // Private Methods //
+
+#if QWT_VERSION >= 0x060000
+QPSymbol* QPScatterPlot::coloredSymbol(const QColor& color) const {
+    // Qwt 6 uses pen color from symbol not painter;
+    // Need a non-const symbol
+    QPSymbol* coloredSym = new QPSymbol();
+    coloredSym->setStyle(m_symbol.style());
+    coloredSym->setSize(m_symbol.size().first, m_symbol.size().second);
+    coloredSym->setBrush(color);
+    coloredSym->setPen(color);
+    return coloredSym;
+}
+#endif
 
 void QPScatterPlot::updateBrushes() {
     m_coloredBrushes.clear();

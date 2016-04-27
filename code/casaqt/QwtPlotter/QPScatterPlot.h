@@ -236,7 +236,11 @@ private:
     QList<QBrush> m_coloredBrushes;
     // </group>
     
-    
+#if QWT_VERSION >= 0x060000
+    // Make non-const symbol from m_symbol for colorized plots
+    QPSymbol* coloredSymbol(const QColor& color) const;
+#endif
+
     // Updates the binned color brushes.
     void updateBrushes();
 };
