@@ -1058,9 +1058,9 @@ if(mystep in thesteps):
     exprmsm = 0.00912253372371
     # tclean expectation values set 11 Abril 2013 based on analysis using CASA trunk r36680
     if (withtclean):
-	exppeakm = 0.189118608832
-	# tclean gives in parallel slightly higher rms for M100 (0.8% higher)
-	exprmsm = (0.0094265351072+0.00947754923254)/2
+	# tclean gives in parallel slightly different resukts for M100 (1% instead of 0.5%)
+	exppeakm = (0.189118608832+0.189019560814)/2
+	exprmsm = (0.0094265351072+0.00936493650079)/2
 
 
     calstat=imstat(imagename='test-M100line.image', region='', box='42,115,65,134')
