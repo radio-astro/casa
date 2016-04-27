@@ -261,29 +261,32 @@ class Tclean(cleanbase.CleanBase):
         #       If 'cont' images are going to be used, then the
         #       startmodel parameter must be a list with
         #       ['<name>.model.tt0', '<name>.model.tt1'].
-        cont_image_name = ''
-        if (('TARGET' in inputs.intent) and (inputs.specmode == 'cube')):
-            imlist = self.inputs.context.sciimlist.get_imlist()
-            for iminfo in imlist[::-1]:
-                if ((iminfo['sourcetype'] == 'TARGET') and \
-                    (iminfo['sourcename'] == inputs.field) and \
-                    (iminfo['specmode'] == 'mfs') and \
-                    (inputs.spw in iminfo['spwlist'].split(','))):
-                    cont_image_name = iminfo['imagename'][:iminfo['imagename'].rfind('.image')]
-                    cont_image_name = cont_image_name.replace('.pbcor', '.model')
-                    break
+        # NOTE: For Cycle 4 we will implement uv continuum subtraction
+        #       Leave this code in place as a reminder for the future
+        #       when the pipeline may opt to choose between them
+        #cont_image_name = ''
+        #if (('TARGET' in inputs.intent) and (inputs.specmode == 'cube')):
+            #imlist = self.inputs.context.sciimlist.get_imlist()
+            #for iminfo in imlist[::-1]:
+                #if ((iminfo['sourcetype'] == 'TARGET') and \
+                    #(iminfo['sourcename'] == inputs.field) and \
+                    #(iminfo['specmode'] == 'mfs') and \
+                    #(inputs.spw in iminfo['spwlist'].split(','))):
+                    #cont_image_name = iminfo['imagename'][:iminfo['imagename'].rfind('.image')]
+                    #cont_image_name = cont_image_name.replace('.pbcor', '.model')
+                    #break
 
-            if (cont_image_name != ''):
-                LOG.info('Using %s for continuum subtraction.' % (os.path.basename(cont_image_name)))
-            else:
-                LOG.warning('Could not find any matching continuum image. Skipping continuum subtraction.')
+            #if (cont_image_name != ''):
+                #LOG.info('Using %s for continuum subtraction.' % (os.path.basename(cont_image_name)))
+            #else:
+                #LOG.warning('Could not find any matching continuum image. Skipping continuum subtraction.')
 
         # Do continuum subtraction for target cubes
         # NOTE: This currently needs to be done as a separate step.
         #       In the future the subtraction will be handled
         #       on-the-fly in tclean.
-        if (cont_image_name != ''):
-            self._do_continuum(cont_image_name = cont_image_name, mode = 'sub')
+        #if (cont_image_name != ''):
+            #self._do_continuum(cont_image_name = cont_image_name, mode = 'sub')
 
         # Compute the dirty image
         LOG.info('Compute the dirty image')
@@ -377,11 +380,11 @@ class Tclean(cleanbase.CleanBase):
             iter += 1
 
         # Re-add continuum so that the MS is unchanged afterwards.
-        if (cont_image_name != ''):
-            if (inputs.subcontms == False):
-                self._do_continuum(cont_image_name = cont_image_name, mode = 'add')
-            else:
-                LOG.warn('Not re-adding continuum model. MS is modified !')
+        #if (cont_image_name != ''):
+            #if (inputs.subcontms == False):
+                #self._do_continuum(cont_image_name = cont_image_name, mode = 'add')
+            #else:
+                #LOG.warn('Not re-adding continuum model. MS is modified !')
 
         return result
 
@@ -508,9 +511,19 @@ class Tclean(cleanbase.CleanBase):
 
         LOG.info('Predict continuum model.')
 
+        # Set the data column
+        #   This routine is not used for Cycle 4. This is a reminder to
+        #   consider the datacolumn default when making future modifications
+        targetmslist = [vis for vis in inputs.vis if context.observing_run.get_ms(name=vis).is_imaging_ms]
+        if len(targetmslist) > 0:
+            datacolumn = 'data'
+        else:
+            datacolumn = 'corrected'
+
         # Predict continuum model
         job = casa_tasks.tclean(vis=inputs.vis, imagename='%s.I.cont_%s_pred' %
                 (os.path.basename(inputs.imagename), mode),
+                datacolumn=datacolumn,
                 spw=inputs.spw,
                 intent='*TARGET*',
                 scan='', specmode='mfs', gridder=inputs.gridder,

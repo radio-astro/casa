@@ -29,7 +29,7 @@ LOG = infrastructure.get_logger(__name__)
 
 class CleanBaseInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
-    def __init__(self, context, output_dir=None, vis=None, imagename=None,
+    def __init__(self, context, output_dir=None, vis=None, imagename=None, datacolumn=None,
                  intent=None, field=None, spw=None, spwsel=None, uvrange=None, specmode=None,
                  gridder=None, deconvolver=None, outframe=None, imsize=None, cell=None,
                  phasecenter=None, nchan=None, start=None, width=None, stokes=None,
@@ -116,6 +116,16 @@ class CleanBaseInputs(basetask.StandardInputs):
             value = []
         self._cell = value
 
+    @property
+    def datacolumn(self):
+        return self._datacolumn
+
+    @datacolumn.setter
+    def datacolumn(self, value):
+        if value is None:
+            value = ''
+        self._datacolumn = value
+
 
 class CleanBase(basetask.StandardTaskTemplate):
     Inputs = CleanBaseInputs
@@ -131,6 +141,17 @@ class CleanBase(basetask.StandardTaskTemplate):
         # single measurement set
         if type(inputs.vis) is not types.ListType:
             inputs.vis = [inputs.vis]
+
+        # Set the data column
+        targetmslist = [vis for vis in inputs.vis if context.observing_run.get_ms(name=vis).is_imaging_ms]
+        if not inputs.datacolumn:
+            if len(targetmslist) > 0:
+                if inputs.specmode == 'cube':
+                    inputs.datacolumn = 'corrected'
+                else:
+                    inputs.datacolumn = 'data'
+            else:
+                inputs.datacolumn = 'corrected'
 
         # Construct regex for string matching - escape likely problem
         # chars. Simpler way to do this ?
@@ -326,6 +347,7 @@ class CleanBase(basetask.StandardTaskTemplate):
         if (result.multiterm):
             job = casa_tasks.tclean(vis=inputs.vis, imagename='%s.%s.iter%s' %
                   (os.path.basename(inputs.imagename), inputs.stokes, iter),
+                  datacolumn=inputs.datacolumn,
                   spw=spw_freq_param,
                   intent=utils.to_CASA_intent(inputs.ms[0], inputs.intent),
                   scan=scanidlist, specmode=inputs.specmode if inputs.specmode != 'cont' else 'mfs', gridder=inputs.gridder,
@@ -345,6 +367,7 @@ class CleanBase(basetask.StandardTaskTemplate):
         else:
             job = casa_tasks.tclean(vis=inputs.vis, imagename='%s.%s.iter%s' %
                   (os.path.basename(inputs.imagename), inputs.stokes, iter),
+                  datacolumn=inputs.datacolumn,
                   spw=spw_freq_param,
                   intent=utils.to_CASA_intent(inputs.ms[0], inputs.intent),
                   scan=scanidlist, specmode=inputs.specmode if inputs.specmode != 'cont' else 'mfs', gridder=inputs.gridder,
