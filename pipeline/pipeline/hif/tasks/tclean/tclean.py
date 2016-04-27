@@ -202,7 +202,7 @@ class Tclean(cleanbase.CleanBase):
                 LOG.info('Heuristic imsize: %s', imsize)
 
         # Get a noise estimate from the CASA sensitivity calculator
-        sensitivity = self._do_sensitivity()
+        sensitivity, channel_rms_factor = self._do_sensitivity()
         LOG.info('Sensitivity estimate from CASA %s', sensitivity)
 
         # Choose cleaning method.
@@ -220,23 +220,27 @@ class Tclean(cleanbase.CleanBase):
             if inputs.hm_masking == 'centralregion':
                 sequence_manager = ImageCentreThresholdSequence(
                     gridder = inputs.gridder, threshold=threshold,
+                    channel_rms_factor = channel_rms_factor,
                     sensitivity = sensitivity, niter=inputs.niter)
             # Manually supplied mask
             else:
                 sequence_manager = ManualMaskThresholdSequence(
                     mask=inputs.mask,
                     gridder = inputs.gridder, threshold=threshold,
+                    channel_rms_factor = channel_rms_factor,
                     sensitivity = sensitivity, niter=inputs.niter)
 
         elif inputs.hm_masking == 'psfiter':
             sequence_manager = IterativeSequence(
                 maxncleans=inputs.maxncleans,
-                sensitivity=sensitivity)
+                sensitivity=sensitivity,
+                channel_rms_factor = channel_rms_factor)
 
         elif inputs.hm_masking == 'psfiter2':
             sequence_manager = IterativeSequence2(
                 maxncleans=inputs.maxncleans,
-                sensitivity=sensitivity)
+                sensitivity=sensitivity,
+                channel_rms_factor = channel_rms_factor)
 
         result = self._do_iterative_imaging(
             sequence_manager=sequence_manager, result=result)
@@ -315,7 +319,7 @@ class Tclean(cleanbase.CleanBase):
         LOG.info('    Residual max %s', residual_max)
         LOG.info('    Residual min %s', residual_min)
 
-        dirty_dynamic_range = residual_max / non_cleaned_rms
+        dirty_dynamic_range = residual_max / non_cleaned_rms / sequence_manager.channel_rms_factor
         if (dirty_dynamic_range > 100.):
             n_dr = 5.
         elif (50. < dirty_dynamic_range <= 100.):
@@ -485,7 +489,7 @@ class Tclean(cleanbase.CleanBase):
 
         if inputs.specmode == 'cube':
             if inputs.nchan != -1:
-                sensitivity *= numpy.sqrt(inputs.nchan)
+                channel_rms_factor = numpy.sqrt(inputs.nchan)
             else:
                 qaTool = casatools.quanta
                 ms = context.observing_run.measurement_sets[0]
@@ -494,12 +498,14 @@ class Tclean(cleanbase.CleanBase):
                 max_frequency = float(spwDesc.max_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
                 if qaTool.convert(inputs.width, 'GHz')['value'] == 0.0:
                     effective_channel_width = [float(ch.effective_bw.convert_to(measures.FrequencyUnits.GIGAHERTZ)) for ch in spwdesc.channels][len(spwdesc.channels)/2]
-                    sensitivity *= numpy.sqrt(abs((max_frequency - min_frequency) / effective_channel_width))
+                    channel_rms_factor = numpy.sqrt(abs((max_frequency - min_frequency) / effective_channel_width))
                 else:
-                    sensitivity *= numpy.sqrt(abs((max_frequency - min_frequency) /
-                                                  qaTool.convert(inputs.width, 'GHz')['value']))
+                    channel_rms_factor = numpy.sqrt(abs((max_frequency - min_frequency) / qaTool.convert(inputs.width, 'GHz')['value']))
+            sensitivity *= channel_rms_factor
+        else:
+            channel_rms_factor = 1.0
 
-        return sensitivity
+        return sensitivity, channel_rms_factor
 
     def _do_continuum(self, cont_image_name, mode):
         """

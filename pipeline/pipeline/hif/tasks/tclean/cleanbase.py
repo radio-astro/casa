@@ -386,6 +386,7 @@ class CleanBase(basetask.StandardTaskTemplate):
         tclean_result = self._executor.execute(job)
 
         if (inputs.niter > 0):
+            LOG.info('tclean used %d iterations' % (tclean_result['iterdone']))
             if (tclean_result['iterdone'] == tclean_result['niter']):
                 LOG.warning('tclean reached niter limit of %d !' % (tclean_result['niter']))
 
