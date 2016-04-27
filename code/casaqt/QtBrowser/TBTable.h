@@ -32,11 +32,7 @@
 
 #include <casa/BasicSL/String.h>
 
-#include <map>
 #include <vector>
-
-#include <casa/namespace.h>
-using namespace std;
 
 namespace casa {
 
@@ -94,9 +90,9 @@ public:
 class TableParams {
 public:
     TableParams(String& l, bool& ir, bool& rr,
-                vector<vector<TBData*>*>& d,
-                vector<TBField*>& f, vector<TBKeyword*>& k,
-                vector<int>& sr, int& tr, int& lr, vector<bool>& w, bool& t,
+                std::vector<std::vector<TBData*>*>& d,
+                std::vector<TBField*>& f, std::vector<TBKeyword*>& k,
+                std::vector<int>& sr, int& tr, int& lr, std::vector<bool>& w, bool& t,
                 DriverParams* dp): location(l), insertRow(ir), removeRow(rr),
                 data(d), fields(f), keywords(k), subtableRows(sr),
                 totalRows(tr), loadedRows(lr), writable(w), taql(t),
@@ -113,16 +109,16 @@ public:
     bool& removeRow;
     
     // See TBTable::data.    
-    vector<vector<TBData*>*>& data;
+    std::vector<std::vector<TBData*>*>& data;
     
     // See TBTable::fields.
-    vector<TBField*>& fields;
+    std::vector<TBField*>& fields;
     
     // See TBTable::keywords.
-    vector<TBKeyword*>& keywords;
+    std::vector<TBKeyword*>& keywords;
     
     // See TBTable::subtableRows.
-    vector<int>& subtableRows;
+    std::vector<int>& subtableRows;
     
     // See TBTable::totalRows.
     int& totalRows;
@@ -131,7 +127,7 @@ public:
     int& loadedRows;
     
     // See TBTable::writable.
-    vector<bool>& writable;
+    std::vector<bool>& writable;
     
     // See TBTable::taql.
     bool& taql;
@@ -174,7 +170,7 @@ public:
     DriverParams* getDriverParams();
 
     // Returns the fields for this table.
-    vector<TBField*>* getFields();
+    std::vector<TBField*>* getFields();
     
     // Returns the field at the given index, or NULL if there is none.
     TBField* field(int i);
@@ -183,7 +179,7 @@ public:
     TBField* field(String name);
 
     // Returns the table keywords.
-    vector<TBKeyword*>* getTableKeywords();
+    std::vector<TBKeyword*>* getTableKeywords();
 
     // Returns the keyword at the given index, or NULL if there is none.
     TBKeyword* keyword(int i);
@@ -234,7 +230,7 @@ public:
 
     // Returns the shape of the array for the given field, or an empty list
     // if the field is not an array.
-    vector<int> dataDimensionsAt(unsigned int col);
+    std::vector<int> dataDimensionsAt(unsigned int col);
     
     // Returns whether all the columns in this table are editable or not.
     bool isEditable();
@@ -272,15 +268,15 @@ public:
     // as progress is made.
     Result loadRows(int start = 0,
                     int number = TBConstants::DEFAULT_SELECT_NUM,
-                    bool full = false, vector<String>* columns = NULL,
+                    bool full = false, std::vector<String>* columns = NULL,
                     bool parsedata = true,
                     ProgressHelper* progressPanel = NULL);
 
     // Returns the column headers (field names) for this table.
-    vector<String> getColumnHeaders();
+    std::vector<String> getColumnHeaders();
 
     // Returns the row headers (row numbers) for the loaded rows in this table.
-    vector<String> getRowHeaders();
+    std::vector<String> getRowHeaders();
 
     // Loads and returns the array at the given indices.
     TBArrayData* loadArray(unsigned int row, unsigned int col);
@@ -298,7 +294,7 @@ public:
     // one-dimensional array, false otherwise.  Returns a result indicating
     // the success of the editing.    
     Result editArrayData(unsigned int row, unsigned int col,
-                         vector<int> coords, TBData* newVal, bool oneDim);
+                         std::vector<int> coords, TBData* newVal, bool oneDim);
 
     // Exports the entirety of this table to VOTable XML format to the given
     // file.  If a ProgressHelper is provided, progress information is updated
@@ -338,7 +334,7 @@ public:
     // Deletes the given rows from the table.  Each element in the vector
     // should be a row number.  Returns a Result indicating the success of the
     // operation.
-    Result deleteRows(vector<int> r);
+    Result deleteRows(std::vector<int> r);
 
 private:
     // Driver parameters.
@@ -357,7 +353,7 @@ private:
     bool removeRow;
     
     // Holds the table data.    
-    vector< vector<TBData*>* > data;
+    std::vector< std::vector<TBData*>* > data;
     
     // The total number of rows in the table.
     int totalRows;
@@ -372,16 +368,16 @@ private:
     int rowIndex;
 
     // The table fields.
-    vector<TBField*> fields;
+    std::vector<TBField*> fields;
     
     // The table keywords.
-    vector<TBKeyword*> keywords;
+    std::vector<TBKeyword*> keywords;
     
     // Cache of total number of rows for subtables.
-    vector<int> subtableRows;
+    std::vector<int> subtableRows;
     
     // Indicates whether this table is writable or not.
-    vector<bool> writable;
+    std::vector<bool> writable;
     
     // Indates whether this table was constructed from a TaQL command or not.
     bool taql;
@@ -391,7 +387,7 @@ private:
 
     
     // Helper method for plotRows().
-    double getDouble(TBData* d, vector<int>* slice, bool complex, bool amp);
+    double getDouble(TBData* d, std::vector<int>* slice, bool complex, bool amp);
     
     // Helper method for plotRows().
     void filter(TBPlotData* data, TBTable& table, TBFilterRuleSequence* rules,

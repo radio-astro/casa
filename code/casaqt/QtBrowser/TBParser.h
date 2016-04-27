@@ -27,9 +27,6 @@
 #ifndef TBPARSER_H_
 #define TBPARSER_H_
 
-#include <vector>
-#include <sstream>
-
 #include <xercesc/dom/DOM.hpp>
 #include <xercesc/sax2/DefaultHandler.hpp>
 #include <xercesc/sax2/Attributes.hpp>
@@ -39,9 +36,11 @@
 
 #include <casa/BasicSL/String.h>
 
-#include <casa/namespace.h>
+#include <vector>
+#include <sstream>
+#include <map>
+
 using namespace xercesc;
-using namespace std;
 
 namespace casa {
 
@@ -74,7 +73,7 @@ public:
     virtual ~TBParser();
 
     
-    vector<vector<String>*>* getData() { return &data; }
+    std::vector<std::vector<String>*>* getData() { return &data; }
     
     // Set whether the TBParser should print debug information or not.
     void setPrintDebug(bool pdb);
@@ -94,19 +93,19 @@ protected:
     bool& removeRow;
 
     // Holds the table data.
-    vector<vector<String>*> data;
+    std::vector<std::vector<String>*> data;
 
     // Holds the "real" table data.
-    vector<vector<TBData*>*>& data2;
+    std::vector<std::vector<TBData*>*>& data2;
     
     // Holds the table fields.
-    vector<TBField*>& fields;
+    std::vector<TBField*>& fields;
 
     // Holds the table keywords.
-    vector<TBKeyword*>& keywords;
+    std::vector<TBKeyword*>& keywords;
 
     // Holds the list of the number of rows for each subtable.
-    vector<int>& subtableRows;
+    std::vector<int>& subtableRows;
 
     // Holds the total number of rows in the table.
     int& totalRows;
@@ -142,13 +141,13 @@ public:
 
 private:
     // All parsed XMLtokens that had a tag name of TBConstants::XML_FIELD.
-    vector<XMLtoken*> xfields;
+    std::vector<XMLtoken*> xfields;
 
     // All parsed XMLtokens that had a tag name of TBConstants::XML_KEYWORD.
-    vector<XMLtoken*> xkeywords;
+    std::vector<XMLtoken*> xkeywords;
 
     // All parsed XMLtokens that had a tag name of TBConstants::XML_COLUMNKW.
-    map<String, vector<XMLtoken*>*> xcolkeywords;
+    std::map<String, std::vector<XMLtoken*>*> xcolkeywords;
 
     
     // Recursively parses a XMLtoken from the given String.  The level
@@ -256,7 +255,7 @@ private:
     bool inTD;
 
     // The current row of table data being parsed.
-    vector<String>* row;
+    std::vector<String>* row;
 
     // Keeps all non-XML or extra text.
     stringstream extraText;
@@ -265,7 +264,7 @@ private:
     bool valid;
 
     // Keep all parsed column keywords.
-    map<int, vector<TBKeyword*>*> colkws;
+    std::map<int, std::vector<TBKeyword*>*> colkws;
 
     // Is true if the table data should be parsed, false otherwise.
     bool parsedata;

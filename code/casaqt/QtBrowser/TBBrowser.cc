@@ -45,6 +45,8 @@
 
 #include <sstream>
 
+using namespace std;
+
 namespace casa {
 
 ////////////////////////////

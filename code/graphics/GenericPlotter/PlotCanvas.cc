@@ -30,7 +30,7 @@
 #include <graphics/GenericPlotter/PlotFactory.h>
 #include <graphics/GenericPlotter/PlotOptions.h>
 
-
+using namespace std;
 
 namespace casa {
 

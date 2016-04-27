@@ -33,8 +33,6 @@
 #include <QDBusArgument>
 #include <QMetaType>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 // Subclass of QDomDocument that represents an XML scheme that is to be used

@@ -36,8 +36,6 @@
 #include <qwt_plot_item.h>
 #include <qwt_plot_marker.h>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 // QPShape is the abstract superclass for any qwt-based shapes.  It handles the
@@ -409,7 +407,7 @@ public:
     // are at a 45 degree angle from the "from" point and the line between the
     // point and the "from" point is equal to "length".
     // <group>
-    static pair<QPointF, QPointF> arrowPoints(QPointF from, QPointF to,
+    static std::pair<QPointF, QPointF> arrowPoints(QPointF from, QPointF to,
                                               double length);    
     static void arrowPoints(double x1, double y1, double x2, double y2,
                             double length, double& resX1, double& resY1,
@@ -501,7 +499,7 @@ private:
     // Helper for arrowPoints.  Calculates the points under the assumption that
     // the arrow is pointing in an assumed direction, and then lets arrowPoints
     // rotate/transform the results as needed.
-    static pair<QPointF, QPointF> arrowPointsHelper(QPointF p1, QPointF p2,
+    static std::pair<QPointF, QPointF> arrowPointsHelper(QPointF p1, QPointF p2,
                                                     double length);
 };
 
@@ -760,7 +758,7 @@ namespace casa {
 // the flag isn't on.
 class QPArrow {
 public:
-    static pair<QPointF, QPointF> arrowPoints(QPointF from, QPointF to,
+    static std::pair<QPointF, QPointF> arrowPoints(QPointF from, QPointF to,
                                               double length);
     
     static void arrowPoints(double x1, double y1, double x2, double y2,
@@ -768,7 +766,7 @@ public:
                             double& resX2, double& resY2);
     
 private:
-    static pair<QPointF, QPointF> arrowPointsHelper(QPointF p1, QPointF p2,
+    static std::pair<QPointF, QPointF> arrowPointsHelper(QPointF p1, QPointF p2,
                                                     double length);
 };
 

@@ -34,8 +34,6 @@
 #include <QMutex>
 #include <vector>
 
-//#include <casa/namespace.h>
-
 namespace casa {
 
 //# Forward Declarations

@@ -34,8 +34,6 @@
 
 #include <casa/BasicSL/String.h>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 //# Forward Declarations
@@ -283,7 +281,7 @@ private slots:
     void clearSort();
 
     // Sort the current table with the given order.  See TBBrowser::sort().
-    void sort(vector<pair<String, bool> >& sort);
+    void sort(std::vector<std::pair<String, bool> >& sort);
 
     // Allows the user to edit table options.  See TBOptions.
     void options();

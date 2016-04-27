@@ -32,7 +32,6 @@
 #include <casaqt/QtUtilities/QtEditingWidget.qo.h>
 #include <plotms/PlotMS/PlotMSConstants.h>
 #include <casaqt/QtUtilities/QtUtilities.h>
-#include <casa/namespace.h>
 
 namespace casa {
 

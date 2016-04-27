@@ -39,8 +39,6 @@
 #include <QMainWindow>
 #include <QToolButton>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 //# Forward Declarations

@@ -33,8 +33,6 @@
 
 #include <casa/BasicSL/String.h>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 // <summary>

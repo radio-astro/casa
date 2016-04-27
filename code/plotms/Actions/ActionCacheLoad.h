@@ -36,7 +36,7 @@ class PlotMSPlot;
 class ActionCacheLoad  : public ActionCache {
 public:
 	ActionCacheLoad( Client* client );
-	ActionCacheLoad( Client* client, vector<PlotMSPlot*> plots,
+	ActionCacheLoad( Client* client, std::vector<PlotMSPlot*> plots,
 			PMSPTMethod postThreadMethod);
 
 	void setSetupPlot( bool setUp );
@@ -44,11 +44,11 @@ public:
 	virtual ~ActionCacheLoad();
 protected:
 	virtual bool loadAxes();
-	virtual bool isAxesValid( vector<pair<PMS::Axis,unsigned int > > cacheAxes, int plotIndex, int axisIndex ) const;
-	virtual void setUpWorkParameters(CacheThread* cacheThread, int plotIndex, vector<PMS::Axis>& axes );
+	virtual bool isAxesValid( std::vector<std::pair<PMS::Axis,unsigned int > > cacheAxes, int plotIndex, int axisIndex ) const;
+	virtual void setUpWorkParameters(CacheThread* cacheThread, int plotIndex, std::vector<PMS::Axis>& axes );
 private:
 	void initialize();
-	vector<vector<PMS::DataColumn> > cachedData;
+	std::vector<std::vector<PMS::DataColumn> > cachedData;
 	bool setupPlot;
 };
 

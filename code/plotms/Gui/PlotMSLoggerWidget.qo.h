@@ -32,9 +32,6 @@
 
 #include <QComboBox>
 
-#include <casa/namespace.h>
-using namespace std;
-
 namespace casa {
 
 //# Forward declarations.

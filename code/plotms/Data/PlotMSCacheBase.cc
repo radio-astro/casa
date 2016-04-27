@@ -938,8 +938,8 @@ void PlotMSCacheBase::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange,
 
 		//We are not averaging time.  Store and count the unique time values.
 		else {
-			QList<double> uniqueTimes;
-			QVector<int> timeList;
+			::QList<double> uniqueTimes;
+			::QVector<int> timeList;
 			for ( int i = 0; i < nChunk(); i++ ){
 				double timeValue = getTime(i, 0);
 				if ( !uniqueTimes.contains( timeValue )){
@@ -1496,8 +1496,7 @@ unsigned int PlotMSCacheBase::nPointsForAxis(PMS::Axis axis) const {
 
 void PlotMSCacheBase::log(const String& method, const String& message,
 		int eventType) {
-	plotms_->getLogger()->postMessage(PMS::LOG_ORIGIN,method,message,eventType);}
-
+	plotms_->getLogger()->postMessage(PMS::LOG_ORIGIN,method,message,eventType);
 }
 
 int PlotMSCacheBase::findColorIndex( int chunk, bool initialize ){
@@ -1513,4 +1512,6 @@ int PlotMSCacheBase::findColorIndex( int chunk, bool initialize ){
 	double timeChunk = getTime(chunk,0);
 	int index = uniqueTimes.indexOf( timeChunk );
 	return index;
+}
+
 }

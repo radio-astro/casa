@@ -26,6 +26,8 @@
 //# $Id: $
 #include <plotms/PlotMS/PlotMSRegions.h>
 
+using namespace std;
+
 namespace casa {
 
 //////////////////////////////

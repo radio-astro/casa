@@ -30,6 +30,8 @@
 #include <QApplication>
 #include <QDesktopWidget>
 
+using namespace std;
+
 namespace casa {
 
 //////////////////////////////////

@@ -31,7 +31,6 @@
 #include <plotms/PlotMS/PlotMSParameters.h>
 #include <plotms/Plots/PlotMSPlotManager.h>
 #include <plotms/PlotMS/PlotEngine.h>
-#include <casa/namespace.h>
 
 namespace casa {
 

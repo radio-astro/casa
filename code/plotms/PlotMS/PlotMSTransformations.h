@@ -32,8 +32,6 @@
 #include <measures/Measures/MFrequency.h>
 #include <measures/Measures/MDoppler.h>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 // Specifies averaging parameters for an MS.

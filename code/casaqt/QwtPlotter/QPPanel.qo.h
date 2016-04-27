@@ -35,7 +35,7 @@
 #include <QFrame>
 #include <QPushButton>
 
-#include <casa/namespace.h>
+#include <vector>
 
 namespace casa {
 
@@ -112,7 +112,7 @@ public:
     void registerHandler(PlotButtonEventHandlerPtr handler);
     
     // Implements PlotButton::allHandlers().
-    vector<PlotButtonEventHandlerPtr> allHandlers() const;
+    std::vector<PlotButtonEventHandlerPtr> allHandlers() const;
     
     // Implements PlotButton::unregisterHandler().
     void unregisterHandler(PlotButtonEventHandlerPtr handler);
@@ -131,7 +131,7 @@ private:
     String m_text;         // Text
     String m_imageLoc;     // Image location
     
-    vector<PlotButtonEventHandlerPtr> m_handlers; // Event handlers
+    std::vector<PlotButtonEventHandlerPtr> m_handlers; // Event handlers
     
 private slots:
     // For when the button is pushed/toggled.
@@ -193,7 +193,7 @@ public:
     void registerHandler(PlotCheckboxEventHandlerPtr handler);
     
     // Implements PlotCheckbox::allHandlers().
-    vector<PlotCheckboxEventHandlerPtr> allHandlers() const;
+    std::vector<PlotCheckboxEventHandlerPtr> allHandlers() const;
     
     // Implements PlotCheckbox::unregisterHandler().
     void unregisterHandler(PlotCheckboxEventHandlerPtr handler);
@@ -209,7 +209,7 @@ public:
     
 private:
     QCheckBox* m_checkbox; // Checkbox
-    vector<PlotCheckboxEventHandlerPtr> m_handlers; // Event handlers
+    std::vector<PlotCheckboxEventHandlerPtr> m_handlers; // Event handlers
     
 private slots:
     // For when the checkbox has been toggled.
@@ -235,7 +235,7 @@ public:
     // PlotPanel Methods //
     
     // Implements PlotPanel::widgets().
-    vector<PlotWidgetPtr> widgets() const;
+    std::vector<PlotWidgetPtr> widgets() const;
     
     // Implements PlotPanel::addWidget().
     int addWidget(PlotWidgetPtr widget);
@@ -260,7 +260,7 @@ public:
     
 private:
     QFrame* m_frame;                 // Frame
-    vector<PlotWidgetPtr> m_widgets; // Widgets
+    std::vector<PlotWidgetPtr> m_widgets; // Widgets
     
 private slots:
     // For when the frame is deleted.

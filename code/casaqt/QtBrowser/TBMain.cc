@@ -44,6 +44,8 @@
 #include <casaqt/QtUtilities/QtFileDialog.qo.h>
 #include <stdcasa/version.h>
 
+using namespace std;
+
 namespace casa {
 
 /////////////////////////

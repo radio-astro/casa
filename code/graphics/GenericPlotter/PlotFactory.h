@@ -40,8 +40,6 @@
 
 #include <utility>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 // The idea behind a plot factory is to produce classes that are useful to

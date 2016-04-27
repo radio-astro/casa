@@ -31,7 +31,6 @@
 #include <graphics/GenericPlotter/PlotOperation.h>
 #include <vector>
 #include <QMutex>
-//#include <casa/namespace.h>
 
 namespace casa {
 
@@ -80,7 +79,7 @@ private:
     PlotMSPlotter* itsPlotter_;
 
     // Operations.
-    vector<PlotOperationPtr> itsOperations_;
+    std::vector<PlotOperationPtr> itsOperations_;
 
     // Mutex for accessing operations.
     QMutex itsOperationsMutex_;

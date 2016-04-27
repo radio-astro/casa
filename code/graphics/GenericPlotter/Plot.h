@@ -32,8 +32,6 @@
 
 #include <casa/BasicSL/String.h>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 // A Plot basically consists of data and customization information.  The data

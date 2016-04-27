@@ -31,8 +31,6 @@
 
 #include <casa/BasicSL/String.h>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 // Interface for connecting to and running tasks in Python.

@@ -29,8 +29,6 @@
 
 #include <plotms/PlotMS/PlotMSConstants.h>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 // Specifies export parameters for plotms

@@ -29,6 +29,8 @@
 #include <casaqt/QtUtilities/QtDBusXmlApp.qo.h>
 #include <stdcasa/StdCasa/CasacSupport.h>
 
+using namespace casa;
+
 namespace casac {
 
 //////////////////////

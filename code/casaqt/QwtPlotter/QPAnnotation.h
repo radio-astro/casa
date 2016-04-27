@@ -34,8 +34,6 @@
 
 #include <qwt_text.h>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 //# Forward Declarations

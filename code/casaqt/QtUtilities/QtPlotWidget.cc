@@ -31,6 +31,8 @@
 #include <QColorDialog>
 #include <QDebug>
 
+using namespace std;
+
 namespace casa {
 
 //////////////////////////////

@@ -33,9 +33,6 @@
 #include <QLabel>
 #include <QTimer>
 
-#include <casa/namespace.h>
-using namespace std;
-
 namespace casa {
 
 // Subclass of QFileDialog with additional functionality.

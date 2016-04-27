@@ -31,8 +31,6 @@
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/GuiTabs/PlotMSTab.qo.h>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 class PlotMSDataCollapsible;

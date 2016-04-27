@@ -31,9 +31,6 @@
 
 #include <casa/Containers/Record.h>
 
-#include <casa/namespace.h>
-using namespace std;
-
 namespace casa {
 
 class RecordItemPanel;
@@ -84,7 +81,7 @@ protected:
     const RecordInterface& m_paramRecord;
     
     // Returns the allowed vector in m_paramRecord in a useful format.
-    vector<String> allowedVector();
+    std::vector<String> allowedVector();
 };
 
 
@@ -130,13 +127,13 @@ private:
     bool m_mustExist;
     
     // Array widgets (for array types only).
-    vector<QWidget*> m_aWidgets;
+    std::vector<QWidget*> m_aWidgets;
     
     // Record item panels (for records only).
-    vector<RecordItemPanel*> m_rPanels;
+    std::vector<RecordItemPanel*> m_rPanels;
     
     // Allowed values, or empty if N/A.
-    vector<String> m_allowed;
+    std::vector<String> m_allowed;
     
     // Holds whether the value is a variant or not.
     bool m_isVariant;
@@ -154,7 +151,7 @@ private:
     
     // Limit the chooseable types to the given, for variant values.  May not
     // have a noticeable effect if the type is incompatible.
-    void limitTypes(vector<String> types);
+    void limitTypes(std::vector<String> types);
     
     // Set the lower bound for inputted int values.  May not have a
     // noticeable effect if the type is incompatible.
@@ -202,31 +199,31 @@ private:
     
     // Set the string array value to the given.  May not have a noticeable
     // effect if the type is incompatible.
-    void setStringArrayValue(const vector<String>& array);
+    void setStringArrayValue(const std::vector<String>& array);
     
     // Set the bool array value to the given.  May not have a noticeable
     // effect if the type is incompatible.
-    void setBoolArrayValue(const vector<bool>& array);
+    void setBoolArrayValue(const std::vector<bool>& array);
     
     // Set the double array value to the given.  May not have a noticeable
     // effect if the type is incompatible.
-    void setDoubleArrayValue(const vector<double>& array);
+    void setDoubleArrayValue(const std::vector<double>& array);
     
     // Set the int array value to the given.  May not have a noticeable
     // effect if the type is incompatible.
-    void setIntArrayValue(const vector<int>& array);
+    void setIntArrayValue(const std::vector<int>& array);
     
     // Set the complex array value to the given.  May not have a noticeable
     // effect if the type is incompatible.
-    void setComplexArrayValue(const vector<DComplex>& array);    
+    void setComplexArrayValue(const std::vector<DComplex>& array);    
     
     // Returns a new array widget based on the current type.  Used for adding
     // an item to an array list.
     QWidget* arrayWidget();
     
     // Holds the types supported by the variant panel.
-    static vector<DataType> supportedTypes() {
-        vector<DataType> v(11);
+    static std::vector<DataType> supportedTypes() {
+        std::vector<DataType> v(11);
         v[0] = TpBool; v[1] = TpArrayBool;
         v[2] = TpInt; v[3] = TpArrayInt;
         v[4] = TpDouble; v[5] = TpArrayDouble;

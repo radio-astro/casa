@@ -35,8 +35,6 @@
 
 #include <QObject>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 // Implementation of MaskedPlot, ErrorPlot, and ColoredPlot for Qwt plotter.

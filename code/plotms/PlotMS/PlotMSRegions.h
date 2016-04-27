@@ -31,9 +31,6 @@
 
 #include <map>
 
-#include <casa/namespace.h>
-using namespace std;
-
 namespace casa {
 
 // A single region; basically just a container class for four doubles.
@@ -119,7 +116,7 @@ public:
     
     
     // Returns all axis pairs that have regions.
-    Vector<pair<PMS::Axis, PMS::Axis> > allAxisPairs() const;
+    Vector<std::pair<PMS::Axis, PMS::Axis> > allAxisPairs() const;
     
     // Returns whether or not there are regions for the given (x, y) axis pair.
     bool hasRegionsFor(PMS::Axis x, PMS::Axis y) const;
@@ -156,7 +153,7 @@ public:
     
 private:
     // Convenience macro for map type.
-    typedef map<pair<PMS::Axis, PMS::Axis>, Vector<PlotMSRegion> > PMSRMap;
+    typedef std::map<std::pair<PMS::Axis, PMS::Axis>, Vector<PlotMSRegion> > PMSRMap;
     
     // Map from (x, y) to selected regions.
     PMSRMap itsRegions_;

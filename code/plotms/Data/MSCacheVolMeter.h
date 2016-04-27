@@ -59,8 +59,8 @@ public:
   void add(Int DDID,Int nRows);
 
   // evaluate the volume for specified axes, and complain if 
-  String evalVolume(map<PMS::Axis,Bool> axes,Vector<Bool> axesmask);
-  String evalVolume(std::vector<IPosition> vbShapes, map<PMS::Axis,Bool> axes);
+  String evalVolume(std::map<PMS::Axis,Bool> axes,Vector<Bool> axesmask);
+  String evalVolume(std::vector<IPosition> vbShapes, std::map<PMS::Axis,Bool> axes);
 
 private:
 

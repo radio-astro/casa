@@ -33,9 +33,6 @@
 #include <map>
 #include <vector>
 
-#include <casa/namespace.h>
-using namespace std;
-
 namespace casa {
 
 // Useful macros for defining enums.  Although the two macros can be used
@@ -309,7 +306,7 @@ public:
     // </group>
     
     // Returns the minimum visible sizes for plot symbol types.
-    static map<PlotSymbol::Symbol, int> SYMBOL_MINIMUM_SIZES();
+    static std::map<PlotSymbol::Symbol, int> SYMBOL_MINIMUM_SIZES();
     
     // Default text annotation properties.
     // <group>

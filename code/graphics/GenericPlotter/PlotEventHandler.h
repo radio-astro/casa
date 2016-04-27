@@ -29,8 +29,6 @@
 
 #include <graphics/GenericPlotter/PlotEvent.h>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 // Base class for a handler for PlotSelectEvent.

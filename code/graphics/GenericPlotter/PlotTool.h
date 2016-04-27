@@ -32,8 +32,6 @@
 #include <graphics/GenericPlotter/PlotShape.h>
 #include <graphics/GenericPlotter/PlotAnnotation.h>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 //# Forward Declarations

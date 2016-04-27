@@ -35,13 +35,10 @@
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/CountedPtr.h>
 
-#include <casa/namespace.h>
-using namespace std;
-
 namespace casa {
 
 // Typedef for a point, which is two doubles (x and y).
-typedef pair<double, double> ppoint_t;
+typedef std::pair<double, double> ppoint_t;
 
 //////////////////////
 // ABSTRACT CLASSES //

@@ -28,7 +28,8 @@
 #include "PlotMSPages.h"
 #include <plotms/Plots/PlotMSPlotManager.h>
 #include <plotms/PlotMS/PlotMSParameters.h>
-#include <QDebug>
+
+using namespace std;
 
 namespace casa {
 

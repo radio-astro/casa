@@ -33,9 +33,6 @@
 
 #include <casa/BasicSL/String.h>
 
-#include <casa/namespace.h>
-using namespace std;
-
 namespace casa {
 
 // <summary>
@@ -58,7 +55,7 @@ public:
     // order to display, and an optional parent.  If parent is NULL, the
     // widget is displayed as a dialog; otherwise it is displayed in the
     // parent.
-    TBSorter(vector<String>& cols, vector<pair<String, bool> >* sort = NULL,
+    TBSorter(std::vector<String>& cols, std::vector<std::pair<String, bool> >* sort = NULL,
              QWidget* parent = NULL);
 
     ~TBSorter();
@@ -66,11 +63,11 @@ public:
 signals:
     // sortEntered is emitted when the "Sort" button is clicked.  The sort
     // parameter contains the ordered list of fields and ascending bools.
-    void sortEntered(vector<pair<String, bool> >& sort);
+    void sortEntered(std::vector<std::pair<String, bool> >& sort);
 
 private:
     // The sortable fields.
-    vector<String> cols;
+    std::vector<String> cols;
 
     
     // Adds the specified field from the field list to the sort list.

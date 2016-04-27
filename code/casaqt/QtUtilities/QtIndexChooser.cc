@@ -26,6 +26,8 @@
 //# $Id: $
 #include <casaqt/QtUtilities/QtIndexChooser.qo.h>
 
+using namespace std;
+
 namespace casa {
 
 ////////////////////////////////

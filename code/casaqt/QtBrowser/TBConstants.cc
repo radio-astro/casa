@@ -37,6 +37,7 @@
 #include <casaqt/QtUtilities/QtUtilities.h>
 
 #include <casa/namespace.h>
+using namespace std;
 
 namespace casa {
 

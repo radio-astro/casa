@@ -50,6 +50,7 @@
 #include <QHash>
 #include <QSettings>
 #include <QTextStream>
+#include <QVector>
 #include <graphics/X11/X_exit.h>
 
 
@@ -110,7 +111,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		displayType_[NEWPANEL]  = String("newpanel");
 
 		// define the accepted export types
-		exportTypes_ = QVector<int>(1, IMAGE);
+		exportTypes_ = ::QVector<int>(1, IMAGE);
 
 		leaveOpen_->setToolTip("Uncheck to close this window after "
 		                       "data and export action.\n"

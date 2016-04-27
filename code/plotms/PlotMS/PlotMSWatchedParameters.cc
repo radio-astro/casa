@@ -26,6 +26,8 @@
 //# $Id: $
 #include <plotms/PlotMS/PlotMSWatchedParameters.h>
 
+using namespace std;
+
 namespace casa {
 
 /////////////////////////////////////////

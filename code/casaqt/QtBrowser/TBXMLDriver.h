@@ -31,8 +31,6 @@
 #include <casa/BasicSL/String.h>
 #include <tables/Tables/Table.h>
 
-#include <casa/namespace.h>
-
 // <summary>
 // Driver for converting table data into an XML String.
 // </summary>

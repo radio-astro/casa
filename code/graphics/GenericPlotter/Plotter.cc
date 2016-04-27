@@ -32,6 +32,8 @@
 #include <iomanip>
 #include <stdint.h>
 
+using namespace std;
+
 namespace casa {
 
 /////////////////////////

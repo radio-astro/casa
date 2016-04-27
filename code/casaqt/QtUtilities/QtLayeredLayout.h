@@ -32,9 +32,6 @@
 #include <QEvent>
 #include <QLayout>
 
-#include <casa/namespace.h>
-using namespace std;
-
 namespace casa {
 
 // Subclass of QLayout to have multiple widgets layered on top of each other.

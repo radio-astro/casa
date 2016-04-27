@@ -33,9 +33,6 @@
 
 #include <map>
 
-#include <casa/namespace.h>
-using namespace std;
-
 namespace casa {
 
 //# Forward declarations
@@ -163,7 +160,7 @@ public:
     bool isEmpty() const;
 private:    
     // Selection field values.
-    map<Field, String> itsValues_;
+    std::map<Field, String> itsValues_;
 
 
 

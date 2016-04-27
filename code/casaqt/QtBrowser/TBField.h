@@ -31,9 +31,6 @@
 
 #include <casa/BasicSL/String.h>
 
-#include <casa/namespace.h>
-using namespace std;
-
 namespace casa {
 
 //# Forward Declarations
@@ -64,7 +61,7 @@ public:
     String getType();
 
     // Returns this field's keywords.
-    vector<TBKeyword*>* getKeywords();
+    std::vector<TBKeyword*>* getKeywords();
     
     // Returns the keyword at index i, or NULL if there is none.
     TBKeyword* keyword(int i);
@@ -121,7 +118,7 @@ private:
     String type;
 
     // Field keywords.
-    vector<TBKeyword*> keywords;
+    std::vector<TBKeyword*> keywords;
 
     // Field UCD.
     String ucd;

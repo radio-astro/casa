@@ -45,9 +45,6 @@
 
 #include <vector>
 
-#include <casa/namespace.h>
-using namespace std;
-
 namespace casa {
 
 //# Forward declarations
@@ -139,7 +136,7 @@ public:
     virtual void setCommonAxes( bool /*commonX*/, bool /*commonY*/ ){}
     
     // Implements PlotCanvas::size().
-    pair<int, int> size() const;
+    std::pair<int, int> size() const;
     virtual void setMinimumSize( int width, int height ){
     	QFrame::setMinimumSize( width, height );
     }
@@ -270,7 +267,7 @@ public:
     void setCachedAxesStackSizeLimit(int sizeInKilobytes);
     
     // Overrides PlotCanvas::cachedAxesStackImageSize().
-    pair<int, int> cachedAxesStackImageSize() const;
+    std::pair<int, int> cachedAxesStackImageSize() const;
     
     // Overrides PlotCanvas::setCachedAxesStackImageSize().
     void setCachedAxesStackImageSize(int width, int height);
@@ -283,10 +280,10 @@ public:
     bool plotItem(PlotItemPtr item, PlotCanvasLayer layer = MAIN);
 
     // Implements PlotCanvas::allPlotItems().
-    vector<PlotItemPtr> allPlotItems() const;
+    std::vector<PlotItemPtr> allPlotItems() const;
     
     // Implements PlotCanvas::layerPlotItems().
-    vector<PlotItemPtr> layerPlotItems(PlotCanvasLayer layer) const;
+    std::vector<PlotItemPtr> layerPlotItems(PlotCanvasLayer layer) const;
 
     // Overrides PlotCanvas::numPlotItems().
     unsigned int numPlotItems() const;
@@ -295,7 +292,7 @@ public:
     unsigned int numLayerPlotItems(PlotCanvasLayer layer) const;
     
     // Implements PlotCanvas::removePlotItems().
-    void removePlotItems(const vector<PlotItemPtr>& items);
+    void removePlotItems(const std::vector<PlotItemPtr>& items);
     
     // Overrides PlotCanvas::clearPlotItems().
     void clearPlotItems();
@@ -380,7 +377,7 @@ public:
            PlotCoordinate::System newSystem = PlotCoordinate::WORLD) const;
 
     // Implements PlotCanvas::textWidthHeightDescent().
-    vector<double> textWidthHeightDescent(const String& text,
+    std::vector<double> textWidthHeightDescent(const String& text,
             PlotFontPtr font) const;
     
     // Implements PlotCanvas::implementation().
@@ -441,14 +438,14 @@ private:
     QwtPlot::Axis axisType;
 
     // Queued log messages before parent is set.
-    vector<PlotLogObject> m_queuedLogs;
+    std::vector<PlotLogObject> m_queuedLogs;
     
 
     // Whether the axes ratio is locked or not.
     bool m_axesRatioLocked;
     
     // Used for recalculating axes ranges if the ratio is locked.
-    vector<double> m_axesRatios;
+    std::vector<double> m_axesRatios;
 
     // Date formats.
     // <group>

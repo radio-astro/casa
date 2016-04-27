@@ -34,8 +34,6 @@
 
 #include <QtGui>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 //# Forward Declarations
@@ -93,7 +91,7 @@ public:
     void updateScriptGui();
     
     // Implements Plotter::size().
-    pair<int, int> size() const;
+    std::pair<int, int> size() const;
     
     // Implements Plotter::setSize().
     void setSize(int width, int height);
@@ -105,7 +103,7 @@ public:
     void setWindowTitle(const String& newTitle);
     
     // Implements Plotter::canvasAreaSize().
-    pair<int, int> canvasAreaSize() const;
+    std::pair<int, int> canvasAreaSize() const;
         
     // Implements Plotter::setCanvasSize().
     void setCanvasSize(int width, int height, bool resizeWindow = true);

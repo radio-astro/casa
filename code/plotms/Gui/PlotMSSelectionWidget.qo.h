@@ -30,8 +30,6 @@
 #include <casaqt/QtUtilities/QtEditingWidget.qo.h>
 #include <plotms/PlotMS/PlotMSSelection.h>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 // Widget for editing a PlotMSSelection object.

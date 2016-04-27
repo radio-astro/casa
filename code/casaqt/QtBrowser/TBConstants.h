@@ -48,8 +48,6 @@
 */
 #include <graphics/GenericPlotter/PlotFactory.h>
 
-#include <casa/namespace.h>
-using namespace std;
 using namespace xercesc;
 
 namespace casa {
@@ -124,14 +122,14 @@ public:
     ~TBLocatedRows();
     
     // Returns a list of all the tables in this TBLocatedRows.
-    vector<TBTableTabs*> tables();
+    std::vector<TBTableTabs*> tables();
     
     // Associates the given list of row numbers with the given TBTableTabs.
-    void put(TBTableTabs* tt, vector<int>* r);
+    void put(TBTableTabs* tt, std::vector<int>* r);
     
     
     // Results.
-    map<TBTableTabs*, vector<int>*> results;
+    std::map<TBTableTabs*, std::vector<int>*> results;
 };
 
 
@@ -221,16 +219,16 @@ public:
     static String dotCasapyDir();
     
     // Converts a vector<int> to an IPosition.
-    static IPosition ipos(vector<int>& d);
+    static IPosition ipos(std::vector<int>& d);
     
     // Converts an IPosition to a vector<int>.
-    static vector<int> ipos(IPosition& d);
+    static std::vector<int> ipos(IPosition& d);
     
     // Increments the given dimension, using the given shape as a maximum.
     static bool increment(IPosition& shape, IPosition& d);
     
     // Increments the given dimension, using the given shape as a maximum.
-    static bool increment(vector<int>& shape, vector<int>& d);
+    static bool increment(std::vector<int>& shape, std::vector<int>& d);
     
     // Inserts the given widget into the given placeholder frame.
     static void insert(QFrame* frame, QWidget* widget);
@@ -277,13 +275,13 @@ public:
     // static const String TYPE_OTHER;
     
     // Return a vector containing all the valid data types.
-    static vector<String>* allTypes();
+    static std::vector<String>* allTypes();
 
     // Return a vector containing all the valid array data types.
-    static vector<String>* arrayTypes();
+    static std::vector<String>* arrayTypes();
 
     // Return a vector containing all the valid non-array data types.
-    static vector<String>* nonArrayTypes();
+    static std::vector<String>* nonArrayTypes();
 
     // The comments for Double fields that indicate that they should be
     // interpreted as a date.
@@ -360,7 +358,7 @@ public:
     static bool dateFormatIsValid(String& d);
 
     // Converts a String in complex format (a,b) into a pair of doubles.
-    static pair<double, double> toComplex(String str);
+    static std::pair<double, double> toComplex(String str);
     
     // String used in parsing arrays.
     static const String ARRAY_AXES_LENGTHS;

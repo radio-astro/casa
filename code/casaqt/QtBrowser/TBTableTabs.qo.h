@@ -39,8 +39,6 @@
 
 #include <casa/BasicSL/String.h>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 //# Forward Declarations
@@ -110,7 +108,7 @@ public:
     
     // Returns the current sort on the table data tab, or an empty list
     // if there is none.
-    vector<pair<String, bool> >* getSortFields();
+    std::vector<std::pair<String, bool> >* getSortFields();
     
 
     // Loads rows into the table backend and, if successful, updates the three
@@ -129,14 +127,14 @@ public:
     // of rows.  Each element in the vector should be a row number.  If
     // successful, the GUI display is updated; otherwise an error message is
     // displayed.
-    void deleteRows(vector<int> r);
+    void deleteRows(std::vector<int> r);
 
     // Clears the current sort on the table data tab.
     void clearSort();
 
     // Sorts the table data tab with the given sort order.  See
     // TBDataTab::sortBy().
-    void sort(vector<pair<String, bool> >& s);
+    void sort(std::vector<std::pair<String, bool> >& s);
 
     // Selects and highlights the given row in the data tab.  If the given
     // row is not loaded in the table, the user is prompted on whether they

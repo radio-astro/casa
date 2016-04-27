@@ -29,8 +29,6 @@
 
 #include <graphics/GenericPlotter/PlotCanvas.h>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 //# Forward Declarations

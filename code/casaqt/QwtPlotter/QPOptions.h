@@ -40,8 +40,6 @@
 #include <qwt_plot.h>
 #include <qwt_symbol.h>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 // Implementation of PlotColor for Qwt plotter, using QColor.

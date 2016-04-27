@@ -31,9 +31,6 @@
 
 #include <vector>
 
-#include <casa/namespace.h>
-using namespace std;
-
 namespace casa {
 
 // Abstract class for any shape which contains common functionality.
@@ -55,12 +52,12 @@ public:
     
     // Returns the coordinates for this shape.  The number and order depends
     // on the specific shape subclass.
-    virtual vector<PlotCoordinate> coordinates() const = 0;
+    virtual std::vector<PlotCoordinate> coordinates() const = 0;
     
     // Sets this shape's coordinates to the given.  Must be in the same size
     // and order as that returned by coordinates().  Specific to each shape
     // subclass.
-    virtual void setCoordinates(const vector<PlotCoordinate>& c) = 0;
+    virtual void setCoordinates(const std::vector<PlotCoordinate>& c) = 0;
     
     // Returns true if a line is shown for this shape, false otherwise.
     virtual bool lineShown() const = 0;

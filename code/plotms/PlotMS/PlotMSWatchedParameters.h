@@ -31,9 +31,6 @@
 
 #include <vector>
 
-#include <casa/namespace.h>
-using namespace std;
-
 namespace casa {
 
 //# Forward Declarations
@@ -99,8 +96,8 @@ public:
     
     // Returns all registered update flags.
     // <group>
-    static vector<int> UPDATE_FLAGS();
-    static vector<String> UPDATE_FLAG_NAMES();
+    static std::vector<int> UPDATE_FLAGS();
+    static std::vector<String> UPDATE_FLAG_NAMES();
     // </group>
     
     // Returns all registered update flags as one or-ed value.
@@ -109,8 +106,8 @@ public:
     // Returns all registered update flags that were turned on in the given
     // flags value.
     // <group>
-    static vector<int> UPDATE_FLAGS(int value);
-    static vector<String> UPDATE_FLAG_NAMES(int value);
+    static std::vector<int> UPDATE_FLAGS(int value);
+    static std::vector<String> UPDATE_FLAG_NAMES(int value);
     // </group>
     
     
@@ -178,7 +175,7 @@ private:
     int itsUpdateFlags_;
     
     // Watchers.
-    vector<PlotMSParametersWatcher*> itsWatchers_;
+    std::vector<PlotMSParametersWatcher*> itsWatchers_;
     
     // Flag for whether notifications are currently being held or not.
     bool isHolding_;
@@ -190,10 +187,10 @@ private:
     // Static //
     
     // Registered flags.
-    static vector<int> FLAGS;
+    static std::vector<int> FLAGS;
     
     // Registered flag names.
-    static vector<String> NAMES;
+    static std::vector<String> NAMES;
 };
 
 }

@@ -36,9 +36,6 @@
 #include <time.h>
 #include <vector>
 
-#include <casa/namespace.h>
-using namespace std;
-
 namespace casa {
 
 //# Forward declarations
@@ -205,7 +202,7 @@ public:
     // used.
     PlotLogLocate(const String& origin1, const String& origin2,
             const PlotRegion& locateRegion,
-            vector<vector<pair<unsigned int,unsigned int> > >* locatedIndices,
+            std::vector<std::vector<std::pair<unsigned int,unsigned int> > >* locatedIndices,
             int eventType = DEFAULT_EVENT_TYPE,
             bool deleteIndicesOnDestruction = true);
     
@@ -228,11 +225,11 @@ public:
     unsigned int numSearchedPlots() const;
     
     // Returns the located indices.
-    vector<vector<pair<unsigned int, unsigned int> > >* indices() const;
+    std::vector<std::vector<std::pair<unsigned int, unsigned int> > >* indices() const;
     
     // Returns the located indices for the plot at the given index, or NULL for
     // invalid.
-    vector<pair<unsigned int, unsigned int> >* plotIndices(
+    std::vector<std::pair<unsigned int, unsigned int> >* plotIndices(
             unsigned int index) const;
     
     // Returns whether or not this message will delete the indices vector on
@@ -244,7 +241,7 @@ private:
     PlotRegion m_region;
     
     // Indices.
-    vector<vector<pair<unsigned int, unsigned int> > >* m_indices;
+    std::vector<std::vector<std::pair<unsigned int, unsigned int> > >* m_indices;
     
     // Should delete indices.
     bool m_shouldDelete;
@@ -367,7 +364,7 @@ public:
     static int ALL_EVENTS_FLAG();
     
     // All events as a vector.
-    static vector<int> ALL_EVENTS();
+    static std::vector<int> ALL_EVENTS();
     
     
     // Registers an extended event type with the given name and optional
@@ -383,7 +380,7 @@ public:
     // </group>
     
     // Returns all the event names.
-    static vector<String> EVENT_NAMES();
+    static std::vector<String> EVENT_NAMES();
     
     // Converts between an event type and its name.
     // <group>
@@ -393,8 +390,8 @@ public:
     
     // Returns an event flag from the given vector.
     // <group>
-    static int FLAG_FROM_EVENTS(const vector<int>& events);
-    static int FLAG_FROM_EVENTS(const vector<String>& names);
+    static int FLAG_FROM_EVENTS(const std::vector<int>& events);
+    static int FLAG_FROM_EVENTS(const std::vector<String>& names);
     // </group>
     
     // Returns an event flag for all events that meet the given minimum
@@ -520,19 +517,19 @@ private:
     String m_loggerLocation;
     
     // Current measurement marks.
-    vector<PlotLogMeasurement> m_measurements;
+    std::vector<PlotLogMeasurement> m_measurements;
 
     
     // Static //
     
     // Registered extended types.
-    static vector<int> EXTENDED_TYPES;
+    static std::vector<int> EXTENDED_TYPES;
     
     // Registered extended type names.
-    static vector<String> EXTENDED_NAMES;
+    static std::vector<String> EXTENDED_NAMES;
     
     // Map from log event to priority.
-    static map<int, LogMessage::Priority> EVENT_PRIORITIES;
+    static std::map<int, LogMessage::Priority> EVENT_PRIORITIES;
     
     // Disabled old global filter, or null.
     static LogFilterInterface* DISABLED_GLOBAL_FILTER;

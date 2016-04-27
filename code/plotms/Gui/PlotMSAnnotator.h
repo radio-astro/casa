@@ -33,8 +33,6 @@
 
 #include <QAction>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 //# Forward Declarations.

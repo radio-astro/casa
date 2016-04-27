@@ -37,6 +37,8 @@
 
 #include <algorithm>
 
+using namespace std;
+
 namespace casa {
 
 ////////////////////////////

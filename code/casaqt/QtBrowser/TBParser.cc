@@ -36,6 +36,7 @@
 #include <xercesc/sax2/XMLReaderFactory.hpp>
 
 using namespace xercesc;
+using namespace std;
 
 namespace casa {
 

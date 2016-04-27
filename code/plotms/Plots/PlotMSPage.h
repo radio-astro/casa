@@ -29,7 +29,6 @@
 
 #include <graphics/GenericPlotter/PlotCanvas.h>
 
-#include <casa/namespace.h>
 #include <QList>
 
 namespace casa {
@@ -79,7 +78,7 @@ public:
     //  Returns the <rowIndex,colIndex> of the first available canvas that does
     //  not yet have a plot.  Returns <-1,-1> if there are no canvases without
     //  plots.
-    pair<int,int> findEmptySpot() const;
+    std::pair<int,int> findEmptySpot() const;
 
     //Returns whether or not the plot is the owner of a canvas located at the given
     //rowIndex and colIndex.

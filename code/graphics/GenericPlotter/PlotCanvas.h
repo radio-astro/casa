@@ -39,8 +39,6 @@
 
 #include <casa/BasicSL/String.h>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 //# Forward Declarations
@@ -100,8 +98,8 @@ public:
     
     // Returns all legend positions.
     // <group>
-    static vector<LegendPosition> allLegendPositions(); 
-    static vector<String> allLegendPositionStrings();
+    static std::vector<LegendPosition> allLegendPositions(); 
+    static std::vector<String> allLegendPositionStrings();
     // </group>
     
     // Converts between legend positions and their String representations.
@@ -114,16 +112,16 @@ public:
     // not.
     static bool legendPositionIsInternal(LegendPosition p);
     
-    // Returns a vector containing all values in the PlotAxis enum, ordered
+    // Returns a std::vector containing all values in the PlotAxis enum, ordered
     // from lowest value to highest value.
-    static vector<PlotAxis> allAxes();
+    static std::vector<PlotAxis> allAxes();
     
     // Returns the or'ed value of all PlotAxis enum values.
     static int allAxesFlag();
     
     // Returns a vector containing all values in the PlotCanvasLayer enum,
     // ordered from lowest value to highest value.
-    static vector<PlotCanvasLayer> allLayers();
+    static std::vector<PlotCanvasLayer> allLayers();
     
     // Returns the or'ed value of all PlotCanvasLayer enum values.
     static int allLayersFlag();
@@ -162,7 +160,7 @@ public:
     // GUI Methods //
     
     // Returns the canvas size in pixels (width x height).
-    virtual pair<int, int> size() const = 0;
+    virtual std::pair<int, int> size() const = 0;
     virtual void setMinimumSize( int width, int height ) = 0;
     virtual void setMinimumSizeHint( int width, int height ) = 0;
     virtual void show() = 0;
@@ -446,7 +444,7 @@ public:
     // the larger image to a smaller one.
     // DEFAULT IMPLEMENTATION.
     // <group>
-    virtual pair<int, int> cachedAxesStackImageSize() const;
+    virtual std::pair<int, int> cachedAxesStackImageSize() const;
     virtual void setCachedAxesStackImageSize(int width, int height);
     // </group>
     
@@ -468,15 +466,15 @@ public:
     // </group>
     
     // Returns all plot items currently on the canvas.
-    virtual vector<PlotItemPtr> allPlotItems() const = 0;
+    virtual std::vector<PlotItemPtr> allPlotItems() const = 0;
     
     // Item-specific all methods.
     // DEFAULT IMPLEMENTATION.
     // <group>
-    virtual vector<PlotPtr> allPlots() const;
-    virtual vector<PlotPointPtr> allPoints() const;
-    virtual vector<PlotShapePtr> allShapes() const;
-    virtual vector<PlotAnnotationPtr> allAnnotations() const;
+    virtual std::vector<PlotPtr> allPlots() const;
+    virtual std::vector<PlotPointPtr> allPoints() const;
+    virtual std::vector<PlotShapePtr> allShapes() const;
+    virtual std::vector<PlotAnnotationPtr> allAnnotations() const;
     // </group>
     
     // Returns the number of plot items currently on the canvas.
@@ -493,15 +491,15 @@ public:
     // </group>
     
     // Returns all plot items currently on the given layer of the canvas.
-    virtual vector<PlotItemPtr> layerPlotItems(PlotCanvasLayer layer) const= 0;
+    virtual std::vector<PlotItemPtr> layerPlotItems(PlotCanvasLayer layer) const= 0;
     
     // Item-specific layer methods.
     // DEFAULT IMPLEMENTATION.
     // <group>
-    virtual vector<PlotPtr> layerPlots(PlotCanvasLayer layer) const;
-    virtual vector<PlotPointPtr> layerPoints(PlotCanvasLayer layer) const;
-    virtual vector<PlotShapePtr> layerShapes(PlotCanvasLayer layer) const;
-    virtual vector<PlotAnnotationPtr> layerAnnotations(PlotCanvasLayer l)const;
+    virtual std::vector<PlotPtr> layerPlots(PlotCanvasLayer layer) const;
+    virtual std::vector<PlotPointPtr> layerPoints(PlotCanvasLayer layer) const;
+    virtual std::vector<PlotShapePtr> layerShapes(PlotCanvasLayer layer) const;
+    virtual std::vector<PlotAnnotationPtr> layerAnnotations(PlotCanvasLayer l)const;
     // </group>
     
     // Returns the number of plot items currently on the given layer of the
@@ -534,7 +532,7 @@ public:
     
     // Removes the given items from this canvas (if valid) and updates the GUI.
     // May reset registered PlotTools.
-    virtual void removePlotItems(const vector<PlotItemPtr>& items) = 0;
+    virtual void removePlotItems(const std::vector<PlotItemPtr>& items) = 0;
     
     // Removes the last plot item added to the canvas and updates the GUI.  May
     // reset registered PlotTools.
@@ -799,7 +797,7 @@ public:
            PlotCoordinate::System newSystem = PlotCoordinate::WORLD) const = 0;
     
     bool hasSelectedRectangles();
-    vector<PlotRegion> getSelectedRects();
+    std::vector<PlotRegion> getSelectedRects();
     void clearSelectedRects();
 
     // Converts the given region into a region with the given system.
@@ -810,14 +808,14 @@ public:
     // Returns the width, height, and descent for the given text in the given
     // font.  Note: this was put into place for use in a matplotlib backend,
     // but probably doesn't have much use outside that.
-    virtual vector<double> textWidthHeightDescent(const String& text,
+    virtual std::vector<double> textWidthHeightDescent(const String& text,
             PlotFontPtr font) const = 0;
     
     // Returns the width, height, and descent for the given annotation.  Note:
     // this was put into place for use in a matplotlib backend, but probably
     // doesn't have much use outside that.
     // DEFAULT IMPLEMENTATION.
-    virtual vector<double> annotationWidthHeightDescent(
+    virtual std::vector<double> annotationWidthHeightDescent(
             const PlotAnnotationPtr annot) const;
     
     // Returns the implementation of this canvas as a Plotter::Implementation
@@ -848,7 +846,7 @@ public:
     // of size 2.  The first element would be the list [(1, 3), (7, 7),
     // (10, 10)] while the second element would be the list [(6, 7)].
     // DEFAULT IMPLEMENTATION.
-    virtual vector<vector<pair<unsigned int, unsigned int> > >* locate(
+    virtual std::vector<std::vector<std::pair<unsigned int, unsigned int> > >* locate(
             const PlotRegion& region) const;
     
     // Calls locate() and posts the result to the given log.
@@ -864,8 +862,8 @@ public:
     // <group>
     virtual void registerMouseTool(PlotMouseToolPtr tool, bool activate = true,
             bool blocking = false);
-    virtual vector<PlotMouseToolPtr> allMouseTools() const;
-    virtual vector<PlotMouseToolPtr> activeMouseTools() const;
+    virtual std::vector<PlotMouseToolPtr> allMouseTools() const;
+    virtual std::vector<PlotMouseToolPtr> activeMouseTools() const;
     virtual void unregisterMouseTool(PlotMouseToolPtr tool);
     // </group>
     
@@ -882,7 +880,7 @@ public:
     // <group>
     virtual void registerSelectHandler(PlotSelectEventHandlerPtr handler,
             PlotCoordinate::System system = PlotCoordinate::WORLD);
-    virtual vector<PlotSelectEventHandlerPtr> allSelectHandlers() const;
+    virtual std::vector<PlotSelectEventHandlerPtr> allSelectHandlers() const;
     virtual void unregisterSelectHandler(PlotSelectEventHandlerPtr handler);
     // </group>
     
@@ -891,7 +889,7 @@ public:
     // <group>
     virtual void registerClickHandler(PlotClickEventHandlerPtr handler,
             PlotCoordinate::System system = PlotCoordinate::WORLD);
-    virtual vector<PlotClickEventHandlerPtr> allClickHandlers() const;
+    virtual std::vector<PlotClickEventHandlerPtr> allClickHandlers() const;
     virtual void unregisterClickHandler(PlotClickEventHandlerPtr handler);
     // </group>
     
@@ -900,7 +898,7 @@ public:
     // <group>
     virtual void registerMousePressHandler(PlotMousePressEventHandlerPtr hndlr,
             PlotCoordinate::System system = PlotCoordinate::WORLD);
-    virtual vector<PlotMousePressEventHandlerPtr>
+    virtual std::vector<PlotMousePressEventHandlerPtr>
             allMousePressHandlers() const;
     virtual void unregisterMousePressHandler(
             PlotMousePressEventHandlerPtr handler);
@@ -912,7 +910,7 @@ public:
     virtual void registerMouseReleaseHandler(
             PlotMouseReleaseEventHandlerPtr handler,
             PlotCoordinate::System system = PlotCoordinate::WORLD);
-    virtual vector<PlotMouseReleaseEventHandlerPtr>
+    virtual std::vector<PlotMouseReleaseEventHandlerPtr>
             allMouseReleaseHandlers() const;
     virtual void unregisterMouseReleaseHandler(
             PlotMouseReleaseEventHandlerPtr handler);
@@ -923,7 +921,7 @@ public:
     // <group>
     virtual void registerMouseDragHandler(PlotMouseDragEventHandlerPtr h,
             PlotCoordinate::System system = PlotCoordinate::WORLD);
-    virtual vector<PlotMouseDragEventHandlerPtr> allMouseDragHandlers() const;
+    virtual std::vector<PlotMouseDragEventHandlerPtr> allMouseDragHandlers() const;
     virtual void unregisterMouseDragHandler(PlotMouseDragEventHandlerPtr h);
     // </group>
     
@@ -934,7 +932,7 @@ public:
     // <group>
     virtual void registerMouseMoveHandler(PlotMouseMoveEventHandlerPtr h,
             PlotCoordinate::System system = PlotCoordinate::WORLD);
-    virtual vector<PlotMouseMoveEventHandlerPtr> allMouseMoveHandlers() const;
+    virtual std::vector<PlotMouseMoveEventHandlerPtr> allMouseMoveHandlers() const;
     virtual void unregisterMouseMoveHandler(PlotMouseMoveEventHandlerPtr h);
     // </group>
     
@@ -943,7 +941,7 @@ public:
     // <group>
     virtual void registerWheelHandler(PlotWheelEventHandlerPtr handler,
             PlotCoordinate::System system = PlotCoordinate::WORLD);
-    virtual vector<PlotWheelEventHandlerPtr> allWheelHandlers() const;
+    virtual std::vector<PlotWheelEventHandlerPtr> allWheelHandlers() const;
     virtual void unregisterWheelHandler(PlotWheelEventHandlerPtr handler);
     // </group>
     
@@ -951,7 +949,7 @@ public:
     // DEFAULT IMPLEMENTATION.
     // <group>
     virtual void registerKeyHandler(PlotKeyEventHandlerPtr handler);
-    virtual vector<PlotKeyEventHandlerPtr> allKeyHandlers() const;
+    virtual std::vector<PlotKeyEventHandlerPtr> allKeyHandlers() const;
     virtual void unregisterKeyHandler(PlotKeyEventHandlerPtr handler);
     // </group>
     
@@ -959,7 +957,7 @@ public:
     // DEFAULT IMPLEMENTATION.
     // <group>
     virtual void registerResizeHandler(PlotResizeEventHandlerPtr handler);
-    virtual vector<PlotResizeEventHandlerPtr> allResizeHandlers() const;
+    virtual std::vector<PlotResizeEventHandlerPtr> allResizeHandlers() const;
     virtual void unregisterResizeHandler(PlotResizeEventHandlerPtr handler);
     // </group>
     
@@ -974,32 +972,32 @@ protected:
     // </group>
     
     // Draw watchers.
-    vector<PlotDrawWatcherPtr> m_drawWatchers;
+    std::vector<PlotDrawWatcherPtr> m_drawWatchers;
     
     // One-per-canvas standard mouse tools.
     PlotStandardMouseToolGroupPtr m_standardTools;
     
     // Registered mouse tools.
-    vector<PlotMouseToolPtr> m_mouseTools;
+    std::vector<PlotMouseToolPtr> m_mouseTools;
     
     // Event handlers.
     // <group>
-    vector<pair<PlotSelectEventHandlerPtr, PlotCoordinate::System> >
+    std::vector<std::pair<PlotSelectEventHandlerPtr, PlotCoordinate::System> >
         m_selectHandlers;
-    vector<pair<PlotClickEventHandlerPtr, PlotCoordinate::System> >
+    std::vector<std::pair<PlotClickEventHandlerPtr, PlotCoordinate::System> >
         m_clickHandlers;
-    vector<pair<PlotMousePressEventHandlerPtr, PlotCoordinate::System> >
+    std::vector<std::pair<PlotMousePressEventHandlerPtr, PlotCoordinate::System> >
         m_pressHandlers;
-    vector<pair<PlotMouseReleaseEventHandlerPtr, PlotCoordinate::System> >
+    std::vector<std::pair<PlotMouseReleaseEventHandlerPtr, PlotCoordinate::System> >
         m_releaseHandlers;
-    vector<pair<PlotMouseDragEventHandlerPtr, PlotCoordinate::System> >
+    std::vector<std::pair<PlotMouseDragEventHandlerPtr, PlotCoordinate::System> >
         m_dragHandlers;
-    vector<pair<PlotMouseMoveEventHandlerPtr, PlotCoordinate::System> >
+    std::vector<std::pair<PlotMouseMoveEventHandlerPtr, PlotCoordinate::System> >
         m_moveHandlers;
-    vector<pair<PlotWheelEventHandlerPtr, PlotCoordinate::System> >
+    std::vector<std::pair<PlotWheelEventHandlerPtr, PlotCoordinate::System> >
         m_wheelHandlers;
-    vector<PlotKeyEventHandlerPtr> m_keyHandlers;
-    vector<PlotResizeEventHandlerPtr> m_resizeHandlers;
+    std::vector<PlotKeyEventHandlerPtr> m_keyHandlers;
+    std::vector<PlotResizeEventHandlerPtr> m_resizeHandlers;
     // </group>
     
     
@@ -1030,7 +1028,7 @@ protected:
             const PlotCoordinate& coord);
     bool notifyWheelHandlers(int delta, const PlotCoordinate& coord);
     bool notifyKeyHandlers(char key,
-            const vector<PlotKeyEvent::Modifier>& modifiers);
+            const std::vector<PlotKeyEvent::Modifier>& modifiers);
     bool notifyResizeHandlers(int oldWidth, int oldHeight,
             int newWidth, int newHeight);
     // </group>

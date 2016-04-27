@@ -31,8 +31,6 @@
 
 #include <graphics/GenericPlotter/PlotFactory.h>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 // Implementation of PlotFactory for Qwt plotter.

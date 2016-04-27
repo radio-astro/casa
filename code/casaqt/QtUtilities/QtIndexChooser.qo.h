@@ -33,9 +33,6 @@
 
 #include <vector>
 
-#include <casa/namespace.h>
-using namespace std;
-
 namespace casa {
 
 // Widget that allows the user to pick an index, with a number of choices on
@@ -75,11 +72,11 @@ public:
     
     // Only valid if type is NAME.  Sets the available names to the given.
     // <group>
-    void setNames(const vector<String>& names);
-    void setNames(const vector<unsigned int>& indices,
-            const vector<String>& names);
-    void setNames(const map<unsigned int, String>& names);
-    void setNames(const map<String, unsigned int>& names);
+    void setNames(const std::vector<String>& names);
+    void setNames(const std::vector<unsigned int>& indices,
+            const std::vector<String>& names);
+    void setNames(const std::map<unsigned int, String>& names);
+    void setNames(const std::map<String, unsigned int>& names);
     // </group>
     
     // Only valid if type is ROW_COL.  Sets the number of rows and columns.

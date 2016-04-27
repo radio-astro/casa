@@ -31,8 +31,6 @@
 
 #include <map>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 // Specifies averaging parameters for an MS.
@@ -168,10 +166,10 @@ public:
 
 private:
     // Averaging field flags.
-    map<Field, bool> itsFlags_;
+    std::map<Field, bool> itsFlags_;
     
     // Averaging field double values.
-    map<Field, double> itsValues_;
+    std::map<Field, double> itsValues_;
 
     
     // Sets the default values.

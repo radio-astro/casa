@@ -36,8 +36,6 @@
 #include <plotms/Plots/PlotMSPage.h>
 #include <plotms/Data/PlotMSIndexer.h>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 //# Forward declarations

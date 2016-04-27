@@ -31,9 +31,6 @@
 
 #include <vector>
 
-#include <casa/namespace.h>
-using namespace std;
-
 namespace casa {
 
 //# Forward Declarations
@@ -84,7 +81,7 @@ public:
     bool isValid();
     
     // Returns the dimensions of the array in list format.
-    vector<int> getDimensions();
+    std::vector<int> getDimensions();
 
     // Returns the dimensionality of the array.  For example, a 4x4 array
     // would return 2 while a 4x4x4 array would return 3.
@@ -103,7 +100,7 @@ public:
     // Returns the data representation.  In all but the last dimension, the
     // void*s point to vector<void*>s; in the last dimension the void*s point
     // to Strings.
-    vector<void*>* getData();
+    std::vector<void*>* getData();
 
     // Returns the row of the table where the array is located.  This is only
     // valid for data arrays.
@@ -130,16 +127,16 @@ public:
 
     // Returns the data at the given coordinates, or blank if the coordinates
     // are invalid.
-    String dataAt(vector<int> d);
+    String dataAt(std::vector<int> d);
 
     // Sets the data at the given coordinates to the given value.  This call
     // does NOT write through to the underlying table; it only updates the data
     // representation.
-    void setDataAt(vector<int> d, String newVal);
+    void setDataAt(std::vector<int> d, String newVal);
 
     // Returns true if the given coordinates are valid for this array, false
     // otherwise.
-    bool dimensionIsValid(vector<int> d);
+    bool dimensionIsValid(std::vector<int> d);
 
     // Returns a "flattened" String representation of this array.  Each cell
     // is appended to the String separated by a space.
@@ -162,10 +159,10 @@ public:
 
 private:
     // Holds the dimensions of this array.
-    vector<int> dimensions;
+    std::vector<int> dimensions;
 
     // Data representation.
-    vector<void*> data;
+    std::vector<void*> data;
 
     // Indicates whether the array is valid or not.
     bool valid;
@@ -197,32 +194,32 @@ private:
     void parseArray(String* table);
 
     // Helper for parseArray().  Parses a single row into the given vector.
-    String parseRow(String& str, vector<void*>* r, vector<int> d, int x);
+    String parseRow(String& str, std::vector<void*>* r, std::vector<int> d, int x);
 
     // Helper for parseArray().  Parses a table with dimension > 1.
     void parseMultidimensionalTable(String str);
 
     // Helper for parseArray().  Creates placeholder objects (such as empty
     // Strings and vectors) into the given row.
-    void insertPlaceholders(vector<void*>* r, vector<int> d, int x);
+    void insertPlaceholders(std::vector<void*>* r, std::vector<int> d, int x);
 
     // Helper method for toFlattenedString();
-    String toFlattenedString(vector<void*>* row, int d);
+    String toFlattenedString(std::vector<void*>* row, int d);
 
     // Helper method for contains().
-    bool contains(vector<void*>* data, int n, String v);
+    bool contains(std::vector<void*>* data, int n, String v);
 
     // Helper method for containsBetween().
-    bool containsBetween(vector<void*>* data, int n, double v1, double v2);
+    bool containsBetween(std::vector<void*>* data, int n, double v1, double v2);
 
     // Helper method for containsLessThan().
-    bool containsLessThan(vector<void*>* data, int n, double v);
+    bool containsLessThan(std::vector<void*>* data, int n, double v);
 
     // Helper method for containsGreaterThan().
-    bool containsGreaterThan(vector<void*>* data, int n, double v);
+    bool containsGreaterThan(std::vector<void*>* data, int n, double v);
     
     // Deletes the data in the given row.
-    void deleteData(vector<void*>* data, int n);
+    void deleteData(std::vector<void*>* data, int n);
 };
 
 }

@@ -40,6 +40,8 @@
 #include <qwt_scale_widget.h>
 #include <qwt_picker_machine.h>
 
+using namespace std;
+
 namespace casa {
 
 //////////////////////////

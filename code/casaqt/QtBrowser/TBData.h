@@ -33,9 +33,6 @@
 #include <casa/Containers/Record.h>
 #include <casa/Arrays/Array.h>
 
-#include <casa/namespace.h>
-using namespace std;
-
 namespace casa {
 
 //# Forward Declarations
@@ -111,12 +108,12 @@ public:
     // asComplex() must be implemented by any subclass, although the returned
     // value does not have to be valid for classes for which the value cannot
     // be represented as a complex.
-    virtual pair<float, float> asComplex() = 0;
+    virtual std::pair<float, float> asComplex() = 0;
     
     // asDComplex() must be implemented by any subclass, although the returned
     // value does not have to be valid for classes for which the value cannot
     // be represented as a double complex.
-    virtual pair<double, double> asDComplex() = 0;
+    virtual std::pair<double, double> asDComplex() = 0;
     
     // asRecord() must be implemented by any subclass, although the returned
     // value does not have to be valid for classes for which the value cannot
@@ -185,8 +182,8 @@ public:
     char asChar() { return 0; } 
     unsigned char asUChar() { return 0; }   
     short int asShort() { return 0; }   
-    pair<float, float> asComplex() { return pair<float, float>(0, 0); } 
-    pair<double, double> asDComplex() { return pair<double, double>(0, 0); }    
+    std::pair<float, float> asComplex() { return std::pair<float, float>(0, 0); } 
+    std::pair<double, double> asDComplex() { return std::pair<double, double>(0, 0); }    
     Record* asRecord() { return 0; }
     // </group>
     
@@ -241,8 +238,8 @@ public:
     char asChar() { return 0; } 
     unsigned char asUChar() { return 0; }   
     short int asShort() { return 0; }   
-    pair<float, float> asComplex() { return pair<float, float>(0, 0); } 
-    pair<double, double> asDComplex() { return pair<double, double>(0, 0); }    
+    std::pair<float, float> asComplex() { return std::pair<float, float>(0, 0); } 
+    std::pair<double, double> asDComplex() { return std::pair<double, double>(0, 0); }    
     Record* asRecord() { return 0; }
     // </group>
     
@@ -299,8 +296,8 @@ public:
     char asChar() { return 0; } 
     unsigned char asUChar() { return 0; }   
     short int asShort() { return 0; }   
-    pair<float, float> asComplex() { return pair<float, float>(0, 0); } 
-    pair<double, double> asDComplex() { return pair<double, double>(0, 0); }    
+    std::pair<float, float> asComplex() { return std::pair<float, float>(0, 0); } 
+    std::pair<double, double> asDComplex() { return std::pair<double, double>(0, 0); }    
     Record* asRecord() { return 0; }
     // </group>
     
@@ -358,8 +355,8 @@ public:
     char asChar() { return 0; } 
     unsigned char asUChar() { return 0; }   
     short int asShort() { return 0; }   
-    pair<float, float> asComplex() { return pair<float, float>(0, 0); } 
-    pair<double, double> asDComplex() { return pair<double, double>(0, 0); }    
+    std::pair<float, float> asComplex() { return std::pair<float, float>(0, 0); } 
+    std::pair<double, double> asDComplex() { return std::pair<double, double>(0, 0); }    
     Record* asRecord() { return 0; }
     // </group>
     
@@ -417,8 +414,8 @@ public:
     char asChar() { return 0; } 
     unsigned char asUChar() { return 0; }   
     short int asShort() { return 0; }   
-    pair<float, float> asComplex() { return pair<float, float>(0, 0); } 
-    pair<double, double> asDComplex() { return pair<double, double>(0, 0); }    
+    std::pair<float, float> asComplex() { return std::pair<float, float>(0, 0); } 
+    std::pair<double, double> asDComplex() { return std::pair<double, double>(0, 0); }    
     Record* asRecord() { return 0; }
     // </group>
     
@@ -483,8 +480,8 @@ public:
     char asChar() { return 0; } 
     unsigned char asUChar() { return 0; }   
     short int asShort() { return 0; }   
-    pair<float, float> asComplex() { return pair<float, float>(0, 0); } 
-    pair<double, double> asDComplex() { return pair<double, double>(0, 0); }    
+    std::pair<float, float> asComplex() { return std::pair<float, float>(0, 0); } 
+    std::pair<double, double> asDComplex() { return std::pair<double, double>(0, 0); }    
     Record* asRecord() { return 0; }
     // </group>
     
@@ -544,8 +541,8 @@ public:
     bool asBool() { return 0; }
     unsigned char asUChar() { return 0; }   
     short int asShort() { return 0; }   
-    pair<float, float> asComplex() { return pair<float, float>(0, 0); } 
-    pair<double, double> asDComplex() { return pair<double, double>(0, 0); }    
+    std::pair<float, float> asComplex() { return std::pair<float, float>(0, 0); } 
+    std::pair<double, double> asDComplex() { return std::pair<double, double>(0, 0); }    
     Record* asRecord() { return 0; }
     // </group>
     
@@ -606,8 +603,8 @@ public:
     bool asBool() { return 0; }
     char asChar() { return 0; } 
     short int asShort() { return 0; }   
-    pair<float, float> asComplex() { return pair<float, float>(0, 0); } 
-    pair<double, double> asDComplex() { return pair<double, double>(0, 0); }    
+    std::pair<float, float> asComplex() { return std::pair<float, float>(0, 0); } 
+    std::pair<double, double> asDComplex() { return std::pair<double, double>(0, 0); }    
     Record* asRecord() { return 0; }
     // </group>
     
@@ -672,8 +669,8 @@ public:
     bool asBool() { return 0; }
     char asChar() { return 0; } 
     unsigned char asUChar() { return 0; }   
-    pair<float, float> asComplex() { return pair<float, float>(0, 0); } 
-    pair<double, double> asDComplex() { return pair<double, double>(0, 0); }    
+    std::pair<float, float> asComplex() { return std::pair<float, float>(0, 0); } 
+    std::pair<double, double> asDComplex() { return std::pair<double, double>(0, 0); }    
     Record* asRecord() { return 0; }
     // </group>
     
@@ -705,10 +702,10 @@ public:
     TBDataComplex(String value);
     
     // Constructor that takes the complex data.
-    TBDataComplex(pair<float, float> value);
+    TBDataComplex(std::pair<float, float> value);
     
     // Constructor that takes the complex data.
-    TBDataComplex(complex<float> value);
+    TBDataComplex(std::complex<float> value);
     
     // Constructor that calls setValue().
     TBDataComplex(TBData& data);
@@ -720,10 +717,10 @@ public:
     String asString();
     
     // Returns the value in double complex form.
-    pair<double, double> asDComplex();
+    std::pair<double, double> asDComplex();
     
     // Returns the value.
-    pair<float, float> asComplex();
+    std::pair<float, float> asComplex();
     
     
     // Invalid operations.
@@ -753,7 +750,7 @@ public:
     
 private:
     // Value.
-    pair<float, float> value;
+    std::pair<float, float> value;
 };
 
 
@@ -767,10 +764,10 @@ public:
     TBDataDComplex(String value);
     
     // Constructor that takes the double complex data.
-    TBDataDComplex(pair<double, double> value);
+    TBDataDComplex(std::pair<double, double> value);
     
     // Constructor that takes the double complex data.
-    TBDataDComplex(complex<double> value);
+    TBDataDComplex(std::complex<double> value);
     
     // Constructor that calls setValue().
     TBDataDComplex(TBData& data);
@@ -782,7 +779,7 @@ public:
     String asString();
     
     // Returns the value.
-    pair<double, double> asDComplex();
+    std::pair<double, double> asDComplex();
     
     
     // Invalid operations.
@@ -795,7 +792,7 @@ public:
     bool asBool() { return 0; }
     char asChar() { return 0; } 
     unsigned char asUChar() { return 0; }   
-    pair<float, float> asComplex() { return pair<float, float>(0, 0); }
+    std::pair<float, float> asComplex() { return std::pair<float, float>(0, 0); }
     Record* asRecord() { return 0; }
     // </group>
     
@@ -814,7 +811,7 @@ public:
     
 private:
     // Value.
-    pair<double, double> value;
+    std::pair<double, double> value;
 };
 
 
@@ -879,8 +876,8 @@ public:
     bool asBool() { return 0; }
     char asChar() { return 0; } 
     unsigned char asUChar() { return 0; }   
-    pair<float, float> asComplex() { return pair<float, float>(0, 0); }
-    pair<double, double> asDComplex() { return pair<double, double>(0, 0); }
+    std::pair<float, float> asComplex() { return std::pair<float, float>(0, 0); }
+    std::pair<double, double> asDComplex() { return std::pair<double, double>(0, 0); }
     // </group>
     
     
@@ -943,8 +940,8 @@ public:
     char asChar() { return 0; } 
     unsigned char asUChar() { return 0; }   
     short int asShort() { return 0; }   
-    pair<float, float> asComplex() { return pair<float, float>(0, 0); } 
-    pair<double, double> asDComplex() { return pair<double, double>(0, 0); }    
+    std::pair<float, float> asComplex() { return std::pair<float, float>(0, 0); } 
+    std::pair<double, double> asDComplex() { return std::pair<double, double>(0, 0); }    
     Record* asRecord() { return 0; }
     // </group>
     
@@ -992,7 +989,7 @@ public:
     
     
     // Returns the array's shape.
-    vector<int> getShape();
+    std::vector<int> getShape();
     
     // Returns true if the array has data loaded into it, false otherwise.
     bool isLoaded();
@@ -1002,7 +999,7 @@ public:
     
     // Returns true if the given coordinate is a valid index for this array
     // given its shape, false otherwise.
-    bool coordIsValid(vector<int> d);
+    bool coordIsValid(std::vector<int> d);
     
     // Returns true if the array is empty (i.e., all dimensions have size 0),
     // false otherwise.
@@ -1017,7 +1014,7 @@ public:
     // invalid or there is no loaded data.  NOTE: generally speaking, since
     // subclasses do not internally store their data as arrays of TBData*,
     // the returned TBData object must be deleted by the caller.
-    virtual TBData* dataAt(vector<int> d) = 0;  
+    virtual TBData* dataAt(std::vector<int> d) = 0;  
     
     // asString() must be implemented by any subclass.  Generally speaking,
     // should return the array data for one-dimensional arrays or the shape
@@ -1032,7 +1029,7 @@ public:
     // the given coordinates to the given value.  NOTE: this method's behavior
     // is undefined if the type of the TBData does not match the type of the
     // array.
-    virtual void setDataAt(vector<int> d, TBData& value) = 0;
+    virtual void setDataAt(std::vector<int> d, TBData& value) = 0;
     
     
     // Invalid operations.
@@ -1045,8 +1042,8 @@ public:
     char asChar() { return 0; } 
     unsigned char asUChar() { return 0; }   
     short int asShort() { return 0; }   
-    pair<float, float> asComplex() { return pair<float, float>(0, 0); } 
-    pair<double, double> asDComplex() { return pair<double, double>(0, 0); }    
+    std::pair<float, float> asComplex() { return std::pair<float, float>(0, 0); } 
+    std::pair<double, double> asDComplex() { return std::pair<double, double>(0, 0); }    
     Record* asRecord() { return 0; }
     void setValue(TBData& value) { (void)value; }
     
@@ -1082,7 +1079,7 @@ public:
     
 protected:
     // Array shape.
-    vector<int> shape;
+    std::vector<int> shape;
     
     // Whether data is loaded.
     bool loaded;
@@ -1113,7 +1110,7 @@ public:
     
     
     // See TBArrayData::dataAt().  Returns data of type String.
-    TBData* dataAt(vector<int> d);
+    TBData* dataAt(std::vector<int> d);
     
     // Returns the value.
     Array<String>& data() { return value; }
@@ -1132,7 +1129,7 @@ public:
     // If the array is loaded, sets the value at the given coordinates (if
     // valid) to the given data.  This method is not defined if the given
     // value is not of the correct type.
-    void setDataAt(vector<int> d, TBData& value);
+    void setDataAt(std::vector<int> d, TBData& value);
     
     
     // Returns the String array type.
@@ -1184,7 +1181,7 @@ public:
     
     
     // See TBArrayData::dataAt().  Returns data of type double.
-    TBData* dataAt(vector<int> d);
+    TBData* dataAt(std::vector<int> d);
     
     // Returns the value.
     Array<Double>& data() { return value; }
@@ -1203,7 +1200,7 @@ public:
     // If the array is loaded, sets the value at the given coordinates (if
     // valid) to the given data.  This method is not defined if the given
     // value is not of the correct type.
-    void setDataAt(vector<int> d, TBData& value);
+    void setDataAt(std::vector<int> d, TBData& value);
     
     
     // Returns the double array type.
@@ -1255,7 +1252,7 @@ public:
     
     
     // See TBArrayData::dataAt().  Returns data of type float.
-    TBData* dataAt(vector<int> d);
+    TBData* dataAt(std::vector<int> d);
     
     // Returns the value.
     Array<Float>& data() { return value; }
@@ -1274,7 +1271,7 @@ public:
     // If the array is loaded, sets the value at the given coordinates (if
     // valid) to the given data.  This method is not defined if the given
     // value is not of the correct type.
-    void setDataAt(vector<int> d, TBData& value);
+    void setDataAt(std::vector<int> d, TBData& value);
     
     
     // Returns the float array type.
@@ -1326,7 +1323,7 @@ public:
     
     
     // See TBArrayData::dataAt().  Returns data of type int.
-    TBData* dataAt(vector<int> d);
+    TBData* dataAt(std::vector<int> d);
     
     // Returns the value.
     Array<Int>& data() { return value; }
@@ -1345,7 +1342,7 @@ public:
     // If the array is loaded, sets the value at the given coordinates (if
     // valid) to the given data.  This method is not defined if the given
     // value is not of the correct type.
-    void setDataAt(vector<int> d, TBData& value);
+    void setDataAt(std::vector<int> d, TBData& value);
     
     
     // Returns the int array type.
@@ -1397,7 +1394,7 @@ public:
     
     
     // See TBArrayData::dataAt().  Returns data of type unsigned int.
-    TBData* dataAt(vector<int> d);
+    TBData* dataAt(std::vector<int> d);
     
     // Returns the value.
     Array<uInt>& data() { return value; }
@@ -1416,7 +1413,7 @@ public:
     // If the array is loaded, sets the value at the given coordinates (if
     // valid) to the given data.  This method is not defined if the given
     // value is not of the correct type.
-    void setDataAt(vector<int> d, TBData& value);
+    void setDataAt(std::vector<int> d, TBData& value);
     
     
     // Returns the unsigned int array type.
@@ -1468,7 +1465,7 @@ public:
     
     
     // See TBArrayData::dataAt().  Returns data of type boolean.
-    TBData* dataAt(vector<int> d);
+    TBData* dataAt(std::vector<int> d);
     
     // Returns the value.
     Array<Bool>& data() { return value; }
@@ -1487,7 +1484,7 @@ public:
     // If the array is loaded, sets the value at the given coordinates (if
     // valid) to the given data.  This method is not defined if the given
     // value is not of the correct type.
-    void setDataAt(vector<int> d, TBData& value);
+    void setDataAt(std::vector<int> d, TBData& value);
     
     
     // Returns the boolean array type.
@@ -1539,7 +1536,7 @@ public:
     
     
     // See TBArrayData::dataAt().  Returns data of type character.
-    TBData* dataAt(vector<int> d);
+    TBData* dataAt(std::vector<int> d);
     
     // Returns the value.
     Array<Char>& data() { return value; }
@@ -1558,7 +1555,7 @@ public:
     // If the array is loaded, sets the value at the given coordinates (if
     // valid) to the given data.  This method is not defined if the given
     // value is not of the correct type.
-    void setDataAt(vector<int> d, TBData& value);
+    void setDataAt(std::vector<int> d, TBData& value);
     
     
     // Returns the character array type.
@@ -1610,7 +1607,7 @@ public:
     
     
     // See TBArrayData::dataAt().  Returns data of type unsigned character.
-    TBData* dataAt(vector<int> d);
+    TBData* dataAt(std::vector<int> d);
     
     // Returns the value.
     Array<uChar>& data() { return value; }
@@ -1629,7 +1626,7 @@ public:
     // If the array is loaded, sets the value at the given coordinates (if
     // valid) to the given data.  This method is not defined if the given
     // value is not of the correct type.
-    void setDataAt(vector<int> d, TBData& value);
+    void setDataAt(std::vector<int> d, TBData& value);
     
     
     // Returns the unsigned character array type.
@@ -1681,7 +1678,7 @@ public:
     
     
     // See TBArrayData::dataAt().  Returns data of type short.
-    TBData* dataAt(vector<int> d);
+    TBData* dataAt(std::vector<int> d);
     
     // Returns the value.
     Array<Short>& data() { return value; }
@@ -1700,7 +1697,7 @@ public:
     // If the array is loaded, sets the value at the given coordinates (if
     // valid) to the given data.  This method is not defined if the given
     // value is not of the correct type.
-    void setDataAt(vector<int> d, TBData& value);
+    void setDataAt(std::vector<int> d, TBData& value);
     
     
     // Returns the short array type.
@@ -1752,7 +1749,7 @@ public:
     
     
     // See TBArrayData::dataAt().  Returns data of type complex.
-    TBData* dataAt(vector<int> d);
+    TBData* dataAt(std::vector<int> d);
     
     // Returns the value.
     Array<Complex>& data() { return value; }
@@ -1771,7 +1768,7 @@ public:
     // If the array is loaded, sets the value at the given coordinates (if
     // valid) to the given data.  This method is not defined if the given
     // value is not of the correct type.
-    void setDataAt(vector<int> d, TBData& value);
+    void setDataAt(std::vector<int> d, TBData& value);
     
     
     // Returns the complex array type.
@@ -1823,7 +1820,7 @@ public:
     
     
     // See TBArrayData::dataAt().  Returns data of type double complex.
-    TBData* dataAt(vector<int> d);
+    TBData* dataAt(std::vector<int> d);
     
     // Returns the value.
     Array<DComplex>& data() { return value; }
@@ -1842,7 +1839,7 @@ public:
     // If the array is loaded, sets the value at the given coordinates (if
     // valid) to the given data.  This method is not defined if the given
     // value is not of the correct type.
-    void setDataAt(vector<int> d, TBData& value);
+    void setDataAt(std::vector<int> d, TBData& value);
     
     
     // Returns the double complex array type.

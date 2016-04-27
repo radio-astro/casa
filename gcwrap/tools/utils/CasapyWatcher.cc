@@ -26,6 +26,9 @@
 //# $Id: $
 #include <tools/utils/CasapyWatcher.h>
 
+using namespace std;
+using namespace casa;
+
 namespace casac {
 
 ///////////////////////////////

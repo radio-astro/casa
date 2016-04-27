@@ -34,9 +34,6 @@
 
 #include <casa/BasicSL/String.h>
 
-#include <casa/namespace.h>
-using namespace std;
-
 namespace casa {
 
 //# Forward Declarations
@@ -99,10 +96,10 @@ public:
     // the type.  For example, for a format applied to integers the
     // non-negative QFontColor is first.  If there is a format for all
     // values, this will return an empty vector.
-    vector<QFontColor*>* getFonts();
+    std::vector<QFontColor*>* getFonts();
 
     // Sets the value-dependent QFontColors to the values in the given vector.
-    void setFonts(vector<QFontColor*>* f);
+    void setFonts(std::vector<QFontColor*>* f);
 
     // Adds a font to the end of the value-dependent QFontColor vector.
     void addFont(QFontColor* fc);
@@ -157,7 +154,7 @@ private:
     QFontColor* allFont;
 
     // The vector of value-dependent QFontColors (can be empty).
-    vector<QFontColor*> fonts;
+    std::vector<QFontColor*> fonts;
 
     // The number of decimal places to display, or -1 for unlimited.
     int decimalPlaces;
@@ -227,7 +224,7 @@ private:
     int index;
 
     // Vector of QFontColors for value-dependent formats.
-    vector<QFontColor*> fonts;
+    std::vector<QFontColor*> fonts;
 
     // Flag indicating whether any GUI-generated events are "genuine."
     bool update;

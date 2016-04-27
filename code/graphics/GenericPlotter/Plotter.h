@@ -93,7 +93,7 @@ public:
     virtual void showGUI(bool showGUI = true) = 0;
     
     // Returns the current size of the plotter GUI in pixels (width x height).
-    virtual pair<int, int> size() const = 0;
+    virtual std::pair<int, int> size() const = 0;
     
     // Sets the plotter GUI size in pixels
     virtual void setSize(int width, int height) = 0;
@@ -109,7 +109,7 @@ public:
     
     // Returns the size of the canvas area (i.e., minus bordering panels) in
     // pixels (width x height).
-    virtual pair<int, int> canvasAreaSize() const = 0;
+    virtual std::pair<int, int> canvasAreaSize() const = 0;
     
     // If the plotter has a single canvas, sets the size of the canvas to the
     // given.  If resizeWindow is true, the plotter is resized to fit the new

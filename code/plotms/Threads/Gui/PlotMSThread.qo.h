@@ -30,8 +30,6 @@
 #include <plotms/Threads/ThreadController.h>
 #include <QObject>
 
-//#include <casa/namespace.h>
-
 namespace casa {
 
 class QtProgressWidget;

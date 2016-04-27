@@ -33,9 +33,6 @@
 
 #include <vector>
 
-#include <casa/namespace.h>
-using namespace std;
-
 namespace casa {
 
 //# Forward Declarations
@@ -163,10 +160,10 @@ public:
     
 private:
     // Performed actions list
-    vector<TBAction*> actions;
+    std::vector<TBAction*> actions;
 
     // Undone actions list
-    vector<TBAction*> undone;
+    std::vector<TBAction*> undone;
 };
 
 /* Specific Actions */
@@ -249,7 +246,7 @@ private:
 class TBEditArrayDataAction : public TBAction {
 public:
     TBEditArrayDataAction(TBTableTabs* tt, TBViewArray* array, int row,
-        int col, vector<int> coord, TBData* newVal);
+        int col, std::vector<int> coord, TBData* newVal);
 
     virtual ~TBEditArrayDataAction();
 
@@ -286,7 +283,7 @@ private:
     int col;
 
     // Array coordinates of the edit data.
-    vector<int> coords;;
+    std::vector<int> coords;
     
     // New value.
     TBData* newVal;

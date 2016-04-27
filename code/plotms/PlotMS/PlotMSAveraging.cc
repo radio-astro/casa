@@ -26,6 +26,8 @@
 //# $Id: $
 #include <plotms/PlotMS/PlotMSAveraging.h>
 
+using namespace std;
+
 namespace casa {
 
 /////////////////////////////////

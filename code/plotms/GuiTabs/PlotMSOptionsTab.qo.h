@@ -31,8 +31,6 @@
 
 #include <plotms/GuiTabs/PlotMSTab.qo.h>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 //# Forward declarations.

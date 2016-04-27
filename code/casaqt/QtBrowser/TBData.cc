@@ -28,6 +28,8 @@
 #include <casaqt/QtBrowser/TBArray.h>
 #include <casa/Arrays/ArrayIO.h>
 
+using namespace std;
+
 namespace casa {
 
 ////////////////////////

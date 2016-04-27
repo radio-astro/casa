@@ -31,9 +31,6 @@
 #include <graphics/GenericPlotter/PlotFactory.h>
 #include <plotms/PlotMS/PlotMSWatchedParameters.h>
 
-#include <casa/namespace.h>
-#include <QDebug>
-
 namespace casa {
 
 //# Forward Declarations.

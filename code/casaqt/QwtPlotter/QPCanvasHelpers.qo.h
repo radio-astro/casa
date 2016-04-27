@@ -45,8 +45,6 @@
 #include <QMouseEvent>
 #include <QSpacerItem>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 //# Forward Declarations

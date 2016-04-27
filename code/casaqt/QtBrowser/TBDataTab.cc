@@ -38,6 +38,8 @@
 #include <casaqt/QtBrowser/QProgressPanel.qo.h>
 #include <casaqt/QtBrowser/TBData.h>
 
+using namespace std;
+
 namespace casa {
 
 ////////////////////////////

@@ -132,7 +132,7 @@ public:
   // Also includes the size (number of points) for each axis (which will
   // eventually be used for a cache manager to let the user know the
   // relative memory use of each axis).
-  vector<pair<PMS::Axis, unsigned int> > loadedAxes() const;
+  std::vector<pair<PMS::Axis, unsigned int> > loadedAxes() const;
 
   // Access to averaging state in the cache:
   PlotMSAveraging& averaging() { return averaging_; }
@@ -147,8 +147,8 @@ public:
   // is not the case, then clear() should be called BEFORE append().  If a
   // PlotMSCacheThreadHelper object is given, it will be used to report
   // progress information.
-  virtual void load(const vector<PMS::Axis>& axes,
-		    const vector<PMS::DataColumn>& data,
+  virtual void load(const std::vector<PMS::Axis>& axes,
+		    const std::vector<PMS::DataColumn>& data,
 		    const String& filename,
 		    const PlotMSSelection& selection,
 		    const PlotMSAveraging& averaging,
@@ -162,7 +162,7 @@ public:
   void clearRanges();
   
   // Releases the given axes from the cache.
-  void release(const vector<PMS::Axis>& axes);
+  void release(const std::vector<PMS::Axis>& axes);
   
   // Set up indexing for the plot
   bool isIndexerInitialized( PMS::Axis iteraxis, Bool globalXRange,
@@ -264,8 +264,8 @@ protected:
 
   // Specialized method for loading the cache
   //  (pure virtual: implemented specifically in child classes)
-  virtual void loadIt(vector<PMS::Axis>& loadAxes,
-		      vector<PMS::DataColumn>& loadData,
+  virtual void loadIt(std::vector<PMS::Axis>& loadAxes,
+		      std::vector<PMS::DataColumn>& loadData,
 		      /*PlotMSCacheThread**/ThreadCommunication* thread = NULL)=0;
 
   virtual void flagToDisk(const PlotMSFlagging& flagging,
@@ -335,7 +335,7 @@ protected:
   PlotMSIndexer* indexer0_;
 
   // The indexer into the cache
-  vector<PtrBlock<PlotMSIndexer*> > indexer_;
+  std::vector<PtrBlock<PlotMSIndexer*> > indexer_;
   
   // The number of chunks in the cache
   Int nChunk_;
@@ -394,8 +394,8 @@ protected:
   // Current setup/state.
   bool dataLoaded_;
   bool userCanceled_;
-  vector<PMS::Axis> currentX_;
-  vector<PMS::Axis> currentY_;
+  std::vector<PMS::Axis> currentX_;
+  std::vector<PMS::Axis> currentY_;
   map<PMS::Axis, bool> loadedAxes_;
   map<PMS::Axis, PMS::DataColumn> loadedAxesData_;
   map<PMS::Axis, bool> pendingLoadAxes_;
@@ -411,10 +411,10 @@ protected:
   PlotMSCalibration calibration_;
 
   // Axes mask
-  vector<Vector<Bool> > netAxesMask_;
+  std::vector<Vector<Bool> > netAxesMask_;
 
   // collapsed flag mask for plotting
-  vector<PtrBlock<Array<Bool>* > > plmask_;
+  std::vector<PtrBlock<Array<Bool>* > > plmask_;
 
   // meta info for locate output
   Vector<String> antnames_; 	 
@@ -426,7 +426,7 @@ protected:
 
   PMS::Axis iterAxis;
   bool ephemerisInitialized;
-  QVector<double> uniqueTimes;
+  ::QVector<double> uniqueTimes;
 
 private:
   void _updateAntennaMask( Int a, Vector<Bool>& antMask, const Vector<Int> selectedAntennas );

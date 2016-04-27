@@ -36,9 +36,6 @@
 
 #include <vector>
 
-#include <casa/namespace.h>
-using namespace std;
-
 namespace casa {
 
 //# Forward Declarations
@@ -112,7 +109,7 @@ public:
     TBTableTabs* currentlySelectedTableTabs();
 
     // Returns the names of all opened tables.
-    vector<String> openedTableNames();
+    std::vector<String> openedTableNames();
     
     // Returns the TBTableTabs for the table with the given name.
     TBTableTabs* table(String name);
@@ -212,12 +209,12 @@ public:
     void viewTableInfo();
     
     // Sort the currently selected table by the indicated fields.
-    void sort(vector<pair<String, bool> >& s);
+    void sort(std::vector<std::pair<String, bool> >& s);
 
     // Sort the table at index i with the fields in s.  Each entry in s should
     // be a field name paired with a bool indicating whether the sort order is
     // ascending.  See TBTableTabs::sort().
-    void sort(int i, vector<pair<String, bool> >& s);
+    void sort(int i, std::vector<std::pair<String, bool> >& s);
 
     
     /* Action Methods */
@@ -325,7 +322,7 @@ private:
     bool available;
 
     // Holds the opened tables.
-    vector<TBTableTabs*> tables;
+    std::vector<TBTableTabs*> tables;
 
     // Error dialog.
     QErrorMessage* errorDialog;
@@ -340,10 +337,10 @@ private:
     TBExportThread* exportThread;
 
     // Find rules for all opened tables.
-    vector<TBFilterRuleSequence*> currentFindRules;
+    std::vector<TBFilterRuleSequence*> currentFindRules;
 
     // Filters for all opened tables.
-    vector<TBFilterRuleSequence*> currentFilters;
+    std::vector<TBFilterRuleSequence*> currentFilters;
 
     // Indicates whether a background task is currently running or not.
     bool bgTaskRunning;

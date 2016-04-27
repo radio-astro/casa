@@ -36,8 +36,6 @@
 #include <QToolButton>
 #include <QGroupBox>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 //# Forward declarations

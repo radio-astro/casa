@@ -32,6 +32,8 @@
 
 #include <ctype.h>
 
+using namespace std;
+
 namespace casa {
 
 /////////////////////

@@ -20,10 +20,10 @@ public:
     
     // Overrides casapy_watcher::logChanged().
     // <group>
-    void logChanged(const String& sinkLocation) {
+    void logChanged(const casa::String& sinkLocation) {
         p->setLogFilename(sinkLocation); }
-    void logChanged(LogMessage::Priority filterPriority) {
-        p->setLogFilter(LogMessage::toString(filterPriority).c_str()); }
+    void logChanged(casa::LogMessage::Priority filterPriority) {
+        p->setLogFilter(casa::LogMessage::toString(filterPriority).c_str()); }
     // </group>
     
     // Overrides casapy_watcher::casapyClosing().
@@ -38,12 +38,12 @@ private:
 class plotms_app  {
 public:
   plotms_app( ) { }
-  const String &dbusName( ) const { return itsDBusName_; }
-  String &dbusName( ) { return itsDBusName_; }
+  const casa::String &dbusName( ) const { return itsDBusName_; }
+  casa::String &dbusName( ) { return itsDBusName_; }
   // DBus name of the plotms application we're communicating with.
-  const QString &getName( ) const { return PlotMSDBusApp::name( ); }
+  const QString &getName( ) const { return casa::PlotMSDBusApp::name( ); }
  private:
-  String itsDBusName_;
+  casa::String itsDBusName_;
 };
 
 // Non-Static //
@@ -60,7 +60,7 @@ pid_t app_pid;
 
 // Log parameters that are set before the application is launched.
 // <group>
-String itsLogFilename_, itsLogFilter_;
+casa::String itsLogFilename_, itsLogFilter_;
 // </group>
 
 
@@ -75,33 +75,33 @@ void launchApp();
 void closeApp();
 
 // Helper method for calling an async method.
-void callAsync(const String& methodName);
+void callAsync(const casa::String& methodName);
 
 // Helper method for realizing synchronous behavior
 void waitUntilIdle();
 
 // Helper method for setting the MS selection.
-void setPlotMSSelection_(const PlotMSSelection& selection,
+void setPlotMSSelection_(const casa::PlotMSSelection& selection,
         const bool updateImmediately, const int plotIndex);
 
 // Helper method for setting the MS averaging.
-void setPlotMSAveraging_(const PlotMSAveraging& averaging,
+void setPlotMSAveraging_(const casa::PlotMSAveraging& averaging,
         const bool updateImmediately, const int plotIndex);
 
 // Helper method for setting the MS transformations.
-void setPlotMSTransformations_(const PlotMSTransformations& trans,
+void setPlotMSTransformations_(const casa::PlotMSTransformations& trans,
         const bool updateImmediately, const int plotIndex);
 
 // Helper method for setting the MS calibration.
-void setPlotMSCalibration_(const PlotMSCalibration& calib,
+void setPlotMSCalibration_(const casa::PlotMSCalibration& calib,
         const bool updateImmediately, const int plotIndex);
 
 // Helper method for setting the iteration parameters
-void setPlotMSIterate_(const PlotMSIterParam& iter,
+void setPlotMSIterate_(const casa::PlotMSIterParam& iter,
         const bool updateImmediately, const int plotIndex);
 
 // Helper method for setting the flag extension.
-void setFlagging_(const PlotMSFlagging& flagging);
+void setFlagging_(const casa::PlotMSFlagging& flagging);
 
 bool showGui;
 bool asyncCall;

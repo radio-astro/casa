@@ -33,6 +33,8 @@
 #include <casaqt/QtBrowser/TBField.h>
 #include <casaqt/QtBrowser/TBData.h>
 
+using namespace std;
+
 namespace casa {
 
 //////////////////////////////

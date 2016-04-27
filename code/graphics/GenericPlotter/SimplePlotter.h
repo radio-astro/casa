@@ -31,8 +31,6 @@
 
 #include <casa/Arrays/Matrix.h>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 // SimplePlotter is a concrete class that uses the abstract plotting classes

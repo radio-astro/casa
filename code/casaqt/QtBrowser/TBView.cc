@@ -44,6 +44,7 @@
 #include <sstream>
 
 using namespace casa::xerces;
+using namespace std;
 
 namespace casa {
 

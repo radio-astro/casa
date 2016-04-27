@@ -1283,7 +1283,6 @@ void PlotMSPlot::waitForDrawing( bool holdDrawing ){
 	detachFromCanvases();
 }
 
-}
 
 bool PlotMSPlot::firstIter() {
 	Int nIter = itsCache_->nIter(0);
@@ -1878,4 +1877,6 @@ bool PlotMSPlot::axisIsAveraged(PMS::Axis axis, PlotMSAveraging averaging) {
 String PlotMSPlot::addFreqFrame(String freqLabel) {
     String freqType = MFrequency::showType(itsCache_->getFreqFrame());
     return freqLabel + " " + freqType;
+}
+
 }

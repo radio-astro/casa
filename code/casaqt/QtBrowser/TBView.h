@@ -33,8 +33,6 @@
 
 #include <casa/BasicSL/String.h>
 
-#include <casa/namespace.h>
-using namespace std;
 using namespace xercesc;
 
 namespace casa {
@@ -70,10 +68,10 @@ public:
     bool selected;
     
     // Whether each column is hidden (true) or not (false).
-    vector<bool> hidden;
+    std::vector<bool> hidden;
     
     // The visual index of each column in case they were moved.
-    vector<int> visInd;
+    std::vector<int> visInd;
     
     // The starting number of the loaded rows.
     int loadedFrom;
@@ -85,10 +83,10 @@ public:
     TBFilterRuleSequence* filter;
     
     // The format for each field, or NULL if that field has none.
-    vector<TBFormat*> formats;
+    std::vector<TBFormat*> formats;
     
     // The current sort order, or an empty list if there is none.
-    vector<pair<String, bool> > sort;
+    std::vector<std::pair<String, bool> > sort;
     
     // Whether this table is from a TaQL command or not.
     bool taql;
@@ -116,7 +114,7 @@ public:
     void addTableView(TBTableView* view);
 
     // Returns the list of table views in this view.
-    vector<TBTableView*>* getTableViews();
+    std::vector<TBTableView*>* getTableViews();
 
     // Sets the last opened directory for this view.
     void setLastOpenedDirectory(String str);
@@ -157,7 +155,7 @@ private:
     int histLimit;
     
     // Table views.
-    vector<TBTableView*> views;
+    std::vector<TBTableView*> views;
 
     
     // Creates an XML element based upon the given QFontColor.

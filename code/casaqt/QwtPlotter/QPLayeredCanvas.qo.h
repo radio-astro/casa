@@ -36,8 +36,6 @@
 
 #include <QPicture>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 //# Forward declarations

@@ -29,7 +29,6 @@
 
 #include <plotms/GuiTabs/PlotMSCalibrationTab.ui.h>
 #include <plotms/GuiTabs/PlotMSPlotTab.qo.h>
-#include <casa/namespace.h>
 
 namespace casa {
 

@@ -28,10 +28,10 @@
 #include <images/Images/ImageInterface.h>
 #include <images/Images/TempImage.h>
 #include <synthesis/MeasurementEquations/Feather.h>
-#include <synthesis/MeasurementEquations/Imager.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
 #include <images/Images/ImageUtilities.h>
 #include <QDebug>
+#include <synthesis/MeasurementEquations/Imager.h>
 
 namespace casa {
 

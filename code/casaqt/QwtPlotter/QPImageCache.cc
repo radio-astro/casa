@@ -31,7 +31,7 @@
 
 #include <QPainter>
 
-uint qHash(const QPAxesCache::Key& key) { return key.hash(); }
+uint qHash(const casa::QPAxesCache::Key& key) { return key.hash(); }
 
 namespace casa {
 

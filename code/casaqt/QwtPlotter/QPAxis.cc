@@ -42,6 +42,8 @@
 
 #include <qwt_scale_widget.h>
 
+using namespace std;
+
 namespace casa {
 
 //////////////////////////

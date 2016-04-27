@@ -32,6 +32,8 @@
 #include <cstdio>
 #include <QApplication>
 #include <QDebug>
+
+namespace casa {
 class tUtil {
 public:
 	static String getFullPath( String fileName ){
@@ -134,4 +136,4 @@ private:
 	~tUtil();
 };
 
-
+}

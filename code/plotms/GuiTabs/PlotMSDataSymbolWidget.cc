@@ -30,6 +30,7 @@
 #include <casaqt/QtUtilities/QtUtilities.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
 
+#include <casa/namespace.h>
 
 PlotMSDataSymbolWidget::PlotMSDataSymbolWidget(PlotMSPlotter *parent)
     : QWidget(parent){

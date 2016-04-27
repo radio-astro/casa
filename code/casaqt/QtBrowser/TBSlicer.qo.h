@@ -35,9 +35,6 @@
 
 #include <casa/BasicSL/String.h>
 
-#include <casa/namespace.h>
-using namespace std;
-
 namespace casa {
 
 // <summary>
@@ -57,7 +54,7 @@ class TBSlicer : public QWidget, Ui_Slicer {
 
 public:
     // Constructor that takes the shape of the array.
-    TBSlicer(vector<int> d);
+    TBSlicer(std::vector<int> d);
 
     ~TBSlicer();
 
@@ -72,14 +69,14 @@ signals:
 	// SLICER_COL_AXIS] would mean to display the first dimension along the
 	// X-axis and the third dimension along the Y-axis and to use 1 as the
 	// index for the second dimension.
-    void sliceChanged(vector<int> slice);
+    void sliceChanged(std::vector<int> slice);
     
 private:
     // Current spinners.
-    vector<QSpinBox*> spinners;
+    std::vector<QSpinBox*> spinners;
 
     // Current slice values.
-    vector<int> values;
+    std::vector<int> values;
 
     // Holds the old row index.
     int oldR;

@@ -39,9 +39,6 @@
 #include <QDialog>
 #include <QFile>
 
-#include <casa/namespace.h>
-using namespace std;
-
 namespace casa {
 
 class ParamPanel;
@@ -181,7 +178,7 @@ private:
     PythonInterpreter m_python;
     
     // Parameter panels for currently displayed task.
-    vector<ParamPanel*> m_panels;
+    std::vector<ParamPanel*> m_panels;
     
     // Currently displayed task.
     String m_taskName;
@@ -194,11 +191,11 @@ private:
     // Checks the value in the record at the given RecordFieldId for
     // validity.  If invalid, the second value in the pair holds the reason(s)
     // why.
-    pair<bool, String> recordIsValid(const Record& record, RecordFieldId id);
+    std::pair<bool, String> recordIsValid(const Record& record, RecordFieldId id);
     
     // Once the displayed task has been chosen, set up the panels.  If an
     // order is given, use that instead of the record's natural order.
-    void setupRecord(vector<String> order);
+    void setupRecord(std::vector<String> order);
     
     // Returns the text for the constraints dialog for the given param panel.
     String constraintsString(const String& id);

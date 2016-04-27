@@ -35,8 +35,6 @@
 #include <qwt_plot_picker.h>
 #include <qwt_plot_panner.h>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 //# Forward Declarations

@@ -31,8 +31,6 @@
 
 #include <casa/BasicSL/String.h>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 // PlotAnnotation is an abstraction of text written directly on the canvas.  An

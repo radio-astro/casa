@@ -9,6 +9,3 @@
 #include <tools/utils/CasapyWatcher.h>
 #include <casaqt/QtUtilities/QtDBusApp.h>
 #include <plotms/PlotMS/PlotMSDBusApp.h>
-
-#include <casa/namespace.h>
-using namespace std;

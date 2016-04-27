@@ -31,9 +31,6 @@
 
 #include <casa/BasicSL/String.h>
 
-#include <casa/namespace.h>
-using namespace std;
-
 namespace casa {
 
 //# Forward Declarations
@@ -66,7 +63,7 @@ public:
     // checks() must be implemented by any subclass.
     // Returns a list of the names of the checks in this test, given the name
     // of the table on which the test will be run.
-    virtual vector<String> checks(String table) = 0;
+    virtual std::vector<String> checks(String table) = 0;
 
     // runCheck() must be implemented by any subclass.
     // Runs the given check on the given table and returns the result.
@@ -94,7 +91,7 @@ public:
     // Implements TBTest::checks().
     // For each field ending in _ID: "Field [name]_ID has corresponding table
     // keyword [name]."
-    vector<String> checks(String table);
+    std::vector<String> checks(String table);
 
     // Implements TBTest::runCheck().
     bool runCheck(String table, int i);
@@ -114,7 +111,7 @@ public:
     // Implements TBTest::checks().
     // For each subtable in the keywords: "Subtable [name] exists on disk at 
     // [location]."
-    vector<String> checks(String table);
+    std::vector<String> checks(String table);
 
     // Implements TBTest::runCheck().
     bool runCheck(String table, int i);
@@ -134,7 +131,7 @@ public:
     // Implements TBTest::checks().
     // For each subtable in the keywords: "Subtable [name] can be opened and
     // has at least one row of data."
-    vector<String> checks(String table);
+    std::vector<String> checks(String table);
 
     // Implements TBTest::runCheck().
     bool runCheck(String table, int i);

@@ -40,9 +40,6 @@
 
 #include <casa/BasicSL/String.h>
 
-#include <casa/namespace.h>
-using namespace std;
-
 namespace casa {
 
 //# Forward Declarations
@@ -83,7 +80,7 @@ public:
     unsigned int colIndex;
 
     // If the field is an array, indicates the array slice to be used.
-    vector<int> slice;
+    std::vector<int> slice;
 };
 
 // <summary>
@@ -145,18 +142,18 @@ public:
     // Sets the dimensions of the slicer to the given vector.  If complex is
     // true, a combobox to choose between phase and amplitude is also shown.
     // If index is true, a spinbox to select plot axis is also shown.
-    bool setDimension(vector<int>* d, bool complex = false);
-    bool setDimension(vector<int>* d, bool complex, bool index);
+    bool setDimension(std::vector<int>* d, bool complex = false);
+    bool setDimension(std::vector<int>* d, bool complex, bool index);
 
     // Retrieves the array slice into the given vector.  complex is set to true
     // if the slice is for complex numbers; if complex is true, amp indicates
     // whether the slice is for the amplitude (true) or the phase (false).
-    void getDimension(vector<int>& d, bool& complex, bool& amp);
-    void getDimension(vector<int>& d, bool& complex, bool& amp, int& axis);
+    void getDimension(std::vector<int>& d, bool& complex, bool& amp);
+    void getDimension(std::vector<int>& d, bool& complex, bool& amp, int& axis);
 
 private:
     // All current spinners.
-    vector<QSpinBox*> spinners;
+    std::vector<QSpinBox*> spinners;
 
     // Complex chooser.
     QComboBox* complexChooser;
@@ -218,13 +215,13 @@ private:
     // For each table the plotter knows about, the dimensions of the fields are
     // kept for fast access.  So, for example, the dimensions of a field can be
     // found with dimensions[tableName][columnIndex].
-    map<String, vector<vector<int>*> > dimensions;
+    std::map<String, std::vector<std::vector<int>*> > dimensions;
 
     // Since only certain field types are plottable, adjustedIndices allows for
     // translation between the index of the combobox (which contains only
     // plottable fields) and the index in the table (which contains all
     // fields).  So, for example, adjustedIndices[plottableIndex] = tableIndex.
-    vector<int> adjustedIndices;
+    std::vector<int> adjustedIndices;
 
     // PlotSlicer for the x-axis.
     PlotSlicer xSlice;
@@ -233,7 +230,7 @@ private:
     PlotSlicer ySlice;
 
     // Types for the displayed plottable fields.
-    vector<String> types;
+    std::vector<String> types;
 
     // Is true if the current selection for the x-axis is valid, false
     // otherwise.  If the axis is invalid, it cannot be used for plotting.

@@ -32,9 +32,6 @@
 
 #include <casa/BasicSL/String.h>
 
-#include <casa/namespace.h>
-using namespace std;
-
 namespace casa {
 
 // <summary>
@@ -56,10 +53,10 @@ public:
 
     
     // Returns the attributes for this tag.
-    map<String, String>* getAttributes();
+    std::map<String, String>* getAttributes();
 
     // Returns the list of content tags, or an empty list if there are none.
-    vector<XMLtoken*>* getTags();
+    std::vector<XMLtoken*>* getTags();
 
     // Returns this tag's name.
     const String getName();
@@ -83,10 +80,10 @@ private:
     String content;
 
     // Token content (empty list for none).
-    vector<XMLtoken*> tags;
+    std::vector<XMLtoken*> tags;
     
     // Tag attributes.
-    map<String, String> attributes;
+    std::map<String, String> attributes;
 };
 
 }

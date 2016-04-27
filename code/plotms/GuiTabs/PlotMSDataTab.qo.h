@@ -29,7 +29,6 @@
 
 #include <plotms/GuiTabs/PlotMSDataTab.ui.h>
 #include <plotms/GuiTabs/PlotMSPlotTab.qo.h>
-#include <casa/namespace.h>
 
 namespace casa {
 

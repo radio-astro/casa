@@ -32,8 +32,6 @@
 #include <plotms/PlotMS/PlotMSConstants.h>
 #include <plotms/Plots/PlotMSPlotManager.h>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 //# Forward declarations.

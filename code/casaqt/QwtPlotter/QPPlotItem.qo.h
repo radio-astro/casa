@@ -41,8 +41,6 @@
 #include <qwt_plot.h>
 #include <casaqt/QwtConfig.h>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 //# Forward Declarations

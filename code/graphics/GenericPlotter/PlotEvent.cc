@@ -26,6 +26,8 @@
 //# $Id: $
 #include <graphics/GenericPlotter/PlotEvent.h>
 
+using namespace std;
+
 namespace casa {
 
 /////////////////////////////////

@@ -32,8 +32,6 @@
 #include <casaqt/QtUtilities/QtEditingWidget.qo.h>
 #include <plotms/PlotMS/PlotMSTransformations.h>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 // Widget for editing a PlotMSTransformations object.

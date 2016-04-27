@@ -30,8 +30,6 @@
 #include <graphics/GenericPlotter/PlotFactory.h>
 #include <plotms/Plots/PlotMSPages.h>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 //# Forward Declararations

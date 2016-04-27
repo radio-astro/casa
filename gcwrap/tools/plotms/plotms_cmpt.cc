@@ -34,6 +34,8 @@
 #include <sys/types.h>
 #include <signal.h>
 
+using namespace casa;
+
 namespace casac {
 
 

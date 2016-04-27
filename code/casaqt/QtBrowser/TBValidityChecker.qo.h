@@ -35,9 +35,6 @@
 
 #include <QtGui>
 
-#include <casa/namespace.h>
-using namespace std;
-
 namespace casa {
 
 //# Forward Declarations
@@ -67,7 +64,7 @@ private:
     TBBrowser* browser;
     
     // List of tests that can be run.
-    vector<TBTest*> tests;
+    std::vector<TBTest*> tests;
 
     
     // Sets up the tests in the GUI.

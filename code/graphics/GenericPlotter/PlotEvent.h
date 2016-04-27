@@ -29,8 +29,6 @@
 
 #include <graphics/GenericPlotter/PlotOptions.h>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 //# Forward Declarations
@@ -303,16 +301,16 @@ public:
     Plotter* plotter() const;
     
     // Old size, in pixels.
-    pair<int, int> oldSize() const;
+    std::pair<int, int> oldSize() const;
     
     // New size, in pixels.
-    pair<int, int> newSize() const;
+    std::pair<int, int> newSize() const;
     
 protected:
     Plotter* m_plotter;   // Plotter (or NULL)
     PlotCanvas* m_canvas; // Canvas (or NULL)
-    pair<int, int> m_old; // Old size
-    pair<int, int> m_new; // New size
+    std::pair<int, int> m_old; // Old size
+    std::pair<int, int> m_new; // New size
 };
 
 

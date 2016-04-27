@@ -33,9 +33,6 @@
 
 #include <casa/BasicSL/String.h>
 
-#include <casa/namespace.h>
-using namespace std;
-
 namespace casa {
 
 // <summary>
@@ -70,7 +67,7 @@ private:
     String type;
     
     // All available types.
-    vector<String>* types;
+    std::vector<String>* types;
     
     // TBTypes panel for entering single array cell values.
     TBTypes* arrayTypes;

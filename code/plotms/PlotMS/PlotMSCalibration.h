@@ -30,8 +30,6 @@
 #include <plotms/PlotMS/PlotMSConstants.h>
 #include <casa/Containers/Record.h>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 // Specifies calibration parameters for an MS.

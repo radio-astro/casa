@@ -3,7 +3,6 @@
 #undef NO_INITIALIZE_STATICS
 #include <stdcasa/StdCasa/CasacSupport.h>
 
-#include <casa/namespace.h>
 #include <memory>
 
 namespace casa 

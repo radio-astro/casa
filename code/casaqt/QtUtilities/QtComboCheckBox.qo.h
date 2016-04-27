@@ -30,9 +30,6 @@
 #include <QComboBox>
 #include <QItemDelegate>
 
-//#include <casa/namespace.h>
-using namespace std;
-
 namespace casa {
 
 // Subclass of QItemDelegate for use with QtComboCheckBox.

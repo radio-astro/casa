@@ -35,8 +35,6 @@
 #include <QImage>
 #include <QMap>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 //# Forward Declarations
@@ -239,7 +237,7 @@ private:
 }
 
 // Provides a hashing function for QPAxesCache::Key, for use with Qt.
-uint qHash(const QPAxesCache::Key& key);
+uint qHash(const casa::QPAxesCache::Key& key);
 
 #endif
 #endif /* QPIMAGECACHE_H_ */

@@ -45,9 +45,6 @@
 
 #include <vector>
 
-#include <casa/namespace.h>
-using namespace std;
-
 namespace casa {
 
 //# Forward declarations
@@ -113,7 +110,7 @@ public:
     // PlotCanvas Methods //
     
     // Implements PlotCanvas::size().
-    pair<int, int> size() const;
+    std::pair<int, int> size() const;
     virtual void setMinimumSize( int width, int height ){
     	QFrame::setMinimumSize( width, height );
     }
@@ -242,7 +239,7 @@ public:
     void setCachedAxesStackSizeLimit(int sizeInKilobytes);
     
     // Overrides PlotCanvas::cachedAxesStackImageSize().
-    pair<int, int> cachedAxesStackImageSize() const;
+    std::pair<int, int> cachedAxesStackImageSize() const;
     
     // Overrides PlotCanvas::setCachedAxesStackImageSize().
     void setCachedAxesStackImageSize(int width, int height);
@@ -255,10 +252,10 @@ public:
     bool plotItem(PlotItemPtr item, PlotCanvasLayer layer = MAIN);
 
     // Implements PlotCanvas::allPlotItems().
-    vector<PlotItemPtr> allPlotItems() const;
+    std::vector<PlotItemPtr> allPlotItems() const;
     
     // Implements PlotCanvas::layerPlotItems().
-    vector<PlotItemPtr> layerPlotItems(PlotCanvasLayer layer) const;
+    std::vector<PlotItemPtr> layerPlotItems(PlotCanvasLayer layer) const;
 
     // Overrides PlotCanvas::numPlotItems().
     unsigned int numPlotItems() const;
@@ -267,7 +264,7 @@ public:
     unsigned int numLayerPlotItems(PlotCanvasLayer layer) const;
     
     // Implements PlotCanvas::removePlotItems().
-    void removePlotItems(const vector<PlotItemPtr>& items);
+    void removePlotItems(const std::vector<PlotItemPtr>& items);
     
     // Overrides PlotCanvas::clearPlotItems().
     void clearPlotItems();
@@ -380,7 +377,7 @@ public:
            PlotCoordinate::System newSystem = PlotCoordinate::WORLD) const;
 
     // Implements PlotCanvas::textWidthHeightDescent().
-    vector<double> textWidthHeightDescent(const String& text,
+    std::vector<double> textWidthHeightDescent(const String& text,
             PlotFontPtr font) const;
     
     // Implements PlotCanvas::implementation().
@@ -473,16 +470,16 @@ private:
     QPPlotter* m_parent;
     
     // Queued log messages before parent is set.
-    vector<PlotLogObject> m_queuedLogs;
+    std::vector<PlotLogObject> m_queuedLogs;
     
     // Main QwtPlot object.
     QPLayeredCanvas m_canvas;
 
     // Main-layer plot items.
-    vector<pair<PlotItemPtr, QPPlotItem*> > m_plotItems;
+    std::vector<std::pair<PlotItemPtr, QPPlotItem*> > m_plotItems;
     
     // Annotation-layer plot items.
-    vector<pair<PlotItemPtr, QPPlotItem*> > m_layeredItems;
+    std::vector<std::pair<PlotItemPtr, QPPlotItem*> > m_layeredItems;
     
     // Scale draws.
     QPScaleDraw* m_scaleDraws[QwtPlot::axisCnt];
@@ -495,7 +492,7 @@ private:
     bool commonY;
     
     // Used for recalculating axes ranges if the ratio is locked.
-    vector<double> m_axesRatios;
+    std::vector<double> m_axesRatios;
     
     // Cached axes stack.
     QPAxesCache m_stackCache;
@@ -504,7 +501,7 @@ private:
     bool m_autoIncColors;
     
     // Used auto-incremented colors.
-    vector<int> m_usedColors;
+    std::vector<int> m_usedColors;
     
     // Picker used for select events.
     QwtPlotPicker m_picker;

@@ -125,7 +125,7 @@ public:
     
     //Returns the row and column index of the first canvas on the
     //page, or <-1,-1> if the page is full.
-    pair<int,int> findEmptySpot() const;
+    std::pair<int,int> findEmptySpot() const;
 
 private:
 	//Returns whether or not (rows,cols) would represent

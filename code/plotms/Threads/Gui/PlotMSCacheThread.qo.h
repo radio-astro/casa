@@ -37,8 +37,6 @@
 
 #include <vector>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 //# Forward Declarations
@@ -104,10 +102,10 @@ private:
     bool itsLoad_;
     
     // Axes.
-    vector<PMS::Axis> itsAxes_;
+    std::vector<PMS::Axis> itsAxes_;
     
     // Axes data columns.
-    vector<PMS::DataColumn> itsAxesData_;
+    std::vector<PMS::DataColumn> itsAxesData_;
     
     // MS selection/averaging info
     String itsMSName_;

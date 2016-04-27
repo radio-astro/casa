@@ -34,17 +34,14 @@
 #include <casa/Utilities/CountedPtr.h>
 #include <casa/Containers/Record.h>
 
-#include <casa/namespace.h>
-using namespace std;
-
 namespace casa {
 
 
 // Typedef for range, which is two doubles (min and max).
-typedef pair<double, double> prange_t;
+typedef std::pair<double, double> prange_t;
 
 // Typedef for size, which is two doubles (width and height).
-typedef pair<double, double> psize_t;
+typedef std::pair<double, double> psize_t;
 
 
 
@@ -749,11 +746,11 @@ public:
     unsigned int size() const;
     
     // Returns a copy of the stack.
-    vector<PlotRegion> stack() const;
+    std::vector<PlotRegion> stack() const;
     
     // Returns a copy of the stack axes.  The first item is for x, the second
     // for y.
-    vector<pair<PlotAxis, PlotAxis> > stackAxes() const;
+    std::vector<std::pair<PlotAxis, PlotAxis> > stackAxes() const;
     
     // Resets the stack and sets the stack base to the given.
     void setBase(const PlotRegion& base, PlotAxis xAxis, PlotAxis yAxis);
@@ -787,10 +784,10 @@ private:
     int m_lengthLimit;
     
     // Region stack.
-    vector<PlotRegion> m_stack;
+    std::vector<PlotRegion> m_stack;
     
     // Axes stack.
-    vector<pair<PlotAxis, PlotAxis> > m_axes;
+    std::vector<std::pair<PlotAxis, PlotAxis> > m_axes;
     
     // Stack index.
     unsigned int m_stackIndex;
@@ -834,14 +831,14 @@ public:
     
     // Returns all supported export formats.
     // <group>
-    static vector<Type> supportedFormats();  
-    static vector<String> supportedFormatStrings();
+    static std::vector<Type> supportedFormats();  
+    static std::vector<String> supportedFormatStrings();
     // </group>
     
     // Returns all supported image formats.
     // <group>
-    static vector<Type> supportedImageFormats();
-    static vector<String> supportedImageFormatStrings();
+    static std::vector<Type> supportedImageFormats();
+    static std::vector<String> supportedImageFormatStrings();
     // </group>
     
     

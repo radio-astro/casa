@@ -33,8 +33,6 @@
 #include <QDBusAbstractAdaptor>
 #include <QDBusConnection>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 //# Forward Declarations.

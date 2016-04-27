@@ -26,6 +26,8 @@
 //# $Id: $
 #include <casaqt/QtBrowser/XMLtoken.h>
 
+using namespace std;
+
 namespace casa {
 
 //////////////////////////

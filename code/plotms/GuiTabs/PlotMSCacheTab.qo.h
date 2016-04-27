@@ -31,8 +31,6 @@
 
 #include <plotms/GuiTabs/PlotMSPlotTab.qo.h>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 class PlotMSCacheTab : public PlotMSPlotSubtab, Ui::CacheTab {

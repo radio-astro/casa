@@ -36,9 +36,6 @@
 #include <qwt_color_map.h>
 #include <qwt_plot_spectrogram.h>
 
-#include <casa/namespace.h>
-using namespace std;
-
 namespace casa {
 
 // Implementation of QwtColorMap that just returns the value as a color.

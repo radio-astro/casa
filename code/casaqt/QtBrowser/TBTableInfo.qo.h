@@ -33,9 +33,6 @@
 
 #include <casa/BasicSL/String.h>
 
-#include <casa/namespace.h>
-using namespace std;
-
 namespace casa {
 
 //# Forward Declarations
@@ -68,7 +65,7 @@ private:
 
     
     // Sets the fields information in the QTableWidget.
-    void setFields(vector<TBField*>* fields);
+    void setFields(std::vector<TBField*>* fields);
 };
 
 }

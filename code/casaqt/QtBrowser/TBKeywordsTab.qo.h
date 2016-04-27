@@ -35,9 +35,6 @@
 
 #include <casa/BasicSL/String.h>
 
-#include <casa/namespace.h>
-using namespace std;
-
 namespace casa {
 
 //# Forward Declarations
@@ -64,7 +61,7 @@ class TBNewKeyword : public QDialog, Ui::NewKeyword {
 public:
     // Constructor that takes an optional vector of fields for entering a new
 	// field keyword.  If this vector is null, a table keyword is entered.
-    TBNewKeyword(vector<String>* fields = NULL, QWidget* parent = NULL);
+    TBNewKeyword(std::vector<String>* fields = NULL, QWidget* parent = NULL);
 
     ~TBNewKeyword();
 
@@ -76,7 +73,7 @@ signals:
 
 private:
     // Displayed data types.
-    vector<String>* types;
+    std::vector<String>* types;
 
     // Widget to enter the value based on the type.
     TBTypes* typesWidget;

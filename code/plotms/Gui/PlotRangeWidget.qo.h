@@ -34,9 +34,6 @@
 
 #include <utility>
 
-#include <casa/namespace.h>
-using namespace std;
-
 namespace casa {
 
 // Widget for selecting a plot axis range.  Lets the user choose between an

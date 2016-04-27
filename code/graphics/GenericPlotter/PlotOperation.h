@@ -32,9 +32,6 @@
 
 #include <vector>
 
-#include <casa/namespace.h>
-using namespace std;
-
 namespace casa {
 
 //# Forward Declarations
@@ -135,7 +132,7 @@ private:
     PlotMutexPtr m_mutex;
     
     // Watchers.
-    vector<PlotOperationWatcher*> m_watchers;
+    std::vector<PlotOperationWatcher*> m_watchers;
     
     
     // Notifies any registered watchers that the operation has changed.

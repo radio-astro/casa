@@ -35,9 +35,6 @@
 
 #include <vector>
 
-#include <casa/namespace.h>
-using namespace std;
-
 namespace casa {
 
 //# Forward Declarations
@@ -105,7 +102,7 @@ public:
     // Loads the given rows into the table.  See TBTable::loadRows();
     virtual Result loadRows(int start = 0,
                             int num = TBConstants::DEFAULT_SELECT_NUM,
-                            bool full = false, vector<String>* fields = NULL,
+                            bool full = false, std::vector<String>* fields = NULL,
                             bool parsedata = true,
                             ProgressHelper* pp = NULL) = 0;
     
@@ -117,14 +114,14 @@ public:
     // dimensionsOf() must be implemented by any subclass.
     // Returns the array dimensions of the given field.  See
     // TBTable::dimensionsOf().
-    virtual vector<int> dimensionsOf(unsigned int col) = 0;
+    virtual std::vector<int> dimensionsOf(unsigned int col) = 0;
     
     // editData() must be implemented by any subclass.
     // Updates the cell at the given coordinates to have the given value.
     // If the data is an array, the array coordinates are provided in d.
     // Returns the result of the operation.
     virtual Result editData(unsigned int row, unsigned int col, TBData* newVal,
-                            vector<int>* d = NULL) = 0;
+                            std::vector<int>* d = NULL) = 0;
                                 
     // totalRowsOf() must be implemented by any subclass.
     // Returns the total rows of the table at the given location.  See
@@ -138,7 +135,7 @@ public:
 
     // deleteRows() must be implemented by any subclass.
     // Deletes the given rows.  See TBTable::deleteRows().
-    virtual Result deleteRows(vector<int> r) = 0;
+    virtual Result deleteRows(std::vector<int> r) = 0;
 
 protected:
     // The location of the table.
@@ -151,16 +148,16 @@ protected:
     bool& removeRow;
     
     // Reference to the table's data parameter.    
-    vector<vector<TBData*>*>& data;
+    std::vector<std::vector<TBData*>*>& data;
     
     // Reference to the table's fields parameter.
-    vector<TBField*>& fields;
+    std::vector<TBField*>& fields;
     
     // Reference to the table's keywords parameter.
-    vector<TBKeyword*>& keywords;
+    std::vector<TBKeyword*>& keywords;
     
     // Reference to the table's subtableRows parameter.
-    vector<int>& subtableRows;
+    std::vector<int>& subtableRows;
     
     // Reference to the table's totalRows parameter.
     int& totalRows;
@@ -169,7 +166,7 @@ protected:
     int& loadedRows;
     
     // Reference to the table's writable parameter.
-    vector<bool>& writable;
+    std::vector<bool>& writable;
     
     // Reference to the table's taql parameter.
     bool& taql;
@@ -219,18 +216,18 @@ public:
     bool releaseWriteLock();
     
     // Implements TBTableDriver::loadRows().
-    Result loadRows(int start, int num, bool full, vector<String>* fields,
+    Result loadRows(int start, int num, bool full, std::vector<String>* fields,
                     bool parsedata, ProgressHelper* progressPanel);
     
     // Implements TBTableDriver::loadArray().
     void loadArray(TBArrayData* d, unsigned int row, unsigned int col);
 
     // Implements TBTableDriver::dimensionsOf().
-    vector<int> dimensionsOf(unsigned int col);
+    std::vector<int> dimensionsOf(unsigned int col);
     
     // Implements TBTableDriver::editData().
     Result editData(unsigned int row, unsigned int col, TBData* newVal,
-                    vector<int>* d = NULL);
+                    std::vector<int>* d = NULL);
                                 
     // Implements TBTableDriver::totalRowsOf().
     int totalRowsOf(String location);
@@ -239,10 +236,10 @@ public:
     Result insertRows(int n);
 
     // Implements TBTableDriver::deleteRows().
-    Result deleteRows(vector<int> r);
+    Result deleteRows(std::vector<int> r);
 
     // Converts keywords in a TableRecord to a vector of TBKeywords.
-    static vector<TBKeyword*>* getKeywords(RecordInterface& kws);
+    static std::vector<TBKeyword*>* getKeywords(RecordInterface& kws);
     
 private:
     // Reference to table on disk.
@@ -279,16 +276,16 @@ public:
 
     
     // Implements TBTableDriver::loadRows().
-    Result loadRows(int start, int num, bool full, vector<String>* fields,
+    Result loadRows(int start, int num, bool full, std::vector<String>* fields,
                     bool parsedata, ProgressHelper* progressPanel);
     
     void loadArray(TBArrayData* d, unsigned int row, unsigned int col);
 
     // Implements TBTableDriver::dimensionsOf().
-    vector<int> dimensionsOf(unsigned int col);
+    std::vector<int> dimensionsOf(unsigned int col);
     
     Result editData(unsigned int row, unsigned int col, TBData* newVal,
-                        vector<int>* d = NULL);
+                        std::vector<int>* d = NULL);
                                 
     // Implements TBTableDriver::totalRowsOf().
     int totalRowsOf(String location);
@@ -300,7 +297,7 @@ public:
     Result insertRows(int n);
 
     // Implements TBTableDriver::deleteRows().
-    Result deleteRows(vector<int> r);
+    Result deleteRows(std::vector<int> r);
     
 private:
     // XML parser.

@@ -35,6 +35,8 @@
 #include <fstream>
 #include <ctime>
 
+using namespace std;
+
 namespace casa {
 
 ////////////////////////////////

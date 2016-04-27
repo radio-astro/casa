@@ -36,8 +36,6 @@
 #include <casaqt/QtUtilities/QtEditingWidget.qo.h>
 #include <graphics/GenericPlotter/PlotFactory.h>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 // Parent for plot widgets.
@@ -199,7 +197,7 @@ public:
     void addRadioButtonsToGroup(QButtonGroup* group) const;
     
     // Sets the allowable minimum sizes for the given symbol types.
-    void setMinimumSizes(const map<PlotSymbol::Symbol, int>& minimumSizes);
+    void setMinimumSizes(const std::map<PlotSymbol::Symbol, int>& minimumSizes);
     
 private:
     // Area fill widget.
@@ -215,7 +213,7 @@ private:
     PlotSymbolPtr itsSymbol_;
     
     // Minimum allowable sizes.
-    map<PlotSymbol::Symbol, int> itsMinSizes_;
+    std::map<PlotSymbol::Symbol, int> itsMinSizes_;
     
 private slots:
     // Slot for when the set symbol changes.  The "check" flag can be used to

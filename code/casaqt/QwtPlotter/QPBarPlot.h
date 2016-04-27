@@ -35,8 +35,6 @@
 #include <casaqt/QwtPlotter/QPData.h>
 #include <casaqt/QwtPlotter/QPOptions.h>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 // Implementation of BarPlot for Qwt plotter.

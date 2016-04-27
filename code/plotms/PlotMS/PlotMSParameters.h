@@ -29,8 +29,6 @@
 #include <plotms/PlotMS/PlotMSConstants.h>
 #include <plotms/PlotMS/PlotMSWatchedParameters.h>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 // Subclass of PlotMSWatchedParameters that hold parameters for the whole
@@ -102,7 +100,7 @@ public:
     // Gets/Sets the cached image size.  See
     // PlotCanvas::cachedAxesStackImageSize().
     // <group>
-    pair<int, int> cachedImageSize() const;
+    std::pair<int, int> cachedImageSize() const;
     void setCachedImageSize(int width, int height);
     // </group>
     

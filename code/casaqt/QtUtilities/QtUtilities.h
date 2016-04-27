@@ -29,8 +29,6 @@
 
 #include <QScrollArea>
 
-//#include <casa/namespace.h>
-
 namespace casa {
 
 class QtUtilities {

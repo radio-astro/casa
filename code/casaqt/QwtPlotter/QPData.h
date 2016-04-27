@@ -38,8 +38,6 @@
 
 #include <qwt_raster_data.h>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 // Connects PlotPointData and QwtData.

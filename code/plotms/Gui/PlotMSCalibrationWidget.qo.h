@@ -31,8 +31,6 @@
 #include <plotms/PlotMS/PlotMSCalibration.h>
 #include <casaqt/QtUtilities/QtEditingWidget.qo.h>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 // Widget for editing a PlotMSCalibration object.

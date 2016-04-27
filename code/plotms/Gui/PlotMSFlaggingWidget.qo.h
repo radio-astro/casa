@@ -32,8 +32,6 @@
 #include <casaqt/QtUtilities/QtEditingWidget.qo.h>
 #include <plotms/PlotMS/PlotMSFlagging.h>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 //# Forward Declarations.

@@ -29,10 +29,6 @@
 
 #include <plotms/PlotMS/PlotMSConstants.h>
 #include <plotms/Threads/ThreadController.h>
-#include <map>
-
-#include <casa/namespace.h>
-using namespace std;
 
 namespace casa {
 

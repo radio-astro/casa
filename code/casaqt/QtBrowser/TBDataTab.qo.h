@@ -33,9 +33,6 @@
 
 #include <casa/BasicSL/String.h>
 
-#include <casa/namespace.h>
-using namespace std;
-
 namespace casa {
 
 //# Forward Declarations
@@ -141,7 +138,7 @@ public:
     // Returns the current sort on the displayed data.  Each pair in the vector
     // is the name of the field with a bool indicating whether the sort is
     // ascending or not.
-    vector<pair<String, bool> >* getSortFields();
+    std::vector<std::pair<String, bool> >* getSortFields();
     
     
     // Updates the QTableWidget with new data that has been loaded into the
@@ -166,7 +163,7 @@ public:
     // Sorts the displayed data with the given order.  Each pair in the vector
     // is the name of the field with a bool indicating whether the sort is
     // ascending or not.
-    void sortBy(vector<pair<String, bool> >& s);
+    void sortBy(std::vector<std::pair<String, bool> >& s);
     
     // Sets the sort indicator on the QTableWidget for the given column with an
     // ascending arrow if asc is true or a descending arrow otherwise.
@@ -266,7 +263,7 @@ private:
 
     // List of cells that are highlighted (the row and column of the currently
     // selected cell).
-    vector<QTableWidgetItem*> highlightedCells;
+    std::vector<QTableWidgetItem*> highlightedCells;
 
     // Brushes used to draw the backgrounds of unselected and selected cells in
     // the QTableWidget, respectively.
@@ -279,7 +276,7 @@ private:
     TBFilterRuleSequence* filter;
 
     // Current field formats.
-    vector<TBFormat*> formats;
+    std::vector<TBFormat*> formats;
 
     // "Cleared" format for cell text.
     QFontColor* defaultFormat;
@@ -292,14 +289,14 @@ private:
 
     // Keeps track of the un-sorted order of the rows.
     // Doing rowItems[logicalRow]->row() returns the visualRow.
-    vector<QTableWidgetItem*> rowItems;
+    std::vector<QTableWidgetItem*> rowItems;
 
     // Keeps track of the un-sorted order of the rows.
     // Doing rowIndices[visualRow] returns the logicalRow.
-    vector<int> rowIndices;
+    std::vector<int> rowIndices;
 
     // The current sort order.
-    vector<pair<String, bool> > currSort;
+    std::vector<std::pair<String, bool> > currSort;
     
     // Used for handling right-clicks on headers.  Keeps track of the last
     // right-clicked header column number.

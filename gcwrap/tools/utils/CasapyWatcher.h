@@ -31,9 +31,6 @@
 
 #include <vector>
 
-#include <casa/namespace.h>
-using namespace std;
-
 namespace casac {
 
 // Parent for any class that wants to be notified about events in casapy.
@@ -67,8 +64,8 @@ public:
     // casapy.  Should be overridden if the child class wants to know when this
     // happens.
     // <group>
-    virtual void logChanged(const String& sinkLocation);
-    virtual void logChanged(LogMessage::Priority filterPriority);
+    virtual void logChanged(const casa::String& sinkLocation);
+    virtual void logChanged(casa::LogMessage::Priority filterPriority);
     // </group>
     
     // Called when casapy is closing.  Should be overridden if the child class
@@ -90,7 +87,7 @@ private:
     };
 #endif
     // All registered watchers.
-    static vector<CasapyWatcher*> *WATCHERS;
+    static std::vector<CasapyWatcher*> *WATCHERS;
     
     // Used to detect when casapy is closing.
 /*     static Singleton SINGLETON; */
@@ -99,8 +96,8 @@ private:
     // Called by the logger component when the sink location or filter priority
     // changes.
     // <group>
-    static void logChanged_(const String& sinkLocation);
-    static void logChanged_(LogMessage::Priority filterPriority);
+    static void logChanged_(const casa::String& sinkLocation);
+    static void logChanged_(casa::LogMessage::Priority filterPriority);
     // </group>
 
     // Called by the dbus component when casapy is closing.

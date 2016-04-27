@@ -30,8 +30,6 @@
 #include <plotms/PlotMS/PlotMSConstants.h>
 #include <plotms/PlotMS/PlotMSSelection.h>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 // Specifies flagging parameters (including possibly flag extension) for an MS.

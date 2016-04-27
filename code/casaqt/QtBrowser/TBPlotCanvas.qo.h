@@ -38,9 +38,6 @@
 
 #include <vector>
 
-#include <casa/namespace.h>
-using namespace std;
-
 namespace casa {
 
 //# Forward Declarations
@@ -145,7 +142,7 @@ public:
     
     
     // Returns the data corresponding to the current plots.
-    vector<TBPlotData*> allData();
+    std::vector<TBPlotData*> allData();
     
     // Implements PlotSelectEventHandler::handleSelect().
     void handleSelect(const PlotSelectEvent& event);    
@@ -196,7 +193,7 @@ private:
     PlotShapeRectanglePtr selectedRegion;
     
     // Current data.
-    vector<TBPlotData*> data;
+    std::vector<TBPlotData*> data;
     
 private slots:    
     // Slot for clearing all the internal tracking of current plots.

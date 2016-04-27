@@ -37,8 +37,6 @@
 #include <plotms/PlotMS/PlotMSCalibration.h>
 #include <plotms/PlotMS/PlotMSLabelFormat.h>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 // Container class to hold constants for groups.

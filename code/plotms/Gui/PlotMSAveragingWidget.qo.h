@@ -32,8 +32,6 @@
 #include <casaqt/QtUtilities/QtEditingWidget.qo.h>
 #include <plotms/PlotMS/PlotMSAveraging.h>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 // GUI widget for editing a PlotMSAveraging object.

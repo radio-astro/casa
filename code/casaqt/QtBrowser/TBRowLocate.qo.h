@@ -33,9 +33,6 @@
 
 #include <casa/BasicSL/String.h>
 
-#include <casa/namespace.h>
-using namespace std;
-
 namespace casa {
 
 //# Forward Declarations
@@ -67,7 +64,7 @@ private:
     TBLocatedRows* rows;
 
     // List of tables.
-    vector<TBTableTabs*> tables;
+    std::vector<TBTableTabs*> tables;
     
 private slots:
     // Slot for when the user clicks a cell.

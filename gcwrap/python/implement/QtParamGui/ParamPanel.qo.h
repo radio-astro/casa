@@ -33,9 +33,6 @@
 
 #include <utility>
 
-#include <casa/namespace.h>
-using namespace std;
-
 namespace casa {
 
 // A ParamPanel holds information for a single parameter.  It displays the

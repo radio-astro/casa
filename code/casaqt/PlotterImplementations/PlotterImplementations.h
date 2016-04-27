@@ -3,8 +3,6 @@
 
 #include <graphics/GenericPlotter/SimplePlotter.h>
 
-#include <casa/namespace.h>
-
 namespace casa {
 
 // The plotterImplementation function is a global function

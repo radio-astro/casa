@@ -26,6 +26,8 @@
 //# $Id: $
 #include <casaqt/QtBrowser/TBSorter.qo.h>
 
+using namespace std;
+
 namespace casa {
 
 //////////////////////////
