@@ -362,6 +362,10 @@ class CleanBase(basetask.StandardTaskTemplate):
                   chanchunks=chanchunks, parallel=parallel)
         tclean_result = self._executor.execute(job)
 
+        if (inputs.niter > 0):
+            if (tclean_result['iterdone'] == tclean_result['niter']):
+                LOG.warning('tclean reached niter limit of %d !' % (tclean_result['niter']))
+
         # Create PB for single fields since it is not auto-generated for
         # gridder='standard'.
         if (inputs.gridder == 'standard'):
