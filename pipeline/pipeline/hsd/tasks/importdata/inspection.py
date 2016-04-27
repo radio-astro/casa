@@ -133,7 +133,8 @@ class SDMSInspection(object):
                     # add new group
                     key = len(reduction_group)
                     group_spw_names[key] = (spw_name, field_name)
-                    newgroup = singledish.MSReductionGroupDesc(min_frequency=min_frequency, 
+                    newgroup = singledish.MSReductionGroupDesc(spw_name=spw_name,
+                                                               min_frequency=min_frequency, 
                                                                max_frequency=max_frequency, 
                                                                nchan=nchan,
                                                                field=field)

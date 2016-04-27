@@ -726,7 +726,8 @@ class MSReductionGroupMember(object):
         return other.ms.name != self.ms.name or other.antenna != self.antenna or other.spw != self.spw or other.field_id != self.field_id
      
 class MSReductionGroupDesc(list):
-    def __init__(self, min_frequency=None, max_frequency=None, nchan=None, field=None):
+    def __init__(self, spw_name=None, min_frequency=None, max_frequency=None, nchan=None, field=None):
+        self.spw_name = spw_name
         self.max_frequency = max_frequency
         self.min_frequency = min_frequency
         self.nchan = nchan
@@ -738,7 +739,7 @@ class MSReductionGroupDesc(list):
     
     @property
     def field_name(self):
-        return self.field.name.strip('"')
+        return self.field.name.strip('"')    
 
     def merge(self, other):
         assert self == other
@@ -774,16 +775,28 @@ class MSReductionGroupDesc(list):
             
     def __eq__(self, other):
         #LOG.debug('MSReductionGroupDesc.__eq__')
-        return self.max_frequency == other.max_frequency \
-            and self.min_frequency == other.min_frequency \
-            and self.nchan == other.nchan \
-            and self.field_name == other.field_name
+        if (not isinstance(self.spw_name, str)) or len(self.spw_name) == 0:
+            return self.max_frequency == other.max_frequency \
+                and self.min_frequency == other.min_frequency \
+                and self.nchan == other.nchan \
+                and self.field_name == other.field_name
+        else:
+            return self.spw_name == other.spw_name \
+                and self.field_name == other.field_name
             
     def __ne__(self, other):
-        return self.max_frequency != other.max_frequency \
-            or self.min_frequency != other.min_frequency \
-            or self.nchan != other.nchan \
-            or self.field_name != other.field_name
+        if (not isinstance(self.spw_name, str)) or len(self.spw_name) == 0:
+            return self.max_frequency != other.max_frequency \
+                or self.min_frequency != other.min_frequency \
+                or self.nchan != other.nchan \
+                or self.field_name != other.field_name
+        else:
+            return self.spw_name != other.spw_name \
+                or self.field_name != other.field_name
 
     def __repr__(self):
-        return 'MSReductionGroupDesc(frequency_range=%s, nchan=%s, field=\'%s\', member=%s)' % (self.frequency_range, self.nchan, self.field_name, self[:])
+        if (not isinstance(self.spw_name, str)) or len(self.spw_name) == 0:
+            return 'MSReductionGroupDesc(frequency_range=%s, nchan=%s, field=\'%s\', member=%s)' % (self.frequency_range, self.nchan, self.field_name, self[:])
+        else:
+            return 'MSReductionGroupDesc(spw_name=%s, frequency_range=%s, nchan=%s, field=\'%s\', member=%s)' % (self.spw_name, self.frequency_range, self.nchan, self.field_name, self[:])
+  
