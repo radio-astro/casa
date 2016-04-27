@@ -4,6 +4,7 @@ import os
 import re
 import shutil
 import types
+from math import sqrt
 
 import casadef
 #from recipes import makepb
@@ -228,6 +229,7 @@ class CleanBase(basetask.StandardTaskTemplate):
         spw_freq_param_lists = []
         spw_chan_param_lists = []
         p = re.compile('([\d.]*)(~)([\d.]*)(\D*)')
+        total_freq_ranges = []
         freq_ranges = []
         num_channels = []
 
@@ -253,7 +255,15 @@ class CleanBase(basetask.StandardTaskTemplate):
 
         for spwid in inputs.spw.split(','):
             spw_info = ms.get_spectral_window(spwid)
+
             num_channels.append(spw_info.num_channels)
+
+            min_frequency = float(spw_info.min_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
+            max_frequency = float(spw_info.max_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
+
+            # Save spw width
+            total_freq_ranges.append((min_frequency, max_frequency))
+
             if (inputs.spwsel.has_key('spw%s' % (spwid))):
                 if (inputs.spwsel['spw%s' % (spwid)] != ''):
                     freq_selection, refer = inputs.spwsel['spw%s' % (spwid)].split()
@@ -274,22 +284,27 @@ class CleanBase(basetask.StandardTaskTemplate):
                             freq_ranges.append((float(f1), float(f2)))
                 else:
                     spw_freq_param_lists.append([spwid] * len(inputs.vis))
-                    min_frequency = float(spw_info.min_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
-                    max_frequency = float(spw_info.max_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
                     freq_ranges.append((min_frequency, max_frequency))
             else:
                 spw_freq_param_lists.append([spwid] * len(inputs.vis))
-                min_frequency = float(spw_info.min_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
-                max_frequency = float(spw_info.max_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
                 freq_ranges.append((min_frequency, max_frequency))
 
         spw_freq_param = [','.join(spwsel_per_ms) for spwsel_per_ms in [[spw_freq_param_list_per_ms[i] for spw_freq_param_list_per_ms in spw_freq_param_lists] for i in xrange(len(inputs.vis))]]
+
+        qaTool = casatools.quanta
+
+        # Calculate total bandwidth
+        total_bw = '0.0GHz'
+        for total_freq_range in utils.merge_ranges(total_freq_ranges):
+            total_bw = qaTool.add(total_bw, qaTool.sub('%sGHz' % (total_freq_range[1]), '%sGHz' % (total_freq_range[0])))
+
+        # Calculate aggregate selected bandwidth
         aggregate_bw = '0.0GHz'
         for freq_range in utils.merge_ranges(freq_ranges):
-            aggregate_bw = casatools.quanta.add(aggregate_bw, casatools.quanta.sub('%sGHz' % (freq_range[1]), '%sGHz' % (freq_range[0])))
+            aggregate_bw = qaTool.add(aggregate_bw, qaTool.sub('%sGHz' % (freq_range[1]), '%sGHz' % (freq_range[0])))
 
-        # TODO: Adjust sensitivity to selection bandwidth here ?
-        #       Save channel selection in result for weblog.
+        # Adjust sensitivity according to selection bandwidth
+        inputs.threshold = threshold = '%sJy' % (qaTool.convert(inputs.threshold, 'Jy')['value'] * sqrt(qaTool.convert(total_bw, 'GHz')['value'] / qaTool.convert(aggregate_bw, 'GHz')['value']))
 
         if (inputs.specmode == 'cube'):
             # Estimate memory usage and adjust chanchunks parameter to avoid
@@ -429,6 +444,8 @@ class CleanBase(basetask.StandardTaskTemplate):
         result.set_cleanmask(iter=iter, image=inputs.mask)
 
         # Keep threshold, sensitivity and aggregate bandwidth for QA and weblog
+        # TODO: Save channel selection in result for weblog.
+        #       Save total frequency bandwidth for weblog.
         result.set_threshold(inputs.threshold)
         result.set_sensitivity(inputs.sensitivity)
         result.set_aggregate_bw(aggregate_bw)
