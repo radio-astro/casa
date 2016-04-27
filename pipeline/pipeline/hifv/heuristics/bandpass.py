@@ -72,12 +72,12 @@ def computeChanFlag(vis, caltable, context):
             '''
             try:
                 if ((rangeA[0][0] == 0 and rangeA[0][1] == len(flagArr[0])-1) or (rangeB[0][0] == 0 and rangeB[0][1] == len(flagArr[1])-1)):
-                    LOG.warn("Weak bandpass heuristic could not recover solutions for spwid="+str(spwArr[0]))
+                    LOG.warn("channel pre-averaging bandpass calibration heuristic could not recover solutions for spw="+str(spwArr[0]))
                     print rangeA, rangeB
                     spwids.append(spwArr[0])
                     largechunk = True
             except:
-                LOG.warn("Problem with using weakbp heuristics - check CASA log")
+                LOG.warn("Problem with using channel pre-averaging bandpass calibration heuristic - check CASA log")
             '''
 
             # Determine contiguous lengths for both polarizations, but ignoring edge flagging
@@ -158,15 +158,15 @@ def weakbp(vis, caltable, context=None, RefAntOutput=None, ktypecaltable=None, b
         interp = ''
         return interp
 
-    LOG.warning("Solutions for all channels not obtained.  Using weak bandpass calibrator heuristics.")
+    LOG.warning("Solutions for all channels not obtained.  Using channel pre-averaging bandpass calibration heuristic.")
     cpa = 2  # Channel pre-averaging
     while(largechunk == True):
 
-        LOG.info("Removing rows in table " + caltable + " for spwids="+','.join([str(i) for i in spwids]))
+        LOG.info("Removing rows in table " + caltable + " for spws="+','.join([str(i) for i in spwids]))
         removeRows(caltable, spwids)
         solint = 'inf,'+str(cpa)+'ch'
-        LOG.warning("Largest contiguous set of channels with no BP solution is greater than maximum allowable 1/32 fractional bandwidth for spwid="+','.join([str(i) for i in spwids])+"."+ "  Using solint=" + solint)
-        LOG.info('Weak bandpass heuristics.  Using solint='+solint)
+        LOG.warning("Largest contiguous set of channels with no BP solution is greater than maximum allowable 1/32 fractional bandwidth for spw="+','.join([str(i) for i in spwids])+"."+ "  Using solint=" + solint)
+        LOG.info('Channel pre-averaging bandpass calibration heuristic.  Using solint='+solint)
         bpjob = do_bandpass(vis, caltable, context=context, RefAntOutput=RefAntOutput, spw=','.join([str(i) for i in spwids]),
                             ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse, solint=solint, append=True)
         bpjob.execute()
@@ -175,7 +175,7 @@ def weakbp(vis, caltable, context=None, RefAntOutput=None, ktypecaltable=None, b
             preavgnchan = channels[spw]/float(cpa)
             LOG.debug("CPA: "+str(cpa)+"   NCHAN: "+str(preavgnchan)+"    NCHAN/32: "+str(preavgnchan/32.0))
             if (cpa > preavgnchan/32.0):
-                LOG.warn("Limiting pre-averaging to maximum 1/32 fractional bandwidth for spwid="+str(spw)+". Interpolation in applycal will need to extend over greater than 1/32 fractional bandwidth, which may fail to capture significant bandpass structure.")
+                LOG.warn("Limiting pre-averaging to maximum 1/32 fractional bandwidth for spw="+str(spw)+". Interpolation in applycal will need to extend over greater than 1/32 fractional bandwidth, which may fail to capture significant bandpass structure.")
                 largechunk = False  #This will break the while loop and move onto applycal
         cpa = cpa * 2
 
