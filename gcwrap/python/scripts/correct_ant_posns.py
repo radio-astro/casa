@@ -127,7 +127,10 @@ def correct_ant_posns (vis_name, print_offsets=False):
     for correction_line in correction_lines:
         # remove any html tags (use non-greedy match)
         correction_line = re.sub(r"<.*?>","",correction_line)
+        # replace any commas( shouldn't be there but in the case there is the html formatting error) with a whitespace
+        correction_line = re.sub(r","," ",correction_line)
         correction_line_fields = correction_line.split()
+        #print "correction_line_fields=",correction_line_fields, "len=",len(correction_line_fields)
         if (len(correction_line_fields) > 9):
             [c_year, moved_date, obs_date, put_date, put_time_str, ant, pad, Bx, By, Bz] = correction_line_fields
             s_moved = moved_date[:3]
@@ -161,6 +164,7 @@ def correct_ant_posns (vis_name, print_offsets=False):
         corrections_list.append([c_year, moved_date, moved_time, obs_date, obs_time_2, put_date, put_time, int(ant), pad, float(Bx), float(By), float(Bz)])
 
     for correction_list in corrections_list:
+        #print "correction_list=", correction_list
         [c_year, moved_date, moved_time, obs_date, obs_time_2, put_date, put_time, ant, pad, Bx, By, Bz] = correction_list
         ant_ind = -1
         for ii in range(len(ant_num_stas)):
