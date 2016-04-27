@@ -35,7 +35,7 @@
     <number>3</number>
    </property>
    <item>
-    <widget class="PlotMSFlaggingWidget" native="1" name="flaggingWidget" />
+    <widget class="casa::PlotMSFlaggingWidget" native="1" name="flaggingWidget" />
    </item>
    <item>
     <spacer>
@@ -84,7 +84,7 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>PlotMSFlaggingWidget</class>
+   <class>casa::PlotMSFlaggingWidget</class>
    <extends>QWidget</extends>
    <header>../Gui/PlotMSFlaggingWidget.qo.h</header>
    <container>1</container>
