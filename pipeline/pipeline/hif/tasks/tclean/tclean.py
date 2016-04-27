@@ -421,44 +421,44 @@ class Tclean(cleanbase.CleanBase):
             raise Exception, 'Unknown specmode "%s"' % (inputs.specmode)
         for ms in context.observing_run.measurement_sets:
             for intSpw in [int(s) for s in spw.split(',')]:
-                with casatools.ImagerReader(ms.name) as imTool:
-                    try:
-                        if (inputs.gridder == 'mosaic'):
-                            field_sensitivities = []
-                            for field_id in [f.id for f in ms.fields if (utils.dequote(f.name) == utils.dequote(field) and inputs.intent in f.intents)]:
+                try:
+                    if (inputs.gridder == 'mosaic'):
+                        field_sensitivities = []
+                        for field_id in [f.id for f in ms.fields if (utils.dequote(f.name) == utils.dequote(field) and inputs.intent in f.intents)]:
+                            with casatools.ImagerReader(ms.name) as imTool:
+                                imTool.selectvis(spw=intSpw, field=field_id)
                                 # TODO: Add scan selection ?
                                 imTool.defineimage(mode=specmode, spw=intSpw,
                                                    cellx=inputs.cell[0], celly=inputs.cell[0],
                                                    nx=inputs.imsize[0], ny=inputs.imsize[1])
                                 # TODO: Mosaic switch needed ?
                                 imTool.weight(type=inputs.weighting, robust=inputs.robust)
-                                imTool.selectvis(spw=intSpw, field=field_id)
                                 result = imTool.apparentsens()
                                 if (result[1] != 0.0):
                                     field_sensitivities.append(result[1])
 
-                            # Calculate mosaic overlap factor
-                            source_name = [f.source.name for f in ms.fields if (utils.dequote(f.name) == utils.dequote(field) and inputs.intent in f.intents)][0]
-                            diameter = numpy.median([a.diameter for a in ms.antennas])
-                            overlap_factor = mosaicoverlap.mosaicOverlapFactorMS(ms, source_name, intSpw, diameter)
+                        # Calculate mosaic overlap factor
+                        source_name = [f.source.name for f in ms.fields if (utils.dequote(f.name) == utils.dequote(field) and inputs.intent in f.intents)][0]
+                        diameter = numpy.median([a.diameter for a in ms.antennas])
+                        overlap_factor = mosaicoverlap.mosaicOverlapFactorMS(ms, source_name, intSpw, diameter)
 
-                            sensitivities.append(numpy.median(field_sensitivities) / overlap_factor)
-                        else:
+                        sensitivities.append(numpy.median(field_sensitivities) / overlap_factor)
+                    else:
+                        with casatools.ImagerReader(ms.name) as imTool:
+                            imTool.selectvis(spw=intSpw, field=field)
                             # TODO: Add scan selection ?
                             imTool.defineimage(mode=specmode, spw=intSpw,
                                                cellx=inputs.cell[0], celly=inputs.cell[0],
                                                nx=inputs.imsize[0], ny=inputs.imsize[1])
                             # TODO: Mosaic switch needed ?
                             imTool.weight(type=inputs.weighting, robust=inputs.robust)
-                            imTool.selectvis(spw=intSpw, field=field)
                             result = imTool.apparentsens()
                             if (result[1] != 0.0):
                                 sensitivities.append(result[1])
-                            imtTool.done()
-                    except Exception as e:
-                        # Simply pass as this could be a case of a source not
-                        # being present in the MS.
-                        pass
+                except Exception as e:
+                    # Simply pass as this could be a case of a source not
+                    # being present in the MS.
+                    pass
 
         if (len(sensitivities) != 0):
             sensitivity = 1.0 / numpy.sqrt(numpy.sum(1.0 / numpy.array(sensitivities)**2))
