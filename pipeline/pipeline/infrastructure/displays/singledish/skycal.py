@@ -3,12 +3,13 @@ import re
 
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.displays.bandpass as bandpass
+import pipeline.infrastructure.casatools as casatools
 
 LOG = logging.get_logger(__name__)
 
 class SingleDishSkyCalDisplayBase(object):
     def init_with_field(self, context, result, field):
-        vis = os.path.basename(result.inputs['vis'])
+        vis = self._vis 
         ms = context.observing_run.get_ms(vis)
         num_fields = len(ms.fields)
         if field.isdigit() and int(field) < num_fields:
@@ -45,6 +46,8 @@ class SingleDishSkyCalSummaryChart(bandpass.BandpassAmpVsFreqSummaryChart, Singl
         self.init_with_field(context, result, field)
          
     def plot(self):
+        self._kwargs['timeranges'] = '0'
+        
         wrappers = super(SingleDishSkyCalSummaryChart, self).plot()
          
         self.add_field_identifier(wrappers)
@@ -56,9 +59,11 @@ class SingleDishSkyCalSummaryChart(bandpass.BandpassAmpVsFreqSummaryChart, Singl
             self._figfile[ant_id] = map(lambda x: x.replace(old_prefix, new_prefix), figfiles)
         
     
-class SingleDishSkyCalDetailChart(bandpass.BandpassAmpVsFreqDetailChart, SingleDishSkyCalDisplayBase):
+class SingleDishSkyCalDetailChart(bandpass.BandpassDetailChart, SingleDishSkyCalDisplayBase):
     def __init__(self, context, result, field):
-        super(SingleDishSkyCalDetailChart, self).__init__(context, result)
+        super(SingleDishSkyCalDetailChart, self).__init__(context, result,
+                                                          xaxis='freq', yaxis='amp', showatm=True,
+                                                          overlay='time')
         
         self.init_with_field(context, result, field)
     
