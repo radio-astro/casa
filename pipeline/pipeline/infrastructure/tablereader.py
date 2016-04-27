@@ -353,13 +353,14 @@ class SpectralWindowTable(object):
             mean_freq = msmd.meanfreq(i)
             chan_freqs = msmd.chanfreqs(i)
             chan_widths = msmd.chanwidths(i)            
+            chan_effective_bws = msmd.chaneffbws(i)
             sideband = msmd.sideband(i)
             baseband = msmd.baseband(i)
             ref_freq = msmd.reffreq(i)
 
             spw = domain.SpectralWindow(i, spw_name, spw_type, bandwidth,
-                    ref_freq, mean_freq, chan_freqs, chan_widths, sideband,
-                    baseband)
+                    ref_freq, mean_freq, chan_freqs, chan_widths,
+                    chan_effective_bws, sideband, baseband)
             spws.append(spw)
 
         return spws

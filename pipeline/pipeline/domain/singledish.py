@@ -322,16 +322,16 @@ class SpectralWindowAdapter:
     
     @property
     def chan_freqs(self):
-        chan_freqs = self.spw._chan_freqs
+        chan_freqs = self.spw.channels.chan_freqs
         if isinstance(chan_freqs, spectralwindow.ArithmeticProgression):
-            chan_freqs = numpy.array(list(spectralwindow.expand_ap(chan_freqs)))
+            chan_freqs = numpy.array(list(chan_freqs))
         return chan_freqs
         
     @property
     def chan_widths(self):
-        chan_widths = self.spw._chan_widths
+        chan_widths = self.spw.channels.chan_widths
         if isinstance(chan_widths, spectralwindow.ArithmeticProgression):
-            chan_widths = numpy.array(list(spectralwindow.expand_ap(chan_widths)))
+            chan_widths = numpy.array(list(chan_widths))
         return chan_widths
     
     @property
@@ -374,17 +374,10 @@ class SpectralWindowAdapter:
     def increment(self):
         if not hasattr(self, '_increment') or self._increment is None:
             if self.nchan == 1:
-                chan_widths = self.spw._chan_widths
-                if isinstance(chan_widths, spectralwindow.ArithmeticProgression):
-                    self._increment = chan_widths.start
-                else:
-                    self._increment = chan_widths[0]
+                self._increment = self.spw.channels.chan_widths[0]
             else:
-                chan_freqs = self.spw._chan_freqs
-                if isinstance(chan_freqs, spectralwindow.ArithmeticProgression):
-                    self._increment = chan_freqs.delta
-                else:
-                    self._increment = chan_freqs[1] - chan_freqs[0]
+                chan_freqs = self.spw.channels.chan_freqs
+                self._increment = chan_freqs[1] - chan_freqs[0]
         return self._increment
    
     @property
@@ -468,11 +461,7 @@ class SpectralWindowAdapter:
     @property
     def refval(self):
         if not hasattr(self, '_refval') or self._refval is None:
-            chan_freqs = self.spw._chan_freqs
-            if isinstance(chan_freqs, spectralwindow.ArithmeticProgression):
-                self._refval = chan_freqs.start
-            else:
-                self._refval = chan_freqs[0]
+            self._refval = self.spw.channels.chan_freqs[0]
         return self._refval
     
     @property
