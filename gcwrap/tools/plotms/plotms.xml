@@ -1451,7 +1451,7 @@ and outline.
     </param>
     <param type="bool" name="outline">
       <description>sets outline on plotted points</description>
-      <value>False</value>
+      <value>false</value>
     </param>
 
     <param type="bool" name="updateImmediately">
@@ -1498,7 +1498,7 @@ and outline.
     </param>
     <param type="bool" name="outline">
       <description>sets outline on plotted flagged points</description>
-      <value>False</value>
+      <value>false</value>
     </param>
 
     <param type="bool" name="updateImmediately">

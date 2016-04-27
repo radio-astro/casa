@@ -145,7 +145,7 @@ imd.done()
     <input>
         <param type="bool" name="verbose">
             <description>If true, print listing to logger</description>
-            <value>True</value>
+            <value>true</value>
         </param>
     </input>
     <returns type="record"/>
