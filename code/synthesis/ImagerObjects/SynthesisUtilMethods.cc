@@ -2189,9 +2189,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       mySpectral.setRestFrequencies(restfreqval, 0, True);
     }
 
-    if ( freqFrameValid ) {
-      mySpectral.setReferenceConversion(MFrequency::LSRK,obsEpoch,obsPosition,phaseCenterToUse);   
-    }
+    // no longer needed, done inside SIImageStore
+    //if ( freqFrameValid ) {
+    // mySpectral.setReferenceConversion(MFrequency::LSRK,obsEpoch,obsPosition,phaseCenterToUse);   
+    //}
 
     //    cout << "RF from coordinate : " << mySpectral.restFrequency() << endl;
 
