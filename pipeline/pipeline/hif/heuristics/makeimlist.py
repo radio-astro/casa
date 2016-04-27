@@ -207,7 +207,7 @@ class MakeImListHeuristics(object):
                 field_intent_result.discard(field_intent)
             else:
                 done_vis_scanids.append(vis_scanids)
-                
+
         return field_intent_result
 
     def beam(self, spwspec):

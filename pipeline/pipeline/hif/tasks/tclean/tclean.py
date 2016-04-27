@@ -312,6 +312,19 @@ class Tclean(cleanbase.CleanBase):
         LOG.info('    Residual max %s', residual_max)
         LOG.info('    Residual min %s', residual_min)
 
+        dirty_dynamic_range = residual_max / non_cleaned_rms
+        if (dirty_dynamic_range > 100.):
+            n_dr = 5.
+        elif (50. < dirty_dynamic_range <= 100.):
+            n_dr = 4.
+        elif (20. < dirty_dynamic_range <= 50.):
+            n_dr = 3.
+        elif (dirty_dynamic_range <= 20.):
+            n_dr = 2.
+
+        qaTool = casatools.quanta
+        sequence_manager.threshold = sequence_manager.threshold = threshold = '%sJy' % (qaTool.convert(sequence_manager.threshold, 'Jy')['value'] * n_dr)
+
         iterating = True
         iter = 1
         while iterating:

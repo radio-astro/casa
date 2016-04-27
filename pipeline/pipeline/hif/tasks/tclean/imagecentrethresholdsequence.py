@@ -12,7 +12,7 @@ LOG = infrastructure.get_logger(__name__)
 
 class ImageCentreThresholdSequence(BaseCleanSequence):
 
-    def __init__(self, gridder, threshold='0.0mJy', sensitivity=0.0, niter=1000):
+    def __init__(self, gridder, threshold='0.0mJy', sensitivity=0.0, niter=100000):
         """Constructor.
         """
         BaseCleanSequence.__init__(self)

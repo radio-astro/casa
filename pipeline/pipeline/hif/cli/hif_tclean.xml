@@ -186,7 +186,7 @@ Compute a clean map.
 
   <param type="int" name="niter" subparam="true">
     <description>Maximum number of clean iterations</description>
-    <value>1000</value>
+    <value>100000</value>
   </param>
 
   <param type="double" name="threshold" units="mJy" subparam="true">
@@ -306,16 +306,16 @@ Compute a clean map.
 
     <when param="hm_cleaning">
       <equals value="manual">
-        <default param="niter"><value type="int">1000</value></default>
+        <default param="niter"><value type="int">100000</value></default>
         <default param="threshold"><value type="double" units="mJy">0.0</value></default>
       </equals>
       <equals value="sensitivity">
         <default param="tlimit"><value type="double">2.0</value></default>
-        <default param="niter"><value type="int">1000</value></default>
+        <default param="niter"><value type="int">100000</value></default>
       </equals>
       <equals value="rms">
         <default param="tlimit"><value type="double">2.0</value></default>
-        <default param="niter"><value type="int">1000</value></default>
+        <default param="niter"><value type="int">100000</value></default>
       </equals>
       <equals value="mask">
         <default param="masklimit"><value type="int">4</value></default>
@@ -513,7 +513,7 @@ mask -- Image mask for hm_masking manual mode. User responsible for
     example: 'mymask.mask'
 
 niter -- Maximum number of iterations per clean call
-    default: 1000
+    default: 100000
     example: 500
 
 threshold -- Threshold for cleaning
