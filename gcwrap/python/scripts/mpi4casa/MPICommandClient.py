@@ -928,6 +928,25 @@ class MPICommandClient:
             self.push_command_request("self.omp_set_num_threads(%s)" % str(omp_max_threads),
                                       block=True,target_server=target_server)
             
+        def wait_for_command_request_sent(self,command_request_id_list):
+            
+            casalog_call_origin = "MPICommandClient::wait_for_command_request_sent"    
+            
+            if self.__life_cycle_state == 0:
+                casalog.post("Services not started","WARN",casalog_call_origin)
+                return       
+            elif self.__life_cycle_state == 2:
+                casalog.post("MPICommandClient life cycle finalized","WARN",casalog_call_origin)
+                return            
+            
+            pending_command_request_id_list = list(command_request_id_list)
+            while len(pending_command_request_id_list) > 0:
+                for command_request_id in command_request_id_list:
+                    print self.__command_request_list[command_request_id]
+                    if self.__command_request_list[command_request_id]['status'] == 'request sent':
+                        pending_command_request_id_list.remove(command_request_id)
+                time.sleep(MPIEnvironment.mpi_push_command_request_block_mode_sleep_time)            
+            
             
                       
             
