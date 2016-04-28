@@ -40,7 +40,8 @@ namespace casa {
 
 	void SearchMoleculesResultsWidget::initializeTable() {
 		QStringList tableHeaders(QStringList() << "ID"<<"Species" << "Chemical Name" <<
-		                         "Frequency(MHz)" << "Resolved QNs" << "Intensity" <<"Energy Upper(K)" );
+		                         "Frequency(MHz)" << "Energy Upper(K)"<<"Resolved QNs" <<
+		                         	 "CDMS/JPL Intensity");
 		ui.searchResultsTable->setColumnCount( COLUMN_COUNT );
 		ui.searchResultsTable->setHorizontalHeaderLabels( tableHeaders );
 		ui.searchResultsTable->setSelectionBehavior(QAbstractItemView::SelectRows);
