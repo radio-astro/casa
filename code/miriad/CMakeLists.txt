@@ -23,32 +23,13 @@ include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/Filling )
 # because the generated code contain relative paths to the source tree
 
 casa_add_library( miriad
-  Filling/DataLoadingBuf.cc
-  Filling/DOmirfiller.cc
-  Filling/FillMetadata.cc
-  Filling/IDIndex.cc
-  Filling/MirExceptions.cc
-  Filling/MirFiller.cc
-  Filling/MirTypeAssert.cc
-  Filling/MirVisReader.cc
+   Filling/Importmiriad.cc
   )
 
 install (FILES
-	Filling/DOmirfiller.h
-	Filling/DataLoadingBuf.h
-	Filling/FillMetadata.h
-	Filling/IDIndex.h
-	Filling/MirDataBuffer.h
-	Filling/MirExceptions.h
-	Filling/MirFiller.h
-	Filling/MirTypeAssert.h
-	Filling/MirVarHandler.h
-	Filling/MirVisReader.h
+        Filling/Importmiriad.h
 	DESTINATION include/casacode/miriad/Filling
 	)
-
-# importmiriad is supposed to be a more general filler for miriad data
-casa_add_executable( miriad importmiriad apps/importmiriad/importmiriad.cc )
 
 # carmafiller is somewhat limited, and deals only with CARMA (like) data
 casa_add_executable( miriad carmafiller apps/carmafiller/carmafiller.cc )
