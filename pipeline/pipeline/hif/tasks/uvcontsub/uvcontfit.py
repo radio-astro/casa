@@ -200,8 +200,13 @@ class UVcontFit(basetask.StandardTaskTemplate):
         inputs.caltable = inputs.caltable
         orig_spw = ','.join([spw.split(':')[0] for spw in inputs.spw.split(',')])
 
+        # every time inputs.caltable is called, the old caltable is deleted.
+        # So, calculate the caltable name once and use THIS variable from here
+        # on in
+        caltable = inputs.caltable
+
         if not inputs.contfile:
-            uvcontfit_args = inputs.to_casa_args(inputs.caltable)
+            uvcontfit_args = inputs.to_casa_args(caltable)
             uvcontfit_job = casa_tasks.uvcontfit(**uvcontfit_args)
             self._executor.execute(uvcontfit_job)
         else:
@@ -213,25 +218,22 @@ class UVcontFit(basetask.StandardTaskTemplate):
             orig_intent = inputs.intent
 
             # Loop over the ranges calling uvcontfit once per source
-            for sname in cranges_spwsel.iterkeys():
+            for sname in cranges_spwsel:
                 # Translate to field selection
-                sfields, sintents = self._get_source_fields (sname)
+                sfields, sintents = self._get_source_fields(sname)
                 if not sfields:
                     continue
-                spwstr = ''
-                for spw_id in cranges_spwsel[sname].iterkeys():
-                    # Skip empty entry
-                    if cranges_spwsel[sname][spw_id] == 'NONE':
-                        continue
-                    # Accumulate spw selection string or this source
-                    if not spwstr:
-                        spwstr =  spwstr + '%s:%s' % (spw_id, cranges_spwsel[sname][spw_id].split()[0])
-                    else:
-                        spwstr =  spwstr + ',%s:%s' % (spw_id, cranges_spwsel[sname][spw_id].split()[0])
+
+                # Accumulate spw selection string or this source
+                source_cranges = cranges_spwsel[sname]
+                spw_cranges = ['%s:%s' % (spw_id, source_cranges[spw_id].split()[0])
+                               for spw_id in source_cranges
+                               if source_cranges[spw_id] != 'NONE']
+                spwstr = ','.join(spw_cranges)
 
                 # Fire off task
                 inputs.intent = sintents
-                uvcontfit_args = inputs.to_casa_args(inputs.caltable, field=sfields, spw=spwstr, append=append)
+                uvcontfit_args = inputs.to_casa_args(caltable, field=sfields, spw=spwstr, append=append)
                 uvcontfit_job = casa_tasks.uvcontfit(**uvcontfit_args)
                 self._executor.execute(uvcontfit_job)
                 
@@ -243,10 +245,11 @@ class UVcontFit(basetask.StandardTaskTemplate):
         # careful now! Calling inputs.caltable mid-task will remove the
         # newly-created caltable, so we must look at the task arguments
         # instead
-        calfrom = callibrary.CalFrom(uvcontfit_args['caltable'],
+        calfrom = callibrary.CalFrom(caltable,
                                      caltype='uvcont',
                                      spwmap=[],
-                                     interp='', calwt=False)
+                                     interp='',
+                                     calwt=False)
 
         calapp = callibrary.CalApplication(calto, calfrom)
 
@@ -410,7 +413,14 @@ class UVcontFit(basetask.StandardTaskTemplate):
 
 
 class UVcontFitResults(basetask.Results):
-    def __init__(self, final=[], pool=[], preceding=[]):
+    def __init__(self, final=None, pool=None, preceding=None):
+        if final is None:
+            final = []
+        if pool is None:
+            pool = []
+        if preceding is None:
+            preceding = []
+
         super(UVcontFitResults, self).__init__()
         self.pool = pool[:]
         self.final = final[:]

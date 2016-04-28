@@ -5,6 +5,7 @@ import os
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.tablereader as tablereader
 from pipeline.infrastructure import casa_tasks
 
@@ -188,6 +189,11 @@ class MstransformResults(basetask.Results):
         for ms in self.mses:
             LOG.info('Adding {} to context'.format(ms.name))
             target.add_measurement_set(ms)
+
+        for ms in self.mses:
+            calto = callibrary.CalTo(vis=ms.name)
+            LOG.info('Registering {} with callibrary'.format(ms.name))
+            context.callibrary.add(calto, [])
 
     def __str__(self):
         # Format the Mstransform results.
