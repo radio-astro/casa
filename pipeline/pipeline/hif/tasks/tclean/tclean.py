@@ -319,18 +319,23 @@ class Tclean(cleanbase.CleanBase):
         LOG.info('    Residual max %s', residual_max)
         LOG.info('    Residual min %s', residual_min)
 
-        dirty_dynamic_range = residual_max / non_cleaned_rms / sequence_manager.channel_rms_factor
-        if (dirty_dynamic_range > 100.):
-            n_dr = 5.
-        elif (50. < dirty_dynamic_range <= 100.):
-            n_dr = 4.
-        elif (20. < dirty_dynamic_range <= 50.):
-            n_dr = 3.
-        elif (dirty_dynamic_range <= 20.):
-            n_dr = 2.
-
         qaTool = casatools.quanta
-        sequence_manager.threshold = sequence_manager.threshold = threshold = '%sJy' % (qaTool.convert(sequence_manager.threshold, 'Jy')['value'] * n_dr)
+        if (inputs.intent == 'TARGET'):
+            dirty_dynamic_range = residual_max / non_cleaned_rms / sequence_manager.channel_rms_factor
+            if (dirty_dynamic_range > 100.):
+                n_dr = 5.
+            elif (50. < dirty_dynamic_range <= 100.):
+                n_dr = 4.
+            elif (20. < dirty_dynamic_range <= 50.):
+                n_dr = 3.
+            elif (dirty_dynamic_range <= 20.):
+                n_dr = 2.
+
+            sequence_manager.threshold = '%sJy' % (qaTool.convert(sequence_manager.threshold, 'Jy')['value'] * n_dr)
+        else:
+            # Calibrators are usually dynamic range limited. The sensitivity from apparentsens
+            # is not a valid estimate for the threshold. Use the dirty image RMS instead.
+            sequence_manager.threshold = '%sJy' % (non_cleaned_rms * sequence_manager.channel_rms_factor * inputs.tlimit)
 
         iterating = True
         iter = 1
@@ -372,7 +377,7 @@ class Tclean(cleanbase.CleanBase):
                 pblimit_cleanmask = self.pblimit_cleanmask)
 
             # Keep RMS for QA
-            result.set_rms(non_cleaned_rms)
+            result.set_rms(non_cleaned_rms * sequence_manager.channel_rms_factor)
 
             LOG.info('Clean image iter %s stats' % iter)
             LOG.info('    Clean rms %s', cleaned_rms)
