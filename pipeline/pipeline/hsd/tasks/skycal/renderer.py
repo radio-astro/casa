@@ -1,4 +1,5 @@
 import os
+import collections
 
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.logging as logging
@@ -20,9 +21,12 @@ class T2_4MDetailsSingleDishSkyCalRenderer(basetemplates.T2_4MDetailsDefaultRend
             os.mkdir(stage_dir)
 
         applications = []
-        summary_amp = {}
-        details_amp = {}
+        summary_amp_vs_freq = collections.defaultdict(list)
+        details_amp_vs_freq = collections.defaultdict(list)
+        summary_amp_vs_time = collections.defaultdict(list)
+        details_amp_vs_time = collections.defaultdict(list)
         amp_vs_freq_subpages = {}
+        amp_vs_time_subpages = {}
         for result in results:
             if not result.final:
                 continue
@@ -38,32 +42,38 @@ class T2_4MDetailsSingleDishSkyCalRenderer(basetemplates.T2_4MDetailsDefaultRend
             # iterate over CalApplication instances
             final_original = result.final
             
-            summaries = []
-            details = []
+            summaries_freq = []
+            details_freq = []
+            summaries_time = []
+            details_time = []
             for calapp in final_original:
                 result.final = [calapp]
                 gainfield = calapp.calfrom[0].gainfield
                 
-                # summary plots
-                summary_plotter = skycal_display.SingleDishSkyCalSummaryChart(context, result, gainfield)
-                summaries.extend(summary_plotter.plot())
+                # Amp vs. Freq: summary plots
+                summary_plotter = skycal_display.SingleDishSkyCalAmpVsFreqSummaryChart(context, result, gainfield)
+                summaries_freq.extend(summary_plotter.plot())
                 
-                # detail plots
-                detail_plotter = skycal_display.SingleDishSkyCalDetailChart(context, result, gainfield)
-                details.extend(detail_plotter.plot())
+                # Amp vs. Freq: detail plots
+                detail_plotter = skycal_display.SingleDishSkyCalAmpVsFreqDetailChart(context, result, gainfield)
+                details_freq.extend(detail_plotter.plot())
             
-            if summary_amp.has_key(vis):
-                summary_amp[vis].extend(summaries)
-            else:
-                summary_amp[vis] = summaries
-            if details_amp.has_key(vis):
-                details_amp[vis].extend(details)
-            else:
-                details_amp[vis] = details 
+                # Amp vs. Time: summary plots
+                summary_plotter = skycal_display.SingleDishSkyCalAmpVsTimeSummaryChart(context, result, calapp)
+                summaries_time.extend(summary_plotter.plot())
+                
+                # Amp vs. Time: detail plots
+                detail_plotter = skycal_display.SingleDishSkyCalAmpVsTimeDetailChart(context, result, calapp)
+                details_time.extend(detail_plotter.plot())
+            
+            summary_amp_vs_freq[vis].extend(summaries_freq)
+            details_amp_vs_freq[vis].extend(details_freq)
+            summary_amp_vs_time[vis].extend(summaries_time)
+            details_amp_vs_time[vis].extend(details_time)
 
             result.final = final_original    
             
-        for vis, details in details_amp.items():
+        for vis, details in details_amp_vs_freq.items():
             renderer = basetemplates.JsonPlotRenderer(uri='generic_x_vs_y_field_spw_ant_detail_plots.mako',
                                                       context=context,
                                                       result=result,
@@ -74,10 +84,25 @@ class T2_4MDetailsSingleDishSkyCalRenderer(basetemplates.T2_4MDetailsDefaultRend
                 fileobj.write(renderer.render())
             amp_vs_freq_subpages[vis] = os.path.basename(renderer.path)
             
+        LOG.debug('number of items for details_amp_vs_time: {n}'.format(n=len(details_amp_vs_time)))
+        for vis, details in details_amp_vs_time.items():
+            LOG.debug('vis={vis}, number of plots {n}'.format(vis=vis, n=len(details)))
+            renderer = basetemplates.JsonPlotRenderer(uri='generic_x_vs_y_field_spw_ant_detail_plots.mako',
+                                                      context=context,
+                                                      result=result,
+                                                      plots=details,
+                                                      title ='Sky Level vs Time',
+                                                      outfile='%s-sky_level_vs_time.html'%(vis))
+            with renderer.get_file() as fileobj:
+                fileobj.write(renderer.render())
+            amp_vs_time_subpages[vis] = os.path.basename(renderer.path)
+            
         # update Mako context                
         ctx.update({'applications': applications,
-                    'summary_amp': summary_amp,
-                    'amp_subpages': amp_vs_freq_subpages})
+                    'summary_amp_vs_freq': summary_amp_vs_freq,
+                    'amp_vs_freq_subpages': amp_vs_freq_subpages,
+                    'summary_amp_vs_time': summary_amp_vs_time,
+                    'amp_vs_time_subpages': amp_vs_time_subpages})
     
     def get_skycal_applications(self, context, result, ms):
         applications = []

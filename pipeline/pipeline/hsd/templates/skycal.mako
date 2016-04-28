@@ -65,14 +65,14 @@ $(document).ready(function() {
 	</tbody>
 </table>
 
-<h2>Plots</h2>
+<h2>Amp vs. Frequency Plots</h2>
 % for ms in pcontext.observing_run.measurement_sets:
     <% 
         vis = ms.basename 
-        subpage = os.path.join(dirname, amp_subpages[vis])
+        subpage = os.path.join(dirname, amp_vs_freq_subpages[vis])
     %>
     <h4><a class="replace" href="${subpage}">${vis}</a></h4>
-    % for plot in summary_amp[vis]:
+    % for plot in summary_amp_vs_freq[vis]:
         % if os.path.exists(plot.thumbnail):
             <% 
                 img_path = os.path.relpath(plot.abspath, pcontext.report_dir)
@@ -94,7 +94,45 @@ $(document).ready(function() {
 	                        </a>
 	                    </h4>
 	
-	                    <p>Plot of sky level for field ${field}, antenna ${ant}.</p>
+	                    <p>Plot of sky level vs frequency for field ${field}, antenna ${ant}.</p>
+	                </div>
+	            </div>
+	        </div>
+        % endif
+    % endfor
+	<div class="clearfix"></div><!--  flush plots, break to next row -->
+% endfor
+
+<h2>Amp vs. Time Plots</h2>
+% for ms in pcontext.observing_run.measurement_sets:
+    <% 
+        vis = ms.basename 
+        subpage = os.path.join(dirname, amp_vs_time_subpages[vis])
+    %>
+    <h4><a class="replace" href="${subpage}">${vis}</a></h4>
+    % for plot in summary_amp_vs_time[vis]:
+        % if os.path.exists(plot.thumbnail):
+            <% 
+                img_path = os.path.relpath(plot.abspath, pcontext.report_dir)
+                thumbnail_path = os.path.relpath(plot.thumbnail, pcontext.report_dir)
+                ant = plot.parameters['ant']
+                field = plot.parameters['field']
+            %>
+ 	        <div class="col-md-3">
+	            <div class="thumbnail">
+	                <a href="${img_path}" class="fancybox" rel="thumbs">
+	                    <img src="${thumbnail_path}"
+	                         title="Sky level summary for Field ${field}, Antenna ${ant}"
+	                         data-thumbnail="${thumbnail_path}">
+	                </a>
+	                <div class="caption">
+	                    <h4>
+	                        <a href="${subpage}" class="replace" data-field="${field}" data-ant="${ant}">
+	                           Field ${field} Antenna ${ant}
+	                        </a>
+	                    </h4>
+	
+	                    <p>Plot of sky level vs time for field ${field}, antenna ${ant}.</p>
 	                </div>
 	            </div>
 	        </div>
