@@ -562,6 +562,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             'gaincal': 'Gain',
             'tsys': 'T<sub>sys</sub>',
             'wvr': 'WVR',
+            'ps': 'Sky',
         }
         
         d = {}

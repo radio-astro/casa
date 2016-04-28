@@ -10,6 +10,7 @@ import os
 
 import pipeline.domain.measures as measures
 import pipeline.infrastructure
+import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.displays.applycal as applycal
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
@@ -79,34 +80,7 @@ class T2_4MDetailsSDApplycalRenderer(T2_4MDetailsApplycalRenderer,
         # )
 
         # CAS-5970: add science target plots to the applycal page
-        (science_amp_vs_freq_summary_plots, uv_max) = self.create_science_plots(context, result)
-
-        # # these dicts map vis to the list of plots
-        # amp_vs_time_detail_plots = {}
-
-        # if pipeline.infrastructure.generate_detail_plots(result):
-        #     # detail plots. Don't need the return dictionary, but make sure a
-        #     # renderer is passed so the detail page is written to disk
-
-        #     amp_vs_time_detail_plots, amp_vs_time_subpages = self.create_plots(
-        #         context,
-        #         result,
-        #         applycal.AmpVsTimeDetailChart,
-        #         ['TARGET'],
-        #         ApplycalAmpVsTimePlotRenderer
-        #     )
-
-        # # render plots for all EBs in one page
-        # for d, plotter_cls, subpages in (
-        #         (amp_vs_time_detail_plots, ApplycalAmpVsTimePlotRenderer, amp_vs_time_subpages),):
-        #     if d:
-        #         all_plots = list(utils.flatten([v for v in d.values()]))
-        #         renderer = plotter_cls(context, result, all_plots)
-        #         with renderer.get_file() as fileobj:
-        #             fileobj.write(renderer.render())
-        #             # redirect subpage links to master page
-        #             for vis in subpages:
-        #                 subpages[vis] = renderer.path
+        (science_amp_vs_freq_summary_plots, uv_max) = self.create_single_dish_science_plots(context, result)
 
         ctx.update({
 #            'amp_vs_time_plots': amp_vs_time_summary_plots,
@@ -115,10 +89,11 @@ class T2_4MDetailsSDApplycalRenderer(T2_4MDetailsApplycalRenderer,
 #            'amp_vs_time_subpages': amp_vs_time_subpages,
         })
         
-    def create_science_plots(self, context, results):
+    def create_single_dish_science_plots(self, context, results):
         """
         Create plots for the science targets, returning two dictionaries of 
         vis:[Plots].
+        MODIFIED for single dish
         """
         amp_vs_freq_summary_plots = collections.defaultdict(dict)
         max_uvs = collections.defaultdict(dict)
@@ -129,50 +104,37 @@ class T2_4MDetailsSDApplycalRenderer(T2_4MDetailsApplycalRenderer,
             vis = os.path.basename(result.inputs['vis'])
             ms = context.observing_run.get_ms(vis)
             correlation = ms.get_alma_corrstring()
+            max_uvs[vis] = 0.0
 
             # Plot for 1 science field (either 1 science target or for a mosaic 1
             # pointing). The science field that should be chosen is the one with
             # the brightest average amplitude over all spws
 
-            # Ideally, the uvmax of the spectrum (plots 1 and 2)
-            # would be set by the appearance of plot 3; that is, if there is
-            # no obvious drop in amplitude with uvdist, then use all the data.
-            # A simpler compromise would be to use a uvrange that captures the
-            # inner half the data.
-            baselines = sorted(ms.antenna_array.baselines,
-                               key=operator.attrgetter('length'))
-            # take index as midpoint + 1 so we include the midpoint in the
-            # constraint
-            half_baselines = baselines[0:(len(baselines)//2)+1]
-            uv_max = half_baselines[-1].length.to_units(measures.DistanceUnits.METRE)
-            uv_range = '<%s' % uv_max
-            LOG.debug('Setting UV range to %s for %s', uv_range, vis)
-            max_uvs[vis] = half_baselines[-1].length
-
-            brightest_fields = T2_4MDetailsApplycalRenderer.get_brightest_fields(ms)        
+            brightest_fields = T2_4MDetailsApplycalRenderer.get_brightest_fields(ms)
             for source_id, brightest_field in brightest_fields.items():
                 plots = self.science_plots_for_result(context,
-                                                      result, 
+                                                      result,
                                                       applycal.RealVsFrequencySummaryChart,
-                                                      [brightest_field.id],
-                                                      uv_range, correlation=correlation)
+                                                      [brightest_field.id], None,
+                                                      correlation=correlation)
                 amp_vs_freq_summary_plots[vis][source_id] = plots
     
             if pipeline.infrastructure.generate_detail_plots(result):
-                scans = ms.get_scans(scan_intent='TARGET')
                 fields = set()
-                for scan in scans:
-                    fields.update([field.id for field in scan.fields])
+                # scans = ms.get_scans(scan_intent='TARGET')
+                # for scan in scans:
+                #     fields.update([field.id for field in scan.fields])
+                with casatools.MSMDReader(vis) as msmd:
+                    fields.update(list(msmd.fieldsforintent("OBSERVE_TARGET#ON_SOURCE")))
                 
                 # Science target detail plots. Note that summary plots go onto the
                 # detail pages; we don't create plots per spw or antenna
                 plots = self.science_plots_for_result(context,
-                                                  result,
-                                                  applycal.AmpVsFrequencySummaryChart,
-                                                  fields,
-                                                  uv_range,
-                                                  ApplycalAmpVsFreqSciencePlotRenderer,
-                                                  correlation=correlation)
+                                                      result,
+                                                      applycal.RealVsFrequencySummaryChart,
+                                                      fields, None,
+                                                      ApplycalAmpVsFreqSciencePlotRenderer,
+                                                      correlation=correlation)
                 amp_vs_freq_detail_plots[vis] = plots
 
         for d, plotter_cls in (
@@ -189,4 +151,3 @@ class T2_4MDetailsSDApplycalRenderer(T2_4MDetailsApplycalRenderer,
                 self.sort_plots_by_baseband(source_plots)
 
         return (amp_vs_freq_summary_plots, max_uvs)
-

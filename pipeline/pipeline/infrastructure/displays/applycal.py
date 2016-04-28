@@ -896,7 +896,7 @@ class CorrectedToModelRatioVsUVDistanceSummaryChart(SpwSummaryChart):
 
 class RealVsFrequencySummaryChart(SpwSummaryChart):
     """
-    Create an real vs time plot for each spw, overplotting by antenna.
+    Create a real vs time plot for each spw, overplotting by antenna.
     """
     def __init__(self, context, result, intent='', ydatacolumn='corrected', 
                  **kwargs):
