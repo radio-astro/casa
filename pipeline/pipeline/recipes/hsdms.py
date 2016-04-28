@@ -24,6 +24,7 @@ from hifa_tsyscal_cli import hifa_tsyscal_cli as hifa_tsyscal
 from hifa_tsysflag_cli import hifa_tsysflag_cli as hifa_tsysflag
 from hsdms_skycal_cli import hsdms_skycal_cli as hsdms_skycal
 from hsdms_k2jycal_cli import hsdms_k2jycal_cli as hsdms_k2jycal
+from hsdms_applycal_cli import hsdms_applycal_cli as hsdms_applycal
 from h_save_cli import h_save_cli as h_save
 
 
