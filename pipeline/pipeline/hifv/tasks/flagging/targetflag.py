@@ -29,7 +29,9 @@ class TargetflagInputs(basetask.StandardInputs):
 
         # return just the unwanted intents that are present in the MS
         # intents_to_flag = set(['POINTING','FOCUS','ATMOSPHERE','SIDEBAND','UNKNOWN', 'SYSTEM_CONFIGURATION'])
-        return ''
+        #return ''
+        intents_to_flag = set(['*CALIBRATE*','*TARGET*'])
+        return ','.join(self.ms.intents.intersection(intents_to_flag))
 
     @intents.setter
     def intents(self, value):
