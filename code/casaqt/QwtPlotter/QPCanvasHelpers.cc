@@ -375,10 +375,12 @@ void QPLegendHolder::showLegend(bool show) {
 #if QWT_VERSION >= 0x060000
 	// In Qwt6, cannot set visibility of legend; if it exists,
 	// it will be shown
+    m_legendItem->detach();
     if(show) {
         if(isInternal()) {
-            m_canvas->asQwtPlot().insertLegend(NULL);
-            m_legendItem->detach();
+		    delete m_legend;
+		    m_legend = NULL;
+            m_canvas->asQwtPlot().insertLegend(m_legend);
             QwtPlot* plot = dynamic_cast<QwtPlot*>(&m_canvas->asQwtPlot());
             if (plot) m_legendItem->attach(plot);
         } else {
@@ -390,7 +392,6 @@ void QPLegendHolder::showLegend(bool show) {
 		delete m_legend;
 		m_legend = NULL;
         m_canvas->asQwtPlot().insertLegend(m_legend);
-        m_legendItem->detach();
 	}
 #else
     m_legend->setVisible(show);
@@ -410,8 +411,6 @@ void QPLegendHolder::setPosition(PlotCanvas::LegendPosition pos) {
 #if QWT_VERSION >= 0x060000
     if (isInternal()) {
         setAlignment(pos);
-    } else {
-	    m_canvas->asQwtPlot().insertLegend(m_legend, legendPosition(pos));
     }
 #else
     QGridLayout* l = dynamic_cast<QGridLayout*>(layout());

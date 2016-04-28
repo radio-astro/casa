@@ -1176,8 +1176,8 @@ bool QPCanvas::legendShown() const {
 
 
 void QPCanvas::showLegend(bool on, LegendPosition pos) {
-    m_legend->showLegend(on);
     m_legend->setPosition(pos);
+    m_legend->showLegend(on);
 }
 
 
