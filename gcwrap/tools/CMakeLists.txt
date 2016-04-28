@@ -93,6 +93,7 @@ casa_add_library( tools
  images/imagepol_cmpt.cc
  images/regionmanager_cmpt.cc
  measures/measures_cmpt.cc
+ miriad/miriadfiller_cmpt.cc
  ms/ms_cmpt.cc
  ms/msmetadata_cmpt.cc
  ms/msplot_cmpt.cc
@@ -164,6 +165,7 @@ casa_add_tools( tools_swig tools_sources tools_py
  images/imagepol.xml
  images/regionmanager.xml
  measures/measures.xml
+ miriad/miriadfiller.xml
  ms/msplot.xml
  ms/ms.xml
  ms/msmetadata.xml
