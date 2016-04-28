@@ -44,13 +44,17 @@ def uvcontfit (vis=None, caltable=None, field=None, intent=None, spw=None,
         # Select the data for continuum subtraction
         #   Intent forces the selection to be on TARGET data only
         #   Field is needed because the continuum regions will be different for different target fields
-        #   Spw selection will include and spw and frequency change   
+        #   Spw selection will include an spw and frequency change   
         mycb.reset()
         mycb.selectvis(field=field, intent=intent, spw=locfitspw)
 
         # Add append parameter because it may be needed to deal with data sets with multiple
         # targets.
-        mycb.setsolve(type='A', t=solint, table=caltable, combine=combine,
+        if not combine:
+            mycombine = ''
+        else:
+            mycombine = combine
+        mycb.setsolve(type='A', t=solint, table=caltable, combine=mycombine,
             fitorder=fitorder, append=append)
 
         # Solve for the continuum
