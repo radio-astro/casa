@@ -228,7 +228,7 @@ class UVcontFit(basetask.StandardTaskTemplate):
                 source_cranges = cranges_spwsel[sname]
                 spw_cranges = ['%s:%s' % (spw_id, source_cranges[spw_id].split()[0])
                                for spw_id in source_cranges
-                               if source_cranges[spw_id] != 'NONE']
+                               if source_cranges[spw_id] not in ['', 'NONE']]
                 spwstr = ','.join(spw_cranges)
 
                 # Fire off task
