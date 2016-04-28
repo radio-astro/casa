@@ -37,11 +37,13 @@ namespace casa {
 	class QtPlotSettings {
 	public:
 		QtPlotSettings();
-		void adjust( const QString& topUnits, const QString& bottomUnits,
-				bool autoScaleX, bool autoScaleY, bool zoom = false );
-		void zoomOut( double zoomFactor, const QString& topUnits, const QString& bottomUnits,
+		void adjust( const QString& topUnits, const QString& topType, const QString& bottomUnits,
+				const QString& bottomType, bool autoScaleX, bool autoScaleY, bool zoom = false );
+		void zoomOut( double zoomFactor, const QString& topUnits, const QString& topType,
+				const QString& bottomUnits, const QString& bottomType,
 		              bool autoScaleX, bool autoScaleY );
-		void zoomIn( double zoomFactor, const QString& topUnits, const QString& bottomUnits,
+		void zoomIn( double zoomFactor, const QString& topUnits, const QString& topType,
+				    const QString& bottomUnits, const QString& bottomType,
 		             bool autoScaleX, bool autoScaleY );
 		void zoomY( double minY, double maxY, bool autoScaleY );
 		pair<double,double> getZoomInY( double zoomFactor ) const;
@@ -80,7 +82,11 @@ namespace casa {
 			return numYTicks;
 		}
 
+		double getTickLabelX(int tickIndex, int tickCount, QtPlotSettings::AxisIndex axisIndex ) const;
 
+		static const QString RADIO_VELOCITY;
+		static const QString OPTICAL_VELOCITY;
+		static const double ZERO_LIMIT;
 
 	private:
 
@@ -96,6 +102,11 @@ namespace casa {
 		//double originalMinX;
 		//double originalMaxX;
 		int numYTicks;
+		QString m_topType;
+		QString m_bottomType;
+		QString m_topUnits;
+		QString m_bottomUnits;
+
 	};
 
 

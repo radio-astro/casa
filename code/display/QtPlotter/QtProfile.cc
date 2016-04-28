@@ -83,7 +83,7 @@ namespace casa {
 	const QString QtProfile::PLOT_TYPE_MEDIAN = "Median";
 	const QString QtProfile::PLOT_TYPE_SUM = "Sum";
 	const QString QtProfile::FREQUENCY = "frequency";
-	const QString QtProfile::RADIO_VELOCITY = "radio velocity";
+
 	const QString QtProfile::VELOCITY = "velocity";
 	const QString QtProfile::CHANNEL = "channel";
 	const QString QtProfile::OPTICAL = "optical";
@@ -274,8 +274,8 @@ namespace casa {
 
 	void QtProfile::initializeXAxisUnits(){
 		xUnitsList =(QStringList()<<
-		   "radio velocity [m/s]"<< "radio velocity [km/s]" <<
-		   "optical velocity [m/s]" << "optical velocity [km/s]" <<
+		   QtPlotSettings::RADIO_VELOCITY + " [m/s]"<< QtPlotSettings::RADIO_VELOCITY + " [km/s]" <<
+		   QtPlotSettings::OPTICAL_VELOCITY +" [m/s]" << QtPlotSettings::OPTICAL_VELOCITY +" [km/s]" <<
 		   "frequency [Hz]" << "frequency [MHz]" << "frequency [GHz]" <<
 		   "wavelength [mm]" << "wavelength [um]" << "wavelength [nm]" << "wavelength [Angstrom]" <<
 		   "air wavelength [mm]" << "air wavelength [um]" << "air wavelength [nm]"<<"air wavelength [Angstrom]"<<
@@ -2333,18 +2333,24 @@ namespace casa {
 
 	void QtProfile::getcoordTypeUnit(String &ctypeUnitStr, String &cTypeStr, String &unitStr) {
 		// determine the coordinate type
-		if (ctypeUnitStr.contains("air wavelength"))
+		if (ctypeUnitStr.contains("air wavelength")){
 			cTypeStr = String("air wavelength");
-		else if (ctypeUnitStr.contains("wavelength"))
+		}
+		else if (ctypeUnitStr.contains("wavelength")){
 			cTypeStr = String("wavelength");
-		else if (ctypeUnitStr.contains("radio velocity"))
-			cTypeStr = String("radio velocity");
-		else if (ctypeUnitStr.contains("optical velocity"))
-			cTypeStr = String("optical velocity");
-		else if (ctypeUnitStr.contains("frequency"))
+		}
+		else if (ctypeUnitStr.contains(QtPlotSettings::RADIO_VELOCITY.toStdString().c_str())){
+			cTypeStr = String(QtPlotSettings::RADIO_VELOCITY.toStdString().c_str());
+		}
+		else if (ctypeUnitStr.contains(QtPlotSettings::OPTICAL_VELOCITY.toStdString().c_str())){
+			cTypeStr = String(QtPlotSettings::OPTICAL_VELOCITY.toStdString().c_str());
+		}
+		else if (ctypeUnitStr.contains("frequency")){
 			cTypeStr = String("frequency");
-		else
+		}
+		else {
 			cTypeStr = String( CHANNEL.toStdString() );
+		}
 
 		// determine the unit
 		if (ctypeUnitStr.contains("[Hz]"))
@@ -3053,7 +3059,7 @@ namespace casa {
 	}
 
 	bool QtProfile::isVelocityMatch(){
-		return isXUnitsMatch( RADIO_VELOCITY );
+		return isXUnitsMatch( QtPlotSettings::RADIO_VELOCITY );
 	}
 
 	bool QtProfile::isXUnitsMatch(const QString& matchUnits){
@@ -3169,7 +3175,7 @@ namespace casa {
 
 	bool QtProfile::isVelocityUnit( const QString& unit ) const {
 			bool velocityUnit = false;
-			int velocityIndex = unit.indexOf( RADIO_VELOCITY );
+			int velocityIndex = unit.indexOf( QtPlotSettings::RADIO_VELOCITY );
 			if ( velocityIndex >= 0 ){
 				velocityUnit = true;
 			}

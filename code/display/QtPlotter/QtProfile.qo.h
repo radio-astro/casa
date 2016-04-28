@@ -435,7 +435,6 @@ namespace casa {
 		static const QString PLOT_TYPE_MEDIAN;
 		static const QString PLOT_TYPE_SUM;
 
-		static const QString RADIO_VELOCITY;
 		static const QString VELOCITY;
 		static const QString OPTICAL;
 		static const QString AIR;

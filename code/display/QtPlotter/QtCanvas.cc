@@ -56,7 +56,7 @@ namespace casa {
 
 	QtCanvas::QtCanvas(QWidget *parent)
 		: QWidget(parent),
-		  MARGIN_LEFT(100), MARGIN_BOTTOM(60), MARGIN_TOP(90), MARGIN_RIGHT(25), FRACZOOM(20),ZERO_LIMIT(0.0000000000000005f),
+		  MARGIN_LEFT(100), MARGIN_BOTTOM(60), MARGIN_TOP(90), MARGIN_RIGHT(25), FRACZOOM(20),
 		  title(), yLabel(), welcome(),
 		  showTopAxis( true ), showToolTips( true ), showFrameMarker( true ), displayStepFunction( false ),
 		  contextMenu( this ),
@@ -149,8 +149,9 @@ namespace casa {
 		}
 
 		double zoomFactor = (double)FRACZOOM/100.0;
-		settings.zoomOut( zoomFactor, getUnits(QtPlotSettings::xTop),
-		                  getUnits( QtPlotSettings::xBottom), autoScaleX, autoScaleY );
+		settings.zoomOut( zoomFactor, getUnits(QtPlotSettings::xTop), getType( QtPlotSettings::xTop),
+		                  getUnits( QtPlotSettings::xBottom), getType( QtPlotSettings::xBottom),
+		                  autoScaleX, autoScaleY );
 		zoomYBasedOnX( settings, zoomFactor, false );
 
 		std::vector<QtPlotSettings>::iterator it;
@@ -190,8 +191,9 @@ namespace casa {
 		}
 
 		//Change x zoom by a percentage.
-		settings.zoomIn( zoomFactor, getUnits(QtPlotSettings::xTop),
-		                 getUnits( QtPlotSettings::xBottom), autoScaleX, autoScaleY );
+		settings.zoomIn( zoomFactor, getUnits(QtPlotSettings::xTop), getType( QtPlotSettings::xTop),
+		                 getUnits( QtPlotSettings::xBottom), getType( QtPlotSettings::xBottom),
+		                 autoScaleX, autoScaleY );
 		zoomYBasedOnX( settings, zoomFactor, true );
 
 		zoomStack.push_back(settings);
@@ -370,7 +372,9 @@ namespace casa {
 		settings.setMaxY(ymax);
 		//}
 
-		settings.adjust( getUnits( QtPlotSettings::xTop ), getUnits(QtPlotSettings::xBottom), autoScaleX, autoScaleY );
+		settings.adjust( getUnits( QtPlotSettings::xTop ), getType( QtPlotSettings::xTop ),
+				getUnits(QtPlotSettings::xBottom), getType( QtPlotSettings::xBottom ),
+				autoScaleX, autoScaleY );
 
 		if ( curZoom > 0 ) {
 			// if the canvas is zoomed, keep the zoom level,
@@ -381,6 +385,18 @@ namespace casa {
 			// reset the canvas, zoom, etc.
 			setPlotSettings(settings);
 		}
+	}
+
+	QString QtCanvas::getType( QtPlotSettings::AxisIndex axisIndex ) {
+		QString unitStr = xLabel[axisIndex].text;
+		int unitIndex = unitStr.indexOf( "[");
+		if ( unitIndex >= 0 ) {
+			unitStr = unitStr.mid(0, unitIndex );
+			unitStr = unitStr.trimmed();
+		} else {
+			unitStr = "";
+		}
+		return unitStr;
 	}
 
 	QString QtCanvas::getUnits( QtPlotSettings::AxisIndex axisIndex ) {
@@ -492,7 +508,9 @@ namespace casa {
 		QtPlotSettings currentSettings = zoomStack[curZoom];
 		currentSettings.setMinX(QtPlotSettings::xTop, min );
 		currentSettings.setMaxX( QtPlotSettings::xTop, max );
-		currentSettings.adjust(getUnits(QtPlotSettings::xTop), getUnits( QtPlotSettings::xBottom), autoScaleX, autoScaleY);
+		currentSettings.adjust(getUnits(QtPlotSettings::xTop), getType( QtPlotSettings::xTop),
+				getUnits( QtPlotSettings::xBottom), getType(QtPlotSettings::xBottom),
+				autoScaleX, autoScaleY);
 		zoomStack[curZoom] = currentSettings;
 		refreshPixmap();
 	}
@@ -1023,11 +1041,12 @@ namespace casa {
 
 	QString QtCanvas::getXTickLabel( int tickIndex, int tickCount, QtPlotSettings::AxisIndex axisIndex ) const {
 		QtPlotSettings settings = zoomStack[curZoom];
-		double label = settings.getMinX(axisIndex) + (tickIndex * settings.spanX(axisIndex) / tickCount);
+		//double label = settings.getMinX(axisIndex) + (tickIndex * settings.spanX(axisIndex) / tickCount);
+		double label = settings.getTickLabelX( tickIndex, tickCount, axisIndex );
 		QString tickLabel = QString::number( label );
-		if (abs(label) < ZERO_LIMIT) {
+		/*if (abs(label) < ZERO_LIMIT) {
 			tickLabel = "0";
-		}
+		}*/
 		if ( axisIndex == QtPlotSettings::xTop && !showTopAxis ) {
 			tickLabel="";
 		}
@@ -1102,7 +1121,7 @@ namespace casa {
 			int y = rect.bottom() - (j * (rect.height() - 1) / tickCountY );
 			double label = settings.getMinY() + (j * settings.spanY() / tickCountY );
 			QString numberLabel = QString::number( label );
-			if (abs(label) < ZERO_LIMIT) {
+			if (abs(label) < QtPlotSettings::ZERO_LIMIT) {
 				numberLabel = "0";
 			}
 			if (showGrid) {
@@ -1149,7 +1168,7 @@ namespace casa {
 			int y = rect.bottom() - (j * (rect.height() - 1) / tickCountY );
 			double label = settings.getMinY() + (j * settings.spanY() / tickCountY );
 			QString numberLabel = QString::number(label);
-			if (abs(label) < ZERO_LIMIT) {
+			if (abs(label) < QtPlotSettings::ZERO_LIMIT) {
 				numberLabel = "0";
 			}
 			painter->setPen(quiteDark);
@@ -1989,7 +2008,9 @@ namespace casa {
 		settings.setMinY( prevMaxY - dy * rect.bottom() );
 		settings.setMaxY( prevMaxY - dy * rect.top() );
 		//qDebug() << "min-x: " << settings.minX << " max-x: " << settings.maxX;
-		settings.adjust( getUnits(QtPlotSettings::xTop), getUnits( QtPlotSettings::xBottom), autoScaleX, autoScaleY );
+		settings.adjust( getUnits(QtPlotSettings::xTop), getType( QtPlotSettings::xTop),
+				getUnits( QtPlotSettings::xBottom), getType( QtPlotSettings::xBottom),
+				autoScaleX, autoScaleY );
 		if ( curveMap.size() != 0) {
 			zoomStack.resize(curZoom + 1);
 			zoomStack.push_back(settings);

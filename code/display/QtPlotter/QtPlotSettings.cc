@@ -27,8 +27,12 @@
 #include <display/QtPlotter/conversion/Converter.h>
 #include <assert.h>
 #include <QtGui>
+
 namespace casa {
 
+	const QString QtPlotSettings::RADIO_VELOCITY   = "radio velocity";
+	const QString QtPlotSettings::OPTICAL_VELOCITY = "optical velocity";
+	const double QtPlotSettings::ZERO_LIMIT        = 0.0000000000000005f;
 
 	QtPlotSettings::QtPlotSettings() {
 		const int TICK_MIN = 0;
@@ -73,8 +77,9 @@ namespace casa {
 		return percentageSpan;
 	}
 
-	void QtPlotSettings::zoomOut( double zoomFactor, const QString& topUnits,
-	                              const QString& bottomUnits, bool autoScaleX, bool autoScaleY ) {
+	void QtPlotSettings::zoomOut( double zoomFactor, const QString& topUnits, const QString& topType,
+	                              const QString& bottomUnits, const QString& bottomType,
+	                              bool autoScaleX, bool autoScaleY ) {
 		for ( int i = 0; i < END_AXIS_INDEX; i++ ) {
 			AxisIndex axisIndex = static_cast<AxisIndex>(i);
 			double prevSpanX = spanX(axisIndex);
@@ -85,7 +90,7 @@ namespace casa {
 				originalMaxX = maxX[i];
 			}*/
 		}
-		adjust( topUnits, bottomUnits, autoScaleX, autoScaleY, true );
+		adjust( topUnits, topType, bottomUnits, bottomType, autoScaleX, autoScaleY, true );
 	}
 
 	pair<double,double> QtPlotSettings::getZoomInY( double zoomFactor ) const {
@@ -106,8 +111,9 @@ namespace casa {
 
 
 
-	void QtPlotSettings::zoomIn( double zoomFactor, const QString& topUnits,
-	                             const QString& bottomUnits, bool autoScaleX, bool autoScaleY ) {
+	void QtPlotSettings::zoomIn( double zoomFactor, const QString& topUnits, const QString& topType,
+	                             const QString& bottomUnits, const QString& bottomType,
+	                             bool autoScaleX, bool autoScaleY ) {
 		for ( int i = 0; i < END_AXIS_INDEX; i++ ) {
 			AxisIndex axisIndex = static_cast<AxisIndex>(i);
 			double prevSpanX = spanX( axisIndex );
@@ -120,13 +126,19 @@ namespace casa {
 			}*/
 
 		}
-		adjust( topUnits, bottomUnits, autoScaleX, autoScaleY, true );
+		adjust( topUnits, topType, bottomUnits, bottomType, autoScaleX, autoScaleY, true );
 	}
 
 
 
-	void QtPlotSettings::adjust( const QString& /*topUnits*/, const QString& /*bottomUnits*/,
-	                             bool autoScaleX, bool autoScaleY, bool zoom) {
+	void QtPlotSettings::adjust( const QString& topUnits, const QString& topType,
+			const QString& bottomUnits, const QString& bottomType,
+			bool autoScaleX, bool autoScaleY, bool zoom) {
+
+		m_topType = topType;
+		m_bottomType = bottomType;
+		m_topUnits = topUnits;
+		m_bottomUnits = bottomUnits;
 		if ( autoScaleX ) {
 			//Adjust the bottom axis allowing it to set the number of ticks.
 
@@ -148,7 +160,6 @@ namespace casa {
 			//Adjust the top axis using the same number of ticks.  Use a
 			//converter to get its min and max based on the min and max of
 			//the bottom axis.
-
 			adjustAxisTop( minX[xTop], maxX[xTop]);
 		}
 
@@ -247,7 +258,60 @@ namespace casa {
 		maxY = value;
 	}
 
-
+	double QtPlotSettings::getTickLabelX(int tickIndex, int tickCount,
+			QtPlotSettings::AxisIndex axisIndex) const {
+		double label = getMinX(axisIndex) + (tickIndex * spanX(axisIndex) / tickCount);
+		QtPlotSettings::AxisIndex otherIndex = QtPlotSettings::xTop;
+		if( axisIndex == QtPlotSettings::xTop ){
+			otherIndex = QtPlotSettings::xBottom;
+		}
+		double otherLabel = getMinX( otherIndex) + ( tickIndex * spanX(otherIndex) / tickCount);
+		//If the label is very close to zero, make it zero.
+		if ( qAbs( label ) < ZERO_LIMIT ){
+			label = 0;
+		}
+		//Note:  The latter two cases if the if statement are inspired by CAS-8512.  The idea
+		//being that if optical velocity is zero at one of the label points, then radio velocity
+		//should also be zero at the label point and vice versa.  This was generalized to include the case if
+		//the units are the same on both the top and bottom axes, then the labels should be the
+		//same.
+		//If the type and units are the same as the other axis type and units, eliminate round-off
+		//by making them the same.
+		else if ( m_bottomType == m_topType && m_topUnits == m_bottomUnits ){
+			if ( axisIndex == QtPlotSettings::xTop ){
+				label = otherLabel;
+			}
+		}
+		//If the other one was very close to zero and the only difference between them is optical
+		//versus radio, make sure they are both zero at zero.
+		else if ( qAbs( otherLabel) < ZERO_LIMIT ){
+			if ( m_topType == OPTICAL_VELOCITY &&
+					axisIndex == QtPlotSettings::xTop ){
+				if ( m_bottomType == RADIO_VELOCITY){
+					label = 0;
+				}
+			}
+			else if ( m_topType == RADIO_VELOCITY &&
+					axisIndex == QtPlotSettings::xTop ){
+				if ( m_bottomType == OPTICAL_VELOCITY){
+					label = 0;
+				}
+			}
+			else if ( m_bottomType == OPTICAL_VELOCITY &&
+					axisIndex == QtPlotSettings::xBottom ){
+				if ( m_topType == RADIO_VELOCITY ){
+					label = 0;
+				}
+			}
+			else if ( m_bottomType == RADIO_VELOCITY &&
+					axisIndex == QtPlotSettings::xBottom ){
+				if ( m_topType == OPTICAL_VELOCITY ){
+					label = 0;
+				}
+			}
+		}
+		return label;
+	}
 
 }
 

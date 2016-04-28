@@ -115,6 +115,7 @@ namespace casa {
 		void drawBackBuffer(QPainter *);
 		//Draws a vertical line indicating the current frame.
 		void drawFrameMarker( QPainter* );
+		QString getType( QtPlotSettings::AxisIndex axisIndex = QtPlotSettings::xBottom );
 		QString getUnits( QtPlotSettings::AxisIndex axisIndex = QtPlotSettings::xBottom );
 		QList<MolecularLine*> getMolecularLines() const;
 		void setGaussianEstimateCount( int count );
@@ -252,6 +253,7 @@ namespace casa {
 
 		//Force a repaint
 		void refreshPixmap();
+
 
 	public slots:
 		void zoomIn();
@@ -443,7 +445,7 @@ namespace casa {
 		const int MARGIN_TOP;
 		const int MARGIN_RIGHT;
 		const int FRACZOOM;
-		const double ZERO_LIMIT;
+
 
 		GraphLabel title;
 		GraphLabel xLabel[2];
