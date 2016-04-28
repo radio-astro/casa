@@ -320,22 +320,27 @@ class Tclean(cleanbase.CleanBase):
         LOG.info('    Residual min %s', residual_min)
 
         qaTool = casatools.quanta
-        if (inputs.intent == 'TARGET'):
-            dirty_dynamic_range = residual_max / non_cleaned_rms / sequence_manager.channel_rms_factor
-            if (dirty_dynamic_range > 100.):
-                n_dr = 5.
-            elif (50. < dirty_dynamic_range <= 100.):
-                n_dr = 4.
-            elif (20. < dirty_dynamic_range <= 50.):
-                n_dr = 3.
-            elif (dirty_dynamic_range <= 20.):
-                n_dr = 2.
+        dirty_dynamic_range = residual_max / non_cleaned_rms / sequence_manager.channel_rms_factor
+        if (dirty_dynamic_range > 100.):
+            n_dr = 5.
+        elif (50. < dirty_dynamic_range <= 100.):
+            n_dr = 4.
+        elif (20. < dirty_dynamic_range <= 50.):
+            n_dr = 3.
+        elif (dirty_dynamic_range <= 20.):
+            n_dr = 2.
 
+        if (inputs.intent == 'TARGET'):
             sequence_manager.threshold = '%sJy' % (qaTool.convert(sequence_manager.threshold, 'Jy')['value'] * n_dr)
         else:
             # Calibrators are usually dynamic range limited. The sensitivity from apparentsens
-            # is not a valid estimate for the threshold. Use the dirty image RMS instead.
-            sequence_manager.threshold = '%sJy' % (non_cleaned_rms * sequence_manager.channel_rms_factor * inputs.tlimit)
+            # is not a valid estimate for the threshold. Use a heuristic based on the dirty peak
+            # and some maximum expected dynamic range (EDR) values.
+            if (context.observing_run.get_measurement_sets()[0].antennas[0].diameter == 12.0):
+                maxEDR = 1000.0
+            else:
+                maxEDR = 200.0
+            sequence_manager.threshold = '%sJy' % (max(qaTool.convert(sequence_manager.threshold, 'Jy')['value'], residual_max / maxEDR * inputs.tlimit * sequence_manager.channel_rms_factor))
 
         iterating = True
         iter = 1
