@@ -19,8 +19,8 @@ def importmiriad (
         mirfile -- Name of input Miriad visibility file (directory)
                default: none; example: mirfile='mydata.uv'
 
-....   ms       -- Output ms name, note a postfix (.ms) is NOT appended to this name
-               default: none
+....   vis      -- Output ms name
+               default: mirfile name with suffix replaced by '.ms'
 
 ....   tsys   -- Set True to use the system temperature to set the visibility weights
                default: False
@@ -31,7 +31,7 @@ def importmiriad (
 ....   vel -- Velocity system to use: LSRK, LSRD or TOPO
 ....       default: TOPO for ATCA, LSRK for CARMA
 
-....   linecal       -- apply CARMA linecal on the fly?
+....   linecal -- (CARMA only) apply CARMA linecal on the fly?
 ....       default: False
 
 ....   wide    -- (CARMA only) specify the window averages to use
@@ -44,53 +44,35 @@ def importmiriad (
         """
 
     # Python script
-
+    mymf = casac.miriadfiller()
     try:
-        casalog.origin('importmiriad')
-        # -----------------------------------------'
-        # beginning of importmiriad implementation
-        # -----------------------------------------
-	theexecutable = 'importmiriad'
-        cmd = 'which %s > /dev/null 2>&1' % theexecutable
-        ret = os.system(cmd)
-	if ret == 0:
-            import commands
-            casalog.post('found %s' % theexecutable)
-        execute_string = theexecutable
-        if len(mirfile) != 0:
-            execute_string += ' mirfile=' + mirfile.rstrip('/')
-            execute_string += ' vis=' + vis
-	    if tsys:
-                execute_string += ' tsys=' + str(tsys)
-	    if spw != "all":
-                execute_string += ' spw=' + str(spw) # may need to convert
-            if vel !="":
-                execute_string += ' vel=' + str(vel)
-	    if linecal:
-                execute_string += ' linecal=' + str(linecal)
-            if wide != "all":
-		execute_string += ' wide=' + str(wide)
-            if debug>0: 
-		execute_string += ' debug=' + str(debug)
-#            execute_string += ' -logfile ' + casalog.logfile()
-            casalog.post('execute_string is')
-            casalog.post('   ' + execute_string)
-            ret = os.system(execute_string)
-            if ret != 0 :
-                casalog.post(theexecutable
-                             + ' terminated with exit code '
-                             + str(ret), 'SEVERE')
-                raise Exception, \
-                    'Miriad conversion error, please check if it is a valid Miriad file.'
-
-        return
+        try:
+            casalog.origin('importmiriad')
+            # -----------------------------------------'
+            # beginning of importmiriad implementation
+            # -----------------------------------------
+            mymf.fill(vis,mirfile,tsys,spw,vel,linecal,wide,debug)
+        except Exception, e:
+          print e;
+          casalog.post("Failed to import miriad file %s" % mirfile)
+          raise
+        # Write the args to HISTORY.
+        try:
+            param_names = \
+                importmiriad.func_code.co_varnames[:importmiriad.func_code.co_argcount]
+            param_vals = [eval(p) for p in param_names]
+            write_history(
+                mymf, vis, 'importmiriad', param_names, 
+                param_vals, casalog
+            )
+        except Exception, instance:
+            casalog.post("Failed to updated HISTORY", 'WARN')
+    except:
+        pass
+    finally:
+        if (mymf):
+            del mymf 
         # -----------------------------------
         # end of importmiriad implementation
         # -----------------------------------
-       
-    except Exception, e:
-	casalog.post("Failed to import miriad file %s" % mirfile)
-	
-    return
- 
 

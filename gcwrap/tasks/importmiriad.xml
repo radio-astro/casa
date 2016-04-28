@@ -29,9 +29,9 @@
 			<value>False</value>
 		</param>
 		
-		<param type="string" name="spw">
-			<description>Select spectral windows</description>
-			<value>all</value>
+		<param type="intArray" name="spw">
+			<description>Select spectral windows, default is all</description>
+			<value>-1</value>
                         <example>spw='1,3,4'</example>
 		</param>
 
@@ -46,9 +46,9 @@
 			<value>False</value>
 		</param>
 
-		<param type="string" name="wide">
+		<param type="intArray" name="wide">
 			<description>(CARMA) Select wide window averages</description>
-			<value>all</value>
+			<value></value>
 		</param>
 
 		<param type="int" name="debug">
