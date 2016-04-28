@@ -11,7 +11,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 Fit the continuum in the UV plane using polynomials.
 </description>
 <input>
-	<param type="string" name="vis" subparam="true">
+	<param type="stringArray" name="vis" subparam="true">
 		<description>The name of the input visibility file</description>
 		<value></value>
 	</param>
