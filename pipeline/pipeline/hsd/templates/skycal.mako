@@ -65,6 +65,35 @@ $(document).ready(function() {
 	</tbody>
 </table>
 
+% if len(reference_coords) > 0:
+    <h2>Reference Coordinates</h2>
+    <table class="table table-bordered" summary="Reference Coordinates">
+	    <caption>Reference coordinates for position-switch calibration</caption>
+        <thead>
+            <tr>
+                <th scope="col">Measurement Set</th>
+			    <th scope="col">Field</th>
+			    <th scope="col">Reference Coordinate</th>
+		    </tr>
+        </thead>
+	    <tbody>
+	    % for vis, coords in reference_coords.items():
+	        <% isfirst = True %>
+	        % for field, coord in coords.items():
+	            <tr>
+	                % if isfirst:
+	                    <% isfirst = False %>
+                        <td rowspan=${len(coords)}>${vis}</td>
+                    % endif
+	                <td>${field}</td>
+	                <td>${coord}</td>
+	            </tr>
+	        % endfor
+	    % endfor
+	    </tbody>
+    </table>
+% endif
+
 <h2>Amp vs. Frequency Plots</h2>
 % for ms in pcontext.observing_run.measurement_sets:
     <% 
