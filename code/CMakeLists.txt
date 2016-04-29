@@ -1191,6 +1191,16 @@ casa_find( LIBSAKURA
 
 include (GoogleTestInstall)
 
+#########################
+#                       #
+# Breakpad Installation #
+#                       #
+#########################
+
+include (BreakpadInstall)
+
+###
+
 casa_config_end()
 
 # The modules must be defined in dependency order!
@@ -1236,7 +1246,7 @@ casa_add_module( singledish CASACORE casa_sakura msvis mstransform)
 casa_add_module( bnmin1 Boost GSL GSLCBLAS CASACORE )
 casa_add_module( air_casawvr CASACORE bnmin1 Boost synthesis WCSLIB CFITSIO LAPACK )
 
-### add_subdirectory( crash) Add to build once the 3rd party dependencies are resolved
+add_subdirectory( crash) 
 
 #
 # ASAP's build depends on something called a makedefs file. Fake one of those.

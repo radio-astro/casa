@@ -24,7 +24,7 @@ CrashReporter::initialize (const std::string &, const std::string &, const std::
 }
 
 std::string
-CrashReporter::initializeFromApplication (const char * arg0)
+CrashReporter::initializeFromApplication (const char *)
 {
     // This is a stub (duh!)
 
@@ -38,9 +38,9 @@ CrashReporter::initializeFromApplication (const char * arg0)
 // Real code to handle crash reporting
 
 #if  defined (__APPLE__)
-#include "exception_handler_mac.h"
+#include <client/mac/handler/exception_handler.h>
 #else
-#include "exception_handler_linux.h"
+#include <client/linux/handler/exception_handler.h>
 #endif
 
 #include <casa/OS/File.h>
@@ -191,8 +191,8 @@ CrashReporter::initializeFromApplication (const char * applicationArg0)
 
     if (status == 0){
 
-        return format ("CrashReporter call to realpath during initialization failed: %s",
-                       strerror (errno));
+        return String::format ("CrashReporter call to realpath during initialization failed: %s",
+                               strerror (errno));
     }
 
     // Extract the path portion of the file spec.
@@ -204,7 +204,7 @@ CrashReporter::initializeFromApplication (const char * applicationArg0)
     if (std::regex_match (exePath, match, re)){
         binPath = match.str(1);
     } else {
-        return format ("CrashReporter could not find path in '%s'", exePath);
+        return String::format ("CrashReporter could not find path in '%s'", exePath);
     }
 
     // Determine the temporary directory.  On Mac and sometimes on linux this will be
@@ -219,7 +219,7 @@ CrashReporter::initializeFromApplication (const char * applicationArg0)
 
     // Look up the crash report posting URL in the .casarc file.
 
-    string crashReportUrl;
+    String crashReportUrl;
     AipsrcValue<String>::find (crashReportUrl, "CrashReporter.url", "");
 
     return casa::CrashReporter::initialize (crashReportDirectory, crashReportPoster, crashReportUrl);

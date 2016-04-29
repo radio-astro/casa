@@ -100,6 +100,10 @@ casa_add_library( stdcasa
 	version2.cc
 	version.cc
 	)
+if (UseCrashReporter)
+    target_include_directories (libstdcasa PUBLIC ${Breakpad_IncludeRoot})
+    target_link_libraries (libstdcasa general ${Breakpad_Library})
+endif ()
 
 if (UseCrashReporter)
    message ("DEBUG Adding UseCrashReporter to definitions")
