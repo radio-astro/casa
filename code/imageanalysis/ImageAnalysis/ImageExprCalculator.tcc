@@ -42,6 +42,8 @@ template<class T> SPIIT ImageExprCalculator<T>::compute() const {
 	PtrBlock<const ImageRegion*> tempRegs;
 	_makeRegionBlock(tempRegs, regions);
 	LatticeExprNode node = ImageExprParse::command(_expr, temps, tempRegs);
+	// Delete the ImageRegions (by using an empty Record).
+	_makeRegionBlock(tempRegs, Record());
 	_checkImages();
 	// Get the shape of the expression
 	const IPosition shape = node.shape();
@@ -62,8 +64,7 @@ template<class T> SPIIT ImageExprCalculator<T>::compute() const {
 	SPIIT computedImage = _imagecalc(
 		node, shape, csys, imCoord
 	);
-	// Delete the ImageRegions (by using an empty Record).
-	_makeRegionBlock(tempRegs, Record());
+    computedImage->flush();
 	return computedImage;
 }
 

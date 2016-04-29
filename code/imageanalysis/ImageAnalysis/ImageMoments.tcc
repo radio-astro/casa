@@ -581,6 +581,9 @@ vector<SHARED_PTR<MaskedLattice<T> > > ImageMoments<T>::createMoments(
             dir.removeRecursive();
         }
     }
+    for (auto& p: outPt) {
+        p->flush();
+    }
     return outPt;
 }
 
