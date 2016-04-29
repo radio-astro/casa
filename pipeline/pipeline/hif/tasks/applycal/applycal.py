@@ -238,6 +238,10 @@ class Applycal(basetask.StandardTaskTemplate):
         
         jobs = []
         for calto, calfroms in merged.items():
+            # if there's nothing to apply for this data selection, continue
+            if not calfroms:
+                continue
+
             # arrange a calibration job for the unique data selection
             inputs.spw = calto.spw
             inputs.field = calto.field
