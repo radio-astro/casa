@@ -1659,6 +1659,17 @@ class immath_test3(unittest.TestCase):
         self.assertTrue("ia.calc" in msgs[-2])
         self.assertTrue("ia.calc" in msgs[-1])
 
+    def test_flush(self):
+        "CAS-8570: ensure image is flushed to disk when it is created"""
+        myia = iatool()
+        myia.fromshape("jj.im", [20,20,20])
+        myia.fromshape("kk.im", [20,20,20])
+        outfile = "CAS-8570.im"
+        zz = myia.imagecalc(outfile, "jj.im + kk.im")
+        self.assertTrue(myia.open(outfile))
+        myia.done()
+        zz.done()
+
 def suite():
     return [immath_test1, immath_test2, immath_test3]
     

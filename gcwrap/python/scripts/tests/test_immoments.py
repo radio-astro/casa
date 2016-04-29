@@ -1353,6 +1353,17 @@ class immoment_test2(unittest.TestCase):
         bb.done()
         self.assertTrue("ia.moments" in msgs[-2])        
         self.assertTrue("ia.moments" in msgs[-1])        
+
+    def test_flush(self):
+        """CAS-8570: Ensure moments images are flushed to disk"""
+        myia = iatool()
+        myia.fromshape("", [20, 20, 20])
+        outfile = "CAS-8570.im"
+        bb = myia.moments(outfile=outfile, moments=8)
+        # this running correctly indicates issue resolved
+        imhistory(outfile)
+        myia.done()
+        bb.done()
         
 def suite():
     return [immoment_test1,immoment_test2]        
