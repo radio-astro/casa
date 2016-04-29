@@ -9,8 +9,7 @@ LOG = infrastructure.get_logger(__name__)
 class UVcontSubInputs(applycal.ApplycalInputs):
 
     # Property overrides
-    #intent = basetask.property_with_default('intent', 'TARGET')
-    applymode = basetask.property_with_default('applymode','calonly')
+    applymode = basetask.property_with_default('applymode','calflag')
 
     # Would like to set this to False in future but this causes
     # an issue with the results handling.
