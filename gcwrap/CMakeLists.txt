@@ -393,6 +393,7 @@ elseif( CMAKE_SYSTEM_NAME STREQUAL Linux )
 	    # we continue to use libcasa-dbus in preference to
 	    # the system libdbus...
 	    set( dbus-cpp-library-name casa-dbus-cpp )
+            set( python_version 2.7 )
         else( )
 	        set( dbusxx dbus-c++ )
             set( casa_packages /usr/lib64/casapy )
