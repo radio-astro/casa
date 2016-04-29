@@ -175,6 +175,12 @@ class UVcontFitInputs(basetask.StandardInputs):
         # Fix caltable
         d['caltable'] = caltable
 
+        # Fix combine
+        if 'combine' not in d:
+            d['combine'] = ''
+        elif d['combine'] is not types.StringType:
+            d['combine'] = ''
+
         # If field and spw are not defined use the default
         if field:
             d['field'] = field
@@ -292,17 +298,22 @@ class UVcontFit(basetask.StandardTaskTemplate):
         for sname in all_source_names:
             source_fields =  [s.fields for s in all_sources if s.name == sname][0]
             if len(source_fields) > 1:
-                rep_field_id = self._get_rep_field (source_fields)
+                rep_field_id, rep_field_name = self._get_rep_field (source_fields)
                 if rep_field_id < 0:
                     rep_field_id = source_fields[1].id
+                    rep_field_name = source_fields[1].name
             else:
                 rep_field_id = source_fields[0].id
-            LOG.info('Representative field id for MS %s source %s is %d' % (inputs.ms.basename, sname, rep_field_id))
+                rep_field_name = source_fields[0].name
+            LOG.info('Representative field for MS %s source %s is field %s with id %d' % (inputs.ms.basename, sname, rep_field_name, rep_field_id))
             cranges_spwsel[sname] = {}
             for spw_id in [str(spw.id) for spw in inputs.ms.get_spectral_windows(task_arg=inputs.spw)]:
                 cranges_spwsel[sname][spw_id] = contfile_handler.get_merged_selection(sname, spw_id)
-                LOG.info('Input frequency ranges for MS %s and spw %d are %s' % (inputs.ms.basename, int(spw_id),
-                    cranges_spwsel[sname][spw_id]))
+                if not cranges_spwsel[sname][spw_id]:
+                    LOG.warn('No frequency ranges for MS %s source %s and spw %d' % (inputs.ms.basename, sname, int(spw_id)))
+                    continue
+                else:
+                    LOG.info('Input frequency ranges for MS %s and spw %d are %s' % (inputs.ms.basename, int(spw_id), cranges_spwsel[sname][spw_id]))
                 try:
                     freq_ranges, chan_ranges = contfile_handler.lsrk_to_topo(cranges_spwsel[sname][spw_id],
                         [inputs.vis], [rep_field], int(spw_id))
@@ -325,6 +336,7 @@ class UVcontFit(basetask.StandardTaskTemplate):
 
         # Initialize
         rep_field = -1
+        rep_field_name = ''
 
         # Get CASA tools
         cqa = casatools.quanta
@@ -377,10 +389,13 @@ class UVcontFit(basetask.StandardTaskTemplate):
         # Then find the field with smallest separation from the phase center
 
         field_ids = [f.id for f in source_fields]
+        field_names = [f.name for f in source_fields]
         separations = [cme.separation(phase_dir, f.mdirection)['value'] for f in source_fields]
-        rep_field = field_ids[separations.index(min(separations))]
+        index = separations.index(min(separations))
+        rep_field = field_ids[index]
+        rep_field_name = field_names[index]
 
-        return rep_field
+        return rep_field, rep_field_name
 
     def _get_source_fields(self, sname):
         inputs = self.inputs
