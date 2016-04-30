@@ -320,7 +320,7 @@ class Tclean(cleanbase.CleanBase):
         LOG.info('    Residual min %s', residual_min)
 
         qaTool = casatools.quanta
-        dirty_dynamic_range = residual_max / non_cleaned_rms / sequence_manager.channel_rms_factor
+        dirty_dynamic_range = residual_max / non_cleaned_rms
         if (dirty_dynamic_range > 100.):
             n_dr = 5.
         elif (50. < dirty_dynamic_range <= 100.):
@@ -340,7 +340,7 @@ class Tclean(cleanbase.CleanBase):
                 maxEDR = 1000.0
             else:
                 maxEDR = 200.0
-            sequence_manager.threshold = '%sJy' % (max(qaTool.convert(sequence_manager.threshold, 'Jy')['value'], residual_max / maxEDR * inputs.tlimit * sequence_manager.channel_rms_factor))
+            sequence_manager.threshold = '%sJy' % (max(qaTool.convert(sequence_manager.threshold, 'Jy')['value'], residual_max / maxEDR * inputs.tlimit))
 
         iterating = True
         iter = 1
@@ -382,7 +382,7 @@ class Tclean(cleanbase.CleanBase):
                 pblimit_cleanmask = self.pblimit_cleanmask)
 
             # Keep RMS for QA
-            result.set_rms(non_cleaned_rms * sequence_manager.channel_rms_factor)
+            result.set_rms(non_cleaned_rms)
 
             LOG.info('Clean image iter %s stats' % iter)
             LOG.info('    Clean rms %s', cleaned_rms)

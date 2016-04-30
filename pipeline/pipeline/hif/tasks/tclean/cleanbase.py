@@ -45,7 +45,7 @@ class CleanBaseInputs(basetask.StandardInputs):
     intent = basetask.property_with_default('intent', '')
     iter = basetask.property_with_default('iter', 0)
     mask = basetask.property_with_default('mask', '')
-    niter = basetask.property_with_default('niter', 100000)
+    niter = basetask.property_with_default('niter', 5000)
     noise = basetask.property_with_default('noise', '1.0Jy')
     nchan = basetask.property_with_default('nchan', -1)
     npixels = basetask.property_with_default('npixels', 0)
@@ -387,7 +387,7 @@ class CleanBase(basetask.StandardTaskTemplate):
 
         if (inputs.niter > 0):
             LOG.info('tclean used %d iterations' % (tclean_result['iterdone']))
-            if (tclean_result['iterdone'] == tclean_result['niter']):
+            if (tclean_result['iterdone'] >= tclean_result['niter']):
                 LOG.warning('tclean reached niter limit of %d !' % (tclean_result['niter']))
 
         # Create PB for single fields since it is not auto-generated for
