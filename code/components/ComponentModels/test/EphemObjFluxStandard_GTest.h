@@ -33,8 +33,6 @@
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MFrequency.h>
 
-using namespace casa;
-
 namespace test 
 {
 
@@ -44,32 +42,32 @@ class EphemObjFluxStandardTest: public FluxStandardTest
 public:
 
     EphemObjFluxStandardTest();
-    EphemObjFluxStandardTest(Int nspw);
+    EphemObjFluxStandardTest(casacore::Int nspw);
     virtual ~EphemObjFluxStandardTest();
     
 protected:
     
     virtual void SetUp();
     virtual void TearDown();
-    Bool ephemExists(); 
-    String foundEphemPath; 
-    String flxStdName;          
-    String srcName;
-    String flxStdDesc;
-    Double freq;
-    MFrequency mfreq;
-    MEpoch mtime;
-    MDirection fieldDir;
-    FluxStandard::FluxScale flxStdEnum;
-    Vector<Double> fluxUsed;
-    Bool foundStd;
-    Flux<Double> returnFlux, returnFluxErr;
-    Vector<Vector<MFrequency> > spws;
-    Vector<String> tempCLs;
-    Vector<Vector<Flux<Double> >> returnFluxes, returnFluxErrs;
-    ComponentList* cl;
+    casacore::Bool ephemExists(); 
+    casacore::String foundEphemPath; 
+    casacore::String flxStdName;          
+    casacore::String srcName;
+    casacore::String flxStdDesc;
+    casacore::Double freq;
+    casacore::MFrequency mfreq;
+    casacore::MEpoch mtime;
+    casacore::MDirection fieldDir;
+    casa::FluxStandard::FluxScale flxStdEnum;
+    casacore::Vector<casacore::Double> fluxUsed;
+    casacore::Bool foundStd;
+    casacore::Flux<casacore::Double> returnFlux, returnFluxErr;
+    casacore::Vector<casacore::Vector<casacore::MFrequency> > spws;
+    casacore::Vector<casacore::String> tempCLs;
+    casacore::Vector<casacore::Vector<casacore::Flux<casacore::Double> >> returnFluxes, returnFluxErrs;
+    casa::ComponentList* cl;
     // expected values
-    FluxStandard::FluxScale expFlxStdEnum;
+    casa::FluxStandard::FluxScale expFlxStdEnum;
 };
 
 class MatchStandardTest:public EphemObjFluxStandardTest {
@@ -83,8 +81,8 @@ protected:
   
     virtual void SetUp();
     virtual void TearDown();
-    Bool matchedStandard;
-    String flxStdDesc;
+    casacore::Bool matchedStandard;
+    casacore::String flxStdDesc;
 
 }; 
 

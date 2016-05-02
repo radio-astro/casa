@@ -5,8 +5,6 @@
 
 #include <casa/namespace.h>
 
-using namespace std::chrono;
-
 namespace casa {
 
 class C11Timer {
@@ -55,7 +53,7 @@ public:
 	Double totalDuration() const;
 
 private:
-	steady_clock::time_point _start;
+    std::chrono::steady_clock::time_point _start;
 	std::chrono::duration<double> _duration, _totalDuration;
 	uInt _nCycles;
 

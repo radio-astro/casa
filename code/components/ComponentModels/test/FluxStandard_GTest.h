@@ -32,8 +32,6 @@
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MFrequency.h>
 
-using namespace casa;
-
 namespace test 
 {
 
@@ -49,22 +47,22 @@ protected:
     
     virtual void SetUp();
     virtual void TearDown();
-    String flxStdName;          
-    String srcName;
-    Double freq;
-    MFrequency mfreq;
-    MEpoch mtime;
-    MDirection srcDir;
-    FluxStandard::FluxScale flxStdEnum;
-    Vector<Double> fluxUsed;
-    Flux<Double> returnFlux, returnFluxErr;
-    Bool foundStd;
+    casacore::String flxStdName;          
+    casacore::String srcName;
+    casacore::Double freq;
+    casacore::MFrequency mfreq;
+    casacore::MEpoch mtime;
+    casacore::MDirection srcDir;
+    casa::FluxStandard::FluxScale flxStdEnum;
+    casacore::Vector<casacore::Double> fluxUsed;
+    casacore::Flux<casacore::Double> returnFlux, returnFluxErr;
+    casacore::Bool foundStd;
     // expected values
-    FluxStandard::FluxScale expFlxStdEnum;
+    casa::FluxStandard::FluxScale expFlxStdEnum;
 };
 
 class MatchStandardTest: public OldFluxStandardTest,
-       public ::testing::WithParamInterface<std::tr1::tuple<String,FluxStandard::FluxScale>>
+       public ::testing::WithParamInterface<std::tr1::tuple<casacore::String, casa::FluxStandard::FluxScale>>
 {
 
 public:
@@ -76,14 +74,14 @@ protected:
     
     virtual void SetUp();
     virtual void TearDown();
-    Bool matchedStandard;
-    String flxStdDesc;
+    casacore::Bool matchedStandard;
+    casacore::String flxStdDesc;
 
 };//matchStandardTest
 
 
 class AltSrcNameTest: public OldFluxStandardTest,
-       public ::testing::WithParamInterface<std::tr1::tuple<String,String,Double,FluxStandard::FluxScale>>
+       public ::testing::WithParamInterface<std::tr1::tuple<casacore::String, casacore::String, casacore::Double, casa::FluxStandard::FluxScale>>
 {
 
 public:
@@ -98,7 +96,7 @@ protected:
 };
 
 class FluxValueTest: public OldFluxStandardTest, 
-       public ::testing::WithParamInterface<std::tr1::tuple<String,String,Double,FluxStandard::FluxScale,Double>>
+       public ::testing::WithParamInterface<std::tr1::tuple<casacore::String, casacore::String, casacore::Double, casa::FluxStandard::FluxScale, casacore::Double>>
 {
 
 public:
@@ -110,7 +108,7 @@ protected:
     
     virtual void SetUp();
     virtual void TearDown();
-    Double expFlxVal;
+    casacore::Double expFlxVal;
 };
 
 }// end namespace test

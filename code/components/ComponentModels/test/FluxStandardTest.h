@@ -31,8 +31,6 @@
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MFrequency.h>
 
-using namespace casa;
-
 namespace test 
 {
 
@@ -49,8 +47,8 @@ protected:
 
     virtual void SetUp();
     virtual void TearDown();
-    String fluxScaleName;
-    std::unique_ptr<FluxStandard> fluxStd;
+    casa::String fluxScaleName;
+    std::unique_ptr<casa::FluxStandard> fluxStd;
 // things to test
 // compute (2 signatures)
 // computeCL

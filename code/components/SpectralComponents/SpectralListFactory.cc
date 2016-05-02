@@ -33,6 +33,8 @@
 
 #include <stdcasa/StdCasa/CasacSupport.cc>
 
+using namespace casac;
+
 namespace casa { 
 
 SpectralList SpectralListFactory::create(

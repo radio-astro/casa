@@ -30,6 +30,8 @@
 typedef std::numeric_limits< double > dbl;
 
 using namespace casa;
+using namespace casac;
+using namespace casacore;
 using namespace std; 
 
 namespace test {

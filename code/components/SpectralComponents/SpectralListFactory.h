@@ -31,8 +31,6 @@
 
 #include <components/SpectralComponents/SpectralList.h>
 
-using namespace casac;
-
 namespace casa {
 
 // create a SpectralList
@@ -50,22 +48,22 @@ public:
 	// coefficient during fitting).
 
 	static SpectralList create(
-		LogIO& log, const variant& pampest,
-		const variant& pcenterest, const variant& pfwhmest,
-		const variant& pfix=initialize_variant(""),
-		const variant& gmncomps=initialize_variant(""),
-		const variant& gmampcon=initialize_variant(""),
-		const variant& gmcentercon=initialize_variant(""),
-		const variant& gmfwhmcon=initialize_variant(""),
+		LogIO& log, const casac::variant& pampest,
+		const casac::variant& pcenterest, const casac::variant& pfwhmest,
+		const casac::variant& pfix=casac::initialize_variant(""),
+		const casac::variant& gmncomps=casac::initialize_variant(""),
+		const casac::variant& gmampcon=casac::initialize_variant(""),
+		const casac::variant& gmcentercon=casac::initialize_variant(""),
+		const casac::variant& gmfwhmcon=casac::initialize_variant(""),
 		const vector<double>& gmampest=vector<double>(0),
 		const vector<double>& gmcenterest=vector<double>(0),
 		const vector<double>& gmfwhmest=vector<double>(0),
-		const variant& gmfix=initialize_variant(""),
-		const variant& pfunc=initialize_variant(""),
-		const variant& plpest=initialize_variant(""),
-		const variant& plpfix=initialize_variant(""),
-		const variant& ltpest=initialize_variant(""),
-		const variant& ltpfix=initialize_variant("")
+		const casac::variant& gmfix=casac::initialize_variant(""),
+		const casac::variant& pfunc=casac::initialize_variant(""),
+		const casac::variant& plpest=casac::initialize_variant(""),
+		const casac::variant& plpfix=casac::initialize_variant(""),
+		const casac::variant& ltpest=casac::initialize_variant(""),
+		const casac::variant& ltpfix=casac::initialize_variant("")
 
 	);
 
