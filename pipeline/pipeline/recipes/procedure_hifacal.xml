@@ -119,10 +119,6 @@
     <ProcessingCommand>
         <Command xmlns="">hif_makeimages</Command>
         <ParameterSet>
-            <Parameter>
-                <Keyword xmlns="">tlimit</Keyword>
-                <Value xmlns="">2.0</Value>
-            </Parameter>
         </ParameterSet>
     </ProcessingCommand>
 
