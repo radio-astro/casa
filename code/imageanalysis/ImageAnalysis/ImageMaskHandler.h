@@ -10,8 +10,6 @@
 
 #include <set>
 
-using namespace std;
-
 namespace casa {
 
 class ImageRegion;

@@ -35,6 +35,8 @@
 #include <imageanalysis/ImageAnalysis/PixelValueManipulator.h>
 #include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 
+using namespace std;
+
 namespace casa {
 
 SPIIF ImageFactory::floatImageFromShape(

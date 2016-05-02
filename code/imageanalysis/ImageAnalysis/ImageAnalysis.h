@@ -34,8 +34,6 @@
 
 #include <utility>
 
-using namespace std;
-
 namespace casa {
 
 class CoordinateSystem;

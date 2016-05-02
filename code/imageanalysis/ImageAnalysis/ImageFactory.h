@@ -39,8 +39,6 @@
 #include <utility>
 #include <vector>
 
-using namespace std;
-
 namespace casa {
 
 class CoordinateSystem;
@@ -111,7 +109,7 @@ public:
 
     // only the pointer of the correct data type will be valid, the other
     // will be null.
-    static pair<SPIIF, SPIIC> fromImage(
+    static std::pair<SPIIF, SPIIC> fromImage(
         const String& outfile, const String& infile,
         const Record& region, const String& mask,
         Bool dropdeg=False,
@@ -154,7 +152,7 @@ public:
 
     // exactly one of the pointers will not be null, indicating the
     // pixel data type
-    static pair<SPIIF, SPIIC> fromFile(const String& filename);
+    static std::pair<SPIIF, SPIIC> fromFile(const String& filename);
 
     static SPIIF fromFITS(
         const String& outfile, const String& fitsfile,
@@ -162,7 +160,7 @@ public:
         const Bool zeroBlanks, const Bool overwrite
     );
 
-    static pair<SPIIF, SPIIC> fromRecord(
+    static std::pair<SPIIF, SPIIC> fromRecord(
         const RecordInterface& rec, const String& imagename=""
     );
 
@@ -228,11 +226,11 @@ private:
 
     static void _checkOutfile(const String& outfile, Bool overwrite);
 
-    static pair<SPIIF, SPIIC> _fromLatticeBase(unique_ptr<LatticeBase>& latt);
+    static std::pair<SPIIF, SPIIC> _fromLatticeBase(std::unique_ptr<LatticeBase>& latt);
 
     // if successful, image will point to the newly named image
     // upone return
-    template <class T> static pair<SPIIF, SPIIC> _rename(
+    template <class T> static std::pair<SPIIF, SPIIC> _rename(
     	SPIIT& image, const String& name, const Bool overwrite
     );
 

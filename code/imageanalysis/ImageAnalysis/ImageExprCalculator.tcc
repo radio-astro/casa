@@ -10,8 +10,6 @@
 #include <imageanalysis/ImageAnalysis/ImageFactory.h>
 #include <imageanalysis/ImageAnalysis/PixelValueManipulator.h>
 
-using namespace std;
-
 namespace casa {
 
 template<class T> ImageExprCalculator<T>::ImageExprCalculator(

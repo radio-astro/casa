@@ -247,8 +247,8 @@ template<class T> Record PixelValueManipulator<T>::getProfile(
 		Vector<Double> xvals = ret.asArrayDouble("coords");
 		auto diter = begin(data);
 		auto dend = end(data);
-		auto citer = begin(xvals);
-        auto miter = begin(mask);
+		auto citer = xvals.begin();
+        auto miter = mask.begin();
 		for ( ; diter != dend; ++diter, ++citer, ++miter) {
             if (*miter) {
 			    oss << fixed << setprecision(7) << *citer
@@ -313,7 +313,7 @@ template<class T> void PixelValueManipulator<T>::insert(
 	Int dbg = 0;
 	auto inSub = SubImageFactory<T>::createSubImageRO(
 		infile, region, "",
-		verbose ? unique_ptr<LogIO>(new LogIO()).get() : nullptr
+		verbose ? std::unique_ptr<LogIO>(new LogIO()).get() : nullptr
 	);
 
 	// Generate output pixel location
@@ -642,7 +642,7 @@ template<class T> Bool PixelValueManipulator<T>::putRegion(
     LogIO mylog;
     const auto& csys = image->coordinates();
     const auto imShape = image->shape();
-    unique_ptr<const ImageRegion> pRegion(
+    std::unique_ptr<const ImageRegion> pRegion(
         ImageRegion::fromRecord(
             (list ? &mylog : nullptr), csys, imShape, region
         )
@@ -856,8 +856,8 @@ template<class T> Bool PixelValueManipulator<T>::set(
     }
 
     // Make region and subimage
-    unique_ptr<Record> tmpRegion(new Record(p_Region));
-    unique_ptr<const ImageRegion> pRegion(
+    std::unique_ptr<Record> tmpRegion(new Record(p_Region));
+    std::unique_ptr<const ImageRegion> pRegion(
         ImageRegion::fromRecord(
             (list ? &mylog : 0), image->coordinates(), image->shape(),
             *tmpRegion

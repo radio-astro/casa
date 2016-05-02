@@ -30,9 +30,6 @@
 
 #include <casacore/casa/BasicSL/String.h>
 
-using namespace std;
-using namespace casacore;
-
 namespace test {
 
 class ImageMaskHandlerTest : public ::testing::Test {

@@ -467,10 +467,10 @@ void ImageMetaDataRW::setCsys(const Record& coordinates) {
     );
 }
 
-unique_ptr<CoordinateSystem> ImageMetaDataRW::_makeCoordinateSystem(
+std::unique_ptr<CoordinateSystem> ImageMetaDataRW::_makeCoordinateSystem(
     const Record& coordinates, const IPosition& shape
 ) {
-    unique_ptr<CoordinateSystem> pCS;
+    std::unique_ptr<CoordinateSystem> pCS;
     if (coordinates.nfields() == 1) {
         // must be a record as an element
         Record tmp(coordinates.asRecord(RecordFieldId(0)));

@@ -34,8 +34,6 @@
 
 #include <memory>
 
-using namespace std;
-
 namespace casa {
 
 // <summary>
@@ -172,7 +170,7 @@ private:
 	mutable vector<Quantity> _refVal, _increment;
 	mutable Record _header, _stats;
 
-	unique_ptr<CoordinateSystem> _makeCoordinateSystem(
+    std::unique_ptr<CoordinateSystem> _makeCoordinateSystem(
 	    const Record& coordinates, const IPosition& shape
 	);
 
