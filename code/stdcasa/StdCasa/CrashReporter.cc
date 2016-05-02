@@ -67,13 +67,30 @@ string crashUrl; // Url to post the crash dump to
 // application will collect other system information, bundle all information
 // up and post it to an HTTP server.
 
+#if defined (__APPLE__)
+bool crashCallback (const char * dump_dir,
+                    const char * /*minidump_id*/,
+                    void * /*context*/,
+                    bool succeeded)
+{
+    return crashCallbackCommon (dumpPath, succeeded);
+}
+
+#else // Linux
+
 bool
 crashCallback (const google_breakpad::MinidumpDescriptor& descriptor,
                void* /*context*/,
                bool succeeded)
 {
-    cerr<<"*** entering callback; succeeded=" << succeeded << endl;
+    return crashCallbackCommon (descriptor.path().c_str(), succeeded);
+}
+#endif
 
+bool
+crashCallbackCommon (const * dumpPath,
+                     bool succeeded)
+{
     // Start the crash poster executable by using a fork.  The crash dump
     // has already been written to disk before this function is called.
     // The crash poster will grab any other info desired, tar it up and
@@ -88,7 +105,7 @@ crashCallback (const google_breakpad::MinidumpDescriptor& descriptor,
 
         execl (crashDumpPoster.c_str(),       // File to run
                crashDumpPoster.c_str(),       // Argument 0
-               descriptor.path(), // Argument #1
+               dumpPath, // Argument #1
                crashUrl.c_str(),
                nullptr);          // No more arguments
 
@@ -157,7 +174,6 @@ CrashReporter::initialize (const string & crashDumpDirectory,
                                crashDumpPosterApplication.c_str());
     }
 
-    google_breakpad::MinidumpDescriptor descriptor (crashDumpDirectory);
     crashDumpPoster = crashDumpPosterApplication;
     crashUrl = crashPostingUrl;
 
@@ -166,6 +182,18 @@ CrashReporter::initialize (const string & crashDumpDirectory,
     // Dynamically allocate a breakpad exception handler.  The object needs to kept alive for
     // the duration of the session (hence the "new").
 
+#if defined (__APPLE__)
+
+    exceptionHandler =
+            new google_breakpad::ExceptionHandler (crashDumpDirectory,
+                                                   filter,
+                                                   crashCallback,
+                                                   nullptr,
+                                                   true,
+                                                   nullptr /*serverFd*/);
+#else
+    google_breakpad::MinidumpDescriptor descriptor (crashDumpDirectory);
+
     exceptionHandler =
             new google_breakpad::ExceptionHandler (descriptor,
                                                    filter,
@@ -173,6 +201,7 @@ CrashReporter::initialize (const string & crashDumpDirectory,
                                                    nullptr,
                                                    true,
                                                    -1 /*serverFd*/);
+#endif
 
     return "";
 }
