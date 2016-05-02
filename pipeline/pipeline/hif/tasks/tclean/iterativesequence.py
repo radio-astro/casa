@@ -38,7 +38,7 @@ class IterativeSequence(BaseCleanSequence):
             self.result.threshold = new_threshold
             self.result.cleanmask = new_cleanmask
             self.result.island_peaks = {}
-            self.result.niter = 2000
+            self.result.niter = 5000
             self.result.iterating = True
 
         else:
@@ -69,7 +69,7 @@ class IterativeSequence(BaseCleanSequence):
             self.result.threshold = new_threshold
             self.result.cleanmask = new_cleanmask
             self.result.island_peaks = island_peaks
-            self.result.niter = 2000
+            self.result.niter = 5000
 
             self.result.iterating = cbheuristic.clean_more(
               loop=self.iters[-1],

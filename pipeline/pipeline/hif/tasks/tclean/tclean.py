@@ -41,7 +41,7 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
     hm_cleaning = basetask.property_with_default('hm_cleaning', 'rms')
     hm_masking = basetask.property_with_default('hm_masking', 'centralregion')
     masklimit = basetask.property_with_default('masklimit', 4.0)
-    tlimit = basetask.property_with_default('tlimit', 2.0)
+    tlimit = basetask.property_with_default('tlimit', 4.0)
     subcontms = basetask.property_with_default('subcontms', False)
 
     @property
@@ -141,7 +141,7 @@ class Tclean(cleanbase.CleanBase):
         inputs.pblimit = self.pblimit_image
 
         # Instantiate the clean list heuristics class
-        clheuristics = makeimlist.MakeImListHeuristics(context=context,
+        self.clheuristics = makeimlist.MakeImListHeuristics(context=context,
                                                        vislist=inputs.vis,
                                                        spw=inputs.spw,
                                                        contfile=context.contfile,
@@ -149,29 +149,29 @@ class Tclean(cleanbase.CleanBase):
 
         # Generate the image name if one is not supplied.
         if inputs.imagename in ('', None):
-            inputs.imagename = clheuristics.imagename(intent=inputs.intent,
+            inputs.imagename = self.clheuristics.imagename(intent=inputs.intent,
                                                       field=inputs.field,
                                                       spwspec=inputs.spw)
 
         # Determine the default gridder
         if inputs.gridder in ('', None):
-            inputs.gridder = clheuristics.gridder(inputs.intent, inputs.field)
+            inputs.gridder = self.clheuristics.gridder(inputs.intent, inputs.field)
 
         # Determine the default deconvolver
         if inputs.deconvolver in ('', None):
-            inputs.deconvolver = clheuristics.deconvolver(inputs.intent,
+            inputs.deconvolver = self.clheuristics.deconvolver(inputs.intent,
                                                           inputs.field)
 
         # Determine the phase center.
         if inputs.phasecenter in ('', None):
-            field_id = clheuristics.field(inputs.intent, inputs.field)
-            inputs.phasecenter = clheuristics.phasecenter(field_id)
+            field_id = self.clheuristics.field(inputs.intent, inputs.field)
+            inputs.phasecenter = self.clheuristics.phasecenter(field_id)
 
         # Adjust the width to get around problems with increasing / decreasing
         # frequency with channel issues.
         if inputs.width in ('', None):
             if inputs.specmode == 'cube':
-                width = clheuristics.width(int(inputs.spw.split(',')[0]))
+                width = self.clheuristics.width(int(inputs.spw.split(',')[0]))
             else:
                 width = inputs.width
         else:
@@ -186,16 +186,16 @@ class Tclean(cleanbase.CleanBase):
 
             # The heuristics cell size  is always the same for x and y as
             # the value derives from a single value returned by imager.advise
-            cell, valid_data = clheuristics.cell(field_intent_list=[(inputs.field, inputs.intent)],
+            cell, valid_data = self.clheuristics.cell(field_intent_list=[(inputs.field, inputs.intent)],
                                            spwspec=inputs.spw)
-            beam = clheuristics.beam(spwspec=inputs.spw)
+            beam = self.clheuristics.beam(spwspec=inputs.spw)
 
             if inputs.cell == []:
                 inputs.cell = cell
                 LOG.info('Heuristic cell: %s' % cell)
 
-            field_ids = clheuristics.field(inputs.intent, inputs.field)
-            imsize = clheuristics.imsize(fields=field_ids,
+            field_ids = self.clheuristics.field(inputs.intent, inputs.field)
+            imsize = self.clheuristics.imsize(fields=field_ids,
                                          cell=inputs.cell, beam=beam)
             if inputs.imsize == []:
                 inputs.imsize = imsize
@@ -319,6 +319,7 @@ class Tclean(cleanbase.CleanBase):
         LOG.info('    Residual max %s', residual_max)
         LOG.info('    Residual min %s', residual_min)
 
+        # Check dynamic range and adjust threshold
         qaTool = casatools.quanta
         dirty_dynamic_range = residual_max / non_cleaned_rms
         if (dirty_dynamic_range > 100.):
@@ -330,8 +331,9 @@ class Tclean(cleanbase.CleanBase):
         elif (dirty_dynamic_range <= 20.):
             n_dr = 2.
 
+        old_threshold = qaTool.convert(sequence_manager.threshold, 'Jy')['value']
         if (inputs.intent == 'TARGET'):
-            sequence_manager.threshold = '%sJy' % (qaTool.convert(sequence_manager.threshold, 'Jy')['value'] * n_dr)
+            new_threshold = old_threshold* n_dr
         else:
             # Calibrators are usually dynamic range limited. The sensitivity from apparentsens
             # is not a valid estimate for the threshold. Use a heuristic based on the dirty peak
@@ -340,7 +342,22 @@ class Tclean(cleanbase.CleanBase):
                 maxEDR = 1000.0
             else:
                 maxEDR = 200.0
-            sequence_manager.threshold = '%sJy' % (max(qaTool.convert(sequence_manager.threshold, 'Jy')['value'], residual_max / maxEDR * inputs.tlimit))
+            new_threshold = max(old_threshold, residual_max / maxEDR * inputs.tlimit)
+        if (new_threshold != old_threshold):
+            sequence_manager.threshold = '%sJy' % (new_threshold)
+            LOG.info('Modified threshold from %s Jy to %s Jy' % (old_threshold, new_threshold))
+
+        # Compute automatic niter estimate
+        old_niter = sequence_manager.niter
+        kappa = 5
+        loop_gain = 0.1
+        r_mask = 0.45 * max(inputs.imsize[0], inputs.imsize[1]) * qaTool.convert(inputs.cell[0], 'arcsec')['value']
+        beam = qaTool.convert(inputs.cell[0], 'arcsec')['value'] * 5.0
+        new_niter_f = int(kappa / loop_gain * (r_mask / beam) ** 2 * residual_max / new_threshold)
+        new_niter = int(round(new_niter_f, -int(numpy.log10(new_niter_f))))
+        if (new_niter != old_niter):
+            sequence_manager.niter = new_niter
+            LOG.info('Modified niter from %d to %d' % (old_niter, new_niter))
 
         iterating = True
         iter = 1

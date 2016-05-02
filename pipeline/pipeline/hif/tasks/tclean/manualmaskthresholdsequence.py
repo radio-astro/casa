@@ -12,7 +12,7 @@ LOG = infrastructure.get_logger(__name__)
 
 class ManualMaskThresholdSequence(BaseCleanSequence):
 
-    def __init__(self, mask, gridder, threshold='0.0mJy', sensitivity=0.0, channel_rms_factor = 1.0, niter=100000):
+    def __init__(self, mask, gridder, threshold='0.0mJy', sensitivity=0.0, channel_rms_factor=1.0, niter=5000):
         """Constructor.
         """
         BaseCleanSequence.__init__(self)
