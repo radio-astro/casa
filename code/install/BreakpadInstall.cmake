@@ -84,11 +84,21 @@ macro (configure_breakpad Breakpad_Root)
     message ("-- .. +-------------------+")
     message ("-- .. ")
 
-    execute_process (COMMAND "make"
-	WORKING_DIRECTORY "breakpad/breakpad-distro"
-	RESULT_VARIABLE status)
-    if (NOT ${status} EQUAL 0)
-	message (SEND_ERROR "*** Failed to make breakpad: ${Breakpad_Root}")
+    if (APPLE)
+	    message ("Configuring on Mac")
+        execute_process (COMMAND xcodebuild -sdk macosx GCC_VERSION=com.apple.compilers.llvm.clang.1_0 OTHER_CFLAGS=-stdlib=libc++ OTHER_LDFLAGS=-stdlib=libc++
+	    WORKING_DIRECTORY "breakpad/breakpad-distro/src/client/mac"
+	    RESULT_VARIABLE status)
+        if (NOT ${status} EQUAL 0)
+	        message (SEND_ERROR "*** Failed to make breakpad: ${Breakpad_Root}")
+        endif ()
+    else ()
+        execute_process (COMMAND "make"
+	    WORKING_DIRECTORY "breakpad/breakpad-distro"
+	    RESULT_VARIABLE status)
+        if (NOT ${status} EQUAL 0)
+	        message (SEND_ERROR "*** Failed to make breakpad: ${Breakpad_Root}")
+        endif ()
     endif ()
 
     # Copy the client library up to the breakpad root directory
@@ -98,14 +108,18 @@ macro (configure_breakpad Breakpad_Root)
     else ()
 	set (OS "linux")
     endif ()
-
-    execute_process (COMMAND cp ./breakpad-distro/src/client/${OS}/libbreakpad_client.a .
-	WORKING_DIRECTORY "breakpad"
-	OUTPUT_VARIABLE error_message
-	ERROR_VARIABLE error_message
-	RESULT_VARIABLE status)
-    if (NOT ${status} EQUAL 0)
-	message (SEND_ERROR "*** Failed to copy: ${command}: ${error_message}")
+    
+    if (APPLE)
+	    message ("Building on and Mac, not trying to copy the breakpad client")
+    else ()
+        execute_process (COMMAND cp ./breakpad-distro/src/client/${OS}/libbreakpad_client.a .
+	    WORKING_DIRECTORY "breakpad"
+	    OUTPUT_VARIABLE error_message
+	    ERROR_VARIABLE error_message
+	    RESULT_VARIABLE status)
+        if (NOT ${status} EQUAL 0)
+	    message (SEND_ERROR "*** Failed to copy: ${command}: ${error_message}")
+    endif ()
     endif ()
 
 endmacro (configure_breakpad)
@@ -214,10 +228,13 @@ if (UseCrashReporter)
     ######################
 
     install_breakpad (${Breakpad_Root} ${Breakpad_ArchiveFile} ${Breakpad_ArchiveUrl})
-
-    set (Breakpad_Library "${Breakpad_Root}/libbreakpad_client.a" CACHE STRING "Full filespec for libbreakpad.a")
-    set (Breakpad_IncludeRoot "${Breakpad_Root}/breakpad-distro/src" CACHE STRING "Location of breakpad include file root")
-
+    if ( APPLE ) 
+            set (Breakpad_Library "${Breakpad_Root}/src/client/mac/build/Release/Breakpad.framework/Versions/A/Resources/breakpadUtilities.dylib" CACHE STRING "Full filespec for breakpadUtilities.dylib")
+            set (Breakpad_IncludeRoot "${Breakpad_Root}/breakpad-distro/src" CACHE STRING "Location of breakpad include file root")
+    else ()
+        set (Breakpad_Library "${Breakpad_Root}/libbreakpad_client.a" CACHE STRING "Full filespec for libbreakpad.a")
+        set (Breakpad_IncludeRoot "${Breakpad_Root}/breakpad-distro/src" CACHE STRING "Location of breakpad include file root")
+    endif ()
 endif ()
 
 
