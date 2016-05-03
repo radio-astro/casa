@@ -67,28 +67,8 @@ string crashUrl; // Url to post the crash dump to
 // application will collect other system information, bundle all information
 // up and post it to an HTTP server.
 
-#if defined (__APPLE__)
-bool crashCallback (const char * dump_dir,
-                    const char * /*minidump_id*/,
-                    void * /*context*/,
-                    bool succeeded)
-{
-    return crashCallbackCommon (dumpPath, succeeded);
-}
-
-#else // Linux
-
 bool
-crashCallback (const google_breakpad::MinidumpDescriptor& descriptor,
-               void* /*context*/,
-               bool succeeded)
-{
-    return crashCallbackCommon (descriptor.path().c_str(), succeeded);
-}
-#endif
-
-bool
-crashCallbackCommon (const * dumpPath,
+crashCallbackCommon (const char * dumpPath,
                      bool succeeded)
 {
     // Start the crash poster executable by using a fork.  The crash dump
@@ -126,6 +106,27 @@ crashCallbackCommon (const * dumpPath,
 
     return succeeded;
 }
+
+#if defined (__APPLE__)
+bool crashCallback (const char * dumpPath,
+                    const char * /*minidump_id*/,
+                    void * /*context*/,
+                    bool succeeded)
+{
+    return crashCallbackCommon (dumpPath, succeeded);
+}
+
+#else // Linux
+
+bool
+crashCallback (const google_breakpad::MinidumpDescriptor& descriptor,
+               void* /*context*/,
+               bool succeeded)
+{
+    return crashCallbackCommon (descriptor.path().c_str(), succeeded);
+}
+#endif
+
 
 // The breakpad exceptionHandler has to be alive at the time the crash occurs.
 // Keeping it in a global does the trick since the handler should stay active
