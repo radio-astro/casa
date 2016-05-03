@@ -23,7 +23,10 @@ class TcleanQAHandler(pqa.QAResultHandler):
 
         qaTool = casac.quanta()
         try:
-            score = imageScorer(result.rms / qaTool.convert(result.threshold, 'Jy')['value'])
+            # The threshold applies to peaks in the residual. To compare to the
+            # measured RMS, one needs to translate peak to RMS by about a
+            # factor 4.0.
+            score = imageScorer(result.rms / qaTool.convert(result.threshold, 'Jy')['value'] * 4.0)
         except Exception as e:
             LOG.warning('Exception scoring imaging result by RMS: %s. Setting score to -0.1.' % (e))
             score = -0.1
