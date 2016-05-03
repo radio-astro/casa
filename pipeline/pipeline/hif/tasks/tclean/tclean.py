@@ -344,6 +344,9 @@ class Tclean(cleanbase.CleanBase):
                 maxEDR = 200.0
             new_threshold = max(old_threshold, residual_max / maxEDR * inputs.tlimit)
         if (new_threshold != old_threshold):
+            # Catch trivial case which is broken up to CASA 4.6.0 / 4.7.44 (CAS-8576)
+            if (new_threshold > residual_max):
+                new_threshold = 0.9 * residual_max
             sequence_manager.threshold = '%sJy' % (new_threshold)
             LOG.info('Modified threshold from %s Jy to %s Jy' % (old_threshold, new_threshold))
 
