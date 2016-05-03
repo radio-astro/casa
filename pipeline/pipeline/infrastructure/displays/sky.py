@@ -221,7 +221,7 @@ class SkyDisplay(object):
             plt.xlabel('%s (%s)' % (coord_names[0], coord_units[0]))
             plt.ylabel('%s (%s)' % (coord_names[1], coord_units[1]))
 
-            mode_texts = {'mean': 'mean', 'max': 'max. at each pixel', 'center': 'center slice'}
+            mode_texts = {'mean': 'mean', 'max': 'max. at each pixel (MOM8)', 'center': 'center slice'}
             image_info = {'display': mode_texts[collapseFunction]}
             image_info.update(miscinfo)
             if (image_info.get('type')):
