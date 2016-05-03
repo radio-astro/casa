@@ -461,7 +461,7 @@ macro( casa_add_unit_test)
     add_executable( ${testName} EXCLUDE_FROM_ALL ${sources} ) # not part of main build
     target_link_libraries( ${testName} lib${module} ${casa_unit_test_LIBRARIES})
   else ()
-    add_executable( ${testName} ${sources} )
+    add_executable( ${testName} EXCLUDE_FROM_ALL ${sources} )
     target_link_libraries( ${testName} lib${module} ${casa_unit_test_LIBRARIES})
 
     if (${module}_WarningsAsErrors)
@@ -633,7 +633,7 @@ macro (casa_add_demo module)
      endif ()
   endforeach ()
 
-  add_executable ( ${executableName} ${sources})
+  add_executable ( ${executableName} EXCLUDE_FROM_ALL ${sources})
   target_link_libraries( ${executableName} lib${module})
 
   # Ensure that make module builds this demo.
