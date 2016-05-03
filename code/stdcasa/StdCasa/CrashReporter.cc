@@ -43,11 +43,14 @@ CrashReporter::initializeFromApplication (const char *)
 #include <client/linux/handler/exception_handler.h>
 #endif
 
-#include <casa/OS/File.h>
-#include <casa/System/AipsrcValue.h>
 #include <iostream>
 #include <regex>
 #include <string>
+
+#undef check
+
+#include <casa/OS/File.h>
+#include <casa/System/AipsrcValue.h>
 
 using namespace std;
 

@@ -108,8 +108,6 @@ endif ()
 if (UseCrashReporter)
    message ("DEBUG Adding UseCrashReporter to definitions")
     add_definitions( -DUseCrashReporter )
-    target_link_libraries( libstdcasa /home/orion/lib/libbreakpad_client.a)
-    target_include_directories ( libstdcasa PRIVATE /home/orion/pkg/breakpad/src)
 endif ()
 
 add_dependencies( libstdcasa_fast stdcasa_definitions )
