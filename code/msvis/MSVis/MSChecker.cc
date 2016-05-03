@@ -36,15 +36,16 @@ MSChecker::MSChecker(const MeasurementSet& ms) : _ms(ms) {}
 void MSChecker::checkReferentialIntegrity() const {
     Int nrows = 0;
     String colname, tablename;
+    uInt nAnts = _ms.antenna().nrow();
     for (uInt i=0; i<4; ++i) {
         switch (i) {
         case 0:
-            nrows = _ms.antenna().nrow();
+            nrows = nAnts;
             tablename = _ms.antenna().tableName();
             colname = _ms.columnName(MSMainEnums::ANTENNA1);
             break;
         case 1:
-            nrows = _ms.antenna().nrow();
+            nrows = nAnts;
             tablename = _ms.antenna().tableName();
             colname = _ms.columnName(MSMainEnums::ANTENNA2);
             break;
@@ -61,10 +62,11 @@ void MSChecker::checkReferentialIntegrity() const {
         default:
             break;
         }
-        Int mymax = max(ROScalarColumn<Int>(_ms, colname).getColumn());
+        Vector<Int> data;
+        ROScalarColumn<Int>(_ms, colname).getColumn(data);
         ThrowIf(
-            mymax >= nrows,
-            "Illegal " + colname + " value " + String::toString(mymax)
+            anyGE(data, nrows),
+            "Illegal " + colname + " value " + String::toString(max(data))
             + " found in main table. " + tablename + " only has "
             + String::toString(nrows) + " rows (IDs)"
         );
