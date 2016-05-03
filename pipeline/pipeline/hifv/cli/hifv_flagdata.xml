@@ -89,8 +89,8 @@
 	    <description>The time buffer computation heuristic</description>
 	    <value>1.5int</value>
 	    <allowed kind="enum">
-		<value>halfint</value>
 		<value>1.5int</value>
+		<value>halfint</value>
 		<value>manual</value>
 	    </allowed>
 	</param>
@@ -176,9 +176,9 @@
 	    
 	    
 	    <when param="hm_tbuff">
-	        <equals type="string" value="halfint">
+			<equals type="string" value="1.5int">
 	        </equals>
-	        <equals type="string" value="1.5int">
+	        <equals type="string" value="halfint">
 	        </equals>
 	        <equals type="string" value="manual">
 		    <default param="tbuff"><value type="double">0.0</value></default>
