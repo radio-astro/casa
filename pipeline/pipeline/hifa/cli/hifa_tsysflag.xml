@@ -202,15 +202,15 @@ spectra that are 'ringing'.
 3. Flag the edge channels of the Tsys spectra in each SpW.
 
 4. Flag Tsys spectra whose shape is different from that associated with
-the BANDPASS intent or which are associated with an antenna that has 
-been too heavily flagged already.
+the BANDPASS intent.
 
 5. Flag 'birdies'.
 
-6. Flag all Tsys spectra within a timestamp for an antenna if proportion 
-flagged already exceeds a threshold, and flag Tsys spectra for all antennas 
-in a spw, if proportion of antennas that are already entirely flagged in all 
-timestamps exceeds a threshold.
+6. Flag the Tsys spectra of all antennas in a timestamp and spw if 
+proportion of antennas already flagged in this timestamp and spw exceeds 
+a threshold, and flag Tsys spectra for all antennas and all timestamps 
+in a spw, if proportion of antennas that are already entirely flagged 
+in all timestamps exceeds a threshold.
 
 Keyword arguments:
 
@@ -269,16 +269,17 @@ fb_sharps_limit -- Flag channels bracketing a channel to channel
      default: 0.05
 
 flag_toomany -- True to flag Tsys spectra for which a proportion of 
-timestamps or proportion of antennas that are entirely flagged exceeds 
-their respective thresholds.
+antennas for given timestamp and/or proportion of antennas that are 
+entirely flagged in all timestamps exceeds their respective thresholds.
 
-tmf1_limit -- Flag all Tsys spectra within a timestamp for an 
-antenna if proportion flagged already &gt; tmf1_limit.
+tmf1_limit -- Flag Tsys spectra for all antennas in a timestamp and spw if 
+proportion of antennas already flagged in this timestamp and spw exceeds 
+tmf1_limit.
     default: 0.666
 
-tmef1_limit -- Flag all Tsys spectra for all antennas in a spw, if 
-proportion of antennas that are already entirely flagged in all 
-timestamps &gt; tmef1_limit.
+tmef1_limit -- Flag Tsys spectra for all antennas and all timestamps
+in a spw, if proportion of antennas that are already entirely flagged 
+in all timestamps exceeds tmef1_limit.
     default: 0.666
 
 -- Pipeline task execution modes
