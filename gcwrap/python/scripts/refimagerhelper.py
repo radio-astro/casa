@@ -363,67 +363,69 @@ class PySynthesisImager:
         pl.figure(fignum)
         pl.clf();
         minarr = summ['summaryminor']
+        if minarr.size==0:
+            casalog.post("Zero iteration: no summary plot is generated.", "WARN")
+        else:
+	    iterlist = minarr[0,:]
+	    eps=0.0
+	    peakresstart=[]
+	    peakresend=[]
+	    modfluxstart=[]
+	    modfluxend=[]
+	    itercountstart=[]
+	    itercountend=[]
+	    peakresstart.append( minarr[1,:][0] )
+	    modfluxstart.append( minarr[2,:][0] )
+	    itercountstart.append( minarr[0,:][0] + eps )
+	    peakresend.append( minarr[1,:][0] )
+	    modfluxend.append( minarr[2,:][0] )
+	    itercountend.append( minarr[0,:][0] + eps )
+	    for ii in range(0,len(iterlist)-1):
+		if iterlist[ii]==iterlist[ii+1]:
+		    peakresend.append( minarr[1,:][ii] )
+		    peakresstart.append( minarr[1,:][ii+1] ) 
+		    modfluxend.append( minarr[2,:][ii] )
+		    modfluxstart.append( minarr[2,:][ii+1] )
+		    itercountend.append( iterlist[ii]-eps )
+		    itercountstart.append( iterlist[ii]+eps )
 
-        iterlist = minarr[0,:]
-        eps=0.0
-        peakresstart=[]
-        peakresend=[]
-        modfluxstart=[]
-        modfluxend=[]
-        itercountstart=[]
-        itercountend=[]
-        peakresstart.append( minarr[1,:][0] )
-        modfluxstart.append( minarr[2,:][0] )
-        itercountstart.append( minarr[0,:][0] + eps )
-        peakresend.append( minarr[1,:][0] )
-        modfluxend.append( minarr[2,:][0] )
-        itercountend.append( minarr[0,:][0] + eps )
-        for ii in range(0,len(iterlist)-1):
-            if iterlist[ii]==iterlist[ii+1]:
-                peakresend.append( minarr[1,:][ii] )
-                peakresstart.append( minarr[1,:][ii+1] ) 
-                modfluxend.append( minarr[2,:][ii] )
-                modfluxstart.append( minarr[2,:][ii+1] )
-                itercountend.append( iterlist[ii]-eps )
-                itercountstart.append( iterlist[ii]+eps )
+	    peakresend.append( minarr[1,:][len(iterlist)-1] )
+	    modfluxend.append( minarr[2,:][len(iterlist)-1] )
+	    itercountend.append( minarr[0,:][len(iterlist)-1] + eps )
 
-        peakresend.append( minarr[1,:][len(iterlist)-1] )
-        modfluxend.append( minarr[2,:][len(iterlist)-1] )
-        itercountend.append( minarr[0,:][len(iterlist)-1] + eps )
+    #        pl.plot( iterlist , minarr[1,:] , 'r.-' , label='peak residual' , linewidth=1.5, markersize=8.0)
+    #        pl.plot( iterlist , minarr[2,:] , 'b.-' , label='model flux' )
+    #        pl.plot( iterlist , minarr[3,:] , 'g--' , label='cycle threshold' )
 
-#        pl.plot( iterlist , minarr[1,:] , 'r.-' , label='peak residual' , linewidth=1.5, markersize=8.0)
-#        pl.plot( iterlist , minarr[2,:] , 'b.-' , label='model flux' )
-#        pl.plot( iterlist , minarr[3,:] , 'g--' , label='cycle threshold' )
+	    pl.plot( itercountstart , peakresstart , 'r.--' , label='peak residual (start)')
+	    pl.plot( itercountend , peakresend , 'r.-' , label='peak residual (end)',linewidth=2.5)
+	    pl.plot( itercountstart , modfluxstart , 'b.--' , label='model flux (start)' )
+	    pl.plot( itercountend , modfluxend , 'b.-' , label='model flux (end)',linewidth=2.5 )
+	    pl.plot( iterlist , minarr[3,:] , 'g--' , label='cycle threshold', linewidth=2.5 )
+	    maxval = amax( minarr[1,:] )
+	    maxval = max( maxval, amax( minarr[2,:] ) )
+	    
+	    bcols = ['b','g','r','y','c']
+	    minv=1
+	    niterdone = len(minarr[4,:])
+	  
+	    if len(summ['summarymajor'].shape)==1 and summ['summarymajor'].shape[0]>0 :       
+		pl.vlines(summ['summarymajor'],0,maxval, label='major cycles', linewidth=2.0)
 
-        pl.plot( itercountstart , peakresstart , 'r.--' , label='peak residual (start)')
-        pl.plot( itercountend , peakresend , 'r.-' , label='peak residual (end)',linewidth=2.5)
-        pl.plot( itercountstart , modfluxstart , 'b.--' , label='model flux (start)' )
-        pl.plot( itercountend , modfluxend , 'b.-' , label='model flux (end)',linewidth=2.5 )
-        pl.plot( iterlist , minarr[3,:] , 'g--' , label='cycle threshold', linewidth=2.5 )
-        maxval = amax( minarr[1,:] )
-        maxval = max( maxval, amax( minarr[2,:] ) )
-        
-        bcols = ['b','g','r','y','c']
-        minv=1
-        niterdone = len(minarr[4,:])
-      
-        if len(summ['summarymajor'].shape)==1 and summ['summarymajor'].shape[0]>0 :       
-            pl.vlines(summ['summarymajor'],0,maxval, label='major cycles', linewidth=2.0)
+	    pl.hlines( summ['threshold'], 0, summ['iterdone'] , linestyle='dashed' ,label='threshold')
+	
+	    pl.xlabel( 'Iteration Count' )
+	    pl.ylabel( 'Peak Residual (red), Model Flux (blue)' )
 
-        pl.hlines( summ['threshold'], 0, summ['iterdone'] , linestyle='dashed' ,label='threshold')
-    
-        pl.xlabel( 'Iteration Count' )
-        pl.ylabel( 'Peak Residual (red), Model Flux (blue)' )
+	    ax = pl.axes()
+	    box = ax.get_position()
+	    ax.set_position([box.x0, box.y0, box.width, box.height*0.8])
 
-        ax = pl.axes()
-        box = ax.get_position()
-        ax.set_position([box.x0, box.y0, box.width, box.height*0.8])
+	    pl.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05),
+		      ncol=3, fancybox=True, shadow=True)
 
-        pl.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05),
-                  ncol=3, fancybox=True, shadow=True)
-
-        pl.savefig('summaryplot_'+str(fignum)+'.png')
-        pl.ion()
+	    pl.savefig('summaryplot_'+str(fignum)+'.png')
+	    pl.ion()
 
         return summ;
 

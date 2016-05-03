@@ -387,6 +387,14 @@ class test_iterbot(testref_base):
           self.checkfinal(report)
 
 
+     def test_iterbot_cube_3(self): # test for returned summary/plot for no iteration case 
+          """ [iterbot] Test_Iterbot_cube_3 : Very high threshold, no iteration (verification of CAS-8576 fix) """
+          self.prepData('refim_point_withline.ms')
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',specmode='cube',deconvolver='clark',niter=10,threshold='3.5Jy',interactive=0)
+          report=self.th.checkall(ret=ret,iterdone=0,nmajordone=1,imexist=[self.img+'.psf', self.img+'.residual'])
+
+          self.checkfinal(report)
+
      def test_iterbot_mfs_deconvolvers(self):
           """ [iterbot] : test_iterbot_deconvolvers : Do all minor cycle algorithms respond in the same way to iteration controls ? No ! """
           # clark and hogbom reach niter first, but multiscale gets to cyclethreshold first. Check peakres and iterdone.
