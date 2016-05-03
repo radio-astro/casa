@@ -387,7 +387,7 @@ class CleanBase(basetask.StandardTaskTemplate):
 
         if (inputs.niter > 0):
             LOG.info('tclean used %d iterations' % (tclean_result['iterdone']))
-            if (tclean_result['iterdone'] >= tclean_result['niter']):
+            if ((tclean_result['stopcode'] != 2) and (tclean_result['iterdone'] >= tclean_result['niter'])):
                 LOG.warning('tclean reached niter limit of %d !' % (tclean_result['niter']))
 
         # Create PB for single fields since it is not auto-generated for
@@ -441,7 +441,9 @@ class CleanBase(basetask.StandardTaskTemplate):
         result.set_model(iter=iter, image=model_name)
 
         # Store the image.
-        if (pb_corrected):
+        # TODO: The change for cubes is just temporary for C4R1 !
+        #       This needs to be done properly later.
+        if (pb_corrected and (pbcor_image_name.find('cube') == -1)):
             set_miscinfo(name=pbcor_image_name, spw=inputs.spw, field=inputs.field,
                          type='image', iter=iter, multiterm=result.multiterm)
             result.set_image(iter=iter, image=pbcor_image_name)
