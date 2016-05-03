@@ -388,7 +388,7 @@ class CleanBase(basetask.StandardTaskTemplate):
         if (inputs.niter > 0):
             LOG.info('tclean used %d iterations' % (tclean_result['iterdone']))
             if ((tclean_result['stopcode'] != 2) and (tclean_result['iterdone'] >= tclean_result['niter'])):
-                LOG.warning('tclean reached niter limit of %d !' % (tclean_result['niter']))
+                LOG.warning('tclean reached niter limit of %d for %s / spw%s !' % (tclean_result['niter'], utils.dequote(inputs.field), inputs.spw))
 
         # Create PB for single fields since it is not auto-generated for
         # gridder='standard'.
