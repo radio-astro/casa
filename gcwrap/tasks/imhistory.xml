@@ -61,7 +61,9 @@ PARAMETER SUMMARY
 imagename        Name of the input (CASA, FITS, MIRIAD) image
 mode             Operating mode. Either "list" or "append" is accepted.
 verbose          Log history if mode="list"?
-origin           Origin of appended message if mode="append".
+origin           Origin of appended message if mode="append". The user can specify any string.
+                 This string will appear as a tag at the start of the appended line in the image
+                 history. Default value is imhistory.
 message          Message to append if mode="append".
 
 This task provides access to the logtable of an image, where generally history information is
@@ -70,11 +72,12 @@ as an array of strings. If verbose=True, this information is also written to the
 mode="append", a specified message (along with its specified origin) are appended to the logtable
 and True is returned if successful.
 
-# get history and list to logger
-imhistory("my.im", mode="list", verbose=True)
+# get history and list to logger, and store history
+# as an array of strings stored in variable x
+x = imhistory("my.im", mode="list", verbose=True)
 
 # append a message
-imhistory("my.im", origin="myorigin", "ETI signal found in this image!")
+imhistory("my.im", origin="myorigin", message="ETI signal found in this image!")
 
 </example>
 
