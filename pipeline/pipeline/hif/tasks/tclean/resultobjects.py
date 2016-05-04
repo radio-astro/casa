@@ -43,6 +43,8 @@ class TcleanResult(basetask.Results):
         self._sensitivity = 0.0
         self._threshold = 0.0
         self._rms = 0.0
+        # Temporarily needed until CAS-8576 is fixed
+        self._residual_abs_max = 0.0
         # This should be automatic, but it does not yet work
         self.pipeline_casa_task = 'Tclean'
         # Dummy settings for the weblog renderer

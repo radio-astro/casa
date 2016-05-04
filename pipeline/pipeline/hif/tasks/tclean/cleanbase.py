@@ -325,7 +325,14 @@ class CleanBase(basetask.StandardTaskTemplate):
             aggregate_bw = qaTool.add(aggregate_bw, qaTool.sub('%sGHz' % (freq_range[1]), '%sGHz' % (freq_range[0])))
 
         # Adjust sensitivity according to selection bandwidth
-        inputs.threshold = threshold = '%sJy' % (qaTool.convert(inputs.threshold, 'Jy')['value'] * sqrt(qaTool.convert(total_bw, 'GHz')['value'] / qaTool.convert(aggregate_bw, 'GHz')['value']))
+        old_threshold = qaTool.convert(inputs.threshold, 'Jy')['value']
+        new_threshold = old_threshold * sqrt(qaTool.convert(total_bw, 'GHz')['value'] / qaTool.convert(aggregate_bw, 'GHz')['value'])
+
+        # Catch trivial case which is broken up to CASA 4.6.0 / 4.7.44 (CAS-8576)
+        if (new_threshold > result._residual_abs_max):
+            new_threshold = 0.9 * result._residual_abs_max
+
+        inputs.threshold = '%sJy' % (new_threshold)
 
         if (inputs.specmode == 'cube'):
             # Estimate memory usage and adjust chanchunks parameter to avoid
