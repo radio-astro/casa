@@ -834,7 +834,7 @@ namespace casa {
 
 		//YUnits
 		yUnit = getBrightnessUnit( image );
-
+		
 		yUnitPrefix = "";
 		adjustPlotUnits();
 		setPixelCanvasYUnits( yUnitPrefix, yUnit );
@@ -950,11 +950,17 @@ namespace casa {
 
 	void QtProfile::adjustPlotUnits() {
 		//Store the old units so we can try to reset them
+
 		//Except that we don't need to reset them, and in fact reset them incorrectly on
 		//the canvas if the yAxisCombo is not being used (CAS-7681).
-		if ( yAxisCombo->isVisible() ){
-			QString currentYUnits = yAxisCombo->currentText();
 
+		//However, we can't depend on the y-axisCombo visibility being correct as the change
+		//in visibility is apparently getting caught in an event loop, so instead, we rely
+		//on a compatible check of the y-units, which is the trigger for the y-axisCombo
+		//visibility anyway (CAS-8585).
+		bool unitsAcceptable = ConverterIntensity::isSupportedUnits( yUnit);
+		if ( unitsAcceptable ){
+			QString currentYUnits = yAxisCombo->currentText();
 			yAxisCombo->clear();
 			QStringList yUnitsList =(QStringList()<< ConverterIntensity::JY_BEAM <<
 		                         ConverterIntensity::JY_ARCSEC << ConverterIntensity::JY_SR <<
@@ -988,7 +994,8 @@ namespace casa {
 			if ( itsPlotType==QtProfile::PFLUX ) {
 				yAxisCombo->addItem( yUnitsList[0] );
 				yAxisCombo->addItem( ConverterIntensity::FRACTION_OF_PEAK );
-			} else {
+			}
+			else {
 				for ( int i = 0; i < yUnitsList.size(); i++ ) {
 					yAxisCombo->addItem( yUnitsList[i]);
 				}
@@ -2847,13 +2854,13 @@ namespace casa {
 		if ( unitsAcceptable ) {
 			yAxisCombo->setCurrentIndex( 0 );
 		}
+
 		QString imageUnit(yUnitPrefix + yUnit );
 
 		specFitSettingsWidget->setImageYUnits( imageUnit );
 		//Changed lines below because of CAS-7207
 		pixelCanvas->setImageYUnits( /*yAxisCombo->currentText()*/imageUnit );
 		pixelCanvas->setDisplayYUnits( imageUnit );
-
 	}
 
 	void QtProfile::setYUnitConversionVisibility( bool visible ) {
