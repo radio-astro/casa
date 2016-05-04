@@ -33,7 +33,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <value>imhistory</value>
     </param>
     <param type="string" name="message" subparam="true">
-        <description>eMessage to append. Only used of mode="append".</description>
+        <description>Message to append. Only used of mode="append".</description>
         <value/>
     </param>
     <constraints>
