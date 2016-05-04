@@ -93,6 +93,7 @@ class SkyDisplay(object):
     def _plot_panel(self, reportdir, result, vmin=None, vmax=None,
      channelMap=False, collapseFunction='mean'):
         """Method to plot a map."""
+
         plotfile = plotfilename(image=os.path.basename(result),
           reportdir=reportdir)
 
@@ -221,7 +222,7 @@ class SkyDisplay(object):
             plt.xlabel('%s (%s)' % (coord_names[0], coord_units[0]))
             plt.ylabel('%s (%s)' % (coord_names[1], coord_units[1]))
 
-            mode_texts = {'mean': 'mean', 'max': 'max. at each pixel (MOM8)', 'center': 'center slice'}
+            mode_texts = {'mean': 'mean', 'max': 'peak line int. (mom8)', 'center': 'center slice'}
             image_info = {'display': mode_texts[collapseFunction]}
             image_info.update(miscinfo)
             if (image_info.get('type')):

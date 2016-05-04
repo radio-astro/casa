@@ -74,8 +74,13 @@ class CleanSummary(object):
 
                 # cleanmask for this iteration - not for iter 0
                 if i > 0:
+                    if (r.iterations[i]['cleanmask'].find('cube') != -1):
+                        collapseFunction = 'max'
+                    else:
+                        collapseFunction = 'mean'
                     plot_wrappers.append(displays.SkyDisplay().plot(
                       self.context, r.iterations[i]['cleanmask'],
-                      reportdir=stage_dir, intent=r.intent))
+                      reportdir=stage_dir, intent=r.intent,
+                      collapseFunction=collapseFunction))
 
         return [p for p in plot_wrappers if p is not None]
