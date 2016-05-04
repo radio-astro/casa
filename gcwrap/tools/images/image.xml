@@ -30,14 +30,24 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 \medskip
 \noindent{\bf Summary}
 
-Image tools provides access to \casa\ images.    Currently only single
-precision floating point \casa\ images are supported by the Image \tool. In the
-future, complex images will also be supported.
+An Image tool provides access to \casa\ images.    Currently only single
+precision floating point \casa\ images are supported by all methods in the Image
+\tool and complex-valued images are supported by many, but not all, methods.
 
 Image tools also provide direct (native) access to \fits\ and Miriad images.
 You can also convert these foreign formats to \casa\ format (for
 optimum processing speed).
 
+It is important to note that many methods return new image tools that are
+attached to an image that method has created. Even if one does not intend
+on using this returned tool, it is important to capture it and run done() on
+it or it will continue to use resources unnecessarily, eg
+
+<example>
+new_image_tool = ia.collapse("my_collapsed.im")
+# do things with new_image_tool and then run done() on it
+new_image_tool.done()
+</example>
 \bigskip
 {\bf Overview of Image \tool\ functionality}
 
