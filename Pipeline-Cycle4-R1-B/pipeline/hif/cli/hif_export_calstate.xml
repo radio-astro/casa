@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="hif_export_calstate" category="pipeline">
+<shortdescription>Save the pipeline calibration state to disk</shortdescription>
+
+<description>
+hif_export_calstate saves the current pipeline calibration state to disk
+in the form of a set of equivalent applycal calls.
+</description>		
+
+<input>
+    <param type="string" name="filename">
+        <description>Name for saved calibration state</description>
+        <value></value>
+    </param>
+
+  <param type="string" name="state">
+    <description>The calibration state to export</description>
+    <value>active</value>
+    <allowed kind="enum">
+      <value>active</value>
+      <value>applied</value>
+    </allowed>
+  </param>
+
+</input>
+
+<example>
+
+hif_export_calstate saves the current pipeline calibration state to disk
+in the form of a set of equivalent applycal calls.
+
+Keyword arguments:
+
+filename -- Name for the saved calibration state.
+state -- calibration state to export
+
+Description
+
+hif_export_calstate saves the current pipeline calibration state to disk
+in the form of a set of equivalent applycal calls.
+
+If filename is not given, hif_export_calstate saves the calibration state to
+disk with a filename based on the pipeline context creation time, using the
+extension '.calstate'
+
+One of two calibration states can be exported: either the active calibration
+state (those calibrations currently applied on-the-fly but scheduled for
+permanent application to the measurement set in a subsequent hif_applycal
+call) or the applied calibration state (calibrations that were previously
+applied to the measurement set using hif_applycal). The default is to export
+the active calibration state.
+
+Issues
+
+If run several times in one pipeline session does the automatic export
+file naming scheme, overwrite previous versions?
+
+Example
+
+1. Save the calibration state.
+
+   hif_export_calstate()
+
+2. Save the active calibration state with a custom filename
+
+   hif_export_calstate(filename='afterbandpass.calstate')
+
+3. Save the applied calibration state with a custom filename
+
+   hif_export_calstate(filename='applied.calstate', state='applied')
+
+</example>
+</task>
+</casaxml>

@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="hifa_spwphaseup" category="pipeline">
+<shortdescription>Compute phase calibration spw map and per spw phase offsets</shortdescription>
+<description>
+The spw map for phase calibration is computed. Phase offsets as a function of spectral
+window are computed using high signal to noise calibration observations. 
+
+Previous calibrations are applied on the fly.
+
+</description>
+<input>
+
+   <param type="stringArray" name="vis" subparam="true">
+	<description>List of input measurement sets</description>
+	<value></value>
+   </param>
+
+   <param type="stringArray" name="caltable" subparam="true">
+	<description>List of output caltables</description>
+	<value type="string"></value>
+   </param>
+
+   <param type="string" name="field" subparam="true">
+	<description>Set of data selection field names or ids</description>
+	<value></value>
+   </param>
+
+   <param type="string" name="intent" subparam="true">
+	<description>Set of data selection observing intents</description>
+	<value>BANDPASS</value>
+   </param>
+
+   <param type="string" name="spw" subparam="true">
+	<description>Set of data selection spectral window/channels</description>
+	<value></value>
+   </param>
+
+   <param type="string" name="hm_spwmapmode">
+	<description>The spw mapping mode</description>
+	<value>auto</value>
+	<allowed kind="enum">
+	    <value>auto</value>
+	    <value>simple</value>
+	    <value>combine</value>
+	    <value>default</value>
+	</allowed>
+   </param>
+
+   <param type="string" name="maxnarrowbw" subparam="true">
+	<description>The maximum bandwidth defining narrow spectral windows</description>
+	<value>300MHz</value>
+   </param>
+
+   <param type="double" name="minfracmaxbw" subparam="true">
+	<description>The minimum fraction of the maximum bandpass for spw matching</description>
+	<value>0.8</value>
+   </param>
+
+   <param type="bool" name="samebb" subparam="true">
+	<description>Match within the same baseband if possible ?</description>
+	<value>True</value>
+   </param>
+
+   <param type="double" name="phasesnr" subparam="true">
+	<description>The minimum snr for triggering spw combination in auto spw mapping mode</description>
+	<value>25.0</value>
+   </param>
+
+   <param type="double" name="bwedgefrac" subparam="true">
+        <description>The fraction of the bandwidth edge that is flagged</description>
+        <value>0.03125</value>
+   </param>
+
+   <param type="string" name="hm_nantennas" subparam="true">
+        <description>The antenna selection heuristic </description>
+        <value>all</value>
+        <allowed kind="enum">
+            <value>all</value>
+            <value>unflagged</value>
+        </allowed>
+   </param>
+
+   <param type="double" name="maxfracflagged" subparam="true">
+        <description>The maximum fraction of data flagged per antenna</description>
+        <value>0.90</value>
+   </param>
+
+    <param type="string" name="combine">
+	<description>Data axes which to combine for solve (scan, spw, and/or field)</description>
+	<value type="string"></value>
+    </param>
+
+    <param type="string" name="refant" subparam="true">
+	<description>Reference antenna names</description>
+	<value></value>
+    </param>
+
+    <param type="int" name="minblperant">
+	<description>Minimum baselines per antenna required for solve</description>
+	<value>4</value>
+    </param>
+
+    <param type="double" name="minsnr">
+	<description>Reject solutions below this SNR</description>
+	<value>3.0</value>
+    </param>
+
+    <param type="string" name="pipelinemode">
+	<description>The pipeline operating mode</description>
+	<value>automatic</value>
+	<allowed kind="enum">
+	    <value>automatic</value>
+	    <value>interactive</value>
+	    <value>getinputs</value>
+	</allowed>
+    </param>
+
+    <param type="bool" name="dryrun" subparam="true">
+	<description>Run task (False) or display the command(True)</description>
+	<value type="bool">False</value>
+    </param>
+
+    <param type="bool" name="acceptresults" subparam="true">
+	<description>Automatically accept results into the context</description>
+	<value type="bool">True</value>
+    </param>
+
+    <constraints>
+
+        <when param="hm_spwmapmode">
+	    <equals type="string" value="auto">
+	        <default param="phasesnr"><value type="double">25.0</value></default>
+	        <default param="bwedgefrac"><value type="double">0.03125</value></default>
+	        <default param="hm_nantennas"><value type="string">all</value></default>
+                <default param="maxfracflagged"><value type="double">0.90</value></default>
+	    </equals>
+	    <equals type="string" value="simple">
+	        <default param="maxnarrowbw"><value type="string">300MHz</value></default>
+	        <default param="minfracmaxbw"><value type="double">0.8</value></default>
+	        <default param="samebb"><value type="bool">True</value></default>
+	    </equals>
+	    <equals type="string" value="combine">
+	    </equals>
+	    <equals type="string" value="default">
+	    </equals>
+        </when>
+
+        <when param="pipelinemode">
+	    <equals type="string" value="automatic" />
+	    <equals type="string" value="interactive">
+	        <default param="vis"><value type="stringArray"></value></default>
+	        <default param="caltable"><value type="stringArray"></value></default>
+	        <default param="field"><value type="string"></value></default>
+	        <default param="intent"><value type="string">BANDPASS</value></default>
+	        <default param="spw"><value type="string"></value></default>
+	        <default param="refant"><value type="string"></value></default>
+	        <default param="dryrun"><value type="bool">False</value></default>
+	        <default param="acceptresults"><value type="bool">True</value></default>
+	    </equals>
+	    <equals type="string" value="getinputs">
+	        <default param="vis"><value type="stringArray"></value></default>
+	        <default param="caltable"><value type="stringArray"></value></default>
+	        <default param="field"><value type="string"></value></default>
+	        <default param="intent"><value type="string">BANDPASS</value></default>
+	        <default param="spw"><value type="string"></value></default>
+	        <default param="antenna"><value type="string"></value></default>
+	        <default param="refant"><value type="string"></value></default>
+	    </equals>
+        </when>
+
+    </constraints>
+</input>
+
+<output>
+    <param type="any" name="results">
+        <description>The output results object</description>
+        <any type="variant"/>
+        <value></value>
+    </param>
+</output>
+<returns type="void"/>
+
+<example>
+
+Compute the gain solutions.
+
+---- pipeline parameter arguments which can be set in any pipeline mode
+
+pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
+       determines the values of all context defined pipeline inputs
+       automatically.  In interactive mode the user can set the pipeline
+       context defined parameters manually.  In 'getinputs' mode the user
+       can check the settings of all pipeline parameters without running
+       the task.
+       default: 'automatic'.
+
+hm_spwmapmode -- The spectral window mapping mode. The options are: 'simple',
+    'auto', 'combine', and 'default'. In 'simple' mode narrow windows are
+    mapped to wider ones using a simepl algorithm defined by 'maxnarrowbw',
+    'minfracmaxbw', and 'samebb'.
+    default: 'simple'
+    example: hm_spwmapmode='combine' 
+
+maxnarrowbw -- The maximum bandwidth defining narrow spectral windows. Values
+    must be in CASA compatible frequency units.
+    default: '300MHz'
+    example: maxnarrowbw=''
+
+minfracmaxbw -- The minimum fraction of the maximum bandwidth in the set of
+    spws to use for matching.
+    default: 0.8
+    example: minfracmaxbw=0.75
+
+samebb -- Match within the same baseband if possible ?
+    default: True
+    example: samebb=False
+
+phasesnr -- The required gaincal solution signal to noise
+    default: 25.0
+    example: phaseupsnr = 20.0
+
+bwedgefrac -- The fraction of the bandwidth edges that is flagged
+    default: 0.03125
+    example: bwedgefrac = 0.0
+
+hm_nantennas -- The heuristics for determines the number of antennas to use
+    in the signal to noise estimate. The options are 'all' and 'unflagged'.
+    The 'unflagged' options is not currently supported.
+    default: 'all'
+    example: hm_nantennas='unflagged'
+
+maxfracflagged -- The maximum fraction of an antenna that can be flagged
+    before its is excluded from the signal to noise estimate.
+    default: 0.90
+    example: maxfracflagged=0.80
+
+
+combine -- Data axes to combine for solving. Options are  '','scan','spw',field'
+    or any comma-separated combination.
+    default: ''
+    example: combine=''
+
+minblperant -- Minimum number of baselines required per antenna for each solve
+    Antennas with fewer baaselines are excluded from solutions. 
+    default: 4
+    example: minblperant=2
+
+minsnr -- Solutions below this SNR are rejected. 
+    default: 3.0
+
+---- pipeline context defined parameter arguments which can be set only in
+'interactive mode'
+
+vis -- The list of input measurement sets. Defaults to the list of measurement
+    sets specified in the pipeline context
+    default: ''
+    example: ['M82A.ms', 'M82B.ms'] 
+
+caltable -- The list of output calibration tables. Defaults to the standard
+    pipeline naming convention.
+    default: ''
+    example: ['M82.gcal', 'M82B.gcal']
+
+field -- The list of field names or field ids for which gain solutions are
+    to be computed. Defaults to all fields with the standard intent.
+    default: '' 
+    example: '3C279', '3C279, M82'
+
+intent -- A string containing a comma delimited list of intents against
+    which the the selected fields are matched. Defaults to 'BANDPASS'
+    default: 'BANDPASS' 
+    example: intent='', intent='*PHASE*'
+
+spw -- The list of spectral windows and channels for which gain solutions are
+    computed. Defaults to all the science spectral windows.
+    default: '' 
+    example: '13,15'
+
+refant -- Reference antenna name(s) in priority order. Defaults to most recent
+    values set in the pipeline context.  If no reference antenna is defined in
+    the pipeline context the CASA defaults are used.
+    default: '' 
+    example: refant='DV01', refant='DV05,DV07'
+
+--- pipeline task execution modes
+dryrun -- Run the commands (True) or generate the commands to be run but
+   do not execute (False).
+   default: False
+
+acceptresults -- Add the results of the task to the pipeline context (True) or
+   reject them (False).
+   default: True
+
+Output:
+
+results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
+    the results object for the pipeline task is returned
+
+Description
+
+If hm_spwmapmode = 'simple', a mapping from narrow science to wide scinece
+spectral windows, is computed as follows:
+
+o construct a list of the bandwidths of all the science spectral windows
+o determine the maximum bandwidth in this list maxbandwidth
+o for each science spectral window  with bandwidth less than maxbandwidth
+    o construct a list of spectral windows with bandwidths greater than
+      minfracmaxbw * maxbandwidth
+    o select the spectral window in this list whose band center most closely
+      matches the band center of the narr spectral window
+    o prefentially match within the same baseband is samebb is True
+o otherwise
+    o map the science spectral window to itself
+
+If hm_spwmapmode = 'combine' the code assumes ttah all the science spws
+will be combined into a single spectral window with an id of 0.
+
+If hm_spwmapmode = 'no' the spw mapping is assumed to be one to one.
+
+If hm_spwmapmode = 'auto' the  per spw per scan gaincal solution
+signal to noise is estimated. If the signal to noise of any single
+window is less than the value of "phasesnr" then the task defaults
+to hm_spwmapmode = 'combine', if not it defaults to hm_spwmapmode =
+'simple'
+
+Phase offsets per spw are determined by computing a phase only gain
+calibration on the selected data, normally the high signal to noise
+bandpass calibration observations, using the solution interval 'inf'.
+
+Store the spectral window map and the phase offset calibration table
+in the pipeline context for use by later tasks.
+
+
+Examples
+
+1. Compute the simple narrow to wide spe map and the per spw phase offsets.
+
+hif_spwphaseup()
+
+</example> 
+
+</task>
+</casaxml>
