@@ -111,6 +111,15 @@ macro (configure_breakpad Breakpad_Root)
     
     if (APPLE)
 	    message ("Building on and Mac, not trying to copy the breakpad client")
+	    message ("Extracting full paths for Mac libraries")
+        execute_process (COMMAND perl fixbreakpadframeworkrefs.pl
+	    WORKING_DIRECTORY "../install"
+	    OUTPUT_VARIABLE error_message
+	    ERROR_VARIABLE error_message
+	    RESULT_VARIABLE status)
+        if (NOT ${status} EQUAL 0)
+	        message (SEND_ERROR "*** Failed to fix Breakpad Framework paths: ${command}: ${error_message}")
+        endif ()
     else ()
         execute_process (COMMAND cp ./breakpad-distro/src/client/${OS}/libbreakpad_client.a .
 	    WORKING_DIRECTORY "breakpad"
@@ -118,8 +127,8 @@ macro (configure_breakpad Breakpad_Root)
 	    ERROR_VARIABLE error_message
 	    RESULT_VARIABLE status)
         if (NOT ${status} EQUAL 0)
-	    message (SEND_ERROR "*** Failed to copy: ${command}: ${error_message}")
-    endif ()
+	       message (SEND_ERROR "*** Failed to copy: ${command}: ${error_message}")
+        endif ()
     endif ()
 
 endmacro (configure_breakpad)
