@@ -1462,14 +1462,15 @@ class plotms_test_transform(plotms_test_base):
         
     def test_transform_freqframe(self):
         '''test_transform_freqframe: Test frequency frames'''
-        frames = ['LSRK', 'LSRD', 'BARY', 'GEO', 'TOPO'] 
+        frames = ['LSRK', 'LSRD', 'BARY', 'GEO', 'TOPO',
+                  'GALACTO', 'LGROUP', 'CMB'] 
         for frame in frames:
             plotfile = self.outputDir + "testTransform01_" + frame + ".jpg"
             self.removePlotfile(plotfile)
             res = plotms(vis=self.ms, plotfile=plotfile, yaxis='freq', 
                          showgui=False, freqframe=frame, highres=True)
             self.assertTrue(res)
-            self.checkPlotfile(plotfile, 300000)
+            self.checkPlotfile(plotfile, 210000)
             self.removePlotfile(plotfile)
         print
 

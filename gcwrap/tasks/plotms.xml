@@ -426,7 +426,7 @@ MS Data Transformation Parameters
 
   <param type="bool" name="transform">
     <description>transform data in various ways?</description>
-    <value>False</value>
+    <value>True</value>
   </param>
 
     <param type="string" name="freqframe" subparam="true">
@@ -434,11 +434,14 @@ MS Data Transformation Parameters
       <value />
       <allowed kind="enum">
         <value />
-        <value>TOPO</value>
-        <value>GEO</value>
-        <value>BARY</value>
         <value>LSRK</value>
         <value>LSRD</value>
+        <value>BARY</value>
+        <value>GEO</value>
+        <value>TOPO</value>
+        <value>GALACTO</value>
+        <value>LGROUP</value>
+        <value>CMB</value>
       </allowed>
     </param>
 
@@ -1578,11 +1581,11 @@ Constraints
                   default: False  (i.e., do vector averaging)
     
     transform -- apply various transformations on data for plotting
-                 default: False.
+                 default: True
       &gt;&gt;&gt; transform expandable parameters
         freqframe -- the coordinate frame in which to render frequency and velocity axes
                  default: ''  (unspecified: will use frame in which data were taken)
-                 options: TOPO, GEO, BARY, LSRK, LSRD
+                 options: LSRK, LSRD, BARY, GEO, TOPO, GALACTO, LGROUP, CMB
         restfreq -- the rest frequency to use in velocity conversions (MHz)
                  default: '' (use spw central frequency and show relative velocity)
                  example: '22235.08MHz'
