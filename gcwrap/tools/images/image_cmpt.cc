@@ -3083,22 +3083,12 @@ image* image::moments(
         std::vector<Double> includepix;
         num = d_includepix.size();
         if (!(num == 1 && d_includepix[0] == -1)) {
-            // includepix.resize(num);
             includepix = d_includepix;;
-            /*
-            for (int i = 0; i < num; i++)
-                includepix[i] = d_includepix[i];
-            */
         }
         std::vector<Double> excludepix;
         num = d_excludepix.size();
         if (!(num == 1 && d_excludepix[0] == -1)) {
-            // excludepix.resize(num);
             excludepix = d_excludepix;
-            /*
-            for (int i = 0; i < num; i++)
-                excludepix[i] = d_excludepix[i];
-                */
         }
         ThrowIf(
             ! includepix.empty() && ! excludepix.empty(),
