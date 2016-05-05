@@ -317,9 +317,9 @@ Vector<Int> MomentsBase<T>::toMethodTypes (const String& methods)
 } 
 
 template<class T>
-CoordinateSystem MomentsBase<T>::coordinates()
+const CoordinateSystem& MomentsBase<T>::coordinates()
 {
-  return CoordinateSystem() ;
+  return _dummyCoords;
 }
 
 // protected member functions

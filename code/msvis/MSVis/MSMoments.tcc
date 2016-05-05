@@ -716,7 +716,7 @@ Bool MSMoments<T>::createMoments(PtrBlock< MeasurementSet* >& outPt,
 }
 
 template<class T>
-CoordinateSystem MSMoments<T>::coordinates()
+const CoordinateSystem& MSMoments<T>::coordinates()
 {
   if ( cSys_.nCoordinates() == 0 ) {
     CoordinateSystem cSys = CoordinateSystem() ;

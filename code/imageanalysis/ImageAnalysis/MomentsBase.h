@@ -307,7 +307,7 @@ enum MethodTypes {
    String errorMessage() const {return error_p;};
 
 // Get CoordinateSystem
-   virtual CoordinateSystem coordinates() ;
+   virtual const CoordinateSystem& coordinates() ;
 
 // Helper function to convert a string containing a list of desired methods to
 // the correct <src>Vector<Int></src> required for the <src>setWinFitMethod</src> function.
@@ -380,6 +380,10 @@ protected:
                                            const CoordinateSystem& cSysIn,
                                            const IPosition& inShape,
                                            Int momentAxis, Bool removeAxis);
+
+private:
+   const CoordinateSystem _dummyCoords;
+
 };
 
 

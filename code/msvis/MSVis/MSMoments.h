@@ -211,7 +211,7 @@ public:
                        const String& outFileName ) ;
 
    // Get CoordinateSystem
-   CoordinateSystem coordinates() ;
+   const CoordinateSystem& coordinates() ;
 
 
    // Get shape 

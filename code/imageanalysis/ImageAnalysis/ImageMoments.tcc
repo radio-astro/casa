@@ -92,20 +92,13 @@ template <class T>
 ImageMoments<T>::ImageMoments (
     const ImageInterface<T>& image, LogIO &os,
     Bool overWriteOutput, Bool showProgressU
-) : MomentsBase<T>( os, overWriteOutput, showProgressU ),
-    _image(), _progressMonitor(0)
-          {
-    if (setNewImage(image)) {
-        goodParameterStatus_p = True;
-    }
-    else {
-        goodParameterStatus_p = False;
-    }
+) : MomentsBase<T>(os, overWriteOutput, showProgressU) {
+    setNewImage(image);
 }
 
 template <class T>
 ImageMoments<T>::ImageMoments(const ImageMoments<T> &other)
-: MomentsBase<T>(other), _image(0), _progressMonitor(0) {
+: MomentsBase<T>(other), _image(), _progressMonitor(nullptr) {
     operator=(other);
 }
 
@@ -164,24 +157,14 @@ ImageMoments<T> &ImageMoments<T>::operator=(const ImageMoments<T> &other) {
 
 template <class T> 
 Bool ImageMoments<T>::setNewImage(const ImageInterface<T>& image) {
-    // Assign pointer to image
-    if (!goodParameterStatus_p) {
-        os_p << LogIO::SEVERE << "Internal class status is bad" << LogIO::POST;
-        return False;
-    }
-
-    T *dummy = 0;
+    T *dummy = nullptr;
     DataType imageType = whatType(dummy);
 
-    if (imageType !=TpFloat && imageType != TpDouble) {
-        ostringstream oss;
-        oss << "Moments can only be evaluated from images of type : "
-            << TpFloat << " and " << TpDouble << endl;
-        String tmp(oss);
-        os_p << LogIO::SEVERE << tmp << LogIO::POST;
-        goodParameterStatus_p = False;
-        return False;
-    }
+    ThrowIf(
+        imageType != TpFloat && imageType != TpDouble,
+        "Moments can only be evaluated for Float or Double valued "
+        "images"
+    );
     // Make a clone of the image
     _image.reset(image.cloneII());
     return True;
@@ -422,7 +405,7 @@ vector<SHARED_PTR<MaskedLattice<T> > > ImageMoments<T>::createMoments(
     ImageInterface<T>* pSmoothedImage = nullptr;
     String smoothName;
     if (doSmooth_p) {
-        if (! smoothImage(pSmoothedImageHolder, smoothName)) {
+        if (! _smoothImage(pSmoothedImageHolder, smoothName)) {
             throw AipsError(error_p);
         }
         pSmoothedImage = pSmoothedImageHolder.ptr();
@@ -513,13 +496,13 @@ vector<SHARED_PTR<MaskedLattice<T> > > ImageMoments<T>::createMoments(
     if (stdDeviation_p <= T(0) && ( (doWindow_p && doAuto_p) || (doFit_p && !doWindow_p && doAuto_p) ) ) {
         if (pSmoothedImage) {
             os_p << LogIO::NORMAL << "Evaluating noise level from smoothed image" << LogIO::POST;
-            if (!whatIsTheNoise (noise, *pSmoothedImage)) {
+            if (! _whatIsTheNoise (noise, *pSmoothedImage)) {
                 throw AipsError(error_p);
             }
         }
         else {
             os_p << LogIO::NORMAL << "Evaluating noise level from input image" << LogIO::POST;
-            if (!whatIsTheNoise (noise, *_image)) {
+            if (! _whatIsTheNoise (noise, *_image)) {
                 throw AipsError(error_p);
             }
         }
@@ -588,7 +571,7 @@ vector<SHARED_PTR<MaskedLattice<T> > > ImageMoments<T>::createMoments(
 }
 
 template <class T> 
-Bool ImageMoments<T>::smoothImage (
+Bool ImageMoments<T>::_smoothImage (
     PtrHolder<ImageInterface<T> >& pSmoothedImage,
     String& smoothName
 ) {
@@ -644,8 +627,8 @@ Bool ImageMoments<T>::smoothImage (
 }
 
 template <class T> 
-Bool ImageMoments<T>::whatIsTheNoise (
-    T& sigma, ImageInterface<T>& image
+Bool ImageMoments<T>::_whatIsTheNoise (
+    T& sigma, const ImageInterface<T>& image
 ) {
     // Determine the noise level in the image by first making a histogram of
     // the image, then fitting a Gaussian between the 25% levels to give sigma
@@ -671,26 +654,11 @@ Bool ImageMoments<T>::whatIsTheNoise (
     LatticeStatsBase::stretchMinMax(xMinF, xMaxF);
     IPosition yMinPos(1), yMaxPos(1);
     minMax (yMin, yMax, yMinPos, yMaxPos, counts);
-    //Float yMinF = 0.0;
     Float yMaxF = this->convertT(yMax);
     yMaxF += yMaxF/20;
-    /*
-    if (plotter_p.isAttached()) {
-        plotter_p.subp(1,1);
-        plotter_p.swin (xMinF, xMaxF, yMinF, yMaxF);
-    }
-    */
     auto first = True;
     auto more = True;
-    //T x1, x2;
     while (more) {
-        /*
-        // Plot histogram
-        if (plotter_p.isAttached()) {
-            plotter_p.page();
-            this->drawHistogram (values, counts, plotter_p);
-        }
-        */
         Int iMin = 0;
         Int iMax = 0;
         if (first) {
@@ -716,48 +684,7 @@ Bool ImageMoments<T>::whatIsTheNoise (
                 iMin = 0;
                 iMax = nBins-1;
             }
-            /*
-            // Draw on plot
-            if (plotter_p.isAttached()) {
-                x1 = values(iMin);
-                x2 = values(iMax);
-                this->drawVertical (x1, yMin, yMax, plotter_p);
-                this->drawVertical (x2, yMin, yMax, plotter_p);
-            }
-            */
         }
-        /*
-        else if (plotter_p.isAttached()) {
-            // We are redoing the fit so let the user mark where they think
-            // the window fit should be done
-            x1 = (xMin+xMax)/2;
-            T y1 = (yMin+yMax)/2;
-            Int i1, i2;
-            i1 = i2 = 0;
-            plotter_p.message("Mark the locations for the window");
-            while (i1==i2) {
-                while (!this->getLoc(x1, y1, plotter_p)) {};
-                i1 = Int((x1 - (values(0) - binWidth/2))/binWidth);
-                i1 = min(Int(nBins-1),max(0,i1));
-                this->drawVertical (values(i1), yMin, yMax, plotter_p);
-
-                T x2 = x1;
-                while (!this->getLoc(x2, y1, plotter_p)) {};
-                i2 = Int((x2 - (values(0) - binWidth/2))/binWidth);
-                i2 = min(Int(nBins-1),max(0,i2));
-                this->drawVertical (values(i2), yMin, yMax, plotter_p);
-
-                if (i1 == i2) {
-                    plotter_p.message("Degenerate window, try again");
-                    plotter_p.eras ();
-                    this->drawHistogram (values, counts, plotter_p);
-                }
-            }
-            // Set window
-            iMin = min(i1, i2);
-            iMax = max(i1, i2);
-        }
-        */
         // Now generate the distribution we want to fit.  Normalize to
         // peak 1 to help fitter.
         const uInt nPts2 = iMax - iMin + 1;
@@ -799,57 +726,13 @@ Bool ImageMoments<T>::whatIsTheNoise (
             os_p << LogIO::NORMAL
                     << "*** The fitted standard deviation of the noise is " << sigma
                     << endl << LogIO::POST;
-            /*
-            // Now plot the fit
-            if (plotter_p.isAttached()) {
-                Int nGPts = 100;
-                T dx = (values(nBins-1) - values(0))/nGPts;
-                Gaussian1D<T> gauss(solution(0), solution(1), abs(solution(2)));
-                Vector<T> xG(nGPts);
-                Vector<T> yG(nGPts);
-                T xx;
-                for (i=0,xx=values(0); i<nGPts; xx+=dx,i++) {
-                    xG(i) = xx;
-                    yG(i) = gauss(xx) * yMax;
-                }
-                plotter_p.sci (7);
-                this->drawLine (xG, yG, plotter_p);
-                plotter_p.sci (1);
-            }
-            */
         }
         else {
             os_p << LogIO::NORMAL << "The fit to determine the noise level failed." << endl;
             os_p << "Try inputting it directly" << endl;
-            /*
-            if (plotter_p.isAttached()) {
-                os_p << "or try a different window " << LogIO::POST;
-            }
-            */
         }
         // Another go
-        /*
-        if (plotter_p.isAttached()) {
-            plotter_p.message("Accept (click left), redo (click middle), give up (click right)");
-            Float xx = this->convertT(xMin+xMax)/2;
-            Float yy = this->convertT(yMin+yMax)/2;
-            String str;
-            this->readCursor(plotter_p, xx, yy, str);
-            str.upcase();
-            if (str == "D") {
-                plotter_p.message("Redoing fit");
-            }
-            else if (str == "X") {
-                return False;
-            }
-            else {
-                more = False;
-            }
-        }
-        else {
-        */
-            more = False;
-        //}
+        more = False;
     }
     return True;
 }

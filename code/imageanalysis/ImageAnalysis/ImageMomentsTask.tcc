@@ -53,7 +53,7 @@ template<class T> SPIIT ImageMomentsTask<T>::makeMoments() const {
         }
         // Create ImageMoments object
         ImageMoments<T> momentMaker(*x, *this->_getLog(), this->_getOverwrite(), True);
-        if ( _imageMomentsProgressMonitor != nullptr ){
+        if (_imageMomentsProgressMonitor) {
             momentMaker.setProgressMonitor( _imageMomentsProgressMonitor );
         }
         // Set which moments to output, NOTE we add one from what the UI
@@ -69,7 +69,7 @@ template<class T> SPIIT ImageMomentsTask<T>::makeMoments() const {
         if (x->imageInfo().hasMultipleBeams()) {
             const CoordinateSystem& csys = x->coordinates();
             if (csys.hasPolarizationCoordinate() && _axis == csys.polarizationAxisNumber()) {
-                *this->_getLog() << LogIO::WARN << "This image has multiple beams and you determining "
+                *this->_getLog() << LogIO::WARN << "This image has multiple beams and you are determining "
                     << " moments along the polarization axis. Interpret your results carefully"
                     << LogIO::POST;
             }
@@ -77,10 +77,10 @@ template<class T> SPIIT ImageMomentsTask<T>::makeMoments() const {
         // Set moment methods
         if (! _methods.empty() && ! _methods[0].empty()) {
             String tmp;
-            for (const auto m : _methods) {
+            for (const auto& m : _methods) {
                 tmp += m + " ";
             }
-            Vector<Int> intmethods = momentMaker.toMethodTypes(tmp);
+            auto intmethods = momentMaker.toMethodTypes(tmp);
             ThrowIf(
                 ! momentMaker.setWinFitMethod(intmethods),
                 momentMaker.errorMessage()
@@ -91,10 +91,12 @@ template<class T> SPIIT ImageMomentsTask<T>::makeMoments() const {
             _kernels.size() >= 1 && _kernels[0] != "" && _smoothAxes.size() >= 1
             && _kernelWidths.size() >= 1
         ) {
+            /*
             String tmp;
-            for (uInt i = 0; i < _kernels.size(); ++i) {
-                tmp += _kernels[i] + " ";
+            for (const auto& k: _kernels) {
+                tmp += k + " ";
             }
+            */
             auto intkernels = VectorKernel::toKernelTypes(Vector<String>(_kernels));
             ThrowIf(
                 ! momentMaker.setSmoothMethod(
@@ -104,7 +106,7 @@ template<class T> SPIIT ImageMomentsTask<T>::makeMoments() const {
             );
         }
         // Set pixel include/exclude range
-        if (_range.size() > 0) {
+        if (! _range.empty()) {
             auto includepix = _isIncludeRange ? Vector<T>(_range) : Vector<T>();
             auto excludepix = _isIncludeRange ? Vector<T>() : Vector<T>(_range);
             ThrowIf(
@@ -120,9 +122,9 @@ template<class T> SPIIT ImageMomentsTask<T>::makeMoments() const {
         // Set velocity type
         if (! _velocityType.empty()) {
             MDoppler::Types velType;
-            if (!MDoppler::getType(velType, _velocityType)) {
-                *this->_getLog() << LogIO::WARN << "Illegal velocity type, using RADIO"
-                    << LogIO::POST;
+            if (! MDoppler::getType(velType, _velocityType)) {
+                *this->_getLog() << LogIO::WARN << "Illegal velocity type "
+                    << _velocityType << ". Using RADIO" << LogIO::POST;
                 velType = MDoppler::RADIO;
             }
             momentMaker.setVelocityType(velType);
@@ -130,7 +132,7 @@ template<class T> SPIIT ImageMomentsTask<T>::makeMoments() const {
         // Set output names
         auto smoothout = this->_getOutname();
         ThrowIf(
-            smoothout != "" && ! momentMaker.setSmoothOutName(smoothout),
+            ! smoothout.empty() && ! momentMaker.setSmoothOutName(smoothout),
             momentMaker.errorMessage()
         );
         // If no file name given for one moment image, make TempImage.
@@ -138,32 +140,31 @@ template<class T> SPIIT ImageMomentsTask<T>::makeMoments() const {
         Bool doTemp = _momentName.empty() && _moments.size() == 1;
         // Create moments
         auto images = momentMaker.createMoments(doTemp, _momentName, _removeAxis);
-        // Return handle of first image
         for (auto& image: images) {
+            // copy history from input to all created images
             SPIIT x = dynamic_pointer_cast<ImageInterface<T>>(image);
             this->_doHistory(x);
         }
+        // Return handle of first image
         pIm = dynamic_pointer_cast<ImageInterface<T>>(images[0]);
-        //pIm.reset(
-            // dynamic_cast<ImageInterface<T>*> (images[0].release())
-        //);
     }
     catch (const AipsError& x) {
-        if (! tmpImageName.empty()) {
-            Directory dir(tmpImageName);
-            if (dir.exists()) {
-                dir.removeRecursive(False);
-            }
-        }
+        _deleteTempImage(tmpImageName);
         RETHROW(x);
     }
-    if (! tmpImageName.empty()) {
-        Directory dir(tmpImageName);
+    _deleteTempImage(tmpImageName);
+    return pIm;
+}
+
+template<class T> void ImageMomentsTask<T>::_deleteTempImage(
+    const String& tmpImage
+) const {
+    if (! tmpImage.empty()) {
+        Directory dir(tmpImage);
         if (dir.exists()) {
             dir.removeRecursive(False);
         }
     }
-    return pIm;
 }
 
 template<class T> void ImageMomentsTask<T>::setAxis(Int axis) {

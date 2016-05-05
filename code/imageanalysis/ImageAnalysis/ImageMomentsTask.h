@@ -125,6 +125,9 @@ private:
     Double _snr, _stddev;
     String _velocityType, _momentName;
     ImageMomentsProgressMonitor* _imageMomentsProgressMonitor;
+
+    void _deleteTempImage(const String& tmpImage) const;
+
 };
 }
 

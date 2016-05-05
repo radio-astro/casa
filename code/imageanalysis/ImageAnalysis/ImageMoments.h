@@ -29,18 +29,20 @@
 #define IMAGES_IMAGEMOMENTS_H
 
 #include <casa/aips.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <casa/iosfwd.h>
+#include <casa/Arrays/Vector.h>
+#include <casa/Logging/LogIO.h>
 #include <casa/Quanta/QMath.h>
 #include <casa/Quanta/Quantum.h>
+#include <coordinates/Coordinates/CoordinateSystem.h>
 #include <measures/Measures/MDoppler.h>
-#include <casa/Logging/LogIO.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/iosfwd.h>
+
+#include <imageanalysis/ImageTypedefs.h>
 #include <imageanalysis/ImageAnalysis/MomentsBase.h>
 
 #include <vector>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casa {
 
 //# Forward Declarations
 template <class T> class Matrix;
@@ -310,9 +312,7 @@ public:
    );
 
    // This is the function that does all the computational work.  It should be called
-   // after the <src>set</src> functions.  A return value of  <src>False</src>
-   // indicates that additional checking of the combined methods that you
-   // have requested has shown that you have not given consistent state to the class.
+   // after the <src>set</src> functions.
    // If the axis being collapsed comes from a coordinate with one axis only,
    // the axis and its coordinate are physically removed from the output image.  Otherwise,
    // if <src>removeAxes=True</src> then the output axis is logically removed from the
@@ -320,9 +320,8 @@ public:
    // is retained with shape=1 and with its original coordinate information (which
    // is probably meaningless).
    //
-   // The output PtrBlock will hold PagedImages or TempImages (doTemp=True).
-   // It is your responsibility to delete the pointers.
-   // If doTemp is True, the outFileName is irrelevant.
+   // The output vector will hold PagedImages or TempImages (doTemp=True).
+   // If doTemp is True, the outFileName is not used.
    //
    // If you create PagedImages, outFileName is the root name for
    // the output files.  Suffixes will be made up internally to append
@@ -340,23 +339,22 @@ public:
    Bool setNewImage (const ImageInterface<T>& image);
 
    // Get CoordinateSystem
-   CoordinateSystem coordinates() {return _image->coordinates();};
-
+   const CoordinateSystem& coordinates() {return _image->coordinates();};
 
    // Get shape
-   IPosition getShape() const { return _image->shape() ; } ;
+   IPosition getShape() const { return _image->shape(); }
 
    //Set an ImageMomentsProgressMonitor interested in getting updates on the
    //progress of the collapse process.
-   void setProgressMonitor( ImageMomentsProgressMonitor* progressMonitor );
+   void setProgressMonitor(ImageMomentsProgressMonitor* progressMonitor);
 
 private:
 
-   SHARED_PTR<ImageInterface<T> > _image;
-   ImageMomentsProgressMonitor* _progressMonitor;
+   SPCIIT _image = SPCIIT(nullptr);
+   ImageMomentsProgressMonitor* _progressMonitor = nullptr;
 
    // Smooth an image
-   Bool smoothImage (
+   Bool _smoothImage (
        PtrHolder<ImageInterface<T> >& pSmoothedImage,
        String& smoothName
    );
@@ -364,8 +362,7 @@ private:
    // Determine the noise by fitting a Gaussian to a histogram
    // of the entire image above the 25% levels.  If a plotting
    // device is set, the user can interact with this process.
-   Bool whatIsTheNoise (T& noise, ImageInterface<T>& image);
-
+   Bool _whatIsTheNoise (T& noise, const ImageInterface<T>& image);
 
 protected:
    using MomentsBase<T>::os_p;
@@ -393,7 +390,6 @@ protected:
    using MomentsBase<T>::moments_p;
    using MomentsBase<T>::selectRange_p;
    using MomentsBase<T>::smoothAxes_p;
-//   using MomentsBase<T>::plotter_p;
    using MomentsBase<T>::overWriteOutput_p;
    using MomentsBase<T>::error_p;
    using MomentsBase<T>::convertToVelocity_p;
@@ -405,5 +401,5 @@ protected:
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
 #include <imageanalysis/ImageAnalysis/ImageMoments.tcc>
-#endif //# CASACORE_NO_AUTO_TEMPLATES
+#endif
 #endif
