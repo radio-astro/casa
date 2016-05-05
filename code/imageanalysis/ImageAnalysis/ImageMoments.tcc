@@ -28,63 +28,12 @@
 
 #include <imageanalysis/ImageAnalysis/ImageMoments.h>
 
-#include <casa/aips.h>
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayPosIter.h>
-#include <casa/Containers/Block.h>
-#include <casa/Containers/Record.h>
-#include <casa/Containers/RecordFieldId.h>
-#include <casa/Exceptions/Error.h>
-#include <scimath/Functionals/Gaussian1D.h>
-#include <casa/Logging/LogIO.h>
-#include <tables/LogTables/TableLogSink.h>
-#include <casa/BasicSL/Constants.h>
-#include <casa/BasicMath/Math.h>
-#include <scimath/Mathematics/Convolver.h>
-#include <casa/Quanta/Unit.h>
-#include <casa/Quanta/UnitMap.h>
-#include <casa/Quanta/Quantum.h>
-#include <casa/Quanta/QMath.h>
-#include <casa/OS/Directory.h>
-#include <casa/OS/File.h>
-#include <casa/OS/Path.h>
-#include <tables/Tables/Table.h>
-#include <casa/Utilities/DataType.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Utilities/LinearSearch.h>
-#include <casa/Utilities/PtrHolder.h>
-
-#include <coordinates/Coordinates/CoordinateUtil.h>
-#include <coordinates/Coordinates/DirectionCoordinate.h>
-#include <coordinates/Coordinates/LinearCoordinate.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
-#include <scimath/Fitting/NonLinearFitLM.h>
-#include <images/Images/ImageInterface.h>
 #include <imageanalysis/ImageAnalysis/CasaImageBeamSet.h>
-#include <imageanalysis/ImageAnalysis/ImageMomentsProgress.h>
 #include <imageanalysis/ImageAnalysis/Image2DConvolver.h>
-#include <images/Images/ImageStatistics.h>
 #include <imageanalysis/ImageAnalysis/ImageHistograms.h>
+#include <imageanalysis/ImageAnalysis/ImageMomentsProgress.h>
 #include <imageanalysis/ImageAnalysis/MomentCalculator.h>
-#include <images/Images/PagedImage.h>
-#include <images/Images/TempImage.h>
-#include <images/Regions/RegionHandler.h>
-#include <images/Regions/ImageRegion.h>
-#include <images/Images/SubImage.h>
 #include <imageanalysis/ImageAnalysis/SepImageConvolver.h>
-#include <imageanalysis/ImageAnalysis/ImageMomentsProgressMonitor.h>
-#include <lattices/Lattices/ArrayLattice.h>
-#include <lattices/LatticeMath/LatticeApply.h>
-#include <lattices/Lattices/LatticeIterator.h>
-#include <lattices/LatticeMath/LatticeStatsBase.h>
-#include <lattices/LRegions/LCPagedMask.h>
-#include <lattices/Lattices/TiledLineStepper.h>
-#include <tables/LogTables/NewFile.h>
-
-#include <casa/sstream.h>
-#include <casa/iomanip.h>
 
 namespace casa {
 

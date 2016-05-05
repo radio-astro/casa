@@ -28,35 +28,14 @@
 #ifndef IMAGES_IMAGEMOMENTS_H
 #define IMAGES_IMAGEMOMENTS_H
 
-#include <casa/aips.h>
-#include <casa/iosfwd.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Logging/LogIO.h>
-#include <casa/Quanta/QMath.h>
-#include <casa/Quanta/Quantum.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
-#include <measures/Measures/MDoppler.h>
-
-#include <imageanalysis/ImageTypedefs.h>
 #include <imageanalysis/ImageAnalysis/MomentsBase.h>
 
-#include <vector>
+#include <imageanalysis/ImageTypedefs.h>
 
 namespace casa {
 
-//# Forward Declarations
-template <class T> class Matrix;
-template <class T> class MomentCalcBase;
-template <class T> class SubImage;
-template <class T> class ImageInterface;
-template <class T> class MaskedLattice;
-template <class T> class Lattice;
-template <class T> class PtrHolder;
-class IPosition;
-class String;
-class Unit;
 class ImageMomentsProgressMonitor;
-//template <class T> class MomentsBase;
+template <class T> class MaskedLattice;
 
 // <summary>
 // This class generates moments from an image.
