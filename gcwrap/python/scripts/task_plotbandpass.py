@@ -13,7 +13,7 @@
 #
 # To test:  see plotbandpass_regression.py
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.83 2016/04/21 15:38:35 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.84 2016/05/05 03:16:51 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -89,7 +89,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.83 2016/04/21 15:38:35 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.84 2016/05/05 03:16:51 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -6286,9 +6286,11 @@ def callFrequencyRangeForSpws(mymsmd, spwlist, vm, caltable=None):
             mytb = createCasaTool(tbtool)
             try:
                 mytb.open(caltable+'/SPECTRAL_WINDOW')
-                originalSpws = range(len(mytb.getcol('MEAS_FREQ_REF')))
                 chanfreq = []
-                for i in originalSpws:
+                if (len(spwlist) == 0): # CAS-8489b
+                    originalSpws = range(len(mytb.getcol('MEAS_FREQ_REF')))
+                    spwlist = originalSpws
+                for i in spwlist:  # CAS-8489b
                     # The array shapes can vary.
                     chanfreq.append(mytb.getcell('CHAN_FREQ',i))
                 for cf in chanfreq:
