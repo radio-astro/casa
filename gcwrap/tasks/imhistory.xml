@@ -72,9 +72,9 @@ as an array of strings. If verbose=True, this information is also written to the
 mode="append", a specified message (along with its specified origin) are appended to the logtable
 and True is returned if successful.
 
-# get history and list to logger, and store history
-# as an array of strings stored in variable x
-x = imhistory("my.im", mode="list", verbose=True)
+# get image history, print to log window, and store as an array of
+# strings in variable x
+x = imhistory("my.im", mode="list", verbose=True) 
 
 # append a message
 imhistory("my.im", origin="myorigin", message="ETI signal found in this image!")
