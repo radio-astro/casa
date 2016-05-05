@@ -2,6 +2,7 @@ use Cwd;
 use Cwd 'abs_path';
 @files = `find ../build/breakpad/breakpad-distro/src/client/mac/build/Release/ -type f`;
 #print @files;
+# Fix library references
 foreach $file ( @files ) {
       $type = `file $file`;
       if ($type =~ m|Mach|) {
@@ -13,7 +14,7 @@ foreach $file ( @files ) {
             print "Changing \@executable_path to \@loader_path for $file\n";
             $estring = "\@executable_path/../Frameworks/";
             $dir = abs_path(getcwd) ; #. "/build";
-            $lstring = "$dir/breakpad/breakpad-distro/src/client/mac/build/Release/";
+            $lstring = "$dir/../build/breakpad/breakpad-distro/src/client/mac/build/Release/";
             my ($oldref, $reftail) = split / /, $reference, 2;
             $newref = $oldref;
             $newref =~ s/$estring/$lstring/g;
@@ -25,7 +26,7 @@ foreach $file ( @files ) {
             print "Changing \@executable_path to \@loader_path for $file\n";
             $estring = "\@executable_path/../Resources/";
             $dir = abs_path(getcwd) ; #. "/build";
-            $lstring = "$dir/breakpad/breakpad-distro/src/client/mac/build/Release/";
+            $lstring = "$dir/../build/breakpad/breakpad-distro/src/client/mac/build/Release/";
             my ($oldref, $reftail) = split / /, $reference, 2;
             $newref = $oldref;
             $newref =~ s/$estring/$lstring/g;
@@ -37,6 +38,7 @@ foreach $file ( @files ) {
       }
 }
 
+# Fix id
 foreach $file ( @files ) {
     $type = `file $file`;
     if ($type =~ m|Mach|) {
@@ -47,7 +49,7 @@ foreach $file ( @files ) {
             print "Changing id for $file\n";
             $estring = "\@executable_path/../Frameworks/";
             $dir = abs_path(getcwd) ; #. "/build";
-            $lstring = "$dir/breakpad/breakpad-distro/src/client/mac/build/Release/";
+            $lstring = "$dir/../build/breakpad/breakpad-distro/src/client/mac/build/Release/";
             my ($oldref, $reftail) = split / /, $reference, 2;
             $newref = $oldref;
             $newref =~ s/$estring/$lstring/g;
