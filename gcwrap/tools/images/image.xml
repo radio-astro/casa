@@ -44,9 +44,11 @@ on using this returned tool, it is important to capture it and run done() on
 it or it will continue to use resources unnecessarily, eg
 
 <example>
+\begin{verbatim}
 new_image_tool = ia.collapse("my_collapsed.im")
 # do things with new_image_tool and then run done() on it
 new_image_tool.done()
+\end{verbatim}
 </example>
 \bigskip
 {\bf Overview of Image \tool\ functionality}
