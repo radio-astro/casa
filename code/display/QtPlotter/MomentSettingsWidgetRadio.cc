@@ -178,12 +178,7 @@ namespace casa {
 				else {
                     try {
 					    analysis->setInExCludeRange(includepix, excludepix);
-                    }
-                    catch(const AipsError& x) {
-						errorMsg = x.getMesg();
-						collapseError = true;
-					}
-						auto newImages = analysis->createMoments(
+   						auto newImages = analysis->createMoments(
 							   false, outFile, false );
 						int newImageCount = newImages.size();
 						for ( int i = 0; i < newImageCount; i++ ){
@@ -191,6 +186,11 @@ namespace casa {
 							CollapseResult result( outFile, outputFileTemporary, newImage );
 							collapseResults.push_back( result );
 						}
+                 }
+                    catch(const AipsError& x) {
+						errorMsg = x.getMesg();
+						collapseError = true;
+					}
 				}
 			}
 			//casa::utilj::ThreadTimes t2;
