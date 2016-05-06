@@ -359,7 +359,9 @@ utils::_trigger_segfault (int faultType)
     switch (faultType) {
 
     case 0:{
-	bool * p = 0;
+	bool * p;
+        long zero = 0;
+	p = (bool *) zero;
 	return * p;
 	break;
     }
