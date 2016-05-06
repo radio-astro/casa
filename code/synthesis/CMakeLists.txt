@@ -803,7 +803,6 @@ casa_add_assay( synthesis MeasurementComponents/test/tPBMath2D.cc )
 casa_add_assay( synthesis MeasurementComponents/test/tPBTable.cc )
 #casa_add_assay( synthesis MeasurementComponents/test/tTrVI2.cc )
 casa_add_assay( synthesis MeasurementComponents/test/tVPSkyJones.cc )
-casa_add_assay( synthesis MeasurementComponents/test/tVisVectorJonesMueller.cc )
 casa_add_demo ( synthesis MeasurementEquations/test/dCEMemModel.cc )
 casa_add_assay( synthesis MeasurementEquations/test/tCCList.cc )
 casa_add_assay( synthesis MeasurementEquations/test/tCEMemModel.cc )
@@ -837,6 +836,9 @@ casa_add_unit_test( MODULES synthesis SOURCES ImagerObjects/test/tSynthesisImage
 casa_add_unit_test( MODULES synthesis SOURCES ImagerObjects/test/tSynthesisImagerVi2.cc  TransformMachines2/test/MakeMS.cc )
 casa_add_unit_test( MODULES synthesis SOURCES Utilities/test/tFFT2D.cc  ) 
 casa_add_unit_test( MODULES synthesis SOURCES CalTables/test/tCTPatchedInterp.cc )
+
+casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tVisVectorJonesMueller_GT.cc )
+
 casa_add_google_test( MODULES mstransform SOURCES ../mstransform/MSTransform/test/tMSTransformIterator.cc  ../mstransform/TVI/test/TestUtilsTVI.cc)
 casa_add_google_test( MODULES mstransform SOURCES ../mstransform/TVI/test/tChannelAverageTVI.cc  ../mstransform/TVI/test/TestUtilsTVI.cc)
 casa_add_google_test( MODULES mstransform SOURCES ../mstransform/TVI/test/tHanningSmoothTVI.cc  ../mstransform/TVI/test/TestUtilsTVI.cc)

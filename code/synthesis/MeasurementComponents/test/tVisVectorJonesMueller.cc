@@ -47,6 +47,9 @@
 
 void testVisVector (Bool verbose=False) {
 
+  cout << endl << "testVisVector:" << endl;
+
+
   {
     Int nCorr(4), nChan(32), nRow(10);
 
@@ -109,6 +112,8 @@ void initVis(Cube<Complex>& v,Float I,Float Q,Float U,Float V) {
 }
 
 void testJonesApply (Bool verbose=False) {
+
+  cout << endl << "testJonesApply:" << endl;
 
   {
     Int nAnt(5);
@@ -236,6 +241,8 @@ void testJonesApply (Bool verbose=False) {
 
 void testGenLinJones (Bool /*verbose=False*/) {
 
+  cout << endl << "testGenLinJones:" << endl;
+
   {
 
     Vector<Complex> vis(4);
@@ -307,6 +314,8 @@ void testGenLinJones (Bool /*verbose=False*/) {
 
 void testGenJones (Bool /*verbose=False*/) {
 
+  cout << endl << "testGenJones:" << endl;
+
   {
 
     Vector<Complex> vis(4);
@@ -360,6 +369,8 @@ void testGenJones (Bool /*verbose=False*/) {
 
 void testGenJones2 (Bool /*verbose=False*/) {
 
+  cout << endl << "testGenJones2" << endl;
+
   {
 
     Vector<Complex> vis(4);
@@ -400,7 +411,6 @@ void testGenJones2 (Bool /*verbose=False*/) {
 
     cout << "VV corrupted = " << VV << endl;
 
-
     Complex a;
     a=d1(1);
     d1(1)-=a;
@@ -425,7 +435,10 @@ void testGenJones2 (Bool /*verbose=False*/) {
 
 void testDiagJones (Bool /*verbose=False*/) {
 
+  cout << endl << "testDiagJones:" << endl;
+
   {
+
 
     Vector<Complex> vis(4);
     vis(0)=vis(3)=Complex(1.);
@@ -460,7 +473,7 @@ void testDiagJones (Bool /*verbose=False*/) {
 
     cout << "VV corrupted = " << VV << endl;
 
-    ok2(1)=False;
+    //    ok2(1)=False;
 
     J1.invert();
     J2.invert();
@@ -478,6 +491,8 @@ void testDiagJones (Bool /*verbose=False*/) {
 #define floattype Float 
 
 void testMueller (Bool verbose=False) {
+
+  cout << endl << "testMueller:" << endl;
 
   {
 
@@ -883,14 +898,12 @@ int main ()
 {
   try {
 
-    //    /*
     testVisVector(JONES_VERBOSE);
     testJonesApply(JONES_VERBOSE);
     testGenJones(JONES_VERBOSE);
     testGenJones2(JONES_VERBOSE);
     testGenLinJones(JONES_VERBOSE);
     testDiagJones(JONES_VERBOSE);
-    //    */
     testMueller(JONES_VERBOSE);
 
 
