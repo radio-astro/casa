@@ -1552,13 +1552,14 @@ import tempfile
 try:
     temporaryDirectory = tempfile.gettempdir()
     posterApp = casa['helpers']['crashPoster']
+    if posterApp is None: posterApp = "" # handle case where it wasn't found
     postingUrl = "http:/127.0.0.1:8080/CasaCrashUpload"
     message = casac.utils()._crash_reporter_initialize(temporaryDirectory, posterApp, postingUrl)
     if len (message) > 0:
         print ("***\n*** Crash reporter failed to initialize: " + message)
 except Exception as e:
     print "***\n*** Crash reporter initialization failed.\n***"
-    print "*** esception={0}\n***".format (e)
+    print "*** exception={0}\n***".format (e)
 
 ipshell.mainloop( )
 if(os.uname()[0] == 'Darwin') and type(casa) == "<type 'dict'>" and casa['flags'].has_key('--maclogger') :
