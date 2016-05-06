@@ -373,7 +373,7 @@ protected:
    using MomentsBase<T>::error_p;
    using MomentsBase<T>::convertToVelocity_p;
    using MomentsBase<T>::velocityType_p;
-   using MomentsBase<T>::checkMethod;
+   using MomentsBase<T>::_checkMethod;
 };
 
 }

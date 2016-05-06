@@ -42,9 +42,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
 template <class T> class MomentsBase;
-template <class T> class ImageMoments;
-template <class T> class MSMoments;
-
 // <summary>
 // Abstract base class for moment calculator classes
 // </summary>

@@ -319,9 +319,7 @@ vector<SHARED_PTR<MaskedLattice<T> > > ImageMoments<T>::createMoments(
         << cSys.worldAxisNames()(worldMomentAxis_p) << LogIO::POST;
     // If the moment axis is a spectral axis, indicate we want to convert to velocity
     // Check the user's requests are allowed
-    if (!checkMethod()) {
-        throw AipsError(error_p);
-    }
+    _checkMethod();
     // Check that input and output image names aren't the same.
     // if there is only one output image
     if (moments_p.nelements() == 1 && !doTemp) {
@@ -361,7 +359,7 @@ vector<SHARED_PTR<MaskedLattice<T> > > ImageMoments<T>::createMoments(
     }
     // Set output images shape and coordinates.
     IPosition outImageShape;
-    const auto cSysOut = this->makeOutputCoordinates(
+    const auto cSysOut = this->_makeOutputCoordinates(
         outImageShape, cSys, _image->shape(),
         momentAxis_p, removeAxis
     );
@@ -377,7 +375,7 @@ vector<SHARED_PTR<MaskedLattice<T> > > ImageMoments<T>::createMoments(
         // Set moment image units and assign pointer to output moments array
         // Value of goodUnits is the same for each output moment image
         Unit momentUnits;
-        goodUnits = this->setOutThings(
+        goodUnits = this->_setOutThings(
             suffix, momentUnits, imageUnits, momentAxisUnits,
             moments_p(i), convertToVelocity_p
         );
@@ -598,12 +596,12 @@ Bool ImageMoments<T>::_whatIsTheNoise (
     T xMin, xMax, yMin, yMax;
     xMin = values(0) - binWidth;
     xMax = values(nBins-1) + binWidth;
-    Float xMinF = this->convertT(xMin);
-    Float xMaxF = this->convertT(xMax);
+    Float xMinF = this->_convertT(xMin);
+    Float xMaxF = this->_convertT(xMax);
     LatticeStatsBase::stretchMinMax(xMinF, xMaxF);
     IPosition yMinPos(1), yMaxPos(1);
     minMax (yMin, yMax, yMinPos, yMaxPos, counts);
-    Float yMaxF = this->convertT(yMax);
+    Float yMaxF = this->_convertT(yMax);
     yMaxF += yMaxF/20;
     auto first = True;
     auto more = True;

@@ -109,10 +109,7 @@ template<class T> SPIIT ImageMomentsTask<T>::makeMoments() const {
         if (! _range.empty()) {
             auto includepix = _isIncludeRange ? Vector<T>(_range) : Vector<T>();
             auto excludepix = _isIncludeRange ? Vector<T>() : Vector<T>(_range);
-            ThrowIf(
-                ! momentMaker.setInExCludeRange(includepix, excludepix),
-                momentMaker.errorMessage()
-            );
+            momentMaker.setInExCludeRange(includepix, excludepix);
         }
         // Set SNR cutoff
         ThrowIf(
