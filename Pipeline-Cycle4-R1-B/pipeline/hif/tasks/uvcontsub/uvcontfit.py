@@ -316,7 +316,7 @@ class UVcontFit(basetask.StandardTaskTemplate):
                     LOG.info('Input frequency ranges for MS %s and spw %d are %s' % (inputs.ms.basename, int(spw_id), cranges_spwsel[sname][spw_id]))
                 try:
                     freq_ranges, chan_ranges = contfile_handler.lsrk_to_topo(cranges_spwsel[sname][spw_id],
-                        [inputs.vis], [rep_field], int(spw_id))
+                        [inputs.vis], [rep_field_id], int(spw_id))
                     LOG.info('Output frequency range for MS %s and spw %d are %s' % (inputs.ms.basename, int(spw_id),
                         freq_ranges[0]))
                     LOG.info('Output channel ranges for MS %s and spw %d are %s' % (inputs.ms.basename, int(spw_id),
