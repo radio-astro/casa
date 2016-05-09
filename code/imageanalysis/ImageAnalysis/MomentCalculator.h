@@ -528,17 +528,15 @@ protected:
 // <todo asof="yyyy/mm/dd">
 // </todo>
 
-
-
-template <class T> class MomentClip : public MomentCalcBase<T>
-{
+template <class T> class MomentClip : public MomentCalcBase<T> {
 public:
 
 // Constructor.  The pointer is to an ancilliary  lattice used as a mask.
 // If no masking lattice is desired, the pointer value must be zero.  We also 
 // need the ImageMoments or MSMoments object which is calling us, its
 // logger, and the number of output lattices it has created.
-   MomentClip(Lattice<T>* pAncilliaryLattice,
+   MomentClip(
+           shared_ptr<Lattice<T>> pAncilliaryLattice,
               MomentsBase<T>& iMom,
               LogIO& os,
               const uInt nLatticeOut);
@@ -567,7 +565,7 @@ public:
 
 private:
 
-   Lattice<T>* pAncilliaryLattice_p; 
+   shared_ptr<Lattice<T>> _ancilliaryLattice;
    MomentsBase<T>& iMom_p;
    LogIO os_p;
 
@@ -712,7 +710,7 @@ public:
 // lattice (created by ImageMoments or MSMoments).   We also need the 
 // ImageMoments or MSMoments object which is calling us, its logger,
 // and the number of output lattices it has created.
-   MomentWindow(Lattice<T>* pAncilliaryLattice,
+   MomentWindow(shared_ptr<Lattice<T>> pAncilliaryLattice,
                 MomentsBase<T>& iMom,
                 LogIO& os,
                 const uInt nLatticeOut);
@@ -739,7 +737,7 @@ public:
                              
 private:
 
-   Lattice<T>* pAncilliaryLattice_p; 
+   shared_ptr<Lattice<T>> _ancilliaryLattice;
    MomentsBase<T>& iMom_p;
    LogIO os_p;
 

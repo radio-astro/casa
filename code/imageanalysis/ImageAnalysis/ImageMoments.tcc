@@ -348,14 +348,10 @@ vector<SHARED_PTR<MaskedLattice<T> > > ImageMoments<T>::createMoments(
     // or possibly the interactive window method.  Note that the convolution
     // routines can only handle convolution when the image fits fully in core
     // at present.
-    PtrHolder<ImageInterface<T> > pSmoothedImageHolder;
-    ImageInterface<T>* pSmoothedImage = nullptr;
+    SPIIT smoothedImage;
     String smoothName;
     if (doSmooth_p) {
-        if (! _smoothImage(pSmoothedImageHolder, smoothName)) {
-            throw AipsError(error_p);
-        }
-        pSmoothedImage = pSmoothedImageHolder.ptr();
+        smoothedImage = _smoothImage(smoothName);
     }
     // Set output images shape and coordinates.
     IPosition outImageShape;
@@ -433,7 +429,6 @@ vector<SHARED_PTR<MaskedLattice<T> > > ImageMoments<T>::createMoments(
                 giveMessage = False;
             }
         }
-        // outPt[i] = move(imgp);
         outPt[i] = imgp;
     }
     // If the user is using the automatic, non-fitting window method, they need
@@ -441,9 +436,9 @@ vector<SHARED_PTR<MaskedLattice<T> > > ImageMoments<T>::createMoments(
     // they don't, we work it out here.
     T noise;
     if (stdDeviation_p <= T(0) && ( (doWindow_p && doAuto_p) || (doFit_p && !doWindow_p && doAuto_p) ) ) {
-        if (pSmoothedImage) {
+        if (smoothedImage) {
             os_p << LogIO::NORMAL << "Evaluating noise level from smoothed image" << LogIO::POST;
-            _whatIsTheNoise(noise, *pSmoothedImage);
+            _whatIsTheNoise(noise, *smoothedImage);
         }
         else {
             os_p << LogIO::NORMAL << "Evaluating noise level from input image" << LogIO::POST;
@@ -457,13 +452,13 @@ vector<SHARED_PTR<MaskedLattice<T> > > ImageMoments<T>::createMoments(
     PtrHolder<MomentCalcBase<T> > pMomentCalculatorHolder;
     if (clipMethod || smoothClipMethod) {
         pMomentCalculatorHolder.set(
-            new MomentClip<T>(pSmoothedImage, *this, os_p, outPt.size()),
+            new MomentClip<T>(smoothedImage, *this, os_p, outPt.size()),
             False, False
         );
     }
     else if (windowMethod) {
         pMomentCalculatorHolder.set(
-            new MomentWindow<T>(pSmoothedImage, *this, os_p, outPt.size()),
+            new MomentWindow<T>(smoothedImage, *this, os_p, outPt.size()),
             False, False
         );
     }
@@ -496,9 +491,8 @@ vector<SHARED_PTR<MaskedLattice<T> > > ImageMoments<T>::createMoments(
             os_p << LogIO::NORMAL << "There were " <<  pMomentCalculator->nFailedFits() << " failed fits" << LogIO::POST;
         }
     }
-    if (pSmoothedImage) {
+    if (smoothedImage) {
         // Remove the smoothed image file if they don't want to save it
-        pSmoothedImageHolder.clear(True);
         if (smoothOut_p.empty()) {
             Directory dir(smoothName);
             dir.removeRecursive();
@@ -510,9 +504,7 @@ vector<SHARED_PTR<MaskedLattice<T> > > ImageMoments<T>::createMoments(
     return outPt;
 }
 
-template <class T> 
-Bool ImageMoments<T>::_smoothImage (
-    PtrHolder<ImageInterface<T> >& pSmoothedImage,
+template <class T> SPIIT ImageMoments<T>::_smoothImage (
     String& smoothName
 ) {
     // Smooth image.   Input masked pixels are zerod before smoothing.
@@ -524,10 +516,10 @@ Bool ImageMoments<T>::_smoothImage (
     //   Bool           True for success
     // Check axes
     Int axMax = max(smoothAxes_p) + 1;
-    if (axMax > Int(_image->ndim())) {
-        error_p = "You have specified an illegal smoothing axis";
-        return False;
-    }
+    ThrowIf(
+        axMax > Int(_image->ndim()),
+        "You have specified an illegal smoothing axis"
+    );
     // Create smoothed image as a PagedImage.  We delete it later
     // if the user doesn't want to save it
     if (smoothOut_p.empty()) {
@@ -542,14 +534,13 @@ Bool ImageMoments<T>::_smoothImage (
         // to not exist
         smoothName = smoothOut_p;
     }
-    pSmoothedImage.set(
+    SPIIT smoothedImage(
         new PagedImage<T>(
             _image->shape(),
             _image->coordinates(), smoothName
-        ), False, False
+        )
     );
-    ImageInterface<T>* pSmIm = pSmoothedImage.ptr();
-    pSmIm->setMiscInfo(_image->miscInfo());
+    smoothedImage->setMiscInfo(_image->miscInfo());
     if (!smoothOut_p.empty()) {
         os_p << LogIO::NORMAL << "Created " << smoothName << LogIO::POST;
     }
@@ -562,8 +553,8 @@ Bool ImageMoments<T>::_smoothImage (
         sic.setKernel(uInt(smoothAxes_p(i)), type, kernelWidths_p(i),
                 autoScale, useImageShapeExactly, 1.0);
     }
-    sic.convolve(*pSmIm);
-    return True;
+    sic.convolve(*smoothedImage);
+    return smoothedImage;
 }
 
 template <class T> 

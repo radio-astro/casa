@@ -1147,11 +1147,11 @@ void MomentCalcBase<T>::setCalcMoments
 // Derived class MomentClip
 
 template <class T>
-MomentClip<T>::MomentClip(Lattice<T>* pAncilliaryLattice,
+MomentClip<T>::MomentClip(shared_ptr<Lattice<T>> pAncilliaryLattice,
                           MomentsBase<T>& iMom,
                           LogIO& os,
                           const uInt nLatticeOut)
-: pAncilliaryLattice_p(pAncilliaryLattice),
+: _ancilliaryLattice(pAncilliaryLattice),
   iMom_p(iMom),
   os_p(os)
 {
@@ -1169,10 +1169,10 @@ MomentClip<T>::MomentClip(Lattice<T>* pAncilliaryLattice,
 
 // Set up slice shape for extraction from masking lattice
 
-   if (pAncilliaryLattice_p != 0) {
-      sliceShape_p.resize(pAncilliaryLattice_p->ndim());
+   if (_ancilliaryLattice) {
+      sliceShape_p.resize(_ancilliaryLattice->ndim());
       sliceShape_p = 1;
-      sliceShape_p(momAxis) = pAncilliaryLattice_p->shape()(momAxis);
+      sliceShape_p(momAxis) = _ancilliaryLattice->shape()(momAxis);
    }
 
 // Make all plots with same y range ?
@@ -1249,11 +1249,11 @@ void MomentClip<T>::multiProcess(Vector<T>& moments,
 
    const T* pProfileSelect = 0;      
    Bool deleteIt;
-   if (pAncilliaryLattice_p && (doInclude_p || doExclude_p)) {
+   if (_ancilliaryLattice && (doInclude_p || doExclude_p)) {
       Array<T> ancilliarySlice;
-      IPosition stride(pAncilliaryLattice_p->ndim(),1);
+      IPosition stride(_ancilliaryLattice->ndim(),1);
 
-      pAncilliaryLattice_p->getSlice(ancilliarySlice, inPos,
+      _ancilliaryLattice->getSlice(ancilliarySlice, inPos,
                                sliceShape_p, stride, True);
       ancilliarySliceRef_p.reference(ancilliarySlice);
  
@@ -1264,61 +1264,6 @@ void MomentClip<T>::multiProcess(Vector<T>& moments,
       pProfileSelect = profileIn.getStorage(deleteIt);
    }
 
-
-// Plot spectrum if asked
-/*
-   if (plotter_p.isAttached()) {
-      this->makeAbcissa(abcissa_p, pProfileSelect_p->nelements());
-      String xLabel;
-      if (momAxisType_p.empty()) {
-         xLabel = "x (pixels)";
-      } else {
-         xLabel = momAxisType_p + " (pixels)";
-      }
-      const String yLabel("Intensity");
-      String title;
-      setPosLabel (title, inPos);
-
-      if (!this->drawSpectrum (abcissa_p, *pProfileSelect_p, profileInMask, 
-                         fixedYLimits_p, yMinAuto_p, yMaxAuto_p, xLabel, 
-                         yLabel, title, True, plotter_p)) {
-
-// If all points were masked, it's over for this profile.
-
-         moments = 0.0;
-         momentsMask = False;
-
-         if (pAncilliaryLattice_p && (doInclude_p || doExclude_p)) {
-            ancilliarySliceRef_p.freeStorage(pProfileSelect, deleteIt);
-         } else {
-            profileIn.freeStorage(pProfileSelect, deleteIt);
-         }
-         return;
-      }
-
-
-// Draw on clip levels and arrows
-
-      if (doInclude_p || doExclude_p) {
-         plotter_p.sci (5);
-         this->drawHorizontal(range_p(0), plotter_p);
-         this->drawHorizontal(range_p(1), plotter_p);
-      
-
-         Float y1F = this->convertT(range_p(0));
-         Float y2F = this->convertT(range_p(1));
-
-         Vector<Float> minMax(4);
-         minMax = plotter_p.qwin();
-         Float xF = minMax(0) + 0.05*(minMax(1)-minMax(0));
-         Float yF = y2F - 0.2*y1F;
-         plotter_p.arro (xF, y2F, xF, yF);
-         yF = y1F + 0.2*y2F;
-         plotter_p.arro (xF, yF, xF, y1F);
-         plotter_p.sci(1);
-      } 
-   }
-*/
 
 // Resize array for median.  Is resized correctly later
  
@@ -1481,7 +1426,7 @@ void MomentClip<T>::multiProcess(Vector<T>& moments,
 
 // Delete pointer memory
 
-   if (pAncilliaryLattice_p  && (doInclude_p || doExclude_p)) {
+   if (_ancilliaryLattice  && (doInclude_p || doExclude_p)) {
       ancilliarySliceRef_p.freeStorage(pProfileSelect, deleteIt);
    } else {
       profileIn.freeStorage(pProfileSelect, deleteIt);
@@ -1585,11 +1530,11 @@ void MomentClip<T>::multiProcess(Vector<T>& moments,
 // Derived class MomentWindow
 
 template <class T>
-MomentWindow<T>::MomentWindow(Lattice<T>* pAncilliaryLattice,
+MomentWindow<T>::MomentWindow(shared_ptr<Lattice<T>> pAncilliaryLattice,
                               MomentsBase<T>& iMom,
                               LogIO& os,
                               const uInt nLatticeOut)
-: pAncilliaryLattice_p(pAncilliaryLattice),
+: _ancilliaryLattice(pAncilliaryLattice),
   iMom_p(iMom),
   os_p(os)
 {
@@ -1607,10 +1552,10 @@ MomentWindow<T>::MomentWindow(Lattice<T>* pAncilliaryLattice,
 
 // Set up slice shape for extraction from masking lattice
 
-   if (pAncilliaryLattice_p != 0) {
-      sliceShape_p.resize(pAncilliaryLattice_p->ndim());
+   if (_ancilliaryLattice != 0) {
+      sliceShape_p.resize(_ancilliaryLattice->ndim());
       sliceShape_p = 1;
-      sliceShape_p(momAxis) = pAncilliaryLattice_p->shape()(momAxis);
+      sliceShape_p(momAxis) = _ancilliaryLattice->shape()(momAxis);
    }
 
 // Make all plots with same y range ?
@@ -1693,10 +1638,10 @@ void MomentWindow<T>::multiProcess(Vector<T>& moments,
 
    const T* pProfileSelect = 0;      
    Bool deleteIt;
-   if (pAncilliaryLattice_p != 0) {
+   if (_ancilliaryLattice) {
       Array<T> ancilliarySlice;
-      IPosition stride(pAncilliaryLattice_p->ndim(),1);
-      pAncilliaryLattice_p->getSlice(ancilliarySlice, inPos,
+      IPosition stride(_ancilliaryLattice->ndim(),1);
+      _ancilliaryLattice->getSlice(ancilliarySlice, inPos,
                                sliceShape_p, stride, True);
       ancilliarySliceRef_p.reference(ancilliarySlice);
 
@@ -1741,37 +1686,6 @@ void MomentWindow<T>::multiProcess(Vector<T>& moments,
       } else {
          nPts = 0;
       }
-   } else {
-/*
-// Define the window interactively, unless the user has told us when
-// doing the previous spectrum that they wish to apply that window
-// to all subsequent ones
-    
-
-      if (!doFit_p && !allSubsequent) {
-         // plotter_p.message(" ");
-         // plotter_p.message("Mark extremum (left), redo (middle), reject (right), all subsequent (S)");
-      }
-
-      if (!allSubsequent) {
-         if (getInterWindow (nFailed_p, allSubsequent, os_p, window, doFit_p, abcissa_p, 
-                             *pProfileSelect_p, profileInMask, fixedYLimits_p, 
-                             yMinAuto_p, yMaxAuto_p, xLabel, yLabel, title, 
-                             plotter_p)) {
-            nPts = window(1) - window(0) + 1;
-         } else {
-            nPts = 0;
-         }
-      } else if (nPts != 0) {
-         if (this->drawSpectrum (abcissa_p, *pProfileSelect_p, profileInMask,
-                           fixedYLimits_p, yMinAuto_p, yMaxAuto_p, xLabel, 
-                           yLabel, title, True, plotter_p)) {
-            drawWindow (window, plotter_p);
-            nPts = window(1) - window(0) + 1;
-         } else {
-            nPts = 0;
-         }
-      } */
    }
 
 
@@ -1781,7 +1695,7 @@ void MomentWindow<T>::multiProcess(Vector<T>& moments,
       moments = 0.0;
       momentsMask = False;
 
-      if (pAncilliaryLattice_p) {
+      if (_ancilliaryLattice) {
          ancilliarySliceRef_p.freeStorage(pProfileSelect, deleteIt);
       } else {
          profileIn.freeStorage(pProfileSelect, deleteIt);
@@ -1861,7 +1775,7 @@ void MomentWindow<T>::multiProcess(Vector<T>& moments,
 
 // Delete memory associated with pointers
 
-   if (pAncilliaryLattice_p) {
+   if (_ancilliaryLattice) {
       ancilliarySliceRef_p.freeStorage(pProfileSelect, deleteIt);
    } else {
       profileIn.freeStorage(pProfileSelect, deleteIt);
