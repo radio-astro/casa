@@ -942,33 +942,45 @@ def merge_td_columns(rows, num_to_merge=None, vertical_align=False):
     return zip(*new_cols)
 
 
+def get_cube_freq_axis(img):
+
+    '''Get image cube frequency axis.'''
+
+    iaTool = casatools.image
+
+    # Get frequency axis
+    iaTool.open(img)
+    imInfo = iaTool.summary()
+    iaTool.close()
+
+    fIndex = imInfo['axisnames'].tolist().index('Frequency')
+    refFreq = imInfo['refval'][fIndex]
+    deltaFreq = imInfo['incr'][fIndex]
+    freqUnit = imInfo['axisunits'][fIndex]
+    refPix = imInfo['refpix'][fIndex]
+    numPix = imInfo['shape'][fIndex]
+
+    return refFreq, deltaFreq, freqUnit, refPix, numPix
+
+
 def selection_to_frequencies(img, selection, unit='GHz'):
 
     '''Convert channel selection to frequency tuples.'''
 
     frequencies = []
     if (selection != ''):
-        iaTool = casatools.image
         qaTool = casatools.quanta
 
-        iaTool.open(img)
 
         # Get frequency axis
-        imInfo = iaTool.summary()
         try:
-            fIndex = imInfo['axisnames'].tolist().index('Frequency')
+            refFreq, deltaFreq, freqUnit, refPix, numPix = get_cube_freq_axis(img)
         except:
             LOG.error('No frequency axis found in %s.' % (img))
-            iaTool.close()
             return ['NONE']
 
-        refFreq = imInfo['refval'][fIndex]
-        deltaFreq = imInfo['incr'][fIndex]
-        freqUnit = imInfo['axisunits'][fIndex]
-        refPix = imInfo['refpix'][fIndex]
-
         for crange in selection.split(';'):
-            c0, c1 = map(int, crange.split('~'))
+            c0, c1 = map(float, crange.split('~'))
             f0 = qaTool.convert({'value': refFreq + (c0 - refPix) * deltaFreq, 'unit': freqUnit}, unit)
             f1 = qaTool.convert({'value': refFreq + (c1 - refPix) * deltaFreq, 'unit': freqUnit}, unit)
             if (qaTool.lt(f0, f1)):
@@ -977,7 +989,6 @@ def selection_to_frequencies(img, selection, unit='GHz'):
             else:
                 #print '%.9f~%.9f%s' % (f1['value'], f0['value'], unit)
                 frequencies.append((f1['value'], f0['value']))
-        iaTool.close()
     else:
         frequencies = ['NONE']
         #print 'None'
