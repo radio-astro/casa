@@ -581,12 +581,12 @@ void ImageMoments<T>::_whatIsTheNoise (
     T xMin, xMax, yMin, yMax;
     xMin = values(0) - binWidth;
     xMax = values(nBins-1) + binWidth;
-    Float xMinF = this->_convertT(xMin);
-    Float xMaxF = this->_convertT(xMax);
+    Float xMinF = Float(real(xMin));
+    Float xMaxF = Float(real(xMax));
     LatticeStatsBase::stretchMinMax(xMinF, xMaxF);
     IPosition yMinPos(1), yMaxPos(1);
     minMax (yMin, yMax, yMinPos, yMaxPos, counts);
-    Float yMaxF = this->_convertT(yMax);
+    Float yMaxF = Float(real(yMax));
     yMaxF += yMaxF/20;
     auto first = True;
     auto more = True;

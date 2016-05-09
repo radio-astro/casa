@@ -527,7 +527,7 @@ Bool MomentCalcBase<T>::getInterGaussianFit (uInt& nFailed,
 }
 
 
-
+/*
 template <class T>
 void MomentCalcBase<T>::getInterGaussianGuess(T& peakGuess,
                                               T& posGuess,
@@ -649,7 +649,7 @@ void MomentCalcBase<T>::getInterGaussianGuess(T& peakGuess,
    window(0) = max(0,window(0));
    window(1) = min(nPts-1,window(1));
 }
-   
+   */
 template <class T>
 void MomentCalcBase<T>::lineSegments (uInt& nSeg,
                                       Vector<uInt>& start, 
@@ -694,17 +694,6 @@ void MomentCalcBase<T>::lineSegments (uInt& nSeg,
    start.resize(nSeg,True);
    nPts.resize(nSeg,True);
 }
-
-/*
-template <class T>      
-void MomentCalcBase<T>::makeAbcissa (Vector<T>& x,
-                                     Int n) const
-{
-   x.resize(n);
-   for (Int i=0; i<n; i++) x(i) = i;
-}
-
-*/
 
 template <class T>
 Int& MomentCalcBase<T>::momentAxis(MomentsBase<T>& iMom) const

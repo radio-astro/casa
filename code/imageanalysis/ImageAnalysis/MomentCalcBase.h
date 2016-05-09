@@ -248,6 +248,7 @@ protected:
         uInt nLatticeOut
     ) const;
 
+
     // Convert from <tt>T</tt> to <tt>Float</tt> for plotting
     inline Float convertT(T value) {
         return MomentsBase<T>::convertT(value);
@@ -257,6 +258,7 @@ protected:
     inline T convertF(const Float value) {
         return MomentsBase<T>::convertF(value);
     }
+
 
     // Find out from the selectMoments array whether we want
     // to compute the more expensive moments
@@ -329,6 +331,7 @@ protected:
         const String& yLabel, const String& title
     ) const;
 
+    /*
     // Interactively define a guess for the Gaussian parameters
     void getInterGaussianGuess(
         T& peakGuess, T& posGuess,
@@ -336,6 +339,7 @@ protected:
         Bool& reject, LogIO& os,
         Int nPts
     ) const;
+    */
 
     // Compute the world coordinate for the given moment axis pixel
     inline Double getMomentCoord(
@@ -375,9 +379,6 @@ protected:
         uInt& nSeg, Vector<uInt>& start,
         Vector<uInt>& nPts, const Vector<Bool>& mask
     ) const;
-
-    // Determine abscissa vector
-    //void makeAbcissa(Vector<T>& x, Int n) const;
 
     // Return the moment axis from the ImageMoments object
     Int& momentAxis(MomentsBase<T>& iMom) const;
