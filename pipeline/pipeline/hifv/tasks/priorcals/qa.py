@@ -7,14 +7,15 @@ import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.qa.scorecalculator as qacalc
 
-from . import hanning
+from . import priorcals
+from . import resultobjects
 
 LOG = logging.get_logger(__name__)
 
-class HanningQAHandler(pqa.QAResultHandler):
-    result_cls = hanning.HanningResults
+class PriorcalsQAHandler(pqa.QAResultHandler):
+    result_cls = resultobjects.PriorcalsResults
     child_cls = None
-    generating_task = hanning.Hanning
+    generating_task = priorcals.Priorcals
 
     def handle(self, context, result):
 
@@ -28,15 +29,15 @@ class HanningQAHandler(pqa.QAResultHandler):
         '''
         Check for the existence of the target MS
         '''
-        return qacalc.score_path_exists(output_dir, ms, 'Hanning smoothed ms')
+        return qacalc.score_path_exists(output_dir, ms, 'Priorcals QA Score calculated')
 
-class HanningListQAHandler(pqa.QAResultHandler):
+class PriorcalsListQAHandler(pqa.QAResultHandler):
     """
-    QA handler for a list containing HanningResults.
+    QA handler for a list containing PriorcalsResults.
     """
     result_cls = list
-    child_cls = hanning.HanningResults
-    generating_task = hanning.Hanning
+    child_cls = resultobjects.PriorcalsResults
+    generating_task = priorcals.Priorcals
 
     def handle(self, context, result):
         # collate the QAScores from each child result, pulling them into our
