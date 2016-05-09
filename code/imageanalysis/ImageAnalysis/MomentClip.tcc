@@ -30,381 +30,355 @@
 
 namespace casa {
 
-template <class T>
-MomentClip<T>::MomentClip(shared_ptr<Lattice<T>> pAncilliaryLattice,
-                          MomentsBase<T>& iMom,
-                          LogIO& os,
-                          const uInt nLatticeOut)
-: _ancilliaryLattice(pAncilliaryLattice),
-  iMom_p(iMom),
-  os_p(os)
-{
-// Set moment selection vector
+template <class T> MomentClip<T>::MomentClip(
+    shared_ptr<Lattice<T>> pAncilliaryLattice, MomentsBase<T>& iMom,
+    LogIO& os, const uInt nLatticeOut
+) : _ancilliaryLattice(pAncilliaryLattice), iMom_p(iMom), os_p(os) {
+    selectMoments_p = this->selectMoments(iMom_p);
+    constructorCheck(calcMoments_p, calcMomentsMask_p, selectMoments_p, nLatticeOut);
+    Int momAxis = this->momentAxis(iMom_p);
+    if (_ancilliaryLattice) {
+        sliceShape_p.resize(_ancilliaryLattice->ndim());
+        sliceShape_p = 1;
+        sliceShape_p(momAxis) = _ancilliaryLattice->shape()(momAxis);
+    }
+    fixedYLimits_p = this->fixedYLimits(iMom_p);
+    this->yAutoMinMax(yMinAuto_p, yMaxAuto_p, iMom_p);
 
-   selectMoments_p = this->selectMoments(iMom_p);
+    this->selectRange(range_p, doInclude_p, doExclude_p, iMom_p);
 
-// Set/check some dimensionality
+    this->costlyMoments(iMom_p, doMedianI_p, doMedianV_p, doAbsDev_p);
 
-   constructorCheck(calcMoments_p, calcMomentsMask_p, selectMoments_p, nLatticeOut);
+    // Are we computing coordinate-dependent moments.  If so
+    // precompute coordinate vector if moment axis separable
 
-// Fish out moment axis
+    this->setCoordinateSystem (cSys_p, iMom_p);
+    this->doCoordCalc(doCoordProfile_p, doCoordRandom_p, iMom_p);
+    this->setUpCoords(
+        iMom_p, pixelIn_p, worldOut_p, sepWorldCoord_p, os_p,
+        integratedScaleFactor_p, cSys_p, doCoordProfile_p,
+        doCoordRandom_p
+    );
 
-   Int momAxis = this->momentAxis(iMom_p);
+    // What is the axis type of the moment axis
 
-// Set up slice shape for extraction from masking lattice
+    momAxisType_p = this->momentAxisName(cSys_p, iMom_p);
 
-   if (_ancilliaryLattice) {
-      sliceShape_p.resize(_ancilliaryLattice->ndim());
-      sliceShape_p = 1;
-      sliceShape_p(momAxis) = _ancilliaryLattice->shape()(momAxis);
-   }
-
-// Make all plots with same y range ?
-
-   fixedYLimits_p = this->fixedYLimits(iMom_p);
-   this->yAutoMinMax(yMinAuto_p, yMaxAuto_p, iMom_p);
-
-// Fish out pixel selection range
-
-   this->selectRange(range_p, doInclude_p, doExclude_p, iMom_p);
-
-// Are we computing the expensive moments ?
-
-   this->costlyMoments(iMom_p, doMedianI_p, doMedianV_p, doAbsDev_p);
-
-// Are we plotting ?
-
-   //plotter_p = this->device(iMom_p);
-
-// Are we computing coordinate-dependent moments.  If so
-// precompute coordinate vector if moment axis separable
-
-   this->setCoordinateSystem (cSys_p, iMom_p);
-   this->doCoordCalc(doCoordProfile_p, doCoordRandom_p, iMom_p);
-   this->setUpCoords(iMom_p, pixelIn_p, worldOut_p, sepWorldCoord_p, os_p,
-               integratedScaleFactor_p, cSys_p, doCoordProfile_p, 
-               doCoordRandom_p);
-
-// What is the axis type of the moment axis
-
-   momAxisType_p = this->momentAxisName(cSys_p, iMom_p);
-
-
-// Number of failed Gaussian fits 
-   nFailed_p = 0;
+    // Number of failed Gaussian fits
+    nFailed_p = 0;
 }
 
+template <class T> MomentClip<T>::~MomentClip() {}
 
-template <class T>
-MomentClip<T>::~MomentClip()
-{;}
-
-template <class T>
-void MomentClip<T>::process(T&,
-                            Bool&,
-                            const Vector<T>&,
-                            const Vector<Bool>&,
-                            const IPosition&)
-{
-   throw(AipsError("MomentClip<T>::process(Vector<T>&, IPosition&): not implemented"));
+template <class T> void MomentClip<T>::process(
+    T&, Bool&, const Vector<T>&, const Vector<Bool>&,
+    const IPosition&
+) {
+    ThrowCc("MomentClip<T>::process(Vector<T>&, IPosition&): not implemented");
 }
 
+template <class T> void MomentClip<T>::multiProcess(
+    Vector<T>& moments, Vector<Bool>& momentsMask,
+    const Vector<T>& profileIn, const Vector<Bool>& profileInMask,
+    const IPosition& inPos
+) {
+    // The profile comes with its own mask (or a null mask
+    // which means all good).  In addition, we create
+    // a further mask by applying the clip range to either
+    // the primary lattice, or the ancilliary lattice (e.g.
+    // the smoothed lattice)
 
-template <class T> 
-void MomentClip<T>::multiProcess(Vector<T>& moments,
-                                 Vector<Bool>& momentsMask,
-                                 const Vector<T>& profileIn,
-                                 const Vector<Bool>& profileInMask,
-                                 const IPosition& inPos)
-//
-// The profile comes with its own mask (or a null mask
-// which means all good).  In addition, we create
-// a further mask by applying the clip range to either
-// the primary lattice, or the ancilliary lattice (e.g. 
-// the smoothed lattice)
-//
-{
+    // Fish out the ancilliary image slice if needed.  Stupid slice functions
+    // require me to create the slice empty every time so degenerate
+    // axes can be chucked out.  We set up a pointer to the primary or
+    // ancilliary vector object  that we can use for fast access
 
-// Fish out the ancilliary image slice if needed.  Stupid slice functions 
-// require me to create the slice empty every time so degenerate
-// axes can be chucked out.  We set up a pointer to the primary or 
-// ancilliary vector object  that we can use for fast access 
+    const T* pProfileSelect = nullptr;
+    auto deleteIt = False;
+    if (_ancilliaryLattice && (doInclude_p || doExclude_p)) {
+        Array<T> ancilliarySlice;
+        IPosition stride(_ancilliaryLattice->ndim(),1);
+        _ancilliaryLattice->getSlice(
+            ancilliarySlice, inPos, sliceShape_p, stride, True
+        );
+        ancilliarySliceRef_p.reference(ancilliarySlice);
+        pProfileSelect_p = &ancilliarySliceRef_p;
+        pProfileSelect = ancilliarySliceRef_p.getStorage(deleteIt);
+    }
+    else {
+        pProfileSelect_p = &profileIn;
+        pProfileSelect = profileIn.getStorage(deleteIt);
+    }
+    // Resize array for median.  Is resized correctly later
+    auto nPts = profileIn.size();
+    selectedData_p.resize(nPts);
+    selectedDataIndex_p.resize(nPts);
 
+    // Were the profile coordinates precomputed ?
 
-   const T* pProfileSelect = 0;      
-   Bool deleteIt;
-   if (_ancilliaryLattice && (doInclude_p || doExclude_p)) {
-      Array<T> ancilliarySlice;
-      IPosition stride(_ancilliaryLattice->ndim(),1);
+    auto preComp = sepWorldCoord_p.nelements() > 0;
 
-      _ancilliaryLattice->getSlice(ancilliarySlice, inPos,
-                               sliceShape_p, stride, True);
-      ancilliarySliceRef_p.reference(ancilliarySlice);
- 
-      pProfileSelect_p = &ancilliarySliceRef_p;
-      pProfileSelect = ancilliarySliceRef_p.getStorage(deleteIt);
-   } else {
-      pProfileSelect_p = &profileIn;
-      pProfileSelect = profileIn.getStorage(deleteIt);
-   }
+    // We must fill in the input pixel coordinate if we need
+    // coordinates, but did not pre compute them
+    if (! preComp && (doCoordRandom_p || doCoordProfile_p)) {
+        for (uInt i=0; i<inPos.size(); ++i) {
+            pixelIn_p[i] = Double(inPos[i]);
+        }
+    }
 
+    // Compute moments.  The actual moment computation always done with
+    // the original data, regardless of whether the pixel selection is
+    // done with the primary or ancilliary data.
 
-// Resize array for median.  Is resized correctly later
- 
-   Int nPts = profileIn.nelements();
-   selectedData_p.resize(nPts);
-   selectedDataIndex_p.resize(nPts);
-
-
-// Were the profile coordinates precomputed ?
-      
-   Bool preComp = (sepWorldCoord_p.nelements() > 0);
-
-// 
-// We must fill in the input pixel coordinate if we need
-// coordinates, but did not pre compute them
-//
-   if (!preComp) {
-      if (doCoordRandom_p || doCoordProfile_p) {
-         for (uInt i=0; i<inPos.nelements(); i++) {
-            pixelIn_p(i) = Double(inPos(i));
-         }
-      }
-   }
-
-// Compute moments.  The actual moment computation always done with 
-// the original data, regardless of whether the pixel selection is 
-// done with the primary or ancilliary data.
-
-   typename NumericTraits<T>::PrecisionType s0  = 0.0;
-   typename NumericTraits<T>::PrecisionType s0Sq = 0.0;
-   typename NumericTraits<T>::PrecisionType s1  = 0.0;
-   typename NumericTraits<T>::PrecisionType s2  = 0.0;
-   Int iMin = -1;
-   Int iMax = -1;
-   T dMin =  1.0e30;
-   T dMax = -1.0e30;
-   Double coord = 0.0;
-   Int i, j;
-//
-   if (profileInMask.nelements() == 0) {
-
-// No mask included.
-
-      if (doInclude_p) {
-         for (i=0,j=0; i<nPts; i++) {
-            if (pProfileSelect[i] >= range_p(0) && 
-                pProfileSelect[i] <= range_p(1)) {
-
-               if (preComp) {
-                  coord = sepWorldCoord_p(i);              
-               } else if (doCoordProfile_p) {
-                  coord = this->getMomentCoord(iMom_p, pixelIn_p,
-                                         worldOut_p, Double(i));
-               }
-               this->accumSums(s0, s0Sq, s1, s2, iMin, iMax,     
-                         dMin, dMax, i, profileIn(i), coord);
-               selectedData_p(j) = profileIn(i);
-               selectedDataIndex_p(j) = i;
-               j++;
+    typename NumericTraits<T>::PrecisionType s0  = 0.0;
+    typename NumericTraits<T>::PrecisionType s0Sq = 0.0;
+    typename NumericTraits<T>::PrecisionType s1  = 0.0;
+    typename NumericTraits<T>::PrecisionType s2  = 0.0;
+    Int iMin = -1;
+    Int iMax = -1;
+    T dMin =  1.0e30;
+    T dMax = -1.0e30;
+    Double coord = 0.0;
+    uInt i, j;
+    if (profileInMask.empty()) {
+        // No mask included.
+        if (doInclude_p) {
+            for (i=0,j=0; i<nPts; ++i) {
+                if (
+                    pProfileSelect[i] >= range_p[0]
+                    && pProfileSelect[i] <= range_p[1]
+                ) {
+                    if (preComp) {
+                        coord = sepWorldCoord_p(i);
+                    }
+                    else if (doCoordProfile_p) {
+                        coord = this->getMomentCoord(
+                            iMom_p, pixelIn_p,
+                            worldOut_p, Double(i)
+                        );
+                    }
+                    this->accumSums(
+                        s0, s0Sq, s1, s2, iMin, iMax,
+                        dMin, dMax, i, profileIn(i), coord
+                    );
+                    selectedData_p[j] = profileIn[i];
+                    selectedDataIndex_p[j] = i;
+                    ++j;
+                }
             }
-         }
-         nPts = j;
-      } else if (doExclude_p) {
-         for (i=0,j=0; i<nPts; i++) {
-            if (pProfileSelect[i] <= range_p(0) || 
-                pProfileSelect[i] >= range_p(1)) {
-               if (preComp) {
-                  coord = sepWorldCoord_p(i); 
-               } else if (doCoordProfile_p) {
-                  coord = this->getMomentCoord(iMom_p, pixelIn_p,
-                                         worldOut_p, Double(i));
-               }
-               this->accumSums(s0, s0Sq, s1, s2, iMin, iMax,
-                         dMin, dMax, i, profileIn(i), coord);
-               selectedData_p(j) = profileIn(i);
-               selectedDataIndex_p(j) = i;
-               j++;
+            nPts = j;
+        }
+        else if (doExclude_p) {
+            for (i=0,j=0; i<nPts; ++i) {
+                if (
+                    pProfileSelect[i] <= range_p[0]
+                    || pProfileSelect[i] >= range_p[1]
+                ) {
+                    if (preComp) {
+                        coord = sepWorldCoord_p[i];
+                    }
+                    else if (doCoordProfile_p) {
+                        coord = this->getMomentCoord(
+                            iMom_p, pixelIn_p,
+                            worldOut_p, Double(i)
+                        );
+                    }
+                    this->accumSums(
+                        s0, s0Sq, s1, s2, iMin, iMax,
+                        dMin, dMax, i, profileIn[i], coord
+                    );
+                    selectedData_p[j] = profileIn[i];
+                    selectedDataIndex_p[j] = i;
+                    ++j;
+                }
             }
-         }
-         nPts = j;
-      } else {    
-         for (i=0; i<nPts; i++) {
-            if (preComp) {
-               coord = sepWorldCoord_p(i);
-            } else if (doCoordProfile_p) {
-               coord = this->getMomentCoord(iMom_p, pixelIn_p,
-                                      worldOut_p, Double(i));
+            nPts = j;
+        }
+        else {
+            for (i=0; i<nPts; ++i) {
+                if (preComp) {
+                    coord = sepWorldCoord_p[i];
+                }
+                else if (doCoordProfile_p) {
+                    coord = this->getMomentCoord(
+                        iMom_p, pixelIn_p,
+                        worldOut_p, Double(i)
+                    );
+                }
+                this->accumSums(
+                    s0, s0Sq, s1, s2, iMin, iMax,
+                    dMin, dMax, i, profileIn[i], coord
+                );
+                selectedData_p[i] = profileIn[i];
+                selectedDataIndex_p[i] = i;
             }
-            this->accumSums(s0, s0Sq, s1, s2, iMin, iMax,
-                      dMin, dMax, i, profileIn(i), coord);
-            selectedData_p(i) = profileIn(i);
-            selectedDataIndex_p(i) = i;
-         }
-      }
-   } else {
+        }
+    }
+    else {
+        // Set up a pointer for faster access to the profile mask
+        auto deleteIt2 = False;
+        const auto* pProfileInMask = profileInMask.getStorage(deleteIt2);
 
-// Set up a pointer for faster access to the profile mask
-
-      Bool deleteIt2;
-      const Bool* pProfileInMask = profileInMask.getStorage(deleteIt2);
-
-      if (doInclude_p) {
-         for (i=0,j=0; i<nPts; i++) {
-            if (pProfileInMask[i] &&
-                pProfileSelect[i] >= range_p(0) && 
-                pProfileSelect[i] <= range_p(1)) {
-
-               if (preComp) {
-                  coord = sepWorldCoord_p(i);              
-               } else if (doCoordProfile_p) {
-                  coord = this->getMomentCoord(iMom_p, pixelIn_p,
-                                         worldOut_p, Double(i));
-               }
-               this->accumSums(s0, s0Sq, s1, s2, iMin, iMax,     
-                         dMin, dMax, i, profileIn(i), coord);
-               selectedData_p(j) = profileIn(i);
-               selectedDataIndex_p(j) = i;
-               j++;
+        if (doInclude_p) {
+            for (i=0, j=0; i<nPts; ++i) {
+                if (
+                    pProfileInMask[i]
+                    && pProfileSelect[i] >= range_p(0)
+                    && pProfileSelect[i] <= range_p(1)
+                ) {
+                    if (preComp) {
+                        coord = sepWorldCoord_p[i];
+                    }
+                    else if (doCoordProfile_p) {
+                        coord = this->getMomentCoord(
+                            iMom_p, pixelIn_p, worldOut_p, Double(i)
+                        );
+                    }
+                    this->accumSums(
+                        s0, s0Sq, s1, s2, iMin, iMax,
+                        dMin, dMax, i, profileIn(i), coord
+                    );
+                    selectedData_p[j] = profileIn[i];
+                    selectedDataIndex_p[j] = i;
+                    ++j;
+                }
             }
-         }
-      } else if (doExclude_p) {
-         for (i=0,j=0; i<nPts; i++) {
-            if (pProfileInMask[i] &&
-               (pProfileSelect[i] <= range_p(0) || 
-                pProfileSelect[i] >= range_p(1))) {
-               if (preComp) {
-                  coord = sepWorldCoord_p(i); 
-               } else if (doCoordProfile_p) {
-                  coord = this->getMomentCoord(iMom_p, pixelIn_p,
-                                         worldOut_p, Double(i));
-               }
-               this->accumSums(s0, s0Sq, s1, s2, iMin, iMax,
-                         dMin, dMax, i, profileIn(i), coord);
-               selectedData_p(j) = profileIn(i);
-               selectedDataIndex_p(j) = i;
-               j++;
+        }
+        else if (doExclude_p) {
+            for (i=0, j=0; i<nPts; ++i) {
+                if (
+                    pProfileInMask[i]
+                    && (
+                        pProfileSelect[i] <= range_p[0]
+                        || pProfileSelect[i] >= range_p[1]
+                    )
+                ) {
+                    if (preComp) {
+                        coord = sepWorldCoord_p(i);
+                    }
+                    else if (doCoordProfile_p) {
+                        coord = this->getMomentCoord(
+                            iMom_p, pixelIn_p,
+                            worldOut_p, Double(i)
+                        );
+                    }
+                    this->accumSums(
+                        s0, s0Sq, s1, s2, iMin, iMax,
+                        dMin, dMax, i, profileIn[i], coord
+                    );
+                    selectedData_p[j] = profileIn[i];
+                    selectedDataIndex_p[j] = i;
+                    ++j;
+                }
             }
-         }
-      } else {    
-         for (i=0,j=0; i<nPts; i++) {
-            if (pProfileInMask[i]) {
-               if (preComp) {
-                  coord = sepWorldCoord_p(i);
-               } else if (doCoordProfile_p) {
-                  coord = this->getMomentCoord(iMom_p, pixelIn_p,
-                                         worldOut_p, Double(i));
-               }
-               this->accumSums(s0, s0Sq, s1, s2, iMin, iMax,
-                         dMin, dMax, i, profileIn(i), coord);
-               selectedData_p(j) = profileIn(i);
-               selectedDataIndex_p(j) = i;
-               j++;
+        } else {
+            for (i=0,j=0; i<nPts; ++i) {
+                if (pProfileInMask[i]) {
+                    if (preComp) {
+                        coord = sepWorldCoord_p[i];
+                    }
+                    else if (doCoordProfile_p) {
+                        coord = this->getMomentCoord(
+                            iMom_p, pixelIn_p,
+                            worldOut_p, Double(i)
+                        );
+                    }
+                    this->accumSums(
+                        s0, s0Sq, s1, s2, iMin, iMax,
+                        dMin, dMax, i, profileIn[i], coord
+                    );
+                    selectedData_p[j] = profileIn[i];
+                    selectedDataIndex_p[j] = i;
+                    ++j;
+                }
             }
-         }
-      }
-      nPts = j;
-      profileInMask.freeStorage(pProfileInMask, deleteIt2);
-   }
-
-
-// Delete pointer memory
-
-   if (_ancilliaryLattice  && (doInclude_p || doExclude_p)) {
-      ancilliarySliceRef_p.freeStorage(pProfileSelect, deleteIt);
-   } else {
-      profileIn.freeStorage(pProfileSelect, deleteIt);
-   }
-
-   
-// If no points make moments zero and mask
-               
-   if (nPts==0) {
-      moments = 0.0;
-      momentsMask = False;
-      return;
-   }        
-   
-         
-// Absolute deviations of I from mean needs an extra pass.
-         
-   typename NumericTraits<T>::PrecisionType sumAbsDev = 0;
-   if (doAbsDev_p) {
-      T iMean = s0 / nPts;
-      for (i=0; i<nPts; i++) sumAbsDev += abs(selectedData_p(i) - iMean);
-   }
- 
-// Median of I
-         
-   T dMedian = 0.0;
-   if (doMedianI_p) {
-      selectedData_p.resize(nPts,True);
-      dMedian = median(selectedData_p);
-   }
-       
- 
-// Median coordinate.  ImageMoments will only be allowing this if
-// we are not offering the ancilliary lattice, and with an include 
-// or exclude range.   Pretty dodgy   
-         
-   T vMedian = 0.0;
-   if (doMedianV_p) {
-      if (doInclude_p || doExclude_p) {
-            
-// Treat spectrum as a probability distribution for velocity
-// and generate cumulative probability (it's already sorted
-// of course).
- 
-         selectedData_p.resize(nPts,True);
-         selectedData_p(0) = abs(selectedData_p(0));
-         T dataMax = selectedData_p(0);
-         for (i=1; i<nPts; i++) {
-            selectedData_p(i) += abs(selectedData_p(i-1));
-            dataMax = max(dataMax,selectedData_p(i));
-         }
-// Find 1/2 way value (well, the first one that occurs)
- 
-         T halfMax = dataMax/2.0;
-         Int iVal = 0;
-         for (i=0; i<nPts; i++) {
-            if (selectedData_p(i) >= halfMax) {
-               iVal = i;
-               break;
+        }
+        nPts = j;
+        profileInMask.freeStorage(pProfileInMask, deleteIt2);
+    }
+    // Delete pointer memory
+    if (_ancilliaryLattice && (doInclude_p || doExclude_p)) {
+        ancilliarySliceRef_p.freeStorage(pProfileSelect, deleteIt);
+    }
+    else {
+        profileIn.freeStorage(pProfileSelect, deleteIt);
+    }
+    // If no points make moments zero and mask
+    if (nPts == 0) {
+        moments = 0.0;
+        momentsMask = False;
+        return;
+    }
+    // Absolute deviations of I from mean needs an extra pass.
+    typename NumericTraits<T>::PrecisionType sumAbsDev = 0;
+    if (doAbsDev_p) {
+        T iMean = s0 / nPts;
+        for (i=0; i<nPts; ++i) {
+            sumAbsDev += abs(selectedData_p(i) - iMean);
+        }
+    }
+    // Median of I
+    T dMedian = 0.0;
+    if (doMedianI_p) {
+        selectedData_p.resize(nPts,True);
+        dMedian = median(selectedData_p);
+    }
+    // Median coordinate.  ImageMoments will only be allowing this if
+    // we are not offering the ancilliary lattice, and with an include
+    // or exclude range.   Pretty dodgy
+    T vMedian(0.0);
+    if (doMedianV_p) {
+        if (doInclude_p || doExclude_p) {
+            // Treat spectrum as a probability distribution for velocity
+            // and generate cumulative probability (it's already sorted
+            // of course).
+            selectedData_p.resize(nPts,True);
+            selectedData_p(0) = abs(selectedData_p[0]);
+            auto dataMax = selectedData_p[0];
+            for (i=1; i<nPts; ++i) {
+                selectedData_p[i] += abs(selectedData_p[i-1]);
+                dataMax = max(dataMax, selectedData_p[i]);
             }
-         }
- 
-// Linearly interpolate to velocity index
-                                
-         Double interpPixel;
-         if (iVal > 0) {
-            Double m = (selectedData_p(iVal) - selectedData_p(iVal-1)) /
-                      (selectedDataIndex_p(iVal) - selectedDataIndex_p(iVal-1));
-            Double b = selectedData_p(iVal) - m*selectedDataIndex_p(iVal);
-            interpPixel = (selectedData_p(iVal) -b) / m;
-         } else {
-            interpPixel = selectedDataIndex_p(iVal);   
-         }
- 
-// Find world coordinate of that pixel on the moment axis
-         vMedian = this->getMomentCoord(iMom_p, pixelIn_p,
-                                  worldOut_p, interpPixel, iMom_p.shouldConvertToVelocity());
-      }   
-   }
- 
-// Fill all moments array
-   
-   this->setCalcMoments(iMom_p, calcMoments_p, calcMomentsMask_p, pixelIn_p, worldOut_p, 
-                  doCoordRandom_p, integratedScaleFactor_p,
-                  dMedian, vMedian, nPts, s0, s1, s2, s0Sq, 
-                  sumAbsDev, dMin, dMax, iMin, iMax);
+            // Find 1/2 way value (well, the first one that occurs)
 
-// Fill vector of selected moments 
-
-
-   for (i=0; i<Int(selectMoments_p.nelements()); i++) {
-      moments(i) = calcMoments_p(selectMoments_p(i));
-      momentsMask(i) = calcMomentsMask_p(selectMoments_p(i));
-   }
+            auto halfMax = dataMax/2.0;
+            Int iVal = 0;
+            for (i=0; i<nPts; ++i) {
+                if (selectedData_p[i] >= halfMax) {
+                    iVal = i;
+                    break;
+                }
+            }
+            // Linearly interpolate to velocity index
+            Double interpPixel;
+            if (iVal > 0) {
+                Double m = (selectedData_p[iVal] - selectedData_p[iVal-1])
+                    / (selectedDataIndex_p[iVal] - selectedDataIndex_p[iVal-1]);
+                Double b = selectedData_p[iVal] - m*selectedDataIndex_p[iVal];
+                interpPixel = (selectedData_p[iVal] - b)/m;
+            }
+            else {
+                interpPixel = selectedDataIndex_p[iVal];
+            }
+            // Find world coordinate of that pixel on the moment axis
+            vMedian = this->getMomentCoord(
+                iMom_p, pixelIn_p, worldOut_p, interpPixel,
+                iMom_p.shouldConvertToVelocity()
+            );
+        }
+    }
+    // Fill all moments array
+    this->setCalcMoments(
+        iMom_p, calcMoments_p, calcMomentsMask_p, pixelIn_p, worldOut_p,
+        doCoordRandom_p, integratedScaleFactor_p,
+        dMedian, vMedian, nPts, s0, s1, s2, s0Sq,
+        sumAbsDev, dMin, dMax, iMin, iMax
+    );
+    // Fill vector of selected moments
+    for (i=0; i<selectMoments_p.size(); ++i) {
+        moments[i] = calcMoments_p(selectMoments_p[i]);
+        momentsMask[i] = calcMomentsMask_p(selectMoments_p[i]);
+    }
 }
 
 }

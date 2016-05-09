@@ -28,15 +28,12 @@
 #ifndef IMAGEANALYSIS_MOMENTCLIP_H
 #define IMAGEANALYSIS_MOMENTCLIP_H
 
-#include <casa/aips.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
-#include <casa/Quanta/Quantum.h>
-#include <measures/Measures/MDoppler.h>
-#include <casa/Logging/LogIO.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/iosfwd.h>
+#include <casacore/casa/Arrays/Vector.h>
+
+#include <imageanalysis/ImageAnalysis/MomentClip.h>
 
 namespace casa {
+
 // <summary> Computes simple clipped, and masked moments</summary>
 // <use visibility=export>
 //
@@ -123,80 +120,78 @@ namespace casa {
 // <todo asof="yyyy/mm/dd">
 // </todo>
 
-template <class T> class MomentClip : public MomentCalcBase<T>
-{
+template <class T> class MomentClip: public MomentCalcBase<T> {
 public:
 
-// Constructor.  The pointer is to an ancilliary  lattice used as a mask.
-// If no masking lattice is desired, the pointer value must be zero.  We also
-// need the ImageMoments or MSMoments object which is calling us, its
-// logger, and the number of output lattices it has created.
-   MomentClip(shared_ptr<Lattice<T>> pAncilliaryLattice,
-              MomentsBase<T>& iMom,
-              LogIO& os,
-              const uInt nLatticeOut);
+    // Constructor.  The pointer is to an ancilliary  lattice used as a mask.
+    // If no masking lattice is desired, the pointer value must be zero.  We also
+    // need the ImageMoments or MSMoments object which is calling us, its
+    // logger, and the number of output lattices it has created.
+    MomentClip(shared_ptr<Lattice<T>> pAncilliaryLattice,
+            MomentsBase<T>& iMom,
+            LogIO& os,
+            const uInt nLatticeOut);
 
-// Destructor (does nothing).
-  ~MomentClip();
+    // Destructor (does nothing).
+    virtual ~MomentClip();
 
-// This function is not implemented and throws an exception.
-   virtual void process(T& out,
-                        Bool& outMask,
-                        const Vector<T>& in,
-                        const Vector<Bool>& inMask,
-                        const IPosition& pos);
+    // This function is not implemented and throws an exception.
+    virtual void process(
+        T& out, Bool& outMask,
+        const Vector<T>& in,
+        const Vector<Bool>& inMask,
+        const IPosition& pos
+    );
 
-// This function returns a vector of numbers from each input vector.
-// the output vector contains the moments known to the ImageMoments
-// or MSMoments object passed into the constructor.
-   virtual void multiProcess(Vector<T>& out,
-                             Vector<Bool>& outMask,
-                             const Vector<T>& in,
-                             const Vector<Bool>& inMask,
-                             const IPosition& pos);
+    // This function returns a vector of numbers from each input vector.
+    // the output vector contains the moments known to the ImageMoments
+    // or MSMoments object passed into the constructor.
+    virtual void multiProcess(
+        Vector<T>& out, Vector<Bool>& outMask,
+        const Vector<T>& in,
+        const Vector<Bool>& inMask,
+        const IPosition& pos
+    );
 
-// Can handle null mask
-   virtual Bool canHandleNullMask() const {return True;};
+    // Can handle null mask
+    virtual Bool canHandleNullMask() const {return True;};
 
 private:
 
-   shared_ptr<Lattice<T>> _ancilliaryLattice;
-   MomentsBase<T>& iMom_p;
-   LogIO os_p;
+    shared_ptr<Lattice<T>> _ancilliaryLattice;
+    MomentsBase<T>& iMom_p;
+    LogIO os_p;
 
-   const Vector<T>* pProfileSelect_p;
-   Vector<T> ancilliarySliceRef_p;
-   Vector<T> selectedData_p;
-   Vector<Int> selectedDataIndex_p;
-   Bool doInclude_p, doExclude_p;
-   Vector<T> range_p;
-   IPosition sliceShape_p;
+    const Vector<T>* pProfileSelect_p = nullptr;
+    Vector<T> ancilliarySliceRef_p;
+    Vector<T> selectedData_p;
+    Vector<Int> selectedDataIndex_p;
+    Bool doInclude_p, doExclude_p;
+    Vector<T> range_p;
+    IPosition sliceShape_p;
 
-
-  //# Make members of parent class known.
 protected:
-  using MomentCalcBase<T>::constructorCheck;
-  using MomentCalcBase<T>::setPosLabel;
-  using MomentCalcBase<T>::selectMoments_p;
-  using MomentCalcBase<T>::calcMoments_p;
-  using MomentCalcBase<T>::calcMomentsMask_p;
-  using MomentCalcBase<T>::fixedYLimits_p;
-  using MomentCalcBase<T>::yMinAuto_p;
-  using MomentCalcBase<T>::yMaxAuto_p;
-  using MomentCalcBase<T>::doMedianI_p;
-  using MomentCalcBase<T>::doMedianV_p;
-  using MomentCalcBase<T>::doAbsDev_p;
-  //using MomentCalcBase<T>::plotter_p;
-  using MomentCalcBase<T>::cSys_p;
-  using MomentCalcBase<T>::doCoordProfile_p;
-  using MomentCalcBase<T>::doCoordRandom_p;
-  using MomentCalcBase<T>::pixelIn_p;
-  using MomentCalcBase<T>::worldOut_p;
-  using MomentCalcBase<T>::sepWorldCoord_p;
-  using MomentCalcBase<T>::integratedScaleFactor_p;
-  using MomentCalcBase<T>::momAxisType_p;
-  using MomentCalcBase<T>::nFailed_p;
-  using MomentCalcBase<T>::abcissa_p;
+    using MomentCalcBase<T>::constructorCheck;
+    using MomentCalcBase<T>::setPosLabel;
+    using MomentCalcBase<T>::selectMoments_p;
+    using MomentCalcBase<T>::calcMoments_p;
+    using MomentCalcBase<T>::calcMomentsMask_p;
+    using MomentCalcBase<T>::fixedYLimits_p;
+    using MomentCalcBase<T>::yMinAuto_p;
+    using MomentCalcBase<T>::yMaxAuto_p;
+    using MomentCalcBase<T>::doMedianI_p;
+    using MomentCalcBase<T>::doMedianV_p;
+    using MomentCalcBase<T>::doAbsDev_p;
+    using MomentCalcBase<T>::cSys_p;
+    using MomentCalcBase<T>::doCoordProfile_p;
+    using MomentCalcBase<T>::doCoordRandom_p;
+    using MomentCalcBase<T>::pixelIn_p;
+    using MomentCalcBase<T>::worldOut_p;
+    using MomentCalcBase<T>::sepWorldCoord_p;
+    using MomentCalcBase<T>::integratedScaleFactor_p;
+    using MomentCalcBase<T>::momAxisType_p;
+    using MomentCalcBase<T>::nFailed_p;
+    using MomentCalcBase<T>::abcissa_p;
 };
 
 }
