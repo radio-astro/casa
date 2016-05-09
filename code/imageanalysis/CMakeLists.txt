@@ -218,6 +218,8 @@ install (FILES
 	ImageAnalysis/ImageTwoPtCorr.tcc
 	ImageAnalysis/MomentsBase.h
 	ImageAnalysis/MomentsBase.tcc
+	ImageAnalysis/MomentCalcBase.h
+	ImageAnalysis/MomentCalcBase.tcc
 	ImageAnalysis/MomentCalculator.h
 	ImageAnalysis/MomentCalculator.tcc
 	ImageAnalysis/MomentClip.h

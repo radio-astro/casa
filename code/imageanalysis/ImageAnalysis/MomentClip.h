@@ -30,7 +30,7 @@
 
 #include <casacore/casa/Arrays/Vector.h>
 
-#include <imageanalysis/ImageAnalysis/MomentClip.h>
+#include <imageanalysis/ImageAnalysis/MomentCalcBase.h>
 
 namespace casa {
 
