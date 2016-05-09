@@ -443,15 +443,11 @@ vector<SHARED_PTR<MaskedLattice<T> > > ImageMoments<T>::createMoments(
     if (stdDeviation_p <= T(0) && ( (doWindow_p && doAuto_p) || (doFit_p && !doWindow_p && doAuto_p) ) ) {
         if (pSmoothedImage) {
             os_p << LogIO::NORMAL << "Evaluating noise level from smoothed image" << LogIO::POST;
-            if (! _whatIsTheNoise (noise, *pSmoothedImage)) {
-                throw AipsError(error_p);
-            }
+            _whatIsTheNoise(noise, *pSmoothedImage);
         }
         else {
             os_p << LogIO::NORMAL << "Evaluating noise level from input image" << LogIO::POST;
-            if (! _whatIsTheNoise (noise, *_image)) {
-                throw AipsError(error_p);
-            }
+            _whatIsTheNoise (noise, *_image);
         }
         stdDeviation_p = noise;
     }
@@ -479,11 +475,11 @@ vector<SHARED_PTR<MaskedLattice<T> > > ImageMoments<T>::createMoments(
     }
     // Iterate optimally through the image, compute the moments, fill the output lattices
     MomentCalcBase<T>* pMomentCalculator = pMomentCalculatorHolder.ptr();
-    ImageMomentsProgress* pProgressMeter = 0;
-    if (showProgress_p){
-        pProgressMeter = new ImageMomentsProgress();
-        if ( _progressMonitor != nullptr ){
-            pProgressMeter->setProgressMonitor( _progressMonitor );
+    unique_ptr<ImageMomentsProgress> pProgressMeter;
+    if (showProgress_p) {
+        pProgressMeter.reset(new ImageMomentsProgress());
+        if (_progressMonitor) {
+            pProgressMeter->setProgressMonitor(_progressMonitor);
         }
     }
     uInt n = outPt.size();
@@ -493,15 +489,12 @@ vector<SHARED_PTR<MaskedLattice<T> > > ImageMoments<T>::createMoments(
     }
     LatticeApply<T>::lineMultiApply(
         ptrBlock, *_image, *pMomentCalculator,
-        momentAxis_p, pProgressMeter
+        momentAxis_p, pProgressMeter.get()
     );
     if (windowMethod || fitMethod) {
         if (pMomentCalculator->nFailedFits() != 0) {
             os_p << LogIO::NORMAL << "There were " <<  pMomentCalculator->nFailedFits() << " failed fits" << LogIO::POST;
         }
-    }
-    if (pProgressMeter != 0) {
-        delete pProgressMeter;
     }
     if (pSmoothedImage) {
         // Remove the smoothed image file if they don't want to save it
@@ -574,7 +567,7 @@ Bool ImageMoments<T>::_smoothImage (
 }
 
 template <class T> 
-Bool ImageMoments<T>::_whatIsTheNoise (
+void ImageMoments<T>::_whatIsTheNoise (
     T& sigma, const ImageInterface<T>& image
 ) {
     // Determine the noise level in the image by first making a histogram of
@@ -587,12 +580,12 @@ Bool ImageMoments<T>::_whatIsTheNoise (
     // we are binning the whole image and ImageHistograms will only resize
     // these Vectors to a 1-D shape
     Vector<T> values, counts;
-    if (!histo.getHistograms(values, counts)) {
-        error_p = "Unable to make histogram of image";
-        return False;
-    }
+    ThrowIf(
+        ! histo.getHistograms(values, counts),
+        "Unable to make histogram of image"
+    );
     // Enter into a plot/fit loop
-    T binWidth = values(1) - values(0);
+    auto binWidth = values(1) - values(0);
     T xMin, xMax, yMin, yMax;
     xMin = values(0) - binWidth;
     xMax = values(nBins-1) + binWidth;
@@ -662,26 +655,24 @@ Bool ImageMoments<T>::_whatIsTheNoise (
         Bool fail = False;
         try {
             solution = fitter.fit(xx, yy, resultSigma);
-        } catch (AipsError x) {
+        }
+        catch (const AipsError& x) {
             fail = True;
         }
-        //      os_p << LogIO::NORMAL << "Solution=" << solution << LogIO::POST;
-
         // Return values of fit
-        if (!fail && fitter.converged()) {
+        if (! fail && fitter.converged()) {
             sigma = T(abs(solution(2)) / sqrt(2.0));
             os_p << LogIO::NORMAL
                     << "*** The fitted standard deviation of the noise is " << sigma
                     << endl << LogIO::POST;
         }
         else {
-            os_p << LogIO::NORMAL << "The fit to determine the noise level failed." << endl;
+            os_p << LogIO::WARN << "The fit to determine the noise level failed." << endl;
             os_p << "Try inputting it directly" << endl;
         }
         // Another go
         more = False;
     }
-    return True;
 }
 
 template <class T>

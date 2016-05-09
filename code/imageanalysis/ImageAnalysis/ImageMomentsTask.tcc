@@ -31,9 +31,11 @@ template<class T> SPIIT ImageMomentsTask<T>::makeMoments() const {
         if (this->_getImage()->imageType() != PagedImage<Float>::className()) {
             Path tmpImage = File::newUniqueName (".", "moments.scratch.image");
             tmpImageName = tmpImage.baseName();
-            *this->_getLog() << LogIO::NORMAL << "Calculating moments of non-paged images can be notoriously slow, "
+            *this->_getLog() << LogIO::NORMAL
+                << "Calculating moments of non-paged images can be notoriously slow, "
                 << "so converting to a CASA temporary paged image named "
-                << tmpImageName  << " first which will be written to the current directory" << LogIO::POST;
+                << tmpImageName  << " first which will be written to the current "
+                << "directory" << LogIO::POST;
             x = SubImageFactory<T>::createSubImageRO(
                 *this->_getImage(), *this->_getRegion(), this->_getMask(),
                 this->_getLog().get(), AxesSpecifier(),
@@ -91,12 +93,6 @@ template<class T> SPIIT ImageMomentsTask<T>::makeMoments() const {
             _kernels.size() >= 1 && _kernels[0] != "" && _smoothAxes.size() >= 1
             && _kernelWidths.size() >= 1
         ) {
-            /*
-            String tmp;
-            for (const auto& k: _kernels) {
-                tmp += k + " ";
-            }
-            */
             auto intkernels = VectorKernel::toKernelTypes(Vector<String>(_kernels));
             ThrowIf(
                 ! momentMaker.setSmoothMethod(

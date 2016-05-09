@@ -341,7 +341,7 @@ private:
    // Determine the noise by fitting a Gaussian to a histogram
    // of the entire image above the 25% levels.  If a plotting
    // device is set, the user can interact with this process.
-   Bool _whatIsTheNoise (T& noise, const ImageInterface<T>& image);
+   void _whatIsTheNoise (T& noise, const ImageInterface<T>& image);
 
 protected:
    using MomentsBase<T>::os_p;
