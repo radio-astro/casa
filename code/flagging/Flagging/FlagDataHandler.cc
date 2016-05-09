@@ -1541,6 +1541,24 @@ FlagDataHandler::preFetchColumns()
 				break;
 			}
 			*/
+			case VisBufferComponent2::AllBeamOffsetsZero:
+			case VisBufferComponent2::AntennaMounts:
+			case VisBufferComponent2::BeamOffsets:
+			case VisBufferComponent2::DataDescriptionIds:
+			case VisBufferComponent2::FloatData:
+			case VisBufferComponent2::Frequencies:
+			case VisBufferComponent2::NAntennas:
+			case VisBufferComponent2::N_VisBufferComponents2:
+			case VisBufferComponent2::PolarizationId:
+			case VisBufferComponent2::ReceptorAngles:
+			case VisBufferComponent2::RowIds:
+			case VisBufferComponent2::SigmaSpectrum:
+			case VisBufferComponent2::Unknown:
+			case VisBufferComponent2::VisibilityCubeFloat:
+			case VisBufferComponent2::WeightScaled:
+			case VisBufferComponent2::WeightSpectrumScaled:
+
+			    break; // nothing for these right now
 		}
 	}
 
