@@ -126,7 +126,7 @@ crashCallback (const google_breakpad::MinidumpDescriptor& descriptor,
                void* /*context*/,
                bool succeeded)
 {
-    return crashCallbackCommon (descriptor.path().c_str(), succeeded);
+    return crashCallbackCommon (descriptor.path(), succeeded);
 }
 #endif
 
