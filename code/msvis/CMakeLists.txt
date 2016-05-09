@@ -125,8 +125,6 @@ install (FILES
 	MSVis/MSCalEnums.h
 	MSVis/MSChecker.h
 	MSVis/MSContinuumSubtractor.h
-	MSVis/MSMoments.h
-	MSVis/MSMoments.tcc
 	MSVis/MSUVWGenerator.h
 	MSVis/MSUtil.h
 	MSVis/MsAverager.h
