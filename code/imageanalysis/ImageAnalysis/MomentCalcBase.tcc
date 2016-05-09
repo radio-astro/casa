@@ -431,12 +431,12 @@ Bool MomentCalcBase<T>::getInterGaussianFit (uInt& nFailed,
                                              const Vector<T>& x,
                                              const Vector<T>& y,
                                              const Vector<Bool>& mask,
-                                             const Bool fixedYLimits,
-                                             const T yMinAuto,
-                                             const T yMaxAuto,
-                                             const String xLabel,
-                                             const String yLabel,
-                                             const String title ) const
+                                             Bool fixedYLimits,
+                                             T yMinAuto,
+                                             T yMaxAuto,
+                                             const String& xLabel,
+                                             const String& yLabel,
+                                             const String& title ) const
 //
 // With the cursor, define a guess for a Gaussian fit,
 // and do the fit over and over until they are happy.
@@ -719,7 +719,7 @@ void MomentCalcBase<T>::lineSegments (uInt& nSeg,
 
 template <class T>      
 void MomentCalcBase<T>::makeAbcissa (Vector<T>& x,
-                                     const Int& n) const
+                                     Int n) const
 {
    x.resize(n);
    for (Int i=0; i<n; i++) x(i) = i;
