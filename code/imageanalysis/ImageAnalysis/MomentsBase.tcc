@@ -194,31 +194,19 @@ void MomentsBase<T>::setInExCludeRange(
    );
 }
 
-template <class T> 
-Bool MomentsBase<T>::setSnr(const T& peakSNRU,
-                             const T& stdDeviationU)
+template <class T> void MomentsBase<T>::setSnr(
+    const T& peakSNRU, const T& stdDeviationU
+) {
 //
 // Assign the desired snr.  The default assigned in
 // the constructor is 3,0
 //
-{
-   if (!goodParameterStatus_p) {
-      error_p = "Internal class status is bad";
-      return False;
-   }
-
-   if (peakSNRU <= 0.0) {
-      peakSNR_p = T(3.0);
-   } else {
-      peakSNR_p = peakSNRU;
-   }
-   if (stdDeviationU <= 0.0) {
-      stdDeviation_p = 0.0;
-   } else {
-      stdDeviation_p = stdDeviationU;
-   }
-
-   return True;
+   ThrowIf(
+       ! goodParameterStatus_p,
+       "Internal class status is bad"
+   );
+   peakSNR_p = peakSNRU <= 0.0 ? T(3.0) : peakSNRU;
+   stdDeviation_p = stdDeviationU <= 0.0 ? 0.0 : stdDeviationU;
 } 
 
 

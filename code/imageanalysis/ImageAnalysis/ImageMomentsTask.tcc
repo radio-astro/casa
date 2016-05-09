@@ -108,10 +108,7 @@ template<class T> SPIIT ImageMomentsTask<T>::makeMoments() const {
             momentMaker.setInExCludeRange(includepix, excludepix);
         }
         // Set SNR cutoff
-        ThrowIf(
-            ! momentMaker.setSnr(_snr, _stddev),
-            momentMaker.errorMessage()
-        );
+        momentMaker.setSnr(_snr, _stddev);
         // Set velocity type
         if (! _velocityType.empty()) {
             MDoppler::Types velType;

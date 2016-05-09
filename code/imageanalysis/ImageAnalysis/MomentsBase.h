@@ -233,10 +233,7 @@ public:
 
     // This function is used to help assess whether a spectrum along the moment
     // axis is all noise or not.  If it is all noise, there is not a lot of point
-    // to trying to computing the moment.  This is only needed for the automatic
-    // window or fit methods.  If you are using an interactive nethod, you assess
-    // yourself whether the spectrum contains signal or not.
-    //
+    // to trying to computing the moment.
     // <src>peakSNR</src> is the signal-to-noise ratio of the peak value in the
     // spectrum below which the spectrum is considered pure noise.
     // <src>stdDeviation</src> is the standard deviation of the noise for the
@@ -247,11 +244,8 @@ public:
     // The default state of the class then is to set <src>peakSNR=3</src>
     // and/or to work out the noise level from a Gaussian fit to a histogram
     // (above 25%) of the entire image (it is very hard to get an accurate
-    // estimate of the noise a single spectrum).  If you have specified a
-    // plotting device (see <src>setPlotting</src>) then you get to interact with
-    // the fitting procedure if you want to.  A return value of <src>False</src>
-    // indicates you have set invalid values.
-    Bool setSnr(const T& peakSNR, const T& stdDeviation);
+    // estimate of the noise a single spectrum).
+    void setSnr(const T& peakSNR, const T& stdDeviation);
 
     // This is the output file name for the smoothed image.   It can be useful
     // to have access this to this image when trying to get the pixel
@@ -331,12 +325,6 @@ protected:
     // Check that the combination of methods that the user has requested is valid
     // List a handy dandy table if not.
     void _checkMethod();
-
-    // Convert a <tt>T</tt> to a <tt>Float</tt> for plotting
-    //static Float _convertT (const T value) {return Float(real(value));};
-
-    // Convert a <tt>Float</tt> (from plotting) to a <tt>T</tt>
-    //static T convertF (const Float value) {return T(value);};
 
     // Take the user's data inclusion and exclusion data ranges and
     // generate the range and Booleans to say what sort it is
