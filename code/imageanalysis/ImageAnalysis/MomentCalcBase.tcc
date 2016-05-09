@@ -316,16 +316,6 @@ Bool MomentCalcBase<T>::fitGaussian (uInt& nFailed,
                                    
 }
 
-
-
-template <class T>
-Bool MomentCalcBase<T>::fixedYLimits(const MomentsBase<T>& iMom) const
-{
-   return iMom.fixedYLimits_p;
-}
-
-
-
 template <class T>
 Bool MomentCalcBase<T>::getAutoGaussianFit (uInt& nFailed,
                                             Vector<T>& gaussPars,
@@ -456,11 +446,6 @@ Bool MomentCalcBase<T>::getInterGaussianFit (uInt& nFailed,
 //
 {
    
-// First draw the spectrum
-/*         
-   if (!this->drawSpectrum (x, y, mask, fixedYLimits, yMinAuto, yMaxAuto,
-                      xLabel, yLabel, title, True, plotter)) return False;
-*/
 // Get user's guess and fit until satisfied
 
    Bool more = True;
@@ -526,12 +511,6 @@ Bool MomentCalcBase<T>::getInterGaussianFit (uInt& nFailed,
          return False;
       } else if (redo) {
    
-// Redraw spectrum
-        /*               
-         plotter.eras();
-         this->drawSpectrum (x, y, mask, fixedYLimits, yMinAuto, yMaxAuto,
-                       xLabel, yLabel, title, False, plotter);
-         */
       } else {
          
 // OK, set parameters of fit

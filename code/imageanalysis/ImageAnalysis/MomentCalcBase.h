@@ -94,7 +94,7 @@ template <class T> class MomentsBase;
 //  of the derived MomentCalculator classes.  
 //
 //  Finally, MomentCalcBase also has a number of protected functions that are common to its
-//  derived classes (e.g. plotting, fitting, accumulating sums etc).  It also has protected 
+//  derived classes (e.g. fitting, accumulating sums etc).  It also has protected
 //  data that is common to all the MomentCalculator classes.  This protected data is accessed 
 //  directly by name rather than with interface functions as there is too much of it.  Of 
 //  course, since MomentCalcBase is an abstract base class, it is up to the MomentCalculator 
@@ -180,7 +180,7 @@ protected:
 
     // This Bool tells us whether we want to see all profiles plotted with the
     // Y range or whether they are to be scaled individually
-    Bool fixedYLimits_p;
+    //Bool fixedYLimits_p;
 
     // When we are plotting, if we have asked to all profiles with the same
     // Y min and max, these are the values to use
@@ -380,10 +380,8 @@ protected:
     // Examine a mask and determine how many segments of unmasked points
     // it consists of.
     void lineSegments (
-        uInt& nSeg,
-        Vector<uInt>& start,
-        Vector<uInt>& nPts,
-        const Vector<Bool>& mask
+        uInt& nSeg, Vector<uInt>& start,
+        Vector<uInt>& nPts, const Vector<Bool>& mask
     ) const;
 
     // Resize an abcissa vector for plotting

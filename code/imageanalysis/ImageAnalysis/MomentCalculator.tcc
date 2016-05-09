@@ -79,7 +79,7 @@ MomentWindow<T>::MomentWindow(shared_ptr<Lattice<T>> pAncilliaryLattice,
 
 // Make all plots with same y range ?
 
-   fixedYLimits_p = this->fixedYLimits(iMom_p);
+   //fixedYLimits_p = this->fixedYLimits(iMom_p);
    this->yAutoMinMax(yMinAuto_p, yMaxAuto_p, iMom_p);
 
 // Are we computing the expensive moments ?
@@ -541,7 +541,7 @@ MomentFit<T>::MomentFit(MomentsBase<T>& iMom,
 
 // Make all plots with same y range ?
 
-   fixedYLimits_p = this->fixedYLimits(iMom_p);
+   //fixedYLimits_p = this->fixedYLimits(iMom_p);
    this->yAutoMinMax(yMinAuto_p, yMaxAuto_p, iMom_p);
 
 // Are we computing the expensive moments ?
