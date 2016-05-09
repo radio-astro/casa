@@ -438,7 +438,7 @@ def score_online_shadow_agents(ms, summaries):
     0 < score < 1 === 60% < frac_flagged < 5%
     """
     return score_data_flagged_by_agents(ms, summaries, 0.05, 0.6, 
-                                        ['online', 'shadow', 'qa0', 'before'])
+                                        ['online', 'shadow', 'qa0', 'before', 'template'])
 
 @log_qa
 def score_applycal_agents(ms, summaries):
