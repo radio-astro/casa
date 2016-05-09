@@ -19,6 +19,6 @@ for i in ['h', 'hif', 'hsd', 'hifa', 'hifv']:
 	print command
 	os.system( command)
 if ((casasrc+'/extern') != (casaarch+'/pipeline/extern')) :
-   command = 'cp '+casasrc+'/extern/Mako-0.7.0-py2.6.egg '+casaarch+'/pipeline/extern'
+   command = 'cp '+casasrc+'/extern/Mako-0.7.0-py' + pyversion + '.egg '+casaarch+'/pipeline/extern'
    print command
    os.system( command)
