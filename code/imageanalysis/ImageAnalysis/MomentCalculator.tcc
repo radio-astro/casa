@@ -168,11 +168,12 @@ void MomentWindow<T>::multiProcess(Vector<T>& moments,
 
 // Make abcissa and labels
    
-   //static Bool allSubsequent = False;
    static Vector<Int> window(2);  
    static Int nPts = 0;
       
-   this->makeAbcissa (abcissa_p, pProfileSelect_p->nelements());
+   abcissa_p.resize(pProfileSelect_p->size());
+   indgen(abcissa_p);
+   //this->makeAbcissa (abcissa_p, pProfileSelect_p->nelements());
    String xLabel;
    if (momAxisType_p.empty()) {
       xLabel = "x (pixels)";
@@ -192,9 +193,7 @@ void MomentWindow<T>::multiProcess(Vector<T>& moments,
 
       Vector<T> gaussPars;
       if (getAutoWindow(nFailed_p, window,  abcissa_p, *pProfileSelect_p, profileInMask,
-                        peakSNR_p, stdDeviation_p, doFit_p/*, plotter_p, 
-                        fixedYLimits_p, yMinAuto_p, yMaxAuto_p, xLabel,
-                        yLabel, title*/)) {
+                        peakSNR_p, stdDeviation_p, doFit_p)) {
          nPts = window(1) - window(0) + 1;
       } else {
          nPts = 0;
@@ -601,7 +600,9 @@ void MomentFit<T>::multiProcess(Vector<T>& moments,
        
    Int nPts = profileIn.nelements();
    Vector<T> gaussPars(4);
-   this->makeAbcissa (abcissa_p, nPts);
+   abcissa_p.resize(nPts);
+   indgen(abcissa_p);
+   //this->makeAbcissa (abcissa_p, nPts);
    String xLabel;
    if (momAxisType_p.empty())
       xLabel = "x (pixels)";
@@ -626,18 +627,6 @@ void MomentFit<T>::multiProcess(Vector<T>& moments,
          return;
       }
 
-   } else {
-/*
-// Interactive
-   
-       if (!this->getInterGaussianFit(nFailed_p, gaussPars, os_p, abcissa_p, profileIn, profileInMask,
-                                fixedYLimits_p, yMinAuto_p, yMaxAuto_p,
-                                xLabel, yLabel, title, plotter_p)) {
-         moments = 0;   
-         momentsMask = False;
-         return;
-      }
-  */ 
    }
 
 // Were the profile coordinates precomputed ?

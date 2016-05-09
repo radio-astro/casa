@@ -695,7 +695,7 @@ void MomentCalcBase<T>::lineSegments (uInt& nSeg,
    nPts.resize(nSeg,True);
 }
 
-
+/*
 template <class T>      
 void MomentCalcBase<T>::makeAbcissa (Vector<T>& x,
                                      Int n) const
@@ -704,7 +704,7 @@ void MomentCalcBase<T>::makeAbcissa (Vector<T>& x,
    for (Int i=0; i<n; i++) x(i) = i;
 }
 
-
+*/
 
 template <class T>
 Int& MomentCalcBase<T>::momentAxis(MomentsBase<T>& iMom) const

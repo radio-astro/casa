@@ -176,8 +176,6 @@ protected:
     using MomentCalcBase<T>::selectMoments_p;
     using MomentCalcBase<T>::calcMoments_p;
     using MomentCalcBase<T>::calcMomentsMask_p;
-    //using MomentCalcBase<T>::yMinAuto_p;
-   // using MomentCalcBase<T>::yMaxAuto_p;
     using MomentCalcBase<T>::doMedianI_p;
     using MomentCalcBase<T>::doMedianV_p;
     using MomentCalcBase<T>::doAbsDev_p;
@@ -190,7 +188,7 @@ protected:
     using MomentCalcBase<T>::integratedScaleFactor_p;
     using MomentCalcBase<T>::momAxisType_p;
     using MomentCalcBase<T>::nFailed_p;
-    using MomentCalcBase<T>::abcissa_p;
+    //using MomentCalcBase<T>::abcissa_p;
 };
 
 }

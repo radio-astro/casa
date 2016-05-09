@@ -178,11 +178,7 @@ protected:
     // (expensive).  It should only be filled if doCoordCalc_p is True
     Vector<Double> sepWorldCoord_p;
 
-    // When we are plotting, if we have asked to all profiles with the same
-    // Y min and max, these are the values to use
-    //T yMinAuto_p, yMaxAuto_p;
-
-    // This vector is used to hold the abcissa values when plotting profiles
+    // This vector is used to hold the abscissa values
     Vector<T> abcissa_p;
 
     // This string tells us the name of the moment axis (VELO or FREQ etc)
@@ -380,10 +376,8 @@ protected:
         Vector<uInt>& nPts, const Vector<Bool>& mask
     ) const;
 
-    // Resize an abcissa vector for plotting
-    void makeAbcissa(
-        Vector<T>& x, Int n
-    ) const;
+    // Determine abscissa vector
+    //void makeAbcissa(Vector<T>& x, Int n) const;
 
     // Return the moment axis from the ImageMoments object
     Int& momentAxis(MomentsBase<T>& iMom) const;
@@ -459,13 +453,6 @@ protected:
 
     // Return standard deviation of image from ImageMoments or MSMoments object
     T& stdDeviation(MomentsBase<T>& iMom) const;
-
-    // Return the auto y min and max from the ImageMoments object
-    /*
-    void yAutoMinMax(
-        T& yMin, T& yMax, MomentsBase<T>& iMom
-    ) const;
-    */
 
 protected:
     // Check if #pixels is indeed 1.
