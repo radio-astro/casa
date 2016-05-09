@@ -219,13 +219,11 @@ protected:
   using MomentCalcBase<T>::selectMoments_p;
   using MomentCalcBase<T>::calcMoments_p;
   using MomentCalcBase<T>::calcMomentsMask_p;
-  //using MomentCalcBase<T>::fixedYLimits_p;
-  using MomentCalcBase<T>::yMinAuto_p;
-  using MomentCalcBase<T>::yMaxAuto_p;
+  // using MomentCalcBase<T>::yMinAuto_p;
+  // using MomentCalcBase<T>::yMaxAuto_p;
   using MomentCalcBase<T>::doMedianI_p;
   using MomentCalcBase<T>::doMedianV_p;
   using MomentCalcBase<T>::doAbsDev_p;
-  //using MomentCalcBase<T>::plotter_p;
   using MomentCalcBase<T>::cSys_p;
   using MomentCalcBase<T>::doCoordProfile_p;
   using MomentCalcBase<T>::doCoordRandom_p;
@@ -365,13 +363,11 @@ protected:
   using MomentCalcBase<T>::selectMoments_p;
   using MomentCalcBase<T>::calcMoments_p;
   using MomentCalcBase<T>::calcMomentsMask_p;
-  //using MomentCalcBase<T>::fixedYLimits_p;
-  using MomentCalcBase<T>::yMinAuto_p;
-  using MomentCalcBase<T>::yMaxAuto_p;
+  //using MomentCalcBase<T>::yMinAuto_p;
+  //using MomentCalcBase<T>::yMaxAuto_p;
   using MomentCalcBase<T>::doMedianI_p;
   using MomentCalcBase<T>::doMedianV_p;
   using MomentCalcBase<T>::doAbsDev_p;
-  //using MomentCalcBase<T>::plotter_p;
   using MomentCalcBase<T>::cSys_p;
   using MomentCalcBase<T>::doCoordProfile_p;
   using MomentCalcBase<T>::doCoordRandom_p;
@@ -385,7 +381,7 @@ protected:
 };
 
 
-} //# NAMESPACE CASA - END
+}
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
 #include <imageanalysis/ImageAnalysis/MomentCalculator.tcc>

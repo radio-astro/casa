@@ -77,18 +77,12 @@ MomentWindow<T>::MomentWindow(shared_ptr<Lattice<T>> pAncilliaryLattice,
       sliceShape_p(momAxis) = _ancilliaryLattice->shape()(momAxis);
    }
 
-// Make all plots with same y range ?
 
-   //fixedYLimits_p = this->fixedYLimits(iMom_p);
-   this->yAutoMinMax(yMinAuto_p, yMaxAuto_p, iMom_p);
+   // this->yAutoMinMax(yMinAuto_p, yMaxAuto_p, iMom_p);
 
 // Are we computing the expensive moments ?
 
    this->costlyMoments(iMom_p, doMedianI_p, doMedianV_p, doAbsDev_p);
-
-// Are we plotting ?
-
-   //plotter_p = this->device(iMom_p);
 
 // Are we computing coordinate-dependent moments.  If
 // so precompute coordinate vector is momebt axis separable
@@ -539,17 +533,11 @@ MomentFit<T>::MomentFit(MomentsBase<T>& iMom,
 
    constructorCheck(calcMoments_p, calcMomentsMask_p, selectMoments_p, nLatticeOut);
 
-// Make all plots with same y range ?
-
-   //fixedYLimits_p = this->fixedYLimits(iMom_p);
-   this->yAutoMinMax(yMinAuto_p, yMaxAuto_p, iMom_p);
+   //this->yAutoMinMax(yMinAuto_p, yMaxAuto_p, iMom_p);
 
 // Are we computing the expensive moments ?
 
    this->costlyMoments(iMom_p, doMedianI_p, doMedianV_p, doAbsDev_p);
-
-// Are we plotting ?
-   //plotter_p = this->device(iMom_p);
 
 // Are we computing coordinate-dependent moments.  If so
 // precompute coordinate vector if moment axis is separable

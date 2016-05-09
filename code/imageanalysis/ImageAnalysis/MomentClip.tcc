@@ -42,8 +42,7 @@ template <class T> MomentClip<T>::MomentClip(
         sliceShape_p = 1;
         sliceShape_p(momAxis) = _ancilliaryLattice->shape()(momAxis);
     }
-    //fixedYLimits_p = this->fixedYLimits(iMom_p);
-    this->yAutoMinMax(yMinAuto_p, yMaxAuto_p, iMom_p);
+    //this->yAutoMinMax(yMinAuto_p, yMaxAuto_p, iMom_p);
 
     this->selectRange(range_p, doInclude_p, doExclude_p, iMom_p);
 

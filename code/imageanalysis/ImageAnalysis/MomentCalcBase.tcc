@@ -997,7 +997,7 @@ T& MomentCalcBase<T>::stdDeviation(MomentsBase<T>& iMom) const
    return iMom.stdDeviation_p;
 }
       
-
+/*
 template <class T>
 void MomentCalcBase<T>::yAutoMinMax(T& yMin, 
                                     T& yMax, 
@@ -1006,7 +1006,7 @@ void MomentCalcBase<T>::yAutoMinMax(T& yMin,
    yMin = iMom.yMin_p;
    yMax = iMom.yMax_p;
 }
- 
+ */
 
 
 
