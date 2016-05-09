@@ -7,15 +7,31 @@ print "Using CASA installation root: $root\n";
 $pipe = abs_path(dirname($0));
 $ENV{CASASRC}="$pipe/pipeline";
 $ENV{PYVERSION}="2.7";
-$ENV{CASAARCH}="$pipe/pipeline";
-$ENV{PYTHONPATH}="$pipe/pipeline";
-print "Using CASA installation root: $root\n";
-print "CASAARCH:                     $ENV{CASAARCH}\n";
+$ENV{CASAARCH}="$pipe";
+$ENV{PYTHONPATH}="$pipe/pipeline:$ENV{CASAARCH}";
+
+$ENV{SCIPIPE_HEURISTICS}="$pipe";
+$ENV{SCIPIPE_ROOTDIR}="$pipe";
+
+$ENV{PATH} = "$ENV{CASAPATH}:$ENV{CASAARCH}:$ENV{PYTHONPATH}:$root:$ENV{SCIPIPE_ROOTDIR}:$ENV{SCIPIPE_HEURISTICS}:$ENV{PATH}";
+
+print "PATH:                 $ENV{PATH}\n";
+print "CASAPATH:             $ENV{CASAPATH}\n";
+print "CASAASRC:             $ENV{CASASRC}\n";
+print "CASAARCH:             $ENV{CASAARCH}\n";
+print "PYVERSION:            $ENV{PYVERSION}\n";
+print "PYTHONPATH:           $ENV{PYTHONPATH}\n";
+print "SCIPIPE_ROOTDIR:      $ENV{SCIPIPE_ROOTDIR}\n";
+print "SCIPIPE_HEURISTICS:   $ENV{SCIPIPE_HEURISTICS}\n";
 
 chomp($OSNAME=`uname -s`);
 if ( $OSNAME eq "Linux" ) {
    print "OSNAME: $OSNAME\n";
    exec "casa-config --exec python setup.py install --install-lib=$ENV{CASAARCH} --install-data=$ENV{CASAARCH} --force";
+} elsif ($OSNAME eq "Darwin") {
+   print "OSNAME: $OSNAME\n";
+   exec "casa-config --exec python setup.py install --install-lib=$ENV{CASAARCH} --install-data=$ENV{CASAARCH} --force";
 } else {
    print "WARNING: Could not find CASA's Python !\n"
 }
+
