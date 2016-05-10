@@ -29,16 +29,16 @@
 #include <cmath>
 #include <QString>
 #include <utility>		/***for std::pair***/
-
-using namespace std;
+#include <coordinates/Coordinates/SpectralCoordinate.h>
 
 namespace casa {
 
 	class QtPlotSettings {
 	public:
-		QtPlotSettings();
+		QtPlotSettings( );
 		void adjust( const QString& topUnits, const QString& topType, const QString& bottomUnits,
 				const QString& bottomType, bool autoScaleX, bool autoScaleY, bool zoom = false );
+		void setSpectralCoordinate( const SpectralCoordinate& coord );
 		void zoomOut( double zoomFactor, const QString& topUnits, const QString& topType,
 				const QString& bottomUnits, const QString& bottomType,
 		              bool autoScaleX, bool autoScaleY );
@@ -86,12 +86,19 @@ namespace casa {
 
 		static const QString RADIO_VELOCITY;
 		static const QString OPTICAL_VELOCITY;
+		static const QString OPTICAL_WAVELENGTH;
 		static const double ZERO_LIMIT;
 
 	private:
 
 		pair<double,double> adjustAxis(double &min, double &max, int &numTicks);
+
 		void adjustAxisTop( double &min, double &max);
+		std::pair<double,double> convertBottomBounds(
+						double min, double max, const QString& topUnits, const QString& unitType );
+		MDoppler::Types getDoppler(  const QString& unitType );
+		double getTickValue(int tickIndex, int tickCount,
+							QtPlotSettings::AxisIndex axisIndex) const;
 		double minX[END_AXIS_INDEX];
 		double maxX[END_AXIS_INDEX];
 		int numXTicks;
@@ -99,13 +106,14 @@ namespace casa {
 		double maxY;
 		double minPercentage;
 		double maxPercentage;
-		//double originalMinX;
-		//double originalMaxX;
 		int numYTicks;
 		QString m_topType;
 		QString m_bottomType;
 		QString m_topUnits;
 		QString m_bottomUnits;
+
+		//Used for conversions
+		SpectralCoordinate m_spectralCoordinate;
 
 	};
 

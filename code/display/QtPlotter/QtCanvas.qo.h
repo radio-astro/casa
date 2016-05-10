@@ -35,6 +35,7 @@
 #include <casa/Arrays/Matrix.h>
 #include <casa/Inputs/Input.h>
 #include <casa/Arrays/IPosition.h>
+#include <coordinates/Coordinates/SpectralCoordinate.h>
 
 #include <display/QtPlotter/QtPlotSettings.h>
 #include <display/QtPlotter/CanvasCurve.h>
@@ -253,6 +254,9 @@ namespace casa {
 
 		//Force a repaint
 		void refreshPixmap();
+
+		//Used for conversion purposes.
+		void setSpectralCoordinate( const SpectralCoordinate& coord );
 
 
 	public slots:
@@ -567,6 +571,7 @@ namespace casa {
 		Annotation* getActiveAnnotation() const;
 		CanvasMode* currentMode;
 		CanvasModeFactory* modeFactory;
+		SpectralCoordinate m_spectralCoordinate;
 	};
 
 }

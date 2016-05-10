@@ -32,9 +32,10 @@ namespace casa {
 
 	const QString QtPlotSettings::RADIO_VELOCITY   = "radio velocity";
 	const QString QtPlotSettings::OPTICAL_VELOCITY = "optical velocity";
+	const QString QtPlotSettings::OPTICAL_WAVELENGTH = "air wavelength";
 	const double QtPlotSettings::ZERO_LIMIT        = 0.0000000000000005f;
 
-	QtPlotSettings::QtPlotSettings() {
+	QtPlotSettings::QtPlotSettings( ) {
 		const int TICK_MIN = 0;
 		const int TICK_MAX = 10;
 		const int TICK_COUNT = 5;
@@ -58,10 +59,6 @@ namespace casa {
 			double stepX = spanX( axisIndex ) / numXTicks/*[i]*/;
 			minX[i] += dx * stepX;
 			maxX[i] += dx * stepX;
-			/*if ( axisIndex == QtPlotSettings::xBottom ) {
-				originalMinX = minX[i];
-				originalMaxX = maxX[i];
-			}*/
 		}
 
 		double stepY = spanY() / numYTicks;
@@ -85,13 +82,10 @@ namespace casa {
 			double prevSpanX = spanX(axisIndex);
 			minX[i] = minX[i] - zoomFactor * prevSpanX;
 			maxX[i] = maxX[i] + zoomFactor * prevSpanX;
-			/*if ( axisIndex == QtPlotSettings::xBottom ) {
-				originalMinX = minX[i];
-				originalMaxX = maxX[i];
-			}*/
 		}
 		adjust( topUnits, topType, bottomUnits, bottomType, autoScaleX, autoScaleY, true );
 	}
+
 
 	pair<double,double> QtPlotSettings::getZoomInY( double zoomFactor ) const {
 		double prevSpanY = spanY();
@@ -100,6 +94,7 @@ namespace casa {
 		pair<double,double> percentageSpan( minY,maxY);
 		return percentageSpan;
 	}
+
 
 	void QtPlotSettings::zoomY( double minY, double maxY, bool autoScaleY ) {
 		this->minY = minY;
@@ -117,14 +112,8 @@ namespace casa {
 		for ( int i = 0; i < END_AXIS_INDEX; i++ ) {
 			AxisIndex axisIndex = static_cast<AxisIndex>(i);
 			double prevSpanX = spanX( axisIndex );
-
 			minX[i] = minX[i] + zoomFactor * prevSpanX;
 			maxX[i] = maxX[i] - zoomFactor * prevSpanX;
-			/*if ( axisIndex == QtPlotSettings::xBottom ) {
-				originalMinX = minX[i];
-				originalMaxX = maxX[i];
-			}*/
-
 		}
 		adjust( topUnits, topType, bottomUnits, bottomType, autoScaleX, autoScaleY, true );
 	}
@@ -141,7 +130,6 @@ namespace casa {
 		m_bottomUnits = bottomUnits;
 		if ( autoScaleX ) {
 			//Adjust the bottom axis allowing it to set the number of ticks.
-
 			pair<double,double> percentChange=adjustAxis( minX[xBottom], maxX[xBottom], numXTicks);
 
 			if ( percentChange.first > 0 ){
@@ -169,6 +157,7 @@ namespace casa {
 		}
 	}
 
+
 	pair<double,double> QtPlotSettings::adjustAxis(double &min, double &max,
 	                                int &numTicks ) {
 		const int MinTicks = 4;
@@ -190,36 +179,74 @@ namespace casa {
 		}
 		min = newMin;
 		max = newMax;
+
 		pair<double,double> percentageChange( minPercentage, maxPercentage );
 		return percentageChange;
 	}
 
-	void QtPlotSettings::adjustAxisTop(double &min, double &max) {
 
+
+	void QtPlotSettings::adjustAxisTop(double &min, double &max) {
 		//The calculation below, based on percentages is being used rather than
-		//using a converter because of CAS-5175.  The problem was that the
+		//using a converter because of CAS-5175 (CAS-5252?).  The problem was that the
 		//converter could not distinguish between optical velocity in km/sec
 		//and radio velocity in km/sec since the units were the same.
-		double topRange = maxX[QtPlotSettings::xTop] - minX[QtPlotSettings::xTop];
+		/*double topRange = maxX[QtPlotSettings::xTop] - minX[QtPlotSettings::xTop];
 		min = minX[QtPlotSettings::xTop] - minPercentage * topRange;
-		max = maxX[QtPlotSettings::xTop] + maxPercentage * topRange;
+		max = maxX[QtPlotSettings::xTop] + maxPercentage * topRange;*/
 
-
+		//However, it now appears we are back to conversion.  Please see CAS-8591.
+		//There are errors being introduced with percentages.  Thus, the spectral coordinate has been
+		//introduces and we are setting a doppler.
+		Quantity botUnit( 0, m_bottomUnits.toStdString().c_str());
 		//Top axis is not channels
-		/*if ( topUnits != "" ) {
-			Converter* converter = Converter::getConverter( bottomUnits, topUnits);
-			min = converter->convert( minX[QtPlotSettings::xBottom] );
-			max = converter->convert( maxX[QtPlotSettings::xBottom] );
-			delete converter;
+		if ( m_topUnits != "" ) {
+			//If the bottom unit is not already Hz, convert it to such since optical
+			//and radio Hz will agree.
+			double minHz = 0;
+			double maxHz = 0;
+			if ( !botUnit.isConform( "Hz") ){
+				Converter* converter = Converter::getConverter( m_bottomUnits, "Hz");
+				minHz = converter->convert( minX[QtPlotSettings::xBottom], m_spectralCoordinate );
+				maxHz = converter->convert( maxX[QtPlotSettings::xBottom], m_spectralCoordinate );
+				delete converter;
+			}
+
+			//If the top axis involves optical units, then we need to set the doppler
+			//before being able to convert.
+			if ( m_topType == OPTICAL_VELOCITY || m_topType == OPTICAL_WAVELENGTH ){
+				std::pair<double,double> topBounds = convertBottomBounds( minHz, maxHz, m_topUnits, m_topType);
+				min = topBounds.first;
+				max = topBounds.second;
+			}
+
+			else if ( m_topUnits != "Hz"){
+				Converter* converter = Converter::getConverter( "Hz", m_topUnits);
+				min = converter->convert( minHz, m_spectralCoordinate );
+				max = converter->convert( maxHz, m_spectralCoordinate  );
+				delete converter;
+			}
+			else {
+				min = minHz;
+				max = maxHz;
+			}
 		}
 		//Top axis is channels, but bottom axis is not
-		else if ( topUnits == "" && bottomUnits != "" ) {
-			Converter* channelConverter = Converter::getConverter(bottomUnits,topUnits);
-			double startChannel = channelConverter->toPixel( minX[QtPlotSettings::xBottom]);
-			double endChannel = channelConverter->toPixel( maxX[QtPlotSettings::xBottom]);
-			delete channelConverter;
-			min = startChannel;
-			max = endChannel;
+		else if ( m_topUnits == "" && m_bottomUnits != "" ) {
+			if ( !botUnit.isConform( "m/s") ){
+				Converter* channelConverter = Converter::getConverter(m_bottomUnits,m_topUnits);
+				double startChannel = channelConverter->toPixel( minX[QtPlotSettings::xBottom], m_spectralCoordinate);
+				double endChannel = channelConverter->toPixel( maxX[QtPlotSettings::xBottom], m_spectralCoordinate);
+				delete channelConverter;
+				min = startChannel;
+				max = endChannel;
+			}
+			else {
+				double topRange = maxX[QtPlotSettings::xTop] - minX[QtPlotSettings::xTop];
+				min = minX[QtPlotSettings::xTop] - minPercentage * topRange;
+				max = maxX[QtPlotSettings::xTop] + maxPercentage * topRange;
+			}
+
 		}
 		//Both axis are using channels
 		else {
@@ -227,27 +254,18 @@ namespace casa {
 			max = maxX[QtPlotSettings::xBottom];
 		}
 
-		if ( bottomUnits == "") {
+		if ( m_bottomUnits == "") {
 			minPercentage = 0;
 			maxPercentage = 0;
-		}*/
+		}
 	}
 
 	void QtPlotSettings::setMinX( AxisIndex index, double value ) {
-
 		minX[static_cast<int>(index)] = value;
-		/*if ( index == QtPlotSettings::xBottom ) {
-			originalMinX = value;
-		}*/
-
 	}
 
 	void QtPlotSettings::setMaxX( AxisIndex index, double value ) {
 		maxX[static_cast<int>(index)] = value;
-		/*if ( index == QtPlotSettings::xBottom ) {
-			originalMaxX = value;
-		}*/
-
 	}
 
 	void QtPlotSettings::setMinY( double value ) {
@@ -258,16 +276,25 @@ namespace casa {
 		maxY = value;
 	}
 
+
+	double QtPlotSettings::getTickValue(int tickIndex, int tickCount,
+			QtPlotSettings::AxisIndex axisIndex) const {
+		double value = getMinX(axisIndex) + (tickIndex * spanX(axisIndex) / tickCount);
+		return value;
+	}
+
+
 	double QtPlotSettings::getTickLabelX(int tickIndex, int tickCount,
 			QtPlotSettings::AxisIndex axisIndex) const {
-		double label = getMinX(axisIndex) + (tickIndex * spanX(axisIndex) / tickCount);
+		double label = getTickValue( tickIndex, tickCount, axisIndex);
 		QtPlotSettings::AxisIndex otherIndex = QtPlotSettings::xTop;
 		if( axisIndex == QtPlotSettings::xTop ){
 			otherIndex = QtPlotSettings::xBottom;
 		}
-		double otherLabel = getMinX( otherIndex) + ( tickIndex * spanX(otherIndex) / tickCount);
+		double otherLabel = getTickValue(tickIndex, tickCount, otherIndex);
+
 		//If the label is very close to zero, make it zero.
-		if ( qAbs( label ) < ZERO_LIMIT ){
+		if ( qAbs( label ) < ZERO_LIMIT  ){
 			label = 0;
 		}
 		//Note:  The latter two cases if the if statement are inspired by CAS-8512.  The idea
@@ -284,34 +311,77 @@ namespace casa {
 		}
 		//If the other one was very close to zero and the only difference between them is optical
 		//versus radio, make sure they are both zero at zero.
-		else if ( qAbs( otherLabel) < ZERO_LIMIT ){
-			if ( m_topType == OPTICAL_VELOCITY &&
-					axisIndex == QtPlotSettings::xTop ){
-				if ( m_bottomType == RADIO_VELOCITY){
-					label = 0;
+		else if ( qAbs(otherLabel) < ZERO_LIMIT && axisIndex == QtPlotSettings::xTop ){
+			//For this label to be zero, it should either be the first index, the last index,
+			//or bracketed by a positive & negative on each side.
+			bool bracketed = false;
+			if ( tickIndex > 0 && tickIndex < tickCount - 1 ){
+				double label1 = getTickValue( tickIndex-1, tickCount, axisIndex );
+				double label2 = getTickValue( tickIndex+1, tickCount, axisIndex );
+				if ( label1 * label2 < 0 ){
+					bracketed = true;
 				}
 			}
-			else if ( m_topType == RADIO_VELOCITY &&
-					axisIndex == QtPlotSettings::xTop ){
-				if ( m_bottomType == OPTICAL_VELOCITY){
-					label = 0;
-				}
-			}
-			else if ( m_bottomType == OPTICAL_VELOCITY &&
-					axisIndex == QtPlotSettings::xBottom ){
-				if ( m_topType == RADIO_VELOCITY ){
-					label = 0;
-				}
-			}
-			else if ( m_bottomType == RADIO_VELOCITY &&
-					axisIndex == QtPlotSettings::xBottom ){
+			if ( tickIndex == 0 || (tickIndex == tickCount - 1) || bracketed ){
 				if ( m_topType == OPTICAL_VELOCITY ){
-					label = 0;
+					if ( m_bottomType == RADIO_VELOCITY){
+						label = 0;
+					}
+				}
+				else if ( m_topType == RADIO_VELOCITY ){
+					if ( m_bottomType == OPTICAL_VELOCITY){
+						label = 0;
+					}
 				}
 			}
 		}
 		return label;
 	}
 
+
+	void QtPlotSettings::setSpectralCoordinate( const SpectralCoordinate& coord ){
+		m_spectralCoordinate = coord;
+	}
+
+
+	MDoppler::Types QtPlotSettings::getDoppler(  const QString& unitType ){
+		MDoppler::Types dopplerType = MDoppler::RELATIVISTIC;
+		if ( unitType == RADIO_VELOCITY ){
+			dopplerType = MDoppler::RADIO;
+		}
+		else if ( unitType == OPTICAL_VELOCITY ){
+			dopplerType = MDoppler::OPTICAL;
+		}
+		return dopplerType;
+	}
+
+
+	std::pair<double,double> QtPlotSettings::convertBottomBounds(
+			double min, double max, const QString& units, const QString& unitType ) {
+
+		Vector<double> coords(2);
+		coords[0] = min;
+		coords[1] = max;
+		Unit unit( units.toStdString().c_str());
+		Quantity t(0, unit);
+		//Velocity units
+		if (t.isConform("m/s")) {
+			MDoppler::Types doppler = getDoppler( unitType );
+			m_spectralCoordinate.setVelocity(units.toStdString().c_str() ,doppler);
+			m_spectralCoordinate.frequencyToVelocity(coords, coords);
+		}
+		else {
+			// unit must be conformant with meters
+			m_spectralCoordinate.setWavelengthUnit(units.toStdString().c_str());
+			if ( unitType == OPTICAL_WAVELENGTH ){
+				m_spectralCoordinate.frequencyToAirWavelength( coords, coords );
+			}
+			else {
+				m_spectralCoordinate.frequencyToWavelength( coords, coords );
+			}
+		}
+		std::pair<double, double> result( coords[0], coords[1]);
+		return result;
+	}
 }
 

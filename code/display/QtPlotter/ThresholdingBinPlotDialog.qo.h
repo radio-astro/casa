@@ -31,8 +31,6 @@
 #include <utility>
 #include <QMainWindow>
 
-using namespace std;
-
 namespace casa {
 
 	template <class T> class ImageInterface;
@@ -50,7 +48,7 @@ namespace casa {
 		ThresholdingBinPlotDialog(QString yAxisUnits, QWidget *parent = 0);
 		void setImage( const SHARED_PTR<const ImageInterface<Float> >  img );
 		void setInterval( double minValue, double maxValue );
-		pair<double,double> getInterval() const;
+		std::pair<double,double> getInterval() const;
 		~ThresholdingBinPlotDialog();
 
 	signals:

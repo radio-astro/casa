@@ -124,8 +124,17 @@ namespace casa {
 		curZoom = 0;
 
 		zoomStack[curZoom] = settings;
+		zoomStack[curZoom].setSpectralCoordinate( m_spectralCoordinate );
 		curMarker = 0;
 		refreshPixmap();
+	}
+
+	void QtCanvas::setSpectralCoordinate( const SpectralCoordinate& coord ){
+		int zoomStackSize = zoomStack.size();
+		for ( int i = 0; i < zoomStackSize; i++ ){
+			zoomStack[i].setSpectralCoordinate( coord );
+		}
+		m_spectralCoordinate = coord;
 	}
 
 	void QtCanvas::zoomOut() {
@@ -146,6 +155,9 @@ namespace casa {
 		QtPlotSettings settings;
 		if ( zoomStack.size() > 0 ) {
 			settings = zoomStack[0];
+		}
+		else {
+			settings.setSpectralCoordinate( m_spectralCoordinate );
 		}
 
 		double zoomFactor = (double)FRACZOOM/100.0;
@@ -188,6 +200,9 @@ namespace casa {
 		double zoomFactor = (double)FRACZOOM/100.0;
 		if ( zoomStack.size() > 0 ) {
 			settings = zoomStack[curZoom];
+		}
+		else {
+			settings.setSpectralCoordinate( m_spectralCoordinate );
 		}
 
 		//Change x zoom by a percentage.
@@ -243,6 +258,7 @@ namespace casa {
 		if ( zoomStack.size() != 1 ){
 			zoomStack.resize(1);
 			zoomStack[0] = QtPlotSettings();
+			zoomStack[0].setSpectralCoordinate( m_spectralCoordinate );
 			curZoom = 0;
 
 			setDataRange();
@@ -360,6 +376,7 @@ namespace casa {
 
 		//Store the results in the plot settings
 		QtPlotSettings settings;
+		settings.setSpectralCoordinate( m_spectralCoordinate );
 		//if (autoScaleX) {
 		settings.setMinX(QtPlotSettings::xBottom, xmin);
 		settings.setMaxX(QtPlotSettings::xBottom, xmax);
@@ -1996,6 +2013,7 @@ namespace casa {
 
 		QtPlotSettings prevSettings = zoomStack[curZoom];
 		QtPlotSettings settings;
+		settings.setSpectralCoordinate( m_spectralCoordinate );
 		for ( int i = 0; i < QtPlotSettings::END_AXIS_INDEX; i++ ) {
 			QtPlotSettings::AxisIndex axisIndex = static_cast<QtPlotSettings::AxisIndex>(i);
 			double dx = prevSettings.spanX(axisIndex) / getRectWidth();

@@ -1417,6 +1417,11 @@ namespace casa {
 				if ( topAxisAscendingX != bottomAxisAscendingX ) {
 					topAxisDescending = true;
 				}
+				bool validSpectrum = false;
+				SpectralCoordinate coord = getSpectralAxis( image, validSpectrum );
+				if ( validSpectrum ){
+					pixelCanvas ->setSpectralCoordinate( coord );
+				}
 				pixelCanvas -> setTopAxisRange( xValues, topAxisDescending );
 			}
 		}
