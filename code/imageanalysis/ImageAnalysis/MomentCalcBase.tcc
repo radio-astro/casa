@@ -211,109 +211,76 @@ Bool MomentCalcBase<T>::findNextDatum (uInt& iFound,
    return False;
 }
 
-
-template <class T>
-Bool MomentCalcBase<T>::fitGaussian (uInt& nFailed, 
-                                     T& peak,
-                                     T& pos,
-                                     T& width,
-                                     T& level,
-                                     const Vector<T>& x,
-                                     const Vector<T>& y,
-                                     const Vector<Bool>& mask,
-                                     const T peakGuess,
-                                     const T posGuess,
-                                     const T widthGuess,
-                                     const T levelGuess) const
-// 
-// Fit Gaussian pos * exp(-4ln2*(x-pos)**2/width**2)
-// width = fwhm
-// 
-// Returns false if fit fails or all masked
-//
-{
-
-// Select unmasked pixels
-
-   uInt j = 0;
-   Vector<T> xSel(y.nelements());
-   Vector<T> ySel(y.nelements());
-   for (uInt i=0; i<y.nelements(); i++) {
-     if (mask(i)) {
-       xSel(j) = x(i);
-       ySel(j) = y(i);
-       j++;
-     }
-   }
-   uInt nPts = j;
-   if (nPts == 0) return False;
-
-   xSel.resize(nPts,True);
-   ySel.resize(nPts,True);
-
-      
-// Create fitter
-
-   NonLinearFitLM<T> fitter;
-
-// Create and set the functionals
-
-   Gaussian1D<AutoDiff<T> > gauss; 
-   Polynomial<AutoDiff<T> > poly;  
-   CompoundFunction<AutoDiff<T> > func;
-   func.addFunction(gauss);
-   func.addFunction(poly);         
-   
-   fitter.setFunction(func);
-   
-   
-// Initial guess
-
-   Vector<T> v(4);
-   v(0) = peakGuess;             // peak
-   v(1) = posGuess;              // position
-   v(2) = widthGuess;            // width
-   v(3) = levelGuess;            // level
-  
-   fitter.setParameterValues(v);
-   
-   
-// Set maximum number of iterations to 50.  Default is 10
-
-   fitter.setMaxIter(50);
-
-
-// Set converge criteria.
-
-   T tol = 0.001;
-   fitter.setCriteria(tol);
-                                   
-
-// Perform fit on unmasked data
-
-   Vector<T> resultSigma(nPts);
-   Vector<T> solution;
-   resultSigma = 1;
-   try {
-     solution = fitter.fit(xSel, ySel, resultSigma);
-   } catch (AipsError x1) {
-      nFailed++;
-      return False;
-   } 
-
-
-// Return values of fit
-   
-   peak  = solution(0);
-   pos   = solution(1);
-   width = abs(solution(2));
-   level = solution(3);
-
-// Return status
-
-   if (!fitter.converged()) nFailed++;
-   return fitter.converged();
-                                   
+template <class T> Bool MomentCalcBase<T>::fitGaussian(
+    uInt& nFailed, T& peak, T& pos, T& width,
+    T& level, const Vector<T>& x, const Vector<T>& y,
+    const Vector<Bool>& mask, const T peakGuess,
+    const T posGuess, const T widthGuess,
+    const T levelGuess
+) const {
+    // Fit Gaussian pos * exp(-4ln2*(x-pos)**2/width**2)
+    // width = fwhm
+    // Returns false if fit fails or all masked
+    // Select unmasked pixels
+    uInt j = 0;
+    auto nAll = y.size();
+    Vector<T> xSel(nAll);
+    Vector<T> ySel(nAll);
+    for (uInt i=0; i<nAll; ++i) {
+        if (mask[i]) {
+            xSel[j] = x[i];
+            ySel[j] = y[i];
+            ++j;
+        }
+    }
+    auto nPts = j;
+    if (nPts == 0) {
+        return False;
+    }
+    xSel.resize(nPts, True);
+    ySel.resize(nPts, True);
+    // Create fitter as gaussian + constant offset
+    NonLinearFitLM<T> fitter;
+    Gaussian1D<AutoDiff<T> > gauss;
+    Polynomial<AutoDiff<T> > poly;
+    CompoundFunction<AutoDiff<T> > func;
+    func.addFunction(gauss);
+    func.addFunction(poly);
+    fitter.setFunction(func);
+    // Initial guess
+    Vector<T> v(4);
+    v[0] = peakGuess;
+    v[1] = posGuess;
+    v[2] = widthGuess;
+    v[3] = levelGuess;
+    fitter.setParameterValues(v);
+    // Set maximum number of iterations to 50.  Default is 10
+    fitter.setMaxIter(50);
+    // Set converge criteria.
+    T tol = 0.001;
+    fitter.setCriteria(0.001);
+    // Perform fit on unmasked data
+    Vector<T> resultSigma(nPts, 1);
+    Vector<T> solution;
+    try {
+        solution = fitter.fit(xSel, ySel, resultSigma);
+    }
+    catch (const AipsError& x1) {
+        ++nFailed;
+        return False;
+    }
+    // Return values of fit
+    // FIXME shouldn't these only be set if the fit converged?
+    peak  = solution[0];
+    pos   = solution[1];
+    width = abs(solution[2]);
+    level = solution[3];
+    // Return status
+    auto converged = fitter.converged();
+    if (! converged) {
+        ++nFailed;
+    }
+    return converged;
 }
 
 template <class T>
