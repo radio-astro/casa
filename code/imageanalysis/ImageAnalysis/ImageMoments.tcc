@@ -492,12 +492,18 @@ vector<SHARED_PTR<MaskedLattice<T> > > ImageMoments<T>::createMoments(
             os_p << LogIO::NORMAL << "There were " <<  pMomentCalculator->nFailedFits() << " failed fits" << LogIO::POST;
         }
     }
+    pMomentCalculatorHolder.clear(True);
     if (smoothedImage) {
+        smoothedImage->flush();
+
+        smoothedImage.reset();
         // Remove the smoothed image file if they don't want to save it
+
         if (smoothOut_p.empty()) {
             Directory dir(smoothName);
             dir.removeRecursive();
         }
+
     }
     for (auto& p: outPt) {
         p->flush();
