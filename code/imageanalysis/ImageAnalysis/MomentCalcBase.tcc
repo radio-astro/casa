@@ -134,7 +134,7 @@ void MomentCalcBase<T>::costlyMoments(MomentsBase<T>& iMom,
       if (iMom.moments_p(i) == IM::ABS_MEAN_DEVIATION) doAbsDev = True;
    }      
 }
-
+/*
 template <class T>
 Bool MomentCalcBase<T>::doAuto(const MomentsBase<T>& iMom) const
 {
@@ -142,7 +142,7 @@ Bool MomentCalcBase<T>::doAuto(const MomentsBase<T>& iMom) const
 
    return iMom.doAuto_p;
 }
-
+*/
 
 template <class T>
 Bool MomentCalcBase<T>::doFit(const MomentsBase<T>& iMom) const

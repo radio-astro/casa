@@ -99,7 +99,7 @@ MomentWindow<T>::MomentWindow(shared_ptr<Lattice<T>> pAncilliaryLattice,
 
 // Are we fitting, automatically or interactively ?
 
-   doAuto_p = this->doAuto(iMom_p);
+   //doAuto_p = this->doAuto(iMom_p);
    doFit_p = this->doFit(iMom_p);
 
 // Values to assess if spectrum is all noise or not
@@ -553,7 +553,7 @@ MomentFit<T>::MomentFit(MomentsBase<T>& iMom,
 
 // Are we fitting, automatically or interactively ?
    
-   doAuto_p = this->doAuto(iMom_p);
+   //doAuto_p = this->doAuto(iMom_p);
    doFit_p = this->doFit(iMom_p);
          
 // Values to assess if spectrum is all noise or not
@@ -615,7 +615,7 @@ void MomentFit<T>::multiProcess(Vector<T>& moments,
 
 // Fit the profile
 
-   if (doAuto_p) {
+   //if (doAuto_p) {
 
 // Automatic
 
@@ -627,7 +627,7 @@ void MomentFit<T>::multiProcess(Vector<T>& moments,
          return;
       }
 
-   }
+   // }
 
 // Were the profile coordinates precomputed ?
       

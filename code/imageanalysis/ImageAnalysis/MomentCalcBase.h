@@ -247,20 +247,6 @@ protected:
         uInt nLatticeOut
     ) const;
 
-
-    /*
-    // Convert from <tt>T</tt> to <tt>Float</tt> for plotting
-    inline Float convertT(T value) {
-        return MomentsBase<T>::convertT(value);
-    }
-
-    // Convert from <tt>Float</tt> (from plotting) to a <tt>T</tt>
-    inline T convertF(const Float value) {
-        return MomentsBase<T>::convertF(value);
-    }
-    */
-
-
     // Find out from the selectMoments array whether we want
     // to compute the more expensive moments
     void costlyMoments(
@@ -269,7 +255,7 @@ protected:
     ) const;
 
     // Return automatic/interactive switch from the ImageMoments object
-    Bool doAuto(const MomentsBase<T>& iMom) const;
+    //Bool doAuto(const MomentsBase<T>& iMom) const;
 
     // Return the Bool saying whether we need to compute coordinates
     // or not for the requested moments

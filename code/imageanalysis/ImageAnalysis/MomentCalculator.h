@@ -349,7 +349,7 @@ private:
    MomentsBase<T>& iMom_p;
    LogIO os_p;
    T stdDeviation_p, peakSNR_p;
-   Bool doAuto_p, doFit_p;
+   Bool /*doAuto_p, */ doFit_p;
    Gaussian1D<T> gauss_p;
 
 
@@ -357,7 +357,6 @@ private:
 protected:
   using MomentCalcBase<T>::constructorCheck;
   using MomentCalcBase<T>::setPosLabel;
-  //using MomentCalcBase<T>::convertF;
   using MomentCalcBase<T>::selectMoments_p;
   using MomentCalcBase<T>::calcMoments_p;
   using MomentCalcBase<T>::calcMomentsMask_p;
