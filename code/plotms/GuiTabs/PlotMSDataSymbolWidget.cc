@@ -41,10 +41,13 @@ PlotMSDataSymbolWidget::PlotMSDataSymbolWidget(PlotMSPlotter *parent)
 	unflaggedSymbol->setColor( "#0000FF" );
 	itsSymbolWidget_ = new PlotSymbolWidget(factory, unflaggedSymbol, false, false, false,false);
 
+    // Set up default
 	PlotSymbolPtr flaggedSymbol = PMS::DEFAULT_FLAGGED_SYMBOL( factory );
 	String defaultFlaggedColor = flaggedSymbol->getColor();
 	flaggedSymbol->setColor( "#FF0000");
 	itsMaskedSymbolWidget_ = new PlotSymbolWidget(factory, flaggedSymbol, false, false, false, false);
+    // Now set to none
+    itsMaskedSymbolWidget_->setSymbol(factory->symbol(PlotSymbol::NOSYMBOL));
 
 	QtUtilities::putInFrame(ui.unflaggedFrame, itsSymbolWidget_);
 	QtUtilities::putInFrame(ui.flaggedFrame, itsMaskedSymbolWidget_);

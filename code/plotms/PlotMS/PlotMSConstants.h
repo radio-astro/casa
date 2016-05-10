@@ -303,6 +303,7 @@ public:
     // <group>
     static PlotSymbolPtr DEFAULT_UNFLAGGED_SYMBOL(PlotFactoryPtr factory);
     static PlotSymbolPtr DEFAULT_FLAGGED_SYMBOL(PlotFactoryPtr factory);
+    static PlotSymbolPtr NO_FLAGGED_SYMBOL(PlotFactoryPtr factory);
     // </group>
     
     // Returns the minimum visible sizes for plot symbol types.

@@ -1175,6 +1175,7 @@ const String PMS_PP_Display::REC_COLAXES = "colorizeAxes";
 PMS_PP_Display::PMS_PP_Display(PlotFactoryPtr factory) : PlotMSPlotParameters::Group(factory)
 {
 	setDefaults();
+    setFlaggedSymbol(PMS::NO_FLAGGED_SYMBOL(factory));
 }
 
 PMS_PP_Display::PMS_PP_Display(const PMS_PP_Display& copy) : PlotMSPlotParameters::Group(copy){

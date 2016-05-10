@@ -305,6 +305,14 @@ PlotSymbolPtr PMS::DEFAULT_UNFLAGGED_SYMBOL(PlotFactoryPtr factory) {
 }
 
 PlotSymbolPtr PMS::DEFAULT_FLAGGED_SYMBOL(PlotFactoryPtr factory) {
+    static PlotSymbolPtr symbol = factory->symbol(PlotSymbol::CIRCLE);
+    symbol->setSize(2, 2);
+    symbol->setLine("#000000", PlotLine::NOLINE, 1.0);
+    symbol->setAreaFill("#FF0000");
+    return factory->symbol(*symbol);
+}
+
+PlotSymbolPtr PMS::NO_FLAGGED_SYMBOL(PlotFactoryPtr factory) {
     static PlotSymbolPtr symbol = factory->symbol(PlotSymbol::NOSYMBOL);
     symbol->setSize(2, 2);
     symbol->setLine("#000000", PlotLine::NOLINE, 1.0);
