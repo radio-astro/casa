@@ -671,7 +671,7 @@ template <class T> void MomentFit<T>::multiProcess(
     typename NumericTraits<T>::PrecisionType sumAbsDev = 0.0;
     if (doAbsDev_p) {
         T iMean = s0 / nPts;
-        for (i=0; i<nPts; i++) {
+        for (i=0; i<nPts; ++i) {
             sumAbsDev += abs(gData[i] - iMean);
         }
     }
@@ -694,7 +694,7 @@ template <class T> void MomentFit<T>::multiProcess(
 
     // Fill vector of selected moments
 
-    for (i=0; i<Int(selectMoments_p.size()); ++i) {
+    for (i=0; i<selectMoments_p.size(); ++i) {
         moments[i] = calcMoments_p(selectMoments_p[i]);
         momentsMask[i] = True;
         momentsMask[i] = calcMomentsMask_p(selectMoments_p[i]);

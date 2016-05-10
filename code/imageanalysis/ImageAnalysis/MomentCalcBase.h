@@ -376,8 +376,8 @@ protected:
         const MomentsBase<T>& iMom
     ) const;
 
-    // Return the number of moments that the ImageMoments or MSMoments class can calculate
-    uInt nMaxMoments() const;
+    // Return the number of moments that the ImageMoments class can calculate
+    //uInt nMaxMoments() const;
 
     // Return the peak SNR for determination of all noise spectra from
     // the ImageMoments or MSMoments object

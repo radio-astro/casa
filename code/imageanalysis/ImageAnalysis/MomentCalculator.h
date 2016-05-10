@@ -349,9 +349,8 @@ private:
    MomentsBase<T>& iMom_p;
    LogIO os_p;
    T stdDeviation_p, peakSNR_p;
-   Bool /*doAuto_p, */ doFit_p;
+   Bool doFit_p;
    Gaussian1D<T> gauss_p;
-
 
   //# Make members of parent class known.
 protected:

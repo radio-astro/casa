@@ -104,13 +104,14 @@ void MomentCalcBase<T>::constructorCheck(Vector<T>& calcMoments,
 
 // Number of requested moments must be in allowed range
 
-   AlwaysAssert(selectMoments.nelements() <= nMaxMoments(), AipsError);
+   auto nMaxMoments = MomentsBase<T>::NMOMENTS;
+   AlwaysAssert(selectMoments.nelements() <= nMaxMoments, AipsError);
    AlwaysAssert(selectMoments.nelements() > 0, AipsError);
 
 // Resize the vector that will hold ALL possible moments
    
-   calcMoments.resize(nMaxMoments());
-   calcMomentsMask.resize(nMaxMoments());
+   calcMoments.resize(nMaxMoments);
+   calcMomentsMask.resize(nMaxMoments);
 }
 
 
@@ -257,7 +258,6 @@ template <class T> Bool MomentCalcBase<T>::fitGaussian(
     // Set maximum number of iterations to 50.  Default is 10
     fitter.setMaxIter(50);
     // Set converge criteria.
-    T tol = 0.001;
     fitter.setCriteria(0.001);
     // Perform fit on unmasked data
     Vector<T> resultSigma(nPts, 1);
@@ -493,130 +493,6 @@ Bool MomentCalcBase<T>::getInterGaussianFit (uInt& nFailed,
    return True;
 }
 
-
-/*
-template <class T>
-void MomentCalcBase<T>::getInterGaussianGuess(T& peakGuess,
-                                              T& posGuess,
-                                              T& widthGuess,
-                                              Vector<Int>& window,
-                                              Bool& reject,
-                                              LogIO& os,
-                                              const Int nPts) const
-
-//
-// Use the cursor to get the user's guess for the
-// Gaussian peak, position and width (fwhm)
-// and fitting window 
-//
-{
-   //plotter.message("Mark location of peak & position - click right to reject spectrum");
-
-   Vector<Float> minMax(4);
-   //minMax = plotter.qwin();
-    
-   
-// Peak/pos first
-
-   String str;
-   Float xCurLocF = (minMax(0)+minMax(1))/2;
-   Float yCurLocF = (minMax(2)+minMax(3))/2;
-   Bool miss=True;
-   while (miss) {
-     str.upcase();
-     if (str == "X") {
-        miss = False;
-     } else {
-        miss = (xCurLocF<minMax(0) || xCurLocF>minMax(1) ||
-                      yCurLocF<minMax(2) || yCurLocF>minMax(3));
-     }
-   }
-
-   reject = False;
-   if (str == "X") {
-     reject = True;
-     return;
-   }
-
-   Vector<Float> xDataF(1), yDataF(1);
-   xDataF(0) = xCurLocF;
-   yDataF(0) = yCurLocF;
-   posGuess = convertT(xCurLocF);
-   peakGuess = convertT(yCurLocF);
-   
-// Now FWHM
-     
-   os << endl;
-   miss = True;   
-   while (miss) {
-     str.upcase();
-     if (str == "X") {
-        miss = False;
-     } else {
-        miss = (xCurLocF<minMax(0) || xCurLocF>minMax(1) ||
-                      yCurLocF<minMax(2) || yCurLocF>minMax(3));
-     }
-   }
-   if (str == "X") {
-     reject = True;
-   }
-   xDataF(0) = xCurLocF;
-   yDataF(0) = yCurLocF;
-   yCurLocF = convertT(peakGuess)/2;
-   widthGuess = 2*abs(posGuess-T(xCurLocF));
-  
-   miss=True;
-   while (miss) {
-     str.upcase();
-     if (str == "X") {
-        miss = False;
-     } else {
-        miss = (xCurLocF<minMax(0) || xCurLocF>minMax(1) || 
-                      yCurLocF<minMax(2) || yCurLocF>minMax(3));
-     }
-   }
-   if (str == "X") {
-     reject = True;
-     return;
-   } else if (str == "D") {
-     window(0) = 0;
-     window(1) = nPts-1;
-     return; 
-   }
-   T tX = convertF(xCurLocF);
-   T tY1 = minMax(2);
-   T tY2 = minMax(3);
-   window(0) = Int(xCurLocF+0.5);
-   
-   miss = True;
-   while (miss) {
-     str.upcase();
-     if (str == "X") {
-        miss = False;
-     } else {
-        miss = (xCurLocF<minMax(0) || xCurLocF>minMax(1) || 
-                      yCurLocF<minMax(2) || yCurLocF>minMax(3));
-     }
-   }
-   if (str == "X") {
-     reject = True;
-     return;
-   } else if (str == "D") {
-     window(0) = 0;
-     window(1) = nPts-1;
-     return;
-   }
-   tX = convertT(xCurLocF);
-   tY1 = minMax(2);
-   tY2 = minMax(3);
-   window(1) = Int(xCurLocF+0.5);
-   Int iTemp = window(0);
-   window(0) = min(iTemp, window(1));
-   window(1) = max(iTemp, window(1));
-   window(0) = max(0,window(0));
-   window(1) = min(nPts-1,window(1));
-}
-   */
 template <class T>
 void MomentCalcBase<T>::lineSegments (uInt& nSeg,
                                       Vector<uInt>& start, 
@@ -678,7 +554,7 @@ String MomentCalcBase<T>::momentAxisName(const CoordinateSystem& cSys,
    return cSys.worldAxisNames()(worldMomentAxis);
 }
 
-
+/*
 template <class T>
 uInt MomentCalcBase<T>::nMaxMoments() const
 {
@@ -688,7 +564,7 @@ uInt MomentCalcBase<T>::nMaxMoments() const
    uInt i = MomentsBase<T>::NMOMENTS;
    return i;
 }
-
+*/
 
 template <class T>
 T& MomentCalcBase<T>::peakSNR(MomentsBase<T>& iMom) const
