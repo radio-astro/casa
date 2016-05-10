@@ -380,7 +380,7 @@ Bool MomentCalcBase<T>::getAutoGaussianGuess (T& peakGuess,
    widthGuess = 5;
    return True;
 }
-
+/*
 template <class T>
 Bool MomentCalcBase<T>::getInterGaussianFit (uInt& nFailed,
                                              Vector<T>& gaussPars,
@@ -428,7 +428,7 @@ Bool MomentCalcBase<T>::getInterGaussianFit (uInt& nFailed,
       T peakGuess, posGuess, widthGuess, levelGuess, level;
       Bool reject;
       getInterGaussianGuess (peakGuess, posGuess, widthGuess, window,
-                             reject, os, y.nelements()/*, plotter*/);
+                             reject, os, y.nelements());
       if (reject) {
          gaussPars = 0;   
          return False;
@@ -492,7 +492,7 @@ Bool MomentCalcBase<T>::getInterGaussianFit (uInt& nFailed,
    }
    return True;
 }
-
+*/
 template <class T>
 void MomentCalcBase<T>::lineSegments (uInt& nSeg,
                                       Vector<uInt>& start, 

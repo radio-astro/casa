@@ -307,6 +307,7 @@ protected:
         const Vector<Bool>& mask
     ) const;
 
+    /*
     // Interactively define a guess for a Gaussian fit, and then
     // do the fit.  Do this repeatedly  until the user is content.
     Bool getInterGaussianFit(
@@ -316,15 +317,6 @@ protected:
         const Bool fixedYLimits, const T yMinAuto,
         T yMaxAuto, const String& xLabel,
         const String& yLabel, const String& title
-    ) const;
-
-    /*
-    // Interactively define a guess for the Gaussian parameters
-    void getInterGaussianGuess(
-        T& peakGuess, T& posGuess,
-        T& widthGuess, Vector<Int>& window,
-        Bool& reject, LogIO& os,
-        Int nPts
     ) const;
     */
 
@@ -348,7 +340,7 @@ protected:
         // if the coordinate transformation fails or not
         //
         // Should really check the result is True, but for speed ...
-        pixelIn(iMom.momentAxis_p) = momentPixel;
+        pixelIn[iMom.momentAxis_p] = momentPixel;
         cSys_p.toWorld(worldOut, pixelIn);
         if (asVelocity) {
             Double velocity;
@@ -375,9 +367,6 @@ protected:
         const CoordinateSystem&,
         const MomentsBase<T>& iMom
     ) const;
-
-    // Return the number of moments that the ImageMoments class can calculate
-    //uInt nMaxMoments() const;
 
     // Return the peak SNR for determination of all noise spectra from
     // the ImageMoments or MSMoments object
