@@ -350,9 +350,8 @@ vector<SHARED_PTR<MaskedLattice<T> > > ImageMoments<T>::createMoments(
     // routines can only handle convolution when the image fits fully in core
     // at present.
     SPIIT smoothedImage;
-    String smoothName;
     if (doSmooth_p) {
-        smoothedImage = _smoothImage(smoothName);
+        smoothedImage = _smoothImage();
     }
     // Set output images shape and coordinates.
     IPosition outImageShape;
@@ -450,27 +449,23 @@ vector<SHARED_PTR<MaskedLattice<T> > > ImageMoments<T>::createMoments(
 
     // Create appropriate MomentCalculator object
     os_p << LogIO::NORMAL << "Begin computation of moments" << LogIO::POST;
-    PtrHolder<MomentCalcBase<T> > pMomentCalculatorHolder;
+    shared_ptr<MomentCalcBase<T> > momentCalculator;
     if (clipMethod || smoothClipMethod) {
-        pMomentCalculatorHolder.set(
-            new MomentClip<T>(smoothedImage, *this, os_p, outPt.size()),
-            False, False
+        momentCalculator.reset(
+            new MomentClip<T>(smoothedImage, *this, os_p, outPt.size())
         );
     }
     else if (windowMethod) {
-        pMomentCalculatorHolder.set(
-            new MomentWindow<T>(smoothedImage, *this, os_p, outPt.size()),
-            False, False
+        momentCalculator.reset(
+            new MomentWindow<T>(smoothedImage, *this, os_p, outPt.size())
         );
     }
     else if (fitMethod) {
-        pMomentCalculatorHolder.set(
-            new MomentFit<T>(*this, os_p, outPt.size()),
-            False, False
+        momentCalculator.reset(
+            new MomentFit<T>(*this, os_p, outPt.size())
         );
     }
     // Iterate optimally through the image, compute the moments, fill the output lattices
-    MomentCalcBase<T>* pMomentCalculator = pMomentCalculatorHolder.ptr();
     unique_ptr<ImageMomentsProgress> pProgressMeter;
     if (showProgress_p) {
         pProgressMeter.reset(new ImageMomentsProgress());
@@ -484,26 +479,15 @@ vector<SHARED_PTR<MaskedLattice<T> > > ImageMoments<T>::createMoments(
         ptrBlock[i] = outPt[i].get();
     }
     LatticeApply<T>::lineMultiApply(
-        ptrBlock, *_image, *pMomentCalculator,
+        ptrBlock, *_image, *momentCalculator,
         momentAxis_p, pProgressMeter.get()
     );
     if (windowMethod || fitMethod) {
-        if (pMomentCalculator->nFailedFits() != 0) {
-            os_p << LogIO::NORMAL << "There were " <<  pMomentCalculator->nFailedFits() << " failed fits" << LogIO::POST;
+        if (momentCalculator->nFailedFits() != 0) {
+            os_p << LogIO::NORMAL << "There were "
+                <<  momentCalculator->nFailedFits()
+                << " failed fits" << LogIO::POST;
         }
-    }
-    pMomentCalculatorHolder.clear(True);
-    if (smoothedImage) {
-        smoothedImage->flush();
-
-        smoothedImage.reset();
-        // Remove the smoothed image file if they don't want to save it
-
-        if (smoothOut_p.empty()) {
-            Directory dir(smoothName);
-            dir.removeRecursive();
-        }
-
     }
     for (auto& p: outPt) {
         p->flush();
@@ -511,54 +495,44 @@ vector<SHARED_PTR<MaskedLattice<T> > > ImageMoments<T>::createMoments(
     return outPt;
 }
 
-template <class T> SPIIT ImageMoments<T>::_smoothImage (
-    String& smoothName
-) {
+template <class T> SPIIT ImageMoments<T>::_smoothImage() {
     // Smooth image.   Input masked pixels are zerod before smoothing.
     // The output smoothed image is masked as well to reflect
     // the input mask.
-    // Output
-    //   pSmoothedImage PtrHolder for smoothed Lattice
-    //   smoothName     Name of smoothed image file
-    //   Bool           True for success
-    // Check axes
-    Int axMax = max(smoothAxes_p) + 1;
+    auto axMax = max(smoothAxes_p) + 1;
     ThrowIf(
         axMax > Int(_image->ndim()),
         "You have specified an illegal smoothing axis"
     );
-    // Create smoothed image as a PagedImage.  We delete it later
-    // if the user doesn't want to save it
+    SPIIT smoothedImage;
     if (smoothOut_p.empty()) {
-        // We overwrite this image if it exists.
-        File inputImageName(_image->name());
-        const String path = inputImageName.path().dirName() + "/";
-        Path fileName = File::newUniqueName(path, String("ImageMoments_Smooth_"));
-        smoothName = fileName.absoluteName();
+        smoothedImage.reset(
+            new TempImage<T>(
+                _image->shape(),
+                _image->coordinates()
+            )
+        );
     }
     else {
         // This image has already been checked in setSmoothOutName
         // to not exist
-        smoothName = smoothOut_p;
+        smoothedImage.reset(
+            new PagedImage<T>(
+                _image->shape(),
+                _image->coordinates(), smoothOut_p
+            )
+        );
     }
-    SPIIT smoothedImage(
-        new PagedImage<T>(
-            _image->shape(),
-            _image->coordinates(), smoothName
-        )
-    );
     smoothedImage->setMiscInfo(_image->miscInfo());
-    if (!smoothOut_p.empty()) {
-        os_p << LogIO::NORMAL << "Created " << smoothName << LogIO::POST;
-    }
     // Do the convolution.  Conserve flux.
-    Bool autoScale = True;
-    Bool useImageShapeExactly = False;
     SepImageConvolver<T> sic(*_image, os_p, True);
-    for (uInt i=0; i<smoothAxes_p.nelements(); i++) {
-        VectorKernel::KernelTypes type = VectorKernel::KernelTypes(kernelTypes_p(i));
-        sic.setKernel(uInt(smoothAxes_p(i)), type, kernelWidths_p(i),
-                autoScale, useImageShapeExactly, 1.0);
+    auto n = smoothAxes_p.size();
+    for (uInt i=0; i<n; ++i) {
+        VectorKernel::KernelTypes type = VectorKernel::KernelTypes(kernelTypes_p[i]);
+        sic.setKernel(
+            uInt(smoothAxes_p[i]), type, kernelWidths_p[i],
+            True, False, 1.0
+        );
     }
     sic.convolve(*smoothedImage);
     return smoothedImage;

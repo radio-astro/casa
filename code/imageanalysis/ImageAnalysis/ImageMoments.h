@@ -333,7 +333,7 @@ private:
    ImageMomentsProgressMonitor* _progressMonitor = nullptr;
 
    // Smooth an image
-   SPIIT _smoothImage(String& smoothName);
+   SPIIT _smoothImage();
 
    // Determine the noise by fitting a Gaussian to a histogram
    // of the entire image above the 25% levels.  If a plotting
