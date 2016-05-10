@@ -412,7 +412,7 @@ Bool MomentWindow<T>::getBosmaWindow (Vector<Int>& window,
 
    uInt minPos, maxPos;
    T yMin, yMax, yMean;
-   this->stats(yMin, yMax, minPos, maxPos, yMean, y, mask);
+   this->_stats(yMin, yMax, minPos, maxPos, yMean, y, mask);
 
    const Int nPts = y.nelements(); 
    Int iMin = max(0,Int(maxPos)-2);   

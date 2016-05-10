@@ -254,9 +254,6 @@ protected:
         Bool& doMedianV, Bool& doAbsDev
     ) const;
 
-    // Return automatic/interactive switch from the ImageMoments object
-    //Bool doAuto(const MomentsBase<T>& iMom) const;
-
     // Return the Bool saying whether we need to compute coordinates
     // or not for the requested moments
     void doCoordCalc(
@@ -285,10 +282,6 @@ protected:
         T levelGuess
     ) const;
 
-    // Return the fixed Y-plotting limits switch from the
-    // ImageMoments or MSMoments object
-    Bool fixedYLimits(const MomentsBase<T>& iMom) const;
-
     // Automatically fit a Gaussian to a spectrum, including finding the
     // starting guesses.
     Bool getAutoGaussianFit(
@@ -306,19 +299,6 @@ protected:
         const Vector<T>& x, const Vector<T>& y,
         const Vector<Bool>& mask
     ) const;
-
-    /*
-    // Interactively define a guess for a Gaussian fit, and then
-    // do the fit.  Do this repeatedly  until the user is content.
-    Bool getInterGaussianFit(
-        uInt& nFailed, Vector<T>& gaussPars,
-        LogIO& os, const Vector<T>& x,
-        const Vector<T>& y, const Vector<Bool>& mask,
-        const Bool fixedYLimits, const T yMinAuto,
-        T yMaxAuto, const String& xLabel,
-        const String& yLabel, const String& title
-    ) const;
-    */
 
     // Compute the world coordinate for the given moment axis pixel
     inline Double getMomentCoord(
@@ -422,7 +402,7 @@ protected:
 
     // Find some statistics from teh masked vector.
     // Returns False if no unmasked points.
-    Bool stats(
+    Bool _stats(
         T& dMin, T& dMax, uInt& minPos, uInt& maxPos,
         T& mean, const Vector<T>& profile,
         const Vector<Bool>& mask

@@ -42,53 +42,45 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/Exceptions/Error.h>
 
+namespace casa {
 
+template <class T> MomentCalcBase<T>::~MomentCalcBase() {}
 
-namespace casa { //# NAMESPACE CASA - BEGIN
-
-// Base class MomentCalcBase 
-
-template <class T> 
-MomentCalcBase<T>::~MomentCalcBase()
-{;}
-
-template <class T>
-void MomentCalcBase<T>::init (uInt nOutPixelsPerCollapse)
-{
+template <class T> void MomentCalcBase<T>::init(
+    uInt nOutPixelsPerCollapse
+) {
    AlwaysAssert (nOutPixelsPerCollapse == 1, AipsError);
 }
 
+template <class T> uInt MomentCalcBase<T>::allNoise (
+    T& dMean,  const Vector<T>& data, const Vector<Bool>& mask,
+    const T peakSNR, const T stdDeviation
+) const {
+    //
+    // Try and work out whether this spectrum is all noise
+    // or not.  We don't bother with it if it is noise.
+    // We compare the peak with sigma and a cutoff SNR
+    // Returns 1 if all noise
+    // Returns 2 if all masked
+    // Returns 0 otherwise
+    T dMin, dMax;
+    uInt minPos, maxPos;
+    if (
+        ! this->_stats(dMin, dMax, minPos, maxPos, dMean, data, mask)
+    ) {
+        return 2;
+    }
 
-template <class T>
-uInt MomentCalcBase<T>::allNoise (T& dMean, 
-                                  const Vector<T>& data,
-                                  const Vector<Bool>& mask,
-                                  const T peakSNR,
-                                  const T stdDeviation) const
-//
-// Try and work out whether this spectrum is all noise
-// or not.  We don't bother with it if it is noise.
-// We compare the peak with sigma and a cutoff SNR
-//
-// Returns 1 if all noise
-// Returns 2 if all masked
-// Returns 0 otherwise
-//
-{
-   T dMin, dMax;
-   uInt minPos, maxPos;
-   if (!this->stats(dMin, dMax, minPos, maxPos, dMean, data, mask)) return 2;
+    // Assume we are continuum subtracted so outside of line mean=0
 
+    const T rat = max(abs(dMin),abs(dMax)) / stdDeviation;
 
-// Assume we are continuum subtracted so outside of line mean=0
-
-   const T rat = max(abs(dMin),abs(dMax)) / stdDeviation;
-
-   if (rat < peakSNR) {
-      return 1;
-   } else {
-      return 0;
-   }
+    if (rat < peakSNR) {
+        return 1;
+    }
+    else {
+        return 0;
+    }
 }
 
 template <class T>
@@ -347,8 +339,6 @@ Bool MomentCalcBase<T>::getAutoGaussianFit (uInt& nFailed,
    return True;
 }
 
-
-
 template <class T>
 Bool MomentCalcBase<T>::getAutoGaussianGuess (T& peakGuess,
                                               T& posGuess,
@@ -368,7 +358,7 @@ Bool MomentCalcBase<T>::getAutoGaussianGuess (T& peakGuess,
 
    uInt minPos, maxPos;
    T dMin, dMax, dMean;
-   if (!this->stats(dMin, dMax, minPos, maxPos, dMean, y, mask)) return False;
+   if (!this->_stats(dMin, dMax, minPos, maxPos, dMean, y, mask)) return False;
 
    posGuess = x(maxPos);
    peakGuess = dMax;
@@ -380,119 +370,7 @@ Bool MomentCalcBase<T>::getAutoGaussianGuess (T& peakGuess,
    widthGuess = 5;
    return True;
 }
-/*
-template <class T>
-Bool MomentCalcBase<T>::getInterGaussianFit (uInt& nFailed,
-                                             Vector<T>& gaussPars,
-                                             LogIO& os,
-                                             const Vector<T>& x,
-                                             const Vector<T>& y,
-                                             const Vector<Bool>& mask,
-                                             Bool fixedYLimits,
-                                             T yMinAuto,
-                                             T yMaxAuto,
-                                             const String& xLabel,
-                                             const String& yLabel,
-                                             const String& title ) const
-//
-// With the cursor, define a guess for a Gaussian fit,
-// and do the fit over and over until they are happy.
-// Then return the Gaussian parameters.
-//
-// Inputs:
-//   x,y       The abcissa and spectrum
-//   mask      Mask.  True is good.
-//   x,yLabel  Labels
-//   title     Title of plot
-// Input/output
-//   nFailed   Cumualtive number of failures in fitting
-// Outputs:
-//   gaussPars The gaussian parameters (peak, pos, width, level)
-//   Bool      True if all successful, False if spectrum rejected
-//             because all noise or all masked
-//
-{
-   
-// Get user's guess and fit until satisfied
 
-   Bool more = True;
-   Bool ditch, redo;
-   Vector<Int> window(2);
-   os << endl;
-
-
-   while (more) {
-
-// Get users guess for position, peak, width and fit window
-
-      T peakGuess, posGuess, widthGuess, levelGuess, level;
-      Bool reject;
-      getInterGaussianGuess (peakGuess, posGuess, widthGuess, window,
-                             reject, os, y.nelements());
-      if (reject) {
-         gaussPars = 0;   
-         return False;
-      }
-  
-
-// Get guess for level and adjust peak
-
-      T dMin, dMax, dMean;
-      uInt minPos, maxPos;
-      this->stats (dMin, dMax, minPos, maxPos, dMean, y, mask);
-      levelGuess = dMean;
-      peakGuess = peakGuess - levelGuess;
-
-   
-// Fit a Gaussian
-   
-      Int n = window(1) - window(0) + 1;
-      Vector<T> xFit(n);
-      Vector<T> yFit(n); 
-      Vector<Bool> maskFit(n);
-      for (Int i=0; i<n; i++) {
-         xFit(i) = x(i+window(0));
-         yFit(i) = y(i+window(0));
-         maskFit(i) = mask(i+window(0));
-      }
-      T pos, width, peak;
-      if (fitGaussian (nFailed, peak, pos, width, level, xFit, yFit, maskFit,
-                       peakGuess, posGuess, widthGuess, levelGuess)) {
-       
-// Show fit
-
-         //showGaussFit (peak, pos, width, level, x, y, mask, plotter);
-      } else {
-         os << LogIO::NORMAL << "Fit failed" << LogIO::POST;
-      }
-
-
-// Are we happy ?
-
-   
-      //plotter.message("Accept (left),  redo (middle), reject (right)");
-      //getButton(ditch, redo, plotter);
-      if (ditch) {
-         //plotter.message("Rejecting spectrum");
-         gaussPars = 0;
-         return False;
-      } else if (redo) {
-   
-      } else {
-         
-// OK, set parameters of fit
-         
-         more = False;
-         gaussPars(0) = peak;
-         gaussPars(1) = pos;
-         gaussPars(2) = width;
-         gaussPars(3) = level;
-         return True;
-      }
-   }
-   return True;
-}
-*/
 template <class T>
 void MomentCalcBase<T>::lineSegments (uInt& nSeg,
                                       Vector<uInt>& start, 
@@ -770,45 +648,39 @@ void MomentCalcBase<T>::setUpCoords (const MomentsBase<T>& iMom,
    }
 }
 
-template <class T>      
-Bool MomentCalcBase<T>::stats(T& dMin, 
-                              T& dMax,  
-                              uInt& minPos,
-                              uInt& maxPos,
-                              T& dMean,
-                              const Vector<T>& profile,
-                              const Vector<Bool>& mask) const
-//
-// Returns False if no unmasked points
-//
-{
-   Bool deleteIt1, deleteIt2;
-   const T* pProfile = profile.getStorage(deleteIt1);
-   const Bool* pMask = mask.getStorage(deleteIt2);
+template <class T> Bool MomentCalcBase<T>::_stats(
+    T& dMin, T& dMax, uInt& minPos, uInt& maxPos, T& dMean,
+    const Vector<T>& profile, const Vector<Bool>& mask
+) const {
+    // Returns False if no unmasked points
+    Bool deleteIt1, deleteIt2;
+    const T* pProfile = profile.getStorage(deleteIt1);
+    const Bool* pMask = mask.getStorage(deleteIt2);
+    Int iStart = -1;
+    uInt i = 0;
+    uInt nPts = 0;
+    typename NumericTraits<T>::PrecisionType sum = 0;
+    auto size = profile.size();
+    while (i<size && iStart==-1) {
+        if (pMask[i]) {
+            dMax = pProfile[i];
+            dMin = dMax;
+            minPos = i;
+            maxPos = i;
+            sum = pProfile[i];
+            ++nPts;
+            iStart = i+1;
+        }
+        ++i;
+    }
+    if (iStart == -1) {
+        return False;
+    }
 
-   Int iStart = -1;
-   uInt i = 0;
-   uInt nPts = 0;
-   typename NumericTraits<T>::PrecisionType sum = 0;
-
-   while (i<profile.nelements() && iStart==-1) {
+   for (i=iStart; i<size; ++i) {
       if (pMask[i]) {
-        dMax = pProfile[i];
-        dMin = dMax;
-        minPos = i;
-        maxPos = i;
-        sum = pProfile[i];
-        nPts++;
-        iStart = i+1;
-      }
-      i++;
-   }
-   if (iStart == -1) return False;
-
-   for (i=iStart; i<profile.nelements(); i++) {
-      if (pMask[i]) {
-         dMin = min(dMin,pProfile[i]);
-         dMax = max(dMax,pProfile[i]);
+         dMin = min(dMin, pProfile[i]);
+         dMax = max(dMax, pProfile[i]);
          minPos = i;
          maxPos = i;
          sum += pProfile[i];
@@ -818,7 +690,6 @@ Bool MomentCalcBase<T>::stats(T& dMin,
    dMean = sum / nPts;
    profile.freeStorage(pProfile, deleteIt1);
    mask.freeStorage(pMask, deleteIt2);
-
    return True;  
 }
 
