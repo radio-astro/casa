@@ -7,15 +7,15 @@ import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.qa.scorecalculator as qacalc
 
-from .semiFinalBPdcals import semiFinalBPdcalsResults
-from .semiFinalBPdcals import semiFinalBPdcals
+from . import finalcals
+
 
 LOG = logging.get_logger(__name__)
 
-class semiFinalBPdcalsQAHandler(pqa.QAResultHandler):
-    result_cls = semiFinalBPdcalsResults
+class FinalcalsQAHandler(pqa.QAResultHandler):
+    result_cls = finalcals.FinalcalsResults
     child_cls = None
-    generating_task = semiFinalBPdcals
+    generating_task = finalcals.Finalcals
 
     def handle(self, context, result):
 
@@ -29,15 +29,15 @@ class semiFinalBPdcalsQAHandler(pqa.QAResultHandler):
         '''
         Check for the existence of the target MS
         '''
-        return qacalc.score_path_exists(output_dir, ms, 'semiFinalBPdcals')
+        return qacalc.score_path_exists(output_dir, ms, 'Finalcals')
 
-class semiFinalBPdcalsListQAHandler(pqa.QAResultHandler):
+class FinalcalsListQAHandler(pqa.QAResultHandler):
     """
-    QA handler for a list containing semiFinalBPdcalsResults.
+    QA handler for a list containing FinalcalsResults.
     """
     result_cls = list
-    child_cls = semiFinalBPdcalsResults
-    generating_task = semiFinalBPdcals
+    child_cls = finalcals.FinalcalsResults
+    generating_task = finalcals.Finalcals
 
     def handle(self, context, result):
         # collate the QAScores from each child result, pulling them into our
@@ -47,3 +47,5 @@ class semiFinalBPdcalsListQAHandler(pqa.QAResultHandler):
         mses = [r.inputs['vis'] for r in result]
         longmsg = 'No missing target MS(s) for %s' % utils.commafy(mses, quotes=False, conjunction='or')
         result.qa.all_unity_longmsg = longmsg
+
+

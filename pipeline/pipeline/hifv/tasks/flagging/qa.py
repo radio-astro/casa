@@ -30,7 +30,7 @@ class FlagBadDeformattersQAHandler(pqa.QAResultHandler):
         '''
         Check for the existence of the target MS
         '''
-        return qacalc.score_path_exists(output_dir, ms, 'testBPdcals')
+        return qacalc.score_path_exists(output_dir, ms, 'Flag Bad Deformatters')
 
 class FlagBadDeformattersListQAHandler(pqa.QAResultHandler):
     """
@@ -70,7 +70,7 @@ class CheckflagQAHandler(pqa.QAResultHandler):
         '''
         Check for the existence of the target MS
         '''
-        return qacalc.score_path_exists(output_dir, ms, 'testBPdcals')
+        return qacalc.score_path_exists(output_dir, ms, 'Checkflag')
 
 class CheckflagListQAHandler(pqa.QAResultHandler):
     """
@@ -109,7 +109,7 @@ class TargetflagQAHandler(pqa.QAResultHandler):
         '''
         Check for the existence of the target MS
         '''
-        return qacalc.score_path_exists(output_dir, ms, 'testBPdcals')
+        return qacalc.score_path_exists(output_dir, ms, 'Targetflag')
 
 class TargetflagListQAHandler(pqa.QAResultHandler):
     """

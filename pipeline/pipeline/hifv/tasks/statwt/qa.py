@@ -7,15 +7,15 @@ import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.qa.scorecalculator as qacalc
 
-from .semiFinalBPdcals import semiFinalBPdcalsResults
-from .semiFinalBPdcals import semiFinalBPdcals
+from . import statwt
+
 
 LOG = logging.get_logger(__name__)
 
-class semiFinalBPdcalsQAHandler(pqa.QAResultHandler):
-    result_cls = semiFinalBPdcalsResults
+class StatwtQAHandler(pqa.QAResultHandler):
+    result_cls = statwt.StatwtResults
     child_cls = None
-    generating_task = semiFinalBPdcals
+    generating_task = statwt.Statwt
 
     def handle(self, context, result):
 
@@ -29,15 +29,15 @@ class semiFinalBPdcalsQAHandler(pqa.QAResultHandler):
         '''
         Check for the existence of the target MS
         '''
-        return qacalc.score_path_exists(output_dir, ms, 'semiFinalBPdcals')
+        return qacalc.score_path_exists(output_dir, ms, 'Statwt')
 
-class semiFinalBPdcalsListQAHandler(pqa.QAResultHandler):
+class StatwtListQAHandler(pqa.QAResultHandler):
     """
-    QA handler for a list containing semiFinalBPdcalsResults.
+    QA handler for a list containing StatwtResults.
     """
     result_cls = list
-    child_cls = semiFinalBPdcalsResults
-    generating_task = semiFinalBPdcals
+    child_cls = statwt.StatwtResults
+    generating_task = statwt.Statwt
 
     def handle(self, context, result):
         # collate the QAScores from each child result, pulling them into our
