@@ -215,7 +215,7 @@ private:
 protected:
   using MomentCalcBase<T>::constructorCheck;
   using MomentCalcBase<T>::setPosLabel;
-  using MomentCalcBase<T>::convertF;
+  //using MomentCalcBase<T>::convertF;
   using MomentCalcBase<T>::selectMoments_p;
   using MomentCalcBase<T>::calcMoments_p;
   using MomentCalcBase<T>::calcMomentsMask_p;
@@ -357,7 +357,7 @@ private:
 protected:
   using MomentCalcBase<T>::constructorCheck;
   using MomentCalcBase<T>::setPosLabel;
-  using MomentCalcBase<T>::convertF;
+  //using MomentCalcBase<T>::convertF;
   using MomentCalcBase<T>::selectMoments_p;
   using MomentCalcBase<T>::calcMoments_p;
   using MomentCalcBase<T>::calcMomentsMask_p;

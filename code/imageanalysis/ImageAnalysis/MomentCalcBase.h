@@ -42,7 +42,6 @@ template <class T> class MomentsBase;
 // <prerequisite>
 //   <li> <linkto class="MomentsBase">MomentsBase</linkto>
 //   <li> <linkto class="ImageMoments">ImageMoments</linkto>
-//   <li> <linkto class="MSMoments">MSMoments</linkto>
 //   <li> <linkto class="LatticeApply">LatticeApply</linkto>
 //   <li> <linkto class="LineCollapser">LineCollapser</linkto>
 // </prerequisite>
@@ -249,6 +248,7 @@ protected:
     ) const;
 
 
+    /*
     // Convert from <tt>T</tt> to <tt>Float</tt> for plotting
     inline Float convertT(T value) {
         return MomentsBase<T>::convertT(value);
@@ -258,6 +258,7 @@ protected:
     inline T convertF(const Float value) {
         return MomentsBase<T>::convertF(value);
     }
+    */
 
 
     // Find out from the selectMoments array whether we want
