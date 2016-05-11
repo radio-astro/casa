@@ -400,7 +400,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SynthesisDeconvolver::setupMask()
   {
     LogIO os( LogOrigin("SynthesisDeconvolver","setupMask",WHERE) );
-
     if( itsIsMaskLoaded==False ) {
       // use mask(s) 
       if(  itsMaskList[0] != "" || itsMaskType == "pb" || itsAutoMaskAlgorithm != "" ) {
@@ -448,7 +447,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SynthesisDeconvolver::setAutoMask()
   {
      //modify mask using automask otherwise no-op
-     if ( itsAutoMaskAlgorithm != "" && !itsIsInteractive) {
+     if ( itsAutoMaskAlgorithm != "" )  {
        if ( itsPBMask > 0.0 ) {
          itsMaskHandler->autoMaskWithinPB( itsImages, itsAutoMaskAlgorithm, itsMaskThreshold, itsFracOfPeak, itsMaskResolution, itsMaskResByBeam, itsPBMask);
        }
