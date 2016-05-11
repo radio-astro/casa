@@ -676,23 +676,25 @@ template <class T> Bool MomentCalcBase<T>::_stats(
     if (iStart == -1) {
         return False;
     }
-
-   for (i=iStart; i<size; ++i) {
-      if (pMask[i]) {
-         dMin = min(dMin, pProfile[i]);
-         dMax = max(dMax, pProfile[i]);
-         minPos = i;
-         maxPos = i;
-         sum += pProfile[i];
-         nPts++;
-      }
-   }
-   dMean = sum / nPts;
-   profile.freeStorage(pProfile, deleteIt1);
-   mask.freeStorage(pMask, deleteIt2);
-   return True;  
+    for (i=iStart; i<size; ++i) {
+        if (pMask[i]) {
+            if (pProfile[i] < dMin) {
+                dMin = pProfile[i];
+                minPos = i;
+            }
+            else if (pProfile[i] > dMax) {
+                dMax = pProfile[i];
+                maxPos = i;
+            }
+            sum += pProfile[i];
+            ++nPts;
+        }
+    }
+    dMean = sum / nPts;
+    profile.freeStorage(pProfile, deleteIt1);
+    mask.freeStorage(pMask, deleteIt2);
+    return True;
 }
-
 
 template <class T>
 T& MomentCalcBase<T>::stdDeviation(MomentsBase<T>& iMom) const
