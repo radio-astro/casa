@@ -10762,7 +10762,10 @@ used to create a 2D temporary image.
     </description>
     <example>
         ia.open("attenuated.im")
-        ia.pbcor(pbimage="mypb.im", outname="pbcorred.im", mode="divide", cutoff=0.1)
+        pbia = ia.pbcor(pbimage="mypb.im", outname="pbcorred.im", mode="divide", cutoff=0.1)
+        ia.done()
+        # do stuff with ia tool attached to pb image and close it
+        pbia.done()
     </example>
 </method>
   
