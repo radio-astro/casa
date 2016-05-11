@@ -175,7 +175,7 @@ class ContFileHandler(object):
                         stop = stop if (stop < (ctrim_nchan-ctrim)) else ctrim_nchan-ctrim-1
                     if (stop >= start):
                         chan_selection.append((start, stop))
-                        result = imTool.advisechansel(msname = msname, fieldid = field, spwselection = '%d:%d~%d' % (spw_id, start, stop), getfreqrange = True)
+                        result = imTool.advisechansel(msname = msname, fieldid = field, spwselection = '%d:%d~%d' % (spw_id, start, stop), freqframe = 'TOPO', getfreqrange = True)
                         fLow = casatools.quanta.convert('%sHz' % (result['freqstart']), 'GHz')['value']
                         fHigh = casatools.quanta.convert('%sHz' % (result['freqend']), 'GHz')['value']
                         freq_selection.append((fLow, fHigh))
