@@ -340,6 +340,51 @@ void MosaicFT::prepGridForDegrid(){
     //if(arrayLattice) delete arrayLattice; arrayLattice=0;
   arrayLattice = new ArrayLattice<Complex>(griddedData);
   lattice=arrayLattice;
+   {///UnDo the grid correction
+      Int inx = lattice->shape()(0);
+      //Int iny = lattice->shape()(1);
+      Vector<Complex> correction(inx);
+      correction=Complex(1.0, 0.0);
+
+      // Int npixCorr= max(nx,ny);
+      Vector<Float> sincConvX(nx);
+      for (Int ix=0;ix<nx;ix++) {
+	Float x=C::pi*Float(ix-nx/2)/(Float(nx)*Float(convSampling));
+	if(ix==nx/2) {
+	  sincConvX(ix)=1.0;
+	}
+	else {
+	  sincConvX(ix)=sin(x)/x;
+	}
+      }
+      Vector<Float> sincConvY(ny);
+      for (Int ix=0;ix<ny;ix++) {
+	Float x=C::pi*Float(ix-ny/2)/(Float(ny)*Float(convSampling));
+	if(ix==ny/2) {
+	  sincConvY(ix)=1.0;
+	}
+	else {
+	  sincConvY(ix)=sin(x)/x;
+	}
+      }
+ 
+       IPosition cursorShape(4, inx, 1, 1, 1);
+      IPosition axisPath(4, 0, 1, 2, 3);
+      LatticeStepper lsx(lattice->shape(), cursorShape, axisPath);
+      LatticeIterator<Complex> lix(*lattice, lsx);
+      for(lix.reset();!lix.atEnd();lix++) {
+	//Int pol=lix.position()(2);
+	//Int chan=lix.position()(3);
+	
+	Int iy=lix.position()(1);
+	//gridder->correctX1D(correction,iy);
+	for (Int ix=0;ix<nx;ix++) {
+	  correction(ix)=(sincConvX(ix)*sincConvY(iy));
+	}
+	lix.rwVectorCursor()*=correction;
+	
+      }
+  }
     
   
   logIO() << LogIO::DEBUGGING << "Starting FFT of image" << LogIO::POST;
@@ -1627,12 +1672,34 @@ ImageInterface<Complex>& MosaicFT::getImage(Matrix<Float>& weights,
       lattice=arrayLattice;
       LatticeFFT::cfft2d(*lattice,False);
     }
-    
-    {
+   {////Do the grid correction
       Int inx = lattice->shape()(0);
-      Int iny = lattice->shape()(1);
+      //Int iny = lattice->shape()(1);
       Vector<Complex> correction(inx);
       correction=Complex(1.0, 0.0);
+
+      // Int npixCorr= max(nx,ny);
+      Vector<Float> sincConvX(nx);
+      for (Int ix=0;ix<nx;ix++) {
+	Float x=C::pi*Float(ix-nx/2)/(Float(nx));//*Float(convSampling));
+	if(ix==nx/2) {
+	  sincConvX(ix)=1.0;
+	}
+	else {
+	  sincConvX(ix)=sin(x)/x;
+	}
+      }
+      Vector<Float> sincConvY(ny);
+      for (Int ix=0;ix<ny;ix++) {
+	Float x=C::pi*Float(ix-ny/2)/(Float(ny));//*Float(convSampling));
+	if(ix==ny/2) {
+	  sincConvY(ix)=1.0;
+	}
+	else {
+	  sincConvY(ix)=sin(x)/x;
+	}
+      }
+    
 
       IPosition cursorShape(4, inx, 1, 1, 1);
       IPosition axisPath(4, 0, 1, 2, 3);
@@ -1642,26 +1709,24 @@ ImageInterface<Complex>& MosaicFT::getImage(Matrix<Float>& weights,
 	Int pol=lix.position()(2);
 	Int chan=lix.position()(3);
 	if(weights(pol, chan)!=0.0) {
-	  /*
-	  if(!sj_p) {
-	    gridder->correctX1D(correction, lix.position()(1));
-	    lix.rwVectorCursor()/=correction;
+	  Int iy=lix.position()(1);
+	  //gridder->correctX1D(correction,iy);
+	  for (Int ix=0;ix<nx;ix++) {
+	    correction(ix)=1.0/(sincConvX(ix)*sincConvY(iy));
 	  }
-	  */
+	  lix.rwVectorCursor()*=correction;
 	  if(normalize) {
-	    Complex rnorm(Float(inx)*Float(iny)/weights(pol,chan));
+	    Complex rnorm(1.0/weights(pol,chan));
 	    lix.rwCursor()*=rnorm;
 	  }
-	  //	  else {
-	  //	    Complex rnorm(Float(inx)*Float(iny));
-	  //	    lix.rwCursor()*=rnorm;
-	  //	  }
 	}
 	else {
 	  lix.woCursor()=0.0;
 	}
       }
     }
+     
+    
 
     //if(!isTiled) 
     {

@@ -338,6 +338,55 @@ void MosaicFT::prepGridForDegrid(){
     //if(arrayLattice) delete arrayLattice; arrayLattice=0;
   arrayLattice = new ArrayLattice<Complex>(griddedData);
   lattice=arrayLattice;
+  
+
+  {///UnDo the grid correction
+      Int inx = lattice->shape()(0);
+      //Int iny = lattice->shape()(1);
+      Vector<Complex> correction(inx);
+      correction=Complex(1.0, 0.0);
+
+      // Int npixCorr= max(nx,ny);
+      Vector<Float> sincConvX(nx);
+      for (Int ix=0;ix<nx;ix++) {
+	Float x=C::pi*Float(ix-nx/2)/(Float(nx)*Float(convSampling));
+	if(ix==nx/2) {
+	  sincConvX(ix)=1.0;
+	}
+	else {
+	  sincConvX(ix)=sin(x)/x;
+	}
+      }
+      Vector<Float> sincConvY(ny);
+      for (Int ix=0;ix<ny;ix++) {
+	Float x=C::pi*Float(ix-ny/2)/(Float(ny)*Float(convSampling));
+	if(ix==ny/2) {
+	  sincConvY(ix)=1.0;
+	}
+	else {
+	  sincConvY(ix)=sin(x)/x;
+	}
+      }
+ 
+       IPosition cursorShape(4, inx, 1, 1, 1);
+      IPosition axisPath(4, 0, 1, 2, 3);
+      LatticeStepper lsx(lattice->shape(), cursorShape, axisPath);
+      LatticeIterator<Complex> lix(*lattice, lsx);
+      for(lix.reset();!lix.atEnd();lix++) {
+	//Int pol=lix.position()(2);
+	//Int chan=lix.position()(3);
+	
+	Int iy=lix.position()(1);
+	//gridder->correctX1D(correction,iy);
+	for (Int ix=0;ix<nx;ix++) {
+	  correction(ix)=(sincConvX(ix)*sincConvY(iy));
+	}
+	lix.rwVectorCursor()*=correction;
+	
+      }
+  }
+    
+  
     
   
   logIO() << LogIO::DEBUGGING << "Starting FFT of image" << LogIO::POST;
@@ -1053,13 +1102,14 @@ void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
     nth= omp_get_max_threads();
   }
   nth=min(4,nth);
+  omp_set_dynamic(0);
 #endif
   Double cinv=Double(1.0)/C::c;
  
   Int dow=0;
 #pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvc, scalestor, offsetstor, csamp, phasorstor, uvwstor, locstor, offstor, dpstor, dow, cinv) shared(startRow, endRow) num_threads(nth)  
 {
-#pragma omp for
+#pragma omp for schedule(dynamic,1)
   for (irow=startRow; irow<=endRow;irow++){
     /*locateuvw(uvwstor,dpstor, visfreqstor, nvc, scalestor, offsetstor, csamp, 
 	      locstor, 
@@ -1114,7 +1164,7 @@ Int x0, y0, nxsub, nysub, ixsub, iysub, icounter, ix, iy;
     
 #pragma omp parallel default(none) private(icounter,ix,iy,x0,y0,nxsub,nysub, del) firstprivate(idopsf, doWeightGridding, datStorage, wgtStorage, flagstor, rowflagstor, convstor, wconvstor, pmapstor, cmapstor, gridstor,  csupp, nxp, nyp, np, nc,ixsub, iysub, rend, rbeg, csamp, csize, nvp, nvc, nvisrow, phasorstor, locstor, offstor, convrowmapstor, convchanmapstor, convpolmapstor, nPolConv, nChanConv, nConvFunc) shared(sumwgt) num_threads(ixsub*iysub)
     {   
-#pragma omp for schedule(static, 1)      
+#pragma omp for schedule(dynamic, 1)      
     for(icounter=0; icounter < ixsub*iysub; ++icounter){
       ix= (icounter+1)-((icounter)/ixsub)*ixsub;
       iy=(icounter)/ixsub+1;
@@ -1185,7 +1235,7 @@ Int x0, y0, nxsub, nysub, ixsub, iysub, icounter, ix, iy;
     Complex *gridstor=griddedData.getStorage(gridcopy);
 #pragma omp parallel default(none) private(icounter,ix,iy,x0,y0,nxsub,nysub, del) firstprivate(idopsf, doWeightGridding, datStorage, wgtStorage, flagstor, rowflagstor, convstor, wconvstor, pmapstor, cmapstor, gridstor, csupp, nxp, nyp, np, nc,ixsub, iysub, rend, rbeg, csamp, csize, nvp, nvc, nvisrow, phasorstor, locstor, offstor, convrowmapstor, convchanmapstor, convpolmapstor, nPolConv, nChanConv, nConvFunc) shared(sumwgt) num_threads(ixsub*iysub)
     {   
-#pragma omp for schedule(static, 1)      
+#pragma omp for schedule(dynamic, 1)      
       for(icounter=0; icounter < ixsub*iysub; ++icounter){
 	ix= (icounter+1)-((icounter)/ixsub)*ixsub;
 	iy=(icounter)/ixsub+1;
@@ -1388,12 +1438,13 @@ void MosaicFT::get(VisBuffer& vb, Int row)
     nth= omp_get_max_threads();
   }
   nth=min(4,nth);
+  omp_set_dynamic(0);
 #endif
    Int dow=0;
    Double cinv=Double(1.0)/C::c;
 #pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvc, scalestor, offsetstor, csamp, phasorstor, uvwstor, locstor, offstor, dpstor, dow, cinv) shared(startRow, endRow) num_threads(nth)  
 {
-#pragma omp for
+#pragma omp for schedule(dynamic,1)
   for (irow=startRow; irow<=endRow;irow++){
     /////////////////*locateuvw(uvwstor,dpstor, visfreqstor, nvc, scalestor, offsetstor, csamp, 
     //    locstor, 
@@ -1422,7 +1473,7 @@ void MosaicFT::get(VisBuffer& vb, Int row)
   Int ix=0;
 #pragma omp parallel default(none) private(ix, rbeg, rend) firstprivate(uvwstor, datStorage, flagstor, rowflagstor, convstor, pmapstor, cmapstor, gridstor, nxp, nyp, np, nc, csamp, csize, csupp, nvp, nvc, nvisrow, phasorstor, locstor, offstor, nPolConv, nChanConv, nConvFunc, convrowmapstor, convpolmapstor, convchanmapstor, npart)  num_threads(npart)
   {
-    #pragma omp for schedule(static,1) 
+    #pragma omp for schedule(dynamic,1) 
     for (ix=0; ix< npart; ++ix){
       rbeg=ix*(nvisrow/npart)+1;
       rend=(ix != (npart-1)) ? (rbeg+(nvisrow/npart)-1) : (rbeg+(nvisrow/npart)-1+nvisrow%npart) ;
@@ -1657,12 +1708,34 @@ ImageInterface<Complex>& MosaicFT::getImage(Matrix<Float>& weights,
       lattice=arrayLattice;
       LatticeFFT::cfft2d(*lattice,False);
     }
-    
-    {
+    {////Do the grid correction
       Int inx = lattice->shape()(0);
-      Int iny = lattice->shape()(1);
+      //Int iny = lattice->shape()(1);
       Vector<Complex> correction(inx);
       correction=Complex(1.0, 0.0);
+
+      // Int npixCorr= max(nx,ny);
+      Vector<Float> sincConvX(nx);
+      for (Int ix=0;ix<nx;ix++) {
+	Float x=C::pi*Float(ix-nx/2)/(Float(nx)*Float(convSampling));
+	if(ix==nx/2) {
+	  sincConvX(ix)=1.0;
+	}
+	else {
+	  sincConvX(ix)=sin(x)/x;
+	}
+      }
+      Vector<Float> sincConvY(ny);
+      for (Int ix=0;ix<ny;ix++) {
+	Float x=C::pi*Float(ix-ny/2)/(Float(ny)*Float(convSampling));
+	if(ix==ny/2) {
+	  sincConvY(ix)=1.0;
+	}
+	else {
+	  sincConvY(ix)=sin(x)/x;
+	}
+      }
+    
 
       IPosition cursorShape(4, inx, 1, 1, 1);
       IPosition axisPath(4, 0, 1, 2, 3);
@@ -1672,27 +1745,24 @@ ImageInterface<Complex>& MosaicFT::getImage(Matrix<Float>& weights,
 	Int pol=lix.position()(2);
 	Int chan=lix.position()(3);
 	if(weights(pol, chan)!=0.0) {
-	  /*
-	  if(!sj_p) {
-	    gridder->correctX1D(correction, lix.position()(1));
-	    lix.rwVectorCursor()/=correction;
+	  Int iy=lix.position()(1);
+	  //gridder->correctX1D(correction,iy);
+	  for (Int ix=0;ix<nx;ix++) {
+	    correction(ix)=1.0/(sincConvX(ix)*sincConvY(iy));
 	  }
-	  */
+	  lix.rwVectorCursor()*=correction;
 	  if(normalize) {
-	    Complex rnorm(Float(inx)*Float(iny)/weights(pol,chan));
+	    Complex rnorm(1.0/weights(pol,chan));
 	    lix.rwCursor()*=rnorm;
 	  }
-	  //	  else {
-	  //	    Complex rnorm(Float(inx)*Float(iny));
-	  //	    lix.rwCursor()*=rnorm;
-	  //	  }
 	}
 	else {
 	  lix.woCursor()=0.0;
 	}
       }
     }
-
+    
+  
     //if(!isTiled) 
     {
       // Check the section from the image BEFORE converting to a lattice 
