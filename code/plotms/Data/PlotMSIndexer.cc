@@ -1192,7 +1192,6 @@ PlotLogMessage* PlotMSIndexer::locateRange(const Vector<PlotRegion>& regions,
 	Int nFoundMasked(0),nFoundUnmasked(0);
 
 	Bool m(False);
-	ss << "Deprecation warning: (offset, currchunk, irel) will be removed from Locate information in the next release.\n";
 	for(Int i = 0; i < n; i++) {
 
 		m=maskedAt(i);
@@ -1320,9 +1319,6 @@ void PlotMSIndexer::reportMeta(Double x, Double y, Bool masked,stringstream& ss)
 	ss << "Y="  << y;
 	ss << ( masked ? " F " : " ");
 	ss << "Observation=" << plotmscache_->getObsid(currChunk_,0) << " ";
-	ss << "(" << (currChunk_ > 0 ? (nCumulative_(currChunk_-1)+irel_) : irel_) << "/";
-	ss << currChunk_ << "/" << irel_ << ")";
-
 }
 
 PlotLogMessage* PlotMSIndexer::flagRange(const PlotMSFlagging& flagging,

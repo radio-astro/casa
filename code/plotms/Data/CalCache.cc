@@ -95,11 +95,13 @@ void CalCache::loadIt(vector<PMS::Axis>& loadAxes,
     stanames_.resize();
     antstanames_.resize();
     fldnames_.resize();
+    positions_.resize();
+
     antnames_=ctCol.antenna().name().getColumn(); 	 
     stanames_=ctCol.antenna().station().getColumn(); 	 
-    fldnames_=ctCol.field().name().getColumn(); 	 
-    
     antstanames_=antnames_+String("@")+stanames_;
+    fldnames_=ctCol.field().name().getColumn();
+    positions_ = ctCol.antenna().position().getColumn();    
 
     nAnt_ = ctCol.antenna().nrow();
      
@@ -511,6 +513,7 @@ void CalCache::loadCalChunks(ROCTIter& ci,
     }
  */
   case PMS::OBSERVATION: {
+    (*obsid_[chunk]).resize(1);
     *obsid_[chunk] = cti.thisObs();
     break;
   }
