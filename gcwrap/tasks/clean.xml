@@ -225,6 +225,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value>mosaic</value>
       <allowed kind="enum">
 	<value>ft</value>
+	<value>wproject</value>
 	<value>mosaic</value>
 	<value>sd</value>
 	<value>both</value>
@@ -1023,7 +1024,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                This can optinally include w-projection also.
 
                wprojplanes is the number of pre-computed w-planes used
-               for W-Projection algorithm.  wprojplanes=1 diables
+               for W-Projection algorithm.  wprojplanes=1 disables
                correction for non-coplanar effects.
 
                cfcache is the name of the directory to store the
@@ -1049,9 +1050,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
  		   on-source); this parameter will give more weight to 
  		   higher sensitivity fields in the overlap regions.
                ftmachine -- Gridding method for the mosaic;
-                   Options: 'ft' or 'mosaic'
+                   Options: 'mosaic' , 'ft' or 'wproject' 
                    default: 'mosaic'; 
-		   'ft' implies standard interferometric gridding. The residual visibilities are 
+		   'ft' or 'wproject' implies standard interferometric 2D or widefield gridding. The residual visibilities are 
                    imaged for each pointing and combined in the image plane with the 
 		   appropriate PB to make the mosaic.
                     

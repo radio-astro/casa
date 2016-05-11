@@ -249,7 +249,6 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
         if (mode=='mfs'):
             start=0;
             outframe=''
-        
         #some default value handling for channelization
         if (mode=='velocity' or mode=='frequency' or mode=='channel'):
             # new version: uses  ms.cvelfreqs
@@ -672,7 +671,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                 imCln.setsmallscalebias(smallscalebias)
 
             if imagermode == 'mosaic':
-                if localFTMachine == 'ft':
+                if localFTMachine == 'ft' or localFTMachine == 'wproject' :
                     imCln.setmfcontrol(stoplargenegatives=negcomponent,
                                        scaletype=sclt,minpb=minpb,constpb=1.0,
                                        cyclefactor=cyclefactor,
@@ -681,7 +680,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                                        fluxscale=fluximage)
                 else:
                     imCln.setmfcontrol(stoplargenegatives=negcomponent,
-                                       scaletype=sclt,minpb=minpb,
+                                       scaletype=sclt,minpb=minpb, constpb=1.0,
                                        cyclefactor=cyclefactor,
                                        cyclespeedup=cyclespeedup,
                     #                   fluxscale=[imagename+'.flux'])
