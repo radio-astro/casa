@@ -259,6 +259,11 @@ class Tclean(cleanbase.CleanBase):
         context = self.inputs.context
         inputs = self.inputs
 
+        if (inputs.specmode == 'cube'):
+            inputs.width = 1
+            inputs.start = 2
+            inputs.nchan = context.observing_run.measurement_sets[0].get_spectral_window(inputs.spw).num_channels - 2
+
         # Check if a matching 'cont' image exists for continuum subtraction.
         # NOTE: For Cycle 3 we use 'mfs' images due to possible
         #       inaccuracies in the nterms=2 cont images.
