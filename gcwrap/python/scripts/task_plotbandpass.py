@@ -13,7 +13,7 @@
 #
 # To test:  see plotbandpass_regression.py
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.84 2016/05/05 03:16:51 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.85 2016/05/11 11:53:42 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -22,6 +22,7 @@ import re  # used for testing if a string is a float
 import casadef     # necessary to read the casa version strings
 from taskinit import * # necessary for tb.open() to work
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter, ScalarFormatter
+import matplotlib.transforms
 import inspect
 
 TOP_MARGIN  = 0.25   # Used if showatm=T or showtksy=T
@@ -89,7 +90,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.84 2016/05/05 03:16:51 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.85 2016/05/11 11:53:42 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -567,7 +568,8 @@ def drawAtmosphereAndFDM(showatm, showtsky, atmString, subplotRows, mysize, Tebb
                          atmfreqImage,transmissionImage, firstFrame,showfdm,nChannels,tableFormat,
                          originalSpw_casa33, chanFreqGHz_casa33,originalSpw,chanFreqGHz,
                          overlayTimes, overlayAntennas, xant, antennasToPlot, overlaySpws,
-                         baseband, showBasebandNumber, basebandDict, drewAtmosphere):
+                         baseband, showBasebandNumber, basebandDict, overlayBasebands, 
+                         drewAtmosphere):
     """
     If requested by the user at the command line, draw the atmospheric curve
     and the FDM window locations.
@@ -579,14 +581,17 @@ def drawAtmosphereAndFDM(showatm, showtsky, atmString, subplotRows, mysize, Tebb
                        atmfreq, transmission, subplotCols,
                        showatmPoints=showatmPoints, xframe=xframe, 
                        channels=channels,
-                       mylineno=mylineno,xant=xant,drewAtmosphere=drewAtmosphere)
+                       mylineno=mylineno,xant=xant,
+                       overlaySpws=overlaySpws, overlayBasebands=overlayBasebands,
+                       drewAtmosphere=drewAtmosphere)
         if (LO1 != ''):
             # Now draw the image band
             DrawAtmosphere(showatm,showtsky, subplotRows, atmString,
-                mysize, TebbSkyImage, plotrange, xaxis,
-                atmchanImage, atmfreqImage, transmissionImage,
-                subplotCols, LO1, xframe, firstFrame, showatmPoints, 
-                channels=channels, mylineno=mylineno,xant=xant,
+                           mysize, TebbSkyImage, plotrange, xaxis,
+                           atmchanImage, atmfreqImage, transmissionImage,
+                           subplotCols, LO1, xframe, firstFrame, showatmPoints, 
+                           channels=channels, mylineno=mylineno,xant=xant,
+                           overlaySpws=overlaySpws, overlayBasebands=overlayBasebands,
                            drewAtmosphere=drewAtmosphere)
     # The following case is needed for the case that overlay='antenna,time' and
     # the final timerange is flagged on the final antenna.
@@ -1459,7 +1464,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
         else:
             basebandDict = {}
             telescopeName = getTelescopeNameFromCaltable(caltable)
-            print "This %s caltable (%s) is too old to have a BBC_NO column in the SPECTRAL_WINDOW_TABLE." % (telescopeName,caltable)
+            print "Measurement set not found."
         if (basebandDict == {}):
             if (overlay.find('spw') >= 0):
                 print "As such, since the ms cannot be found, overlay='spw' is not supported, but overlay='baseband' should work."
@@ -3227,7 +3232,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                                        overlayTimes, overlayAntennas, xant, 
                                                        antennasToPlot, overlaySpws, baseband,
                                                        showBasebandNumber, basebandDict,
-                                                       drewAtmosphere)
+                                                       overlayBasebands, drewAtmosphere)
                                   drewAtmosphere = True
                               if (xctr == firstUnflaggedAntennaToPlot or overlayAntennas==False): # changed xant->xctr on 11-mar-2014
                                   DrawPolarizationLabelsForOverlayTime(xstartPolLabel,ystartPolLabel,corr_type,polsToPlot,
@@ -3527,15 +3532,15 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                     pb.plot(pchannels[p],gamp[p],'%s%s'%(pcolor[p],ampmarkstyle), markersize=markersize,markeredgewidth=markeredgewidth)
                                     newylimits =  recalcYlimits(plotrange,newylimits,gamp[p])
                           if (sum(xflag)>0):
-                              xrange = np.max(channels)-np.min(channels)
-                              SetNewXLimits([np.min(channels)-xrange/20, np.max(channels)+xrange/20],1)
+                              myxrange = np.max(channels)-np.min(channels)
+                              SetNewXLimits([np.min(channels)-myxrange/20, np.max(channels)+myxrange/20],1)
 # #     # #                    print "amp: Resetting xaxis channel range to counteract flagged data"
                           if (xframe in bottomRowFrames or (xctr+1==len(antennasToPlot) and ispw==spwsToPlot[-1])):
                               pb.xlabel("Channel", size=mysize)
                       elif (xaxis.find('freq')>=0):   # amp
                           if (bOverlay):
                                 pb.hold(True)
-                                xrange = np.abs(xfrequencies[0]-xfrequencies[-1])
+                                myxrange = np.abs(xfrequencies[0]-xfrequencies[-1])
                                 try:
                                     xrange2 = np.abs(xfrequencies2[0]-xfrequencies2[-1])
                                 except:
@@ -3543,12 +3548,12 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                     print "If this doesn't work, email the developer (%s)." % (developerEmail)
                                     return()
           
-                                if (np.abs(xrange/xrange2 - 1) > 0.05 + len(xflag)/len(xchannels)):  # 0.0666 is 2000/1875-1
+                                if (np.abs(myxrange/xrange2 - 1) > 0.05 + len(xflag)/len(xchannels)):  # 0.0666 is 2000/1875-1
                                    # These line widths are optimal for visualizing FDM over TDM
                                    width1 = 1
                                    width2 = 4
                                    # solutions differ in frequency width
-                                   if (xrange < xrange2):
+                                   if (myxrange < xrange2):
                                       for p in range(nPolarizations):
                                             if (corrTypeToString(corr_type[p]) in polsToPlot):
                                                   pb.plot(pfrequencies[p], gamp[p], '%s%s'%(pcolor[p],ampmarkstyle), linewidth=width2, markersize=markersize,markeredgewidth=markeredgewidth)
@@ -3590,8 +3595,8 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                               newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp2[p], sideband,plotrange,xchannels2,chanrangePercent=chanrangePercent)
                                 # must set new limits after plotting  'amp'
                                 if (zoom=='intersect'):
-                                    if (xrange < xrange2):
-                                        SetNewXLimits([min(xfrequencies[0],xfrequencies[-1])-xrange*0.1, max(xfrequencies[0],xfrequencies[-1])+xrange*0.1],2)
+                                    if (myxrange < xrange2):
+                                        SetNewXLimits([min(xfrequencies[0],xfrequencies[-1])-myxrange*0.1, max(xfrequencies[0],xfrequencies[-1])+myxrange*0.1],2)
                                         SetLimits(plotrange, chanrange, newylimits, channels, frequencies,
                                                   pfrequencies, ampMin, ampMax, xaxis, pxl, chanrangeSetXrange,
                                                   chanrangePercent)
@@ -3602,7 +3607,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                                   pfrequencies2, ampMin, ampMax, xaxis, pxl, chanrangeSetXrange,
                                                              chanrangePercent)
                                 else:
-                                    if (xrange < xrange2):
+                                    if (myxrange < xrange2):
                                         SetLimits(plotrange, chanrange, newylimits, channels, frequencies,
                                                   pfrequencies, ampMin, ampMax, xaxis, pxl, chanrangeSetXrange,
                                                   chanrangePercent)
@@ -3808,8 +3813,8 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
 #                                  if (debug): print "finished 'for' loop"
                                   if (sum(xflag)>0):
                                       # print "amp: Resetting xaxis frequency range to counteract flagged data"
-                                      xrange = np.max(frequencies)-np.min(frequencies)
-                                      SetNewXLimits([np.min(frequencies)-0.15*xrange, np.max(frequencies)+0.15*xrange],4)
+                                      myxrange = np.max(frequencies)-np.min(frequencies)
+                                      SetNewXLimits([np.min(frequencies)-0.15*myxrange, np.max(frequencies)+0.15*myxrange],4)
                                       
                           if (1==1 or (xframe in bottomRowFrames) or (xctr+1==len(antennasToPlot) and ispw==spwsToPlot[-1])):
                               # use 1==1 because spw might change between top row and bottom row of frames
@@ -3859,7 +3864,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                   else:
                                       SetNewXLimits([frequencies[0], frequencies[-1]],8)
                               if (bOverlay):
-                                  if (xrange2 > xrange+0.1 and zoom != 'intersect'):
+                                  if (xrange2 > myxrange+0.1 and zoom != 'intersect'):
                                       TDMisSecond = True
                       if (abs(plotrange[2]) > 0 or abs(plotrange[3]) > 0):
                           SetNewYLimits([plotrange[2],plotrange[3]])
@@ -3871,7 +3876,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                       pb.subplots_adjust(hspace=myhspace, wspace=mywspace)
                       xlim = pb.xlim()
                       ylim = pb.ylim()
-                      xrange = xlim[1]-xlim[0]
+                      myxrange = xlim[1]-xlim[0]
                       yrange = ylim[1]-ylim[0]
                       if (debug): print "amp: ylim, yrange = ",  ylim, yrange
                       if (overlayAntennas == False and overlayTimes == False and bOverlay == False and
@@ -4029,11 +4034,11 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                   else:
                                       SetNewXLimits([frequencies[0], frequencies[-1]],11)
                               if (bOverlay):
-# #     # #                        print "Checking if %f >= %f" % (xrange2, xrange)
-                                  if (xrange2 >= xrange and zoom != 'intersect'):
+# #     # #                        print "Checking if %f >= %f" % (xrange2, myxrange)
+                                  if (xrange2 >= myxrange and zoom != 'intersect'):
                                       # This is necessary if caltable2=TDM and caltable=FDM
                                       SetNewXLimits([frequencies2[0], frequencies2[-1]],12)
-                                  if (xrange2 > xrange+0.1 and zoom != 'intersect'):
+                                  if (xrange2 > myxrange+0.1 and zoom != 'intersect'):
                                       TDMisSecond = True
                       else:
                           SetNewXLimits([plotrange[0], plotrange[1]],13)
@@ -4045,7 +4050,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                     ampMin, ampMax, xaxis,pxl, chanrangeSetXrange,
                                     chanrangePercent)
           
-                      # Finally, draw the atmosphere and FDM windows, if requested.
+                      # Finally, draw the atmosphere and FDM windows, if requested.  'amp'
                       if ((overlayAntennas==False and overlayTimes==False) or
                           (overlayAntennas==True and overlayTimes==False and xant==antennasToPlot[-1]) or
                           (overlayTimes==True and overlayAntennas==False and doneOverlayTime) or
@@ -4060,14 +4065,19 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                              atmfreq, transmission, subplotCols,
                                              showatmPoints=showatmPoints, xframe=xframe, 
                                              channels=channels,mylineno=lineNumber(),
+                                             overlaySpws=overlaySpws,
+                                             overlayBasebands=overlayBasebands,
                                              drewAtmosphere=drewAtmosphere)
                               if (LO1 != ''):
                                   # Now draw the image band
                                   DrawAtmosphere(showatm,showtsky, subplotRows, atmString,
                                                  mysize, TebbSkyImage, plotrange, xaxis,
                                                  atmchanImage, atmfreqImage, transmissionImage,
-                                                 subplotCols, LO1, xframe, firstFrame, showatmPoints, 
+                                                 subplotCols, LO1, xframe, firstFrame,
+                                                 showatmPoints, 
                                                  channels=channels,mylineno=lineNumber(),
+                                                 overlaySpws=overlaySpws,
+                                                 overlayBasebands=overlayBasebands,
                                                  drewAtmosphere=drewAtmosphere)
                               drewAtmosphere = True
                           if (xaxis.find('freq')>=0 and showfdm and nChannels <= 256):
@@ -4356,8 +4366,9 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                           newylimits = phase
                           if (sum(xflag)>0):
 # #     # #                    print "phase: Resetting xaxis channel range to counteract flagged data"
-                              xrange = np.max(channels)-np.min(channels)
-                              SetNewXLimits([np.min(channels)-xrange/20, np.max(channels)+xrange/20],14)
+                              myxrange = np.max(channels)-np.min(channels)
+                              SetNewXLimits([np.min(channels)-myxrange/20, 
+                                             np.max(channels)+myxrange/20],14)
                           if (xframe in bottomRowFrames or (xctr+1==len(antennasToPlot) and ispw==spwsToPlot[-1])):
                               pb.xlabel("Channel", size=mysize)
                       elif (xaxis.find('freq')>=0):     # 'phase'
@@ -4367,19 +4378,19 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                     print "Preparing to plot phase from %f-%f for pols: %s" % (xfrequencies[0],xfrequencies[-1],str(polsToPlot))
                                     print "Preparing to plot phase from %f-%f for pols: %s" % (pfrequencies[p][0],pfrequencies[p][-1],str(polsToPlot))
                                     print "Preparing to plot phase from %f-%f for pols: %s" % (pfrequencies2[p][0],pfrequencies2[p][-1],str(polsToPlot))
-                                xrange = np.abs(xfrequencies[0]-xfrequencies[-1])
+                                myxrange = np.abs(xfrequencies[0]-xfrequencies[-1])
                                 try:
                                     xrange2 = np.abs(xfrequencies2[0]-xfrequencies2[-1])
                                 except:
                                     print "No phase data found in second solution.  Try increasing the solutionTimeThresholdSeconds above %.0f." % (solutionTimeThresholdSeconds)
                                     print "If this doesn't work, email the developer (%s)." % (developerEmail)
                                     return()
-                                if (np.abs(xrange/xrange2 - 1) > 0.05 + len(xflag)/len(xchannels)):  # 0.0666 is 2000/1875-1
+                                if (np.abs(myxrange/xrange2 - 1) > 0.05 + len(xflag)/len(xchannels)):  # 0.0666 is 2000/1875-1
                                    # These line widths are optimal for visualizing FDM over TDM
                                    width1 = 1
                                    width2 = 4
                                    # solutions differ in frequency width, so show the narrower one first
-                                   if (xrange < xrange2):
+                                   if (myxrange < xrange2):
                                      for p in range(nPolarizations):
                                        if (corrTypeToString(corr_type[p]) in polsToPlot):
                                           if (debug): print "pb.plot 1"
@@ -4434,8 +4445,8 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                       # this must come before defining ticks 
                                       SetNewYLimits([-minPhaseRange,minPhaseRange])
                                 if (zoom=='intersect'):
-                                    if (xrange < xrange2):
-                                        SetNewXLimits([min(xfrequencies[0],xfrequencies[-1])-xrange*0.1, max(xfrequencies[0],xfrequencies[-1])+xrange*0.1],15)
+                                    if (myxrange < xrange2):
+                                        SetNewXLimits([min(xfrequencies[0],xfrequencies[-1])-myxrange*0.1, max(xfrequencies[0],xfrequencies[-1])+myxrange*0.1],15)
                                         SetLimits(plotrange, chanrange, newylimits, channels, frequencies,
                                                   pfrequencies, ampMin, ampMax, xaxis,pxl, chanrangeSetXrange,
                                                   chanrangePercent)
@@ -4445,7 +4456,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                                   pfrequencies2, ampMin, ampMax, xaxis,pxl, chanrangeSetXrange,
                                                   chanrangePercent)
                                 else:
-                                    if (xrange < xrange2):
+                                    if (myxrange < xrange2):
                                         SetLimits(plotrange, chanrange, newylimits, channels, frequencies,
                                                   pfrequencies, ampMin, ampMax, xaxis,pxl, chanrangeSetXrange,
                                                   chanrangePercent)
@@ -4618,8 +4629,8 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                         newylimits = recalcYlimitsFreq(chanrange, newylimits, gphs[p], sideband, plotrange,xchannels,chanrangePercent=chanrangePercent)
                                   if (sum(xflag)>0):
 # #     # #                            print "phase frame %d: Resetting xaxis frequency range to counteract flagged data" % (xframe)
-                                      xrange = np.max(frequencies)-np.min(frequencies)
-                                      SetNewXLimits([np.min(frequencies)-0.15*xrange, np.max(frequencies)+0.15*xrange],17)
+                                      myxrange = np.max(frequencies)-np.min(frequencies)
+                                      SetNewXLimits([np.min(frequencies)-0.15*myxrange, np.max(frequencies)+0.15*myxrange],17)
                                   if (len(gphs[p]) > 0):
                                       if (np.max(gphs[p]) < minPhaseRange and np.min(gphs[p]) > -minPhaseRange):
                                           SetNewYLimits([-minPhaseRange,minPhaseRange])
@@ -4656,7 +4667,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                   else:
                                       SetNewXLimits([frequencies[0], frequencies[-1]])
                               if (bOverlay):
-                                  if (xrange2 > xrange+0.1 and zoom != 'intersect'):
+                                  if (xrange2 > myxrange+0.1 and zoom != 'intersect'):
                                       TDMisSecond = True
           
                       if (abs(plotrange[2]) > 0 or abs(plotrange[3]) > 0):
@@ -4683,7 +4694,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                       pb.subplots_adjust(hspace=myhspace, wspace=mywspace)
                       ylim = pb.ylim()
                       xlim = pb.xlim()
-                      xrange = xlim[1]-xlim[0]
+                      myxrange = xlim[1]-xlim[0]
                       yrange = ylim[1]-ylim[0]
 # #     # #            print "phase: ylim, yrange = ",  ylim, yrange
                       myap = 0
@@ -4831,10 +4842,10 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                   else:
                                       SetNewXLimits([frequencies[0], frequencies[-1]])
                               if (bOverlay):
-                                  if (xrange2 >= xrange and zoom != 'intersect'):
+                                  if (xrange2 >= myxrange and zoom != 'intersect'):
                                       # This is necessary if caltable2=TDM and caltable=FDM
                                       SetNewXLimits([frequencies2[0], frequencies2[-1]])
-                                  if (xrange2 > xrange+0.1 and zoom != 'intersect'):
+                                  if (xrange2 > myxrange+0.1 and zoom != 'intersect'):
                                       TDMisSecond = True
                       else:
                           SetNewXLimits([plotrange[0], plotrange[1]])
@@ -4845,7 +4856,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                     ampMin, ampMax, xaxis,pxl, chanrangeSetXrange,
                                     chanrangePercent)
           
-                      # Finally, draw the atmosphere and FDM windows, if requested.
+                      # Finally, draw the atmosphere and FDM windows, if requested.  'phase'
                       if ((overlayAntennas==False and overlayTimes==False) or
                           (overlayAntennas==True and overlayTimes==False and xant==antennasToPlot[-1]) or
                           (overlayTimes==True and overlayAntennas==False and doneOverlayTime) or
@@ -4857,6 +4868,8 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                              atmfreq, transmission, subplotCols,
                                              showatmPoints=showatmPoints, xframe=xframe, 
                                              channels=channels, mylineno=lineNumber(),
+                                             overlaySpws=overlaySpws, 
+                                             overlayBasebands=overlayBasebands,
                                              drewAtmosphere=drewAtmosphere)
                               if (LO1 != ''):
                                   DrawAtmosphere(showatm,showtsky, subplotRows, atmString,
@@ -4864,6 +4877,8 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                                  atmfreqImage, transmissionImage, subplotCols,
                                                  LO1, xframe, firstFrame, showatmPoints, 
                                                  channels=channels, mylineno=lineNumber(),
+                                                 overlaySpws=overlaySpws, 
+                                                 overlayBasebands=overlayBasebands,
                                                  drewAtmosphere=drewAtmosphere)
                               drewAtmosphere = True
                       
@@ -5303,8 +5318,8 @@ def calcChebyshev(coeff, validDomain, x):
     """
     if (type(x) == float or type(x) == int):
          x = [x]
-    xrange = validDomain[1] - validDomain[0]
-    x = -1 + 2*(x-validDomain[0])/xrange
+    myxrange = validDomain[1] - validDomain[0]
+    x = -1 + 2*(x-validDomain[0])/myxrange
     coeff[0] = 0
     if (True):
         try:
@@ -5794,13 +5809,13 @@ def SetNewYLimits(newylimits):
 
 def SetNewXLimits(newxlimits, loc=0):
 #    print "loc=%d: Entered SetNewXLimits with range = %.3f (%f-%f)" % (loc,np.max(newxlimits)-np.min(newxlimits), newxlimits[0], newxlimits[1])
-    xrange = np.abs(newxlimits[1]-newxlimits[0])
-    buffer = 0.01
+    myxrange = np.abs(newxlimits[1]-newxlimits[0])
+    mybuffer = 0.01
     if (newxlimits[0] < newxlimits[1]):
-        pb.xlim([newxlimits[0]-xrange*buffer,newxlimits[1]+xrange*buffer] )
+        pb.xlim([newxlimits[0]-myxrange*mybuffer,newxlimits[1]+myxrange*mybuffer] )
     else:
 #        print "Swapping xlimits order"
-        pb.xlim(newxlimits[1]-xrange*buffer, newxlimits[0]+xrange*buffer)
+        pb.xlim(newxlimits[1]-myxrange*mybuffer, newxlimits[0]+myxrange*mybuffer)
 
 def sloppyMatch(newvalue, mylist, threshold, mytime=None, scansToPlot=[],
                 scansForUniqueTimes=[], myprint=False, whichone=False):
@@ -5927,7 +5942,7 @@ def showFDM(originalSpw, chanFreqGHz, baseband, showBasebandNumber, basebandDict
     x0,x1 = pb.xlim()
     y0,y1 = pb.ylim()
     yrange = y1 - y0
-    xrange = x1 - x0
+    myxrange = x1 - x0
     pb.hold(True)
     labelAbove = False  # False means label to the right
     for i in range(len(originalSpw)):
@@ -5960,7 +5975,7 @@ def showFDM(originalSpw, chanFreqGHz, baseband, showBasebandNumber, basebandDict
                     if (xlabel > x1):
                         xlabel = x1
                 else:
-                    xlabel = v1+0.02*xrange
+                    xlabel = v1+0.02*myxrange
                 pb.plot([v0,v1], [y1a,y1a], '-',
                         linewidth=4, color=overlayColors[fdmctr],markeredgewidth=markeredgewidth)
                 if (showBasebandNumber):
@@ -5986,16 +6001,16 @@ def DrawAtmosphere(showatm, showtsky, subplotRows, atmString, mysize,
                    TebbSky, plotrange, xaxis, atmchan, atmfreq, transmission,
                    subplotCols, lo1='', xframe=0, firstFrame=0,
                    showatmPoints=False, channels=[0], mylineno=-1,xant=-1,
-                   drewAtmosphere=False):
+                   overlaySpws=False, overlayBasebands=False, drewAtmosphere=False):
     """
     Draws atmospheric transmission or Tsky on an amplitude vs. chan or freq plot.
     """
     xlim = pb.xlim()
     ylim = pb.ylim()
-    xrange = xlim[1]-xlim[0]
+    myxrange = xlim[1]-xlim[0]
     yrange = ylim[1]-ylim[0]
 
-    if (not drewAtmosphere):
+    if (not drewAtmosphere and not overlayBasebands):  # CAS-8489 final
         if (lo1 == ''):
             # add some space at the top -- Apr 16, 2012
             pb.ylim([ylim[0], ylim[1]+TOP_MARGIN*yrange])
@@ -6027,70 +6042,117 @@ def DrawAtmosphere(showatm, showtsky, subplotRows, atmString, mysize,
             rescaledY, edgeYvalue, zeroValue, zeroYValue, otherEdgeYvalue, edgeT, otherEdgeT, edgeValueAmplitude, otherEdgeValueAmplitude, zeroValueAmplitude = RescaleTrans(TebbSky, ylim, subplotRows, lo1, xframe)
         else:
             rescaledY, edgeYvalue, zeroValue, zeroYValue, otherEdgeYvalue, edgeT, otherEdgeT, edgeValueAmplitude, otherEdgeValueAmplitude, zeroValueAmplitude = RescaleTrans(transmission, ylim, subplotRows, lo1, xframe)
-        if (xaxis.find('chan')>=0):
-            rescaledX = RescaleX(atmchan, xlim, plotrange, channels)
-#            rescaledX = atmchan  
-            pb.plot(rescaledX, rescaledY,'%s%s'%(atmcolor,atmline),markeredgewidth=markeredgewidth)
-            tindex = -1
-        elif (xaxis.find('freq')>=0):
-            pb.plot(atmfreq, rescaledY, '%s%s'%(atmcolor,atmline),markeredgewidth=markeredgewidth)
+        if (overlayBasebands and xaxis.find('freq')>=0):
+            # use axis coordinates for y-axis only so that transmission can be on common scale
+            trans = matplotlib.transforms.blended_transform_factory(pb.gca().transData, pb.gca().transAxes)
+            if showtsky:
+                pb.plot(atmfreq, TebbSky/300., '%s%s'%(atmcolor,atmline),
+                        markeredgewidth=markeredgewidth, transform=trans)
+            else:
+                pb.plot(atmfreq, transmission, '%s%s'%(atmcolor,atmline),
+                        markeredgewidth=markeredgewidth, transform=trans)
             if (atmfreq[0]<atmfreq[1]):
                 tindex = -1
             else:
                 tindex = 0
+        else:
+            # use user coordinates
+            if (xaxis.find('chan')>=0):
+                rescaledX = RescaleX(atmchan, xlim, plotrange, channels)
+    #            rescaledX = atmchan  
+                pb.plot(rescaledX, rescaledY,'%s%s'%(atmcolor,atmline),markeredgewidth=markeredgewidth)
+                tindex = -1
+            elif (xaxis.find('freq')>=0):
+                pb.plot(atmfreq, rescaledY, '%s%s'%(atmcolor,atmline),markeredgewidth=markeredgewidth)
+                if (atmfreq[0]<atmfreq[1]):
+                    tindex = -1
+                else:
+                    tindex = 0
         if (lo1 == ''):
-              xEdgeLabel = 1.01
+            xEdgeLabel = 1.01
         else:
             if (xframe == firstFrame):
                 xEdgeLabel = -0.10*subplotCols # avoids overwriting y-axis label
             else:
                 xEdgeLabel = -0.10*subplotCols
         SetNewXLimits(xlim)  # necessary for zoom='intersect'
-        SetNewYLimits(ylim)
+        if (not overlayBasebands):   # CAS-8489 final
+            SetNewYLimits(ylim)
         # Now draw the percentage on right edge of plot
         if (not drewAtmosphere):
-          if (showtsky):
-            if (lo1 == ''):
-#                pb.text(xEdgeLabel, edgeYvalue,'%.0fK'%(edgeT),color=atmcolor,
-#                        size=mysize, transform=pb.gca().transAxes)
-#                pb.text(1.01, zeroYValue,'%.0fK'%(zeroValue), color=atmcolor,
-#                        size=mysize, transform=pb.gca().transAxes)
-                # This must be done in user coordinates since another curve
-                # is plotted following this one.
-                pb.text(xlim[1]+0.06*xrange/subplotCols, edgeValueAmplitude,
-                        '%.0fK'%(edgeT), color=atmcolor, size=mysize)
-                pb.text(xlim[1]+0.06*xrange/subplotCols, zeroValueAmplitude,
-                        '%.0fK'%(zeroValue), color=atmcolor,
-                        size=mysize)
+            if (overlayBasebands and xaxis.find('freq')>=0):   # CAS-8489 final
+                trans = matplotlib.transforms.blended_transform_factory(pb.gca().transData, pb.gca().transAxes)
+                zeroValue = 0
+                zeroValueAmplitude = 0
+                edgeValueAmplitude = 1
+                if (showtsky):
+                    edgeT = 300
+                    if (lo1 == ''):
+                        pb.text(xlim[1]+0.06*myxrange/subplotCols, edgeValueAmplitude,
+                                '%.0fK'%(edgeT), color=atmcolor, size=mysize, transform=trans)
+                        pb.text(xlim[1]+0.06*myxrange/subplotCols, zeroValueAmplitude,
+                                '%.0fK'%(zeroValue), color=atmcolor, transform=trans,
+                                size=mysize)
+                    else:
+                        pb.text(xEdgeLabel, edgeValueAmplitude,'%.0fK'%(edgeT),
+                                color=atmcolor,
+                                size=mysize, transform=pb.gca().transAxes)
+                        pb.text(xEdgeLabel, zeroValueAmplitude,'%.0fK'%(zeroValue),
+                                color=atmcolor,
+                                size=mysize, transform=pb.gca().transAxes)
+                else:
+                    # showatm=True
+                    edgeT = 1
+                    if (lo1 == ''):
+                        pb.text(xlim[1]+0.05*myxrange/subplotCols, edgeValueAmplitude, 
+                                '%.0f%%'%(edgeT*100), color=atmcolor, size=mysize, 
+                                transform=trans, va='center')
+                        pb.text(xlim[1]+0.05*myxrange/subplotCols, zeroValueAmplitude,
+                                '%.0f%%'%(zeroValue*100), color=atmcolor, transform=trans,
+                                size=mysize, va='center')
+                    else:
+                        pb.text(xEdgeLabel, edgeValueAmplitude,'%.0f%%'%(edgeT*100),
+                                color=atmcolor, va='center',
+                                size=mysize, transform=pb.gca().transAxes)
+                        pb.text(xEdgeLabel, zeroValueAmplitude,'%.0f%%'%(zeroValue*100),
+                                color=atmcolor, va='center',
+                                size=mysize, transform=pb.gca().transAxes)
             else:
-                # This can remain in axes units since it is the final plot.
-                pb.text(xEdgeLabel, otherEdgeYvalue,'%.0fK'%(otherEdgeT),
-                        color=atmcolor,
-                        size=mysize, transform=pb.gca().transAxes)
-                pb.text(xEdgeLabel, zeroYValue,'%.0fK'%(zeroValue),
-                        color=atmcolor,
-                        size=mysize, transform=pb.gca().transAxes)
-          else:
-            # showatm=True
-            if (lo1 == ''):
-#                pb.text(xEdgeLabel, edgeYvalue,'%.0f%%'%(edgeT*100),
-#                        color=atmcolor,
-#                        size=mysize, transform=pb.gca().transAxes)
-                # This must be done in user coordinates since another curve
-                # is plotted following this one.
-                pb.text(xlim[1]+0.05*xrange/subplotCols, edgeValueAmplitude,
-                        '%.0f%%'%(edgeT*100), color=atmcolor, size=mysize)
-                pb.text(xlim[1]+0.05*xrange/subplotCols, zeroValueAmplitude,
-                        '%.0f%%'%(zeroValue*100), color=atmcolor,
-                        size=mysize)
-            else:
-                # This can remain in axes units since it is the final plot.
-                pb.text(xEdgeLabel, otherEdgeYvalue,'%.0f%%'%(otherEdgeT*100),
-                        color=atmcolor,
-                        size=mysize, transform=pb.gca().transAxes)
-                pb.text(xEdgeLabel, zeroYValue,'%.0f%%'%(zeroValue*100),
-                        color=atmcolor,
-                        size=mysize, transform=pb.gca().transAxes)
+                if (showtsky):
+                    if (lo1 == ''):
+                        # This must be done in user coordinates since another curve
+                        # is plotted following this one.
+                        pb.text(xlim[1]+0.06*myxrange/subplotCols, edgeValueAmplitude,
+                                '%.0fK'%(edgeT), color=atmcolor, size=mysize)
+                        pb.text(xlim[1]+0.06*myxrange/subplotCols, zeroValueAmplitude,
+                                '%.0fK'%(zeroValue), color=atmcolor,
+                                size=mysize)
+                    else:
+                        # This can remain in axes units since it is the final plot.
+                        pb.text(xEdgeLabel, otherEdgeYvalue,'%.0fK'%(otherEdgeT),
+                                color=atmcolor,
+                                size=mysize, transform=pb.gca().transAxes)
+                        pb.text(xEdgeLabel, zeroYValue,'%.0fK'%(zeroValue),
+                                color=atmcolor,
+                                size=mysize, transform=pb.gca().transAxes)
+                else:
+                    # showatm=True
+                    if (lo1 == ''):
+                        # This must be done in user coordinates since another curve
+                        # is plotted following this one.
+                        pb.text(xlim[1]+0.05*myxrange/subplotCols, edgeValueAmplitude,
+                                '%.0f%%'%(edgeT*100), color=atmcolor, size=mysize)
+                        pb.text(xlim[1]+0.05*myxrange/subplotCols, zeroValueAmplitude,
+                                '%.0f%%'%(zeroValue*100), color=atmcolor,
+                                size=mysize)
+                    else:
+                        # This can remain in axes units since it is the final plot.
+                        pb.text(xEdgeLabel, otherEdgeYvalue,'%.0f%%'%(otherEdgeT*100),
+                                color=atmcolor,
+                                size=mysize, transform=pb.gca().transAxes)
+                        pb.text(xEdgeLabel, zeroYValue,'%.0f%%'%(zeroValue*100),
+                                color=atmcolor,
+                                size=mysize, transform=pb.gca().transAxes)
         if (lo1 != ''):
             if (xframe == firstFrame):
                 pb.text(+0.96-0.08*subplotCols, -0.07*subplotRows,
@@ -6133,20 +6195,6 @@ def DrawAntennaNames(msAnt, antennasToPlot, msFound, mysize):
         pb.text(x0, y0, legendString,color=overlayColors[a],fontsize=mysize,
                 transform=pb.gcf().transFigure)
     
-def fixGapInSpws(spws, verbose=False):
-    # find gap in spectralWindowId numbering in ASDM_RECEIVER
-    gap = 0
-    for i in range(len(spws)):
-        if (spws[i] > 0):
-            gap = spws[i] - 1
-            break
-    for i in range(len(spws)):
-        if (spws[i] > 0):
-            if (verbose):
-                print "Renaming spw%d to spw%d" % (spws[i],spws[i]-gap)
-            spws[i] -= gap
-    return(spws)
-
 def stdInfo(a, sigma=3, edge=0, spw=-1, xant=-1, pol=-1):
     """
     Computes the standard deviation of a list, then returns the value, plus the
