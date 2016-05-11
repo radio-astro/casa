@@ -132,7 +132,7 @@ class ContFileHandler(object):
 
         return cont_ranges_spwsel
 
-    def lsrk_to_topo(self, selection, msnames, fields, spw_id):
+    def lsrk_to_topo(self, selection, msnames, fields, spw_id, ctrim=0, ctrim_nchan=-1):
 
         freq_selection, refer = selection.split()
         if (refer != 'LSRK'):
@@ -165,15 +165,20 @@ class ContFileHandler(object):
                 for freq_range in freq_ranges:
                     imTool.selectvis(vis = msname, field = field, spw = spw_id)
                     result = imTool.advisechansel(freqstart = freq_range[0], freqend = freq_range[1], freqstep = 100., freqframe = 'LSRK')
+                    imTool.done()
                     spw_index = result['ms_0']['spw'].tolist().index(spw_id)
                     start = result['ms_0']['start'][spw_index]
                     stop = start + result['ms_0']['nchan'][spw_index] - 1
-                    chan_selection.append((start, stop))
-                    imTool.done()
-                    result = imTool.advisechansel(msname = msname, fieldid = field, spwselection = '%d:%d~%d' % (spw_id, start, stop), getfreqrange = True)
-                    fLow = casatools.quanta.convert('%sHz' % (result['freqstart']), 'GHz')['value']
-                    fHigh = casatools.quanta.convert('%sHz' % (result['freqend']), 'GHz')['value']
-                    freq_selection.append((fLow, fHigh))
+                    # Optionally skip edge channels
+                    if (ctrim_nchan != -1):
+                        start = start if (start >= ctrim) else ctrim
+                        stop = stop if (stop < (ctrim_nchan-ctrim)) else ctrim_nchan-ctrim-1
+                    if (stop >= start):
+                        chan_selection.append((start, stop))
+                        result = imTool.advisechansel(msname = msname, fieldid = field, spwselection = '%d:%d~%d' % (spw_id, start, stop), freqframe = 'TOPO', getfreqrange = True)
+                        fLow = casatools.quanta.convert('%sHz' % (result['freqstart']), 'GHz')['value']
+                        fHigh = casatools.quanta.convert('%sHz' % (result['freqend']), 'GHz')['value']
+                        freq_selection.append((fLow, fHigh))
             chan_selections.append(';'.join('%d~%d' % (item[0], item[1]) for item in chan_selection))
             freq_selections.append('%s TOPO' % (';'.join('%s~%sGHz' % (item[0], item[1]) for item in freq_selection)))
 
