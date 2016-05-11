@@ -96,6 +96,7 @@ private:
   String checkLoadedAxesDatacol();
   String normalizeColumnName(String plotmscol);
   void getNamesFromMS(MeasurementSet& ms);
+  void logChansForSpws(MeasurementSet& ms, Int chanVal);
   void setUpVisIter(PlotMSSelection& selection,
 		    PlotMSCalibration& calibration,
 		    String dataColumn,

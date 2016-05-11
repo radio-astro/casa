@@ -101,6 +101,18 @@ void MSCache::loadIt(vector<PMS::Axis>& loadAxes,
         delete selMS;
         loadError(log.getMesg());
     }
+    if (averaging_.channel()) {
+        Int avgChans;
+        double chanVal = averaging_.channelValue();
+        if (chanVal > INT_MAX) {
+            logWarn(PMS::LOG_ORIGIN_LOAD_CACHE, "avgchannel value exceeds maximum integer allowed (" + String::toString(INT_MAX) + ")");
+            avgChans = INT_MAX;
+        } else {
+            avgChans = static_cast<Int>(chanVal);
+        }
+        logChansForSpws(*selMS, avgChans);
+    }
+
     // Make volume meter for countChunks to estimate memory requirements
     vm_ = new MSCacheVolMeter(*inputMS, averaging_, chansel, corrsel);
     delete inputMS;
@@ -332,6 +344,24 @@ void MSCache::getNamesFromMS(MeasurementSet& ms)
     mapIntentNamesToIds();  // eliminate duplicate intent names
 }
 
+void MSCache::logChansForSpws(MeasurementSet& ms, Int chanVal) {
+    logLoad("Actual avgchannel value used:");
+    ROMSColumns msCol(ms);
+    Vector<Int> spwIds = msCol.dataDescription().spectralWindowId().getColumn();
+    Vector<Int> spwChans = msCol.spectralWindow().numChan().getColumn();
+    Int spw, numChans;
+    for (uInt i=0; i < spwIds.size(); ++i) {
+        spw = spwIds[i];
+        if (chanVal > spwChans[spw]) {
+            numChans = spwChans[spw];
+        } else {
+            numChans = chanVal;
+        }
+        logLoad("SPW " + String::toString(spw) + " number of channels averaged: " 
+            + String::toString(numChans));
+    }
+}
+
 void MSCache::setUpVisIter(PlotMSSelection& selection,
 		PlotMSCalibration& calibration,
 		String dataColumn, 
@@ -378,16 +408,10 @@ void MSCache::setUpVisIter(PlotMSSelection& selection,
 		configuration.define("timespan", timespanStr);
 	}
 	if (averaging_.channel()) {
-        int chanVal;
-        if (averaging_.channelValue() > INT_MAX) {
-            cout << "\nWARNING: avgchannel value exceeds maximum integer allowed, setting to " + String::toString(INT_MAX) << endl;
-            logWarn(PMS::LOG_ORIGIN_LOAD_CACHE, "avgchannel value exceeds maximum integer allowed, setting to " + String::toString(INT_MAX));
-            chanVal = INT_MAX;
-        } else {
-		    chanVal = static_cast<int>(averaging_.channelValue());
-        }
+        double chanVal = averaging_.channelValue();
+        int chanBin = (chanVal > INT_MAX) ? INT_MAX : static_cast<int>(chanVal);
 		configuration.define("chanaverage", True);
-		configuration.define("chanbin", chanVal);
+		configuration.define("chanbin", chanBin);
 	}
     if (averaging_.spw()) {
         configuration.define("spwaverage", True);
@@ -779,7 +803,8 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
                 ss << "scan=" << vb->scan()(0) << " ";
                 ss << "fieldId=" << vb->fieldId()(0) << " ";
                 ss << "spw=" << vb->spectralWindows()(0) << " ";
-                ss << "freq=" << vb->getFrequencies(0, freqFrame_) << " ";
+                ss << "amp=" << vb->visCube().shape() << " ";
+                ss << "freq=" << vb->getFrequencies(0, freqFrame_).shape() << " ";
             }
             // Accumulate into the averager
             pmsvba.accumulate(*vb);

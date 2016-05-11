@@ -312,6 +312,12 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
 		}
 
         // Check averaging validity
+		if (averaging_.time() && averaging_.timeValue() < 0.0) {
+			throw(AipsError("Cannot average negative time value"));
+        }
+        if (averaging_.channel() && averaging_.channelValue() < 0.0) {
+			throw(AipsError("Cannot average negative number of channels"));
+        }
 		if ( averaging_.baseline() || averaging_.antenna() || averaging_.spw() )
 		{
 			int axesCount = axes.size();
