@@ -12,11 +12,11 @@ based on the distance between the antenna to the centre of the array.</p>
 <table class="table table-bordered table-striped"
 	   summary="Reference Antennas">
 	<caption>Reference antenna selection per measurement set. Antennas are
-	listed in order of priority.</caption>
+	listed in order of highest to lowest priority.</caption>
 	<thead>
 		<tr>
 			<th>Measurement Set</th>
-			<th>Reference Antennas</th>
+			<th>Reference Antennas (Highest to Lowest)</th>
 		</tr>
 	</thead>
 	<tbody>
