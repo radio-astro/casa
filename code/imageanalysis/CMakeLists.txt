@@ -224,6 +224,8 @@ install (FILES
 	ImageAnalysis/MomentCalculator.tcc
 	ImageAnalysis/MomentClip.h
     ImageAnalysis/MomentClip.tcc
+    ImageAnalysis/MomentWindow.h
+    ImageAnalysis/MomentWindow.tcc
 	ImageAnalysis/PeakIntensityFluxDensityConverter.h
 	ImageAnalysis/PixelValueManipulator.h
 	ImageAnalysis/PixelValueManipulator.tcc

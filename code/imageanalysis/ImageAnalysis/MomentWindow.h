@@ -1,4 +1,4 @@
-//# MomentCalculator.h: 
+//# MomentWindow.h:
 //# Copyright (C) 1997,1999,2000,2001,2002
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -25,8 +25,8 @@
 //#
 //# $Id: MomentCalculator.h 20299 2008-04-03 05:56:44Z gervandiepen $
 
-#ifndef IMAGES_MOMENTCALCULATOR_H
-#define IMAGES_MOMENTCALCULATOR_H
+#ifndef IMAGEANALYSIS_MOMENTWINDOW_H
+#define IMAGEANALYSIS_MOMENTWINDOW_H
 
 #include <casa/aips.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
@@ -41,7 +41,7 @@ namespace casa {
 
 template <class T> class MomentsBase;
 
-// <summary> Compute moments from a Gaussian fitted to a profile</summary>
+// <summary> Computes moments from a windowed profile </summary>
 // <use visibility=export>
 // 
 // <reviewed reviewer="" date="yyyy/mm/dd" tests="" demos="">
@@ -58,24 +58,38 @@ template <class T> class MomentsBase;
 //
 // <synopsis>
 //  This concrete class is derived from the abstract base class MomentCalcBase
-//  which provides an interface layer to the ImageMoments or MSMoments driver class.  
-//  ImageMoments or MSMoments creates a MomentFit object and passes it to the LatticeApply
-//  function, lineMultiApply. This function iterates through a given lattice,
-//  and invokes the <src>multiProcess</src> member function of MomentFit on each vector
-//  of pixels that it extracts from the input lattice.  The <src>multiProcess</src>
-//  function returns a vector of moments which are inserted into the output
-//  lattices also supplied to the LatticeApply function.
+//  which provides an interface layer to the ImageMoments or MSMoments driver class.
+//  ImageMoments or MSMoments creates a MomentWindow object and passes it to the LatticeApply
+//  function lineMultiApply.  This function iterates through a given lattice, 
+//  and invokes the <src>multiProcess</src> member function of MomentWindow on each profile
+//  of pixels that it extracts from the input lattice.  The <src>multiProcess</src> function 
+//  returns a vector of moments which are inserted into the output lattices also
+//  supplied to the LatticeApply function.
+//
+//  MomentWindow computes moments from a subset of the pixels selected from  the
+//  input profile.  This subset is a simple index range, or window.  The window is
+//  selected, for each profile, that is thought to surround the spectral feature 
+//  of interest.  This window can be found from the primary lattice, or from an 
+//  ancilliary lattice (ImageMoments or MSMoments offers a smoothed version of the primary 
+//  lattice as the ancilliary lattice).  The moments are always computed from 
+//  primary lattice data.   
+//
+//  For each profile, the window can be found either interactively or automatically.
+//  There are two interactive methods.  Either you just mark the window with the
+//  cursor, or you interactively fit a Gaussian to the profile and the +/- 3-sigma
+//  window is returned.  There are two automatic methods.  Either Bosma's converging
+//  mean algorithm is used, or an automatically  fit Gaussian +/- 3-sigma window
+//  is returned.
 // 
-//  MomentFit computes moments by fitting a Gaussian to each profile.  The
-//  moments are then computed from that fit.   The fitting can be done either
-//  interactively or automatically.
-// 
-//  The constructor takes MomentsBase object that is actually an ImageMoments or 
+//  The constructor takes an MomentsBase object that is actually an ImageMoments or 
 //  an MSMoments object; the one that is constructing
-//  the MomentFit object of course.   There is much control information embodied
-//  in the state of the ImageMoments object.  This information is extracted by the
-//  MomentCalcBase class and passed on to MomentFit for consumption.
-//   
+//  the MomentWindow object of course.   There is much control information embodied  
+//  in the state  of the ImageMoments or MSMoments object.  This information is extracted by the
+//  MomentCalcBase class and passed on to MomentWindow for consumption.
+//
+//  Note that the ancilliary lattice is only accessed if the pointer to it
+//  is non zero.
+//  
 //  See the <linkto class="MomentsBase">MomentsBase</linkto>, 
 //  <linkto class="ImageMoments">ImageMoments</linkto>, and 
 //  <linkto class="MSMoments">MSMoments</linkto>
@@ -85,13 +99,14 @@ template <class T> class MomentsBase;
 //
 // <example>
 // This example comes from ImageMoments.   outPt is a pointer block holding
-// pointers to the output lattices.   os_P is a LogIO object.
-//                                     
+// pointers to the output lattices.  The ancilliary masking lattice is
+// just a smoothed version of the input lattice.  os_P is a LogIO object.
+//   
 // <srcBlock>
 // 
-//// Construct desired moment calculator object.  Use it polymorphically via
+//// Construct desired moment calculator object.  Use it polymorphically via 
 //// a pointer to the base class.
-//
+//  
 //   MomentCalcBase<T>* pMomentCalculator = 0;
 //   if (clipMethod || smoothClipMethod) {
 //      pMomentCalculator = new MomentClip<T>(pSmoothedImage, *this, os_p, outPt.nelements());
@@ -100,12 +115,13 @@ template <class T> class MomentsBase;
 //   } else if (fitMethod) {
 //      pMomentCalculator = new MomentFit<T>(*this, os_p, outPt.nelements());
 //   }
-//
+//  
 //// Iterate optimally through the image, compute the moments, fill the output lattices
-//
+//  
 //   LatticeApply<T>::lineMultiApply(outPt, *pInImage_p, *pMomentCalculator,   
 //                                   momentAxis_p, pProgressMeter);
 //   delete pMomentCalculator;
+//  
 // </srcBlock>
 // </example>
 //
@@ -121,18 +137,24 @@ template <class T> class MomentsBase;
 // </todo>
 
 
-template <class T> class MomentFit : public MomentCalcBase<T>
+template <class T> class MomentWindow : public MomentCalcBase<T>
 {
 public:
+    using AccumType = typename NumericTraits<T>::PrecisionType;
+    using DataIterator = typename Vector<T>::const_iterator;
+    using MaskIterator = Vector<Bool>::const_iterator;
 
-// Constructor.  We need the ImageMoments or MSMoments object which is calling us, 
-// its logger, and the number of output lattices it has created.
-   MomentFit(MomentsBase<T>& iMom,
-             LogIO& os,
-             const uInt nLatticeOut);
+// Constructor.  The pointer is to a lattice containing the masking
+// lattice (created by ImageMoments or MSMoments).   We also need the 
+// ImageMoments or MSMoments object which is calling us, its logger,
+// and the number of output lattices it has created.
+   MomentWindow(shared_ptr<Lattice<T>> pAncilliaryLattice,
+                MomentsBase<T>& iMom,
+                LogIO& os,
+                const uInt nLatticeOut);
 
 // Destructor (does nothing).
-  ~MomentFit();
+  ~MomentWindow();
 
 // This function is not implemented and throws an exception.
    virtual void process(T& out,
@@ -150,17 +172,51 @@ public:
                              const Vector<Bool>& inMask,
                              const IPosition& pos);
 
+                             
 private:
+
+   shared_ptr<Lattice<T>> _ancilliaryLattice;
    MomentsBase<T>& iMom_p;
    LogIO os_p;
+
+   const Vector<T>* pProfileSelect_p;
+   Vector<T> ancilliarySliceRef_p;
+   Vector<T> selectedData_p;
    T stdDeviation_p, peakSNR_p;
    Bool doFit_p;
-   Gaussian1D<T> gauss_p;
+   IPosition sliceShape_p;
+
+// Automatically determine the spectral window
+   Bool getAutoWindow(uInt& nFailed,
+                      Vector<Int>& window,
+                      const Vector<T>& x,
+                      const Vector<T>& y,
+                      const Vector<Bool>& mask,
+                      const T peakSNR,
+                      const T stdDeviation,
+                      const Bool doFit) const;
+
+   // Automatically determine the spectral window via Bosma's algorithm
+   Bool _getBosmaWindow (
+       Vector<Int>& window, const Vector<T>& y,
+       const Vector<Bool>& mask, const T peakSNR,
+       const T stdDeviation
+   ) const;
+
+// Take the fitted Gaussian parameters and set an N-sigma window.
+// If the window is too small return a Fail condition.
+   Bool setNSigmaWindow(Vector<Int>& window,  
+                        const T pos,
+                        const T width,
+                        const Int nPts,
+                        const Int N) const;
+
 
   //# Make members of parent class known.
 protected:
   using MomentCalcBase<T>::constructorCheck;
   using MomentCalcBase<T>::setPosLabel;
+  //using MomentCalcBase<T>::convertF;
   using MomentCalcBase<T>::selectMoments_p;
   using MomentCalcBase<T>::calcMoments_p;
   using MomentCalcBase<T>::calcMomentsMask_p;
@@ -179,10 +235,9 @@ protected:
   using MomentCalcBase<T>::abcissa_p;
 };
 
-
 }
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <imageanalysis/ImageAnalysis/MomentCalculator.tcc>
-#endif //# CASACORE_NO_AUTO_TEMPLATES
+#include <imageanalysis/ImageAnalysis/MomentWindow.tcc>
+#endif
 #endif

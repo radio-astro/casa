@@ -34,6 +34,7 @@
 #include <imageanalysis/ImageAnalysis/ImageMomentsProgress.h>
 #include <imageanalysis/ImageAnalysis/MomentCalculator.h>
 #include <imageanalysis/ImageAnalysis/MomentClip.h>
+#include <imageanalysis/ImageAnalysis/MomentWindow.h>
 #include <imageanalysis/ImageAnalysis/SepImageConvolver.h>
 
 namespace casa {
