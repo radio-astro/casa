@@ -1,4 +1,5 @@
 from taskinit import *
+import glob
 
 # Concatenation of ephemeris tables
 #
@@ -54,44 +55,49 @@ def concatephem(ephems=[], outputephem=''):
         ends.append(myend)
         stepsizes.append(mystepsize)
 
-    casalog.post('Ephem no., startMJD, endMJD, step size (d)', 'INFO')
+    if os.path.exists(outputephem):
+        casalog.post('Output ephemeris table '+outputephem+' exists already.', 'SEVERE')
+        return
 
+    casalog.post('Ephem no., startMJD, endMJD, step size (d)', 'INFO')
     for i in range(0,len(starts)):
         casalog.post(str(i)+', '+str(starts[i])+', '+str(ends[i])+', '+str(stepsizes[i]), 'INFO')
+
+    for i in range(0,len(starts)):
         shouldconcat_with_previous.append(False)
         canconcat_with_previous.append(False)
         hasoverlap_with_previous.append(False)
         gap_to_previous.append(0)
         if i>0: 
             if stepsizes[i]==stepsizes[i-1]:
-                print 'Ephemerides '+str(i-1)+' and '+str(i)+' have same step size.'
+                casalog.post( 'Ephemerides '+str(i-1)+' and '+str(i)+' have same step size.', 'INFO')
                 if starts[i-1] < starts[i]:
-                    print 'Ephemeris '+str(i-1)+' begins before '+str(i)
+                    casalog.post( 'Ephemeris '+str(i-1)+' begins before '+str(i), 'INFO')
                     if ends[i-1] < ends[i]: 
-                        print 'Ephemeris '+str(i-1)+' ends before '+str(i)
+                        casalog.post( 'Ephemeris '+str(i-1)+' ends before '+str(i), 'INFO')
                         shouldconcat_with_previous[i] = True
                         numsteps_to_add = (starts[i]-ends[i-1])/stepsizes[i] - 1
                         gap_to_previous[i] = int(round(numsteps_to_add))
                         if abs(round(numsteps_to_add) - numsteps_to_add)<1E-6:
-                            print 'Gap between ephemerides '+str(i-1)+' and '+str(i)+' is '+str(gap_to_previous[i])+' steps'
+                            casalog.post( 'Gap between ephemerides '+str(i-1)+' and '+str(i)+' is '+str(gap_to_previous[i])+' steps', 'INFO')
                             canconcat_with_previous[i] = True
                             if numsteps_to_add<0.:
-                                print  'Ephemerides '+str(i-1)+' and '+str(i)+' have overlap of '+str(-gap_to_previous[i])+' steps'
+                                casalog.post(  'Ephemerides '+str(i-1)+' and '+str(i)+' have overlap of '+str(-gap_to_previous[i])+' steps', 'INFO')
                                 hasoverlap_with_previous[i]=True
                         else:
-                            print 'Gap between ephemerides '+str(i-1)+' and '+str(i)+' is not an integer number of steps:'
-                            print str(round(numsteps_to_add) - numsteps_to_add)
+                            casalog.post( 'Gap between ephemerides '+str(i-1)+' and '+str(i)+' is not an integer number of steps:', 'WARN')
+                            casalog.post( str(round(numsteps_to_add) - numsteps_to_add), 'INFO')
                             canconcat_with_previous[i] = False
                     else:
-                        print 'Ephemeris '+str(i-1)+' does not end before '+str(i)
+                        casalog.post( 'Ephemeris '+str(i-1)+' does not end before '+str(i), 'INFO')
                         shouldconcat_with_previous[i] = False
                         canconcat_with_previous[i] = False
                 else:
-                    print 'Ephemeris '+str(i-1)+' begins before '+str(i)
+                    casalog.post( 'Ephemeris '+str(i-1)+' begins before '+str(i), 'INFO')
                     casalog.post('Ephemerides are in wrong order.', 'SEVERE')
                     return
             else:
-                print 'Ephemerides '+str(i-1)+' and '+str(i)+' do not have same step size.'
+                casalog.post( 'Ephemerides '+str(i-1)+' and '+str(i)+' do not have same step size.', 'INFO')
                 casalog.post('Ephemerides have inhomogeneous steps sizes.', 'SEVERE')
                 return
         #end if
@@ -99,10 +105,7 @@ def concatephem(ephems=[], outputephem=''):
     if outputephem=='' or len(starts)<2:
         return
     else:
-        print 'Creating output ephemeris ...'
-        if os.path.exists(outputephem):
-            casalog.post('Output ephemeris table '+outputephem+' exists already.', 'SEVERE')
-            return
+        casalog.post( 'Creating output ephemeris ...', 'INFO')
 
         os.system('cp -R '+ephems[0]+' '+outputephem)
         
@@ -137,7 +140,7 @@ def concatephem(ephems=[], outputephem=''):
                     mytb.putcell('diskLong', j, 0.)
                     mytb.putcell('diskLat', j, 0.)
 
-                print str(gap_to_previous[i])+' dummy rows appended to fill gap'
+                casalog.post( str(gap_to_previous[i])+' dummy rows appended to fill gap', 'INFO')
 
             mynrows = mytb.nrows()
 
@@ -152,12 +155,83 @@ def concatephem(ephems=[], outputephem=''):
                 mytb.putcell('diskLong', j, mytb2.getcell('diskLong', fromrow))
                 mytb.putcell('diskLat', j, mytb2.getcell('diskLat', fromrow))
 
-            print str(mynrows2-startrow)+' rows copied over'
+            casalog.post( str(mynrows2-startrow)+' rows copied over', 'INFO')
 
     return
 
 
-                
-        
-
+def findephems(vis=[], field=''):
     
+    """
+       findephems
+
+       Search the MSs given in the list "vis" for ephemerides for
+       a given field and return the list of paths to the ephemeris tables
+       in the same order as vis.
+
+       vis - list of the MSs to search for ephemerides
+             default: []
+
+       field - field for which to seach ephemerides
+             default:
+    """
+
+    if vis==[] or field=='':
+        return []
+
+    if type(vis) == str:
+        vis = [vis]
+
+    mytb=tbtool()
+
+    rval = [] # list of ephemeris tables to be returned
+
+    for visname in vis:
+        if not os.path.exists(visname+'/FIELD'):
+            casalog.post('MS '+visname+' does not exist.', 'SEVERE')
+            return []
+
+        mytb.open(visname+'/FIELD')
+        fnames = mytb.getcol('NAME')
+
+        if type(field) == int:
+            field = fnames[field]
+        elif type(field) != str:
+            casalog.post('Parameter field must be str or int.', 'SEVERE')
+            mytb.close()
+            return []
+
+        if field in fnames:
+            colnames = mytb.colnames()
+            if not 'EPHEMERIS_ID' in colnames:
+                casalog.post('MS '+visname+' has no ephemerides attached.', 'WARN')
+                rval.append('')
+                mytb.close()
+                continue
+
+            ephids = mytb.getcol('EPHEMERIS_ID')
+            mytb.close()
+            theephid = ephids[list(fnames).index(field)]
+
+            thetabs = glob.glob(visname+'/FIELD/EPHEM'+str(theephid)+'_*')
+
+            if len(thetabs)==0:
+                casalog.post('MS '+visname+' has no ephemerides for field '+field+' attached.', 'WARN')
+                rval.append('')
+                continue
+
+            if len(thetabs)>1:
+                casalog.post('MS '+visname+' has more than one ephemeris for field '+field+' attached.', 'SEVERE')
+                return[]
+
+            rval.append(thetabs[0])
+
+        else:
+             casalog.post('MS '+visname+' has no field '+field, 'WARN')
+             rval.append('')
+             continue
+    #endfor
+
+    return rval
+
+             
