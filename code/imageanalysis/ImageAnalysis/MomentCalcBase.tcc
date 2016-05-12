@@ -56,31 +56,25 @@ template <class T> uInt MomentCalcBase<T>::allNoise (
     T& dMean,  const Vector<T>& data, const Vector<Bool>& mask,
     const T peakSNR, const T stdDeviation
 ) const {
-    //
     // Try and work out whether this spectrum is all noise
     // or not.  We don't bother with it if it is noise.
     // We compare the peak with sigma and a cutoff SNR
     // Returns 1 if all noise
     // Returns 2 if all masked
     // Returns 0 otherwise
-    T dMin, dMax;
-    uInt minPos, maxPos;
-    if (
-        ! this->_stats(dMin, dMax, minPos, maxPos, dMean, data, mask)
-    ) {
+    ClassicalStatistics<AccumType, DataIterator, MaskIterator> statsCalculator;
+    statsCalculator.addData(data.begin(), mask.begin(), data.size());
+    StatsData<AccumType> stats = statsCalculator.getStatistics();
+    if (stats.npts == 0) {
         return 2;
     }
-
+    T dMin = *stats.min;
+    T dMax = *stats.max;
+    dMean = stats.mean;
     // Assume we are continuum subtracted so outside of line mean=0
-
     const T rat = max(abs(dMin),abs(dMax)) / stdDeviation;
-
-    if (rat < peakSNR) {
-        return 1;
-    }
-    else {
-        return 0;
-    }
+    uInt ret = rat < peakSNR ? 1 : 0;
+    return ret;
 }
 
 template <class T>
@@ -127,15 +121,6 @@ void MomentCalcBase<T>::costlyMoments(MomentsBase<T>& iMom,
       if (iMom.moments_p(i) == IM::ABS_MEAN_DEVIATION) doAbsDev = True;
    }      
 }
-/*
-template <class T>
-Bool MomentCalcBase<T>::doAuto(const MomentsBase<T>& iMom) const
-{
-// Get it from ImageMoments private data
-
-   return iMom.doAuto_p;
-}
-*/
 
 template <class T>
 Bool MomentCalcBase<T>::doFit(const MomentsBase<T>& iMom) const
@@ -339,36 +324,28 @@ Bool MomentCalcBase<T>::getAutoGaussianFit (uInt& nFailed,
    return True;
 }
 
-template <class T>
-Bool MomentCalcBase<T>::getAutoGaussianGuess (T& peakGuess,
-                                              T& posGuess,
-                                              T& widthGuess,
-                                              T& levelGuess,
-                                              const Vector<T>& x,
-                                              const Vector<T>& y,
-                                              const Vector<Bool>& mask) const
-//
-// Make a wild stab in the dark as to what the Gaussian
-// parameters of this spectrum might be
-//    
-// Returns False if all masked
-{
+template <class T> Bool MomentCalcBase<T>::getAutoGaussianGuess (
+    T& peakGuess, T& posGuess, T& widthGuess, T& levelGuess,
+    const Vector<T>& x, const Vector<T>& y, const Vector<Bool>& mask
+) const {
+    // Make a wild stab in the dark as to what the Gaussian
+    // parameters of this spectrum might be
 
-// Find peak and position of peak
-
-   uInt minPos, maxPos;
-   T dMin, dMax, dMean;
-   if (!this->_stats(dMin, dMax, minPos, maxPos, dMean, y, mask)) return False;
-
-   posGuess = x(maxPos);
-   peakGuess = dMax;
-   levelGuess = dMean;
-
-// Nothing much is very robust.  Assume the line is reasonably
-// sampled and set its width to a few pixels.  Totally ridiculous.
-                                            
-   widthGuess = 5;
-   return True;
+    ClassicalStatistics<AccumType, DataIterator, MaskIterator> statsCalculator;
+    statsCalculator.addData(y.begin(), mask.begin(), y.size());
+    StatsData<AccumType> stats = statsCalculator.getStatistics();
+    if (stats.npts == 0) {
+        // all masked
+        return False;
+    }
+    // Find peak and position of peak
+    posGuess = x[stats.maxpos.second];
+    peakGuess = *stats.max;
+    levelGuess = stats.mean;
+    // Nothing much is very robust.  Assume the line is reasonably
+    // sampled and set its width to a few pixels.  Totally ridiculous.
+    widthGuess = 5;
+    return True;
 }
 
 template <class T>
@@ -431,18 +408,6 @@ String MomentCalcBase<T>::momentAxisName(const CoordinateSystem& cSys,
    Int worldMomentAxis = cSys.pixelAxisToWorldAxis(iMom.momentAxis_p);
    return cSys.worldAxisNames()(worldMomentAxis);
 }
-
-/*
-template <class T>
-uInt MomentCalcBase<T>::nMaxMoments() const
-{
-
-// Get it from ImageMoments enum
-
-   uInt i = MomentsBase<T>::NMOMENTS;
-   return i;
-}
-*/
 
 template <class T>
 T& MomentCalcBase<T>::peakSNR(MomentsBase<T>& iMom) const
@@ -648,72 +613,11 @@ void MomentCalcBase<T>::setUpCoords (const MomentsBase<T>& iMom,
    }
 }
 
-template <class T> Bool MomentCalcBase<T>::_stats(
-    T& dMin, T& dMax, uInt& minPos, uInt& maxPos, T& dMean,
-    const Vector<T>& profile, const Vector<Bool>& mask
-) const {
-    // Returns False if no unmasked points
-    Bool deleteIt1, deleteIt2;
-    const T* pProfile = profile.getStorage(deleteIt1);
-    const Bool* pMask = mask.getStorage(deleteIt2);
-    Int iStart = -1;
-    uInt i = 0;
-    uInt nPts = 0;
-    typename NumericTraits<T>::PrecisionType sum = 0;
-    auto size = profile.size();
-    while (i<size && iStart==-1) {
-        if (pMask[i]) {
-            dMax = pProfile[i];
-            dMin = dMax;
-            minPos = i;
-            maxPos = i;
-            sum = pProfile[i];
-            ++nPts;
-            iStart = i+1;
-        }
-        ++i;
-    }
-    if (iStart == -1) {
-        return False;
-    }
-    for (i=iStart; i<size; ++i) {
-        if (pMask[i]) {
-            if (pProfile[i] < dMin) {
-                dMin = pProfile[i];
-                minPos = i;
-            }
-            else if (pProfile[i] > dMax) {
-                dMax = pProfile[i];
-                maxPos = i;
-            }
-            sum += pProfile[i];
-            ++nPts;
-        }
-    }
-    dMean = sum / nPts;
-    profile.freeStorage(pProfile, deleteIt1);
-    mask.freeStorage(pMask, deleteIt2);
-    return True;
-}
-
 template <class T>
 T& MomentCalcBase<T>::stdDeviation(MomentsBase<T>& iMom) const
 {
    return iMom.stdDeviation_p;
 }
-      
-/*
-template <class T>
-void MomentCalcBase<T>::yAutoMinMax(T& yMin, 
-                                    T& yMax, 
-                                    MomentsBase<T>& iMom) const
-{
-   yMin = iMom.yMin_p;
-   yMax = iMom.yMax_p;
-}
- */
-
-
 
 // Fill the ouput moments array
 template<class T>
@@ -825,5 +729,5 @@ void MomentCalcBase<T>::setCalcMoments
    calcMoments(IM::MEDIAN_COORDINATE) = vMedian;
 }
 
-} //# NAMESPACE CASA - END
+}
 

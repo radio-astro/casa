@@ -131,6 +131,11 @@ template <class T> class MomentsBase;
 
 template <class T> class MomentCalcBase : public LineCollapser<T,T> {
 public:
+
+    using AccumType = typename NumericTraits<T>::PrecisionType;
+    using DataIterator = typename Vector<T>::const_iterator;
+    using MaskIterator = Vector<Bool>::const_iterator;
+
     virtual ~MomentCalcBase();
 
     // Returns the number of failed fits if doing fitting
@@ -398,14 +403,6 @@ protected:
         LogIO& os, Double& integratedScaleFactor,
         const CoordinateSystem& cSys, Bool doCoordProfile,
         Bool doCoordRandom
-    ) const;
-
-    // Find some statistics from teh masked vector.
-    // Returns False if no unmasked points.
-    Bool _stats(
-        T& dMin, T& dMax, uInt& minPos, uInt& maxPos,
-        T& mean, const Vector<T>& profile,
-        const Vector<Bool>& mask
     ) const;
 
     // Return standard deviation of image from ImageMoments or MSMoments object

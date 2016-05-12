@@ -142,6 +142,9 @@ template <class T> class MomentsBase;
 template <class T> class MomentWindow : public MomentCalcBase<T>
 {
 public:
+    using AccumType = typename NumericTraits<T>::PrecisionType;
+    using DataIterator = typename Vector<T>::const_iterator;
+    using MaskIterator = Vector<Bool>::const_iterator;
 
 // Constructor.  The pointer is to a lattice containing the masking
 // lattice (created by ImageMoments or MSMoments).   We also need the 
@@ -182,7 +185,7 @@ private:
    Vector<T> ancilliarySliceRef_p;
    Vector<T> selectedData_p;
    T stdDeviation_p, peakSNR_p;
-   Bool doAuto_p, doFit_p;
+   Bool doFit_p;
    IPosition sliceShape_p;
 
 // Automatically determine the spectral window
@@ -195,12 +198,12 @@ private:
                       const T stdDeviation,
                       const Bool doFit) const;
 
-// Automatically determine the spectral window via Bosma's algorithm
-   Bool getBosmaWindow (Vector<Int>& window,
-                        const Vector<T>& y,
-                        const Vector<Bool>& mask,
-                        const T peakSNR,
-                        const T stdDeviation) const;
+   // Automatically determine the spectral window via Bosma's algorithm
+   Bool _getBosmaWindow (
+       Vector<Int>& window, const Vector<T>& y,
+       const Vector<Bool>& mask, const T peakSNR,
+       const T stdDeviation
+   ) const;
 
 // Take the fitted Gaussian parameters and set an N-sigma window.
 // If the window is too small return a Fail condition.

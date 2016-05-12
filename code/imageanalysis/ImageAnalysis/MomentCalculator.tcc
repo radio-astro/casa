@@ -99,7 +99,6 @@ MomentWindow<T>::MomentWindow(shared_ptr<Lattice<T>> pAncilliaryLattice,
 
 // Are we fitting, automatically or interactively ?
 
-   //doAuto_p = this->doAuto(iMom_p);
    doFit_p = this->doFit(iMom_p);
 
 // Values to assess if spectrum is all noise or not
@@ -185,20 +184,18 @@ void MomentWindow<T>::multiProcess(Vector<T>& moments,
    setPosLabel(title, inPos);
 
 
-// Do the window selection
-
-   if (doAuto_p) {
+   // Do the window selection
    
-// Define the window automatically
-
-      Vector<T> gaussPars;
-      if (getAutoWindow(nFailed_p, window,  abcissa_p, *pProfileSelect_p, profileInMask,
-                        peakSNR_p, stdDeviation_p, doFit_p)) {
-         nPts = window(1) - window(0) + 1;
-      } else {
-         nPts = 0;
-      }
+   // Define the window automatically
+   Vector<T> gaussPars;
+   if (getAutoWindow(nFailed_p, window,  abcissa_p, *pProfileSelect_p, profileInMask,
+           peakSNR_p, stdDeviation_p, doFit_p)) {
+       nPts = window(1) - window(0) + 1;
    }
+   else {
+       nPts = 0;
+   }
+
 
 
 // If no points make moments zero and mask
@@ -367,7 +364,7 @@ Bool MomentWindow<T>::getAutoWindow (uInt& nFailed,
    } else {
 // Invoke Albert's method (see AJ, 86, 1791)
 
-      if (!getBosmaWindow (window, y, mask, peakSNR, stdDeviation)) {
+      if (! _getBosmaWindow (window, y, mask, peakSNR, stdDeviation)) {
          window = 0;
          return False;
       }
@@ -375,104 +372,92 @@ Bool MomentWindow<T>::getAutoWindow (uInt& nFailed,
    return True;
 }
 
-template <class T>
-Bool MomentWindow<T>::getBosmaWindow (Vector<Int>& window,
-                                      const Vector<T>& y,
-                                      const Vector<Bool>& mask,
-                                      const T peakSNR,
-                                      const T stdDeviation) const
-//
-// Automatically work out the spectral window
-// with Albert Bosma's algorithm.
-//    
-// Inputs: 
-//   x,y       Spectrum
-//   plotter   Plot device active if True
-//   x,yLabel  Labels for plots
-// Output:
-//   window    The window
-//   Bool      False if we reject this spectrum.  This may
-//             be because it is all noise, or all masked
-//
-{
-// See if this spectrum is all noise first.  If so, forget it.
-// Return straight away if all maske
+template <class T> Bool MomentWindow<T>::_getBosmaWindow(
+    Vector<Int>& window, const Vector<T>& y, const Vector<Bool>& mask,
+    const T peakSNR, const T stdDeviation
+) const {
+    // Automatically work out the spectral window
+    // with Albert Bosma's algorithm.
+    // Inputs:
+    //   x,y       Spectrum
+    // Output:
+    //   window    The window
+    //   Bool      False if we reject this spectrum.  This may
+    //             be because it is all noise, or all masked
 
-   T dMean;
-   uInt iNoise = this->allNoise(dMean, y, mask, peakSNR, stdDeviation);
-   if (iNoise == 2) return False;
+    // See if this spectrum is all noise first.  If so, forget it.
+    // Return straight away if all maske
+    T dMean;
+    uInt iNoise = this->allNoise(dMean, y, mask, peakSNR, stdDeviation);
+    if (iNoise == 2) {
+        // all masked
+        return False;
+    }
 
-   if (iNoise==1) {
-      window = 0;
-      return False;   
-   }
+    if (iNoise==1) {
+        // all noise
+        window = 0;
+        return False;
+    }
+    // Find peak
 
-
-// Find peak
-
-   uInt minPos, maxPos;
-   T yMin, yMax, yMean;
-   this->_stats(yMin, yMax, minPos, maxPos, yMean, y, mask);
-
-   const Int nPts = y.nelements(); 
-   Int iMin = max(0,Int(maxPos)-2);   
-   Int iMax = min(nPts-1,Int(maxPos)+2);
-   T tol = stdDeviation / (nPts - (iMax-iMin-1));
-          
-       
-// Iterate to convergence
-   
-   Bool first = True;
-   Bool converged = False;
-   Bool more = True;
-   yMean = 0;
-   T oldYMean = 0;
-   while (more) {
-   
-// Find mean outside of peak region
-
-      typename NumericTraits<T>::PrecisionType sum = 0;
-      Int i,j;
-      for (i=0,j=0; i<nPts; i++) {
-         if (mask(i) && (i < iMin || i > iMax)) {
-            sum += y(i);
-            j++;
-         }
-      }
-      if (j>0) yMean = sum / j;
-   
-
-// Interpret result
-
-      if (!first && j>0 && abs(yMean-oldYMean) < tol) {
-         converged = True;
-         more = False;
-      } else if (iMin==0 && iMax==nPts-1)
-         more = False;
-      else {
-   
-// Widen window and redetermine tolerance
-
-         oldYMean = yMean;
-         iMin = max(0,iMin - 2);
-         iMax = min(nPts-1,iMax+2); 
-         tol = stdDeviation / (nPts - (iMax-iMin-1));
-      }
-      first = False;
-   }   
+    ClassicalStatistics<AccumType, DataIterator, MaskIterator> statsCalculator;
+    statsCalculator.addData(y.begin(), mask.begin(), y.size());
+    StatsData<AccumType> stats = statsCalculator.getStatistics();
+    const Int nPts = y.size();
+    auto maxPos = stats.maxpos.second;
+    Int iMin = max(0, Int(maxPos)-2);
+    Int iMax = min(nPts-1, Int(maxPos)+2);
+    T tol = stdDeviation / (nPts - (iMax-iMin-1));
+    // Iterate to convergence
+    auto first = True;
+    auto converged = False;
+    auto more = True;
+    T yMean = 0;
+    T oldYMean = 0;
+    while (more) {
+        // Find mean outside of peak region
+        AccumType sum = 0;
+        Int i,j;
+        for (i=0,j=0; i<nPts; ++i) {
+            if (mask[i] && (i < iMin || i > iMax)) {
+                sum += y[i];
+                ++j;
+            }
+        }
+        if (j>0) {
+            yMean = sum / j;
+        }
+        // Interpret result
+        if (!first && j>0 && abs(yMean-oldYMean) < tol) {
+            converged = True;
+            more = False;
+        }
+        else if (iMin==0 && iMax==nPts-1) {
+            more = False;
+        }
+        else {
+            // Widen window and redetermine tolerance
+            oldYMean = yMean;
+            iMin = max(0,iMin - 2);
+            iMax = min(nPts-1,iMax+2);
+            tol = stdDeviation / (nPts - (iMax-iMin-1));
+        }
+        first = False;
+    }
       
-// Return window
+    // Return window
 
-   if (converged) {
-      window(0) = iMin;
-      window(1) = iMax;
-      return True;
-   } else {
-      window = 0;
-      return False;   
-   }
+    if (converged) {
+        window[0] = iMin;
+        window[1] = iMax;
+        return True;
+    }
+    else {
+        window = 0;
+        return False;
+    }
 }  
-
 
 template <class T> 
 Bool MomentWindow<T>::setNSigmaWindow (Vector<Int>& window,
@@ -553,7 +538,6 @@ MomentFit<T>::MomentFit(MomentsBase<T>& iMom,
 
 // Are we fitting, automatically or interactively ?
    
-   //doAuto_p = this->doAuto(iMom_p);
    doFit_p = this->doFit(iMom_p);
          
 // Values to assess if spectrum is all noise or not
