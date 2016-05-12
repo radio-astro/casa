@@ -7,7 +7,7 @@ from taskinit import *
 from parallel.parallel_task_helper import ParallelTaskHelper
 
 def concat(vislist,concatvis,freqtol,dirtol,respectname,timesort,copypointing,
-	   visweightscale):
+	   visweightscale, forcesingleephemfield):
 	"""concatenate visibility datasets
 	The list of data sets given in the vis argument are chronologically concatenated 
 	into an output data set in concatvis, i.e. the data sets in vis are first ordered
@@ -99,6 +99,16 @@ def concat(vislist,concatvis,freqtol,dirtol,respectname,timesort,copypointing,
 		factors. See the cookbook for more details.
 		example: [1.,3.,3.] - scale the weights of the second and third MS by a factor 3.
 		default: [] (empty list) - no scaling
+
+        forcesingleephemfield -- By default, concat will only merge two ephemeris fields if
+                the first ephemeris covers the time range of the second. Otherwise, two separate
+                fields with separate ephemerides are placed in the output MS.
+                In order to override this behaviour and make concat merge the non-overlapping 
+                or only partially overlapping input ephemerides, the name or id of the field
+                in question needs to be placed into the list in parameter 'forcesingleephemfield'.
+                example: ['Neptune'] - will make sure that there is only one joint ephemeris for
+                                       field Neptune in the output MS
+                default: '' - standard treatment of all ephemeris fields
 
 	"""
 
@@ -209,6 +219,7 @@ def concat(vislist,concatvis,freqtol,dirtol,respectname,timesort,copypointing,
 				vis.pop(0)
 				# don't need to pop visweightscale here!
 
+
 		if not copypointing: # remove the rows from the POINTING table of the first MS
 			casalog.post('*** copypointing==False: resulting MS will have empty POINTING table.', 'INFO')
 			tmptabname = 'TMPPOINTING'+str(time.time())
@@ -224,6 +235,42 @@ def concat(vislist,concatvis,freqtol,dirtol,respectname,timesort,copypointing,
 				casalog.post('***    Input POINTING table was already empty.', 'INFO')
 				shutil.move(tmptabname, theconcatvis+'/POINTING')
 				t.close()
+
+
+		# handle the ephemeris concatenation
+		if not forcesingleephemfield=='':
+			from recipes.ephemerides import concatephem
+
+			if type(forcesingleephemfield)==str or type(forcesingleephemfield)==int:
+				forcesingleephemfield = [forcesingleephemfield]
+			if not type(forcesingleephemfield) == list:
+				raise Exception, 'Type of parameter forcesingleephemfield must be str, int, or list'
+
+			themss = [theconcatvis]
+			for x in vis:
+				themss.append(x)
+
+			for ephemfield in forcesingleephemfield:
+				if not type(ephemfield)==int:
+					ephemfield = str(ephemfield)
+				casalog.post('***    Forcing single ephemeris for field '+str(ephemfield), 'INFO')
+				thetabs = concatephem.findephems(themss, ephemfield)
+				if thetabs != [] and not ('' in thetabs):
+					tmptab = os.path.basename(thetabs[0])+'.concattmp'
+					targettab = theconcatvis+'/FIELD/'+os.path.basename(thetabs[0])
+					if not os.path.exists(targettab):
+						raise Exception, 'Internal ERROR: ephemeris '+targettab+' does not exist'	
+					concatephem.concatephem(thetabs, tmptab)
+					if os.path.exists(tmptab):
+						os.system('rm -rf '+targettab)
+						os.system('mv '+tmptab+' '+targettab)
+					else:
+						casalog.post('ERROR while forcing single ephemeris for field '+str(ephemfield), 'SEVERE')
+						raise Exception, 'Concatenation of ephemerides for field '+str(ephemfield)+' failed.'
+				else:
+					casalog.post('ERROR while forcing single ephemeris for field '+str(ephemfield), 'SEVERE')
+					raise Exception, 'Cannot find ephemerides for field '+str(ephemfield)+' in all input MSs.'
+
 
 		# Determine if scratch columns should be considered at all
 		# by checking if any of the MSs has them.
@@ -251,7 +298,7 @@ def concat(vislist,concatvis,freqtol,dirtol,respectname,timesort,copypointing,
                 else:
                         raise Exception, 'Visibility data set '+theconcatvis+' not found - please verify the name'
 
-
+		
 		for elvis in vis : 			###Oh no Elvis does not exist Mr Bill
 			if(not os.path.exists(elvis)):
 				raise Exception, 'Visibility data set '+elvis+' not found - please verify the name'
@@ -270,6 +317,7 @@ def concat(vislist,concatvis,freqtol,dirtol,respectname,timesort,copypointing,
 			t.close()
 
 		considerscrcols = (considercorr or considermodel)   # there are scratch columns
+
 
 
 		# start actual work, file existence has already been checked
@@ -361,6 +409,7 @@ def concat(vislist,concatvis,freqtol,dirtol,respectname,timesort,copypointing,
 		m.writehistory(message='respectname  = "'+str(respectname)+'"',origin='concat')
 		m.writehistory(message='copypointing = "'+str(copypointing)+'"',origin='concat')
 		m.writehistory(message='visweightscale = "'+str(visweightscale)+'"',origin='concat')
+		m.writehistory(message='forcesingleephemfield = "'+str(forcesingleephemfield)+'"',origin='concat')
 
 		m.close()
 		
