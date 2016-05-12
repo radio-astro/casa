@@ -779,7 +779,7 @@ def merge_jobs(jobs, task, merge=None, ignore=None):
         hashed_job_args = merged_jobs[job_hash].kw
         new_job_args = dict(hashed_job_args)
         for prop in merge:
-            if job.kw[prop] not in hashed_job_args[prop]:
+            if job.kw[prop] not in safe_split(hashed_job_args[prop]):
                 merged_value = ','.join((hashed_job_args[prop], job.kw[prop]))
                 new_job_args[prop] = merged_value
             merged_jobs[job_hash] = task(**new_job_args)
