@@ -78,6 +78,18 @@ def aquaReportFromFile (contextFile, aquaFile):
     # Produce the AQUA report
     aquaReportFromContext (context, aquaFile)
 
+def aquaTestReportFromLocalFile (contextFile, aquaFile):
+    '''
+    Test AQUA report generation.
+    The pipeline context file and web log directory must be in the same local directry
+    '''
+
+    context = pipeline.Pipeline (context=contextFile,
+        path_overrides={'name':os.path.splitext(contextFile)[0], 'output_dir':os.getcwd()}).context 
+    LOG.info ("Opening context file: %s for test" % (contextFile))
+
+    # Produce the AQUA report
+    aquaReportFromContext (context, aquaFile)
 
 def aquaReportFromContext (context, aquaFile):
 
@@ -233,8 +245,11 @@ class AquaReport(object):
             #    are not appropriate for AQUA.
 
             if self.stagedict[stage][0] == 'hifa_importdata':
-                self.add_missing_intents_metric(st,
-                    self.context.results[stage-1])
+                try:
+                    self.add_missing_intents_metric(st,
+                        self.context.results[stage-1])
+                except:
+                    LOG.warn ("Error handling hifa_importdata result")
 
             # Deterministic flagging
             #     Retrieve the result with the highest online and shadow
@@ -242,8 +257,11 @@ class AquaReport(object):
             #     TBD: Modify metric in QA class to include BDF flags.
 
             elif self.stagedict[stage][0] == 'hifa_flagdata':
-                self.add_online_shadow_flagging_metric(st,
-                    self.context.results[stage-1])
+                try:
+                    self.add_online_shadow_flagging_metric(st,
+                        self.context.results[stage-1])
+                except:
+                    LOG.warn ("Error handling hifa_flagdata result")
 
             # Flux calibrator flagging
             #    Retrieve the result with the highest percentage of new
@@ -253,47 +271,76 @@ class AquaReport(object):
             #    of new flags for the whole data set.
 
             elif self.stagedict[stage][0] == 'hifa_fluxcalflag':
-                self.add_fluxcal_flagging_metric(st,
-                    self.context.results[stage-1])
+                try:
+                    self.add_fluxcal_flagging_metric(st,
+                        self.context.results[stage-1])
+                except:
+                    LOG.warn ("Error handling hifa_fluxcalflag result")
 
             # Raw data bad channel flagging
             #    Retrieve the results with the highest percentage of new
             #    flags.
 
             elif self.stagedict[stage][0] == 'hif_rawflagchans':
-                self.add_rawflagchans_flagging_metric(st,
-                    self.context.results[stage-1])
+                try:
+                    self.add_rawflagchans_flagging_metric(st,
+                        self.context.results[stage-1])
+                except:
+                    LOG.warn ("Error handling hif_rawflagchans result")
 
             # Tsys flagging
             #     Retrieve the result with the highest percentage of new
             #     flags.
 
             elif self.stagedict[stage][0] == 'hifa_tsysflag':
-                self.add_tsys_flagging_metric(st,
-                    self.context.results[stage-1])
+                try:
+                    self.add_tsys_flagging_metric(st,
+                        self.context.results[stage-1])
+                except:
+                    LOG.warn ("Error handling hifa_tsysflag result")
 
             # WVR calibration and flagging
             #     Retrieve the result with the poorest rms improvement.
 
             elif self.stagedict[stage][0] == 'hifa_wvrgcalflag':
-                self.add_phase_rms_ratio_metric(st,
-                    self.context.results[stage-1])
+                try:
+                    self.add_phase_rms_ratio_metric(st,
+                        self.context.results[stage-1])
+                except:
+                    LOG.warn ("Error handling hifa_wvrgcalflag result")
 
             # Deviant (high / low) gain flagging
             #     Retrieve the result with the highest percentage of new
             #     flags
 
             elif self.stagedict[stage][0] == 'hif_lowgainflag':
-                self.add_highlow_gain_flagging_metric(st,
-                    self.context.results[stage-1])
+                try:
+                    self.add_highlow_gain_flagging_metric(st,
+                        self.context.results[stage-1])
+                except:
+                    LOG.warn ("Error handling hif_lowgainflag result")
+
+            # Deviant gain flagging
+            #     Retrieve the result with the highest percentage of new
+            #     flags
+
+            elif self.stagedict[stage][0] == 'hif_gainflag':
+                try:
+                    self.add_gain_flagging_metric(st,
+                        self.context.results[stage-1])
+                except:
+                    LOG.warn ("Error handling hif_gainflag result")
 
             # Applycal flagging
             #     Retrieve the result with the highest percentage of
             #     newly flagged data
 
             elif self.stagedict[stage][0] == 'hif_applycal':
-                self.add_applycal_flagging_metric(st,
-                    self.context.results[stage-1])
+                try:
+                    self.add_applycal_flagging_metric(st,
+                        self.context.results[stage-1])
+                except:
+                    LOG.warn ("Error handling hif_applycal result")
 
             # Generic empty result for stages with no supported metrics
             # Currently these include the calibration and imaging tasks
@@ -678,6 +725,57 @@ class AquaReport(object):
 
         eltree.SubElement(stage_element, "Metric", Name="%HighLowGainFlags",
             Value=metric, Asdm=vis)
+
+    def add_gain_flagging_metric (self, stage_element,
+        gainflag_result):
+
+        '''
+        Recompute  the metric that defines the percentage of newly
+        flagged data. Account for the metric which defines the
+        existence of flagging views.
+
+        Results are probably always iterable but support a non-iterable
+        option just in case.
+        '''
+
+        # Retrieve the results.
+        results = gainflag_result.read()
+
+        # If results is iterable loop over the results.
+        if isinstance (results, collections.Iterable):
+
+            # Construct the list of results.
+            mlist = []
+            for i in range(len(results)):
+                agent_stats = calcmetrics.calc_flags_per_agent(results[i].summaries)
+                mlist.append (reduce(operator.add, [float(s.flagged) / s.total for s in \
+                    agent_stats[1:]], 0))
+
+            # Evaluate the metrics
+            metric, idx = max ((metric, idx) for (idx, metric) in enumerate(mlist)) 
+            if idx is None:
+                vis = 'Undefined'
+                metric = 'Undefined'
+            else:
+                vis = os.path.splitext(os.path.basename(results[idx].inputs['vis']))[0]
+                if metric is not None:
+                    metric = '%0.3f' % (100.0 * metric)
+
+        # Single result
+        else:
+            # By definition this is the result with the lowest metric
+            if not results:
+                vis = 'Undefined'
+                metric = 'Undefined'
+            else:
+                vis = os.path.splitext(os.path.basename(results.inputs['vis']))[0]
+                agent_stats = calcmetrics.calc_flags_per_agent(results.summaries)
+                metric =  reduce(operator.add, [float(s.flagged)/s.total for s in agent_stats[1:]], 0)
+                metric = '%0.3f' % (100.0 * metric)
+
+        eltree.SubElement(stage_element, "Metric", Name="%GainFlags",
+            Value=metric, Asdm=vis)
+
 
     def add_applycal_flagging_metric (self, stage_element,
         applycal_result):
