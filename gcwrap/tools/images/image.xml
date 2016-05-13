@@ -6532,9 +6532,8 @@ ia.close()
   
      <param type="stringArray"  name="method">
      <description>List of windowing and/or fitting functions you would
-     like to invoke.  Vector of strings from 'window', 'fit' and
-     'interactive'.  The default is to not invoke the window or fit
-     functions, and to not invoke any interactive functions.</description>
+     like to invoke.  Vector of strings from 'window' and 'fit'. The default is to not invoke the window or fit
+     functions.</description>
      <value></value>
      </param>
   
@@ -6766,15 +6765,10 @@ convolved or unconvolved image (arguments {\stfaf smoothaxes}, {\stfaf
 smoothtypes}, and {\stfaf smoothwidths}).
 
 The moments are always computed from the unconvolved data.  The window
-can be found (for each spectrum) <!-- interactively or --> automatically.  The
+can be found (for each spectrum) automatically.  The
 automatic methods are via Bosma's converging mean algorithm ({\stfaf
 method='window'}) or by fitting Gaussians and taking $\pm 3\sigma$ as
-the window ({\stfaf method='window,fit'}).  <!-- The interactive methods 
-are a direct specification of the window with the cursor ({\stfaf
-method='window,interactive'}) and by interactive fitting of Gaussians
-and taking $\pm 3$-sigma as the window ({\stfaf
-method='window,fit,interactive'}). -->
-
+the window ({\stfaf method='window,fit'}). 
 In Bosma's algorithm, an initial guess for a range of pixels surrounding
 a spectral feature is refined by widening until the mean of the pixels
 outside of the range converges (to the noise). 
@@ -6783,13 +6777,8 @@ outside of the range converges (to the noise).
 \noindent{\bf Fit Method}
 
 The fit method ({\stfaf method='fit'}) fits Gaussians to spectral
-features automatically.  <!-- either automatically or interactively ({\stfaf
-method='fit,interactive'}).-->  The moments are then computed from the
+features automatically. The moments are then computed from the
 Gaussian fits (not the data themselves). 
-
-<!-- The interactive methods are very user intensive.  You have to do
-something for each spectrum.  These are really only useful for images
-with a manageably small number of spectra. -->
 
 \bigskip
 \noindent{\bf Other Arguments}
