@@ -296,31 +296,35 @@ protected:
         Bool showProgress=True
     );
 
-
     LogIO os_p;
     Bool showProgress_p;
-    Int momentAxisDefault_p;
-    T peakSNR_p;
-    T stdDeviation_p;
-    T yMin_p, yMax_p;
+    Int momentAxisDefault_p {-10};
+    T peakSNR_p {T(3)};
+    T stdDeviation_p {T(0)};
+    T yMin_p {T(0)};
+    T yMax_p {T(0)};
     String out_p;
-    String smoothOut_p;
-    Bool goodParameterStatus_p;
-    Bool doWindow_p, doFit_p, doAuto_p, doSmooth_p, noInclude_p, noExclude_p;
-    Bool fixedYLimits_p;
+    String smoothOut_p {};
+    Bool goodParameterStatus_p {True};
+    Bool doWindow_p {False};
+    Bool doFit_p {False};
+    Bool doAuto_p {True};
+    Bool doSmooth_p {False};
+    Bool noInclude_p {True};
+    Bool noExclude_p {True};
+    Bool fixedYLimits_p {False};
 
-    Int momentAxis_p;
+    Int momentAxis_p {momentAxisDefault_p};
     Int worldMomentAxis_p;
-    Vector<Int> kernelTypes_p;
-    Vector<Quantum<Double> > kernelWidths_p;
-    Vector<Int> nxy_p;
-    Vector<Int> moments_p;
-    Vector<T> selectRange_p;
-    Vector<Int> smoothAxes_p;
+    Vector<Int> kernelTypes_p {};
+    Vector<Quantity> kernelWidths_p {};
+    Vector<Int> moments_p {1, INTEGRATED};
+    Vector<T> selectRange_p {};
+    Vector<Int> smoothAxes_p {};
     Bool overWriteOutput_p;
-    String error_p;
-    Bool convertToVelocity_p;
-    MDoppler::Types velocityType_p;
+    String error_p {};
+    Bool convertToVelocity_p {False};
+    MDoppler::Types velocityType_p {MDoppler::RADIO};
 
     // Check that the combination of methods that the user has requested is valid
     // List a handy dandy table if not.

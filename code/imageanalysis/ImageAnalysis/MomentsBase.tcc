@@ -45,44 +45,14 @@
 #include <casa/sstream.h>
 #include <casa/iomanip.h>
 
-
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casa {
 
 template <class T> 
-MomentsBase<T>::MomentsBase ( LogIO &os,
-                              Bool overWriteOutput,
-                              Bool showProgressU)
-: os_p(os),
-  showProgress_p(showProgressU),
-  momentAxisDefault_p(-10),
-  peakSNR_p(T(3)),
-  stdDeviation_p(T(0.0)),
-  yMin_p(T(0.0)),
-  yMax_p(T(0.0)),
-  smoothOut_p(""),
-  goodParameterStatus_p(True),
-  doWindow_p(False),
-  doFit_p(False),
-  doAuto_p(True),
-  doSmooth_p(False),
-  noInclude_p(True),
-  noExclude_p(True),
-  fixedYLimits_p(False),
-  overWriteOutput_p(overWriteOutput),
-  error_p(""),
-  convertToVelocity_p(False),
-  velocityType_p(MDoppler::RADIO)
-{
-   momentAxis_p = momentAxisDefault_p;
-   moments_p.resize(1);
-   moments_p(0) = INTEGRATED;
-   kernelTypes_p.resize(0);
-   kernelWidths_p.resize(0);
-   nxy_p.resize(0);
-   selectRange_p.resize(0);
-   smoothAxes_p.resize(0);
-
-   UnitMap::putUser("pix",UnitVal(1.0), "pixel units");
+MomentsBase<T>::MomentsBase(
+    LogIO &os, Bool overWriteOutput, Bool showProgressU
+) : os_p(os), showProgress_p(showProgressU),
+    overWriteOutput_p(overWriteOutput) {
+    UnitMap::putUser("pix",UnitVal(1.0), "pixel units");
 }
 
 template <class T> 

@@ -47,9 +47,10 @@ namespace casa {
 // Derived class MomentFit
 
 template <class T>
-MomentFit<T>::MomentFit(MomentsBase<T>& iMom,
-                        LogIO& os,
-                        const uInt nLatticeOut)
+MomentFit<T>::MomentFit(
+    MomentsBase<T>& iMom,
+    LogIO& os,
+    const uInt nLatticeOut)
 : iMom_p(iMom),
   os_p(os)
 {

@@ -362,7 +362,6 @@ protected:
    using MomentsBase<T>::worldMomentAxis_p;
    using MomentsBase<T>::kernelTypes_p;
    using MomentsBase<T>::kernelWidths_p;
-   using MomentsBase<T>::nxy_p;
    using MomentsBase<T>::moments_p;
    using MomentsBase<T>::selectRange_p;
    using MomentsBase<T>::smoothAxes_p;

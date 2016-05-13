@@ -131,7 +131,7 @@ public:
              const uInt nLatticeOut);
 
 // Destructor (does nothing).
-  ~MomentFit();
+  virtual ~MomentFit();
 
 // This function is not implemented and throws an exception.
    virtual void process(T& out,
