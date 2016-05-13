@@ -107,6 +107,9 @@ bool QPExporter::exportPostscript(
     QImage image=produceHighResImage(format, qcanvases, width, height, gridRows,
         		  gridCols, wasCanceled);
 
+    if (format.resolution == PlotExportFormat::HIGH)
+        image = image.scaledToWidth(printer.width());
+
     QPainter painter(&printer);
     painter.drawImage(QPoint(0,0), image );
     painter.end();
