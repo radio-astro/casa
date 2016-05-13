@@ -215,22 +215,26 @@ fitmode -- mode for fitting
                         to DELETE the region. 
     &gt;&gt;&gt; fitmode expandable parameters     
         nfit -- list of number of lines to fit in each region specified by the 
-                parameter spw
+                parameter spw (only available in fitmode='list')
                 default: [0] (no fitting)
                 example: nfit=[1] for single line in single region,
                          nfit=[2] for two lines in single region,
                          nfit=[1,1] for single lines in each of two regions, etc.
         thresh -- S/N threshold for linefinder. a single channel S/N ratio
                   above which the channel is considered to be a detection.
+                   (only available in fitmode='auto')
                 default: 5
         avg_limit -- channel averaging for broad lines. a number of
                      consecutive channels not greater than this parameter
                      can be averaged to search for broad lines.
+                    (only available in fitmode='auto')
                 default: 4
         minwidth -- minimum number of consecutive channels required to
-                     pass threshold
+                    pass threshold
+                    (only available in fitmode='auto')
                 default: 4
         edge -- channels to drop at beginning and end of spectrum
+                (only available in fitmode='auto')
                 default: 0
                 example: edge=[1000] drops 1000 channels at beginning AND end.
                          edge=[1000,500] drops 1000 from beginning and 500
@@ -272,12 +276,12 @@ to give a single selection for each fit.
 FITMODE
 -------
 As described in the parameter description section, tsdfit implements 
-a fitting mode 'list' so far. The 'list' mode allows users to set 
-initial guess manually. Only controllable parameter for the guess is 
-range of the line region and number of lines per region.
-In 'list' mode, users must give line region via spw parameter by 
-using ms selection syntax while number of lines per region can be 
-specified via nfit parameter. For example,
+fitting modes 'list' and 'auto' so far. 
+The 'list' mode allows users to set  initial guess manually. The only
+controllable parameter for the guess is  range of the line region and
+number of lines per region. In 'list' mode, users must give line 
+region via spw parameter by using ms selection syntax while number of
+lines per region can be specified via nfit parameter. For example,
  
     spw = '17:1500~2500'
     nfit = [1]
@@ -285,6 +289,17 @@ specified via nfit parameter. For example,
 will set line region between channels 1500 and 2500 for spw 17, and
 indicate that there is only one line in this region. Specifying single
 region with multiple line is also possible but is not recommended.
+In 'auto' mode, the line finder detects channel ranges of spectral lines
+based on median absolute deviation (MAD) of the spectra using user defined
+criteria, thres, avg_limit, minwidth, and edge. The number of channels
+in both edges of spectra defined by edge parameter are ignored in line
+detection. The median of lower 80% of MAD values in a spectrum is 
+multiplied by thres parameter value to define a threshold of line 
+detection. All channels with MAD above the threshold is detected as 
+spectral line candidates and accepted as spectral lines only if the 
+channel width of the line exceeds the value of minwidth parameter. The 
+line detection is iteratively invoked for channel averaged spectra 
+up to avg_limit.
 
   </example>
 
