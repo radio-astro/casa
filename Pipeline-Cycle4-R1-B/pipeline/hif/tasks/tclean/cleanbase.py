@@ -329,8 +329,8 @@ class CleanBase(basetask.StandardTaskTemplate):
         new_threshold = old_threshold * sqrt(qaTool.convert(total_bw, 'GHz')['value'] / qaTool.convert(aggregate_bw, 'GHz')['value'])
 
         # Catch trivial case which is broken up to CASA 4.6.0 / 4.7.44 (CAS-8576)
-        if (new_threshold > result._residual_abs_max):
-            new_threshold = 0.9 * result._residual_abs_max
+        if (new_threshold > result._residual_max):
+            new_threshold = 0.9 * result._residual_max
 
         inputs.threshold = '%sJy' % (new_threshold)
 
