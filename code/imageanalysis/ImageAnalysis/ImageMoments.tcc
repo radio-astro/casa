@@ -90,7 +90,6 @@ ImageMoments<T> &ImageMoments<T>::operator=(const ImageMoments<T> &other) {
         goodParameterStatus_p = other.goodParameterStatus_p;
         doWindow_p = other.doWindow_p;
         doFit_p = other.doFit_p;
-        doAuto_p = other.doAuto_p;
         doSmooth_p = other.doSmooth_p;
         noInclude_p = other.noInclude_p;
         noExclude_p = other.noExclude_p;
@@ -434,7 +433,7 @@ vector<SHARED_PTR<MaskedLattice<T> > > ImageMoments<T>::createMoments(
     // a good assessment of the noise.  The user can input that value, but if
     // they don't, we work it out here.
     T noise;
-    if (stdDeviation_p <= T(0) && ( (doWindow_p && doAuto_p) || (doFit_p && !doWindow_p && doAuto_p) ) ) {
+    if (stdDeviation_p <= T(0) && (doWindow_p || (doFit_p && !doWindow_p) ) ) {
         if (smoothedImage) {
             os_p << LogIO::NORMAL << "Evaluating noise level from smoothed image" << LogIO::POST;
             _whatIsTheNoise(noise, *smoothedImage);

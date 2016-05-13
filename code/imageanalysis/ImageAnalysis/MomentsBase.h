@@ -306,7 +306,6 @@ protected:
     Bool goodParameterStatus_p {True};
     Bool doWindow_p {False};
     Bool doFit_p {False};
-    Bool doAuto_p {True};
     Bool doSmooth_p {False};
     Bool noInclude_p {True};
     Bool noExclude_p {True};

@@ -353,7 +353,6 @@ protected:
    using MomentsBase<T>::goodParameterStatus_p;
    using MomentsBase<T>::doWindow_p;
    using MomentsBase<T>::doFit_p;
-   using MomentsBase<T>::doAuto_p;
    using MomentsBase<T>::doSmooth_p;
    using MomentsBase<T>::noInclude_p;
    using MomentsBase<T>::noExclude_p;

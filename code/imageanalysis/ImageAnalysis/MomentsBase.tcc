@@ -131,8 +131,6 @@ Bool MomentsBase<T>::setWinFitMethod(const Vector<Int>& methodU)
 
    linearSearch(doWindow_p, methodU, Int(WINDOW), methodU.nelements());
    linearSearch(doFit_p, methodU, Int(FIT), methodU.nelements());
-   doAuto_p  = (!doAuto_p);
-
    return True;
 }
 
@@ -274,77 +272,58 @@ template <class T> void MomentsBase<T>::_checkMethod () {
         );
     }
     // Now check all the silly methods
-    const Bool doInter = (!doAuto_p);
     if (
         ! (
             (
                 ! doSmooth_p && ! doWindow_p && ! doFit_p
-                && (noInclude_p &&  noExclude_p) && ! doInter
+                && (noInclude_p &&  noExclude_p)
             ) || (
                 doSmooth_p && ! doWindow_p && ! doFit_p
-                && (! noInclude_p || ! noExclude_p) && ! doInter
+                && (! noInclude_p || ! noExclude_p)
             ) || (
                 ! doSmooth_p && ! doWindow_p && ! doFit_p
-                && (! noInclude_p || ! noExclude_p) && ! doInter
+                && (! noInclude_p || ! noExclude_p)
             ) || (
                 doSmooth_p &&  doWindow_p && ! doFit_p
-                && (noInclude_p &&  noExclude_p) &&  doInter
-            ) || (
-                ! doSmooth_p &&  doWindow_p && ! doFit_p
-                && (noInclude_p &&  noExclude_p) &&  doInter
-            ) || (
-                doSmooth_p &&  doWindow_p && ! doFit_p
-                && (noInclude_p &&  noExclude_p) && ! doInter
+                && (noInclude_p &&  noExclude_p)
             ) || (
                 ! doSmooth_p && doWindow_p && ! doFit_p
-                && (noInclude_p &&  noExclude_p) && ! doInter
+                && (noInclude_p &&  noExclude_p)
             ) || (
                 ! doSmooth_p &&  doWindow_p &&  doFit_p
-                && (noInclude_p &&  noExclude_p) &&  doInter
-            ) || (
-                ! doSmooth_p &&  doWindow_p &&  doFit_p
-                && (noInclude_p &&  noExclude_p) && ! doInter
+                && (noInclude_p &&  noExclude_p)
             ) || (
                 doSmooth_p &&  doWindow_p &&  doFit_p
-                && (noInclude_p &&  noExclude_p) && doInter
-            ) || (
-                doSmooth_p &&  doWindow_p &&  doFit_p
-                && (noInclude_p &&  noExclude_p) && ! doInter
+                && (noInclude_p &&  noExclude_p)
             ) || (
                 ! doSmooth_p && ! doWindow_p && doFit_p
-                && (noInclude_p &&  noExclude_p) &&  doInter
-            ) || (
-                ! doSmooth_p && ! doWindow_p && doFit_p
-                && (noInclude_p &&  noExclude_p) && !doInter
+                && (noInclude_p &&  noExclude_p)
             )
         )
     ) {
         ostringstream oss;
         oss << "Invalid combination of methods requested." << endl;
         oss << "Valid combinations are: " << endl << endl;
-        oss <<  "Smooth    Window      Fit   in/exclude   Interactive " << endl;
-        oss <<  "-----------------------------------------------------" << endl;
+        oss <<  "Smooth    Window      Fit   in/exclude " << endl;
+        oss <<  "---------------------------------------" << endl;
         // Basic method. Just use all the data
-        oss <<  "  N          N         N        N            N       " << endl;
+        oss <<  "  N          N         N        N      " << endl;
         // Smooth and clip, or just clip
-        oss <<  "  Y/N        N         N        Y            N       " << endl << endl;
-        // Direct interactive window selection with or without smoothing
-        oss <<  "  Y/N        Y         N        N            Y       " << endl;
+        oss <<  "  Y/N        N         N        Y      " << endl << endl;
         // Automatic windowing via Bosma's algorithm with or without smoothing
-        oss <<  "  Y/N        Y         N        N            N       " << endl;
+        oss <<  "  Y/N        Y         N        N      " << endl;
         // Windowing by fitting Gaussians (selecting +/- 3-sigma) automatically or interactively
         // with or without out smoothing
-        oss <<  "  Y/N        Y         Y        N            Y/N     " << endl;
+        oss <<  "  Y/N        Y         Y        N      " << endl;
         // Interactive and automatic Fitting of Gaussians and the moments worked out
         // directly from the fits
-        oss <<  "  N          N         Y        N            Y/N     " << endl << endl;
+        oss <<  "  N          N         Y        N      " << endl << endl;
 
         oss <<  "Request was" << endl << endl;
         oss << "  " << (doSmooth_p ? "Y" : "N");
         oss << "          " << (doWindow_p ? "Y" : "N");
         oss << "         " << (doFit_p ? "Y" : "N");
         oss << "        " << (noInclude_p && noExclude_p ? "Y" : "N");
-        oss << "            " << (doInter ? "Y" : "N");
         oss <<  endl;
         oss <<  "-----------------------------------------------------" << endl;
         ThrowCc(oss.str());
@@ -358,20 +337,10 @@ template <class T> void MomentsBase<T>::_checkMethod () {
     if (doWindow_p) {
         os_p << "The window method" << endl;
         if (doFit_p) {
-            if (doInter) {
-                os_p << "   with window selection via interactive Gaussian fitting" << endl;
-            }
-            else {
-                os_p << "   with window selection via automatic Gaussian fitting" << endl;
-            }
+            os_p << "   with window selection via automatic Gaussian fitting" << endl;
         }
         else {
-            if (doInter) {
-                os_p << "   with interactive direct window selection" << endl;
-            }
-            else {
-                os_p << "   with automatic window selection via the converging mean (Bosma) algorithm" << endl;
-            }
+            os_p << "   with automatic window selection via the converging mean (Bosma) algorithm" << endl;
         }
         if (doSmooth_p) {
             os_p << "   operating on the smoothed image.  The moments are still" << endl;
@@ -382,12 +351,7 @@ template <class T> void MomentsBase<T>::_checkMethod () {
         }
     }
     else if (doFit_p) {
-        if (doInter) {
-            os_p << "The interactive Gaussian fitting method" << endl;
-        }
-        else {
-            os_p << "The automatic Gaussian fitting method" << endl;
-        }
+        os_p << "The automatic Gaussian fitting method" << endl;
         os_p << "   operating on the unsmoothed data" << endl;
         os_p << "   The moments are evaluated from the fits" << endl;
     }
