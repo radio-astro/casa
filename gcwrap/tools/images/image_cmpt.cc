@@ -4363,6 +4363,28 @@ bool image::set(
     return False;
 }
 
+bool image::setbrightnessunit(const std::string& unit) {
+    try {
+        _log << _ORIGIN;
+        if (detached()) {
+            return False;
+        }
+        Bool res = _imageF
+            ?  _imageF->setUnits(Unit(unit))
+            : _imageC->setUnits(Unit(unit));
+        ThrowIf(! res, "Unable to set brightness unit");
+        vector<String> names = {"unit"};
+        vector<variant> values = {unit};
+        _addHistory(__func__, names, values);
+        _stats.reset();
+        return True;
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+}
 
 record* image::torecord() {
     _log << LogOrigin("image", __func__);
@@ -4545,26 +4567,6 @@ void image::_reset() {
 
 
 
-
-bool image::setbrightnessunit(const std::string& unit) {
-	try {
-		_log << _ORIGIN;
-		if (detached()) {
-			return False;
-		}
-		Bool res = _imageF
-			?  _imageF->setUnits(Unit(unit))
-			: _imageC->setUnits(Unit(unit));
-		ThrowIf(! res, "Unable to set brightness unit");
-		_stats.reset(0);
-		return True;
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-}
 
 bool image::setcoordsys(const ::casac::record& csys) {
 	try {
