@@ -109,8 +109,6 @@ public:
         WINDOW,
         // Invokes Gaussian fitting
         FIT,
-        // Invokes interactive methods
-        INTERACTIVE,
         NMETHODS
     };
 

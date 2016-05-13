@@ -131,7 +131,6 @@ Bool MomentsBase<T>::setWinFitMethod(const Vector<Int>& methodU)
 
    linearSearch(doWindow_p, methodU, Int(WINDOW), methodU.nelements());
    linearSearch(doFit_p, methodU, Int(FIT), methodU.nelements());
-   linearSearch(doAuto_p, methodU, Int(INTERACTIVE), methodU.nelements());
    doAuto_p  = (!doAuto_p);
 
    return True;
@@ -235,10 +234,6 @@ Vector<Int> MomentsBase<T>::toMethodTypes (const String& methods)
       }
       if (tMethods.contains("FIT")) {
          methodTypes(i) = FIT;
-         i++;
-      }
-      if (tMethods.contains("INTER")) {
-         methodTypes(i) = INTERACTIVE;
          i++;
       }
       methodTypes.resize(i, True);
