@@ -25,7 +25,6 @@
 //#
 //# $Id: MomentCalculator.tcc 19940 2007-02-27 05:35:22Z Malte.Marquarding $
 //
-#include <imageanalysis/ImageAnalysis/MomentCalculator.h>
 
 #include <casa/aips.h>
 #include <casa/Arrays/Vector.h>

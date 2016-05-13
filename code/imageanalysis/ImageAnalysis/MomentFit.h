@@ -1,4 +1,4 @@
-//# MomentCalculator.h: 
+//# MomentFit.h:
 //# Copyright (C) 1997,1999,2000,2001,2002
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -25,8 +25,8 @@
 //#
 //# $Id: MomentCalculator.h 20299 2008-04-03 05:56:44Z gervandiepen $
 
-#ifndef IMAGES_MOMENTCALCULATOR_H
-#define IMAGES_MOMENTCALCULATOR_H
+#ifndef IMAGEANALYSIS_MOMENTFIT_H
+#define IMAGEANALYSIS_MOMENTFIT_H
 
 #include <casa/aips.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
@@ -120,7 +120,6 @@ template <class T> class MomentsBase;
 // <todo asof="yyyy/mm/dd">
 // </todo>
 
-
 template <class T> class MomentFit : public MomentCalcBase<T>
 {
 public:
@@ -179,10 +178,9 @@ protected:
   using MomentCalcBase<T>::abcissa_p;
 };
 
-
 }
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <imageanalysis/ImageAnalysis/MomentCalculator.tcc>
-#endif //# CASACORE_NO_AUTO_TEMPLATES
+#include <imageanalysis/ImageAnalysis/MomentFit.tcc>
+#endif
 #endif

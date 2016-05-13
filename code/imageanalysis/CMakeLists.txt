@@ -220,10 +220,10 @@ install (FILES
 	ImageAnalysis/MomentsBase.tcc
 	ImageAnalysis/MomentCalcBase.h
 	ImageAnalysis/MomentCalcBase.tcc
-	ImageAnalysis/MomentCalculator.h
-	ImageAnalysis/MomentCalculator.tcc
 	ImageAnalysis/MomentClip.h
     ImageAnalysis/MomentClip.tcc
+    ImageAnalysis/MomentFit.h
+	ImageAnalysis/MomentFit.tcc
     ImageAnalysis/MomentWindow.h
     ImageAnalysis/MomentWindow.tcc
 	ImageAnalysis/PeakIntensityFluxDensityConverter.h

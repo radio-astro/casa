@@ -1,4 +1,4 @@
-//# MomentCalculator.cc: 
+//# MomentFit.cc:
 //# Copyright (C) 1996,1997,1998,1999,2000,2001,2002,2003,2004
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -25,7 +25,7 @@
 //#
 //# $Id: MomentCalculator.tcc 19940 2007-02-27 05:35:22Z Malte.Marquarding $
 //
-#include <imageanalysis/ImageAnalysis/MomentCalculator.h>
+#include <imageanalysis/ImageAnalysis/MomentFit.h>
 
 #include <casa/aips.h>
 #include <casa/Arrays/Vector.h>
@@ -41,8 +41,6 @@
 #include <casa/Logging/LogIO.h> 
 #include <casa/Utilities/Assert.h>
 #include <casa/Exceptions/Error.h>
-
-
 
 namespace casa {
 
