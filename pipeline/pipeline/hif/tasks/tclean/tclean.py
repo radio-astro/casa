@@ -320,7 +320,7 @@ class Tclean(cleanbase.CleanBase):
                     pblimit_cleanmask = self.pblimit_cleanmask)
 
         # Temporarily needed until CAS-8576 is fixed
-        result._residual_abs_max = max(abs(residual_min), abs(residual_max))
+        result._residual_max = residual_max
 
         LOG.info('Dirty image stats')
         LOG.info('    Rms %s', non_cleaned_rms)
