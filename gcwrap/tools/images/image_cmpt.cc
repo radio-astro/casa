@@ -104,6 +104,8 @@
 
 #include <casa/namespace.h>
 
+#include <memory>
+
 using namespace std;
 
 #define _ORIGIN LogOrigin(_class, __func__, WHERE)
@@ -4386,6 +4388,32 @@ bool image::setbrightnessunit(const std::string& unit) {
     }
 }
 
+bool image::setcoordsys(const record& csys) {
+    try {
+        _log << _ORIGIN;
+        if (detached()) {
+            return False;
+        }
+
+        unique_ptr<Record> coordinates(toRecord(csys));
+        unique_ptr<ImageMetaDataRW> md(
+            _imageF
+            ? new ImageMetaDataRW(_imageF)
+            : new ImageMetaDataRW(_imageC)
+        );
+        md->setCsys(*coordinates);
+        vector<String> names = {"csys"};
+        vector<variant> values = {csys};
+        _addHistory(__func__, names, values);
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return True;
+}
+
 record* image::torecord() {
     _log << LogOrigin("image", __func__);
     if (detached()) {
@@ -4567,31 +4595,6 @@ void image::_reset() {
 
 
 
-
-bool image::setcoordsys(const ::casac::record& csys) {
-	try {
-		_log << _ORIGIN;
-		if (detached()) {
-			return False;
-		}
-
-		unique_ptr<Record> coordinates(toRecord(csys));
-		unique_ptr<ImageMetaDataRW> md(
-		    _imageF
-		    ? new ImageMetaDataRW(_imageF)
-		    : new ImageMetaDataRW(_imageC)
-		);
-		md->setCsys(*coordinates);
-
-		//rstat = _image->setcoordsys(*coordinates);
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	return True;
-}
 
 bool image::sethistory(const std::string& origin,
 		const std::vector<std::string>& history) {

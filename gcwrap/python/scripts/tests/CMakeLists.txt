@@ -95,6 +95,7 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_ia_sepconvolve.py
   test_ia_set.py
   test_ia_setbrightnessunit.py
+  test_ia_setcoordsys.py
   test_ia_subimage.py
   test_ia_summary.py
   test_ia_toascii.py
