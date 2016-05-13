@@ -47,61 +47,8 @@ ImageMoments<T>::ImageMoments (
     setNewImage(image);
 }
 
-template <class T>
-ImageMoments<T>::ImageMoments(const ImageMoments<T> &other)
-: MomentsBase<T>(other), _image(), _progressMonitor(nullptr) {
-    operator=(other);
-}
-
-template <class T>
-ImageMoments<T>::ImageMoments(ImageMoments<T> &other)
-: MomentsBase<T>(other), _image(0), _progressMonitor(0) {
-    operator=(other);
-}
-
 template <class T> 
 ImageMoments<T>::~ImageMoments () {}
-
-template <class T>
-ImageMoments<T> &ImageMoments<T>::operator=(const ImageMoments<T> &other) {
-    if (this != &other) {
-
-        // Deal with image pointer
-
-        _image.reset(other._image->cloneII());
-
-        // Do the rest
-        _progressMonitor = other._progressMonitor;
-        os_p = other.os_p;
-        showProgress_p = other.showProgress_p;
-        momentAxis_p = other.momentAxis_p;
-        worldMomentAxis_p = other.worldMomentAxis_p;
-        momentAxisDefault_p = other.momentAxisDefault_p;
-        kernelTypes_p = other.kernelTypes_p.copy();
-        kernelWidths_p = other.kernelWidths_p.copy();
-        moments_p = other.moments_p.copy();
-        selectRange_p = other.selectRange_p.copy();
-        smoothAxes_p = other.smoothAxes_p.copy();
-        peakSNR_p = other.peakSNR_p;
-        stdDeviation_p = other.stdDeviation_p;
-        yMin_p = other.yMin_p;
-        yMax_p = other.yMax_p;
-        smoothOut_p = other.smoothOut_p;
-        goodParameterStatus_p = other.goodParameterStatus_p;
-        doWindow_p = other.doWindow_p;
-        doFit_p = other.doFit_p;
-        doSmooth_p = other.doSmooth_p;
-        noInclude_p = other.noInclude_p;
-        noExclude_p = other.noExclude_p;
-        fixedYLimits_p = other.fixedYLimits_p;
-        overWriteOutput_p = other.overWriteOutput_p;
-        error_p = other.error_p;
-        convertToVelocity_p = other.convertToVelocity_p;
-        velocityType_p = other.velocityType_p;
-    }
-    return *this;
-}
-
 
 template <class T> 
 Bool ImageMoments<T>::setNewImage(const ImageInterface<T>& image) {
@@ -631,7 +578,7 @@ void ImageMoments<T>::_whatIsTheNoise (
         }
         // Return values of fit
         if (! fail && fitter.converged()) {
-            sigma = T(abs(solution(2)) / sqrt(2.0));
+            sigma = T(abs(solution(2)) / C::sqrt2);
             os_p << LogIO::NORMAL
                     << "*** The fitted standard deviation of the noise is " << sigma
                     << endl << LogIO::POST;

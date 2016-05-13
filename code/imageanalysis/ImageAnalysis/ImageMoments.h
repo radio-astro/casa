@@ -248,17 +248,12 @@ public:
         Bool showProgress=True
     );
 
-    // Copy constructor.  Uses copy semantics.
-    ImageMoments(const ImageMoments<T> &other);
-
-    // Copy constructor.  Uses copy semantics.
-    ImageMoments(ImageMoments<T> &other);
+    ImageMoments(const ImageMoments<T> &other) = delete;
 
     // Destructor
     ~ImageMoments();
 
-    // Assignment operator. USes copy semantics.
-    ImageMoments<T> &operator=(const ImageMoments<T> &other);
+    ImageMoments<T> &operator=(const ImageMoments<T> &other) = delete;
 
     // Set the moment axis (0 relative).  A return value of <src>False</src>
     // indicates that the axis was not contained in the image. If you don't
