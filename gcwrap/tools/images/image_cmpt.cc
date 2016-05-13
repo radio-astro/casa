@@ -4414,6 +4414,63 @@ bool image::setcoordsys(const record& csys) {
     return True;
 }
 
+bool image::sethistory(
+    const string& origin, const vector<string>& history
+) {
+    try {
+        if (detached()) {
+            return false;
+        }
+        if ((history.size() == 1) && (history[0].size() == 0)) {
+            LogOrigin lor("image", "sethistory");
+            _log << lor << "history string is empty" << LogIO::POST;
+        }
+        else {
+            if(_imageF) {
+                ImageHistory<Float> hist(_imageF);
+                hist.addHistory(origin, history);
+            }
+            else {
+                ImageHistory<Complex> hist(_imageC);
+                hist.addHistory(origin, history);
+            }
+        }
+        return True;
+    }
+    catch (const AipsError& x) {
+        _log << _ORIGIN << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
+        RETHROW(x);
+    }
+    return False;
+}
+
+bool image::setmiscinfo(const record& info) {
+    try {
+        _log << _ORIGIN;
+        if (detached()) {
+            return False;
+        }
+        std::unique_ptr<Record> tmp(toRecord(info));
+        Bool res = _imageF
+            ? _imageF->setMiscInfo(*tmp)
+            : _imageC->setMiscInfo(*tmp);
+        if (res) {
+            vector<String> names {"info"};
+            vector<variant> values {info};
+            _addHistory(__func__, names, values);
+        }
+        return res;
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return False;
+}
+
+
 record* image::torecord() {
     _log << LogOrigin("image", __func__);
     if (detached()) {
@@ -4595,54 +4652,6 @@ void image::_reset() {
 
 
 
-
-bool image::sethistory(const std::string& origin,
-		const std::vector<std::string>& history) {
-	try {
-		if (detached()) {
-			return false;
-		}
-		if ((history.size() == 1) && (history[0].size() == 0)) {
-			LogOrigin lor("image", "sethistory");
-			_log << lor << "history string is empty" << LogIO::POST;
-		} else {
-			if(_imageF) {
-				ImageHistory<Float> hist(_imageF);
-				hist.addHistory(origin, history);
-			}
-			else {
-				ImageHistory<Complex> hist(_imageC);
-				hist.addHistory(origin, history);
-			}
-		}
-		return True;
-	}
-	catch (const AipsError& x) {
-		LogOrigin lor("image", __func__);
-		_log << lor << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-}
-
-bool image::setmiscinfo(const ::casac::record& info) {
-	try {
-		_log << _ORIGIN;
-		if (detached()) {
-			return false;
-		}
-		std::unique_ptr<Record> tmp(toRecord(info));
-		Bool res = _imageF
-			? _imageF->setMiscInfo(*tmp)
-			: _imageC->setMiscInfo(*tmp);
-		return res;
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-}
 
 std::vector<int> image::shape() {
 	std::vector<int> rstat(0);
