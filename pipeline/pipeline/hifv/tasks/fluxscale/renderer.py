@@ -150,7 +150,7 @@ class T2_4MDetailsSolintRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         
 
 class T2_4MDetailsfluxbootRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
-    def __init__(self,uri='fluxboot.mako', description='Determine solint and Test gain calibrations', 
+    def __init__(self,uri='fluxboot.mako', description='Gain table for flux density bootstrapping',
                  always_rerender=False):
         super(T2_4MDetailsfluxbootRenderer, self).__init__(uri=uri,
                 description=description, always_rerender=always_rerender)
