@@ -5110,7 +5110,8 @@ ia.fitcomponents(region=region, chans=chans, excludepix=excludepix, estimates=es
 <description>
 You can convert an associated image to a record 
 (<link anchor="images:image.torecord.function">torecord</link>) or  imagepol tool functions  will sometimes give you a record.  This function
-(fromrecord) allows you to set the contents of an image tool to the content of the record
+(fromrecord) allows you to set the contents of an image tool to the content of the record.
+This and torecord are used for deserialization and serialization.
 
 <!--These functions are not for general user use.-->
 
@@ -10097,7 +10098,8 @@ ia.toASCII('myfile2.ascii',overwrite=true)
   
 <description>
 
-You can convert an associated image to a record for manipulation or passing it to inputs of other function of other tools
+You can convert an associated image to a record for manipulation or passing it to inputs of other function of other tools.
+This and fromrecord are used for serialization and deserialization.
 
 <!--These functions are not for general user use.-->
 
