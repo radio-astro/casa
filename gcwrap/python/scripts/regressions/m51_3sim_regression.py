@@ -342,12 +342,17 @@ ia.close()
 #             'sigma': 0.01575659,
 #             'sum':  1238.80514997}
 # 20150323: update after image parameter change in HetArrayConvFunc (r32748)
-refstats = {'max': 0.1385,
-             'min': -0.025011,
-             'rms': 0.019215,
-             'sigma': 0.016102,
-             'sum':  1257.2}
-
+#refstats = {'max': 0.1385,
+#             'min': -0.025011,
+#             'rms': 0.019215,
+#             'sigma': 0.016102,
+#             'sum':  1257.2}
+# 20160516: update after image parameter change after Sinc correction in MosaicFT 
+refstats = {'max': 0.14125,
+             'min': -0.025361,
+             'rms': 0.019264,
+             'sigma': 0.01622,
+             'sum':  1246.1}
 
 # # reference statistic values for diff image
 # diffstats = {'max': 0.030648,
@@ -417,12 +422,17 @@ refstats = {'max': 0.1385,
 #             'sigma': 0.00941917,
 #             'sum':  -367.45107187}
 # 20150308: update after image parameter change in HetArrayConvFunc.cc (r32748)
-diffstats = {'max':  0.03277,
-             'min': -0.073614,
-             'rms': 0.010518,
-             'sigma': 0.010015,
-             'sum':  -385.33}
-
+#diffstats = {'max':  0.03277,
+#             'min': -0.073614,
+#             'rms': 0.010518,
+#             'sigma': 0.010015,
+#             'sum':  -385.33}
+# 20160516: update after sinc correction in MosaicFT
+diffstats = {'max':  0.032796,
+             'min': -0.067938,
+             'rms': 0.010429,
+             'sigma': 0.0099509,
+             'sum':  -374.23}
 # relative tolerances to reference values
 reftol   = {'sum':  1e-2,
             'max':  1e-2,
