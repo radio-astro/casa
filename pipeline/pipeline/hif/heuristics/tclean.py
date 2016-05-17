@@ -75,7 +75,6 @@ class TcleanHeuristics(object):
             finally:
                 iaTool.close()
 
-        print 'DEBUG_DM:', pblimit_image, pblimit_cleanmask
         return pblimit_image, pblimit_cleanmask
 
     def field(self, intent, field):
