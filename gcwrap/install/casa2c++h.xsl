@@ -237,12 +237,12 @@ static <xsl:value-of select="@xsi:type"/><xsl:text> </xsl:text><xsl:value-of sel
 		      <xsl:when test="lower-case(@xsi:type)='variant'">
 			  <xsl:choose>
 			      <xsl:when test="@direction">
-				      <xsl:if test="@direction='in'"> const</xsl:if><xsl:text disable-output-escaping="yes"> variant&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="aps:value"> = initialize_variant("<xsl:value-of select="aps:value"/>")</xsl:if><xsl:if test="position()&lt;last()">, </xsl:if>
+				      <xsl:if test="@direction='in'"> const</xsl:if><xsl:text disable-output-escaping="yes"> variant &amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="aps:value"> = variant()</xsl:if><xsl:if test="position()&lt;last()">, </xsl:if>
 		              </xsl:when>
 			      <xsl:otherwise>
 				   <xsl:choose>
 			           <xsl:when test="$defdirection='in'">
-					   <xsl:text disable-output-escaping="yes"> const variant&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="aps:value"> = initialize_variant("<xsl:value-of select="aps:value"/>")</xsl:if><xsl:if test="position()&lt;last()">, </xsl:if>
+					   <xsl:text disable-output-escaping="yes"> const variant &amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="aps:value"> = variant()</xsl:if><xsl:if test="position()&lt;last()">, </xsl:if>
 			           </xsl:when>
 				   <xsl:when test="$defdirection='out'">
 					   <xsl:text disable-output-escaping="yes"> variant&amp; </xsl:text><xsl:value-of select="@name"/>=<xsl:value-of select="../../../@name"/>::<xsl:value-of select="@name"/>_<xsl:value-of select="$myname"/><xsl:if test="position()&lt;last()">, </xsl:if>
@@ -257,12 +257,12 @@ static <xsl:value-of select="@xsi:type"/><xsl:text> </xsl:text><xsl:value-of sel
 		      <xsl:when test="lower-case(@xsi:type)='any'">
 			  <xsl:choose>
 			      <xsl:when test="@direction">
-				      <xsl:if test="@direction='in'"> const</xsl:if><xsl:text disable-output-escaping="yes"> variant&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="aps:value"> = initialize_variant("<xsl:value-of select="aps:value"/>")</xsl:if><xsl:if test="position()&lt;last()">, </xsl:if>
+				      <xsl:if test="@direction='in'"> const</xsl:if><xsl:text disable-output-escaping="yes"> variant &amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="aps:value"> = variant()</xsl:if><xsl:if test="position()&lt;last()">, </xsl:if>
 		              </xsl:when>
 			      <xsl:otherwise>
 				   <xsl:choose>
 			           <xsl:when test="$defdirection='in'">
-					   <xsl:text disable-output-escaping="yes"> const variant&amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="aps:value">= initialize_variant("<xsl:value-of select="aps:value"/>")</xsl:if><xsl:if test="position()&lt;last()">, </xsl:if>
+					   <xsl:text disable-output-escaping="yes"> const variant &amp; </xsl:text><xsl:value-of select="@name"/><xsl:if test="aps:value">= variant()</xsl:if><xsl:if test="position()&lt;last()">, </xsl:if>
 			           </xsl:when>
 				   <xsl:when test="$defdirection='out'">
 					   <xsl:text disable-output-escaping="yes"> variant&amp; </xsl:text><xsl:value-of select="@name"/>=<xsl:value-of select="../../../@name"/>::<xsl:value-of select="@name"/>_<xsl:value-of select="$myname"/><xsl:if test="position()&lt;last()">, </xsl:if>

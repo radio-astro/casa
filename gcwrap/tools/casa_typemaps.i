@@ -10,6 +10,7 @@
 // Quantities
 // Quantity DoubleVec
 %{
+#include <memory>
 #include <string>
 #include <vector>
 #include <complex>
@@ -75,12 +76,16 @@ using namespace casac;
 %typemap(typecheck) string {
    $1 = PyString_Check($input);
 }
-%typemap(in) string& {
+%typemap(in) string& (std::unique_ptr<string> deleter) {
    if(PyString_Check($input)){
-      if(!$1)
-        $1 = new string(PyString_AsString($input));
-      else
+       if(!$1){
+	  
+	   deleter.reset (new string(PyString_AsString($input)));
+	   $1 = deleter.get();
+
+       } else {
         *$1 = string(PyString_AsString($input));
+       }
    } else {
         PyErr_SetString(PyExc_TypeError,"argument $1_name must be a string");
         return NULL;
@@ -90,12 +95,14 @@ using namespace casac;
 %typemap(typecheck) string& {
    $1 = PyString_Check($input);
 }
-%typemap(in) const string& {
+%typemap(in) const string& (std::unique_ptr<string> deleter){
    if(PyString_Check($input)){
-      if(!$1)
-         $1 = new string(PyString_AsString($input));
-      else
-         *$1 = string(PyString_AsString($input));
+       if(!$1){
+	   deleter.reset (new string(PyString_AsString($input)));
+	   $1 = deleter.get();
+       }else {
+	   *$1 = string(PyString_AsString($input));
+       }
    } else {
         PyErr_SetString(PyExc_TypeError,"argument $1_name must be a string");
         return NULL;
@@ -134,12 +141,14 @@ if($1){
   }
 }
 
-%typemap(in) std::vector<std::string> & {
+%typemap(in) std::vector<std::string> & (std::unique_ptr<std::vector<std::string> > deleter) {
   /* Check if is a list */
   if (PyList_Check($input)) {
     Py_ssize_t size = PyList_Size($input);
-    if(!$1)
-       $1 = new std::vector<std::string>(size);
+    if(!$1){
+	deleter.reset (new std::vector<std::string>(size));
+        $1 = deleter.get();
+    }
     for (Py_ssize_t i = 0; i < size; i++) {
       PyObject *o = PyList_GetItem($input,i);
       if (PyString_Check(o))
@@ -154,8 +163,10 @@ if($1){
     }
   } else {
     if(PyString_Check($input)){
-       if(!$1)
-          $1 = new std::vector<std::string>(1);
+	if(!$1){
+	    deleter.reset (new std::vector<std::string>(1));
+	    $1 = deleter.get();
+	}
        if(!$1->size())
          $1->push_back(PyString_AsString($input));
        else
@@ -176,23 +187,37 @@ if($1){
 }
 
 %typemap(in) variant {
-   $1 = new variant(pyobj2variant($input, true));
+    if ($1){
+        (* $1) = variant(pyobj2variant($input, true));
+    } else {
+	PyErr_SetString (PyExc_RuntimeError, 
+                         "BugCheck: Argument not initialized???");
+	return nullptr;
+    }
 }
 
-%typemap(in) variant& {
-   $1 = new variant(pyobj2variant($input, true));
+// Create a new value here and add a method-scope unique_ptr to
+// delete the object after the method exits.  The name will be
+// suffixed with an integer by swig.
+
+%typemap(in) variant & (std::unique_ptr<variant> deleter) {
+
+    deleter.reset (new variant (pyobj2variant ($input, true)));
+    $1 = deleter.get ();
+
 }
 
-%typemap(freearg) variant& {
-   delete $1;
-}
+/* %typemap(freearg) variant& { */
+/*    delete $1; */
+/* } */
 
 //%typemap(freearg) record& {
    //delete $1;
 //}
 
-%typemap(in) variant* {
-   $1 = new variant(pyobj2variant($input, true));
+%typemap(in) variant* (std::unique_ptr<variant> deleter){
+    deleter.reset (new variant (pyobj2variant ($input, true)));
+    $1 = deleter.get ();
 }
 
 //%typemap(typecheck) variant {
@@ -203,15 +228,6 @@ if($1){
    //$1=1;
 //}
 
-
-%typemap(in) record {
-   if(PyDict_Check($input)){
-      $1 = pyobj2variant($input, true).asRecord();      
-   } else {
-      PyErr_SetString(PyExc_TypeError,"$1_name is not a dictionary");
-      return NULL;
-   }
-}
 
 %typemap(in) Quantity {
    if(PyDict_Check($input)){
@@ -252,7 +268,7 @@ if($1){
    }
 }
 
-%typemap(in) Quantity *{
+%typemap(in) Quantity * (std::unique_ptr<Quantity> deleter){
    if(PyDict_Check($input)){
       PyObject *theUnits = PyDict_GetItemString($input, "unit");
       PyObject *theVal = PyDict_GetItemString($input, "value");
@@ -284,14 +300,15 @@ if($1){
         istringstream iss(inpstring);
         iss >> val >> units;
         myVals.push_back(val);
-        $1 = new Quantity(myVals,units.c_str());
+        deleter.reset (new Quantity(myVals,units.c_str()));
+        $1 = deleter.get();
    } else {
       PyErr_SetString(PyExc_TypeError,"$1_name is not a dictionary");
       return NULL;
    }
 }
 
-%typemap(in) Quantity &{
+%typemap(in) Quantity & (std::unique_ptr<Quantity> deleter){
    if(PyDict_Check($input)){
       PyObject *theUnits = PyDict_GetItemString($input, "unit");
       PyObject *theVal = PyDict_GetItemString($input, "value");
@@ -314,7 +331,8 @@ if($1){
                 casac::pylist2vector(theVal,  myVals, shape);
              }
          }
-         $1 = new Quantity(myVals, PyString_AsString(theUnits));
+	 deleter.reset (new Quantity(myVals, PyString_AsString(theUnits)));
+         $1 = deleter.get();
       }
    } else if (PyString_Check($input)) {
         std::vector<double> myVals;
@@ -324,25 +342,40 @@ if($1){
         istringstream iss(inpstring);
         iss >> val >> units;
         myVals.push_back(val);
-        $1 = new Quantity(myVals,units.c_str());
+	deleter.reset (new Quantity(myVals,units.c_str()));
+        $1 = deleter.get();
    } else {
       PyErr_SetString(PyExc_TypeError,"$1_name is not a dictionary");
       return NULL;
    }
 }
 
-%typemap(in) record *{
+%typemap(in) record {
    if(PyDict_Check($input)){
-      $1 = new record(pyobj2variant($input, true).asRecord());      
+      $1 = pyobj2variant($input, true).asRecord();      
    } else {
       PyErr_SetString(PyExc_TypeError,"$1_name is not a dictionary");
       return NULL;
    }
 }
 
-%typemap(in) record &{
+%typemap(in) record * (std::unique_ptr<record> deleter){
    if(PyDict_Check($input)){
-      $1 = new record(pyobj2variant($input, true).asRecord());      
+       
+       deleter.reset (new record(pyobj2variant($input, true).asRecord()));      
+       $1 = deleter.get();
+   } else {
+      PyErr_SetString(PyExc_TypeError,"$1_name is not a dictionary");
+      return NULL;
+   }
+}
+
+%typemap(in) record & (std::unique_ptr<record> deleter){
+   if(PyDict_Check($input)){
+
+       // Put value into unique_ptr so it gets free when method exits
+       deleter.reset (new record(pyobj2variant($input, true).asRecord()));
+       $1 = deleter.get(); 
    } else {
       PyErr_SetString(PyExc_TypeError,"$1_name is not a dictionary");
       return NULL;
@@ -356,8 +389,9 @@ if($1){
      $1 = 1
 }
 
-%typemap(in) BoolVec {
-   $1 = new casac::BoolAry;
+%typemap(in) BoolVec (std::unique_ptr<BoolVec> deleter){
+   deleter.reset (new casac::BoolAry);
+   $1 = deleter.get();
    if(pyarray_check($input)){
       numpy2vector((PyArrayObject*)$input, $1->value, $1->shape);
    } else {
@@ -366,8 +400,9 @@ if($1){
    }
 }
 
-%typemap(in) BoolVec& {
-   $1 = new casac::BoolAry;
+%typemap(in) BoolVec& (std::unique_ptr<BoolVec> deleter){
+   deleter.reset (new casac::BoolAry);
+   $1 = deleter.get();
    if(pyarray_check($input)){
       numpy2vector((PyArrayObject*)$input, $1->value, $1->shape);
    } else {
@@ -376,8 +411,9 @@ if($1){
    }
 }
 
-%typemap(in) IntVec {
-   $1 = new casac::IntAry;
+%typemap(in) IntVec (std::unique_ptr<IntVec> deleter){
+   deleter.reset (new casac::IntAry);
+   $1 = deleter.get();
    if(pyarray_check($input)){
       numpy2vector((PyArrayObject*)$input, $1->value, $1->shape);
    } else {
@@ -386,8 +422,9 @@ if($1){
    }
 }
 
-%typemap(in) IntVec& {
-   $1 = new casac::IntAry;
+%typemap(in) IntVec& (std::unique_ptr<IntVec> deleter) {
+   deleter.reset (new casac::IntAry);
+   $1 = deleter.get();
    if(pyarray_check($input)){
       numpy2vector((PyArrayObject*)$input, $1->value, $1->shape);
    } else {
@@ -396,8 +433,10 @@ if($1){
    }
 }
 
-%typemap(in) DoubleVec {
-   $1 = new casac::DoubleAry;
+%typemap(in) DoubleVec (std::unique_ptr<DoubleVec> deleter){
+
+   deleter.reset (new casac::DoubleAry);
+   $1 = deleter.reset();
    if(pyarray_check($input)){
       numpy2vector((PyArrayObject*)$input, $1->value, $1->shape);
    } else {
@@ -406,9 +445,11 @@ if($1){
    }
 }
 
-%typemap(in) DoubleVec& {
-   if(!$1)
-      $1 = new casac::DoubleAry;
+%typemap(in) DoubleVec& (std::unique_ptr<DoubleVec> deleter){
+    if(!$1){
+	deleter.reset (new casac::DoubleAry);
+	$1 = deleter.reset();
+    }
    if(pyarray_check($input)){
       numpy2vector((PyArrayObject*)$input, $1->value, $1->shape);
    } else {
@@ -417,11 +458,13 @@ if($1){
    }
 }
 
-%typemap(in) std::vector<double> & {
+%typemap(in) std::vector<double> & (std::unique_ptr<std::vector<double> > deleter){
    std::vector<int> shape;
   
-   if(!$1)
-      $1 = new std::vector<double>(0);
+   if(!$1){
+       deleter.reset (new std::vector<double>(0));
+       $1 = deleter.get();
+   }
    else
       $1->resize(0);
    if(casac::pyarray_check($input)){
@@ -443,9 +486,11 @@ if($1){
    }
 }
 
-%typemap(in) std::vector<bool> & {
-   if(!$1)
-      $1 = new std::vector<bool>(0);
+%typemap(in) std::vector<bool> & (std::unique_ptr<std::vector<bool> > deleter) {
+    if(!$1){
+	deleter.reset (new std::vector<bool>(0));
+        $1 = deleter.get();
+    }
    else
       $1->resize(0);
    std::vector<int> shape;
@@ -473,9 +518,11 @@ if($1){
 }
 
 
-%typemap(in) std::vector<int> & {
-   if(!$1)
-      $1 = new std::vector<int>(0);
+%typemap(in) std::vector<int> & (std::unique_ptr<std::vector<int> > deleter) {
+    if(!$1){
+	deleter.reset (new std::vector<int>(0));
+	$1 = deleter.get();
+    }
    else
       $1->resize(0);
    std::vector<int> shape;
@@ -500,9 +547,11 @@ if($1){
    }
 }
 
-%typemap(in) std::vector<long long> & {
-   if(!$1)
-      $1 = new std::vector<long long>(0);
+%typemap(in) std::vector<long long> & (std::unique_ptr<std::vector<long long> > deleter) {
+    if(!$1){
+	deleter.reset (new std::vector<long long>(0));
+	$1 = deleter.get();
+    }
    else
       $1->resize(0);
    std::vector<int> shape;
@@ -528,9 +577,11 @@ if($1){
 }
 
 
-%typemap(in) std::vector<long> & {
-   if(!$1)
-      $1 = new std::vector<long>(0);
+%typemap(in) std::vector<long> & (std::unique_ptr<std::vector<long> > deleter){
+    if(!$1){
+	deleter.reset (new std::vector<long>(0));
+	$1 = deleter.get():
+    }
    else
       $1->resize(0);
    std::vector<int> shape;
@@ -555,21 +606,22 @@ if($1){
    }
 }
 
-%typemap(freearg) const std::vector<long long>& rownr {
-   delete $1;
-}
+/* %typemap(freearg) const std::vector<long long>& rownr { */
+/*    delete $1; */
+/* } */
 
-%typemap(freearg) const std::vector<long>& rownr {
-   delete $1;
-}
+/* %typemap(freearg) const std::vector<long>& rownr { */
+/*    delete $1; */
+/* } */
 
-%typemap(freearg) const std::vector<int>& rownr {
-   delete $1;
-}
+/* %typemap(freearg) const std::vector<int>& rownr { */
+/*    delete $1; */
+/* } */
 
 
-%typemap(in) ComplexVec {
-   $1 = new casac::ComplexAry;
+%typemap(in) ComplexVec (std::unique_ptr<ComplexVec> deleter) {
+    deleter.reset (new casac::ComplexAry);
+    $1 = deleter.get();
    if(pyarray_check($input)){
       numpy2vector((PyArrayObject*)$input, $1->value, $1->shape);
    } else {
@@ -578,8 +630,9 @@ if($1){
    }
 }
 
-%typemap(in) ComplexVec& {
-   $1 = new casac::ComplexAry;
+%typemap(in) ComplexVec& (std::unique_ptr<ComplexVec> deleter) {
+    deleter.reset (new casac::ComplexAry);
+    $1 = deleter.get();
    if(pyarray_check($input)){
       numpy2vector((PyArrayObject*)$input, $1->value, $1->shape);
    } else {

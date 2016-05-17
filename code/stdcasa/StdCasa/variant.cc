@@ -85,17 +85,37 @@ variant::variant(record *arg) : typev(RECORD), shape_(1,arg->size()) {
     val.recordv = arg;
 }
 
-variant::variant(const variant &other) : typev(other.typev), shape_(other.shape_) {
+variant::variant(const variant &other){
+
+    typev = INT; // need to make it something easy for the assignment operator.
+
+    * this = other;
+}
+
+variant &
+variant::operator= (const variant &other){
+
+    if (& other == this){
+        return * this;
+    }
+
+    freeStorage (); // uses current typev for this
+
+    typev = other.typev;
+    shape_ = other.shape_;
+
     switch( typev ) {
+
 	case BOOL:
 	    val.b = other.val.b;
 	    break;
 	case INT:
 	    val.i = other.val.i;
 	    break;
-        case UINT:
-            val.ui = other.val.ui;
-            break;
+
+    case UINT:
+        val.ui = other.val.ui;
+        break;
 	case LONG:
 	    val.l = other.val.l;
 	    break;
@@ -137,9 +157,13 @@ variant::variant(const variant &other) : typev(other.typev), shape_(other.shape_
 	    val.b = false;
 	    break;
     }
+
+    return * this;
 }
 
-variant::~variant( ) {
+void
+variant::freeStorage ()
+{
     switch( typev ) {
 	case BOOLVEC:
 	    delete val.bv;
@@ -174,6 +198,11 @@ variant::~variant( ) {
 	default:
 	    break;
     }
+}
+
+variant::~variant( ) {
+
+    freeStorage ();
 }
 
 const std::string &variant::typeString( ) const {
@@ -1861,8 +1890,8 @@ void variant::resize( int size ) {
     }
 }
 
-variant& initialize_variant( const std::string & ) {
-	    return *new variant();
+variant initialize_variant( const std::string & ) {
+	    return variant();
 }
 
 

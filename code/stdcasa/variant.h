@@ -116,6 +116,8 @@ class variant {
 
 	~variant( );
 
+	variant & operator= (const variant &other);
+
 	bool toBool( ) const;
 	int toInt( ) const;
 	unsigned int touInt( ) const;
@@ -222,6 +224,8 @@ class variant {
 
     private:
 
+	void freeStorage ();
+
 	// what size does the shape imply
 	int shape_size( ) const;
 
@@ -252,7 +256,7 @@ class variant {
 	std::string create_message( const std::string s ) const;
 };
 
-variant &initialize_variant( const std::string & );
+variant initialize_variant( const std::string & );
 }	// casac namespace
 
 #endif
