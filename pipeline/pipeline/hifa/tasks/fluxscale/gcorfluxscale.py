@@ -142,7 +142,7 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
         if inputs.reference == '':
             # No point carrying on if not.
             LOG.error('%s has no data with reference intent %s'
-                      '' % (ms.basename, inputs.refintent))
+                      '' % (inputs.ms.basename, inputs.refintent))
             return result
 
         # Run setjy for sources in the reference list which have transfer intents.
