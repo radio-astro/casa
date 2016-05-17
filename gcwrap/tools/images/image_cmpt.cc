@@ -1610,7 +1610,6 @@ record* image::fitcomponents(
         return fromRecord(fitter.getOutputRecord());
     }
     catch (const AipsError& x) {
-        FluxRep<Double>::clearAllowedUnits();
         _log << "Exception Reported: " << x.getMesg()
             << LogIO::EXCEPTION;
         RETHROW(x);
