@@ -203,7 +203,7 @@ class Tclean(cleanbase.CleanBase):
 
         # Get a noise estimate from the CASA sensitivity calculator
         sensitivity, channel_rms_factor = self._do_sensitivity()
-        LOG.info('Sensitivity estimate from CASA %s', sensitivity)
+        LOG.info('Sensitivity estimate from CASA: %s Jy', sensitivity)
 
         # Choose cleaning method.
         if inputs.hm_masking in ('centralregion', 'manual'):
@@ -474,7 +474,11 @@ class Tclean(cleanbase.CleanBase):
             specmode = 'cube'
         else:
             raise Exception, 'Unknown specmode "%s"' % (inputs.specmode)
-        for ms in context.observing_run.measurement_sets:
+
+        targetmslist = [ms_do for ms_do in [context.observing_run.get_ms(name=ms) for ms in inputs.vis] if ms_do.is_imaging_ms]
+        if (targetmslist == []):
+            targetmslist = [context.observing_run.get_ms(name=ms) for ms in inputs.vis]
+        for ms in targetmslist:
             for intSpw in [int(s) for s in spw.split(',')]:
                 try:
                     if (inputs.gridder == 'mosaic'):
