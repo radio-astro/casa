@@ -86,6 +86,7 @@ void CalCache::loadIt(vector<PMS::Axis>& loadAxes,
   { 	 
 
     NewCalTable ct(NewCalTable::createCT(filename_,Table::Old,Table::Plain));
+    calType_ = ct.tableInfo().subType();
 
     parsAreComplex_ = ct.isComplex();
     basis_=ct.polBasis();
@@ -447,7 +448,7 @@ void CalCache::loadCalChunks(ROCTIter& ci,
     break;
   }
   case PMS::SWP: {
-	  if ( !parsAreComplex()){
+	  if ( !parsAreComplex() && (!calType_.contains("TSYS"))) {
 		  *par_[chunk] = cti.fparam()(Slice(0,2,2),Slice(),Slice());
 	  }
 	  else {
@@ -456,7 +457,11 @@ void CalCache::loadCalChunks(ROCTIter& ci,
     break;
   }
   case PMS::TSYS: {
-    throw(AipsError("Tsys not yet implemented"));
+	if ( !parsAreComplex() && (calType_.contains("TSYS"))) {
+        *tsys_[chunk] = cti.fparam();
+    } else {
+        throw(AipsError( "tsys has no meaning for this table"));
+	}
     break;
   }
   case PMS::SNR: {

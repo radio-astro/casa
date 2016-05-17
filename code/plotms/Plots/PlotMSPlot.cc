@@ -1650,11 +1650,17 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
 		canvas->showAxis(cy, showY);
 	}
 
+    bool isCalTable = (itsCache_->cacheType() == PlotMSCacheBase::CAL);
+    String calType = itsCache_->calType();
+
 	// Set axes scales
 	PMS::Axis x = cacheParams->xAxis();
+    if (isCalTable && (x==PMS::AMP)) x = getCalAxis(calType);
 	canvas->setAxisScale(cx, PMS::axisScale(x));
 	for ( int i = 0; i < yAxisCount; i++ ){
 		PMS::Axis y = cacheParams->yAxis( i );
+        if (isCalTable && (y==PMS::AMP)) y = getCalAxis(calType);
+	    canvas->setAxisScale(cx, PMS::axisScale(x));
 		PlotAxis cy = axesParams->yAxis( i );
 		canvas->setAxisScale(cy, PMS::axisScale(y));
 	}
@@ -1665,6 +1671,7 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
 	canvas->setAxisReferenceValue(cx, xref, xrefval);
 	for ( int i = 0; i < yAxisCount; i++ ){
 		PMS::Axis y = cacheParams->yAxis( i );
+        if (isCalTable && (y==PMS::AMP)) y = getCalAxis(calType);
 		PlotAxis cy = axesParams->yAxis( i );
 		bool yref = itsCache_->hasReferenceValue(y);
 		double yrefval = itsCache_->referenceValue(y);
@@ -1715,6 +1722,7 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
 			int plotYAxisCount = plotAxisParams->numYAxes();
 			for ( int i = 0; i < plotYAxisCount; i++ ){
 				PMS::Axis y = plotCacheParams->yAxis( i );
+                if (isCalTable && (y==PMS::AMP)) y = getCalAxis(calType);
 				PlotAxis cy = plotAxisParams->yAxis( i );
 				bool yref = itsCache_->hasReferenceValue(y);
 				double yrefval = itsCache_->referenceValue(y);
@@ -1823,7 +1831,9 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
 			PlotMSCacheBase& plotCacheBase = canvasPlots[j]->cache();
 			int plotYAxisCount = plotAxisParams->numYAxes();
 			for ( int i = 0; i < plotYAxisCount; i++ ){
-				yAxes.push_back(plotCacheParams->yAxis( i ));
+                PMS::Axis y = plotCacheParams->yAxis( i );
+                if (isCalTable && (y==PMS::AMP)) y = getCalAxis(calType);
+				yAxes.push_back(y);
 				yRefs.push_back(plotCacheBase.hasReferenceValue(yAxes[i]));
 				yRefVals.push_back(plotCacheBase.referenceValue(yAxes[i]));
 				yDatas.push_back(plotCacheParams->yDataColumn( i ) );
@@ -1877,6 +1887,12 @@ bool PlotMSPlot::axisIsAveraged(PMS::Axis axis, PlotMSAveraging averaging) {
 String PlotMSPlot::addFreqFrame(String freqLabel) {
     String freqType = MFrequency::showType(itsCache_->getFreqFrame());
     return freqLabel + " " + freqType;
+}
+
+PMS::Axis PlotMSPlot::getCalAxis(String calType) {
+    if (calType.contains("TSYS")) return PMS::TSYS;
+    if (calType.contains("SWPOW")) return PMS::SWP;
+    return PMS::AMP;
 }
 
 }

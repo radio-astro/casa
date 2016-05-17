@@ -102,7 +102,8 @@ PlotMSCacheBase::PlotMSCacheBase(PlotMSApp* parent):
           xminG_(0),
           yminG_(0),
           xmaxG_(0),
-          ymaxG_(0)
+          ymaxG_(0),
+          calType_("")
 {
 
 	// Make the empty indexer0 object so we have and empty PlotData object
@@ -506,13 +507,12 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
         setAxesMask(currentY_[i],ymask);
         netAxesMask_[i]=(xmask || ymask);
     }
-
     /*
   cout << boolalpha;
   cout << "xmask = " << xmask << endl;
   cout << "ymask = " << ymask << endl;
   cout << "netAxesMask_ = " << netAxesMask_ << endl;
-     */
+    */
 
     // Generate the plot mask from scratch
     deletePlotMask();
@@ -1241,6 +1241,7 @@ void PlotMSCacheBase::setAxesMask(PMS::Axis axis,Vector<Bool>& axismask) {
 	case PMS::WTxAMP:
 	case PMS::WTSP:
 	case PMS::SIGMASP:
+	case PMS::TSYS:
 		axismask(Slice(0,3,1))=True;
 		break;
 	case PMS::CHANNEL:
@@ -1289,7 +1290,6 @@ void PlotMSCacheBase::setAxesMask(PMS::Axis axis,Vector<Bool>& axismask) {
 	case PMS::EL0:
 	case PMS::HA0:
 	case PMS::PA0:
-	case PMS::TSYS:
 	case PMS::SNR:
 	case PMS::RADIAL_VELOCITY:
 	case PMS::RHO:

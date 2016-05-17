@@ -76,6 +76,7 @@ public:
   // Identify myself
   //  pure virtual
   virtual PlotMSCacheBase::Type cacheType() const = 0;
+  String calType() const { return calType_; };
 
   // Access to pol names
   virtual String polname(Int ipol)=0;
@@ -427,6 +428,9 @@ protected:
   PMS::Axis iterAxis;
   bool ephemerisInitialized;
   ::QVector<double> uniqueTimes;
+
+  // The calibration type (Table subType)
+  String calType_;
 
 private:
   void _updateAntennaMask( Int a, Vector<Bool>& antMask, const Vector<Int> selectedAntennas );

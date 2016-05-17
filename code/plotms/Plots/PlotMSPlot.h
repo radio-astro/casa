@@ -335,6 +335,7 @@ private:
     // To modify axis label if needed:
     bool axisIsAveraged(PMS::Axis axis, PlotMSAveraging averaging);
     String addFreqFrame(String freqLabel);
+    PMS::Axis getCalAxis(String calType);
 
     //Note:  First index for a plot is the dataCount,
     //second index is the number of iteration.
