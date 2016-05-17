@@ -237,28 +237,15 @@ template <class T> ComponentList ImageSourceFinder<T>::_findSources (
 	IPosition start(inShape);
 	start = 0;
 	IPosition pos(1,0);
-	cout << __FILE__ << " " << __LINE__ << endl;
-
 	for (Int j=0; j<(w-1); ++j) {
-		cout << __FILE__ << " " << __LINE__ << endl;
-		cout << "start " << start << endl;
-		cout << "shape " << inSliceShape << endl;
 		subImage->getSlice(inPtr[inp+j], Slicer(start, inSliceShape), True);
-		cout << __FILE__ << " " << __LINE__ << endl;
-
 		subImage->getMaskSlice(inMaskPtr[inp+j], Slicer(start, inSliceShape), True);
-		cout << __FILE__ << " " << __LINE__ << endl;
-
 		for (Int i=0; i<nx; ++i) {
 			pos(0) = i;
 			inDone(inp+j, i) = inMaskPtr[inp+j].ref()(pos);
 		}
-		cout << __FILE__ << " " << __LINE__ << endl;
-
 		start(1) += 1;
 	}
-	cout << __FILE__ << " " << __LINE__ << endl;
-
 	// Loop through remaining lines
                
 	for (Int j=(w-1); j<ny; ++j) {

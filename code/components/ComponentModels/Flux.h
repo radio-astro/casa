@@ -348,19 +348,18 @@ public:
   // otherwise returns False.
   Bool ok() const;
 
-  // in addition to Jy, allow these "flux" units. Useful when images have "flux-like"
-  // units such as Jy.km/s
-  static void setAllowedUnits(const Vector<String>& allowedUnits);
-
-  // clear all allowed units set by setAllowedUnits
-  static void clearAllowedUnits();
-
 private:
   Vector<typename NumericTraits<T>::ConjugateType> itsVal;
   ComponentType::Polarisation itsPol;
   Unit itsUnit;
   Vector<typename NumericTraits<T>::ConjugateType> itsErr;
-  static Vector<String> _allowedUnits;
+  static const std::vector<Unit> _allowedUnits;
+
+    // returns the conversion unit to which <src>unit</src> conforms.
+    // If <src>unit</src> does not conform to a supported unit, an
+    // exception is thrown.
+    static Unit _getConversionUnit(const Unit& unit);
+
 };
 
 // <summary>A class that represents the Flux (reference semantics)</summary>

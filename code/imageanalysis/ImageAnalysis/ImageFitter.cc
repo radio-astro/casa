@@ -144,8 +144,6 @@ std::pair<ComponentList, ComponentList> ImageFitter::fit() {
 	inputStats = myStats.statistics();
 	Vector<String> allowFluxUnits(2, "Jy.km/s");
 	allowFluxUnits[1] = "K.rad2";
-	FluxRep<Double>::setAllowedUnits(allowFluxUnits);
-	FluxRep<Float>::setAllowedUnits(allowFluxUnits);
 	_results.setStokes(_getStokes());
 	String resultsString = _results.resultsHeader(
 		_getChans(), _chanVec, _regionString,
@@ -211,8 +209,6 @@ std::pair<ComponentList, ComponentList> ImageFitter::fit() {
 		_results.writeNewEstimatesFile(_newEstimatesFileName);
 	}
 	_createOutputRecord(convolvedList, deconvolvedList);
-	FluxRep<Double>::clearAllowedUnits();
-	FluxRep<Float>::clearAllowedUnits();
 	_writeLogfile(resultsString);
 	std::pair<ComponentList, ComponentList> lists;
 	lists.first = convolvedList;

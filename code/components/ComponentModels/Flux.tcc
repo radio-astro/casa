@@ -45,7 +45,7 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-template<class T> Vector<String> FluxRep<T>::_allowedUnits(0);
+template<class T> const std::vector<Unit> FluxRep<T>::_allowedUnits {"Jy", "Jy.km/s", "K.rad2"};
 
 template<class T> FluxRep<T>::
 FluxRep()
@@ -391,30 +391,28 @@ setValue(const
   itsPol = pol;
 }
 
+template<class T> Unit FluxRep<T>::_getConversionUnit(const Unit& unit) {
+    auto iter = _allowedUnits.begin();
+    auto end = _allowedUnits.end();
+    for (; iter!=end; ++iter) {
+        if (unit.getValue() == iter->getValue()) {
+		    return *iter;
+		}
+    }
+    ostringstream oss;
+	ThrowCc(
+        "The flux unit "
+		+ unit.getName()
+        + " has dimensions that are not supported"
+    );
+}
+
 template<class T> void FluxRep<T>::setValue(
 		const Quantum<T>& value, Stokes::StokesTypes stokes
 ) {
 	LogIO os(LogOrigin("FluxRep", "setValue(const Quantum<Double>&, Stokes::StokesTypes)"));
 	Vector<T> tmp(4, 0.0);
-	String conversionUnit = "Jy";
-	if (! value.isConform("Jy")) {
-		Bool found = False;
-		for (
-			Vector<String>::const_iterator iter=_allowedUnits.begin();
-			iter != _allowedUnits.end(); iter++
-		) {
-			if (value.isConform(*iter)) {
-				conversionUnit = *iter;
-				found = True;
-				break;
-			}
-		}
-		if (! found) {
-			os << LogIO::EXCEPTION << "The flux units "
-				<< value.getFullUnit().getName() << " have dimensions that are "
-				<< "different from 'Jy' and are not allowed";
-		}
-	}
+	auto conversionUnit = _getConversionUnit(value.getUnit()) ;
 	if (stokes==Stokes::I || stokes==Stokes::Q || stokes==Stokes::U || stokes==Stokes::V) {
 		if (stokes==Stokes::I) {
 			tmp(0) = value.getValue(Unit(conversionUnit));
@@ -666,27 +664,8 @@ template<class T> Bool FluxRep<T>::ok() const {
 				<< LogIO::POST;
 		return False;
 	}
-	if (itsUnit == Unit("Jy") || itsUnit == Unit("K.rad.rad")) {
-		return True;
-	}
-	for (Vector<String>::const_iterator iter=_allowedUnits.begin(); iter!=_allowedUnits.end(); iter++) {
-		if (itsUnit == Unit(*iter)) {
-			return True;
-		}
-	}
-	LogIO logErr(LogOrigin("FluxRep", "ok()"));
-	logErr << LogIO::SEVERE << "The flux units " << itsUnit.getName()
-     << " have dimensions that are different from 'Jy'"
-				<< LogIO::POST;
-		return False;
-}
-
-template<class T> void FluxRep<T>::setAllowedUnits(const Vector<String>& allowedUnits) {
-	_allowedUnits = allowedUnits;
-}
-
-template<class T> void FluxRep<T>::clearAllowedUnits() {
-	_allowedUnits.resize(0);
+    _getConversionUnit(itsUnit);
+    return True;
 }
 
 template<class T> Flux<T>::
