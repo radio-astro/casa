@@ -48,6 +48,7 @@ namespace po = boost::program_options;
 using namespace boost::assign; // bring 'operator+=()' into scope
 
 bool verbose = false; // By default, let's stay quiet.
+bool ddebug = false;
 
 #include "CScanIntent.h"
 using namespace ScanIntentMod;
@@ -156,6 +157,63 @@ const string& ProcessFlagsException::getMessage() {
 // end of class ProcessFlagsException
 
 /*
+** A class to perform linearized index computations between a matrix lower left and upper right corners. This class was designed during the work on http://jira.alma.cl/browse/PRTSIR-9678
+**
+*/
+class Transposer {
+private: 
+  unsigned int n_;
+  vector<unsigned int> ur2llTransposed_v_;
+
+  unsigned int nnm1o2_() const;
+  Transposer() {;};
+
+public :
+  Transposer(unsigned int n);
+  unsigned int transposed(unsigned int n) const;
+};
+
+unsigned int Transposer::nnm1o2_() const {
+  return n_*(n_-1)/2;
+}
+
+Transposer::Transposer(unsigned int n) {
+  if (n == 0 )
+    throw ProcessFlagsException("Internal error. The Tranposer constructor was called with n == 0.");
+  n_ = n;
+  vector<unsigned int> v_v(n_);
+  vector<vector<unsigned int> > m_vv(n_, v_v); 
+  
+  ur2llTransposed_v_.resize(nnm1o2_(), 0);
+  
+  unsigned int k = 0;
+
+  // Lower left traversal and index linearization
+  k = 0;
+  for (unsigned int i = 0; i < n_-1; i++)
+    for (unsigned int j = i+1; j < n_; j++) 
+      m_vv[i][j] = k++;
+  
+  // Upper right traversal and linearized index transposition
+  k = 0;
+  for (unsigned int i = 1; i < n_; i++) 
+    for (unsigned int j = 0; j < i ; j++)
+      ur2llTransposed_v_[k++]=m_vv[j][i];
+}
+
+unsigned int Transposer::transposed(unsigned int n) const {
+  if ( n >= nnm1o2_() ) {
+    ostringstream oss;
+    oss << "Internal error.The method Transposer::transposed was called with an invalid value '"
+	<< n << "'. The maximum allowed is '" << nnm1o2_() << "==" << n_ << "*" << n_-1 << "/2'"; 
+    throw ProcessFlagsException(oss.str());
+  }
+  else
+    return  ur2llTransposed_v_[n];
+}
+
+
+/*
 ** Some typedefs for quite complex data structures used in many places 
 */
 typedef pair <unsigned int, unsigned int> FLAG_SHAPE;
@@ -217,7 +275,7 @@ public:
 MSFlagEval::MSFlagEval(FLAGSTYPE mask, FLAGSTYPE ignore):mask(mask),ignore(ignore) {;}
 MSFlagEval::~MSFlagEval() {;}
 //char MSFlagEval::operator()(FLAGSTYPE f) { return ((f == ignore) || (f & mask & 0x0000FFFF) == 0) ? 0 : 1; }
-char MSFlagEval::operator()(FLAGSTYPE f) { return ((f == ignore) || (f & mask) == 0) ? 0 : 1; } // As of 2015.8 correlator 
+char MSFlagEval::operator()(FLAGSTYPE f) { return ((f == ignore) || ((f & mask) == 0)) ? 0 : 1; } // As of 2015.8 correlator 
                                                                                                 // uses the definitions for binary
                                                                                                 // contained in BinaryFlags
                                                                                                 // see https://bugs.nrao.edu/browse/CAS-8491
@@ -493,12 +551,14 @@ void traverseBAB(bool					sameAntenna,
 	  unsigned int kk = 0;
 	  for (const FLAGSTYPE* p = range.first; p != range.second; p++){
 	    MSFlagsCell[k] = flagEval(*p) ; k++;
+	    if (ddebug && *p) cout << *p << ":" << (short) flagEval(*p) << " ";
 	    kk++;
 	    if ((flagsCellNumPolProducts == 4) && sameAntenna && ( kk == 1 )) { // If we are in a case like XX XY YX, don't forget to repeat the value of index 1 .
 	      MSFlagsCell[k] =  MSFlagsCell[k-1]; k++;
 	    }
 	  }
 	}
+	if (ddebug) cout << endl; 
       }
       accumulator.accumulate(spw.numSpectralPoint(), flagsCellNumPolProducts, MSFlagsCell);
       accumulator.nextDD();
@@ -534,8 +594,9 @@ void traverseBAL(const vector<SDMDataObject::Baseband>& basebands,
 
   LOGENTER("traverseBAL");
   accumulator.resetBAL();
-  for (unsigned int i = 0; i < antennas.size(); i++)
-    for (unsigned int j = i+1; j < antennas.size(); j++) {      
+  for (unsigned int i = 1; i < antennas.size(); i++)
+    //for (unsigned int j = i+1; j < antennas.size(); j++) {      
+    for (unsigned int j = 0; j < i; j++) {      
       traverseBAB(false, basebands, dataDescriptions, flagsPair, consumer, flagEval, accumulator);
       accumulator.nextBAL();
     }
@@ -594,6 +655,7 @@ bool isNotNull(char f){
  * 
  * Populates one cell of the columns FLAG and FLAG_ROW from the content of what's been found in the BDF flags attachment.
  *
+ * (function used for Correlator data)
  * 
  * @parameter flagsShape_p a pointer to the shape of the flag in the MS Main row number iRow0.
  * @parameter flag_v_p a pointer to a vector of flags as a flattened version of the 2D natural represenation of flags. 
@@ -625,15 +687,18 @@ bool  putCell( FLAG_SHAPE* flagShape_p,
   //if (notNullBDF) cout << "row " << iRow0 << " - putCell in front of " << flag_v_p->size() << " elements of which " << notNullBDF << " are not null";
   int notNull = 0;
   int k = 0;
+  if (ddebug) cout << "Put into MS :" ;
   for (uInt i = 0;  i < numChan; i++) {
     for (uInt j = 0; j < numCorr; j++) {
       flagged = flag_v_p->at(k++) != (char) 0;
+      if (ddebug) cout << flagged << " " ;
       if (flagged) notNull++;
       flagCell(j, i) = flagged; // flagCell(j, i) || flagged;    // Let's OR the content of flag with what's found in the BDF flags.
       cellFlagged = cellFlagged || flagged;
       allSet = allSet && flagged;
     }
   }
+  if (ddebug) cout << endl;
   flag.put((uInt)iRow0, flagCell);
   //if (notNull)  cout << "row " << iRow0 <<  " - putCell counted actually" << notNull << " non null flags so that cellFlagged = " << cellFlagged << endl;
 
@@ -643,6 +708,9 @@ bool  putCell( FLAG_SHAPE* flagShape_p,
   return cellFlagged;  
 }
 
+/*
+ * Used for correlator data.
+ */
 pair<uInt, uInt> mergeAndPut(CorrelationModeMod::CorrelationMode correlationMode,
 			     MSFlagAccumulator<char>& autoAccumulator,
 			     MSFlagAccumulator<char>& crossAccumulator,
@@ -673,6 +741,8 @@ pair<uInt, uInt> mergeAndPut(CorrelationModeMod::CorrelationMode correlationMode
   unsigned int		kAuto	       = 0;
   unsigned int		kCross	       = 0;
 
+  Transposer t(numANT);  // Yes we need that since the filler has performed a transposition on the base line order !
+
   unsigned int		numFlaggedRows = 0; // Maintain a count of the number of flagged rows.
 
   //
@@ -701,16 +771,17 @@ pair<uInt, uInt> mergeAndPut(CorrelationModeMod::CorrelationMode correlationMode
     // ... put the flags for cross correlation then
     if (correlationMode != CorrelationModeMod::AUTO_ONLY) {
       if (debug) cout << "CROSS " << numIntegration << ", " << iDD << ", " << crossFlagShapes_p_v_p->at(0)->first << ", " << crossFlagShapes_p_v_p->at(0)->second << endl;
-      for (unsigned int iTIMEBAL = 0; iTIMEBAL < numIntegration * numBAL; iTIMEBAL++) {
-	if (putCell(crossFlagShapes_p_v_p->at(kCross),
-		    crossFlagValues_p_v_p->at(kCross),
-		    iRow0,
-		    flag, 
-		    flagRow))
-	  numFlaggedRows++;
-	
-	iRow0++;
-	kCross++;
+      for (unsigned int iIntegration = 0; iIntegration < numIntegration; iIntegration++) {
+	for (unsigned int iBAL = 0; iBAL < numBAL; iBAL++) {
+	  if (putCell(crossFlagShapes_p_v_p->at(kCross),
+		      crossFlagValues_p_v_p->at(kCross),
+		      iRow0 + t.transposed(iBAL), // This fixes the bug related in http://jira.alma.cl/browse/PRTSIR-9678
+		      flag, 
+		      flagRow))
+	    numFlaggedRows++;
+	  kCross++;
+	}
+	iRow0 += numBAL;
       }
     }
   }
@@ -718,6 +789,9 @@ pair<uInt, uInt> mergeAndPut(CorrelationModeMod::CorrelationMode correlationMode
   return make_pair(iRow0, numFlaggedRows);
 }
 
+/*
+ * Used for Radiometer data.
+ */
 pair<uInt, uInt> put(MSFlagAccumulator<char>& accumulator,
 		     uInt iRow0,
 		     ArrayColumn<Bool>& flag,
@@ -1478,8 +1552,10 @@ int main (int argC, char * argV[]) {
       // End of check
 
       switch (pt) {
+
       case ProcessorTypeMod::CORRELATOR :
-	{   
+	{  
+	  //ddebug =  (mR -> getScanNumber() == 2) ; 
 	  if (lazy) 
 	    processCorrelatorFlags(numIntegration,
 				   bdfPath,
