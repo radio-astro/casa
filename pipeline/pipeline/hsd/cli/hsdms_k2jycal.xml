@@ -122,11 +122,14 @@ reffile -- Path to a file containing Jy/K factors for science data, which
         2,2011-11-13 01:45:00,2011-11-13 02:15:00,ANONYMOUS,86243.0,1000.0,I,110.0
         
     The line starting with '#' indicates a meta data section and header. 
-    The header must exist. The lines whose antenna name is 'ANONYMOUS' 
-    are used when there is no meaurement for specific antenna in the session. 
-    In the above example, if science observation of session 1 contains the 
-    antenna PM04, Jy/K factor for ANONYMOUS antenna will be applied since there 
-    is no measurement for PM04 in session 1. 
+    The header must exist. The factor to apply is identified by matching the
+    session ID, antenna name, frequency and polarization of data in each line of
+    the file. Note the observation date is supplementary information and not used 
+    for the matching so far. The lines whose antenna name is 'ANONYMOUS' are used 
+    when there is no meaurement for specific antenna in the session. In the above 
+    example, if science observation of session 1 contains the antenna PM04, Jy/K 
+    factor for ANONYMOUS antenna will be applied since there is no measurement for 
+    PM04 in session 1.
     If no file name is specified or specified file doesn't exist, all Jy/K factors 
     are set to 1.0. 
     default: 'jyperk.csv'
