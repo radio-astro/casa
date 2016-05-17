@@ -324,7 +324,8 @@ class CleanBase(basetask.StandardTaskTemplate):
         for freq_range in utils.merge_ranges(freq_ranges):
             aggregate_bw = qaTool.add(aggregate_bw, qaTool.sub('%sGHz' % (freq_range[1]), '%sGHz' % (freq_range[0])))
 
-        # Adjust sensitivity according to selection bandwidth
+        # Adjust threshold according to selection bandwidth
+        # TODO: Adjust sensitivity as well. Needs this code in tclean.py.
         old_threshold = qaTool.convert(inputs.threshold, 'Jy')['value']
         new_threshold = old_threshold * sqrt(qaTool.convert(total_bw, 'GHz')['value'] / qaTool.convert(aggregate_bw, 'GHz')['value'])
 
