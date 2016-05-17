@@ -388,7 +388,11 @@ class RawflagchansView(object):
         Creates an RawflagchansView instance.
         """
         
-        # Initialize result structure
+        # Initialize result structure. By initializing here,
+        # it is ensured that repeated calls to this instance will
+        # have access to all previously generated results,
+        # which is used to "refine" the data view in case the 
+        # incoming data task result is not new.
         self.result = RawflagchansViewResults()
 
 

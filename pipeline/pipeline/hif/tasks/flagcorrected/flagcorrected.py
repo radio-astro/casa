@@ -407,9 +407,6 @@ class FlagcorrectedView(object):
         
         # Store input parameters.
         self.metric = metric
-        
-        # Initialize result structure.
-        self.result = FlagcorrectedViewResults()
 
 
     def __call__(self, dataresult):
@@ -422,6 +419,9 @@ class FlagcorrectedView(object):
         Returns:
         FlagcorrectedViewResults object containing the flagging view.
         """
+        
+        # Initialize result structure.
+        self.result = FlagcorrectedViewResults()
 
         # Take vis from data task results, and add to result.
         self.result.vis = dataresult.table
