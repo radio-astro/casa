@@ -61,13 +61,21 @@ class TcleanHeuristics(object):
                 iaTool = casatools.image
                 iaTool.open(pb)
                 nx, ny = iaTool.shape()[0:2]
-                pb_edge = iaTool.getchunk([nx/2, 0], [nx/2, 0]).flatten()[0]
+                pb_edge = 0.0
+                i = 0
+                # There are cases with zero edged PBs
+                while ((pb_edge == 0.0) and (i < ny/2)):
+                    pb_edge = iaTool.getchunk([nx/2, i], [nx/2, i]).flatten()[0]
+                    i += 1
                 if (pb_edge > 0.2):
                     pblimit_image = iaTool.getchunk([nx/2, 0.05*ny], [nx/2, 0.05*ny]).flatten()[0]
                     pblimit_cleanmask = iaTool.getchunk([nx/2, 0.1*ny], [nx/2, 0.1*ny]).flatten()[0]
             except Exception as e:
                 LOG.warning('Could not analyze PB: %s. Using default pblimit values.' % (e))
+            finally:
+                iaTool.close()
 
+        print 'DEBUG_DM:', pblimit_image, pblimit_cleanmask
         return pblimit_image, pblimit_cleanmask
 
     def field(self, intent, field):
