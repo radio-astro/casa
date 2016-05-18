@@ -58,19 +58,12 @@ ImageFitter::ImageFitter(
 		image, region, regionRec, box,
 		chanInp, stokes,
 		maskInp, "", False
-	), _regionString(region), _residual(),_model(),
-	_estimatesString(""), _newEstimatesFileName(newEstimatesInp),
+	), _regionString(region),
+	_newEstimatesFileName(newEstimatesInp),
 	_compListName(compListName), _bUnit(image->units().getName()),
-	_includePixelRange(),
-	_excludePixelRange(), _estimates(), _fixed(0),
-	_fitDone(False), _noBeam(False),
-	_doZeroLevel(False), _zeroLevelIsFixed(False),
 	_correlatedNoise(image->imageInfo().hasBeam()),
-	_fitConverged(0), _peakIntensities(), _rms(-1),
-	_writeControl(ImageFitterResults::NO_WRITE), _zeroLevelOffsetEstimate(0),
 	_zeroLevelOffsetSolution(0), _zeroLevelOffsetError(0),
-	_stokesPixNumber(-1), _chanPixNumber(-1), _results(image, _getLog()),
-	_noiseFWHM(), _pixWidth(Quantity(0, "arcsec")) {
+	_results(image, _getLog()) {
 	if (
 		stokes.empty() && image->coordinates().hasPolarizationCoordinate()
 		&& regionRec == 0 && region.empty()
@@ -200,13 +193,28 @@ std::pair<ComponentList, ComponentList> ImageFitter::fit() {
 			}
 		}
 	}
-	if (anyConverged && ! _newEstimatesFileName.empty()) {
-		_results.setConvolvedList(_curConvolvedList);
-		_results.setPeakIntensities(_peakIntensities);
-		_results.setMajorAxes(_majorAxes);
-		_results.setMinorAxes(_minorAxes);
-		_results.setPositionAngles(_positionAngles);
-		_results.writeNewEstimatesFile(_newEstimatesFileName);
+	if (
+	    anyConverged
+	    && (! _newEstimatesFileName.empty() || ! _summary.empty())
+	) {
+		if (! _newEstimatesFileName.empty()) {
+		    _results.setConvolvedList(_curConvolvedList);
+		    _results.setPeakIntensities(_peakIntensities);
+		    _results.setMajorAxes(_majorAxes);
+		    _results.setMinorAxes(_minorAxes);
+		    _results.setPositionAngles(_positionAngles);
+		    _results.writeNewEstimatesFile(_newEstimatesFileName);
+		}
+		if (! _summary.empty()) {
+	        _results.setConvolvedList(convolvedList);
+		    _results.setDeconvolvedList(deconvolvedList);
+		    _results.setChannels(_allChanNums);
+		    _results.setFluxDensities(_allFluxDensities);
+            _results.setFluxDensityErrors(_allFluxDensityErrors);
+            _results.setPeakIntensities(_allConvolvedPeakIntensities);
+            _results.setPeakIntensityErrors(_allConvolvedPeakIntensityErrors);
+            _results.writeSummaryFile(_summary, _getImage()->coordinates());
+		}
 	}
 	_createOutputRecord(convolvedList, deconvolvedList);
 	_writeLogfile(resultsString);
@@ -807,6 +815,8 @@ void ImageFitter::_calculateErrors() {
 					? 0 : baseFac*_fluxDensities[i];
 			}
 		}
+		_allFluxDensities.push_back(_fluxDensities[i]);
+		_allFluxDensityErrors.push_back(_fluxDensityErrors[i]);
 		_curConvolvedList.setShape(Vector<Int>(1, i), *newShape);
 		Vector<std::complex<double> > errors(4, std::complex<double>(0, 0));
 		errors[polnum] = std::complex<double>(_fluxDensityErrors[i].getValue(), 0);
@@ -1681,7 +1691,3 @@ void ImageFitter::_fitskyExtractBeam(
 	parameters(4) = dParameters(1);
 	parameters(5) = dParameters(2);
 }
-
-
-
-

@@ -37,6 +37,8 @@ template<class T> class Vector;
 
 class ImageFitterResults {
 	// <summary>
+    // Used exclusively by ImageFitter. Unless you are modifying that class,
+    // you should have no reason to use this class.
 	// </summary>
 
 	// <reviewed reviewer="" date="" tests="" demos="">
@@ -64,20 +66,28 @@ public:
 		OVERWRITE
 	};
 
+	ImageFitterResults() = delete;
+
 	ImageFitterResults(SPCIIF image, SHARED_PTR<LogIO> log);
 
 	~ImageFitterResults();
+
+	void setChannels(Vector<uInt> chans) { _channels = chans; }
 
 	void setConvolvedList(const ComponentList& list) {
 		_convolvedList = list;
 	}
 
+	void setDeconvolvedList(const ComponentList& list) {
+	    _deconvolvedList = list;
+	}
+
 	void setPeakIntensities(const Vector<Quantity>& p) {
-		_peakIntensities = p;
+		_peakIntensities.assign(p);
 	}
 
 	void setPeakIntensityErrors(const Vector<Quantity>& m) {
-		_peakIntensityErrors = m;
+		_peakIntensityErrors.assign(m);
 	}
 	void setMajorAxes(const Vector<Quantity>& m) {
 		_majorAxes = m;
@@ -92,13 +102,11 @@ public:
 	}
 
 	void setFluxDensities(const Vector<Quantity>& m) {
-		_fluxDensities = m;
+		_fluxDensities.assign(m);
 	}
 
-
-
 	void setFluxDensityErrors(const Vector<Quantity>& m) {
-		_fluxDensityErrors = m;
+		_fluxDensityErrors.assign(m);
 	}
 
 	void writeNewEstimatesFile(const String& filename) const;
@@ -124,15 +132,18 @@ public:
 
 	void setFixed(const Vector<String>& s) { _fixed = s; }
 
+	void writeSummaryFile(const String& filename, const CoordinateSystem& csys) const;
+
 private:
 	SPCIIF _image;
 	SHARED_PTR<LogIO> _log;
-	ComponentList _convolvedList;
+	ComponentList _convolvedList{}, _deconvolvedList{};
 	Vector<Quantity> _peakIntensities, _peakIntensityErrors,
 		_majorAxes, _minorAxes,
 		_positionAngles, _fluxDensities, _fluxDensityErrors;
 	String _bUnit, _stokes;
 	Vector<String> _fixed;
+	Vector<uInt> _channels{};
 	const static String _class;
 	static std::vector<String> _prefixes, _prefixesWithCenti;
 };

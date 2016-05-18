@@ -67,6 +67,8 @@ class ImageFitter : public ImageTask<Float> {
 
 public:
 
+    ImageFitter() = delete;
+
 	// constructor appropriate for API calls.
 	// Parameters:
 	// <ul>
@@ -90,6 +92,7 @@ public:
 
 	// use these constructors when you already have a pointer to a valid ImageInterface object
 
+
 	ImageFitter(
 		const SPCIIF image, const String& region,
 		const Record *const &regionRec,
@@ -99,6 +102,8 @@ public:
 		const String& estiamtesFilename="",
 		const String& newEstimatesInp="", const String& compListName=""
 	);
+
+	ImageFitter(const ImageFitter& other) = delete;
 
 	// destructor
 	~ImageFitter();
@@ -166,6 +171,9 @@ public:
 	// The Record holding all the output info
 	Record getOutputRecord() const {return _output; }
 
+	// Set The summary text file name.
+	void setSummaryFile(const String& f) { _summary = f; }
+
 protected:
 
 	virtual Bool _hasLogfileSupport() const { return True; }
@@ -176,33 +184,36 @@ private:
 
     using Angular2DGaussian = GaussianBeam;
 
-	String _regionString, _residual, _model,
-		_estimatesString, _newEstimatesFileName, _compListName, _bUnit;
-	SHARED_PTR<std::pair<Float, Float> > _includePixelRange, _excludePixelRange;
-	ComponentList _estimates, _curConvolvedList, _curDeconvolvedList;
-	Vector<String> _fixed, _deconvolvedMessages;
-	Bool _fitDone, _noBeam, _doZeroLevel, _zeroLevelIsFixed, _correlatedNoise, _useBeamForNoise;
-	Vector<Bool> _fitConverged;
-	Vector<Quantity> _peakIntensities, _peakIntensityErrors, _fluxDensityErrors,
+	String _regionString;
+	String _residual{}, _model{}, _estimatesString{}, _summary{};
+	String _newEstimatesFileName, _compListName, _bUnit;
+	SHARED_PTR<std::pair<Float, Float> > _includePixelRange{}, _excludePixelRange{};
+	ComponentList _estimates{}, _curConvolvedList, _curDeconvolvedList;
+	Vector<String> _fixed{}, _deconvolvedMessages;
+	Bool _fitDone{False}, _noBeam{False}, _doZeroLevel{}, _zeroLevelIsFixed{},
+	    _correlatedNoise, _useBeamForNoise;
+	Vector<Bool> _fitConverged{};
+	Vector<Quantity> _peakIntensities{}, _peakIntensityErrors, _fluxDensityErrors,
 		_fluxDensities, _majorAxes, _majorAxisErrors, _minorAxes, _minorAxisErrors,
 		_positionAngles, _positionAngleErrors;
-	vector<Quantity> _allConvolvedPeakIntensities, _allConvolvedPeakIntensityErrors, _allSums;
+	vector<Quantity> _allConvolvedPeakIntensities{}, _allConvolvedPeakIntensityErrors{}, _allSums{},
+	    _allFluxDensities{}, _allFluxDensityErrors{};
 	vector<GaussianBeam> _allBeams;
 	vector<Double> _allBeamsPix, _allBeamsSter;
 	vector<uInt> _allChanNums;
 	vector<Bool> _isPoint;
 	Record _residStats, inputStats, _output;
-	Double _rms;
+	Double _rms = -1;
 	String _kludgedStokes;
-	ImageFitterResults::CompListWriteControl _writeControl;
+	ImageFitterResults::CompListWriteControl _writeControl = ImageFitterResults::NO_WRITE;
 	Vector<uInt> _chanVec;
 	uInt _curChan;
-	Double _zeroLevelOffsetEstimate;
+	Double _zeroLevelOffsetEstimate = 0;
 	vector<Double> _zeroLevelOffsetSolution, _zeroLevelOffsetError;
-	Int _stokesPixNumber, _chanPixNumber;
+	Int _stokesPixNumber = -1, _chanPixNumber = -1;
 	ImageFitterResults _results;
-	std::unique_ptr<Quantity> _noiseFWHM;
-	Quantity _pixWidth;
+	std::unique_ptr<Quantity> _noiseFWHM{};
+	Quantity _pixWidth{0, "arcsec"};
 
 	const static String _class;
 

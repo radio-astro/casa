@@ -31,8 +31,10 @@
 #include <casa/OS/File.h>
 #include <casa/Quanta/QLogical.h>
 #include <casa/Utilities/Precision.h>
-
+#include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <images/Images/ImageInterface.h>
+
+#include <components/ComponentModels/GaussianShape.h>
 #include <imageanalysis/IO/LogFile.h>
 
 #include <iomanip>
@@ -61,7 +63,7 @@ void ImageFitterResults::writeNewEstimatesFile(const String& filename) const {
 	csys.toWorld(world, pixel);
 	*_log << LogOrigin(_class, __func__);
 	uInt n = _convolvedList.nelements();
-	for (uInt i=0; i<n; i++) {
+	for (uInt i=0; i<n; ++i) {
 		MDirection mdir = _convolvedList.getRefDirection(i);
 		Quantity lat = mdir.getValue().getLat("rad");
 		Quantity longitude = mdir.getValue().getLong("rad");
@@ -238,7 +240,6 @@ String ImageFitterResults::fluxToString(
 			break;
 		}
 	}
-	//peakIntensity = tmpFlux/intensityToFluxConversion;
 	peakIntensity = Quantity(
 		tmpFlux.getValue(),
 		tmpFlux.getUnit() + "/" + intensityToFluxConversion.getUnit()
@@ -264,7 +265,6 @@ String ImageFitterResults::fluxToString(
 	return fluxes.str();
 }
 
-
 vector<String> ImageFitterResults::unitPrefixes(Bool includeCenti) {
 	if (_prefixes.empty()) {
 #if __cplusplus >= 201103L
@@ -282,5 +282,173 @@ vector<String> ImageFitterResults::unitPrefixes(Bool includeCenti) {
 		return _prefixes;
 	}
 }
+
+void ImageFitterResults::writeSummaryFile(
+    const String& filename, const CoordinateSystem& csys
+) const {
+    ostringstream oss;
+    auto fluxUnit = _fluxDensities[0].getUnit();
+    uInt planeWidth = 6;
+    uInt fluxWidth = max(12, fluxUnit.size());
+    auto peakUnit = _peakIntensities[0].getUnit();
+    auto peakWidth = max(12, peakUnit.size());
+    String ref = _convolvedList.getRefDirection(0).getRefString();
+    String longLabel, latLabel;
+    if (ref == "J2000" || ref == "B1950") {
+        longLabel = "RA" + ref;
+        latLabel = "Dec" + ref;
+    }
+    else {
+        longLabel = "Long" + ref;
+        latLabel = "Lat" + ref;
+    }
+    auto longErrLabel = longLabel + "err";
+    auto latErrLabel = latLabel + "err";
+
+    uInt longWidth = max(12, longLabel.size());
+    uInt latWidth = max(12, latLabel.size());
+    uInt longErrWidth = max(12, longErrLabel.size());
+    uInt latErrWidth = max(12, latErrLabel.size());
+    uInt sizeWidth = 12;
+    uInt freqWidth = 15;
+    auto doDecon = _deconvolvedList.nelements() > 0;
+    auto doFreq = csys.hasSpectralAxis();
+
+    oss << "# " << std::setw(planeWidth) << std::right << " " << " "
+        << std::setw(fluxWidth) << std::right << fluxUnit << " "
+        << std::setw(fluxWidth) << std::right << fluxUnit << " "
+        << std::setw(peakWidth) << std::right << peakUnit << " "
+        << std::setw(peakWidth) << std::right << peakUnit << " "
+        << std::setw(longWidth) << std::right << "deg" << " "
+        << std::setw(latWidth) << std::right << "deg" << " "
+        << std::setw(longErrWidth) << std::right << "arcsec" << " "
+        << std::setw(latErrWidth) << std::right << "arcsec" << " "
+        << std::setw(sizeWidth) << std::right << "arcsec" << " "
+        << std::setw(sizeWidth) << std::right << "arcsec" << " "
+        << std::setw(sizeWidth) << std::right << "deg" << " "
+        << std::setw(sizeWidth) << std::right << "arcsec" << " "
+        << std::setw(sizeWidth) << std::right << "arcsec" << " "
+        << std::setw(sizeWidth) << std::right << "deg" << " ";
+    if (doDecon) {
+        oss << std::setw(sizeWidth) << std::right << "arcsec" << " "
+            << std::setw(sizeWidth) << std::right << "arcsec" << " "
+            << std::setw(sizeWidth) << std::right << "deg" << " "
+            << std::setw(sizeWidth) << std::right << "arcsec" << " "
+            << std::setw(sizeWidth) << std::right << "arcsec" << " "
+            << std::setw(sizeWidth) << std::right << "deg" << " ";
+    }
+    if (doFreq) {
+        oss << std::setw(freqWidth) << std::right << "GHz" << " ";
+    }
+    oss << endl;
+
+    oss << "# " << std::setw(planeWidth) << std::right << "Plane" << " "
+        << std::right << std::setw(fluxWidth) << _stokes << " "
+        << std::right << std::setw(fluxWidth) << (_stokes + "err") << " "
+        << std::right << std::setw(peakWidth) << "Peak" << " "
+        << std::right << std::setw(peakWidth) << "PeakErr" << " "
+        << std::right << std::setw(longWidth) << longLabel << " "
+        << std::right << std::setw(latWidth) << latLabel << " "
+        << std::right << std::setw(longErrWidth) << longErrLabel << " "
+        << std::right << std::setw(latErrWidth) << latErrLabel << " "
+        << std::setw(sizeWidth) << std::right << "ConMaj" << " "
+        << std::setw(sizeWidth) << std::right << "ConMin" << " "
+        << std::setw(sizeWidth) << std::right << "ConPA" << " "
+        << std::setw(sizeWidth) << std::right << "ConMajErr" << " "
+        << std::setw(sizeWidth) << std::right << "ConMinErr" << " "
+        << std::setw(sizeWidth) << std::right << "ConPAErr" << " ";
+    if (doDecon) {
+        oss << std::setw(sizeWidth) << std::right << "DeconMaj" << " "
+            << std::setw(sizeWidth) << std::right << "DeconMin" << " "
+            << std::setw(sizeWidth) << std::right << "DeconPA" << " "
+            << std::setw(sizeWidth) << std::right << "DeconMajErr" << " "
+            << std::setw(sizeWidth) << std::right << "DeconMinErr" << " "
+            << std::setw(sizeWidth) << std::right << "DeconPAErr" << " ";
+    }
+    if (doFreq) {
+        oss << std::setw(freqWidth) << std::right << "Freq" << " ";
+    }
+    oss << endl;
+
+    auto n = _convolvedList.nelements();
+    for (uInt i=0; i<n; ++i) {
+        const auto* comp = _convolvedList.getShape(i);
+        if (comp->type() != ComponentType::GAUSSIAN) {
+            continue;
+        }
+        auto angle = comp->refDirection().getAngle().getValue("deg");
+        auto longErr = comp->refDirectionErrorLong().getValue("arcsec");
+        auto latErr = comp->refDirectionErrorLat().getValue("arcsec");
+        auto gauss = dynamic_cast<const GaussianShape*>(comp);
+        auto conMajor = gauss->majorAxis().getValue("arcsec");
+        auto conMinor = gauss->minorAxis().getValue("arcsec");
+        auto conPA = gauss->positionAngle().getValue("deg");
+        auto conMajErr = gauss->majorAxisError().getValue("arcsec");
+        auto conMinErr = gauss->minorAxisError().getValue("arcsec");
+        auto conPAErr = gauss->positionAngleError().getValue("deg");
+        oss << "  " << std::setw(planeWidth) << std::right << std::noshowpos << _channels[i] << " "
+            << std::setw(fluxWidth) << std::right << std::scientific
+                << std::setprecision(fluxWidth-7) << std::showpos << _fluxDensities[i].getValue(fluxUnit) << " "
+            << std::setw(fluxWidth) << std::right << std::scientific
+                << std::setprecision(fluxWidth-6) << std::noshowpos << _fluxDensityErrors[i].getValue(fluxUnit) << " "
+            << std::setw(peakWidth) << std::right << std::scientific
+                << std::setprecision(peakWidth-7) << std::showpos << _peakIntensities[i].getValue() << " "
+            << std::setw(peakWidth) << std::right << std::scientific
+                << std::setprecision(fluxWidth-6) << std::noshowpos << _peakIntensityErrors[i].getValue() << " "
+            << std::setw(longWidth) << std::right << std::scientific
+                << std::setprecision(longWidth-7) << std::showpos << angle[0] << " "
+            << std::setw(latWidth) << std::right << std::scientific
+                << std::setprecision(latWidth-7) << std::showpos << angle[1] << " "
+            << std::setw(longErrWidth) << std::right << std::scientific
+                << std::setprecision(longErrWidth-6) << std::noshowpos << longErr << " "
+            << std::setw(latErrWidth) << std::right << std::scientific
+                << std::setprecision(latWidth-6) << std::noshowpos << latErr << " "
+            << std::setw(sizeWidth) << std::right << std::scientific
+                << std::setprecision(sizeWidth-6) << std::noshowpos << conMajor << " "
+            << std::setw(sizeWidth) << std::right << std::scientific
+                << std::setprecision(sizeWidth-6) << std::noshowpos << conMinor << " "
+            << std::setw(sizeWidth) << std::right << std::scientific
+                << std::setprecision(sizeWidth-7) << std::showpos << conPA << " "
+            << std::setw(sizeWidth) << std::right << std::scientific
+                << std::setprecision(sizeWidth-6) << std::noshowpos << conMajErr << " "
+            << std::setw(sizeWidth) << std::right << std::scientific
+                << std::setprecision(sizeWidth-6) << std::noshowpos << conMinErr << " "
+            << std::setw(sizeWidth) << std::right << std::scientific
+                << std::setprecision(sizeWidth-6) << std::noshowpos << conPAErr << " ";
+        if (doDecon) {
+            const auto* decGauss = dynamic_cast<const GaussianShape*>(
+                _deconvolvedList.getShape(i)
+            );
+            auto deconMajor = decGauss->majorAxis().getValue("arcsec");
+            auto deconMinor = decGauss->minorAxis().getValue("arcsec");
+            auto deconPA = decGauss->positionAngle().getValue("deg");
+            auto deconMajErr = decGauss->majorAxisError().getValue("arcsec");
+            auto deconMinErr = decGauss->minorAxisError().getValue("arcsec");
+            auto deconPAErr = decGauss->positionAngleError().getValue("deg");
+            oss << std::setw(sizeWidth) << std::right << std::scientific
+                << std::setprecision(sizeWidth-6) << std::noshowpos << deconMajor << " "
+            << std::setw(sizeWidth) << std::right << std::scientific
+                << std::setprecision(sizeWidth-6) << std::noshowpos << deconMinor << " "
+            << std::setw(sizeWidth) << std::right << std::scientific
+                << std::setprecision(sizeWidth-7) << std::showpos << deconPA << " "
+            << std::setw(sizeWidth) << std::right << std::scientific
+                << std::setprecision(sizeWidth-6) << std::noshowpos << deconMajErr << " "
+            << std::setw(sizeWidth) << std::right << std::scientific
+                << std::setprecision(sizeWidth-6) << std::noshowpos << deconMinErr << " "
+            << std::setw(sizeWidth) << std::right << std::scientific
+                << std::setprecision(sizeWidth-6) << std::noshowpos << deconPAErr << " ";
+        }
+        if (doFreq) {
+            Double freq;
+            csys.spectralCoordinate().toWorld(freq, _channels[i]);
+            oss << std::setw(freqWidth) << std::right << std::scientific
+                << std::setprecision(freqWidth-6) << std::noshowpos << freq << " ";
+        }
+        oss << endl;
+    }
+    LogFile summary(filename);
+    summary.write(oss.str(), True, True);
+}
+
 
 }
