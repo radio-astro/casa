@@ -14,7 +14,7 @@ try:
 except:
     def_rethrow = False
 
-__rethrow_casa_exceptions = True
+__rethrow_casa_exceptions = False
 
 
 
