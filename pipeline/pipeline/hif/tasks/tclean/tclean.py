@@ -305,6 +305,12 @@ class Tclean(cleanbase.CleanBase):
                                 sensitivity=sequence_manager.sensitivity,
                                 result=None)
 
+        # Store modified sensitivity
+        # TODO: Do this here rather than through cleanbase
+        if (result.sensitivity != sequence_manager.sensitivity):
+            LOG.info('Adjusting sensitivity for continuum selection from %s Jy to %s Jy by a factor %s' % (sequence_manager.sensitivity, result.sensitivity, result.sensitivity / sequence_manager.sensitivity))
+            sequence_manager.sensitivity = result.sensitivity
+
         # Determine masking limits depending on PB
         self.pblimit_image, self.pblimit_cleanmask = \
             inputs.heuristics.pblimits(result.flux)
@@ -329,31 +335,51 @@ class Tclean(cleanbase.CleanBase):
 
         # Check dynamic range and adjust threshold
         qaTool = casatools.quanta
-        dirty_dynamic_range = residual_max / non_cleaned_rms
-        if (dirty_dynamic_range > 100.):
-            n_dr = 5.
-        elif (50. < dirty_dynamic_range <= 100.):
-            n_dr = 4.
-        elif (20. < dirty_dynamic_range <= 50.):
-            n_dr = 3.
-        elif (dirty_dynamic_range <= 20.):
-            n_dr = 2.
+        dirty_dynamic_range = residual_max / sequence_manager.sensitivity
 
         old_threshold = qaTool.convert(sequence_manager.threshold, 'Jy')['value']
         if (inputs.intent == 'TARGET'):
-            new_threshold = old_threshold* n_dr
+            if (context.observing_run.get_measurement_sets()[0].antennas[0].diameter == 12.0):
+                if (dirty_dynamic_range > 200.):
+                    maxSciEDR = 200.0
+                    new_threshold = max(old_threshold, residual_max / maxSciEDR * inputs.tlimit)
+                else:
+                    if (dirty_dynamic_range > 100.):
+                        n_dr = 5.
+                    elif (50. < dirty_dynamic_range <= 100.):
+                        n_dr = 4.
+                    elif (20. < dirty_dynamic_range <= 50.):
+                        n_dr = 3.
+                    elif (dirty_dynamic_range <= 20.):
+                        n_dr = 2.
+                    new_threshold = old_threshold * n_dr
+            else:
+                if (dirty_dynamic_range > 40.):
+                    maxSciEDR = 40.0
+                    new_threshold = max(old_threshold, residual_max / maxSciEDR * inputs.tlimit)
+                else:
+                    if (dirty_dynamic_range > 20.):
+                        n_dr = 5.
+                    elif (10. < dirty_dynamic_range <= 20.):
+                        n_dr = 4.
+                    elif (4. < dirty_dynamic_range <= 10.):
+                        n_dr = 3.
+                    elif (dirty_dynamic_range <= 4.):
+                        n_dr = 2.
+                    new_threshold = old_threshold * n_dr
         else:
             # Calibrators are usually dynamic range limited. The sensitivity from apparentsens
             # is not a valid estimate for the threshold. Use a heuristic based on the dirty peak
             # and some maximum expected dynamic range (EDR) values.
             if (context.observing_run.get_measurement_sets()[0].antennas[0].diameter == 12.0):
-                maxEDR = 1000.0
+                maxCalEDR = 1000.0
             else:
-                maxEDR = 200.0
-            new_threshold = max(old_threshold, residual_max / maxEDR * inputs.tlimit)
+                maxCalEDR = 200.0
+            new_threshold = max(old_threshold, residual_max / maxCalEDR * inputs.tlimit)
+
         if (new_threshold != old_threshold):
             sequence_manager.threshold = '%sJy' % (new_threshold)
-            LOG.info('Modified threshold from %s Jy to %s Jy' % (old_threshold, new_threshold))
+            LOG.info('Modified threshold from %s Jy to %s Jy based on dynamic range heuristic (dirty dynamic range: %.1f)' % (old_threshold, new_threshold, dirty_dynamic_range))
 
         # Compute automatic niter estimate
         old_niter = sequence_manager.niter
@@ -365,7 +391,7 @@ class Tclean(cleanbase.CleanBase):
         new_niter = int(round(new_niter_f, -int(numpy.log10(new_niter_f))))
         if (new_niter != old_niter):
             sequence_manager.niter = new_niter
-            LOG.info('Modified niter from %d to %d' % (old_niter, new_niter))
+            LOG.info('Modified niter from %d to %d based on mask vs. beam size heuristic' % (old_niter, new_niter))
 
         iterating = True
         iter = 1
@@ -500,7 +526,7 @@ class Tclean(cleanbase.CleanBase):
                         source_name = [f.source.name for f in ms.fields if (utils.dequote(f.name) == utils.dequote(field) and inputs.intent in f.intents)][0]
                         diameter = numpy.median([a.diameter for a in ms.antennas])
                         overlap_factor = mosaicoverlap.mosaicOverlapFactorMS(ms, source_name, intSpw, diameter)
-
+                        LOG.info('Applying mosaic overlap factor of %s.' % (overlap_factor))
                         sensitivities.append(numpy.median(field_sensitivities) / overlap_factor)
                     else:
                         with casatools.ImagerReader(ms.name) as imTool:
@@ -540,6 +566,7 @@ class Tclean(cleanbase.CleanBase):
                     channel_rms_factor = numpy.sqrt(abs((max_frequency - min_frequency) / effective_channel_width))
                 else:
                     channel_rms_factor = numpy.sqrt(abs((max_frequency - min_frequency) / qaTool.convert(inputs.width, 'GHz')['value']))
+            LOG.info('Applying effective channel width correction factor of %s.' % (channel_rms_factor))
             sensitivity *= channel_rms_factor
         else:
             channel_rms_factor = 1.0
