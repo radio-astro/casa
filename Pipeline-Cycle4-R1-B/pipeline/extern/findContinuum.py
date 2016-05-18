@@ -30,7 +30,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: findContinuum.py,v 1.66 2016/04/06 21:36:28 we Exp $" 
+    myversion = "$Id: findContinuum.py,v 1.69 2016/05/17 15:45:19 we Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -50,7 +50,7 @@ def is_binary(filename):
 
 def getMemorySize():
     try:
-        return os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')
+        return(os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES'))
     except ValueError:
         # SC_PHYS_PAGES can be missing on OS X
         return int(subprocess.check_output(['sysctl', '-n', 'hw.memsize']).strip())
@@ -168,6 +168,9 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
         chanInfo = numberOfChannelsInCube(img, returnChannelWidth=True, returnFreqs=True, 
                                           header=header)
         nchan,firstFreq,lastFreq,channelWidth = chanInfo
+        if (nchan < 2):
+            print "You must have more than one channel in the image."
+            return
         channelWidth = abs(channelWidth)
     else:
         header = []
@@ -233,11 +236,11 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
             a,b,c,d = atmosphereVariation(img, header, chanInfo, airmass=airmass, pwv=pwv)
             if (c > skyTempThreshold):
                 meanSpectrumMethod = 'peakOverMad'
-                print "Switching to %s since", meanSpectrumMethod
+                print "Switching to %s since %f > %f" % (meanSpectrumMethod,c,skyTempThreshold)
     if (centralArcsec == 'auto' and img != ''):
         npixels = float(nchan)*naxis1*naxis2
         maxpixels = bytes/67 # float(1024)*1024*960
-        if (npixels > maxpixels and meanSpectrumMethod.find('meanAboveThreshold')>=0):
+        if (npixels > maxpixels): # and meanSpectrumMethod.find('meanAboveThreshold')>=0):
             print "Excessive number of pixels (%.0f > %.0f)" % (npixels,maxpixels)
             totalWidthArcsec = abs(cdelt2*naxis2)
             if (mask == ''):
@@ -247,6 +250,7 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
                 centralArcsecField = widthOfMaskArcsec(mask)
             print "Reducing image width examined from %.2f to %.2f arcsec to avoid memory problems." % (totalWidthArcsec,centralArcsecField)
         else:
+            print "Using whole field since npixels=%d < maxpixels=%d" % (npixels, maxpixels)
             centralArcsecField = -1  # use the whole field
     elif (centralArcsec == 'fwhm' and img != ''):
         centralArcsecField = primaryBeamArcsec(frequency=getFitsBeam(image)[-1],
