@@ -143,6 +143,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//		printOut("FromcleanComplete ", False);
 
 		int stopCode=0;
+                
+		//os << "itsMajorDone="<<itsMajorDone<<" itsIterDone="<<itsIterDone<< " itsPrevPeakResidual="<<itsPrevPeakResidual<<" itsPeakResidual="<<itsPeakResidual<<" itsStopFlag="<<itsStopFlag<<LogIO::POST;
 
 		/// This may interfere with some other criterion... check.
 		if ( itsMajorDone==0 && itsIterDone==0 ) { stopCode=0; }
@@ -167,8 +169,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		    //cout << "Prev Res : " << itsPrevPeakResidual << "   current res : " << itsPeakResidual << endl;
 		    if( fabs( itsPrevPeakResidual - itsPeakResidual )<1e-10) 
 		      {stopCode = 4;}
+
+                    // another non-convergent condition: diverging
+                    else if ( itsIterDone > 0 && fabs( itsPrevPeakResidual) < fabs(itsPeakResidual) ) 
+                      {stopCode = 5;}
 		  }
-		
+	        
 		//		os << "Peak residual : " << itsPeakResidual << " and " << itsIterDone << " iterations."<< LogIO::POST;
 		//cout << "cleancomp : stopcode : " << stopCode << endl;
 
