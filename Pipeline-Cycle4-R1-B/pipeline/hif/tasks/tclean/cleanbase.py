@@ -324,9 +324,18 @@ class CleanBase(basetask.StandardTaskTemplate):
         for freq_range in utils.merge_ranges(freq_ranges):
             aggregate_bw = qaTool.add(aggregate_bw, qaTool.sub('%sGHz' % (freq_range[1]), '%sGHz' % (freq_range[0])))
 
-        # Adjust sensitivity according to selection bandwidth
+        # Adjust threshold according to selection bandwidth
+        # TODO: Adjust sensitivity as well. Need this code in tclean.py to correct the sensitivity.
+        #       For now pass back via result object.
         old_threshold = qaTool.convert(inputs.threshold, 'Jy')['value']
-        new_threshold = old_threshold * sqrt(qaTool.convert(total_bw, 'GHz')['value'] / qaTool.convert(aggregate_bw, 'GHz')['value'])
+        total_bw_GHz = qaTool.convert(total_bw, 'GHz')['value']
+        aggregate_bw_GHz = qaTool.convert(aggregate_bw, 'GHz')['value']
+        contsel_factor = sqrt(total_bw_GHz / aggregate_bw_GHz)
+        if ((contsel_factor != 1.0) and (old_threshold != 0.0)):
+            new_threshold = old_threshold * contsel_factor
+            LOG.info('Adjusting threshold for continuum selection from %s Jy to %s Jy by a factor %s' % (old_threshold, new_threshold, contsel_factor))
+        else:
+            new_threshold = old_threshold
 
         # Catch trivial case which is broken up to CASA 4.6.0 / 4.7.44 (CAS-8576)
         if (new_threshold > result._residual_max):
@@ -484,7 +493,7 @@ class CleanBase(basetask.StandardTaskTemplate):
         # TODO: Save channel selection in result for weblog.
         #       Save total frequency bandwidth for weblog.
         result.set_threshold(inputs.threshold)
-        result.set_sensitivity(inputs.sensitivity)
+        result.set_sensitivity(inputs.sensitivity * contsel_factor)
         result.set_aggregate_bw(aggregate_bw)
 
         return result
