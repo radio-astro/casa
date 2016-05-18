@@ -5,7 +5,8 @@ import numpy
 import math
 import sys
 import exceptions
-from tasks import mstransform, cvel, cvel2, listpartition, listobs, setjy, flagdata, split, applycal
+import filecmp
+from tasks import mstransform, cvel, cvel2, listpartition, listobs, setjy, flagdata, split, applycal, importasdm, flagcmd
 from taskinit import mstool, tbtool, msmdtool, aftool
 from __main__ import default
 import testhelper as th
@@ -259,6 +260,16 @@ class test_base(unittest.TestCase):
 
         os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
         default(mstransform)
+
+    def setUp_flags(self):
+        asdmname = 'test_uid___A002_X997a62_X8c-short' # Flag.xml is modified
+        self.vis = asdmname+'.ms'
+        self.flagfile = asdmname+'_cmd.txt'
+
+        asdmpath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/importasdm/'
+        os.system('ln -sf '+asdmpath+asdmname)
+        importasdm(asdmname, convert_ephem2geo=False, flagbackup=False, process_syspower=False, lazy=True, 
+                   scans='1', savecmds=True, overwrite=True)
                    
     def createMMS(self, msfile, axis='auto',scans='',spws=''):
         '''Create MMSs for tests with input MMS'''
@@ -5470,6 +5481,24 @@ class test_no_reindexing(test_base_compare):
         self.excludecols = ['DATA_DESC_ID','FIELD_ID','FLAG_CATEGORY','WEIGHT_SPECTRUM','SIGMA_SPECTRUM']
         self.generate_tolerance_map()
         self.compare_main_table_columns()
+
+class test_splitUpdateFlagCmd(test_base):
+    
+    def setUp(self):
+        self.datapath = '.'
+        self.setUp_flags()
+
+    def tearDown(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf '+ self.outputms)
+        os.system('rm -rf list.obs')
+        
+    def test_split_update_flagcmd(self):
+        '''split: Do not update FLAG_CMD table when spw selection in FLAG_CMD is by name'''
+        self.outputms = 'mst_split_spwName.ms'
+        mstransform(vis=self.vis, outputvis=self.outputms, spw='1,2', datacolumn='data')
+        flagcmd(self.outputms, action='list', savepars=True, outfile='mstspwnames.txt', useapplied=True)
+        self.assertTrue(filecmp.cmp(self.flagfile, 'mstspwnames.txt',1))
         
 # Cleanup class
 class Cleanup(test_base):
@@ -5527,6 +5556,7 @@ def suite():
             test_otf_calibration,
             test_polarization_reindex,
             test_no_reindexing,
+            test_splitUpdateFlagCmd,
             # jagonzal: Replace median with mean to capture overall behaviour
             # test_spectrum_transformations_median,
             # jagonzal: mstransform has been optimized to not use weight spectrum for chan. avg. DATA when 
