@@ -1664,6 +1664,7 @@ Bool MSTransformDataHandler::fillFieldTable()
 		const MSField &inputField = mssel_p.field();
 		MSField &outputField = msOut_p.field();
 		TableCopy::copyRows(outputField, inputField);
+		copyEphemerisTable(msField);
 		return True;
 	}
 
@@ -1705,38 +1706,7 @@ Bool MSTransformDataHandler::fillFieldTable()
 
 		if (nAddedCols > 0)
 		{
-			ROScalarColumn<Int> eID(fieldIn.ephemerisId());
-
-			if (eID.hasContent())
-			{
-				String destPathName = Path(msOut_p.field().tableName()).absoluteName();
-
-				for (uInt k = 0; k < fieldid_p.nelements(); ++k)
-				{
-
-					Int theEphId = eID(fieldid_p[k]);
-
-					// There is an ephemeris attached to this field
-					if (theEphId > -1)
-					{
-						Path ephPath = Path(fieldIn.ephemPath(fieldid_p[k]));
-
-						// Copy the ephemeris table over to the output FIELD table
-						if (ephPath.length() > 0)
-						{
-							Directory origEphemDir(ephPath);
-							origEphemDir.copy(destPathName + "/" + ephPath.baseName());
-
-							os 	<< LogIO::NORMAL
-								<< "Transferring ephemeris " << ephPath.baseName()
-								<< " for output field " << name(fieldid_p[k])
-								<< LogIO::POST;
-						}
-					}
-
-					msField.ephemerisId().put(k, theEphId);
-				}
-			}
+			copyEphemerisTable(msField);
 
 			// need to copy the reference column
 			if (!nameVarRefColDelayDir.empty())
@@ -1783,6 +1753,49 @@ Bool MSTransformDataHandler::fillFieldTable()
 	}
 
 	return True;
+}
+
+Bool MSTransformDataHandler::copyEphemerisTable(MSFieldColumns & msField)
+{
+	LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
+	const ROMSFieldColumns& fieldIn = mscIn_p->field();
+	ROScalarColumn<Int> eID(fieldIn.ephemerisId());
+
+	if (eID.hasContent())
+	{
+		String destPathName = Path(msOut_p.field().tableName()).absoluteName();
+		ROScalarColumn<String> name(fieldIn.name());
+
+		for (uInt k = 0; k < fieldid_p.nelements(); ++k)
+		{
+
+			Int theEphId = eID(fieldid_p[k]);
+
+			// There is an ephemeris attached to this field
+			if (theEphId > -1)
+			{
+				Path ephPath = Path(fieldIn.ephemPath(fieldid_p[k]));
+
+				// Copy the ephemeris table over to the output FIELD table
+				if (ephPath.length() > 0)
+				{
+					Directory origEphemDir(ephPath);
+					origEphemDir.copy(destPathName + "/" + ephPath.baseName());
+
+					os 	<< LogIO::NORMAL
+							<< "Transferring ephemeris " << ephPath.baseName()
+							<< " for output field " << name(fieldid_p[k])
+							<< LogIO::POST;
+				}
+			}
+			if (reindex_p)
+			{
+				msField.ephemerisId().put(k, theEphId);
+			}
+		}
+	}
+
+	return true;
 }
 
 // -----------------------------------------------------------------------

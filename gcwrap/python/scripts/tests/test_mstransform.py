@@ -6,14 +6,11 @@ import math
 import sys
 import exceptions
 import filecmp
+import glob
 from tasks import mstransform, cvel, cvel2, listpartition, listobs, setjy, flagdata, split, applycal, importasdm, flagcmd
 from taskinit import mstool, tbtool, msmdtool, aftool
 from __main__ import default
 import testhelper as th
-import partitionhelper as ph
-from recipes.listshapes import listshapes
-from parallel.parallel_data_helper import ParallelDataHelper
-from unittest.case import expectedFailure
 
 
 # Define the root for the data files
@@ -260,16 +257,6 @@ class test_base(unittest.TestCase):
 
         os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
         default(mstransform)
-
-    def setUp_flags(self):
-        asdmname = 'test_uid___A002_X997a62_X8c-short' # Flag.xml is modified
-        self.vis = asdmname+'.ms'
-        self.flagfile = asdmname+'_cmd.txt'
-
-        asdmpath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/importasdm/'
-        os.system('ln -sf '+asdmpath+asdmname)
-        importasdm(asdmname, convert_ephem2geo=False, flagbackup=False, process_syspower=False, lazy=True, 
-                   scans='1', savecmds=True, overwrite=True)
                    
     def createMMS(self, msfile, axis='auto',scans='',spws=''):
         '''Create MMSs for tests with input MMS'''
@@ -5482,6 +5469,45 @@ class test_no_reindexing(test_base_compare):
         self.generate_tolerance_map()
         self.compare_main_table_columns()
 
+
+class test_no_reindexing_ephemeris_copy(test_base):
+    #Test copying ephemeris table using no-reindexing feature CAS-8618
+    def setUp(self):
+        self.outvis = 'split_ephemeris_no_reindex.ms'
+        self.splitvis = 'split_ephemeris_no_reindex.split.ms'
+        self.asdm = 'uid___A002_X997a62_X8c-short'
+        datapath = os.environ.get('CASAPATH').split()[0] + "/data/regression/asdm-import/input/"
+        os.system('cp -RL '+datapath + self.asdm +' '+ self.asdm)
+        default(importasdm)
+        default(mstransform)
+
+        importasdm(self.asdm, vis=self.outvis, convert_ephem2geo=True, process_pointing=False, flagbackup=False)
+
+    def tearDown(self):
+        os.system('rm -rf '+ self.asdm)
+        os.system('rm -rf '+ self.outvis)
+        os.system('rm -rf '+ self.splitvis)
+
+    def test_ephemeris_copy(self):
+        mstransform(self.outvis, outputvis=self.splitvis, datacolumn='DATA', reindex=False)
+        eph = glob.glob(os.path.join(self.splitvis, 'FIELD', 'EPHEM*.tab'))
+        self.assertEqual(len(eph), 2)
+        for e in eph:
+            mytb = tbtool()
+            mytb.open(e)
+            mytb.close()
+
+        os.system('rm -rf '+ self.splitvis)
+
+        mstransform(self.outvis, outputvis=self.splitvis, datacolumn='DATA', reindex=False, field='0')
+        eph = glob.glob(os.path.join(self.splitvis, 'FIELD', 'EPHEM*.tab'))
+        self.assertEqual(len(eph), 1)
+        for e in eph:
+            mytb = tbtool()
+            mytb.open(e)
+            mytb.close()
+
+
 class test_splitUpdateFlagCmd(test_base):
     
     def setUp(self):
@@ -5556,6 +5582,7 @@ def suite():
             test_otf_calibration,
             test_polarization_reindex,
             test_no_reindexing,
+            test_no_reindexing_ephemeris_copy,
             test_splitUpdateFlagCmd,
             # jagonzal: Replace median with mean to capture overall behaviour
             # test_spectrum_transformations_median,

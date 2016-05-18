@@ -311,6 +311,8 @@ public:
 	void setReindex(Bool reindex) {reindex_p = reindex;};
 
 protected:
+	// copy ephemeris table and reindex field table if requested
+	Bool copyEphemerisTable(MSFieldColumns & msField);
 
 	// Initialized* by ctors.  (Maintain order both here and in ctors.)
 	//  * not necessarily to anything useful.
