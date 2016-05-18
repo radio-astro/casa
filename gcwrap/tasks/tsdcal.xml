@@ -218,7 +218,6 @@ spectrum is
         </equals>
         <equals value="otf,tsys,apply">
           <default param="fraction"><value type="string">10%</value></default>
-          <default param="noff"><value type="int">-1</value></default>
           <default param="applytable"><value type="string"></value></default>
           <default param="interp"><value type="string"></value></default>
           <default param="spwmap"><value type="dict">{}</value></default>

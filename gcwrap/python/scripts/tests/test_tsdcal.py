@@ -947,80 +947,266 @@ class tsdcal_test_otfraster(tsdcal_test_base):
         """
         self.result = tsdcal(infile=self.infile, outfile=self.outfile,
                              calmode='otfraster', fraction='90%', noff=3)
+
+def assert_true(condition,err_msg):
+    """Assertion not optimized away -contrary to Python assert- when Python interpreter is run in optimized mode (__debug__=False)"""
+    if not condition:
+        raise RuntimeError(err_msg)
         
-class tsdcal_test_otf(tsdcal_test_base):   
+class CasaTableChecker:
+    """Base class for OTF mode checkers"""
+    def __init__(self,tbl_path): 
+        self.tb = gentools(['tb'])[0]  
+        self.path = tbl_path
+        self.tb.open(self.path) # Raises RuntimeError on failure
+        assert self.tb.ok()
+    def __del__(self):
+        self.tb.close()
+        
+class MsCalTableChecker(CasaTableChecker):
+    """OTF mode checker: checking equality of 2 ms_caltable fparam columns within specified tolerance"""
+    def __init__(self,tbl_path,tol=1e-6):
+        CasaTableChecker.__init__(self, tbl_path)
+        assert_true('FPARAM' in self.tb.colnames(),
+                   str(self.path) + ': FPARAM column missing')
+        self.fparam = self.tb.getcol('FPARAM')
+        self.tol=tol
+    def __eq__(self,other):
+        assert_true(self.fparam.shape == other.fparam.shape,
+                   'FPARAM columns: shape mismatch')
+        assert_true(numpy.allclose(self.fparam,other.fparam,atol=self.tol,rtol=0.0),
+                   'FPARAM columns: error exceeds tolerance='+str(self.tol))
+        return True
+    def __del__(self):
+        CasaTableChecker.__del__(self)
+        
+class MsCorrectedDataChecker(CasaTableChecker):
+    """OTF mode checker: checking equality of 2 ms corrected_data columns within specified tolerance"""
+    def __init__(self,tbl_path,convert_to_kelvin=False,tol_real=1e-6):
+        CasaTableChecker.__init__(self, tbl_path)
+        self.tol_real = tol_real
+        assert_true('CORRECTED_DATA' in self.tb.colnames(),
+                   str(self.path) + ': CORRECTED_DATA column missing')
+        self.cdata = self.tb.getcol('CORRECTED_DATA')
+        if convert_to_kelvin:
+            tbl_syscal = gentools(['tb'])[0]  
+            tbl_syscal.open(os.path.join(tbl_path,'SYSCAL'))
+            tsys_spectrum = tbl_syscal.getcol('TSYS_SPECTRUM')
+            self.cdata = tsys_spectrum * self.cdata
+            tbl_syscal.close()
+            
+    def __eq__(self,other):
+        assert_true(self.cdata.shape == other.cdata.shape,
+                   'CORRECTED_DATA: shape: mismatch')
+        assert_true((self.cdata.imag == other.cdata.imag).all(),
+                   'CORRECTED_DATA: imaginary part: mismatch')
+        assert_true(numpy.allclose(self.cdata.real,other.cdata.real,atol=self.tol_real,rtol=0.0),
+                   'CORRECTED_DATA: real part: error exceeds tolerance='+str(self.tol_real))
+        return True
+    def __del__(self):
+        CasaTableChecker.__del__(self)
+          
+        
+class tsdcal_test_otf(unittest.TestCase):   
     """
-    Unit test for task tsdcal (OTF non-raster sky calibration).
+    Unit tests for task tsdcal,
+    sky calibration mode = 'otf' : On-The-Fly (OTF) *non-raster* 
 
     The list of tests:
-    test_otf07 --- OTF calibration ('otf') with default setting
+    Test       | Input            | Edges    | Calibration 
+    Name       | MS               | Fraction | Mode
+    ==========================================================================
+    test_otf01 | squares.dec60_cs | 10%      | otf
+    test_otf02 | squares.dec60_cs | 20%      | otf
+    test_otf03 | lissajous        | 10%      | otf    
+    test_otf04 | lissajous        | 20%      | otf    
+    test_otf05 | squares.dec60_cs | 10%      | otf,apply
+    test_otf06 | lissajous        | 10%      | apply  
+    test_otf07 | lissajous        | 10%      | otf,tsys,apply     
     """
-    invalid_argument_case = tsdcal_test_base.invalid_argument_case
-    exception_case = tsdcal_test_base.exception_case
-    infile = 'lissajous.ms'
-    applytable = infile + '.sky'
     
-    @staticmethod
-    def calculate_expected_value(table, numedge=1):
-        expected_value = {}
-        # TODO
-      
-        return expected_value
-
-    @property
-    def outfile(self):
-        return self.applytable
-
-    def setUp(self):
-        self._setUp([self.infile], tsdcal)
-
+    # Required checkers:
+    # - compare 2 calibration tables
+    # - compare 2 corrected data
+    datapath=os.environ.get('CASAPATH').split()[0]+ '/data/regression/unittest/tsdcal/'
+    ref_datapath=os.path.join(datapath,'otf_reference_data')
+    tsdcal_params = {}
+    current_test_params = {}
+        
+    def setup(self):
+        # Copy input MS into current directory
+        infile = self.tsdcal_params['infile']
+        if os.path.exists(infile):
+            shutil.rmtree(infile)
+        copytree_ignore_subversion(self.datapath, infile)
+        # Delete output calibration table if any
+        if 'outfile' in self.tsdcal_params :
+            outfile = self.tsdcal_params['outfile']
+            if os.path.exists(outfile):
+                shutil.rmtree(outfile)
+        # Compute reference calibrated ms if required
+        if 'compute_ref_ms' in self.current_test_params:
+            # Create a second copy of input MS
+            ref_ms_name = 'ref_'+infile
+            if os.path.exists(ref_ms_name):
+                shutil.rmtree(ref_ms_name)
+            shutil.copytree(src=infile,dst=ref_ms_name)
+            # Calibrate it using current test caltable
+            tsdcal(infile=ref_ms_name,calmode='apply',applytable=self.ref_caltable())
+            # Update test params
+            self.current_test_params['ref_calibrated_ms'] = ref_ms_name
+            
     def tearDown(self):
-        self._tearDown([self.infile, self.outfile])
-
-    def normal_case(numedge=1, **kwargs):
+        casalog.post("tearDown")
+        infile = self.tsdcal_params['infile']
+        if os.path.exists(infile):
+            shutil.rmtree(infile)
+        if 'outfile' in self.tsdcal_params:
+            outfile = self.tsdcal_params['outfile']
+            if os.path.exists(outfile):
+                shutil.rmtree(outfile)
+        if 'compute_ref_ms' in self.current_test_params:
+            ref_ms_name = self.ref_calibrated_ms()
+            if os.path.exists(ref_ms_name):
+                shutil.rmtree(ref_ms_name)
+            
+            
+    def run_tsdcal(self):
+        self.setup()
+        tsdcal(**self.tsdcal_params)
+        
+    def ref_caltable(self):
+        assert_true('ref_caltable' in self.current_test_params,'tsdcal_test_otf internal error')
+        return os.path.join(self.ref_datapath,self.current_test_params['ref_caltable'])
+    
+    def ref_calibrated_ms(self):
+        assert_true('ref_calibrated_ms' in self.current_test_params,'tsdcal_test_otf internal error')
+        ref_ms_name = self.current_test_params['ref_calibrated_ms']
+        if 'compute_ref_ms' in self.current_test_params:
+            return ref_ms_name
+        else:
+            return os.path.join(self.ref_datapath,ref_ms_name)
+    
+    def test_otf01(self):
         """
-        Decorator for tests verifying normal execution result.
-
-        numedge --- expected number of edge points
-        selection --- data selection parameter as dictionary
-
-        Here, expected result is as follows:
-            - total number of rows is 24
-            - number of antennas is 2
-            - number of spectral windows is 2
-            - each (antenna,spw) pair has 6 rows
+        test_otf01 --- Compute calibration table. calmode='otf' ms=squares.dec60_cs.ms
         """
-        def wrapper(func):
-            import functools
-            @functools.wraps(func)
-            def _wrapper(self):
-                func(self)
+        self.tsdcal_params = {
+            'infile':'squares.dec60_cs.ms',
+            'calmode':'otf',
+            'outfile':'test_otf01.ms_caltable'
+        }
+        self.current_test_params = {
+            'ref_caltable':'squares.dec60_cs.edges_fraction_0.1.ms_caltable'
+        }
+        expected_result = MsCalTableChecker(self.ref_caltable())
+        self.run_tsdcal()
+        tsdcal_result = MsCalTableChecker(self.tsdcal_params['outfile'])
+        self.assertEqual(tsdcal_result,expected_result) # AlmostEqual semantics
+        
+    def test_otf02(self):
+        """
+        test_otf02 --- Compute calibration table. calmode='otf' ms=squares.dec60_cs.ms edges_fraction=20%
+        """
+        self.tsdcal_params = {
+            'infile':'squares.dec60_cs.ms',
+            'calmode':'otf',
+            'outfile':'test_otf02.ms_caltable',
+            'fraction':0.2
+        }
+        self.current_test_params = {
+            'ref_caltable':'squares.dec60_cs.edges_fraction_0.2.ms_caltable'
+        }
+        expected_result = MsCalTableChecker(self.ref_caltable())
+        self.run_tsdcal()
+        tsdcal_result = MsCalTableChecker(self.tsdcal_params['outfile'])
+        self.assertEqual(tsdcal_result,expected_result) # AlmostEqual semantics
 
-                # sanity check
-                self.assertIsNone(self.result, msg='The task must complete without error')
-                self.assertTrue(os.path.exists(self.outfile), msg='Output file is not properly created.')
+    def test_otf03(self):
+        """
+        test_otf03 --- Compute calibration table. calmode='otf' ms=lissajous.ms
+        """
+        self.tsdcal_params = {
+            'infile':'lissajous.ms',
+            'calmode':'otf',
+            'outfile':'test_otf03.ms_caltable'
+        }
+        self.current_test_params = {
+            'ref_caltable':'lissajous.edges_fraction_0.1.ms_caltable'
+        }
+        expected_result = MsCalTableChecker(self.ref_caltable())
+        self.run_tsdcal()
+        tsdcal_result = MsCalTableChecker(self.tsdcal_params['outfile'])
+        self.assertEqual(tsdcal_result,expected_result) # AlmostEqual semantics
 
-                # check number of rows
-                # TODO
-                
-                # check sky spectra
-                # TODO
+    def test_otf04(self):
+        """
+        test_otf04 --- Compute calibration table. calmode='otf' ms=lissajous.ms edges_fraction=20%
+        """
+        self.tsdcal_params = {
+            'infile':'lissajous.ms',
+            'calmode':'otf',
+            'outfile':'test_otf04.ms_caltable',
+            'fraction':'20%'
+        }
+        self.current_test_params = {
+            'ref_caltable':'lissajous.edges_fraction_0.2.ms_caltable'
+        }
+        expected_result = MsCalTableChecker(self.ref_caltable())
+        self.run_tsdcal()
+        tsdcal_result = MsCalTableChecker(self.tsdcal_params['outfile'])
+        self.assertEqual(tsdcal_result,expected_result) # AlmostEqual semantics 
+        
+    def test_otf05(self):
+        """
+        test_otf05 --- Sky calibration. calmode='otf,apply' ms=squares.dec60_cs.ms
+        """
+        self.tsdcal_params = {
+            'infile':'squares.dec60_cs.ms',
+            'calmode':'otf,apply'
+        }
+        self.current_test_params = {
+            'ref_caltable':'squares.dec60_cs.edges_fraction_0.1.ms_caltable',
+            'compute_ref_ms':True
+        }
+        self.run_tsdcal()
+        expected_result = MsCorrectedDataChecker(self.ref_calibrated_ms())
+        tsdcal_result = MsCorrectedDataChecker(self.tsdcal_params['infile'])
+        self.assertEqual(tsdcal_result,expected_result) # AlmostEqual semantics
+        
+    def test_otf06(self):
+        """
+        test_otf06 --- Sky calibration reusing caltable pre-computed with calmode='otf'. calmode='apply' ms=lissajous.ms
+        """
+        self.tsdcal_params = {
+            'infile':'lissajous.ms',
+            'calmode':'apply',
+            'applytable':os.path.join(self.ref_datapath,'lissajous.edges_fraction_0.1.ms_caltable')
+        }
+        self.current_test_params = {
+            'ref_calibrated_ms':'lissajous.edges_fraction_0.1.sky.ms'
+        }
+        expected_result = MsCorrectedDataChecker(self.ref_calibrated_ms())
+        self.run_tsdcal()
+        tsdcal_result = MsCorrectedDataChecker(self.tsdcal_params['infile'])
+        self.assertEqual(tsdcal_result,expected_result) # AlmostEqual semantics
 
-            return _wrapper
-        return wrapper
-
-
-
-    @normal_case(numedge=1)
     def test_otf07(self):
         """
-        test_otf07 --- OTF calibration ('otf') with default setting
+        test_otf07 --- Sky calibration + Tsys conversion, composite calmode='otf,tsys,apply'. ms=lissajous.ms
         """
-        self.result = tsdcal(infile=self.infile, outfile=self.outfile,
-                             calmode='otf')
-
-
-        
+        self.tsdcal_params = {
+            'infile':'lissajous.ms',
+            'calmode':'otf,tsys,apply',
+        }
+        self.current_test_params = {
+            'ref_calibrated_ms':'lissajous.edges_fraction_0.1.sky.ms'
+        }
+        expected_result = MsCorrectedDataChecker(self.ref_calibrated_ms(),convert_to_kelvin=True)
+        self.run_tsdcal()
+        tsdcal_result = MsCorrectedDataChecker(self.tsdcal_params['infile'])
+        self.assertEqual(tsdcal_result,expected_result) # AlmostEqual semantics            
+    
 
 # interpolator utility for testing
 class Interpolator(object):
@@ -1611,7 +1797,7 @@ def suite():
     return [  tsdcal_test
             , tsdcal_test_ps
             , tsdcal_test_otfraster
-            #, tsdcal_test_otf
+            , tsdcal_test_otf
             , tsdcal_test_apply]
 
 
