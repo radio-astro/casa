@@ -5,7 +5,8 @@ def imfit(
     mask, includepix, excludepix, residual,
     model, estimates, logfile, append,
     newestimates, complist, overwrite, dooff,
-    offset, fixoffset, stretch, rms, noisefwhm
+    offset, fixoffset, stretch, rms, noisefwhm,
+    summary
 ):
     casalog.origin('imfit')
     myia = iatool()
@@ -20,7 +21,7 @@ def imfit(
             append=append, newestimates=newestimates,
             complist=complist, overwrite=overwrite, dooff=dooff,
             offset=offset, fixoffset=fixoffset, stretch=stretch,
-            rms=rms, noisefwhm=noisefwhm
+            rms=rms, noisefwhm=noisefwhm, summary=summary
         )
         return result_dict
     except Exception, instance:

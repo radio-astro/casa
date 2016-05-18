@@ -130,6 +130,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <description>Noise correlation beam FWHM. If numeric value, interpreted as pixel widths. If quantity (dictionary, string), it must have angular units.</description>
         <value type="string"/>
     </param>
+    <param type="string" name="summary">
+        <description>File name to which to write table of fit parameters.</description>
+        <value/>
+    </param>
     <constraints>
         <when param="mask">
             <notequals type="string" value="">
@@ -202,6 +206,7 @@ rms              RMS to use in calculation of various uncertainties, assumed to 
                  image. If not positve, the rms of the residual image is used.
 noisefwhm        Noise correlation beam FWHM. If numeric value, interpreted as pixel widths. If
                  quantity (dictionary, string), it must have angular units.
+summary          File name to which to write table of fit parameters.
 
 OVERVIEW
 This application is used to fit one or more two dimensional gaussians to sources in an image as
@@ -248,7 +253,7 @@ dictionary contains two additional keys, 'zerooff' and 'zeroofferr', which are b
 dictionaries containing 'unit' and 'value' keys. The values associated with the 'value'
 keys are arrays containing the the fitted zero level offset value and its error, respectively,
 for each channel. In cases where the fit did not converge, these values are set to NaN.
-The value associated with 'unit' is just the image brightness unit.
+The value associated with 'unit' is just the i`mage brightness unit.
 
 The region can either be specified by a box(es) or a region.
 Ranges of pixel values can be included or excluded from the fit. If specified using
@@ -269,6 +274,9 @@ and has the option of either appending to or overwriting an existing file.
 The user has the option of writing the (convolved) parameters of a successful
 fit to a file which can be fed back to fitcomponents() as the estimates file for a
 subsequent run.
+
+The user has the option of writing the fit results in tabular format to a file whose
+name is specified using the summary parameter.
 
 If specified and positive, the value of rms is used to calculate the parameter uncertainties,
 otherwise, the rms in the selected region in the relevant channel is used for these calculations.

@@ -1857,5 +1857,19 @@ class imfit_test(unittest.TestCase):
             self.assertTrue("ia.fitcomponents" in msgs[-2])    
             self.assertTrue("ia.fitcomponents" in msgs[-1])
 
+    def test_summary(self):
+        """Test summary file, CAS-3478"""
+        myia = iatool()
+        image = datapath + "CAS-3478.im"
+        estimates = datapath + "CAS-3478_estimates.txt"
+        summary = "summary1.txt"
+        myia.open(image)
+        zz = myia.fitcomponents(estimates=estimates, summary=summary)
+        myia.done()
+        self.assertTrue(sum(1 for line in open(summary)) == 6, "summary line count")
+        summary = "summary2.txt"
+        zz = imfit(imagename=image, estimates=estimates, summary=summary)
+        self.assertTrue(sum(1 for line in open(summary)) == 6, "summary line count")
+        
 def suite():
     return [imfit_test]

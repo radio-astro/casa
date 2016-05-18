@@ -4806,6 +4806,10 @@ res = ia.fitprofile(ngauss=2, box="3,3,4,5", poly=2, multifit=true)
             <description>Noise correlation beam FWHM. If numeric value, interpreted as pixel widths. If quantity (dictionary, string), it must have angular units.</description>
             <value type="string"/>
         </param>
+        <param type="string" name="summary">
+            <description>File name to which to write table of fit parameters.</description>
+            <value/>
+        </param>
     </input>
     <returns type="record">Results dictionary</returns>
     <description>
@@ -4877,6 +4881,9 @@ and has the option of either appending to or overwriting an existing file.
 The user has the option of writing the (convolved) parameters of a successful
 fit to a file which can be fed back to fitcomponents() as the estimates file for a
 subsequent run.
+
+The user has the option of writing the fit results in tabular format to a file whose
+name is specified using the summary parameter.
 
 If specified and positive, the value of rms is used to calculate the parameter uncertainties,
 otherwise, the rms in the selected region in the relevant channel is used for these calculations.
@@ -4968,7 +4975,6 @@ An example of such a file is:
 120, 150, 110, 23.5arcsec, 18.9arcsec, 120deg  
 90, 60, 200, 46arcsec, 23arcsec, 140deg, fxp
 \end{verbatim}
-
 
 This is a file which specifies that two gaussians are to be simultaneously fit,
 and for the second gaussian the specified peak intensity, x position, and position angle

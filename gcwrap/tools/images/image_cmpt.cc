@@ -1479,7 +1479,7 @@ record* image::fitcomponents(
     const string& newestimates, const string& complist,
     bool overwrite, bool dooff, double offset,
     bool fixoffset, bool stretch, const variant& rms,
-    const variant& noisefwhm
+    const variant& noisefwhm, const string& summary
 ) {
     if (detached()) {
         return nullptr;
@@ -1606,6 +1606,7 @@ record* image::fitcomponents(
             auto msgs = _newHistory(__func__, names, values);
             fitter.addHistory(_ORIGIN, msgs);
         }
+        fitter.setSummaryFile(summary);
         auto compLists = fitter.fit();
         return fromRecord(fitter.getOutputRecord());
     }
@@ -4450,6 +4451,7 @@ bool image::setmiscinfo(const record& info) {
         if (detached()) {
             return False;
         }
+
         std::unique_ptr<Record> tmp(toRecord(info));
         Bool res = _imageF
             ? _imageF->setMiscInfo(*tmp)
@@ -4468,7 +4470,6 @@ bool image::setmiscinfo(const record& info) {
     }
     return False;
 }
-
 
 record* image::torecord() {
     _log << LogOrigin("image", __func__);
