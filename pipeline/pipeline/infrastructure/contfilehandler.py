@@ -45,6 +45,7 @@ class ContFileHandler(object):
                         field_name = item.split('Field:')[1].strip()
                     else:
                         field_name = item
+                    field_name = utils.dequote(field_name)
                     cont_ranges['fields'][field_name] = {}
                 elif (item.find('SPW') == 0):
                     cont_ranges['version'] = 1
