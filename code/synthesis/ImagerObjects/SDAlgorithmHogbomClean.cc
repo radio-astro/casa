@@ -253,9 +253,9 @@ void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* 
     Bool stop=False;
     Float maxRes=C::flt_max;
     Int niterloop= niter < 5000 ? 500: 1000 ;
-    Int numloop = niter%niterloop ? niter/niterloop  : niter/niterloop+1;
-    while (!stop  && ending_iteration < niter && numloop >=0 ){
-      Int thisNiter=numloop==0 ? starting_iteration+niter%niterloop : starting_iteration+niterloop;
+    Int numloop = niter%niterloop ? niter/niterloop+1  : niter/niterloop;
+    while (!stop  && ending_iteration < niter && numloop >0 ){
+      Int thisNiter=((numloop==1) && (niter != niterloop)) ? starting_iteration+niter%niterloop : starting_iteration+niterloop;
       hclean(limage_data, limageStep_data,
 	   (Float*)lpsf_data, &domaskI, (Float*)lmask_data,
 	   &newNx, &newNy, &npol,
