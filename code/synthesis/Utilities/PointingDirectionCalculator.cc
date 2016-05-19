@@ -329,6 +329,12 @@ void PointingDirectionCalculator::setMovingSource(
     configureMovingSourceCorrection();
 }
 
+void PointingDirectionCalculator::unsetMovingSource() {
+  if (!movingSource_.null()) {
+    movingSource_ = nullptr;
+  }
+}
+
 Matrix<Double> PointingDirectionCalculator::getDirection() {
     assert(!selectedMS_.null());
 

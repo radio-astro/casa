@@ -29,6 +29,7 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
+#include <map>
 
 #include <casa/Arrays/MaskedArray.h>
 #include <casa/Arrays/MaskArrMath.h>
@@ -432,6 +433,24 @@ struct NearestWeightScalingScheme : public SimpleWeightScalingScheme
       : SimpleScale(exposureOn, exposureOff2);
   }
 };
+
+inline bool isEphemeris(casa::String const &name) {
+  // Check if given name is included in MDirection types
+  casa::Int nall, nextra;
+  const casa::uInt *typ;
+  auto *types = casa::MDirection::allMyTypes(nall, nextra, typ);
+  auto start_extra = nall - nextra;
+  auto capital_name = name;
+  capital_name.upcase();
+
+  for (auto i = start_extra; i < nall; ++i) {
+    if (capital_name == types[i]) {
+      return true;
+    }
+  }
+
+  return false;
+}
 
 }
 
@@ -1214,10 +1233,24 @@ String SingleDishOtfCal::configureSelection()
   //   . FIELD_ID column is removed
   //   . FIELD table is directly indexed using the FIELD_ID value in MAIN
   const MSField& tbl_field = msSel_.field();
+  const String &field_col_name_str = tbl_field.columnName(MSField::MSFieldEnums::SOURCE_ID);
+  ROScalarColumn<Int> source_id_col(tbl_field, field_col_name_str);
   const MSAntenna& tbl_antenna = msSel_.antenna();
   const String &col_name_str = tbl_antenna.columnName(MSAntenna::MSAntennaEnums::NAME);
   ScalarColumn<String> antenna_name(tbl_antenna,col_name_str);
   const MSSpectralWindow& tbl_spectral_window = msSel_.spectralWindow();
+
+  // make a map between SOURCE_ID and source NAME
+  const MSSource &tbl_source = msSel_.source();
+  ROScalarColumn<Int> id_col(tbl_source, tbl_source.columnName(MSSource::MSSourceEnums::SOURCE_ID));
+  ROScalarColumn<String> name_col(tbl_source, tbl_source.columnName(MSSource::MSSourceEnums::NAME));
+  std::map<Int, String> source_map;
+  for (uInt irow = 0; irow < tbl_source.nrow(); ++irow) {
+    auto source_id = id_col(irow);
+    if (source_map.find(source_id) == source_map.end()) {
+      source_map[source_id] = name_col(irow);
+    }
+  }
 
   ostringstream taql_oss;
   const char delimiter = ',';
@@ -1225,6 +1258,14 @@ String SingleDishOtfCal::configureSelection()
 
   for (uInt field_id=0; field_id < tbl_field.nrow(); ++field_id){
 	  String field_sel(casacore::String::toString<uInt>(field_id));
+	  //String const field_name = field_name_col(field_id);
+	  String const source_name = source_map.at(source_id_col(field_id));
+	  if (isEphemeris(source_name)) {
+	    calc.setMovingSource(source_name);
+	  }
+	  else {
+	    calc.unsetMovingSource();
+	  }
 	  for (uInt ant_id=0; ant_id < tbl_antenna.nrow(); ++ant_id){
 		  String ant_sel(antenna_name(ant_id) + "&&&");
 		  for (uInt spw_id=0; spw_id < tbl_spectral_window.nrow(); ++spw_id){

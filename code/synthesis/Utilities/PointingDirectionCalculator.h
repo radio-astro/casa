@@ -71,6 +71,7 @@ public:
             PointingDirectionCalculator::MatrixShape const shape);
     void setMovingSource(String const sourceName);
     void setMovingSource(MDirection const &sourceDirection);
+    void unsetMovingSource();
 
     uInt getNrowForSelectedMS() {return selectedMS_->nrow();}
     MDirection::Types const &getDirectionType() {return directionType_;}
