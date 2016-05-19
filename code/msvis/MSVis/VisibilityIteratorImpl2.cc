@@ -2262,47 +2262,54 @@ VisibilityIteratorImpl2::setTileCache ()
         Block<String> names = theMs.getPartNames (false);
         msNames.assign (names.begin(), names.end());
 
+        for (String msName : msNames){
+            MeasurementSet anMs (msName);
+
+            setMsCacheSizes (anMs, columnIds);
+        }
+
     } else {
 
-        msNames.push_back (theMs.tableName()); // No part MSs.
+        setMsCacheSizes (theMs, columnIds);
     }
 
-    for (String msName : msNames){
+}
 
-        MeasurementSet partMs (msName); // Create an MS object (should already be open)
-        const ColumnDescSet & cds = partMs.tableDesc ().columnDescSet ();
+void VisibilityIteratorImpl2::setMsCacheSizes (const MeasurementSet & ms,
+                                               vector<MSMainEnums::PredefinedColumns> columnIds)
+{
+    const ColumnDescSet & cds = ms.tableDesc ().columnDescSet ();
 
-        for (MSMainEnums::PredefinedColumns  columnId : columnIds){
+    for (MSMainEnums::PredefinedColumns  columnId : columnIds){
 
-            String column = MS::columnName (columnId);
+        String column = MS::columnName (columnId);
 
-            try {
+        try {
 
-                if (! cds.isDefined (column) || ! usesTiledDataManager (column, partMs)){
-                    continue; // skip if column not in MS or not using tiles
-                }
-
-                if (columnId == MS::WEIGHT_SPECTRUM || columnId == MS::SIGMA_SPECTRUM){
-
-                    // These two columns are frequently present in an MS but uninitialized.
-
-                    TableColumn tableColumn (partMs, column);
-                    if (! tableColumn.hasContent()){
-                        continue; // Skip
-                    }
-                }
-
-                setMsColumnCacheSizes (partMs, column);
-
-            } catch (AipsError & e){
-                continue; // It failed so leave the caching as is
+            if (! cds.isDefined (column) || ! usesTiledDataManager (column, ms)){
+                continue; // skip if column not in MS or not using tiles
             }
+
+            if (columnId == MS::WEIGHT_SPECTRUM || columnId == MS::SIGMA_SPECTRUM){
+
+                // These two columns are frequently present in an MS but uninitialized.
+
+                TableColumn tableColumn (ms, column);
+                if (! tableColumn.hasContent()){
+                    continue; // Skip
+                }
+            }
+
+            setMsColumnCacheSizes (ms, column);
+
+        } catch (AipsError & e){
+            continue; // It failed so leave the caching as is
         }
     }
 }
 
 void
-VisibilityIteratorImpl2::setMsColumnCacheSizes (MeasurementSet & partMs,
+VisibilityIteratorImpl2::setMsColumnCacheSizes (const MeasurementSet & partMs,
                                                 const string & column)
 {
     // For the column in the provided MS, loop over the hypercubes and
