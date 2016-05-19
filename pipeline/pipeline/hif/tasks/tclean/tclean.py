@@ -340,32 +340,32 @@ class Tclean(cleanbase.CleanBase):
         old_threshold = qaTool.convert(sequence_manager.threshold, 'Jy')['value']
         if (inputs.intent == 'TARGET'):
             if (context.observing_run.get_measurement_sets()[0].antennas[0].diameter == 12.0):
-                if (dirty_dynamic_range > 200.):
-                    maxSciEDR = 200.0
+                if (dirty_dynamic_range > 150.):
+                    maxSciEDR = 150.0
                     new_threshold = max(old_threshold, residual_max / maxSciEDR * inputs.tlimit)
                 else:
                     if (dirty_dynamic_range > 100.):
-                        n_dr = 5.
+                        n_dr = 2.5
                     elif (50. < dirty_dynamic_range <= 100.):
-                        n_dr = 4.
+                        n_dr = 2.0
                     elif (20. < dirty_dynamic_range <= 50.):
-                        n_dr = 3.
+                        n_dr = 1.5
                     elif (dirty_dynamic_range <= 20.):
-                        n_dr = 2.
+                        n_dr = 1.0
                     new_threshold = old_threshold * n_dr
             else:
-                if (dirty_dynamic_range > 40.):
-                    maxSciEDR = 40.0
+                if (dirty_dynamic_range > 30.):
+                    maxSciEDR = 30.0
                     new_threshold = max(old_threshold, residual_max / maxSciEDR * inputs.tlimit)
                 else:
                     if (dirty_dynamic_range > 20.):
-                        n_dr = 5.
+                        n_dr = 2.5
                     elif (10. < dirty_dynamic_range <= 20.):
-                        n_dr = 4.
+                        n_dr = 2.0
                     elif (4. < dirty_dynamic_range <= 10.):
-                        n_dr = 3.
+                        n_dr = 1.5
                     elif (dirty_dynamic_range <= 4.):
-                        n_dr = 2.
+                        n_dr = 1.0
                     new_threshold = old_threshold * n_dr
         else:
             # Calibrators are usually dynamic range limited. The sensitivity from apparentsens
