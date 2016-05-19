@@ -250,6 +250,38 @@ bool image::addnoise(
 	return False;
 }
 
+record* image::beamarea(int channel, int polarization) {
+    try {
+        _log << _ORIGIN;
+        if (detached()) {
+            return nullptr;
+        }
+        auto dc = _imageF
+            ? _imageF->coordinates().directionCoordinate()
+            : _imageC->coordinates().directionCoordinate();
+        auto pixelArea = dc.getPixelArea();
+        auto beamInPixels = _imageF
+            ? _imageF->imageInfo().getBeamAreaInPixels(
+                channel, polarization, dc
+            )
+            : _imageC->imageInfo().getBeamAreaInPixels(
+                    channel, polarization, dc
+            );
+        auto arcsec2 = beamInPixels*pixelArea;
+        record *rec = new record();
+        rec->insert("pixels", beamInPixels);
+        rec->insert("arcsec2", arcsec2.getValue("arcsec2"));
+        return rec;
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return nullptr;
+}
+
+
 record* image::beamforconvolvedsize(
     const variant& source, const variant& convolved
 ) {

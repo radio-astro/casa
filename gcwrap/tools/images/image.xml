@@ -8394,6 +8394,24 @@ image {\sff zz1}.
 
 </method>
 
+<method type="function" name="beamarea">
+    <shortdescription>Get the beam area.</shortdescription>
+    <input>
+        <param type="int" direction="in" name="channel">
+            <description>The zero-based spectral channel number for a per-plane beam. Default -1</description>
+            <value>-1</value>
+        </param>
+        <param type="int" direction="in" name="polarization">
+            <description>The zero-based polarization plane number for a per-plane beam. Default -1</description>
+            <value>-1</value>
+        </param>
+    </input>
+    <returns type="record">record</returns>
+    <description>
+        Get the area of the image's restoring beam.
+    </description>
+</method>
+
 <method type="function" name="restoringbeam">
     <shortdescription>Get the restoring beam(s).</shortdescription>
     <input>

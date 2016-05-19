@@ -188,6 +188,7 @@ scripts/task_simanalyze.py
 scripts/task_slsearch.py
 scripts/task_smoothcal.py
 scripts/task_specfit.py
+scripts/task_specflux.py
 scripts/task_specsmooth.py
 scripts/task_splattotable.py
 scripts/task_split.py

@@ -119,6 +119,7 @@ simanalyze.xml
 slsearch.xml
 smoothcal.xml
 specfit.xml
+specflux.xml
 specsmooth.xml
 splattotable.xml
 split.xml

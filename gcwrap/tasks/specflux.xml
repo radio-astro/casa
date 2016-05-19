@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<task type="function" name="specflux" category="analysis">
+
+<shortdescription>Report details of an image spectrum.</shortdescription>
+
+<input>
+    <param type="string" name="imagename" mustexist="true">
+    	<description>Name of the input image</description>
+    	<value/>
+        <example>imagenam='ngc5921.im'</example>
+    </param>
+    <param type="string" name="box">
+        <description>Rectangular region to select in direction plane. See "help par.box" for details. Default is to use the entire direction plane.</description>
+        <value/>
+        <example>box="100,100,200,200"</example>
+    </param>
+    <param type="any" name="region" subparam="true">
+        <any type="variant"/>
+        <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
+        <value type="string"/>
+        <example>region="my.rgn"</example>
+    </param>
+    <param type="string" name="chans">
+        <description>Channels to use. See "help par.chans" for details. Default is to use all channels.</description>
+        <value/>
+    </param>
+    <param type="string" name="stokes">
+        <description>Stokes planes to use. See "help par.stokes" for details. Default is to use all Stokes planes.</description>
+        <value/>
+        <example>stokes="iq"</example>
+    </param>
+    <param type="string" name="mask">
+        <description>Mask to use. See help par.mask. Default is none.</description>
+        <value type="string"/>
+    </param>
+    <param type="bool" direction="in" name="stretch" subparam="true">
+        <description>Stretch the mask if necessary and possible? See help par.stretch </description>
+        <value>False</value>
+    </param>
+    <param type="string" name="unit">
+        <description>Unit to use for the abscissa. Must be conformant with a typical spectral axis unit.</description>
+        <value>km/s</value>
+    </param>
+    <param type="any" name="major">
+        <any type="variant"/>
+        <description>Major axis of overriding restoring beam. If specified, must be a valid quantity.</description>
+        <value type="string"/>
+    </param>
+    <param type="any" name="minor">
+        <any type="variant"/>
+        <description>Minor axis of overriding restoring beam. If specified, must be a valid quantity</description>
+        <value type="string"/>
+    </param>
+    <param type="string" name="logfile">
+        <description>File which to write details. Default is to not write to a file.</description>
+        <value/>
+    </param>
+    <param type="bool" name="overwrite" subparam="true">
+        <description>Overwrite exisitng ouput file if it exists?</description>
+        <value>False</value>
+        <example>overwrite=true</example>
+    </param>
+    
+    <constraints>
+        <when param="logfile">
+            <notequals type="string" value="">
+                <default param="overwrite">
+                    <value>False</value>
+                </default>
+            </notequals>
+        </when>
+        <when param="box">
+            <equals type="string" value="">
+                <default param="region">
+                    <value>""</value>
+                </default>
+            </equals>
+        </when>
+        <when param="mask">
+            <notequals type="string" value="">
+                <default param="stretch">
+                    <value>False</value>
+                </default>
+            </notequals>
+        </when>
+    </constraints>
+</input>
+<returns type="record"/>
+
+<example>
+PARAMETER SUMMARY
+imagename        Name of the input (CASA, FITS, MIRIAD) image
+box              Rectangular region to select in direction plane. See "help par.box"
+                 for details. Default is to use the entire direction plane.
+region           Region selection. See "help par.region" for details. Default is to use
+                 the full image.
+chans            Channels to use. See "help par.chans" for details. Default is to use
+                 all channels.
+stokes           Stokes planes to use. See "help par.stokes" for details. Default is to use
+                 all Stokes planes.
+mask             Mask to use. See help par.mask. Default is none.
+stretch          Stretch the input mask if necessary and possible. Only used if a mask is specified.
+                 See help par.stretch.
+unit             Unit to use for the abscissa. Must be conformant with a typical spectral axis unit
+                 (ie something conformant with a velocity, frequency, or length). Velocity units may
+                 only be used if the spectral coordinate has a rest frequency and if it is &gt; 0.
+logfile          Name of file to which to write tabular output. Default is to not write to a file.
+overwrite        Controls if an already existing log file by the
+                 same name can be overwritten. If true, the user is not prompted, the file
+                 if it exists is automatically overwritten.
+major            Major axis of overriding restoring beam. If specified, must be a valid quantity.
+                 If specified, minor must also be specified. The overriding beam is used for
+                 computing flux density values. Ignored if the image brightness units do not contain
+                 "/beam".
+minor            Minor axis of overriding restoring beam. If specified, must be a valid quantity.
+                 If specified, major must also be specified. See help on parameter major for details.
+
+This application retrieves details of an image spectrum which has been integrated over a specified
+region (or the entire image if no region has been specified). The spectral flux is reported in
+units flux density consistent with the image brightness unit times the specified spectral unit (eg,
+Jy*km/s, K*arcsec2*km/s). If the units are K*arcsec2..., multiply the reported value by
+2.3504430539098e-8*d*d, where d is the distance in pc, to convert to units of K*pc2... 
+If provided, major and minor will be used to compute the beam size, and hence the per channel flux
+densities, overriding the input image beam information, if present.
+
+# write spectrum to file that has been integrated over
+# rectangular region, using only pixels with non-negative values.
+# if the log file already exists, overwrite it with the new data.
+specflux(imagename="my.im", box="10,10,45,50", mask="my.im>=0", unit="km/s", logfile="my.log", overwrite=True)
+
+</example>
+
+</task>
+
+</casaxml>

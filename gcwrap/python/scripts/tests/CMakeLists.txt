@@ -192,6 +192,7 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_slsearch.py
   test_smoothcal.py
   test_specfit.py
+  test_specflux.py
   test_splattotable.py
   test_split.py
   test_split2.py
