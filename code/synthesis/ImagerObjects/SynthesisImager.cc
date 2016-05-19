@@ -1805,13 +1805,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ROMSColumns msc(rvi_p->ms());
     String telescop=msc.observation().telescopeName()(0);
     // Hack...start
-    if(telescop=="EVLA"){os << LogIO::WARN << "vpmanager does not list EVLA. Using VLA beam parameters" << LogIO::POST; telescop="VLA";}
+    //if(telescop=="EVLA"){os << LogIO::WARN << "vpmanager does not list EVLA. Using VLA beam parameters" << LogIO::POST; telescop="VLA";}
     // Hack...stop
     VPManager *vpman=VPManager::Instance();
     PBMath::CommonPB kpb;
     PBMath::enumerateCommonPB(telescop, kpb);
     Record rec;
     vpman->getvp(rec, telescop);
+    if(rec.empty()){
+	if((telescop=="EVLA")){
+	  os << LogIO::WARN << "vpmanager does not list EVLA. Using VLA beam parameters" << LogIO::POST; 
+	  telescop="VLA";
+	  vpman->getvp(rec, telescop);
+	  kpb=PBMath::VLA;
+	}
+	else{
+	  os << LogIO::SEVERE << "vpmanager does not have a beam "+telescop <<"\n You can use VPManager to define one" << LogIO::POST;
+	}
+    }
     VPSkyJones* vps=NULL;
     if(rec.asString("name")=="COMMONPB" && kpb !=PBMath::UNKNOWN ){
       vps= new VPSkyJones(msc, True, Quantity(rotatePAStep, "deg"), BeamSquint::GOFIGURE, Quantity(360.0, "deg"));
@@ -1819,6 +1830,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       ////leaving at default
       ////vps.setThreshold(minPB);
       
+    }
+    else{
+      PBMath myPB(rec);
+      String whichPBMath;
+      PBMathInterface::namePBClass(myPB.whichPBClass(), whichPBMath);
+      os  << "Using the PB defined by " << whichPBMath << " for beam calculation for telescope " << telescop << LogIO::POST;
+      vps= new VPSkyJones(telescop, myPB, Quantity(rotatePAStep, "deg"), BeamSquint::GOFIGURE, Quantity(360.0, "deg"));
+      kpb=PBMath::DEFAULT;
     }
     
     theFT = new MosaicFTNew(vps, mLocation_p, stokes, 1000000000, 16, useAutoCorr, 

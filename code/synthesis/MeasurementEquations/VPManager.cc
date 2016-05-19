@@ -1,5 +1,5 @@
 //# VPManager.cc: Implementation of VPManager.h
-//# Copyright (C) 1996-2011
+//# Copyright (C) 1996-2016
 //# Associated Universities, Inc. Washington DC, USA.
 //# Copyright by ESO (in the framework of the ALMA collaboration)
 //#
@@ -404,25 +404,38 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     rec.define("dopb", dopb);
     String error;
-    Record tempholder; 
-    QuantumHolder(dishdiam).toRecord(error, tempholder);
-    rec.defineRecord("dishdiam", tempholder);
-    QuantumHolder(blockagediam).toRecord(error, tempholder);
-    rec.defineRecord("blockagediam", tempholder);
-    QuantumHolder(maxrad).toRecord(error, tempholder);
-    rec.defineRecord("maxrad", tempholder);
-    QuantumHolder(reffreq).toRecord(error, tempholder);
-    rec.defineRecord("reffreq", tempholder);
+    {Record tempholder; 
+      QuantumHolder(dishdiam).toRecord(error, tempholder);
+      rec.defineRecord("dishdiam", tempholder);
+    }
+    {Record tempholder; 
+      QuantumHolder(blockagediam).toRecord(error, tempholder);
+      rec.defineRecord("blockagediam", tempholder);
+    }
+    { Record tempholder; 
+      QuantumHolder(maxrad).toRecord(error, tempholder);
+      rec.defineRecord("maxrad", tempholder);
+    }
+    {Record tempholder; 
+      QuantumHolder(reffreq).toRecord(error, tempholder);
+      rec.defineRecord("reffreq", tempholder);
+    }
     rec.define("isthisvp", False);
-    MeasureHolder(squintdir).toRecord(error, tempholder);
-    rec.defineRecord("squintdir", tempholder);
-    QuantumHolder(squintreffreq).toRecord(error, tempholder);
-    rec.defineRecord("squintreffreq", tempholder);
+    {Record tempholder; 
+      MeasureHolder(squintdir).toRecord(error, tempholder);
+      rec.defineRecord("squintdir", tempholder);
+    }
+    {Record tempholder; 
+      QuantumHolder(squintreffreq).toRecord(error, tempholder);
+      rec.defineRecord("squintreffreq", tempholder);
+    }
     rec.define("dosquint", dosquint);
-    QuantumHolder(paincrement).toRecord(error, tempholder);
-    rec.defineRecord("paincrement", tempholder);
+    {Record tempholder; 
+      QuantumHolder(paincrement).toRecord(error, tempholder);
+      rec.defineRecord("paincrement", tempholder);
+    }
     rec.define("usesymmetricbeam", usesymmetricbeam);
-
+    
     if(dopb){
       vplistdefaults_p.define(rec.asString(rec.fieldNumber("telescope")), vplist_p.nfields());
     } 
@@ -462,24 +475,33 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     rec.define("coeff", coeff);
     rec.define("scale", scale);
     String error;
-    Record tempholder; 
-    QuantumHolder(maxrad).toRecord(error, tempholder);
-    rec.defineRecord("maxrad", tempholder);
-    QuantumHolder(reffreq).toRecord(error, tempholder);
-    rec.defineRecord("reffreq", tempholder);
+    { Record tempholder; 
+      QuantumHolder(maxrad).toRecord(error, tempholder);
+      rec.defineRecord("maxrad", tempholder);
+    }
+    {Record tempholder; 
+      QuantumHolder(reffreq).toRecord(error, tempholder);
+      rec.defineRecord("reffreq", tempholder);
+    }
     if(isthispb=="PB" || isthispb=="pb"){
       rec.define("isthisvp", False);
     }
     else{
       rec.define("isthisvp", True);
     }
-    MeasureHolder(squintdir).toRecord(error, tempholder);
-    rec.defineRecord("squintdir", tempholder);
-    QuantumHolder(squintreffreq).toRecord(error, tempholder);
-    rec.defineRecord("squintreffreq", tempholder);
+    {Record tempholder; 
+      MeasureHolder(squintdir).toRecord(error, tempholder);
+      rec.defineRecord("squintdir", tempholder);
+    }
+    {Record tempholder; 
+      QuantumHolder(squintreffreq).toRecord(error, tempholder);
+      rec.defineRecord("squintreffreq", tempholder);
+    }
     rec.define("dosquint", dosquint);
-    QuantumHolder(paincrement).toRecord(error, tempholder);
-    rec.defineRecord("paincrement", tempholder);
+    {Record tempholder; 
+      QuantumHolder(paincrement).toRecord(error, tempholder);
+      rec.defineRecord("paincrement", tempholder);
+    }
     rec.define("usesymmetricbeam", usesymmetricbeam);
 
     if(dopb){
@@ -521,27 +543,37 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       hpw.setValue(hpw.getValue()/2.0);
     }
     String error;
-    Record tempholder; 
+    {Record tempholder; 
     QuantumHolder(hpw).toRecord(error, tempholder);
     rec.defineRecord("halfwidth", tempholder);
-    
-    QuantumHolder(maxrad).toRecord(error, tempholder);
-    rec.defineRecord("maxrad", tempholder);
-    QuantumHolder(reffreq).toRecord(error, tempholder);
-    rec.defineRecord("reffreq", tempholder);
+    }
+    {Record tempholder; 
+      QuantumHolder(maxrad).toRecord(error, tempholder);
+      rec.defineRecord("maxrad", tempholder);
+    }
+    {Record tempholder; 
+      QuantumHolder(reffreq).toRecord(error, tempholder);
+      rec.defineRecord("reffreq", tempholder);
+    }
     if(isthispb=="PB" || isthispb=="pb"){
       rec.define("isthisvp", False);
     }
     else{
       rec.define("isthisvp", True);
     }
-    MeasureHolder(squintdir).toRecord(error, tempholder);
-    rec.defineRecord("squintdir", tempholder);
-    QuantumHolder(squintreffreq).toRecord(error, tempholder);
-    rec.defineRecord("squintreffreq", tempholder);
+    {Record tempholder; 
+      MeasureHolder(squintdir).toRecord(error, tempholder);
+      rec.defineRecord("squintdir", tempholder);
+    }
+    {Record tempholder; 
+      QuantumHolder(squintreffreq).toRecord(error, tempholder);
+      rec.defineRecord("squintreffreq", tempholder);
+    }
     rec.define("dosquint", dosquint);
-    QuantumHolder(paincrement).toRecord(error, tempholder);
-    rec.defineRecord("paincrement", tempholder);
+    {Record tempholder; 
+      QuantumHolder(paincrement).toRecord(error, tempholder);
+      rec.defineRecord("paincrement", tempholder);
+    }
     rec.define("usesymmetricbeam", usesymmetricbeam);
 
     if(dopb){
@@ -581,24 +613,33 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     rec.define("dopb", dopb);
     rec.define("coeff", coeff);
     String error;
-    Record tempholder; 
-    QuantumHolder(maxrad).toRecord(error, tempholder);
-    rec.defineRecord("maxrad", tempholder);
-    QuantumHolder(reffreq).toRecord(error, tempholder);
-    rec.defineRecord("reffreq", tempholder);
+    {Record tempholder; 
+      QuantumHolder(maxrad).toRecord(error, tempholder);
+      rec.defineRecord("maxrad", tempholder);
+    }
+    {Record tempholder; 
+      QuantumHolder(reffreq).toRecord(error, tempholder);
+      rec.defineRecord("reffreq", tempholder);
+    }
     if(isthispb=="PB" || isthispb=="pb"){
       rec.define("isthisvp", False);
     }
     else{
       rec.define("isthisvp", True);
     }
-    MeasureHolder(squintdir).toRecord(error, tempholder);
-    rec.defineRecord("squintdir", tempholder);
-    QuantumHolder(squintreffreq).toRecord(error, tempholder);
-    rec.defineRecord("squintreffreq", tempholder);
+    {Record tempholder; 
+      MeasureHolder(squintdir).toRecord(error, tempholder);
+      rec.defineRecord("squintdir", tempholder);
+    }
+    {Record tempholder; 
+      QuantumHolder(squintreffreq).toRecord(error, tempholder);
+      rec.defineRecord("squintreffreq", tempholder);
+    }
     rec.define("dosquint", dosquint);
-    QuantumHolder(paincrement).toRecord(error, tempholder);
-    rec.defineRecord("paincrement", tempholder);
+    {Record tempholder; 
+      QuantumHolder(paincrement).toRecord(error, tempholder);
+      rec.defineRecord("paincrement", tempholder);
+    }
     rec.define("usesymmetricbeam", usesymmetricbeam);
 
     if(dopb){
@@ -640,24 +681,33 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     rec.define("coeff", coeff);
     rec.define("fitfreqs", freqs);
     String error;
-    Record tempholder; 
-    QuantumHolder(maxrad).toRecord(error, tempholder);
-    rec.defineRecord("maxrad", tempholder);
-    QuantumHolder(reffreq).toRecord(error, tempholder);
-    rec.defineRecord("reffreq", tempholder);
+    {Record tempholder; 
+      QuantumHolder(maxrad).toRecord(error, tempholder);
+      rec.defineRecord("maxrad", tempholder);
+    }
+    {Record tempholder; 
+      QuantumHolder(reffreq).toRecord(error, tempholder);
+      rec.defineRecord("reffreq", tempholder);
+    }
     if(isthispb=="PB" || isthispb=="pb"){
       rec.define("isthisvp", False);
     }
     else{
       rec.define("isthisvp", True);
     }
-    MeasureHolder(squintdir).toRecord(error, tempholder);
-    rec.defineRecord("squintdir", tempholder);
-    QuantumHolder(squintreffreq).toRecord(error, tempholder);
-    rec.defineRecord("squintreffreq", tempholder);
+    {Record tempholder; 
+      MeasureHolder(squintdir).toRecord(error, tempholder);
+      rec.defineRecord("squintdir", tempholder);
+    }
+    {Record tempholder; 
+      QuantumHolder(squintreffreq).toRecord(error, tempholder);
+      rec.defineRecord("squintreffreq", tempholder);
+    }
     rec.define("dosquint", dosquint);
-    QuantumHolder(paincrement).toRecord(error, tempholder);
-    rec.defineRecord("paincrement", tempholder);
+    {Record tempholder; 
+      QuantumHolder(paincrement).toRecord(error, tempholder);
+      rec.defineRecord("paincrement", tempholder);
+    }
     rec.define("usesymmetricbeam", usesymmetricbeam);
 
     if(dopb){
@@ -698,24 +748,33 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     rec.define("dopb", dopb);
     rec.define("vect", vect);
     String error;
-    Record tempholder; 
-    QuantumHolder(maxrad).toRecord(error, tempholder);
-    rec.defineRecord("maxrad", tempholder);
-    QuantumHolder(reffreq).toRecord(error, tempholder);
-    rec.defineRecord("reffreq", tempholder);
+    {Record tempholder; 
+      QuantumHolder(maxrad).toRecord(error, tempholder);
+      rec.defineRecord("maxrad", tempholder);
+    }
+    {Record tempholder; 
+      QuantumHolder(reffreq).toRecord(error, tempholder);
+      rec.defineRecord("reffreq", tempholder);
+    }
     if(isthispb=="PB" || isthispb=="pb"){
       rec.define("isthisvp", False);
     }
     else{
       rec.define("isthisvp", True);
     }
-    MeasureHolder(squintdir).toRecord(error, tempholder);
-    rec.defineRecord("squintdir", tempholder);
-    QuantumHolder(squintreffreq).toRecord(error, tempholder);
-    rec.defineRecord("squintreffreq", tempholder);
+    {Record tempholder; 
+      MeasureHolder(squintdir).toRecord(error, tempholder);
+      rec.defineRecord("squintdir", tempholder);
+    }
+    {Record tempholder; 
+      QuantumHolder(squintreffreq).toRecord(error, tempholder);
+      rec.defineRecord("squintreffreq", tempholder);
+    }
     rec.define("dosquint", dosquint);
-    QuantumHolder(paincrement).toRecord(error, tempholder);
-    rec.defineRecord("paincrement", tempholder);
+    {Record tempholder; 
+      QuantumHolder(paincrement).toRecord(error, tempholder);
+      rec.defineRecord("paincrement", tempholder);
+    }
     rec.define("usesymmetricbeam", usesymmetricbeam);
 
     if(dopb){
@@ -821,24 +880,34 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     rec.define("dopb", dopb);
     rec.define("coeff", coeff);
     String error;
-    Record tempholder; 
-    QuantumHolder(maxrad).toRecord(error, tempholder);
-    rec.defineRecord("maxrad", tempholder);
-    QuantumHolder(reffreq).toRecord(error, tempholder);
-    rec.defineRecord("reffreq", tempholder);
+    {
+      Record tempholder; 
+      QuantumHolder(maxrad).toRecord(error, tempholder);
+      rec.defineRecord("maxrad", tempholder);
+    }
+    {Record tempholder;
+      QuantumHolder(reffreq).toRecord(error, tempholder);
+      rec.defineRecord("reffreq", tempholder);
+    }
     if(isthispb=="PB" || isthispb=="pb"){
       rec.define("isthisvp", False);
     }
     else{
       rec.define("isthisvp", True);
     }
-    MeasureHolder(squintdir).toRecord(error, tempholder);
-    rec.defineRecord("squintdir", tempholder);
-    QuantumHolder(squintreffreq).toRecord(error, tempholder);
-    rec.defineRecord("squintreffreq", tempholder);
+    {Record tempholder;
+      MeasureHolder(squintdir).toRecord(error, tempholder);
+      rec.defineRecord("squintdir", tempholder);
+    }
+    {Record tempholder;
+      QuantumHolder(squintreffreq).toRecord(error, tempholder);
+      rec.defineRecord("squintreffreq", tempholder);
+    }
     rec.define("dosquint", dosquint);
-    QuantumHolder(paincrement).toRecord(error, tempholder);
-    rec.defineRecord("paincrement", tempholder);
+    {Record tempholder;
+      QuantumHolder(paincrement).toRecord(error, tempholder);
+      rec.defineRecord("paincrement", tempholder);
+    }
     rec.define("usesymmetricbeam", usesymmetricbeam);
 
     if(dopb){
