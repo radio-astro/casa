@@ -1512,7 +1512,7 @@ reportingAxisIds(const string &s)
 
 // Parse "timespan" string provided to statistics2 to determine whether
 // statistics should span scans or subscans. The input string is expected to be
-// composed of the tokens "scan" or "subscan", separated by commas.
+// composed of the tokens "scan" or "state", separated by commas.
 static void
 timespanBoundaries(const string &s, bool &spanScan, bool &spanSubscan)
 {
@@ -1524,13 +1524,13 @@ timespanBoundaries(const string &s, bool &spanScan, bool &spanSubscan)
 	while (sep != string::npos) {
 		string token = s.substr(init, sep - init);
 		if (token == "scan") spanScan = true;
-		else if (token == "subscan") spanSubscan = true;
+		else if (token == "state") spanSubscan = true;
 		init = sep + 1;
 		sep = s.find(',', init);
 	}
 	string token = s.substr(init, s.length() - init);
 	if (token == "scan") spanScan = true;
-	else if (token == "subscan") spanSubscan = true;
+	else if (token == "state") spanSubscan = true;
 }
 
 //
@@ -1560,7 +1560,7 @@ timespanBoundaries(const string &s, bool &spanScan, bool &spanSubscan)
 // * timeaverage: whether to do time averaging
 // * timebin: time averaging interval
 // * timespan: whether time averaging crosses span or subscan boundaries; value
-//             is a string consisting of "scan" and/or "subscan", separated by
+//             is a string consisting of "scan" and/or "state", separated by
 //             commas
 // * maxuvwdistance: Maximum separation of start-to-end baselines that can be
 //                   included in an average
