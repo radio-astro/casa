@@ -833,7 +833,7 @@ namespace casa{
 	  else            return 0.0;
 	}
   }
-  Double SynthesisUtils::getRefFreq(const VisBuffer2& vb)
+    Double SynthesisUtils::getRefFreq(const VisBuffer2& /*vb*/)
   {
     throw(AipsError("SynthesisUtils::getRefFreq() depricated due to VI2/VB2 move"));
     // return max((vb.getVi()->ms())//vb.msColumns()
