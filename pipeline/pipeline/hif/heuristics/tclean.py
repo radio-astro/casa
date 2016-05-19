@@ -60,16 +60,18 @@ class TcleanHeuristics(object):
             try:
                 iaTool = casatools.image
                 iaTool.open(pb)
-                nx, ny = iaTool.shape()[0:2]
+                nx, ny, np, nf = iaTool.shape()
                 pb_edge = 0.0
-                i = 0
-                # There are cases with zero edged PBs
-                while ((pb_edge == 0.0) and (i < ny/2)):
-                    pb_edge = iaTool.getchunk([nx/2, i], [nx/2, i]).flatten()[0]
-                    i += 1
+                i_pb_edge = -1
+                # There are cases with zero edged PBs (due to masking)
+                while ((pb_edge == 0.0) and (i_pb_edge < ny/2)):
+                    i_pb_edge += 1
+                    pb_edge = iaTool.getchunk([nx/2, i_pb_edge, 0, nf/2], [nx/2, i_pb_edge, 0, nf/2]).flatten()[0]
                 if (pb_edge > 0.2):
-                    pblimit_image = iaTool.getchunk([nx/2, 0.05*ny], [nx/2, 0.05*ny]).flatten()[0]
-                    pblimit_cleanmask = iaTool.getchunk([nx/2, 0.1*ny], [nx/2, 0.1*ny]).flatten()[0]
+                    i_pb_image = max(i_pb_edge, int(0.05 * ny))
+                    pblimit_image = iaTool.getchunk([nx/2, i_pb_image, 0, nf/2], [nx/2, i_pb_image, 0, nf/2]).flatten()[0]
+                    i_pb_cleanmask = i_pb_edge + int(0.05 * ny)
+                    pblimit_cleanmask = iaTool.getchunk([nx/2, i_pb_cleanmask, 0, nf/2], [nx/2, i_pb_cleanmask, 0, nf/2]).flatten()[0]
             except Exception as e:
                 LOG.warning('Could not analyze PB: %s. Using default pblimit values.' % (e))
             finally:
