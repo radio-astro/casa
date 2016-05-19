@@ -257,7 +257,17 @@ class test_base(unittest.TestCase):
 
         os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
         default(mstransform)
-                   
+
+    def setUp_flags(self):
+        asdmname = 'test_uid___A002_X997a62_X8c-short' # Flag.xml is modified
+        self.vis = asdmname+'.ms'
+        self.flagfile = asdmname+'_cmd.txt'
+
+        asdmpath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/importasdm/'
+        os.system('ln -sf '+asdmpath+asdmname)
+        importasdm(asdmname, convert_ephem2geo=False, flagbackup=False, process_syspower=False, lazy=True,
+                   scans='1', savecmds=True, overwrite=True)
+
     def createMMS(self, msfile, axis='auto',scans='',spws=''):
         '''Create MMSs for tests with input MMS'''
         prefix = msfile.rstrip('.ms')
