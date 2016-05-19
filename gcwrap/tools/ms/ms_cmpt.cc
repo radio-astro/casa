@@ -1706,6 +1706,7 @@ ms::statistics2(const std::string& column,
 				chunkInterval = positiveButShorterThanEveryIntegrationSec;
 			}
 			if (timeaverage) {
+				hideTimeAxis = false;
 				averagingInterval =
 					casaQuantity(timebin).get("s").getValue();
 				// remove TIME from sortColumnIds and determine chunkInterval
