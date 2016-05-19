@@ -725,6 +725,7 @@ protected:
     // optimized for the current input state (e.g., a new data description).
 
     virtual void setTileCache ();
+    void setMsColumnCacheSizes (MeasurementSet&, const string &);
 
     // Throws exception if there is a pending (i.e., unapplied) change to
     // the VI's properties.  Called when the VI is advanced since the user

@@ -2230,131 +2230,125 @@ VisibilityIteratorImpl2::getMsd () const
 void
 VisibilityIteratorImpl2::setTileCache ()
 {
+    if (! msIter_p->newMS () || autoTileCacheSizing_p) {
+        return; // Only useful when at start of an MS
+    }
+
     // This function sets the tile cache because of a feature in
     // sliced data access that grows memory dramatically in some cases
     //  if (useSlicer_p){
 
-    if (! (msIter_p->newDataDescriptionId () || msIter_p->newMS ()) ) {
-        return;
-    }
+//    if (! (msIter_p->newDataDescriptionId () || msIter_p->newMS ()) ) {
+//        return;
+//    }
 
     const MeasurementSet & theMs = msIter_p->ms ();
     if (theMs.tableType () == Table::Memory) {
         return;
     }
 
-    if (autoTileCacheSizing_p){
-        return; // take the default behavior
+//    if (autoTileCacheSizing_p){
+//        return; // take the default behavior
+//    }
+
+    vector<MSMainEnums::PredefinedColumns> columnIds =
+        { MS::CORRECTED_DATA, MS::DATA, MS::FLAG, MS::MODEL_DATA, MS::SIGMA,
+          MS::SIGMA_SPECTRUM, MS::UVW, MS::WEIGHT, MS::WEIGHT_SPECTRUM };
+
+    vector<String> msNames;
+
+    if (theMs.tableInfo ().subType () == "CONCATENATED"){
+
+        Block<String> names = theMs.getPartNames (false);
+        msNames.assign (names.begin(), names.end());
+
+    } else {
+
+        msNames.push_back (theMs.tableName()); // No part MSs.
     }
 
-    const ColumnDescSet & cds = theMs.tableDesc ().columnDescSet ();
+    for (String msName : msNames){
 
-    uInt startrow = msIter_p->table ().rowNumbers ()(0); // Get the first row number for this DDID.
+        MeasurementSet partMs (msName); // Create an MS object (should already be open)
+        const ColumnDescSet & cds = partMs.tableDesc ().columnDescSet ();
 
-    vector<String> columns;
-    columns.push_back (MS::columnName (MS::DATA));  // complex
-    columns.push_back (MS::columnName (MS::CORRECTED_DATA));  // complex
-    columns.push_back (MS::columnName (MS::MODEL_DATA));      // complex
-    columns.push_back (MS::columnName (MS::FLAG));            // boolean
-    columns.push_back (MS::columnName (MS::WEIGHT_SPECTRUM)); // float
-    columns.push_back (MS::columnName (MS::SIGMA_SPECTRUM)); // float
-    columns.push_back (MS::columnName (MS::WEIGHT));          // float
-    columns.push_back (MS::columnName (MS::SIGMA));           // float
-    columns.push_back (MS::columnName (MS::UVW));             // double
+        for (MSMainEnums::PredefinedColumns  columnId : columnIds){
 
-    if (tileCacheIsSet_p.nelements () != columns.size()) {
+            String column = MS::columnName (columnId);
 
-        tileCacheIsSet_p.resize (columns.size());
-        tileCacheIsSet_p.set (False);
-    }
+            try {
 
-    for (uInt k = 0; k < columns.size (); ++k) {
-
-        if (! cds.isDefined (columns [k]) || ! usesTiledDataManager (columns[k], theMs)){
-            continue;
-        }
-
-
-        try {
-
-            //////////////////
-            //////Temporary fix for virtual ms of multiple real ms's ...miracle of statics
-            //////setting the cache size of hypercube at row 0 of each ms.
-            ///will not work if each subms of a virtual ms has multi hypecube being
-            ///accessed.
-            if (theMs.tableInfo ().subType () == "CONCATENATED" &&
-                    msIterAtOrigin_p &&
-                    ! tileCacheIsSet_p[k]) {
-
-                Block<String> refTables = theMs.getPartNames (True);
-
-                for (uInt kk = 0; kk < refTables.nelements (); ++kk) {
-
-                    MeasurementSet elms (refTables[kk]);
-
-                    // Skip existing but empty WEIGHT_SPECTRUM or SIGMA_SPECTRUM column
-
-                    if (columns [k] == MS::columnName (MS::WEIGHT_SPECTRUM) ||
-                            columns [k] == MS::columnName (MS::SIGMA_SPECTRUM)) {
-                        TableColumn tc (elms, columns [k]);
-                        if (! tc.hasContent()){
-                            continue;
-                        }
-                    }
-
-                    ROTiledStManAccessor tacc (elms, columns[k], True);
-
-                    const IPosition tileShape(tacc.tileShape(startrow));
-                    const IPosition hypercubeShape(tacc.hypercubeShape(startrow));
-                    uInt nax=hypercubeShape.size();  // how many axes
-
-                    // Accumulate axis factors up to--but NOT including--the row (last) axis
-                    //  "ceil" catches partially filled tiles...
-                    uInt cacheSize(1);
-                    for (uInt iax=0; iax<nax-1; ++iax)
-                        cacheSize*= (uInt) ceil(hypercubeShape[iax]/(Float)(tileShape[iax]));
-
-                    cacheSize*=2; // Doubling to handle case where baselines span tiles in the row direction
-
-
-                    tacc.clearCaches (); //One tile only for now ...seems to work faster
-                    tacc.setCacheSize (startrow, cacheSize);
-
-                    tileCacheIsSet_p[k] = True;
+                if (! cds.isDefined (column) || ! usesTiledDataManager (column, partMs)){
+                    continue; // skip if column not in MS or not using tiles
                 }
+
+                if (columnId == MS::WEIGHT_SPECTRUM || columnId == MS::SIGMA_SPECTRUM){
+
+                    // These two columns are frequently present in an MS but uninitialized.
+
+                    TableColumn tableColumn (partMs, column);
+                    if (! tableColumn.hasContent()){
+                        continue; // Skip
+                    }
+                }
+
+                setMsColumnCacheSizes (partMs, column);
+
+            } catch (AipsError & e){
+                continue; // It failed so leave the caching as is
             }
-            else {
-
-                // For the big columns always set the tile cache so that it
-                // holds enough tiles to cover a complete row.  This could be
-                // optimized further (to reduce memory footprint but not I/O) by basing the
-                // cache size on the number of tiles needed to span the selected
-                // channels.  
-
-                ROTiledStManAccessor tacc (theMs, columns[k], True);
-
-                const IPosition tileShape(tacc.tileShape(startrow));
-                const IPosition hypercubeShape(tacc.hypercubeShape(startrow));
-                uInt nax=hypercubeShape.size();  // how many axes
-
-                // Accumulate axis factors up to--but NOT including--the row (last) axis
-                //  "ceil" catches partially filled tiles...
-                uInt cacheSize(1);
-                for (uInt iax=0; iax<nax-1; ++iax)
-                    cacheSize*= (uInt) ceil(hypercubeShape[iax]/(Float)(tileShape[iax]));
-
-                cacheSize*=2; // Doubling to handle case where baselines span tiles in the row direction
-
-                tacc.clearCaches (); //One tile only for now ...seems to work faster
-                tacc.setCacheSize (startrow, cacheSize);
-
-            }
-        }
-        catch (AipsError x) {
-            continue; // It failed so leave the caching as is
         }
     }
 }
+
+void
+VisibilityIteratorImpl2::setMsColumnCacheSizes (MeasurementSet & partMs,
+                                                const string & column)
+{
+    // For the column in the provided MS, loop over the hypercubes and
+    // set the cache size appropriately.
+
+    ROTiledStManAccessor accessor (partMs, column, True);
+    uInt nHypercubes = accessor.nhypercubes();
+
+    for (uInt cube = 0; cube != nHypercubes; cube ++){
+
+        // Get hypercube shape (includes row axis) and tile shape (does not
+        // include the row axis).
+
+        const IPosition tileShape(accessor.getTileShape(cube));
+        const IPosition hypercubeShape(accessor.getHypercubeShape(cube));
+
+        uInt nAxes = hypercubeShape.size();  // how many axes
+        if (nAxes < 1){
+
+            // Empty hypercube so skip it. Can't rely on loop below to handle
+            // this case because nAxes is unsigned so nAxes-1 is going to
+            // wrap around and become yuuge!
+
+            continue;
+        }
+
+        // Compute the appropriate cache size which will hold at least a single
+        // row's worth of tiles in the cache.  Use the factor of 2 as the initial
+        // value since  some large Alma data sets cause the row to span tiles along
+        // the baseline axis due to the autocorrelations not occurring near the
+        // corresponding cross correlation baselines.
+
+        uInt cacheSize = 2; // Doubling to handle case where baselines span tiles in the row direction
+
+        // Compute the number of tiles required to span the non-row axes of the hypercube.
+
+        for (uInt axis = 0; axis < nAxes - 1; ++ axis){
+            cacheSize *= (uInt) ceil(hypercubeShape[axis] / (Float)(tileShape [axis]));
+        }
+
+        // Apply the cache size (in tiles).
+
+        accessor.setHypercubeCacheSize(cube, cacheSize);
+    }
+}
+
 
 Bool
 VisibilityIteratorImpl2::usesTiledDataManager (const String & columnName,
