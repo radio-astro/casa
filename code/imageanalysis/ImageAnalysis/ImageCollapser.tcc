@@ -103,7 +103,7 @@ template<class T> SPIIT ImageCollapser<T>::collapse() const {
 			"Image has no direction coordinate." + cant
 		);
 		ThrowIf(
-			! subImage->imageInfo().hasBeam(),
+			subImage->units().getName().contains("beam") && ! subImage->imageInfo().hasBeam(),
 			"Image has no beam." + cant
 		);
 		Vector<Int> dirAxes = outCoords.directionAxesNumbers();

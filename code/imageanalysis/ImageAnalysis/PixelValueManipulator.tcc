@@ -197,17 +197,19 @@ template<class T> Record PixelValueManipulator<T>::getProfile(
 	}
 	ret.define("mask", mask);
 	ret.define("yUnit", collapsed->units().getName());
+	ret.define("npix", _npts(axis));
 	String tunit = unit;
 	tunit.downcase();
+	Vector<Double> pix(collapsed->ndim(), 0);
+	auto outputRef = collapsed->coordinates().toWorld(pix);
+	auto inputRef = this->_getImage()->coordinates().referenceValue();
+	inputRef[axis] = outputRef[axis];
+	auto inputPixel = this->_getImage()->coordinates().toPixel(inputRef);
+	Double count = floor(inputPixel[axis] + 0.5);
+	auto length = values.shape()[0];
+	Vector<Double> coords = indgen(length, count, 1.0);
+	ret.define("planes", coords);
 	if (tunit.startsWith("pix")) {
-		Vector<Double> pix(collapsed->ndim(), 0);
-		Vector<Double> outputRef = collapsed->coordinates().toWorld(pix);
-		Vector<Double> inputRef = this->_getImage()->coordinates().referenceValue();
-		inputRef[axis] = outputRef[axis];
-		Vector<Double> inputPixel = this->_getImage()->coordinates().toPixel(inputRef);
-		Double count = floor(inputPixel[axis] + 0.5);
-		uInt length = values.shape()[0];
-		Vector<Double> coords = indgen(length, count, 1.0);
 		ret.define("coords", coords);
 		ret.define("xUnit", "pixel");
 	}
@@ -257,9 +259,32 @@ template<class T> Record PixelValueManipulator<T>::getProfile(
 		}
 		this->_writeLogfile(oss.str());
 	}
-
 	return ret;
 }
+
+template<class T> Vector<uInt> PixelValueManipulator<T>::_npts(uInt axis) const {
+    auto subim = SubImageFactory<T>::createSubImageRO(
+        *this->_getImage(), *this->_getRegion(), this->_getMask(),
+        this->_getLog().get()
+    );
+    auto shape = subim->shape();
+    uInt nvals = shape[axis];
+    Vector<uInt> counts(nvals);
+    if (subim->hasPixelMask() || subim->isMasked()) {
+        IPosition begin(shape.size(), 0);
+        auto sliceShape = shape;
+        sliceShape[axis] = 1;
+        for (uInt i=0; i<nvals; ++i, ++begin[axis]) {
+            counts[i] = ntrue(subim->getMaskSlice(begin, sliceShape));
+        }
+    }
+    else {
+        // no mask, just return number of pixels in each plane
+        counts = shape.removeAxes(IPosition(1, axis)).product();
+    }
+    return counts;
+}
+
 
 template<class T> Record* PixelValueManipulator<T>::getSlice(
 	SPCIIT image, const Vector<Double>& x, const Vector<Double>& y,

@@ -120,7 +120,8 @@ public:
 	// calculated. If empty, the reference frame associated with the spectral coordinate is used.
 	// The return Record has the following keys: "values" is a Vector<T> containing the aggregate pixel values,
 	// "mask" is the associated mask values (Vector<Bool>), "coords" is a Vector<Double> of coordinate values,
-	// and "xUnit" is a String containing the coordinate unit.
+	// and "xUnit" is a String containing the coordinate unit, and "yUnit" is a string containing the
+	// ordinate unit.
 	Record getProfile(
 		uInt axis, const String& function, const String& unit,
 		PixelValueManipulatorData::SpectralType specType=PixelValueManipulatorData::DEFAULT,
@@ -202,9 +203,7 @@ private:
 		const Quantity *const restFreq, const String& axisUnit
 	) const;
 
-
-
-
+	Vector<uInt> _npts(uInt axis) const;
 };
 
 }
