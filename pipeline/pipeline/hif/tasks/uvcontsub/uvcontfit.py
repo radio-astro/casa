@@ -236,6 +236,8 @@ class UVcontFit(basetask.StandardTaskTemplate):
                                for spw_id in source_cranges
                                if source_cranges[spw_id] not in ['', 'NONE']]
                 spwstr = ','.join(spw_cranges)
+                if not spwstr:
+                    continue
 
                 # Fire off task
                 inputs.intent = sintents
