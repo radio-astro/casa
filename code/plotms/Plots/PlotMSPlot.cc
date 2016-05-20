@@ -1652,6 +1652,7 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
 
     bool isCalTable = (itsCache_->cacheType() == PlotMSCacheBase::CAL);
     String calType = itsCache_->calType();
+    bool polnRatio = itsCache_->polnRatio();
 
 	// Set axes scales
 	PMS::Axis x = cacheParams->xAxis();
@@ -1698,7 +1699,7 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
 	//x-axis label
 	if(set && showX) {
 		PMS::DataColumn xDataColumn = cacheParams->xDataColumn();
-		String xLabelSingle = canvParams->xLabelFormat().getLabel(x, xref, xrefval, xDataColumn);
+		String xLabelSingle = canvParams->xLabelFormat().getLabel(x, xref, xrefval, xDataColumn, polnRatio);
         if (x == PMS::FREQUENCY) xLabelSingle = addFreqFrame(xLabelSingle);
         if (axisIsAveraged(x, averaging)) xLabelSingle = "Average " + xLabelSingle;
 		canvas->setAxisLabel(cx, xLabelSingle);
@@ -1727,7 +1728,7 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
 				bool yref = itsCache_->hasReferenceValue(y);
 				double yrefval = itsCache_->referenceValue(y);
 				PMS::DataColumn yDataColumn = plotCacheParams->yDataColumn(i);
-				String yLabelSingle = canvParams->yLabelFormat( ).getLabel(y, yref, yrefval, yDataColumn );
+				String yLabelSingle = canvParams->yLabelFormat( ).getLabel(y, yref, yrefval, yDataColumn, polnRatio );
                 if (y == PMS::FREQUENCY) yLabelSingle = addFreqFrame(yLabelSingle);
                 if (axisIsAveraged(y, averaging)) yLabelSingle = "Average " + yLabelSingle;
 				if ( cy == Y_LEFT ){
@@ -1840,7 +1841,7 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
 			}
 		}
 		title = canvParams->titleFormat().getLabel(x, yAxes, xref,
-				xrefval, yRefs, yRefVals, xDataColumn, yDatas)
+				xrefval, yRefs, yRefVals, xDataColumn, yDatas, polnRatio)
 				+ " " + iterTxt;
 		canvas->setTitle(title);
 	}

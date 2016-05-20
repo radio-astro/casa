@@ -130,18 +130,22 @@ public:
     // any double axes tags are in the format, the given axis will be used for
     // them.
     String getLabel(PMS::Axis axis, bool refValueSet = false,
-            double refValue = 0, PMS::DataColumn data = PMS::DATA) const;
+            double refValue = 0, PMS::DataColumn data = PMS::DATA,
+            bool polnRatio = false) const;
     
     String getLabel(vector<PMS::Axis> axes, vector<bool> refValueSets,
-    		vector<double> refValues, vector<PMS::DataColumn> datas ) const;
+    		vector<double> refValues, vector<PMS::DataColumn> datas,
+            bool polnRatio = false ) const;
 
     // Generates a label, using the given double axes and reference values.  If
     // any single axes tags are in the format, the x axis will be used for it.
     String getLabel(PMS::Axis xAxis, vector<PMS::Axis> yAxes,
             bool xRefValueSet = false, double xRefValue = 0,
-            vector<bool> yRefValueSets=vector<bool>(1,false), vector<double> yRefValues =vector<double>(1,0.0),
+            vector<bool> yRefValueSets=vector<bool>(1,false), 
+            vector<double> yRefValues =vector<double>(1,0.0),
             PMS::DataColumn xData=PMS::DATA,
-            vector<PMS::DataColumn> yData = vector<PMS::DataColumn>(1,PMS::DATA) ) const;
+            vector<PMS::DataColumn> yData = vector<PMS::DataColumn>(1,PMS::DATA),
+            bool polnRatio = false ) const;
     
     // Equality operators.
     // <group>
@@ -159,10 +163,13 @@ private:
             PMS::Axis xAxis, vector<PMS::Axis> yAxes, bool refValueSet,
             double refValue, bool xRefValueSet, double xRefValue,
             vector<bool> yRefValueSets, vector<double> yRefValues,
-            PMS::DataColumn xData, const vector<PMS::DataColumn>& ydatas );
+            PMS::DataColumn xData, const vector<PMS::DataColumn>& ydatas,
+            bool polnRatio);
     
     //Adds the data label such as DATA, MODEL, CORRECTED, etc to the tag
     static void addDataToTag( String& tag, PMS::Axis axis, PMS::DataColumn column );
+    // Adds "POLN Ratio" to tag for cal table ratio plots
+    static void addPolnRatioToTag( String& tag, PMS::Axis axis );
 
     // Helper method for getLabel() which gets the next token in the format.
     // Returns true if a token was returned; false if the end of the format was

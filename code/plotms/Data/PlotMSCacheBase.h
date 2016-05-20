@@ -77,6 +77,7 @@ public:
   //  pure virtual
   virtual PlotMSCacheBase::Type cacheType() const = 0;
   String calType() const { return calType_; };
+  bool polnRatio() const { return polnRatio_; };
 
   // Access to pol names
   virtual String polname(Int ipol)=0;
@@ -431,6 +432,8 @@ protected:
 
   // The calibration type (Table subType)
   String calType_;
+  // Polarization selection is ratio
+  bool polnRatio_;
 
 private:
   void _updateAntennaMask( Int a, Vector<Bool>& antMask, const Vector<Int> selectedAntennas );

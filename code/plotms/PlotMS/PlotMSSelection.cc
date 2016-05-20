@@ -159,8 +159,6 @@ void PlotMSSelection::apply(NewCalTable& ct, NewCalTable& selCT,
 
   if (uvrange().length()>0)
     throw(AipsError("Selection by uvrange not supported for NewCalTable"));
-  if (corr().length()>0)
-    throw(AipsError("Selection by corr not supported for NewCalTable"));
   if (array().length()>0)
     throw(AipsError("Selection by array not supported for NewCalTable"));
 

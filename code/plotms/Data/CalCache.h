@@ -73,8 +73,8 @@ public:
   //  void setUpIndexer(PMS::Axis iteraxis=PMS::SCAN,
   //		    Bool globalXRange=False, Bool globalYRange=False);
 
+  // Convert poln index->name and name->index
   virtual String polname(Int ipol);
-
 
 protected:
 
@@ -125,6 +125,9 @@ private:
   
   // The polarization basis
   String basis_;
+  // Polarization selection index
+  Int polnIndex_;
+  Int polIndex(String polname);
 
   // VisIterator pointer
   ROCTIter* ci_p;

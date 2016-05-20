@@ -103,7 +103,8 @@ PlotMSCacheBase::PlotMSCacheBase(PlotMSApp* parent):
           yminG_(0),
           xmaxG_(0),
           ymaxG_(0),
-          calType_("")
+          calType_(""),
+          polnRatio_(False)
 {
 
 	// Make the empty indexer0 object so we have and empty PlotData object
@@ -276,6 +277,10 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
 	// 2) the underlying MS has changed, requiring a reloading of metadata
 
     userCanceled_ = false;
+
+    // Trap ratio plots, only for cal tables
+    if ((selection.corr()=='/') && (cacheType()==PlotMSCacheBase::MS))
+	    throw(AipsError("Polarization ratio plots not supported for measurement sets."));
 
 	// Remember the axes that we will load for plotting:
 	currentX_.clear();

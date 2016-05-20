@@ -45,7 +45,8 @@ namespace casa {
 
 CalCache::CalCache(PlotMSApp* parent):
   PlotMSCacheBase(parent),
-  basis_("Circular")
+  basis_("Circular"),
+  polnIndex_(-1)
 {}
 
 CalCache::~CalCache() {}
@@ -61,8 +62,21 @@ String CalCache::polname(Int ipol) {
   //  return String("?");
 }
 
+Int CalCache::polIndex(String polname) {
+  // check we have valid selection and return polarization index
+  if (polname == "") return -1;
 
-
+  if (basis_=="Linear") {
+    if (polname == "XY" || polname == "YX") return -1;
+    if (polname == "X") return 0;
+    if (polname == "Y") return 1;
+  } else {
+    if (polname == "RL" || polname == "LR") return -1;
+    if (polname == "R") return 0;
+    if (polname == "L") return 1;
+  }
+  throw(AipsError("correlation string not valid for Cal Table"));
+}
 
 //*********************************
 // protected method implementations
@@ -150,6 +164,15 @@ void CalCache::setUpCalIter(const String& ctname,
   Vector<Vector<Slice> > chansel;
   Vector<Vector<Slice> > corrsel;
   selection.apply(ct,selct,chansel,corrsel);
+
+  // check for invalid caltypes for ratio plots
+  if (selection.corr() == "/") {
+    if (calType_ == "BPOLY" || calType_[0] == 'T' || calType_[0] == 'F')
+      throw(AipsError("Polarization ratio plots not supported for " + calType_ + " tables."));
+    polnRatio_ = True;
+  } else {
+    polnIndex_ = polIndex(selection.corr());
+  }
   
   // setup the volume meter
   //  vm_.reset();
@@ -166,7 +189,7 @@ void CalCache::setUpCalIter(const String& ctname,
     ci_p = wci_p;  // const access
   }
 
-  // Apply chan/corr selction
+  // Apply chan/corr selection
   //if (chanselect) rci_p->selectChannel(chansel);
   //if (corrselect) rci_p->selectCorrelation(corrsel);
 
@@ -180,7 +203,6 @@ void CalCache::countChunks(ROCTIter& ci,
     thread->setStatus("Establishing cache size.  Please wait...");
     thread->setAllowedOperations(false,false,false);
   }
-
 
   ci.reset();
 
@@ -287,10 +309,9 @@ void CalCache::loadCalChunks(ROCTIter& ci,
       ROCTMainColumns cmc(thisct);
       IPosition pshape(cmc.flag().shape(0));
       
-      // cout << " pshape = " << pshape << flush;
-
       // Cache the data shapes
       chshapes_(0,chunk)=pshape[0];
+      if ((polnIndex_ >= 0) || polnRatio_) chshapes_(0,chunk)=1;
       chshapes_(1,chunk)=pshape[1];
       chshapes_(2,chunk)=thisct.nrow();
       chshapes_(3,chunk)=nAnt_;
@@ -361,11 +382,13 @@ void CalCache::loadCalChunks(ROCTIter& ci,
   */
 
   case PMS::CORR:
-    if (parsAreComplex()) 
-      corr_[chunk]->resize(cti.flag().shape()(0));
-    else
-      corr_[chunk]->resize(cti.flag().shape()(0));
+    corr_[chunk]->resize(cti.flag().shape()(0));
     indgen(*corr_[chunk]);
+
+    if (polnIndex_ >= 0) {
+      corr_[chunk]->resize(1);
+      corr_[chunk]->set(polnIndex_);
+    }
     break;
         
   case PMS::ANTENNA1:
@@ -390,18 +413,42 @@ void CalCache::loadCalChunks(ROCTIter& ci,
 
   case PMS::GAMP:
   case PMS::AMP: {
-    if (parsAreComplex()) 
-      *amp_[chunk] = amplitude(cti.cparam());
-    else
-      *amp_[chunk] = cti.fparam();
+    if (parsAreComplex()) {
+        Cube<Complex> cArray = cti.cparam();
+        if (polnIndex_ >= 0) {
+            *amp_[chunk] = amplitude(cArray(Slice(polnIndex_), Slice(), Slice()));
+        } else if (polnRatio_) {
+            *amp_[chunk] = amplitude(
+                cArray(Slice(0), Slice(), Slice()) / cArray(Slice(1), Slice(), Slice()));
+        } else {
+            *amp_[chunk] = amplitude(cArray);
+        }
+    } else {
+        Cube<Float> fArray = cti.fparam();
+        if (polnIndex_ >= 0) {
+           *amp_[chunk] = fArray(Slice(polnIndex_), Slice(), Slice());
+        } else if (polnRatio_) {        
+            *amp_[chunk] = fArray(Slice(0), Slice(), Slice()) / fArray(Slice(1), Slice(), Slice());
+        } else { 
+            *amp_[chunk] = fArray;
+        }
+    }
     break;
   }
     
   case PMS::GPHASE:
   case PMS::PHASE: {
     if (parsAreComplex()) {
-      *pha_[chunk] = phase(cti.cparam()); //*(180.0/C::pi);
-      (*pha_[chunk])*=Float(180.0/C::pi);
+        Cube<Complex> cArray = cti.cparam();
+        if (polnIndex_ >= 0) {
+            *pha_[chunk] = phase(cArray(Slice(polnIndex_), Slice(), Slice()));
+        } else if (polnRatio_) {        
+            *pha_[chunk] = phase(
+                cArray(Slice(0), Slice(), Slice()) / cArray(Slice(1), Slice(), Slice()));
+        } else {
+            *pha_[chunk] = phase(cArray);
+        }
+      (*pha_[chunk]) *= Float(180.0/C::pi);
     }
     else
       throw(AipsError("phase has no meaning for this table"));
@@ -411,66 +458,116 @@ void CalCache::loadCalChunks(ROCTIter& ci,
   case PMS::GREAL:
   case PMS::REAL: {
     if (parsAreComplex()) {
-      *real_[chunk] = real(cti.cparam());
-    }
-    else
-      throw(AipsError("real has no meaning for this table"));
+        Cube<Complex> cArray = cti.cparam();
+        if (polnIndex_ >= 0) {
+            *real_[chunk] = real(cArray(Slice(polnIndex_), Slice(), Slice()));
+        } else if (polnRatio_) {        
+            *real_[chunk] = real(
+                cArray(Slice(0), Slice(), Slice()) / cArray(Slice(1), Slice(), Slice()));
+        } else {
+            *real_[chunk] = real(cArray);
+        }
+    } else
+        throw(AipsError("real has no meaning for this table"));
     break;
   }
+
   case PMS::GIMAG:
   case PMS::IMAG: {
     if (parsAreComplex()) {
-      *imag_[chunk] = imag(cti.cparam());
-    }
-    else
-      throw(AipsError("imag has no meaning for this table"));
+        Cube<Complex> cArray = cti.cparam();
+        if (polnIndex_ >= 0) {
+            *imag_[chunk] = imag(cArray(Slice(polnIndex_), Slice(), Slice()));
+        } else if (polnRatio_) {        
+            *imag_[chunk] = imag(
+                cArray(Slice(0), Slice(), Slice()) / cArray(Slice(1), Slice(), Slice()));
+        } else {
+            *imag_[chunk] = imag(cArray);
+        }
+    } else
+        throw(AipsError("imag has no meaning for this table"));
     break;
   }
 
   case PMS::DELAY:{
-	  if ( !parsAreComplex()){
-		  *par_[chunk] = cti.fparam();
-	  }
-	  else {
-		  throw(AipsError( "delay has no meaning for this table"));
-	  }
-	  break;
+    if (!parsAreComplex()) {
+        Cube<Float> fArray = cti.fparam();
+        if (polnIndex_ >= 0) {
+           *par_[chunk] = fArray(Slice(polnIndex_), Slice(), Slice());
+        } else if (polnRatio_) {        
+            *par_[chunk] = fArray(Slice(0), Slice(), Slice()) - fArray(Slice(1), Slice(), Slice());
+        } else { 
+            *par_[chunk] = fArray;
+        }
+    } else
+        throw(AipsError( "delay has no meaning for this table"));
+    break;
   }
 
   case PMS::OPAC: {
-
-	if ( !parsAreComplex()){
-		*par_[chunk] = cti.fparam();
-	}
-	else {
+    if (!parsAreComplex()) {
+        Cube<Float> fArray = cti.fparam();
+        if (polnIndex_ >= 0) {
+           *par_[chunk] = fArray(Slice(polnIndex_), Slice(), Slice());
+        } else if (polnRatio_) {
+            // ??? requirements here      
+        } else { 
+            *par_[chunk] = fArray;
+        }
+    } else
 		throw(AipsError( "opacity has no meaning for this table"));
-	}
     break;
   }
-  case PMS::SWP: {
-	  if ( !parsAreComplex() && (!calType_.contains("TSYS"))) {
-		  *par_[chunk] = cti.fparam()(Slice(0,2,2),Slice(),Slice());
-	  }
-	  else {
-		  throw( AipsError( "SwPower has no meaning for this table"));
-	  }
+
+  case PMS::SWP: {   // "SPGAIN" in plotcal
+    if ( !parsAreComplex() && (!calType_.contains("TSYS"))) {
+        Cube<Float> fArray = cti.fparam();
+        if (polnIndex_ >= 0) {
+           *par_[chunk] = fArray(Slice(polnIndex_), Slice(), Slice());
+        } else if (polnRatio_) {
+            *par_[chunk] = fArray(Slice(1), Slice(), Slice()) / fArray(Slice(3), Slice(), Slice());
+        } else { 
+		    *par_[chunk] = fArray(Slice(0,2,2),Slice(),Slice());
+        }
+    } else
+        throw( AipsError( "SwPower has no meaning for this table"));
     break;
   }
+
   case PMS::TSYS: {
 	if ( !parsAreComplex() && (calType_.contains("TSYS"))) {
-        *tsys_[chunk] = cti.fparam();
-    } else {
+        Cube<Float> fArray = cti.fparam();
+        if (polnIndex_ >= 0) {
+           *tsys_[chunk] = fArray(Slice(polnIndex_), Slice(), Slice());
+        } else if (polnRatio_) {
+            *tsys_[chunk] = fArray(Slice(0), Slice(), Slice()) / fArray(Slice(1), Slice(), Slice());
+        } else { 
+		    *tsys_[chunk] = fArray;
+        }
+    } else
         throw(AipsError( "tsys has no meaning for this table"));
-	}
     break;
   }
+
   case PMS::SNR: {
-	*snr_[chunk] = cti.snr();
+	if (polnIndex_ >= 0)
+        *snr_[chunk] = cti.snr()(Slice(polnIndex_), Slice(), Slice());
+    else if (polnRatio_)
+        *snr_[chunk] = cti.snr()(Slice(0), Slice(), Slice()) /
+                        cti.snr()(Slice(1), Slice(), Slice());
+    else 
+        *snr_[chunk] = cti.snr();
     break;
   }
                 
   case PMS::FLAG:
-    *flag_[chunk] = cti.flag();
+	if (polnIndex_ >= 0) 
+        *flag_[chunk] = cti.flag()(Slice(polnIndex_), Slice(), Slice());
+    else if (polnRatio_) {
+        *flag_[chunk] = cti.flag()(Slice(0), Slice(), Slice()) || 
+                        cti.flag()(Slice(1), Slice(), Slice());
+    }
+    else *flag_[chunk] = cti.flag();
     break;
  /*
     case PMS::WT: {
