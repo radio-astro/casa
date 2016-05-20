@@ -435,10 +435,7 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
 		// 2)  not already loaded? (loadedAxes)
 		if(!loadedAxes_[axis]) {
 			loadAxes.push_back(axis);
-			if ((axis == PMS::WT) || (axis == PMS::WTSP))
-                loadData.push_back(PMS::DEFAULT_DATACOLUMN_WT);
-            else
-			    loadData.push_back(dc);
+			loadData.push_back(dc);
 		}
 
 		// 3)  a data column, already loaded, but wrong data column
