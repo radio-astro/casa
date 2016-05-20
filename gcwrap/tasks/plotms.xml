@@ -87,65 +87,64 @@ MS Parameters
     <value />
     <allowed kind="enum">
       <value />
-      <value>scan</value>
-      <value>field</value>
-      <value>time</value>
-      <value>interval</value><value>time_interval</value><value>timeinterval</value><value>timeint</value>
-      <value>spw</value>
-      <value>channel</value><value>chan</value>
-      <value>frequency</value><value>freq</value>
-      <value>correlation</value><value>corr</value>
-      <value>antenna1</value><value>ant1</value>
-      <value>antenna2</value><value>ant2</value>
-      <value>baseline</value>
-      <value>row</value>
-      <value>observation</value>
-      <value>intent</value>
-      <value>feed1</value>
-      <value>feed2</value>
-      <value>uvdist</value>
-      <value>uvwave</value><value>uvdist_l</value><value>uvdistl</value>
-      <value>u</value>
-      <value>v</value>
-      <value>w</value>
-      <value>uwave</value>
-      <value>vwave</value>
-      <value>wwave</value>
-      <value>velocity</value><value>vel</value>
-      <value>amp</value><value>amplitude</value>
-      <value>phase</value>
-      <value>real</value>
-      <value>imag</value><value>imaginary</value>
-      <value>wt</value>
+      <value>scan</value><value>Scan</value>
+      <value>field</value><value>Field</value>
+      <value>time</value><value>Time</value>
+      <value>interval</value><value>time_interval</value><value>timeinterval</value><value>timeint</value><value>Interval</value>
+      <value>spw</value><value>Spw</value>
+      <value>channel</value><value>chan</value><value>Channel</value>
+      <value>frequency</value><value>freq</value><value>Frequency</value>
+      <value>correlation</value><value>corr</value><value>Corr</value>
+      <value>antenna1</value><value>ant1</value><value>Antenna1</value>
+      <value>antenna2</value><value>ant2</value><value>Antenna2</value>
+      <value>baseline</value><value>Baseline</value>
+      <value>row</value><value>Row</value>
+      <value>observation</value><value>Observation</value>
+      <value>intent</value><value>Intent</value>
+      <value>feed1</value><value>Feed1</value>
+      <value>feed2</value><value>Feed2</value>
+      <value>uvdist</value><value>UVdist</value>
+      <value>uvwave</value><value>uvdist_l</value><value>uvdistl</value><value>UVwave</value>
+      <value>u</value><value>U</value>
+      <value>v</value><value>V</value>
+      <value>w</value><value>W</value>
+      <value>uwave</value><value>Uwave</value>
+      <value>vwave</value><value>Vwave</value>
+      <value>wwave</value><value>Wwave</value>
+      <value>velocity</value><value>vel</value><value>Velocity</value>
+      <value>amp</value><value>amplitude</value><value>Amp</value>
+      <value>phase</value><value>Phase</value>
+      <value>real</value><value>Real</value>
+      <value>imag</value><value>imaginary</value><value>Imag</value>
+      <value>wt</value><value>Wt</value>
       <value>weight</value>
-      <value>wt*amp</value>
-      <value>wtsp</value>
-      <value>weightspectrum</value>
-      <value>sigma</value>
-      <value>sigmasp</value>
-      <value>sigmaspectrum</value>
-      <value>imwt</value>
-      <value>flag</value>
-      <value>azimuth</value>
-      <value>elevation</value>
-      <value>hourang</value><value>hourangle</value>
-      <value>parang</value><value>parangle</value><value>parallacticangle</value>
-      <value>antenna</value><value>ant</value>
-      <value>ant-azimuth</value>
-      <value>ant-elevation</value>
-      <value>ant-parang</value><value>ant-parangle</value><value>ant-parallacticangle</value>
-      <value>flagrow</value>
-      <value>gainamp</value><value>gamp</value>
-      <value>gainphase</value><value>gphase</value>
-      <value>gainreal</value><value>greal</value>
-      <value>gainimag</value><value>gimag</value>
-      <value>delay</value><value>del</value>
-      <value>opac</value><value>opacity</value>
-      <value>swp</value><value>swpower</value><value>switchedpower</value>
-      <value>tsys</value>
-      <value>snr</value>
-      <value>radialvelocity</value>
-      <value>rho</value>
+      <value>wt*amp</value><value>Wt*Amp</value>
+      <value>wtsp</value><value>WtSp</value>
+      <value>weightspectrum</value><value>WeightSpectrum</value>
+      <value>sigma</value><value>Sigma</value>
+      <value>sigmasp</value><value>SigmaSp</value>
+      <value>sigmaspectrum</value><value>SigmaSpectrum</value>
+      <value>flag</value><value>Flag</value>
+      <value>azimuth</value><value>Azimuth</value>
+      <value>elevation</value><value>Elevation</value>
+      <value>hourang</value><value>hourangle</value><value>HourAngle</value>
+      <value>parang</value><value>parangle</value><value>parallacticangle</value><value>ParAngle</value>
+      <value>antenna</value><value>ant</value><value>Antenna</value>
+      <value>ant-azimuth</value><value>Ant-Azimuth</value>
+      <value>ant-elevation</value><value>Ant-Elevation</value>
+      <value>ant-parang</value><value>ant-parangle</value><value>ant-parallacticangle</value><value>Ant-Parangle</value>
+      <value>flagrow</value><value>FlagRow</value>
+      <value>gainamp</value><value>gamp</value><value>GainAmp</value>
+      <value>gainphase</value><value>gphase</value><value>GainPhase</value>
+      <value>gainreal</value><value>greal</value><value>GainReal</value>
+      <value>gainimag</value><value>gimag</value><value>GainImag</value>
+      <value>delay</value><value>del</value><value>Delay</value>
+      <value>opac</value><value>opacity</value><value>Opac</value>
+      <value>swp</value><value>swpower</value><value>switchedpower</value><value>SwPower</value>
+      <value>tsys</value><value>Tsys</value>
+      <value>snr</value><value>SNR</value>
+      <value>radialvelocity</value><value>Radial Velocity</value>
+      <value>rho</value><value>Distance</value>
     </allowed>
   </param>
   
@@ -172,94 +171,65 @@ MS Parameters
    <value type="string" />
    <value type="stringArray" ><value></value></value>
    <allowed kind="enum">
-      <value />
-      <value>scan</value>
-      <value>field</value>
-      <value>time</value>
-      <value>interval</value>
-      <value>time_interval</value>
-      <value>timeinterval</value>
-      <value>timeint</value>
-      <value>spw</value>
-      <value>channel</value>
-      <value>chan</value>
-      <value>frequency</value>
-      <value>freq</value>
-      <value>correlation</value>
-      <value>corr</value>
-      <value>antenna1</value>
-      <value>ant1</value>
-      <value>antenna2</value>
-      <value>ant2</value>
-      <value>baseline</value>
-      <value>observation</value>
-      <value>intent</value>
-      <value>feed1</value>
-      <value>feed2</value>
-      <value>uvdist</value>
-      <value>uvwave</value>
-      <value>uvdist_l</value>
-      <value>uvdistl</value>
-      <value>u</value>
-      <value>v</value>
-      <value>w</value>
-      <value>uwave</value>
-      <value>vwave</value>
-      <value>wwave</value>
-      <value>velocity</value>
-      <value>vel</value>
-      <value>amp</value>
-      <value>amplitude</value>
-      <value>phase</value>
-      <value>real</value>
-      <value>imag</value>
-      <value>imaginary</value>
-      <value>wt</value>
+       <value />
+       <value>scan</value><value>Scan</value>
+      <value>field</value><value>Field</value>
+      <value>time</value><value>Time</value>
+      <value>interval</value><value>time_interval</value><value>timeinterval</value><value>timeint</value><value>Interval</value>
+      <value>spw</value><value>Spw</value>
+      <value>channel</value><value>chan</value><value>Channel</value>
+      <value>frequency</value><value>freq</value><value>Frequency</value>
+      <value>correlation</value><value>corr</value><value>Corr</value>
+      <value>antenna1</value><value>ant1</value><value>Antenna1</value>
+      <value>antenna2</value><value>ant2</value><value>Antenna2</value>
+      <value>baseline</value><value>Baseline</value>
+      <value>row</value><value>Row</value>
+      <value>observation</value><value>Observation</value>
+      <value>intent</value><value>Intent</value>
+      <value>feed1</value><value>Feed1</value>
+      <value>feed2</value><value>Feed2</value>
+      <value>uvdist</value><value>UVdist</value>
+      <value>uvwave</value><value>uvdist_l</value><value>uvdistl</value><value>UVwave</value>
+      <value>u</value><value>U</value>
+      <value>v</value><value>V</value>
+      <value>w</value><value>W</value>
+      <value>uwave</value><value>Uwave</value>
+      <value>vwave</value><value>Vwave</value>
+      <value>wwave</value><value>Wwave</value>
+      <value>velocity</value><value>vel</value><value>Velocity</value>
+      <value>amp</value><value>amplitude</value><value>Amp</value>
+      <value>phase</value><value>Phase</value>
+      <value>real</value><value>Real</value>
+      <value>imag</value><value>imaginary</value><value>Imag</value>
+      <value>wt</value><value>Wt</value>
       <value>weight</value>
-      <value>wt*amp</value>
-      <value>wtsp</value>
-      <value>weightspectrum</value>
-      <value>sigma</value>
-      <value>sigmasp</value>
-      <value>sigmaspectrum</value>
-      <value>imwt</value>
-      <value>flag</value>
-      <value>azimuth</value>
-      <value>elevation</value>
-      <value>radialvelocity</value>
-      <value>rho</value>
-      <value>hourang</value>
-      <value>hourangle</value>
-      <value>parang</value>
-      <value>parangle</value>
-      <value>parallacticangle</value>
-      <value>antenna</value><value>ant</value>
-      <value>ant-azimuth</value>
-      <value>ant-elevation</value>
-      <value>ant-hourang</value>
-      <value>ant-hourangle</value>
-      <value>ant-parang</value>
-      <value>ant-parangle</value>
-      <value>ant-parallacticangle</value>
-      <value>row</value>
-      <value>flagrow</value>
-      <value>gainamp</value>
-      <value>gamp</value>
-      <value>gainphase</value>
-      <value>gphase</value>
-      <value>gainreal</value>
-      <value>greal</value>
-      <value>gainimag</value>
-      <value>gimag</value>
-      <value>delay</value>
-      <value>del</value>
-      <value>opac</value>
-      <value>opacity</value>
-      <value>swp</value>
-      <value>swpower</value>
-      <value>switchedpower</value>
-      <value>tsys</value>
-      <value>snr</value>
+      <value>wt*amp</value><value>Wt*Amp</value>
+      <value>wtsp</value><value>WtSp</value>
+      <value>weightspectrum</value><value>WeightSpectrum</value>
+      <value>sigma</value><value>Sigma</value>
+      <value>sigmasp</value><value>SigmaSp</value>
+      <value>sigmaspectrum</value><value>SigmaSpectrum</value>
+      <value>flag</value><value>Flag</value>
+      <value>azimuth</value><value>Azimuth</value>
+      <value>elevation</value><value>Elevation</value>
+      <value>hourang</value><value>hourangle</value><value>HourAngle</value>
+      <value>parang</value><value>parangle</value><value>parallacticangle</value><value>ParAngle</value>
+      <value>antenna</value><value>ant</value><value>Antenna</value>
+      <value>ant-azimuth</value><value>Ant-Azimuth</value>
+      <value>ant-elevation</value><value>Ant-Elevation</value>
+      <value>ant-parang</value><value>ant-parangle</value><value>ant-parallacticangle</value><value>Ant-Parangle</value>
+      <value>flagrow</value><value>FlagRow</value>
+      <value>gainamp</value><value>gamp</value><value>GainAmp</value>
+      <value>gainphase</value><value>gphase</value><value>GainPhase</value>
+      <value>gainreal</value><value>greal</value><value>GainReal</value>
+      <value>gainimag</value><value>gimag</value><value>GainImag</value>
+      <value>delay</value><value>del</value><value>Delay</value>
+      <value>opac</value><value>opacity</value><value>Opac</value>
+      <value>swp</value><value>swpower</value><value>switchedpower</value><value>SwPower</value>
+      <value>tsys</value><value>Tsys</value>
+      <value>snr</value><value>SNR</value>
+      <value>radialvelocity</value><value>Radial Velocity</value>
+      <value>rho</value><value>Distance</value>
     </allowed>
     </param>
     
@@ -540,13 +510,13 @@ Iteration Parameters
       <value />
       <allowed kind="enum">
         <value />
-        <value>scan</value>
-        <value>field</value>
-        <value>spw</value>
-        <value>baseline</value>
-        <value>antenna</value>
-        <value>time</value>
-        <value>corr</value>
+        <value>scan</value><value>Scan</value>
+        <value>field</value><value>Field</value>
+        <value>spw</value><value>Spw</value>
+        <value>baseline</value><value>Baseline</value>
+        <value>antenna</value><value>Antenna</value>
+        <value>time</value><value>Time</value>
+        <value>corr</value><value>Corr</value>
       </allowed>
    </param>
 
@@ -635,17 +605,17 @@ Display Parameters
         <value type="string" />
         <allowed kind="enum" type="string">
             <value />
-            <value>scan</value>
-            <value>field</value>
-            <value>spw</value>
-            <value>antenna1</value><value>ant1</value>
-            <value>antenna2</value><value>ant2</value>
-            <value>baseline</value>
-            <value>channel</value><value>chan</value>
-            <value>corr</value>
-            <value>time</value>
-            <value>observation</value>
-            <value>intent</value>
+            <value>scan</value><value>Scan</value>
+            <value>field</value><value>Field</value>
+            <value>spw</value><value>Spw</value>
+            <value>antenna1</value><value>ant1</value><value>Antenna1</value>
+            <value>antenna2</value><value>ant2</value><value>Antenna2</value>
+            <value>baseline</value><value>Baseline</value>
+            <value>channel</value><value>chan</value><value>Channel</value>
+            <value>corr</value><value>Corr</value>
+            <value>time</value><value>Time</value>
+            <value>observation</value><value>Observation</value>
+            <value>intent</value><value>Intent</value>
         </allowed>
     </param>
 
@@ -1029,6 +999,7 @@ Constraints
         <default param="xdatacolumn"><value type="string" /></default>
       </equals>
       <equals value="scan"/>
+       <equals value="Scan"/>
       <equals value="field"/>
       <equals value="time"/>
       <equals value="time_interval"/>
@@ -1112,6 +1083,7 @@ Constraints
         <default param="ydatacolumn"><value type="string" /></default>
       </equals>
       <equals value="scan"/>
+       <equals value="Scan"/>
       <equals value="field"/>
       <equals value="time"/>
       <equals value="time_interval"/>
