@@ -269,23 +269,24 @@ class testBPdcals(basetask.StandardTaskTemplate):
         LOG.info("Doing test bandpass calibration")
 
         '''
-        flagdata_task_args = {'vis'         :self.inputs.vis, 'spw' : '0:35~40'}
+        flagdata_task_args = {'vis'         :self.inputs.vis, 'spw' : '0:35~55'}
         job = casa_tasks.flagdata(**flagdata_task_args)
         self._executor.execute(job)
 
-        flagdata_task_args = {'vis'         :self.inputs.vis, 'spw' : '3:35~40'}
+
+        flagdata_task_args = {'vis'         :self.inputs.vis, 'spw' : '3:25~45'}
         job = casa_tasks.flagdata(**flagdata_task_args)
         self._executor.execute(job)
         '''
 
-        print "WEAKBP: ", self.inputs.weakbp
+        LOG.info("WEAKBP: "+str(self.inputs.weakbp))
 
         if (self.inputs.weakbp == True):
-            print "USING WEAKBP HEURISTICS"
+            LOG.info("USING WEAKBP HEURISTICS")
             interp = weakbp(self.inputs.vis, bpcaltable, context=context, RefAntOutput=RefAntOutput[0],
                                             ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse, solint='inf', append=False)
         else:
-            print "Using REGULAR heuristics"
+            LOG.info("Using REGULAR heuristics")
             interp = ''
             bandpass_job = do_bandpass(self.inputs.vis, bpcaltable, context=context, RefAntOutput=RefAntOutput[0], spw='',
                                             ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse, solint='inf', append=False)

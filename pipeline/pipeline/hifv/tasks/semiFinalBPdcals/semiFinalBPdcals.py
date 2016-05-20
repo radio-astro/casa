@@ -143,10 +143,14 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
         #calfrom = callibrary.CalFrom(gaintable=bpdgain_touse, interp='', calwt=False)
         #context.callibrary.add(calto, calfrom)
 
+        LOG.info("WEAKBP: "+str(self.inputs.weakbp))
+
         if (self.inputs.weakbp == True):
+            LOG.info("USING WEAKBP HEURISTICS")
             interp = weakbp(self.inputs.vis, bpcaltable, context=context, RefAntOutput=RefAntOutput[0],
                                             ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse, solint='inf', append=False)
         else:
+            LOG.info("Using REGULAR heuristics")
             interp = ''
             bandpass_job = do_bandpass(self.inputs.vis, bpcaltable, context=context, RefAntOutput=RefAntOutput[0], spw='',
                                             ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse, solint='inf', append=False)

@@ -80,16 +80,18 @@ def computeChanFlag(vis, caltable, context):
                 LOG.warn("Problem with using channel pre-averaging bandpass calibration heuristic - check CASA log")
             '''
 
-            # Determine contiguous lengths for both polarizations, but ignoring edge flagging
+            # Determine contiguous lengths of failed solutions for both polarizations, but ignoring edge flagging
             for row in rangeA[1:-1]:
                 length = row[-1]-row[0]
                 spwids.append(spwArr[0])
+                LOG.info('WEAKBP FAILED SOLUTION: SPW '+str(spwArr[0])+': '+str(row[0])+'~'+str(row[-1]))
                 if length > len(flagArr[0])/32.0:
                     largechunk = True
 
             for row in rangeB[1:-1]:
                 length = row[-1]-row[0]
                 spwids.append(spwArr[0])
+                LOG.info('WEAKBP FAILED SOLUTION: SPW '+str(spwArr[0])+': '+str(row[0])+'~'+str(row[-1]))
                 if length > len(flagArr[1])/32.0:
                     largechunk = True
 
