@@ -1373,7 +1373,7 @@ using namespace casa::vi;
 
   Bool FTMachine::matchChannel(const vi::VisBuffer2& vb){
 
-    Int spw=vb.spectralWindows()[0];
+    //Int spw=vb.spectralWindows()[0];
     nvischan  = vb.nChannels();
     chanMap.resize(nvischan);
     chanMap.set(-1);

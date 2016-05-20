@@ -1,18 +1,18 @@
 //# Mosaicft.cc: Implementation of MosaicFTNew class
-//# Copyright (C) 1997,1998,1999,2000,2001,2002,2003
+//# Copyright (C) 2016
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
-//# under the terms of the GNU Library General Public License as published by
+//# under the terms of the GNU General Public License as published by
 //# the Free Software Foundation; either version 2 of the License, or (at your
 //# option) any later version.
 //#
 //# This library is distributed in the hope that it will be useful, but WITHOUT
 //# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU  General Public
 //# License for more details.
 //#
-//# You should have received a copy of the GNU Library General Public License
+//# You should have received a copy of the GNU General Public License
 //# along with this library; if not, write to the Free Software Foundation,
 //# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
 //#
@@ -150,6 +150,27 @@ ImageInterface<Complex>& MosaicFTNew::getImage(Matrix<Float>& weights,
       Int iny = lattice->shape()(1);
       Vector<Complex> correction(inx);
       correction=Complex(1.0, 0.0);
+      Vector<Float> sincConvX(nx);
+      for (Int ix=0;ix<nx;ix++) {
+	Float x=C::pi*Float(ix-nx/2)/(Float(nx)*Float(convSampling));
+	if(ix==nx/2) {
+	  sincConvX(ix)=1.0;
+	}
+	else {
+	  sincConvX(ix)=sin(x)/x;
+	}
+      }
+      Vector<Float> sincConvY(ny);
+      for (Int ix=0;ix<ny;ix++) {
+	Float x=C::pi*Float(ix-ny/2)/(Float(ny)*Float(convSampling));
+	if(ix==ny/2) {
+	  sincConvY(ix)=1.0;
+	}
+	else {
+	  sincConvY(ix)=sin(x)/x;
+	}
+      }
+
 
       IPosition cursorShape(4, inx, 1, 1, 1);
       IPosition axisPath(4, 0, 1, 2, 3);
@@ -159,19 +180,23 @@ ImageInterface<Complex>& MosaicFTNew::getImage(Matrix<Float>& weights,
 	{
 	Int pol=lix.position()(2);
 	Int chan=lix.position()(3);
+	Int iy=lix.position()(1);
+	for (Int ix=0;ix<nx;ix++) {
+	    correction(ix)=1.0/(sincConvX(ix)*sincConvY(iy));
+	}
 	if(normalize) 
 	  {
 	    if(weights(pol, chan)!=0.0) 
 	      {
 		Complex rnorm(Float(inx)*Float(iny)/weights(pol,chan));
-		lix.rwCursor()*=rnorm;
+		lix.rwVectorCursor()*=rnorm*correction;
 	      }
 	    else {
 	      lix.woCursor()=0.0;
 	    }
 	}	  else {
 	  Complex rnorm(Float(inx)*Float(iny));
-	  lix.rwCursor()*=rnorm;
+	  lix.rwVectorCursor()*=rnorm*correction;
 	}
       }
     }
