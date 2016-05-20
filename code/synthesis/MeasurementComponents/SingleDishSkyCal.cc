@@ -1258,14 +1258,16 @@ String SingleDishOtfCal::configureSelection()
 
   for (uInt field_id=0; field_id < tbl_field.nrow(); ++field_id){
 	  String field_sel(casacore::String::toString<uInt>(field_id));
-	  //String const field_name = field_name_col(field_id);
 	  String const source_name = source_map.at(source_id_col(field_id));
+
+	  // Set ephemeris flag if source name is the one recognized as a moving source
 	  if (isEphemeris(source_name)) {
 	    calc.setMovingSource(source_name);
 	  }
 	  else {
 	    calc.unsetMovingSource();
 	  }
+
 	  for (uInt ant_id=0; ant_id < tbl_antenna.nrow(); ++ant_id){
 		  String ant_sel(antenna_name(ant_id) + "&&&");
 		  for (uInt spw_id=0; spw_id < tbl_spectral_window.nrow(); ++spw_id){
