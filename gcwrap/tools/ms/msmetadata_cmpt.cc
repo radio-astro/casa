@@ -51,7 +51,7 @@
 
 #include <casa/namespace.h>
 
-#define _ORIGIN *_log << LogOrigin("msmetadata_cmpt.cc", __FUNCTION__, __LINE__);
+#define _ORIGIN *_log << LogOrigin("msmetadata_cmpt.cc", __func__, __LINE__);
 // common method scaffold
 
 #define COMMA ,
@@ -1177,8 +1177,11 @@ void msmetadata::_init(const casa::MeasurementSet *const &ms, const float caches
 
 bool msmetadata::open(const string& msname, const float cachesize) {
 	_FUNC2(
-		_ms.reset(new MeasurementSet(msname));
-		MSChecker msChecker(*_ms);
+
+        _ms.reset(new MeasurementSet(msname));
+        *_log << LogIO::NORMAL << "Performing internal consistency checks on "
+            << msname << "..." << LogIO::POST;
+        MSChecker msChecker(*_ms);
 		msChecker.checkReferentialIntegrity();
 		_init(_ms.get(), cachesize);
 		return true;
