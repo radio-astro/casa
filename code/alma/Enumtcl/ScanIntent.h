@@ -25,7 +25,7 @@
 using namespace ScanIntentMod;
 
 template<>
- struct enum_set_traits<ScanIntentMod::ScanIntent> : public enum_set_traiter<ScanIntentMod::ScanIntent,29,ScanIntentMod::OBSERVE_CHECK_SOURCE> {};
+ struct enum_set_traits<ScanIntentMod::ScanIntent> : public enum_set_traiter<ScanIntentMod::ScanIntent,30,ScanIntentMod::CALIBRATE_DIFFGAIN> {};
 
 template<>
 class enum_map_traits<ScanIntentMod::ScanIntent,void> : public enum_map_traiter<ScanIntentMod::ScanIntent,void> {
@@ -95,6 +95,8 @@ public:
      (ScanIntentMod::CALIBRATE_APPPHASE_PASSIVE,ep((int)ScanIntentMod::CALIBRATE_APPPHASE_PASSIVE,"CALIBRATE_APPPHASE_PASSIVE","un-documented")));
     m_.insert(pair<ScanIntentMod::ScanIntent,EnumPar<void> >
      (ScanIntentMod::OBSERVE_CHECK_SOURCE,ep((int)ScanIntentMod::OBSERVE_CHECK_SOURCE,"OBSERVE_CHECK_SOURCE","un-documented")));
+    m_.insert(pair<ScanIntentMod::ScanIntent,EnumPar<void> >
+     (ScanIntentMod::CALIBRATE_DIFFGAIN,ep((int)ScanIntentMod::CALIBRATE_DIFFGAIN,"CALIBRATE_DIFFGAIN","un-documented")));
     return true;
   }
   static map<ScanIntentMod::ScanIntent,EnumPar<void> > m_;
