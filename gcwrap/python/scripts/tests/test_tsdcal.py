@@ -1208,6 +1208,94 @@ class tsdcal_test_otf(unittest.TestCase):
         self.assertEqual(tsdcal_result,expected_result) # AlmostEqual semantics            
     
 
+class tsdcal_test_otf_ephem(unittest.TestCase):
+    """
+    Unit tests for task tsdcal,
+    sky calibration mode = 'otf' : On-The-Fly (OTF) *non-raster* 
+    
+    Test cases for ephemeris objects are defined in this class.
+
+    The list of tests:
+    Test            | Input            | Edges    | Calibration 
+    Name            | MS               | Fraction | Mode
+    ==========================================================================
+    test_otfephem01 | otf_ephem.ms     | 10%      | otf
+    test_otfephem02 | otf_ephem.ms     | 10%      | otf,apply
+    """
+    
+    datapath=os.environ.get('CASAPATH').split()[0]+ '/data/regression/unittest/tsdcal/'
+    infile = 'otf_ephem.ms'
+    outfile = infile + '.otfcal'
+        
+    def setUp(self):
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
+        copytree_ignore_subversion(self.datapath, self.infile)
+
+        default(tsdcal)
+
+    def tearDown(self):
+        to_be_removed = [self.infile, self.outfile]
+        for f in to_be_removed:
+            if os.path.exists(f):
+                shutil.rmtree(f)
+                
+    def check_ephem(self, vis):
+        with sdutil.tbmanager(os.path.join(vis, 'SOURCE')) as tb:
+            names = tb.getcol('NAME')
+        self.assertEqual(len(names), 1)
+        me = gentools(['me'])[0]
+        direction_refcodes = me.listcodes(me.direction())
+        ephemeris_codes = direction_refcodes['extra']
+        self.assertIn(names[0].upper(), ephemeris_codes)
+        
+    def check_fresh_ms(self, vis):
+        with sdutil.tbmanager(vis) as tb:
+            colnames = tb.colnames()
+            
+        self.assertNotIn('CORRECTED_DATA', colnames)
+        
+    def check_caltable(self, caltable):
+        with sdutil.tbmanager(caltable) as tb:
+            data = tb.getcol('FPARAM')
+        
+        self.assertEqual(data.shape, (2, 1, 10))
+        self.assertTrue(numpy.all(data == 1.0))
+    
+    def check_corrected(self, vis):
+        with sdutil.tbmanager(vis) as tb:
+            data = tb.getcol('CORRECTED_DATA')
+            nrow = tb.nrows()
+            
+        self.assertEqual(nrow, 40)
+        
+        real = data.real
+        expected = numpy.ones(real.shape, dtype=numpy.float64)
+        for irow in xrange(nrow):
+            if irow % 4 == 3:
+                expected[:,:,irow] = 0.0
+        self.assertTrue(numpy.all(real == expected))
+        
+        imag = data.imag
+        self.assertTrue(numpy.all(imag == 0))
+        
+                
+    def test_otfephem01(self):
+        """test_otfephem01: Sky calibration of 'otf' mode for ephemeris object"""
+        self.check_ephem(self.infile)
+        self.assertFalse(os.path.exists(self.outfile))
+        tsdcal(infile=self.infile, outfile=self.outfile, calmode='otf')
+        self.check_caltable(self.outfile)
+        
+    def test_otfephem02(self):
+        """test_otfephem02: On-the-fly application of 'otf' calibration mode for ephemeris object"""
+        self.check_ephem(self.infile)
+        self.check_fresh_ms(self.infile)
+        tsdcal(infile=self.infile, calmode='otf,apply')
+        self.check_corrected(self.infile)
+       
+    
+    
 # interpolator utility for testing
 class Interpolator(object):
     @staticmethod
@@ -1798,6 +1886,7 @@ def suite():
             , tsdcal_test_ps
             , tsdcal_test_otfraster
             , tsdcal_test_otf
-            , tsdcal_test_apply]
+            , tsdcal_test_apply
+            , tsdcal_test_otf_ephem]
 
 
