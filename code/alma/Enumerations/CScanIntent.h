@@ -118,6 +118,8 @@ namespace ScanIntentMod
     CALIBRATE_APPPHASE_PASSIVE /*!< Apply previously obtained phasing solutions. Applicable at ALMA. */
      ,
     OBSERVE_CHECK_SOURCE /*!<  */
+     ,
+    CALIBRATE_DIFFGAIN /*!< Enable a gain differential target type */
      
   };
   typedef ScanIntent &ScanIntent_out;
@@ -197,6 +199,8 @@ class CScanIntent {
 	static const std::string& sCALIBRATE_APPPHASE_PASSIVE; /*!< A const string equal to "CALIBRATE_APPPHASE_PASSIVE".*/
 	
 	static const std::string& sOBSERVE_CHECK_SOURCE; /*!< A const string equal to "OBSERVE_CHECK_SOURCE".*/
+	
+	static const std::string& sCALIBRATE_DIFFGAIN; /*!< A const string equal to "CALIBRATE_DIFFGAIN".*/
 	
 
 	/**

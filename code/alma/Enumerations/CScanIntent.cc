@@ -46,7 +46,7 @@ string CScanIntent::revision () {
 }
 
 unsigned int CScanIntent::size() {
-	return 29;
+	return 30;
 	}
 	
 	
@@ -108,6 +108,8 @@ const std::string& CScanIntent::sCALIBRATE_APPPHASE_PASSIVE = "CALIBRATE_APPPHAS
 	
 const std::string& CScanIntent::sOBSERVE_CHECK_SOURCE = "OBSERVE_CHECK_SOURCE";
 	
+const std::string& CScanIntent::sCALIBRATE_DIFFGAIN = "CALIBRATE_DIFFGAIN";
+	
 const std::vector<std::string> CScanIntent::names() {
     std::vector<std::string> enumSet;
     
@@ -168,6 +170,8 @@ const std::vector<std::string> CScanIntent::names() {
     enumSet.insert(enumSet.end(), CScanIntent::sCALIBRATE_APPPHASE_PASSIVE);
     
     enumSet.insert(enumSet.end(), CScanIntent::sOBSERVE_CHECK_SOURCE);
+    
+    enumSet.insert(enumSet.end(), CScanIntent::sCALIBRATE_DIFFGAIN);
         
     return enumSet;
 }
@@ -261,6 +265,9 @@ std::string CScanIntent::name(const ScanIntentMod::ScanIntent& f) {
     
     case ScanIntentMod::OBSERVE_CHECK_SOURCE:
       return CScanIntent::sOBSERVE_CHECK_SOURCE;
+    
+    case ScanIntentMod::CALIBRATE_DIFFGAIN:
+      return CScanIntent::sCALIBRATE_DIFFGAIN;
     	
     }
     // Impossible siutation but....who knows with C++ enums
@@ -384,6 +391,10 @@ ScanIntentMod::ScanIntent CScanIntent::newScanIntent(const std::string& name) {
     if (name == CScanIntent::sOBSERVE_CHECK_SOURCE) {
         return ScanIntentMod::OBSERVE_CHECK_SOURCE;
     }
+    	
+    if (name == CScanIntent::sCALIBRATE_DIFFGAIN) {
+        return ScanIntentMod::CALIBRATE_DIFFGAIN;
+    }
     
     throw badString(name);
 }
@@ -504,6 +515,10 @@ ScanIntentMod::ScanIntent CScanIntent::literal(const std::string& name) {
     	
     if (name == CScanIntent::sOBSERVE_CHECK_SOURCE) {
         return ScanIntentMod::OBSERVE_CHECK_SOURCE;
+    }
+    	
+    if (name == CScanIntent::sCALIBRATE_DIFFGAIN) {
+        return ScanIntentMod::CALIBRATE_DIFFGAIN;
     }
     
     throw badString(name);
