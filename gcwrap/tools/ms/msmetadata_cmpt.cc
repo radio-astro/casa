@@ -1173,6 +1173,7 @@ record* msmetadata::pointingdirection(int rowid, bool const interpolate, int con
 
 void msmetadata::_init(const casa::MeasurementSet *const &ms, const float cachesize) {
     _msmd.reset(new MSMetaData(ms, cachesize));
+    _msmd->setForceSubScanPropsToCache(true);
 }
 
 bool msmetadata::open(const string& msname, const float cachesize) {
