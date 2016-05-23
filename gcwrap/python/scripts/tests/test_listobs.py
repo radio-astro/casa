@@ -39,6 +39,7 @@ reffile = datapath+'reflistobs'
 # Input and output names
 msfile1 = 'ngc5921_ut.ms'
 msfile2 = 'uid___X02_X3d737_X1_01_small.ms'
+nep = "nep2-shrunk.ms"
 
 def _sha1it(filename):
     blocksize = 65536
@@ -170,6 +171,19 @@ class listobs_test1(unittest.TestCase):
                         'New and reference files are different. %s != %s. '
                         'See the diff file %s.'%(out,reference,diff))
 
+    def test_ephem(self):
+        '''ephemeris objects'''
+        output = "listobs9.txt"
+        out = "newobs9.txt"
+        diff = "difflistobs9"
+        reference = reffile+'9'
+        self.res = listobs(vis=datapath + nep, listfile=output, verbose=True, listunfl=False)
+#        # Remove the name of the MS from output before comparison
+        os.system("sed '1,3d' "+ output+ ' > '+ out)        
+        os.system("diff "+reference+" "+out+" > "+diff)    
+        self.assertTrue(lt.compare(out,reference),
+                        'New and reference files are different. %s != %s. '
+                        'See the diff file %s.'%(out,reference,diff))
 
     def test_overwrite(self):
         """Test overwrite parameter - CAS-5203"""
