@@ -71,11 +71,11 @@ class GaincalSnrInputs(basetask.StandardInputs):
         sci_spws = set([spw.id for spw in \
             self.ms.get_spectral_windows(science_windows_only=True)])
 
-        # Get the bandpass spw ids
-        bandpass_spws = []
+        # Get the phase spw ids
+        phase_spws = []
         for scan in self.ms.get_scans(scan_intent=self.intent):
-            bandpass_spws.extend(spw.id for spw in scan.spws)
-        bandpass_spws = set (bandpass_spws).intersection(sci_spws)
+            phase_spws.extend(spw.id for spw in scan.spws)
+        phase_spws = set (phase_spws).intersection(sci_spws)
 
         # Get science target spw ids
         target_spws = []
@@ -85,7 +85,11 @@ class GaincalSnrInputs(basetask.StandardInputs):
         
         # Compute the intersection of the bandpass and science target spw
         # ids
-        spws = list(bandpass_spws.intersection(target_spws))
+        #    Sanity check not reuired for more advanced observingr modes
+        spws = list(phase_spws.intersection(target_spws))
+        if not spws:
+            spws = list(phase_spws)
+
         spws = [str(spw) for spw in sorted(spws)]
         return ','.join(spws)
 
