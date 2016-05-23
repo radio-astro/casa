@@ -3760,9 +3760,13 @@ ms::iterend()
 */
 
 bool
-ms::fillbuffer(const std::string& item, const bool ifraxis)
+ms::fillbuffer(const std::string& /*item*/, const bool /*ifraxis*/)
 {
+    stringstream ss;
+    ss << "ms::fillbuffer method deprecated";
+	throw AipsError(ss.str());
 	Bool rstat(False);
+    /*
 	try {
 		if(!detached())
 			rstat =  itsFlag->fillDataBuffer(item, ifraxis);
@@ -3772,14 +3776,19 @@ ms::fillbuffer(const std::string& item, const bool ifraxis)
 		RETHROW(x);
 	}
 	Table::relinquishAutoLocks(True);
+    */
 	return rstat;
 }
 
 ::casac::record*
-ms::diffbuffer(const std::string& direction, const int window)
+ms::diffbuffer(const std::string& /*direction*/, const int /*window*/)
 {
-	Bool domedian(False); //Not in the help file but in glish/C++
+    stringstream ss;
+    ss << "ms::diffbuffer method deprecated";
+	throw AipsError(ss.str());
 	::casac::record* retval(0);
+    /*
+	Bool domedian(False); //Not in the help file but in glish/C++
 	try {
 		if(!detached()){
 			casa::Record daRec = itsFlag->diffDataBuffer(casa::String(direction),
@@ -3792,13 +3801,18 @@ ms::diffbuffer(const std::string& direction, const int window)
 		RETHROW(x);
 	}
 	Table::relinquishAutoLocks(True);
+    */
 	return retval;
 }
 
 ::casac::record*
 ms::getbuffer()
 {
+    stringstream ss;
+    ss << "ms::getbuffer method deprecated";
+	throw AipsError(ss.str());
 	::casac::record* retval(0);
+    /*
 	try {
 		if(!detached())
 			retval = fromRecord(itsFlag->getDataBuffer());
@@ -3807,13 +3821,18 @@ ms::getbuffer()
 		Table::relinquishAutoLocks(True);
 		RETHROW(x);
 	}
+    */
 	return retval;
 }
 
 bool
-ms::clipbuffer(const double pixellevel, const double timelevel, const double channellevel)
+ms::clipbuffer(const double /*pixellevel*/, const double /*timelevel*/, const double /*channellevel*/)
 {
 	Bool rstat(False);
+    stringstream ss;
+    ss << "ms::clipbuffer method deprecated";
+	throw AipsError(ss.str());
+    /*
 	try {
 		if(!detached())
 			rstat =  itsFlag->clipDataBuffer(pixellevel, timelevel, channellevel);
@@ -3823,6 +3842,7 @@ ms::clipbuffer(const double pixellevel, const double timelevel, const double cha
 		RETHROW(x);
 	}
 	Table::relinquishAutoLocks(True);
+    */
 	return rstat;
 }
 
@@ -3901,9 +3921,13 @@ ms::asdmref(const std::string& abspath)
 }
 
 bool
-ms::setbufferflags(const ::casac::record& flags)
+ms::setbufferflags(const ::casac::record& /*flags*/)
 {
 	Bool retval = False;
+    stringstream ss;
+    ss << "ms::setbufferflags method deprecated";
+	throw AipsError(ss.str());
+    /*
 	try {
 		if(!detached()){
 			Record *myTmp = toRecord(flags);
@@ -3916,6 +3940,7 @@ ms::setbufferflags(const ::casac::record& flags)
 		RETHROW(x);
 	}
 	Table::relinquishAutoLocks(True);
+    */
 	return retval;
 
 }
@@ -3924,6 +3949,10 @@ bool
 ms::writebufferflags()
 {
 	Bool rstat(False);
+    stringstream ss;
+    ss << "ms::setbufferflags method deprecated";
+	throw AipsError(ss.str());
+    /*
 	try {
 		if(!detached())
 			rstat =  itsFlag->writeDataBufferFlags();
@@ -3933,6 +3962,7 @@ ms::writebufferflags()
 		RETHROW(x);
 	}
 	Table::relinquishAutoLocks(True);
+    */
 	return rstat;
 }
 

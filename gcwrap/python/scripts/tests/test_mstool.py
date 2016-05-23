@@ -866,6 +866,7 @@ class mstool_test_iter(mstool_test_base):
         print
 
 # ------------------------------------------------------------------------------
+""" DEPRECATED *buffer methods since they depend on MSSelector
 
 class mstool_test_buffer(mstool_test_base):
 
@@ -878,7 +879,7 @@ class mstool_test_buffer(mstool_test_base):
         self.tearDownTest()
 
     def test_diff_clipbuffer(self): 
-        """test ms.fillbuffer, diffbuffer, clipbuffer"""
+        # test ms.fillbuffer, diffbuffer, clipbuffer
         exp_aad = array([[ 4.37068081], [ 4.31520033]])
         exp_median = array([[ 4.6457572 ], [ 4.51209211]])
         self.assertTrue(self.ms.fillbuffer("DATA"))
@@ -895,7 +896,7 @@ class mstool_test_buffer(mstool_test_base):
         print
 
     def test_get_clearbuffer(self): 
-        """test ms.getbuffer, clearbuffer"""
+        # test ms.getbuffer, clearbuffer
         exp_phase1 = array([-1.694900, -1.604357, -0.766461, -2.658377, -2.548764, -1.703157,  2.388235, -2.540746,  2.701918, -1.691168])
         exp_phase2 = array([0.683892,-1.658363,-1.591494, 2.319796, 2.912622, 3.089270, 2.936095,-2.889212,-2.267109,-2.687929])
         # fill buffer with phase (no ifraxis)
@@ -915,7 +916,7 @@ class mstool_test_buffer(mstool_test_base):
         print
 
     def test_set_writebufferflags(self): 
-        """test ms.setbufferflags, writebufferflags"""
+        # test ms.setbufferflags, writebufferflags
         # Need writable MS for this test
         self.ms.close()
         rwbufferms = 'ngc5921_rw.ms'
@@ -937,7 +938,7 @@ class mstool_test_buffer(mstool_test_base):
         self.removeMS(rwbufferms)
         self.ms.open(self.testms) # prevent SEVERE ms::detached errors in cleanup
         print
-
+"""
 # ------------------------------------------------------------------------------
 
 class mstool_test_fits(mstool_test_base):
@@ -980,7 +981,7 @@ def suite():
             mstool_test_transform,
             mstool_test_dataIO,
             mstool_test_iter,
-            mstool_test_buffer,
+            #mstool_test_buffer,
             mstool_test_sort,
             mstool_test_subms,
             mstool_test_fits

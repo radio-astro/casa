@@ -234,6 +234,7 @@ file:///opt/casa/code/tools/xml/casa.xsd">
     actual ms.
 		
 
+<!--   
   \medskip\noindent\textbf{Flagging data}
 
     The flag and buffer functions all belong together.  The idea is to fill a
@@ -250,6 +251,7 @@ file:///opt/casa/code/tools/xml/casa.xsd">
     (<link anchor="ms:ms.writebufferflags.function">writebufferflags</link>),
     into the appropriate flag level, so you can choose to apply or undo them.
     The data is untouched by these functions.
+-->
 
 \def\bul{$+$}
 \def\all{$\ast$}
@@ -4123,7 +4125,7 @@ We open the MS and ask for the current flag level.
 -->
  
    <method type="function" name="fillbuffer">
-   <shortdescription>Fill the internal buffer with data and flags.</shortdescription>
+   <shortdescription>[ DEPRECATED ]: Fill the internal buffer with data and flags.</shortdescription>
    
 <input>
 
@@ -4140,7 +4142,7 @@ We open the MS and ask for the current flag level.
 <returns type="bool"/>
 
 <description>
-Read the specified data item from the table, including its flags
+[ DEPRECATED ]: Read the specified data item from the table, including its flags
 and keep the results in an internal buffer
 </description>
 <example>
@@ -4162,7 +4164,7 @@ and keep the results around in an internal buffer.
 
  
    <method type="function" name="diffbuffer">
-   <shortdescription>Differentiate or difference the internal buffer.</shortdescription>
+   <shortdescription>[ DEPRECATED ]: Differentiate or difference the internal buffer.</shortdescription>
    
 <input>
 
@@ -4181,8 +4183,8 @@ and keep the results around in an internal buffer.
 </shortdescription></returns>
 
 <description>
-Subtract the previous point from each data point in the buffer (for
-window equal 2), or subtract the average over a window (for window
+[ DEPRECATED ]: Subtract the previous point from each data point in the buffer
+(for window equal 2), or subtract the average over a window (for window
 greater than 2) from each point. The window can be in the time / row
 direction or the frequency / channel direction. The input data can be
 float or complex but the output is always float.  The function returns
@@ -4218,15 +4220,15 @@ data point.
 
  
    <method type="function" name="getbuffer">
-   <shortdescription>Return the internal buffer as a Record for access from the intrepreter.</shortdescription>
+   <shortdescription>[ DEPRECATED ]: Return the internal buffer as a Record for access from the intrepreter.</shortdescription>
    
 <returns type="record">
 <shortdescription>Record with data if operation successful
 </shortdescription></returns>
 
 <description>
-Returns the internal buffer with either 'raw' or differenced data,
-flags and buffer statistics (if a difference operation was performed).
+[ DEPRECATED ]: Returns the internal buffer with either 'raw' or differenced
+data, flags and buffer statistics (if a difference operation was performed).
 </description>
 
 <example>
@@ -4247,7 +4249,7 @@ and then obtain the results in a record.
 
  
    <method type="function" name="clipbuffer">
-   <shortdescription>(NON-FUNCTIONAL???) Clip the internal buffer with specified limits.</shortdescription>
+   <shortdescription>[ DEPRECATED ]: Clip the internal buffer with specified limits.</shortdescription>
    
 <input>
 
@@ -4269,7 +4271,7 @@ and then obtain the results in a record.
 <returns type="bool"/>
 
 <description>
-This sets flags in the internal buffer based on the clip levels
+[ DEPRECATED ]: This sets flags in the internal buffer based on the clip levels
 specified. You can flag times, channels and individual pixels based on
 their deviation from the median. The cliplevel is specified in units of
 the corresponding average absolute deviation (a robust version of rms).
@@ -4343,7 +4345,7 @@ times this for channels and timeslots.
 
 
    <method type="function" name="setbufferflags">
-   <shortdescription>Set the flags in the buffer</shortdescription>
+   <shortdescription>[ DEPRECATED ]: Set the flags in the buffer</shortdescription>
    <input>
      <param type="record" name="flags">
        <description>record with flag and flag\_row</description>
@@ -4352,7 +4354,7 @@ times this for channels and timeslots.
    </input>
    <returns type="bool"/>
    <description>
-     Replace the flag and flag\_row fields in the internal
+     [ DEPRECATED ]: Replace the flag and flag\_row fields in the internal
      buffer with those in the input record.
      The input record can be e.g., a modified version of the record
      returned by getbuffer(). The other fields in the record are ignored.
@@ -4375,12 +4377,12 @@ times this for channels and timeslots.
    </method>
  
    <method type="function" name="writebufferflags">
-     <shortdescription>Write the flags in the internal buffer back to the table.</shortdescription>
+     <shortdescription>[ DEPRECATED ]: Write the flags in the internal buffer back to the table.</shortdescription>
      <returns type="bool"/>
      <description>
-       Takes the flag and flag\_row field in the internal buffer and writes
-       them back to the FLAG and FLAG\_ROW column in the currently selected
-       table.
+       [ DEPRECATED ] Takes the flag and flag\_row field in the internal buffer
+       and writes them back to the FLAG and FLAG\_ROW column in the
+       currently selected table.
      </description>
      <example>
        
@@ -4405,12 +4407,12 @@ times this for channels and timeslots.
 
  
    <method type="function" name="clearbuffer">
-   <shortdescription>Clear the internal buffer.</shortdescription>
+   <shortdescription>[ DEPRECATED ]: Clear the internal buffer.</shortdescription>
    
 <returns type="bool"/>
 
 <description>
-Clears the internal buffer, returning the memory.
+[ DEPRECATED ]: Clears the internal buffer, returning the memory.
 This can be used after the (final) clipping/flagging operations have
 been performed.
 </description>
