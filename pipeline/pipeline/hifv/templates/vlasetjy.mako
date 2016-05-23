@@ -39,6 +39,11 @@ def get_template_agents(agents):
 def sanitise(url):
 	return filenamer.sanitize(url)
 
+def spws_for_baseband(plot):
+	spws = plot.parameters['spw'].split(',')
+	if not spws:
+		return ''
+	return '<h6 style="margin-top: -11px;">(Spw%s)</h6>' % utils.commafy(spws, quotes=False, multi_prefix='s')
 
 %>
 <%inherit file="t2-4m_details-base.html"/>
@@ -137,11 +142,15 @@ $(document).ready(function(){
 	<%def name="mouseover(plot)">Click to show model amplitude vs UV distance for receiver bands ${utils.commafy(plot.parameters['receiver'], False)}</%def>
 
 	<%def name="fancybox_caption(plot)">
-		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)}		
+		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)} (spw ${plot.parameters['spw']})
 	</%def>
 
 	<%def name="caption_title(plot)">
 		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)}
+	</%def>
+
+	<%def name="caption_subtitle(plot)">
+		${spws_for_baseband(plot)}
 	</%def>
 
 	<%def name="caption_text(plot, source_id)">
