@@ -299,8 +299,10 @@ ${next.body()}
 					<dd>${utils.format_datetime(result.timestamps.end, dp=3)}</dd>
 					<dt>Duration</dt>
 					<dd>${utils.format_timedelta(result.timestamps.end - result.timestamps.start, dp=3)}</dd>
-					<dt>Context size</dt>
-					<dd>${str(measures.FileSize(asizeof.asizeof(pcontext), measures.FileSizeUnits.BYTES))}</dd>
+					% if logging.logging_level <= logging.DEBUG:
+						<dt>Context size</dt>
+						<dd>${str(measures.FileSize(asizeof.asizeof(pcontext), measures.FileSizeUnits.BYTES))}</dd>
+					% endif
 				</dl>
 			</div>
 		</div>
