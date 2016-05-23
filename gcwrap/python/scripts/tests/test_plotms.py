@@ -32,6 +32,7 @@ class plotms_test_base(unittest.TestCase):
 
     ms  = "pm_ngc5921.ms"
     ms2 = "ngc5921.ms"
+    caltable = 'ngc5921.ref1a.gcal'
     outputDir='/tmp/'
     plotfile_jpg = "/tmp/myplot.jpg"
     display = os.environ.get("DISPLAY")
@@ -54,10 +55,21 @@ class plotms_test_base(unittest.TestCase):
     def setUpaltdata(self):
         if not os.path.exists(self.ms2):
             shutil.copytree(altdatapath+self.ms2, self.ms2, symlinks=True)            
-
     def tearDownaltdata(self):
         if os.path.exists(self.ms2):
             shutil.rmtree(self.ms2)
+
+    def setUpcaldata(self):
+        res = None
+        default(plotms)
+        if not os.path.exists(self.ms2):
+            shutil.copytree(calpath+self.ms2, self.ms2, symlinks=True)
+        if not os.path.exists(self.caltable):
+            shutil.copytree(calpath+self.caltable, self.caltable, symlinks=True)
+
+    def tearDowncaldata(self):
+        if os.path.exists(self.caltable):
+            shutil.rmtree(self.caltable)
 
     def checkPlotfile(self, plotfileName, minSize, maxSize=None):
         self.assertTrue(os.path.isfile(plotfileName), "Plot was not created")
@@ -595,6 +607,97 @@ class plotms_test_calibration(plotms_test_base):
                      highres=True)
         self.assertFalse(res)
         print 
+
+# ------------------------------------------------------------------------------
+ 
+class plotms_test_calplots(plotms_test_base):
+    ''' Test basic single plots and overplots '''
+
+    def setUp(self):
+        self.checkDisplay()
+        # cal table for plotting
+        self.setUpcaldata()
+        
+    def tearDown(self):
+        self.tearDowncaldata()
+
+    def test_basic_calplot(self):
+        '''test_basic_calplot: Basic plot of caltable'''
+        self.plotfile_jpg = self.outputDir + "testCalPlot01.jpg"
+        self.removePlotfile()
+        time.sleep(5)
+        res = plotms(vis=self.caltable, plotfile=self.plotfile_jpg, expformat="jpg", 
+                     showgui=False, highres=True)   
+        self.assertTrue(res)
+        self.checkPlotfile(self.plotfile_jpg, 50000)
+        self.removePlotfile()
+        print
+ 
+    def test_calplot_axes(self):
+        '''test_calplot_axes: Basic plot of caltable with non-default axes'''
+        self.plotfile_jpg = self.outputDir + "testCalPlot02.jpg"
+        self.removePlotfile()
+        time.sleep(5)
+        res = plotms(vis=self.caltable, xaxis='freq',
+                     plotfile=self.plotfile_jpg, expformat="jpg", 
+                     showgui=False, highres=True)   
+        self.assertTrue(res)
+        self.checkPlotfile(self.plotfile_jpg, 40000)
+        self.removePlotfile()
+        res = plotms(vis=self.caltable, yaxis='phase',
+                     xaxis='baseline', overwrite=True,
+                     plotfile=self.plotfile_jpg, expformat="jpg", 
+                     showgui=False, highres=True)   
+        self.assertTrue(res)
+        self.checkPlotfile(self.plotfile_jpg, 80000)
+        self.removePlotfile()
+        print
+
+    def test_calplot_iteration(self):
+        '''test_calplot_iteration: caltable with corr iteraxis'''
+        self.plotfile_jpg = self.outputDir + "testCalPlot03.jpg"
+        plotfile1 = self.outputDir + "testCalPlot03_CorrL_2.jpg"
+        self.removeFiles(self.outputDir, "testCalPlot03_")
+        time.sleep(5)
+        res = plotms(vis=self.caltable, plotfile=self.plotfile_jpg, expformat="jpg", 
+                     showgui=False, highres=True, iteraxis='corr', exprange='all',
+                     overwrite=True)   
+        self.assertTrue(res)
+        fileCount = self.getFilecount( self.outputDir, "testCalPlot03_" )
+        self.assertEqual(fileCount,2)
+        self.checkPlotfile(plotfile1, 55000)
+        self.removeFiles(self.outputDir, "testCalPlot03_")
+        print
+
+    def test_calplot_selection(self):
+        '''test_calplot_selection: caltable with corr selection'''
+        self.plotfile_jpg = self.outputDir + "testCalPlot04.jpg"
+        self.removePlotfile()
+        time.sleep(5)
+        res = plotms(vis=self.caltable, plotfile=self.plotfile_jpg, expformat="jpg", 
+                     showgui=False, highres=True, correlation='R', overwrite=True)   
+        self.assertTrue(res)
+        self.checkPlotfile(self.plotfile_jpg, 50000)
+        self.removePlotfile()
+        print
+
+# ------------------------------------------------------------------------------
+
+class plotms_test_display(plotms_test_base):
+
+    def setUp(self):
+        self.checkDisplay()
+        self.setUpdata()
+        
+    def tearDown(self):
+        self.tearDowndata()
+       
+    def test_display_symbol(self):
+        '''test_display_symbol: Set a custom plotting symbol'''
+        self.plotfile_jpg = self.outputDir + "testDisplay01.jpg"
+        self.removePlotfile()
+        time.sleep(5)
+        # Test diamond shape
 
 # ------------------------------------------------------------------------------
 
@@ -1531,6 +1634,7 @@ def suite():
             plotms_test_averaging,
             plotms_test_axis,
             plotms_test_calibration,
+            plotms_test_calplots,
             plotms_test_display,
             plotms_test_grid,
             plotms_test_iteration,
