@@ -629,7 +629,7 @@ class plotms_test_calplots(plotms_test_base):
         res = plotms(vis=self.caltable, plotfile=self.plotfile_jpg, expformat="jpg", 
                      showgui=False, highres=True)   
         self.assertTrue(res)
-        self.checkPlotfile(self.plotfile_jpg, 50000)
+        self.checkPlotfile(self.plotfile_jpg, 40000)
         self.removePlotfile()
         print
  
@@ -638,11 +638,11 @@ class plotms_test_calplots(plotms_test_base):
         self.plotfile_jpg = self.outputDir + "testCalPlot02.jpg"
         self.removePlotfile()
         time.sleep(5)
-        res = plotms(vis=self.caltable, xaxis='freq',
+        res = plotms(vis=self.caltable, xaxis='scan',
                      plotfile=self.plotfile_jpg, expformat="jpg", 
                      showgui=False, highres=True)   
         self.assertTrue(res)
-        self.checkPlotfile(self.plotfile_jpg, 40000)
+        self.checkPlotfile(self.plotfile_jpg, 30000)
         self.removePlotfile()
         res = plotms(vis=self.caltable, yaxis='phase',
                      xaxis='baseline', overwrite=True,
@@ -665,7 +665,7 @@ class plotms_test_calplots(plotms_test_base):
         self.assertTrue(res)
         fileCount = self.getFilecount( self.outputDir, "testCalPlot03_" )
         self.assertEqual(fileCount,2)
-        self.checkPlotfile(plotfile1, 55000)
+        self.checkPlotfile(plotfile1, 40000)
         self.removeFiles(self.outputDir, "testCalPlot03_")
         print
 
@@ -677,7 +677,7 @@ class plotms_test_calplots(plotms_test_base):
         res = plotms(vis=self.caltable, plotfile=self.plotfile_jpg, expformat="jpg", 
                      showgui=False, highres=True, correlation='R', overwrite=True)   
         self.assertTrue(res)
-        self.checkPlotfile(self.plotfile_jpg, 50000)
+        self.checkPlotfile(self.plotfile_jpg, 40000)
         self.removePlotfile()
         print
 
