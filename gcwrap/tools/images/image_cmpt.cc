@@ -4418,6 +4418,7 @@ bool image::setbrightnessunit(const std::string& unit) {
                 << LogIO::POST;
         RETHROW(x);
     }
+    return False;
 }
 
 bool image::setcoordsys(const record& csys) {
@@ -4626,6 +4627,147 @@ vector<int> image::shape() {
     return vector<int>();
 }
 
+record* image::statistics(
+    const vector<int>& axes, const variant& region,
+    const variant& mask,
+    const vector<double>& includepix,
+    const vector<double>& excludepix, bool list, bool force,
+    bool disk, bool robust, bool verbose,
+    bool stretch, const string& logfile,
+    bool append, const string& algorithm, double fence,
+    const string& center, bool lside, double zscore,
+    int maxiter, const string& clmethod
+) {
+    _log << _ORIGIN;
+    if (detached()) {
+        _log << "Image not attached" << LogIO::POST;
+        return nullptr;
+    }
+    try {
+        ThrowIf(
+            ! _imageF,
+            "This method only supports Float valued images"
+        );
+        SHARED_PTR<Record> regionRec(_getRegion(region, True));
+        String mtmp = mask.toString();
+        if (mtmp == "false" || mtmp == "[]") {
+            mtmp = "";
+        }
+        Vector<Int> tmpaxes(axes);
+        if (tmpaxes.size() == 1 && tmpaxes[0] == -1) {
+            tmpaxes.resize(0);
+        }
+        Vector<Float> tmpinclude;
+        Vector<Float> tmpexclude;
+        if (
+            !(
+                includepix.size() == 1
+                && includepix[0] == -1
+            )
+        ) {
+            tmpinclude.resize(includepix.size());
+            for (uInt i=0; i<includepix.size(); i++) {
+                tmpinclude[i] = includepix[i];
+            }
+        }
+        if (!(excludepix.size() == 1 && excludepix[0] == -1)) {
+            tmpexclude.resize(excludepix.size());
+            for (uInt i = 0; i < excludepix.size(); i++) {
+                tmpexclude[i] = excludepix[i];
+            }
+        }
+        if (verbose) {
+            _log << LogIO::NORMAL << "Determining stats for image "
+                << _name(True) << LogIO::POST;
+        }
+        Record ret;
+        if (force || _stats.get() == 0) {
+            _stats.reset(
+                new ImageStatsCalculator(
+                    _imageF, regionRec.get(), mtmp, verbose
+                )
+            );
+        }
+        else {
+            _stats->setMask(mtmp);
+            _stats->setRegion(regionRec ? *regionRec : Record());
+        }
+        String myalg = algorithm;
+        myalg.downcase();
+        if (myalg.startsWith("ch")) {
+            _stats->configureChauvenet(zscore, maxiter);
+        }
+        else if (myalg.startsWith("cl")) {
+            String mymethod = clmethod;
+            mymethod.downcase();
+            ImageStatsCalculator::PreferredClassicalAlgorithm method;
+            if (mymethod.startsWith("a")) {
+                method = ImageStatsCalculator::AUTO;
+            }
+            else if (mymethod.startsWith("t")) {
+                method = ImageStatsCalculator::TILED_APPLY;
+            }
+            else if (mymethod.startsWith("f")) {
+                method = ImageStatsCalculator::STATS_FRAMEWORK;
+            }
+            else {
+                ThrowCc("Unsupported classical method " + clmethod);
+            }
+            _stats->configureClassical(method);
+        }
+        else if (myalg.startsWith("f")) {
+            String mycenter = center;
+            mycenter.downcase();
+            FitToHalfStatisticsData::CENTER centerType;
+            if (mycenter.startsWith("mea")) {
+                centerType = FitToHalfStatisticsData::CMEAN;
+            }
+            else if (mycenter.startsWith("med")) {
+                centerType = FitToHalfStatisticsData::CMEDIAN;
+            }
+            else if (mycenter.startsWith("z")) {
+                centerType = FitToHalfStatisticsData::CVALUE;
+            }
+            else {
+                ThrowCc("Unsupported center value " + center);
+            }
+            FitToHalfStatisticsData::USE_DATA useData = lside
+                ? FitToHalfStatisticsData::LE_CENTER
+                : FitToHalfStatisticsData::GE_CENTER;
+            _stats->configureFitToHalf(centerType, useData, 0.0);
+        }
+        else if (myalg.startsWith("h")) {
+            _stats->configureHingesFences(fence);
+        }
+        else {
+            ThrowCc("Unsupported algorithm " + algorithm);
+        }
+        _stats->setAxes(tmpaxes);
+        _stats->setIncludePix(tmpinclude);
+        _stats->setExcludePix(tmpexclude);
+        _stats->setList(list);
+        if (force) {
+            _stats->forceNewStorage();
+        }
+        //_stats->setForce(force);
+        _stats->setDisk(disk);
+        _stats->setRobust(robust);
+        _stats->setVerbose(verbose);
+        _stats->setStretch(stretch);
+        if (! logfile.empty()) {
+            _stats->setLogfile(logfile);
+        }
+        _stats->setLogfileAppend(append);
+        return fromRecord(_stats->calculate());
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return nullptr;
+}
+
 record* image::torecord() {
     _log << LogOrigin("image", __func__);
     if (detached()) {
@@ -4728,6 +4870,77 @@ void image::_addHistory(
     }
 }
 
+bool image::twopointcorrelation(
+    const string& outfile,
+    const variant& region, const variant& vmask,
+    const vector<int>& axes, const string& method,
+    bool overwrite, bool stretch
+) {
+    _log << _ORIGIN;
+    if (detached()) {
+        return false;
+    }
+    try {
+        String outFile(outfile);
+        SHARED_PTR<Record> Region(_getRegion(region, False));
+        String mask = vmask.toString();
+        if (mask == "[]") {
+            mask = "";
+        }
+        Vector<Int> iAxes;
+        if (!(axes.size() == 1 && axes[0] == -1)) {
+            iAxes = axes;
+        }
+        vector<String> names {
+            "outfile", "region", "mask", "axes",
+            "method", "overwrite", "stretch"
+        };
+        vector<variant> values {
+            outfile, region, vmask, axes,
+            method, overwrite, stretch
+        };
+        auto msgs = _newHistory(__func__, names, values);
+        if (_imageF) {
+            auto im = _twopointcorrelation(
+                _imageF, outfile, Region, mask,
+                IPosition(iAxes), method, overwrite, stretch,
+                _ORIGIN, msgs
+            );
+        }
+        else {
+            auto im = _twopointcorrelation(
+                _imageC, outfile, Region, mask,
+                IPosition(iAxes), method, overwrite, stretch,
+                _ORIGIN, msgs
+            );
+        }
+        return True;
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return False;
+}
+
+template <class T> SPIIT image::_twopointcorrelation(
+    SPIIT myimage, const std::string& outfile,
+    SHARED_PTR<Record> region, const casa::String& mask,
+    const IPosition& axes, const std::string& method,
+    bool overwrite, bool stretch, const LogOrigin& origin,
+    const vector<String>& msgs
+) {
+    TwoPointCorrelator<T> tpc(
+        myimage, region.get(), mask, outfile, overwrite
+    );
+    tpc.setAxes(axes);
+    tpc.setMethod(method);
+    tpc.setStretch(stretch);
+    tpc.addHistory(origin, msgs);
+    return tpc.correlate();
+}
+
 String image::_getMask(const variant& mask) {
     if (mask.type() == variant::BOOLVEC) {
        return "";
@@ -4809,204 +5022,6 @@ void image::_reset() {
 
 
 
-
-record* image::statistics(
-	const vector<int>& axes, const variant& region,
-	const variant& mask,
-	const vector<double>& includepix,
-	const vector<double>& excludepix, bool list, bool force,
-	bool disk, bool robust, bool verbose,
-	bool stretch, const string& logfile,
-	bool append, const string& algorithm, double fence,
-	const string& center, bool lside, double zscore,
-	int maxiter, const string& clmethod
-) {
-	_log << _ORIGIN;
-	if (detached()) {
-		_log << "Image not attached" << LogIO::POST;
-		return 0;
-	}
-	try {
-		ThrowIf(
-			! _imageF,
-			"This method only supports Float valued images"
-		);
-		SHARED_PTR<Record> regionRec(_getRegion(region, True));
-		String mtmp = mask.toString();
-		if (mtmp == "false" || mtmp == "[]") {
-			mtmp = "";
-		}
-		Vector<Int> tmpaxes(axes);
-		if (tmpaxes.size() == 1 && tmpaxes[0] == -1) {
-			tmpaxes.resize(0);
-		}
-		Vector<Float> tmpinclude;
-		Vector<Float> tmpexclude;
-		if (
-			!(
-				includepix.size() == 1
-				&& includepix[0] == -1
-			)
-		) {
-			tmpinclude.resize(includepix.size());
-			for (uInt i=0; i<includepix.size(); i++) {
-				tmpinclude[i] = includepix[i];
-			}
-		}
-		if (!(excludepix.size() == 1 && excludepix[0] == -1)) {
-			tmpexclude.resize(excludepix.size());
-			for (uInt i = 0; i < excludepix.size(); i++) {
-				tmpexclude[i] = excludepix[i];
-			}
-		}
-		if (verbose) {
-			_log << LogIO::NORMAL << "Determining stats for image "
-				<< _name(True) << LogIO::POST;
-		}
-		Record ret;
-		if (force || _stats.get() == 0) {
-			_stats.reset(
-				new ImageStatsCalculator(
-					_imageF, regionRec.get(), mtmp, verbose
-				)
-			);
-		}
-		else {
-			_stats->setMask(mtmp);
-			_stats->setRegion(regionRec ? *regionRec : Record());
-		}
-		String myalg = algorithm;
-		myalg.downcase();
-		if (myalg.startsWith("ch")) {
-			_stats->configureChauvenet(zscore, maxiter);
-		}
-		else if (myalg.startsWith("cl")) {
-			String mymethod = clmethod;
-			mymethod.downcase();
-			ImageStatsCalculator::PreferredClassicalAlgorithm method;
-			if (mymethod.startsWith("a")) {
-				method = ImageStatsCalculator::AUTO;
-			}
-			else if (mymethod.startsWith("t")) {
-				method = ImageStatsCalculator::TILED_APPLY;
-			}
-			else if (mymethod.startsWith("f")) {
-				method = ImageStatsCalculator::STATS_FRAMEWORK;
-			}
-			else {
-				ThrowCc("Unsupported classical method " + clmethod);
-			}
-			_stats->configureClassical(method);
-		}
-		else if (myalg.startsWith("f")) {
-			String mycenter = center;
-			mycenter.downcase();
-			FitToHalfStatisticsData::CENTER centerType;
-			if (mycenter.startsWith("mea")) {
-				centerType = FitToHalfStatisticsData::CMEAN;
-			}
-			else if (mycenter.startsWith("med")) {
-				centerType = FitToHalfStatisticsData::CMEDIAN;
-			}
-			else if (mycenter.startsWith("z")) {
-				centerType = FitToHalfStatisticsData::CVALUE;
-			}
-			else {
-				ThrowCc("Unsupported center value " + center);
-			}
-			FitToHalfStatisticsData::USE_DATA useData = lside
-				? FitToHalfStatisticsData::LE_CENTER
-				: FitToHalfStatisticsData::GE_CENTER;
-			_stats->configureFitToHalf(centerType, useData, 0.0);
-		}
-		else if (myalg.startsWith("h")) {
-			_stats->configureHingesFences(fence);
-		}
-		else {
-			ThrowCc("Unsupported algorithm " + algorithm);
-		}
-		_stats->setAxes(tmpaxes);
-		_stats->setIncludePix(tmpinclude);
-		_stats->setExcludePix(tmpexclude);
-		_stats->setList(list);
-        if (force) {
-            _stats->forceNewStorage();
-        }
-        //_stats->setForce(force);
-		_stats->setDisk(disk);
-		_stats->setRobust(robust);
-		_stats->setVerbose(verbose);
-		_stats->setStretch(stretch);
-		if (! logfile.empty()) {
-			_stats->setLogfile(logfile);
-		}
-		_stats->setLogfileAppend(append);
-		return fromRecord(_stats->calculate());
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-}
-
-bool image::twopointcorrelation(
-	const std::string& outfile,
-	const variant& region, const variant& vmask,
-	const std::vector<int>& axes, const std::string& method,
-	bool overwrite, bool stretch
-) {
-	_log << _ORIGIN;
-	if (detached()) {
-		return false;
-	}
-	try {
-		String outFile(outfile);
-		SHARED_PTR<Record> Region(_getRegion(region, False));
-		String mask = vmask.toString();
-		if (mask == "[]") {
-			mask = "";
-		}
-		Vector<Int> iAxes;
-		if (!(axes.size() == 1 && axes[0] == -1)) {
-			iAxes = axes;
-		}
-		if (_imageF) {
-			auto im = _twopointcorrelation(
-				_imageF, outfile, Region, mask,
-				IPosition(iAxes), method, overwrite, stretch
-			);
-		}
-		else {
-			auto im = _twopointcorrelation(
-				_imageC, outfile, Region, mask,
-				IPosition(iAxes), method, overwrite, stretch
-			);
-		}
-		return True;
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	return False;
-}
-
-template <class T> SPIIT image::_twopointcorrelation(
-	SPIIT myimage, const std::string& outfile,
-	SHARED_PTR<Record> region, const casa::String& mask,
-	const IPosition& axes, const std::string& method,
-	bool overwrite, bool stretch
-) {
-	TwoPointCorrelator<T> tpc(
-		myimage, region.get(), mask, outfile, overwrite
-	);
-	tpc.setAxes(axes);
-	tpc.setMethod(method);
-	tpc.setStretch(stretch);
-	return tpc.correlate();
-}
 
 ::casac::image* image::subimage(
 	const string& outfile, const variant& region,

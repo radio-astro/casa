@@ -100,6 +100,19 @@ class ia_twopointcorrelation_test(unittest.TestCase):
         )
         self.assertTrue(zz and type(zz) == type(True))
         yy.done()
+
+    def test_history(self):
+        """verify history writing"""
+        myia = iatool()
+        myia.fromshape("zz",[20, 20])
+        outfile = "xyz.im"
+        # does not return an ia tool, just a bool
+        self.assertTrue(myia.twopointcorrelation(outfile))
+        myia.open(outfile)
+        msgs = myia.history()
+        myia.done()       
+        self.assertTrue("ia.twopointcorrelation" in msgs[-2])
+        self.assertTrue("ia.twopointcorrelation" in msgs[-1])
     
 def suite():
     return [ia_twopointcorrelation_test]

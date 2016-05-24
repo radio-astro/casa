@@ -173,5 +173,6 @@ template <class T> static SPIIT _twopointcorrelation(
 	SPIIT myimage, const string& outfile,
 	SHARED_PTR<Record> region, const casa::String& mask,
 	const casa::IPosition& axes, const std::string& method,
-	bool overwrite, bool stretch
+	bool overwrite, bool stretch, const LogOrigin& origin,
+    const vector<String>& msgs
 );
