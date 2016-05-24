@@ -1,8 +1,9 @@
-'''
+"""
 Created on 11 Sep 2014
 
 @author: sjw
-'''
+"""
+import collections
 import os
 
 import pipeline.infrastructure.displays.image as image
@@ -14,9 +15,9 @@ LOG = logging.get_logger(__name__)
 
 
 class T2_4MDetailsLowgainFlagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
-    '''
+    """
     Renders detailed HTML output for the Lowgainflag task.
-    '''
+    """
     def __init__(self, uri='lowgainflag.mako', 
                  description='Flag antennas with low gain',
                  always_rerender=False):
@@ -26,7 +27,9 @@ class T2_4MDetailsLowgainFlagRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
     def update_mako_context(self, mako_context, pipeline_context, results):
         htmlreports = self.get_htmlreports(pipeline_context, results)        
 
-        plots = {}
+        # CAS-8265: multi-ms in time order in all weblog stages
+        # Maintain the time-order of the input results by using an OrderedDict
+        plots = collections.OrderedDict()
         for result in results:
             if not result.view:
                 continue
@@ -37,15 +40,17 @@ class T2_4MDetailsLowgainFlagRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
             vis = os.path.basename(result.inputs['vis'])
             plots[vis] = os.path.relpath(renderer.path, pipeline_context.report_dir)
 
-        mako_context.update({'htmlreports' : htmlreports,
-                             'plots'       : plots})
+        mako_context.update({'htmlreports': htmlreports,
+                             'plots': plots})
 
     def get_htmlreports(self, context, results):
         report_dir = context.report_dir
         weblog_dir = os.path.join(report_dir,
                                   'stage%s' % results.stage_number)
 
-        htmlreports = {}
+        # CAS-8265: multi-ms in time order in all weblog stages
+        # Maintain the time-order of the input results by using an OrderedDict
+        htmlreports = collections.OrderedDict()
         for result in results:
             flagcmd_abspath = self._write_flagcmd_to_disk(weblog_dir, result)
             flagcmd_relpath = os.path.relpath(flagcmd_abspath, report_dir)

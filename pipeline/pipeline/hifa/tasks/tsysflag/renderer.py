@@ -1,8 +1,8 @@
-'''
+"""
 Created on 9 Sep 2014
 
 @author: sjw
-'''
+"""
 import collections
 import os
 
@@ -32,9 +32,9 @@ extra_templates = {'nmedian': 'generic_x_vs_y_per_spw_and_pol_plots.mako',
 
 
 class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
-    '''
+    """
     Renders detailed HTML output for the Tsysflag task.
-    '''
+    """
     def __init__(self, uri='tsysflag.mako',
                  description='Flag Tsys calibration',
                  always_rerender=False):
@@ -71,12 +71,14 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         
         # Initialize items that are to be exported to the
         # mako context
-        task_incomplete_msg = collections.defaultdict(dict)
+        # CAS-8265: multi-ms in time order in all weblog stages
+        # Maintain the time-order of the input results by using an OrderedDict
+        task_incomplete_msg = collections.OrderedDict()
         components = []
-        stdplots = collections.defaultdict(dict)
-        extraplots = collections.defaultdict(dict)
-        flag_totals = collections.defaultdict(dict)
-        summary_plots = {}
+        stdplots = collections.OrderedDict()
+        extraplots = collections.OrderedDict()
+        flag_totals = collections.OrderedDict()
+        summary_plots = collections.OrderedDict()
         subpages = {}
         eb_plots = []
         last_results = []
@@ -105,13 +107,13 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                         continue
                     try:
                         renderer = self._do_standard_plots(context, result, component)
-                        stdplots[component][vis] = renderer
+                        stdplots.setdefault(component, collections.OrderedDict())[vis] = renderer
                     except TypeError:
                         continue
     
                     try:
                         renderer = self._do_extra_plots(context, result, component)
-                        extraplots[component][vis] = renderer
+                        extraplots.setdefault(component, collections.OrderedDict())[vis] = renderer
                     except (TypeError, NotImplementedError):
                         continue                
 
@@ -119,17 +121,14 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 table = os.path.basename(result.inputs['caltable'])
     
                 # summarise flag state on entry
-                flag_totals[table]['before'] = self._flags_for_result(result, 
-                        context, summary='first')
+                flag_totals.setdefault(table, {})['before'] = self._flags_for_result(result, context, summary='first')
                 
                 # summarise flagging by each step
                 for component, r in result.components.items():
-                    flag_totals[table][component] = self._flags_for_result(r, 
-                                                                          context)
+                    flag_totals[table][component] = self._flags_for_result(r, context)
     
                 # summarise flag state on exit
-                flag_totals[table]['after'] = self._flags_for_result(result, 
-                        context, summary='last')
+                flag_totals[table]['after'] = self._flags_for_result(result, context, summary='last')
 
                 # Generate the summary plots at end of flagging sequence, 
                 # beware empty sequence
@@ -190,10 +189,12 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         weblog_dir = os.path.join(report_dir,
                                   'stage%s' % results.stage_number)
 
-        htmlreports = {}
+        # CAS-8265: multi-ms in time order in all weblog stages
+        # Maintain the time-order of the input results by using an OrderedDict
+        htmlreports = collections.OrderedDict()
 
         for component in components:
-            htmlreports[component] = {}
+            htmlreports[component] = collections.OrderedDict()
 
             for msresult in results:
                 if not msresult.task_incomplete_reason:

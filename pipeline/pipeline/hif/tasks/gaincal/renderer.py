@@ -1,8 +1,8 @@
-'''
+"""
 Created on 29 Oct 2014
 
 @author: sjw
-'''
+"""
 import collections
 import os
 
@@ -28,20 +28,20 @@ class T2_4MDetailsGaincalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
     def update_mako_context(self, ctx, context, results):
         applications = []
-        structure_plots = {}
-        amp_vs_time_summaries = {}
-        phase_vs_time_summaries = {}
-        amp_vs_time_details = {}
-        phase_vs_time_details = {}
-        diagnostic_amp_vs_time_summaries = {}
-        diagnostic_phase_vs_time_summaries = {}
-        diagnostic_amp_vs_time_details = {}
-        diagnostic_phase_vs_time_details = {}
-        amp_vs_time_subpages = {}
-        phase_vs_time_subpages = {}
-        diagnostic_amp_vs_time_subpages = {}
-        diagnostic_phase_vs_time_subpages = {}
-        diagnostic_solints = collections.defaultdict(dict)
+        structure_plots = collections.OrderedDict()
+        amp_vs_time_summaries = collections.OrderedDict()
+        phase_vs_time_summaries = collections.OrderedDict()
+        amp_vs_time_details = collections.OrderedDict()
+        phase_vs_time_details = collections.OrderedDict()
+        diagnostic_amp_vs_time_summaries = collections.OrderedDict()
+        diagnostic_phase_vs_time_summaries = collections.OrderedDict()
+        diagnostic_amp_vs_time_details = collections.OrderedDict()
+        diagnostic_phase_vs_time_details = collections.OrderedDict()
+        amp_vs_time_subpages = collections.OrderedDict()
+        phase_vs_time_subpages = collections.OrderedDict()
+        diagnostic_amp_vs_time_subpages = collections.OrderedDict()
+        diagnostic_phase_vs_time_subpages = collections.OrderedDict()
+        diagnostic_solints = collections.OrderedDict()
 
         for result in results:
             vis = os.path.basename(result.inputs['vis'])
@@ -50,6 +50,8 @@ class T2_4MDetailsGaincalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             ms_applications = self.get_gaincal_applications(context, result, ms)
             applications.extend(ms_applications)
 
+            if vis not in diagnostic_solints:
+                diagnostic_solints[vis] = {}
             try:
                 diag_phase = [a for a in ms_applications
                               if a.calmode == 'Phase only'

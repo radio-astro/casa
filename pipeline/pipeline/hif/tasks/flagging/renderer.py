@@ -1,8 +1,9 @@
-'''
+"""
 Created on 9 Sep 2014
 
 @author: sjw
-'''
+"""
+import collections
 import os
 import shutil
 
@@ -24,8 +25,9 @@ class T2_4MDetailsAgentFlaggerRenderer(basetemplates.T2_4MDetailsDefaultRenderer
         weblog_dir = os.path.join(pipeline_context.report_dir,
                                   'stage%s' % result.stage_number)
 
-        flag_totals = {}
-        #non_science_agents = ['qa0']
+        # CAS-8265: multi-ms in time order in all weblog stages
+        # Maintain the time-order of the input results by using an OrderedDict
+        flag_totals = collections.OrderedDict()
         for r in result:
             flag_totals = utils.dict_merge(flag_totals, 
                                            flagutils.flags_for_result(r, pipeline_context))
@@ -40,7 +42,9 @@ class T2_4MDetailsAgentFlaggerRenderer(basetemplates.T2_4MDetailsDefaultRenderer
                     LOG.trace('Copying %s to %s' % (src, weblog_dir))
                     shutil.copy(src, weblog_dir)
 
-        flagcmd_files = {}
+        # CAS-8265: multi-ms in time order in all weblog stages
+        # Maintain the time-order of the input results by using an OrderedDict
+        flagcmd_files = collections.OrderedDict()
         for r in result:
             # write final flagcmds to a file
             ms = pipeline_context.observing_run.get_ms(r.inputs['vis'])
@@ -66,15 +70,19 @@ class T2_4MDetailsAgentFlaggerRenderer(basetemplates.T2_4MDetailsDefaultRenderer
         agents = ['before', 'online', 'qa0', 'template', 'autocorr', 'shadow', 
                   'intents', 'edgespw']
 
-        flagplots = {os.path.basename(r.inputs['vis']): self.flagplot(r, pipeline_context)
-                     for r in result}
+        # CAS-8265: multi-ms in time order in all weblog stages
+        # Maintain the time-order of the input results by using an OrderedDict
+        flagplots = collections.OrderedDict()
+        for r in result:
+            flagplots[os.path.basename(r.inputs['vis'])] = self.flagplot(r, pipeline_context)
 
         mako_context.update({
             'flags': flag_totals,
             'agents': agents,
             'dirname': weblog_dir,
             'flagcmds': flagcmd_files,
-            'flagplots': flagplots})
+            'flagplots': flagplots
+        })
 
     def flagplot(self, result, context):
         plotter = flagging.PlotAntsChart(context, result)

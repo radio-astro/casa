@@ -1,8 +1,8 @@
-'''
+"""
 Created on 10 Sep 2014
 
 @author: sjw
-'''
+"""
 import collections
 import os
 
@@ -48,15 +48,17 @@ class T2_4MDetailsWvrgcalflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
             os.mkdir(plots_dir)
 
         applications = []
-        flag_plots = {}
-        metric_plots = {}
-        phase_offset_summary_plots = {}
-        phase_offset_subpages = {}
-        phase_offset_detail_plots = {}
-        baseline_summary_plots = {}
-        baseline_summary_subpages = {}
-        baseline_detail_plots = {}
-        wvrinfos = {}
+        # CAS-8265: multi-ms in time order in all weblog stages
+        # Maintain the time-order of the input results by using an OrderedDict
+        flag_plots = collections.OrderedDict()
+        metric_plots = collections.OrderedDict()
+        phase_offset_summary_plots = collections.OrderedDict()
+        phase_offset_subpages = collections.OrderedDict()
+        phase_offset_detail_plots = collections.OrderedDict()
+        baseline_summary_plots = collections.OrderedDict()
+        baseline_summary_subpages = collections.OrderedDict()
+        baseline_detail_plots = collections.OrderedDict()
+        wvrinfos = collections.OrderedDict()
         ms_non12 = []
         for result in results:
             vis = os.path.basename(result.inputs['vis'])

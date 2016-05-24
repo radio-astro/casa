@@ -59,15 +59,18 @@ class T2_4MDetailsBandpassRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         # returned by the plot generator 
         bandpass_table_rows = []
         phaseup_applications = []
-        amp_refant = {}
-        amp_mode = {}
+        # CAS-8265: multi-ms in time order in all weblog stages
+        # Maintain the time-order of the input results by using an OrderedDict
+        # The same holds true for amp_mode, phase_refant, phase_mode.
+        amp_refant = collections.OrderedDict()
+        amp_mode = collections.OrderedDict()
         amp_details = {}
-        amp_vs_time_subpages = {}
+        amp_vs_time_subpages = collections.OrderedDict()
 
-        phase_refant = {}
-        phase_mode = {}
+        phase_refant = collections.OrderedDict()
+        phase_mode = collections.OrderedDict()
         phase_details = {}
-        phase_vs_time_subpages = {}
+        phase_vs_time_subpages = collections.OrderedDict()
 
         for result in results:
             if not result.final:

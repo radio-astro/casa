@@ -1,8 +1,8 @@
-'''
+"""
 Created on 23 Oct 2014
 
 @author: sjw
-'''
+"""
 import collections
 import decimal
 import os
@@ -25,7 +25,7 @@ class T2_4MDetailsGFluxscaleRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
     def update_mako_context(self, mako_context, pipeline_context, results):
         #All antenna, sort by baseband
-        ampuv_allant_plots = collections.defaultdict(dict)
+        ampuv_allant_plots = collections.OrderedDict()
         for intents in ['AMPLITUDE']:
             plots = self.create_plots(pipeline_context, 
                                       results, 
@@ -35,11 +35,10 @@ class T2_4MDetailsGFluxscaleRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
             key = intents
             for vis, vis_plots in plots.items():
-                ampuv_allant_plots[vis][key] = vis_plots
+                ampuv_allant_plots.setdefault(vis, {})[key] = vis_plots
                 
         #List of antenna for the fluxscale result, sorted by baseband
-        ampuv_ant_plots = collections.defaultdict(dict)
-
+        ampuv_ant_plots = collections.OrderedDict()
         for intents in ['AMPLITUDE']:
             plots = self.create_plots_ants(pipeline_context, 
                                       results, 
@@ -49,13 +48,13 @@ class T2_4MDetailsGFluxscaleRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
             key = intents
             for vis, vis_plots in plots.items():
-                ampuv_ant_plots[vis][key] = vis_plots
+                ampuv_ant_plots.setdefault(vis, {})[key] = vis_plots
 
         table_rows = make_flux_table(pipeline_context, results)
         
-        mako_context.update({'ampuv_allant_plots' : ampuv_allant_plots,
-                             'ampuv_ant_plots'    : ampuv_ant_plots,
-                             'table_rows'         : table_rows})
+        mako_context.update({'ampuv_allant_plots': ampuv_allant_plots,
+                             'ampuv_ant_plots': ampuv_ant_plots,
+                             'table_rows': table_rows})
 
     def sort_plots_by_baseband(self, d):
         for vis, plots in d.items():
@@ -67,7 +66,7 @@ class T2_4MDetailsGFluxscaleRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         """
         Create plots and return a dictionary of vis:[Plots].  No antenna or UVrange selection.
         """
-        d = {}
+        d = collections.OrderedDict()
         for result in results:
             plots = self.plots_for_result(context, result, plotter_cls, intents, renderer_cls)
             d = utils.dict_merge(d, plots)
@@ -79,7 +78,7 @@ class T2_4MDetailsGFluxscaleRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         Create plots and return a dictionary of vis:[Plots].  Antenna and UVrange selection
                                                               determined by heuristics.
         """
-        d = {}
+        d = collections.OrderedDict()
         for result in results:
             plots = self.plots_for_result(context, result, plotter_cls,
                     intents, renderer_cls, ant=result.resantenna, uvrange=result.uvrange)
@@ -93,7 +92,7 @@ class T2_4MDetailsGFluxscaleRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         plotter = plotter_cls(context, result, intents, ant=ant, uvrange=uvrange)
         plots = plotter.plot()
 
-        d = collections.defaultdict(dict)
+        d = collections.OrderedDict()
         d[vis] = plots
 
         if renderer_cls is not None:

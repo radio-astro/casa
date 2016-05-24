@@ -1,8 +1,8 @@
-'''
+"""
 Created on 9 Sep 2014
 
 @author: sjw
-'''
+"""
 import collections
 import os
 
@@ -32,8 +32,10 @@ class T2_4MDetailsTsyscalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         weblog_dir = os.path.join(pipeline_context.report_dir,
                                   'stage%s' % results.stage_number)
 
-        summary_plots = {}
-        subpages = {}
+        # CAS-8265: multi-ms in time order in all weblog stages
+        # Maintain the time-order of the input results by using an OrderedDict
+        summary_plots = collections.OrderedDict()
+        subpages = collections.OrderedDict()
         eb_plots = []
         for result in results:
             plotter = displays.TsysSummaryChart(pipeline_context, result)
@@ -146,11 +148,11 @@ class TsyscalPlotRenderer(basetemplates.JsonPlotRenderer):
             return self.get_stat_from_calanalysis(ca_result)
 
     def get_stat_from_calanalysis(self, ca_result):
-        '''
+        """
         Calculate the median and RMS for a calanalysis result. The argument
         supplied to this function should be a calanalysis result for ONE
         spectral window and ONE antenna only!
-        ''' 
+        """
         # get the unique timestamps from the calanalysis result
         times = set([v['time'] for v in ca_result.values()])
         mean_tsyses = []
