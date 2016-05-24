@@ -86,8 +86,9 @@ class ia_setmiscinfo_test(unittest.TestCase):
         myia.fromshape("zz",[20, 20])
         myia.setmiscinfo({"me": "you"})
         msgs = myia.history()
+        myia.done()       
         self.assertTrue("ia.setmiscinfo" in msgs[-2])
         self.assertTrue("ia.setmiscinfo" in msgs[-1])
-        
+ 
 def suite():
     return [ia_setmiscinfo_test]

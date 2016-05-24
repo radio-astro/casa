@@ -4503,6 +4503,129 @@ bool image::setmiscinfo(const record& info) {
     return False;
 }
 
+bool image::setrestoringbeam(
+    const variant& major, const variant& minor,
+    const variant& pa, const record& beam,
+    bool remove, bool log,
+    int channel, int polarization,
+    const string& imagename
+) {
+    try {
+        _log << _ORIGIN;
+        if (detached()) {
+            return false;
+        }
+        std::unique_ptr<Record> rec(toRecord(beam));
+        ImageBeamSet bs;
+        if (! imagename.empty()) {
+            ThrowIf(
+                ! major.empty() || ! minor.empty() || ! pa.empty(),
+                "Cannot specify both imagename and major, minor, and/or pa"
+            );
+            ThrowIf(
+                remove, "remove cannot be true if imagename is specified"
+            );
+            ThrowIf(
+                ! beam.empty(),
+                "beam must be empty if imagename specified"
+            );
+            ThrowIf(
+                channel >= 0 || polarization >= 0,
+                "Neither channel nor polarization can be non-negative if imagename is specified"
+            );
+            PtrHolder<ImageInterface<Float> > k;
+            ImageUtilities::openImage(k, imagename);
+            if (k.ptr() == 0) {
+                PtrHolder<ImageInterface<Float> > c;
+                ImageUtilities::openImage(c, imagename);
+                ThrowIf(
+                    c.ptr() == 0,
+                    "Unable to open " + imagename
+                );
+                bs = c->imageInfo().getBeamSet();
+            }
+            else {
+                bs = k->imageInfo().getBeamSet();
+            }
+            ThrowIf(
+                bs.empty(),
+                "Image " + imagename + " has no beam"
+            );
+        }
+        if (_imageF) {
+            BeamManipulator<Float> bManip(_imageF);
+            bManip.setVerbose(log);
+            if (remove) {
+                bManip.remove();
+            }
+            else if (! bs.empty()) {
+                bManip.set(bs);
+            }
+            else {
+                bManip.set(
+                    major.empty() ? casa::Quantity() : _casaQuantityFromVar(major),
+                    minor.empty() ? casa::Quantity() : _casaQuantityFromVar(minor),
+                    pa.empty() ? casa::Quantity() : _casaQuantityFromVar(pa),
+                    *rec, channel, polarization
+                );
+            }
+        }
+        else {
+            BeamManipulator<Complex> bManip(_imageC);
+            bManip.setVerbose(log);
+            if (remove) {
+                bManip.remove();
+            }
+            else if (! bs.empty()) {
+                bManip.set(bs);
+            }
+            else {
+                bManip.set(
+                    major.empty() ? casa::Quantity() : _casaQuantityFromVar(major),
+                    minor.empty() ? casa::Quantity() : _casaQuantityFromVar(minor),
+                    pa.empty() ? casa::Quantity() : _casaQuantityFromVar(pa),
+                    *rec, channel, polarization
+                );
+            }
+        }
+        vector<String> names {
+            "major", "minor", "pa", "beam", "remove", "log",
+            "channel", "polarization", "imagename"
+        };
+        vector<variant> values {
+            major, minor, pa, beam, remove, log,
+            channel, polarization, imagename
+        };
+        _addHistory(__func__, names, values);
+        return True;
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
+        RETHROW(x);
+    }
+    return False;
+}
+
+vector<int> image::shape() {
+    _log << _ORIGIN;
+    if (detached()) {
+        return vector<int>(0);
+    }
+    try {
+        vector<int> rstat = _imageF
+            ? _imageF->shape().asVector().tovector()
+            : _imageC->shape().asVector().tovector();
+        return rstat;
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return vector<int>();
+}
+
 record* image::torecord() {
     _log << LogOrigin("image", __func__);
     if (detached()) {
@@ -4685,119 +4808,7 @@ void image::_reset() {
 
 
 
-std::vector<int> image::shape() {
-	std::vector<int> rstat(0);
-	_log << _ORIGIN;
-	if (detached()) {
-		return rstat;
-	}
-	try {
-		rstat = _imageF
-			? _imageF->shape().asVector().tovector()
-			: _imageC->shape().asVector().tovector();
-		return rstat;
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	return vector<int>();
-}
 
-bool image::setrestoringbeam(
-	const variant& major, const variant& minor,
-	const variant& pa, const record& beam,
-	bool remove, bool log,
-	int channel, int polarization,
-	const string& imagename
-) {
-	try {
-		_log << _ORIGIN;
-		if (detached()) {
-			return false;
-		}
-		std::unique_ptr<Record> rec(toRecord(beam));
-		ImageBeamSet bs;
-		if (! imagename.empty()) {
-			ThrowIf(
-				! major.empty() || ! minor.empty() || ! pa.empty(),
-				"Cannot specify both imagename and major, minor, and/or pa"
-			);
-			ThrowIf(
-				remove,	"remove cannot be true if imagename is specified"
-			);
-			ThrowIf(
-				! beam.empty(),
-				"beam must be empty if imagename specified"
-			);
-			ThrowIf(
-				channel >= 0 || polarization >= 0,
-				"Neither channel nor polarization can be non-negative if imagename is specified"
-			);
-			PtrHolder<ImageInterface<Float> > k;
-			ImageUtilities::openImage(k, imagename);
-			if (k.ptr() == 0) {
-				PtrHolder<ImageInterface<Float> > c;
-				ImageUtilities::openImage(c, imagename);
-				ThrowIf(
-					c.ptr() == 0,
-					"Unable to open " + imagename
-				);
-				bs = c->imageInfo().getBeamSet();
-			}
-			else {
-				bs = k->imageInfo().getBeamSet();
-			}
-			ThrowIf(
-				bs.empty(),
-				"Image " + imagename + " has no beam"
-			);
-		}
-		if (_imageF) {
-			BeamManipulator<Float> bManip(_imageF);
-			bManip.setVerbose(log);
-			if (remove) {
-				bManip.remove();
-			}
-			else if (! bs.empty()) {
-				bManip.set(bs);
-			}
-			else {
-				bManip.set(
-					major.empty() ? casa::Quantity() : _casaQuantityFromVar(major),
-					minor.empty() ? casa::Quantity() : _casaQuantityFromVar(minor),
-					pa.empty() ? casa::Quantity() : _casaQuantityFromVar(pa),
-					*rec, channel, polarization
-				);
-			}
-		}
-		else {
-			BeamManipulator<Complex> bManip(_imageC);
-			bManip.setVerbose(log);
-			if (remove) {
-				bManip.remove();
-			}
-			else if (! bs.empty()) {
-				bManip.set(bs);
-			}
-			else {
-				bManip.set(
-					major.empty() ? casa::Quantity() : _casaQuantityFromVar(major),
-					minor.empty() ? casa::Quantity() : _casaQuantityFromVar(minor),
-					pa.empty() ? casa::Quantity() : _casaQuantityFromVar(pa),
-					*rec, channel, polarization
-				);
-			}
-		}
-		return true;
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-			<< LogIO::POST;
-		RETHROW(x);
-	}
-}
 
 record* image::statistics(
 	const vector<int>& axes, const variant& region,
