@@ -1,8 +1,8 @@
-"""
+'''
 Created on 24 Oct 2014
 
 @author: sjw
-"""
+'''
 import collections
 import itertools
 import operator
@@ -32,23 +32,23 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         weblog_dir = os.path.join(context.report_dir,
                                   'stage%s' % result.stage_number)
 
-        flag_totals = collections.OrderedDict()
+        flag_totals = {}
         for r in result:
-            if r.inputs['flagsum'] is True:
+            if r.inputs['flagsum'] == True:
                 flag_totals = utils.dict_merge(flag_totals,
-                                               self.flags_for_result(r, context))
+                                           self.flags_for_result(r, context))
 
-        calapps = collections.OrderedDict()
+        calapps = {}
         for r in result:
             calapps = utils.dict_merge(calapps,
                                        self.calapps_for_result(r))
 
-        caltypes = collections.OrderedDict()
+        caltypes = {}
         for r in result:
             caltypes = utils.dict_merge(caltypes,
                                         self.caltypes_for_result(r))
 
-        filesizes = collections.OrderedDict()
+        filesizes = {}
         for r in result:
             vis = r.inputs['vis']
             ms = context.observing_run.get_ms(vis)
@@ -67,11 +67,11 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         })
 
         # these dicts map vis to the hrefs of the detail pages
-        amp_vs_time_subpages = collections.OrderedDict()
-        phase_vs_time_subpages = collections.OrderedDict()
-        amp_vs_freq_subpages = collections.OrderedDict()
-        phase_vs_freq_subpages = collections.OrderedDict()
-        amp_vs_uv_subpages = collections.OrderedDict()
+        amp_vs_time_subpages = {}
+        phase_vs_time_subpages = {}
+        amp_vs_freq_subpages = {}
+        phase_vs_freq_subpages = {}
+        amp_vs_uv_subpages = {}
 
         amp_vs_time_summary_plots, amp_vs_time_subpages = self.create_plots(
             context,
@@ -87,7 +87,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             ['PHASE', 'BANDPASS', 'AMPLITUDE', 'CHECK', 'TARGET']
         )
 
-        amp_vs_freq_summary_plots = collections.OrderedDict()
+        amp_vs_freq_summary_plots = utils.OrderedDefaultdict(utils.OrderedDefaultdict)
         for intents in [['PHASE'], ['BANDPASS'], ['CHECK'], ['AMPLITUDE']]:
             # it doesn't matter that the subpages dict is repeatedly redefined.
             # The only purpose of the returned dict is to map the vis to a
@@ -101,9 +101,9 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
             key = utils.commafy(intents, quotes=False)
             for vis, vis_plots in plots.items():
-                amp_vs_freq_summary_plots.setdefault(vis, collections.OrderedDict())[key] = vis_plots
+                amp_vs_freq_summary_plots[vis][key] = vis_plots
 
-        phase_vs_freq_summary_plots = collections.OrderedDict()
+        phase_vs_freq_summary_plots = utils.OrderedDefaultdict(utils.OrderedDefaultdict)
         for intents in [['PHASE'], ['BANDPASS'], ['CHECK']]:
             plots, phase_vs_freq_subpages = self.create_plots(
                 context,
@@ -115,11 +115,11 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
             key = utils.commafy(intents, quotes=False)
             for vis, vis_plots in plots.items():
-                phase_vs_freq_summary_plots.setdefault(vis, collections.OrderedDict())[key] = vis_plots
+                phase_vs_freq_summary_plots[vis][key] = vis_plots
 
         # CAS-7659: Add plots of all calibrator calibrated amp vs uvdist to
         # the WebLog applycal page
-        amp_vs_uv_summary_plots = collections.OrderedDict()
+        amp_vs_uv_summary_plots = utils.OrderedDefaultdict(utils.OrderedDefaultdict)
         for intents in ['AMPLITUDE', 'PHASE', 'BANDPASS', 'CHECK']:
             plots, amp_vs_uv_subpages = self.create_plots(
                 context,
@@ -130,7 +130,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
             key = utils.commafy(intents, quotes=False)
             for vis, vis_plots in plots.items():
-                amp_vs_uv_summary_plots.setdefault(vis, collections.OrderedDict())[key] = vis_plots
+                amp_vs_uv_summary_plots[vis][key] = vis_plots
 
         # Phase vs UV distance plots are not required
         # phase_vs_uv_summary_plots, _ = self.create_plots(
@@ -146,8 +146,8 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
          science_amp_vs_uv_summary_plots,
          uv_max) = self.create_science_plots(context, result)
 
-        corrected_ratio_to_antenna1_plots = collections.OrderedDict()
-        corrected_ratio_to_uv_dist_plots = collections.OrderedDict()
+        corrected_ratio_to_antenna1_plots = {}
+        corrected_ratio_to_uv_dist_plots = {}
         for r in result:
             vis = os.path.basename(r.inputs['vis'])
             uvrange_dist = uv_max.get(vis, None)
@@ -174,11 +174,11 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             corrected_ratio_to_uv_dist_plots[vis] = p[vis]
 
         # these dicts map vis to the list of plots
-        amp_vs_freq_detail_plots = collections.OrderedDict()
-        phase_vs_freq_detail_plots = collections.OrderedDict()
-        amp_vs_uv_detail_plots = collections.OrderedDict()
-        amp_vs_time_detail_plots = collections.OrderedDict()
-        phase_vs_time_detail_plots = collections.OrderedDict()
+        amp_vs_freq_detail_plots = {}
+        phase_vs_freq_detail_plots = {}
+        amp_vs_uv_detail_plots = {}
+        amp_vs_time_detail_plots = {}
+        phase_vs_time_detail_plots = {}
 
         if pipeline.infrastructure.generate_detail_plots(result):
             # detail plots. Don't need the return dictionary, but make sure a
@@ -272,31 +272,19 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         Create plots for the science targets, returning two dictionaries of 
         vis:[Plots].
         """
-        amp_vs_freq_summary_plots = collections.OrderedDict()
-        phase_vs_freq_summary_plots = collections.OrderedDict()
-        amp_vs_uv_summary_plots = collections.OrderedDict()
-        max_uvs = collections.OrderedDict()
+        amp_vs_freq_summary_plots = collections.defaultdict(dict)
+        phase_vs_freq_summary_plots = collections.defaultdict(dict)
+        amp_vs_uv_summary_plots = collections.defaultdict(dict)
+        max_uvs = collections.defaultdict(dict)
 
-        amp_vs_freq_detail_plots = collections.OrderedDict()
-        phase_vs_freq_detail_plots = collections.OrderedDict()
-        amp_vs_uv_detail_plots = collections.OrderedDict()
+        amp_vs_freq_detail_plots = {}
+        phase_vs_freq_detail_plots = {}
+        amp_vs_uv_detail_plots = {}
 
         for result in results:
             vis = os.path.basename(result.inputs['vis'])
             ms = context.observing_run.get_ms(vis)
             correlation = ms.get_alma_corrstring()
-
-            # initialise dicts here rather than scattering setdefault calls
-            # throughout the code
-            for d in (amp_vs_freq_summary_plots,
-                      phase_vs_freq_summary_plots,
-                      amp_vs_uv_summary_plots,
-                      max_uvs,
-                      amp_vs_freq_detail_plots,
-                      phase_vs_freq_detail_plots,
-                      amp_vs_uv_detail_plots):
-                if vis not in d:
-                    d[vis] = {}
 
             # Plot for 1 science field (either 1 science target or for a mosaic 1
             # pointing). The science field that should be chosen is the one with
@@ -523,8 +511,8 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         """
         Create plots and return (dictionary of vis:[Plots], dict of vis:subpage URL).
         """
-        d = collections.OrderedDict()
-        subpages = collections.OrderedDict()
+        d = {}
+        subpages = {}
 
         for result in results:
             vis = os.path.basename(result.inputs['vis'])
@@ -548,7 +536,8 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         for plot in plots:
             plot.parameters['intent'] = intents
 
-        d = {vis: plots}
+        d = collections.defaultdict(dict)
+        d[vis] = plots
 
         path = None
 

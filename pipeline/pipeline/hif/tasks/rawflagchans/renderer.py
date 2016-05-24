@@ -1,9 +1,8 @@
-"""
+'''
 Created on 24 Nov 2014
 
 @author: sjw
-"""
-import collections
+'''
 import os
 
 import pipeline.infrastructure.displays.image as image
@@ -26,10 +25,8 @@ class T2_4MDetailsRawflagchansRenderer(basetemplates.T2_4MDetailsDefaultRenderer
     def update_mako_context(self, mako_context, pipeline_context, results):
         htmlreports = self._get_htmlreports(pipeline_context, results)
 
-        # CAS-8265: multi-ms in time order in all weblog stages
-        # Maintain the time-order of the input results by using an OrderedDict
-        plots = collections.OrderedDict()
-        flag_totals = collections.OrderedDict()
+        plots = {}
+        flag_totals = {}
         for result in results:
             if not result.view:
                 continue
@@ -46,21 +43,17 @@ class T2_4MDetailsRawflagchansRenderer(basetemplates.T2_4MDetailsDefaultRenderer
             flag_totals = utils.dict_merge(flag_totals, 
                                            flags_for_result)
 
-        mako_context.update({
-            'htmlreports': htmlreports,
-            'plots': plots,
-            'flags': flag_totals,
-            'agents': ['before', 'after']
-        })
+        mako_context.update({'htmlreports' : htmlreports,
+                             'plots'       : plots,
+                             'flags'       : flag_totals,
+                             'agents'      : ['before', 'after']})        
 
     def _get_htmlreports(self, context, results):
         report_dir = context.report_dir
         weblog_dir = os.path.join(report_dir,
                                   'stage%s' % results.stage_number)
 
-        # CAS-8265: multi-ms in time order in all weblog stages
-        # Maintain the time-order of the input results by using an OrderedDict
-        htmlreports = collections.OrderedDict()
+        htmlreports = {}
         for result in results:
             flagcmd_abspath = self._write_flagcmd_to_disk(weblog_dir, result)
             flagcmd_relpath = os.path.relpath(flagcmd_abspath, report_dir)

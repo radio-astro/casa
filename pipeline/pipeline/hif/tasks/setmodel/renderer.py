@@ -1,8 +1,8 @@
-"""
+'''
 Created on 11 Sep 2014
 
 @author: sjw
-"""
+'''
 import collections
 import os
 
@@ -22,7 +22,7 @@ class T2_4MDetailsSetjyRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 description=description, always_rerender=always_rerender)
 
     def update_mako_context(self, ctx, context, result):
-        amp_vs_uv_summary_plots = collections.OrderedDict()
+        amp_vs_uv_summary_plots = collections.defaultdict(dict)
 
         for intents in ['AMPLITUDE']:
             plots = self.create_plots(context, 
@@ -33,7 +33,7 @@ class T2_4MDetailsSetjyRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
             key = intents
             for vis, vis_plots in plots.items():
-                amp_vs_uv_summary_plots.setdefault(vis, {})[key] = vis_plots
+                amp_vs_uv_summary_plots[vis][key] = vis_plots
 
         table_rows = make_flux_table(context, result)
 
@@ -50,7 +50,7 @@ class T2_4MDetailsSetjyRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         """
         Create plots and return a dictionary of vis:[Plots].
         """
-        d = collections.OrderedDict()
+        d = {}
         for result in results:
             plots = self.plots_for_result(context, result, plotter_cls, intents)
             d = utils.dict_merge(d, plots)

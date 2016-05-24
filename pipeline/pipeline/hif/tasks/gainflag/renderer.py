@@ -3,8 +3,8 @@ Created on 7 Oct 2015
 
 @author: vgeers
 """
-import collections
 import os
+import collections
 
 import pipeline.infrastructure.displays as displays
 import pipeline.infrastructure.filenamer as filenamer
@@ -24,19 +24,18 @@ class T2_4MDetailsGainflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 description=description, always_rerender=always_rerender)
 
     def update_mako_context(self, mako_context, pipeline_context, results):
-        plots = {}
+        plots = collections.defaultdict(dict)
         for result in results:
             vis = os.path.basename(result.inputs['vis'])
             for component, r in result.components.items():
                 if not r.view:
                     continue
                 try:
-                    renderer = TimeVsAntenna1PlotRenderer(pipeline_context, result, component)
+                    renderer = TimeVsAntenna1PlotRenderer(pipeline_context, 
+                      result, component)
                     with renderer.get_file() as fileobj:
                         fileobj.write(renderer.render())
-                    # CAS-8265: multi-ms in time order in all weblog stages
-                    # Maintain the time-order of the input results by using an OrderedDict
-                    plots.setdefault(component, collections.OrderedDict())[vis] = os.path.relpath(renderer.path, pipeline_context.report_dir)
+                    plots[component][vis] = os.path.relpath(renderer.path, pipeline_context.report_dir)
                 except TypeError:
                     continue
                 
@@ -44,12 +43,10 @@ class T2_4MDetailsGainflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         
         components = results[0].metric_order
         
-        mako_context.update({
-            'htmlreports': htmlreports,
-            'components': components,
-            'plots': plots,
-            'agents': ['before', 'after']
-        })
+        mako_context.update({'htmlreports': htmlreports,
+                             'components': components,
+                             'plots': plots,
+                             'agents': ['before', 'after']})
 
     def _get_htmlreports(self, context, results):
         report_dir = context.report_dir
@@ -62,14 +59,14 @@ class T2_4MDetailsGainflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         htmlreports = {}
         
         for component in components:
-            # CAS-8265: multi-ms in time order in all weblog stages
-            # Maintain the time-order of the input results by using an OrderedDict
-            htmlreports[component] = collections.OrderedDict()
+            htmlreports[component] = {}
 
             for msresult in results:
-                flagcmd_abspath = self._write_flagcmd_to_disk(weblog_dir, msresult.components[component], component)
+                flagcmd_abspath = self._write_flagcmd_to_disk(weblog_dir, 
+                  msresult.components[component], component)
                 flagcmd_relpath = os.path.relpath(flagcmd_abspath, report_dir)
-                table_basename = os.path.basename(msresult.components[component].table)
+                table_basename = os.path.basename(
+                  msresult.components[component].table)
                 htmlreports[component][table_basename] = flagcmd_relpath
 
         return htmlreports
