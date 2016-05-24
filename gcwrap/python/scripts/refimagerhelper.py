@@ -821,6 +821,15 @@ class PyParallelCubeSynthesisImager():
                         selparsPerNode[tnode][ky] = alldataimpars[fid][nodeidx][ky].copy();
                         if alldataimpars[fid][nodeidx][ky]['spw']=='-1':
                             selparsPerNode[tnode][ky]['spw']=''
+                        else: 
+                            # remove chan selections (will be adjusted by tuneSelectData)
+                            newspw=selparsPerNode[tnode][ky]['spw']
+                            newspwlist = newspw.split(',')
+                            spwsOnly = ''
+                            for sp in newspwlist:
+                                if spwsOnly!='': spwsOnly+=','
+                                spwsOnly+=sp.split(':')[0]   
+                            selparsPerNode[tnode][ky]['spw']=spwsOnly
 
                 imparsPerNode[tnode][fid] = allimagepars[fid].copy()
                 imparsPerNode[tnode][fid]['csys'] = alldataimpars[fid][nodeidx]['coordsys'].copy()
