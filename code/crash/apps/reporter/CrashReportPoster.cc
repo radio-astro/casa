@@ -40,9 +40,9 @@ public:
 
 private:
 
-template <typename T>
-friend
-OstreamSet & operator<< (OstreamSet & ostreamSet, T value);
+    template <typename T>
+    friend
+    OstreamSet & operator<< (OstreamSet & ostreamSet, T value);
 
     vector<shared_ptr<ostream>> streams () { return streams_p;}
 
@@ -125,7 +125,7 @@ private:
 
 const string CrashReportPoster::AppName = "CrashReportPoster";
 const string CrashReportPoster::CaCertificateFile = "";
-const string CrashReportPoster::CrashReportName = "crashReport";
+const string CrashReportPoster::CrashReportName = "file";
 const string CrashReportPoster::Proxy = "";
 const string CrashReportPoster::ProxyPassword = "";
 
@@ -163,11 +163,26 @@ CrashReportPoster::captureAdditionalInformation ()
     // Capture various bits of information about the platform
     // and store them in files; add the names to the manifest.
 
+#if ! defined (__APPLE__)
+
     captureOne ("cat /proc/cpuinfo", "cpuinfo.txt");
     captureOne ("cat /proc/meminfo", "meminfo.txt");
     captureOne ("mount", "mountinfo.txt");
     captureOne ("lsb_release -a", "lsbinfo.txt");
     captureOne ("uname -a", "unameinfo.txt");
+
+#else
+
+    // No proc filesystem on OSX, so use something else
+
+    captureOne ("sysctl -a hw", "hw.txt");
+    captureOne ("sysctl -a machdep", "machdep.txt");
+    captureOne ("vm_stat", "meminfo.txt");
+    captureOne ("mount", "mountinfo.txt");
+    captureOne ("lsb_release -a", "lsbinfo.txt");
+    captureOne ("uname -a", "unameinfo.txt");
+
+#endif
 }
 
 void
@@ -289,13 +304,19 @@ CrashReportPoster::postArchiveToServer ()
                                        & responseCode,
                                        & errorDescription);
 
+    logStream_p << AppName << ":: Results of post: code=" << responseCode << endl;
+    logStream_p << AppName << ":: Response: " << responseBody << endl;
+
+
+
     if (! ok){
 
-        logStream_p << AppName << ": Upload failed: code=" << responseCode
+        logStream_p << AppName << ":: Upload to " << crashPostingUrl_p << " failed: code=" << responseCode
                     << "; description=" << errorDescription << endl;
 
+    } else {
+        logStream_p << AppName << ":: Upload to " << crashPostingUrl_p << " succeeded." << endl;
     }
-
 }
 
 int
