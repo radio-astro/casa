@@ -97,9 +97,10 @@ PlotMSDataSummaryTab::~PlotMSDataSummaryTab() {
 
 void PlotMSDataSummaryTab::emptyLayout(){
     // Start at end of QList to avoid indexing issues...
-    for ( int i=(dataList.size()-1); i >= 0; --i ){
+    for ( int i=(dataList.size()-1); i > 0; --i ){
         close(dataList[i]);
     }
+    dataList[0]->clearData();
 }
 
 void PlotMSDataSummaryTab::setGridSize( int rowCount, int colCount ){
