@@ -159,6 +159,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		Bool sChg = readOptionRecord(itsSpectralTypeUnit, error, rec,
 		                             "axislabelspectypeunit");
+		sChg = readOptionRecord(itsSpectralPrecision, error, rec,
+		                        "axislabelspecfixedprec")   || sChg;
 		sChg = readOptionRecord(itsFrequencySystem, error, rec,
 		                        "axislabelfrequencysystem")   || sChg;
 		sChg = readOptionRecord(itsRestValue, error, rec,
@@ -378,23 +380,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				spectypeunit.define("ptype", "userchoice");
 				Vector<String> spctypeunits;
 
-				spctypeunits.resize(16);
+				spctypeunits.resize(17);
 				spctypeunits(0)  = "radio velocity [m/s]";
 				spctypeunits(1)  = "radio velocity [km/s]";
-				spctypeunits(2)  = "optical velocity [m/s]";
-				spctypeunits(3)  = "optical velocity [km/s]";
-				spctypeunits(4)  = "frequency [Hz]";
-				spctypeunits(5)  = "frequency [MHz]";
-				spctypeunits(6)  = "frequency [GHz]";
-				spctypeunits(7)  = "wavelength [mm]";
-				spctypeunits(8)  = "wavelength [um]";
-				spctypeunits(9)  = "wavelength [nm]";
-				spctypeunits(10) = "wavelength [Angstrom]";
-				spctypeunits(11) = "air wavelength [mm]";
-				spctypeunits(12) = "air wavelength [um]";
-				spctypeunits(13) = "air wavelength [nm]";
-				spctypeunits(14) = "air wavelength [Angstrom]";
-				spctypeunits(15) = "channel";
+				spctypeunits(2)  = "radio velocity [Mm/s]";
+				spctypeunits(3)  = "optical velocity [m/s]";
+				spctypeunits(4)  = "optical velocity [km/s]";
+				spctypeunits(5)  = "frequency [Hz]";
+				spctypeunits(6)  = "frequency [MHz]";
+				spctypeunits(7)  = "frequency [GHz]";
+				spctypeunits(8)  = "wavelength [mm]";
+				spctypeunits(9)  = "wavelength [um]";
+				spctypeunits(10)  = "wavelength [nm]";
+				spctypeunits(11) = "wavelength [Angstrom]";
+				spctypeunits(12) = "air wavelength [mm]";
+				spctypeunits(13) = "air wavelength [um]";
+				spctypeunits(14) = "air wavelength [nm]";
+				spctypeunits(15) = "air wavelength [Angstrom]";
+				spctypeunits(16) = "channel";
 
 				spectypeunit.define("popt", spctypeunits);
 				spectypeunit.define("default", itsSpectralTypeUnit);
@@ -402,6 +405,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				spectypeunit.define("allowunset", False);
 				rec.defineRecord("axislabelspectypeunit", spectypeunit);
 
+// set spectral display precision (-1 implies default precision)
+				Record specfixedprec;
+				specfixedprec.define("dlformat", "axislabelspecfixedprec");
+				specfixedprec.define("listname", "spectral precision");
+				specfixedprec.define("ptype", "intrange");
+				specfixedprec.define("pmin", Int(-1));
+				specfixedprec.define("pmax", Int(20));
+				specfixedprec.define("presolution", Int(1));
+				specfixedprec.define("default", Int(-1));
+				specfixedprec.define("value", Int(-1));
+				specfixedprec.define("allowunset", False);
+				specfixedprec.define("context", "axis_label_properties");
+				rec.defineRecord("axislabelspecfixedprec", specfixedprec);
 
 // line editor for rest frequency/wavelength
 
@@ -599,6 +615,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				Unit HZ("Hz");
 				Unit KMS("km/s");
 				Unit NM("m");
+
 				if (pVU==KMS) {
 					prefUnit = itsSpectralUnit;
 					unitString = " (" + prefUnit + ")";
@@ -791,6 +808,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			itsSpectralUnit = String("km/s");
 		} else if (itsSpectralTypeUnit.contains("[m/s]")) {
 			itsSpectralUnit = String("m/s");
+		} else if (itsSpectralTypeUnit.contains("[Mm/s]")) {
+			itsSpectralUnit = String("Mm/s");
 		} else if (itsSpectralTypeUnit.contains("[GHz]")) {
 			itsSpectralUnit = String("GHz");
 		} else if (itsSpectralTypeUnit.contains("[MHz]")) {

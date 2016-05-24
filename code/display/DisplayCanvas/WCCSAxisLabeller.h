@@ -152,6 +152,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			return itsSpectralUnit;
 		}
 
+        Int spectralprec( ) const {
+            return itsSpectralPrecision;
+        }
 
 	protected:
 		Bool itsAbsolute;
@@ -169,6 +172,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		DisplayCoordinateSystem itsCoordinateSystem;
 		Bool itsHasCoordinateSystem;
+		Int    itsSpectralPrecision;
 		String itsSpectralUnit;
 		String itsSpectralQuantity;
 		String itsSpectralTypeUnit;

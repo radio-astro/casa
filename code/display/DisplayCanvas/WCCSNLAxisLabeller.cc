@@ -1006,7 +1006,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 						String tStr;
 						if (!cs.toWorld(tWrld,tPix)) {
 						} else {
-							zLabel = cs.format(tStr, Coordinate::DEFAULT, tWrld(2), 2);
+							Int prec = spectralprec( );
+							if ( prec < 0 )
+								zLabel = cs.format(tStr, Coordinate::DEFAULT, tWrld(2), 2);
+							else
+								zLabel = cs.format( tStr, Coordinate::FIXED, tWrld(2), 2, true, true, prec );
 							//cout << "zlabel: " << zLabel << " tStr: "<<tStr<< " World value: "<< tWrld(2)<<endl;
 						}
 						//
