@@ -1672,7 +1672,7 @@ the ms definition itself. -->
       <description>
         Average data in time
       </description>
-      <value>true</value>
+      <value>false</value>
     </param>
 
     <param type="string" name="timebin">
@@ -1684,7 +1684,7 @@ the ms definition itself. -->
 
     <param type="string" name="timespan">
       <description>
-        Boundaries to ignore in time averaging: example: 'scan,subscan'
+        Boundaries to ignore in time averaging: example: 'scan,state'
       </description>
       <value></value>
     </param>
