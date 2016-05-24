@@ -7,14 +7,12 @@
    Fit lines to data which have errors in both coordinates
 */
 
-#include <boost/scoped_ptr.hpp>
-
+#include <memory>
 #include "twoerrline.hxx"
 #include "twoerrline_ml.hxx"
 #include "gradientminim.hxx"
 #include "lmmin.hxx"
 #include "lmminutils.hxx"
-
 
 namespace Minim {
 
@@ -62,8 +60,7 @@ namespace Minim {
     res.a=m.getbyname("a")->getp();
     res.b=m.getbyname("b")->getp();
     
-    boost::scoped_ptr<std::vector<double> > cv(CVMatrix(m,
-							1e-5));
+    std::unique_ptr<std::vector<double> > cv(CVMatrix(m,1e-5));
 
     std::copy(cv->begin(),
 	      cv->end(),

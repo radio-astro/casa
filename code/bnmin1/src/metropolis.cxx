@@ -12,7 +12,7 @@
 #include <list>
 #include <memory>
 #include <cmath>
-#include <boost/format.hpp>
+#include <sstream>
 
 #include "metropolis.hxx"
 #include "metro_propose.hxx"
@@ -43,8 +43,9 @@ namespace Minim {
   {
     if (prop->nPars() != NParam() )
     {
-      throw Error((boost::format("Number of sigmas not consistent with number of pars\
- set to fit: expected %i, got %i") %  NParam() % prop->nPars()).str());
+      std::ostringstream buf;
+      buf << "Number of sigmas not consistent with number of pars set to fit: expected " << NParam( ) << ", got " << prop->nPars( );
+      throw Error(buf.str( ));
     }
 
     std::auto_ptr< std::list<MCPoint> > res
