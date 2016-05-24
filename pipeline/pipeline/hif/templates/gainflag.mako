@@ -22,9 +22,7 @@ The following section provides summary plots and flagging commands that
 resulted from each flagging metric that the pipeline uses to determine 
 antennas with deviant gains.
  
-<ul>
 % for component in components:
-	<li>
 	<h3>${component}</h3>
 	${comp_descriptions[component]}
 
@@ -62,6 +60,4 @@ antennas with deviant gains.
       </table>
     %endif
  
-  </li>
 % endfor
-</ul>

@@ -205,6 +205,21 @@ antenna for both polarisations.</p>
 	<h3 id="${component}" class="jumptarget">${component}</h3>
 	${comp_descriptions[component]}
 
+    % if component in stdplots:
+	<h4>Plots</h4>
+	<ul>
+		% for vis, renderer in stdplots[component].items():
+		<li><a class="replace" href="${os.path.relpath(renderer.path, pcontext.report_dir)}">${renderer.shorttitle}</a> ${std_plot_desc[component]} ${vis}.</li>
+		% endfor
+	    % if component in extraplots:
+			% for vis, renderer in extraplots[component].items():
+			<li><a class="replace" href="${os.path.relpath(renderer.path, pcontext.report_dir)}">${renderer.shorttitle}</a> ${extra_plot_desc[component]} ${vis}.</li>
+			% endfor
+		% endif
+
+	</ul>
+    % endif
+
     <h4>Flags</h4>
     <table class="table table-bordered table-striped">
 	<thead>
@@ -229,20 +244,5 @@ antenna for both polarisations.</p>
 	    % endfor
 	</tbody>
     </table>
- 
-    % if component in stdplots:
-	<h4>Plots</h4>
-	<ul>
-		% for vis, renderer in stdplots[component].items():
-		<li><a class="replace" href="${os.path.relpath(renderer.path, pcontext.report_dir)}">${renderer.shorttitle}</a> ${std_plot_desc[component]} ${vis}.</li>
-		% endfor
-	    % if component in extraplots:
-			% for vis, renderer in extraplots[component].items():
-			<li><a class="replace" href="${os.path.relpath(renderer.path, pcontext.report_dir)}">${renderer.shorttitle}</a> ${extra_plot_desc[component]} ${vis}.</li>
-			% endfor
-		% endif
-
-	</ul>
-    % endif
   % endif
 % endfor
