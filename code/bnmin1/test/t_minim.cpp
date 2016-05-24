@@ -22,18 +22,11 @@
 
 
 
+#include <functional>
 #include <iostream>
+#include <random>
 #include <limits>
 #include <set>
-
-#include <boost/bind.hpp>
-#include <boost/assign/list_of.hpp>
-#include <boost/assign/std/vector.hpp>
-#include <boost/random.hpp>
-#include <boost/random/mersenne_twister.hpp>
-#include "../src/random_normal_distribution.hxx"
-#include "../src/random_variate_generator.hxx"
-#include <boost/random/uniform_real.hpp>
 
 #include <casa/aips.h>
 #include <casa/BasicMath/Math.h>
@@ -93,7 +86,7 @@ void QuadT1()
 {
   using namespace Minim;
 
-  boost::scoped_ptr<QuadObs> qo(mkStdObs());
+  std::unique_ptr<QuadObs> qo(mkStdObs());
 
   std::vector<double> scratch(3);
   qo->residuals(scratch);
@@ -124,6 +117,7 @@ void RecPars( const QuadModel & qm,
 
 void QuadMetro()
 {
+  using namespace std::placeholders;
   using namespace Minim;
 
   const double params[]= { 1, 2, 3};
@@ -147,9 +141,9 @@ void QuadMetro()
   std::vector<double> sigmas(3,0.1);
 
   MetropolisMCMC metro(qo,sigmas);
-  metro.f=boost::bind( RecPars, qm, _1);
+  metro.f=std::bind( RecPars, qm, _1);
   
-  boost::shared_ptr< std::list<Minim::MCPoint>  >
+  std::shared_ptr< std::list<Minim::MCPoint>  >
     res( metro.sample(10000)) ;
 
   for (size_t i = 0 ; i < sigmas.size(); ++i)
@@ -169,6 +163,7 @@ void QuadMetro()
 
 void QuadMetro_Seq()
 {
+  using namespace std::placeholders;
   using namespace Minim;
 
   const double params[]= { 1, 2, 3};
@@ -192,9 +187,9 @@ void QuadMetro_Seq()
   std::vector<double> sigmas(3,0.1);
 
   MetropolisMCMC metro(qo,sigmas,33, MetropolisMCMC::Sequence);
-  metro.f=boost::bind( RecPars, qm, _1);
+  metro.f=std::bind( RecPars, qm, _1);
   
-  boost::shared_ptr< std::list<Minim::MCPoint>  >
+  std::shared_ptr< std::list<Minim::MCPoint>  >
     res( metro.sample(30000)) ;
 
   for (size_t i = 0 ; i < sigmas.size(); ++i)
@@ -224,7 +219,7 @@ void GaussObs_Metro()
   
   MetropolisMCMC metro(go,sigmas);  
 
-  boost::shared_ptr< std::list<Minim::MCPoint>  >
+  std::shared_ptr< std::list<Minim::MCPoint>  >
     res( metro.sample(10000)) ;
 
   for (size_t i = 0; i < sigmas.size(); ++i)
@@ -249,13 +244,11 @@ void Params_ByName()
 void QuadPrior()
 {
   using namespace Minim;
-  using namespace boost::assign;
 
   const double params[]= { 1, 2, 3};
 
   // Abcissa values at which the quardratic function is "observed"
-  std::vector<double> x;
-  x +=  -1, 0 , 1;
+  std::vector<double> x {-1, 0 , 1 };
 
   // Corresponding "observation"
   std::vector<double> obs(3);
@@ -280,7 +273,7 @@ void QuadPrior()
   qifp.AddPrior("c", -10,2);
 
   MetropolisMCMC metro(qifp,sigmas);
-  boost::shared_ptr< std::list<Minim::MCPoint>  >
+  std::shared_ptr< std::list<Minim::MCPoint>  >
     res( metro.sample(10000)) ;
 
   AlwaysAssertExit(near( res->back().p[2],
@@ -343,8 +336,8 @@ void BFGS2Minim_QuadRes()
 void t_RobustLineObsMod()
 {
   
-  std::vector<double> xvals = boost::assign::list_of(1)(2)(3)(4)(5)(6)(7)(8)(9)(10).convert_to_container<std::vector<double> >();  
-  std::vector<double> yvals = boost::assign::list_of(1)(2)(3)(4)(5)(6)(7)(80)(9)(10).convert_to_container<std::vector<double> >();  
+  std::vector<double> xvals { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+  std::vector<double> yvals { 1, 2, 3, 4, 5, 6, 7, 80, 9, 10 };
 
   Minim::RobustLineObsMod rom(xvals, yvals);
   rom.a=0;
@@ -400,8 +393,8 @@ void t_LineTwoErrML()
     obs[i]=i;
   }
   */
-  std::vector<double> x=boost::assign::list_of(1)(2).convert_to_container<std::vector<double> >();
-  std::vector<double> obs=boost::assign::list_of(1)(2).convert_to_container<std::vector<double> >();
+  std::vector<double> x { 1, 2 };
+  std::vector<double> obs { 1, 2 };
 
   Minim::LineTwoErrML lml(x, obs,
 			  1.0, 1.0);
@@ -418,8 +411,8 @@ void t_LineTwoErrML()
 
 void t_LineTwoErr_LavMarq()
 {
-  std::vector<double> x=boost::assign::list_of(1)(2).convert_to_container<std::vector<double> >();
-  std::vector<double> obs=boost::assign::list_of(1)(2).convert_to_container<std::vector<double> >();
+  std::vector<double> x { 1, 2 };
+  std::vector<double> obs { 1, 2 };
 
   Minim::LineTwoErr_LavMarq lml(x, obs,
 				1.0, 1.0);
@@ -457,25 +450,24 @@ void t_NestedSampling()
   IndependentFlatPriors obs(mkStdObs());
   
   std::list<Minim::MCPoint> startset;
-  Minim::MCPoint p; 
+  Minim::MCPoint p;
 
-  p.p=boost::assign::list_of(0)(0)(0).convert_to_container<std::vector<double> >();
+  p.p = { 0, 0, 0 };
   startset.push_back(p);
 
-  p.p=boost::assign::list_of(2)(0)(0).convert_to_container<std::vector<double> >();
+  p.p = { 2, 0, 0 };
   startset.push_back(p);
 
-  p.p=boost::assign::list_of(0)(1)(5).convert_to_container<std::vector<double> >();
+  p.p = { 0, 1, 5 };
   startset.push_back(p);
 
-  p.p=boost::assign::list_of(3)(1)(10).convert_to_container<std::vector<double> >();
+  p.p = { 3, 1, 10 };
   startset.push_back(p);
 
-  p.p=boost::assign::list_of(-3)(2)(10).convert_to_container<std::vector<double> >();
+  p.p = { -3, 2, 10 };
   startset.push_back(p);
   
-  NestedS s(obs,
-	    startset);
+  NestedS s( obs, startset );
   
   /*const double res=*/s.sample(30);
 
@@ -487,7 +479,7 @@ void MetroPropose_raccept()
 {
   
   std::vector<double> sigmas(0);
-  //  sigmas= boost::assign::list_of(1)(1)(1)(1).convert_to_container<std::vector<double> >();
+
   Minim::MetroPropose mp(sigmas, 1);
 
   for (size_t i =0 ; i < 100 ; ++i)
@@ -615,10 +607,10 @@ void llPoint_Wrks()
 
 
   Minim::MCPoint p1; 
-  p1.p=boost::assign::list_of(0.5)(0.5)(0.5).convert_to_container<std::vector<double> >();
+  p1.p = { 0.5, 0.5, 0.5 };
 
   Minim::MCPoint p2; 
-  p2.p=boost::assign::list_of(0.5)(0.5)(0.5).convert_to_container<std::vector<double> >();
+  p2.p = { 0.5, 0.5, 0.5 };
 
   std::list<Minim::MCPoint> lp;
   lp.push_back(p1); 
@@ -703,11 +695,11 @@ void metropolis_accept()
 
 void normal() {
   unsigned seed = 42;
-  boost::mt19937 rng(seed);
-  bnmin1boost::normal_distribution<double> distro(0., 1.);
-  bnmin1boost::variate_generator<boost::mt19937, bnmin1boost::normal_distribution<double> > norm(rng, distro);
+  std::mt19937 rng(seed);
+  std::normal_distribution<double> distro(0., 1.);
+  auto norm = std::bind(distro,rng);
   std::cout << "normal" << std::endl;
-  std::cout << distro.mean() << " " << distro.sigma() << std::endl;
+  std::cout << distro.mean() << " " << distro.stddev() << std::endl;
   for (int i=0; i<10; ++i) {
     std::cout << norm() << std::endl;
   }
@@ -715,8 +707,8 @@ void normal() {
 
 void uniform() {
   unsigned seed = 42;
-  boost::mt19937 rng(seed);
-  boost::uniform_real<double> distro(0., 1.);
+  std::mt19937 rng(seed);
+  std::uniform_real_distribution<double> distro(0., 1.);
   std::cout << "uniform" << std::endl;
   for (int i=0; i<10; ++i) {
     std::cout << distro(rng) << std::endl;
