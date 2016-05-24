@@ -271,6 +271,7 @@ casa_add_library( synthesis
  MeasurementComponents/SingleDishSkyCal.cc
  MeasurementComponents/SkyCal.cc
  MeasurementComponents/SolvableVisCal.cc
+ MeasurementComponents/SolveDataBuffer.cc
  MeasurementComponents/StandardVisCal.cc
  MeasurementComponents/SteepestDescentSolver.cc
  MeasurementComponents/TsysGainCal.cc
@@ -527,6 +528,7 @@ install (FILES
 	MeasurementComponents/SimACohCalc.h
 	MeasurementComponents/SkyModel.h
 	MeasurementComponents/SolvableVisCal.h
+	MeasurementComponents/SolveDataBuffer.h
 	MeasurementComponents/StandardVisCal.h
 	MeasurementComponents/SteepestDescentSolver.h
 	MeasurementComponents/TabulatedConvFunc.h
@@ -837,7 +839,6 @@ casa_add_unit_test( MODULES synthesis SOURCES ImagerObjects/test/tSynthesisImage
 casa_add_unit_test( MODULES synthesis SOURCES Utilities/test/tFFT2D.cc  ) 
 casa_add_unit_test( MODULES synthesis SOURCES CalTables/test/tCTPatchedInterp.cc )
 
-casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tVisVectorJonesMueller_GT.cc )
 
 casa_add_google_test( MODULES mstransform SOURCES ../mstransform/MSTransform/test/tMSTransformIterator.cc  ../mstransform/TVI/test/TestUtilsTVI.cc)
 casa_add_google_test( MODULES mstransform SOURCES ../mstransform/TVI/test/tChannelAverageTVI.cc  ../mstransform/TVI/test/TestUtilsTVI.cc)
@@ -845,6 +846,8 @@ casa_add_google_test( MODULES mstransform SOURCES ../mstransform/TVI/test/tHanni
 casa_add_google_test( MODULES mstransform SOURCES ../mstransform/TVI/test/tPhaseShiftingTVI.cc  ../mstransform/TVI/test/TestUtilsTVI.cc)
 casa_add_google_test( MODULES mstransform SOURCES ../mstransform/TVI/test/tRegriddingTVI.cc  ../mstransform/TVI/test/TestUtilsTVI.cc)
 
+casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tVisVectorJonesMueller_GT.cc )
+casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tSolveDataBuffer_GT.cc )
 
 casa_add_google_test( MODULES synthesis SOURCES ImagerObjects/test/SDMaskHandler_GTest.cc )
 casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/SDPosInterpolator_GTest.cc )
