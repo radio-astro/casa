@@ -28,6 +28,17 @@ antennas with deviant gains.
 	<h3>${component}</h3>
 	${comp_descriptions[component]}
 
+    % if component in plots:
+	<h4>Plots</h4>
+	<ul>
+	    % for vis, relpath in plots[component].items():
+	        <li>
+	               <a class="replace" href="${relpath}">${vis}</a>
+	               shows the images used for flagging.
+	    % endfor	
+	</ul>
+    % endif
+ 
     % if htmlreports[component]:
       <h4>Flags</h4>
       <table class="table table-bordered table-striped">
@@ -50,17 +61,6 @@ antennas with deviant gains.
 	  </tbody>
       </table>
     %endif
- 
-    % if component in plots:
-	<h4>Plots</h4>
-	<ul>
-	    % for vis, relpath in plots[component].items():
-	        <li>
-	               <a class="replace" href="${relpath}">${vis}</a>
-	               shows the images used for flagging.
-	    % endfor	
-	</ul>
-    % endif
  
   </li>
 % endfor
