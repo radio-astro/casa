@@ -9,6 +9,8 @@ from . import resultobjects
 
 from casac import casac
 
+import numpy
+
 LOG = logging.get_logger(__name__)
 
 
@@ -30,7 +32,10 @@ class TcleanQAHandler(pqa.QAResultHandler):
         except Exception as e:
             LOG.warning('Exception scoring imaging result by RMS: %s. Setting score to -0.1.' % (e))
             score = -0.1
-        result.qa.pool[:] = [pqa.QAScore(score, longmsg='RMS outside mask vs. threshold', shortmsg='RMS vs. threshold')]
+        if (numpy.isnan(score)):
+            result.qa.pool[:] = [pqa.QAScore(0.0, longmsg='Cleaning diverged', shortmsg='Cleaning diverged')]
+        else:
+            result.qa.pool[:] = [pqa.QAScore(score, longmsg='RMS outside mask vs. threshold', shortmsg='RMS vs. threshold')]
 
 
 class TcleanListQAHandler(pqa.QAResultHandler):
