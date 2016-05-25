@@ -441,6 +441,12 @@ class Tclean(cleanbase.CleanBase):
             LOG.info('    Residual max %s', residual_max)
             LOG.info('    Residual min %s', residual_min)
 
+            # Keep tclean summary plot
+            try:
+                shutil.move('summaryplot_1.png', '%s.iter%s.summaryplot.png' % (rootname, iter))
+            except:
+                LOG.info('Could not save tclean summary plot.')
+
             # Up the iteration counter
             iter += 1
 
