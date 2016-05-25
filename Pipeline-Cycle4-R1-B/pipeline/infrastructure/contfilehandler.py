@@ -93,7 +93,7 @@ class ContFileHandler(object):
                     fd.write('NONE\n')
                 else:
                     for freq_range in cont_ranges['fields'][field_name][spw_id]:
-                        if (freq_range == 'NONE'):
+                        if (freq_range['range'] == 'NONE'):
                             fd.write('NONE\n')
                         else:
                             if (cont_ranges['version'] == 1):
