@@ -1173,7 +1173,8 @@ record* msmetadata::pointingdirection(int rowid, bool const interpolate, int con
 
 void msmetadata::_init(const casa::MeasurementSet *const &ms, const float cachesize) {
     _msmd.reset(new MSMetaData(ms, cachesize));
-    _msmd->setForceSubScanPropsToCache(true);
+    _msmd->setForceSubScanPropsToCache(True);
+    _msmd->setShowProgress(True);
 }
 
 bool msmetadata::open(const string& msname, const float cachesize) {
@@ -1567,6 +1568,21 @@ vector<int> msmetadata::spwsforfield(const variant& field) {
 		}
 	)
 	return vector<int>();
+}
+
+record* msmetadata::spwsforfields() {
+	_FUNC(
+        auto mymap = _msmd->getFieldsToSpwsMap();
+        record* ret = new record();
+        for (const auto& elem: mymap) {
+            ret->insert(
+                String::toString(elem.first),
+                vector<uInt>(elem.second.begin(), elem.second.end())
+            );
+        }
+        return ret;
+	)
+	return nullptr;
 }
 
 vector<int> msmetadata::spwsforscan(int scan, int obsid, int arrayid) {

@@ -1852,6 +1852,22 @@ windows in the dataset and close the tool.
     msmd.done()
             </example>
         </method>
+
+        <method type="function" name="spwsforfields">
+            <shortdescription>Get a dictionary which maps field IDs to spectral window IDs.</shortdescription>
+            <returns type="record"/>
+            <description>
+                Get a dictionary which maps field IDs to spectral window IDs. The field IDs are keys in the
+                returned dictionary. To access a particular element, one must ensure the key is a string.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the map of field IDs to spw IDs
+    field_to_spw_map = msmd.spwsforfields()
+    spws_for_field_5 = field_to_spw_map[str(5)]
+    msmd.done()
+            </example>
+        </method>
         
         <method type="function" name="spwsforintent">
             <shortdescription>Get an array of the unique spectral window IDs for the specified intent.</shortdescription>

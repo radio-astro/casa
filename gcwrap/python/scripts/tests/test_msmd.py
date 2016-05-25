@@ -671,7 +671,8 @@ class msmd_test(unittest.TestCase):
                 )
 
     def test_spwsforfield(self):
-        """Test spwsforfield()"""
+        """Test spwsforfield() and spwsforfields()"""
+        field_spw_map = self.md.spwsforfields()
         names = [
             "3C279", "J1337-129", "Titan",
             "J1625-254", "V866 Sco", "RNO 90"
@@ -697,6 +698,8 @@ class msmd_test(unittest.TestCase):
             got = self.md.spwsforfield(i)
             self.assertTrue((got == expec).all())
             got = self.md.spwsforfield(names[i])
+            self.assertTrue((got == expec).all())
+            got = field_spw_map[str(i)]
             self.assertTrue((got == expec).all())
 
     def test_spwsforintent(self):
