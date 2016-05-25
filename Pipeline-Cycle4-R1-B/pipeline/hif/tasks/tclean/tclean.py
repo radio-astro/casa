@@ -342,7 +342,7 @@ class Tclean(cleanbase.CleanBase):
             if (context.observing_run.get_measurement_sets()[0].antennas[0].diameter == 12.0):
                 if (dirty_dynamic_range > 150.):
                     maxSciEDR = 150.0
-                    new_threshold = max(old_threshold, residual_max / maxSciEDR * inputs.tlimit)
+                    new_threshold = max(2.5 * old_threshold, residual_max / maxSciEDR * inputs.tlimit)
                 else:
                     if (dirty_dynamic_range > 100.):
                         n_dr = 2.5
@@ -356,7 +356,7 @@ class Tclean(cleanbase.CleanBase):
             else:
                 if (dirty_dynamic_range > 30.):
                     maxSciEDR = 30.0
-                    new_threshold = max(old_threshold, residual_max / maxSciEDR * inputs.tlimit)
+                    new_threshold = max(2.5 * old_threshold, residual_max / maxSciEDR * inputs.tlimit)
                 else:
                     if (dirty_dynamic_range > 20.):
                         n_dr = 2.5
