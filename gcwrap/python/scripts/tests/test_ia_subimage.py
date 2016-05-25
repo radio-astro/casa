@@ -305,5 +305,15 @@ class ia_subimage_test(unittest.TestCase):
         self.assertTrue((zz.shape() == [10, 20, 1]).all())
         zz.done()
 
+    def test_history(self):
+        """verify history writing"""
+        myia = iatool()
+        myia.fromshape("zz",[20, 20])
+        myia = myia.subimage()
+        msgs = myia.history()
+        myia.done()       
+        self.assertTrue("ia.subimage" in msgs[-2])
+        self.assertTrue("ia.subimage" in msgs[-1])
+
 def suite():
     return [ia_subimage_test]

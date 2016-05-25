@@ -4768,6 +4768,101 @@ record* image::statistics(
     return nullptr;
 }
 
+image* image::subimage(
+    const string& outfile, const variant& region,
+    const variant& vmask, bool dropDegenerateAxes,
+    bool overwrite, bool list, bool stretch,
+    bool wantreturn, const vector<int>& keepaxes
+) {
+    try {
+        _log << _ORIGIN;
+        ThrowIf(
+            detached(),
+            "Unable to create image"
+        );
+        SHARED_PTR<Record> regionRec = _getRegion(region, False);
+        String regionStr = region.type() == variant::STRING
+            ? region.toString()
+            : "";
+        String mask = vmask.toString();
+        if (mask == "[]") {
+            mask = "";
+        }
+        if (outfile.empty() && ! wantreturn) {
+            _log << LogIO::WARN << "outfile was not specified and wantreturn is false. "
+                << "The resulting image will be inaccessible" << LogIO::POST;
+        }
+        vector<String> names = {
+            "outfile", "region", "mask", "dropdeg", "overwrite",
+            "list", "stretch", "wantreturn", "keepaxes"
+        };
+        vector<variant> values = {
+            outfile, region, vmask, dropDegenerateAxes,
+            overwrite, list, stretch, wantreturn, keepaxes
+        };
+        auto history = _newHistory(__func__, names, values);
+        if (_imageF) {
+            auto im = _subimage<Float>(
+                SHARED_PTR<ImageInterface<Float> >(
+                    _imageF->cloneII()
+                ),
+                outfile, *regionRec, mask, dropDegenerateAxes,
+                overwrite, list, stretch, keepaxes
+            );
+            ImageHistory<Float> hist(im);
+            hist.addHistory(_ORIGIN, history);
+            auto res = wantreturn ? new image(im) : nullptr;
+            return res;
+        }
+        else {
+            auto im = _subimage<Complex>(
+                SHARED_PTR<ImageInterface<Complex> >(
+                    _imageC->cloneII()
+                ),
+                outfile, *regionRec, mask, dropDegenerateAxes,
+                overwrite, list, stretch, keepaxes
+            );
+            ImageHistory<Complex> hist(im);
+            hist.addHistory(_ORIGIN, history);
+            auto res = wantreturn ? new image(im) : nullptr;
+            return res;
+        }
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    // so eclipse doesn't complain
+    return nullptr;
+}
+
+template<class T> SPIIT image::_subimage(
+    SPIIT clone,
+    const String& outfile, const Record& region,
+    const String& mask, bool dropDegenerateAxes,
+    bool overwrite, bool list, bool stretch,
+    const vector<int>& keepaxes
+) {
+    if (! dropDegenerateAxes || keepaxes.empty()) {
+        return SPIIT(
+            SubImageFactory<T>::createImage(
+                *clone, outfile, region, mask,
+                dropDegenerateAxes, overwrite, list, stretch
+            )
+        );
+    }
+    else {
+        return SPIIT(
+            SubImageFactory<T>::createImage(
+                *clone, outfile, region, mask,
+                AxesSpecifier(IPosition(Vector<Int>(keepaxes))),
+                overwrite, list, stretch
+            )
+        );
+    }
+}
+
 record* image::torecord() {
     _log << LogOrigin("image", __func__);
     if (detached()) {
@@ -4856,20 +4951,6 @@ image* image::transpose(
     return nullptr;
 }
 
-void image::_addHistory(
-    const String& method, const vector<String>& names, const vector<variant>& values
-) {
-    auto msgs = _newHistory(method, names, values);
-    if (_imageC) {
-        ImageHistory<Complex> ih(_imageC);
-        ih.addHistory(method, msgs);
-    }
-    else {
-        ImageHistory<Float> ih(_imageF);
-        ih.addHistory(method, msgs);
-    }
-}
-
 bool image::twopointcorrelation(
     const string& outfile,
     const variant& region, const variant& vmask,
@@ -4939,6 +5020,20 @@ template <class T> SPIIT image::_twopointcorrelation(
     tpc.setStretch(stretch);
     tpc.addHistory(origin, msgs);
     return tpc.correlate();
+}
+
+void image::_addHistory(
+    const String& method, const vector<String>& names, const vector<variant>& values
+) {
+    auto msgs = _newHistory(method, names, values);
+    if (_imageC) {
+        ImageHistory<Complex> ih(_imageC);
+        ih.addHistory(method, msgs);
+    }
+    else {
+        ImageHistory<Float> ih(_imageF);
+        ih.addHistory(method, msgs);
+    }
 }
 
 String image::_getMask(const variant& mask) {
@@ -5022,90 +5117,6 @@ void image::_reset() {
 
 
 
-
-::casac::image* image::subimage(
-	const string& outfile, const variant& region,
-	const variant& vmask, bool dropDegenerateAxes,
-	bool overwrite, bool list, bool stretch,
-	bool wantreturn, const vector<int>& keepaxes
-) {
-	try {
-		_log << _ORIGIN;
-		ThrowIf(
-			detached(),
-			"Unable to create image"
-		);
-		SHARED_PTR<Record> regionRec = _getRegion(region, False);
-		String regionStr = region.type() == variant::STRING
-			? region.toString()
-			: "";
-		String mask = vmask.toString();
-		if (mask == "[]") {
-			mask = "";
-		}
-		if (outfile.empty() && ! wantreturn) {
-			_log << LogIO::WARN << "outfile was not specified and wantreturn is false. "
-				<< "The resulting image will be inaccessible" << LogIO::POST;
-		}
-
-		//SHARED_PTR<ImageAnalysis> ia;
-		if (_imageF) {
-			auto im = _subimage<Float>(
-				SHARED_PTR<ImageInterface<Float> >(
-					_imageF->cloneII()
-				),
-				outfile, *regionRec, mask, dropDegenerateAxes,
-				overwrite, list, stretch, keepaxes
-			);
-			auto res = wantreturn ? new image(im) : nullptr;
-			return res;
-		}
-		else {
-			auto im = _subimage<Complex>(
-				SHARED_PTR<ImageInterface<Complex> >(
-					_imageC->cloneII()
-				),
-				outfile, *regionRec, mask, dropDegenerateAxes,
-				overwrite, list, stretch, keepaxes
-			);
-			auto res = wantreturn ? new image(im) : nullptr;
-			return res;
-		}
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	// so eclipse doesn't complain
-	return nullptr;
-}
-
-template<class T> SPIIT image::_subimage(
-	SPIIT clone,
-	const String& outfile, const Record& region,
-	const String& mask, bool dropDegenerateAxes,
-	bool overwrite, bool list, bool stretch,
-	const vector<int>& keepaxes
-) {
-	if (! dropDegenerateAxes || keepaxes.empty()) {
-		return SPIIT(
-			SubImageFactory<T>::createImage(
-				*clone, outfile, region, mask,
-				dropDegenerateAxes, overwrite, list, stretch
-			)
-		);
-	}
-	else {
-		return SPIIT(
-			SubImageFactory<T>::createImage(
-				*clone, outfile, region, mask,
-				AxesSpecifier(IPosition(Vector<Int>(keepaxes))),
-				overwrite, list, stretch
-			)
-		);
-	}
-}
 
 record* image::summary(
 	const string& doppler, bool list,
