@@ -567,6 +567,9 @@ class T2_1DetailsRenderer(object):
         baseline_min = ms.antenna_array.min_baseline.length
         baseline_max = ms.antenna_array.max_baseline.length
 
+        num_antennas = len(ms.antennas)
+        num_baselines = int(num_antennas * (num_antennas-1) / 2)
+
         time_start = utils.get_epoch_as_datetime(ms.start_time)
         time_end = utils.get_epoch_as_datetime(ms.end_time)
 
@@ -658,6 +661,8 @@ class T2_1DetailsRenderer(object):
             'science_bands'   : utils.commafy(science_bands),
             'baseline_min'    : baseline_min,
             'baseline_max'    : baseline_max,
+            'num_antennas'    : num_antennas,
+            'num_baselines'   : num_baselines,
             'time_start'      : utils.format_datetime(time_start),
             'time_end'        : utils.format_datetime(time_end),
             'time_on_source'  : utils.format_timedelta(time_on_source),
