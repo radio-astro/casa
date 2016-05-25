@@ -285,7 +285,7 @@ class UVcontFit(basetask.StandardTaskTemplate):
         inputs = self.inputs
 
         # Read continuum file
-        contfile_handler = contfilehandler.ContFileHandler(inputs.contfile)
+        contfile_handler = contfilehandler.ContFileHandler(inputs.contfile, warn_nonexist=True)
 
         # Get all the selected fields
         all_fields = inputs.ms.get_fields(task_arg=inputs.field)

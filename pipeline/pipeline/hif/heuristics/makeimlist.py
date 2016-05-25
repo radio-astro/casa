@@ -85,7 +85,7 @@ class MakeImListHeuristics(object):
         if (os.path.isfile(contfile)):
             LOG.info('Using continuum frequency ranges from %s to calculate continuum frequency selections.' % (contfile))
 
-            contfile_handler = contfilehandler.ContFileHandler(contfile)
+            contfile_handler = contfilehandler.ContFileHandler(contfile, warn_nonexist=True)
 
             # Collect the merged the ranges
             for field_name in self.cont_ranges_spwsel.iterkeys():

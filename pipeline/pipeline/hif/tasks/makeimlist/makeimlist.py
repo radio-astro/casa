@@ -408,8 +408,8 @@ class MakeImList(basetask.StandardTaskTemplate):
                         if (field_intent[1] == 'TARGET'):
                             if (spwsel_spwid == 'NONE'):
                                 LOG.warn('No continuum frequency range information detected for %s, spw %s.' % (field_intent[0], spwid))
-                            elif (spwsel_spwid == ''):
-                                LOG.warn('Empty continuum frequency range for %s, spw %s. Run hif_findcont ?' % (field_intent[0], spwid))
+                            #elif (spwsel_spwid == ''):
+                            #    LOG.warn('Empty continuum frequency range for %s, spw %s. Run hif_findcont ?' % (field_intent[0], spwid))
 
                         if (spwsel_spwid in ('', 'NONE')):
                             spwsel_spwid_freqs = ''

@@ -58,7 +58,7 @@ def cont_file_to_CASA(contfile='cont.dat'):
         '''
 
         contfile_handler = contfilehandler.ContFileHandler(contfile)
-        contdict = contfile_handler.read()
+        contdict = contfile_handler.read(warn_nonexist=True)
 
 
         #if contdict == {}:

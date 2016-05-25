@@ -20,12 +20,12 @@ LOG = logging.get_logger(__name__)
 
 class ContFileHandler(object):
 
-    def __init__(self, filename):
+    def __init__(self, filename, warn_nonexist=False):
         self.filename = filename
         self.p = re.compile('([\d.]*)(~)([\d.]*)(\D*)')
-        self.cont_ranges = self.read()
+        self.cont_ranges = self.read(warn_nonexist=warn_nonexist)
 
-    def read(self, skip_none=False):
+    def read(self, skip_none=False, warn_nonexist=False):
 
         cont_ranges = {'fields': {}, 'version': 2}
 
@@ -33,7 +33,8 @@ class ContFileHandler(object):
             cont_region_data = [item.replace('\n', '') for item in open(self.filename, 'r').readlines() if item != '\n']
         except:
             cont_region_data = []
-            LOG.warning('Could not read file %s. Using empty selection.' % (self.filename))
+            if (warn_nonexist):
+                LOG.warning('Could not read file %s. Using empty selection.' % (self.filename))
 
         for item in cont_region_data:
             try:
