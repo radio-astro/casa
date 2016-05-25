@@ -57,6 +57,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsSpecAxisType(WCCSAxisLabeller::VELO),
 		itsZIndex(-1),
 		itsHasCoordinateSystem(False),
+		itsSpectralPrecision(-1),
 		itsSpectralUnit("km/s"),
 		itsSpectralQuantity("radio velocity"),
 		itsSpectralTypeUnit("radio velocity [km/s]"),
