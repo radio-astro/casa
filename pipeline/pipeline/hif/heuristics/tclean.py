@@ -70,7 +70,7 @@ class TcleanHeuristics(object):
                 if (pb_edge > 0.2):
                     i_pb_image = max(i_pb_edge, int(0.05 * ny))
                     pblimit_image = iaTool.getchunk([nx/2, i_pb_image, 0, nf/2], [nx/2, i_pb_image, 0, nf/2]).flatten()[0]
-                    i_pb_cleanmask = i_pb_edge + int(0.05 * ny)
+                    i_pb_cleanmask = i_pb_image + int(0.05 * ny)
                     pblimit_cleanmask = iaTool.getchunk([nx/2, i_pb_cleanmask, 0, nf/2], [nx/2, i_pb_cleanmask, 0, nf/2]).flatten()[0]
             except Exception as e:
                 LOG.warning('Could not analyze PB: %s. Using default pblimit values.' % (e))
