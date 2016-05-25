@@ -104,12 +104,11 @@ bool QPExporter::exportPostscript(
     Bool wasCanceled = false;
 
     // High resolution, or format size larger than widget.
-    QImage image=produceHighResImage(format, qcanvases, width, height, gridRows,
-        		  gridCols, wasCanceled);
+    QImage image=produceHighResImage(format, qcanvases, width, height, 
+        gridRows, gridCols, wasCanceled);
 
     if (format.resolution == PlotExportFormat::HIGH)
         image = image.scaledToWidth(printer.width());
-
     QPainter painter(&printer);
     painter.drawImage(QPoint(0,0), image );
     painter.end();
@@ -387,6 +386,8 @@ QImage QPExporter::produceHighResImage(
     QPExportCanvas* canv = qcanvases[0];
     image.fill(canv->palette().color(canv->backgroundRole()).rgba());
     image.fill((uint)(-1));
+    // cannot continue!
+    if (image.isNull()) return image;
 
     // Change canvas' background color to white for a nice bright clean image file
     PlotFactory* f = canv->implementationFactory();

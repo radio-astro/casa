@@ -259,7 +259,7 @@
              <number>999999</number>
             </property>
             <property name="value">
-             <number>1</number>
+             <number>-1</number>
             </property>
            </widget>
           </item>

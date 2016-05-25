@@ -224,7 +224,10 @@ void PlotMSApp::canvasAdded( PlotCanvasPtr canvas ){
 }
 
 bool PlotMSApp::exportToFormat(const PlotExportFormat& format){
-	return itsPlotter_->exportToFormat( format );
+	bool exportOK = itsPlotter_->exportToFormat( format );
+    if (!exportOK && ((format.width > 0) || format.height > 0))
+        showError("Export failed! Try decreasing width/height settings.", "Export");
+    return exportOK;
 }
 
 bool PlotMSApp::isVisible(PlotCanvasPtr& canvas ) {
