@@ -281,7 +281,6 @@ record* image::beamarea(int channel, int polarization) {
     return nullptr;
 }
 
-
 record* image::beamforconvolvedsize(
     const variant& source, const variant& convolved
 ) {
@@ -1363,6 +1362,17 @@ record* image::deconvolvefrombeam(
         RETHROW(x);
     }
     return nullptr;
+}
+
+bool image::detached() const {
+    if ( ! _imageF && ! _imageC) {
+        _log <<  _ORIGIN;
+        _log << LogIO::SEVERE
+            << "Image is detached - cannot perform operation." << endl
+            << "Call image.open('filename') to reattach." << LogIO::POST;
+        return True;
+    }
+    return False;
 }
 
 bool image::done(bool remove, bool verbose) {
@@ -2901,6 +2911,30 @@ bool image::makecomplex(
     return False;
 }
 
+bool image::maketestimage(
+    const string& outfile, bool overwrite
+) {
+    try {
+        _reset();
+        _log << _ORIGIN;
+        _imageF = ImageFactory::testImage(
+            outfile, overwrite
+        );
+        vector<String> names = {
+            "outfile", "overwrite"
+        };
+        vector<variant> values { outfile, overwrite };
+        _addHistory(__func__, names, values);
+        return True;
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
+        RETHROW(x);
+    }
+    return False;
+}
+
 vector<string> image::maskhandler(
     const string& op, const vector<string>& name
 ) {
@@ -3201,7 +3235,7 @@ image* image::moments(
     return nullptr;
 }
 
-std::string image::name(const bool strippath) {
+string image::name(const bool strippath) {
     try {
         _log << _ORIGIN;
         if (detached()) {
@@ -3224,6 +3258,48 @@ String image::_name(bool strippath) const {
     else {
         return _imageC->name(strippath);
     }
+}
+
+image* image::newimagefromimage(
+    const string& infile, const string& outfile,
+    const variant& region, const variant& vmask,
+    bool dropdeg, bool overwrite
+) {
+    try {
+        _log << _ORIGIN;
+        auto mask = this->_getMask(vmask);
+        auto regionPtr = _getRegion(region, False, infile);
+        auto ret = ImageFactory::fromImage(
+            outfile, infile, *regionPtr, mask,
+            dropdeg, overwrite
+        );
+        vector<String> names = {
+            "infile", "outfile", "region",
+            "vmask", "dropdeg", "overwrite"
+        };
+        vector<variant> values = {
+            infile, outfile, region,
+            vmask, dropdeg, overwrite
+        };
+        auto hist = _newHistory(__func__, names, values);
+        if (ret.first) {
+            ImageHistory<Float> ih(ret.first);
+            ih.addHistory(_ORIGIN, hist);
+            return new image(ret.first);
+        }
+        else if (ret.second) {
+            ImageHistory<Complex> ih(ret.second);
+            ih.addHistory(_ORIGIN, hist);
+            return new image(ret.second);
+        }
+        ThrowCc("Error creating image");
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
+        RETHROW(x);
+    }
+    return nullptr;
 }
 
 bool image::open(const std::string& infile) {
@@ -4863,6 +4939,170 @@ template<class T> SPIIT image::_subimage(
     }
 }
 
+record* image::summary(
+    const string& doppler, bool list,
+    bool pixelorder, bool verbose
+) {
+    try {
+        _log << _ORIGIN;
+        if (detached()) {
+            return 0;
+        }
+        if (_imageF) {
+            ImageMetaData md(_imageF);
+            return fromRecord(
+                md.summary(doppler, list, pixelorder, verbose)
+            );
+        }
+        else {
+            ImageMetaData md(_imageC);
+            return fromRecord(
+                md.summary(doppler, list, pixelorder, verbose)
+            );
+        }
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return nullptr;
+}
+
+bool image::toASCII(
+    const string& outfile, const variant& region,
+    const variant& mask, const string& sep,
+    const string& format, double maskvalue, bool overwrite,
+    bool stretch
+) {
+    // sep is hard-wired as ' ' which is what imagefromascii expects
+    _log << _ORIGIN;
+    if (detached()) {
+        return False;
+    }
+    try {
+        String Mask;
+        if (mask.type() == variant::BOOLVEC) {
+            Mask = "";
+        }
+        else if (
+            mask.type() == variant::STRING
+            || mask.type() == variant::STRINGVEC
+        ) {
+            Mask = mask.toString();
+        }
+        SHARED_PTR<Record> pRegion(_getRegion(region, False));
+        ImageFactory::toASCII(
+            _imageF, outfile, *pRegion, Mask,
+            sep, format, maskvalue, overwrite, stretch
+        );
+        return True;
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return False;
+}
+
+bool image::tofits(
+    const string& fitsfile, bool velocity,
+    bool optical, int bitpix, double minpix,
+    double maxpix, const variant& region,
+    const variant& vmask, bool overwrite,
+    bool dropdeg, bool deglast, bool dropstokes,
+    bool stokeslast, bool wavelength, bool airwavelength,
+    bool /* async */, bool stretch, bool history
+) {
+    _log << _ORIGIN;
+    if (detached()) {
+        return false;
+    }
+    try {
+        ThrowIf(
+            fitsfile.empty(),
+            "fitsfile must be specified"
+        );
+        ThrowIf(
+            fitsfile == "." || fitsfile == "..",
+            "Invalid fitsfile name " + fitsfile
+        );
+        SHARED_PTR<Record> pRegion(_getRegion(region, False));
+        String mask = vmask.toString();
+        if (mask == "[]") {
+            mask = "";
+        }
+        String origin;
+        {
+            ostringstream buffer;
+            buffer << "CASA ";
+            VersionInfo::report(buffer);
+            origin = String(buffer);
+        }
+        ThrowIf(
+            ! _imageF,
+            "Only writing float-valued images to FITS is supported"
+        );
+        ImageFactory::toFITS(
+            _imageF, fitsfile, velocity, optical,
+            bitpix, minpix, maxpix, *pRegion, mask, overwrite,
+            dropdeg, deglast, dropstokes, stokeslast, wavelength,
+            airwavelength, origin, stretch, history
+        );
+        /*
+        if (history) {
+            vector<String> names {
+                "fitsfile", "velocity", "optical", "bitpix", "minpix",
+                "maxpix", "region", "mask", "overwrite",
+                "dropdeg", "deglast", "dropstokes", "stokeslast",
+                "wavelength", "airwavelength", "stretch", "history"
+            };
+            vector<variant> values {
+                fitsfile, velocity, optical, bitpix, minpix,
+                maxpix, region, vmask, overwrite,
+                dropdeg, deglast, dropstokes, stokeslast,
+                wavelength, airwavelength, stretch, history
+            };
+            auto newhist = _newHistory(__func__, names, values);
+            SPIIF myfits(new FITSImage(fitsfile));
+            ImageHistory<Float> myhist(myfits);
+            cout << "write history " << newhist << endl;
+            myhist.addHistory(_ORIGIN, newhist);
+        }
+        */
+        return True;
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
+        RETHROW(x);
+    }
+}
+
+record* image::topixel(const variant& value) {
+    try {
+        _log << LogOrigin("image", __func__);
+        if (detached()) {
+            return nullptr;
+        }
+        auto cSys = _imageF
+            ? _imageF->coordinates()
+            : _imageC->coordinates();
+        casac::coordsys mycoords;
+        //NOT using _image->toworld as most of the math is in casac namespace
+        //in coordsys...should revisit this when casac::coordsys is cleaned
+        mycoords.setcoordsys(cSys);
+        return mycoords.topixel(value);
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return nullptr;
+}
+
 record* image::torecord() {
     _log << LogOrigin("image", __func__);
     if (detached()) {
@@ -4882,6 +5122,60 @@ record* image::torecord() {
         RETHROW(x);
     }
     return new record();
+}
+
+record* image::toworld(
+    const variant& value, const string& format, bool dovelocity
+) {
+    try {
+        _log << LogOrigin("image", __func__);
+        if (detached()) {
+            return nullptr;
+        }
+        Vector<Double> pixel;
+        if (_isUnset(value)) {
+            pixel.resize(0);
+        }
+        else if (value.type() == variant::DOUBLEVEC) {
+            pixel = value.getDoubleVec();
+        }
+        else if (value.type() == variant::INTVEC) {
+            variant vcopy = value;
+            Vector<Int> ipixel = vcopy.asIntVec();
+            Int n = ipixel.size();
+            pixel.resize(n);
+            for (int i = 0; i < n; i++) {
+                pixel[i] = ipixel[i];
+            }
+        }
+        else if (value.type() == ::casac::variant::RECORD) {
+            variant localvar(value);
+            unique_ptr<Record> tmp(toRecord(localvar.asRecord()));
+            if (tmp->isDefined("numeric")) {
+                pixel = tmp->asArrayDouble("numeric");
+            }
+            else {
+                ThrowCc("Unsupported record type for value");
+            }
+        }
+        else {
+            ThrowCc("Unsupported data type for value");
+        }
+        //rstat = fromRecord(_image->toworld(pixel, format, dovelocity));
+        unique_ptr<ImageMetaData> imd;
+        if (_imageF) {
+            imd.reset(new ImageMetaData(_imageF));
+        }
+        else {
+            imd.reset(new ImageMetaData(_imageC));
+        }
+        return fromRecord(imd->toWorld(pixel, format, dovelocity));
+    } catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return nullptr;
 }
 
 image* image::transpose(
@@ -5022,6 +5316,31 @@ template <class T> SPIIT image::_twopointcorrelation(
     return tpc.correlate();
 }
 
+string image::type() {
+    return "image";
+}
+
+bool image::unlock() {
+    try {
+        _log << LogOrigin("image", __func__);
+        if (detached()) {
+            return False;
+        }
+        if (_imageF) {
+            _imageF->unlock();
+        }
+        else {
+            _imageC->unlock();
+        }
+        return True;
+    } catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return False;
+}
+
 void image::_addHistory(
     const String& method, const vector<String>& names, const vector<variant>& values
 ) {
@@ -5118,312 +5437,14 @@ void image::_reset() {
 
 
 
-record* image::summary(
-	const string& doppler, bool list,
-	bool pixelorder, bool verbose
-) {
-	try {
-		_log << _ORIGIN;
-		if (detached()) {
-			return 0;
-		}
-		if (_imageF) {
-		    ImageMetaData md(_imageF);
-		    return fromRecord(
-		        md.summary(doppler, list, pixelorder, verbose)
-		    );
-		}
-		else {
-		    ImageMetaData md(_imageC);
-		    return fromRecord(
-		        md.summary(doppler, list, pixelorder, verbose)
-		    );
-		}
-		/*
-		return fromRecord(
-			_image->summary(doppler, list, pixelorder, verbose)
-		);
-		*/
-	} catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	return nullptr;
-}
 
-bool image::tofits(
-	const std::string& fitsfile, const bool velocity,
-	const bool optical, const int bitpix, const double minpix,
-	const double maxpix, const variant& region,
-	const ::casac::variant& vmask, const bool overwrite,
-	const bool dropdeg, const bool deglast, const bool dropstokes,
-	const bool stokeslast, const bool wavelength, const bool airwavelength,
-	const bool /* async */, const bool stretch,
-	const bool history
-) {
-	_log << _ORIGIN;
-	if (detached()) {
-		return false;
-	}
-	try {
-		ThrowIf(
-			fitsfile.empty(),
-			"fitsfile must be specified"
-		);
-		ThrowIf(
-			fitsfile == "." || fitsfile == "..",
-			"Invalid fitsfile name " + fitsfile
-		);
-		SHARED_PTR<Record> pRegion(_getRegion(region, False));
-		String mask = vmask.toString();
-		if (mask == "[]") {
-			mask = "";
-		}
 
-		String origin;
-		{
-			ostringstream buffer;
-			buffer << "CASA ";
-			VersionInfo::report(buffer);
-			origin = String(buffer);
-		}
-		ThrowIf(
-			! _imageF,
-			"Only writing float-valued images to FITS is supported"
-		);
-		ImageFactory::toFITS(
-			_imageF, fitsfile, velocity, optical,
-			bitpix, minpix, maxpix, *pRegion, mask, overwrite,
-			dropdeg, deglast, dropstokes, stokeslast, wavelength,
-			airwavelength, origin, stretch, history
-		);
-		/*
-		return _image->tofits(
-			fitsfile, velocity, optical, bitpix, minpix,
-			maxpix, *pRegion, mask, overwrite, dropdeg,
-			deglast, dropstokes, stokeslast, wavelength,
-			airwavelength, origin, stretch, history
-		);
-		*/
-		return True;
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-			<< LogIO::POST;
-		RETHROW(x);
-	}
-}
 
-bool image::toASCII(const std::string& outfile, const variant& region,
-		const ::casac::variant& mask, const std::string& sep,
-		const std::string& format, const double maskvalue, const bool overwrite,
-		const bool stretch) {
-	// sep is hard-wired as ' ' which is what imagefromascii expects
-	_log << _ORIGIN;
-	if (detached()) {
-		return False;
-	}
-	try {
-		String Mask;
-		if (mask.type() == ::casac::variant::BOOLVEC) {
-			Mask = "";
-		}
-		else if (
-			mask.type() == ::casac::variant::STRING
-			|| mask.type() == ::casac::variant::STRINGVEC
-		) {
-			Mask = mask.toString();
-		}
-		SHARED_PTR<Record> pRegion(_getRegion(region, False));
-		ImageFactory::toASCII(
-			_imageF, outfile, *pRegion, Mask,
-			sep, format, maskvalue, overwrite, stretch
-		);
-		return True;
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	return False;
-}
 
-std::string image::type() {
-	return "image";
-}
 
-//std::vector<double>
-::casac::record*
-image::topixel(const ::casac::variant& value) {
-	try {
-		_log << LogOrigin("image", __func__);
-		if (detached()) {
-			return nullptr;
-		}
 
-		auto cSys = _imageF
-			? _imageF->coordinates()
-			: _imageC->coordinates();
-		::casac::coordsys mycoords;
-		//NOT using _image->toworld as most of the math is in casac namespace
-		//in coordsys...should revisit this when casac::coordsys is cleaned
-		mycoords.setcoordsys(cSys);
-		return mycoords.topixel(value);
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	return nullptr;
-}
 
-::casac::record*
-image::toworld(const ::casac::variant& value, const std::string& format, bool dovelocity) {
-	try {
-		_log << LogOrigin("image", __func__);
-		if (detached()) {
-			return nullptr;
-        }
-		Vector<Double> pixel;
-		if (_isUnset(value)) {
-			pixel.resize(0);
-		}
-        else if (value.type() == ::casac::variant::DOUBLEVEC) {
-			pixel = value.getDoubleVec();
-		}
-        else if (value.type() == ::casac::variant::INTVEC) {
-			variant vcopy = value;
-			Vector<Int> ipixel = vcopy.asIntVec();
-			Int n = ipixel.size();
-			pixel.resize(n);
-			for (int i = 0; i < n; i++) {
-				pixel[i] = ipixel[i];
-            }
-		}
-        else if (value.type() == ::casac::variant::RECORD) {
-			variant localvar(value);
-			unique_ptr<Record> tmp(toRecord(localvar.asRecord()));
-			if (tmp->isDefined("numeric")) {
-				pixel = tmp->asArrayDouble("numeric");
-			}
-            else {
-				ThrowCc("Unsupported record type for value");
-			}
-		}
-        else {
-			ThrowCc("Unsupported data type for value");
-		}
-		//rstat = fromRecord(_image->toworld(pixel, format, dovelocity));
-		unique_ptr<ImageMetaData> imd;
-		if (_imageF) {
-		    imd.reset(new ImageMetaData(_imageF));
-		}
-		else {
-		    imd.reset(new ImageMetaData(_imageC));
-		}
-		return fromRecord(imd->toWorld(pixel, format, dovelocity));
-	} catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	return nullptr;
-}
 
-bool image::unlock() {
-	try {
-		_log << LogOrigin("image", __func__);
-		if (detached()) {
-			return False;
-		}
-		if (_imageF) {
-			_imageF->unlock();
-		}
-		else {
-			_imageC->unlock();
-		}
-		return True;
-	} catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-}
-
-bool image::detached() const {
-	if ( ! _imageF && ! _imageC) {
-		_log <<  _ORIGIN;
-		_log << LogIO::SEVERE
-			<< "Image is detached - cannot perform operation." << endl
-			<< "Call image.open('filename') to reattach." << LogIO::POST;
-		return True;
-	}
-	return False;
-}
-
-bool image::maketestimage(
-	const std::string& outfile, const bool overwrite
-) {
-	try {
-		_reset();
-		_log << _ORIGIN;
-		_imageF = ImageFactory::testImage(
-			outfile, overwrite
-		);
-		//_image.reset(new ImageAnalysis(_imageF));
-		return True;
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-			<< LogIO::POST;
-		RETHROW(x);
-	}
-	return False;
-}
-
-image* image::newimagefromimage(
-	const string& infile, const string& outfile,
-	const variant& region, const variant& vmask,
-	const bool dropdeg, const bool overwrite
-) {
-	try {
-		_log << _ORIGIN;
-		String mask;
-		if (vmask.type() == variant::BOOLVEC) {
-			mask = "";
-		}
-		else if (
-			vmask.type() == variant::STRING
-			|| vmask.type() == variant::STRINGVEC
-		) {
-			mask = vmask.toString();
-		}
-		else {
-			ThrowCc("mask is not understood, try a valid LEL string");
-		}
-		SHARED_PTR<Record> regionPtr(_getRegion(region, False, infile));
-		auto ret = ImageFactory::fromImage(
-			outfile, infile, *regionPtr, mask,
-			dropdeg, overwrite
-		);
-		if (ret.first) {
-			return new image(ret.first);
-		}
-		else if (ret.second) {
-			return new image(ret.second);
-		}
-		ThrowCc("Error creating image");
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-			<< LogIO::POST;
-		RETHROW(x);
-	}
-	return nullptr;
-}
 
 image* image::newimagefromfile(const std::string& fileName) {
 	try {
