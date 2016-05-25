@@ -324,7 +324,7 @@ class TcleanHeuristics(object):
         cqa = casatools.quanta
         desired_angular_resolution = cqa.convert(self.context.project_performance_parameters.desired_angular_resolution, '')['value']
         if (desired_angular_resolution == 0.0):
-            LOG.warning('No value for desired angular resolution. Setting "robust" parameter to 0.5.')
+            LOG.info('No value for desired angular resolution. Setting "robust" parameter to 0.5.')
             return 0.5
 
         # Get maximum baseline length in metres
