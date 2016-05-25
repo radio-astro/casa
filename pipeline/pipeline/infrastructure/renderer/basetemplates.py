@@ -1,8 +1,9 @@
-'''
+"""
 Created on 8 Sep 2014
 
 @author: sjw
-'''
+"""
+import collections
 import contextlib
 import json
 import math
@@ -29,7 +30,11 @@ class T2_4MDetailsDefaultRenderer(object):
                         'casalog_url': self._get_log_url(context, result),
                         'dirname': 'stage%s' % result.stage_number}
         self.update_mako_context(mako_context, context, result)
-        return mako_context
+
+        # CAS-8216: multi-ms in time order in all weblog stages
+        time_ordered = time_order_dicts(mako_context, context)
+
+        return time_ordered
 
     def update_mako_context(self, mako_context, pipeline_context, result):
         LOG.trace('No-op update_mako_context for %s', self.__class__.__name__)
@@ -51,7 +56,54 @@ class T2_4MDetailsDefaultRenderer(object):
         if not os.path.exists(stagelog_path):
             return None
 
-        return os.path.relpath(stagelog_path, context.report_dir)        
+        return os.path.relpath(stagelog_path, context.report_dir)
+
+
+def time_order_dicts(mako_context, pipeline_context):
+    """
+    Time-sort any MS-related entries in the Mako context dictionary.
+    """
+    time_ordered_data = sorted(pipeline_context.observing_run.measurement_sets,
+                               key=lambda ms:ms.start_time['m0']['value'])
+
+    order_mapping = {ms.name: i for i, ms in enumerate(time_ordered_data)}
+    order_mapping.update({os.path.basename(k): v for k, v in order_mapping.items()})
+
+    return reorder_dicts(order_mapping, mako_context)
+
+
+def reorder_dicts(order_mapping, d):
+    # Only reorder when it makes a difference. The test is not len(d)<2 as the
+    # dict could be a single key pointing to another collection that needs
+    # sorting.
+    if len(d) is 0:
+        return d
+
+    # reorder any dict values first
+    for k, v in d.items():
+        if isinstance(v, dict):
+            d[k] = reorder_dicts(order_mapping, v)
+
+    # Now reorder this dict's keys, if necessary
+
+    # only reorder dicts with string keys
+    if not all((isinstance(k, str) for k in d)):
+        return d
+
+    # Only reorder dicts when all the keys begin with an MS name. An exact
+    # match is not used as the keys could be caltable names, which only begin
+    # with the MS name.
+    if not all((any((key.startswith(o) for o in order_mapping)) for key in d)):
+        return d
+
+    # this dict is necessary as order_mapping stores ms names, whereas we may
+    # need to reorder caltable names which would not be in the original map
+    key_order = {key: order_mapping[o] for key in d for o in order_mapping if key.startswith(o)}
+
+    # create the time-ordered collection
+    ordered = collections.OrderedDict(sorted(d.items(), key=lambda t: key_order[t[0]]))
+
+    return ordered
 
 
 class CommonRenderer(object):
