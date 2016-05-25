@@ -17,7 +17,7 @@
         <ParameterSet>
             <Parameter>
                 <Keyword xmlns="">specmode</Keyword>
-                <Value xmlns="">cont</Value>
+                <Value xmlns="">mfs</Value>
             </Parameter>
         </ParameterSet>
     </ProcessingCommand>
@@ -51,7 +51,7 @@
         <ParameterSet>
             <Parameter>
                 <Keyword xmlns="">specmode</Keyword>
-                <Value xmlns="">mfs</Value>
+                <Value xmlns="">cont</Value>
             </Parameter>
         </ParameterSet>
     </ProcessingCommand>
