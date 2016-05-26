@@ -660,10 +660,10 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                     nbaseline = data_shape[1]
                     nant = int(math.sqrt(nbaseline))
 
-                    quadrant = [[0,nchan/4-1],
-                      [nchan/4,nchan/2-1],
-                      [nchan/2,nchan*3/4-1],
-                      [nchan*3/4,nchan-1]]
+                    quadrant = [[0,nchan/4],
+                      [nchan/4,nchan/2],
+                      [nchan/2,nchan*3/4],
+                      [nchan*3/4,nchan]]
                         
                     quadrant_len = nchan/4
 
@@ -1723,10 +1723,10 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
                     nbaseline = data_shape[1]
                     nant = int(math.sqrt(nbaseline))
 
-                    quadrant = [[0,nchan/4-1],
-                      [nchan/4,nchan/2-1],
-                      [nchan/2,nchan*3/4-1],
-                      [nchan*3/4,nchan-1]]
+                    quadrant = [[0,nchan/4],
+                      [nchan/4,nchan/2],
+                      [nchan/2,nchan*3/4],
+                      [nchan*3/4,nchan]]
                     
                     for ant in range(nant):
                         # flag based on outliers in flag_copy, will set new flags
