@@ -224,15 +224,19 @@ class CleanBase(basetask.StandardTaskTemplate):
         # old clean products with the name name,
         old_model_name = result.model
         model_name = '%s.%s.iter%s.model' % (inputs.imagename, inputs.stokes, iter)
-        if (result.multiterm):
-            rename_image(old_name=old_model_name, new_name=model_name, extensions=['.tt%d' % (nterm) for nterm in xrange(result.multiterm)])
-        else:
-            rename_image(old_name=old_model_name, new_name=model_name)
+        if old_model_name is not None:
+            if os.path.exists(old_model_name):
+                if (result.multiterm):
+                    rename_image(old_name=old_model_name, new_name=model_name, extensions=['.tt%d' % (nterm) for nterm in xrange(result.multiterm)])
+                else:
+                    rename_image(old_name=old_model_name, new_name=model_name)
+
         if (inputs.niter == 0):
             image_name = ''
         else:
             image_name = '%s.%s.iter%s.image' % (
                 inputs.imagename, inputs.stokes, iter)
+
         residual_name = '%s.%s.iter%s.residual' % (
             inputs.imagename, inputs.stokes, iter)
         psf_name = '%s.%s.iter%s.psf' % (
@@ -378,7 +382,6 @@ class CleanBase(basetask.StandardTaskTemplate):
                   restoringbeam=inputs.restoringbeam, uvrange=inputs.uvrange,
                   mask=inputs.mask, usemask='user', savemodel='none',
                   nterms=result.multiterm,
-                  makeimages='choose', restoremodel=True,
                   chanchunks=chanchunks, parallel=parallel)
         else:
             job = casa_tasks.tclean(vis=inputs.vis, imagename='%s.%s.iter%s' %
@@ -397,7 +400,6 @@ class CleanBase(basetask.StandardTaskTemplate):
                   npixels=inputs.npixels,
                   restoringbeam=inputs.restoringbeam, uvrange=inputs.uvrange,
                   mask=inputs.mask, usemask='user', savemodel='none',
-                  makeimages='choose', restoremodel=True,
                   chanchunks=chanchunks, parallel=parallel)
         tclean_result = self._executor.execute(job)
 
@@ -451,22 +453,23 @@ class CleanBase(basetask.StandardTaskTemplate):
             else:
                 LOG.warning('Image %s could not be PB corrected !')
  
-        # Store the model.
-        set_miscinfo(name=model_name, spw=inputs.spw, field=inputs.field,
-                     type='model', iter=iter, multiterm=result.multiterm)
-        result.set_model(iter=iter, image=model_name)
+        if (iter > 0):
+            # Store the model.
+            set_miscinfo(name=model_name, spw=inputs.spw, field=inputs.field,
+                         type='model', iter=iter, multiterm=result.multiterm)
+            result.set_model(iter=iter, image=model_name)
 
-        # Store the image.
-        # TODO: The change for cubes is just temporary for C4R1 !
-        #       This needs to be done properly later.
-        if (pb_corrected and (pbcor_image_name.find('cube') == -1)):
-            set_miscinfo(name=pbcor_image_name, spw=inputs.spw, field=inputs.field,
-                         type='image', iter=iter, multiterm=result.multiterm)
-            result.set_image(iter=iter, image=pbcor_image_name)
-        else:
-            set_miscinfo(name=image_name, spw=inputs.spw, field=inputs.field,
-                         type='image', iter=iter, multiterm=result.multiterm)
-            result.set_image(iter=iter, image=image_name)
+            # Store the image.
+            # TODO: The change for cubes is just temporary for C4R1 !
+            #       This needs to be done properly later.
+            if (pb_corrected and (pbcor_image_name.find('cube') == -1)):
+                set_miscinfo(name=pbcor_image_name, spw=inputs.spw, field=inputs.field,
+                             type='image', iter=iter, multiterm=result.multiterm)
+                result.set_image(iter=iter, image=pbcor_image_name)
+            else:
+                set_miscinfo(name=image_name, spw=inputs.spw, field=inputs.field,
+                             type='image', iter=iter, multiterm=result.multiterm)
+                result.set_image(iter=iter, image=image_name)
 
         # Store the residual.
         set_miscinfo(name=residual_name, spw=inputs.spw, field=inputs.field,

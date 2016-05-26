@@ -51,7 +51,7 @@ class CleanSummary(object):
             iterations.sort()
             for i in iterations:
                 # image for this iteration
-                if (r.iterations[i]['image'] != ''):
+                if (r.iterations[i].get('image', '') != ''):
                     if (r.iterations[i]['image'].find('cube') != -1):
                         collapseFunction = 'max'
                     else:

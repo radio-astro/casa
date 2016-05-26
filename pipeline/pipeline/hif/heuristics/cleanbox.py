@@ -704,10 +704,11 @@ def analyse_clean_result(multiterm, model, restored, residual, flux, cleanmask, 
     # get the sum of the model image to find how much flux has been
     # cleaned
     model_sum = None
-    with casatools.ImageReader(model+extension) as image:
-        model_stats = image.statistics(robust=False)
-        model_sum = model_stats['sum'][0]
-        LOG.debug('Sum of model: %s' % model_sum)
+    if (model is not None):
+        with casatools.ImageReader(model+extension) as image:
+            model_stats = image.statistics(robust=False)
+            model_sum = model_stats['sum'][0]
+            LOG.debug('Sum of model: %s' % model_sum)
 
     LOG.debug('Fixing coordsys of flux and cleanmask')
     with casatools.ImageReader(residual+extension) as image:
@@ -784,7 +785,7 @@ def analyse_clean_result(multiterm, model, restored, residual, flux, cleanmask, 
         LOG.debug('2d rms of residual:%s' % rms2d)
 
     # get max of cleaned result
-    if restored != '':
+    if restored not in [None, '']:
         with casatools.ImageReader(restored+extension) as image:
             clean_stats = image.statistics()
             image_max = clean_stats['max'][0]

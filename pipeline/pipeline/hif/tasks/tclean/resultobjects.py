@@ -60,7 +60,7 @@ class TcleanResult(basetask.Results):
     def imageplot(self):
         iters = self.iterations.keys()
         iters.sort()
-        image = self.iterations[iters[-1]]['image']
+        image = self.iterations[iters[-1]].get('image', None)
         imageplot = displays.sky.plotfilename(image=image,
           reportdir=self.plotdir)
         return imageplot
@@ -78,7 +78,7 @@ class TcleanResult(basetask.Results):
         iters = self.iterations.keys()
         iters.sort()
         if len(iters) > 0:
-            return self.iterations[iters[-1]]['cleanmask']
+            return self.iterations[iters[-1]].get('cleanmask', None)
         else:
             return None
 
@@ -90,7 +90,7 @@ class TcleanResult(basetask.Results):
         iters = self.iterations.keys()
         iters.sort()
         if len(iters) > 0:
-            return self.iterations[iters[-1]]['image']
+            return self.iterations[iters[-1]].get('image', None)
         else:
             return None
 
@@ -102,7 +102,7 @@ class TcleanResult(basetask.Results):
         iters = self.iterations.keys()
         iters.sort()
         if len(iters) > 0:
-            return self.iterations[iters[-1]]['model']
+            return self.iterations[iters[-1]].get('model', None)
         else:
             return None
 
@@ -122,7 +122,7 @@ class TcleanResult(basetask.Results):
         iters = self.iterations.keys()
         iters.sort()
         if len(iters) > 0:
-            return self.iterations[iters[-1]]['residual']
+            return self.iterations[iters[-1]].get('residual', None)
         else:
             return None
 
