@@ -13,7 +13,7 @@
 #
 # To test:  see plotbandpass_regression.py
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.85 2016/05/11 11:53:42 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.86 2016/05/26 18:10:55 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -90,7 +90,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.85 2016/05/11 11:53:42 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.86 2016/05/26 18:10:55 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -575,8 +575,9 @@ def drawAtmosphereAndFDM(showatm, showtsky, atmString, subplotRows, mysize, Tebb
     and the FDM window locations.
     """
     mylineno = lineNumber()
+    ylim = pb.ylim()  # CAS-8655
     if ((showatm or showtsky) and len(atmString) > 0): 
-        DrawAtmosphere(showatm, showtsky, subplotRows, atmString,
+        ylim = DrawAtmosphere(showatm, showtsky, subplotRows, atmString,
                        mysize, TebbSky, plotrange, xaxis, atmchan,
                        atmfreq, transmission, subplotCols,
                        showatmPoints=showatmPoints, xframe=xframe, 
@@ -586,7 +587,7 @@ def drawAtmosphereAndFDM(showatm, showtsky, atmString, subplotRows, mysize, Tebb
                        drewAtmosphere=drewAtmosphere)
         if (LO1 != ''):
             # Now draw the image band
-            DrawAtmosphere(showatm,showtsky, subplotRows, atmString,
+            ylim = DrawAtmosphere(showatm,showtsky, subplotRows, atmString,
                            mysize, TebbSkyImage, plotrange, xaxis,
                            atmchanImage, atmfreqImage, transmissionImage,
                            subplotCols, LO1, xframe, firstFrame, showatmPoints, 
@@ -606,6 +607,7 @@ def drawAtmosphereAndFDM(showatm, showtsky, atmString, subplotRows, mysize, Tebb
             else:
                 showFDM(originalSpw, chanFreqGHz,
                         baseband, showBasebandNumber, basebandDict)
+    return ylim  # CAS-8655
 
 def DrawPolarizationLabelsForOverlayTime(xstartPolLabel,ystartPolLabel,corr_type,polsToPlot,
                                          channeldiff,ystartMadLabel,subplotRows,gamp_mad,mysize,
@@ -3222,7 +3224,8 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                                          timerangeList, caltableTitle, mytime,
 #                                                         scansToPlot, scansForUniqueTimes) # task version
                                                          scansToPlotPerSpw[ispw], scansForUniqueTimes) # au version
-                                  drawAtmosphereAndFDM(showatm,showtsky,atmString,subplotRows,mysize,
+                                  # CAS-8655
+                                  newylimits = drawAtmosphereAndFDM(showatm,showtsky,atmString,subplotRows,mysize,
                                                        TebbSky,TebbSkyImage,plotrange, xaxis,atmchan,
                                                        atmfreq,transmission,subplotCols,showatmPoints,
                                                        xframe, channels,LO1,atmchanImage,atmfreqImage,
@@ -6161,7 +6164,7 @@ def DrawAtmosphere(showatm, showtsky, subplotRows, atmString, mysize,
                 pb.text(-0.08*subplotCols, -0.07*subplotRows,
                         'Image Sideband', color='k', size=mysize,
                         transform=pb.gca().transAxes)
-                
+    return ylim # CAS-8655
 
 def DrawBottomLegendPageCoords(msName, uniqueTimesMytime, mysize, figfile):
     msName = msName.split('/')[-1]
