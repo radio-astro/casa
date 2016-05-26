@@ -139,6 +139,7 @@ class WeatherChart(object):
             analysis_scripts.analysisUtils.plotWeather(vis=self.ms.name,
                                                        figfile=self.figfile)
         except:
+            pylab.close()
             return None
 
         # plot weather does not close the plot! work around that here rather
