@@ -1577,7 +1577,7 @@ for x in os.listdir('.'):
 
 ## leave killing off children to the watchdog...
 ## so everyone has a chance to die naturally...
-print "leaving casapy..."
+print "leaving casa..."
 def excepthook(exctype, value, tb):
     print "-----------------------------------------------------------------------------"
     print "error during shutdown"
