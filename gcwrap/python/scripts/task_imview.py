@@ -218,6 +218,8 @@ class __imview_class(object):
         if contour.has_key('base'):
             vwr.contourlevels( baselevel=self.__checknumeric(contour['base'], float, "contour baselevel"), data=data )
 
+        if contour.has_key('thickness'):
+            vwr.contourthickness( contour['thickness'], data=data )
         if contour.has_key('color'):
             vwr.contourcolor( contour['color'], data=data )
 

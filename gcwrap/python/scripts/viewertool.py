@@ -331,6 +331,15 @@ class viewertool(object):
 
         return self.__invoke( dbus.Boolean, bool, self.__state['proxy'].contourcolor, color, data )
 
+    def contourthickness( self, thickness=1.0, data=0 ):
+        if type(thickness) != float or type(data) != int:
+            raise Exception, "contorthickness() takes a float representing the thickness and data id..."
+
+        if self.__state['proxy'] == None:
+            self.__connect( )
+
+        return self.__invoke( dbus.Boolean, bool, self.__state['proxy'].contourthickness, thickness, data )
+
     def colormap( self, map, data_or_panel=0 ):
         if type(map) != str or type(data_or_panel) != int :
             raise Exception, "colormap() takes a colormap name and an optional panel or data id..."

@@ -68,6 +68,7 @@ namespace casa {
 		                            double baselevel=2147483648.0,
 		                            double unitlevel=2147483648.0, int panel_or_data=0 );
 		QDBusVariant contourcolor( const QString &color, int panel_or_data=0 );
+		QDBusVariant contourthickness( double thickness, int panel_or_data=0 );
 		QDBusVariant axes( const QString &x = "", const QString &y = "", const QString &z = "", int panel=0 );
 		QDBusVariant colormap( const QString &map, int panel_or_data=0 );
 		QDBusVariant colorwedge( bool show=true, int panel_or_data=0 );
