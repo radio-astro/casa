@@ -108,6 +108,10 @@ void MSCache::loadIt(vector<PMS::Axis>& loadAxes,
             logWarn(PMS::LOG_ORIGIN_LOAD_CACHE, "avgchannel value exceeds maximum integer allowed (" + String::toString(INT_MAX) + ")");
             avgChans = INT_MAX;
         } else {
+            if (chanVal == 0.0) {
+                chanVal = 1.0;
+                logLoad("Cannot average 0 channels, using 1 instead (no averaging).");
+            }
             avgChans = static_cast<Int>(chanVal);
         }
         logChansForSpws(*selMS, avgChans);
@@ -410,6 +414,7 @@ void MSCache::setUpVisIter(PlotMSSelection& selection,
 	if (averaging_.channel()) {
         double chanVal = averaging_.channelValue();
         int chanBin = (chanVal > INT_MAX) ? INT_MAX : static_cast<int>(chanVal);
+        if (chanBin == 0) chanBin = 1;
 		configuration.define("chanaverage", True);
 		configuration.define("chanbin", chanBin);
 	}
