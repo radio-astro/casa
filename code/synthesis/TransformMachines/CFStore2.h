@@ -59,7 +59,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //-------------------------------------------------------------------------
     void show(const char *Mesg=NULL,ostream &os=cerr, const Bool verbose=False);
     //-------------------------------------------------------------------------
+    // This version saves the entire CFStore
     void makePersistent(const char *dir,const char *name="", const char *qualifier="");
+    // This version saves only those pixels of CFStore that correspond
+    // to [PA,(Ant1,Ant2)] co-ordiantes ([PA, BaselineType]
+    // co-ordinate).
+    void makePersistent(const char *dir,
+			const char *cfName,
+			const char *qualifier,
+			const Quantity &pa, const Quantity& dPA,
+			const Int& ant1, const Int& ant2);
     //-------------------------------------------------------------------------
     void primeTheCFB();
     //-------------------------------------------------------------------------

@@ -146,13 +146,39 @@ namespace casa{
   }
   //
   //---------------------------------------------------------------
+  // This version saves the CFBuffer that corresponds to the
+  // [PA,(Ant1,Ant2)] pixel of the CFStore storage.
+  void CFStore2::makePersistent(const char *dir,
+				const char *cfName,
+				const char *qualifier,
+				const Quantity &pa, const Quantity& dPA,
+				const Int& ant1, const Int& ant2)
+  {
+    LogIO log_l(LogOrigin("CFStore2", "makePersistent(pa)[R&D]"));
+    (void)cfName;
+    Int paNdx, antNdx;
+    getIndex(pa,dPA,ant1,ant2,paNdx, antNdx);
+    
+    log_l << "Saving " << storage_p(paNdx,antNdx)->shape().product() << " "
+	  << "CFs for PA = " << pa.getValue("deg") 
+	  << " BaselineType = (" << ant1 << "," << ant2 << ")" 
+	  << LogIO::POST;
+    ostringstream name;
+    name << String(qualifier) << "CFS_" << paNdx << "_" << antNdx;
+    storage_p(paNdx,antNdx)->makePersistent(dir, name.str().c_str());
+  }
   //
+  //---------------------------------------------------------------
+  // This version saves the entire storage of CFStore (all CFs
+  // in the CFStore).
   void CFStore2::makePersistent(const char *dir,
 				const char *cfName,
 				const char *qualifier)
   {
     (void)cfName;
+    LogIO log_l(LogOrigin("CFStore2", "makePersistent[R&D]"));
     //const char *formedName;
+    log_l << "Writing CFs of shape " << storage_p.shape() << "...";
     for (Int i=0;i<storage_p.shape()(0);i++)
       for (Int j=0;j<storage_p.shape()(1);j++)
 	{
@@ -163,6 +189,7 @@ namespace casa{
 	  // else              formedName = cfName;
 	  storage_p(i,j)->makePersistent(dir,name.str().c_str());
 	}
+    log_l << "Done." << endl;
   }
   //
   //---------------------------------------------------------------
