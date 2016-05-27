@@ -568,7 +568,7 @@ class Tclean(cleanbase.CleanBase):
                 min_frequency = float(spwDesc.min_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
                 max_frequency = float(spwDesc.max_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
                 if qaTool.convert(inputs.width, 'GHz')['value'] == 0.0:
-                    effective_channel_width = [float(ch.effective_bw.convert_to(measures.FrequencyUnits.GIGAHERTZ)) for ch in spwdesc.channels][len(spwdesc.channels)/2]
+                    effective_channel_width = [float(ch.effective_bw.convert_to(measures.FrequencyUnits.GIGAHERTZ)) for ch in spwDesc.channels][len(spwDesc.channels)/2]
                     channel_rms_factor = numpy.sqrt(abs((max_frequency - min_frequency) / effective_channel_width))
                 else:
                     channel_rms_factor = numpy.sqrt(abs((max_frequency - min_frequency) / qaTool.convert(inputs.width, 'GHz')['value']))
