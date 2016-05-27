@@ -377,6 +377,10 @@ class CalibrationTable(NamingTemplate):
         self._associations.smooth(smooth)
         return self
 
+    def source(self, source):
+        self._associations.source(source)
+        return self
+
     def spectral_window(self, window):
         self._associations.spectral_window(window)
         return self
