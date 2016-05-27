@@ -216,12 +216,7 @@ class CleanBase(basetask.StandardTaskTemplate):
         context = self.inputs.context
         inputs = self.inputs
 
-        #        LOG.info('Stokes %s' % (inputs.stokes))
-        #        LOG.info('Iteration %s threshold %s niter %s' % (iter,
-        #          inputs.threshold, inputs.niter))
-
-        # Derive names of clean products for this iteration, remove
-        # old clean products with the name name,
+        # Derive names of clean products for this iteration
         old_model_name = result.model
         model_name = '%s.%s.iter%s.model' % (inputs.imagename, inputs.stokes, iter)
         if old_model_name is not None:
@@ -243,13 +238,6 @@ class CleanBase(basetask.StandardTaskTemplate):
             inputs.imagename, inputs.stokes, iter)
         flux_name = '%s.%s.iter%s.pb' % (
             inputs.imagename, inputs.stokes, iter)
-
-        # delete any old files with this naming root
-        try:
-            shutil.rmtree('%s.%s.iter%s*' % (inputs.imagename,
-                                             inputs.stokes, iter))
-        except:
-            pass
 
         spw_freq_param_lists = []
         spw_chan_param_lists = []
@@ -364,43 +352,51 @@ class CleanBase(basetask.StandardTaskTemplate):
         parallel = all([mpihelpers.parse_mpi_input_parameter(inputs.parallel),
                         'TARGET' in inputs.intent])
 
+        tclean_job_parameters = {
+            'vis':           inputs.vis,
+            'imagename':     '%s.%s.iter%s' % (os.path.basename(inputs.imagename), inputs.stokes, iter),
+            'datacolumn':    inputs.datacolumn,
+            'spw':           spw_freq_param,
+            'intent':        utils.to_CASA_intent(inputs.ms[0], inputs.intent),
+            'scan':          scanidlist,
+            'specmode':      inputs.specmode if inputs.specmode != 'cont' else 'mfs',
+            'gridder':       inputs.gridder,
+            'pblimit':       inputs.pblimit,
+            'niter':         inputs.niter,
+            'threshold':     inputs.threshold,
+            'deconvolver':   inputs.deconvolver,
+            'interactive':   0,
+            'outframe':      inputs.outframe,
+            'nchan':         inputs.nchan,
+            'start':         inputs.start,
+            'width':         inputs.width,
+            'imsize':        inputs.imsize,
+            'cell':          inputs.cell,
+            'phasecenter':   inputs.phasecenter,
+            'stokes':        inputs.stokes,
+            'weighting':     inputs.weighting,
+            'robust':        inputs.robust,
+            'npixels':       inputs.npixels,
+            'restoringbeam': inputs.restoringbeam,
+            'uvrange':       inputs.uvrange,
+            'mask':          inputs.mask,
+            'usemask':       'user',
+            'savemodel':     'none',
+            'chanchunks':    chanchunks,
+            'parallel':      parallel,
+            }
+
+        # Show nterms parameter only if it is used.
         if (result.multiterm):
-            job = casa_tasks.tclean(vis=inputs.vis, imagename='%s.%s.iter%s' %
-                  (os.path.basename(inputs.imagename), inputs.stokes, iter),
-                  datacolumn=inputs.datacolumn,
-                  spw=spw_freq_param,
-                  intent=utils.to_CASA_intent(inputs.ms[0], inputs.intent),
-                  scan=scanidlist, specmode=inputs.specmode if inputs.specmode != 'cont' else 'mfs', gridder=inputs.gridder,
-                  pblimit=inputs.pblimit, niter=inputs.niter,
-                  threshold=inputs.threshold, deconvolver=inputs.deconvolver,
-                  interactive=0, outframe=inputs.outframe, nchan=inputs.nchan,
-                  start=inputs.start, width=inputs.width, imsize=inputs.imsize,
-                  cell=inputs.cell, phasecenter=inputs.phasecenter,
-                  stokes=inputs.stokes,
-                  weighting=inputs.weighting, robust=inputs.robust,
-                  npixels=inputs.npixels,
-                  restoringbeam=inputs.restoringbeam, uvrange=inputs.uvrange,
-                  mask=inputs.mask, usemask='user', savemodel='none',
-                  nterms=result.multiterm,
-                  chanchunks=chanchunks, parallel=parallel)
-        else:
-            job = casa_tasks.tclean(vis=inputs.vis, imagename='%s.%s.iter%s' %
-                  (os.path.basename(inputs.imagename), inputs.stokes, iter),
-                  datacolumn=inputs.datacolumn,
-                  spw=spw_freq_param,
-                  intent=utils.to_CASA_intent(inputs.ms[0], inputs.intent),
-                  scan=scanidlist, specmode=inputs.specmode if inputs.specmode != 'cont' else 'mfs', gridder=inputs.gridder,
-                  pblimit=inputs.pblimit, niter=inputs.niter,
-                  threshold=inputs.threshold, deconvolver=inputs.deconvolver,
-                  interactive=0, outframe=inputs.outframe, nchan=inputs.nchan,
-                  start=inputs.start, width=inputs.width, imsize=inputs.imsize,
-                  cell=inputs.cell, phasecenter=inputs.phasecenter,
-                  stokes=inputs.stokes,
-                  weighting=inputs.weighting, robust=inputs.robust,
-                  npixels=inputs.npixels,
-                  restoringbeam=inputs.restoringbeam, uvrange=inputs.uvrange,
-                  mask=inputs.mask, usemask='user', savemodel='none',
-                  chanchunks=chanchunks, parallel=parallel)
+            tclean_job_parameters['nterms'] = result.multiterm
+
+        # Re-use products from previous iteration.
+        if (iter > 0):
+            tclean_job_parameters['restart'] = True
+            tclean_job_parameters['calcpsf'] = False
+            tclean_job_parameters['calcres'] = False
+
+        job = casa_tasks.tclean(**tclean_job_parameters)
         tclean_result = self._executor.execute(job)
 
         if (inputs.niter > 0):
@@ -410,7 +406,7 @@ class CleanBase(basetask.StandardTaskTemplate):
 
         # Create PB for single fields since it is not auto-generated for
         # gridder='standard'.
-        if (inputs.gridder == 'standard'):
+        if ((inputs.gridder == 'standard') and (iter == 0)):
             # TODO: Change to use list of MSs when makePB supports this.
             if (inputs.specmode == 'cube'):
                 mode = 'frequency'

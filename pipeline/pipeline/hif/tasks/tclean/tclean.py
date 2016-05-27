@@ -1,5 +1,6 @@
 import os
 import shutil
+import glob
 import numpy
 
 import pipeline.domain.measures as measures
@@ -120,6 +121,13 @@ class Tclean(cleanbase.CleanBase):
 
     def is_multi_vis_task(self):
         return True
+
+    def copy_products(self, old_pname, new_pname):
+        try:
+            LOG.info('Copying %s to %s' % (old_pname, new_pname))
+            shutil.copytree(old_pname, new_pname)
+        except Exception as e:
+            LOG.warning('Exception copying %s: %s' % (old_pname, e))
 
     def prepare(self):
         context = self.inputs.context
@@ -400,11 +408,16 @@ class Tclean(cleanbase.CleanBase):
             # previous residual image.
             rootname, ext = os.path.splitext(result.residual)
             rootname, ext = os.path.splitext(rootname)
+
+            # Delete any old files with this naming root
+            filenames = glob.glob('%s.iter%s*' % (rootname, iter))
+            for filename in filenames:
+                try:
+                    shutil.rmtree(filename)
+                except Exception as e:
+                    LOG.warning('Exception while deleting %s: %s' % (filename, e))
+
             new_cleanmask = '%s.iter%s.cleanmask' % (rootname, iter)
-            try:
-                shutil.rmtree(new_cleanmask)
-            except OSError:
-                pass
 
             # perform an iteration.
             seq_result = sequence_manager.iteration(new_cleanmask, self.pblimit_image, self.pblimit_cleanmask)
@@ -412,6 +425,26 @@ class Tclean(cleanbase.CleanBase):
             # Check the iteration status.
             if not seq_result.iterating:
                 break
+
+            # Use previous iterations's products as starting point
+            ptypes = ['residual', 'sumwt', 'psf', 'pb']
+            if (inputs.gridder == 'mosaic'):
+                ptypes.append('weight')
+            for ptype in ptypes:
+                old_pname = '%s.iter%s.%s' % (rootname, iter-1, ptype)
+                new_pname = '%s.iter%s.%s' % (rootname, iter, ptype)
+                if (ptype == 'pb'):
+                    self.copy_products(old_pname, new_pname)
+                else:
+                    if (inputs.deconvolver == 'mtmfs'):
+                        if (ptype in ['sumwt', 'psf', 'weight']):
+                            exts = ['.tt0', '.tt1', '.tt2']
+                        else:
+                            exts = ['.tt0', '.tt1']
+                    else:
+                        exts = ['']
+                    for ext in exts:
+                        self.copy_products('%s%s' % (old_pname, ext), '%s%s' % (new_pname, ext))
 
             # Determine the cleaning threshold
             threshold = seq_result.threshold
@@ -568,7 +601,7 @@ class Tclean(cleanbase.CleanBase):
                 min_frequency = float(spwDesc.min_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
                 max_frequency = float(spwDesc.max_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
                 if qaTool.convert(inputs.width, 'GHz')['value'] == 0.0:
-                    effective_channel_width = [float(ch.effective_bw.convert_to(measures.FrequencyUnits.GIGAHERTZ)) for ch in spwdesc.channels][len(spwdesc.channels)/2]
+                    effective_channel_width = [float(ch.effective_bw.convert_to(measures.FrequencyUnits.GIGAHERTZ).value) for ch in spwDesc.channels][len(spwDesc.channels)/2]
                     channel_rms_factor = numpy.sqrt(abs((max_frequency - min_frequency) / effective_channel_width))
                 else:
                     channel_rms_factor = numpy.sqrt(abs((max_frequency - min_frequency) / qaTool.convert(inputs.width, 'GHz')['value']))
