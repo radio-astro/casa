@@ -135,8 +135,26 @@ def space_comma(s):
 
 <p>This task applies all calibrations registered with the pipeline to their target measurement sets.<p>
 
+<h2>Contents</h2>
+<ul>
+<li><a href="#appliedcal">Applied calibrations</a></li>
+<li><a href="#flaggeddata">Flagged data after calibration application</a></li>
+<li><a href="#plots">Plots</a></li>
+  <ul>
+  <li><a href="#calampvsfreq">Calibrated amplitude vs frequency</a></li>
+  <li><a href="#calphasevsfreq">Calibrated phase vs frequency</a></li>
+  <li><a href="#calampvsuvdist">Calibrated amplitude vs UV distance</a></li>
+  <li><a href="#calampvstime">Calibrated amplitude vs time</a></li>
+  <li><a href="#calphasevstime">Calibrated phase vs time</a></li>
+  <li><a href="#corrampvsant">(Corrected amplitude / model) vs antenna</a></li>
+  <li><a href="#corrampvsuvdist">(Corrected amplitude / model) vs UV distance</a></li>
+  <li><a href="#scicalampvsfreq">Science target: calibrated amplitude vs frequency</a></li>
+  <li><a href="#scicalphasevsfreq">Science target: calibrated phase vs frequency</a></li>
+  <li><a href="#scicalampvsuvdist">Science target: calibrated amplitude vs UV distance</a></li>
+  </ul>
+</ul>
 
-<h2>Applied calibrations</h2>
+<h2 id="appliedcal" class="jumptarget">Applied calibrations</h2>
 <table class="table table-bordered table-striped table-condensed"
 	   summary="Applied Calibrations">
 	<caption>Applied Calibrations</caption>
@@ -188,7 +206,7 @@ def space_comma(s):
 
 
 
-<h2>Flagged data after calibration application</h2>
+<h2 id="flaggeddata" class="jumptarget">Flagged data after calibration application</h2>
 <table class="table table-bordered table-striped "
 	   summary="Flagged Data">
 	<caption>Summary of measurement set flagging status after application
@@ -241,14 +259,15 @@ def space_comma(s):
 </table>
 
 % if amp_vs_freq_plots or phase_vs_freq_plots or amp_vs_time_plots or amp_vs_uv_plots or phase_vs_time_plots or science_amp_vs_freq_plots:
-<h2>Plots</h2>
+<h2 id="plots" class="jumptarget">Plots</h2>
 
 <%self:plot_group plot_dict="${amp_vs_freq_plots}"
 				  url_fn="${lambda x: amp_vs_freq_subpages[x]}"
 				  data_field="${True}"
 				  data_spw="${True}"
                   data_vis="${True}"
-				  plot_accessor="${lambda ms_plots: ms_plots.items()}">
+				  plot_accessor="${lambda ms_plots: ms_plots.items()}"
+				  title_id="calampvsfreq">
 
 	<%def name="title()">
 		Calibrated amplitude vs frequency
@@ -289,7 +308,8 @@ def space_comma(s):
 				  data_field="${True}"
 				  data_spw="${True}"
 				  data_vis="${True}"
-				  plot_accessor="${lambda ms_plots: ms_plots.items()}">
+				  plot_accessor="${lambda ms_plots: ms_plots.items()}"
+				  title_id="calphasevsfreq">
 
 	<%def name="title()">
 		Calibrated phase vs frequency
@@ -332,7 +352,8 @@ def space_comma(s):
                   data_field="${True}"
 				  data_spw="${True}"
 				  data_vis="${True}"
-				  plot_accessor="${lambda ms_plots: ms_plots.items()}">
+				  plot_accessor="${lambda ms_plots: ms_plots.items()}"
+				  title_id="calampvsuvdist">
 
 	<%def name="title()">
 		Calibrated amplitude vs UV distance
@@ -372,7 +393,8 @@ def space_comma(s):
 <%self:plot_group plot_dict="${amp_vs_time_plots}"
 				  url_fn="${lambda x: amp_vs_time_subpages[x]}"
 				  data_vis="${True}"
-				  data_spw="${True}">
+				  data_spw="${True}"
+				  title_id="calampvstime">
 
 	<%def name="title()">
 		Calibrated amplitude vs time
@@ -406,7 +428,8 @@ def space_comma(s):
 <%self:plot_group plot_dict="${phase_vs_time_plots}"
 				  url_fn="${lambda x: phase_vs_time_subpages[x]}"
 				  data_vis="${True}"
-                  data_spw="${True}">
+                  data_spw="${True}"
+                  title_id="calphasevstime">
 
 	<%def name="title()">
 		Calibrated phase vs time
@@ -438,7 +461,8 @@ def space_comma(s):
 
 
 <%self:plot_group plot_dict="${corrected_to_antenna1_plots}"
-				  url_fn="${lambda x: 'junk'}">
+				  url_fn="${lambda x: 'junk'}"
+				  title_id="corrampvsant">
 
 	<%def name="title()">
         (Corrected amplitude / model) vs antenna
@@ -477,7 +501,8 @@ def space_comma(s):
 
 
 <%self:plot_group plot_dict="${corrected_to_model_vs_uvdist_plots}"
-				  url_fn="${lambda x: 'junk'}">
+				  url_fn="${lambda x: 'junk'}"
+				  title_id="corrampvsuvdist">
 
 	<%def name="title()">
 		(Corrected amplitude / model) vs UV distance
@@ -520,7 +545,8 @@ def space_comma(s):
 				  data_spw="${True}"
 				  data_field="${True}"
                   data_vis="${True}"
-				  plot_accessor="${lambda ms_plots: ms_plots.items()}">
+				  plot_accessor="${lambda ms_plots: ms_plots.items()}"
+				  title_id="scicalampvsfreq">
 
 	<%def name="title()">
 		Science target: calibrated amplitude vs frequency
@@ -574,7 +600,8 @@ def space_comma(s):
 				  data_baseband="${True}"
 				  data_field="${True}"
                   data_vis="${True}"
-				  plot_accessor="${lambda ms_plots: ms_plots.items()}">
+				  plot_accessor="${lambda ms_plots: ms_plots.items()}"
+				  title_id="scicalphasevsfreq">
 
 	<%def name="title()">
 		Science target: calibrated phase vs frequency
@@ -628,10 +655,11 @@ def space_comma(s):
 				  data_spw="${True}"
 				  data_field="${True}"
                   data_vis="${True}"
-				  plot_accessor="${lambda ms_plots: ms_plots.items()}">
+				  plot_accessor="${lambda ms_plots: ms_plots.items()}"
+				  title_id="scicalampvsuvdist">
 
 	<%def name="title()">
-		Science targets: calibrated amplitude vs UV distance
+		Science target: calibrated amplitude vs UV distance
 	</%def>
 
 	<%def name="preamble()">
