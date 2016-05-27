@@ -769,28 +769,38 @@ windows in the dataset and close the tool.
         </method>
   
         <method type="function" name="fieldsforscans">
-            <shortdescription>Get an array of the unique fields for the specified scan numbers, observationID, and array ID.</shortdescription>
+            <shortdescription>Get an array or dictionary of the unique fields for the specified scan numbers, observationID, and array ID.</shortdescription>
              <input>
-                <param type="intArray" direction="in" name="scans">
+                <param type="intArray" name="scans">
                     <description>Scan numbers for which to return the fields.</description>
                     <value/>
                 </param>
-                <param type="bool" direction="in" name="asnames">
+                <param type="bool" name="asnames">
                     <description>If true, return the field names. If false, return the zero-based field IDs.</description>
                     <value>false</value>
                 </param>
-                <param type="int" direction="in" name="obsid">
+                <param type="int" name="obsid">
                     <description>Observation ID. A negative value means use all observation IDs.</description>
                     <value>-1</value>
                 </param>
-                <param type="int" direction="in" name="arrayid">
+                <param type="int" name="arrayid">
                     <description>Array ID. A negative value means use all array IDs.</description>
                     <value>-1</value>
+                </param>
+                <param type="bool" name="asmap">
+                    <description>Return a dictionary mapping scan numbers to fields?</description>
+                    <value>false</value>
                 </param>
             </input>
             <returns type="any"/>
             <description>
-                Get an array of the unique fields for the specified scan numbers, observation ID, and array ID.
+                Get an array or dictionary of the unique fields for the specified scan numbers, observation ID, and array ID.
+                If asnames=True, the values returned will be the field names, if False, they will be field IDs.
+                If asmap=True, the structure returned will be a dictionary which maps scan number (as a string) to fields.
+                In this case, both obsid and arrayid must be nonnegative. If asmap=False, a single array of fields is returned
+                that matches the query. In this case, if obsid and/or arrayid are negative, then it indicates that all
+                fields matching any obsid and/or arrayid should be returned. An empty array specified for scans means
+                that all scans for the selected obsid and arrayid should be included.
             </description>
             <example>
     msmd.open("my.ms")
@@ -798,6 +808,8 @@ windows in the dataset and close the tool.
     field_names = msmd.fieldsforscan([5, 10], True)
     # get the field IDs for scan numbers 5 and 10 (all obsids, all arrayids)
     field_IDs = msmd.fieldsforscan([5, 10], False)
+    # get mapping of scans to fields for arrayid=2 and obsid=4
+    scans_to_fields = msmd.fieldsforscan(obsid=4, arrayid=2, asmap=True)
     msmd.done()
             </example>
         </method>

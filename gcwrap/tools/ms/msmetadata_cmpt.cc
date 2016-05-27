@@ -775,29 +775,62 @@ variant* msmetadata::fieldsforscan(int scan, bool asnames, int obsid, int arrayi
 
 variant* msmetadata::fieldsforscans(
 	const vector<int>& scans, const bool asnames,
-	int obsid, int arrayid
+	int obsid, int arrayid, bool asmap
 ) {
 	_FUNC(
 		ThrowIf(
-			scans.empty(), "Scans array cannot be empty"
-		);
-		ThrowIf(
-			*std::min_element (scans.begin(), scans.end()) < 0,
+			! scans.empty()
+            && *std::min_element (scans.begin(), scans.end()) < 0,
 			"All scan numbers must be non-negative"
 		);
-		auto scanKeys = _getScanKeys(scans, obsid, arrayid);
-		std::set<int> ids;
-		for (auto scanKey: scanKeys) {
-			auto t = _msmd->getFieldsForScan(scanKey);
-			ids.insert(t.begin(), t.end());
-		}
-		if (asnames) {
-			return new variant(_fieldNames(ids));
-		}
-		else {
-			return new variant(
-				_setIntToVectorInt(ids)
-			);
+        if (asmap) {
+            ThrowIf(
+                obsid < 0 || arrayid < 0,
+                "When asmap is True, both obsid and arrayid must be nonnegative"
+            );
+            ArrayKey ak;
+            ak.obsID = obsid;
+            ak.arrayID = arrayid;
+            auto subScanKeys = _msmd->getSubScanKeys(ak);
+            std::map<int COMMA set<int>> mymap;
+            for (const auto& ss : subScanKeys) {
+                mymap[ss.scan].insert(ss.fieldID);
+            }
+            if (! scans.empty()) {
+                auto tmpmap = mymap;
+                for (auto& p : mymap) {
+                    if (std::find(scans.begin(), scans.end(), p.first) == scans.end()) {
+                        tmpmap.erase(p.first);
+                    }
+                }
+                mymap = tmpmap;
+            }
+            record ret;
+            for (const auto& p : mymap) {
+                if (asnames) {
+                    ret.insert(to_string(p.first), _fieldNames(p.second));
+                }
+                else {
+                    ret.insert(to_string(p.first), _setIntToVectorInt(p.second));
+                }
+            }
+            return new variant(ret);
+        }
+        else {
+		    auto scanKeys = _getScanKeys(scans, obsid, arrayid);
+		    std::set<int> ids;
+		    for (auto scanKey: scanKeys) {
+			    auto t = _msmd->getFieldsForScan(scanKey);
+			    ids.insert(t.begin(), t.end());
+		    }
+		    if (asnames) {
+			    return new variant(_fieldNames(ids));
+		    }
+		    else {
+			    return new variant(
+				    _setIntToVectorInt(ids)
+			    );
+            }
 		}
 	)
 	return nullptr;
@@ -1936,33 +1969,35 @@ std::set<ScanKey> msmetadata::_getScanKeys(
 ) const {
 	_checkObsId(obsid, False);
 	_checkArrayId(arrayid, False);
-	if (obsid >= 0 && arrayid >= 0) {
-		std::set<ScanKey> scanKeys;
-		ScanKey x;
-		x.obsID = obsid;
-		x.arrayID = arrayid;
-		for (auto scan : scans) {
+    std::set<ScanKey> myKeys;
+    if (scans.empty()) {
+        ArrayKey akey;
+        akey.obsID = obsid;
+        akey.arrayID = arrayid;
+        myKeys = _msmd->getScanKeys(akey);
+    }
+    else if (obsid >= 0 && arrayid >= 0) {
+	    ScanKey x;
+	    for (auto scan : scans) {
 			x.scan = scan;
-			scanKeys.insert(x);
-		}
-		return scanKeys;
+			myKeys.insert(x);
+        }
 	}
 	else {
 		ArrayKey ak;
 		ak.obsID = obsid;
 		ak.arrayID = arrayid;
 		auto scanKeys = _msmd->getScanKeys(ak);
-		std::set<ScanKey> myKeys;
-		for (const auto k : scanKeys) {
+		for (const auto& k : scanKeys) {
 			if (
 				std::find(scans.begin(), scans.end(), k.scan) != scans.end()
 			) {
 				myKeys.insert(k);
 			}
 		}
-		ThrowIf(myKeys.empty(), "No matching scans found");
-		return myKeys;
 	}
+	ThrowIf(myKeys.empty(), "No matching scans found");
+	return myKeys;
 }
 
 template <class T>

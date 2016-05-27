@@ -211,7 +211,7 @@ class msmd_test(unittest.TestCase):
             "3C279", "J1337-129", "Titan",
             "J1625-254", "V866 Sco", "RNO 90"
         ])
-        self.assertRaises(Exception, self.md.fieldsforscans)
+        self.assertTrue((self.md.fieldsforscans() == [0, 1, 2, 3, 4, 5]).all())
         for scan in self.md.scannumbers():
             if scan <= 4:
                 expec = numpy.array([0])
@@ -235,7 +235,25 @@ class msmd_test(unittest.TestCase):
             self.assertTrue((got==expec2).all())
             got = self.md.fieldsforscans(scans, True)
             self.assertTrue((got==names[expec2]).all())
-            
+        self.assertRaises(Exception, self.md.fieldsforscans, asmap=True)
+        mymap = self.md.fieldsforscans(asmap=True, obsid=0, arrayid=0)
+        for k, v in mymap.iteritems():
+            self.assertTrue(len(v) == 1)
+            ik = int(k)
+            if ik in [1, 2, 3, 4]:
+                expec = 0
+            elif ik == 5:
+                expec = 1
+            elif ik in [6, 7]:
+                expec = 2
+            elif ik in [ 8,  9, 10, 13, 14, 17, 18, 21, 24, 25, 28, 31, 32]:
+                expec = 3
+            elif ik in [11, 12, 19, 20, 26, 27]:
+                expec = 4
+            elif ik in [15, 16, 22, 23, 29, 30]:
+                expec = 5           
+            self.assertTrue(v[0] == expec)
+
     def test_fieldsforspw(self):
         """Test fieldsforspw()"""
         for i in range(self.md.nspw()):
