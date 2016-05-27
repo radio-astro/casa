@@ -18,10 +18,12 @@ class UVcontFitQAHandler(pqa.QAResultHandler):
 
     def handle(self, context, result):
 
-	# Check for existance of the the target MS.
-        score1 = self._uvtable_exists(result.inputs['output_dir'],
-	    os.path.basename(result.inputs['caltable']))
-        scores = [score1]
+	# Check for existance of the UV continuum table
+        scores = []
+        for calapp in result.pool:
+            score = self._uvtable_exists(result.inputs['output_dir'],
+	       os.path.basename(calapp.calfrom[0].gaintable))
+            scores.append(score)
 	    
         result.qa.pool.extend(scores)
     

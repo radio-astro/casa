@@ -203,28 +203,42 @@ class UVcontFit(basetask.StandardTaskTemplate):
     def prepare(self):
         inputs = self.inputs
 
-        inputs.caltable = inputs.caltable
+        # Compute the spw list from the frequency selection string
+        #    This is passed to callibrary
         orig_spw = ','.join([spw.split(':')[0] for spw in inputs.spw.split(',')])
 
-        # every time inputs.caltable is called, the old caltable is deleted.
-        # So, calculate the caltable name once and use THIS variable from here
-        # on in
-        caltable = inputs.caltable
-
+        calapps = []
         if not inputs.contfile:
+
+            # Simple case frequency selection same for all sources
+
+            # Create the caltable without a source name
+            caltable = inputs.caltable
+
+            # Execute
             uvcontfit_args = inputs.to_casa_args(caltable)
             uvcontfit_job = casa_tasks.uvcontfit(**uvcontfit_args)
             self._executor.execute(uvcontfit_job)
+
+            # Create the callibrary object
+            calto = callibrary.CalTo(vis=inputs.vis, spw=orig_spw, intent=inputs.intent)
+            calfrom = callibrary.CalFrom(caltable,
+                                     caltype='uvcont',
+                                     spwmap=[],
+                                     interp='',
+                                     calwt=False)
+            calapps.append (callibrary.CalApplication(calto, calfrom))
+
         else:
             # Get the continuum ranges
             cranges_spwsel = self._get_ranges_spwsel()
 
             # Initialize uvcontfit append mode
-            append = False
             orig_intent = inputs.intent
 
             # Loop over the ranges calling uvcontfit once per source
             for sname in cranges_spwsel:
+
                 # Translate to field selection
                 sfields, sintents = self._get_source_fields(sname)
                 if not sfields:
@@ -239,29 +253,31 @@ class UVcontFit(basetask.StandardTaskTemplate):
                 if not spwstr:
                     continue
 
+                # Create the caltable with a source name
+                #     Not ideal because of the way inputs works but ...
+
+                caltable = uvcaltable.UVcontCaltable()
+                caltable = caltable (output_dir=inputs.output_dir,
+                    stage=inputs.context.stage, vis=inputs.vis, source=sname)
+
                 # Fire off task
                 inputs.intent = sintents
-                uvcontfit_args = inputs.to_casa_args(caltable, field=sfields, spw=spwstr, append=append)
+                uvcontfit_args = inputs.to_casa_args(caltable, field=sfields, spw=spwstr, append=False)
                 uvcontfit_job = casa_tasks.uvcontfit(**uvcontfit_args)
                 self._executor.execute(uvcontfit_job)
-                
-                # Switch to append mode
-                append = True
-                inputs.intent = orig_intent
 
-        calto = callibrary.CalTo(vis=inputs.vis, spw=orig_spw, intent=inputs.intent)
-        # careful now! Calling inputs.caltable mid-task will remove the
-        # newly-created caltable, so we must look at the task arguments
-        # instead
-        calfrom = callibrary.CalFrom(caltable,
+                # Create the callibrary object
+                calto = callibrary.CalTo(vis=inputs.vis, field=sname, spw=orig_spw, intent=inputs.intent)
+                calfrom = callibrary.CalFrom(caltable,
                                      caltype='uvcont',
                                      spwmap=[],
                                      interp='',
                                      calwt=False)
+                calapps.append (callibrary.CalApplication(calto, calfrom))
+                
+                inputs.intent = orig_intent
 
-        calapp = callibrary.CalApplication(calto, calfrom)
-
-        return UVcontFitResults(pool=[calapp])
+        return UVcontFitResults(pool=calapps)
 
 
     def analyse (self, result):
