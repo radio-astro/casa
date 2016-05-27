@@ -21,6 +21,10 @@
     <ProcessingCommand>
         <Command xmlns="">hifa_tsysflag</Command>
         <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">fnm_byfield</Keyword>
+                <Value xmlns="">True</Value>
+            </Parameter>
         </ParameterSet>
     </ProcessingCommand>
 

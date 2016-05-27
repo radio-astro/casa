@@ -33,6 +33,11 @@ possible error.
         <value>2.0</value>
     </param>
  
+    <param type="bool" name="fnm_byfield" subparam="true">
+        <description>Evaluate the nmedian metric separately for each field.</description>
+        <value>False</value>
+    </param>
+
     <param type="bool" name="flag_derivative">
         <description>True to flag Tsys spectra with high median derivative</description>
         <value>True</value>
@@ -129,6 +134,7 @@ possible error.
         <when param="flag_nmedian">
             <equals type="bool" value="True">
                 <default param="fnm_limit"><value>2.0</value></default>
+                <default param="fnm_byfield"><value>False</value></default>
             </equals>
             <equals type="bool" value="False">
             </equals>
@@ -234,6 +240,9 @@ flag_nmedian -- True to flag Tsys spectra with high median value.
 fnm_limit -- Flag spectra with median value higher than fnm_limit * median 
     of this measure over all spectra.
     default: 2.0
+
+fnm_byfield -- Evaluate the nmedian metric separately for each field.
+    default: False
  
 flag_derivative -- True to flag Tsys spectra with high median derivative.
     default: True

@@ -25,7 +25,7 @@ LOG = infrastructure.get_logger(__name__)
 class TsysflagInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, caltable=None, 
-      flag_nmedian=None, fnm_limit=None,
+      flag_nmedian=None, fnm_limit=None, fnm_byfield=None,
       flag_derivative=None, fd_max_limit=None,
       flag_edgechans=None, fe_edge_limit=None,
       flag_fieldshape=None, ff_refintent=None, ff_max_limit=None,
@@ -79,6 +79,16 @@ class TsysflagInputs(basetask.StandardInputs):
         if value is None:
             value = 2.0
         self._fnm_limit = value
+
+    @property
+    def fnm_byfield(self):
+        return self._fnm_byfield
+
+    @fnm_byfield.setter
+    def fnm_byfield(self, value):
+        if value is None:
+            value = False
+        self._fnm_byfield = value
 
     @property
     def flag_derivative(self):
@@ -317,15 +327,14 @@ class Tsysflag(basetask.StandardTaskTemplate):
             metric_to_test = testable_metrics_completed[-1]
             LOG.trace("Using metric '{0}' to evaluate if any antennas were entirely flagged.".format(metric_to_test))
 
-            # Read in the Tsys table, and extract the field ids, sorted by timestamp.
+            # Identify fields present in Tsys table:
+            # Read in the Tsys table, and extract the field ids.
             tsystable = caltableaccess.CalibrationTableDataFiller.getcal(self.inputs.caltable)
-            
             fields = {}
             for row in tsystable.rows:
                 time = row.get('TIME')
                 if time not in fields.keys():
                     fields[time] = row.get('FIELD_ID')
-            fields_sorted = [fields[time] for time in sorted(fields.keys())]
             
             # Get the science spw ids from the MS.
             science_spw_ids = [spw.id for spw in ms.get_spectral_windows(science_windows_only=True)]
@@ -341,62 +350,112 @@ class Tsysflag(basetask.StandardTaskTemplate):
             antenna_id_to_name = {ant.id: ant.name for ant in ms.antennas if ant.name.strip()}
 
             # Perform test separately for each of these intents.
-            intents = ['BANDPASS', 'AMPLITUDE', 'PHASE']
+            intents_of_interest = ['BANDPASS', 'AMPLITUDE', 'PHASE']
+
+            # Create translation of field to intent for intents of interest.
+            intents_for_field = dict((field.id, field.intents) for field in ms.fields)
+
+            # Create translation of field ID to field name
+            field_name_for_id = dict((field.id, field.name) for field in ms.fields)
 
             # Initialize set of antennas that are fully flagged for all spws, for any intent
             ants_fully_flagged_in_all_spws_any_intent = set()
             
-            for intent in intents:
+            # Initialize flagging state
+            flagging_state = collections.defaultdict(list)
             
-                # Initialize dictionary of antennas fully flagged for this intent
-                ants_fully_flagged = collections.defaultdict(set)
-            
-                # Identify which fields belong to this intent
-                intentfields = [field for field in ms.get_fields(intent=intent)]
-            
-                for intentfield in intentfields:
-            
-                    # Identify which flagging view rows belong to this field, and continue 
-                    # with check if any were found.
-                    intent_view_rows = [i for i, field in enumerate(fields_sorted) if field == intentfield.id]
-
-                    if intent_view_rows:
-                        
-                        # Go through each view product for the specified metric.
-                        for description in result.components[metric_to_test].descriptions():
-            
-                            # Get final view.
-                            view = result.components[metric_to_test].last(description)
-            
-                            # Select the rows in the view that belong to the intentfield.
-                            flag_selection = view.flag[:,intent_view_rows]
-            
-                            # For each antenna in selection...
-                            for iant, flag_for_ant in enumerate(flag_selection):
-
-                                # If all timestamps for antenna are flagged...
-                                if flag_for_ant.all():
-                                    # Append antenna to set of fully flagged antennas.
-                                    ants_fully_flagged[view.spw].update([iant])
-
-                        # Raise warning for each flagged antenna:
-                        for spw, iants in ants_fully_flagged.items():
-                            
-                            # Convert antenna IDs to names and create a string.
-                            ants_str = ", ".join(map(str, [antenna_id_to_name[iant] for iant in iants]))
-        
-                            # Raise the warning.
-                            LOG.warning("%s - for intent %s (field %s: %s) and spw %s, the following antennas are fully flagged: %s" % 
-                              (ms.basename, intent, intentfield.id, intentfield.name, spw, ants_str))
+            # Go through each view product for the specified metric.
+            for description in result.components[metric_to_test].descriptions():
                 
-                # Identify if any antennas were fully flagged in all science spws:
-                # If all Tsys spws appear as keys the dictionary of fully flagged antennas...
-                if set(ants_fully_flagged.keys()) == set(tsys_spw_ids):
-                    # Update the aggregate set of fully flagged antennas with
-                    # the intersection of antennas fully flagged for each spw,
-                    # for the current intent.
+                # Get final view.
+                view = result.components[metric_to_test].last(description)
+                
+                # Get spw
+                spwid = view.spw
+                
+                # Go through each scan within view.
+                for iscan, time in enumerate(view.axes[1].data):
+                    
+                    # Get flags per antenna for current scan
+                    flag_per_scan = view.flag[:,iscan]
+                    
+                    # Get field ID and intent(s) for current scan
+                    field_scan = fields[time]
+                    intents_scan = intents_for_field[field_scan]
+                    
+                    # For each intent that this scan belongs to:
+                    for intent in intents_scan:
+                        # If this scan is for an intent of interest, then store scan
+                        # accordingly.
+                        if intent in intents_of_interest:
+                            flagging_state[(intent,field_scan,spwid)].append(list(flag_per_scan))
+            
+            # After summarizing all available views, check if any antennas
+            # are fully flagged for all available timestamps for one or more 
+            # fields belonging to one or more of the intents of interest in 
+            # one or more of the spws.
+            ants_fully_flagged = collections.defaultdict(set)
+            intents_found = set([key[0] for key in flagging_state.keys()])
+            for intent in intents_found:
+                fields_found = set([key[1] for key in flagging_state.keys() if key[0] == intent])
+                for field in fields_found:
+                    spws_found = set([key[2] for key in flagging_state.keys() if key[0:2] == (intent,field)])
+                    for spwid in spws_found:
+                        flags_per_ant = np.array(flagging_state[(intent,field,spwid)]).T
+                        for iant, flag_for_ant in enumerate(flags_per_ant):
+                            if flag_for_ant.all():
+                                ants_fully_flagged[(intent,field,spwid)].update([iant])   
+            
+            # Check if any antennas were found to be fully flagged in all 
+            # scans (timestamps) for a given intent, field, and spwid:
+            sorted_keys = sorted(sorted(ants_fully_flagged.keys(), key=lambda key: key[2]),
+              key=lambda key: key[0])
+            for (intent, field, spwid) in sorted_keys:
+                
+                ants_flagged = ants_fully_flagged[(intent, field, spwid)]
+                
+                # Convert antenna IDs to names and create a string.
+                ants_str = ", ".join(map(str, [antenna_id_to_name[iant] for iant in ants_flagged])) 
+                
+                # Log a warning.
+                LOG.warning("%s - for intent %s (field %s: %s) and spw %s, the following antennas are fully flagged: %s" % 
+                    (ms.basename, intent, field, field_name_for_id[field], spwid, ants_str))
+            
+            # Check if any antennas were found to be fully flagged in all
+            # scans (timestamps) and all spws, for any intent.
+            #
+            # NOTE: The following test checks for antennas fully flagged 
+            # in all spws declared by CalTo (and assumes that flagging views were
+            # available for each of those spw to be able to test it). 
+            # Conversely, this test does not check for antennas fully flagged in 
+            # all spws within the subset of spws for which flagging views were available. 
+            # If a flagging view was not available for some spw and a given intent, 
+            # then no antenna will be found to be fully flagged in all spws for that intent.
+            
+            # Identify the field and intent combinations for which fully flagged 
+            # antennas were found.
+            intent_field_found = set([key[0:2] for key in ants_fully_flagged.keys()])
+            for (intent,field) in intent_field_found:
+                
+                # Identify the spws for which fully flagged antennas were found (for current
+                # intent and field).
+                spws_found = set([key[2] for key in ants_fully_flagged.keys() if key[0:2] == (intent,field)])
+                
+                # Only proceed if the set of spws for which flagged antennas were found is
+                # the same as the set of spws declared by CalTo, i.e. flagged antennas
+                # were found in all spws.
+                if spws_found == set(tsys_spw_ids):
+                    
+                    # Select the fully flagged antennas for current intent and field.
+                    ants_fully_flagged_for_intent_field = [ants_fully_flagged[key] for key in 
+                        ants_fully_flagged.keys() if key[0:2] == (intent,field)]
+                    
+                    # Identify which antennas are fully flagged in all spws, for 
+                    # current intent and field, and store these for later warning 
+                    # and/or updating of refant.
                     ants_fully_flagged_in_all_spws_any_intent.update(
-                      set.intersection(*ants_fully_flagged.values()))
+                      set.intersection(*ants_fully_flagged_for_intent_field))
+               
         else:
             LOG.trace("Cannot test if any antennas were entirely flagged "
                       "since none of the following flagging metrics were evaluated: "
@@ -470,7 +529,8 @@ class Tsysflag(basetask.StandardTaskTemplate):
 
         # Initialize results object
         result = TsysflagspectraResults()
-
+        result.view_by_field = False
+        
         # Load the input tsys caltable
         tsystable = caltableaccess.CalibrationTableDataFiller.getcal(inputs.caltable)        
 
@@ -496,10 +556,15 @@ class Tsysflag(basetask.StandardTaskTemplate):
         datatask = TsysflagData(datainputs)
 
         # Construct the generator that will create the view of the data
-        # that is the basis for flagging.
+        # that is the basis for flagging. Update result to indicate whether
+        # separate views are created per field.
         if metric == 'fieldshape':
             viewtask = TsysflagView(context=inputs.context,
               vis=inputs.vis, metric=metric, refintent=inputs.ff_refintent)
+        elif metric == 'nmedian':
+            viewtask = TsysflagView(context=inputs.context,
+              vis=inputs.vis, metric=metric, split_by_field=inputs.fnm_byfield)  
+            result.view_by_field = inputs.fnm_byfield
         else:
             viewtask = TsysflagView(context=inputs.context,
               vis=inputs.vis, metric=metric)
@@ -590,34 +655,38 @@ class TsysflagData(basetask.StandardTaskTemplate):
 
 class TsysflagView(object):
 
-    def __init__(self, context, vis=None, metric=None, refintent=None):
+    def __init__(self, context, vis=None, metric=None, refintent=None, 
+                 split_by_field=False):
         """
         Creates an TsysflagView instance for specified metric.
 
         Keyword arguments:
-        metric    -- the name of the view metric:
-                        'nmedian' gives an image where each pixel is the
-                          tsys median for that antenna/scan.
-                        'derivative' gives an image where each pixel is
-                          the MAD of the channel to channel derivative
-                          across the spectrum for that antenna/scan.
-                        'fieldshape' gives an image where each pixel is a
-                          measure of the departure of the shape for that 
-                          antenna/scan from the median over all
-                          scans for that antenna in the selected fields
-                          in the SpW.
-                        'edgechans' gives median Tsys spectra for each
-                          spw.
-                        'birdies' gives difference spectra between
-                          the antenna median spectra and spw median.
-        refintent -- data with this intent will be used to
-                     calculate the 'reference' Tsys shape to which
-                     other data will be compared, in some views.
+        metric         -- the name of the view metric:
+                            'nmedian' gives an image where each pixel is the
+                              tsys median for that antenna/scan.
+                            'derivative' gives an image where each pixel is
+                              the MAD of the channel to channel derivative
+                              across the spectrum for that antenna/scan.
+                            'fieldshape' gives an image where each pixel is a
+                              measure of the departure of the shape for that 
+                              antenna/scan from the median over all
+                              scans for that antenna in the selected fields
+                              in the SpW.
+                            'edgechans' gives median Tsys spectra for each
+                              spw.
+                            'birdies' gives difference spectra between
+                              the antenna median spectra and spw median.
+        refintent      -- data with this intent will be used to
+                          calculate the 'reference' Tsys shape to which
+                          other data will be compared, in some views.
+        split_by_field -- if True and if the 'metric' supports it, then create 
+                          separate flagging views for each field.
         """
         self.context = context
         self.vis = vis
         self.metric = metric
         self.refintent = refintent
+        self.split_by_field = split_by_field
 
         # Set group of intents-of-interest based on metric:
         if self.metric == 'edgechans':
@@ -714,8 +783,9 @@ class TsysflagView(object):
         LOG.info ('Computing flagging metrics for caltable %s ' % (table))
         for tsysspwid in tsysspws:
             for intent in self.intentgroup:
-                if self.metric in ['nmedian', 'toomany'] :
-                    self.calculate_median_spectra_view(tsystable, tsysspwid, intent, fieldids[intent])
+                if self.metric in ['nmedian', 'toomany']:
+                    self.calculate_median_spectra_view(tsystable, tsysspwid, intent, fieldids[intent],
+                      split_by_field=self.split_by_field)
                 elif self.metric == 'derivative':
                     self.calculate_derivative_view(tsystable, tsysspwid, intent, fieldids[intent])
                 elif self.metric == 'fieldshape':
@@ -786,7 +856,7 @@ class TsysflagView(object):
         return tsysspectra, times
 
     
-    def calculate_median_spectra_view(self, tsystable, spwid, intent, fieldids):
+    def calculate_median_spectra_view(self, tsystable, spwid, intent, fieldids, split_by_field=False):
         """
         Data of the specified spwid, intent and range of fieldids are
         read from the given tsystable object. Two data 'views' will be
@@ -797,12 +867,14 @@ class TsysflagView(object):
         Results are added to self.result.
 
         Keyword arguments:
-        tsystable -- CalibrationTableData object giving access to the tsys
-                     caltable.
-        spwid     -- view will be calculated using data for this spw id.
-        intent    -- view will be calculated using data for this intent.
-        fieldids  -- view will be calculated using data for all field_ids in
-                     this list.
+        tsystable      -- CalibrationTableData object giving access to the tsys
+                          caltable.
+        spwid          -- view will be calculated using data for this spw id.
+        intent         -- view will be calculated using data for this intent.
+        fieldids       -- view will be calculated using data for all field_ids in
+                          this list.
+        split_by_field -- if True, separate views will be calculated for each
+                          field_id.
         """
 
         # Get antenna names, ids
@@ -812,91 +884,187 @@ class TsysflagView(object):
         corr_type = commonhelpermethods.get_corr_axis(self.ms, spwid)
         pols = range(len(corr_type))
 
-        # Select Tsysspectra and corresponding times for specified spwid and fieldids
-        tsysspectra, times = self.get_tsystable_data(tsystable,
-          spwid, fieldids, antenna_names, corr_type, normalise=True)
-
-        # Create separate flagging views for each polarisation
-        for pol in pols:
+        # If splitting views by field...
+        if split_by_field:
             
-            # Initialize the median Tsys spectra results, and spectrum stack
-            tsysmedians = TsysflagspectraResults()
-            spectrumstack = None
-
-            # Create a stack of all Tsys spectra for specified spw and pol;
-            # this will stack together spectra from all "fieldids".
-            for description in tsysspectra[pol].descriptions():
-                tsysspectrum = tsysspectra[pol].last(description)
-                if tsysspectrum.pol==corr_type[pol][0]:
-                    if spectrumstack is None:
-                        spectrumstack = np.vstack((tsysspectrum.data,))
-                        flagstack = np.vstack((tsysspectrum.flag,))
-                    else:
-                        spectrumstack = np.vstack((tsysspectrum.data,
-                          spectrumstack))
-                        flagstack = np.vstack((tsysspectrum.flag,
-                          flagstack))
+            # Create translation of field ID to field name
+            field_name_for_id = dict((field.id, field.name) for field in self.ms.fields)
             
-            # From the stack of all Tsys spectra for the specified spw and pol,
-            # create a median Tsys spectrum and corresponding flagging state,
-            # convert to a SpectrumResult, and store this as a view in tsysmedians:
-            if spectrumstack is not None:
-
-                # Initialize median spectrum and corresponding flag list
-                # and populate with valid data
-                stackmedian = np.zeros(np.shape(spectrumstack)[1])
-                stackmedianflag = np.ones(np.shape(spectrumstack)[1], np.bool)
-                for j in range(np.shape(spectrumstack)[1]):
-                    valid_data = spectrumstack[:,j][np.logical_not(flagstack[:,j])]
-                    if len(valid_data):
-                        stackmedian[j] = np.median(valid_data)
-                        stackmedianflag[j] = False
-
-                tsysmedian = commonresultobjects.SpectrumResult(
-                  data=stackmedian, 
-                  datatype='Median Normalised Tsys',
-                  filename=tsystable.name, spw=spwid, 
-                  pol=corr_type[pol][0],
-                  intent=intent)
-                tsysmedians.addview(tsysmedian.description, tsysmedian)
-
-            # Initialize the data and flagging state for the flagging view,
-            # and get values for the 'times' axis.
-            times = np.sort(list(times))
-            data = np.zeros([antenna_ids[-1]+1, len(times)])
-            flag = np.ones([antenna_ids[-1]+1, len(times)], np.bool)
-
-            # Populate the flagging view based on the flagging metric
-            for description in tsysspectra[pol].descriptions():
-                tsysspectrum = tsysspectra[pol].last(description)
-                metric = tsysspectrum.median
-                metricflag = np.all(tsysspectrum.flag)
-
-                ant = tsysspectrum.ant
-                caltime = tsysspectrum.time
-
-                data[ant[0], caltime==times] = metric
-                flag[ant[0], caltime==times] = metricflag
-
-            # Create axes for flagging view
-            axes = [commonresultobjects.ResultAxis(name='Antenna1',
-              units='id', data=np.arange(antenna_ids[-1]+1)),
-              commonresultobjects.ResultAxis(name='Time', units='',
-              data=times)]
-
-            # Convert flagging view into an ImageResult
-            viewresult = commonresultobjects.ImageResult(
-              filename=tsystable.name, data=data,
-              flag=flag, axes=axes, datatype='Median Tsys',
-              spw=spwid, intent=intent, pol=corr_type[pol][0])
-
-            # Store the spectra contributing to this view as 'children'
-            viewresult.children['tsysmedians'] = tsysmedians
-            viewresult.children['tsysspectra'] = tsysspectra[pol]
-
-            # Add the view results to the class result structure
-            self.result.addview(viewresult.description, viewresult)
-
+            # Create separate flagging views for each field id.
+            for fieldid in fieldids:
+                
+                # Select Tsysspectra and corresponding times for specified spwid and fieldids
+                tsysspectra, times = self.get_tsystable_data(tsystable,
+                  spwid, [fieldid], antenna_names, corr_type, normalise=True)
+                
+                # Create separate flagging views for each polarisation
+                for pol in pols:
+                    
+                    # Initialize the median Tsys spectra results, and spectrum stack
+                    tsysmedians = TsysflagspectraResults()
+                    spectrumstack = None
+                    
+                    # Create a stack of all Tsys spectra for specified spw, pol, and field id.
+                    for description in tsysspectra[pol].descriptions():
+                        tsysspectrum = tsysspectra[pol].last(description)
+                        if tsysspectrum.pol==corr_type[pol][0]:
+                            if spectrumstack is None:
+                                spectrumstack = np.vstack((tsysspectrum.data,))
+                                flagstack = np.vstack((tsysspectrum.flag,))
+                            else:
+                                spectrumstack = np.vstack((tsysspectrum.data,
+                                  spectrumstack))
+                                flagstack = np.vstack((tsysspectrum.flag,
+                                  flagstack))
+                      
+                    # From the stack of all Tsys spectra for the specified spw and pol,
+                    # create a median Tsys spectrum and corresponding flagging state,
+                    # convert to a SpectrumResult, and store this as a view in tsysmedians:
+                    if spectrumstack is not None:
+                        
+                        # Initialize median spectrum and corresponding flag list
+                        # and populate with valid data
+                        stackmedian = np.zeros(np.shape(spectrumstack)[1])
+                        stackmedianflag = np.ones(np.shape(spectrumstack)[1], np.bool)
+                        for j in range(np.shape(spectrumstack)[1]):
+                            valid_data = spectrumstack[:,j][np.logical_not(flagstack[:,j])]
+                            if len(valid_data):
+                                stackmedian[j] = np.median(valid_data)
+                                stackmedianflag[j] = False
+         
+                        tsysmedian = commonresultobjects.SpectrumResult(
+                          data=stackmedian, 
+                          datatype='Median Normalised Tsys',
+                          filename=tsystable.name, spw=spwid, 
+                          pol=corr_type[pol][0], field_id=fieldid,
+                          intent=intent)
+                        tsysmedians.addview(tsysmedian.description, tsysmedian)
+                    
+                    # Initialize the data and flagging state for the flagging view,
+                    # and get values for the 'times' axis.
+                    times = np.sort(list(times))
+                    data = np.zeros([antenna_ids[-1]+1, len(times)])
+                    flag = np.ones([antenna_ids[-1]+1, len(times)], np.bool)
+                    
+                    # Populate the flagging view based on the flagging metric
+                    for description in tsysspectra[pol].descriptions():
+                        tsysspectrum = tsysspectra[pol].last(description)
+                        metric = tsysspectrum.median
+                        metricflag = np.all(tsysspectrum.flag)
+                        
+                        ant = tsysspectrum.ant
+                        caltime = tsysspectrum.time
+                        
+                        data[ant[0], caltime==times] = metric
+                        flag[ant[0], caltime==times] = metricflag
+                    
+                    # Create axes for flagging view
+                    axes = [commonresultobjects.ResultAxis(name='Antenna1',
+                      units='id', data=np.arange(antenna_ids[-1]+1)),
+                      commonresultobjects.ResultAxis(name='Time', units='',
+                      data=times)]
+                    
+                    # Convert flagging view into an ImageResult
+                    viewresult = commonresultobjects.ImageResult(
+                      filename=tsystable.name, data=data,
+                      flag=flag, axes=axes, datatype='Median Tsys',
+                      spw=spwid, intent=intent, pol=corr_type[pol][0],
+                      field_id=fieldid, field_name=field_name_for_id[fieldid])
+                    
+                    # Store the spectra contributing to this view as 'children'
+                    viewresult.children['tsysmedians'] = tsysmedians
+                    viewresult.children['tsysspectra'] = tsysspectra[pol]
+                    
+                    # Add the view results to the class result structure
+                    self.result.addview(viewresult.description, viewresult)
+        
+        # If not splitting by field...
+        else:
+            # Select Tsysspectra and corresponding times for specified spwid and fieldids
+            tsysspectra, times = self.get_tsystable_data(tsystable,
+              spwid, fieldids, antenna_names, corr_type, normalise=True)
+            
+            # Create separate flagging views for each polarisation
+            for pol in pols:
+                
+                # Initialize the median Tsys spectra results, and spectrum stack
+                tsysmedians = TsysflagspectraResults()
+                spectrumstack = None
+                
+                # Create a stack of all Tsys spectra for specified spw and pol;
+                # this will stack together spectra from all "fieldids".
+                for description in tsysspectra[pol].descriptions():
+                    tsysspectrum = tsysspectra[pol].last(description)
+                    if tsysspectrum.pol==corr_type[pol][0]:
+                        if spectrumstack is None:
+                            spectrumstack = np.vstack((tsysspectrum.data,))
+                            flagstack = np.vstack((tsysspectrum.flag,))
+                        else:
+                            spectrumstack = np.vstack((tsysspectrum.data,
+                              spectrumstack))
+                            flagstack = np.vstack((tsysspectrum.flag,
+                              flagstack))
+                
+                # From the stack of all Tsys spectra for the specified spw and pol,
+                # create a median Tsys spectrum and corresponding flagging state,
+                # convert to a SpectrumResult, and store this as a view in tsysmedians:
+                if spectrumstack is not None:
+                    
+                    # Initialize median spectrum and corresponding flag list
+                    # and populate with valid data
+                    stackmedian = np.zeros(np.shape(spectrumstack)[1])
+                    stackmedianflag = np.ones(np.shape(spectrumstack)[1], np.bool)
+                    for j in range(np.shape(spectrumstack)[1]):
+                        valid_data = spectrumstack[:,j][np.logical_not(flagstack[:,j])]
+                        if len(valid_data):
+                            stackmedian[j] = np.median(valid_data)
+                            stackmedianflag[j] = False
+                    
+                    tsysmedian = commonresultobjects.SpectrumResult(
+                      data=stackmedian, 
+                      datatype='Median Normalised Tsys',
+                      filename=tsystable.name, spw=spwid, 
+                      pol=corr_type[pol][0],
+                      intent=intent)
+                    tsysmedians.addview(tsysmedian.description, tsysmedian)
+                
+                # Initialize the data and flagging state for the flagging view,
+                # and get values for the 'times' axis.
+                times = np.sort(list(times))
+                data = np.zeros([antenna_ids[-1]+1, len(times)])
+                flag = np.ones([antenna_ids[-1]+1, len(times)], np.bool)
+                
+                # Populate the flagging view based on the flagging metric
+                for description in tsysspectra[pol].descriptions():
+                    tsysspectrum = tsysspectra[pol].last(description)
+                    metric = tsysspectrum.median
+                    metricflag = np.all(tsysspectrum.flag)
+                    
+                    ant = tsysspectrum.ant
+                    caltime = tsysspectrum.time
+                    
+                    data[ant[0], caltime==times] = metric
+                    flag[ant[0], caltime==times] = metricflag
+                
+                # Create axes for flagging view
+                axes = [commonresultobjects.ResultAxis(name='Antenna1',
+                  units='id', data=np.arange(antenna_ids[-1]+1)),
+                  commonresultobjects.ResultAxis(name='Time', units='',
+                  data=times)]
+                
+                # Convert flagging view into an ImageResult
+                viewresult = commonresultobjects.ImageResult(
+                  filename=tsystable.name, data=data,
+                  flag=flag, axes=axes, datatype='Median Tsys',
+                  spw=spwid, intent=intent, pol=corr_type[pol][0])
+                
+                # Store the spectra contributing to this view as 'children'
+                viewresult.children['tsysmedians'] = tsysmedians
+                viewresult.children['tsysspectra'] = tsysspectra[pol]
+                
+                # Add the view results to the class result structure
+                self.result.addview(viewresult.description, viewresult)
+            
 
     def calculate_derivative_view(self, tsystable, spwid, intent, fieldids):
         """

@@ -330,31 +330,6 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         return total
 
 
-class TimeVsAntennaPlotRenderer(basetemplates.JsonPlotRenderer):
-    def __init__(self, context, result, component):
-        r = result.components[component]
-
-        vis = os.path.basename(result.inputs['vis'])
-        self._vis = vis
-        title = 'Time vs Antenna plots for %s' % vis
-        outfile = filenamer.sanitize('%s-time_vs_ant-%s.html' % (vis, component))
-
-        stage = 'stage%s' % result.stage_number
-        dirname = os.path.join(context.report_dir, stage)
-
-        plotter = displays.image.ImageDisplay()
-        plots = plotter.plot(context, r, reportdir=dirname, prefix=component)
-        
-        super(TimeVsAntennaPlotRenderer, self).__init__(
-                'generic_x_vs_y_per_spw_and_pol_plots.mako', context, 
-                result, plots, title, outfile)
-
-    def update_json_dict(self, d, plot):
-        if 'vis' not in plot.parameters:
-            plot.parameters['vis'] = self._vis
-            d['vis'] = self._vis
-
-
 class ImageDisplayPlotRenderer(basetemplates.JsonPlotRenderer):
     def __init__(self, context, result, component):
         r = result.components[component]
@@ -379,8 +354,13 @@ class ImageDisplayPlotRenderer(basetemplates.JsonPlotRenderer):
         title = '%s vs %s plots for %s' % (y_axis, x_axis, vis)
         self.shorttitle = '%s vs %s' % (y_axis, x_axis)
 
+        if r.view_by_field:
+            plottemplate = 'generic_x_vs_y_per_spw_pol_and_field_plots.mako'
+        else:
+            plottemplate = 'generic_x_vs_y_per_spw_and_pol_plots.mako'
+
         super(ImageDisplayPlotRenderer, self).__init__(
-                'generic_x_vs_y_per_spw_and_pol_plots.mako', context, 
+                plottemplate, context, 
                 result, plots, title, outfile)
 
     def update_json_dict(self, d, plot):
