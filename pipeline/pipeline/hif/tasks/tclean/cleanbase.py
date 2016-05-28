@@ -383,7 +383,7 @@ class CleanBase(basetask.StandardTaskTemplate):
             'usemask':       'user',
             'savemodel':     'none',
             'chanchunks':    chanchunks,
-            'parallel':      parallel,
+            'parallel':      parallel
             }
 
         # Show nterms parameter only if it is used.
