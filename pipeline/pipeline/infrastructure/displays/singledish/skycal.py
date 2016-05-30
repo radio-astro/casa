@@ -153,7 +153,9 @@ class SingleDishPlotmsLeaf(object):
                      'spw': self.spw,
                      'antenna': self.antenna_selection,
                      'title': title,
-                     'showlegend': False}
+                     'showlegend': True,
+                     'averagedata': True,
+                     'avgchannel': '1e8'}
         
         return casa_tasks.plotms(**task_args)
     
