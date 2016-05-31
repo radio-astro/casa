@@ -237,6 +237,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     writeAccess_p=writeAccess_p && !selpars.readonly;
     createVisSet(writeAccess_p);
 
+    /////// Remove this when the new vi/vb is able to get the full freq range.
+    mssFreqSel_p.resize();
+    mssFreqSel_p  = thisSelection.getChanFreqList(NULL,True);
    
     //// Set the data column on which to operate
     // TT: added checks for the requested data column existace 
@@ -986,7 +989,7 @@ void SynthesisImagerVi2::unlockMSs()
 					)
 
   {
-    LogIO os( LogOrigin("SynthesisImager","createAWPFTMachine",WHERE));
+    LogIO os( LogOrigin("SynthesisImagerVi2","createAWPFTMachine",WHERE));
 
     if (wprojPlane<=1)
       {
@@ -1090,6 +1093,9 @@ void SynthesisImagerVi2::unlockMSs()
 
     theIFT = new refim::AWProjectWBFTNew(static_cast<refim::AWProjectWBFTNew &>(*theFT));
 
+    os << "Sending frequency selection information " <<  mssFreqSel_p  <<  " to AWP FTM." << LogIO::POST;
+    theFT->setSpwFreqSelection( mssFreqSel_p );
+    theIFT->setSpwFreqSelection( mssFreqSel_p );
     
 
   }

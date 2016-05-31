@@ -315,7 +315,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  dRows=nRows/npart;
 	Int rowBegID=0, rowEndID=nRows-1;
 	Int rowBeg=rowNumbers[rowBegID], rowEnd=rowNumbers[rowEndID];
-	cerr << "NRows, dRows, npart = " << nRows << " " << dRows << " " << npart << " " << rowBeg << " " << rowEnd << endl;
+	//cerr << "NRows, dRows, npart = " << nRows << " " << dRows << " " << npart << " " << rowBeg << " " << rowEnd << endl;
 
 	rowEndID = rowBegID + dRows;
 	
@@ -345,9 +345,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	rowBeg=rowBegID; rowEnd = nRows-1;
 	taql << "ROWNUMBER() >= " << rowBeg << " && ROWNUMBER() <= " << rowEnd;
 	timeSelPerPart[msID][partNo] = taql.str();
-	cerr << endl << "Rows = " << rowBeg << " " << rowEnd << " "
-	     << "[P][M]: " << msID << ":" << partNo << " " << timeSelPerPart[msID][partNo]
-	     << endl;	    
+	os << endl << "Rows = " << rowBeg << " " << rowEnd << " "
+	   << "[P][M]: " << msID << ":" << partNo << " " << timeSelPerPart[msID][partNo]
+	   << LogIO::POST;	    
       }
     //
     // The time selection strings for all parts of the current

@@ -80,9 +80,9 @@ void MakeMS::makems(String msname, MDirection thedir, Double freq,
     padnames[k]=padnames[k]+String::toString(k);
   }
   MPosition obsPos;
-  MeasTable::Observatory(obsPos, "VLA");
+  MeasTable::Observatory(obsPos, "EVLA");
   Simulator sm(msname);
-  sm.setconfig("VLA", xpos, ypos, zpos, diam, Vector<Double>(27,0.0), 
+  sm.setconfig("EVLA", xpos, ypos, zpos, diam, Vector<Double>(27,0.0), 
 	       Vector<String>(27, "ALT-AZ"), antnames, padnames, "local", obsPos);
   
   sm.setspwindow("Bandobast", Quantity(freq, "Hz"), Quantity(chanwidth, "Hz"), Quantity(chanwidth, "Hz"), MFrequency::LSRK,  nchan, "RR RL LR LL");

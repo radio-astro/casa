@@ -73,10 +73,11 @@
 #include <synthesis/TransformMachines2/VisModelData.h>
 //#include <synthesis/TransformMachines2/AWProjectFT.h>
 #include <synthesis/TransformMachines2/MultiTermFTNew.h>
-//#include <synthesis/TransformMachines2/AWProjectWBFTNew.h>
-//#include <synthesis/TransformMachines2/AWConvFunc.h>
-//#include <synthesis/TransformMachines2/AWConvFuncEPJones.h>
-//#include <synthesis/TransformMachines2/NoOpATerm.h>
+#include <synthesis/TransformMachines2/AWProjectWBFTNew.h>
+#include <synthesis/TransformMachines2/AWConvFunc.h>
+#include <synthesis/TransformMachines2/AWConvFuncEPJones.h>
+#include <synthesis/TransformMachines2/NoOpATerm.h>
+#include <synthesis/TransformMachines2/EVLAAperture.h>
 
 #include <casadbus/viewer/ViewerProxy.h>
 #include <casadbus/plotserver/PlotServerProxy.h>
@@ -1089,7 +1090,6 @@ using namespace casa::vi;
       static_cast<refim::WProjectFT &>(*theFT).setConvFunc(sharedconvFunc);
       static_cast<refim::WProjectFT &>(*theFT).setConvFunc(sharedconvFunc);
     }
-    /*
     else if ((ftname == "awprojectft") || (ftname== "mawprojectft") || (ftname == "protoft")) {
       createAWPFTMachine(theFT, theIFT, ftname, facets, wprojplane, 
 			 padding, useAutocorr, useDoublePrec, gridFunction,
@@ -1097,7 +1097,6 @@ using namespace casa::vi;
 			 doPointing, doPBCorr, conjBeams, computePAStep,
 			 rotatePAStep, cache,tile);
     }
-    */
     else
       {
 	throw( AipsError( "Invalid FTMachine name : " + ftname ) );
@@ -1178,7 +1177,7 @@ using namespace casa::vi;
 					)
 
   {
-    LogIO os( LogOrigin("SynthesisImager","createAWPFTMachine",WHERE));
+    LogIO os( LogOrigin("SynthesisImager2","createAWPFTMachine",WHERE));
 
     if (wprojPlane<=1)
       {
@@ -1195,39 +1194,39 @@ using namespace casa::vi;
 	os << LogIO::NORMAL << "Performing WBAW-Projection" << LogIO::POST; // Loglevel PROGRESS
       }
 
-    CountedPtr<ATerm> apertureFunction = createTelescopeATerm(*mss_p[0], aTermOn);
-    CountedPtr<PSTerm> psTerm = new PSTerm();
-    CountedPtr<WTerm> wTerm = new WTerm();
+    CountedPtr<refim::ATerm> apertureFunction = createTelescopeATerm(*mss_p[0], aTermOn);
+    CountedPtr<refim::PSTerm> psTerm = new refim::PSTerm();
+    CountedPtr<refim::WTerm> wTerm = new refim::WTerm();
     
     //
     // Selectively switch off CFTerms.
     //
-    if (aTermOn == False) {apertureFunction->setOpCode(CFTerms::NOOP);}
-    if (psTermOn == False) psTerm->setOpCode(CFTerms::NOOP);
+    if (aTermOn == False) {apertureFunction->setOpCode(refim::CFTerms::NOOP);}
+    if (psTermOn == False) psTerm->setOpCode(refim::CFTerms::NOOP);
 
     //
     // Construct the CF object with appropriate CFTerms.
     //
-    CountedPtr<ConvolutionFunction> awConvFunc;
+    CountedPtr<refim::ConvolutionFunction> awConvFunc;
     //    awConvFunc = new AWConvFunc(apertureFunction,psTerm,wTerm, !wbAWP);
     if ((ftmName=="mawprojectft") || (mTermOn))
-      awConvFunc = new AWConvFuncEPJones(apertureFunction,psTerm,wTerm,wbAWP);
+      awConvFunc = new refim::AWConvFuncEPJones(apertureFunction,psTerm,wTerm,wbAWP);
     else
-      awConvFunc = new AWConvFunc(apertureFunction,psTerm,wTerm,wbAWP);
+      awConvFunc = new refim::AWConvFunc(apertureFunction,psTerm,wTerm,wbAWP);
 
     //
     // Construct the appropriate re-sampler.
     //
-    CountedPtr<VisibilityResamplerBase> visResampler;
+    CountedPtr<refim::VisibilityResamplerBase> visResampler;
     //    if (ftmName=="protoft") visResampler = new ProtoVR();
     //elsef
-      visResampler = new AWVisResampler();
+    visResampler = new refim::AWVisResampler();
     //    CountedPtr<VisibilityResamplerBase> visResampler = new VisibilityResampler();
 
     //
     // Construct and initialize the CF cache object.
     //
-    CountedPtr<CFCache> cfCacheObj = new CFCache();
+    CountedPtr<refim::CFCache> cfCacheObj = new refim::CFCache();
     cfCacheObj->setCacheDir(cfCache.data());
     cfCacheObj->initCache2();
 
@@ -1236,7 +1235,7 @@ using namespace casa::vi;
     // Re-sampler objects.  
     //
     Float pbLimit_l=1e-3;
-    theFT = new AWProjectWBFTNew(wprojPlane, cache/2, 
+    theFT = new refim::AWProjectWBFTNew(wprojPlane, cache/2, 
 			      cfCacheObj, awConvFunc, 
 			      visResampler,
 			      /*True */doPointing, doPBCorr, 
@@ -1244,8 +1243,8 @@ using namespace casa::vi;
 			      useDoublePrec);
 
     Quantity rotateOTF(rotatePAStep,"deg");
-    static_cast<AWProjectWBFTNew &>(*theFT).setObservatoryLocation(mLocation_p);
-    static_cast<AWProjectWBFTNew &>(*theFT).setPAIncrement(Quantity(computePAStep,"deg"),rotateOTF);
+    static_cast<refim::AWProjectWBFTNew &>(*theFT).setObservatoryLocation(mLocation_p);
+    static_cast<refim::AWProjectWBFTNew &>(*theFT).setPAIncrement(Quantity(computePAStep,"deg"),rotateOTF);
 
     // theIFT = new AWProjectWBFT(wprojPlane, cache/2, 
     // 			       cfCacheObj, awConvFunc, 
@@ -1257,29 +1256,29 @@ using namespace casa::vi;
     // static_cast<AWProjectWBFT &>(*theIFT).setObservatoryLocation(mLocation_p);
     // static_cast<AWProjectWBFT &>(*theIFT).setPAIncrement(Quantity(computePAStep,"deg"),rotateOTF);
 
-    theIFT = new AWProjectWBFTNew(static_cast<AWProjectWBFTNew &>(*theFT));
+    theIFT = new refim::AWProjectWBFTNew(static_cast<refim::AWProjectWBFTNew &>(*theFT));
 
     //// Send in Freq info.
     //    vi_p->getFreqInSpwRange(
     os << "DO SOMETHING HERE for vi2/vb2 : Sending frequency selection information " <<  mssFreqSel_p  <<  " to AWP FTM." << LogIO::POST;
-    //    theFT->setSpwFreqSelection( mssFreqSel_p );
-    //    theIFT->setSpwFreqSelection( mssFreqSel_p );
+        theFT->setSpwFreqSelection( mssFreqSel_p );
+        theIFT->setSpwFreqSelection( mssFreqSel_p );
 
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  ATerm* SynthesisImager::createTelescopeATerm(const MeasurementSet& ms, const Bool& isATermOn)
+  refim::ATerm* SynthesisImager::createTelescopeATerm(const MeasurementSet& ms, const Bool& isATermOn)
   {
     LogIO os(LogOrigin("SynthesisImager", "createTelescopeATerm",WHERE));
     
-    if (!isATermOn) return new NoOpATerm();
+    if (!isATermOn) return new refim::NoOpATerm();
     
     ROMSObservationColumns msoc(ms.observation());
     String ObsName=msoc.telescopeName()(0);
     if ((ObsName == "EVLA") || (ObsName == "VLA"))
-      return new EVLAAperture();
+      return new refim::EVLAAperture();
     else
       {
 	os << "Telescope name ('"+

@@ -68,24 +68,28 @@ int main(int argc, char **argv)
 	  }
     */	 
 	  String imtype=String("continuum");
-	  if(argc>1)
-		  imtype=String(argv[1]);
+	  String ftmName("");
+	  if(argc>1) imtype=String(argv[1]);
+	  if (argc > 2) ftmName = String(argv[2]);
 	  if(imtype.contains("help")){
-	     cerr << "usage: tSynthesisImagerVi2 mode [mode: continuum, cube, widefield, cubesliced]"<< endl;
-	     exit(-1);
-	    }
+	    cerr << "usage: " << argv[0] << " [continuum, cube, widefield, cubeslice] [gridft, awprojecft]"<< endl;
+	    exit(-1);
+	  }
+	  
 	  MDirection thedir(Quantity(20.0, "deg"), Quantity(20.0, "deg"));
 	  String msname("Test2.ms");
 	  const Int numchan=10;
-	  MakeMS::makems(msname, thedir, 1.5e9, 1e6, numchan, 20);
+	  MakeMS::makems(msname, thedir, 1.0e9, 1e8, numchan, 20);
+	  //MakeMS::makems(msname, thedir, 1.5e9, 1e6, numchan, 20);
 	  MeasurementSet thems(msname, Table::Update);
 	  thems.markForDelete();
 	  MSColumns(thems).data().fillColumn(Matrix<Complex>(4,numchan, Complex(6.66e-2)));
 	  MSColumns(thems).correctedData().fillColumn(Matrix<Complex>(4,numchan, Complex(6.66e-2)));
 	  thems.flush();
 	  SynthesisImager* imgr = new SynthesisImagerVi2();
-	  imgr->selectData(msname, /*spw=*/"0",/*freqBeg*/"", /*freqEnd*/"", /*freqFrame*/MFrequency::LSRK, /*field=*/"0",  /*antenna=*/"",  /*timestr*/"", /*scan*/"", /*obs*/"", /*state*/"",/*uvdist*/"", 
-    		/*taql*/"", /*usescratch*/False, /*readonly*/False);
+	  imgr->selectData(msname, /*spw=*/"0",/*freqBeg*/"", /*freqEnd*/"", /*freqFrame*/MFrequency::LSRK, 
+			   /*field=*/"0",  /*antenna=*/"",  /*timestr*/"", /*scan*/"", /*obs*/"", /*state*/"",/*uvdist*/"", 
+			   /*taql*/"", /*usescratch*/False, /*readonly*/False);
 	  cout <<"--Imager created for MeasurementSet object. " << endl;
 	  MeasurementSet tab(msname);
 	  MDirection phasecenter=MSFieldColumns(tab.field()).phaseDirMeas(0,0.0);
@@ -93,10 +97,12 @@ int main(int argc, char **argv)
 	  Int ndataChan=MSSpWindowColumns(tab.spectralWindow()).numChan()(0);
 	  Quantity freqWidth=MSSpWindowColumns(tab.spectralWindow()).chanFreqQuant()(0)(IPosition(1,ndataChan-1));
 	  freqWidth-=freqBeg;
-	  int nx = 100;
-	  int ny = 100;
-	  Quantity cellx( 0.5, "arcsec" );
-	  Quantity celly( 0.5, "arcsec" );
+	  int nx,ny;
+	  nx = ny = 1024;
+	  Quantity cellx( 10.0, "arcsec" );
+	  Quantity celly( 10.0, "arcsec" );
+	  // Quantity cellx( 0.5, "arcsec" );
+	  // Quantity celly( 0.5, "arcsec" );
 	  Vector<Int> spwids(2);
 	  String stokes="I";
 	  Int nchan=1;
@@ -108,64 +114,78 @@ int main(int argc, char **argv)
 	  ////lets do a cube of ndatachan
 	  //nchan=ndataChan;
 	  freqWidth /= Double(nchan);
-	  if(imtype==String("continuum")){
+	  String imageName("test_cont_image2");
+	  String cfCache("test.cf");
+	  SynthesisParamsImage impars;
+	  SynthesisParamsGrid gridpars;
+	  Vector<Quantity> qCellSize(2); qCellSize[0]=cellx; qCellSize[1]=celly;
+	  Vector<Int> ims(2);ims[0]=nx, ims[1]=ny;
+	  // Set up the parameters common for all modes
+	  impars.cellsize=qCellSize;
+	  impars.imsize=ims;
+	  impars.phaseCenter=phasecenter;
+	  impars.stokes=stokes;
+	  impars.freqStart=freqBeg;
+	  impars.freqStep=freqWidth;
+	  impars.restFreq=Vector<Quantity>(1,Quantity(1.420, "GHz"));
+	  impars.nchan=-1;
+	  impars.imageName=imageName;
 
-	    system("rm -rf test_cont_image2.*");
-	    imgr->defineImage(/*imagename*/"test_cont_image2", nx, ny, cellx, celly,
-			      stokes,phasecenter, -1,
-			      freqBeg, freqWidth, Vector<Quantity>(1,Quantity(1.420, "GHz")), 1);
-		  /*
-			   const String& ftmachine="GridFT",
-			   const Projection& projection=Projection::SIN,
-			   const Quantity& distance=Quantity(0,"m"),
-			   const MFrequency::Types& freqFrame=MFrequency::LSRK,
-			   const Bool trackSource=False, const MDirection&
-			   trackDir=MDirection(Quantity(0.0, "deg"),
-					       Quantity(90.0, "deg")))
-		   */
+	  if (ftmName != "") gridpars.ftmachine=ftmName;
+	  gridpars.facets=1;
+	  //	  gridpars.imageName=imageName;
+	  gridpars.aTermOn=True;
+	  gridpars.psTermOn=False;
+	  gridpars.mTermOn=True;
+	  gridpars.wbAWP=True;
+	  gridpars.cfCache=cfCache;
+	  gridpars.conjBeams=True;
+	  if(imtype==String("continuum")){
+	    std::string cmd=string("rm -rf ")+string(imageName)+string(".*");
+	    system(cmd.c_str());
+	    imgr->defineImage(impars,gridpars);
 	  }
 	  else if(imtype==String("cube")){
-
 		  ////lets do a cube of ndatachan
 		  nchan=ndataChan;
 		  freqWidth /= Double(nchan);
-		  imgr->defineImage(/*imagename*/"test_cube_image2", nx, ny, cellx, celly,
-				  stokes,phasecenter, nchan,
-				  freqBeg, freqWidth, Vector<Quantity>(1,Quantity(1.420, "GHz")), 1);
 
+		  impars.nchan=nchan;
+		  impars.freqStep=freqWidth;
+
+		  imgr->defineImage(impars,gridpars);
 	  }
 	  else if(imtype==String("widefield")){
-		  nx = 300;
-		  ny = 300;
-
-		  ///64 projplanes
-		  ////		  imgr->setupImaging(1.0, False, True, 64, "SF");
-		  imgr->defineImage(/*imagename*/"test_widefield_image2", nx, ny, cellx, celly,
-				  stokes,phasecenter, nchan,
-				    freqBeg, freqWidth, Vector<Quantity>(1,Quantity(1.420, "GHz")),
-
-				    /*facets*/1, 
-				    "wprojectft",/*ntaylor*/ 1,freqBeg, Projection::SIN, Quantity(0,"m"), 
-				    MFrequency::LSRK, /*tracksource*/ False,  
-				    MDirection(Quantity(0.0, "deg"), Quantity(90.0, "deg")), False, 
-				    1.0, /*useauto*/False,  /*doubleprec*/True, 64, "SF" );
+	    ims[0]=ims[1]=300;
+	    impars.imsize=ims;
+	    impars.nTaylorTerms=1;
+	    gridpars.ftmachine=String("wprojectft");
+	    gridpars.wprojplanes=64;
+	    impars.imageName=String("test_widefield_image2");
+	    imgr->defineImage(impars,gridpars);
 	  }
 	  else if(imtype==String("facet")){
-		  nx = 300;
-	  		  ny = 300;
-	  		  imgr->defineImage(/*imagename*/"test_facet_image2", nx, ny, cellx, celly,
-	  				  stokes,phasecenter, nchan,
-	  				  freqBeg, freqWidth, Vector<Quantity>(1,Quantity(1.420, "GHz")), 2);
+	    ims[0]=ims[1]=300;
+	    impars.imsize=ims;
+	    gridpars.facets=2;
+	    impars.imageName=String("test_facet_image2");
+	    imgr->defineImage(impars,gridpars);
 	  }
 	  else if(imtype==String("cubeslice")){
+	    ims[0]=ims[1]=100;
+	    nchan=ndataChan;
+	    freqWidth /= Double(nchan);
 
-	  		  nx = 100;
-	  		  ny = 100;
-	  		  nchan=ndataChan;
-	  		  freqWidth /= Double(nchan);
-	  		  imgr->defineImage(/*imagename*/"test_cubesliced_image2", nx, ny, cellx, celly,
-	  				  stokes,phasecenter, nchan,
-	  				  freqBeg, freqWidth, Vector<Quantity>(1,Quantity(1.420, "GHz")), 1);
+	    impars.imsize=ims;
+	    impars.nchan=nchan;
+	    impars.freqStep=freqWidth;
+	    impars.imageName=String("test_cubesliced_image2");
+	    //	    imgr->defineImage(impars,gridpars);
+
+	    nx = ny = 100;
+	    		  imgr->defineImage(/*imagename*/"test_cubesliced_image2", nx, ny, cellx, celly,
+	    		  		  stokes,phasecenter, nchan,
+	    		  		  freqBeg, freqWidth, Vector<Quantity>(1,Quantity(1.420, "GHz")), 1);
 	  		  CountedPtr<SIImageStore> si=imgr->imageStore(0);
 	  		  CountedPtr<ImageInterface<Float> > resid=si->residual();
 	  		  CountedPtr<ImageInterface<Float> > psf=si->psf();
@@ -195,8 +215,9 @@ int main(int argc, char **argv)
 			    String freqEnd=String::toString(SpectralImageUtil::worldFreq((subImStor->residual())->coordinates(), Double(0.5)))+"Hz";
 			    SynthesisImager subImgr;
 	  			  //can select the right channel to match subimage
-			    subImgr.selectData(msname, /*spw=*/"0", freqBeg, freqEnd, MFrequency::LSRK, /*field=*/"0",  /*antenna=*/"",  /*timestr*/"", /*scan*/"", /*obs*/"", /*state*/"",/*uvdist*/"", 
-						     /*taql*/"", /*usescratch*/False, /*readonly*/False, /*incrmodel*/True);
+			    subImgr.selectData(msname, /*spw=*/"0", freqBeg, freqEnd, MFrequency::LSRK, /*field=*/"0",  
+					       /*antenna=*/"",  /*timestr*/"", /*scan*/"", /*obs*/"", /*state*/"",/*uvdist*/"", 
+					       /*taql*/"", /*usescratch*/False, /*readonly*/False, /*incrmodel*/True);
 
 			    subImgr.defineImage(subImStor, "gridft");
 			    subImgr.weight("natural");
@@ -218,14 +239,12 @@ int main(int argc, char **argv)
               return 0;
 	  	  }
 	  else if(imtype==String("predictimage")){
+	    impars.imageName=String("test_cont_image");
+	    imgr->defineImage(impars,gridpars);
 
-
-		  imgr->defineImage(/*imagename*/"test_cont_image", nx, ny, cellx, celly,
-				  stokes,phasecenter, nchan,
-				  freqBeg, freqWidth, Vector<Quantity>(1,Quantity(1.420, "GHz")), 1);
-		  imgr->predictModel();
-		  delete imgr;
-		  return 0;
+	    imgr->predictModel();
+	    delete imgr;
+	    return 0;
 	  }
 	  else{
 		  throw(AipsError("Don't know what you are talking about"));
@@ -242,12 +261,12 @@ int main(int argc, char **argv)
 	  images->divideResidualByWeight();
 	  {
 	    //After Normalization
-	    LatticeExprNode LEN = max( *(images->residual()) );
-	    AlwaysAssertExit(near(6.66e-2, LEN.getFloat(), 1.0e-5));
-	    cerr << "Max of residual=" << LEN.getFloat() << endl;
+	    LatticeExprNode LENMaxRes = max( *(images->residual()) );
+	    cerr << "Max of residual=" << LENMaxRes.getFloat() << endl;
 	    LatticeExprNode psfmax = max( *(images->psf()) );
 	    LatticeExprNode psfmin = min( *(images->psf()) );
 	    cerr <<"Min max of psf "<< psfmin.getFloat() << " " << psfmax.getFloat() << endl;
+	    AlwaysAssertExit(near(6.66e-2, LENMaxRes.getFloat(), 1.0e-5));
 	  }
 	  delete imgr;
 

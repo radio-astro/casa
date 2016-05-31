@@ -41,6 +41,7 @@
 
 #include <msvis/MSVis/VisibilityIterator2.h>
 #include <synthesis/TransformMachines2/FTMachine.h>
+#include <synthesis/TransformMachines2/ATerm.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 // Forward declarations
@@ -244,7 +245,7 @@ protected:
 			  const Float rotatePAStep, 
 			  const Int cache,          
 			  const Int tile);
-  ATerm* createTelescopeATerm(const MeasurementSet& ms, const Bool& isATermOn);
+  refim::ATerm* createTelescopeATerm(const MeasurementSet& ms, const Bool& isATermOn);
 
   void runMajorCycle(const Bool dopsf=False, const Bool savemodel=False);
 
