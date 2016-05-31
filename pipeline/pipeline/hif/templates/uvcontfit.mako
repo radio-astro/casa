@@ -17,28 +17,26 @@ science target data prior to cube imaging</p>
     <thead>
         <tr>
             <th scope="col" rowspan="2">Measurement Set</th>
-                        <th scope="col" colspan="2">Solution Parameters</th>
+                        <th scope="col" colspan="3">Solution Parameters</th>
                         <th scope="col" colspan="2">Applied To</th>
             <th scope="col" rowspan="2">Calibration Table</th>
         </tr>
         <tr>
+                        <th>Frequency Ranges (TOPO)</th>
                         <th>Interval</th>
                         <th>Fit Order</th>
-                        <th>Scan Intent</th>
-                        <th>Spectral Windows</th>
+                        <th>Source Intent</th>
+                        <th>Spectral Window</th>
         </tr>
     </thead>
         <tbody>
-% for application in applications:
+                % for tr in table_rows:
                 <tr>
-                        <td>${application.ms}</td>
-                        <td>${application.solint}</td>
-                        <td>${application.fitorder}</td>
-                        <td>${application.intent}</td>
-                        <td>${application.spw}</td>
-                        <td>${application.gaintable}</td>
+                    % for td in tr:
+                        ${td}
+                    % endfor
                 </tr>
-% endfor
+                % endfor
         </tbody>
 </table>
 
