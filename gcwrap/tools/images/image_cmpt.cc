@@ -3301,7 +3301,6 @@ image* image::newimagefromarray(
     return nullptr;
 }
 
-
 image* image::newimagefromfile(const string& fileName) {
     try {
         _log << _ORIGIN;
@@ -3370,6 +3369,75 @@ image* image::newimagefromimage(
     }
     return nullptr;
 }
+
+image* image::newimagefromshape(
+    const string& outfile, const vector<int>& shape,
+    const record& csys, bool linear,
+    bool overwrite, bool log, const string& type
+) {
+    try {
+        _log << _ORIGIN;
+        unique_ptr<Record> coordinates(toRecord(csys));
+        String mytype = type;
+        mytype.downcase();
+        ThrowIf(
+            ! mytype.startsWith("f") && ! mytype.startsWith("c"),
+            "Input parm type must start with either 'f' or 'c'"
+        );
+        /*
+        vector<std::pair<LogOrigin, String> > msgs;
+        {
+
+            ostringstream os;
+            os << "Ran ia." << __func__;
+            msgs.push_back(make_pair(lor, os.str()));
+            vector<std::pair<String, variant> > inputs;
+            inputs.push_back(make_pair("outfile", outfile));
+            inputs.push_back(make_pair("shape", shape));
+            inputs.push_back(make_pair("csys", csys));
+            inputs.push_back(make_pair("linear", linear));
+            inputs.push_back(make_pair("overwrite", overwrite));
+            inputs.push_back(make_pair("log", log));
+            inputs.push_back(make_pair("type", type));
+            os.str("");
+            os << "ia." << __func__ << _inputsString(inputs);
+            msgs.push_back(make_pair(lor, os.str()));
+        }
+        */
+        unique_ptr<image> ret;
+        if (mytype.startsWith("f")) {
+            SPIIF myfloat = ImageFactory::floatImageFromShape(
+                outfile, shape, *coordinates,
+                linear, overwrite, log
+            );
+            ret.reset(new image(myfloat));
+        }
+        else {
+            SPIIC mycomplex = ImageFactory::complexImageFromShape(
+                outfile, shape, *coordinates,
+                linear, overwrite, log
+            );
+            ret.reset(new image(mycomplex));
+        }
+        vector<String> names {
+            "outfile", "shape", "csys", "linear",
+            "overwrite", "log", "type"
+        };
+        vector<variant> values {
+            outfile, shape, csys, linear,
+            overwrite, log, type
+        };
+        ret->_addHistory(__func__, names, values);
+        return ret.release();
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
+        RETHROW(x);
+    }
+    return nullptr;
+}
+
 
 bool image::open(const std::string& infile) {
     try {
@@ -5516,60 +5584,6 @@ void image::_reset() {
 
 
 
-image* image::newimagefromshape(
-	const string& outfile, const vector<int>& shape,
-	const record& csys, bool linear,
-	bool overwrite, bool log, const string& type
-) {
-	try {
-        LogOrigin lor("image", __func__);
-		_log << lor;
-		unique_ptr<Record> coordinates(toRecord(csys));
-        String mytype = type;
-        mytype.downcase();
-        ThrowIf(
-            ! mytype.startsWith("f") && ! mytype.startsWith("c"),
-            "Input parm type must start with either 'f' or 'c'"
-        );
-		vector<std::pair<LogOrigin, String> > msgs;
-		{
-			ostringstream os;
-			os << "Ran ia." << __func__;
-			msgs.push_back(make_pair(lor, os.str()));
-			vector<std::pair<String, variant> > inputs;
-			inputs.push_back(make_pair("outfile", outfile));
-			inputs.push_back(make_pair("shape", shape));
-			inputs.push_back(make_pair("csys", csys));
-			inputs.push_back(make_pair("linear", linear));
-			inputs.push_back(make_pair("overwrite", overwrite));
-			inputs.push_back(make_pair("log", log));
-			inputs.push_back(make_pair("type", type));
-			os.str("");
-			os << "ia." << __func__ << _inputsString(inputs);
-			msgs.push_back(make_pair(lor, os.str()));
-		}
-        if (mytype.startsWith("f")) {
-            SPIIF myfloat = ImageFactory::floatImageFromShape(
-                outfile, shape, *coordinates,
-                linear, overwrite, log, &msgs
-            );
-            return new image(myfloat);
-        }
-        else {
-            SPIIC mycomplex = ImageFactory::complexImageFromShape(
-                outfile, shape, *coordinates,
-                linear, overwrite, log, &msgs
-            );
-            return new image(mycomplex);
-        }
-    }
-    catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-			<< LogIO::POST;
-		RETHROW(x);
-	}
-}
-
 image* image::newimagefromfits(
 	const string& outfile, const string& fitsfile,
 	const int whichrep, const int whichhdu,
@@ -5595,16 +5609,19 @@ image* image::newimagefromfits(
 	return nullptr;
 }
 
-::casac::variant*
-image::makearray(const double v, const std::vector<int>& shape) {
-	int ndim = shape.size();
+variant* image::makearray(
+    double v, const vector<int>& shape
+) {
+	auto ndim = shape.size();
 	int nelem = 1;
-	for (int i = 0; i < ndim; i++)
+	for (int i = 0; i < ndim; ++i) {
 		nelem *= shape[i];
+	}
 	std::vector<double> element(nelem);
-	for (int i = 0; i < nelem; i++)
+	for (int i = 0; i < nelem; ++i) {
 		element[i] = v;
-	return new ::casac::variant(element, shape);
+	}
+	return new variant(element, shape);
 }
 
 casac::record*
@@ -5616,7 +5633,8 @@ image::recordFromQuantity(const casa::Quantity q) {
 		casa::Record R;
 		if (QuantumHolder(q).toRecord(error, R)) {
 			r = fromRecord(R);
-		} else {
+		}
+		else {
 			_log << LogIO::SEVERE << "Could not convert quantity to record."
 					<< LogIO::POST;
 		}
