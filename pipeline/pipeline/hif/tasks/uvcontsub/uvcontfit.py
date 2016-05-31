@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import os
 import types
 import numpy as np
+import collections
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -211,6 +212,8 @@ class UVcontFit(basetask.StandardTaskTemplate):
         if not inputs.contfile:
 
             # Simple case frequency selection same for all sources
+            #    Store input string as is done for the continuum file case
+            spwstr = inputs.spwstr
 
             # Create the caltable without a source name
             caltable = inputs.caltable
@@ -233,7 +236,7 @@ class UVcontFit(basetask.StandardTaskTemplate):
             # Get the continuum ranges
             cranges_spwsel = self._get_ranges_spwsel()
 
-            # Initialize uvcontfit append mode
+            # Save the original list of intents
             orig_intent = inputs.intent
 
             # Loop over the ranges calling uvcontfit once per source
@@ -244,7 +247,7 @@ class UVcontFit(basetask.StandardTaskTemplate):
                 if not sfields:
                     continue
 
-                # Accumulate spw selection string or this source
+                # Accumulate spw selection string for this source
                 source_cranges = cranges_spwsel[sname]
                 spw_cranges = ['%s:%s' % (spw_id, source_cranges[spw_id].split()[0])
                                for spw_id in source_cranges
@@ -277,7 +280,7 @@ class UVcontFit(basetask.StandardTaskTemplate):
                 
                 inputs.intent = orig_intent
 
-        return UVcontFitResults(pool=calapps)
+        return UVcontFitResults(spwstr=spwstr, pool=calapps)
 
 
     def analyse (self, result):
@@ -312,7 +315,7 @@ class UVcontFit(basetask.StandardTaskTemplate):
 
         # Collect the merged ranges
         #    Error checking ?
-        cranges_spwsel = {}
+        cranges_spwsel = collections.OrderedDict()
         for sname in all_source_names:
             source_fields =  [s.fields for s in all_sources if s.name == sname][0]
             if len(source_fields) > 1:
@@ -324,7 +327,7 @@ class UVcontFit(basetask.StandardTaskTemplate):
                 rep_field_id = source_fields[0].id
                 rep_field_name = source_fields[0].name
             LOG.info('Representative field for MS %s source %s is field %s with id %d' % (inputs.ms.basename, sname, rep_field_name, rep_field_id))
-            cranges_spwsel[sname] = {}
+            cranges_spwsel[sname] = collections.OrderedDict()
             for spw_id in [str(spw.id) for spw in inputs.ms.get_spectral_windows(task_arg=inputs.spw)]:
                 cranges_spwsel[sname][spw_id] = contfile_handler.get_merged_selection(sname, spw_id)
                 if not cranges_spwsel[sname][spw_id]:
@@ -446,7 +449,9 @@ class UVcontFit(basetask.StandardTaskTemplate):
 
 
 class UVcontFitResults(basetask.Results):
-    def __init__(self, final=None, pool=None, preceding=None):
+    def __init__(self, spwstr=None, final=None, pool=None, preceding=None):
+        if spwstr is None:
+            spwstr = ''
         if final is None:
             final = []
         if pool is None:
@@ -455,6 +460,7 @@ class UVcontFitResults(basetask.Results):
             preceding = []
 
         super(UVcontFitResults, self).__init__()
+        self.spwstr = spwstr
         self.pool = pool[:]
         self.final = final[:]
         self.preceding = preceding[:]

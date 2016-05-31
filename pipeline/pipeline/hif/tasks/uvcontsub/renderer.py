@@ -10,7 +10,8 @@ import pipeline.infrastructure.utils as utils
 
 # Reuse this definition
 UVcontFitApplication = collections.namedtuple('UVcontFitApplication', 
-                                            'ms gaintable solint fitorder intent spw') 
+                                            #'ms scispw freqrange solint fitorder source scispws gaintable') 
+                                            'ms freqrange solint fitorder source scispw gaintable') 
 
 
 class T2_4MDetailsUVcontFitRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
@@ -21,45 +22,80 @@ class T2_4MDetailsUVcontFitRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 description=description, always_rerender=always_rerender)
 
     def update_mako_context(self, ctx, context, results):
-        applications = []
+        rows = []
 
         for result in results:
             vis = os.path.basename(result.inputs['vis'])
             ms = context.observing_run.get_ms(vis)
 
-            applications.extend(self.get_uvtable_applications(context, result, ms))
+            rows.extend(self.get_uvtable_rows(context, result, ms))
 
+        table_rows = utils.merge_td_columns(rows)
         ctx.update({
-            'applications': applications
+            'table_rows': table_rows
         })
 
-    def get_uvtable_applications(self, context, result, ms):
-        applications = []
+    def get_uvtable_rows(self, context, result, ms):
+        table_rows = []
         
+        # Construct the rows. All entries must be strings.
         for calapp in result.final:
-            solint = result.inputs['solint']
 
+            # Define solint
+            solint = result.inputs['solint']
             if solint == 'inf':
                 solint = 'Infinite'
             
             # Convert solint=int to a real integration time. 
             # solint is spw dependent; science windows usually have the same
             # integration time, though that's not guaranteed.
+            #    Leave out this for now
             #if solint == 'int':
                 #in_secs = ['%0.2fs' % (dt.seconds + dt.microseconds * 1e-6) 
                            #for dt in utils.get_intervals(context, calapp)]
                 #solint = 'Per integration (%s)' % utils.commafy(in_secs, quotes=False, conjunction='or')
             
             gaintable = os.path.basename(calapp.gaintable)
-            spw = ', '.join(calapp.spw.split(','))
 
+            #to_spws = ', '.join(calapp.spw.split(','))
+
+            # Source is composed of source name and intent
             to_intent = ', '.join(calapp.intent.split(','))
             if to_intent == '':
                 to_intent = 'ALL'
+            to_field = ', '.join(calapp.field.split(','))
+            if to_field == '':
+                to_field = 'ALL'
+            to_source = to_field + ' ' + to_intent
 
+            # Get the fit order
             fitorder = '%d' % result.inputs['fitorder']
-            a = UVcontFitApplication(ms.basename, gaintable, solint, fitorder,
-                                   to_intent, spw)
-            applications.append(a)
 
-        return applications
+            # Get the input spws and associated frequency ranges
+            spws, freqranges = self._get_spw_ranges(result.spwstr)
+
+            # Create the table
+            for spw, freqrange in zip(spws, freqranges):
+                frange = ', '.join(freqrange)
+                row = UVcontFitApplication(ms.basename,  frange, solint, fitorder,
+                    to_source, spw, gaintable)
+                table_rows.append(row)
+
+        return table_rows
+
+    def _get_spw_ranges (self, spwranges):
+
+        '''
+        Decode the spw / frequency ranges string int a list of spws and
+        frequency ranges
+        '''
+        spws = []; freqranges = []
+        for spwrange in spwranges.split(','):
+            tspwrange = tuple (spwrange.split(':'))
+            spws.append(tspwrange[0])
+            if len(tspwrange) > 1:
+                freqranges.append(tspwrange[1].split(';'))
+            else:
+                freqranges.append([])
+
+        return spws, freqranges
