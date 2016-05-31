@@ -192,7 +192,7 @@ CASA_COMMANDS_PROLOGUE = (
     'calculations performed by pipeline code. This file is useful to '
     'understand which CASA commands are being run by each pipeline task. If '
     'one wishes to re-run the pipeline, one should use the pipeline script '
-    'linked on the front page of the weblog. Some stages may not have any '
+    'linked on the front page or By Task page of the weblog. Some stages may not have any '
     'commands listed here, e.g. hifa_importdata if conversion from ASDM to MS '
     'is not required.'
 )
