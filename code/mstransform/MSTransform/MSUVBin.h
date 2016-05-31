@@ -108,7 +108,8 @@ private:
 			 const Double& fracbw,  
 			 Complex*& grid, Complex*& wghtSpec, Bool*& flag, 
 			 Bool*& rowFlag, Double*& uvw, Int*& ant1,
-			 Int*& ant2, Double*& timeCen, const Int startchan, 
+			  Int*& ant2, Double*& timeCen, Double*& sumWeight, Double*& numvis, 
+			  const Int startchan, 
 			 const Int endchan, const Cube<Complex>& convFunc, const Vector<Int>& convSupport, const Double wScale, const Int convSampling );
 	void locateFlagFromGrid(vi::VisBuffer2& vb, Cube<Bool>& datFlag,
 				Cube<Float>& wghtSpec,
@@ -153,6 +154,8 @@ private:
 	VisBufferUtil vbutil_p;
 	Float memFraction_p;
 	Bool doW_p, doFlag_p;
+	Matrix<Double> numVis_p;
+	Matrix<Double> sumWeight_p;
 
 }; // end class MSUVBin
 } //# NAMESPACE CASA - END

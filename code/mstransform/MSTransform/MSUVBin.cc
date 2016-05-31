@@ -7,13 +7,13 @@
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
-//# under the terms of the GNU  General Public License as published by
+//# under the terms of the GNU General Public License as published by
 //# the Free Software Foundation; either version 3 of the License, or (at your
 //# option) any later version.
 //#
 //# This library is distributed in the hope that it will be useful, but WITHOUT
 //# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU  General Public
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
 //# License for more details.
 //#
 //# You should have received a copy of the GNU  General Public License
@@ -77,7 +77,7 @@ typedef unsigned long long ooLong;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-MSUVBin::MSUVBin():nx_p(0), ny_p(0), nchan_p(0), npol_p(0),existOut_p(False){
+  MSUVBin::MSUVBin():nx_p(0), ny_p(0), nchan_p(0), npol_p(0),existOut_p(False),numVis_p(), sumWeight_p(){
 	outMsPtr_p=NULL;
 	outMSName_p="OutMS.ms";
 	memFraction_p=0.5;
@@ -92,6 +92,10 @@ MSUVBin::MSUVBin(const MDirection& phaseCenter,
 	ny_p=ny;
 	nchan_p=nchan;
 	npol_p=npol;
+	numVis_p.resize(npol, nchan);
+	sumWeight_p.resize(npol, nchan);
+	numVis_p.set(0);
+	sumWeight_p.set(0);
 	deltas_p.resize(2);
 	deltas_p[0]=cellx.getValue("rad");
 	deltas_p[1]=celly.getValue("rad");
@@ -225,19 +229,30 @@ Int MSUVBin::recoverGridInfo(const String& msname){
 		throw(AipsError("could recover grid info from ms"));
 	csys_p=*tempCoordsys;
 	delete tempCoordsys;
+	numVis_p.resize();
+	rec.get("numvis", numVis_p);
+	sumWeight_p.resize();
+	rec.get("sumweight", sumWeight_p);
 	return outMsPtr_p->nrow();
-
+	
 
 }
 
 void MSUVBin::storeGridInfo(){
-	if(existOut_p)
-		return;
+  //cerr << "numVis " << numVis_p << endl;
+  //cerr << "sumWgt " << sumWeight_p << endl;
+  if(existOut_p){
+    outMsPtr_p->rwKeywordSet().asrwRecord("MSUVBIN").define("numvis", numVis_p);
+    outMsPtr_p->rwKeywordSet().asrwRecord("MSUVBIN").define("sumweight", sumWeight_p);
+    return;
+  }
 	Record rec;
 	rec.define("nx", nx_p);
 	rec.define("ny", ny_p);
 	rec.define("nchan", nchan_p);
 	rec.define("npol", npol_p);
+	rec.define("numvis", numVis_p);
+	rec.define("sumweight", sumWeight_p);
 	csys_p.save(rec, "csys");
 	outMsPtr_p->rwKeywordSet().defineRecord("MSUVBIN", rec);
 
@@ -347,6 +362,7 @@ Bool MSUVBin::fillNewBigOutputMS(){
 		msc.antenna2().getColumn(ant2);
 		msc.time().getColumn(timeCen);
 		msc.uvw().getColumn(uvw);
+		
 	}
 	else{
 		wght.set(0.0);
@@ -437,6 +453,7 @@ Bool MSUVBin::fillNewBigOutputMS(){
 		ProgressMeter pm(1.0, Double(nrrows),"Gridding data",
                          "", "", "", True);
 		Double rowsDone=0.0;
+		//cerr << "Before: Num of flagged model " << ntrue(uvw.row(2) ==(-666.0)) << endl;
      for (iter.originChunks(); iter.moreChunks(); iter.nextChunk()){
 	for(iter.origin(); iter.more(); iter.next()){
 	  if(doFlag_p){
@@ -520,7 +537,7 @@ Bool MSUVBin::fillNewBigOutputMS(){
 	 } // iz
        }
        
-      
+       //cerr << "After: Num of flagged model " << ntrue(uvw.row(2) ==(-666.0)) << endl;
        saveData(grid, flag, rowFlag, realWghtSpec, uvw, ant1, ant2, timeCen, startchan, endchan, imagWghtSpec);
 	}
 	storeGridInfo();
@@ -660,12 +677,12 @@ Int MSUVBin::makeUVW(const Double reffreq, Vector<Double>& increment,
 		//scale(1)=1.0/(ny_p*thedir.increment()(1));
 		center.resize(2);
 		center(0)=nx_p/2;
-		center(1)=ny_p/2;
+		center(1)=ny_p/2;		
 		Vector<Int> npix(2);
 		npix(0)=nx_p;
 		npix(1)=ny_p;
 		uvw.resize(3, nx_p*ny_p);
-		uvw.set(0.0);
+		uvw.set(-666.0);
 		Vector<Double> px(2);
 		Vector<Double> wld(2);
 		Double lambd=C::c/reffreq;
@@ -1304,6 +1321,9 @@ void MSUVBin::gridData(const vi::VisBuffer2& vb, Cube<Complex>& grid,
     Vector<Float> scale(2);
     scale(0)=fabs(nx_p*thedir.increment()(0))/C::c;
     scale(1)=fabs(ny_p*thedir.increment()(1))/C::c;
+
+
+    //cerr << "chanmap " << chanMap_p << " pol map " <<polMap_p << " weight " << wghtSpec.shape() << endl;
     //Dang i thought the new vb will return Data or FloatData if correctedData was
 	    //not there
 	    Bool hasCorrected=!(ROMSMainColumns(vb.getVi()->ms()).correctedData().isNull());
@@ -1334,7 +1354,7 @@ void MSUVBin::gridData(const vi::VisBuffer2& vb, Cube<Complex>& grid,
 		    	  locv=Int(Double(ny_p)/2.0+vb.uvw()(1,k)*visFreq(chan)*scale(1)+0.5);
 		    	  locu=Int(Double(nx_p)/2.0+vb.uvw()(0,k)*visFreq(chan)*scale(0)+0.5);
 		      }
-		      if(locv < ny_p && locu < nx_p){
+		      if(locv < ny_p && locu < nx_p && locv >=0 && locu >=0){
 				  Int newrow=locv*nx_p+locu;
 				  if(rowFlag(newrow) && !(vb.flagRow()(k))){
 				    rowFlag(newrow)=False;
@@ -1579,7 +1599,7 @@ void MSUVBin::gridDataConvThr(const vi::VisBuffer2& vb, Cube<Complex>& grid,
   Matrix<Double> eluvw;
   eluvw=vb.uvw();
   Bool needRot=vbutil_p.rotateUVW(vb, phaseCenter_p, eluvw, phasor);
-  Bool gridCopy, weightCopy, flagCopy, rowFlagCopy, uvwCopy, ant1Copy, ant2Copy, timeCenCopy;
+  Bool gridCopy, weightCopy, flagCopy, rowFlagCopy, uvwCopy, ant1Copy, ant2Copy, timeCenCopy, sumWeightCopy, numVisCopy;
   Complex * gridStor=grid.getStorage(gridCopy);
   Complex * wghtSpecStor=wghtSpec.getStorage(weightCopy);
   Bool * flagStor=flag.getStorage(flagCopy);
@@ -1588,6 +1608,8 @@ void MSUVBin::gridDataConvThr(const vi::VisBuffer2& vb, Cube<Complex>& grid,
   Int* ant1Stor=ant1.getStorage(ant1Copy);
   Int* ant2Stor=ant2.getStorage(ant2Copy);
   Double* timeCenStor= timeCen.getStorage(timeCenCopy);
+  Double* sumweightStor=sumWeight_p.getStorage(sumWeightCopy);
+  Double* numvisStor=numVis_p.getStorage(numVisCopy);
   //  Vector<Double> invLambda=visFreq/C::c;
   
   //Fill the caches in the master thread
@@ -1606,14 +1628,14 @@ void MSUVBin::gridDataConvThr(const vi::VisBuffer2& vb, Cube<Complex>& grid,
   nth=min(nchan_p, omp_get_max_threads());
   omp_set_dynamic(0);
 #endif
-#pragma omp parallel for firstprivate(refFreq, scale, hasCorrected, needRot, fracbw, gridStor, wghtSpecStor, flagStor, rowFlagStor, uvwStor, ant1Stor, ant2Stor, timeCenStor ) shared(phasor, visFreq) num_threads(nth) schedule(dynamic, 1)
+#pragma omp parallel for firstprivate(refFreq, scale, hasCorrected, needRot, fracbw, gridStor, wghtSpecStor, flagStor, rowFlagStor, uvwStor, ant1Stor, ant2Stor, timeCenStor, sumweightStor, numvisStor ) shared(phasor, visFreq) num_threads(nth) schedule(dynamic, 1)
 
   for(Int outchan=0; outchan < nchan_p; ++outchan){
     //cerr << "outchan " << outchan << "  " << chanMapRev_p[outchan] << endl;
    
     multiThrLoop(outchan, vb, refFreq, scale, hasCorrected, needRot, phasor, visFreq, 
 		 fracbw, gridStor, wghtSpecStor, flagStor, rowFlagStor, uvwStor, ant1Stor, 
-		 ant2Stor, timeCenStor, startchan, endchan, convFunc, convSupport, wScale, 
+		 ant2Stor, timeCenStor, sumweightStor, numvisStor, startchan, endchan, convFunc, convSupport, wScale, 
 		 convSampling); 
 
     /*for(uInt nel=0; nel < chanMapRev_p[outchan].nelements(); ++nel ){
@@ -1725,7 +1747,8 @@ void MSUVBin::gridDataConvThr(const vi::VisBuffer2& vb, Cube<Complex>& grid,
   ant1.putStorage(ant1Stor,ant1Copy);
   ant2.putStorage(ant2Stor, ant2Copy);
   timeCen.putStorage(timeCenStor, timeCenCopy);
-
+  sumWeight_p.putStorage(sumweightStor, sumWeightCopy);
+  numVis_p.putStorage(numvisStor, numVisCopy);
 
 
 }
@@ -1733,7 +1756,7 @@ void MSUVBin::gridDataConvThr(const vi::VisBuffer2& vb, Cube<Complex>& grid,
 void MSUVBin::multiThrLoop(const Int outchan, const vi::VisBuffer2& vb, Double refFreq, Vector<Float> scale, Bool hasCorrected, Bool needRot, const Vector<Double>& phasor, const Vector<Double>& visFreq, const Double& fracbw, Complex*& grid,
 			     Complex*& wghtSpec,
 			  Bool*& flag, Bool*& rowFlag, Double*& uvw, 
-			  Int*& ant1, Int*& ant2, Double*& timeCen, 
+			   Int*& ant1, Int*& ant2, Double*& timeCen, Double*& sumWeight, Double*& numVis,
 			  const Int startchan, const Int endchan, 
 		       const Cube<Complex>& convFunc, const Vector<Int>& convSupport, const Double wScale, const Int convSampling ){
 
@@ -1744,10 +1767,12 @@ void MSUVBin::multiThrLoop(const Int outchan, const vi::VisBuffer2& vb, Double r
 	if(!vb.flagRow()[k]){
 	  Int locu, locv, locw,supp, offu, offv;
 	  {
-	    locv=Int(Double(ny_p)/2.0+vb.uvw()(1,k)*refFreq*scale(1)+0.5);
-	    locu=Int(Double(nx_p)/2.0+vb.uvw()(0,k)*refFreq*scale(0)+0.5);
-	    offv=Int ((Double(locv)-(Double(ny_p)/2.0+vb.uvw()(1,k)*refFreq*scale(1)))*Double(convSampling)+0.5);
-	    offu=Int ((Double(locu)-(Double(nx_p)/2.0+vb.uvw()(0,k)*refFreq*scale(0)))*Double(convSampling)+0.5);
+	    Double centx=Double(nx_p)/2.0;
+	    Double centy=Double(ny_p)/2.0;
+	    locv=Int(centy+vb.uvw()(1,k)*refFreq*scale(1)+0.5);
+	    locu=Int(centx+vb.uvw()(0,k)*refFreq*scale(0)+0.5);
+	    offv=Int ((Double(locv)-(centy+vb.uvw()(1,k)*refFreq*scale(1)))*Double(convSampling)+0.5);
+	    offu=Int ((Double(locu)-(centx+vb.uvw()(0,k)*refFreq*scale(0)))*Double(convSampling)+0.5);
 	    locw=Int(sqrt(fabs(wScale*vb.uvw()(2,k)*refFreq/C::c))+0.5);
 	    supp=locw < convSupport.shape()[0] ? convSupport(locw) :convSupport(convSupport.nelements()-1) ;
 	  }
@@ -1761,49 +1786,64 @@ void MSUVBin::multiThrLoop(const Int outchan, const vi::VisBuffer2& vb, Double r
 		  Int newlocu=locu+xx-supp;
 		  if(newlocu < nx_p && newlocu >0){
 		    newrow(yy*(2*supp+1)+xx)=newlocv*nx_p+newlocu;
-			  }			  
+		  }			  
 		}
 	      }
 	    }
 	  }
-		  Complex elphas(1.0, 0.0);
+	  Complex elphas(1.0, 0.0);
+	  
+	  if(chanMap_p(chan) >=startchan && chanMap_p(chan) <=endchan){
+	    if(needRot){
+	      Double phasmult=phasor(k)*invLambda;
+	      Double s, c;
+	      SINCOS(phasmult, s, c);
+	      elphas=Complex(c, s);
+	    }
+	    if(fracbw > 0.05)
+	      {
+		locv=Int(Double(ny_p)/2.0+vb.uvw()(1,k)*visFreq(chan)*scale(1)+0.5);
+		locu=Int(Double(nx_p)/2.0+vb.uvw()(0,k)*visFreq(chan)*scale(0)+0.5);
+	      }
+	    if(locv < ny_p && locu < nx_p){
+	      for (Int yy=0; yy< Int(2*supp+1); ++yy){
+		Int locy=abs((yy-supp)*convSampling+offv);
+		
+		for (Int xx=0; xx< Int(2*supp+1); ++xx){
+		  Int locx=abs((xx-supp)*convSampling+offu);
 		  
-		  if(chanMap_p(chan) >=startchan && chanMap_p(chan) <=endchan){
-		    if(needRot){
-		      Double phasmult=phasor(k)*invLambda;
-		      Double s, c;
-		      SINCOS(phasmult, s, c);
-		      elphas=Complex(c, s);
-		    }
-		    if(fracbw > 0.05)
-		      {
-			locv=Int(Double(ny_p)/2.0+vb.uvw()(1,k)*visFreq(chan)*scale(1)+0.5);
-			locu=Int(Double(nx_p)/2.0+vb.uvw()(0,k)*visFreq(chan)*scale(0)+0.5);
+		  Int jj=yy*(2*supp+1)+xx;
+		  ////////TEST
+		  //Int CENTER=2*supp*(supp+1);
+		  //jj=CENTER;
+		  /////////////////End TEST
+		  if(newrow[jj] >-1){
+		    Complex cwt=convFunc(locx, locy, locw);
+		    //Float fracconv=fabs(cwt)/fabs(convFunc(0,0,locw));
+		    /////TEST
+		    //cwt=1.0;
+		    //////
+		    if(vb.uvw()(2,k) > 0.0)
+		      cwt=conj(cwt);
+		    //if(rowFlag[newrow[jj]] && !(vb.flagRow()(k))){
+		    if(!(vb.flagRow()(k))){
+		      rowFlag[newrow[jj]]=False;
+		      if(yy==supp and xx==supp){
+			uvw[2+newrow[jj]*3]=0;
+			for(Int pol=0; pol < vb.nCorrelations(); ++pol){
+			  numVis[npol_p*chanMap_p(chan)+polMap_p(pol)] += 1.0;
+			  sumWeight[npol_p*chanMap_p(chan)+polMap_p(pol)] += vb.weight()(pol,k) ;
+			}
 		      }
-		    if(locv < ny_p && locu < nx_p){
-		      for (Int yy=0; yy< Int(2*supp+1); ++yy){
-			Int locy=abs((yy-supp)*convSampling+offv);
-			
-			for (Int xx=0; xx< Int(2*supp+1); ++xx){
-			  Int locx=abs((xx-supp)*convSampling+offu);
-			  
-			  Int jj=yy*(2*supp+1)+xx;
-			  if(newrow[jj] >-1){
-			    Complex cwt=convFunc(locx, locy, locw);
-			    //Float fracconv=fabs(cwt)/fabs(convFunc(0,0,locw));
-			    /////TEST
-			    //cwt=1.0;
-			    //////
-			    if(vb.uvw()(2,k) > 0.0)
-			      cwt=conj(cwt);
-			    if(rowFlag[newrow[jj]] && !(vb.flagRow()(k))){
-			      rowFlag[newrow[jj]]=False;
-			      uvw[2+newrow[jj]*3]=0;
-			      ant1[newrow[jj]]=vb.antenna1()(k);
-			      ant2[newrow[jj]]=vb.antenna2()(k);
-			      timeCen[newrow[jj]]=vb.time()(k);
-			    
-			    }
+		      /*else{
+			if(uvw[2+newrow[jj]*3] !=0)
+			uvw[2+newrow[jj]*3]=-666;
+			}*/
+		      ant1[newrow[jj]]=vb.antenna1()(k);
+		      ant2[newrow[jj]]=vb.antenna2()(k);
+		      timeCen[newrow[jj]]=vb.time()(k);
+		      
+		    }
 			    Int lechan=chanMap_p(chan)-startchan;
 			    for(Int pol=0; pol < vb.nCorrelations(); ++pol){
 			      if((!vb.flagCube()(pol,chan, k)) && (polMap_p(pol)>=0) /*&& (vb.weight()(pol,k)>0.0) && fabs(cwt) > 0.0//// (fracconv > 5e-2)*/){
@@ -1964,10 +2004,10 @@ Bool MSUVBin::saveData(const Cube<Complex>& grid, const Cube<Bool>&flag, const V
 	MSColumns msc(*outMsPtr_p);
 	if(!existOut_p && startchan==0){
 		fillSubTables();
-		msc.uvw().putColumn(uvw);
+		//	msc.uvw().putColumn(uvw);
 
 	}
-
+	msc.uvw().putColumn(uvw);
 	Slicer elslice(IPosition(2, 0, startchan), IPosition(2,npol_p, endchan-startchan+1));
 	//lets put ny_p slices
 	Int nchan=endchan-startchan+1;
@@ -2351,7 +2391,10 @@ void MSUVBin::makeWConv(vi::VisibilityIterator2& iter, Cube<Complex>& convFunc, 
     }
     rmsW=sqrt(rmsW/Double(nval))*max(vb->getFrequencies(0))/C::c;
     Double maxUVW=rmsW < 0.5*(minW+maxW) ? 1.05*maxW: (rmsW /(0.5*((minW)+maxW))*1.05*maxW) ;
-    Int wConvSize=Int(maxUVW*fabs(sin(fabs(csys_p.increment()(0))*max(nx_p, ny_p)/2.0)));
+    //Int wConvSize=Int(maxUVW*fabs(sin(fabs(csys_p.increment()(0))*max(nx_p, ny_p)/2.0)));
+    //////////TEST
+    Int wConvSize=2*Int(maxUVW*fabs(sin(fabs(csys_p.increment()(0))*max(nx_p, ny_p)/2.0)));
+    /////////////////
     wScale=Double((wConvSize-1)*(wConvSize-1))/maxUVW;
     if(wConvSize <2) 
       ThrowCc("Should not be using wprojection");
@@ -2577,7 +2620,7 @@ void MSUVBin::makeWConv(vi::VisibilityIterator2& iter, Cube<Complex>& convFunc, 
     for (trial=0; trial<cpConvSize/2-2;++trial) {
     //for (trial=cpConvSize/2-2;trial>0;trial--) {
     // if((abs(convFunc(trial,0,iw))>1e-3)||(abs(convFunc(0,trial,iw))>1e-3) ) {
-     if((abs(convFuncPtr[ooLong(trial)+ploffset])/abs(maxes[0])< 1e-3)||(abs(convFuncPtr[ooLong(trial*(cpConvSize/2-1))+ploffset])/abs(maxes[0]) < 1e-3) ) {
+     if((abs(convFuncPtr[ooLong(trial)+ploffset])/abs(maxes[0])< 1e-5)||(abs(convFuncPtr[ooLong(trial*(cpConvSize/2-1))+ploffset])/abs(maxes[0]) < 1e-5) ) {
       //if((abs(convFuncPtr[ooLong(trial)+ploffset]) < 1e-3)||(abs(convFuncPtr[ooLong(trial*(cpConvSize/2-1))+ploffset]) < 1e-3) ) {
       //if(abs(convFuncPtr[ooLong(trial)+ploffset])*abs(convFuncPtr[ooLong(trial*(cpConvSize/2-1))+ploffset]) < 1e-3){
       ///diagonal
@@ -2621,17 +2664,22 @@ void MSUVBin::makeWConv(vi::VisibilityIterator2& iter, Cube<Complex>& convFunc, 
   // Normalize such that plane 0 sums to 1 (when jumping in
   // steps of convSampling)
   Complex pbSum=0.0;
-  for (Int iz=0; iz< convSupport.shape()[0]; ++iz){
+  Int iz=0;
+  //for (Int iz=0; iz< convSupport.shape()[0]; ++iz){
     pbSum=0.0;
+
   for (Int iy=-convSupport(iz);iy<=convSupport(iz);iy++) {
     for (Int ix=-convSupport(iz);ix<=convSupport(iz);ix++) {
-      pbSum+=fabs(convFunc(abs(ix)*cpConvSamp,abs(iy)*cpConvSamp,iz));
+      pbSum+=real(convFunc(abs(ix)*cpConvSamp,abs(iy)*cpConvSamp,iz));
     }
   }
-  convFunc.xyPlane(iz) = convFunc.xyPlane(iz)/Complex(pbSum);
-  }
+  //convFunc.xyPlane(iz) = convFunc.xyPlane(iz)/Complex(pbSum);
+  // }
   //cerr << "pbSum " << pbSum << endl;
+   for (Int iz=0; iz< convSupport.shape()[0]; ++iz){
+     convFunc.xyPlane(iz)= convFunc.xyPlane(iz)/pbSum;
 
+   }
    Int newConvSize=2*(max(convSupport)+2)*convSampling;
   
   if(newConvSize < convSize){
@@ -2674,9 +2722,9 @@ void MSUVBin::makeWConv(vi::VisibilityIterator2& iter, Cube<Complex>& convFunc, 
   */
    /////////////////////////
   /////Write out the SF correction image
-  String corrim=outMSName_p+String("/WprojCorrection.image");
+  /*String corrim=outMSName_p+String("/WprojCorrection.image");
   Path elpath(corrim);
-  //cerr << "Saving the correction image " << elpath.absoluteName() << "\nIt should be used to restore images to a flat noise state " << endl;
+  cerr << "Saving the correction image " << elpath.absoluteName() << "\nIt should be used to restore images to a flat noise state " << endl;
   if(!Table::isReadable(corrim)){
     ConvolveGridder<Double, Float>elgridder(IPosition(2, nx_p, ny_p),
 					      uvScale, uvOffset,
@@ -2706,17 +2754,17 @@ void MSUVBin::makeWConv(vi::VisibilityIterator2& iter, Cube<Complex>& convFunc, 
     LatticeIterator<Float> lix(thisScreen, lsx);
     for(lix.reset();!lix.atEnd();lix++) {
       Int iy=lix.position()(1);
-      //elgridder.correctX1D(correction, iy);
+      elgridder.correctX1D(correction, iy);
     
       for (Int ix=0;ix<nx_p; ++ix) {
-	correction(ix)=sincConv(ix)*sincConv(iy);
-	//correction(ix)*=sincConv(ix)*sincConv(iy);
+	//correction(ix)=sincConv(ix)*sincConv(iy);
+	correction(ix)*=sincConv(ix)*sincConv(iy);
       }
       lix.rwVectorCursor()=correction;
     }
   }
 
-
+  */
   // Write out FT of screen as an image
   /*  if(1) {
       CoordinateSystem ftCoords(coords);
