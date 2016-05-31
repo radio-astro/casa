@@ -3260,6 +3260,48 @@ String image::_name(bool strippath) const {
     }
 }
 
+image* image::newimage(const string& fileName) {
+    image *rstat = newimagefromfile(fileName);
+    if (!rstat)
+            throw AipsError("Unable to create image");
+    return rstat;
+}
+
+image* image::newimagefromarray(
+    const string& outfile, const variant& pixels,
+    const record& csys, bool linear,
+    bool overwrite, bool log
+) {
+    try {
+        auto mypair = _fromarray(
+            outfile, pixels, csys,
+            linear, overwrite, log
+        );
+        auto res = mypair.first
+            ? new image(mypair.first)
+            : new image(mypair.second);
+        vector<String> names = {
+            "outfile", "pixels", "csys",
+            "linear", "overwrite", "log"
+        };
+        variant k("[...]");
+        const auto* mpixels = pixels.size() <= 100 ? &pixels : &k;
+        vector<variant> values = {
+            outfile, *mpixels, csys,
+            linear, overwrite, log
+        };
+        res->_addHistory(__func__, names, values);
+        return res;
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+    return nullptr;
+}
+
+
 image* image::newimagefromfile(const string& fileName) {
     try {
         _log << _ORIGIN;
@@ -5473,43 +5515,6 @@ void image::_reset() {
 
 
 
-image* image::newimage(const string& fileName) {
-	image *rstat = newimagefromfile(fileName);
-	if (!rstat)
-			throw AipsError("Unable to create image");
-	return rstat;
-}
-
-image* image::newimagefromarray(
-	const string& outfile, const variant& pixels,
-	const record& csys, const bool linear,
-	const bool overwrite, const bool log
-) {
-	try {
-		/*
-	    return new image(
-	        _fromarray(
-	            outfile, pixels, csys,
-	            linear, overwrite, log
-	        )
-	    );
-	    */
-		auto mypair = _fromarray(
-			outfile, pixels, csys,
-			linear, overwrite, log
-		);
-		auto res = mypair.first
-			? new image(mypair.first)
-			: new image(mypair.second);
-		return res;
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	return nullptr;
-}
 
 image* image::newimagefromshape(
 	const string& outfile, const vector<int>& shape,

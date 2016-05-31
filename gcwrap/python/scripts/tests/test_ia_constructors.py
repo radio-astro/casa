@@ -79,5 +79,17 @@ class ia_constructors_test(unittest.TestCase):
         zz.done()
         self.assertTrue(len(tb.showcache()) == 0) 
 
+    def test_history(self):
+        """verify history writing"""
+        myia = iatool()
+        myia.fromshape("zz",[20, 20])
+        csys = myia.coordsys()
+        ary = myia.getchunk()
+        myia = myia.newimagefromarray(pixels=ary, csys=csys.torecord())
+        msgs = myia.history()
+        myia.done()       
+        self.assertTrue("ia.newimagefromarray" in msgs[-2])
+        self.assertTrue("ia.newimagefromarray" in msgs[-1])
+
 def suite():
     return [ia_constructors_test]
