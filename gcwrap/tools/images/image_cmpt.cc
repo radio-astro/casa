@@ -3260,6 +3260,33 @@ String image::_name(bool strippath) const {
     }
 }
 
+image* image::newimagefromfile(const string& fileName) {
+    try {
+        _log << _ORIGIN;
+        auto mypair = ImageFactory::fromFile(fileName);
+
+        if (mypair.first || mypair.second) {
+            unique_ptr<image> ret(
+                    mypair.first ? new image(mypair.first)
+                    : new image(mypair.second)
+            );
+            vector<String> names = { "infile" };
+            vector<variant> values = { fileName };
+            ret->_addHistory(__func__, names, values);
+            return ret.release();
+        }
+        else {
+            return new image();
+        }
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
+        RETHROW(x);
+    }
+    return nullptr;
+}
+
 image* image::newimagefromimage(
     const string& infile, const string& outfile,
     const variant& region, const variant& vmask,
@@ -5078,6 +5105,7 @@ bool image::tofits(
             << LogIO::POST;
         RETHROW(x);
     }
+    return False;
 }
 
 record* image::topixel(const variant& value) {
@@ -5179,8 +5207,7 @@ record* image::toworld(
 }
 
 image* image::transpose(
-    const std::string& outfile,
-    const variant& order
+    const std::string& outfile, const variant& order
 ) {
     try {
         _log << _ORIGIN;
@@ -5445,28 +5472,6 @@ void image::_reset() {
 
 
 
-
-image* image::newimagefromfile(const std::string& fileName) {
-	try {
-		//std::unique_ptr<ImageAnalysis> newImage(new ImageAnalysis());
-		_log << _ORIGIN;
-		auto mypair = ImageFactory::fromFile(fileName);
-		if (mypair.first) {
-			return new image(mypair.first);
-		}
-		else if (mypair.second) {
-		    return new image(mypair.second);
-		}
-		else {
-		    return new image();
-		}
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-			<< LogIO::POST;
-		RETHROW(x);
-	}
-}
 
 image* image::newimage(const string& fileName) {
 	image *rstat = newimagefromfile(fileName);
@@ -5814,4 +5819,4 @@ vector<double> image::_toDoubleVec(const variant& v) {
 	return output;
 }
 
-} // casac namespace
+}
