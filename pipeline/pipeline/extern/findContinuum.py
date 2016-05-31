@@ -30,7 +30,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: findContinuum.py,v 1.69 2016/05/17 15:45:19 we Exp $" 
+    myversion = "$Id: findContinuum.py,v 1.70 2016/05/27 13:45:52 we Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -230,6 +230,7 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
         hostname = "?"
     print "Total memory on %s = %.3f GB" % (hostname,
                                             bytes/1e9)
+    meanSpectrumMethodRequested = meanSpectrumMethod
     if (meanSpectrumMethod.find('auto') >= 0):
         meanSpectrumMethod = 'meanAboveThreshold'
         if (img != ''):
@@ -258,6 +259,7 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
     else:  
         centralArcsecField = centralArcsec
 
+    iteration = 0
     result = runFindContinuum(img, spw, transition, baselineModeA,baselineModeB,
                               sigmaCube, nBaselineChannels, sigmaFindContinuum,
                               verbose, png, pngBasename, nanBufferChannels, 
@@ -270,7 +272,7 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
                               plotAtmosphere, airmass, pwv, 
                               channelFractionForSlopeRemoval, mask, 
                               invert, meanSpectrumMethod, peakFilterFWHM, 
-                              iteration=0)
+                              iteration=iteration)
     if result == None:
         return
     selection, png, slope = result
@@ -281,6 +283,7 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
         centralArcsec = 0.1*imageWidthArcsec
         overwrite = True
         print "Re-running findContinuum over central %.1f arcsec" % (centralArcsec)
+        iteration += 1
         result = runFindContinuum(img, spw, transition, baselineModeA, baselineModeB,
                                   sigmaCube, nBaselineChannels, sigmaFindContinuum,
                                   verbose, png, pngBasename, nanBufferChannels, 
@@ -293,11 +296,34 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
                                   plotAtmosphere, airmass, pwv, 
                                   channelFractionForSlopeRemoval, mask, 
                                   invert, meanSpectrumMethod, peakFilterFWHM, 
-                                  iteration=1)
+                                  iteration=iteration)
         if result == None:
             return
         selection, png, slope = result
     aggregateBandwidth = computeBandwidth(selection, channelWidth)
+    if (meanSpectrumMethodRequested == 'auto' and aggregateBandwidth <= 0.00001):
+        # If less than 10 kHz is found, then try the other approach.
+        if (meanSpectrumMethod == 'peakOverMad'):
+            meanSpectrumMethod = 'meanAboveThreshold'
+        else:
+            meanSpectrumMethod = 'peakOverMad'
+        print "Re-running findContinuum with the other method: ", meanSpectrumMethod
+        iteration += 1
+        result = runFindContinuum(img, spw, transition, baselineModeA, baselineModeB,
+                                  sigmaCube, nBaselineChannels, sigmaFindContinuum,
+                                  verbose, png, pngBasename, nanBufferChannels, 
+                                  source, useAbsoluteValue, trimChannels, 
+                                  percentile, continuumThreshold, narrow, 
+                                  separator, overwrite, titleText, 
+                                  showAverageSpectrum, maxTrim, maxTrimFraction,
+                                  meanSpectrumFile, centralArcsec, channelWidth,
+                                  alternateDirectory, imageInfo, chanInfo, header,
+                                  plotAtmosphere, airmass, pwv, 
+                                  channelFractionForSlopeRemoval, mask, 
+                                  invert, meanSpectrumMethod, peakFilterFWHM, 
+                                  iteration=iteration)
+
+
     # Write summary of results to text file
     if (meanSpectrumFile == ''): 
         meanSpectrumFile = buildMeanSpectrumFilename(img, meanSpectrumMethod, peakFilterFWHM)
