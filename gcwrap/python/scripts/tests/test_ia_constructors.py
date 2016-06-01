@@ -91,5 +91,14 @@ class ia_constructors_test(unittest.TestCase):
         self.assertTrue("ia.newimagefromarray" in msgs[-2])
         self.assertTrue("ia.newimagefromarray" in msgs[-1])
 
+    def test_history1(self):
+        """verify history writing"""
+        myia = iatool()
+        myia = myia.newimagefromshape(shape=[20,20])
+        msgs = myia.history()
+        myia.done()       
+        self.assertTrue("ia.newimagefromshape" in msgs[-2])
+        self.assertTrue("ia.newimagefromshape" in msgs[-1])
+
 def suite():
     return [ia_constructors_test]

@@ -86,7 +86,6 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_ia_modify.py
   test_ia_newimagefromfile.py
   test_ia_newimagefromimage.py
-  test_ia_newimagefromshape.py
   test_ia_pad.py
   test_ia_putchunk.py
   test_ia_putregion.py
