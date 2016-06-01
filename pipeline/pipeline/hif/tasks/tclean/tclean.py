@@ -175,17 +175,6 @@ class Tclean(cleanbase.CleanBase):
             field_id = self.clheuristics.field(inputs.intent, inputs.field)
             inputs.phasecenter = self.clheuristics.phasecenter(field_id)
 
-        # Adjust the width to get around problems with increasing / decreasing
-        # frequency with channel issues.
-        if inputs.width in ('', None):
-            if inputs.specmode == 'cube':
-                width = self.clheuristics.width(int(inputs.spw.split(',')[0]))
-            else:
-                width = inputs.width
-        else:
-            width = inputs.width
-        inputs.width = width
-
         # If imsize not set then use heuristic code to calculate the
         # centers for each field  / spw
         imsize = inputs.imsize

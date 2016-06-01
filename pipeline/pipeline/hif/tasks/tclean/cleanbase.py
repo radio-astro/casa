@@ -329,10 +329,6 @@ class CleanBase(basetask.StandardTaskTemplate):
         else:
             new_threshold = old_threshold
 
-        # Catch trivial case which is broken up to CASA 4.6.0 / 4.7.44 (CAS-8576)
-        if (new_threshold > result._residual_max):
-            new_threshold = 0.9 * result._residual_max
-
         inputs.threshold = '%sJy' % (new_threshold)
 
         if (inputs.specmode == 'cube'):
@@ -401,13 +397,19 @@ class CleanBase(basetask.StandardTaskTemplate):
 
         if (inputs.niter > 0):
             LOG.info('tclean used %d iterations' % (tclean_result['iterdone']))
-            if ((tclean_result['stopcode'] != 2) and (tclean_result['iterdone'] >= tclean_result['niter'])):
+            if ((tclean_result['stopcode'] == 1) and (tclean_result['iterdone'] >= tclean_result['niter'])):
                 LOG.warning('tclean reached niter limit of %d for %s / spw%s !' % (tclean_result['niter'], utils.dequote(inputs.field), inputs.spw))
+
+            # TODO: Pass stop code 5 information to QA scoring
+            if (tclean_result['stopcode'] == 5):
+                LOG.warning('tclean diverged')
 
         # Create PB for single fields since it is not auto-generated for
         # gridder='standard'.
         if ((inputs.gridder == 'standard') and (iter == 0)):
             # TODO: Change to use list of MSs when makePB supports this.
+            #       Is this really needed for single fields ?
+            #       Will be obsolete anyways when tclean does it.
             if (inputs.specmode == 'cube'):
                 mode = 'frequency'
             else:
