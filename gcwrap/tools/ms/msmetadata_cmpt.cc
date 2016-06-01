@@ -1644,6 +1644,25 @@ vector<int> msmetadata::statesforscan(int scan, int obsid, int arrayid) {
 	return vector<int>();
 }
 
+record* msmetadata::statesforscans(int obsid, int arrayid) {
+	_FUNC(
+		_checkObsId(obsid, False);
+		_checkArrayId(arrayid, False);
+        std::map<ScanKey COMMA std::set<Int> > mymap = _msmd->getScanToStatesMap();
+        ArrayKey arrayKey;
+        arrayKey.obsID = obsid;
+        arrayKey.arrayID = arrayid;
+        auto scanKeys = _msmd->getScanKeys();
+        auto filtered = filter(_msmd->getScanKeys(), arrayKey);
+        unique_ptr<record> ret(new record());
+        for (const auto& f: filtered) {
+            ret->insert(to_string(f.scan), _setIntToVectorInt(mymap[f]));
+        }
+        return ret.release();
+	)
+	return nullptr;
+}
+
 record* msmetadata::timerangeforobs(int obsid) {
 	_FUNC(
 		_checkObsId(obsid, True);

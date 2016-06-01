@@ -1960,6 +1960,32 @@ windows in the dataset and close the tool.
             </example>
         </method>
         
+        <method type="function" name="statesforscans">
+            <shortdescription>Get a dictionary which maps scan numbers to state IDs for the specified array and observation IDs.</shortdescription>
+            <returns type="record"/>
+            <input>
+                <param type="int" direction="in" name="obsid">
+                    <description>Observation ID, must be nonnegative. </description>
+                    <value>0</value>
+                </param>
+                <param type="int" direction="in" name="arrayid">
+                    <description>Array ID, must be nonnegative.</description>
+                    <value>0</value>
+                </param>
+            </input>
+            <description>
+                Get a dictionary which maps scan numbers to state IDs for the specified array and observation IDs. The returned dictionary
+                will have scan numbers, as strings, as keys.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the map of scan numbers to state IDs for arrayID=1, obsID=2
+    scans_to_states = msmd.statesforscans(obsID=2, arrayID=1)
+    states_for_scan_5 = scans_to_states[str(5)]
+    msmd.done()
+            </example>
+        </method>
+
         <method type="function" name="summary">
             <shortdescription>Get dictionary summarizing the MS.</shortdescription>
             <returns type="record"/>

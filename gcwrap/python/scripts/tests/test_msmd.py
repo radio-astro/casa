@@ -775,7 +775,8 @@ class msmd_test(unittest.TestCase):
             self.assertTrue((got == expec).all())
             
     def test_statesforscan(self):
-        """Test statesforscan()"""
+        """Test statesforscan() and statesforscans()"""
+        mymap = self.md.statesforscans()
         for i in self.md.scannumbers():
             if [1, 5, 8].count(i) > 0:
                 expec = numpy.array([0, 1, 2, 3, 4])
@@ -798,6 +799,7 @@ class msmd_test(unittest.TestCase):
                 expec = numpy.array([33, 34, 35, 36])
             got = self.md.statesforscan(i)
             self.assertTrue((got == expec).all())
+            self.assertTrue((mymap[str(i)] == expec).all())
 
     def test_telescopenames(self):
         """ Test observatorynames()"""
