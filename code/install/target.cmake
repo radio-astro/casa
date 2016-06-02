@@ -565,8 +565,8 @@ macro (casa_add_google_test)
 
     # Parse the arguments
 
-    set (options ) # None
-    set (oneValueArgs ) # just MODULE
+    set (options NOT_ON_APPLE)
+    set (oneValueArgs ) 
     set (multiValueArgs SOURCES LIBS MODULES) # the lists of source files and libraries
     cmake_parse_arguments (google_test "${options}" "${oneValueArgs}"
                            "${multiValueArgs}"  ${ARGN})
@@ -574,9 +574,9 @@ macro (casa_add_google_test)
     list(GET google_test_SOURCES 0 testName)
     get_filename_component (testName ${testName} NAME_WE)
 
-    if (NOT (CMAKE_SYSTEM_NAME STREQUAL Linux AND CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 ))
+    if (${APPLE} AND ${google_test_NOT_ON_APPLE})
 
-        message ("WARNING:: Test ${testName}: CASA support for Google Test not ready except of Linux for x64")
+        message ("WARNING:: Test ${testName}: Disabled on Apple platform.")
         return()
 
     endif ()
