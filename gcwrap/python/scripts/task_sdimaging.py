@@ -79,6 +79,10 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
             param = getattr(self, name)
             if not self.__check_selection_length(param, nfile):
                 raise ValueError, "Length of %s != infiles." % (name)
+        # set convsupport default
+        if self.convsupport >= 0 and self.gridfunction.upper() != 'SF':
+            casalog.post("user defined convsupport is ignored for %s kernel" % self.gridfunction)
+            self.convsupport=-1
 
     def __format_spw_string(self, spw):
         """
