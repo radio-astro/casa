@@ -22,6 +22,7 @@ __all__ = ['score_polintents',                                # ALMA specific
            '_score_missing_derived_fluxes',                    # ALMA specific
            'score_derived_fluxes_snr',                        # ALMA specific
            'score_phaseup_mapping_fraction',                  # ALMA specific
+           'score_refspw_mapping_fraction',                   # ALMA specific
            'score_missing_phaseup_snrs',                      # ALMA specific
            'score_missing_bandpass_snrs',                     # ALMA specific
            'score_poor_phaseup_solutions',                    # ALMA specific
@@ -773,6 +774,39 @@ def score_missing_derived_fluxes (ms, reqfields, reqintents, measurements):
         score = 0.0
         longmsg = 'Extra derived fluxes for %s %d/%d' % (ms.basename, nmeasured, nexpected)
         shortmsg = 'Extra derived fluxes'
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg,
+                       vis=ms.basename)
+
+@log_qa
+def score_refspw_mapping_fraction(ms, ref_spwmap):
+    '''
+    Compute the fraction of science spws that have not been
+    mapped to other windows.
+    '''
+
+    if ref_spwmap == [-1]:
+        score = 1.0
+        longmsg = 'No mapped science spws for %s ' % ms.basename
+        shortmsg = 'No mapped science spws'
+    else:
+        # Expected science windows
+        scispws = set([spw.id for spw in ms.get_spectral_windows(science_windows_only=True)])
+        nexpected = len(scispws)
+
+        nunmapped = 0
+        for spwid in scispws:
+            if spwid == ref_spwmap[spwid]: 
+                nunmapped = nunmapped + 1
+        
+        if nunmapped >= nexpected:
+            score = 1.0
+            longmsg = 'No mapped science spws for %s ' % ms.basename
+            shortmsg = 'No mapped science spws'
+        else:
+            score =  float(nunmapped) / float(nexpected) 
+            longmsg = 'There are %d mapped science spws for %s ' % (nexpected - nunmapped, ms.basename)
+            shortmsg = 'There are mapped science spws'
 
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg,
                        vis=ms.basename)
