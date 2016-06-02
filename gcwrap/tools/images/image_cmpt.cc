@@ -3305,15 +3305,13 @@ image* image::newimagefromfile(const string& fileName) {
     try {
         _log << _ORIGIN;
         auto mypair = ImageFactory::fromFile(fileName);
-
         if (mypair.first || mypair.second) {
             unique_ptr<image> ret(
                     mypair.first ? new image(mypair.first)
                     : new image(mypair.second)
             );
-            vector<String> names = { "infile" };
-            vector<variant> values = { fileName };
-            ret->_addHistory(__func__, names, values);
+            // not adding history because all this method does is open
+            // the image, it doesn't change it
             return ret.release();
         }
         else {
