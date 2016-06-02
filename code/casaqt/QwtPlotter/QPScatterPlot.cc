@@ -567,6 +567,7 @@ void QPScatterPlot::draw_(QPainter* p, const QwtScaleMap& xMap,
 #if QWT_VERSION >= 0x060000
                         QPSymbol* coloredSym = coloredSymbol(brushColor);
                         coloredSym->draw(p, rect);
+                        delete coloredSym;
                     } else
                         m_symbol.draw(p, rect);
 #else
