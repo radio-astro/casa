@@ -2353,7 +2353,7 @@ void SingleDishMS::fitLine(string const& in_column_name, string const& in_spw,
             parameters_.resize();
             parameters_ = fitter.fit(x_, y_, &m_);
             if (!fitter.converged()) {
-              throw(AipsError("Failed in fitting. Fitter did not converged. "));
+              throw(AipsError("Failed in fitting. Fitter did not converge."));
             }
             error_.resize();
             error_ = fitter.errors();
