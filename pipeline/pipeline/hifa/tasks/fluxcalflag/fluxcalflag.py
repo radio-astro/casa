@@ -131,8 +131,8 @@ class FluxcalFlagResults(basetask.Results):
             LOG.error ( ' No results to merge ')
             return
 
-        # For now only the refspwmap goes back to the context
-        # The other quantities can be merged later
+        # Store the refspwmap and flagging commands
+        # in the context. Leave out the line list for now
         ms = context.observing_run.get_ms( name = self._vis)
         if ms:
             #ms.fluxcal_linelist = self._fluxcal_linelist
@@ -173,7 +173,7 @@ class FluxcalFlag(basetask.StandardTaskTemplate):
             result.summaries = summaries
             return result
 
-        # Get the science spws. In future field.valid_spws should be used.
+        # Get the science spws. 
         science_spws = inputs.ms.get_spectral_windows(task_arg=inputs.spw,
             science_windows_only=True)
         if not science_spws:
@@ -195,9 +195,10 @@ class FluxcalFlag(basetask.StandardTaskTemplate):
                 inputs.linesfile)
             self._append_linesfile (UserSolarSystemLineList, inputs.linesfile)
 
-        # Get the pipeline to CASA intents mapping to be used  in the CASA
+        # Get the pipeline to CASA intents mapping to be used in the CASA
         # flagging commands. Should be handled transparently by framework
         # as is the case for the calibration software.
+        #    Intent mapping problem ?
         amp_obsmodes = []
         for state in inputs.ms.states:
             amp_obsmodes.extend(state.get_obs_mode_for_intent(inputs.intent))
@@ -243,12 +244,7 @@ class FluxcalFlag(basetask.StandardTaskTemplate):
                             nchan=spw.num_channels)
                         fluxcal_lines.append(fluxcal_line)
 
-        # Generate the channel flagging statistics per
-        # field and spw.
-        # Note: Assumes that if multiple lines are detected
-        # that there are no line overlaps
-        #flagstats = self._flagstats (fluxcal_lines)
-        # Note: Replaced with a routine which can deal with overlaps.
+        # Generate the channel flagging statistics per field and spw.
         flagstats = self._newflagstats (fluxcal_lines)
 
         # Compute the reference spw map
@@ -339,28 +335,6 @@ class FluxcalFlag(basetask.StandardTaskTemplate):
                     if newspecies:
                         linedict[source].append((species, [region]))
 
-
-    # Generate channel flagging statistics per field and spw assuming no
-    # line regions overlaps.
-    def _flagstats (self, fluxcal_lines):
-
-        flagstats = {}
-        prev_fieldname = None; prev_spwid = None
-        for line in fluxcal_lines:
-            fraction = float (line.chanrange[1] - line.chanrange[0] + 1) / \
-                float (line.nchan)
-            if line.fieldname != prev_fieldname:
-                flagstats[line.fieldname] = {}
-                flagstats[line.fieldname][line.spwid] = fraction
-            elif line.spwid != prev_spwid:
-                flagstats[line.fieldname][line.spwid] = fraction
-            else:
-                flagstats[line.fieldname][line.spwid] += fraction
-
-            prev_fieldname = line.fieldname
-            prev_spwid = line.spwid
-
-        return flagstats
 
     # Generate channel flagging statistics per field and spw allowing
     # for line region overlaps. For each field, spwid combination create
@@ -463,7 +437,8 @@ class FluxcalFlag(basetask.StandardTaskTemplate):
             if closest_spwid is not None:
                 refspwmap[fkey] = closest_spwid
         
-        return True, refspwmap
+        #return True, refspwmap
+        return False, refspwmap
 
 
     # Generate flagging commands one per field and spw

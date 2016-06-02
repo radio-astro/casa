@@ -23,12 +23,23 @@ class FluxcalflagQAHandler(pqa.QAResultHandler):
     
         # calculate QA scores from agentflagger summary dictionary, adopting
         # the minimum score as the representative score for this task
-        scores = [qacalc.score_fraction_newly_flagged(ms.basename,
+        score1 = qacalc.score_fraction_newly_flagged(ms.basename,
                                                       result.summaries,
-                                                      ms.basename)]
+                                                      ms.basename)
+
+        score2 = self._refspw_mapping_fraction(ms, result._refspwmap)
+
+        scores = [score1, score2]
         result.qa.pool[:] = scores
 
-        result.qa.all_unity_longmsg = 'No extra data was flagged in %s' % ms.basename
+        result.qa.all_unity_longmsg = 'No flux calibrator data was flagged in %s' % ms.basename
+
+    def _refspw_mapping_fraction(self, ms, refspwmap):
+        '''
+        Check whether or not there has been reference spw mapping .
+        '''
+
+        return qacalc.score_refspw_mapping_fraction(ms, refspwmap)
 
 
 class FluxcalflagListQAHandler(pqa.QAResultHandler):
@@ -45,7 +56,7 @@ class FluxcalflagListQAHandler(pqa.QAResultHandler):
         result.qa.pool[:] = collated
 
         mses = [r.inputs['vis'] for r in result]
-        longmsg = 'No extra data was flagged in %s' % utils.commafy(mses, 
+        longmsg = 'No flux calibrator data was flagged in %s' % utils.commafy(mses, 
                                                                     quotes=False, 
                                                                     conjunction='or')
         result.qa.all_unity_longmsg = longmsg
