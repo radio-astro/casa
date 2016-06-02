@@ -26,23 +26,23 @@ using namespace std;
 #define TESTLOG cout << "TESTLOG::" << __FUNCTION__ << " "
 
 namespace {
-void createTestData(size_t const num_pol, size_t const num_chan,
-    Cube<Float> &data, Matrix<Double> &direction, size_t const ncycle = 20,
-    size_t const datapercycle = 20) {
-  size_t const num_data = ncycle * datapercycle;
+void createTestData(ssize_t const num_pol, ssize_t const num_chan,
+    Cube<Float> &data, Matrix<Double> &direction, ssize_t const ncycle = 20,
+    ssize_t const datapercycle = 20) {
+  ssize_t const num_data = ncycle * datapercycle;
 
   direction.resize(2, num_data);
   data.resize(num_pol, num_chan, num_data);
 
   // set direction
   Double const scaler = 10.0;
-  for (size_t idata = 0; idata < num_data; ++idata) {
+  for (ssize_t idata = 0; idata < num_data; ++idata) {
     Double angle = C::_2pi / static_cast<Double>(num_data)
         * static_cast<Double>(idata);
     Double px = cos(angle);
     Double py = sin(angle);
 
-    size_t const k = idata % datapercycle;
+    ssize_t const k = idata % datapercycle;
     auto const halfcycle = datapercycle / 2;
     Double const halfcycle_asdouble = static_cast<Double>(datapercycle) / 2.0;
     Double r = 0.0;
@@ -71,7 +71,7 @@ void createTestData(size_t const num_pol, size_t const num_chan,
 
   // set data
   constexpr Float offset = 1.0;
-  for (size_t idata = 0; idata < num_data; ++idata) {
+  for (ssize_t idata = 0; idata < num_data; ++idata) {
     auto k = idata / datapercycle;
     data.xyPlane(idata) = static_cast<Float>(k) + offset;
   }
@@ -93,10 +93,10 @@ Double getDefaultSmoothingSize(Double radius) {
 
 struct StandardConfig {
   static void ConfigureData(Cube<Float> &data, Matrix<Double> &direction,
-      size_t const num_cycle = 20, size_t const num_data_per_cycle = 20) {
-    size_t const num_pol = 2;
-    size_t const num_chan = 2;
-    size_t const num_data = num_cycle * num_data_per_cycle;
+      ssize_t const num_cycle = 20, ssize_t const num_data_per_cycle = 20) {
+    ssize_t const num_pol = 2;
+    ssize_t const num_chan = 2;
+    ssize_t const num_data = num_cycle * num_data_per_cycle;
     createTestData(num_pol, num_chan, data, direction, num_cycle,
         num_data_per_cycle);
 
@@ -168,7 +168,7 @@ struct StandardConfig {
 struct ExceptionExecutor {
   static void Execute(SDDoubleCircleGainCalImpl &calibrator,
       Cube<Float> const &data, Matrix<Double> const &direction,
-      Double const radius, Int const smooth_size) {
+      Double const /* radius */, Int const /* smooth_size */) {
     size_t const num_data = data.shape()[2];
     Vector<Double> time(num_data);
     indgen(time, 0., 1.0);
@@ -221,9 +221,9 @@ private:
       Cube<Float> const &gain) {
     TESTLOG << endl;
     IPosition const data_shape = data.shape();
-    size_t const num_pol_expected = data_shape[0];
-    size_t const num_chan_expected = data_shape[1];
-    size_t const num_data_expected = data_index.nelements();
+    ssize_t const num_pol_expected = data_shape[0];
+    ssize_t const num_chan_expected = data_shape[1];
+    ssize_t const num_data_expected = data_index.nelements();
 
     if (num_data_expected < 100) {
       // no calibration is executed, gain should be empty array
@@ -234,10 +234,10 @@ private:
       ASSERT_EQ(num_pol_expected, gain_shape[0]);
       ASSERT_EQ(num_chan_expected, gain_shape[1]);
       ASSERT_EQ(num_data_expected, gain_shape[2]);
-      ASSERT_EQ(num_data_expected, gain_time.nelements());
+      ASSERT_EQ(static_cast<size_t>(num_data_expected), gain_time.nelements());
 
       // verify timestamp
-      for (size_t i = 0; i < num_data_expected; ++i) {
+      for (ssize_t i = 0; i < num_data_expected; ++i) {
         auto const time_expected = time[data_index[i]];
         auto const time_actual = gain_time[i];
         EXPECT_EQ(time_expected, time_actual);
@@ -249,7 +249,7 @@ private:
         // do smoothing
         TESTLOG << "do smoothing" << endl;
         Cube<Float> unsmoothed_data(gain.shape());
-        for (size_t i = 0; i < num_data_expected; ++i) {
+        for (ssize_t i = 0; i < num_data_expected; ++i) {
           unsmoothed_data.xyPlane(i) = data.xyPlane(data_index[i]);
         }
 //        TESTLOG << "unsmoothed_data" << unsmoothed_data << endl;
@@ -257,19 +257,19 @@ private:
 //        TESTLOG << "smoothed_data" << smoothed_data << endl;
       } else {
         // no smoothing
-        for (size_t i = 0; i < num_data_expected; ++i) {
+        for (ssize_t i = 0; i < num_data_expected; ++i) {
           smoothed_data.xyPlane(i) = data.xyPlane(data_index[i]);
         }
       }
 
-      for (size_t ip = 0; ip < num_pol_expected; ++ip) {
-        for (size_t ic = 0; ic < num_chan_expected; ++ic) {
+      for (ssize_t ip = 0; ip < num_pol_expected; ++ip) {
+        for (ssize_t ic = 0; ic < num_chan_expected; ++ic) {
           Double mean_data = 0.0;
-          for (size_t i = 0; i < num_data_expected; ++i) {
+          for (ssize_t i = 0; i < num_data_expected; ++i) {
             mean_data += smoothed_data(ip, ic, i);
           }
           mean_data /= num_data_expected;
-          for (size_t ig = 0; ig < num_data_expected; ++ig) {
+          for (ssize_t ig = 0; ig < num_data_expected; ++ig) {
             auto const expected_gain = mean_data / smoothed_data(ip, ic, ig);
             auto const expected = 1.0 / sqrt(expected_gain);
             EXPECT_FLOAT_EQ(expected, gain(ip, ic, ig));
@@ -319,7 +319,7 @@ private:
 };
 
 template<class Configurator, class Executor>
-void RunTest(size_t const num_cycle, size_t const num_data_per_cycle,
+void RunTest(ssize_t const num_cycle, ssize_t const num_data_per_cycle,
     Double const radius, Bool const auto_radius, Bool const do_smooth,
     Int const smooth_size, Bool const auto_smooth_size) {
   TESTLOG << "=== START TEST === " << endl;

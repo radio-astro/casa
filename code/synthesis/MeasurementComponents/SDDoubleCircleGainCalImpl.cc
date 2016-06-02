@@ -62,7 +62,7 @@ inline void smooth(Int const smooth_size, Vector<Double> const &data,
   // TODO replace with sakura function
   assert(data.nelements() == smoothed_data.nelements());
   size_t num_data = data.nelements();
-  if (smooth_size < 2 || smooth_size >= num_data) {
+  if (smooth_size < 2 || static_cast<size_t>(smooth_size) >= num_data) {
     //cout << "no smoothing" << endl;
     smoothed_data = data;
   } else {
@@ -202,7 +202,7 @@ void SDDoubleCircleGainCalImpl::calibrate(Cube<Float> const &data,
           smooth_size = getDefaultSmoothingSize();
           LOG << "default smoothing size will be used: " << smooth_size
               << LogIO::POST;
-        } else if (smooth_size_ < 2 || smooth_size_ >= num_gain) {
+        } else if (smooth_size_ < 2 || static_cast<size_t>(smooth_size_) >= num_gain) {
           LOG << LogIO::WARN
               << "data is not smoothed since smoothing size is invalid: "
               << smooth_size_ << " (number of data " << num_gain << ")"
@@ -239,9 +239,9 @@ void SDDoubleCircleGainCalImpl::calibrate(Cube<Float> const &data,
   }
 }
 
-void SDDoubleCircleGainCalImpl::apply(Vector<Double> const &gain_time,
-    Cube<Float> const &gain, Vector<Double> const &time, Cube<Float> &data) {
-  // TODO implement
-  // not necessary to implement? reuse G type application?
-}
+//void SDDoubleCircleGainCalImpl::apply(Vector<Double> const &gain_time,
+//    Cube<Float> const &gain, Vector<Double> const &time, Cube<Float> &data) {
+//  // TODO implement
+//  // not necessary to implement? reuse G type application?
+//}
 } // namespace casa END

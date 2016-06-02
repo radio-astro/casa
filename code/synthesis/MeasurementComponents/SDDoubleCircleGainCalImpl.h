@@ -60,6 +60,7 @@ public:
   }
 
   // gain calibration
+  // based on Stephen White's IDL script
   void calibrate(casacore::Cube<casacore::Float> const &data,
       casacore::Vector<casacore::Double> const &time,
       casacore::Matrix<casacore::Double> const &direction,
@@ -67,10 +68,10 @@ public:
       casacore::Cube<casacore::Float> &gain);
 
   // apply gain factor
-  void apply(casacore::Vector<casacore::Double> const &gain_time,
-      casacore::Cube<casacore::Float> const &gain,
-      casacore::Vector<casacore::Double> const &time,
-      casacore::Cube<casacore::Float> &data);
+//  void apply(casacore::Vector<casacore::Double> const &gain_time,
+//      casacore::Cube<casacore::Float> const &gain,
+//      casacore::Vector<casacore::Double> const &time,
+//      casacore::Cube<casacore::Float> &data);
 
 private:
   // radius of the central region [arcsec]
