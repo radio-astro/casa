@@ -42,12 +42,7 @@ namespace casac {
 					   bool vi2 // default value = false
 					   )
   {
-    if (forceNew)
-      {
-	if (vi2) return new SynthesisImagerVi2();
-	else return new SynthesisImager();
-      }
-    else if( ! itsImager ) 
+    if ((!itsImager) || forceNew)
       {
 	if (vi2) return new SynthesisImagerVi2();
 	else return new SynthesisImager();
