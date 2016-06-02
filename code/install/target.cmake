@@ -574,7 +574,7 @@ macro (casa_add_google_test)
     list(GET google_test_SOURCES 0 testName)
     get_filename_component (testName ${testName} NAME_WE)
 
-    if (${APPLE} AND ${google_test_NOT_ON_APPLE})
+    if (DEFINED ${APPLE} AND ${google_test_NOT_ON_APPLE})
 
         message ("WARNING:: Test ${testName}: Disabled on Apple platform.")
         return()
