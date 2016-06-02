@@ -649,7 +649,7 @@ class plotms_test_calplots(plotms_test_base):
                      plotfile=self.plotfile_jpg, expformat="jpg", 
                      showgui=False, highres=True)   
         self.assertTrue(res)
-        self.checkPlotfile(self.plotfile_jpg, 80000)
+        self.checkPlotfile(self.plotfile_jpg, 70000)
         self.removePlotfile()
         print
 
@@ -1031,11 +1031,11 @@ class plotms_test_grid(plotms_test_base):
                      rowindex=1, colindex=0, plotindex=3, clearplots=False)
         self.assertTrue(res)
         print 'Added iteration plot, now exporting'
-        self.checkPlotfile(plotFiles[0], 200000)
+        self.checkPlotfile(plotFiles[0], 190000)
         self.removePlotfile(plotFiles[0])
-        self.checkPlotfile(plotFiles[1], 200000)
+        self.checkPlotfile(plotFiles[1], 190000)
         self.removePlotfile(plotFiles[1])
-        self.checkPlotfile(plotFiles[2], 50000)
+        self.checkPlotfile(plotFiles[2], 40000)
         self.removePlotfile(plotFiles[2])
         print
 
