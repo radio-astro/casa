@@ -38,7 +38,7 @@
 
     <param type="bool" name="weakbp">
 	<description>Activate weak bandpass heuristics</description>
-	<value>True</value>
+	<value>Flase</value>
     </param>
 
     <constraints>
@@ -49,7 +49,7 @@
                 <default param="vis"><value type="stringArray"></value></default>
                 <default param="dryrun"><value type="bool">False</value></default>
 		        <default param="acceptresults"><value type="bool">True</value></default>
-                <default param="weakbp"><value type="bool">True</value></default>
+                <default param="weakbp"><value type="bool">False</value></default>
 	    </equals>
 	    <equals type="string" value="getinputs">
                 <default param="vis"><value type="stringArray"></value></default>

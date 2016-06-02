@@ -33,7 +33,7 @@ class semiFinalBPdcalsInputs(basetask.StandardInputs):
     def weakbp(self, value):
 
         if self._weakbp is None:
-            self._weakbp = True
+            self._weakbp = False
 
         self._weakbp = value
 
