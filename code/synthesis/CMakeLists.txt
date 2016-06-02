@@ -266,6 +266,7 @@ casa_add_library( synthesis
  MeasurementComponents/ResamplerWorklet.cc
  MeasurementComponents/SDGrid.cc
  MeasurementComponents/SDPosInterpolator.cc
+ MeasurementComponents/SDDoubleCircleGainCalImpl.cc
  MeasurementComponents/SimACohCalc.cc
  MeasurementComponents/SimACoh.cc
  MeasurementComponents/SingleDishSkyCal.cc
@@ -524,8 +525,10 @@ install (FILES
 	MeasurementComponents/ResidualAlgorithm.h
 	MeasurementComponents/SDGrid.h
 	MeasurementComponents/SDPosInterpolator.h
+	MeasurementComponents/SDDoubleCircleGainCalImpl.h
 	MeasurementComponents/SimACoh.h
 	MeasurementComponents/SimACohCalc.h
+	MeasurementComponents/SingleDishSkyCal.h
 	MeasurementComponents/SkyModel.h
 	MeasurementComponents/SolvableVisCal.h
 	MeasurementComponents/SolveDataBuffer.h
@@ -851,3 +854,5 @@ casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tSolv
 
 casa_add_google_test( MODULES synthesis SOURCES ImagerObjects/test/SDMaskHandler_GTest.cc )
 casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/SDPosInterpolator_GTest.cc )
+casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/SDDoubleCircleGainCalImpl_GTest.cc )
+
