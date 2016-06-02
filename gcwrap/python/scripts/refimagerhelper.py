@@ -971,6 +971,14 @@ class PyParallelCubeSynthesisImager():
                         subimliststr+=fullimname+'.'+ext+' '
                 subimliststr+="'"
                 if subimliststr!="''":
+                    # parent images need to be cleaned up for restart=T
+                    if self.allinimagepars[str(immod)]['restart'] and os.path.exists(fullconcatimname):
+                        try:
+                            casalog.post("Cleaning up the existing "+fullconcatimname,"DEBUG")
+                            shutil.rmtree(fullconcatimname)
+                        except:
+                            casalog.post("Cleaning up the existing file named "+fullconcatimname,"DEBUG")
+                            os.remove(fullconcatimname)
                     cmd = 'imageconcat inimages='+subimliststr+' outimage='+"'"+fullconcatimname+"'"+' type='+type      
                     # run virtual concat
                     ret=os.system(cmd)
