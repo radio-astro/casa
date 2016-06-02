@@ -47,14 +47,12 @@ RegriddingTVI::RegriddingTVI(	ViImplementation2 * inputVii,
 	interpolationMethodPar_p = String("linear");	// Options are: nearest, linear, cubic, spline, fftshift
 	outputReferenceFramePar_p = String("");			// Options are: LSRK, LSRD, BARY, GALACTO, LGROUP, CMB, GEO, or TOPO
 	phaseCenterPar_p = new casac::variant("");
-	interpolationMethod_p = linear;
+	regriddingMethod_p = linear;
 
 	// Sub-cases
-    fftShiftEnabled_p = False;
 	refFrameTransformation_p = False;
 	radialVelocityCorrection_p = False;
 	fftShift_p = 0;
-	transformFlags_p = False;
 
 	// SPW-indexed maps
     weightFactorMap_p.clear();
@@ -134,24 +132,23 @@ Bool RegriddingTVI::parseConfiguration(const Record &configuration)
 
 		if (interpolationMethodPar_p.contains("nearest"))
 		{
-			interpolationMethod_p = nearestNeighbour;
+			regriddingMethod_p = nearestNeighbour;
 		}
 		else if (interpolationMethodPar_p.contains("linear"))
 		{
-			interpolationMethod_p = linear;
+			regriddingMethod_p = linear;
 		}
 		else if (interpolationMethodPar_p.contains("cubic"))
 		{
-			interpolationMethod_p = cubic;
+			regriddingMethod_p = cubic;
 		}
 		else if (interpolationMethodPar_p.contains("spline"))
 		{
-			interpolationMethod_p = spline;
+			regriddingMethod_p = spline;
 		}
 		else if (interpolationMethodPar_p.contains("fftshift"))
 		{
-			fftShiftEnabled_p = True;
-			interpolationMethod_p = linear;
+			regriddingMethod_p = fftshift;
 		}
 		else
 		{
@@ -164,7 +161,7 @@ Bool RegriddingTVI::parseConfiguration(const Record &configuration)
 	}
 	else
 	{
-		interpolationMethod_p = linear;
+		regriddingMethod_p = linear;
 	}
 
 	exists = configuration.fieldNumber ("mode");
@@ -211,14 +208,6 @@ Bool RegriddingTVI::parseConfiguration(const Record &configuration)
 		configuration.get (exists, velocityType_p);
 		logger_p << LogIO::NORMAL << LogOrigin("RegriddingTVI", __FUNCTION__)
 				<< "Velocity type is " << velocityType_p << LogIO::POST;
-	}
-
-	exists = configuration.fieldNumber ("flags");
-	if ((exists >= 0))
-	{
-		configuration.get (exists, transformFlags_p);
-		logger_p << LogIO::NORMAL << LogOrigin("RegriddingTVI", __FUNCTION__)
-				<< "Transform flags us " << transformFlags_p << LogIO::POST;
 	}
 
 	return ret;
@@ -503,7 +492,7 @@ void RegriddingTVI::initFrequencyTransformationEngine() const
 		}
 
 		// Calculate FFT shift if necessary
-		if (fftShiftEnabled_p)
+		if (regriddingMethod_p == fftshift)
 		{
 			uInt centralChan = inputOutputSpwMap_p[spwId].first.CHAN_FREQ.size()/2;
 			Double absoluteShift = inputOutputSpwMap_p[spwId].first.CHAN_FREQ_aux[centralChan]
@@ -596,7 +585,8 @@ void RegriddingTVI::flag(Cube<Bool>& flagCube) const
 
 	// Get input and output shape
 	const IPosition &inputShape = flagCube.shape();
-	IPosition outputShape(inputShape(0),spwOutChanNumMap_p[inputSPW],inputShape(2));
+	IPosition outputShape = inputShape;
+	outputShape(0) = spwOutChanNumMap_p[inputSPW];
 	flagCube.resize(getVisBufferConst()->getShape(),False);
 
 	// Gather input data
@@ -612,9 +602,9 @@ void RegriddingTVI::flag(Cube<Bool>& flagCube) const
 	outputData.setWindowShape(outputShape);
 
 	// Configure kernel
-	if (fftShiftEnabled_p)
+	if (regriddingMethod_p == fftshift)
 	{
-		DataFFTKernel<Float> kernel(interpolationMethod_p);
+		DataFFTKernel<Float> kernel(regriddingMethod_p);
 		RegriddingTransformEngine<Float> transformer(&kernel,&inputData,&outputData);
 		transformFreqAxis2(inputShape,transformer);
 	}
@@ -622,7 +612,7 @@ void RegriddingTVI::flag(Cube<Bool>& flagCube) const
 	{
 		Vector<Double> *inputFreq = &(inputOutputSpwMap_p[inputSPW].first.CHAN_FREQ_aux);
 		Vector<Double> *outputFreq = &(inputOutputSpwMap_p[inputSPW].second.CHAN_FREQ);
-		DataInterpolationKernel<Float> kernel(interpolationMethod_p,inputFreq,outputFreq);
+		DataInterpolationKernel<Float> kernel(regriddingMethod_p,inputFreq,outputFreq);
 		RegriddingTransformEngine<Float> transformer(&kernel,&inputData,&outputData);
 		transformFreqAxis2(inputShape,transformer);
 	}
@@ -679,9 +669,12 @@ void RegriddingTVI::weightSpectrum(Cube<Float> &weightSp) const
 	VisBuffer2 *vb = getVii()->getVisBuffer();
 	Int inputSPW = vb->spectralWindows()(0);
 
-	// Multiply input weight spectrum by the scaling factor
-	initFrequencyTransformationEngine();
-	weightSp = weightFactorMap_p[inputSPW]*(vb->weightSpectrum());
+	// Transform data
+	transformDataCube(getVii()->getVisBuffer()->weightSpectrum(),weightSp);
+
+	// Apply scaling factor on weights
+	weightSp *= weightFactorMap_p[inputSPW];
+
 
 	return;
 }
@@ -695,9 +688,11 @@ void RegriddingTVI::sigmaSpectrum (Cube<Float> &sigmaSp) const
 	VisBuffer2 *vb = getVii()->getVisBuffer();
 	Int inputSPW = vb->spectralWindows()(0);
 
-	// Multiply input sigma spectrum by the scaling factor
-	initFrequencyTransformationEngine();
-	sigmaSp = sigmaFactorMap_p[inputSPW]*(vb->sigmaSpectrum());
+	// Transform data
+	transformDataCube(getVii()->getVisBuffer()->sigmaSpectrum(),sigmaSp);
+
+	// Apply scaling factor on weights
+	sigmaSp *= sigmaFactorMap_p[inputSPW];
 
 	return;
 }
@@ -705,7 +700,8 @@ void RegriddingTVI::sigmaSpectrum (Cube<Float> &sigmaSp) const
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-template<class T> void RegriddingTVI::transformDataCube(const Cube<T> &inputVis,Cube<T> &outputVis) const
+template<class T> void RegriddingTVI::transformDataCube(	const Cube<T> &inputVis,
+															Cube<T> &outputVis) const
 {
 	// Get input VisBuffer and SPW
 	VisBuffer2 *vb = getVii()->getVisBuffer();
@@ -734,9 +730,9 @@ template<class T> void RegriddingTVI::transformDataCube(const Cube<T> &inputVis,
 	outputData.setWindowShape(outputShape);
 
 	// Configure kernel
-	if (fftShiftEnabled_p)
+	if (regriddingMethod_p == fftshift)
 	{
-		DataFFTKernel<T> kernel(interpolationMethod_p);
+		DataFFTKernel<T> kernel(regriddingMethod_p);
 		RegriddingTransformEngine<T> transformer(&kernel,&inputData,&outputData);
 		transformFreqAxis2(inputShape,transformer);
 	}
@@ -744,7 +740,7 @@ template<class T> void RegriddingTVI::transformDataCube(const Cube<T> &inputVis,
 	{
 		Vector<Double> *inputFreq = &(inputOutputSpwMap_p[inputSPW].first.CHAN_FREQ_aux);
 		Vector<Double> *outputFreq = &(inputOutputSpwMap_p[inputSPW].second.CHAN_FREQ);
-		DataInterpolationKernel<T> kernel(interpolationMethod_p,inputFreq,outputFreq);
+		DataInterpolationKernel<T> kernel(regriddingMethod_p,inputFreq,outputFreq);
 		RegriddingTransformEngine<T> transformer(&kernel,&inputData,&outputData);
 		transformFreqAxis2(inputShape,transformer);
 	}

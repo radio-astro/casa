@@ -2739,6 +2739,7 @@ void MSTransformManager::regridSpwAux(	Int spwId,
 	        					<< ", setting pre-channel average width to " << width << LogIO::POST;
 			channelAverage_p = True;
 			freqbinMap_p[spwId] = width;
+			newWeightFactorMap_p[spwId] /= width; // jagonzal: Remove channel width contribution to the scale factor
 
 			// Calculate averaged frequencies
 			calculateIntermediateFrequencies(spwId,originalCHAN_FREQ,originalCHAN_WIDTH,inputCHAN_FREQ,inputCHAN_WIDTH);
@@ -6229,12 +6230,33 @@ void MSTransformManager::transformAndWriteSpectrum(	vi::VisBuffer2 *vb,
 	// Dummy auxiliary weightSpectrum
 	const Cube<Float> applicableSpectrum;
 
+	// Check if weight scaling has to be applied
+	Float weightScale = 0, sigmaScale = 0;
+	if (refFrameTransformation_p)
+	{
+		if ( (newWeightFactorMap_p.find(vb->spectralWindows()(0))  != newWeightFactorMap_p.end()) and
+				(newWeightFactorMap_p[vb->spectralWindows()(0)] != 1) )
+		{
+			weightScale = newWeightFactorMap_p[vb->spectralWindows()(0)];
+		}
+
+		if ( (newSigmaFactorMap_p.find(vb->spectralWindows()(0))  != newSigmaFactorMap_p.end()) and
+				(newSigmaFactorMap_p[vb->spectralWindows()(0)] != 1) )
+		{
+			sigmaScale = newSigmaFactorMap_p[vb->spectralWindows()(0)];
+		}
+	}
+
+	// Apply transformations
 	switch (weightTransformation)
 	{
 		case MSTransformations::transformWeight:
 		{
 			dataBuffer_p = MSTransformations::weightSpectrum;
 			transformCubeOfData(vb,rowRef,inputSpectrum,outputCubeCol,NULL,applicableSpectrum);
+
+			if (weightScale > 0) *weightSpectrum_p *= weightScale;
+
 			break;
 		}
 		case MSTransformations::transformWeightIntoSigma:
@@ -6244,11 +6266,15 @@ void MSTransformManager::transformAndWriteSpectrum(	vi::VisBuffer2 *vb,
 				dataBuffer_p = MSTransformations::sigmaSpectrum;
 				transformCubeOfData(vb,rowRef,inputSpectrum,outputCubeCol,NULL,applicableSpectrum);
 				arrayTransformInPlace (*sigmaSpectrum_p,vi::AveragingTvi2::weightToSigma);
+
+				if (sigmaScale > 0) *sigmaSpectrum_p *= sigmaScale;
 			}
 			else
 			{
 				transformCubeOfData(vb,rowRef,inputSpectrum,outputCubeCol,NULL,applicableSpectrum);
 				arrayTransformInPlace (*weightSpectrum_p,vi::AveragingTvi2::weightToSigma);
+
+				if (sigmaScale > 0) *weightSpectrum_p *= sigmaScale;
 			}
 
 			break;
@@ -6261,12 +6287,16 @@ void MSTransformManager::transformAndWriteSpectrum(	vi::VisBuffer2 *vb,
 				// so copy weightSpectrum into sigmaSpectrum
 				sigmaSpectrum_p->operator =(*weightSpectrum_p);
 				arrayTransformInPlace (*sigmaSpectrum_p,vi::AveragingTvi2::weightToSigma);
+
+				// No need to scale in this case as it already happened before
 			}
 			else
 			{
 				// WeightSpectrum is always transformed before sigmaSpectrum
 				// so transform directly weightSpectrum into sigmaSpectrum
 				arrayTransformInPlace (*weightSpectrum_p,vi::AveragingTvi2::weightToSigma);
+
+				// No need to scale in this case as it already happened before
 			}
 			break;
 		}

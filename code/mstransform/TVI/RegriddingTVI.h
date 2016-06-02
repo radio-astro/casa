@@ -38,15 +38,18 @@
 // calcChanFreqs
 #include <mstransform/MSTransform/MSTransformManager.h>
 
+// 1d interpolation methods
+#include <casacore/scimath/Mathematics/InterpolateArray1D.h>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 namespace vi { //# NAMESPACE VI - BEGIN
 
 //////////////////////////////////////////////////////////////////////////
-// Enumerations
+// Enumerations (see equivalences in InterpolateArray1D.h)
 //////////////////////////////////////////////////////////////////////////
 
-enum InterpolationMethod {
+enum RegriddingMethod {
     // nearest neighbour
     nearestNeighbour,
     // linear
@@ -97,7 +100,8 @@ protected:
     void initFrequencyGrid();
     void initFrequencyTransformationEngine() const;
 
-    template<class T> void transformDataCube(const Cube<T> &inputVis,Cube<T> &outputVis) const;
+    template<class T> void transformDataCube(	const Cube<T> &inputVis,
+    											Cube<T> &outputVis) const;
 
 	int nChan_p;
 	String mode_p;
@@ -108,13 +112,11 @@ protected:
 	String interpolationMethodPar_p;
 	String outputReferenceFramePar_p;
 	casac::variant *phaseCenterPar_p;
-	uInt interpolationMethod_p;
+	uInt regriddingMethod_p;
 
-    Bool fftShiftEnabled_p;
 	Bool refFrameTransformation_p;
 	Bool radialVelocityCorrection_p;
 	Bool radialVelocityCorrectionSignificant_p;
-	Bool transformFlags_p;
 
 	MEpoch referenceTime_p;
 	MDirection phaseCenter_p;

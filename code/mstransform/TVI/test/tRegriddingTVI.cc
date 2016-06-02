@@ -92,7 +92,7 @@ RegriddingTVITest::RegriddingTVITest(): FreqAxisTVITest ()
     configuration.define ("spw", "1");
     configuration.define ("field", "Titan");
     configuration.define ("mode", "velocity");
-    configuration.define ("width", "0.5km/s");
+    configuration.define ("width", "0.2km/s");
     configuration.define ("interpolation", "linear");
     configuration.define ("restfreq", "349.45370GHz");
     configuration.define ("outframe", "SOURCE");
@@ -148,6 +148,16 @@ void RegriddingTVITest::testCompareTransformedData()
 	columns += VisBufferComponent2::NChannels;
 	columns += VisBufferComponent2::NCorrelations;
 	columns += VisBufferComponent2::Frequencies;
+	columns += VisBufferComponent2::FlagRow;
+	columns += VisBufferComponent2::FlagCube;
+	columns += VisBufferComponent2::VisibilityCubeObserved;
+	columns += VisBufferComponent2::VisibilityCubeCorrected;
+	columns += VisBufferComponent2::VisibilityCubeModel;
+	columns += VisBufferComponent2::VisibilityCubeFloat;
+	columns += VisBufferComponent2::WeightSpectrum;
+	columns += VisBufferComponent2::SigmaSpectrum;
+	columns += VisBufferComponent2::Weight;
+	columns += VisBufferComponent2::Sigma;
 
 	// Compare
 	Bool res = compareVisibilityIterators(testTVI,refTVI,columns,tolerance);
