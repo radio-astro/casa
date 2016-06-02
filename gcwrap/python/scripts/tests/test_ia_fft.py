@@ -137,11 +137,11 @@ class ia_fft_test(unittest.TestCase):
         data = os.environ.get("CASAPATH").split()[0]
         testname = data + '/data/regression/unittest/ia_fft/test_image'
         myia = iatool()
-        testim = myia.newimage(testname)
+        testim = iatool()
+        testim.open(testname)
         self.assertTrue(testim)
         testshape = testim.shape()
         self.assertTrue(len(testshape) == 3)
-         
         rname = 'real_reg'
         iname = 'imag_reg'
         aname = 'amp_reg'
