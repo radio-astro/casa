@@ -1553,7 +1553,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (nx <= 2*convSupport) {
       logIO_p 
 	<< "number of pixels "
-	<< nx << " on x axis is smaller that the gridding support "
+	<< nx << " on x axis is smaller than or equals to the gridding support "
 	<< 2*convSupport   << " Please use a larger value " 
 	<< LogIO::EXCEPTION;
     }
@@ -1561,7 +1561,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (ny <= 2*convSupport) {
       logIO_p 
 	<< "number of pixels "
-	<< ny << " on y axis is smaller that the gridding support "
+	<< ny << " on y axis is smaller than or equals to the gridding support "
 	<< 2*convSupport   << " Please use a larger value " 
 	<< LogIO::EXCEPTION;
     }
