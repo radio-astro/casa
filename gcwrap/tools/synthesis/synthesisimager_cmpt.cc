@@ -33,12 +33,36 @@ using namespace casa;
      
 namespace casac {
 
+  // Method used for creating the SynthesisImager object.  By default,
+  // this will look at itsImager and decide if a new instance needs to
+  // be constructed.  The second argument determines if
+  // SynthesisImager (vi2=false) or SynthesisImagerVi2 (vi2=true)
+  // should be constructed.
+  SynthesisImager* synthesisimager::makeSI(bool forceNew, //default value = false
+					   bool vi2 // default value = false
+					   )
+  {
+    if (forceNew)
+      {
+	if (vi2) return new SynthesisImagerVi2();
+	else return new SynthesisImager();
+      }
+    else if( ! itsImager ) 
+      {
+	if (vi2) return new SynthesisImagerVi2();
+	else return new SynthesisImager();
+      }
+    else return itsImager;
+  }
+
+
   synthesisimager::synthesisimager() 
 {
   
   // itsImager = new SynthesisImagerVi2();
  
-   itsImager = new SynthesisImager();
+  //itsImager = new SynthesisImager();
+  itsImager = makeSI(true);
 }
 
 synthesisimager::~synthesisimager()
@@ -67,7 +91,8 @@ synthesisimager::setdata(const std::string& msname,
 			    const bool incrmodel) {
 	Bool rstat=False;
 	 try {
-		 if( ! itsImager ) itsImager = new SynthesisImager();
+	   //if( ! itsImager ) itsImager = new SynthesisImagerVi2();
+                 itsImager = makeSI();
 		 MFrequency::Types freqtype;
 		 MFrequency::getType(freqtype, freqframe);
 		 rstat=itsImager->selectData(msname, spw, freqbeg, freqend, freqtype,field, antenna, timestr, scan, obs, state,
@@ -90,8 +115,8 @@ synthesisimager::selectdata(const casac::record& selpars)
   try 
     {
 
-      if( ! itsImager ) itsImager = new SynthesisImager();
-
+      //if( ! itsImager ) itsImager = new SynthesisImagerVi2();
+      itsImager = makeSI();
       casa::Record recpars = *toRecord( selpars );
       SynthesisParamsSelect pars;
       pars.fromRecord( recpars );
@@ -156,8 +181,8 @@ bool synthesisimager::defineimage(const casac::record& impars, const casac::reco
   try 
     {
     
-    if( ! itsImager ) itsImager = new SynthesisImager();
-    
+      //if( ! itsImager ) itsImager = new SynthesisImager();
+      itsImager = makeSI();
     casa::Record irecpars = *toRecord( impars );
     SynthesisParamsImage ipars;
     ipars.fromRecord( irecpars );
@@ -235,8 +260,8 @@ synthesisimager::setimage(const std::string& imagename,
   try 
     {
 
-      if( ! itsImager ) itsImager = new SynthesisImager();   // any more here ?
-
+      //if( ! itsImager ) itsImager = new SynthesisImager();   // any more here ?
+      itsImager = makeSI();
       // Check nx, ny
       Int nX, nY;
       nX=nx;
@@ -356,8 +381,8 @@ bool synthesisimager::setweighting(const std::string& type,
   try 
     {
 
-      if( ! itsImager ) itsImager = new SynthesisImager(); // More here ? Check that defineImage has been called
-
+      //if( ! itsImager ) itsImager = new SynthesisImager(); // More here ? Check that defineImage has been called
+      itsImager = makeSI();
       casa::Quantity cnoise = casaQuantity( noise );
       casa::Quantity cfov = casaQuantity( fieldofview );
 
@@ -389,8 +414,8 @@ bool synthesisimager::setweighting(const std::string& type,
     
     try {
       
-      if( ! itsImager ) itsImager = new SynthesisImager();
-      
+      //if( ! itsImager ) itsImager = new SynthesisImager();
+      itsImager = makeSI();
       itsImager->makePSF();
       
     } catch  (AipsError x) {
@@ -405,8 +430,8 @@ bool synthesisimager::setweighting(const std::string& type,
     
     try {
       
-      if( ! itsImager ) itsImager = new SynthesisImager();
-      
+      //if( ! itsImager ) itsImager = new SynthesisImager();
+      itsImager = makeSI();
       itsImager->dryGridding(cfList);
       
     } catch  (AipsError x) {
@@ -425,8 +450,8 @@ bool synthesisimager::setweighting(const std::string& type,
     
     try {
       
-      if( ! itsImager ) itsImager = new SynthesisImager();
-      
+      //if( ! itsImager ) itsImager = new SynthesisImager();
+      itsImager = makeSI();
       itsImager->fillCFCache(cfList,ftmName, cfcPath, psTermOn, aTermOn);
       
     } catch  (AipsError x) {
@@ -441,8 +466,8 @@ bool synthesisimager::setweighting(const std::string& type,
     
     try {
       
-      if( ! itsImager ) itsImager = new SynthesisImager();
-      
+      //if( ! itsImager ) itsImager = new SynthesisImager();
+      itsImager = makeSI();
       itsImager->reloadCFCache();
       
     } catch  (AipsError x) {
@@ -457,8 +482,8 @@ bool synthesisimager::setweighting(const std::string& type,
     
     try {
       
-      if( ! itsImager ) itsImager = new SynthesisImager();
-      
+      //if( ! itsImager ) itsImager = new SynthesisImager();
+      itsImager = makeSI();
       itsImager->predictModel();
       
     } catch  (AipsError x) {
@@ -473,8 +498,8 @@ bool synthesisimager::executemajorcycle(const casac::record& controls)
 
   try {
 
-      if( ! itsImager ) itsImager = new SynthesisImager();
-
+    //if( ! itsImager ) itsImager = new SynthesisImager();
+    itsImager = makeSI();
     casa::Record recpars = *toRecord( controls );
     itsImager->executeMajorCycle( recpars );
 
@@ -489,8 +514,8 @@ synthesisimstore* synthesisimager::getimstore(const int id)
   synthesisimstore *rstat;
   try {
 
-      if( ! itsImager ) itsImager = new SynthesisImager();
-
+    //if( ! itsImager ) itsImager = new SynthesisImager();
+    itsImager = makeSI();
       rstat = new synthesisimstore( &*(itsImager->imageStore( id )) );
 
   } catch  (AipsError x) {
@@ -539,8 +564,8 @@ int synthesisimager::updatenchan()
     
     try {
       
-      if( ! itsImager ) itsImager = new SynthesisImager();
-      
+      //if( ! itsImager ) itsImager = new SynthesisImager();
+      itsImager = makeSI();
       itsImager->getWeightDensity();
       
     } catch  (AipsError x) {
@@ -554,8 +579,8 @@ int synthesisimager::updatenchan()
     
     try {
       
-      if( ! itsImager ) itsImager = new SynthesisImager();
-      
+      //if( ! itsImager ) itsImager = new SynthesisImager();
+      itsImager = makeSI();
       itsImager->setWeightDensity();
       
     } catch  (AipsError x) {
