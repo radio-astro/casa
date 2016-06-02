@@ -1634,6 +1634,30 @@ vector<int> msmetadata::spwsforscan(int scan, int obsid, int arrayid) {
 	return vector<int>();
 }
 
+record* msmetadata::spwsforscans(int obsid, int arrayid) {
+	_FUNC(
+	    _checkArrayId(arrayid, True);
+	    _checkObsId(obsid, True);
+        auto scanToSpws = _msmd->getScanToSpwsMap();
+		auto_ptr<record> ret(new record());
+		std::set<ScanKey> allScans;
+		for (const auto& p : scanToSpws) {
+		    allScans.insert(p.first);
+		}
+		ArrayKey ak;
+	    ak.obsID = obsid;
+	    ak.arrayID = arrayid;
+		auto scans = filter(allScans, ak);
+		for (const auto& sk : scans) {
+		    ret->insert(
+		        String::toString(sk.scan), _setUIntToVectorInt(scanToSpws[sk])
+		    );
+		}
+		return ret.release();
+	)
+	return nullptr;
+}
+
 vector<int> msmetadata::statesforscan(int scan, int obsid, int arrayid) {
 	_FUNC(
 		ThrowIf(scan < 0, "Scan number must be nonnegative");

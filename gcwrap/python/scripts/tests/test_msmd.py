@@ -763,7 +763,8 @@ class msmd_test(unittest.TestCase):
             self.assertTrue((got == expec).all())
 
     def test_spwsforscan(self):
-        """Test spwsforscan()"""
+        """Test spwsforscan() and spwsforscans()"""
+        scan_to_spws = self.md.spwsforscans(0, 0)
         for i in self.md.scannumbers():
             if [1, 5, 8].count(i) > 0:
                 expec = numpy.array([0, 1, 2, 3, 4, 5, 6, 7, 8])
@@ -773,6 +774,7 @@ class msmd_test(unittest.TestCase):
                 expec = numpy.array([0, 17, 18, 19, 20, 21, 22, 23, 24])
             got = self.md.spwsforscan(i)
             self.assertTrue((got == expec).all())
+            self.assertTrue((scan_to_spws[str(i)] == expec).all())
             
     def test_statesforscan(self):
         """Test statesforscan() and statesforscans()"""
