@@ -425,8 +425,8 @@ class TcleanHeuristics(object):
                         spw_topo_freq_param_lists.append(['%s:%s' % (spwid, freq_selection)] * len(inputs.vis))
                         for i in xrange(len(inputs.vis)):
                             spw_topo_freq_param_dict[inputs.vis[i]][spwid] = freq_selection.split()[0]
-                            # TODO: Do not have channel information
-                            spw_topo_chan_param_dict[inputs.vis[i]][spwid] = chan_selection.split()[0]
+                            # TODO: Need to derive real channel ranges
+                            spw_topo_chan_param_dict[inputs.vis[i]][spwid] = '0~%d' % (spw_info.num_channels)
                         # Count only one selection !
                         for freq_range in freq_selection.split(';'):
                             f1, sep, f2, unit = p.findall(freq_range)[0]
