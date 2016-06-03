@@ -50,11 +50,11 @@ int main() {
         String datadir = parts[0] + "/data/regression/unittest/imageanalysis/ImageAnalysis/";
         delete [] parts;
 		writeTestString("Verify fix for CAS-2195: error if image has no direction coordinate but does have linear coordiante");
-		FITSImage fits(datadir + "/linearCoords.fits");
+		SPCIIF fits(new FITSImage(datadir + "/linearCoords.fits"));
 		Vector<Int> axes(2);
 		axes[0] = 0;
 		axes[1] = 1;
-		ImageStatsCalculator calculator(&fits, 0, "", False);
+		ImageStatsCalculator calculator(fits, 0, "", False);
 		calculator.setAxes(axes);
 		Record statsOut = calculator.statistics();
 		Vector<Int> got;
