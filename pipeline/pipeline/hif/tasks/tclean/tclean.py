@@ -12,6 +12,7 @@ import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.mpihelpers as mpihelpers
 import pipeline.infrastructure.pipelineqa as pipelineqa
 import pipeline.infrastructure.utils as utils
+import pipeline.infrastructure.contfilehandler as contfilehandler
 from pipeline.infrastructure import casa_tasks
 from .basecleansequence import BaseCleanSequence
 from .imagecentrethresholdsequence import ImageCentreThresholdSequence
@@ -199,7 +200,15 @@ class Tclean(cleanbase.CleanBase):
                 LOG.info('Heuristic imsize: %s', imsize)
 
         # Get a noise estimate from the CASA sensitivity calculator
-        sensitivity, channel_rms_factor = self._do_sensitivity()
+        sensitivity, \
+        channel_rms_factor, \
+        spw_topo_freq_param, \
+        spw_topo_chan_param, \
+        spw_topo_freq_param_dict, \
+        spw_topo_chan_param_dict, \
+        total_topo_bw, aggregate_topo_bw = \
+            self._do_sensitivity()
+        inputs.spwsel = spw_topo_freq_param
         LOG.info('Sensitivity estimate from CASA: %s Jy', sensitivity)
 
         # Choose cleaning method.
@@ -241,6 +250,11 @@ class Tclean(cleanbase.CleanBase):
 
         result = self._do_iterative_imaging(
             sequence_manager=sequence_manager, result=result)
+
+        # Record aggregate bandwidth for weblog
+        # TODO: Record total bandwidth as opposed to range
+        #       Save channel selection in result for weblog.
+        result.set_aggregate_bw(aggregate_topo_bw)
 
         return result
 
@@ -532,6 +546,10 @@ class Tclean(cleanbase.CleanBase):
         targetmslist = [ms_do for ms_do in [context.observing_run.get_ms(name=ms) for ms in inputs.vis] if ms_do.is_imaging_ms]
         if (targetmslist == []):
             targetmslist = [context.observing_run.get_ms(name=ms) for ms in inputs.vis]
+
+        # Convert LSKR ranges to TOPO
+        spw_topo_freq_param, spw_topo_chan_param, spw_topo_freq_param_dict, spw_topo_chan_param_dict, total_topo_bw, aggregate_topo_bw = self.inputs.heuristics.calc_topo_ranges(inputs)
+
         for ms in targetmslist:
             for intSpw in [int(s) for s in spw.split(',')]:
                 try:
@@ -558,7 +576,12 @@ class Tclean(cleanbase.CleanBase):
                         sensitivities.append(numpy.median(field_sensitivities) / overlap_factor)
                     else:
                         with casatools.ImagerReader(ms.name) as imTool:
-                            imTool.selectvis(spw=intSpw, field=field)
+                            if (spw_topo_freq_param_dict[ms.name][str(intSpw)] != ''):
+                                spwsel = '%s:%s' % (intSpw, spw_topo_freq_param_dict[ms.name][str(intSpw)])
+                            else:
+                                spwsel = '%s' % (intSpw)
+                            #imTool.selectvis(spw=intSpw, field=field)
+                            imTool.selectvis(spw=spwsel, field=field)
                             # TODO: Add scan selection ?
                             imTool.defineimage(mode=specmode, spw=intSpw,
                                                cellx=inputs.cell[0], celly=inputs.cell[0],
@@ -599,7 +622,7 @@ class Tclean(cleanbase.CleanBase):
         else:
             channel_rms_factor = 1.0
 
-        return sensitivity, channel_rms_factor
+        return sensitivity, channel_rms_factor, spw_topo_freq_param, spw_topo_chan_param, spw_topo_freq_param_dict, spw_topo_chan_param_dict, total_topo_bw, aggregate_topo_bw
 
     def _do_continuum(self, cont_image_name, mode):
         """

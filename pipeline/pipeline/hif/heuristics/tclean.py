@@ -3,6 +3,7 @@ import math
 import numpy as np
 import re
 import types
+import collections
 
 import cleanhelper
 
@@ -10,6 +11,8 @@ import pipeline.infrastructure.casatools as casatools
 import pipeline.domain.measures as measures
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.utils as utils
+import pipeline.infrastructure.contfilehandler as contfilehandler
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -357,3 +360,105 @@ class TcleanHeuristics(object):
             robust = 0.5
 
         return robust
+
+    def calc_topo_ranges(self, inputs):
+
+        '''Calculate TOPO ranges for hif_tclean inputs.'''
+
+        spw_topo_freq_param_lists = []
+        spw_topo_chan_param_lists = []
+        spw_topo_freq_param_dict = collections.defaultdict(dict)
+        spw_topo_chan_param_dict = collections.defaultdict(dict)
+        p = re.compile('([\d.]*)(~)([\d.]*)(\D*)')
+        total_topo_freq_ranges = []
+        topo_freq_ranges = []
+        num_channels = []
+
+        # get spw info from first vis set, assume spws uniform
+        # across datasets
+        ms = self.context.observing_run.get_ms(name=inputs.vis[0])
+
+        # Get ID of field closest to the phase center
+        meTool = casatools.measures
+        ref_field_ids = []
+
+        # Phase center coordinates
+        pc_direc = meTool.source(inputs.phasecenter)
+
+        for msname in inputs.vis:
+            ms_obj = self.context.observing_run.get_ms(msname)
+            field_ids = [f.id for f in ms_obj.fields if inputs.intent in f.intents]
+            separations = [meTool.separation(pc_direc, ms_obj.fields[i].mdirection)['value'] for i in field_ids]
+            ref_field_ids.append(field_ids[separations.index(min(separations))])
+
+        # Get a cont file handler for the conversion to TOPO
+        contfile_handler = contfilehandler.ContFileHandler(self.context.contfile)
+
+        for spwid in inputs.spw.split(','):
+            spw_info = ms.get_spectral_window(spwid)
+
+            num_channels.append(spw_info.num_channels)
+
+            min_frequency = float(spw_info.min_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
+            max_frequency = float(spw_info.max_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
+
+            # Save spw width
+            total_topo_freq_ranges.append((min_frequency, max_frequency))
+
+            if (inputs.spwsel.has_key('spw%s' % (spwid))):
+                if (inputs.spwsel['spw%s' % (spwid)] != ''):
+                    freq_selection, refer = inputs.spwsel['spw%s' % (spwid)].split()
+                    if (refer == 'LSRK'):
+                        # Convert to TOPO
+                        topo_freq_selections, topo_chan_selections = contfile_handler.lsrk_to_topo(inputs.spwsel['spw%s' % (spwid)], inputs.vis, ref_field_ids, spwid)
+                        spw_topo_freq_param_lists.append(['%s:%s' % (spwid, topo_freq_selection.split()[0]) for topo_freq_selection in topo_freq_selections])
+                        spw_topo_chan_param_lists.append(['%s:%s' % (spwid, topo_chan_selection.split()[0]) for topo_chan_selection in topo_chan_selections])
+                        for i in xrange(len(inputs.vis)):
+                            spw_topo_freq_param_dict[inputs.vis[i]][spwid] = topo_freq_selections[i].split()[0]
+                            spw_topo_chan_param_dict[inputs.vis[i]][spwid] = topo_chan_selections[i].split()[0]
+                        # Count only one selection !
+                        for topo_freq_range in topo_freq_selections[0].split(';'):
+                            f1, sep, f2, unit = p.findall(topo_freq_range)[0]
+                            topo_freq_ranges.append((float(f1), float(f2)))
+                    else:
+                        LOG.warning('Cannot convert frequency selection properly to TOPO. Using plain ranges for all MSs.')
+                        spw_topo_freq_param_lists.append(['%s:%s' % (spwid, freq_selection)] * len(inputs.vis))
+                        for i in xrange(len(inputs.vis)):
+                            spw_topo_freq_param_dict[inputs.vis[i]][spwid] = freq_selection.split()[0]
+                            # TODO: Do not have channel information
+                            spw_topo_chan_param_dict[inputs.vis[i]][spwid] = chan_selection.split()[0]
+                        # Count only one selection !
+                        for freq_range in freq_selection.split(';'):
+                            f1, sep, f2, unit = p.findall(freq_range)[0]
+                            topo_freq_ranges.append((float(f1), float(f2)))
+                else:
+                    spw_topo_freq_param_lists.append([spwid] * len(inputs.vis))
+                    spw_topo_chan_param_lists.append([spwid] * len(inputs.vis))
+                    for msname in inputs.vis:
+                        spw_topo_freq_param_dict[msname][spwid] = ''
+                        spw_topo_chan_param_dict[msname][spwid] = ''
+                    topo_freq_ranges.append((min_frequency, max_frequency))
+            else:
+                spw_topo_freq_param_lists.append([spwid] * len(inputs.vis))
+                spw_topo_chan_param_lists.append([spwid] * len(inputs.vis))
+                for msname in inputs.vis:
+                    spw_topo_freq_param_dict[msname][spwid] = ''
+                    spw_topo_chan_param_dict[msname][spwid] = ''
+                topo_freq_ranges.append((min_frequency, max_frequency))
+
+        spw_topo_freq_param = [','.join(spwsel_per_ms) for spwsel_per_ms in [[spw_topo_freq_param_list_per_ms[i] for spw_topo_freq_param_list_per_ms in spw_topo_freq_param_lists] for i in xrange(len(inputs.vis))]]
+        spw_topo_chan_param = [','.join(spwsel_per_ms) for spwsel_per_ms in [[spw_topo_chan_param_list_per_ms[i] for spw_topo_chan_param_list_per_ms in spw_topo_chan_param_lists] for i in xrange(len(inputs.vis))]]
+
+        qaTool = casatools.quanta
+
+        # Calculate total bandwidth
+        total_topo_bw = '0.0GHz'
+        for total_topo_freq_range in utils.merge_ranges(total_topo_freq_ranges):
+            total_topo_bw = qaTool.add(total_topo_bw, qaTool.sub('%sGHz' % (total_topo_freq_range[1]), '%sGHz' % (total_topo_freq_range[0])))
+
+        # Calculate aggregate selected bandwidth
+        aggregate_topo_bw = '0.0GHz'
+        for topo_freq_range in utils.merge_ranges(topo_freq_ranges):
+            aggregate_topo_bw = qaTool.add(aggregate_topo_bw, qaTool.sub('%sGHz' % (topo_freq_range[1]), '%sGHz' % (topo_freq_range[0])))
+
+        return spw_topo_freq_param, spw_topo_chan_param, spw_topo_freq_param_dict, spw_topo_chan_param_dict, total_topo_bw, aggregate_topo_bw

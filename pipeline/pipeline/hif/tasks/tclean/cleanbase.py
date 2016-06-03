@@ -15,12 +15,10 @@ import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.mpihelpers as mpihelpers
 import pipeline.infrastructure.utils as utils
-import pipeline.infrastructure.contfilehandler as contfilehandler
 from pipeline.infrastructure import casa_tasks
 import pipeline.domain.measures as measures
 
 from .resultobjects import TcleanResult
-from pipeline.hif.heuristics import makeimlist
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -239,98 +237,6 @@ class CleanBase(basetask.StandardTaskTemplate):
         flux_name = '%s.%s.iter%s.pb' % (
             inputs.imagename, inputs.stokes, iter)
 
-        spw_freq_param_lists = []
-        spw_chan_param_lists = []
-        p = re.compile('([\d.]*)(~)([\d.]*)(\D*)')
-        total_freq_ranges = []
-        freq_ranges = []
-        num_channels = []
-
-        # get spw info from first vis set, assume spws uniform
-        # across datasets
-        ms = context.observing_run.get_ms(name=inputs.vis[0])
-
-        # Get ID of field closest to the phase center
-        meTool = casatools.measures
-        ref_field_ids = []
-
-        # Phase center coordinates
-        pc_direc = meTool.source(inputs.phasecenter)
-
-        for msname in inputs.vis:
-            ms_obj = context.observing_run.get_ms(msname)
-            field_ids = [f.id for f in ms_obj.fields if inputs.intent in f.intents]
-            separations = [meTool.separation(pc_direc, ms_obj.fields[i].mdirection)['value'] for i in field_ids]
-            ref_field_ids.append(field_ids[separations.index(min(separations))])
-
-        # Get a cont file handler for the conversion to TOPO
-        contfile_handler = contfilehandler.ContFileHandler(context.contfile)
-
-        for spwid in inputs.spw.split(','):
-            spw_info = ms.get_spectral_window(spwid)
-
-            num_channels.append(spw_info.num_channels)
-
-            min_frequency = float(spw_info.min_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
-            max_frequency = float(spw_info.max_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
-
-            # Save spw width
-            total_freq_ranges.append((min_frequency, max_frequency))
-
-            if (inputs.spwsel.has_key('spw%s' % (spwid))):
-                if (inputs.spwsel['spw%s' % (spwid)] != ''):
-                    freq_selection, refer = inputs.spwsel['spw%s' % (spwid)].split()
-                    if (refer == 'LSRK'):
-                        # Convert to TOPO
-                        topo_freq_selections, topo_chan_selections = contfile_handler.lsrk_to_topo(inputs.spwsel['spw%s' % (spwid)], inputs.vis, ref_field_ids, spwid)
-                        spw_freq_param_lists.append(['%s:%s' % (spwid, topo_freq_selection.split()[0]) for topo_freq_selection in topo_freq_selections])
-                        spw_chan_param_lists.append(['%s:%s' % (spwid, topo_chan_selection.split()[0]) for topo_chan_selection in topo_chan_selections])
-                        # Count only one selection !
-                        for freq_range in topo_freq_selections[0].split(';'):
-                            f1, sep, f2, unit = p.findall(freq_range)[0]
-                            freq_ranges.append((float(f1), float(f2)))
-                    else:
-                        LOG.warning('Cannot convert frequency selection properly to TOPO. Using plain ranges for all MSs.')
-                        spw_freq_param_lists.append(['%s:%s' % (spwid, freq_selection)] * len(inputs.vis))
-                        for freq_range in freq_selection.split(';'):
-                            f1, sep, f2, unit = p.findall(freq_range)[0]
-                            freq_ranges.append((float(f1), float(f2)))
-                else:
-                    spw_freq_param_lists.append([spwid] * len(inputs.vis))
-                    freq_ranges.append((min_frequency, max_frequency))
-            else:
-                spw_freq_param_lists.append([spwid] * len(inputs.vis))
-                freq_ranges.append((min_frequency, max_frequency))
-
-        spw_freq_param = [','.join(spwsel_per_ms) for spwsel_per_ms in [[spw_freq_param_list_per_ms[i] for spw_freq_param_list_per_ms in spw_freq_param_lists] for i in xrange(len(inputs.vis))]]
-
-        qaTool = casatools.quanta
-
-        # Calculate total bandwidth
-        total_bw = '0.0GHz'
-        for total_freq_range in utils.merge_ranges(total_freq_ranges):
-            total_bw = qaTool.add(total_bw, qaTool.sub('%sGHz' % (total_freq_range[1]), '%sGHz' % (total_freq_range[0])))
-
-        # Calculate aggregate selected bandwidth
-        aggregate_bw = '0.0GHz'
-        for freq_range in utils.merge_ranges(freq_ranges):
-            aggregate_bw = qaTool.add(aggregate_bw, qaTool.sub('%sGHz' % (freq_range[1]), '%sGHz' % (freq_range[0])))
-
-        # Adjust threshold according to selection bandwidth
-        # TODO: Adjust sensitivity as well. Need this code in tclean.py to correct the sensitivity.
-        #       For now pass back via result object.
-        old_threshold = qaTool.convert(inputs.threshold, 'Jy')['value']
-        total_bw_GHz = qaTool.convert(total_bw, 'GHz')['value']
-        aggregate_bw_GHz = qaTool.convert(aggregate_bw, 'GHz')['value']
-        contsel_factor = sqrt(total_bw_GHz / aggregate_bw_GHz)
-        if ((contsel_factor != 1.0) and (old_threshold != 0.0)):
-            new_threshold = old_threshold * contsel_factor
-            LOG.info('Adjusting threshold for continuum selection from %s Jy to %s Jy by a factor %s' % (old_threshold, new_threshold, contsel_factor))
-        else:
-            new_threshold = old_threshold
-
-        inputs.threshold = '%sJy' % (new_threshold)
-
         if (inputs.specmode == 'cube'):
             # Estimate memory usage and adjust chanchunks parameter to avoid
             # exceeding the available memory.
@@ -352,7 +258,7 @@ class CleanBase(basetask.StandardTaskTemplate):
             'vis':           inputs.vis,
             'imagename':     '%s.%s.iter%s' % (os.path.basename(inputs.imagename), inputs.stokes, iter),
             'datacolumn':    inputs.datacolumn,
-            'spw':           spw_freq_param,
+            'spw':           inputs.spwsel,
             'intent':        utils.to_CASA_intent(inputs.ms[0], inputs.intent),
             'scan':          scanidlist,
             'specmode':      inputs.specmode if inputs.specmode != 'cont' else 'mfs',
@@ -417,7 +323,7 @@ class CleanBase(basetask.StandardTaskTemplate):
             makepb.makePB(vis=inputs.vis[0],
                           field=inputs.field,
                           intent=utils.to_CASA_intent(inputs.ms[0], inputs.intent),
-                          spw=spw_freq_param,
+                          spw=inputs.spwsel,
                           scan=scanidlist,
                           mode=mode,
                           imtemplate='%s.%s.iter%s.residual%s' % (os.path.basename(inputs.imagename), inputs.stokes, iter, '.tt0' if result.multiterm else ''),
@@ -490,12 +396,9 @@ class CleanBase(basetask.StandardTaskTemplate):
                          type='cleanmask', iter=iter)
         result.set_cleanmask(iter=iter, image=inputs.mask)
 
-        # Keep threshold, sensitivity and aggregate bandwidth for QA and weblog
-        # TODO: Save channel selection in result for weblog.
-        #       Save total frequency bandwidth for weblog.
+        # Keep threshold and sensitivity bandwidth for QA and weblog
         result.set_threshold(inputs.threshold)
-        result.set_sensitivity(inputs.sensitivity * contsel_factor)
-        result.set_aggregate_bw(aggregate_bw)
+        result.set_sensitivity(inputs.sensitivity)
 
         return result
 
