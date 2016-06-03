@@ -66,7 +66,7 @@ install (FILES
 #    SingleDish/test/tLineFinder.cc
 #    )
 ### google tests ###
-casa_add_google_test (MODULES singledish SOURCES SingleDish/test/LineFindingUtils_GTest.cc)
-casa_add_google_test (MODULES singledish SOURCES SingleDish/test/LineFinder_GTest.cc)
+casa_add_google_test (NOT_ON_APPLE MODULES singledish SOURCES SingleDish/test/LineFindingUtils_GTest.cc)
+casa_add_google_test (NOT_ON_APPLE MODULES singledish SOURCES SingleDish/test/LineFinder_GTest.cc)
 casa_add_google_test (MODULES singledish SOURCES SingleDish/test/SingleDishMS_GTest.cc)
 casa_add_google_test (MODULES singledish SOURCES Filler/test/SingleDishMSFiller_GTest.cc)
