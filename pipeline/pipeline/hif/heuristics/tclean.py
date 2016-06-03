@@ -423,6 +423,8 @@ class TcleanHeuristics(object):
                     else:
                         LOG.warning('Cannot convert frequency selection properly to TOPO. Using plain ranges for all MSs.')
                         spw_topo_freq_param_lists.append(['%s:%s' % (spwid, freq_selection)] * len(inputs.vis))
+                        # TODO: Need to derive real channel ranges
+                        spw_topo_chan_param_lists.append(['%s:0~%s' % (spwid, spw_info.num_channels)] * len(inputs.vis))
                         for i in xrange(len(inputs.vis)):
                             spw_topo_freq_param_dict[inputs.vis[i]][spwid] = freq_selection.split()[0]
                             # TODO: Need to derive real channel ranges
