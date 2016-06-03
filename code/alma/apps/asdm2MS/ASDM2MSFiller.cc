@@ -1333,16 +1333,9 @@ void ASDM2MSFiller::addField(const string&		name_,
   MDirection::Types directionReference = (iter == string2MDirection.end()) ? MDirection::J2000 : iter->second;
 
   for (unsigned int i = 0; i < num_poly_; i++) {
-    cout << "quantity - delay_dir = " << Quantity(delay_dir_[i][0], "rad") << "," << Quantity(delay_dir_[i][1], "rad") << endl;
     delayDir(i)     = MDirection(Quantity(delay_dir_[i][0], "rad"), Quantity(delay_dir_[i][1], "rad"), directionReference);
-    cout << "MDirection(delay_dir) = " << delayDir(i).getAngle() << endl;
-
-    cout << "quantity - reference_dir = " << Quantity(reference_dir_[i][0], "rad") << "," << Quantity(reference_dir_[i][1], "rad") << endl;
     referenceDir(i) = MDirection(Quantity(reference_dir_[i][0], "rad"), Quantity(reference_dir_[i][1], "rad"), directionReference);
-
-    cout << "quantity - phase_dir = " << Quantity(phase_dir_[i][0], "rad") << "," << Quantity(phase_dir_[i][1], "rad") << endl;
     phaseDir(i)     = MDirection(Quantity(phase_dir_[i][0], "rad"), Quantity(phase_dir_[i][1], "rad"), directionReference);
-    cout << "MDirection(phase_dir) = " << phaseDir(i).getAngle() << endl;
   }
   
   msfieldCol.numPoly().put(crow,num_poly_ - 1);
