@@ -147,76 +147,69 @@ def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
     # Loop over the commands
     for command in commandsList:
 
-	# Get task name and arguments lists.
+        # Get task name and arguments lists.
         taskname = command[0]
         task_args = command[1]
-	casatools.set_log_origin(fromwhere=taskname)
-        casatools.post_to_log ("Executing command ..." + \
-	    taskname, echo_to_screen=echo_to_screen)
+        casatools.set_log_origin(fromwhere=taskname)
+        casatools.post_to_log ("Executing command ..." + taskname, echo_to_screen=echo_to_screen)
 
-	# Search dictionary for CASA to Python task name alias.
-	if taskname in CasaTaskDict:
-	    taskname = CasaTaskDict[taskname]
-            casatools.post_to_log ("    Using python class ..." + \
-	        taskname, echo_to_screen=echo_to_screen)
+        # Search dictionary for CASA to Python task name alias.
+        if taskname in CasaTaskDict:
+            taskname = CasaTaskDict[taskname]
+            casatools.post_to_log ("    Using python class ..." + taskname, echo_to_screen=echo_to_screen)
 
-	# List parameters
-	for keyword, value in task_args.items():
-            casatools.post_to_log ("    Parameter: " + \
-	    keyword + " = "+ str(value), echo_to_screen=echo_to_screen)
+        # List parameters
+        for keyword, value in task_args.items():
+            casatools.post_to_log ("    Parameter: " + keyword + " = "+ str(value), echo_to_screen=echo_to_screen)
 
-	# Execute the command
-	try:
+        # Execute the command
+        try:
 
-	    cInputs = pipeline.tasks.__dict__[taskname].Inputs
+            cInputs = pipeline.tasks.__dict__[taskname].Inputs
             if taskname == 'ImportData' or taskname == 'RestoreData' or \
-	        taskname == 'ALMAImportData' or taskname == 'VLAImportData':
-	        task_args['vis'] = files
-	        task_args['session'] = sessions
+                taskname == 'ALMAImportData' or taskname == 'VLAImportData':
+                task_args['vis'] = files
+                task_args['session'] = sessions
             elif taskname == 'SDImportData':
                 task_args['infiles'] = files
-	    
-	    remapped_args = argmapper.convert_args(taskname, task_args,
-	        convert_nulls=False)
-	    inputs = cInputs (context, **remapped_args)
-	    #inputs = cInputs (context, **command[1])
-	    cTask = pipeline.tasks.__dict__[taskname]
-	    task = cTask(inputs)
-	    results = task.execute (dry_run=dry_run)
-	    casatools.post_to_log('Results ' + str(results),
-		echo_to_screen=echo_to_screen)
-	    try:
-	        results.accept(context)
-	    except Exception, e:
-		casatools.post_to_log("Error: " \
-		    "Failed to update context for " + taskname,
-		    echo_to_screen=echo_to_screen)
-		raise
 
-            if taskname == 'ImportData' and importonly: 
-		casatools.post_to_log(
-		    "Terminating execution after running " + taskname,
-		    echo_to_screen=echo_to_screen)
-	        break
+            remapped_args = argmapper.convert_args(taskname, task_args, convert_nulls=False)
+            inputs = cInputs (context, **remapped_args)
+            #inputs = cInputs (context, **command[1])
+            cTask = pipeline.tasks.__dict__[taskname]
 
-            if taskname == 'ALMAImportData' and importonly: 
-		casatools.post_to_log(
-		    "Terminating execution after running " + taskname,
-		    echo_to_screen=echo_to_screen)
-	        break
-            
-            if taskname == 'VLAImportData' and importonly: 
-		casatools.post_to_log(
-		    "Terminating execution after running " + taskname,
-		    echo_to_screen=echo_to_screen)
-	        break
+            spectral_mode = False
+            if 'SPECTRAL_MODE' in intentsDict.keys(): spectral_mode = intentsDict['SPECTRAL_MODE']
 
-	except Exception, e:
-	    #traceback.print_exc(file=sys.stdout)
-	    errstr=traceback.format_exc()
-            casatools.post_to_log (errstr,
-	        echo_to_screen=echo_to_screen)
-	    break
+            if taskname == 'Hanning' and spectral_mode == True:
+                casatools.post_to_log("SPECTRAL_MODE=True.  Hanning smoothing will not be executed.")
+            else:
+                task = cTask(inputs)
+                results = task.execute (dry_run=dry_run)
+                casatools.post_to_log('Results ' + str(results), echo_to_screen=echo_to_screen)
+                try:
+                    results.accept(context)
+                except Exception, e:
+                    casatools.post_to_log("Error: Failed to update context for " + taskname, echo_to_screen=echo_to_screen)
+                    raise
+
+            if taskname == 'ImportData' and importonly:
+                casatools.post_to_log("Terminating execution after running " + taskname, echo_to_screen=echo_to_screen)
+                break
+
+            if taskname == 'ALMAImportData' and importonly:
+                casatools.post_to_log("Terminating execution after running " + taskname, echo_to_screen=echo_to_screen)
+                break
+
+            if taskname == 'VLAImportData' and importonly:
+                casatools.post_to_log("Terminating execution after running " + taskname, echo_to_screen=echo_to_screen)
+                break
+
+        except Exception, e:
+            #traceback.print_exc(file=sys.stdout)
+            errstr=traceback.format_exc()
+            casatools.post_to_log (errstr, echo_to_screen=echo_to_screen)
+            break
 
     # Save the context
     context.save()
