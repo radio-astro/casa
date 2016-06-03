@@ -125,9 +125,11 @@ see detailed plots per spectral window and antenna.</p>
 	        	plot = amp_refant[ms]
 	        %>
 			<h4>Amplitude vs frequency
+		        % if plot is not None:
 				(<a class="replace"
                     data-vis="${plot.parameters['vis']}"
 		            href="${os.path.relpath(os.path.join(dirname, amp_subpages[ms]), pcontext.report_dir)}">show ${plot.parameters['vis']}</a>)
+                % endif
 			</h4>
 			<p>The plots below show amplitude vs frequency for the
 			bandpass correction, overlayed for all spectral windows
@@ -216,9 +218,11 @@ see detailed plots per spectral window and antenna.</p>
                 plot = phase_mode[ms]
             %>
 			<h4>Phase vs frequency
+                % if plot is not None:
 				(<a class="replace"
                     data-vis="${plot.parameters['vis']}"
 		            href="${os.path.relpath(os.path.join(dirname, phase_subpages[ms]), pcontext.report_dir)}">show ${plot.parameters['vis']}</a>)
+                % endif
 			</h4>
 			<p>The plot below shows phase vs frequency for the
 			bandpass correction, overlayed for all spectral windows
