@@ -13,6 +13,7 @@ import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
+import pipeline.infrastructure.renderer.rendererutils as rutils
 
 __all__ = ['score_polintents',                                # ALMA specific
            'score_bands',                                     # ALMA specific
@@ -804,7 +805,9 @@ def score_refspw_mapping_fraction(ms, ref_spwmap):
             longmsg = 'No mapped science spws for %s ' % ms.basename
             shortmsg = 'No mapped science spws'
         else:
-            score =  float(nunmapped) / float(nexpected) 
+            #score =  float(nunmapped) / float(nexpected) 
+            # Replace the previous score with a warning
+            score =  rutils.SCORE_THRESHOLD_WARNING
             longmsg = 'There are %d mapped science spws for %s ' % (nexpected - nunmapped, ms.basename)
             shortmsg = 'There are mapped science spws'
 
@@ -848,7 +851,9 @@ def score_phaseup_mapping_fraction(ms, reqfields, reqintents, phaseup_spwmap):
             longmsg = 'No mapped science spws for %s ' % ms.basename
             shortmsg = 'No mapped science spws'
         else:
-            score =  float(nunmapped) / float(nexpected) 
+            #score =  float(nunmapped) / float(nexpected) 
+            # Replace the previous score with a warning
+            score =  rutils.SCORE_THRESHOLD_WARNING
             longmsg = 'There are %d mapped science spws for %s ' % (nexpected - nunmapped, ms.basename)
             shortmsg = 'There are mapped science spws'
 
