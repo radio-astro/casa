@@ -88,7 +88,11 @@ $(document).ready(function() {
 				% endif
 				<tr>
 					<th>Pipeline Version</th>
-					<td>${pipeline_revision}</td>					
+					<td>${pipeline_revision} 
+					% if pipeline_doclink is not None:
+						(<a href=${pipeline_doclink}>documentation</a>)
+					% endif
+					</td>					
 					<td></td>
 					<td></td>
 				</tr>

@@ -21,6 +21,8 @@ from .infrastructure import Pipeline, Context
 
 LOG = infrastructure.get_logger(__name__)
 
+__pipeline_documentation_weblink_alma__ = "http://almascience.org/documents-and-tools/pipeline-documentation-archive"
+
 # create a fake module containing all the tasks defined in 
 
 def _all_subclasses(cls):

@@ -8,7 +8,6 @@ import os
 import pydoc
 import re
 import shutil
-import types
 import zipfile
 
 import casadef
@@ -213,6 +212,13 @@ class T1_1Renderer(RendererBase):
 
         out_fmt = '%Y-%m-%d %H:%M:%S'
         
+        # Set link to pipeline documentation depending on which observatory
+        # this context is for.
+        observatory = context.project_summary.telescope
+        if observatory == 'ALMA':
+            pipeline_doclink = pipeline.__pipeline_documentation_weblink_alma__
+        else:
+            pipeline_doclink = None
         
         #Observation Summary (formerly the T1-2 page)
         ms_summary_rows = []
@@ -271,6 +277,7 @@ class T1_1Renderer(RendererBase):
                 'casa_version'      : casadef.casa_version,
                 'casa_revision'     : casadef.subversion_revision,
                 'pipeline_revision' : pipeline.revision,
+                'pipeline_doclink'  : pipeline_doclink,
                 'obs_start'         : obs_start.strftime(out_fmt),
                 'obs_end'           : obs_end.strftime(out_fmt),
                 'array_names'       : utils.commafy(array_names),
@@ -891,7 +898,7 @@ class T2_2_7Renderer(T2_2_XRendererBase):
     @classmethod
     def render(cls, context):
         if is_singledish_ms(context):
-           super(T2_2_7Renderer, cls).render(context)
+            super(T2_2_7Renderer, cls).render(context)
 
     @staticmethod
     def get_display_context(context, ms):
