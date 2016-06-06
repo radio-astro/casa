@@ -1697,6 +1697,16 @@ class IntervalCalState(object):
 
         # get a copy of this calstate trimmed to the CalTo data selection
         vis = adapted.ms.name
+
+        # if the data has not been registered with the CalLibrary, create a
+        # new and empty calibration application and register it, thereby
+        # creating all the IntervalTrees necessary for the MS.
+        if vis not in self.data:
+            ms = context.observing_run.get_ms(vis)
+            calto = CalTo(vis=ms.name)
+            to_add = IntervalCalState.from_calapplication(context, calto, [])
+            self.__iadd__(to_add)
+
         copied = copy.deepcopy(self.data[vis])
         trimmed = trim_nd(copied, selection_intervals)
 
@@ -1794,6 +1804,16 @@ class IntervalCalState(object):
                 calstate.id_to_field[vis] = other.id_to_field[vis]
 
         return calstate
+
+    def __iadd__(self, other):
+        sum_state = self + other
+
+        # adopt all properties from the added states
+        self.data = sum_state.data
+        self.id_to_field = sum_state.id_to_field
+        self.id_to_intent = sum_state.id_to_intent
+
+        return self
 
     def __sub__(self, other):
         return self._combine(other, ant_sub)
