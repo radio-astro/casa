@@ -198,6 +198,7 @@ class CleanBase(basetask.StandardTaskTemplate):
             result = self._do_clean_cycle (scanidlist, result, iter=inputs.iter)
         except Exception, e:
             LOG.error('%s/%s/spw%s clean error: %s' % (inputs.field, inputs.intent, inputs.spw, str(e)))
+            result.error = '%s/%s/spw%s clean error: %s' % (inputs.field, inputs.intent, inputs.spw, str(e))
 
         return result
 
@@ -306,8 +307,8 @@ class CleanBase(basetask.StandardTaskTemplate):
             if ((tclean_result['stopcode'] == 1) and (tclean_result['iterdone'] >= tclean_result['niter'])):
                 LOG.warning('tclean reached niter limit of %d for %s / spw%s !' % (tclean_result['niter'], utils.dequote(inputs.field), inputs.spw))
 
-            # TODO: Pass stop code 5 information to QA scoring
             if (tclean_result['stopcode'] == 5):
+                result.error = 'tclean diverged'
                 LOG.warning('tclean diverged')
 
         # Create PB for single fields since it is not auto-generated for

@@ -12,7 +12,6 @@ import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.mpihelpers as mpihelpers
 import pipeline.infrastructure.pipelineqa as pipelineqa
 import pipeline.infrastructure.utils as utils
-import pipeline.infrastructure.contfilehandler as contfilehandler
 from pipeline.infrastructure import casa_tasks
 from .basecleansequence import BaseCleanSequence
 from .imagecentrethresholdsequence import ImageCentreThresholdSequence
