@@ -50,6 +50,7 @@ def makePB(vis='', field='', spw='', timerange='', uvrange='',
     nchan = shp[3]
     start = qa.quantity(csysa.referencevalue()['numeric'][3],
                         csysa.units()[3])  # assumes refpix is zero
+    mestart = me.frequency('LSRK',start)
     step = qa.quantity(csysa.increment()['numeric'][3],
                        csysa.units()[3])
 
@@ -60,7 +61,7 @@ def makePB(vis='', field='', spw='', timerange='', uvrange='',
                      observation=observation)
         im.defineimage(nx=shp[0], ny=shp[0], phasecenter=phasecenter,
                        cellx=qa.tos(cellx), celly=qa.tos(celly), nchan=nchan,
-                       start=start, step=step, mode=mode)
+                       start=mestart, step=step, mode=mode)
         im.setvp(dovp=True, telescope=telescope_name)
         im.makeimage(type='pb', image=outimage+'.tmp')
 
