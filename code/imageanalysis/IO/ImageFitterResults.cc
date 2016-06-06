@@ -419,12 +419,20 @@ void ImageFitterResults::writeSummaryFile(
             const auto* decGauss = dynamic_cast<const GaussianShape*>(
                 _deconvolvedList.getShape(i)
             );
-            auto deconMajor = decGauss->majorAxis().getValue("arcsec");
-            auto deconMinor = decGauss->minorAxis().getValue("arcsec");
-            auto deconPA = decGauss->positionAngle().getValue("deg");
-            auto deconMajErr = decGauss->majorAxisError().getValue("arcsec");
-            auto deconMinErr = decGauss->minorAxisError().getValue("arcsec");
-            auto deconPAErr = decGauss->positionAngleError().getValue("deg");
+            Double deconMajor = 0;
+            Double deconMinor = 0;
+            Double deconPA = 0;
+            Double deconMajErr = 0;
+            Double deconMinErr = 0;
+            Double deconPAErr = 0;
+            if (decGauss) {
+                deconMajor = decGauss->majorAxis().getValue("arcsec");
+                deconMinor = decGauss->minorAxis().getValue("arcsec");
+                deconPA = decGauss->positionAngle().getValue("deg");
+                deconMajErr = decGauss->majorAxisError().getValue("arcsec");
+                deconMinErr = decGauss->minorAxisError().getValue("arcsec");
+                deconPAErr = decGauss->positionAngleError().getValue("deg");
+            }
             oss << std::setw(sizeWidth) << std::right << std::scientific
                 << std::setprecision(sizeWidth-6) << std::noshowpos << deconMajor << " "
             << std::setw(sizeWidth) << std::right << std::scientific
