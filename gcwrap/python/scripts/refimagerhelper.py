@@ -1893,15 +1893,29 @@ class ImagerParameters():
             else: 
                 locmax=1
 
+            cleanext = ['.image','.residual','.model','.psf','.sumwt','.tt0']
+            incremented=False
             for iname in inamelist:
-                startind = iname.find( prefix+'_' )
-                if startind==0:
-                    idstr = ( iname[nlen+1:len(iname)] ).split('.')[0]
-                    if idstr.isdigit() :
-                        val = eval(idstr)
-                        if val > locmax : 
-                            locmax = val
-                            
+                rootname,ext = os.path.splitext(iname)
+                if ext in cleanext:
+                    startind = iname.find( prefix+'_' )
+                    if startind==0:
+                        idstr = ( iname[nlen+1:len(iname)] ).split('.')[0]
+                        if idstr.isdigit() :
+                            val = eval(idstr)
+                            incremented=True
+                            if val > locmax : 
+                                locmax = val
+                    elif startind==-1:
+                        if ext=='.tt0':
+                           # need one more pass to extract rootname 
+                           rootname,ext = os.path.splitext(rootname)
+                        if rootname==prefix:
+                            # the file name with root file name only
+                            incremented=True
+                             
+            if not incremented: 
+                locmax = 0; 
             if locmax > maxid:
                 maxid = locmax
 
