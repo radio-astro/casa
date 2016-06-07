@@ -46,221 +46,225 @@
 namespace casa {
 
 template<class T> SHARED_PTR<SubImage<T> > SubImageFactory<T>::createSubImageRW(
-	CountedPtr<ImageRegion>& outRegion, CountedPtr<ImageRegion>& outMask,
-	ImageInterface<T>& inImage, const Record& region,
-	const String& mask, LogIO *const &os,
-	const AxesSpecifier& axesSpecifier,
-	Bool extendMask, Bool preserveAxesOrder
+    CountedPtr<ImageRegion>& outRegion, CountedPtr<ImageRegion>& outMask,
+    ImageInterface<T>& inImage, const Record& region,
+    const String& mask, LogIO *const &os,
+    const AxesSpecifier& axesSpecifier,
+    Bool extendMask, Bool preserveAxesOrder
 ) {
-	if (! mask.empty()) {
-		_getMask(outMask, mask, extendMask, inImage.shape(), inImage.coordinates());
-	}
-	SHARED_PTR<SubImage<T> > subImage;
-	// We can get away with no region processing if the region record
-	// is empty and the user is not dropping degenerate axes
-	if (region.nfields() == 0 && axesSpecifier.keep()) {
+    if (! mask.empty()) {
+        _getMask(outMask, mask, extendMask, inImage.shape(), inImage.coordinates());
+    }
+    SHARED_PTR<SubImage<T> > subImage;
+    // We can get away with no region processing if the region record
+    // is empty and the user is not dropping degenerate axes
+    if (region.nfields() == 0 && axesSpecifier.keep()) {
         subImage.reset(
-        	! outMask
-			? new SubImage<T>(inImage, True, axesSpecifier, preserveAxesOrder)
-			: new SubImage<T>(
-				inImage, *outMask,
-				True, axesSpecifier, preserveAxesOrder
-			)
-		);
-	}
-	else {
-		outRegion = ImageRegion::fromRecord(
-			os, inImage.coordinates(),
-			inImage.shape(), region
-		);
-		if (! outMask) {
+            ! outMask
+            ? new SubImage<T>(inImage, True, axesSpecifier, preserveAxesOrder)
+            : new SubImage<T>(
+                inImage, *outMask,
+                True, axesSpecifier, preserveAxesOrder
+            )
+        );
+    }
+    else {
+        outRegion = ImageRegion::fromRecord(
+            os, inImage.coordinates(),
+            inImage.shape(), region
+        );
+        if (! outMask) {
             subImage.reset(
-            	new SubImage<T>(
-            		inImage, *outRegion,
-            		True, axesSpecifier,
-            		preserveAxesOrder
-            	)
+                new SubImage<T>(
+                    inImage, *outRegion,
+                    True, axesSpecifier,
+                    preserveAxesOrder
+                )
             );
-		}
-		else {
+        }
+        else {
             // on the first pass, we need to keep all axes, the second
             // SubImage construction after this one will properly account
             // for the axes specifier
             SubImage<T> subImage0(
-				inImage, *outMask, True,
-				AxesSpecifier(), preserveAxesOrder
-			);
-			subImage.reset(
-				new SubImage<T>(
-					subImage0, *outRegion,
-					True, axesSpecifier,
-					preserveAxesOrder
-				)
-			);
-		}
-	}
-	return subImage;
+                inImage, *outMask, True,
+                AxesSpecifier(), preserveAxesOrder
+            );
+            subImage.reset(
+                new SubImage<T>(
+                    subImage0, *outRegion,
+                    True, axesSpecifier,
+                    preserveAxesOrder
+                )
+            );
+        }
+    }
+    return subImage;
 }
 
 template<class T> SHARED_PTR<SubImage<T> > SubImageFactory<T>::createSubImageRW(
-	ImageInterface<T>& inImage, const Record& region,
-	const String& mask, LogIO *const &os,
-	const AxesSpecifier& axesSpecifier,
-	Bool extendMask, Bool preserveAxesOrder
+    ImageInterface<T>& inImage, const Record& region,
+    const String& mask, LogIO *const &os,
+    const AxesSpecifier& axesSpecifier,
+    Bool extendMask, Bool preserveAxesOrder
 ) {
-	CountedPtr<ImageRegion> pRegion;
-	CountedPtr<ImageRegion> pMask;
-	return createSubImageRW(
-		pRegion, pMask, inImage, region,
-		mask, os, axesSpecifier,
-		extendMask, preserveAxesOrder
-	);
+    CountedPtr<ImageRegion> pRegion;
+    CountedPtr<ImageRegion> pMask;
+    return createSubImageRW(
+        pRegion, pMask, inImage, region,
+        mask, os, axesSpecifier,
+        extendMask, preserveAxesOrder
+    );
 }
 
 template<class T> SHARED_PTR<const SubImage<T> > SubImageFactory<T>::createSubImageRO(
-	CountedPtr<ImageRegion>& outRegion, CountedPtr<ImageRegion>& outMask,
-	const ImageInterface<T>& inImage, const Record& region,
-	const String& mask, LogIO *const &os,
-	const AxesSpecifier& axesSpecifier,
-	Bool extendMask, Bool preserveAxesOrder
+    CountedPtr<ImageRegion>& outRegion, CountedPtr<ImageRegion>& outMask,
+    const ImageInterface<T>& inImage, const Record& region,
+    const String& mask, LogIO *const &os,
+    const AxesSpecifier& axesSpecifier,
+    Bool extendMask, Bool preserveAxesOrder
 ) {
-	if (! mask.empty()) {
-		_getMask(outMask, mask, extendMask, inImage.shape(), inImage.coordinates());
-	}
-	SHARED_PTR<SubImage<T> > subImage;
-	// We can get away with no region processing if the region record
-	// is empty and the user is not dropping degenerate axes
-	if (region.nfields() == 0 && axesSpecifier.keep()) {
+    if (! mask.empty()) {
+        _getMask(outMask, mask, extendMask, inImage.shape(), inImage.coordinates());
+    }
+    SHARED_PTR<SubImage<T> > subImage;
+    // We can get away with no region processing if the region record
+    // is empty and the user is not dropping degenerate axes
+    if (region.nfields() == 0 && axesSpecifier.keep()) {
         subImage.reset(
-        	! outMask
-			? new SubImage<T>(inImage, axesSpecifier, preserveAxesOrder)
-			: new SubImage<T>(
-				inImage, *outMask,
-				axesSpecifier, preserveAxesOrder
-			)
-		);
-	}
-	else {
-		outRegion = ImageRegion::fromRecord(
-			os, inImage.coordinates(),
-			inImage.shape(), region
-		);
-		if (! outMask) {
+            ! outMask
+            ? new SubImage<T>(inImage, axesSpecifier, preserveAxesOrder)
+            : new SubImage<T>(
+                inImage, *outMask,
+                axesSpecifier, preserveAxesOrder
+            )
+        );
+    }
+    else {
+        outRegion = ImageRegion::fromRecord(
+            os, inImage.coordinates(),
+            inImage.shape(), region
+        );
+        if (! outMask) {
             subImage.reset(
-            	new SubImage<T>(
-            		inImage, *outRegion,
-            		axesSpecifier,
-            		preserveAxesOrder
-            	)
+                new SubImage<T>(
+                    inImage, *outRegion,
+                    axesSpecifier,
+                    preserveAxesOrder
+                )
             );
-		}
-		else {
+        }
+        else {
             // on the first pass, we need to keep all axes, the second
             // SubImage construction after this one will properly account
             // for the axes specifier
             SubImage<T> subImage0(
-				inImage, *outMask,
-				AxesSpecifier(),
-				preserveAxesOrder
-			);
-			subImage.reset(
-				new SubImage<T>(
-					subImage0, *outRegion,
-					axesSpecifier,
-					preserveAxesOrder
-				)
-			);
-		}
-	}
-	return subImage;
+                inImage, *outMask,
+                AxesSpecifier(),
+                preserveAxesOrder
+            );
+            subImage.reset(
+                new SubImage<T>(
+                    subImage0, *outRegion,
+                    axesSpecifier,
+                    preserveAxesOrder
+                )
+            );
+        }
+    }
+    return subImage;
 }
 
 template<class T> SHARED_PTR<const SubImage<T> > SubImageFactory<T>::createSubImageRO(
-	const ImageInterface<T>& inImage, const Record& region,
-	const String& mask, LogIO *const &os,
-	const AxesSpecifier& axesSpecifier,
-	Bool extendMask, Bool preserveAxesOrder
+    const ImageInterface<T>& inImage, const Record& region,
+    const String& mask, LogIO *const &os,
+    const AxesSpecifier& axesSpecifier,
+    Bool extendMask, Bool preserveAxesOrder
 ) {
-	CountedPtr<ImageRegion> pRegion;
-	CountedPtr<ImageRegion> pMask;
-	return createSubImageRO(
-		pRegion, pMask, inImage, region,
-		mask, os, axesSpecifier,
-		extendMask, preserveAxesOrder
-	);
+    CountedPtr<ImageRegion> pRegion;
+    CountedPtr<ImageRegion> pMask;
+    return createSubImageRO(
+        pRegion, pMask, inImage, region,
+        mask, os, axesSpecifier,
+        extendMask, preserveAxesOrder
+    );
 }
 
 template<class T> SPIIT SubImageFactory<T>::createImage(
-	const ImageInterface<T>& image,
-	const String& outfile, const Record& region,
-	const String& mask, Bool dropDegenerateAxes,
-	Bool overwrite, Bool list, Bool extendMask, Bool attachMask,
-	const Lattice<T> *const data
+    const ImageInterface<T>& image,
+    const String& outfile, const Record& region,
+    const String& mask, Bool dropDegenerateAxes,
+    Bool overwrite, Bool list, Bool extendMask, Bool attachMask,
+    const Lattice<T> *const data
 ) {
-	return createImage(
-		image, outfile, region, mask, AxesSpecifier(! dropDegenerateAxes),
-		overwrite, list, extendMask, attachMask, data
-	);
+    return createImage(
+        image, outfile, region, mask, AxesSpecifier(! dropDegenerateAxes),
+        overwrite, list, extendMask, attachMask, data
+    );
 }
 
 template<class T> SPIIT SubImageFactory<T>::createImage(
-	const ImageInterface<T>& image,
-	const String& outfile, const Record& region,
-	const String& mask, const AxesSpecifier& axesSpec,
-	Bool overwrite, Bool list, Bool extendMask, Bool attachMask,
-	const Lattice<T> *const data
+    const ImageInterface<T>& image,
+    const String& outfile, const Record& region,
+    const String& mask, const AxesSpecifier& axesSpec,
+    Bool overwrite, Bool list, Bool extendMask, Bool attachMask,
+    const Lattice<T> *const data
 ) {
-	LogIO log;
-	log << LogOrigin("SubImageFactory", __func__);
-	// Copy a portion of the image
-	// Verify output file
-	if (! overwrite && ! outfile.empty()) {
-		NewFile validfile;
-		String errmsg;
-		ThrowIf(
-			! validfile.valueOK(outfile, errmsg), errmsg
-		);
-	}
-	SHARED_PTR<const SubImage<T> > x = createSubImageRO(
-		image, region, mask, list ? &log : 0,
-		axesSpec, extendMask, True
-	);
-	SPIIT outImage;
-	if (outfile.empty()) {
-		outImage.reset(
-			new TempImage<T>(x->shape(), x->coordinates())
-		);
-	}
-	else {
-		outImage.reset(
-			new PagedImage<T>(
-				x->shape(), x->coordinates(), outfile
-			)
-		);
-		if (list) {
-			log << LogIO::NORMAL << "Creating image '" << outfile
-				<< "' of shape " << outImage->shape() << LogIO::POST;
-		}
-	}
-	ImageUtilities::copyMiscellaneous(*outImage, *x);
-	if (attachMask || ! ImageMask::isAllMaskTrue(*x)) {
-		// if we don't already have a mask, but the user has specified that one needs to
-		// be present, attach it. This needs to be done prior to the copyDataAndMask() call
-		// because in that implementation, the image to which the mask is to be copied must
-		// have already have a mask; that call does not create one if it does not exist.
-		String maskName = "";
-		ImageMaskAttacher::makeMask(*outImage, maskName, False, True, log, list);
-		if (data) {
-		    ImageMaskHandler<T> imh(outImage);
-		    imh.copy(*x);
-		}
-	}
-	if (data) {
-	    outImage->copyData(*data);
-	}
-	else {
-	    LatticeUtilities::copyDataAndMask(log, *outImage, *x);
-	}
+    LogIO log;
+    log << LogOrigin("SubImageFactory", __func__);
+    // Copy a portion of the image
+    // Verify output file
+    if (! overwrite && ! outfile.empty()) {
+        NewFile validfile;
+        String errmsg;
+        if(! validfile.valueOK(outfile, errmsg)) {
+            // CAS-8715 users want a nicer error message in this case
+            if (File(outfile).exists()) {
+                errmsg = outfile + " already exists";
+            }
+            ThrowCc(errmsg);
+        }
+    }
+    SHARED_PTR<const SubImage<T> > x = createSubImageRO(
+        image, region, mask, list ? &log : 0,
+        axesSpec, extendMask, True
+    );
+    SPIIT outImage;
+    if (outfile.empty()) {
+        outImage.reset(
+            new TempImage<T>(x->shape(), x->coordinates())
+        );
+    }
+    else {
+        outImage.reset(
+            new PagedImage<T>(
+                x->shape(), x->coordinates(), outfile
+            )
+        );
+        if (list) {
+            log << LogIO::NORMAL << "Creating image '" << outfile
+                << "' of shape " << outImage->shape() << LogIO::POST;
+        }
+    }
+    ImageUtilities::copyMiscellaneous(*outImage, *x);
+    if (attachMask || ! ImageMask::isAllMaskTrue(*x)) {
+        // if we don't already have a mask, but the user has specified that one needs to
+        // be present, attach it. This needs to be done prior to the copyDataAndMask() call
+        // because in that implementation, the image to which the mask is to be copied must
+        // have already have a mask; that call does not create one if it does not exist.
+        String maskName = "";
+        ImageMaskAttacher::makeMask(*outImage, maskName, False, True, log, list);
+        if (data) {
+            ImageMaskHandler<T> imh(outImage);
+            imh.copy(*x);
+        }
+    }
+    if (data) {
+        outImage->copyData(*data);
+    }
+    else {
+        LatticeUtilities::copyDataAndMask(log, *outImage, *x);
+    }
     outImage->flush();
     return outImage;
 }
