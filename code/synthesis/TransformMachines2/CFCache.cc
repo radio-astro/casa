@@ -240,10 +240,14 @@ namespace casa{
     Double memUsed0,memUsed1;
     memUsed0=memCache2_p[0].memUsage()/1024;
     memUsed1=memCacheWt2_p[0].memUsage()/1024;
-    summarize(memCache2_p,   "CFS",   True);
-    summarize(memCacheWt2_p, "WTCFS", False);
+    Int nCFs=memCache2_p[0].getShape().product();
+    if (nCFs > 0)
+      {
+	summarize(memCache2_p,   "CFS",   True);
+	summarize(memCacheWt2_p, "WTCFS", False);
 
-    log_l << "Total CF Cache memory footprint: " << (memUsed0+memUsed1) << " (" << memUsed0 << "," << memUsed1 << ") KB" << LogIO::POST;
+	log_l << "Total CF Cache memory footprint: " << (memUsed0+memUsed1) << " (" << memUsed0 << "," << memUsed1 << ") KB" << LogIO::POST;
+      }
     // memCache2_p[0].makePersistent("./junk.cf");
     // memCacheWt2_p[0].makePersistent("./junk.cf","","WT");
   }

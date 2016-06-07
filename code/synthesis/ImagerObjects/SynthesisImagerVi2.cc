@@ -650,6 +650,11 @@ void SynthesisImagerVi2::appendToMapperList(String imagename,
 			    //Darn not implented
 			    //vi_p->writeVisModel(vb->visCubeModel());
 			    static_cast<VisibilityIteratorImpl2 *> (vi_p->getImpl())->writeVisModel(vb->visCubeModel());
+
+			    // Cube<Complex> tt=vb->visCubeModel();
+			    // tt = 20.0;
+			    // cout << "Vis:" << tt << endl;
+			    // static_cast<VisibilityIteratorImpl2 *> (vi_p->getImpl())->writeVisModel(tt);
 			  }
     			}
     			itsMappers.grid(*vb, dopsf, (refim::FTMachine::Type)datacol_p);
@@ -778,6 +783,58 @@ void SynthesisImagerVi2::appendToMapperList(String imagename,
   }// end runMajorCycle2
 
 
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  void SynthesisImagerVi2::predictModel(){
+    LogIO os( LogOrigin("SynthesisImager","predictModel ",WHERE) );
+
+    os << "---------------------------------------------------- Predict Model ---------------------------------------------" << LogIO::POST;
+    
+    Bool savemodelcolumn = !readOnly_p && useScratch_p;
+    Bool savevirtualmodel = !readOnly_p && !useScratch_p;
+
+    if( savemodelcolumn ) os << "Saving model column" << LogIO::POST;
+    if( savevirtualmodel ) os << "Saving virtual model" << LogIO::POST;
+
+    itsMappers.checkOverlappingModels("blank");
+
+
+    {
+      vi::VisBuffer2* vb = vi_p->getVisBuffer();;
+      vi_p->originChunks();
+      vi_p->origin();
+      Double numberCoh=0;
+      for (uInt k=0; k< mss_p.nelements(); ++k)
+	numberCoh+=Double(mss_p[k]->nrow());
+
+      ProgressMeter pm(1.0, numberCoh, "Predict Model", "","","",True);
+      Int cohDone=0;
+
+      itsMappers.initializeDegrid(*vb);
+      for (vi_p->originChunks(); vi_p->moreChunks();vi_p->nextChunk())
+	{
+	  
+	  for (vi_p->origin(); vi_p->more(); vi_p->next())
+	    {
+	      //if (SynthesisUtilMethods::validate(*vb)==SynthesisUtilMethods::NOVALIDROWS) break; //No valid rows in this MS
+	      //if !usescratch ...just save
+	      vb->setVisCubeModel(Complex(0.0, 0.0));
+	      itsMappers.degrid(*vb, savevirtualmodel);
+	      if(savemodelcolumn && writeAccess_p )
+		vb->setVisCubeModel(vb->visCubeModel());
+
+	      //	      cout << "nRows "<< vb->nRow() << "   " << max(vb->modelVisCube()) <<  endl;
+	      cohDone += vb->nRows();
+	      pm.update(Double(cohDone));
+
+	    }
+	}
+      itsMappers.finalizeDegrid(*vb);
+    }
+
+    itsMappers.checkOverlappingModels("restore");
+    unlockMSs();
+   
+  }// end of predictModel
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -1142,6 +1199,45 @@ void SynthesisImagerVi2::unlockMSs()
 
     
   }
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  //// Get/Set Weight Grid.... write to disk and read
+
+  /// todo : do for full mapper list, and taylor terms.
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /// todo : do for full mapper list, and taylor terms.
+  
+  Bool SynthesisImagerVi2::setWeightDensity( )
+  {
+    LogIO os(LogOrigin("SynthesisImager", "setWeightDensity()", WHERE));
+    try
+      {
+	Block<Matrix<Float> > densitymatrices(itsMappers.nMappers());
+	for (uInt fid=0;fid<densitymatrices.nelements();fid++)
+	  {
+	    Array<Float> arr;
+	    itsMappers.imageStore(fid)->gridwt(0)->get(arr,True);
+	    densitymatrices[fid].reference( arr );
+	    //cout << "Density shape (set) for f " << fid << " : " << arr.shape() << " : " << densitymatrices[fid].shape() << endl;
+	  }
+
+
+	imwgt_p.setWeightDensity( densitymatrices );
+	vi_p->useImagingWeight(imwgt_p);
+	itsMappers.releaseImageLocks();
+
+      }
+    catch (AipsError &x)
+      {
+	throw(AipsError("In setWeightDensity : "+x.getMesg()));
+      }
+    return True;
+  }
+  
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   void SynthesisImagerVi2::createVisSet(const Bool /*writeAccess*/)
@@ -1158,6 +1254,179 @@ void SynthesisImagerVi2::unlockMSs()
     vi_p->origin();
   }// end of createVisSet
 
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  // Method to run the AWProjectFT machine to seperate the CFCache
+  // construction from imaging.  This is done by splitting the
+  // operation in two steps: (1) run the FTM in "dry" mode to create a
+  // "blank" CFCache, and (2) re-load the "blank" CFCache and "fill"
+  // it.
+  //
+  // If someone can get me (SB) out of the horrible statc_casts in the
+  // code below, I will be most grateful (we are out of it! :-)).
+  //
+  void SynthesisImagerVi2::dryGridding(const Vector<String>& cfList)
+  {
+    LogIO os( LogOrigin("SynthesisImagerVi2","dryGridding",WHERE) );
+
+    Int cohDone=0, whichFTM=0;
+    (void)cfList;
+    // If not an AWProject-class FTM, make this call a NoOp.  Might be
+    // useful to extend it to other projection FTMs -- but later.
+    String ftmName = ((*(itsMappers.getFTM2(whichFTM)))).name();
+
+    if (!((itsMappers.getFTM2(whichFTM,True))->isUsingCFCache())) return;
+
+    os << "---------------------------------------------------- Dry Gridding ---------------------------------------------" << LogIO::POST;
+
+    //
+    // Go through the entire MS in "dry" mode to set up a "blank"
+    // CFCache.  This is done by setting the AWPWBFT in dryrun mode
+    // and gridding.  The process of gridding emits CFCache, which
+    // will be "blank" in a dry run.
+    {
+      vi::VisBuffer2* vb=vi_p->getVisBuffer();
+      vi_p->originChunks();
+      vi_p->origin();
+      Double numberCoh=0;
+      for (uInt k=0; k< mss_p.nelements(); ++k)
+	numberCoh+=Double(mss_p[k]->nrow());
+
+      ProgressMeter pm(1.0, numberCoh, "dryGridding", "","","",True);
+
+      itsMappers.initializeGrid(*vb);
+    
+      // Set the gridder (iFTM) to run in dry-gridding mode
+      (itsMappers.getFTM2(whichFTM,True))->setDryRun(True);
+
+      os << "Making a \"blank\" CFCache" << LogIO::WARN << LogIO::POST;
+
+      // Step through the MS.  This triggers the logic in the Gridder
+      // to determine all the CFs that will be required.  These empty
+      // CFs are written to the CFCache which can then be filled via
+      // a call to fillCFCache().
+      for (vi_p->originChunks(); vi_p->moreChunks();vi_p->nextChunk())
+	{
+	  for (vi_p->origin(); vi_p->more(); vi_p->next())
+	    {
+	      if (SynthesisUtilMethods::validate(*vb)!=SynthesisUtilMethods::NOVALIDROWS) 
+		{
+		  itsMappers.grid(*vb, True, refim::FTMachine::OBSERVED, whichFTM);
+		  cohDone += vb->nRows();
+		  pm.update(Double(cohDone));
+		}
+	    }
+	}
+    }
+    if (cohDone == 0) os << "No valid rows found in dryGridding." << LogIO::EXCEPTION << LogIO::POST;
+    // Unset the dry-gridding mode.
+    (itsMappers.getFTM2(whichFTM,True))->setDryRun(False);
+
+    //itsMappers.checkOverlappingModels("restore");
+    unlockMSs();
+    //fillCFCache(cfList);
+  }
+  //
+  // Re-load the CFCache from the disk using the supplied list of CFs
+  // (as cfList).  Then extract the ConvFunc object (which was setup
+  // in the FTM) and call it's makeConvFunction2() to fill the CF.
+  // Finally, unset the dry-run mode of the FTM.
+  //
+  void SynthesisImagerVi2::fillCFCache(const Vector<String>& cfList,
+				    const String& ftmName,
+				    const String& cfcPath,
+				    const Bool& psTermOn,
+				    const Bool& aTermOn)
+    {
+      LogIO os( LogOrigin("SynthesisImager","fillCFCache",WHERE) );
+      // If not an AWProject-class FTM, make this call a NoOp.  Might be
+      // useful to extend it to other projection FTMs -- but later.
+      // String ftmName = ((*(itsMappers.getFTM(whichFTM)))).name();
+
+      if (!ftmName.contains("awproject") and
+	  !ftmName.contains("multitermftnew")) return;
+      //if (!ftmName.contains("awproject")) return;
+      
+      os << "---------------------------------------------------- fillCFCache ---------------------------------------------" << LogIO::POST;
+
+      //String cfcPath = itsMappers.getFTM(whichFTM)->getCacheDir();
+      //String imageNamePrefix=itsMappers.getFTM(whichFTM)->getCFCache()->getWtImagePrefix();
+
+      //cerr << "Path = " << path << endl;
+
+      // CountedPtr<AWProjectWBFTNew> tmpFT = new AWProjectWBFTNew(static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM))));
+
+
+      Float dPA=360.0,selectedPA=2*360.0;
+      if (cfList.nelements() > 0)
+      {
+	CountedPtr<refim::CFCache> cfCacheObj = new refim::CFCache();
+	  //Vector<String> wtCFList; wtCFList.resize(cfList.nelements());
+	  //for (Int i=0; i<wtCFList.nelements(); i++) wtCFList[i] = "WT"+cfList[i];
+	  //Directory dir(path);
+	  Vector<String> cfList_p=cfList;//dir.find(Regex(Regex::fromPattern("CFS*")));
+	  Vector<String> wtCFList_p;
+	  wtCFList_p.resize(cfList_p.nelements());
+	  for (Int i=0; i<(Int)wtCFList_p.nelements(); i++) wtCFList_p[i]="WT"+cfList_p[i];
+
+	  //cerr << cfList_p << endl;
+      	  cfCacheObj->setCacheDir(cfcPath.data());
+
+	  os << "Re-loading the \"blank\" CFCache for filling" << LogIO::WARN << LogIO::POST;
+
+      	  cfCacheObj->initCacheFromList2(cfcPath, cfList_p, wtCFList_p,
+      					 selectedPA, dPA,1);
+	  // tmpFT->setCFCache(cfCacheObj);
+	  Vector<Double> uvScale, uvOffset;
+	  Matrix<Double> vbFreqSelection;
+	  CountedPtr<refim::CFStore2> cfs2 = CountedPtr<refim::CFStore2>(&cfCacheObj->memCache2_p[0],False);//new CFStore2;
+	  CountedPtr<refim::CFStore2> cfwts2 =  CountedPtr<refim::CFStore2>(&cfCacheObj->memCacheWt2_p[0],False);//new CFStore2;
+
+	  //
+	  // Get whichFTM from itsMappers (SIMapperCollection) and
+	  // cast it as AWProjectWBFTNew.  Then get the ConvFunc from
+	  // the FTM and cast it as AWConvFunc.  Finally call
+	  // AWConvFunc::makeConvFunction2().
+	  //
+	  // (static_cast<AWConvFunc &> 
+	  //  (*(static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM)))).getAWConvFunc())
+	  //  ).makeConvFunction2(String(path), uvScale, uvOffset, vbFreqSelection,
+	  // 		       *cfs2, *cfwts2);
+
+	  // This is a global methond in AWConvFunc.  Does not require
+	  // FTM to be constructed (which can be expensive in terms of
+	  // memory footprint).
+	  refim::AWConvFunc::makeConvFunction2(String(cfcPath), uvScale, uvOffset, vbFreqSelection,
+					       *cfs2, *cfwts2, psTermOn, aTermOn);
+      	}
+      //cerr << "Mem used = " << itsMappers.getFTM(whichFTM)->getCFCache()->memCache2_p[0].memUsage() << endl;
+      //(static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM)))).getCFCache()->initCache2();
+    }
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  void SynthesisImagerVi2::reloadCFCache()
+  {
+      LogIO os( LogOrigin("SynthesisImager","reloadCFCache",WHERE) );
+      Int whichFTM=0;
+      String ftmName = ((*(itsMappers.getFTM2(whichFTM)))).name();
+      if (!ftmName.contains("AWProject")) return;
+
+      os << "-------------------------------------------- reloadCFCache ---------------------------------------------" << LogIO::POST;
+      String path = itsMappers.getFTM2(whichFTM)->getCacheDir();
+      String imageNamePrefix=itsMappers.getFTM2(whichFTM)->getCFCache()->getWtImagePrefix();
+
+      CountedPtr<refim::CFCache> cfCacheObj = new refim::CFCache();
+      cfCacheObj->setCacheDir(path.data());
+      cfCacheObj->setWtImagePrefix(imageNamePrefix.c_str());
+      cfCacheObj->initCache2();
+      
+      // This assumes the itsMappers is always SIMapperCollection.
+      for (whichFTM = 0; whichFTM < itsMappers.nMappers(); whichFTM++)
+	{
+	  (static_cast<refim::AWProjectWBFTNew &> (*(itsMappers.getFTM2(whichFTM)))).setCFCache(cfCacheObj,True); // Setup iFTM
+	  (static_cast<refim::AWProjectWBFTNew &> (*(itsMappers.getFTM2(whichFTM,False)))).setCFCache(cfCacheObj,True); // Set FTM
+	}
+  }
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 

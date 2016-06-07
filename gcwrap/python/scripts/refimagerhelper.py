@@ -692,7 +692,7 @@ class PyParallelContSynthesisImager(PySynthesisImager):
         self.PH.checkJobs(joblist);
 #############################################
     def fillCFCache(self):
-        print "-----------------------fillCFCache------------------------------------"
+        #print "-----------------------fillCFCache------------------------------------"
         # cflist=[f for f in os.listdir(self.allgridpars['cfcache']) if re.match(r'CFS*', f)];
         # partCFList = 
         allcflist = self.PH.partitionCFCacheList(self.allgridpars['0']);
@@ -701,17 +701,17 @@ class PyParallelContSynthesisImager(PySynthesisImager):
         psTermOn = str(self.allgridpars['0']['psterm']);
         aTermOn = str(self.allgridpars['0']['aterm']);
         aTermOn = str(True);
-        print "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
-        print "AllCFList = ",allcflist;
+        # print "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
+        # print "AllCFList = ",allcflist;
         m = len(allcflist);
-        print "No. of nodes used: ", m,cfcPath,ftmname;
-        print "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
+        # print "No. of nodes used: ", m,cfcPath,ftmname;
+        # print "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
 
         joblist=[];
         for node in self.listOfNodes[:m]:
             #print "#!$#!%#!$#@$#@$ ",allcflist;
             cmd = "toolsi.fillcfcache("+str(allcflist[node])+","+str(ftmname)+","+str(cfcPath)+","+psTermOn+","+aTermOn+")";
-            print "CMD = ",node," ",cmd;
+            # print "CMD = ",node," ",cmd;
             joblist.append(self.PH.runcmd(cmd,node));
         self.PH.checkJobs(joblist);
 
@@ -1130,9 +1130,10 @@ class PyParallelImagerHelper():
             n=nCF;
         else:
             n=nProcs;
-        print "########################################################"
-        print "nCF = ",nCF," nProcs = ",n," NodeList=",self.nodeList;
-        print "########################################################"
+        if (nCF > 0):
+            casalog.post("########################################################");
+            casalog.post("nCF = " + str(nCF) + " nProcs = " + str(n) + " NodeList=" + str(self.nodeList));
+            casalog.post("########################################################");
         xx=self.chunkify(cflist,n);
         allcfs={};
         for i in range(n):

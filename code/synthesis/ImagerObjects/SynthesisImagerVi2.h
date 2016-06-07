@@ -57,6 +57,19 @@ public:
 	      const Quantity& filterbmaj=Quantity(0.0,"deg"),
 	      const Quantity& filterbmin=Quantity(0.0,"deg"),
 	      const Quantity& filterbpa=Quantity(0.0,"deg")  );
+  
+  Bool setWeightDensity();
+  void predictModel();
+
+
+  void dryGridding(const Vector<String>& cfList);
+  void fillCFCache(const Vector<String>& cfList,
+		   const String& ftmName,
+		   const String& cfcPath,
+		   const Bool& psTermOn,
+		   const Bool& aTermOn);
+  void reloadCFCache();
+
  protected:
   void appendToMapperList(String imagename, 
 			  CoordinateSystem& csys, 

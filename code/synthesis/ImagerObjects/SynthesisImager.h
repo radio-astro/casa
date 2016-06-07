@@ -160,7 +160,7 @@ class SynthesisImager
 	      const Quantity& filterbpa=Quantity(0.0,"deg")  );
 
   Bool getWeightDensity();
-  Bool setWeightDensity();
+  virtual Bool setWeightDensity();
 
   //the following get rid of the mappers in this object
   void resetMappers();
@@ -175,15 +175,15 @@ class SynthesisImager
 
   //  void makePrimaryBeam(PBMath& pbMath);
 
-  void predictModel();
+  virtual void predictModel();
   //  void makeImage();
   /* Access method to the Loop Controller held in this class */
   //SIIterBot& getLoopControls();
 
-  void dryGridding(const Vector<String>& cfList);
-  void fillCFCache(const Vector<String>& cfList, const String& ftmName, const String& cfcPath,
-		   const Bool& psTermOn, const Bool& aTermOn); 
-  void reloadCFCache();
+  virtual void dryGridding(const Vector<String>& cfList);
+  virtual void fillCFCache(const Vector<String>& cfList, const String& ftmName, const String& cfcPath,
+			   const Bool& psTermOn, const Bool& aTermOn); 
+  virtual void reloadCFCache();
 
   static String doubleToString(const Double& df); 
  

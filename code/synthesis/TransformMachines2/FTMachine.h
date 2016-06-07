@@ -190,8 +190,13 @@ public:
 
   // Put coherence to grid
   virtual void put(const vi::VisBuffer2& vb, Int row=-1, Bool dopsf=False,
-  		   FTMachine::Type type= FTMachine::OBSERVED)=0;
+  		   refim::FTMachine::Type type= refim::FTMachine::OBSERVED)=0;
   
+  // Non const vb version - so that weights can be modified in-place
+  // Currently, used only by MultiTermFT
+  virtual void put(vi::VisBuffer2& vb, Int row=-1, Bool dopsf=False, 
+  	           refim::FTMachine::Type type= refim::FTMachine::OBSERVED)
+  {put((const vi::VisBuffer2&)vb,row,dopsf,type);};
 
   //-------------------------------------------------------------------------------------
   virtual void correlationToStokes(ImageInterface<Complex>& compImage, 

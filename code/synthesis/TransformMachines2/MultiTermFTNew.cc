@@ -391,7 +391,7 @@ void MultiTermFTNew::initializeToSkyNew(const Bool dopsf,
   
 
 
-void MultiTermFTNew::put(VisBuffer2& vb, Int row, Bool dopsf, FTMachine::Type type)
+  void MultiTermFTNew::put(VisBuffer2& vb, Int row, Bool dopsf, refim::FTMachine::Type type)
   {
     
     subftms_p[0]->put(vb,row,dopsf,type);
@@ -454,7 +454,7 @@ void MultiTermFTNew::finalizeToSkyNew(Bool dopsf,
   //----------------------------- Obtain Images -----------------------------------------------------
   //---------------------------------------------------------------------------------------------------
   //----------------------------------------------------------------------
-  void MultiTermFTNew::makeImage(FTMachine::Type type, VisibilityIterator2& vi,
+  void MultiTermFTNew::makeImage(refim::FTMachine::Type type, VisibilityIterator2& vi,
 				 ImageInterface<Complex>& theImage,  Matrix<Float>& weight) 
   {
     //    cout << "MTFT :: makeImage for taylor 0 only "<< endl;

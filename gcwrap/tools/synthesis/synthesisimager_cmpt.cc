@@ -44,10 +44,10 @@ namespace casac {
   {
     if ((!itsImager) || forceNew)
       {
-	if (vi2) return new SynthesisImagerVi2();
-	else return new SynthesisImager();
+	if (vi2) itsImager = new SynthesisImagerVi2();
+	else itsImager = new SynthesisImager();
       }
-    else return itsImager;
+    return itsImager;
   }
 
 

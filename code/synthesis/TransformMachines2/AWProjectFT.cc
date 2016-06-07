@@ -1242,9 +1242,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     if (cfSource != CFDefs::MEMCACHE)
       {
+	// If dry run, write the uvgrid as an image for later use in
+	// filling the empty CFCache.  Only the co-ordinate system of
+	// the uvgrid is required later.
 	if (dryRun())
 	  {
-	    PagedImage<Complex> thisGrid(lattice->shape(),image.coordinates(), 
+	    // PagedImage<Complex> thisGrid(lattice->shape(),image.coordinates(), 
+	    // 				 cfCache_p->getCacheDir()+"/uvgrid.im");
+	    PagedImage<Complex> thisGrid(image.shape(),image.coordinates(), 
 					 cfCache_p->getCacheDir()+"/uvgrid.im");
 	  }
 
