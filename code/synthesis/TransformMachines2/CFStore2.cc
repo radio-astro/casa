@@ -158,7 +158,7 @@ namespace casa{
     for (Int i=0;i<storage_p.shape()(0);i++)
       for (Int j=0;j<storage_p.shape()(1);j++)
 	{
-	  log_l << "Writing CFStore("<<i<<","<<j<<") of shape " << storage_p(i,j).shape() << LogIO::POST;
+	  log_l << "Writing CFStore("<<i<<","<<j<<") of shape " << storage_p(i,j)->shape() << LogIO::POST;
 	  ostringstream name;
 	  //name << dir << "/" << qualifier << "CFS_" << i << "_" << j;
 	  name << String(qualifier) << "CFS_" << i << "_" << j;
