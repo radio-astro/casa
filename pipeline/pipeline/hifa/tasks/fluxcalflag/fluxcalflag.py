@@ -115,7 +115,7 @@ class FluxcalFlagInputs(basetask.StandardInputs):
 
 class FluxcalFlagResults(basetask.Results):
     def __init__(self, vis, fluxcal_linelist=[], fluxcal_flagcmds=[],
-        refspwmap=[-1]):
+        refspwmap=[-1], science_spw_ids=[]):
         """
         Initialise the flux calibration flagging task results object.
         """
@@ -124,6 +124,7 @@ class FluxcalFlagResults(basetask.Results):
         self._fluxcal_linelist = fluxcal_linelist
         self._fluxcal_flagcmds = fluxcal_flagcmds
         self._refspwmap = refspwmap
+        self._science_spw_ids = science_spw_ids
 
     def merge_with_context(self, context):
 
@@ -182,7 +183,8 @@ class FluxcalFlag(basetask.StandardTaskTemplate):
             result = FluxcalFlagResults(inputs.vis)
             result.summaries = summaries
             return result
-
+        science_spw_ids = [spw.id for spw in science_spws]
+        
         # Get all the spws. These will be used to construct refspwmap
         all_spws = inputs.ms.get_spectral_windows(task_arg=inputs.spw,
             science_windows_only=False)
@@ -288,7 +290,7 @@ class FluxcalFlag(basetask.StandardTaskTemplate):
 
         result = FluxcalFlagResults(inputs.vis,
             fluxcal_linelist=fluxcal_lines, fluxcal_flagcmds=flagcmds,
-                refspwmap=refspwmap) 
+                refspwmap=refspwmap, science_spw_ids=science_spw_ids) 
         result.summaries = summaries
 
         return result
@@ -428,7 +430,7 @@ class FluxcalFlag(basetask.StandardTaskTemplate):
             maxdiff = sys.float_info.max
             ctrfreq = fvalue.centre_frequency.value
             closest_spwid = None
-            for ufkey, ufvalue in unflaggedspws.iteritems():
+            for _, ufvalue in unflaggedspws.iteritems():
                 uctrfreq = ufvalue.centre_frequency.value
                 diff = abs(ctrfreq - uctrfreq)
                 if (diff < maxdiff):

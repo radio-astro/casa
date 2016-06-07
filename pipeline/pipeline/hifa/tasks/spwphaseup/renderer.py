@@ -1,15 +1,13 @@
 import collections
 import os
 
-import pipeline.infrastructure
-#import pipeline.infrastructure.logging as logging
+import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.utils as utils
 
-#LOG = logging.get_logger(__name__)
+LOG = logging.get_logger(__name__)
 
-SpwMaps = collections.namedtuple('SpwMaps', 'ms spwmap')
-# Reuse this definition
+SpwMaps = collections.namedtuple('SpwMaps', 'ms spwmap scispws')
 SpwPhaseupApplication = collections.namedtuple('SpwPhaseupApplication', 
                                             'ms gaintable calmode solint intent spw') 
 
@@ -33,7 +31,11 @@ class T2_4MDetailsSpwPhaseupRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 spwmap = result.combine_spwmap
             else:
                 spwmap = result.phaseup_spwmap
-            spwmaps.append(SpwMaps(ms.basename, spwmap))
+                
+            # Get science spws
+            science_spw_ids = [spw.id for spw in ms.get_spectral_windows(science_windows_only=True)]
+            
+            spwmaps.append(SpwMaps(ms.basename, spwmap, science_spw_ids))
 
             applications.extend(self.get_gaincal_applications(context, result.phaseup_result, ms))
 

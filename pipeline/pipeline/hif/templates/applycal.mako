@@ -129,6 +129,18 @@ def total_for_agent(agent, row, mses=flags.keys()):
 def space_comma(s):
 	return ', '.join(string.split(s, ','))
 
+def format_spwmap(spwmap, scispws):
+    if not spwmap:
+        return ''
+    else:
+        spwmap_strings=[]
+        for ind, spwid in enumerate(spwmap):
+        	if ind in scispws:
+        		spwmap_strings.append("<strong>{0}</strong>".format(spwid))
+        	else:
+        		spwmap_strings.append(str(spwid))
+        
+        return ', '.join(spwmap_strings)
 %>
 
 <%block name="title">Apply calibration tables</%block>
@@ -192,7 +204,7 @@ def space_comma(s):
 			<td rowspan="${ca_rowspan}">${space_comma(calapp.calto.antenna)}</td>
 		% for calfrom in calapp.calfrom:
 			<td>${caltypes[calfrom.gaintable]}</td>
-			<td>${', '.join([str(i) for i in calfrom.spwmap])}</td>
+			<td>${format_spwmap(calfrom.spwmap, [int(spw) for spw in calapp.calto.spw.split(',')])}</td>
 			<td>${space_comma(calfrom.gainfield)}</td>
 			<td>${space_comma(calfrom.interp)}</td>
 			<td>${calfrom.calwt}</td>

@@ -2,11 +2,18 @@
 rsc_path = ""
 import os
 
-def format_spwmap(spwmap):
+def format_spwmap(spwmap, scispws):
     if not spwmap:
         return ''
     else:
-        return ', '.join([str(spwid) for spwid in spwmap])
+        spwmap_strings=[]
+        for ind, spwid in enumerate(spwmap):
+        	if ind in scispws:
+        		spwmap_strings.append("<strong>{0}</strong>".format(spwid))
+        	else:
+        		spwmap_strings.append(str(spwid))
+        
+        return ', '.join(spwmap_strings)
 %>
 <%inherit file="t2-4m_details-base.html"/>
 
@@ -28,7 +35,7 @@ and the caltable containing per spw phase offsets</p>
     % for spwmap in spwmaps:
 		<tr>
 			<td>${os.path.basename(spwmap.ms)}</td>
-			<td>${format_spwmap(spwmap.spwmap)}</td>
+			<td>${format_spwmap(spwmap.spwmap, spwmap.scispws)}</td>
 		</tr>
     % endfor
 	</tbody>

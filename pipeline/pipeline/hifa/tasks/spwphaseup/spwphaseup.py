@@ -2,7 +2,6 @@ from __future__ import absolute_import
 
 import types
 
-from pipeline.hif.tasks.gaincal import common
 from pipeline.hif.tasks.gaincal import gaincalmode
 from pipeline.hif.tasks.gaincal import gaincalworker
 from pipeline.hif.tasks.gaincal import gtypegaincal
@@ -71,8 +70,8 @@ class SpwPhaseup(gaincalworker.GaincalWorker):
 
     def prepare(self, **parameters):
 
-	# Simplify the inputs
-	inputs = self.inputs
+        # Simplify the inputs
+        inputs = self.inputs
 
         # Get a list of all the spws and a list of the science spws
         allspws = inputs.ms.get_spectral_windows(task_arg=inputs.spw,
@@ -80,63 +79,63 @@ class SpwPhaseup(gaincalworker.GaincalWorker):
         scispws = inputs.ms.get_spectral_windows(task_arg=inputs.spw,
             science_windows_only=True)
 
-	# Compute the spw map according to the rules defined by each
+        # Compute the spw map according to the rules defined by each
         # mapping mode. The default map is [] which stands for the
-	# default one to one spw mapping.
-	LOG.info('The spw mapping mode for %s is %s' % \
+        # default one to one spw mapping.
+        LOG.info('The spw mapping mode for %s is %s' % \
             (inputs.ms.basename, inputs.hm_spwmapmode))
         if inputs.hm_spwmapmode == 'auto':
             lowsnr, snrtest_result = self._do_snrtest()
             if lowsnr:
                 LOG.info('    Low SNR condition met')
-	        combinespwmap = combine_spwmap (allspws, scispws, scispws[0].id)
-	        LOG.info('    The combine spw map is %s' % (combinespwmap))
-	        phaseupspwmap = []
+                combinespwmap = combine_spwmap (allspws, scispws, scispws[0].id)
+                LOG.info('    The combine spw map is %s' % (combinespwmap))
+                phaseupspwmap = []
             elif (len(snrtest_result.snrs) <= 0):
                 LOG.info('    Cannot compute PHASE SNR values')
                 LOG.info('    Switching to narrow to wide spw mapping algorithm')
-	        combinespwmap = []
-	        phaseupspwmap = simple_n2wspwmap (allspws, scispws, inputs.maxnarrowbw,
-	            inputs.minfracmaxbw, inputs.samebb)
-	        LOG.info('    The simple phaseup spw map is %s' % (phaseupspwmap))
+                combinespwmap = []
+                phaseupspwmap = simple_n2wspwmap (allspws, scispws, inputs.maxnarrowbw,
+                    inputs.minfracmaxbw, inputs.samebb)
+                LOG.info('    The simple phaseup spw map is %s' % (phaseupspwmap))
             else:
                 LOG.info('    Low SNR condition not met')
-	        combinespwmap = []
-	        phaseupspwmap = []
-	        LOG.info('    The phaseup spw map is %s' % (phaseupspwmap))
+                combinespwmap = []
+                phaseupspwmap = []
+                LOG.info('    The phaseup spw map is %s' % (phaseupspwmap))
         elif inputs.hm_spwmapmode == 'combine':
-	    combinespwmap = combine_spwmap (allspws, scispws, scispws[0].id)
-	    phaseupspwmap = []
-	    LOG.info('    The combine spw map is %s' % (combinespwmap))
+            combinespwmap = combine_spwmap (allspws, scispws, scispws[0].id)
+            phaseupspwmap = []
+            LOG.info('    The combine spw map is %s' % (combinespwmap))
         elif inputs.hm_spwmapmode == 'simple':
             combinespwmap = []
-	    phaseupspwmap = simple_n2wspwmap (allspws, scispws, inputs.maxnarrowbw,
-	        inputs.minfracmaxbw, inputs.samebb)
-	    LOG.info('    The phaseup spw map is %s' % (phaseupspwmap))
+            phaseupspwmap = simple_n2wspwmap (allspws, scispws, inputs.maxnarrowbw,
+                inputs.minfracmaxbw, inputs.samebb)
+            LOG.info('    The phaseup spw map is %s' % (phaseupspwmap))
         else:
             phaseupspwmap = []
             combinespwmap = []
-	    LOG.info('    No combine or phaseup spw map for %s' % \
+            LOG.info('    No combine or phaseup spw map for %s' % \
                 (inputs.ms.basename))
 
-	# Compute the phaseup table and set calwt to False
-	LOG.info('Computing spw phaseup table for %s is %s' % \
+        # Compute the phaseup table and set calwt to False
+        LOG.info('Computing spw phaseup table for %s is %s' % \
             (inputs.ms.basename, inputs.hm_spwmapmode))
-	phaseupresult = self._do_phaseup()
-	self._mod_last_calwt (phaseupresult.pool[0], False)
-	#self._mod_last_calwt (phaseupresult.final[0], False)
+        phaseupresult = self._do_phaseup()
+        self._mod_last_calwt (phaseupresult.pool[0], False)
+        #self._mod_last_calwt (phaseupresult.final[0], False)
 
         # Create the results object.
-	result = SpwPhaseupResults(vis=inputs.vis,
+        result = SpwPhaseupResults(vis=inputs.vis,
             phaseup_result=phaseupresult, combine_spwmap=combinespwmap,
             phaseup_spwmap=phaseupspwmap)
 
-	return result
+        return result
 
     def analyse(self, result):
 
-	# The caltable portion of the result is treated as if it
-	# were any other calibration result.
+        # The caltable portion of the result is treated as if it
+        # were any other calibration result.
 
         # With no best caltable to find, our task is simply to set the one
         # caltable as the best result
@@ -157,7 +156,7 @@ class SpwPhaseup(gaincalworker.GaincalWorker):
 
     def _do_snrtest (self):
 
-	# Simplify inputs.
+        # Simplify inputs.
         inputs = self.inputs
 
         task_args = {
@@ -186,7 +185,7 @@ class SpwPhaseup(gaincalworker.GaincalWorker):
 
     def _do_phaseup(self):
 
-	# Simplify inputs.
+        # Simplify inputs.
         inputs = self.inputs
 
         task_args = {
@@ -263,8 +262,5 @@ class SpwPhaseupResults(basetask.Results):
             '\tNo spw phaseup table computed')
         else:
             spwmap = 'SpwPhaseupResults:\nCombine spwmap = %s\nNarrow to wide spwmap = %s\n' % \
-		(self.combine_spwmap, self.phaseup_spwmap)
+                (self.combine_spwmap, self.phaseup_spwmap)
             return spwmap
-
-
-

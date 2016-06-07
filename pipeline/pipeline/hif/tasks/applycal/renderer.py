@@ -67,8 +67,6 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         })
 
         # these dicts map vis to the hrefs of the detail pages
-        amp_vs_time_subpages = {}
-        phase_vs_time_subpages = {}
         amp_vs_freq_subpages = {}
         phase_vs_freq_subpages = {}
         amp_vs_uv_subpages = {}
@@ -151,7 +149,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         for r in result:
             vis = os.path.basename(r.inputs['vis'])
             uvrange_dist = uv_max.get(vis, None)
-            in_m = str(uvrange_dist.to_units(pipeline.domain.measures.DistanceUnits.METRE))
+            in_m = str(uvrange_dist.to_units(measures.DistanceUnits.METRE))
             uvrange = '0~%sm' % in_m
 
             p, _ = self.create_plots(
