@@ -963,7 +963,7 @@ def get_cube_freq_axis(img):
     return refFreq, deltaFreq, freqUnit, refPix, numPix
 
 
-def selection_to_frequencies(img, selection, unit='GHz'):
+def chan_selection_to_frequencies(img, selection, unit='GHz'):
 
     '''Convert channel selection to frequency tuples.'''
 
@@ -994,6 +994,38 @@ def selection_to_frequencies(img, selection, unit='GHz'):
         #print 'None'
 
     return frequencies
+
+
+def freq_selection_to_channels(img, selection):
+
+    '''Convert frequency selection to channel tuples.'''
+
+    channels = []
+    if (selection != ''):
+        qaTool = casatools.quanta
+
+
+        # Get frequency axis
+        try:
+            refFreq, deltaFreq, freqUnit, refPix, numPix = get_cube_freq_axis(img)
+        except:
+            LOG.error('No frequency axis found in %s.' % (img))
+            return ['NONE']
+
+        p = re.compile('([\d.]*)(~)([\d.]*)(\D*)')
+        for frange in p.findall(selection.replace(';','')):
+            f0 = qaTool.convert('%s%s' % (frange[0], frange[3]), freqUnit)['value']
+            f1 = qaTool.convert('%s%s' % (frange[2], frange[3]), freqUnit)['value']
+            c0 = int((f0 - refFreq) / deltaFreq)
+            c1 = int((f1 - refFreq) / deltaFreq)
+            if (c0 < c1):
+                channels.append((c0, c1))
+            else:
+                channels.append((c1, c0))
+    else:
+        channels = ['NONE']
+
+    return channels
 
 
 def get_vis_from_plots(plots):
