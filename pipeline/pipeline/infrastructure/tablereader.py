@@ -67,21 +67,31 @@ class MeasurementSetReader(object):
             qt = casatools.quanta
 
             scans = []
+            statesforscans = msmd.statesforscans()
+            fieldsforscans = msmd.fieldsforscans(asmap=True, arrayid=0, obsid=0)
+            spwsforscans = msmd.spwsforscans()
+
             for scan_id in msmd.scannumbers():
+                #states = [s for s in ms.states
+                #          if s.id in msmd.statesforscan(scan_id)]
                 states = [s for s in ms.states
-                          if s.id in msmd.statesforscan(scan_id)]
+                          if s.id in statesforscans[str(scan_id)]]
 
                 intents = reduce(lambda s, t: s.union(t.intents), states, set())
                 
-                fields = [f for f in ms.fields 
-                          if f.id in msmd.fieldsforscan(scan_id)]
+                #fields = [f for f in ms.fields
+                #          if f.id in msmd.fieldsforscan(scan_id)]
+                fields = [f for f in ms.fields
+                          if f.id in fieldsforscans[str(scan_id)]]
 
                 # can't use msmd.timesforscan as we need unique times grouped by 
                 # spw
 #                 scan_times = msmd.timesforscan(scan_id)
                 
+                #exposures = {spw_id : msmd.exposuretime(scan=scan_id, spwid=spw_id)
+                #             for spw_id in msmd.spwsforscan(scan_id)}
                 exposures = {spw_id : msmd.exposuretime(scan=scan_id, spwid=spw_id)
-                             for spw_id in msmd.spwsforscan(scan_id)}
+                             for spw_id in spwsforscans[str(scan_id)]}
                 
                 scan_mask = (scan_number_col==scan_id)                
 
@@ -269,9 +279,11 @@ class MeasurementSetReader(object):
 
     @staticmethod
     def link_spws_to_fields(msmd, ms):
+        spwsforfields = msmd.spwsforfields()
         for field in ms.fields:
-            spws = [spw for spw in ms.spectral_windows
-                    if spw.id in msmd.spwsforfield(field.id)]
+            #spws = [spw for spw in ms.spectral_windows
+            #        if spw.id in msmd.spwsforfield(field.id)]
+            spws = [spw for spw in ms.spectral_windows if spw.id in spwsforfields[str(field.id)]]
             field.valid_spws.update(spws)
     
     @staticmethod
