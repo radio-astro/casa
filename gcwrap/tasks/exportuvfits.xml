@@ -157,8 +157,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 output data will average channels in groups of three.
         multisource -- Write in multi-source format
                 default: =&gt; True;
-                   false if one source is selected
-                True works with AIPS, but not difmap.
+                True works with AIPS, but not difmap. Set to False if one source is selected or if planning on using difmap on the output. 
         combinespw -- If True, export the spectral windows as IFs.
                       Otherwise multiple windows will use multiple FREQIDs.
                 default: =&gt;  True;
