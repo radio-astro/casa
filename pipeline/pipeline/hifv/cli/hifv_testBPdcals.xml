@@ -38,7 +38,7 @@
 
     <param type="bool" name="weakbp">
 	<description>Activate weak bandpass heuristics</description>
-	<value>Flase</value>
+	<value>False</value>
     </param>
 
     <constraints>
