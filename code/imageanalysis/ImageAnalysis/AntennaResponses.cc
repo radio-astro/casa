@@ -408,7 +408,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   Bool AntennaResponses::getImageName(String& functionImageName, // the path to the image
 				      uInt& functionChannel, // the channel to use
-				      MFrequency& nomFreq, // nominal frequency of the image (at the given channel)
+				      MFrequency& nomFreq, // nominal frequency of the image (in the given channel)
 				      FuncTypes& fType, // the function type of the image
 				      MVAngle& rotAngOffset, // response rotation angle offset
 				      const String& obsName, // (the observatory name, e.g. "ALMA" or "ACA")
@@ -444,8 +444,54 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
 
   }
+
+  // overloaded method with additional output hi and lo ends of validity range
+  Bool AntennaResponses::getImageName(String& functionImageName, // the path to the image
+				      uInt& functionChannel, // the channel to use
+				      MFrequency& nomFreq, // nominal frequency of the image (in the given channel)
+				      MFrequency& loFreq, // lower end of the frequency validity range
+				      MFrequency& hiFreq, // upper end of the frequency validity range
+				      FuncTypes& fType, // the function type of the image
+				      MVAngle& rotAngOffset, // response rotation angle offset
+				      const String& obsName, // (the observatory name, e.g. "ALMA" or "ACA")
+				      const MEpoch& obsTime,
+				      const MFrequency& freq,
+				      const FuncTypes& requFType, // the requested function type
+				      const String& antennaType,
+				      const MDirection& center,
+				      const String& receiverType,
+				      const Int& beamNumber){
+    
+    uInt row, subBand;
+
+    if(!getRowAndIndex(row, subBand,
+		       obsName, obsTime, freq,
+		       requFType, antennaType,
+		       center, receiverType,
+		       beamNumber)){
+      return False;
+    }
+    else{
+      functionImageName = FuncName_p(row)(subBand);
+      if(functionImageName.firstchar()!='/'){ // need to prepend the path
+	String tempS = paths_p(pathIndex_p(row));
+	string::size_type p = tempS.find_last_of('/',tempS.size());
+	functionImageName = tempS.substr(0,p) + "/" + functionImageName;
+      }
+      functionChannel = FuncChannel_p(row)(subBand);
+      nomFreq = MFrequency(NomFreq_p(row)(subBand),MFrequency::TOPO);
+      loFreq = MFrequency(SubbandMinFreq_p(row)(subBand),MFrequency::TOPO);
+      hiFreq = MFrequency(SubbandMaxFreq_p(row)(subBand),MFrequency::TOPO);
+      fType = FuncType_p(row)(subBand);
+      rotAngOffset = RotAngOffset_p(row)(subBand);
+      return True;
+    }
+
+
+  }
+
 		
-  // overloaded method: as previous method but using beamId
+  // overloaded method: similar to previous but using beamId
   // (instead of obs. time, ant. type,  rec. type, and center)
   Bool AntennaResponses::getImageName(String& functionImageName,
 				      uInt& functionChannel,

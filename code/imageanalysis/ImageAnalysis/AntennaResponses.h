@@ -241,6 +241,25 @@ public:
 							  MDirection::AZEL), 
 		    const String& receiverType = "",
 		    const Int& beamNumber=0);   
+
+  // Overloaded method: returning the validity range
+  Bool getImageName(String& functionImageName, // the path to the image
+		    uInt& funcChannel, // the channel to use in the image  
+		    MFrequency& nomFreq, // nominal frequency of the image (in the given channel)
+		    MFrequency& loFreq, // lower end of the frequency validity range
+		    MFrequency& hiFreq, // upper end of the frequency validity range
+		    FuncTypes& fType, // the function type of the image
+		    MVAngle& rotAngOffset, // the response rotation angle offset
+		    const String& obsName, // (the observatory name, e.g. "ALMA" or "ACA")
+		    const MEpoch& obsTime,
+		    const MFrequency& freq,
+		    const FuncTypes& requFType = ANY, // the requested function type
+		    const String& antennaType = "",
+		    const MDirection& center = MDirection(Quantity( 0., "deg"), // the center to be matched with the CENTER column,
+							  Quantity(90., "deg"), // default is the Zenith
+							  MDirection::AZEL), 
+		    const String& receiverType = "",
+		    const Int& beamNumber=0);
 		
   // Overloaded method: as previous method but using beamId
   // (instead of obs. time, ant. type,  rec. type, center, and functype)
@@ -252,6 +271,7 @@ public:
 		    const String& obsName, // (the observatory name, e.g. "ALMA" or "ACA")
 		    const Int& beamId,
 		    const MFrequency& freq);
+
 
   // Get a vector containing all unique antenna type strings for the given constraints
   Bool getAntennaTypes(Vector<String>& antTypes,

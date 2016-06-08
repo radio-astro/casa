@@ -1199,6 +1199,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	String functionImageName;
 	uInt funcChannel;
 	MFrequency nomFreq;
+	MFrequency loFreq;
+	MFrequency hiFreq;
 	AntennaResponses::FuncTypes fType;
 	MVAngle rotAngOffset;
 
@@ -1221,6 +1223,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if(!aR_p.getImageName(functionImageName, // the path to the image
 			      funcChannel, // the channel to use in the image  
 			      nomFreq, // nominal frequency of the image (in the given channel)
+			      loFreq, // lower end of the validity range
+			      hiFreq, // upper end of the validity range
 			      fType, // the function type of the image
 			      rotAngOffset, // the response rotation angle offset
 			      /////////////////////
@@ -1257,6 +1261,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  rec.define("compleximage", functionImageName);
 	  rec.define("channel", funcChannel);
 	  rec.define("reffreq", nomFreq.get(uHz).getValue());
+	  rec.define("minvalidfreq", loFreq.get(uHz).getValue());
+	  rec.define("maxvalidfreq", hiFreq.get(uHz).getValue());
 	  rval = True;
 	  break;
 	case AntennaResponses::VP: // real voltage pattern
@@ -1268,6 +1274,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  rec.define("realimage", functionImageName);
 	  rec.define("channel", funcChannel);
 	  rec.define("reffreq", nomFreq.get(uHz).getValue());
+	  rec.define("minvalidfreq", loFreq.get(uHz).getValue());
+	  rec.define("maxvalidfreq", hiFreq.get(uHz).getValue());
 	  rval = True;
 	  break;
 	case AntennaResponses::VPMAN: // the function is available in casa via the vp manager, i.e. use COMMONPB
@@ -1406,6 +1414,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      rec.define("channel", 0);
 	      rec.define("antennatype", antennatype);
 	      rec.define("reffreq", refFreqHz);
+	      rec.define("minvalidfreq", refFreqHz-refFreqHz/10.*5.);
+	      rec.define("maxvalidfreq", refFreqHz+refFreqHz/10.*5.);
 	      rval = True;
 	    }
 	  }
@@ -1471,6 +1481,163 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     return rval;
 
+  }
+
+  Bool VPManager::getvps(Vector<Record> & unique_out_rec_list, // the list of unique beam records
+			 Vector<Vector<uInt> >& beam_index, // indices to the above vector in sync with AntennaNames
+			 const String& telescope,
+			 const Vector<MEpoch>& inpTimeRange, // only elements 0 and 1 are used; if 1 is not present it is assumed to be inf
+			 const Vector<MFrequency>& inpFreqRange, // must contain at least one element; beams will be provided for each element 
+			 const Vector<String>& AntennaNames, // characters 0 and 1 are used for ALMA to determine the antenna type
+			 const MDirection& obsdirection){ // default is the Zenith
+
+    LogIO os;
+    os << LogOrigin("VPManager", "getvp3");
+
+    Bool rval=True;
+
+    if (inpTimeRange.size()==0){
+      os << LogIO::WARN	 << "No observation time provided." << LogIO::POST;
+      return False;
+    }
+    if (inpFreqRange.size()==0){
+      os << LogIO::WARN	 << "No observation frequency provided." << LogIO::POST;
+      return False;
+    }
+    if (AntennaNames.size()==0){
+      os << LogIO::WARN	 << "No antenna names provided." << LogIO::POST;
+      return False;
+    }
+
+    Bool checkTimeDep = False;
+    Unit uS("s");
+    if(inpTimeRange.size()>1 && (inpTimeRange[0].get(uS) < inpTimeRange[1].get(uS))){
+      checkTimeDep = True;
+    }
+
+    unique_out_rec_list.resize(0);
+    beam_index.resize(0);
+
+    vector<Record> recList;
+    vector<vector<uInt> > beamIndex;
+
+    if(!(telescope=="ALMA" || telescope=="ACA" || telescope=="OSF")){
+      os << LogIO::WARN << "Don't know how to determine antenna type from antenna name for telescope " << telescope << LogIO::POST;
+      os << LogIO::WARN << "Will try to use whole name ..." << LogIO::POST;
+    }
+
+    for(uInt k=0; k<AntennaNames.size(); k++){
+
+      vector<uInt> index;
+
+      for(uInt i=0; i<inpFreqRange.size(); i++){
+
+	Record rec0;
+
+	MEpoch obstime = inpTimeRange[0];
+	MFrequency freq=inpFreqRange[i];
+
+	String antennatype=AntennaNames[k];
+	if(telescope=="ALMA" || telescope=="ACA" || telescope=="OSF"){
+	  antennatype=antennatype(0,2);
+	}
+	//else {} // warning is given above, outside of the loop
+
+	if (getvp(rec0, telescope, obstime, freq, antennatype, obsdirection)){
+
+	  if(checkTimeDep){ // check if there is a step in time
+	    Record recOther;
+	    if (getvp(recOther, telescope, inpTimeRange[1], freq, antennatype, obsdirection)){
+	      if(!vpRecIsIdentical(rec0,recOther)){
+		os << LogIO::WARN << "Primary beam changes during observation time range." << LogIO::POST;
+		return False;
+	      }
+	    }
+	  }
+
+	  Bool notPresent=True;
+	  for(uInt j=0; j<recList.size(); j++){ // check if we already have this PB in our collection
+	    if(vpRecIsIdentical(rec0,recList[j])){
+	      index.push_back(j);
+	      notPresent=False;
+	      break;
+	    }
+	  }
+	  if(notPresent){ // put new beam into the list
+	    index.push_back(recList.size());
+	    recList.push_back(rec0);
+	  }
+	  
+	}
+	else{
+	  rval=False;
+	  break;
+	}
+	
+	if(!rval) break;
+
+      } // end for i
+
+      beamIndex.push_back(index);
+
+    } // end for k
+
+    if(rval){
+      unique_out_rec_list=recList;
+      beam_index.resize(beamIndex.size());
+      for(uInt i=0; i<beamIndex.size(); i++){
+	beam_index[i] = beamIndex[i];
+      }
+    }
+
+    return rval;
+
+  }
+
+  Bool VPManager::vpRecIsIdentical(const Record& rec0, const Record& rec1){
+    
+    Bool rval = False;
+    if( (rec0.nfields() == rec1.nfields()) &&
+	rec0.asString("name") == rec1.asString("name")
+	){
+      
+      if(rec0.isDefined("compleximage")){
+	if(rec1.isDefined("compleximage") &&
+	   rec0.asString("compleximage") == rec1.asString("compleximage") &&
+	   rec0.asDouble("reffreq") == rec1.asDouble("reffreq")){
+	  rval = True;
+	}
+      }
+      else if(rec0.isDefined("realimage")){
+	if(rec1.isDefined("realimage") &&
+	   rec0.asString("realimage") == rec1.asString("realimage") &&
+	   rec0.asDouble("reffreq") == rec1.asDouble("reffreq")){
+	  rval = True;
+	}
+      }
+      else{
+	rval=True;
+      }
+
+      Vector<String> fnames(5);
+      fnames[0]="dosquint";
+      fnames[1]="usesymmetricbeam";
+      fnames[2]="isthisvp";
+      fnames[3]="isVP";
+      fnames[4]="dopb";
+      for(uInt i=0; i<fnames.size(); i++){
+	if( rval && rec0.isDefined(fnames[i])){
+	  rval=False;
+	  if(rec1.isDefined(fnames[i]) &&
+	     (rec0.asBool(fnames[i]) == rec1.asBool(fnames[i]))
+	     ){
+	    rval = True;
+	  }
+	}
+      }
+    } // end if
+
+    return rval;
   }
 
 

@@ -394,6 +394,26 @@ int main() {
 
     AlwaysAssert(aR.append("testAntennaResponsesACA_tmp.dat"), AipsError);
 
+    cout << "access 11b" << endl;
+    MFrequency lofreq, hifreq;
+    Unit uHz("Hz");
+    AlwaysAssert(aR.getImageName(theImageName, theImageChannel, theNomFreq, 
+				 lofreq, hifreq,
+				 theFType,
+				 theRotAngOffset,
+				 "ALMA", 
+				 MEpoch(MVEpoch(Quantity(50000., "d")), MEpoch::UTC),
+				 MFrequency( Quantity(160., "GHz"), MFrequency::TOPO),
+				 AntennaResponses::VP, "DV",
+				 MDirection(Quantity(10., "deg"),
+					    Quantity(40., "deg"), 
+					    MDirection::AZEL)
+				 ),
+		 AipsError);
+
+    AlwaysAssert(lofreq.get(uHz).getValue() == 100.);
+    AlwaysAssert(hifreq.get(uHz).getValue() == 200.);
+
 
     cout << "access 12" << endl;
     AlwaysAssert(aR.getImageName(theImageName, theImageChannel, theNomFreq, theFType,
@@ -426,7 +446,6 @@ int main() {
 					     Quantity(80., "deg"), 
 					     MDirection::AZEL)), 
 		 AipsError);
-
 
     AlwaysAssert(aR.getBandName(myBandName, 
 				"ALMA",

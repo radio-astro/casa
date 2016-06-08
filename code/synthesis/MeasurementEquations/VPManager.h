@@ -196,6 +196,20 @@ namespace casa {
 		 const String& antennatype=""
 		 ); 
 
+      // get a set of all necessary beams and their properties for a given antenna list
+      Bool getvps(Vector<Record> & unique_out_rec_list, // the list of unique beam records
+		  Vector<Vector<uInt> >& beam_index, // indices to the above vectors in sync with AntennaNames
+		  const String& telescope,
+		  const Vector<MEpoch>& inpTimeRange, // only elements 0 and 1 are used; if 1 is not present it is assumed to be inf
+		  const Vector<MFrequency>& inpFreqRange, // must contain at least one element; beams will be provided for each element 
+		  const Vector<String>& AntennaNames, // characters 0 and 1 are used for ALMA to determine the antenna type
+		  const MDirection& obsdirection=MDirection(Quantity( 0., "deg"), // default is the Zenith
+							    Quantity(90., "deg"), 
+							    MDirection::AZEL)
+		  );
+
+      Bool vpRecIsIdentical(const Record& rec0, const Record& rec1);
+
     protected:
       VPManager(Bool verbose=False);
 
