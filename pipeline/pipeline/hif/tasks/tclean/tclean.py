@@ -27,7 +27,7 @@ LOG = infrastructure.get_logger(__name__)
 
 class TcleanInputs(cleanbase.CleanBaseInputs):
     def __init__(self, context, output_dir=None, vis=None, imagename=None,
-                 intent=None, field=None, spw=None, spwsel=None, uvrange=None, specmode=None,
+                 intent=None, field=None, spw=None, spwsel_lsrk=None, spwsel_topo=None, uvrange=None, specmode=None,
                  gridder=None, deconvolver=None, outframe=None, imsize=None, cell=None,
                  phasecenter=None, nchan=None, start=None, width=None,
                  weighting=None, robust=None, noise=None, npixels=None,
@@ -38,7 +38,8 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
         self.heuristics = tclean.TcleanHeuristics(self.context, self.vis, self.spw)
 
     # Add extra getters and setters here
-    spwsel = basetask.property_with_default('spwsel', {})
+    spwsel_lsrk = basetask.property_with_default('spwsel_lsrk', {})
+    spwsel_topo = basetask.property_with_default('spwsel_topo', [])
     hm_cleaning = basetask.property_with_default('hm_cleaning', 'rms')
     hm_masking = basetask.property_with_default('hm_masking', 'centralregion')
     masklimit = basetask.property_with_default('masklimit', 4.0)
@@ -207,8 +208,13 @@ class Tclean(cleanbase.CleanBase):
         spw_topo_chan_param_dict, \
         total_topo_bw, aggregate_topo_bw = \
             self._do_sensitivity()
-        inputs.spwsel = spw_topo_freq_param
         LOG.info('Sensitivity estimate from CASA: %s Jy', sensitivity)
+
+        # Choose TOPO frequency selections
+        if inputs.specmode != 'cube':
+            inputs.spwsel_topo = spw_topo_freq_param
+        else:
+            inputs.spwsel_topo = ['%s' % (inputs.spw)] * len(inputs.vis)
 
         # Choose cleaning method.
         if inputs.hm_masking in ('centralregion', 'manual'):
@@ -422,7 +428,10 @@ class Tclean(cleanbase.CleanBase):
             new_cleanmask = '%s.iter%s.cleanmask' % (rootname, iter)
 
             # perform an iteration.
-            seq_result = sequence_manager.iteration(new_cleanmask, self.pblimit_image, self.pblimit_cleanmask)
+            if (inputs.specmode == 'cube'):
+                seq_result = sequence_manager.iteration(new_cleanmask, self.pblimit_image, self.pblimit_cleanmask, inputs.spw, inputs.spwsel_lsrk)
+            else:
+                seq_result = sequence_manager.iteration(new_cleanmask, self.pblimit_image, self.pblimit_cleanmask)
 
             # Check the iteration status.
             if not seq_result.iterating:
@@ -546,7 +555,7 @@ class Tclean(cleanbase.CleanBase):
         if (targetmslist == []):
             targetmslist = [context.observing_run.get_ms(name=ms) for ms in inputs.vis]
 
-        # Convert LSKR ranges to TOPO
+        # Convert LSRK ranges to TOPO
         spw_topo_freq_param, spw_topo_chan_param, spw_topo_freq_param_dict, spw_topo_chan_param_dict, total_topo_bw, aggregate_topo_bw = self.inputs.heuristics.calc_topo_ranges(inputs)
 
         for ms in targetmslist:
@@ -556,7 +565,7 @@ class Tclean(cleanbase.CleanBase):
                         field_sensitivities = []
                         for field_id in [f.id for f in ms.fields if (utils.dequote(f.name) == utils.dequote(field) and inputs.intent in f.intents)]:
                             with casatools.ImagerReader(ms.name) as imTool:
-                                if (spw_topo_freq_param_dict[ms.name][str(intSpw)] != ''):
+                                if ((inputs.specmode != 'cube') and (spw_topo_freq_param_dict[ms.name][str(intSpw)] != '')):
                                     spwsel = '%s:%s' % (intSpw, spw_topo_freq_param_dict[ms.name][str(intSpw)])
                                 else:
                                     spwsel = '%s' % (intSpw)
@@ -579,7 +588,7 @@ class Tclean(cleanbase.CleanBase):
                         sensitivities.append(numpy.median(field_sensitivities) / overlap_factor)
                     else:
                         with casatools.ImagerReader(ms.name) as imTool:
-                            if (spw_topo_freq_param_dict[ms.name][str(intSpw)] != ''):
+                            if ((inputs.specmode != 'cube') and (spw_topo_freq_param_dict[ms.name][str(intSpw)] != '')):
                                 spwsel = '%s:%s' % (intSpw, spw_topo_freq_param_dict[ms.name][str(intSpw)])
                             else:
                                 spwsel = '%s' % (intSpw)
@@ -717,7 +726,7 @@ class Tclean(cleanbase.CleanBase):
                                                   intent=inputs.intent,
                                                   field=inputs.field,
                                                   spw=inputs.spw,
-                                                  spwsel=inputs.spwsel,
+                                                  spwsel=inputs.spwsel_topo,
                                                   uvrange=inputs.uvrange,
                                                   specmode=inputs.specmode,
                                                   gridder=inputs.gridder,

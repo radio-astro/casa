@@ -400,37 +400,33 @@ class MakeImList(basetask.StandardTaskTemplate):
         for field_intent in field_intent_list:
             for spwspec in spwlist:
                 spwspec_ok = True
-                if (specmode in ('mfs', 'cont')):
-                    new_spwspec = []
-                    spwsel = {}
-                    for spwid in spwspec.split(','):
-                        spwsel_spwid = self.heuristics.cont_ranges_spwsel[utils.dequote(field_intent[0])][spwid]
-                        if (field_intent[1] == 'TARGET'):
-                            if (spwsel_spwid == 'NONE'):
-                                LOG.warn('No continuum frequency range information detected for %s, spw %s.' % (field_intent[0], spwid))
-                            #elif (spwsel_spwid == ''):
-                            #    LOG.warn('Empty continuum frequency range for %s, spw %s. Run hif_findcont ?' % (field_intent[0], spwid))
+                new_spwspec = []
+                spwsel = {}
+                for spwid in spwspec.split(','):
+                    spwsel_spwid = self.heuristics.cont_ranges_spwsel[utils.dequote(field_intent[0])][spwid]
+                    if (field_intent[1] == 'TARGET'):
+                        if (spwsel_spwid == 'NONE'):
+                            LOG.warn('No continuum frequency range information detected for %s, spw %s.' % (field_intent[0], spwid))
+                        #elif (spwsel_spwid == ''):
+                        #    LOG.warn('Empty continuum frequency range for %s, spw %s. Run hif_findcont ?' % (field_intent[0], spwid))
 
-                        if (spwsel_spwid in ('', 'NONE')):
-                            spwsel_spwid_freqs = ''
-                            spwsel_spwid_refer = 'LSRK'
-                        else:
-                            spwsel_spwid_freqs, spwsel_spwid_refer = spwsel_spwid.split()
+                    if (spwsel_spwid in ('', 'NONE')):
+                        spwsel_spwid_freqs = ''
+                        spwsel_spwid_refer = 'LSRK'
+                    else:
+                        spwsel_spwid_freqs, spwsel_spwid_refer = spwsel_spwid.split()
 
-                        if (spwsel_spwid_refer != 'LSRK'):
-                            LOG.warn('Frequency selection is specified in %s but must be in LSRK' % (spwsel_spwid_refer))
-                            # TODO: skip this field and/or spw ?
+                    if (spwsel_spwid_refer != 'LSRK'):
+                        LOG.warn('Frequency selection is specified in %s but must be in LSRK' % (spwsel_spwid_refer))
+                        # TODO: skip this field and/or spw ?
 
-                        new_spwspec.append(spwid)
-                        spwsel['spw%s' % (spwid)] = spwsel_spwid
+                    new_spwspec.append(spwid)
+                    spwsel['spw%s' % (spwid)] = spwsel_spwid
 
-                    new_spwspec = ','.join(new_spwspec)
-                    if ((new_spwspec == '') and (field_intent[1] == 'TARGET')):
-                        LOG.warn('No continuum selection for target %s, spw %s. Will not image this selection.' % (field_intent[1], spwspec))
-                        spwspec_ok = False
-                else:
-                    new_spwspec = spwspec
-                    spwsel = {}
+                new_spwspec = ','.join(new_spwspec)
+                if ((new_spwspec == '') and (field_intent[1] == 'TARGET')):
+                    LOG.warn('No continuum selection for target %s, spw %s. Will not image this selection.' % (field_intent[1], spwspec))
+                    spwspec_ok = False
 
                 if spwspec_ok and valid_data[spwspec][field_intent] and imsizes.has_key((field_intent[0],spwspec)):
                     LOG.debug (
@@ -442,7 +438,8 @@ class MakeImList(basetask.StandardTaskTemplate):
                     target = {'field':field_intent[0],
                               'intent':field_intent[1],
                               'spw': new_spwspec,
-                              'spwsel': spwsel,
+                              'spwsel_lsrk': spwsel,
+                              'spwsel_topo': [],
                               'cell':cells[spwspec],
                               'imsize':imsizes[(field_intent[0],spwspec)],
                               'phasecenter':phasecenters[field_intent[0]],

@@ -4,6 +4,7 @@ import os
 
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.utils as utils
 from .basecleansequence import BaseCleanSequence
 from .resultobjects import BoxResult
 
@@ -25,7 +26,7 @@ class ImageCentreThresholdSequence(BaseCleanSequence):
         self.result = BoxResult()
         self.sidelobe_ratio = -1
 
-    def iteration(self, new_cleanmask, pblimit_image=0.2, pblimit_cleanmask=0.3):
+    def iteration(self, new_cleanmask, pblimit_image=0.2, pblimit_cleanmask=0.3, spw=None, frequency_selection=None):
 
         if (self.multiterm):
             extension = '.tt0'
@@ -64,7 +65,22 @@ class ImageCentreThresholdSequence(BaseCleanSequence):
                 cm.set(pixels='1', region=region)
                 rg.done()
                 cm.done()
-          
+
+            if frequency_selection is not None:
+                channel_ranges = []
+                for spwid in spw.split(','):
+                    spwkey = 'spw%s' % (spwid)
+                    if frequency_selection.has_key(spwkey):
+                        channel_ranges.extend(utils.freq_selection_to_channels(new_cleanmask, frequency_selection[spwkey].split()[0]))
+                with casatools.ImageReader(new_cleanmask) as iaTool:
+                    shape = iaTool.shape()
+                    rgTool = casatools.regionmanager
+                    for channel_range in channel_ranges:
+                        LOG.info('Unmasking channels %d to %d' % (channel_range[0], channel_range[1]))
+                        region = rgTool.box([0,0,0,channel_range[0]], [shape[0]-1, shape[1]-1, 0, channel_range[1]])
+                        iaTool.set(region=region, pixels=0.0)
+                    rgTool.done()
+
             self.result.cleanmask = new_cleanmask
             self.result.threshold = self.threshold
             self.result.sensitivity = self.sensitivity

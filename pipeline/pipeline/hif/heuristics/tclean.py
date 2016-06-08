@@ -405,12 +405,12 @@ class TcleanHeuristics(object):
             # Save spw width
             total_topo_freq_ranges.append((min_frequency, max_frequency))
 
-            if (inputs.spwsel.has_key('spw%s' % (spwid))):
-                if (inputs.spwsel['spw%s' % (spwid)] != ''):
-                    freq_selection, refer = inputs.spwsel['spw%s' % (spwid)].split()
+            if (inputs.spwsel_lsrk.has_key('spw%s' % (spwid))):
+                if (inputs.spwsel_lsrk['spw%s' % (spwid)] != ''):
+                    freq_selection, refer = inputs.spwsel_lsrk['spw%s' % (spwid)].split()
                     if (refer == 'LSRK'):
                         # Convert to TOPO
-                        topo_freq_selections, topo_chan_selections = contfile_handler.lsrk_to_topo(inputs.spwsel['spw%s' % (spwid)], inputs.vis, ref_field_ids, spwid)
+                        topo_freq_selections, topo_chan_selections = contfile_handler.lsrk_to_topo(inputs.spwsel_lsrk['spw%s' % (spwid)], inputs.vis, ref_field_ids, spwid)
                         spw_topo_freq_param_lists.append(['%s:%s' % (spwid, topo_freq_selection.split()[0]) for topo_freq_selection in topo_freq_selections])
                         spw_topo_chan_param_lists.append(['%s:%s' % (spwid, topo_chan_selection.split()[0]) for topo_chan_selection in topo_chan_selections])
                         for i in xrange(len(inputs.vis)):
