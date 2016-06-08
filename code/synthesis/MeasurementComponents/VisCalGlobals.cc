@@ -39,6 +39,7 @@
 #include <synthesis/MeasurementComponents/TsysGainCal.h>
 #include <synthesis/MeasurementComponents/EVLASwPow.h>
 #include <synthesis/MeasurementComponents/SingleDishSkyCal.h>
+#include <synthesis/MeasurementComponents/SDDoubleCircleGainCal.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -215,6 +216,9 @@ SolvableVisCal* createSolvableVisCal(const String& type, VisSet& vs) {
   else if (uptype.contains("SDSKY_OTF"))
     return new SingleDishOtfCal(vs);
   
+  else if (uptype.contains("SDGAIN_OTFD"))
+    return new SDDoubleCircleGainCal(vs);
+
   else {
     cout << "attempted type = " << type << endl;
     throw(AipsError("Unknown calibration type."));

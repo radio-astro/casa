@@ -267,6 +267,7 @@ casa_add_library( synthesis
  MeasurementComponents/SDGrid.cc
  MeasurementComponents/SDPosInterpolator.cc
  MeasurementComponents/SDDoubleCircleGainCalImpl.cc
+ MeasurementComponents/SDDoubleCircleGainCal.cc
  MeasurementComponents/SimACohCalc.cc
  MeasurementComponents/SimACoh.cc
  MeasurementComponents/SingleDishSkyCal.cc
@@ -526,6 +527,7 @@ install (FILES
 	MeasurementComponents/SDGrid.h
 	MeasurementComponents/SDPosInterpolator.h
 	MeasurementComponents/SDDoubleCircleGainCalImpl.h
+	MeasurementComponents/SDDoubleCircleGainCal.h
 	MeasurementComponents/SimACoh.h
 	MeasurementComponents/SimACohCalc.h
 	MeasurementComponents/SingleDishSkyCal.h
