@@ -33,10 +33,14 @@
 
 #include <libsakura/sakura.h>
 
+#include <casa/Logging/LogIO.h>
 #include <singledish/SingleDish/LineFinder.h>
 #include <singledish/SingleDish/LineFindingUtils.h>
 
 using namespace std;
+
+#define _ORIGIN LogOrigin("LineFinder", __func__, WHERE)
+//#define KS_DEBUG
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -71,6 +75,10 @@ list<pair<size_t,size_t>> MADLineFinder(size_t const num_data,
 					size_t const avg_limit,
 					pair<size_t,size_t> edge)
 {
+#if defined(KS_DEBUG)
+  LogIO os(_ORIGIN);
+  os << LogIO::DEBUG1 << "Start MADLineFinder" << LogIO::POST;
+#endif
   // value check and edge handling
   size_t min_valid_elem = 2;
   AlwaysAssert(edge.first+edge.second<num_data-min_valid_elem, AipsError);
@@ -103,6 +111,10 @@ list<pair<size_t,size_t>> MADLineFinder(size_t const num_data,
 					     binned_data_p,
 					     binned_mask_p,
 					     offset,false);
+#if defined(KS_DEBUG)
+    os << LogIO::DEBUG1 << "Bin level: " << average_factor << " (offset: " << offset << ")"  << LogIO::POST;
+    os << LogIO::DEBUG1 << "---> Binned channel = " << num_binned << LogIO::POST;
+#endif
     // caluculate MAD array
     Vector<float> mad_data(num_binned);
     Vector<bool> line_mask(num_binned);
@@ -118,6 +130,9 @@ list<pair<size_t,size_t>> MADLineFinder(size_t const num_data,
     list<pair<size_t,size_t>> prev_line_list;
     prev_line_list.clear();
     for (size_t iteration=0; iteration < max_iteration; ++iteration) {
+#if defined(KS_DEBUG)
+      os << LogIO::DEBUG1 << "START iteration " << iteration << LogIO::POST;
+#endif
       list<pair<size_t,size_t>> new_lines; // lines found in this iteration
       // working data array. sorted after median calculation.
       LineFinderUtils::calculateMAD(num_binned, binned_data_p,
@@ -126,12 +141,23 @@ list<pair<size_t,size_t>> MADLineFinder(size_t const num_data,
       float mad_threshold = threshold*LineFinderUtils::maskedMedian(num_binned, mad_data_p,
 								    search_mask_p,0.8);
 //       cout << "mad_threshold = " << mad_threshold << endl;
-      if (mad_threshold >= prev_mad_threshold) break; // stop iteration
+#if defined(KS_DEBUG)
+      os << LogIO::DEBUG1 << "mad = " << mad_threshold/threshold << ", mad_threshold = " << mad_threshold << " (factor: " << threshold << ")"  << LogIO::POST;
+#endif
+      if (mad_threshold >= prev_mad_threshold){
+#if defined(KS_DEBUG)
+      os << LogIO::DEBUG1 << "threshold increased. stop iteration."  << LogIO::POST;
+#endif
+	break; // stop iteration
+      }
       LineFinderUtils::createMaskByAThreshold(num_binned, mad_data_p,
 					      binned_mask_p, mad_threshold,
 					      line_mask_p);
       // channel mask -> mask range
       LineFinderUtils::maskToRangesList(num_binned, line_mask_p, new_lines);
+#if defined(KS_DEBUG)
+      os << LogIO::DEBUG1 << "raw detection:" <<  LineFinderUtils::FormatLineString(new_lines) << LogIO::POST;
+#endif
       //rejectByRangeWidth(minwidth_bin,maxwidth_bin,new_lines);
       if ( new_lines.size()>0 ) {
 	// merge flagged gaps
@@ -145,17 +171,29 @@ list<pair<size_t,size_t>> MADLineFinder(size_t const num_data,
 	LineFinderUtils::extendRangeBySign(num_binned, sign_p,
 					   binned_mask_p,
 					   new_lines);
+#if defined(KS_DEBUG)
+	os << LogIO::DEBUG1 << "extend for wing:" <<  LineFinderUtils::FormatLineString(new_lines) << LogIO::POST;
+#endif
 	// merge overlap
 	LineFinderUtils::mergeOverlappingRanges(new_lines);
 	// reject by max line width
 	LineFinderUtils::rejectWideRange(maxwidth_bin,new_lines);
 	// merge lines with small gap
 	LineFinderUtils::mergeSmallGapByFraction(0.25,maxwidth_bin,new_lines);
+#if defined(KS_DEBUG)
+	os << LogIO::DEBUG1 << "merge overlapping and nearby lines:" <<  LineFinderUtils::FormatLineString(new_lines)  << LogIO::POST;
+#endif
 	// de-bin line ranges
 	LineFinderUtils::deBinRanges(average_factor, offset, new_lines);
+#if defined(KS_DEBUG)
+	os << LogIO::DEBUG1 << "debin lines: " <<  LineFinderUtils::FormatLineString(new_lines)  << LogIO::POST;
+#endif
 	// reject by min and max line width
 	LineFinderUtils::rejectWideRange(maxwidth,new_lines);
 	LineFinderUtils::rejectNarrowRange(minwidth, new_lines);
+#if defined(KS_DEBUG)
+	os << LogIO::DEBUG1 << "check for line width: " <<  LineFinderUtils::FormatLineString(new_lines) << LogIO::POST;
+#endif
 	// update search mask for the next iteration
 	for (list<pair<size_t,size_t>>::iterator iter=new_lines.begin();
 	     iter!=new_lines.end(); ++iter) {
@@ -169,8 +207,12 @@ list<pair<size_t,size_t>> MADLineFinder(size_t const num_data,
 	     iter!=new_lines.end(); ++iter) {
 	  curr_num_line_chan += ((*iter).second - (*iter).first + 1);
 	}
-	if (curr_num_line_chan <= prev_num_line_chan)
+	if (curr_num_line_chan <= prev_num_line_chan) {
+#if defined(KS_DEBUG)
+      os << LogIO::DEBUG1 << "No new line found. stop at iteration " << iteration << LogIO::POST;
+#endif
 	  break; // stop iteration
+	}
 	// save values of current iteration for next loop
 	prev_num_line_chan = curr_num_line_chan;
 	prev_mad_threshold = mad_threshold;
@@ -178,6 +220,9 @@ list<pair<size_t,size_t>> MADLineFinder(size_t const num_data,
 	prev_line_list.splice(prev_line_list.end(), new_lines);
       }
       else { // no lines found
+#if defined(KS_DEBUG)
+	os << LogIO::DEBUG1 << "No line found" << LogIO::POST;
+#endif
 	break;
       }
     } // end of iteration loop
@@ -197,9 +242,6 @@ list<pair<size_t,size_t>> MADLineFinder(size_t const num_data,
   } // end of bin level loop
   return line_list;
 }
-
-
-
 
 } //# NAMESPACE LINEFINDER - END
 
