@@ -55,7 +55,7 @@ class vpmanager_test(unittest.TestCase):
         self.assertTrue(myrec['commonpb']=='VLA')
 
     def test3(self):
-        '''Test 3: getvp for ALMA'''
+        '''Test 3: getvp and getvps for ALMA'''
         vp.reset()
         vp.setpbantresptable(telescope='ALMA',
                              antresppath=casa['dirs']['data']+'/alma/responses/AntennaResponses-ALMA',
@@ -67,6 +67,41 @@ class vpmanager_test(unittest.TestCase):
                          obsdirection = 'AZEL 30deg 60deg')
         
         self.assertTrue(myrec['name']=='IMAGE' and myrec['telescope']=='ALMA')
+
+        myrec2 =  vp.getvps(telescope='ALMA',
+                            obstimestart = '2009/07/24/10:00:00',
+                            obstimeend = '2009/07/24/15:00:00',
+                            minfreq = 'TOPO 100GHz',
+                            maxfreq = 'TOPO 101GHz',
+                            antennas = ['DV15','DV16', 'DV32'],
+                            obsdirection = 'AZEL 30deg 60deg')
+
+        self.assertTrue(myrec2['uniquebeam_0']['name']=='IMAGE' 
+                        and myrec2['uniquebeam_0']['telescope']=='ALMA'
+                        and myrec2['uniquebeam_0']['minvalidfreq']==92000000000.0
+                        and myrec2['uniquebeam_0']['maxvalidfreq']==105000000000.0)
+
+        myrec3 =  vp.getvps(telescope='ALMA',
+                            obstimestart = '2009/07/24/10:00:00',
+                            obstimeend = '2009/07/24/15:00:00',
+                            minfreq = 'TOPO 100GHz',
+                            maxfreq = 'TOPO 101GHz',
+                            antennas = ['DV15','DA45', 'PM02', 'PM03'])
+
+        self.assertTrue(myrec3['uniquebeam_1']['name']=='IMAGE' 
+                        and myrec3['uniquebeam_1']['telescope']=='ALMA'
+                        and myrec3['uniquebeam_1']['minvalidfreq']==92000000000.0
+                        and myrec3['uniquebeam_1']['maxvalidfreq']==105000000000.0)
+
+        myrec4 =  vp.getvps(telescope='ALMA',
+                            obstimestart = '2009/07/24/10:00:00',
+                            obstimeend = '2009/07/24/15:00:00',
+                            minfreq = 'TOPO 100GHz',
+                            maxfreq = 'TOPO 101GHz',
+                            antennas = ['DV15','DV16', 'XY45'])
+        
+        self.assertTrue(myrec4=={})
+
 
     def test4(self):
         '''Test 4: numvps for VLA'''

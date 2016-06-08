@@ -1060,6 +1060,64 @@ Record is empty if no matching vp/pb could be found.
 </method>
 
 
+   <method type="function" name="getvps">
+   <shortdescription>Return the default vps/pbs records for the given antenna list as subrecords in one record</shortdescription>
+   
+<description>
+Record is empty if no matching vp/pb could be found.
+</description>  
+<input>
+
+     <param type="string" name="telescope">
+     <description>Telescope name</description>
+     <value></value>
+     </param>
+ 
+     <param type="stringArray" name="antennas">
+     <description>The antenna names, e.g., as taken from the MS ANTENNA table</description>
+     <value></value>
+     </param>
+
+     <param type="any" direction="in" name="obstimestart">
+     <description> Time of the start of the observation (for versioning and reference frame calculations), e.g. 2011/12/12T00:00:00 
+     </description>
+     <any type="variant"/>
+     <value type="string">1970/01/01T00:00:00</value>
+     </param>
+
+     <param type="any" direction="in" name="obstimeend">
+     <description> Time of the end of the observation (for versioning and reference frame calculations), e.g. 2011/12/12T00:00:00 
+     </description>
+     <any type="variant"/>
+     <value type="string">1970/01/01T00:00:00</value>
+     </param>
+
+     <param type="any" direction="in" name="minfreq">
+     <description> Minimum frequency of the observation (may include reference frame, default: LSRK)
+     </description>
+     <any type="variant"/>
+     <value type="string">1GHz</value>
+     </param>
+
+     <param type="any" direction="in" name="maxfreq">
+     <description> Maximum frequency of the observation (may include reference frame, default: LSRK)
+     </description>
+     <any type="variant"/>
+     <value type="string">1GHz</value>
+     </param>
+
+     <param type="any" direction="in" name="obsdirection">
+     <description> Direction of the observation (may include reference frame, default: J2000), default:
+     </description>
+     <any type="variant"/>
+     <value type="string">AZEL 0deg 90deg</value>
+     </param>
+
+</input>
+<returns type="record">itemcontainer</returns>
+</method>
+
+
    <method type="function" name="createantresp">
    <shortdescription>Create a standard-format AntennaResponses table</shortdescription>
    

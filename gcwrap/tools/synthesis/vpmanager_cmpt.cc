@@ -654,6 +654,133 @@ vpmanager::getvp(const std::string& telescope,
 
 }
 
+::casac::record* 
+vpmanager::getvps(const std::string& telescope,
+		  const std::vector<std::string>& antennas, 
+		  const casac::variant& obstimestart, 
+		  const casac::variant& obstimeend, 
+		  const casac::variant& minfreq, 
+		  const casac::variant& maxfreq, 
+		  const casac::variant& obsdirection){
+
+  ::casac::record* r=0;
+
+  *itsLog << LogOrigin("vp", "getvp");
+
+  try{
+    casa::Vector<casa::MEpoch> mObsTimeV;
+    casa::Vector<casa::MFrequency> mFreqV;
+    casa::MDirection mObsDir;
+    Record rec;
+    
+    int nRefs = 0;
+
+
+    if(antennas.size()==0 || (antennas[0]=="" && antennas.size()==1)){
+      *itsLog << LogIO::SEVERE << "Antenna name list is empty." << LogIO::POST;
+      return r;
+    }
+
+    std::vector<casac::variant> obst;
+    obst.push_back(obstimestart);
+    obst.push_back(obstimeend);
+    mObsTimeV.resize(2);
+
+    for(uInt i=0; i<2; i++){
+      if(casaMEpoch(obst[i], mObsTimeV[i])){
+	nRefs +=1;
+      }
+      else{
+	if(toCasaString(obst[i]).empty()){
+	  casaMEpoch("2000/01/01T00:00:00", mObsTimeV[i]);
+	}
+	else{
+	  *itsLog << LogIO::SEVERE << "Could not interprete obstime parameter "
+		  << toCasaString(obst[i]) << LogIO::POST;
+	  return r;
+	}
+      }
+    }
+
+    std::vector<casac::variant> obsf;
+    obsf.push_back(minfreq);
+    obsf.push_back(maxfreq);
+    mFreqV.resize(2);
+
+    for(uInt i=0; i<2; i++){
+      if(casaMFrequency(obsf[i], mFreqV[i])){
+	nRefs +=1;
+      }
+      else{
+	if(toCasaString(obsf[i]).empty()){
+	  casaMFrequency("TOPO 0Hz", mFreqV[i]);
+	}
+	else{
+	  *itsLog << LogIO::SEVERE << "Could not interprete freq parameter "
+		  << toCasaString(obsf[i]) << LogIO::POST;
+	  return r;
+	}
+      }
+    }
+
+    if(!casaMDirection(obsdirection, mObsDir)){
+      if(toCasaString(obsdirection).empty()){
+	casaMDirection("AZEL 0deg 90deg", mObsDir);
+      }
+      else{
+	*itsLog << LogIO::SEVERE << "Could not interprete obsdirection parameter "
+		<< toCasaString(obsdirection) << LogIO::POST;
+	return r;
+      }
+    }
+
+
+    if(nRefs==0){
+	*itsLog << LogIO::SEVERE << "None of the necessary input parameters was provided."
+	        << LogIO::POST;
+	return r;
+    }
+    else{
+      casa::Vector<Record> out_rec_list;
+      casa::Vector<casa::Vector<uInt> > beam_index;
+
+      if(VPManager::Instance()->getvps(out_rec_list, beam_index,
+				       telescope, mObsTimeV, mFreqV, antennas, mObsDir)){
+	if(beam_index.size()>0){
+          // translate index into matrix
+	  Matrix<uInt> beamIndex(beam_index.size(), beam_index[0].size(), -1);
+	  for(uInt i=0; i<beam_index.size(); i++){
+	    for(uInt j=0; j<beam_index[i].size(); j++){
+	      beamIndex(i,j) = beam_index[i][j];
+	    }
+	  }
+	  rec.define("beamindex", beamIndex); 
+
+	  // store the records in the output record
+	  for(uInt i=0; i<out_rec_list.size(); i++){
+	    String bnum = String::toString(i);
+	    bnum.trim();
+	    rec.defineRecord(String("uniquebeam_")+bnum, out_rec_list[i]);
+	  }
+
+	  r = fromRecord(rec);
+	}
+	else{
+	  *itsLog << LogIO::SEVERE << "No appropriate beams found." << LogIO::POST;
+	}
+      }
+    }
+
+  } catch(AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+  }
+
+  return r;
+
+}
+
+
 bool 
 vpmanager::createantresp(const std::string& imdir, 
 			 const std::string& starttime, 
