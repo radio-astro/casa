@@ -68,7 +68,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     FTMachine* cloneFTM();
 
     virtual Bool useWeightImage(){return True;};
-    virtual void setDryRun(Bool val) {isDryRun=val;cerr << "###### " << isDryRun << endl;};
+    virtual void setDryRun(Bool val)
+    {
+      isDryRun=val;
+      //cerr << "###### " << isDryRun << endl;
+    };
 
   protected:
     void ftWeightImage(Lattice<Complex>& wtImage, 
