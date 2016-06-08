@@ -556,7 +556,11 @@ class Tclean(cleanbase.CleanBase):
                         field_sensitivities = []
                         for field_id in [f.id for f in ms.fields if (utils.dequote(f.name) == utils.dequote(field) and inputs.intent in f.intents)]:
                             with casatools.ImagerReader(ms.name) as imTool:
-                                imTool.selectvis(spw=intSpw, field=field_id)
+                                if (spw_topo_freq_param_dict[ms.name][str(intSpw)] != ''):
+                                    spwsel = '%s:%s' % (intSpw, spw_topo_freq_param_dict[ms.name][str(intSpw)])
+                                else:
+                                    spwsel = '%s' % (intSpw)
+                                imTool.selectvis(spw=spwsel, field=field)
                                 # TODO: Add scan selection ?
                                 imTool.defineimage(mode=specmode, spw=intSpw,
                                                    cellx=inputs.cell[0], celly=inputs.cell[0],
@@ -579,7 +583,6 @@ class Tclean(cleanbase.CleanBase):
                                 spwsel = '%s:%s' % (intSpw, spw_topo_freq_param_dict[ms.name][str(intSpw)])
                             else:
                                 spwsel = '%s' % (intSpw)
-                            #imTool.selectvis(spw=intSpw, field=field)
                             imTool.selectvis(spw=spwsel, field=field)
                             # TODO: Add scan selection ?
                             imTool.defineimage(mode=specmode, spw=intSpw,
