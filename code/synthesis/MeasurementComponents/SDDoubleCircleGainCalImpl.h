@@ -37,8 +37,7 @@ public:
   casacore::Double getAntennaDiameter() const {
     return antenna_diameter_;
   }
-  casacore::Double getPrimaryBeamSize() const;
-  casacore::Int getDefaultSmoothingSize() const;
+  casacore::Double getPrimaryBeamSize() const;casacore::Int getDefaultSmoothingSize() const;
 
   // setter
   void setCentralRegion(casacore::Double value) {
@@ -62,11 +61,18 @@ public:
   // gain calibration
   // based on Stephen White's IDL script
   void calibrate(casacore::Cube<casacore::Float> const &data,
-      casacore::Vector<casacore::Double> const &time,
-      casacore::Matrix<casacore::Double> const &direction,
-      casacore::Vector<casacore::Double> &gain_time,
-      casacore::Cube<casacore::Float> &gain);
-
+  casacore::Vector<casacore::Double> const &time,
+  casacore::Matrix<casacore::Double> const &direction,
+  casacore::Vector<casacore::Double> &gain_time,
+  casacore::Cube<casacore::Float> &gain);
+  // subspecies that take into account flag (False: valid, True: invalid)
+  void calibrate(casacore::Cube<casacore::Float> const &data,
+  casacore::Cube<casacore::Bool> const &flag,
+  casacore::Vector<casacore::Double> const &time,
+  casacore::Matrix<casacore::Double> const &direction,
+  casacore::Vector<casacore::Double> &gain_time,
+  casacore::Cube<casacore::Float> &gain,
+  casacore::Cube<casacore::Bool> &gain_flag);
   // apply gain factor
 //  void apply(casacore::Vector<casacore::Double> const &gain_time,
 //      casacore::Cube<casacore::Float> const &gain,
@@ -91,6 +97,20 @@ private:
 
   // logger
   casacore::LogIO logger_;
+
+  // get radius of the central region
+  casacore::Double getRadius();
+
+  // get effective smoothing size
+  casacore::Int getEffectiveSmoothingSize();
+
+  // find data within radius
+  void findDataWithinRadius(casacore::Double const radius,
+      casacore::Vector<casacore::Double> const &time,
+      casacore::Cube<casacore::Float> const &data,
+      casacore::Matrix<casacore::Double> const &direction,
+      casacore::Vector<casacore::Double> &gain_time,
+      casacore::Cube<casacore::Float> &gain);
 };
 
 } // namespace casa END

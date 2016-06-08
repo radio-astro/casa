@@ -21,6 +21,9 @@
 using namespace casacore;
 
 #define LOG logger_ << LogOrigin("SDDoubleCircleGainCal", __FUNCTION__, WHERE)
+#define POSTLOG LogIO::POST
+//#define LOG std::cout << "SDDoubleCircleGainCal::" << __FUNCTION__ << " "
+//#define POSTLOG std::endl
 
 namespace { // anonymous namespace START
 // primary beam size based on observing frequency and antenna diameter
@@ -54,6 +57,24 @@ inline Double average(size_t const index_from, size_t const index_to,
     sum += data[i];
   }
   return sum / static_cast<Double>(index_to - index_from);
+}
+inline Double average(size_t const index_from, size_t const index_to,
+    Vector<Double> const &data, Vector<Bool> const &flag) {
+  Double sum = 0.0;
+  size_t count = 0;
+  //cout << "number of data to be averaged " << index_to - index_from << endl;
+  for (size_t i = index_from; i < index_to; ++i) {
+    if (flag[i] == False) {
+      sum += data[i];
+      count++;
+    }
+  }
+
+  if (count == 0) {
+    return 0.0;
+  }
+
+  return sum / static_cast<Double>(count);
 }
 
 // smoothing
@@ -89,6 +110,50 @@ inline void smooth(Int const smooth_size, Vector<Double> const &data,
   }
 }
 
+inline void smooth(Int const smooth_size, Vector<Double> const &data,
+    Vector<Bool> const &flag, Vector<Double> &smoothed_data) {
+  // TODO replace with sakura function
+  assert(data.nelements() == smoothed_data.nelements());
+  size_t num_data = data.nelements();
+  if (smooth_size < 2 || static_cast<size_t>(smooth_size) >= num_data) {
+    //cout << "no smoothing" << endl;
+    smoothed_data = data;
+  } else {
+    size_t left_edge = (smooth_size + 1) / 2 - 1;
+    size_t right_edge = smooth_size / 2 + 1;
+    for (size_t i = 0; i < left_edge; ++i) {
+      size_t l = 0;
+      size_t r = i + right_edge;
+      //cout << "i = " << i << ": l, r = " << l << "," << r << endl;
+      if (flag[i] == True) {
+        smoothed_data[i] = data[i];
+      } else {
+        smoothed_data[i] = average(l, r, data, flag);
+      }
+    }
+    for (size_t i = left_edge; i < num_data - right_edge; ++i) {
+      size_t l = i - left_edge;
+      size_t r = i + right_edge;
+      //cout << "i = " << i << ": l, r = " << l << "," << r << endl;
+      if (flag[i] == True) {
+        smoothed_data[i] = data[i];
+      } else {
+        smoothed_data[i] = average(l, r, data, flag);
+      }
+    }
+    for (size_t i = num_data - right_edge; i < num_data; ++i) {
+      size_t l = i - left_edge;
+      size_t r = num_data;
+      //cout << "i = " << i << ": l, r = " << l << "," << r << endl;
+      if (flag[i] == True) {
+        smoothed_data[i] = data[i];
+      } else {
+        smoothed_data[i] = average(l, r, data, flag);
+      }
+    }
+  }
+}
+
 // interpolation
 inline void interpolateLinear(Vector<Double> const &x0,
     Vector<Double> const &y0, Vector<Double> const &x1, Vector<Double> &y1) {
@@ -100,6 +165,12 @@ inline void interpolateLinear(Vector<Double> const &x0,
   for (size_t i = 0; i < x1.nelements(); ++i) {
     y1[i] = interpolator(x1[i]);
   }
+}
+
+// utility
+inline size_t toUnsigned(ssize_t const v) {
+  assert(v >= 0);
+  return static_cast<size_t>(v);
 }
 } // anonymous namespace END
 
@@ -128,55 +199,32 @@ Int SDDoubleCircleGainCalImpl::getDefaultSmoothingSize() const {
 
 void SDDoubleCircleGainCalImpl::calibrate(Cube<Float> const &data,
     Vector<Double> const &time, Matrix<Double> const &direction,
-    Vector<Double> &gain_time, Cube<casacore::Float> &gain) {
+    Vector<Double> &gain_time, Cube<Float> &gain) {
 
   // radius of the central region
-  Double radius = central_region_;
-  if (radius <= 0.0) {
-    // use default value: primary beam size
-    radius = 0.5 * getPrimaryBeamSize();
-  }
-  if (radius <= 0.0) {
-    LOG << LogIO::SEVERE << "Size of central region is not properly set: "
-        << radius << LogIO::EXCEPTION;
-  }
+  Double radius = getRadius();
+
+  LOG << "radius = " << radius << POSTLOG;
 
   // select data within radius
-  IPosition data_shape = data.shape();
-  size_t const num_pol = data_shape[0];
-  size_t const num_chan = data_shape[1];
-  size_t const num_data = data_shape[2];
-  assert(time.nelements() == num_data);
-  assert(direction.shape()[1] == num_data);
+  auto const data_shape = data.shape();
+  size_t const num_pol = ::toUnsigned(data_shape[0]);
+  size_t const num_chan = ::toUnsigned(data_shape[1]);
+  assert(time.nelements() == data_shape[2]);
+  assert(direction.shape()[1] == data_shape[2]);
   assert(direction.shape()[0] == 2);
-  Vector<size_t> within_radius(num_data);
-  size_t num_gain = 0;
-  for (size_t i = 0; i < num_data; ++i) {
-    Double x = direction(0, i);
-    Double y = direction(1, i);
-    Double r2 = x * x + y * y;
-    if (r2 <= radius * radius) {
-      within_radius[num_gain] = i;
-      num_gain++;
-    }
-  }
+  findDataWithinRadius(radius, time, data, direction, gain_time, gain);
+  size_t num_gain = gain_time.nelements();
+  LOG << "num_gain = " << num_gain << POSTLOG;
 
-//  LOG << "indices within radius: " << within_radius << LogIO::POST;
+  //LOG << "indices within radius: " << within_radius << POSTLOG;
 
   if (num_gain < 100) {
     LOG << LogIO::WARN << "Probably not enough points for gain calibration: "
-        << num_gain << endl << "Skipping..." << LogIO::POST;
+        << num_gain << endl << "Skipping..." << POSTLOG;
+    gain_time.resize();
+    gain.resize();
     return;
-  }
-
-  // store data for calibration
-  LOG << "num_gain = " << num_gain << LogIO::POST;
-  gain_time.resize(num_gain);
-  gain.resize(num_pol, num_chan, num_gain);
-  for (size_t i = 0; i < num_gain; ++i) {
-    size_t j = within_radius[i];
-    gain_time[i] = time[j];
-    gain.xyPlane(i) = data.xyPlane(j);
   }
 
   // for each spectral data
@@ -192,45 +240,40 @@ void SDDoubleCircleGainCalImpl::calibrate(Cube<Float> const &data,
       }
 
 //      LOG << "work_data[" << ipol << "," << ichan << "]=" << work_data
-//          << LogIO::POST;
+//          << POSTLOG;
 
       // smoothing if necessary
       if (do_smooth_) {
-        LOG << "do smoothing with size " << smooth_size_ << LogIO::POST;
-        Int smooth_size = smooth_size_;
-        if (smooth_size_ < 0) {
-          smooth_size = getDefaultSmoothingSize();
-          LOG << "default smoothing size will be used: " << smooth_size
-              << LogIO::POST;
-        } else if (smooth_size_ < 2 || static_cast<size_t>(smooth_size_) >= num_gain) {
+        Int smooth_size = getEffectiveSmoothingSize();
+        if (smooth_size_ < 2 || static_cast<size_t>(smooth_size_) >= num_gain) {
           LOG << LogIO::WARN
               << "data is not smoothed since smoothing size is invalid: "
               << smooth_size_ << " (number of data " << num_gain << ")"
-              << LogIO::POST;
+              << POSTLOG;
         }
         smooth(smooth_size, work_data, smoothed_data);
       } else {
-        LOG << "no smoothing" << LogIO::POST;
+        LOG << "no smoothing" << POSTLOG;
         smoothed_data.reference(work_data);
       }
 
       LOG << LogIO::DEBUGGING << "smoothed_data[" << ipol << "," << ichan
-          << "]=" << smoothed_data << LogIO::POST;
+          << "]=" << smoothed_data << POSTLOG;
 
       LOG << LogIO::DEBUGGING << "mean value = " << mean(smoothed_data)
-          << LogIO::POST;
+          << POSTLOG;
 
       // derive gain factor: mean(smoothed_data) / smoothed_data
       work_data = mean(smoothed_data) / smoothed_data;
 
 //      LOG << "gfactor[" << ipol << "," << ichan << "]=" << work_data
-//          << LogIO::POST;
+//          << POSTLOG;
 
       // conversion for G type calibration
       work_data = 1.0 / sqrt(work_data);
 
 //      LOG << "fparam[" << ipol << "," << ichan << "]=" << work_data
-//          << LogIO::POST;
+//          << POSTLOG;
 
       for (size_t idata = 0; idata < num_gain; ++idata) {
         gain(ipol, ichan, idata) = work_data[idata];
@@ -239,9 +282,159 @@ void SDDoubleCircleGainCalImpl::calibrate(Cube<Float> const &data,
   }
 }
 
+void SDDoubleCircleGainCalImpl::calibrate(Cube<Float> const &data,
+    Cube<Bool> const &flag, Vector<Double> const &time,
+    Matrix<Double> const &direction, Vector<Double> &gain_time,
+    Cube<Float> &gain, Cube<Bool> &gain_flag) {
+
+  // radius of the central region
+  Double radius = getRadius();
+
+  LOG << "radius = " << radius << POSTLOG;
+
+  // select data within radius
+  auto const data_shape = data.shape();
+  size_t const num_pol = ::toUnsigned(data_shape[0]);
+  size_t const num_chan = ::toUnsigned(data_shape[1]);
+  assert(time.nelements() == data_shape[2]);
+  assert(direction.shape()[1] == data_shape[2]);
+  assert(direction.shape()[0] == 2);
+  findDataWithinRadius(radius, time, data, direction, gain_time, gain);
+  size_t num_gain = gain_time.nelements();
+  LOG << "num_gain = " << num_gain << POSTLOG;
+
+  //LOG << "indices within radius: " << within_radius << POSTLOG;
+
+  if (num_gain < 100) {
+    LOG << LogIO::WARN << "Probably not enough points for gain calibration: "
+        << num_gain << endl << "Skipping..." << POSTLOG;
+    gain_time.resize();
+    gain.resize();
+    return;
+  }
+
+  // for each spectral data
+  gain_flag.resize(gain.shape());
+
+  Vector<Double> work_data(num_gain);
+  Vector<Bool> work_flag(num_gain);
+  Vector<Double> smoothed_data;
+  if (do_smooth_) {
+    smoothed_data.resize(num_gain);
+  }
+  for (size_t ipol = 0; ipol < num_pol; ++ipol) {
+    for (size_t ichan = 0; ichan < num_chan; ++ichan) {
+      for (size_t idata = 0; idata < num_gain; ++idata) {
+        work_data[idata] = gain(ipol, ichan, idata);
+        work_flag[idata] = flag(ipol, ichan, idata);
+      }
+
+//      LOG << "work_data[" << ipol << "," << ichan << "]=" << work_data
+//          << POSTLOG;
+
+      // smoothing if necessary
+      if (do_smooth_) {
+        Int smooth_size = getEffectiveSmoothingSize();
+        if (smooth_size_ < 2 || static_cast<size_t>(smooth_size_) >= num_gain) {
+          LOG << LogIO::WARN
+              << "data is not smoothed since smoothing size is invalid: "
+              << smooth_size_ << " (number of data " << num_gain << ")"
+              << POSTLOG;
+        }
+        smooth(smooth_size, work_data, work_flag, smoothed_data);
+      } else {
+        LOG << "no smoothing" << POSTLOG;
+        smoothed_data.reference(work_data);
+      }
+
+      LOG << LogIO::DEBUGGING << "smoothed_data[" << ipol << "," << ichan
+          << "]=" << smoothed_data << POSTLOG;
+
+      LOG << LogIO::DEBUGGING << "mean value = " << mean(smoothed_data)
+          << POSTLOG;
+
+      // derive gain factor: mean(smoothed_data) / smoothed_data
+      work_data = mean(smoothed_data) / smoothed_data;
+
+//      LOG << "gfactor[" << ipol << "," << ichan << "]=" << work_data
+//          << POSTLOG;
+
+      // conversion for G type calibration
+      work_data = 1.0 / sqrt(work_data);
+
+//      LOG << "fparam[" << ipol << "," << ichan << "]=" << work_data
+//          << POSTLOG;
+
+      for (size_t idata = 0; idata < num_gain; ++idata) {
+        gain(ipol, ichan, idata) = work_data[idata];
+        gain_flag(ipol, ichan, idata) = work_flag[idata];
+      }
+    }
+  }
+}
+
+Double SDDoubleCircleGainCalImpl::getRadius() {
+  // radius of the central region
+  Double radius = central_region_;
+  if (radius <= 0.0) {
+    // use default value: primary beam size
+    radius = 0.5 * getPrimaryBeamSize();
+  }
+  if (radius <= 0.0) {
+    LOG << LogIO::SEVERE << "Size of central region is not properly set: "
+        << radius << LogIO::EXCEPTION;
+  }
+
+  return radius;
+}
+
+Int SDDoubleCircleGainCalImpl::getEffectiveSmoothingSize() {
+  LOG << "do smoothing with size " << smooth_size_ << POSTLOG;
+
+  Int smooth_size = smooth_size_;
+  if (smooth_size_ < 0) {
+    smooth_size = getDefaultSmoothingSize();
+    LOG << "default smoothing size will be used: " << smooth_size
+    << POSTLOG;
+  }
+
+  return smooth_size;
+}
+
+void SDDoubleCircleGainCalImpl::findDataWithinRadius(Double const radius,
+    Vector<Double> const &time, Cube<Float> const &data,
+    Matrix<Double> const &direction, Vector<Double> &gain_time,
+    Cube<Float> &gain) {
+  size_t num_data = ::toUnsigned(direction.shape()[1]);
+  // find data within radius
+  Vector<size_t> data_index(num_data);
+  size_t num_gain = 0;
+  for (size_t i = 0; i < num_data; ++i) {
+    Double x = direction(0, i);
+    Double y = direction(1, i);
+    Double r2 = x * x + y * y;
+    if (r2 <= radius * radius) {
+      data_index[num_gain] = i;
+      num_gain++;
+    }
+  }
+
+  // store data for calibration
+  LOG << "num_gain = " << num_gain << POSTLOG;
+  gain_time.resize(num_gain);
+  IPosition gain_shape(data.shape());
+  gain_shape[2] = num_gain;
+  gain.resize(gain_shape);
+  for (size_t i = 0; i < num_gain; ++i) {
+    size_t j = data_index[i];
+    gain_time[i] = time[j];
+    gain.xyPlane(i) = data.xyPlane(j);
+  }
+}
+
 //void SDDoubleCircleGainCalImpl::apply(Vector<Double> const &gain_time,
 //    Cube<Float> const &gain, Vector<Double> const &time, Cube<Float> &data) {
 //  // TODO implement
 //  // not necessary to implement? reuse G type application?
 //}
-} // namespace casa END
+}// namespace casa END
