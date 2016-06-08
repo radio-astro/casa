@@ -28,7 +28,7 @@ and the caltable containing per spw phase offsets</p>
         <thead>
 	    <tr>
 	        <th>Measurement Set</th>
-	        <th>Phaseup Spw Map</th>
+	        <th>Spectral Window Map</th>
 	    </tr>
 	</thead>
 	<tbody>
