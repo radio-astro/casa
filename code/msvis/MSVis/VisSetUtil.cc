@@ -518,23 +518,32 @@ void VisSetUtil::addScrCols(MeasurementSet& ms, Bool addModel, Bool addCorr,
                 // Make a clone of the appropriate data column.  The clone can differ by
                 // by having a different element datatype.
 
-                String dataColumnName = data_is_float ? MS::columnName (MS::FLOAT_DATA)
-                :  MS::columnName (MS::DATA);
+                try {
+                    String dataColumnName = data_is_float ? MS::columnName (MS::FLOAT_DATA)
+                    :  MS::columnName (MS::DATA);
 
-                TableCopy::cloneColumnTyped<Complex> (ms, dataColumnName, ms, MS::columnName(MS::MODEL_DATA),
-                                                      "TiledModel");
+                    TableCopy::cloneColumnTyped<Complex> (ms, dataColumnName, ms, MS::columnName(MS::MODEL_DATA),
+                                                          "TiledModel");
 
-                // Now fill the model column with complex zeroes.  Using the function below
-                // to do the filling preserves the tiling of the hypercubes making up
-                // the column.  The later call to initScrCols will set these appropriately
-                // since depending on the way the correlations are represented, only one
-                // of the correlations will be set to one.  Unfortunately, this results in
-                // two writes of the scratch column where one would do.
+                    // Now fill the model column with complex zeroes.  Using the function below
+                    // to do the filling preserves the tiling of the hypercubes making up
+                    // the column.  The later call to initScrCols will set these appropriately
+                    // since depending on the way the correlations are represented, only one
+                    // of the correlations will be set to one.  Unfortunately, this results in
+                    // two writes of the scratch column where one would do.
 
-                TableCopy::fillColumnData (ms, MS::columnName (MS::MODEL_DATA),
-                                           Complex (0.0, 0.0),
-                                           ms, dataColumnName,
-                                           true); // last arg preserves tile shape
+                    TableCopy::fillColumnData (ms, MS::columnName (MS::MODEL_DATA),
+                                               Complex (0.0, 0.0),
+                                               ms, dataColumnName,
+                                               true); // last arg preserves tile shape
+                } catch (AipsError & e){
+
+                    // Column cloning failed (presumably).  Try it the old way.
+
+                    MeasurementSet::addColumnToDesc(tdModel, MeasurementSet::MODEL_DATA, 2);
+                    TiledShapeStMan modelStMan("ModelTiled", modelTileShape);
+                    ms.addColumn(tdModel, modelStMan);
+                }
             }
 
             if (ccModel) delete ccModel;
@@ -564,25 +573,36 @@ void VisSetUtil::addScrCols(MeasurementSet& ms, Bool addModel, Bool addCorr,
 
             } else {
 
-                // Make a clone of the appropriate data column, except the new column
-                // will have datatype complex.
+                try {
 
-                String dataColumnName = data_is_float ? MS::columnName (MS::FLOAT_DATA)
-                :  MS::columnName (MS::DATA);
+                    // Make a clone of the appropriate data column, except the new column
+                    // will have datatype complex.
 
-                TableCopy::cloneColumnTyped<Complex> (ms, dataColumnName,
-                                                      ms, MS::columnName (MS::CORRECTED_DATA),
-                                                      "TiledCorrected");
+                    String dataColumnName = data_is_float ? MS::columnName (MS::FLOAT_DATA)
+                    :  MS::columnName (MS::DATA);
 
-                // Copy the appropriate data column into the new one, preserving the tiling
-                // of the column's hypercubes.
+                    TableCopy::cloneColumnTyped<Complex> (ms, dataColumnName,
+                                                          ms, MS::columnName (MS::CORRECTED_DATA),
+                                                          "TiledCorrected");
 
-                TableCopy::copyColumnData (ms, dataColumnName,
-                                           ms, MS::columnName (MS::CORRECTED_DATA),
-                                           true); // last arg preserves tile shape
+                    // Copy the appropriate data column into the new one, preserving the tiling
+                    // of the column's hypercubes.
 
-                addCorr = false; // We've already done the copying
-            };
+                    TableCopy::copyColumnData (ms, dataColumnName,
+                                               ms, MS::columnName (MS::CORRECTED_DATA),
+                                               true); // last arg preserves tile shape
+
+                    addCorr = false; // We've already done the copying
+
+                } catch (AipsError & e){
+
+                    // Table clone failed (presumably): try it the old way
+
+                    TiledShapeStMan corrStMan("CorrectedTiled", corrTileShape);
+                    ms.addColumn(tdCorr, corrStMan);
+                }
+
+            }
 
             if (ccCorr) delete ccCorr;
         }
