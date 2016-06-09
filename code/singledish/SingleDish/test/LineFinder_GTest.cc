@@ -106,7 +106,7 @@ public:
 private:
   DataType mean_;
   DataType stddev_;
-  DataType cashed_value;
+  DataType cashed_value = 0.0;
   bool cashed = false;
   const DataType k2PI = 8*atan(1); //2*PI
 };
