@@ -562,28 +562,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for(uInt i=0;i<mss4vi_p.nelements();i++)
       { 
 	os << LogIO::NORMAL2 << "Unlocking : " << mss4vi_p[i].tableName() << LogIO::POST;
-	MeasurementSet *ms_l = 	const_cast<MeasurementSet* >(mss_p[i]);
-	ms_l->unlock(); 
-	ms_l->antenna().unlock();
-	ms_l->dataDescription().unlock();
-	ms_l->feed().unlock();
-	ms_l->field().unlock();
-	ms_l->observation().unlock();
-	ms_l->polarization().unlock();
-	ms_l->processor().unlock();
-	ms_l->spectralWindow().unlock();
-	ms_l->state().unlock();
+	MeasurementSet &ms_l = 	const_cast<MeasurementSet& >(mss4vi_p[i]);
+	ms_l.unlock(); 
+	ms_l.antenna().unlock();
+	ms_l.dataDescription().unlock();
+	ms_l.feed().unlock();
+	ms_l.field().unlock();
+	ms_l.observation().unlock();
+	ms_l.polarization().unlock();
+	ms_l.processor().unlock();
+	ms_l.spectralWindow().unlock();
+	ms_l.state().unlock();
 	//
 	// Unlock the optional sub-tables as well, if they are present
 	//
-	if(!(ms_l->source().isNull()))     ms_l->source().unlock();
-	if(!(ms_l->doppler().isNull()))    ms_l->doppler().unlock();
-	if(!(ms_l->flagCmd().isNull()))    ms_l->flagCmd().unlock();
-	if(!(ms_l->freqOffset().isNull())) ms_l->freqOffset().unlock();
-	if(!(ms_l->history().isNull()))    ms_l->history().unlock();
-	if(!(ms_l->pointing().isNull()))   ms_l->pointing().unlock();
-	if(!(ms_l->sysCal().isNull()))     ms_l->sysCal().unlock();
-	if(!(ms_l->weather().isNull()))    ms_l->weather().unlock();
+	if(!(ms_l.source().isNull()))     ms_l.source().unlock();
+	if(!(ms_l.doppler().isNull()))    ms_l.doppler().unlock();
+	if(!(ms_l.flagCmd().isNull()))    ms_l.flagCmd().unlock();
+	if(!(ms_l.freqOffset().isNull())) ms_l.freqOffset().unlock();
+	if(!(ms_l.history().isNull()))    ms_l.history().unlock();
+	if(!(ms_l.pointing().isNull()))   ms_l.pointing().unlock();
+	if(!(ms_l.sysCal().isNull()))     ms_l.sysCal().unlock();
+	if(!(ms_l.weather().isNull()))    ms_l.weather().unlock();
       }
   }
  
