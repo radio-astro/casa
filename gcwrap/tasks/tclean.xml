@@ -1928,11 +1928,11 @@ HPX HEALPix grid.  -->
 
 </description>
 	    <value type="string">none</value>
-<!--	    <allowed kind="enum">
+	    <allowed kind="enum">
 	      <value>none</value>
               <value>virtual</value>
 	      <value>modelcolumn</value>
-	    </allowed> -->
+	    </allowed>
     </param>
 
     <param type="string" name="makeimages">
