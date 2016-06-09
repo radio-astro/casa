@@ -110,7 +110,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   Bool SynthesisImagerVi2::selectData(const SynthesisParamsSelect& selpars){
- LogIO os( LogOrigin("SynthesisImager","selectData",WHERE) );
+ LogIO os( LogOrigin("SynthesisImagerVi2","selectData",WHERE) );
 
     try
       {
@@ -128,8 +128,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       VisSetUtil::addScrCols(thisms, True, False, True, False);
       refim::VisModelData::clearModel(thisms);
     }
+
     if(!selpars.incrmodel && !selpars.usescratch && !selpars.readonly)
       refim::VisModelData::clearModel(thisms, selpars.field, selpars.spw);
+
+    unlockMSs();
+
 
     os << "MS : " << selpars.msname << " | ";
 
@@ -202,6 +206,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  mss_p[mss_p.nelements()-1]=new MeasurementSet(thisMSSelected0);
 	  
 	os << "  NRows selected : " << (mss_p[mss_p.nelements()-1])->nrow() << LogIO::POST;
+	unlockMSs();
       }
     else{
       throw(AipsError("Selection for given MS "+selpars.msname+" is invalid"));
@@ -874,11 +879,32 @@ CountedPtr<SIMapper> SynthesisImagerVi2::createSIMapper(String mappertype,
 
 void SynthesisImagerVi2::unlockMSs()
   {
-    LogIO os( LogOrigin("SynthesisImager","unlockMSs",WHERE) );
+    LogIO os( LogOrigin("SynthesisImagerVi2","unlockMSs",WHERE) );
     for(uInt i=0;i<mss_p.nelements();i++)
       { 
 	os << LogIO::NORMAL2 << "Unlocking : " << (mss_p[i])->tableName() << LogIO::POST;
-	const_cast<MeasurementSet* >(mss_p[i])->unlock(); 
+	MeasurementSet *ms_l = 	const_cast<MeasurementSet* >(mss_p[i]);
+	ms_l->unlock(); 
+	ms_l->antenna().unlock();
+	ms_l->dataDescription().unlock();
+	ms_l->feed().unlock();
+	ms_l->field().unlock();
+	ms_l->observation().unlock();
+	ms_l->polarization().unlock();
+	ms_l->processor().unlock();
+	ms_l->spectralWindow().unlock();
+	ms_l->state().unlock();
+	//
+	// Unlock the optional sub-tables as well, if they are present
+	//
+	if(!(ms_l->source().isNull()))     ms_l->source().unlock();
+	if(!(ms_l->doppler().isNull()))    ms_l->doppler().unlock();
+	if(!(ms_l->flagCmd().isNull()))    ms_l->flagCmd().unlock();
+	if(!(ms_l->freqOffset().isNull())) ms_l->freqOffset().unlock();
+	if(!(ms_l->history().isNull()))    ms_l->history().unlock();
+	if(!(ms_l->pointing().isNull()))   ms_l->pointing().unlock();
+	if(!(ms_l->sysCal().isNull()))     ms_l->sysCal().unlock();
+	if(!(ms_l->weather().isNull()))    ms_l->weather().unlock();
       }
   }
   void SynthesisImagerVi2::createFTMachine(CountedPtr<refim::FTMachine>& theFT, 
@@ -1337,7 +1363,7 @@ void SynthesisImagerVi2::unlockMSs()
 				    const Bool& psTermOn,
 				    const Bool& aTermOn)
     {
-      LogIO os( LogOrigin("SynthesisImager","fillCFCache",WHERE) );
+      LogIO os( LogOrigin("SynthesisImagerVi2","fillCFCache",WHERE) );
       // If not an AWProject-class FTM, make this call a NoOp.  Might be
       // useful to extend it to other projection FTMs -- but later.
       // String ftmName = ((*(itsMappers.getFTM(whichFTM)))).name();
@@ -1405,7 +1431,7 @@ void SynthesisImagerVi2::unlockMSs()
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   void SynthesisImagerVi2::reloadCFCache()
   {
-      LogIO os( LogOrigin("SynthesisImager","reloadCFCache",WHERE) );
+      LogIO os( LogOrigin("SynthesisImagerVi2","reloadCFCache",WHERE) );
       Int whichFTM=0;
       String ftmName = ((*(itsMappers.getFTM2(whichFTM)))).name();
       if (!ftmName.contains("AWProject")) return;
