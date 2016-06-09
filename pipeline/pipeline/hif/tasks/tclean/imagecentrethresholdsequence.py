@@ -78,7 +78,7 @@ class ImageCentreThresholdSequence(BaseCleanSequence):
                     for channel_range in channel_ranges:
                         LOG.info('Unmasking channels %d to %d' % (channel_range[0], channel_range[1]))
                         region = rgTool.box([0,0,0,channel_range[0]], [shape[0]-1, shape[1]-1, 0, channel_range[1]])
-                        iaTool.set(region=region, pixels=0.0)
+                        iaTool.set(region=region, pixels=0.0, pixelmask=False)
                     rgTool.done()
 
             self.result.cleanmask = new_cleanmask
