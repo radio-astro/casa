@@ -51,6 +51,66 @@ using namespace test_utility;
 typedef pair<size_t,size_t> LineRange;
 typedef list<LineRange> LineRangeList;
 
+/*
+ * A struct to generate a deterministic normalized uniform random number sequence.
+ * The sequence is platform independent.
+ *
+ * Usage:
+ *    NormalizedUniformRandomGenerator<float> uniform_rand = {1111}; //with seed
+ *    for (size_t i=0; i<10; ++i) {
+ *        cout << uniform_rand.generate() << endl;
+ *    }
+ */
+template <typename DataType>
+struct NormalizedUniformRandomGenerator {
+  NormalizedUniformRandomGenerator(int seed=1111) {
+    mt.seed(seed);
+  }
+  DataType generate() {
+    return static_cast<DataType>(mt())/static_cast<DataType>(mt.max());
+  }
+  mt19937 mt;
+};
+
+/*
+ * A helper class to generate deterministic random number sequence in normal destribution.
+ * The sequence is platform independent.
+ *
+ * Usage:
+ *     NormalizedUniformRandomGenerator<float> uniform_rand;
+ *     BoxMuller<float> normal_rand(0.0, 1.0);
+ *     for (size_t i=0; i<10;++i) {
+ *         cout << normal_rand.generate(&uniform_rand) << endl;
+ *     }
+ */
+template<typename DataType>
+class BoxMuller {
+public:
+  BoxMuller(DataType const mean, DataType const stddev) : mean_(mean), stddev_(stddev){
+  }
+  ~BoxMuller() {}
+  DataType generate(NormalizedUniformRandomGenerator<DataType> *generator) {
+    if (cashed) {
+      cashed = false;
+      return cashed_value;
+    }
+    else {
+      DataType const urand0 = generator->generate();
+      DataType const urand1 = generator->generate();
+      cashed_value = mean_ + stddev_ * sqrt(-2*log(1-urand0))*sin(k2PI*urand1);
+      cashed = true;
+      return mean_ + stddev_ * sqrt(-2*log(1-urand0))*cos(k2PI*urand1);
+    }
+  }
+
+private:
+  DataType mean_;
+  DataType stddev_;
+  DataType cashed_value;
+  bool cashed = false;
+  const DataType k2PI = 8*atan(1); //2*PI
+};
+
 class LineFinderTest : public ::testing::Test {
 protected:
   LineFinderTest() : verbose_(false) {}
@@ -95,11 +155,13 @@ TEST_F(LineFinderTest, LineFinding) {
   float const peak = 5.0;
   float const width = 10.0;
   float const stddev = 0.5;
-  mt19937 mt(1111);
-  normal_distribution<float> rand(0.0, stddev);
+//  mt19937 mt(1111);
+//  normal_distribution<float> rand(0.0, stddev);
+  NormalizedUniformRandomGenerator<float> urand = {3333};
+  BoxMuller<float> nrand(0.0, stddev);
   // two gaussian + random noize
   for (size_t i = 0; i<kNumData; ++i) {
-    data[i] = rand(mt)
+    data[i] = nrand.generate(&urand)
       + GaussElement(i, kNumData*0.5, peak, width)
       + GaussElement(i, kNumData*0.75, peak*2.0, width/2.0);
     mask[i] = true;
@@ -120,7 +182,7 @@ TEST_F(LineFinderTest, LineFinding) {
     cout << "[Line finding result]" << endl;
     PrintLine(line_list);
   }
-  LineRangeList line_ref = {LineRange(490, 533), LineRange(758, 781)};
+  LineRangeList line_ref = {LineRange(490, 533), LineRange(754, 781)};
   AssertLineRanges(line_list, line_ref);
 }
 
