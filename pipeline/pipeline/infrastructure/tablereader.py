@@ -280,11 +280,17 @@ class MeasurementSetReader(object):
     @staticmethod
     def link_spws_to_fields(msmd, ms):
         spwsforfields = msmd.spwsforfields()
+        print spwsforfields
         for field in ms.fields:
             #spws = [spw for spw in ms.spectral_windows
             #        if spw.id in msmd.spwsforfield(field.id)]
-            spws = [spw for spw in ms.spectral_windows if spw.id in spwsforfields[str(field.id)]]
-            field.valid_spws.update(spws)
+            LOG.info("FIELD ID:  "+str(field.id))
+            try:
+                spws = [spw for spw in ms.spectral_windows if spw.id in spwsforfields[str(field.id)]]
+                field.valid_spws.update(spws)
+            except:
+                LOG.debug("Field "+str(field.id) + " not in spwsforfields dictionary.")
+
     
     @staticmethod
     def get_measurement_set(ms_file):
