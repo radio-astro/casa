@@ -2,6 +2,7 @@ import os
 import shutil
 import glob
 import numpy
+import scipy.special
 
 import pipeline.domain.measures as measures
 from pipeline.hif.heuristics import tclean
@@ -355,33 +356,51 @@ class Tclean(cleanbase.CleanBase):
 
         old_threshold = qaTool.convert(sequence_manager.threshold, 'Jy')['value']
         if (inputs.intent == 'TARGET'):
+            n_false_pos = 1
+            r_mask_pixel = 0.45 * max(inputs.imsize[0], inputs.imsize[1])
+            n_pixel_mask = numpy.pi * r_mask_pixel ** 2
+            n_dr_min = scipy.special.erfcinv(n_false_pos / numpy.sqrt(2.0) / n_pixel_mask)
+            n_dr_max = max(n_dr_min, 2.5)
+            LOG.info('DR heuristic: N_DR_min=%s N_DR_max=%s' % (n_dr_min, n_dr_max))
             if (context.observing_run.get_measurement_sets()[0].antennas[0].diameter == 12.0):
                 if (dirty_dynamic_range > 150.):
                     maxSciEDR = 150.0
-                    new_threshold = max(2.5 * old_threshold, residual_max / maxSciEDR * inputs.tlimit)
+                    new_threshold = max(n_dr_max * old_threshold, residual_max / maxSciEDR * inputs.tlimit)
+                    LOG.info('DR heuristic: Applying maxSciEDR(Main array)=%s' % (maxSciEDR))
                 else:
-                    if (dirty_dynamic_range > 100.):
-                        n_dr = 2.5
-                    elif (50. < dirty_dynamic_range <= 100.):
-                        n_dr = 2.0
-                    elif (20. < dirty_dynamic_range <= 50.):
-                        n_dr = 1.5
-                    elif (dirty_dynamic_range <= 20.):
-                        n_dr = 1.0
+                    if (n_dr_min > 2.5):
+                        n_dr = n_dr_min
+                        LOG.info('DR heuristic: Applying N_DR=N_DR_min=%s' % (n_dr_min))
+                    else:
+                        if (dirty_dynamic_range > 100.):
+                            n_dr = 2.5
+                        elif (50. < dirty_dynamic_range <= 100.):
+                            n_dr = 2.0
+                        elif (20. < dirty_dynamic_range <= 50.):
+                            n_dr = 1.5
+                        elif (dirty_dynamic_range <= 20.):
+                            n_dr = 1.0
+                        LOG.info('DR heuristic: Applying N_DR=%s' % (n_dr))
                     new_threshold = old_threshold * n_dr
             else:
                 if (dirty_dynamic_range > 30.):
                     maxSciEDR = 30.0
-                    new_threshold = max(2.5 * old_threshold, residual_max / maxSciEDR * inputs.tlimit)
+                    new_threshold = max(n_dr_max * old_threshold, residual_max / maxSciEDR * inputs.tlimit)
+                    LOG.info('DR heuristic: Applying maxSciEDR(ACA)=%s' % (maxSciEDR))
                 else:
-                    if (dirty_dynamic_range > 20.):
-                        n_dr = 2.5
-                    elif (10. < dirty_dynamic_range <= 20.):
-                        n_dr = 2.0
-                    elif (4. < dirty_dynamic_range <= 10.):
-                        n_dr = 1.5
-                    elif (dirty_dynamic_range <= 4.):
-                        n_dr = 1.0
+                    if (n_dr_min > 2.5):
+                        n_dr = n_dr_min
+                        LOG.info('DR heuristic: Applying N_DR=N_DR_min=%s' % (n_dr_min))
+                    else:
+                        if (dirty_dynamic_range > 20.):
+                            n_dr = 2.5
+                        elif (10. < dirty_dynamic_range <= 20.):
+                            n_dr = 2.0
+                        elif (4. < dirty_dynamic_range <= 10.):
+                            n_dr = 1.5
+                        elif (dirty_dynamic_range <= 4.):
+                            n_dr = 1.0
+                        LOG.info('DR heuristic: Applying N_DR=%s' % (n_dr))
                     new_threshold = old_threshold * n_dr
         else:
             # Calibrators are usually dynamic range limited. The sensitivity from apparentsens
@@ -391,11 +410,12 @@ class Tclean(cleanbase.CleanBase):
                 maxCalEDR = 1000.0
             else:
                 maxCalEDR = 200.0
+            LOG.info('DR heuristic: Applying maxCalEDR=%s' % (maxCalEDR))
             new_threshold = max(old_threshold, residual_max / maxCalEDR * inputs.tlimit)
 
         if (new_threshold != old_threshold):
             sequence_manager.threshold = '%sJy' % (new_threshold)
-            LOG.info('Modified threshold from %s Jy to %s Jy based on dynamic range heuristic (dirty dynamic range: %.1f)' % (old_threshold, new_threshold, dirty_dynamic_range))
+            LOG.info('DR heuristic: Modified threshold from %s Jy to %s Jy based on dynamic range heuristic (dirty dynamic range: %.1f)' % (old_threshold, new_threshold, dirty_dynamic_range))
 
         # Compute automatic niter estimate
         old_niter = sequence_manager.niter
@@ -407,7 +427,7 @@ class Tclean(cleanbase.CleanBase):
         new_niter = int(round(new_niter_f, -int(numpy.log10(new_niter_f))))
         if (new_niter != old_niter):
             sequence_manager.niter = new_niter
-            LOG.info('Modified niter from %d to %d based on mask vs. beam size heuristic' % (old_niter, new_niter))
+            LOG.info('niter heuristic: Modified niter from %d to %d based on mask vs. beam size heuristic' % (old_niter, new_niter))
 
         iterating = True
         iter = 1
