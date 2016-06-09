@@ -383,7 +383,7 @@ Bool SynthesisImagerVi2::defineImage(SynthesisParamsImage& impars,
 			       const String& filtertype, const Quantity& filterbmaj,
 			       const Quantity& filterbmin, const Quantity& filterbpa   )
   {
-    LogIO os(LogOrigin("SynthesisImager", "weight()", WHERE));
+    LogIO os(LogOrigin("SynthesisImagerVi2", "weight()", WHERE));
 
        try {
     	//Int nx=itsMaxShape[0];
@@ -607,7 +607,7 @@ void SynthesisImagerVi2::appendToMapperList(String imagename,
  void SynthesisImagerVi2::runMajorCycle(const Bool dopsf, 
 				      const Bool savemodel)
   {
-    LogIO os( LogOrigin("SynthesisImager","runMajorCycle",WHERE) );
+    LogIO os( LogOrigin("SynthesisImagerVi2","runMajorCycle",WHERE) );
 
     //    cout << "Savemodel : " << savemodel << "   readonly : " << readOnly_p << "   usescratch : " << useScratch_p << endl;
 
@@ -694,7 +694,7 @@ void SynthesisImagerVi2::appendToMapperList(String imagename,
   void SynthesisImagerVi2::runMajorCycle2(const Bool dopsf, 
 				      const Bool savemodel)
   {
-    LogIO os( LogOrigin("SynthesisImager","runMajorCycle2",WHERE) );
+    LogIO os( LogOrigin("SynthesisImagerVi2","runMajorCycle2",WHERE) );
 
     //    cout << "Savemodel : " << savemodel << "   readonly : " << readOnly_p << "   usescratch : " << useScratch_p << endl;
 
@@ -790,7 +790,7 @@ void SynthesisImagerVi2::appendToMapperList(String imagename,
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   void SynthesisImagerVi2::predictModel(){
-    LogIO os( LogOrigin("SynthesisImager","predictModel ",WHERE) );
+    LogIO os( LogOrigin("SynthesisImagerVi2","predictModel ",WHERE) );
 
     os << "---------------------------------------------------- Predict Model ---------------------------------------------" << LogIO::POST;
     
@@ -849,7 +849,7 @@ CountedPtr<SIMapper> SynthesisImagerVi2::createSIMapper(String mappertype,
 							CountedPtr<refim::FTMachine> iftmachine,
 						       uInt /*ntaylorterms*/)
   {
-    LogIO os( LogOrigin("SynthesisImager","createSIMapper",WHERE) );
+    LogIO os( LogOrigin("SynthesisImagerVi2","createSIMapper",WHERE) );
     
     CountedPtr<SIMapper> localMapper;
 
@@ -939,7 +939,7 @@ void SynthesisImagerVi2::unlockMSs()
 					   )
 
   {
-    LogIO os( LogOrigin("SynthesisImager","createFTMachine",WHERE));
+    LogIO os( LogOrigin("SynthesisImagerVi2","createFTMachine",WHERE));
 
     if(ftname=="gridft"){
       if(facets >1){
@@ -1188,7 +1188,7 @@ void SynthesisImagerVi2::unlockMSs()
 
   void SynthesisImagerVi2:: createMosFTMachine(CountedPtr<refim::FTMachine>& theFT,CountedPtr<refim::FTMachine>&  theIFT, const Float /*padding*/, const Bool useAutoCorr, const Bool useDoublePrec, const Float rotatePAStep, const String stokes){
     
-    LogIO os(LogOrigin("SynthesisImager", "createMosFTMachine",WHERE));
+    LogIO os(LogOrigin("SynthesisImagerVi2", "createMosFTMachine",WHERE));
    
     ROMSColumns msc(vi_p->ms());
     String telescop=msc.observation().telescopeName()(0);
@@ -1235,7 +1235,7 @@ void SynthesisImagerVi2::unlockMSs()
   
   Bool SynthesisImagerVi2::setWeightDensity( )
   {
-    LogIO os(LogOrigin("SynthesisImager", "setWeightDensity()", WHERE));
+    LogIO os(LogOrigin("SynthesisImagerVi2", "setWeightDensity()", WHERE));
     try
       {
 	Block<Matrix<Float> > densitymatrices(itsMappers.nMappers());
@@ -1268,7 +1268,7 @@ void SynthesisImagerVi2::unlockMSs()
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   void SynthesisImagerVi2::createVisSet(const Bool /*writeAccess*/)
   {
-    LogIO os( LogOrigin("SynthesisImager","createVisSet",WHERE) );
+    LogIO os( LogOrigin("SynthesisImagerVi2","createVisSet",WHERE) );
     if(mss_p.nelements() != uInt(fselections_p.size()) && (fselections_p.size() !=0)){
       throw(AipsError("Discrepancy between Number of MSs and Frequency selections"));
     }
