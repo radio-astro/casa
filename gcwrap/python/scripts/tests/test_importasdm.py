@@ -28,7 +28,7 @@ import sys
 import shutil
 from __main__ import default
 from tasks import importasdm, flagdata, exportasdm, flagcmd
-from taskinit import mstool, tbtool
+from taskinit import mstool, tbtool, cbtool
 import testhelper as th
 import unittest
 import partitionhelper as ph
@@ -835,6 +835,17 @@ class asdm_import6(test_base):
 
         self.res = importasdm(myasdmname, vis=themsname, lazy=True, scans='0:1~3') # only the first 3 scans to save time
         self.assertEqual(self.res, None)
+
+        #test that scratch columns can be created from lazy import
+        cblocal = cbtool()
+        cblocal.open(themsname)
+        cblocal.close()
+        tblocal = tbtool()
+        tblocal.open(themsname)
+        self.assertIn('CORRECTED_DATA', tblocal.getdesc())
+        self.assertIn('MODEL_DATA', tblocal.getdesc())
+        tblocal.close()
+
         print myname, ": Success! Now checking output ..."
         mscomponents = set(["ANTENNA/table.dat",
                             "DATA_DESCRIPTION/table.dat",
