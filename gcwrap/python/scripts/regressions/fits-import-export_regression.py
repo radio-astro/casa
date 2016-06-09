@@ -87,6 +87,7 @@ def checkimage(myfitsimage_name, maxpos_expect, maxposf_expect):
         # perform a basic check of the coordinate system
         ia.open(myfitsimage_name)
         mystat = imstat(imagename = myfitsimage_name)
+        ia.close()
         if not (myname == ' '):
             print mystat
         if not ((mystat['maxpos']) == maxpos_expect).all():
@@ -128,6 +129,7 @@ def checkimage(myfitsimage_name, maxpos_expect, maxposf_expect):
                     print myname, ' No exceptions raised! Now checking image ...'
                     ia.open(myfitsimage_name+'exp')
                     csm = ia.coordsys()
+                    ia.close()
                     csm.summary() 
                     mystat = imstat(imagename = myfitsimage_name+'exp')
                     if not ((mystat['maxpos']) == maxpos_expect).all():
@@ -398,6 +400,7 @@ for name in ['dir_and_stokes.fits', 'dir_stokes_and_freq.fits', 'onlydir.fits', 
     mycs = ia.coordsys()
     ia.close()
     if not mycs.axiscoordinatetypes() == ['Direction', 'Direction', 'Stokes', 'Spectral']:
+        print "ERROR: unexpected value of axiscoordinatetypes: ", mycs.axiscoordinatetypes()
         passed = False
     else:
         mycsr = mycs.torecord()
