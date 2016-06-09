@@ -280,11 +280,9 @@ class MeasurementSetReader(object):
     @staticmethod
     def link_spws_to_fields(msmd, ms):
         spwsforfields = msmd.spwsforfields()
-        print spwsforfields
         for field in ms.fields:
             #spws = [spw for spw in ms.spectral_windows
             #        if spw.id in msmd.spwsforfield(field.id)]
-            LOG.info("FIELD ID:  "+str(field.id))
             try:
                 spws = [spw for spw in ms.spectral_windows if spw.id in spwsforfields[str(field.id)]]
                 field.valid_spws.update(spws)
