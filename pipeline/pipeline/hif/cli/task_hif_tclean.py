@@ -5,7 +5,7 @@ from taskinit import casalog
 import pipeline.h.cli.utils as utils
 
 
-def hif_tclean(vis=None, imagename=None, intent=None, field=None, spw=None, spwsel=None,
+def hif_tclean(vis=None, imagename=None, intent=None, field=None, spw=None, spwsel_lsrk=None, spwsel_topo=None,
                uvrange=None, specmode=None, gridder=None, deconvolver=None, outframe=None, 
 	       imsize=None, cell=None, phasecenter=None, nchan=None, start=None,
 	       width=None, weighting=None, robust=None, noise=None, npixels=None,

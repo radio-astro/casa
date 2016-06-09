@@ -36,9 +36,15 @@ Compute a clean map.
     <value></value>
   </param>
 
-  <param type="any" name="spwsel" subparam="true">
+  <param type="any" name="spwsel_lsrk" subparam="true">
     <any type="variant"/>
-    <description>Dictionary of spw frequency selections {} for automatic</description>
+    <description>Dictionary of LSRK spw frequency selections, {} for automatic</description>
+    <value>{}</value>
+  </param>
+
+  <param type="any" name="spwsel_topo" subparam="true">
+    <any type="variant"/>
+    <description>List of TOPO spw frequency selections per MS, [] for automatic</description>
     <value>{}</value>
   </param>
 
@@ -255,7 +261,8 @@ Compute a clean map.
         <default param="intent"><value type="string"></value></default>
         <default param="field"><value type="string"></value></default>
         <default param="spw"><value type="string"></value></default>
-        <default param="spwsel"><value type="any">{}</value></default>
+        <default param="spwsel_lsrk"><value type="any">{}</value></default>
+        <default param="spwsel_topo"><value type="any">[]</value></default>
         <default param="uvrange"><value type="string"></value></default>
         <default param="gridder"><value type="string"></value></default>
         <default param="deconvolver"><value type="string"></value></default>
@@ -275,7 +282,8 @@ Compute a clean map.
         <default param="intent"><value type="string"></value></default>
         <default param="field"><value type="string"></value></default>
         <default param="spw"><value type="string"></value></default>
-        <default param="spwsel"><value type="any">{}</value></default>
+        <default param="spwsel_lsrk"><value type="any">{}</value></default>
+        <default param="spwsel_topo"><value type="any">[]</value></default>
         <default param="uvrange"><value type="string"></value></default>
         <default param="gridder"><value type="string"></value></default>
         <default param="deconvolver"><value type="string"></value></default>
@@ -423,9 +431,13 @@ spw -- Spectral window/channels to image. \'\' for all science data.
     default: ''
     example: '9', '9,11'
 
-spwsel -- Spectral window frequency selection for continuum. {} for all science data.
+spwsel_lsrk -- Spectral window LSRK frequency selection for continuum. {} for all science data.
     default: {}
     example: {'spw16': '89.1~89.5GHz;90.2~90.3GHz', 'spw18': '101.2~102.1GHz'}
+
+spwsel_topo -- Per MS spectral window TOPO frequency selection for continuum. [] for all science data.
+    default: {}
+    example: {['spw16:89.1~89.5GHz;90.2~90.3GHz']}
 
 specmode -- Frequency imaging mode, 'mfs', 'cube'. \'\' defaults to
     'cube' if intent parameter includes 'TARGET' otherwise 'mfs'.
