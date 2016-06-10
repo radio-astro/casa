@@ -130,7 +130,7 @@ public:
 						DataCubeMap *outputData,
 						uInt startInputPos,
 						uInt outputPos,
-						uInt width);
+						uInt width) = 0;
 };
 
 //////////////////////////////////////////////////////////////////////////
