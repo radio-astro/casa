@@ -201,10 +201,11 @@ namespace casa{
     Int index=cs.findCoordinate(Coordinate::SPECTRAL);
     SpectralCoordinate spCS = cs.spectralCoordinate(index);
     Vector<Double> val; val.resize(1);val(0)=freqValues_p(ndx(0));
-    spCS.setReferenceValue(val); val.resize();
-    val = spCS.increment();
+    spCS.setReferenceValue(val);
+    //val.resize();
+    //val = spCS.increment();
     // val = cfCells_p(ndx(0),ndx(1),ndx(2))->freqIncr_p;
-    spCS.setIncrement(val);
+    //spCS.setIncrement(val);
     cs.replaceCoordinate(spCS,index);
 
     // cfCells_p(ndx(0),ndx(1),ndx(2))->freqValue_p = 
