@@ -1425,6 +1425,32 @@ vector<int> msmetadata::scansforspw(const int spw, int obsid, int arrayid) {
 	return vector<int>();
 }
 
+record* msmetadata::scansforspws(int obsid, int arrayid) {
+	_FUNC(
+	    _checkArrayId(arrayid, True);
+	    _checkObsId(obsid, True);
+        auto spwToScans = _msmd->getSpwToScansMap();
+		auto_ptr<record> ret(new record());
+        uInt n = spwToScans.size();
+   		ArrayKey ak;
+	    ak.obsID = obsid;
+	    ak.arrayID = arrayid;
+        for (uInt i=0; i<n; ++i) {
+		    std::set<ScanKey> allScans;
+		    auto scans = filter(spwToScans[i], ak);
+            std::set<uInt> scanNums;
+            for (const auto& scan: scans) {
+                scanNums.insert(scan.scan);
+            }
+            ret->insert(
+                String::toString(i), _setUIntToVectorInt(scanNums)
+            );
+		}
+		return ret.release();
+	)
+	return nullptr;
+}
+
 vector<int> msmetadata::scansforstate(int state, int obsid, int arrayid) {
 	_FUNC(
 		ThrowIf(

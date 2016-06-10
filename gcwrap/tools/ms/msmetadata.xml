@@ -1624,6 +1624,34 @@ windows in the dataset and close the tool.
             </example>
         </method>
         
+        <method type="function" name="scansforspws">
+            <shortdescription>Get a dictionary of which maps spw ID to scan numbers for the specified observation ID and array ID.</shortdescription>
+             <input>
+                <param type="int" direction="in" name="obsid">
+                    <description>Observation ID. Must be non-negative.</description>
+                    <value>0</value>
+                </param>
+                <param type="int" direction="in" name="arrayid">
+                    <description>Array ID. Must be non-negative.</description>
+                    <value>0</value>
+                </param>
+            </input>
+            <returns type="record"/>
+            <description>
+                Get a dictionary of which maps spw ID to scan numbers for the specified observation ID 
+                and array ID. The keys (spectral window IDs) will be strings. obsid and arrayid must both
+                be non-negative.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the spw - scan map for arrayID 1 and obsID 2
+    spw_to_scans = msmd.scansforspws(arrayid=1, obsid=2)
+    # access the spws associated with spw ID 2
+    spw_to_scans2 = swp_to_scans["2"]
+    msmd.done()
+            </example>
+        </method>
+
         <method type="function" name="scansforstate">
             <shortdescription>Get an array of the unique scan numbers for the specified state, observation ID, and array ID.</shortdescription>
              <input>

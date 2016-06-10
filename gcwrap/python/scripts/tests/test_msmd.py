@@ -583,7 +583,8 @@ class msmd_test(unittest.TestCase):
         )
         
     def test_scansforspw(self):
-        """Test scansforspw()"""
+        """Test scansforspw() and scansforspws()"""
+        gotmap = self.md.scansforspws(0, 0)
         for i in range(self.md.nspw()):
             if (i==0):
                 expec = numpy.array([
@@ -607,8 +608,10 @@ class msmd_test(unittest.TestCase):
             got = self.md.scansforspw(i)
             if (i<25):
                 self.assertTrue((got == expec).all())
+                self.assertTrue((gotmap[str(i)] == expec).all())
             else:
                 self.assertTrue(len(got) == 0)
+                self.assertTrue(len(gotmap[str(i)]) == 0)
 
     def test_scansforstate(self):
         """ Test scansforstate()"""
