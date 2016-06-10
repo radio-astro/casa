@@ -22,8 +22,6 @@ using namespace casacore;
 
 #define LOG logger_ << LogOrigin("SDDoubleCircleGainCal", __FUNCTION__, WHERE)
 #define POSTLOG LogIO::POST
-//#define LOG std::cout << "SDDoubleCircleGainCal::" << __FUNCTION__ << " "
-//#define POSTLOG std::endl
 
 namespace { // anonymous namespace START
 // primary beam size based on observing frequency and antenna diameter
@@ -52,6 +50,7 @@ inline Int getDefaultSmoothingSize(Double const radius) {
 inline Double average(size_t const index_from, size_t const index_to,
     Vector<Double> const &data) {
   Double sum = 0.0;
+  assert(index_from <= index_to);
   //cout << "number of data to be averaged " << index_to - index_from << endl;
   for (size_t i = index_from; i < index_to; ++i) {
     sum += data[i];
@@ -62,6 +61,7 @@ inline Double average(size_t const index_from, size_t const index_to,
     Vector<Double> const &data, Vector<Bool> const &flag) {
   Double sum = 0.0;
   size_t count = 0;
+  assert(index_from <= index_to);
   //cout << "number of data to be averaged " << index_to - index_from << endl;
   for (size_t i = index_from; i < index_to; ++i) {
     if (flag[i] == False) {
@@ -299,7 +299,8 @@ void SDDoubleCircleGainCalImpl::calibrate(Cube<Float> const &data,
   assert(time.nelements() == data_shape[2]);
   assert(direction.shape()[1] == data_shape[2]);
   assert(direction.shape()[0] == 2);
-  findDataWithinRadius(radius, time, data, direction, gain_time, gain);
+  findDataWithinRadius(radius, time, data, flag, direction, gain_time, gain,
+      gain_flag);
   size_t num_gain = gain_time.nelements();
   LOG << "num_gain = " << num_gain << POSTLOG;
 
@@ -310,23 +311,19 @@ void SDDoubleCircleGainCalImpl::calibrate(Cube<Float> const &data,
         << num_gain << endl << "Skipping..." << POSTLOG;
     gain_time.resize();
     gain.resize();
+    gain_flag.resize();
     return;
   }
 
   // for each spectral data
-  gain_flag.resize(gain.shape());
-
   Vector<Double> work_data(num_gain);
   Vector<Bool> work_flag(num_gain);
-  Vector<Double> smoothed_data;
-  if (do_smooth_) {
-    smoothed_data.resize(num_gain);
-  }
+  Vector<Double> smoothed_data(num_gain);
   for (size_t ipol = 0; ipol < num_pol; ++ipol) {
     for (size_t ichan = 0; ichan < num_chan; ++ichan) {
       for (size_t idata = 0; idata < num_gain; ++idata) {
         work_data[idata] = gain(ipol, ichan, idata);
-        work_flag[idata] = flag(ipol, ichan, idata);
+        work_flag[idata] = gain_flag(ipol, ichan, idata);
       }
 
 //      LOG << "work_data[" << ipol << "," << ichan << "]=" << work_data
@@ -344,30 +341,38 @@ void SDDoubleCircleGainCalImpl::calibrate(Cube<Float> const &data,
         smooth(smooth_size, work_data, work_flag, smoothed_data);
       } else {
         LOG << "no smoothing" << POSTLOG;
-        smoothed_data.reference(work_data);
+        smoothed_data = work_data;
       }
 
-      LOG << LogIO::DEBUGGING << "smoothed_data[" << ipol << "," << ichan
-          << "]=" << smoothed_data << POSTLOG;
-
-      LOG << LogIO::DEBUGGING << "mean value = " << mean(smoothed_data)
-          << POSTLOG;
+//      LOG << LogIO::DEBUGGING << "smoothed_data[" << ipol << "," << ichan
+//          << "]=" << smoothed_data << POSTLOG;
 
       // derive gain factor: mean(smoothed_data) / smoothed_data
-      work_data = mean(smoothed_data) / smoothed_data;
+      //work_data = mean(smoothed_data) / smoothed_data;
+      auto mean_value = ::average(0, num_gain, smoothed_data, work_flag);
+      work_data = mean_value / smoothed_data;
+
+      LOG << LogIO::DEBUGGING << "mean value = " << mean_value
+          << " (simple mean " << mean(smoothed_data) << ")" << POSTLOG;
 
 //      LOG << "gfactor[" << ipol << "," << ichan << "]=" << work_data
 //          << POSTLOG;
 
       // conversion for G type calibration
-      work_data = 1.0 / sqrt(work_data);
+      //work_data = 1.0 / sqrt(work_data);
+      for (size_t idata = 0; idata < num_gain; ++idata) {
+        if (work_data[idata] != 0.0) {
+          work_data[idata] = 1.0 / sqrt(work_data[idata]);
+        } else {
+          work_data[idata] = 0.0;
+        }
+      }
 
 //      LOG << "fparam[" << ipol << "," << ichan << "]=" << work_data
 //          << POSTLOG;
 
       for (size_t idata = 0; idata < num_gain; ++idata) {
         gain(ipol, ichan, idata) = work_data[idata];
-        gain_flag(ipol, ichan, idata) = work_flag[idata];
       }
     }
   }
@@ -381,8 +386,10 @@ Double SDDoubleCircleGainCalImpl::getRadius() {
     radius = 0.5 * getPrimaryBeamSize();
   }
   if (radius <= 0.0) {
-    LOG << LogIO::SEVERE << "Size of central region is not properly set: "
-        << radius << LogIO::EXCEPTION;
+    ostringstream ss;
+    ss << "Size of central region is not properly set: " << radius;
+    LOG << LogIO::SEVERE << ss.str() << POSTLOG;
+    throw AipsError(ss.str());
   }
 
   return radius;
@@ -429,6 +436,39 @@ void SDDoubleCircleGainCalImpl::findDataWithinRadius(Double const radius,
     size_t j = data_index[i];
     gain_time[i] = time[j];
     gain.xyPlane(i) = data.xyPlane(j);
+  }
+}
+
+void SDDoubleCircleGainCalImpl::findDataWithinRadius(Double const radius,
+    Vector<Double> const &time, Cube<Float> const &data, Cube<Bool> const &flag,
+    Matrix<Double> const &direction, Vector<Double> &gain_time,
+    Cube<Float> &gain, Cube<Bool> &gain_flag) {
+  size_t num_data = ::toUnsigned(direction.shape()[1]);
+  // find data within radius
+  Vector<size_t> data_index(num_data);
+  size_t num_gain = 0;
+  for (size_t i = 0; i < num_data; ++i) {
+    Double x = direction(0, i);
+    Double y = direction(1, i);
+    Double r2 = x * x + y * y;
+    if (r2 <= radius * radius) {
+      data_index[num_gain] = i;
+      num_gain++;
+    }
+  }
+
+  // store data for calibration
+  LOG << "num_gain = " << num_gain << POSTLOG;
+  gain_time.resize(num_gain);
+  IPosition gain_shape(data.shape());
+  gain_shape[2] = num_gain;
+  gain.resize(gain_shape);
+  gain_flag.resize(gain_shape);
+  for (size_t i = 0; i < num_gain; ++i) {
+    size_t j = data_index[i];
+    gain_time[i] = time[j];
+    gain.xyPlane(i) = data.xyPlane(j);
+    gain_flag.xyPlane(i) = flag.xyPlane(j);
   }
 }
 

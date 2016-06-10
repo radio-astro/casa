@@ -24,6 +24,7 @@ using namespace casa;
 using namespace std;
 
 #define TESTLOG cout << "TESTLOG::" << __FUNCTION__ << " "
+#define SDD_TEST(name) TEST(SDDoubleCircleGainCalImplTest, name)
 
 namespace {
 void createTestData(ssize_t const num_pol, ssize_t const num_chan,
@@ -89,16 +90,24 @@ void createTestData(ssize_t const num_pol, ssize_t const num_chan,
 Double getDefaultSmoothingSize(Double radius) {
   return 2 * static_cast<Int>(round(radius / 1.5)) + 1;
 }
+
+inline size_t toUnsigned(ssize_t const v) {
+  assert(v >= 0);
+  return static_cast<size_t>(v);
+}
 }
 
-struct StandardConfig {
-  static void ConfigureData(Cube<Float> &data, Matrix<Double> &direction,
-      ssize_t const num_cycle = 20, ssize_t const num_data_per_cycle = 20) {
+template<class Config>
+struct ConfigInterface {
+  static void ConfigureData(Cube<Float> &data, Cube<Bool> &flag,
+      Matrix<Double> &direction, ssize_t const num_cycle = 20,
+      ssize_t const num_data_per_cycle = 20) {
     ssize_t const num_pol = 2;
     ssize_t const num_chan = 2;
     ssize_t const num_data = num_cycle * num_data_per_cycle;
     createTestData(num_pol, num_chan, data, direction, num_cycle,
         num_data_per_cycle);
+    Config::ConfigureFlag(data, direction, flag);
 
     IPosition const data_shape = data.shape();
     IPosition const direction_shape = direction.shape();
@@ -165,10 +174,59 @@ struct StandardConfig {
   }
 };
 
+struct StandardConfig: public ConfigInterface<StandardConfig> {
+  static void ConfigureFlag(Cube<Float> const &/*data*/,
+      Matrix<Double> const &/*direction*/, Cube<Bool> &flag) {
+    if (!flag.empty()) {
+      flag.resize();
+    }
+    ASSERT_TRUE(flag.empty());
+  }
+};
+
+struct AllFlaggedConfig: public ConfigInterface<AllFlaggedConfig> {
+  static void ConfigureFlag(Cube<Float> const &data,
+      Matrix<Double> const &/*direction*/, Cube<Bool> &flag) {
+    if (flag.shape() != data.shape()) {
+      flag.resize(data.shape());
+    }
+
+    // all data are flagged
+    flag = True;
+
+    ASSERT_EQ(data.shape(), flag.shape());
+  }
+};
+
+struct PartiallyFlaggedConfig: public ConfigInterface<PartiallyFlaggedConfig> {
+  static void ConfigureFlag(Cube<Float> const &data,
+      Matrix<Double> const &direction, Cube<Bool> &flag) {
+    if (flag.shape() != data.shape()) {
+      flag.resize(data.shape());
+    }
+
+    flag = False;
+
+    ASSERT_GE(data.shape()[0], 0);
+    ASSERT_GE(data.shape()[1], 0);
+    ASSERT_GE(data.shape()[2], 0);
+    size_t const num_data = data.shape()[2];
+    for (size_t i = 0; i < num_data; ++i) {
+      if (direction(0, i) == 0.0 && direction(1, i) == 0.0) {
+        TESTLOG << "flag " << i << endl;
+        flag.xyPlane(i) = True;
+      }
+    }
+
+    ASSERT_EQ(data.shape(), flag.shape());
+  }
+};
+
 struct ExceptionExecutor {
   static void Execute(SDDoubleCircleGainCalImpl &calibrator,
-      Cube<Float> const &data, Matrix<Double> const &direction,
-      Double const /* radius */, Int const /* smooth_size */) {
+      Cube<Float> const &data, Cube<Bool> const &/*flag*/,
+      Matrix<Double> const &direction, Double const /* radius */,
+      Int const /* smooth_size */) {
     size_t const num_data = data.shape()[2];
     Vector<Double> time(num_data);
     indgen(time, 0., 1.0);
@@ -182,19 +240,54 @@ struct ExceptionExecutor {
 
 struct StandardExecutor {
   static void Execute(SDDoubleCircleGainCalImpl &calibrator,
-      Cube<Float> const &data, Matrix<Double> const &direction,
-      Double const radius, Int const smooth_size) {
+      Cube<Float> const &data, Cube<Bool> const &flag,
+      Matrix<Double> const &direction, Double const radius,
+      Int const smooth_size) {
     size_t const num_data = data.shape()[2];
     Vector<Double> time(num_data);
     indgen(time, 0., 1.0);
 
-    Vector<Double> gain_time;
-    Cube<Float> gain;
-    calibrator.calibrate(data, time, direction, gain_time, gain);
+    Cube<Bool> flag_local;
+
+    if (flag.empty()) {
+      flag_local.resize(data.shape());
+      flag_local = False; // all data are valid
+    } else {
+      flag_local.reference(flag);
+    }
+
+    Vector<Double> gain_time_with_flag;
+    Cube<Float> gain_with_flag;
+    Cube<Bool> gain_flag;
+    calibrator.calibrate(data, flag_local, time, direction, gain_time_with_flag,
+        gain_with_flag, gain_flag);
 
     Vector<size_t> data_index;
     GetDataIndex(radius, direction, data_index);
-    VerifyGain(smooth_size, data_index, time, data, gain_time, gain);
+
+    //TESTLOG << "INPUT FLAG: " << flag_local << endl;
+    //TESTLOG << "OUTPUT FLAG: " << gain_flag << endl;
+    VerifyGainWithFlag(smooth_size, data_index, time, data, flag_local,
+        gain_time_with_flag, gain_with_flag, gain_flag);
+
+    if (flag.empty()) {
+      // check consistency between calibrations with and without flag
+      Vector<Double> gain_time;
+      Cube<Float> gain;
+      calibrator.calibrate(data, time, direction, gain_time, gain);
+
+      Vector<size_t> data_index;
+      GetDataIndex(radius, direction, data_index);
+
+      VerifyGain(smooth_size, data_index, time, data, gain_time, gain);
+
+      // result should be identical with no-flag version
+//      TESTLOG << "gain " << gain << endl;
+//      TESTLOG << "gain (with flag) " << gain_with_flag << endl;
+      EXPECT_TRUE(allEQ(gain_time, gain_time_with_flag));
+      EXPECT_TRUE(allEQ(gain, gain_with_flag));
+      EXPECT_TRUE(allEQ(gain_flag, False));
+    }
   }
 
 private:
@@ -304,6 +397,31 @@ private:
     }
   }
 
+  static void SmoothData(Cube<Float> const &data, Cube<Bool> const &flag,
+      Int const smooth_size, Cube<Float> &smoothed_data) {
+    size_t const num_data = data.shape()[2];
+    size_t const left_edge = (smooth_size + 1) / 2 - 1;
+    size_t const right_edge = smooth_size / 2 + 1;
+    TESTLOG << "num_data " << num_data << ", left_edge " << left_edge
+        << ", right_edge " << right_edge << endl;
+    TESTLOG << "smoothed_data.shape = " << smoothed_data.shape() << endl;
+    for (size_t i = 0; i < left_edge; ++i) {
+      size_t l = 0;
+      size_t r = i + right_edge;
+      smoothed_data.xyPlane(i) = AverageData(i, l, r, data, flag);
+    }
+    for (size_t i = left_edge; i < num_data - right_edge; ++i) {
+      size_t l = i - left_edge;
+      size_t r = i + right_edge;
+      smoothed_data.xyPlane(i) = AverageData(i, l, r, data, flag);
+    }
+    for (size_t i = num_data - right_edge; i < num_data; ++i) {
+      size_t l = i - left_edge;
+      size_t r = num_data;
+      smoothed_data.xyPlane(i) = AverageData(i, l, r, data, flag);
+    }
+  }
+
   static Matrix<Float> AverageData(size_t const start, size_t const end,
       Cube<Float> const &data) {
     Matrix<Float> mean(data.shape().getFirst(2), 0.0f);
@@ -315,6 +433,123 @@ private:
     }
     mean /= static_cast<Float>(end - start);
     return mean;
+  }
+
+  static Matrix<Float> AverageData(size_t const middle, size_t const start, size_t const end,
+      Cube<Float> const &data, Cube<Bool> const &flag) {
+    Matrix<Float> mean(data.shape().getFirst(2), 0.0f);
+    Matrix<size_t> count(mean.shape(), 0ul);
+    auto const num_pol = mean.shape()[0];
+    auto const num_chan = mean.shape()[1];
+//    TESTLOG << "mean.shape=" << mean.shape() << endl;
+//    TESTLOG << "data.shape " << data.shape() << ", start " << start << ", end "
+//        << end << endl;
+    for (ssize_t ip = 0; ip < num_pol; ++ip) {
+      for (ssize_t ic = 0; ic < num_chan; ++ic) {
+        for (size_t i = start; i < end; ++i) {
+          if (flag(ip, ic, i) == False) {
+            mean(ip, ic) += data(ip, ic, i);
+            count(ip, ic) += 1;
+          }
+        }
+        if (count(ip, ic) == 0) {
+          mean(ip, ic) = data(ip, ic, middle);
+        } else {
+          mean(ip, ic) /= static_cast<Float>(count(ip, ic));
+        }
+      }
+    }
+    return mean;
+  }
+
+  static void VerifyGainWithFlag(Int const smooth_size,
+      Vector<size_t> const &data_index, Vector<Double> const &time,
+      Cube<Float> const &data, Cube<Bool> const &flag,
+      Vector<Double> &gain_time, Cube<Float> const &gain,
+      Cube<Bool> const &gain_flag) {
+    TESTLOG << endl;
+    IPosition const data_shape = data.shape();
+    ssize_t const num_pol_expected = data_shape[0];
+    ssize_t const num_chan_expected = data_shape[1];
+    size_t const num_data_expected = data_index.nelements();
+    ASSERT_LE(num_data_expected, static_cast<size_t>(SSIZE_MAX));
+
+    //TESTLOG << "data_index=" << data_index << endl;
+    if (num_data_expected < 100) {
+      // no calibration is executed, gain should be empty array
+      ASSERT_TRUE(gain.empty());
+      ASSERT_TRUE(gain_flag.empty());
+      ASSERT_TRUE(gain_time.empty());
+    } else {
+      // calibration is properly done
+      IPosition const gain_shape = gain.shape();
+      ASSERT_EQ(num_pol_expected, gain_shape[0]);
+      ASSERT_EQ(num_chan_expected, gain_shape[1]);
+      ASSERT_EQ(static_cast<ssize_t>(num_data_expected), gain_shape[2]);
+      ASSERT_EQ(num_data_expected, gain_time.nelements());
+
+      // verify timestamp
+      for (size_t i = 0; i < num_data_expected; ++i) {
+        auto const time_expected = time[data_index[i]];
+        auto const time_actual = gain_time[i];
+        EXPECT_EQ(time_expected, time_actual);
+      }
+
+      // do smoothing if necessary
+      Cube<Float> smoothed_data(gain.shape());
+      Cube<Bool> smoothed_flag(gain.shape());
+      if (smooth_size > 1 && static_cast<size_t>(smooth_size) < num_data_expected) {
+        // do smoothing
+        TESTLOG << "do smoothing" << endl;
+        Cube<Float> unsmoothed_data(gain.shape());
+        Cube<Bool> unsmoothed_flag(gain.shape());
+        for (size_t i = 0; i < num_data_expected; ++i) {
+          unsmoothed_data.xyPlane(i) = data.xyPlane(data_index[i]);
+          unsmoothed_flag.xyPlane(i) = flag.xyPlane(data_index[i]);
+        }
+//        TESTLOG << "unsmoothed_data" << unsmoothed_data << endl;
+        SmoothData(unsmoothed_data, unsmoothed_flag, smooth_size,
+            smoothed_data);
+        smoothed_flag = unsmoothed_flag;
+//        TESTLOG << "smoothed_data" << smoothed_data << endl;
+      } else {
+        // no smoothing
+        for (size_t i = 0; i < num_data_expected; ++i) {
+          smoothed_data.xyPlane(i) = data.xyPlane(data_index[i]);
+          smoothed_flag.xyPlane(i) = flag.xyPlane(data_index[i]);
+        }
+      }
+
+      //TESTLOG << "smoothed_flag=" << smoothed_flag << endl;
+
+      for (ssize_t ip = 0; ip < num_pol_expected; ++ip) {
+        for (ssize_t ic = 0; ic < num_chan_expected; ++ic) {
+          Double mean_data = 0.0;
+          size_t count = 0;
+          for (size_t ig = 0; ig < num_data_expected; ++ig) {
+            if (gain_flag(ip, ic, ig) == False) {
+              mean_data += smoothed_data(ip, ic, ig);
+              count++;
+            }
+          }
+          if (count > 0) {
+            mean_data /= static_cast<Double>(count);
+          } else {
+            mean_data = 0.0;
+          }
+          for (size_t ig = 0; ig < num_data_expected; ++ig) {
+            auto const expected_gain = mean_data / smoothed_data(ip, ic, ig);
+            Float expected = 0.0f;
+            if (mean_data != 0.0 && smoothed_data(ip, ic, ig) != 0.0) {
+              expected = 1.0 / sqrt(expected_gain);
+            }
+            EXPECT_FLOAT_EQ(expected, gain(ip, ic, ig)) << ip << "," << ic << "," << ig;
+            auto const expected_flag = smoothed_flag(ip, ic, ig);
+            EXPECT_EQ(expected_flag, gain_flag(ip, ic, ig)) << ip << "," << ic << "," << ig;
+          }
+        }
+      }
+    }
   }
 };
 
@@ -332,8 +567,10 @@ void RunTest(ssize_t const num_cycle, ssize_t const num_data_per_cycle,
   SDDoubleCircleGainCalImpl calibrator;
 
   Cube<Float> data;
+  Cube<Bool> flag;
   Matrix<Double> direction;
-  Configurator::ConfigureData(data, direction, num_cycle, num_data_per_cycle);
+  Configurator::ConfigureData(data, flag, direction, num_cycle,
+      num_data_per_cycle);
 
   Double const myradius = Configurator::ConfigureRadius(calibrator, radius,
       auto_radius);
@@ -343,12 +580,13 @@ void RunTest(ssize_t const num_cycle, ssize_t const num_data_per_cycle,
   //Bool do_smooth = (mysmooth_size >= 0);
 
   // calibrate without smoothing
-  Executor::Execute(calibrator, data, direction, myradius, mysmooth_size);
+  Executor::Execute(calibrator, data, flag, direction, myradius, mysmooth_size);
 
   TESTLOG << "=== END TEST === " << endl;
 }
 
-TEST(SDDoubleCircleGainCalImplTest, BasicTest) {
+//TEST(SDDoubleCircleGainCalImplTest, BasicTest) {
+SDD_TEST(BasicAPITest) {
   SDDoubleCircleGainCalImpl calibrator;
 
   // setter and getter tests
@@ -400,7 +638,8 @@ TEST(SDDoubleCircleGainCalImplTest, BasicTest) {
   ASSERT_EQ(expected_smooth_size, default_smooth_size);
 }
 
-TEST(SDDoubleCircleGainCalImplTest, FailedTest) {
+//TEST(SDDoubleCircleGainCalImplTest, FailedTest) {
+SDD_TEST(FailedTest) {
   // too small central region, no calibration is done
   RunTest<StandardConfig, StandardExecutor>(20, 20, 0.01, False, False, -1,
       False);
@@ -414,32 +653,80 @@ TEST(SDDoubleCircleGainCalImplTest, FailedTest) {
       False);
 }
 
-TEST(SDDoubleCircleGainCalImplTest, CalibrationTest) {
+//TEST(SDDoubleCircleGainCalImplTest, CalibrationTest) {
+SDD_TEST(CalibrationNoSmoothingUserSuppliedRadius2) {
   // no smoothing, user-supplied radius
+  TESTLOG << "no smoothing, user-supplied radius (2.1)" << endl;
   RunTest<StandardConfig, StandardExecutor>(20, 20, 2.1, False, False, -1,
       False);
+}
+
+SDD_TEST(CalibrationNoSmoothingUserSuppliedRadius3) {
+  TESTLOG << "no smoothing, user-supplied radius (3.1)" << endl;
   RunTest<StandardConfig, StandardExecutor>(20, 20, 3.1, False, False, -1,
       False);
+}
 
+SDD_TEST(CalibrationNoSmoothingAutoRadius) {
   // no smoothing, auto radius based on primary beam size
+  TESTLOG << "no smoothing, auto radius based on primary beam size" << endl;
   RunTest<StandardConfig, StandardExecutor>(20, 20, 2.1, True, False, -1,
       False);
+}
 
+SDD_TEST(CalibrationDoSmoothing2UserSuppliedRadius2) {
   // do smoothing with size 2, user-supplied radius
+  TESTLOG << "do smoothing with size 2, user-supplied radius" << endl;
   RunTest<StandardConfig, StandardExecutor>(20, 20, 2.1, False, True, 2, False);
+}
 
+SDD_TEST(CalibrationDoSmoothing1UserSuppliedRadius2) {
   // do smoothing with size 1 (effectively no smoothing), user-supplied radius
+  TESTLOG << "do smoothing with size 1 (effectively no smoothing), user-supplied radius" << endl;
   RunTest<StandardConfig, StandardExecutor>(20, 20, 2.1, False, True, 1, False);
+}
 
+SDD_TEST(CalibrationDoSmoothingLargeUserSuppliedRadius2) {
   // do smoothing with size 100000 (effectively no smoothing), user-supplied radius
+  TESTLOG << "do smoothing with size 100000 (effectively no smoothing), user-supplied radius" << endl;
   RunTest<StandardConfig, StandardExecutor>(20, 20, 2.1, False, True, 100000,
       False);
+}
 
+SDD_TEST(CalibrationAutoSmoothingUserSuppliedRadius3) {
   // do smoothing with auto calculated size (which will be 5), user-supplied radius
+  TESTLOG << "do smoothing with auto calculated size (which will be 5), user-supplied radius" << endl;
   RunTest<StandardConfig, StandardExecutor>(20, 20, 3.1, False, True, -1, True);
+}
 
+SDD_TEST(CalibrationAutoSmoothingAutoRadius) {
   // do smoothing with auto calculated size (which will be 5), auto radius based on primary beam size
+  TESTLOG << "do smoothing with auto calculated size (which will be 5), auto radius based on primary beam size" << endl;
   RunTest<StandardConfig, StandardExecutor>(20, 20, 3.1, True, True, -1, True);
+}
+
+SDD_TEST(CalibrationNoSmoothingUserSuppliedRadius2AllFlagged) {
+  // no smoothing, user-supplied radius, all data are flagged
+  TESTLOG << "no smoothing, user-supplied radius, all data are flagged" << endl;
+  RunTest<AllFlaggedConfig, StandardExecutor>(20, 20, 2.1, False, False, -1, False);
+}
+
+SDD_TEST(CalibrationDoSmoothing2UserSuppliedRadius2AllFlagged) {
+  // do smoothing with size 2, user-supplied radius, all data are flagged
+  TESTLOG << "do smoothing with size 2, user-supplied radius, all data are flagged" << endl;
+  RunTest<AllFlaggedConfig, StandardExecutor>(20, 20, 2.1, False, True, 2, False);
+}
+
+SDD_TEST(CalibrationNoSmoothingUserSuppliedRadius2PartiallyFlagged) {
+  // no smoothing, user-supplied radius, data partially flagged
+  TESTLOG << "no smoothing, user-supplied radius, data partially flagged" << endl;
+  RunTest<PartiallyFlaggedConfig, StandardExecutor>(20, 20, 2.1, False, False, -1, False);
+}
+
+SDD_TEST(CalibrationDoSmoothing2UserSuppliedRadius2PartiallyFlagged) {
+  // do smoothing with size 2, user-supplied radius, data partially flagged
+  TESTLOG << "do smoothing with size 2, user-supplied radius, data partially flagged" << endl;
+  RunTest<PartiallyFlaggedConfig, StandardExecutor>(20, 20, 2.1, False, True, 2, False);
 }
 
 int main(int nArgs, char * args[]) {

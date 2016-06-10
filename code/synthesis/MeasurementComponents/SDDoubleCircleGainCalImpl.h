@@ -111,6 +111,14 @@ private:
       casacore::Matrix<casacore::Double> const &direction,
       casacore::Vector<casacore::Double> &gain_time,
       casacore::Cube<casacore::Float> &gain);
+  void findDataWithinRadius(casacore::Double const radius,
+      casacore::Vector<casacore::Double> const &time,
+      casacore::Cube<casacore::Float> const &data,
+      casacore::Cube<casacore::Bool> const &flag,
+      casacore::Matrix<casacore::Double> const &direction,
+      casacore::Vector<casacore::Double> &gain_time,
+      casacore::Cube<casacore::Float> &gain,
+      casacore::Cube<casacore::Bool> &gain_flag);
 };
 
 } // namespace casa END
