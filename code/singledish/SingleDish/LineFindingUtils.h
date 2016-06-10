@@ -32,6 +32,7 @@
 #include <iostream>
 #include <string>
 #include <list>
+#include <sstream>
 
 #include <casa/aipstype.h>
 #include <casa/Arrays/Vector.h>
@@ -307,6 +308,16 @@ public:
 	/* 			     std::list<std::pair<size_t,size_t>> const& in_range, */
 	/* 			     std::list<std::pair<size_t,size_t>>& out_range); */
 
+	inline static string FormatLineString(std::list<std::pair<size_t,size_t>> &line_list) {
+	  ostringstream oss;
+	  oss << "number of Lines = " << line_list.size() << endl;
+	  for (std::list<std::pair<size_t,size_t>>::iterator iter = line_list.begin();
+	       iter!=line_list.end(); ++iter) {
+	    oss << "- [ " << (*iter).first << ", " << (*iter).second << " ] (width: " << (*iter).second-(*iter).first+1 << ")" << endl;
+	  }
+	  return oss.str();
+	};
+
 private:
 	/*
 	 * Merge a line range to a list of line range taking into account the overlap.
@@ -332,6 +343,7 @@ private:
 			return 0;
 	}
 	;
+
 };
 
 } //# NAMESPACE CASA - END
