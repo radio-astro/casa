@@ -60,7 +60,7 @@ class FindContResult(basetask.Results):
                         target_ok = False
                     else:
                         new_target['spw'] = new_spwids
-                        new_target['spwsel'] = spwsel
+                        new_target['spwsel_lsrk'] = spwsel
 
             if (target_ok):
                 clean_list_pending.append(new_target)
