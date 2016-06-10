@@ -151,7 +151,7 @@ class sdimprocess_test0(unittest.TestCase,sdimprocess_unittest_base):
             self.assertTrue(False,
                             msg='The task must throw exception')
         except StandardError, e:
-            pos=str(e).find('%s exists'%(self.outfile))
+            pos=str(e).find('%s already exists'%(self.outfile))
             self.assertNotEqual(pos,-1,
                                 msg='Unexpected exception was thrown: %s'%(str(e)))        
         except Exception, e:
