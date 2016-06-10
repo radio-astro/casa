@@ -49,6 +49,14 @@ uInt DataCubeHolderBase::getVectorIndex()
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
+IPosition & DataCubeHolderBase::getCubeShape()
+{
+	return cubeShape_p;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
 IPosition & DataCubeHolderBase::getMatrixShape()
 {
 	return matrixShape_p;
@@ -116,22 +124,6 @@ Bool DataCubeMap::present(MS::PredefinedColumns key)
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-void DataCubeMap::setWindowShape(IPosition windowShape)
-{
-	windowShape_p = windowShape;
-}
-
-// -----------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------
-IPosition & DataCubeMap::getWindowShape()
-{
-	return windowShape_p;
-}
-
-// -----------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------
 void DataCubeMap::setMatrixIndex(uInt rowIndex)
 {
 	for (dataCubeMapIter_p = dataCubeMap_p.begin();dataCubeMapIter_p!= dataCubeMap_p.end();dataCubeMapIter_p++)
@@ -153,6 +145,14 @@ void DataCubeMap::setVectorIndex(uInt vectorIndex)
 	}
 
 	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+IPosition & DataCubeMap::getCubeShape()
+{
+	return dataCubeMap_p.begin()->second->getCubeShape();
 }
 
 // -----------------------------------------------------------------------

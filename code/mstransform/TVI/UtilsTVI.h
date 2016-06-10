@@ -59,6 +59,7 @@ public:
 	virtual void setVectorIndex(uInt vectorIndex) = 0;
 	uInt getMatrixIndex();
 	uInt getVectorIndex();
+	IPosition & getCubeShape();
 	IPosition & getMatrixShape();
 	IPosition & getVectorShape();
 
@@ -66,6 +67,7 @@ protected:
 
 	uInt matrixIndex_p;
 	uInt vectorIndex_p;
+	IPosition cubeShape_p;
 	IPosition matrixShape_p;
 	IPosition vectorShape_p;
 };
@@ -79,8 +81,41 @@ template <class T> class DataCubeHolder : public DataCubeHolderBase
 
 public:
 
-	DataCubeHolder(Cube<T> &dataCube) {cube_p.reference(dataCube);}
-	DataCubeHolder(const Cube<T> &dataCube) {cube_p.reference(dataCube);}
+	DataCubeHolder(Cube<T> &dataCube)
+	{
+		cube_p.reference(dataCube);
+		cubeShape_p = cube_p.shape();
+	}
+
+	DataCubeHolder(const Cube<T> &dataCube)
+	{
+		cube_p.reference(dataCube);
+		cubeShape_p = cube_p.shape();
+	}
+
+	DataCubeHolder(Matrix<T> &dataMatrix)
+	{
+		matrix_p.reference(dataMatrix);
+		matrixShape_p = matrix_p.shape();
+	}
+
+	DataCubeHolder(const Matrix<T> &dataMatrix)
+	{
+		matrix_p.reference(dataMatrix);
+		matrixShape_p = matrix_p.shape();
+	}
+
+	DataCubeHolder(Vector<T> &dataVector)
+	{
+		vector_p.reference(dataVector);
+		vectorShape_p = vector_p.shape();
+	}
+
+	DataCubeHolder(const Vector<T> &dataVector)
+	{
+		vector_p.reference(dataVector);
+		vectorShape_p = vector_p.shape();
+	}
 
 	Matrix<T> & getMatrix() {return matrix_p;}
 	Vector<T> & getVector() {return vector_p;}
@@ -130,24 +165,22 @@ public:
 
 	Bool present(MS::PredefinedColumns key);
 
-	void setWindowShape(IPosition windowShape);
-	IPosition & getWindowShape();
-
 	template <class T> Vector<T> & getVector(MS::PredefinedColumns key)
 	{
-		DataCubeHolder<T> *flagCubeHolder = static_cast< DataCubeHolder<T>* >(dataCubeMap_p[key]);
-		return flagCubeHolder->getVector();
+		DataCubeHolder<T> *dataCubeHolder = static_cast< DataCubeHolder<T>* >(dataCubeMap_p[key]);
+		return dataCubeHolder->getVector();
 	}
 
 	template <class T> Matrix<T> & getMatrix(MS::PredefinedColumns key)
 	{
-		DataCubeHolder<T> *flagCubeHolder = static_cast< DataCubeHolder<T>* >(dataCubeMap_p[key]);
-		return flagCubeHolder->getVector();
+		DataCubeHolder<T> *dataCubeHolder = static_cast< DataCubeHolder<T>* >(dataCubeMap_p[key]);
+		return dataCubeHolder->getVector();
 	}
 
 	void setMatrixIndex(uInt rowIndex);
 	void setVectorIndex(uInt vectorIndex);
 
+	IPosition & getCubeShape();
 	IPosition & getMatrixShape();
 	IPosition & getVectorShape();
 
@@ -156,7 +189,6 @@ public:
 
 protected:
 
-	IPosition windowShape_p;
 	std::map<MS::PredefinedColumns, DataCubeHolderBase*> dataCubeMap_p;
 	std::map<MS::PredefinedColumns, DataCubeHolderBase*>::iterator dataCubeMapIter_p;
 };

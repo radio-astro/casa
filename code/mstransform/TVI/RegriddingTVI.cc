@@ -583,30 +583,25 @@ void RegriddingTVI::flag(Cube<Bool>& flagCube) const
 	// Configure Transformation Engine
 	initFrequencyTransformationEngine();
 
-	// Get input and output shape
-	const IPosition &inputShape = flagCube.shape();
-	IPosition outputShape = inputShape;
-	outputShape(0) = spwOutChanNumMap_p[inputSPW];
+	// Reshape output data before passing it to the DataCubeHolder
 	flagCube.resize(getVisBufferConst()->getShape(),False);
 
 	// Gather input data
 	DataCubeMap inputData;
 	DataCubeHolder<Bool> inputFlagCubeHolder(vb->flagCube());
 	inputData.add(MS::FLAG,inputFlagCubeHolder);
-	inputData.setWindowShape(inputShape);
 
 	// Gather output data
 	DataCubeMap outputData;
 	DataCubeHolder<Bool> outputFlagCubeHolder(flagCube);
 	outputData.add(MS::FLAG,outputFlagCubeHolder);
-	outputData.setWindowShape(outputShape);
 
 	// Configure kernel
 	if (regriddingMethod_p == fftshift)
 	{
 		DataFFTKernel<Float> kernel(regriddingMethod_p);
 		RegriddingTransformEngine<Float> transformer(&kernel,&inputData,&outputData);
-		transformFreqAxis2(inputShape,transformer);
+		transformFreqAxis2(vb->getShape(),transformer);
 	}
 	else
 	{
@@ -614,7 +609,7 @@ void RegriddingTVI::flag(Cube<Bool>& flagCube) const
 		Vector<Double> *outputFreq = &(inputOutputSpwMap_p[inputSPW].second.CHAN_FREQ);
 		DataInterpolationKernel<Float> kernel(regriddingMethod_p,inputFreq,outputFreq);
 		RegriddingTransformEngine<Float> transformer(&kernel,&inputData,&outputData);
-		transformFreqAxis2(inputShape,transformer);
+		transformFreqAxis2(vb->getShape(),transformer);
 	}
 
 	return;
@@ -710,9 +705,7 @@ template<class T> void RegriddingTVI::transformDataCube(	const Cube<T> &inputVis
 	// Configure Transformation Engine
 	initFrequencyTransformationEngine();
 
-	// Get input and output shape
-	const IPosition &inputShape = inputVis.shape();
-	IPosition outputShape(inputShape(0),spwOutChanNumMap_p[inputSPW],inputShape(2));
+	// Reshape output data before passing it to the DataCubeHolder
 	outputVis.resize(getVisBufferConst()->getShape(),False);
 
 	// Gather input data
@@ -721,20 +714,18 @@ template<class T> void RegriddingTVI::transformDataCube(	const Cube<T> &inputVis
 	DataCubeHolder<T> inputVisCubeHolder(inputVis);
 	inputData.add(MS::FLAG,inputFlagCubeHolder);
 	inputData.add(MS::DATA,inputVisCubeHolder);
-	inputData.setWindowShape(inputShape);
 
 	// Gather output data
 	DataCubeMap outputData;
 	DataCubeHolder<T> outputVisCubeHolder(outputVis);
 	outputData.add(MS::DATA,outputVisCubeHolder);
-	outputData.setWindowShape(outputShape);
 
 	// Configure kernel
 	if (regriddingMethod_p == fftshift)
 	{
 		DataFFTKernel<T> kernel(regriddingMethod_p);
 		RegriddingTransformEngine<T> transformer(&kernel,&inputData,&outputData);
-		transformFreqAxis2(inputShape,transformer);
+		transformFreqAxis2(vb->getShape(),transformer);
 	}
 	else
 	{
@@ -742,7 +733,7 @@ template<class T> void RegriddingTVI::transformDataCube(	const Cube<T> &inputVis
 		Vector<Double> *outputFreq = &(inputOutputSpwMap_p[inputSPW].second.CHAN_FREQ);
 		DataInterpolationKernel<T> kernel(regriddingMethod_p,inputFreq,outputFreq);
 		RegriddingTransformEngine<T> transformer(&kernel,&inputData,&outputData);
-		transformFreqAxis2(inputShape,transformer);
+		transformFreqAxis2(vb->getShape(),transformer);
 	}
 
 	return;
@@ -833,7 +824,7 @@ template<class T> Vector<Bool>& RegriddingKernel<T>::getInputFlagVector(DataCube
 	else if (not inputDummyFlagVectorInitialized_p)
 	{
 		inputDummyFlagVectorInitialized_p = True;
-		inputDummyFlagVector_p.resize(inputData->getWindowShape()(1),False);
+		inputDummyFlagVector_p.resize(inputData->getVectorShape()(0),False);
 	}
 
 	return inputDummyFlagVector_p;
@@ -851,7 +842,7 @@ template<class T> Vector<Bool>& RegriddingKernel<T>::getOutputFlagVector(DataCub
 	else if (not outputDummyFlagVectorInitialized_p)
 	{
 		outputDummyFlagVectorInitialized_p = True;
-		outputDummyFlagVector_p.resize(outputData->getWindowShape()(1),False);
+		outputDummyFlagVector_p.resize(outputData->getVectorShape()(0),False);
 	}
 
 	return outputDummyFlagVector_p;
@@ -869,7 +860,7 @@ template<class T> Vector<T>& RegriddingKernel<T>::getInputDataVector(DataCubeMap
 	else if (not inputDummyDataVectorInitialized_p)
 	{
 		inputDummyDataVectorInitialized_p = True;
-		inputDummyDataVector_p.resize(inputData->getWindowShape()(1),False);
+		inputDummyDataVector_p.resize(inputData->getVectorShape()(0),False);
 	}
 
 	return inputDummyDataVector_p;
@@ -887,7 +878,7 @@ template<class T> Vector<T>& RegriddingKernel<T>::getOutputDataVector(DataCubeMa
 	else if (not outputDummyDataVectorInitialized_p)
 	{
 		outputDummyDataVectorInitialized_p = True;
-		outputDummyDataVector_p.resize(outputData->getWindowShape()(1),False);
+		outputDummyDataVector_p.resize(outputData->getVectorShape()(0),False);
 	}
 
 	return outputDummyDataVector_p;

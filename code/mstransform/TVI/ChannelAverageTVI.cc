@@ -163,13 +163,27 @@ void ChannelAverageTVI::flag(Cube<Bool>& flagCube) const
 	VisBuffer2 *vb = getVii()->getVisBuffer();
 	Int inputSPW = vb->spectralWindows()(0);
 
+	// Reshape output data before passing it to the DataCubeHolder
+	flagCube.resize(getVisBufferConst()->getShape(),False);
+
+	// Gather input data
+	DataCubeMap inputData;
+	DataCubeHolder<Bool> inputFlagCubeHolder(vb->flagCube());
+	inputData.add(MS::FLAG,inputFlagCubeHolder);
+
+	// Gather output data
+	DataCubeMap outputData;
+	DataCubeHolder<Bool> outputFlagCubeHolder(flagCube);
+	outputData.add(MS::FLAG,outputFlagCubeHolder);
+
 	// Configure Transformation Engine
 	LogicalANDKernel<Bool> kernel;
 	uInt width = spwChanbinMap_p[inputSPW];
-	ChannelAverageTransformEngine<Bool> transformer(&kernel,width);
+	ChannelAverageTransformEngine<Bool> transformer(&kernel,&inputData,&outputData,width);
 
 	// Transform data
-	transformFreqAxis(vb->flagCube(),flagCube,transformer);
+	transformFreqAxis2(vb->getShape(),transformer);
+
 
 	return;
 }
@@ -183,20 +197,30 @@ void ChannelAverageTVI::floatData (Cube<Float> & vis) const
 	VisBuffer2 *vb = getVii()->getVisBuffer();
 	Int inputSPW = vb->spectralWindows()(0);
 
-	// Configure auxiliary data
-	DataCubeMap auxiliaryData;
-	DataCubeHolder<Bool> flagCubeHolder(vb->flagCube());
+	// Reshape output data before passing it to the DataCubeHolder
+	vis.resize(getVisBufferConst()->getShape(),False);
+
+	// Gather input data
+	DataCubeMap inputData;
+	DataCubeHolder<Float> inputVisCubeHolder(vb->visCubeFloat());
+	DataCubeHolder<Bool> inputFlagCubeHolder(vb->flagCube());
 	DataCubeHolder<Float> weightCubeHolder(vb->weightSpectrum());
-	auxiliaryData.add(MS::FLAG,flagCubeHolder);
-	auxiliaryData.add(MS::WEIGHT_SPECTRUM,weightCubeHolder);
+	inputData.add(MS::DATA,inputVisCubeHolder);
+	inputData.add(MS::FLAG,inputFlagCubeHolder);
+	inputData.add(MS::WEIGHT_SPECTRUM,weightCubeHolder);
+
+	// Gather output data
+	DataCubeMap outputData;
+	DataCubeHolder<Float> outputVisCubeHolder(vis);
+	outputData.add(MS::DATA,outputVisCubeHolder);
 
 	// Configure Transformation Engine
 	uInt width = spwChanbinMap_p[inputSPW];
-	WeightedChannelAverageKernel<Float> kernel(&auxiliaryData);
-	ChannelAverageTransformEngine<Float> transformer(&kernel,width);
+	WeightedChannelAverageKernel<Float> kernel;
+	ChannelAverageTransformEngine<Float> transformer(&kernel,&inputData,&outputData,width);
 
 	// Transform data
-	transformFreqAxis(vb->visCubeFloat(),vis,transformer);
+	transformFreqAxis2(vb->getShape(),transformer);
 
 	return;
 }
@@ -210,26 +234,36 @@ void ChannelAverageTVI::visibilityObserved (Cube<Complex> & vis) const
 	VisBuffer2 *vb = getVii()->getVisBuffer();
 	Int inputSPW = vb->spectralWindows()(0);
 
+	// Reshape output data before passing it to the DataCubeHolder
+	vis.resize(getVisBufferConst()->getShape(),False);
+
 	// Get weightSpectrum from sigmaSpectrum
 	Cube<Float> weightSpFromSigmaSp;
 	weightSpFromSigmaSp.resize(vb->sigmaSpectrum().shape(),False);
 	weightSpFromSigmaSp = vb->sigmaSpectrum(); // = Operator makes a copy
 	arrayTransformInPlace (weightSpFromSigmaSp,sigmaToWeight);
 
-	// Configure auxiliary data
-	DataCubeMap auxiliaryData;
-	DataCubeHolder<Bool> flagCubeHolder(vb->flagCube());
+	// Gather input data
+	DataCubeMap inputData;
+	DataCubeHolder<Complex> inputVisCubeHolder(vb->visCube());
+	DataCubeHolder<Bool> inputFlagCubeHolder(vb->flagCube());
 	DataCubeHolder<Float> weightCubeHolder(weightSpFromSigmaSp);
-	auxiliaryData.add(MS::FLAG,flagCubeHolder);
-	auxiliaryData.add(MS::WEIGHT_SPECTRUM,weightCubeHolder);
+	inputData.add(MS::DATA,inputVisCubeHolder);
+	inputData.add(MS::FLAG,inputFlagCubeHolder);
+	inputData.add(MS::WEIGHT_SPECTRUM,weightCubeHolder);
+
+	// Gather output data
+	DataCubeMap outputData;
+	DataCubeHolder<Complex> outputVisCubeHolder(vis);
+	outputData.add(MS::DATA,outputVisCubeHolder);
 
 	// Configure Transformation Engine
 	uInt width = spwChanbinMap_p[inputSPW];
-	WeightedChannelAverageKernel<Complex> kernel(&auxiliaryData);
-	ChannelAverageTransformEngine<Complex> transformer(&kernel,width);
+	WeightedChannelAverageKernel<Complex> kernel;
+	ChannelAverageTransformEngine<Complex> transformer(&kernel,&inputData,&outputData,width);
 
 	// Transform data
-	transformFreqAxis(vb->visCube(),vis,transformer);
+	transformFreqAxis2(vb->getShape(),transformer);
 
 	return;
 }
@@ -243,20 +277,30 @@ void ChannelAverageTVI::visibilityCorrected (Cube<Complex> & vis) const
 	VisBuffer2 *vb = getVii()->getVisBuffer();
 	Int inputSPW = vb->spectralWindows()(0);
 
-	// Configure auxiliary data
-	DataCubeMap auxiliaryData;
-	DataCubeHolder<Bool> flagCubeHolder(vb->flagCube());
+	// Reshape output data before passing it to the DataCubeHolder
+	vis.resize(getVisBufferConst()->getShape(),False);
+
+	// Gather input data
+	DataCubeMap inputData;
+	DataCubeHolder<Complex> inputVisCubeHolder(vb->visCubeCorrected());
+	DataCubeHolder<Bool> inputFlagCubeHolder(vb->flagCube());
 	DataCubeHolder<Float> weightCubeHolder(vb->weightSpectrum());
-	auxiliaryData.add(MS::FLAG,flagCubeHolder);
-	auxiliaryData.add(MS::WEIGHT_SPECTRUM,weightCubeHolder);
+	inputData.add(MS::DATA,inputVisCubeHolder);
+	inputData.add(MS::FLAG,inputFlagCubeHolder);
+	inputData.add(MS::WEIGHT_SPECTRUM,weightCubeHolder);
+
+	// Gather output data
+	DataCubeMap outputData;
+	DataCubeHolder<Complex> outputVisCubeHolder(vis);
+	outputData.add(MS::DATA,outputVisCubeHolder);
 
 	// Configure Transformation Engine
 	uInt width = spwChanbinMap_p[inputSPW];
-	WeightedChannelAverageKernel<Complex> kernel(&auxiliaryData);
-	ChannelAverageTransformEngine<Complex> transformer(&kernel,width);
+	WeightedChannelAverageKernel<Complex> kernel;
+	ChannelAverageTransformEngine<Complex> transformer(&kernel,&inputData,&outputData,width);
 
 	// Transform data
-	transformFreqAxis(vb->visCubeCorrected(),vis,transformer);
+	transformFreqAxis2(vb->getShape(),transformer);
 
 	return;
 }
@@ -270,20 +314,30 @@ void ChannelAverageTVI::visibilityModel (Cube<Complex> & vis) const
 	VisBuffer2 *vb = getVii()->getVisBuffer();
 	Int inputSPW = vb->spectralWindows()(0);
 
-	// Configure auxiliary data
-	DataCubeMap auxiliaryData;
-	DataCubeHolder<Bool> flagCubeHolder(vb->flagCube());
+	// Reshape output data before passing it to the DataCubeHolder
+	vis.resize(getVisBufferConst()->getShape(),False);
+
+	// Gather input data
+	DataCubeMap inputData;
+	DataCubeHolder<Complex> inputVisCubeHolder(vb->visCubeModel());
+	DataCubeHolder<Bool> inputFlagCubeHolder(vb->flagCube());
 	DataCubeHolder<Float> weightCubeHolder(vb->weightSpectrum());
-	auxiliaryData.add(MS::FLAG,flagCubeHolder);
-	auxiliaryData.add(MS::WEIGHT_SPECTRUM,weightCubeHolder);
+	inputData.add(MS::DATA,inputVisCubeHolder);
+	inputData.add(MS::FLAG,inputFlagCubeHolder);
+	inputData.add(MS::WEIGHT_SPECTRUM,weightCubeHolder);
+
+	// Gather output data
+	DataCubeMap outputData;
+	DataCubeHolder<Complex> outputVisCubeHolder(vis);
+	outputData.add(MS::DATA,outputVisCubeHolder);
 
 	// Configure Transformation Engine
 	uInt width = spwChanbinMap_p[inputSPW];
-	WeightedChannelAverageKernel<Complex> kernel(&auxiliaryData);
-	ChannelAverageTransformEngine<Complex> transformer(&kernel,width);
+	WeightedChannelAverageKernel<Complex> kernel;
+	ChannelAverageTransformEngine<Complex> transformer(&kernel,&inputData,&outputData,width);
 
 	// Transform data
-	transformFreqAxis(vb->visCubeModel(),vis,transformer);
+	transformFreqAxis2(vb->getShape(),transformer);\
 
 	return;
 }
@@ -297,18 +351,28 @@ void ChannelAverageTVI::weightSpectrum(Cube<Float> &weightSp) const
 	VisBuffer2 *vb = getVii()->getVisBuffer();
 	Int inputSPW = vb->spectralWindows()(0);
 
-	// Configure auxiliary data
-	DataCubeMap auxiliaryData;
-	DataCubeHolder<Bool> flagCubeHolder(vb->flagCube());
-	auxiliaryData.add(MS::FLAG,flagCubeHolder);
+	// Reshape output data before passing it to the DataCubeHolder
+	weightSp.resize(getVisBufferConst()->getShape(),False);
+
+	// Gather input data
+	DataCubeMap inputData;
+	DataCubeHolder<Float> inputWeightCubeHolder(vb->weightSpectrum());
+	DataCubeHolder<Bool> inputFlagCubeHolder(vb->flagCube());
+	inputData.add(MS::DATA,inputWeightCubeHolder);
+	inputData.add(MS::FLAG,inputFlagCubeHolder);
+
+	// Gather output data
+	DataCubeMap outputData;
+	DataCubeHolder<Float> outputWeightCubeHolder(weightSp);
+	outputData.add(MS::DATA,outputWeightCubeHolder);
 
 	// Configure Transformation Engine
-	ChannelAccumulationKernel<Float> kernel(&auxiliaryData);
 	uInt width = spwChanbinMap_p[inputSPW];
-	ChannelAverageTransformEngine<Float> transformer(&kernel,width);
+	ChannelAccumulationKernel<Float> kernel;
+	ChannelAverageTransformEngine<Float> transformer(&kernel,&inputData,&outputData,width);
 
 	// Transform data
-	transformFreqAxis(vb->weightSpectrum(),weightSp,transformer);
+	transformFreqAxis2(vb->getShape(),transformer);
 
 	return;
 }
@@ -322,24 +386,34 @@ void ChannelAverageTVI::sigmaSpectrum(Cube<Float> &sigmaSp) const
 	VisBuffer2 *vb = getVii()->getVisBuffer();
 	Int inputSPW = vb->spectralWindows()(0);
 
+	// Reshape output data before passing it to the DataCubeHolder
+	sigmaSp.resize(getVisBufferConst()->getShape(),False);
+
 	// Get weightSpectrum from sigmaSpectrum
 	Cube<Float> weightSpFromSigmaSp;
 	weightSpFromSigmaSp.resize(vb->sigmaSpectrum().shape(),False);
 	weightSpFromSigmaSp = vb->sigmaSpectrum(); // = Operator makes a copy
 	arrayTransformInPlace (weightSpFromSigmaSp,sigmaToWeight);
 
-	// Configure auxiliary data
-	DataCubeMap auxiliaryData;
-	DataCubeHolder<Bool> flagCubeHolder(vb->flagCube());
-	auxiliaryData.add(MS::FLAG,flagCubeHolder);
+	// Gather input data
+	DataCubeMap inputData;
+	DataCubeHolder<Float> inputWeightCubeHolder(weightSpFromSigmaSp);
+	DataCubeHolder<Bool> inputFlagCubeHolder(vb->flagCube());
+	inputData.add(MS::DATA,inputWeightCubeHolder);
+	inputData.add(MS::FLAG,inputFlagCubeHolder);
+
+	// Gather output data
+	DataCubeMap outputData;
+	DataCubeHolder<Float> outputWeightCubeHolder(sigmaSp);
+	outputData.add(MS::DATA,outputWeightCubeHolder);
 
 	// Configure Transformation Engine
 	uInt width = spwChanbinMap_p[inputSPW];
-	ChannelAccumulationKernel<Float> kernel(&auxiliaryData);
-	ChannelAverageTransformEngine<Float> transformer(&kernel,width);
+	ChannelAccumulationKernel<Float> kernel;
+	ChannelAverageTransformEngine<Float> transformer(&kernel,&inputData,&outputData,width);
 
 	// Transform data
-	transformFreqAxis(weightSpFromSigmaSp,sigmaSp,transformer);
+	transformFreqAxis2(vb->getShape(),transformer);
 
 	// Transform back from weight format to sigma format
 	arrayTransformInPlace (sigmaSp,weightToSigma);
@@ -360,15 +434,25 @@ Vector<Double> ChannelAverageTVI::getFrequencies (	Double time,
 																spectralWindowId,msId);
 
 	// Produce output (transformed) frequencies
-	Vector<Double> outputFrecuencies(spwOutChanNumMap_p[spectralWindowId]);
+	Vector<Double> outputFrecuencies(spwOutChanNumMap_p[spectralWindowId],0);
+
+	// Gather input data
+	DataCubeMap inputData;
+	DataCubeHolder<Double> inputFrecuenciesHolder(inputFrequencies);
+	inputData.add(MS::DATA,inputFrecuenciesHolder);
+
+	// Gather output data
+	DataCubeMap outputData;
+	DataCubeHolder<Double> outputFrecuenciesHolder(outputFrecuencies);
+	outputData.add(MS::DATA,outputFrecuenciesHolder);
 
 	// Configure Transformation Engine
 	PlainChannelAverageKernel<Double> kernel;
 	uInt width = spwChanbinMap_p[spectralWindowId];
-	ChannelAverageTransformEngine<Double> transformer(&(kernel),width);
+	ChannelAverageTransformEngine<Double> transformer(&kernel,&inputData,&outputData,width);
 
 	// Transform data
-	transformer.transform(inputFrequencies,outputFrecuencies);
+	transformer.transform();
 
 	return outputFrecuencies;
 }
@@ -486,37 +570,43 @@ vi::ViImplementation2 * ChannelAverageTVIFactory::createVi() const
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-template<class T> void ChannelAverageTransformEngine<T>::setRowIndex(uInt row)
+template<class T> ChannelAverageTransformEngine<T>::ChannelAverageTransformEngine(	ChannelAverageKernel<T> *kernel,
+																					DataCubeMap *inputData,
+																					DataCubeMap *outputData,
+																					uInt width):
+																					FreqAxisTransformEngine2<T>(inputData,
+																												outputData)
 {
-	chanAvgKernel_p->setRowIndex(row);
+	width_p = width;
+	chanAvgKernel_p = kernel;
 }
 
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-template<class T> void ChannelAverageTransformEngine<T>::setCorrIndex(uInt corr)
+template<class T> void ChannelAverageTransformEngine<T>::transform()
 {
-	chanAvgKernel_p->setCorrIndex(corr);
-}
+	uInt startChan = 0;
+	uInt outChanIndex = 0;
+	uInt inputSize = inputData_p->getVectorShape()(0);
+	uInt outputSize = outputData_p->getVectorShape()(0);
+	uInt tail = inputSize % width_p;
+	uInt limit = inputSize - tail;
+	while (startChan < limit)
+	{
+		chanAvgKernel_p->kernel(inputData_p,outputData_p,
+								startChan,outChanIndex,width_p);
+		startChan += width_p;
+		outChanIndex += 1;
+	}
 
-//////////////////////////////////////////////////////////////////////////
-// ChannelAverageKernel class
-//////////////////////////////////////////////////////////////////////////
+	if (tail and (outChanIndex <= outputSize - 1) )
+	{
+		chanAvgKernel_p->kernel(inputData_p,outputData_p,
+								startChan,outChanIndex,tail);
+	}
 
-// -----------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------
-template<class T> void ChannelAverageKernel<T>::setRowIndex(uInt row)
-{
-	if (auxiliaryData_p != NULL) auxiliaryData_p->setMatrixIndex(row);
-}
-
-// -----------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------
-template<class T> void ChannelAverageKernel<T>::setCorrIndex(uInt corr)
-{
-	if (auxiliaryData_p != NULL) auxiliaryData_p->setVectorIndex(corr);
+	return;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -526,20 +616,15 @@ template<class T> void ChannelAverageKernel<T>::setCorrIndex(uInt corr)
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-template<class T> PlainChannelAverageKernel<T>::PlainChannelAverageKernel(DataCubeMap *auxiliaryData)
-{
-	auxiliaryData_p = auxiliaryData;
-}
-
-// -----------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------
-template<class T> void PlainChannelAverageKernel<T>::kernel(	Vector<T> &inputVector,
-																Vector<T> &outputVector,
+template<class T> void PlainChannelAverageKernel<T>::kernel(	DataCubeMap *inputData,
+																DataCubeMap *outputData,
 																uInt startInputPos,
 																uInt outputPos,
 																uInt width)
 {
+	Vector<T> &inputVector = inputData->getVector<T>(MS::DATA);
+	Vector<T> &outputVector = outputData->getVector<T>(MS::DATA);
+
 	uInt pos = startInputPos + 1;
 	uInt counts = 1;
 	T avg = inputVector(startInputPos);
@@ -567,16 +652,8 @@ template<class T> void PlainChannelAverageKernel<T>::kernel(	Vector<T> &inputVec
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-template<class T> WeightedChannelAverageKernel<T>::WeightedChannelAverageKernel(DataCubeMap *auxiliaryData)
-{
-	auxiliaryData_p = auxiliaryData;
-}
-
-// -----------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------
-template<class T> void WeightedChannelAverageKernel<T>::kernel(	Vector<T> &inputVector,
-																Vector<T> &outputVector,
+template<class T> void WeightedChannelAverageKernel<T>::kernel(	DataCubeMap *inputData,
+																DataCubeMap *outputData,
 																uInt startInputPos,
 																uInt outputPos,
 																uInt width)
@@ -584,9 +661,10 @@ template<class T> void WeightedChannelAverageKernel<T>::kernel(	Vector<T> &input
 	T avg = 0;
 	T normalization = 0;
 	uInt inputPos = 0;
-	DataCubeMap &auxiliaryData = *auxiliaryData_p;
-	Vector<Bool> &inputFlagVector = auxiliaryData.getVector<Bool>(MS::FLAG);
-	Vector<Float> &inputWeightVector = auxiliaryData.getVector<Float>(MS::WEIGHT_SPECTRUM);
+	Vector<T> &inputVector = inputData->getVector<T>(MS::DATA);
+	Vector<Bool> &inputFlagVector = inputData->getVector<Bool>(MS::FLAG);
+	Vector<Float> &inputWeightVector = inputData->getVector<Float>(MS::WEIGHT_SPECTRUM);
+	Vector<T> &outputVector = outputData->getVector<T>(MS::DATA);
 	Bool accumulatorFlag = inputFlagVector(startInputPos);
 
 	for (uInt sample_i=0;sample_i<width;sample_i++)
@@ -633,20 +711,15 @@ template<class T> void WeightedChannelAverageKernel<T>::kernel(	Vector<T> &input
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-template<class T> LogicalANDKernel<T>::LogicalANDKernel(DataCubeMap *auxiliaryData)
-{
-	auxiliaryData_p = auxiliaryData;
-}
-
-// -----------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------
-template<class T> void LogicalANDKernel<T>::kernel(	Vector<T> &inputVector,
-													Vector<T> &outputVector,
+template<class T> void LogicalANDKernel<T>::kernel(	DataCubeMap *inputData,
+													DataCubeMap *outputData,
 													uInt startInputPos,
 													uInt outputPos,
 													uInt width)
 {
+	Vector<Bool> &inputVector = inputData->getVector<Bool>(MS::FLAG);
+	Vector<Bool> &outputVector = outputData->getVector<Bool>(MS::FLAG);
+
 	Bool outputFlag = True;
 	for (uInt sample_i=0;sample_i<width;sample_i++)
 	{
@@ -669,24 +742,17 @@ template<class T> void LogicalANDKernel<T>::kernel(	Vector<T> &inputVector,
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-template<class T> ChannelAccumulationKernel<T>::ChannelAccumulationKernel(DataCubeMap *auxiliaryData)
-{
-	auxiliaryData_p = auxiliaryData;
-}
-
-// -----------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------
-template<class T> void ChannelAccumulationKernel<T>::kernel(	Vector<T> &inputVector,
-																Vector<T> &outputVector,
+template<class T> void ChannelAccumulationKernel<T>::kernel(	DataCubeMap *inputData,
+																DataCubeMap *outputData,
 																uInt startInputPos,
 																uInt outputPos,
 																uInt width)
 {
 	T acc = 0;
 	uInt inputPos = 0;
-	DataCubeMap &auxiliaryData = *auxiliaryData_p;
-	Vector<Bool> &inputFlagVector = auxiliaryData.getVector<Bool>(MS::FLAG);
+	Vector<T> &inputVector = inputData->getVector<T>(MS::DATA);
+	Vector<Bool> &inputFlagVector = inputData->getVector<Bool>(MS::FLAG);
+	Vector<T> &outputVector = outputData->getVector<T>(MS::DATA);
 	Bool accumulatorFlag = inputFlagVector(startInputPos);
 
 	for (uInt sample_i=0;sample_i<width;sample_i++)
