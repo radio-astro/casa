@@ -160,7 +160,7 @@ def weakbp(vis, caltable, context=None, RefAntOutput=None, ktypecaltable=None, b
         interp = ''
         return interp
 
-    LOG.warning("Solutions for all channels not obtained.  Using channel pre-averaging bandpass calibration heuristic.")
+    LOG.warning("Solutions for all channels not obtained.  Using weak bandpass calibration heuristic.")
     cpa = 2  # Channel pre-averaging
     while(largechunk == True):
 
@@ -168,7 +168,7 @@ def weakbp(vis, caltable, context=None, RefAntOutput=None, ktypecaltable=None, b
         removeRows(caltable, spwids)
         solint = 'inf,'+str(cpa)+'ch'
         LOG.warning("Largest contiguous set of channels with no BP solution is greater than maximum allowable 1/32 fractional bandwidth for spw="+','.join([str(i) for i in spwids])+"."+ "  Using solint=" + solint)
-        LOG.info('Channel pre-averaging bandpass calibration heuristic.  Using solint='+solint)
+        LOG.info('Weak bandpass calibration heuristic.  Using solint='+solint)
         bpjob = do_bandpass(vis, caltable, context=context, RefAntOutput=RefAntOutput, spw=','.join([str(i) for i in spwids]),
                             ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse, solint=solint, append=True)
         bpjob.execute()
