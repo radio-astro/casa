@@ -177,7 +177,7 @@ namespace casa{
   RigidVector<Int, 3> CFBuffer::setParams(const Int& inu, const Int& iw, const Int& /*ipx*/, const Int& /*ipy*/,
 					  CoordinateSystem& cs, Float& sampling,
 					  Int& xSupport, Int& ySupport, 
-					  const Double& freqValue, const Double& wValue, 
+					  const Double& freqValue, const Double& wValue,
 					  const Int& muellerElement,
 					  const String& fileName,
 					  const Double& conjFreq,
@@ -203,7 +203,7 @@ namespace casa{
     Vector<Double> val; val.resize(1);val(0)=freqValues_p(ndx(0));
     spCS.setReferenceValue(val); val.resize();
     val = spCS.increment();
-    val = cfCells_p(ndx(0),ndx(1),ndx(2))->freqIncr_p;
+    // val = cfCells_p(ndx(0),ndx(1),ndx(2))->freqIncr_p;
     spCS.setIncrement(val);
     cs.replaceCoordinate(spCS,index);
 
