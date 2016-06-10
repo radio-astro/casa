@@ -174,7 +174,7 @@ def get_plot(plots, field, spw, i, colname):
                             </tr>
                             <tr>
                                <th>image file</th>
-                               <td colspan="2">${info_dict[(field,str(spw),pol,'image name')]}</td>
+                               <td colspan="2">${info_dict[(field,str(spw),pol,'image name')].replace('.pbcor','')}</td>
                             </tr>
                             %endif
                         %endfor

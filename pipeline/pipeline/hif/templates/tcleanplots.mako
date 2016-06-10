@@ -4,12 +4,12 @@ import os
 
 columns = {'cleanmask' : 'Clean Mask',
 		   'flux' : 'Primary Beam',
-		   'image' : 'Image',
+		   'pbcorimage' : 'Image',
 		   'residual' : 'Residual',
 		   'model' : 'Final Model',
 		   'psf' : 'PSF'}
 
-colorder = ['image', 'residual', 'cleanmask']
+colorder = ['pbcorimage', 'residual', 'cleanmask']
 
 def get_plot(plots, field, spw, i, colname):
 	try:
@@ -73,7 +73,7 @@ $(document).ready(function() {
 	                <a class="fancybox"
 	                   href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
 	                   title="Iteration ${i}: ${columns[colname]}"
-	                   % if colname in ['image', 'residual']:
+	                   % if colname in ['pbcorimage', 'residual']:
 	                   rel="iteration"                   
 	                   % endif	
 	                   data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">

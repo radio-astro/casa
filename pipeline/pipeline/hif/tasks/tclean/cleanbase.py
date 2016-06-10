@@ -364,16 +364,15 @@ class CleanBase(basetask.StandardTaskTemplate):
                          type='model', iter=iter, multiterm=result.multiterm)
             result.set_model(iter=iter, image=model_name)
 
+            # Always set info on the uncorrected image for plotting
+            set_miscinfo(name=image_name, spw=inputs.spw, field=inputs.field,
+                         type='image', iter=iter, multiterm=result.multiterm)
             # Store the image.
-            # TODO: The change for cubes is just temporary for C4R1 !
-            #       This needs to be done properly later.
-            if (pb_corrected and (pbcor_image_name.find('cube') == -1)):
+            if (pb_corrected):
                 set_miscinfo(name=pbcor_image_name, spw=inputs.spw, field=inputs.field,
-                             type='image', iter=iter, multiterm=result.multiterm)
+                             type='pbcorimage', iter=iter, multiterm=result.multiterm)
                 result.set_image(iter=iter, image=pbcor_image_name)
             else:
-                set_miscinfo(name=image_name, spw=inputs.spw, field=inputs.field,
-                             type='image', iter=iter, multiterm=result.multiterm)
                 result.set_image(iter=iter, image=image_name)
 
         # Store the residual.

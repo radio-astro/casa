@@ -56,8 +56,15 @@ class CleanSummary(object):
                         collapseFunction = 'max'
                     else:
                         collapseFunction = 'mean'
+                    # PB corrected
+                    image_name = r.iterations[i]['image']+extension
                     plot_wrappers.append(displays.SkyDisplay().plot(self.context,
-                      r.iterations[i]['image']+extension, reportdir=stage_dir,
+                      image_name, reportdir=stage_dir,
+                      intent=r.intent, collapseFunction=collapseFunction))
+                    # Non PB corrected
+                    image_name = image_name.replace('.pbcor', '')
+                    plot_wrappers.append(displays.SkyDisplay().plot(self.context,
+                      image_name, reportdir=stage_dir,
                       intent=r.intent, collapseFunction=collapseFunction))
 
                 # residual for this iteration
