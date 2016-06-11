@@ -42,15 +42,16 @@
 
 //
 // <summary> defines interface for the storage for convolution functions </summary>
-
+// <use visibility=export>
+//
 // <prerequisite>
 // </prerequisite>
 //
 // <etymology> 
 //
-//  CFBuffer is basic in-memory storage for convolution functions
-//  as a function of polarization and frequency at a particular value
-//  of Parallactic Angle.
+//  CFBuffer is the basic in-memory storage for convolution functions
+//  as a function of polarization, W-value and frequency at a
+//  particular value of Parallactic Angle and baseline type.
 //
 //</etymology>
 //
@@ -64,13 +65,8 @@
 // appropriate one, depending on the Time/PA value, polarization and
 // frequency of the data in the <linkto
 // class=VisBuffer2>VisBuffer2</linkto>, is supplied to the <linkto
-// class=VisibilityResampler>VisibilityResampler</linkto> object of
+// class=VisibilityResampler>VisibilityResampler</linkto> object for
 // re-sampling the data onto a grid (or vice versa).
-//
-// This buffer holds the convolution functions for the required range
-// of frequencies and polarizations at a particular Parallactic Angle
-// (or time), for one W-value and for a single baseline (antenna
-// pair).
 //
 // Conceptually, this object holds the convolution functions
 // parameterized by the properties of the electromagnetic radiation
@@ -95,7 +91,6 @@
 //
 // </motivation>
 //
-
 
 using namespace std;
 using namespace casa::vi;
