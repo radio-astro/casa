@@ -308,8 +308,8 @@ class CleanBase(basetask.StandardTaskTemplate):
                 LOG.warning('tclean reached niter limit of %d for %s / spw%s !' % (tclean_result['niter'], utils.dequote(inputs.field), inputs.spw))
 
             if (tclean_result['stopcode'] == 5):
-                result.error = 'tclean diverged'
-                LOG.warning('tclean diverged')
+                result.error = CleanBaseError('tclean diverged. Field: %s SPW: %s' % (inputs.field, inputs.spw), 'tclean diverged')
+                LOG.warning('tclean diverged. Field: %s SPW: %s' % (inputs.field, inputs.spw))
 
         # Create PB for single fields since it is not auto-generated for
         # gridder='standard'.
@@ -431,3 +431,13 @@ def set_miscinfo(name, spw=None, field=None, type=None, iter=None, multiterm=Non
             if iter is not None:
                 info['iter'] = iter
             image.setmiscinfo(info)
+
+
+class CleanBaseError(object):
+
+    '''Clean Base Error Class to transfer detailed messages for weblog
+       reporting.'''
+
+    def __init__(self, longmsg='', shortmsg=''):
+        self.longmsg = longmsg
+        self.shortmsg= shortmsg

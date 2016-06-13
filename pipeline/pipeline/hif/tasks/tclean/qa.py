@@ -24,7 +24,7 @@ class TcleanQAHandler(pqa.QAResultHandler):
         imageScorer = scorers.erfScorer(1.0, 5.0)
 
         if (result.error != ''):
-            result.qa.pool[:] = [pqa.QAScore(0.0, longmsg=result.error, shortmsg=result.error)]
+            result.qa.pool[:] = [pqa.QAScore(0.0, longmsg=result.error.longmsg, shortmsg=result.error.shortmsg)]
         else:
             qaTool = casac.quanta()
             try:
@@ -36,9 +36,9 @@ class TcleanQAHandler(pqa.QAResultHandler):
                 LOG.warning('Exception scoring imaging result by RMS: %s. Setting score to -0.1.' % (e))
                 score = -0.1
             if (numpy.isnan(score)):
-                result.qa.pool[:] = [pqa.QAScore(0.0, longmsg='Cleaning diverged', shortmsg='Cleaning diverged')]
+                result.qa.pool[:] = [pqa.QAScore(0.0, longmsg='Cleaning diverged. Field: %s SPW: %s' % (result.inputs['field'], result.inputs['spw']), shortmsg='Cleaning diverged')]
             else:
-                result.qa.pool[:] = [pqa.QAScore(score, longmsg='RMS outside mask vs. threshold', shortmsg='RMS vs. threshold')]
+                result.qa.pool[:] = [pqa.QAScore(score, longmsg='RMS outside mask vs. threshold. Field: %s SPW: %s' % (result.inputs['field'], result.inputs['spw']), shortmsg='RMS vs. threshold')]
 
 
 class TcleanListQAHandler(pqa.QAResultHandler):
