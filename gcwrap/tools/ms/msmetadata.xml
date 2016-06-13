@@ -828,7 +828,7 @@ windows in the dataset and close the tool.
             </input>
             <returns type="any"/>
             <description>
-                Get an array of the unique fields for the specified spectral window.
+                Get an array of the unique fields for the specified source.
             </description>
             <example>
     msmd.open("my.ms")
@@ -836,6 +836,28 @@ windows in the dataset and close the tool.
     field_names = msmd.fieldsforsource(1, True)
     # get the field IDs for source ID 1
     field_IDs = msmd.fieldsforsource(1, False)
+    msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="fieldsforsources">
+            <shortdescription>Get a map of source IDs to fields.</shortdescription>
+             <input>
+                <param type="bool" direction="in" name="asnames">
+                    <description>If true, return the field names. If false, return the zero-based field IDs.</description>
+                    <value>false</value>
+                </param>
+            </input>
+            <returns type="record"/>
+            <description>
+                Get a map of source IDs to fields. The keys (source IDs) will be strings.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the source to field name map
+    sources_to_fields = msmd.fieldsforsources(True)
+    # access the field names for source 1
+    field = sources_to_fields["1"]
     msmd.done()
             </example>
         </method>

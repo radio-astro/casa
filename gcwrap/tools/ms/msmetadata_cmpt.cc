@@ -656,7 +656,7 @@ record* msmetadata::exposuretime(
 					<< " polarization IDs which are " << polids
 					<< ". You must specify one of those."
 					<< LogIO::POST;
-				return 0;
+				return nullptr;
 			}
 		}
 		std::map<std::pair<uInt COMMA uInt> COMMA uInt> ddidMap = _msmd->getSpwIDPolIDToDataDescIDMap();
@@ -680,7 +680,7 @@ record* msmetadata::exposuretime(
 
 		return fromRecord(QuantumHolder(map2[scan]).toRecord());
 	)
-	return 0;
+	return nullptr;
 }
 
 vector<int> msmetadata::fdmspws() {
@@ -836,10 +836,10 @@ variant* msmetadata::fieldsforscans(
 	return nullptr;
 }
 
-variant* msmetadata::fieldsforsource(const int sourceID, const bool asnames) {
+variant* msmetadata::fieldsforsource(int sourceID, bool asnames) {
 	_FUNC(
 		if (asnames) {
-			std::map<Int COMMA std::set<String> > res = _msmd->getFieldNamesForSourceMap();
+			auto res = _msmd->getFieldNamesForSourceMap();
 			if (res.find(sourceID) == res.end()) {
 				return new variant(vector<string>());
 			}
@@ -850,7 +850,7 @@ variant* msmetadata::fieldsforsource(const int sourceID, const bool asnames) {
 			}
 		}
 		else {
-			std::map<Int COMMA std::set<Int> > res = _msmd->getFieldsForSourceMap();
+			auto res = _msmd->getFieldsForSourceMap();
 			if (res.find(sourceID) == res.end()) {
 				return new variant(vector<int>());
 			}
@@ -861,7 +861,31 @@ variant* msmetadata::fieldsforsource(const int sourceID, const bool asnames) {
 			}
 		}
 	)
-	return 0;
+	return nullptr;
+}
+
+record* msmetadata::fieldsforsources(bool asnames) {
+    _FUNC(
+        auto_ptr<record> ret(new record());
+        if (asnames) {
+            auto mymap = _msmd->getFieldNamesForSourceMap();
+            for (const auto& p: mymap) {
+                ret->insert(
+                    String::toString(p.first), _setStringToVectorString(p.second)
+                );
+            }
+        }
+        else {
+            auto mymap = _msmd->getFieldsForSourceMap();
+            for (const auto& p: mymap) {
+                ret->insert(
+                    String::toString(p.first), _setIntToVectorInt(p.second)
+                );
+            }
+        }
+        return ret.release();
+    )
+    return nullptr;
 }
 
 variant* msmetadata::fieldsforspw(const int spw, const bool asnames) {

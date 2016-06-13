@@ -1199,8 +1199,10 @@ class msmd_test(unittest.TestCase):
         self.assertRaises(Exception, md.namesforspws, [0,85])
 
     def test_fieldsforsource(self):
-        """Test fieldsforsource()"""
+        """Test fieldsforsource() and fieldsforsources()"""
         md = self.md
+        mynames = self.md.fieldsforsources(True)
+        myids = self.md.fieldsforsources(False)
         names = [
             "3C279", "J1337-129", "Titan",
             "J1625-254", "V866 Sco", "RNO 90"
@@ -1211,11 +1213,17 @@ class msmd_test(unittest.TestCase):
                 self.assertTrue(len(res) == 0)
             else:
                 self.assertTrue(len(res) == 1 and res[0] == i)
+                self.assertTrue(
+                    len(myids[str(i)]) == 1 and myids[str(i)][0] == i
+                )
             res2 = md.fieldsforsource(i, True)
             if i == 6:
                 self.assertTrue(len(res2) == 0)
             else:
-                self.assertTrue(len(res2) == 1 and res2[0] == names[i])
+                self.assertTrue(
+                    len(mynames[str(i)]) == 1
+                    and mynames[str(i)][0] == names[i]
+                )
 
     def test_pointingdirection(self):
         """Test pointingdirection(), CAS-5878"""
