@@ -79,7 +79,6 @@ fixture = datadir + 'regression/unittest/MSMetaData/MSMetaData.ms'
 
 writeable = datadir + 'regression/unittest/MSMetaData/checker.ms'
 
-
 def near(a, b, epsilon):
     return abs((a-b)/max(a,b)) <= epsilon
 
@@ -515,8 +514,9 @@ class msmd_test(unittest.TestCase):
         self.assertTrue((self.md.scannumbers()==expec).all())
         
     def test_scansforfield(self):
-        """Test scansforfield()"""
+        """Test scansforfield() and scansforfields()"""
         names = ["3C279", "J1337-129", "Titan", "J1625-254", "V866 Sco", "RNO 90"]
+        mymap = self.md.scansforfields(0, 0)
         for i in range(self.md.nfields()):
             if i == 0:
                 expec = numpy.array([1, 2, 3, 4])
@@ -536,7 +536,8 @@ class msmd_test(unittest.TestCase):
             got = self.md.scansforfield(i)
             self.assertTrue((got==expec).all())
             got = self.md.scansforfield(names[i])
-            self.assertTrue((got==expec).all())
+            self.assertTrue((got == expec).all())
+            self.assertTrue((mymap[str(i)] == expec).all())
     
     def test_scansforintent(self):
         """Test scansforintent()"""

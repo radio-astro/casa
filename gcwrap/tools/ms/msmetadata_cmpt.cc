@@ -1387,6 +1387,31 @@ vector<int> msmetadata::scansforfield(
 	return vector<int>();
 }
 
+record* msmetadata::scansforfields(int obsid, int arrayid) {
+    _FUNC(
+        _checkArrayId(arrayid, True);
+        _checkObsId(obsid, True);
+        auto fieldToScans = _msmd->getFieldToScansMap();
+        std::auto_ptr<record> ret(new record());
+        uInt n = fieldToScans.size();
+        ArrayKey ak;
+        ak.obsID = obsid;
+        ak.arrayID = arrayid;
+        for (uInt i=0; i<n; ++i) {
+            auto scans = filter(fieldToScans[i], ak);
+            std::set<uInt> scanNums;
+            for (const auto& scan: scans) {
+                scanNums.insert(scan.scan);
+            }
+            ret->insert(
+                String::toString(i), _setUIntToVectorInt(scanNums)
+            );
+        }
+        return ret.release();
+    )
+    return nullptr;
+}
+
 vector<int> msmetadata::scansforintent(const string& intent, int obsid, int arrayid) {
 	_FUNC(
 		_checkObsId(obsid, False);
@@ -1436,7 +1461,6 @@ record* msmetadata::scansforspws(int obsid, int arrayid) {
 	    ak.obsID = obsid;
 	    ak.arrayID = arrayid;
         for (uInt i=0; i<n; ++i) {
-		    std::set<ScanKey> allScans;
 		    auto scans = filter(spwToScans[i], ak);
             std::set<uInt> scanNums;
             for (const auto& scan: scans) {
