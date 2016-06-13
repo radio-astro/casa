@@ -342,6 +342,7 @@ protected:
   Int indexTelescope(const String & compareTelescope,
                      const Int &compareAntenna=-1,
 		     const Int &compareFeed=-1) const;
+  MDirection convertDir(const VisBuffer& vb, const MDirection& inDir, const MDirection::Types outType);
 
 };
  
