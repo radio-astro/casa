@@ -406,7 +406,7 @@ class TcleanHeuristics(object):
             total_topo_freq_ranges.append((min_frequency, max_frequency))
 
             if (inputs.spwsel_lsrk.has_key('spw%s' % (spwid))):
-                if (inputs.spwsel_lsrk['spw%s' % (spwid)] != ''):
+                if (inputs.spwsel_lsrk['spw%s' % (spwid)] not in ['', 'NONE']):
                     freq_selection, refer = inputs.spwsel_lsrk['spw%s' % (spwid)].split()
                     if (refer == 'LSRK'):
                         # Convert to TOPO
