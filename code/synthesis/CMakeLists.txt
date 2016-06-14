@@ -854,6 +854,7 @@ casa_add_google_test( MODULES mstransform SOURCES ../mstransform/TVI/test/tPhase
 casa_add_google_test( NOT_ON_APPLE MODULES mstransform SOURCES ../mstransform/TVI/test/tRegriddingTVI.cc  ../mstransform/TVI/test/TestUtilsTVI.cc)
 
 casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tVisVectorJonesMueller_GT.cc )
+casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tVisCal_GT.cc )
 casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tSolveDataBuffer_GT.cc )
 
 casa_add_google_test( MODULES synthesis SOURCES ImagerObjects/test/SDMaskHandler_GTest.cc )
