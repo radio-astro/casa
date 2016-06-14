@@ -33,6 +33,7 @@
 #include <synthesis/MeasurementComponents/EJones.h>
 #include <synthesis/MeasurementComponents/EPJones.h>
 #include <synthesis/MeasurementComponents/FJones.h>
+#include <synthesis/MeasurementComponents/FringeJones.h>
 #include <synthesis/MeasurementComponents/KJones.h>
 #include <synthesis/MeasurementComponents/LJJones.h>
 #include <synthesis/MeasurementComponents/AMueller.h>
@@ -207,6 +208,9 @@ SolvableVisCal* createSolvableVisCal(const String& type, VisSet& vs) {
   else if (uptype.contains("TEC") || uptype.contains("F JONES") )  // Ionosphere
     return new FJones(vs);
 
+  else if (uptype.contains("FRINGE"))   // Fringe-fitting
+    return new FringeJones(vs);
+
   else if (uptype.contains("SDSKY_PS"))
     return new SingleDishPositionSwitchCal(vs);
 
@@ -220,8 +224,7 @@ SolvableVisCal* createSolvableVisCal(const String& type, VisSet& vs) {
     return new SDDoubleCircleGainCal(vs);
 
   else {
-    cout << "attempted type = " << type << endl;
-    throw(AipsError("Unknown calibration type."));
+    throw(AipsError("Unknown calibration type: '"+type+"'"));
   }
 };
 
@@ -352,6 +355,9 @@ SolvableVisCal* createSolvableVisCal(const String& type, String msname, Int MSnA
   else if (uptype.contains("TEC") || uptype.contains("F JONES") )  // Ionosphere
     return new FJones(msname,MSnAnt,MSnSpw);
 
+  else if (uptype.contains("FRINGE"))  // Fringe-fitting
+    return new FringeJones(msname,MSnAnt,MSnSpw);
+
   else if (uptype.contains("SDSKY_PS"))
     throw(AipsError(uptype+" not yet supported via BJonesPoly(msname,MSnAnt,MSnSpw)"));
   //    return new SingleDishPositionSwitchCal(msname,MSnAnt,MSnSpw);
@@ -365,8 +371,7 @@ SolvableVisCal* createSolvableVisCal(const String& type, String msname, Int MSnA
   //    return new SingleDishOtfCal(msname,MSnAnt,MSnSpw);
   
   else {
-    cout << "attempted type = " << type << endl;
-    throw(AipsError("Unknown calibration type."));
+    throw(AipsError("Unknown calibration type: '"+type+"'"));
   }
 };
 
@@ -392,8 +397,7 @@ SolvableVisCal* createSolvableVisCal(const String& type, const Int& nAnt) {
     return new JJones(nAnt);
      
   else {
-    cout << "attempted type = " << type << endl;
-    throw(AipsError("Unknown calibration type."));
+    throw(AipsError("Unknown calibration type: '"+type+"'"));
   }
 };
 

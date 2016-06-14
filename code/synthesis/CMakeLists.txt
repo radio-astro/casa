@@ -237,6 +237,7 @@ casa_add_library( synthesis
  MeasurementComponents/EPJones.cc
  MeasurementComponents/EVLASwPow.cc
  MeasurementComponents/FJones.cc
+ MeasurementComponents/FringeJones.cc
  MeasurementComponents/GlobalFTMachineCallbacks.cc
  MeasurementComponents/GridBoth.cc
  MeasurementComponents/GSpline.cc
@@ -500,6 +501,7 @@ install (FILES
 	MeasurementComponents/EPJones.h
 	MeasurementComponents/ExpCache.h
 	MeasurementComponents/FJones.h
+        MeasurementComponents/FringeJones.h
 	MeasurementComponents/GSpline.h
 	MeasurementComponents/GlobalFTMachineCallbacks.h
 	MeasurementComponents/GridBoth.h
@@ -853,6 +855,7 @@ casa_add_google_test( MODULES mstransform SOURCES ../mstransform/TVI/test/tHanni
 casa_add_google_test( MODULES mstransform SOURCES ../mstransform/TVI/test/tPhaseShiftingTVI.cc  ../mstransform/TVI/test/TestUtilsTVI.cc)
 casa_add_google_test( NOT_ON_APPLE MODULES mstransform SOURCES ../mstransform/TVI/test/tRegriddingTVI.cc  ../mstransform/TVI/test/TestUtilsTVI.cc)
 
+casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tFringeJones_GT.cc )
 casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tVisVectorJonesMueller_GT.cc )
 casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tVisCal_GT.cc )
 casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tSolveDataBuffer_GT.cc )
