@@ -12,16 +12,16 @@ def num_lines(report_dir, relpath):
 
 <%block name="title">Flag antennas with low gain</%block>
  
-% if plots:
-<h2>Plots</h2>
-<ul>
-    % for vis, relpath in plots.items():
-        <li>
-               <a class="replace" href="${relpath}">${vis}</a>
-               shows the images used for flagging.
-    % endfor
-</ul>
-% endif
+## % if plots:
+## <h2>Plots</h2>
+## <ul>
+##     % for vis, relpath in plots.items():
+##         <li>
+##                <a class="replace" href="${relpath}">${vis}</a>
+##                shows the images used for flagging.
+##     % endfor
+## </ul>
+## % endif
 
 % if htmlreports:
 <h2>Flags</h2>
@@ -32,6 +32,7 @@ def num_lines(report_dir, relpath):
 			<th>Measurement Set</th>
 			<th>Flagging Commands</th>
 			<th>Number of Statements</th>
+            <th>Flagging Views</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -40,6 +41,7 @@ def num_lines(report_dir, relpath):
 			<td>${msname}</td>
 			<td><a class="replace-pre" href="${relpath}">${os.path.basename(relpath)}</a></td>
 			<td>${num_lines(pcontext.report_dir, relpath)}</td>
+            <td><a class="replace" data-vis="${msname}" href="${plots_path}">Display</a></td>
 		</tr>
 		% endfor
 	</tbody>

@@ -1,8 +1,8 @@
-'''
+"""
 Created on 24 Nov 2014
 
 @author: sjw
-'''
+"""
 import os
 
 import pipeline.infrastructure.displays.image as image
@@ -27,31 +27,37 @@ class T2_4MDetailsRawflagchansRenderer(basetemplates.T2_4MDetailsDefaultRenderer
 
         plots = {}
         flag_totals = {}
-        for result in results:
-            if not result.view:
-                continue
-            
-            renderer = BaselineVsChannelsPlotRenderer(pipeline_context, result)
+
+        stage = 'stage%s' % results.stage_number
+        dirname = os.path.join(pipeline_context.report_dir, stage)
+
+        for result in (r for r in results if r.view):
+            vis = os.path.basename(result.inputs['vis'])
+            plotter = image.ImageDisplay()
+            plots[vis] = plotter.plot(context=pipeline_context, results=result, reportdir=dirname)
+
+            flags_for_result = flagutils.flags_for_result(result, pipeline_context)
+            flag_totals = utils.dict_merge(flag_totals, flags_for_result)
+
+        # render plots for all EBs in one page
+        plots_path = None
+        if plots:
+            all_plots = list(utils.flatten([v for v in plots.values()]))
+            renderer = BaselineVsChannelsPlotRenderer(pipeline_context, results, all_plots)
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())
+                plots_path = os.path.relpath(renderer.path, pipeline_context.report_dir)
 
-            vis = os.path.basename(result.inputs['vis'])
-            plots[vis] = os.path.relpath(renderer.path, pipeline_context.report_dir)
-                
-            flags_for_result = flagutils.flags_for_result(result, 
-                                                          pipeline_context)
-            flag_totals = utils.dict_merge(flag_totals, 
-                                           flags_for_result)
-
-        mako_context.update({'htmlreports' : htmlreports,
-                             'plots'       : plots,
-                             'flags'       : flag_totals,
-                             'agents'      : ['before', 'after']})        
+        mako_context.update({
+            'htmlreports': htmlreports,
+            'flags': flag_totals,
+            'agents': ('before', 'after'),
+            'plots_path': plots_path
+        })
 
     def _get_htmlreports(self, context, results):
         report_dir = context.report_dir
-        weblog_dir = os.path.join(report_dir,
-                                  'stage%s' % results.stage_number)
+        weblog_dir = os.path.join(report_dir, 'stage%s' % results.stage_number)
 
         htmlreports = {}
         for result in results:
@@ -76,17 +82,12 @@ class T2_4MDetailsRawflagchansRenderer(basetemplates.T2_4MDetailsDefaultRenderer
 
 
 class BaselineVsChannelsPlotRenderer(basetemplates.JsonPlotRenderer):
-    def __init__(self, context, result):
-        vis = os.path.basename(result.inputs['vis'])
-        title = 'Baseline vs channels plots for %s' % vis
+    def __init__(self, context, result, plots):
+        vis = utils.get_vis_from_plots(plots)
+
+        title = 'Baseline vs channels for %s' % vis
         outfile = filenamer.sanitize('baseline_vs_channels-%s.html' % vis)
 
-        stage = 'stage%s' % result.stage_number
-        dirname = os.path.join(context.report_dir, stage)
-
-        plotter = image.ImageDisplay()
-        plots = plotter.plot(context=context, results=result, reportdir=dirname)
-        
         super(BaselineVsChannelsPlotRenderer, self).__init__(
-                'generic_x_vs_y_per_spw_and_pol_plots.mako', context, 
+                'generic_x_vs_y_spw_pol_plots.mako', context,
                 result, plots, title, outfile)

@@ -1,22 +1,23 @@
-'''
+"""
 Created on 11 Sep 2014
 
 @author: sjw
-'''
+"""
 import os
 
 import pipeline.infrastructure.displays.image as image
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
+import pipeline.infrastructure.utils as utils
 
 LOG = logging.get_logger(__name__)
 
 
 class T2_4MDetailsLowgainFlagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
-    '''
+    """
     Renders detailed HTML output for the Lowgainflag task.
-    '''
+    """
     def __init__(self, uri='lowgainflag.mako', 
                  description='Flag antennas with low gain',
                  always_rerender=False):
@@ -27,18 +28,27 @@ class T2_4MDetailsLowgainFlagRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
         htmlreports = self.get_htmlreports(pipeline_context, results)        
 
         plots = {}
-        for result in results:
-            if not result.view:
-                continue
-            renderer = TimeVsAntenna1PlotRenderer(pipeline_context, result)
+
+        stage = 'stage%s' % results.stage_number
+        dirname = os.path.join(pipeline_context.report_dir, stage)
+
+        for result in (r for r in results if r.view):
+            vis = os.path.basename(result.inputs['vis'])
+            plotter = image.ImageDisplay()
+            plots[vis] = plotter.plot(context=pipeline_context, results=result, reportdir=dirname)
+
+        plots_path = None
+        if plots:
+            all_plots = list(utils.flatten([v for v in plots.values()]))
+            renderer = TimeVsAntenna1PlotRenderer(pipeline_context, results, all_plots)
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())
-            
-            vis = os.path.basename(result.inputs['vis'])
-            plots[vis] = os.path.relpath(renderer.path, pipeline_context.report_dir)
+                plots_path = os.path.relpath(renderer.path, pipeline_context.report_dir)
 
-        mako_context.update({'htmlreports' : htmlreports,
-                             'plots'       : plots})
+        mako_context.update({
+            'htmlreports': htmlreports,
+            'plots_path': plots_path
+        })
 
     def get_htmlreports(self, context, results):
         report_dir = context.report_dir
@@ -67,17 +77,12 @@ class T2_4MDetailsLowgainFlagRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
     
 
 class TimeVsAntenna1PlotRenderer(basetemplates.JsonPlotRenderer):
-    def __init__(self, context, result):
-        vis = os.path.basename(result.inputs['vis'])
+    def __init__(self, context, result, plots):
+        vis = utils.get_vis_from_plots(plots)
+
         title = 'Time vs Antenna1 plots for %s' % vis
         outfile = filenamer.sanitize('time_vs_antenna1-%s.html' % vis)
 
-        stage = 'stage%s' % result.stage_number
-        dirname = os.path.join(context.report_dir, stage)
-
-        plotter = image.ImageDisplay()
-        plots = plotter.plot(context=context, results=result, reportdir=dirname)
-        
         super(TimeVsAntenna1PlotRenderer, self).__init__(
                 'generic_x_vs_y_spw_plots.mako', context, 
                 result, plots, title, outfile)

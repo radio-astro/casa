@@ -26,16 +26,16 @@ antennas with deviant gains.
 	<h3>${component}</h3>
 	${comp_descriptions[component]}
 
-    % if component in plots:
-	<h4>Plots</h4>
-	<ul>
-	    % for vis, relpath in plots[component].items():
-	        <li>
-	               <a class="replace" href="${relpath}">${vis}</a>
-	               shows the images used for flagging.
-	    % endfor	
-	</ul>
-    % endif
+##     % if component in plots:
+## 	<h4>Plots</h4>
+## 	<ul>
+## 	    % for vis, relpath in plots[component].items():
+## 	        <li>
+## 	               <a class="replace" href="${relpath}" data-vis="${vis}">${vis}</a>
+## 	               shows the images used for flagging.
+## 	    % endfor
+## 	</ul>
+##     % endif
  
     % if htmlreports[component]:
       <h4>Flags</h4>
@@ -46,6 +46,7 @@ antennas with deviant gains.
 	        <th>Measurement Set</th>
 	        <th>Flagging Commands</th>
 	        <th>Number of Statements</th>
+	        <th><abbr title="Shows the data views used by the pipeline to flag data">Flagging View</abbr></th>
 	    </tr>
 	  </thead>
 	  <tbody>
@@ -54,6 +55,11 @@ antennas with deviant gains.
 			<td>${msname}</td>
 			<td><a class="replace-pre" href="${relpath}">${os.path.basename(relpath)}</a></td>
 			<td>${num_lines(pcontext.report_dir, relpath)}</td>
+            % if component in plots and msname in plots[component]:
+                <td><a class="replace" data-vis="${msname}" href="${plots[component][msname]}">Display</a></td>
+            % else:
+                <td>N/A</td>
+            % endif
 		</tr>
 	  % endfor
 	  </tbody>

@@ -4,14 +4,15 @@ Created on 7 Oct 2015
 @author: vgeers
 """
 import os
-import collections
 
-import pipeline.infrastructure.displays as displays
+import pipeline.infrastructure.displays.image as image
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
+import pipeline.infrastructure.utils as utils
 
 LOG = logging.get_logger(__name__)
+
 
 class T2_4MDetailsGainflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     """
@@ -24,29 +25,44 @@ class T2_4MDetailsGainflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 description=description, always_rerender=always_rerender)
 
     def update_mako_context(self, mako_context, pipeline_context, results):
-        plots = collections.defaultdict(dict)
+        stage = 'stage%s' % results.stage_number
+        dirname = os.path.join(pipeline_context.report_dir, stage)
+
+        component_plots = {}
         for result in results:
             vis = os.path.basename(result.inputs['vis'])
+
             for component, r in result.components.items():
                 if not r.view:
                     continue
-                try:
-                    renderer = TimeVsAntenna1PlotRenderer(pipeline_context, 
-                      result, component)
-                    with renderer.get_file() as fileobj:
-                        fileobj.write(renderer.render())
-                    plots[component][vis] = os.path.relpath(renderer.path, pipeline_context.report_dir)
-                except TypeError:
-                    continue
-                
+
+                plotter = image.ImageDisplay()
+                plots = plotter.plot(pipeline_context, r, reportdir=dirname, prefix=component)
+
+                if plots:
+                    component_plots.setdefault(component, {})[vis] = plots
+
         htmlreports = self._get_htmlreports(pipeline_context, results)
-        
+
         components = results[0].metric_order
-        
-        mako_context.update({'htmlreports': htmlreports,
-                             'components': components,
-                             'plots': plots,
-                             'agents': ['before', 'after']})
+
+        # render plots for all EBs in one page
+        plot_subpages = {}
+        for component, vis_plots in component_plots.items():
+            all_plots = list(utils.flatten([v for v in vis_plots.values()]))
+            renderer = TimeVsAntenna1PlotRenderer(pipeline_context, results, all_plots, component)
+            with renderer.get_file() as fileobj:
+                fileobj.write(renderer.render())
+                subpage_path = os.path.relpath(renderer.path, pipeline_context.report_dir)
+                for vis in vis_plots:
+                    plot_subpages.setdefault(component, {})[vis] = subpage_path
+
+        mako_context.update({
+            'htmlreports': htmlreports,
+            'components': components,
+            'plots': plot_subpages,
+            'agents': ('before', 'after')
+        })
 
     def _get_htmlreports(self, context, results):
         report_dir = context.report_dir
@@ -89,22 +105,11 @@ class T2_4MDetailsGainflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
 
 class TimeVsAntenna1PlotRenderer(basetemplates.JsonPlotRenderer):
-    def __init__(self, context, result, component):
-
-        r = result.components[component]
-
-        stage = 'stage%s' % result.stage_number
-        dirname = os.path.join(context.report_dir, stage)
-        
-        plotter = displays.image.ImageDisplay()
-        plots = plotter.plot(context, r, reportdir=dirname, prefix=component)
-        if not plots:
-            raise TypeError('No plots generated for %s component' % component)
-        
-        vis = os.path.basename(result.inputs['vis'])
-        outfile = filenamer.sanitize('time_vs_antenna1-%s-%s.html' % (vis, component))
+    def __init__(self, context, result, plots, component):
+        vis = utils.get_vis_from_plots(plots)
 
         title = 'Time vs Antenna1 plots for %s' % vis
+        outfile = filenamer.sanitize('time_vs_antenna1-%s-%s.html' % (vis, component))
 
         super(TimeVsAntenna1PlotRenderer, self).__init__(
                 'generic_x_vs_y_spw_plots.mako', context, 

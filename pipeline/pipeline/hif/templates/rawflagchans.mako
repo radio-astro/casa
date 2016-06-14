@@ -112,17 +112,6 @@ def num_lines(relpath):
 
 <%block name="title">Flag raw channels</%block>
 
-% if plots:
-<h2>Plots</h2>
-<ul>
-    % for vis, relpath in plots.items():
-        <li>
-               <a class="replace" href="${relpath}">${vis}</a>
-               shows the images used for flagging.
-    % endfor
-</ul>
-% endif
-
 % if htmlreports:
 <h2>Flags</h2>
 <table class="table table-bordered table-striped">
@@ -132,6 +121,7 @@ def num_lines(relpath):
 			<th>Measurement Set</th>
 			<th>Flagging Commands</th>
 			<th>Number of Statements</th>
+	        <th>Flagging View</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -140,6 +130,7 @@ def num_lines(relpath):
 			<td>${msname}</td>
 			<td><a class="replace-pre" href="${relpath}">${os.path.basename(relpath)}</a></td>
 			<td>${num_lines(relpath)}</td>
+            <td><a class="replace" data-vis="${msname}" href="${plots_path}">Display</a></td>
         </tr>
 	% endfor
 	</tbody>

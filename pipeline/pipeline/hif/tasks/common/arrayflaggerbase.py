@@ -113,8 +113,8 @@ class FlagCmd(object):
       antenna=None, intent=None, pol=None, axisnames=None,
       flagcoords=None, channel_axis=None, reason=None,
       extendfields=None, antenna_id_to_name=None):
-        print 'FlagCmd intent=%s spw=%s antenna=%s axisnames=%s flagcoords=%s pol=%s reason=%s' % (
-          intent, spw, antenna, axisnames, flagcoords, pol, reason)
+        # print 'FlagCmd intent=%s spw=%s antenna=%s axisnames=%s flagcoords=%s pol=%s reason=%s' % (
+        #   intent, spw, antenna, axisnames, flagcoords, pol, reason)
 
         self.filename = filename
         self.rulename = rulename
@@ -128,6 +128,7 @@ class FlagCmd(object):
         self.channel_axis = channel_axis
         self.reason = reason
         self.extendfields = extendfields
+        self.antenna_id_to_name = antenna_id_to_name
 
         # construct the corresponding flag command
         flagcmd = ""
@@ -277,35 +278,46 @@ class FlagCmd(object):
         return result
 
     def match(self, spectrum):
-        """Return True if the FlagCmd operates on this SpectrumResult.
         """
-        match = True
-#        match = match and (self.filename == spectrum.filename)
+        Return True if the FlagCmd operates on this SpectrumResult.
+        """
+        # cache self.__repr__ to avoid repeated calculations
+        _repr = self.__repr__()
 
         # does spw match?
-        match = match and (
-          ("spw=" not in self.__repr__()) or
-          (("spw='%s" % spectrum.spw) in self.__repr__()))
+        if 'spw=' in _repr:
+            match = "spw='{!s}".format(spectrum.spw) in _repr
+            if not match:
+                return False
 
         # does antenna match?
-        try:
-            match = match and (
-              ("antenna=" not in self.__repr__()) or
-              (("antenna='%s'" % spectrum.ant[0]) in self.__repr__()))
-        except:
-            match = False
+        if 'antenna=' in _repr:
+            try:
+                # use the textual ID if available, falling back to the numeric ID if not
+                if self.antenna_id_to_name:
+                    antenna_id = self.antenna_id_to_name.get(spectrum.ant[0], spectrum.ant[0])
+                else:
+                    antenna_id = spectrum.ant[0]
+            except:
+                return False
+            else:
+                match = "antenna='{!s}'".format(antenna_id) in _repr
+                if not match:
+                    return False
 
         # does time match?
         if spectrum.time is not None and self.start_time is not None:
-            match = match and (spectrum.time > self.start_time and
-              spectrum.time < self.end_time)
+            match = self.start_time < spectrum.time < self.end_time
+            if not match:
+                return False
 
         # does correlation/pol match?
-        match = match and (
-          ("correlation=" not in self.__repr__()) or
-          (("correlation='%s'" % spectrum.pol) in self.__repr__()))
+        if 'correlation=' in _repr:
+            match = "correlation='{!s}'".format(spectrum.pol) in _repr
+            if not match:
+                return False
 
-        return match
+        return True
 
     def match_image(self, image):
         """Return True if the FlagCmd operates on this ImageResult.
