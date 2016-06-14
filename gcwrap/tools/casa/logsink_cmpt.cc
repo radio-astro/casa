@@ -51,7 +51,7 @@ logsink::logsink()
   if(!theLogName.size()){
      char *buff = NULL;
      char *mybuff = getcwd(buff, MAXPATHLEN);
-     theLogName = string(mybuff) + string("/casapy.log");
+     theLogName = string(mybuff) + string("/casa.log");
   }
 
   // jagonzal: Set task and processor name
@@ -73,7 +73,7 @@ logsink::logsink()
       String logfileKey="logfile.no.default";
       String logname2;
       if(!Aipsrc::find(logname2, logfileKey)){
-         tmpname = "casapy.log";
+         tmpname = "casa.log";
       } else {
          //tmpname = logname2;
          ACG g(7326458, 98);
@@ -314,7 +314,7 @@ bool logsink::setlogfile(const std::string& filename)
       String logfileKey="logfile.no.default";
       String logname2;
       if(!Aipsrc::find(logname2, logfileKey)){
-         tmpname = "casapy.log";
+         tmpname = "casa.log";
       } else {
          //tmpname = logname2;
          ACG g(7326458, 98);

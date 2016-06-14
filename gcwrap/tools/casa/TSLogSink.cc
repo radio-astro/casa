@@ -102,7 +102,7 @@ void TSLogSink::setLogSink(String logname){
       String logfileKey="user.logfile";
       String logname2;
       if(!Aipsrc::find(logname2, logfileKey)){
-         logname = "casapy.log";
+         logname = "casa.log";
       } else {
          logname = logname2;
       }

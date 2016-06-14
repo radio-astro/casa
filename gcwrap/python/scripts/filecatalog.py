@@ -28,7 +28,7 @@ def filecatalog():
         	fsRef, cfURL = LSFindApplicationForInfo(kLSUnknownCreator, None, "casafilecatalog.app")
         	filecatalog_path = os.path.join(fsRef.as_pathname(), 'Contents', 'MacOS', 'casafilecatalog')
 		fcpid=os.spawnvp(os.P_NOWAIT, filecatalog_path, [filecatalog_path])
-        	#logpid=os.system('open -a casalogger.app casapy.log')
+        	#logpid=os.system('open -a casalogger.app casa.log')
 	elif (os.uname()[0]=='Linux'):
         	fcpid=os.spawnlp(os.P_NOWAIT,'casafilecatalog','casafilecatalog')
 	else:

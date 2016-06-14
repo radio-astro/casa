@@ -61,7 +61,7 @@ int main( int argc, char ** argv )
 	casa::String logfileKey="user.logfile";
 	casa::String logname2;
 	if(!casa::Aipsrc::find(logname2, logfileKey)){
-	   mylog = const_cast<char *>("casapy.log");
+	   mylog = const_cast<char *>("casa.log");
 	} else {
 	   mylog = const_cast<char *>(logname2.c_str());
 	}

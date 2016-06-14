@@ -208,7 +208,7 @@ class runTest:
                 #
                 files = os.listdir('.')
                 for f in files:
-                    if f != 'casapy.log' and \
+                    if f != 'casa.log' and \
                            re.compile('.log$').search(f) != None:
 
                         for line in open(f, 'r'):
@@ -410,8 +410,8 @@ class runTest:
                     sys.stdout = save_stdout
                     fsock.close()
 
-                    casalog.setlogfile("casapy.log")
-                    os.system("sed 's/^/casapy.log: /' "+testlog+" >> "+self.resultsubdir+'/'+logfilename)
+                    casalog.setlogfile("casa.log")
+                    os.system("sed 's/^/casa.log: /' "+testlog+" >> "+self.resultsubdir+'/'+logfilename)
 
                 if not dry and cleanup:
                     self.tester.cleanup()
@@ -420,8 +420,8 @@ class runTest:
                     sys.stderr = save_stderr
                     sys.stdout = save_stdout
                     fsock.close()
-                    casalog.setlogfile("casapy.log")
-                    os.system("sed 's/^/casapy.log: /' "+testlog+" >> "+self.resultsubdir+'/'+logfilename)
+                    casalog.setlogfile("casa.log")
+                    os.system("sed 's/^/casa.log: /' "+testlog+" >> "+self.resultsubdir+'/'+logfilename)
 
                 print "Unexpected error:", sys.exc_info()[0]
                 raise
@@ -438,7 +438,7 @@ class runTest:
     def op_done(self, oprofile):
         if oprofile:
             casapy = os.environ["CASAPATH"].split()[0] + '/' + \
-                     os.environ["CASAPATH"].split()[1] + '/bin/casapy'
+                     os.environ["CASAPATH"].split()[1] + '/bin/casa'
 
             gprof2dot = SCRIPT_REPOS + "/../gprof2dot.py"
             

@@ -208,12 +208,18 @@ echo "========================================="
 echo
 
 
-# This bit of code, copies the old casapy.log file to one with a 
+# This bit of code, copies the old casa/casapy.log file to one with a 
 # date string based on the last entry and then blows away the casapy.log
 # after creating a hard link
+#
+# (the casapy.log 'if' statement can be removed after some time... when
+#  users likely no longer have old casapy.log files hanging around any more)
 
 if [[ -f casapy.log ]]; then
     ln casapy.log casapy.$(tail -n 1 casapy.log | cut -c 1-19 | tr ' ' T).log && rm casapy.log
+fi
+if [[ -f casa.log ]]; then
+    ln casa.log casa.$(tail -n 1 casa.log | cut -c 1-19 | tr ' ' T).log && rm casa.log
 fi
 
 if [ $installed_from_rpm = "T" ]; then

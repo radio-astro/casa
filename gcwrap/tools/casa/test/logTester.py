@@ -21,7 +21,7 @@ class LogTester:
         self._logTool = casac.homefinder.find_home_by_name('logsinkHome')
         self._log['logTool'] = self._logTool.create()
         self._log['logTool'].origin('LogTester')
-        self._log['logTool'].setlogfile('casapy.log')
+        self._log['logTool'].setlogfile('casa.log')
         if len(tasks) == 0:
             self._log['logTool'].setglobal(True)
 

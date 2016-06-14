@@ -931,7 +931,7 @@ class imhead_test(unittest.TestCase):
             res = imhead(imagename=image, mode='list', verbose=True)
             self.assertTrue(res)
             # restore logfile
-            casalog.setlogfile('casapy.log')
+            casalog.setlogfile('casa.log')
             
             cmd = 'grep cdelt1 ' + logfile
             out = commands.getoutput(cmd)

@@ -158,7 +158,7 @@ casa = { 'build': {
          },
          'flags': { },
          'files': { 
-             'logfile': os.getcwd( ) + '/casapy-'+time.strftime("%Y%m%d-%H%M%S", time.gmtime())+'.log'
+             'logfile': os.getcwd( ) + '/casa-'+time.strftime("%Y%m%d-%H%M%S", time.gmtime())+'.log'
          },
          'state' : {
              'startup': True,
@@ -239,7 +239,7 @@ if os.path.exists(casa['dirs']['root']+"/pipeline"):
 ## try to set casapyinfo path...
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 if os.path.exists( __casapath__ + "/bin/casapyinfo") :
-    casa['helpers']['info'] = __casapath__ + "/bin/casapyinfo"
+    casa['helpers']['info'] = __casapath__ + "/bin/casa-config"
 
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 ##     first try to find executables using casapyinfo...
@@ -492,8 +492,8 @@ def casalogger(logfile=''):
         if casa.has_key('files') and casa['files'].has_key('logfile') :
             logfile = casa['files']['logfile']
         else:
-            casa['files']['logfile'] = os.getcwd( ) + '/casapy.log'
-            logfile = 'casapy.log'
+            casa['files']['logfile'] = os.getcwd( ) + '/casa.log'
+            logfile = 'casa.log'
 
     pid=9999
     if (os.uname()[0]=='Darwin'):
@@ -1519,11 +1519,11 @@ elif os.environ.has_key('OMPI_COMM_WORLD_SIZE'):
 casa['state']['startup'] = False
 
 #print '----thelogfile:', thelogfile
-#print 'casapy.log exists:', os.path.exists('casapy.log')
+#print 'casa.log exists:', os.path.exists('casa.log')
 
-if (thelogfile == 'null' or thelogfile != 'casapy.log') and os.path.exists('casapy.log'):
+if (thelogfile == 'null' or thelogfile != 'casa.log') and os.path.exists('casa.log'):
     try:
-        os.remove('casapy.log')
+        os.remove('casa.log')
     except OSError:
         pass
 

@@ -100,7 +100,7 @@ LogViewer::LogViewer(QString logFile, QWidget *parent)
     logView->setFocus();
 
     canClose = true;
-    if (logFile == "casapy.log") {
+    if (logFile == "casa.log") {
        fileName = logFile;
        canClose = false;
     }
@@ -571,7 +571,7 @@ bool LogViewer::fileSave()
     if (fileName.isEmpty())
         return fileSaveAs();
     fileName = fileName.section('/', -1);
-    if (fileName == "casapy.log")
+    if (fileName == "casa.log")
         fileName.prepend("~");
     QFile file(fileName);
     if (!file.open(QFile::WriteOnly | QIODevice::Text))
@@ -596,12 +596,12 @@ bool LogViewer::fileSaveAs()
 
     QString path = fn.left(pos);
     QString fnm = fn.section('/', -1);
-    if (fnm == "casapy.log")
+    if (fnm == "casa.log")
        fnm.prepend("~");
     if (fnm.startsWith("-"))
        fnm.replace("-", "_");
     //if (fnm == "")
-    //    fnm = "~casapy.log";
+    //    fnm = "~casa.log";
     if (!fnm.endsWith(".log"))
         fnm.append(".log");
 
