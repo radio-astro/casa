@@ -9,19 +9,42 @@ namespace casa {
 // Partially projection code from ASAP GenericEdgeDetector
 class Projector {
 public:
-  Projector() {
-  }
+  Projector();
   virtual ~Projector() {
   }
   void setDirection(const casacore::Matrix<casacore::Double> &dir);
+  void setReferenceCoordinate(casacore::Double const lat, casacore::Double const lon);
+  void setReferencePixel(casacore::Double const refx, casacore::Double const refy);
+  void unsetReferenceCoordinate();
+  void unsetReferencePixel();
+  casacore::Bool isReferenceCoordinateSet() const {return user_defined_center_;}
+  casacore::Bool isReferencePixelSet() const {return user_defined_pcenter_;}
+  void getUserDefinedReferenceCoordinate(casacore::Double &lat, casacore::Double &lon) {
+    lat = cenx_user_;
+    lon = ceny_user_;
+  }
+  void getUserDefinedReferencePixel(casacore::Double &refx, casacore::Double &refy) {
+    refx = pcenx_user_;
+    refy = pceny_user_;
+  }
   virtual const casacore::Matrix<casacore::Double>& project() = 0;
 protected:
   // From asap/src/MathUtils
   void rotateRA(casacore::Vector<casacore::Double> &v);
   // Input data
   casacore::Matrix<casacore::Double> dir_;
+
   // logging
   casa::LogIO os_;
+
+private:
+  // private attributes
+  casacore::Double cenx_user_;
+  casacore::Double ceny_user_;
+  casacore::Bool user_defined_center_;
+  casacore::Double pcenx_user_;
+  casacore::Double pceny_user_;
+  casacore::Bool user_defined_pcenter_;
 };
 
 class OrthographicProjector: public Projector {
