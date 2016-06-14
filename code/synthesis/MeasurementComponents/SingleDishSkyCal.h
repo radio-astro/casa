@@ -168,19 +168,19 @@ public:
   virtual Type type() { return VisCal::M; }
   
   // Return type name as string (ditto)
-  virtual String typeName()     { return "SD SKY"; };
-  virtual String longTypeName() { return "SD SKY (sky spectra)"; };
+  virtual String typeName()     { return "SD SKY"; }
+  virtual String longTypeName() { return "SD SKY (sky spectra)"; }
 
   // Return Matrix type
   // single dish calibration is antenna-based
-  virtual VisCalEnum::MatrixType matrixType() { return VisCalEnum::JONES; };
+  virtual VisCalEnum::MatrixType matrixType() { return VisCalEnum::JONES; }
 
   // Mueller matrix type (must be implemented in Mueller specializations!)
-  virtual Mueller::MuellerType muellerType() { return Mueller::AddDiag2; };  
+  virtual Mueller::MuellerType muellerType() { return Mueller::AddDiag2; }
 
   // Return the parameter type
   // so far single dish calibration is real
-  virtual VisCalEnum::VCParType parType() { return VisCalEnum::REAL; };
+  virtual VisCalEnum::VCParType parType() { return VisCalEnum::REAL; }
 
   // Number of pars per ant/bln
   // TODO: nPar should refer numCorr in input MS
@@ -209,7 +209,7 @@ public:
   		       Array<Complex>& dV);
 
   // Apply refant (implemented in SVJ)
-  virtual void reReference() {};
+  virtual void reReference() {}
 
   // Accumulate another VisCal onto this one
   virtual void accumulate(SolvableVisCal* incr,
@@ -232,7 +232,7 @@ public:
                          const Bool& display);
 
   // Use generic data gathering mechanism for solve
-  virtual Bool useGenericGatherForSolve() { return False; };
+  virtual Bool useGenericGatherForSolve() { return False; }
 
   // Report state:
   virtual void listCal(const Vector<Int> ufldids, const Vector<Int> uantids,
@@ -244,7 +244,7 @@ public:
   virtual void setApply(const Record& apply);
 
   // In general, we are freq-dep
-  virtual Bool freqDepPar() { return True; };
+  virtual Bool freqDepPar() { return True; }
   
   // New CalTable handling
   virtual void keepNCT();
@@ -265,13 +265,13 @@ protected:
   // Are the parameters the matrix elements? 
   //   (or is a non-trivial calculation required?)
   //    (Must be implemented in specializations!)
-  virtual Bool trivialMuellerElem() { return False; };
+  virtual Bool trivialMuellerElem() { return False; }
 
   // Initialize solve parameters (shape)
   virtual void initSolvePar();
 
   // Invalidate diff cal matrices generically 
-  inline virtual void invalidateDiffCalMat() {};
+  inline virtual void invalidateDiffCalMat() {}
 
   // overwride syncMeta2
   virtual void syncMeta2(const vi::VisBuffer2& vb);
@@ -293,7 +293,7 @@ protected:
   virtual Float calcPowerNorm(Array<Float>& amp, const Array<Bool>& ok);
 
   // Invalidate cal matrices generically 
-  virtual void invalidateCalMat() {};
+  virtual void invalidateCalMat() {}
 
   // Row-by-row apply to a Cube<Complex> (generic)
   virtual void applyCal(VisBuffer& vb, Cube<Complex>& Vout,Bool trial=False);
@@ -308,10 +308,10 @@ protected:
   inline void traverseMS(MeasurementSet const &ms);
 
   // access to current calibration data
-  inline Cube<Complex> &currentSky() { return (*currentSky_[currSpw()]); };
-  inline Cube<Bool> &currentSkyOK() { return (*currentSkyOK_[currSpw()]); };
-  inline SkyCal<Complex, Complex> &engineC() { return (*engineC_[currSpw()]); };
-  inline SkyCal<Float, Float> &engineF() { return (*engineF_[currSpw()]); };
+  inline Cube<Complex> &currentSky() { return (*currentSky_[currSpw()]); }
+  inline Cube<Bool> &currentSkyOK() { return (*currentSkyOK_[currSpw()]); }
+  inline SkyCal<Complex, Complex> &engineC() { return (*engineC_[currSpw()]); }
+  inline SkyCal<Float, Float> &engineF() { return (*engineF_[currSpw()]); }
 
   // arrange data selection according to calibration mode
   virtual String configureSelection() = 0;
@@ -346,8 +346,8 @@ public:
   virtual ~SingleDishPositionSwitchCal();
 
   // Return type name as string (ditto)
-  virtual String typeName()     { return "SDSKY_PS"; };
-  virtual String longTypeName() { return "SDSKY_PS (position switch sky subtraction)"; };
+  virtual String typeName()     { return "SDSKY_PS"; }
+  virtual String longTypeName() { return "SDSKY_PS (position switch sky subtraction)"; }
 
   // data selection for position switch calibration
   virtual String configureSelection();
@@ -366,8 +366,8 @@ public:
   virtual ~SingleDishRasterCal();
 
   // Return type name as string (ditto)
-  virtual String typeName()     { return "SDSKY_RASTER"; };
-  virtual String longTypeName() { return "SDSKY_RASTER (position switch sky subtraction specific to OTF raster observation)"; };
+  virtual String typeName()     { return "SDSKY_RASTER"; }
+  virtual String longTypeName() { return "SDSKY_RASTER (position switch sky subtraction specific to OTF raster observation)"; }
 
   // local setSolve
   virtual void setSolve(const Record& solve);
@@ -393,8 +393,8 @@ public:
   virtual ~SingleDishOtfCal();
 
   // Return type name as string (ditto)
-  virtual String typeName()     { return "SDSKY_OTF"; };
-  virtual String longTypeName() { return "SDSKY_OTF (position switch sky subtraction specific to OTF fast scan)"; };
+  virtual String typeName()     { return "SDSKY_OTF"; }
+  virtual String longTypeName() { return "SDSKY_OTF (position switch sky subtraction specific to OTF fast scan)"; }
 
   // Data selection specific to otf mode
   virtual String configureSelection();
@@ -407,57 +407,6 @@ private:
 
   // MeasurementSet filtered with user-specified selection
   const MeasurementSet & msSel_ ;
-
-  // Partially projection code from ASAP GenericEdgeDetector
-  class Projector
-  {
-	  public:
-	  	  Projector() {};
-	  	  virtual ~Projector() {};
-	  	  void setDirection( const Matrix<Double> &dir ) ;
-	  	  virtual const Matrix<Double>& project() = 0 ;
-	  protected:
-	  	  // From asap/src/MathUtils
-	  	  void rotateRA( Vector<Double> &v ) ;
-	  	  // Input data
-	  	  Matrix<Double> dir_ ;
-	  	  // logging
-	  	  casa::LogIO os_ ;
-  };
-  class OrthographicProjector; // Forward declaration
-  friend class OrthographicProjector;
-  class OrthographicProjector : public Projector
-  {
-  public:
-	  OrthographicProjector(Float pixel_scale=0.5);
-	  virtual ~OrthographicProjector();
-	  const Matrix<Double>& project() ;
-	  const Vector<Double>& p_center() const { return p_center_; };
-	  const Vector<Double>& p_size() const { return p_size_; };
-	  Double pixel_size() const { return dy_ ; } ;
-
-  private:
-	  void scale_and_center();
-	  // options
-	  Float pixel_scale_ ;
-	  // pixel info
-	  casa::Double cenx_ ;
-	  casa::Double ceny_ ;
-	  casa::Double pcenx_ ;
-	  casa::Double pceny_ ;
-	  casa::uInt nx_ ;
-	  casa::uInt ny_ ;
-	  casa::Double dx_ ;
-	  casa::Double dy_ ;
-
-	  // storage for projection
-	  Matrix<Double> pdir_ ;
-
-	  // projection parameters computed from input directions
-	  casa::Vector<Double> p_center_ ;
-	  casa::Vector<Double> p_size_ ;
-  };
-
 
 };
 

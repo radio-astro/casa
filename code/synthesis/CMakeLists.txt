@@ -366,6 +366,7 @@ casa_add_library( synthesis
 # ImagerObjects2/SIMapperImageMosaic.cc
  ImagerObjects/InteractiveMasking.cc
  Utilities/PointingDirectionCalculator.cc
+ Utilities/PointingDirectionProjector.cc
  ${BISON_CalLibraryGram_OUTPUTS}
  ${FLEX_CalLibraryGram_OUTPUTS}
   )
@@ -782,6 +783,7 @@ install (FILES
 	Utilities/SigHandler.h 
 	Utilities/ThreadCoordinator.h
 	Utilities/PointingDirectionCalculator.h
+	Utilities/PointingDirectionProjector.h
 	DESTINATION include/casacode/synthesis/Utilities
 	)
 casa_add_executable( synthesis casasplit apps/casasplit/casasplit.cc )
