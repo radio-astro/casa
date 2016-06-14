@@ -11,6 +11,7 @@
 #include <synthesis/MeasurementComponents/SDDoubleCircleGainCalImpl.h>
 #include <synthesis/MeasurementEquations/VisEquation.h>
 #include <synthesis/Utilities/PointingDirectionCalculator.h>
+#include <synthesis/Utilities/PointingDirectionProjector.h>
 #include <msvis/MSVis/VisSet.h>
 
 #include <casacore/casa/BasicSL/String.h>
@@ -163,7 +164,8 @@ inline void updateWeight(casa::NewCalTable &ct) {
   for (size_t irow = 0; irow < ct.nrow(); ++irow) {
     ctmc.weight().put(irow, ctmc.fparam()(irow));
   }
-}}
+}
+}
 
 namespace casa {
 SDDoubleCircleGainCal::SDDoubleCircleGainCal(VisSet &vs) :
@@ -223,6 +225,7 @@ void SDDoubleCircleGainCal::selfGatherAndSolve(VisSet& vs, VisEquation& ve) {
 template<class Accessor>
 void SDDoubleCircleGainCal::executeDoubleCircleGainCal(
     MeasurementSet const &ms) {
+  logSink() << LogOrigin("SDDoubleCircleGainCal", __FUNCTION__, WHERE);
   // setup worker class
   SDDoubleCircleGainCalImpl worker;
   // TODO: options for worker class should propagate here
@@ -258,6 +261,7 @@ void SDDoubleCircleGainCal::executeDoubleCircleGainCal(
   auto const &fieldTable = ms.field();
   idCol.attach(fieldTable,
       fieldTable.columnName(MSField::MSFieldEnums::SOURCE_ID));
+  ROArrayMeasColumn<MDirection> dirCol(fieldTable, "REFERENCE_DIR");
   std::map<Int, Int> fieldMap;
   for (uInt irow = 0; irow < fieldTable.nrow(); ++irow) {
     auto sourceId = idCol(irow);
@@ -313,23 +317,37 @@ void SDDoubleCircleGainCal::executeDoubleCircleGainCal(
     pcalc.setFrame("J2000");
     pcalc.setDirectionListMatrixShape(PointingDirectionCalculator::ROW_MAJOR);
     debuglog<< "SOURCE_ID " << fieldMap[ifield] << " SOURCE_NAME " << sourceMap[fieldMap[ifield]] << debugpost;
-    if (::isEphemeris(sourceMap[fieldMap[ifield]])) {
+    auto const isEphem = ::isEphemeris(sourceMap[fieldMap[ifield]]);
+    Matrix<Double> offset_direction;
+    if (isEphem) {
       pcalc.setMovingSource(sourceMap[fieldMap[ifield]]);
+      offset_direction = pcalc.getDirection();
     } else {
       pcalc.unsetMovingSource();
+      Matrix<Double> direction = pcalc.getDirection();
+
+      // absolute coordinate -> offset from center
+      OrthographicProjector projector(1.0f);
+      projector.setDirection(direction);
+      Vector<MDirection> md = dirCol.convert(ifield, MDirection::J2000);
+      logSink() << "md.shape() = " << md.shape() << LogIO::POST;
+      auto const qd = md[0].getAngle("rad");
+      auto const d = qd.getValue();
+      auto const lat = d[0];
+      auto const lon = d[1];
+      logSink() << "lat = " << lat << " lon = " << lon << LogIO::POST;
+      projector.setReferencePixel(0.0, 0.0);
+      projector.setReferenceCoordinate(lat, lon);
+      offset_direction = projector.project();
     }
-    Matrix<Double> direction = pcalc.getDirection();
-//    debuglog<< "direction = " << direction << debugpost;
-    Double const *direction_p = direction.data();
-    for (size_t i = 0; i < 10; ++i) {
-      debuglog<< "direction[" << i << "]=" << direction_p[i] << debugpost;
-    }
+//    debuglog<< "offset_direction = " << offset_direction << debugpost;
+//    Double const *direction_p = offset_direction.data();
+//    for (size_t i = 0; i < 10; ++i) {
+//      debuglog<< "offset_direction[" << i << "]=" << direction_p[i] << debugpost;
+//    }
 
     ROScalarColumn<Double> timeCol(currentMS, "TIME");
     Vector<Double> time = timeCol.getColumn();
-//    debuglog<< "time = " << time << debugpost;
-//  ROScalarColumn<Double> exposureCol(current, "EXPOSURE");
-//  ROScalarColumn<Double> intervalCol(current, "INTERVAL");
     Accessor dataCol(currentMS);
     Cube<Float> data = dataCol.getColumn();
 //    debuglog<< "data = " << data << debugpost;
@@ -356,7 +374,7 @@ void SDDoubleCircleGainCal::executeDoubleCircleGainCal(
     debuglog<< "observing frequency = " << worker.getObservingFrequency() / 1e9 << "GHz" << debugpost;
     Double primaryBeamSize = worker.getPrimaryBeamSize();
     debuglog<< "primary beam size = " << primaryBeamSize << " arcsec" << debugpost;
-    worker.calibrate(data, time, direction, gainTime, gain);
+    worker.calibrate(data, time, offset_direction, gainTime, gain);
     //debuglog<< "gain_time = " << gain_time << debugpost;
     //debuglog<<"gain = " << gain << debugpost;
     size_t numGain = gainTime.nelements();
