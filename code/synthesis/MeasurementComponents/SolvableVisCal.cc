@@ -295,8 +295,6 @@ void SolvableVisCal::setApply() {
   setApplied(True);
   setSolved(False);
 
-  throw(AipsError("Generic SVC::setApply is currently disabled."));
-
 }
 
 
@@ -1008,8 +1006,6 @@ void SolvableVisCal::setSolve() {
   setSolved(True);
   setApplied(False);
   setSimulated(False);
-
-  throw(AipsError("Generic SVC::setSolve() is currently disabled."));
 
 }
 
@@ -3556,7 +3552,10 @@ void SolvableVisCal::initSVC() {
   }
   
   parType_=VisCalEnum::COMPLEX;
-  csmi.reset(msName());
+
+  // Temporary trap for _tests_:  an MS-agnostic state
+  if (msName()!="<noms>")
+    csmi.reset(msName());
 }
 
 void SolvableVisCal::deleteSVC() {
