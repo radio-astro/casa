@@ -286,7 +286,7 @@ class CleanBase(basetask.StandardTaskTemplate):
             total_freq_ranges.append((min_frequency, max_frequency))
 
             if (inputs.spwsel.has_key('spw%s' % (spwid))):
-                if (inputs.spwsel['spw%s' % (spwid)] != ''):
+                if (inputs.spwsel['spw%s' % (spwid)] not in ['', 'NONE']):
                     freq_selection, refer = inputs.spwsel['spw%s' % (spwid)].split()
                     if (refer == 'LSRK'):
                         # Convert to TOPO
