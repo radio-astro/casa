@@ -69,6 +69,18 @@ class PipelineManifest(object):
 	"""
         eltree.SubElement (ous, "casa_cmdlog", name=casa_cmdlog)
 
+    def add_flux_file (self, ous, flux_file):
+	"""
+        Add the flux file to the OUS element
+	"""
+        eltree.SubElement (ous, "flux_file", name=flux_file)
+
+    def add_antennapos_file (self, ous, antennapos_file):
+	"""
+        Add the antenna positions file to the OUS element
+	"""
+        eltree.SubElement (ous, "antennapos_file", name=antennapos_file)
+
     def add_aqua_report (self, ous, aqua_report):
 	"""
         Add the AQUA report to the OUS element

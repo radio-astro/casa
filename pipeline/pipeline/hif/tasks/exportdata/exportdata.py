@@ -359,31 +359,39 @@ class ExportData(basetask.StandardTaskTemplate):
             pipemanifest.add_caltables(session, sessiondict[session_name][1])
             for vis_name in sessiondict[session_name][0]:
                 pipemanifest.add_asdm (session, vis_name, visdict[vis_name][0],
-                                       visdict[vis_name][1])
+                    visdict[vis_name][1])
 
         # Export a tar file of the web log
         weblog_file = self._export_weblog (inputs.context, inputs.products_dir,
-                                           oussid)
+            oussid)
         pipemanifest.add_weblog (ouss, os.path.basename(weblog_file))
 
         # Export the processing log independently of the web log
         casa_commands_file = self._export_casa_commands_log (inputs.context,
-                                                             inputs.context.logs['casa_commands'], inputs.products_dir, oussid)
+            inputs.context.logs['casa_commands'], inputs.products_dir, oussid)
         pipemanifest.add_casa_cmdlog (ouss,
-                                      os.path.basename(casa_commands_file))
+            os.path.basename(casa_commands_file))
 
         # Export the processing script independently of the web log
         casa_pipescript = self._export_casa_script (inputs.context,
-                                                    inputs.context.logs['pipeline_script'], inputs.products_dir,
-                                                    oussid)
+            inputs.context.logs['pipeline_script'], inputs.products_dir, oussid)
         pipemanifest.add_pipescript (ouss, os.path.basename(casa_pipescript))
 
-        # Export the restore script
+        # Export the restore script independently of the web log
         casa_restore_script = self._export_casa_restore_script (inputs.context,
-                                                                inputs.context.logs['pipeline_restore_script'],
-                                                                inputs.products_dir, oussid, vislist, session_list)
-        pipemanifest.add_restorescript (ouss,
-                                        os.path.basename(casa_restore_script))
+            inputs.context.logs['pipeline_restore_script'], inputs.products_dir,
+            oussid, vislist, session_list)
+        pipemanifest.add_restorescript (ouss, os.path.basename(casa_restore_script))
+
+        # Export the flux.csv file
+        flux_file = self._export_flux_file (inputs.context, oussid, 'flux.csv',
+            inputs.products_dir)
+        pipemanifest.add_flux_file (ouss, os.path.basename(flux_file))
+
+        # Export the antennapos.csv file.
+        antenna_file = self._export_antpos_file (inputs.context, oussid, 'antennapos.csv',
+            inputs.products_dir)
+        pipemanifest.add_antennapos_file (ouss, os.path.basename(antenna_file))
 
         # Export calibrator images to FITS
         LOG.info ('Exporting calibrator source images')
@@ -395,8 +403,8 @@ class ExportData(basetask.StandardTaskTemplate):
             inputs.context, True, calintents_list, inputs.calimages, \
             inputs.products_dir)
         pipemanifest.add_images (ouss,
-                                 [os.path.basename(image) for image in calimages_fitslist], \
-                                 'calibrator')
+            [os.path.basename(image) for image in calimages_fitslist], 
+            'calibrator')
 
         # Export science target images to FITS
         LOG.info ('Exporting target source images')
@@ -404,8 +412,8 @@ class ExportData(basetask.StandardTaskTemplate):
             inputs.context, False, ['TARGET'], inputs.targetimages, \
             inputs.products_dir)
         pipemanifest.add_images (ouss,
-                                 [os.path.basename(image) for image in targetimages_fitslist], \
-                                 'target')
+            [os.path.basename(image) for image in targetimages_fitslist], \
+            'target')
 
         # Generate the AQUA report
         aqua_reportfile = 'pipeline_aquareport.xml'
@@ -417,12 +425,12 @@ class ExportData(basetask.StandardTaskTemplate):
         finally:
             LOG.info ('Exporting pipeline AQUA report')
             pipe_aquareport_file = self._export_aqua_report (inputs.context,
-                                                             oussid, aqua_reportfile, inputs.products_dir)
+                oussid, aqua_reportfile, inputs.products_dir)
             pipemanifest.add_aqua_report(ouss, os.path.basename(pipe_aquareport_file))
 
         # Export the pipeline manifest file
         casa_pipe_manifest = self._export_pipe_manifest(inputs.context, oussid,
-                                                        'pipeline_manifest.xml', inputs.products_dir, pipemanifest)
+            'pipeline_manifest.xml', inputs.products_dir, pipemanifest)
 
         # Return the results object, which will be used for the weblog
         return ExportDataResults(pprequest=ppr_file, \
@@ -768,7 +776,6 @@ class ExportData(basetask.StandardTaskTemplate):
         else:
             aqua_file = os.path.join (context.output_dir, aquareport_name)
             out_aqua_file = os.path.join (products_dir, oussid + '.' + aquareport_name)
-        print 'AQUA INPUT OUTPUT', aqua_file, out_aqua_file
 
         if os.path.exists(aqua_file):
             LOG.info('Copying AQUA report %s to %s' % \
@@ -777,6 +784,58 @@ class ExportData(basetask.StandardTaskTemplate):
             return os.path.basename(out_aqua_file)
         else:
             return 'Undefined'
+
+    def _export_flux_file (self, context, oussid, fluxfile_name, products_dir):
+
+        """
+        Save the flux file
+        """
+
+        ps = context.project_structure
+        if ps is None:
+            flux_file = os.path.join (context.output_dir, fluxfile_name)
+            out_flux_file = os.path.join (products_dir, fluxfile_name)
+        elif ps.ousstatus_entity_id == 'unknown':
+            flux_file = os.path.join (context.output_dir, fluxfile_name)
+            out_flux_file = os.path.join (products_dir, fluxfile_name)
+        else:
+            flux_file = os.path.join (context.output_dir, fluxfile_name)
+            out_flux_file = os.path.join (products_dir, oussid + '.' + fluxfile_name)
+
+        if os.path.exists(flux_file):
+            LOG.info('Copying flux file %s to %s' % \
+                     (flux_file, out_flux_file))
+            shutil.copy (flux_file, out_flux_file)
+            return os.path.basename(out_flux_file)
+        else:
+            return 'Undefined'
+
+
+    def _export_antpos_file (self, context, oussid, antposfile_name, products_dir):
+
+        """
+        Save the antenna positions file
+        """
+
+        ps = context.project_structure
+        if ps is None:
+            antpos_file = os.path.join (context.output_dir, antposfile_name)
+            out_antpos_file = os.path.join (products_dir, antposfile_name)
+        elif ps.ousstatus_entity_id == 'unknown':
+            antpos_file = os.path.join (context.output_dir, antposfile_name)
+            out_antpos_file = os.path.join (products_dir, antposfile_name)
+        else:
+            antpos_file = os.path.join (context.output_dir, antposfile_name)
+            out_antpos_file = os.path.join (products_dir, oussid + '.' + antposfile_name)
+
+        if os.path.exists(antpos_file):
+            LOG.info('Copying antenna postions file %s to %s' % \
+                     (antpos_file, out_antpos_file))
+            shutil.copy (antpos_file, out_antpos_file)
+            return os.path.basename(out_antpos_file)
+        else:
+            return 'Undefined'
+
 
     def _export_casa_restore_script (self, context, script_name, products_dir, oussid, vislist, session_list):
 
