@@ -337,7 +337,7 @@ void ChannelAverageTVI::visibilityModel (Cube<Complex> & vis) const
 	ChannelAverageTransformEngine<Complex> transformer(&kernel,&inputData,&outputData,width);
 
 	// Transform data
-	transformFreqAxis2(vb->getShape(),transformer);\
+	transformFreqAxis2(vb->getShape(),transformer);
 
 	return;
 }

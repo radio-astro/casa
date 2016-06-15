@@ -79,19 +79,24 @@ protected:
 // PhaseShiftingTransformEngine class
 //////////////////////////////////////////////////////////////////////////
 
-template<class T> class PhaseShiftingTransformEngine : public FreqAxisTransformEngine<T>
+template<class T> class PhaseShiftingTransformEngine : public FreqAxisTransformEngine2<T>
 {
-
-	using FreqAxisTransformEngine<T>::row_p;
-	using FreqAxisTransformEngine<T>::corr_p;
+	using FreqAxisTransformEngine2<T>::inputData_p;
+	using FreqAxisTransformEngine2<T>::outputData_p;
+	using FreqAxisTransformEngine2<T>::rowIndex_p;
+	using FreqAxisTransformEngine2<T>::corrIndex_p;
 
 public:
 
 	PhaseShiftingTransformEngine(Double dx, Double dy,
 								Matrix<Double> *uvw,
-								Vector<Double> *frequencies);
+								Vector<Double> *frequencies,
+								DataCubeMap *inputData,
+								DataCubeMap *outputData);
 
-	void transform(Vector<T> &inputVector,Vector<T> &outputVector);
+	void transform();
+
+	void transformCore(DataCubeMap *inputData,DataCubeMap *outputData);
 
 protected:
 

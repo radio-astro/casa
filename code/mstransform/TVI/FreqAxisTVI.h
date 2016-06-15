@@ -200,6 +200,7 @@ public:
 
 	void setRowIndex(uInt row)
 	{
+		rowIndex_p = row;
 		inputData_p->setMatrixIndex(row);
 		outputData_p->setMatrixIndex(row);
 
@@ -208,6 +209,7 @@ public:
 
 	void setCorrIndex(uInt corr)
 	{
+		corrIndex_p = corr;
 		inputData_p->setVectorIndex(corr);
 		outputData_p->setVectorIndex(corr);
 
@@ -218,6 +220,8 @@ public:
 
 protected:
 
+	uInt rowIndex_p;
+	uInt corrIndex_p;
 	DataCubeMap *inputData_p;
 	DataCubeMap *outputData_p;
 

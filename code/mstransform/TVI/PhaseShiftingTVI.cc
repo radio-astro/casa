@@ -109,11 +109,24 @@ void PhaseShiftingTVI::visibilityObserved (Cube<Complex> & vis) const
 	Matrix<Double> uvw = vb->uvw();
 	Vector<Double> frequencies = vb->getFrequencies(0);
 
+	// Reshape output data before passing it to the DataCubeHolder
+	vis.resize(getVisBufferConst()->getShape(),False);
+
+	// Gather input data
+	DataCubeMap inputData;
+	DataCubeHolder<Complex> inputVisCubeHolder(vb->visCube());
+	inputData.add(MS::DATA,inputVisCubeHolder);
+
+	// Gather output data
+	DataCubeMap outputData;
+	DataCubeHolder<Complex> outputVisCubeHolder(vis);
+	outputData.add(MS::DATA,outputVisCubeHolder);
+
 	// Configure Transformation Engine
-	PhaseShiftingTransformEngine<Complex> transformer(dx_p,dy_p,&uvw,&frequencies);
+	PhaseShiftingTransformEngine<Complex> transformer(dx_p,dy_p,&uvw,&frequencies,&inputData,&outputData);
 
 	// Transform data
-	transformFreqAxis(vb->visCube(),vis,transformer);
+	transformFreqAxis2(vb->getShape(),transformer);
 
 	return;
 }
@@ -128,11 +141,24 @@ void PhaseShiftingTVI::visibilityCorrected (Cube<Complex> & vis) const
 	Matrix<Double> uvw = vb->uvw();
 	Vector<Double> frequencies = vb->getFrequencies(0);
 
+	// Reshape output data before passing it to the DataCubeHolder
+	vis.resize(getVisBufferConst()->getShape(),False);
+
+	// Gather input data
+	DataCubeMap inputData;
+	DataCubeHolder<Complex> inputVisCubeHolder(vb->visCubeCorrected());
+	inputData.add(MS::DATA,inputVisCubeHolder);
+
+	// Gather output data
+	DataCubeMap outputData;
+	DataCubeHolder<Complex> outputVisCubeHolder(vis);
+	outputData.add(MS::DATA,outputVisCubeHolder);
+
 	// Configure Transformation Engine
-	PhaseShiftingTransformEngine<Complex> transformer(dx_p,dy_p,&uvw,&frequencies);
+	PhaseShiftingTransformEngine<Complex> transformer(dx_p,dy_p,&uvw,&frequencies,&inputData,&outputData);
 
 	// Transform data
-	transformFreqAxis(vb->visCubeCorrected(),vis,transformer);
+	transformFreqAxis2(vb->getShape(),transformer);
 
 	return;
 }
@@ -147,11 +173,24 @@ void PhaseShiftingTVI::visibilityModel (Cube<Complex> & vis) const
 	Matrix<Double> uvw = vb->uvw();
 	Vector<Double> frequencies = vb->getFrequencies(0);
 
+	// Reshape output data before passing it to the DataCubeHolder
+	vis.resize(getVisBufferConst()->getShape(),False);
+
+	// Gather input data
+	DataCubeMap inputData;
+	DataCubeHolder<Complex> inputVisCubeHolder(vb->visCubeModel());
+	inputData.add(MS::DATA,inputVisCubeHolder);
+
+	// Gather output data
+	DataCubeMap outputData;
+	DataCubeHolder<Complex> outputVisCubeHolder(vis);
+	outputData.add(MS::DATA,outputVisCubeHolder);
+
 	// Configure Transformation Engine
-	PhaseShiftingTransformEngine<Complex> transformer(dx_p,dy_p,&uvw,&frequencies);
+	PhaseShiftingTransformEngine<Complex> transformer(dx_p,dy_p,&uvw,&frequencies,&inputData,&outputData);
 
 	// Transform data
-	transformFreqAxis(vb->visCubeModel(),vis,transformer);
+	transformFreqAxis2(vb->getShape(),transformer);
 
 	return;
 }
@@ -196,7 +235,10 @@ vi::ViImplementation2 * PhaseShiftingTVIFactory::createVi() const
 template<class T> PhaseShiftingTransformEngine<T>::PhaseShiftingTransformEngine(
 															Double dx, Double dy,
 															Matrix<Double> *uvw,
-															Vector<Double> *frequencies)
+															Vector<Double> *frequencies,
+															DataCubeMap *inputData,
+															DataCubeMap *outputData):
+															FreqAxisTransformEngine2<T>(inputData,outputData)
 {
 	uvw_p = uvw;
 	frequencies_p = frequencies;
@@ -209,11 +251,23 @@ template<class T> PhaseShiftingTransformEngine<T>::PhaseShiftingTransformEngine(
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-template<class T> void PhaseShiftingTransformEngine<T>::transform(	Vector<T> &inputVector,
-																	Vector<T> &outputVector)
+template<class T> void PhaseShiftingTransformEngine<T>::transform(	)
 {
+	transformCore(inputData_p,outputData_p);
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template<class T> void PhaseShiftingTransformEngine<T>::transformCore(	DataCubeMap *inputData,
+																		DataCubeMap *outputData)
+{
+	// Get input/output data
+	Vector<T> &inputVector = inputData->getVector<T>(MS::DATA);
+	Vector<T> &outputVector = outputData->getVector<T>(MS::DATA);
+
 	// Extra path as fraction of U and V in m
-	Double phase = dx_p*(*uvw_p)(0,row_p) + dy_p*(*uvw_p)(1,row_p);
+	Double phase = dx_p*(*uvw_p)(0,rowIndex_p) + dy_p*(*uvw_p)(1,rowIndex_p);
 
 	// In radian/Hz
 	phase *= -2.0 * C::pi / C::c;
