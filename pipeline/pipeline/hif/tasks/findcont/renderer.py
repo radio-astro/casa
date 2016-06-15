@@ -47,8 +47,8 @@ class T2_4MDetailsFindContRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
                 status = ranges_dict[field][spw]['status']
 
-                ranges_for_spw = ranges_dict[field][spw].get('cont_ranges', [])
-                if (ranges_for_spw in (['NONE'], [''])):
+                ranges_for_spw = ranges_dict[field][spw].get('cont_ranges', ['NONE'])
+                if (ranges_for_spw in (['NONE'], [], [{'range': 'NONE', 'refer': 'LSRK'}], [{'range': 'NONE', 'refer': 'TOPO'}])):
                     rows.append(TR(field=field, spw=spw, min='None', max='',
                                    frame='None', status=status, spectrum=plotfile))
                 else:
