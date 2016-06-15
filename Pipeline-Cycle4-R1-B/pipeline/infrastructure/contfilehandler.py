@@ -45,8 +45,9 @@ class ContFileHandler(object):
                         field_name = item.split('Field:')[1].strip()
                     else:
                         field_name = item
-                    field_name = utils.dequote(field_name)
-                    cont_ranges['fields'][field_name] = {}
+                    field_name = utils.dequote(field_name).strip()
+                    if (field_name != ''):
+                        cont_ranges['fields'][field_name] = {}
                 elif (item.find('SPW') == 0):
                     cont_ranges['version'] = 1
                     spw_id = item.split('SPW')[1].strip()
@@ -71,6 +72,11 @@ class ContFileHandler(object):
             except:
                 pass
 
+        for fkey in cont_ranges['fields'].iterkeys():
+            for skey in cont_ranges['fields'][fkey].iterkeys():
+                if (cont_ranges['fields'][fkey][skey] == []):
+                    cont_ranges['fields'][fkey][skey] = ['NONE']
+
         return cont_ranges
 
     def write(self, cont_ranges = None):
@@ -89,7 +95,7 @@ class ContFileHandler(object):
                     fd.write('SPW%s\n' % (spw_id))
                 elif (cont_ranges['version'] == 2):
                     fd.write('SpectralWindow: %s\n' % (spw_id))
-                if (cont_ranges['fields'][field_name][spw_id] == []):
+                if (cont_ranges['fields'][field_name][spw_id] in ([], ['NONE'])):
                     fd.write('NONE\n')
                 else:
                     for freq_range in cont_ranges['fields'][field_name][spw_id]:
@@ -113,7 +119,7 @@ class ContFileHandler(object):
 
         if (cont_ranges['fields'].has_key(field_name)):
             if (cont_ranges['fields'][field_name].has_key(spw_id)):
-                if (cont_ranges['fields'][field_name][spw_id] != ['NONE']):
+                if (cont_ranges['fields'][field_name][spw_id] not in ([], ['NONE'])):
                     merged_cont_ranges = utils.merge_ranges([cont_range['range'] for cont_range in cont_ranges['fields'][field_name][spw_id]])
                     cont_ranges_spwsel = ';'.join(['%s~%sGHz' % (spw_sel_interval[0], spw_sel_interval[1]) for spw_sel_interval in merged_cont_ranges])
                     refers = np.array([spw_sel_interval['refer'] for spw_sel_interval in cont_ranges['fields'][field_name][spw_id]])
