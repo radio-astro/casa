@@ -81,120 +81,133 @@ public:
 
     ImageMetaDataRW() = delete;
 
-	ImageMetaDataRW(SPIIF image);
-	ImageMetaDataRW(SPIIC image);
+    ImageMetaDataRW(SPIIF image);
+    ImageMetaDataRW(SPIIC image);
 
-	// remove, if possible, the specified parameter. Returns True if removal
-	// was successful.
-	Bool remove(const String& key);
+    // remove, if possible, the specified parameter. Returns True if removal
+    // was successful.
+    Bool remove(const String& key);
 
-	// remove the specified mask. If the empty string is given, all masks will
-	// be removed. Returns True if successful, False otherwise or if the specfied
-	// mask does not exist.
-	Bool removeMask(const String& maskName);
+    // remove the specified mask. If the empty string is given, all masks will
+    // be removed. Returns True if successful, False otherwise or if the specfied
+    // mask does not exist.
+    Bool removeMask(const String& maskName);
 
-	Record toRecord(Bool verbose) const;
+    Record toRecord(Bool verbose) const;
 
-	// add a key-value pair
-	Bool add(const String& key, const ValueHolder& value);
+    // add a key-value pair
+    Bool add(const String& key, const ValueHolder& value);
 
-	// set (update) the value associated with the key.
-	Bool set(const String& key, const ValueHolder& value);
+    // set (update) the value associated with the key.
+    Bool set(const String& key, const ValueHolder& value);
 
-	// set the coordinate system from a Record.
-	void setCsys(const Record& coordinates);
+    // set the coordinate system from a Record.
+    void setCsys(const Record& coordinates);
 
 protected:
 
-	SPCIIF _getFloatImage() const {return _floatImage;}
+    SPCIIF _getFloatImage() const {return _floatImage;}
 
-	SPCIIC _getComplexImage() const {return _complexImage;}
+    SPCIIC _getComplexImage() const {return _complexImage;}
 
-	const ImageInfo& _getInfo() const;
+    const ImageInfo& _getInfo() const;
 
-	const CoordinateSystem& _getCoords() const;
+    const CoordinateSystem& _getCoords() const;
 
-	Vector<String> _getAxisNames() const;
+    Vector<String> _getAxisNames() const;
 
-	Vector<String> _getAxisUnits() const;
+    Vector<String> _getAxisUnits() const;
 
-	GaussianBeam _getBeam() const;
+    GaussianBeam _getBeam() const;
 
-	String _getBrightnessUnit() const;
+    String _getBrightnessUnit() const;
 
-	String _getImType() const;
+    String _getImType() const;
 
-	vector<Quantity> _getIncrements() const;
+    vector<Quantity> _getIncrements() const;
 
-	Vector<String> _getMasks() const;
+    Vector<String> _getMasks() const;
 
-	String _getObject() const;
+    String _getObject() const;
 
-	String _getEquinox() const;
+    String _getEquinox() const;
 
-	MEpoch _getObsDate() const;
+    MEpoch _getObsDate() const;
 
-	String _getObserver() const;
+    String _getObserver() const;
 
-	String _getProjection() const;
+    String _getProjection() const;
 
-	String _getRefFreqType() const;
+    String _getRefFreqType() const;
 
-	Vector<Double> _getRefPixel() const;
+    Vector<Double> _getRefPixel() const;
 
-	Vector<Quantity> _getRefValue() const;
+    Vector<Quantity> _getRefValue() const;
 
-	Quantity _getRestFrequency() const;
+    Quantity _getRestFrequency() const;
 
-	String _getTelescope() const;
+    String _getTelescope() const;
 
-	Record _getStatistics() const;
+    Record _getStatistics() const;
 
-	Vector<String> _getStokes() const;
+    Vector<String> _getStokes() const;
 
 private:
-	SPIIF _floatImage;
-	SPIIC _complexImage;
+    SPIIF _floatImage;
+    SPIIC _complexImage;
 
-	// These are mutable because they are only to be set once and
-	// then cached. If this contract is broken, and they are set elsewhere
-	// defects will likely occur.
-	mutable String _bunit, _imtype, _object, _equinox, _observer, _projection,
-		_reffreqtype, _telescope;
-	mutable MEpoch _obsdate;
-	mutable Quantity _restFreq;
-	mutable Vector<String> _masks, _stokes;
-	mutable GaussianBeam _beam;
-	mutable Vector<String> _axisNames, _axisUnits;
-	mutable Vector<Double> _refPixel;
-	mutable vector<Quantity> _refVal, _increment;
-	mutable Record _header, _stats;
+    // These are mutable because they are only to be set once and
+    // then cached. If this contract is broken, and they are set elsewhere
+    // defects will likely occur.
+    mutable String _bunit, _imtype, _object, _equinox, _observer, _projection,
+        _reffreqtype, _telescope;
+    mutable MEpoch _obsdate;
+    mutable Quantity _restFreq;
+    mutable Vector<String> _masks, _stokes;
+    mutable GaussianBeam _beam;
+    mutable Vector<String> _axisNames, _axisUnits;
+    mutable Vector<Double> _refPixel;
+    mutable vector<Quantity> _refVal, _increment;
+    mutable Record _header, _stats;
 
     std::unique_ptr<CoordinateSystem> _makeCoordinateSystem(
-	    const Record& coordinates, const IPosition& shape
-	);
+        const Record& coordinates, const IPosition& shape
+    );
 
-	void _setCoordinateValue(const String& key, const ValueHolder& value);
+    void _setCoordinateValue(const String& key, const ValueHolder& value);
 
-	String  _getString(const String& key, const ValueHolder& value) const;
+    String  _getString(const String& key, const ValueHolder& value) const;
 
-	void _setUserDefined(const String& key, const ValueHolder& v);
+    void _setUserDefined(const String& key, const ValueHolder& v);
 
-	Bool _setUnit(const String& unit);
+    Bool _setUnit(const String& unit);
 
-	Bool _setCsys(const CoordinateSystem& csys);
+    Bool _setCsys(const CoordinateSystem& csys);
 
-	Bool _setImageInfo(const ImageInfo& info);
+    Bool _setImageInfo(const ImageInfo& info);
 
-	const TableRecord _miscInfo() const;
+    const TableRecord _miscInfo() const;
 
-	void _setMiscInfo(const TableRecord& rec);
+    void _setMiscInfo(const TableRecord& rec);
 
-	Bool _hasRegion(const String& maskName) const;
+    Bool _hasRegion(const String& maskName) const;
 
-	static Quantity _getQuantity(const ValueHolder& v);
+    static Quantity _getQuantity(const ValueHolder& v);
 
-	Bool _isWritable() const;
+    Bool _isWritable() const;
+
+    template <class T, class U> void _modHistory(
+        const String& func, const String& keyword,
+        const T& oldVal, const U& newVal
+    );
+
+    template <class T> void _addHistory(
+        const String& func, const String& keyword, const T& newVal
+    );
+
+    void _toHistory(const String& origin, const String& record);
+
+    template <class T> static String _quotify(const T& val);
 };
 
 }
