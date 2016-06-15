@@ -1455,7 +1455,34 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  // This runs once per cube partition, and will see only its own partition's shape
 	  chanchunks=1;
 
-	  log_l <<"Setting chanchunks to " << chanchunks << LogIO::POST;
+          // heuristic, we need around 9 times more than imshape memory
+          size_t fudge_factor = 9;
+          size_t required_mem = fudge_factor * sizeof(Float);
+          for (size_t i = 0; i < imshape.nelements(); i++) {
+              required_mem *= imshape[i];
+          }
+          // get number of tclean processes running on the same machine
+          size_t nlocal_procs = 1;
+          if (getenv("OMPI_COMM_WORLD_LOCAL_SIZE")) {
+              std::stringstream ss(getenv("OMPI_COMM_WORLD_LOCAL_SIZE"));
+              ss >> nlocal_procs;
+          }
+          // assumes all processes need the same amount of memory
+          required_mem *= nlocal_procs;
+          Double memory_avail = HostInfo::memoryTotal(true) * 1024.;
+
+          // compute required chanchunks to fit into the available memory
+          chanchunks = (Double)required_mem / memory_avail;
+          if (imshape.nelements() == 4 && imshape[3] < chanchunks) {
+              chanchunks = imshape[3];
+              // TODO make chanchunks a divisor of nchannels?
+          }
+          chanchunks = chanchunks < 1 ? 1 : chanchunks;
+
+	  log_l << "Required memory " << required_mem / nlocal_procs / 1024. / 1024. / 1024.
+                 << "\nAvailable memory " << memory_avail / 1024. / 1024 / 1024.
+                 << "\n" << nlocal_procs << " other processes on node\n"
+                 << "Setting chanchunks to " << chanchunks << LogIO::POST;
 	}
 
       if( imshape.nelements()==4 && imshape[3]<chanchunks )
