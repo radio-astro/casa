@@ -188,7 +188,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
   void SynthesisUtilMethods::getResource(String label, String fname)
   {
-        return;
+           return;
 
      LogIO os( LogOrigin("SynthesisUtilMethods","getResource",WHERE) );
 
@@ -2954,8 +2954,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     if( facets < 1 )
       {err += "Must have at least 1 facet\n"; }
-    if( chanchunks < 1 )
-      {err += "Must have at least 1 chanchunk\n"; }
+    //if( chanchunks < 1 )
+    //  {err += "Must have at least 1 chanchunk\n"; }
     if( (facets>1) && (chanchunks>1) )
       { err += "The combination of facetted imaging with channel chunking is not yet supported. Please choose only one or the other for now. \n";}
 

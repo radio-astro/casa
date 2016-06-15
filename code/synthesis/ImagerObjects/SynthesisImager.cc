@@ -1445,6 +1445,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       if(facets > 1 && itsMappers.nMappers() > 0)
 	log_l << "Facetted image has to be the first of multifields" << LogIO::EXCEPTION;
 
+     if(chanchunks<1)
+	{
+	  log_l << "Automatically calculate chanchunks";
+	  log_l << " using imshape : " << imshape << LogIO::POST;
+
+	  // Do calculation here.
+	  // This runs once per image field (for multi-field imaging)
+	  // This runs once per cube partition, and will see only its own partition's shape
+	  chanchunks=1;
+
+	  log_l <<"Setting chanchunks to " << chanchunks << LogIO::POST;
+	}
+
       if( imshape.nelements()==4 && imshape[3]<chanchunks )
 	{
 	  log_l << LogIO::WARN << "An image with " << imshape[3] << " channel(s) cannot be divided into " << chanchunks << " chunks. Please set chanchunks=1 or choose chanchunks<nchan." << LogIO::EXCEPTION;
