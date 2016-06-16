@@ -1124,15 +1124,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 	      }
 	  }
 
-	/*	
-	///Remove the old mask as it is no longer valid
-	if (pb()-> getDefaultMask() != String("")){
-	  String strung=pb()->getDefaultMask();
-	  pb()->setDefaultMask("");
-	  pb()->removeRegion(strung);
-	} 
-	*/
-
+	//Remove the old mask as it is no longer valid
 	removeMask( pb() );
 
 	//MSK//	
@@ -1176,10 +1168,10 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 	  {
 	    removeMask(outimage);
 	    
-	    // clear output image mask
-	    if( (outimage->getDefaultMask()).matches("mask0") ) 
-	      {outimage->setDefaultMask(""); 
-		outimage->removeRegion("mask0");}
+	    // // clear output image mask
+	    // if( (outimage->getDefaultMask()).matches("mask0") ) 
+	    //   {outimage->setDefaultMask(""); 
+	    // 	outimage->removeRegion("mask0");}
 	    // get mask from input image
 	    
 	    ImageRegion outreg=outimage->makeMask("mask0", False, True);
@@ -1199,19 +1191,26 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
   {
     try
       {
+	// // clear output image mask
+	// if( (im->getDefaultMask()).matches("mask0") ) 
+	//   {im->setDefaultMask(""); 
+	// 	im->removeRegion("mask0");}
 	///Remove the old mask as it is no longer valid
-	if (im-> getDefaultMask() != String("")){
-	  String strung=im->getDefaultMask();
-	  im->setDefaultMask("");
-	  im->removeRegion(strung);
-	} 
+	if (im-> getDefaultMask() != String(""))
+	  {
+	    String strung=im->getDefaultMask();
+	    im->setDefaultMask("");
+	    im->removeRegion(strung);
+	  } 
 	if( im->hasRegion("mask0") )
-	  {	  im->removeRegion("mask0"); }
-	
+	  {
+	    im->removeRegion("mask0");
+	  }
       }
-    catch (const AipsError& x) {
-      throw(AipsError("Error in deleting internal T/F mask : " + x.getMesg() ));
-    }
+    catch (const AipsError& x)
+      {
+	throw(AipsError("Error in deleting internal T/F mask : " + x.getMesg() ));
+      }
   } 
   void SIImageStore:: rescaleResolution(Int chan, 
 					ImageInterface<Float>& image, 

@@ -1187,7 +1187,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	// isDryRun = True;
-	//cerr << "Is Dry Run = " << dryRun() << endl;
 	Bool pleaseDoAlsoFillTheCF=!dryRun();
 	convFuncCtor_p->makeConvFunction(image,vb,wConvSize, 
 					 pop_p, pa, dPA, uvScale, uvOffset,spwFreqSel_p,

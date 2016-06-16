@@ -684,7 +684,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	if( tix < itsNTerms ) {
 	  if( resetresidual ) {
-	    removeMask( residual(tix) );
+	    //removeMask( residual(tix) );
 	    residual(tix)->set(0.0);
 	  } 
 	}
