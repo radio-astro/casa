@@ -600,11 +600,13 @@ PER SPECTRUM FIT PARAMETERS
 Per spectrum baseline fitting parameter is accepted in blfunc='variable'.
 Note this is an expert mode. The fitting parameters should be defined in
 a text file for each spectrum in the input MS. The text file should store
-commpa separated values in order of:
-row ID, polarization ID, masklist, blfunc, order, npiece, nwave,clipthresh,
-clipniter, use_linefinder, thresh, edge, chan_avg_limit.
+comma separated values in order of:
+row ID, polarization, mask, clipniter, clipthresh, use_linefinder, 
+thresh, left edge, right edge, avg_limit, blfunc, order, npiece, nwave.
 Each row in the text file must contain the following keys and values:
-* 'row': row number,
+* 'row': row number after selection,
+* 'pol': polarization index in the row,
+* 'clipniter': maximum iteration number for iterative fitting,
 * 'blfunc': function name.
      available ones include, 'poly', 'chebyshev', 'cspline',and 'sinusoid'
 * 'order': maximum order of polynomial. needed when blfunc='poly'
@@ -614,11 +616,11 @@ and
 * 'nwave': a list of sinusoidal wave numbers. needed when blfunc='sinusoid'.
 
 example:
-#row,pol,masklist,blfunc,order,npiece,nwave,clipthresh,clipniter,use_lf,thres,edge,avg_limit
-0,0,[[500,1600]],poly,5,,,,,,,,
-0,1,,chebyshev,10,,,,,,,,
-1,0,,cspline,,4,,,,,,,
-1,1,,sinusoid,,,[0,1,2,3],,,,,,
+#row,pol,mask,clipniter,clipthresh,use_linefinder,thresh,Ledge,Redge,avg_limit,blfunc,order,npiece,nwave
+1,1,0~4000;6000~8000,0,3.,false,0.,0,0,0,chebyshev,0,0,[]
+1,0,,0,3.,false,0.,0,0,0,poly,1,0,[]
+0,1,,0,3.,false,0.,0,0,0,chebyshev,2,0,[]
+0,0,,0,3.,false,,,,,cspline,,1,[]
 
   </example>
 
