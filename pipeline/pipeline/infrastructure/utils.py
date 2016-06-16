@@ -236,13 +236,14 @@ def to_CASA_intent(ms, intents):
     understand.
     '''
     obs_modes = ms.get_original_intent(intents)
-    if obs_modes:
-        r = re.compile('\W*_([a-zA-Z]*)[#\._]\W*')
-        intents = [r.findall(obs_mode) for obs_mode in obs_modes]
-        # convert the list of lists back to a 1-D list
-        intents = set(itertools.chain(*intents))
-        # replace the CASA arg with *INTENT1*,*INTENT2*, etc.
-        return ','.join(['*{0}*'.format(intent) for intent in intents])
+    return ','.join(obs_modes)
+#     if obs_modes:
+#         r = re.compile('\W*_([a-zA-Z]*)[#\._]\W*')
+#         intents = [r.findall(obs_mode) for obs_mode in obs_modes]
+#         # convert the list of lists back to a 1-D list
+#         intents = set(itertools.chain(*intents))
+#         # replace the CASA arg with *INTENT1*,*INTENT2*, etc.
+#         return ','.join(['*{0}*'.format(intent) for intent in intents])
 
 
 def to_pipeline_intent(ms, intent):
