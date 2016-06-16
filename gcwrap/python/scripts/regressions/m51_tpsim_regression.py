@@ -157,12 +157,17 @@ ia.close()
 #             'sigma': 0.42372863,
 #             'sum':  47434.86051071}
 # 2015/10/23: update after the fix to rasterutil._get_sampling (r35037)
-refstats = {'max': 5.01661158,
-             'min': -0.80671942,
-             'rms': 0.5335443,
-             'sigma': 0.48867723,
-             'sum':  56116.85862354}
-
+#refstats = {'max': 5.01661158,
+#             'min': -0.80671942,
+#             'rms': 0.5335443,
+#             'sigma': 0.48867723,
+#             'sum':  56116.85862354}
+#2016/06/15 after fixing B1950 component corruption
+refstats = {'max': 5.2856,
+             'min': -0.79999,
+             'rms': 0.56074,
+             'sigma': 0.51274,
+             'sum':  59485}
 ia.open(project+"/"+project + '.sd.diff')
 m51sd_diffstats=ia.statistics(verbose=False,list=False)
 ia.close()
@@ -222,12 +227,17 @@ ia.close()
 #              'sum': 5277.29528891}
 
 # 2015/10/23: update after the fix to rasterutil._get_sampling (r35037)
-diffstats = {'max': 0.91776484,
-             'min': -0.89943612,
-             'rms': 0.20261368,
-             'sigma': 0.20169726,
-             'sum': 5044.85529928}
-
+#diffstats = {'max': 0.91776484,
+#             'min': -0.89943612,
+#             'rms': 0.20261368,
+#             'sigma': 0.20169726,
+#             'sum': 5044.85529928}
+#2016/06/15 after fixing 1950 component corruption
+diffstats = {'max': 0.91084,
+             'min': -0.90267,
+             'rms': 0.19858,
+             'sigma': 0.19848,
+             'sum': 1676.6}
 # relative tolerances to reference values
 reftol   = {'sum':  1e-2,
             'max':  1e-2,

@@ -348,12 +348,17 @@ ia.close()
 #             'sigma': 0.016102,
 #             'sum':  1257.2}
 # 20160516: update after image parameter change after Sinc correction in MosaicFT 
-refstats = {'max': 0.14125,
-             'min': -0.025361,
-             'rms': 0.019264,
-             'sigma': 0.01622,
-             'sum':  1246.1}
-
+#refstats = {'max': 0.14125,
+#             'min': -0.025361,
+#             'rms': 0.019264,
+#             'sigma': 0.01622,
+#             'sum':  1246.1}
+# 20160615: after fixing component corruption in B1950 frame
+refstats = {'max': 0.14578,
+             'min': -0.02492,
+             'rms': 0.019677,
+             'sigma': 0.016366,
+             'sum':  1310.0}
 # # reference statistic values for diff image
 # diffstats = {'max': 0.030648,
 #              'min': -0.075413,
@@ -428,11 +433,17 @@ refstats = {'max': 0.14125,
 #             'sigma': 0.010015,
 #             'sum':  -385.33}
 # 20160516: update after sinc correction in MosaicFT
-diffstats = {'max':  0.032796,
-             'min': -0.067938,
-             'rms': 0.010429,
-             'sigma': 0.0099509,
-             'sum':  -374.23}
+#diffstats = {'max':  0.032796,
+#             'min': -0.067938,
+#             'rms': 0.010429,
+#             'sigma': 0.0099509,
+#             'sum':  -374.23}
+# 20160615: After fixing B1950 component corruption
+diffstats = {'max':  0.031154,
+             'min': -0.067642,
+             'rms': 0.010623,
+             'sigma': 0.0099747,
+             'sum':  -438.1}
 # relative tolerances to reference values
 reftol   = {'sum':  1e-2,
             'max':  1e-2,
