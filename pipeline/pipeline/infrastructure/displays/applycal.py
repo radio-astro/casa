@@ -36,14 +36,14 @@ class PlotmsLeaf(object):
         self._intent = intent
         self._uvrange = uvrange
         
-        # convert intent to scan selection
-        if intent != '':
-            domain_fields = self._ms.get_fields(field)
-            domain_spws = self._ms.get_spectral_windows(spw)
-            scans = [s for s in self._ms.get_scans(scan_intent=intent)
-                     if s.fields.intersection(domain_fields)
-                     and s.spws.intersection(domain_spws)]
-            scan = ','.join([str(s.id) for s in scans])
+#         # convert intent to scan selection
+#         if intent != '':
+#             domain_fields = self._ms.get_fields(field)
+#             domain_spws = self._ms.get_spectral_windows(spw)
+#             scans = [s for s in self._ms.get_scans(scan_intent=intent)
+#                      if s.fields.intersection(domain_fields)
+#                      and s.spws.intersection(domain_spws)]
+#             scan = ','.join([str(s.id) for s in scans])
         self._scan = scan
 
         # use field name rather than ID where possible
@@ -169,12 +169,14 @@ class PlotmsLeaf(object):
         return wrapper
 
     def _get_plot_task(self):
+        casa_intent = utils.to_CASA_intent(self._ms, self._intent)
         task_args = {'vis'             : self._ms.name,
                      'xaxis'           : self._xaxis,
                      'yaxis'           : self._yaxis,
                      'field'           : str(self._field),
                      'spw'             : str(self._spw),
                      'scan'            : str(self._scan),
+                     'intent'          : casa_intent,
                      'antenna'         : self._ant,
                      'uvrange'         : self._uvrange,
                      'plotfile'        : self._plotfile,
