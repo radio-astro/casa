@@ -154,7 +154,14 @@ CrashReportPoster::cleanup ()
 
     // Close out the log file entry.
 
-    logStream_p << "... done\n------------------------------" << endl;
+    time_t seconds;
+    struct tm * timeInfo;
+
+    time (& seconds);
+    timeInfo = localtime (& seconds);
+
+    logStream_p << "... done at " << asctime (timeInfo)
+                << "\n------------------------------" << endl;
 }
 
 void

@@ -48,6 +48,7 @@
 #include <display/Utilities/Lowlevel.h>
 
 #include <unistd.h>
+#include <stdcasa/StdCasa/CrashReporter.h>
 #include <sys/stat.h>
 
 /*
@@ -139,7 +140,12 @@ bool ViewerApp::notify( QObject *receiver, QEvent *e ) {
 	return true;
 }
 
+
+
+
 int main( int argc, const char *argv[] ) {
+
+    CrashReporter::initializeFromApplication(argv[0]);
 
 	casa::dbus::diagnostic.argv( argc, argv );
 
@@ -151,7 +157,6 @@ int main( int argc, const char *argv[] ) {
 	bool with_dbus = false;
 	char *logfile_path = 0;
 	bool initial_run = false;
-
 
 	char **args;
 	int numargs;

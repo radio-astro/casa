@@ -220,6 +220,8 @@ endmacro (install_breakpad)
 
 if (UseCrashReporter)
 
+    message ("INFO Configuring support for Crash Reporting.")
+
     # Only the Breakpad_Timestamp line below should require changing when upgrading
     # to a later breakpad release
 

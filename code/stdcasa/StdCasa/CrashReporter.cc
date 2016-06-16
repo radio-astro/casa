@@ -1,5 +1,5 @@
 /*
- * CrashReporter.cc
+ appli* CrashReporter.cc
  *
  *  Created on: Mar 16, 2016
  *      Author: jjacobs
@@ -46,6 +46,8 @@ CrashReporter::initializeFromApplication (const char *)
 #include <iostream>
 #include <regex>
 #include <string>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #undef check
 
@@ -85,6 +87,12 @@ crashCallbackCommon (const char * dumpPath,
 
         // This is the new process; replace the current process image with
         // the crashPoster executable image.
+        //
+        // First make the process the leader of a new session so that we don't
+        // die when the parent process does (and that's likely to happen
+        // pretty quickly).
+
+        setsid (); // Create/join new session
 
         execl (crashDumpPoster.c_str(),       // File to run
                crashDumpPoster.c_str(),       // Argument 0
@@ -100,6 +108,15 @@ crashCallbackCommon (const char * dumpPath,
     } else if (pid == -1){
 
         cerr << "*** Failed to fork: errno=" << errno << endl;
+    } else {
+
+        // Wait for the crash poster process to finish otherwise exiting will
+        // likely kill the poster application, too.
+
+        pid_t child = waitpid (pid, nullptr, 0);
+        if (child == -1){
+            cerr << "*** waitpid failed: errno= << errno << endl";
+        }
     }
 
     // Only the original process gets to here.  Exiting the routine will
@@ -179,7 +196,14 @@ CrashReporter::initialize (const string & crashDumpDirectory,
     }
 
     crashDumpPoster = crashDumpPosterApplication;
+
     crashUrl = crashPostingUrl;
+    if (crashUrl.empty()){
+        String s;
+        AipsrcValue<String>::find (s, String ("CrashReportUrl"),
+                                   String ("https://casa.nrao.edu/cgi-bin/crash-report.pl"));
+        crashUrl = s;
+    }
 
     auto filter = [] (void *) -> bool {/* cerr << "... filter called" << endl; */ return true;};
 
@@ -207,6 +231,8 @@ CrashReporter::initialize (const string & crashDumpDirectory,
                                                    -1 /*serverFd*/);
 #endif
 
+cerr << "--> CrashReporter initialized." << endl << flush;
+
     return "";
 }
 
@@ -214,18 +240,29 @@ std::string
 CrashReporter::initializeFromApplication (const char * applicationArg0)
 {
     // The single argument to this method is the zeroeth argument passed to the
-    // main function in the applicaiton.  The path portion of arg0 will be extracted
+    // main function in the application.  The path portion of arg0 will be extracted
     // and used to find the bin directory and thereby the crash dump poster application.
 
     // Convert the provided path to an absolute one with all symbolic links expanded.
 
-    char exePath [4096];
-    char * status = realpath (applicationArg0, exePath);
+    char exePathBuffer [4096];
+    char * status = realpath (applicationArg0, exePathBuffer);
+    String exePath = (status != 0) ? exePathBuffer : "";
 
-    if (status == 0){
+    if (exePath.empty()){
 
-        return String::format ("CrashReporter call to realpath during initialization failed: %s",
-                               strerror (errno));
+        // No path from arg0 so use the first chunk of CASAPATH
+
+        char * s = getenv ("CASAPATH");
+        exePath = (s) ? s : "";
+
+        // Replace a string of contiguous spaces (should be one of these) with
+        // a "slash".
+        std::regex spaces (" +");
+        exePath = regex_replace (exePath, spaces, "/");
+
+        exePath += "/bin/bogusExe";
+
     }
 
     // Extract the path portion of the file spec.
@@ -234,16 +271,17 @@ CrashReporter::initializeFromApplication (const char * applicationArg0)
     std::string binPath;
     std::regex re ("(.*/)[^/]*$"); // Match everything through the last slash
 
-    if (std::regex_match (exePath, match, re)){
+    if (std::regex_match (exePath.c_str(), match, re)){
         binPath = match.str(1);
     } else {
-        return String::format ("CrashReporter could not find path in '%s'", exePath);
+        return String::format ("CrashReporter could not find path in '%s'", exePath.c_str());
     }
 
     // Determine the temporary directory.  On Mac and sometimes on linux this will be
     // contained in the TMPDIR environment variable.  If that's not defined then use /tmp.
 
-    string crashReportDirectory = getenv ("TMPDIR");
+    char * tmpDir = getenv ("TMPDIR");
+    string crashReportDirectory = (tmpDir) ? tmpDir : "";
     if (crashReportDirectory.empty()){
         crashReportDirectory = "/tmp";
     }
@@ -253,7 +291,7 @@ CrashReporter::initializeFromApplication (const char * applicationArg0)
     // Look up the crash report posting URL in the .casarc file.
 
     String crashReportUrl;
-    AipsrcValue<String>::find (crashReportUrl, "CrashReporter.url", "");
+    AipsrcValue<String>::find (crashReportUrl, "CrashReporter.url", String ());
 
     return casa::CrashReporter::initialize (crashReportDirectory, crashReportPoster, crashReportUrl);
 }
