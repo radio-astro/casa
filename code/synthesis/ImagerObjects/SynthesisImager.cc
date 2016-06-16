@@ -1472,7 +1472,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
           Double memory_avail = HostInfo::memoryTotal(true) * 1024.;
 
           // compute required chanchunks to fit into the available memory
-          chanchunks = (Double)required_mem / memory_avail;
+          chanchunks = (int)std::ceil((Double)required_mem / memory_avail);
           if (imshape.nelements() == 4 && imshape[3] < chanchunks) {
               chanchunks = imshape[3];
               // TODO make chanchunks a divisor of nchannels?
