@@ -97,7 +97,7 @@ void BLParameterParser::parse(string const file_name)
     // ROW,POL,MASK,NITERATION,CLIP_THRES,LF,LF_THRES,LEDGE,REDGE,CHANAVG,BL_TYPE,ORDER,N_PIECE,NWAVE
     // size_t,1,string,uint16_t,float,bool,float,size_t,size_t,size_t,sinusoidal,uint16_t,size_t,vector<size_t>
     //skip line starting with '#'
-    if (linestr[0]=='#') continue;
+    if (linestr.empty() || linestr[0]=='#') continue;
     BLParameterSet *bl_param = new BLParameterSet();
     size_t row_idx, pol_idx;
     ConvertLineToParam(linestr, row_idx, pol_idx, *bl_param);

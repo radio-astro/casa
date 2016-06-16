@@ -2499,15 +2499,6 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
       bool new_nchan = false;
       get_nchan_and_mask(recspw, data_spw, recchan, num_chan, nchan, in_mask,
           nchan_set, new_nchan);
-      if (new_nchan) {
-        // Generate context for all necessary baseline types
-        map<size_t const, uint16_t>::iterator iter = max_orders.begin();
-        while (iter != max_orders.end()) {
-          get_baseline_context((*iter).first, (*iter).second, num_chan, nchan,
-              nchan_set, ctx_indices, context_reservoir[(*iter).first]);
-          ++iter;
-        }
-      }
       
       // get data/flag cubes (npol*nchan*nrow) from VisBuffer
       get_data_cube_float(*vb, data_chunk);
@@ -2576,6 +2567,17 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
             os << "[ROW" << orig_rows[irow] << ", POL" << ipol << "]"
                 << LogIO::POST;
             fit_param.PrintSummary();
+          }
+          // Create contexts when actually subtract baseine for the first time (if not yet exist)
+          if (new_nchan) {
+            // Generate context for all necessary baseline types
+            map<size_t const, uint16_t>::iterator iter = max_orders.begin();
+            while (iter != max_orders.end()) {
+              get_baseline_context((*iter).first, (*iter).second, num_chan, nchan,
+                  nchan_set, ctx_indices, context_reservoir[(*iter).first]);
+              ++iter;
+            }
+            new_nchan = false;
           }
           // get mask from BLParameterset and create composit mask
           if (fit_param.baseline_mask != "") {
