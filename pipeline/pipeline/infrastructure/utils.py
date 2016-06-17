@@ -1070,6 +1070,28 @@ def merge_ranges(ranges):
     yield current_start, current_stop
 
 
+def intersect_ranges(ranges):
+
+    """Compute intersection of ranges."""
+
+    if (len(ranges) == 0):
+        return ()
+    elif (len(ranges) == 1):
+        return ranges[0]
+    else:
+
+        ref_range = ranges[0]
+        for range in ranges[1:]:
+            i0 = max(ref_range[0], range[0])
+            i1 = min(ref_range[1], range[1])
+            if (i0 <= i1):
+                ref_range = (i0, i1)
+            else:
+                return ()
+
+        return ref_range
+
+
 def spw_intersect(spw_range, line_regions):
 
     """
