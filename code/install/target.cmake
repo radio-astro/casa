@@ -577,24 +577,25 @@ macro (casa_add_google_test)
     if (DEFINED APPLE AND ${google_test_NOT_ON_APPLE})
 
         message ("WARNING:: Test ${testName} disabled on Apple platform.")
-        return()
+
+    else ()
+
+        # The Google Test install logic in cmake will put the needed include and library
+        # below the directory stored in the variable GtestRoot.
+
+        set (gtestIncludeDirectory ${GoogleTest_ReleaseRoot}/include)
+        set (gtestLibrary ${GoogleTest_LibraryDir}/libgtest.a)
+
+        set (libraries ${gtestLibrary})
+        list (APPEND gtestLibrary ${google_test_LIBS})
+
+        casa_add_unit_test (MODULES ${google_test_MODULES} SOURCES ${google_test_SOURCES} 
+                            LIBRARIES ${libraries} # gtest + provide libs
+                            INCLUDE_DIRS ${gtestIncludeDirectory}) # gtest include dirs
+
+        add_dependencies (${CasaTestName} ${GoogleTest_Target})
 
     endif ()
-
-    # The Google Test install logic in cmake will put the needed include and library
-    # below the directory stored in the variable GtestRoot.
-
-    set (gtestIncludeDirectory ${GoogleTest_ReleaseRoot}/include)
-    set (gtestLibrary ${GoogleTest_LibraryDir}/libgtest.a)
-
-    set (libraries ${gtestLibrary})
-    list (APPEND gtestLibrary ${google_test_LIBS})
-
-    casa_add_unit_test (MODULES ${google_test_MODULES} SOURCES ${google_test_SOURCES} 
-                        LIBRARIES ${libraries} # gtest + provide libs
-                        INCLUDE_DIRS ${gtestIncludeDirectory}) # gtest include dirs
-
-    add_dependencies (${CasaTestName} ${GoogleTest_Target})
 
 endmacro ()
 
