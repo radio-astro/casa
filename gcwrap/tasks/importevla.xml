@@ -143,6 +143,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     </constraints>
 
+    <param type="double" name="polyephem_tabtimestep">
+    <description>Timestep (days) for the tabulation of polynomial ephemerides. A value &lt;= 0 disables tabulation.</description>
+    <value>0.001</value>
+    </param>
+
+
     </input>
 
   <returns type="void"/>
@@ -195,6 +201,9 @@ scans        -- processes the scans requested in this parameter (default is
 overwrite    -- Over write an existing MS
 
 verbose      -- produce log output as asdm2MS is being run
+
+polyephem_tabtimestep -- Timestep (days) for the tabulation of polynomial ephemerides. 
+               A value &lt;= 0 disables tabulation.
 
 EVLA-specific parameters:
 -------------------------

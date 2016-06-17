@@ -212,6 +212,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value>True</value>
     </param>
 
+    <param type="double" name="polyephem_tabtimestep">
+    <description>Timestep (days) for the tabulation of polynomial ephemerides. A value &lt;= 0 disables tabulation.</description>
+    <value>0.</value>
+    </param>
+
     </input>
 
   <returns type="void"/>
@@ -404,6 +409,10 @@ convert_ephem2geo -- ALMA uses ephemerides with observer location equal to the A
                      velocities on all attached ephemerides in the imported MS. 
                      This will neither change the time-spacing nor the duration of the ephemeris. 
                      No interpolation in time is done.
+
+polyephem_tabtimestep -- Timestep (days) for the tabulation of polynomial ephemerides. A value &lt;= 0 disables tabulation.
+                         Presently, VLA data can contain polynomial ephemerides. ALMA data uses tabulated values.
+                   default: 0.           
 
   </example>
 

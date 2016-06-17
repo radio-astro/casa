@@ -25,6 +25,7 @@ def importevla(
     savecmds=None,
     outfile=None,
     flagbackup=None,
+    polyephem_tabtimestep=None,
     ):
     """ Convert a Science Data Model (SDM) dataset into a CASA Measurement Set (MS)
 ....This version is under development and is geared to handling EVLA specific flag and
@@ -57,6 +58,7 @@ def importevla(
     # Vers8.5 (3.4.0) STM 2011-12-08 new readflagxml for new Flag.xml format
     # Vers8.6 (3.4.0) STM 2011-02-22 full handling of new Flag.xml ant+spw+pol flags
     # Vers9.0 (3.4.0) SMC 2012-03-13 ported to use the new flagger tool (agentflagger)
+    # Vers9.1 (4.7.0) DP  2016-06-17 introduced polyephem_tabtimestep parameter
     #
 
     # Create local versions of the flagger and ms tools
@@ -66,7 +68,7 @@ def importevla(
     #
     try:
         casalog.origin('importevla')
-        casalog.post('You are using importevla v9.0 SMC Updated 2012-03-13'
+        casalog.post('You are using importevla v9.1 SMC Updated 2016-06-17'
                      )
         viso = ''
         casalog.post('corr_mode is forcibly set to all.')
@@ -95,6 +97,15 @@ def importevla(
             execute_string = execute_string + ' --compression'
         if verbose:
             execute_string = execute_string + ' --verbose'
+
+        if (polyephem_tabtimestep!=None) and (type(polyephem_tabtimestep)==int or type(polyephem_tabtimestep)==float):
+            if polyephem_tabtimestep>0:
+                casalog.post('Will tabulate all attached polynomial ephemerides with a time step of '
+                             +str(polyephem_tabtimestep)+' days.')
+                if polyephem_tabtimestep>1.:
+                    casalog.post('A tabulation timestep of <= 1 days is recommended.', 'WARN')
+                execute_string = execute_string + ' --polyephem-tabtimestep '+str(polyephem_tabtimestep)
+                
         if not overwrite and os.path.exists(viso):
             raise Exception, \
                 'You have specified and existing ms and have indicated you do not wish to overwrite it'

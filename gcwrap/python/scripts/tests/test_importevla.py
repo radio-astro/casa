@@ -215,6 +215,95 @@ class importevla_test(unittest.TestCase):
                 
         self.assertTrue(results)
 
+    def test2(self):
+        '''Importevla test2: Good input asdm with polynomial ephemeris'''
+        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }    
+
+        asdmname2 = 'polyuranus'
+        if (not os.path.exists(asdmname2)):
+            datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/importevla/'
+            os.system('ln -s '+datapath+asdmname2)
+
+
+        msname2 = 'polyuranus.ms'
+        self.res = importevla(asdm=asdmname2, vis=msname2, scans='0:5')
+        print myname, ": Success! Now checking output ..."
+        mscomponents = set(["table.dat",
+                            "table.f1",
+                            "table.f2",
+                            "table.f3",
+                            "table.f4",
+                            "table.f5",
+                            "table.f6",
+                            "table.f7",
+                            "table.f8",
+                            "Antenna.xml",
+                            "Flag.xml",
+                            "SpectralWindow.xml",
+                            "ANTENNA/table.dat",
+                            "DATA_DESCRIPTION/table.dat",
+                            "FEED/table.dat",
+                            "FIELD/table.dat",
+                            "FLAG_CMD/table.dat",
+                            "HISTORY/table.dat",
+                            "OBSERVATION/table.dat",
+                            "POINTING/table.dat",
+                            "POLARIZATION/table.dat",
+                            "PROCESSOR/table.dat",
+                            "SOURCE/table.dat",
+                            "SPECTRAL_WINDOW/table.dat",
+                            "STATE/table.dat",
+                            "SYSCAL/table.dat",
+                            "WEATHER/table.dat",
+                            "ANTENNA/table.f0",
+                            "DATA_DESCRIPTION/table.f0",
+                            "FEED/table.f0",
+                            "FIELD/table.f0",
+                            "FIELD/EPHEM0_URANUS_57545.8.tab/table.f0",  # the ephemeris table!
+                            "FLAG_CMD/table.f0",
+                            "HISTORY/table.f0",
+                            "OBSERVATION/table.f0",
+                            "POINTING/table.f0",
+                            "POLARIZATION/table.f0",
+                            "PROCESSOR/table.f0",
+                            "SOURCE/table.f0",
+                            "SPECTRAL_WINDOW/table.f0",
+                            "STATE/table.f0",
+                            "SYSCAL/table.f0",
+                            "WEATHER/table.f0"
+                            ])
+        for name in mscomponents:
+            if not os.access(msname2+"/"+name, os.F_OK):
+                print myname, ": Error  ", msname2+"/"+name, "doesn't exist ..."
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+msname2+'/'+name+' does not exist'
+            else:
+                print myname, ": ", name, "present."
+        print myname, ": MS exists. All tables present. Try opening as MS ..."
+        try:
+            ms.open(msname2)
+        except:
+            print myname, ": Error  Cannot open MS table", tablename
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+tablename
+        else:
+            ms.close()
+            print myname, ": OK. Checking tables in detail ..."
+    
+            ms.open(msname2)
+            mssum = ms.summary()
+            ms.close()
+
+            if(mssum['scan_5']['0']['FieldName']=='URANUS' and mssum['field_2']['direction']['m0']['value']==0.3783275670495854):
+                print myname, ": MS summary as expected."
+                retValue['success']=True
+            else:
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+'Unexepcted mssummary.'
+                
+        self.assertTrue(retValue['success'])
+
+
 
     def test_apply1(self):
         '''importevla: apply all flags and save to file'''

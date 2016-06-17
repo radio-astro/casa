@@ -39,7 +39,8 @@ def importasdm(
     bdfflags=None,
     with_pointing_correction=None,
     remove_ref_undef=None,
-    convert_ephem2geo=None
+    convert_ephem2geo=None,
+    polyephem_tabtimestep=None
     ):
     """Convert an ALMA Science Data Model observation into a CASA visibility file (MS) or single-dish data format (Scantable).
            The conversion of the ALMA SDM archive format into a measurement set.  This version
@@ -121,7 +122,7 @@ def importasdm(
                        If the parameter is set to False the resulting MS will have an empty POINTING table.
               default: True
 
-      process_flags -- Process the online flags and save them to the FLAG_CMD sub-table.
+       process_flags -- Process the online flags and save them to the FLAG_CMD sub-table.
               default: True
 
             &gt;&gt;&gt; process_flags expandable parameter
@@ -149,17 +150,21 @@ def importasdm(
        useversion -- Selects the version of asdm2MS to be used (presently only \'v3\' is available).
                      default: v3
                      
-      bdfflags -- Set the MS FLAG column according to the ASDM _binary_ flags
+       bdfflags -- Set the MS FLAG column according to the ASDM _binary_ flags
                    default: false
 
-      with_pointing_correction -- add (ASDM::Pointing::encoder - ASDM::Pointing::pointingDirection)
+       with_pointing_correction -- add (ASDM::Pointing::encoder - ASDM::Pointing::pointingDirection)
                  to the value to be written in MS::Pointing::direction 
                    default: false
 
-      remove_ref_undef -- if set to True then apply fixspwbackport on the resulting MSes.
+       remove_ref_undef -- if set to True then apply fixspwbackport on the resulting MSes.
 
-      convert_ephem2geo -- if True, convert any attached ephemerides to the GEO reference frame
-           
+       convert_ephem2geo -- if True, convert any attached ephemerides to the GEO reference frame
+
+       polyephem_tabtimestep -- Timestep (days) for the tabulation of polynomial ephemerides. A value <= 0 disables tabulation.
+                   Presently, VLA data can contain polynomial ephemerides. ALMA data uses tabulated values.
+                   default: 0.          
+
         """
 
     # Python script
@@ -290,6 +295,14 @@ def importasdm(
 
         if with_pointing_correction:
             execute_string = execute_string + ' --with-pointing-correction'
+
+        if (polyephem_tabtimestep!=None) and (type(polyephem_tabtimestep)==int or type(polyephem_tabtimestep)==float):
+            if polyephem_tabtimestep>0:
+                casalog.post('Will tabulate all attached polynomial ephemerides with a time step of '
+                             +str(polyephem_tabtimestep)+' days.')
+                if polyephem_tabtimestep>1.:
+                    casalog.post('A tabulation timestep of <= 1 days is recommended.', 'WARN')
+                execute_string = execute_string + ' --polyephem-tabtimestep '+str(polyephem_tabtimestep)
 
         casalog.post('Running ' + theexecutable
                      + ' standalone invoked as:')
