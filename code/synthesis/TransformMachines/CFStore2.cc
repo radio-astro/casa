@@ -178,10 +178,11 @@ namespace casa{
     (void)cfName;
     LogIO log_l(LogOrigin("CFStore2", "makePersistent[R&D]"));
     //const char *formedName;
-    log_l << "Writing CFs of shape " << storage_p.shape() << "...";
+
     for (Int i=0;i<storage_p.shape()(0);i++)
       for (Int j=0;j<storage_p.shape()(1);j++)
 	{
+	  log_l << "Writing CFStore("<<i<<","<<j<<") of shape " << storage_p(i,j)->shape() << LogIO::POST;
 	  ostringstream name;
 	  //name << dir << "/" << qualifier << "CFS_" << i << "_" << j;
 	  name << String(qualifier) << "CFS_" << i << "_" << j;
@@ -189,7 +190,6 @@ namespace casa{
 	  // else              formedName = cfName;
 	  storage_p(i,j)->makePersistent(dir,name.str().c_str());
 	}
-    log_l << "Done." << endl;
   }
   //
   //---------------------------------------------------------------
