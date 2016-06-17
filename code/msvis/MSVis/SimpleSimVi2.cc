@@ -181,13 +181,13 @@ void SimpleSimVi2Parameters::initialize(const Vector<Int>& nTimePerField,const V
 
   nTimePerField_.resize(nField_);  // field-dep scan length
   if (nTimePerField.nelements()==1)
-    nTimePerField_.set(nTimePerField(0));
+    nTimePerField_.set(nTimePerField(0));  // all to specified value
   else
     nTimePerField_=nTimePerField; // will throw if length mismatch
 
   nChan_.resize(nSpw_);
   if (nChan.nelements()==1)
-    nChan_.set(nChan(0));
+    nChan_.set(nChan(0));  // all to specified value
   else
     nChan_=nChan; // will throw if length mismatch
 
@@ -196,26 +196,28 @@ void SimpleSimVi2Parameters::initialize(const Vector<Int>& nTimePerField,const V
 
   df_.resize(nSpw_);
   if (df.nelements()==1)
-    df_.set(df(0));
+    df_.set(df(0));  // all to specified value
   else
     df_=df;  // will throw if length mismatch
 
   stokes_.resize(4,nField_);
-  if (stokes.nelements()==1)
-    stokes_(Slice(0),Slice())=stokes(0,0);
+  if (stokes.nelements()==1) {
+    stokes_.set(0.0f);                       // enforce unpolarized!
+    stokes_(Slice(0),Slice())=stokes(0,0);   // only I specified
+  }
   else
     stokes_=stokes; // insist shapes match
 
   gain_.resize(2,nAnt_);
   if (gain.nelements()==1)
-    gain_.set(gain(0,0));
+    gain_.set(gain(0,0));  // all to specified value
   else
     gain_=gain;  // will throw if shapes mismatch
 
 
   tsys_.resize(2,nAnt_);
   if (tsys.nelements()==1)
-    tsys_.set(tsys(0,0));
+    tsys_.set(tsys(0,0));  // all to specified value
   else
     tsys_=tsys;  // will throw if shapes mismatch
 
@@ -316,7 +318,6 @@ SimpleSimVi2::SimpleSimVi2 (const SimpleSimVi2Parameters& pars)
       }
     }
   }
-
   corrdef_(0)=Stokes::type("RR");
   corrdef_(1)=Stokes::type("RL");
   corrdef_(2)=Stokes::type("LR");
@@ -542,8 +543,6 @@ void SimpleSimVi2::visibilityCorrected (Cube<Complex> & vis) const {
 }
 void SimpleSimVi2::visibilityModel (Cube<Complex> & vis) const {
   vis.resize(pars_.nCorr_,pars_.nChan_(thisSpw_),nRows());
-  // set according to stokes
-  // TBD
   for (int icor=0;icor<pars_.nCorr_;++icor)
     vis(Slice(icor),Slice(),Slice()).set(vis0_(icor,thisField_));
 }
@@ -569,7 +568,7 @@ void SimpleSimVi2::visibilityObserved (Cube<Complex> & vis) const {
   }
 
   // Now add noise
-  if (pars_.doNoise_) 
+  if (pars_.doNoise_)
     this->addNoise(vis);
 }
 

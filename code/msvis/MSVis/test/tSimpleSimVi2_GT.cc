@@ -33,6 +33,7 @@
 #include <casa/Quanta/MVTime.h>
 #include <casa/OS/Timer.h>
 #include <casa/iomanip.h>
+#include <casa/BasicMath/Math.h>
 //#include <casa/namespace.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <gtest/gtest.h>
@@ -88,9 +89,13 @@ protected:
 			      DONORM,
 			      POLBASIS,DOAC);
 
+    fp=2.*FLT_EPSILON;
+
   }
   
   SimpleSimVi2Parameters s0,s1,s2;
+
+  Float fp;
 
 };
 
@@ -154,7 +159,7 @@ TEST_F( SimpleSimVi2Test , SimpleSimVi2Parameters_NonTrivial1 ) {
 
   ASSERT_EQ(uInt(4*NFLD),s1.stokes_.nelements());
   Vector<Float> stokes(s1.stokes_.row(0));
-  for (Int i=0;i<NFLD;++i) ASSERT_EQ(Float(exp10(-i)),stokes(i));
+  for (Int i=0;i<NFLD;++i) ASSERT_EQ(pow(10.f,Float(-i)),stokes(i));
 
   ASSERT_EQ(uInt(2*NANT),s1.gain_.nelements());  // 2*4
   ASSERT_TRUE(allEQ(s1.gain_,Float(GAIN)));
@@ -213,11 +218,11 @@ TEST_F( SimpleSimVi2Test , SimpleSimVi2_Trivial ) {
   EXPECT_EQ(dsh,vb->visCubeModel().shape());
   EXPECT_EQ(dsh,vb->visCubeCorrected().shape());
 
-  ASSERT_TRUE(allNearAbs(vb->visCube()(Slice(0,2,3),Slice(),Slice()),Complex(1.0f),FLT_EPSILON));
-  ASSERT_TRUE(allNearAbs(vb->visCubeModel()(Slice(0,2,3),Slice(),Slice()),Complex(1.0f),FLT_EPSILON));
+  ASSERT_TRUE(allNearAbs(vb->visCube()(Slice(0,2,3),Slice(),Slice()),Complex(1.0f),fp));
+  ASSERT_TRUE(allNearAbs(vb->visCubeModel()(Slice(0,2,3),Slice(),Slice()),Complex(1.0f),fp));
 
-  ASSERT_TRUE(allNearAbs(vb->visCube()(Slice(1,2,1),Slice(),Slice()),Complex(0.0f),FLT_EPSILON));
-  ASSERT_TRUE(allNearAbs(vb->visCubeModel()(Slice(1,2,1),Slice(),Slice()),Complex(0.0f),FLT_EPSILON));
+  ASSERT_TRUE(allNearAbs(vb->visCube()(Slice(1,2,1),Slice(),Slice()),Complex(0.0f),fp));
+  ASSERT_TRUE(allNearAbs(vb->visCubeModel()(Slice(1,2,1),Slice(),Slice()),Complex(0.0f),fp));
 
   Int niter(0);
   for (vi->originChunks();vi->moreChunks();vi->nextChunk()) {
@@ -278,8 +283,8 @@ TEST_F( SimpleSimVi2Test , SimpleSimVi2_NonTrivial1 ) {
       EXPECT_EQ(dsh,vb->visCubeCorrected().shape());
 
       // Model is fldid-dependent
-      ASSERT_TRUE(allNearAbs(vb->visCubeModel()(Slice(0,2,3),Slice(),Slice()),Complex(Float(exp10(-fldid))),FLT_EPSILON));
-      ASSERT_TRUE(allNearAbs(vb->visCubeModel()(Slice(1,2,1),Slice(),Slice()),Complex(0.0f),FLT_EPSILON));
+      ASSERT_TRUE(allNearAbs(vb->visCubeModel()(Slice(0,2,3),Slice(),Slice()),Complex(pow(Float(10.),Float(-fldid))),fp));
+      ASSERT_TRUE(allNearAbs(vb->visCubeModel()(Slice(1,2,1),Slice(),Slice()),Complex(0.0f),fp));
 
       // Test stats of residual (implicitly tests Stokes I level)
       Cube<Complex> resid(vb->visCube()-vb->visCubeModel());
