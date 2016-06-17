@@ -554,7 +554,10 @@ void PlotMSVBAverager::antAccumulate (vi::VisBuffer2& vb)
   //    avBuf_p->spectralWindow()=-1;
 
   Double vbWt(0.0);  // will accumulate this VBs total data weight
-  const Float* wt;
+  Cube<Float> wtsp;
+  wtsp.resize();
+  wtsp = vb.weightSpectrum();
+  Float wt;
 
   // Mutable vis cubes for accumulation
   Cube<Complex> accumVisCube;
@@ -590,12 +593,10 @@ void PlotMSVBAverager::antAccumulate (vi::VisBuffer2& vb)
     blnOK_p(obln_i) = True;
     blnOK_p(obln_j) = True;
       
-    wt = &vb.weightSpectrum()(0,0,ibln);
-    
     Double blnWt(0.0);  // will accumulate this baseline's total data weight
     for (Int chn=0; chn<vb.nChannels(); chn++) {
-      for (Int cor=0; cor<nCorr_p; ++cor,++wt) {
-	
+      for (Int cor=0; cor<nCorr_p; ++cor) {
+          wt = wtsp(cor, chn, ibln);
 	// Assume we won't accumulate anything in this cell
 	//   (output is unflagged, input is flagged)
 	Bool acc_i(False),acc_j(False);
@@ -636,30 +637,30 @@ void PlotMSVBAverager::antAccumulate (vi::VisBuffer2& vb)
 	// Accumulate data, if appropriate
 	if (acc_i) {
 		if (doVC_p) avgVisCube_(cor,chn,obln_i) +=
-				((*wt) * accumVisCube(cor,chn,ibln));
+				((wt) * accumVisCube(cor,chn,ibln));
 		if (doMVC_p) avgModelCube_(cor,chn,obln_i) +=
-				((*wt) * accumVisCubeModel(cor,chn,ibln));
+				((wt) * accumVisCubeModel(cor,chn,ibln));
 		if (doCVC_p) avgCorrectedCube_(cor,chn,obln_i) +=
-				((*wt) * accumVisCubeCorrected(cor,chn,ibln));
+				((wt) * accumVisCubeCorrected(cor,chn,ibln));
 	  	if (doFC_p)  avgFloatCube_(cor,chn,obln_i) +=
-               	          	((*wt) * accumVisCubeFloat(cor,chn,ibln) );
-		if (doWC_p)  avgWeight_(cor,chn,obln_i) += (*wt);
+               	          	((wt) * accumVisCubeFloat(cor,chn,ibln) );
+		if (doWC_p)  avgWeight_(cor,chn,obln_i) += (wt);
 	}
 	if (acc_j) { 
 		// NB: wt is implicitly indexed by cor, so index incoming data w/ cor
 		Int jcor = jcor_p(cor);  // handle cross-hand swap
 	  	if (doVC_p) avgVisCube_(jcor,chn,obln_j) +=
-				((*wt) * conj(accumVisCube(cor,chn,ibln)));
+				((wt) * conj(accumVisCube(cor,chn,ibln)));
 		if (doMVC_p) avgModelCube_(jcor,chn,obln_j) +=
-				((*wt) * conj(accumVisCubeModel(cor,chn,ibln)));
+				((wt) * conj(accumVisCubeModel(cor,chn,ibln)));
 		if (doCVC_p) avgCorrectedCube_(jcor,chn,obln_j) +=
-				((*wt) * conj(accumVisCubeCorrected(cor,chn,ibln)));
+				((wt) * conj(accumVisCubeCorrected(cor,chn,ibln)));
 	  	if (doFC_p)  avgFloatCube_(jcor,chn,obln_j) +=
-				((*wt) * accumVisCubeFloat(cor,chn,ibln));
-		if (doWC_p)  avgWeight_(jcor,chn,obln_j) += (*wt);
+				((wt) * accumVisCubeFloat(cor,chn,ibln));
+		if (doWC_p)  avgWeight_(jcor,chn,obln_j) += (wt);
 	}
 
-	blnWt += (*wt);
+	blnWt += (wt);
 	
       } // cor 
     } // chn
@@ -678,6 +679,7 @@ void PlotMSVBAverager::antAccumulate (vi::VisBuffer2& vb)
 	avgUvw_(i,obln_j) += (vb.uvw()(i,ibln) * blnWt);
       }      
   }
+  cout << endl;
 
   if (vbWt>0) {
 
