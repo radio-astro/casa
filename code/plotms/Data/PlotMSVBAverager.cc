@@ -679,7 +679,6 @@ void PlotMSVBAverager::antAccumulate (vi::VisBuffer2& vb)
 	avgUvw_(i,obln_j) += (vb.uvw()(i,ibln) * blnWt);
       }      
   }
-  cout << endl;
 
   if (vbWt>0) {
 
