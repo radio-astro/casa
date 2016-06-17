@@ -38,6 +38,9 @@
 #include <casaqt/QtPlotServer/QtPlotFrame.qo.h>
 #include <casaqt/QtPlotServer/QtRasterData.h>
 #include <casaqt/QwtConfig.h>
+#if QWT_VERSION >= 0x060000
+#include <qwt_compat.h>
+#endif
 #include <qwt_plot_spectrogram.h>
 #include <qwt_legend.h>
 #include <qwt_plot_zoomer.h>
@@ -99,7 +102,11 @@ namespace casa {
 	slider->setTickInterval( 10 );
 	zoomer = new QwtPlotZoomer( plot->canvas( ) );
 	connect( slider, SIGNAL(sliderReleased( )), b, SLOT(zoom( )));
+#if QWT_VERSION >= 0x060000
+	connect( zoomer, SIGNAL(zoomed(QRectF)), b, SLOT(zoomed(QRectF)));
+#else
 	connect( zoomer, SIGNAL(zoomed(QwtDoubleRect)), b, SLOT(zoomed(QwtDoubleRect)));
+#endif
 	QVBoxLayout *l = new QVBoxLayout;
 	l->addWidget(plot);
 	l->addWidget(slider);
@@ -220,7 +227,11 @@ namespace casa {
 	    slider_last_value = 0;
 	    connect( slider, SIGNAL(sliderReleased( )), this, SLOT(zoom( )));
 	}
+#if QWT_VERSION >= 0x060000
+	connect( zoomer, SIGNAL(zoomed(QRectF)), this, SLOT(zoomed(QRectF)));
+#else
 	connect( zoomer, SIGNAL(zoomed(QwtDoubleRect)), this, SLOT(zoomed(QwtDoubleRect)));
+#endif
 
     }
 
@@ -437,27 +448,30 @@ namespace casa {
 
     QwtPlotSpectrogram *QtPlotSvrPanel::raster( const QList<double> &matrix, int sizex, int sizey, const QString &colormap ) {
 	QwtPlotSpectrogram *result = new QwtPlotSpectrogram( );
-	QtRasterData data(result);
 	QwtDoubleRect box;
 	box.setLeft(0);
 	box.setRight(sizex);
 	box.setTop(0);
 	box.setBottom(sizey);
+#if QWT_VERSION >= 0x060000
+	QtRasterData * data = new QtRasterData(result);
+	data->setBoundingRect( box );
+	data->setData( matrix, sizex, sizey );
+#else
+	QtRasterData data(result);
 	data.setBoundingRect( box );
 	data.setData( matrix, sizex, sizey );
+#endif
+	QwtLinearColorMap * cmap = getnewcolormap(colormap);
+   if ( cmap ) {
 #if QWT_VERSION >= 0x060000
-	result->setData(&data);
+	   result->setColorMap( cmap );
 #else
+	   result->setColorMap( *cmap );
+	   delete cmap;
+#endif
+   }
 	result->setData(data);
-#endif
-	colormap_map::iterator it = colormaps_->find(colormap);
-	if ( it != colormaps_->end() ) {
-#if QWT_VERSION >= 0x060000
-	    result->setColorMap( &*( it->second) );
-#else
-	    result->setColorMap( *( it->second) );
-#endif
-	}
 	result->attach(plot);
 	plot->replot( );
 	return result;
@@ -501,6 +515,20 @@ namespace casa {
  	  plot->setTitle(title);
 	  ((QWidget*) (plot->titleLabel()))->setFont(defaultfont);
 	}
+    }
+
+    QwtLinearColorMap * QtPlotSvrPanel::getnewcolormap(const QString & colormap)
+    {
+    	colormap_map::iterator it = colormaps_->find(colormap);
+    	if ( it != colormaps_->end() ) {
+    		QwtLinearColorMap* cmap = new QwtLinearColorMap(QwtColorMap::RGB);
+    		const std::vector<QColor> & cmapv = it->second;
+    		for (std::vector<QColor>::size_type i=0; i < cmapv.size(); i++) {
+    			cmap->addColorStop( (double) i / (double) (cmapv.size()-1), cmapv[i]);
+    		}
+    		return cmap;
+    	}
+    	return NULL;
     }
 
     void QtPlotSvrPanel::replot( ) {
@@ -558,7 +586,11 @@ namespace casa {
 	slider_last_value = index;
     }
 
+#if QWT_VERSION >= 0x060000
+    void QtPlotSvrPanel::zoomed( const QRectF &r ) {
+#else
     void QtPlotSvrPanel::zoomed( const QwtDoubleRect &r ) {
+#endif
 
 	if ( disable_it ) {
 	    disable_it = false;
@@ -662,7 +694,6 @@ namespace casa {
         casa::ROArrayColumn<casa::Float> blue_col (colormap_table, "BLUE");
 
         for ( unsigned int i=0; i < n; ++i ) {
-	    memory::cptr<QwtLinearColorMap> cmap(new QwtLinearColorMap(QwtColorMap::RGB));
             casa::String name = name_col(i);
             casa::Vector<casa::String> synonyms(synonym_col(i));
 
@@ -672,18 +703,19 @@ namespace casa {
 
             unsigned int len = red.nelements() < green.nelements() ? red.nelements() : green.nelements();
             len = len < blue.nelements() ? len : blue.nelements( );
-	    QColor c;
+            QColor c;
+            std::vector<QColor> cmapv;
             for ( unsigned int m=0; m < len; ++m ) {
-		c.setRgbF(red[m],green[m],blue[m]);
-		cmap->addColorStop( (double) m / (double) (len-1), c );
-	    }
+            	c.setRgbF(red[m],green[m],blue[m]);
+            	cmapv.push_back(c);
+            }
 
-            colormaps_->insert( std::make_pair(QString::fromStdString(name),cmap) );
+            colormaps_->insert( std::make_pair(QString::fromStdString(name),cmapv) );
 
             if ( synonyms.nelements( ) > 0 ) {
 		const unsigned int len = synonyms.nelements( );
                 for ( unsigned int s=0; s < len; ++s ) {
-		    colormaps_->insert( std::make_pair(QString::fromStdString(synonyms(s)),cmap) );
+		    colormaps_->insert( std::make_pair(QString::fromStdString(synonyms(s)),cmapv) );
                 }
             }
         }

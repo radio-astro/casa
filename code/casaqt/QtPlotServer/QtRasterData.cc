@@ -67,7 +67,9 @@ namespace casa {
 
     void QtRasterData::setBoundingRect( const QwtDoubleRect &rect ) {
 #if QWT_VERSION >= 0x060000
-	initRaster(rect, QSize());
+	initRaster(rect, QSize(rect.right() - rect.left(), rect.bottom() - rect.top()));
+	setInterval(Qt::XAxis, QwtDoubleInterval(0.0, rect.right() - rect.left()));
+	setInterval(Qt::YAxis, QwtDoubleInterval(0.0, rect.bottom() - rect.top()));
 #else
 	bounding_box = rect;
 	// if ( output_limit < 20) fprintf( stderr, "setBoundingRect( ): (%f, %f) (%f, %f)\n", rect.left(), rect.right(), rect.top(), rect.bottom() );
@@ -99,6 +101,9 @@ namespace casa {
 	length_ = sizex * sizey;
 	m_RealToArray.x = (bounding_box.right() - bounding_box.left()) / (m_DataSize.x - 1);
 	m_RealToArray.y = (bounding_box.bottom() - bounding_box.top()) / (m_DataSize.y - 1);
+#if QWT_VERSION >= 0x060000
+	setInterval( Qt::ZAxis, QwtInterval( m_minValue, m_maxValue) );
+#endif
     }
 
     void QtRasterData::setData( const double *array, int sizex, int sizey, double min, double max ) {
@@ -123,6 +128,9 @@ namespace casa {
 
 	m_RealToArray.x = (bounding_box.right() - bounding_box.left()) / (m_DataSize.x - 1);
 	m_RealToArray.y = (bounding_box.bottom() - bounding_box.top()) / (m_DataSize.y - 1);
+#if QWT_VERSION >= 0x060000
+	setInterval( Qt::ZAxis, QwtInterval( m_minValue, m_maxValue) );
+#endif
     }
 
     QwtDoubleInterval QtRasterData::range() const {

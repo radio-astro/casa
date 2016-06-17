@@ -29,9 +29,10 @@
 #ifndef CASAQT_QTPLOTSRVPANEL_H
 #define CASAQT_QTPLOTSRVPANEL_H
 
-#include <map>
 #include <QMainWindow>
 #include <QStringList>
+#include <QColor>
+#include <qwt_global.h>
 #include <qwt_plot_curve.h>
 #include <qwt_color_map.h>
 #include <casaqt/QwtConfig.h>
@@ -39,6 +40,8 @@
 #include <casaqt/QtUtilities/QtPanelBase.qo.h>
 #include <casaqt/QtPlotServer/QtPlotHistogram.h>
 #include <casadbus/types/ptr.h>
+#include <map>
+#include <vector>
 
 class QwtPlotCurve;
 class QwtPlotSpectrogram;
@@ -95,6 +98,7 @@ namespace casa {
 	    void setxlabel( const QString &xlabel );
 	    void setylabel( const QString &ylabel );
 	    void settitle( const QString &title );
+	    QwtLinearColorMap * getnewcolormap(const QString & colormap);
 	    
 	    std::pair<QDockWidget*,QString> loaddock( const QString &file_or_xml, const QString &loc, const QStringList &dockable );
 
@@ -121,14 +125,18 @@ namespace casa {
 	    void emit_closing( bool );
 
 	    void zoom( int x=-1 );
+#ifdef QWT6
+	    void zoomed( const QRectF & );
+#else
 	    void zoomed( const QwtDoubleRect & );
+#endif
 
 	protected: 
 
 	    QWidget *loaddock( QString file );
             QFont defaultfont;
 
-	    typedef std::map<QString,memory::cptr<QwtLinearColorMap> > colormap_map;
+	    typedef std::map<QString,std::vector<QColor> > colormap_map;
 	    static void load_colormaps( );
 	    static colormap_map *colormaps_;
 

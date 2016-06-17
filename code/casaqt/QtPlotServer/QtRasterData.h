@@ -47,7 +47,9 @@ namespace casa {
 
 	public:
 	    // Constructor giving back the QwtRasterData Constructor
-	    QtRasterData( QwtPlotSpectrogram *s ) : m_Array(0), spect(s) { }
+	    QtRasterData( QwtPlotSpectrogram *s ) : m_Array(0), spect(s) {
+	        setRangeX(0, 0); setRangeY(0, 0);
+	    }
  
 	    ~QtRasterData( ) { if ( m_Array ) delete [] m_Array; }
 

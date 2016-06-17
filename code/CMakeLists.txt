@@ -1130,6 +1130,10 @@ casa_find( QWT
   CPP_VERSION QWT_VERSION_STR
   DEPENDS QT4 )
 
+if (QWT_VERSION VERSION_EQUAL 6 OR QWT_VERSION VERSION_GREATER 6)
+    add_definitions( -DQWT6 )
+endif()
+
 # Xerces
 casa_find( XERCES
   VERSION 2.7.0
