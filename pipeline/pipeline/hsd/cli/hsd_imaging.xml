@@ -5,7 +5,7 @@
 	xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="hsd_imaging" category="pipeline">
-<shortdescription>Apply calibration tables to the data for science target</shortdescription>
+<shortdescription>Apply flags to scantable, convert data to MS, and generate single dish images</shortdescription>
 <description>
 </description>
 <input>
