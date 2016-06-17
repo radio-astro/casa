@@ -589,7 +589,7 @@ class Tclean(cleanbase.CleanBase):
                                     spwsel = '%s:%s' % (intSpw, spw_topo_freq_param_dict[ms.name][str(intSpw)])
                                 else:
                                     spwsel = '%s' % (intSpw)
-                                imTool.selectvis(spw=spwsel, field=field)
+                                imTool.selectvis(spw=spwsel, field=field_id)
                                 # TODO: Add scan selection ?
                                 imTool.defineimage(mode=specmode, spw=intSpw,
                                                    cellx=inputs.cell[0], celly=inputs.cell[0],
