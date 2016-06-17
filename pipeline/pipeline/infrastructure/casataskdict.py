@@ -48,6 +48,7 @@ CasaTaskDict = {
                    'hsd_flagdata'          : 'FlagDeterALMASingleDish',
                    'hsd_simplescale'       : 'SDSimpleScale',
                    'hsdms_applycal'        : 'SDMSApplycal',
+                   'hsdms_imaging'         : 'SDMSImaging',
                    'hsdms_k2jycal'         : 'SDK2JyCal',
                    'hsdms_skycal'          : 'SDMSSkyCal',
                    'hifa_importdata'       : 'ALMAImportData',
@@ -154,6 +155,7 @@ classToCASATask = {
     hsd_tasks.FlagDeterALMASingleDish : 'hsd_flagdata',
     hsd_tasks.SDSimpleScale           : 'hsd_simplescale',
     hsd_tasks.SDMSApplycal            : 'hsdms_applycal',
+    hsd_tasks.SDMSImaging             : 'hsdms_imaging',
     hsd_tasks.SDK2JyCal               : 'hsdms_k2jycal',
     hsd_tasks.SDMSSkyCal              : 'hsdms_skycal',
     #VLA tasks
@@ -345,6 +347,9 @@ TASK_COMMENTS = {
         'Executes preparation for imaging: Exports scantables to '
         'measurement sets, apply row flags, and apply weights. '
         'Then, perform imaging.'
+    ),
+    (hsd_tasks.SDMSImaging,) : (
+        'Perform single dish imaging.'
     ),
     (hsd_tasks.SDFlagBaseline,) : (
         'Execute baseline subtraction and flagging iteratively. '

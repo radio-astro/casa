@@ -18,4 +18,5 @@ from .simplescale import SDSimpleScale
 from .msapplycal import SDMSApplycal
 from .k2jycal import SDK2JyCal
 from .skycal import SDMSSkyCal
+from .msimaging import SDMSImaging
 
