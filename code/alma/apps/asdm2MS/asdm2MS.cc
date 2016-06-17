@@ -17,6 +17,7 @@
 #include <complex>
 #include <iostream>
 #include <map>
+#include <math.h>
 #include <sstream>
 #include <stdlib.h>
 #include <string>
@@ -29,6 +30,7 @@
 namespace po = boost::program_options;
 
 #include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/regex.hpp>
 using namespace boost;
 
 #include <boost/filesystem/path.hpp>
@@ -169,7 +171,6 @@ bool lazy = false;
 #include <casa/Logging/LogSink.h>
 
 #define VARYINGNPOLNCHAN 4 
-
 void info (const string& message) {
   
   if (!verbose){
@@ -222,6 +223,11 @@ string TO_STRING(const int &v) {
   return string(buffer);
 }
 
+string TO_STRING(const double &d) {
+  char buffer[128];
+  sprintf(buffer,"%g",d);
+  return string(buffer);
+}
 
 //
 // A class to describe Exceptions.
@@ -1285,12 +1291,13 @@ double evalPoly (unsigned int		numCoeff,
 		 double 		time) {
   LOGENTER("evalPoly");
   LOG( "numCoeff=" + TO_STRING(numCoeff) + ", size of coeff=" + TO_STRING(coeff.size())) ;
+  LOG( "time=" + TO_STRING(time) + ", timeOrigin=" + TO_STRING(timeOrigin));
   //
   // Let's use the Horner schema to evaluate the polynomial.
   double result = coeff[numCoeff-1];
   for (int i = numCoeff - 2; i >= 0; i--) 
     result = coeff[i] + result*(time-timeOrigin);
-
+  LOG (" result= " + TO_STRING(result));
   LOGEXIT("evalPoly");
   return result;
 }
@@ -1302,7 +1309,21 @@ void deleteEphemeris(map<AtmPhaseCorrection, Table*>& apc2EphemTable_m) {
     if (apc2EphemTable_m[iter->first] != NULL) delete apc2EphemTable_m[iter->first];
 }
 
-void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_ephemeris, string telescopeName) {
+double radian2degree(double radian) {
+  return radian / M_PI * 180.0;
+}
+
+double m2au(double m) {
+  return m / 1.4959787066e11;
+}
+
+double mpers2auperd(double mpers) {
+  return mpers * 24. * 3600. / 1.4959787066e11;
+}
+
+std::map<int, double>ephemStartTime_m;
+
+void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_ephemeris, bool tabulate_ephemeris_polynomials, string telescopeName) {
   LOGENTER("fillEphemeris");
   
   try {
@@ -1383,6 +1404,8 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
       }
 
       double mjd0 = ArrayTime(t0MS).getMJD();
+     
+
       double dmjd = interpolate_ephemeris ? 0.001 : v[0]->getTimeInterval().getDuration().get() / 1000000000LL / 86400.0; // Grid time step == 0.001 if ephemeris interpolation requested
       // otherwise == the interval of time of the first element of ephemeris converted in days.
       // *SUPPOSEDLY* constant over all the ephemeris. 
@@ -1462,6 +1485,10 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 	+ TO_STRING(mjd0)
 	+ ".tab";
 
+      boost::regex e("[\\[\\]\\(\\)\\{\\} ]");
+      tableName = replace_all_regex_copy(tableName, e, std::string("_"));
+      
+
       map<AtmPhaseCorrection, Table*> apc2EphemTable_m;
       for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
 	   iter != msFillers.end();
@@ -1499,6 +1526,8 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
       bool	numPolyDistIsOne   = v[0]->getNumPolyDist() == 1;
       bool	radVelExists	   = v[0]->isRadVelExists() && v[0]->isNumPolyRadVelExists();
       bool	numPolyRadVelIsOne = radVelExists ? v[0]->getNumPolyRadVel() == 1 : false; 
+
+
      
       if (interpolate_ephemeris) { 
     
@@ -1752,8 +1781,128 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 	  }
 	  LOG_EPHEM("\n");
 	}
-      } // end if interpolate_ephemeris
-      else { 
+      }				// end if interpolate_ephemeris
+      else if (tabulate_ephemeris_polynomials  &&
+	       v.size()==1 &&
+	       timeStepInNanoSecond > 0
+	       ) {
+
+	
+	infostream << "The MS Ephemeris table for ephemerisId = '" << ephemerisId
+		   << "' will be produced by tabulating the polynomials found in the columns 'dir', 'distance' and optionally 'radVel' with a timestep of '"
+		 << timeStepInNanoSecond / 1.e9 / 86400. << "' days"; 
+	
+	
+	dmjd =  timeStepInNanoSecond / 1.e9 / 86400.; // to be written in the keyword DMJD
+	
+	for (unsigned int i = 0; i < v.size(); i++) {
+	  //
+	  // Calculate the grid of times where the polynomials will be tabulated.
+	  // This grid contains all the times which :
+	  // - are multiple of the tabulation time steps,
+	  // - contained in the arraytime interval of validity of the current ASDM Ephemeris row.
+	  // 
+	  // At this point times are expressed in nanoseconds.
+	  //
+	  int64_t tstartASDM = v[i]->getTimeInterval().getStart().get();
+	  int64_t tendASDM   = tstartASDM + v[i]->getTimeInterval().getDuration().get();
+	  int64_t q	   = tstartASDM / timeStepInNanoSecond;
+	  int64_t r	   = tstartASDM % timeStepInNanoSecond;
+	  int64_t tstartMS   = tstartASDM;
+	  
+	  if ( r!= 0 ) {
+	    q = q + 1;
+	    tstartMS = q * timeStepInNanoSecond;
+	  }
+	  
+	  vector<int64_t> tabulation_time_v;
+	  int64_t t = tstartMS;
+	  do {
+	    tabulation_time_v.push_back(t);
+	    t += timeStepInNanoSecond;
+	  }
+	  while (t <= tendASDM);
+	  
+	  //
+	  // Let's tabulate the MS Ephemeris column for each tabulation time, in s. 
+	  //
+	  double		timeOrigin = v[i]->getTimeOrigin().get() * 1.0e-09 / 86400. ; // It appeared that time must be expressed in "days" !!
+	  
+	  // Convert from radians to degrees.
+	  const vector<vector<double> >& dir_v =  v[i]->getDir();
+	  vector<double>	ra_coeff_v;
+	  vector<double>	dec_coeff_v;
+	  for (unsigned int idir = 0; idir < dir_v.size(); idir++) {
+	    ra_coeff_v.push_back(dir_v[idir][0]);
+	    dec_coeff_v.push_back(dir_v[idir][1]);
+	  }
+				 
+	  LOG(" There are " + TO_STRING(ra_coeff_v.size()) + " RA coeffs and " + TO_STRING(dec_coeff_v.size()) + " DEC coeffs");
+	  
+	  // Convert radian to degree.
+	  std::transform(ra_coeff_v.begin(), ra_coeff_v.end(), ra_coeff_v.begin(), radian2degree);
+	  std::transform(dec_coeff_v.begin(), dec_coeff_v.end(), dec_coeff_v.begin(), radian2degree);
+	  
+	  // Convert from m to AU.
+	  vector<double> distance_coeff_v = v[i]->getDistance();
+	  std::transform(distance_coeff_v.begin(), distance_coeff_v.end(), distance_coeff_v.begin(), m2au);
+	  
+
+	  vector<double> radvel_coeff_v;
+	  if (v[i]->isRadVelExists()) {
+	    radvel_coeff_v = v[i]->getRadVel();
+	    // Convert from m per s to AU per day.
+	    std::transform(radvel_coeff_v.begin(), radvel_coeff_v.end(), radvel_coeff_v.begin(), mpers2auperd);
+	  } else {
+	    // Let's derivate the polynomial in distance.
+	    for (unsigned int iDistance=1; iDistance < distance_coeff_v.size(); iDistance++)
+	      radvel_coeff_v.push_back(distance_coeff_v[iDistance]*iDistance);
+	  }
+	  
+	  // And proceed...
+	  LOG ("There will be " + TO_STRING(tabulation_time_v.size()) + " time steps used to tabulate the polynomials.");
+	  for (unsigned int itab = 0; itab < tabulation_time_v.size(); itab++) {
+	    double tabulation_time = tabulation_time_v[itab] * 1.0e-09 / 86400.0 ;  // It appeared that times should be expressed in "day" !!
+	    
+	    
+	    //
+	    // MJD
+	    //
+	    mjdMS_v.push_back(ArrayTime(tabulation_time_v[itab]).getMJD());
+	    
+	    //
+	    // RA / DEC
+	    //
+	    raMS_v.push_back(evalPoly(ra_coeff_v.size(),
+				      ra_coeff_v,
+				      timeOrigin,
+				      tabulation_time));
+	    
+	    decMS_v.push_back(evalPoly(dec_coeff_v.size(),
+				       dec_coeff_v,
+				       timeOrigin,
+				       tabulation_time));
+	    
+	    
+	    //
+	    // DISTANCE
+	    //
+	    distanceMS_v.push_back(evalPoly(distance_coeff_v.size(),
+					    distance_coeff_v,
+					    timeOrigin,
+					    tabulation_time));
+	    
+	    //
+	    // RADVEL
+	    //
+	    radVelMS_v.push_back(evalPoly(radvel_coeff_v.size(),
+					  radvel_coeff_v,
+					  timeOrigin,
+					  tabulation_time));
+	  }
+	}
+      }
+      else {
 	// Just copy ephemeris without any interpolation. Just adapt the units.
 	for(const EphemerisRow *eR_p: v) {
 	  mjdMS_v.push_back(eR_p->getTimeInterval().getStart().getMJD()); // MJD
@@ -1765,6 +1914,11 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 	    radVelMS_v.push_back(eR_p->getRadVel()[0] / 1.4959787066e11 * 24. * 3600. ); // AU/d
 	}
       } // end not if interpolate_ephemeris
+
+      // 
+      // Record the starting time so that Field can use it if needed.
+      //
+      ephemStartTime_m[ephemerisId] = ArrayTime(mjdMS_v[0]).get()*1.e-09;
 
       // Now the data are ready to be written to the MS Ephemeris table.
       // Let's proceed, using Slicers.
@@ -1783,6 +1937,9 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 	// Update the MJD0 Keyword to the correct value, i.e. mjdMS_v[0] - dmjd
 	table_p->rwKeywordSet().define("MJD0", casa::Double(mjdMS_v[0] - dmjd));
 	
+	// Update the dMJD keyword.
+	table_p->rwKeywordSet().define("dMJD", casa::Double(dmjd));
+
 	// And fill the table
 	table_p->addRow(numRows);
 	LOG ("Added "+TO_STRING(numRows)+" rows to table "+((string)table_p->tableName()));
@@ -1807,12 +1964,11 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 	ScalarColumn<casa::Double> Rho(*table_p, "Rho");
 	Rho.putColumnRange(slicer, Rho_V);
       
-	if (radVelExists) {
-	  LOG ("Filling column RadVel");
-	  Vector<casa::Double> RadVel_V(IPosition(1, numRows), &radVelMS_v[0], SHARE);
-	  ScalarColumn<casa::Double> RadVel(*table_p, "RadVel");
-	  RadVel.putColumnRange(slicer, RadVel_V);
-	}
+	
+	LOG ("Filling column RadVel");
+	Vector<casa::Double> RadVel_V(IPosition(1, numRows), &radVelMS_v[0], SHARE);
+	ScalarColumn<casa::Double> RadVel(*table_p, "RadVel");
+	RadVel.putColumnRange(slicer, RadVel_V);
       
 	infostream.str("");
 	infostream << "converted in " << table_p->nrow() << " ephemeris rows in the table '" << table_p->tableName() << "'.";
@@ -1896,12 +2052,38 @@ void fillField(ASDM* ds_p, bool considerEphemeris) {
       
       if (r->isEphemerisIdExists()) idxEphemerisId_v.push_back(pair<int, int>(i, r->getEphemerisId()));
 
+      /*
+       * The value of time requires some attention.
+       * if :
+       * 1) there is an ephemeris associated to the field and
+       * 2) time is not present in the ASDM Field table or if time is present but equal to 0 
+       * then:
+       *  write a time in the MS Field table equal to the start of the first arrayTime interval of validity in the Ephemeris.
+       *
+       * else :
+       * write the time found in the ASDM Field relevant columns.
+       *
+       */
+      vector<EphemerisRow *> eR_v;
+      if (r->isEphemerisIdExists())
+	eR_v = *(r->getTable().getContainer().getEphemeris().getByContext(r->getEphemerisId()));
+	
+      bool getTimeFromEphemeris = (eR_v.size() > 0) && (!r->isTimeExists() || (r->isTimeExists() && (r->getTime().get() == 0)));
+      double time = 0.0;
+
+      if (getTimeFromEphemeris)
+	time = ephemStartTime_m[r->getEphemerisId()]; // It's already in second.
+      else if (r->isTimeExists())
+	time = ((double) r->getTime().get()) * 1.e-09 ;
+      else
+	time = 0.0;
+
       for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
 	   iter != msFillers.end();
 	   ++iter) {
 	iter->second->addField( fieldName,
 				code,
-				r->isTimeExists() ? ((double) r->getTime().get()) / ArrayTime::unitsInASecond : 0.0,
+				time,
 				r->getNumPoly(),
 				delayDir,
 				phaseDir,
@@ -4706,8 +4888,10 @@ int main(int argc, char *argv[]) {
 
   bool ac_xc_per_timestamp = false; // for the time being the option is 'preserve the old order'
 
-  bool interpolate_ephemeris = false ; 
-
+  bool		interpolate_ephemeris	       = false ; 
+  bool		tabulate_ephemeris_polynomials = false;
+  double	polyephem_tabtimestep	       = 0.0;
+  
   //   Process command line options and parameters.
   po::variables_map vm;
 
@@ -4750,6 +4934,7 @@ int main(int argc, char *argv[]) {
       ("lazy", "defers the production of the observational data in the MS Main table (DATA column) - Purely experimental, don't use in production !")
       ("with-pointing-correction", "add (ASDM::Pointing::encoder - ASDM::Pointing::pointingDirection) to the value to be written in MS::Pointing::direction - (related with JIRA tickets CSV-2878 and ICT-1532))")
       ("ac-xc-per-timestamp", po::value<string>()->default_value("no"), "if set to yes, then the filler writes in that order autocorrelations and cross correlations rows for one given data description and timestamp. Otherwise auto correlations data are grouped for a sequence of time stamps and then come the cross correlations data for the same sequence of timestamps.")
+      ("polyephem-tabtimestep", po::value<double>(&polyephem_tabtimestep)->default_value(0.001), "Defines the time step used to tabulate the polynomials found in the columns 'dir', 'distance' and optionally 'radVel' of the ASDM Ephemeris table. The unit to express the time step is the day and the default value is 0.001. If 'radvel' is not present then the radial velocity will be obtained by tabulating the derivative the polynomial found in 'distance'.") 
       ("interpolate-ephemeris", po::value<string>()->default_value("no"), "if set to 'yes' then the filler will resample the sequence of times found in the ASDM Ephemeris table into an evenly spaced sequence of times on which the ephemeris paarameters will obtained by an interpolation of degree 1. Otherwise (!= 'yes') the ephemeris parameters will be copies of what's in the ASDM Ephemeris table on the same sequence of times");
 
     // Hidden options, will be allowed both on command line and
@@ -4985,15 +5170,27 @@ int main(int argc, char *argv[]) {
     ac_xc_per_timestamp = (vm.count("ac-xc-per-timestamp") == 0) ? false :
       boost::algorithm::to_lower_copy(vm["ac-xc-per-timestamp"].as<string>()) == "yes";
 
-    // Do we want interpolate the values found in the ASDM Ephemeris table or not ?
-    interpolate_ephemeris = (vm.count("interpolate-ephemeris") == 0) ? false :
-      boost::algorithm::to_lower_copy(vm["interpolate-ephemeris"].as<string>()) == "yes";
-    infostream.str("");
-    if (interpolate_ephemeris) {
-      infostream << "the MS Ephemeris table(s) will be produced by interpolation of the values present in the ASDM Ephemeris table on a resampled time grid."; 
+    // Do we want to tabulate polynomial present in the ephemeris table ?
+    tabulate_ephemeris_polynomials = (vm.count("polyephem-tabtimestep") != 0);
+    
+    if (tabulate_ephemeris_polynomials) {
+      //  infostream << "The MS Ephemeris table(s) will be produced by tabulating the polynomials found in the columns 'dir', 'distance' and optionally 'radVel' with a timestep of '"
+      //		 << polyephem_tabtimestep << "' day, i.e. '"<< ((uint64_t) (polyephem_tabtimestep * 86400 * 1.e09)) <<"' nanoseconds."; 
     }
+    
+    // If we tabluate then ignore all the other options about ephemeris
+    
     else {
-      infostream << "the MS Ephemeris tables(s) will be produced by simple copies of the values found in the ASDM Ephemeris table with just units conversion.";
+      // Do we want interpolate the values found in the ASDM Ephemeris table or not ?
+      interpolate_ephemeris = (vm.count("interpolate-ephemeris") == 0) ? false :
+	boost::algorithm::to_lower_copy(vm["interpolate-ephemeris"].as<string>()) == "yes";
+      infostream.str("");
+      if (interpolate_ephemeris) {
+	infostream << "the MS Ephemeris table(s) will be produced by interpolation of the values present in the ASDM Ephemeris table on a resampled time grid."; 
+      }
+      else {
+	infostream << "the MS Ephemeris tables(s) will be produced by simple copies of the values found in the ASDM Ephemeris table with just units conversion.";
+      }
     }
     info(infostream.str());
   }
@@ -5892,8 +6089,10 @@ int main(int argc, char *argv[]) {
   // Process the Ephemeris table.
   //
   // Create and fill the MS ephemeris table(s) with a time interpolation time step set to 86400000000 nanoseconds ( 1/1000 day).
-  if (processEphemeris) 
-    fillEphemeris(ds, 86400000000LL, interpolate_ephemeris, telescopeName);
+  if (processEphemeris) {
+    uint64_t timeStepInNanoSeconds = polyephem_tabtimestep * 86400 * 1.e09;
+    fillEphemeris(ds, timeStepInNanoSeconds, interpolate_ephemeris, tabulate_ephemeris_polynomials, telescopeName);
+  }
 
   // Process the Field table.
   // Now it respects the degree of the polynomials but it ignores the ephemerisId.
