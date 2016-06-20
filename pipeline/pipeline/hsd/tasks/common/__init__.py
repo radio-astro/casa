@@ -14,6 +14,7 @@ from .utils import asdm_name_from_ms
 from .utils import temporary_filename
 from .utils import get_index_list
 from .utils import get_valid_members
+from .utils import get_valid_ms_members
 from .utils import _collect_logrecords
 from .utils import selection_to_list
 from .utils import list_to_selection

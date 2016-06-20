@@ -254,6 +254,24 @@ def get_index_list(datatable, antenna, spw, pols=None, srctype=None):
     
     return index_list
 
+def get_index_list_for_ms(datatable, vis_list, fieldid_list, antennaid_list, 
+                          spwid_list, srctype=None):
+    return numpy.fromiter(_get_index_list_for_ms(datatable, vis_list, fieldid_list, antennaid_list, 
+                                                spwid_list, srctype), dtype=numpy.int64)
+    
+def _get_index_list_for_ms(datatable, vis_list, fieldid_list, antennaid_list, 
+                          spwid_list, srctype=None):
+    # use time_table instead of data selection
+    online_flag = datatable.tb2.getcolslice('FLAG_PERMANENT', [OnlineFlagIndex], [OnlineFlagIndex], 1)[0]
+    for (_vis, _field, _ant, _spw) in zip(vis_list, fieldid_list, antennaid_list, spwid_list):
+        time_table = datatable.get_timetable(_ant, _spw, None, os.path.basename(_vis), _field)
+        # time table separated by large time gap
+        the_table = time_table[1]
+        for group in the_table:
+            for row in group[1]:
+                if online_flag[row] == 1:
+                    yield row    
+
 def get_valid_members(group_desc, antenna_filter, spwid_filter):
     for i in xrange(len(group_desc)):
         member = group_desc[i]
@@ -264,6 +282,19 @@ def get_valid_members(group_desc, antenna_filter, spwid_filter):
         if antenna in antenna_filter:
             if _spwid_filter is None or len(_spwid_filter) == 0 or spwid in _spwid_filter:
                 yield i
+                
+def get_valid_ms_members(group_desc, ms_filter, spw_selection, field_selection):
+    for member_id in xrange(len(group_desc)):
+        member = group_desc[member_id]
+        spw_id = member.spw_id
+        field_id = member.field_id
+        ms = member.ms
+        if ms in ms_filter:
+            mssel = casatools.ms.msseltoindex(vis=ms.name, spw=spw_selection, field=field_selection)
+            spwsel = mssel['spw']
+            fieldsel = mssel['field']
+            if (len(spwsel) == 0 or spw_id in spwsel) and (len(fieldsel) == 0 or field_id in fieldsel):
+                yield member_id
 
 def _get_spwid_filter(spwid_filter, file_id):
     if spwid_filter is None:
