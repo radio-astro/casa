@@ -386,12 +386,12 @@ class T1_3MRenderer(RendererBase):
             scores[result.stage_number] = result.qa.representative
             results_list = get_results_by_time(context, result)
         
-            qa_errors = cls._filter_qascores(results_list, -0.1, 0.1)
+            qa_errors = cls._filter_qascores(results_list, -0.1, 0.33)
             tablerows.extend(cls._qascores_to_tablerows(qa_errors,
                                                         results_list,
                                                         'QA Error'))
         
-            qa_warnings = cls._filter_qascores(results_list, 0.1, 0.5)
+            qa_warnings = cls._filter_qascores(results_list, 0.33, 0.66)
             tablerows.extend(cls._qascores_to_tablerows(qa_warnings,
                                                         results_list,
                                                         'QA Warning'))
@@ -951,12 +951,12 @@ class T2_3_XMBaseRenderer(RendererBase):
                 continue
             
             for results_list in list_of_results_lists:
-                qa_errors = cls._filter_qascores(results_list, -0.1, 0.1)
+                qa_errors = cls._filter_qascores(results_list, -0.1, 0.33)
                 tablerows.extend(cls._qascores_to_tablerows(qa_errors,
                                                             results_list,
                                                             'QA Error'))
                     
-                qa_warnings = cls._filter_qascores(results_list, 0.1, 0.5)
+                qa_warnings = cls._filter_qascores(results_list, 0.33, 0.66)
                 tablerows.extend(cls._qascores_to_tablerows(qa_warnings,
                                                             results_list,
                                                             'QA Warning'))
