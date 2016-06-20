@@ -1397,14 +1397,13 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
                      minwidth,
                      edge,
                      [&](size_t const cidx, size_t const num_chan, float *spec, bool *mask, double *coeff, bool *mask2, float *rms){
-                       status = LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsFloat)(
-                         bl_contexts[cidx], num_chan, spec, mask,
+                       status = LIBSAKURA_SYMBOL(LSQFitPolynomialFloat)(
+                         bl_contexts[cidx], static_cast<uint16_t>(order_vect[0]),
+                         num_chan, spec, mask,
                          clip_threshold_sigma, num_fitting_max,
-                         //order+1,/////////////////////////////////
-                         order_vect[0]+1,/////////////////////////   
-                         coeff, mask2, rms,
-                         &bl_status);
-                       check_sakura_status("sakura_GetBestFitBaselineCoefficientsFloat", status);
+                         order_vect[0] + 1, coeff, nullptr, nullptr,
+                         mask2, rms, &bl_status);
+                       check_sakura_status("sakura_LSQFitPolynomialFloat", status);
                        if (bl_status != LIBSAKURA_SYMBOL(BaselineStatus_kOK)) {
                          throw(AipsError("baseline fitting isn't successful."));
                        }
@@ -1414,20 +1413,19 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
                        ffpar_mtx_tmp[ipol].resize(num_ffpar);
                      },
                      [&](size_t const cidx, size_t const num_chan, float *spec, double *coeff){
-                       status = LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(
+                       status = LIBSAKURA_SYMBOL(SubtractPolynomialFloat)(
                          bl_contexts[cidx], num_chan, spec, 
-                         //order+1, ///////////////////////////
                          order_vect[0]+1,/////////////////////
                          coeff, spec);
-                       check_sakura_status("sakura_SubtractBaselineUsingCoefficientsFloat", status);},
+                       check_sakura_status("sakura_SubtractPolynomialFloat", status);},
                      [&](size_t const cidx, size_t const num_chan, float *spec, bool *mask, float *rms){
-                       status = LIBSAKURA_SYMBOL(SubtractBaselineFloat)(
-                         bl_contexts[cidx], 
-                         //static_cast<uint16_t>(order),///////////////////////////
-                         static_cast<uint16_t>(order_vect[0]),////////////////////
-                         num_chan, spec, mask, clip_threshold_sigma,
-                         num_fitting_max, true, spec, mask, rms, &bl_status);
-                       check_sakura_status("sakura_SubtractBaselineFloat", status);
+                       status = LIBSAKURA_SYMBOL(LSQFitPolynomialFloat)(
+                         bl_contexts[cidx], static_cast<uint16_t>(order_vect[0]),
+                         num_chan, spec, mask,
+                         clip_threshold_sigma, num_fitting_max,
+                         order_vect[0] + 1, nullptr, nullptr, spec,
+                         mask, rms, &bl_status);
+                       check_sakura_status("sakura_LSQFitPolynomialFloat", status);
                        if (bl_status != LIBSAKURA_SYMBOL(BaselineStatus_kOK)) {
                          throw(AipsError("baseline fitting isn't successful."));
                        }
@@ -1485,21 +1483,20 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
                      minwidth,
                      edge,
                      [&](size_t const cidx, size_t const num_chan, float *spec, bool *mask, double *coeff, bool *mask2, float *rms) {
-                       status = LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsCubicSplineFloat)(
-                         bl_contexts[cidx], num_chan, spec, mask,
+                       status = LIBSAKURA_SYMBOL(LSQFitCubicSplineFloat)(
+                         bl_contexts[cidx], static_cast<uint16_t>(npiece_vect[0]),
+                         num_chan, spec, mask,
                          clip_threshold_sigma, num_fitting_max,
-                         //npiece,/////////////////
-                         npiece_vect[0],/////////////
-                         reinterpret_cast<double (*)[4]>(coeff), mask2, rms, boundary_data,
+                         reinterpret_cast<double (*)[4]>(coeff), nullptr, nullptr,
+                         mask2, rms, boundary_data,
                          &bl_status);
-                       check_sakura_status("sakura_GetBestFitBaselineCoefficientsCubicSplineFloat", status);
+                       check_sakura_status("sakura_LSQFitCubicSplineFloat", status);
                        if (bl_status != LIBSAKURA_SYMBOL(BaselineStatus_kOK)) {
                          throw(AipsError("baseline fitting isn't successful."));
                        }
                      },
                      [&](size_t ipol, std::vector<std::vector<double> > &ffpar_mtx_tmp, size_t &num_ffpar_max) {
                        size_t num_ffpar = get_num_coeff_bloutput(bltype,
-                       //npiece, 
                        npiece_vect[0],
                        num_ffpar_max);
                        ffpar_mtx_tmp[ipol].resize(num_ffpar);
@@ -1508,20 +1505,20 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
                        }
                      },
                      [&](size_t const cidx, size_t const num_chan, float *spec, double *coeff) {
-                       status = LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
+                       status = LIBSAKURA_SYMBOL(SubtractCubicSplineFloat)(
                          bl_contexts[cidx], num_chan, spec,
-                         //npiece,////////////////
                          npiece_vect[0],//////////
                          reinterpret_cast<double (*)[4]>(coeff), boundary_data, spec);
-                       check_sakura_status("sakura_SubtractBaselineCubicSplineUsingCoefficientsFloat", status);},
+                       check_sakura_status("sakura_SubtractCubicSplineFloat", status);},
                      [&](size_t const cidx, size_t const num_chan, float *spec, bool *mask, float *rms) {
-                       status = LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineFloat)(
-                         bl_contexts[cidx], 
-                         //static_cast<uint16_t>(npiece),////////////////
-                         static_cast<uint16_t>(npiece_vect[0]),////////
-                         num_chan, spec, mask, clip_threshold_sigma, num_fitting_max,
-                         true, spec, mask, rms, boundary_data, &bl_status);
-                       check_sakura_status("sakura_SubtractBaselineCubicSplineFloat", status);
+                       status = LIBSAKURA_SYMBOL(LSQFitCubicSplineFloat)(
+                         bl_contexts[cidx], static_cast<uint16_t>(npiece_vect[0]),
+                         num_chan, spec, mask,
+                         clip_threshold_sigma, num_fitting_max,
+                         nullptr, nullptr, spec, 
+                         mask, rms, boundary_data,
+                         &bl_status);
+                       check_sakura_status("sakura_LSQFitCubicSplineFloat", status);
                        if (bl_status != LIBSAKURA_SYMBOL(BaselineStatus_kOK)) {
                          throw(AipsError("baseline fitting isn't successful."));
                        }
@@ -1661,60 +1658,14 @@ void SingleDishMS::subtractBaselineSinusoid(string const& in_column_name,
                         num_coeff=(addwn.size()*2);
                      }
 
-                        //cout << endl;
-                       //cout << "just before Get BestFitBaselineCoefficientsSinusoidFloat" << endl; 
-                        //cout << "bl_contexts[cidx] " << bl_contexts[cidx] << endl;
-                        //cout << "num_chan " << num_chan << endl;
-                        //cout << "spec " << spec << endl;
-                        //cout << "size of spec " << sizeof(spec) << endl;
-                        //cout << " mask " << mask << endl;
-                        //cout << " clip_threshold_sigma " << clip_threshold_sigma << endl;
-                        //cout << " num_fitting_max " << num_fitting_max << endl;
-                        //cout << " addwn.size() " << addwn.size() << endl;
-                        //cout << "&nwave2[0] " << &nwave2[0] << endl;
-                        //cout << "nwave2 " << nwave2 << endl;
-                        //cout << "nwave[0] " << nwave2[0] << endl;
-                        //cout << "nwave[1] " << nwave2[1] << endl;
-                        //cout << "num_coeff " << num_coeff << endl;
-                        //cout << endl;
-                        
-                    
-                       status = LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsSinusoidFloat)(
-                         bl_contexts[cidx], 
-                         num_chan, 
-                         spec, 
-                         mask,
-                         clip_threshold_sigma, 
-                         num_fitting_max,
-                         addwn.size(),
-                         nwave2,
-                         //&nwave2[0],
-                         //npiece,/////////////////
-                         //npiece_vect[0],/////////////
-                         num_coeff,// <--- depends on whether nwave contains 0 or not.
-                         coeff, 
-                         mask2, 
-                         rms, 
-                         //boundary_data,
-                         &bl_status);
+                       status = LIBSAKURA_SYMBOL(LSQFitSinusoidFloat)(
+                         bl_contexts[cidx], addwn.size(), nwave2,
+                         num_chan, spec, mask,
+                         clip_threshold_sigma, num_fitting_max,
+                         num_coeff, coeff, nullptr, nullptr, 
+                         mask2, rms, &bl_status);
 
-    
-
-                        //cout << endl;
-                        //cout << "just after Get BestFitBaselineCoefficientsSinusoidFloat" << endl;                        
-                        //cout << "num_coeff " << num_coeff << endl;
-                        //cout << "coeff " << coeff << endl;
-                        //cout << "size of mask2 " << sizeof(mask2) << endl;
-                        //cout << "rms " << rms << endl;
-                        //cout << "status " << status << endl;
-                        //cout << endl;
-
-
-                       //check_sakura_status("sakura_GetBestFitBaselineCoefficientsSinusoidFloat", status);
-                       
-                       
-                       //cout << "bl_status " << bl_status << endl;
-                       
+                       check_sakura_status("sakura_LSQFitSinusoidFloat", status);
                        if (bl_status != LIBSAKURA_SYMBOL(BaselineStatus_kOK)) {
                          throw(AipsError("baseline fitting isn't successful."));
                        }
@@ -1724,9 +1675,7 @@ void SingleDishMS::subtractBaselineSinusoid(string const& in_column_name,
                      ,
                      [&](size_t ipol, std::vector<std::vector<double> > &ffpar_mtx_tmp, size_t &num_ffpar_max) {
                        size_t num_ffpar = get_num_coeff_bloutput(bltype,
-                       addwn.size(),/////////////////////////
-                       //npiece, 
-                       //npiece_vect[0],
+                       addwn.size(),
                        num_ffpar_max);
                        ffpar_mtx_tmp[ipol].resize(num_ffpar);
                        //for (size_t ipiece = 0; ipiece < num_ffpar; ++ipiece) {
@@ -1779,7 +1728,7 @@ void SingleDishMS::subtractBaselineSinusoid(string const& in_column_name,
                      }
 
                         
-                       status = LIBSAKURA_SYMBOL(SubtractBaselineSinusoidUsingCoefficientsFloat)(
+                     status = LIBSAKURA_SYMBOL(SubtractSinusoidFloat)(
                          bl_contexts[cidx], 
                          num_chan, 
                          spec,
@@ -1791,7 +1740,7 @@ void SingleDishMS::subtractBaselineSinusoid(string const& in_column_name,
                          //boundary_data, 
                          spec
                          );
-                       check_sakura_status("sakura_SubtractBaselineSinusoidUsingCoefficientsFloat", status);
+                     check_sakura_status("sakura_SubtractSinusoidFloat", status);
                        
                        
                        },
@@ -1836,30 +1785,25 @@ void SingleDishMS::subtractBaselineSinusoid(string const& in_column_name,
                      //   nwave2.push_back((size_t)addwn[i]);
                      //}
 
-                     //size_t num_coeff;
-                       
-                     //if(nwave[0]==0){
-                     //   num_coeff=(nwave.size()*2-1);
-                     //}else{
-                     //   num_coeff=(nwave.size()*2);
-                     //}
+                     size_t num_coeff;
+                     if (nwave2[0] == 0) {
+                       num_coeff = addwn.size() * 2 - 1;
+                     } else {
+                       num_coeff = addwn.size() * 2;
+                     }
 
 
-                        
-                       status = LIBSAKURA_SYMBOL(SubtractBaselineSinusoidFloat)(
-                         bl_contexts[cidx], 
-                         //static_cast<uint16_t>(npiece),////////////////
-                         static_cast<size_t>(addwn.size()),////////
-                         &nwave2[0],
-                         num_chan, spec, mask, clip_threshold_sigma,
-                         num_fitting_max, true, spec, mask, rms,
-                         //boundary_data,
-                         &bl_status);
+                       status = LIBSAKURA_SYMBOL(LSQFitSinusoidFloat)(
+                         bl_contexts[cidx], addwn.size(), nwave2,
+                         num_chan, spec, mask,
+                         clip_threshold_sigma, num_fitting_max,
+                         num_coeff, nullptr, nullptr, spec, 
+                         mask, rms, &bl_status);
 
 
                         //cout << "status3 " << status << endl;
 
-                       check_sakura_status("sakura_SubtractBaselineSinusoidFloat", status);
+                       check_sakura_status("sakura_LSQFitSinusoidFloat", status);
                        if (bl_status != LIBSAKURA_SYMBOL(BaselineStatus_kOK)) {
                          throw(AipsError("baseline fitting isn't successful."));
                        }
@@ -2041,23 +1985,16 @@ void SingleDishMS::applyBaselineTable(string const& in_column_name,
           switch (static_cast<size_t>(fit_param.baseline_type)) {
           case BaselineType_kPolynomial:
           case BaselineType_kChebyshev:
-            //cout << (fit_param.baseline_type==0 ? "poly" : "chebyshev") << ": order=" << fit_param.order << ", row=" << orig_rows[irow] << ", pol=" << ipol << ", num_chan=" << num_chan << ", num_valid_chan = " << NValidMask(num_chan, mask.data) << endl;
-            status = LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(
-                context, num_chan, spec_data, num_coeff, coeff_data, spec_data);
-            subtract_funcname = "sakura_SubtractBaselineUsingCoefficientsFloat";
+            status = LIBSAKURA_SYMBOL(SubtractPolynomialFloat)(
+              context, num_chan, spec_data, num_coeff, coeff_data, spec_data);
+            subtract_funcname = "sakura_SubtractPolynomialFloat";
             break;
           case BaselineType_kCubicSpline:
-            //cout << "cspline: npiece = " << fit_param.npiece << ", row=" << orig_rows[irow] << ", pol=" << ipol << ", num_chan=" << num_chan << ", num_valid_chan = " << NValidMask(num_chan, mask.data) << endl;
-            status = LIBSAKURA_SYMBOL(
-                SubtractBaselineCubicSplineUsingCoefficientsFloat)(context,
-                                                                   num_chan,
-                                                                   spec_data,
-                                                                   num_boundary-1,
-                                                                   reinterpret_cast<double (*)[4]>(coeff_data),
-                                                                   boundary_data,
-                                                                   spec_data);
-            subtract_funcname =
-                "sakura_SubtractBaselineCubicSplineUsingCoefficientsFloat";
+            status = LIBSAKURA_SYMBOL(SubtractCubicSplineFloat)(
+              context, num_chan, spec_data, num_boundary-1,
+              reinterpret_cast<double (*)[4]>(coeff_data),
+              boundary_data, spec_data);
+            subtract_funcname = "sakura_SubtractCubicSplineFloat";
             break;
           default:
             throw(AipsError("Unsupported baseline type."));
@@ -2679,10 +2616,12 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
             switch (bltype) {
             case BaselineType_kPolynomial:
             case BaselineType_kChebyshev:
-              status = LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsFloat)(
-                  context, num_chan, spec_data, mask_data,
-                  fit_param.clip_threshold_sigma, fit_param.num_fitting_max,
-                  num_coeff, coeff_data, mask2_data, &rms, &bl_status);
+              status = LIBSAKURA_SYMBOL(LSQFitPolynomialFloat)(
+                context, fit_param.order,
+                num_chan, spec_data, mask_data,
+                fit_param.clip_threshold_sigma, fit_param.num_fitting_max,
+                num_coeff, coeff_data, nullptr, nullptr,
+                mask2_data, &rms, &bl_status);
 
               for (size_t i = 0; i < num_chan; ++i) {
                 if (mask_data[i] == false) {
@@ -2693,15 +2632,15 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
                 }
               }
 
-              get_coeff_funcname = "sakura_GetBestFitBaselineCoefficientsFloat";
+              get_coeff_funcname = "sakura_LSQFitPolynomialFloat";
               break;
             case BaselineType_kCubicSpline:
-              status = LIBSAKURA_SYMBOL(
-                  GetBestFitBaselineCoefficientsCubicSplineFloat)(context,
-                  num_chan, spec_data, mask_data,
-                  fit_param.clip_threshold_sigma, fit_param.num_fitting_max,
-                  fit_param.npiece, reinterpret_cast<double (*)[4]>(coeff_data),
-                  mask2_data, &rms, boundary_data, &bl_status);
+              status = LIBSAKURA_SYMBOL(LSQFitCubicSplineFloat)(
+                context, fit_param.npiece,
+                num_chan, spec_data, mask_data,
+                fit_param.clip_threshold_sigma, fit_param.num_fitting_max,
+                reinterpret_cast<double (*)[4]>(coeff_data), nullptr, nullptr, 
+                mask2_data, &rms, boundary_data, &bl_status);
 
               for (size_t i = 0; i < num_chan; ++i) {
                 if (mask_data[i] == false) {
@@ -2712,8 +2651,7 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
                 }
               }
 
-              get_coeff_funcname =
-                  "sakura_GetBestFitBaselineCoefficientsCubicSplineFloat";
+              get_coeff_funcname = "sakura_LSQFitCubicSplineFloat";
               break;
             default:
               throw(AipsError("Unsupported baseline type."));
@@ -2745,19 +2683,17 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
             switch (fit_param.baseline_type) {
             case BaselineType_kPolynomial:
             case BaselineType_kChebyshev:
-              status = LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(
+              status = LIBSAKURA_SYMBOL(SubtractPolynomialFloat)(
                   context, num_chan, spec_data, num_coeff, coeff_data,
                   spec_data);
-              subtract_funcname =
-                  "sakura_SubtractBaselineUsingCoefficientsFloat";
+              subtract_funcname = "sakura_SubtractPolynomialFloat";
               break;
             case BaselineType_kCubicSpline:
-              status = LIBSAKURA_SYMBOL(
-                  SubtractBaselineCubicSplineUsingCoefficientsFloat)(context,
+              status = LIBSAKURA_SYMBOL(SubtractCubicSplineFloat)(
+                  context,
                   num_chan, spec_data, fit_param.npiece, reinterpret_cast<double (*)[4]>(coeff_data),
                   boundary_data, spec_data);
-              subtract_funcname =
-                  "sakura_SubtractBaselineCubicSplineUsingCoefficientsFloat";
+              subtract_funcname = "sakura_SubtractCubicSplineFloat";
               break;
             default:
               throw(AipsError("Unsupported baseline type."));
@@ -2780,18 +2716,22 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
             switch (fit_param.baseline_type) {
             case BaselineType_kPolynomial:
             case BaselineType_kChebyshev:
-              status = LIBSAKURA_SYMBOL(SubtractBaselineFloat)(context,
-                  fit_param.order, num_chan, spec_data, mask_data,
-                  fit_param.clip_threshold_sigma, fit_param.num_fitting_max,
-                  true, spec_data, mask_data, &rms, &bl_status);
-              subtract_funcname = "sakura_SubtractBaselineFloat";
+              status = LIBSAKURA_SYMBOL(LSQFitPolynomialFloat)(
+                context, fit_param.order,
+                num_chan, spec_data, mask_data,
+                fit_param.clip_threshold_sigma, fit_param.num_fitting_max,
+                num_coeff, nullptr, nullptr, spec_data,
+                mask_data, &rms, &bl_status);
+              subtract_funcname = "sakura_LSQFitPolynomialFloat";
               break;
             case BaselineType_kCubicSpline:
-              status = LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineFloat)(
-                  context, fit_param.npiece, num_chan, spec_data, mask_data,
-                  fit_param.clip_threshold_sigma, fit_param.num_fitting_max,
-                  true, spec_data, mask_data, &rms, boundary_data, &bl_status);
-              subtract_funcname = "sakura_SubtractBaselineCubicSplineFloat";
+              status = LIBSAKURA_SYMBOL(LSQFitCubicSplineFloat)(
+                context, fit_param.npiece,
+                num_chan, spec_data, mask_data,
+                fit_param.clip_threshold_sigma, fit_param.num_fitting_max,
+                nullptr, nullptr, spec_data,
+                mask_data, &rms, boundary_data, &bl_status);
+              subtract_funcname = "sakura_LSQFitCubicSplineFloat";
               break;
             default:
               throw(AipsError("Unsupported baseline type."));
