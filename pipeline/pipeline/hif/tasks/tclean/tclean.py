@@ -200,6 +200,14 @@ class Tclean(cleanbase.CleanBase):
                 inputs.imsize = imsize
                 LOG.info('Heuristic imsize: %s', imsize)
 
+        if (inputs.specmode == 'cube'):
+            # To avoid noisy edge channels, use only the LSRK frequency
+            # intersection and skip one channel on either end.
+            if0, if1, channel_width = inputs.heuristics.lsrk_freq_intersection(inputs.vis, inputs.field, inputs.spw)
+            inputs.start = '%sGHz' % ((if0+channel_width) / 1e9)
+            inputs.width = '%sMHz' % ((channel_width) / 1e6)
+            inputs.nchan = int((if1 - if0 - 2 * channel_width) / channel_width)
+
         # Get a noise estimate from the CASA sensitivity calculator
         sensitivity, \
         channel_rms_factor, \
@@ -275,11 +283,6 @@ class Tclean(cleanbase.CleanBase):
 
         context = self.inputs.context
         inputs = self.inputs
-
-        if (inputs.specmode == 'cube'):
-            inputs.width = 1
-            inputs.start = 1
-            inputs.nchan = context.observing_run.measurement_sets[0].get_spectral_window(inputs.spw).num_channels - 2
 
         # Check if a matching 'cont' image exists for continuum subtraction.
         # NOTE: For Cycle 3 we use 'mfs' images due to possible

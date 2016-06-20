@@ -13,6 +13,7 @@ from pipeline.infrastructure import casa_tasks
 from .resultobjects import FindContResult
 from pipeline.hif.heuristics import makeimlist
 from pipeline.hif.heuristics import findcont
+from pipeline.hif.heuristics import tclean
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -128,6 +129,14 @@ class FindCont(basetask.StandardTaskTemplate):
                         scanids = scanids.replace(']', '')
                         scanidlist.append(scanids)
 
+                    # To avoid noisy edge channels, use only the LSRK frequency
+                    # intersection and skip one channel on either end.
+                    tclean_heuristics = tclean.TcleanHeuristics(context, inputs.vis, target['spw'])
+                    if0, if1, channel_width = tclean_heuristics.lsrk_freq_intersection(inputs.vis, target['field'], target['spw'])
+                    start = '%sGHz' % ((if0 + channel_width) / 1e9)
+                    width = '%sMHz' % ((channel_width) / 1e6)
+                    nchan = int((if1 - if0 - 2 * channel_width) / channel_width)
+
                     # Estimate memory usage and adjust chanchunks parameter to avoid
                     # exceeding the available memory.
                     try:
@@ -150,10 +159,10 @@ class FindCont(basetask.StandardTaskTemplate):
                     job = casa_tasks.tclean(vis=inputs.vis, imagename=findcont_basename,
                         datacolumn=datacolumn,
                         spw=spwid, intent=utils.to_CASA_intent(inputs.ms[0], target['intent']),
+                        start=start, width=width, nchan=nchan, outframe='LSRK',
                         scan=scanidlist, specmode='cube', gridder=gridder, pblimit=0.2,
                         niter=0, threshold='0mJy', deconvolver='hogbom',
-                        interactive=False, outframe='LSRK', nchan=-1,
-                        width='', imsize=target['imsize'],
+                        interactive=False, imsize=target['imsize'],
                         cell=target['cell'], phasecenter=target['phasecenter'],
                         stokes='I', weighting='briggs', robust=0.5,
                         npixels=0, restoringbeam='common',

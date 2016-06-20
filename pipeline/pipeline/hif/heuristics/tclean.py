@@ -464,3 +464,56 @@ class TcleanHeuristics(object):
             aggregate_topo_bw = qaTool.add(aggregate_topo_bw, qaTool.sub('%sGHz' % (topo_freq_range[1]), '%sGHz' % (topo_freq_range[0])))
 
         return spw_topo_freq_param, spw_topo_chan_param, spw_topo_freq_param_dict, spw_topo_chan_param_dict, total_topo_bw, aggregate_topo_bw
+
+
+    def lsrk_freq_intersection(self, vis, field, spw):
+
+        lsrk_freq_ranges = []
+        lsrk_channel_widths = []
+
+        msTool = casatools.ms
+        imTool = casatools.imager
+
+        for msname in vis:
+
+            msDO = self.context.observing_run.get_ms(msname)
+            n_ants = len(msDO.antennas)
+
+            spwDO = msDO.get_spectral_window(spw)
+            channel_width = float(spwDO.channels[0].getWidth().to_units(measures.FrequencyUnits.HERTZ))
+
+            msTool.open(msname)
+            msTool.iterinit(maxrows = int(n_ants * ((n_ants - 1) / 2.0 + 1)))
+            msTool.iterorigin()
+            # Antenna selection does not work (CAS-8757)
+            #staql={'field': field, 'spw': spw, 'antenna': '*&*'}
+            staql={'field': field, 'spw': spw}
+            msTool.msselect(staql)
+            flag_ants = msTool.getdata(['flag','antenna1','antenna2'])
+            msTool.done()
+
+            # Calculate averaged flagging vector keeping all unflagged channel
+            # from any baseline.
+            result = np.array([True] * flag_ants['flag'].shape[1])
+            for i in xrange(flag_ants['flag'].shape[2]):
+                # Antenna selection does not work (CAS-8757)
+                if (flag_ants['antenna1'][i] != flag_ants['antenna2'][i]):
+                    for j in xrange(flag_ants['flag'].shape[0]):
+                         result = np.logical_and(result, flag_ants['flag'][j,:,i])
+
+            nfi = np.where(result == False)[0]
+
+            imTool.open(msname)
+            # Just the edges. Skip one extra channel in final frequency range.
+            imTool.selectvis(field=field, spw='%s:%d~%d' % (spw, nfi[0], nfi[-1]))
+            result = imTool.advisechansel(getfreqrange = True, freqframe = 'LSRK')
+            imTool.done()
+            f0 = result['freqstart']
+            f1 = result['freqend']
+
+            lsrk_freq_ranges.append((f0, f1))
+            lsrk_channel_widths.append((f1-f0)/(nfi[-1]-nfi[0]))
+
+        if0, if1 = utils.intersect_ranges(lsrk_freq_ranges)
+
+        return if0, if1, max(lsrk_channel_widths)
