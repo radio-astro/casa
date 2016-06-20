@@ -560,10 +560,10 @@ protected:
         Int field_id = mycolumns.fieldId()(i);
         Int feed_id = mycolumns.feed1()(i);
         Int data_desc_id = mycolumns.dataDescId()(i);
-        Int state_id = mycolumns.stateId()(i);
+//        Int state_id = mycolumns.stateId()(i);
         Int scan = mycolumns.scanNumber()(i);
         Bool flag_row = mycolumns.flagRow()(i);
-        Int subscan = state_columns.subScan()(state_id);
+//        Int subscan = state_columns.subScan()(state_id);
         Int pol_id = data_desc_columns.polarizationId()(data_desc_id);
         Int spw_id = data_desc_columns.spectralWindowId()(data_desc_id);
         String field_name = field_columns.name()(field_id) + "__"

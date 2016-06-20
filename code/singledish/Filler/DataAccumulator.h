@@ -101,7 +101,7 @@ struct ExecuteMatrix2 {
 
 struct ExecuteMatrix4X {
   template<class T>
-  static void execute(ssize_t n, T const *src, T *dst) {
+  static void execute(ssize_t /*n*/, T const */*src*/, T */*dst*/) {
     throw std::runtime_error("");
   }
 };

@@ -460,7 +460,7 @@ public:
   }
 
   // query for data type
-  virtual Bool isFloatData() {
+  virtual Bool isFloatData() const {
     return True;
   }
 
