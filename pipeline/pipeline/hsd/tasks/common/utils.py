@@ -54,7 +54,22 @@ def asdm_name_from_ms(ms_domain):
     asdm = ms_basename[:index_for_suffix] if index_for_suffix > 0 \
            else ms_basename
     return asdm
-    
+
+def get_parent_ms_idx(context, msname):
+    """
+    Returns index of corresponding ms in context
+    The method maps both work_data and original MS to a proper index
+    The return value is -1 if no match found.
+    """
+    mslist = context.observing_run.measurements
+    idx_found = -1
+    for idx in xrange(len(mslist)):
+        msobj = mslist[idx]
+        if msname in (msobj.name, msobj.basename, msobj.work_data,
+                      os.path.basename(msobj.work_data)):
+            idx_found = idx
+            break
+    return idx_found    
 
 ####
 # ProgressTimer
@@ -322,6 +337,7 @@ def _collect_logrecords(logger):
     return logrecords
 
 def selection_to_list(sel, maxid=99):
+    """Convert idx selction string to a list of ids"""
     def _selection_to_list(sel):
         elements = sel.split(',')
         for _elem in elements:
