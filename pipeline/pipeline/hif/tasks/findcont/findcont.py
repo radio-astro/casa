@@ -139,17 +139,20 @@ class FindCont(basetask.StandardTaskTemplate):
 
                     # Estimate memory usage and adjust chanchunks parameter to avoid
                     # exceeding the available memory.
-                    try:
-                        mem_bytes = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')
-                    except ValueError:
+                    #try:
+                    #    mem_bytes = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')
+                    #except ValueError:
                         # SC_PHYS_PAGES can be missing on OS X
-                        mem_bytes = int(subprocess.check_output(['sysctl', '-n', 'hw.memsize']).strip())
-                    mem_usable_bytes = 0.8 * mem_bytes
-                    ms = context.observing_run.get_ms(name=inputs.vis[0])
-                    spw_info = ms.get_spectral_window(spwid)
-                    cube_bytes = target['imsize'][0] * target['imsize'][1] * spw_info.num_channels * 4
-                    tclean_bytes = 9 * cube_bytes
-                    chanchunks = int(tclean_bytes / mem_usable_bytes) + 1
+                    #    mem_bytes = int(subprocess.check_output(['sysctl', '-n', 'hw.memsize']).strip())
+                    #mem_usable_bytes = 0.8 * mem_bytes
+                    #ms = context.observing_run.get_ms(name=inputs.vis[0])
+                    #spw_info = ms.get_spectral_window(spwid)
+                    #cube_bytes = target['imsize'][0] * target['imsize'][1] * spw_info.num_channels * 4
+                    #tclean_bytes = 9 * cube_bytes
+                    #chanchunks = int(tclean_bytes / mem_usable_bytes) + 1
+
+                    # Starting with CASA 4.7.79 tclean can calculate chanchunks automatically.
+                    chanchunks = -1
 
                     parallel = mpihelpers.parse_mpi_input_parameter(inputs.parallel)
 
