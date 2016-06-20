@@ -757,7 +757,7 @@ sdms.set_selection(field="M100", spw="3,5")
   Import ASAP Scantable data to MeasurementSet.
   </description>
   <input>
-    <param type="string" name="invile">
+    <param type="string" name="infile">
       <description>The name of input ASAP Scantable</description>
       <value></value>
     </param>
@@ -770,6 +770,29 @@ sdms.set_selection(field="M100", spw="3,5")
     <param type="bool" name="parallel">
       <description>Turn on parallel execution</description>
       <value>false</value>
+    </param>
+  </input> 
+  
+  <returns type="bool"/>
+  <example>
+  </example> 
+</method>
+
+<method type="function" name="importnro">
+  <shortdescription>Import NOSTAR data to MS.</shortdescription>
+  
+  <description>
+  Import NOSTAR data to MeasurementSet.
+  </description>
+  <input>
+    <param type="string" name="infile">
+      <description>The name of input NOSTAR data</description>
+      <value></value>
+    </param>
+    
+    <param type="string" name="outfile">
+      <description>The name of output MeasurementSet</description>
+      <value></value>
     </param>
   </input> 
   

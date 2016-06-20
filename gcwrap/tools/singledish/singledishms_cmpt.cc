@@ -484,4 +484,19 @@ singledishms::importasap(string const &infile, string const &outfile, bool const
     return rstat;
 }
 
+bool
+singledishms::importnro(string const &infile, string const &outfile)
+{
+    bool rstat(false);
+    *itsLog << _ORIGIN;
+    try {
+      rstat = SingleDishMS::importNRO(infile, outfile);
+    } catch  (AipsError x) {
+      *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+          << LogIO::POST;
+      RETHROW(x);
+    }
+    return rstat;
+}
+
 } // end of casac namespace

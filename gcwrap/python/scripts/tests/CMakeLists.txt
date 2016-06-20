@@ -118,6 +118,7 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_importasdm_mms.py
   test_importevla.py
   test_importfitsidi.py
+  test_importnro.py
   test_imregrid.py
   test_imsmooth.py
   test_imstat.py
