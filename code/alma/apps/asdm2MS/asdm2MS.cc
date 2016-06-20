@@ -1816,12 +1816,14 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 	  }
 	  
 	  vector<int64_t> tabulation_time_v;
-	  int64_t t = tstartMS;
+	  int64_t t = tstartMS - timeStepInNanoSecond;  // One extra timestep before the beginning of the interval of validity.
 	  do {
 	    tabulation_time_v.push_back(t);
 	    t += timeStepInNanoSecond;
 	  }
 	  while (t <= tendASDM);
+	  tabulation_time_v.push_back(t); // One extra timestep after the end of the interval of validity. 
+
 	  
 	  //
 	  // Let's tabulate the MS Ephemeris column for each tabulation time, in s. 
