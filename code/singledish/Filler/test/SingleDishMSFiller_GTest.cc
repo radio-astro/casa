@@ -437,7 +437,7 @@ protected:
         }
         if (transition_column.isDefined(0)
             && transition_column.shape(0).product() > 0) {
-          Vector < String > expected_transition = transition_column(0);
+          Vector<String> expected_transition = transition_column(0);
           EXPECT_TRUE(allEQ(expected_transition, mycolumns.transition()(i)));
         } else {
           EXPECT_FALSE(mycolumns.transition().isDefined(i));
@@ -883,6 +883,9 @@ TEST_F(SingleDishMSFillerTestComplex, FillerTest) {
   EXPECT_TRUE(allEQ(imag(data.row(3)), 0.0f));
 }
 
+// Test using stub reader class that contains two antennas
+// Having more than one antenna should not happen except ALMA
+// but its worth testing
 TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
   // Create filler
   SingleDishMSFiller<TestReader<FloatDataStorage> > filler(my_data_name_);
@@ -945,29 +948,34 @@ TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
   {
     std::cout << "Verify ANTENNA table" << std::endl;
     auto const mytable = myms.antenna();
-    ASSERT_EQ(uInt(1), mytable.nrow());
+    constexpr size_t kNumAntennaExpected = 2;
+    ASSERT_EQ(kNumAntennaExpected, mytable.nrow());
     TableRecord const &expected_record = reader.antenna_record_;
     ROMSAntennaColumns mycolumns(mytable);
-    CASA_EXPECT_STREQ(expected_record.asString("NAME"), mycolumns.name()(0));
-    CASA_EXPECT_STREQ(expected_record.asString("STATION"),
-        mycolumns.station()(0));
-    CASA_EXPECT_STREQ(expected_record.asString("TYPE"), mycolumns.type()(0));
-    CASA_EXPECT_STREQ(expected_record.asString("MOUNT"), mycolumns.mount()(0));
-    auto const position_meas_column = mycolumns.positionMeas();
-    auto const position = position_meas_column(0);
-    auto const position_val = position.get("m");
-    CASA_EXPECT_STREQ(String("ITRF"), position.getRefString());
-    EXPECT_TRUE(
-        allEQ(Vector<Double>(expected_record.asArrayDouble("POSITION")),
-            position_val.getValue()));
-    auto const offset_meas_column = mycolumns.offsetMeas();
-    auto const offset = offset_meas_column(0);
-    auto const offset_val = offset.get("m");
-    CASA_EXPECT_STREQ(String("ITRF"), offset.getRefString());
-    EXPECT_TRUE(
-        allEQ(expected_record.asArrayDouble("OFFSET"), offset_val.getValue()));
-    EXPECT_EQ(expected_record.asDouble("DISH_DIAMETER"),
-        mycolumns.dishDiameter()(0));
+    for (size_t i = 0; i < kNumAntennaExpected; ++i) {
+      CASA_EXPECT_STREQ(expected_record.asString("NAME"), mycolumns.name()(i));
+      CASA_EXPECT_STREQ(expected_record.asString("STATION"),
+          mycolumns.station()(i));
+      CASA_EXPECT_STREQ(expected_record.asString("TYPE"), mycolumns.type()(i));
+      CASA_EXPECT_STREQ(expected_record.asString("MOUNT"),
+          mycolumns.mount()(i));
+      auto const position_meas_column = mycolumns.positionMeas();
+      auto const position = position_meas_column(i);
+      auto const position_val = position.get("m");
+      CASA_EXPECT_STREQ(String("ITRF"), position.getRefString());
+      EXPECT_TRUE(
+          allEQ(Vector<Double>(expected_record.asArrayDouble("POSITION")),
+              position_val.getValue()));
+      auto const offset_meas_column = mycolumns.offsetMeas();
+      auto const offset = offset_meas_column(i);
+      auto const offset_val = offset.get("m");
+      CASA_EXPECT_STREQ(String("ITRF"), offset.getRefString());
+      EXPECT_TRUE(
+          allEQ(expected_record.asArrayDouble("OFFSET"),
+              offset_val.getValue()));
+      EXPECT_EQ(expected_record.asDouble("DISH_DIAMETER"),
+          mycolumns.dishDiameter()(i));
+    }
   }
 
   // verify SOURCE table
@@ -1303,7 +1311,7 @@ TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
         ;
       }
 );
-                                                                                                                                                                                                          ASSERT_GT(num_chan, 0);
+                                                                                                                                                                                                                ASSERT_GT(num_chan, 0);
       Matrix<Bool> expected_flag(expected_num_pol, num_chan);
       Matrix<Float> expected_data(expected_num_pol, num_chan);
       uInt pol_id0 = row_record0.polno;
@@ -1418,7 +1426,7 @@ TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
         ;
       }
 );
-                                                                                                                                                                                                          ASSERT_GT(num_chan, 0);
+                                                                                                                                                                                                                ASSERT_GT(num_chan, 0);
       expected_flag.resize(expected_num_pol, num_chan);
       expected_data.resize(expected_flag.shape());
       uInt pol_id2 = row_record2.polno;

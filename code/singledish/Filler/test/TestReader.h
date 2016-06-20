@@ -446,7 +446,7 @@ public:
       get_source_row_(&::TestReader<DataStorage>::getSourceRowWithInitImpl),
       get_field_row_(&::TestReader<DataStorage>::getFieldRowWithInitImpl),
       get_spw_row_(&::TestReader<DataStorage>::getSpwRowWithInitImpl),
-      storage_() {
+      storage_(), antenna_count_(0) {
     POST_START;POST_END;
   }
 
@@ -569,6 +569,7 @@ private:
   Bool (::TestReader<DataStorage>::*get_field_row_)(FieldRecord &);
   Bool (::TestReader<DataStorage>::*get_spw_row_)(SpectralWindowRecord &);
   DataStorage storage_;
+  size_t antenna_count_;
 
   Bool getObservationRowImpl(ObservationRecord &record) {
     POST_START;
@@ -646,8 +647,13 @@ private:
     record.dish_diameter = dish_diameter;
     antenna_record_.define("DISH_DIAMETER", dish_diameter);
 
-    get_antenna_row_ = &::TestReader<DataStorage>::noMoreRowImplTemplate<
-        AntennaRecord>;
+    antenna_count_++;
+    constexpr size_t kNumAntenna = 2;
+
+    if (antenna_count_ >= kNumAntenna) {
+      get_antenna_row_ = &::TestReader<DataStorage>::noMoreRowImplTemplate<
+          AntennaRecord>;
+    }
 
     POST_END;
 
