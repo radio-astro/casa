@@ -52,6 +52,7 @@ importfits.xml
 importfitsidi.xml
 importgmrt.xml
 importmiriad.xml
+importnro.xml
 importuvfits.xml
 importvla.xml
 imrebin.xml
