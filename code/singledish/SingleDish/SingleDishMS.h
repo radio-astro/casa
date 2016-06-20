@@ -336,6 +336,7 @@ private:
 
 public:
   static bool importAsap(string const &infile, string const &outfile, bool const parallel=false);
+  static bool importNRO(string const &infile, string const &outfile, bool const parallel=false);
 };
 // class SingleDishMS -END
 

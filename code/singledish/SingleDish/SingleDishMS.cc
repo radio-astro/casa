@@ -35,9 +35,10 @@
 #include <stdcasa/StdCasa/CasacSupport.h>
 #include <tables/Tables/ScalarColumn.h>
 
-// for importasap
+// for importasap and importnro
 #include <singledish/Filler/SingleDishMSFiller.h>
 #include <singledish/Filler/Scantable2MSReader.h>
+#include <singledish/Filler/NRO2MSReader.h>
 
 #define _ORIGIN LogOrigin("SingleDishMS", __func__, WHERE)
 
@@ -3147,5 +3148,27 @@ bool SingleDishMS::importAsap(string const &infile, string const &outfile, bool 
   }
   return status;
 }
+
+bool SingleDishMS::importNRO(string const &infile, string const &outfile, bool const parallel)
+{
+  bool status = true;
+  try {
+    SingleDishMSFiller<NRO2MSReader> filler(infile, parallel);
+    filler.fill();
+    filler.save(outfile);
+  } catch (AipsError &e) {
+    LogIO os(_ORIGIN);
+    os << LogIO::SEVERE << "Exception occurred." << LogIO::POST;
+    os << LogIO::SEVERE << "Original Message: \n" << e.getMesg() << LogIO::POST;
+    os << LogIO::DEBUGGING << "Detailed Stack Trace: \n" << e.getStackTrace() << LogIO::POST;
+    status = false;
+  } catch (...) {
+    LogIO os(_ORIGIN);
+    os << LogIO::SEVERE << "Unknown exception occurred." << LogIO::POST;
+    status = false;
+  }
+  return status;
+}
+
 }  // End of casa namespace.
 
