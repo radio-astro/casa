@@ -246,7 +246,9 @@ class CleanBase(basetask.StandardTaskTemplate):
             if (inputs.nchan != -1):
                 cube_bytes = inputs.imsize[0] * inputs.imsize[1] * inputs.nchan * 4
             else:
-                cube_bytes = inputs.imsize[0] * inputs.imsize[1] * max(num_channels) * 4
+                ms = context.observing_run.get_ms(name=inputs.vis[0])
+                spw_info = ms.get_spectral_window(spwid)
+                cube_bytes = inputs.imsize[0] * inputs.imsize[1] * spw_info.num_channels * 4
             tclean_bytes = 9 * cube_bytes
             chanchunks = int(tclean_bytes / mem_usable_bytes) + 1
         else:
