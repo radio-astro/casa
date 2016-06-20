@@ -43,8 +43,8 @@ class QAScorePool(object):
         if not self.pool:
             return QAScore(None, 'No QA scores registered for this task', '')
         
-        if all([s.score == 1.0 for s in self.pool]):
-            return QAScore(1.0, self.all_unity_longmsg, self.all_unity_shortmsg)
+        if all([s.score >= 0.9 for s in self.pool]):
+            return QAScore(s.score, self.all_unity_longmsg, self.all_unity_shortmsg)
         
         # maybe have different algorithms here. for now just return the
         # QAScore with minimum score
