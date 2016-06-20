@@ -305,10 +305,10 @@ void ImageFitterResults::writeSummaryFile(
     auto longErrLabel = longLabel + "err";
     auto latErrLabel = latLabel + "err";
 
-    uInt longWidth = max(12, longLabel.size());
-    uInt latWidth = max(12, latLabel.size());
-    uInt longErrWidth = max(12, longErrLabel.size());
-    uInt latErrWidth = max(12, latErrLabel.size());
+    uInt longWidth = max(16, longLabel.size());
+    uInt latWidth = max(16, latLabel.size());
+    uInt longErrWidth = max(16, longErrLabel.size());
+    uInt latErrWidth = max(16, latErrLabel.size());
     uInt sizeWidth = 12;
     uInt freqWidth = 15;
     auto doDecon = _deconvolvedList.nelements() > 0;
