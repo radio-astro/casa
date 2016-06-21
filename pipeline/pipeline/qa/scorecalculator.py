@@ -418,7 +418,7 @@ def score_ephemeris_coordinates(mses):
                 source.dec == casatools.quanta.formxxx(zerodirection['m1'], format='dms', prec=2):
                 all_ok = False
                 score += (-1.0 / num_mses)
-                longmsg =  ('Suspicious source coordinates for  %s in %s'
+                longmsg =  ('Suspicious source coordinates for  %s in %s. Check whether position of 00:00:00.0+00:00:00.0 is valid.'
                     '' % (source.name, ms.basename))
                 complaints.append(longmsg)
 
