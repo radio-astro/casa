@@ -9,7 +9,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 from .. import common 
 
-from ..msimaging.accumulator import Accumulator
+from .accumulator import Accumulator
 
 LOG = infrastructure.get_logger(__name__)
 DO_TEST = True
@@ -41,6 +41,10 @@ class GriddingResults(common.SingleDishResults):
         return ''
 
 
+# Creates a dictionary of gridded RMS and the number of valid spectra
+# in each grid. This module collects data from DataTable. Pass parent
+# MS names as an input (although parent name is internally resolved in
+# the class).
 class GriddingBase(common.SingleDishTaskTemplate):
     Inputs = GriddingInputs
     Rule = {'WeightDistance': 'Gauss', \
@@ -57,32 +61,42 @@ class GriddingBase(common.SingleDishTaskTemplate):
             self.antenna = [inputs.antennaid]
         else:
             self.antenna = inputs.antennaid
-        self.files = [context.observing_run[i].name for i in self.antenna]
+        # Make sure using parent MS name
+        if type(inputs.msname) == str:
+            self.files = [common.get_parent_ms_name(context, inputs.msname)]
+        else:
+            self.files = [ common.get_parent_ms_name(context, name) for name in inputs.msname]
         if type(inputs.spwid) == int:
             self.spw = [inputs.spwid]
         else:
             self.spw = inputs.spwid
         self.spwmap = dict([(a,s) for (a,s) in zip(self.antenna,self.spw)])
+        if type(inputs.fieldid) == int:
+            self.field = [inputs.fieldid]
+        else:
+            self.field = inputs.fieldid
         if type(inputs.polid) == int:
             self.pol = [inputs.polid]
         else:
             self.pol = inputs.polid
+        LOG.debug('self.files=%s'%(self.files))
         LOG.debug('self.antenna=%s'%(self.antenna))
         LOG.debug('self.spw=%s'%(self.spw))
+        LOG.debug('self.field=%s'%(self.field))
         LOG.debug('self.pol=%s'%(self.pol))
             
         LOG.debug('Members to be processed:')
         for (a,s) in zip(self.antenna, self.spw):
             LOG.debug('\tAntenna %s Spw %s Pol %s'%(a,s,self.pol))
             
-        reference_data = context.observing_run[self.antenna[0]]
-        reference_spw = reference_data.spectral_window[self.spw[0]]
-        self.nchan = reference_spw.nchan
-        self.srctype = reference_data.calibration_strategy['srctype']
+        reference_data = context.observing_run.get_ms(name=self.files[0])
+        reference_spw = reference_data.spectral_windows[self.spw[0]]
+        self.nchan = reference_spw.num_channels
+        self.srctype = reference_data.calibration_strategy['xxxx']
         # beam size
-        grid_size = casatools.quanta.convert(reference_data.beam_size[self.spw[0]], 'deg')['value']
+        grid_size = casatools.quanta.convert(reference_data.beam_size[self.antenna[0]][self.spw[0]], 'deg')['value']
         self.grid_ra = grid_size
-        self.grid_dec = grid_size       
+        self.grid_dec = grid_size
         
         combine_radius = self.grid_ra
         kernel_width = 0.5 * combine_radius
@@ -127,13 +141,11 @@ class GriddingBase(common.SingleDishTaskTemplate):
             [IF, POL, X, Y, RA, DEC, # of Combined Sp., # of flagged Sp., RMS]
                     ......
             [IF, POL, X, Y, RA, DEC, # of Combined Sp., # of flagged Sp., RMS]]
-
-        DataOut is not used 2010/10/25 GK
         """
         start = time.time()
 
         table = self.datatable.tb1
-        index_list = common.get_index_list(self.datatable, self.antenna, self.spw, self.pol, self.srctype)
+        index_list = common.get_index_list_for_ms(self.datatable, DataIn, self.field, self.antenna, self.spw, self.srctype)
         #pols = table.getcol('POL').take(index_list)
         #index_list = numpy.take(index_list, numpy.where(pols == self.pol)[0])
         #del pols
@@ -163,7 +175,7 @@ class GriddingBase(common.SingleDishTaskTemplate):
                 _j = list(self.antenna).index(_ant)
                 assert _pol in self.pol[_j], 'row %s is bad selection: POLNO doesn\'t match (actual %s expected %s)'%(index_list[_i], _pol, self.pol[_j])
                 assert _spw == self.spw[_j], 'row %s is bad selection: IFNO not in process list (actual %s expected %s)'%(index_list[_i], _spw, self.spw[_j])
-        ###
+        ###dd19.chan_freq
 
         # Re-Gridding
         # 2008/09/20 Spacing should be identical between RA and DEC direction

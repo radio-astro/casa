@@ -14,18 +14,19 @@ from ..common import utils
 
 LOG = infrastructure.get_logger(__name__)
 
-def ALMAImageCoordinateUtil(context, datatable, infiles, spw_list, pols_list, srctype, vislist):
+def ALMAImageCoordinateUtil(context, datatable, ms_names, ant_list, spw_list, fieldid_list, srctype):
     """
     An utility function to calculate spatial coordinate of image for ALMA
     """
-    antenna_list = [context.observing_run.st_names.index(f) 
-                    for f in infiles]
-    vislist = [vislist[i] for i in antenna_list]
-    reference_data = context.observing_run[antenna_list[0]]
+    idx = utils.get_parent_ms_idx(context, ms_names[0])
+    if idx >= 0 and idx < len(context.observing_run.measurements):
+        ref_msobj = context.observing_run.measurements[idx]
+    else:
+        raise ValueError, "The reference ms, %s, not registered to context" % ms_names[0]
+    ref_ms_name = ref_msobj.name
+    ref_fieldid = fieldid_list[0]
     ref_spw = spw_list[0]
-    target_sources = [v for v in reference_data.source.values() 
-                      if 'TARGET' in v.intents]
-    source_name = target_sources[0].name
+    source_name = ref_msobj.fields[ref_fieldid].name
 
     # qa tool
     qa = casatools.quanta
@@ -38,7 +39,7 @@ def ALMAImageCoordinateUtil(context, datatable, infiles, spw_list, pols_list, sr
     diameter_m = 12.0 #max([ context.observing_run[antid].antenna.diameter for antid in antenna_list ])
     obscure_alma = 0.75
     ### END OF ALMA part ###
-    with casatools.MSMDReader(vislist[0]) as msmd:
+    with casatools.MSMDReader(ref_ms_name) as msmd:
         freq_hz = msmd.meanfreq(ref_spw)
         fnames = [name for name in msmd.fieldnames() if name.find(source_name) > -1 ]
         me_center = msmd.phasecenter(msmd.fieldsforname(fnames[0])[0])
@@ -63,10 +64,10 @@ def ALMAImageCoordinateUtil(context, datatable, infiles, spw_list, pols_list, sr
     LOG.info('phasecenter=\'%s\'' % (phasecenter, ))
 
     # nx and ny
-    index_list = common.get_index_list(datatable, antenna_list, spw_list, pols_list, srctype)
+    index_list = common.get_index_list_for_ms(datatable, ms_names, fieldid_list, ant_list, spw_list, srctype)
     
     if len(index_list) == 0:
-        antenna_name = reference_data.antenna.name
+        antenna_name = ref_msobj.antennas[ant_list[0]].name
         LOG.warn('No valid data for source %s antenna %s spw %s. Image will not be created.'%(source_name, antenna_name, ref_spw))
         return False
         
@@ -111,12 +112,13 @@ def ALMAImageCoordinateUtil(context, datatable, infiles, spw_list, pols_list, sr
     LOG.info('nx,ny=%s,%s' % (nx, ny))
     return phasecenter, cellx, celly, nx, ny    
 
+
 class SDImagingWorkerInputs(common.SingleDishInputs):
     """
     Inputs for imaging worker
     """
-    def __init__(self, context, infiles, outfile, mode, spwids, scans, pols, onsourceid, 
-                 edge=None, vislist=None, phasecenter=None, cellx=None, celly=None, nx=None, ny=None):
+    def __init__(self, context, infiles, outfile, mode, antids, spwids, fieldids, onsourceid, 
+                 edge=None, phasecenter=None, cellx=None, celly=None, nx=None, ny=None):
         # NOTE: spwids and pols are list of numeric id list while scans
         #       is string (mssel) list
         self._init_properties(vars())
@@ -141,13 +143,13 @@ class SDImagingWorker(common.SingleDishTaskTemplate):
         infiles = self.inputs.infiles
         outfile = self.inputs.outfile
         edge = self.inputs.edge
+        antid_list = self.inputs.antids
         spwid_list = self.inputs.spwids
-        scan_list = self.inputs.scans
-        pols_list = self.inputs.pols
+        fieldid_list = self.inputs.fieldids
         imagemode = self.inputs.mode
-        phasecenter, cellx, celly, nx, ny = self._get_map_coord(self.inputs, self.context, self.datatable, infiles, spwid_list, pols_list)
+        phasecenter, cellx, celly, nx, ny = self._get_map_coord(self.inputs, self.context, self.datatable, infiles, antid_list, spwid_list, fieldid_list)
         
-        status = self._do_imaging(infiles, spwid_list, scan_list, outfile, imagemode, edge, phasecenter, cellx, celly, nx, ny)
+        status = self._do_imaging(infiles, antid_list, spwid_list, fieldid_list, outfile, imagemode, edge, phasecenter, cellx, celly, nx, ny)
  
         if status is True:
             result = SDImagingWorkerResults(task=self.__class__,
@@ -169,34 +171,31 @@ class SDImagingWorker(common.SingleDishTaskTemplate):
     def analyse(self, result):
         return result
 
-    def _get_map_coord(self, inputs, context, datatable, infiles, spw_list, pols_list):
+    def _get_map_coord(self, inputs, context, datatable, infiles, ant_list, spw_list, field_list):
         params = (inputs.phasecenter, inputs.cellx, inputs.celly, inputs.nx, inputs.ny)
         coord_set = (params.count(None) == 0)
         if coord_set:
             return params
         else:
-            return ALMAImageCoordinateUtil(context, datatable, infiles, spw_list, pols_list, inputs.onsourceid, inputs.vislist)
+            return ALMAImageCoordinateUtil(context, datatable, infiles, ant_list, spw_list, field_list, inputs.onsourceid)
 
-    def _do_imaging(self, infiles, spwid_list, scan_list, imagename, imagemode, edge, phasecenter, cellx, celly, nx, ny):
+    def _do_imaging(self, infiles, antid_list, spwid_list, fieldid_list, imagename, imagemode, edge, phasecenter, cellx, celly, nx, ny):
         context = self.context
-        antenna_list = [context.observing_run.st_names.index(f) 
-                        for f in infiles]
-        vislist = [self.inputs.vislist[i] for i in antenna_list]
-        reference_data = context.observing_run[antenna_list[0]]
-        spwid = spwid_list[0]
+        idx = utils.get_parent_ms_idx(context, infiles[0])
+        if idx >= 0 and idx < len(context.observing_run.measurements):
+            reference_data = context.observing_run.measurements[idx]
+        else:
+            raise ValueError, "The reference ms, %s, not registered to context" % infiles[0]
+        ref_spwid = spwid_list[0]
         
         LOG.debug('Members to be processed:')
-        for (a,s) in zip(antenna_list, spwid_list):
-            LOG.debug('\tAntenna %s Spw %s'%(a,s))
+        for (m, a,s, f) in zip(infiles, antid_list, spwid_list, fieldid_list):
+            LOG.debug('\tMS %s: Antenna %s Spw %s Field %s'%(os.path.basename(m), a,s,f))
     
-        # field
-        target_sources = [v for v in reference_data.source.values() 
-                          if 'TARGET' in v.intents]
-        source_name = target_sources[0].name
-        field = '"%s*"' % (source_name)
         # Check for ephemeris source
         known_ephemeris_list = ['MERCURY', 'VENUS', 'MARS', 'JUPITER', 'SATURN', 'URANUS', 'NEPTUNE', 'PLUTO', 'SUN', 'MOON']
         ephemsrcname = ''
+        source_name = reference_data.fields[fieldid_list[0]].name
         if source_name.upper() in known_ephemeris_list:
             ephemsrcname = source_name.upper()
             LOG.info("Generating an image of ephemeris source. Setting ephemsrcname='%s'" % ephemsrcname)
@@ -211,7 +210,8 @@ class SDImagingWorker(common.SingleDishTaskTemplate):
         stokes = 'I'
     
         # start, nchan, step
-        total_nchan = reference_data.spectral_window[spwid].nchan
+        ref_spwobj = reference_data.spectral_windows[ref_spwid]
+        total_nchan = ref_spwobj.num_channels
         if total_nchan == 1:
             start = 0
             step = 1
@@ -225,13 +225,13 @@ class SDImagingWorker(common.SingleDishTaskTemplate):
             step = nchan
             nchan = 1
     
-         # restfreq
-        spw = reference_data.spectral_window[spwid]
-        rest_freqs = spw.rest_frequencies
-        if len(rest_freqs) > 0:
-            restfreq = rest_freqs[0]
+        # restfreq
+        rest_freq = ref_spwobj.ref_frequency
+        if rest_freq is not None:
+            qa = casatools.quanta
+            restfreq = qa.tos(qa.quantity(numpy.double(rest_freq.value), rest_freq.unit['symbol']))
         else:
-            restfreq = spw.refval
+            raise RuntimeError, "Could not get reference frequency of Spw %d" % ref_spwid
     
         # outframe
         outframe = 'LSRK'
@@ -246,8 +246,8 @@ class SDImagingWorker(common.SingleDishTaskTemplate):
 #         temporary_name = imagename.rstrip('/')+'.tmp'
         cleanup_params = ['outfile', 'infiles', 'spw', 'scan']
         qa = casatools.quanta
-        image_args = {'field': field, 
-                      'mode': mode,
+        image_args = {'mode': mode,
+                      'intent': "OBSERVE_TARGET#ON_SOURCE",
                       'nchan': nchan,
                       'start': start,
                       'width': step,
@@ -272,24 +272,26 @@ class SDImagingWorker(common.SingleDishTaskTemplate):
         # imaging
         infile_list = []
         spwsel_list = []
-        scansel_list = []
-        spwsel = []
-        for (vis, spw, scan) in zip(vislist, spwid_list, scan_list):
-            LOG.debug('Registering data to image: vis=\'%s\', spw=%s, field=%s%s'%(vis, spw, field,
-                                                                                       (' (ephemeris source)' if ephemsrcname!='' else '')))
-            infile_list.append(vis)
-            scansel_list.append(common.list_to_selection(scan))
-            # WORKAROUND for a bug in sdimaging
-            #spwsel_list.append(common.list_to_selection(utils.to_list(spw)))
-            if not (spw in spwsel):
-                spwsel.append(spw)
-        spwsel_list = common.list_to_selection(spwsel)
+        fieldsel_list = []
+        antsel_list = []
+        for (msname, ant, spw, field) in zip(infiles, antid_list, spwid_list, fieldid_list):
+            LOG.debug('Registering data to image: vis=\'%s\', ant=%s, spw=%s, field=%s'%(msname, ant, spw, field,
+                                                                                           (' (ephemeris source)' if ephemsrcname!='' else '')))
+            infile_list.append(msname)
+            spwsel_list.append(str(spw))
+            fieldsel_list.append(str(field))
+            antsel_list.append(str(ant))
+        # collapse selection if possible
+        spwsel_list = spwsel_list[0] if len(set(spwsel_list)) == 1 else spwsel_list
+        fieldsel_list = fieldsel_list[0] if len(set(fieldsel_list)) == 1 else fieldsel_list
+        antsel_list = antsel_list[0] if len(set(antsel_list)) == 1 else antsel_list
         # set-up image dependent parameters
         for p in cleanup_params: image_args[p] = None
         image_args['outfile'] = imagename
         image_args['infiles'] = infile_list
         image_args['spw'] = spwsel_list
-        image_args['scan'] = scansel_list
+        image_args['field'] = fieldsel_list
+        image_args['antenna'] = antsel_list
         LOG.debug('Executing sdimaging task: args=%s'%(image_args))
         image_job = casa_tasks.sdimaging(**image_args)
 
