@@ -61,15 +61,26 @@ def get_parent_ms_idx(context, msname):
     The method maps both work_data and original MS to a proper index
     The return value is -1 if no match found.
     """
-    mslist = context.observing_run.measurements
+    mslist = context.observing_run.measurement_sets
     idx_found = -1
     for idx in xrange(len(mslist)):
         msobj = mslist[idx]
-        if msname in (msobj.name, msobj.basename, msobj.work_data,
-                      os.path.basename(msobj.work_data)):
+        search_list = [msobj.name, msobj.basename]
+        if hasattr(msobj, "work_data"):
+            search_list += [msobj.work_data, os.path.basename(msobj.work_data)]
+        if msname in search_list:
             idx_found = idx
             break
     return idx_found    
+
+def get_parent_ms_name(context, msname):
+    """
+    Returns name of corresponding parent ms in context
+    The method maps both work_data and original MS to a proper index
+    The return value is "" if no match found.
+    """
+    idx = get_parent_ms_idx(context, msname)
+    return context.observing_run.measurement_sets[idx].name if idx >=0 else ""
 
 ####
 # ProgressTimer
