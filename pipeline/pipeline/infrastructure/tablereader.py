@@ -204,8 +204,13 @@ class MeasurementSetReader(object):
     def link_intents_to_spws(msmd, ms):
         # we can't use msmd.intentsforspw directly as we may have a modified
         # obsmode mapping
+
+        scansforspws = msmd.scansforspws()
+        #statesforscans = msmd.statesforscans()
+
         for spw in ms.spectral_windows:
-            scan_ids = msmd.scansforspw(spw.id)
+            # scan_ids = msmd.scansforspw(spw.id)
+            scan_ids = scansforspws[str(spw.id)]
             state_ids = [msmd.statesforscan(i) for i in scan_ids]
             state_ids = set(itertools.chain(*state_ids))
             states = [s for s in ms.states if s.id in state_ids] 
@@ -247,25 +252,33 @@ class MeasurementSetReader(object):
     @staticmethod
     def link_fields_to_states(msmd, ms):
         # for each field..
+
+        scansforfields = msmd.scansforfields()
+
         for field in ms.fields:
             # Find the state IDs for the field by first identifying the scans
             # for the field, then finding the state IDs for those scans
-            scan_ids = msmd.scansforfield(field.id)
-            state_ids = [msmd.statesforscan(i) for i in scan_ids]
-            # flatten the state IDs to a 1D list
-            state_ids = set(itertools.chain(*state_ids))            
-            states = [ms.get_state(i) for i in state_ids]
+
+            try:
+                # scan_ids = msmd.scansforfield(field.id)
+                scan_ids = scansforfields[str(field.id)]
+                state_ids = [msmd.statesforscan(i) for i in scan_ids]
+                # flatten the state IDs to a 1D list
+                state_ids = set(itertools.chain(*state_ids))
+                states = [ms.get_state(i) for i in state_ids]
             
-            # some scans may have multiple fields and/or intents so 
-            # it is necessary to distinguish which intents belong to 
-            # each field
-            obs_modes_for_field = set(msmd.intentsforfield(field.id))
-            states_for_field = [s for s in states \
-                if not obs_modes_for_field.isdisjoint(s.obs_mode.split(','))]
+                # some scans may have multiple fields and/or intents so
+                # it is necessary to distinguish which intents belong to
+                # each field
+                obs_modes_for_field = set(msmd.intentsforfield(field.id))
+                states_for_field = [s for s in states \
+                    if not obs_modes_for_field.isdisjoint(s.obs_mode.split(','))]
             
-            field.states.update(states_for_field)
-            for state in states_for_field:
-                field.intents.update(state.intents)
+                field.states.update(states_for_field)
+                for state in states_for_field:
+                    field.intents.update(state.intents)
+            except:
+                LOG.debug("Field "+str(field.id) + " not in scansforfields dictionary.")
             
     @staticmethod
     def link_fields_to_sources(msmd, ms):        
@@ -315,11 +328,17 @@ class MeasurementSetReader(object):
                     dd.corr_axis = ms_info['axis_info']['corr_axis'].tolist()
     
             # now back to pure MSMD calls
+            LOG.info("TABLEREADER 1")
             MeasurementSetReader.link_fields_to_states(msmd, ms)
+            LOG.info("TABLEREADER 2")
             MeasurementSetReader.link_fields_to_sources(msmd, ms)
+            LOG.info("TABLEREADER 3")
             MeasurementSetReader.link_intents_to_spws(msmd, ms)
+            LOG.info("TABLEREADER 4")
             MeasurementSetReader.link_spws_to_fields(msmd, ms)
+            LOG.info("TABLEREADER 5")
             ms.scans = MeasurementSetReader.get_scans(msmd, ms)
+            LOG.info("TABLEREADER 6")
 
             (observer, project_id, schedblock_id, execblock_id) = ObservationTable.get_project_info(msmd)
 

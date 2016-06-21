@@ -504,14 +504,19 @@ class MeasurementSet(object):
         
         vis = self.name
         
-        with casatools.TableReader(vis+'/FIELD') as table:
-            numFields = table.nrows()
+        ##with casatools.TableReader(vis+'/FIELD') as table:
+        ##    numFields = table.nrows()
             
         #Map field IDs to spws
         field_spws = []
-        for ii in range(numFields):
-            field_spws.append(self.vla_spws_for_field(ii))
-       
+        ##for ii in range(numFields):
+        ##    field_spws.append(self.vla_spws_for_field(ii))
+
+        with casatools.MSMDReader(vis) as msmd:
+            spwsforfields = msmd.spwsforfields()
+            for key in spwsforfields.keys():
+                field_spws.append(spwsforfields[key])
+
         return field_spws
     
     
