@@ -309,17 +309,19 @@ def get_valid_members(group_desc, antenna_filter, spwid_filter):
             if _spwid_filter is None or len(_spwid_filter) == 0 or spwid in _spwid_filter:
                 yield i
                 
-def get_valid_ms_members(group_desc, ms_filter, spw_selection, field_selection):
+def get_valid_ms_members(group_desc, ms_filter, ant_selection, spw_selection, field_selection):
     for member_id in xrange(len(group_desc)):
         member = group_desc[member_id]
         spw_id = member.spw_id
         field_id = member.field_id
+        ant_id = member.antenna
         ms = member.ms
         if ms in ms_filter:
-            mssel = casatools.ms.msseltoindex(vis=ms.name, spw=spw_selection, field=field_selection)
+            mssel = casatools.ms.msseltoindex(vis=ms.name, spw=spw_selection, field=field_selection, baseline=ant_selection)
             spwsel = mssel['spw']
             fieldsel = mssel['field']
-            if (len(spwsel) == 0 or spw_id in spwsel) and (len(fieldsel) == 0 or field_id in fieldsel):
+            antsel = mssel['antenna1']
+            if (len(spwsel) == 0 or spw_id in spwsel) and (len(fieldsel) == 0 or field_id in fieldsel) and (len(antsel) == 0 or ant_id in antsel):
                 yield member_id
 
 def _get_spwid_filter(spwid_filter, file_id):
