@@ -756,10 +756,11 @@ class asdm_import11(test_base):
         self.setUp_eph()
        
     def tearDown(self):
-        for myasdmname in ['uid___A002_X997a62_X8c-short']:
-            os.system('rm -f '+myasdmname) # a link
-            shutil.rmtree(myasdmname+".ms",ignore_errors=True)
-            shutil.rmtree(myasdmname+'.ms.flagversions',ignore_errors=True)
+        pass
+#        for myasdmname in ['uid___A002_X997a62_X8c-short']:
+##            os.system('rm -f '+myasdmname) # a link
+#            shutil.rmtree(myasdmname+".ms",ignore_errors=True)
+#            shutil.rmtree(myasdmname+'.ms.flagversions',ignore_errors=True)
             
     def test_mms_ephem(self):
         '''Asdm-import: Test good 12 m ASDM with Ephemeris table in lazy mode and MMS'''
@@ -773,8 +774,8 @@ class asdm_import11(test_base):
         self.assertEqual(self.res, None)
         print myname, ": Success! Now checking output ..."
         mscomponents = set(["FIELD/table.dat",
-                            "FIELD/EPHEM0_Mars_57034.89600000.tab",
-                            "FIELD/EPHEM1_Titania_57034.93500000.tab"
+                            "FIELD/EPHEM0_Mars_57034.9.tab",
+                            "FIELD/EPHEM1_Titania_57034.9.tab"
                             ])
         for name in mscomponents:
             if not os.access(themsname+"/"+name, os.F_OK):
@@ -794,8 +795,8 @@ class asdm_import11(test_base):
             mslocal.close()
             print myname, ": OK."
 
-        for name in ["FIELD/EPHEM0_Mars_57034.89600000.tab",
-                     "FIELD/EPHEM1_Titania_57034.93500000.tab"]:
+        for name in ["FIELD/EPHEM0_Mars_57034.9.tab",
+                     "FIELD/EPHEM1_Titania_57034.9.tab"]:
             tblocal.open(themsname+"/"+name)
             kw = tblocal.getkeywords()
             tblocal.close()
