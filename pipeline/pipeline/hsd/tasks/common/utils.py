@@ -312,7 +312,7 @@ def get_valid_members(group_desc, antenna_filter, spwid_filter):
 def get_valid_ms_members(group_desc, ms_filter, ant_selection, spw_selection, field_selection):
     for member_id in xrange(len(group_desc)):
         member = group_desc[member_id]
-        spw_id = member.spw_id
+        spw_id = member.spw
         field_id = member.field_id
         ant_id = member.antenna
         ms = member.ms
