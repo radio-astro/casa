@@ -10,10 +10,10 @@ from . import hanning
 
 from . import qa
 
-pipelineqa.registry.add_handler(qa.HanningQAHandler())
-pipelineqa.registry.add_handler(qa.HanningListQAHandler())
-qaadapter.registry.register_to_dataset_topic(hanning.HanningResults)
-#qaadapter.registry.register_to_dataset_topic(applycal.ApplycalResults)
+#pipelineqa.registry.add_handler(qa.HanningQAHandler())
+#pipelineqa.registry.add_handler(qa.HanningListQAHandler())
+#qaadapter.registry.register_to_dataset_topic(hanning.HanningResults)
+
 
 weblog.add_renderer(Hanning,
                     basetemplates.T2_4MDetailsDefaultRenderer(uri='hanning.mako',

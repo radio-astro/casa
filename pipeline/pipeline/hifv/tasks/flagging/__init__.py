@@ -25,17 +25,17 @@ from .targetflag import Targetflag
 #from .hflag import Heuristicflag
 
 
-pipelineqa.registry.add_handler(qa.FlagBadDeformattersQAHandler())
-pipelineqa.registry.add_handler(qa.FlagBadDeformattersListQAHandler())
-qaadapter.registry.register_to_dataset_topic(flagbaddeformatters.FlagBadDeformattersResults)
+#pipelineqa.registry.add_handler(qa.FlagBadDeformattersQAHandler())
+#pipelineqa.registry.add_handler(qa.FlagBadDeformattersListQAHandler())
+#qaadapter.registry.register_to_dataset_topic(flagbaddeformatters.FlagBadDeformattersResults)
 
-pipelineqa.registry.add_handler(qa.CheckflagQAHandler())
-pipelineqa.registry.add_handler(qa.CheckflagListQAHandler())
-qaadapter.registry.register_to_dataset_topic(checkflag.CheckflagResults)
+#pipelineqa.registry.add_handler(qa.CheckflagQAHandler())
+#pipelineqa.registry.add_handler(qa.CheckflagListQAHandler())
+#qaadapter.registry.register_to_dataset_topic(checkflag.CheckflagResults)
 
-pipelineqa.registry.add_handler(qa.TargetflagQAHandler())
-pipelineqa.registry.add_handler(qa.TargetflagListQAHandler())
-qaadapter.registry.register_to_dataset_topic(targetflag.TargetflagResults)
+#pipelineqa.registry.add_handler(qa.TargetflagQAHandler())
+#pipelineqa.registry.add_handler(qa.TargetflagListQAHandler())
+#qaadapter.registry.register_to_dataset_topic(targetflag.TargetflagResults)
 
 
 weblog.add_renderer(FlagDeterVLA, renderer.T2_4MDetailsVLAAgentFlaggerRenderer(), group_by='ungrouped')

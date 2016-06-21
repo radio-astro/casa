@@ -11,8 +11,8 @@ from . import resultobjects
 
 from . import qa
 
-pipelineqa.registry.add_handler(qa.PriorcalsQAHandler())
-pipelineqa.registry.add_handler(qa.PriorcalsListQAHandler())
-qaadapter.registry.register_to_dataset_topic(resultobjects.PriorcalsResults)
+#pipelineqa.registry.add_handler(qa.PriorcalsQAHandler())
+#pipelineqa.registry.add_handler(qa.PriorcalsListQAHandler())
+#qaadapter.registry.register_to_dataset_topic(resultobjects.PriorcalsResults)
 
 weblog.add_renderer(Priorcals, renderer.T2_4MDetailspriorcalsRenderer(), group_by='ungrouped')

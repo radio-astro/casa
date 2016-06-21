@@ -12,9 +12,9 @@ from . import renderer
 
 from . import qa
 
-pipelineqa.registry.add_handler(qa.FinalcalsQAHandler())
-pipelineqa.registry.add_handler(qa.FinalcalsListQAHandler())
-qaadapter.registry.register_to_dataset_topic(finalcals.FinalcalsResults)
+#pipelineqa.registry.add_handler(qa.FinalcalsQAHandler())
+#pipelineqa.registry.add_handler(qa.FinalcalsListQAHandler())
+#qaadapter.registry.register_to_dataset_topic(finalcals.FinalcalsResults)
 
 
 weblog.add_renderer(Finalcals, renderer.T2_4MDetailsfinalcalsRenderer(), group_by='ungrouped')

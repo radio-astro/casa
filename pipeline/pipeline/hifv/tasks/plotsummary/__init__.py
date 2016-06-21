@@ -10,9 +10,9 @@ from . import renderer
 
 from . import qa
 
-pipelineqa.registry.add_handler(qa.PlotSummaryQAHandler())
-pipelineqa.registry.add_handler(qa.PlotSummaryListQAHandler())
-qaadapter.registry.register_to_dataset_topic(plotsummary.PlotSummaryResults)
+#pipelineqa.registry.add_handler(qa.PlotSummaryQAHandler())
+#pipelineqa.registry.add_handler(qa.PlotSummaryListQAHandler())
+#qaadapter.registry.register_to_dataset_topic(plotsummary.PlotSummaryResults)
 
 
 '''

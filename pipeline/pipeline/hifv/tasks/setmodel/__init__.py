@@ -11,9 +11,9 @@ from .fluxgains import Fluxgains
 from . import qa
 from . import renderer
 
-pipelineqa.registry.add_handler(qa.VLASetjyQAHandler())
-pipelineqa.registry.add_handler(qa.VLASetjyListQAHandler())
-qaadapter.registry.register_to_calibration_topic(commonfluxresults.FluxCalibrationResults)
+#pipelineqa.registry.add_handler(qa.VLASetjyQAHandler())
+#pipelineqa.registry.add_handler(qa.VLASetjyListQAHandler())
+#qaadapter.registry.register_to_calibration_topic(commonfluxresults.FluxCalibrationResults)
 
 #weblog.add_renderer(VLASetjy, super_renderer.T2_4MDetailsSetjyRenderer(uri="vlasetjy.mako"), group_by='ungrouped')
 weblog.add_renderer(VLASetjy, renderer.T2_4MDetailsVLASetjyRenderer(uri="vlasetjy.mako"), group_by='ungrouped')

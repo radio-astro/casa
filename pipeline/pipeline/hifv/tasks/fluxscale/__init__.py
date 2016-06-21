@@ -13,13 +13,13 @@ from . import renderer
 
 from . import qa
 
-pipelineqa.registry.add_handler(qa.SolintQAHandler())
-pipelineqa.registry.add_handler(qa.SolintListQAHandler())
-qaadapter.registry.register_to_dataset_topic(solint.SolintResults)
+#pipelineqa.registry.add_handler(qa.SolintQAHandler())
+#pipelineqa.registry.add_handler(qa.SolintListQAHandler())
+#qaadapter.registry.register_to_dataset_topic(solint.SolintResults)
 
-pipelineqa.registry.add_handler(qa.FluxbootQAHandler())
-pipelineqa.registry.add_handler(qa.FluxbootListQAHandler())
-qaadapter.registry.register_to_dataset_topic(fluxboot.FluxbootResults)
+#pipelineqa.registry.add_handler(qa.FluxbootQAHandler())
+#pipelineqa.registry.add_handler(qa.FluxbootListQAHandler())
+#qaadapter.registry.register_to_dataset_topic(fluxboot.FluxbootResults)
 
 
 weblog.add_renderer(Solint, renderer.T2_4MDetailsSolintRenderer(), group_by='ungrouped')

@@ -9,9 +9,9 @@ from . import statwt
 
 from . import qa
 
-pipelineqa.registry.add_handler(qa.StatwtQAHandler())
-pipelineqa.registry.add_handler(qa.StatwtListQAHandler())
-qaadapter.registry.register_to_dataset_topic(statwt.StatwtResults)
+#pipelineqa.registry.add_handler(qa.StatwtQAHandler())
+#pipelineqa.registry.add_handler(qa.StatwtListQAHandler())
+#qaadapter.registry.register_to_dataset_topic(statwt.StatwtResults)
 
 
 weblog.add_renderer(Statwt, 
