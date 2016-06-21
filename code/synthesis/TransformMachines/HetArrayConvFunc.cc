@@ -80,21 +80,21 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-  HetArrayConvFunc::HetArrayConvFunc() : convFunctionMap_p(0), nDefined_p(0), antDiam2IndexMap_p(-1),msId_p(-1), actualConvIndex_p(-1)
+  HetArrayConvFunc::HetArrayConvFunc() : SimplePBConvFunc(), convFunctionMap_p(0), nDefined_p(0), antDiam2IndexMap_p(-1),msId_p(-1), actualConvIndex_p(-1)
   {
     calcFluxScale_p=True;
     init(PBMathInterface::AIRY);
   }
 
-  HetArrayConvFunc::HetArrayConvFunc(const PBMathInterface::PBClass typeToUse, const String vpTable):
-    convFunctionMap_p(0), nDefined_p(0), antDiam2IndexMap_p(-1),msId_p(-1), actualConvIndex_p(-1), vpTable_p(vpTable)
+  HetArrayConvFunc::HetArrayConvFunc(const PBMathInterface::PBClass typeToUse, const String vpTable): SimplePBConvFunc(),
+												      convFunctionMap_p(0), nDefined_p(0), antDiam2IndexMap_p(-1),msId_p(-1), actualConvIndex_p(-1), vpTable_p(vpTable)
   {
     calcFluxScale_p=True;
     init(typeToUse);
 
   }
 
-  HetArrayConvFunc::HetArrayConvFunc(const RecordInterface& rec, Bool calcFluxneeded):convFunctionMap_p(0), nDefined_p(0), antDiam2IndexMap_p(-1),msId_p(-1), actualConvIndex_p(-1) {
+  HetArrayConvFunc::HetArrayConvFunc(const RecordInterface& rec, Bool calcFluxneeded):  SimplePBConvFunc(), convFunctionMap_p(0), nDefined_p(0), antDiam2IndexMap_p(-1), msId_p(-1), actualConvIndex_p(-1) {
     String err;
     fromRecord(err, rec, calcFluxneeded);
   }
@@ -112,7 +112,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
 
   void HetArrayConvFunc::findAntennaSizes(const VisBuffer& vb){
-
+    //cerr << "findAnt " << msId_p  << "  " << vb.msId() << " " << vb.msName() << endl;
     if(msId_p != vb.msId()){
       msId_p=vb.msId();
       
@@ -133,6 +133,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    antDiam2IndexMap_p.define(String::toString(dishDiam(k)), diamIndex);
 	    antIndexToDiamIndex_p(k)=diamIndex;
 	    antMath_p.resize(diamIndex+1);
+	    //cerr << "diamindex " << diamIndex << " antMath_p,size " << antMath_p.nelements() << endl;
 	    if(pbClass_p== PBMathInterface::AIRY){
 	      Quantity qdiam(10.7, "m");
 	      Quantity blockDiam(0.75, "m");
@@ -305,6 +306,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     convFuncPolMap.resize(vb.nCorr());
     Int nBeamPols=1;
     convFuncPolMap.set(0);
+    Bool msChanged= msId_p != vb.msId();
     findAntennaSizes(vb);
     uInt ndish=antMath_p.nelements();
     if(ndish==0)
@@ -341,21 +343,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       
     }
     actualConvIndex_p=convIndex(vb);
-    //cerr << "actual conv index " << actualConvIndex_p << " doneMainconv " << doneMainConv_p << endl;
     if(doneMainConv_p.shape()[0] < (actualConvIndex_p+1)){
       //cerr << "resizing DONEMAIN " <<   doneMainConv_p.shape()[0] << endl;
     	doneMainConv_p.resize(actualConvIndex_p+1, True);
     	doneMainConv_p[actualConvIndex_p]=False;
+	convFunctions_p.resize(actualConvIndex_p+1);
+	convFunctions_p[actualConvIndex_p]=nullptr;
     }
     ///// In multi ms mode ndishpair may change when meeting a new ms
     //// redo the calculation then
-    if(doneMainConv_p[actualConvIndex_p] && ((convSupport_p.nelements() != uInt(ndishpair)) || convFunctions_p[actualConvIndex_p]->shape()[3] != nBeamChans)){
+    if(msChanged){
       doneMainConv_p[actualConvIndex_p]=False;
-      //cerr << "invalidating doneMainConv " <<  convFunctions_p[actualConvIndex_p]->shape()[3] << " =? " << nBeamChans << " convsupp " << convSupport_p.nelements() << endl;
+      //cerr << "invalidating doneMainConv " << endl; //<<  convFunctions_p[actualConvIndex_p]->shape()[3] << " =? " << nBeamChans << " convsupp " << convSupport_p.nelements() << endl;
     }
 
     // Get the coordinate system
-    CoordinateSystem coords(iimage.coordinates());
+    
+    CoordinateSystem coords;
+    coords=iimage.coordinates();
     Int directionIndex=coords.findCoordinate(Coordinate::DIRECTION);
     AlwaysAssert(directionIndex>=0, AipsError);
     // Set up the convolution function.
