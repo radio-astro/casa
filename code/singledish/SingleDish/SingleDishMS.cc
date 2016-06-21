@@ -2118,7 +2118,7 @@ void SingleDishMS::fitLine(string const& in_column_name, string const& in_spw,
             fitrange_end.push_back(recchan.row(i)(2));
           }
         }
-	if (!linefinding && nfit.size() != fitrange_start.size()) {
+        if (!linefinding && nfit.size() != fitrange_start.size()) {
           throw(AipsError(
               "the number of elements of nfit and fitranges specified in spw must be identical."));
         }
@@ -2147,23 +2147,23 @@ void SingleDishMS::fitLine(string const& in_column_name, string const& in_spw,
           // line finding. get fit mask (invert=false)
           if (linefinding) {
               list<pair<size_t, size_t>> line_ranges
-	      = findLineAndGetRanges(num_chan, spec_data, mask_data,
-				       threshold, avg_limit, minwidth,
-				       edge, false);
-	    if (line_ranges.size()==0) {
-	      continue;
-	    }
-	    size_t nline = line_ranges.size();
-	    fitrange_start.resize(nline);
-	    fitrange_end.resize(nline);
-	    nfit.resize(nline);
-	    auto range=line_ranges.begin();
-	    for (size_t iline=0; iline<nline; ++iline){
-	      fitrange_start[iline] = (*range).first;
-	      fitrange_end[iline] = (*range).second;
-	      nfit[iline] = 1;
-	      ++range;
-	    }
+                = findLineAndGetRanges(num_chan, spec_data, mask_data,
+                                       threshold, avg_limit, minwidth,
+                                       edge, false);
+              if (line_ranges.size()==0) {
+                continue;
+              }
+              size_t nline = line_ranges.size();
+              fitrange_start.resize(nline);
+              fitrange_end.resize(nline);
+              nfit.resize(nline);
+              auto range=line_ranges.begin();
+              for (size_t iline=0; iline<nline; ++iline){
+                fitrange_start[iline] = (*range).first;
+                fitrange_end[iline] = (*range).second;
+                nfit[iline] = 1;
+                ++range;
+              }
           }
 
           Vector<Float> x_;
@@ -2217,14 +2217,14 @@ void SingleDishMS::fitLine(string const& in_column_name, string const& in_spw,
               Float sum = 0.0;
               Float max_spec = fabs(y_[fitrange_start[ifit]]);
               Float max_spec_x = x_[fitrange_start[ifit]];
-	      bool is_positive = true;
+              bool is_positive = true;
               for (size_t ichan = fitrange_start[ifit];
-                  ichan <= fitrange_end[ifit]; ++ichan) {
+                   ichan <= fitrange_end[ifit]; ++ichan) {
                 sum += y_[ichan];
                 if (max_spec < fabs(y_[ichan])) {
                   max_spec = fabs(y_[ichan]);
                   max_spec_x = x_[ichan];
-		  is_positive = (fabs(y_[ichan]) == y_[ichan]);
+                  is_positive = (fabs(y_[ichan]) == y_[ichan]);
                 }
               }
               peak[0] = max_spec * (is_positive ? 1 : -1);
@@ -2232,8 +2232,7 @@ void SingleDishMS::fitLine(string const& in_column_name, string const& in_spw,
               fwhm[0] = fabs(sum / max_spec * 0.7);
             } else {
               size_t x_start = fitrange_start[ifit];
-              size_t x_width = (fitrange_end[ifit] - fitrange_start[ifit])
-                  / nfit[ifit];
+              size_t x_width = (fitrange_end[ifit] - fitrange_start[ifit]) / nfit[ifit];
               size_t x_end = x_start + x_width;
               for (size_t icomp = 0; icomp < nfit[ifit]; ++icomp) {
                 if (icomp == nfit[ifit] - 1) {
@@ -2243,13 +2242,13 @@ void SingleDishMS::fitLine(string const& in_column_name, string const& in_spw,
                 Float sum = 0.0;
                 Float max_spec = fabs(y_[x_start]);
                 Float max_spec_x = x_[x_start];
-		bool is_positive = true;
+                bool is_positive = true;
                 for (size_t ichan = x_start; ichan < x_end; ++ichan) {
                   sum += y_[ichan];
                   if (max_spec < fabs(y_[ichan])) {
                     max_spec = fabs(y_[ichan]);
                     max_spec_x = x_[ichan];
-		    is_positive = (fabs(y_[ichan]) == y_[ichan]);
+                    is_positive = (fabs(y_[ichan]) == y_[ichan]);
                   }
                 }
                 peak[icomp] = max_spec * (is_positive ? 1 : -1);
@@ -2279,8 +2278,8 @@ void SingleDishMS::fitLine(string const& in_column_name, string const& in_spw,
             }
 
             //actual fitting
-            NonLinearFitLM < Float > fitter;
-            CompoundFunction < Float > func;
+            NonLinearFitLM<Float> fitter;
+            CompoundFunction<Float> func;
             for (size_t icomp = 0; icomp < funcs_.nelements(); ++icomp) {
               func.addFunction(*funcs_[icomp]);
             }
