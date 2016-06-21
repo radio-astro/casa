@@ -32,7 +32,7 @@ class CleanBaseInputs(basetask.StandardInputs):
                  gridder=None, deconvolver=None, outframe=None, imsize=None, cell=None,
                  phasecenter=None, nchan=None, start=None, width=None, stokes=None,
                  weighting=None, robust=None, noise=None, npixels=None,
-                 restoringbeam=None, iter=None, mask=None, pblimit=None, niter=None,
+                 restoringbeam=None, iter=None, mask=None, hm_masking=None, pblimit=None, niter=None,
                  threshold=None, sensitivity=None, result=None, parallel=None):
         self._init_properties(vars())
 
@@ -43,6 +43,7 @@ class CleanBaseInputs(basetask.StandardInputs):
     intent = basetask.property_with_default('intent', '')
     iter = basetask.property_with_default('iter', 0)
     mask = basetask.property_with_default('mask', '')
+    hm_masking = basetask.property_with_default('hm_masking', 'centralregion')
     niter = basetask.property_with_default('niter', 5000)
     noise = basetask.property_with_default('noise', '1.0Jy')
     nchan = basetask.property_with_default('nchan', -1)
@@ -260,6 +261,7 @@ class CleanBase(basetask.StandardTaskTemplate):
         parallel = all([mpihelpers.parse_mpi_input_parameter(inputs.parallel),
                         'TARGET' in inputs.intent])
 
+        # Common tclean parameters
         tclean_job_parameters = {
             'vis':           inputs.vis,
             'imagename':     '%s.%s.iter%s' % (os.path.basename(inputs.imagename), inputs.stokes, iter),
@@ -287,12 +289,17 @@ class CleanBase(basetask.StandardTaskTemplate):
             'npixels':       inputs.npixels,
             'restoringbeam': inputs.restoringbeam,
             'uvrange':       inputs.uvrange,
-            'mask':          inputs.mask,
-            'usemask':       'user',
             'savemodel':     'none',
             'chanchunks':    chanchunks,
             'parallel':      parallel
             }
+
+        # Set up masking parameters
+        if (inputs.hm_masking == 'auto'):
+            tclean_job_parameters['usemask'] = 'auto-thresh'
+        else:
+            tclean_job_parameters['usemask'] = 'user'
+            tclean_job_parameters['mask']    = inputs.mask
 
         # Show nterms parameter only if it is used.
         if (result.multiterm):

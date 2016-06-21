@@ -16,6 +16,7 @@ import pipeline.infrastructure.utils as utils
 from pipeline.infrastructure import casa_tasks
 from .basecleansequence import BaseCleanSequence
 from .imagecentrethresholdsequence import ImageCentreThresholdSequence
+from .automaskthresholdsequence import AutoMaskThresholdSequence
 from .manualmaskthresholdsequence import ManualMaskThresholdSequence
 from .iterativesequence import IterativeSequence
 from .iterativesequence2 import IterativeSequence2
@@ -226,7 +227,7 @@ class Tclean(cleanbase.CleanBase):
             inputs.spwsel_topo = ['%s' % (inputs.spw)] * len(inputs.vis)
 
         # Choose cleaning method.
-        if inputs.hm_masking in ('centralregion', 'manual'):
+        if inputs.hm_masking in ('centralregion', 'auto', 'manual'):
             # Determine threshold
             if inputs.hm_cleaning == 'manual':
                 threshold = inputs.threshold
@@ -239,6 +240,12 @@ class Tclean(cleanbase.CleanBase):
             # Central mask based on PB
             if inputs.hm_masking == 'centralregion':
                 sequence_manager = ImageCentreThresholdSequence(
+                    gridder = inputs.gridder, threshold=threshold,
+                    channel_rms_factor = channel_rms_factor,
+                    sensitivity = sensitivity, niter=inputs.niter)
+            # Auto-boxing
+            elif inputs.hm_masking == 'auto':
+                sequence_manager = AutoMaskThresholdSequence(
                     gridder = inputs.gridder, threshold=threshold,
                     channel_rms_factor = channel_rms_factor,
                     sensitivity = sensitivity, niter=inputs.niter)
@@ -448,7 +455,10 @@ class Tclean(cleanbase.CleanBase):
                 except Exception as e:
                     LOG.warning('Exception while deleting %s: %s' % (filename, e))
 
-            new_cleanmask = '%s.iter%s.cleanmask' % (rootname, iter)
+            if inputs.hm_masking == 'auto':
+                new_cleanmask = '%s.iter%s.mask' % (rootname, iter)
+            else:
+                new_cleanmask = '%s.iter%s.cleanmask' % (rootname, iter)
 
             # perform an iteration.
             if (inputs.specmode == 'cube'):
@@ -769,6 +779,7 @@ class Tclean(cleanbase.CleanBase):
                                                   restoringbeam=inputs.restoringbeam,
                                                   iter=iter,
                                                   mask=cleanmask,
+                                                  hm_masking=inputs.hm_masking,
                                                   niter=niter,
                                                   threshold=threshold,
                                                   sensitivity=sensitivity,

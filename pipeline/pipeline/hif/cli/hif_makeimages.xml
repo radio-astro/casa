@@ -52,13 +52,14 @@ Compute clean results from a list of specified targets.
 
   <param type="string" name="hm_masking">
      <description>Pipeline heuristics masking option</description>
-       <value></value>
+       <value>centralregion</value>
        <allowed kind="enum">
-         <value></value>
-         <value>none</value>
          <value>centralregion</value>
          <value>psf</value>
          <value>psfiter</value>
+         <value>auto</value>
+         <value>none</value>
+         <value></value>
        </allowed>
   </param>
 
@@ -141,16 +142,18 @@ Compute clean results from a list of specified targets.
     </when>
 
     <when param="hm_masking">
-      <equals value="">
-      </equals>
-      <equals value="none">
-      </equals>
       <equals value="centralregion">
       </equals>
       <equals value="psf">
       </equals>
       <equals value="psfiter">
         <default param="maxncleans"><value type="int">10</value></default>
+      </equals>
+      <equals value="auto">
+      </equals>
+      <equals value="none">
+      </equals>
+      <equals value="">
       </equals>
     </when>
 

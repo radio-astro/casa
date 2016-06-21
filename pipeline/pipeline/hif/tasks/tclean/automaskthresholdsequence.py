@@ -10,13 +10,12 @@ from .resultobjects import BoxResult
 LOG = infrastructure.get_logger(__name__)
 
 
-class ManualMaskThresholdSequence(BaseCleanSequence):
+class AutoMaskThresholdSequence(BaseCleanSequence):
 
-    def __init__(self, mask, gridder, threshold='0.0mJy', sensitivity=0.0, channel_rms_factor=1.0, niter=5000):
+    def __init__(self, gridder, threshold='0.0mJy', sensitivity=0.0, channel_rms_factor=1.0, niter=5000):
         """Constructor.
         """
         BaseCleanSequence.__init__(self)
-        self.mask = mask
         self.gridder = gridder
         self.threshold = threshold
         self.sensitivity = sensitivity
@@ -32,11 +31,6 @@ class ManualMaskThresholdSequence(BaseCleanSequence):
             raise Exception, 'no data for iteration'
 
         elif self.iter == 0:
-            tbTool = casatools.table
-            tbTool.open(self.mask)
-            tbTool.copy(new_cleanmask)
-            tbTool.done()
-
             self.result.cleanmask = new_cleanmask
             self.result.threshold = self.threshold
             self.result.sensitivity = self.sensitivity
