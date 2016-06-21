@@ -316,7 +316,7 @@ def get_valid_ms_members(group_desc, ms_filter, ant_selection, spw_selection, fi
         field_id = member.field_id
         ant_id = member.antenna
         ms = member.ms
-        if ms in ms_filter:
+        if ms.name in ms_filter:
             mssel = casatools.ms.msseltoindex(vis=ms.name, spw=spw_selection, field=field_selection, baseline=ant_selection)
             spwsel = mssel['spw']
             fieldsel = mssel['field']
