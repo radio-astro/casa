@@ -110,58 +110,67 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 class VersionInfo
 {
 public:
+
     // Major version of AIPS++, changes about twice a year.
-    static int majorVersion();
+
+    static int majorVersion()
+    {
+        return aips_major_version;
+    }
+
     // Minor version of AIPS++, changes about three times a
     // day (every exhale).
-    static int minorVersion();
+
+    static int minorVersion()
+    {
+        return aips_minor_version;
+    }
+
     // Patch number of this release. Changes when a bug-fix patch is
     // created.
-    static int patch();
+
+    static int patch()
+    {
+        return aips_patch_version;
+    }
+
     // String representation of the date when this release was created
     // (when "exhale" was run).
-    static const char *date();
+
+    static const char * date()
+    {
+        return aips_version_date;
+    }
+
     // Extra information about this release, e.g. "beta release."
-    static const char *info();
+
+    static const char * info()
+    {
+        return aips_version_info;
+    }
+
     // Summarize the above into an ostream. Note that an 
     // <src>ostringstream</src> can be converted to a 
     // <linkto class="String">String</linkto> via a constructor.
     // This information is NOT prepended with "AIPS++ version:" or anything
     // like that. You may wish to add this yourself. The date is also not
     // included.
+
     static void report(std::ostream &os);
+
+private:
+
+    friend void report_aips_version(std::ostream &os);
+
+    static const int   aips_major_version;
+    static const int   aips_minor_version;
+    static const int   aips_patch_version;
+    static const char * aips_version_date;
+    static const char * aips_version_info;
+
 };
 
 //# Inlines ------------------------------------------------------------------
-inline int VersionInfo::majorVersion()
-{
-    extern const int   aips_major_version;
-    return aips_major_version;
-}
-
-inline int VersionInfo::minorVersion()
-{
-    extern const int   aips_minor_version;
-    return aips_minor_version;
-}
-
-inline int VersionInfo::patch()
-{
-    extern const int   aips_patch_version;
-    return aips_patch_version;
-}
-
-inline const char *VersionInfo::date()
-{
-    extern const char* aips_version_date;
-    return aips_version_date;
-}
-
-inline const char *VersionInfo::info()
-{
-    extern const char* aips_version_info;
-    return aips_version_info;
-}
 
 
 } //# NAMESPACE CASA - END

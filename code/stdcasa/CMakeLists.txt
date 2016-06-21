@@ -39,20 +39,15 @@ if(${SVNINFOSTATUS} STREQUAL "0")
 		    COMMAND ${CASA_svngen} url=${CMAKE_SOURCE_DIR} > definitions_tmp
 		    COMMAND ${CMAKE_COMMAND} -E copy definitions_tmp definitions
 		    )
-
 	add_custom_command( OUTPUT version.cc
 		  COMMAND egrep subversion_revision definitions > tmp1.txt
 		  COMMAND sed -e 's|[^0-9]*\"||g' tmp1.txt > tmp2.txt
-		  COMMAND echo "namespace casa { extern const int   aips_patch_version =" > tmp3.txt
-		  COMMAND cat tmp2.txt >> tmp3.txt
 		COMMAND
 		sed -e 's|MAJOR|${CASA_MAJOR_VERSION}|'
 		-e 's|MINOR|${CASA_MINOR_VERSION}|'
-		-e 's|PATCH|${CASA_PATCH_VERSION}|'
-		-e 's|REVISION|${SVNREVISION}|'
+		-e '/patch_version = / r tmp2.txt'
 		-e 's|DATE|${SVNDATE}|'
-		${CMAKE_CURRENT_SOURCE_DIR}/version.template > tmp4.txt
-		COMMAND cat tmp3.txt tmp4.txt > version_tmp.cc
+		${CMAKE_CURRENT_SOURCE_DIR}/version.template > version_tmp.cc
 		|| ${PERL_EXECUTABLE} -e 'unlink("version_tmp.cc")\; exit 1\;'
 		COMMAND ${CMAKE_COMMAND} -E copy_if_different version_tmp.cc version.cc
 		COMMAND mkdir -p ${CMAKE_INSTALL_PREFIX}/../share
