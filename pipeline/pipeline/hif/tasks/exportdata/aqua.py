@@ -9,6 +9,7 @@ import operator
 
 import casadef
 import pipeline
+import pipeline.domain.measures as measures
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.utils as utils
 import pipeline.qa.scorecalculator as calcmetrics
@@ -114,6 +115,7 @@ def aquaReportFromContext (context, aquaFile):
 
     # Construct the topics elements.
     # TBD
+    aquaReport.set_topics_qa()
 
     LOG.info ("Writing aqua report file: %s" % (aquaFile))
     aquaReport.write(aquaFile)
@@ -128,8 +130,14 @@ class AquaReport(object):
 
         '''
         Create the AQUA document
+        Attributes
+               context The context
+             stagedict The stage dictionary
+             fluxstage The stage holding the flux results
+            aquareport The aquareport
         '''
 
+        # Store the context
         self.context = context
 
         # Construct the stage dictionary
@@ -138,6 +146,7 @@ class AquaReport(object):
         #   it does not take very long
 
         self.stagedict = collections.OrderedDict()
+        self.fluxstage = None
         for i in range(len(context.results)):
             stage_name, stage_score =  \
                 get_pipeline_stage_and_score (context.results[i])
@@ -145,9 +154,12 @@ class AquaReport(object):
                 stage_score = 'Undefined'
             else:
                 stage_score = '%0.3f' % stage_score
+            if stage_name == 'hifa_gfluxscale':
+                self.fluxstage = i
             self.stagedict[i+1] = (stage_name, stage_score)
 
         # Create the top level AQUA report element
+        # and store it.
         self.aquareport = eltree.Element("PipelineAquaReport")
 
     def set_project_structure (self):
@@ -349,6 +361,113 @@ class AquaReport(object):
                 
         return ppqa
 
+    def set_topics_qa (self):
+
+        '''
+        Add the per topics elements
+        '''
+
+        # Set the top level topics element.
+        topicqa = eltree.SubElement(self.aquareport, "QaPerTopic")
+
+        # Add the data topic
+        # TBD
+
+        # Add the flagging topic
+        # TBD
+
+        # Add the calibration topic
+        self.add_calibration_topic(topicqa)
+        
+        # Add the imaging topic
+        # TBD
+
+        return topicqa
+
+    def add_calibration_topic (self, topicqa):
+
+        # Check if there are any calibration results
+        #    Return if not. Registry seems linked to web log. How to detect this ?
+        # TBD
+
+        # Set the calibration topics element element
+        calqa = eltree.SubElement(topicqa, "Calibration", Score="Undefined")
+
+        # Create the flux summary record
+        # Test for the existence of a flux scaling stage
+        if not self.fluxstage:
+            return calqa
+        self.add_fluxes_summary (calqa)
+
+        return calqa
+
+    def add_fluxes_summary (self, calqa):
+
+        # This is the global flux score for the flux scaling stage
+        fluxscore = self.stagedict[self.fluxstage+1][1]
+        fluxqa = eltree.SubElement(calqa, "FluxMeasurements", Score=fluxscore)
+
+        # Locate the flux scaling results in the stage dict
+        flux_results = self.context.results[self.fluxstage].read()
+
+        # Loop over the flux results registering
+        if isinstance (flux_results, collections.Iterable):
+            for fr in flux_results:
+                ms_for_result = self.context.observing_run.get_ms(fr.vis)
+                vis = os.path.basename(fr.vis)
+                for field_arg, measurements in fr.measurements.items():
+                    fieldname = ms_for_result.get_fields(field_arg)[0].name
+                    if fieldname.startswith('"') and fieldname.endswith('"'):
+                        fieldname = fieldname[1:-1]
+                    for measurement in sorted(measurements, key=lambda m: int(m.spw_id)):
+                        spw = ms_for_result.get_spectral_window(measurement.spw_id)
+                        frequency = '%0.6f' % (spw.centre_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
+                        # I only for now ...
+                        for stokes in ['I']:
+                            try:
+                                flux = getattr(measurement, stokes)
+                                flux_jy = flux.to_units(measures.FluxDensityUnits.JANSKY)
+                                flux_jy = '%0.3f'% float(flux_jy)
+
+                                unc = getattr(measurement.uncertainty, stokes)
+                                unc_jy = unc.to_units(measures.FluxDensityUnits.JANSKY)
+                                if unc_jy != 0:
+                                    unc_jy = '%0.6f'% float(unc_jy)
+                                else:
+                                    unc_jy = ''
+
+                                fvtp = eltree.SubElement(fluxqa, "FluxMeasurement", Name="FluxMeasurement", FluxJy=flux_jy, ErrorJy=unc_jy,
+                                    Asdm=vis, Field=fieldname, FrequencyGHz=frequency)
+                            except:
+                                pass
+        else:
+            fr = flux_results
+            ms_for_result = self.context.observing_run.get_ms(fr.vis)
+            vis = os.path.basename(fr.vis)
+            for field_arg, measurements in fr.measurements.items():
+                fieldname = ms_for_result.get_fields(field_arg)[0].name
+                if fieldname.startswith('"') and fieldname.endswith('"'):
+                    fieldname = fieldname[1:-1]
+                for measurement in sorted(measurements, key=lambda m: int(m.spw_id)):
+                    spw = ms_for_result.get_spectral_window(measurement.spw_id)
+                    frequency = '%0.6f' % (spw.centre_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
+                    # I only for now ...
+                    for stokes in ['I']:
+                        try:
+                            flux = getattr(measurement, stokes)
+                            flux_jy = flux.to_units(measures.FluxDensityUnits.JANSKY)
+                            unc = getattr(measurement.uncertainty, stokes)
+                            unc_jy = unc.to_units(measures.FluxDensityUnits.JANSKY)
+                            if unc_jy != 0:
+                                unc_jy = '%s'% unc_jy
+                            else:
+                                unc_jy = ''
+                            fvtp = eltree.SubElement(fluxqa, "FluxMeasurement", Name="FluxMeasurement", FluxJy=flux_jy, ErrorJy=unc_jy,
+                                Asdm=vis, Field=fieldname, FrequencyGHz=frequency)
+                        except:
+                            pass
+        return fluxqa
+    
     def add_missing_intents_metric (self, stage_element, importdata_result):
 
         '''
