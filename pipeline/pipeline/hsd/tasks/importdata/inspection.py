@@ -94,8 +94,8 @@ class SDMSInspection(object):
         for (group_id, member_list) in reduction_group.items():
             for member in member_list:
                 ms = member.ms
-                ant = member.antenna
-                spw = member.spw
+                ant = member.antenna_id
+                spw = member.spw_id
                 field_id = member.field_id
                 LOG.info('Adding time table for Reduction Group %s (ms %s antenna %s spw %s field_id %s)'%(group_id,ms.basename,ant,spw,field_id))
                 datatable.set_timetable(ant, spw, None, time_group_list[ant][spw][field_id], 

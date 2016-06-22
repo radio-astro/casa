@@ -44,8 +44,8 @@ class DataTableAnalyser(object):
                     for i in xrange(ms_index):
                         ms = self.scantablelist.measurement_sets[i]
                         ant_offset += len(ms.antennas)
-                    antenna = member.antenna + ant_offset
-                    spw = member.spw
+                    antenna = member.antenna_id + ant_offset
+                    spw = member.spw_id
                     dd = member.ms.get_data_description(spw=spw)
                     polarization = member.ms.polarizations[dd.pol_id]
                     corr_type_string = polarization.corr_type_string.flatten()
