@@ -160,7 +160,7 @@ class SDImaging(basetask.StandardTaskTemplate):
 #             pols_list = list(common.pol_filter(group_desc, inputs.get_pollist))
             # Which group in group_desc list should be processed
             member_list = list(common.get_valid_ms_members(group_desc, ms_names, inputs.antenna, in_field, in_spw))
-            LOG.debug('group %s: member_list=%s'%(group_id, member_list))
+            LOG.trace('group %s: member_list=%s'%(group_id, member_list))
              
             # skip this group if valid member list is empty
             if len(member_list) == 0:
@@ -279,7 +279,7 @@ class SDImaging(basetask.StandardTaskTemplate):
   
                 # register data for combining
                 combined_infiles.extend(infiles)
-                combined_antids.append(antids)
+                combined_antids.extend(antids)
                 combined_fieldids.extend(fieldids)
                 combined_spws.extend(spwids)
                   
@@ -305,58 +305,61 @@ class SDImaging(basetask.StandardTaskTemplate):
                     if os.path.exists(imagename) and os.path.exists(imagename+'.weight'):
                         tocombine_images.append(imagename)
   
-#                     # Additional Step.
-#                     # Make grid_table and put rms and valid spectral number array 
-#                     # to the outcome.
-#                     # The rms and number of valid spectra is used to create RMS maps.
-#                     validsps = []
-#                     rmss = []
-# #                     if imagemode != 'AMPCAL':
-#                     LOG.info('Additional Step. Make grid_table')
-#                     with casatools.ImageReader(imager_result.outcome) as ia:
-#                         cs = ia.coordsys()
-#                         dircoords = [i for i in xrange(cs.naxes())
-#                                      if cs.axiscoordinatetypes()[i] == 'Direction']
-#                         nx = ia.shape()[dircoords[0]]
-#                         ny = ia.shape()[dircoords[1]]
-# 
-#                     observing_pattern = ms.observing_pattern[andids[0][spwids[0]][fieldids[0]]
-#                     grid_task_class = gridding.gridding_factory(observing_pattern)
-#                     grid_tables = []
-#                     grid_input_dict = {}
-#                     for (msobj, antid, spwid, fieldid) in _members:
-#                         msname = msobj.name # Use parent ms
-#                         ddobj = msobj.get_data_description(spw=spwid)
-#                         pol = map(ddobj.get_polarization_id, map(ddobj.get_polarization_label, xrange(ddobj.num_polarizations)))
-#                         for p in pol:
-#                             if not grid_input_dict.has_key(p):
-#                                 grid_input_dict[p] = [[msname], [antid], [spwid], [fieldid]]
-#                             else:
-#                                 grid_input_dict[p][0].append(msname)
-#                                 grid_input_dict[p][1].append(antid)
-#                                 grid_input_dict[p][2].append(spwid)
-#                                 grid_input_dict[p][3].append(fieldid)
-#  
-#                     for (pol,member) in grid_input_dict.items():
-#                         _mses = member[0]
-#                         _antids = member[1]
-#                         _spwids = member[2]
-#                         _fieldids = member[3]
-#                         _pols = [[pol] for i in xrange(len(_mses))]
-#                         gridding_inputs = grid_task_class.Inputs(context, msname=_mses, 
-#                                                                  antennaid=_antids, 
-#                                                                  spwid=_spwids,
-#                                                                  fieldids=_fieldids,
-#                                                                  polid=_pols,
-#                                                                  nx=nx, ny=ny)
-#                         gridding_task = grid_task_class(gridding_inputs)
-#                         gridding_result = self._executor.execute(gridding_task, merge=True)
-#                         grid_tables.append(gridding_result.outcome)
-#                         logrecords.extend(gridding_result.logrecords)
-#                     for i in xrange(len(grid_input_dict)):
-#                         validsps.append([r[6] for r in grid_tables[i]])
-#                         rmss.append([r[8] for r in grid_tables[i]])
-#  
+                    # Additional Step.
+                    # Make grid_table and put rms and valid spectral number array 
+                    # to the outcome.
+                    # The rms and number of valid spectra is used to create RMS maps.
+                    validsps = []
+                    rmss = []
+#                     if imagemode != 'AMPCAL':
+                    LOG.info('Additional Step. Make grid_table')
+                    with casatools.ImageReader(imager_result.outcome) as ia:
+                        cs = ia.coordsys()
+                        dircoords = [i for i in xrange(cs.naxes())
+                                     if cs.axiscoordinatetypes()[i] == 'Direction']
+                        nx = ia.shape()[dircoords[0]]
+                        ny = ia.shape()[dircoords[1]]
+ 
+                    observing_pattern = msobjs[0].observing_pattern[antids[0]][spwids[0]][fieldids[0]]
+                    grid_task_class = gridding.gridding_factory(observing_pattern)
+                    grid_tables = []
+                    grid_input_dict = {}
+                    for (msobj, antid, spwid, fieldid) in _members:
+                        msname = msobj.name # Use parent ms
+                        ddobj = msobj.get_data_description(spw=spwid)
+                        polids = map(ddobj.get_polarization_id, map(ddobj.get_polarization_label, xrange(ddobj.num_polarizations)))
+                        for p in polids:
+                            if not grid_input_dict.has_key(p):
+                                grid_input_dict[p] = [[msname], [antid], [fieldid], [spwid]]
+                            else:
+                                grid_input_dict[p][0].append(msname)
+                                grid_input_dict[p][1].append(antid)
+                                grid_input_dict[p][2].append(fieldid)
+                                grid_input_dict[p][3].append(spwid)
+
+                    # Generate grid table for each POL in image (per ANT,
+                    # FIELD, and SPW, over all MSes)
+                    for (pol,member) in grid_input_dict.items():
+                        _mses = member[0]
+                        _antids = member[1]
+                        _fieldids = member[2]
+                        _spwids = member[3]
+                        _pols = [[pol] for i in xrange(len(_mses))]
+                        gridding_inputs = grid_task_class.Inputs(context, msnames=_mses, 
+                                                                 antennaids=_antids, 
+                                                                 fieldids=_fieldids,
+                                                                 spwids=_spwids,
+                                                                 polids=_pols,
+                                                                 nx=nx, ny=ny)
+                        gridding_task = grid_task_class(gridding_inputs)
+                        gridding_result = self._executor.execute(gridding_task, merge=True)
+                        grid_tables.append(gridding_result.outcome)
+                        logrecords.extend(gridding_result.logrecords)
+                    # Extract RMS and number of spectra from grid_tables
+                    for i in xrange(len(grid_input_dict)):
+                        validsps.append([r[6] for r in grid_tables[i]])
+                        rmss.append([r[8] for r in grid_tables[i]])
+  
                     image_item = imagelibrary.ImageItem(imagename=imagename,
                                                         sourcename=source_name,
                                                         spwlist=spwids,
@@ -366,8 +369,8 @@ class SDImaging(basetask.StandardTaskTemplate):
                     outcome = {}
                     outcome['image'] = image_item
                     outcome['imagemode'] = imagemode
-#                     outcome['validsp'] = validsps
-#                     outcome['rms'] = rmss
+                    outcome['validsp'] = validsps
+                    outcome['rms'] = rmss
                     outcome['edge'] = edge
                     outcome['reduction_group_id'] = group_id
                     outcome['file_index'] = [common.get_parent_ms_idx(context, name) for name in infiles]
@@ -431,56 +434,57 @@ class SDImaging(basetask.StandardTaskTemplate):
                 # Imaging was successful, proceed following steps
                 logrecords.extend(imager_result.logrecords)
       
-#                 # Additional Step.
-#                 # Make grid_table and put rms and valid spectral number array 
-#                 # to the outcome
-#                 # The rms and number of valid spectra is used to create RMS maps
-#                 LOG.info('Additional Step. Make grid_table')
-#                 with casatools.ImageReader(imager_result.outcome) as ia:
-#                     cs = ia.coordsys()
-#                     dircoords = [i for i in xrange(cs.naxes())
-#                                  if cs.axiscoordinatetypes()[i] == 'Direction']
-#                     nx = ia.shape()[dircoords[0]]
-#                     ny = ia.shape()[dircoords[1]]
-#                 validsps = []
-#                 rmss = []
-#                 observing_pattern =  ref_ms.observing_pattern[andids[0][spwids[0]][fieldids[0]]
-#                 grid_task_class = gridding.gridding_factory(observing_pattern)
-#                 grid_tables = []
-#                 grid_input_dict = {}
-#                 for (msname, antid, spwid, fieldid) in zip(combined_infiles,combined_antids,combined_spws,combined_fieldids):
-#                     msobj = context.observing_run.get_ms(name=common.get_parent_ms_name(context,name)) # Use parent ms
-#                     ddobj = msobj.get_data_description(spw=spwid)
-#                     pol = map(ddobj.get_polarization_id, map(ddobj.get_polarization_label, xrange(ddobj.num_polarizations)))
-#                     for p in pol:
-#                         if not grid_input_dict.has_key(p):
-#                             grid_input_dict[p] = [[msname], [antid], [spwid], [fieldid]]
-#                         else:
-#                             grid_input_dict[p][0].append(msname)
-#                             grid_input_dict[p][1].append(antid)
-#                             grid_input_dict[p][2].append(spwid)
-#                             grid_input_dict[p][3].append(fieldid)
-#  
-#                 for (pol,member) in grid_input_dict.items():
-#                     _mses = member[0]
-#                     _antids = member[1]
-#                     _spwids = member[2]
-#                     _fieldids = member[3]
-#                     _pols = [[pol] for i in xrange(len(_mses))]
-#                     gridding_inputs = grid_task_class.Inputs(context, msname=_mses, 
-#                                                              antennaid=_antids, 
-#                                                              spwid=_spwids,
-#                                                              fieldids=_fieldids,
-#                                                              polid=_pols,
-#                                                              nx=nx, ny=ny)
-#                     gridding_task = grid_task_class(gridding_inputs)
-#                     gridding_result = self._executor.execute(gridding_task, merge=True)
-#                     logrecords.extend(gridding_result.logrecords)
-#                     grid_tables.append(gridding_result.outcome)
-#                 for i in xrange(len(grid_input_dict)):
-#                     validsps.append([r[6] for r in grid_tables[i]])
-#                     rmss.append([r[8] for r in grid_tables[i]])
-#                  
+                # Additional Step.
+                # Make grid_table and put rms and valid spectral number array 
+                # to the outcome
+                # The rms and number of valid spectra is used to create RMS maps
+                LOG.info('Additional Step. Make grid_table')
+                with casatools.ImageReader(imager_result.outcome) as ia:
+                    cs = ia.coordsys()
+                    dircoords = [i for i in xrange(cs.naxes())
+                                 if cs.axiscoordinatetypes()[i] == 'Direction']
+                    nx = ia.shape()[dircoords[0]]
+                    ny = ia.shape()[dircoords[1]]
+                validsps = []
+                rmss = []
+                observing_pattern =  ref_ms.observing_pattern[antids[0]][spwids[0]][fieldids[0]]
+                grid_task_class = gridding.gridding_factory(observing_pattern)
+                grid_tables = []
+                grid_input_dict = {}
+                for (msname, antid, spwid, fieldid) in zip(combined_infiles,combined_antids,combined_spws,combined_fieldids):
+                    msobj = context.observing_run.get_ms(name=common.get_parent_ms_name(context,name)) # Use parent ms
+                    ddobj = msobj.get_data_description(spw=spwid)
+                    polids = map(ddobj.get_polarization_id, map(ddobj.get_polarization_label, xrange(ddobj.num_polarizations)))
+                    for p in polids:
+                        if not grid_input_dict.has_key(p):
+                            grid_input_dict[p] = [[msname], [antid], [fieldid], [spwid]]
+                        else:
+                            grid_input_dict[p][0].append(msname)
+                            grid_input_dict[p][1].append(antid)
+                            grid_input_dict[p][2].append(fieldid)
+                            grid_input_dict[p][3].append(spwid)
+  
+                for (pol,member) in grid_input_dict.items():
+                    _mses = member[0]
+                    _antids = member[1]
+                    _fieldids = member[2]
+                    _spwids = member[3]
+                    _pols = [[pol] for i in xrange(len(_mses))]
+                    gridding_inputs = grid_task_class.Inputs(context, msnames=_mses, 
+                                                             antennaids=_antids, 
+                                                             fieldids=_fieldids,
+                                                             spwids=_spwids,
+                                                             polids=_pols,
+                                                             nx=nx, ny=ny)
+                    gridding_task = grid_task_class(gridding_inputs)
+                    gridding_result = self._executor.execute(gridding_task, merge=True)
+                    logrecords.extend(gridding_result.logrecords)
+                    grid_tables.append(gridding_result.outcome)
+                # Extract RMS and number of spectra from grid_tables
+                for i in xrange(len(grid_input_dict)):
+                    validsps.append([r[6] for r in grid_tables[i]])
+                    rmss.append([r[8] for r in grid_tables[i]])
+                  
                 image_item = imagelibrary.ImageItem(imagename=imagename,
                                                     sourcename=source_name,
                                                     spwlist=combined_spws,
@@ -490,8 +494,8 @@ class SDImaging(basetask.StandardTaskTemplate):
                 outcome = {}
                 outcome['image'] = image_item
                 outcome['imagemode'] = imagemode
-#                 outcome['validsp'] = validsps
-#                 outcome['rms'] = rmss
+                outcome['validsp'] = validsps
+                outcome['rms'] = rmss
                 outcome['edge'] = edge
                 outcome['reduction_group_id'] = group_id
                 outcome['file_index'] = [common.get_parent_ms_idx(context, name) for name in combined_infiles]
