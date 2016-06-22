@@ -73,9 +73,6 @@
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisIterator.h>
 
-#include <lattices/LatticeMath/LatticeStatistics.h> // for ms::statistics
-#include <lattices/Lattices/SubLattice.h> // for ms::statistics
-
 #include <msvis/MSVis/VisibilityIterator2.h>
 #include <msvis/MSVis/VisBuffer2.h>
 #include <array>
