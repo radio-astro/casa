@@ -4,17 +4,20 @@ import os
 import numpy
 
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
+from pipeline.domain.datatable import DataTableImpl
 from .. import common
 
 LOG = infrastructure.get_logger(__name__)
 
-class WeightMSInputs(common.SingleDishInputs):
+class WeightMSInputs(basetask.StandardInputs):
     """
     Inputs for exporting data to MS 
+    NOTE: infile should be a complete list of MSes 
     """
     def __init__(self, context, infile, outfile, antenna, 
-                 spwid, fieldid, spwtype, onsourceid):
+                 spwid, fieldid, spwtype):
         self._init_properties(vars())
         
         
@@ -30,7 +33,7 @@ class WeightMSResults(common.SingleDishResults):
         return self.outcome
 
 
-class WeightMS(common.SingleDishTaskTemplate):
+class WeightMS(basetask.StandardTaskTemplate):
     Inputs = WeightMSInputs
  
     Rule = {'WeightDistance': 'Gauss',
@@ -38,7 +41,9 @@ class WeightMS(common.SingleDishTaskTemplate):
             'WeightRMS': True,
             'WeightTsysExpTime': False}
    
-    @common.datatable_setter
+    def is_multi_vis_task(self):
+        return True
+
     def prepare(self):
         # for each data
         outfile = self.inputs.outfile
@@ -76,29 +81,29 @@ class WeightMS(common.SingleDishTaskTemplate):
         return result
 
     def _make_row_map(self):
-        """maps scantable row to MS row"""
+        """
+        Returns a dictionary which maps input and output MS row IDs
+        The dictionary has
+            key: input MS row IDs
+            value: output MS row IDs
+        It has row IDs of all intents of selected field, spw, and antenna.
+        """
         infile = self.inputs.infile
         outfile = self.inputs.outfile
         spwid = self.inputs.spwid
         antid = self.inputs.antenna
         fieldid = self.inputs.fieldid
-        srctype = self.inputs.onsourceid
-        rows_list = []
-        srctypes_list = []
+        in_rows = []
         with casatools.TableReader(os.path.join(infile, 'DATA_DESCRIPTION')) as tb:
             spwids = tb.getcol('SPECTRAL_WINDOW_ID')
             data_desc_id = numpy.where(spwids == spwid)[0][0]
         
         with casatools.TableReader(infile) as tb:
-            for polno in xrange(4):
-                tsel = tb.query('DATA_DESC_ID==%d && FIELD_ID==%d && ANTENNA1==%d && ANTENNA2==%d' % (data_desc_id, fieldid, antid, antid),
-                                sortlist='TIME')
-                if tsel.nrows() > 0:
-                    rows = tsel.rownumbers() 
-                    srctypes = tsel.getcol('SRCTYPE')
-                    rows_list.append(rows)
-                    srctypes_list.append(srctypes)
-                tsel.close()
+            tsel = tb.query('DATA_DESC_ID==%d && FIELD_ID==%d && ANTENNA1==%d && ANTENNA2==%d' % (data_desc_id, fieldid, antid, antid),
+                            sortlist='TIME')
+            if tsel.nrows() > 0:
+                in_rows = tsel.rownumbers() 
+            tsel.close()
     
         with casatools.TableReader(os.path.join(outfile, 'DATA_DESCRIPTION')) as tb:
             spwids = tb.getcol('SPECTRAL_WINDOW_ID')
@@ -107,45 +112,46 @@ class WeightMS(common.SingleDishTaskTemplate):
         with casatools.TableReader(outfile) as tb:
             tsel = tb.query('DATA_DESC_ID==%s && FIELD_ID==%d && ANTENNA1==%d && ANTENNA2==%d' % (data_desc_id, fieldid, antid, antid),
                             sortlist='TIME')
-            ms_rows = tsel.rownumbers() 
+            out_rows = tsel.rownumbers() 
             tsel.close()
     
         row_map = {}
-        # ms_row: (st_row_pol0, st_row_pol1)
-        for index in xrange(len(rows)):
-            if srctypes[index] == srctype:
-                row_map[ms_rows[index]] = [rows[index] for rows in rows_list]
+        # in_row: out_row
+        for index in xrange(len(in_rows)):
+            row_map[in_rows[index]] = out_rows[index]
     
         return row_map
          
     def _set_weight(self, row_map, minmaxclip, weight_rms, weight_tintsys):
-        outfile = self.inputs.outfile
-        antenna = self.inputs.antenna
-        spwid = self.inputs.spwid
-        srctype = self.inputs.onsourceid
+        inputs = self.inputs
+        infile = inputs.infile
+        outfile = inputs.outfile
+        spwid = inputs.spwid
+        antid = inputs.antenna
+        fieldid = self.inputs.fieldid
 
-        datatable = self.datatable
+        context = inputs.context
+        datatable = DataTableImpl(name=context.observing_run.ms_datatable_name, readonly=True)
         
-        # get corresponding datatable rows
-        datatable_name = datatable.plaintable
-        taqlstring = 'USING STYLE PYTHON SELECT ROWNUMBER() AS ID FROM "%s" WHERE IF==%s && SRCTYPE == %s && ANTENNA == %s' % (os.path.join(datatable_name, 'RO'), spwid, srctype, antenna)
-        table = datatable.tb1
-        LOG.debug('taqlstring=\'%s\'' % (taqlstring))
-        tx = table.taql(taqlstring)
-        index_list = tx.getcol('ID')
-        tx.close()
-        del tx
+        # get corresponding datatable rows (only IDs of target scans will be retruned)
+        index_list = common.get_index_list_for_ms(datatable, [infile], [antid], [fieldid], [spwid])
     
-        rows = datatable.tb1.getcol('ROW').take(index_list)
+        in_rows = datatable.tb1.getcol('ROW').take(index_list)
+        # row map filtered by target scans (key: target input 
+        target_row_map = {}
+        for idx in in_rows:
+            target_row_map[idx] = row_map.get(idx, -1)
+        
         weight = {}
-        for row in rows:
+        for row in in_rows:
             weight[row] = 1.0
     
-        # set weight 
+        # set weight (key: input MS row ID, value: weight)
+        # TODO: proper handling of pols
         if weight_rms:
             stats = datatable.tb2.getcol('STATISTICS').take(index_list)
-            for index in xrange(len(rows)):
-                row = rows[index]
+            for index in xrange(len(in_rows)):
+                row = in_rows[index]
                 stat = stats[index]
                 if stat != 0.0:
                     weight[row] /= (stat * stat)
@@ -155,8 +161,8 @@ class WeightMS(common.SingleDishTaskTemplate):
         if weight_tintsys:
             exposures = datatable.tb1.getcol('EXPOSURE').take(index_list)
             tsyss = datatable.tb1.getcol('TSYS').take(index_list)
-            for index in xrange(len(rows)):
-                row = rows[index]
+            for index in xrange(len(in_rows)):
+                row = in_rows[index]
                 exposure = exposures[index]
                 tsys = tsyss[index]
                 if tsys > 0.5:
@@ -166,13 +172,17 @@ class WeightMS(common.SingleDishTaskTemplate):
     
         # put weight
         with casatools.TableReader(outfile, nomodify=False) as tb:
-            tsel = tb.query('ROWNUMBER() IN %s' % (row_map.keys()), style='python')
+            # The selection, tsel, contains all intents.
+            # Need to match output element in selected table by rownumbers().
+            tsel = tb.query('ROWNUMBER() IN %s' % (row_map.values()), style='python')
             ms_weights = tsel.getcol('WEIGHT')
             rownumbers = tsel.rownumbers().tolist()
-            for (k, v) in row_map.items():
-                ms_row = k
-                ms_weight = list((weight[row] for row in v))
-                ms_index = rownumbers.index(ms_row)
+            for idx in xrange(len(in_rows)):
+                in_row = in_rows[idx]
+                out_row = row_map[in_row]
+                ms_weight = weight[in_row]
+                # search for the place of selected MS col to put back the value.
+                ms_index = rownumbers.index(out_row)
                 ms_weights[:, ms_index] = ms_weight
             tsel.putcol('WEIGHT', ms_weights)
             tsel.close()
