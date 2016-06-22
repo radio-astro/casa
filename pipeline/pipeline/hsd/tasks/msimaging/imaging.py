@@ -4,13 +4,14 @@ import os
 import numpy
 
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.sdfilenamer as filenamer
 import pipeline.infrastructure.imagelibrary as imagelibrary
 import pipeline.infrastructure.callibrary as callibrary
-import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.utils as utils
 from pipeline.hif.heuristics import fieldnames
+from pipeline.domain.datatable import DataTableImpl
 from . import gridding
 from . import weighting
 from . import worker
@@ -20,7 +21,7 @@ from ..baseline import baseline
 
 LOG = infrastructure.get_logger(__name__)
 
-class SDImagingInputs(basetask.StandardInputs): #common.SingleDishInputs
+class SDImagingInputs(basetask.StandardInputs):
     """
     Inputs for imaging
     """
@@ -30,13 +31,7 @@ class SDImagingInputs(basetask.StandardInputs): #common.SingleDishInputs
         self._init_properties(vars())
         self.vis = infiles
         self.infiles = self.vis
-#         self._to_list(['infiles'])
-#         for key in ['spw']:
-#             val = getattr(self, key)
-#             if val is None or (val[0] == '[' and val[-1] == ']'):
-#                 self._to_list([key])
         if self.mode is None: self.mode='line'
-#         self._to_list(['infiles', 'iflist', 'pollist'])
 
     @property
     def msid_list(self):
@@ -116,20 +111,25 @@ class SDImagingResults(common.SingleDishResults):
         # return [image.imagename for image in self.outcome]
         return self.outcome['image'].imagename
 
-class SDImaging(common.SingleDishTaskTemplate):
+class SDImaging(basetask.StandardTaskTemplate):
     Inputs = SDImagingInputs
 
-    @common.datatable_setter
+    def is_multi_vis_task(self):
+        return True
+
     def prepare(self):
-        context = self.inputs.context
+        inputs = self.inputs
+        context = inputs.context
         reduction_group = context.observing_run.ms_reduction_group
-        infiles = self.inputs.infiles
+        infiles = inputs.infiles
         # list of ms to process
-        ms_list = [context.observing_run.measurement_sets[idx] for idx in self.inputs.msid_list]
+        ms_list = [context.observing_run.measurement_sets[idx] for idx in inputs.msid_list]
         ms_names = [msobj.name for msobj in ms_list]
-        args = self.inputs.to_casa_args()
-#         antennalist = self.inputs.antennalist
-        imagemode = self.inputs.mode.upper()
+        in_spw = inputs.spw
+        in_field = inputs.field
+#         antennalist = inputs.antennalist
+        imagemode = inputs.mode.upper()
+        datatable = DataTableImpl(name=context.observing_run.ms_datatable_name, readonly=True)
         logrecords = []
          
         # task returns ResultsList
@@ -154,13 +154,13 @@ class SDImaging(common.SingleDishTaskTemplate):
             LOG.debug('Processing Reduction Group %s'%(group_id))
             LOG.debug('Group Summary:')
             for m in group_desc:
-                LOG.debug('\t%s: Antenna %s Spw %s Field %s'%(os.path.basename(m.ms.work_data),
-                                                              m.ms.antennas[m.antenna].name,
-                                                              m.spw, m.ms.fields[m.field_id].name))
-            #member_list = list(common.get_valid_members(group_desc, file_index, iflist))
-#             pols_list = list(common.pol_filter(group_desc, self.inputs.get_pollist))
-            # which group in group_desc list should be processed
-            member_list = list(common.get_valid_ms_members(group_desc, ms_names, self.inputs.antenna, args['spw'], args['field']))
+                LOG.debug('\t%s: Antenna %d (%s) Spw %d Field %d (%s)' % \
+                          (os.path.basename(m.ms.work_data),
+                           m.antenna, m.ms.antennas[m.antenna].name,
+                           m.spw, m.field_id, m.ms.fields[m.field_id].name))
+#             pols_list = list(common.pol_filter(group_desc, inputs.get_pollist))
+            # Which group in group_desc list should be processed
+            member_list = list(common.get_valid_ms_members(group_desc, ms_names, inputs.antenna, in_spw, in_field))
             LOG.debug('group %s: member_list=%s'%(group_id, member_list))
              
             # skip this group if valid member list is empty
@@ -176,13 +176,16 @@ class SDImaging(common.SingleDishTaskTemplate):
              
             LOG.debug('Members to be processed:')
             for i in xrange(len(member_list)):
-                LOG.debug('\t%s: Antenna %s Spw %s Field %s'%(ms_list[i].work_data, antenna_list[i], spwid_list[i], fieldid_list[i]))
+                LOG.debug('\t%s: Antenna %s Spw %s Field %s' % \
+                          (os.path.basename(ms_list[i].work_data),
+                           antenna_list[i], spwid_list[i], fieldid_list[i]))
  
             #continue
  
             # image is created per antenna (science) or per asdm and antenna (ampcal)
             image_group = {}
-            for (msobj, ant, spwid, fieldid) in zip(ms_list, antenna_list, spwid_list, fieldid_list):
+            for (msobj, ant, spwid, fieldid) in zip(ms_list, antenna_list,
+                                                    spwid_list, fieldid_list):
                 field_name = msobj.fields[fieldid].name
                 identifier = field_name
                 antenna = msobj.antennas[ant].name
@@ -195,111 +198,114 @@ class SDImaging(common.SingleDishTaskTemplate):
                     image_group[identifier].append([msobj, ant, spwid, fieldid])
                 else:
                     image_group[identifier] = [[msobj, ant, spwid, fieldid]]
-            LOG.info('image_group=%s' % (image_group))
+            LOG.debug('image_group=%s' % (image_group))
  
-#             # loop over antennas
-#             combined_infiles = []
-#             combined_antids = []
-#             combined_fieldids = []
-#             combined_spws = []
-#             tocombine_images = []
-#  
-#             srctype = None
-#             coord_set = False
-#             for (name, _members) in image_group.items():
-#                 msobjs =  map(lambda x: x[0], _members)
-#                 antids = map(lambda x: x[1], _members)
-#                 spwids = map(lambda x: x[2], _members)
-#                 fieldids = map(lambda x: x[3], _members)
-#                  
-#                 # reference data is first MS
-#                 ref_ms = msobjs[0]
-#                 ant_name = ref_ms.antennas[antids[0]].name
-#                 # for ampcal
-#                 asdm = None
-#                 if imagemode=='AMPCAL':
-#                     asdm = common.asdm_name_from_ms(ref_ms)
-#  
-# #                 # SRCTYPE for ON-SOURCE
-# #                 srctype = st.calibration_strategy['srctype']
-#  
-#                 # source name
-# #                 target_sources = [v for v in st.source.values() \
-# #                                   if 'TARGET' in v.intents]
-#                 source_name =  group_desc.field_name.replace(' ', '_')
-#                  
-#                 # filenames for gridding
-#                 infiles = [ms.work_data for ms in msobjs]
-#  
-# #                 LOG.debug('filenames=%s' % (filenames))
-#                 LOG.debug('infiles=%s' % (infiles))
-#                  
-#                 # image name
-#                 namer = filenamer.Image()
-#                 namer.casa_image()
-#                 namer.source(source_name)
-#                 namer.antenna_name(ant_name)
-#                 namer.asdm(asdm)
-#                 namer.spectral_window(spwids[0])
-# #                 namer.polarization('I' if imagemode=='AMPCAL' else common.polstring(net_pols))
-#                 namer.polarization('I')
-#                 imagename = namer.get_filename()
-#                 
-#                 # Step 1.
-#                 # Initialize weight column based on baseline RMS.
+            # loop over antennas
+            combined_infiles = []
+            combined_antids = []
+            combined_fieldids = []
+            combined_spws = []
+            tocombine_images = []
+  
+            coord_set = False
+            for (name, _members) in image_group.items():
+                msobjs =  map(lambda x: x[0], _members)
+                antids = map(lambda x: x[1], _members)
+                spwids = map(lambda x: x[2], _members)
+                fieldids = map(lambda x: x[3], _members)
+                LOG.info("Processing image group: %s" % name)
+                for idx in xrange(len(msobjs)):
+                    LOG.info("\t%s: Antenna %d (%s) Spw %s Field %d (%s)" % \
+                             (os.path.basename(msobjs[idx].name),
+                              antids[idx], msobjs[idx].antennas[antids[idx]].name,
+                              spwids[idx], fieldids[idx],
+                              msobjs[idx].fields[fieldids[idx]].name))
+                # reference data is first MS
+                ref_ms = msobjs[0]
+                ant_name = ref_ms.antennas[antids[0]].name
+                # for ampcal
+                asdm = None
+                if imagemode=='AMPCAL':
+                    asdm = common.asdm_name_from_ms(ref_ms)
+ 
+                # source name
+                source_name =  group_desc.field_name.replace(' ', '_')
+                  
+                # filenames for gridding
+                infiles = [ms.work_data for ms in msobjs]
+  
+                LOG.debug('infiles=%s' % (infiles))
+                  
+                # image name
+                namer = filenamer.Image()
+                namer.casa_image()
+                namer.source(source_name)
+                namer.antenna_name(ant_name)
+                namer.asdm(asdm)
+                namer.spectral_window(spwids[0])
+                namer.polarization('I')
+                imagename = namer.get_filename()
+                LOG.info("Output image name: %s" % imagename)
+                 
+                # Step 1.
+                # Initialize weight column based on baseline RMS.
 #                 LOG.info('Set weights based on baseline RMS')
 #                 for i in xrange(len(msobjs)):
 #                     msobj = msobjs[i]
 #                     antid = antids[i]
 #                     spwid = spwids[i]
 #                     fieldid = fieldids[i]
-#                     LOG.debug('Setting weight for %s Antenna %s Spw %s Field'%(msobj.name, antid,spwid, fieldid))
 #                     original_ms = msobj.name
 #                     work_ms = msobj.work_data
-#                     ###???
-#                     spwtype = msobj.spectral_windows[19].type
-#                     weighting_inputs = weighting.WeightMS.Inputs(context, infile=original_ms, 
+#                     LOG.info('Setting weight for %s Antenna %s Spw %s Field %s' % \
+#                              (os.path.basename(work_ms), msobj.antennas[antid].name,
+#                               spwid, msobj.fields[fieldid].name))
+# ########## NEED TO HANDLE THIS PROPERLY
+#                     spwtype = msobj.spectral_windows[spwid].type
+#                     weighting_inputs = weighting.WeightMSInputs(context, infile=original_ms, 
 #                                                                  outfile=work_ms, antenna=antid,
-#                                                                  spwid=spwid, field=fieldid, spwtype=spwtype, 
-#                                                                  onsourceid=srctype)
+#                                                                  spwid=spwid, fieldid=fieldid, spwtype=spwtype)
 #                     weighting_task = weighting.WeightMS(weighting_inputs)
 #                     weighting_result = self._executor.execute(weighting_task, merge=True)
 #                     logrecords.extend(weighting_result.logrecords)
-#  
-#                 # Step 2.
-#                 # Imaging
-#                 # Image per antenna, source
-#                 LOG.info('Imaging Source %s, Ant %s' % (source_name, ant_name))
-#                 # map coordinate (use identical map coordinate per spw)
-#                 if not coord_set:
-#                     phasecenter, cellx, celly, nx, ny = worker.ALMAImageCoordinateUtil(context, self.datatable, infiles, antids, spwids, fieldids, srctype)
-#                     coord_set = True
-#  
-#                 # register data for combining
-#                 combined_infiles.extend(infiles)
-#                 combined_antids.append(antids)
-#                 combined_fieldids.extend(fieldids)
-#                 combined_spws.extend(spwids)
-#                  
-#                 imager_inputs = worker.SDImagingWorker.Inputs(context, infiles=infiles, 
-#                                                               outfile=imagename, mode=imagemode,
-#                                                               antids=antids, spwids=spwids,
-#                                                               fieldids=fieldids,
-#                                                               onsourceid=srctype, edge=edge,
-#                                                               phasecenter=phasecenter,
-#                                                               cellx=cellx, celly=celly,
-#                                                               nx=nx, ny=ny)
-#                 imager_task = worker.SDImagingWorker(imager_inputs)
-#                 imager_result = self._executor.execute(imager_task, merge=True)
-#                  
-#                 if imager_result.outcome is not None:
-#                     # Imaging was successful, proceed following steps
-#                     logrecords.extend(imager_result.logrecords)
-#  
-#                     # add image list to combine
-#                     if os.path.exists(imagename) and os.path.exists(imagename+'.weight'):
-#                         tocombine_images.append(imagename)
-#  
+  
+                # Step 2.
+                # Imaging
+                # Image per antenna, source
+                LOG.info('Imaging Source %s, Ant %s Spw %d' % (source_name, ant_name, spwids[0]))
+                # map coordinate (use identical map coordinate per spw)
+                if not coord_set:
+                    phasecenter, cellx, celly, nx, ny = worker.ALMAImageCoordinateUtil(context, datatable, infiles, antids, spwids, fieldids)
+                    coord_set = True
+  
+                # register data for combining
+                combined_infiles.extend(infiles)
+                combined_antids.append(antids)
+                combined_fieldids.extend(fieldids)
+                combined_spws.extend(spwids)
+                  
+                imager_inputs = worker.SDImagingWorker.Inputs(context, infiles, 
+                                                              outfile=imagename,
+                                                              mode=imagemode,
+                                                              antids=antids,
+                                                              spwids=spwids,
+                                                              fieldids=fieldids,
+                                                              edge=edge,
+                                                              phasecenter=phasecenter,
+                                                              cellx=cellx,
+                                                              celly=celly,
+                                                              nx=nx, ny=ny)
+                imager_task = worker.SDImagingWorker(imager_inputs)
+                imager_result = self._executor.execute(imager_task, merge=True)
+                  
+                if imager_result.outcome is not None:
+                    # Imaging was successful, proceed following steps
+                    logrecords.extend(imager_result.logrecords)
+  
+                    # add image list to combine
+                    if os.path.exists(imagename) and os.path.exists(imagename+'.weight'):
+                        tocombine_images.append(imagename)
+  
 #                     # Additional Step.
 #                     # Make grid_table and put rms and valid spectral number array 
 #                     # to the outcome.
@@ -352,78 +358,78 @@ class SDImaging(common.SingleDishTaskTemplate):
 #                         validsps.append([r[6] for r in grid_tables[i]])
 #                         rmss.append([r[8] for r in grid_tables[i]])
 #  
-#                     image_item = imagelibrary.ImageItem(imagename=imagename,
-#                                                         sourcename=source_name,
-#                                                         spwlist=spwids,
-#                                                         specmode='cube',
-#                                                         sourcetype='TARGET')
-#                     image_item.antenna = name
-#                     outcome = {}
-#                     outcome['image'] = image_item
-#                     outcome['imagemode'] = imagemode
+                    image_item = imagelibrary.ImageItem(imagename=imagename,
+                                                        sourcename=source_name,
+                                                        spwlist=spwids,
+                                                        specmode='cube',
+                                                        sourcetype='TARGET')
+                    image_item.antenna = name
+                    outcome = {}
+                    outcome['image'] = image_item
+                    outcome['imagemode'] = imagemode
 #                     outcome['validsp'] = validsps
 #                     outcome['rms'] = rmss
-#                     outcome['edge'] = edge
-#                     outcome['reduction_group_id'] = group_id
-#                     outcome['file_index'] = map(common.get_parent_ms_idx, infiles)
-#                     outcome['assoc_spws'] = spwids
+                    outcome['edge'] = edge
+                    outcome['reduction_group_id'] = group_id
+                    outcome['file_index'] = [common.get_parent_ms_idx(context, name) for name in infiles]
+                    outcome['assoc_spws'] = spwids
 #                     outcome['assoc_pols'] = pols
-#                     if imagemode == 'AMPCAL':
-#                         if len(infiles)==1 and (asdm not in ['', None]): outcome['vis'] = asdm
+                    if imagemode == 'AMPCAL':
+                        if len(infiles)==1 and (asdm not in ['', None]): outcome['vis'] = asdm
 #                         # to register exported_ms to each scantable instance
 #                         outcome['export_results'] = export_results
-#  
-#                     result = SDImagingResults(task=self.__class__,
-#                                               success=True,
-#                                               outcome=outcome)
-#                     result.task = self.__class__
-#  
-#                     result.stage_number = self.inputs.context.task_counter 
-#                                                  
-#                     results.append(result)
-#                      
-#             # derive Jy/K factor and store it in a file
-#             if imagemode == 'AMPCAL':
-#                 LOG.info("Skipping combined image for the amplitude calibrator.")
-#                 continue
-#  
-#             # Make combined image
-#             # reference MS
-#             ms = context.observing_run.measurement_sets[combined_infiles[0]]
-#              
-#             # image name
-#             namer = filenamer.Image()
-#             namer.casa_image()
-#             namer.source(source_name)
-#             namer.spectral_window(combined_spws[0])
-#             namer.polarization('I')
-#             imagename = namer.get_filename()
-#  
-#             # Step 3.
-#             # Imaging of all antennas
-#             LOG.info('Combine images of Source %s' % (source_name))
-#             if False:
-#                 imager_inputs = worker.SDImagingWorker.Inputs(context, infiles=combined_infiles, 
-#                                                               outfile=imagename, mode=imagemode,
-#                                                               antids=combined_antids,
-#                                                               spwids=combined_spws,
-#                                                               fieldids=combined_fieldids,
-#                                                               onsourceid=srctype, edge=edge,
-#                                                               phasecenter=phasecenter,
-#                                                               cellx=cellx, celly=celly,
-#                                                               nx=nx, ny=ny)
-#                 imager_task = worker.SDImagingWorker(imager_inputs)
-#                 imager_result = self._executor.execute(imager_task, merge=True)
-#             else:
-#                 combine_inputs = sdcombine.SDImageCombineInputs(context, inimages=tocombine_images,
-#                                                                 outfile=imagename)
-#                 combine_task = sdcombine.SDImageCombine(combine_inputs)
-#                 imager_result = self._executor.execute(combine_task, merge=True)
-#              
-#             if imager_result.outcome is not None:
-#                 # Imaging was successful, proceed following steps
-#                 logrecords.extend(imager_result.logrecords)
-#      
+  
+                    result = SDImagingResults(task=self.__class__,
+                                              success=True,
+                                              outcome=outcome)
+                    result.task = self.__class__
+  
+                    result.stage_number = inputs.context.task_counter 
+                                                  
+                    results.append(result)
+                      
+            # derive Jy/K factor and store it in a file
+            if imagemode == 'AMPCAL':
+                LOG.info("Skipping combined image for the amplitude calibrator.")
+                continue
+  
+            # Make combined image
+            # reference MS
+            ref_ms = context.observing_run.get_ms(name=combined_infiles[0])
+              
+            # image name
+            namer = filenamer.Image()
+            namer.casa_image()
+            namer.source(source_name)
+            namer.spectral_window(combined_spws[0])
+            namer.polarization('I')
+            imagename = namer.get_filename()
+  
+            # Step 3.
+            # Imaging of all antennas
+            LOG.info('Combine images of Source %s Spw %d' % (source_name, combined_spws[0]))
+            if False:
+                imager_inputs = worker.SDImagingWorker.Inputs(context, combined_infiles, 
+                                                              outfile=imagename, mode=imagemode,
+                                                              antids=combined_antids,
+                                                              spwids=combined_spws,
+                                                              fieldids=combined_fieldids,
+                                                              edge=edge,
+                                                              phasecenter=phasecenter,
+                                                              cellx=cellx, celly=celly,
+                                                              nx=nx, ny=ny)
+                imager_task = worker.SDImagingWorker(imager_inputs)
+                imager_result = self._executor.execute(imager_task, merge=True)
+            else:
+                combine_inputs = sdcombine.SDImageCombineInputs(context, inimages=tocombine_images,
+                                                                outfile=imagename)
+                combine_task = sdcombine.SDImageCombine(combine_inputs)
+                imager_result = self._executor.execute(combine_task, merge=True)
+              
+            if imager_result.outcome is not None:
+                # Imaging was successful, proceed following steps
+                logrecords.extend(imager_result.logrecords)
+      
 #                 # Additional Step.
 #                 # Make grid_table and put rms and valid spectral number array 
 #                 # to the outcome
@@ -437,7 +443,7 @@ class SDImaging(common.SingleDishTaskTemplate):
 #                     ny = ia.shape()[dircoords[1]]
 #                 validsps = []
 #                 rmss = []
-#                 observing_pattern =  ms.observing_pattern[andids[0][spwids[0]][fieldids[0]]
+#                 observing_pattern =  ref_ms.observing_pattern[andids[0][spwids[0]][fieldids[0]]
 #                 grid_task_class = gridding.gridding_factory(observing_pattern)
 #                 grid_tables = []
 #                 grid_input_dict = {}
@@ -474,40 +480,39 @@ class SDImaging(common.SingleDishTaskTemplate):
 #                     validsps.append([r[6] for r in grid_tables[i]])
 #                     rmss.append([r[8] for r in grid_tables[i]])
 #                  
-#                 image_item = imagelibrary.ImageItem(imagename=imagename,
-#                                                     sourcename=source_name,
-#                                                     spwlist=combined_spws,
-#                                                     specmode='cube',
-#                                                     sourcetype='TARGET')
-#                 image_item.antenna = 'COMBINED'
-#                 outcome = {}
-#                 outcome['image'] = image_item
-#                 outcome['imagemode'] = imagemode
+                image_item = imagelibrary.ImageItem(imagename=imagename,
+                                                    sourcename=source_name,
+                                                    spwlist=combined_spws,
+                                                    specmode='cube',
+                                                    sourcetype='TARGET')
+                image_item.antenna = 'COMBINED'
+                outcome = {}
+                outcome['image'] = image_item
+                outcome['imagemode'] = imagemode
 #                 outcome['validsp'] = validsps
 #                 outcome['rms'] = rmss
-#                 outcome['edge'] = edge
-#                 outcome['reduction_group_id'] = group_id
-#                 outcome['file_index'] = combined_indices
-#                 outcome['assoc_spws'] = combined_spws
+                outcome['edge'] = edge
+                outcome['reduction_group_id'] = group_id
+                outcome['file_index'] = [common.get_parent_ms_idx(context, name) for name in combined_infiles]
+                outcome['assoc_spws'] = combined_spws
 #                  
 #                 # to register exported_ms to each scantable instance
 #                 outcome['export_results'] = export_results
-#                 outcome['reduction_group_id'] = group_id
-#                 result = SDImagingResults(task=self.__class__,
-#                                           success=True,
-#                                           outcome=outcome)
-#                 result.task = self.__class__
-#  
-#                 result.stage_number = self.inputs.context.task_counter 
-#                      
-#                 results.append(result)
-#                                      
-#         LOG.todo('logrecords for SDImagingResults must be handled properly')
-#         # only add logrecords to first result
-#         if len(results) > 0:
-#             results[0].logrecords = logrecords
-#             for r in results[1:]:   
-#                 r.logrecords = []
+                result = SDImagingResults(task=self.__class__,
+                                          success=True,
+                                          outcome=outcome)
+                result.task = self.__class__
+  
+                result.stage_number = inputs.context.task_counter 
+                      
+                results.append(result)
+                                      
+        LOG.todo('logrecords for SDImagingResults must be handled properly')
+        # only add logrecords to first result
+        if len(results) > 0:
+            results[0].logrecords = logrecords
+            for r in results[1:]:   
+                r.logrecords = []
 
         return results
     
