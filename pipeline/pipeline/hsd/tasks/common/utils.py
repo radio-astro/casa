@@ -280,12 +280,12 @@ def get_index_list(datatable, antenna, spw, pols=None, srctype=None):
     
     return index_list
 
-def get_index_list_for_ms(datatable, vis_list, fieldid_list, antennaid_list, 
+def get_index_list_for_ms(datatable, vis_list, antennaid_list, fieldid_list, 
                           spwid_list, srctype=None):
     return numpy.fromiter(_get_index_list_for_ms(datatable, vis_list, fieldid_list, antennaid_list, 
                                                 spwid_list, srctype), dtype=numpy.int64)
     
-def _get_index_list_for_ms(datatable, vis_list, fieldid_list, antennaid_list, 
+def _get_index_list_for_ms(datatable, vis_list, antennaid_list, fieldid_list, 
                           spwid_list, srctype=None):
     # use time_table instead of data selection
     online_flag = datatable.tb2.getcolslice('FLAG_PERMANENT', [OnlineFlagIndex], [OnlineFlagIndex], 1)[0]
@@ -309,7 +309,7 @@ def get_valid_members(group_desc, antenna_filter, spwid_filter):
             if _spwid_filter is None or len(_spwid_filter) == 0 or spwid in _spwid_filter:
                 yield i
                 
-def get_valid_ms_members(group_desc, ms_filter, ant_selection, spw_selection, field_selection):
+def get_valid_ms_members(group_desc, ms_filter, ant_selection, field_selection, spw_selection):
     for member_id in xrange(len(group_desc)):
         member = group_desc[member_id]
         spw_id = member.spw
