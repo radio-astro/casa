@@ -7,11 +7,11 @@
 
 namespace casa {
 
-const int    VersionInfo::aips_major_version = MAJOR;
-const int    VersionInfo::aips_minor_version = MINOR;
-const int    VersionInfo::aips_patch_version = 
-;
-const char * VersionInfo::aips_version_date  = "DATE";
+const int    VersionInfo::aips_major_version = @CASA_MAJOR_VERSION@;
+const int    VersionInfo::aips_minor_version = @CASA_MINOR_VERSION@;
+const int    VersionInfo::aips_patch_version = @CASA_PATCH_VERSION@;
+
+const char * VersionInfo::aips_version_date  = "@COMPILE_TIME@";
 const char * VersionInfo::aips_version_info  = "";
 
 } //# NAMESPACE CASA - END

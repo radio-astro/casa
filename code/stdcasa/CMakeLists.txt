@@ -18,70 +18,25 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-# Make sure that compile time definitions (build time, svn revision number)
-# are recomputed in every build.
+if( ${CASA_PATCH_VERSION} STREQUAL "0" )
 
-# This target is executed unconditionally and before any other target that
-# depends on the definitions file
-add_custom_target( stdcasa_definitions COMMAND ${CMAKE_COMMAND} -E remove -f definitions )
+    execute_process( COMMAND svn info
+                     RESULT_VARIABLE SVNINFOSTATUS
+                     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} )
 
-execute_process( COMMAND svn info
-                 RESULT_VARIABLE SVNINFOSTATUS
-                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-)
-message("SVNINFOSTATUS: ${SVNINFOSTATUS}")
-       
-if(${SVNINFOSTATUS} STREQUAL "0")
-	message("stdcasa: Running svn scripts.")
-	# This is delegated to the generate-svninfo script to allow for overriding
-	# subversion information via environment variables.
-	add_custom_command( OUTPUT definitions
-		    COMMAND ${CASA_svngen} url=${CMAKE_SOURCE_DIR} > definitions_tmp
-		    COMMAND ${CMAKE_COMMAND} -E copy definitions_tmp definitions
-		    )
-	add_custom_command( OUTPUT version.cc
-		  COMMAND egrep subversion_revision definitions > tmp1.txt
-		  COMMAND sed -e 's|[^0-9]*\"||g' tmp1.txt > tmp2.txt
-		COMMAND
-		sed -e 's|MAJOR|${CASA_MAJOR_VERSION}|'
-		-e 's|MINOR|${CASA_MINOR_VERSION}|'
-		-e '/patch_version = / r tmp2.txt'
-		-e 's|DATE|${SVNDATE}|'
-		${CMAKE_CURRENT_SOURCE_DIR}/version.template > version_tmp.cc
-		|| ${PERL_EXECUTABLE} -e 'unlink("version_tmp.cc")\; exit 1\;'
-		COMMAND ${CMAKE_COMMAND} -E copy_if_different version_tmp.cc version.cc
-		COMMAND mkdir -p ${CMAKE_INSTALL_PREFIX}/../share
-		COMMAND echo '\# casa version file created from casa code cmake' > ${CMAKE_INSTALL_PREFIX}/../share/version.txt
-		COMMAND echo '${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_VERSION} ${SVNREVISION}' >> ${CMAKE_INSTALL_PREFIX}/../share/version.txt
-		DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/version.template
-		DEPENDS definitions
-	    )
-else ()
-	add_custom_command( OUTPUT definitions
-				COMMAND ${CMAKE_SOURCE_DIR}/install/generate-gitinfo > definitions_tmp
-				COMMAND ${CMAKE_COMMAND} -E copy definitions_tmp definitions
-				)
+    ### hash-bound git will need another solution
+    if ( ${SVNINFOSTATUS} STREQUAL "0" )
+        execute_process( COMMAND svnversion
+                         OUTPUT_VARIABLE CASA_PATCH_VERSION
+                         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} )
 
-         message("stdcasa: Creating a dummy version.cc.")
-        string(TIMESTAMP COMPILE_TIME UTC)
-	add_custom_command( OUTPUT version.cc
-		  COMMAND egrep subversion_revision definitions > tmp1.txt
-		  COMMAND sed -e 's|[^0-9]*\"||g' tmp1.txt > tmp2.txt
-		COMMAND
-		sed -e 's|MAJOR|${CASA_MAJOR_VERSION}|'
-		-e 's|MINOR|${CASA_MINOR_VERSION}|'
-		-e '/patch_version = / r tmp2.txt'
-		-e 's|DATE|${COMPILE_TIME}|'
-		${CMAKE_CURRENT_SOURCE_DIR}/version.template > version_tmp.cc
-		|| ${PERL_EXECUTABLE} -e 'unlink("version_tmp.cc")\; exit 1\;'
-		COMMAND ${CMAKE_COMMAND} -E copy_if_different version_tmp.cc version.cc
-		COMMAND mkdir -p ${CMAKE_INSTALL_PREFIX}/../share
-		COMMAND echo '\# casa version file created from casa code cmake' > ${CMAKE_INSTALL_PREFIX}/../share/version.txt
-		COMMAND echo '1.1.1 1' >> ${CMAKE_INSTALL_PREFIX}/../share/version.txt
-		DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/version.template
-		DEPENDS definitions
-	    )
-endif ()
+        string( REGEX  REPLACE "[a-zA-Z]" "" CASA_PATCH_VERSION ${CASA_PATCH_VERSION} )
+        string( REPLACE "\n" "" CASA_PATCH_VERSION ${CASA_PATCH_VERSION} )
+    endif( )
+
+endif( )
+
+CONFIGURE_FILE( ${CMAKE_CURRENT_SOURCE_DIR}/version.cc.cmake version.cc )
 
 casa_add_library( stdcasa
         StdCasa/CrashReporter.cc

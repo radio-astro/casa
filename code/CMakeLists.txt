@@ -57,6 +57,7 @@ set( CASA_MAJOR_VERSION 4 )
 set( CASA_MINOR_VERSION 7 )
 set( CASA_PATCH_VERSION 0 )
 set( CASA_API_VERSION "${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_VERSION}" )
+string(TIMESTAMP COMPILE_TIME "%Y-%m-%d %H:%M:%S UTC" UTC)
 
 ###
 ### default name for casa-maintained dbus C++ library... (but could also be called just "dbus-cpp")
