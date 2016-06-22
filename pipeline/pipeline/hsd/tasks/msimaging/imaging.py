@@ -160,7 +160,7 @@ class SDImaging(basetask.StandardTaskTemplate):
                            m.spw, m.field_id, m.ms.fields[m.field_id].name))
 #             pols_list = list(common.pol_filter(group_desc, inputs.get_pollist))
             # Which group in group_desc list should be processed
-            member_list = list(common.get_valid_ms_members(group_desc, ms_names, inputs.antenna, in_spw, in_field))
+            member_list = list(common.get_valid_ms_members(group_desc, ms_names, inputs.antenna, in_field, in_spw))
             LOG.debug('group %s: member_list=%s'%(group_id, member_list))
              
             # skip this group if valid member list is empty
@@ -260,7 +260,7 @@ class SDImaging(basetask.StandardTaskTemplate):
 #                     LOG.info('Setting weight for %s Antenna %s Spw %s Field %s' % \
 #                              (os.path.basename(work_ms), msobj.antennas[antid].name,
 #                               spwid, msobj.fields[fieldid].name))
-# ########## NEED TO HANDLE THIS PROPERLY
+# ########## TODO: NEED TO HANDLE THIS PROPERLY
 #                     spwtype = msobj.spectral_windows[spwid].type
 #                     weighting_inputs = weighting.WeightMSInputs(context, infile=original_ms, 
 #                                                                  outfile=work_ms, antenna=antid,
@@ -268,7 +268,7 @@ class SDImaging(basetask.StandardTaskTemplate):
 #                     weighting_task = weighting.WeightMS(weighting_inputs)
 #                     weighting_result = self._executor.execute(weighting_task, merge=True)
 #                     logrecords.extend(weighting_result.logrecords)
-  
+#   
                 # Step 2.
                 # Imaging
                 # Image per antenna, source

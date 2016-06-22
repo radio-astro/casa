@@ -69,7 +69,7 @@ def ALMAImageCoordinateUtil(context, datatable, ms_names, ant_list, spw_list, fi
     LOG.info('phasecenter=\'%s\'' % (phasecenter, ))
 
     # nx and ny
-    index_list = common.get_index_list_for_ms(datatable, ms_names, fieldid_list, ant_list, spw_list)
+    index_list = common.get_index_list_for_ms(datatable, ms_names, ant_list, fieldid_list, spw_list)
     
     if len(index_list) == 0:
         antenna_name = ref_msobj.antennas[ant_list[0]].name
