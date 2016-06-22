@@ -678,10 +678,10 @@ class ReductionGroupDesc(list):
 
 
 class MSReductionGroupMember(object):
-    def __init__(self, ms, antenna, spw, field_id=None):
+    def __init__(self, ms, antenna_id, spw_id, field_id=None):
         self.ms = ms
-        self.antenna = antenna
-        self.spw = spw
+        self.antenna_id = antenna_id
+        self.spw_id = spw_id
         self.field_id = -1 if field_id is None else field_id
         self.iteration = 0
         self.linelist = []
@@ -690,6 +690,26 @@ class MSReductionGroupMember(object):
     @property
     def npol(self):
         return 1
+    
+    @property
+    def spw(self):
+        return self.ms.spectral_windows[self.spw_id]
+        
+    @property
+    def antenna(self):
+        return self.ms.antennas[self.antenna_id]
+    
+    @property
+    def antenna_name(self):
+        return self.antenna.name
+    
+    @property
+    def field(self):
+        return self.ms.fields[self.field_id]
+    
+    @property
+    def field_name(self):
+        return self.field.name
 
     def iter_countup(self):
         self.iteration += 1
@@ -705,14 +725,14 @@ class MSReductionGroupMember(object):
             self.channelmap_range = linelist
 
     def __repr__(self):
-        return 'MSReductionGroupMember(ms=\'%s\', antenna=%s, spw=%s, field_id=%s)' % (self.ms.basename, self.antenna, self.spw, self.field_id)
+        return 'MSReductionGroupMember(ms=\'%s\', antenna=%s, spw=%s, field_id=%s)' % (self.ms.basename, self.antenna_id, self.spw_id, self.field_id)
 
     def __eq__(self, other):
         #LOG.debug('MSReductionGroupMember.__eq__')
-        return other.ms.name == self.ms.name and other.antenna == self.antenna and other.spw == self.spw and other.field_id == self.field_id
+        return other.ms.name == self.ms.name and other.antenna_id == self.antenna_id and other.spw_id == self.spw_id and other.field_id == self.field_id
 
     def __ne__(self, other):
-        return other.ms.name != self.ms.name or other.antenna != self.antenna or other.spw != self.spw or other.field_id != self.field_id
+        return other.ms.name != self.ms.name or other.antenna_id != self.antenna_id or other.spw_id != self.spw_id or other.field_id != self.field_id
      
 class MSReductionGroupDesc(list):
     def __init__(self, spw_name=None, min_frequency=None, max_frequency=None, nchan=None, field=None):
@@ -733,32 +753,32 @@ class MSReductionGroupDesc(list):
     def merge(self, other):
         assert self == other
         for member in other:
-            LOG.trace('ms.name=\"%s\" antenna=%s spw=%s, field_id=%s'%(member.ms.name, member.antenna, member.spw, member.field_id))
+            LOG.trace('ms.name=\"%s\" antenna=%s spw=%s, field_id=%s'%(member.ms.name, member.antenna_id, member.spw_id, member.field_id))
             if not member in self:
-                LOG.debug('Adding (%s, %s, %s, %s)'%(member.ms.name,member.antenna,member.spw,member.field_id))
+                LOG.debug('Adding (%s, %s, %s, %s)'%(member.ms.name,member.antenna_id,member.spw_id,member.field_id))
                 self.append(member)
 
-    def add_member(self, ms, antenna, spw, field_id=None):
-        new_member = MSReductionGroupMember(ms, antenna, spw, field_id)
+    def add_member(self, ms, antenna_id, spw_id, field_id=None):
+        new_member = MSReductionGroupMember(ms, antenna_id, spw_id, field_id)
         if not new_member in self:
             self.append(new_member)
 
-    def get_iteration(self, ms, antenna, spw, field_id=None):
-        member = self[self.__search_member(ms, antenna, spw, field_id)]
+    def get_iteration(self, ms, antenna_id, spw_id, field_id=None):
+        member = self[self.__search_member(ms, antenna_id, spw_id, field_id)]
         return member.iteration
             
-    def iter_countup(self, ms, antenna, spw, field_id=None):
-        member = self[self.__search_member(ms, antenna, spw, field_id)]
+    def iter_countup(self, ms, antenna_id, spw_id, field_id=None):
+        member = self[self.__search_member(ms, antenna_id, spw_id, field_id)]
         member.iter_countup()
 
-    def add_linelist(self, linelist, antenna, spw, field_id=None, channelmap_range=None):
-        member = self[self.__search_member(antenna, spw, field_id)]
+    def add_linelist(self, linelist, antenna_id, spw_id, field_id=None, channelmap_range=None):
+        member = self[self.__search_member(antenna_id, spw_id, field_id)]
         member.add_linelist(linelist, channelmap_range=channelmap_range)
 
-    def __search_member(self, ms, antenna, spw, field_id=None):
+    def __search_member(self, ms, antenna_id, spw_id, field_id=None):
         for indx in xrange(len(self)):
             member = self[indx]
-            if member.ms.name == ms.name and member.antenna == antenna and member.spw == spw and member.field_id == field_id:
+            if member.ms.name == ms.name and member.antenna_id == antenna_id and member.spw_id == spw_id and member.field_id == field_id:
                 return indx
                 break
             
