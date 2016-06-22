@@ -53,6 +53,15 @@ TABLE_KEYWORD = {'VERSION': 1,
                  'ApplyType': 'CALTSYS',
                  'FREQUENCIES': 'Table: {name}'}
 
+# workaround for CAS-8724
+# set column keywords after creating table
+def create_table(table, name):
+    ret = table.create(name, TABLE_DESC, memtype='plain', nrow=0)
+    assert ret == True
+    for (_colname, _coldesc) in TABLE_DESC.items():
+        if _coldesc.has_key('keywords'):
+            table.putcolkeywords(_colname, _coldesc['keywords'])
+
 def map_without_average(prefix, caltable, reftable):
     # initial check
     check(caltable)
@@ -63,7 +72,7 @@ def map_without_average(prefix, caltable, reftable):
     for (antenna_id, antenna_name) in enumerate(antenna):
         name = '.'.join([prefix, antenna_name, 'tsyscal.tbl'])
         names[antenna_name] = name
-        ret = tb.create(name, TABLE_DESC, memtype='plain', nrow=0)
+        create_table(tb, name)
         try:
             fill(tb, caltable, antenna_id)
             keywords = TABLE_KEYWORD.copy()
@@ -92,7 +101,7 @@ def map_with_average(prefix, caltable, reftable, atm_spw, science_spw):
     for (antenna_id, antenna_name) in enumerate(antenna):
         name = '.'.join([prefix, antenna_name, 'spw%s'%(science_spw.id), 'tsyscal.tbl'])
         names[antenna_name] = name
-        ret = tb.create(name, TABLE_DESC, memtype='plain', nrow=0)
+        create_table(tb, name)
         try:
             fill_with_average(tb, caltable, antenna_id, atm_spw, science_spw)
             keywords = TABLE_KEYWORD.copy()

@@ -109,6 +109,13 @@ def __tabledescrw():
 TABLEDESC_RO = __tabledescro()
 TABLEDESC_RW = __tabledescrw()
 
+def create_table(table, name, desc, memtype='plain', nrow=0):
+    ret = table.create(name, desc, memtype=memtype, nrow=nrow)
+    assert ret == True
+    for (_colname, _coldesc) in desc.items():
+        if _coldesc.has_key('keywords'):
+            table.putcolkeywords(_colname, _coldesc['keywords'])
+
 # FLAG_PERMANENT Layout
 WeatherFlagIndex = 0
 TsysFlagIndex = 1
@@ -349,14 +356,8 @@ class DataTableImpl( object ):
 
     def _create( self, readonly=False ):
         self._close()
-        self.tb1.create( tablename=self.memtable1,
-                         tabledesc=TABLEDESC_RO,
-                         memtype='memory',
-                         nrow=self.nrow )
-        self.tb2.create( tablename=self.memtable2,
-                         tabledesc=TABLEDESC_RW,
-                         memtype='memory',
-                         nrow=self.nrow )
+        create_table(self.tb1, self.memtable1, TABLEDESC_RO, 'memory', self.nrow)
+        create_table(self.tb2, self.memtable2, TABLEDESC_RW, 'memory', self.nrow)
         self.isopened = True
         self.__init_cols(readonly=readonly)
 
