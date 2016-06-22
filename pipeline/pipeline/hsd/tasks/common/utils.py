@@ -282,7 +282,7 @@ def get_index_list(datatable, antenna, spw, pols=None, srctype=None):
 
 def get_index_list_for_ms(datatable, vis_list, antennaid_list, fieldid_list, 
                           spwid_list, srctype=None):
-    return numpy.fromiter(_get_index_list_for_ms(datatable, vis_list, fieldid_list, antennaid_list, 
+    return numpy.fromiter(_get_index_list_for_ms(datatable, vis_list, antennaid_list, fieldid_list, 
                                                 spwid_list, srctype), dtype=numpy.int64)
     
 def _get_index_list_for_ms(datatable, vis_list, antennaid_list, fieldid_list, 
