@@ -582,7 +582,15 @@ class SourceTable(object):
         propermotions = [v for _, v in sorted(msmd.propermotions().items(),
                                               key=lambda (k, _): int(k))]
 
-        return zip(ids, sourcenames, directions, propermotions)
+        all_sources = zip(ids, sourcenames, directions, propermotions)
+
+        # only return sources for which scans are present
+        # create a mapping of source id to a boolean of whether any scans are present for that source
+        source_id_to_scans = {source_id: (len(msmd.scansforfield(field_id)) is not 0)
+                              for source_id in set(msmd.sourceidsfromsourcetable())
+                              for field_id in set(msmd.fieldsforsource(source_id))}
+
+        return [row for row in all_sources if source_id_to_scans.get(row[0], False)]
 
 
 class StateTable(object):
@@ -650,9 +658,15 @@ class FieldTable(object):
             else:
                 source_types = [None] * num_fields
 
-            return zip(field_ids, field_names, source_ids, times,
-                       source_types, phase_centres)
-    
+        all_fields = zip(field_ids, field_names, source_ids, times, source_types, phase_centres)
+
+        # only return sources for which scans are present
+        # create a mapping of source id to a boolean of whether any scans are present for that source
+        field_id_to_scans = {field_id: (len(msmd.scansforfield(field_id)) is not 0)
+                             for field_id in set(field_ids)}
+
+        return [row for row in all_fields if field_id_to_scans.get(row[0], False)]
+
     @staticmethod
     def get_fields(msmd):
         return [FieldTable._create_field(*row) 
