@@ -155,9 +155,8 @@ class SDImaging(basetask.StandardTaskTemplate):
             LOG.debug('Group Summary:')
             for m in group_desc:
                 LOG.debug('\t%s: Antenna %d (%s) Spw %d Field %d (%s)' % \
-                          (os.path.basename(m.ms.work_data),
-                           m.antenna, m.ms.antennas[m.antenna].name,
-                           m.spw, m.field_id, m.ms.fields[m.field_id].name))
+                          (os.path.basename(m.ms.work_data), m.antenna_id,
+                           m.antenna_name, m.spw_id, m.field_id, m.field_name))
 #             pols_list = list(common.pol_filter(group_desc, inputs.get_pollist))
             # Which group in group_desc list should be processed
             member_list = list(common.get_valid_ms_members(group_desc, ms_names, inputs.antenna, in_field, in_spw))
@@ -169,8 +168,8 @@ class SDImaging(basetask.StandardTaskTemplate):
                 continue
  
             member_list.sort() #list of group_desc IDs to image
-            antenna_list = [group_desc[i].antenna for i in member_list]
-            spwid_list = [group_desc[i].spw for i in member_list]
+            antenna_list = [group_desc[i].antenna_id for i in member_list]
+            spwid_list = [group_desc[i].spw_id for i in member_list]
             ms_list = [group_desc[i].ms for i in member_list]
             fieldid_list = [group_desc[i].field_id for i in member_list]
              
@@ -249,26 +248,26 @@ class SDImaging(basetask.StandardTaskTemplate):
                  
                 # Step 1.
                 # Initialize weight column based on baseline RMS.
-#                 LOG.info('Set weights based on baseline RMS')
-#                 for i in xrange(len(msobjs)):
-#                     msobj = msobjs[i]
-#                     antid = antids[i]
-#                     spwid = spwids[i]
-#                     fieldid = fieldids[i]
-#                     original_ms = msobj.name
-#                     work_ms = msobj.work_data
-#                     LOG.info('Setting weight for %s Antenna %s Spw %s Field %s' % \
-#                              (os.path.basename(work_ms), msobj.antennas[antid].name,
-#                               spwid, msobj.fields[fieldid].name))
-# ########## TODO: NEED TO HANDLE THIS PROPERLY
-#                     spwtype = msobj.spectral_windows[spwid].type
-#                     weighting_inputs = weighting.WeightMSInputs(context, infile=original_ms, 
-#                                                                  outfile=work_ms, antenna=antid,
-#                                                                  spwid=spwid, fieldid=fieldid, spwtype=spwtype)
-#                     weighting_task = weighting.WeightMS(weighting_inputs)
-#                     weighting_result = self._executor.execute(weighting_task, merge=True)
-#                     logrecords.extend(weighting_result.logrecords)
-#   
+                LOG.info('Set weights based on baseline RMS')
+                for i in xrange(len(msobjs)):
+                    msobj = msobjs[i]
+                    antid = antids[i]
+                    spwid = spwids[i]
+                    fieldid = fieldids[i]
+                    original_ms = msobj.name
+                    work_ms = msobj.work_data
+                    LOG.info('Setting weight for %s Antenna %s Spw %s Field %s' % \
+                             (os.path.basename(work_ms), msobj.antennas[antid].name,
+                              spwid, msobj.fields[fieldid].name))
+########## TODO: NEED TO HANDLE THIS PROPERLY
+                    spwtype = msobj.spectral_windows[spwid].type
+                    weighting_inputs = weighting.WeightMSInputs(context, infile=original_ms, 
+                                                                 outfile=work_ms, antenna=antid,
+                                                                 spwid=spwid, fieldid=fieldid, spwtype=spwtype)
+                    weighting_task = weighting.WeightMS(weighting_inputs)
+                    weighting_result = self._executor.execute(weighting_task, merge=True)
+                    logrecords.extend(weighting_result.logrecords)
+   
                 # Step 2.
                 # Imaging
                 # Image per antenna, source
@@ -372,6 +371,8 @@ class SDImaging(basetask.StandardTaskTemplate):
                     outcome['edge'] = edge
                     outcome['reduction_group_id'] = group_id
                     outcome['file_index'] = [common.get_parent_ms_idx(context, name) for name in infiles]
+                    outcome['assoc_antennas'] = antids
+                    outcome['assoc_fields'] = fieldids
                     outcome['assoc_spws'] = spwids
 #                     outcome['assoc_pols'] = pols
                     if imagemode == 'AMPCAL':
@@ -494,8 +495,11 @@ class SDImaging(basetask.StandardTaskTemplate):
                 outcome['edge'] = edge
                 outcome['reduction_group_id'] = group_id
                 outcome['file_index'] = [common.get_parent_ms_idx(context, name) for name in combined_infiles]
+                outcome['assoc_antennas'] = combined_antids
+                outcome['assoc_fields'] = combined_fieldids
                 outcome['assoc_spws'] = combined_spws
-#                  
+#                 outcome['assoc_pols'] = pols
+
 #                 # to register exported_ms to each scantable instance
 #                 outcome['export_results'] = export_results
                 result = SDImagingResults(task=self.__class__,
