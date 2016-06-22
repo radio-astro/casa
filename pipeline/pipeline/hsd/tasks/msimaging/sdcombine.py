@@ -1,38 +1,28 @@
 from __future__ import absolute_import
 
-import os
+import os, shutil
 
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 from pipeline.infrastructure import casa_tasks
-from .. import common
-from . import worker
+from .worker import SDImagingWorkerResults
 
 LOG = infrastructure.get_logger(__name__)
 
-class SDImageCombineInputs(common.SingleDishInputs):
+class SDImageCombineInputs(basetask.StandardInputs):
     """
     Inputs for image plane combination
     """
     def __init__(self, context, inimages, outfile):
         self._init_properties(vars())
 
-# class SDImageCombineResults(common.SingleDishResults):
-#     def __init__(self, task=None, success=None, outcome=None):
-#         super(SDImageCombineResults, self).__init__(task, success, outcome)
-
-#     def merge_with_context(self, context):
-#         super(SDImageCombineResults, self).merge_with_context(context)
-
-#     def _outcome_name(self):
-#         # return [image.imagename for image in self.outcome]
-#         return self.outcome
-
-
-class SDImageCombine(common.SingleDishTaskTemplate):
+class SDImageCombine(basetask.StandardTaskTemplate):
     Inputs = SDImageCombineInputs
     
-    @common.datatable_setter
+    def is_multi_vis_task(self):
+        return True
+
     def prepare(self):
         infiles = self.inputs.inimages
         outfile = self.inputs.outfile
@@ -61,12 +51,12 @@ class SDImageCombine(common.SingleDishTaskTemplate):
                 if shape.prod() > stat['npts'][0]:
                     ia.replacemaskedpixels(0.0, update=False)
 
-            result = worker.SDImagingWorkerResults(task=self.__class__,
+            result = SDImagingWorkerResults(task=self.__class__,
                                                    success=True,
                                                    outcome=outfile)
         else:
             # Combination failed due to missing valid data
-            result = worker.SDImagingWorkerResults(task=self.__class__,
+            result = SDImagingWorkerResults(task=self.__class__,
                                                    success=False,
                                                    outcome=None)
 
@@ -81,6 +71,8 @@ class SDImageCombine(common.SingleDishTaskTemplate):
         return result
 
     def _do_combine(self, infiles, imagename, expr):
+        if os.path.exists(imagename):
+            shutil.rmtree(imagename)
         combine_args = dict(imagename=infiles, outfile=imagename,
                             mode='evalexpr', expr=expr)
         LOG.debug('Executing immath task: args=%s'%(combine_args))
