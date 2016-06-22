@@ -6,7 +6,7 @@ from taskinit import *
 import sdutil
 mysdms, mycb = gentools(['sdms', 'cb'])
 
-def importnro(infile, outputvis, overwrite):
+def importnro(infile=None, outputvis=None, overwrite=None, parallel=None):
     """
     """
     casalog.origin('importnro')
@@ -24,7 +24,7 @@ def importnro(infile, outputvis, overwrite):
         if not is_nostar(infile):
             raise RuntimeError('%s is not a valid NOSTAR data.'%(infile))
 
-        status = mysdms.importnro(infile, outputvis)
+        status = mysdms.importnro(infile, outputvis, parallel)
 
         if status:
             # initialize weights using cb tool

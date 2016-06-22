@@ -27,6 +27,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <value>False</value>
     </param>
 
+    <param type="bool" name="parallel">
+	    <description>Turn on parallel execution</description>
+	    <value>False</value>
+    </param>
+
     </input>
 
   <returns type="bool"/>
@@ -41,6 +46,9 @@ outputvis -- Root ms name. Note that a prefix (.ms) is NOT appended to this name
 
 overwrite -- overwrite an existing MS
              default: False (do not overwrite)
+
+parallel  -- Turn on parallel execution
+             default: False (serial execution)
   </example>
 
 </task>

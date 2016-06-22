@@ -485,12 +485,12 @@ singledishms::importasap(string const &infile, string const &outfile, bool const
 }
 
 bool
-singledishms::importnro(string const &infile, string const &outfile)
+singledishms::importnro(string const &infile, string const &outfile, bool const parallel)
 {
     bool rstat(false);
     *itsLog << _ORIGIN;
     try {
-      rstat = SingleDishMS::importNRO(infile, outfile);
+      rstat = SingleDishMS::importNRO(infile, outfile, parallel);
     } catch  (AipsError x) {
       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
           << LogIO::POST;
