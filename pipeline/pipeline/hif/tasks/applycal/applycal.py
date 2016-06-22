@@ -235,7 +235,9 @@ class Applycal(basetask.StandardTaskTemplate):
             flagdata_summary_job = casa_tasks.flagdata(vis=inputs.vis, mode='summary')
             stats_before = self._executor.execute(flagdata_summary_job)
             stats_before['name'] = 'before'
-        
+
+        merged = callibrary.fix_cycle0_data_selection(inputs.context, merged)
+
         jobs = []
         for calto, calfroms in merged.items():
             # if there's nothing to apply for this data selection, continue
@@ -263,7 +265,7 @@ class Applycal(basetask.StandardTaskTemplate):
             args['interp']    = calapp.interp
             args['calwt']     = calapp.calwt
             args['applymode'] = inputs.applymode
-            
+
             jobs.append(casa_tasks.applycal(**args))
 
         # execute the jobs

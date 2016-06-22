@@ -30,6 +30,9 @@ CalToArgs = collections.namedtuple('CalToArgs',
 # struct used to link calapplication to the task and inputs that created it
 CalAppOrigin = collections.namedtuple('CalAppOrigin', ['task', 'inputs'])
 
+# observations before this date are considered Cycle 0 observations
+CYCLE_0_END_DATE = datetime.datetime(2013, 1, 21)
+
 
 class CalApplication(object):
     """
@@ -114,16 +117,18 @@ class CalApplication(object):
 
         :rtype: string
         """
-        args = {'vis'       : self.vis,
-                'field'     : self.field,
-                'intent'    : self.intent,
-                'spw'       : self.spw,
-                'antenna'   : self.antenna,
-                'gaintable' : self.gaintable,
-                'gainfield' : self.gainfield,
-                'spwmap'    : self.spwmap,
-                'interp'    : self.interp,
-                'calwt'     : self.calwt}
+        args = {
+            'vis': self.vis,
+            'field': self.field,
+            'intent': self.intent,
+            'spw': self.spw,
+            'antenna': self.antenna,
+            'gaintable': self.gaintable,
+            'gainfield': self.gainfield,
+            'spwmap': self.spwmap,
+            'interp': self.interp,
+            'calwt': self.calwt
+        }
         
         for key in ('gaintable', 'gainfield', 'spwmap', 'interp', 'calwt'):
             if type(args[key]) is types.StringType:
@@ -1608,7 +1613,7 @@ def get_intent_id_map(ms):
     :return: a dict of intent ID: intent
     """
     # intents are sorted to ensure consistent ordering
-    return {i: v for i, v in enumerate(sorted(ms.intents))}
+    return dict(enumerate(sorted(ms.intents)))
 
 
 class IntervalCalState(object):
@@ -1832,6 +1837,42 @@ class IntervalCalState(object):
 
     def __iter__(self):
         return iter(self.data)
+
+
+def fix_cycle0_data_selection(context, merged):
+    results = {}
+
+    # We can't trust Cycle 0 data intents. If this is Cycle 0 data we need
+    # to resolve the intents to fields and add them to the CalTo data
+    # selection to ensure that the correct data is selected.
+    for calto, calfroms in merged.items():
+        vis = calto.vis
+        ms = context.observing_run.get_ms(vis)
+        if utils.get_epoch_as_datetime(ms.start_time) > CYCLE_0_END_DATE:
+            results[calto] = calfroms
+            continue
+
+        if calto.intent is not '':
+            fields_with_intent = ms.get_fields(task_arg=calto.field, intent=calto.intent)
+
+            field_names = {f.name for f in fields_with_intent}
+            if len(field_names) is len(fields_with_intent):
+                new_field_arg = ','.join(field_names)
+            else:
+                new_field_arg = ','.join([str(field.id) for field in fields_with_intent])
+
+            if new_field_arg != calto.field:
+                LOG.info('Rewriting data selection to work around mislabeled Cycle 0 data intents. '
+                         'Old field selection: %r; new field selection: %r', calto.field, new_field_arg)
+                calto = CalTo(vis=calto.vis,
+                              field=new_field_arg,
+                              spw=calto.spw,
+                              antenna=calto.antenna,
+                              intent=calto.intent)
+
+        results[calto] = calfroms
+
+    return results
 
 
 class IntervalCalLibrary(object):
