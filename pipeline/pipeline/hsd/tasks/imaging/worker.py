@@ -14,6 +14,8 @@ from ..common import utils
 
 LOG = infrastructure.get_logger(__name__)
 
+USE_FIELD_DIR = False
+
 def ALMAImageCoordinateUtil(context, datatable, infiles, spw_list, pols_list, srctype, vislist):
     """
     An utility function to calculate spatial coordinate of image for ALMA
@@ -41,7 +43,8 @@ def ALMAImageCoordinateUtil(context, datatable, infiles, spw_list, pols_list, sr
     with casatools.MSMDReader(vislist[0]) as msmd:
         freq_hz = msmd.meanfreq(ref_spw)
         fnames = [name for name in msmd.fieldnames() if name.find(source_name) > -1 ]
-        me_center = msmd.phasecenter(msmd.fieldsforname(fnames[0])[0])
+        if USE_FIELD_DIR:
+            me_center = msmd.phasecenter(msmd.fieldsforname(fnames[0])[0])
 
     # cellx and celly
     import sdbeamutil
@@ -53,16 +56,7 @@ def ALMAImageCoordinateUtil(context, datatable, infiles, spw_list, pols_list, sr
     LOG.info('Calculating image coordinate of field \'%s\', reference frequency %fGHz' % (fnames[0], freq_hz*1.e-9))
     LOG.info('cell=%s' % (qa.tos(cellx)))
     
-    # phasecenter = field direction
-    ra_center = qa.convert(me_center['m0'], 'deg')
-    dec_center = qa.convert(me_center['m1'], 'deg')
-    ra_center_in_deg = qa.getvalue(ra_center)
-    dec_center_in_deg = qa.getvalue(dec_center)
-    phasecenter = 'J2000 %s %s' % (qa.formxxx(ra_center, 'hms'),
-                                     qa.formxxx(dec_center, 'dms'))
-    LOG.info('phasecenter=\'%s\'' % (phasecenter, ))
-
-    # nx and ny
+    # nx, ny and center
     index_list = common.get_index_list(datatable, antenna_list, spw_list, pols_list, srctype)
     
     if len(index_list) == 0:
@@ -71,14 +65,33 @@ def ALMAImageCoordinateUtil(context, datatable, infiles, spw_list, pols_list, sr
         return False
         
     index_list.sort()
-    
+
+    # the unit of RA and DEC should be in deg
     ra = datatable.tb1.getcol('RA').take(index_list)
     dec = datatable.tb1.getcol('DEC').take(index_list)
+    if (datatable.tb1.getcolkeyword('RA', 'UNIT') != 'deg') or \
+        (datatable.tb1.getcolkeyword('DEC', 'UNIT') != 'deg'):
+        raise RuntimeError, "Found unexpected unit of RA/DEC in DataTable. It should be in 'deg'"
     
     ra_min = min(ra)
     ra_max = max(ra)
     dec_min = min(dec)
     dec_max = max(dec)
+    
+    if USE_FIELD_DIR:
+        # phasecenter = field direction
+        ra_center = qa.convert(me_center['m0'], 'deg')
+        dec_center = qa.convert(me_center['m1'], 'deg')
+    else:
+        # map center
+        ra_center = qa.quantity(0.5*(ra_min + ra_max), 'deg')
+        dec_center = qa.quantity(0.5*(dec_min + dec_max), 'deg')
+    ra_center_in_deg = qa.getvalue(ra_center)
+    dec_center_in_deg = qa.getvalue(dec_center)
+    phasecenter = 'J2000 %s %s' % (qa.formxxx(ra_center, 'hms'),
+                                     qa.formxxx(dec_center, 'dms'))
+    LOG.info('phasecenter=\'%s\'' % (phasecenter, ))
+
     dec_correction = 1.0 / math.cos(dec_center_in_deg / 180.0 * 3.1415926535897931)
     width = 2*max(abs(ra_center_in_deg-ra_min), abs(ra_max-ra_center_in_deg))
     height = 2*max(abs(dec_center_in_deg-dec_min), abs(dec_max-dec_center_in_deg))
@@ -108,7 +121,7 @@ def ALMAImageCoordinateUtil(context, datatable, infiles, spw_list, pols_list, sr
     else:
         ny += 1
     
-    LOG.info('nx,ny=%s,%s' % (nx, ny))
+    LOG.info('Image pixel size: [nx, ny] = [%s, %s]' % (nx, ny))
     return phasecenter, cellx, celly, nx, ny    
 
 class SDImagingWorkerInputs(common.SingleDishInputs):
