@@ -1804,11 +1804,12 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 	  // 
 	  // At this point times are expressed in nanoseconds.
 	  //
-	  int64_t tstartASDM = v[i]->getTimeInterval().getStart().get();
-	  int64_t tendASDM   = tstartASDM + v[i]->getTimeInterval().getDuration().get();
-	  int64_t q	   = tstartASDM / timeStepInNanoSecond;
-	  int64_t r	   = tstartASDM % timeStepInNanoSecond;
-	  int64_t tstartMS   = tstartASDM;
+
+	  int64_t	tstartASDM = v[i]->getTimeInterval().getStart().get();
+	  int64_t	tendASDM   = tstartASDM + v[i]->getTimeInterval().getDuration().get();
+	  int64_t	q	   = tstartASDM / timeStepInNanoSecond;
+	  int64_t	r	   = tstartASDM % timeStepInNanoSecond;
+	  int64_t	tstartMS   = tstartASDM;
 	  
 	  if ( r!= 0 ) {
 	    q = q + 1;
@@ -1918,9 +1919,9 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
       } // end not if interpolate_ephemeris
 
       // 
-      // Record the starting time so that Field can use it if needed.
+      // Record the starting time + one time step so that Field can use it if needed.
       //
-      ephemStartTime_m[ephemerisId] = ArrayTime(mjdMS_v[0]).get()*1.e-09;
+      ephemStartTime_m[ephemerisId] = ArrayTime(mjdMS_v[1]).get()*1.e-09;
 
       // Now the data are ready to be written to the MS Ephemeris table.
       // Let's proceed, using Slicers.
@@ -1998,6 +1999,39 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
   
 }
 
+/**
+ * Given a field id this function returns the smallest time for which the corresponding field has been observed
+ * derived from the columns time and interval in the Main table.
+ * 
+ * The returned result is a pair (bool, double). A bool component equal to false means that no row was found in the Main
+ * table for the given field Id. Conversely a bool component equal to true means that at least one row was found and the
+ * searched value is returned in the double component. The returned time when it exists is expressed in seconds.
+ *
+ * 
+ */
+pair<bool, double> deriveMSFieldTimeFromASDMMain(ASDM* ds_p, const Tag& fieldId) {
+  LOGENTER("deriveMSFieldTimeFromASDMMain");
+  const vector<MainRow*>& mR_v = ds_p->getMain().get();
+
+  vector<double> time_v;
+  for (unsigned int i = 0; i < mR_v.size(); i++)
+    if (mR_v[i]->getFieldId() == fieldId) 
+      time_v.push_back((mR_v[i]->getTime().get() - mR_v[i]->getInterval().get()/2) * 1.e-09);
+
+  std::pair<bool, double> result;
+
+  if (time_v.size() == 0)
+    // No element in time_v  
+    result = std::make_pair(false,0.0);
+  else
+    // At least one element in time_v, then look for its smallest element.
+    result = std::make_pair(true, *std::min_element(time_v.begin(), time_v.end()));
+  
+  LOGEXIT("deriveMSFieldTimeFromASDMMain");
+  return result;
+}
+
+
 /** 
  * This function fills the MS Field table.
  * given :
@@ -2067,12 +2101,25 @@ void fillField(ASDM* ds_p, bool considerEphemeris) {
        *
        */
       vector<EphemerisRow *> eR_v;
+      
       if (r->isEphemerisIdExists())
 	eR_v = *(r->getTable().getContainer().getEphemeris().getByContext(r->getEphemerisId()));
 	
       bool getTimeFromEphemeris = (eR_v.size() > 0) && (!r->isTimeExists() || (r->isTimeExists() && (r->getTime().get() == 0)));
-      double time = 0.0;
+      
 
+      double time = 0.0;
+      /*
+      if (r->isTimeExists()) 
+	// If the ASDM Field row has a time defined then let's use it.
+	time =  ((double) r->getTime().get()) * 1.e-09 ;
+      else {
+	// else let's use the first (time, interval) pair found in the ASDM Main table for which this field has been observed.
+	pair<bool, double> p = deriveMSFieldTimeFromASDMMain(r->getFieldId());
+	time = p.first ? p.second : 0.0;
+      }
+      */
+      
       if (getTimeFromEphemeris)
 	time = ephemStartTime_m[r->getEphemerisId()]; // It's already in second.
       else if (r->isTimeExists())
