@@ -193,6 +193,8 @@ void MSUVBin::createOutputMS(const Int nrrow){
 	msc.weight().fillColumn(Vector<Float>(npol_p, 0.0));
 	msc.sigma().fillColumn(Vector<Float>(npol_p, 0.0));
 	msc.weightSpectrum().fillColumn(Matrix<Float>(npol_p, nchan_p, 0.0));
+	msc.antenna1().fillColumn(0);
+	msc.antenna2().fillColumn(0);
 	//change array id for every 2000 rows
 	Vector<Int> arrayID(nrrow,0);
 	Int blk=2000;
@@ -1940,7 +1942,7 @@ void MSUVBin::multiThrLoop(const Int outchan, const vi::VisBuffer2& vb, Double r
 		    	  locv=Int(Double(ny_p)/2.0+vb.uvw()(1,k)*visFreq(chan)*scale(1)+0.5);
 		    	  locu=Int(Double(nx_p)/2.0+vb.uvw()(0,k)*visFreq(chan)*scale(0)+0.5);
 		      }
-		      if(locv < ny_p && locu < nx_p){
+		      if(locv < ny_p && locu < nx_p && locv >=0 && locu >=0){
 				  Int newrow=locv*nx_p+locu;
 				  if(rowFlag(newrow) && !(vb.flagRow()(k))){
 				    rowFlag(newrow)=False;
