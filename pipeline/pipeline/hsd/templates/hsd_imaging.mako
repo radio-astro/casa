@@ -88,6 +88,8 @@ $(document).ready(function() {
 </script>
 
 <%
+### ASAP OR MS procedure
+isASAP = (len(pcontext.observing_run.st_names) > 0)
 stage_dir = os.path.join(pcontext.report_dir, 'stage%s'%(result.stage_number))
 plots_list = [{'title': 'Channel Map',
                'subpage': channelmap_subpage,
@@ -98,6 +100,7 @@ plots_list = [{'title': 'Channel Map',
               {'title': 'Integrated Intensity Map',
                'subpage': integratedmap_subpage,
                'plot': integratedmap_plots}]
+###### only for ASAP procedures
 st_per_ms = collections.defaultdict(list)
 for st in pcontext.observing_run:
     st_per_ms[st.ms.basename].append(st)
@@ -114,11 +117,14 @@ for ms in pcontext.observing_run.measurement_sets:
                 rowspans_ms[vis] += num_factors
                 rowspans_ant[vis][ant] += num_factors
                 rowspans_spw[vis][ant][spwid] += num_factors
+##### END only for ASAP
 %>
 
 <p>This task generates single dish images per source per spectral window. 
 It generates an image combined spectral data from whole antenna as well as images per antenna.</p>
 
+<!---------- start of isASAP block ------------>
+% if isASAP:
 <h3>Jy/K Conversion Factor</h3>
 The following table lists the Jy/K factor applied to the spectral data. 
 % if reffile is not None and len(reffile) > 0 and os.path.exists(os.path.join(stage_dir, os.path.basename(reffile))):
@@ -162,6 +168,8 @@ No Jy/K factors file is specified.
     % endfor
 % endfor
 </table>
+% endif
+<!---------- end of isASAP block ------------>
 
 <h3>Profile Map</h3>
 % for field in sparsemap_subpage.keys():
