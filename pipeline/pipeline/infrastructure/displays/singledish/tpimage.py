@@ -1,19 +1,15 @@
 from __future__ import absolute_import
 
 import os
-import abc
 import numpy
-import math
 import pylab as pl
 
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.utils as utils
-import pipeline.infrastructure.casatools as casatools
 from pipeline.infrastructure.jobrequest import casa_tasks
 import pipeline.infrastructure.renderer.logger as logger
 from .utils import RADEClabel, RArotation, DECrotation
 #from .utils import sd_polmap as polmap
-from .common import DPISummary, DPIDetail, SDImageDisplay, SDImageDisplayInputs, ShowPlot, draw_beam
+from .common import DPIDetail, SDImageDisplay, SDImageDisplayInputs, ShowPlot, draw_beam
 
 LOG = infrastructure.get_logger(__name__)
 

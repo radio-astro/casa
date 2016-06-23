@@ -10,6 +10,8 @@ import pylab as pl
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 
+from pipeline.domain.singledish import ScantableList
+
 from .utils import utc_locator
 
 LOG = infrastructure.get_logger(__name__)
@@ -27,6 +29,7 @@ class SingleDishDisplayInputs(object):
     def __init__(self, context, result):
         self.context = context
         self.result = result
+        self.isASAP = (len(self.context.observing_run.st_names) > 0)
 
 class SpectralImage(object):
     def __init__(self, imagename):
@@ -57,6 +60,9 @@ class SpectralImage(object):
             self.dec_min = bottom[key(self.id_direction[1])]
             self.dec_max = top[key(self.id_direction[1])]
             self._brightnessunit = ia.brightnessunit()
+            beam = ia.restoringbeam()
+        qa = casatools.quanta
+        self._beamsize_in_deg = qa.convert(qa.sqrt(qa.mul(beam['major'], beam['minor'])),'deg')['value']
         
     @property
     def nx(self):
@@ -81,6 +87,10 @@ class SpectralImage(object):
 #             return 'Jy'
 #         else:
 #             return 'K'
+
+    @property
+    def beam_size(self):
+        return self._beamsize_in_deg
 
     def to_velocity(self, frequency, freq_unit='GHz'):
         qa = casatools.quanta
@@ -139,13 +149,30 @@ class SDImageDisplayInputs(SingleDishDisplayInputs):
 
     @property
     def reduction_group(self):
-        reduction_group = self.context.observing_run.reduction_group
+        """
+        Retruns ReductionGroupDesc instance corresponding to the reduction group
+        associated to the image
+        """
         group_id = self.result.outcome['reduction_group_id']
-        return reduction_group[group_id]
+        if self.isASAP:
+            return self.context.observing_run.reduction_group[group_id]
+        else:
+            return self.context.observing_run.ms_reduction_group[group_id]
     
     @property
+    def msid_list(self):
+        if self.isASAP: return None
+        else: return self.result.outcome['file_index']
+
+    @property
     def antennaid_list(self):
-        return self.result.outcome['file_index']
+        if self.isASAP: return self.result.outcome['file_index']
+        else: return self.result.outcome['assoc_antennas']
+    
+    @property
+    def fieldid_list(self):
+        if self.isASAP: return None
+        else: return self.result.outcome['assoc_fields']
 
     @property
     def spwid_list(self):
@@ -248,7 +275,6 @@ class SDImageDisplay(object):
 
     def __init__(self, inputs):
         self.inputs = inputs
-
         self.context = self.inputs.context
         self.stage_dir = self.inputs.stage_dir
         self.image = None
@@ -283,10 +309,7 @@ class SDImageDisplay(object):
         LOG.debug('(ra_min,ra_max)=(%s,%s)'%(self.ra_min,self.ra_max))
         LOG.debug('(dec_min,dec_max)=(%s,%s)'%(self.dec_min,self.dec_max))
 
-        # beam size in deg
-        ant_index = self.inputs.antennaid_list[0]
-        self.beam_size = qa.convert(self.context.observing_run[ant_index].beam_size[self.inputs.spwid_list[0]], 'deg')['value']
-
+        self.beam_size = self.image.beam_size
         self.beam_radius = self.beam_size / 2.0
         self.grid_size = self.beam_size / 3.0
         LOG.debug('beam_radius=%s'%(self.beam_radius))

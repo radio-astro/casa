@@ -2,19 +2,14 @@ from __future__ import absolute_import
 
 import os
 import time
-import abc
 import numpy
-import math
 import pylab as pl
-from matplotlib.ticker import MultipleLocator
 
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.utils as utils
-import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.renderer.logger as logger
-from .utils import RADEClabel, RArotation, DECrotation, DDMMSSs, HHMMSSss
+from .utils import RADEClabel, RArotation, DECrotation
 from .utils import sd_polmap as polmap
-from .common import DPISummary, DPIDetail, SDImageDisplay, ShowPlot, draw_beam, LightSpeed
+from .common import DPISummary, SDImageDisplay, ShowPlot, draw_beam
 from . import tpimage
 
 LOG = infrastructure.get_logger(__name__)
@@ -32,12 +27,9 @@ class SDRmsMapDisplay(SDImageDisplay):
     #MATPLOTLIB_FIGURE_ID = 8910
 
     def plot(self):
-        qa = casatools.quanta
-
         self.init()
 
         t1 = time.time()
-        #plot_list.extend(self.__plot_channel_map())
         plot_list = self.__plot_channel_map()
         t2 = time.time()
         LOG.debug('__plot_channel_map: elapsed time %s sec'%(t2-t1))
@@ -65,17 +57,9 @@ class SDRmsMapDisplay(SDImageDisplay):
 
     
     def __plot_channel_map(self):
-        #if ShowPlot: pl.ion()
-        #else: pl.ioff()
-        #pl.figure(self.MATPLOTLIB_FIGURE_ID)
-        #if ShowPlot: pl.ioff()
-
         pl.clf()
 
         colormap = 'color'
-        scale_max = False
-        scale_min = False
-        
         plot_list = []
 
         # 2008/9/20 Dec Effect has been taken into account
@@ -84,8 +68,6 @@ class SDRmsMapDisplay(SDImageDisplay):
         # Draw RMS Map
         TickSize = 6
 
-        grid_size_arcsec = self.grid_size * 3600.0
-        ExtentCM = ((self.x_max+0.5)*grid_size_arcsec, (self.x_min-0.5)*grid_size_arcsec, (self.y_min-0.5)*grid_size_arcsec, (self.y_max+0.5)*grid_size_arcsec)
         Extent = (self.ra_max+self.grid_size/2.0, self.ra_min-self.grid_size/2.0, self.dec_min-self.grid_size/2.0, self.dec_max+self.grid_size/2.0)
         span = max(self.ra_max - self.ra_min + self.grid_size, self.dec_max - self.dec_min + self.grid_size)
         (RAlocator, DEClocator, RAformatter, DECformatter) = RADEClabel(span)

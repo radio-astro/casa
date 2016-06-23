@@ -2,16 +2,13 @@ from __future__ import absolute_import
 
 import os
 import time
-import abc
 import numpy
-import math
 import pylab as pl
-from matplotlib.ticker import MultipleLocator
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.renderer.logger as logger
 import pipeline.infrastructure.casatools as casatools
-from .utils import RADEClabel, RArotation, DECrotation, DDMMSSs, HHMMSSss
+from .utils import RADEClabel, RArotation, DECrotation
 #from .utils import sd_polmap as polmap
 from .common import DPIDetail, SDImageDisplay, ShowPlot, draw_beam
 from . import tpimage
@@ -141,23 +138,39 @@ class SDChannelMapDisplay(SDImageDisplay):
         return self.__plot_channel_map()
 
     def __valid_lines(self):
-        reduction_group = self.context.observing_run.reduction_group
+        isASAP = self.inputs.isASAP
+        group_desc = self.inputs.reduction_group
         ant_index = self.inputs.antennaid_list
         spwid_list = self.inputs.spwid_list
+        msid_list = self.inputs.msid_list
+        fieldid_list = self.inputs.fieldid_list
 
         line_list = []
-        for (gid, group_desc) in reduction_group.items():
-            for g in group_desc:
-                found = False
+#         for group_desc in reduction_group.values():
+        for g in group_desc:
+            found = False
+            if isASAP:
                 for (ant,spw) in zip(ant_index, spwid_list):
                     if g.antenna == ant and g.spw == spw:
                         found = True
                         break
-                if found:
-                    for ll_p in g.channelmap_range:
-                        for ll in ll_p:
-                            if not ll in line_list and ll[2] is True:
-                                line_list.append(ll)
+            else:
+                for (msid, ant, fid, spw) in zip(msid_list, ant_index,
+                                                 fieldid_list, spwid_list):
+                    msobj_list = self.inputs.context.observing_run.measurement_sets
+                    msname_list = [os.path.abspath(msobj_list[idx].name) \
+                                   for idx in xrange(len(msobj_list))]
+                    group_msid = msname_list.index(os.path.abspath(g.ms.name))
+                    del msobj_list, msname_list
+                    if group_msid==msid and g.antenna_id == ant and \
+                        g.field_id == fid and g.spw_id == spw:
+                        found = True
+                        break
+            if found:
+                for ll_p in g.channelmap_range:
+                    for ll in ll_p:
+                        if not ll in line_list and ll[2] is True:
+                            line_list.append(ll)
         return line_list
 
     def __get_integrated_spectra(self):

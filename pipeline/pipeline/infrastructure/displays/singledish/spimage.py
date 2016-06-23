@@ -1,12 +1,9 @@
 from __future__ import absolute_import
 
-import os
 import time
-import abc
 import pylab as pl
 
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.renderer.logger as logger
 from . import spectralmap
 from . import sparsemap
 from . import channelmap

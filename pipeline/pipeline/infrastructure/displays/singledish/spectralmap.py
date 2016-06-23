@@ -1,8 +1,6 @@
 from __future__ import absolute_import
 
 import os
-import time
-import abc
 import numpy
 import math
 import pylab as pl
@@ -11,7 +9,6 @@ from matplotlib.ticker import MultipleLocator
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.renderer.logger as logger
 from .utils import DDMMSSs, HHMMSSss
-from .utils import sd_polmap as polmap
 from .common import DPIDetail, SDImageDisplay, ShowPlot
 import pipeline.infrastructure.casatools as casatools
 
@@ -66,45 +63,8 @@ class SDSpectralMapDisplay(SDImageDisplay):
     MaxNvPanel = 5
     
     def plot(self):
-#         imagename = self.imagename
-#         regridname = self.imagename + "_temp"
-#         self.__regrid(imagename, regridname)
-#         self.imagename = regridname
         self.init()
-#         self.imagename = imagename
-        
         return self.__plot_spectral_map()
-
-#     def __regrid(self, inname, outname):
-#         import pipeline.infrastructure.utils as utils
-#         import pipeline.infrastructure.casatools as casatools
-#         qa = casatools.quanta
-#         # calculate grid size
-#         ant_index = self.inputs.antennaid_list[0]
-#         beam_size = qa.convert(self.context.observing_run[ant_index].beam_size[self.inputs.spwid_list[0]], 'deg')['value']
-#         grid_size = beam_size / 3.0
-#         
-#         with casatools.ImageReader(inname) as ia:
-#             csys = ia.coordsys()
-#             dir_ax = csys.findcoordinate('direction')['pixel']
-#             increment = csys.increment()
-#             units = csys.units()
-#             ref_pix = csys.referencepixel()['numeric']
-#             shape = ia.shape()
-#             for i in dir_ax:
-#                 cell = qa.convert(qa.quantity(increment['numeric'][i],units[i]),'deg')['value']
-#                 factor = abs(grid_size / cell)
-#                 if factor > 1.0:
-#                     interpolation = "nearest"
-#                 else:
-#                     interpolation = "linear"
-#                 increment['numeric'][i] *= factor
-#                 shape[i] = int(pl.ceil(shape[i]/factor))
-#                 ref_pix[i] /= factor
-#             csys.setreferencepixel(value=ref_pix)
-#             csys.setincrement(increment)
-#             gridim = ia.regrid(outfile=outname, overwrite=True, method=interpolation, shape=shape, csys=csys.torecord())
-#             gridim.close()
 
     def __get_strides(self):
         qa = casatools.quanta
@@ -117,40 +77,7 @@ class SDSpectralMapDisplay(SDImageDisplay):
         return factors
 
     def __plot_spectral_map(self):
-        #if ShowPlot: pl.ion()
-        #else: pl.ioff()
-        #pl.figure(self.MATPLOTLIB_FIGURE_ID)
-        #if ShowPlot: pl.ioff()
-
         pl.clf()
-
-        Pass = False
-        if Pass == True:
-            Npanel = 0
-            pl.cla()
-            pl.clf()
-            Regends = pl.axes([0.1, 0.1, 0.8, 0.8])
-            Regends.set_axis_off()
-            pl.text(0.5, 0.5, "Baseline Fit has already been converged.\n\nPlease see panels in the  previous iteration cycle.", horizontalalignment='center', verticalalignment='center', size=10)
-            prefix = self.inputs.imagename+'.pol%s_Result'%(pol)
-            plotfile = os.path.join(self.stage_dir, prefix+'_%s.png'%(Npanel))
-            pl.savefig(plotfile, format='png', dpi=DPIDetail)
-
-            parameters = {}
-            parameters['intent'] = 'TARGET'
-            parameters['spw'] = self.inputs.spw
-            parameters['pol'] = pol
-            parameters['ant'] = self.inputs.antenna
-            parameters['type'] = 'sd_spectral_map'
-            parameters['file'] = self.inputs.imagename
-            
-            plot = logger.Plot(plotfile,
-                               x_axis='Frequency',
-                               y_axis='Intensity',
-                               field=self.inputs.source,
-                               parameters=parameters)
-
-            return [plot]
 
         # read data to storage
         masked_data = self.data * self.mask
@@ -176,7 +103,7 @@ class SDSpectralMapDisplay(SDImageDisplay):
                     offsety = NvPanel - 1 - (self.y_max - y)/STEPY % NvPanel
                     row = (self.nx - x - 1) * self.ny + y
                     ROWS[(posy*NH+posx)*NvPanel*NhPanel + offsety*NhPanel + offsetx] = row
-        else:
+        else: ### This block is currently broken (2016/06/23 KS)
             ROWS = rows[:]
             NROW = len(rows)
             Npanel = (NROW - 1) / (self.MaxNhPanel * self.MaxNvPanel) + 1
@@ -189,8 +116,6 @@ class SDSpectralMapDisplay(SDImageDisplay):
         LOG.debug("- Number of pages: [%d, %d]" % (NH, NV))
         LOG.debug("- Number of spcetra to be plotted: %d" % (len(ROWS)))
         
-        NSpFit = NhPanel * NvPanel
-        NSp = 0
         Npanel = 0
         TickSize = 11 - NhPanel
 
@@ -228,12 +153,15 @@ class SDSpectralMapDisplay(SDImageDisplay):
         axes_list = axes_manager.axes_list
         plot_objects = []
 
-        antennas = [st.antenna.name for st in self.context.observing_run]
-        if self.antenna == 'COMBINED':
-            reference_scantable = self.context.observing_run[0]
-        else:
-            reference_scantable = self.context.observing_run[antennas.index(self.antenna)]
-        is_baselined = reference_scantable.work_data != reference_scantable.name
+        if self.inputs.isASAP:
+            antennas = [st.antenna.name for st in self.context.observing_run]
+            if self.antenna == 'COMBINED':
+                reference_data = self.context.observing_run[0]
+            else:
+                reference_data = self.context.observing_run[antennas.index(self.antenna)]
+        else: # MS-based procedure
+            reference_data = self.context.observing_run.measurement_sets[self.inputs.msid_list[0]]
+        is_baselined = reference_data.work_data != reference_data.name
         
         for pol in xrange(self.npol):
             data = masked_data.take([pol], axis=self.id_stokes).squeeze()
