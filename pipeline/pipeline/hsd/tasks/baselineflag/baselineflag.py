@@ -1,11 +1,7 @@
 from __future__ import absolute_import
 
-import os
-
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.jobrequest as jobrequest
 import pipeline.infrastructure.basetask as basetask
-from pipeline.infrastructure import casa_tasks
 from .. import common
 
 from .worker import SDBLFlagWorker
@@ -52,8 +48,7 @@ class SDBLFlagInputs(common.SingleDishInputs):
                        'plotflag'])
         if self.iteration is None: self.iteration = 5
         ### Default Flag rule
-        #import SDFlagRule
-        from . import SDFlagRule
+        from ..msbaselineflag import SDFlagRule
         reload(SDFlagRule)
         self.FlagRuleDictionary = SDFlagRule.SDFlagRule
         # update FlagRuleDictionary
@@ -97,14 +92,14 @@ class SDBLFlagInputs(common.SingleDishInputs):
     def activateFlagRule(self,key):
         """Activates a flag type specified by the input parameter in FlagRuleDictionary"""
         if(key in self.FlagRuleDictionary.keys()):
-           self.FlagRuleDictionary[key]['isActive'] = True
+            self.FlagRuleDictionary[key]['isActive'] = True
         else:
             print 'Error not in predefined Flagging Rules'
 
     def deactivateFlagRule(self,key):
         """Deactivates a flag type specified by the input parameter in FlagRuleDictionary"""
         if(key in self.FlagRuleDictionary.keys()):
-           self.FlagRuleDictionary[key]['isActive'] = False
+            self.FlagRuleDictionary[key]['isActive'] = False
         else:
             print 'Error not in predefined Flagging Rules'
 
@@ -171,7 +166,7 @@ class SDBLFlag(common.SingleDishTaskTemplate):
 
             # assume all members have same spw and pollist
             first_member = group_desc[0]
-            #spwid = first_member.spw
+            spwid = first_member.spw
             #LOG.debug('spwid = %s'%(spwid))
             #pols = first_member.pols
             ###iteration = first_member.iteration[0]
@@ -233,7 +228,7 @@ class SDBLFlag(common.SingleDishTaskTemplate):
             LOG.info("*"*60)
             LOG.info("Start processing reduction group %d" % (group_id))
             LOG.debug("- file indices = %s" % str(_file_index))
-            LOG.info("- scantable names: %s" % (", ".join([st_names[id] for id in _file_index])))
+            LOG.info("- scantable names: %s" % (", ".join([st_names[idx] for idx in _file_index])))
             LOG.info("- spw: %s" % spwid_list)
             LOG.info("- pols: %s" % str(pols_list))
             #LOG.debug("- additional selections:")

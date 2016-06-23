@@ -21,7 +21,7 @@ from .. import common
 
 LOG = infrastructure.get_logger(__name__)
 
-from .SDFlagRule import INVALID_STAT
+from ..msbaselineflag.SDFlagRule import INVALID_STAT
 
 class SDBLFlagWorker(object):
     '''

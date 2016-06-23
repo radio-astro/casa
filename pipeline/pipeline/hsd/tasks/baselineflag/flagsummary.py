@@ -11,12 +11,10 @@ from taskinit import gentools
 #from SDTool import ProgressTimer
 
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.sdfilenamer as filenamer
-import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.utils as utils
 from pipeline.domain.datatable import OnlineFlagIndex
 
-from . import SDFlagPlotter as SDP
+from ..msbaselineflag import SDFlagPlotter as SDP
 from .. import common
 
 LOG = infrastructure.get_logger(__name__)
@@ -184,7 +182,7 @@ class SDBLFlagSummary(object):
             Flag *= self._get_stat_flag_summary(tFLAG, FlagRule_local)
             if Flag == 0:
                 FlaggedRows.append( row )
-           # Tsys flag
+            # Tsys flag
             NPpdata[0][N] = tTSYS
             NPpflag[0][N] = tPFLAG[1]
             NPprows[0][N] = row
@@ -324,7 +322,6 @@ class SDBLFlagSummary(object):
             # Assuming single scantable, antenna, spw, and pol
             ID = ids[0]
             ant_id = DataTable.getcell('ANTENNA',ID)
-            st_row = DataTable.getcell('ROW',ID)
             #st_name = DataTable.getkeyword('FILENAMES')[ant_id]
             st = self.context.observing_run[ant_id]
             asdm = common.asdm_name(st)
@@ -435,7 +432,7 @@ def _format_table_row_html(label, isactive, threshold, nflag, ntotal):
     return html_str % (label, isactive, threshold, (nflag if valid_flag else "N/A"), (nflag*100.0/ntotal if valid_flag else "N/A"))
 
 def _get_iteration(reduction_group, antenna, spw, pol):
-    for (group_id, group_desc) in reduction_group.items():
+    for group_desc in reduction_group.values():
         for group_member in group_desc:
             if group_member.antenna == antenna and group_member.spw == spw and pol in group_member.pols:
                 return group_member.iteration[pol]

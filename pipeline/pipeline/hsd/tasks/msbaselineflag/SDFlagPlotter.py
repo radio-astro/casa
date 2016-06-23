@@ -7,8 +7,6 @@ Created on 2013/07/02
 import pylab as PL
 #import math
 import os
-from matplotlib.ticker import FuncFormatter, MultipleLocator, AutoLocator
-from matplotlib.font_manager import FontProperties 
 
 from .SDFlagRule import INVALID_STAT
 
@@ -80,9 +78,7 @@ def StatisticsPlot(PlotData, FigFileDir=False, FigFileRoot=False):
         PL.draw()
         if FigFileDir != False:
             OldPlot = FigFileDir+FigFileRoot+'.png'
-            NewPlot = FigFileDir+FigFileRoot+'_trim.png'
             PL.savefig(OldPlot, format='png', dpi=DPIDetail)
-            #os.system('convert %s -trim %s' % (OldPlot, NewPlot))
         PL.gcf().set_size_inches(figsize_org)
         return
         
@@ -163,9 +159,7 @@ def StatisticsPlot(PlotData, FigFileDir=False, FigFileRoot=False):
     PL.draw()
     if FigFileDir != False:
         OldPlot = FigFileDir+FigFileRoot+'.png'
-        NewPlot = FigFileDir+FigFileRoot+'_trim.png'
         PL.savefig(OldPlot, format='png', dpi=DPIDetail)
-        #os.system('convert %s -trim %s' % (OldPlot, NewPlot))
     PL.gcf().set_size_inches(figsize_org)
     
     PL.close()
