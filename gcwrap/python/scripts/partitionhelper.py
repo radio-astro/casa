@@ -742,6 +742,7 @@ def makeMMS(outputvis, submslist, copysubtables=False, omitsubtables=[], paralle
     origpath = os.getcwd()
     mymstool = mstool()
     mytbtool = tbtool()
+    
     try:
         try:
             mymstool.createmultims(outputvis,
@@ -757,7 +758,6 @@ def makeMMS(outputvis, submslist, copysubtables=False, omitsubtables=[], paralle
             raise
         mymstool.close()
         
-
         # remove the SORTED_TABLE keywords because the sorting is not reliable after partitioning
         try:
             mytbtool.open(outputvis, nomodify=False)
@@ -775,35 +775,29 @@ def makeMMS(outputvis, submslist, copysubtables=False, omitsubtables=[], paralle
             mytbtool.close()
             raise
             
-        # finally create symbolic links to the subtables of the first SubMS
-        os.chdir(origpath)
+        # Create symbolic links to the subtables of the first SubMS in the reference MS (top one)
         os.chdir(outputvis)
         mastersubms = os.path.basename(submslist[0].rstrip('/'))
         thesubtables = getSubtables('SUBMSS/'+mastersubms)
+        
         for s in thesubtables:
             os.symlink('SUBMSS/'+mastersubms+'/'+s, s)
 
-        # AND put links for those subtables omitted
         os.chdir('SUBMSS/'+mastersubms)
-        
-        # Check if firtst subMS has POINTING, SYSCAL and SYSPOWER
-        hasPointing = os.path.exists('POINTING')
-        hasSyscal = os.path.exists('SYSCAL')
-        hasSyspower = os.path.exists('SYSPOWER')
+                
+        # Remove the SOURCE and HISTORY tables, which should not be linked
+        thesubtables.remove('SOURCE')
+        thesubtables.remove('HISTORY')
 
+        # Create sym links to all sub-tables in all subMSs
         for i in xrange(1,len(submslist)):
             thesubms = os.path.basename(submslist[i].rstrip('/'))
             os.chdir('../'+thesubms)
-            for s in omitsubtables:
-                if s == 'POINTING' and hasPointing == False:
-                    continue
-                if s == 'SYSCAL' and hasSyscal == False:
-                    continue
-                if s == 'SYSPOWER' and hasSyspower == False:
-                    continue
-                os.system('rm -rf '+s) # shutil does not work in the general case
+            
+            for s in thesubtables:
+                os.system('rm -rf '+s)
                 os.symlink('../'+mastersubms+'/'+s, s)
-                
+                            
         # Write the AxisType info in the MMS
         if parallelaxis != '':
             setAxisType(outputvis, parallelaxis)

@@ -1479,7 +1479,7 @@ class ParallelDataHelper(ParallelTaskHelper):
         nFailures = [v for v in outputList.values() if v == False]
     
         for subMS in outputList:
-            # Only use the successfull output MSs
+            # Only use the successful output MSs
             if outputList[subMS]:
                 subMSList.append(subMS)
                            
@@ -1544,17 +1544,23 @@ class ParallelDataHelper(ParallelTaskHelper):
         # Get the first subMS to be the reference when
         # copying the sub-tables to the other subMSs  
         mastersubms = subMSList[0]
-            
-        subtabs_to_omit = ['POINTING','SYSCAL','SYSPOWER']
+
+        # Get list of all subtables in a subms
+        thesubtables = ph.getSubtables(mastersubms)
+        
+        # Remove the SOURCE and HISTORY tables, which will be the only copied.
+        # All other sub-tables will be linked to first subms
+        thesubtables.remove('SOURCE')
+        thesubtables.remove('HISTORY')
+
+        subtabs_to_omit = thesubtables
         
         # Parallel axis to write to table.info of MMS
         # By default take the one from the input MMS
-
         parallel_axis = ph.axisType(self.__args['vis'])
         if self._arg.has_key('createmms') and self._arg['createmms'] == True:
             parallel_axis = self._arg['separationaxis']
 
-#        if parallel_axis == 'auto' or parallel_axis == 'both' or parallel_axis == 'balanced':
         if parallel_axis == 'auto' or parallel_axis == 'both':
             parallel_axis = 'scan,spw'
             
@@ -1562,14 +1568,13 @@ class ParallelDataHelper(ParallelTaskHelper):
         # subtabs_to_omit are linked instead of copied.
         casalog.post("Finalizing MMS structure")
         ph.makeMMS(self._arg['outputvis'], subMSList,
-                   True, # copy subtables
+                   True, # copy subtables (will copy only the SOURCE and HISTORY tables)
                    subtabs_to_omit, # omitting these
                    parallel_axis
                   )
     
         thesubmscontainingdir = os.path.dirname(subMSList[0].rstrip('/'))
             
-#        os.rmdir(thesubmscontainingdir)
         shutil.rmtree(thesubmscontainingdir)
             
         # Sanity check on the just created MMS
