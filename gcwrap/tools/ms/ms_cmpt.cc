@@ -749,7 +749,7 @@ ms::getscansummary()
 ::casac::record*
 ms::getspectralwindowinfo()
 {
-	::casac::record *spwSummary;
+	::casac::record *spwSummary = nullptr;
 	try {
 		if(!detached()){
 			//*itsLog << LogOrigin("ms", "summary");
