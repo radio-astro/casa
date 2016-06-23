@@ -41,7 +41,7 @@
 
     <param type="any" name="spw" subparam="true">
             <description>select data by IF IDs (spectral windows), e.g. \'3,5,7\' (\'\'=all)</description>
-            <any type="variant" limittypes="string stringArray"/>
+            <any type="variant" limittypes="string"/>
             <value type="string"></value>
     </param>
 
@@ -122,11 +122,11 @@ infiles -- List of data files. These must be a name of Scantables that
 
 field -- Data selection by field name.
    default: '' (all fields)
+   example: '*Sgr*,M100'
    
-spw -- Data selection by spw.
+spw -- Data selection by spw IDs.
    default: '' (all spws)
-   example: '3,4' (generate caltable for spw 3 and 4)
-            ['0','2'] (spw 0 for first data, 2 for second)
+   example: '3,4' (generate images for spw 3 and 4)
 
 --- pipeline task execution modes
 
