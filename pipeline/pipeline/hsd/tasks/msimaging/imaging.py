@@ -215,7 +215,7 @@ class SDImaging(basetask.StandardTaskTemplate):
                 LOG.info("Processing image group: %s" % name)
                 for idx in xrange(len(msobjs)):
                     LOG.info("\t%s: Antenna %d (%s) Spw %s Field %d (%s)" % \
-                             (os.path.basename(msobjs[idx].name),
+                             (msobjs[idx].base_name,
                               antids[idx], msobjs[idx].antennas[antids[idx]].name,
                               spwids[idx], fieldids[idx],
                               msobjs[idx].fields[fieldids[idx]].name))
