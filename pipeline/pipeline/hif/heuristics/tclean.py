@@ -387,8 +387,8 @@ class TcleanHeuristics(object):
 
         for msname in inputs.vis:
             ms_obj = self.context.observing_run.get_ms(msname)
-            field_ids = [f.id for f in ms_obj.fields if inputs.intent in f.intents]
-            separations = [meTool.separation(pc_direc, ms_obj.fields[i].mdirection)['value'] for i in field_ids]
+            field_ids = [f.id for f in ms_obj.fields if (f.name == inputs.field) and (inputs.intent in f.intents)]
+            separations = [meTool.separation(pc_direc, f.mdirection)['value'] for f in ms_obj.fields if f.id in field_ids]
             ref_field_ids.append(field_ids[separations.index(min(separations))])
 
         # Get a cont file handler for the conversion to TOPO
@@ -424,11 +424,11 @@ class TcleanHeuristics(object):
                         LOG.warning('Cannot convert frequency selection properly to TOPO. Using plain ranges for all MSs.')
                         spw_topo_freq_param_lists.append(['%s:%s' % (spwid, freq_selection)] * len(inputs.vis))
                         # TODO: Need to derive real channel ranges
-                        spw_topo_chan_param_lists.append(['%s:0~%s' % (spwid, spw_info.num_channels)] * len(inputs.vis))
+                        spw_topo_chan_param_lists.append(['%s:0~%s' % (spwid, spw_info.num_channels - 1)] * len(inputs.vis))
                         for i in xrange(len(inputs.vis)):
                             spw_topo_freq_param_dict[inputs.vis[i]][spwid] = freq_selection.split()[0]
                             # TODO: Need to derive real channel ranges
-                            spw_topo_chan_param_dict[inputs.vis[i]][spwid] = '0~%d' % (spw_info.num_channels)
+                            spw_topo_chan_param_dict[inputs.vis[i]][spwid] = '0~%d' % (spw_info.num_channels - 1)
                         # Count only one selection !
                         for freq_range in freq_selection.split(';'):
                             f1, sep, f2, unit = p.findall(freq_range)[0]
