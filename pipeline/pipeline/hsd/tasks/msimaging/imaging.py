@@ -215,7 +215,7 @@ class SDImaging(basetask.StandardTaskTemplate):
                 LOG.info("Processing image group: %s" % name)
                 for idx in xrange(len(msobjs)):
                     LOG.info("\t%s: Antenna %d (%s) Spw %s Field %d (%s)" % \
-                             (msobjs[idx].base_name,
+                             (msobjs[idx].basename,
                               antids[idx], msobjs[idx].antennas[antids[idx]].name,
                               spwids[idx], fieldids[idx],
                               msobjs[idx].fields[fieldids[idx]].name))
@@ -365,7 +365,7 @@ class SDImaging(basetask.StandardTaskTemplate):
                                                         spwlist=spwids,
                                                         specmode='cube',
                                                         sourcetype='TARGET')
-                    image_item.antenna = name
+                    image_item.antenna = ant_name #name #(group name)
                     outcome = {}
                     outcome['image'] = image_item
                     outcome['imagemode'] = imagemode
