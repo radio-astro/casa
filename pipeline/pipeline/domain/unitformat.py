@@ -1,9 +1,13 @@
-'''
+"""
 Format values that are usually associated with a unit.
-'''
+"""
 from __future__ import division
 import bisect
 import decimal
+
+
+# TODO
+# for reformatiing GHz, want to say 'print precision to nearest 10kHz'
 
 
 class UnitOfMagnitude(object):
@@ -73,6 +77,7 @@ class UnitFormat(object):
                 break
         return best_unit
 
+
 file_size = UnitFormat()
 file_size.addUnitOfMagnitude(1, '{0:.0f} bytes')
 file_size.addUnitOfMagnitude(1024, '{0:.1f} KB')
@@ -86,15 +91,20 @@ distance.addUnitOfMagnitude('.001', '{0:.1f} mm')
 distance.addUnitOfMagnitude(1, '{0:.1f} m')
 distance.addUnitOfMagnitude(1000, '{0:.1f} km')
 
+
 # Create a Unit for measuring frequencies
-frequency = UnitFormat()
-frequency.addUnitOfMagnitude('.000001', '{0:.3f} &#181;Hz')
-frequency.addUnitOfMagnitude('.001', '{0:.3f} mHz')
-frequency.addUnitOfMagnitude(1, '{0:.3f} Hz')
-frequency.addUnitOfMagnitude(1000, '{0:.3f} kHz')
-frequency.addUnitOfMagnitude(1000000, '{0:.3f} MHz')
-frequency.addUnitOfMagnitude(1000000000, '{0:.3f} GHz')
-frequency.addUnitOfMagnitude(1000000000000, '{0:.3f} THz')
+def get_frequency_format(precision):
+    s = '{0:.' + str(precision) + 'f}'
+    f = UnitFormat()
+    f.addUnitOfMagnitude('.000001', s + ' &#181;Hz')
+    f.addUnitOfMagnitude('.001', s + ' mHz')
+    f.addUnitOfMagnitude(1, s + ' Hz')
+    f.addUnitOfMagnitude(1000, s + ' kHz')
+    f.addUnitOfMagnitude(1000000, s + ' MHz')
+    f.addUnitOfMagnitude(1000000000, s + ' GHz')
+    f.addUnitOfMagnitude(1000000000000, s + ' THz')
+    return f
+frequency = get_frequency_format(3)
 
 # Create a Unit for measuring flux densities
 flux = UnitFormat()
