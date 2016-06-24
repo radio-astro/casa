@@ -610,6 +610,54 @@ void SingleDishMS::get_baseline_context(size_t const bltype,
   }
 }
 
+void SingleDishMS::get_baseline_context(size_t const bltype,
+    uint16_t order,
+    size_t num_chan,
+    size_t ispw,
+    Vector<size_t> &ctx_indices,
+    std::vector<size_t> & ctx_nchans,
+    std::vector<LIBSAKURA_SYMBOL(BaselineContextFloat) *> &bl_contexts)
+{
+  AlwaysAssert(bl_contexts.size() == ctx_nchans.size() || bl_contexts.size() == ctx_nchans.size()-1 , AipsError);
+  size_t idx = 0;
+  bool found = false;
+  for (size_t i = 0; i < bl_contexts.size(); ++i) {
+    if (ctx_nchans[i] == num_chan) {
+      idx = i;
+      found = true;
+      break;
+    }
+  }
+  if (found) {
+    // contexts with the valid number of channels already exists.
+    // just update idx to bl_contexts and return.
+    ctx_indices[ispw] = idx;
+    return;
+  }
+  // contexts with the number of channels is not yet in bl_contexts.
+  // Need to create a new context.
+  ctx_indices[ispw] = bl_contexts.size();
+  LIBSAKURA_SYMBOL(BaselineContextFloat) *context;
+  LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Status_kNG);
+  if ((bltype == BaselineType_kPolynomial)||(bltype == BaselineType_kChebyshev)) {
+    status = LIBSAKURA_SYMBOL(CreateBaselineContextPolynomialFloat)(static_cast<LIBSAKURA_SYMBOL(BaselineType)>(bltype),
+								    static_cast<uint16_t>(order),
+								    num_chan, &context);
+  } else if (bltype == BaselineType_kCubicSpline) {
+    status = LIBSAKURA_SYMBOL(CreateBaselineContextCubicSplineFloat)(static_cast<uint16_t>(order),
+								     num_chan, &context);
+  } else if (bltype == BaselineType_kSinusoid) {
+    status = LIBSAKURA_SYMBOL(CreateBaselineContextSinusoidFloat)(static_cast<uint16_t>(order),
+                                                                  num_chan, &context);
+  }
+  check_sakura_status("sakura_CreateBaselineContextFloat", status);
+  bl_contexts.push_back(context);
+  if (ctx_nchans.size() != bl_contexts.size()) {
+    ctx_nchans.push_back(num_chan);
+  }
+  AlwaysAssert(bl_contexts.size() == ctx_nchans.size(), AipsError);
+}
+
 void SingleDishMS::destroy_baseline_contexts(std::vector<LIBSAKURA_SYMBOL(BaselineContextFloat) *> &bl_contexts)
 {
   LIBSAKURA_SYMBOL(Status) status;
@@ -2398,7 +2446,11 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
       ++iter;
     }
   }
+  
   Vector<size_t> ctx_indices(nchan.nelements(), 0ul);
+  //stores the number of channels of corresponding elements in contexts list.
+  // WORKAROUND for absense of the way to get num_bases_data in context.
+  vector<size_t> ctx_nchans;
 
   Vector<bool> pol;
   LIBSAKURA_SYMBOL(Status) status;
@@ -2436,7 +2488,10 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
       bool new_nchan = false;
       get_nchan_and_mask(recspw, data_spw, recchan, num_chan, nchan, in_mask,
           nchan_set, new_nchan);
-      
+      // check if context should be created once per chunk
+      // in the first actual excution of baseline.
+      bool check_context = true;
+
       // get data/flag cubes (npol*nchan*nrow) from VisBuffer
       get_data_cube_float(*vb, data_chunk);
       get_flag_cube(*vb, flag_chunk);
@@ -2506,15 +2561,17 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
             fit_param.PrintSummary();
           }
           // Create contexts when actually subtract baseine for the first time (if not yet exist)
-          if (new_nchan) {
+          if (check_context) {
             // Generate context for all necessary baseline types
+	    // cout << "Checking for context generation of SPW " << recspw[idx] << endl;
             map<size_t const, uint16_t>::iterator iter = max_orders.begin();
             while (iter != max_orders.end()) {
-              get_baseline_context((*iter).first, (*iter).second, num_chan, nchan,
-                  nchan_set, ctx_indices, context_reservoir[(*iter).first]);
+	      // cout << "blfunc " << (*iter).first << ": max order = " << (*iter).second << endl;
+              get_baseline_context((*iter).first, (*iter).second, num_chan, idx,
+	      		   ctx_indices, ctx_nchans, context_reservoir[(*iter).first]);
               ++iter;
             }
-            new_nchan = false;
+            check_context = false;
           }
           // get mask from BLParameterset and create composit mask
           if (fit_param.baseline_mask != "") {
@@ -2546,7 +2603,13 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
           if (iter == context_reservoir.end()) {
             throw(AipsError("Invalid baseline type detected!"));
           }
+	  // cout << "Try getting context from resorvior" << endl;
+	  // cout << "idx=" << idx << endl;
+	  // cout << "ctx_indices[" << idx << "]=" << ctx_indices[idx] << endl;
+	  // cout << "func type = " <<(*iter).first << endl;
+	  // cout << "The number of contexts for the func type = " << (*iter).second.size() << endl;
           LIBSAKURA_SYMBOL(BaselineContextFloat) * context = (*iter).second[ctx_indices[idx]];
+	  // cout << "blcontext successfully aquired!" << endl;
 
           // Number of coefficients to fit this spectrum
           size_t num_coeff;

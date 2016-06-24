@@ -189,10 +189,44 @@ private:
   std::vector<string> split_string(string const &s, char delim);
   // examine if a file with specified name exists
   bool file_exists(string const &filename);
-  // Parse msseltoindex output
+  /* Convert spw selection string to vectors of spwid and channel
+     ranges by parsing msseltoindex output. Also creates some
+     placeholder vectors to store mask and the muber of channels
+     in each selected SPW.
+     [in] in_spw: input SPW selection string
+     [out] spw : a vector of selected SPW IDs. the number of
+                 elements is the number of selected SPWs
+     [out] chan : a vector of selected SPW IDs and channel ranges
+                  returned by msseltoindex. [[SPWID, start, end, stride], ...]
+     [out] nchan : a vector of length spw.size() initialized by zero
+     [out] mask : an uninitialized vector of length spw.size() 
+     [out] nchan_set: a vector of length spw.size() initilazed by false
+   */
   void parse_spw(string const &in_spw, Vector<Int> &spw, Matrix<Int> &chan,
       Vector<size_t> &nchan, Vector<Vector<Bool> > &mask,
       Vector<bool> &nchan_set);
+  /* Go through chunk and set valudes to nchan and mask selection
+     vectors of the SPW if not already done.
+    [in] rec_spw: a vector of selected SPW IDs. the number of
+                 elements is the number of selected SPWs
+    [in] data_spw: a vector of SPW IDs in current chunk. the
+                   number of elements is equals to the number
+                   of rows in the chunk.
+    [in] rec_chan: a vector of selected SPW IDs and channel ranges
+                  returned by msseltoindex. [[SPWID, start, end, stride], ...]
+    [in] num_chan: a vector of the number of channels in current chunk.
+                   the number of elements is equals to the number
+                   of rows in the chunk.
+    [out] nchan: a vector of length spw.size(). the number of channels 
+                 in the corresponding SPW is set when the loop traverses
+		 the SPW for the first time.
+    [out] mask: a vector of length spw.size().
+    [in,out] nchan_set: a boolean vector of length spw.size().
+                        the value indicates if nchan, and mask of
+                        the corresponding SPW is already set.
+    [out] new_nchan: returns true if this is the first time finding
+                     SPWs with the same number of channels.
+   */
   void get_nchan_and_mask(Vector<Int> const &rec_spw,
       Vector<Int> const &data_spw, Matrix<Int> const &rec_chan,
       size_t const num_chan, Vector<size_t> &nchan, Vector<Vector<Bool> > &mask,
@@ -201,13 +235,20 @@ private:
       Vector<Bool> &mask, bool initialize = true);
   void get_masklist_from_mask(size_t const num_chan, bool const *mask,
       Vector<uInt> &masklist);
-  // Create a set of baseline contexts
+  // Create a set of baseline contexts (if necessary)
   void get_baseline_context(size_t const bltype,
       uint16_t order,
       size_t num_chan,
       Vector<size_t> const &nchan,
       Vector<bool> const &nchan_set,
       Vector<size_t> &ctx_indices,
+      std::vector<LIBSAKURA_SYMBOL(BaselineContextFloat) *> &bl_contexts);
+  void get_baseline_context(size_t const bltype,
+      uint16_t order,
+      size_t num_chan,
+      size_t ispw,
+      Vector<size_t> &ctx_indices,
+      std::vector<size_t> &ctx_nchans,
       std::vector<LIBSAKURA_SYMBOL(BaselineContextFloat) *> &bl_contexts);
   // Destroy a set of baseline contexts
   void destroy_baseline_contexts(std::vector<LIBSAKURA_SYMBOL(BaselineContextFloat) *> &bl_contexts);void check_sakura_status(string const &name, LIBSAKURA_SYMBOL(Status) const status);
