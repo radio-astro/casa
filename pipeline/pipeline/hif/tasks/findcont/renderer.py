@@ -48,15 +48,15 @@ class T2_4MDetailsFindContRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 status = ranges_dict[field][spw]['status']
 
                 ranges_for_spw = ranges_dict[field][spw].get('cont_ranges', ['NONE'])
-                if (ranges_for_spw in (['NONE'], [], [{'range': 'NONE', 'refer': 'LSRK'}], [{'range': 'NONE', 'refer': 'TOPO'}])):
+                if ranges_for_spw in (['NONE'], [], [{'range': 'NONE', 'refer': 'LSRK'}], [{'range': 'NONE', 'refer': 'TOPO'}]):
                     rows.append(TR(field=field, spw=spw, min='None', max='',
                                    frame='None', status=status, spectrum=plotfile))
                 else:
                     raw_ranges_for_spw = [item['range'] for item in ranges_for_spw]
                     refers = numpy.array([item['refer'] for item in ranges_for_spw])
-                    if ((refers == 'TOPO').all()):
+                    if (refers == 'TOPO').all():
                         refer = 'TOPO'
-                    elif ((refers == 'LSRK').all()):
+                    elif (refers == 'LSRK').all():
                         refer = 'LSRK'
                     else:
                         refer = 'UNDEFINED'
@@ -64,8 +64,8 @@ class T2_4MDetailsFindContRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                     for (range_min, range_max) in sorted_ranges:
                         # default units for Frequency is GHz, which matches the
                         # units of cont_ranges values
-                        min_freq = measures.Frequency(range_min)
-                        max_freq = measures.Frequency(range_max)
+                        min_freq = measures.Frequency(range_min).str_to_precision(5)
+                        max_freq = measures.Frequency(range_max).str_to_precision(5)
                         rows.append(TR(field=field, spw=spw, min=min_freq,
                                        max=max_freq, frame=refer, status=status,
                                        spectrum=plotfile))

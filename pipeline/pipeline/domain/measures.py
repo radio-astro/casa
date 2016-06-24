@@ -563,6 +563,17 @@ class Frequency(ComparableUnit):
         factor = self.units['hz'] / otherUnits['hz']
         return self.value * factor
 
+    def str_to_precision(self, precision):
+        """
+        Return the string representation of this Frequency to a fixed number
+        of decimal places.
+
+        :param precision:
+        :return:
+        """
+        f = unitformat.get_frequency_format(precision)
+        return f.format(self.to_units(FrequencyUnits.HERTZ))
+
     def __str__(self):
         return unitformat.frequency.format(self.to_units(FrequencyUnits.HERTZ))
 
