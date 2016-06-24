@@ -218,10 +218,13 @@ class __imview_class(object):
         if contour.has_key('base'):
             vwr.contourlevels( baselevel=self.__checknumeric(contour['base'], float, "contour baselevel"), data=data )
 
-        if contour.has_key('thickness'):
-            vwr.contourthickness( contour['thickness'], data=data )
-        if contour.has_key('color'):
-            vwr.contourcolor( contour['color'], data=data )
+        try:
+            if contour.has_key('thickness'):
+                vwr.contourthickness( thickness=self.__checknumeric(contour['thickness'], float, "contour thickness"), data=data )
+            if contour.has_key('color'):
+                vwr.contourcolor( contour['color'], data=data )
+        except:
+            print "viewertool error: %s" % sys.exc_info()[1]
 
         return panel
 

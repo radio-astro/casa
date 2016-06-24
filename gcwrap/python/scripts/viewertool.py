@@ -331,9 +331,11 @@ class viewertool(object):
 
         return self.__invoke( dbus.Boolean, bool, self.__state['proxy'].contourcolor, color, data )
 
-    def contourthickness( self, thickness=1.0, data=0 ):
+    def contourthickness( self, thickness=0.0, data=0 ):
         if type(thickness) != float or type(data) != int:
-            raise Exception, "contorthickness() takes a float representing the thickness and data id..."
+            raise Exception, "contourthickness() takes a float representing the thickness and data id..."
+        if thickness < 0 or thickness > 5:
+            raise Exception, "the thickness supplied to contourthickness() should between 0 and 5"
 
         if self.__state['proxy'] == None:
             self.__connect( )
