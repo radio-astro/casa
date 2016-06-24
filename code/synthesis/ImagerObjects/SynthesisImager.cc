@@ -802,6 +802,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////
+  // Record SynthesisImage::runGridParamsHeuristics(SynthesisParamsGrid& gridPars)
+  // {
+  //   return gridPars;
+  // }
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////
   
   Vector<SynthesisParamsSelect> SynthesisImager::tuneSelectData(){
            LogIO os( LogOrigin("SynthesisImager","tuneSelectData",WHERE) );
@@ -2233,7 +2239,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SynthesisImager::dryGridding(const Vector<String>& cfList)
   {
     LogIO os( LogOrigin("SynthesisImager","dryGridding",WHERE) );
-    os << "From dryGridding" << LogIO::POST;
     Int cohDone=0, whichFTM=0;
     (void)cfList;
     // If not an AWProject-class FTM, make this call a NoOp.  Might be
@@ -2261,8 +2266,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // Set the gridder (iFTM) to run in dry-gridding mode
       (itsMappers.getFTM(whichFTM,True))->setDryRun(True);
 
-      os << "Making a \"blank\" CFCache" << LogIO::WARN << LogIO::POST;
+      Bool aTermIsOff=False;
+      {
+	CountedPtr<FTMachine> ftm=itsMappers.getFTM(whichFTM,True);
+	CountedPtr<ConvolutionFunction> cf=ftm->getAWConvFunc();
+	//      Bool aTermIsOff =	  (((static_cast<AWConvFunc &> (*cf)).getTerm("ATerm")))->isNoOp();
+	aTermIsOff = cf->getTerm("ATerm")->isNoOp();
+      }
 
+      os << "Making a \"blank\" CFCache"
+	 << (aTermIsOff?" (without the A-Term)":"")
+	 << LogIO::WARN << LogIO::POST;
+      
       // Step through the MS.  This triggers the logic in the Gridder
       // to determine all the CFs that will be required.  These empty
       // CFs are written to the CFCache which can then be filled via
@@ -2276,6 +2291,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  itsMappers.grid(*vb, True, FTMachine::OBSERVED, whichFTM);
 		  cohDone += vb->nRow();
 		  pm.update(Double(cohDone));
+		  // If there is no term that depends on time, don't iterate over the entire data base
+		  if (aTermIsOff) break;
 		}
 	    }
 	}
@@ -2306,8 +2323,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // String ftmName = ((*(itsMappers.getFTM(whichFTM)))).name();
 
       if (!ftmName.contains("awproject") and
-	  !ftmName.contains("multitermftnew")) return;
-      //if (!ftmName.contains("awproject")) return;
+	  !ftmName.contains("multitermftnew"))  return;
       
       os << "---------------------------------------------------- fillCFCache ---------------------------------------------" << LogIO::POST;
 

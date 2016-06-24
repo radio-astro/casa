@@ -237,12 +237,20 @@ namespace casa{
     // memCacheWt2_p[0].show("WTCF Cache: ");
 
     Double memUsed0,memUsed1;
-    memUsed0=memCache2_p[0].memUsage()/1024;
-    memUsed1=memCacheWt2_p[0].memUsage()/1024;
+    String memUnit="B";
+    memUsed0=memCache2_p[0].memUsage();
+    memUsed1=memCacheWt2_p[0].memUsage();
+    if (memUsed0 > 1024.0)
+      {
+	memUsed0 /= 1024.0;
+	memUsed1 /= 1024.0;
+	memUnit="KB";
+      }
+
     summarize(memCache2_p,   "CFS",   True);
     summarize(memCacheWt2_p, "WTCFS", False);
 
-    log_l << "Total CF Cache memory footprint: " << (memUsed0+memUsed1) << " (" << memUsed0 << "," << memUsed1 << ") KB" << LogIO::POST;
+    log_l << "Total CF Cache memory footprint: " << (memUsed0+memUsed1) << " (" << memUsed0 << "," << memUsed1 << ") " << memUnit << LogIO::POST;
     // memCache2_p[0].makePersistent("./junk.cf");
     // memCacheWt2_p[0].makePersistent("./junk.cf","","WT");
   }

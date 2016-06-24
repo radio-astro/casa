@@ -195,6 +195,7 @@ using namespace casa::vi;
       cmplxImage_p=other.cmplxImage_p;
       numthreads_p=other.numthreads_p;
       pbLimit_p=other.pbLimit_p;
+      convFuncCtor_p = other.convFuncCtor_p;      
       sj_p.resize();
       sj_p=other.sj_p;
       isDryRun=other.isDryRun;
@@ -1373,7 +1374,7 @@ using namespace casa::vi;
 
   Bool FTMachine::matchChannel(const vi::VisBuffer2& vb){
 
-    Int spw=vb.spectralWindows()[0];
+    //Int spw=vb.spectralWindows()[0];
     nvischan  = vb.nChannels();
     chanMap.resize(nvischan);
     chanMap.set(-1);

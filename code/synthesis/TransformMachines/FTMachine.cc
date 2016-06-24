@@ -197,6 +197,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       cmplxImage_p=other.cmplxImage_p;
       numthreads_p=other.numthreads_p;
       pbLimit_p=other.pbLimit_p;
+      convFuncCtor_p = other.convFuncCtor_p;      
       sj_p.resize();
       sj_p=other.sj_p;
       isDryRun=other.isDryRun;

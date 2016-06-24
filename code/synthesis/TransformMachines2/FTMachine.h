@@ -244,6 +244,7 @@ public:
   template <typename T> void getGrid(Array<T>& thegrid);
   // Get the final image
   virtual ImageInterface<Complex>& getImage(Matrix<Float>&, Bool normalize=True) = 0;
+  virtual const CountedPtr<refim::ConvolutionFunction>& getAWConvFunc() {return convFuncCtor_p;};
 
   virtual void findConvFunction(const ImageInterface<Complex>&,// image,
 				const vi::VisBuffer2& /*vb*/) {};

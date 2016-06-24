@@ -29,6 +29,7 @@
 #ifndef SYNTHESIS_TRANSFORM2_CONVOLUTIONFUNCTION_H
 #define SYNTHESIS_TRANSFORM2_CONVOLUTIONFUNCTION_H
 
+#include <synthesis/TransformMachines2/CFTerms.h>
 #include <synthesis/TransformMachines2/CFStore.h>
 #include <synthesis/TransformMachines2/CFStore2.h>
 #include <synthesis/TransformMachines2/PolOuterProduct.h>
@@ -152,6 +153,7 @@ namespace casa{
     virtual Matrix<Int> makeBaselineList(const Vector<Int>& antList);
     virtual Int mapAntIDToAntType(const Int& /*ant*/) {return 0;};
     virtual void setMiscInfo(const RecordInterface& /*params*/) {};
+    virtual CountedPtr<CFTerms> getTerm(const String& /*name*/) {return NULL;}
   private:
     Int nDim;
   protected:

@@ -1364,7 +1364,16 @@ void SynthesisImagerVi2::unlockMSs()
       // Set the gridder (iFTM) to run in dry-gridding mode
       (itsMappers.getFTM2(whichFTM,True))->setDryRun(True);
 
-      os << "Making a \"blank\" CFCache" << LogIO::WARN << LogIO::POST;
+      Bool aTermIsOff=False;
+      {
+	CountedPtr<refim::FTMachine> ftm=itsMappers.getFTM2(whichFTM,True);
+	CountedPtr<refim::ConvolutionFunction> cf=ftm->getAWConvFunc();
+	aTermIsOff = cf->getTerm("ATerm")->isNoOp();
+      }
+
+      os << "Making a \"blank\" CFCache"
+	 << (aTermIsOff?" (without the A-Term)":"")
+	 << LogIO::WARN << LogIO::POST;
 
       // Step through the MS.  This triggers the logic in the Gridder
       // to determine all the CFs that will be required.  These empty
@@ -1379,6 +1388,8 @@ void SynthesisImagerVi2::unlockMSs()
 		  itsMappers.grid(*vb, True, refim::FTMachine::OBSERVED, whichFTM);
 		  cohDone += vb->nRows();
 		  pm.update(Double(cohDone));
+		  // If there is no term that depends on time, don't iterate over the entire data base
+		  if (aTermIsOff) break;
 		}
 	    }
 	}

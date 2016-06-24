@@ -31,6 +31,7 @@
 
 #include <synthesis/TransformMachines/CFStore.h>
 #include <synthesis/TransformMachines/CFStore2.h>
+#include <synthesis/TransformMachines/CFTerms.h>
 #include <synthesis/TransformMachines/PolOuterProduct.h>
 #include <synthesis/TransformMachines/Utils.h>
 #include <images/Images/ImageInterface.h>
@@ -145,6 +146,7 @@ namespace casa{
     virtual Matrix<Int> makeBaselineList(const Vector<Int>& antList);
     virtual Int mapAntIDToAntType(const Int& /*ant*/) {return 0;};
     virtual void setMiscInfo(const RecordInterface& /*params*/) {};
+    virtual CountedPtr<CFTerms> getTerm(const String& /*name*/) {return NULL;}
   private:
     Int nDim;
   protected:
