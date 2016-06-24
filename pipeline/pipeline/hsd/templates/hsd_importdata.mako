@@ -88,9 +88,9 @@ baseline subtraction and imaging. Grouping is performed based on field and spect
             <td rowspan="${len(group_desc)}">${group_desc.field_name}</td>
             % for m in group_desc:
                 <td>${m.ms.basename}</td>
-                <td>${m.ms.antennas[m.antenna].name}</td>
-                <td>${m.ms.spectral_windows[m.spw].id}</td>
-                <td>${m.ms.spectral_windows[m.spw].num_channels}</td>
+                <td>${m.ms.antennas[m.antenna_id].name}</td>
+                <td>${m.ms.spectral_windows[m.spw_id].id}</td>
+                <td>${m.ms.spectral_windows[m.spw_id].num_channels}</td>
                 % if len(group_desc) > 1:
                     </tr><tr>
                 % endif
