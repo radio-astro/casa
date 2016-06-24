@@ -1,3 +1,4 @@
+import os
 import decimal
 import math
 import numpy as np
@@ -414,8 +415,8 @@ class TcleanHeuristics(object):
                         spw_topo_freq_param_lists.append(['%s:%s' % (spwid, topo_freq_selection.split()[0]) for topo_freq_selection in topo_freq_selections])
                         spw_topo_chan_param_lists.append(['%s:%s' % (spwid, topo_chan_selection.split()[0]) for topo_chan_selection in topo_chan_selections])
                         for i in xrange(len(inputs.vis)):
-                            spw_topo_freq_param_dict[inputs.vis[i]][spwid] = topo_freq_selections[i].split()[0]
-                            spw_topo_chan_param_dict[inputs.vis[i]][spwid] = topo_chan_selections[i].split()[0]
+                            spw_topo_freq_param_dict[os.path.basename(inputs.vis[i])][spwid] = topo_freq_selections[i].split()[0]
+                            spw_topo_chan_param_dict[os.path.basename(inputs.vis[i])][spwid] = topo_chan_selections[i].split()[0]
                         # Count only one selection !
                         for topo_freq_range in topo_freq_selections[0].split(';'):
                             f1, sep, f2, unit = p.findall(topo_freq_range)[0]
@@ -426,9 +427,9 @@ class TcleanHeuristics(object):
                         # TODO: Need to derive real channel ranges
                         spw_topo_chan_param_lists.append(['%s:0~%s' % (spwid, spw_info.num_channels - 1)] * len(inputs.vis))
                         for i in xrange(len(inputs.vis)):
-                            spw_topo_freq_param_dict[inputs.vis[i]][spwid] = freq_selection.split()[0]
+                            spw_topo_freq_param_dict[os.path.basename(inputs.vis[i])][spwid] = freq_selection.split()[0]
                             # TODO: Need to derive real channel ranges
-                            spw_topo_chan_param_dict[inputs.vis[i]][spwid] = '0~%d' % (spw_info.num_channels - 1)
+                            spw_topo_chan_param_dict[os.path.basename(inputs.vis[i])][spwid] = '0~%d' % (spw_info.num_channels - 1)
                         # Count only one selection !
                         for freq_range in freq_selection.split(';'):
                             f1, sep, f2, unit = p.findall(freq_range)[0]
@@ -437,15 +438,15 @@ class TcleanHeuristics(object):
                     spw_topo_freq_param_lists.append([spwid] * len(inputs.vis))
                     spw_topo_chan_param_lists.append([spwid] * len(inputs.vis))
                     for msname in inputs.vis:
-                        spw_topo_freq_param_dict[msname][spwid] = ''
-                        spw_topo_chan_param_dict[msname][spwid] = ''
+                        spw_topo_freq_param_dict[os.path.basename(msname)][spwid] = ''
+                        spw_topo_chan_param_dict[os.path.basename(msname)][spwid] = ''
                     topo_freq_ranges.append((min_frequency, max_frequency))
             else:
                 spw_topo_freq_param_lists.append([spwid] * len(inputs.vis))
                 spw_topo_chan_param_lists.append([spwid] * len(inputs.vis))
                 for msname in inputs.vis:
-                    spw_topo_freq_param_dict[msname][spwid] = ''
-                    spw_topo_chan_param_dict[msname][spwid] = ''
+                    spw_topo_freq_param_dict[os.path.basename(msname)][spwid] = ''
+                    spw_topo_chan_param_dict[os.path.basename(msname)][spwid] = ''
                 topo_freq_ranges.append((min_frequency, max_frequency))
 
         spw_topo_freq_param = [','.join(spwsel_per_ms) for spwsel_per_ms in [[spw_topo_freq_param_list_per_ms[i] for spw_topo_freq_param_list_per_ms in spw_topo_freq_param_lists] for i in xrange(len(inputs.vis))]]

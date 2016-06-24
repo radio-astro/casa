@@ -3,6 +3,7 @@ import shutil
 import glob
 import numpy
 import scipy.special
+import operator
 
 import pipeline.domain.measures as measures
 from pipeline.hif.heuristics import tclean
@@ -591,15 +592,18 @@ class Tclean(cleanbase.CleanBase):
         # Convert LSRK ranges to TOPO
         spw_topo_freq_param, spw_topo_chan_param, spw_topo_freq_param_dict, spw_topo_chan_param_dict, total_topo_bw, aggregate_topo_bw = self.inputs.heuristics.calc_topo_ranges(inputs)
 
+        detailed_field_sensitivities = {}
         for ms in targetmslist:
+            detailed_field_sensitivities[ms.name] = {}
             for intSpw in [int(s) for s in spw.split(',')]:
+                detailed_field_sensitivities[ms.name][intSpw] = {}
                 try:
                     if (inputs.gridder == 'mosaic'):
                         field_sensitivities = []
                         for field_id in [f.id for f in ms.fields if (utils.dequote(f.name) == utils.dequote(field) and inputs.intent in f.intents)]:
                             with casatools.ImagerReader(ms.name) as imTool:
-                                if ((inputs.specmode != 'cube') and (spw_topo_freq_param_dict[ms.name][str(intSpw)] != '')):
-                                    spwsel = '%s:%s' % (intSpw, spw_topo_freq_param_dict[ms.name][str(intSpw)])
+                                if ((inputs.specmode != 'cube') and (spw_topo_freq_param_dict[os.path.basename(ms.name)][str(intSpw)] != '')):
+                                    spwsel = '%s:%s' % (intSpw, spw_topo_freq_param_dict[os.path.basename(ms.name)][str(intSpw)])
                                 else:
                                     spwsel = '%s' % (intSpw)
                                 imTool.selectvis(spw=spwsel, field=field_id)
@@ -612,6 +616,13 @@ class Tclean(cleanbase.CleanBase):
                                 result = imTool.apparentsens()
                                 if (result[1] != 0.0):
                                     field_sensitivities.append(result[1])
+                                    detailed_field_sensitivities[ms.name][intSpw][field_id] = result[1]
+
+                        LOG.info('Using median of all mosaic field sensitivities for MS %s, Field %s, SPW %s: %s Jy' % (os.path.basename(ms.name), field, str(intSpw), numpy.median(field_sensitivities)))
+                        min_field_id, min_sensitivity = min(detailed_field_sensitivities[ms.name][intSpw].iteritems(), key=operator.itemgetter(1))
+                        LOG.info('Minimum mosaic field sensitivity for MS %s, Field %s (ID: %s), SPW %s: %s Jy' % (os.path.basename(ms.name), field, min_field_id, str(intSpw), min_sensitivity))
+                        max_field_id, max_sensitivity = max(detailed_field_sensitivities[ms.name][intSpw].iteritems(), key=operator.itemgetter(1))
+                        LOG.info('Maximum mosaic field sensitivity for MS %s, Field %s (ID: %s), SPW %s: %s Jy' % (os.path.basename(ms.name), field, max_field_id, str(intSpw), max_sensitivity))
 
                         # Calculate mosaic overlap factor
                         source_name = [f.source.name for f in ms.fields if (utils.dequote(f.name) == utils.dequote(field) and inputs.intent in f.intents)][0]
@@ -621,8 +632,8 @@ class Tclean(cleanbase.CleanBase):
                         sensitivities.append(numpy.median(field_sensitivities) / overlap_factor)
                     else:
                         with casatools.ImagerReader(ms.name) as imTool:
-                            if ((inputs.specmode != 'cube') and (spw_topo_freq_param_dict[ms.name][str(intSpw)] != '')):
-                                spwsel = '%s:%s' % (intSpw, spw_topo_freq_param_dict[ms.name][str(intSpw)])
+                            if ((inputs.specmode != 'cube') and (spw_topo_freq_param_dict[os.path.basename(ms.name)][str(intSpw)] != '')):
+                                spwsel = '%s:%s' % (intSpw, spw_topo_freq_param_dict[os.path.basename(ms.name)][str(intSpw)])
                             else:
                                 spwsel = '%s' % (intSpw)
                             imTool.selectvis(spw=spwsel, field=field)
@@ -635,6 +646,7 @@ class Tclean(cleanbase.CleanBase):
                             result = imTool.apparentsens()
                             if (result[1] != 0.0):
                                 sensitivities.append(result[1])
+                                detailed_field_sensitivities[ms.name][intSpw][field] = result[1]
                 except Exception as e:
                     # Simply pass as this could be a case of a source not
                     # being present in the MS.
