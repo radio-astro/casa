@@ -2,14 +2,15 @@
 rsc_path = ""
 import os
 
-columns = {'cleanmask' : 'Clean Mask',
-		   'flux' : 'Primary Beam',
-		   'pbcorimage' : 'Image',
-		   'residual' : 'Residual',
-		   'model' : 'Final Model',
-		   'psf' : 'PSF'}
+columns = {'cleanmask' : ('Clean Mask', 'Clean Mask'),
+		   'flux' : ('Primary Beam', 'Primary Beam'),
+		   'pbcorimage' : ('Image', 'Image'),
+		   'residual' : ('Residual', 'Residual'),
+		   'model' : ('Final Model', 'Final Model'),
+		   'psf' : ('PSF', 'PSF'),
+		   'mom0_fc': ('MOM0_FC', 'MOM0_FC: integrated intensity (moment 0) of line-free channels after continuum subtraction')}
 
-colorder = ['pbcorimage', 'residual', 'cleanmask']
+colorder = ['pbcorimage', 'residual', 'cleanmask', 'mom0_fc']
 
 def get_plot(plots, field, spw, i, colname):
 	try:
@@ -53,7 +54,7 @@ $(document).ready(function() {
 		<tr>
 			<th>Iteration</th>
 		    % for colname in colorder:
-	        	<th>${columns[colname]}</th>
+	        	<th>${columns[colname][0]}</th>
 		    % endfor
 		</tr>
 	</thead>
@@ -72,14 +73,14 @@ $(document).ready(function() {
 	            <div class="thumbnail">
 	                <a class="fancybox"
 	                   href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-	                   title="Iteration ${i}: ${columns[colname]}"
+	                   title="Iteration ${i}: ${columns[colname][1]}"
 	                   % if colname in ['pbcorimage', 'residual']:
 	                   rel="iteration"                   
 	                   % endif	
 	                   data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
 	                   <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-	                   		title="Iteration ${i}: ${columns[colname]}"
-	                   		alt="Iteration ${i}: ${columns[colname]}"
+	                   		title="Iteration ${i}: ${columns[colname][1]}"
+	                   		alt="Iteration ${i}: ${columns[colname][1]}"
 	                   		class="img-responsive">
 	                </a>
 	            </div>
@@ -93,28 +94,29 @@ $(document).ready(function() {
 			<td></td>
 		    % for colname in ['flux', 'psf', 'model']:
 		    	<td>
-		            <!-- flux and PSF plots are associated with iteration 0 -->
 		            % if colname == 'model':
+			            <!-- model plots are associated with the final iteration -->
 		                <% 
 		                lastiter = sorted(plots_dict[field][spw].keys())[-1]
 		                plot = get_plot(plots_dict, field, spw, lastiter, colname)
 		                %>
 		            % else:
+			            <!-- flux and PSF plots are associated with iteration 0 -->
 		                <% plot = get_plot(plots_dict, field, spw, 0, colname) %>
 		            % endif
 		            % if plot is not None:
 		                <div class="thumbnail">
 		                    <a class="fancybox"
 		                       href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-		                       title="${columns[colname]}"
+		                       title="${columns[colname][1]}"
 		                       data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">									   
 								<img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-									 title="${columns[colname]}"
-								     alt="${columns[colname]}"]
+									 title="${columns[colname][1]}"
+								     alt="${columns[colname][1]}"]
 								     class="img-responsive">
 							</a>
 							<div class="caption">
-								<p class="text-center">${columns[colname]}</p>
+								<p class="text-center">${columns[colname][1]}</p>
 		               		</div>
 		         		</div>
 		            % endif
@@ -131,27 +133,28 @@ $(document).ready(function() {
     <div class="col-md-11 col-md-offset-1">
     % for colname in ['flux', 'psf', 'model']:
         <div class="col-md-4">
-            <!-- flux and PSF plots are associated with iteration 0 -->
             % if colname == 'model':
+	            <!-- model plots are associated with the final iteration -->
                 <% 
                 lastiter = sorted(plots_dict[field][spw].keys())[-1]
                 plot = get_plot(plots_dict, field, spw, lastiter, colname)
                 %>
             % else:
+	            <!-- flux and PSF plots are associated with iteration 0 -->
                 <% plot = get_plot(plots_dict, field, spw, 0, colname) %>
             % endif
             % if plot is not None:
                 <div class="thumbnail">
                     <a class="fancybox"
                        href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-                       title="${columns[colname]}"
+                       title="${columns[colname][1]}"
                        data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">									   
 						<img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-							 title="${columns[colname]}"
-						     alt="${columns[colname]}">
+							 title="${columns[colname][1]}"
+						     alt="${columns[colname][1]}">
 					</a>
 					<div class="caption">
-						<p class="text-center">${columns[colname]}</p>
+						<p class="text-center">${columns[colname][1]}</p>
                		</div>
          		</div>
             % endif

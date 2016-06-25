@@ -79,6 +79,14 @@ class CleanSummary(object):
                       self.context, r.iterations[i]['model']+extension,
                       reportdir=stage_dir, intent=r.intent))
 
+                # MOM0_FC for this iteration (currently only last but
+                # allow for others in future).
+                if r.iterations[i].has_key('mom0_fc') and \
+                  os.path.exists(r.iterations[i]['mom0_fc']+extension):
+                    plot_wrappers.append(displays.SkyDisplay().plot(self.context, 
+                      r.iterations[i]['mom0_fc']+extension, reportdir=stage_dir, intent=r.intent))
+                
+
                 # cleanmask for this iteration - not for iter 0
                 if i > 0:
                     if (r.iterations[i]['cleanmask'].find('cube') != -1):

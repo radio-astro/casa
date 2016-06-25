@@ -111,6 +111,14 @@ class TcleanResult(basetask.Results):
         self.iterations[iter]['model'] = image
 
     @property
+    def mom0_fc(self):
+        iters = sorted(self.iterations.keys())
+        return self.iterations[iters[-1]].get('mom0_fc')
+
+    def set_mom0_fc(self, iter, image):
+        self.iterations[iter]['mom0_fc'] = image
+
+    @property
     def psf(self):
         return self._psf
 
@@ -169,12 +177,12 @@ class TcleanResult(basetask.Results):
         else:
             repr += ' flux: None'
 
+        items_to_print = ['image','residual','model','cleanmask','mom0_fc']
+        str_len = max([len(item) for item in items_to_print])
         for k,v in self.iterations.items():
             repr += ' iteration %s:\n' % k
-            repr += '   image    : %s\n' % os.path.basename(v['image'])
-            repr += '   residual : %s\n' % os.path.basename(v['residual'])
-            repr += '   model    : %s\n' % os.path.basename(v['model'])
-            if k > 0:
-                repr += '   cleanmask: %s\n' % os.path.basename(v['cleanmask'])
+            for item in items_to_print:
+                if item in v:
+                    repr += '   %s : %s\n' % (item.ljust(str_len), os.path.basename(v[item]))
 
         return repr

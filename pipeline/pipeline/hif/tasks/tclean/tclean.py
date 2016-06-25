@@ -535,6 +535,12 @@ class Tclean(cleanbase.CleanBase):
             #else:
                 #LOG.warn('Not re-adding continuum model. MS is modified !')
 
+        # If specmode is "cube", create from the non-pbcorrected cube 
+        # after continuum subtraction an image of the moment 0 integrated 
+        # intensity for the line-free channels.
+        if inputs.specmode == 'cube':
+            self._calc_mom0_fc(result)
+
         return result
 
     def _do_noise_estimate (self, stokes):
@@ -826,3 +832,47 @@ class Tclean(cleanbase.CleanBase):
                 LOG.debug('Copying back into POINTING table')
                 original = table.copy('%s/POINTING' % vis, valuecopy=True)
                 original.done()
+    
+    # Calculate a "mom0_fc" image: this is a moment 0 integration over the 
+    # line-free channels of the non-primary-beam corrected image-cube, 
+    # after continuum subtraction; where the "line-free" channels are taken 
+    # from those identified as continuum channels. 
+    # This is a diagnostic plot representing the residual emission 
+    # in the line-free (aka continuum) channels. If the continuum subtraction
+    # worked well, then this image should just contain noise.
+    def _calc_mom0_fc(self, result):
+        
+        # Find max iteration that was performed.
+        maxiter = max(result.iterations.keys())
+
+        # Get filename of image from result, and modify to select the  
+        # non-PB-corrected image.
+        imagename = result.iterations[maxiter]['image'].replace('.pbcor','')
+        
+        # Set output filename for MOM0_FC image.
+        mom0_name = '%s.mom0_fc' % (imagename)
+        
+        # Get continuum frequency ranges.
+        cont_freq_ranges = self.inputs.spwsel_lsrk['spw%s' % (self.inputs.spw)].split()[0]
+
+        # Convert frequency ranges to channel ranges.
+        cont_chan_ranges = utils.freq_selection_to_channels(imagename, cont_freq_ranges)
+        
+        # Only continue if there were continuum channel ranges for this spw.
+        if cont_chan_ranges[0] != 'NONE':
+            
+            # Create a channel ranges string.
+            cont_chan_ranges_str = ";".join(["%s,%s" % (ch0, ch1) for ch0, ch1 in cont_chan_ranges])
+            
+            # Execute job to create the MOM0_FC image.
+            job = casa_tasks.immoments(imagename=imagename, moments=[0], outfile=mom0_name, chans=cont_chan_ranges_str)
+            job.execute(dry_run=False)
+            assert os.path.exists(mom0_name)
+            
+            # Update the metadata in the MOM0_FC image.
+            cleanbase.set_miscinfo(name=mom0_name, spw=self.inputs.spw, 
+              field=self.inputs.field, iter=maxiter, type='mom0_fc')
+            
+            # Update the result.
+            result.set_mom0_fc(maxiter, mom0_name)
+        
