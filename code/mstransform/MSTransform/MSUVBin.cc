@@ -735,6 +735,8 @@ void MSUVBin::makeCoordsys(){
 	MSUtil::getSpectralFrames(typesInData, *(mss_p[0]));
 	if(anyEQ(typesInData, MFrequency::REST))
 		outFreqFrame=MFrequency::REST;
+	//make freqstart the centre of channel
+	freqStart_p=freqStart_p+freqStep_p/2.0;
 	SpectralCoordinate mySpectral(outFreqFrame, freqStart_p, freqStep_p, 0.0);
 	ROMSColumns msc(*mss_p[0]);
 	Int ddId=msc.dataDescId()(0);
@@ -846,8 +848,11 @@ void MSUVBin::locateuvw(Matrix<Int>& locuv, const Vector<Double>& increment,
 	chanMap_p.set(-1);
 	for (Int chan=0; chan < vb.nChannels(); ++chan){
 		f[0]=visFreq[chan];
+	
 		if(spec.toPixel(c,f)){
-			Int pixel=Int(floor(c(0)+0.5));  // round to chan freq at chan center
+		  
+		  Int pixel=Int(floor(c(0)+0.5));  // round to chan freq at chan center
+		  //cout << " pixel " << pixel << " " << c  << " f " << f << " chan " << chan << endl;
 			if(pixel > -1 && pixel< nchan_p){
 				chanMap_p(chan)=pixel;
 				chanMapRev_p[pixel].resize(chanMapRev_p[pixel].nelements()+1, True);
