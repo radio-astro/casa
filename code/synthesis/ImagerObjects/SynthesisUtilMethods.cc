@@ -2863,6 +2863,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	err += readVal( inrec, String("wprojplanes"), wprojplanes );
 	err += readVal( inrec, String("convfunc"), convFunc );
 
+	err += readVal( inrec, String("vptable"), vpTable );
+
 	//// convert 'gridder' to 'ftmachine' and 'mtype'
 	ftmachine="gridft";
 	mType="default";
@@ -2989,6 +2991,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     useDoublePrec=True; 
     wprojplanes=1; 
     convFunc="SF"; 
+    vpTable="";
     
     // facets
     facets=1;
@@ -3031,6 +3034,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     gridpar.define("usedoubleprec", useDoublePrec);
     gridpar.define("wprojplanes", wprojplanes);
     gridpar.define("convfunc", convFunc);
+    gridpar.define("vptable", vpTable);
 
     gridpar.define("facets", facets);
     gridpar.define("chanchunks", chanchunks);

@@ -558,7 +558,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}// if non zero model
     }
   
-  /*
+  
   void SIMapperCollection::initPB()
   {
     for (uInt k=0; k < itsMappers.nelements(); ++k)
@@ -575,7 +575,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
       }
   }
-  */
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////// End of VB dependent code.

@@ -504,6 +504,24 @@ bool synthesisimager::executemajorcycle(const casac::record& controls)
   return rstat;
 }
 
+  bool synthesisimager::makepb()
+  {
+    Bool rstat(False);
+    
+    try {
+      
+      //if( ! itsImager ) itsImager = new SynthesisImager();
+      itsImager = makeSI();
+      itsImager->makePB();
+      
+    } catch  (AipsError x) {
+      RETHROW(x);
+    }
+    return rstat;
+  }
+
+
+
 synthesisimstore* synthesisimager::getimstore(const int id)
 {
   synthesisimstore *rstat;

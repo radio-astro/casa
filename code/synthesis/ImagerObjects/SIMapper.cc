@@ -321,7 +321,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return cl_p.toRecord(err, rec);
   }
 
-  /*
+  
   void SIMapper::initPB()
   {
     itsImages->pb()->set(0.0);
@@ -343,9 +343,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // Think about applying PB square and using the weight image instead of PB, 
     // so that it's the same as the weight image.
+    // ---- No.... it still won't be accurate because we'll need the weights, so no point trying
+    //      to be just a bit more accurate but not fully.  Need another solution for the wideband PB.
 
   }//addPB
-  */
+  
 
 } //# NAMESPACE CASA - END
 

@@ -106,10 +106,9 @@ class SIMapperCollection
     return itsMappers[which]->getFTM2(ift);
   };
 
-  /*
+  
   void initPB();
   void addPB(VisBuffer& vb, PBMath& pbMath);
-  */
 
   const CountedPtr<SIMapper> getMapper(Int which)
   {AlwaysAssert(which>=0 && which<(Int)itsMappers.nelements(),AipsError);

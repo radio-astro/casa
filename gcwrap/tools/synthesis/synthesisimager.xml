@@ -600,6 +600,16 @@ Define the image coordinate systems and shapes.
 </method>
 
 <!-- ===================================== -->
+   <method type="function" name="makepb">
+   <shortdescription>Make the primary beam</shortdescription>
+
+<description>
+</description>
+<input/>
+<returns type="bool"/>
+</method>
+
+<!-- ===================================== -->
 
    <method type="function" name="getimstore">
    <shortdescription>Get Image Store</shortdescription>

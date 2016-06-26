@@ -136,6 +136,11 @@ class PySynthesisImager:
               self.SDtools[immod].restore()
 
 #############################################
+    def pbcorImages(self):
+         for immod in range(0,self.NF):
+              self.SDtools[immod].pbcor()
+
+#############################################
 
     def getSummary(self,fignum=1):
         summ = self.IBtool.getiterationsummary()
@@ -299,6 +304,13 @@ class PySynthesisImager:
         self.SItool.reloadcfcache();
 
 #############################################
+    def makePB(self):
+        self.SItool.makepb()
+        for immod in range(0,self.NF):
+            self.PStools[immod].normalizeprimarybeam() 
+
+#############################################
+
 ## Overloaded for parallel runs
     def setWeighting(self):
         ## Set weighting parameters, and all pars common to all fields.
@@ -1364,6 +1376,8 @@ class ImagerParameters():
 
                  wprojplanes=1,
 
+                 vptable="",
+
                  aterm=True,
                  psterm=True,
                  mterm=True,
@@ -1450,7 +1464,7 @@ class ImagerParameters():
                                    'rotatepastep':rotatepastep, #'mtype':mtype, # 'weightlimit':weightlimit,
                                    'facets':facets,'chanchunks':chanchunks,
                                    'interpolation':interpolation, 'wprojplanes':wprojplanes,
-                                   'deconvolver':deconvolver }     }
+                                   'deconvolver':deconvolver, 'vptable':vptable }     }
         ######### weighting
         self.weightpars = {'type':weighting,'robust':robust, 'npixels':npixels,'uvtaper':uvtaper}
 

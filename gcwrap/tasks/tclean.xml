@@ -872,6 +872,39 @@ HPX HEALPix grid.  -->
       <value type="int">1</value>
     </param>
 
+    <param type="string" name="vptable" subparam="true">
+     <shortdescription>Name of Voltage Pattern table</shortdescription>
+<description> VP table saved via the vpmanager
+
+                       vptable="" : Choose default beams for different telescopes
+                                           ALMA : Airy disks
+                                           EVLA : old VLA models.
+
+                       Other primary beam models can be chosen via the vpmanager tool.
+                       
+                       Step 1 :  Set up the vpmanager tool
+ 
+                                     vp.setpbpoly(telescope='EVLA', coeff=[1.0, -1.529e-3, 8.69e-7, -1.88e-10]) 
+                                     vp.saveastable('myvp.tab')
+
+                       Step 2 : Save its state in a table, and supply the name of that table here.
+ 
+                                    tclean(....., vptable='myvp.tab',....)
+
+                       Please see the documentation for the vpmanager for more details on how to 
+                       choose different beam models. Work is in progress to update the defaults
+                       for EVLA and ALMA.
+
+                       Note : AWProjection currently does not use this mechanism to choose
+                                 beam models. It instead uses ray-traced beams computed from
+                                 parameterized aperture illumination functions, which are not 
+                                 available via the vpmanager. So, gridder='awproject' does not allow
+                                 the user to set this parameter.
+
+</description>
+      <value type="string"></value>
+    </param>
+
     <param type="bool" name="aterm" subparam="true">
            <shortdescription>Use aperture illumination functions during gridding</shortdescription>
 <description>Use aperture illumination functions during gridding
@@ -1199,6 +1232,25 @@ HPX HEALPix grid.  -->
     </param>
 
 
+    <param type="bool" name="restoration">
+     <shortdescription>Do restoration steps (or not)</shortdescription>
+<description> Restore the model image.
+  
+                       Construct a restored image : imagename.image by convolving the model 
+                       image with a clean beam and adding the residual image to the result. 
+                       If a restoringbeam is specified, the residual image is also
+                       smoothed to that target resolution before adding it in.
+
+                       If a .model does not exist, it will make an empty one and create
+                       the restored image from the residuals ( with additional smoothing if needed ).
+                       With algorithm='mtmfs', this will construct Taylor coefficient maps from 
+                       the residuals and compute .alpha and .alpha.error.
+
+</description>
+      <value type="bool">True</value>
+    </param>
+
+
     <param type="any" name="restoringbeam" subparam="true">
            <shortdescription>Restoring beam shape to use. Default is the PSF main lobe</shortdescription>
 <description> Restoring beam shape/size to use.
@@ -1224,6 +1276,24 @@ HPX HEALPix grid.  -->
 	    <any type="variant" limittypes="string stringArray"/>
 	    <value type="stringArray"></value>
     </param>
+
+    <param type="bool" name="pbcor" subparam="true">
+     <shortdescription>Apply PB correction on the output restored image</shortdescription>
+<description> Apply PB correction on the output restored image
+
+                       A new image with extension .image.pbcor will be created from
+                       the evaluation of   .image / .pb  for all pixels above the specified pblimit. 
+
+                       Note : Stand-alone PB-correction can be triggered by re-running 
+                                 tclean with the appropriate imagename and with 
+                                 niter=0, calcpsf=False, calcres=False, pbcor=True, vptable='vp.tab'
+                                 ( where vp.tab is the name of the vpmanager file. 
+                                    See the inline help for the 'vptable' parameter )
+
+</description>
+      <value type="bool">False</value>
+    </param>
+
 
 <!--
     <param type="any" name="specthreshold" subparam="true">
@@ -1935,7 +2005,7 @@ HPX HEALPix grid.  -->
 	    </allowed>
     </param>
 
-    <param type="string" name="makeimages">
+<!--    <param type="string" name="makeimages">
 	   <shortdescription>List of output images (auto,choose)</shortdescription>
 <description> List of output images. 
                        This option is mainly to force uniformity of outputs 
@@ -1954,10 +2024,10 @@ HPX HEALPix grid.  -->
 </description>
 	    <value type="string">auto</value>
     </param>
+-->
 
 
-
-    <param type="bool" name="calcres" subparam="true">
+    <param type="bool" name="calcres">
 	   <shortdescription>Calculate initial residual image</shortdescription>
 <description>Calculate initial residual image
 
@@ -1984,7 +2054,7 @@ HPX HEALPix grid.  -->
     </param>
 
 
-    <param type="bool" name="calcpsf" subparam="true">
+    <param type="bool" name="calcpsf">
       <shortdescription>Calculate PSF</shortdescription>
       <description>Calculate PSF
 	
@@ -1995,7 +2065,8 @@ HPX HEALPix grid.  -->
       </description>
       <value type="bool">True</value>
     </param>
-    
+
+<!--     
     <param type="any" name="restoremodel" subparam="true">
       <shortdescription>Restore the model image</shortdescription>
       <description>Restore the model image
@@ -2018,8 +2089,9 @@ HPX HEALPix grid.  -->
       </description>
       <value type="string">auto</value>
     </param>
-    
-    <param type="any" name="writepb" subparam="true">
+ -->
+   
+<!--    <param type="any" name="writepb" subparam="true">
       <shortdescription>Make a primary beam image</shortdescription>
       <description>Make a primary beam image
 
@@ -2034,11 +2106,12 @@ HPX HEALPix grid.  -->
                                                     Note : For now, this option will create an empty image. 
 
                                                     ( The makepb script can be used as described in the
-                                                       gridder section to make .pb images externally )                                    
+                                                       gridder section to make .pb images externally )                                
       </description>
       <value type="string">auto</value>
     </param>
     
+    -->
 
 
     <param type="bool" name="parallel">
@@ -2180,37 +2253,48 @@ HPX HEALPix grid.  -->
 
      <when param="gridder">
        <equals type="string" value="standard">
+	 <default param="vptable"><value>""</value></default>
+	 <default param="pblimit"><value>0.2</value></default>
        </equals>
        <equals type="string" value="widefield">
 	 <default param="wprojplanes"><value>1</value></default>
 	 <default param="facets"><value>1</value></default>
+	 <default param="vptable"><value>""</value></default>
+	 <default param="pblimit"><value>0.2</value></default>
        </equals>
        <equals type="string" value="wproject">
 	 <default param="wprojplanes"><value>1</value></default>
+	 <default param="vptable"><value>""</value></default>
+	 <default param="pblimit"><value>0.2</value></default>
        </equals>
        <equals type="string" value="wprojectft">
 	 <default param="wprojplanes"><value>1</value></default>
+	 <default param="vptable"><value>""</value></default>
+	 <default param="pblimit"><value>0.2</value></default>
        </equals>
        <equals type="string" value="mosaic">
-	 <default param="pblimit"><value>0.2</value></default>
 	 <default param="normtype"><value>"flatnoise"</value></default>
+	 <default param="vptable"><value>""</value></default>
+	 <default param="pblimit"><value>0.2</value></default>
        </equals>
        <equals type="string" value="mosaicft">
-	 <default param="pblimit"><value>0.2</value></default>
 	 <default param="normtype"><value>"flatnoise"</value></default>
+	 <default param="vptable"><value>""</value></default>
+	 <default param="pblimit"><value>0.2</value></default>
        </equals>
        <equals type="string" value="ftmosaic">
-	 <default param="pblimit"><value>0.2</value></default>
 	 <default param="normtype"><value>"flatnoise"</value></default>
+	 <default param="vptable"><value>""</value></default>
+	 <default param="pblimit"><value>0.2</value></default>
        </equals>
        <equals type="string" value="imagemosaic">
 	 <default param="wprojplanes"><value>1</value></default>
-	 <default param="pblimit"><value>0.2</value></default>
 	 <default param="normtype"><value>"flatnoise"</value></default>
+	 <default param="vptable"><value>""</value></default>
+	 <default param="pblimit"><value>0.2</value></default>
        </equals>
        <equals type="string" value="awproject">
 	 <default param="wprojplanes"><value>1</value></default>
-	 <default param="pblimit"><value>0.2</value></default>
 	 <default param="normtype"><value>"flatnoise"</value></default>
 	 <default param="psterm"><value>False</value></default>
 	 <default param="aterm"><value>True</value></default>
@@ -2219,10 +2303,11 @@ HPX HEALPix grid.  -->
 	 <default param="rotatepastep"><value>360.0</value></default>
 	 <default param="wbawp"><value>False</value></default>
 	 <default param="conjbeams"><value>False</value></default>
+<!--	 <default param="vptable"><value>""</value></default> -->
+	 <default param="pblimit"><value>0.2</value></default>
        </equals>
        <equals type="string" value="awprojectft">
 	 <default param="wprojplanes"><value>1</value></default>
-	 <default param="pblimit"><value>0.2</value></default>
 	 <default param="normtype"><value>"flatnoise"</value></default>
 	 <default param="psterm"><value>False</value></default>
 	 <default param="aterm"><value>True</value></default>
@@ -2231,6 +2316,8 @@ HPX HEALPix grid.  -->
 	 <default param="rotatepastep"><value>360.0</value></default>
 	 <default param="wbawp"><value>False</value></default>
 	 <default param="conjbeams"><value>False</value></default>
+<!--	 <default param="vptable"><value>""</value></default> -->
+	 <default param="pblimit"><value>0.2</value></default>
        </equals>
      </when>
 
@@ -2260,23 +2347,25 @@ HPX HEALPix grid.  -->
 
      <when param="deconvolver">
        <equals type="string" value="hogbom">
-	 <default param="restoringbeam"><value type="stringArray"></value></default>
        </equals>
        <equals type="string" value="clark">
-	 <default param="restoringbeam"><value type="stringArray"></value></default>
        </equals>
        <equals type="string" value="multiscale">
 	 <default param="scales"><value type="intArray"></value></default>
 	 <default param="smallscalebias"><value>0.6</value></default>
-	 <default param="restoringbeam"><value type="stringArray"></value></default>
        </equals>
        <equals type="string" value="mtmfs">
 	 <default param="scales"><value type="intArray"></value></default>
 	 <default param="nterms"><value>2</value></default>  
-	 <default param="restoringbeam"><value type="stringArray"></value></default>
        </equals>
        <equals type="string" value="aasp">
+       </equals>
+     </when>
+
+     <when param="restoration">
+       <equals type="bool" value="True">
 	 <default param="restoringbeam"><value type="stringArray"></value></default>
+	 <default param="pbcor"><value>False</value></default>
        </equals>
      </when>
 
@@ -2327,6 +2416,7 @@ HPX HEALPix grid.  -->
        </equals>
    </when>
 
+<!--
      <when param="makeimages">
        <equals type="string" value="auto"/>
        <equals type="string" value="choose">
@@ -2334,8 +2424,10 @@ HPX HEALPix grid.  -->
 	 <default param="calcpsf"><value type="bool">True</value></default>
 	 <default param="restoremodel"><value type="string">auto</value></default>
 	 <default param="writepb"><value type="string">auto</value></default>
+
        </equals>
      </when>
+-->
 
    </constraints>
 

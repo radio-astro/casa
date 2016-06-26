@@ -112,7 +112,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    //	    itsImages = imagestore->getSubImageStoreOld( chanid, onechan, polid, onepol );
 	    itsImages = imagestore->getSubImageStore( 0, 1, chanid, nSubChans, polid, nSubPols );
 	    
-	    Int startiteration = loopcontrols.getIterDone();
+	    Int startiteration = loopcontrols.getIterDone(); // TODO : CAS-8767 key off subimage index
 	    Float peakresidual=0.0;
 	    Float modelflux=0.0;
 	    Int iterdone=0;
@@ -154,8 +154,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				 iterdone);
 		    
 		    os << LogIO::NORMAL1 << "SDAlgoBase: After one step, dec : " << deconvolverid << "    residual=" << peakresidual << " model=" << modelflux << " iters=" << iterdone << LogIO::POST; 
+		    SynthesisUtilMethods::getResource("In deconvolver : one plane" );
 		    
-		    loopcontrols.incrementMinorCycleCount( iterdone );
+		    loopcontrols.incrementMinorCycleCount( iterdone ); // CAS-8767 : add subimageindex and merge with addSummaryMinor call later.
 		    
 		    stopCode = checkStop( loopcontrols,  peakresidual );
 		    
@@ -277,7 +278,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SDAlgorithmBase","restore",WHERE) );
 
     os << "[" << imagestore->getName() << "] : Restoring model image." << LogIO::POST;
-    imagestore->restore( itsRestoringBeam, itsUseBeam );
+
+    if( imagestore->hasResidualImage() )  imagestore->restore( itsRestoringBeam, itsUseBeam );
+    else{os << "Cannot restore with a residual image" << LogIO::POST;}
 
    
   }
@@ -288,27 +291,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     LogIO os( LogOrigin("SDAlgorithmBase","pbcor",WHERE) );
 
-    Int nSubChans, nSubPols;
-    queryDesiredShape(nSubChans, nSubPols, imagestore->getShape());
+    os << "[" << imagestore->getName() << "] : Applying PB correction" << LogIO::POST;
 
-    //    if( ! imagestore->checkValidity(False/*psf*/, False/*res*/,True/*wgt*/,False/*model*/,True/*image*/,
-    //				    False/*mask*/,False/*sumwt*/,
-    //				    True/*alpha*/, True/*beta*/) ) // alpha,beta will be ignored for single-term.
-    //      { throw(AipsError("Internal Error : Invalid ImageStore for " + imagestore->getName())); }
-
-    // Init the restored image here.
-    //    imagestore->image();
-    //    imagestore->model();
-
-    for( Int chanid=0; chanid<nSubChans;chanid++)
-      {
-	for( Int polid=0; polid<nSubPols; polid++)
-	  {
-	    //	    itsImages = imagestore->getSubImageStoreOld( chanid, onechan, polid, onepol );
-	    itsImages = imagestore->getSubImageStore( 0, 1, chanid, nSubChans, polid, nSubPols );
-	    itsImages->pbcorPlane();
-	  }
-      }
+    imagestore->pbcor();
 
   }
   

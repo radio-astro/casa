@@ -206,6 +206,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     LogIO os( LogOrigin("SDAlgorithmMSMFS","restore",WHERE) );
 
+    if( ! imagestore->hasResidualImage() ) return;
+
     // Compute principal solution ( if it hasn't already been done to this ImageStore......  )
     //////  Put some image misc info in here, to say if it has been done or not. 
 

@@ -53,7 +53,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 class SIImageStore 
 {
  public:
-  enum IMAGE_IDS {MASK=0,PSF,MODEL,RESIDUAL,WEIGHT,IMAGE,SUMWT,GRIDWT,PB,FORWARDGRID,BACKWARDGRID, MAX_IMAGE_IDS};
+  enum IMAGE_IDS {MASK=0,PSF,MODEL,RESIDUAL,WEIGHT,IMAGE,SUMWT,GRIDWT,PB,FORWARDGRID,BACKWARDGRID, IMAGEPBCOR, MAX_IMAGE_IDS};
   // Default constructor
 
   SIImageStore();
@@ -74,6 +74,9 @@ class SIImageStore
 	       SHARED_PTR<ImageInterface<Float> > restoredim, 
 	       SHARED_PTR<ImageInterface<Float> > maskim,
 	       SHARED_PTR<ImageInterface<Float> > sumwtim,
+	       SHARED_PTR<ImageInterface<Float> > gridwtim,
+	       SHARED_PTR<ImageInterface<Float> > pbim,
+	       SHARED_PTR<ImageInterface<Float> > restoredpbcorim,
 	       CoordinateSystem& csys, 
 	       IPosition imshape, 
 	       String imagename, 
@@ -109,6 +112,7 @@ class SIImageStore
 
   virtual SHARED_PTR<ImageInterface<Float> > gridwt(uInt term=0);
   virtual SHARED_PTR<ImageInterface<Float> > pb(uInt term=0);
+  virtual SHARED_PTR<ImageInterface<Float> > imagepbcor(uInt term=0);
 
   virtual void setModelImageOne( String modelname, Int nterm=-1 );
   virtual void setModelImage( Vector<String> modelnames );
@@ -123,6 +127,7 @@ class SIImageStore
 
   ///// Normalizers
   virtual void dividePSFByWeight(const Float pblimit=C::minfloat);
+  virtual void normalizePrimaryBeam(const Float pblimit=C::minfloat);
   virtual void divideResidualByWeight(const Float pblimit=C::minfloat, const String normtype="flatnoise");
   virtual void divideModelByWeight(const Float pblimit=C::minfloat, const String normtype="flatnoise");
   virtual void multiplyModelByWeight(const Float pblimit=C::minfloat, const String normtype="flatnoise");
@@ -135,7 +140,7 @@ class SIImageStore
   GaussianBeam getPSFGaussian();
   //  virtual GaussianBeam restorePlane();
   virtual void restore(GaussianBeam& rbeam, String& usebeam,uInt term=0 );
-  virtual void pbcorPlane();
+  virtual void pbcor();
 
 
   ////////// Restoring Beams
@@ -166,8 +171,12 @@ class SIImageStore
   //  virtual Bool hasModel() {return (bool) itsModel;}
   virtual Bool hasModel() {return doesImageExist(itsImageName+imageExts(MODEL));}
   virtual Bool hasPsf() {return (bool) itsPsf;}
+  //  virtual Bool hasPsfImage()  {return doesImageExist(itsImageName+imageExts(PSF));}
   virtual Bool hasResidual() {return (bool) itsResidual;}
+  virtual Bool hasResidualImage() {return doesImageExist(itsImageName+imageExts(RESIDUAL));}
   virtual Bool hasSumWt() {return (bool) itsSumWt;}
+  //  {return doesImageExist(itsImageName+imageExts(SUMWT));}
+  virtual Bool hasRestored() {return doesImageExist(itsImageName+imageExts(IMAGE));}
 
   // Image Statistics....
   Float getPeakResidual();
@@ -274,10 +283,10 @@ protected:
 
 private:
 
-  SHARED_PTR<ImageInterface<Float> > itsPsf, itsModel, itsResidual, itsWeight, itsImage, itsSumWt;
+  SHARED_PTR<ImageInterface<Float> > itsPsf, itsModel, itsResidual, itsWeight, itsImage, itsSumWt, itsImagePBcor;
   SHARED_PTR<ImageInterface<Complex> > itsForwardGrid, itsBackwardGrid;
 
-  SHARED_PTR<ImageInterface<Float> > itsParentPsf, itsParentModel, itsParentResidual, itsParentWeight, itsParentImage, itsParentSumWt, itsParentGridWt, itsParentPB;
+  SHARED_PTR<ImageInterface<Float> > itsParentPsf, itsParentModel, itsParentResidual, itsParentWeight, itsParentImage, itsParentSumWt, itsParentGridWt, itsParentPB, itsParentImagePBcor;
 
 
 };

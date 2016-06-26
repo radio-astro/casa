@@ -83,6 +83,8 @@ class SynthesisNormalizer
   void divideModelByWeight();
   void multiplyModelByWeight();
 
+  void normalizePrimaryBeam();
+
 protected:
 
  // Normalize. This can later change to be more general, i.e. used for PB-correction too...

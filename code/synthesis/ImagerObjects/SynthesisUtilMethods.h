@@ -289,7 +289,7 @@ public:
   String imageName;
 
   // FTMachine setup
-  String gridder, ftmachine, convFunc;
+  String gridder, ftmachine, convFunc, vpTable;
   Int wprojplanes;
   Bool useDoublePrec, useAutoCorr; 
   Float padding;

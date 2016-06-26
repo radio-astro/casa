@@ -61,7 +61,7 @@ from refimagerhelper import TestHelpers
 
 ## List to be run
 def suite():
-     return [test_onefield, test_iterbot, test_multifield,test_stokes, test_modelvis, test_cube, test_mask, test_startmodel,test_widefield]
+     return [test_onefield, test_iterbot, test_multifield,test_stokes, test_modelvis, test_cube, test_mask, test_startmodel,test_widefield,test_pbcor]
 #     return [test_onefield, test_iterbot, test_multifield,test_stokes,test_cube, test_widefield,test_mask, test_modelvis,test_startmodel,test_widefield_failing]
 
 refdatapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/refimager/'
@@ -113,7 +113,7 @@ class test_onefield(testref_base):
           """ [onefield] Test_Onefield_defaults : Defaults """
           self.prepData('refim_twochan.ms')
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',interactive=0)
-          report=self.th.checkall(imexist=[self.img+'.psf', self.img+'.residual'], imexistnot=[self.img+'.image'],imval=[(self.img+'.psf', 1.0, [50,50,0,0])])
+          report=self.th.checkall(imexist=[self.img+'.psf', self.img+'.residual', self.img+'.image'], imval=[(self.img+'.psf', 1.0, [50,50,0,0])])
           self.checkfinal(pstr=report)
 
      def test_onefield_clark(self):
@@ -194,7 +194,7 @@ class test_onefield(testref_base):
           report=self.th.checkall(imexist=[self.img+'.psf'], imexistnot=[self.img+'.residual', self.img+'.image'],nmajordone=1)
 
           ## Only residual
-          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=0,interactive=0,calcpsf=False,calcres=True,deconvolver='clark')
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=0,interactive=0,calcpsf=False,calcres=True,deconvolver='clark',restoration=False)
           report1=self.th.checkall(imexist=[self.img+'.psf', self.img+'.residual'], imexistnot=[self.img+'.image'],nmajordone=1)
 
           ## Start directly with minor cycle and do only the last major cycle.
@@ -218,7 +218,7 @@ class test_onefield(testref_base):
           report=self.th.checkall(imexist=[self.img+'.psf.tt0', self.img+'.psf.tt1'], imexistnot=[self.img+'.residual.tt0', self.img+'.image.tt0'],nmajordone=1)
 
           ## Only residual
-          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=0,interactive=0,calcpsf=False,calcres=True,deconvolver='mtmfs')
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=0,interactive=0,calcpsf=False,calcres=True,deconvolver='mtmfs',restoration=False)
           report1=self.th.checkall(imexist=[self.img+'.psf.tt0',self.img+'.psf.tt1', self.img+'.residual.tt0', self.img+'.residual.tt1'], imexistnot=[self.img+'.image.tt0'],nmajordone=1)
 
           ## Start directly with minor cycle and do only the last major cycle.
@@ -239,28 +239,28 @@ class test_onefield(testref_base):
           self.prepData('refim_twochan.ms')
 
           ## Make only partial outputs
-          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=0,interactive=0,deconvolver='hogbom',makeimages='auto')
-          report1=self.th.checkall(imexist=[self.img+'.psf', self.img+'.residual'],imexistnot=[self.img+'.image',self.img+'.model'],nmajordone=1)
+#          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=0,interactive=0,deconvolver='hogbom')
+#          report1=self.th.checkall(imexist=[self.img+'.psf', self.img+'.residual'],imexistnot=[self.img+'.image',self.img+'.model'],nmajordone=1)
 
           ## Make all outputs
-          ret = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',niter=0,interactive=0,deconvolver='hogbom',makeimages='choose',restoremodel=True)
+          ret = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',niter=0,interactive=0,deconvolver='hogbom',restoration=True)
           report2=self.th.checkall(imexist=[self.img+'2.psf', self.img+'2.residual',self.img+'2.image',self.img+'2.model'],nmajordone=1)
  
-          self.checkfinal(pstr = report1+report2)
+          self.checkfinal(pstr = report2)
 
      def test_onefield_all_outputs_mtmfs(self):
           """ [onefield] : test_onefield_all_outputs_mtmfs : Make all output images even when not needed """
           self.prepData('refim_twochan.ms')
 
           ## Make only partial outputs
-          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=0,interactive=0,deconvolver='mtmfs',makeimages='auto')
-          report1=self.th.checkall(imexist=[self.img+'.psf.tt0', self.img+'.psf.tt1'],imexistnot=[self.img+'.image.tt0',self.img+'.model.tt0', self.img+'.alpha'],nmajordone=1)
+#          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=0,interactive=0,deconvolver='mtmfs')
+#          report1=self.th.checkall(imexist=[self.img+'.psf.tt0', self.img+'.psf.tt1'],imexistnot=[self.img+'.image.tt0',self.img+'.model.tt0', self.img+'.alpha'],nmajordone=1)
 
           ## Make all outputs
-          ret = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',niter=0,interactive=0,deconvolver='mtmfs',makeimages='choose',restoremodel=True)
+          ret = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',niter=0,interactive=0,deconvolver='mtmfs',restoration=True)
           report2=self.th.checkall(imexist=[self.img+'2.psf.tt0', self.img+'2.psf.tt1',self.img+'2.image.tt0',self.img+'2.model.tt0', self.img+'2.alpha'],nmajordone=1)
  
-          self.checkfinal(pstr=report1+report2)
+          self.checkfinal(pstr=report2)
 
      def test_onefield_restore_mtmfs_niter0(self):
           """ [onefield] : test_onefield_restore_mtmfs_niter0 : Niter=0 run followed by restoration without a model"""
@@ -269,15 +269,15 @@ class test_onefield(testref_base):
           ## This test also checks the principal solution calculation on the dirty images.
 
           ## niter=0 run 
-          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=0,interactive=0,deconvolver='mtmfs')
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=0,interactive=0,deconvolver='mtmfs',restoration=False)
           report1=self.th.checkall(imexist=[self.img+'.psf.tt0', self.img+'.psf.tt1'], imexistnot=[self.img+'.model.tt0', self.img+'.model.tt0'],nmajordone=1)
           ## restore only 
-          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=0,interactive=0,deconvolver='mtmfs',makeimages='choose',calcres=False,calcpsf=False,restoremodel=True)
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=0,interactive=0,deconvolver='mtmfs',calcres=False,calcpsf=False,restoration=True)
           report2=self.th.checkall(imexist=[self.img+'.image.tt0', self.img+'.alpha'],nmajordone=0,
                              imval=[(self.img+'.alpha',-1.0,[50,50,0,0])])
 
           ## niter=0 and restore ( in one step )
-          ret = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',niter=0,interactive=0,deconvolver='mtmfs',makeimages='choose',restoremodel=True)
+          ret = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',niter=0,interactive=0,deconvolver='mtmfs',restoration=True)
           report3=self.th.checkall(imexist=[self.img+'2.image.tt0', self.img+'2.alpha'],nmajordone=1,
                              imval=[(self.img+'.alpha',-1.0,[50,50,0,0])] )
 
@@ -300,7 +300,7 @@ class test_iterbot(testref_base):
      def test_iterbot_mfs_1(self):
           """ [iterbot] Test_Iterbot_Mfs_1 : Zero Iterations """
           self.prepData('refim_twochan.ms')
-          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',deconvolver='clark',niter=0,interactive=0)
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',deconvolver='clark',niter=0,interactive=0,restoration=False)
           report=self.th.checkall(imexist=[self.img+'.psf', self.img+'.residual'], imexistnot=[self.img+'.image'])
 
           self.checkfinal(report)
@@ -1445,7 +1445,7 @@ class test_widefield(testref_base):
      def test_widefield_aproj_mtmfs(self):
           """ [widefield] Test_Widefield_aproj_mtmfs : MFS with AWProjection (wbawp=T,conjbeams=F, allspw) and nt=2 stokes I  """
           self.prepData("refim_mawproject.ms")
-          ret = tclean(vis=self.msfile,spw='*',field='*',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",niter=0,gridder='awproject',cfcache=self.img+'.cfcache',wbawp=True,conjbeams=False,psterm=False,computepastep=360.0,rotatepastep=360.0,deconvolver='mtmfs',makeimages='choose',restoremodel=True)
+          ret = tclean(vis=self.msfile,spw='*',field='*',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",niter=0,gridder='awproject',cfcache=self.img+'.cfcache',wbawp=True,conjbeams=False,psterm=False,computepastep=360.0,rotatepastep=360.0,deconvolver='mtmfs')
           report=self.th.checkall(imexist=[self.img+'.image.tt0', self.img+'.psf.tt0', self.img+'.weight.tt0'],imval=[(self.img+'.image.tt0',1.0,[256,256,0,0]),(self.img+'.weight.tt0',0.49,[256,256,0,0]),(self.img+'.alpha',-1.4,[256,256,0,0]) ] )
           self.checkfinal(report)
           ## alpha should represent that of the mosaic PB (twice).. -0.1 doesn't look right. Sigh.... well.. it should converge to zero.
@@ -1474,7 +1474,7 @@ class test_widefield(testref_base):
           """ [widefield] Test_Widefield_mosaic : MFS with mosaicft  stokes I """
           self.prepData("refim_mawproject.ms")
           ret = tclean(vis=self.msfile,spw='1',field='*',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",niter=30,gridder='mosaicft',deconvolver='hogbom',pblimit=0.3)
-          report=self.th.checkall(imexist=[self.img+'.image', self.img+'.psf', self.img+'.weight'],imval=[(self.img+'.image',0.9471,[256,256,0,0]),(self.img+'.weight',0.544,[256,256,0,0]) ] )
+          report=self.th.checkall(imexist=[self.img+'.image', self.img+'.psf', self.img+'.weight'],imval=[(self.img+'.image',0.9471,[256,256,0,0]),(self.img+'.weight',0.3,[256,256,0,0]) ] )
           #ret = clean(vis=self.msfile,spw='1',field='*',imagename=self.img+'.old',imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",niter=30,imagermode='mosaic',psfmode='hogbom')
           self.checkfinal(report)
 
@@ -1484,7 +1484,7 @@ class test_widefield(testref_base):
           """ [widefield] Test_Widefield_mosaicft_mtmfs : MT-MFS with mosaicft  stokes I, alpha """
           self.prepData("refim_mawproject.ms")
           ret = tclean(vis=self.msfile,spw='*',field='*',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",niter=60,gridder='mosaicft',deconvolver='mtmfs')
-          report=self.th.checkall(imexist=[self.img+'.image.tt0', self.img+'.psf.tt0', self.img+'.weight.tt0'],imval=[(self.img+'.image.tt0',0.922,[256,256,0,0]),(self.img+'.weight.tt0',0.547,[256,256,0,0]),(self.img+'.alpha',-0.04,[256,256,0,0]) ] )
+          report=self.th.checkall(imexist=[self.img+'.image.tt0', self.img+'.psf.tt0', self.img+'.weight.tt0'],imval=[(self.img+'.image.tt0',0.922,[256,256,0,0]),(self.img+'.weight.tt0',0.3,[256,256,0,0]),(self.img+'.alpha',-0.04,[256,256,0,0]) ] )
           ## alpha should represent that of the mosaic PB (twice)... and should then converge to zero
           self.checkfinal(report)
           
@@ -1492,8 +1492,10 @@ class test_widefield(testref_base):
      def test_widefield_mosaicft_cube(self):
           """ [widefield] Test_Widefield_mosaicft_cube : MFS with mosaicft  stokes I """
           self.prepData("refim_mawproject.ms")
-          ret = tclean(vis=self.msfile,spw='*',field='0',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",specmode='cube',niter=10,gridder='mosaicft',deconvolver='hogbom',gain=0.1,stokes='I')
-          report=self.th.checkall(imexist=[self.img+'.image', self.img+'.psf', self.img+'.weight'],imval=[(self.img+'.image',0.797,[256,256,0,0]),(self.img+'.weight',0.682,[256,256,0,0]) ] )
+#          vp.setpbpoly(telescope='EVLA', coeff=[1.0, -1.529e-3, 8.69e-7, -1.88e-10]) 
+#          vp.saveastable('evlavp.tab')
+          ret = tclean(vis=self.msfile,spw='*',field='0',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",specmode='cube',niter=10,gridder='mosaicft',deconvolver='hogbom',gain=0.1,stokes='I') #,vptable='evlavp.tab')
+          report=self.th.checkall(imexist=[self.img+'.image', self.img+'.psf', self.img+'.weight'],imval=[(self.img+'.image',0.797,[256,256,0,0]),(self.img+'.weight',0.33,[256,256,0,0]) ] )
           self.checkfinal(report)
 
           #do stokes V too..
@@ -1846,4 +1848,53 @@ class test_startmodel(testref_base):
           self.checkfinal(report)
           
  ##############################################
-          
+class test_pbcor(testref_base):
+     def setUp(self):
+          self.epsilon = 0.05
+          self.msfile = ""
+          self.img = "tst"
+
+          self.th = TestHelpers()
+
+          vp.setpbpoly(telescope='EVLA', coeff=[1.0, -1.529e-3, 8.69e-7, -1.88e-10]) 
+          vp.saveastable('evlavp.tab')
+
+     def test_pbcor_mfs(self):
+          """ [pbcor] Test pbcor with mfs"""
+          self.prepData('refim_mawproject.ms')
+          ret1 = tclean(vis=self.msfile, imagename=self.img, field='0', imsize=512, cell='10.0arcsec', phasecenter="J2000 19:59:28.500 +40.44.01.50", niter=10, specmode='mfs', vptable='evlavp.tab', pbcor=True)
+          report=self.th.checkall(imexist=[self.img+'.image', self.img+'.pb', self.img+'.image.pbcor'], imval=[(self.img+'.pb',0.7,[256,256,0,0]),(self.img+'.image.pbcor',1.0,[256,256,0,0])])
+          self.checkfinal(report)
+
+     def test_pbcor_mtmfs(self):
+          """ [pbcor] Test pbcor with mtmfs"""
+          self.prepData('refim_mawproject.ms')
+          ret1 = tclean(vis=self.msfile, imagename=self.img, field='0', imsize=512, cell='10.0arcsec', phasecenter="J2000 19:59:28.500 +40.44.01.50", niter=10, specmode='mfs', vptable='evlavp.tab', pbcor=True, deconvolver='mtmfs')
+          report=self.th.checkall(imexist=[self.img+'.image.tt0', self.img+'.pb', self.img+'.image.pbcor'], imval=[(self.img+'.pb',0.7,[256,256,0,0]),(self.img+'.image.pbcor',1.0,[256,256,0,0])])
+          self.checkfinal(report)
+
+     def test_pbcor_cube_basic(self):
+          """ [pbcor] Test pbcor with cube"""
+          self.prepData('refim_mawproject.ms')
+          ret1 = tclean(vis=self.msfile, imagename=self.img, field='0', imsize=512, cell='10.0arcsec', phasecenter="J2000 19:59:28.500 +40.44.01.50", niter=10, specmode='cube', vptable='evlavp.tab', pbcor=True)
+          report=self.th.checkall(imexist=[self.img+'.image', self.img+'.pb', self.img+'.image.pbcor'], imval=[(self.img+'.pb',0.79,[256,256,0,0]),(self.img+'.image.pbcor',1.0,[256,256,0,0]), (self.img+'.pb',0.59,[256,256,0,2]),(self.img+'.image.pbcor',1.0,[256,256,0,2])])
+          self.checkfinal(report)
+
+     def test_pbcor_cube_twosteps(self):
+          """ [pbcor] Test pbcor with cube with imaging and pbcor separately"""
+          self.prepData('refim_mawproject.ms')
+          ret1 = tclean(vis=self.msfile, imagename=self.img, field='0', imsize=512, cell='10.0arcsec', phasecenter="J2000 19:59:28.500 +40.44.01.50", niter=10, specmode='cube', pbcor=False)
+          report1=self.th.checkall(imexist=[self.img+'.image'],imexistnot=[self.img+'.pb', self.img+'.image.pbcor'])
+          ret2 = tclean(vis=self.msfile, imagename=self.img, field='0', imsize=512, cell='10.0arcsec', phasecenter="J2000 19:59:28.500 +40.44.01.50", niter=0,calcres=False,calcpsf=False, specmode='cube', vptable='evlavp.tab', pbcor=True)
+
+          report2=self.th.checkall(imexist=[self.img+'.image', self.img+'.pb', self.img+'.image.pbcor'], imval=[(self.img+'.pb',0.79,[256,256,0,0]),(self.img+'.image.pbcor',1.0,[256,256,0,0]), (self.img+'.pb',0.59,[256,256,0,2]),(self.img+'.image.pbcor',1.0,[256,256,0,2])])
+          self.checkfinal(report1+report2)
+
+     def test_pbcor_cube_mosaicft(self):
+          """ [pbcor] Test pbcor with cube with mosaicft"""
+          self.prepData('refim_mawproject.ms')
+          ret1 = tclean(vis=self.msfile, imagename=self.img, field='0', imsize=512, cell='10.0arcsec', phasecenter="J2000 19:59:28.500 +40.44.01.50", niter=10, specmode='cube', vptable='evlavp.tab',pbcor=True, gridder='mosaic')
+
+          report=self.th.checkall(imexist=[self.img+'.image', self.img+'.pb', self.img+'.image.pbcor'], imval=[(self.img+'.pb',0.79,[256,256,0,0]),(self.img+'.image.pbcor',1.0,[256,256,0,0]), (self.img+'.pb',0.59,[256,256,0,2]),(self.img+'.image.pbcor',1.0,[256,256,0,2])])
+          self.checkfinal(report)
+

@@ -110,6 +110,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsMask.reset( );
     itsGridWt.reset( );
     itsPB.reset( );
+    itsImagePBcor.reset();
 
     itsSumWt.reset( );
     itsOverWrite=False;
@@ -151,6 +152,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsMask.reset( );
     itsGridWt.reset( );
     itsPB.reset( );
+    itsImagePBcor.reset( );
 
     itsSumWt.reset( );
     itsOverWrite=False; // Hard Coding this. See CAS-6937. overwrite;
@@ -194,6 +196,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsMask.reset( );
     itsGridWt.reset( );
     itsPB.reset( );
+    itsImagePBcor.reset( );
     itsMiscInfo=Record();
 
     itsSumWt.reset( );
@@ -269,6 +272,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			     SHARED_PTR<ImageInterface<Float> > restoredim, 
 			     SHARED_PTR<ImageInterface<Float> > maskim,
 			     SHARED_PTR<ImageInterface<Float> > sumwtim,
+			     SHARED_PTR<ImageInterface<Float> > gridwtim,
+			     SHARED_PTR<ImageInterface<Float> > pbim,
+			     SHARED_PTR<ImageInterface<Float> > restoredpbcorim,
 			     CoordinateSystem& csys,
 			     IPosition imshape,
 			     String imagename,
@@ -286,6 +292,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsMask=maskim;
 
     itsSumWt=sumwtim;
+
+    itsGridWt=gridwtim;
+    itsPB=pbim;
+    itsImagePBcor=restoredpbcorim;
 
     itsPBScaleFactor=1.0;// No need to set properly here as it will be computed in makePSF.
 
@@ -385,7 +395,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							  const Int chan, const Int nchanchunks, 
 							  const Int pol, const Int npolchunks)
   {
-    return SHARED_PTR<SIImageStore>(new SIImageStore(itsModel, itsResidual, itsPsf, itsWeight, itsImage, itsMask, itsSumWt, itsCoordSys,itsImageShape, itsImageName, facet, nfacets,chan,nchanchunks,pol,npolchunks,itsUseWeight));
+    return SHARED_PTR<SIImageStore>(new SIImageStore(itsModel, itsResidual, itsPsf, itsWeight, itsImage, itsMask, itsSumWt, itsGridWt, itsPB, itsImagePBcor, itsCoordSys,itsImageShape, itsImageName, facet, nfacets,chan,nchanchunks,pol,npolchunks,itsUseWeight));
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -665,6 +675,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if( itsSumWt ) releaseImage( itsSumWt );
     if( itsGridWt ) releaseImage( itsGridWt );
     if( itsPB ) releaseImage( itsPB );
+    if( itsImagePBcor ) releaseImage( itsImagePBcor );
 
     return True; // do something more intelligent here.
   }
@@ -932,8 +943,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SHARED_PTR<ImageInterface<Float> > SIImageStore::pb(uInt /*nterm*/)
   {
     accessImage( itsPB, itsParentPB, imageExts(PB) );
-    /// change the coordinate system here, to uv.
     return itsPB;
+  }
+  SHARED_PTR<ImageInterface<Float> > SIImageStore::imagepbcor(uInt /*nterm*/)
+  {
+    accessImage( itsImagePBcor, itsParentImagePBcor, imageExts(IMAGEPBCOR) );
+    return itsImagePBcor;
   }
 
   SHARED_PTR<ImageInterface<Complex> > SIImageStore::forwardGrid(uInt /*nterm*/){
@@ -1125,7 +1140,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 	  }
 
 	//Remove the old mask as it is no longer valid
-	removeMask( pb() );
+	//	removeMask( pb() );
 
 	//MSK//	
 	LatticeExpr<Bool> pbmask( iif( *pb() > pblimit , True , False ) );
@@ -1251,21 +1266,13 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
     
 
   }
-  void  SIImageStore::makePBImage(const Float /*pblimit*/)
+
+
+  void  SIImageStore::makePBImage(const Float pblimit)
   {
    LogIO os( LogOrigin("SIImageStore","makePBImage",WHERE) );
 
-   //   cout << "Norm precalc'd PB to max 1 and set mask via pblimit" << endl;
-   /*
-    LatticeExprNode elmax= max( pbImage );
-    Float fmax = abs(elmax.getFloat());
-    //If there are multiple overlap of beam such that the peak is larger than 1 then normalize
-    //otherwise leave as is
-    if(fmax>1.0)
-      pbImage.copyData((LatticeExpr<Float>)(pbImage/fmax));
-*/
 
-   /*
     	for(Int pol=0; pol<itsImageShape[2]; pol++)
 	  {
 	       for(Int chan=0; chan<itsImageShape[3]; chan++)
@@ -1276,29 +1283,55 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 									  pol, itsImageShape[2], 
 									  *pb() );
 
-		  // Fill in a PB model for this chan/pol.
-
+		  // Norm by the max
+		  LatticeExprNode elmax= max( *pbsubim );
+		  Float fmax = abs(elmax.getFloat());
+		  //If there are multiple overlap of beam such that the peak is larger than 1 then normalize
+		  //otherwise leave as is
+		  if(fmax>1.0)
+		    {
+		      LatticeExpr<Float> normed( (*pbsubim) / fmax  );
+		      LatticeExpr<Float> limited( iif( normed > pblimit , normed, 0.0 ) );
+		      pbsubim->copyData( limited );
+		    }
+		  else
+		    {
+		      LatticeExpr<Float> limited( iif((*pbsubim) > pblimit , (*pbsubim), 0.0 ) );
+		      pbsubim->copyData( limited );
+		    }
 	      }
 	  }
-   */	
-   // removeMask( pb() );
-	//MSK//		LatticeExpr<Bool> pbmask( iif( *pb() > pblimit , True , False ) );
-	//MSK// 	createMask( pbmask, pb() );
+
+	//	removeMask( pb() );
+	//MSK//		
+	LatticeExpr<Bool> pbmask( iif( *pb() > pblimit , True , False ) );
+	//MSK// 
+	createMask( pbmask, pb() );
   }
   
 
-  void SIImageStore::dividePSFByWeight(const Float pblimit)
+  void SIImageStore::dividePSFByWeight(const Float /* pblimit*/)
   {
     LogIO os( LogOrigin("SIImageStore","dividePSFByWeight",WHERE) );
 
     normPSF();
 
-    //    cout << "In dividePSFByWeight : itsUseWeight : " << itsUseWeight << endl;
     if( itsUseWeight )
     { 
 	
 	divideImageByWeightVal( *weight() ); 
+    }
 
+  }
+
+  void SIImageStore::normalizePrimaryBeam(const Float pblimit)
+  {
+    LogIO os( LogOrigin("SIImageStore","normalizePrimaryBeam",WHERE) );
+
+    //    cout << "In dividePSFByWeight : itsUseWeight : " << itsUseWeight << endl;
+    if( itsUseWeight )
+    { 
+	
 	for(Int pol=0; pol<itsImageShape[2]; pol++)
 	  {
 	    for(Int chan=0; chan<itsImageShape[3]; chan++)
@@ -1310,7 +1343,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 	makePBFromWeight(pblimit);
 	
     }//if itsUseWeight
-    else { makePBImage(pblimit); }
+    else { makePBImage(pblimit); } // OR... just check that it exists already.
     
    }
 
@@ -1700,6 +1733,14 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
     Int npol = itsImageShape[2];
     Int nchan = itsImageShape[3];
 
+    /*    if( !hasResidualImage() )
+      {
+	// Cannot restore without residual/dirty image.
+	os << "Cannot restore without residual image" << LogIO::POST;
+	return;
+      }
+    */
+
     //// Get/fill the beamset
     IPosition beamset = itsPSFBeams.shape();
     AlwaysAssert( beamset.nelements()==2 , AipsError );
@@ -2049,13 +2090,60 @@ Float SIImageStore :: calcStd(Vector<Float> &vect, Vector<Bool> &flag, Float mea
   }
 */
 
-  void SIImageStore::pbcorPlane()
+  void SIImageStore::pbcor()
   {
 
-    LogIO os( LogOrigin("SIImageStore","pbcorPlane",WHERE) );
-    //     << ". Optionally, PB-correct too." << LogIO::POST;
+    LogIO os( LogOrigin("SIImageStore","pbcor",WHERE) );
 
-  }
+    if( !hasRestored() && !hasPB() )
+      {
+	// Cannot pbcor without restored image and pb
+	os << "Cannot pbcor without restored image and pb" << LogIO::POST;
+	return;
+      }
+
+
+	for(Int pol=0; pol<itsImageShape[2]; pol++)
+	  {
+	    for(Int chan=0; chan<itsImageShape[3]; chan++)
+	      {
+		
+		CountedPtr<ImageInterface<Float> > restoredsubim=makeSubImage(0,1, 
+								      chan, itsImageShape[3],
+								      pol, itsImageShape[2], 
+								      *image() );
+		CountedPtr<ImageInterface<Float> > pbsubim=makeSubImage(0,1, 
+								      chan, itsImageShape[3],
+								      pol, itsImageShape[2], 
+								      *pb() );
+
+		CountedPtr<ImageInterface<Float> > pbcorsubim=makeSubImage(0,1, 
+								      chan, itsImageShape[3],
+								      pol, itsImageShape[2], 
+								      *imagepbcor() );
+
+
+		LatticeExprNode pbmax( max( *pbsubim ) );
+		Float pbmaxval = pbmax.getFloat();
+
+		if( pbmaxval<=0.0 )
+		  {
+		    os << LogIO::WARN << "Skipping PBCOR for C:" << chan << " P:" << pol << " because pb max is zero " << LogIO::POST;
+		    pbcorsubim->set(0.0);
+		  }
+		else
+		  {
+
+		    LatticeExpr<Float> thepbcor( iif( *(pbsubim) > 0.0 , (*(restoredsubim))/(*(pbsubim)) , 0.0 ) );
+		    pbcorsubim->copyData( thepbcor );
+
+		}// if not zero
+	      }//chan
+	  }//pol
+
+       copyMask(pb(),imagepbcor());
+
+  }// end pbcor
 
   Matrix<Float> SIImageStore::getSumWt(ImageInterface<Float>& target)
   {
@@ -2411,6 +2499,7 @@ Bool SIImageStore::findMinMaxLattice(const Lattice<Float>& lattice,
     imageExts(PB)=".pb";
     imageExts(FORWARDGRID)=".forward";
     imageExts(BACKWARDGRID)=".backward";
+    imageExts(IMAGEPBCOR)=".image.pbcor";
 
     itsParentPsf = itsPsf;
     itsParentModel=itsModel;

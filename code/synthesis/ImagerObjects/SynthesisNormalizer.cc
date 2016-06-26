@@ -72,7 +72,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   SynthesisNormalizer::~SynthesisNormalizer() 
   {
-    LogIO os( LogOrigin("SynthesisNormalizer","descructor",WHERE) );
+    LogIO os( LogOrigin("SynthesisNormalizer","destructor",WHERE) );
     os << LogIO::DEBUG1 << "SynthesisNormalizer destroyed" << LogIO::POST;
   }
   
@@ -264,22 +264,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // Since PSFs are normed just by their max, this sequence is OK.
       setPsfFromOneFacet();
       itsImages->dividePSFByWeight(itsPBLimit);
-
-      /*
-      /// All facets are invidually normalized and sumwt per facet has
-      /// been recorded from unnormed psfs, copy one psf to the centre because the
-      /// minor cycle needs a 'normal' psf for whole image.
-      for ( uInt facet=0; facet<itsNFacets*itsNFacets; facet++ )
-        { itsFacetImageStores[facet]->dividePSFByWeight( ); }
-      setPsfFromOneFacet();
-      */
-
     }
-
-    //        cout << "UU Validating parent imstore " << endl;
-    //        itsImages->validate();
-
-
 
       // Check PSF quality by fitting beams
     {
@@ -288,7 +273,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       itsImages->makeImageBeamSet();
       itsImages->printBeamSet();
     }
-    
+
+  }
+
+  void SynthesisNormalizer::normalizePrimaryBeam()
+  {
+    LogIO os( LogOrigin("SynthesisNormalizer", "normalizePrimaryBeam",WHERE) );
+
+    if( itsImages==NULL ) { itsImages = makeImageStore( itsImageName ); }
+
+
+    // Irrespective of facets.
+    itsImages->normalizePrimaryBeam(itsPBLimit);
   }
 
 

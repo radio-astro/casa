@@ -732,7 +732,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
   }
 
-  void SIImageStoreMultiTerm::dividePSFByWeight(const Float pblimit)
+  void SIImageStoreMultiTerm::dividePSFByWeight(const Float /*pblimit*/)
   {
     LogIO os( LogOrigin("SIImageStoreMultiTerm","dividePSFByWeight",WHERE) );
 
@@ -743,17 +743,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//cout << "npsfs : " << itsPsfs.nelements() << " and tix : " << tix << endl;
 
 	normPSF(tix);
+	
+	if ( itsUseWeight) {
+	  divideImageByWeightVal( *weight(tix) ); 
+	}
+	
+      }     
+   }
 
-	if( itsUseWeight )
-	{ 
-	    
-	    divideImageByWeightVal( *weight(tix) ); 
-
-	  }
-      }
-
+ void SIImageStoreMultiTerm::normalizePrimaryBeam(const Float pblimit)
+  {
+    LogIO os( LogOrigin("SIImageStoreMultiTerm","normalizePrimaryBeam",WHERE) );
     if ( itsUseWeight) {
-    makePBFromWeight(pblimit);
+      
+      makePBFromWeight(pblimit);
     }
     else { makePBImage(pblimit); }
     //    calcSensitivity();
@@ -889,6 +892,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     LogIO os( LogOrigin("SIImageStoreMultiTerm","restore",WHERE) );
 
+    /*    if( !hasResidualImage() )
+      {
+	// Cannot restore without residual/dirty image.
+	os << "Cannot restore without residual image" << LogIO::POST;
+	return;
+      }
+    */
+
     for(uInt tix=0; tix<itsNTerms; tix++)
       {
 	SIImageStore::restore(rbeam, usebeam, tix);
@@ -969,10 +980,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
  
   }
 
-  void SIImageStoreMultiTerm::pbcorPlane()
+  void SIImageStoreMultiTerm::pbcor()
   {
 
     LogIO os( LogOrigin("SIImageStoreMultiTerm","pbcorPlane",WHERE) );
+
+    // message saying that it's only stokes I for now...
+
+    //    call imstore's version.
+    SIImageStore::pbcor();
 
   }
 

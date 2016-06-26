@@ -340,6 +340,10 @@ Bool SynthesisImagerVi2::defineImage(SynthesisParamsImage& impars,
       {
 	os << "Set Gridding options for [" << impars.imageName << "] with ftmachine : " << gridpars.ftmachine << LogIO::POST;
 
+	itsVpTable=gridpars.vpTable;
+	itsMakeVP= ( gridpars.ftmachine.contains("mosaicft") ||
+		             gridpars.ftmachine.contains("awprojectft") )?False:True;
+
 	createFTMachine(ftm, iftm, gridpars.ftmachine, impars.nTaylorTerms, gridpars.mType, 
 			gridpars.facets, gridpars.wprojplanes,
 			gridpars.padding,gridpars.useAutoCorr,gridpars.useDoublePrec,
@@ -1224,6 +1228,10 @@ void SynthesisImagerVi2::unlockMSs()
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   void SynthesisImagerVi2:: createMosFTMachine(CountedPtr<refim::FTMachine>& theFT,CountedPtr<refim::FTMachine>&  theIFT, const Float /*padding*/, const Bool useAutoCorr, const Bool useDoublePrec, const Float rotatePAStep, const String stokes){
@@ -1233,14 +1241,23 @@ void SynthesisImagerVi2::unlockMSs()
     ROMSColumns msc(vi_p->ms());
     String telescop=msc.observation().telescopeName()(0);
     // Hack...start
-    if(telescop=="EVLA"){os << LogIO::WARN << "vpmanager does not list EVLA. Using VLA beam parameters" << LogIO::POST; telescop="VLA";}
+    //    if(telescop=="EVLA"){os << LogIO::WARN << "vpmanager does not list EVLA. Using VLA beam parameters" << LogIO::POST; telescop="VLA";}
     // Hack...stop
-    VPManager *vpman=VPManager::Instance();
+ 
+
+    PBMath::CommonPB kpb;
+    Record rec;
+    getVPRecord( rec, kpb, telescop );
+    
+    /*
+   VPManager *vpman=VPManager::Instance();
     PBMath::CommonPB kpb;
     PBMath::enumerateCommonPB(telescop, kpb);
     Record rec;
     vpman->getvp(rec, telescop);
-    refim::VPSkyJones* vps=NULL;
+    */
+
+   refim::VPSkyJones* vps=NULL;
     if(rec.asString("name")=="COMMONPB" && kpb !=PBMath::UNKNOWN ){
       vps= new refim::VPSkyJones(msc, True, Quantity(rotatePAStep, "deg"), BeamSquint::GOFIGURE, Quantity(360.0, "deg"));
       /////Don't know which parameter has pb threshold cutoff that the user want 
@@ -1504,6 +1521,45 @@ void SynthesisImagerVi2::unlockMSs()
 	}
   }
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+  Bool SynthesisImagerVi2::makePrimaryBeam(PBMath& /*pbMath*/)
+  {
+    LogIO os( LogOrigin("SynthesisImager","makePrimaryBeam",WHERE) );
+
+    os << "Evaluating Primary Beam model onto image grid(s)" << LogIO::POST;
+
+    itsMappers.initPB();
+
+    vi::VisBuffer2* vb = vi_p->getVisBuffer();
+    vi_p->originChunks();
+    vi_p->origin();
+    //Int fieldCounter=0;
+    Vector<Int> fieldsDone;
+
+    vb;
+
+    for(vi_p->originChunks(); vi_p->moreChunks(); vi_p->nextChunk()){
+
+      /*  TODO : fill this in
+      Bool fieldDone=False;
+      for (uInt k=0;  k < fieldsDone.nelements(); ++k)
+	fieldDone=fieldDone || (vb->fieldId()==fieldsDone(k));
+      if(!fieldDone){
+	++fieldCounter;
+	fieldsDone.resize(fieldCounter, True);
+	fieldsDone(fieldCounter-1)=vb->fieldId();
+
+	itsMappers.addPB(*vb,pbMath);
+
+      }
+      */
+
+    }
+      unlockMSs();
+
+      return True;
+  }// end makePB
 
 
 

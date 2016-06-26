@@ -119,6 +119,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  Bool addpsf, Bool addresidual, Bool addweight, Bool adddensity);
 
   void dividePSFByWeight(const Float pblimit=C::minfloat);
+  void normalizePrimaryBeam(const Float pblimit=C::minfloat);
 
   void divideResidualByWeight(const Float pblimit=C::minfloat, const String normtype="flatnoise");
   //  void divideSensitivityPatternByWeight();
@@ -139,7 +140,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   void restore(GaussianBeam& rbeam, String& usebeam,uInt term=0 );
   //  GaussianBeam restorePlane();
-  void pbcorPlane();
+  void pbcor();
 
   /*
   SHARED_PTR<SIImageStore> getFacetImageStore(const Int facet, const Int nfacets);
@@ -151,13 +152,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					    const Int chan=0, const Int nchanchunks=1, 
 					    const Int pol=0, const Int npolchunks=1);
   
-
+  
   virtual Bool hasSensitivity(){return itsWeights.nelements()>0 && itsWeights[0];}
   //  virtual Bool hasModel() {return itsModels.nelements()>0 && itsModels[0];}
   virtual Bool hasModel() {return doesImageExist(itsImageName+imageExts(MODEL)+String(".tt0"));}
   virtual Bool hasPsf(){return itsPsfs.nelements()>0 && itsPsfs[0];}
   virtual Bool hasResidual() {return itsResiduals.nelements()>0 && itsResiduals[0];}
   virtual Bool hasSumWt() {return itsSumWts.nelements()>0 && itsSumWts[0];}
+  
+
+  //  virtual Bool hasSensitivity() {return doesImageExist(itsImageName+imageExts(WEIGHT)+String(".tt0"));}
+  //  virtual Bool hasModel() {return doesImageExist(itsImageName+imageExts(MODEL)+String(".tt0"));}
+  //  virtual Bool hasMask() {return doesImageExist(itsImageName+imageExts(MASK)+String(".tt0"));}
+  //  virtual Bool hasPsf() {return doesImageExist(itsImageName+imageExts(PSF)+String(".tt0"));}
+  virtual Bool hasResidualImage() {return doesImageExist(itsImageName+imageExts(RESIDUAL)+String(".tt0"));}
+  //  virtual Bool hasSumWt() {return doesImageExist(itsImageName+imageExts(SUMWT)+String(".tt0"));}
+  virtual Bool hasRestored() {return doesImageExist(itsImageName+imageExts(IMAGE)+String(".tt0"));}
 
   //  virtual Bool getUseWeightImage();
   //  {return ( itsParentSumWts.nelements()==0 || itsParentSumWts[0].null() ) ? False : getUseWeightImage( *(itsParentSumWts[0]) ); };

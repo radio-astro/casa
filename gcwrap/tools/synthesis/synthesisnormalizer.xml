@@ -123,6 +123,18 @@ This is used to construct {\tt synthesisnormalizer} tool.
 
 <!-- ===================================== -->
 
+   <method type="function" name="normalizeprimarybeam">
+   <shortdescription>Normalize PB to peak 1</shortdescription>
+
+<description>
+</description>
+<input/>
+
+<returns type="bool"/>
+</method>
+
+<!-- ===================================== -->
+
    <method type="function" name="divideresidualbyweight">
    <shortdescription>Divide residual by weight</shortdescription>
 

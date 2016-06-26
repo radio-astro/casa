@@ -105,6 +105,17 @@ bool synthesisdeconvolver::restore()
   return rstat;
 }
 
+bool synthesisdeconvolver::pbcor()
+{
+  casac::record* rstat(0);
+  try {
+    itsDeconvolver->pbcor();
+  } catch  (AipsError x) {
+    RETHROW(x);
+  }
+  return rstat;
+}
+
   /*
   bool synthesisdeconvolver::testsummary(const casac::image *imt)
 {

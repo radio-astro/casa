@@ -94,10 +94,10 @@ template<class T> class ImageInterface;
   const CountedPtr<FTMachine>& getFTM(const Bool ift=True) {if (ift) return ift_p; else return ft_p;};
   const CountedPtr<refim::FTMachine>& getFTM2(const Bool ift=True) {if (ift) return ift2_p; else return ft2_p;};
 
-  /*
+  
   virtual void initPB();
   virtual void addPB(VisBuffer& vb, PBMath& pbMath);
-  */
+  
 
 protected:
 

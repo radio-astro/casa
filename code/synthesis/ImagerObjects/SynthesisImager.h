@@ -115,6 +115,7 @@ class SynthesisImager
 			   const bool useDoublePrec=True, 
 			   const Int wprojplanes=1, 
 			   const String convFunc="SF", 
+			   //			   const String vptable="",
 			   const String startmodel="",
 			   // The extra params for WB-AWP
 			   const Bool aTermOn    = True,
@@ -173,8 +174,13 @@ class SynthesisImager
   // make the psf images  i.e grid weight rather than data
   void makePSF();
 
-  //  void makePrimaryBeam(PBMath& pbMath);
 
+  Bool makePB();
+  Bool makePBImage(const String& telescopeName, 
+		   Bool useSymmetricBeam, Double diam);
+  Bool makePBImage(const String telescop);
+  Bool makePrimaryBeam(PBMath& pbMath);
+  
   virtual void predictModel();
   //  void makeImage();
   /* Access method to the Loop Controller held in this class */
@@ -281,6 +287,9 @@ protected:
 			  const String imageNamePrefix="");
   ATerm* createTelescopeATerm(const MeasurementSet& ms, const Bool& isATermOn);
 
+  // Get VP record
+  void getVPRecord(Record &rec, PBMath::CommonPB &kpb, String telescop);
+
   // Do the major cycle
   virtual void runMajorCycle(const Bool dopsf=False, const Bool savemodel=False);
 
@@ -322,6 +331,9 @@ protected:
   IPosition itsMaxShape;
   Record itsCsysRec;
   Int itsNchan;
+
+  String itsVpTable; 
+  Bool itsMakeVP;
 
   /////////////// All input parameters
 

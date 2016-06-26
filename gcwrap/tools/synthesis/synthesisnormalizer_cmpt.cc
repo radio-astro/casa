@@ -140,6 +140,18 @@ bool synthesisnormalizer::gatherresidual()
   return rstat;
 }
 
+  bool synthesisnormalizer::normalizeprimarybeam()
+{
+  Bool rstat(False);
+  try {
+	itsNormalizer->normalizePrimaryBeam( );
+	rstat=True;
+  } catch  (AipsError x) {
+    RETHROW(x);
+  }
+  return rstat;
+}
+
   bool synthesisnormalizer::divideresidualbyweight()
 {
   Bool rstat(False);

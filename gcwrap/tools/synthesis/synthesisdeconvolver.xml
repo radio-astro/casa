@@ -125,6 +125,19 @@ This is used to construct {\tt synthesisdeconvolver} tool.
 <returns type="bool"/>
 </method>
 
+<!-- ===================================== -->
+
+   <method type="function" name="pbcor">
+   <shortdescription>Apply primary beam correction</shortdescription>
+
+<description>
+</description>
+<input>
+</input>
+
+<returns type="bool"/>
+</method>
+
 <!-- ===========================
 
    <method type="function" name="testsummary">

@@ -61,6 +61,9 @@ def tclean(
 
     wprojplanes,#=1,
 
+    ### PB
+    vptable,
+
     aterm,#=True,
     psterm,#=True,
     wbawp ,#= True,
@@ -77,7 +80,11 @@ def tclean(
     scales,#=[],
     nterms,#=1,
     smallscalebias,#=0.6
+
+    ### restoration options
+    restoration,
     restoringbeam,#=[],
+    pbcor,
 
     ##### Outliers
     outlierfile,#='',
@@ -107,15 +114,16 @@ def tclean(
     maskthreshold,#='',
     maskresolution,#='',
 
+
+    ## Misc
+
     restart,#=True,
 
     savemodel,#="none",
 
-    makeimages,#="auto"
+#    makeimages,#="auto"
     calcres,#=True,
     calcpsf,#=True,
-    restoremodel,#='auto'
-    writepb,#='auto'
 
     ####### State parameters
     parallel):#=False):
@@ -183,7 +191,9 @@ def tclean(
         chanchunks=chanchunks,
 
         wprojplanes=wprojplanes,
-        
+
+        vptable=vptable,
+
         ### Gridding....
 
         aterm=aterm,
@@ -276,7 +286,7 @@ def tclean(
         casalog.post("***Time for initializing imager and normalizers: "+"%.2f"%(t1-t0)+" sec", "INFO3", "task_tclean");
 
         ## Init minor cycle elements
-        if niter>0 or restoremodel==True:
+        if niter>0 or restoration==True:
             t0=time.time();
             imager.initializeDeconvolvers()
             t1=time.time();
@@ -297,6 +307,14 @@ def tclean(
             t1=time.time();
             casalog.post("***Time for making PSF: "+"%.2f"%(t1-t0)+" sec", "INFO3", "task_tclean");
 
+        if pbcor==True: # or gridder.count('mosaic') or gridder.count('awproject'):
+            t0=time.time();
+
+            imager.makePB()
+
+            t1=time.time();
+            casalog.post("***Time for normalizing PB: "+"%.2f"%(t1-t0)+" sec", "INFO3", "task_tclean");
+
         if niter >=0 : 
 
             ## Make dirty image
@@ -313,10 +331,8 @@ def tclean(
                     imager.predictModel()
         
             ## Do deconvolution and iterations
-            dorestore=False
             if niter>0 :
                 while ( not imager.hasConverged() ):
-                    dorestore=True
                     t0=time.time();
                     imager.runMinorCycle()
                     t1=time.time();
@@ -331,11 +347,17 @@ def tclean(
                     retrec=imager.getSummary();
 
             ## Restore images.
-            if dorestore or restoremodel==True:  
+            if restoration==True:  
                 t0=time.time();
                 imager.restoreImages()
                 t1=time.time();
                 casalog.post("***Time for restoring images: "+"%.2f"%(t1-t0)+" sec", "INFO3", "task_tclean");
+                if pbcor==True:
+                    t0=time.time();
+                    imager.pbcorImages()
+                    t1=time.time();
+                    casalog.post("***Time for pb-correcting images: "+"%.2f"%(t1-t0)+" sec", "INFO3", "task_tclean");
+                    
 
 
         if (pcube):

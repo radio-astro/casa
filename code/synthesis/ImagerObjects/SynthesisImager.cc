@@ -614,6 +614,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				    const Bool useDoublePrec, 
 				    const Int wprojplanes, 
 				    const String convFunc, 
+				    //				    const String vpTable,
 				    const String startmodel,
 				    // The extra params for WB-AWP
 				    const Bool aTermOn,//    = True,
@@ -667,6 +668,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   gridpars.useDoublePrec=useDoublePrec;
   gridpars.wprojplanes=wprojplanes;
   gridpars.convFunc=convFunc;
+  //  gridpars.vpTable=vpTable;
   gridpars.aTermOn=aTermOn;
   gridpars.psTermOn=psTermOn;
   gridpars.mTermOn=mTermOn;
@@ -738,6 +740,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     try
       {
 	os << "Set Gridding options for [" << impars.imageName << "] with ftmachine : " << gridpars.ftmachine << LogIO::POST;
+
+	itsVpTable=gridpars.vpTable;
+	itsMakeVP= ( gridpars.ftmachine.contains("mosaicft") ||
+		             gridpars.ftmachine.contains("awprojectft") )?False:True;
 
 	createFTMachine(ftm, iftm, gridpars.ftmachine, impars.nTaylorTerms, gridpars.mType, 
 			gridpars.facets, gridpars.wprojplanes,
@@ -1865,6 +1871,45 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  void SynthesisImager::getVPRecord(Record &rec, PBMath::CommonPB &kpb, String telescop)
+  {
+    LogIO os(LogOrigin("SynthesisImager", "getVPRecord",WHERE));
+
+    VPManager *vpman=VPManager::Instance();
+    if( itsVpTable != String("") ) 
+      {
+	os << "Loading Voltage Pattern information from " << itsVpTable << LogIO::POST;
+	vpman->loadfromtable(itsVpTable);
+      }
+    else
+      {
+	//	os << "Using Voltage Pattern currently set in the VPManager" << LogIO::POST;
+	os << "Using default Voltage Patterns from the VPManager" << LogIO::POST;
+	vpman->reset();
+      }
+
+    os << LogIO::WARN << "Temporary alert : The state of the vpmanager tool has been modified by loading these primary beam models. If any of your scripts rely on the vpmanager state being preserved throughout your CASA session, please use vp.saveastable() and vp.loadfromtable() as needed. This 'feature'/warning will hopefully go away by the 4.7 release." << LogIO::POST;
+    
+
+    //    PBMath::CommonPB kpb;
+    PBMath::enumerateCommonPB(telescop, kpb);
+    //    Record rec;
+    vpman->getvp(rec, telescop);
+    if(rec.empty()){
+	if((telescop=="EVLA")){
+	  os << LogIO::WARN << "vpmanager does not list EVLA. Using VLA beam parameters" << LogIO::POST; 
+	  telescop="VLA";
+	  vpman->getvp(rec, telescop);
+	  kpb=PBMath::VLA;
+	}
+	else{
+	  os << LogIO::SEVERE << "vpmanager does not have a beam "+telescop <<"\n Please use the vpanager to define one (and optionally save its state as a table and supply its name via the vptable parameter.)" << LogIO::POST;
+	}
+    }
+    
+  }// get VPRecord
+
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   void SynthesisImager:: createMosFTMachine(CountedPtr<FTMachine>& theFT,CountedPtr<FTMachine>&  theIFT, const Float /*padding*/, const Bool useAutoCorr, const Bool useDoublePrec, const Float rotatePAStep, const String stokes){
     
@@ -1875,7 +1920,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Hack...start
     //if(telescop=="EVLA"){os << LogIO::WARN << "vpmanager does not list EVLA. Using VLA beam parameters" << LogIO::POST; telescop="VLA";}
     // Hack...stop
-    VPManager *vpman=VPManager::Instance();
+
+    PBMath::CommonPB kpb;
+    Record rec;
+    getVPRecord( rec, kpb, telescop );
+    
+    /*
+     VPManager *vpman=VPManager::Instance();
+
+    if( itsVpTable != String("") ) vpman->loadfromtable(itsVpTable);
+
     PBMath::CommonPB kpb;
     PBMath::enumerateCommonPB(telescop, kpb);
     Record rec;
@@ -1891,6 +1945,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  os << LogIO::SEVERE << "vpmanager does not have a beam "+telescop <<"\n You can use VPManager to define one" << LogIO::POST;
 	}
     }
+
+    */
+
     VPSkyJones* vps=NULL;
     if(rec.asString("name")=="COMMONPB" && kpb !=PBMath::UNKNOWN ){
       vps= new VPSkyJones(msc, True, Quantity(rotatePAStep, "deg"), BeamSquint::GOFIGURE, Quantity(360.0, "deg"));
@@ -2417,37 +2474,54 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/*
-  Bool SynthesisImager::makePB(String vpString)
+
+  Bool SynthesisImager::makePB()
   {
-    Bool doDefaultVP = vpString.length()>0 ? False : True;
+      LogIO os( LogOrigin("SynthesisImager","makePB",WHERE) );
 
-      if (doDefaultVP) {
+      if( itsMakeVP==False )
+	{
+	  os << LogIO::NORMAL1 << "Not making .pb by direct evaluation. The gridder will make a .weight and a .pb will be computed from it." << LogIO::POST;
+	  // Check that the .weight exists.. ?
 
-	CoordinateSystem coordsys=itsMappers(0)->imageStore()->itsCoordSys;
+	  return False;
+	}
+      else
+	{
+	  Bool doDefaultVP = itsVpTable.length()>0 ? False : True;
 
-	String telescope=coordsys.obsInfo().telescope();
-	
-	ROMSAntennaColumns ac(ms_p->antenna());
-	Double dishDiam=ac.dishDiameter()(0);
-	if(!allEQ(ac.dishDiameter().getColumn(), dishDiam))
-	  os << LogIO::WARN
-	     << "The MS has multiple antenna diameters ..PB could be wrong "
-	     << LogIO::POST;
-        return makePBImage(coordsys, telescope, False, dishDiam);
-      }
-      else{
-	Table vpTable(vpString);
-        return makePBImage( vpTable );	
-      }
-
+	  CoordinateSystem coordsys=itsMappers.imageStore(0)->getCSys();
+	  String telescope=coordsys.obsInfo().telescope();
+	  
+	  if (doDefaultVP) {
+	    
+	    ROMSAntennaColumns ac(mss4vi_p[0].antenna());
+	    Double dishDiam=ac.dishDiameter()(0);
+	    if(!allEQ(ac.dishDiameter().getColumn(), dishDiam))
+	      os << LogIO::WARN
+		 << "The MS has multiple antenna diameters ..PB could be wrong "
+		 << LogIO::POST;
+	    return makePBImage( telescope, False, dishDiam);
+	  }
+	  else{
+	    return makePBImage(telescope );	
+	  }
+	  
+	}
+ 
+      return False;
   }
+  
+  Bool SynthesisImager::makePBImage(const String& telescopeName, 
+				    Bool useSymmetricBeam, Double diam){
+    
+    LogIO os(LogOrigin("SynthesisImager", "makePBImage()", WHERE));
+    
+    // Check if this metadata info should come from each Mapper or if it's OK to be just the first one.
+    // Right now it assumes all mappers have the same FREQUENCY settings.
+    
+  CoordinateSystem imageCoord=itsMappers.imageStore(0)->getCSys();
 
-Bool SynthesisImager::makePBImage(const CoordinateSystem& imageCoord, 
-			 const String& telescopeName, 
-			 Bool useSymmetricBeam, Double diam){
-
-  LogIO os(LogOrigin("SynthesisImager", "makePBImage()", WHERE));
   Int spectralIndex=imageCoord.findCoordinate(Coordinate::SPECTRAL);
   SpectralCoordinate
     spectralCoord=imageCoord.spectralCoordinate(spectralIndex);
@@ -2482,18 +2556,30 @@ Bool SynthesisImager::makePBImage(const CoordinateSystem& imageCoord,
   return makePrimaryBeam(myPB );
 }
 
-Bool SynthesisImager::makePBImage(const Table& vpTable){
+  Bool SynthesisImager::makePBImage(const String telescop){
+
+  /*
   ROScalarColumn<TableRecord> recCol(vpTable, (String)"pbdescription");
   PBMath myPB(recCol(0));
+  */
+  
+  PBMath::CommonPB kpb;
+  Record rec;
+  getVPRecord( rec, kpb, telescop );
+
+  PBMath myPB( rec );
+
   return makePrimaryBeam(myPB);
 }
 
 
-  void SynthesisImager::makePrimaryBeam(PBMath& pbMath)
+  Bool SynthesisImager::makePrimaryBeam(PBMath& pbMath)
   {
     LogIO os( LogOrigin("SynthesisImager","makePrimaryBeam",WHERE) );
 
-    itsMappers->initPB();
+    os << "Evaluating Primary Beam model onto image grid(s)" << LogIO::POST;
+
+    itsMappers.initPB();
 
     VisBuffer vb(*rvi_p);
     Int fieldCounter=0;
@@ -2508,15 +2594,16 @@ Bool SynthesisImager::makePBImage(const Table& vpTable){
 	fieldsDone.resize(fieldCounter, True);
 	fieldsDone(fieldCounter-1)=vb.fieldId();
 
-	itsMappers->addPB(vb,pbMath);
+	itsMappers.addPB(vb,pbMath);
 
       }
     }
       unlockMSs();
 
+      return True;
   }// end makePB
 
-*/
+
 
 } //# NAMESPACE CASA - END
 
