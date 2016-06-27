@@ -534,8 +534,8 @@ void SingleDishMS::get_mask_from_rec(Int spwid, Matrix<Int> const &rec_chan,
     }
   }
   //generate mask
-  for (size_t j = 0; j < edge.size(); j += 3) {
-    for (size_t k = edge[j]; k <= edge[j + 1]; k += edge[j + 2]) {
+  for (size_t j = 0; j < edge.size()-2; j += 3) {
+    for (size_t k = edge[j]; k <= edge[j + 1] && k < mask.size(); k += edge[j + 2]) {
       mask(k) = True;
     }
   }
@@ -771,6 +771,9 @@ void SingleDishMS::split_bloutputname(string str) {
   //cout << "str.substr(v[1]+1, str.size()-v[1]-1) " << str.substr(v[1]+1, str.size()-v[1]-1) << endl;
 
   string ss;
+  bloutputname_csv.clear();
+  bloutputname_text.clear();
+  bloutputname_table.clear();
 
   if (0 != v[0]) {
     bloutputname_csv = str.substr(0, v[0]);
@@ -2447,12 +2450,11 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
     }
   }
   
-  Vector<size_t> ctx_indices(nchan.nelements(), 0ul);
+  Vector<size_t> ctx_indices(recspw.size(), 0ul);
   //stores the number of channels of corresponding elements in contexts list.
   // WORKAROUND for absense of the way to get num_bases_data in context.
   vector<size_t> ctx_nchans;
 
-  Vector<bool> pol;
   LIBSAKURA_SYMBOL(Status) status;
   LIBSAKURA_SYMBOL(BaselineStatus) bl_status;
 
@@ -2536,6 +2538,8 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
           get_flag_from_cube(flag_chunk, irow, ipol, num_chan, mask_data);
           // skip spectrum if all channels flagged
           if (allchannels_flagged(num_chan, mask_data)) {
+            os << LogIO::DEBUG1 << "Row " << orig_rows[irow] << ", Pol " << ipol
+                << ": All channels flagged. Skipping." << LogIO::POST;
             apply_mtx[0][ipol] = False;
             continue;
           }
@@ -2556,17 +2560,15 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
           }
           if (true) {
             os << "Fitting Parameter" << LogIO::POST;
-            os << "[ROW" << orig_rows[irow] << ", POL" << ipol << "]"
+            os << "[ROW " << orig_rows[irow] << " (nchan " << num_chan << ")" << ", POL" << ipol << "]"
                 << LogIO::POST;
             fit_param.PrintSummary();
           }
           // Create contexts when actually subtract baseine for the first time (if not yet exist)
           if (check_context) {
             // Generate context for all necessary baseline types
-	    // cout << "Checking for context generation of SPW " << recspw[idx] << endl;
             map<size_t const, uint16_t>::iterator iter = max_orders.begin();
             while (iter != max_orders.end()) {
-	      // cout << "blfunc " << (*iter).first << ": max order = " << (*iter).second << endl;
               get_baseline_context((*iter).first, (*iter).second, num_chan, idx,
 	      		   ctx_indices, ctx_nchans, context_reservoir[(*iter).first]);
               ++iter;
@@ -2603,13 +2605,7 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
           if (iter == context_reservoir.end()) {
             throw(AipsError("Invalid baseline type detected!"));
           }
-	  // cout << "Try getting context from resorvior" << endl;
-	  // cout << "idx=" << idx << endl;
-	  // cout << "ctx_indices[" << idx << "]=" << ctx_indices[idx] << endl;
-	  // cout << "func type = " <<(*iter).first << endl;
-	  // cout << "The number of contexts for the func type = " << (*iter).second.size() << endl;
           LIBSAKURA_SYMBOL(BaselineContextFloat) * context = (*iter).second[ctx_indices[idx]];
-	  // cout << "blcontext successfully aquired!" << endl;
 
           // Number of coefficients to fit this spectrum
           size_t num_coeff;
@@ -2645,9 +2641,9 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
           float rms;
           size_t num_boundary = 0;
           if (bltype == BaselineType_kCubicSpline) {
-            num_boundary = fit_param.npiece;
+            num_boundary = fit_param.npiece+1;
           }
-          Vector<size_t> boundary(num_boundary);
+          Vector<size_t> boundary(num_boundary,ArrayInitPolicy::NO_INIT);
           size_t *boundary_data = boundary.data();
 
           if (write_baseline_text || write_baseline_csv || write_baseline_table) {
