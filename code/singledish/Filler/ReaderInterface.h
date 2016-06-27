@@ -44,8 +44,8 @@ private:
 
 class ReaderInterface: private NonCopyable<ReaderInterface> {
 public:
-  ReaderInterface(std::string const &name) :
-      name_(name) {
+  ReaderInterface(std::string const &name, bool const is_nro = false) :
+    name_(name), is_nro_(is_nro) {
   }
 
   virtual ~ReaderInterface() {
@@ -53,6 +53,23 @@ public:
 
   std::string const &getName() const {
     return name_;
+  }
+
+  bool isNROData() {
+    return is_nro_;
+  }
+  
+  virtual int getNROArraySize() {
+    return 0;
+  }
+  virtual int getNRONumBeam() {
+    return 0;
+  }
+  virtual int getNRONumPol() {
+    return 0;
+  }
+  virtual int getNRONumSpw() {
+    return 0;
   }
 
   virtual Bool isFloatData() const {
@@ -114,6 +131,7 @@ protected:
   virtual void finalizeSpecific() = 0;
 
   std::string const name_;
+  bool const is_nro_;
 
 private:
   // common initialization/finalization actions

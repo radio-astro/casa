@@ -660,6 +660,11 @@ void SingleDishMSFiller<T>::fillPreProcessTables() {
   // fill SPECTRAL_WINDOW table
   fillSpectralWindow();
 
+  // Add and fill NRO_ARRAY table (only for NRO data)
+  if (reader_->isNROData()) {
+    fillNROArray();
+  }
+
   POST_END;
 }
 
@@ -806,6 +811,42 @@ void SingleDishMSFiller<T>::fillSpectralWindow() {
 
   ::fillTable(mytable, record,
       [&](SpectralWindowRecord &record) {return reader_->getSpectralWindowRow(record);});
+
+  POST_END;
+}
+
+template<class T>
+void SingleDishMSFiller<T>::fillNROArray() {
+  POST_START;
+
+  String const nro_tablename = "NRO_ARRAY";
+
+  TableDesc td(nro_tablename, TableDesc::Scratch);
+  td.addColumn(ScalarColumnDesc<Int>("ARRAY"));
+  td.addColumn(ScalarColumnDesc<Int>("BEAM"));
+  td.addColumn(ScalarColumnDesc<Int>("POLARIZATION"));
+  td.addColumn(ScalarColumnDesc<Int>("SPECTRAL_WINDOW"));
+  String tabname = ms_->tableName() + "/" + nro_tablename;
+  SetupNewTable newtab(tabname, td, Table::Scratch);
+  ms_->rwKeywordSet().defineTable(nro_tablename, Table(newtab, reader_->getNROArraySize()));
+
+  Table nro_table = ms_->rwKeywordSet().asTable(nro_tablename);
+  ScalarColumn<int> arr(nro_table, "ARRAY");
+  ScalarColumn<int> bea(nro_table, "BEAM");
+  ScalarColumn<int> pol(nro_table, "POLARIZATION");
+  ScalarColumn<int> spw(nro_table, "SPECTRAL_WINDOW");
+  int iarr = 0;
+  for (int ibeam = 0; ibeam < reader_->getNRONumBeam(); ++ibeam) {
+    for (int ipol = 0; ipol < reader_->getNRONumPol(); ++ipol) {
+      for (int ispw = 0; ispw < reader_->getNRONumSpw(); ++ispw) {
+        arr.put(iarr, iarr);
+        bea.put(iarr, ibeam);
+        pol.put(iarr, ipol);
+        spw.put(iarr, ispw);
+        ++iarr;
+      }
+    }
+  }
 
   POST_END;
 }

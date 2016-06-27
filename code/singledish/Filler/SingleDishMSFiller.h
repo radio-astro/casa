@@ -36,6 +36,7 @@
 #include <casacore/tables/Tables/TableRow.h>
 #include <casacore/tables/Tables/ArrayColumn.h>
 #include <casacore/tables/Tables/ScalarColumn.h>
+#include <casacore/tables/Tables/ScaColDesc.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 namespace sdfiller {
@@ -120,6 +121,9 @@ private:
   // fill HISTORY table
   void fillHistory();
 
+  // add and fill NRO_ARRAY table (specific for NRO data)
+  void fillNROArray();
+  
   // update POLARIZATION table
   // @param[in] corr_type polarization type list
   // @param[in] num_pol number of polarization components

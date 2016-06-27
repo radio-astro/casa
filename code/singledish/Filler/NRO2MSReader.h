@@ -85,6 +85,19 @@ public:
   // for DataAccumulator
   virtual Bool getData(size_t irow, sdfiller::DataRecord &record);
 
+  virtual int getNROArraySize() {
+    return obs_header_.NBEAM * obs_header_.NPOL * obs_header_.NSPWIN;
+  }
+  virtual int getNRONumBeam() {
+    return obs_header_.NBEAM;
+  }
+  virtual int getNRONumPol() {
+    return obs_header_.NPOL;
+  }
+  virtual int getNRONumSpw() {
+    return obs_header_.NSPWIN;
+  }
+
 protected:
   void initializeSpecific();
   void finalizeSpecific();
