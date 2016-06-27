@@ -712,7 +712,7 @@ class PyParallelContSynthesisImager(PySynthesisImager):
         ftmname = "\""+str(self.allgridpars['0']['gridder'])+"\"";
         psTermOn = str(self.allgridpars['0']['psterm']);
         aTermOn = str(self.allgridpars['0']['aterm']);
-        aTermOn = str(True);
+        #aTermOn = str(True);
         # print "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
         # print "AllCFList = ",allcflist;
         m = len(allcflist);
