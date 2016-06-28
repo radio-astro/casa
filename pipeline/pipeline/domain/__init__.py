@@ -13,3 +13,4 @@ from .spectralwindow import SpectralWindow, SpectralWindowWithChannelSelection
 from .state import State
 from .singledish import ScantableList, ScantableRep
 from .datatable import DataTableImpl as DataTable
+from .datatableold import DataTableImpl as DataTableOld

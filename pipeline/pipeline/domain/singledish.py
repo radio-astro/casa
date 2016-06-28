@@ -9,7 +9,8 @@ from . import measures
 from . import observingrun
 from . import source
 from . import spectralwindow
-from .datatable import DataTableImpl as DataTable
+#from .datatable import DataTableImpl as DataTable
+from .datatableold import DataTableImpl as DataTableOld
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
@@ -38,7 +39,7 @@ class ScantableList(observingrun.ObservingRun, list):
         self.__dict__ = d
         name = self.__dict__['datatable_name']
         if name is not None and self.__dict__['datatable_instance'] is None:
-            datatable = DataTable(name)
+            datatable = DataTableOld(name)
             self.__dict__['datatable_instance'] = datatable
         
 
