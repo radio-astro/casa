@@ -100,7 +100,7 @@ class testref_base(unittest.TestCase):
 
      def checkfinal(self,pstr=""):
           if( pstr.count("(Fail") > 0 ):
-               pstr += "["+inspect.stack()[2][3]+"] : To re-run this test :  runUnitTest.main(['test_refimager["+ inspect.stack()[2][3] +"]']) "
+               pstr += "["+inspect.stack()[1][3]+"] : To re-run this test :  runUnitTest.main(['test_refimager["+ inspect.stack()[1][3] +"]']) "
                self.fail("\n"+pstr)
 
 ##############################################
