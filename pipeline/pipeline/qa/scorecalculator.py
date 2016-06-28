@@ -414,7 +414,7 @@ def score_ephemeris_coordinates(mses):
 
     # Examine each source
         for source in ms.sources:
-            if source.ra == casatools.quanta.formxxx(zerodirection['m0'], format='hms', prec=3) or \
+            if source.ra == casatools.quanta.formxxx(zerodirection['m0'], format='hms', prec=3) and \
                 source.dec == casatools.quanta.formxxx(zerodirection['m1'], format='dms', prec=2):
                 all_ok = False
                 score += (-1.0 / num_mses)
