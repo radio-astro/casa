@@ -48,6 +48,7 @@ CasaTaskDict = {
                    'hsd_flagdata'          : 'FlagDeterALMASingleDish',
                    'hsd_simplescale'       : 'SDSimpleScale',
                    'hsdms_applycal'        : 'SDMSApplycal',
+                   'hsdms_blflag'          : 'SDMSBLFlag',
                    'hsdms_imaging'         : 'SDMSImaging',
                    'hsdms_k2jycal'         : 'SDK2JyCal',
                    'hsdms_skycal'          : 'SDMSSkyCal',
@@ -155,6 +156,7 @@ classToCASATask = {
     hsd_tasks.FlagDeterALMASingleDish : 'hsd_flagdata',
     hsd_tasks.SDSimpleScale           : 'hsd_simplescale',
     hsd_tasks.SDMSApplycal            : 'hsdms_applycal',
+    hsd_tasks.SDMSBLFlag              : 'hsdms_blflag',
     hsd_tasks.SDMSImaging             : 'hsdms_imaging',
     hsd_tasks.SDK2JyCal               : 'hsdms_k2jycal',
     hsd_tasks.SDMSSkyCal              : 'hsdms_skycal',
@@ -338,7 +340,8 @@ TASK_COMMENTS = {
         'these features from the fit. \n'
         '' + SILENT_TASK_COMMENT
     ),
-    (hsd_tasks.SDBLFlag,) : (
+    (hsd_tasks.SDBLFlag,
+     hsd_tasks.SDMSBLFlag) : (
         'Perform row-based flagging based on noise level and quality of '
         'spectral baseline subtraction. \n'
         '' + SILENT_TASK_COMMENT

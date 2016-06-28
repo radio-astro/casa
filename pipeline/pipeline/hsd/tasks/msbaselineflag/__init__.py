@@ -4,7 +4,7 @@ import pipeline.infrastructure.pipelineqa as pipelineqa
 import pipeline.infrastructure.renderer.weblog as weblog
 import pipeline.infrastructure.renderer.basetemplates as super_renderer
 
-# from .baselineflag import SDBLFlag as SDMSBLFlag
+from .baselineflag import SDBLFlag as SDMSBLFlag
 # from . import qa
 # from . import baselineflag
 ### Temporary exported for ASAP procedure
@@ -19,5 +19,6 @@ from . import SDFlagRule
 #                     super_renderer.T2_4MDetailsDefaultRenderer(uri='hsd_blflag.mako', 
 #                                                                description='Flag data by Tsys, weather, and statistics of spectra'),
 #                     group_by='ungrouped')
-
-# weblog.add_renderer(SDMSBLFlag, basetemplates.T2_4MDetailsDefaultRenderer(always_rerender=False), group_by='ungrouped')
+#### No weblog
+import pipeline.infrastructure.renderer.basetemplates as basetemplates
+weblog.add_renderer(SDMSBLFlag, basetemplates.T2_4MDetailsDefaultRenderer(always_rerender=False), group_by='ungrouped')

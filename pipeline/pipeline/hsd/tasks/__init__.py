@@ -16,6 +16,7 @@ from .flagbaseline import SDPlotFlagBaseline
 from .flagging import FlagDeterALMASingleDish
 from .simplescale import SDSimpleScale
 from .msapplycal import SDMSApplycal
+from .msbaselineflag import SDMSBLFlag
 from .k2jycal import SDK2JyCal
 from .skycal import SDMSSkyCal
 from .msimaging import SDMSImaging
