@@ -11,7 +11,7 @@ import pipeline.infrastructure.imagelibrary as imagelibrary
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.utils as utils
 from pipeline.hif.heuristics import fieldnames
-from pipeline.domain.datatable import DataTableImpl
+from pipeline.domain import DataTable
 from . import gridding
 from . import weighting
 from . import worker
@@ -129,7 +129,7 @@ class SDImaging(basetask.StandardTaskTemplate):
         in_field = inputs.field
 #         antennalist = inputs.antennalist
         imagemode = inputs.mode.upper()
-        datatable = DataTableImpl(name=context.observing_run.ms_datatable_name, readonly=True)
+        datatable = DataTable(name=context.observing_run.ms_datatable_name, readonly=True)
         logrecords = []
          
         # task returns ResultsList

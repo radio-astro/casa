@@ -6,7 +6,7 @@ import numpy
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
-from pipeline.domain.datatable import DataTableImpl
+from pipeline.domain import DataTable
 from .. import common
 
 LOG = infrastructure.get_logger(__name__)
@@ -131,7 +131,7 @@ class WeightMS(basetask.StandardTaskTemplate):
         fieldid = self.inputs.fieldid
 
         context = inputs.context
-        datatable = DataTableImpl(name=context.observing_run.ms_datatable_name, readonly=True)
+        datatable = DataTable(name=context.observing_run.ms_datatable_name, readonly=True)
         
         # get corresponding datatable rows (only IDs of target scans will be retruned)
         index_list = common.get_index_list_for_ms(datatable, [infile], [antid], [fieldid], [spwid])

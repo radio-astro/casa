@@ -7,7 +7,7 @@ import time
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
-from pipeline.domain.datatable import DataTableImpl
+from pipeline.domain import DataTable
 from .. import common 
 
 from .accumulator import Accumulator
@@ -148,7 +148,7 @@ class GriddingBase(basetask.StandardTaskTemplate):
         """
         start = time.time()
 
-        datatable = DataTableImpl(name=self.inputs.context.observing_run.ms_datatable_name, readonly=True)
+        datatable = DataTable(name=self.inputs.context.observing_run.ms_datatable_name, readonly=True)
         table = datatable.tb1
         index_list = common.get_index_list_for_ms(datatable, DataIn, self.antenna, self.field, self.spw)
         #pols = table.getcol('POL').take(index_list)

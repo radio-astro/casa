@@ -9,7 +9,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 from pipeline.infrastructure import casa_tasks
-from pipeline.domain.datatable import DataTableImpl
+from pipeline.domain import DataTable
 from .. import common
 #from ..common import temporary_filename
 from ..common import utils
@@ -202,7 +202,7 @@ class SDImagingWorker(basetask.StandardTaskTemplate):
         if coord_set:
             return params
         else:
-            datatable = DataTableImpl(name=context.observing_run.ms_datatable_name, readonly=True)
+            datatable = DataTable(name=context.observing_run.ms_datatable_name, readonly=True)
             return ALMAImageCoordinateUtil(context, datatable, infiles, ant_list, spw_list, field_list)
 
     def _do_imaging(self, infiles, antid_list, spwid_list, fieldid_list, imagename, imagemode, edge, phasecenter, cellx, celly, nx, ny):
