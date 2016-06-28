@@ -4,6 +4,7 @@
 #include <vector>
 #include <algorithm>
 #include <utility>
+#include <stdlib.h>
 
 using namespace std;
 
@@ -32,6 +33,7 @@ using namespace asdmbinaries;
 
 #include "asdm2MSGeneric.h"
 #include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/case_conv.hpp>
 #include <boost/regex.hpp>
 using namespace boost;
 
@@ -678,7 +680,7 @@ bool  putCell( FLAG_SHAPE* flagShape_p,
   Matrix<Bool> flagCell(IPosition(2, numCorr, numChan));
   if (debug) {
     cout << "irow0 = " << iRow0 << endl;
-    cout << "expectin g a cell of shape numCorr=" << numCorr << ", numChan=" << numChan << endl;
+    cout << "expecting a cell of shape numCorr=" << numCorr << ", numChan=" << numChan << endl;
     cout << "actual shape is " << flag.shape(iRow0) << endl;
   }
   flag.get((uInt)iRow0, flagCell);
@@ -712,6 +714,7 @@ bool  putCell( FLAG_SHAPE* flagShape_p,
  * Used for correlator data.
  */
 pair<uInt, uInt> mergeAndPut(CorrelationModeMod::CorrelationMode correlationMode,
+			     CorrelationModeMod::CorrelationMode ocorrelationMode,
 			     MSFlagAccumulator<char>& autoAccumulator,
 			     MSFlagAccumulator<char>& crossAccumulator,
 			     uInt iRow0,
@@ -769,7 +772,7 @@ pair<uInt, uInt> mergeAndPut(CorrelationModeMod::CorrelationMode correlationMode
 
     //
     // ... put the flags for cross correlation then
-    if (correlationMode != CorrelationModeMod::AUTO_ONLY) {
+    if (correlationMode != CorrelationModeMod::AUTO_ONLY && ocorrelationMode != CorrelationModeMod::AUTO_ONLY) {
       if (debug) cout << "CROSS " << numIntegration << ", " << iDD << ", " << crossFlagShapes_p_v_p->at(0)->first << ", " << crossFlagShapes_p_v_p->at(0)->second << endl;
       for (unsigned int iIntegration = 0; iIntegration < numIntegration; iIntegration++) {
 	for (unsigned int iBAL = 0; iBAL < numBAL; iBAL++) {
@@ -931,7 +934,8 @@ void processCorrelatorFlags(unsigned int                                numInteg
 			    MSFlagEval&				flagEval,
 			    uInt&					iMSRow,
 			    ArrayColumn<Bool>&				flag,
-			    ScalarColumn<Bool>&	                        flagRow
+			    ScalarColumn<Bool>&	                        flagRow,
+			    CorrelationModeMod::CorrelationMode         ocorrelationMode
 			    ) {
   boost::regex  ALMACorrelatorFlagsAxesRegex("(BAL )?ANT (BAB )?(POL )?");
 
@@ -981,6 +985,7 @@ void processCorrelatorFlags(unsigned int                                numInteg
   }
 
   pair<uInt, uInt> putReturn = mergeAndPut(correlationMode,
+					   ocorrelationMode,
 					   autoAccumulator,
 					   crossAccumulator,
 					   iMSRow,
@@ -1002,7 +1007,8 @@ void processCorrelatorFlagsPerSlices(MainRow*					mR_p,
 				     MSFlagEval&				flagEval,
 				     uInt&					iMSRow,
 				     ArrayColumn<Bool>&				flag,
-				     ScalarColumn<Bool>&	                flagRow
+				     ScalarColumn<Bool>&	                flagRow,
+				     CorrelationModeMod::CorrelationMode        ocorrelationMode
 				     ) {
   // Regular expressions for the correct sequences of axes in the flags in the case of ALMA data.
   boost::regex  ALMACorrelatorFlagsAxesRegex("(BAL )?ANT (BAB )?(POL )?");
@@ -1063,6 +1069,7 @@ void processCorrelatorFlagsPerSlices(MainRow*					mR_p,
 	  crossAccumulator.nextIntegration();
       }
       pair<uInt, uInt> putReturn = mergeAndPut(correlationMode,
+					       ocorrelationMode,
 					       autoAccumulator,
 					       crossAccumulator,
 					       iMSRow,
@@ -1106,6 +1113,7 @@ void processCorrelatorFlagsPerSlices(MainRow*					mR_p,
 	crossAccumulator.nextIntegration();
     }
     pair<uInt, uInt> putReturn = mergeAndPut(correlationMode,
+					     ocorrelationMode,
 					     autoAccumulator,
 					     crossAccumulator,
 					     iMSRow,
@@ -1145,7 +1153,7 @@ int main (int argC, char * argV[]) {
   po::variables_map vm;
 
   bool lazy = false;  // must be set to true with the option "--lazy=true" if the MS has been produced by asdm2MS with the option --lazy !!!
-
+  string ocm("ac") ; // A default value for the option --ocm.
   try {
     string flagcondDoc = "specifies the list of flagging conditions to consider. The list must be a white space separated list of valid flagging conditions names. Note that the flag names can be shortened as long as there is no ambiguity (i.e. \"FFT, SI\" is valid and will be interpreted as \"FFT_OVERFLOW , SIGMA_OVERFLOW\"). If no flagging condition is provided the application exits immediately. A flag is set at the appropriate location in the MS Main row whenever at least one of the flagging conditions present in the option --flagcond is read at the relevant location in the relevant BDF file. The flagging conditions are :\n" + abbrevList + "\n\n. Note that the special value \"ALL\" to set all the flagging conditions.";
     po::options_description generic("Generates MS Flag information from the flagging conditions contained in the BDF files of an ASDM dataset.\n\n"
@@ -1161,6 +1169,7 @@ int main (int argC, char * argV[]) {
       ("scans,s", po::value<string>(), "processes only the scans specified in the option's value. This value is a semicolon separated list of scan specifications. A scan specification consists in an exec bock index followed by the character ':' followed by a comma separated list of scan indexes or scan index ranges. A scan index is relative to the exec block it belongs to. Scan indexes are 1-based while exec blocks's are 0-based. \"0:1\" or \"2:2~6\" or \"0:1,1:2~6,8;2:,3:24~30\" \"1,2\" are valid values for the option. \"3:\" alone will be interpreted as 'all the scans of the exec block#3'. An scan index or a scan index range not preceded by an exec block index will be interpreted as 'all the scans with such indexes in all the exec blocks'.  By default all the scans are considered.")
       ("wvr-corrected-data", po::value<bool>()->default_value(false), "must be set to True (resp. False) whenever the MS to be populated contains corrected (resp. uncorrected) data (default==false)")
       ("lazy", po::value<bool>()->default_value(false), "must be set to True if the measurement set has been produced by asdm2MS run with the option --lazy (default==false")
+      ("ocm", po::value<string>(&ocm)->default_value("ca"), "specifies the output correlation mode, i.e. the correlation mode of the ASDM/BDF's data for which the MS flags will be written. The value given to this option must *imperatively* be the same than the one given to the --ocm option for the execution of the filler which produced the MS. Valid values are 'ca' for CROSS_AND_AUTO and 'ao' for AUTO_ONLY. The present version doest not consider the case 'co' (CROSS_ONLY). The default value is 'ca'.")
       ("verbose, v",  "logs numerous informations as the application is running.");
     
     po::options_description hidden("Hidden options");
@@ -1407,6 +1416,28 @@ int main (int argC, char * argV[]) {
   infostream << scansOptionInfo;
   info(infostream.str());
 
+  // 
+  // Selection of the output correlation mode, i.e. the correlation mode of the data for which the flag are evaluated.
+  // This works if and only the value given to the option --ocm is equal to the value given to the same option of asdm2MS
+  // when the filler which produced the MS of interest was run.
+  //
+    CorrelationModeMod::CorrelationMode ocorrelationMode = CorrelationModeMod::CROSS_AND_AUTO; 
+  if (vm.count("ocm")) {
+    // Let's filter the value given to ocm
+    //    
+    if (ocm == "ca") 
+      ocorrelationMode = CorrelationModeMod::CROSS_AND_AUTO;
+    else if (ocm == "ao")
+      ocorrelationMode =  CorrelationModeMod::AUTO_ONLY;
+    else {
+      errstream.str("");
+      errstream << "The value given to the option ocm ('" << ocm << "') is invalid. Expecting one of {'ca', 'ao'}" << endl;
+      error(errstream.str());     
+    }
+  }
+  infostream.str("");
+  infostream << "The MS FLAG column will be calculated for the correlation mode '" << CCorrelationMode::toString(ocorrelationMode) << "'." << endl;
+  info(infostream.str());
 
   // Open the MS MAIN table of the measurement set in Update mode.
   
@@ -1564,7 +1595,8 @@ int main (int argC, char * argV[]) {
 				   flagEval,
 				   iMSRow,
 				   flag,
-				   flagRow);
+				   flagRow,
+				   ocorrelationMode);
 	  
 	  else 
 	    processCorrelatorFlagsPerSlices(mR,
@@ -1577,7 +1609,8 @@ int main (int argC, char * argV[]) {
 					    flagEval,
 					    iMSRow,
 					    flag,
-					    flagRow);
+					    flagRow,
+					    ocorrelationMode);
 	}	
 	break;
  
