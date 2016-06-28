@@ -1326,9 +1326,10 @@ void MSUVBin::gridData(const vi::VisBuffer2& vb, Cube<Complex>& grid,
     Double refFreq=SpectralImageUtil::worldFreq(csys_p, Double(nchan_p/2));
     //Double refFreq=SpectralImageUtil::worldFreq(csys_p, Double(0));
     Vector<Float> scale(2);
-    scale(0)=fabs(nx_p*thedir.increment()(0))/C::c;
-    scale(1)=fabs(ny_p*thedir.increment()(1))/C::c;
-
+    scale(0)=fabs(Double(nx_p)*thedir.increment()(0))/C::c;
+    scale(1)=fabs(Double(ny_p)*thedir.increment()(1))/C::c;
+    //cerr << "dir incr "<< thedir.increment() << " nx ny " << nx_p << " " << ny_p << endl; 
+    //cerr << "SCALE " << scale << " fracbw " << fracbw << endl;
 
     //cerr << "chanmap " << chanMap_p << " pol map " <<polMap_p << " weight " << wghtSpec.shape() << endl;
     //Dang i thought the new vb will return Data or FloatData if correctedData was
@@ -1430,8 +1431,8 @@ void MSUVBin::gridDataConv(const vi::VisBuffer2& vb, Cube<Complex>& grid,
   Double refFreq=SpectralImageUtil::worldFreq(csys_p, Double(nchan_p/2));
   //Double refFreq=SpectralImageUtil::worldFreq(csys_p, Double(0));
   Vector<Float> scale(2);
-  scale(0)=fabs(nx_p*thedir.increment()(0))/C::c;
-  scale(1)=fabs(ny_p*thedir.increment()(1))/C::c;
+  scale(0)=fabs(Double(nx_p)*thedir.increment()(0))/C::c;
+  scale(1)=fabs(Double(ny_p)*thedir.increment()(1))/C::c;
   //Dang i thought the new vb will return Data or FloatData if correctedData was
   //not there
   Bool hasCorrected=!(ROMSMainColumns(vb.getVi()->ms()).correctedData().isNull());
@@ -1595,8 +1596,8 @@ void MSUVBin::gridDataConvThr(const vi::VisBuffer2& vb, Cube<Complex>& grid,
   Double refFreq=SpectralImageUtil::worldFreq(csys_p, Double(nchan_p/2));
   //Double refFreq=SpectralImageUtil::worldFreq(csys_p, Double(0));
   Vector<Float> scale(2);
-  scale(0)=fabs(nx_p*thedir.increment()(0))/C::c;
-  scale(1)=fabs(ny_p*thedir.increment()(1))/C::c;
+  scale(0)=fabs(Double(nx_p)*thedir.increment()(0))/C::c;
+  scale(1)=fabs(Double(ny_p)*thedir.increment()(1))/C::c;
   //Dang i thought the new vb will return Data or FloatData if correctedData was
   //not there
   Bool hasCorrected=!(ROMSMainColumns(vb.getVi()->ms()).correctedData().isNull());
