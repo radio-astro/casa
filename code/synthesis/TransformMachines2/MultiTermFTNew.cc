@@ -96,7 +96,8 @@ using namespace casa::vi;
       }
 
     //	printFTTypes();
-    
+    LogIO os(LogOrigin("MultiTermFTNew2", "MultiTermFTNew2",WHERE));
+    os << "There is no setImagingWeight in VB2!  Images for TT > 0 will be incorrect!" << LogIO::WARN;
   }
   
   //---------------------------------------------------------------------- 
