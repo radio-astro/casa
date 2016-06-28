@@ -63,7 +63,15 @@ VisBuffer::VisBuffer()
 {
     validate();
     oldMSId_p = -1;
-    visModelData_p = VisModelDataI::create();
+
+    try
+    {
+        visModelData_p = VisModelDataI::create();
+    }
+    catch (...)
+    {
+    	visModelData_p = NULL;
+    }
 }
 
 VisBuffer::VisBuffer(ROVisibilityIterator & iter)
@@ -74,7 +82,15 @@ VisBuffer::VisBuffer(ROVisibilityIterator & iter)
     twoWayConnection_p = True;
     oldMSId_p = -1;
     corrSorted_p = False;
-    visModelData_p = VisModelDataI::create();
+
+    try
+    {
+        visModelData_p = VisModelDataI::create();
+    }
+    catch (...)
+    {
+    	visModelData_p = NULL;
+    }
 }
 
 VisBuffer::VisBuffer(const VisBuffer & vb)
@@ -97,7 +113,7 @@ VisBuffer & VisBuffer::operator=(const VisBuffer & other)
 VisBuffer &
 VisBuffer::assign(const VisBuffer & other, Bool copy)
 {
-    visModelData_p = other.visModelData_p->clone();
+    if (visModelData_p) visModelData_p = other.visModelData_p->clone();
 
     if (other.corrSorted_p) {
         throw(AipsError("Cannot assign a VisBuffer that has had correlations sorted!"));
@@ -2450,29 +2466,33 @@ Cube<Complex>& VisBuffer::fillVisCube(VisibilityIterator::DataColumn whichOne)
 {
   switch (whichOne) {
   case VisibilityIterator::Model:
-    {
-      CheckVisIter1 (" (Model)");
-      modelVisCubeOK_p = True;
-      String modelkey; //=String("definedmodel_field_")+String::toString(fieldId());
-      Int snum;
-      Bool hasmodkey=visModelData_p->isModelDefinedI(fieldId(), visIter_p->ms(), modelkey, snum);
-      if( hasmodkey || !(visIter_p->ms().tableDesc().isColumn("MODEL_DATA"))){
-	//cerr << "HASMOD " << visModelData_p.hasModel(msId(), fieldId(), spectralWindow()) << endl;
-	if(visModelData_p->hasModel(msId(), fieldId(), spectralWindow()) ==-1){
-	  if(hasmodkey){
-	    //String whichrec=visIter_p->ms().keywordSet().asString(modelkey);
-	    TableRecord modrec;
-	    if(visModelData_p->getModelRecordI(modelkey, modrec, visIter_p->ms())){
-	      visModelData_p->addModel(modrec, Vector<Int>(1, msId()), *this);
-	    }
+  {
+	  CheckVisIter1 (" (Model)");
+	  modelVisCubeOK_p = True;
+	  String modelkey; //=String("definedmodel_field_")+String::toString(fieldId());
+	  Int snum;
+	  Bool hasmodkey = False;
+	  if (visModelData_p) hasmodkey = visModelData_p->isModelDefinedI(fieldId(), visIter_p->ms(), modelkey, snum);
+	  if( hasmodkey || !(visIter_p->ms().tableDesc().isColumn("MODEL_DATA")))
+	  {
+		  if (not visModelData_p) visModelData_p = VisModelDataI::create();
+		  //cerr << "HASMOD " << visModelData_p.hasModel(msId(), fieldId(), spectralWindow()) << endl;
+		  if(visModelData_p->hasModel(msId(), fieldId(), spectralWindow()) ==-1){
+			  if(hasmodkey){
+				  //String whichrec=visIter_p->ms().keywordSet().asString(modelkey);
+				  TableRecord modrec;
+				  if(visModelData_p->getModelRecordI(modelkey, modrec, visIter_p->ms())){
+					  visModelData_p->addModel(modrec, Vector<Int>(1, msId()), *this);
+				  }
+			  }
+		  }
+		  visModelData_p->getModelVis(*this);
 	  }
-	}
-	visModelData_p->getModelVis(*this);
-      }
-      else{
-	visIter_p->visibility(modelVisCube_p, whichOne);
-      }
-    }
+	  else
+	  {
+		  visIter_p->visibility(modelVisCube_p, whichOne);
+	  }
+  }
     return modelVisCube_p;
     break;
   case VisibilityIterator::Corrected:

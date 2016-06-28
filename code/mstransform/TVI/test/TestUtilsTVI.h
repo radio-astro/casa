@@ -32,6 +32,9 @@
 #include <casacore/casa/Arrays/Vector.h>
 #include <casacore/casa/Containers/Record.h>
 
+// Measurement Set enumerations
+#include <mstransform/MSTransform/MSTransformManager.h>
+
 // VI/VB framework
 #include <msvis/MSVis/VisBuffer2.h>
 #include <msvis/MSVis/VisibilityIterator2.h>
@@ -110,12 +113,17 @@ template <class T> Bool compareCube(const Char* column,
 									const Cube<T> &ref,
 									Float tolerance = FLT_EPSILON);
 
-Bool copyTestFile(String &path,String &filename,String &outfilename);
-
 Bool compareVisibilityIterators(VisibilityIterator2 &testTVI,
 								VisibilityIterator2 &refTVI,
 								VisBufferComponents2 &columns,
-								Float tolerance = FLT_EPSILON);
+								Float tolerance = FLT_EPSILON,
+								dataColMap *datacolmap = NULL);
+
+Bool copyTestFile(String &path,String &filename,String &outfilename);
+
+const Cube<Complex> & getViscube(	VisBuffer2 *vb,
+									MS::PredefinedColumns datacol,
+									dataColMap *datacolmap);
 
 void flagEachOtherChannel(VisibilityIterator2 &vi);
 

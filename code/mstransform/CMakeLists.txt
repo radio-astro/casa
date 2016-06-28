@@ -34,6 +34,7 @@ casa_add_library( mstransform
  TVI/HanningSmoothTVI.cc	 
  TVI/PhaseShiftingTVI.cc 
  TVI/RegriddingTVI.cc  
+ TVI/UVContSubTVI.cc
 )
 
 install (FILES
@@ -61,6 +62,7 @@ install (FILES
 	TVI/HanningSmoothTVI.h
 	TVI/PhaseShiftingTVI.h		
  	TVI/RegriddingTVI.h
+ 	TVI/UVContSubTVI.h 	
 	DESTINATION include/casacode/mstransform/TVI
 	)
 	

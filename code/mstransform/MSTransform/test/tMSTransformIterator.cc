@@ -193,7 +193,6 @@ void MSTransformIteratorTest::testCompareTransformedData()
 	columns += VisBufferComponent2::VisibilityCubeObserved;
 	columns += VisBufferComponent2::VisibilityCubeCorrected;
 	columns += VisBufferComponent2::VisibilityCubeModel;
-	columns += VisBufferComponent2::VisibilityCubeFloat;
 	columns += VisBufferComponent2::WeightSpectrum;
 	columns += VisBufferComponent2::SigmaSpectrum;
 	columns += VisBufferComponent2::Weight;

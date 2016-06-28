@@ -1,4 +1,4 @@
-//# tHanningSmoothTVI: This file contains the unit tests of the HanningSmoothTVI class.
+//# tUVContSubTVI: This file contains the unit tests of the UVContSubTVI class.
 //#
 //#  CASA - Common Astronomy Software Applications (http://casa.nrao.edu/)
 //#  Copyright (C) Associated Universities, Inc. Washington DC, USA 2011, All rights reserved.
@@ -21,7 +21,7 @@
 //# $Id: $
 
 
-#include <mstransform/TVI/test/tHanningSmoothTVI.h>
+#include <mstransform/TVI/test/tUVContSubTVI.h>
 
 using namespace std;
 using namespace casa;
@@ -29,13 +29,13 @@ using namespace casa::vi;
 
 
 //////////////////////////////////////////////////////////////////////////
-// HanningSmoothTVITest class
+// UVContSubTVITest class
 //////////////////////////////////////////////////////////////////////////
 
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-void HanningSmoothTVITest::generateTestFile()
+void UVContSubTVITest::generateTestFile()
 {
 	String path("");
 	if (autoMode_p) path = String("/data/regression/unittest/flagdata/");
@@ -47,11 +47,37 @@ void HanningSmoothTVITest::generateTestFile()
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-void HanningSmoothTVITest::generateReferenceFile()
+void UVContSubTVITest::generateReferenceFile()
 {
+	// Set path
 	String path("");
 	if (autoMode_p) path = String("/data/regression/unittest/flagdata/");
-	ASSERT_TRUE(copyTestFile(path,inpFile_p,referenceFile_p));
+	ASSERT_TRUE(copyTestFile(path,inpFile_p,inpFile_p));
+
+	// Get parameters
+	uInt fitorder;
+	String datacolumn;
+	refConfiguration_p.get (refConfiguration_p.fieldNumber ("fitorder"), fitorder);
+	refConfiguration_p.get (refConfiguration_p.fieldNumber ("datacolumn"), datacolumn);
+
+	// Run uvcontsub (uvcontsub3 implementation)
+	try
+	{
+		MeasurementSet ms(inpFile_p);
+		SubMS subtractor(ms);
+		subtractor.setFitOrder(fitorder);
+		subtractor.setmsselect();
+		subtractor.makeSubMS(referenceFile_p, datacolumn);
+	}
+	catch (AipsError ex)
+	{
+		LogIO logger;
+		logger 	<< LogIO::SEVERE
+					<< "Exception comparing visibility iterators: " << ex.getMesg() << endl
+					<< "Stack Trace: " << ex.getStackTrace()
+					<< LogIO::POST;
+		RETHROW(ex);
+	}
 
 	return;
 }
@@ -59,7 +85,7 @@ void HanningSmoothTVITest::generateReferenceFile()
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-void HanningSmoothTVITest::initTestConfiguration(Record &configuration)
+void UVContSubTVITest::initTestConfiguration(Record &configuration)
 {
 	testConfiguration_p = configuration;
 	testConfiguration_p.define ("inputms", testFile_p);
@@ -70,13 +96,10 @@ void HanningSmoothTVITest::initTestConfiguration(Record &configuration)
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-void HanningSmoothTVITest::initReferenceConfiguration(Record &configuration)
+void UVContSubTVITest::initReferenceConfiguration(Record &configuration)
 {
 	refConfiguration_p = configuration;
 	refConfiguration_p.define ("inputms", referenceFile_p);
-	refConfiguration_p.define ("reindex", False);
-	refConfiguration_p.define ("hanning", True);
-	refConfiguration_p.define ("datacolumn", String("ALL"));
 
 	return;
 }
@@ -84,14 +107,18 @@ void HanningSmoothTVITest::initReferenceConfiguration(Record &configuration)
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-HanningSmoothTVITest::HanningSmoothTVITest(): FreqAxisTVITest ()
+UVContSubTVITest::UVContSubTVITest(): FreqAxisTVITest ()
 {
 	inpFile_p = String("Four_ants_3C286.ms");
-    testFile_p = String("Four_ants_3C286.ms.test");
+    testFile_p = String("Four_ants_3C286.test");
     referenceFile_p = String("Four_ants_3C286.ms.ref");
 
     Record configuration;
-    configuration.define ("spw", "1");
+    configuration.define ("spw", "0");
+    configuration.define ("scan", "30");
+    configuration.define ("fitorder", 0);
+    configuration.define ("want_cont", False);
+    configuration.define ("datacolumn", String("MODEL_DATA"));
 
 	init(configuration);
 }
@@ -99,7 +126,7 @@ HanningSmoothTVITest::HanningSmoothTVITest(): FreqAxisTVITest ()
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-HanningSmoothTVITest::HanningSmoothTVITest(Record configuration): FreqAxisTVITest(configuration)
+UVContSubTVITest::UVContSubTVITest(Record configuration): FreqAxisTVITest(configuration)
 {
 	init(configuration);
 }
@@ -107,7 +134,7 @@ HanningSmoothTVITest::HanningSmoothTVITest(Record configuration): FreqAxisTVITes
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-void HanningSmoothTVITest::TestBody()
+void UVContSubTVITest::TestBody()
 {
 	SetUp();
 	testCompareTransformedData();
@@ -119,40 +146,36 @@ void HanningSmoothTVITest::TestBody()
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-void HanningSmoothTVITest::testCompareTransformedData()
+void UVContSubTVITest::testCompareTransformedData()
 {
 	// Declare working variables
 	Float tolerance = 1E-5; // FLT_EPSILON is 1.19209290e-7F
 
-	// Create MSTransformIterator pointing to reference file
-	MSTransformIteratorFactory refFactory(refConfiguration_p);
-	VisibilityIterator2 refTVI(refFactory);
+	// Generate configuration record for reference file
+    Record refConfiguration;
+    refConfiguration.define ("datacolumn", String("DATA"));
+    refConfiguration.define ("inputms", referenceFile_p);
+
+    // Prepare datacolmap
+    dataColMap datacolmap;
+    datacolmap[MS::MODEL_DATA] =  MS::DATA;
 
 	// Use MSTransformFactory to create a plain input VII
-	MSTransformIteratorFactory plainVIFactory(testConfiguration_p);
-	ViImplementation2 *inputVI = plainVIFactory.getInputVI()->getImpl();
+	MSTransformIteratorFactory refFactory(refConfiguration);
+	VisibilityIterator2 refTVI(refFactory);
 
 	// Generate TVI to test
-	HanningSmoothTVIFactory testFactory(testConfiguration_p,inputVI);
+	MSTransformIteratorFactory testPlainVIFactory(testConfiguration_p);
+	ViImplementation2 *testInputVI = testPlainVIFactory.getInputVI()->getImpl();
+	UVContSubTVIFactory testFactory(testConfiguration_p,testInputVI);
 	VisibilityIterator2 testTVI(testFactory);
 
 	// Determine columns to check
 	VisBufferComponents2 columns;
-	columns += VisBufferComponent2::NRows;
-	columns += VisBufferComponent2::NChannels;
-	columns += VisBufferComponent2::NCorrelations;
-	columns += VisBufferComponent2::FlagRow;
-	columns += VisBufferComponent2::FlagCube;
-	columns += VisBufferComponent2::VisibilityCubeObserved;
-	columns += VisBufferComponent2::VisibilityCubeCorrected;
 	columns += VisBufferComponent2::VisibilityCubeModel;
-	columns += VisBufferComponent2::WeightSpectrum;
-	columns += VisBufferComponent2::SigmaSpectrum;
-	columns += VisBufferComponent2::Weight;
-	columns += VisBufferComponent2::Sigma;
 
 	// Compare
-	Bool res = compareVisibilityIterators(testTVI,refTVI,columns,tolerance);
+	Bool res = compareVisibilityIterators(testTVI,refTVI,columns,tolerance,&datacolmap);
 
 	// Store result
 	if (not res) testResult_p = res;
@@ -166,7 +189,7 @@ void HanningSmoothTVITest::testCompareTransformedData()
 //////////////////////////////////////////////////////////////////////////
 // Googletest macros
 //////////////////////////////////////////////////////////////////////////
-TEST_F(HanningSmoothTVITest, testCompareTransformedData)
+TEST_F(UVContSubTVITest, testCompareTransformedData)
 {
 	testCompareTransformedData();
 }
@@ -204,7 +227,7 @@ int main(int argc, char **argv)
 	}
 	else
 	{
-		HanningSmoothTVITest test(configuration);
+		UVContSubTVITest test(configuration);
 		test.TestBody();
 		if (test.getTestResult()) ret = 0;
 		else ret = 1;

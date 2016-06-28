@@ -96,6 +96,12 @@ void FreqAxisTVITest::TearDown()
 	rm_command = String ("rm -rf ") + referenceFile_p;
 	system(rm_command.c_str());
 
+	if (autoMode_p)
+	{
+		rm_command = String ("rm -rf ") + inpFile_p;
+		system(rm_command.c_str());
+	}
+
 	return;
 }
 
@@ -257,7 +263,8 @@ template <class T> Bool compareCube(const Char* column,
 Bool compareVisibilityIterators(VisibilityIterator2 &testTVI,
 								VisibilityIterator2 &refTVI,
 								VisBufferComponents2 &columns,
-								Float tolerance)
+								Float tolerance,
+								dataColMap *datacolmap)
 {
 	// Declare working variables
 	String columnName;
@@ -286,8 +293,12 @@ Bool compareVisibilityIterators(VisibilityIterator2 &testTVI,
 				buffer += 1;
 				cout << BLUE;
 				cout << " COMPARING CHUNK " << chunk << " BUFFER " << buffer << endl;
+				cout << " SPW=" << refVb->spectralWindows()[0]
+				     << " SCAN=" << refVb->scan()[0]
+				     << " START_ROW=" << refVb->rowIds()[0]
+				     << endl;
 
-				if (columns.contains(VisBufferComponent2::NRows) and testTVI.existsColumn(VisBufferComponent2::NRows))
+				if (columns.contains(VisBufferComponent2::NRows))
 				{
 					res = testVb->nRows() == refVb->nRows();
 					if (not res)
@@ -301,7 +312,7 @@ Bool compareVisibilityIterators(VisibilityIterator2 &testTVI,
 					}
 				}
 
-				if (columns.contains(VisBufferComponent2::NChannels) and testTVI.existsColumn(VisBufferComponent2::NChannels))
+				if (columns.contains(VisBufferComponent2::NChannels))
 				{
 					res = testVb->nChannels() == refVb->nChannels();
 					if (not res)
@@ -315,7 +326,7 @@ Bool compareVisibilityIterators(VisibilityIterator2 &testTVI,
 					}
 				}
 
-				if (columns.contains(VisBufferComponent2::NCorrelations) and testTVI.existsColumn(VisBufferComponent2::NCorrelations))
+				if (columns.contains(VisBufferComponent2::NCorrelations))
 				{
 					res = testVb->nCorrelations() == refVb->nCorrelations();
 					if (not res)
@@ -329,70 +340,70 @@ Bool compareVisibilityIterators(VisibilityIterator2 &testTVI,
 					}
 				}
 
-				if (columns.contains(VisBufferComponent2::FlagRow) and testTVI.existsColumn(VisBufferComponent2::FlagRow))
+				if (columns.contains(VisBufferComponent2::FlagRow))
 				{
 					columnName = VisBufferComponents2::name(VisBufferComponent2::FlagRow);
 					res = compareVector(columnName.c_str(),testVb->flagRow(),refVb->flagRow(),tolerance);
 					if (not res) keepIterating = False;
 				}
 
-				if (columns.contains(VisBufferComponent2::FlagCube) and testTVI.existsColumn(VisBufferComponent2::FlagCube))
+				if (columns.contains(VisBufferComponent2::FlagCube))
 				{
 					columnName = VisBufferComponents2::name(VisBufferComponent2::FlagCube);
 					res = compareCube(columnName.c_str(),testVb->flagCube(),refVb->flagCube(),tolerance);
 					if (not res) keepIterating = False;
 				}
 
-				if (columns.contains(VisBufferComponent2::VisibilityCubeObserved) and testTVI.existsColumn(VisBufferComponent2::VisibilityCubeObserved))
+				if (columns.contains(VisBufferComponent2::VisibilityCubeObserved))
 				{
 					columnName = VisBufferComponents2::name(VisBufferComponent2::VisibilityCubeObserved);
-					res = compareCube(columnName.c_str(),testVb->visCube(),refVb->visCube(),tolerance);
+					res = compareCube(columnName.c_str(),testVb->visCube(),getViscube(refVb,MS::DATA,datacolmap),tolerance);
 					if (not res) keepIterating = False;
 				}
 
-				if (columns.contains(VisBufferComponent2::VisibilityCubeCorrected) and testTVI.existsColumn(VisBufferComponent2::VisibilityCubeCorrected))
+				if (columns.contains(VisBufferComponent2::VisibilityCubeCorrected))
 				{
 					columnName = VisBufferComponents2::name(VisBufferComponent2::VisibilityCubeCorrected);
-					res = compareCube(columnName.c_str(),testVb->visCubeCorrected(),refVb->visCubeCorrected(),tolerance);
+					res = compareCube(columnName.c_str(),testVb->visCubeCorrected(),getViscube(refVb,MS::CORRECTED_DATA,datacolmap),tolerance);
 					if (not res) keepIterating = False;
 				}
 
-				if (columns.contains(VisBufferComponent2::VisibilityCubeModel) and testTVI.existsColumn(VisBufferComponent2::VisibilityCubeModel))
+				if (columns.contains(VisBufferComponent2::VisibilityCubeModel))
 				{
 					columnName = VisBufferComponents2::name(VisBufferComponent2::VisibilityCubeModel);
-					res = compareCube(columnName.c_str(),testVb->visCubeModel(),refVb->visCubeModel(),tolerance);
+					res = compareCube(columnName.c_str(),testVb->visCubeModel(),getViscube(refVb,MS::MODEL_DATA,datacolmap),tolerance);
 					if (not res) keepIterating = False;
 				}
 
-				if (columns.contains(VisBufferComponent2::VisibilityCubeFloat) and testTVI.existsColumn(VisBufferComponent2::VisibilityCubeFloat))
+				if (columns.contains(VisBufferComponent2::VisibilityCubeFloat))
 				{
 					columnName = VisBufferComponents2::name(VisBufferComponent2::VisibilityCubeFloat);
 					res = compareCube(columnName.c_str(),testVb->visCubeFloat(),refVb->visCubeFloat(),tolerance);
 					if (not res) keepIterating = False;
 				}
 
-				if (columns.contains(VisBufferComponent2::WeightSpectrum) and testTVI.existsColumn(VisBufferComponent2::WeightSpectrum))
+				if (columns.contains(VisBufferComponent2::WeightSpectrum))
 				{
 					columnName = VisBufferComponents2::name(VisBufferComponent2::WeightSpectrum);
 					res = compareCube(columnName.c_str(),testVb->weightSpectrum(),refVb->weightSpectrum(),tolerance);
 					if (not res) keepIterating = False;
 				}
 
-				if (columns.contains(VisBufferComponent2::SigmaSpectrum) and testTVI.existsColumn(VisBufferComponent2::SigmaSpectrum))
+				if (columns.contains(VisBufferComponent2::SigmaSpectrum))
 				{
 					columnName = VisBufferComponents2::name(VisBufferComponent2::SigmaSpectrum);
 					res = compareCube(columnName.c_str(),testVb->sigmaSpectrum(),refVb->sigmaSpectrum(),tolerance);
 					if (not res) keepIterating = False;
 				}
 
-				if (columns.contains(VisBufferComponent2::Weight) and testTVI.existsColumn(VisBufferComponent2::Weight))
+				if (columns.contains(VisBufferComponent2::Weight))
 				{
 					columnName = VisBufferComponents2::name(VisBufferComponent2::Weight);
 					res = compareMatrix(columnName.c_str(),testVb->weight(),refVb->weight(),tolerance);
 					if (not res) keepIterating = False;
 				}
 
-				if (columns.contains(VisBufferComponent2::Sigma) and testTVI.existsColumn(VisBufferComponent2::Sigma))
+				if (columns.contains(VisBufferComponent2::Sigma))
 				{
 					columnName = VisBufferComponents2::name(VisBufferComponent2::Sigma);
 					res = compareMatrix(columnName.c_str(),testVb->sigma(),refVb->sigma(),tolerance);
@@ -500,6 +511,56 @@ Bool copyTestFile(String &path,String &filename,String &outfilename)
 	}
 
 	return ret;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+const Cube<Complex> & getViscube(	VisBuffer2 *vb,
+									MS::PredefinedColumns datacol,
+									dataColMap *datacolmap)
+{
+	MS::PredefinedColumns mappeddatacol;
+	if (datacolmap == NULL)
+	{
+		mappeddatacol = datacol;
+	}
+	else
+	{
+		if (datacolmap->find(datacol) != datacolmap->end())
+		{
+			mappeddatacol = datacolmap->at(datacol);
+		}
+		else
+		{
+			mappeddatacol = datacol;
+		}
+	}
+
+
+	switch (mappeddatacol)
+	{
+		case MS::DATA:
+		{
+			return vb->visCube();
+			break;
+		}
+		case MS::CORRECTED_DATA:
+		{
+			return vb->visCubeCorrected();
+			break;
+		}
+		case MS::MODEL_DATA:
+		{
+			return vb->visCubeModel();
+			break;
+		}
+		default:
+		{
+			return vb->visCube();
+			break;
+		}
+	}
 }
 
 // -----------------------------------------------------------------------
