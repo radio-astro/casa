@@ -154,10 +154,21 @@ class TCleanPlotsRenderer(basetemplates.CommonRenderer):
         
         outfile = 'field%s-spw%s-pol%s-cleanplots.html' % (field, spw, pol)
         self.path = os.path.join(self.dirname, filenamer.sanitize(outfile))
+                
+        # Determine whether any of targets were run with specmode = 'cube',
+        # in which case the weblog will need to show the MOM0_FC column.
+        show_mom0_fc = 'cube' in [item['specmode'] for item in 
+          result[0].inputs['target_list']]
+        
+        if show_mom0_fc:
+            colorder = ['pbcorimage', 'residual', 'cleanmask', 'mom0_fc']
+        else:
+            colorder = ['pbcorimage', 'residual', 'cleanmask']
         
         self.extra_data = {'plots_dict' : plots_dict,
                            'field'      : field,
-                           'spw'        : spw}
+                           'spw'        : spw,
+                           'colorder'   : colorder}
     
     def update_mako_context(self, mako_context):
         mako_context.update(self.extra_data)

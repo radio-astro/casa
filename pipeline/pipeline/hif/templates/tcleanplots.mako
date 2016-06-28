@@ -10,8 +10,6 @@ columns = {'cleanmask' : ('Clean Mask', 'Clean Mask'),
 		   'psf' : ('PSF', 'PSF'),
 		   'mom0_fc': ('MOM0_FC', 'MOM0_FC: integrated intensity (moment 0) of line-free channels after continuum subtraction')}
 
-colorder = ['pbcorimage', 'residual', 'cleanmask', 'mom0_fc']
-
 def get_plot(plots, field, spw, i, colname):
 	try:
 		return plots[field][spw][i][colname]

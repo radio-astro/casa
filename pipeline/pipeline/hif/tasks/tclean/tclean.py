@@ -875,4 +875,8 @@ class Tclean(cleanbase.CleanBase):
             
             # Update the result.
             result.set_mom0_fc(maxiter, mom0_name)
+        else:
+            LOG.warning('Cannot create MOM0_FC image for intent "%s", '
+              'field %s, spw %s, no continuum ranges found.' %
+              (self.inputs.intent, self.inputs.field, self.inputs.spw))            
         
