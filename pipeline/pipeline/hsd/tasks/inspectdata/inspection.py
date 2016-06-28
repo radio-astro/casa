@@ -5,7 +5,8 @@ import re
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.basetask as basetask
-from pipeline.domain.datatable import DataTableImpl as DataTable
+#from pipeline.domain.datatable import DataTableImpl as DataTable
+from pipeline.domain import DataTableOld as DataTable
 from pipeline.domain.datatable import absolute_path
 import pipeline.domain as domain
 from .. import common

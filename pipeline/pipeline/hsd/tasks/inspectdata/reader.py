@@ -8,7 +8,8 @@ import asap as sd
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
-from pipeline.domain.datatable import DataTableImpl as DataTable
+#from pipeline.domain.datatable import DataTableImpl as DataTable
+from pipeline.domain import DataTableOld as DataTable
 from pipeline.domain.datatable import DataTableColumnMaskList as ColMaskList
 from pipeline.domain.datatable import OnlineFlagIndex
 

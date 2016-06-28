@@ -191,7 +191,13 @@ class SingleDishPointingChart(object):
         
         RA = datatable.tb1.getcol('RA')[dt_rows]
         DEC = datatable.tb1.getcol('DEC')[dt_rows]
-        FLAG = datatable.tb2.getcol('FLAG_PERMANENT')[:,dt_rows][OnlineFlagIndex]
+        FLAG = numpy.zeros(len(RA), dtype=int)
+        rows = numpy.where(dt_rows == True)[0]
+        assert len(RA) == len(rows)
+        for (i, row) in enumerate(rows):
+            pflags = datatable.tb2.getcell('FLAG_PERMANENT', row)
+            # use flag for pol 0
+            FLAG[i] = pflags[0][OnlineFlagIndex]
                 
         pl.clf()
         draw_pointing(self.axes_manager, RA, DEC, FLAG, self.figfile, circle=[0.5*beam_size_in_deg], ObsPattern=obs_pattern, plotpolicy='greyed')

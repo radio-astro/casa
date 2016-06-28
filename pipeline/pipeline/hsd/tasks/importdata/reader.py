@@ -136,8 +136,9 @@ class MetaDataReader(object):
             Tscan = tb.getcol('SCAN_NUMBER')
             TDD = tb.getcol('DATA_DESC_ID')
             ddspwmap = numpy.vectorize(lambda x: ms.get_data_description(id=x).spw.id, otypes=[numpy.int32])
+            ddnpolmap = numpy.vectorize(lambda x: ms.get_data_description(id=x).num_polarizations, otypes=[numpy.int32])
             Tif = ddspwmap(TDD)
-            Tpol = numpy.zeros(nrow, dtype=numpy.int32)
+            Tpol = ddnpolmap(TDD)
             Tant = tb.getcol('ANTENNA1')
             Tbeam = tb.getcol('FEED1')
             Tsrctype = numpy.fromiter((0 if i in target_states else 1 for i in tb.getcol('STATE_ID')), dtype=numpy.int32)
@@ -145,9 +146,6 @@ class MetaDataReader(object):
             field_ids = tb.getcol('FIELD_ID')
             getsourcename = numpy.vectorize(lambda x: ms.get_fields(x)[0].source.name, otypes=['string'])
             Tsrc = getsourcename(field_ids)
-            # set dummy value to TSYS 
-            # since it will be overwritten in hsd_applycal stage
-            Tsys = numpy.ones(nrow, dtype=numpy.float32)
             NchanArray = numpy.fromiter((nchan_map[n] for n in Tif), dtype=numpy.int)   
 
         ID = len(self.datatable)
@@ -160,7 +158,7 @@ class MetaDataReader(object):
         self.datatable.putcol('ROW',rows,startrow=ID)
         self.datatable.putcol('SCAN',Tscan,startrow=ID)
         self.datatable.putcol('IF',Tif,startrow=ID)
-        self.datatable.putcol('POL',Tpol,startrow=ID)
+        self.datatable.putcol('NPOL',Tpol,startrow=ID)
         self.datatable.putcol('BEAM',Tbeam,startrow=ID)
         self.datatable.putcol('TIME',Tmjd/86400.0,startrow=ID)
         self.datatable.putcol('ELAPSED',Tmjd-Tmjd[0],startrow=ID)
@@ -247,37 +245,44 @@ class MetaDataReader(object):
         self.datatable.putcol('AZ',Taz,startrow=ID)
         self.datatable.putcol('EL',Tel,startrow=ID)
         self.datatable.putcol('NCHAN',NchanArray,startrow=ID)
-        self.datatable.putcol('TSYS',Tsys,startrow=ID)
         self.datatable.putcol('TARGET',Tsrc,startrow=ID)
-        intArr = numpy.ones(nrow, dtype=int)
-        self.datatable.putcol('FLAG_SUMMARY',intArr,startrow=ID)
-        intArr[:] = 0
+        intArr = numpy.zeros(nrow, dtype=int)
         self.datatable.putcol('NMASK',intArr,startrow=ID)
         intArr[:] = -1
-        self.datatable.putcol('NOCHANGE',intArr,startrow=ID)
         self.datatable.putcol('POSGRP',intArr,startrow=ID)
-        #Tant += self.vAnt
         self.datatable.putcol('ANTENNA',Tant,startrow=ID)
         self.datatable.putcol('SRCTYPE',Tsrctype,startrow=ID)
         intArr[:] = ms_id
         self.datatable.putcol('MS', intArr, startrow=ID)
         
         # row base storing
-        stats = [-1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0]
-        flags = [1, 1, 1, 1, 1, 1, 1]
-        pflags = [1, 1, 1, 1]
         masklist = ColMaskList.NoMask
+        
+        # Tsys will be overwritten in applycal stage
+        tsys_template = numpy.ones(4, dtype=numpy.float32)
+        
+        flag_summary_template = numpy.ones(4, dtype=numpy.int32)
+        stats_template = numpy.zeros((4,7), dtype=numpy.int32) - 1
+        flags_template = numpy.ones((4,7), dtype=numpy.int32)
+        pflags_template = numpy.ones((4,4), dtype=numpy.int32)
+        nochange_template = numpy.zeros(4, dtype=numpy.int32) - 1
         for x in xrange(nrow):
             # FLAGROW is mapped into OnlineFlag (PermanentFlag[3])
             # NOTE: data is valid if Tflagrow is 0
             #       data is valid if pflags[3] is 1
-            pflags[OnlineFlagIndex] = 1 if Tflagrow[x] == 0 else 0
+            pflags_template[:,OnlineFlagIndex] = 1 if Tflagrow[x] == 0 else 0
             sDate = mjd_to_datestring(Tmjd[x],unit='day')
             self.datatable.putcell('DATE',ID,sDate)
-            self.datatable.putcell('STATISTICS',ID,stats)
-            self.datatable.putcell('FLAG',ID,flags)
-            self.datatable.putcell('FLAG_PERMANENT',ID,pflags)
             self.datatable.putcell('MASKLIST',ID,masklist)
+
+            # polarization dependent arrays
+            npol = self.datatable.getcell('NPOL', ID)
+            self.datatable.putcell('STATISTICS', ID, stats_template[:npol])
+            self.datatable.putcell('FLAG', ID, flags_template[:npol])
+            self.datatable.putcell('FLAG_PERMANENT', ID, pflags_template[:npol])
+            self.datatable.putcell('FLAG_SUMMARY', ID, flag_summary_template[:npol])
+            self.datatable.putcell('TSYS', ID, tsys_template[:npol])
+            self.datatable.putcell('NOCHANGE', ID, nochange_template[:npol])
             ID += 1
 
         num_antenna = len(self.ms.antennas)
