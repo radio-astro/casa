@@ -4,6 +4,7 @@ import glob
 import numpy
 import scipy.special
 import operator
+import decimal
 
 import pipeline.domain.measures as measures
 from pipeline.hif.heuristics import tclean
@@ -212,14 +213,13 @@ class Tclean(cleanbase.CleanBase):
 
         # Get a noise estimate from the CASA sensitivity calculator
         sensitivity, \
-        channel_rms_factor, \
         spw_topo_freq_param, \
         spw_topo_chan_param, \
         spw_topo_freq_param_dict, \
         spw_topo_chan_param_dict, \
         total_topo_bw, aggregate_topo_bw = \
             self._do_sensitivity()
-        LOG.info('Sensitivity estimate from CASA: %s Jy', sensitivity)
+        LOG.info('Sensitivity estimate: %s Jy', sensitivity)
 
         # Choose TOPO frequency selections
         if inputs.specmode != 'cube':
@@ -242,33 +242,28 @@ class Tclean(cleanbase.CleanBase):
             if inputs.hm_masking == 'centralregion':
                 sequence_manager = ImageCentreThresholdSequence(
                     gridder = inputs.gridder, threshold=threshold,
-                    channel_rms_factor = channel_rms_factor,
                     sensitivity = sensitivity, niter=inputs.niter)
             # Auto-boxing
             elif inputs.hm_masking == 'auto':
                 sequence_manager = AutoMaskThresholdSequence(
                     gridder = inputs.gridder, threshold=threshold,
-                    channel_rms_factor = channel_rms_factor,
                     sensitivity = sensitivity, niter=inputs.niter)
             # Manually supplied mask
             else:
                 sequence_manager = ManualMaskThresholdSequence(
                     mask=inputs.mask,
                     gridder = inputs.gridder, threshold=threshold,
-                    channel_rms_factor = channel_rms_factor,
                     sensitivity = sensitivity, niter=inputs.niter)
 
         elif inputs.hm_masking == 'psfiter':
             sequence_manager = IterativeSequence(
                 maxncleans=inputs.maxncleans,
-                sensitivity=sensitivity,
-                channel_rms_factor = channel_rms_factor)
+                sensitivity=sensitivity)
 
         elif inputs.hm_masking == 'psfiter2':
             sequence_manager = IterativeSequence2(
                 maxncleans=inputs.maxncleans,
-                sensitivity=sensitivity,
-                channel_rms_factor = channel_rms_factor)
+                sensitivity=sensitivity)
 
         result = self._do_iterative_imaging(
             sequence_manager=sequence_manager, result=result)
@@ -600,34 +595,36 @@ class Tclean(cleanbase.CleanBase):
 
         detailed_field_sensitivities = {}
         for ms in targetmslist:
-            detailed_field_sensitivities[ms.name] = {}
+            detailed_field_sensitivities[os.path.basename(ms.name)] = {}
             for intSpw in [int(s) for s in spw.split(',')]:
-                detailed_field_sensitivities[ms.name][intSpw] = {}
+                spw_do = ms.get_spectral_window(intSpw)
+                detailed_field_sensitivities[os.path.basename(ms.name)][intSpw] = {}
                 try:
+                    if (inputs.specmode == 'cube'):
+                        # Use the center channel
+                        chansel = '%d~%d' % (int(spw_do.num_channels / 2.0), int(spw_do.num_channels / 2.0))
+                    else:
+                        if (spw_topo_freq_param_dict[os.path.basename(ms.name)][str(intSpw)] != ''):
+                            # Use continuum frequency selection
+                            chansel = spw_topo_freq_param_dict[os.path.basename(ms.name)][str(intSpw)]
+                        else:
+                            # Use full spw
+                            chansel = '0~%d' % (spw_do.num_channels - 1)
+
                     if (inputs.gridder == 'mosaic'):
                         field_sensitivities = []
                         for field_id in [f.id for f in ms.fields if (utils.dequote(f.name) == utils.dequote(field) and inputs.intent in f.intents)]:
-                            with casatools.ImagerReader(ms.name) as imTool:
-                                if ((inputs.specmode != 'cube') and (spw_topo_freq_param_dict[os.path.basename(ms.name)][str(intSpw)] != '')):
-                                    spwsel = '%s:%s' % (intSpw, spw_topo_freq_param_dict[os.path.basename(ms.name)][str(intSpw)])
-                                else:
-                                    spwsel = '%s' % (intSpw)
-                                imTool.selectvis(spw=spwsel, field=field_id)
-                                # TODO: Add scan selection ?
-                                imTool.defineimage(mode=specmode, spw=intSpw,
-                                                   cellx=inputs.cell[0], celly=inputs.cell[0],
-                                                   nx=inputs.imsize[0], ny=inputs.imsize[1])
-                                # TODO: Mosaic switch needed ?
-                                imTool.weight(type=inputs.weighting, robust=inputs.robust)
-                                result = imTool.apparentsens()
-                                if (result[1] != 0.0):
-                                    field_sensitivities.append(result[1])
-                                    detailed_field_sensitivities[ms.name][intSpw][field_id] = result[1]
+                            try:
+                                field_sensitivity = self._get_sensitivity(ms, field_id, intSpw, chansel)
+                                field_sensitivities.append(field_sensitivity)
+                                detailed_field_sensitivities[os.path.basename(ms.name)][intSpw][field_id] = field_sensitivity
+                            except Exception as e:
+                                LOG.warning('Could not calculate sensitivity for MS %s Field %s (ID %d) SPW %d ChanSel %s' % (os.path.basename(ms.name), utils.dequote(field), field_id, intSpw, chansel))
 
                         LOG.info('Using median of all mosaic field sensitivities for MS %s, Field %s, SPW %s: %s Jy' % (os.path.basename(ms.name), field, str(intSpw), numpy.median(field_sensitivities)))
-                        min_field_id, min_sensitivity = min(detailed_field_sensitivities[ms.name][intSpw].iteritems(), key=operator.itemgetter(1))
+                        min_field_id, min_sensitivity = min(detailed_field_sensitivities[os.path.basename(ms.name)][intSpw].iteritems(), key=operator.itemgetter(1))
                         LOG.info('Minimum mosaic field sensitivity for MS %s, Field %s (ID: %s), SPW %s: %s Jy' % (os.path.basename(ms.name), field, min_field_id, str(intSpw), min_sensitivity))
-                        max_field_id, max_sensitivity = max(detailed_field_sensitivities[ms.name][intSpw].iteritems(), key=operator.itemgetter(1))
+                        max_field_id, max_sensitivity = max(detailed_field_sensitivities[os.path.basename(ms.name)][intSpw].iteritems(), key=operator.itemgetter(1))
                         LOG.info('Maximum mosaic field sensitivity for MS %s, Field %s (ID: %s), SPW %s: %s Jy' % (os.path.basename(ms.name), field, max_field_id, str(intSpw), max_sensitivity))
 
                         # Calculate mosaic overlap factor
@@ -637,22 +634,10 @@ class Tclean(cleanbase.CleanBase):
                         LOG.info('Applying mosaic overlap factor of %s.' % (overlap_factor))
                         sensitivities.append(numpy.median(field_sensitivities) / overlap_factor)
                     else:
-                        with casatools.ImagerReader(ms.name) as imTool:
-                            if ((inputs.specmode != 'cube') and (spw_topo_freq_param_dict[os.path.basename(ms.name)][str(intSpw)] != '')):
-                                spwsel = '%s:%s' % (intSpw, spw_topo_freq_param_dict[os.path.basename(ms.name)][str(intSpw)])
-                            else:
-                                spwsel = '%s' % (intSpw)
-                            imTool.selectvis(spw=spwsel, field=field)
-                            # TODO: Add scan selection ?
-                            imTool.defineimage(mode=specmode, spw=intSpw,
-                                               cellx=inputs.cell[0], celly=inputs.cell[0],
-                                               nx=inputs.imsize[0], ny=inputs.imsize[1])
-                            # TODO: Mosaic switch needed ?
-                            imTool.weight(type=inputs.weighting, robust=inputs.robust)
-                            result = imTool.apparentsens()
-                            if (result[1] != 0.0):
-                                sensitivities.append(result[1])
-                                detailed_field_sensitivities[ms.name][intSpw][field] = result[1]
+                        # Use field name for single field case
+                        field_sensitivity = self._get_sensitivity(ms, field, intSpw, chansel)
+                        sensitivities.append(field_sensitivity)
+                        detailed_field_sensitivities[os.path.basename(ms.name)][intSpw][field] = field_sensitivity
                 except Exception as e:
                     # Simply pass as this could be a case of a source not
                     # being present in the MS.
@@ -665,26 +650,76 @@ class Tclean(cleanbase.CleanBase):
             LOG.warning('Exception in calculating sensitivity. Assuming %g Jy/beam.' % (defaultSensitivity))
             sensitivity = defaultSensitivity
 
-        if inputs.specmode == 'cube':
-            if inputs.nchan != -1:
-                channel_rms_factor = numpy.sqrt(inputs.nchan)
-            else:
-                qaTool = casatools.quanta
-                ms = context.observing_run.measurement_sets[0]
-                spwDesc = ms.get_spectral_window(spw)
-                min_frequency = float(spwDesc.min_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
-                max_frequency = float(spwDesc.max_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
-                if qaTool.convert(inputs.width, 'GHz')['value'] == 0.0:
-                    effective_channel_width = [float(ch.effective_bw.convert_to(measures.FrequencyUnits.GIGAHERTZ).value) for ch in spwDesc.channels][len(spwDesc.channels)/2]
-                    channel_rms_factor = numpy.sqrt(abs((max_frequency - min_frequency) / effective_channel_width))
-                else:
-                    channel_rms_factor = numpy.sqrt(abs((max_frequency - min_frequency) / qaTool.convert(inputs.width, 'GHz')['value']))
-            LOG.info('Applying effective channel width correction factor of %s.' % (channel_rms_factor))
-            sensitivity *= channel_rms_factor
-        else:
-            channel_rms_factor = 1.0
+        return sensitivity, spw_topo_freq_param, spw_topo_chan_param, spw_topo_freq_param_dict, spw_topo_chan_param_dict, total_topo_bw, aggregate_topo_bw
 
-        return sensitivity, channel_rms_factor, spw_topo_freq_param, spw_topo_chan_param, spw_topo_freq_param_dict, spw_topo_chan_param_dict, total_topo_bw, aggregate_topo_bw
+    def _get_sensitivity(self, ms_do, field, spw, chansel):
+        """
+        Get sensitivity for a field / spw / chansel combination from CASA's
+        apparentsens method and a correction for effective channel widths
+        in case of online smoothing.
+
+        This heuristic is currently optimized for ALMA data only.
+        """
+
+        context = self.inputs.context
+        inputs = self.inputs
+
+        spw_do = ms_do.get_spectral_window(spw)
+        spwchan = spw_do.num_channels
+        physicalBW_of_1chan = spw_do.channels[0].getWidth().convert_to(measures.FrequencyUnits.HERTZ).value
+        effectiveBW_of_1chan = spw_do.channels[0].effective_bw.convert_to(measures.FrequencyUnits.HERTZ).value
+
+        BW_ratio = effectiveBW_of_1chan / physicalBW_of_1chan
+
+        if (BW_ratio <= decimal.Decimal('1.000')):
+            N_smooth = 0
+        elif (BW_ratio == decimal.Decimal('2.667')):
+            N_smooth = 1
+        elif (BW_ratio == decimal.Decimal('1.600')):
+            N_smooth = 2
+        elif (BW_ratio == decimal.Decimal('1.231')):
+            N_smooth = 4
+        elif (BW_ratio == decimal.Decimal('1.104')):
+            N_smooth = 8
+        elif (BW_ratio == decimal.Decimal('1.049')):
+            N_smooth = 16
+        else:
+            LOG.warning('Could not determine channel bandwidths ratio. Physical: %s Effective: %s' % (physicalBW_of_1chan, effectiveBW_of_1chan))
+            N_smooth = 0
+
+        chansel_sensitivities = []
+        for chanrange in chansel.split(';'):
+
+            try:
+                with casatools.ImagerReader(ms_do.name) as imTool:
+                    imTool.selectvis(spw='%s:%s' % (spw, chanrange), field=field)
+                    # TODO: Add scan selection ?
+                    imTool.defineimage(mode=inputs.specmode if inputs.specmode=='cube' else 'mfs', spw=spw,
+                                       cellx=inputs.cell[0], celly=inputs.cell[0],
+                                       nx=inputs.imsize[0], ny=inputs.imsize[1])
+                    # TODO: Mosaic switch needed ?
+                    imTool.weight(type=inputs.weighting, robust=inputs.robust)
+                    result = imTool.apparentsens()
+
+                apparentsens_value = result[1]
+                LOG.info('apparentsens result for MS %s Field %s SPW %s ChanRange %s: %s Jy/beam' % (os.path.basename(ms_do.name), field, spw, chanrange, apparentsens_value))
+                if (N_smooth > 0):
+                    cstart, cstop = map(int, chanrange.split('~'))
+                    nchan = cstop - cstart + 1
+                    optimisticBW = nchan * float(effectiveBW_of_1chan)
+                    approximateEffectiveBW = (N_smooth * nchan + 1.12 * (spwchan - nchan) / spwchan) * float(physicalBW_of_1chan)
+                    SCF = (optimisticBW / approximateEffectiveBW)**0.5
+                    corrected_apparentsens_value = apparentsens_value * SCF
+                    LOG.info('Correcting apparentsens result by %s from %s Jy/beam to %s Jy/beam' % (SCF, apparentsens_value, corrected_apparentsens_value))
+                else:
+                    corrected_apparentsens_value = apparentsens_value 
+
+            except Exception as e:
+                LOG.warning('Could not calculate sensitivity for MS %s Field %s SPW %s ChanRange %s: %s' % (os.path.basename(ms_do.name), field, spw, chanrange, e))
+
+            chansel_sensitivities.append(corrected_apparentsens_value)
+
+        return 1.0 / numpy.sqrt(numpy.sum(1.0 / numpy.array(chansel_sensitivities)**2))
 
     def _do_continuum(self, cont_image_name, mode):
         """
@@ -823,7 +858,7 @@ class Tclean(cleanbase.CleanBase):
                 table.removerows(range(table.nrows()))
                 copy.done()
 
-                # Restore pointing table
+    # Restore pointing table
     def _restore_pointing_table(self):
         for vis in self.inputs.vis:
             # restore the copy of the POINTING table
@@ -878,5 +913,4 @@ class Tclean(cleanbase.CleanBase):
         else:
             LOG.warning('Cannot create MOM0_FC image for intent "%s", '
               'field %s, spw %s, no continuum ranges found.' %
-              (self.inputs.intent, self.inputs.field, self.inputs.spw))            
-        
+              (self.inputs.intent, self.inputs.field, self.inputs.spw))
