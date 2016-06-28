@@ -35,12 +35,12 @@
     </param>
 
     <param type="string" name="field" subparam="true">
-        <description>Field to be calibrated (default all)</description>
+        <description>Field to be imaged, e.g., \'M100,Sgr*\' (default all)</description>
         <value></value>
     </param>
 
     <param type="any" name="spw" subparam="true">
-            <description>select data by IF IDs (spectral windows), e.g. \'3,5,7\' (\'\'=all)</description>
+            <description>select data by spectral window IDs, e.g. \'3,5,7\' (default all)</description>
             <any type="variant" limittypes="string"/>
             <value type="string"></value>
     </param>
@@ -120,7 +120,7 @@ infiles -- List of data files. These must be a name of Scantables that
    default: []
    example: vis=['X227.PM01.asap', 'X227.PM02.asap']
 
-field -- Data selection by field name.
+field -- Data selection by field names or ids.
    default: '' (all fields)
    example: '*Sgr*,M100'
    
