@@ -1164,3 +1164,13 @@ def dequote(s):
     '''Remove any kind of quotes from a string to faciliate comparisons.'''
 
     return s.replace('"','').replace("'","")
+
+
+def approx_equal(x, y, numdigits=7):
+    '''Approximate equality check up to a given number of digits.'''
+
+    try:
+        np.testing.assert_approx_equal(x, y, numdigits)
+        return True
+    except:
+        return False

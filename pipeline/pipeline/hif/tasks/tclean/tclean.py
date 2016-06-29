@@ -604,9 +604,9 @@ class Tclean(cleanbase.CleanBase):
                         # Use the center channel
                         chansel = '%d~%d' % (int(spw_do.num_channels / 2.0), int(spw_do.num_channels / 2.0))
                     else:
-                        if (spw_topo_freq_param_dict[os.path.basename(ms.name)][str(intSpw)] != ''):
+                        if (spw_topo_chan_param_dict[os.path.basename(ms.name)][str(intSpw)] != ''):
                             # Use continuum frequency selection
-                            chansel = spw_topo_freq_param_dict[os.path.basename(ms.name)][str(intSpw)]
+                            chansel = spw_topo_chan_param_dict[os.path.basename(ms.name)][str(intSpw)]
                         else:
                             # Use full spw
                             chansel = '0~%d' % (spw_do.num_channels - 1)
@@ -666,22 +666,22 @@ class Tclean(cleanbase.CleanBase):
 
         spw_do = ms_do.get_spectral_window(spw)
         spwchan = spw_do.num_channels
-        physicalBW_of_1chan = spw_do.channels[0].getWidth().convert_to(measures.FrequencyUnits.HERTZ).value
-        effectiveBW_of_1chan = spw_do.channels[0].effective_bw.convert_to(measures.FrequencyUnits.HERTZ).value
+        physicalBW_of_1chan = float(spw_do.channels[0].getWidth().convert_to(measures.FrequencyUnits.HERTZ).value)
+        effectiveBW_of_1chan = float(spw_do.channels[0].effective_bw.convert_to(measures.FrequencyUnits.HERTZ).value)
 
         BW_ratio = effectiveBW_of_1chan / physicalBW_of_1chan
 
-        if (BW_ratio <= decimal.Decimal('1.000')):
+        if (BW_ratio <= 1.0):
             N_smooth = 0
-        elif (BW_ratio == decimal.Decimal('2.667')):
+        elif (utils.approx_equal(BW_ratio, 2.667, 4)):
             N_smooth = 1
-        elif (BW_ratio == decimal.Decimal('1.600')):
+        elif (utils.approx_equal(BW_ratio, 1.600, 4)):
             N_smooth = 2
-        elif (BW_ratio == decimal.Decimal('1.231')):
+        elif (utils.approx_equal(BW_ratio, 1.231, 4)):
             N_smooth = 4
-        elif (BW_ratio == decimal.Decimal('1.104')):
+        elif (utils.approx_equal(BW_ratio, 1.104, 4)):
             N_smooth = 8
-        elif (BW_ratio == decimal.Decimal('1.049')):
+        elif (utils.approx_equal(BW_ratio, 1.049, 4)):
             N_smooth = 16
         else:
             LOG.warning('Could not determine channel bandwidths ratio. Physical: %s Effective: %s' % (physicalBW_of_1chan, effectiveBW_of_1chan))
