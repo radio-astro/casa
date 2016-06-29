@@ -472,6 +472,114 @@ def science_spw(spectral_windows):
         match_by_intents = spw.is_target 
         if match_by_name and match_by_intents:
             yield spwid
+            
+def make_row_map_for_baselined_ms(ms):
+    """
+    Make row mapping between calibrated MS and baselined MS.
+    Return value is a dictionary whose key is row number for calibrated MS and 
+    its corresponding value is the one for baselined MS.
+    
+    ms: measurement set domain object
+    
+    returns: row mapping dictionary
+    """
+    generate_taql_item = lambda column, value: \
+        '{column} == {value}'.format(column=column, value=value)
+    
+    def generate_taql(processor_id=None, observation_id=None,
+                      field_id=None, antenna1=None, antenna2=None,
+                      data_desc_id=None, scan_number=None,
+                      state_id=None, time=None):
+        if antenna2 is None:
+            antenna2 = antenna1
+            
+        taql_items = []
+        taql_list = [('PROCESSOR_ID', processor_id),
+                     ('OBSERVATION_ID', observation_id),
+                     ('FIELD_ID', field_id),
+                     ('ANTENNA1', antenna1),
+                     ('ANTENNA2', antenna2),
+                     ('DATA_DESC_ID', data_desc_id),
+                     ('SCAN_NUMBER', scan_number),
+                     ('STATE_ID', state_id),
+                     ('TIME', time)]
+        for (column, value) in taql_list:
+            if value is not None:
+                taql_items.append(generate_taql_item(column, value))
+                
+        taql = ' && '.join(taql_items)
+        return taql
+
+    rowmap = {}
+    vis = ms.name
+    work_data = ms.work_data
+    LOG.debug('START processing "%s" (work_data "%s")'%(vis, work_data))
+    with casatools.TableReader(vis) as tb:
+        observation_ids = set(tb.getcol('OBSERVATION_ID'))
+        processor_ids = set(tb.getcol('PROCESSOR_ID'))
+    scans = ms.get_scans(scan_intent='TARGET')
+    for processor_id in processor_ids:
+        LOG.trace('PROCESSOR_ID %s'%(processor_id))
+        for observation_id in observation_ids:
+            LOG.trace('OBSERVATION_ID %s'%(observation_id))
+            for scan in scans:
+                scan_number = scan.id
+                LOG.trace('SCAN_NUMBER %s'%(scan_number))
+                states = [s for s in scan.states if 'TARGET' in s.intents]
+
+                if len(states) == 0:
+                    LOG.trace('No target states in SCAN %s'%(scan_number))
+                    continue
+                
+                for field in scan.fields:
+                    field_id = field.id
+                    LOG.trace('FIELD_ID %s'%(field_id))
+                    for antenna in ms.antennas:
+                        antenna_id = antenna.id
+                        LOG.trace('ANTENNA_ID %s'%(antenna_id))
+                        for spw in ms.get_spectral_windows(science_windows_only=True):
+                            data_desc = ms.get_data_description(spw=spw)
+                            data_desc_id = data_desc.id
+                            LOG.trace('DATA_DESC_ID %s (SPW %s)'%(data_desc_id, spw.id))
+                            for state in states:
+                                state_id = state.id
+                                LOG.trace('STATE_ID %s'%(state_id))
+                                taql = generate_taql(processor_id=processor_id,
+                                                     observation_id=observation_id,
+                                                     field_id=field_id,
+                                                     antenna1=antenna_id,
+                                                     antenna2=antenna_id,
+                                                     data_desc_id=data_desc_id,
+                                                     scan_number=scan_number,
+                                                     state_id=state_id)
+
+                                with casatools.TableReader(vis) as ti:
+                                    tisel = ti.query(taql, sortlist='TIME')
+                                    LOG.trace('NROW = %s'%(tisel.nrows()))
+                                    if tisel.nrows() > 0:
+                                        with casatools.TableReader(work_data) as to:
+                                            tosel = to.query(taql, sortlist='TIME')
+                                            time_in = tisel.getcol('TIME')
+                                            time_out = tosel.getcol('TIME')
+                                            row_in = tisel.rownumbers()
+                                            row_out = tosel.rownumbers()
+                                    else:
+                                        time_in = None
+                                        time_out = None
+                                        row_in = None
+                                        row_out = None
+
+                                if time_in is not None:
+                                    assert numpy.all(time_in == time_out)
+
+                                    for (rin, rout) in zip(row_in, row_out):
+                                        rowmap[rin] = rout
+                                else:
+                                    LOG.trace('NOTE: no rows')
+
+    end_time = time.time()
+    LOG.debug('Elapsed %s sec'%(end_time - start_time))
+    return rowmap
 
 @contextlib.contextmanager
 def asap_force_storage(storage='disk'):
