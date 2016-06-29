@@ -288,14 +288,17 @@ def get_index_list_for_ms(datatable, vis_list, antennaid_list, fieldid_list,
 def _get_index_list_for_ms(datatable, vis_list, antennaid_list, fieldid_list, 
                           spwid_list, srctype=None):
     # use time_table instead of data selection
-    online_flag = datatable.tb2.getcolslice('FLAG_PERMANENT', [OnlineFlagIndex], [OnlineFlagIndex], 1)[0]
+    #online_flag = datatable.tb2.getcolslice('FLAG_PERMANENT', [0, OnlineFlagIndex], [-1, OnlineFlagIndex], 1)[0]
+    #LOG.info('online_flag=%s'%(online_flag))
     for (_vis, _field, _ant, _spw) in zip(vis_list, fieldid_list, antennaid_list, spwid_list):
         time_table = datatable.get_timetable(_ant, _spw, None, os.path.basename(_vis), _field)
         # time table separated by large time gap
         the_table = time_table[1]
         for group in the_table:
             for row in group[1]:
-                if online_flag[row] == 1:
+                permanent_flag = datatable.tb2.getcell('FLAG_PERMANENT', row)
+                online_flag = permanent_flag[:,OnlineFlagIndex]
+                if any(online_flag == 1):
                     yield row    
 
 def get_valid_members(group_desc, antenna_filter, spwid_filter):

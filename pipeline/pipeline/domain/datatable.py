@@ -60,7 +60,7 @@ TD_DESC_RO = [
     __coldesc('integer', 0, 0, -1, 'Row number'),
     __coldesc('integer', 0, 0, -1, 'Scan number'),
     __coldesc('integer', 0, 0, -1, 'IF number'),
-    __coldesc('integer', 0, 0, -1, 'Pol number'),
+    __coldesc('integer', 0, 0, -1, 'Number of Polarizations'),
     __coldesc('integer', 0, 0, -1, 'Beam number'),
     __coldesc('string',  0, 0, -1, 'Date'),
     __coldesc('double',  0, 0, -1, 'Time in MJD', 's'),
@@ -71,7 +71,7 @@ TD_DESC_RO = [
     __coldesc('double',  0, 0, -1, 'Azimuth', 'deg'),
     __coldesc('double',  0, 0, -1, 'Elevation', 'deg'),
     __coldesc('integer', 0, 0, -1, 'Number of channels'),
-    __coldesc('double',  0, 0, -1, 'Tsys', 'K'),
+    __coldesc('double',  0, 0,  1, 'Tsys', 'K'),
     __coldesc('string',  0, 0, -1, 'Target name'),
     __coldesc('integer', 0, 0, -1, 'Antenna index'),
     __coldesc('integer', 0, 0, -1, 'Source type enum'),
@@ -80,10 +80,10 @@ TD_DESC_RO = [
     ]
 
 TD_DESC_RW = [
-    __coldesc('double',  0, 0,  1, 'Statistics'),
-    __coldesc('integer', 0, 0,  1, 'Flgas'),
-    __coldesc('integer', 0, 0,  1, 'Permanent flags'),
-    __coldesc('integer', 0, 0, -1, 'Actual flag'),
+    __coldesc('double',  0, 0,  2, 'Statistics'),
+    __coldesc('integer', 0, 0,  2, 'Flgas'),
+    __coldesc('integer', 0, 0,  2, 'Permanent flags'),
+    __coldesc('integer', 0, 0,  1, 'Actual flag'),
     __coldesc('integer', 0, 0, -1, 'Number of mask regions'),
     __coldesc('integer', 0, 0,  2, 'List of mask ranges'),
     __coldesc('integer', 0, 0, -1, 'Unchanged row or not'),
@@ -92,7 +92,7 @@ TD_DESC_RW = [
 
 def __tabledescro():
     name = [
-        'ROW', 'SCAN', 'IF', 'POL', 'BEAM', 'DATE',
+        'ROW', 'SCAN', 'IF', 'NPOL', 'BEAM', 'DATE',
         'TIME', 'ELAPSED', 'EXPOSURE', 'RA', 'DEC',
         'AZ', 'EL', 'NCHAN', 'TSYS', 'TARGET', 'ANTENNA',
         'SRCTYPE', 'MS', 'FIELD_ID'
@@ -372,17 +372,17 @@ class DataTableImpl( object ):
         type_map = {'integer': int,
                     'double': float,
                     'string': str}
-        dtype = lambda desc: list if desc.has_key('ndim') and desc['ndim'] > 0 \
+        datatype = lambda desc: list if desc.has_key('ndim') and desc['ndim'] > 0 \
                                   else type_map[desc['valueType']]
         for (k,v) in TABLEDESC_RO.items():
-            self.cols[k] = RO_COLUMN(self.tb1,k,dtype(v))
+            self.cols[k] = RO_COLUMN(self.tb1,k,datatype(v))
         for (k,v) in TABLEDESC_RW.items():
             if k == 'MASKLIST':
                 self.cols[k] = DataTableColumnMaskList(self.tb2)
             elif k == 'NOCHANGE':
                 self.cols[k] = DataTableColumnNoChange(self.tb2)
             else:
-                self.cols[k] = RW_COLUMN(self.tb2,k,dtype(v))
+                self.cols[k] = RW_COLUMN(self.tb2,k,datatype(v))
 
     def _close( self ):
         if self.isopened:
@@ -656,10 +656,12 @@ class RODataTableColumn( object ):
         return '%s("%s","%s")'%(self.__class__.__name__,self.name,self.caster_get)
 
     def getcell( self, idx ):
-        return self.caster_get(self.tb.getcell(self.name, idx))
+        #return self.caster_get(self.tb.getcell(self.name, idx))
+        return self.tb.getcell(self.name, idx)
 
     def getcol( self, startrow=0, nrow=-1, rowincr=1 ):
         return self.tb.getcol(self.name, startrow, nrow, rowincr).tolist()
+        #return self.tb.getcol(self.name, startrow, nrow, rowincr)
 
     def putcell( self, idx, val ):
         self.__raise()
@@ -674,7 +676,7 @@ class RWDataTableColumn( RODataTableColumn ):
     def __init__( self, table, name, dtype ):
         super(RWDataTableColumn,self).__init__(table, name, dtype)
         if dtype == list:
-            self.caster_put = numpy.array
+            self.caster_put = numpy.asarray
         else:
             self.caster_put = dtype
 
@@ -682,7 +684,7 @@ class RWDataTableColumn( RODataTableColumn ):
         self.tb.putcell(self.name, int(idx), self.caster_put(val))
 
     def putcol( self, val, startrow=0, nrow=-1, rowincr=1 ):
-        self.tb.putcol(self.name,numpy.array(val),int(startrow),int(nrow),int(rowincr))
+        self.tb.putcol(self.name,numpy.asarray(val),int(startrow),int(nrow),int(rowincr))
         
 class DataTableColumnNoChange( RWDataTableColumn ):
     def __init__( self, table):

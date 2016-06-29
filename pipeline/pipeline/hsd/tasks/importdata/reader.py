@@ -249,6 +249,7 @@ class MetaDataReader(object):
         intArr = numpy.zeros(nrow, dtype=int)
         self.datatable.putcol('NMASK',intArr,startrow=ID)
         intArr[:] = -1
+        self.datatable.putcol('NOCHANGE', intArr, startrow=ID)
         self.datatable.putcol('POSGRP',intArr,startrow=ID)
         self.datatable.putcol('ANTENNA',Tant,startrow=ID)
         self.datatable.putcol('SRCTYPE',Tsrctype,startrow=ID)
@@ -265,7 +266,6 @@ class MetaDataReader(object):
         stats_template = numpy.zeros((4,7), dtype=numpy.int32) - 1
         flags_template = numpy.ones((4,7), dtype=numpy.int32)
         pflags_template = numpy.ones((4,4), dtype=numpy.int32)
-        nochange_template = numpy.zeros(4, dtype=numpy.int32) - 1
         for x in xrange(nrow):
             # FLAGROW is mapped into OnlineFlag (PermanentFlag[3])
             # NOTE: data is valid if Tflagrow is 0
@@ -282,7 +282,6 @@ class MetaDataReader(object):
             self.datatable.putcell('FLAG_PERMANENT', ID, pflags_template[:npol])
             self.datatable.putcell('FLAG_SUMMARY', ID, flag_summary_template[:npol])
             self.datatable.putcell('TSYS', ID, tsys_template[:npol])
-            self.datatable.putcell('NOCHANGE', ID, nochange_template[:npol])
             ID += 1
 
         num_antenna = len(self.ms.antennas)
