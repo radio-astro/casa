@@ -132,7 +132,8 @@ class FindCont(basetask.StandardTaskTemplate):
                     # To avoid noisy edge channels, use only the LSRK frequency
                     # intersection and skip one channel on either end.
                     tclean_heuristics = tclean.TcleanHeuristics(context, inputs.vis, target['spw'])
-                    if0, if1, channel_width = tclean_heuristics.lsrk_freq_intersection(inputs.vis, target['field'], target['spw'])
+                    # Use only the current spw ID here !
+                    if0, if1, channel_width = tclean_heuristics.lsrk_freq_intersection(inputs.vis, target['field'], spwid)
                     start = '%sGHz' % ((if0 + channel_width) / 1e9)
                     width = '%sMHz' % ((channel_width) / 1e6)
                     nchan = int((if1 - if0 - 2 * channel_width) / channel_width)
