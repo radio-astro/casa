@@ -52,12 +52,14 @@ class WeightMS(common.SingleDishTaskTemplate):
             minmaxclip = (WeightMS.Rule['Clipping'].upper() == 'MINMAXREJECT')
             weight_rms = WeightMS.Rule['WeightRMS']
             weight_tintsys = WeightMS.Rule['WeightTsysExpTime']
+            try_fallback = True
         else:
             minmaxclip = False
             weight_rms = False
             weight_tintsys = True
+            try_fallback = False
         self._set_weight(row_map, minmaxclip=minmaxclip, weight_rms=weight_rms,
-                   weight_tintsys=weight_tintsys)
+                         weight_tintsys=weight_tintsys, try_fallback=try_fallback)
 
 
         result = WeightMSResults(task=self.__class__,
@@ -111,7 +113,7 @@ class WeightMS(common.SingleDishTaskTemplate):
     
         return row_map
          
-    def _set_weight(self, row_map, minmaxclip, weight_rms, weight_tintsys):
+    def _set_weight(self, row_map, minmaxclip, weight_rms, weight_tintsys, try_fallback=False):
         outfile = self.inputs.outfile
         antenna = self.inputs.antenna
         spwid = self.inputs.spwid
@@ -139,9 +141,14 @@ class WeightMS(common.SingleDishTaskTemplate):
             stats = datatable.tb2.getcol('STATISTICS').take(index_list)
             for index in xrange(len(rows)):
                 row = rows[index]
-                stat = stats[index]
-                if stat != 0.0:
+                stat = stats[index][1] #Baselined RMS
+                if stat > 0.0:
                     weight[row] /= (stat * stat)
+                elif stat < 0.0 and stats[index][2] > 0.0:
+                    stat = stats[index][2] #RMS before BL
+                    weight[row] /= (stat * stat)
+                elif try_fallback: # haven't run blflag. try fall back to tintsys
+                    weight_tintsys = True
                 else:
                     weight[row] = 0.0
     
