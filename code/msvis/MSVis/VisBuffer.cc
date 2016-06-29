@@ -64,14 +64,7 @@ VisBuffer::VisBuffer()
     validate();
     oldMSId_p = -1;
 
-    try
-    {
-        visModelData_p = VisModelDataI::create();
-    }
-    catch (...)
-    {
-    	visModelData_p = NULL;
-    }
+    if (VisModelDataI::create() != NULL) visModelData_p = VisModelDataI::create();
 }
 
 VisBuffer::VisBuffer(ROVisibilityIterator & iter)
@@ -83,14 +76,7 @@ VisBuffer::VisBuffer(ROVisibilityIterator & iter)
     oldMSId_p = -1;
     corrSorted_p = False;
 
-    try
-    {
-        visModelData_p = VisModelDataI::create();
-    }
-    catch (...)
-    {
-    	visModelData_p = NULL;
-    }
+    if (VisModelDataI::create() != NULL) visModelData_p = VisModelDataI::create();
 }
 
 VisBuffer::VisBuffer(const VisBuffer & vb)
@@ -113,7 +99,7 @@ VisBuffer & VisBuffer::operator=(const VisBuffer & other)
 VisBuffer &
 VisBuffer::assign(const VisBuffer & other, Bool copy)
 {
-    if (visModelData_p) visModelData_p = other.visModelData_p->clone();
+    if (not other.visModelData_p.null()) visModelData_p = other.visModelData_p->clone();
 
     if (other.corrSorted_p) {
         throw(AipsError("Cannot assign a VisBuffer that has had correlations sorted!"));
@@ -2472,10 +2458,9 @@ Cube<Complex>& VisBuffer::fillVisCube(VisibilityIterator::DataColumn whichOne)
 	  String modelkey; //=String("definedmodel_field_")+String::toString(fieldId());
 	  Int snum;
 	  Bool hasmodkey = False;
-	  if (visModelData_p) hasmodkey = visModelData_p->isModelDefinedI(fieldId(), visIter_p->ms(), modelkey, snum);
+	  if (not visModelData_p.null()) hasmodkey = visModelData_p->isModelDefinedI(fieldId(), visIter_p->ms(), modelkey, snum);
 	  if( hasmodkey || !(visIter_p->ms().tableDesc().isColumn("MODEL_DATA")))
 	  {
-		  if (not visModelData_p) visModelData_p = VisModelDataI::create();
 		  //cerr << "HASMOD " << visModelData_p.hasModel(msId(), fieldId(), spectralWindow()) << endl;
 		  if(visModelData_p->hasModel(msId(), fieldId(), spectralWindow()) ==-1){
 			  if(hasmodkey){
