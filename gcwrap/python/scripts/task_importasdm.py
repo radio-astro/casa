@@ -371,7 +371,7 @@ def importasdm(
             casalog.post('Parameter bdfflags==True: flags from the ASDM binary data will be used to set the MS flags ...')
             
             bdffexecutable = 'bdflags2MS '
-            bdffexecstring_base = bdffexecutable+' -f ALL'
+            bdffexecstring_base = bdffexecutable + ' -f ALL' + ' --ocm "' + ocorr_mode + '"' 
             if len(scans) > 0:
                 bdffexecstring_base = bdffexecstring_base + ' --scans ' + scans
 
