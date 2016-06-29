@@ -209,14 +209,15 @@ def findephems(vis=[], field=''):
         mytb.open(visname+'/FIELD')
         fnames = mytb.getcol('NAME')
 
-        if type(field) == int:
-            field = str(fnames[field])
-        if type(field) != str:
+        thefield = field
+        if type(thefield) == int:
+            thefield = str(fnames[thefield])
+        if type(thefield) != str:
             casalog.post('Parameter field must be str or int.', 'SEVERE')
             mytb.close()
             return []
 
-        if field in fnames:
+        if thefield in fnames:
             colnames = mytb.colnames()
             if not 'EPHEMERIS_ID' in colnames:
                 casalog.post('MS '+visname+' has no ephemerides attached.', 'WARN')
@@ -226,23 +227,23 @@ def findephems(vis=[], field=''):
 
             ephids = mytb.getcol('EPHEMERIS_ID')
             mytb.close()
-            theephid = ephids[list(fnames).index(field)]
+            theephid = ephids[list(fnames).index(thefield)]
 
             thetabs = glob.glob(visname+'/FIELD/EPHEM'+str(theephid)+'_*')
 
             if len(thetabs)==0:
-                casalog.post('MS '+visname+' has no ephemerides for field '+field+' attached.', 'WARN')
+                casalog.post('MS '+visname+' has no ephemerides for field '+thefield+' attached.', 'WARN')
                 rval.append('')
                 continue
 
             if len(thetabs)>1:
-                casalog.post('MS '+visname+' has more than one ephemeris for field '+field+' attached.', 'SEVERE')
+                casalog.post('MS '+visname+' has more than one ephemeris for field '+thefield+' attached.', 'SEVERE')
                 return[]
 
             rval.append(thetabs[0])
 
         else:
-             casalog.post('MS '+visname+' has no field '+field, 'WARN')
+             casalog.post('MS '+visname+' has no field '+thefield, 'WARN')
              rval.append('')
              continue
     #endfor
