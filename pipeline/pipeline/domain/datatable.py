@@ -494,16 +494,26 @@ class DataTableImpl( object ):
         return timetable
         
             
-    def get_timegap(self, ant, spw, pol, asrow=True):
+    def get_timegap(self, ant, spw, pol, asrow=True, ms=None, field_id=None):
         timegap_s = self.getkeyword('TIMEGAP_S')
         timegap_l = self.getkeyword('TIMEGAP_L')
-        try:
-            mygap_s = timegap_s[str(ant)][str(spw)][str(pol)]
-            mygap_l = timegap_l[str(ant)][str(spw)][str(pol)]
-        except KeyError, e:
-            raise KeyError('ant %s spw %s pol %s not in reduction group list'%(ant,spw,pol))
-        except Exception, e:
-            raise e
+        if ms is None:
+            try:
+                mygap_s = timegap_s[str(ant)][str(spw)][str(pol)]
+                mygap_l = timegap_l[str(ant)][str(spw)][str(pol)]
+            except KeyError, e:
+                raise KeyError('ant %s spw %s pol %s not in reduction group list'%(ant,spw,pol))
+            except Exception, e:
+                raise e
+        else:
+            try:
+                mygap_s = timegap_s[ms.basename.replace('.','_')][str(ant)][str(spw)][str(field_id)]
+                mygap_l = timegap_l[ms.basename.replace('.','_')][str(ant)][str(spw)][str(field_id)]
+            except KeyError, e:
+                raise KeyError('ms %s field %s ant %s spw %s not in reduction group list'%(ms.basename,field_id,ant,spw))
+            except Exception, e:
+                raise e
+            
 
         if asrow:
             rows = self.getcol('ROW')

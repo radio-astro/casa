@@ -76,6 +76,9 @@ class SDMSInspection(object):
             if value is None:
                 value = grouping_result[key]
                 LOG.debug('updated value = %s'%(value))
+            else:
+                mskey = self.ms.basename.replace('.','_')
+                value = {mskey: value}
             if datatable.has_key(key):
                 LOG.debug('Updating %s'%(key))
                 LOG.debug('before: %s'%(datatable.getkeyword(key)))
