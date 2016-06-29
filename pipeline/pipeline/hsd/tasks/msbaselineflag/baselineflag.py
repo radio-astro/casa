@@ -7,6 +7,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.utils as utils
 from pipeline.hif.heuristics import fieldnames
+from pipeline.domain import DataTable
 
 from .. import common
 from ..common import utils as sdutils
@@ -218,110 +219,83 @@ class SDBLFlagResults(common.SingleDishResults):
 
 class SDBLFlag(basetask.StandardTaskTemplate):
     """
-    Single dish flagging class
+    Single dish flagging class.
     """
+    ##################################################
+    # Note
+    # The class uses _handle_multiple_vis framework.
+    # Method, prepare() is called per MS. Inputs.ms
+    # holds "an" MS instance to be processed.
+    ##################################################    
     Inputs = SDBLFlagInputs
 
     def prepare(self):
         """
         Iterates over reduction group and invoke flagdata worker function in each clip_niteration.
         """
-#         # self
-#         inputs = self.inputs
-#         context = inputs.context
-#         datatable = context.observing_run.datatable_instance
-#         reduction_group = context.observing_run.reduction_group
-#         # TODO: make sure the reduction group is defined by hsd_inspect()?
-#         infiles = inputs.infiles
-#         #antennalist = self.antennalist
-#         #field = inputs.field        
-#         #iflist = inputs.iflist
-#         #pollist = inputs.pollist
+        inputs = self.inputs
+        context = inputs.context
+        # name of MS to process
+        cal_name = inputs.ms.name
+        bl_name = inputs.ms.work_data
+        in_ant = inputs.antenna
+        in_spw = inputs.spw
+        in_field = inputs.field
+        in_pol = '' if inputs.pol in ['', '*'] else inputs.pol.split(',')
 #         args = inputs.to_casa_args()
-#         #scanlist = inputs.scanlist
-#         st_names = context.observing_run.st_names
-#         file_index = [st_names.index(infile) for infile in infiles]
-#         flag_rule = inputs.FlagRuleDictionary
-#         clip_niteration = inputs.iteration
-# 
-#         # loop over reduction group
-#         files = set()
-#         flagResult = []
-#         for (group_id,group_desc) in reduction_group.items():
-#             LOG.debug('Processing Reduction Group %s'%(group_id))
-#             LOG.debug('Group Summary:')
-#             for m in group_desc:
-#                 LOG.debug('\tAntenna %s Spw %s Pol %s'%(m.antenna, m.spw, m.pols))
-# 
-#             # assume all members have same spw and pollist
-#             first_member = group_desc[0]
-#             spwid = first_member.spw
-#             #LOG.debug('spwid = %s'%(spwid))
-#             #pols = first_member.pols
-#             ###iteration = first_member.iteration[0]
-#             #if pollist is not None:
-#             #    pols = list(set(pollist) & set(pols))
-# 
-#             nchan = group_desc.nchan
-#             if nchan ==1:
-#                 LOG.info('Skip channel averaged spw %s' % (spwid))
-#                 continue
-# 
-#             pols_list = list(common.pol_filter(group_desc, inputs.get_pollist))
-#             LOG.debug('pols_list=%s'%(pols_list))
-# 
-# 
-#             member_list = list(common.get_valid_members(group_desc, file_index, args['spw']))
-#             # skip this group if valid member list is empty
-#             if len(member_list) == 0:
-#                 LOG.info('Skip reduction group %d'%(group_id))
-#                 continue
-# 
-#             member_list.sort()
-#             _file_index = [group_desc[i].antenna for i in member_list]
-#             spwid_list = [group_desc[i].spw for i in member_list]
-#             pols_list = [pols_list[i] for i in member_list]
-#             
-#             # selection by infiles
-#             if len(_file_index) < 1:
-#                 LOG.debug('Skip reduction group %d'%(group_id))
-#                 continue
-# 
-#             # accumulate files IDs processed
-#             files = files | set(_file_index)
-#             
-# 
-# 
-#             LOG.debug('Members to be processed:')
-#             is_all_baselined = True
-#             for i in xrange(len(member_list)):
-#                 bl_loc = True
-#                 for pol in pols_list[i]:
-#                     bl_loc = bl_loc and (group_desc.get_iteration(_file_index[i], spwid_list[i], pol) > 0)
-#                 LOG.debug('\tAntenna %s Spw %s Pol %s%s'%(_file_index[i], spwid_list[i], pols_list[i], ("" if bl_loc else " [Not baselined]")))
-#                 is_all_baselined = (is_all_baselined and bl_loc)
-# 
+        flag_rule = inputs.FlagRuleDictionary
+        clip_niteration = inputs.iteration
+        datatable = DataTable(name=context.observing_run.ms_datatable_name, readonly=True)
+        reduction_group = context.observing_run.ms_reduction_group
+
+        # loop over reduction group (spw and source combination)
+        flagResult = []
+        for (group_id,group_desc) in reduction_group.items():
+            LOG.debug('Processing Reduction Group %s'%(group_id))
+            LOG.debug('Group Summary:')
+            for m in group_desc:
+                LOG.debug('\t%s: Antenna %d (%s) Spw %d Field %d (%s)' % \
+                          (os.path.basename(m.ms.name), m.antenna_id,
+                           m.antenna_name, m.spw_id, m.field_id, m.field_name))
+
+            nchan = group_desc.nchan
+            if nchan ==1:
+                LOG.info('Skipping a group of channel averaged spw')
+                continue
+ 
+            # Which group in group_desc list should be processed
+            member_list = list(common.get_valid_ms_members(group_desc, [cal_name], in_ant, in_field, in_spw))
+            LOG.trace('group %s: member_list=%s'%(group_id, member_list))
+            
+            # skip this group if valid member list is empty
+            if len(member_list) == 0:
+                LOG.info('Skip reduction group %d'%(group_id))
+                continue
+ 
+            member_list.sort() #list of group_desc IDs to flag
+            antenna_list = [group_desc[i].antenna_id for i in member_list]
+            spwid_list = [group_desc[i].spw_id for i in member_list]
+            ms_list = [group_desc[i].ms for i in member_list]
+            fieldid_list = [group_desc[i].field_id for i in member_list]
+            dd_list = [ms_list[i].get_data_description(spw=spwid_list[i]) \
+                       for i in xrange(len(member_list))]
+            pols_list = [[corr for corr in ddobj.corr_axis if (in_pol=='' or corr in in_pol) ] for ddobj in dd_list]
+             
+            LOG.info("*"*60)
+            LOG.info('Members to be processed:')
+            for i in xrange(len(member_list)):
+                LOG.info("\t%s: Antenna %d (%s) Spw %d Field %d (%s) Pol '%s'" % \
+                          (os.path.basename(ms_list[i].name),
+                           antenna_list[i], group_desc[member_list[i]].antenna_name,
+                           spwid_list[i], fieldid_list[i],
+                           group_desc[member_list[i]].field_name,
+                           ','.join(pols_list[i])))
+            LOG.info("*"*60)
+             
+###################################
 #             if not is_all_baselined:
 #                 LOG.warn("Reduction Group contains data not yet baselined. Skipping flag by post-fit statistics for the data. MASKLIST will also be cleared up. You may go on flagging but the statistics will contain line emission.")
-# 
-#             # skip spw not included in iflist
-#             #if len(spwid_list) == 0:
-#             #    LOG.info('Skip spw %d (not in iflist)'%(spwid_list))
-#             #    continue
-# 
-#             # skip polarizations not included in pollist
-#             #if pollist is not None and len(pols)==0:
-#             #    LOG.info('Skip pols %s (not in pollist)'%(str(first_member.pols)))
-#             #    continue
-# 
-#             LOG.info("*"*60)
-#             LOG.info("Start processing reduction group %d" % (group_id))
-#             LOG.debug("- file indices = %s" % str(_file_index))
-#             LOG.info("- scantable names: %s" % (", ".join([st_names[idx] for idx in _file_index])))
-#             LOG.info("- spw: %s" % spwid_list)
-#             LOG.info("- pols: %s" % str(pols_list))
-#             LOG.info("*"*60)
-# 
+#   
 #             worker = SDBLFlagWorker(context, datatable, clip_niteration, spwid_list, nchan, pols_list, _file_index, flag_rule)
 #             thresholds = self._executor.execute(worker, merge=False)
 #             # Summary
