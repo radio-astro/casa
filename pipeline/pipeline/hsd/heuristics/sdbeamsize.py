@@ -53,7 +53,7 @@ class SingleDishBeamSize(api.Heuristic):
 
         Formula:
           beam size = 1.13 * lambda / D
-                    = 1.13 * (c * pi / 180.0 * 3600.0) / (nu * D) [arcsec]
+                    = 1.13 * (c / pi * 180.0 * 3600.0) / (nu * D) [arcsec]
                     = 1.13 * 6.188e4 / {(nu [GHz]) * (D [m])} [arcsec]
         """
         factor = 1.13
