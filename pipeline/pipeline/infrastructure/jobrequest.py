@@ -48,6 +48,8 @@ import sdimaging_cli
 import sdsave_cli
 import sdscale_cli
 import tsdcal_cli
+import tsdbaseline_cli
+#import tsdbaseline_pg
 
 from . import casatools
 from . import logging
@@ -418,6 +420,10 @@ class CASATaskJobGenerator(object):
     
     def tsdcal(self, *v, **k):
         return self._get_job(tsdcal_cli.tsdcal_cli, *v, **k)
+    
+    def tsdbaseline(self, *v, **k):
+        return self._get_job(tsdbaseline_cli.tsdbaseline_cli, *v, **k)
+        #return self._get_job(tsdbaseline_pg.tsdbaseline_pg, *v, **k)
 
     def _get_job(self, task, *v, **k):
         job = JobRequest(task, *v, **k)
