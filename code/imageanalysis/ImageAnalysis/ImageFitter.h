@@ -316,7 +316,7 @@ private:
 
 	void _createOutputRecord(const ComponentList& convolved, const ComponentList& decon);
 
-	void _setSum(const SkyComponent& comp, const SubImage<Float>& im);
+	void _setSum(const SkyComponent& comp, const SubImage<Float>& im, uInt compNum);
 
 	void _setBeam(GaussianBeam& beam, uInt ngauss);
 };

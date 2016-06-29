@@ -1505,7 +1505,7 @@ void ImageFitter::_fitsky(
 	GaussianBeam beam = _getImage()->imageInfo().restoringBeam(
 		_chanPixNumber, _stokesPixNumber
 	);
-	for (uInt i = 0; i < nModels; i++) {
+	for (uInt i = 0; i < nModels; ++i) {
 		if (fitter.type(i) == Fit2D::LEVEL) {
 			zeroLevelOffsetSolution = fitter.availableSolution(i)[0];
 			zeroLevelOffsetError = fitter.availableErrors(i)[0];
@@ -1542,9 +1542,9 @@ void ImageFitter::_fitsky(
 			if (doDeconvolved) {
 				_curDeconvolvedList.add(result[j].copy());
 			}
-			_setSum(result[j], subImage);
+			_setSum(result[j], subImage, j);
 			_allChanNums.push_back(_curChan);
-			j++;
+			++j;
 		}
 	}
 	_setBeam(beam, j);
@@ -1566,8 +1566,9 @@ void ImageFitter::_setBeam(GaussianBeam& beam, uInt ngauss) {
 	}
 }
 
-
-void ImageFitter::_setSum(const SkyComponent& comp, const SubImage<Float>& im) {
+void ImageFitter::_setSum(
+    const SkyComponent& comp, const SubImage<Float>& im, uInt compNum
+) {
 	const GaussianShape& g = static_cast<const GaussianShape&>(comp.shape());
 	Quantum<Vector<Double> > dir = g.refDirection().getAngle();
 	Quantity xcen(dir.getValue()[0], dir.getUnit());
@@ -1575,7 +1576,7 @@ void ImageFitter::_setSum(const SkyComponent& comp, const SubImage<Float>& im) {
 	Quantity sMajor = g.majorAxis()/2;
 	Quantity sMinor = g.minorAxis()/2;
 	Quantity pa = g.positionAngle();
-	const static Vector<Stokes::StokesTypes> stokes(0);
+	const Vector<Stokes::StokesTypes> stokes(0);
 	AnnEllipse x(
 		xcen, ycen, sMajor, sMinor, pa,
 		im.coordinates(), im.shape(), stokes
@@ -1587,8 +1588,18 @@ void ImageFitter::_setSum(const SkyComponent& comp, const SubImage<Float>& im) {
 	ImageStatsCalculator statsCalc(tmp, 0,	String(""), False);
 	statsCalc.setList(False);
 	statsCalc.setVerbose(False);
-	Record res = statsCalc.statistics();
-	_allSums.push_back(Quantity(*(res.asArrayDouble("sum").begin()), _bUnit));
+	Array<Double> mySums = statsCalc.statistics().asArrayDouble("sum");
+	Double mysum = 0;
+	if (mySums.empty()) {
+	    *this->_getLog() << LogIO::WARN << "Found no pixels over which to "
+	        << "sum for component " << compNum << ". This may indicate a "
+	        << "nonsensical result, possibly due to over fitting. "
+	        << "Proceeding anyway." << LogIO::POST;
+	}
+	else {
+	    mysum = *mySums.begin();
+	}
+	_allSums.push_back(Quantity(mysum, _bUnit));
 }
 
 
@@ -1604,12 +1615,10 @@ Vector<Double> ImageFitter::_singleParameterEstimate(
 	*_getLog() << LogOrigin(_class, __func__);
 	Vector<Double> parameters;
 	if (model == Fit2D::GAUSSIAN || model == Fit2D::DISK) {
-		//
 		// Auto determine estimate
-		//
-		parameters
-				= fitter.estimate(model, pixels.getArray(), pixels.getMask());
-		//
+		parameters = fitter.estimate(
+		    model, pixels.getArray(), pixels.getMask()
+		);
 		if (parameters.nelements() == 0) {
 			// Fall back parameters
 			*_getLog() << LogIO::WARN
