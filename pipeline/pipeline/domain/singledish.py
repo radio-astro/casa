@@ -772,8 +772,8 @@ class MSReductionGroupDesc(list):
         member = self[self.__search_member(ms, antenna_id, spw_id, field_id)]
         member.iter_countup()
 
-    def add_linelist(self, linelist, antenna_id, spw_id, field_id=None, channelmap_range=None):
-        member = self[self.__search_member(antenna_id, spw_id, field_id)]
+    def add_linelist(self, linelist, ms, antenna_id, spw_id, field_id=None, channelmap_range=None):
+        member = self[self.__search_member(ms, antenna_id, spw_id, field_id)]
         member.add_linelist(linelist, channelmap_range=channelmap_range)
 
     def __search_member(self, ms, antenna_id, spw_id, field_id=None):
