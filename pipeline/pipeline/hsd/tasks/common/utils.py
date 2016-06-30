@@ -472,7 +472,12 @@ def science_spw(spectral_windows):
         match_by_intents = spw.is_target 
         if match_by_name and match_by_intents:
             yield spwid
-            
+    
+# dictionary that always returns key         
+class EchoDictionary(dict):
+    def __getitem__(self, x):
+        return x
+    
 def make_row_map_for_baselined_ms(ms):
     """
     Make row mapping between calibrated MS and baselined MS.
@@ -513,6 +518,11 @@ def make_row_map_for_baselined_ms(ms):
     rowmap = {}
     vis = ms.name
     work_data = ms.work_data
+    
+    if vis == work_data:
+        return EchoDictionary()
+    
+    start_time = time.time()
     LOG.debug('START processing "%s" (work_data "%s")'%(vis, work_data))
     with casatools.TableReader(vis) as tb:
         observation_ids = set(tb.getcol('OBSERVATION_ID'))
