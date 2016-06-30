@@ -39,6 +39,10 @@ import pipeline.hif.tasks.exportdata.exportdata as hif_exportdata
 LOG = infrastructure.get_logger(__name__)
 
 
+# Inputs class must be separated per task class even if it's effectively the same
+class SDMSExportDataInputs(hif_exportdata.ExportDataInputs):
+    pass
+
 # class SDExportDataInputs(basetask.StandardInputs):
 #     """
 #     ExportDataInputs manages the inputs for the ExportData task.
@@ -126,20 +130,20 @@ LOG = infrastructure.get_logger(__name__)
 #     def targetimages(self, value):
 #         self._targetimages = value
         
-class SDExportDataResults(hif_exportdata.ExportDataResults):
-    def __init__(self, pprequest='', sessiondict=collections.OrderedDict(),
-                 visdict=collections.OrderedDict(), calimages=(), targetimages=(),
-                 weblog='', pipescript='', restorescript='', commandslog='', jyperkfile=''):
-        """
-        Initialise the results object with the given list of JobRequests.
-        """
-        super(SDExportDataResults, self).__init__(pprequest, sessiondict, visdict, calimages, targetimages, 
-                                                  weblog, pipescript, restorescript, commandslog)
-        self.jyperkfile = jyperkfile
-        
-    def __repr__(self):
-        s = 'SDExportData results:\n'
-        return s 
+# class SDExportDataResults(hif_exportdata.ExportDataResults):
+#     def __init__(self, pprequest='', sessiondict=collections.OrderedDict(),
+#                  visdict=collections.OrderedDict(), calimages=(), targetimages=(),
+#                  weblog='', pipescript='', restorescript='', commandslog='', jyperkfile=''):
+#         """
+#         Initialise the results object with the given list of JobRequests.
+#         """
+#         super(SDExportDataResults, self).__init__(pprequest, sessiondict, visdict, calimages, targetimages, 
+#                                                   weblog, pipescript, restorescript, commandslog)
+#         self.jyperkfile = jyperkfile
+#         
+#     def __repr__(self):
+#         s = 'SDExportData results:\n'
+#         return s 
 
 class SDMSExportData(hif_exportdata.ExportData):
     """
@@ -153,7 +157,7 @@ class SDMSExportData(hif_exportdata.ExportData):
     - Saves the final web log in a compressed / tarred file
     - Saves the text formatted list of contents of products directory
     """
-
+    Inputs = SDMSExportDataInputs
     
     # link the accompanying inputs to this task 
     #Inputs = hif_exportdata.ExportDataInputs
