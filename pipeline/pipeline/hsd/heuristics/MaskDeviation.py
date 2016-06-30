@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 import os
 import pylab as PL
 import numpy as NP
@@ -6,7 +8,18 @@ import asap as sd
 import pipeline.infrastructure.api as api
 
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.casatools as casatools
+
 LOG = infrastructure.get_logger(__name__)
+
+def _calculate(worker):
+    worker.SubtractMedian(threshold=3.0)
+    worker.CalcStdSpectrum()
+    #worker.PlotSpectrum()
+    worker.CalcRange(threshold=3.0, detection=5.0, extension=2.0, iteration=10)
+    #worker.SavePlot()
+    mask_list = worker.masklist
+    return mask_list
 
 class MaskDeviationHeuristic(api.Heuristic):
     def calculate(self, infile, spw=None):
@@ -19,12 +32,15 @@ class MaskDeviationHeuristic(api.Heuristic):
         """
         worker = MaskDeviation(infile, spw)
         worker.ReadData()
-        worker.SubtractMedian(threshold=3.0)
-        worker.CalcStdSpectrum()
-        #worker.PlotSpectrum()
-        worker.CalcRange(threshold=3.0, detection=5.0, extension=2.0, iteration=10)
-        #worker.SavePlot()
-        mask_list = worker.masklist
+        mask_list = _calculate(worker)
+        del worker
+        return mask_list
+    
+class MaskDeviationHeuristicForMS(api.Heuristic):
+    def calculate(self, vis, field_id='', antenna_id='', spw_id=''):
+        worker = MaskDeviation(vis, spw_id)
+        worker.ReadDataFromMS(field=field_id, antenna=antenna_id)
+        mask_list = _calculate(worker)
         del worker
         return mask_list
         
@@ -54,7 +70,7 @@ class MaskDeviation(object):
     def __init__(self, infile, spw=None):
         self.infile = infile.rstrip('/')
         self.spw = spw
-        LOG.trace('MaskDeviation.__init__: infile %s spw %s'%(os.path.basename(self.infile), self.spw))
+        LOG.debug('MaskDeviation.__init__: infile %s spw %s'%(os.path.basename(self.infile), self.spw))
         self.masklist = []
 
     def ReadData(self, infile=''):
@@ -80,6 +96,69 @@ class MaskDeviation(object):
             self.data[i] = NP.array(ss._getspectrum(i))
         ss.set_selection()
         del ss, s, sel
+        
+    def ReadDataFromMS(self, vis='', field='', antenna='', colname='CORRECTED_DATA'):
+        """
+        Reads data from input MS. 
+        """
+        if vis != '': 
+            self.infile=vis
+        if vis == '': 
+            vis = self.infile
+        spwsel = '' if self.spw is None else str(self.spw)
+        mssel = {'field': str(field), 
+                 'spw': str(spwsel), 
+                 'scanintent': 'OBSERVE_TARGET#ON_SOURCE*'}
+        LOG.debug('vis="%s"'%(vis))
+        LOG.debug('mssel=%s'%(mssel))
+        with casatools.MSReader(vis) as myms:
+            myms.msselect(mssel)
+            sel = myms.msselectedindices()
+        taql = 'ANTENNA1 == ANTENNA2'
+        if antenna != '':
+            taql += ' && ANTENNA1 == {ant}'.format(ant=str(antenna))
+        nparray2str = lambda a: ','.join(map(str, a))
+        if len(sel['field']) > 0:
+            taql += ' && FIELD_ID IN [{field}]'.format(field=nparray2str(sel['field']))
+        if len(sel['spwdd']) > 0:
+            taql += ' && DATA_DESC_ID IN [{dd}]'.format(dd=nparray2str(sel['spwdd']))
+        if len(sel['stateid']) > 0:
+            taql += ' && STATE_ID IN [{state}]'.format(state=nparray2str(sel['stateid']))
+        LOG.debug('sel=%s'%(sel))
+        LOG.debug('taql="%s"'%(taql))
+        with casatools.TableReader(vis) as mytb:
+            tbsel = mytb.query(taql)
+            nrow = tbsel.nrows()
+            LOG.debug('number of rows for selected table: %s'%(nrow))
+            cellshape = NP.fromstring(tbsel.getcolshapestring(colname, 0, 1)[0].lstrip('[').rstrip(']'), 
+                                      dtype=NP.int, sep=',')
+            LOG.debug('cellshape={shape}'.format(shape=cellshape))
+            npol, nchan = cellshape
+            array_shape = (nrow * npol, nchan)
+            self.data = NP.zeros(array_shape, NP.float)
+            self.nrow, self.nchan = array_shape
+            for i in xrange(nrow):
+                cell = tbsel.getcell(colname, i)
+                self.data[i * npol:(i + 1) * npol] = NP.real(cell)
+        
+#         ss = sd.scantable(self.infile, average=False)
+#         sel = sd.selector(types=[sd.srctype.pson])
+#         if self.spw is not None:
+#             sel.set_ifs([self.spw])
+#         ss.set_selection(sel)
+#         self.nrow = ss.nrow()
+#         s = ss._getspectrum(0)
+#         #self.nchan = ss.nchan()
+#         self.nchan = len(s)
+        LOG.debug('MaskDeviation.ReadDataFromMS: %s %s'%(self.nrow, self.nchan))
+#         self.data = NP.zeros((self.nrow, self.nchan), NP.float)
+#         for i in range(self.nrow):
+#             #sp = ss._getspectrum(i)
+#             #self.data[i] = NP.array(sp, NP.float)
+#             self.data[i] = NP.array(ss._getspectrum(i))
+#         ss.set_selection()
+#         del ss, s, sel
+                
 
     def SubtractMedian(self, threshold=3.0):
         """
