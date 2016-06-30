@@ -142,7 +142,7 @@ class GriddingBase(common.SingleDishTaskTemplate):
         ants = table.getcol('ANTENNA').take(index_list)
         ras = table.getcol('RA').take(index_list)
         decs = table.getcol('DEC').take(index_list)
-        stats = self.datatable.tb2.getcol('STATISTICS').take(index_list)
+        stats = self.datatable.tb2.getcol('STATISTICS').take(index_list, axis=1)
         tsys = table.getcol('TSYS').take(index_list)
         exposure = table.getcol('EXPOSURE').take(index_list)
         net_flag = self.datatable.tb2.getcol('FLAG_SUMMARY').take(index_list)
