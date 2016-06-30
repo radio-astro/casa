@@ -82,8 +82,8 @@ def hsdms (vislist, importonly=False, pipelinemode='automatic', interactive=True
         # # Imaging
         # hsdms_imaging (pipelinemode=pipelinemode)
 
-        # # Export the data
-        # hsdms_exportdata (pipelinemode=pipelinemode)
+        # Export the data
+        hsdms_exportdata (pipelinemode=pipelinemode)
     
     except Exception, e:
         if str(e) == IMPORT_ONLY:
