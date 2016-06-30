@@ -78,6 +78,7 @@ public:
     virtual void dirtyComponentsSet (VisBufferComponent2 /*component*/) {}
 
     virtual const Matrix<Float> & imagingWeight() const {static Matrix<Float> dummy; return dummy;}
+    void setImagingWeight (const Matrix<float> &) {}
 
     virtual Double getFrequency (Int /*rowInBuffer*/, Int /*frequencyIndex*/,
                                  Int /*frame*/ = FrameNotSpecified) const { static Double dummy; return dummy;}
