@@ -79,7 +79,7 @@ def concatephem(ephems=[], outputephem=''):
                         shouldconcat_with_previous[i] = True
                         numsteps_to_add = (starts[i]-ends[i-1-backstep])/stepsizes[i] - 1
                         gap_to_previous[i] = int(round(numsteps_to_add))
-                        if abs(round(numsteps_to_add) - numsteps_to_add)<1E-6:
+                        if abs(round(numsteps_to_add) - numsteps_to_add)<1E-4:
                             casalog.post( 'Gap between ephemerides '+str(i-1-backstep)+' and '+str(i)+' is '+str(gap_to_previous[i])+' steps', 'INFO')
                             canconcat_with_previous[i] = True
                             backstep = 0
