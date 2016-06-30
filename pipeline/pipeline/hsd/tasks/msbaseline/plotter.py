@@ -82,6 +82,10 @@ def create_plotter(num_ra, num_dec, num_plane, refpix, refval, increment):
     return plotter
     
 def get_data(infile, datatable, num_ra, num_dec, num_chan, rowlist, rowmap=None):
+    # default rowmap is EchoDictionary
+    if rowmap is None:
+        rowmap = utils.EchoDictionary()
+
     integrated_data = numpy.zeros(num_chan, dtype=float)
     map_data = numpy.zeros((num_ra, num_dec, num_chan), dtype=float) + sparsemap.NoDataThreshold
     nrow = 0
