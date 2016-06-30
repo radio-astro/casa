@@ -119,7 +119,14 @@ class ClusterDisplay(object):
                 # it should be empty cluster (no detection) or false clusters (detected but 
                 # judged as an invalid clusters) so skip this cycle
                 continue
-            antenna = group['index'][0]
+            if group.has_key('index'):
+                antenna = group['index'][0]
+            else:
+                antenna = group['antenna'][0]
+            if group.has_key('name'):
+                vis = group['name'][0]
+            else:
+                vis = None
             spw = group['spw'][0]
             group_id = group['group_id']
             iteration = group['iteration']
@@ -130,7 +137,8 @@ class ClusterDisplay(object):
             plot_property = ClusterPropertyDisplay(group_id, iteration, cluster, spw, stage_dir)
             plot_list.extend(plot_property.plot())
             t2 = time.time()
-            plot_validation = ClusterValidationDisplay(self.context, group_id, iteration, cluster, spw, antenna, lines, stage_dir)
+            plot_validation = ClusterValidationDisplay(self.context, group_id, iteration, cluster, vis, 
+                                                       spw, antenna, lines, stage_dir)
             plot_list.extend(plot_validation.plot())
             t3 = time.time()
 
@@ -251,11 +259,12 @@ class ClusterValidationDisplay(ClusterDisplayWorker):
         'final': 'Clustering Analysis at Final stage\n\nGreen Square: Final Grid where the line protection channels are calculated and applied to the baseline subtraction\nBlue Square: Final Grid where the calculated line protection channels are applied to the baseline subtraction\n\nIsolated Grids are eliminated.\n'
     }
 
-    def __init__(self, context, group_id, iteration, cluster, spw, antenna, lines, stage_dir):
+    def __init__(self, context, group_id, iteration, cluster, vis, spw, antenna, lines, stage_dir):
         super(ClusterValidationDisplay, self).__init__(group_id, iteration, cluster, spw, stage_dir)
         self.context = context
         self.antenna = antenna
         self.lines = lines
+        self.vis = vis
 
     def _plot(self):
         pl.clf()
@@ -392,14 +401,33 @@ class ClusterValidationDisplay(ClusterDisplayWorker):
                 yield (key,data,threshold,desc)
 
     def __line_property(self, icluster):
-        spectral_window = self.context.observing_run[self.antenna].spectral_window[self.spw]
-        refval = spectral_window.refval
-        refpix = spectral_window.refpix
-        increment = spectral_window.increment
-        if len(spectral_window.rest_frequencies) > 0:
-            rest_frequency = spectral_window.rest_frequencies[0]
+        if self.vis is None:
+            spectral_window = self.context.observing_run[self.antenna].spectral_window[self.spw]
+            refval = spectral_window.refval
+            refpix = spectral_window.refpix
+            increment = spectral_window.increment
+            if len(spectral_window.rest_frequencies) > 0:
+                rest_frequency = spectral_window.rest_frequencies[0]
+            else:
+                rest_frequency = refval
         else:
-            rest_frequency = refval
+            reduction_group = self.context.observing_run.ms_reduction_group[self.group_id]
+            field = reduction_group[0].field
+            source_id = field.source_id
+            ms = self.context.observing_run.get_ms(self.vis)
+            spectral_window = ms.get_spectral_window(self.spw)
+            refpix = 0
+            refval = spectral_window.channels.chan_freqs[0]
+            increment = spectral_window.channels.chan_widths[0]
+            with casatools.TableReader(os.path.join(self.vis, 'SOURCE')) as tb:
+                tsel = tb.query('SOURCE_ID == %s && SPECTRAL_WINDOW_ID == %s'%(source_id, self.spw))
+                if tsel.nrows() == 0:
+                    rest_frequency = refval
+                else:
+                    if tsel.iscelldefined('REST_FREQUENCY', 0):
+                        rest_frequency = tsel.getcell('REST_FREQUENCY', 0)[0]
+                    else:
+                        rest_frequency = refval
         
         # line property in channel
         line_center = self.lines[icluster][0] 
