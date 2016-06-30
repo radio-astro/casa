@@ -247,7 +247,8 @@ class SDBLFlag(common.SingleDishTaskTemplate):
 
 
         outcome = {'datatable': datatable,
-                   'summary': flagResult}
+                   'summary': flagResult,
+                   'byfield': False}
         results = SDBLFlagResults(task=self.__class__,
                                     success=True,
                                     outcome=outcome)
