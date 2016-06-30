@@ -5,6 +5,7 @@ import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.utils as utils
 from pipeline.hif.heuristics import fieldnames
 from pipeline.domain import DataTable
@@ -12,8 +13,8 @@ from pipeline.domain import DataTable
 from .. import common
 from ..common import utils as sdutils
 
-# from .worker import SDBLFlagWorker
-# from .flagsummary import SDBLFlagSummary
+from . import worker
+from .flagsummary import SDBLFlagSummary
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -248,6 +249,17 @@ class SDBLFlag(basetask.StandardTaskTemplate):
         datatable = DataTable(name=context.observing_run.ms_datatable_name, readonly=True)
         reduction_group = context.observing_run.ms_reduction_group
 
+        if os.path.abspath(cal_name)==os.path.abspath(bl_name):
+            LOG.warn("%s is not yet baselined. Skipping flag by post-fit statistics for the data. MASKLIST will also be cleared up. You may go on flagging but the statistics will contain line emission." % self.inputs.ms.basename)
+        # sumarize flag before execution
+        full_intent = utils.to_CASA_intent(self.inputs.ms, self.inputs.intent)
+        flagdata_summary_job = casa_tasks.flagdata(vis=bl_name, mode='summary',
+                                                   antenna=in_ant, field=in_field,
+                                                   spw=in_spw, intent=full_intent,
+                                                   spwcorr=True, fieldcnt=True,
+                                                   name='before')
+        stats_before = self._executor.execute(flagdata_summary_job)
+
         # loop over reduction group (spw and source combination)
         flagResult = []
         for (group_id,group_desc) in reduction_group.items():
@@ -277,9 +289,11 @@ class SDBLFlag(basetask.StandardTaskTemplate):
             spwid_list = [group_desc[i].spw_id for i in member_list]
             ms_list = [group_desc[i].ms for i in member_list]
             fieldid_list = [group_desc[i].field_id for i in member_list]
-            dd_list = [ms_list[i].get_data_description(spw=spwid_list[i]) \
+            temp_dd_list = [ms_list[i].get_data_description(spw=spwid_list[i]) \
                        for i in xrange(len(member_list))]
-            pols_list = [[corr for corr in ddobj.corr_axis if (in_pol=='' or corr in in_pol) ] for ddobj in dd_list]
+            pols_list = [[corr for corr in ddobj.corr_axis if (in_pol=='' or corr in in_pol) ] \
+                         for ddobj in temp_dd_list]
+            del temp_dd_list
              
             LOG.info("*"*60)
             LOG.info('Members to be processed:')
@@ -291,24 +305,32 @@ class SDBLFlag(basetask.StandardTaskTemplate):
                            group_desc[member_list[i]].field_name,
                            ','.join(pols_list[i])))
             LOG.info("*"*60)
-             
-###################################
-#             if not is_all_baselined:
-#                 LOG.warn("Reduction Group contains data not yet baselined. Skipping flag by post-fit statistics for the data. MASKLIST will also be cleared up. You may go on flagging but the statistics will contain line emission.")
-#   
-#             worker = SDBLFlagWorker(context, datatable, clip_niteration, spwid_list, nchan, pols_list, _file_index, flag_rule)
-#             thresholds = self._executor.execute(worker, merge=False)
-#             # Summary
-#             renderer = SDBLFlagSummary(context, datatable, spwid_list, pols_list, _file_index, thresholds, flag_rule)
-#             result = self._executor.execute(renderer, merge=False)
-#             flagResult += result
-#             
-#             # Validation
-# 
-# 
-#         outcome = {'datatable': datatable,
-#                    'summary': flagResult}
-        outcome = {}
+            # Calculate flag and update DataTable
+            flagging_inputs = worker.SDBLFlagWorkerInputs(context, clip_niteration,
+                                            ms_list, antenna_list, fieldid_list,
+                                            spwid_list, pols_list, nchan, flag_rule)
+            flagging_task = worker.SDBLFlagWorker(flagging_inputs)
+
+            flagging_results = self._executor.execute(flagging_task, merge=False)
+            thresholds = flagging_results.outcome
+            # Summary
+            renderer = SDBLFlagSummary(context, datatable, ms_list,
+                                       antenna_list, fieldid_list, spwid_list,
+                                       pols_list, thresholds, flag_rule)
+            result = self._executor.execute(renderer, merge=False)
+            flagResult += result
+            
+        # Calculate flag fraction after operation.
+        flagdata_summary_job = casa_tasks.flagdata(vis=bl_name, mode='summary',
+                                                   antenna=in_ant, field=in_field,
+                                                   spw=in_spw, intent=full_intent,
+                                                   spwcorr=True, fieldcnt=True,
+                                                   name='after')
+        stats_after = self._executor.execute(flagdata_summary_job)
+ 
+        outcome = {'flagdata_summary': [stats_before, stats_after],
+                    'summary': flagResult,
+                    'byfield': True} # temporal flag to tell template 
         results = SDBLFlagResults(task=self.__class__,
                                     success=True,
                                     outcome=outcome)
