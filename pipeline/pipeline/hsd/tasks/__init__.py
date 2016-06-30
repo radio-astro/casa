@@ -21,4 +21,5 @@ from .k2jycal import SDK2JyCal
 from .skycal import SDMSSkyCal
 from .msbaseline import SDMSBaseline
 from .msimaging import SDMSImaging
+from .msexportdata import SDMSExportData
 

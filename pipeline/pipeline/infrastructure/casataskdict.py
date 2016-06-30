@@ -50,6 +50,7 @@ CasaTaskDict = {
                    'hsdms_applycal'        : 'SDMSApplycal',
                    'hsdms_baseline'        : 'SDMSBaseline',
                    'hsdms_blflag'          : 'SDMSBLFlag',
+                   'hsdms_exportdata'      : 'SDMSExportData',
                    'hsdms_imaging'         : 'SDMSImaging',
                    'hsdms_k2jycal'         : 'SDK2JyCal',
                    'hsdms_skycal'          : 'SDMSSkyCal',
@@ -162,6 +163,7 @@ classToCASATask = {
     hsd_tasks.SDK2JyCal               : 'hsdms_k2jycal',
     hsd_tasks.SDMSSkyCal              : 'hsdms_skycal',
     hsd_tasks.SDMSBaseline            : 'hsdms_baseline',
+    hsd_tasks.SDMSExportData          : 'hsdms_exportdata',
     #VLA tasks
     hifv_tasks.VLAImportData          : 'hifv_importdata',
     hifv_tasks.Hanning                : 'hifv_hanning',
@@ -305,7 +307,9 @@ TASK_COMMENTS = {
     (hif_tasks.Clean, hif_tasks.Tclean) : (
         'A single target source is cleaned. '
     ),
-    (hif_tasks.ExportData,) : (
+    (hif_tasks.ExportData,
+     hsd_tasks.SDExportData,
+     hsd_tasks.SDMSExportData) : (
         'The output data products are computed. '
     ),
     # Single Dish Tasks
