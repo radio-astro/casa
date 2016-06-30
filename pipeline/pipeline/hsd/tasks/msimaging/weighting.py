@@ -62,7 +62,7 @@ class WeightMS(basetask.StandardTaskTemplate):
             weight_rms = False
             weight_tintsys = True
         self._set_weight(row_map, minmaxclip=minmaxclip, weight_rms=weight_rms,
-                   weight_tintsys=weight_tintsys)
+                         weight_tintsys=weight_tintsys, try_fallback=is_full_resolution)
 
 
         result = WeightMSResults(task=self.__class__,
@@ -122,7 +122,7 @@ class WeightMS(basetask.StandardTaskTemplate):
     
         return row_map
          
-    def _set_weight(self, row_map, minmaxclip, weight_rms, weight_tintsys):
+    def _set_weight(self, row_map, minmaxclip, weight_rms, weight_tintsys, try_fallback=False):
         inputs = self.inputs
         infile = inputs.infile
         outfile = inputs.outfile
@@ -143,32 +143,43 @@ class WeightMS(basetask.StandardTaskTemplate):
             target_row_map[idx] = row_map.get(idx, -1)
         
         weight = {}
-        for row in in_rows:
-            weight[row] = 1.0
+#         for row in in_rows:
+#             weight[row] = 1.0
     
         # set weight (key: input MS row ID, value: weight)
         # TODO: proper handling of pols
         if weight_rms:
-            stats = datatable.tb2.getcol('STATISTICS').take(index_list)
+            stats = datatable.tb2.getcol('STATISTICS').take(index_list, axis=2)
             for index in xrange(len(in_rows)):
                 row = in_rows[index]
-                stat = stats[index]
-                if stat != 0.0:
-                    weight[row] /= (stat * stat)
-                else:
-                    weight[row] = 0.0
+                cell_stat = stats[:,:,index]
+                weight[row] = numpy.ones(cell_stat.shape[0])
+                for ipol in xrange(weight[row].shape[0]):
+                    stat = cell_stat[ipol,1] #baselined RMS
+                    if stat > 0.0:
+                        weight[row][ipol] /= (stat * stat)
+                    elif stat < 0.0 and cell_stat[ipol,2] > 0.0:
+                        stat = cell_stat[ipol,2] #RMS before baseline
+                        weight[row][ipol] /= (stat * stat)
+                    elif try_fallback:
+                        weight_tintsys = True
+                    else:
+                        weight[row][ipol] = 0.0
     
         if weight_tintsys:
             exposures = datatable.tb1.getcol('EXPOSURE').take(index_list)
-            tsyss = datatable.tb1.getcol('TSYS').take(index_list)
+            tsyss = datatable.tb1.getcol('TSYS').take(index_list, axis=1)
             for index in xrange(len(in_rows)):
                 row = in_rows[index]
                 exposure = exposures[index]
-                tsys = tsyss[index]
-                if tsys > 0.5:
-                    weight[row] *= (exposure / (tsys * tsys))
-                else:
-                    weight[row] = 0.0
+                tsys = tsyss[:,index]
+                if not weight.has_key(row):
+                    weight[row] = numpy.ones(tsys.shape[0])
+                for ipol in xrange(weight[row].shape[0]):
+                    if tsys[ipol] > 0.5:
+                        weight[row][ipol] *= (exposure / (tsys[ipol] * tsys[ipol]))
+                    else:
+                        weight[row][ipol] = 0.0
     
         # put weight
         with casatools.TableReader(outfile, nomodify=False) as tb:

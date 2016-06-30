@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import os
 import math
 import numpy
 import time
@@ -27,7 +28,7 @@ def gridding_factory(observing_pattern):
         raise ValueError('observing_pattern \'%s\' is invalid.'%(observing_pattern))
 
 class GriddingInputs(basetask.StandardInputs):
-    def __init__(self, context, msnames, antennaids, fieldids, spwids, polids, nx=None, ny=None):
+    def __init__(self, context, msnames, antennaids, fieldids, spwids, poltypes, nx=None, ny=None):
         self._init_properties(vars())
         
 class GriddingResults(common.SingleDishResults):
@@ -80,20 +81,28 @@ class GriddingBase(basetask.StandardTaskTemplate):
             self.field = [inputs.fieldids]
         else:
             self.field = inputs.fieldids
-        if type(inputs.polids) == int:
-            self.pol = [inputs.polids]
+        if type(inputs.poltypes) == int:
+            self.poltype = [inputs.poltypes]
         else:
-            self.pol = inputs.polids
+            self.poltype = inputs.poltypes
         LOG.debug('self.files=%s'%(self.files))
         LOG.debug('self.antenna=%s'%(self.antenna))
         LOG.debug('self.spw=%s'%(self.spw))
         LOG.debug('self.field=%s'%(self.field))
-        LOG.debug('self.pol=%s'%(self.pol))
-            
+        LOG.debug('self.poltype=%s'%(self.poltype))
+        # create a map of MS index in context/datatable and polid
+        self.polid = {}
+        for i in xrange(len(self.files)):
+            msidx = self.msidxs[i]
+            spwid = self.spw[i]
+            poltype = self.poltype[i]
+            ddobj = context.observing_run.measurement_sets[msidx].get_data_description(spw=spwid)
+            self.polid[msidx] = ddobj.get_polarization_id(poltype)
+        
         LOG.debug('Members to be processed:')
-        for (a,s) in zip(self.antenna, self.spw):
-            LOG.debug('\tAntenna %s Spw %s Pol %s'%(a,s,self.pol))
-            
+        for (m,a,s,p) in zip(self.files, self.antenna, self.spw, self.poltype):
+            LOG.debug('\t%s Antenna %s Spw %s Pol %s'%(os.path.basename(m),a,s,p))
+        
         reference_data = context.observing_run.get_ms(name=self.files[0])
         reference_spw = reference_data.spectral_windows[self.spw[0]]
         self.nchan = reference_spw.num_channels
@@ -151,44 +160,55 @@ class GriddingBase(basetask.StandardTaskTemplate):
         datatable = DataTable(name=self.inputs.context.observing_run.ms_datatable_name, readonly=True)
         table = datatable.tb1
         index_list = common.get_index_list_for_ms(datatable, DataIn, self.antenna, self.field, self.spw)
-        #pols = table.getcol('POL').take(index_list)
-        #index_list = numpy.take(index_list, numpy.where(pols == self.pol)[0])
-        #del pols
-        
+
         rows = table.getcol('ROW').take(index_list)
+        if len(rows) == 0:
+            # no valid data, return empty table
+            return []
+
         msids = table.getcol('MS').take(index_list)
         ras = table.getcol('RA').take(index_list)
         decs = table.getcol('DEC').take(index_list)
         exposure = table.getcol('EXPOSURE').take(index_list)
-        tsys = table.getcol('TSYS').take(index_list)
-        stats = datatable.tb2.getcol('STATISTICS').take(index_list)
-        net_flag = datatable.tb2.getcol('FLAG_SUMMARY').take(index_list)
-        
-        if len(rows) == 0:
-            # no valid data, return empty table
-            return []
+        polids = numpy.array([self.polid[i] for i in msids])
+        # TSYS and FLAG_SUMMARY cols have NPOL x nrow elements
+        ttsys = table.getcol('TSYS').take(index_list, axis=1)
+        tnet_flag = datatable.tb2.getcol('FLAG_SUMMARY').take(index_list, axis=1)
+        # STATISTICS col has NPOL x 7 x nrow elements -> stats 7 x selected nrow elements
+        tstats = datatable.tb2.getcol('STATISTICS').take(index_list, axis=2)
+        # filter polid of each row
+        if len(set(polids)) == 1:
+            tsys = ttsys[polids[0]]
+            net_flag = tnet_flag[polids[0]]
+            stats = tstats[polids[0]]
+        else: # variable polids need to go hard way
+            tsys = numpy.ones(len(index_list))
+            net_flag = numpy.ones(len(index_list))
+            stats = numpy.zeros(tstats.shape[1:])
+            for i in xrange(len(index_list)):
+                ipol = polids[i]
+                tsys[i] = ttsys[ipol, i]
+                net_flag[i] = tnet_flag[ipol, i]
+                stats[:,i] = tstats[ipol,:,i]
+        del ttsys, tnet_flag, tstats, polids
 
         ### test code (to check selected index_list meets selection)
         if DO_TEST:
             ants = table.getcol('ANTENNA').take(index_list)
             fids = datatable.tb1.getcol('FIELD_ID').take(index_list)
             ifnos = datatable.tb1.getcol('IF').take(index_list)
-#             polnos = datatable.tb1.getcol('POL').take(index_list)
             for _i in xrange(len(rows)):
                 _msid = msids[_i]
                 _ant = ants[_i]
                 _spw = ifnos[_i]
                 _fid = fids[_i]
-#                 _pol = polnos[_i]
                 # search for the elements of msnames that points MS of the row
                 _j = self.msidxs.index(_msid)
                 valid_ants = numpy.array(self.antenna)[numpy.where(numpy.array(self.msidxs)==_msid)[0]]
-#                 assert _pol in self.pol[_j], 'row %s is bad selection: POLNO doesn\'t match (actual %s expected %s)'%(index_list[_i], _pol, self.pol[_j])
                 assert _ant in valid_ants, 'row %s is bad selection: ANTENNA not in process list (actual %s expected %s)'%(index_list[_i], _ant, self.antenna[_j])
                 assert _fid == self.field[_j], 'row %s is bad selection: FIELD_ID not in process list (actual %s expected %s)'%(index_list[_i], _fid, self.field[_j])
                 assert _spw == self.spw[_j], 'row %s is bad selection: IFNO not in process list (actual %s expected %s)'%(index_list[_i], _spw, self.spw[_j])
             del ants, fids, ifnos
-        ###dd19.chan_freq
 
         # Re-Gridding
         # 2008/09/20 Spacing should be identical between RA and DEC direction
@@ -327,12 +347,12 @@ class RasterGridding(GriddingBase):
             DEC = MinDEC + GridSpacing * y
             DeltaDEC = decs - DEC
             SelectD = numpy.where(numpy.logical_and(DeltaDEC < CombineRadius, DeltaDEC > -CombineRadius))[0]
-            #SelectD = numpy.nonzero(numpy.less_equal(DeltaDEC, CombineRadius) * numpy.greater_equal(DeltaDEC, -CombineRadius))[0]
             sDeltaDEC = numpy.take(DeltaDEC, SelectD)
             sRA = numpy.take(ras, SelectD)
             sROW = numpy.take(rows, SelectD)
             sIDX = numpy.take(index_list, SelectD)
-            sRMS = numpy.take(stats, SelectD)
+            # TODO: select proper stat element
+            sRMS = numpy.take(stats, SelectD, axis=1)
             sMS = numpy.take(msids, SelectD)
             #LOG.debug('Combine Spectra: %s' % len(sRMS))
             LOG.debug('Combine Spectra: %s' % len(sRA))
@@ -340,8 +360,6 @@ class RasterGridding(GriddingBase):
                 RA = MinRA + GridSpacing * DecCorrection * x
                 sDeltaRA = (sRA - RA) / DecCorrection
                 Delta = sDeltaDEC * sDeltaDEC + sDeltaRA * sDeltaRA
-                #Select = numpy.less_equal(Delta, ThresholdR)
-                #SelectR = numpy.nonzero(numpy.less_equal(Delta, ThresholdR))[0]
                 SelectR = numpy.where(Delta < ThresholdR)[0]
                 if len(SelectR > 0):
                     ssROW = numpy.take(sROW, SelectR)
@@ -349,9 +367,9 @@ class RasterGridding(GriddingBase):
                     ssIDX = numpy.take(sIDX, SelectR)
                     ssMS = numpy.take(sMS, SelectR)
                     ssDelta = numpy.sqrt(numpy.take(Delta, SelectR))
-                    line = [map(lambda x: self.spwmap[x], ssMS), self.pol, x, y, RA, DEC, numpy.transpose([ssROW, ssDelta, ssRMS, ssIDX, ssMS])]
+                    line = [map(lambda x: self.spwmap[x], ssMS), self.poltype[0], x, y, RA, DEC, numpy.transpose([ssROW, ssDelta, ssRMS, ssIDX, ssMS])]
                 else:
-                    line = [self.spw, self.pol, x, y, RA, DEC, []]
+                    line = [self.spw, self.poltype[0], x, y, RA, DEC, []]
                 GridTable.append(line)
                 #LOG.debug("GridTable: %s" % line)
 

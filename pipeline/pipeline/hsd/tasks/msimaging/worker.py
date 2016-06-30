@@ -138,7 +138,7 @@ class SDImagingWorkerInputs(basetask.StandardInputs):
     Inputs for imaging worker
     NOTE: infile should be a complete list of MSes 
     """
-    def __init__(self, context, infiles, outfile, mode, antids, spwids, fieldids,
+    def __init__(self, context, infiles, outfile, mode, antids, spwids, fieldids, stokes,
                  edge=None, phasecenter=None, cellx=None, celly=None, nx=None, ny=None):
         # NOTE: spwids and pols are list of numeric id list while scans
         #       is string (mssel) list
@@ -233,7 +233,7 @@ class SDImagingWorker(basetask.StandardTaskTemplate):
         mode = 'channel'
     
         # stokes
-        stokes = 'I'
+        stokes = self.inputs.stokes
     
         # start, nchan, step
         ref_spwobj = reference_data.spectral_windows[ref_spwid]

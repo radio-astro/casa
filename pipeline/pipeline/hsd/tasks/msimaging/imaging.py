@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 
 import os
-import numpy
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -113,6 +112,10 @@ class SDImagingResults(common.SingleDishResults):
 
 class SDImaging(basetask.StandardTaskTemplate):
     Inputs = SDImagingInputs
+    # stokes to image and requred POLs for it
+    stokes = 'I'
+    # for linear feed in ALMA. this affects pols passed to gridding module
+    required_pols = ['XX', 'YY']
 
     def is_multi_vis_task(self):
         return True
@@ -157,11 +160,10 @@ class SDImaging(basetask.StandardTaskTemplate):
                 LOG.debug('\t%s: Antenna %d (%s) Spw %d Field %d (%s)' % \
                           (os.path.basename(m.ms.work_data), m.antenna_id,
                            m.antenna_name, m.spw_id, m.field_id, m.field_name))
-#             pols_list = list(common.pol_filter(group_desc, inputs.get_pollist))
             # Which group in group_desc list should be processed
             member_list = list(common.get_valid_ms_members(group_desc, ms_names, inputs.antenna, in_field, in_spw))
             LOG.trace('group %s: member_list=%s'%(group_id, member_list))
-             
+            
             # skip this group if valid member list is empty
             if len(member_list) == 0:
                 LOG.info('Skip reduction group %d'%(group_id))
@@ -172,6 +174,14 @@ class SDImaging(basetask.StandardTaskTemplate):
             spwid_list = [group_desc[i].spw_id for i in member_list]
             ms_list = [group_desc[i].ms for i in member_list]
             fieldid_list = [group_desc[i].field_id for i in member_list]
+            temp_dd_list = [ms_list[i].get_data_description(spw=spwid_list[i]) \
+                            for i in xrange(len(member_list))]
+            # this becomes list of list [[poltypes for ms0], [poltypes for ms1], ...]
+#             polids_list = [[ddobj.get_polarization_id(corr) for corr in ddobj.corr_axis \
+#                             if corr in self.required_pols ] for ddobj in temp_dd_list]
+            pols_list = [[corr for corr in ddobj.corr_axis \
+                          if corr in self.required_pols ] for ddobj in temp_dd_list]
+            del temp_dd_list
              
             LOG.debug('Members to be processed:')
             for i in xrange(len(member_list)):
@@ -183,8 +193,9 @@ class SDImaging(basetask.StandardTaskTemplate):
  
             # image is created per antenna (science) or per asdm and antenna (ampcal)
             image_group = {}
-            for (msobj, ant, spwid, fieldid) in zip(ms_list, antenna_list,
-                                                    spwid_list, fieldid_list):
+            for (msobj, ant, spwid, fieldid, pollist) in zip(ms_list, antenna_list,
+                                                             spwid_list, fieldid_list,
+                                                             pols_list):
                 field_name = msobj.fields[fieldid].name
                 identifier = field_name
                 antenna = msobj.antennas[ant].name
@@ -194,9 +205,9 @@ class SDImaging(basetask.StandardTaskTemplate):
                     asdm_name = common.asdm_name_from_ms(msobj)
                     identifier += ('.'+asdm_name)
                 if identifier in image_group.keys():
-                    image_group[identifier].append([msobj, ant, spwid, fieldid])
+                    image_group[identifier].append([msobj, ant, spwid, fieldid, pollist])
                 else:
-                    image_group[identifier] = [[msobj, ant, spwid, fieldid]]
+                    image_group[identifier] = [[msobj, ant, spwid, fieldid, pollist]]
             LOG.debug('image_group=%s' % (image_group))
  
             # loop over antennas
@@ -205,6 +216,7 @@ class SDImaging(basetask.StandardTaskTemplate):
             combined_fieldids = []
             combined_spws = []
             tocombine_images = []
+            combined_pols = []
   
             coord_set = False
             for (name, _members) in image_group.items():
@@ -212,6 +224,7 @@ class SDImaging(basetask.StandardTaskTemplate):
                 antids = map(lambda x: x[1], _members)
                 spwids = map(lambda x: x[2], _members)
                 fieldids = map(lambda x: x[3], _members)
+                polslist = map(lambda x: x[4], _members)
                 LOG.info("Processing image group: %s" % name)
                 for idx in xrange(len(msobjs)):
                     LOG.info("\t%s: Antenna %d (%s) Spw %s Field %d (%s)" % \
@@ -242,7 +255,7 @@ class SDImaging(basetask.StandardTaskTemplate):
                 namer.antenna_name(ant_name)
                 namer.asdm(asdm)
                 namer.spectral_window(spwids[0])
-                namer.polarization('I')
+                namer.polarization(self.stokes)
                 imagename = namer.get_filename()
                 LOG.info("Output image name: %s" % imagename)
                  
@@ -256,14 +269,16 @@ class SDImaging(basetask.StandardTaskTemplate):
                     fieldid = fieldids[i]
                     original_ms = msobj.name
                     work_ms = msobj.work_data
+                    # weighting module sets weight to all pols
                     LOG.info('Setting weight for %s Antenna %s Spw %s Field %s' % \
                              (os.path.basename(work_ms), msobj.antennas[antid].name,
                               spwid, msobj.fields[fieldid].name))
-########## TODO: NEED TO HANDLE THIS PROPERLY
+########## TODO: NEED TO HANDLE SPWTYPE PROPERLY
                     spwtype = msobj.spectral_windows[spwid].type
                     weighting_inputs = weighting.WeightMSInputs(context, infile=original_ms, 
-                                                                 outfile=work_ms, antenna=antid,
-                                                                 spwid=spwid, fieldid=fieldid, spwtype=spwtype)
+                                                                outfile=work_ms, antenna=antid,
+                                                                spwid=spwid, fieldid=fieldid,
+                                                                spwtype=spwtype)
                     weighting_task = weighting.WeightMS(weighting_inputs)
                     weighting_result = self._executor.execute(weighting_task, merge=True)
                     logrecords.extend(weighting_result.logrecords)
@@ -282,13 +297,15 @@ class SDImaging(basetask.StandardTaskTemplate):
                 combined_antids.extend(antids)
                 combined_fieldids.extend(fieldids)
                 combined_spws.extend(spwids)
-                  
+                combined_pols.extend(polslist)
+                
                 imager_inputs = worker.SDImagingWorker.Inputs(context, infiles, 
                                                               outfile=imagename,
                                                               mode=imagemode,
                                                               antids=antids,
                                                               spwids=spwids,
                                                               fieldids=fieldids,
+                                                              stokes = self.stokes,
                                                               edge=edge,
                                                               phasecenter=phasecenter,
                                                               cellx=cellx,
@@ -324,11 +341,9 @@ class SDImaging(basetask.StandardTaskTemplate):
                     grid_task_class = gridding.gridding_factory(observing_pattern)
                     grid_tables = []
                     grid_input_dict = {}
-                    for (msobj, antid, spwid, fieldid) in _members:
+                    for (msobj, antid, spwid, fieldid, poltypes) in _members:
                         msname = msobj.name # Use parent ms
-                        ddobj = msobj.get_data_description(spw=spwid)
-                        polids = map(ddobj.get_polarization_id, map(ddobj.get_polarization_label, xrange(ddobj.num_polarizations)))
-                        for p in polids:
+                        for p in poltypes:
                             if not grid_input_dict.has_key(p):
                                 grid_input_dict[p] = [[msname], [antid], [fieldid], [spwid]]
                             else:
@@ -344,12 +359,12 @@ class SDImaging(basetask.StandardTaskTemplate):
                         _antids = member[1]
                         _fieldids = member[2]
                         _spwids = member[3]
-                        _pols = [[pol] for i in xrange(len(_mses))]
+                        _pols = [pol for i in xrange(len(_mses))]
                         gridding_inputs = grid_task_class.Inputs(context, msnames=_mses, 
                                                                  antennaids=_antids, 
                                                                  fieldids=_fieldids,
                                                                  spwids=_spwids,
-                                                                 polids=_pols,
+                                                                 poltypes=_pols,
                                                                  nx=nx, ny=ny)
                         gridding_task = grid_task_class(gridding_inputs)
                         gridding_result = self._executor.execute(gridding_task, merge=True)
@@ -406,7 +421,7 @@ class SDImaging(basetask.StandardTaskTemplate):
             namer.casa_image()
             namer.source(source_name)
             namer.spectral_window(combined_spws[0])
-            namer.polarization('I')
+            namer.polarization(self.stokes)
             imagename = namer.get_filename()
   
             # Step 3.
@@ -418,6 +433,7 @@ class SDImaging(basetask.StandardTaskTemplate):
                                                               antids=combined_antids,
                                                               spwids=combined_spws,
                                                               fieldids=combined_fieldids,
+                                                              stokes = self.stokes,
                                                               edge=edge,
                                                               phasecenter=phasecenter,
                                                               cellx=cellx, celly=celly,
@@ -451,11 +467,11 @@ class SDImaging(basetask.StandardTaskTemplate):
                 grid_task_class = gridding.gridding_factory(observing_pattern)
                 grid_tables = []
                 grid_input_dict = {}
-                for (msname, antid, spwid, fieldid) in zip(combined_infiles,combined_antids,combined_spws,combined_fieldids):
+                for (msname, antid, spwid, fieldid, poltypes) in \
+                zip(combined_infiles,combined_antids,combined_spws,combined_fieldids,combined_pols):
                     msobj = context.observing_run.get_ms(name=common.get_parent_ms_name(context,name)) # Use parent ms
                     ddobj = msobj.get_data_description(spw=spwid)
-                    polids = map(ddobj.get_polarization_id, map(ddobj.get_polarization_label, xrange(ddobj.num_polarizations)))
-                    for p in polids:
+                    for p in poltypes:
                         if not grid_input_dict.has_key(p):
                             grid_input_dict[p] = [[msname], [antid], [fieldid], [spwid]]
                         else:
@@ -469,12 +485,12 @@ class SDImaging(basetask.StandardTaskTemplate):
                     _antids = member[1]
                     _fieldids = member[2]
                     _spwids = member[3]
-                    _pols = [[pol] for i in xrange(len(_mses))]
+                    _pols = [pol for i in xrange(len(_mses))]
                     gridding_inputs = grid_task_class.Inputs(context, msnames=_mses, 
                                                              antennaids=_antids, 
                                                              fieldids=_fieldids,
                                                              spwids=_spwids,
-                                                             polids=_pols,
+                                                             poltypes=_pols,
                                                              nx=nx, ny=ny)
                     gridding_task = grid_task_class(gridding_inputs)
                     gridding_result = self._executor.execute(gridding_task, merge=True)
