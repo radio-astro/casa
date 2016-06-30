@@ -25,6 +25,7 @@ from hifa_tsysflag_cli import hifa_tsysflag_cli as hifa_tsysflag
 from hsdms_skycal_cli import hsdms_skycal_cli as hsdms_skycal
 from hsdms_k2jycal_cli import hsdms_k2jycal_cli as hsdms_k2jycal
 from hsdms_applycal_cli import hsdms_applycal_cli as hsdms_applycal
+from hsdms_baseline_cli import hsdms_baseline_cli as hsdms_baseline
 from h_save_cli import h_save_cli as h_save
 
 
@@ -70,10 +71,10 @@ def hsdms (vislist, importonly=False, pipelinemode='automatic', interactive=True
         
         # # Improve line mask for baseline subtraction by executing 
         # # hsd_baseline and hsd_blflag iteratively
-        # for i in xrange(ITERATION):
+        for i in xrange(ITERATION):
             
-        #     # Baseline subtraction with automatic line detection
-        #     hsdms_baseline (pipelinemode=pipelinemode)
+            # Baseline subtraction with automatic line detection
+            hsdms_baseline (pipelinemode=pipelinemode)
             
         #     # Flag data based on baseline quality
         #     hsdms_blflag (pipelinemode=pipelinemode)
