@@ -45,7 +45,11 @@ class VbCacheItemBase {
 
 public:
 
-    VbCacheItemBase () : isKey_p (False), vbComponent_p (VisBufferComponent2::Unknown), vb_p (0) {}
+    VbCacheItemBase (bool isMutable)
+    : isKey_p (False),
+      isMutable_p (isMutable),
+      vbComponent_p (VisBufferComponent2::Unknown),
+      vb_p (0) {}
 
     virtual ~VbCacheItemBase () {}
 
@@ -81,6 +85,7 @@ protected:
                              Bool isKey = True);
 
     Bool isKey () const { return isKey_p;}
+    bool isMutable () const { return isMutable_p; }
 
     virtual void setAsPresent (Bool isPresent = True) const = 0;
     void setIsKey (Bool isKey)
@@ -91,6 +96,7 @@ protected:
 private:
 
     Bool isKey_p;
+    const bool isMutable_p;
     VisBufferComponent2 vbComponent_p;
     VisBufferImpl2 * vb_p; // [use]
 
@@ -108,8 +114,8 @@ public:
     typedef T DataType;
     typedef void (VisBufferImpl2::* Filler) (T &) const;
 
-    VbCacheItem ()
-    : VbCacheItemBase (), isPresent_p (False)
+    VbCacheItem (bool isMutable = false)
+    : VbCacheItemBase (isMutable), isPresent_p (False)
     {}
 
     virtual ~VbCacheItem () {}
@@ -220,7 +226,7 @@ public:
     virtual void
     set (const T & newItem)
     {
-        ThrowIf (! getVb()->isWritable (), "This VisBuffer is readonly");
+        ThrowIf (! isMutable () && ! getVb()->isWritable (), "This VisBuffer is readonly");
 
         ThrowIf (isKey() && ! getVb()->isRekeyable (),
                  "This VisBuffer is does not allow row key values to be changed.");
@@ -249,7 +255,7 @@ public:
     void
     set (const U & newItem)
     {
-        ThrowIf (! getVb()->isWritable (), "This VisBuffer is readonly");
+        ThrowIf (! isMutable () && ! getVb()->isWritable (), "This VisBuffer is readonly");
 
         ThrowIf (isKey () && ! getVb()->isRekeyable (),
                  "This VisBuffer is does not allow row key values to be changed.");
@@ -391,7 +397,8 @@ public:
     typedef typename VbCacheItem<T>::Filler Filler;
     typedef typename T::IteratorSTL::value_type ElementType;
 
-    VbCacheItemArray() : capacity_p (0), shapePattern_p (NoCheck) {}
+    VbCacheItemArray(bool isMutable = false)
+    : VbCacheItem<T, IsComputed> (isMutable), capacity_p (0), shapePattern_p (NoCheck) {}
     virtual ~VbCacheItemArray () {}
 
     virtual void appendRows (Int nRows, Bool truncate)
@@ -537,7 +544,7 @@ public:
     virtual void
     set (const T & newItem)
     {
-        ThrowIf (! this->getVb()->isWritable (), "This VisBuffer is readonly");
+        ThrowIf (! this->isMutable() && ! this->getVb()->isWritable (), "This VisBuffer is readonly");
 
         ThrowIf (this->isKey() && ! this->getVb()->isRekeyable (),
                  "This VisBuffer is does not allow row key values to be changed.");

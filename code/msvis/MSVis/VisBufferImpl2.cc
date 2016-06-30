@@ -48,6 +48,7 @@ namespace vi {
 
 
 VisBufferCache::VisBufferCache (VisBufferImpl2 * vb)
+: imagingWeight_p (true)
 {
     ThrowIf (vb == NULL, "VisBufferCacheImpl not connected to VisBufferImpl2");
 }
@@ -620,7 +621,7 @@ void
 VisBufferImpl2::dirtyComponentsAdd (const VisBufferComponents2 & additionalDirtyComponents)
 {
     // Loop through all of the cached VB components and mark them dirty if
-    // they're in the set of addition dirty components
+    // they're in the set <of addition dirty components
 
     for (CacheRegistry::iterator i = cache_p->registry_p.begin();
          i != cache_p->registry_p.end();
@@ -1699,6 +1700,13 @@ VisBufferImpl2::imagingWeight () const
 {
     return cache_p->imagingWeight_p.get ();
 }
+
+void
+VisBufferImpl2::setImagingWeight (const Matrix<Float> & newImagingWeight)
+{
+    cache_p->imagingWeight_p.set (newImagingWeight);
+}
+
 
 //const Vector<Double> &
 //VisBufferImpl2::lsrFrequency () const

@@ -247,11 +247,12 @@ public:
     virtual void dirtyComponentsSet (const VisBufferComponents2 & dirtyComponents) = 0;
     virtual void dirtyComponentsSet (VisBufferComponent2 component) = 0;
 
-    // This method returns the imaging weights associated with the VisBuffer.
+    // This method returns the imagin g
     // If an imaging weight generator has not been supplied to the associated
     // VisibilityIterator then this method will throw an exception.
 
     virtual const Matrix<Float> & imagingWeight() const = 0;
+    virtual void setImagingWeight (const Matrix<Float> & newImagingWeights) = 0;
 
     //---------------------------------------------------------------------------
     //

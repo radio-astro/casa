@@ -298,6 +298,7 @@ public:
     virtual const Vector<Bool> & flagRow () const;
     virtual void setFlagRow (const Vector<Bool>&);
     virtual const Matrix<Float> & imagingWeight () const;
+    void setImagingWeight (const Matrix<Float> & newImagingWeights);
     virtual Int nAntennas () const;
     virtual Int nChannels () const;
     virtual Int nCorrelations () const;
