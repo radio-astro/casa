@@ -1,0 +1,206 @@
+from __future__ import absolute_import
+
+import os
+import time
+import numpy
+
+import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.casatools as casatools
+import pipeline.domain.datatable as datatable
+from . import simplegrid
+from . import detection
+from . import validation
+from .. import common
+from ..common import utils
+
+LOG = infrastructure.get_logger(__name__)
+
+NoData = common.NoData
+
+class MaskLineInputs(common.SingleDishInputs):
+    def __init__(self, context, iteration, vis_list, field_list, antenna_list, spwid_list,
+                 window=None, edge=None, broadline=None, clusteringalgorithm=None):
+        self._init_properties(vars())
+        
+    @property
+    def window(self):
+        return [] if self._window is None else self._window
+    
+    @window.setter
+    def window(self, value):
+        self._window = value
+        
+    @property
+    def edge(self):
+        return (0, 0) if self._edge is None else self._edge
+    
+    @edge.setter
+    def edge(self, value):
+        self._edge = value
+        
+    @property
+    def broadline(self):
+        return False if self._broadline is None else self._broadline
+    
+    @broadline.setter
+    def broadline(self, value):
+        self._broadline = value
+        
+class MaskLineResults(common.SingleDishResults):
+    def __init__(self, task=None, success=None, outcome=None):
+        super(MaskLineResults, self).__init__(task, success, outcome)
+
+    def merge_with_context(self, context):
+        super(MaskLineResults, self).merge_with_context(context)
+        
+    def _outcome_name(self):
+        return ''
+
+
+class MaskLine(common.SingleDishTaskTemplate):
+    Inputs = MaskLineInputs
+
+    # @common.datatable_setter
+    def prepare(self):
+        context = self.context
+
+        start_time = time.time()
+
+        iteration = self.inputs.iteration
+        vis_list = self.inputs.vis_list
+        field_list = self.inputs.field_list
+        spwid_list = self.inputs.spwid_list
+        antenna_list = self.inputs.antenna_list
+        reference_data = context.observing_run.get_ms(vis_list[0])
+        # datatable = context.observing_run.datatable_instance
+        dt = datatable.DataTableImpl(context.observing_run.ms_datatable_name, readonly=False)
+        srctype = 0  # reference_data.calibration_strategy['srctype']
+        index_list = numpy.array(utils.get_index_list_for_ms(dt, vis_list,
+                                                             antenna_list, field_list,
+                                                             spwid_list, srctype))
+
+        LOG.debug('index_list=%s' % (index_list))
+        LOG.debug('all(spwid == %s) ? %s' % (spwid_list[0], numpy.all(dt.tb1.getcol('IF').take(index_list) == spwid_list[0])))
+        LOG.debug('all(fieldid == %s) ? %s' % (field_list[0], numpy.all(dt.tb1.getcol('FIELD_ID').take(index_list) == field_list[0])))
+        if len(index_list) == 0:
+            # No valid data 
+            outcome = {'detected_lines': [],
+                       'cluster_info': {},
+                       'grid_table': None}
+            result = MaskLineResults(task=self.__class__,
+                                     success=True,
+                                     outcome=outcome)
+            result.task = self.__class__
+                
+            if self.inputs.context.subtask_counter is 0: 
+                result.stage_number = self.inputs.context.task_counter - 1
+            else:
+                result.stage_number = self.inputs.context.task_counter 
+            return result
+        
+
+        window = self.inputs.window
+        edge = self.inputs.edge
+        broadline = self.inputs.broadline
+        clusteringalgorithm = self.inputs.clusteringalgorithm
+        beam_size = casatools.quanta.convert(reference_data.beam_sizes[antenna_list[0]][spwid_list[0]], 'deg')['value']
+        observing_pattern = reference_data.observing_pattern[antenna_list[0]][spwid_list[0]][field_list[0]]
+         
+        LOG.debug('Members to be processed:')
+        for (v, f, a, s) in zip(vis_list, field_list, antenna_list, spwid_list):
+            LOG.debug('MS "%s" Field %s Antenna %s Spw %s' % (os.path.basename(v), f, a, s))
+             
+        # filename for input/output
+        # ms_list = [context.observing_run.get_ms(vis) for vis in vis_list]
+        # filenames_work = [ms.work_data for ms in ms_list]
+        # files_to_grid = dict(zip(file_index, filenames_work))
+ 
+        # LOG.debug('files_to_grid=%s'%(files_to_grid))
+                 
+        # gridding size
+        grid_size = beam_size
+ 
+        # simple gridding
+        t0 = time.time()
+        gridding_inputs = simplegrid.SDMSSimpleGridding.Inputs(context, vis_list, field_list, antenna_list, spwid_list, index_list)
+        gridding_task = simplegrid.SDMSSimpleGridding(gridding_inputs)
+        gridding_result = self._executor.execute(gridding_task, merge=True)
+        spectra = gridding_result.outcome['spectral_data']
+        masks = (spectra != NoData)
+        grid_table = gridding_result.outcome['grid_table']
+        t1 = time.time()
+ 
+        # return empty result if grid_table is empty
+        if len(grid_table) == 0 or len(spectra) == 0:
+            LOG.warn('Line detection/validation will not be done since grid table is empty. Maybe all the data are flagged out in the previous step.')
+            outcome = {'detected_lines': [],
+                       'cluster_info': {},
+                       'grid_table': None}
+            result = MaskLineResults(task=self.__class__,
+                                     success=True,
+                                     outcome=outcome)
+            result.task = self.__class__
+                 
+            if self.inputs.context.subtask_counter is 0: 
+                result.stage_number = self.inputs.context.task_counter - 1
+            else:
+                result.stage_number = self.inputs.context.task_counter 
+            return result
+         
+        LOG.trace('len(grid_table)=%s, spectra.shape=%s' % (len(grid_table), list(numpy.array(spectra).shape)))
+        LOG.trace('grid_table=%s' % (grid_table))
+        LOG.debug('PROFILE simplegrid: elapsed time is %s sec' % (t1 - t0))
+ 
+        # line finding
+        t0 = time.time()
+        detection_inputs = detection.DetectLine.Inputs(context, grid_table, spectra, masks, window, edge, broadline)
+        line_finder = detection.DetectLine(detection_inputs)
+        detection_result = self._executor.execute(line_finder, merge=True)
+        detect_signal = detection_result.signals
+        t1 = time.time()
+ 
+        LOG.trace('detect_signal=%s'%(detect_signal))
+        LOG.debug('PROFILE detection: elapsed time is %s sec'%(t1-t0))
+ 
+        # line validation
+        t0 = time.time()
+        validator_cls = validation.ValidationFactory(observing_pattern)
+        validation_inputs = validator_cls.Inputs(context, grid_table, detect_signal, spwid_list, index_list, iteration, grid_size, grid_size, window, edge, clusteringalgorithm=clusteringalgorithm)
+        line_validator = validator_cls(validation_inputs)
+        LOG.trace('len(index_list)=%s'%(len(index_list)))
+        validation_result = self._executor.execute(line_validator, merge=True)
+        lines = validation_result.outcome['lines']
+        if validation_result.outcome.has_key('channelmap_range'):
+            channelmap_range = validation_result.outcome['channelmap_range']
+        else:
+            channelmap_range = validation_result.outcome['lines']
+        cluster_info = validation_result.outcome['cluster_info']
+        t1 = time.time()
+ 
+        #LOG.debug('lines=%s'%(lines))
+        LOG.debug('PROFILE validation: elapsed time is %s sec'%(t1-t0))
+         
+        #LOG.debug('cluster_info=%s'%(cluster_info))
+ 
+        end_time = time.time()
+        LOG.debug('PROFILE execute: elapsed time is %s sec'%(end_time-start_time))
+ 
+        outcome = {'detected_lines': lines,
+                   'channelmap_range': channelmap_range,
+                   'cluster_info': cluster_info,
+                   'grid_table': grid_table}
+        result = MaskLineResults(task=self.__class__,
+                                  success=True,
+                                  outcome=outcome)
+        result.task = self.__class__
+                 
+        if self.inputs.context.subtask_counter is 0: 
+            result.stage_number = self.inputs.context.task_counter - 1
+        else:
+            result.stage_number = self.inputs.context.task_counter 
+                 
+        return result
+        
+    def analyse(self, result):
+        return result
+
