@@ -184,7 +184,7 @@ def plot_profile_map_with_fit(context, ms, antid, spwid, polid, plot_table, pref
     
     #spw = context.observing_run[antid].spectral_window[spwid]
     #frequency = numpy.array([spw.refval + (i - spw.refpix) * spw.increment for i in xrange(nchan)]) * 1.0e-9    
-    frequency = spw.channels.chan_freqs
+    frequency = spw.channels.chan_freqs * 1.0e-9 # unit in GHz
     LOG.debug('frequency=%s~%s (nchan=%s)'%(frequency[0], frequency[-1], len(frequency)))
 
     rowmap = utils.make_row_map(ms, postfit_data)
