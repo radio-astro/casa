@@ -488,6 +488,23 @@ def make_row_map_for_baselined_ms(ms):
     
     returns: row mapping dictionary
     """
+    work_data = ms.work_data
+    
+    return make_row_map(ms, work_data)
+
+def make_row_map(src_ms, derived_vis):
+    """
+    Make row mapping between source MS and associating MS
+    
+    src_ms: measurement set domain object for source MS 
+    derived_vis: name of the MS that derives from source MS
+    
+    returns: row mapping dictionary
+    """
+    ms = src_ms
+    vis0 = ms.name
+    vis1 = derived_vis
+    
     generate_taql_item = lambda column, value: \
         '{column} == {value}'.format(column=column, value=value)
     
@@ -516,15 +533,13 @@ def make_row_map_for_baselined_ms(ms):
         return taql
 
     rowmap = {}
-    vis = ms.name
-    work_data = ms.work_data
-    
-    if vis == work_data:
+
+    if vis0 == vis1:
         return EchoDictionary()
     
     start_time = time.time()
-    LOG.debug('START processing "%s" (work_data "%s")'%(vis, work_data))
-    with casatools.TableReader(vis) as tb:
+    LOG.debug('START processing "%s" and "%s"'%(vis0, vis1))
+    with casatools.TableReader(vis0) as tb:
         observation_ids = set(tb.getcol('OBSERVATION_ID'))
         processor_ids = set(tb.getcol('PROCESSOR_ID'))
     scans = ms.get_scans(scan_intent='TARGET')
@@ -563,11 +578,11 @@ def make_row_map_for_baselined_ms(ms):
                                                      scan_number=scan_number,
                                                      state_id=state_id)
 
-                                with casatools.TableReader(vis) as ti:
+                                with casatools.TableReader(vis0) as ti:
                                     tisel = ti.query(taql, sortlist='TIME')
                                     LOG.trace('NROW = %s'%(tisel.nrows()))
                                     if tisel.nrows() > 0:
-                                        with casatools.TableReader(work_data) as to:
+                                        with casatools.TableReader(vis1) as to:
                                             tosel = to.query(taql, sortlist='TIME')
                                             time_in = tisel.getcol('TIME')
                                             time_out = tosel.getcol('TIME')
