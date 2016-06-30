@@ -48,6 +48,7 @@ CasaTaskDict = {
                    'hsd_flagdata'          : 'FlagDeterALMASingleDish',
                    'hsd_simplescale'       : 'SDSimpleScale',
                    'hsdms_applycal'        : 'SDMSApplycal',
+                   'hsdms_baseline'        : 'SDMSBaseline',
                    'hsdms_blflag'          : 'SDMSBLFlag',
                    'hsdms_imaging'         : 'SDMSImaging',
                    'hsdms_k2jycal'         : 'SDK2JyCal',
@@ -160,6 +161,7 @@ classToCASATask = {
     hsd_tasks.SDMSImaging             : 'hsdms_imaging',
     hsd_tasks.SDK2JyCal               : 'hsdms_k2jycal',
     hsd_tasks.SDMSSkyCal              : 'hsdms_skycal',
+    hsd_tasks.SDMSBaseline            : 'hsdms_baseline',
     #VLA tasks
     hifv_tasks.VLAImportData          : 'hifv_importdata',
     hifv_tasks.Hanning                : 'hifv_hanning',
@@ -333,7 +335,8 @@ TASK_COMMENTS = {
     (hsd_tasks.SDApplyCal,) : (
         'Apply calibration tables. '
     ),
-    (hsd_tasks.SDBaseline,) : (
+    (hsd_tasks.SDBaseline,
+     hsd_tasks.SDMSBaseline) : (
         'Subtracts spectral baseline by least-square fitting with '
         'N-sigma clipping. Spectral lines are automatically detected '
         'and examined to determine the region that is masked to protect '
