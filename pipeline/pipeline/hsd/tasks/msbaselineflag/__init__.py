@@ -18,7 +18,7 @@ from . import SDFlagRule
 weblog.add_renderer(SDMSBLFlag, 
                     super_renderer.T2_4MDetailsDefaultRenderer(uri='hsd_blflag.mako', 
                                                                description='Flag data by Tsys, weather, and statistics of spectra',
-                                                               always_rerender=True),
+                                                               always_rerender=False),
                     group_by='ungrouped')
 #### No weblog
 # import pipeline.infrastructure.renderer.basetemplates as basetemplates
