@@ -307,7 +307,7 @@ class RasterGridding(GriddingBase):
             sRA = numpy.take(ras, SelectD)
             sROW = numpy.take(rows, SelectD)
             sIDX = numpy.take(index_list, SelectD)
-            sRMS = numpy.take(stats, SelectD)
+            sRMS = numpy.take(stats, SelectD, axis=1)
             sANT = numpy.take(ants, SelectD)
             #LOG.debug('Combine Spectra: %s' % len(sRMS))
             LOG.debug('Combine Spectra: %s' % len(sRA))
