@@ -332,6 +332,7 @@ class ImportData(basetask.StandardTaskTemplate):
         createmms = mpihelpers.parse_mpi_input_parameter(inputs.createmms)
 
         with_pointing_correction = getattr(inputs, 'with_pointing_correction', False)
+        ocorr_mode = getattr(inputs, 'ocorr_mode', 'ca')
 
         task = casa_tasks.importasdm(asdm=asdm,
                                      vis=vis,
@@ -343,6 +344,7 @@ class ImportData(basetask.StandardTaskTemplate):
                                      bdfflags=inputs.bdfflags,
                                      lazy=inputs.lazy,
                                      with_pointing_correction=with_pointing_correction,
+                                     ocorr_mode=ocorr_mode,
                                      createmms=createmms)
 
         self._executor.execute(task)
