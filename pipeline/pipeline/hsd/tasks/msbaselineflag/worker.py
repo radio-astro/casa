@@ -221,6 +221,8 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
 
         end_time = time.time()
         LOG.info('PROFILE execute: elapsed time is %s sec'%(end_time-start_time))
+        # Need to flush changes to disk
+        datatable.exportdata(minimal=True, overwrite=True)
 
         result = SDBLFlagWorkerResults(task=self.__class__,
                                        success=True,
@@ -727,16 +729,13 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
     
     def generateFlagCommandFile(self, datatable, msobj, antid, fieldid, spwid, pollist, filename):
         """
-        Summarize FLAG_SUMMARY column in DataTable and generate flag command file
+        Summarize FLAG status in DataTable and generate flag command file
 
         Arguments:
             datatable: DataTable instance
             msobj: MS instance to summarize flag
             antid, fieldid, spwid: ANTENNA, FIELD_ID and IF to summarize
             filename: output flag command file name
-
-        Note Due to the design of the method, redundantly applying flag
-        to already flagged rows
         """
         dt_ids = common.get_index_list_for_ms(datatable, [msobj.name],
                                               [antid], [fieldid], [spwid])
@@ -746,13 +745,35 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
         base_selection = "antenna='%s&&&' spw='%d' field='%d'" % (ant_name, spwid, fieldid)
         time_unit = datatable.tb1.getcolkeyword('TIME', 'UNIT')
         with open(filename, "w") as fout:
+            # header part
+            fout.write("#"*60+"\n")
+            fout.write("# Flag command file for Statistic Flags\n")
+            fout.write("# Filename: %s\n" % filename)
+            fout.write("# MS name: %s\n" % os.path.basename(msobj.work_data))
+            fout.write("# Antenna: %s\n" % ant_name)
+            fout.write("# Field ID: %d\n" % fieldid)
+            fout.write("# SPW: %d\n" % spwid)
+            fout.write("#"*60+"\n")
+            # data part
             for i in xrange(len(dt_ids)):
                 line = [base_selection]
                 ID = dt_ids[i]
-                sflag = datatable.getcell('FLAG_SUMMARY', ID)
+                tFLAG = DataTable.tb2.getcell('FLAG', ID)
+                tPFLAG = DataTable.tb2.getcell('FLAG_PERMANENT', ID)
+                flag_sum = tFLAG.sum(axis=1) + tPFLAG.sum(axis=1)
+                online = tPFLAG[:,OnlineFlagIndex]
+                # the number of flag types. data are unflagged only if
+                # sum of flag == num_flag
+                num_flag = len(tFLAG[0])+len(tPFLAG[0])
+                # ignore cases only online flag is active (0).
+                # if online = 1 (valid) => sflag = flag_sum == num_flag
+                # if online = 0 (invalid)
+                #     => sflag = flag_sum+1 == num_flag if no other flag
+                #        is active
+                sflag = flag_sum + numpy.ones(flag_sum.shape)-online
                 flagged_pols = []
                 for idx in range(len(polids)):
-                    if sflag[polids[idx]] == 0:
+                    if sflag[polids[idx]] == num_flag[polids[idx]]:
                         flagged_pols.append(pollist[idx])
                 if (len(flagged_pols)==0): # no flag in selcted pols
                     continue
