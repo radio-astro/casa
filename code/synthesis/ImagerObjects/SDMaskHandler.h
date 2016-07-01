@@ -104,7 +104,8 @@ public:
                 const String& threshold="",
                 const Float& fracpeak=0.0,
                 const String& resolution="",
-                const Float& resbybeam=0.0);
+                const Float& resbybeam=0.0,
+                const Int nmask=0);
   // automask algorithms...  
   void autoMaskByThreshold (ImageInterface<Float>& mask,
                            const ImageInterface<Float>& res, 
@@ -114,9 +115,25 @@ public:
                            const Quantity& qthreshold, 
                            const Float& fracofpeak, 
                            const Record& theStats,
-                           const Float& sigma=3.0);
+                           const Float& sigma=3.0,
+                           const Int nmask=0);
                            
+  SHARED_PTR<ImageInterface<Float> > makeMaskFromBinnedImage (
+                               const ImageInterface<Float>& image, 
+                               const Int nx, 
+                               const Int ny,
+                               const Float& fracofpeak,
+                               const Float& sigma, 
+                               const Int nmask,
+                               Double thresh=0.0);
 
+  SHARED_PTR<ImageInterface<Float> > convolveMask(const ImageInterface<Float>& inmask, 
+                                                  Int nxpix, Int nypix);
+
+  SHARED_PTR<ImageInterface<Float> >  pruneRegions(const ImageInterface<Float>& image, 
+                                                   Double& thresh, 
+                                                   Int nmask=0, 
+                                                   Int npix=0);
 
   void makePBMask(SHARED_PTR<SIImageStore> imstore, Float pblimit=0.1);
   void autoMaskWithinPB(SHARED_PTR<SIImageStore> imstore, 

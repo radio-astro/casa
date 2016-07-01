@@ -36,6 +36,7 @@
 #include <images/Regions/WCBox.h>
 #include <images/Regions/WCUnion.h>
 #include <imageanalysis/ImageAnalysis/CasaImageBeamSet.h>
+#include <imageanalysis/ImageAnalysis/ImageDecomposer.h>
 #include <imageanalysis/ImageAnalysis/ImageStatsCalculator.h>
 #include <imageanalysis/ImageAnalysis/Image2DConvolver.h>
 #include <imageanalysis/ImageAnalysis/ImageRegridder.h>
@@ -712,7 +713,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                                const String& threshold, 
                                const Float& fracofpeak, 
                                const String& resolution,
-                               const Float& resbybeam)
+                               const Float& resbybeam,
+                               const Int nmask)
   {
     LogIO os( LogOrigin("SDMaskHandler","autoMask",WHERE) );
     
@@ -796,7 +798,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       makeAutoMask(imstore);
     }
     else if (alg==String("thresh")) {
-      autoMaskByThreshold(*tempmask, *tempres, *temppsf, qreso, resbybeam, qthresh, fracofpeak, thestats, sigma);
+      autoMaskByThreshold(*tempmask, *tempres, *temppsf, qreso, resbybeam, qthresh, fracofpeak, thestats, sigma, nmask);
       //cerr<<" automaskbyThreshold...."<<endl;
       tempmask->get(maskdata);
       imstore->mask()->put(maskdata);
@@ -812,167 +814,470 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                                           const Quantity& qthresh, 
                                           const Float& fracofpeak,
                                           const Record& stats, 
-                                          const Float& sigma) 
+                                          const Float& sigma, 
+                                          const Int nmask) 
   {
     LogIO os( LogOrigin("SDMaskHandler","autoMaskByThreshold",WHERE) );
-     Array<Double> rms, max;
-     Double thresh, rmsthresh, minrmsval, maxrmsval, minmaxval, maxmaxval;
-     IPosition minrmspos, maxrmspos, minmaxpos, maxmaxpos;
-     Int npix;
-     // taking account for beam or input resolution
-     TempImage<Float> tempmask(mask.shape(), mask.coordinates());
-     CoordinateSystem incsys = res.coordinates();
-     Vector<Double> incVal = incsys.increment(); 
-     Vector<String> incUnit = incsys.worldAxisUnits();
-     Quantity qinc(incVal[0],incUnit[0]);
-     if (resolution.get().getValue() ) {
-       //npix = 2*Int(abs( resolution.getValue()/qinc.getValue(resolution.getUnit()) ) );
-       //npix = 2*Int(abs( resolution/(qinc.convert(resolution),qinc) ).getValue() );
-       npix = Int(abs( resolution/(qinc.convert(resolution),qinc) ).getValue() );
-       os << LogIO::NORMAL2 << "Use the input resolution:"<<resolution<<" fo binning "<< LogIO::POST;
-     }
-     else {
-       //use beam from residual or psf
-       ImageInfo resInfo = res.imageInfo();
-       ImageInfo psfInfo = psf.imageInfo();
-       GaussianBeam beam;
-       if (resInfo.hasBeam() || psfInfo.hasBeam()) {
-         if (resInfo.hasSingleBeam()) {
-           beam = resInfo.restoringBeam();  
-         }
-         else if (resInfo.hasMultipleBeams()) {
-           beam = CasaImageBeamSet(resInfo.getBeamSet()).getCommonBeam(); 
-         }
-         else if (psfInfo.hasSingleBeam()) {
-           beam = psfInfo.restoringBeam();  
-         }
-         else {
-           beam = CasaImageBeamSet(psfInfo.getBeamSet()).getCommonBeam(); 
-         }
-         Quantity bmaj = beam.getMajor();
-         if (resbybeam > 0.0 ) {
-           //npix = 2*Int( Double(resbybeam) * abs( (bmaj/(qinc.convert(bmaj),qinc)).get().getValue() ) );
-           npix = Int( Double(resbybeam) * abs( (bmaj/(qinc.convert(bmaj),qinc)).get().getValue() ) );
-           os << LogIO::NORMAL2 << "Use "<< resbybeam <<" x  beam size(maj)="<< Double(resbybeam)*bmaj <<" for binning."<< LogIO::POST;
-         }
-         else {
-           //npix = 2*Int( abs( (bmaj/(qinc.convert(bmaj),qinc)).get().getValue() ) );
-           npix = Int( abs( (bmaj/(qinc.convert(bmaj),qinc)).get().getValue() ) );
-           os << LogIO::NORMAL2 << "Use a beam size(maj):"<<bmaj<<" for binning."<< LogIO::POST;
-         } 
-       }
-       else {
-          throw(AipsError("No restoring beam(s) in the input image/psf or resolution is given"));
-       }
-     }
-     os << LogIO::DEBUG1 << "Acutal bin size used: npix="<<npix<< LogIO::POST;
-     if (npix==0) {
-       os << "Resolution too small. No binning (nbin=1)  is applied input image to evaluate the threshold." << LogIO::POST;
-       npix=1;
-     }
-     RebinImage<Float> tempRebinnedIm( res, IPosition(4,npix,npix,1,1) );
+    Array<Double> rms, max;
+    Double rmsthresh, minrmsval, maxrmsval, minmaxval, maxmaxval;
+    IPosition minrmspos, maxrmspos, minmaxpos, maxmaxpos;
+    Int npix;
 
-     // Determine threshold 
-     stats.get(RecordFieldId("max"), max);
-     stats.get(RecordFieldId("rms"), rms);
-     //minMax(minmaxval,maxmaxval,max);
-     //minMax(minrmsval,maxval,rms); 
-     minMax(minmaxval,maxmaxval,minmaxpos, maxmaxpos, max);
-     minMax(minrmsval,maxrmsval,minrmspos, maxrmspos, rms); 
-     os << LogIO::DEBUG1 <<"stats on the image: max="<<maxmaxval<<" rms="<<maxrmsval<<endl;
-     if (fracofpeak) {
-       rmsthresh = maxmaxval * fracofpeak; 
-       os << LogIO::NORMAL2 <<"Threshold by fraction of the peak(="<<fracofpeak<<") * max: "<<rmsthresh<< LogIO::POST;
-       os << LogIO::DEBUG1 <<"max at "<<maxmaxpos<<"dynamic range = "<<maxmaxval/rms(maxmaxpos) << LogIO::POST;
-     }
-     else if (sigma) {
-       //cerr<<"minval="<<minval<<" maxval="<<maxval<<endl;
-       rmsthresh = maxrmsval * sigma;
-       os << LogIO::NORMAL2 <<"Threshold by sigma(="<<sigma<<")* rms (="<<maxrmsval<<") :"<<rmsthresh<< LogIO::POST;
-       os << LogIO::DEBUG1 <<"max rms at "<<maxrmspos<<"dynamic range = "<<max(maxrmspos)/maxrmsval << LogIO::POST;
-     }      
-     else {
-       rmsthresh = qthresh.getValue(Unit("Jy"));
-       if ( rmsthresh==0.0 ) 
-         { throw(AipsError("Threshold for automask is not set"));}
-     }
-     
-     os << LogIO::NORMAL2 <<" thresh="<<rmsthresh<<LogIO::POST;
-     //thresh = 3.0*rmsthresh / sqrt(npix);
-     thresh = rmsthresh / sqrt(npix);
-     //thresh = rmsthresh;
+    //for debug set to True to save intermediate mask images on disk
+    Bool debug(False);
 
-     //stats on the binned image (the info not used for mask criteria yet)
-     Array<Double> binnedrms, binnedmax, binnedmin;
-     Double minbinrmsval, maxbinrmsval, minbinmaxval, maxbinmaxval, minbinminval, maxbinminval;
-     TempImage<Float>* tempImForStat = new TempImage<Float>(tempRebinnedIm.shape(), tempRebinnedIm.coordinates() );
-     tempImForStat->copyData(tempRebinnedIm);
-     SHARED_PTR<casa::ImageInterface<float> > temprebin_ptr(tempImForStat);
-     ImageStatsCalculator imcalc( temprebin_ptr, 0, "", False); 
-     Vector<Int> stataxes(2);
-     stataxes[0] = 0;
-     stataxes[1] = 1;
-     imcalc.setAxes(stataxes);
-     Record binnedimstats = imcalc.statistics();
-     binnedimstats.get(RecordFieldId("rms"),binnedrms);
-     binnedimstats.get(RecordFieldId("max"),binnedmax);
-     binnedimstats.get(RecordFieldId("min"),binnedmin);
-     minMax(minbinrmsval,maxbinrmsval,binnedrms);
-     minMax(minbinmaxval,maxbinmaxval,binnedmax);
-     minMax(minbinminval,maxbinminval,binnedmin);
+    //automask stage selecitons
+    Bool dobin(True);
+    Bool doregrid(True);
+    Bool doconvolve(True);
+    Bool dothresh(False);
 
-     os << LogIO::DEBUG1 <<" thresh for binned image (modified by sqrt(npix))   ="<<thresh<<LogIO::POST;
-     os << LogIO::DEBUG1 <<"stats on binned image: max="<<maxbinmaxval<<" rms="<<maxbinrmsval<<LogIO::POST;
-     if (thresh > maxmaxval) {
-       os << LogIO::WARN <<" The threshold value for making a mask is greater than max value in the image. Mask will be a full image."<< LogIO::POST;
-     }
-     // apply threshold to rebinned image to generate a temp image mask
-     // TODO: need warn if thresh exceed the max in the binned image
-     LatticeExpr<Float> tempthresh( iif( abs(tempRebinnedIm) > thresh, 1.0, 0.0) );
-     TempImage<Float> tempthreshIm(tempRebinnedIm.shape(), tempRebinnedIm.coordinates() );
-     tempthreshIm.copyData(tempthresh);
+    // taking account for beam or input resolution
+    TempImage<Float> tempmask(mask.shape(), mask.coordinates());
+    IPosition shp = mask.shape();
+    CoordinateSystem incsys = res.coordinates();
+    Vector<Double> incVal = incsys.increment(); 
+    Vector<String> incUnit = incsys.worldAxisUnits();
+    Quantity qinc(incVal[0],incUnit[0]);
+    if (resolution.get().getValue() ) {
+      //npix = 2*Int(abs( resolution/(qinc.convert(resolution),qinc) ).getValue() );
+      npix = Int(abs( resolution/(qinc.convert(resolution),qinc) ).getValue() );
+      os << LogIO::NORMAL2 << "Use the input resolution:"<<resolution<<" fo binning "<< LogIO::POST;
+      os << LogIO::DEBUG1 << "inc = "<<qinc.getValue(resolution.getUnit())<<LogIO::POST;
+    }
+    else {
+      //use beam from residual or psf
+      ImageInfo resInfo = res.imageInfo();
+      ImageInfo psfInfo = psf.imageInfo();
+      GaussianBeam beam;
+      if (resInfo.hasBeam() || psfInfo.hasBeam()) {
+        if (resInfo.hasSingleBeam()) {
+          beam = resInfo.restoringBeam();  
+        }
+        else if (resInfo.hasMultipleBeams()) {
+          beam = CasaImageBeamSet(resInfo.getBeamSet()).getCommonBeam(); 
+        }
+        else if (psfInfo.hasSingleBeam()) {
+          beam = psfInfo.restoringBeam();  
+        }
+        else {
+          beam = CasaImageBeamSet(psfInfo.getBeamSet()).getCommonBeam(); 
+        }
+        Quantity bmaj = beam.getMajor();
+        if (resbybeam > 0.0 ) {
+          //npix = 2*Int( Double(resbybeam) * abs( (bmaj/(qinc.convert(bmaj),qinc)).get().getValue() ) );
+          npix = Int( Double(resbybeam) * abs( (bmaj/(qinc.convert(bmaj),qinc)).get().getValue() ) );
+          os << LogIO::NORMAL2 << "Use "<< resbybeam <<" x  beam size(maj)="<< Double(resbybeam)*bmaj <<" for binning."<< LogIO::POST;
+        }
+        else {
+          //npix = 2*Int( abs( (bmaj/(qinc.convert(bmaj),qinc)).get().getValue() ) );
+          npix = Int( abs( (bmaj/(qinc.convert(bmaj),qinc)).get().getValue() ) );
+          os << LogIO::NORMAL2 << "Use a beam size(maj):"<<bmaj<<" for binning."<< LogIO::POST;
+        } 
+      }
+      else {
+         throw(AipsError("No restoring beam(s) in the input image/psf or resolution is given"));
+      }
+    }
+    os << LogIO::DEBUG1 << "Acutal bin size used: npix="<<npix<< LogIO::POST;
+    if (npix==0) {
+      os << "Resolution too small. No binning (nbin=1)  is applied input image to evaluate the threshold." << LogIO::POST;
+      npix=1;
+    }
 
-     //regrid
-     IPosition axes(3,0, 1, 2);
-     Vector<Int> dirAxes = CoordinateUtil::findDirectionAxes(incsys);
-     axes(0) = dirAxes(0);
-     axes(1) = dirAxes(1);
-     axes(2) = CoordinateUtil::findSpectralAxis(incsys);
-     TempImage<Float> tempIm2(res.shape(), res.coordinates() );
-     ImageRegrid<Float> imRegrid; 
-     imRegrid.regrid(tempIm2, Interpolate2D::LINEAR, axes, tempthreshIm);
 
-     // convolve to a beam = npix
-     TempImage<Float>* tempIm3 = new TempImage<Float>(res.shape(), res.coordinates() );
-     tempIm3->copyData(tempIm2);
-     SHARED_PTR<casa::ImageInterface<float> > tempIm3_ptr(tempIm3);
-     Vector<Quantity> convbeam(3);
-     convbeam[0] = Quantity(npix, "pix");
-     convbeam[1] = Quantity(npix, "pix");
-     convbeam[2] = Quantity(0.0, "deg");
-     Record dammyRec=Record();
-     String convimname("temp_convim");
-     Image2DConvolver<Float> convolver(tempIm3_ptr, &dammyRec, String(""), convimname, True); 
-     convolver.setKernel("GAUSSIAN", convbeam[0], convbeam[1], convbeam[2]);
-     convolver.setAxes(std::make_pair(0,1));
-     convolver.setScale(Double(-1.0));
-     convolver.setSuppressWarnings(True);
-     convolver.convolve();
-     // replaced the deprecated static method with object-oriented one
-     //Image2DConvolver<Float>::convolve(os, tempIm3_ptr, tempIm2, VectorKernel::GAUSSIAN, IPosition(2, 0, 1), convbeam, True, Double(-1.0), True, False);   
-     //PagedImage<Float> tempconvim(TiledShape(res.shape()), res.coordinates(), String("mytemp_convim"));
-     PagedImage<Float> tempconvim(convimname);
-     tempconvim.table().markForDelete();
-     //tempconvim.copyData(*tempIm3_ptr);
+    // Determine threshold from input image stats
+    stats.get(RecordFieldId("max"), max);
+    stats.get(RecordFieldId("rms"), rms);
+    minMax(minmaxval,maxmaxval,minmaxpos, maxmaxpos, max);
+    minMax(minrmsval,maxrmsval,minrmspos, maxrmspos, rms); 
+    os << LogIO::DEBUG1 <<"stats on the image: max="<<maxmaxval<<" rms="<<maxrmsval<<endl;
+    if (fracofpeak) {
+      rmsthresh = maxmaxval * fracofpeak; 
+      os << LogIO::NORMAL <<"Threshold by fraction of the peak(="<<fracofpeak<<") * max: "<<rmsthresh<< LogIO::POST;
+      os << LogIO::DEBUG1 <<"max at "<<maxmaxpos<<", dynamic range = "<<maxmaxval/rms(maxmaxpos) << LogIO::POST;
+    }
+    else if (sigma) {
+      //cerr<<"minval="<<minval<<" maxval="<<maxval<<endl;
+      rmsthresh = maxrmsval * sigma;
+      os << LogIO::NORMAL <<"Threshold by sigma(="<<sigma<<")* rms (="<<maxrmsval<<") :"<<rmsthresh<< LogIO::POST;
+      os << LogIO::DEBUG1 <<"max rms at "<<maxrmspos<<", dynamic range = "<<max(maxrmspos)/maxrmsval << LogIO::POST;
+    }      
+    else {
+      rmsthresh = qthresh.getValue(Unit("Jy"));
+      if ( rmsthresh==0.0 ) 
+        { throw(AipsError("Threshold for automask is not set"));}
+    }
+    os << LogIO::NORMAL2 <<" thresh="<<rmsthresh<<LogIO::POST;
 
-     // fudge factor?  
-     Float afactor = 2.0;
-     //cerr<<"thresh/afactor="<<thresh/afactor<<endl;
-     //LatticeExpr<Float> themask( iif( *(tempIm3_ptr) > thresh/afactor, 1.0, 0.0 ));
-     LatticeExpr<Float> themask( iif( tempconvim > rmsthresh/afactor, 1.0, 0.0 ));
-     mask.copyData( (LatticeExpr<Float>)( iif((mask + themask) > 0.0, 1.0, 0.0  ) ) );
+
+    TempImage<Float>* tempIm2 = new TempImage<Float>(res.shape(), res.coordinates() );
+    TempImage<Float>* tempIm = new TempImage<Float>(res.shape(), res.coordinates() );
+    tempIm->copyData(res);    
+    SPCIIF tempIm2_ptr(tempIm2);
+    SPIIF tempIm3_ptr(tempIm);
+    SPIIF tempIm_ptr;
+    SPIIF tempIm4_ptr;
+    // create a mask based on raw image
+    if (debug && (rmsthresh <= maxmaxval ) ) {
+      os <<"run pruneRegions to the input residual image..."<<LogIO::POST;
+      tempIm4_ptr = pruneRegions(res, rmsthresh, 0, npix);
+    }
+    // for debug
+    if (debug) { 
+      PagedImage<Float> prunedCutOff(TiledShape(tempIm4_ptr.get()->shape(),tempIm4_ptr.get()->niceCursorShape()), tempIm4_ptr.get()->coordinates(), "rawcutoff-pruned.Im");
+      PagedImage<Float> rawCutOff(TiledShape(res.shape(),res.niceCursorShape()), res.coordinates(), "rawcutoff.Im");
+      rawCutOff.copyData( (LatticeExpr<Float>)( iif(res > rmsthresh, 1.0, 0.0  ) ) );
+      os << "save pruned cutoff image"<<LogIO::POST;
+      prunedCutOff.copyData( (LatticeExpr<Float>)( iif(*(tempIm4_ptr.get()) > rmsthresh, 1.0, 0.0  ) ) );
+      os << "DONE saving pruned cutoff image"<<LogIO::POST;
+    }
+ 
+    //binning stage
+    if (dobin) {
+      tempIm_ptr =  makeMaskFromBinnedImage(res, npix, npix, fracofpeak, sigma, nmask, rmsthresh);
+      //for debugging: save the mask at this stage
+      if (debug) {
+        PagedImage<Float> tempBinIm(TiledShape(tempIm_ptr.get()->shape()), tempIm_ptr.get()->coordinates(), "binnedThresh.Im");
+        tempBinIm.copyData(*(tempIm_ptr.get()));
+      }
+    }
+    if (doregrid) {
+      //regrid
+      os << LogIO::DEBUG1 <<" now regridding..."<<LogIO::POST;
+      IPosition axes(3,0, 1, 2);
+      Vector<Int> dirAxes = CoordinateUtil::findDirectionAxes(incsys);
+      axes(0) = dirAxes(0);
+      axes(1) = dirAxes(1);
+      axes(2) = CoordinateUtil::findSpectralAxis(incsys);
+      Record* dummyrec = 0;
+      SPCIIF inmask_ptr(tempIm_ptr);
+      ImageRegridder regridder(inmask_ptr, "", tempIm2_ptr, axes, dummyrec, "", True, shp);
+      regridder.setMethod(Interpolate2D::LINEAR);
+      tempIm_ptr = regridder.regrid();
+      //for debugging: save the mask at this stage
+      if (debug) {
+        PagedImage<Float> tempGridded(TiledShape(tempIm_ptr.get()->shape()), tempIm_ptr.get()->coordinates(), "binAndGridded.Im");
+        tempGridded.copyData(*(tempIm_ptr.get()));
+      }
+    }
+    else {
+      tempIm_ptr = tempIm3_ptr;
+    }
+    if (doconvolve) {
+    //
+      SPIIF outmask = convolveMask(*(tempIm_ptr.get()), npix, npix);
+      tempIm_ptr = outmask;
+      //
+      //for debugging: save the mask at this stage
+      if (debug) { 
+        PagedImage<Float> tempconvIm(TiledShape(tempIm_ptr.get()->shape()), tempIm_ptr.get()->coordinates(),"convolved.Im");
+        tempconvIm.copyData(*(tempIm_ptr.get()));
+      }
+      os<<"done convolving the mask "<<LogIO::POST;
+    }
+
+    Double afactor;
+    if (dothresh) {
+        cerr<<"dothresh..."<<endl;
+        TempImage<Float>* inTempIm = new TempImage<Float>(res.shape(), res.coordinates() );
+        inTempIm->copyData(res);
+        SPIIF tempIm3_ptr(inTempIm);
+        tempIm_ptr = tempIm3_ptr;
+        afactor=1.0;
+    }
+    else {
+        // fudge factor?  
+        afactor = 2.0;
+        //afactor = 1.0;
+    }
+    //os <<"Final thresholding with rmsthresh/afactor="<< rmsthresh/afactor <<LogIO::POST;
+    //LatticeExpr<Float> themask( iif( *(tempIm_ptr.get()) > rmsthresh/afactor, 1.0, 0.0 ));
+    // previous 1/0 mask (regridded), max pix value should be <1.0, take arbitary cut off at 0.1
+    LatticeExpr<Float> themask( iif( *(tempIm_ptr.get()) > 0.1, 1.0, 0.0 ));
+
+    //for debug
+    /***
+    PagedImage<Float> tempthemask(TiledShape(tempIm_ptr.get()->shape()), tempIm_ptr.get()->coordinates(),"tempthemask.Im");
+    tempthemask.copyData(themask);
+    ***/
+
+    os <<"Lattice themask is created..."<<LogIO::POST;
+    //LatticeExpr<Float> themask( iif( tempconvim > rmsthresh/afactor, 1.0, 0.0 ));
+    mask.copyData( (LatticeExpr<Float>)( iif((mask + themask) > 0.0, 1.0, 0.0  ) ) );
+    os <<LogIO::DEBUG1 <<"add previous mask and the new mask.."<<LogIO::POST;
   }
-  
+
+  SHARED_PTR<ImageInterface<Float> >  SDMaskHandler::makeMaskFromBinnedImage(const ImageInterface<Float>& image, 
+                                                                             const Int nx, 
+                                                                             const Int ny,  
+                                                                             const Float& fracofpeak,
+                                                                             const Float& sigma, 
+                                                                             const Int nmask,
+                                                                             Double thresh)
+  {
+    Bool debug(False);
+    LogIO os( LogOrigin("SDMaskHandler","makeMaskfromBinnedImage",WHERE) );
+    RebinImage<Float> tempRebinnedIm( image, IPosition(4,nx, ny,1,1) );
+    // for debug
+    if (debug) {
+      PagedImage<Float> copyRebinnedIm(TiledShape(tempRebinnedIm.shape()), tempRebinnedIm.coordinates(), "binned.Im");
+      copyRebinnedIm.copyData(tempRebinnedIm);
+    }
+
+    // modified threshold
+    // original algortihm
+    //thresh = 3.0*thresh / sqrt(npix);
+    // modified by bin size only
+    //thresh = thresh / sqrt(nx);
+
+    //stats on the binned image (the info not used for mask criteria yet)
+    Array<Double> rms, max, min;
+    // vars to store min,max values of extrema and rms in all planes
+    Double minRmsVal, maxRmsVal, minMaxVal, maxMaxVal, minMinVal, maxMinVal;
+    TempImage<Float>* tempImForStat = new TempImage<Float>(tempRebinnedIm.shape(), tempRebinnedIm.coordinates() );
+    tempImForStat->copyData(tempRebinnedIm);
+    SHARED_PTR<casa::ImageInterface<float> > temprebin_ptr(tempImForStat);
+    ImageStatsCalculator imcalc( temprebin_ptr, 0, "", False);
+    Vector<Int> stataxes(2);
+    stataxes[0] = 0;
+    stataxes[1] = 1;
+    imcalc.setAxes(stataxes);
+    Record imstats = imcalc.statistics();
+    imstats.get(RecordFieldId("rms"),rms);
+    imstats.get(RecordFieldId("max"),max);
+    imstats.get(RecordFieldId("min"),min);
+    minMax(minRmsVal,maxRmsVal,rms);
+    minMax(minMaxVal,maxMaxVal,max);
+    minMax(minMinVal,maxMinVal,min);
+
+    //os << LogIO::DEBUG1 <<" thresh for binned image (modified by sqrt(npix))   ="<<thresh<<LogIO::POST;
+    os << LogIO::DEBUG1 <<" thresh for binned image ="<<thresh<<LogIO::POST;
+    os << LogIO::NORMAL <<"stats on binned image: max="<<maxMaxVal<<" rms="<<maxRmsVal<<LogIO::POST;
+
+    TempImage<Float>* tempMask = new TempImage<Float> (tempRebinnedIm.shape(), tempRebinnedIm.coordinates() );
+
+    if (thresh > maxMaxVal) {
+      os << LogIO::WARN <<" The threshold value,"<<thresh<<" for making a mask is greater than max value in the image. No mask will be added by automask."<< LogIO::POST;
+      tempMask->set(0.0);
+    }
+    else {
+      if (fracofpeak) {
+        thresh = fracofpeak * maxMaxVal;
+      }
+      else if (sigma) {
+        thresh = sigma * maxRmsVal;
+      }
+    
+      // apply threshold to rebinned image to generate a temp image mask
+      // first run pruning by limiting n masks
+      SHARED_PTR<ImageInterface<Float> > dummyim = pruneRegions(tempRebinnedIm, thresh, nmask);
+
+      os << LogIO::DEBUG1<<" threshold applied ="<<thresh<<LogIO::POST;
+      //cerr<<"dummyim shape="<<dummyim.get()->shape()<<endl;
+      //cerr<<"temprebinned shape="<<tempRebinnedIm.shape()<<endl;
+      //
+      //LatticeExpr<Float> tempthresh( iif( abs(tempRebinnedIm) > thresh, 1.0, 0.0) );
+      LatticeExpr<Float> tempthresh( iif( abs( *(dummyim.get()) ) > thresh, 1.0, 0.0) );
+      os << LogIO::DEBUG1<<" copying the threshold image....."<<LogIO::POST;
+      tempMask->copyData(tempthresh);
+      //tempMask->copyData(LatticeExpr<Float>( iif( abs( *(dummyim.get()) ) > thresh, 1.0, 0.0)) );
+      os << LogIO::DEBUG1<<" DONE copying the threshold image....."<<LogIO::POST;
+    }
+    return SHARED_PTR<ImageInterface<Float> >(tempMask);
+  }
+
+  SHARED_PTR<ImageInterface<Float> > SDMaskHandler::convolveMask(const ImageInterface<Float>& inmask, Int nxpix, Int nypix)
+  {
+    LogIO os( LogOrigin("SDMaskHandler","convolveMask",WHERE) );
+    TempImage<Float>* tempIm = new TempImage<Float>(inmask.shape(), inmask.coordinates() );
+    tempIm->copyData(inmask);
+    SHARED_PTR<casa::ImageInterface<float> > tempIm2_ptr(tempIm);
+    //DEBUG will be removed 
+    os << LogIO::DEBUG1<<"convolve with "<<nxpix<<" pix x "<<nypix<<" pix gaussian"<<LogIO::POST;
+
+    Vector<Quantity> convbeam(3);
+    convbeam[0] = Quantity(nxpix, "pix");
+    convbeam[1] = Quantity(nypix, "pix");
+    convbeam[2] = Quantity(0.0, "deg");
+    Record dammyRec=Record();
+    //String convimname("temp_convim");
+    Image2DConvolver<Float> convolver(tempIm2_ptr, &dammyRec, String(""), String(""), True);
+    convolver.setKernel("GAUSSIAN", convbeam[0], convbeam[1], convbeam[2]);
+    convolver.setAxes(std::make_pair(0,1));
+    convolver.setScale(Double(-1.0));
+    convolver.setSuppressWarnings(True);
+    auto outmask = convolver.convolve();
+    return outmask;
+  } 
+
+  SHARED_PTR<casa::ImageInterface<Float> >  SDMaskHandler::pruneRegions(const ImageInterface<Float>& image, Double& thresh, Int nmask, Int npix)
+  {
+    LogIO os( LogOrigin("SDMaskHnadler", "pruneRegions",WHERE) );
+
+    IPosition fullimShape=image.shape();
+    TempImage<Float>* fullIm = new TempImage<Float>(TiledShape(fullimShape, image.niceCursorShape()), image.coordinates());
+
+    if (nmask==0 && npix==0 ) {
+      //No-op
+      os<<LogIO::DEBUG1<<"Skip pruning mask regions"<<LogIO::POST;
+      fullIm->copyData(image);
+      return SHARED_PTR<ImageInterface<Float> >(fullIm);
+    }  
+    os << "pruneRegions with no. mask"<<nmask<<" size="<<npix<<LogIO::POST;
+    
+    IPosition shp = image.shape();
+    //cerr<<"shp = "<<shp<<endl;
+    IPosition blc(4,0);
+    IPosition trc = shp-1; 
+    Slicer sl(blc,trc,Slicer::endIsLast);
+    AxesSpecifier aspec(False);
+    // decomposer can only work for 2 and 3-dim images so need
+    // some checks the case for stokes axis > 1
+    // following works if stokes axis dim = 1
+    SubImage<Float>* subIm = new SubImage<Float>(image, sl, aspec, True); 
+    RegionManager regMan;
+    CoordinateSystem cSys=subIm->coordinates(); 
+    regMan.setcoordsys(cSys);
+    //String strReg = "box[["+String::toString(blc[0])+"pix,"+String::toString(blc[1])+"pix], ["+String::toString(shp[0])+"pix,"+String::toString(shp[1])+"pix]]";
+    //cerr<<"strReg="<<strReg<<endl;
+    //RegionTextList CRTFList(cSys, strReg, shp);
+    //Record regRec = CRTFList.regionAsRecord();
+    //SHARED_PTR<casa::SubImage<Float> > subIm = SubImageFactory<Float>::createSubImageRW(image, regRec, "", &os, aspec, False, False);
+
+    //cerr <<" subIm.shape="<<subIm->shape()<<endl;
+    IPosition subimShape=subIm->shape();
+    uInt ndim = subimShape.nelements();
+    //SHARED_PTR<casa::ImageInterface<float> > tempIm_ptr(subIm);
+    TempImage<Float>* tempIm = new TempImage<Float> (TiledShape(subIm->shape(), subIm->niceCursorShape()), subIm->coordinates() );
+    tempIm->copyData(*subIm);
+    os << LogIO::NORMAL2 <<"Finding regions by ImageDecomposer..."<<LogIO::POST;
+    //use ImageDecomposer
+    Matrix<Quantity> blctrcs;
+    ImageDecomposer<Float> id(*tempIm);
+    id.setDeblend(True);
+    os << LogIO::DEBUG1<< "deblend threshold="<<thresh<<LogIO::POST;
+    id.setDeblendOptions(thresh, 3, 1, 2); //nContour=3
+    id.setFit(False);
+    os << LogIO::DEBUG1<<"decomposeImage()..."<<LogIO::POST;
+    id.decomposeImage();
+    id.printComponents();
+    uInt nRegion = id.numRegions();
+    os << "Found " << nRegion <<" regions"<<LogIO::POST;
+    Block<IPosition> blcs(nRegion);
+    Block<IPosition> trcs(nRegion);
+    id.boundRegions(blcs, trcs);
+    //os << "Get comp list.."<<LogIO::POST;
+    Matrix<Float> clmat=id.componentList();
+    //os << "Get peaks.."<<LogIO::POST;
+    Vector<Float> peaks = clmat.column(0);
+    //cerr<<"peaks="<<peaks<<endl;
+    os << LogIO::DEBUG1<< "Sort by peak fluxes..."<<LogIO::POST;
+    // sort 
+    Vector<uInt> sortedindx;
+    Sort sorter;
+    //cerr<<"Setup sortKey..."<<endl;
+    sorter.sortKey(peaks.data(),TpFloat,0, Sort::Descending);
+    //cerr<<"do sort..."<<endl;
+    sorter.sort(sortedindx, peaks.nelements());
+    //os << "Sorting py peak flux DONE..."<<LogIO::POST;
+    os<< LogIO::DEBUG1<<"sortedindx="<<sortedindx<<LogIO::POST;    
+    // FOR DEBUGGING
+    //for (uInt j = 0; j < blcs.nelements(); j++) {
+    //  os<<" j="<<j<<" blcs="<<blcs[j]<<" trcs="<<trcs[j]<<LogIO::POST;
+    //}
+    Vector<Int> absRel(ndim, RegionType::Abs);
+    //PtrBlock<const WCRegion *> wbox(nbox);
+    PtrBlock<const WCRegion *> wbox;
+    uInt iSubComp=0;
+    for (uInt icomp=0; icomp < sortedindx.nelements(); icomp++) {
+      Bool removeit(False);
+      Vector<Quantum<Double> > qblc(ndim);
+      Vector<Quantum<Double> > qtrc(ndim);      
+      Vector<Double> wblc(ndim);
+      Vector<Double> wtrc(ndim);
+      Vector<Double> pblc(ndim);
+      Vector<Double> ptrc(ndim);
+      // pixel blcs and trcs
+      for (uInt i=0; i < ndim; i++) {
+        pblc[i] = (Double) blcs[sortedindx[icomp]][i]; 
+        ptrc[i] = (Double) trcs[sortedindx[icomp]][i];
+      }
+      // get blcs and trcs in world coord.
+      cSys.toWorld(wblc,pblc);
+      cSys.toWorld(wtrc,ptrc);
+      for (uInt i=0; i < ndim; i++) {
+        qblc[i] = Quantum<Double>(wblc[i], cSys.worldAxisUnits()(cSys.pixelAxisToWorldAxis(i)));
+        qtrc[i] = Quantum<Double>(wtrc[i], cSys.worldAxisUnits()(cSys.pixelAxisToWorldAxis(i)));
+      }
+
+      if (npix > 0) {
+        os<<"pruning regions by size < "<<npix<<LogIO::POST;
+        Int xboxdim = ptrc[0] - pblc[0];
+        Int yboxdim = ptrc[1] - pblc[1];
+        //cerr<<"xboxdim = "<<xboxdim<<" yboxdim="<<yboxdim<<endl;
+        if (( xboxdim < npix || yboxdim < npix ) && xboxdim*yboxdim < npix*npix ) {
+          removeit = True;
+        }
+      }
+      if (nmask > 0 && icomp >= (uInt)nmask ) removeit=True; 
+        if (removeit) {
+          wbox.resize(iSubComp+1);
+          wbox[iSubComp]= new WCBox (qblc, qtrc, cSys, absRel);
+          iSubComp++;
+        }
+    } // for icomp  
+
+    //cerr<<"iSubComp="<<iSubComp<<endl;
+    //cerr<<"wbox.nelements="<<wbox.nelements()<<endl;
+    if (iSubComp>0) {
+      ImageRegion* boxImageRegion=regMan.doUnion(wbox);
+      //cerr<<"regionToMask ..."<<endl;
+      tempIm->copyData(*subIm);
+      regionToMask(*tempIm,*boxImageRegion, Float(0.0)); 
+      //cerr<<"Done regionToMask..."<<endl;
+      os <<"pruneRegions removed "<<iSubComp<<" regions from the mask image"<<LogIO::POST;
+      for (uInt k=0; k < wbox.nelements(); k++) {
+        delete wbox[k];
+      }
+    }
+    else {
+      cerr<<"No pruning"<<endl;
+      os << LogIO::DEBUG1 << "No regions are removed by pruning" << LogIO::POST;
+    }
+    //
+    // Inserting pruned result image to the input image
+    Array<Float> subimData;
+    //IPosition fullimShape=image.shape();
+    //TempImage<Float>* fullIm = new TempImage<Float>(TiledShape(fullimShape, image.niceCursorShape()), image.coordinates());
+    fullIm->set(0);
+    IPosition start(fullimShape.nelements(),0);
+    IPosition stride(fullimShape.nelements(),1);
+    if (ndim ==3) {
+      IPosition substart(3,0);
+      IPosition subshape(3,subimShape(0),subimShape(1),1);
+      IPosition substride(3,1,1,1);
+      uInt nchan=subimShape(2);
+      //cerr<<"shape tempIm ="<<tempIm->shape()<<endl;
+      //cerr<<"shape fullIm ="<<fullIm->shape()<<endl;
+      for (uInt ich=0; ich < nchan; ich++) {
+        substart(2) = ich;
+        //tempIm->getSlice(subimData,Slicer(substart,subend),True);
+        tempIm->getSlice(subimData,substart,subshape,substride,True);
+        start(3) = ich;
+        fullIm->putSlice(subimData,start,stride);  
+      }
+    }
+    else if (ndim==2) {
+      subimData = tempIm->get();
+      //cerr<<"subimData shape="<<subimData.shape()<<endl;
+      //cerr<<"shape tempIm ="<<tempIm->shape()<<endl;
+      fullIm->putSlice(subimData,start,stride);
+      //cerr<<"shape fullIm ="<<fullIm->shape()<<endl;
+    }
+    return SHARED_PTR<ImageInterface<Float> >(fullIm);
+  }
+
   void SDMaskHandler::makePBMask(SHARED_PTR<SIImageStore> imstore, Float pblimit)
   {
     LogIO os( LogOrigin("SDMaskHandler","makePBMask",WHERE) );
