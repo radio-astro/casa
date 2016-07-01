@@ -54,7 +54,7 @@ $(document).ready(function() {
         </%def>
 
         <%def name="preamble()">
-
+           Phase vs. time for all calibrators, as well as a representative selection of fields with intent='TARGET'.
 
         </%def>
 
