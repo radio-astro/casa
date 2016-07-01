@@ -481,7 +481,7 @@ public:
                 Filler filler,
                 VisBufferComponent2 component,
                 ShapePattern shapePattern,
-                Bool isKey = True)
+                Bool isKey)
     {
         VbCacheItem<T, IsComputed>::initialize (cache, vb, filler, component, isKey);
         shapePattern_p = shapePattern;

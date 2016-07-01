@@ -62,36 +62,36 @@ VisBufferCache::initialize (VisBufferImpl2 * vb)
     // values.
 
     antenna1_p.initialize (this, vb, & VisBufferImpl2::fillAntenna1,
-                           VisBufferComponent2::Antenna1, Nr);
+                           VisBufferComponent2::Antenna1, Nr, true);
     antenna2_p.initialize (this, vb, &VisBufferImpl2::fillAntenna2,
-                           VisBufferComponent2::Antenna2, Nr);
+                           VisBufferComponent2::Antenna2, Nr, true);
     arrayId_p.initialize (this, vb, &VisBufferImpl2::fillArrayId,
-                          VisBufferComponent2::ArrayId, Nr);
+                          VisBufferComponent2::ArrayId, Nr, true);
     cjones_p.initialize (this, vb, &VisBufferImpl2::fillJonesC,
-                         VisBufferComponent2::JonesC, NoCheck);
+                         VisBufferComponent2::JonesC, NoCheck, false);
     correctedVisCube_p.initialize (this, vb, &VisBufferImpl2::fillCubeCorrected,
                                    VisBufferComponent2::VisibilityCubeCorrected,
                                    NcNfNr, False);
     corrType_p.initialize (this, vb, &VisBufferImpl2::fillCorrType,
-                           VisBufferComponent2::CorrType, NoCheck);
+                           VisBufferComponent2::CorrType, NoCheck, false);
     dataDescriptionIds_p.initialize (this, vb, &VisBufferImpl2::fillDataDescriptionIds,
-                                     VisBufferComponent2::DataDescriptionIds, Nr);
+                                     VisBufferComponent2::DataDescriptionIds, Nr, true);
     direction1_p.initialize (this, vb, &VisBufferImpl2::fillDirection1,
-                             VisBufferComponent2::Direction1, NoCheck);
+                             VisBufferComponent2::Direction1, NoCheck, false);
     direction2_p.initialize (this, vb, &VisBufferImpl2::fillDirection2,
-                             VisBufferComponent2::Direction2, NoCheck);
+                             VisBufferComponent2::Direction2, NoCheck, false);
     exposure_p.initialize (this, vb, &VisBufferImpl2::fillExposure,
-                           VisBufferComponent2::Exposure, Nr);
+                           VisBufferComponent2::Exposure, Nr, false);
     feed1_p.initialize (this, vb, &VisBufferImpl2::fillFeed1,
-                        VisBufferComponent2::Feed1, Nr);
+                        VisBufferComponent2::Feed1, Nr, false);
     feed1Pa_p.initialize (this, vb, &VisBufferImpl2::fillFeedPa1,
-                          VisBufferComponent2::FeedPa1, NoCheck);
+                          VisBufferComponent2::FeedPa1, NoCheck, false);
     feed2_p.initialize (this, vb, &VisBufferImpl2::fillFeed2,
-                        VisBufferComponent2::Feed2, Nr);
+                        VisBufferComponent2::Feed2, Nr, false);
     feed2Pa_p.initialize (this, vb, &VisBufferImpl2::fillFeedPa2,
-                          VisBufferComponent2::FeedPa2, NoCheck);
+                          VisBufferComponent2::FeedPa2, NoCheck, false);
     fieldId_p.initialize (this, vb, &VisBufferImpl2::fillFieldId,
-                          VisBufferComponent2::FieldId, Nr);
+                          VisBufferComponent2::FieldId, Nr, true);
     flagCategory_p.initialize (this, vb, &VisBufferImpl2::fillFlagCategory,
                                VisBufferComponent2::FlagCategory, NoCheck, False);
     // required column but not used in casa, make it a nocheck for shape validation
@@ -102,45 +102,45 @@ VisBufferCache::initialize (VisBufferImpl2 * vb)
     floatDataCube_p.initialize (this, vb, &VisBufferImpl2::fillFloatData,
                                 VisBufferComponent2::VisibilityCubeFloat, NcNfNr, False);
     imagingWeight_p.initialize (this, vb, &VisBufferImpl2::fillImagingWeight,
-                                VisBufferComponent2::ImagingWeight, NoCheck);
+                                VisBufferComponent2::ImagingWeight, NoCheck, false);
     modelVisCube_p.initialize (this, vb, &VisBufferImpl2::fillCubeModel,
                                VisBufferComponent2::VisibilityCubeModel, NcNfNr, False);
     nAntennas_p.initialize (this, vb, &VisBufferImpl2::fillNAntennas,
-                            VisBufferComponent2::NAntennas);
+                            VisBufferComponent2::NAntennas, false);
     nChannels_p.initialize (this, vb, &VisBufferImpl2::fillNChannel,
-                            VisBufferComponent2::NChannels);
+                            VisBufferComponent2::NChannels, false);
     nCorrelations_p.initialize (this, vb, &VisBufferImpl2::fillNCorr,
                                 VisBufferComponent2::NCorrelations);
     nRows_p.initialize (this, vb, &VisBufferImpl2::fillNRow,
-                        VisBufferComponent2::NRows);
+                        VisBufferComponent2::NRows, false);
     observationId_p.initialize (this, vb, &VisBufferImpl2::fillObservationId,
-                                VisBufferComponent2::ObservationId, Nr);
+                                VisBufferComponent2::ObservationId, Nr, true);
     phaseCenter_p.initialize (this, vb, &VisBufferImpl2::fillPhaseCenter,
-                              VisBufferComponent2::PhaseCenter);
+                              VisBufferComponent2::PhaseCenter, false);
     polFrame_p.initialize (this, vb, &VisBufferImpl2::fillPolFrame,
-                           VisBufferComponent2::PolFrame);
+                           VisBufferComponent2::PolFrame, false);
     polarizationId_p.initialize (this, vb, &VisBufferImpl2::fillPolarizationId,
-                                 VisBufferComponent2::PolarizationId);
+                                 VisBufferComponent2::PolarizationId, false);
     processorId_p.initialize (this, vb, &VisBufferImpl2::fillProcessorId,
-                              VisBufferComponent2::ProcessorId, Nr);
+                              VisBufferComponent2::ProcessorId, Nr, true);
     rowIds_p.initialize (this, vb, &VisBufferImpl2::fillRowIds,
-                         VisBufferComponent2::RowIds, Nr);
+                         VisBufferComponent2::RowIds, Nr, false);
     scan_p.initialize (this, vb, &VisBufferImpl2::fillScan,
-                       VisBufferComponent2::Scan, Nr);
+                       VisBufferComponent2::Scan, Nr, true);
     sigma_p.initialize (this, vb, &VisBufferImpl2::fillSigma,
                         VisBufferComponent2::Sigma, NcNr, False);
     spectralWindows_p.initialize (this, vb, &VisBufferImpl2::fillSpectralWindows,
-                                  VisBufferComponent2::SpectralWindows, Nr);
+                                  VisBufferComponent2::SpectralWindows, Nr, false);
     stateId_p.initialize (this, vb, &VisBufferImpl2::fillStateId,
-                          VisBufferComponent2::StateId, Nr);
+                          VisBufferComponent2::StateId, Nr, true);
     time_p.initialize (this, vb, &VisBufferImpl2::fillTime,
-                       VisBufferComponent2::Time, Nr);
+                       VisBufferComponent2::Time, Nr, true);
     timeCentroid_p.initialize (this, vb, &VisBufferImpl2::fillTimeCentroid,
-                               VisBufferComponent2::TimeCentroid, Nr);
+                               VisBufferComponent2::TimeCentroid, Nr, false);
     timeInterval_p.initialize (this, vb, &VisBufferImpl2::fillTimeInterval,
-                               VisBufferComponent2::TimeInterval, Nr);
+                               VisBufferComponent2::TimeInterval, Nr, false);
     uvw_p.initialize (this, vb, &VisBufferImpl2::fillUvw,
-                      VisBufferComponent2::Uvw, I3Nr);
+                      VisBufferComponent2::Uvw, I3Nr, false);
     visCube_p.initialize (this, vb, &VisBufferImpl2::fillCubeObserved,
                           VisBufferComponent2::VisibilityCubeObserved, NcNfNr, False);
     weight_p.initialize (this, vb, &VisBufferImpl2::fillWeight,
