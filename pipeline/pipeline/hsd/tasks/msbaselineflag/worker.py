@@ -222,7 +222,7 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
         end_time = time.time()
         LOG.info('PROFILE execute: elapsed time is %s sec'%(end_time-start_time))
         # Need to flush changes to disk
-        datatable.exportdata(minimal=True, overwrite=True)
+        datatable.exportdata(minimal=True)
 
         result = SDBLFlagWorkerResults(task=self.__class__,
                                        success=True,
@@ -758,14 +758,17 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
             for i in xrange(len(dt_ids)):
                 line = [base_selection]
                 ID = dt_ids[i]
-                tFLAG = DataTable.tb2.getcell('FLAG', ID)
-                tPFLAG = DataTable.tb2.getcell('FLAG_PERMANENT', ID)
+                tFLAG = datatable.tb2.getcell('FLAG', ID)
+                tPFLAG = datatable.tb2.getcell('FLAG_PERMANENT', ID)
                 flag_sum = tFLAG.sum(axis=1) + tPFLAG.sum(axis=1)
                 online = tPFLAG[:,OnlineFlagIndex]
-                # the number of flag types. data are unflagged only if
-                # sum of flag == num_flag
+                # num_flag: the number of flag types.
+                # data are valid (unflagged) only if all elements of flags are 1.
+                # Hence sum of flag == num_flag
                 num_flag = len(tFLAG[0])+len(tPFLAG[0])
-                # ignore cases only online flag is active (0).
+                # Ignore the case only online flag is active (0).
+                # in that case, flag_sum = num_flag (if online=1)
+                #                          num_flag-1 (if online=0)
                 # if online = 1 (valid) => sflag = flag_sum == num_flag
                 # if online = 0 (invalid)
                 #     => sflag = flag_sum+1 == num_flag if no other flag
@@ -773,7 +776,7 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
                 sflag = flag_sum + numpy.ones(flag_sum.shape)-online
                 flagged_pols = []
                 for idx in range(len(polids)):
-                    if sflag[polids[idx]] == num_flag[polids[idx]]:
+                    if sflag[polids[idx]] != num_flag:
                         flagged_pols.append(pollist[idx])
                 if (len(flagged_pols)==0): # no flag in selcted pols
                     continue
