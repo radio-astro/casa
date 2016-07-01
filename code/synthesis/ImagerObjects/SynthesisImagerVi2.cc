@@ -1523,42 +1523,40 @@ void SynthesisImagerVi2::unlockMSs()
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-  Bool SynthesisImagerVi2::makePrimaryBeam(PBMath& /*pbMath*/)
+  Bool SynthesisImagerVi2::makePrimaryBeam(PBMath& pbMath)
   {
-    LogIO os( LogOrigin("SynthesisImager","makePrimaryBeam",WHERE) );
+    LogIO os( LogOrigin("SynthesisImagerVi2","makePrimaryBeam",WHERE) );
 
-    os << "Evaluating Primary Beam model onto image grid(s)" << LogIO::POST;
+    os << "vi2 : Evaluating Primary Beam model onto image grid(s)" << LogIO::POST;
 
     itsMappers.initPB();
 
     vi::VisBuffer2* vb = vi_p->getVisBuffer();
     vi_p->originChunks();
     vi_p->origin();
-    //Int fieldCounter=0;
+    Int fieldCounter=0;
     Vector<Int> fieldsDone;
 
-    vb;
-
-    for(vi_p->originChunks(); vi_p->moreChunks(); vi_p->nextChunk()){
-
-      /*  TODO : fill this in
-      Bool fieldDone=False;
-      for (uInt k=0;  k < fieldsDone.nelements(); ++k)
-	fieldDone=fieldDone || (vb->fieldId()==fieldsDone(k));
-      if(!fieldDone){
-	++fieldCounter;
-	fieldsDone.resize(fieldCounter, True);
-	fieldsDone(fieldCounter-1)=vb->fieldId();
-
-	itsMappers.addPB(*vb,pbMath);
-
+    for(vi_p->originChunks(); vi_p->moreChunks(); vi_p->nextChunk())
+      {
+	for (vi_p->origin(); vi_p->more(); vi_p->next())
+	  {
+	    Bool fieldDone=False;
+	    for (uInt k=0;  k < fieldsDone.nelements(); ++k)
+	      fieldDone=fieldDone || (vb->fieldId()(0)==fieldsDone(k));
+	    if(!fieldDone){
+	      ++fieldCounter;
+	      fieldsDone.resize(fieldCounter, True);
+	      fieldsDone(fieldCounter-1)=vb->fieldId()(0);
+	      
+	      itsMappers.addPB(*vb,pbMath);
+	      
+	    }
+	  }
       }
-      */
+    unlockMSs();
 
-    }
-      unlockMSs();
-
-      return True;
+    return True;
   }// end makePB
 
 

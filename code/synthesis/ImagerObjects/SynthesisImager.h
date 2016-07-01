@@ -176,10 +176,6 @@ class SynthesisImager
 
 
   Bool makePB();
-  Bool makePBImage(const String& telescopeName, 
-		   Bool useSymmetricBeam, Double diam);
-  Bool makePBImage(const String telescop);
-  Bool makePrimaryBeam(PBMath& pbMath);
   
   virtual void predictModel();
   //  void makeImage();
@@ -317,6 +313,11 @@ protected:
 			  Vector<String> startmodel=Vector<String>(0));
 
   virtual void unlockMSs();
+
+  Bool makePBImage(const String& telescopeName, 
+		   Bool useSymmetricBeam, Double diam);
+  Bool makePBImage(const String telescop);
+  virtual Bool makePrimaryBeam(PBMath& pbMath);
 
   /////////////// Member Objects
 

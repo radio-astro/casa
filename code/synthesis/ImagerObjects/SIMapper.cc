@@ -264,6 +264,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     }
 
+  void SIMapper::addPB(vi::VisBuffer2& vb, PBMath& pbMath)
+  {
+    CoordinateSystem imageCoord=itsImages->pb()->coordinates();
+     
+    IPosition imShape=itsImages->pb()->shape();
+
+    ROMSColumns mscol(vb.getVi()->ms());
+
+    MDirection wcenter=mscol.field().phaseDirMeas(vb.fieldId()(0));
+    TempImage<Float> pbTemp(imShape, imageCoord);
+    TempImage<Complex> ctemp(imShape, imageCoord);
+    ctemp.set(1.0);
+    pbMath.applyPB(ctemp, ctemp, wcenter, Quantity(0.0, "deg"), BeamSquint::NONE);
+    StokesImageUtil::To(pbTemp, ctemp);
+    itsImages->pb()->copyData(  (LatticeExpr<Float>)((*(itsImages->pb()))+pbTemp) );
+
+  }//addPB
+  
+
+
   ////////////////////Old vi/Vb version
 
   void SIMapper::degrid(VisBuffer& vb)
@@ -340,11 +360,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     pbMath.applyPB(ctemp, ctemp, wcenter, Quantity(0.0, "deg"), BeamSquint::NONE);
     StokesImageUtil::To(pbTemp, ctemp);
     itsImages->pb()->copyData(  (LatticeExpr<Float>)((*(itsImages->pb()))+pbTemp) );
-
-    // Think about applying PB square and using the weight image instead of PB, 
-    // so that it's the same as the weight image.
-    // ---- No.... it still won't be accurate because we'll need the weights, so no point trying
-    //      to be just a bit more accurate but not fully.  Need another solution for the wideband PB.
 
   }//addPB
   

@@ -74,12 +74,14 @@ template<class T> class ImageInterface;
   virtual void finalizeGrid(vi::VisBuffer2& vb, Bool dopsf);
   virtual void initializeDegrid(vi::VisBuffer2& vb, Int row=-1);
   virtual void degrid(vi::VisBuffer2& vb);
+  virtual void addPB(vi::VisBuffer2& vb, PBMath& pbMath);
   /////////////////////// OLD VI/VB versions
   virtual void initializeGrid(VisBuffer& vb, Bool dopsf, Bool firstaccess=False);
   virtual void grid(VisBuffer& vb, Bool dopsf, FTMachine::Type col, const Int whichFTM=-1);
   virtual void finalizeGrid(VisBuffer& vb, Bool dopsf);
   virtual void initializeDegrid(VisBuffer& vb, Int row=-1);
   virtual void degrid(VisBuffer& vb);
+  virtual void addPB(VisBuffer& vb, PBMath& pbMath);
 
   virtual void finalizeDegrid();
 
@@ -96,7 +98,6 @@ template<class T> class ImageInterface;
 
   
   virtual void initPB();
-  virtual void addPB(VisBuffer& vb, PBMath& pbMath);
   
 
 protected:

@@ -75,6 +75,7 @@ class SIMapperCollection
   void degrid(vi::VisBuffer2& vb, Bool saveVirtualMod=False,const Int mapperid=-1);
   void saveVirtualModel(vi::VisBuffer2& vb);
   void finalizeDegrid(vi::VisBuffer2& vb,const Int mapperid=-1);
+  void addPB(VisBuffer2& vb, PBMath& pbMath);
 
   //////////// OLD VI/VB : Version that use old vi/vb can be removed the vi2/vb2 works
   void initializeGrid(VisBuffer& vb, Bool dopsf=False,const Int mapperid=-1);
@@ -85,6 +86,7 @@ class SIMapperCollection
   void degrid(VisBuffer& vb, Bool saveVirtualMod=False,const Int mapperid=-1);
   void saveVirtualModel(VisBuffer& vb);
   void finalizeDegrid(VisBuffer& vb,const Int mapperid=-1);
+  void addPB(VisBuffer& vb, PBMath& pbMath);
   ////////////////////////////////////////////////////
   Record getFTMRecord(Int mapperid);
 
@@ -108,7 +110,6 @@ class SIMapperCollection
 
   
   void initPB();
-  void addPB(VisBuffer& vb, PBMath& pbMath);
 
   const CountedPtr<SIMapper> getMapper(Int which)
   {AlwaysAssert(which>=0 && which<(Int)itsMappers.nelements(),AipsError);

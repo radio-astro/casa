@@ -61,8 +61,6 @@ public:
   Bool setWeightDensity();
   void predictModel();
 
-  Bool makePrimaryBeam(PBMath& pbMath);
-
   void dryGridding(const Vector<String>& cfList);
   void fillCFCache(const Vector<String>& cfList,
 		   const String& ftmName,
@@ -153,6 +151,7 @@ public:
 				      CountedPtr<refim::FTMachine> iftmachine,
 				      uInt ntaylorterms=1);
 
+  Bool makePrimaryBeam(PBMath& pbMath);
  
    // Other Options
   Block<const MeasurementSet *> mss_p;
