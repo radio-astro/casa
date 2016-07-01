@@ -277,15 +277,17 @@ class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                     'dirname'  : weblog_dir,
                     'filesizes': filesizes})
 
-        amp_vs_time_summary_plots = self.create_plots(context, 
-                                                      result, 
-                                                      applycal.AmpVsTimeSummaryChart, 
-                                                      ['PHASE', 'BANDPASS', 'AMPLITUDE', 'TARGET'], correlation=corrstring)
+        #Amp vs time removed for CAS-8737
+        ##amp_vs_time_summary_plots = self.create_plots(context,
+        ##                                              result,
+        ##                                              applycal.AmpVsTimeSummaryChart,
+        ##                                              ['PHASE', 'BANDPASS', 'AMPLITUDE', 'TARGET'], correlation=corrstring)
 
-        phase_vs_time_summary_plots = self.create_plots(context, 
-                                                      result, 
-                                                      applycal.PhaseVsTimeSummaryChart, 
-                                                      ['PHASE', 'BANDPASS', 'AMPLITUDE', 'TARGET'], correlation=corrstring)
+        #Phase vs time removed for CAS-8737
+        ##phase_vs_time_summary_plots = self.create_plots(context,
+        ##                                              result,
+        ##                                              applycal.PhaseVsTimeSummaryChart,
+        ##                                              ['PHASE', 'BANDPASS', 'AMPLITUDE', 'TARGET'], correlation=corrstring)
 
 #         amp_vs_freq_phase_summary_plots = self.create_plots(context, 
 #                                                             result, 
@@ -336,10 +338,11 @@ class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
             for vis, vis_plots in plots.items():
                 phase_vs_freq_summary_plots[vis][key] = vis_plots
 
-        amp_vs_uv_summary_plots = self.create_plots(context, 
-                                                    result, 
-                                                    applycal.AmpVsUVSummaryChart, 
-                                                    ['AMPLITUDE'], correlation=corrstring)
+        #Removed for CAS-8737
+        ##amp_vs_uv_summary_plots = self.create_plots(context,
+        ##                                            result,
+        ##                                            applycal.AmpVsUVSummaryChart,
+        ##                                            ['AMPLITUDE'], correlation=corrstring)
 
         phase_vs_uv_summary_plots = self.create_plots(context, 
                                                       result, 
@@ -393,13 +396,13 @@ class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
 
         ctx.update({'amp_vs_freq_plots'   : amp_vs_freq_summary_plots,
                     'phase_vs_freq_plots' : phase_vs_freq_summary_plots,
-                    'amp_vs_time_plots'   : amp_vs_time_summary_plots,
-                    'amp_vs_uv_plots'     : amp_vs_uv_summary_plots,
+                    #'amp_vs_time_plots'   : amp_vs_time_summary_plots,
+                    #'amp_vs_uv_plots'     : amp_vs_uv_summary_plots,
                     'phase_vs_uv_plots'   : phase_vs_uv_summary_plots,
-                    'phase_vs_time_plots' : phase_vs_time_summary_plots,
+                    #'phase_vs_time_plots' : phase_vs_time_summary_plots,
                     'science_amp_vs_freq_plots'   : science_amp_vs_freq_summary_plots,
                     'science_phase_vs_freq_plots' : science_phase_vs_freq_summary_plots,
-                    'science_amp_vs_uv_plots' : science_amp_vs_uv_summary_plots,
+                    #'science_amp_vs_uv_plots' : science_amp_vs_uv_summary_plots,
                     'uv_max' : uv_max})
         
     def create_science_plots(self, context, results, correlation):
@@ -434,15 +437,19 @@ class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
             LOG.debug('Setting UV range to %s for %s', uv_range, vis)
             max_uvs[vis] = half_baselines[-1].length
 
-            brightest_fields = T2_4MDetailsVLAApplycalRenderer.get_brightest_fields(ms)        
-            for source_id, brightest_field in brightest_fields.items():
+            brightest_fields = T2_4MDetailsVLAApplycalRenderer.get_brightest_fields(ms)
+
+            # Limit to 30 sources via CAS-8737
+            MAX_PLOTS = 30
+            for source_id, brightest_field in brightest_fields.items()[0:MAX_PLOTS]:
                 plots = self.science_plots_for_result(context,
                                                       result, 
                                                       applycal.VLAAmpVsFrequencySummaryChart,
                                                       [brightest_field.id],
                                                       uv_range, correlation=correlation)
                 amp_vs_freq_summary_plots[vis][source_id] = plots
-    
+
+            for source_id, brightest_field in brightest_fields.items():
                 plots = self.science_plots_for_result(context, 
                                                       result, 
                                                       applycal.PhaseVsFrequencySummaryChart,
