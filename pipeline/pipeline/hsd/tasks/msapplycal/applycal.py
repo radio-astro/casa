@@ -3,9 +3,9 @@ import os
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.utils as utils
+from pipeline.domain import DataTable
 
-from pipeline.hif.tasks.applycal.applycal import ApplycalInputs, Applycal
+from pipeline.hif.tasks.applycal.applycal import ApplycalInputs, Applycal, ApplycalResults
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -48,8 +48,7 @@ class SDMSApplycalInputs(ApplycalInputs,basetask.StandardInputs,
             value = 'calflagstrict'
         self._applymode = value
 
-
-class SDMSApplycal(Applycal,basetask.StandardTaskTemplate):
+class SDMSApplycal(Applycal, basetask.StandardTaskTemplate):
     """
     Applycal executes CASA applycal tasks for the current context state,
     applying calibrations registered with the pipeline context to the target
@@ -62,4 +61,27 @@ class SDMSApplycal(Applycal,basetask.StandardTaskTemplate):
     Inputs = SDMSApplycalInputs
     ### Note this is a temporary workaround ###
     antenna_to_apply = '*&&&'
+    
+    def prepare(self):
+        # execute Applycal
+        results = super(SDMSApplycal, self).prepare()
+        # Update Tsys in datatable
+        context = self.inputs.context
+        datatable = DataTable(name=context.observing_run.ms_datatable_name, readonly=False)
+        # this task uses _handle_multiple_vis framework 
+        msobj = self.inputs.ms
+        datatable._update_flag(context, msobj.name)
+        for calapp in results.applied:
+            filename = os.path.join(context.output_dir, calapp.vis)
+            fieldids = [fieldobj.id for fieldobj in msobj.get_fields(name=calapp.field)]
+            for _calfrom in calapp.calfrom:
+                if _calfrom.caltype == 'tsys':
+                    tsystable = _calfrom.gaintable
+                    spwmap = _calfrom.spwmap
+                    gainfield= _calfrom.gainfield
+                    datatable._update_tsys(context, filename, tsystable, spwmap, fieldids, gainfield)
+        # here, full export is necessary
+        datatable.exportdata(minimal=False)
+
+        return results
     
