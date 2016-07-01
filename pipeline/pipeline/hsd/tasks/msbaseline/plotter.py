@@ -87,7 +87,10 @@ def get_data(infile, datatable, num_ra, num_dec, num_chan, rowlist, rowmap=None)
         rowmap = utils.EchoDictionary()
 
     integrated_data = numpy.zeros(num_chan, dtype=float)
+    integrated_mask = numpy.zeros(num_chan, dtype=bool)
+    num_accumulated = numpy.zeros(num_chan, dtype=int)
     map_data = numpy.zeros((num_ra, num_dec, num_chan), dtype=float) + sparsemap.NoDataThreshold
+    map_mask = numpy.zeros((num_ra, num_dec, num_chan), dtype=bool)
     nrow = 0
     
     # column name for spectral data
@@ -113,19 +116,31 @@ def get_data(infile, datatable, num_ra, num_dec, num_chan, rowlist, rowmap=None)
                 LOG.debug('median row for (%s,%s) is %s (mapped to %s)'%(ix, iy, median_row, mapped_row))
                 nrow += len(idxs)
                 #map_data[ix,iy,:] = tb.getcell('SPECTRA', median_row)
-                map_data[ix,iy,:] = tb.getcellslice(colname, mapped_row, [polid, 0], [polid, -1], [1,1]).real.squeeze()
+                this_data = tb.getcellslice(colname, mapped_row, [polid, 0], [polid, -1], [1,1]).real.squeeze()
+                this_mask = tb.getcellslice('FLAG', mapped_row, [polid, 0], [polid, -1], [1,1]).squeeze()
+                map_data[ix,iy,:] = this_data
+                map_mask[ix,iy,:] = this_mask
                 for row in (datatable.tb1.getcell('ROW', i) for i in idxs):
                     mapped_row = rowmap[row]
-                    LOG.debug('row %s: mapped_row %s'%(row, mapped_row))      
-                    integrated_data += tb.getcellslice(colname, mapped_row, [polid, 0], [polid, -1], [1,1]).real.squeeze()
+                    LOG.debug('row %s: mapped_row %s'%(row, mapped_row))
+                    this_data = tb.getcellslice(colname, mapped_row, [polid, 0], [polid, -1], [1,1]).real.squeeze()
+                    this_mask = tb.getcellslice('FLAG', mapped_row, [polid, 0], [polid, -1], [1,1]).squeeze()
+                    mask_as_binary = numpy.fromiter((0 if x == True else 1 for x in this_mask), dtype=int)
+                    integrated_data += this_data * mask_as_binary
+                    #integrated_data += tb.getcellslice(colname, mapped_row, [polid, 0], [polid, -1], [1,1]).real.squeeze()
+                    num_accumulated += mask_as_binary
             else:
                 LOG.debug('no data is available for (%s,%s)'%(ix,iy))
-    integrated_data /= nrow
+    #integrated_data /= nrow
+    integrated_data_masked = numpy.ma.masked_array(integrated_data, num_accumulated == 0)
+    integrated_data_masked /= num_accumulated
+    map_data_masked = numpy.ma.masked_array(map_data, map_mask)
     LOG.trace('integrated_data=%s'%(integrated_data))
+    LOG.trace('num_accumulated=%s'%(num_accumulated))
     LOG.trace('map_data.shape=%s'%(list(map_data.shape)))
     LOG.trace('map_data[0][0].shape=%s'%(map_data[0][0].shape))
 
-    return integrated_data, map_data
+    return integrated_data_masked, map_data_masked
 
 def get_lines(datatable, num_ra, rowlist):
     lines_map = collections.defaultdict(dict)
