@@ -240,16 +240,17 @@ class DataTableImpl( object ):
         vals = self.getcol(col)
         return [i for i in xrange(self.nrow) if vals[i] == val]
 
-    def get_row_index(self, antenna, ifno, polno=None):
+    def get_row_index(self, msid, antenna, ifno, polno=None):
+        mses = self.getcol('MS')
         ants = self.getcol('ANTENNA')
         ifs = self.getcol('IF')
         if polno is None:
-            ref = [antenna, ifno]
-            return [i for i in xrange(self.nrow) if [ants[i], ifs[i]] == ref]
+            ref = [msid, antenna, ifno]
+            return [i for i in xrange(self.nrow) if [mses[i], ants[i], ifs[i]] == ref]
         else:
             pols = self.getcol('POL')
-            ref = [antenna, ifno, polno]
-            return [i for i in xrange(self.nrow) if [ants[i], ifs[i], pols[i]] == ref]
+            ref = [msid, antenna, ifno, polno]
+            return [i for i in xrange(self.nrow) if [mses[i], ants[i], ifs[i], pols[i]] == ref]
 
     def has_key(self, name):
         return (name in self.tb2.keywordnames())
@@ -526,67 +527,99 @@ class DataTableImpl( object ):
             timegap = [mygap_s, mygap_l]
         return timegap
     
-    def _update_tsys(self,context, infile, tsystable, ifmap):
-        with casatools.TableReader(tsystable) as tb:
-            ifnos = tb.getcol('IFNO')
-            polnos = tb.getcol('POLNO')
-            times = tb.getcol('TIME')
-            tsys = {}
-            for i in xrange(tb.nrows()):
-                tsys[i] = tb.getcell('TSYS',i)
-        
-        if_from = ifmap.keys()
-        pollist = numpy.unique(polnos)
-        file_list = self.getkeyword('FILENAMES').tolist()
-        ant = file_list.index(os.path.basename(infile.rstrip('/')))
+    def _update_tsys(self, context, infile, tsystable, spwmap, to_fieldid, gainfield):
+        """
+        Transfer Tsys values in a Tsys calibration table and fill Tsys
+        values in DataTable.
+        Tsys in cal table are averaged by channels taking into account
+        of FLAG and linearly interpolated in time to derive values which
+        corresponds to TIME in DataTable.
 
-        spectral_windows = context.observing_run[ant].spectral_window
-                
-        for ifno_from in if_from:
-            for polno in pollist:
-                indices = numpy.where(numpy.logical_and(ifnos==ifno_from,polnos==polno))[0]
-                if len(indices) == 0:
+        Arguments
+            context: pipeline context
+            infile: the name of input MS
+            tsystable: the name of Tsys calibration table
+            spwmap: the list of SPW mapping
+            to_fieldid: FIELD_ID of data table to which Tsys is transferred
+            gainfield: how to find FIELD form which Tsys is extracted in cal table.
+        """
+        with casatools.TableReader(tsystable) as tb:
+            spws = tb.getcol('SPECTRAL_WINDOW_ID')
+            times = tb.getcol('TIME')
+            fieldids = tb.getcol('FIELD_ID')
+            antids = tb.getcol('ANTENNA1')
+            tsys_ave = {}
+            for i in xrange(tb.nrows()):
+                tsys = tb.getcell('FPARAM',i)
+                flag = tb.getcell('FLAG',i)
+                tsys_ave[i] = numpy.ma.masked_array(tsys, mask=(flag==False)).mean(axis=1).data
+
+        file_list = self.getkeyword('FILENAMES').tolist()
+        msid = file_list.index(os.path.abspath(infile.rstrip('/')))
+        msobj = context.observing_run.get_ms(infile)
+        to_antids = [a.id for a in msobj.antennas]
+        from_fields = []
+        if gainfield.upper() != 'NEAREST':
+            from_fields = [ fld.id for fld in msobj.get_fields(gainfield) ]
+
+        for spw_to, spw_from in enumerate(spwmap):
+            for ant_to in to_antids:
+                # select caltable row id by SPW and ANT
+                cal_idxs = numpy.where(numpy.logical_and(spws==spw_from, antids==ant_to))[0]
+                if len(cal_idxs)==0:
                     continue
-                
-                for ifno_to in ifmap[ifno_from]:
-                    # 2015/07/22 TN
-                    # Averaged Tsys is always applied due to change in CAS-7653
-                    #start_chan, end_chan = map_spwchans(spectral_windows[ifno_from], 
-                    #                                    spectral_windows[ifno_to])
-                    #atsys = [numpy.mean(tsys[i][start_chan:end_chan])
-                    atsys = [tsys[i][0]
-                             for i in indices]
-                    LOG.debug('atsys = %s' % atsys)
-                    rows = self.get_row_index(ant, ifno_to, polno)
-                    if len(atsys) == 1:
-                        for row in rows:
-                            self.tb1.putcell('TSYS', row, atsys[0])
+                dtrows = self.get_row_index(msid, ant_to, spw_to, None)
+                time_sel = times.take(cal_idxs)
+                field_sel = fieldids.take(cal_idxs)
+                for dt_id in dtrows:
+                    tref = self.tb1.getcell('TIME', dt_id)
+                    if gainfield=='':
+                        cal_field_idxs = cal_idxs
                     else:
-                        tsys_time = times.take(indices)
-                        for row in rows:
-                            tref = self.tb1.getcell('TIME', row)
-                            itsys = _interpolate(atsys, tsys_time, tref)
-                            self.tb1.putcell('TSYS', row, itsys)
+                        if gainfield.upper() == 'NEAREST':
+                            from_fields = field_sel.take(numpy.where(time_sel-tref==min(time_sel-tref)))[0]
+                        # select caltable row id by SPW, ANT, and gain field
+                        cal_field_idxs = cal_idxs.take(numpy.where([fid in from_fields for fid in field_sel])[0])
+                    if len(cal_field_idxs)==0:
+                        continue
+                    # the array, atsys, is in shape of len(cal_field_idxs) x npol unlike the other arrays.
+                    atsys = numpy.array([tsys_ave[i] for i in cal_field_idxs])
+                    LOG.debug('atsys = %s' % str(atsys))
+                    if atsys.shape[0] == 1: #only one Tsys measurement selcted
+                        self.tb1.putcell('TSYS', dt_id, atsys[0,:])
+                    else:
+                        tsys_time = times.take(cal_field_idxs)
+                        itsys = [ _interpolate(atsys[:,ipol], tsys_time, tref) \
+                                 for ipol in range(atsys.shape[-1]) ]
+                        self.tb1.putcell('TSYS', dt_id, itsys)
 
     def _update_flag(self, context, infile):
+        """
+        Read MS and update online flag status of DataTable.
+        Arguments:
+            context: pipeline context instance
+            infile: the name of MS to transfer flag from
+        NOTE this method should be called before applying the other flags.
+        """
         LOG.info('Updating online flag for %s'%(os.path.basename(infile)))
-        antenna = context.observing_run.st_names.index(os.path.basename(infile))
-        LOG.info('antenna=%s'%(antenna))
-        antennas = self.tb1.getcol('ANTENNA')
+        msobj = context.observing_run.get_ms(name=os.path.abspath(infile))
+        msidx = None
+        for i in xrange(len(context.observing_run.measurement_sets)):
+            if msobj == context.observing_run.measurement_sets[i]:
+                msidx = i
+                break
+        LOG.info('MS idx=%d)'%(msidx))
+        msidcol = self.tb1.getcol('MS')
         rows = self.tb1.getcol('ROW')
         flag_permanent = self.tb2.getcol('FLAG_PERMANENT')
-        online_flag = flag_permanent[OnlineFlagIndex,:]           
-        index = numpy.where(antennas == antenna)
-        myrows = rows[index]
+        online_flag = flag_permanent[:,OnlineFlagIndex,:]           
+        index = numpy.where(msidcol == msidx)
         with casatools.TableReader(infile) as tb:
-            #for i in index:
-            #    row = rows[i]
-            #    LOG.info('index %s row %s'%(i,row))
-            for i in index[0]:
-                row = rows[i]
-                flagrow = tb.getcell('FLAGROW', row)
-                flag = tb.getcell('FLAGTRA', row)
-                online_flag[i] = (flagrow == 0 and any(flag == 0))
+            for dt_row in index[0]:
+                ms_row = rows[dt_row]
+                flag = tb.getcell('FLAG', ms_row)
+                for ipol in range(online_flag.shape[0]):
+                    online_flag[ipol, dt_row] = 0 if flag[ipol].all() else 1
         self.tb2.putcol('FLAG_PERMANENT', flag_permanent)
         
 def map_spwchans(atm_spw, science_spw):
