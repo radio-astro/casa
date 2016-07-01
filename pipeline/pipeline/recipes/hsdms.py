@@ -76,11 +76,11 @@ def hsdms (vislist, importonly=False, pipelinemode='automatic', interactive=True
             # Baseline subtraction with automatic line detection
             hsdms_baseline (pipelinemode=pipelinemode)
             
-        #     # Flag data based on baseline quality
-        #     hsdms_blflag (pipelinemode=pipelinemode)
+            # Flag data based on baseline quality
+            hsdms_blflag (pipelinemode=pipelinemode)
             
-        # # Imaging
-        # hsdms_imaging (pipelinemode=pipelinemode)
+        # Imaging
+        hsdms_imaging (pipelinemode=pipelinemode)
 
         # Export the data
         hsdms_exportdata (pipelinemode=pipelinemode)

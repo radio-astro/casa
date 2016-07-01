@@ -53,7 +53,25 @@
     </ProcessingCommand>
     
     <ProcessingCommand>
+        <Command xmlns="">hsdms_blflag</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
         <Command xmlns="">hsdms_baseline</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hsdms_blflag</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hsdms_imaging</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
@@ -63,4 +81,5 @@
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
+
 </ProcessingProcedure>
