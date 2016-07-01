@@ -569,10 +569,10 @@ class DataTableImpl( object ):
                 if len(cal_idxs)==0:
                     continue
                 dtrows = self.get_row_index(msid, ant_to, spw_to, None)
-                time_sel = times.take(cal_idxs)
+                time_sel = times.take(cal_idxs) #in sec
                 field_sel = fieldids.take(cal_idxs)
                 for dt_id in dtrows:
-                    tref = self.tb1.getcell('TIME', dt_id)
+                    tref = self.tb1.getcell('TIME', dt_id)*86400 # day->sec
                     if gainfield=='':
                         cal_field_idxs = cal_idxs
                     else:
@@ -588,7 +588,7 @@ class DataTableImpl( object ):
                     if atsys.shape[0] == 1: #only one Tsys measurement selcted
                         self.tb1.putcell('TSYS', dt_id, atsys[0,:])
                     else:
-                        tsys_time = times.take(cal_field_idxs)
+                        tsys_time = times.take(cal_field_idxs) #in sec
                         itsys = [ _interpolate(atsys[:,ipol], tsys_time, tref) \
                                  for ipol in range(atsys.shape[-1]) ]
                         self.tb1.putcell('TSYS', dt_id, itsys)
