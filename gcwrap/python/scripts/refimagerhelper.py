@@ -305,9 +305,13 @@ class PySynthesisImager:
 
 #############################################
     def makePB(self):
-        self.SItool.makepb()
+        self.makePBCore()
         for immod in range(0,self.NF):
             self.PStools[immod].normalizeprimarybeam() 
+
+#############################################
+    def makePBCore(self):
+        self.SItool.makepb()
 
 #############################################
 
@@ -741,6 +745,20 @@ class PyParallelContSynthesisImager(PySynthesisImager):
         for node in self.listOfNodes:
              joblist.append( self.PH.runcmd("toolsi.makepsf()",node) )
         self.PH.checkJobs( joblist ) # this call blocks until all are done.
+
+#############################################
+    def makePBCore(self):
+        joblist=[]
+        # Only one node needs to make the PB. It reads the freq from the image coordsys
+        joblist.append( self.PH.runcmd("toolsi.makepb()",self.listOfNodes[0]) )
+        self.PH.checkJobs( joblist )
+
+        for immod in range(0,self.NF):
+            partname = self.allimpars[str(immod)]['imagename']+'.n'+str(self.listOfNodes[0]) + '.pb'
+            fullname = self.allimpars[str(immod)]['imagename']+'.pb'
+            if os.path.exists( partname ):
+                shutil.rmtree( fullname , True )
+                shutil.copytree( partname, fullname )
 
 #############################################
 
