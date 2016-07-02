@@ -1421,6 +1421,7 @@ class ImagerParameters():
                  pbmask=0.0,
                  maskthreshold='',
                  maskresolution='',
+                 nmask=0,
 
 #                 usescratch=True,
 #                 readonly=True,
@@ -1478,7 +1479,7 @@ class ImagerParameters():
         self.alldecpars = { self.defaultKey: { 'id':0, 'deconvolver':deconvolver, 'nterms':nterms, 
                                     'scales':scales, 'scalebias':scalebias, 'restoringbeam':restoringbeam, 'usemask':usemask, 
                                     'mask':mask, 'pbmask':pbmask, 'maskthreshold':maskthreshold, 
-                                    'maskresolution':maskresolution,
+                                    'maskresolution':maskresolution,'nmask':nmask,
                                     'interactive':interactive, 'startmodel':startmodel} }
 
         ######### Iteration control. 

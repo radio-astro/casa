@@ -1763,7 +1763,7 @@ HPX HEALPix grid.  -->
                                              or if an externally produced .pb image exists on disk)
 
                        auto-thresh: automask  by threshold for deconvolution
-                          subparameters : maskthreshold, maskresolution, pbmask
+                          subparameters : maskthreshold, maskresolution, pbmask, nmask
                           
                           if pbmask is >0.0, after automask algorithm is run, it limits the mask to within 
                                              a pb gain level of pbmask (This option will work only with 
@@ -1888,6 +1888,14 @@ HPX HEALPix grid.  -->
                                   maskresolution=''  (default, use a restoring beam major axis)
 </description>
 	    <value type="string"></value>
+    </param>
+    <param type="int" name="nmask" subparam="true">
+	   <shortdescription>the maximum number of masks to be added by automasking</shortdescription>
+<description>Maximum number of mask regions to be added by automasking at the beginning each minor cycles run
+                       Examples : nmask=2 
+                                  nmask=0  (default, set no limit on the number of mask regions to be added)
+</description>
+	    <value type="int">0</value>
     </param>
            
 
@@ -2413,6 +2421,7 @@ HPX HEALPix grid.  -->
          <default param="pbmask"><value>0.0</value></default>
          <default param="maskthreshold"><value>""</value></default>
          <default param="maskresolution"><value>""</value></default>
+         <default param="nmask"><value>0</value></default>
        </equals>
    </when>
 

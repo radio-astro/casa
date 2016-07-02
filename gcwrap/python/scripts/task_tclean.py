@@ -113,6 +113,7 @@ def tclean(
     pbmask,#='',
     maskthreshold,#='',
     maskresolution,#='',
+    nmask,#=0,
 
 
     ## Misc
@@ -237,6 +238,7 @@ def tclean(
         pbmask=pbmask,
         maskthreshold=maskthreshold,
         maskresolution=maskresolution,
+        nmask=nmask,
 
         savemodel=savemodel
         )
