@@ -609,6 +609,18 @@ def make_row_map(src_ms, derived_vis):
     LOG.debug('Elapsed %s sec'%(end_time - start_time))
     return rowmap
 
+def get_datacolumn_name(vis):
+    colname_candidates = ['CORRECTED_DATA', 'FLOAT_DATA', 'DATA']
+    with casatools.TableReader(vis) as tb:
+        colnames = tb.colnames()
+    colname = None
+    for name in colname_candidates:
+        if name in colnames:
+            colname = name
+            break
+    assert colname is not None
+    return colname
+
 @contextlib.contextmanager
 def asap_force_storage(storage='disk'):
     import asap as sd

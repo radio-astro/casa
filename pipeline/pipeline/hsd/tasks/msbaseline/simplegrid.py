@@ -20,7 +20,7 @@ DO_TEST = False
 
 class SDMSSimpleGriddingInputs(common.SingleDishInputs):
     def __init__(self, context, vis_list, field_list, antenna_list, spwid_list, 
-                 index_list, nplane=None, colname=None):
+                 index_list, nplane=None):
         self._init_properties(vars())
         
     @property
@@ -30,8 +30,6 @@ class SDMSSimpleGriddingInputs(common.SingleDishInputs):
     @nplane.setter
     def nplane(self, value):
         self._nplane = value
-        
-    colname = basetask.property_with_default('colname', 'CORRECTED_DATA')
         
 class SDMSSimpleGriddingResults(common.SingleDishResults):
     def __init__(self, task=None, success=None, outcome=None):
@@ -49,12 +47,12 @@ class SDMSSimpleGridding(common.SingleDishTaskTemplate):
     #@common.datatable_setter
     def prepare(self):
         datatable = DataTable(self.context.observing_run.ms_datatable_name)
-        colname = self.inputs.colname
+        #colname = self.inputs.colname
         grid_table = self.make_grid_table(datatable)
         # LOG.debug('work_dir=%s'%(work_dir))
         import time
         start = time.time()
-        retval = self.grid(grid_table=grid_table, datatable=datatable, ms_colname=colname)
+        retval = self.grid(grid_table=grid_table, datatable=datatable)
         end = time.time()
         LOG.debug('Elapsed time: %s sec' % (end - start))
         
@@ -185,7 +183,7 @@ class SDMSSimpleGridding(common.SingleDishTaskTemplate):
         return grid_table
 
 
-    def grid(self, grid_table, datatable, ms_colname):
+    def grid(self, grid_table, datatable):
         """
         The process does re-map and combine spectrum for each position
         grid_table format:
@@ -308,6 +306,7 @@ class SDMSSimpleGridding(common.SingleDishTaskTemplate):
             #AntID = antenna_list[i]
             #with casatools.TableReader(infiles[i]) as tb:
             vis = ms.work_data
+            ms_colname = utils.get_datacolumn_name(vis)
             rowmap = utils.make_row_map_for_baselined_ms(ms)
             LOG.debug('Start reading data from "%s"'%(os.path.basename(vis)))
             LOG.debug('There are %s entries'%(len(bind_to_grid[vis])))

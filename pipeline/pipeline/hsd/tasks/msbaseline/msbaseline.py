@@ -309,11 +309,11 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
                     if (not hasattr(ms, 'deviation_mask')) or ms.deviation_mask is None:
                         ms.deviation_mask = {}
                     if not ms.deviation_mask.has_key((fieldid,antennaid,spwid)):
-                        LOG.debug('Evaluating deviation mask for %s field %s spw %s' % (ms.basename, fieldid, spwid))
+                        LOG.debug('Evaluating deviation mask for %s field %s antenna %s spw %s' % (ms.basename, fieldid, antennaid, spwid))
                         mask_list = self.evaluate_deviation_mask(ms.name, fieldid, antennaid, spwid)
                         LOG.debug('deviation mask = %s' % (mask_list))
                         ms.deviation_mask[(fieldid, antennaid, spwid)] = mask_list
-                        deviation_mask[ms.basename][(fieldid, antennaid, spwid)] = mask_list
+                    deviation_mask[ms.basename][(fieldid, antennaid, spwid)] = ms.deviation_mask[(fieldid, antennaid, spwid)]
                     LOG.debug('evaluated deviation mask is {v}'.format(v=ms.deviation_mask[(fieldid, antennaid, spwid)]))
             else:
                 LOG.info('Deviation mask is disabled by the user')
