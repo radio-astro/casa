@@ -1368,6 +1368,24 @@ class test_mask(testref_base):
           report=self.th.checkall(imexist=[self.img+'.mask'], imval=[(self.img+'.mask',1.0,[50,50,0,0]),(self.img+'.mask',0.0,[60,85,0,0]),(self.img+'2.mask',0.0,[60,30,0,0])])
           self.checkfinal(report)
 
+     def test_mask_autobox_nmask(self):
+          """ [mask] test_mask_autobox_nmask : Autoboxing with nmask """
+          # this won't be triggering actual pruning but just to check going into write places
+          self.prepData('refim_point.ms')
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10,deconvolver='hogbom',
+                       interactive=0,usemask='auto-thresh',nmask=3)
+          report=self.th.checkall(imexist=[self.img+'.mask'], imval=[(self.img+'.mask',1.0,[50,50,0,0]),(self.img+'.mask',0.0,[50,85,0,0])])
+          self.checkfinal(report)
+           
+     def test_mask_autobox2_nmask(self):
+          """ [mask] test_mask_autobox2_nmask : Autoboxing (no binning) with nmask"""
+          # this won't be triggering actual pruning but just to check going into write places
+          self.prepData('refim_point.ms')
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10,deconvolver='hogbom',
+                       interactive=0,usemask='auto-thresh2',nmask=3)
+          report=self.th.checkall(imexist=[self.img+'.mask'], imval=[(self.img+'.mask',1.0,[50,50,0,0]),(self.img+'.mask',0.0,[50,85,0,0])])
+          self.checkfinal(report)
+      
 #     def test_mask_pbmask(self):
 #          """ [mask] test_mask_pbmask :  pb mask """
 #

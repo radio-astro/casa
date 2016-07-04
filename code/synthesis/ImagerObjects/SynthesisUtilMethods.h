@@ -346,6 +346,7 @@ public:
   String maskResolution;
   Float fracOfPeak;
   Float maskResByBeam;
+  Int nMask;
 
 
  

@@ -117,6 +117,18 @@ public:
                            const Record& theStats,
                            const Float& sigma=3.0,
                            const Int nmask=0);
+
+  // no binning version
+  void autoMaskByThreshold2 (ImageInterface<Float>& mask,
+                           const ImageInterface<Float>& res, 
+                           const ImageInterface<Float>& psf, 
+                           const Quantity& resolution, 
+                           const Float& resbybeam, 
+                           const Quantity& qthreshold, 
+                           const Float& fracofpeak, 
+                           const Record& theStats,
+                           const Float& sigma=3.0,
+                           const Int nmask=0);
                            
   SHARED_PTR<ImageInterface<Float> > makeMaskFromBinnedImage (
                                const ImageInterface<Float>& image, 
@@ -142,6 +154,7 @@ public:
                         const Float& fracpeak=0.0,
                         const String& resolution="",
                         const Float& resbybeam=0.0,
+                        const Int nmask=0,
                         Float pblimit=0.1);
 
   // check if input image is a mask image with 0 or a value (if normalize=true, 1)

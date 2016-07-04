@@ -793,6 +793,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     thestats.get(RecordFieldId("rms"), rms);
     os<< LogIO::DEBUG1 << "All rms's on the input image -- rms.nelements()="<<rms.nelements()<<" rms="<<rms<<LogIO::POST;
     os<< LogIO::DEBUG1 << "All max's on the input image -- max.nelements()="<<max.nelements()<<" max="<<max<<LogIO::POST;
+    //os<< "mask algortihm ="<<alg<< LogIO::POST;
     if (alg==String("") || alg==String("onebox")) {
       //cerr<<" calling makeAutoMask(), simple 1 cleanbox around the max"<<endl;
       makeAutoMask(imstore);
@@ -800,6 +801,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     else if (alg==String("thresh")) {
       autoMaskByThreshold(*tempmask, *tempres, *temppsf, qreso, resbybeam, qthresh, fracofpeak, thestats, sigma, nmask);
       //cerr<<" automaskbyThreshold...."<<endl;
+      tempmask->get(maskdata);
+      imstore->mask()->put(maskdata);
+    }
+    else if (alg==String("thresh2")) {
+      autoMaskByThreshold2(*tempmask, *tempres, *temppsf, qreso, resbybeam, qthresh, fracofpeak, thestats, sigma, nmask);
       tempmask->get(maskdata);
       imstore->mask()->put(maskdata);
     } 
@@ -822,15 +828,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Double rmsthresh, minrmsval, maxrmsval, minmaxval, maxmaxval;
     IPosition minrmspos, maxrmspos, minmaxpos, maxmaxpos;
     Int npix;
-
     //for debug set to True to save intermediate mask images on disk
-    Bool debug(False);
+    Bool debug;
+    debug = False;
 
     //automask stage selecitons
     Bool dobin(True);
     Bool doregrid(True);
     Bool doconvolve(True);
-    Bool dothresh(False);
 
     // taking account for beam or input resolution
     TempImage<Float> tempmask(mask.shape(), mask.coordinates());
@@ -917,22 +922,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     SPCIIF tempIm2_ptr(tempIm2);
     SPIIF tempIm3_ptr(tempIm);
     SPIIF tempIm_ptr;
-    SPIIF tempIm4_ptr;
-    // create a mask based on raw image
-    if (debug && (rmsthresh <= maxmaxval ) ) {
-      os <<"run pruneRegions to the input residual image..."<<LogIO::POST;
-      tempIm4_ptr = pruneRegions(res, rmsthresh, 0, npix);
-    }
-    // for debug
-    if (debug) { 
-      PagedImage<Float> prunedCutOff(TiledShape(tempIm4_ptr.get()->shape(),tempIm4_ptr.get()->niceCursorShape()), tempIm4_ptr.get()->coordinates(), "rawcutoff-pruned.Im");
-      PagedImage<Float> rawCutOff(TiledShape(res.shape(),res.niceCursorShape()), res.coordinates(), "rawcutoff.Im");
-      rawCutOff.copyData( (LatticeExpr<Float>)( iif(res > rmsthresh, 1.0, 0.0  ) ) );
-      os << "save pruned cutoff image"<<LogIO::POST;
-      prunedCutOff.copyData( (LatticeExpr<Float>)( iif(*(tempIm4_ptr.get()) > rmsthresh, 1.0, 0.0  ) ) );
-      os << "DONE saving pruned cutoff image"<<LogIO::POST;
-    }
- 
+    //
     //binning stage
     if (dobin) {
       tempIm_ptr =  makeMaskFromBinnedImage(res, npix, npix, fracofpeak, sigma, nmask, rmsthresh);
@@ -977,20 +967,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       os<<"done convolving the mask "<<LogIO::POST;
     }
 
-    Double afactor;
-    if (dothresh) {
-        cerr<<"dothresh..."<<endl;
-        TempImage<Float>* inTempIm = new TempImage<Float>(res.shape(), res.coordinates() );
-        inTempIm->copyData(res);
-        SPIIF tempIm3_ptr(inTempIm);
-        tempIm_ptr = tempIm3_ptr;
-        afactor=1.0;
-    }
-    else {
-        // fudge factor?  
-        afactor = 2.0;
-        //afactor = 1.0;
-    }
     //os <<"Final thresholding with rmsthresh/afactor="<< rmsthresh/afactor <<LogIO::POST;
     //LatticeExpr<Float> themask( iif( *(tempIm_ptr.get()) > rmsthresh/afactor, 1.0, 0.0 ));
     // previous 1/0 mask (regridded), max pix value should be <1.0, take arbitary cut off at 0.1
@@ -1002,11 +978,118 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     tempthemask.copyData(themask);
     ***/
 
-    os <<"Lattice themask is created..."<<LogIO::POST;
+    //os <<"Lattice themask is created..."<<LogIO::POST;
     //LatticeExpr<Float> themask( iif( tempconvim > rmsthresh/afactor, 1.0, 0.0 ));
     mask.copyData( (LatticeExpr<Float>)( iif((mask + themask) > 0.0, 1.0, 0.0  ) ) );
     os <<LogIO::DEBUG1 <<"add previous mask and the new mask.."<<LogIO::POST;
   }
+
+  void SDMaskHandler::autoMaskByThreshold2(ImageInterface<Float>& mask,
+                                          const ImageInterface<Float>& res, 
+                                          const ImageInterface<Float>& psf, 
+                                          const Quantity& resolution,
+                                          const Float& resbybeam,
+                                          const Quantity& qthresh, 
+                                          const Float& fracofpeak,
+                                          const Record& stats, 
+                                          const Float& sigma, 
+                                          const Int nmask) 
+  {
+    LogIO os( LogOrigin("SDMaskHandler","autoMaskByThreshold2",WHERE) );
+    Array<Double> rms, max;
+    Double rmsthresh, minrmsval, maxrmsval, minmaxval, maxmaxval;
+    IPosition minrmspos, maxrmspos, minmaxpos, maxmaxpos;
+    Int npix;
+
+    //for debug set to True to save intermediate mask images on disk
+    //Bool debug(False);
+
+    // taking account for beam or input resolution
+    TempImage<Float> tempmask(mask.shape(), mask.coordinates());
+    IPosition shp = mask.shape();
+    CoordinateSystem incsys = res.coordinates();
+    Vector<Double> incVal = incsys.increment(); 
+    Vector<String> incUnit = incsys.worldAxisUnits();
+    Quantity qinc(incVal[0],incUnit[0]);
+    if (resolution.get().getValue() ) {
+      npix = Int(abs( resolution/(qinc.convert(resolution),qinc) ).getValue() );
+      os << LogIO::NORMAL2 << "Use the input resolution:"<<resolution<<" for pruning "<< LogIO::POST;
+      os << LogIO::DEBUG1 << "inc = "<<qinc.getValue(resolution.getUnit())<<LogIO::POST;
+    }
+    else {
+      //use beam from residual or psf
+      ImageInfo resInfo = res.imageInfo();
+      ImageInfo psfInfo = psf.imageInfo();
+      GaussianBeam beam;
+      if (resInfo.hasBeam() || psfInfo.hasBeam()) {
+        if (resInfo.hasSingleBeam()) {
+          beam = resInfo.restoringBeam();  
+        }
+        else if (resInfo.hasMultipleBeams()) {
+          beam = CasaImageBeamSet(resInfo.getBeamSet()).getCommonBeam(); 
+        }
+        else if (psfInfo.hasSingleBeam()) {
+          beam = psfInfo.restoringBeam();  
+        }
+        else {
+          beam = CasaImageBeamSet(psfInfo.getBeamSet()).getCommonBeam(); 
+        }
+        Quantity bmaj = beam.getMajor();
+        if (resbybeam > 0.0 ) {
+          npix = Int( Double(resbybeam) * abs( (bmaj/(qinc.convert(bmaj),qinc)).get().getValue() ) );
+          os << LogIO::NORMAL2 << "Use "<< resbybeam <<" x  beam size(maj)="<< Double(resbybeam)*bmaj <<" for pruning."<< LogIO::POST;
+        }
+        else {
+          npix = Int( abs( (bmaj/(qinc.convert(bmaj),qinc)).get().getValue() ) );
+          os << LogIO::NORMAL2 << "Use a beam size(maj):"<<bmaj<<" for pruning."<< LogIO::POST;
+        } 
+      }
+      else {
+         throw(AipsError("No restoring beam(s) in the input image/psf or resolution is given"));
+      }
+    }
+    os << LogIO::DEBUG1 << "Acutal bin size used: npix="<<npix<< LogIO::POST;
+
+    // Determine threshold from input image stats
+    stats.get(RecordFieldId("max"), max);
+    stats.get(RecordFieldId("rms"), rms);
+    minMax(minmaxval,maxmaxval,minmaxpos, maxmaxpos, max);
+    minMax(minrmsval,maxrmsval,minrmspos, maxrmspos, rms); 
+    os << LogIO::DEBUG1 <<"stats on the image: max="<<maxmaxval<<" rms="<<maxrmsval<<endl;
+    if (fracofpeak) {
+      rmsthresh = maxmaxval * fracofpeak; 
+      os << LogIO::NORMAL <<"Threshold by fraction of the peak(="<<fracofpeak<<") * max: "<<rmsthresh<< LogIO::POST;
+      os << LogIO::DEBUG1 <<"max at "<<maxmaxpos<<", dynamic range = "<<maxmaxval/rms(maxmaxpos) << LogIO::POST;
+    }
+    else if (sigma) {
+      //cerr<<"minval="<<minval<<" maxval="<<maxval<<endl;
+      rmsthresh = maxrmsval * sigma;
+      os << LogIO::NORMAL <<"Threshold by sigma(="<<sigma<<")* rms (="<<maxrmsval<<") :"<<rmsthresh<< LogIO::POST;
+      os << LogIO::DEBUG1 <<"max rms at "<<maxrmspos<<", dynamic range = "<<max(maxrmspos)/maxrmsval << LogIO::POST;
+    }      
+    else {
+      rmsthresh = qthresh.getValue(Unit("Jy"));
+      if ( rmsthresh==0.0 ) 
+        { throw(AipsError("Threshold for automask is not set"));}
+    }
+    os << LogIO::NORMAL2 <<" thresh="<<rmsthresh<<LogIO::POST;
+
+    SHARED_PTR<ImageInterface<Float> > tempIm_ptr = pruneRegions(res, rmsthresh, nmask, npix);
+    LatticeExpr<Float> themask( iif( *(tempIm_ptr.get()) > rmsthresh, 1.0, 0.0 ));
+
+    //for debug
+    /***
+    PagedImage<Float> tempthemask(TiledShape(tempIm_ptr.get()->shape()), tempIm_ptr.get()->coordinates(),"tempthemask.Im");
+    tempthemask.copyData(themask);
+    ***/
+
+    //os <<"Lattice themask is created..."<<LogIO::POST;
+    //LatticeExpr<Float> themask( iif( tempconvim > rmsthresh/afactor, 1.0, 0.0 ));
+    mask.copyData( (LatticeExpr<Float>)( iif((mask + themask) > 0.0, 1.0, 0.0  ) ) );
+    os <<LogIO::DEBUG1 <<"add previous mask and the new mask.."<<LogIO::POST;
+
+  }//end of makeAutoMaskByThreshold2
+
 
   SHARED_PTR<ImageInterface<Float> >  SDMaskHandler::makeMaskFromBinnedImage(const ImageInterface<Float>& image, 
                                                                              const Int nx, 
@@ -1114,6 +1197,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SHARED_PTR<casa::ImageInterface<Float> >  SDMaskHandler::pruneRegions(const ImageInterface<Float>& image, Double& thresh, Int nmask, Int npix)
   {
     LogIO os( LogOrigin("SDMaskHnadler", "pruneRegions",WHERE) );
+    Bool debug(False);
 
     IPosition fullimShape=image.shape();
     TempImage<Float>* fullIm = new TempImage<Float>(TiledShape(fullimShape, image.niceCursorShape()), image.coordinates());
@@ -1124,7 +1208,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       fullIm->copyData(image);
       return SHARED_PTR<ImageInterface<Float> >(fullIm);
     }  
-    os << "pruneRegions with no. mask"<<nmask<<" size="<<npix<<LogIO::POST;
+    os <<LogIO::DEBUG1<< "pruneRegions with nmask="<<nmask<<", size="<<npix<<LogIO::POST;
     
     IPosition shp = image.shape();
     //cerr<<"shp = "<<shp<<endl;
@@ -1161,7 +1245,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     id.setFit(False);
     os << LogIO::DEBUG1<<"decomposeImage()..."<<LogIO::POST;
     id.decomposeImage();
-    id.printComponents();
+    if (debug) 
+      id.printComponents();
     uInt nRegion = id.numRegions();
     os << "Found " << nRegion <<" regions"<<LogIO::POST;
     Block<IPosition> blcs(nRegion);
@@ -1190,6 +1275,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //PtrBlock<const WCRegion *> wbox(nbox);
     PtrBlock<const WCRegion *> wbox;
     uInt iSubComp=0;
+    uInt removeByNMask=0;
+    uInt removeBySize=0;
     for (uInt icomp=0; icomp < sortedindx.nelements(); icomp++) {
       Bool removeit(False);
       Vector<Quantum<Double> > qblc(ndim);
@@ -1212,20 +1299,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
 
       if (npix > 0) {
-        os<<"pruning regions by size < "<<npix<<LogIO::POST;
+        //os<<"pruning regions by size < "<<npix<<LogIO::POST;
         Int xboxdim = ptrc[0] - pblc[0];
         Int yboxdim = ptrc[1] - pblc[1];
         //cerr<<"xboxdim = "<<xboxdim<<" yboxdim="<<yboxdim<<endl;
         if (( xboxdim < npix || yboxdim < npix ) && xboxdim*yboxdim < npix*npix ) {
           removeit = True;
+          removeBySize++;
         }
       }
-      if (nmask > 0 && icomp >= (uInt)nmask ) removeit=True; 
-        if (removeit) {
-          wbox.resize(iSubComp+1);
-          wbox[iSubComp]= new WCBox (qblc, qtrc, cSys, absRel);
-          iSubComp++;
-        }
+      if (nmask > 0 && icomp >= (uInt)nmask ) {
+        removeit=True; 
+        removeByNMask++;
+      }
+      
+      if (removeit) {
+        wbox.resize(iSubComp+1);
+        wbox[iSubComp]= new WCBox (qblc, qtrc, cSys, absRel);
+        iSubComp++;
+      }
     } // for icomp  
 
     //cerr<<"iSubComp="<<iSubComp<<endl;
@@ -1237,13 +1329,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       regionToMask(*tempIm,*boxImageRegion, Float(0.0)); 
       //cerr<<"Done regionToMask..."<<endl;
       os <<"pruneRegions removed "<<iSubComp<<" regions from the mask image"<<LogIO::POST;
+      os <<"  (reasons: "<< removeBySize<<" by size(maskresolution) "<<", "<<removeByNMask<<" by nmask)" <<LogIO::POST;
       for (uInt k=0; k < wbox.nelements(); k++) {
         delete wbox[k];
       }
     }
     else {
-      cerr<<"No pruning"<<endl;
-      os << LogIO::DEBUG1 << "No regions are removed by pruning" << LogIO::POST;
+      os <<"No regions are removed by pruning" << LogIO::POST;
     }
     //
     // Inserting pruned result image to the input image
@@ -1306,11 +1398,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                                        const Float& fracofpeak, 
                                        const String& resolution,
                                        const Float& resbybeam, 
+                                       const Int nmask,
                                        Float pblimit)
   { 
     LogIO os( LogOrigin("SDMaskHandler","autoMaskWithinPB",WHERE) );
 
-    autoMask( imstore, alg, threshold, fracofpeak, resolution, resbybeam);
+    autoMask( imstore, alg, threshold, fracofpeak, resolution, resbybeam, nmask);
 
     if( imstore->hasPB() ) // Projection algorithms will have this.
       {

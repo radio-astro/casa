@@ -1776,6 +1776,7 @@ HPX HEALPix grid.  -->
               <value>user</value>
               <value>pb</value>
 	      <value>auto-thresh</value>
+	      <value>auto-thresh2</value>
 	    </allowed>
     </param>
 
@@ -2418,6 +2419,13 @@ HPX HEALPix grid.  -->
        </equals>
        <!-- auto masks -->
        <equals type="string" value="auto-thresh"> 
+         <default param="pbmask"><value>0.0</value></default>
+         <default param="maskthreshold"><value>""</value></default>
+         <default param="maskresolution"><value>""</value></default>
+         <default param="nmask"><value>0</value></default>
+       </equals>
+       <!-- auto mask by direct threshold -->
+       <equals type="string" value="auto-thresh2"> 
          <default param="pbmask"><value>0.0</value></default>
          <default param="maskthreshold"><value>""</value></default>
          <default param="maskresolution"><value>""</value></default>

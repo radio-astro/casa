@@ -3133,6 +3133,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
           {
             autoMaskAlgorithm = "thresh";
           }
+        else if( maskType=="auto-thesh2" )
+          {
+            autoMaskAlgorithm = "thresh2";
+          }
         else if( maskType=="auto-onebox" ) 
           {
             autoMaskAlgorithm = "onebox";
@@ -3190,7 +3194,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
               }
             else 
               {
-                err += "maskthreshold must be a string, float, or double";
+                err += "maskthreshold must be a string, float, or double\n";
               }
            }
         if( inrec.isDefined("maskresolution") ) 
@@ -3214,11 +3218,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
               }
             else 
               {
-                err += "maskresolution must be a string, float, or double";
+                err += "maskresolution must be a string, float, or double\n";
               }
            }
              
        
+        if( inrec.isDefined("nmask") ) 
+          {
+            if( inrec.dataType("nmask")==TpInt )
+              {
+                err+= readVal(inrec, String("nmask"), nMask );
+              }
+            else 
+              {
+                err+= "nmask must be an integer\n";
+              }
+          }
 
         if( inrec.isDefined("restoringbeam") )     
 	  {
@@ -3345,6 +3360,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     maskThreshold="";
     maskResolution="";
     fracOfPeak=0.0; 
+    nMask=0;
     interactive=False;
   }
 
@@ -3377,6 +3393,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         decpar.define("maskthreshold",maskThreshold);
       }
     decpar.define("maskresolution",maskResolution);
+    decpar.define("nmask",nMask);
     decpar.define("interactive",interactive);
 
     return decpar;

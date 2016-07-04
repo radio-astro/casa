@@ -146,6 +146,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
           {
             itsAutoMaskAlgorithm="thresh";
           }
+        else if(itsMaskType=="auto-thresh2")
+          {
+            itsAutoMaskAlgorithm="thresh2";
+          }
         else if(itsMaskType=="auto-onebox")
           {
             itsAutoMaskAlgorithm="onebox";
@@ -169,6 +173,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         itsFracOfPeak = decpars.fracOfPeak;
         itsMaskResolution = decpars.maskResolution;
         itsMaskResByBeam = decpars.maskResByBeam;
+        itsNMask = decpars.nMask;
 	itsIsInteractive = decpars.interactive;
       }
     catch(AipsError &x)
@@ -449,10 +454,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      //modify mask using automask otherwise no-op
      if ( itsAutoMaskAlgorithm != "" )  {
        if ( itsPBMask > 0.0 ) {
-         itsMaskHandler->autoMaskWithinPB( itsImages, itsAutoMaskAlgorithm, itsMaskThreshold, itsFracOfPeak, itsMaskResolution, itsMaskResByBeam, itsPBMask);
+         itsMaskHandler->autoMaskWithinPB( itsImages, itsAutoMaskAlgorithm, itsMaskThreshold, itsFracOfPeak, itsMaskResolution, itsMaskResByBeam, itsNMask, itsPBMask);
        }
        else {
-         itsMaskHandler->autoMask( itsImages, itsAutoMaskAlgorithm, itsMaskThreshold, itsFracOfPeak, itsMaskResolution, itsMaskResByBeam);
+         itsMaskHandler->autoMask( itsImages, itsAutoMaskAlgorithm, itsMaskThreshold, itsFracOfPeak, itsMaskResolution, itsMaskResByBeam, itsNMask);
        }
      }
   }
