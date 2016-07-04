@@ -207,6 +207,11 @@ class Tclean(cleanbase.CleanBase):
             # To avoid noisy edge channels, use only the LSRK frequency
             # intersection and skip one channel on either end.
             if0, if1, channel_width = inputs.heuristics.lsrk_freq_intersection(inputs.vis, inputs.field, inputs.spw)
+            if (if0 == -1) or (if1 == -1):
+                LOG.error('No LSRK frequency overlap for Field %s SPW %s' % (inputs.field, inputs.spw))
+                result.error = '%s/%s/spw%s clean error: %s' % (inputs.field, inputs.intent, inputs.spw)
+                return result
+
             inputs.start = '%sGHz' % ((if0+channel_width) / 1e9)
             inputs.width = '%sMHz' % ((channel_width) / 1e6)
             inputs.nchan = int((if1 - if0 - 2 * channel_width) / channel_width)

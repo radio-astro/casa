@@ -123,6 +123,7 @@ class FindCont(basetask.StandardTaskTemplate):
                                    target['intent'] in scan.intents and
                                    re.search(pattern=re_field, string=str(scan.fields))]
                         if not scanids:
+                            LOG.warning('No data for Field %s SPW %s' % (target['field'], spwid))
                             continue
                         scanids = str(scanids)
                         scanids = scanids.replace('[', '')
@@ -134,6 +135,10 @@ class FindCont(basetask.StandardTaskTemplate):
                     tclean_heuristics = tclean.TcleanHeuristics(context, inputs.vis, target['spw'])
                     # Use only the current spw ID here !
                     if0, if1, channel_width = tclean_heuristics.lsrk_freq_intersection(inputs.vis, target['field'], spwid)
+                    if (if0 == -1) or (if1 == -1):
+                        LOG.warning('No LSRK frequency overlap for Field %s SPW %s' % (target['field'], spwid))
+                        continue
+
                     start = '%sGHz' % ((if0 + channel_width) / 1e9)
                     width = '%sMHz' % ((channel_width) / 1e6)
                     nchan = int((if1 - if0 - 2 * channel_width) / channel_width)

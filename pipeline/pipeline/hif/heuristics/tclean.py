@@ -469,6 +469,9 @@ class TcleanHeuristics(object):
 
     def lsrk_freq_intersection(self, vis, field, spw):
 
+        '''Calculate LSRK frequency intersection of a list of MSs for a
+           given field and spw. Exclude flagged channels.'''
+
         lsrk_freq_ranges = []
         lsrk_channel_widths = []
 
@@ -504,17 +507,21 @@ class TcleanHeuristics(object):
 
             nfi = np.where(result == False)[0]
 
-            imTool.open(msname)
-            # Just the edges. Skip one extra channel in final frequency range.
-            imTool.selectvis(field=field, spw='%s:%d~%d' % (spw, nfi[0], nfi[-1]))
-            result = imTool.advisechansel(getfreqrange = True, freqframe = 'LSRK')
-            imTool.done()
-            f0 = result['freqstart']
-            f1 = result['freqend']
+            if (nfi.shape != (0,)):
+                imTool.open(msname)
+                # Just the edges. Skip one extra channel in final frequency range.
+                imTool.selectvis(field=field, spw='%s:%d~%d' % (spw, nfi[0], nfi[-1]))
+                result = imTool.advisechansel(getfreqrange = True, freqframe = 'LSRK')
+                imTool.done()
+                f0 = result['freqstart']
+                f1 = result['freqend']
 
-            lsrk_freq_ranges.append((f0, f1))
-            lsrk_channel_widths.append((f1-f0)/(nfi[-1]-nfi[0]))
+                lsrk_freq_ranges.append((f0, f1))
+                lsrk_channel_widths.append((f1-f0)/(nfi[-1]-nfi[0]))
 
-        if0, if1 = utils.intersect_ranges(lsrk_freq_ranges)
-
-        return if0, if1, max(lsrk_channel_widths)
+        intersect_range = utils.intersect_ranges(lsrk_freq_ranges)
+        if (intersect_range != ()):
+            if0, if1 = intersect_range
+            return if0, if1, max(lsrk_channel_widths)
+        else:
+            return -1, -1, 0
