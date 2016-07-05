@@ -1139,13 +1139,65 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 	      }
 	  }
 
-	//Remove the old mask as it is no longer valid
-	//	removeMask( pb() );
+        if((pb()->getDefaultMask()==""))
+	  {
+	    //Remove the old mask as it is no longer valid
+	    //removeMask( pb() );
+	    
+	    //MSK//	
+	    LatticeExpr<Bool> pbmask( iif( *pb() > pblimit , True , False ) );
+	    //MSK// 
+	    createMask( pbmask, pb() );
+	  }
+  }
 
-	//MSK//	
-	LatticeExpr<Bool> pbmask( iif( *pb() > pblimit , True , False ) );
-	//MSK// 
-	createMask( pbmask, pb() );
+  void  SIImageStore::makePBImage(const Float pblimit)
+  {
+   LogIO os( LogOrigin("SIImageStore","makePBImage",WHERE) );
+
+   if( hasPB() )
+     {
+
+    	for(Int pol=0; pol<itsImageShape[2]; pol++)
+	  {
+	       for(Int chan=0; chan<itsImageShape[3]; chan++)
+	      {
+
+		  CountedPtr<ImageInterface<Float> > pbsubim=makeSubImage(0,1, 
+									  chan, itsImageShape[3],
+									  pol, itsImageShape[2], 
+									  *pb() );
+
+		  // Norm by the max
+		  LatticeExprNode elmax= max( *pbsubim );
+		  Float fmax = abs(elmax.getFloat());
+		  //If there are multiple overlap of beam such that the peak is larger than 1 then normalize
+		  //otherwise leave as is
+		  if(fmax>1.0)
+		    {
+		      LatticeExpr<Float> normed( (*pbsubim) / fmax  );
+		      LatticeExpr<Float> limited( iif( normed > pblimit , normed, 0.0 ) );
+		      pbsubim->copyData( limited );
+		    }
+		  else
+		    {
+		      LatticeExpr<Float> limited( iif((*pbsubim) > pblimit , (*pbsubim), 0.0 ) );
+		      pbsubim->copyData( limited );
+		    }
+	      }
+	  }
+
+	if((pb()->getDefaultMask()==""))
+	  {
+	    //	    removeMask( pb() );
+	    //MSK//		
+	    LatticeExpr<Bool> pbmask( iif( *pb() > pblimit , True , False ) );
+	    //MSK// 
+	    createMask( pbmask, pb() );
+	  }
+
+     }// if hasPB
+
   }
 
   Bool SIImageStore::createMask(LatticeExpr<Bool> &lemask, 
@@ -1268,46 +1320,6 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
   }
 
 
-  void  SIImageStore::makePBImage(const Float pblimit)
-  {
-   LogIO os( LogOrigin("SIImageStore","makePBImage",WHERE) );
-
-
-    	for(Int pol=0; pol<itsImageShape[2]; pol++)
-	  {
-	       for(Int chan=0; chan<itsImageShape[3]; chan++)
-	      {
-
-		  CountedPtr<ImageInterface<Float> > pbsubim=makeSubImage(0,1, 
-									  chan, itsImageShape[3],
-									  pol, itsImageShape[2], 
-									  *pb() );
-
-		  // Norm by the max
-		  LatticeExprNode elmax= max( *pbsubim );
-		  Float fmax = abs(elmax.getFloat());
-		  //If there are multiple overlap of beam such that the peak is larger than 1 then normalize
-		  //otherwise leave as is
-		  if(fmax>1.0)
-		    {
-		      LatticeExpr<Float> normed( (*pbsubim) / fmax  );
-		      LatticeExpr<Float> limited( iif( normed > pblimit , normed, 0.0 ) );
-		      pbsubim->copyData( limited );
-		    }
-		  else
-		    {
-		      LatticeExpr<Float> limited( iif((*pbsubim) > pblimit , (*pbsubim), 0.0 ) );
-		      pbsubim->copyData( limited );
-		    }
-	      }
-	  }
-
-	//	removeMask( pb() );
-	//MSK//		
-	LatticeExpr<Bool> pbmask( iif( *pb() > pblimit , True , False ) );
-	//MSK// 
-	createMask( pbmask, pb() );
-  }
   
 
   void SIImageStore::dividePSFByWeight(const Float /* pblimit*/)
@@ -2095,10 +2107,10 @@ Float SIImageStore :: calcStd(Vector<Float> &vect, Vector<Bool> &flag, Float mea
 
     LogIO os( LogOrigin("SIImageStore","pbcor",WHERE) );
 
-    if( !hasRestored() && !hasPB() )
+    if( !hasRestored() || !hasPB() )
       {
 	// Cannot pbcor without restored image and pb
-	os << "Cannot pbcor without restored image and pb" << LogIO::POST;
+	os << LogIO::WARN << "Cannot pbcor without restored image and pb" << LogIO::POST;
 	return;
       }
 
@@ -2141,7 +2153,16 @@ Float SIImageStore :: calcStd(Vector<Float> &vect, Vector<Bool> &flag, Float mea
 	      }//chan
 	  }//pol
 
-       copyMask(pb(),imagepbcor());
+	// Copy over the PB mask.
+        if((imagepbcor()->getDefaultMask()=="") && hasPB())
+	  {copyMask(pb(),imagepbcor());}
+
+	// Set restoring beam info
+	ImageInfo iminf = imagepbcor()->imageInfo();
+        iminf.setBeams( itsRestoredBeams);
+	imagepbcor()->setImageInfo(iminf);
+ 
+
 
   }// end pbcor
 

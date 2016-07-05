@@ -1248,6 +1248,8 @@ void SynthesisImagerVi2::unlockMSs()
     PBMath::CommonPB kpb;
     Record rec;
     getVPRecord( rec, kpb, telescop );
+
+    if(rec.empty()){os << LogIO::SEVERE << "Cannot proceed with mosaicft gridder without a valid PB model" << LogIO::POST; }
     
     /*
    VPManager *vpman=VPManager::Instance();

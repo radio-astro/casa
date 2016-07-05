@@ -1889,7 +1889,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	vpman->reset();
       }
 
-    os << LogIO::WARN << "Temporary alert : The state of the vpmanager tool has been modified by loading these primary beam models. If any of your scripts rely on the vpmanager state being preserved throughout your CASA session, please use vp.saveastable() and vp.loadfromtable() as needed. This 'feature'/warning will hopefully go away by the 4.7 release." << LogIO::POST;
+    os << "Temporary alert : The state of the vpmanager tool has been modified by loading these primary beam models. If any of your scripts rely on the vpmanager state being preserved throughout your CASA session, please use vp.saveastable() and vp.loadfromtable() as needed. This 'feature'/warning will hopefully go away by the 4.7 release." << LogIO::POST;
     
 
     //    PBMath::CommonPB kpb;
@@ -1904,7 +1904,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  kpb=PBMath::VLA;
 	}
 	else{
-	  os << LogIO::SEVERE << "vpmanager does not have a beam "+telescop <<"\n Please use the vpanager to define one (and optionally save its state as a table and supply its name via the vptable parameter.)" << LogIO::POST;
+	  os << LogIO::WARN << "vpmanager does not have a beam for antenna : "+telescop <<".\n Please use the vpanager to define one (and optionally save its state as a table and supply its name via the vptable parameter.)" << LogIO::POST;
 	}
     }
     
@@ -1947,6 +1947,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
 
     */
+
+    if(rec.empty()){os << LogIO::SEVERE << "Cannot proceed with mosaicft gridder without a valid PB model" << LogIO::POST; }
 
     VPSkyJones* vps=NULL;
     if(rec.asString("name")=="COMMONPB" && kpb !=PBMath::UNKNOWN ){
@@ -2562,16 +2564,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   ROScalarColumn<TableRecord> recCol(vpTable, (String)"pbdescription");
   PBMath myPB(recCol(0));
   */
+  LogIO os( LogOrigin("SynthesisImager","makePBImage",WHERE) );
   
   PBMath::CommonPB kpb;
   Record rec;
   getVPRecord( rec, kpb, telescop );
 
-  PBMath myPB( rec );
-
-  return makePrimaryBeam(myPB);
-}
-
+  Bool ret=False;
+  if(rec.empty())
+    {os << LogIO::WARN << "Not making PB. Cannot use pbcor option later." << LogIO::POST; }
+  else
+    {
+      PBMath myPB( rec );
+      ret = makePrimaryBeam(myPB);
+    }
+  return ret;
+  }
+  
 
   Bool SynthesisImager::makePrimaryBeam(PBMath& pbMath)
   {

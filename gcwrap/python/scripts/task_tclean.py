@@ -309,13 +309,10 @@ def tclean(
             t1=time.time();
             casalog.post("***Time for making PSF: "+"%.2f"%(t1-t0)+" sec", "INFO3", "task_tclean");
 
-        if pbcor==True: # or gridder.count('mosaic') or gridder.count('awproject'):
-            t0=time.time();
-
             imager.makePB()
 
-            t1=time.time();
-            casalog.post("***Time for normalizing PB: "+"%.2f"%(t1-t0)+" sec", "INFO3", "task_tclean");
+            t2=time.time();
+            casalog.post("***Time for making PB: "+"%.2f"%(t2-t1)+" sec", "INFO3", "task_tclean");
 
         if niter >=0 : 
 

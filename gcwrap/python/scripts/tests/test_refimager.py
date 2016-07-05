@@ -1903,10 +1903,9 @@ class test_pbcor(testref_base):
      def test_pbcor_cube_twosteps(self):
           """ [pbcor] Test pbcor with cube with imaging and pbcor separately"""
           self.prepData('refim_mawproject.ms')
-          ret1 = tclean(vis=self.msfile, imagename=self.img, field='0', imsize=512, cell='10.0arcsec', phasecenter="J2000 19:59:28.500 +40.44.01.50", niter=10, specmode='cube', pbcor=False)
-          report1=self.th.checkall(imexist=[self.img+'.image'],imexistnot=[self.img+'.pb', self.img+'.image.pbcor'])
+          ret1 = tclean(vis=self.msfile, imagename=self.img, field='0', imsize=512, cell='10.0arcsec', phasecenter="J2000 19:59:28.500 +40.44.01.50", niter=10, specmode='cube',vptable='evlavp.tab', pbcor=False)
+          report1=self.th.checkall(imexist=[self.img+'.image',self.img+'.pb'],imexistnot=[self.img+'.image.pbcor'], imval=[(self.img+'.pb',0.79,[256,256,0,0]), (self.img+'.pb',0.59,[256,256,0,2])])
           ret2 = tclean(vis=self.msfile, imagename=self.img, field='0', imsize=512, cell='10.0arcsec', phasecenter="J2000 19:59:28.500 +40.44.01.50", niter=0,calcres=False,calcpsf=False, specmode='cube', vptable='evlavp.tab', pbcor=True)
-
           report2=self.th.checkall(imexist=[self.img+'.image', self.img+'.pb', self.img+'.image.pbcor'], imval=[(self.img+'.pb',0.79,[256,256,0,0]),(self.img+'.image.pbcor',1.0,[256,256,0,0]), (self.img+'.pb',0.59,[256,256,0,2]),(self.img+'.image.pbcor',1.0,[256,256,0,2])])
           self.checkfinal(report1+report2)
 
@@ -1917,4 +1916,14 @@ class test_pbcor(testref_base):
 
           report=self.th.checkall(imexist=[self.img+'.image', self.img+'.pb', self.img+'.image.pbcor'], imval=[(self.img+'.pb',0.79,[256,256,0,0]),(self.img+'.image.pbcor',1.0,[256,256,0,0]), (self.img+'.pb',0.59,[256,256,0,2]),(self.img+'.image.pbcor',1.0,[256,256,0,2])])
           self.checkfinal(report)
+
+     def test_pbcor_mfs_restart(self):
+          """ [pbcor] Test pbcor with mfs and a restart"""
+          self.prepData('refim_mawproject.ms')
+          ret1 = tclean(vis=self.msfile, imagename=self.img, field='0', imsize=512, cell='10.0arcsec', phasecenter="J2000 19:59:28.500 +40.44.01.50", niter=0, specmode='mfs', vptable='evlavp.tab', pbcor=False)
+          report1=self.th.checkall(imexist=[self.img+'.image', self.img+'.pb'], imexistnot=[self.img+'.image.pbcor'], imval=[(self.img+'.pb',0.7,[256,256,0,0])])
+
+          ret2 = tclean(vis=self.msfile, imagename=self.img, field='0', imsize=512, cell='10.0arcsec', phasecenter="J2000 19:59:28.500 +40.44.01.50", niter=10, specmode='mfs', vptable='evlavp.tab', pbcor=True)
+          report2=self.th.checkall(imexist=[self.img+'.image', self.img+'.pb', self.img+'.image.pbcor'], imval=[(self.img+'.pb',0.7,[256,256,0,0]),(self.img+'.image.pbcor',1.0,[256,256,0,0])])
+          self.checkfinal(report1+report2)
 
