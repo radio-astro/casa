@@ -42,9 +42,11 @@ namespace casac {
 					   bool vi2 // default value = false
 					   )
   {
+    Bool vi2_l=vi2;
+    vi2_l =  (getenv("VI2")!=NULL);
     if ((!itsImager) || forceNew)
       {
-	if (vi2) itsImager = new SynthesisImagerVi2();
+	if (vi2_l) itsImager = new SynthesisImagerVi2();
 	else itsImager = new SynthesisImager();
       }
     return itsImager;
