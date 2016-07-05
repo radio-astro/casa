@@ -984,10 +984,15 @@ class PyParallelCubeSynthesisImager():
             joblist.append( self.PH.runcmd("imager.restoreImages()", node) )
         self.PH.checkJobs( joblist )
 
+    def makePB(self):
+        joblist=[]
+        for node in self.listOfNodes:
+            joblist.append( self.PH.runcmd("imager.makePB()", node) )
+        self.PH.checkJobs( joblist )
+
     def concatImages(self, type='virtualnomove'):
         import subprocess
-        imtypes=['image','psf','model','residual','mask','pb', 'pbcor', 'weight']
-        # being different 'image coordinates', sumwt need to be handle differently.
+        imtypes=['image','psf','model','residual','mask','pb', 'pbcor', 'weight', 'sumwt']
         for immod in range(0,self.NF):
             for ext in imtypes:
                 subimliststr="'"
