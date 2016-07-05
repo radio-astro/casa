@@ -882,12 +882,12 @@ HPX HEALPix grid.  -->
 
                        Other primary beam models can be chosen via the vpmanager tool.
                        
-                       Step 1 :  Set up the vpmanager tool
+                       Step 1 :  Set up the vpmanager tool and save its state in a table
  
                                      vp.setpbpoly(telescope='EVLA', coeff=[1.0, -1.529e-3, 8.69e-7, -1.88e-10]) 
                                      vp.saveastable('myvp.tab')
 
-                       Step 2 : Save its state in a table, and supply the name of that table here.
+                       Step 2 : Supply the name of that table in tclean.
  
                                     tclean(....., vptable='myvp.tab',....)
 
