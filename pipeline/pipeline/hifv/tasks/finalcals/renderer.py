@@ -449,7 +449,7 @@ class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                                                       uv_range, correlation=correlation)
                 amp_vs_freq_summary_plots[vis][source_id] = plots
 
-            for source_id, brightest_field in brightest_fields.items():
+            for source_id, brightest_field in brightest_fields.items()[0:MAX_PLOTS]:
                 plots = self.science_plots_for_result(context, 
                                                       result, 
                                                       applycal.PhaseVsFrequencySummaryChart,
