@@ -1870,6 +1870,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     MFrequency::Types dataFrame=(MFrequency::Types)vi2.subtableColumns().spectralWindow().measFreqRef()(spwids[0]);
     Double datafstart, datafend;
     VisBufferUtil::getFreqRange(datafstart, datafend, vi2, dataFrame );
+    LogIO os(LogOrigin("SynthesisUtilMethods", "SynthesisParmsImage::buildCoordinateSystem",WHERE));
+    os << "Image co-ord. sys. with VB2 is different from that with VB!  Images for TT > 0 will be incorrect!" << LogIO::WARN;
+
     return buildCoordinateSystemCore( msobj, spwids, fld, freqmin, freqmax, datafstart, datafend );
   }
   
@@ -2143,6 +2146,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
             stepf=chanFreq[1]-chanFreq[0];
           }
         Double restf=qrestfreq.getValue("Hz");
+	//stepf=9e8;
         if ( mode=="mfs" and restf == 0.0 ) restf = restFreq[0].getValue("Hz");
         //cerr<<" startf="<<startf<<" stepf="<<stepf<<" refPix="<<refPix<<" restF="<<restf<<endl;
         // once NOFRAME is implemented do this 

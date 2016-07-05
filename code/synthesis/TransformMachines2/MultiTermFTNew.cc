@@ -96,8 +96,6 @@ using namespace casa::vi;
       }
 
     //	printFTTypes();
-    LogIO os(LogOrigin("MultiTermFTNew2", "MultiTermFTNew2",WHERE));
-    os << "There is no setImagingWeight in VB2!  Images for TT > 0 will be incorrect!" << LogIO::WARN;
   }
   
   //---------------------------------------------------------------------- 
@@ -217,6 +215,7 @@ using namespace casa::vi;
 	    (imwgt)(chn,row) *= pow( mulfactor,(Int)thisterm);
 	    //	      sumwt_p += (vb.imagingWeight())(chn,row);
 	  }
+      vb.setImagingWeight(imwgt);
     }
     /* // For debugging.
        else
@@ -241,10 +240,11 @@ using namespace casa::vi;
   {
     AlwaysAssert( imweights_p.shape() == vb.imagingWeight().shape() ,AipsError);
     ///There is no setImagingWeight in vb2 !
-    Matrix<Float>& imwgt=const_cast<Matrix<Float>& >(vb.imagingWeight());
-    ////remove the above line when using setImagingWeight
-    imwgt = imweights_p;
-  }
+    // Matrix<Float>& imwgt=const_cast<Matrix<Float>& >(vb.imagingWeight());
+    // ////remove the above line when using setImagingWeight
+    // imwgt = imweights_p;
+    vb.setImagingWeight(imweights_p);
+ }
   
   
   // Multiply the model visibilities by the Taylor functions - in place.
