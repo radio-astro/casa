@@ -101,7 +101,7 @@ C
       real convFunc(*)
       real norm
       real wt, wtx, wty
-      real swap, theweight
+      real swap, theweight, nweight
 
       logical ogridsd
 
@@ -158,8 +158,6 @@ C          if (ogridsd(nx, ny, loc, support)) then
      $                    (apol.ge.1).and.(apol.le.npol)) then
                         thevalue=conjg(values(ipol,ichan,irow))
                         theweight=weight(ichan,irow)
-                        nvalue=weight(ichan,irow)*
-     $                    conjg(values(ipol,ichan,irow))
                         norm=0.0
                         ir=1
 C                        do iy=-support,support
@@ -172,23 +170,24 @@ C                            do ix=-support,support
                               if ((ax.ge.1).and.(ax.le.nx)) then
                               ir = (iy-1)*(2*support+1) + ix
                               wt=convFunc(irad(ir))
-                              theweight=theweight*wt
+                              nweight=theweight*wt
+                              nvalue=thevalue*nweight
                               if (npoints(ax,ay,apol,achan).eq.0) then
                                 gmin(ax,ay,apol,achan)=thevalue
-                                wmin(ax,ay,apol,achan)=theweight
+                                wmin(ax,ay,apol,achan)=nweight
                               else if
      $                          (npoints(ax,ay,apol,achan).eq.1) then
                                 if (real(gmin(ax,ay,apol,achan)).lt.
      $                            real(thevalue)) then
                                   gmax(ax,ay,apol,achan)=thevalue
-                                  wmax(ax,ay,apol,achan)=theweight
+                                  wmax(ax,ay,apol,achan)=nweight
                                 else
                                   gmax(ax,ay,apol,achan)=
      $                              gmin(ax,ay,apol,achan)
                                   wmax(ax,ay,apol,achan)=
      $                              wmin(ax,ay,apol,achan)
                                   gmin(ax,ay,apol,achan)=thevalue
-                                  wmin(ax,ay,apol,achan)=theweight
+                                  wmin(ax,ay,apol,achan)=nweight
                                 end if
                               else
                               if (real(thevalue).le.
@@ -197,7 +196,7 @@ C                            do ix=-support,support
      $                            gmin(ax,ay,apol,achan)
                                 gmin(ax,ay,apol,achan)=thevalue
                                 swap=theweight
-                                theweight=wmin(ax,ay,apol,achan)
+                                nweight=wmin(ax,ay,apol,achan)
                                 wmin(ax,ay,apol,achan)=swap
                               else if (real(thevalue).ge.
      $                          real(gmax(ax,ay,apol,achan))) then
@@ -205,14 +204,14 @@ C                            do ix=-support,support
      $                            gmax(ax,ay,apol,achan)
                                 gmax(ax,ay,apol,achan)=thevalue
                                 swap=theweight
-                                theweight=wmax(ax,ay,apol,achan)
+                                nweight=wmax(ax,ay,apol,achan)
                                 wmax(ax,ay,apol,achan)=swap
                               end if
                               grid(ax,ay,apol,achan)=
      $                             grid(ax,ay,apol,achan)+nvalue
                               wgrid(ax,ay,apol,achan)=
-     $                             wgrid(ax,ay,apol,achan)+theweight
-                              norm=norm+theweight
+     $                             wgrid(ax,ay,apol,achan)+nweight
+                              norm=norm+nweight
                               end if
                               npoints(ax,ay,apol,achan)=
      $                          npoints(ax,ay,apol,achan)+1
