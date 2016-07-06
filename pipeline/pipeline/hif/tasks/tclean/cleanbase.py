@@ -297,6 +297,12 @@ class CleanBase(basetask.StandardTaskTemplate):
         # Set up masking parameters
         if (inputs.hm_masking == 'auto'):
             tclean_job_parameters['usemask'] = 'auto-thresh'
+            # The following parameters are currently just for PL developer
+            # testing
+            #tclean_job_parameters['pbmask'] = 0.3
+            #qaTool = casatools.quanta
+            #maskthreshold = qaTool.mul(inputs.threshold, 3.0)
+            #tclean_job_parameters['maskthreshold'] = '%s%s' % (maskthreshold['value'], maskthreshold['unit'])
         else:
             tclean_job_parameters['usemask'] = 'user'
             tclean_job_parameters['mask']    = inputs.mask
@@ -304,6 +310,14 @@ class CleanBase(basetask.StandardTaskTemplate):
         # Show nterms parameter only if it is used.
         if (result.multiterm):
             tclean_job_parameters['nterms'] = result.multiterm
+
+        # Select whether to restore image
+        if (inputs.niter == 0):
+            tclean_job_parameters['restoration'] = False
+            tclean_job_parameters['pbcor'] = False
+        else:
+            tclean_job_parameters['restoration'] = True
+            tclean_job_parameters['pbcor'] = True
 
         # Re-use products from previous iteration.
         if (iter > 0):
@@ -313,6 +327,8 @@ class CleanBase(basetask.StandardTaskTemplate):
 
         job = casa_tasks.tclean(**tclean_job_parameters)
         tclean_result = self._executor.execute(job)
+
+        pbcor_image_name = '%s.%s.iter%s.image.pbcor' % (inputs.imagename, inputs.stokes, iter)
 
         if (inputs.niter > 0):
             LOG.info('tclean used %d iterations' % (tclean_result['iterdone']))
@@ -324,53 +340,6 @@ class CleanBase(basetask.StandardTaskTemplate):
                 result.error = CleanBaseError('tclean diverged. Field: %s SPW: %s' % (inputs.field, inputs.spw), 'tclean diverged')
                 LOG.warning('tclean diverged. Field: %s SPW: %s' % (inputs.field, inputs.spw))
 
-        # Create PB for single fields since it is not auto-generated for
-        # gridder='standard'.
-        if ((inputs.gridder == 'standard') and (iter == 0)):
-            # TODO: Change to use list of MSs when makePB supports this.
-            #       Is this really needed for single fields ?
-            #       Will be obsolete anyways when tclean does it.
-            if (inputs.specmode == 'cube'):
-                mode = 'frequency'
-            else:
-                mode = 'mfs'
-            makepb.makePB(vis=inputs.vis[0],
-                          field=inputs.field,
-                          intent=utils.to_CASA_intent(inputs.ms[0], inputs.intent),
-                          spw=inputs.spwsel,
-                          scan=scanidlist,
-                          mode=mode,
-                          imtemplate='%s.%s.iter%s.residual%s' % (os.path.basename(inputs.imagename), inputs.stokes, iter, '.tt0' if result.multiterm else ''),
-                          outimage='%s.%s.iter%s.pb' % (os.path.basename(inputs.imagename), inputs.stokes, iter),
-                          pblimit = inputs.pblimit)
-
-        # Correct images for primary beam
-        pb_corrected = False
-        if ((image_name not in (None, '')) and (flux_name not in (None, '')) and (inputs.mask not in (None, ''))):
-            if (os.path.exists(flux_name)):
-                LOG.info('Applying PB correction')
-                pb_corrected = True
-                pbcor_image_name = '%s.%s.iter%s.pbcor.image' % (inputs.imagename, inputs.stokes, iter)
-                if (result.multiterm):
-                    for nterm in xrange(result.multiterm):
-                        job = casa_tasks.impbcor(
-                                  imagename='%s.tt%d' % (image_name, nterm),
-                                  pbimage=flux_name,
-                                  outfile='%s.tt%d' % (pbcor_image_name, nterm))
-                        self._executor.execute(job)
-                else:
-                    job = casa_tasks.impbcor(
-                              imagename=image_name,
-                              pbimage=flux_name,
-                              outfile=pbcor_image_name)
-                    self._executor.execute(job)
-
-        if ((image_name not in (None, '')) and (not pb_corrected)):
-            if (flux_name in (None, '')):
-                LOG.warning('Image %s could not be PB corrected due to missing PB !' % (image_name))
-            else:
-                LOG.warning('Image %s could not be PB corrected !')
- 
         if (iter > 0):
             # Store the model.
             set_miscinfo(name=model_name, spw=inputs.spw, field=inputs.field,
@@ -380,13 +349,11 @@ class CleanBase(basetask.StandardTaskTemplate):
             # Always set info on the uncorrected image for plotting
             set_miscinfo(name=image_name, spw=inputs.spw, field=inputs.field,
                          type='image', iter=iter, multiterm=result.multiterm)
-            # Store the image.
-            if (pb_corrected):
-                set_miscinfo(name=pbcor_image_name, spw=inputs.spw, field=inputs.field,
-                             type='pbcorimage', iter=iter, multiterm=result.multiterm)
-                result.set_image(iter=iter, image=pbcor_image_name)
-            else:
-                result.set_image(iter=iter, image=image_name)
+
+            # Store the PB corrected image.
+            set_miscinfo(name=pbcor_image_name, spw=inputs.spw, field=inputs.field,
+                         type='pbcorimage', iter=iter, multiterm=result.multiterm)
+            result.set_image(iter=iter, image=pbcor_image_name)
 
         # Store the residual.
         set_miscinfo(name=residual_name, spw=inputs.spw, field=inputs.field,
