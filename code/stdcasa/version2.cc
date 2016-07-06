@@ -35,12 +35,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 void VersionInfo::report(ostream &os)
 {
-    int major1 = majorVersion()/10;
-    int major2 = majorVersion() - major1*10;
-    os << major1 << "." << major2 << "." << minorVersion();
-    os << " (DEV r" << setfill('0') << setw(2) << patch() << ")";
-    os << setfill(' ');
-
+    /* Read Casa version from the CASAVERSION environment variable if one 
+       exists. Otherwise parse version as reported by version.h (set at build
+       time by cmake flags.
+    */ 
+    if(const char* casaversion = std::getenv("CASAVERSION")) {
+        os << casaversion << endl;
+    }
+    else {
+        int major1 = majorVersion()/10;
+        int major2 = majorVersion() - major1*10;
+        os << major1 << "." << major2 << "." << minorVersion();
+        os << " (DEV r" << setfill('0') << setw(2) << patch() << ")";
+        os << setfill(' ');
+    }
     
     const char *ptr = info();
     if (ptr && *ptr) {
