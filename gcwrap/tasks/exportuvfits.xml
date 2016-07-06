@@ -63,7 +63,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	</param>
 
 	<param type="bool" name="multisource">
-		<description>Write in multi-source format</description>
+		<description>Write in multi-source format? Set to False if only one source is selected. Note that diffmap does not work on multisource uvfits files.</description>
 		<value>True</value>
 	</param>
 
@@ -157,7 +157,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 output data will average channels in groups of three.
         multisource -- Write in multi-source format
                 default: =&gt; True;
-                True works with AIPS, but not difmap. Set to False if one source is selected or if planning on using difmap on the output. 
+                Set to False if a single source is selected. Note that diffmap does not work on
+                multi-source uvfits files, so if planning on using diffmap on the resulting uvfits
+                file, select a single source and set multisource = False. Otherwise use True. (If
+                multiple sources are selected, a multi-source file will be written no matter what
+                the setting of this parameter). 
         combinespw -- If True, export the spectral windows as IFs.
                       Otherwise multiple windows will use multiple FREQIDs.
                 default: =&gt;  True;
