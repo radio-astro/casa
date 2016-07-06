@@ -120,13 +120,15 @@ class ClusterDisplay(object):
                 # judged as an invalid clusters) so skip this cycle
                 continue
             if group.has_key('index'):
+                # having key 'index' indicates the result comes from old (Scantable-based) 
+                # procedure
                 antenna = group['index'][0]
-            else:
-                antenna = group['antenna'][0]
-            if group.has_key('name'):
-                vis = group['name'][0]
-            else:
                 vis = None
+            else:
+                # having key 'antenna' instead of 'index' indicates the result comes from 
+                # new (MS-based) procedure
+                antenna = group['antenna'][0]
+                vis = group['name'][0]
             spw = group['spw'][0]
             group_id = group['group_id']
             iteration = group['iteration']
