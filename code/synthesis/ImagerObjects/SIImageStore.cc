@@ -948,6 +948,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SHARED_PTR<ImageInterface<Float> > SIImageStore::imagepbcor(uInt /*nterm*/)
   {
     accessImage( itsImagePBcor, itsParentImagePBcor, imageExts(IMAGEPBCOR) );
+    itsImagePBcor->setUnits("Jy/beam");
     return itsImagePBcor;
   }
 
