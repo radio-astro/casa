@@ -68,7 +68,7 @@ TEST_F(FringeJonesTest, Basic) {
   ASSERT_EQ(False,fringe->freqDepPar());
   ASSERT_EQ(True,fringe->freqDepMat());
   ASSERT_EQ(False,fringe->freqDepCalWt());
-  ASSERT_EQ(False,fringe->timeDepMat());
+  ASSERT_EQ(True,fringe->timeDepMat());
   ASSERT_EQ(True,fringe->isApplied());
   ASSERT_EQ(True,fringe->isSolvable());
 

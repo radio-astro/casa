@@ -58,6 +58,8 @@ public:
   // Type of Jones matrix according to nPar()
   virtual Jones::JonesType jonesType() { return Jones::Diagonal; };
 
+  virtual Bool timeDepMat() { return True; };
+
   // Freq dependence (delays)
   virtual Bool freqDepPar() { return False; };
   virtual Bool freqDepMat() { return True; };
@@ -81,9 +83,7 @@ public:
   virtual Bool smoothable() { return True; };
 
   // Delay to phase calculator
-  virtual void calcOneJones(Vector<Complex>& mat, Vector<Bool>& mOk, 
-			    const Vector<Complex>& par, const Vector<Bool>& pOk );
-
+  virtual void calcAllJones();
 
   // Hazard a guess at parameters (unneeded here)
   //  TBD?  Needed?

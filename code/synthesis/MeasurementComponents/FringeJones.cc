@@ -158,28 +158,50 @@ void FringeJones::setSolve(const Record& solve) {
 
 }
 
-void FringeJones::calcOneJones(Vector<Complex>& /*mat*/, Vector<Bool>& /*mOk*/, 
-			       const Vector<Complex>& /*par*/, const Vector<Bool>& /*pOk*/ ) {
+void FringeJones::calcAllJones() {
 
-  if (prtlev()>6) cout << "       FringeJones::calcOneJones()" << endl;
+  if (prtlev()>6) cout << "       FringeJones::calcAllJones()" << endl;
 
-  //  TBD!!!    It will look be something like this:
-  /*
-      // This is the KJones version, for which nPar()=2 delays
-      //   are changed to the appropriate complex numbers in
-      //   the two(=nPar()) diagonal Jones matrix elements
-      //   (the ipar loop here will not be appropriate for the
-      //    more general fringe phase calculation, obviously)
+  // Should handle OK flags in this method, and only
+  //  do Jones calc if OK
 
-      for (Int ipar=0;ipar<nPar();++ipar) {
-	if (onePOK(ipar)) { 
-	  phase=2.0*C::pi*onePar(ipar)*(currFreq()(ich)-KrefFreqs_(currSpw()));
-	  oneJones(ipar)=Complex(cos(phase),sin(phase));
-	  oneJOK(ipar)=True;
-	}
+  Vector<Complex> oneJones;
+  Vector<Bool> oneJOK;
+  Vector<Float> onePar;
+  Vector<Bool> onePOK;
+
+  ArrayIterator<Complex> Jiter(currJElem(),1);
+  ArrayIterator<Bool>    JOKiter(currJElemOK(),1);
+  ArrayIterator<Float>   Piter(currRPar(),1);
+  ArrayIterator<Bool>    POKiter(currParOK(),1);
+
+  Double phase;
+  for (Int iant=0; iant<nAnt(); iant++) {
+
+    for (Int ich=0; ich<nChanMat(); ich++) {
+      
+      oneJones.reference(Jiter.array());
+      oneJOK.reference(JOKiter.array());
+      onePar.reference(Piter.array());
+      onePOK.reference(POKiter.array());
+
+      for (Int ipar=0;ipar<nPar();ipar+=3) {
+        if (onePOK(ipar)) {
+	  phase=onePar(ipar);
+          phase+=2.0*C::pi*onePar(ipar+1)*(currFreq()(ich)-KrefFreqs_(currSpw()));
+          oneJones(ipar/3)=Complex(cos(phase),sin(phase));
+          oneJOK(ipar/3)=True;
+        }
       }
-  */
-  
+      
+      // Advance iterators
+      Jiter.next();
+      JOKiter.next();
+    }
+    // Step to next antenns's pars
+    Piter.next();
+    POKiter.next();
+  }
 }
 
 void FringeJones::selfSolveOne(VisBuffGroupAcc& vbga) {
