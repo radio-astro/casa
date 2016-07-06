@@ -1898,7 +1898,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     vpman->getvp(rec, telescop);
     if(rec.empty()){
 	if((telescop=="EVLA")){
-	  os << LogIO::WARN << "vpmanager does not list EVLA. Using VLA beam parameters" << LogIO::POST; 
+	  os << LogIO::WARN << "vpmanager does not list EVLA. Using VLA beam parameters. To use EVLA beams, please use the vpmanager and set the vptable parameter in tclean (see inline help for vptable)." << LogIO::POST; 
 	  telescop="VLA";
 	  vpman->getvp(rec, telescop);
 	  kpb=PBMath::VLA;
@@ -2123,8 +2123,38 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     itsMappers.checkOverlappingModels("blank");
 
+    Bool resetModel=False;
+    if( savemodelcolumn && writeAccess_p)
+      {
+	resetModel=True;
+	os << "Iterating through the model column to reset it to zero" << LogIO::POST;
+    	VisBufferAutoPtr vb(rvi_p);
+    	rvi_p->originChunks();
+    	rvi_p->origin();
+
+	ProgressMeter pm(1.0, Double(vb->numberCoh()), 
+			 dopsf?"Seting model column to zero":"pre-Major Cycle", "","","",True);
+	Int cohDone=0;
+    	for (rvi_p->originChunks(); rvi_p->moreChunks();rvi_p->nextChunk())
+	  {
+	    
+	    for (rvi_p->origin(); rvi_p->more(); (*rvi_p)++)
+	      {
+		if (SynthesisUtilMethods::validate(*vb)!=SynthesisUtilMethods::NOVALIDROWS)
+		  {
+		    vb->setModelVisCube(Complex(0.0, 0.0));
+		    wvi_p->setVis(vb->modelVisCube(),VisibilityIterator::Model);
+		  }
+		cohDone += vb->nRow();
+		pm.update(Double(cohDone));
+	      }
+	  }
+      }// setting model to zero
+    
     for(Int gmap=0;gmap<itsMappers.nMappers();gmap++)
        {
+	 os << "Running major cycle for chunk : " << gmap << LogIO::POST;
+
 	 SynthesisUtilMethods::getResource("Start Major Cycle for mapper"+String::toString(gmap));
     	VisBufferAutoPtr vb(rvi_p);
     	rvi_p->originChunks();
@@ -2154,7 +2184,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  if (SynthesisUtilMethods::validate(*vb)!=SynthesisUtilMethods::NOVALIDROWS)
 		    {
     			if(!dopsf) {
-			  {   vb->setModelVisCube(Complex(0.0, 0.0)); }
+			  if(resetModel==False) {   vb->setModelVisCube(Complex(0.0, 0.0)); }
 			  itsMappers.degrid(*vb, savevirtualmodel, gmap );
 			  //itsMappers.getMapper(gmap)->degrid(*vb); //, savevirtualmodel );
     				if(savemodelcolumn && writeAccess_p )

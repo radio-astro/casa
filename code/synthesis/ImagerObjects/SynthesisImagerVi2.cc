@@ -750,8 +750,38 @@ void SynthesisImagerVi2::appendToMapperList(String imagename,
 
     itsMappers.checkOverlappingModels("blank");
 
+    Bool resetModel=False;
+    if( savemodelcolumn && writeAccess_p)
+      {
+	resetModel=True;
+	os << "Iterating through the model column to reset it to zero" << LogIO::POST;
+    	VisBufferAutoPtr vb(rvi_p);
+    	rvi_p->originChunks();
+    	rvi_p->origin();
+
+	ProgressMeter pm(1.0, Double(vb->numberCoh()), 
+			 dopsf?"Seting model column to zero":"pre-Major Cycle", "","","",True);
+	Int cohDone=0;
+    	for (rvi_p->originChunks(); rvi_p->moreChunks();rvi_p->nextChunk())
+	  {
+	    
+	    for (rvi_p->origin(); rvi_p->more(); (*rvi_p)++)
+	      {
+		if (SynthesisUtilMethods::validate(*vb)!=SynthesisUtilMethods::NOVALIDROWS)
+		  {
+		    vb->setModelVisCube(Complex(0.0, 0.0));
+		    wvi_p->setVis(vb->modelVisCube(),VisibilityIterator::Model);
+		  }
+		cohDone += vb->nRow();
+		pm.update(Double(cohDone));
+	      }
+	  }
+      }// setting model to zero
+
     for(Int gmap=0;gmap<itsMappers.nMappers();gmap++)
        {
+	 os << "Running major cycle for chunk : " << gmap << LogIO::POST;
+
 	 SynthesisUtilMethods::getResource("Start Major Cycle for mapper"+String::toString(gmap));
 
 	 vi::VisBuffer2* vb=vi_p->getVisBuffer();
@@ -786,9 +816,11 @@ void SynthesisImagerVi2::appendToMapperList(String imagename,
 	      if (SynthesisUtilMethods::validate(*vb)!=SynthesisUtilMethods::NOVALIDROWS)
 		{
 		  if(!dopsf) {
-		    { Cube<Complex> mod(vb->nCorrelations(), vb->nChannels(), vb->nRows(), Complex(0.0));
-		      vb->setVisCubeModel(mod); 
-		    }
+		    if(resetModel==False) 
+		      { 
+			Cube<Complex> mod(vb->nCorrelations(), vb->nChannels(), vb->nRows(), Complex(0.0));
+			vb->setVisCubeModel(mod); 
+		      }
 		    itsMappers.degrid(*vb, savevirtualmodel, gmap );
 		    //itsMappers.getMapper(gmap)->degrid(*vb); //, savevirtualmodel );
 		    if(savemodelcolumn && writeAccess_p ){
