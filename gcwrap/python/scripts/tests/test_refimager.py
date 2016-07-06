@@ -1282,9 +1282,19 @@ class test_cube(testref_base):
 #          self.assertTrue(os.path.exists(self.img+'.psf') and os.path.exists(self.img+'.image') )
 #          report=self.th.checkall(imexist=[self.img+'.image'],imval=[(self.img+'.image',1.5002,[50,50,0,0]) , (self.img+'.image',0.769,[50,50,0,19]) ])
 
+          ret = tclean(vis=self.msfile,imagename=self.img+'cc',specmode='cube',imsize=100,cell='10.0arcsec',niter=10,deconvolver='hogbom',chanchunks=2)
+          self.assertTrue(os.path.exists(self.img+'cc.psf') and os.path.exists(self.img+'cc.image') )
+          report=self.th.checkall(imexist=[self.img+'cc.image'],imval=[(self.img+'cc.image',1.5002,[50,50,0,0]) , (self.img+'cc.image',0.769,[50,50,0,19]) ])
+          self.checkfinal(report)
+
+
+     def test_cube_chanchunks_savemodel(self):
+          """ [cube] Test channel chunking for large cubes and save model """
+          self.prepData('refim_point.ms')
           ret = tclean(vis=self.msfile,imagename=self.img+'cc',specmode='cube',imsize=100,cell='10.0arcsec',niter=10,deconvolver='hogbom',chanchunks=2,savemodel='modelcolumn')
           self.assertTrue(os.path.exists(self.img+'cc.psf') and os.path.exists(self.img+'cc.image') )
           report=self.th.checkall(imexist=[self.img+'cc.image'],imval=[(self.img+'cc.image',1.5002,[50,50,0,0]) , (self.img+'cc.image',0.769,[50,50,0,19]) ])
+          self.assertTrue( self.th.checkmodelchan(self.msfile,5) > 0.0 and self.th.checkmodelchan(self.msfile,18) > 0.0 )
           self.checkfinal(report)
 
 ##############################################
