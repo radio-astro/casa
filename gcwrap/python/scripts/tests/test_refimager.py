@@ -1287,6 +1287,14 @@ class test_cube(testref_base):
           report=self.th.checkall(imexist=[self.img+'cc.image'],imval=[(self.img+'cc.image',1.5002,[50,50,0,0]) , (self.img+'cc.image',0.769,[50,50,0,19]) ])
           self.checkfinal(report)
 
+     def test_cube_chanchunks_auto(self):
+          """ [cube] Test channel chunking for large cubes : automatic calc of nchanchunks """
+          self.prepData('refim_point.ms')
+          ret = tclean(vis=self.msfile,imagename=self.img+'cc',specmode='cube',imsize=100,cell='10.0arcsec',niter=10,deconvolver='hogbom',chanchunks=-1)
+          self.assertTrue(os.path.exists(self.img+'cc.psf') and os.path.exists(self.img+'cc.image') )
+          report=self.th.checkall(imexist=[self.img+'cc.image'],imval=[(self.img+'cc.image',1.5002,[50,50,0,0]) , (self.img+'cc.image',0.769,[50,50,0,19]) ])
+          self.checkfinal(report)
+
 
      def test_cube_chanchunks_savemodel(self):
           """ [cube] Test channel chunking for large cubes and save model """
