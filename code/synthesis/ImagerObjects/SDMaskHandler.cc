@@ -743,10 +743,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     tempmask->put(maskdata);
     //
     // create pixel mask (set to False for the previous selected region(s))
-    LatticeExpr<Bool> pixmask( iif(*tempmask > 0.0, False, True) );
+    //LatticeExpr<Bool> pixmask( iif(*tempmask > 0.0, False, True) );
+    // create pixel mask (set to True for the previous selected region(s) to exclude the region from the stats/masking )
+    LatticeExpr<Bool> pixmask( iif(*tempmask > 0.0, True, False) );
     TempImage<Float>* dummy = new TempImage<Float>(tempres->shape(), tempres->coordinates());
     dummy->attachMask(pixmask);
-    if (ntrue(dummy->getMask())) tempres->attachMask(pixmask);
+    //if (ntrue(dummy->getMask())) tempres->attachMask(pixmask);
+    if (ntrue(dummy->getMask())) {
+      os<<"Got non zero mask ntrue="<<ntrue(dummy->getMask())<<LogIO::POST;
+      tempres->attachMask(pixmask);
+    }
+    else {
+      os<<"No previous mask"<<LogIO::POST;
+    }  
     delete dummy; dummy=0;
     //input 
     Quantity qthresh(0,"");
@@ -829,8 +838,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     IPosition minrmspos, maxrmspos, minmaxpos, maxmaxpos;
     Int npix;
     //for debug set to True to save intermediate mask images on disk
-    Bool debug;
-    debug = False;
+    Bool debug(False);
 
     //automask stage selecitons
     Bool dobin(True);
@@ -899,13 +907,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     os << LogIO::DEBUG1 <<"stats on the image: max="<<maxmaxval<<" rms="<<maxrmsval<<endl;
     if (fracofpeak) {
       rmsthresh = maxmaxval * fracofpeak; 
-      os << LogIO::NORMAL <<"Threshold by fraction of the peak(="<<fracofpeak<<") * max: "<<rmsthresh<< LogIO::POST;
+      //os << LogIO::NORMAL <<"Threshold by fraction of the peak(="<<fracofpeak<<") * max: "<<rmsthresh<< LogIO::POST;
       os << LogIO::DEBUG1 <<"max at "<<maxmaxpos<<", dynamic range = "<<maxmaxval/rms(maxmaxpos) << LogIO::POST;
     }
     else if (sigma) {
       //cerr<<"minval="<<minval<<" maxval="<<maxval<<endl;
       rmsthresh = maxrmsval * sigma;
-      os << LogIO::NORMAL <<"Threshold by sigma(="<<sigma<<")* rms (="<<maxrmsval<<") :"<<rmsthresh<< LogIO::POST;
+      //os << LogIO::NORMAL <<"Threshold by sigma(="<<sigma<<")* rms (="<<maxrmsval<<") :"<<rmsthresh<< LogIO::POST;
       os << LogIO::DEBUG1 <<"max rms at "<<maxrmspos<<", dynamic range = "<<max(maxrmspos)/maxrmsval << LogIO::POST;
     }      
     else {
@@ -919,6 +927,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     TempImage<Float>* tempIm2 = new TempImage<Float>(res.shape(), res.coordinates() );
     TempImage<Float>* tempIm = new TempImage<Float>(res.shape(), res.coordinates() );
     tempIm->copyData(res);    
+
     SPCIIF tempIm2_ptr(tempIm2);
     SPIIF tempIm3_ptr(tempIm);
     SPIIF tempIm_ptr;
@@ -1135,26 +1144,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     minMax(minMinVal,maxMinVal,min);
 
     //os << LogIO::DEBUG1 <<" thresh for binned image (modified by sqrt(npix))   ="<<thresh<<LogIO::POST;
-    os << LogIO::DEBUG1 <<" thresh for binned image ="<<thresh<<LogIO::POST;
     os << LogIO::NORMAL <<"stats on binned image: max="<<maxMaxVal<<" rms="<<maxRmsVal<<LogIO::POST;
 
     TempImage<Float>* tempMask = new TempImage<Float> (tempRebinnedIm.shape(), tempRebinnedIm.coordinates() );
+
+    if (fracofpeak) {
+      thresh = fracofpeak * maxMaxVal;
+    }
+    else if (sigma) {
+      thresh = sigma * maxRmsVal;
+    }
+
+     os << LogIO::NORMAL <<"rms="<<maxRmsVal<<" thresh="<<thresh<<" with sigma="<<sigma<<LogIO::POST;
 
     if (thresh > maxMaxVal) {
       os << LogIO::WARN <<" The threshold value,"<<thresh<<" for making a mask is greater than max value in the image. No mask will be added by automask."<< LogIO::POST;
       tempMask->set(0.0);
     }
     else {
-      if (fracofpeak) {
-        thresh = fracofpeak * maxMaxVal;
-      }
-      else if (sigma) {
-        thresh = sigma * maxRmsVal;
-      }
     
       // apply threshold to rebinned image to generate a temp image mask
-      // first run pruning by limiting n masks
-      SHARED_PTR<ImageInterface<Float> > dummyim = pruneRegions(tempRebinnedIm, thresh, nmask);
+      // first run pruning by limiting n masks (npix=1 as it is already binned)
+      SHARED_PTR<ImageInterface<Float> > dummyim = pruneRegions(tempRebinnedIm, thresh, nmask, 1);
 
       os << LogIO::DEBUG1<<" threshold applied ="<<thresh<<LogIO::POST;
       //cerr<<"dummyim shape="<<dummyim.get()->shape()<<endl;
@@ -1317,6 +1328,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         wbox.resize(iSubComp+1);
         wbox[iSubComp]= new WCBox (qblc, qtrc, cSys, absRel);
         iSubComp++;
+        os << LogIO::DEBUG1<<"*** Removed region: "<<icomp<<" pblc="<<pblc<<" ptrc="<<ptrc<<LogIO::POST;
+      }
+      else {
+        os << LogIO::DEBUG1<<"Saved region: "<<icomp<<" pblc="<<pblc<<" ptrc="<<ptrc<<LogIO::POST;
       }
     } // for icomp  
 
@@ -1336,6 +1351,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     else {
       os <<"No regions are removed by pruning" << LogIO::POST;
+    }
+    // Debug
+    if (debug) {
+      PagedImage<Float> debugPrunedIm(tempIm->shape(),tempIm->coordinates(),"prunedSub.Im");
+      debugPrunedIm.copyData(*tempIm);
     }
     //
     // Inserting pruned result image to the input image
@@ -1403,13 +1423,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   { 
     LogIO os( LogOrigin("SDMaskHandler","autoMaskWithinPB",WHERE) );
 
-    autoMask( imstore, alg, threshold, fracofpeak, resolution, resbybeam, nmask);
+    // changed to do automask ater pb mask is generated so automask do stats within pb mask
+    //autoMask( imstore, alg, threshold, fracofpeak, resolution, resbybeam, nmask);
 
     if( imstore->hasPB() ) // Projection algorithms will have this.
       {
 	LatticeExpr<Float> themask( iif( (*(imstore->pb())) > pblimit , (*(imstore->mask())), 0.0 ) );
 	imstore->mask()->copyData( themask );
       }
+    autoMask( imstore, alg, threshold, fracofpeak, resolution, resbybeam, nmask);
     // else... same options as makePBMask (put it into a helper function)
   }// end of autoMaskWithinPB
 
