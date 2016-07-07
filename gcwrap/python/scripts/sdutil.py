@@ -1496,6 +1496,7 @@ def get_ms_sampling_arcsec(msname, spw='', antenna='', field='',
         casalog.post("Detected more than 100 raster rows. Using the first 100 raster rows to define separation between rows.")
         times = times[:row_gap[100]]
         row_idx = row_idx[:row_gap[100]]
+        row_gap = row_gap[:101]
     casalog.post("Using %d pointings to define sampling interval" % len(row_idx))
     # get pointing direction of the time
     msmd_loc.open(msname)
