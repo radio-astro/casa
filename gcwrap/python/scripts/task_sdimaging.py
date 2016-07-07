@@ -474,10 +474,11 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
             casalog.post("All pixels weight zero. This indicates no data in MS is in image area. Mask will not be set. Please check your image parameters.","WARN")
             return
         median_weight = stat['median'][0]
+        weight_threshold = median_weight * self.minweight
         casalog.post("Median of weight in the map is %f" % median_weight, \
                      "INFO")
         casalog.post("Pixels in map with weight <= median(weight)*minweight = %f will be masked." % \
-                     (median_weight*self.minweight),"INFO")
+                     (weight_threshold),"INFO")
         ###Leaving the original logic to calculate the number of masked pixels via
         ###product of median of and min_weight (which i don't understand the logic)
         ### if one wanted to find how many pixel were masked one could easily count the
@@ -501,7 +502,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         my_ia.close()
         # Modify default mask
         my_ia.open(self.outfile)
-        my_ia.calcmask("'%s'>%f" % (weightfile,self.minweight), asdefault=True)
+        my_ia.calcmask("'%s'>%f" % (weightfile,weight_threshold), asdefault=True)
         my_ia.close()
         masked_fraction = 100.*(1. - (imsize - nmask_pixels) / float(valid_pixels[0]) )
         casalog.post("This amounts to %5.1f %% of the area with nonzero weight." % \
