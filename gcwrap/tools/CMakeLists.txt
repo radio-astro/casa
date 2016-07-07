@@ -60,6 +60,8 @@ add_custom_target(
     COMMAND echo "    if os.environ.has_key\\\(\\'__CASAPY_PYTHONDIR\\'\\\):" >> casadef.py
     COMMAND echo "        python_library_directory = os.environ[\\'__CASAPY_PYTHONDIR\\']" >> casadef.py
     COMMAND echo "casa_version = \\\"${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_VERSION}\\\"" >> casadef.py
+    COMMAND echo "if os.environ.get\\\(\\'CASAVERSION\\'\\\) is not None:" >> casadef.py
+    COMMAND echo "    casa_version = os.environ.get\\\(\\'CASAVERSION\\'\\\)" >> casadef.py
     COMMAND cat definitions >> casadef.py
     DEPENDS definitions
     )
