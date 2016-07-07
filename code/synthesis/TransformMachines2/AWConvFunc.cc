@@ -394,11 +394,11 @@ using namespace casa::vi;
     		    cs.replaceCoordinate(SpCS,index);
 		    //tim.show("CSStuff:");
     		    // {
-		    //   ostringstream name;
+		    // ostringstream name;
 		    //   name << "twoDPB.before" << iw << "_" << inu << "_" << muellerElements(imx)(imy) <<".im";
     		    //   storeImg(name,twoDPB_l);
-		    //   name << "twoDPBSq.before" << iw << "_" << inu << "_" << muellerElements(imx)(imy) <<".im";
-    		    //   storeImg(name,twoDPBSq_l);
+		      // name << "twoDPBSq.before" << iw << "_" << inu << "_" << muellerElements(imx)(imy) <<".im";
+    		      // storeImg(name,twoDPBSq_l);
     		    // }
 		    //
 		    // Now FT the function and copy the data from
@@ -935,8 +935,8 @@ using namespace casa::vi;
 	// Float psScale= (image.coordinates().increment()(0)*nx) /
 	//   (coords.increment()(0)*screen.shape()(0));
 
-	Float psScale = (2*coords.increment()(0))/(nx*image.coordinates().increment()(0)),
-	  innerQuaterFraction=0.5;
+	Float psScale = (2.0*coords.increment()(0))/(nx*image.coordinates().increment()(0)),
+	  innerQuaterFraction=0.25;
 	// psScale when using SynthesisUtils::libreSpheroidal() is
 	// 2.0/nSupport.  nSupport is in pixels and the 2.0 is due to
 	// the center being at Nx/2.  Here the nSupport is determined
@@ -1520,7 +1520,7 @@ using namespace casa::vi;
   //
   void AWConvFunc::fillConvFuncBuffer2(CFBuffer& cfb, CFBuffer& cfWtb,
 				       const Int& nx, const Int& ny, 
-				       const CoordinateSystem& skyCoords,
+				       const ImageInterface<Complex>& skyImage,
 				       const CFCStruct& miscInfo,
 				       PSTerm& psTerm, WTerm& wTerm, ATerm& aTerm)
 
@@ -1584,10 +1584,12 @@ using namespace casa::vi;
       // 	cellSize = lc.increment();
       // }
       {
+	CoordinateSystem skyCoords(skyImage.coordinates());
+	
 	Int directionIndex=skyCoords.findCoordinate(Coordinate::DIRECTION);
 	DirectionCoordinate dc=skyCoords.directionCoordinate(directionIndex);
 	//Vector<Double> cellSize;
-	cellSize = dc.increment()*(Double)miscInfo.sampling;
+	cellSize = dc.increment()*(Double)(miscInfo.sampling*skyImage.shape()(0)/nx); // nx is the size of the CF buffer
       }
       //cerr << "#########$$$$$$ " << cellSize << endl;
 
@@ -1801,8 +1803,8 @@ using namespace casa::vi;
     // Get the coordinate system
     //
     const String uvGridDiskImage=cfCachePath+"/"+"uvgrid.im";
-    PagedImage<Complex> image_l(uvGridDiskImage);//cfs2.getCacheDir()+"/uvgrid.im");
-    CoordinateSystem coords(image_l.coordinates());
+    PagedImage<Complex> skyImage_l(uvGridDiskImage);//cfs2.getCacheDir()+"/uvgrid.im");
+    //CoordinateSystem coords(image_l.coordinates());
     
     //Int nx=image_l.shape()(0);//, ny=image.shape()(1);
     CountedPtr<CFBuffer> cfb_p, cfwtb_p;
@@ -1861,7 +1863,7 @@ using namespace casa::vi;
 			 
 			 Int inner=convSize/(convSampling);
 			 //Float psScale = (2*coords.increment()(0))/(nx*image.coordinates().increment()(0));
-			 Float innerQuaterFraction=1.0;
+			 Float innerQuaterFraction=0.5;
 			 
 			 Float psScale = 2.0/(innerQuaterFraction*convSize/convSampling);// nx*image.coordinates().increment()(0)*convSampling/2;
 			 ((static_cast<AWConvFunc &>(*awCF)).psTerm_p)->init(IPosition(2,inner,inner), uvScale, uvOffset,psScale);
@@ -1873,7 +1875,7 @@ using namespace casa::vi;
 			 //
 			 
 			 AWConvFunc::fillConvFuncBuffer2(*cfb_p, *cfwtb_p, convSize, convSize, 
-					     coords, miscInfo,
+					     skyImage_l, miscInfo,
 					     *((static_cast<AWConvFunc &>(*awCF)).psTerm_p),
 					     *((static_cast<AWConvFunc &>(*awCF)).wTerm_p),
 					     *((static_cast<AWConvFunc &>(*awCF)).aTerm_p));

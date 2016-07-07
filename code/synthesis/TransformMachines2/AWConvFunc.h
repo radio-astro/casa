@@ -96,10 +96,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				  const Bool psTermOn,
 				  const Bool aTermOn);
     static void fillConvFuncBuffer2(CFBuffer& cfb, CFBuffer& cfWtb,
-			     const Int& nx, const Int& ny,
-			     const CoordinateSystem& skyCoords,
-			     const CFCStruct& miscInfo,
-			     PSTerm& psTerm, WTerm& wTerm, ATerm& aTerm);
+				    const Int& nx, const Int& ny,
+				    const ImageInterface<Complex>& skyImage,
+				    const CFCStruct& miscInfo,
+				    PSTerm& psTerm, WTerm& wTerm, ATerm& aTerm);
 
     virtual Bool makeAverageResponse(const VisBuffer2& vb, 
 				     const ImageInterface<Complex>& image,

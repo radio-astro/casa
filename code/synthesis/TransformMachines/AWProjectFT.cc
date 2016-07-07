@@ -1242,8 +1242,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					 cfCache_p->getCacheDir()+"/uvgrid.im");
 	  }
 
-	cfs2_p->makePersistent(cfCache_p->getCacheDir().c_str());
-	cfwts2_p->makePersistent(cfCache_p->getCacheDir().c_str(),"","WT");
+	// cfs2_p->makePersistent(cfCache_p->getCacheDir().c_str());
+	// cfwts2_p->makePersistent(cfCache_p->getCacheDir().c_str(),"","WT");
+
+	// Save only the CF Cube for the current value of PA (not the
+	// entire CFStore -- CFs for PA values encountered earlier
+	// than current value have already need made persistent).
+	cfs2_p->makePersistent(cfCache_p->getCacheDir().c_str(),"","",    Quantity(pa,"rad"),dPAQuant,0,0);
+	cfwts2_p->makePersistent(cfCache_p->getCacheDir().c_str(),"","WT",Quantity(pa,"rad"),dPAQuant,0,0);
 	Double memUsed=cfs2_p->memUsage();
 	String unit(" KB");
 	memUsed = (Int)(memUsed/1024.0+0.5);

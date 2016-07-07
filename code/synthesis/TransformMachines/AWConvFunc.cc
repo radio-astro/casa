@@ -332,7 +332,6 @@ namespace casa{
 		    if (!isDryRun)
 		      {
 			wTerm.applySky(cfBufMat, iw, cellSize, wScale, cfBuf.shape()(0));///4);
-			//cerr << iw << " " << cellSize << " " << iw*iw/wScale << endl;
 		      }
 		    //tim.show("WTerm: ");
 		    // wTerm.applySky(cfWtBufMat, iw, cellSize, wScale, cfWtBuf.shape()(0)/4);
@@ -1517,7 +1516,8 @@ namespace casa{
   //
   void AWConvFunc::fillConvFuncBuffer2(CFBuffer& cfb, CFBuffer& cfWtb,
 				       const Int& nx, const Int& ny, 
-				       const CoordinateSystem& skyCoords,
+				       const ImageInterface<Complex>& skyImage,
+				       //const CoordinateSystem& skyCoords,
 				       const CFCStruct& miscInfo,
 				       PSTerm& psTerm, WTerm& wTerm, ATerm& aTerm)
 
@@ -1565,7 +1565,6 @@ namespace casa{
       // }
 
       //if (!isDryRun)
-      // cerr << "#########$$$$$$ " << pbshp << " " << nx << " " << freq_l << " " << conjFreq << endl;
       {
 	aTerm.applySky(ftATerm_l, vbPA, doSquint, 0, miscInfo.muellerElement,freq_l);//freqHi);
 	aTerm.applySky(ftATermSq_l, vbPA, doSquint, 0,miscInfo.muellerElement,conjFreq);
@@ -1581,10 +1580,12 @@ namespace casa{
       // 	cellSize = lc.increment();
       // }
       {
+	CoordinateSystem skyCoords(skyImage.coordinates());
 	Int directionIndex=skyCoords.findCoordinate(Coordinate::DIRECTION);
 	DirectionCoordinate dc=skyCoords.directionCoordinate(directionIndex);
 	//Vector<Double> cellSize;
-	cellSize = dc.increment()*(Double)miscInfo.sampling;
+	//	cerr << "#########$$$$$$ " << skyImage.shape() << " " << pbshp << " " << nx << " " << freq_l << " " << conjFreq << endl;
+	cellSize = dc.increment()*(Double)(miscInfo.sampling*skyImage.shape()(0)/nx); // nx is the size of the CF buffer
       }
       //cerr << "#########$$$$$$ " << cellSize << endl;
 
@@ -1632,7 +1633,6 @@ namespace casa{
 	    if (miscInfo.wValue > 0)
 	      {
 		wTerm.applySky(cfBufMat, cellSize, miscInfo.wValue, cfBuf.shape()(0));///4);
-		//cerr << cellSize << " " << wValue << endl;
 	      }
 	  }
 
@@ -1870,10 +1870,11 @@ namespace casa{
 			 //
 			 
 			 AWConvFunc::fillConvFuncBuffer2(*cfb_p, *cfwtb_p, convSize, convSize, 
-					     coords, miscInfo,
-					     *((static_cast<AWConvFunc &>(*awCF)).psTerm_p),
-					     *((static_cast<AWConvFunc &>(*awCF)).wTerm_p),
-					     *((static_cast<AWConvFunc &>(*awCF)).aTerm_p));
+							 image_l,//coords,
+							 miscInfo,
+							 *((static_cast<AWConvFunc &>(*awCF)).psTerm_p),
+							 *((static_cast<AWConvFunc &>(*awCF)).wTerm_p),
+							 *((static_cast<AWConvFunc &>(*awCF)).aTerm_p));
 					     
 			 //				     *psTerm_p, *wTerm_p, *aTerm_p);
 			 //cfb_p->show(NULL,cerr);
