@@ -25,7 +25,8 @@ class BaseCleanSequence:
         self.model_sums = []
         self.residual_maxs = []
         self.residual_mins = []
-        self.non_cleaned_rms_list = []
+        self.residual_non_cleanmask_rms_list = []
+        self.image_non_cleanmask_rms_list = []
         self.island_peaks_list = []
         self.thresholds = []
         self.multiterm = multiterm
@@ -44,8 +45,8 @@ class BaseCleanSequence:
         self.flux = flux
 
         #if cleanmask is not None and os.path.exists(cleanmask):
-        model_sum, clean_rms, non_cleaned_rms, residual_max, \
-            residual_min, rms2d, image_max = cbheuristic.analyse_clean_result(
+        model_sum, residual_cleanmask_rms, residual_non_cleanmask_rms, residual_max, \
+            residual_min, rms2d, image_non_cleanmask_rms, image_max = cbheuristic.analyse_clean_result(
             multiterm, model, restored, residual, flux, cleanmask, pblimit_image, pblimit_cleanmask)
 
         # Append the statistics.
@@ -56,10 +57,11 @@ class BaseCleanSequence:
         self.model_sums.append(model_sum)
         self.residual_maxs.append(residual_max)
         self.residual_mins.append(residual_min)
-        self.non_cleaned_rms_list.append(non_cleaned_rms)
+        self.residual_non_cleanmask_rms_list.append(residual_non_cleanmask_rms)
+        self.image_non_cleanmask_rms_list.append(image_non_cleanmask_rms)
 
-        return model_sum, clean_rms, non_cleaned_rms, residual_max, \
-               residual_min, rms2d, image_max
+        return model_sum, residual_cleanmask_rms, residual_non_cleanmask_rms, residual_max, \
+               residual_min, rms2d, image_non_cleanmask_rms, image_max
 
     def iteration(self, new_cleanmask):
         """The base boxworker allows only one iteration.

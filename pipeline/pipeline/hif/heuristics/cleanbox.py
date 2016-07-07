@@ -723,7 +723,7 @@ def analyse_clean_result(multiterm, model, restored, residual, flux, cleanmask, 
     with casatools.ImageReader(residual+extension) as image:
         # get the rms of the residual image inside the cleaned area
         LOG.todo('Cannot use dirname in mask')
-        clean_rms = None
+        residual_cleanmask_rms = None
 
         if cleanmask is not None and os.path.exists(cleanmask):
             # Area inside clean mask
@@ -731,15 +731,16 @@ def analyse_clean_result(multiterm, model, restored, residual, flux, cleanmask, 
 
             resid_clean_stats = image.statistics(mask=statsmask, 
               robust=False)
+
             try:
-                clean_rms = resid_clean_stats['rms'][0]
+                residual_cleanmask_rms = resid_clean_stats['rms'][0]
                 LOG.info('Residual rms inside cleaned area: %s' %
-                  clean_rms)
+                  residual_cleanmask_rms)
             except:
                 pass
 
         # and the rms of the residual image outside the cleaned area
-        non_clean_rms = None
+        residual_non_cleanmask_rms = None
 
         if flux is not None and os.path.exists(flux):
             have_mask= True
@@ -753,14 +754,14 @@ def analyse_clean_result(multiterm, model, restored, residual, flux, cleanmask, 
             have_mask= False
             statsmask = ''
 
-        resid_stats = image.statistics(mask=statsmask, robust=False)
+        residual_stats = image.statistics(mask=statsmask, robust=False)
 
         try:
-            non_clean_rms = resid_stats['rms'][0]
+            residual_non_cleanmask_rms = residual_stats['rms'][0]
             if have_mask:
-                LOG.info('Residual rms at the edge of the cleaned area: %s' % non_clean_rms)
+                LOG.info('Residual rms at the edge of the cleaned area: %s' % residual_non_cleanmask_rms)
             else:
-                LOG.info('Residual rms across full area: %s' %  non_clean_rms)
+                LOG.info('Residual rms across full area: %s' %  residual_non_cleanmask_rms)
         except:
             pass
 
@@ -771,27 +772,53 @@ def analyse_clean_result(multiterm, model, restored, residual, flux, cleanmask, 
               mask='"%s" > %f' % (os.path.basename(flux), pblimit_image), robust=False)
         else:
             residual_stats = image.statistics(robust=False)
+
         try:
             residual_max = residual_stats['max'][0]
             residual_min = residual_stats['min'][0]
         except:
             residual_max = None
             residual_min = None
-        LOG.info('Residual max:%s min:%s' % (residual_max, residual_min))
+
+        LOG.info('Residual max: %s min: %s' % (residual_max, residual_min))
 
         # get 2d rms of residual
         pixels = image.getregion(axes=[3])
         rms2d = np.std(pixels)
-        LOG.debug('2d rms of residual:%s' % rms2d)
+        LOG.debug('2d rms of residual: %s' % rms2d)
 
-    # get max of cleaned result
+    # get max and RMS in non cleanask area of non-pb corrected cleaned result
+    image_max = None
+    image_non_cleanmask_rms = None
     if restored not in [None, '']:
-        with casatools.ImageReader(restored+extension) as image:
+        with casatools.ImageReader(restored.replace('.pbcor','')+extension) as image:
             clean_stats = image.statistics()
             image_max = clean_stats['max'][0]
             LOG.debug('Clean image max: %s' % image_max)
-    else:
-        image_max = None
 
-    return model_sum, clean_rms, non_clean_rms, residual_max,\
-      residual_min, rms2d, image_max
+            # and the rms of the clean image outside the cleaned area
+            if flux is not None and os.path.exists(flux):
+                have_mask= True
+                # Default is annulus 0.2 < pb < 0.3
+                statsmask = '("%s" > %f) && ("%s" < %f)' % (os.path.basename(flux), pblimit_image, os.path.basename(flux), pblimit_cleanmask)
+            elif cleanmask is not None and os.path.exists(cleanmask):
+                have_mask= True
+                # Area outside clean mask
+                statsmask = '"%s" < 0.1' % (os.path.basename(cleanmask))
+            else:
+                have_mask= False
+                statsmask = ''
+
+            image_stats = image.statistics(mask=statsmask, robust=False)
+
+            try:
+                image_non_cleanmask_rms = image_stats['rms'][0]
+                if have_mask:
+                    LOG.info('Clean image rms at the edge of the cleaned area: %s' % image_non_cleanmask_rms)
+                else:
+                    LOG.info('Clean image rms across full area: %s' %  image_non_cleanmask_rms)
+            except:
+                pass
+
+    return model_sum, residual_cleanmask_rms, residual_non_cleanmask_rms, residual_max,\
+      residual_min, rms2d, image_non_cleanmask_rms, image_max

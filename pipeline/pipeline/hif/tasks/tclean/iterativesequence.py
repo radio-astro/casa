@@ -32,7 +32,7 @@ class IterativeSequence(BaseCleanSequence):
             nm.close()
             nm.done()
 
-            new_threshold = 10.0 * self.non_cleaned_rms_list[-1]
+            new_threshold = 10.0 * self.residual_non_cleanmask_rms_list[-1]
             new_threshold = '%sJy' % new_threshold
             self.result.threshold = new_threshold
             self.result.cleanmask = new_cleanmask
@@ -77,7 +77,7 @@ class IterativeSequence(BaseCleanSequence):
               sum=self.model_sums[-1], 
               residual_max=self.residual_maxs[-1],
               residual_min=self.residual_mins[-1], 
-              non_cleaned_rms=self.non_cleaned_rms_list[-1],
+              non_cleaned_rms=self.residual_non_cleanmask_rms_list[-1],
               island_peaks_list=self.island_peaks_list,
               flux_list=self.model_sums)
 

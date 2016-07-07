@@ -339,8 +339,8 @@ class Tclean(cleanbase.CleanBase):
         inputs.pblimit = self.pblimit_image
 
         # Give the result to the sequence_manager for analysis
-        model_sum, cleaned_rms, non_cleaned_rms, residual_max, residual_min,\
-            rms2d, image_max = sequence_manager.iteration_result(iter=0,
+        model_sum, residual_cleanmask_rms, residual_non_cleanmask_rms, residual_max, residual_min,\
+            rms2d, image_non_cleanmask_rms, image_max = sequence_manager.iteration_result(iter=0,
                     multiterm = result.multiterm, psf = result.psf, model = result.model,
                     restored = result.image, residual = result.residual,
                     flux = result.flux, cleanmask=None, threshold = None,
@@ -348,9 +348,9 @@ class Tclean(cleanbase.CleanBase):
                     pblimit_cleanmask = self.pblimit_cleanmask)
 
         LOG.info('Dirty image stats')
-        LOG.info('    Rms %s', non_cleaned_rms)
-        LOG.info('    Residual max %s', residual_max)
-        LOG.info('    Residual min %s', residual_min)
+        LOG.info('    Residual rms: %s', residual_non_cleanmask_rms)
+        LOG.info('    Residual max: %s', residual_max)
+        LOG.info('    Residual min: %s', residual_min)
 
         # Check dynamic range and adjust threshold
         qaTool = casatools.quanta
@@ -496,19 +496,21 @@ class Tclean(cleanbase.CleanBase):
                     sensitivity=sequence_manager.sensitivity, result=result)
 
             # Give the result to the clean 'sequencer'
-            model_sum, cleaned_rms, non_cleaned_rms, residual_max, residual_min, rms2d, image_max = sequence_manager.iteration_result(
+            model_sum, residual_cleanmask_rms, residual_non_cleanmask_rms, residual_max, residual_min, rms2d, image_non_cleanmask_rms, image_max = sequence_manager.iteration_result(
                 iter=iter, multiterm=result.multiterm, psf=result.psf, model=result.model, restored=result.image, residual=result.residual,
                 flux=result.flux, cleanmask=new_cleanmask, threshold=seq_result.threshold, pblimit_image = self.pblimit_image,
                 pblimit_cleanmask = self.pblimit_cleanmask)
 
-            # Keep RMS for QA
-            result.set_rms(non_cleaned_rms)
+            # Keep image non-cleanmask area RMS for QA
+            result.set_rms(image_non_cleanmask_rms)
 
             LOG.info('Clean image iter %s stats' % iter)
-            LOG.info('    Clean rms %s', cleaned_rms)
-            LOG.info('    Nonclean rms %s', non_cleaned_rms)
-            LOG.info('    Residual max %s', residual_max)
-            LOG.info('    Residual min %s', residual_min)
+            LOG.info('    Clean image non-cleanmask area rms: %s', image_non_cleanmask_rms)
+            LOG.info('    Clean image max: %s', image_max)
+            LOG.info('    Residual non-cleanmask area rms: %s', residual_non_cleanmask_rms)
+            LOG.info('    Residual cleanmask area rms: %s', residual_cleanmask_rms)
+            LOG.info('    Residual max: %s', residual_max)
+            LOG.info('    Residual min: %s', residual_min)
 
             # Keep tclean summary plot
             try:
