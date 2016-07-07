@@ -566,7 +566,7 @@ def _doPolA(filenames, varnames, tmpFilePrefix):
             blc[stokesPixel] = pixNum
             trc[stokesPixel] = pixNum
             myfile = tmpFilePrefix + '_' + stokes
-            _myia.subimage(outfile=myfile, region=rg.box(blc=blc, trc=trc))
+            _myia.subimage(outfile=myfile, region=rg.box(blc=blc, trc=trc), wantreturn=False, overwrite=True)
             if (stokes == 'Q'):
                 Qimage = myfile
             elif (stokes == 'U'):
