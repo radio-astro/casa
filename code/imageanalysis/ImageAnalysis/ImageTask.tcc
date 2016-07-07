@@ -46,31 +46,31 @@
 namespace casa {
 
 template <class T> ImageTask<T>::ImageTask(
-	const SPCIIT image,
-	const String& region, const Record *const &regionPtr,
-	const String& box, const String& chanInp,
-	const String& stokes, const String& maskInp,
+    const SPCIIT image,
+    const String& region, const Record *const &regionPtr,
+    const String& box, const String& chanInp,
+    const String& stokes, const String& maskInp,
     const String& outname, Bool overwrite
 ) : _image(image), _regionPtr(regionPtr),_region(region), _box(box),
-	_chan(chanInp), _stokesString(stokes), _mask(maskInp),
-	_outname(outname), _overwrite(overwrite), _stretch(False),
-	_logfile() {
+    _chan(chanInp), _stokesString(stokes), _mask(maskInp),
+    _outname(outname), _overwrite(overwrite), _stretch(False),
+    _logfile() {
    // FITSImage::registerOpenFunction();
    //  MIRIADImage::registerOpenFunction();
 }
 
 template <class T> ImageTask<T>::ImageTask(
-	const SPCIIT image, const Record *const &regionPtr,
-	const String& mask,
+    const SPCIIT image, const Record *const &regionPtr,
+    const String& mask,
     const String& outname, Bool overwrite
 ) : _image(image), _regionPtr(regionPtr),
-	_region(), _box(), _chan(), _stokesString(), _mask(mask),
-	_outname(outname), _overwrite(overwrite) {}
+    _region(), _box(), _chan(), _stokesString(), _mask(mask),
+    _outname(outname), _overwrite(overwrite) {}
 
 template <class T> ImageTask<T>::~ImageTask() {}
 
 template <class T> std::vector<OutputDestinationChecker::OutputStruct> ImageTask<T>::_getOutputStruct() {
-	std::vector<OutputDestinationChecker::OutputStruct> outputs;
+    std::vector<OutputDestinationChecker::OutputStruct> outputs;
     _outname.trim();
     if (! _outname.empty()) {
         OutputDestinationChecker::OutputStruct outputImage;
@@ -84,44 +84,44 @@ template <class T> std::vector<OutputDestinationChecker::OutputStruct> ImageTask
 }
 
 template <class T> void ImageTask<T>::_construct(Bool verbose) {
-	ThrowIf(
-		! _supportsMultipleBeams() && _image->imageInfo().hasMultipleBeams(),
-		"This application does not support images with multiple "
-		"beams. Please convolve your image with a single beam "
-		"and run this application using that image"
-	);
-	String diagnostics;
-	std::vector<OutputDestinationChecker::OutputStruct> outputs = _getOutputStruct();
-	std::vector<OutputDestinationChecker::OutputStruct> *outputPtr = outputs.size() > 0
-		? &outputs
-		: 0;
-	std::vector<Coordinate::Type> necCoords = _getNecessaryCoordinates();
-	std::vector<Coordinate::Type> *coordsPtr = necCoords.size() > 0
-		? &necCoords
-		: 0;
-	ThrowIf(
-		_mustHaveSquareDirectionPixels()
-		&& _image->coordinates().hasDirectionCoordinate()
-		&& ! _image->coordinates().directionCoordinate().hasSquarePixels(),
-		"This application requires that the input image must have square"
-		"direction pixels, but the input image does not. Please regrid it"
-		"so it does and rerun on the regridded image"
-	);
-	ImageInputProcessor inputProcessor;
-	inputProcessor.process(
-		_regionRecord, diagnostics, outputPtr,
-    	_stokesString, _image, _regionPtr,
-    	_region, _box, _chan,
-    	_getStokesControl(), _supportsMultipleRegions(),
-    	coordsPtr, verbose
+    ThrowIf(
+        ! _supportsMultipleBeams() && _image->imageInfo().hasMultipleBeams(),
+        "This application does not support images with multiple "
+        "beams. Please convolve your image with a single beam "
+        "and run this application using that image"
+    );
+    String diagnostics;
+    std::vector<OutputDestinationChecker::OutputStruct> outputs = _getOutputStruct();
+    std::vector<OutputDestinationChecker::OutputStruct> *outputPtr = outputs.size() > 0
+        ? &outputs
+        : 0;
+    std::vector<Coordinate::Type> necCoords = _getNecessaryCoordinates();
+    std::vector<Coordinate::Type> *coordsPtr = necCoords.size() > 0
+        ? &necCoords
+        : 0;
+    ThrowIf(
+        _mustHaveSquareDirectionPixels()
+        && _image->coordinates().hasDirectionCoordinate()
+        && ! _image->coordinates().directionCoordinate().hasSquarePixels(),
+        "This application requires that the input image must have square"
+        "direction pixels, but the input image does not. Please regrid it"
+        "so it does and rerun on the regridded image"
+    );
+    ImageInputProcessor inputProcessor;
+    inputProcessor.process(
+        _regionRecord, diagnostics, outputPtr,
+        _stokesString, _image, _regionPtr,
+        _region, _box, _chan,
+        _getStokesControl(), _supportsMultipleRegions(),
+        coordsPtr, verbose
     );
 }
 
 template <class T> void ImageTask<T>::setRegion(const Record& region) {
-	ThrowIf(
-		! _supportsMultipleRegions() && region.isDefined("regions"),
-		"This application does not support multiple region selection"
-	);
+    ThrowIf(
+        ! _supportsMultipleRegions() && region.isDefined("regions"),
+        "This application does not support multiple region selection"
+    );
     _regionRecord = region;
     _box = "";
     _chan = "";
@@ -130,275 +130,275 @@ template <class T> void ImageTask<T>::setRegion(const Record& region) {
 }
 
 template <class T> void ImageTask<T>::_removeExistingFileIfNecessary(
-	const String& filename, Bool overwrite, Bool warnOnly
+    const String& filename, Bool overwrite, Bool warnOnly
 ) const {
-	File out(filename);
-	if (out.exists()) {
-		// remove file if it exists which prevents emission of
-		// file is already open in table cache exceptions
-		if (overwrite) {
-			if (out.isDirectory()) {
-				Directory dir(filename);
-				dir.removeRecursive();
-			}
-			else if (out.isRegular()) {
-				RegularFile reg(filename);
-				reg.remove();
-			}
-			else if (out.isSymLink()) {
-				SymLink link(filename);
-				link.remove();
-			}
-		}
-		else {
-		    String msg = "File " + filename + " exists but overwrite is false "
-				"so it cannot be overwritten";
-		    if (warnOnly) {
-		        *_log << LogIO::WARN << msg << LogIO::POST;
-		    }
-		    else {
-		        ThrowCc(msg);
-		    }
-		}
-	}
+    File out(filename);
+    if (out.exists()) {
+        // remove file if it exists which prevents emission of
+        // file is already open in table cache exceptions
+        if (overwrite) {
+            if (out.isDirectory()) {
+                Directory dir(filename);
+                dir.removeRecursive();
+            }
+            else if (out.isRegular()) {
+                RegularFile reg(filename);
+                reg.remove();
+            }
+            else if (out.isSymLink()) {
+                SymLink link(filename);
+                link.remove();
+            }
+        }
+        else {
+            String msg = "File " + filename + " exists but overwrite is false "
+                "so it cannot be overwritten";
+            if (warnOnly) {
+                *_log << LogIO::WARN << msg << LogIO::POST;
+            }
+            else {
+                ThrowCc(msg);
+            }
+        }
+    }
 }
 
 template <class T> void ImageTask<T>::_removeExistingOutfileIfNecessary() const {
-	_removeExistingFileIfNecessary(_outname, _overwrite);
+    _removeExistingFileIfNecessary(_outname, _overwrite);
 }
 
 template <class T> String ImageTask<T>::_summaryHeader() const {
-	String region = _box.empty() ? _region : "";
-	ostringstream os;
-	os << "Input parameters ---" << endl;
-	os << "       --- imagename:           " << _image->name() << endl;
-	os << "       --- region:              " << region << endl;
-	os << "       --- box:                 " << _box << endl;
-	os << "       --- channels:            " << _chan << endl;
-	os << "       --- stokes:              " << _stokesString << endl;
-	os << "       --- mask:                " << _mask << endl;
-	return os.str();
+    String region = _box.empty() ? _region : "";
+    ostringstream os;
+    os << "Input parameters ---" << endl;
+    os << "       --- imagename:           " << _image->name() << endl;
+    os << "       --- region:              " << region << endl;
+    os << "       --- box:                 " << _box << endl;
+    os << "       --- channels:            " << _chan << endl;
+    os << "       --- stokes:              " << _stokesString << endl;
+    os << "       --- mask:                " << _mask << endl;
+    return os.str();
 }
 
 template <class T> void ImageTask<T>::setLogfile(const String& lf) {
-	if (lf.empty()) {
-		return;
-	}
-	ThrowIf(
-		! _hasLogfileSupport(),
-		"Logic Error: This task does not support writing of a log file"
-	);
-	try {
-		_logfile.reset(new LogFile(lf));
-		_logfile->setAppend(_logfileAppend);
-	}
-	catch (const AipsError& x) {}
+    if (lf.empty()) {
+        return;
+    }
+    ThrowIf(
+        ! _hasLogfileSupport(),
+        "Logic Error: This task does not support writing of a log file"
+    );
+    try {
+        _logfile.reset(new LogFile(lf));
+        _logfile->setAppend(_logfileAppend);
+    }
+    catch (const AipsError& x) {}
 }
 
 template <class T> const SHARED_PTR<LogFile> ImageTask<T>::_getLogFile() const {
-	ThrowIf(
-		! _hasLogfileSupport(),
-		"Logic Error: This task does not support writing of a log file"
-	);
-	return _logfile;
+    ThrowIf(
+        ! _hasLogfileSupport(),
+        "Logic Error: This task does not support writing of a log file"
+    );
+    return _logfile;
 }
 
 template <class T> Bool ImageTask<T>::_openLogfile() {
-	if (_logfile.get() == 0) {
-		return False;
-	}
-	ThrowIf(
-		! _hasLogfileSupport(),
-		"Logic Error: This task does not support writing of a log file"
-	);
-	return _logfile->open();
+    if (_logfile.get() == 0) {
+        return False;
+    }
+    ThrowIf(
+        ! _hasLogfileSupport(),
+        "Logic Error: This task does not support writing of a log file"
+    );
+    return _logfile->open();
 }
 
 template <class T> void ImageTask<T>::_closeLogfile() const {
-	if (_logfile) {
-		_logfile->close();
-	}
+    if (_logfile) {
+        _logfile->close();
+    }
 }
 
 template<class T> Bool ImageTask<T>::_writeLogfile(
-	const String& output, const Bool open, const Bool close
+    const String& output, const Bool open, const Bool close
 ) {
-	ThrowIf(
-		! _hasLogfileSupport(),
-		"Logic Error: This task does not support writing of a log file"
-	);
-	if (! _logfile) {
-		return False;
-	}
-	return _logfile->write(output, open, close);
+    ThrowIf(
+        ! _hasLogfileSupport(),
+        "Logic Error: This task does not support writing of a log file"
+    );
+    if (! _logfile) {
+        return False;
+    }
+    return _logfile->write(output, open, close);
 }
 
 template <class T> void ImageTask<T>::setLogfileAppend(Bool a) {
-	ThrowIf(
-		! _hasLogfileSupport(),
-		"Logic Error: This task does not support writing of a log file"
-	);
-	_logfileAppend = a;
-	if (_logfile) {
-		_logfile->setAppend(a);
-	}
+    ThrowIf(
+        ! _hasLogfileSupport(),
+        "Logic Error: This task does not support writing of a log file"
+    );
+    _logfileAppend = a;
+    if (_logfile) {
+        _logfile->setAppend(a);
+    }
 }
 
 template <class T> void ImageTask<T>::addHistory(
-	const vector<std::pair<String, String> >& msgs
+    const vector<std::pair<String, String> >& msgs
 ) const {
-	_newHistory.insert(
-		_newHistory.end(), msgs.begin(), msgs.end()
-	);
+    _newHistory.insert(
+        _newHistory.end(), msgs.begin(), msgs.end()
+    );
 }
 
 template <class T> void ImageTask<T>::addHistory(
-	const LogOrigin& origin, const String& msg
+    const LogOrigin& origin, const String& msg
 ) const {
-	std::pair<String, String> x;
-	x.first = origin.fullName();
-	x.second = msg;
-	_newHistory.push_back(x);
+    std::pair<String, String> x;
+    x.first = origin.fullName();
+    x.second = msg;
+    _newHistory.push_back(x);
 }
 
 template <class T> void ImageTask<T>::addHistory(
-	const LogOrigin& origin, const vector<String>& msgs
+    const LogOrigin& origin, const vector<String>& msgs
 ) const {
-	std::pair<String, String> x;
-	x.first = origin.fullName();
-	for( String m: msgs ) {
-		x.second = m;
-		_newHistory.push_back(x);
-	}
+    std::pair<String, String> x;
+    x.first = origin.fullName();
+    for( String m: msgs ) {
+        x.second = m;
+        _newHistory.push_back(x);
+    }
 }
 
 template <class T> void ImageTask<T>::addHistory(
     const LogOrigin& origin, const String& taskname,
     const vector<String>& paramNames, const vector<casac::variant>& paramValues
 ) const {
-	ThrowIf(
-		paramNames.size() != paramValues.size(),
-		"paramNames and paramValues must have the same number of elements"
-	);
-	std::pair<String, String> x;
-	x.first = origin.fullName();
-	x.second = "Ran " + taskname + " on " + _image->name();
-	_newHistory.push_back(x);
-	vector<std::pair<String, casac::variant> > inputs;
-	vector<String>::const_iterator begin = paramNames.begin();
-	vector<String>::const_iterator name = begin;
-	vector<casac::variant>::const_iterator value = paramValues.begin();
-	vector<String>::const_iterator end = paramNames.end();
-	String out = taskname + "(";
-	String quote;
-	while (name != end) {
-		if (name != begin) {
-			out += ", ";
-		}
-		quote = value->type() == casac::variant::STRING ? "'" : "";
-		out += *name + "=" + quote;
-		out += value->toString();
-		out += quote;
-		name++;
-		value++;
-	}
-	x.second = out + ")";
-	_newHistory.push_back(x);
+    ThrowIf(
+        paramNames.size() != paramValues.size(),
+        "paramNames and paramValues must have the same number of elements"
+    );
+    std::pair<String, String> x;
+    x.first = origin.fullName();
+    x.second = "Ran " + taskname + " on " + _image->name();
+    _newHistory.push_back(x);
+    vector<std::pair<String, casac::variant> > inputs;
+    vector<String>::const_iterator begin = paramNames.begin();
+    vector<String>::const_iterator name = begin;
+    vector<casac::variant>::const_iterator value = paramValues.begin();
+    vector<String>::const_iterator end = paramNames.end();
+    String out = taskname + "(";
+    String quote;
+    while (name != end) {
+        if (name != begin) {
+            out += ", ";
+        }
+        quote = value->type() == casac::variant::STRING ? "'" : "";
+        out += *name + "=" + quote;
+        out += value->toString();
+        out += quote;
+        name++;
+        value++;
+    }
+    x.second = out + ")";
+    _newHistory.push_back(x);
 }
 
 template <class T> void ImageTask<T>::_copyMask(
-	Lattice<Bool>& mask, const ImageInterface<T>& image
+    Lattice<Bool>& mask, const ImageInterface<T>& image
 ) {
-	auto cursorShape = image.niceCursorShape(4096*4096);
-	LatticeStepper stepper(image.shape(), cursorShape, LatticeStepper::RESIZE);
-	RO_MaskedLatticeIterator<T> iter(image, stepper);
-	LatticeIterator<Bool> miter(mask, stepper);
-	std::unique_ptr<RO_LatticeIterator<Bool>> pmiter;
-	if (image.hasPixelMask()) {
-		pmiter.reset(new RO_LatticeIterator<Bool>(image.pixelMask(), stepper));
-	}
-	for (iter.reset(); ! iter.atEnd(); ++iter, ++miter) {
-		auto mymask = iter.getMask();
-		if (pmiter) {
-			mymask = mymask && pmiter->cursor();
-			pmiter->operator++();
-		}
-		miter.rwCursor() = mymask;
-	}
+    auto cursorShape = image.niceCursorShape(4096*4096);
+    LatticeStepper stepper(image.shape(), cursorShape, LatticeStepper::RESIZE);
+    RO_MaskedLatticeIterator<T> iter(image, stepper);
+    LatticeIterator<Bool> miter(mask, stepper);
+    std::unique_ptr<RO_LatticeIterator<Bool>> pmiter;
+    if (image.hasPixelMask()) {
+        pmiter.reset(new RO_LatticeIterator<Bool>(image.pixelMask(), stepper));
+    }
+    for (iter.reset(); ! iter.atEnd(); ++iter, ++miter) {
+        auto mymask = iter.getMask();
+        if (pmiter) {
+            mymask = mymask && pmiter->cursor();
+            pmiter->operator++();
+        }
+        miter.rwCursor() = mymask;
+    }
 }
 
 template <class T> void ImageTask<T>::_copyData(
-	Lattice<T>& data, const ImageInterface<T>& image
+    Lattice<T>& data, const ImageInterface<T>& image
 ) {
-	auto cursorShape = image.niceCursorShape(4096*4096);
-	LatticeStepper stepper(image.shape(), cursorShape, LatticeStepper::RESIZE);
-	RO_LatticeIterator<T> iter(image, stepper);
-	LatticeIterator<T> diter(data, stepper);
-	for (iter.reset(); ! iter.atEnd(); ++iter, ++diter) {
-		diter.rwCursor() = iter.cursor();
-	}
+    auto cursorShape = image.niceCursorShape(4096*4096);
+    LatticeStepper stepper(image.shape(), cursorShape, LatticeStepper::RESIZE);
+    RO_LatticeIterator<T> iter(image, stepper);
+    LatticeIterator<T> diter(data, stepper);
+    for (iter.reset(); ! iter.atEnd(); ++iter, ++diter) {
+        diter.rwCursor() = iter.cursor();
+    }
 }
 
 template <class T> SPIIT ImageTask<T>::_prepareOutputImage(
     const ImageInterface<T>& image, const Array<T> *const values,
     const ArrayLattice<Bool> *const mask,
     const IPosition *const outShape, const CoordinateSystem *const coordsys,
-	const String *const outname, Bool overwrite, Bool dropDegen
+    const String *const outname, Bool overwrite, Bool dropDegen
 ) const {
-	IPosition oShape = outShape == 0 ? image.shape() : *outShape;
-	CoordinateSystem csys = coordsys == 0 ? image.coordinates() : *coordsys;
-	SHARED_PTR<TempImage<T> > tmpImage(
-		new TempImage<T>(TiledShape(oShape), csys)
-	);
-	if (mask != 0) {
-		if (! ImageMask::isAllMaskTrue(*mask)) {
-			tmpImage->attachMask(*mask);
-		}
-	}
-	// because subimages can have two types of masks, a region mask and
-	// a pixel mask, but most other types of images really just have a
-	// pixel mask. its very confusing
-	else if (image.hasPixelMask() || image.isMasked()) {
-		// A paged array is stored on disk and is preferred over an
-		// ArrayLattice which will exhaust memory for large images.
-		std::unique_ptr<Lattice<Bool>> mymask;
-		if (image.size() > 4096*4096) {
-			mymask.reset(new PagedArray<Bool>(image.shape()));
-		}
-		else {
-			mymask.reset(new ArrayLattice<Bool>(image.shape()));
-		}
-		_copyMask(*mymask, image);
-		if (! ImageMask::isAllMaskTrue(image)) {
-			tmpImage->attachMask(*mymask);
-		}
-	}
-	String myOutname = outname ? *outname : _outname;
-	if (! outname) {
-		overwrite = _overwrite;
-	}
-	SPIIT outImage = tmpImage;
-	if (values) {
-		outImage->put(*values);
-	}
-	else {
-	    // FIXME this is a superfluous copy if  dropgen || ! myOutname.empty()
-		_copyData(*outImage, image);
-	}
-	if (dropDegen || ! myOutname.empty()) {
-		if (! myOutname.empty()) {
-			_removeExistingFileIfNecessary(myOutname, overwrite);
-		}
-		String emptyMask = "";
-		Record empty;
+    IPosition oShape = outShape == 0 ? image.shape() : *outShape;
+    CoordinateSystem csys = coordsys == 0 ? image.coordinates() : *coordsys;
+    SHARED_PTR<TempImage<T> > tmpImage(
+        new TempImage<T>(TiledShape(oShape), csys)
+    );
+    if (mask != 0) {
+        if (! ImageMask::isAllMaskTrue(*mask)) {
+            tmpImage->attachMask(*mask);
+        }
+    }
+    // because subimages can have two types of masks, a region mask and
+    // a pixel mask, but most other types of images really just have a
+    // pixel mask. its very confusing
+    else if (image.hasPixelMask() || image.isMasked()) {
+        // A paged array is stored on disk and is preferred over an
+        // ArrayLattice which will exhaust memory for large images.
+        std::unique_ptr<Lattice<Bool>> mymask;
+        if (image.size() > 4096*4096) {
+            mymask.reset(new PagedArray<Bool>(image.shape()));
+        }
+        else {
+            mymask.reset(new ArrayLattice<Bool>(image.shape()));
+        }
+        _copyMask(*mymask, image);
+        if (! ImageMask::isAllMaskTrue(image)) {
+            tmpImage->attachMask(*mymask);
+        }
+    }
+    String myOutname = outname ? *outname : _outname;
+    if (! outname) {
+        overwrite = _overwrite;
+    }
+    SPIIT outImage = tmpImage;
+    if (values) {
+        outImage->put(*values);
+    }
+    else {
+        // FIXME this is a superfluous copy if  dropgen || ! myOutname.empty()
+        _copyData(*outImage, image);
+    }
+    if (dropDegen || ! myOutname.empty()) {
+        if (! myOutname.empty()) {
+            _removeExistingFileIfNecessary(myOutname, overwrite);
+        }
+        String emptyMask = "";
+        Record empty;
         outImage = SubImageFactory<T>::createImage(
-        	*tmpImage, myOutname, empty, emptyMask,
-        	dropDegen, False, True, False
+            *tmpImage, myOutname, empty, emptyMask,
+            dropDegen, False, True, False
         );
-	}
-	ImageUtilities::copyMiscellaneous(*outImage, image);
-	_doHistory(outImage);
-	return outImage;
+    }
+    ImageUtilities::copyMiscellaneous(*outImage, image);
+    _doHistory(outImage);
+    return outImage;
 }
 
 template <class T> SPIIT ImageTask<T>::_prepareOutputImage(

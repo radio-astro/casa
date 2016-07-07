@@ -41,16 +41,16 @@ template <class T> class ImageTask {
 
 public:
 
-	// verbosity levels
-	enum Verbosity {
-		QUIET,
-		WHISPER,
-		LOW,
-		NORMAL,
-		HIGH,
-		NOISY,
-		DEAFENING
-	};
+    // verbosity levels
+    enum Verbosity {
+        QUIET,
+        WHISPER,
+        LOW,
+        NORMAL,
+        HIGH,
+        NOISY,
+        DEAFENING
+    };
 
     virtual ~ImageTask();
 
@@ -84,8 +84,8 @@ public:
     // This adds standard history messages regarding the task that was run and
     // input parameters used. The vectors must have the same length
     void addHistory(
-    	const LogOrigin& origin, const String& taskname,
-    	const vector<String>& paramNames, const vector<casac::variant>& paramValues
+        const LogOrigin& origin, const String& taskname,
+        const vector<String>& paramNames, const vector<casac::variant>& paramValues
     ) const;
 
     // suppress writing the history on _prepareOutputImage() call. Useful for
@@ -100,25 +100,25 @@ public:
 
 protected:
 
-	// if <src>outname</src> is empty, no image will be written
- 	// if <src>overwrite</src> is True, if image already exists it will be removed
-  	// if <src>overwrite</src> is False, if image already exists exception will be thrown
+    // if <src>outname</src> is empty, no image will be written
+     // if <src>overwrite</src> is True, if image already exists it will be removed
+      // if <src>overwrite</src> is False, if image already exists exception will be thrown
 
-   	ImageTask(
-   		const SPCIIT image,
-    	const String& region, const Record *const &regionPtr,
-    	const String& box, const String& chanInp,
-    	const String& stokes, const String& maskInp,
+       ImageTask(
+           const SPCIIT image,
+        const String& region, const Record *const &regionPtr,
+        const String& box, const String& chanInp,
+        const String& stokes, const String& maskInp,
         const String& outname, Bool overwrite
     );
 
-   	ImageTask(
-   		const SPCIIT image, const Record *const &regionPtr,
-    	const String& mask,
+       ImageTask(
+           const SPCIIT image, const Record *const &regionPtr,
+        const String& mask,
         const String& outname, Bool overwrite
     );
 
-   	virtual CasacRegionManager::StokesControl _getStokesControl() const = 0;
+       virtual CasacRegionManager::StokesControl _getStokesControl() const = 0;
 
     virtual std::vector<OutputDestinationChecker::OutputStruct> _getOutputStruct();
 
@@ -150,7 +150,7 @@ protected:
     // if warnOnly is True, log a warning message if file exists and
     // overwrite is True, else throw an exception.
     void _removeExistingFileIfNecessary(
-    	const String& filename, const Bool overwrite, Bool warnOnly=False
+        const String& filename, const Bool overwrite, Bool warnOnly=False
     ) const;
 
     String _summaryHeader() const;
@@ -166,8 +166,8 @@ protected:
     const SHARED_PTR<LogFile> _getLogFile() const;
 
     Bool _writeLogfile(
-    	const String& output, const Bool open=True,
-    	const Bool close=True
+        const String& output, const Bool open=True,
+        const Bool close=True
     );
 
     Bool _openLogfile();
@@ -191,14 +191,14 @@ protected:
     //SPIIT _prepareOutputImage(const ImageInterface<T>& image) const;
 
     SPIIT _prepareOutputImage(
-    	const ImageInterface<T>& image, const Array<T> *const values,
-    	const ArrayLattice<Bool> *const mask=nullptr,
-    	const IPosition *const outShape=nullptr, const CoordinateSystem *const coordsys=nullptr,
-    	const String *const outname=nullptr, Bool overwrite=False, Bool dropDegen=False
+        const ImageInterface<T>& image, const Array<T> *const values,
+        const ArrayLattice<Bool> *const mask=nullptr,
+        const IPosition *const outShape=nullptr, const CoordinateSystem *const coordsys=nullptr,
+        const String *const outname=nullptr, Bool overwrite=False, Bool dropDegen=False
     ) const;
 
     SPIIT _prepareOutputImage(
-    	const ImageInterface<T>& image, Bool dropDegen=False
+        const ImageInterface<T>& image, Bool dropDegen=False
     ) const;
 
     // if warnOnly is True, only log a warning message if the file exists and
@@ -244,12 +244,12 @@ private:
     Bool _logfileAppend = False;
     Bool _suppressHistory = False;
     Bool _dropDegen = False;
-	std::unique_ptr<FiledesIO> _logFileIO;
-	Verbosity _verbosity = NORMAL;
-	SHARED_PTR<LogFile> _logfile;
-	mutable vector<std::pair<String, String> > _newHistory;
+    std::unique_ptr<FiledesIO> _logFileIO;
+    Verbosity _verbosity = NORMAL;
+    SHARED_PTR<LogFile> _logfile;
+    mutable vector<std::pair<String, String> > _newHistory;
 
-	mutable C11Timer _timer;
+    mutable C11Timer _timer;
 };
 
 }
