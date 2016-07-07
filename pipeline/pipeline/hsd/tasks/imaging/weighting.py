@@ -141,11 +141,20 @@ class WeightMS(common.SingleDishTaskTemplate):
             stats = datatable.tb2.getcol('STATISTICS').take(index_list)
             for index in xrange(len(rows)):
                 row = rows[index]
-                stat = stats[index][1] #Baselined RMS
+                # stats is an one-dimensional array 
+                # needs to specify axis parameter to obtain stats as 
+                # a two-dimensional array 
+                stat = stats[index]
+                #stat = stats[index][1] #Baselined RMS
                 if stat > 0.0:
                     weight[row] /= (stat * stat)
-                elif stat < 0.0 and stats[index][2] > 0.0:
-                    stat = stats[index][2] #RMS before BL
+                # stats is an one-dimensional array 
+                # needs to specify axis parameter to obtain stats as 
+                # a two-dimensional array 
+                #elif stat < 0.0 and stats[index][2] > 0.0:
+                    #stat = stats[index][2] #RMS before BL
+                elif stat < 0.0 and stats[index] > 0.0:
+                    stat = stats[index] #RMS before BL
                     weight[row] /= (stat * stat)
                 elif try_fallback: # haven't run blflag. try fall back to tintsys
                     weight_tintsys = True
