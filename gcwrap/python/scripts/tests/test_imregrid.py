@@ -871,7 +871,16 @@ class imregrid_test(unittest.TestCase):
         )
         myia.open(output)
         self.assertTrue((myia.shape() == [20, 20, 4, 20]).all())
-    
+        # should fail the image to be overwritten is open
+        self.assertFalse(
+            imregrid(
+                imagename=imagename, template=template,
+                output=output, decimate=5, overwrite=True,
+                axes=[0, 1, 3]
+            )
+        )
+        # so close the image and then try to overwrite it
+        myia.done() 
         # the spectral axis is removed from the list of axes, a warning is emitted
         # that it cannot be regridded, and the input spectral axis is copied to
         # the ouptut image
@@ -908,6 +917,16 @@ class imregrid_test(unittest.TestCase):
         )
         myia.open(output)
         self.assertTrue((myia.shape() == [20, 20, 4, 1]).all())
+        # should fail because image to be overwritten is open in the table cache
+        self.assertFalse(
+            imregrid(
+                imagename=imagename, template=template,
+                output=output, decimate=5, overwrite=True,
+                axes=[0, 1, 3]
+            )
+        )
+        # so close it and try again
+        myia.done()
         # if explicitly specified in the axis parameter, the template spectral
         # axis is copied to the output and the output's spectral axis length as
         # the same as the template's spectral axis length. The output pixel values
