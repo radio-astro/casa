@@ -35,6 +35,7 @@
 #include <images/Images/MIRIADImage.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/TempImage.h>
+#include <tables/Tables/PlainTable.h>
 
 #include <imageanalysis/ImageAnalysis/ImageHistory.h>
 #include <imageanalysis/ImageAnalysis/ImageInputProcessor.h>
@@ -134,9 +135,15 @@ template <class T> void ImageTask<T>::_removeExistingFileIfNecessary(
 ) const {
     File out(filename);
     if (out.exists()) {
-        // remove file if it exists which prevents emission of
-        // file is already open in table cache exceptions
         if (overwrite) {
+            File f(filename);
+            ThrowIf(
+                PlainTable::tableCache()(f.path().absoluteName()),
+                filename + " is currently present in the table cache "
+                + "and so is being used by another process. Please close "
+                + "it in the other process first before attempting to "
+                + "overwrite it"
+            );
             if (out.isDirectory()) {
                 Directory dir(filename);
                 dir.removeRecursive();
