@@ -333,12 +333,6 @@ class Tclean(cleanbase.CleanBase):
                                 sensitivity=sequence_manager.sensitivity,
                                 result=None)
 
-        # Store modified sensitivity
-        # TODO: Do this here rather than through cleanbase
-        if (result.sensitivity != sequence_manager.sensitivity):
-            LOG.info('Adjusting sensitivity for continuum selection from %s Jy to %s Jy by a factor %s' % (sequence_manager.sensitivity, result.sensitivity, result.sensitivity / sequence_manager.sensitivity))
-            sequence_manager.sensitivity = result.sensitivity
-
         # Determine masking limits depending on PB
         self.pblimit_image, self.pblimit_cleanmask = \
             inputs.heuristics.pblimits(result.flux)
@@ -352,9 +346,6 @@ class Tclean(cleanbase.CleanBase):
                     flux = result.flux, cleanmask=None, threshold = None,
                     pblimit_image = self.pblimit_image,
                     pblimit_cleanmask = self.pblimit_cleanmask)
-
-        # Temporarily needed until CAS-8576 is fixed
-        result._residual_max = residual_max
 
         LOG.info('Dirty image stats')
         LOG.info('    Rms %s', non_cleaned_rms)

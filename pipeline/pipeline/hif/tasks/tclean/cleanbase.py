@@ -376,10 +376,6 @@ class CleanBase(basetask.StandardTaskTemplate):
                          type='cleanmask', iter=iter)
         result.set_cleanmask(iter=iter, image=inputs.mask)
 
-        # Keep threshold and sensitivity bandwidth for QA and weblog
-        result.set_threshold(inputs.threshold)
-        result.set_sensitivity(inputs.sensitivity)
-
         return result
 
 def rename_image(old_name, new_name, extensions=['']):
