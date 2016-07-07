@@ -372,7 +372,9 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0, reftime='first'
             else: # we are working with an ephemeris
                 try:
                     mst.open(vis, nomodify=False)
-                    mst.addephemeris(-1, theephemeris, planetname, fld) # -1 = take the next free ID
+                    valid_chars = "-+_.%s%s" % (string.ascii_letters, string.digits)
+                    planetname_for_table = ''.join(c if c in valid_chars else '_' for c in planetname)
+                    mst.addephemeris(-1, theephemeris, planetname_for_table, fld) # -1 = take the next free ID
                     mst.close()
                 except Exception, instance:
                     casalog.post("*** Error \'%s\' when attaching ephemeris: " % (instance),
