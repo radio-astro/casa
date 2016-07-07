@@ -251,7 +251,14 @@ class imcollapse_test(unittest.TestCase):
                     good_image, "sum", 1, outname, "", box,
                     chans, stokes, "", False
                 )
-                # check that can overwrite previous output. Then check output image
+                # this should throw an exception because we are trying to overwrite a file
+                # that is open in the table cache
+                self.assertRaises(
+                    Exception, run_collapse, good_image, "sum", 1, outname, "", box,
+                    chans, stokes, "", True
+                )
+                mytool.done()
+                # now the image is closed, so check that can overwrite previous output. Then check output image
                 mytool = run_collapse(
                     good_image, "sum", 1, outname, "", box,
                     chans, stokes, "", True
