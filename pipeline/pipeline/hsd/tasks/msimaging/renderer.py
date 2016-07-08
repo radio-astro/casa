@@ -17,7 +17,7 @@ class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRen
         super(T2_4MDetailsSingleDishImagingRenderer, self).__init__(uri=uri,
                 description=description, always_rerender=always_rerender)
         
-    def update_mako_context(self, ctx, context, results):            
+    def update_mako_context(self, ctx, context, results):
         plots = []
         for r in results:
             if isinstance(r, imaging.SDImagingResults):

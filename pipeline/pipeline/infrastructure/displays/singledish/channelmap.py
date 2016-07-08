@@ -154,6 +154,11 @@ class SDChannelMapDisplay(SDImageDisplay):
                     if g.antenna == ant and g.spw == spw:
                         found = True
                         break
+                if found:
+                    for ll_p in g.channelmap_range:
+                        for ll in ll_p:
+                            if not ll in line_list and ll[2] is True:
+                                line_list.append(ll)
             else:
                 for (msid, ant, fid, spw) in zip(msid_list, ant_index,
                                                  fieldid_list, spwid_list):
@@ -166,9 +171,8 @@ class SDChannelMapDisplay(SDImageDisplay):
                         g.field_id == fid and g.spw_id == spw:
                         found = True
                         break
-            if found:
-                for ll_p in g.channelmap_range:
-                    for ll in ll_p:
+                if found:
+                    for ll in g.channelmap_range:
                         if not ll in line_list and ll[2] is True:
                             line_list.append(ll)
         return line_list
