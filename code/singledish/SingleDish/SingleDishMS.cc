@@ -2121,6 +2121,8 @@ void SingleDishMS::fitLine(string const& in_column_name, string const& in_spw,
     }
   }
 
+  size_t num_spec = 0;
+  size_t num_noline = 0;
   for (vi->originChunks(); vi->moreChunks(); vi->nextChunk()) {
     for (vi->origin(); vi->more(); vi->next()) {
       Vector<Int> scans = vb->scan();
@@ -2186,6 +2188,7 @@ void SingleDishMS::fitLine(string const& in_column_name, string const& in_spw,
           if (allchannels_flagged(num_chan, mask_data)) {
             continue;
           }
+	  ++num_spec;
 
           // convert flag to mask by taking logical NOT of flag
           // and then operate logical AND with in_mask
@@ -2202,6 +2205,7 @@ void SingleDishMS::fitLine(string const& in_column_name, string const& in_spw,
                                        threshold, avg_limit, minwidth,
                                        edge, false);
               if (line_ranges.size()==0) {
+		++num_noline;
                 continue;
               }
               size_t nline = line_ranges.size();
@@ -2240,6 +2244,7 @@ void SingleDishMS::fitLine(string const& in_column_name, string const& in_spw,
             expr = "lorentz";
           }
 
+	  bool any_converged = false;
           for (size_t ifit = 0; ifit < nfit.size(); ++ifit) {
             if (nfit[ifit] == 0)
               continue;
@@ -2340,9 +2345,10 @@ void SingleDishMS::fitLine(string const& in_column_name, string const& in_spw,
 
             parameters_.resize();
             parameters_ = fitter.fit(x_, y_, &m_);
-            if (!fitter.converged()) {
-              throw(AipsError("Failed in fitting. Fitter did not converge."));
-            }
+	    any_converged |= fitter.converged();
+            // if (!fitter.converged()) {
+	    //   throw(AipsError("Failed in fitting. Fitter did not converge."));
+            // }
             error_.resize();
             error_ = fitter.errors();
 
@@ -2365,13 +2371,23 @@ void SingleDishMS::fitLine(string const& in_column_name, string const& in_spw,
                   << parameters_[offset + 2] << "," << error_[offset + 2]; // fwhm
             }
           }        //end of nfit loop
-
           ofs << "\n";
+	  // count up spectra w/o any line fit
+	  if (!any_converged) ++num_noline;
 
         }        //end of polarization loop
       }        // end of MS row loop
     }        //end of vi loop
   }        //end of chunk loop
+
+  if (num_noline==num_spec) {
+    os << LogIO::WARN
+       << "Fitter did not converge on any fit components." << LogIO::POST;
+  }
+  else if (num_noline > 0) {
+    os << "No convergence for fitting to " << num_noline 
+       << " out of " << num_spec << " spectra" << LogIO::POST;
+  }
 
   finalize_process();
   ofs.close();
