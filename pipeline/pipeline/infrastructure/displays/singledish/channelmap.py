@@ -179,6 +179,14 @@ class SDChannelMapDisplay(SDImageDisplay):
         new_id_stokes = 0 if self.id_stokes < self.id_spectral else 1
         # un-weighted image
         unweight_ia = casatools.image.imagecalc(outfile='', pixels='"%s" * "%s"' % (imagename, weightname))
+        
+        # if all pixels are masked, return fully masked array
+        unweight_mask = unweight_ia.getchunk(getmask=True)
+        if numpy.all(unweight_mask == False):
+            sp_ave = numpy.ma.masked_array(numpy.zeros((self.npol, self.nchan), dtype=numpy.float32), 
+                                           mask=numpy.ones((self.npol, self.nchan), dtype=numpy.bool))
+            return sp_ave
+        
         # average image spectra over map area taking mask into account
         try:
             collapsed_ia = unweight_ia.collapse(outfile='', function='mean', axes=self.image.id_direction)

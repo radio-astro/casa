@@ -48,7 +48,7 @@ class SDImageCombine(basetask.StandardTaskTemplate):
                 stat = ia.statistics()
                 shape = ia.shape()
                 # replacemaskedpixels fails if all pixels are valid
-                if shape.prod() > stat['npts'][0]:
+                if len(stat['npts']) > 0 and shape.prod() > stat['npts'][0]:
                     ia.replacemaskedpixels(0.0, update=False)
 
             result = SDImagingWorkerResults(task=self.__class__,

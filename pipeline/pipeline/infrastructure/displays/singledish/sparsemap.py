@@ -177,12 +177,32 @@ class SDSparseMapPlotter(object):
         #  1/10-th value from max and min are used instead
         valid_index = numpy.where(map_data.min(axis=2) > NoDataThreshold)
         valid_data = map_data[valid_index[0],valid_index[1],:]
-        ListMax = valid_data.max(axis=1)
-        ListMin = valid_data.min(axis=1)
-        LOG.debug('ListMax=%s'%(list(ListMax)))
-        LOG.debug('ListMin=%s'%(list(ListMin)))
-        if len(ListMax) == 0: 
+        LOG.debug('valid_data.shape={shape}'.format(shape=valid_data.shape))
+        if isinstance(map_data, numpy.ma.masked_array):
+            def stat_per_spectra(spectra, oper):
+                for v in spectra:
+                    unmasked = v.data[v.mask == False]
+                    if len(unmasked) > 0:
+                        yield oper(unmasked)
+            ListMax = numpy.fromiter(stat_per_spectra(valid_data, numpy.max), dtype=numpy.float64)
+            ListMin = numpy.fromiter(stat_per_spectra(valid_data, numpy.min), dtype=numpy.float64)
+#             ListMax = numpy.fromiter((numpy.max(v.data[v.mask == False]) for v in valid_data), 
+#                                      dtype=numpy.float64)
+#             ListMin = numpy.fromiter((numpy.min(v.data[v.mask == False]) for v in valid_data), 
+#                                      dtype=numpy.float64)
+            LOG.debug('ListMax from masked_array=%s'%(ListMax))
+            LOG.debug('ListMin from masked_array=%s'%(ListMin))
+        else:
+            ListMax = valid_data.max(axis=1)
+            ListMin = valid_data.min(axis=1)
+        if len(ListMax) == 0 or len(ListMin) == 0: 
             return False
+        #if isinstance(ListMin, numpy.ma.masked_array):
+        #    ListMin = ListMin.data[ListMin.mask == False]
+        #if isinstance(ListMax, numpy.ma.masked_array):
+        #    ListMax = ListMax.data[ListMax.mask == False]
+        LOG.debug('ListMax=%s'%(list(ListMax)))
+        LOG.debug('ListMin=%s'%(list(ListMin)))            
         global_ymax = numpy.sort(ListMax)[len(ListMax) - len(ListMax)/10 - 1]
         global_ymin = numpy.sort(ListMin)[len(ListMin)/10]
         global_ymax = global_ymax + (global_ymax - global_ymin) * 0.2
