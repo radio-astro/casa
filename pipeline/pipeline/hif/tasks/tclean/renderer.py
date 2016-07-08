@@ -67,7 +67,6 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                     frequency = coord_refs['string'][coord_names == 'Frequency'][0]
                     frequency = qaTool.convert(frequency, 'GHz')
                     info_dict[(field, spw, pol, 'frequency')] = frequency
-                    
                     info_dict[(field, spw, pol, 'image name')] = image.name(strippath=True)
                     stats = image.statistics(robust=False)
                     info_dict[(field, spw, pol, 'max')] = stats.get('max')[0]
@@ -100,9 +99,22 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                     info_dict[(field, spw, pol, 'nchan')] = nchan
                     info_dict[(field, spw, pol, 'width')] = width
 
-                    aggregate_bw = '%.3g GHz' % (qaTool.convert(r.aggregate_bw, 'GHz')['value'])
-                    info_dict[(field, spw, pol, 'aggregate bandwidth')] = aggregate_bw
-                    
+                    aggregate_bw_GHz = qaTool.convert(r.aggregate_bw, 'GHz')['value']
+                    aggregate_bw_text = '%.3g GHz' % (aggregate_bw_GHz)
+                    info_dict[(field, spw, pol, 'aggregate bandwidth')] = aggregate_bw_text
+
+                    try:
+                        frequency_axis = list(summary['axisnames']).index('Frequency')
+                        frequency1 = summary['refval'][frequency_axis] + (-0.5 - summary['refpix'][frequency_axis]) * summary['incr'][frequency_axis]
+                        frequency2 = summary['refval'][frequency_axis] + (summary['shape'][frequency_axis] - 0.5 - summary['refpix'][frequency_axis]) * summary['incr'][frequency_axis]
+                        full_bw_GHz = qaTool.convert(abs(frequency2 - frequency1), 'GHz')['value']
+                        fractional_bw = (frequency2 - frequency1) / (0.5 * (frequency1 + frequency2))
+                        info_dict[(field, spw, pol, 'fractional bandwidth')] = '%.2g' % (fractional_bw)
+                    except:
+                        info_dict[(field, spw, pol, 'fractional bandwidth')] = 'N/A'
+
+                    info_dict[(field, spw, pol, 'nterms')] = r.multiterm if r.multiterm else 1
+
                 with casatools.ImageReader(r.iterations[maxiter]['residual']+extension) as residual:
                     stats = residual.statistics(robust=False)
                     info_dict[(field, spw, pol, 'residual rms')] = stats.get('rms')[0]

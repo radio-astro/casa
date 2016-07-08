@@ -148,11 +148,18 @@ def get_plot(plots, field, spw, i, colname):
                                 %endif
                             </tr>
                             <tr>
-                                        <th>channels</th>
                                 %if info_dict.get((field,str(spw),pol,'nchan')) is not None:
+                                    %if info_dict[(field,str(spw),pol,'nchan')] > 1:
+                                        <th>channels</th>
                                             <td>${'%d x %s' % (info_dict[(field,str(spw),pol,'nchan')],
                                                 info_dict[(field,str(spw),pol,'width')])}</td>
+                                    %else:
+                                        <th>fractional bandwidth / nterms</th>
+                                            <td>${'%s / %s' % (info_dict[(field,str(spw),pol,'fractional bandwidth')],
+                                                info_dict[(field,str(spw),pol,'nterms')])}</td>
+                                    %endif
                                 %else:
+                                        <th>No channel / width information</th>
                                             <td>-</td>
                                 %endif
                             </tr>
