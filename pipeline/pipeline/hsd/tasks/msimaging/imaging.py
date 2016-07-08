@@ -7,7 +7,6 @@ import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.sdfilenamer as filenamer
 import pipeline.infrastructure.imagelibrary as imagelibrary
-import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.utils as utils
 from pipeline.hif.heuristics import fieldnames
 from pipeline.domain import DataTable
@@ -17,6 +16,7 @@ from . import worker
 from . import sdcombine
 from .. import common
 from ..baseline import baseline
+from ..common import utils as sdutils
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -417,7 +417,7 @@ class SDImaging(basetask.StandardTaskTemplate):
   
             # Make combined image
             # reference MS
-            ref_ms = context.observing_run.get_ms(name=combined_infiles[0])
+            ref_ms = context.observing_run.get_ms(name=sdutils.get_parent_ms_name(context, combined_infiles[0]))
               
             # image name
             namer = filenamer.Image()
