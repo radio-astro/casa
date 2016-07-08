@@ -121,41 +121,6 @@ ia.open(project+"/"+project + '.sd.image')
 m51sd_stats=ia.statistics(verbose=False,list=False)
 ia.close()
 
-#refstats = {'max':  1.8829,
-#            'min': -0.52625,
-#            'rms': 0.22069,
-#            'sigma': 0.20145,
-#            'sum': 23627}
-# # update after setvp fix (r21970)
-# refstats = {'max': 3.17733955,
-#             'min': -0.52407992,
-#             'rms': 0.36143386,
-#             'sigma': 0.32582116,
-#             'sum': 41011.427}
-# # update after change to gridfunction='SF' (r26496)
-# refstats = {'max': 3.760463,
-#              'min': -0.63766569,
-#              'rms': 0.39420992,
-#              'sigma': 0.36188505,
-#              'sum': 40982.74700824} 
-# # update after mask to TP image (r26597)
-# refstats = {'max': 3.760463,
-#              'min': -0.63766569,
-#              'rms': 0.4169735,
-#              'sigma': 0.37817003,
-#              'sum':  40972.22263158}
-# # update after fix to null pixel isuue (r27041)
-# refstats = {'max': 3.760463,
-#              'min': -0.63766569,
-#              'rms': 0.40548718,
-#              'sigma': 0.37000663,
-#              'sum':  41420.88008615}
-# # 2015/03/08: update after scaling of TP image (r27397)
-#refstats = {'max': 4.30645227,
-#             'min': -0.73024964,
-#             'rms': 0.46436065,
-#             'sigma': 0.42372863,
-#             'sum':  47434.86051071}
 # 2015/10/23: update after the fix to rasterutil._get_sampling (r35037)
 #refstats = {'max': 5.01661158,
 #             'min': -0.80671942,
@@ -163,68 +128,20 @@ ia.close()
 #             'sigma': 0.48867723,
 #             'sum':  56116.85862354}
 #2016/06/15 after fixing B1950 component corruption
+# refstats = {'max': 5.2856,
+#              'min': -0.79999,
+#              'rms': 0.56074,
+#              'sigma': 0.51274,
+#              'sum':  59485}
+#2016/07/08 after fixing minweight bug in sdimaging
 refstats = {'max': 5.2856,
              'min': -0.79999,
-             'rms': 0.56074,
-             'sigma': 0.51274,
-             'sum':  59485}
+             'rms': 0.56827,
+             'sigma': 0.5176,
+             'sum':  59391}
 ia.open(project+"/"+project + '.sd.diff')
 m51sd_diffstats=ia.statistics(verbose=False,list=False)
 ia.close()
-
-#diffstats = {'max': 2.4528,
-#             'min': -0.48053,
-#             'rms': 0.26383,
-#             'sigma': 0.24221,
-#             'sum': 27423 }
-# # update after setvp fix (r21970)
-# diffstats = {'max': 1.19746065,
-#              'min': -0.50039643,
-#              'rms': 0.13544469,
-#              'sigma': 0.12991888,
-#              'sum': 10038.482 }
-# # update after PB change (r26333)
-# diffstats = {'max': 0.82618213,
-#              'min': -0.50403631,
-#              'rms': 0.10586927,
-#              'sigma': 0.10465023,
-#              'sum': 4199.82504407 }
-# # update after change to gridfunction='SF' (r26496)
-# diffstats = {'max': 0.76168156,
-#              'min': -0.70423162,
-#              'rms': 0.14784159,
-#              'sigma': 0.14695927,
-#              'sum':  4228.50428399}
-# # update after mask to TP image (r26597)
-# diffstats = {'max': 1.19147229,
-#              'min': -0.69741619,
-#              'rms': 0.1786425,
-#              'sigma': 0.17307631,
-#              'sum': 10320.91638317}
-# # update after fix to null pixel isuue (r27041)
-# diffstats = {'max': 1.19147229,
-#              'min': -0.69741619,
-#              'rms': 0.17808262,
-#              'sigma': 0.1733555,
-#              'sum': 10178.15341685}
-# update after scaling of TP image (r27397)
-#diffstats = {'max': 0.82301152,
-#             'min': -0.80564827,
-#             'rms': 0.17661846,
-#             'sigma': 0.17582976,
-#             'sum': 4164.18677758}
-# 2015/03/08: update after beam size definition at sdimaging (r32597)
-#diffstats = {'max': 1.46299481,
-#             'min': -0.79397476,
-#             'rms': 0.2181273,
-#             'sigma': 0.2095669,
-#             'sum': 15109.65572983}
-# # 2015/03/08: update after image parameter change in simanalyze (r32603)
-# diffstats = {'max': 0.96216369,
-#              'min': -0.94122034,
-#              'rms': 0.21231961,
-#              'sigma': 0.21136266,
-#              'sum': 5277.29528891}
 
 # 2015/10/23: update after the fix to rasterutil._get_sampling (r35037)
 #diffstats = {'max': 0.91776484,
@@ -233,11 +150,17 @@ ia.close()
 #             'sigma': 0.20169726,
 #             'sum': 5044.85529928}
 #2016/06/15 after fixing 1950 component corruption
+# diffstats = {'max': 0.91084,
+#              'min': -0.90267,
+#              'rms': 0.19858,
+#              'sigma': 0.19848,
+#              'sum': 1676.6}
+#2016/07/08 after fixing minweight bug in sdimaging
 diffstats = {'max': 0.91084,
              'min': -0.90267,
-             'rms': 0.19858,
-             'sigma': 0.19848,
-             'sum': 1676.6}
+             'rms': 0.19583,
+             'sigma': 0.19572,
+             'sum': 1640.8}
 # relative tolerances to reference values
 reftol   = {'sum':  1e-2,
             'max':  1e-2,
