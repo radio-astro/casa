@@ -289,8 +289,11 @@ class SDImaging(basetask.StandardTaskTemplate):
                 LOG.info('Imaging Source %s, Ant %s Spw %d' % (source_name, ant_name, spwids[0]))
                 # map coordinate (use identical map coordinate per spw)
                 if not coord_set:
-                    phasecenter, cellx, celly, nx, ny = worker.ALMAImageCoordinateUtil(context, datatable, infiles, antids, spwids, fieldids)
+                    image_coord = worker.ALMAImageCoordinateUtil(context, datatable, infiles, antids, spwids, fieldids)
+                    if not image_coord: #No valid data is found
+                        continue
                     coord_set = True
+                    (phasecenter, cellx, celly, nx, ny) = image_coord
   
                 # register data for combining
                 combined_infiles.extend(infiles)

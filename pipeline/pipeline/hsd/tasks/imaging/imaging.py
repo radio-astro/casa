@@ -288,8 +288,11 @@ class SDImaging(common.SingleDishTaskTemplate):
 
                 # map coordinate (use identical map coordinate per spw)
                 if not coord_set:
-                    phasecenter, cellx, celly, nx, ny = worker.ALMAImageCoordinateUtil(context, self.datatable, infiles, spwids, pols, srctype, exported_mses)
+                    image_coord = worker.ALMAImageCoordinateUtil(context, self.datatable, infiles, spwids, pols, srctype, exported_mses)
+                    if not image_coord: #No valid data is found
+                        continue
                     coord_set = True
+                    (phasecenter, cellx, celly, nx, ny) = image_coord
 
                 # register data for combining
                 combined_indices.extend(indices)
