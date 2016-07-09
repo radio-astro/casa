@@ -33,6 +33,7 @@
 #include <images/Images/SubImage.h>
 #include <images/Regions/ImageRegion.h>
 #include <images/Regions/RegionManager.h>
+#include <images/Regions/RegionHandler.h>
 #include <images/Regions/WCBox.h>
 #include <images/Regions/WCUnion.h>
 #include <imageanalysis/ImageAnalysis/CasaImageBeamSet.h>
@@ -49,6 +50,7 @@
 #include <lattices/LRegions/LCEllipsoid.h>
 #include <lattices/LRegions/LCUnion.h>
 #include <lattices/LRegions/LCExtension.h>
+#include <lattices/LRegions/LCPagedMask.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
 #include <coordinates/Coordinates/StokesCoordinate.h>
@@ -714,7 +716,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                                const Float& fracofpeak, 
                                const String& resolution,
                                const Float& resbybeam,
-                               const Int nmask)
+                               const Int nmask,
+                               Float pblimit)
   {
     LogIO os( LogOrigin("SDMaskHandler","autoMask",WHERE) );
     
@@ -741,22 +744,53 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     imstore->mask()->get(maskdata);
     String maskname = imstore->getName()+".mask";
     tempmask->put(maskdata);
-    //
-    // create pixel mask (set to False for the previous selected region(s))
-    //LatticeExpr<Bool> pixmask( iif(*tempmask > 0.0, False, True) );
-    // create pixel mask (set to True for the previous selected region(s) to exclude the region from the stats/masking )
-    LatticeExpr<Bool> pixmask( iif(*tempmask > 0.0, True, False) );
-    TempImage<Float>* dummy = new TempImage<Float>(tempres->shape(), tempres->coordinates());
-    dummy->attachMask(pixmask);
-    //if (ntrue(dummy->getMask())) tempres->attachMask(pixmask);
-    if (ntrue(dummy->getMask())) {
-      os<<"Got non zero mask ntrue="<<ntrue(dummy->getMask())<<LogIO::POST;
-      tempres->attachMask(pixmask);
+
+    if (pblimit>0.0 && imstore->hasPB()) {
+      //cerr<<" applying pb mask ..."<<endl;
+      LatticeExpr<Bool> pixmask( iif(*tempmask > 0.0, True, False));
+      TempImage<Float>* dummy = new TempImage<Float>(tempres->shape(), tempres->coordinates());
+      dummy->attachMask(pixmask);
+      LatticeExpr<Float> themask;
+      if (!ntrue(dummy->getMask())) { // initial zero mask
+        //themask = LatticeExpr<Float>( iif( (*(imstore->pb())) > pblimit , 1.0 , 0.0 ));
+        themask = LatticeExpr<Float>( *tempmask);
+      }
+      else {
+        themask = LatticeExpr<Float>( iif( (*(imstore->pb())) > pblimit, *(imstore->mask()), 0.0));
+      } 
+      // attache pixmask to temp res image to be used in stats etc
+      //LatticeExpr<Bool> pbpixmask( iif(*(imstore->pb()) > pblimit, True, False));
+      //cerr<<"attaching pixmask to res.."<<endl;
+      tempres->attachMask(LatticeExpr<Bool> ( iif(*(imstore->pb()) > pblimit, True, False)));
+      //cerr<<"Has pixmask now?= "<<tempres->hasPixelMask()<<endl;
+      imstore->mask()->copyData( themask );
+      imstore->mask()->get(maskdata);
+      tempmask->put(maskdata);
+      delete dummy;
     }
-    else {
-      os<<"No previous mask"<<LogIO::POST;
-    }  
-    delete dummy; dummy=0;
+     
+    // Not use this way for now. Got an issue on removing pixel mask from *.mask image
+    // retrieve pixelmask (i.e.  pb mask)
+    //LatticeExpr<Bool> pixmasyyk;
+    //if (imstore->mask()->hasPixelMask()) {
+    //  pixmask = LatticeExpr<Bool> (imstore->mask()->pixelMask()); 
+      //
+      // create pixel mask (set to True for the previous selected region(s) to exclude the region from the stats/masking )
+      //LatticeExpr<Bool> prevmask( iif(*tempmask > 0.0 || pixmask, True, False) );
+    //  TempImage<Float>* dummy = new TempImage<Float>(tempres->shape(), tempres->coordinates());
+    //  dummy->attachMask(pixmask);
+      //if (ntrue(dummy->getMask())) tempres->attachMask(pixmask);
+    //  if (ntrue(dummy->getMask())) {
+    //    tempres->attachMask(pixmask);
+    //    cerr<<"tempres->getDefaultMask()="<<tempres->getDefaultMask()<<endl;
+        //tempmask->removeMask();
+    //  }
+    //  else {
+    //    os<<LogIO::DEBUG1<<"No pixel mask"<<LogIO::POST;
+    //  }  
+    //  delete dummy; dummy=0;
+    //}
+    //
     //input 
     Quantity qthresh(0,"");
     Quantity qreso(0,"");
@@ -791,6 +825,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        
     //do statistics
     SHARED_PTR<casa::ImageInterface<float> > tempres_ptr(tempres);
+    //cerr<<" tempres->hasPixelMask? "<<tempres->hasPixelMask()<<endl;
     ImageStatsCalculator imcalc( tempres_ptr, 0, "", False); 
     Vector<Int> axes(2);
     axes[0] = 0;
@@ -809,15 +844,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     else if (alg==String("thresh")) {
       autoMaskByThreshold(*tempmask, *tempres, *temppsf, qreso, resbybeam, qthresh, fracofpeak, thestats, sigma, nmask);
-      //cerr<<" automaskbyThreshold...."<<endl;
-      tempmask->get(maskdata);
-      imstore->mask()->put(maskdata);
     }
     else if (alg==String("thresh2")) {
       autoMaskByThreshold2(*tempmask, *tempres, *temppsf, qreso, resbybeam, qthresh, fracofpeak, thestats, sigma, nmask);
-      tempmask->get(maskdata);
-      imstore->mask()->put(maskdata);
-    } 
+    }
+    /***
+    // this did not work (it won't physically remove the mask from the image 
+    if (imstore->mask()->hasPixelMask()) {
+      imstore.get()->mask()->removeRegion(fname, RegionHandler::Any, False);
+      cerr<<"imstore->mask()->name()="<<imstore->mask()->name()<<endl;
+      cerr<<" mask: "<<fname<<" exist on disk? ="<<File(fname).isDirectory()<<endl;
+    }
+    ***/
+    tempmask->get(maskdata);
+    imstore->mask()->put(maskdata);
     delete tempmask; tempmask=0;
   }
 
@@ -921,7 +961,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       if ( rmsthresh==0.0 ) 
         { throw(AipsError("Threshold for automask is not set"));}
     }
-    os << LogIO::NORMAL2 <<" thresh="<<rmsthresh<<LogIO::POST;
+    //os << LogIO::NORMAL2 <<" thresh="<<rmsthresh<<LogIO::POST;
 
 
     TempImage<Float>* tempIm2 = new TempImage<Float>(res.shape(), res.coordinates() );
@@ -973,24 +1013,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         PagedImage<Float> tempconvIm(TiledShape(tempIm_ptr.get()->shape()), tempIm_ptr.get()->coordinates(),"convolved.Im");
         tempconvIm.copyData(*(tempIm_ptr.get()));
       }
-      os<<"done convolving the mask "<<LogIO::POST;
+      //os<<"done convolving the mask "<<LogIO::POST;
     }
 
     //os <<"Final thresholding with rmsthresh/afactor="<< rmsthresh/afactor <<LogIO::POST;
     //LatticeExpr<Float> themask( iif( *(tempIm_ptr.get()) > rmsthresh/afactor, 1.0, 0.0 ));
     // previous 1/0 mask (regridded), max pix value should be <1.0, take arbitary cut off at 0.1
     LatticeExpr<Float> themask( iif( *(tempIm_ptr.get()) > 0.1, 1.0, 0.0 ));
+    if (res.hasPixelMask()) {
+      LatticeExpr<Bool>  pixmask(res.pixelMask()); 
+      mask.copyData( (LatticeExpr<Float>)( iif((mask + themask) > 0.0 && pixmask, 1.0, 0.0  ) ) );
+      os <<LogIO::DEBUG1 <<"add previous mask, pbmask and the new mask.."<<LogIO::POST;
+    }
+    else {
+      //for debug
+      /***
+      PagedImage<Float> tempthemask(TiledShape(tempIm_ptr.get()->shape()), tempIm_ptr.get()->coordinates(),"tempthemask.Im");
+      tempthemask.copyData(themask);
+      ***/
 
-    //for debug
-    /***
-    PagedImage<Float> tempthemask(TiledShape(tempIm_ptr.get()->shape()), tempIm_ptr.get()->coordinates(),"tempthemask.Im");
-    tempthemask.copyData(themask);
-    ***/
-
-    //os <<"Lattice themask is created..."<<LogIO::POST;
-    //LatticeExpr<Float> themask( iif( tempconvim > rmsthresh/afactor, 1.0, 0.0 ));
-    mask.copyData( (LatticeExpr<Float>)( iif((mask + themask) > 0.0, 1.0, 0.0  ) ) );
-    os <<LogIO::DEBUG1 <<"add previous mask and the new mask.."<<LogIO::POST;
+      //os <<"Lattice themask is created..."<<LogIO::POST;
+      //LatticeExpr<Float> themask( iif( tempconvim > rmsthresh/afactor, 1.0, 0.0 ));
+      mask.copyData( (LatticeExpr<Float>)( iif((mask + themask) > 0.0, 1.0, 0.0  ) ) );
+      os <<LogIO::DEBUG1 <<"add previous mask and the new mask.."<<LogIO::POST;
+    }
   }
 
   void SDMaskHandler::autoMaskByThreshold2(ImageInterface<Float>& mask,
@@ -1091,12 +1137,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     PagedImage<Float> tempthemask(TiledShape(tempIm_ptr.get()->shape()), tempIm_ptr.get()->coordinates(),"tempthemask.Im");
     tempthemask.copyData(themask);
     ***/
-
-    //os <<"Lattice themask is created..."<<LogIO::POST;
-    //LatticeExpr<Float> themask( iif( tempconvim > rmsthresh/afactor, 1.0, 0.0 ));
-    mask.copyData( (LatticeExpr<Float>)( iif((mask + themask) > 0.0, 1.0, 0.0  ) ) );
-    os <<LogIO::DEBUG1 <<"add previous mask and the new mask.."<<LogIO::POST;
-
+    if (res.hasPixelMask()) {
+      LatticeExpr<Bool>  pixmask(res.pixelMask()); 
+      mask.copyData( (LatticeExpr<Float>)( iif((mask + themask) > 0.0 && pixmask, 1.0, 0.0  ) ) );
+      mask.clearCache();
+      mask.unlock();
+      mask.tempClose();
+      os <<LogIO::DEBUG1 <<"Add previous mask, pbmask and the new mask.."<<LogIO::POST;
+    }
+    else {
+      //os <<"Lattice themask is created..."<<LogIO::POST;
+      //LatticeExpr<Float> themask( iif( tempconvim > rmsthresh/afactor, 1.0, 0.0 ));
+      mask.copyData( (LatticeExpr<Float>)( iif((mask + themask) > 0.0, 1.0, 0.0  ) ) );
+      os <<LogIO::DEBUG1 <<"Add previous mask and the new mask.."<<LogIO::POST;
+    }
   }//end of makeAutoMaskByThreshold2
 
 
@@ -1130,6 +1184,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     TempImage<Float>* tempImForStat = new TempImage<Float>(tempRebinnedIm.shape(), tempRebinnedIm.coordinates() );
     tempImForStat->copyData(tempRebinnedIm);
     SHARED_PTR<casa::ImageInterface<float> > temprebin_ptr(tempImForStat);
+    //os<<" temprebin_ptr.get()->hasPixelMask()="<<temprebin_ptr.get()->hasPixelMask()<<LogIO::POST;
     ImageStatsCalculator imcalc( temprebin_ptr, 0, "", False);
     Vector<Int> stataxes(2);
     stataxes[0] = 0;
@@ -1173,10 +1228,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //
       //LatticeExpr<Float> tempthresh( iif( abs(tempRebinnedIm) > thresh, 1.0, 0.0) );
       LatticeExpr<Float> tempthresh( iif( abs( *(dummyim.get()) ) > thresh, 1.0, 0.0) );
-      os << LogIO::DEBUG1<<" copying the threshold image....."<<LogIO::POST;
+      //os << LogIO::DEBUG1<<" copying the threshold image....."<<LogIO::POST;
       tempMask->copyData(tempthresh);
       //tempMask->copyData(LatticeExpr<Float>( iif( abs( *(dummyim.get()) ) > thresh, 1.0, 0.0)) );
-      os << LogIO::DEBUG1<<" DONE copying the threshold image....."<<LogIO::POST;
     }
     return SHARED_PTR<ImageInterface<Float> >(tempMask);
   }
@@ -1215,11 +1269,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     if (nmask==0 && npix==0 ) {
       //No-op
-      os<<LogIO::DEBUG1<<"Skip pruning mask regions"<<LogIO::POST;
+      os<<LogIO::DEBUG1<<"Skip pruning of mask regions"<<LogIO::POST;
       fullIm->copyData(image);
       return SHARED_PTR<ImageInterface<Float> >(fullIm);
     }  
-    os <<LogIO::DEBUG1<< "pruneRegions with nmask="<<nmask<<", size="<<npix<<LogIO::POST;
+    os <<LogIO::DEBUG1<< "pruneRegions with nmask="<<nmask<<", size="<<npix<<" is applied"<<LogIO::POST;
     
     IPosition shp = image.shape();
     //cerr<<"shp = "<<shp<<endl;
@@ -1251,10 +1305,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Matrix<Quantity> blctrcs;
     ImageDecomposer<Float> id(*tempIm);
     id.setDeblend(True);
-    os << LogIO::DEBUG1<< "deblend threshold="<<thresh<<LogIO::POST;
+    os << LogIO::DEBUG1<< "Deblend threshold="<<thresh<<LogIO::POST;
     id.setDeblendOptions(thresh, 3, 1, 2); //nContour=3
     id.setFit(False);
-    os << LogIO::DEBUG1<<"decomposeImage()..."<<LogIO::POST;
+    os << LogIO::DEBUG1<<"Now calling decomposeImage()..."<<LogIO::POST;
     id.decomposeImage();
     if (debug) 
       id.printComponents();
@@ -1268,7 +1322,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //os << "Get peaks.."<<LogIO::POST;
     Vector<Float> peaks = clmat.column(0);
     //cerr<<"peaks="<<peaks<<endl;
-    os << LogIO::DEBUG1<< "Sort by peak fluxes..."<<LogIO::POST;
+    os << LogIO::DEBUG1<< "Sorting by peak fluxes..."<<LogIO::POST;
     // sort 
     Vector<uInt> sortedindx;
     Sort sorter;
@@ -1283,7 +1337,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //  os<<" j="<<j<<" blcs="<<blcs[j]<<" trcs="<<trcs[j]<<LogIO::POST;
     //}
     Vector<Int> absRel(ndim, RegionType::Abs);
-    //PtrBlock<const WCRegion *> wbox(nbox);
     PtrBlock<const WCRegion *> wbox;
     uInt iSubComp=0;
     uInt removeByNMask=0;
@@ -1387,6 +1440,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       fullIm->putSlice(subimData,start,stride);
       //cerr<<"shape fullIm ="<<fullIm->shape()<<endl;
     }
+
     return SHARED_PTR<ImageInterface<Float> >(fullIm);
   }
 
@@ -1422,18 +1476,44 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                                        Float pblimit)
   { 
     LogIO os( LogOrigin("SDMaskHandler","autoMaskWithinPB",WHERE) );
+    Bool debug(False);
 
+    os <<LogIO::DEBUG1<<"Calling autoMaskWithinPB .."<<LogIO::POST;
     // changed to do automask ater pb mask is generated so automask do stats within pb mask
-    //autoMask( imstore, alg, threshold, fracofpeak, resolution, resbybeam, nmask);
+    autoMask( imstore, alg, threshold, fracofpeak, resolution, resbybeam, nmask, pblimit);
 
-    if( imstore->hasPB() ) // Projection algorithms will have this.
+    if( imstore->hasPB() )
       {
-	LatticeExpr<Float> themask( iif( (*(imstore->pb())) > pblimit , (*(imstore->mask())), 0.0 ) );
+        LatticeExpr<Float> themask( iif( (*(imstore->pb())) > pblimit , (*(imstore->mask())), 0.0 ) );
 	imstore->mask()->copyData( themask );
+
+        /**** 
+        // apply pb mask as pixel mask for now. This will be converted to 1/0 image later
+        LatticeExpr<Bool> mask( iif(*(imstore->pb()) > pblimit, True, False));
+        os <<"calling MakeMask, hasPixelMask? "<<imstore->mask()->hasPixelMask()<<LogIO::POST;
+        os <<"calling MakeMask, hasRegion mask0? "<<imstore->mask()->hasRegion("mask0")<<LogIO::POST;
+        os <<"defaultMask "<<imstore->mask()->getDefaultMask()<<LogIO::POST;
+        //ImageRegion outreg=imstore->mask()->makeMask("mask0", False, True);
+        ImageRegion outreg=imstore.get()->mask()->makeMask("mask0", True, True);
+        LCRegion& outmask=outreg.asMask();
+        outmask.copyData(mask);
+        os <<"Before defineRegion"<<LogIO::POST;
+        imstore.get()->mask()->defineRegion("mask0", outreg, RegionHandler::Masks, True);
+        os <<"setDefMask"<<LogIO::POST;
+        imstore.get()->mask()->setDefaultMask("mask0");
+        imstore.get()->releaseImage(imstore.get()->mask());
+        if (debug) {
+	  cerr<<"Make a copy"<<endl;
+          PagedImage<Float> temppb(imstore->mask()->shape(), imstore->mask()->coordinates(),"tempPB.Im");
+          temppb.copyData(*(imstore->mask()));
+          temppb.defineRegion("mask0", outreg, RegionHandler::Masks, True);
+          temppb.setDefaultMask("mask0");
+        }
+        ***/
+        
       }
-    autoMask( imstore, alg, threshold, fracofpeak, resolution, resbybeam, nmask);
+    //autoMask( imstore, alg, threshold, fracofpeak, resolution, resbybeam, nmask);
     // else... same options as makePBMask (put it into a helper function)
   }// end of autoMaskWithinPB
 
 } //# NAMESPACE CASA - END
-

@@ -105,7 +105,8 @@ public:
                 const Float& fracpeak=0.0,
                 const String& resolution="",
                 const Float& resbybeam=0.0,
-                const Int nmask=0);
+                const Int nmask=0, 
+                Float pblimit=0.0);
   // automask algorithms...  
   void autoMaskByThreshold (ImageInterface<Float>& mask,
                            const ImageInterface<Float>& res, 
