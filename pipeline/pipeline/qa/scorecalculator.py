@@ -607,7 +607,7 @@ def score_wvrgcal(ms_name, wvr_score):
                        vis=os.path.basename(ms_name))
 
 @log_qa
-def score_sdtotal_data_flagged_old(name, ant, spw, pol, frac_flagged):
+def score_sdtotal_data_flagged_old(name, ant, spw, pol, frac_flagged, field=None):
     """
     Calculate a score for the flagging task based on the total fraction of
     data flagged.
@@ -622,7 +622,10 @@ def score_sdtotal_data_flagged_old(name, ant, spw, pol, frac_flagged):
         score = linear_score(frac_flagged, 0.05, 0.5, 1.0, 0.5)
     
     percent = 100.0 * frac_flagged
-    longmsg = '%0.2f%% of data in %s (Ant=%s, SPW=%d, Pol=%d) was flagged' % (percent, name, ant, spw, pol)
+    if field is None:
+        longmsg = '%0.2f%% of data in %s (Ant=%s, SPW=%d, Pol=%d) was flagged' % (percent, name, ant, spw, pol)
+    else:
+        longmsg = '%0.2f%% of data in %s (Ant=%s, Field=%s, SPW=%d, Pol=%s) was flagged' % (percent, name, ant, field, spw, pol)
     shortmsg = '%0.2f%% data flagged' % percent
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, 
                        vis=os.path.basename(name))
