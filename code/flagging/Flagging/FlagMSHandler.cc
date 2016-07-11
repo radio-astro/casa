@@ -929,19 +929,20 @@ FlagMSHandler::processorTable()
 		/* Create a look-up boolean column to tell if a row is of type CORRELATOR.
 		   isCorrelatorType_p = True when PROCESSOR_ID is of TYPE CORRELATOR
 		 */
-		isCorrelatorType_p = tableCols.flagRow();
+		isCorrelatorType_p.resize(msSubtable.nrow(),False);
 
 		// Assign True to row in look-up table that have TYPE==CORRELATOR
 		for (uInt pid=0; pid<msSubtable.nrow(); pid++){
 
 			String proc_type = typeCol.asString(pid);
+
 			if (proc_type.compare("CORRELATOR") == 0){
-				isCorrelatorType_p.put(pid, 1);
+				isCorrelatorType_p(pid) = True;
 			}
 			else
-				isCorrelatorType_p.put(pid, 0);
+				isCorrelatorType_p(pid) = False;
 
-		}
+			}
 	}
 
 	return true;

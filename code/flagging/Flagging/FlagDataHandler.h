@@ -934,7 +934,7 @@ public:
 	Bool loadProcessorTable_p;
 
 	// PROCESSOR sub-table section
-	ScalarColumn<Bool> isCorrelatorType_p;
+	Vector<Bool> isCorrelatorType_p;
 	bool processorTableExist_p;
 
 

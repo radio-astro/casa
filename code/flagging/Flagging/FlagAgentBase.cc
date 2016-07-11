@@ -1643,7 +1643,7 @@ FlagAgentBase::generateRowsIndex(uInt nRows)
 					int proc_id = visibilityBuffer_p->processorId()[row_i];
 
 					if (flagDataHandler_p->processorTableExist_p == true and
-							flagDataHandler_p->isCorrelatorType_p.get(proc_id) == false){
+							flagDataHandler_p->isCorrelatorType_p(proc_id) == false){
 						// skip non-CORRELATOR data
 						continue;
 					}
