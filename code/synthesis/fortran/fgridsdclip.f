@@ -195,7 +195,7 @@ C                            do ix=-support,support
                                 nvalue=wmin(ax,ay,apol,achan)*
      $                            gmin(ax,ay,apol,achan)
                                 gmin(ax,ay,apol,achan)=thevalue
-                                swap=theweight
+                                swap=nweight
                                 nweight=wmin(ax,ay,apol,achan)
                                 wmin(ax,ay,apol,achan)=swap
                               else if (real(thevalue).ge.
@@ -203,7 +203,7 @@ C                            do ix=-support,support
                                 nvalue=wmax(ax,ay,apol,achan)*
      $                            gmax(ax,ay,apol,achan)
                                 gmax(ax,ay,apol,achan)=thevalue
-                                swap=theweight
+                                swap=nweight
                                 nweight=wmax(ax,ay,apol,achan)
                                 wmax(ax,ay,apol,achan)=swap
                               end if
