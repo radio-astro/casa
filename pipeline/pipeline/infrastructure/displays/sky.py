@@ -101,14 +101,6 @@ class SkyDisplay(object):
             try:
                 if (collapseFunction == 'center'):
                     collapsed = image.collapse(function='mean', chans=str(image.summary()['shape'][3]/2), axes=[2,3])
-                elif (collapseFunction == 'max'):
-                    shape = image.shape()
-                    centerMask = ''.join(['T' if item==True else 'F' for item in image.getchunk([shape[0]/2, shape[1]/2, 0, 0], [shape[0]/2, shape[1]/2, 0, shape[3]], getmask=True).flatten()])
-                    # Set channel range to avoid spurious edge spikes
-                    c1 = centerMask.find('T')
-                    c2 = centerMask.rfind('T')
-                    if (c1 != -1) and (c2 != -1):
-                        collapsed = image.collapse(function='max', chans='%d~%d' % (c1, c2), axes=[2,3])
                 else:
                     collapsed = image.collapse(function=collapseFunction, axes=[2,3])
             except:
