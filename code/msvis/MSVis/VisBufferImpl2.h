@@ -250,7 +250,6 @@ public:
     virtual Bool areCorrelationsSorted() const;
     virtual IPosition getValidShape (Int) const;
     virtual VisModelDataI * getVisModelData() const;
-    virtual Bool modelDataIsVirtual () const;
 
 
     //////////////////////////////////////////////////////////////////////

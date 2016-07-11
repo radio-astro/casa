@@ -2196,81 +2196,14 @@ VisBufferImpl2::fillCubeCorrected (Cube <Complex> & value) const
     getViiP()->visibilityCorrected (value);
 }
 
-Bool
-VisBufferImpl2::modelDataIsVirtual () const
-{
-    //String modelkey=String("definedmodel_field_")+String::toString(fieldId());
-    //Bool hasmodkey=getViiP()->ms().keywordSet().isDefined(modelkey);
-	String elkey;
-	Int sourcerow;
-	if (state_p->visModelData_p == 0){
-		state_p->visModelData_p = VisModelDataI::create2();
-	}
-	Bool hasmodkey= ! (state_p->visModelData_p == 0) &&
-	                state_p->visModelData_p->isModelDefinedI(fieldId()(0), getViiP()->ms(), elkey, sourcerow);
-
-    Bool isVirtual = hasmodkey || !(getViiP()->ms().tableDesc().isColumn("MODEL_DATA"));
-
-    return isVirtual;
-}
-
 void
 VisBufferImpl2::fillCubeModel (Cube <Complex> & value) const
 {
     CheckVisIter ();
 
-    //String modelkey = String("definedmodel_field_")+String::toString(fieldId());
-    //Bool hasmodkey=getViiP()->ms().keywordSet().isDefined(modelkey);
-//    String modelkey;
-//    if (state_p->visModelData_p == 0){
-//                state_p->visModelData_p = VisModelDataI::create2();
-//    }
-
-    if (modelDataIsVirtual ()){
-
-        Int sourcerow;
-        String modelkey = String("definedmodel_field_")+String::toString(fieldId());
-        Bool hasmodkey=state_p->visModelData_p->isModelDefinedI(fieldId()(0), getViiP()->ms(), modelkey, sourcerow);
-
-        if (state_p->visModelData_p->hasModel (msId(), fieldId()(0), spectralWindows()(0)) == -1){
-
-            if(hasmodkey){
-            	TableRecord modrec;
-            	if(state_p->visModelData_p->getModelRecordI(modelkey, modrec, getViiP()->ms())){
-            		state_p->visModelData_p->addModel(modrec, Vector<Int>(1, msId()), *this);
-            	}
-                //String whichrec=getViiP()->ms().keywordSet().asString(modelkey);
-                //Record modrec(getViiP()->ms().keywordSet().asRecord(whichrec));
-                //state_p->visModelData_p->addModel(modrec, Vector<Int>(1, msId()), VisBuffer2Adapter (this));
-            }
-        }
-
-        {
-            // Horrible kluge here.  The model field itself is mutable within this class so
-            // that the filling operation can modify it even though the accessor method
-            // is const.  This is a reasonable use of mutable since the user is unaware that
-            // the data is cached and filled on demand.  However, the getModelVis method
-            // repeatedly modifies the VisBuffer that it gets passed and there doesn't appear
-            // to be any easy way to rework it so that it can get by with const access (it
-            // modifies the modelVis field and then passes the modified VisBuffer on down
-            // to other virtual methods which can potentially access the modified model
-            // field.
-
-            Bool wasWritable = state_p->isWritable_p;
-            state_p->isWritable_p = True;
-            //VisBuffer2Adapter vb2a (const_cast <VisBufferImpl2 *> (this));
-            //state_p->visModelData_p->getModelVis (vb2a);
-        	state_p->visModelData_p->getModelVis (const_cast <VisBufferImpl2& > (*this));
-            state_p->isWritable_p = wasWritable;
-        }
-    }
-    else{
-
-        // Get the model data from the measurement set via the VI
-
-        getViiP()->visibilityModel (value);
-    }
+    getViiP()->visibilityModel(value);
 }
+
 
 void
 VisBufferImpl2::fillCubeObserved (Cube <Complex> & value) const

@@ -45,6 +45,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 template <typename T> class ArrayColumn;
 template <typename T> class CountedPtr;
+class VisModelDataI;
 class MsIter;
 template <typename T> class ROArrayColumn;
 template <typename T, Int N> class RigidVector;
@@ -620,6 +621,8 @@ protected:
                                                                    Int polarizationId = -1,
                                                                    Int msId = -1) const;
 
+    bool fillFromVirtualModel (Cube <Complex> & value) const;
+
     Slice findChannelsInRange (Double lowerFrequency, Double upperFrequency,
                                const vi::SpectralWindowChannels & spectralWindowChannels) const;
 
@@ -929,6 +932,7 @@ protected:
     VisImagingWeight              imwgt_p;    // object to calculate imaging weight
     mutable Int                   measurementFrame_p; // cached value of observatory type
     MeasurementSets               measurementSets_p; // [use]
+    VisModelDataI *               modelDataGenerator_p; // [own]
     Bool                          more_p; // True if more data in this chunk
     Int                           msIndex_p; // array index of current MS
     Bool                          msIterAtOrigin_p; // True if MS Iter is a start of first MS

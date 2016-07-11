@@ -939,6 +939,7 @@ VisibilityIteratorImpl2::VisibilityIteratorImpl2 (const Block<const MeasurementS
   floatDataFound_p (False),
   frequencySelections_p (0),
   measurementFrame_p (VisBuffer2::FrameNotSpecified),
+  modelDataGenerator_p (VisModelDataI::create2()),
   more_p (False),
   msIndex_p (0),
   msIterAtOrigin_p (False),
@@ -1057,6 +1058,7 @@ VisibilityIteratorImpl2::~VisibilityIteratorImpl2 ()
 {
     delete channelSelectorCache_p;
     delete frequencySelections_p;
+    delete modelDataGenerator_p;
     delete spectralWindowChannelsCache_p;
     delete subtableColumns_p;
     delete vb_p;
@@ -2636,7 +2638,12 @@ VisibilityIteratorImpl2::visibilityCorrected (Cube<Complex> & vis) const
 void
 VisibilityIteratorImpl2::visibilityModel (Cube<Complex> & vis) const
 {
-    getColumnRows (columns_p.modelVis_p, vis);
+    // See if the data can be filled from a virtual model column; if not
+    // then get it from the model column.
+
+    if (! fillFromVirtualModel (vis)){
+        getColumnRows (columns_p.modelVis_p, vis);
+    }
 }
 
 void
@@ -3556,6 +3563,58 @@ VisibilityIteratorImpl2::PendingChanges::setNRowBlocking (Int nRowBlocking)
 
     nRowBlocking_p = nRowBlocking;
 }
+
+bool
+VisibilityIteratorImpl2::fillFromVirtualModel (Cube <Complex> & value) const
+{
+    // The model is virtual if there is no model column or there is a virtual model defined
+    // in the MS.
+
+    String modelKey = "definedmodel_field_" + String::toString (vb_p->fieldId());
+	Int sourceRow;
+	Bool hasModelKey= ! (modelDataGenerator_p == 0) &&
+	                  modelDataGenerator_p->isModelDefinedI (vb_p->fieldId()(0), ms(),
+	                                                         modelKey, sourceRow);
+
+    Bool isVirtual = hasModelKey || ! (ms().tableDesc().isColumn("MODEL_DATA"));
+
+   if (isVirtual){
+
+        if (modelDataGenerator_p->hasModel (msId(), vb_p->fieldId()(0), vb_p->spectralWindows()(0)) == -1){
+
+            // If the model generator does not have a model for this (ms,field, spectralWindow) then
+            // try to add it.
+
+            if (hasModelKey) {
+
+                // Read the record of model information and if found add it to the model generator.
+
+            	TableRecord modelRecord;
+            	if(modelDataGenerator_p->getModelRecordI(modelKey, modelRecord, ms())){
+
+            		modelDataGenerator_p->addModel(modelRecord, Vector<Int>(1, msId()), * vb_p);
+            	}
+            }
+        }
+
+        // Now use the model data generator to fill in the model data.  Temporarily make the
+        // VisBuffer writable, if it wasn't already.
+
+        Bool wasWritable = vb_p->setWritability (true);
+        modelDataGenerator_p->getModelVis (const_cast <VisBuffer2 &> (* vb_p));
+        vb_p->setWritability (wasWritable);
+
+        // Put the model cube into the provided container.  If that turns out to be the
+        // model component of the VIIs VB2 then this will be a no-op.
+
+        value = vb_p->visCubeModel();
+
+        return true; // filled it
+    }
+
+   return false; // Did not fill
+}
+
 
 } // end namespace vi
 

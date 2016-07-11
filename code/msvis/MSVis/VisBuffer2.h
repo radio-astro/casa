@@ -345,7 +345,6 @@ public:
     virtual Int msId() const /*__attribute__((deprecated))*/ = 0;
     virtual String msName (Bool stripPath = False) const /*__attribute__((deprecated))*/ = 0;
     virtual Subchunk getSubchunk () const = 0;
-    virtual Bool modelDataIsVirtual () const = 0;
 
     //////////////////////////////////////////////////////////////////////
     //
@@ -576,6 +575,7 @@ protected:
     virtual Bool isRekeyable () const = 0;
     virtual void setFillable (Bool isFillable) = 0;
     virtual void setRekeyable (Bool isRekeable) = 0;
+    virtual Bool setWritability (bool /*newWritability*/) { ThrowCc ("Should be overridden"); } // Kluge
 
     virtual Vector<Bool> & flagRowRef () = 0;  // [nR]
     virtual Cube<Bool> & flagCubeRef () = 0;  // [nC,nF,nR]
