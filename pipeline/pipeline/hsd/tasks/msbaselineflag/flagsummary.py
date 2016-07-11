@@ -8,6 +8,7 @@ import copy
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.utils as utils
 from pipeline.domain.datatable import OnlineFlagIndex
+from pipeline.domain import DataTable
 
 from ..msbaselineflag import SDFlagPlotter as SDP
 from .. import common
@@ -21,13 +22,13 @@ class SDBLFlagSummary(object):
     This class defines per spwid flagging operation.
     '''
 
-    def __init__(self, context, datatable, ms_list, antid_list, fieldid_list,
+    def __init__(self, context, ms_list, antid_list, fieldid_list,
                  spwid_list, pols_list, thresholds, flagRule, userFlag=[]):
         '''
         Constructor of worker class
         '''
         self.context = context
-        self.datatable = datatable
+        self.datatable = DataTable(name=self.context.observing_run.ms_datatable_name, readonly=True)
         self.ms_list = ms_list
         self.antid_list = antid_list
         self.fieldid_list = fieldid_list

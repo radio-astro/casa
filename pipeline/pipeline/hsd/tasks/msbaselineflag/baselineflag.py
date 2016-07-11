@@ -8,7 +8,6 @@ import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.utils as utils
 from pipeline.hif.heuristics import fieldnames
-from pipeline.domain import DataTable
 
 from .. import common
 from ..common import utils as sdutils
@@ -246,7 +245,6 @@ class SDBLFlag(basetask.StandardTaskTemplate):
 #         args = inputs.to_casa_args()
         flag_rule = inputs.FlagRuleDictionary
         clip_niteration = inputs.iteration
-        datatable = DataTable(name=context.observing_run.ms_datatable_name, readonly=True)
         reduction_group = context.observing_run.ms_reduction_group
 
         if os.path.abspath(cal_name)==os.path.abspath(bl_name):
@@ -314,7 +312,7 @@ class SDBLFlag(basetask.StandardTaskTemplate):
             flagging_results = self._executor.execute(flagging_task, merge=False)
             thresholds = flagging_results.outcome
             # Summary
-            renderer = SDBLFlagSummary(context, datatable, ms_list,
+            renderer = SDBLFlagSummary(context, ms_list,
                                        antenna_list, fieldid_list, spwid_list,
                                        pols_list, thresholds, flag_rule)
             result = self._executor.execute(renderer, merge=False)
