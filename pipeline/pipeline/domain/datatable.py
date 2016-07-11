@@ -548,11 +548,11 @@ class DataTableImpl( object ):
             times = tb.getcol('TIME')
             fieldids = tb.getcol('FIELD_ID')
             antids = tb.getcol('ANTENNA1')
-            tsys_ave = {}
+            tsys_masked = {}
             for i in xrange(tb.nrows()):
                 tsys = tb.getcell('FPARAM',i)
                 flag = tb.getcell('FLAG',i)
-                tsys_ave[i] = numpy.ma.masked_array(tsys, mask=(flag==False)).mean(axis=1).data
+                tsys_masked[i] = numpy.ma.masked_array(tsys, mask=(flag==True))
 
         file_list = self.getkeyword('FILENAMES').tolist()
         msid = file_list.index(os.path.abspath(infile.rstrip('/')))
@@ -561,8 +561,28 @@ class DataTableImpl( object ):
         from_fields = []
         if gainfield.upper() != 'NEAREST':
             from_fields = [ fld.id for fld in msobj.get_fields(gainfield) ]
+            
+        def map_spwchans(atm_spw, science_spw):
+            """
+            Map the channel ID ranges of ATMCal spw that covers frequency range of a science spw
+            Arguments: spw object of ATMCal and science spws
+            """
+            atm_freqs = numpy.array(atm_spw.channels.chan_freqs)
+            min_chan = numpy.where(abs(atm_freqs-float(science_spw.min_frequency.value))==min(abs(atm_freqs-float(science_spw.min_frequency.value))))[0][0]
+            max_chan = numpy.where(abs(atm_freqs-float(science_spw.max_frequency.value))==min(abs(atm_freqs-float(science_spw.max_frequency.value))))[0][-1]
+            start_atmchan = min(min_chan, max_chan)
+            end_atmchan = max(min_chan, max_chan)
+            LOG.trace('calculate_average_tsys:   satrt_atmchan == %d' % start_atmchan)
+            LOG.trace('calculate_average_tsys:   end_atmchan == %d' % end_atmchan)
+            if end_atmchan == start_atmchan:
+                end_atmchan = start_atmchan + 1
+            return start_atmchan, end_atmchan
 
         for spw_to, spw_from in enumerate(spwmap):
+            atm_spw = msobj.get_spectral_window(spw_from)
+            science_spw = msobj.get_spectral_window(spw_to)
+            start_atmchan, end_atmchan = map_spwchans(atm_spw, science_spw)
+            LOG.trace("Transfer Tsys from spw %d (chans: %d~%d) to %d" % (spw_from, start_atmchan, end_atmchan, spw_to))
             for ant_to in to_antids:
                 # select caltable row id by SPW and ANT
                 cal_idxs = numpy.where(numpy.logical_and(spws==spw_from, antids==ant_to))[0]
@@ -583,9 +603,10 @@ class DataTableImpl( object ):
                     if len(cal_field_idxs)==0:
                         continue
                     # the array, atsys, is in shape of len(cal_field_idxs) x npol unlike the other arrays.
-                    atsys = numpy.array([tsys_ave[i] for i in cal_field_idxs])
-                    LOG.debug('atsys = %s' % str(atsys))
-                    if atsys.shape[0] == 1: #only one Tsys measurement selcted
+                    atsys = numpy.array([tsys_masked[i][:,start_atmchan:end_atmchan+1].mean(axis=1).data for i in cal_field_idxs])
+                    LOG.trace("cal_field_ids=%s" % cal_field_idxs)
+                    LOG.trace('atsys = %s' % str(atsys))
+                    if atsys.shape[0] == 1: #only one Tsys measurement selected
                         self.tb1.putcell('TSYS', dt_id, atsys[0,:])
                     else:
                         tsys_time = times.take(cal_field_idxs) #in sec
