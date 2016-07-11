@@ -109,7 +109,7 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                         frequency2 = summary['refval'][frequency_axis] + (summary['shape'][frequency_axis] - 0.5 - summary['refpix'][frequency_axis]) * summary['incr'][frequency_axis]
                         full_bw_GHz = qaTool.convert(abs(frequency2 - frequency1), 'GHz')['value']
                         fractional_bw = (frequency2 - frequency1) / (0.5 * (frequency1 + frequency2))
-                        info_dict[(field, spw, pol, 'fractional bandwidth')] = '%.2g' % (fractional_bw)
+                        info_dict[(field, spw, pol, 'fractional bandwidth')] = '%.2g %%' % (fractional_bw * 100.)
                     except:
                         info_dict[(field, spw, pol, 'fractional bandwidth')] = 'N/A'
 
