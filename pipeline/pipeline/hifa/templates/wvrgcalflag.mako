@@ -50,7 +50,9 @@ application of WVR correction. Plots based on these data in these evaluation
 caltables are presented below.</p>
 
 <%self:plot_group plot_dict="${flag_plots}"
-				  url_fn="${lambda x: 'science_amp_vs_uv-%s.html' % filenamer.sanitize(x)}">
+				  url_fn="${lambda x: flag_subpages[x]}">
+                  data_vis="${True}"
+                  data_spw="${True}">
 
 	<%def name="title()">
 		Flagging plots
@@ -90,10 +92,13 @@ calibration process. Click on a link below to show all flagging metric views
 for that measurement set.</p>
 
 <ul>
-% for ms, plot in metric_plots.items():
+% for ms, subpage in metric_subpages.items():
     <li>
-        <a href="${os.path.relpath(os.path.join(dirname, 'flagging_metric-%s.html' % ms), pcontext.report_dir)}"
-          class="replace">${ms}</a>
+        <a href="${os.path.relpath(os.path.join(dirname, subpage), pcontext.report_dir)}"
+           data-vis="${ms}"
+           class="replace">
+            ${ms}
+        </a>
     </li>
 % endfor
 </ul>
