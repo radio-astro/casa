@@ -607,7 +607,7 @@ def score_wvrgcal(ms_name, wvr_score):
                        vis=os.path.basename(ms_name))
 
 @log_qa
-def score_sdtotal_data_flagged(name, ant, spw, pol, frac_flagged):
+def score_sdtotal_data_flagged_old(name, ant, spw, pol, frac_flagged):
     """
     Calculate a score for the flagging task based on the total fraction of
     data flagged.

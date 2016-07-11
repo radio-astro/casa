@@ -24,7 +24,7 @@ class SDBLFlagQAHandler(pqa.QAResultHandler):
             spw = summary['spw']
             pol = summary['pol']
             frac_flagged = summary['nflags'][0] / float(summary['nrow'])
-            scores.append(qacalc.score_sdtotal_data_flagged(name, ant, spw, pol, frac_flagged))
+            scores.append(qacalc.score_sdtotal_data_flagged_old(name, ant, spw, pol, frac_flagged))
 #         frac_flagged = result.rows_flagged / result.num_rows
 #         frac_flagged = 0.25
 
