@@ -53,26 +53,6 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
     
     def is_multi_vis_task(self):
         return True
-
-
-#     def __init__(self, context, datatable, clip_niteration,
-#                  ms_list, antenna_list, fieldid_list, spwid_list, pols_list,
-#                  nchan, flagRule, userFlag=[], edge=(0,0)):
-#         '''
-#         Constructor of worker class
-#         '''
-#         self.context = context
-#         self.datatable = datatable
-#         self.clip_niteration = clip_niteration
-#         self.ms_list = ms_list
-#         self.antid_list = antenna_list
-#         self.fieldid_list = fieldid_list
-#         self.spwid_list = spwid_list
-#         self.pols_list = pols_list
-#         self.nchan = nchan
-#         self.flagRule = flagRule
-#         self.userFlag = userFlag
-#         self.edge = edge
     
     def _search_datacol(self, table):
         """
@@ -672,7 +652,6 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
                 tPFLAG = DataTable.tb2.getcell('FLAG_PERMANENT', ID)
                 tPFLAG[polid, 2] = 1
                 DataTable.putcell('FLAG_PERMANENT', ID, tPFLAG)
-
 
     def flagSummary(self, DataTable, ids, polid, FlagRule):
         for ID in ids:
