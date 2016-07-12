@@ -15,6 +15,7 @@ LOG = infrastructure.get_logger(__name__)
 class SDMSSkyCalInputs(basetask.StandardInputs):
     """
     """
+    @basetask.log_equivalent_CASA_call
     def __init__(self, context, calmode=None, fraction=None, noff=None,
                  width=None, elongated=None, output_dir=None,
                  infiles=None, outfile=None, field=None,
