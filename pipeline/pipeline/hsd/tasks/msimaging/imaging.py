@@ -105,6 +105,13 @@ class SDImagingResults(common.SingleDishResults):
         
         if self.outcome.has_key('export_results'):
             self.outcome['export_results'].merge_with_context(context)
+            
+        # register ImageItem object to context.sciimlist if antenna is COMBINED
+        if self.outcome.has_key('image'):
+            image_item = self.outcome['image']
+            if isinstance(image_item, imagelibrary.ImageItem) \
+              and image_item.antenna == 'COMBINED':
+                context.sciimlist.add_item(image_item)
 
     def _outcome_name(self):
         # return [image.imagename for image in self.outcome]
