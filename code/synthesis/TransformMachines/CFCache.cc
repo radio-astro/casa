@@ -328,7 +328,7 @@ namespace casa{
 	    // 	if (pickThisCF) cfCount++;
 	    //   }
 	    // cerr << "Will load " << cfCount << "CFs." << endl;
-
+	    TableRecord miscInfo;
 	    {
 	      ProgressMeter pm(1.0, Double(fileNames.nelements()),
 			       "Loading CFs", "","","",True);
@@ -337,7 +337,7 @@ namespace casa{
 		  Double paVal, wVal, fVal, sampling, conjFreq; Int mVal, xSupport, ySupport, conjPoln;
 		  CoordinateSystem coordSys;
 
-		  TableRecord miscInfo = getCFParams(fileNames[i], pixBuf, coordSys,  sampling, paVal, 
+		  miscInfo = getCFParams(fileNames[i], pixBuf, coordSys,  sampling, paVal, 
 			      xSupport, ySupport, fVal, wVal, mVal,conjFreq, conjPoln,False);
 		
 		  Bool pickThisCF=True;
@@ -394,7 +394,8 @@ namespace casa{
 		    muellerElements[ii].resize(1);
 		    muellerElements[ii][0]=mList[ii];
 		  }
-		cfb->resize(0.0,0.0,wList,fList,
+		Double wIncr; miscInfo.get("WIncr", wIncr);
+		cfb->resize(wIncr,0.0,wList,fList,
 			    muellerElements,muellerElements,muellerElements,muellerElements);
 		cfb->setPA(paList_p[ipa]);
 

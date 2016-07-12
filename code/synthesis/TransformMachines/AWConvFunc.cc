@@ -524,7 +524,8 @@ namespace casa{
 
 		    cfb.setParams(inu,iw,imx,imy,//muellerElements(imx)(imy),
 				  ftCoords, sampling, xSupport, ySupport,
-				  freqValues(inu), wValues(iw), muellerElements(imx)(imy),
+				  freqValues(inu), wValues(iw),
+				  muellerElements(imx)(imy),
 				  String(""), // Default ==> Don't set in the CFCell
 				  conjFreq, conjPol[0]);
 		    cfCellPtr=cfb.getCFCellPtr(freqValues(inu), wValues(iw), 
@@ -1864,9 +1865,9 @@ namespace casa{
 			 ((static_cast<AWConvFunc &>(*awCF)).psTerm_p)->init(IPosition(2,inner,inner), uvScale, uvOffset,psScale);
 			 
 			 //
-			 // By this point, the all the 4 axis (Time/PA, Freq, Pol,
-			 // Baseline) of the CFBuffer objects have been setup.  The CFs
-			 // will now be filled using the supplied PS-, W- ad A-term objects.
+			 // By this point,  all the 4 axis (Time/PA, Freq, Pol, Baseline)
+			 // of the CFBuffer objects have been setup.  The CFs will now
+			 // be filled using the supplied PS-, W- and the A-term objects.
 			 //
 			 
 			 AWConvFunc::fillConvFuncBuffer2(*cfb_p, *cfwtb_p, convSize, convSize, 

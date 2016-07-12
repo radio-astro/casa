@@ -101,7 +101,7 @@ namespace casa{
   //---------------------------------------------------------------
   //
   //  template<class T>  void CFBuffer<T>
-  void CFBuffer::resize(const Double& wIncr, const Double& freqIncr,
+  void CFBuffer::resize(const Double& wScale, const Double& freqIncr,
 			const Vector<Double>& wValues, 
 			const Vector<Double>& freqValues,
 			const PolMapType& muellerElements,
@@ -112,7 +112,7 @@ namespace casa{
   {
     wValues_p.assign(wValues);
     freqValues_p.assign(freqValues);
-    wValIncr_p = wIncr;
+    wValIncr_p = wScale;
     freqValIncr_p = freqIncr;
     //    muellerMask_p.assign(muellerElements);
 
@@ -145,6 +145,7 @@ namespace casa{
 		cfCells_p(i,j,k)->freqValue_p = freqValues(i);
 		cfCells_p(i,j,k)->freqIncr_p = freqIncr;
 		cfCells_p(i,j,k)->wValue_p = wValues(j);
+		cfCells_p(i,j,k)->wIncr_p = wValIncr_p;
 		cfCells_p(i,j,k)->muellerElement_p = muellerElements_p(prow)(pcol);
 		cfCells_p(i,j,k)->xSupport_p = 0;
 		cfCells_p(i,j,k)->ySupport_p = 0;
@@ -175,7 +176,8 @@ namespace casa{
   RigidVector<Int, 3> CFBuffer::setParams(const Int& inu, const Int& iw, const Int& /*ipx*/, const Int& /*ipy*/,
 					  CoordinateSystem& cs, Float& sampling,
 					  Int& xSupport, Int& ySupport, 
-					  const Double& freqValue, const Double& wValue, 
+					  const Double& freqValue,
+					  const Double& wValue,
 					  const Int& muellerElement,
 					  const String& fileName,
 					  const Double& conjFreq,

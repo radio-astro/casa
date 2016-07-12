@@ -67,6 +67,7 @@ namespace casa{
     os << "Sampling: "           << sampling_p  << endl
        << "xSupport, ySupport: " << xSupport_p  << " " << ySupport_p << endl
        << "wValues: "            << wValue_p    << endl
+       << "wIncr: "            << wIncr_p    << endl
        << "FreqValues: "         << freqValue_p << endl
        << "ConjFreq: "           << conjFreq_p  << endl
        << "ConjPoln: "           << conjPoln_p  << endl
@@ -125,6 +126,7 @@ namespace casa{
     miscinfo.define("ParallacticAngle",pa_p.getValue("deg"));
     miscinfo.define("MuellerElement", muellerElement_p);
     miscinfo.define("WValue", wValue_p);
+    miscinfo.define("WIncr", wIncr_p);
     miscinfo.define("Name", fileName_p);
     miscinfo.define("ConjFreq", conjFreq_p);
     miscinfo.define("ConjPoln", conjPoln_p);

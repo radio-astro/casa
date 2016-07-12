@@ -80,7 +80,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int shape[2];
     Float sampling,diameter;
     Int xSupport, ySupport;
-    Double wValue, freqValue,freqIncr, conjFreq;    
+    Double wValue, wIncr, freqValue,freqIncr, conjFreq;    
     Int muellerElement, conjPoln;
     String fileName, telescopeName;
   };
@@ -132,6 +132,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       cfst.xSupport=xSupport_p;
       cfst.ySupport=ySupport_p;
       cfst.wValue=wValue_p;
+      cfst.wIncr=wIncr_p;
       cfst.freqValue=freqValue_p;
       cfst.freqIncr=freqIncr_p;
       cfst.muellerElement=muellerElement_p;
@@ -158,7 +159,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     CoordinateSystem coordSys_p;
     Float sampling_p, diameter_p;
     Int xSupport_p,ySupport_p, conjPoln_p;
-    Double wValue_p, freqValue_p,freqIncr_p, conjFreq_p;
+    Double wValue_p, wIncr_p, freqValue_p,freqIncr_p, conjFreq_p;
     //    MuellerElementType muellerElement_p;
     Int muellerElement_p;
     Quantity pa_p;

@@ -147,14 +147,14 @@ namespace casa{
 	  {
 	    log_l << "CFs not cached for " << pa.getValue("deg") 
 		  << " deg, dPA = " << dPA.getValue("deg") 
-		  << " Field ID = " << vbs.fieldId()
-		  << " TimeStamps(0-10) = " << vbs.feed_pa(getCurrentTimeStamp(vbs)).nelements() << " ";
-	    for (Int i=0;i<10;i++) 
-	      {
-		//		log_l << MVTime(vbs.time()(i)).string(MVTime::TIME) << " ";
-		log_l << vbs.time()(i)/1.0e8 << " ";
-		log_l << "(" << (vbs.feed_pa(getCurrentTimeStamp(vbs))(i))*57.2956 << ") ";
-	      }
+		  << " Field ID = " << vbs.fieldId();
+	    // 	  << " TimeStamps(0-10) = " << vbs.feed_pa(getCurrentTimeStamp(vbs)).nelements() << " ";
+	    // for (Int i=0;i<10;i++) 
+	    //   {
+	    // 	//		log_l << MVTime(vbs.time()(i)).string(MVTime::TIME) << " ";
+	    // 	log_l << vbs.time()(i)/1.0e8 << " ";
+	    // 	log_l << "(" << (vbs.feed_pa(getCurrentTimeStamp(vbs))(i))*57.2956 << ") ";
+	    //   }
 	    log_l << " Ant1Type, Ant2Type = " << ant1Type << "," << ant2Type << LogIO::POST;
 	    statusCode=CFDefs::NOTCACHED;
 	  }

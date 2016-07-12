@@ -242,7 +242,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     inline Int nearestWNdx(const Double& wVal) 
     {
       //      return SynthesisUtils::nint(sqrt(wValIncr_p*abs(wVal)));
-      return (int)(sqrt(wValIncr_p*abs(wVal)));
+      return max(0,min((int)(sqrt(wValIncr_p*abs(wVal))),wValues_p.nelements())-1);
+      // Int ndx=(int)(sqrt(wValIncr_p*abs(wVal)));
+      // if ((uInt)ndx >= wValues_p.nelements())
+      // 	cerr << endl << endl << ndx << " " <<  wVal << " " << wValIncr_p << endl << endl;
+      // return min(ndx,wValues_p.nelements()-1);
     }
     
     Double nearest(Bool& found, const Double& val, const Vector<Double>& valList, const Double& incr);
