@@ -55,7 +55,7 @@ class CleanBaseInputs(basetask.StandardInputs):
     restoringbeam = basetask.property_with_default('restoringbeam', 'common')
     robust = basetask.property_with_default('robust', -999.0)
     sensitivity = basetask.property_with_default('sensitivity', 0.0)
-    spwsel = basetask.property_with_default('spwsel', {})
+    spwsel = basetask.property_with_default('spwsel', [])
     start = basetask.property_with_default('start', '')
     stokes = basetask.property_with_default('stokes', 'I')
     threshold = basetask.property_with_default('threshold', '0.0mJy')
@@ -168,8 +168,9 @@ class CleanBase(basetask.StandardTaskTemplate):
         # don't contain the requested data.
         scanidlist = []
         vislist = []
-        for vis in inputs.vis:
-            ms = inputs.context.observing_run.get_ms(name=vis)
+        spwsellist = []
+        for i in xrange(len(inputs.vis)):
+            ms = inputs.context.observing_run.get_ms(name=inputs.vis[i])
             scanids = [scan.id for scan in ms.scans if
                        inputs.intent in scan.intents and
                        re.search(pattern=re_field, string=str(scan.fields))]
@@ -179,8 +180,10 @@ class CleanBase(basetask.StandardTaskTemplate):
             scanids = scanids.replace('[', '')
             scanids = scanids.replace(']', '')
             scanidlist.append(scanids)
-            vislist.append(vis)
+            vislist.append(inputs.vis[i])
+            spwsellist.append(inputs.spwsel[i])
         inputs.vis=vislist
+        inputs.spwsel=spwsellist
 
         # Initialize imaging results structure
         if not inputs.result:

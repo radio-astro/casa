@@ -387,10 +387,13 @@ class TcleanHeuristics(object):
         pc_direc = meTool.source(inputs.phasecenter)
 
         for msname in inputs.vis:
-            ms_obj = self.context.observing_run.get_ms(msname)
-            field_ids = [f.id for f in ms_obj.fields if (f.name == inputs.field) and (inputs.intent in f.intents)]
-            separations = [meTool.separation(pc_direc, f.mdirection)['value'] for f in ms_obj.fields if f.id in field_ids]
-            ref_field_ids.append(field_ids[separations.index(min(separations))])
+            try:
+                ms_obj = self.context.observing_run.get_ms(msname)
+                field_ids = [f.id for f in ms_obj.fields if (f.name == inputs.field) and (inputs.intent in f.intents)]
+                separations = [meTool.separation(pc_direc, f.mdirection)['value'] for f in ms_obj.fields if f.id in field_ids]
+                ref_field_ids.append(field_ids[separations.index(min(separations))])
+            except:
+                ref_field_ids.append(-1)
 
         # Get a cont file handler for the conversion to TOPO
         contfile_handler = contfilehandler.ContFileHandler(self.context.contfile)
