@@ -614,8 +614,9 @@ class Tclean(cleanbase.CleanBase):
                         for field_id in [f.id for f in ms.fields if (utils.dequote(f.name) == utils.dequote(field) and inputs.intent in f.intents)]:
                             try:
                                 field_sensitivity = self._get_sensitivity(ms, field_id, intSpw, chansel)
-                                field_sensitivities.append(field_sensitivity)
-                                detailed_field_sensitivities[os.path.basename(ms.name)][intSpw][field_id] = field_sensitivity
+                                if (field_sensitivity > 0.0):
+                                    field_sensitivities.append(field_sensitivity)
+                                    detailed_field_sensitivities[os.path.basename(ms.name)][intSpw][field_id] = field_sensitivity
                             except Exception as e:
                                 LOG.warning('Could not calculate sensitivity for MS %s Field %s (ID %d) SPW %d ChanSel %s' % (os.path.basename(ms.name), utils.dequote(field), field_id, intSpw, chansel))
 
@@ -632,10 +633,18 @@ class Tclean(cleanbase.CleanBase):
                         LOG.info('Applying mosaic overlap factor of %s.' % (overlap_factor))
                         sensitivities.append(numpy.median(field_sensitivities) / overlap_factor)
                     else:
-                        # Use field name for single field case
-                        field_sensitivity = self._get_sensitivity(ms, field, intSpw, chansel)
-                        sensitivities.append(field_sensitivity)
-                        detailed_field_sensitivities[os.path.basename(ms.name)][intSpw][field] = field_sensitivity
+                        # Still need to loop over field ID with proper intent for single field case
+                        field_sensitivities = []
+                        for field_id in [f.id for f in ms.fields if (utils.dequote(f.name) == utils.dequote(field) and inputs.intent in f.intents)]:
+                            field_sensitivity = self._get_sensitivity(ms, field_id, intSpw, chansel)
+                            if (field_sensitivity > 0.0):
+                                field_sensitivities.append(field_sensitivity)
+                        # Check if we have anything
+                        if (len(field_sensitivities) > 0):
+                            # If there is more than one result (shouldn't be), combine them to one number
+                            field_sensitivity = 1.0 / numpy.sqrt(numpy.sum(1.0 / numpy.array(field_sensitivities)**2))
+                            sensitivities.append(field_sensitivity)
+                            detailed_field_sensitivities[os.path.basename(ms.name)][intSpw][field] = field_sensitivity
                 except Exception as e:
                     # Simply pass as this could be a case of a source not
                     # being present in the MS.
@@ -644,9 +653,9 @@ class Tclean(cleanbase.CleanBase):
         if (len(sensitivities) != 0):
             sensitivity = 1.0 / numpy.sqrt(numpy.sum(1.0 / numpy.array(sensitivities)**2))
         else:
-            defaultSensitivity = 0.001
-            LOG.warning('Exception in calculating sensitivity. Assuming %g Jy/beam.' % (defaultSensitivity))
-            sensitivity = defaultSensitivity
+            dummySensitivity = 0.001
+            LOG.warning('Exception in calculating sensitivity. Assuming dummy value of %g Jy/beam.' % (dummySensitivity))
+            sensitivity = dummySensitivity
 
         return sensitivity, spw_topo_freq_param, spw_topo_chan_param, spw_topo_freq_param_dict, spw_topo_chan_param_dict, total_topo_bw, aggregate_topo_bw
 
@@ -699,6 +708,9 @@ class Tclean(cleanbase.CleanBase):
                     imTool.weight(type=inputs.weighting, robust=inputs.robust)
                     result = imTool.apparentsens()
 
+                if (result[1] == 0.0):
+                    raise Exception('Empty selection')
+
                 apparentsens_value = result[1]
                 LOG.info('apparentsens result for MS %s Field %s SPW %s ChanRange %s: %s Jy/beam' % (os.path.basename(ms_do.name), field, spw, chanrange, apparentsens_value))
                 if (N_smooth > 0):
@@ -712,12 +724,16 @@ class Tclean(cleanbase.CleanBase):
                 else:
                     corrected_apparentsens_value = apparentsens_value 
 
+                chansel_sensitivities.append(corrected_apparentsens_value)
+
             except Exception as e:
-                LOG.warning('Could not calculate sensitivity for MS %s Field %s SPW %s ChanRange %s: %s' % (os.path.basename(ms_do.name), field, spw, chanrange, e))
+                if (str(e) != 'Empty selection'):
+                    LOG.info('Could not calculate sensitivity for MS %s Field %s SPW %s ChanRange %s: %s' % (os.path.basename(ms_do.name), field, spw, chanrange, e))
 
-            chansel_sensitivities.append(corrected_apparentsens_value)
-
-        return 1.0 / numpy.sqrt(numpy.sum(1.0 / numpy.array(chansel_sensitivities)**2))
+        if (len(chansel_sensitivities) > 0):
+            return 1.0 / numpy.sqrt(numpy.sum(1.0 / numpy.array(chansel_sensitivities)**2))
+        else:
+            return 0.0
 
     def _do_continuum(self, cont_image_name, mode):
         """
