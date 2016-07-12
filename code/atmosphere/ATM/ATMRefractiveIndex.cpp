@@ -361,7 +361,7 @@ ATM_NAMESPACE_BEGIN
     if(species==20){return mkSpecificRefractivity_16o16o18o(tt, pp, nu);}
     if(species==21){return mkSpecificRefractivity_16o16o17o(tt, pp, nu);}
     if(species==22){return mkSpecificRefractivity_16o18o16o(tt, pp, nu);}
-    if(species==23){return mkSpecificRefractivity_16o18o16o(tt, pp, nu);}
+    if(species==23){return mkSpecificRefractivity_16o17o16o(tt, pp, nu);}
     complex<double> aa(0.0,0.0);
     return aa;
   }
