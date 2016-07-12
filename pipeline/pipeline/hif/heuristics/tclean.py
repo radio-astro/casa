@@ -444,6 +444,8 @@ class TcleanHeuristics(object):
                         spw_topo_freq_param_dict[os.path.basename(msname)][spwid] = ''
                         spw_topo_chan_param_dict[os.path.basename(msname)][spwid] = ''
                     topo_freq_ranges.append((min_frequency, max_frequency))
+                    if (inputs.intent == 'TARGET') and (inputs.specmode in ('mfs', 'cont')):
+                        LOG.warning('No continuum frequency selection for Target Field %s SPW %s' % (inputs.field, spwid))
             else:
                 spw_topo_freq_param_lists.append([spwid] * len(inputs.vis))
                 spw_topo_chan_param_lists.append([spwid] * len(inputs.vis))
@@ -451,6 +453,8 @@ class TcleanHeuristics(object):
                     spw_topo_freq_param_dict[os.path.basename(msname)][spwid] = ''
                     spw_topo_chan_param_dict[os.path.basename(msname)][spwid] = ''
                 topo_freq_ranges.append((min_frequency, max_frequency))
+                if (inputs.intent == 'TARGET') and (inputs.specmode in ('mfs', 'cont')):
+                    LOG.warning('No continuum frequency selection for Target Field %s SPW %s' % (inputs.field, spwid))
 
         spw_topo_freq_param = [','.join(spwsel_per_ms) for spwsel_per_ms in [[spw_topo_freq_param_list_per_ms[i] for spw_topo_freq_param_list_per_ms in spw_topo_freq_param_lists] for i in xrange(len(inputs.vis))]]
         spw_topo_chan_param = [','.join(spwsel_per_ms) for spwsel_per_ms in [[spw_topo_chan_param_list_per_ms[i] for spw_topo_chan_param_list_per_ms in spw_topo_chan_param_lists] for i in xrange(len(inputs.vis))]]
