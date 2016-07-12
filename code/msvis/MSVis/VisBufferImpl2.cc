@@ -1261,6 +1261,14 @@ VisBufferImpl2::setupValidShapes ()
     //   flag_category is not used in CASA, so no need to implement checking.
 }
 
+bool
+VisBufferImpl2::setWritability (Bool newWritability)
+{
+    bool oldWritability = state_p->isWritable_p;
+    state_p->isWritable_p = newWritability;
+    return oldWritability;
+}
+
 
 
 // Sort correlations: (PP,QQ,PQ,QP) -> (PP,PQ,QP,QQ)

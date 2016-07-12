@@ -421,6 +421,7 @@ protected:
     virtual void stateCopy (const VisBufferImpl2 & other); // copy relevant noncached members
     virtual void setFillable (Bool isFillable);
     virtual void setRekeyable (Bool isRekeyable);
+    virtual bool setWritability (Bool newWritability) override;
     virtual void setupValidShapes ();
     template <typename Coord>
     void updateCoord (Coord & item, const Coord & otherItem);
