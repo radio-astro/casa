@@ -1762,14 +1762,25 @@ HPX HEALPix grid.  -->
                                              gridders that produce .pb (i.e. mosaic and awproject)
                                              or if an externally produced .pb image exists on disk)
 
-                       auto-thresh: automask  by threshold for deconvolution
+                       auto-thresh: automask by threshold for deconvolution (binned residual imagei is used for
+                                    to defining masks)
                           subparameters : maskthreshold, maskresolution, pbmask, nmask
                           
-                          if pbmask is >0.0, after automask algorithm is run, it limits the mask to within 
+                          if pbmask is >0.0, the region outside the specified pb gain level is exculded from
+                          image statistics in determination of the threshold. 
+                          if nmask > 0, 'pruning' of the found automask regions will be applied. 
+                        <!--  if pbmask is >0.0, after automask algorithm is run, it limits the mask to within 
                                              a pb gain level of pbmask (This option will work only with 
                                              gridders that produce .pb (i.e. mosaic and awproject)
                                              or if an externally produced .pb image exists on disk)
+                        -->
 
+                       auto-thresh2: automask  by threshold for deconvolution without binning
+                          subparameters : maskthreshold, maskresolution, pbmask, nmask
+                          
+                          if pbmask is >0.0, the region outside the specified pb gain level is exculded from
+                          image statistics in determination of the threshold. 
+                          maskresolution and nmask are used to 'prune' the automask regions.
 </description>
       <value type="string">user</value>
 	    <allowed kind="enum">

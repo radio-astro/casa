@@ -1199,18 +1199,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     minMax(minMinVal,maxMinVal,min);
 
     //os << LogIO::DEBUG1 <<" thresh for binned image (modified by sqrt(npix))   ="<<thresh<<LogIO::POST;
-    os << LogIO::NORMAL <<"stats on binned image: max="<<maxMaxVal<<" rms="<<maxRmsVal<<LogIO::POST;
+    os << LogIO::NORMAL <<"Statistics on binned image: max="<<maxMaxVal<<" rms="<<maxRmsVal<<LogIO::POST;
 
     TempImage<Float>* tempMask = new TempImage<Float> (tempRebinnedIm.shape(), tempRebinnedIm.coordinates() );
 
     if (fracofpeak) {
       thresh = fracofpeak * maxMaxVal;
+      os << LogIO::NORMAL <<"thresh="<<thresh<<" ( "<<fracofpeak<<"* max peak )"<<LogIO::POST;
     }
     else if (sigma) {
       thresh = sigma * maxRmsVal;
+      os << LogIO::NORMAL <<"thresh="<<thresh<<" ( "<<sigma<<"* rms )"<<LogIO::POST;
     }
 
-     os << LogIO::NORMAL <<"rms="<<maxRmsVal<<" thresh="<<thresh<<" with sigma="<<sigma<<LogIO::POST;
 
     if (thresh > maxMaxVal) {
       os << LogIO::WARN <<" The threshold value,"<<thresh<<" for making a mask is greater than max value in the image. No mask will be added by automask."<< LogIO::POST;
@@ -1230,7 +1231,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       LatticeExpr<Float> tempthresh( iif( abs( *(dummyim.get()) ) > thresh, 1.0, 0.0) );
       //os << LogIO::DEBUG1<<" copying the threshold image....."<<LogIO::POST;
       tempMask->copyData(tempthresh);
-      //tempMask->copyData(LatticeExpr<Float>( iif( abs( *(dummyim.get()) ) > thresh, 1.0, 0.0)) );
     }
     return SHARED_PTR<ImageInterface<Float> >(tempMask);
   }
@@ -1299,7 +1299,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     uInt ndim = subimShape.nelements();
     //SHARED_PTR<casa::ImageInterface<float> > tempIm_ptr(subIm);
     TempImage<Float>* tempIm = new TempImage<Float> (TiledShape(subIm->shape(), subIm->niceCursorShape()), subIm->coordinates() );
-    tempIm->copyData(*subIm);
+    // to search for both positive and negative components
+    tempIm->copyData(LatticeExpr<Float> (abs(*subIm)));
     os << LogIO::NORMAL2 <<"Finding regions by ImageDecomposer..."<<LogIO::POST;
     //use ImageDecomposer
     Matrix<Quantity> blctrcs;
@@ -1476,7 +1477,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                                        Float pblimit)
   { 
     LogIO os( LogOrigin("SDMaskHandler","autoMaskWithinPB",WHERE) );
-    Bool debug(False);
+    //Bool debug(False);
 
     os <<LogIO::DEBUG1<<"Calling autoMaskWithinPB .."<<LogIO::POST;
     // changed to do automask ater pb mask is generated so automask do stats within pb mask
@@ -1513,6 +1514,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         
       }
     //autoMask( imstore, alg, threshold, fracofpeak, resolution, resbybeam, nmask);
+
     // else... same options as makePBMask (put it into a helper function)
   }// end of autoMaskWithinPB
 
