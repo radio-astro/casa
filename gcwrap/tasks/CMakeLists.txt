@@ -102,6 +102,7 @@ sdcoadd.xml
 sdfit.xml
 sdflag.xml
 sdflagmanager.xml
+sdgaincal.xml
 sdgrid.xml
 sdimaging.xml
 sdimprocess.xml
