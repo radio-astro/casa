@@ -33,7 +33,7 @@ class MakeImagesInputs(basetask.StandardInputs):
         self._target_list = value
 
     hm_cleaning = basetask.property_with_default('hm_cleaning', 'rms')
-    hm_masking = basetask.property_with_default('hm_masking', 'centerregion')
+    hm_masking = basetask.property_with_default('hm_masking', 'centralregion')
     masklimit = basetask.property_with_default('masklimit', 2.0)
     maxncleans = basetask.property_with_default('maxncleans', 10)
     noise = basetask.property_with_default('noise', '1.0Jy')
