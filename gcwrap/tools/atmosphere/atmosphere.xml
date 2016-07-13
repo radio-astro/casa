@@ -483,7 +483,7 @@ using the above atmospheric parameters.
 
 
      <param type="int" direction="in" name="nbands">
-     <description>number of spectral windows/bands</description>
+     <description>number of spectral windows/bands. The value must be > 0.</description>
      <value>1</value>
      </param>
 
@@ -603,7 +603,7 @@ Return the number of channels of ith band ( passes in as parameter ).
 
 <input>
      <param type="int" direction="in" name="spwid">
-     <description>Int standing for identifier of bands (0-based)</description>
+     <description>Int standing for identifier of bands (0-based). The value must be >= 0.</description>
      <value>0</value>
      </param>
 </input>
@@ -628,7 +628,7 @@ Return the reference channel of the given spectral window
 </description>
 <input>
       <param type="int" direction="in" name="spwid">
-      <description>Int standing for spectral window id (0-based)</description>
+      <description>Int standing for spectral window id (0-based). The value must be >= 0.</description>
       <value>0</value>
      </param>
 </input>
@@ -650,7 +650,7 @@ Return the reference frequency of the given spectral window
 </description>
 <input>
       <param type="int" direction="in" name="spwid">
-      <description>Int standing for spectral window id (0-based)</description>
+      <description>Int standing for spectral window id (0-based). The value must be >= 0.</description>
       <value>0</value>
      </param>
 </input>
@@ -672,7 +672,7 @@ Return the channel separation of the given spectral window
 </description>
 <input>
       <param type="int" direction="in" name="spwid">
-      <description>Int standing for spectral window id (0-based)</description>
+      <description>Int standing for spectral window id (0-based). The value must be >= 0.</description>
       <value>0</value>
      </param>
 </input>
@@ -694,12 +694,12 @@ print "Channel separation retrieved: ", cs['value'][0], cs['unit']
    </description>
    <input>
       <param type="int" direction="in" name="chanNum">
-      <description>Int standing for channel number (0-based)</description>
+      <description>Int standing for channel number (0-based). The value must be >= 0.</description>
       <value>0</value>
      </param>
 
       <param type="int" direction="in" name="spwid">
-      <description>Int standing for spectral window id (0-based)</description>
+      <description>Int standing for spectral window id (0-based). The value must be >= 0.</description>
       <value>0</value>
      </param>
 
@@ -727,7 +727,7 @@ for spwid in range(at.getNumSpectralWindows()):
    </description>
    <input>
       <param type="int" direction="in" name="spwid">
-      <description>Int standing for spectral window id (0-based)</description>
+      <description>Int standing for spectral window id (0-based). The value must be >= 0.</description>
       <value>0</value>
      </param>
    </input>
@@ -757,7 +757,7 @@ for i in range(len(sg['value'])):
       <description>Frequency</description>
       </param>
       <param type="int" direction="in" name="spwid">
-      <description>Int standing for spectral window id (0-based)</description>
+      <description>Int standing for spectral window id (0-based). The value must be >= 0.</description>
       <value>0</value>
      </param>
    </input>
@@ -802,7 +802,7 @@ Get the frequency range encompassing the list of frequency grid points for the s
    </description>
    <input>
       <param type="int" direction="in" name="spwid">
-      <description>Int standing for spectral window id (0-based)</description>
+      <description>Int standing for spectral window id (0-based). The value must be >= 0.</description>
       <value>0</value>
      </param>
    </input>
@@ -825,7 +825,7 @@ Get lowest frequency channel for the specified spectral window.
    </description>
    <input>
       <param type="int" direction="in" name="spwid">
-      <description>Int standing for spectral window id (0-based)</description>
+      <description>Int standing for spectral window id (0-based). The value must be >= 0.</description>
       <value>0</value>
      </param>
    </input>
@@ -850,7 +850,7 @@ Get highest frequency channel for the specified spectral window.
    </description>
    <input>
       <param type="int" direction="in" name="spwid">
-      <description>Int standing for spectral window id (0-based)</description>
+      <description>Int standing for spectral window id (0-based). The value must be >= 0.</description>
       <value>0</value>
      </param>
    </input>
@@ -880,7 +880,7 @@ Get the integrated Dry Opacity for one channel in a band.
       <value>-1</value>
      </param>
       <param type="int" direction="in" name="spwid">
-      <description>Int standing for spectral window id (0-based)</description>
+      <description>Int standing for spectral window id (0-based). The value must be >= 0.</description>
       <value>0</value>
      </param>
 </input>
@@ -916,7 +916,7 @@ Get the integrated Dry Continuum Opacity for one channel in a band.
       <value>-1</value>
      </param>
       <param type="int" direction="in" name="spwid">
-      <description>Int standing for spectral window id (0-based)</description>
+      <description>Int standing for spectral window id (0-based). The value must be >= 0.</description>
       <value>0</value>
      </param>
 </input>
@@ -952,7 +952,7 @@ Get the integrated O2 Lines Opacity for one channel in a band.
       <value>-1</value>
      </param>
       <param type="int" direction="in" name="spwid">
-      <description>Int standing for spectral window id (0-based)</description>
+      <description>Int standing for spectral window id (0-based). The value must be >= 0.</description>
       <value>0</value>
      </param>
 </input>
@@ -988,7 +988,7 @@ Get the integrated O3 Lines Opacity for one channel in a band.
       <value>-1</value>
      </param>
       <param type="int" direction="in" name="spwid">
-      <description>Int standing for spectral window id (0-based)</description>
+      <description>Int standing for spectral window id (0-based). The value must be >= 0.</description>
       <value>0</value>
      </param>
 </input>
@@ -1024,7 +1024,7 @@ Get the integrated CO Lines Opacity for one channel in a band.
       <value>-1</value>
      </param>
       <param type="int" direction="in" name="spwid">
-      <description>Int standing for spectral window id (0-based)</description>
+      <description>Int standing for spectral window id (0-based). The value must be >= 0.</description>
       <value>0</value>
      </param>
 </input>
@@ -1060,7 +1060,7 @@ Get the integrated N2O Lines Opacity for one channel in a band.
       <value>-1</value>
      </param>
       <param type="int" direction="in" name="spwid">
-      <description>Int standing for spectral window id (0-based)</description>
+      <description>Int standing for spectral window id (0-based). The value must be >= 0.</description>
       <value>0</value>
      </param>
 </input>
@@ -1097,7 +1097,7 @@ Get the integrated Wet Opacity for one channel in a band.
       <value>-1</value>
      </param>
       <param type="int" direction="in" name="spwid">
-      <description>Int standing for spectral window id (0-based)</description>
+      <description>Int standing for spectral window id (0-based). The value must be >= 0.</description>
       <value>0</value>
      </param>
 
@@ -1135,7 +1135,7 @@ Get the integrated H2O Lines Opacity for one channel in a band.
       <value>-1</value>
      </param>
       <param type="int" direction="in" name="spwid">
-      <description>Int standing for spectral window id (0-based)</description>
+      <description>Int standing for spectral window id (0-based). The value must be >= 0.</description>
       <value>0</value>
      </param>
 </input>
@@ -1171,7 +1171,7 @@ Get the integrated H2O Continuum Opacity for one channel in a band.
       <value>-1</value>
      </param>
       <param type="int" direction="in" name="spwid">
-      <description>Int standing for spectral window id (0-based)</description>
+      <description>Int standing for spectral window id (0-based). The value must be >= 0.</description>
       <value>0</value>
      </param>
 </input>
@@ -1212,7 +1212,7 @@ Get the integrated Dry optical depth along the atmospheric path on each channel 
 
 <input>
       <param type="int" direction="in" name="spwid">
-      <description>Int standing for spectral window id (0-based)</description>
+      <description>Int standing for spectral window id (0-based). The value must be >= 0.</description>
       <value>0</value>
      </param>
 </input>
@@ -1251,7 +1251,7 @@ Get the integrated optical Wet depth along the atmospheric path on each channel 
 </output>
 <input>
       <param type="int" direction="in" name="spwid">
-      <description>Int standing for spectral window id (0-based)</description>
+      <description>Int standing for spectral window id (0-based). The value must be >= 0.</description>
       <value>0</value>
      </param>
 
@@ -1301,7 +1301,7 @@ for the current conditions, for channel number nc of spectral window spwid.
       <value>-1</value>
      </param>
       <param type="int" direction="in" name="spwid">
-      <description>Int standing for spectral window id (0-based)</description>
+      <description>Int standing for spectral window id (0-based). The value must be >= 0.</description>
       <value>0</value>
      </param>
 
@@ -1343,7 +1343,7 @@ guess water column.
       <value>-1</value>
      </param>
       <param type="int" direction="in" name="spwid">
-      <description>Int standing for spectral window id (0-based)</description>
+      <description>Int standing for spectral window id (0-based). The value must be >= 0.</description>
       <value>0</value>
      </param>
 
@@ -1385,7 +1385,7 @@ guess water column.
       <value>-1</value>
      </param>
       <param type="int" direction="in" name="spwid">
-      <description>Int standing for spectral window id (0-based)</description>
+      <description>Int standing for spectral window id (0-based). The value must be >= 0.</description>
       <value>0</value>
      </param>
 
@@ -1426,7 +1426,7 @@ guess water column.
       <value>-1</value>
      </param>
       <param type="int" direction="in" name="spwid">
-      <description>Int standing for spectral window id (0-based)</description>
+      <description>Int standing for spectral window id (0-based). The value must be >= 0.</description>
       <value>0</value>
      </param>
 
@@ -1467,7 +1467,7 @@ window spwid.
       <value>-1</value>
      </param>
       <param type="int" direction="in" name="spwid">
-      <description>Int standing for spectral window id (0-based)</description>
+      <description>Int standing for spectral window id (0-based). The value must be >= 0.</description>
       <value>0</value>
      </param>
 
@@ -1509,7 +1509,7 @@ for channel nc in spectral window spwid.
       <value>-1</value>
      </param>
       <param type="int" direction="in" name="spwid">
-      <description>Int standing for spectral window id (0-based)</description>
+      <description>Int standing for spectral window id (0-based). The value must be >= 0.</description>
       <value>0</value>
      </param>
 
@@ -1549,7 +1549,7 @@ for channel nc in spectral window spwid.
       <value>-1</value>
      </param>
       <param type="int" direction="in" name="spwid">
-      <description>Int standing for spectral window id (0-based)</description>
+      <description>Int standing for spectral window id (0-based). The value must be >= 0.</description>
       <value>0</value>
      </param>
 
@@ -1589,7 +1589,7 @@ for channel nc in spectral window spwid.
       <value>-1</value>
      </param>
       <param type="int" direction="in" name="spwid">
-      <description>Int standing for spectral window id (0-based)</description>
+      <description>Int standing for spectral window id (0-based). The value must be >= 0.</description>
       <value>0</value>
      </param>
 
@@ -1629,7 +1629,7 @@ for channel nc in spectral window spwid.
       <value>-1</value>
      </param>
       <param type="int" direction="in" name="spwid">
-      <description>Int standing for spectral window id (0-based)</description>
+      <description>Int standing for spectral window id (0-based). The value must be >= 0.</description>
       <value>0</value>
      </param>
 
@@ -1670,7 +1670,7 @@ for channel nc in spectral window spwid.
       <value>-1</value>
      </param>
       <param type="int" direction="in" name="spwid">
-      <description>Int standing for spectral window id (0-based)</description>
+      <description>Int standing for spectral window id (0-based). The value must be >= 0.</description>
       <value>0</value>
      </param>
 
@@ -1701,7 +1701,7 @@ for channel nc in spectral window spwid.
       <value>-1</value>
      </param>
       <param type="int" direction="in" name="spwid">
-      <description>Int standing for spectral window id (0-based)</description>
+      <description>Int standing for spectral window id (0-based). The value must be >= 0.</description>
       <value>0</value>
      </param>
 
@@ -1732,7 +1732,7 @@ for channel nc in spectral window spwid.
       <value>-1</value>
      </param>
       <param type="int" direction="in" name="spwid">
-      <description>Int standing for spectral window id (0-based)</description>
+      <description>Int standing for spectral window id (0-based). The value must be >= 0.</description>
       <value>0</value>
      </param>
 
@@ -1763,7 +1763,7 @@ for channel nc in spectral window spwid.
       <value>-1</value>
      </param>
       <param type="int" direction="in" name="spwid">
-      <description>Int standing for spectral window id (0-based)</description>
+      <description>Int standing for spectral window id (0-based). The value must be >= 0.</description>
       <value>0</value>
      </param>
 
@@ -1793,7 +1793,7 @@ part) for the current conditions, for channel nc in spectral window spwid.
       <value>-1</value>
      </param>
       <param type="int" direction="in" name="spwid">
-      <description>Int standing for spectral window id (0-based)</description>
+      <description>Int standing for spectral window id (0-based). The value must be >= 0.</description>
       <value>0</value>
      </param>
 
@@ -1832,18 +1832,18 @@ spectral window spwid and channel nf.
 <input>
 
      <param type="int"  name="nl">
-     <description>atmospheric layer number
+     <description>atmospheric layer number. The value must be >= 0.
        </description>
      </param>
 
      <param type="int"  name="nf">
-     <description>frequency channnel number
+     <description>frequency channnel number. The value must be >= 0.
        </description>
      <value>0</value>
      </param>
 
      <param type="int"  name="spwid">
-     <description>spectral window id </description>
+     <description>spectral window id. The value must be >= 0.</description>
      <value>0</value>
      </param>
 
@@ -1877,18 +1877,18 @@ spectral window spwid and frequency channel nf
 <input>
 
      <param type="int"  name="nl">
-     <description>atmospheric layer number
+     <description>atmospheric layer number. The value must be >= 0.
        </description>
      </param>
 
      <param type="int"  name="nf">
-     <description>frequency channnel number
+     <description>frequency channnel number. The value must be >= 0.
        </description>
      <value>0</value>
      </param>
 
      <param type="int"  name="spwid">
-     <description>spectral window id </description>
+     <description>spectral window id. The value must be >= 0. </description>
      <value>0</value>
      </param>
 
@@ -1923,18 +1923,18 @@ spectral window spwid and frequency channel nf
 <input>
 
      <param type="int"  name="nl">
-     <description>atmospheric layer number
+     <description>atmospheric layer number. The value must be >= 0.
        </description>
      </param>
 
      <param type="int"  name="nf">
-     <description>frequency channnel number
+     <description>frequency channnel number. The value must be >= 0.
        </description>
      <value>0</value>
      </param>
 
      <param type="int"  name="spwid">
-     <description>spectral window id </description>
+     <description>spectral window id. The value must be >= 0. </description>
      <value>0</value>
      </param>
 
@@ -1969,18 +1969,18 @@ spectral window spwid and frequency channel nf
 <input>
 
      <param type="int"  name="nl">
-     <description>atmospheric layer number
+     <description>atmospheric layer number. The value must be >= 0.
        </description>
      </param>
 
      <param type="int"  name="nf">
-     <description>frequency channnel number
+     <description>frequency channnel number. The value must be >= 0.
        </description>
      <value>0</value>
      </param>
 
      <param type="int"  name="spwid">
-     <description>spectral window id </description>
+     <description>spectral window id. The value must be >= 0. </description>
      <value>0</value>
      </param>
 
@@ -2015,18 +2015,18 @@ spectral window spwid and frequency channel nf
 <input>
 
      <param type="int"  name="nl">
-     <description>atmospheric layer number
+     <description>atmospheric layer number. The value must be >= 0.
        </description>
      </param>
 
      <param type="int"  name="nf">
-     <description>frequency channnel number
+     <description>frequency channnel number. The value must be >= 0.
        </description>
      <value>0</value>
      </param>
 
      <param type="int"  name="spwid">
-     <description>spectral window id </description>
+     <description>spectral window id. The value must be >= 0.</description>
      <value>0</value>
      </param>
 
@@ -2061,18 +2061,18 @@ spectral window spwid and frequency channel nf
 <input>
 
      <param type="int"  name="nl">
-     <description>atmospheric layer number
+     <description>atmospheric layer number. The value must be >= 0.
        </description>
      </param>
 
      <param type="int"  name="nf">
-     <description>frequency channnel number
+     <description>frequency channnel number. The value must be >= 0.
        </description>
      <value>0</value>
      </param>
 
      <param type="int"  name="spwid">
-     <description>spectral window id </description>
+     <description>spectral window id. The value must be >= 0. </description>
      <value>0</value>
      </param>
 
@@ -2107,18 +2107,18 @@ spectral window spwid and frequency channel nf
 <input>
 
      <param type="int"  name="nl">
-     <description>atmospheric layer number
+     <description>atmospheric layer number. The value must be >= 0.
        </description>
      </param>
 
      <param type="int"  name="nf">
-     <description>frequency channnel number
+     <description>frequency channnel number. The value must be >= 0.
        </description>
      <value>0</value>
      </param>
 
      <param type="int"  name="spwid">
-     <description>spectral window id </description>
+     <description>spectral window id. The value must be >= 0. </description>
      <value>0</value>
      </param>
 
@@ -2153,18 +2153,18 @@ spectral window spwid and frequency channel nf
 <input>
 
      <param type="int"  name="nl">
-     <description>atmospheric layer number
+     <description>atmospheric layer number. The value must be >= 0.
        </description>
      </param>
 
      <param type="int"  name="nf">
-     <description>frequency channnel number
+     <description>frequency channnel number. The value must be >= 0.
        </description>
      <value>0</value>
      </param>
 
      <param type="int"  name="spwid">
-     <description>spectral window id </description>
+     <description>spectral window id. The value must be >= 0. </description>
      <value>0</value>
      </param>
 
@@ -2199,18 +2199,18 @@ spectral window spwid and frequency channel nf
 <input>
 
      <param type="int"  name="nl">
-     <description>atmospheric layer number
+     <description>atmospheric layer number. The value must be >= 0.
        </description>
      </param>
 
      <param type="int"  name="nf">
-     <description>frequency channnel number
+     <description>frequency channnel number. The value must be >= 0.
        </description>
      <value>0</value>
      </param>
 
      <param type="int"  name="spwid">
-     <description>spectral window id </description>
+     <description>spectral window id. The value must be >= 0. </description>
      <value>0</value>
      </param>
 
@@ -2372,7 +2372,7 @@ window spwid, for the current conditions and a perfect sky coupling.
 
 <input>
      <param type="int" direction="in" name="spwid">
-     <description>Spectral window (0-based)</description>
+     <description>Spectral window (0-based). The value must be >= 0.</description>
      <value>0</value>
      </param>
      <param type="double" direction="in" name="wh2o" units="mm">
@@ -2409,7 +2409,7 @@ perfect Sky Coupling to the sky.
      <value>-1</value>
      </param>
          <param type="int" direction="in" name="spwid">
-     <description>Spectral window (0-based)</description>
+     <description>Spectral window (0-based). The value must be >= 0.</description>
      <value>0</value>
      </param>
      <param type="double" direction="in" name="wh2o" units="mm">
@@ -2450,7 +2450,7 @@ perfect Sky Coupling to the sky.
 </output>
 <input>
          <param type="int" direction="in" name="spwid">
-     <description>Spectral window (0-based)</description>
+     <description>Spectral window (0-based). The value must be >= 0.</description>
      <value>0</value>
      </param>
      <param type="double" direction="in" name="wh2o" units="mm">
@@ -2500,7 +2500,7 @@ window spwid, for the current conditions and a perfect sky coupling.
 
 <input>
      <param type="int" direction="in" name="spwid">
-     <description>Spectral window (0-based)</description>
+     <description>Spectral window (0-based). The value must be >= 0.</description>
      <value>0</value>
      </param>
      <param type="double" direction="in" name="wh2o" units="mm">
@@ -2537,7 +2537,7 @@ perfect Sky Coupling to the sky.
      <value>-1</value>
      </param>
          <param type="int" direction="in" name="spwid">
-     <description>Spectral window (0-based)</description>
+     <description>Spectral window (0-based). The value must be >= 0.</description>
      <value>0</value>
      </param>
      <param type="double" direction="in" name="wh2o" units="mm">
@@ -2578,7 +2578,7 @@ perfect Sky Coupling to the sky.
 </output>
 <input>
          <param type="int" direction="in" name="spwid">
-     <description>Spectral window (0-based)</description>
+     <description>Spectral window (0-based). The value must be >= 0.</description>
      <value>0</value>
      </param>
      <param type="double" direction="in" name="wh2o" units="mm">
