@@ -982,8 +982,14 @@ def chan_selection_to_frequencies(img, selection, unit='GHz'):
 
         for crange in selection.split(';'):
             c0, c1 = map(float, crange.split('~'))
-            f0 = qaTool.convert({'value': refFreq + (c0 - refPix) * deltaFreq, 'unit': freqUnit}, unit)
-            f1 = qaTool.convert({'value': refFreq + (c1 - refPix) * deltaFreq, 'unit': freqUnit}, unit)
+            # Make sure c0 is the lower channel so that the +/-0.5 channel
+            # adjustments below go in the right direction.
+            if (c1 < c0):
+               ctmp = c0
+               c0 = c1
+               c1 = ctmp
+            f0 = qaTool.convert({'value': refFreq + (c0 - 0.5 - refPix) * deltaFreq, 'unit': freqUnit}, unit)
+            f1 = qaTool.convert({'value': refFreq + (c1 + 0.5 - refPix) * deltaFreq, 'unit': freqUnit}, unit)
             if (qaTool.lt(f0, f1)):
                 #print '%.9f~%.9f%s' % (f0['value'], f1['value'], unit)
                 frequencies.append((f0['value'], f1['value']))
@@ -1017,12 +1023,12 @@ def freq_selection_to_channels(img, selection):
         for frange in p.findall(selection.replace(';','')):
             f0 = qaTool.convert('%s%s' % (frange[0], frange[3]), freqUnit)['value']
             f1 = qaTool.convert('%s%s' % (frange[2], frange[3]), freqUnit)['value']
-            c0 = int((f0 - refFreq) / deltaFreq)
-            c1 = int((f1 - refFreq) / deltaFreq)
+            c0 = (f0 - refFreq) / deltaFreq
+            c1 = (f1 - refFreq) / deltaFreq
             if (c0 < c1):
-                channels.append((c0, c1))
+                channels.append((int(c0 + 0.5), int(c1 - 0.5)))
             else:
-                channels.append((c1, c0))
+                channels.append((int(c1 + 0.5), int(c0 - 0.5)))
     else:
         channels = ['NONE']
 

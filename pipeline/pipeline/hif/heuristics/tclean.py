@@ -524,7 +524,10 @@ class TcleanHeuristics(object):
                 f1 = result['freqend']
 
                 lsrk_freq_ranges.append((f0, f1))
-                lsrk_channel_widths.append((f1-f0)/(nfi[-1]-nfi[0]))
+                # The frequency range from advisechansel is from channel edge
+                # to channel edge. To get the width, one needs to divide by the
+                # number of channels in the selection.
+                lsrk_channel_widths.append((f1-f0)/(nfi[-1]-nfi[0]+1))
 
         intersect_range = utils.intersect_ranges(lsrk_freq_ranges)
         if (intersect_range != ()):
