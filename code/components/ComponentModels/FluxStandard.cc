@@ -187,6 +187,8 @@ Bool FluxStandard::compute(const String& sourceName,
   }
   else if(itsFluxScale == SCAIFE_HEALD_2012)
     fluxStdPtr = new NSTDS::FluxStdScaifeHeald2012;
+  else if(itsFluxScale == STEVENS_REYNOLDS_2016)
+    fluxStdPtr = new NSTDS::FluxStdStevensReynolds2016;
   else{
     if(verbose)
       os << LogIO::SEVERE
@@ -477,6 +479,11 @@ Bool FluxStandard::matchStandard (const String& name,
       (lname.contains("12") || lname.contains("2012"))) {
     stdEnum = FluxStandard::SCAIFE_HEALD_2012;
   }
+  // Stevens-Reynolds (2016)
+  else if (lname.contains("stevens") && lname.contains("reynolds") &&
+        (lname.contains("16") || lname.contains("2016"))) {
+    stdEnum = FluxStandard::STEVENS_REYNOLDS_2016;
+  }
   // Baars
   else if (lname.contains("baars")) {
     stdEnum = FluxStandard::BAARS;
@@ -533,6 +540,10 @@ String FluxStandard::standardName (const FluxStandard::FluxScale& stdEnum)
   }
     case SCAIFE_HEALD_2012: {
     stdName = "Scaife-Heald 2012";
+    break;
+  }
+    case STEVENS_REYNOLDS_2016: {
+    stdName = "Stevens-Reynolds 2016";
     break;
   }
   case SS_JPL_BUTLER: 

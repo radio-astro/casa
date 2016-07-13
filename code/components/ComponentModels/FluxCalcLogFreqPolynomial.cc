@@ -45,7 +45,6 @@ Bool FluxCalcLogFreqPolynomial::operator()(Flux<Double>& value,
     coeffs_p(0).resize();
     coeffs_p(1).resize();
     coeffs_p=getCurrentCoeffs();
-    //cerr<<"Updated coeffs_p(0)[0]="<<coeffs_p(0)[0]<<endl;
   }
   Double fluxCoeff = coeffs_p(0)[coeffs_p(0).nelements() - 1];
   for(Int order = coeffs_p(0).nelements() - 2; order >= 0; --order)
@@ -85,6 +84,8 @@ void FluxCalcLogFreqPolynomial::setFreqUnit(const String& freqUnit)
 
 void FluxCalcLogFreqPolynomial::fill_coeffs(const Vector<Float>& lfv)
 {
+  coeffs_p(0).resize();
+  coeffs_p(1).resize();
   coeffs_p(0) = lfv;
 }
 

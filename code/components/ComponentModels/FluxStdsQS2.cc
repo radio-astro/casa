@@ -184,6 +184,28 @@ Bool FluxStdPerleyButler2010::setSourceCoeffs()
   return found;
 }
 
+// If more sources are added in future, turn this into table based one
+Bool FluxStdStevensReynolds2016::setSourceCoeffs()
+{
+  Bool found = true;
+
+  setFreqUnit("GHz");
+  FSS::Source srcEnum = FCVQS::getSrcEnum();
+
+  if(srcEnum == FSS::NINETEEN34M638){
+    // New high frequency parameters as of May 1, 2016,
+    //  from Partridge et al (2016), ApJ 821,1
+    //
+    // The coefficients have been shifted to use GHz instead of MHz.
+    fill_lohi_coeffs(RVF4(1.170418, 0.248618, -1.649694, 0.605334),  // Low
+                     MFrequency(Quantity(11.1496, "GHz")),           // break
+                     RVF2(1.7581, -1.3763));      // High
+  }
+  else
+    found = false;
+  return found;
+}
+
 Bool FluxStdPerleyButler2013::setSourceCoeffs()
 {
   Bool found = true;

@@ -43,10 +43,10 @@ void FluxCalcLogFreqPolynomial::fill_coeffs(const RigidVector<Float, lford>& lfr
   coeffs_p(0) = lfrv.vector();
 }
 
-template <Int lford>
-void FluxCalcLogFreqBrokenPolynomial::fill_lohi_coeffs(const RigidVector<Float, lford>& lorv,
+template <Int lford1, Int lford2>
+void FluxCalcLogFreqBrokenPolynomial::fill_lohi_coeffs(const RigidVector<Float, lford1>& lorv,
                                                        const MFrequency& break_freq,
-                                                       const RigidVector<Float, lford>& hirv)
+                                                       const RigidVector<Float, lford2>& hirv)
 {
   low_coeffs_p = lorv.vector();
   break_freq_p = break_freq;

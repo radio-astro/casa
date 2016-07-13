@@ -303,6 +303,42 @@ private:
   virtual Bool setSourceCoeffs();
 };
 
+// <summary>
+// FluxStdStevensReynolds: The StevensReynolds2016 flux standard.
+// </summary>
+//
+// <use visibility=export>
+//
+// <reviewed reviewer="" date="" tests="" demos="">
+//
+// <prerequisite>
+// <li><linkto class="FluxStandard">FluxStandard</linkto> module
+// <li><linkto class="FluxCalcLogFreqBrokenPolynomial">FluxCalcLogFreqBrokenPolynomial</linkto> module
+// </prerequisite>
+//
+// <etymology>
+// From "flux density", "standard", "Stevens", "Reynolds", and "2016".
+// </etymology>
+//
+// <synopsis>
+// This specializes FluxCalcLogFreqBrokenPolynomial with the StevensReynolds
+// coefficients and list of recognized sources.
+// </synopsis>
+//
+// <example>
+// <srcblock>
+// </srcblock>
+// </example>
+//
+// <motivation>
+// Support flux density calibration.
+// </motivation>
+class FluxStdStevensReynolds2016 : public virtual FluxCalcVQS,
+                                  private FluxCalcLogFreqBrokenPolynomial
+{
+private:
+  virtual Bool setSourceCoeffs();
+};
 
 } //# NAMESPACE NSTDS -END
 } //# NAMESPACE CASA - END

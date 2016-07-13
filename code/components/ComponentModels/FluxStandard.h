@@ -109,6 +109,11 @@ class FluxStandard
     // broadband low-frequency flux scale for frequencies <~500 MHz
     SCAIFE_HEALD_2012,
 
+    // Stevens & Reynolds 2016, A combination of the Reynolds low
+    // frequency flux scale with the Stevens high frequency flux scale
+    // for 1934-638 described in Partridge et al (2016), ApJ 821,1
+    STEVENS_REYNOLDS_2016,
+
     HAS_RESOLUTION_INFO,
 
     // Estimate the flux density for a Solar System object using a JPL Horizons

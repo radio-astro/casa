@@ -101,6 +101,7 @@
                         <value>Butler-JPL-Horizons 2012</value>
                         <value>Butler-JPL-Horizons 2010</value>
                         <value>Scaife-Heald 2012</value>
+                        <value>Stevens-Reynolds 2016</value>
 			<value>manual</value>
 			<value>fluxscale</value>
 			<!--<value>image</value>-->
@@ -229,6 +230,7 @@
 	          <equals type="string" value="Perley 90"/>
 		  <equals type="string" value="Perley-Taylor 95"/>
 		  <equals type="string" value="Scaife-Heald 2012"/>
+		  <equals type="string" value="Stevens-Reynolds 2016"/>
                   <equals type="string" value="Butler-JPL-Horizons 2012">
                    <default param="listmodels"><value type="bool">False</value>
                    </default>
@@ -413,6 +415,7 @@
                      'Scaife-Heald 2012',
                      'Butler-JPL-Horizons 2010', 
                      'Butler-JPL-Horizons 2012', 
+                     'Stevens-Reynolds 2016',
                      'manual'
                      'fluxscale' 
                      <!-- image to be added -->
@@ -441,12 +444,12 @@
             3C196   0809+483   0813+482   J0813+4813       1,2,7 
             3C286   1328+307   1331+305   J1331+3030       1,2,3,4,5,6,7
             3C295   1409+524   1411+522   J1411+5212       1,2,3,4,5,6,7
-              -     1934-638      -       J1939-6342       1,3,4,5,6
+              -     1934-638      -       J1939-6342       1,3,4,5,6,8
             3C380   1828+487   1829+487   J1829+4845       7
             ------------------------------------------------------------- 
             * supported in: 1 - Perley-Butler 2010, 2 - Perley-Butler 2013 (ref. Perley and 
             Butler 2013, ApJS 204, 19), 3 - Perley-Taylor 99, 4 - Perley-Taylor 95, 
-            5 - Perley 90, 6 - Baars, 7 - Scaife-Heald 2012 
+            5 - Perley 90, 6 - Baars, 7 - Scaife-Heald 2012, 8 - Stevens-Reynolds 2016 
 
             Solar system objects:
             The 'Butler-JPL-Horizons 2012' standard is recommended over 

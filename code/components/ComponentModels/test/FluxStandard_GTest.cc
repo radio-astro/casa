@@ -93,6 +93,7 @@ void FluxValueTest::TearDown() {};
 // (note that for this srcname, freq, and expflux  are dummy values)
 std::tr1::tuple<String,FluxStandard::FluxScale> flxStdParams[] =
 {
+  make_tuple("Stevens-Reynolds 2016", FluxStandard::STEVENS_REYNOLDS_2016),
   make_tuple("Perley-Butler 2010", FluxStandard::PERLEY_BUTLER_2010),
   make_tuple("Baars", FluxStandard::BAARS),
   make_tuple("Perley-Taylor 99", FluxStandard::PERLEY_TAYLOR_99),
@@ -110,7 +111,7 @@ std::tr1::tuple<String,String,Double,FluxStandard::FluxScale> flxStdParamsAltSrc
 //3C196   0809+483   0813+482   J0813+4813       1                 
 //3C286   1328+307   1331+305   J1331+3030       1,3,4,5,6         
 //3C295   1409+524   1411+522   J1411+5212       1,3,4,5,6         
-//  -     1934-638      -       J1939-6342       1,3,4,5,6 
+//  -     1934-638      -       J1939-6342       1,3,4,5,6,8 
   //3c48
   make_tuple("Perley-Butler 2010","3C48", 2.0, FluxStandard::PERLEY_BUTLER_2010),
   make_tuple("Perley-Butler 2010","0134+329", 2.0, FluxStandard::PERLEY_BUTLER_2010),
@@ -223,6 +224,7 @@ std::tr1::tuple<String,String,Double,FluxStandard::FluxScale> flxStdParamsAltSrc
   make_tuple("Perley 90","1411+522", 2.0, FluxStandard::PERLEY_90),
   make_tuple("Perley 90","J1411+5212", 2.0, FluxStandard::PERLEY_90),
   //1934-638   J1939-6342       1,3,4,5,6 
+  make_tuple("Stevens-Reynolds 2016","1934-638", 2.0, FluxStandard::STEVENS_REYNOLDS_2016),
   make_tuple("Perley-Butler 2010","1934-638", 2.0, FluxStandard::PERLEY_BUTLER_2010),
   make_tuple("Perley-Butler 2010","J1939-6342", 2.0, FluxStandard::PERLEY_BUTLER_2010),
   make_tuple("Baars","1934-638", 2.0, FluxStandard::BAARS),
@@ -237,15 +239,17 @@ std::tr1::tuple<String,String,Double,FluxStandard::FluxScale> flxStdParamsAltSrc
 
 std::tr1::tuple<String,String,Double,FluxStandard::FluxScale,Double> flxStdParamsFull[] =
 {
-// 1. P-B 2010, 3. Baars, 4. P-T 99, 5. P-T 95, 6. Perly 90
+// 1. P-B 2010, 3. Baars, 4. P-T 99, 5. P-T 95, 6. Perly 90, 8. Stevens-Reynolds 2016 
 /***
-3C48    0134+329   0137+331   J0137+3309       1,2,3,4,5,6,7         
+3C48    0134+329   0137+331   J0137+3309       1,2,3,4,5,6         
 3C138   0518+165   0521+166   J0521+1638       1,2,3,4,5,6           
-3C147   0538+498   0542+498   J0542+4951       1,2,3,4,5,6,7         
-3C286   1328+307   1331+305   J1331+3030       1,2,3,4,5,6,7         
-3C295   1409+524   1411+522   J1411+5212       1,2,3,4,5,6,7         
-  -     1934-638      -       J1939-6342       1,3,4,5,6 
+3C147   0538+498   0542+498   J0542+4951       1,2,3,4,5,6         
+3C286   1328+307   1331+305   J1331+3030       1,2,3,4,5,6         
+3C295   1409+524   1411+522   J1411+5212       1,2,3,4,5,6         
+  -     1934-638      -       J1939-6342       1,3,4,5,6,8 
 ***/
+  make_tuple("Stevens-Reynolds 2016","1934-638", 2.0, FluxStandard::STEVENS_REYNOLDS_2016, 12.950267126896309),
+  make_tuple("Stevens-Reynolds 2016","1934-638", 20.0, FluxStandard::STEVENS_REYNOLDS_2016, 0.92788142182644617),
   make_tuple("Perley-Butler 2010","3C48", 2.0, FluxStandard::PERLEY_BUTLER_2010, 12.147971835306278),
   make_tuple("Perley-Butler 2010","3C48", 20.0, FluxStandard::PERLEY_BUTLER_2010, 1.4208694621518749),
   make_tuple("Perley-Butler 2010","3C138", 2.0, FluxStandard::PERLEY_BUTLER_2010, 7.2096240634653155),

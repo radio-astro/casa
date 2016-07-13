@@ -81,6 +81,7 @@ class FluxCalcLogFreqPolynomial : public virtual FluxCalcVQS {
 public:
   // Some abbreviations, since the classes derived from this have to
   // define many polynomial coefficients.
+  typedef RigidVector<Float, 2> RVF2;
   typedef RigidVector<Float, 3> RVF3;
   typedef RigidVector<Float, 4> RVF4;
   typedef RigidVector<Float, 5> RVF5;
@@ -174,10 +175,10 @@ class FluxCalcLogFreqBrokenPolynomial : public virtual FluxCalcLogFreqPolynomial
 public:
   FluxCalcLogFreqBrokenPolynomial();
   
-  template <Int lford>
-  void fill_lohi_coeffs(const RigidVector<Float, lford>& lorv,
+  template <Int lford1, Int lford2>
+  void fill_lohi_coeffs(const RigidVector<Float, lford1>& lorv,
                         const MFrequency& break_freq,
-                        const RigidVector<Float, lford>& hirv);
+                        const RigidVector<Float, lford2>& hirv);
 
   virtual Bool operator()(Flux<Double>& value, Flux<Double>& error,
                           const MFrequency& mfreq, const Bool updatecoeffs);
