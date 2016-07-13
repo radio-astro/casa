@@ -63,7 +63,7 @@ def generate_plot_table(ms_id, antenna_id, spw_id, polarization_ids, grid_table)
     def filter(msid, ant, spw, pols, table):
         for row in table:
             if row[0] == spw and row[1] in pols:
-                new_row_entry = row[2:6] + [numpy.array([r[3] for r in row[6] if r[-1] == msid and r[-1] == ant], dtype=int)]
+                new_row_entry = row[2:6] + [numpy.array([r[3] for r in row[6] if r[-1] == msid and r[-2] == ant], dtype=int)]
                 yield new_row_entry
     new_table = list(filter(ms_id, antenna_id, spw_id, polarization_ids, grid_table))
     return new_table
@@ -508,9 +508,12 @@ class BaselineSubtractionWorker(basetask.StandardTaskTemplate):
         if len(line_range) == 0:
             line_range = None
         for pol in pols:
+            LOG.debug('Generating plots for source %s ant %s spw %s pol %s'%(source, ant, spwid, pol))
             outfile_template = lambda x: 'spectral_plot_%s_subtraction_%s_%s_ant%s_spw%s_pol%s.png'%(x,'.'.join(ms.basename.split('.')[:-1]),source,ant,spwid,pol)
             prefit_outfile = os.path.join(outdir, outfile_template('before'))
             postfit_outfile = os.path.join(outdir, outfile_template('after'))
+            LOG.debug('prefit_outfile=\'%s\''%(os.path.basename(prefit_outfile)))
+            LOG.debug('postfit_outfile=\'%s\''%(os.path.basename(postfit_outfile)))
             status = plotter.plot_profile_map_with_fit(self.inputs.context, ms, ant, spwid, pol, grid_table, prefit_data, postfit_data, 
                                                        prefit_outfile, postfit_outfile, deviation_mask, line_range)
             if os.path.exists(prefit_outfile):
