@@ -328,7 +328,6 @@ class BaselineFitParamConfig(basetask.StandardTaskTemplate):
         Argument
             mask : an array of channel mask in values 0 (rejected) or 1 (adopted)
         """
-        LOG.debug('mask.shape={shape}'.format(shape=mask.shape))
         # get indices of clump boundaries
         idx = (mask[1:] ^ mask[:-1]).nonzero()
         idx = (idx[0] + 1)
