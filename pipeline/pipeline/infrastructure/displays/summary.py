@@ -575,9 +575,10 @@ class MosaicChart(object):
 
 
 class PlotAntsChart2(object):
-    def __init__(self, context, ms):
+    def __init__(self, context, ms, polarlog=False):
         self.context = context
         self.ms = ms
+        self.polarlog = polarlog
         self.figfile = self._get_figfile()
         self.site = casatools.measures.observatory(ms.antenna_array.name)
 
@@ -587,8 +588,10 @@ class PlotAntsChart2(object):
 
         # map: with pad names
         plf1 = pylab.figure(1)
-        subpl1 = plf1.add_subplot(1, 1, 1, aspect='equal')
-        self.draw_pad_map_in_subplot(subpl1, self.ms.antennas)
+        if self.polarlog:
+            self.draw_polarlog_ant_map_in_subplot(plf1, self.ms.antennas)
+        else:
+            self.draw_pad_map_in_subplot(plf1, self.ms.antennas)
         pylab.title('Antenna Positions for %s' % self.ms.basename)
         pylab.savefig(self.figfile, format='png', density=108)
         pylab.close()
@@ -598,9 +601,13 @@ class PlotAntsChart2(object):
     def _get_figfile(self):
         session_part = self.ms.session
         ms_part = self.ms.basename
+        if self.polarlog:
+            figfilename = 'plotants_polarlog.png'
+        else:
+            figfilename = 'plotants.png'
         return os.path.join(self.context.report_dir, 
                             'session%s' % session_part, 
-                            ms_part, 'plotants.png')
+                            ms_part, figfilename)
 
     def _get_plot_object(self):
         return logger.Plot(self.figfile,
@@ -608,19 +615,19 @@ class PlotAntsChart2(object):
                            y_axis='Antenna Latitude',
                            parameters={'vis' : self.ms.basename})
 
-    def draw_pad_map_in_subplot(self, subpl, antennas, xlimit=None, 
+    def draw_pad_map_in_subplot(self, plf, antennas, xlimit=None, 
                                 ylimit=None, showemptypads=True):
         """
         Draw a map of pads and antennas on them.
 
-        subpl: a pylab.subplot instance
+        plf: a pylab.figure instance
         pads: a dictionary of antennas {"Name": (X, Y, Z), ...}
         antennas: a dictionary of antennas {"AntennaName": "PadName", ...}
         xlimit, ylimit: lists (or tuples, arrays) for the x and y axis limits.
                         if not given, automatically adjusted.
         showemptypads: set False not to draw pads and their names
         """
-        subpl.clear()
+        subpl = plf.add_subplot(1, 1, 1, aspect='equal')
 
         if showemptypads:
             for antenna in antennas:
@@ -671,6 +678,115 @@ class PlotAntsChart2(object):
                [antenna.offset['elevation offset']['value']]]
 
         return pylab.array(pos)
+
+    # This plot is adapted from the "plotPositionsLogarithmic" function
+    # in the Analysis Utils written by Todd Hunter.
+    def draw_polarlog_ant_map_in_subplot(self, plf, antennas):
+        """
+        Draw a polar-log map of antennas.
+        
+        plf: a pylab.figure instance
+        antennas: a list of dictionaries, each representing an antenna
+        """
+
+        # Get longitude and latitude offsets in meters for antennas.
+        xoffsets = np.array([ant.offset['longitude offset']['value'] for ant in antennas])
+        yoffsets = np.array([ant.offset['latitude offset']['value'] for ant in antennas])
+
+        # Take median of antenna offsets as the actual center for the plot.
+        xcenter = np.median(xoffsets)
+        ycenter = np.median(yoffsets)
+        
+        # Derive radial offset and angle w.r.t. center position.
+        theta = np.arctan2(xoffsets-xcenter, yoffsets-ycenter)
+        r = ((xoffsets-xcenter)**2 + (yoffsets-ycenter)**2)**0.5
+        
+        # Set rmin, clamp between a min and max value, ignore station at r=0 if one is there.
+        rmin_min, rmin_max = 7, 200
+        rmin = min(rmin_max, max(rmin_min, np.min(r[r>0])))
+        
+        # Update r to move any points below rmin to r=rmin.
+        r[r<=rmin] = rmin
+        rmin = np.log(rmin)
+        
+        # Set rmax.
+        rmax = np.log(1.5*np.max(r))
+
+        # Set up subplot.
+        subpl = plf.add_subplot(1, 1, 1, polar=True, projection='polar')
+
+        # Set zero point and direction for theta angle.
+        subpl.set_theta_zero_location('N')
+        subpl.set_theta_direction(-1)
+        
+        # Set minimum and maximum radius.
+        subpl.set_rmax(rmax)
+        subpl.set_rmin(rmin)
+        
+        # Do not show azimuth labels.
+        subpl.set_xticklabels([])
+        subpl.set_yticklabels([])
+        
+        # Do not show grid.
+        subpl.grid(False)
+        
+        # Draw circles at specific distances from the center.
+        angles = np.arange(0,2.01*np.pi,0.01*np.pi)
+        show_circle = True
+        for cr in [30,100,300,1000,3000,10000]:
+
+            # Only draw circles outside rmin.
+            if cr > np.min(r) and show_circle:
+
+                # Draw the circle.
+                radius = np.ones(len(angles))*np.log(cr)
+                subpl.plot(angles, radius, 'k:')
+
+                # Draw tick marks on the circle at 1 km intervals.
+                inc = 0.1*10000/cr
+                if cr > 100:
+                    for angle in np.arange(inc/2., 2*np.pi+0.05, inc):
+                        subpl.plot([angle,angle], [np.log(0.95*cr), np.log(1.05*cr)], 'k-') 
+
+                # Add text label to circle to denote distance from center.
+                va = 'top'
+                circle_label_angle = -20.0 * np.pi / 180.
+                if cr >= 1000:
+                    if (np.log(cr) < rmax):
+                        subpl.text(circle_label_angle, np.log(cr), '%d km'%(cr/1000), size=8, va=va)
+                else:
+                    subpl.text(circle_label_angle, np.log(cr), '%dm'%(cr), size=8, va=va)
+
+            # Find out if most recently drawn circle was outside all antennas, 
+            # if so, no more circles will be drawn.
+            if np.log(cr) > rmax:
+                show_circle = False
+
+        # For each antenna:
+        for i, antenna in enumerate(antennas):
+
+            # Draw the antenna position.
+            subpl.plot(theta[i], np.log(r[i]), 'ko', ms=5, mfc='k')
+    
+            # Draw label for the antenna.
+            subpl.text(theta[i], np.log(r[i]), ' '+antenna.name,
+              size=8, color='k', ha='left', va='bottom', weight='bold')        
+    
+            # Create label for legend
+            if max(r) < 100:
+                label = r'{}: {:2.0f} m, {:4.0f}$^\circ$'.format(antenna.name, r[i], np.degrees(theta[i]))                
+            if max(r) < 1000:
+                label = r'{}: {:3.0f} m, {:4.0f}$^\circ$'.format(antenna.name, r[i], np.degrees(theta[i]))                
+            elif max(r) < 3000:
+                label = r'{}: {:3.2f} km, {:4.0f}$^\circ$'.format(antenna.name, 0.001*r[i], np.degrees(theta[i]))   
+            else:
+                label = r'{}: {:3.1f} km, {:4.0f}$^\circ$'.format(antenna.name, 0.001*r[i], np.degrees(theta[i]))
+
+            # Draw a key in the legend for finding the antenna.
+            subpl.annotate(label, xy=(0.5,0.5), xytext=(0.02,0.925-0.90*i/len(antennas)), 
+              xycoords='figure fraction', textcoords='figure fraction', weight='bold', 
+              arrowprops=None, color='black', ha='left', va='center', size=8) 
+
 
 class TPSamplingChart(object):
     def __init__(self, context, ms):

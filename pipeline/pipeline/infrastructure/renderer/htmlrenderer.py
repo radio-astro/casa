@@ -786,16 +786,22 @@ class T2_2_3Renderer(T2_2_XRendererBase):
 
     @staticmethod
     def get_display_context(context, ms):
+        # Create regular antenna positions plot.
         task = summary.PlotAntsChart2(context, ms)
         plot_ants = task.plot()
+        
+        # Create polar-log antenna positions plot.
+        task = summary.PlotAntsChart2(context, ms, polarlog=True)
+        plot_ants_plog = task.plot()
 
         dirname = os.path.join('session%s' % ms.session,
                                ms.basename)
         
-        return {'pcontext'  : context,
-                'plot_ants' : plot_ants,
-                'ms'        : ms,
-                'dirname'   : dirname}
+        return {'pcontext'       : context,
+                'plot_ants'      : plot_ants,
+                'plot_ants_plog' : plot_ants_plog,
+                'ms'             : ms,
+                'dirname'        : dirname}
 
 
 class T2_2_4Renderer(T2_2_XRendererBase):

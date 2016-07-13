@@ -14,57 +14,76 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 	</ul>
 	<div class="tab-content">
 		<div class="tab-pane active" id="tabs-offsets">		
-			<h3>Antenna Positions</h3>	
-
-			<div class="col-md-3">
-			  	<div class="thumbnail">
-					<a href="${os.path.relpath(plot_ants.abspath, pcontext.report_dir)}"
-					   class="fancybox">
-						<img src="${os.path.relpath(plot_ants.thumbnail, pcontext.report_dir)}"
-							 title="Antenna Latitude vs. Antenna Longitude for ${ms.basename}"
- 							     alt="Antenna Latitude vs. Antenna Longitude for ${ms.basename}"/>
-				    </a>
-				    <div class="caption">
-						<h4>Antenna Position</h4>
-						<p>Plot antenna latitude vs antenna longitude</p>
+			<div class="row">
+				<h3>Antenna Positions</h3>	
+	
+				<div class="col-md-3">
+				  	<div class="thumbnail">
+						<a href="${os.path.relpath(plot_ants.abspath, pcontext.report_dir)}"
+						   class="fancybox">
+							<img src="${os.path.relpath(plot_ants.thumbnail, pcontext.report_dir)}"
+								 title="Antenna Latitude vs. Antenna Longitude for ${ms.basename}"
+	 							     alt="Antenna Latitude vs. Antenna Longitude for ${ms.basename}"/>
+					    </a>
+					    <div class="caption">
+							<h4>Antenna Position</h4>
+							<p>Plot antenna latitude vs antenna longitude</p>
+						</div>
+					</div>
+				</div>
+	
+				<div class="col-md-3">
+				  	<div class="thumbnail">
+						<a href="${os.path.relpath(plot_ants_plog.abspath, pcontext.report_dir)}"
+						   class="fancybox">
+							<img src="${os.path.relpath(plot_ants_plog.thumbnail, pcontext.report_dir)}"
+								 title="Antenna Positions (polar-logarithmic) for ${ms.basename}"
+	 							     alt="Antenna Positions (polar-logarithmic) for ${ms.basename}"/>
+					    </a>
+					    <div class="caption">
+							<h4>Antenna Position</h4>
+							<p>Polar-logarithmic plot of antenna positions.</p>
+						</div>
 					</div>
 				</div>
 			</div>
 			
-			<h3>Antenna Details</h3>
-			<div>
-				<table class="table table-bordered table-striped table-condensed" summary="Antenna Details for ${ms.basename}">
-					<caption>Antenna Details and Offsets for ${ms.basename}</caption>
-				    <thead>
-				        <tr>
-				            <th scope="col" rowspan="2">ID</th>
-				            <th scope="col" rowspan="2">Name</th>
-				            <th scope="col" rowspan="2">Pad</th>
-				            <th scope="col" rowspan="2">Diameter</th>
-				            <th scope="col" colspan="2">Offset from Array Centre</th>
-				        </tr>
-						<tr>
-				            <th scope="col">Longitude</th>
-				            <th scope="col">Latitude</th>			
-						</tr>
-				    </thead>
-					<tbody>
-						% for antenna in ms.antennas:
-						<%
-							(offset_x, offset_y) = ms.antenna_array.get_offset(antenna)
-						%>
-						<tr>
-						  <td>${antenna.id}</td>
-						  <td>${antenna.name}</td>
-						  <td>${antenna.station}</td>
-						  <td>${str(antenna.diameter)}</td>
-						  <td>${str(offset_x)}</td>
-						  <td>${str(offset_y)}</td>
-						</tr>
-						% endfor
-					</tbody>
-				</table>
-			</div>	
+			<div class="row">
+				<h3>Antenna Details</h3>
+				<div>
+					<table class="table table-bordered table-striped table-condensed" summary="Antenna Details for ${ms.basename}">
+						<caption>Antenna Details and Offsets for ${ms.basename}</caption>
+					    <thead>
+					        <tr>
+					            <th scope="col" rowspan="2">ID</th>
+					            <th scope="col" rowspan="2">Name</th>
+					            <th scope="col" rowspan="2">Pad</th>
+					            <th scope="col" rowspan="2">Diameter</th>
+					            <th scope="col" colspan="2">Offset from Array Centre</th>
+					        </tr>
+							<tr>
+					            <th scope="col">Longitude</th>
+					            <th scope="col">Latitude</th>			
+							</tr>
+					    </thead>
+						<tbody>
+							% for antenna in ms.antennas:
+							<%
+								(offset_x, offset_y) = ms.antenna_array.get_offset(antenna)
+							%>
+							<tr>
+							  <td>${antenna.id}</td>
+							  <td>${antenna.name}</td>
+							  <td>${antenna.station}</td>
+							  <td>${str(antenna.diameter)}</td>
+							  <td>${str(offset_x)}</td>
+							  <td>${str(offset_y)}</td>
+							</tr>
+							% endfor
+						</tbody>
+					</table>
+				</div>
+			</div>
 		</div>
 		<div class="tab-pane" id="tabs-baselines">		
 			<h3>Baseline Summary</h3>
