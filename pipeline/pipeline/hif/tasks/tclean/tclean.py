@@ -720,7 +720,7 @@ class Tclean(cleanbase.CleanBase):
                     approximateEffectiveBW = (N_smooth * nchan + 1.12 * (spwchan - nchan) / spwchan) * float(physicalBW_of_1chan)
                     SCF = (optimisticBW / approximateEffectiveBW)**0.5
                     corrected_apparentsens_value = apparentsens_value * SCF
-                    LOG.info('Correcting apparentsens result by %s from %s Jy/beam to %s Jy/beam' % (SCF, apparentsens_value, corrected_apparentsens_value))
+                    LOG.info('Effective BW heuristic: Correcting apparentsens result by %s from %s Jy/beam to %s Jy/beam' % (SCF, apparentsens_value, corrected_apparentsens_value))
                 else:
                     corrected_apparentsens_value = apparentsens_value 
 
