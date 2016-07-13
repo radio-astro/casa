@@ -98,7 +98,7 @@ For 1.-3., the RMSes of spectra before and after baseline fit are obtained using
 			</tr>
 		</thead>
 		<tbody>
-		%for idx in range(len(field_map[field])):
+		%for idx in field_map[field]:
 		<tr>
 			<th><a class="replace-pre" href="${os.path.join(rel_path, html_names[idx])}">details</a></th>
 			<td>${asdm_names[idx]}</td><td>${ant_names[idx]}</td><td>${spw[idx]}</td><td>${pol[idx]}</td><td>${nrows[idx]}</td>
