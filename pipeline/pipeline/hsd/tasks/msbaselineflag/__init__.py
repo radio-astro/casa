@@ -11,7 +11,6 @@ from . import qa
 from . import SDFlagPlotter
 from . import SDFlagRule
 ###
-pipelineqa.registry.add_handler(qa.SDBLFlagQAHandler())
 pipelineqa.registry.add_handler(qa.SDBLFlagListQAHandler())
 qaadapter.registry.register_to_flagging_topic(baselineflag.SDBLFlagResults)
 
