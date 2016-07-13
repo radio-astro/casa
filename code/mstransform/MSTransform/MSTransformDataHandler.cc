@@ -2073,6 +2073,7 @@ Bool MSTransformDataHandler::fillSPWTable()
 			Vector<Double> spwResolIn = inSpWCols.resolution()(spw_uniq_p[min_k]);
 			Vector<Double> effBWOut(nOutChan);
 			Int outChan = 0;
+			Int outChanNotDropped = 0;
 
 			keepShape_p = false;
 
@@ -2111,6 +2112,17 @@ Bool MSTransformDataHandler::fillSPWTable()
 							if (nchan > 1) os << "s.";
 							os << LogIO::POST;
 
+							// jagonzal (CAS-8618): We may have more than one channel dropped per SPW
+							// due to multiple channel selections
+							spwDropChannelMap_p[spw_p[k]].push_back(outChan);
+						}
+						else
+						{
+							for (Int inputChan = inpChan;inputChan<=lastChan;inputChan++)
+							{
+								spwSelectedChannelMap_p[spw_p[k]][outChanNotDropped].push_back(inputChan);
+							}
+							outChanNotDropped++;
 						}
 
 						chanFreqOut[outChan] = (chanFreqIn[inpChan]

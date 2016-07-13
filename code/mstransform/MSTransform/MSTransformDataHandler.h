@@ -304,6 +304,8 @@ public:
 	// Accesors for the Re-mapper objects
 	map<Int, Int> & getStateRemapper() {return stateRemapper_p;};
 	Vector<Int> & getAntennaRemapper() {return antNewIndex_p;};
+	map<Int, vector<Int>> & getDroppedChannelsMap() {return spwDropChannelMap_p;};
+	map<Int,map < Int, vector<Int> > > & getSelectedChannelsMap() {return spwSelectedChannelMap_p;};
 
 	// Accesors for additional parameters
 	void setVirtualModelCol(Bool virtualModelCol) {virtualModelCol_p = virtualModelCol;};
@@ -354,6 +356,10 @@ protected:
 			ncorr_p, // The # of output correlations for each DDID.
 			inNumChan_p, // The # of input channels for each spw.
 			inNumCorr_p; // The # of input correlations for each DDID.
+
+	map<Int,vector<Int> > spwDropChannelMap_p;
+	map<Int,map < Int, vector<Int> > > spwSelectedChannelMap_p;
+
 	Vector<Int> fieldid_p;
 	Vector<Int> spwRelabel_p, fieldRelabel_p, sourceRelabel_p;
 	Vector<Int> oldDDSpwMatch_p;

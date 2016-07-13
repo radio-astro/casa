@@ -4271,47 +4271,67 @@ void MSTransformManager::dropNonUniformWidthChannels()
     	// Skip this SPW in non-reindex mode
     	if ((!reindex_p) and (numOfSelChanMap_p.find(spwId) == numOfSelChanMap_p.end())) continue;
 
-		uInt nchanInAvg = (uInt)floor((widthVector(nChans-1) / (widthVector(0) / freqbinMap_p[spwId])) + 0.5);
+    	logger_p << dataHandler_p->getDroppedChannelsMap() << LogIO::POST;
 
-		if (nchanInAvg < freqbinMap_p[spwId])
-		{
-			logger_p 	<< LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
-						<< "Not enough channels to populate last averaged channel from SPW " << spwId
-						<< " with an uniform width of " << widthVector(0) << " Hz" << endl
-						<< "The resulting channel would have width of only " << widthVector(nChans-1) << " Hz." << endl
-						<< "The channel will be dropped in order to have an uniform grid."
-						<< LogIO::POST;
+    	if (dataHandler_p->getDroppedChannelsMap().find(spwId) != dataHandler_p->getDroppedChannelsMap().end())
+    	{
+    		vector<Int>::iterator iter;
+    		Double droppedWidth = 0;
+    		vector<Int> &droppedChannels = dataHandler_p->getDroppedChannelsMap()[spwId];
+    		for (iter = droppedChannels.begin(); iter != droppedChannels.end(); iter++)
+    		{
+    			logger_p 	<< LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
+    						<< "Not enough input channels to populate output channel n# "
+    						<< *iter << " from SPW " << spwId << "." << endl
+    						<< "The channel will be dropped in order to have an uniform grid."
+    						<< LogIO::POST;
 
-			// Number of channels is reduced in 1
-			numChanCol.put(spw_idx, nChans-1);
+    			droppedWidth += widthVector(*iter);
+    		}
 
-			// Total BW has to be reduced to account for the dropped channel
-			totalBandwidthCol.put(spw_idx, totalBandwidthCol(spw_idx)-widthVector(nChans-1));
+    		// Calculate final number of channels
+    		uInt nChansFinal = nChans-droppedChannels.size();
+    		numChanCol.put(spw_idx, nChansFinal);
 
-			// We have to drop the last element from width
-			widthVector.resize(nChans-1,True);
-			chanWidthCol.put(spw_idx, widthVector);
+    		// Total BW has to be reduced to account for the dropped channels
+    		totalBandwidthCol.put(spw_idx, totalBandwidthCol(spw_idx)-droppedWidth);
 
-			// We have to drop the last element from effective BW
-			// NOTE: Effective BW is not always equal to width
-			Vector<Double> effectiveBWVector = effectiveBWCol(spw_idx);
-			effectiveBWVector.resize(nChans-1,True);
-			effectiveBWCol.put(spw_idx, effectiveBWVector);
+    		// Get current vectors
+    		Vector<Double> effectiveBWVector = effectiveBWCol(spw_idx);
+    		Vector<Double> resolutionVector = resolutionCol(spw_idx);
+    		Vector<Double> frequencyVector = chanFreqCol(spw_idx);
 
-			// We have to drop the last element from resolution
-			// NOTE: Resolution is not always equal to width
-			Vector<Double> resolutionVector = resolutionCol(spw_idx);
-			resolutionVector.resize(nChans-1,True);
-			resolutionCol.put(spw_idx, resolutionVector);
+    		// Declare new vectors
+    		Vector<Double> newWidthVector(nChansFinal);
+    		Vector<Double> newEffectiveBWVector(nChansFinal);
+    		Vector<Double> newResolutionVector(nChansFinal);
+    		Vector<Double> newFrequencyVector(nChansFinal);
 
-			// We have to drop the last element from channel Frequency
-			Vector<Double> frequencyVector = chanFreqCol(spw_idx);
-			frequencyVector.resize(nChans-1,True);
-			chanFreqCol.put(spw_idx, frequencyVector);
+    		// Create a new frequency vector
+    		uInt finalIdx = 0;
+    		vector<Int>::iterator matchIdx;
+    		for (uInt idx=0;idx < widthVector.size(); idx++)
+    		{
+    			matchIdx = find (droppedChannels.begin(), droppedChannels.end(), idx);
+    			if (matchIdx == droppedChannels.end() )
+    			{
+    				newWidthVector(finalIdx) = widthVector(idx);
+    				newEffectiveBWVector(finalIdx) = effectiveBWVector(idx);
+    				newResolutionVector(finalIdx) = resolutionVector(idx);
+    				newFrequencyVector(finalIdx) = frequencyVector(idx);
+        			finalIdx ++;
+    			}
+    		}
 
-			// Update output number of channels
-			inputOutputSpwMap_p[spw_idx].second.resize(nChans-1);
-		}
+    		// Put new vectors in corresponding columns
+    		chanWidthCol.put(spw_idx, newWidthVector);
+    		effectiveBWCol.put(spw_idx, newEffectiveBWVector);
+    		resolutionCol.put(spw_idx, newResolutionVector);
+    		chanFreqCol.put(spw_idx, newFrequencyVector);
+
+    		// Update output number of channels
+    		inputOutputSpwMap_p[spw_idx].second.resize(nChans-1);
+    	}
 	}
 
 	// Flush changes

@@ -1460,45 +1460,9 @@ Vector<Int> MSTransformBufferImpl::getChannelNumbersSelected (Int outputChannelI
 		// If there channel average map all selected channels falling in each bin
 		else
 		{
-			uInt chanbin = manager_p->freqbinMap_p[inputSpw];
-
-			/*
-			manager_p->logger_p << LogIO::NORMAL
-					<< LogOrigin("MSTransformBufferImpl", __FUNCTION__)
-					<< "inputSpw=" << inputSpw
-					<< " chanbin=" << chanbin
-					<< LogIO::POST;
-			*/
-
 			for (uInt outChanIdx=0;outChanIdx<channelNumbers.size();outChanIdx++)
 			{
-				uInt startChan = chanbin*outChanIdx;
-				uInt endChan = chanbin*(outChanIdx+1);
-				outputInputChannelMap_p[channelNumbers(outChanIdx)] = Vector<Int>(chanbin,0);
-
-				/*
-				manager_p->logger_p << LogIO::NORMAL
-						<< LogOrigin("MSTransformBufferImpl", __FUNCTION__)
-						<< " outChanIdx=" << outChanIdx
-						<< " startChan=" << startChan
-						<< " endChan=" << endChan
-						<< LogIO::POST;
-				*/
-
-				uInt mapChanIdex = 0;
-				for (uInt chanIdx=startChan;chanIdx<endChan;chanIdx++)
-				{
-					selectedChannel = manager_p->inputOutputChanIndexMap_p[inputSpw].at(chanIdx);
-					outputInputChannelMap_p[channelNumbers(outChanIdx)](mapChanIdex) = selectedChannel;
-					mapChanIdex ++;
-				}
-
-				/*
-				manager_p->logger_p << LogIO::NORMAL
-						<< LogOrigin("MSTransformBufferImpl", __FUNCTION__)
-						<< " selectedChannels=" << outputInputChannelMap_p[channelNumbers_p(outChanIdx)]
-						<< LogIO::POST;
-				*/
+				outputInputChannelMap_p[channelNumbers_p(outChanIdx)] = manager_p->dataHandler_p->getSelectedChannelsMap()[inputSpw][outChanIdx];
 			}
 		}
 
