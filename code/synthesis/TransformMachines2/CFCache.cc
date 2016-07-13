@@ -238,16 +238,21 @@ namespace casa{
     // memCacheWt2_p[0].show("WTCF Cache: ");
 
     Double memUsed0,memUsed1;
-    memUsed0=memCache2_p[0].memUsage()/1024;
-    memUsed1=memCacheWt2_p[0].memUsage()/1024;
-    Int nCFs=memCache2_p[0].getShape().product();
-    if (nCFs > 0)
+    String memUnit="B";
+    memUsed0=memCache2_p[0].memUsage();
+    memUsed1=memCacheWt2_p[0].memUsage();
+    if (memUsed0 > 1024.0)
       {
-	summarize(memCache2_p,   "CFS",   True);
-	summarize(memCacheWt2_p, "WTCFS", False);
-
-	log_l << "Total CF Cache memory footprint: " << (memUsed0+memUsed1) << " (" << memUsed0 << "," << memUsed1 << ") KB" << LogIO::POST;
+	memUsed0 /= 1024.0;
+	memUsed1 /= 1024.0;
+	memUnit="KB";
       }
+
+    summarize(memCache2_p,   "CFS",   True);
+    summarize(memCacheWt2_p, "WTCFS", False);
+
+    log_l << "Total CF Cache memory footprint: " << (memUsed0+memUsed1) << " (" << memUsed0 << "," << memUsed1 << ") " << memUnit << LogIO::POST;
+
     // memCache2_p[0].makePersistent("./junk.cf");
     // memCacheWt2_p[0].makePersistent("./junk.cf","","WT");
   }
@@ -325,7 +330,7 @@ namespace casa{
 	    // 	if (pickThisCF) cfCount++;
 	    //   }
 	    // cerr << "Will load " << cfCount << "CFs." << endl;
-
+	    TableRecord miscInfo;
 	    {
 	      ProgressMeter pm(1.0, Double(fileNames.nelements()),
 			       "Loading CFs", "","","",True);
@@ -334,7 +339,7 @@ namespace casa{
 		  Double paVal, wVal, fVal, sampling, conjFreq; Int mVal, xSupport, ySupport, conjPoln;
 		  CoordinateSystem coordSys;
 
-		  TableRecord miscInfo = getCFParams(fileNames[i], pixBuf, coordSys,  sampling, paVal, 
+		  miscInfo = getCFParams(fileNames[i], pixBuf, coordSys,  sampling, paVal, 
 			      xSupport, ySupport, fVal, wVal, mVal,conjFreq, conjPoln,False);
 		
 		  Bool pickThisCF=True;
@@ -391,7 +396,8 @@ namespace casa{
 		    muellerElements[ii].resize(1);
 		    muellerElements[ii][0]=mList[ii];
 		  }
-		cfb->resize(0.0,0.0,wList,fList,
+		Double wIncr; miscInfo.get("WIncr", wIncr);
+		cfb->resize(wIncr,0.0,wList,fList,
 			    muellerElements,muellerElements,muellerElements,muellerElements);
 		cfb->setPA(paList_p[ipa]);
 

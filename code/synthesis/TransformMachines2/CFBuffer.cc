@@ -147,6 +147,7 @@ namespace casa{
 		cfCells_p(i,j,k)->freqValue_p = freqValues(i);
 		cfCells_p(i,j,k)->freqIncr_p = freqIncr;
 		cfCells_p(i,j,k)->wValue_p = wValues(j);
+		cfCells_p(i,j,k)->wIncr_p = wValIncr_p;
 		cfCells_p(i,j,k)->muellerElement_p = muellerElements_p(prow)(pcol);
 		cfCells_p(i,j,k)->xSupport_p = 0;
 		cfCells_p(i,j,k)->ySupport_p = 0;
