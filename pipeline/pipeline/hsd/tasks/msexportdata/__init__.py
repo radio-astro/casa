@@ -6,6 +6,6 @@ import pipeline.infrastructure.renderer.basetemplates as super_renderer
 from .msexportdata import SDMSExportData
 
 weblog.add_renderer(SDMSExportData, 
-                    super_renderer.T2_4MDetailsDefaultRenderer(uri='hsd_exportdata.mako',
+                    super_renderer.T2_4MDetailsDefaultRenderer(uri='exportdata.mako',
                                                                description='Prepare pipeline data products for export'),
                     group_by='ungrouped')                 
