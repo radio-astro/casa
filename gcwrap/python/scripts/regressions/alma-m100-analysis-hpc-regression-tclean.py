@@ -1018,8 +1018,8 @@ if(mystep in thesteps):
     exprms = [0.000589906820096, 0.000633491261397]
     # tclean expectation values set 11 Abril 2013 based on analysis using CASA trunk r36680
     if (withtclean):
-	exppeak = [1.18952143192,1.16193449497]
-	exprms = [0.000674300245009,0.000708947831299]
+	exppeak = [1.18952155113,1.16193449497]
+	exprms = [0.000674300128594,0.000708947714884]
     
 
     for name in basename:
@@ -1058,9 +1058,9 @@ if(mystep in thesteps):
     exprmsm = 0.00912253372371
     # tclean expectation values set 11 Abril 2013 based on analysis using CASA trunk r36680
     if (withtclean):
-	# tclean gives in parallel slightly different resukts for M100 (1% instead of 0.5%)
-	exppeakm = (0.189118608832+0.189019560814)/2
-	exprmsm = (0.0094265351072+0.00936493650079)/2
+	# As of r37595 the parallel and sequential versions of tclean produce the same result with a precision better than 1%
+	exppeakm = 0.189118593931
+	exprmsm = 0.0094265351072
 
 
     calstat=imstat(imagename='test-M100line.image', region='', box='42,115,65,134')
