@@ -4271,7 +4271,7 @@ void MSTransformManager::dropNonUniformWidthChannels()
     	// Skip this SPW in non-reindex mode
     	if ((!reindex_p) and (numOfSelChanMap_p.find(spwId) == numOfSelChanMap_p.end())) continue;
 
-    	logger_p << dataHandler_p->getDroppedChannelsMap() << LogIO::POST;
+    	//logger_p << dataHandler_p->getDroppedChannelsMap() << LogIO::POST;
 
     	if (dataHandler_p->getDroppedChannelsMap().find(spwId) != dataHandler_p->getDroppedChannelsMap().end())
     	{
