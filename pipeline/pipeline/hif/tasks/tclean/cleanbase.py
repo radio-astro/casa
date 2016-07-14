@@ -400,10 +400,13 @@ def set_miscinfo(name, spw=None, field=None, type=None, iter=None, multiterm=Non
     """
     if name != '':
         if (multiterm):
-            extension = '.tt0'
+            if (name.find('.image.pbcor') != -1):
+                imagename = name.replace('.image.pbcor', '.image.tt0.pbcor')
+            else:
+                imagename = '%s.tt0' % (name)
         else:
-            extension = ''
-        with casatools.ImageReader(name+extension) as image:
+            imagename = name
+        with casatools.ImageReader(imagename) as image:
             info = image.miscinfo()
             if spw:
                 info['spw'] = spw
