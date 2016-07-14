@@ -73,7 +73,8 @@ PMS::AxisType PMS::axisType(Axis axis) {
     case INTENT: case FEED1: case FEED2:
         return TINT;
     
-    case AMP: case PHASE: case REAL: case IMAG: case PARANG: case SNR:
+    case AMP: case PHASE: case REAL: case IMAG:
+      case PARANG: case SNR: case TEC:
         return TFLOAT;
     
     case TIME: case TIME_INTERVAL:

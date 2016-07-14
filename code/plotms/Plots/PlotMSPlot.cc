@@ -314,14 +314,35 @@ vector<PMS::Axis> PlotMSPlot::getCachedAxes() {
 	int yAxisCount = c->numYAxes();
 	int count = xAxisCount + yAxisCount;
 	vector<PMS::Axis> axes( count );
+    PMS::Axis axis, defaultAxis;
 	for(int i = 0; i < xAxisCount; i++){
-		axes[i] = c->xAxis(i);
+        axis = c->xAxis(i);
+        if (axis == PMS::NONE) {
+            defaultAxis = getDefaultXAxis();
+            axes[i] = defaultAxis;
+            c->setXAxis(defaultAxis, i);
+        } else
+		    axes[i] = axis;
 	}
 	for(int i = xAxisCount; i < count; i++){
 		uInt yIndex = i - xAxisCount;
 	    axes[i] = c->yAxis(yIndex);
 	}
 	return axes;
+}
+
+PMS::Axis PlotMSPlot::getDefaultXAxis() {
+    PMS::Axis xaxis = PMS::TIME;
+    if (itsCache_->cacheType() == PlotMSCacheBase::CAL) {
+        String caltype = itsCache_->calType();
+        if (caltype.contains("BPOLY"))
+            xaxis = PMS::FREQUENCY;
+        if (caltype.contains("TSYS") || caltype[0]=='B')
+            xaxis = PMS::CHANNEL;
+        if (caltype[0]=='D')
+            xaxis = PMS::ANTENNA1;
+    }
+    return xaxis;
 }
 
 const PlotMSPlotParameters& PlotMSPlot::parameters() const{ return itsParams_;}
@@ -1656,11 +1677,11 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
 
 	// Set axes scales
 	PMS::Axis x = cacheParams->xAxis();
-    if (isCalTable && (x==PMS::AMP)) x = getCalAxis(calType);
+    if (isCalTable && PMS::axisIsData(x)) x = getCalAxis(calType, x);
 	canvas->setAxisScale(cx, PMS::axisScale(x));
 	for ( int i = 0; i < yAxisCount; i++ ){
 		PMS::Axis y = cacheParams->yAxis( i );
-        if (isCalTable && (y==PMS::AMP)) y = getCalAxis(calType);
+        if (isCalTable && PMS::axisIsData(y)) y = getCalAxis(calType, y);
 	    canvas->setAxisScale(cx, PMS::axisScale(x));
 		PlotAxis cy = axesParams->yAxis( i );
 		canvas->setAxisScale(cy, PMS::axisScale(y));
@@ -1672,7 +1693,7 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
 	canvas->setAxisReferenceValue(cx, xref, xrefval);
 	for ( int i = 0; i < yAxisCount; i++ ){
 		PMS::Axis y = cacheParams->yAxis( i );
-        if (isCalTable && (y==PMS::AMP)) y = getCalAxis(calType);
+        if (isCalTable && PMS::axisIsData(y)) y = getCalAxis(calType, y);
 		PlotAxis cy = axesParams->yAxis( i );
 		bool yref = itsCache_->hasReferenceValue(y);
 		double yrefval = itsCache_->referenceValue(y);
@@ -1700,8 +1721,10 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
 	if(set && showX) {
 		PMS::DataColumn xDataColumn = cacheParams->xDataColumn();
 		String xLabelSingle = canvParams->xLabelFormat().getLabel(x, xref, xrefval, xDataColumn, polnRatio);
-        if (x == PMS::FREQUENCY) xLabelSingle = addFreqFrame(xLabelSingle);
-        if (axisIsAveraged(x, averaging)) xLabelSingle = "Average " + xLabelSingle;
+        if (x == PMS::FREQUENCY)
+            xLabelSingle = addFreqFrame(xLabelSingle);
+        if (axisIsAveraged(x, averaging))
+            xLabelSingle = "Average " + xLabelSingle;
 		canvas->setAxisLabel(cx, xLabelSingle);
 		PlotFontPtr xFont = canvas->axisFont(cx);
         pointsize = (canvParams->xFontSet()) ? canvParams->xAxisFont(): std::max(12. - rows*cols+1., 8.);
@@ -1723,14 +1746,17 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
 			int plotYAxisCount = plotAxisParams->numYAxes();
 			for ( int i = 0; i < plotYAxisCount; i++ ){
 				PMS::Axis y = plotCacheParams->yAxis( i );
-                if (isCalTable && (y==PMS::AMP)) y = getCalAxis(calType);
+                if (isCalTable && PMS::axisIsData(y)) y = getCalAxis(calType, y);
 				PlotAxis cy = plotAxisParams->yAxis( i );
 				bool yref = itsCache_->hasReferenceValue(y);
 				double yrefval = itsCache_->referenceValue(y);
 				PMS::DataColumn yDataColumn = plotCacheParams->yDataColumn(i);
 				String yLabelSingle = canvParams->yLabelFormat( ).getLabel(y, yref, yrefval, yDataColumn, polnRatio );
-                if (y == PMS::FREQUENCY) yLabelSingle = addFreqFrame(yLabelSingle);
-                if (axisIsAveraged(y, averaging)) yLabelSingle = "Average " + yLabelSingle;
+                if (y == PMS::FREQUENCY)
+                    yLabelSingle = addFreqFrame(yLabelSingle);
+                if (axisIsAveraged(y, averaging))
+                    yLabelSingle = "Average " + yLabelSingle;
+
 				if ( cy == Y_LEFT ){
 					if ( yLabelLeft.size() > 0 ){
 						yLabelLeft.append( ", ");
@@ -1833,7 +1859,7 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
 			int plotYAxisCount = plotAxisParams->numYAxes();
 			for ( int i = 0; i < plotYAxisCount; i++ ){
                 PMS::Axis y = plotCacheParams->yAxis( i );
-                if (isCalTable && (y==PMS::AMP)) y = getCalAxis(calType);
+                if (isCalTable && PMS::axisIsData(y)) y = getCalAxis(calType, y);
 				yAxes.push_back(y);
 				yRefs.push_back(plotCacheBase.hasReferenceValue(yAxes[i]));
 				yRefVals.push_back(plotCacheBase.referenceValue(yAxes[i]));
@@ -1843,6 +1869,8 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
 		title = canvParams->titleFormat().getLabel(x, yAxes, xref,
 				xrefval, yRefs, yRefVals, xDataColumn, yDatas, polnRatio)
 				+ " " + iterTxt;
+        //if (isCalTable && title.contains("Amp"))
+        //    title.replace(title.find("Amp"), 3, "Gain Amplitude");
 		canvas->setTitle(title);
 	}
 
@@ -1890,10 +1918,18 @@ String PlotMSPlot::addFreqFrame(String freqLabel) {
     return freqLabel + " " + freqType;
 }
 
-PMS::Axis PlotMSPlot::getCalAxis(String calType) {
-    if (calType.contains("TSYS")) return PMS::TSYS;
-    if (calType.contains("SWPOW")) return PMS::SWP;
-    return PMS::AMP;
+PMS::Axis PlotMSPlot::getCalAxis(String calType, PMS::Axis axis) {
+    if (axis==PMS::AMP) {
+        if (calType.contains("TSYS")) return PMS::TSYS;
+        if (calType.contains("SWPOW")) return PMS::SWP;
+        if (calType.contains("F")) return PMS::TEC;
+        if (calType == "K Jones") return PMS::DELAY;
+        return PMS::GAMP;
+    }
+    if (axis==PMS::PHASE) return PMS::GPHASE;
+    if (axis==PMS::REAL) return PMS::GREAL;
+    if (axis==PMS::IMAG) return PMS::GIMAG;
+    return PMS::GAMP;
 }
 
 }

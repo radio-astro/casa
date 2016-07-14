@@ -314,7 +314,7 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
 		Vector<Bool> nAM=netAxesMask(currentX_[i],currentY_[i]);
 		if (nAM(2)&&nAM(3)){
 			throw(AipsError("Plots of antenna-based vs. baseline-based axes not supported ("+
-					PMS::axis(currentX_[i])+" and "+PMS::axis(currentY_[i])));
+					PMS::axis(currentX_[i])+" and "+PMS::axis(currentY_[i])+")"));
 		}
 
         // Check averaging validity
@@ -660,10 +660,11 @@ void PlotMSCacheBase::release(const vector<PMS::Axis>& axes) {
 			case PMS::PARANG: PMSC_DELETE(parang_) break;
 			case PMS::ROW: PMSC_DELETE(row_) break;
 			case PMS::DELAY:
+			case PMS::SWP:
+			case PMS::TSYS:
 			case PMS::OPAC:
-			case PMS::SWP: PMSC_DELETE(par_) break;
+			case PMS::TEC: PMSC_DELETE(par_) break;
 			case PMS::SNR: PMSC_DELETE(snr_) break;
-			case PMS::TSYS: PMSC_DELETE(tsys_) break;
 			case PMS::OBSERVATION: PMSC_DELETE(obsid_) break;
 			case PMS::INTENT: PMSC_DELETE(intent_) break;
 			case PMS::FEED1: PMSC_DELETE(feed1_) break;
@@ -1153,7 +1154,6 @@ void PlotMSCacheBase::increaseChunks(Int nc) {
 
 	par_.resize(nChunk_,False,True);
 	snr_.resize(nChunk_,False,True);
-	tsys_.resize(nChunk_,False,True);
 
 
 	// Construct (empty) pointed-to Vectors/Arrays
@@ -1192,7 +1192,6 @@ void PlotMSCacheBase::increaseChunks(Int nc) {
 		parang_[ic] = new Vector<Float>();
 		par_[ic] = new Array<Float>();
 		snr_[ic] = new Array<Float>();
-		tsys_[ic] = new Array<Float>();
 		obsid_[ic] = new Vector<Int>();
 		intent_[ic] = new Vector<Int>();
 		feed1_[ic] = new Vector<Int>();
@@ -1240,12 +1239,14 @@ void PlotMSCacheBase::setAxesMask(PMS::Axis axis,Vector<Bool>& axismask) {
 	case PMS::GIMAG:
 	case PMS::DELAY:
 	case PMS::SWP:
+	case PMS::TSYS:
 	case PMS::OPAC:
+	case PMS::SNR:
+	case PMS::TEC:
 	case PMS::FLAG:
 	case PMS::WTxAMP:
 	case PMS::WTSP:
 	case PMS::SIGMASP:
-	case PMS::TSYS:
 		axismask(Slice(0,3,1))=True;
 		break;
 	case PMS::CHANNEL:
@@ -1294,7 +1295,6 @@ void PlotMSCacheBase::setAxesMask(PMS::Axis axis,Vector<Bool>& axismask) {
 	case PMS::EL0:
 	case PMS::HA0:
 	case PMS::PA0:
-	case PMS::SNR:
 	case PMS::RADIAL_VELOCITY:
 	case PMS::RHO:
 	case PMS::OBSERVATION:
@@ -1427,9 +1427,10 @@ unsigned int PlotMSCacheBase::nPointsForAxis(PMS::Axis axis) const {
 	case PMS::GIMAG:
 	case PMS::DELAY:
 	case PMS::SWP:
+	case PMS::TSYS:
 	case PMS::OPAC:
 	case PMS::SNR:
-	case PMS::TSYS:
+	case PMS::TEC:
 	case PMS::OBSERVATION:
 	case PMS::INTENT:
 	case PMS::FEED1:
@@ -1474,9 +1475,10 @@ unsigned int PlotMSCacheBase::nPointsForAxis(PMS::Axis axis) const {
 			else if(axis == PMS::FLAG_ROW) n += flagrow_[i]->size();
 			else if(axis == PMS::DELAY ||
 					axis == PMS::SWP ||
-					axis == PMS::OPAC)      n += par_[i]->size();
-			else if(axis == PMS::TSYS)      n += snr_[i]->size();
-			else if(axis == PMS::SNR)       n += tsys_[i]->size();
+					axis == PMS::TSYS ||
+					axis == PMS::OPAC ||
+					axis == PMS::TEC)       n += par_[i]->size();
+			else if(axis == PMS::SNR)       n += snr_[i]->size();
 			else if(axis == PMS::OBSERVATION)  n += obsid_[i]->size();
 			else if(axis == PMS::INTENT)  n += intent_[i]->size();
 			else if(axis == PMS::FEED1)  n += feed1_[i]->size();

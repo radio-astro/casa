@@ -43,11 +43,15 @@
 
 namespace casa {
 
-CalCache::CalCache(PlotMSApp* parent):
+CalCache::CalCache(PlotMSApp* parent, String caltype):
   PlotMSCacheBase(parent),
   basis_("Circular"),
   polnIndex_(-1)
-{}
+{
+    if (caltype.contains("KAntPos"))
+        throw(AipsError("K plotting for antenna position offsets not supported in plotms."));
+    calType_ = caltype;
+}
 
 CalCache::~CalCache() {}
 
@@ -520,7 +524,7 @@ void CalCache::loadCalChunks(ROCTIter& ci,
   }
 
   case PMS::SWP: {   // "SPGAIN" in plotcal
-    if ( !parsAreComplex() && (!calType_.contains("TSYS"))) {
+    if ( !parsAreComplex() && (calType_.contains("EVLAPOWER"))) {
         Cube<Float> fArray = cti.fparam();
         if (polnIndex_ >= 0) {
            *par_[chunk] = fArray(Slice(polnIndex_), Slice(), Slice());
@@ -538,11 +542,11 @@ void CalCache::loadCalChunks(ROCTIter& ci,
 	if ( !parsAreComplex() && (calType_.contains("TSYS"))) {
         Cube<Float> fArray = cti.fparam();
         if (polnIndex_ >= 0) {
-           *tsys_[chunk] = fArray(Slice(polnIndex_), Slice(), Slice());
+           *par_[chunk] = fArray(Slice(polnIndex_), Slice(), Slice());
         } else if (polnRatio_) {
-            *tsys_[chunk] = fArray(Slice(0), Slice(), Slice()) / fArray(Slice(1), Slice(), Slice());
+            *par_[chunk] = fArray(Slice(0), Slice(), Slice()) / fArray(Slice(1), Slice(), Slice());
         } else { 
-		    *tsys_[chunk] = fArray;
+		    *par_[chunk] = fArray;
         }
     } else
         throw(AipsError( "tsys has no meaning for this table"));
@@ -559,6 +563,22 @@ void CalCache::loadCalChunks(ROCTIter& ci,
         *snr_[chunk] = cti.snr();
     break;
   }
+
+   case PMS::TEC: {
+	if ( !parsAreComplex() && (calType_[0]=='F')) {
+        Cube<Float> fArray = cti.fparam();
+        if (polnIndex_ >= 0) {
+           *par_[chunk] = fArray(Slice(polnIndex_), Slice(), Slice());
+        } else if (polnRatio_) {
+            *par_[chunk] = fArray(Slice(0), Slice(), Slice()) / fArray(Slice(1), Slice(), Slice());
+        } else { 
+		    *par_[chunk] = fArray;
+        }
+    } else
+        throw(AipsError( "TEC has no meaning for this table"));
+    break;
+  }
+
                 
   case PMS::FLAG:
 	if (polnIndex_ >= 0) 

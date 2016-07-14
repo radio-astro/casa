@@ -76,11 +76,12 @@ public:
   // Identify myself
   //  pure virtual
   virtual PlotMSCacheBase::Type cacheType() const = 0;
-  String calType() const { return calType_; };
-  bool polnRatio() const { return polnRatio_; };
 
   // Access to pol names
   virtual String polname(Int ipol)=0;
+
+  String calType() const { return calType_; };
+  bool polnRatio() const { return polnRatio_; };
 
   // Meta axes info
   int nmetadata() const {return N_METADATA;};
@@ -234,7 +235,6 @@ public:
   // These support generic non-complex calibration
   inline Double getPar(Int chnk,Int irel)  { return *(par_[chnk]->data()+irel); };
   inline Double getSnr(Int chnk,Int irel)  { return *(snr_[chnk]->data()+irel); };
-  inline Double getTsys(Int chnk,Int irel)  { return *(tsys_[chnk]->data()+irel); };
 
   // Returns a list of channel numbers that were averaged together in that chunk
   inline Vector<Int> getChansPerBin(Int chnk,Int irel) { return (*chansPerBin_[chnk])[irel]; };

@@ -257,9 +257,10 @@ String MSCacheVolMeter::evalVolume(map<PMS::Axis,Bool> axes, Vector<Bool> axesma
 			case PMS::GIMAG:
 			case PMS::DELAY:
 			case PMS::SWP:
+			case PMS::TSYS:
 			case PMS::OPAC:
 			case PMS::SNR:
-			case PMS::TSYS:
+			case PMS::TEC:
 			case PMS::WTxAMP:
 			case PMS::NONE:
 				break;
@@ -430,6 +431,7 @@ String MSCacheVolMeter::evalVolume(std::vector<IPosition> vbShapes,
 			case PMS::PHASE:
 			case PMS::REAL:
 			case PMS::IMAG:
+			case PMS::WTxAMP:
 			case PMS::WTSP:
 			case PMS::SIGMASP:
 				axisVol = sizeof(Float) * nElements;
@@ -474,8 +476,8 @@ String MSCacheVolMeter::evalVolume(std::vector<IPosition> vbShapes,
 			case PMS::TSYS:
 			case PMS::OPAC:
 			case PMS::SNR:
+			case PMS::TEC:
 			case PMS::NONE:
-			case PMS::WTxAMP:
 				break;
 			} // switch
 			totalVol += axisVol;

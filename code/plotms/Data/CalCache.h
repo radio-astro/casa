@@ -54,7 +54,7 @@ class CalCache : public PlotMSCacheBase {
 public:    
   
   // Constructor which takes parent PlotMS.
-  CalCache(PlotMSApp* parent);
+  CalCache(PlotMSApp* parent, String caltype);
   
   // Destructor
   virtual ~CalCache();
@@ -122,7 +122,7 @@ private:
 
   // Provisional flagging helpers
   Vector<Int> nVBPerAve_;
-  
+ 
   // The polarization basis
   String basis_;
   // Polarization selection index
