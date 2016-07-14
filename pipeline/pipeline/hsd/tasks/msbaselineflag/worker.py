@@ -762,8 +762,10 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
                 if len(flagged_pols)!=len(pollist):
                     line.append("correlation='%s'" % ','.join(flagged_pols))
                 timeval = datatable.getcell('TIME', ID)
-                #tbuff = datatable.getcell('EXPOSURE', ID)*0.5
-                qtime = casatools.quanta.quantity(timeval, time_unit)
-                line += ["timerange='%s'" % casatools.quanta.time(qtime, prec=9, form="ymd")[0],
+                tbuff = datatable.getcell('EXPOSURE', ID)*0.5/86400.0
+                qtime_s = casatools.quanta.quantity(timeval-tbuff, time_unit)
+                qtime_e = casatools.quanta.quantity(timeval+tbuff, time_unit)
+                line += ["timerange='%s~%s'" % (casatools.quanta.time(qtime_s, prec=9, form="ymd")[0],
+                                                casatools.quanta.time(qtime_e, prec=9, form="ymd")[0]),
                          "reason='blflag'"]
                 fout.write(str(" ").join(line)+"\n")
