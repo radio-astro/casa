@@ -677,7 +677,7 @@ class Tclean(cleanbase.CleanBase):
         elif (utils.approx_equal(BW_ratio, 1.049, 4)):
             N_smooth = 16
         else:
-            LOG.warning('Could not determine channel bandwidths ratio. Physical: %s Effective: %s' % (physicalBW_of_1chan, effectiveBW_of_1chan))
+            LOG.warning('Could not evaluate channel bandwidths ratio. Physical: %s Effective: %s Ratio: %s' % (physicalBW_of_1chan, effectiveBW_of_1chan, BW_ratio))
             N_smooth = 0
 
         chansel_sensitivities = []
@@ -690,7 +690,6 @@ class Tclean(cleanbase.CleanBase):
                     imTool.defineimage(mode=inputs.specmode if inputs.specmode=='cube' else 'mfs', spw=spw,
                                        cellx=inputs.cell[0], celly=inputs.cell[0],
                                        nx=inputs.imsize[0], ny=inputs.imsize[1])
-                    # TODO: Mosaic switch needed ?
                     imTool.weight(type=inputs.weighting, robust=inputs.robust)
                     result = imTool.apparentsens()
 
