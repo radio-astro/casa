@@ -54,7 +54,7 @@ step_title = { 0 : 'Data import',
 
 # global defs
 basename=['X54','X220']
-makeplots=True
+makeplots=False
 print "Make plots?", makeplots
 therefant = 'DV01'
 mynumsubmss = 4
