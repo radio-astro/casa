@@ -88,7 +88,7 @@ class getchunk_test(unittest.TestCase):
     def tearDown(self):
         os.system('rm -rf ' + image)
         myia.done()
-        self.assertTrue(len(tb.showcache()) == 0)
+        self.assertEqual(len(tb.showcache()), 0)
 
     def test_CAS_2355(self):
         '''getchunk: test 32/64 bit resolution'''
@@ -179,7 +179,7 @@ class getchunk_test(unittest.TestCase):
                             self.assertTrue(res['mask'][0:2].all())
                             self.assertFalse(res['mask'][3:6].all())
                             self.assertTrue(res['mask'][7:12].all())
-                        self.assertTrue(len(res['values'] == n))
+                        self.assertEqual(len(res['values']), n)
                         coords = res['coords']
                         if ["km/s", "cm/s", "m", "cm"].count(unit) == 1:
                             if (spectype == "" and ["km/s", "cm/s"].count(unit) == 1) or spectype == "re" or spectype == "b":
@@ -200,32 +200,32 @@ class getchunk_test(unittest.TestCase):
                             expec *= vfac
                         for k in range(n):
                             if region == r3 and k > 2 and k < 7:
-                                self.assertTrue(res['values'][k] == 0)
+                                self.assertEqual(res['values'][k], 0)
                             else:
                                 if function == 'mean':
-                                    self.assertTrue(res['values'][k] == numpy.mean(bb[:,:,k + off]))
+                                    self.assertEqual(res['values'][k], numpy.mean(bb[:,:,k + off]))
                                 elif function == 'sum':
-                                    self.assertTrue(res['values'][k] == numpy.sum(bb[:,:,k + off]))
+                                    self.assertEqual(res['values'][k], numpy.sum(bb[:,:,k + off]))
                             if ["km/s", "cm/s", "m", "cm"].count(unit) == 1:
-                                self.assertTrue(abs(coords[k]/expec[k + off] - 1) < 1e-12)   
+                                self.assertLess(abs(coords[k]/expec[k + off] - 1), 1e-12)
                             elif unit == "pixel":
-                                self.assertTrue(coords[k] == k + off)
+                                self.assertEqual(coords[k], k + off)
                             else:
                                 f = 1
                                 if unit == 'MHz':
                                     f = 1e6
-                                self.assertTrue(coords[k] == expecworld[k + off]/f)                                
+                                self.assertEqual(coords[k], expecworld[k + off]/f)
                         if unit == "":
-                            self.assertTrue(res['xUnit'] == 'Hz')
+                            self.assertEqual(res['xUnit'], 'Hz')
                         else:
-                            self.assertTrue(res['xUnit'] == unit)
+                            self.assertEqual(res['xUnit'], unit)
         myia.done()
         
         myimd = imdtool()
         myimd.open(imagename)
         rfreq = myimd.get("restfreq")
         myimd.set("restfreq", "1e12THz")
-        self.assertTrue(myimd.get("restfreq") != rfreq)
+        self.assertNotEqual(myimd.get("restfreq"), rfreq)
         myimd.done()
         myia.open(imagename)
         res = myia.getprofile(
@@ -263,7 +263,7 @@ class getchunk_test(unittest.TestCase):
         for i in range(20):
             got = res['values'][i]
             expec = 400*i/fac
-            self.assertTrue(abs(got - expec) < 1e-4)
+            self.assertLess(abs(got - expec), 1e-4)
 
     def test_flux_multibeam(self):
         """Test getprofile() for flux on a multibeam image"""
@@ -295,7 +295,7 @@ class getchunk_test(unittest.TestCase):
         myia.done()
         exp = numpy.mean(bb)
         got = res['values'][0]
-        self.assertTrue(abs((got - exp)/exp) < 1e-5)
+        self.assertLess(abs((got - exp)/exp), 1e-5)
 
 def suite():
     return [getchunk_test]
