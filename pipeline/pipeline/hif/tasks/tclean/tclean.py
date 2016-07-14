@@ -707,6 +707,8 @@ class Tclean(cleanbase.CleanBase):
                         SCF = (optimisticBW / approximateEffectiveBW)**0.5
                         corrected_apparentsens_value = apparentsens_value * SCF
                         LOG.info('Effective BW heuristic: Correcting apparentsens result by %s from %s Jy/beam to %s Jy/beam' % (SCF, apparentsens_value, corrected_apparentsens_value))
+                    else:
+                        corrected_apparentsens_value = apparentsens_value
                 else:
                     corrected_apparentsens_value = apparentsens_value 
 
