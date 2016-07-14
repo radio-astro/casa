@@ -241,13 +241,11 @@ class SDIntegratedImageDisplay(SDImageDisplay):
                 if self.nx > 1 or self.ny > 1:
                     if tpmap_colorbar is None:
                         tpmap_colorbar = pl.colorbar(shrink=0.8)
+                        newfontsize = None
                         for t in tpmap_colorbar.ax.get_yticklabels():
                             newfontsize = t.get_fontsize()*0.5
                             t.set_fontsize(newfontsize)
-#                         #tpmap_colorbar.ax.set_title('[K km/s]')
-#                         tpmap_colorbar.ax.set_title('[%s]'%(self.brightnessunit))
-#                         lab = tpmap_colorbar.ax.title
-#                         lab.set_fontsize(newfontsize)
+                        #if newfontsize is None: # no ticks in colorbar likely invalid TP map
                         tpmap_colorbar.ax.set_ylabel('[%s]'%(self.brightnessunit), fontsize=newfontsize)
                     else:
                         tpmap_colorbar.set_clim((tmin,tmax))
