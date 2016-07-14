@@ -479,7 +479,7 @@ class SDImaging(basetask.StandardTaskTemplate):
                 grid_input_dict = {}
                 for (msname, antid, spwid, fieldid, poltypes) in \
                 zip(combined_infiles,combined_antids,combined_spws,combined_fieldids,combined_pols):
-                    msobj = context.observing_run.get_ms(name=common.get_parent_ms_name(context,name)) # Use parent ms
+                    msobj = context.observing_run.get_ms(name=common.get_parent_ms_name(context,msname)) # Use parent ms
                     ddobj = msobj.get_data_description(spw=spwid)
                     for p in poltypes:
                         if not grid_input_dict.has_key(p):
