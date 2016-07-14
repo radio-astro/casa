@@ -139,7 +139,7 @@ def get_plot(plots, field, spw, i, colname):
                                 %endif
                             </tr>
                             <tr>
-                                <th>theoretical noise</th>
+                                <th>final theoretical sensitivity</th>
                                 %if info_dict.get((field,str(spw),pol,'sensitivity')) is not None:
                                             <td>${'%.2g %s' % (info_dict[(field,str(spw),pol,'sensitivity')],
                                                 info_dict[(field,str(spw),pol,'brightness unit')])}</td>

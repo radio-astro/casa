@@ -403,7 +403,7 @@ class Tclean(cleanbase.CleanBase):
 
         if (new_threshold != old_threshold):
             sequence_manager.threshold = '%sJy' % (new_threshold)
-            LOG.info('DR heuristic: Modified threshold from %s Jy to %s Jy based on dynamic range heuristic (dirty dynamic range: %.1f)' % (old_threshold, new_threshold, dirty_dynamic_range))
+            LOG.info('DR heuristic: Modified threshold from %s Jy to %s Jy based on dirty dynamic range calculated from dirty peak / final theoretical sensitivity: %.1f' % (old_threshold, new_threshold, dirty_dynamic_range))
 
         # Compute automatic niter estimate
         old_niter = sequence_manager.niter
