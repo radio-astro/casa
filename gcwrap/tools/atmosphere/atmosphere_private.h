@@ -12,6 +12,15 @@ void check_atmtype_enum(int atmtype);
  */
 void assert_unsigned_int(int value);
 
+/* 
+   Assert SPW ID is valid number in pSpectralGrid.
+ */
+void assert_spwid(int spwid);
+/* 
+   Assert SPW and CHAN IDs are valid number in pSpectralGrid.
+ */
+void assert_spwid_and_channel(int spwid, int chan);
+
 atm::AtmProfile *pAtmProfile;
 atm::SpectralGrid *pSpectralGrid;
 atm::RefractiveIndexProfile *pRefractiveIndexProfile;

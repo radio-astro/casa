@@ -38,6 +38,18 @@ inline void atmosphere::assert_unsigned_int(int value)
 {
   AlwaysAssert(value>=0, AipsError);
 }
+// Assert Spw ID and channel ID are in proper range
+inline void atmosphere::assert_spwid(int spwid) {
+  ThrowIf(pSpectralGrid == 0, "Spectral window is not defined yet");
+  ThrowIf(spwid < 0 || static_cast<unsigned int>(spwid) >= pSpectralGrid->getNumSpectralWindow(),
+	  "Spw ID out of range.");
+}
+inline void atmosphere::assert_spwid_and_channel(int spwid, int chan) {
+  ThrowIf(pSpectralGrid == 0, "Spectral window is not defined yet");
+  assert_spwid(spwid);
+  ThrowIf(chan < 0 || static_cast<unsigned int>(chan) >= pSpectralGrid->getNumChan(static_cast<unsigned int>(spwid)),
+	  "Channel ID out of range.");
+}
 ///// end of helper functions /////
 
 atmosphere::atmosphere()
@@ -579,8 +591,8 @@ atmosphere::getNumChan(int spwid)
 {
   int rstat(-1);
   try {
-    assert_unsigned_int(spwid);
     if (pSpectralGrid) {
+      assert_spwid(spwid);
       rstat = pSpectralGrid->getNumChan(static_cast<unsigned int>(spwid));
     } else {
       *itsLog << LogIO::WARN
@@ -600,7 +612,7 @@ atmosphere::getRefChan(int spwid)
 {
   int rstat(-1);
   try {
-    assert_unsigned_int(spwid);
+    assert_spwid(spwid);
     if (pSpectralGrid) {
       rstat = pSpectralGrid->getRefChan(static_cast<unsigned int>(spwid));
     } else {
@@ -621,8 +633,8 @@ atmosphere::getRefFreq(int spwid)
 {
   ::casac::Quantity q;
   try {
-    assert_unsigned_int(spwid);
     if (pSpectralGrid) {
+      assert_spwid(spwid);
       std::vector<double> qvalue(1);
       std::string qunits("GHz");
       qvalue[0] = pSpectralGrid->getRefFreq(static_cast<unsigned int>(spwid)).get(qunits);
@@ -646,8 +658,8 @@ atmosphere::getChanSep(int spwid)
 {
   ::casac::Quantity q;
   try {
-    assert_unsigned_int(spwid);
     if (pSpectralGrid) {
+      assert_spwid(spwid);
       std::vector<double> qvalue(1);
       std::string qunits("MHz");
       qvalue[0] = pSpectralGrid->getChanSep(static_cast<unsigned int>(spwid)).get(qunits);
@@ -671,9 +683,8 @@ atmosphere::getChanFreq(int chanNum, int spwid)
 {
   ::casac::Quantity q;
   try {
-    assert_unsigned_int(spwid);
-    assert_unsigned_int(chanNum);
     if (pSpectralGrid) {
+      assert_spwid_and_channel(spwid, chanNum);
       std::vector<double> qvalue(1);
       std::string qunits("GHz");
       qvalue[0] = pSpectralGrid->getChanFreq(static_cast<unsigned int>(spwid),
@@ -698,8 +709,8 @@ atmosphere::getSpectralWindow(int spwid)
 {
   Quantity q;
   try {
-    assert_unsigned_int(spwid);
     if (pSpectralGrid) {
+      assert_spwid(spwid);
       q.value = pSpectralGrid->getSpectralWindow(static_cast<unsigned int>(spwid));
       q.units = "Hz";
     } else {
@@ -720,8 +731,8 @@ atmosphere::getChanNum(const Quantity& freq, int spwid)
 {
   double rstat(-1.0);
   try {
-    assert_unsigned_int(spwid);
     if (pSpectralGrid) {
+      assert_spwid(spwid);
       rstat = pSpectralGrid->getChanNum(static_cast<unsigned int>(spwid),
 					casaQuantity(freq).getValue("Hz"));
     } else {
@@ -742,8 +753,8 @@ atmosphere::getBandwidth(int spwid)
 {
   ::casac::Quantity q;
   try {
-    assert_unsigned_int(spwid);
     if (pSpectralGrid) {
+      assert_spwid(spwid);
       std::vector<double> qvalue(1);
       std::string qunits("GHz");
       qvalue[0] = pSpectralGrid->getBandwidth(static_cast<unsigned int>(spwid)).get(qunits);
@@ -767,8 +778,8 @@ atmosphere::getMinFreq(int spwid)
 {
   ::casac::Quantity q;
   try {
-    assert_unsigned_int(spwid);
     if (pSpectralGrid) {
+      assert_spwid(spwid);
       std::vector<double> qvalue(1);
       std::string qunits("GHz");
       qvalue[0] = pSpectralGrid->getMinFreq(static_cast<unsigned int>(spwid)).get(qunits);
@@ -792,8 +803,8 @@ atmosphere::getMaxFreq(int spwid)
 {
   ::casac::Quantity q;
   try {
-    assert_unsigned_int(spwid);
     if (pSpectralGrid) {
+      assert_spwid(spwid);
       std::vector<double> qvalue(1);
       std::string qunits("GHz");
       qvalue[0] = pSpectralGrid->getMaxFreq(static_cast<unsigned int>(spwid)).get(qunits);
@@ -817,7 +828,7 @@ atmosphere::getDryOpacity(int nc, int spwid)
 {
   double dryOpacity(-1.0);
   try {
-    assert_unsigned_int(spwid);
+    assert_spwid(spwid);
     if (pRefractiveIndexProfile) {
       unsigned int chan;
       unsigned int spw = static_cast<unsigned int>(spwid);
@@ -847,7 +858,7 @@ atmosphere::getDryContOpacity(int nc, int spwid)
 {
   double dryContOpacity(-1.0);
   try {
-    assert_unsigned_int(spwid);
+    assert_spwid(spwid);
     if (pRefractiveIndexProfile) {
       unsigned int chan;
       unsigned int spw = static_cast<unsigned int>(spwid);
@@ -878,7 +889,7 @@ atmosphere::getO2LinesOpacity(int nc, int spwid)
 {
   double o2LinesOpacity(-1.0);
   try {
-    assert_unsigned_int(spwid);
+    assert_spwid(spwid);
     if (pRefractiveIndexProfile) {
       unsigned int chan;
       unsigned int spw = static_cast<unsigned int>(spwid);
@@ -909,7 +920,7 @@ atmosphere::getO3LinesOpacity(int nc, int spwid)
 {
   double o3LinesOpacity(-1.0);
   try {
-    assert_unsigned_int(spwid);
+    assert_spwid(spwid);
     if (pRefractiveIndexProfile) {
       unsigned int chan;
       unsigned int spw = static_cast<unsigned int>(spwid);
@@ -940,7 +951,7 @@ atmosphere::getCOLinesOpacity(int nc, int spwid)
 {
   double coLinesOpacity(-1.0);
   try {
-    assert_unsigned_int(spwid);
+    assert_spwid(spwid);
     if (pRefractiveIndexProfile) {
       unsigned int chan;
       unsigned int spw = static_cast<unsigned int>(spwid);
@@ -971,7 +982,7 @@ atmosphere::getN2OLinesOpacity(int nc, int spwid)
 {
   double n2oLinesOpacity(-1.0);
   try {
-    assert_unsigned_int(spwid);
+    assert_spwid(spwid);
     if (pRefractiveIndexProfile) {
       unsigned int chan;
       unsigned int spw = static_cast<unsigned int>(spwid);
@@ -1001,7 +1012,7 @@ atmosphere::getWetOpacity(int nc, int spwid)
 {
   ::casac::Quantity wetOpacity;
   try {
-    assert_unsigned_int(spwid);
+    assert_spwid(spwid);
     if (pSkyStatus) {
       unsigned int chan;
       unsigned int spw = static_cast<unsigned int>(spwid);
@@ -1033,7 +1044,7 @@ atmosphere::getH2OLinesOpacity(int nc, int spwid)
 {
   double h2oLinesOpacity(-1.0);
   try {
-    assert_unsigned_int(spwid);
+    assert_spwid(spwid);
     if (pSkyStatus) {
       unsigned int chan;
       unsigned int spw = static_cast<unsigned int>(spwid);
@@ -1063,7 +1074,7 @@ atmosphere::getH2OContOpacity(int nc, int spwid)
 {
   double h2oContOpacity(-1.0);
   try {
-    assert_unsigned_int(spwid);
+    assert_spwid(spwid);
     if (pSkyStatus) {
       unsigned int chan;
       unsigned int spw = static_cast<unsigned int>(spwid);
@@ -1093,7 +1104,7 @@ atmosphere::getDryOpacitySpec(int spwid, std::vector<double>& dryOpacity)
 {
   int nchan(-1);
   try {
-    assert_unsigned_int(spwid);
+    assert_spwid(spwid);
     if (pRefractiveIndexProfile) {
       unsigned int num_chan = pSpectralGrid->getNumChan(spwid);
       nchan = static_cast<int>(num_chan);
@@ -1121,7 +1132,7 @@ atmosphere::getWetOpacitySpec(int spwid, Quantity& wetOpacity)
 {
   int nchan(-1);
   try {
-    assert_unsigned_int(spwid);
+    assert_spwid(spwid);
     if (pSkyStatus) {
       unsigned int num_chan = pSpectralGrid->getNumChan(spwid);
       nchan = static_cast<int>(num_chan);
@@ -1150,7 +1161,7 @@ atmosphere::getDispersivePhaseDelay(int nc, int spwid)
 {
   ::casac::Quantity dpd;
   try {
-    assert_unsigned_int(spwid);
+    assert_spwid(spwid);
     if (pSkyStatus) {
       unsigned int chan;
       unsigned int spw = static_cast<unsigned int>(spwid);
@@ -1182,7 +1193,7 @@ atmosphere::getDispersiveWetPhaseDelay(int nc, int spwid)
 {
   ::casac::Quantity dwpd;
   try {
-    assert_unsigned_int(spwid);
+    assert_spwid(spwid);
     if (pRefractiveIndexProfile) {
       unsigned int chan;
       unsigned int spw = static_cast<unsigned int>(spwid);
@@ -1214,7 +1225,7 @@ atmosphere::getNonDispersiveWetPhaseDelay(int nc, int spwid)
 {
   ::casac::Quantity ndwpd;
   try {
-    assert_unsigned_int(spwid);
+    assert_spwid(spwid);
     if (pRefractiveIndexProfile) {
       unsigned int chan;
       unsigned int spw = static_cast<unsigned int>(spwid);
@@ -1246,7 +1257,7 @@ atmosphere::getNonDispersiveDryPhaseDelay(int nc, int spwid)
 {
   ::casac::Quantity nddpd;
   try {
-    assert_unsigned_int(spwid);
+    assert_spwid(spwid);
     if (pRefractiveIndexProfile) {
       unsigned int chan;
       unsigned int spw = static_cast<unsigned int>(spwid);
@@ -1278,7 +1289,7 @@ atmosphere::getNonDispersivePhaseDelay(int nc, int spwid)
 {
   ::casac::Quantity ndpd;
   try {
-    assert_unsigned_int(spwid);
+    assert_spwid(spwid);
     if (pSkyStatus) {
       unsigned int chan;
       unsigned int spw = static_cast<unsigned int>(spwid);
@@ -1311,7 +1322,7 @@ atmosphere::getDispersivePathLength(int nc, int spwid)
 {
   ::casac::Quantity dpl;
   try {
-    assert_unsigned_int(spwid);
+    assert_spwid(spwid);
     if (pSkyStatus) {
       unsigned int chan;
       unsigned int spw = static_cast<unsigned int>(spwid);
@@ -1343,7 +1354,7 @@ atmosphere::getDispersiveWetPathLength(int nc, int spwid)
 {
   ::casac::Quantity dwpl;
   try {
-    assert_unsigned_int(spwid);
+    assert_spwid(spwid);
     if (pRefractiveIndexProfile) {
       unsigned int chan;
       unsigned int spw = static_cast<unsigned int>(spwid);
@@ -1375,7 +1386,7 @@ atmosphere::getNonDispersiveWetPathLength(int nc, int spwid)
 {
   ::casac::Quantity ndwpl;
   try {
-    assert_unsigned_int(spwid);
+    assert_spwid(spwid);
     if (pRefractiveIndexProfile) {
       unsigned int chan;
       unsigned int spw = static_cast<unsigned int>(spwid);
@@ -1407,7 +1418,7 @@ atmosphere::getNonDispersiveDryPathLength(int nc, int spwid)
 {
   ::casac::Quantity nddpl;
   try {
-    assert_unsigned_int(spwid);
+    assert_spwid(spwid);
     if (pRefractiveIndexProfile) {
       unsigned int chan;
       unsigned int spw = static_cast<unsigned int>(spwid);
@@ -1440,7 +1451,7 @@ atmosphere::getO2LinesPathLength(int nc, int spwid)
 {
   ::casac::Quantity o2pl;
   try {
-    assert_unsigned_int(spwid);
+    assert_spwid(spwid);
     if (pRefractiveIndexProfile) {
       unsigned int chan;
       unsigned int spw = static_cast<unsigned int>(spwid);
@@ -1472,7 +1483,7 @@ atmosphere::getO3LinesPathLength(int nc, int spwid)
 {
   ::casac::Quantity o3pl;
   try {
-    assert_unsigned_int(spwid);
+    assert_spwid(spwid);
     if (pRefractiveIndexProfile) {
       unsigned int chan;
       unsigned int spw = static_cast<unsigned int>(spwid);
@@ -1504,7 +1515,7 @@ atmosphere::getCOLinesPathLength(int nc, int spwid)
 {
   ::casac::Quantity COpl;
   try {
-    assert_unsigned_int(spwid);
+    assert_spwid(spwid);
     if (pRefractiveIndexProfile) {
       unsigned int chan;
       unsigned int spw = static_cast<unsigned int>(spwid);
@@ -1536,7 +1547,7 @@ atmosphere::getN2OLinesPathLength(int nc, int spwid)
 {
   ::casac::Quantity N2Opl;
   try {
-    assert_unsigned_int(spwid);
+    assert_spwid(spwid);
     if (pRefractiveIndexProfile) {
       unsigned int chan;
       unsigned int spw = static_cast<unsigned int>(spwid);
@@ -1569,7 +1580,7 @@ atmosphere::getNonDispersivePathLength(int nc, int spwid)
 {
   ::casac::Quantity ndpl;
   try {
-    assert_unsigned_int(spwid);
+    assert_spwid(spwid);
     if (pSkyStatus) {
       unsigned int chan;
       unsigned int spw = static_cast<unsigned int>(spwid);
@@ -1603,8 +1614,7 @@ atmosphere::getAbsH2OLines(int nl, int nf, int spwid)
   Quantity rtn(std::vector<double> (1,-1.0), "");
   try {
     assert_unsigned_int(nl);
-    assert_unsigned_int(nf);
-    assert_unsigned_int(spwid);
+    assert_spwid_and_channel(spwid, nf);
     if (pRefractiveIndexProfile) {
       rtn.units = "m-1";
       (rtn.value)[0] = pRefractiveIndexProfile->getAbsH2OLines(static_cast<unsigned int>(spwid),
@@ -1630,8 +1640,7 @@ atmosphere::getAbsH2OCont(int nl, int nf, int spwid)
   Quantity rtn(std::vector<double> (1,-1.0), "");
   try {
     assert_unsigned_int(nl);
-    assert_unsigned_int(nf);
-    assert_unsigned_int(spwid);
+    assert_spwid_and_channel(spwid, nf);
     if (pRefractiveIndexProfile) {
       rtn.units = "m-1";
       (rtn.value)[0] = pRefractiveIndexProfile->getAbsH2OCont(static_cast<unsigned int>(spwid),
@@ -1657,8 +1666,7 @@ atmosphere::getAbsO2Lines(int nl, int nf, int spwid)
   Quantity rtn(std::vector<double> (1,-1.0), "");
   try {
     assert_unsigned_int(nl);
-    assert_unsigned_int(nf);
-    assert_unsigned_int(spwid);
+    assert_spwid_and_channel(spwid, nf);
     if (pRefractiveIndexProfile) {
       rtn.units = "m-1";
       (rtn.value)[0] = pRefractiveIndexProfile->getAbsO2Lines(static_cast<unsigned int>(spwid),
@@ -1684,8 +1692,7 @@ atmosphere::getAbsDryCont(int nl, int nf, int spwid)
   Quantity rtn(std::vector<double> (1,-1.0), "");
   try {
     assert_unsigned_int(nl);
-    assert_unsigned_int(nf);
-    assert_unsigned_int(spwid);
+    assert_spwid_and_channel(spwid, nf);
     if (pRefractiveIndexProfile) {
       rtn.units = "m-1";
       (rtn.value)[0] = pRefractiveIndexProfile->getAbsDryCont(static_cast<unsigned int>(spwid),
@@ -1711,8 +1718,7 @@ atmosphere::getAbsO3Lines(int nl, int nf, int spwid)
   Quantity rtn(std::vector<double> (1,-1.0), "");
   try {
     assert_unsigned_int(nl);
-    assert_unsigned_int(nf);
-    assert_unsigned_int(spwid);
+    assert_spwid_and_channel(spwid, nf);
     if (pRefractiveIndexProfile) {
       rtn.units = "m-1";
       (rtn.value)[0] = pRefractiveIndexProfile->getAbsO3Lines(static_cast<unsigned int>(spwid),
@@ -1738,8 +1744,7 @@ atmosphere::getAbsCOLines(int nl, int nf, int spwid)
   Quantity rtn(std::vector<double> (1,-1.0), "");
   try {
     assert_unsigned_int(nl);
-    assert_unsigned_int(nf);
-    assert_unsigned_int(spwid);
+    assert_spwid_and_channel(spwid, nf);
     if (pRefractiveIndexProfile) {
       rtn.units = "m-1";
       (rtn.value)[0] = pRefractiveIndexProfile->getAbsCOLines(static_cast<unsigned int>(spwid),
@@ -1765,8 +1770,7 @@ atmosphere::getAbsN2OLines(int nl, int nf, int spwid)
   Quantity rtn(std::vector<double> (1,-1.0), "");
   try {
     assert_unsigned_int(nl);
-    assert_unsigned_int(nf);
-    assert_unsigned_int(spwid);
+    assert_spwid_and_channel(spwid, nf);
     if (pRefractiveIndexProfile) {
       rtn.units = "m-1";
       (rtn.value)[0] = pRefractiveIndexProfile->getAbsN2OLines(static_cast<unsigned int>(spwid),
@@ -1792,8 +1796,7 @@ atmosphere::getAbsTotalDry(int nl, int nf, int spwid)
   Quantity rtn(std::vector<double> (1,-1.0), "");
   try {
     assert_unsigned_int(nl);
-    assert_unsigned_int(nf);
-    assert_unsigned_int(spwid);
+    assert_spwid_and_channel(spwid, nf);
     if (pRefractiveIndexProfile) {
       rtn.units = "m-1";
       (rtn.value)[0] = pRefractiveIndexProfile->getAbsTotalDry(static_cast<unsigned int>(spwid),
@@ -1819,8 +1822,7 @@ atmosphere::getAbsTotalWet(int nl, int nf, int spwid)
   Quantity rtn(std::vector<double> (1,-1.0), "");
   try {
     assert_unsigned_int(nl);
-    assert_unsigned_int(nf);
-    assert_unsigned_int(spwid);
+    assert_spwid_and_channel(spwid, nf);
     if (pRefractiveIndexProfile) {
       rtn.units = "m-1";
       (rtn.value)[0] = pRefractiveIndexProfile->getAbsTotalWet(static_cast<unsigned int>(spwid),
@@ -1976,7 +1978,7 @@ atmosphere::getAverageTebbSky(int spwid, const Quantity& wh2o)
 {
   ::casac::Quantity q;
   try {
-    assert_unsigned_int(spwid);
+    assert_spwid(spwid);
     if (pSkyStatus) {
       q.value.resize(1);
       std::string qunits("K");
@@ -2006,7 +2008,7 @@ atmosphere::getTebbSky(int nc, int spwid, const Quantity& wh2o)
 {
   ::casac::Quantity q;
   try {
-    assert_unsigned_int(spwid);
+    assert_spwid(spwid);
     if (pSkyStatus) {
       q.value.resize(1);
       std::string qunits("K");
@@ -2043,7 +2045,7 @@ atmosphere::getTebbSkySpec(const int spwid, const Quantity& wh2o, Quantity& tebb
 {
   int nchan(0);
   try {
-    assert_unsigned_int(spwid);
+    assert_spwid(spwid);
     if (pSkyStatus) {
       bool userwh2o(false);
       unsigned int spw = static_cast<unsigned int>(spwid);
@@ -2083,7 +2085,7 @@ atmosphere::getAverageTrjSky(int spwid, const Quantity& wh2o)
 {
   ::casac::Quantity q;
   try {
-    assert_unsigned_int(spwid);
+    assert_spwid(spwid);
     if (pSkyStatus) {
       q.value.resize(1);
       std::string qunits("K");
@@ -2113,7 +2115,7 @@ atmosphere::getTrjSky(int nc, int spwid, const Quantity& wh2o)
 {
   ::casac::Quantity q;
   try {
-    assert_unsigned_int(spwid);
+    assert_spwid(spwid);
     if (pSkyStatus) {
       q.value.resize(1);
       std::string qunits("K");
@@ -2150,7 +2152,7 @@ atmosphere::getTrjSkySpec(const int spwid, const Quantity& wh2o, Quantity& trjSk
 {
   int nchan(0);
   try {
-    assert_unsigned_int(spwid);
+    assert_spwid(spwid);
     if (pSkyStatus) {
       bool userwh2o(false);
       unsigned int spw = static_cast<unsigned int>(spwid);
