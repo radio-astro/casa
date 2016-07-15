@@ -1870,8 +1870,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     MFrequency::Types dataFrame=(MFrequency::Types)vi2.subtableColumns().spectralWindow().measFreqRef()(spwids[0]);
     Double datafstart, datafend;
     VisBufferUtil::getFreqRange(datafstart, datafend, vi2, dataFrame );
-    LogIO os(LogOrigin("SynthesisUtilMethods", "SynthesisParmsImage::buildCoordinateSystem",WHERE));
-    os << "Image co-ord. sys. with VB2 is different from that with VB!  Images for TT > 0 will be incorrect!" << LogIO::WARN;
 
     return buildCoordinateSystemCore( msobj, spwids, fld, freqmin, freqmax, datafstart, datafend );
   }
