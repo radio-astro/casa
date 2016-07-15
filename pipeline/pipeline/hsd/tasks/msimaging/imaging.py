@@ -323,10 +323,10 @@ class SDImaging(basetask.StandardTaskTemplate):
                                                               nx=nx, ny=ny)
                 imager_task = worker.SDImagingWorker(imager_inputs)
                 imager_result = self._executor.execute(imager_task, merge=True)
+                logrecords.extend(imager_result.logrecords)
                   
                 if imager_result.outcome is not None:
                     # Imaging was successful, proceed following steps
-                    logrecords.extend(imager_result.logrecords)
   
                     # add image list to combine
                     if os.path.exists(imagename) and os.path.exists(imagename+'.weight'):
@@ -455,10 +455,10 @@ class SDImaging(basetask.StandardTaskTemplate):
                                                                 outfile=imagename)
                 combine_task = sdcombine.SDImageCombine(combine_inputs)
                 imager_result = self._executor.execute(combine_task, merge=True)
-              
+
+            logrecords.extend(imager_result.logrecords)
             if imager_result.outcome is not None:
                 # Imaging was successful, proceed following steps
-                logrecords.extend(imager_result.logrecords)
       
                 # Additional Step.
                 # Make grid_table and put rms and valid spectral number array 

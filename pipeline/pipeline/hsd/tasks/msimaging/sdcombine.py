@@ -30,7 +30,7 @@ class SDImageCombine(basetask.StandardTaskTemplate):
         outweight = outfile + ".weight"
         num_in = len(infiles)
         if num_in == 0:
-            LOG.critical("No input image to combine. %s is not generated." % outfile)
+            LOG.warning("No input image to combine. %s is not generated." % outfile)
             result = SDImagingWorkerResults(task=self.__class__,
                                             success=False, outcome=None)
             return result

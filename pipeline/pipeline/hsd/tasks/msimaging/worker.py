@@ -327,12 +327,12 @@ class SDImagingWorker(basetask.StandardTaskTemplate):
         # check imaging result
         imagename = image_args['outfile']
         if not os.path.exists(imagename):
-            LOG.critical("Generation of %s failed" % imagename)
+            LOG.error("Generation of %s failed" % imagename)
             return False
         with casatools.ImageReader(imagename) as ia:
             beam = ia.restoringbeam()
             sumsq = ia.statistics()['sumsq'][0]
             if not beam.has_key('major') and sumsq==0.0:
-                LOG.critical("Image found but neither beam information nor valid pixel found. Discarding %s from imagelibrary" % imagename)
+                LOG.warning("No valid pixel found in image, %s. Discarding the image from futher processing." % imagename)
                 return False
         return True
