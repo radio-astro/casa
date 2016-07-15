@@ -49,7 +49,8 @@ public:
     static void compute2(SPIIT image, const String& expr, Bool verbose);
 
 private:
-    String _expr, _copyMetaDataFromImage, _outname;
+    String _copyMetaDataFromImage = "";
+    String _expr, _outname;
     Bool _overwrite;
     mutable LogIO _log;
 

@@ -14,7 +14,7 @@ namespace casa {
 
 template<class T> ImageExprCalculator<T>::ImageExprCalculator(
 	const String& expression, const String& outname, Bool overwrite
-) : _expr(expression), _copyMetaDataFromImage(), _outname(outname),
+) : _expr(expression), _outname(outname),
 	_overwrite(overwrite), _log() {
 	ThrowIf(_expr.empty(), "You must specify an expression");
 	if (! outname.empty() && ! overwrite) {
@@ -320,7 +320,13 @@ template<class T> void ImageExprCalculator<T>::_checkImages() const {
 					if (unit) {
 						if (myUnit != *unit) {
 							_log << LogIO::WARN << "image units are not the same: '"
-								<< *unit << "' vs '" << myUnit << "'" << LogIO::POST;
+								<< *unit << "' vs '" << myUnit << "'. Proceed with caution. "
+                                << "Output image metadata will be copied from "
+                                << (
+                                    _copyMetaDataFromImage.empty()
+                                    ? "one of the input images since imagemd was not specified"
+                                    : ("image " + _copyMetaDataFromImage)
+                                ) << LogIO::POST;
 							break;
 						}
 					}
