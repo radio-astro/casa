@@ -1763,18 +1763,37 @@ Bool MSTransformDataHandler::copyEphemerisTable(MSFieldColumns & msField)
 
 	if (eID.hasContent())
 	{
+		uInt nField;
+		if (reindex_p)
+		{
+			nField = fieldid_p.nelements();
+		}
+		else
+		{
+			nField = eID.nrow();
+		}
+
 		String destPathName = Path(msOut_p.field().tableName()).absoluteName();
 		ROScalarColumn<String> name(fieldIn.name());
 
-		for (uInt k = 0; k < fieldid_p.nelements(); ++k)
+		for (uInt k = 0; k < nField; ++k)
 		{
+			uInt fieldId;
+			if (reindex_p)
+			{
+				fieldId = fieldid_p[k];
+			}
+			else
+			{
+				fieldId = k;
+			}
 
-			Int theEphId = eID(fieldid_p[k]);
+			Int theEphId = eID(fieldId);
 
 			// There is an ephemeris attached to this field
 			if (theEphId > -1)
 			{
-				Path ephPath = Path(fieldIn.ephemPath(fieldid_p[k]));
+				Path ephPath = Path(fieldIn.ephemPath(fieldId));
 
 				// Copy the ephemeris table over to the output FIELD table
 				if (ephPath.length() > 0)
@@ -1784,10 +1803,11 @@ Bool MSTransformDataHandler::copyEphemerisTable(MSFieldColumns & msField)
 
 					os 	<< LogIO::NORMAL
 							<< "Transferring ephemeris " << ephPath.baseName()
-							<< " for output field " << name(fieldid_p[k])
+							<< " for output field " << name(fieldId)
 							<< LogIO::POST;
 				}
 			}
+
 			if (reindex_p)
 			{
 				msField.ephemerisId().put(k, theEphId);

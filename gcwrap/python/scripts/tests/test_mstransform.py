@@ -5511,7 +5511,7 @@ class test_no_reindexing_ephemeris_copy(test_base):
 
         mstransform(self.outvis, outputvis=self.splitvis, datacolumn='DATA', reindex=False, field='0')
         eph = glob.glob(os.path.join(self.splitvis, 'FIELD', 'EPHEM*.tab'))
-        self.assertEqual(len(eph), 1)
+        self.assertEqual(len(eph), 2)
         for e in eph:
             mytb = tbtool()
             mytb.open(e)
