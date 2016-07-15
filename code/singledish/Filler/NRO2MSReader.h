@@ -165,6 +165,7 @@ private:
   Double const posz_ =  3.7240395e6;
 
   double getRestFrequency(int const spwno);
+  string convertVRefName(string const &vref0);
 
   std::vector<double> getSpectrum(int const irow, sdfiller::NRODataScanData const &data);
   Int getPolNo(string const &rx);

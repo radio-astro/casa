@@ -385,6 +385,20 @@ double NRO2MSReader::getRestFrequency(int const spwno) {
   return restfreq_header;
 }
 
+string NRO2MSReader::convertVRefName(string const &vref0) {
+  string res;
+  if (vref0 == "LSR") {
+    res = "LSRK";
+  } else if (vref0 == "HEL") {
+    res = "BARY";
+  } else if (vref0 == "GAL") {
+    res = "GALACTO";
+  } else {
+    res = "Undefined";
+  }
+  return res;
+}
+
 std::vector<double> NRO2MSReader::getSpectrum(int const irow, sdfiller::NRODataScanData const &data) {
   // size of spectrum is not (SCNLEN-HEADER_SIZE)*8/IBIT0
   // but obs_header_.NCH0 after binding
@@ -653,7 +667,7 @@ Bool NRO2MSReader::getSpectralWindowRowImpl(
   record.spw_id = spw_id_counter_;
   record.num_chan = obs_header_.NCH0;
   MFrequency::Types frame_type;
-  Bool status = MFrequency::getType(frame_type, obs_header_.VREF0);
+  Bool status = MFrequency::getType(frame_type, convertVRefName(obs_header_.VREF0));
   if (!status) {
     frame_type = MFrequency::N_Types;
   }
