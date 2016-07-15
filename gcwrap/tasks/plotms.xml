@@ -139,10 +139,11 @@ MS Parameters
       <value>gainreal</value><value>greal</value><value>GainReal</value>
       <value>gainimag</value><value>gimag</value><value>GainImag</value>
       <value>delay</value><value>del</value><value>Delay</value>
-      <value>opac</value><value>opacity</value><value>Opac</value>
       <value>swp</value><value>swpower</value><value>switchedpower</value><value>SwPower</value>
       <value>tsys</value><value>Tsys</value>
+      <value>opac</value><value>opacity</value><value>Opac</value>
       <value>snr</value><value>SNR</value>
+      <value>tec</value><value>TEC</value>
       <value>radialvelocity</value><value>Radial Velocity</value>
       <value>rho</value><value>Distance</value>
     </allowed>
@@ -224,10 +225,11 @@ MS Parameters
       <value>gainreal</value><value>greal</value><value>GainReal</value>
       <value>gainimag</value><value>gimag</value><value>GainImag</value>
       <value>delay</value><value>del</value><value>Delay</value>
-      <value>opac</value><value>opacity</value><value>Opac</value>
       <value>swp</value><value>swpower</value><value>switchedpower</value><value>SwPower</value>
       <value>tsys</value><value>Tsys</value>
+      <value>opac</value><value>opacity</value><value>Opac</value>
       <value>snr</value><value>SNR</value>
+      <value>tec</value><value>TEC</value>
       <value>radialvelocity</value><value>Radial Velocity</value>
       <value>rho</value><value>Distance</value>
     </allowed>
