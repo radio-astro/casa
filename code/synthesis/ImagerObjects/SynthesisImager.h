@@ -175,7 +175,7 @@ class SynthesisImager
   void makePSF();
 
 
-  Bool makePB();
+  virtual Bool makePB();
   
   virtual void predictModel();
   //  void makeImage();

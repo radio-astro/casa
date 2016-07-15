@@ -712,6 +712,9 @@ void SynthesisImagerVi2::appendToMapperList(String imagename,
 		    }
     		}
     	}
+
+	// cerr << "VI2 data: " << cohDone << endl;
+	// exit(0);
     	//cerr << "IN SYNTHE_IMA" << endl;
     	//VisModelData::listModel(rvi_p->getMeasurementSet());
 	SynthesisUtilMethods::getResource("Before finalize for all mappers");
@@ -1556,6 +1559,44 @@ void SynthesisImagerVi2::unlockMSs()
   }
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  Bool SynthesisImagerVi2::makePB()
+  {
+      LogIO os( LogOrigin("SynthesisImagerVi2","makePB",WHERE) );
+
+      if( itsMakeVP==False )
+	{
+	  os << LogIO::NORMAL1 << "Not making .pb by direct evaluation. The gridder will make a .weight and a .pb will be computed from it." << LogIO::POST;
+	  // Check that the .weight exists.. ?
+
+	  return False;
+	}
+      else
+	{
+	  Bool doDefaultVP = itsVpTable.length()>0 ? False : True;
+
+	  CoordinateSystem coordsys=itsMappers.imageStore(0)->getCSys();
+	  String telescope=coordsys.obsInfo().telescope();
+	  
+	  if (doDefaultVP) {
+	    
+	    ROMSAntennaColumns ac(mss_p[0]->antenna());
+	    Double dishDiam=ac.dishDiameter()(0);
+	    if(!allEQ(ac.dishDiameter().getColumn(), dishDiam))
+	      os << LogIO::WARN
+		 << "The MS has multiple antenna diameters ..PB could be wrong "
+		 << LogIO::POST;
+	    return makePBImage( telescope, False, dishDiam);
+	  }
+	  else{
+	    return makePBImage(telescope );	
+	  }
+	  
+	}
+ 
+      return False;
+  }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   Bool SynthesisImagerVi2::makePrimaryBeam(PBMath& pbMath)
   {

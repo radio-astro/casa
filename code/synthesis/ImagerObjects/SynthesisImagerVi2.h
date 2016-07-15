@@ -151,6 +151,7 @@ public:
 				      CountedPtr<refim::FTMachine> iftmachine,
 				      uInt ntaylorterms=1);
 
+  Bool makePB();
   Bool makePrimaryBeam(PBMath& pbMath);
  
    // Other Options
