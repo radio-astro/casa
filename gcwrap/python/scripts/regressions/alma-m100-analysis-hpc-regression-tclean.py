@@ -66,6 +66,7 @@ parallelImaging = True
 # clean - tclean options
 withtclean = True
 tclean_deconvolver = 'clark'
+tclean_savemodel = 'modelcolumn'
 clean_psfmode = 'clark'
 clean_imager = ''
 
@@ -651,7 +652,8 @@ if(mystep in thesteps):
 			mask='box [ [ 96pix , 96pix] , [104pix, 104pix ] ]',
 			imsize=200,cell='0.5arcsec',
 			deconvolver=tclean_deconvolver,
-			parallel=parallelImaging)
+			parallel=parallelImaging,
+			savemodel=tclean_savemodel)
 	else:
 		imview_input = 'test-'+name+'-sec_phasecal.image.tt0'
 		clean(vis=name+'-line-vs.ms',
@@ -693,7 +695,8 @@ if(mystep in thesteps):
 			mask='box [ [ 96pix , 96pix] , [104pix, 104pix ] ]',
 			imsize=200,cell='0.5arcsec',
 			deconvolver=tclean_deconvolver,
-			parallel=parallelImaging)
+			parallel=parallelImaging,
+			savemodel=tclean_savemodel)
         else:
 		imview_input = 'test-'+name+'-prim_phasecal.image.tt0'
         	clean(vis=name+'-line-vs.ms',
@@ -1113,7 +1116,7 @@ if(mystep in thesteps):
         passed = False
 
     rmsmdev = abs(resrmsm-exprmsm)/exprmsm*100.
-    if (rmsmdev > 0.5):
+    if (rmsmdev > 1):
         casalog.post( 'ERROR: RMS in M100 central field image '+str(i)+' deviates from expectation by '+str(rmsmdev)+' percent.','WARN')
         passed = False
 
