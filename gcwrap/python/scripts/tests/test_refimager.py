@@ -709,6 +709,21 @@ class test_stokes(testref_base):
           report=self.th.checkall(imexist=[self.img+'.image'],imval=[(self.img+'.image',1.0,[50,50,0,1]),(self.img+'.image',2.0,[50,50,1,1]), (self.img+'.image',3.0,[50,50,2,1]),(self.img+'.image',4.0,[50,50,3,1]) ])
           self.checkfinal(report)
 
+     def test_stokes_mtmfs_Q(self):
+          """ [onefield] Test_Stokes_mtmfs_Q : mtmfs with stokes Q"""
+          self.prepData('refim_point_linRL.ms')
+          tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10, stokes='Q',deconvolver='mtmfs',nterms=2)
+          report=self.th.checkall(imexist=[self.img+'.image.tt0'], imexistnot=[self.img+'.image.alpha'], imval=[(self.img+'.image.tt0',2.0,[50,50,0,0]) ] )
+          self.checkfinal(report)
+
+     def test_stokes_mtmfs_IQUV(self):
+          """ [onefield] Test_Stokes_mtmfs_IQUV : mtmfs with stokes IQUV"""
+          self.prepData('refim_point_linRL.ms')
+          tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10, stokes='IQUV',deconvolver='mtmfs',nterms=2)
+          report=self.th.checkall(imexist=[self.img+'.image.tt0'],imexistnot=[self.img+'.image.alpha'], imval=[(self.img+'.image.tt0',1.0,[50,50,0,0]),(self.img+'.image.tt0',2.0,[50,50,1,0]), (self.img+'.image.tt0',3.0,[50,50,2,0]),(self.img+'.image.tt0',4.0,[50,50,3,0]) ])
+          self.checkfinal(report)
+
+
 #     def test_stokes_cube_I_flags(self):
 #          """ [onefield] Test_Stokes_cube_I_flags : cube with stokes I and only XY or YX flagged"""
 #          self.prepData('refim_point_linXY.ms')
@@ -1282,7 +1297,7 @@ class test_cube(testref_base):
 #          self.assertTrue(os.path.exists(self.img+'.psf') and os.path.exists(self.img+'.image') )
 #          report=self.th.checkall(imexist=[self.img+'.image'],imval=[(self.img+'.image',1.5002,[50,50,0,0]) , (self.img+'.image',0.769,[50,50,0,19]) ])
 
-          ret = tclean(vis=self.msfile,imagename=self.img+'cc',specmode='cube',imsize=100,cell='10.0arcsec',niter=10,deconvolver='hogbom',chanchunks=2)
+          ret = tclean(vis=self.msfile,imagename=self.img+'cc',specmode='cube',imsize=100,cell='10.0arcsec',niter=10,deconvolver='hogbom',chanchunks=3)
           self.assertTrue(os.path.exists(self.img+'cc.psf') and os.path.exists(self.img+'cc.image') )
           report=self.th.checkall(imexist=[self.img+'cc.image'],imval=[(self.img+'cc.image',1.5002,[50,50,0,0]) , (self.img+'cc.image',0.769,[50,50,0,19]) ])
           self.checkfinal(report)
