@@ -212,7 +212,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     chans      Channels to use. See "help par.chans" for details. Default is to use all channels.
     stokes     Stokes planes to use. See "help par.stokes" for details. Default is to use all Stokes planes.
                Not used in for cases of mode='poli' or mode='pola'
-    imagemd    The image from which metadata should be copied to the output. Default means no gaurantee from
+    imagemd    The image from which metadata should be copied to the output. Default means no guarantee from
                 which image is used. The image must exist and should conform to the output image spec.
 
     Available functions in the <i>expr</i> and <i>mask</i> parameters:
@@ -243,6 +243,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     stretched along the third dimension to shape [100, 200, 10]. However if
     the mask is shape [100, 200, 2], stretching is not possible and an
     error will result.
+
+    CAUTIONS REGARDING OUTPUT IMAGE METADATA, INCLUDING BRIGHTNESS UNIT
+
+    EXCEPT IN THE CASES NOTED BELOW, THIS APPLICATION MAKES NO ATTEMPT TO
+    DETERMINE WHAT THE CORRECT BRIGHTNESS UNIT OF THE OUTPUT IMAGE SHOULD BE. THIS
+    RESPONSIBILITY LIES SOLELY WITH THE USER. The brightness unit of the output image
+    can be modified using tool method ia.setbrightnessunit() or task imhead with
+    mode='put' and hdkey='bunit'. 
 
     Note that when multiple image are used in the expression, there is
     no garauntee about which of those images will be used to create the metadata
