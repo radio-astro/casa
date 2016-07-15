@@ -123,11 +123,9 @@ class imstat_test(unittest.TestCase):
         shutil.copytree(self.datapath+self.s15, self.s15)
         _myia = iatool()
         _myia.open(self.s15)
-        print "*** before "
         stats = _myia.statistics()
-        print "*** after"
         _myia.close()
-        self.assertTrue(stats['blcf'] == '15:24:08.404, +04.31.59.181, I, 1.41332e+09Hz') 
+        self.assertTrue(stats['blcf'] == '15:24:08.404, +04.31.59.181, I, 1.41332e+09Hz')
         self.assertTrue(stats['maxposf'] == '15:22:04.016, +05.04.44.999, I, 1.41332e+09Hz')
         self.assertTrue(stats['minposf'] == '15:24:08.491, +04.59.59.208, I, 1.41332e+09Hz')
         self.assertTrue(stats['trcf'] == '15:19:52.390, +05.35.44.246, I, 1.41332e+09Hz')
@@ -146,13 +144,11 @@ class imstat_test(unittest.TestCase):
 
     def test005(self):
         """ Test 5: test position format for 0.0015 arcsec pixel image is correct """
-        print "*** test 5"
         _myia = iatool()
         shutil.copytree(self.datapath+self.s0_0015, self.s0_0015)
         _myia.open(self.s0_0015)
         stats = _myia.statistics()
         _myia.close()
-        print "*** blcf xxx " + str(stats['blcf'])
         self.assertTrue(stats['blcf'] == '15:22:00.01285, +05.03.59.80800, I, 1.41332e+09Hz') 
         self.assertTrue(stats['maxposf'] == '15:22:00.00040, +05.04.00.00450, I, 1.41332e+09Hz')
         self.assertTrue(stats['minposf'] == '15:22:00.01285, +05.03.59.97600, I, 1.41332e+09Hz')
@@ -340,7 +336,6 @@ class imstat_test(unittest.TestCase):
                 append = True
             stats = code(myim, [0], logfile, append)
             size = os.path.getsize(logfile)
-            print "size " + str(size)
             # appending, second time through size should double
             self.assertTrue(size > 1.2e4*i and size < 1.3e4*i )
             i = i+1
@@ -489,7 +484,11 @@ class imstat_test(unittest.TestCase):
                 hf0 = imstat(imagename=imagename, algorithm="h", fence=0)
             for k in classic.keys():
                 if type(classic[k]) == numpy.ndarray:
-                    self.assertTrue((hfall[k] == classic[k]).all())
+                    if k == 'sigma':
+                        self.assertTrue((abs(hfall[k]/classic[k] - 1) < 1e-15).all())
+                    else:
+                        self.assertTrue((hfall[k] == classic[k]).all())
+                        
                 else:
                     self.assertTrue(hfall[k] == classic[k])
             self.assertTrue(hf0['npts'][0] == 51)
