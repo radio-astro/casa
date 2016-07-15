@@ -27,6 +27,9 @@ def get_notification_trs(result, alerts_info, alerts_success):
 	for logrecord in utils.get_logrecords(result, logging.ERROR):
 		n = format_notification('danger alert-danger', 'Error!', logrecord.msg)
 		notifications.append(n)
+	for logrecord in utils.get_logrecords(result, logging.CRITICAL):
+		n = format_notification('danger alert-danger', 'Critical Error!', logrecord.msg)
+		notifications.append(n)
 	for logrecord in utils.get_logrecords(result, logging.WARNING):
 		n = format_notification('warning alert-warning', 'Warning!', logrecord.msg)
 		notifications.append(n)
