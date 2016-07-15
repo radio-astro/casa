@@ -326,13 +326,18 @@ class SDImagingWorker(basetask.StandardTaskTemplate):
         self._executor.execute(image_job)
         # check imaging result
         imagename = image_args['outfile']
-        if not os.path.exists(imagename):
+        weightname = imagename+'.weight'
+        if not os.path.exists(imagename) or not os.path.exists(weightname):
             LOG.error("Generation of %s failed" % imagename)
             return False
-        with casatools.ImageReader(imagename) as ia:
-            beam = ia.restoringbeam()
+        # check for valid pixels (non-zero weight)
+        # Task sdimaging does not fail even if no data is gridded to image.
+        # In that case, image is not masked, no restoring beam is set to 
+        # image, and all pixels in corresponding weight image is zero. 
+        with casatools.ImageReader(weightname) as ia:
             sumsq = ia.statistics()['sumsq'][0]
-            if not beam.has_key('major') and sumsq==0.0:
-                LOG.warning("No valid pixel found in image, %s. Discarding the image from futher processing." % imagename)
-                return False
+        if sumsq==0.0:
+            LOG.warning("No valid pixel found in image, %s. Discarding the image from futher processing." % imagename)
+            return False
+        
         return True
