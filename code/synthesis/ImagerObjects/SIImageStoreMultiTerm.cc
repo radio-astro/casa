@@ -906,15 +906,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }	
    
     try
-      {	    
-	    if( itsNTerms > 1)
+      {
+
+	// Check if this is Stokes I.
+	Bool isOnlyStokesI=True;
+
+	Vector<Int> stokes (  (itsParentCoordSys.stokesCoordinate()).stokes() );
+	AlwaysAssert( stokes.nelements()>0 , AipsError);
+	if( stokes.nelements()>1 || stokes[0]!=1 ) isOnlyStokesI=False;
+
+	if( ! isOnlyStokesI )
+	  { os << "Alpha and Beta images will not be computed for images that contain anything other than stokes I in them." << LogIO::POST; }
+
+	//Calculate alpha, beta
+	    if( itsNTerms > 1 && isOnlyStokesI)
 	      {
 		// Calculate alpha and beta
 		LatticeExprNode leMaxRes = max( *( residual(0) ) );
 		Float maxres = leMaxRes.getFloat();
 		Float specthreshold = maxres/10.0;  //////////// do something better here..... 
 		
-		os << "Calculating spectral parameters for  Intensity > peakresidual/10 = " << specthreshold << " Jy/beam" << LogIO::POST;
+		os << "Calculating spectral parameters for Intensity > peakresidual/10 = " << specthreshold << " Jy/beam" << LogIO::POST;
 		LatticeExpr<Float> mask1(iif(((*(image(0))))>(specthreshold),1.0,0.0));
 		LatticeExpr<Float> mask0(iif(((*(image(0))))>(specthreshold),0.0,1.0));
 		

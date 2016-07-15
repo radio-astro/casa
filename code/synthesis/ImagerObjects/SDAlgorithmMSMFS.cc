@@ -211,6 +211,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Compute principal solution ( if it hasn't already been done to this ImageStore......  )
     //////  Put some image misc info in here, to say if it has been done or not. 
 
+    // Loop over polarization planes here, as MTC knows only about Matrices.
+    Int nSubChans, nSubPols;
+    queryDesiredShape(nSubChans, nSubPols, imagestore->getShape());
+    for( Int chanid=0; chanid<nSubChans;chanid++) // redundant since only 1 chan
+      {
+	for( Int polid=0; polid<nSubPols;polid++) // one pol plane at a time
+      {
+	    itsImages = imagestore->getSubImageStore( 0, 1, chanid, nSubChans, polid, nSubPols );
+
     ///  ----------- do once if trying to 'only restore' without model ----------
     if( itsMTCsetup == False)
       {
@@ -218,14 +227,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	itsMatPsfs.resize( 2*itsNTerms-1 );
 	for(uInt tix=0; tix<2*itsNTerms-1; tix++)
 	  {
-	    (imagestore->psf(tix))->get( itsMatPsfs[tix], True );
+	    (itsImages->psf(tix))->get( itsMatPsfs[tix], True );
 	  }
 
 	//cout << "Setting up the MT Cleaner once" << endl;
 	//Vector<Float> scalesizes(1); scalesizes[0]=0.0;
 	itsMTCleaner.setscales( itsScaleSizes );
 	itsMTCleaner.setntaylorterms( itsNTerms );
-	itsMTCleaner.initialise( imagestore->getShape()[0], imagestore->getShape()[1] );
+	itsMTCleaner.initialise( itsImages->getShape()[0], itsImages->getShape()[1] );
 	
 	for(uInt tix=0; tix<2*itsNTerms-1; tix++)
 	  {
@@ -245,14 +254,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for(uInt tix=0; tix<itsNTerms; tix++)
       {
 	Array<Float> tempArr;
-	(imagestore->residual(tix))->get( tempArr, True );	
+	(itsImages->residual(tix))->get( tempArr, True );	
 	Matrix<Float> tempMat;
 	tempMat.reference( tempArr );
 	itsMTCleaner.setresidual( tix, tempMat );
 
 	// Also save them temporarily (copies)
-	tempResOrig[tix] = TempImage<Float>(imagestore->getShape(), imagestore->residual(tix)->coordinates()); 
-	tempResOrig[tix].copyData( LatticeExpr<Float>(* ( imagestore->residual(tix) ) ) );
+	tempResOrig[tix] = TempImage<Float>(itsImages->getShape(), itsImages->residual(tix)->coordinates()); 
+	tempResOrig[tix].copyData( LatticeExpr<Float>(* ( itsImages->residual(tix) ) ) );
       }
 
     // Modify the original in place
@@ -262,19 +271,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	Matrix<Float> tempRes;
 	itsMTCleaner.getresidual(tix,tempRes);
-	(imagestore->residual(tix))->put( tempRes );
+	(itsImages->residual(tix))->put( tempRes );
       }
     
     // Calculate restored image and alpha using modified residuals
-    SDAlgorithmBase::restore( imagestore );
+    SDAlgorithmBase::restore( itsImages );
 
     // Put back original unmodified residuals.o
     for(uInt tix=0; tix<itsNTerms; tix++)
       {
-	(imagestore->residual(tix))->copyData( LatticeExpr<Float>( tempResOrig(tix) ) );
+	(itsImages->residual(tix))->copyData( LatticeExpr<Float>( tempResOrig(tix) ) );
       }
 
-  }
+      } // for polid loop
+      }// for chanid loop
+
+  }// ::restore
 
 
   /*
@@ -358,15 +370,6 @@ Bool SDAlgorithmMSMFS::createMask(LatticeExpr<Bool> &lemask, ImageInterface<Floa
 }
 
 */
-
-  // Use this decide how to partition
-  // the image for separate calls to 'deconvolve'.
-  void SDAlgorithmMSMFS::queryDesiredShape(Bool &onechan, Bool &onepol) // , nImageFacets.
-  {  
-    onechan = True;
-    onepol = True;
-  }
-
 
 } //# NAMESPACE CASA - END
 

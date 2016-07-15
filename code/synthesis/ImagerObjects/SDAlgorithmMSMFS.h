@@ -65,7 +65,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //    void initializeDeconvolver( Float &peakresidual, Float &modelflux );
     void initializeDeconvolver();
     void finalizeDeconvolver();
-    void queryDesiredShape(Bool &onechan, Bool &onepol); // , nImageFacets.
+    //    void queryDesiredShape(Bool &onechan, Bool &onepol, IPosition imshape); // , nImageFacets.
 
     uInt getNTaylorTerms(){ return itsNTerms; };
     

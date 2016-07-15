@@ -425,10 +425,14 @@ void MultiTermFTNew::finalizeToSkyNew(Bool dopsf,
 	  subftms_p[taylor]->getWeightImage(*(imstore->weight(taylor)), sumWeights);
 	}
 
-	AlwaysAssert( ( (imstore->sumwt(taylor))->shape()[2] == sumWeights.shape()[0] ) && 
-		      ((imstore->sumwt(taylor))->shape()[3] == sumWeights.shape()[1] ) , AipsError );
+	// Take sumWeights from corrToStokes here....
+	Matrix<Float> sumWeightStokes( (imstore->sumwt())->shape()[2], (imstore->sumwt())->shape()[3]   );
+	StokesImageUtil::ToStokesSumWt( sumWeightStokes, sumWeights );
+
+	AlwaysAssert( ( (imstore->sumwt(taylor))->shape()[2] == sumWeightStokes.shape()[0] ) && 
+		      ((imstore->sumwt(taylor))->shape()[3] == sumWeightStokes.shape()[1] ) , AipsError );
 	
-	(imstore->sumwt(taylor))->put( sumWeights.reform((imstore->sumwt(taylor))->shape()) );
+	(imstore->sumwt(taylor))->put( sumWeightStokes.reform((imstore->sumwt(taylor))->shape()) );
 
 	//	cout << "taylor : " << taylor << "   sumwt : " << sumWeights << endl;
 
