@@ -48,6 +48,7 @@
 #include <ms/MeasurementSets/MSColumns.h>
 #include <casa/iostream.h>
 #include <iomanip>
+using namespace std;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -255,17 +256,32 @@ Bool VisBufferUtil::interpolateFrequency(Cube<Complex>& data,
 	  for (vi.origin(); vi.more();vi.next())
     		{
 		  Double localmax, localmin;
+                  IPosition localmaxpos(1,0); 
+                  IPosition localminpos(1,0);
 		  Vector<Double> freqs=vb->getFrequencies(0, freqFrame);
-		  localmax=max(freqs);
-		  localmin=min(freqs);
-		  freqEnd=max(freqEnd, localmax);
-		  freqStart=min(freqStart, localmin);
+                  minMax(localmin,localmax,localminpos, localmaxpos, freqs);
+		  //localmax=max(freqs);
+		  //localmin=min(freqs);
+		  //freqEnd=max(freqEnd, localmax);
+		  //freqStart=min(freqStart, localmin);
+
+                  Int nfreq = freqs.nelements(); 
+                  Vector<Int> curspws = vb->spectralWindows();
+                  // as the vb row 0 is used for getFrequencies, the same row 0 is used here
+                  Vector<Double> chanWidths = vi.subtableColumns().spectralWindow().chanWidth()(curspws[0]);  
+                  // freqs are in channel center freq so add the half the width to the values to return the edge frequencies 
+                  if (nfreq==1) {
+		    freqEnd=max(freqEnd, localmax+chanWidths[0]/2.0);
+		    freqStart=min(freqStart, localmin-chanWidths[0]/2.0);
+                  }
+                  else {
+		    freqEnd=max(freqEnd, localmax+chanWidths[localmaxpos[0]]/2.0);
+		    freqStart=min(freqStart, localmin-chanWidths[localminpos[0]]/2.0);
+                  } 
 		}
 	}
     freqMin=freqStart;
     freqMax=freqEnd;
-
-
   }
 void VisBufferUtil::convertFrequency(Vector<Double>& outFreq, 
 				     const VisBuffer& vb, 
