@@ -2053,10 +2053,15 @@ void MSTransformManager::initDataSelectionParams()
 
 		// jagonzal (CAS-7149): Have to remove duplicates: With multiple pols per SPW
 		// each SPWId appears various (see times test_chanavg_spw_with_diff_pol_shape)
-		vector<Int> noDupSpwList(spwList.size());
-		for (uInt idx=0;idx < spwList.size(); idx++) noDupSpwList[idx] = spwList(idx);
-		sort( noDupSpwList.begin(), noDupSpwList.end() );
-		noDupSpwList.erase( unique( noDupSpwList.begin(), noDupSpwList.end() ), noDupSpwList.end() );
+		vector<Int> noDupSpwList;
+		for (uInt idx=0;idx < spwList.size(); idx++)
+		{
+			if (find(noDupSpwList.begin(),noDupSpwList.end(),spwList(idx)) == noDupSpwList.end())
+			{
+				noDupSpwList.push_back(spwList(idx));
+			}
+		}
+
 		spwList.resize(noDupSpwList.size());
 		for (uInt idx=0;idx < noDupSpwList.size(); idx++) spwList(idx) = noDupSpwList[idx];
 
@@ -2114,7 +2119,7 @@ void MSTransformManager::initDataSelectionParams()
 						logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
 								<< "Number of selected channels " << numOfSelChanMap_p[spwList(spw_i)]
 								<< " for SPW " << spwList(spw_i)
-								<< " is smaller than specified chanbin " << freqbin_p(0) << endl
+								<< " is smaller than specified chanbin " << freqbin_p(spw_i) << endl
 								<< "Setting chanbin to " << numOfSelChanMap_p[spwList(spw_i)]
 								<< " for SPW " << spwList(spw_i)
 								<< LogIO::POST;
@@ -4348,7 +4353,7 @@ void MSTransformManager::dropNonUniformWidthChannels()
     		chanFreqCol.put(spw_idx, newFrequencyVector);
 
     		// Update output number of channels
-    		inputOutputSpwMap_p[spw_idx].second.resize(nChans-1);
+    		inputOutputSpwMap_p[spw_idx].second.resize(nChansFinal);
     	}
 	}
 
