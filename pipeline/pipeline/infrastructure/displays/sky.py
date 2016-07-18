@@ -228,6 +228,8 @@ class SkyDisplay(object):
             if (image_info.get('type')):
                 if (image_info['type'] == 'flux'):
                     image_info['type'] = 'pb'
+                if (image_info['type'] == 'mom0_fc'):
+                    image_info['type'] = 'Line-free Moment 0'
 
             label = [TextArea('%s:%s' % (key, image_info[key]), textprops=dict(color=color))
                      for key, color in [('type', 'k'),

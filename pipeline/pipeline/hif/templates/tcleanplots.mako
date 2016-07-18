@@ -8,7 +8,7 @@ columns = {'cleanmask' : ('Clean Mask', 'Clean Mask'),
 		   'residual' : ('Residual', 'Residual'),
 		   'model' : ('Final Model', 'Final Model'),
 		   'psf' : ('PSF', 'PSF'),
-		   'mom0_fc': ('MOM0_FC', 'MOM0_FC: integrated intensity (moment 0) of line-free channels after continuum subtraction')}
+		   'mom0_fc': ('Line-free Moment 0', 'Integrated intensity (moment 0) of line-free channels after continuum subtraction')}
 
 def get_plot(plots, field, spw, i, colname):
 	try:
