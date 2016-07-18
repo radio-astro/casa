@@ -413,14 +413,14 @@
                      'Perley-Butler 2010', 
                      'Perley-Butler 2013',
                      'Scaife-Heald 2012',
+                     'Stevens-Reynolds 2016',
                      'Butler-JPL-Horizons 2010', 
                      'Butler-JPL-Horizons 2012', 
-                     'Stevens-Reynolds 2016',
                      'manual'
                      'fluxscale' 
                      <!-- image to be added -->
-            All but the last two are for extragalactic calibrators,
-            and the final two are for Solar System objects.  
+            All but the last four are for extragalactic calibrators.
+            The two 'Butler-JPL' standards are for Solar System objects.  
             Note that Scaife-Heald 2012 is for the low frequencies (mostly
             valid for the frequency range, 30-300MHz). 
 
