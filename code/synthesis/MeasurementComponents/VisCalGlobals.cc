@@ -401,4 +401,104 @@ SolvableVisCal* createSolvableVisCal(const String& type, const Int& nAnt) {
   }
 };
 
+
+namespace viscal {
+
+// Parameter axis slicer for caltables
+//   (experimental)
+Slice calParSlice(String caltabname, String what, String pol)
+{
+  String caltype=calTableType(caltabname);  // From SolvableVisCal.h (for now)
+  return calParSliceByType(caltype,what,pol);
+}
+
+Slice calParSliceByType(String caltype, String what, String pol)
+{
+
+  // Upcase all inputs
+  //  TBD: do this with local copies
+  caltype.upcase();
+  what.upcase();
+  pol.upcase();
+
+  Int s(0),n(0),i(1);
+
+  if (caltype=="G JONES" ||
+      caltype=="B JONES") {
+    if (what=="AMP" ||
+	what=="PHASE" ||
+	what=="REAL" ||
+	what=="IMAG") {
+      s=0;  // nominal start is first pol
+      i=1;  // increment is nominally 1 (only good for 1-par-per-pol caltypes
+    }
+    else
+      throw(AipsError("Unsupported value type: "+what));
+  } 
+  else if (caltype=="T JONES") {
+    if (what=="AMP" ||
+	what=="PHASE" ||
+	what=="REAL" ||
+	what=="IMAG") {
+      if (pol=="")
+	return Slice(0,1,1); // trivial
+      else
+	throw(AipsError("Can't select with pol='"+pol+"' on unpolarized T table."));
+    }
+    else
+      throw(AipsError("Unsupported value type: "+what));
+  }
+  else if (caltype=="EVLASWP") {
+    i=2;  // 2 pars-per-pol
+    if (what=="GAINAMP")
+      s=0;
+    else if (what=="TSYS")
+      s=1;
+    else
+      throw(AipsError("Unsupported value type: "+what));
+  }
+  else if (caltype=="TSYS") {
+    if (what=="TSYS") {
+      s=0;
+      i=1;
+    }
+    else
+      throw(AipsError("Unsupported value type: "+what));
+  }
+  else if (caltype=="TEC") {
+    if (what=="TEC") {
+      if (pol=="")
+	return Slice(0,1,1); // trivial
+      else
+	throw(AipsError("Can't select with pol='"+pol+"' on unpolarized TEC table."));
+    }
+    else
+      throw(AipsError("Unsupported value type: "+what));
+  }
+  else
+    throw(AipsError("Unsupported cal type: "+caltype));
+
+  // Apply generalized pol selection
+  if (pol=="L" ||
+      pol=="Y") {
+    s+=i; // jump by incr to 2nd pol
+    n=1;
+  }
+  else if (pol=="R" ||
+	   pol=="X") {
+    n=1;  // for _all_ single-pol selections
+  }
+  else if (pol=="") {
+    n=2;  // both pols
+  }
+  else
+    throw(AipsError("Unsupported pol: "+pol));
+
+  return Slice(s,n,i);
+
+}
+
+} //# NAMESPACE VISCAL - END
+
+
 } //# NAMESPACE CASA - END

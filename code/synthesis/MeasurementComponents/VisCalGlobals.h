@@ -56,6 +56,14 @@ SolvableVisCal* createSolvableVisCal(const String& type, String msname, Int MSnA
 // Create a specialized SolvableVisCal from nAnt
 SolvableVisCal* createSolvableVisCal(const String& type, const Int& nAnt);
 
+// Parameter axis slicer for caltables
+//   (experimental)
+
+ namespace viscal {
+   Slice calParSlice(String caltabname, String what, String pol);
+   Slice calParSliceByType(String type, String what, String pol);
+ }
+
 } //# NAMESPACE CASA - END
 
 #endif
