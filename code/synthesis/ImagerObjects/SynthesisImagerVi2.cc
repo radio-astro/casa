@@ -570,7 +570,17 @@ void SynthesisImagerVi2::appendToMapperList(String imagename,
           }
           // assumes all processes need the same amount of memory
           required_mem *= nlocal_procs;
-          Double memory_avail = HostInfo::memoryTotal(true) * 1024.;
+
+          Double usr_memfrac, usr_mem;
+          AipsrcValue<Double>::find(usr_memfrac, "system.resources.memfrac", 80.);
+          AipsrcValue<Double>::find(usr_mem, "system.resources.memory", -1.);
+          Double memory_avail;
+          if (usr_mem > 0.) {
+              memory_avail = usr_mem * 1024. * 1024.;
+          }
+          else {
+              memory_avail = HostInfo::memoryTotal(false) * (usr_memfrac / 100.) * 1024.;
+          }
 
           // compute required chanchunks to fit into the available memory
           chanchunks = (int)std::ceil((Double)required_mem / memory_avail);
@@ -582,7 +592,8 @@ void SynthesisImagerVi2::appendToMapperList(String imagename,
 
 	  log_l << "Required memory " << required_mem / nlocal_procs / 1024. / 1024. / 1024.
                  << "\nAvailable memory " << memory_avail / 1024. / 1024 / 1024.
-                 << "\n" << nlocal_procs << " other processes on node\n"
+                 << " (rc: memory fraction " << usr_memfrac << "% rc memory " << usr_mem / 1024.
+                 << ")\n" << nlocal_procs << " other processes on node\n"
                  << "Setting chanchunks to " << chanchunks << LogIO::POST;
 	}
 
