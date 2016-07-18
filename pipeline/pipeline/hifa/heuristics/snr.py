@@ -16,10 +16,10 @@ The ALMA receiver band, nominal tsys, and sensitivity info.
     The ALMA receiver bands are defined per pipeline convention
 """
 
-ALMA_BANDS = ['ALMA Band 3', 'ALMA Band 4', 'ALMA Band 6', \
+ALMA_BANDS = ['ALMA Band 3', 'ALMA Band 4', 'ALMA Band 5', 'ALMA Band 6', \
     'ALMA Band 7', 'ALMA Band 8', 'ALMA Band 9', 'ALMA Band 10']
-ALMA_TSYS = [75.0, 86.0, 90.0, 150.0, 387.0, 1200.0, 1515.0]
-ALMA_SENSITIVITIES = [0.20, 0.24, 0.27, 0.50, 1.29, 5.32, 8.85] \
+ALMA_TSYS = [75.0, 86.0, 120.0, 90.0, 150.0, 387.0, 1200.0, 1515.0]
+ALMA_SENSITIVITIES = [0.20, 0.24, 0.37, 0.27, 0.50, 1.29, 5.32, 8.85] \
     # mJy (for 16*12 m antennas, 1 minute, 8 GHz, 2pol)
 
 """
