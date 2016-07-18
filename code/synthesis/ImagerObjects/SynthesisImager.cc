@@ -1405,18 +1405,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
       LogIO os(LogOrigin("SynthesisImager", "createChanChunkImageStoreList"));
 
-      Bool extrachunk=False;
-      if( imagestore->getShape()[3] % chanchunks > 0 )
+      Int extrachunks=0;
+      Int chunksize=imagestore->getShape()[3]/chanchunks;
+      Int rem=imagestore->getShape()[3] % chanchunks;
+
+      if( rem>0 )
 	{
-	  os << LogIO::WARN << "chanchunks ["+String::toString(chanchunks)+"] is not a divisor of nchan ["+String::toString(imagestore->getShape()[3])+"].";
-	  //	  os << "Therefore, "+String::toString(imagestore->getShape()[3] % chanchunks)+" channels at the end of the cube will be ignored." << LogIO::POST ;
-	  os << "Therefore, "+String::toString(imagestore->getShape()[3] % chanchunks)+" channel(s) at the end of the cube will be treated as an extra chunk." << LogIO::POST ;
-	  extrachunk=True;
+	  // os << LogIO::WARN << "chanchunks ["+String::toString(chanchunks)+"] is not a divisor of nchan ["+String::toString(imagestore->getShape()[3])+"].";
+	  //	  os << "Therefore, "+String::toString(imagestore->getShape()[3] % chanchunks)+" channel(s) at the end of the cube will be treated as an extra chunk." << LogIO::POST ;
+
+	  if( rem < chunksize ) extrachunks=1;
+	  else
+	    {
+	      extrachunks=rem/chunksize;
+	      if( rem % chunksize > 0 ) extrachunks += 1;
+	    }
 	}
+      
+      os << "Creating " << chanchunks +extrachunks << " reference subCubes (channel chunks) for gridding " << LogIO::POST;
 
-      os << "Creating " << chanchunks +(extrachunk?1:0) << " reference subCubes (channel chunks) for gridding " << LogIO::POST;
-
-      Block<CountedPtr<SIImageStore> > chunkList( chanchunks + (extrachunk?1:0) );
+      Block<CountedPtr<SIImageStore> > chunkList( chanchunks + extrachunks );
 
     if( chanchunks==1 ) { chunkList[0] = imagestore;  return chunkList; }
 
@@ -1428,7 +1436,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     unChanChunkedImStore_p = imagestore;
     chanChunksStore_p = chanchunks;
     
-    for (Int chunk=0; chunk< chanchunks+(extrachunk?1:0); ++chunk){
+    for (Int chunk=0; chunk< chanchunks+extrachunks; ++chunk){
       chunkList[chunk] = unChanChunkedImStore_p->getSubImageStore(0,1,chunk, chanchunks);
       }
     
@@ -1907,16 +1915,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     PBMath::enumerateCommonPB(telescop, kpb);
     //    Record rec;
     vpman->getvp(rec, telescop);
+
+    //ostringstream oss; rec.print(oss);
+    //os << "Using VP model : " << oss.str() << LogIO::POST;
+
     if(rec.empty()){
-	if((telescop=="EVLA")){
-	  os << LogIO::WARN << "vpmanager does not list EVLA. Using VLA beam parameters. To use EVLA beams, please use the vpmanager and set the vptable parameter in tclean (see inline help for vptable)." << LogIO::POST; 
-	  telescop="VLA";
-	  vpman->getvp(rec, telescop);
-	  kpb=PBMath::VLA;
-	}
-	else{
-	  os << LogIO::WARN << "vpmanager does not have a beam for antenna : "+telescop <<".\n Please use the vpanager to define one (and optionally save its state as a table and supply its name via the vptable parameter.)" << LogIO::POST;
-	}
+      if((telescop=="EVLA")){
+	os << LogIO::WARN << "vpmanager does not list EVLA. Using VLA beam parameters. To use EVLA beams, please use the vpmanager and set the vptable parameter in tclean (see inline help for vptable)." << LogIO::POST; 
+	telescop="VLA";
+	vpman->getvp(rec, telescop);
+	kpb=PBMath::VLA;
+      }
+      else{
+	os << LogIO::WARN << "vpmanager does not have a beam for antenna : "+telescop <<".\n Please use the vpanager to define one (and optionally save its state as a table and supply its name via the vptable parameter.)" << LogIO::POST;
+      }
     }
     
   }// get VPRecord
