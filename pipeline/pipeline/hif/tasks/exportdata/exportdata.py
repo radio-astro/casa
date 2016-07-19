@@ -531,7 +531,7 @@ class ExportData(basetask.StandardTaskTemplate):
 
         # Define the name of the output tarfile
         visname = os.path.basename(vis)
-        tarfilename = visname + '.flagversions.tar.gz'
+        tarfilename = visname + '.flagversions.tgz'
         LOG.info('Storing final flags for %s in %s' % (visname, tarfilename))
 
         # Define the directory to be saved
@@ -668,7 +668,7 @@ class ExportData(basetask.StandardTaskTemplate):
             os.chdir(context.output_dir)
 
             # Define the name of the output tarfile
-            tarfilename = '{}.{}.caltables.tar.gz'.format(oussid, session)
+            tarfilename = '{}.{}.caltables.tgz'.format(oussid, session)
             LOG.info('Saving final caltables for %s in %s', session, tarfilename)
 
             # Create the tar file
@@ -717,11 +717,11 @@ class ExportData(basetask.StandardTaskTemplate):
         # Define the name of the output tarfile
         ps = context.project_structure
         if ps is None:
-            tarfilename = 'weblog.tar.gz'
+            tarfilename = 'weblog.tgz'
         elif ps.ousstatus_entity_id == 'unknown':
-            tarfilename = 'weblog.tar.gz'
+            tarfilename = 'weblog.tgz'
         else:
-            tarfilename = oussid + '.weblog.tar.gz'
+            tarfilename = oussid + '.weblog.tgz'
 
         LOG.info('Saving final weblog in %s' % (tarfilename))
 
