@@ -122,12 +122,6 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
 
 ---- pipeline parameter arguments which can be set in any pipeline mode
 
-intent -- The data intent to be checked for antennas with low gain. The
-          default is blank, which causes the task to select the first
-          intent in the list ['BANDPASS', 'PHASE', 'AMPLITUDE'] for which
-          data are found.
-    default ''
-
 flag_nmedian -- True to flag figures of merit greater than 
                 fnm_hi_limit * median or lower than fnm_lo_limit * median.
     default True
@@ -140,6 +134,29 @@ fnm_hi_limit -- Points greater than fnm_hi_limit * median are flagged.
 
 ---- pipeline context defined parameter arguments which can be set only in
 'interactive mode'
+
+vis -- List of input measurement sets.
+    default: [] - Use the measurement sets currently known to the pipeline
+    context. 
+
+intent -- A string containing the list of intents to be checked for antennas
+    with deviant gains. The default is blank, which causes the task to select
+    the 'BANDPASS' intent.
+    default: ''
+    example: '*BANDPASS*'
+
+spw -- The list of spectral windows and channels to which the calibration
+    will be applied. Defaults to all science windows in the pipeline
+    context.
+    default: '' 
+    example: '17', '11, 15'
+
+refant -- A string containing a prioritized list of reference antenna name(s)
+    to be used to produce the gain table. Defaults to the value(s) stored in 
+    the pipeline context. If undefined in the pipeline context defaults to the
+    CASA reference antenna naming scheme.
+    default: ''
+    example: refant='DV01', refant='DV06,DV07'
 
 -- Pipeline task execution modes
 

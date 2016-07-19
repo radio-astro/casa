@@ -22,7 +22,7 @@ Flag deviant baseline/channels in raw data.
     </param>
 
     <param type="string" name="intent" subparam="true">
-        <description>Data selection intent: default is first of BANDPASS, PHASE or AMPLITUDE to have data</description>
+        <description>Data intent to use in creating flagging view</description>
         <value></value>
     </param>
 
@@ -86,11 +86,15 @@ Flag deviant baseline/channels in raw data.
             <equals type="string" value="automatic" />
             <equals type="string" value="interactive">
                 <default param="vis"><value type="stringArray"></value></default>
+                <default param="intent"><value type="string"></value></default>
+                <default param="spw"><value type="string"></value></default>
                 <default param="dryrun"><value type="bool">False</value></default>
                 <default param="acceptresults"><value type="bool">True</value></default>
             </equals>
             <equals type="string" value="getinputs">
                 <default param="vis"><value type="stringArray"></value></default>
+                <default param="intent"><value type="string"></value></default>
+                <default param="spw"><value type="string"></value></default>
             </equals>
         </when>
 
@@ -130,7 +134,7 @@ Flag deviant baseline/channels in raw data.
 hif_rawflagchans flags deviant baseline/channels in the raw data. 
 
 The flagging views used are derived from the raw data for the specified 
-intent - default the first of BANDPASS, PHASE and AMPLITUDE to have data. 
+intent - default is BANDPASS. 
 
 Bad baseline/channels are flagged for all intents, not just the
 one that is the basis of the flagging views.
@@ -218,6 +222,18 @@ fbq_baseline_frac_limit -- If flag_bad_quarant is True and the fraction
 vis -- List of input measurement sets.
     default: [] - Use the measurement sets currently known to the pipeline
     context. 
+
+intent -- A string containing the list of intents to be checked for antennas
+    with deviant gains. The default is blank, which causes the task to select
+    the 'BANDPASS' intent.
+    default: ''
+    example: '*BANDPASS*'
+
+spw -- The list of spectral windows and channels to which the calibration
+    will be applied. Defaults to all science windows in the pipeline
+    context.
+    default: '' 
+    example: '17', '11, 15'
 
 -- Pipeline task execution modes
 
