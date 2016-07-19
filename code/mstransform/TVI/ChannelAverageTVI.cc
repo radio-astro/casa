@@ -564,6 +564,24 @@ vi::ViImplementation2 * ChannelAverageTVIFactory::createVi() const
 }
 
 //////////////////////////////////////////////////////////////////////////
+// ChannelAverageTVILayerFactory class
+//////////////////////////////////////////////////////////////////////////
+
+ChannelAverageTVILayerFactory::ChannelAverageTVILayerFactory(Record &configuration) :
+  ViiLayerFactory(),
+  configuration_p(configuration)
+{}
+
+ViImplementation2* 
+ChannelAverageTVILayerFactory::createInstance(ViImplementation2* vii0) const 
+{
+  // Make the ChannelAverageTVi2, using supplied ViImplementation2, and return it
+  ViImplementation2 *vii = new ChannelAverageTVI(vii0,configuration_p);
+  return vii;
+}
+
+
+//////////////////////////////////////////////////////////////////////////
 // ChannelAverageTransformEngine class
 //////////////////////////////////////////////////////////////////////////
 

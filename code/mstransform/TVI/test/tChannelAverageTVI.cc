@@ -91,7 +91,7 @@ ChannelAverageTVITest::ChannelAverageTVITest(): FreqAxisTVITest ()
     referenceFile_p = String("Four_ants_3C286.ms.ref");
 
     Record configuration;
-    configuration.define ("spw", "1");
+    configuration.define ("spw", "1:8~63,4:16~63");
     configuration.define ("chanbin", 8);
 
 	init(configuration);

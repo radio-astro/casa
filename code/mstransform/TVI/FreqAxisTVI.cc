@@ -96,6 +96,12 @@ Bool FreqAxisTVI::parseConfiguration(const Record &configuration)
 // -----------------------------------------------------------------------
 void FreqAxisTVI::initialize()
 {
+
+  if (inputVii_p->msName()=="<noms>")
+    // Handle "no-MS" case  (SimpleSimVi2 as base layer)
+    formSelectedChanMap();
+  else {
+
 	// Get list of selected SPWs and channels
 	MSSelection mssel;
 	mssel.setSpwExpr(spwSelection_p);
@@ -124,6 +130,7 @@ void FreqAxisTVI::initialize()
 			spwInpChanIdxMap_p[spw].push_back(inpChan);
 		}
 	}
+  }
 
 	return;
 }
@@ -250,6 +257,35 @@ void FreqAxisTVI::sigma (Matrix<Float> & sigma) const
 
 	return;
 }
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void FreqAxisTVI::formSelectedChanMap()
+{
+  // This triggers realization of the channel selection
+  inputVii_p->originChunks();
+  
+  // Refresh map
+  spwInpChanIdxMap_p.clear();
+
+  for (Int ispw=0;ispw<inputVii_p->nSpectralWindows();++ispw) {
+
+    // TBD trap unselected spws with a continue
+
+    Vector<Int> chansV;
+    chansV.reference(inputVii_p->getChannels(0.0,-1,ispw,0));
+
+    Int nChan=chansV.nelements();
+    if (nChan>0) {
+      spwInpChanIdxMap_p[ispw].clear();  // creates ispw's map
+      for (Int ich=0;ich<nChan;++ich)
+	spwInpChanIdxMap_p[ispw].push_back(chansV[ich]);  // accum into map
+    }
+
+  } // ispw
+
+} 
 
 } //# NAMESPACE VI - END
 

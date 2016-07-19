@@ -40,8 +40,12 @@ class ChannelAverageTVI : public FreqAxisTVI
 
 public:
 
-	ChannelAverageTVI(	ViImplementation2 * inputVii,
-						const Record &configuration);
+  ChannelAverageTVI(ViImplementation2 * inputVii,
+		    const Record &configuration);
+
+  // Report the the ViImplementation type
+  virtual String ViiType() const { return String("ChanAve( ")+getVii()->ViiType()+" )"; };
+
 
     void flag(Cube<Bool>& flagCube) const;
     void floatData (Cube<Float> & vis) const;
@@ -84,6 +88,28 @@ protected:
 
 	Record configuration_p;
 	ViImplementation2 *inputVii_p;;
+};
+
+//////////////////////////////////////////////////////////////////////////
+// ChannelAverageTVILayerFactory class  (for _recursive_ layering)
+//////////////////////////////////////////////////////////////////////////
+
+class ChannelAverageTVILayerFactory : public ViiLayerFactory
+{
+
+public:
+
+  ChannelAverageTVILayerFactory(Record &configuration);
+
+  virtual ~ChannelAverageTVILayerFactory() {};
+
+protected:
+
+  
+  virtual ViImplementation2 * createInstance(ViImplementation2* vii0) const;
+
+  const Record configuration_p;
+
 };
 
 //////////////////////////////////////////////////////////////////////////

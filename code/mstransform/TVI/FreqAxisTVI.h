@@ -157,6 +157,9 @@ protected:
 	Bool parseConfiguration(const Record &configuration);
 	void initialize();
 
+	// Form spwInpChanIdxMap_p via calls to underlying Vii
+	void formSelectedChanMap();
+
 	String spwSelection_p;
 	mutable LogIO logger_p;
 	mutable map<Int,uInt > spwOutChanNumMap_p; // Must be accessed from const methods
