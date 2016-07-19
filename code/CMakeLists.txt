@@ -1127,6 +1127,7 @@ casa_find( QWT
     ${casa_packages}/qwt-5.2.0
     ${casa_packages}/qwt-5.2.1-svn
     ${casa_packages}/qwt-5.2.3-svn
+    ${casa_packages}/libexec/qt4
   LIBS qwt
   CPP_VERSION QWT_VERSION_STR
   DEPENDS QT4 )
