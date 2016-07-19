@@ -93,7 +93,7 @@ class GainflagInputs(commoncalinputs.CommonCalibrationInputs):
     @frmsdev_limit.setter
     def frmsdev_limit(self, value):
         if value is None:
-            value = 3.5
+            value = 8.0
         self._frmsdev_limit = value
 
     @property
