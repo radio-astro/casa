@@ -611,7 +611,13 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
             # The Tsys value can be saved for DSB or SSB mode. A scaling factor
             # may be needed. This factor was read above.
             tTSYS = DataTable.tb1.getcell('TSYS', ID)[polid]
-            currentTsys = tTSYS * tsys_fact
+            # K->Jy factor
+            tAnt = DataTable.tb1.getcell('ANTENNA',ID)
+            antname = msobj.get_antenna(tAnt)[0].name
+            polname = msobj.get_data_description(spw=spwid).get_polarization_label(polid)
+            k2jy_fact = msobj.k2jy_factor[(spwid, antname, polname)] if (hasattr(msobj, 'k2jy_factor') and msobj.k2jy_factor.has_key((spwid, antname, polname))) else 1.0
+
+            currentTsys = tTSYS * tsys_fact * k2jy_fact
             if ((noiseEquivBW * integTimeSec) > 0.0):
                 expectedRMS = currentTsys / math.sqrt(noiseEquivBW * integTimeSec)
                 # 2008/10/31
