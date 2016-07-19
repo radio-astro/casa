@@ -309,6 +309,7 @@ protected:
 			  Int chanchunks=1,
 			  const Bool overwrite=False,
 			  String mappertype=String("default"),
+			  Float padding=1.0,
 			  uInt ntaylorterms=1,
 			  Vector<String> startmodel=Vector<String>(0));
 

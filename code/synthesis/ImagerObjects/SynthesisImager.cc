@@ -767,7 +767,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	appendToMapperList(impars.imageName,  csys,  impars.shp(),
 			   ftm, iftm,
 			   gridpars.distance, gridpars.facets, gridpars.chanchunks,impars.overwrite,
-			   gridpars.mType, impars.nTaylorTerms, impars.startModel);
+			   gridpars.mType, gridpars.padding, impars.nTaylorTerms, impars.startModel);
 	imageDefined_p=True;
       }
     catch(AipsError &x)
@@ -1456,6 +1456,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					   Int chanchunks,
 					   const Bool overwrite,
 					   String mappertype,
+					   Float padding,
 					   uInt ntaylorterms,
 					   Vector<String> startmodel)
     {
@@ -1475,12 +1476,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  // This runs once per cube partition, and will see only its own partition's shape
 	  chanchunks=1;
 
+          CompositeNumber cn(uInt(imshape[0] * 2));
           // heuristic, we need around 9 times more than imshape memory
           size_t fudge_factor = 9;
+
           size_t required_mem = fudge_factor * sizeof(Float);
           for (size_t i = 0; i < imshape.nelements(); i++) {
-              required_mem *= imshape[i];
+              // gridding pads image and increases to composite number
+              if (i < 2) {
+                  required_mem *= cn.nextLargerEven(Int(padding*Float(imshape[i])-0.5));
+              }
+              else {
+                  required_mem *= imshape[i];
+              }
           }
+
           // get number of tclean processes running on the same machine
           size_t nlocal_procs = 1;
           if (getenv("OMPI_COMM_WORLD_LOCAL_SIZE")) {
@@ -1500,6 +1510,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
           else {
               memory_avail = HostInfo::memoryTotal(false) * (usr_memfrac / 100.) * 1024.;
           }
+
 
           // compute required chanchunks to fit into the available memory
           chanchunks = (int)std::ceil((Double)required_mem / memory_avail);
