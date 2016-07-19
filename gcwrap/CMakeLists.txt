@@ -264,9 +264,7 @@ if( APPLE )
         if( NOT arch )
         	set( arch darwin )
         endif()
-    elseif( CMAKE_SYSTEM MATCHES ^Darwin-10 OR
-		CMAKE_SYSTEM MATCHES ^Darwin-11 OR
-		CMAKE_SYSTEM MATCHES ^Darwin-12 )
+    elseif( CMAKE_SYSTEM MATCHES ^Darwin-1[0-9])
         if( NOT arch )
         	set( arch darwin64 )
         endif()
@@ -298,9 +296,10 @@ if( APPLE )
                         set ( casa_packages /opt/casa/01 )
                         set( PYTHON_ROOT_DIR /opt/casa/01 )
 	            else()
-                        set ( casa_packages /opt/casa/darwin10-64b )
-                        set( PYTHON_ROOT_DIR /opt/casa/darwin10-64b )
+                        set ( casa_packages /opt/casa/01 )
 	            endif()
+                        message( "-- CMAKE_SYSTEM : ${CMAKE_SYSTEM}" )
+                        message( "-- casa_packages set to : ${casa_packages}" )
                 add_definitions( -DAIPS_64B )
 	        endif()
         else()
@@ -1144,6 +1143,7 @@ set( QT4_FOUND TRUE CACHE BOOL "Was QT4 found?" )
 # Detecting QT4 takes a bit of time, but does not seem possible to skip.
 # If doing so, then "include( ${QT_USE_FILE} )" does not work (because QT_USE_FILE is not cached?).
 
+MESSAGE( STATUS "casa_packages:         " ${casa_packages} )
 
 # QWT (requires Qt)
 casa_find( QWT
@@ -1155,9 +1155,14 @@ casa_find( QWT
     ${casa_packages}/qwt-5.2.0
     ${casa_packages}/qwt-5.2.1-svn
     ${casa_packages}/qwt-5.2.3-svn
+    ${casa_packages}/libexec/qt4
   LIBS qwt
   CPP_VERSION QWT_VERSION_STR
   DEPENDS QT4 )
+
+if (QWT_VERSION VERSION_EQUAL 6 OR QWT_VERSION VERSION_GREATER 6)
+    add_definitions( -DQWT6 )
+endif()
 
 # Xerces
 casa_find( XERCES
