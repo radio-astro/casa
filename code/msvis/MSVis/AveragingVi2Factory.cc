@@ -363,5 +363,24 @@ AveragingVi2Factory::createVi () const
     return averagingTvi2;
 }
 
+// AveragingVi2LayerFactory ctor
+AveragingVi2LayerFactory::AveragingVi2LayerFactory(const AveragingParameters& avepars)
+  : ViiLayerFactory(),
+    avepars_p(avepars)
+{}
+
+// AveragingVi2-specific layer-creator
+ViImplementation2*
+AveragingVi2LayerFactory::createInstance (ViImplementation2* vii0) const 
+{
+    // Make the AveragintTvi2, using supplied ViImplementation2, and return it
+    ViImplementation2 *vii = new AveragingTvi2(vii0,avepars_p);
+    return vii;
+}
+
+
+
+
+
 } // end namesapce vi
 } // end namespace casa

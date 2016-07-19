@@ -1293,6 +1293,13 @@ VisibilityIteratorImpl2::ms () const
     return msIter_p->ms ();
 }
 
+String
+VisibilityIteratorImpl2::msName () const
+{
+    // Name of current MS
+    return ms().tableName();
+}
+
 void
 VisibilityIteratorImpl2::fieldIds (Vector<Int> & fieldIds) const
 {

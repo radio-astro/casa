@@ -163,6 +163,13 @@ VisibilityIterator2::~VisibilityIterator2 ()
 	delete impl_p;
 }
 
+String 
+VisibilityIterator2::ViiType() const
+{ 
+  return impl_p->ViiType (); 
+}
+
+
 void
 VisibilityIterator2::next()
 {

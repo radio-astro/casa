@@ -114,7 +114,7 @@ TransformingVi2::configureNewSubchunk (){
     Int nCorrs = corrs.nelements();
 
     configureNewSubchunk (msId(), // always the first MS
-                          ms().tableName(),
+                          msName(),
                           isNewMs(),
                           isNewArrayId (),
                           isNewFieldId (),
@@ -456,6 +456,11 @@ Int
 TransformingVi2::msId ()  const
 {
     return getVii()->msId ();
+}
+
+String TransformingVi2::msName () const
+{
+    return getVii()->msName ();
 }
 
 Int

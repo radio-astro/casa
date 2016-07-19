@@ -112,6 +112,10 @@ public:
 
     virtual ~TransformingVi2 ();
 
+    // Report the the ViImplementation type
+    //  (should be specialized in child classes)
+    virtual String ViiType() const { return String("UnknownTrans( ")+getVii()->ViiType()+" )"; };
+
     //   +==================================+
     //   |                                  |
     //   | Iteration Control and Monitoring |
@@ -446,6 +450,9 @@ public:
     virtual Int msId () const; // zero-based index of current MS in set of MSs
     virtual const MeasurementSet & ms () const;
     virtual Int getNMs () const;
+
+    // Name of nominal MS (will typically be beneath several layers)
+    virtual String msName () const;
 
     // Call to use the slurp i/o method for all scalar columns. This
     // will set the BucketCache cache size to the full column length

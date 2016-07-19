@@ -72,6 +72,41 @@ SimpleSimVi2Parameters::SimpleSimVi2Parameters() :
 }
 
 SimpleSimVi2Parameters::SimpleSimVi2Parameters(Int nField,Int nScan,Int nSpw,Int nAnt,Int nCorr,
+					       const Vector<Int>& nTimePerField,const Vector<Int>& nChan) :
+  nField_(nField),
+  nScan_(nScan),
+  nSpw_(nSpw),
+  nAnt_(nAnt),
+  nCorr_(nCorr),
+  nTimePerField_(),
+  nChan_(),
+  date0_("2016/01/06/00:00:00."),   //  the rest are defaulted
+  dt_(1.0),
+  refFreq_(Vector<Double>(1,100.0e9)),
+  df_(Vector<Double>(1,1.0e9)),
+  doNoise_(False),
+  stokes_(Matrix<Float>(1,1,1.0)),
+  gain_(Matrix<Float>(1,1,1.0)),
+  tsys_(Matrix<Float>(1,1,1.0)),
+  doNorm_(False),
+  polBasis_("circ"),
+  doAC_(False)
+{
+
+  Vector<Double> refFreq(refFreq_);
+  Vector<Double> df(df_);
+  Matrix<Float> stokes(stokes_);
+  Matrix<Float> gain(gain_);
+  Matrix<Float> tsys(tsys_);
+
+  // Generic initialization
+  this->initialize(nTimePerField,nChan,refFreq,df,stokes,gain,tsys);
+
+}
+
+
+
+SimpleSimVi2Parameters::SimpleSimVi2Parameters(Int nField,Int nScan,Int nSpw,Int nAnt,Int nCorr,
 					       const Vector<Int>& nTimePerField,const Vector<Int>& nChan,
 					       String date0, Double dt, 
 					       const Vector<Double>& refFreq, const Vector<Double>& df,
@@ -224,22 +259,6 @@ void SimpleSimVi2Parameters::initialize(const Vector<Int>& nTimePerField,const V
 }
 
 
-SimpleSimVB2::SimpleSimVB2(ViImplementation2 * vii,VisBufferOptions options)
-: VisBufferImpl2(vii,options)
-{}
-  
-VisBuffer2* SimpleSimVB2::factory(ViImplementation2 * vi, 
-				  VisBufferOptions options) {
-
-  VisBuffer2 * result = NULL;
-  result = new SimpleSimVB2 (vi, options);
-  return result;
-
-}
-
-
-
-
 SimpleSimVi2::SimpleSimVi2 () {}
 
 SimpleSimVi2::SimpleSimVi2 (const SimpleSimVi2Parameters& pars)
@@ -282,7 +301,8 @@ SimpleSimVi2::SimpleSimVi2 (const SimpleSimVi2Parameters& pars)
     lastSpw_(-1),
     thisTime_(0.0),
     corrdef_(4,Stokes::Undefined),
-    vb_(0)
+    vb_(0),
+    phaseCenter_()
 {
   // Derived stuff
 
@@ -324,7 +344,7 @@ SimpleSimVi2::SimpleSimVi2 (const SimpleSimVi2Parameters& pars)
   corrdef_(3)=Stokes::type("LL");
 
   VisBufferOptions vbopt=VbWritable;
-  vb_ = createAttachedVisBuffer(vbopt);
+  vb_ = createAttachedVisBuffer(VbPlain,vbopt);
 
 }
 
@@ -444,6 +464,39 @@ void SimpleSimVi2::setFrequencySelections (const FrequencySelections &)
   SSVi2NotYetImplemented()
 }
 
+Bool SimpleSimVi2::existsColumn (VisBufferComponent2 id) const 
+{
+  Bool result;
+  switch (id){
+
+  case VisBufferComponent2::VisibilityCubeFloat:
+    result = False;
+    break;
+
+  case VisBufferComponent2::VisibilityCorrected:
+  case VisBufferComponent2::VisibilityCubeCorrected:
+  case VisBufferComponent2::VisibilityModel:
+  case VisBufferComponent2::VisibilityCubeModel:
+  case VisBufferComponent2::VisibilityObserved:
+  case VisBufferComponent2::VisibilityCubeObserved:
+  case VisBufferComponent2::WeightSpectrum:
+  case VisBufferComponent2::SigmaSpectrum:
+    result = True;
+    break;
+
+  default:
+    result = True; // required columns
+    break;
+  }
+
+  return result;
+
+
+}
+
+
+
+
   // Return the row ids as from the original root table. This is useful
   // to find correspondance between a given row in this iteration to the
   // original ms row
@@ -527,7 +580,7 @@ void SimpleSimVi2::scan (Vector<Int> & scans) const { scans.resize(nRows()); sca
 String SimpleSimVi2::sourceName () const { return "Source"+String(thisField_); }
 void SimpleSimVi2::stateId (Vector<Int> & stateids) const { stateids.resize(nRows()); stateids.set(0); }
 
-  Int SimpleSimVi2::polFrame () const { SSVi2NotYetImplemented() }
+  Int SimpleSimVi2::polFrame () const { return 0; } // SSVi2NotYetImplemented() }
 
 Int SimpleSimVi2::spectralWindow () const { return thisSpw_; }
 void SimpleSimVi2::spectralWindows (Vector<Int> & spws) const { spws.resize(nRows()); spws.set(thisSpw_); }
@@ -706,13 +759,6 @@ void SimpleSimVi2::configureNewSubchunk() {
 			    getCorrelations(),
 			    corrdef_,corrdef_,
 			    WeightScaling::generateUnityWeightScaling());
-}
-
-
-VisBuffer2 * SimpleSimVi2::createAttachedVisBuffer (VisBufferOptions options) {
-
-  return SimpleSimVB2::factory(this,options);
-
 }
 
   // Generate noise on data

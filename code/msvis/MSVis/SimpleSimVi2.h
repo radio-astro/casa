@@ -71,6 +71,11 @@ public:
   // Default ctor (sets default values, useful for self-testing)
   SimpleSimVi2Parameters();
 
+  // Simple, shape-oriented ctor
+  SimpleSimVi2Parameters(Int nField,Int nScan,Int nSpw,Int nAnt,Int nCorr,
+			 const Vector<Int>& nTimePerField, const Vector<Int>& nChan);
+
+  // Full control
   SimpleSimVi2Parameters(Int nField,Int nScan,Int nSpw,Int nAnt,Int nCorr,
 			 const Vector<Int>& nTimePerField, const Vector<Int>& nChan,
 			 String date0, Double dt, 
@@ -108,24 +113,6 @@ private:
 
 };
 
-
-// We must override modelDataIsVirtual() to avoid dep on a real MS
-//   This is otherwise an ordinary VB2
-class SimpleSimVB2 : public VisBufferImpl2 {
-
-public:
-  static VisBuffer2* factory(ViImplementation2 * vi, VisBufferOptions options);
-
-  // Never virtual
-  Bool modelDataIsVirtual() const { return False; };
-
-protected:
-
-  SimpleSimVB2(ViImplementation2 * vii,VisBufferOptions options);
-
-};
-
-
 class SimpleSimVi2 : public ViImplementation2 {
 
 public:
@@ -138,6 +125,9 @@ public:
 
   // Destructor
   virtual ~SimpleSimVi2 ();
+
+  // Report the the ViImplementation type
+  virtual String ViiType() const { return String("Simulated(*)"); };
 
   //   +==================================+
   //   |                                  |
@@ -177,7 +167,7 @@ public:
   // Set the 'blocking' size for returning data.
   virtual void setRowBlocking (Int) { SSVi2NotPossible() };
   
-  virtual Bool existsColumn (VisBufferComponent2) const { SSVi2NotPossible() };
+  virtual Bool existsColumn (VisBufferComponent2 id) const;
   
   virtual const SortColumns & getSortColumns() const { SSVi2NotPossible() };
 
@@ -272,7 +262,7 @@ public:
   virtual Double hourang (Double) const { SSVi2NotPossible() };
   virtual const Float & parang0 (Double) const { SSVi2NotPossible() };
   virtual const Vector<Float> & parang (Double) const { SSVi2NotPossible() };
-  virtual const MDirection & phaseCenter () const { SSVi2NotPossible() };  // needs POINTING subtable!
+  virtual const MDirection & phaseCenter () const { return phaseCenter_; }; // trivial value (for now)
   virtual const Cube<Double> & receptorAngles () const { SSVi2NotPossible() };
 
   //   +=========================+
@@ -307,6 +297,9 @@ public:
   virtual Int msId () const { return -1; }; // zero-based index of current MS in set of MSs
   virtual const MeasurementSet & ms () const { SSVi2NotPossible() };
   virtual Int getNMs () const { return 0; };
+
+  // Name of the MS in the interator
+  virtual String msName() const { return String("<noms>"); };
 
   // Call to use the slurp i/o method for all scalar columns. 
   //  Not meaningful for non-I/O
@@ -347,10 +340,6 @@ public:
   virtual void writeSigmaSpectrum (const Cube<Float> &) { SSVi2NotPossible() };
   virtual void writeSigma (const Matrix<Float> &) { SSVi2NotPossible() };
   virtual void writeModel(const RecordInterface&,Bool,Bool) { SSVi2NotPossible() };
-
-protected:
-
-  VisBuffer2 * createAttachedVisBuffer (VisBufferOptions options);
 
 private:
 
@@ -397,6 +386,9 @@ private:
 
   // The associated VB
   VisBuffer2* vb_;
+
+  // Trivial (for now) MDirection, so phaseCenter() has something to return
+  MDirection phaseCenter_;
 
 };
 

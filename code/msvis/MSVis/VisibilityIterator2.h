@@ -452,6 +452,9 @@ public:
 
   virtual ~VisibilityIterator2();
 
+  // Report the the ViImplementation type
+  String ViiType() const; 
+
   ///////////////////////////////////////////////////////////////////
   //
   // BEGIN Experimental Section

@@ -141,12 +141,14 @@ public:
 
     virtual ~ViImplementation2 () {}
 
+    // Report the the ViImplementation type
+    virtual String ViiType() const = 0;
+
     //   +==================================+
     //   |                                  |
     //   | Iteration Control and Monitoring |
     //   |                                  |
     //   +==================================+
-
 
     // Methods to control and monitor subchunk iteration
 
@@ -487,6 +489,9 @@ public:
     virtual Int msId () const = 0; // zero-based index of current MS in set of MSs
     virtual const MeasurementSet & ms () const = 0;
     virtual Int getNMs () const = 0;
+
+    // Name of current nominal MS
+    virtual String msName() const = 0;
 
     // Call to use the slurp i/o method for all scalar columns. This
     // will set the BucketCache cache size to the full column length

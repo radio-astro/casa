@@ -89,6 +89,9 @@ protected:
 			      DONORM,
 			      POLBASIS,DOAC);
 
+    s2=SimpleSimVi2Parameters(NFLD,NSCAN,NSPW,NANT,NCORR,
+			      ntpf,nchan);
+
     fp=2.*FLT_EPSILON;
 
   }
@@ -98,6 +101,11 @@ protected:
   Float fp;
 
 };
+
+int main(int argc, char **argv) {
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
 
  
 TEST_F( SimpleSimVi2Test , SimpleSimVi2Parameters_Trivial ) {
@@ -136,7 +144,6 @@ TEST_F( SimpleSimVi2Test , SimpleSimVi2Parameters_Trivial ) {
 
 }
 
- 
 TEST_F( SimpleSimVi2Test , SimpleSimVi2Parameters_NonTrivial1 ) {
 
   ASSERT_EQ(NFLD,  s1.nField_);
@@ -176,9 +183,42 @@ TEST_F( SimpleSimVi2Test , SimpleSimVi2Parameters_NonTrivial1 ) {
 
 }
 
-int main(int argc, char **argv) {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
+TEST_F( SimpleSimVi2Test , SimpleSimVi2Parameters_NonTrivial2 ) {
+
+  ASSERT_EQ(NFLD,  s2.nField_);
+  ASSERT_EQ(NSCAN, s2.nScan_);
+  ASSERT_EQ(NSPW,  s2.nSpw_);
+  ASSERT_EQ(NANT,  s2.nAnt_);
+  ASSERT_EQ(NCORR, s2.nCorr_);
+
+  ASSERT_EQ(uInt(NFLD),    s2.nTimePerField_.nelements());
+  for (Int i=0;i<NFLD;++i)
+    ASSERT_EQ(NTIMEPERFIELD*(i+1), s2.nTimePerField_(i));
+
+  ASSERT_EQ(uInt(NSPW), s2.nChan_.nelements());
+  ASSERT_EQ(NCHAN,      s2.nChan_(0));
+
+  //ASSERT_STREQ(s0.date0_,DATE0);
+  ASSERT_EQ(DT,s2.dt_);
+
+
+  ASSERT_FALSE(s0.doNoise_);
+
+  ASSERT_EQ(uInt(4),s0.stokes_.nelements());
+  ASSERT_EQ(1.0f,s0.stokes_(0,0));
+
+  ASSERT_EQ(uInt(8),s0.gain_.nelements());  // 2*4
+  ASSERT_TRUE(allEQ(s0.gain_,1.0f));
+
+  ASSERT_EQ(uInt(8),s0.tsys_.nelements());  // 2*4
+  ASSERT_TRUE(allEQ(s0.tsys_,1.0f));
+  
+  ASSERT_FALSE(s0.doNorm_);
+  
+  //  ASSERT_STREQ(s0.polBasis_,"circ");
+
+  ASSERT_FALSE(s0.doAC_);
+
 }
 
 

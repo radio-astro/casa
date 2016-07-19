@@ -206,6 +206,10 @@ public:
 
         // Members
 
+    // Report the the ViImplementation type
+    //  TBD:  indicate writable?
+    virtual String ViiType() const { return String("DiskIO()"); };
+
     virtual Bool isWritable () const;
 
     // Reset iterator to origin/start of data (of current chunk)
@@ -259,6 +263,9 @@ public:
 
     //reference to actual ms in interator
     virtual const MeasurementSet & ms () const;
+
+    // Name of the MS in the interator
+    virtual String msName() const;
 
     // advance the iteration
 

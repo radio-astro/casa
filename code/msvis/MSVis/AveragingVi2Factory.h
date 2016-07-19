@@ -213,6 +213,25 @@ private:
     AveragingParameters parameters_p;
 };
 
+
+class AveragingVi2LayerFactory : public ViiLayerFactory {
+
+public:
+
+  AveragingVi2LayerFactory(const AveragingParameters& avepars);
+
+  virtual ~AveragingVi2LayerFactory() {};
+
+ protected:
+
+  
+  virtual ViImplementation2 * createInstance(ViImplementation2* vii0) const;
+
+  const AveragingParameters avepars_p;
+
+};
+
+
 } // end namesapce vi
 } // end namespace casa
 

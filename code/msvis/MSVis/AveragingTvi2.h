@@ -33,6 +33,9 @@ public:
                    const AveragingParameters & averagingParameters);
     ~AveragingTvi2 ();
 
+    // Report the the ViImplementation type
+    virtual String ViiType() const { return String("TimeAve( ")+getVii()->ViiType()+" )"; };
+
     /////////////////////////////////////////////////////////////////////////
     //
     // Chunk/Subchunk structure in the AveragingTvi2
