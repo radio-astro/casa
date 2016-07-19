@@ -700,7 +700,7 @@ Bool NRO2MSReader::getData(size_t irow, DataRecord &record) {
 //  std::cout << "TIME=" << record.time << " INTERVAL=" << record.interval
 //      << std::endl;
 
-  Int srctype = (scan_data.SCNTP0 == "ON") ? 90 : 91;
+  Int srctype = (scan_data.SCNTP0 == "ON") ? 0 : 1;
   record.intent = getIntent(srctype);
   record.scan = (Int)scan_data.ISCN0;
   record.subscan = getSubscan(srctype); 
