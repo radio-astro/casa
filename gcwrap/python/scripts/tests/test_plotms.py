@@ -866,7 +866,7 @@ class plotms_test_display(plotms_test_base):
                      symbolsize=[5,5], symbolcolor=['ff0000','00ff00'], 
                      symbolfill=['mesh3','mesh3'])
         self.assertTrue(res)
-        self.checkPlotfile(plotfile1_jpg, 175000) 
+        self.checkPlotfile(plotfile1_jpg, 165000) 
         self.removePlotfile(plotfile1_jpg)
         print       
       
