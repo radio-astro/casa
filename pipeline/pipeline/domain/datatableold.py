@@ -582,7 +582,7 @@ class DataTableImpl( object ):
 def map_spwchans(atm_spw, science_spw):
     atm_nchan = atm_spw.nchan
     atm_freq_min, atm_freq_max, atm_incr = atm_spw.freq_min, atm_spw.freq_max, atm_spw.increment
-    science_freq_min, science_freq_max = atm_spw.freq_min, atm_spw.freq_max
+    science_freq_min, science_freq_max = science_spw.freq_min, science_spw.freq_max
     if atm_incr < 0: # LSB
         get_channel = lambda ref, freq, incr, offset: int(math.floor((ref - freq)/abs(incr) + offset))
         LOG.trace('--- LSB ----')

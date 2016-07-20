@@ -643,30 +643,30 @@ class DataTableImpl( object ):
                     online_flag[ipol, dt_row] = 0 if flag[ipol].all() else 1
         self.tb2.putcol('FLAG_PERMANENT', flag_permanent)
         
-def map_spwchans(atm_spw, science_spw):
-    atm_nchan = atm_spw.nchan
-    atm_freq_min, atm_freq_max, atm_incr = atm_spw.freq_min, atm_spw.freq_max, atm_spw.increment
-    science_freq_min, science_freq_max = atm_spw.freq_min, atm_spw.freq_max
-    if atm_incr < 0: # LSB
-        get_channel = lambda ref, freq, incr, offset: int(math.floor((ref - freq)/abs(incr) + offset))
-        LOG.trace('--- LSB ----')
-        start_atmchan = max(0, get_channel(atm_freq_max, science_freq_max, atm_incr, 0.5))
-        end_atmchan = min(atm_nchan, get_channel(atm_freq_max, science_freq_min, atm_incr, -0.5) + 1)
-    elif(atm_incr > 0): # USB
-        get_channel = lambda ref, freq, incr, offset: math.floor((freq - ref)/abs(incr) + offset)
-        LOG.trace('--- USB ----')
-        start_atmchan = max(0, get_channel(atm_freq_min, science_freq_min, atm_incr, 0.5))
-        end_atmchan = min(atm_nchan, get_channel(atm_freq_min, science_freq_max, atm_incr, -0.5) + 1)
-    else:
-        raise RuntimeError, 'error: atm_increment should not be 0'
-    
-    LOG.trace('calculate_average_tsys:   satrt_atmchan == %d' % start_atmchan)
-    LOG.trace('calculate_average_tsys:   end_atmchan == %d' % end_atmchan)
-
-    if end_atmchan == start_atmchan:
-        end_atmchan = start_atmchan + 1
-    
-    return start_atmchan, end_atmchan
+# def map_spwchans(atm_spw, science_spw):
+#     atm_nchan = atm_spw.nchan
+#     atm_freq_min, atm_freq_max, atm_incr = atm_spw.freq_min, atm_spw.freq_max, atm_spw.increment
+#     science_freq_min, science_freq_max = atm_spw.freq_min, atm_spw.freq_max
+#     if atm_incr < 0: # LSB
+#         get_channel = lambda ref, freq, incr, offset: int(math.floor((ref - freq)/abs(incr) + offset))
+#         LOG.trace('--- LSB ----')
+#         start_atmchan = max(0, get_channel(atm_freq_max, science_freq_max, atm_incr, 0.5))
+#         end_atmchan = min(atm_nchan, get_channel(atm_freq_max, science_freq_min, atm_incr, -0.5) + 1)
+#     elif(atm_incr > 0): # USB
+#         get_channel = lambda ref, freq, incr, offset: math.floor((freq - ref)/abs(incr) + offset)
+#         LOG.trace('--- USB ----')
+#         start_atmchan = max(0, get_channel(atm_freq_min, science_freq_min, atm_incr, 0.5))
+#         end_atmchan = min(atm_nchan, get_channel(atm_freq_min, science_freq_max, atm_incr, -0.5) + 1)
+#     else:
+#         raise RuntimeError, 'error: atm_increment should not be 0'
+#     
+#     LOG.trace('calculate_average_tsys:   satrt_atmchan == %d' % start_atmchan)
+#     LOG.trace('calculate_average_tsys:   end_atmchan == %d' % end_atmchan)
+# 
+#     if end_atmchan == start_atmchan:
+#         end_atmchan = start_atmchan + 1
+#     
+#     return start_atmchan, end_atmchan
     
 # def calculate_average_tsys(atm_nchan,atm_freq_min,atm_freq_max,target_freq_min,target_freq_max,atm_increment,tsyslist) :
 #     

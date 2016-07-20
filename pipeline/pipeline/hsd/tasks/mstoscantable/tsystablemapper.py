@@ -5,7 +5,7 @@ import numpy
 from taskinit import gentools
 
 import pipeline.infrastructure as infrastructure
-from pipeline.domain.datatable import map_spwchans
+from pipeline.domain.datatableold import map_spwchans
 
 LOG = infrastructure.get_logger(__name__)
 
