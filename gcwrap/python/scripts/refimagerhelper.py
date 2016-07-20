@@ -1798,7 +1798,8 @@ class ImagerParameters():
                 if len(parpair) != 2:
                     errs += 'Error in line containing : ' + oneline + '\n'
                 if parpair[0] == 'imagename' and tempimpar != {}:
-                    returnlist.append({'impars':tempimpar, 'gridpars':tempgridpar, 'weightpars':tempweightpar, 'decpars':tempdecpar} )
+                    #returnlist.append({'impars':tempimpar, 'gridpars':tempgridpar, 'weightpars':tempweightpar, 'decpars':tempdecpar} )
+                    returnlist.append({'impars':tempimpar, 'gridpars':tempgridpar, 'weightpars':tempweightpar, 'decpars':tempdecpar, 'normpars':tempnormpar} )
                     tempimpar={}
                     tempgridpar={}
                     tempweightpar={}
