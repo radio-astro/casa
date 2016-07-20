@@ -262,8 +262,8 @@ def tclean(
          imager = PyParallelContSynthesisImager(params=paramList)
     elif pcube==True:
          imager = PyParallelCubeSynthesisImager(params=paramList)
-         # virtualconcat type 
-         concattype='virtualmove'
+         # virtualconcat type - changed from virtualmove to virtualcopy 2016-07-20
+         concattype='virtualcopy'
     else:
          print 'Invalid parallel combination in doClean.'
          return False
