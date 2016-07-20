@@ -279,7 +279,7 @@ class RestoreData(basetask.StandardTaskTemplate):
         #   Download from the archive or products_dir to rawdata_dir.
         if inputs.copytoraw:
             inflagfiles = glob.glob(os.path.join(inputs.products_dir, \
-                '*.flagversions.tar.gz'))
+                '*.flagversions.tgz'))
             for flagfile in inflagfiles:
                 LOG.info('Copying %s to %s' % (flagfile, inputs.rawdata_dir))
                 shutil.copy(flagfile, os.path.join(inputs.rawdata_dir,
@@ -290,7 +290,7 @@ class RestoreData(basetask.StandardTaskTemplate):
         # rawdata_dir.
         if inputs.copytoraw:
             incaltables = glob.glob(os.path.join(inputs.products_dir, \
-                '*.caltables.tar.gz'))
+                '*.caltables.tgz'))
             for caltable in incaltables:
                 LOG.info('Copying %s to %s' % (caltable, inputs.rawdata_dir))
                 shutil.copy(caltable, os.path.join(inputs.rawdata_dir,
@@ -377,7 +377,7 @@ class RestoreData(basetask.StandardTaskTemplate):
 
             # Untar MS.flagversions file in rawdata_dir to output_dir
             tarfilename = os.path.join(inputs.rawdata_dir,
-                ms.basename + '.flagversions.tar.gz')
+                ms.basename + '.flagversions.tgz')
             LOG.info('Extracting %s' % flagversion)
             LOG.info('    From %s' % tarfilename)
             LOG.info('    Into %s' % inputs.output_dir)
@@ -468,10 +468,10 @@ class RestoreData(basetask.StandardTaskTemplate):
             # Open the tarfile and get the names
             if ousid == '':
                 tarfilename = glob.glob(os.path.join(inputs.rawdata_dir, '*' + session +
-                    '.caltables.tar.gz'))[0]
+                    '.caltables.tgz'))[0]
             else:
                 tarfilename = os.path.join(inputs.rawdata_dir,
-                                           ousid + session + '.caltables.tar.gz')
+                                           ousid + session + '.caltables.tgz')
 
             with tarfile.open(tarfilename, 'r:gz') as tar:
                 tarmembers = tar.getmembers()
