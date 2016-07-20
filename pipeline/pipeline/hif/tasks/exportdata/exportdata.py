@@ -947,8 +947,8 @@ finally:
                         for nt in xrange(image['multiterm']):
                             images_list.append('%s.tt%d' % (image['imagename'], nt))
                         if (image['imagename'].find('.pbcor') != -1):
-                            images_list.append(image['imagename'].replace('.pbcor.image', '.alpha'))
-                            images_list.append('%s.error' % (image['imagename'].replace('.pbcor.image', '.alpha')))
+                            images_list.append(image['imagename'].replace('.image.pbcor', '.alpha'))
+                            images_list.append('%s.error' % (image['imagename'].replace('.image.pbcor', '.alpha')))
                         else:
                             images_list.append(image['imagename'].replace('.image', '.alpha'))
                             images_list.append('%s.error' % (image['imagename'].replace('.image', '.alpha')))
@@ -957,7 +957,7 @@ finally:
 
                     # Add PB
                     if (image['imagename'].find('.pbcor') != -1):
-                        images_list.append(image['imagename'].replace('.pbcor.image', '.pb'))
+                        images_list.append(image['imagename'].replace('.image.pbcor', '.pb'))
                     else:
                         images_list.append(image['imagename'].replace('.image', '.pb'))
         else:
@@ -989,7 +989,7 @@ finally:
             #fitsname = re.sub('\.s\d+.*\.iter.*\.', '.', image)
             fitsname = re.sub('\.s\d+[_]\d+\.', '.', image)
             fitsname = re.sub('\.iter\d+\.image', '', fitsname)
-            fitsname = re.sub('\.iter\d+\.pbcor.image', '.pbcor', fitsname)
+            fitsname = re.sub('\.iter\d+\.image.pbcor', '.pbcor', fitsname)
             fitsname = re.sub('\.iter\d+\.alpha', '.alpha', fitsname)
             # .pb must be tried after .pbcor.image !
             fitsname = re.sub('\.iter\d+\.pb', '.pb', fitsname)
