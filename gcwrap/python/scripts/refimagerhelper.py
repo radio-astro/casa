@@ -50,7 +50,8 @@ class PySynthesisImager:
         ## Number of nodes. This gets set for parallel runs
         ## It can also be used serially to process the major cycle in pieces.
         self.NN = 1 
-
+        ## for debug mode automask incrementation only
+        self.ncycle = 0
 #        isvalid = self.checkParameters()
 #        if isvalid==False:
 #            print 'Invalid parameters'
@@ -193,7 +194,9 @@ class PySynthesisImager:
     def hasConverged(self):
         # Merge peak-res info from all fields to decide iteration parameters
          for immod in range(0,self.NF):
+              #
               initrec =  self.SDtools[immod].initminorcycle() 
+              
               self.IBtool.mergeinitrecord( initrec );
 #              print "Peak res of field ",immod, " : " ,initrec['peakresidual']
 #              casalog.post("["+self.allimpars[str(immod)]['imagename']+"] : Peak residual : %5.5f"%(initrec['peakresidual']), "INFO")
@@ -343,12 +346,19 @@ class PySynthesisImager:
         # Get iteration control parameters
         iterbotrec = self.IBtool.getminorcyclecontrols()
         ##print "Minor Cycle controls : ", iterbotrec
+        #
         # Run minor cycle
+        self.ncycle+=1
         for immod in range(0,self.NF):  
             if self.stopMinor[str(immod)]<2 :
                 exrec = self.SDtools[immod].executeminorcycle( iterbotrecord = iterbotrec )
                 #print '.... iterdone for ', immod, ' : ' , exrec['iterdone']
                 self.IBtool.mergeexecrecord( exrec )
+                if os.environ.has_key('SAVE_ALL_AUTOMASKS') and os.environ['SAVE_ALL_AUTOMASKS']=="true":
+                    maskname = self.allimpars[str(immod)]['imagename']+'.mask'
+                    tempmaskname = self.allimpars[str(immod)]['imagename']+'.autothresh'+str(self.ncycle)
+                    if os.path.isdir(maskname):
+                        shutil.copytree(maskname, tempmaskname)
 
 #############################################
     def runMajorMinorLoops(self):
