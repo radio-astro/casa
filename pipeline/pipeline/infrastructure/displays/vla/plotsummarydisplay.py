@@ -62,18 +62,18 @@ class plotsummarySummaryChart(object):
         
         plots.append(plot)
         
-        #create amp vs. UVwave plots of each cal field and then max 30 targets
-
+        # create amp vs. UVwave plots of each cal field and then max 30 targets
 
         calfields = m.get_fields(intent='BANDPASS,PHASE,AMPLITUDE')
         alltargetfields = m.get_fields(intent='TARGET')
 
-
         plotfields = calfields
 
-        Nplots = 1
-        if len(alltargetfields) > 100 and len(alltargetfields) < 1000: Nplots = 20
-        if len(alltargetfields) > 1000: Nplots = 1000
+        # Nplots = 30
+        # if len(alltargetfields) > 100 and len(alltargetfields) < 1000: Nplots = 30
+        # if len(alltargetfields) > 1000: Nplots = 1000
+
+        Nplots = (len(alltargetfields)/30)+1
 
         targetfields = [field for field in alltargetfields[0:len(alltargetfields):Nplots]]
 

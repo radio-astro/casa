@@ -401,7 +401,7 @@ class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                     'phase_vs_uv_plots'   : phase_vs_uv_summary_plots,
                     #'phase_vs_time_plots' : phase_vs_time_summary_plots,
                     'science_amp_vs_freq_plots'   : science_amp_vs_freq_summary_plots,
-                    'science_phase_vs_freq_plots' : science_phase_vs_freq_summary_plots,
+                    #'science_phase_vs_freq_plots' : science_phase_vs_freq_summary_plots,
                     #'science_amp_vs_uv_plots' : science_amp_vs_uv_summary_plots,
                     'uv_max' : uv_max})
         
@@ -440,8 +440,10 @@ class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
             brightest_fields = T2_4MDetailsVLAApplycalRenderer.get_brightest_fields(ms)
 
             # Limit to 30 sources via CAS-8737
-            MAX_PLOTS = 30
-            for source_id, brightest_field in brightest_fields.items()[0:MAX_PLOTS]:
+            # MAX_PLOTS = 30
+            Nplots = (len(brightest_fields.items())/30)+1
+
+            for source_id, brightest_field in brightest_fields.items()[0:len(brightest_fields.items()):Nplots]:
                 plots = self.science_plots_for_result(context,
                                                       result, 
                                                       applycal.VLAAmpVsFrequencySummaryChart,
@@ -449,7 +451,7 @@ class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                                                       uv_range, correlation=correlation)
                 amp_vs_freq_summary_plots[vis][source_id] = plots
 
-            for source_id, brightest_field in brightest_fields.items()[0:MAX_PLOTS]:
+            for source_id, brightest_field in brightest_fields.items()[0:len(brightest_fields.items()):Nplots]:
                 plots = self.science_plots_for_result(context, 
                                                       result, 
                                                       applycal.PhaseVsFrequencySummaryChart,
@@ -529,6 +531,8 @@ class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                 fileobj.write(renderer.render())        
 
         return plots
+
+
 
     @staticmethod
     def get_brightest_fields(ms, intent='TARGET'):
