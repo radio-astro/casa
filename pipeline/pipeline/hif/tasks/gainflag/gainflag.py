@@ -30,6 +30,7 @@ class GainflagInputs(commoncalinputs.CommonCalibrationInputs):
       intent=None, spw=None, refant=None, niter=None,
       flag_mediandeviant=None, fmeddev_limit=None,
       flag_rmsdeviant=None, frmsdev_limit=None,
+      flag_nrmsdeviant=None, fnrmsdev_limit=None,
       metric_order=None):
 
         # set the properties to the values given as input arguments
@@ -77,6 +78,16 @@ class GainflagInputs(commoncalinputs.CommonCalibrationInputs):
         self._flag_rmsdeviant = value
 
     @property
+    def flag_nrmsdeviant(self):
+        return self._flag_nrmsdeviant
+
+    @flag_nrmsdeviant.setter
+    def flag_nrmsdeviant(self, value):
+        if value is None:
+            value = False
+        self._flag_nrmsdeviant = value
+
+    @property
     def fmeddev_limit(self):
         return self._fmeddev_limit
 
@@ -97,13 +108,23 @@ class GainflagInputs(commoncalinputs.CommonCalibrationInputs):
         self._frmsdev_limit = value
 
     @property
+    def fnrmsdev_limit(self):
+        return self._fnrmsdev_limit
+
+    @fnrmsdev_limit.setter
+    def fnrmsdev_limit(self, value):
+        if value is None:
+            value = 10.0
+        self._fnrmsdev_limit = value
+
+    @property
     def metric_order(self):
         return self._metric_order
 
     @metric_order.setter
     def metric_order(self, value):
         if value is None:
-            value = 'mediandeviant, rmsdeviant'
+            value = 'mediandeviant, rmsdeviant, nrmsdeviant'
         self._metric_order = value
     
     @property
@@ -135,6 +156,8 @@ class Gainflag(basetask.StandardTaskTemplate):
                 metrics_to_evaluate.append(metric)
             if metric == 'rmsdeviant' and inputs.flag_rmsdeviant:
                 metrics_to_evaluate.append(metric)
+            if metric == 'nrmsdeviant' and inputs.flag_nrmsdeviant:
+                metrics_to_evaluate.append(metric)
 
         # Collect requested flagging metrics that were not specified in
         # ordered metric lists, append them to end of list, and raise a warning.
@@ -144,6 +167,9 @@ class Gainflag(basetask.StandardTaskTemplate):
         if inputs.flag_rmsdeviant and 'rmsdeviant' not in metric_list:
             LOG.warning('rmsdeviant flagging metric requested but not specified in the definition of the order-in-which-to-evaluate-metrics; appending metric to the end.')
             metrics_to_evaluate.append('rmsdeviant')
+        if inputs.flag_nrmsdeviant and 'nrmsdeviant' not in metric_list:
+            LOG.warning('nrmsdeviant flagging metric requested but not specified in the definition of the order-in-which-to-evaluate-metrics; appending metric to the end.')
+            metrics_to_evaluate.append('nrmsdeviant')
 
         # Initialize result and store vis and order of metrics in result
         result = GainflagResults()
@@ -168,6 +194,14 @@ class Gainflag(basetask.StandardTaskTemplate):
                   vis=inputs.vis, intent=None, spw=None, refant=None, niter=None,
                   metric=metric, prepend='flag {0} - '.format(metric),
                   flag_maxabs=True, fmax_limit=inputs.frmsdev_limit)
+                flaggertask = Gainflagger(flaggerinputs)
+
+            elif metric == 'nrmsdeviant':
+                flaggerinputs = GainflaggerInputs(
+                  context=inputs.context, output_dir=inputs.output_dir,
+                  vis=inputs.vis, intent=None, spw=None, refant=None, niter=None,
+                  metric=metric, prepend='flag {0} - '.format(metric),
+                  flag_maxabs=True, fmax_limit=inputs.fnrmsdev_limit)
                 flaggertask = Gainflagger(flaggerinputs)
             
             result.add(metric, self._executor.execute(flaggertask))
@@ -445,26 +479,38 @@ class GainflaggerView(object):
                        abs(median(antenna) - median(all antennas)) / mad(all antennas).
                     'rmsdeviant' calculates per antenna:
                        stdev(antenna) / mad(all antennas).
+                    'nrmsdeviant' calculates:
+                       deviation = ( sm(ant_i) - med_sm_allants ) / sigma_sm_allants
+                       where: 
+                         sm(ant_i) = sigma(ant_i) / median(ant_i)
+                         sigma_sm_allants = 1.4826 * mad( {sm(ant_1), sm(ant_2), ..., sm(ant_nants)} )
+                         med_sm_allants = median( {sm(ant_1), sm(ant_2), ..., sm(ant_nants)} )
                     Note: mad = median absolute deviation from the median
         """        
         
         # Create the view, based on the metric
-        if metric in ['mediandeviant', 'rmsdeviant']:
+        if metric in ['mediandeviant', 'rmsdeviant', 'nrmsdeviant']:
             self.calculate_median_rms_deviant_view(table, metric)
 
         
-    def calculate_median_rms_deviant_view(self, gtable, metric='mediantdeviant'):
+    def calculate_median_rms_deviant_view(self, gtable, metric='mediandeviant'):
         """
-        Method to calculate either the "mediandeviant" or "rmsdeviant" flagging view.
+        Method to calculate the "mediandeviant", "rmsdeviant", or "nrmsdeviant" flagging view.
         
         Input parameters:
         
         table  -- Name of gain table to be analysed.
         metric -- the name of the view metric to use:
                     'mediandeviant' calculates per antenna:
-                       abs(median(antenna) - median(all antennas)) / mad(all antennas).
+                       deviation = abs(median(antenna) - median(all antennas)) / mad(all antennas).
                     'rmsdeviant' calculates per antenna:
-                       stdev(antenna) / mad(all antennas).
+                       deviation = stdev(antenna) / mad(all antennas).
+                    'nrmsdeviant' calculates:
+                       deviation = ( sm(ant_i) - med_sm_allants ) / sigma_sm_allants
+                       where: 
+                         sm(ant_i) = sigma(ant_i) / median(ant_i)
+                         sigma_sm_allants = 1.4826 * mad( {sm(ant_1), sm(ant_2), ..., sm(ant_nants)} )
+                         med_sm_allants = median( {sm(ant_1), sm(ant_2), ..., sm(ant_nants)} )
                     Note: mad = median absolute deviation from the median
         """        
         
@@ -549,22 +595,56 @@ class GainflaggerView(object):
     
                     # Store "MAD(ant) / MAD(all ant)" in flagging view
                     data[ant] = stdev_ant / mad_all_ant
+
+            # The following normalised RMS deviant metric is based on the
+            # recommendation by H. Francke Henriquez documented at 
+            # https://bugs.nrao.edu/browse/CAS-8831.
+            elif metric == 'nrmsdeviant':
+                median_per_ant = defaultdict(list)
+                stdev_per_ant = defaultdict(list)
+                sm_all_ant = []
+                
+                # Calculate required statistics for each metric:
+                for ant in data_per_ant.keys():
+                    
+                    # Convert to numpy arrays
+                    data_per_ant[ant] = np.array(data_per_ant[ant])
+                    
+                    # Calculate standard deviation per antenna.
+                    stdev_per_ant[ant] = np.std(data_per_ant[ant])
+                    
+                    # Calculate median per antenna.
+                    median_per_ant[ant] = np.median(data_per_ant[ant])
+
+                    # Calculate stdev / median ratio per antenna.
+                    sm_all_ant.append(stdev_per_ant[ant] / median_per_ant[ant])
+
+                # Convert to numpy array
+                sm_all_ant = np.array(sm_all_ant)
+
+                # Calculate the median of the "sm" distribution.
+                median_sm = np.median(sm_all_ant)
+                
+                # Assuming that "sm" are normally distributed, estimate the 
+                # standard deviation as 1.4826 * MAD. 
+                sigma_sm = 1.4826 * np.median(np.abs(sm_all_ant - median_sm))
+
+                # Calculate final deviation metric for each antenna.
+                for ant in data_per_ant.keys():
+                    data[ant] = ( (stdev_per_ant[ant]/median_per_ant[ant] - median_sm) / sigma_sm)
             
-            # Create axes for view result, set time on y-axis to the first timestamp
+            # Create axes for view result, set time on y-axis to the first timestamp.
             axes = [commonresultobjects.ResultAxis(name='Antenna1',
               units='id', data=np.arange(antenna_ids[-1]+1)),
               commonresultobjects.ResultAxis(name='Time', units='',
               data=times[0:1])]
 
-            # associate the result with a generic filename - using
-            # specific names gives confusing duplicates on the weblog
-            # display
+            # Convert flagging view into an ImageResult.
             viewresult = commonresultobjects.ImageResult(filename=
               '%s(gtable)' % os.path.basename(gtable.vis),
               intent=self.intent,
               data=data, flag=flag,
               axes=axes, datatype='gain amplitude', spw=spwid)
           
-            # add the view results and their children results to the
-            # class result structure
+            # Add the view result to the class result structure.
             self.result.addview(viewresult.description, viewresult)            

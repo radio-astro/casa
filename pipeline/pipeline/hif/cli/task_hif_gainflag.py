@@ -5,6 +5,7 @@ import pipeline.h.cli.utils as utils
 def hif_gainflag(vis=None, intent=None, spw=None, refant=None,
   flag_mediandeviant=None, fmeddev_limit=None,
   flag_rmsdeviant=None, frmsdev_limit=None,
+  flag_nrmsdeviant=None, fnrmsdev_limit=None,
   metric_order=None,
   pipelinemode=None, dryrun=None, acceptresults=None):
 

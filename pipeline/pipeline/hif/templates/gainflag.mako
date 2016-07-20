@@ -8,8 +8,9 @@ def num_lines(report_dir, relpath):
 	else:
 		return 'N/A'
 		
-comp_descriptions = {'mediandeviant': 'Flag antennas with deviant median gains.',
-                 	 'rmsdeviant'   : 'Flag antennas with deviant RMS gains.'}
+comp_descriptions = {'mediandeviant' : 'Flag antennas with deviant median gains.',
+                 	 'rmsdeviant'    : 'Flag antennas with deviant RMS gains.',
+                 	 'nrmsdeviant'   : 'Flag antennas with deviant normalised RMS gains.'}
 
 %>
 
