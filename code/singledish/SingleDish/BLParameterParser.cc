@@ -163,7 +163,7 @@ void BLParameterParser::ConvertLineToParam(string const &linestr,
     if (num_piece > USHRT_MAX)
       throw(AipsError("num_piece is larger than max of uint16_t"));
     paramset.npiece = num_piece;
-    paramset.baseline_type = static_cast<LIBSAKURA_SYMBOL(BaselineType)>(BaselineType_kCubicSpline);
+    paramset.baseline_type = static_cast<LIBSAKURA_SYMBOL(LSQFitType)>(BaselineType_kCubicSpline);
   }
   else if (bltype_str == "sinusoid")
   {
@@ -175,8 +175,8 @@ void BLParameterParser::ConvertLineToParam(string const &linestr,
     if (svec[BLParameters_kOrder].size()==0)
       throw(AipsError("Baseline type 'poly' and 'chebyshev' require order value."));
     paramset.baseline_type = bltype_str == "chebyshev" ?
-      static_cast<LIBSAKURA_SYMBOL(BaselineType)>(BaselineType_kChebyshev) :
-      static_cast<LIBSAKURA_SYMBOL(BaselineType)>(BaselineType_kPolynomial);
+      static_cast<LIBSAKURA_SYMBOL(LSQFitType)>(BaselineType_kChebyshev) :
+      static_cast<LIBSAKURA_SYMBOL(LSQFitType)>(BaselineType_kPolynomial);
     paramset.order = ConvertString<uint16_t>(svec[BLParameters_kOrder]);
   }
   // parse clipping parameters
@@ -307,8 +307,8 @@ void BLTableParser::parse()
     sorted[ss.str()][bt_->getTime(irow)] = irow;
     for (uInt ipol = 0; ipol < npol; ++ipol) {
       if (!bt_->getApply(irow, ipol)) continue;
-      LIBSAKURA_SYMBOL(BaselineType) curr_type_idx = 
-	static_cast<LIBSAKURA_SYMBOL(BaselineType)>(bt_->getBaselineType(irow, ipol));
+      LIBSAKURA_SYMBOL(LSQFitType) curr_type_idx = 
+	static_cast<LIBSAKURA_SYMBOL(LSQFitType)>(bt_->getBaselineType(irow, ipol));
       bool new_type = true;
       for (size_t i = 0; i < baseline_types_.size(); ++i){
 	if (curr_type_idx == baseline_types_[i]){

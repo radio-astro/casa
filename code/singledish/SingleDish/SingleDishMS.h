@@ -242,16 +242,16 @@ private:
       Vector<size_t> const &nchan,
       Vector<bool> const &nchan_set,
       Vector<size_t> &ctx_indices,
-      std::vector<LIBSAKURA_SYMBOL(BaselineContextFloat) *> &bl_contexts);
+      std::vector<LIBSAKURA_SYMBOL(LSQFitContextFloat) *> &bl_contexts);
   void get_baseline_context(size_t const bltype,
       uint16_t order,
       size_t num_chan,
       size_t ispw,
       Vector<size_t> &ctx_indices,
       std::vector<size_t> &ctx_nchans,
-      std::vector<LIBSAKURA_SYMBOL(BaselineContextFloat) *> &bl_contexts);
+      std::vector<LIBSAKURA_SYMBOL(LSQFitContextFloat) *> &bl_contexts);
   // Destroy a set of baseline contexts
-  void destroy_baseline_contexts(std::vector<LIBSAKURA_SYMBOL(BaselineContextFloat) *> &bl_contexts);void check_sakura_status(string const &name, LIBSAKURA_SYMBOL(Status) const status);
+  void destroy_baseline_contexts(std::vector<LIBSAKURA_SYMBOL(LSQFitContextFloat) *> &bl_contexts);void check_sakura_status(string const &name, LIBSAKURA_SYMBOL(Status) const status);
   template<typename T, typename U>
   void set_matrix_for_bltable(size_t const num_pol, size_t const num_data_max,
       std::vector<std::vector<T> > const &in_data, Array<U> &out_data) {
@@ -294,7 +294,7 @@ private:
 			  bool const& do_subtract,
 			  string const& in_spw,
 			  LIBSAKURA_SYMBOL(Status)& status,
-			  std::vector<LIBSAKURA_SYMBOL(BaselineContextFloat) *> &bl_contexts,
+			  std::vector<LIBSAKURA_SYMBOL(LSQFitContextFloat) *> &bl_contexts,
 			  size_t const bltype,
 			  //int const order,//---------------------------------------------
 			  vector<int> const& order,//--------------------------------

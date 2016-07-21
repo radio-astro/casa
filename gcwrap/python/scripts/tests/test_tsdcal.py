@@ -973,7 +973,7 @@ class MsCalTableChecker(CasaTableChecker):
         self.tol=tol
     def __eq__(self,other):
         assert_true(self.fparam.shape == other.fparam.shape,
-                   'FPARAM columns: shape mismatch')
+                   'FPARAM columns: shape mismatch: expected {expected} result {result}'.format(expected=self.fparam.shape, result=other.fparam.shape))
         assert_true(numpy.allclose(self.fparam,other.fparam,atol=self.tol,rtol=0.0),
                    'FPARAM columns: error exceeds tolerance='+str(self.tol))
         return True
@@ -1132,7 +1132,7 @@ class tsdcal_test_otf(unittest.TestCase):
             'outfile':'test_otf03.ms_caltable'
         }
         self.current_test_params = {
-            'ref_caltable':'lissajous.edges_fraction_0.1.ms_caltable'
+            'ref_caltable':'lissajous.edges_new_fraction_0.1.ms_caltable'
         }
         expected_result = MsCalTableChecker(self.ref_caltable())
         self.run_tsdcal()
@@ -1150,7 +1150,7 @@ class tsdcal_test_otf(unittest.TestCase):
             'fraction':'20%'
         }
         self.current_test_params = {
-            'ref_caltable':'lissajous.edges_fraction_0.2.ms_caltable'
+            'ref_caltable':'lissajous.edges_new_fraction_0.2.ms_caltable'
         }
         expected_result = MsCalTableChecker(self.ref_caltable())
         self.run_tsdcal()
@@ -1181,10 +1181,10 @@ class tsdcal_test_otf(unittest.TestCase):
         self.tsdcal_params = {
             'infile':'lissajous.ms',
             'calmode':'apply',
-            'applytable':os.path.join(self.ref_datapath,'lissajous.edges_fraction_0.1.ms_caltable')
+            'applytable':os.path.join(self.ref_datapath,'lissajous.edges_new_fraction_0.1.ms_caltable')
         }
         self.current_test_params = {
-            'ref_calibrated_ms':'lissajous.edges_fraction_0.1.sky.ms'
+            'ref_calibrated_ms':'lissajous.edges_new_fraction_0.1.sky.ms'
         }
         expected_result = MsCorrectedDataChecker(self.ref_calibrated_ms())
         self.run_tsdcal()
@@ -1200,7 +1200,7 @@ class tsdcal_test_otf(unittest.TestCase):
             'calmode':'otf,tsys,apply',
         }
         self.current_test_params = {
-            'ref_calibrated_ms':'lissajous.edges_fraction_0.1.sky.ms'
+            'ref_calibrated_ms':'lissajous.edges_new_fraction_0.1.sky.ms'
         }
         expected_result = MsCorrectedDataChecker(self.ref_calibrated_ms(),convert_to_kelvin=True)
         self.run_tsdcal()

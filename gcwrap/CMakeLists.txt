@@ -720,7 +720,7 @@ if( NOT DEFINED LIBSAKURA_ROOT_DIR )
   set( LIBSAKURA_ROOT_DIR ${casa_packages} )
 endif()
 casa_find( LIBSAKURA
-  VERSION 2.0
+  VERSION 3.0
   INCLUDES libsakura/sakura.h libsakura/config.h
   LIBS sakura
   PREFIX_HINTS ${LIBSAKURA_ROOT_DIR} ${LIBSAKURA_ROOT_DIR}/lib/libsakura/default
