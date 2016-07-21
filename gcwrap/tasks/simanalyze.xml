@@ -27,7 +27,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
       * the "vis" parameter:
         - example: single MS: vis="mysim.alma.out03.ms"
-        - example: multiple MSs: vis=["mysim.alma.out03.ms","mysim.aca.tp.ms"]
+        - example: multiple MSs: vis="mysim.alma.out03.ms,mysim.aca.tp.ms"
         - one can use '$project' and let the task automatically replace it with
           the project name, e.g., vis="$project.noisy.ms,$project.noisy.sd.ms".
           However, note that if you created measurement set(s) using simobserve,
@@ -71,6 +71,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         emission is expected to be.  e.g. pixel ranges mask=[110,110,150,145],
         filename of mask image mask='myimage.mask', or a file with mask 
         regions --  see help for the clean task for more information.
+
+      * NOTE: simanalyze was designed to be used after one or more runs of
+        simobserve, and as such it assumes it will be able to find a 
+        sky model image called $project/$project.skymodel, .newmodel, or 
+        .compskymodel in the $project/ subdirectory.  If the simulated 
+        MS has been created by means other than simply calling simobserve, 
+        the user may have to copy their sky model image into the $project
+        subdirectory and call it "$project.skymodel"
 
     -------------------------------
     mode image=False:
