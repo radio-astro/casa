@@ -34,6 +34,7 @@ import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.imagelibrary as imagelibrary
 import pipeline.infrastructure.sdfilenamer as filenamer
 import pipeline.hif.tasks.exportdata.exportdata as hif_exportdata
+from . import manifest
 
 # the logger for this module
 LOG = infrastructure.get_logger(__name__)
@@ -57,6 +58,16 @@ class SDMSExportData(hif_exportdata.ExportData):
     - Saves the text formatted list of contents of products directory
     """
     Inputs = SDMSExportDataInputs
+    
+    def prepare(self):
+        results = super(SDMSExportData, self).prepare()
+        manifest = os.path.join(self.inputs.context.products_dir, results.manifest)
+        LOG.debug('manifest file is \'%s\''%(manifest))
+        
+        jyperk = self._export_jyperk(self.inputs.context, self.inputs.context.products_dir)
+        self._add_jyperk_to_manifest(manifest, jyperk)
+        
+        return results
      
     def _export_final_calfiles(self, context, oussid, session, vislist, products_dir):
         """
@@ -74,7 +85,7 @@ class SDMSExportData(hif_exportdata.ExportData):
             os.chdir(context.output_dir)
 
             # Define the name of the output tarfile
-            tarfilename = '{}.{}.caltables.tar.gz'.format(oussid, session)
+            tarfilename = '{}.{}.caltables.tgz'.format(oussid, session)
             LOG.info('Saving final caltables for %s in %s', session, tarfilename)
 
             # Create the tar file
@@ -122,3 +133,34 @@ class SDMSExportData(hif_exportdata.ExportData):
         finally:
             # Restore the original current working directory
             os.chdir(cwd)
+
+    def _export_jyperk(self, context, products_dir):
+        reffile_list = set(self.__get_reffile(context.results))
+        
+        if len(reffile_list) == 0:
+            return None
+        if len(reffile_list) > 1:
+            raise RuntimeError("K2Jy conversion file must be only one. %s found."%(len(reffile_list)))
+        
+        jyperk = reffile_list.pop()
+        shutil.copy(jyperk, products_dir)
+        return jyperk
+    
+    def __get_reffile(self, results):
+        for proxy in results:
+            result = proxy.read()
+            if not isinstance(result, basetask.ResultsList):
+                result = [result]
+            for r in result:
+                if str(r).find('SDK2JyCalResults') != -1:
+                    if hasattr(r, 'reffile'):
+                        reffile = r.reffile
+                        if reffile is not None and os.path.exists(reffile):
+                            yield reffile
+                            
+    def _add_jyperk_to_manifest(self, manifest_file, jyperk):
+        pipemanifest = manifest.SingleDishPipelineManifest('')
+        pipemanifest.import_xml(manifest_file)
+        ous = pipemanifest.get_ous()
+        pipemanifest.add_jyperk(ous, os.path.basename(jyperk))
+        pipemanifest.write(manifest_file)

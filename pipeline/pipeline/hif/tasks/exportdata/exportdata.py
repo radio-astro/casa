@@ -216,7 +216,8 @@ class ExportDataInputs(basetask.StandardInputs):
 class ExportDataResults(basetask.Results):
     def __init__(self, pprequest='', sessiondict=collections.OrderedDict(),
                  visdict=collections.OrderedDict(), calimages=(), targetimages=(),
-                 weblog='', pipescript='', restorescript='', commandslog=''):
+                 weblog='', pipescript='', restorescript='', commandslog='', 
+                 manifest=''):
         """
         Initialise the results object with the given list of JobRequests.
         """
@@ -230,6 +231,7 @@ class ExportDataResults(basetask.Results):
         self.pipescript = pipescript
         self.restorescript = restorescript
         self.commandslog = commandslog
+        self.manifest = manifest
 
     def __repr__(self):
         s = 'ExportData results:\n'
@@ -441,7 +443,8 @@ class ExportData(basetask.StandardTaskTemplate):
                                  weblog=os.path.basename(weblog_file), \
                                  pipescript=os.path.basename(casa_pipescript), \
                                  restorescript=os.path.basename(casa_restore_script), \
-                                 commandslog=os.path.basename(casa_commands_file))
+                                 commandslog=os.path.basename(casa_commands_file),
+                                 manifest=os.path.basename(casa_pipe_manifest))
 
     def analyse(self, results):
         """
@@ -923,6 +926,8 @@ finally:
         LOG.info('Creating manifest file %s' % (out_manifest_file))
         if not self._executor._dry_run:
             pipemanifest.write(out_manifest_file)
+            
+        return out_manifest_file
 
     def _export_images (self, context, calimages, intents, images,
                         products_dir):
