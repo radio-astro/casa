@@ -158,7 +158,7 @@ class SDMSSkyCal(basetask.StandardTaskTemplate):
             # create SDCalFrom object
             calfrom = callibrary.CalFrom(gaintable=myargs['outfile'],
                                          gainfield=str(reference_id),
-                                         interp='',
+                                         interp='linear,spline',
                                          caltype=myargs['calmode'])
 
             # create CalApplication object
