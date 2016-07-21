@@ -685,6 +685,21 @@ of edge points is effectively twice of the specified value in each
 raster row. Default (-1) is to use fraction.</description>
      <value>-1</value>
      </param>
+     
+     <param type="string" direction="in" name="radius">
+     <description>[SINGLE-DISH SPECIFIC] Specifies radius of the 
+central region of double circle gain calibration for fast scanning data.
+The value must be either empty or quantum string (numeric value with unit).
+Default ("") is to use a radius of primary beam.</description>
+     <value></value>
+     </param>
+     
+     <param type="bool" direction="in" name="smooth">
+     <description>[SINGLE-DISH SPECIFIC] Whether or not applying 
+smoothing during double circle gain calibration for fast scanning data.
+Default is True. </description>
+     <value>true</value>
+     </param>
 </input>
 <returns type="bool"/>
 
