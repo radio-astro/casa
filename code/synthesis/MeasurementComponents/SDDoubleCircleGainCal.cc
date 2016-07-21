@@ -18,6 +18,7 @@
 #include <casacore/casa/Arrays/Vector.h>
 #include <casacore/casa/Arrays/ArrayIO.h>
 #include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/casa/Quanta/QuantumHolder.h>
 #include <casacore/tables/TaQL/TableParse.h>
 #include <casacore/measures/TableMeasures/ScalarQuantColumn.h>
 #include <casacore/measures/TableMeasures/ArrayQuantColumn.h>
@@ -40,7 +41,7 @@
 //
 //   debuglog << "Any message" << any_value << debugpost;
 //
-#define SDGAINDBLC_DEBUG
+//#define SDGAINDBLC_DEBUG
 
 namespace {
 struct NullLogger {
@@ -165,16 +166,51 @@ inline void updateWeight(casa::NewCalTable &ct) {
     ctmc.weight().put(irow, ctmc.fparam()(irow));
   }
 }
+
+casacore::Double rad2arcsec(casacore::Double value_in_rad) {
+  return casacore::Quantity(value_in_rad, "rad").getValue("arcsec");
+}
 }
 
 namespace casa {
 SDDoubleCircleGainCal::SDDoubleCircleGainCal(VisSet &vs) :
     VisCal(vs),             // virtual base
     VisMueller(vs),         // virtual base
-    GJones(vs) {
+    GJones(vs), central_disk_size_(0.0), smooth_(True) {
 }
 
 SDDoubleCircleGainCal::~SDDoubleCircleGainCal() {
+}
+
+void SDDoubleCircleGainCal::setSolve() {
+  central_disk_size_ = 0.0;
+  smooth_ = True;
+
+  // call parent setSolve
+  SolvableVisCal::setSolve();
+}
+
+void SDDoubleCircleGainCal::setSolve(const Record &solve) {
+  // parameters for double circle gain calibration
+  if (solve.isDefined("smooth")) {
+    smooth_ = solve.asBool("smooth");
+  }
+  if (solve.isDefined("radius")) {
+    String size_string = solve.asString("radius");
+    QuantumHolder qh;
+    String error;
+    qh.fromString(error, size_string);
+    Quantity q = qh.asQuantity();
+    central_disk_size_ = q.getValue("rad");
+  }
+
+  logSink() << LogIO::DEBUGGING << "smooth=" << smooth_ << LogIO::POST;
+  logSink() << LogIO::DEBUGGING << "central disk size=" << central_disk_size_
+      << " rad" << "(" << rad2arcsec(central_disk_size_) << " arcsec)"
+      << LogIO::POST;
+
+  // call parent setSolve
+  SolvableVisCal::setSolve(solve);
 }
 
 void SDDoubleCircleGainCal::selfGatherAndSolve(VisSet& vs, VisEquation& ve) {
@@ -228,12 +264,10 @@ void SDDoubleCircleGainCal::executeDoubleCircleGainCal(
   logSink() << LogOrigin("SDDoubleCircleGainCal", __FUNCTION__, WHERE);
   // setup worker class
   SDDoubleCircleGainCalImpl worker;
-  // TODO: options for worker class should propagate here
-  Double radius = 0.0;
-  Bool doSmoothing = False;
-  Int smoothingSize = 0;
-  worker.setCentralRegion(radius);
-  if (doSmoothing) {
+
+  Int smoothingSize = -1;// use default smoothing size
+  worker.setCentralRegion(central_disk_size_);
+  if (smooth_) {
     worker.setSmoothing(smoothingSize);
   } else {
     worker.unsetSmoothing();
@@ -275,7 +309,7 @@ void SDDoubleCircleGainCal::executeDoubleCircleGainCal(
       "CHAN_FREQ");
 
   // traverse MS
-  Int cols[] = { MS::FIELD_ID, MS::ANTENNA1, MS::FEED1, MS::DATA_DESC_ID };
+  Int cols[] = {MS::FIELD_ID, MS::ANTENNA1, MS::FEED1, MS::DATA_DESC_ID};
   Int *colsp = cols;
   Block<Int> sortCols(4, colsp, False);
   MSIter msIter(ms, sortCols, 0.0, False, False);
@@ -306,7 +340,7 @@ void SDDoubleCircleGainCal::executeDoubleCircleGainCal(
     Int iantenna = antennaCol(0);
     ROScalarColumn<Int> feedCol(currentMS, "FEED1");
     debuglog<< "FIELD_ID " << msIter.fieldId()
-    << " ANTENNA1 " << iantenna  //currAnt_
+    << " ANTENNA1 " << iantenna//currAnt_
     << " FEED1 " << feedCol(0)
     << " DATA_DESC_ID " << msIter.dataDescriptionId()
     << debugpost;
@@ -339,6 +373,9 @@ void SDDoubleCircleGainCal::executeDoubleCircleGainCal(
       projector.setReferencePixel(0.0, 0.0);
       projector.setReferenceCoordinate(lat, lon);
       offset_direction = projector.project();
+      auto const pixel_size = projector.pixel_size();
+      // convert offset_direction from pixel to radian
+      offset_direction *= pixel_size;
     }
 //    debuglog<< "offset_direction = " << offset_direction << debugpost;
 //    Double const *direction_p = offset_direction.data();
@@ -350,10 +387,15 @@ void SDDoubleCircleGainCal::executeDoubleCircleGainCal(
     Vector<Double> time = timeCol.getColumn();
     Accessor dataCol(currentMS);
     Cube<Float> data = dataCol.getColumn();
+    ROArrayColumn<Bool> flagCol(currentMS, "FLAG");
+    Cube<Bool> flag = flagCol.getColumn();
 //    debuglog<< "data = " << data << debugpost;
 
     Vector<Double> gainTime;
     Cube<Float> gain;
+    Cube<Bool> gain_flag;
+
+    // tell some basic information to worker object
     Quantity antennaDiameterQuant = antennaDiameterColumn(iantenna);
     worker.setAntennaDiameter(antennaDiameterQuant.getValue("m"));
     debuglog<< "antenna diameter = " << worker.getAntennaDiameter() << "m" << debugpost;
@@ -373,15 +415,25 @@ void SDDoubleCircleGainCal::executeDoubleCircleGainCal(
     worker.setObservingFrequency(meanFrequency);
     debuglog<< "observing frequency = " << worker.getObservingFrequency() / 1e9 << "GHz" << debugpost;
     Double primaryBeamSize = worker.getPrimaryBeamSize();
-    debuglog<< "primary beam size = " << primaryBeamSize << " arcsec" << debugpost;
-    worker.calibrate(data, time, offset_direction, gainTime, gain);
+    debuglog<< "primary beam size = " << rad2arcsec(primaryBeamSize) << " arcsec" << debugpost;
+
+    auto const effective_radius = worker.getRadius();
+    logSink() << "effective radius of the central region = " << effective_radius << " arcsec"
+        << " (" << rad2arcsec(effective_radius) << " arcsec)"<< LogIO::POST;
+    if (worker.isSmoothingActive()) {
+      auto const effective_smoothing_size = worker.getEffectiveSmoothingSize();
+      logSink() << "smoothing activated. effective size = " << effective_smoothing_size << " channels" << LogIO::POST;
+    }
+    else {
+      logSink() << "smoothing deactivated." << LogIO::POST;
+    }
+
+    // execute calibration
+    worker.calibrate(data, flag, time, offset_direction, gainTime, gain, gain_flag);
     //debuglog<< "gain_time = " << gain_time << debugpost;
     //debuglog<<"gain = " << gain << debugpost;
     size_t numGain = gainTime.nelements();
     debuglog<< "number of gain " << numGain << debugpost;
-
-    ROArrayColumn<Bool> flagCol(currentMS, "FLAG");
-    Cube<Bool> flag = flagCol.getColumn();
 
     currSpw() = ispw;
     currField() = ifield;
@@ -392,11 +444,10 @@ void SDDoubleCircleGainCal::executeDoubleCircleGainCal(
     size_t numCorr = gain.shape()[0];
     Slice corrSlice(0, numCorr);
     Slice chanSlice(0, numChan);
-    Cube<Bool> allParOK(numCorr, numChan, 1, True);
     for (size_t i = 0; i < numGain; ++i) {
       refTime() = gainTime[i];
       solveAllRPar() = gain(corrSlice, chanSlice, Slice(i, 1));
-      solveAllParOK() = allParOK;
+      solveAllParOK() = gain_flag(corrSlice, chanSlice, Slice(i, 1));
 
       keepNCT();
     }

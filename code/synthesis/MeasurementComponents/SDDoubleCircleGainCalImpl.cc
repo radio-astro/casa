@@ -14,6 +14,8 @@
 #include <casacore/scimath/Functionals/Interpolate1D.h>
 #include <casacore/scimath/Functionals/ScalarSampledFunctional.h>
 #include <casacore/casa/BasicSL/Constants.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/casa/Quanta/Quantum.h>
 
 #include <cassert>
 #include <cmath>
@@ -24,26 +26,29 @@ using namespace casacore;
 #define POSTLOG LogIO::POST
 
 namespace { // anonymous namespace START
-// primary beam size based on observing frequency and antenna diameter
+// primary beam size based on observing frequency and antenna diameter in radian
 inline Double getPrimaryBeamSize(Double const observing_frequency,
     Double const antenna_diameter) {
   Double beam_size = -1.0;
   constexpr Double kFactorALMA = 1.13; // measured factor for ALMA
   Double const speed_of_light = C::c;
-  Double const rad2arcsec = 180.0 / C::pi * 3600.0;
+  //Double const rad2arcsec = 180.0 / C::pi * 3600.0;
 
   if (observing_frequency <= 0.0 || antenna_diameter <= 0.0) {
     beam_size = 0.0;
   } else {
-    beam_size = kFactorALMA * rad2arcsec * speed_of_light
+    beam_size = kFactorALMA * speed_of_light // * rad2arcsec
         / (antenna_diameter * observing_frequency);
   }
   return beam_size;
 }
 
 // default smoothing size based on the radius of central region
+// radius will be given in unit of radian but the following formula
+// seems to assume radius in unit of arcsec
 inline Int getDefaultSmoothingSize(Double const radius) {
-  return 2 * static_cast<Int>(round(radius / 1.5)) + 1;
+  auto const radius_in_arcsec = Quantity(radius, "rad").getValue("arcsec");
+  return 2 * static_cast<Int>(round(radius_in_arcsec / 1.5)) + 1;
 }
 
 // average
@@ -184,6 +189,7 @@ SDDoubleCircleGainCalImpl::~SDDoubleCircleGainCalImpl() {
 }
 
 Double SDDoubleCircleGainCalImpl::getPrimaryBeamSize() const {
+  // ::getPrimaryBeamSize returns the size in radian
   return ::getPrimaryBeamSize(observing_frequency_, antenna_diameter_);
 }
 
@@ -245,10 +251,10 @@ void SDDoubleCircleGainCalImpl::calibrate(Cube<Float> const &data,
       // smoothing if necessary
       if (do_smooth_) {
         Int smooth_size = getEffectiveSmoothingSize();
-        if (smooth_size_ < 2 || static_cast<size_t>(smooth_size_) >= num_gain) {
+        if (smooth_size < 2 || static_cast<size_t>(smooth_size) >= num_gain) {
           LOG << LogIO::WARN
               << "data is not smoothed since smoothing size is invalid: "
-              << smooth_size_ << " (number of data " << num_gain << ")"
+              << smooth_size << " (number of data " << num_gain << ")"
               << POSTLOG;
         }
         smooth(smooth_size, work_data, smoothed_data);
@@ -332,10 +338,10 @@ void SDDoubleCircleGainCalImpl::calibrate(Cube<Float> const &data,
       // smoothing if necessary
       if (do_smooth_) {
         Int smooth_size = getEffectiveSmoothingSize();
-        if (smooth_size_ < 2 || static_cast<size_t>(smooth_size_) >= num_gain) {
+        if (smooth_size < 2 || static_cast<size_t>(smooth_size) >= num_gain) {
           LOG << LogIO::WARN
               << "data is not smoothed since smoothing size is invalid: "
-              << smooth_size_ << " (number of data " << num_gain << ")"
+              << smooth_size << " (number of data " << num_gain << ")"
               << POSTLOG;
         }
         smooth(smooth_size, work_data, work_flag, smoothed_data);
@@ -427,7 +433,6 @@ void SDDoubleCircleGainCalImpl::findDataWithinRadius(Double const radius,
   }
 
   // store data for calibration
-  LOG << "num_gain = " << num_gain << POSTLOG;
   gain_time.resize(num_gain);
   IPosition gain_shape(data.shape());
   gain_shape[2] = num_gain;
@@ -458,7 +463,6 @@ void SDDoubleCircleGainCalImpl::findDataWithinRadius(Double const radius,
   }
 
   // store data for calibration
-  LOG << "num_gain = " << num_gain << POSTLOG;
   gain_time.resize(num_gain);
   IPosition gain_shape(data.shape());
   gain_shape[2] = num_gain;

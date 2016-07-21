@@ -38,6 +38,10 @@ public:
     return False;
   }
 
+  // Set the solving parameters
+  virtual void setSolve();
+  virtual void setSolve(const Record& solve);
+
   // Self- gather and/or solve prototypes
   //  (triggered by useGenericGatherForSolve=F or useGenericSolveOne=F)
   virtual void selfGatherAndSolve(VisSet& vs, VisEquation& ve);
@@ -45,6 +49,9 @@ public:
 private:
   template<class Accessor>
   void executeDoubleCircleGainCal(casacore::MeasurementSet const &ms);
+
+  casacore::Double central_disk_size_;
+  casacore::Bool smooth_;
 };
 
 } // namespace casa END

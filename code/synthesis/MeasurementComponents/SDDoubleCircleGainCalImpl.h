@@ -37,23 +37,44 @@ public:
   casacore::Double getAntennaDiameter() const {
     return antenna_diameter_;
   }
-  casacore::Double getPrimaryBeamSize() const;casacore::Int getDefaultSmoothingSize() const;
+
+  // primvary beam size in radian
+  casacore::Double getPrimaryBeamSize() const;
+
+  // default smoothing size in channels
+  casacore::Int getDefaultSmoothingSize() const;
+
+  // get radius of the central region in radian
+  casacore::Double getRadius();
+
+  // get effective smoothing size in channels
+  casacore::Int getEffectiveSmoothingSize();
+
 
   // setter
+  // set radius of the central region in radian
   void setCentralRegion(casacore::Double value) {
     central_region_ = value;
   }
+
+  // activate smoothing and set smoothing size in channels
   void setSmoothing(casacore::Int size) {
     do_smooth_ = True;
     smooth_size_ = size;
   }
+
+  // deactivate smoothing
   void unsetSmoothing() {
     do_smooth_ = False;
     smooth_size_ = -1;
   }
+
+  // set observing frequency in Hz
   void setObservingFrequency(casacore::Double value) {
     observing_frequency_ = value;
   }
+
+  // set antenna diameter in meter
   void setAntennaDiameter(casacore::Double value) {
     antenna_diameter_ = value;
   }
@@ -80,7 +101,7 @@ public:
 //      casacore::Cube<casacore::Float> &data);
 
 private:
-  // radius of the central region [arcsec]
+  // radius of the central region [rad]
   casacore::Double central_region_;
 
   // flag for smoothing
@@ -92,17 +113,12 @@ private:
   // parameter for primary beam size determination
   // observing frequency [Hz]
   casacore::Double observing_frequency_;
+
   // antenna diameter [m]
   casacore::Double antenna_diameter_;
 
   // logger
   casacore::LogIO logger_;
-
-  // get radius of the central region
-  casacore::Double getRadius();
-
-  // get effective smoothing size
-  casacore::Int getEffectiveSmoothingSize();
 
   // find data within radius
   void findDataWithinRadius(casacore::Double const radius,
