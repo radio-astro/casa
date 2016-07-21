@@ -177,56 +177,62 @@ def flagcolortable(flagpct):
         %>
     
          <h4>${ms_name}</h4>
-    
-	% for fieldkey in flagtable.keys():
-		<br>
-		 <h5>Flagging percentages for  ${fieldkey} </h5>
-	    <div style="width: 1700px; height: 250px; overflow: auto;">
 
-		<table class="table table-header-rotated">
-		<!-- <caption>Flagging percentages for  ${fieldkey} </caption> -->
-
-		<thead>
-		</thead>
-	    
-		<tbody>
-		<tr>
-		<td class="rotate-45"><b>spw</b></td>
 		<%
-		name = flagtable[fieldkey].keys()[0]
-		spw = flagtable[fieldkey][name].keys()[0]
-		antennalist = flagtable[fieldkey][name][spw].keys()
-		%>
-		% for antenna in sorted(antennalist):
-		    <td class="rotate-45"><b>${antenna}</b></td>
-		% endfor
-		</tr>
-		
-		
-		% for name in sorted(flagtable[fieldkey].keys()):
-		    <tr>
-		    <th class="row-header">${flagtable[fieldkey][name].keys()[0]}</th>
-		    
-		    % for spw in flagtable[fieldkey][name].keys():
-			% for antenna in sorted(flagtable[fieldkey][name][spw].keys()):
-			    <%
-				flagpct = 100.0*flagtable[fieldkey][name][spw][antenna]['flagged']/flagtable[fieldkey][name][spw][antenna]['total']
-			    %>
-			<td bgcolor="${flagcolortable(flagpct)}">
-				${"{:5.2f}".format(flagpct)}
-			</td>
-			% endfor
-		
-		
-		    % endfor
-		    <tr>
-		% endfor
-	    
-		</tbody>
-		</table>
+		    Nplots = 1
+		    if pcontext.project_summary.telescope == 'VLA' or pcontext.project_summary.telescope == 'EVLA':
+                Nplots = (len(flagtable.keys())/30)+1
+		    endif
 
-	    </div>
-	% endfor
+		%>
+	    % for fieldkey in flagtable.keys()[0:len(flagtable.keys()):Nplots]:
+		    <br>
+		     <h5>Flagging percentages for  ${fieldkey} </h5>
+	        <div style="width: 1700px; height: 250px; overflow: auto;">
+
+		    <table class="table table-header-rotated">
+		    <!-- <caption>Flagging percentages for  ${fieldkey} </caption> -->
+
+		    <thead>
+		    </thead>
+	    
+		    <tbody>
+		    <tr>
+		    <td class="rotate-45"><b>spw</b></td>
+		    <%
+		    name = flagtable[fieldkey].keys()[0]
+		    spw = flagtable[fieldkey][name].keys()[0]
+		    antennalist = flagtable[fieldkey][name][spw].keys()
+		    %>
+		    % for antenna in sorted(antennalist):
+		        <td class="rotate-45"><b>${antenna}</b></td>
+		    % endfor
+		    </tr>
+		
+		
+		    % for name in sorted(flagtable[fieldkey].keys()):
+		        <tr>
+		        <th class="row-header">${flagtable[fieldkey][name].keys()[0]}</th>
+		    
+		        % for spw in flagtable[fieldkey][name].keys():
+			        % for antenna in sorted(flagtable[fieldkey][name][spw].keys()):
+			            <%
+				        flagpct = 100.0*flagtable[fieldkey][name][spw][antenna]['flagged']/flagtable[fieldkey][name][spw][antenna]['total']
+			            %>
+			            <td bgcolor="${flagcolortable(flagpct)}">
+						${"{:5.2f}".format(flagpct)}
+			            </td>
+			        % endfor
+		
+		        % endfor
+		        <tr>
+		    % endfor
+	    
+		    </tbody>
+		    </table>
+
+	        </div>
+	    % endfor
     
     % endfor
 
