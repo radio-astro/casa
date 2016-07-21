@@ -35,7 +35,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: findContinuum.py,v 1.77 2016/07/20 21:18:06 we Exp $" 
+    myversion = "$Id: findContinuum.py,v 1.78 2016/07/21 14:30:05 we Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -1024,7 +1024,7 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
             discarded = ' (result discarded)'
         elif slopeRemoved:
             discarded = ' (removed)'
-        elif slopeRemoved:
+        else:
             discarded = ' (not removed)'
         finalLine += 'linear slope: %g %s' % (roundFigures(slope,3),discarded)
     i += 1
