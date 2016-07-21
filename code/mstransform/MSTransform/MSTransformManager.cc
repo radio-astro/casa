@@ -2034,6 +2034,25 @@ void MSTransformManager::initDataSelectionParams()
 			numOfSelChanMap_p[spw] = channelWidth;
 		}
 
+		// CAS-8631: Even w/o spw selection MSTransformDataHandler sets spws selection to *
+		//           in order to obtain the SPW-DDI list. It turns out that sometimes the
+		//           output DDI sub-table is resorted, for instance in case of non-monotonic
+		//           DDI-SPW relation,  therefore it is necessary to map input-output DDIS
+		if (reindex_p)
+		{
+			Vector<Int> spwddi = mssel.getSPWDDIDList(inputMs_p);
+
+			Int ddid;
+			uInt nddi = spwddi.size();
+			for(uInt selection_ii=0;selection_ii<nddi;selection_ii++)
+			{
+				// Get dd id and set the input-output dd map
+				// This will only be used to write the DD ids in the main table
+				ddid = spwddi[selection_ii];
+				inputOutputDDIndexMap_p[ddid] = selection_ii + ddiStart_p;
+			}
+		}
+
 		spwSelection_p = "";
 	}
 
