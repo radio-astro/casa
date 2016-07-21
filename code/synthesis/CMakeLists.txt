@@ -252,6 +252,7 @@ casa_add_library( synthesis
  MeasurementComponents/MFCleanImageSkyModel.cc
  MeasurementComponents/MFMSCleanImageSkyModel.cc
  MeasurementComponents/MSCleanImageSkyModel.cc
+ MeasurementComponents/MSMetaInfoForCal.cc
  MeasurementComponents/Mueller.cc
  MeasurementComponents/MultiThreadedVisResampler.cc
  MeasurementComponents/NNLSImageSkyModel.cc
@@ -514,6 +515,7 @@ install (FILES
 	MeasurementComponents/MFCleanImageSkyModel.h
 	MeasurementComponents/MFMSCleanImageSkyModel.h
 	MeasurementComponents/MSCleanImageSkyModel.h
+        MeasurementComponents/MSMetaInfoForCal.h
 	MeasurementComponents/MThWorkIDEnum.h
 	MeasurementComponents/MakeApproxPSFAlgorithm.h
 	MeasurementComponents/Mueller.h
@@ -857,6 +859,7 @@ casa_add_google_test( NOT_ON_APPLE MODULES mstransform SOURCES ../mstransform/TV
 casa_add_google_test( NOT_ON_APPLE MODULES mstransform SOURCES ../mstransform/TVI/test/tUVContSubTVI.cc  ../mstransform/TVI/test/TestUtilsTVI.cc)
 
 casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tFringeJones_GT.cc )
+casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tMSMetaInfoForCal_GT.cc )
 casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tVisVectorJonesMueller_GT.cc )
 casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tVisCal_GT.cc )
 casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tVisCalGlobals_GT.cc )
