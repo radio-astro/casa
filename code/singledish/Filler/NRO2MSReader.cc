@@ -710,7 +710,7 @@ Bool NRO2MSReader::getData(size_t irow, DataRecord &record) {
   record.direction_vector(0) = scan_data.SCX0;
   record.direction_vector(1) = scan_data.SCY0;
   record.scan_rate = 0.0;
-  record.feed_id = (Int)(irow / ndata_per_ant % obs_header_.NBEAM);
+  record.feed_id = (Int)0;//(irow / ndata_per_ant % obs_header_.NBEAM);
   record.spw_id = (Int)(irow % obs_header_.NSPWIN);
   Int ndata_per_scan = obs_header_.NBEAM * obs_header_.NPOL * obs_header_.NSPWIN;
   record.polno = getPolNo(obs_header_.RX0[irow % ndata_per_scan]);
