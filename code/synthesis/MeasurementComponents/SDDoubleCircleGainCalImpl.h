@@ -22,18 +22,22 @@ public:
   virtual ~SDDoubleCircleGainCalImpl();
 
   // getter
+  // get size of the central region in radian
   casacore::Double getCentralRegion() const {
     return central_region_;
   }
   casacore::Bool isSmoothingActive() const {
     return do_smooth_;
   }
+  // get smoothing size
   casacore::Int getSmoothingSize() const {
     return smooth_size_;
   }
+  // get observing frequency in Hz
   casacore::Double getObservingFrequency() const {
     return observing_frequency_;
   }
+  // get antenna diameter in meter
   casacore::Double getAntennaDiameter() const {
     return antenna_diameter_;
   }
@@ -41,13 +45,13 @@ public:
   // primvary beam size in radian
   casacore::Double getPrimaryBeamSize() const;
 
-  // default smoothing size in channels
+  // default smoothing size
   casacore::Int getDefaultSmoothingSize() const;
 
   // get radius of the central region in radian
   casacore::Double getRadius();
 
-  // get effective smoothing size in channels
+  // get effective smoothing size
   casacore::Int getEffectiveSmoothingSize();
 
 
@@ -57,7 +61,7 @@ public:
     central_region_ = value;
   }
 
-  // activate smoothing and set smoothing size in channels
+  // activate smoothing and set smoothing size
   void setSmoothing(casacore::Int size) {
     do_smooth_ = True;
     smooth_size_ = size;
@@ -107,7 +111,7 @@ private:
   // flag for smoothing
   casacore::Bool do_smooth_;
 
-  // smoothing size [ch]
+  // smoothing size
   casacore::Int smooth_size_;
 
   // parameter for primary beam size determination
