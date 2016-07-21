@@ -641,6 +641,11 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 totalcount = 0
     
                 for i in scan_ids:
+                    # workaround for KeyError exception when summary 
+                    # dictionary doesn't contain the scan
+                    if not summary['scan'].has_key(i):
+                        continue
+
                     flagcount += int(summary['scan'][i]['flagged'])
                     totalcount += int(summary['scan'][i]['total'])
         
