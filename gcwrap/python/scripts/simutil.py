@@ -1791,9 +1791,13 @@ class simutil:
     def getdatum(self,datumcode,verbose=False):
         """
         local datums and ellipsoids;
-        take local earth-centered xyz coordinates, add dx,dy,dz to get wgs84 earth-centered
-        """
-        
+        input: datam code e.g. 'WGS84','SAM56'
+        output:
+          dx, dy, dz [m] - offsets from ITRF x,y,z i.e. one would take local earth-centered xyz coordinates, add dx,dy,dz to get wgs84 earth-centered
+          
+          er = equatorial radius of the ellipsoid (semi-major axis) [m]
+          rf = reciprocal of flatting of the ellipsoid        
+        """        
         # set equatorial radius and inverse flattening
         
         ellipsoids={'AW':[6377563.396,299.3249647  ,'Airy 1830'                     ],
@@ -1859,7 +1863,9 @@ class simutil:
     def utm2long(self,east,north,zone,datum,nors):
         """
         this program converts universal transverse meractor coordinates to gps
-        converted from fortran by r. indebetouw jan 2009.
+        longitude and latitude.
+
+        converted from Fortran by R. Indebetouw Jan 2009.
         ri also added other datums and ellipsoids in a helper function
         
         header from original UTMS fortran program:
@@ -1918,8 +1924,8 @@ class simutil:
         nors=N/S
         
         determined according to datum:
-        er = equatorial radius of the ellipsoid (semi-major axis)
-        rf = reciprocal of flatting of the ellipsod
+        er = equatorial radius of the ellipsoid (semi-major axis) [m]
+        rf = reciprocal of flatting of the ellipsod [unitless]
         f  =
         esq= e squared
         
@@ -2008,7 +2014,15 @@ class simutil:
 
 
     
-    def long2xyz(self,long,lat,elevation,datum):
+    def long2xyz(self,lon,lat,elevation,datum):
+        """
+        Returns the nominal ITRF (X, Y, Z) coordinates [m] for a point at 
+        geodetic latitude and longitude [degrees] and elevation [m].  
+        The ITRF frame used is not the official ITRF, just a right
+        handed Cartesian system with X going through 0 latitude and 0 longitude,
+        and Z going through the north pole.  
+        """
+
         # geodesy/NGS/XYZWIN/
         # http://www.oc.nps.edu/oc2902w/coord/llhxyz.htm
         dx,dy,dz,er,rf = self.getdatum(datum,verbose=False)
@@ -2017,14 +2031,24 @@ class simutil:
         esq=2*f-f**2    
         nu=er/pl.sqrt(1.-esq*(pl.sin(lat))**2)
         
-        x=(nu+elevation)*pl.cos(lat)*pl.cos(long) +dx
-        y=(nu+elevation)*pl.cos(lat)*pl.sin(long) +dy
+        x=(nu+elevation)*pl.cos(lat)*pl.cos(lon) +dx
+        y=(nu+elevation)*pl.cos(lat)*pl.sin(lon) +dy
         z=((1.-esq)*nu+elevation)*pl.sin(lat)  +dz
         
         return x,y,z
     
     
     def xyz2long(self,x,y,z,datum):
+        """
+        Given ITRF Earth-centered (X, Y, Z) coordinates [m] for a point, 
+        returns geodetic latitude and longitude [degrees] and elevation [m]
+        The ITRF frame used is not the official ITRF, just a right
+        handed Cartesian system with X going through 0 latitude and 0 longitude,
+        and Z going through the north pole.  
+        Elevation is measured relative to the closest point to 
+        the (latitude, longitude) on the WGS84 reference
+        ellipsoid.
+        """
         # http://www.iausofa.org/
         # http://www.iausofa.org/2013_1202_C/sofa/gc2gde.html
 
@@ -2117,6 +2141,14 @@ class simutil:
 
 
     def utm2xyz(self,easting,northing,elevation,zone,datum,nors):
+        """
+        Returns the nominal ITRF (X, Y, Z) coordinates [m] for a point at 
+        UTM easting, northing, elevation [m], and zone of a given 
+        datum (e.g. 'WGS84') and north/south flag ("N" or "S").
+        The ITRF frame used is not the official ITRF, just a right
+        handed Cartesian system with X going through 0 latitude and 0 longitude,
+        and Z going through the north pole.  
+        """
 
         lon,lat = self.utm2long(easting,northing,zone,datum,nors)
         x,y,z = self.long2xyz(lon,lat,elevation,datum)
@@ -2124,11 +2156,10 @@ class simutil:
         return x,y,z
 
 
-
     def locxyz2itrf(self, lat, longitude, alt, locx=0.0, locy=0.0, locz=0.0):
         """
-        Returns the nominal ITRF (X, Y, Z) coordinates (m) for a point at "local"
-        (x, y, z) (m) measured at geodetic latitude lat and longitude longitude
+        Returns the nominal ITRF (X, Y, Z) coordinates [m] for a point at "local"
+        (x, y, z) [m] measured at geodetic latitude lat and longitude longitude
         (degrees) and altitude of the reference point of alt.  
         The ITRF frame used is not the official ITRF, just a right
         handed Cartesian system with X going through 0 latitude and 0 longitude,
@@ -2161,7 +2192,12 @@ class simutil:
 
     def itrf2loc(self, x,y,z, cx,cy,cz):
         """
-        itrf xyz and COFA cx,cy,cz -> lat lon el WGS84
+        Given Earth-centered ITRF (X, Y, Z) coordinates [m] 
+        and the Earth-centered coords of the center of array, 
+        Returns local (x, y, z) [m] relative to the center of the array, 
+        oriented with x and y tangent to the closest point 
+        at the COFA (latitude, longitude) on the WGS84 reference
+        ellipsoid, with z normal to the ellipsoid and y pointing north.
         """
         clon,clat,h = self.xyz2long(cx,cy,cz,'WGS84')
         ccoslon=pl.cos(clon)
@@ -2188,16 +2224,21 @@ class simutil:
             lat[i] = (-csinlon*xtrans) + (ccoslon*ytrans)
             lon[i] = (-csinlat*ccoslon*xtrans) - (csinlat*csinlon*ytrans) + ccoslat*ztrans
             el[i] = (ccoslat*ccoslon*xtrans) + (ccoslat*csinlon*ytrans) + csinlat*ztrans
-                
+            
         return lat,lon,el
 
 
 
 
 
-    def xyz2loc(self, x,y,z, obsname):
+    def itrf2locname(self, x,y,z, obsname):
         """
-        itrf xyz and array name -> lat lon el WGS84
+        Given Earth-centered ITRF (X, Y, Z) coordinates [m] 
+        and the name of an known array (see me.obslist()),
+        Returns local (x, y, z) [m] relative to the center of the array, 
+        oriented with x and y tangent to the closest point 
+        at the COFA (latitude, longitude) on the WGS84 reference
+        ellipsoid, with z normal to the ellipsoid and y pointing north.
         """
         cofa=me.measure(me.observatory(obsname),'WGS84')
         cx,cy,cz=self.long2xyz(cofa['m0']['value'],cofa['m1']['value'],cofa['m2']['value'],cofa['refer'])
