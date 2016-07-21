@@ -13,6 +13,7 @@
 #include <casacore/casa/Arrays/Cube.h>
 #include <casacore/casa/Arrays/ArrayMath.h>
 #include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Quanta/Quantum.h>
 
 #include <iostream>
 #include <fstream>
@@ -27,6 +28,19 @@ using namespace std;
 #define SDD_TEST(name) TEST(SDDoubleCircleGainCalImplTest, name)
 
 namespace {
+inline Double convertUnit(Double const value, String const &from,
+    String const &to) {
+  return Quantity(value, from).getValue(to);
+}
+
+inline Double rad2arcsec(Double const value) {
+  return convertUnit(value, "rad", "arcsec");
+}
+
+inline Double arcsec2rad(Double const value) {
+  return convertUnit(value, "arcsec", "rad");
+}
+
 void createTestData(ssize_t const num_pol, ssize_t const num_chan,
     Cube<Float> &data, Matrix<Double> &direction, ssize_t const ncycle = 20,
     ssize_t const datapercycle = 20) {
@@ -36,7 +50,7 @@ void createTestData(ssize_t const num_pol, ssize_t const num_chan,
   data.resize(num_pol, num_chan, num_data);
 
   // set direction
-  Double const scaler = 10.0;
+  Double const scaler = arcsec2rad(10.0);
   for (ssize_t idata = 0; idata < num_data; ++idata) {
     Double angle = C::_2pi / static_cast<Double>(num_data)
         * static_cast<Double>(idata);
@@ -88,7 +102,8 @@ void createTestData(ssize_t const num_pol, ssize_t const num_chan,
 }
 
 Double getDefaultSmoothingSize(Double radius) {
-  return 2 * static_cast<Int>(round(radius / 1.5)) + 1;
+  auto const radius_in_arcsec = rad2arcsec(radius);
+  return 2 * static_cast<Int>(round(radius_in_arcsec / 1.5)) + 1;
 }
 
 inline size_t toUnsigned(ssize_t const v) {
@@ -118,6 +133,11 @@ struct ConfigInterface {
     ASSERT_EQ(num_data, direction_shape[1]);
   }
 
+  /**
+   * Configure radius for calibrator
+   *
+   * It receives radius in arcsec and return the calculated radius in rad.
+   */
   static Double ConfigureRadius(SDDoubleCircleGainCalImpl &calibrator,
       Double const radius = 0.21, Bool const auto_radius = False) {
     Double myradius = radius;
@@ -139,7 +159,11 @@ struct ConfigInterface {
       Double const r = calibrator.getCentralRegion();
       TESTLOG << "central region: " << r << " myradius = " << myradius << endl;
     } else {
-      calibrator.setCentralRegion(radius);
+      // unit of the radius is assumed to be arcsec
+      // calibrator expects the value in rad
+      auto const radius_in_rad = arcsec2rad(radius);
+      calibrator.setCentralRegion(radius_in_rad);
+      myradius = radius_in_rad;
     }
 
     return myradius;
@@ -435,8 +459,8 @@ private:
     return mean;
   }
 
-  static Matrix<Float> AverageData(size_t const middle, size_t const start, size_t const end,
-      Cube<Float> const &data, Cube<Bool> const &flag) {
+  static Matrix<Float> AverageData(size_t const middle, size_t const start,
+      size_t const end, Cube<Float> const &data, Cube<Bool> const &flag) {
     Matrix<Float> mean(data.shape().getFirst(2), 0.0f);
     Matrix<size_t> count(mean.shape(), 0ul);
     auto const num_pol = mean.shape()[0];
@@ -498,7 +522,8 @@ private:
       // do smoothing if necessary
       Cube<Float> smoothed_data(gain.shape());
       Cube<Bool> smoothed_flag(gain.shape());
-      if (smooth_size > 1 && static_cast<size_t>(smooth_size) < num_data_expected) {
+      if (smooth_size > 1
+          && static_cast<size_t>(smooth_size) < num_data_expected) {
         // do smoothing
         TESTLOG << "do smoothing" << endl;
         Cube<Float> unsmoothed_data(gain.shape());
@@ -543,9 +568,11 @@ private:
             if (mean_data != 0.0 && smoothed_data(ip, ic, ig) != 0.0) {
               expected = 1.0 / sqrt(expected_gain);
             }
-            EXPECT_FLOAT_EQ(expected, gain(ip, ic, ig)) << ip << "," << ic << "," << ig;
+            EXPECT_FLOAT_EQ(expected, gain(ip, ic, ig)) << ip << "," << ic
+                << "," << ig;
             auto const expected_flag = smoothed_flag(ip, ic, ig);
-            EXPECT_EQ(expected_flag, gain_flag(ip, ic, ig)) << ip << "," << ic << "," << ig;
+            EXPECT_EQ(expected_flag, gain_flag(ip, ic, ig)) << ip << "," << ic
+                << "," << ig;
           }
         }
       }
@@ -553,6 +580,13 @@ private:
   }
 };
 
+/**
+ * RunTest
+ *
+ * Template function fur test execution.
+ *
+ * Unit of the radius must be arcsec.
+ */
 template<class Configurator, class Executor>
 void RunTest(ssize_t const num_cycle, ssize_t const num_data_per_cycle,
     Double const radius, Bool const auto_radius, Bool const do_smooth,
@@ -572,7 +606,7 @@ void RunTest(ssize_t const num_cycle, ssize_t const num_data_per_cycle,
   Configurator::ConfigureData(data, flag, direction, num_cycle,
       num_data_per_cycle);
 
-  Double const myradius = Configurator::ConfigureRadius(calibrator, radius,
+  auto const myradius = Configurator::ConfigureRadius(calibrator, radius,
       auto_radius);
 
   Int const mysmooth_size = Configurator::ConfigureSmoothing(calibrator,
@@ -620,18 +654,20 @@ SDD_TEST(BasicAPITest) {
   calibrator.setObservingFrequency(myfrequency); // 300GHz
   calibrator.setAntennaDiameter(mydiameter); // 12m
   Double const beam_size = calibrator.getPrimaryBeamSize();
-  Double const expected_size = kFactorALMA * rad2arcsec * mywavelength
-      / mydiameter;
+  Double const expected_size = kFactorALMA * mywavelength / mydiameter;
   TESTLOG << "beam_size = " << beam_size << " arcsec at frequency "
       << static_cast<uInt>(myfrequency / 1e9) << " GHz for ALMA "
       << static_cast<uInt>(mydiameter) << "m antenna (expected "
-      << expected_size << ")" << endl;
+      << expected_size << " rad " << expected_size * rad2arcsec << " arcsec)"
+      << endl;
   ASSERT_DOUBLE_EQ(expected_size, beam_size);
 
   // default smoothing size
-  Double radius_forsmooth = 20.0;
-  calibrator.setCentralRegion(radius_forsmooth);
-  Int const expected_smooth_size = ::getDefaultSmoothingSize(radius_forsmooth);
+  Double const radius_forsmooth = 20.0;
+  auto const radius_forsmooth_in_rad = radius_forsmooth / rad2arcsec;
+  calibrator.setCentralRegion(radius_forsmooth_in_rad);
+  Int const expected_smooth_size = ::getDefaultSmoothingSize(
+      radius_forsmooth_in_rad);
   Int default_smooth_size = calibrator.getDefaultSmoothingSize();
   TESTLOG << "central region " << radius_forsmooth
       << " arcsec, default smoothing size = " << default_smooth_size << endl;
@@ -682,51 +718,68 @@ SDD_TEST(CalibrationDoSmoothing2UserSuppliedRadius2) {
 
 SDD_TEST(CalibrationDoSmoothing1UserSuppliedRadius2) {
   // do smoothing with size 1 (effectively no smoothing), user-supplied radius
-  TESTLOG << "do smoothing with size 1 (effectively no smoothing), user-supplied radius" << endl;
+  TESTLOG
+      << "do smoothing with size 1 (effectively no smoothing), user-supplied radius"
+      << endl;
   RunTest<StandardConfig, StandardExecutor>(20, 20, 2.1, False, True, 1, False);
 }
 
 SDD_TEST(CalibrationDoSmoothingLargeUserSuppliedRadius2) {
   // do smoothing with size 100000 (effectively no smoothing), user-supplied radius
-  TESTLOG << "do smoothing with size 100000 (effectively no smoothing), user-supplied radius" << endl;
+  TESTLOG
+      << "do smoothing with size 100000 (effectively no smoothing), user-supplied radius"
+      << endl;
   RunTest<StandardConfig, StandardExecutor>(20, 20, 2.1, False, True, 100000,
       False);
 }
 
 SDD_TEST(CalibrationAutoSmoothingUserSuppliedRadius3) {
   // do smoothing with auto calculated size (which will be 5), user-supplied radius
-  TESTLOG << "do smoothing with auto calculated size (which will be 5), user-supplied radius" << endl;
+  TESTLOG
+      << "do smoothing with auto calculated size (which will be 5), user-supplied radius"
+      << endl;
   RunTest<StandardConfig, StandardExecutor>(20, 20, 3.1, False, True, -1, True);
 }
 
 SDD_TEST(CalibrationAutoSmoothingAutoRadius) {
   // do smoothing with auto calculated size (which will be 5), auto radius based on primary beam size
-  TESTLOG << "do smoothing with auto calculated size (which will be 5), auto radius based on primary beam size" << endl;
+  TESTLOG
+      << "do smoothing with auto calculated size (which will be 5), auto radius based on primary beam size"
+      << endl;
   RunTest<StandardConfig, StandardExecutor>(20, 20, 3.1, True, True, -1, True);
 }
 
 SDD_TEST(CalibrationNoSmoothingUserSuppliedRadius2AllFlagged) {
   // no smoothing, user-supplied radius, all data are flagged
   TESTLOG << "no smoothing, user-supplied radius, all data are flagged" << endl;
-  RunTest<AllFlaggedConfig, StandardExecutor>(20, 20, 2.1, False, False, -1, False);
+  RunTest<AllFlaggedConfig, StandardExecutor>(20, 20, 2.1, False, False, -1,
+      False);
 }
 
 SDD_TEST(CalibrationDoSmoothing2UserSuppliedRadius2AllFlagged) {
   // do smoothing with size 2, user-supplied radius, all data are flagged
-  TESTLOG << "do smoothing with size 2, user-supplied radius, all data are flagged" << endl;
-  RunTest<AllFlaggedConfig, StandardExecutor>(20, 20, 2.1, False, True, 2, False);
+  TESTLOG
+      << "do smoothing with size 2, user-supplied radius, all data are flagged"
+      << endl;
+  RunTest<AllFlaggedConfig, StandardExecutor>(20, 20, 2.1, False, True, 2,
+      False);
 }
 
 SDD_TEST(CalibrationNoSmoothingUserSuppliedRadius2PartiallyFlagged) {
   // no smoothing, user-supplied radius, data partially flagged
-  TESTLOG << "no smoothing, user-supplied radius, data partially flagged" << endl;
-  RunTest<PartiallyFlaggedConfig, StandardExecutor>(20, 20, 2.1, False, False, -1, False);
+  TESTLOG << "no smoothing, user-supplied radius, data partially flagged"
+      << endl;
+  RunTest<PartiallyFlaggedConfig, StandardExecutor>(20, 20, 2.1, False, False,
+      -1, False);
 }
 
 SDD_TEST(CalibrationDoSmoothing2UserSuppliedRadius2PartiallyFlagged) {
   // do smoothing with size 2, user-supplied radius, data partially flagged
-  TESTLOG << "do smoothing with size 2, user-supplied radius, data partially flagged" << endl;
-  RunTest<PartiallyFlaggedConfig, StandardExecutor>(20, 20, 2.1, False, True, 2, False);
+  TESTLOG
+      << "do smoothing with size 2, user-supplied radius, data partially flagged"
+      << endl;
+  RunTest<PartiallyFlaggedConfig, StandardExecutor>(20, 20, 2.1, False, True, 2,
+      False);
 }
 
 int main(int nArgs, char * args[]) {
