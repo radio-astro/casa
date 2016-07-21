@@ -148,13 +148,13 @@ struct ConfigInterface {
       calibrator.setObservingFrequency(preliminary_frequency);
       Double preliminary_size = calibrator.getPrimaryBeamSize();
       Double frequency = preliminary_frequency * preliminary_size
-          / (radius * 2.0);
+          / (arcsec2rad(radius) * 2.0);
       calibrator.setObservingFrequency(frequency);
       myradius = calibrator.getPrimaryBeamSize() / 2.0;
       if (radius < 0.0) {
         EXPECT_DOUBLE_EQ(0.0, myradius);
       } else {
-        EXPECT_DOUBLE_EQ(radius, myradius);
+        EXPECT_DOUBLE_EQ(radius, rad2arcsec(myradius));
       }
       Double const r = calibrator.getCentralRegion();
       TESTLOG << "central region: " << r << " myradius = " << myradius << endl;
