@@ -205,7 +205,7 @@ class ProfileMapAxesManager(object):
     @property
     def ylabel_area(self):
         if self.showaxislabel or (self.showtick and self.showticklabel):
-            return 0.02
+            return 0.03
         else:
             return 0.
         
@@ -247,11 +247,17 @@ class ProfileMapAxesManager(object):
                     axes.xaxis.tick_bottom()
                     axes.yaxis.tick_left()
                     if self.showticklabel: 
-                        locator = pl.LinearLocator(numticks=4)
-                        axes.xaxis.set_major_locator(locator)
-                        axes.yaxis.set_major_locator(locator)
-                        axes.xaxis.set_tick_params(labelsize=max(self.ticksize-2,1))
-                        axes.yaxis.set_tick_params(labelsize=max(self.ticksize-2,1))
+                        xlocator = pl.AutoLocator()
+                        xlocator.set_params(nbins=6, prune='upper')
+                        axes.xaxis.set_major_locator(xlocator)
+                        ylocator = pl.AutoLocator()
+                        ylocator.set_params(nbins=4)
+                        axes.yaxis.set_major_locator(ylocator)
+#                         xformatter = pl.ScalarFormatter(useOffset=True, useMathText=False)
+#                         xformatter.set_powerlimits((2,2))
+#                         axes.xaxis.set_major_formatter(xformatter)
+                        axes.xaxis.set_tick_params(labelsize=max(self.ticksize-1,1))
+                        axes.yaxis.set_tick_params(labelsize=max(self.ticksize-1,1))
                         if y != 0 or x != self.nh - 1:
                             axes.xaxis.set_major_formatter(pl.NullFormatter())
                             axes.yaxis.set_major_formatter(pl.NullFormatter())
