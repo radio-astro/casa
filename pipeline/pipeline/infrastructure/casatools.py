@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 import copy_reg
 import contextlib
+import os
 import sys
 
 from casac import casac
@@ -53,24 +54,26 @@ def set_log_origin(fromwhere=''):
 
 
 def context_manager_factory(tool):
-    '''
+    """
     Create a context manager function that wraps the given CASA tool.
 
     The returned context manager function takes one argument: a filename. The
     function opens the file using the CASA tool, returning the tool so that it
     may be used for queries or other operations pertaining to the tool. The
     tool is closed once it falls out of scope or an exception is raised.
-    '''
+    """
     tool_name = tool.__class__.__name__
 
     @contextlib.contextmanager
     def f(filename, **kwargs):
-        LOG.trace('%s tool: opening \'%s\'' % (tool_name, filename))
+        if not os.path.exists(filename):
+            raise IOError('No such file or directory: {!r}'.format(filename))
+        LOG.trace('%s tool: opening %r', tool_name, filename)
         tool.open(filename, **kwargs)
         try:
             yield tool
         finally:
-            LOG.trace('%s tool: closing \'%s\'' % (tool_name, filename))
+            LOG.trace('%s tool: closing %r', tool_name, filename)
             tool.close()
     return f
 
