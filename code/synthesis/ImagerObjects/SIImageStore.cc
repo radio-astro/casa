@@ -218,9 +218,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	SHARED_PTR<ImageInterface<Float> > imptr;
 	if( doesImageExist(itsImageName+String(".psf")) )
-	  imptr.reset( new PagedImage<Float> (itsImageName+String(".psf")) );
-	else if ( doesImageExist(itsImageName+String(".residual")) )
+	  {
+	    imptr.reset( new PagedImage<Float> (itsImageName+String(".psf")) );
+	    itsMiscInfo=imptr->miscInfo();
+	  }
+	else if ( doesImageExist(itsImageName+String(".residual")) ){
 	  imptr.reset( new PagedImage<Float> (itsImageName+String(".residual")) );
+	  itsMiscInfo=imptr->miscInfo();
+	}
 	else 
 	  imptr.reset( new PagedImage<Float> (itsImageName+String(".gridwt")) );
 	  
@@ -554,7 +559,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     itsOpened++;
     imptr.reset( new PagedImage<Float> (shape, csys, name) );
-
+    
+    ImageInfo info = imptr->imageInfo();
+    String objectName("");
+    if( itsMiscInfo.isDefined("OBJECT") ){ itsMiscInfo.get("OBJECT", objectName); }
+    if(objectName != String("")){
+      info.setObjectName(objectName);
+      imptr->setImageInfo( info );
+    }
+    imptr->setMiscInfo( itsMiscInfo );
     /*
     Int MEMFACTOR = 18;
     Double memoryMB=HostInfo::memoryTotal(True)/1024/(MEMFACTOR*itsOpened);
@@ -911,13 +924,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     accessImage( itsModel, itsParentModel, imageExts(MODEL) );
 
-    // Set up header info the first time.
-    ImageInfo info = itsModel->imageInfo();
-    String objectName("");
-    if( itsMiscInfo.isDefined("OBJECT") ){ itsMiscInfo.get("OBJECT", objectName); }
-    info.setObjectName(objectName);
-    itsModel->setImageInfo( info );
-    itsModel->setMiscInfo( itsMiscInfo );
+    // Set up header info the first time. 
     itsModel->setUnits("Jy/pixel");
 
     return itsModel;
