@@ -216,7 +216,7 @@ void SDDoubleCircleGainCalImpl::calibrate(Cube<Float> const &data,
   auto const data_shape = data.shape();
   size_t const num_pol = ::toUnsigned(data_shape[0]);
   size_t const num_chan = ::toUnsigned(data_shape[1]);
-  assert(time.nelements() == data_shape[2]);
+  assert(time.nelements() == uInt(data_shape[2]));
   assert(direction.shape()[1] == data_shape[2]);
   assert(direction.shape()[0] == 2);
   findDataWithinRadius(radius, time, data, direction, gain_time, gain);
@@ -302,7 +302,7 @@ void SDDoubleCircleGainCalImpl::calibrate(Cube<Float> const &data,
   auto const data_shape = data.shape();
   size_t const num_pol = ::toUnsigned(data_shape[0]);
   size_t const num_chan = ::toUnsigned(data_shape[1]);
-  assert(time.nelements() == data_shape[2]);
+  assert(time.nelements() == uInt(data_shape[2]));
   assert(direction.shape()[1] == data_shape[2]);
   assert(direction.shape()[0] == 2);
   findDataWithinRadius(radius, time, data, flag, direction, gain_time, gain,
