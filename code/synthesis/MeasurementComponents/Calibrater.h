@@ -48,16 +48,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <summary>Controls the solution of calibration components (Jones Matrices)</summary>
 
-class CorrectorVp;
-
-namespace asyncio {
-  class PrefetchColumns;
-}
-
 class Calibrater 
 {
-
-  friend class CorrectorVp;
 
  public:
   // Default constructor
@@ -288,8 +280,6 @@ class Calibrater
 
   Bool cleanup();
 
-  CorrectorVp * getCorrectorVp ();
-
   // Handle caltable backward compatibility
   static Bool updateCalTable(const String& caltable);
 
@@ -310,7 +300,6 @@ class Calibrater
   Timer timer_p;
 
   VisibilityIterator::DataColumn configureForCorrection ();
-  Bool correctUsingVpf ();
 
   // Select on channel using MSSelection
   void selectChannel(const String& spw);
@@ -395,37 +384,6 @@ class Calibrater
   Record actRec_;
 
 };
-
-class CorrectorVp : public vpf::VisibilityProcessor {
-
-public:
-
-    CorrectorVp (Calibrater * calibrater, const String & name = "Corrector");
-    ROVisibilityIterator * getVisibilityIterator ();
-
-    static const String In;
-    static const String Out;
-
-protected:
-
-    void chunkStartImpl (const vpf::SubchunkIndex &);
-    ProcessingResult
-    doProcessingImpl (ProcessingType processingType,
-                      vpf::VpData & inputData,
-                      const vpf::SubchunkIndex & subChunkIndex);
-    void processingStartImpl ();
-    void validateImpl ();
-
-private:
-
-    Calibrater * calibrater_p;
-    Bool calculateWeights_p;
-    Vector<Bool> uncalibratedSpectralWindows_p;
-    VisibilityIterator::DataColumn  whichOutputColumn_p;
-};
-
-
-
 
 } //# NAMESPACE CASA - END
 

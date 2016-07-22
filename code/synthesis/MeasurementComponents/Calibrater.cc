@@ -1220,16 +1220,6 @@ Calibrater::correct(String mode)
 
         VisibilityIterator::DataColumn whichOutCol = configureForCorrection ();
 
-        // See if this is to be handled using the Visibility Processing Framework
-
-        Bool useVpf;
-        AipsrcValue<Bool>::find (useVpf, "Calibrater.useVpf", False);
-
-        if (useVpf){
-            logSink() << "Using VPF for correction" << LogIO::POST;
-            return correctUsingVpf ();
-        }
-
         VisIter& vi(vs_p->iter());
         VisBufferAutoPtr vb (vi);
         vi.origin();
@@ -1346,7 +1336,6 @@ Calibrater::correct2(String mode)
 		      upmode.contains("FLAGONLY"));
 
 
-      // TBD:  configureForCorrection/Vpf in VI2/VB2 framework???
       // Arrange for iteration over data
       Block<Int> columns;
       // include scan iteration
@@ -1526,80 +1515,10 @@ Calibrater::configureForCorrection ()
     columns[3]=MS::DATA_DESC_ID;
     columns[4]=MS::TIME;
 
-    // Reset the VisibilityIterator in the VisSet.  If asyncio is to be
-    // used then configure the prefetch columns.  Use the casarc setting
-    // Calibrater.async to decide if applying calibration should
-    // utilize async i/o.  This is in addition to the global setting which
-    // must also be enabled to use async i/o (see VisibilityIterator.{cc,h}).
-
-    Bool isEnabled=False; // Initializing to False to get rid of Warning.  Jim, please check if this is what you intended. It was earlier " Bool isEnabled; ". 
-    //UNUSED: Bool foundSetting = AipsrcValue<Bool>::find (isEnabled, "Calibrater.asyncio", False);
-
-    // isEnabled = ! foundSetting || isEnabled; // let global flag call shots if setting not present
-    // For now (3/19/12) make asyncio for apply cal be explicitly enabled.
-
-    asyncio::PrefetchColumns * prefetchColumns = NULL;
-
-    if (isEnabled){
-        prefetchColumns = new asyncio::PrefetchColumns ();
-        * prefetchColumns =
-            asyncio::PrefetchColumns::prefetchColumns (VisBufferComponents::Ant1,
-                                                       VisBufferComponents::Ant2,
-                                                       VisBufferComponents::Flag,
-                                                       VisBufferComponents::FlagRow,
-                                                       VisBufferComponents::FieldId,
-                                                       VisBufferComponents::Freq,
-                                                       VisBufferComponents::NChannel,
-                                                       VisBufferComponents::NCorr,
-                                                       VisBufferComponents::NRow,
-                                                       VisBufferComponents::ObservedCube,
-                                                       VisBufferComponents::SigmaMat,
-                                                       VisBufferComponents::SpW,
-                                                       VisBufferComponents::Time,
-                                                       VisBufferComponents::WeightMat,
-                                                       -1);
-    }
-
-    vs_p->resetVisIter (columns, 0.0, prefetchColumns);
-
-    delete prefetchColumns;
+    // Reset the VisibilityIterator in the VisSet. 
+    vs_p->resetVisIter (columns, 0.0);
 
     return whichOutCol;
-}
-
-Bool
-Calibrater::correctUsingVpf ()
-{
-    Bool result = False;
-
-    auto_ptr<CorrectorVp> correctorVp (getCorrectorVp ());
-    auto_ptr<WriterVp> writerVp ( new WriterVp ("CorrectionWriter"));
-    auto_ptr<VpContainer> vpContainer (new VpContainer ("CalibraterContainer"));
-
-    vpContainer->add (correctorVp.get());
-    vpContainer->add (writerVp.get());
-
-    vpContainer->connect (correctorVp.get(), "Out", writerVp.get(), "In");
-    vpContainer->connect ("In", correctorVp.get(), "In");
-
-    ROVisibilityIterator * vi = correctorVp->getVisibilityIterator ();
-
-    VpEngine vpEngine;
-
-    try{
-
-        vpEngine.process (* vpContainer, * vi);
-        result = True;
-    }
-    catch (AipsError & e){
-
-        logSink () << LogIO::SEVERE << "Calibrated::correctUsingVpf: " << e.what() << LogIO::POST
-                   << LogIO::NORMAL;
-
-    }
-
-    return result;
-
 }
 
 
@@ -3912,147 +3831,6 @@ void Calibrater::writeHistory(LogIO& /*os*/, Bool /*cliCommand*/)
     os << LogIO::SEVERE << "calibrater is not yet initialized" << LogIO::POST;
   }
   */
-}
-
-CorrectorVp *
-Calibrater::getCorrectorVp ()
-{
-    return new CorrectorVp (this);
-}
-
-const String CorrectorVp::In = "In";
-const String CorrectorVp::Out = "Out";
-
-
-CorrectorVp::CorrectorVp (Calibrater * calibrater, const String & name)
-: VisibilityProcessor (name, vector<String> (1, In), vector<String> (1, Out)),
-  calibrater_p (calibrater)
-{}
-
-
-void
-CorrectorVp::chunkStartImpl (const vpf::SubchunkIndex &)
-{
-}
-
-vpf::VisibilityProcessor::ProcessingResult
-CorrectorVp::doProcessingImpl (ProcessingType processingType,
-                               VpData & inputData,
-                               const SubchunkIndex & /*subchunkIndex*/)
-{
-    VpPort inputPort = getInputs () [0];
-    VbPtr inputVbPtr = inputData [inputPort];
-
-    ProcessingResult result;
-
-    if (processingType == EndOfData){
-        calibrater_p->vs_p->flush(); // flush to disk
-    }
-    else if (processingType != Subchunk){
-        // do nothing
-    }
-    else if (!calibrater_p->ve_p->spwOK (inputVbPtr->spectralWindow())){
-        uncalibratedSpectralWindows_p [inputVbPtr->spectralWindow()] = True;
-    }
-    else {
-
-        // If the VB's spectral window can be calibrated, then do so.
-
-        inputVbPtr->resetWeightMat();
-
-        calibrater_p->ve_p->correct(* inputVbPtr);    // throws exception if nothing to apply
-
-        // Mark the modified columns in the VB as dirty.  The "correct" method makes its
-        // modifications on the observed component of the data.
-
-        if (whichOutputColumn_p == VisibilityIterator::Corrected){
-
-            // Mark the corrected cube as modified and copy the results from the
-            // observed cube to the corrected cube component of the VB.
-
-            inputVbPtr->dirtyComponentsAdd (VisBufferComponents::CorrectedCube);
-            inputVbPtr->correctedVisCube() = inputVbPtr->visCube();
-//VisBuffer * vb = inputVbPtr.get();
-//Cube<Complex> & cube = vb->correctedVisCube();
-//Int d1, d2, d3;
-//cube.shape (d1, d2, d3);
-//cout << "CorrectedVisCube [" << d1 << "," << d2 << "," << d3 << "] {vpf}" << endl;
-//for (int i = 0; i < min(d1, 10); i++){
-//    for (int j = 0; j < min (d2, 10); j++){
-//        for (int k = 0; k < min (d3, 10); k++){
-//            cout << "[" << i << "," << j << "," << k << "] = " << cube(i,j,k) << endl;
-//        }
-//    }
-//}
-        }
-        else{
-
-            // The modifications can be left in place.  Mark the observed cube as
-            // dirty.  N.B., this will overwrite the actual data!
-
-            inputVbPtr->dirtyComponentsAdd (VisBufferComponents::ObservedCube);
-        }
-
-        inputVbPtr->dirtyComponentsAdd (VisBufferComponents::Flag);
-
-        // Write out weight col, if it has changed
-
-	inputVbPtr->dirtyComponentsAdd (VisBufferComponents::WeightMat);
-
-        VpData output;
-        VpPort outputPort = getOutputs () [0];
-
-        output [outputPort] = inputVbPtr;
-
-        result = ProcessingResult (Normal, output);
-    }
-
-    return result;
-}
-
-ROVisibilityIterator *
-CorrectorVp::getVisibilityIterator ()
-{
-    if (!calibrater_p->ok())
-      throw(AipsError("Calibrater not prepared for correct!"));
-
-    // Ensure apply list non-zero and properly sorted
-
-    calibrater_p->ve_p->setapply(calibrater_p->vc_p);
-
-    // Report the types that will be applied
-
-    calibrater_p->applystate();
-
-    // Arrange for iteration over data
-
-    Block<Int> columns;
-    columns.resize(5);
-
-    columns[0]=MS::ARRAY_ID;
-    columns[1]=MS::SCAN_NUMBER; // include scan iteration
-    columns[2]=MS::FIELD_ID;
-    columns[3]=MS::DATA_DESC_ID;
-    columns[4]=MS::TIME;
-
-    calibrater_p->vs_p->resetVisIter(columns,0.0);
-
-    return & (calibrater_p->vs_p->iter());
-}
-
-void
-CorrectorVp::processingStartImpl ()
-{
-    calculateWeights_p = calibrater_p->calWt();
-    uncalibratedSpectralWindows_p.resize ();
-    uncalibratedSpectralWindows_p.set (False);
-    whichOutputColumn_p = VisibilityIterator::Corrected;
-}
-
-void
-CorrectorVp::validateImpl ()
-{
-    throwIfAnyPortsUnconnected ();
 }
 
 
