@@ -133,6 +133,8 @@ class ProfileMapAxesManager(object):
         self.figsize = figsize
         casalog.post('figsize={figsize}'.format(figsize=self.figsize), priority='DEBUG')
         
+        self.normalization_factor = 1
+        
         self._axes_spmap = None
 
         # to resize matplotlib window to specified size        
@@ -224,6 +226,9 @@ class ProfileMapAxesManager(object):
     def vertical_subplot_size(self):
         return (1.0 - self.bottom_margin - self.top_margin - self.xlabel_area - self.title_area) / self.nrow 
 
+    def set_normalization_factor(self, factor):
+        self.normalization_factor = factor
+
     def __axes_spmap(self):
         for x in xrange(self.nh):
             for y in xrange(self.nv):
@@ -241,7 +246,12 @@ class ProfileMapAxesManager(object):
                         spectral_label = self.spectral_label
                     axes.xaxis.set_label_text(spectral_label,
                                               size=self.ticksize)
-                    axes.yaxis.set_label_text('Intensity [%s]'%(self.brightnessunit), 
+                    if self.normalization_factor < 100 and self.normalization_factor > 0.01:
+                        label_text = 'Intensity [%s]'%self.brightnessunit
+                    else:
+                        label_text = 'Intensity [1e%d x %s]'%(int(numpy.log10(self.normalization_factor)), 
+                                                              self.brightnessunit)
+                    axes.yaxis.set_label_text(label_text, 
                                               size=self.ticksize, rotation='vertical')
                 if self.showtick:
                     axes.xaxis.tick_bottom()
@@ -253,9 +263,8 @@ class ProfileMapAxesManager(object):
                         ylocator = pl.AutoLocator()
                         ylocator.set_params(nbins=4)
                         axes.yaxis.set_major_locator(ylocator)
-#                         xformatter = pl.ScalarFormatter(useOffset=True, useMathText=False)
-#                         xformatter.set_powerlimits((2,2))
-#                         axes.xaxis.set_major_formatter(xformatter)
+                        xformatter = pl.ScalarFormatter(useOffset=False)
+                        axes.xaxis.set_major_formatter(xformatter)
                         axes.xaxis.set_tick_params(labelsize=max(self.ticksize-1,1))
                         axes.yaxis.set_tick_params(labelsize=max(self.ticksize-1,1))
                         if y != 0 or x != self.nh - 1:
@@ -466,6 +475,17 @@ def plot_profile_map(image, figfile, pol, spectralaxis='', title=None,
             chunk = masked_data_p[x0:x1,y0:y1]
             valid_sp = chunk[valid_index[0],valid_index[1],:]
             Plot[x][y] = valid_sp.mean(axis=0)
+            
+    # normalize plot data
+    max_data = numpy.abs(Plot).max()
+    casalog.post('max_data = %s'%(max_data), priority='DEBUG')
+    normalization_factor = numpy.power(10.0, int(numpy.log10(max_data)))
+    if normalization_factor < 1.0:
+        normalization_factor /= 10.
+    casalog.post('normalization_factor = %s'%(normalization_factor), priority='DEBUG')
+    plotter.set_normalization_factor(normalization_factor)
+    
+    Plot /= normalization_factor
 
     status = plotter.plot(figfile, Plot, 
                           spectral_data, 
@@ -550,6 +570,9 @@ class SDProfileMapPlotter(object):
         
     def unset_global_scaling(self):
         self.global_scaling = False
+        
+    def set_normalization_factor(self, factor):
+        self.axes.set_normalization_factor(factor)
         
     def plot(self, figfile, map_data, frequency, 
              linecolor='b', linestyle='-', linewidth=0.2,
