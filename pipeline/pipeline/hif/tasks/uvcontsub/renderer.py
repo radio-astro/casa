@@ -72,7 +72,10 @@ class T2_4MDetailsUVcontFitRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             fitorder = '%d' % result.inputs['fitorder']
 
             # Get the input spws and associated frequency ranges
-            spws, freqranges = self._get_spw_ranges(result.spwstr)
+            if to_field == 'ALL':
+                spws, freqranges = self._get_spw_ranges(result.spwdict['all'])
+            else:
+                spws, freqranges = self._get_spw_ranges(result.spwdict[to_field])
 
             # Create the table
             for spw, freqrange in zip(spws, freqranges):

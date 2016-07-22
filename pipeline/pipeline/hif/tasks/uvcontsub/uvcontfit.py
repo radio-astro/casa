@@ -209,11 +209,12 @@ class UVcontFit(basetask.StandardTaskTemplate):
         orig_spw = ','.join([spw.split(':')[0] for spw in inputs.spw.split(',')])
 
         calapps = []
+        spwdict = {}
         if not inputs.contfile:
 
             # Simple case frequency selection same for all sources
             #    Store input string as is done for the continuum file case
-            spwstr = inputs.spwstr
+            spwdict['all'] = inputs.spwstr
 
             # Create the caltable without a source name
             caltable = inputs.caltable
@@ -262,6 +263,7 @@ class UVcontFit(basetask.StandardTaskTemplate):
                 caltable = uvcaltable.UVcontCaltable()
                 caltable = caltable (output_dir=inputs.output_dir,
                     stage=inputs.context.stage, vis=inputs.vis, source=sname)
+                spwdict[sname] = spwstr
 
                 # Fire off task
                 inputs.intent = sintents
@@ -280,7 +282,7 @@ class UVcontFit(basetask.StandardTaskTemplate):
                 
                 inputs.intent = orig_intent
 
-        return UVcontFitResults(spwstr=spwstr, pool=calapps)
+        return UVcontFitResults(spwdict=spwdict, pool=calapps)
 
 
     def analyse (self, result):
@@ -449,9 +451,9 @@ class UVcontFit(basetask.StandardTaskTemplate):
 
 
 class UVcontFitResults(basetask.Results):
-    def __init__(self, spwstr=None, final=None, pool=None, preceding=None):
-        if spwstr is None:
-            spwstr = ''
+    def __init__(self, spwdict=None, final=None, pool=None, preceding=None):
+        if spwdict is None:
+            spwdict = {}
         if final is None:
             final = []
         if pool is None:
@@ -460,7 +462,7 @@ class UVcontFitResults(basetask.Results):
             preceding = []
 
         super(UVcontFitResults, self).__init__()
-        self.spwstr = spwstr
+        self.spwdict = spwdict
         self.pool = pool[:]
         self.final = final[:]
         self.preceding = preceding[:]
