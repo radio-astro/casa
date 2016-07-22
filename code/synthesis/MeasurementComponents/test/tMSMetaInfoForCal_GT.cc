@@ -32,7 +32,7 @@
 //#include <casa/Arrays/ArrayMath.h>
 //#include <casa/OS/Timer.h>
 #include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayIO.h>
+//#include <casa/Arrays/ArrayIO.h>
 #include <casacore/casa/OS/EnvVar.h>
 #include <casacore/casa/OS/Path.h>
 #include <synthesis/MeasurementComponents/MSMetaInfoForCal.h>
